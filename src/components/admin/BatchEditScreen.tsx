@@ -28,7 +28,7 @@ async function batchDeleteAction(prevState: { error: string | null; success?: bo
      return { error: result.message, success: false };
   }
   
-  queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
+  queryClient.invalidateQueries({ queryKey: photoKeys.all });
   return { error: null, success: true };
 }
 

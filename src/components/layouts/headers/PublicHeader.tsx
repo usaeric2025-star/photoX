@@ -11,9 +11,7 @@ interface PublicHeaderProps {
 export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHeaderProps) {
   const { user, isLoading } = useAuth();
   const { settings } = useSettings();
-  const { update } = useUIStore(useShallow(s => ({
-    update: s.update
-  })));
+  const update = useUIStore((s) => s.update);
 
   const handleAuthAction = () => {
     // 切换到私有模式，如果未登录，系统会自动引导至登录页

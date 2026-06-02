@@ -11,7 +11,7 @@ import {
   useUIStore, useShallow
 } from '@/store/useUIStore';
 import { 
-  useCategories, useTags, useManufacturers, usePhotoInfiniteList,
+  useCategories, useTags, useManufacturers, usePhotos,
   useAdminCategory, useAuth, useSettings
 } from '@/hooks';
 import { useSettingsLogic } from './settings/useSettingsLogic';
@@ -35,10 +35,8 @@ const BUTTON_STYLES = {
 };
 
 export function SettingsScreen() {
-  const { update, activeScreen } = useUIStore(useShallow(s => ({
-    update: s.update,
-    activeScreen: s.activeScreen
-  })));
+  const update = useUIStore((s) => s.update);
+  const activeScreen = useUIStore((s) => s.activeScreen);
   
   const { photos } = usePhotoGallery();
   const { data: categories = [] } = useCategories();

@@ -2,7 +2,7 @@ import React from 'react';
 import { SyncSection } from './SyncSection';
 import { ExportDataSection } from './ExportDataSection';
 import { User, Photo, Category, Tag, Manufacturer, ApiResponse } from '@/types';
-import { useUIStore, useShallow } from '@/store/useUIStore';
+import { useUIStore } from '@/store/useUIStore';
 
 interface SyncSettingsProps {
   user: User | null;
@@ -23,7 +23,7 @@ interface SyncSettingsProps {
 }
 
 export function SyncSettings(props: SyncSettingsProps) {
-  const { update } = useUIStore(useShallow(s => ({ update: s.update })));
+  const update = useUIStore((s) => s.update);
   return (
     <>
       <SyncSection 

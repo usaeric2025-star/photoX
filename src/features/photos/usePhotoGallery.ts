@@ -1,4 +1,4 @@
-import { usePhotoInfiniteList, useUrlFilters } from '@/hooks';
+import { usePhotos, useUrlFilters } from '@/hooks';
 import { useFilters } from '@/features/filters/useFilters';
 import { cleanPhotos } from '@/lib/filters';
 import { PAGINATION } from '@/constants/config';
@@ -17,7 +17,7 @@ export function usePhotoGallery() {
   const isAdminPath = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
   const pageSize = isAdminPath ? 60 : 20;  // Use fixed numeric sizes to avoid import/rebuild side effects
 
-  const infinitePhotosQuery = usePhotoInfiniteList({
+  const infinitePhotosQuery = usePhotos({
     category_id: filters.categoryId,
     tag_id: filters.tagIds.length > 0 ? filters.tagIds[0] : null,
     searchQuery: filters.searchQuery,
@@ -60,6 +60,6 @@ export function usePhotoGallery() {
     isFetching: infinitePhotosQuery.isFetching,
     hasNextPage: infinitePhotosQuery.hasNextPage,
     loadMore: () => infinitePhotosQuery.fetchNextPage(),
-    refetch: () => queryClient.invalidateQueries({ queryKey: photoKeys.lists() }),
+    refetch: () => queryClient.invalidateQueries({ queryKey: photoKeys.all }),
   };
 }

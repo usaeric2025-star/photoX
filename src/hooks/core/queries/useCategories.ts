@@ -19,7 +19,7 @@ export const useCategories = (options?: UseCategoriesOptions) => {
       syncCache.saveCategories(cats).catch(() => {});
       return cats;
     },
-    staleTime: createStaleTime('INFINITY'),
+    staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     placeholderData: keepPreviousData,
     enabled: options?.enabled,

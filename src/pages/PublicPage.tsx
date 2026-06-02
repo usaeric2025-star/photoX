@@ -4,7 +4,7 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 import { Skeleton } from '../components/ui/Skeleton';
 import { cleanPhotos, filterPhotos, groupPhotos } from '../lib/filters';
 import { 
-  useCategories, usePhotoInfiniteList, usePhotoCount, 
+  useCategories, usePhotos, usePhotoCount, 
   useTags, useScrollRestoration,
   useMultiSelect, useSyncMutation, useTasks
 } from '@/hooks';
@@ -28,7 +28,7 @@ export default function PublicPage() {
   const authError = (search as any).authError;
   
   const { data: count } = usePhotoCount({});
-  const { isLoading } = usePhotoInfiniteList({});
+  const { isLoading } = usePhotos({});
 
   const { tasks } = useTasks();
   const { mutateAsync: syncMut } = useSyncMutation();

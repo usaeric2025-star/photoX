@@ -5,7 +5,7 @@ import { Photo } from "../../../types";
 import { HeadlessSlot } from "../../../lib/component-contract";
 import { usePhotoEditLogic } from "./usePhotoEditLogic";
 import { DrawerHeader } from "./DrawerHeader";
-import { useUIStore, useShallow } from "../../../store";
+import { useUIStore } from "../../../store";
 import { BasicInfoTab } from "./BasicInfoTab";
 import { OrgTab } from "./OrgTab";
 import { DetailsTab } from "./DetailsTab";
@@ -14,7 +14,7 @@ import { getCacheBustedImageUrl } from "../../../lib/ui-helpers";
 import { translations } from "../../../lib/translations";
 
 import { 
-  usePhotoInfiniteList,
+  usePhotos,
   useSettings,
   useCategories,
   useTags,
@@ -48,16 +48,12 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
     searchQuery: debouncedSearchQuery,
   } = filters;
 
-  const { editPhotoId, formState, updateForm, newPhotoData, appLang, update } = useUIStore(
-    useShallow((s) => ({
-      editPhotoId: s.editPhotoId,
-      formState: s.formState,
-      updateForm: s.updateForm,
-      newPhotoData: s.newPhotoData,
-      update: s.update,
-      appLang: s.appLang,
-    })),
-  );
+  const editPhotoId = useUIStore((s) => s.editPhotoId);
+  const formState = useUIStore((s) => s.formState);
+  const updateForm = useUIStore((s) => s.updateForm);
+  const newPhotoData = useUIStore((s) => s.newPhotoData);
+  const update = useUIStore((s) => s.update);
+  const appLang = useUIStore((s) => s.appLang);
 
   const adminActions = useAdminActions();
   const onDeletePhoto = (id: string) => adminActions.deletePhoto([id]);
@@ -117,7 +113,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
 
   const onCancelAnalyze = () => {};
 
-  const infinitePhotosQuery = usePhotoInfiniteList(
+  const infinitePhotosQuery = usePhotos(
     {
       category_id: filterCatId,
       tag_id:
@@ -216,11 +212,11 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
     return photo ? getCacheBustedImageUrl(photo, "image") : null;
   }, [editPhotoId, photos]);
 
-  const resetAddState = React.useCallback(() => {
+  const resetAddState = () => {
     update({ newPhotoData: null });
     update({ editPhotoId: null });
     update({ batchEditingIds: null });
-  }, [update]);
+  };
 
   const logic = usePhotoEditLogic({
     photos,
@@ -228,7 +224,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
     formState,
     updateForm,
     newPhotoData,
-    editPhotoPreview,
+    editPhotoPreview: editPhotoId && photos.find((p: Photo) => p.id === editPhotoId) ? getCacheBustedImageUrl(photos.find((p: Photo) => p.id === editPhotoId)!, "image") : null,
     analyzeSingle: async (p: Photo) => {
       if (onAiAnalyze) {
         return onAiAnalyze(p);

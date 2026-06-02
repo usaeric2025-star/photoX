@@ -1,7 +1,7 @@
 import { supabase } from '../../lib/supabase';
 import { DB_CONFIG } from '../../constants/config';
 import { Photo } from '../../types';
-import { normalizeSearchQuery } from '@/lib/utils/stringHelper';
+import { normalizeSearchQuery } from '@/lib/utils';
 import { VISIBILITY_OR_QUERY } from '../../constants/photoConstants';
 import { PAGINATION } from '../../config/constants';
 import { PHOTO_LIST_FIELDS } from '../../constants/photoFields';

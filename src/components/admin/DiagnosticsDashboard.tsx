@@ -10,20 +10,52 @@ import {
   FileWarning,
   Bug
 } from 'lucide-react';
-import { client, api } from '@/lib/api';
-import { DiagnosticsReport, DiagnosticIssue } from '@/types/diagnostics';
-import { motion, AnimatePresence } from 'motion/react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/lib/api';
 import { fromThrowableAsync } from '@/lib/errorFactory';
 import { toast } from 'sonner';
+import { DiagnosticsReport } from '@/types/diagnostics';
+import { motion, AnimatePresence } from 'motion/react';
+
+
 
 export function DiagnosticsDashboard() {
   const [report, setReport] = useState<DiagnosticsReport | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   const [r2Result, setR2Result] = useState<any | null>(null);
   const [isDiagnosingR2, setIsDiagnosingR2] = useState(false);
   const [r2Error, setR2Error] = useState<string | null>(null);
+
+  const queryClient = useQueryClient();
+
+  const { isPending: isRepairing, mutate: repair } = useMutation({
+    mutationFn: (issueId: string) => api.admin.repair[':issueId'].$post({
+        param: { issueId }
+    }),
+    onSuccess: () => {
+        toast.success("修复成功");
+        scan(); // Refresh after repair
+    },
+    onError: (err: any) => {
+        toast.error(`修复失败: ${err.message}`);
+    }
+  });
+
+  const { isPending: isScanning, mutate: scan } = useMutation({
+    mutationFn: () => api.admin.diagnose.$get(),
+    onSuccess: async (res) => {
+        const data = await (res as unknown as Response).json();
+        setReport(data);
+    },
+    onError: (err: any) => {
+        setError(`扫描失败: ${err.message}`);
+        toast.error('诊断运行失败');
+    }
+  });
+
+  const runDiagnostics = () => scan();
+  const runRepair = (issueId: string) => repair(issueId);
 
   const runR2Diagnostics = async () => {
     setIsDiagnosingR2(true);
@@ -62,64 +94,13 @@ export function DiagnosticsDashboard() {
     setIsDiagnosingR2(false);
   };
 
-  const runDiagnostics = async () => {
-    setIsLoading(true);
-    setError(null);
-    const result = await fromThrowableAsync(
-        () => api.admin.diagnose.$get(),
-        'runDiagnostics'
-    );
-    
-    if (!result.ok) {
-        setError(result.message);
-        toast.error('诊断运行失败');
-        setIsLoading(false);
-        return;
-    }
-
-    const res = result.data as Response;
-    if (!res.ok) {
-        setError('Failed to run diagnostics');
-        toast.error('诊断运行失败');
-        setIsLoading(false);
-        return;
-    }
-    const data = await res.json() as any;
-    setReport(data);
-    setIsLoading(false);
-  };
-
-  const runRepair = async (issueId: string) => {
-    setIsLoading(true);
-    const result = await fromThrowableAsync(
-        () => api.admin.repair[':issueId'].$post({
-            param: { issueId }
-        }),
-        'runRepair'
-    );
-
-    if (!result.ok) {
-        setError(`修复失败: ${result.message}`);
-        toast.error('修复请求失败');
-        setIsLoading(false);
-        return;
-    }
-    
-    const res = result.data as Response;
-    if (!res.ok) {
-        setError('Repair failed');
-        toast.error('修复失败');
-        setIsLoading(false);
-        return;
-    }
-    await runDiagnostics(); // Refresh
-    setIsLoading(false);
-  };
-
   useEffect(() => {
-    runDiagnostics();
+    scan();
     runR2Diagnostics();
   }, []);
+
+  const isLoading = isScanning || isRepairing;
+
 
   const severityColors = {
     P0: 'text-red-500 bg-red-500/10 border-red-500/20',

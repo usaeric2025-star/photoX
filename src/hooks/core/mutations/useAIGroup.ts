@@ -121,7 +121,7 @@ export function useAIGroup() {
             
             // 刷新列表
             await Promise.all([
-                queryClient.invalidateQueries({ queryKey: photoKeys.lists() }),
+                queryClient.invalidateQueries({ queryKey: photoKeys.all }),
                 queryClient.invalidateQueries({ queryKey: groupKeys.all })
             ]);
             

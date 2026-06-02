@@ -1,7 +1,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { CheckSquare, X } from "lucide-react";
-import { useUIStore, useShallow } from "@/store/useUIStore";
+import { useUIStore } from "@/store/useUIStore";
 import { PromptDialog } from "./PromptDialog";
 import {
   AlertDialog,
@@ -15,13 +15,9 @@ import {
 } from "../ui/alert-dialog";
 
 export function AdminGlobalModals() {
-  const { alertDialog, update, promptDialog } = useUIStore(
-    useShallow((s) => ({
-      alertDialog: s.alertDialog,
-      update: s.update,
-      promptDialog: s.promptDialog
-    })),
-  );
+  const alertDialog = useUIStore((s) => s.alertDialog);
+  const update = useUIStore((s) => s.update);
+  const promptDialog = useUIStore((s) => s.promptDialog);
 
   return (
     <>

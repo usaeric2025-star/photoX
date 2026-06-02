@@ -33,11 +33,11 @@ export const deduplicatePhotos = async (userId?: string): Promise<AppResult<{rem
     if (error || !data) return success({ removed: 0 });
 
     const groups: Record<string, Photo[]> = {};
-    safeArray(data).forEach(item => {
+    safeArray<Photo>(data as any).forEach(item => {
       if (!item.image_hash) return;
       const key = `${item.user_id}_${item.image_hash}`;
       if (!groups[key]) groups[key] = [];
-      groups[key].push(item as Photo);
+      groups[key].push(item);
     });
 
     let removedCount = 0;
@@ -80,7 +80,7 @@ export const repairGroupIntegrity = async (): Promise<{ dissolved: number, synce
   let synced = 0;
   let deleted = 0;
 
-  for (const group of safeArray(groups)) {
+  for (const group of safeArray<any>(groups)) {
     // Count actual members
     const { count, error: countError } = await supabase
       .from(DB_CONFIG.TABLE_NAME)

@@ -2,10 +2,10 @@ import React from "react";
 import { Plus } from "lucide-react";
 import { Manufacturer } from "../../types";
 import { ManufacturerItem } from "../admin/ManufacturerItem";
-import { useUIStore, useShallow } from "@/store/useUIStore";
+import { useUIStore } from "@/store/useUIStore";
 import { useErrorHandler } from "../../hooks";
 import { toast } from "@/lib/ui/toast";
-import { normalizeManufacturerName } from "@/lib/utils/stringHelper";
+import { normalizeManufacturerName } from "@/lib/utils";
 
 interface ManufacturersSectionProps {
   manufacturers: Manufacturer[];
@@ -27,7 +27,7 @@ export function ManufacturersSection({
   cardClass,
   buttonStyles,
 }: ManufacturersSectionProps) {
-  const { update } = useUIStore(useShallow((s) => ({ update: s.update })));
+  const update = useUIStore((s) => s.update);
   const { handleError } = useErrorHandler();
 
   const handleAddManufacturer = () => {

@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { usePerformance } from '@/hooks/usePerformance';
 import { VirtualGrid, VirtualGridHandle } from '@/components/virtualizer/VirtualGrid';
 import { Photo, TranslationType } from '../../types';
-import { useUIStore, useShallow } from '@/store/useUIStore';
+import { useUIStore, useShallow, UIStoreState } from '@/store/useUIStore';
 import { useUrlFilters } from '@/hooks/useUrlFilters';
 import { translations } from '../../lib/translations';
 import { PhotoGridSkeleton } from './PhotoGridSkeleton';
@@ -18,7 +18,7 @@ interface VirtualPhotoGridProps {
   ref?: React.Ref<VirtualGridHandle>;
 }
 
-const multiSelectSelector = (s: any) => ({
+const multiSelectSelector = (s: UIStoreState) => ({
   update: s.update
 });
 
@@ -34,9 +34,7 @@ export function VirtualPhotoGrid({
 }: VirtualPhotoGridProps) {
   usePerformance('VirtualPhotoGrid');
   const { filters } = useUrlFilters();
-  const { appLang } = useUIStore(useShallow(s => ({ 
-    appLang: s.appLang
-  })));
+  const appLang = useUIStore((s) => s.appLang);
   const t = (translations[appLang as keyof typeof translations] || translations.en) as TranslationType;
 
   // Anchoring logic: when returning from a group detail view

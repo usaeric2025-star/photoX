@@ -19,8 +19,7 @@ export { useFilters } from '../features/filters/useFilters';
 export { useUrlFilters } from './useUrlFilters';
 
 // Queries
-export { usePhotoInfiniteList, usePhotoInfiniteGroupList } from './core/queries/useInfinitePhotos';
-export { usePhotoList } from './core/queries/usePhotoList';
+export { usePhotos, useGroupPhotos } from './core/queries/usePhotos';
 export { usePhotoCount } from './core/queries/usePhotoCount';
 export { useCategories } from './core/queries/useCategories';
 export { useTags } from './core/queries/useTags';
@@ -30,24 +29,21 @@ export { useGroupDetail } from './core/queries/useGroupDetail';
 export { useInvalidatePhotos } from './queries/useInvalidatePhotos';
 
 // Mutations
-export { usePhotoEdit } from './core/mutations/usePhotoEdit';
-export { usePhotoDelete } from './core/mutations/usePhotoDelete';
-export { usePhotoBatchEdit } from './core/mutations/usePhotoBatchEdit';
-export { useTagCreate } from './core/mutations/useTagCreate';
-export { useTagEdit } from './core/mutations/useTagEdit';
-export { useTagDelete } from './core/mutations/useTagDelete';
-export { useCategoryCreate } from './core/mutations/useCategoryCreate';
-export { useCategoryEdit } from './core/mutations/useCategoryEdit';
-export { useCategoryDelete } from './core/mutations/useCategoryDelete';
-export { useManufacturerCreate } from './core/mutations/useManufacturerCreate';
-export { useManufacturerEdit } from './core/mutations/useManufacturerEdit';
-export { useManufacturerDelete } from './core/mutations/useManufacturerDelete';
-export { useGroupCreate } from './core/mutations/useGroupCreate';
-export { useGroupEdit, useGroupPhotosMutation, useRemoveFromGroupMutation, useUngroupMutation } from './core/mutations/useGroupEdit';
-export { useGroupDelete } from './core/mutations/useGroupDelete';
-export { useGroupCoverMutation } from './core/mutations/useGroupCoverMutation';
-export { useSettingsMutation } from './core/mutations/useSettingsMutation';
-export { useSyncMutation } from './core/mutations/useSyncMutation';
+export { usePhotoEdit, usePhotoDelete, usePhotoBatchEdit, useTogglePin, usePhotoMutations } from './core/mutations/usePhotoMutations';
+export { 
+  useTagCreate, useTagEdit, useTagDelete,
+  useCategoryCreate, useCategoryEdit, useCategoryDelete,
+  useManufacturerCreate, useManufacturerEdit, useManufacturerDelete,
+  useSyncMutation
+} from './core/mutations/useAdminMutations';
+export { 
+  useGroupCreate, useGroupUpdate, useGroupDelete, useGroupCoverMutation, 
+  useGroupPhotosMutation, useRemoveFromGroupMutation, useUngroupMutation, 
+  useGroupMutations 
+} from './core/mutations/useGroupMutations';
+export { useSettingsUpdateMutation, useSettingsMutations } from './core/mutations/useSettingsMutations';
+export { useAIGroup } from './core/mutations/useAIGroup';
+
 
 // Utils
 export { useUIStore, useStore, useShallow } from '../store/useUIStore';

@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Photo } from "../../types";
 import { PhotoLightbox } from "../PhotoLightbox";
@@ -29,14 +29,10 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
   const isAdminMode = useAdminMode();
 
   const { filters, setGroupId, setPhotoId } = useUrlFilters();
-  const { appLang, isPhotoPickerOpen, photoPickerGroupId, update } = useUIStore(
-    useShallow((s) => ({
-      update: s.update,
-      appLang: s.appLang,
-      isPhotoPickerOpen: s.isPhotoPickerOpen,
-      photoPickerGroupId: s.photoPickerGroupId,
-    })),
-  );
+  const appLang = useUIStore((s) => s.appLang);
+  const isPhotoPickerOpen = useUIStore((s) => s.isPhotoPickerOpen);
+  const photoPickerGroupId = useUIStore((s) => s.photoPickerGroupId);
+  const update = useUIStore((s) => s.update);
 
   const adminActions = useAdminActions();
   const onUngroup = (groupId: string) => {
@@ -78,7 +74,7 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
     };
   }, [draggedPhotoId, handleReorder, isAdminMode, isMultiSelect]);
 
-  const stableGetPhotoProps = useCallback(
+  const stableGetPhotoProps = 
     (photo: Photo) => ({
       draggable:
         dragState.current.isAdminMode && !dragState.current.isMultiSelect,
@@ -92,22 +88,18 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
           update({ draggedPhotoId: null });
         }
       },
-    }),
-    [update],
-  );
+    });
 
-  const handleEditPhoto = useCallback(
+  const handleEditPhoto = 
     (p: Photo) => {
       if (storeEditPhoto) {
         storeEditPhoto(p);
       } else {
         update({ editPhotoId: p.id });
       }
-    },
-    [storeEditPhoto, update],
-  );
+    };
 
-  const handlePhotoClick = useCallback(
+  const handlePhotoClick = 
     (photo: Photo) => {
       if (isMultiSelect) {
         update((state) => ({
@@ -118,64 +110,42 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
       } else {
         update({ focusedGroupPhotoId: photo.id });
       }
-    },
-    [isMultiSelect, update],
-  );
+    };
 
-  const handlePhotoContextMenu = useCallback(
+  const handlePhotoContextMenu = 
     (e: React.MouseEvent | React.TouchEvent, photo: Photo) => {
       if (e && typeof e.preventDefault === "function") e.preventDefault();
       if (isAdminMode) {
         update({ isMultiSelect: true, selectedIds: [photo.id] });
         if ("vibrate" in navigator) navigator.vibrate(50);
       }
-    },
-    [isAdminMode, update],
-  );
+    };
 
-  const handleCloseLightbox = useCallback(
-    () => update({ focusedGroupPhotoId: null }),
-    [update],
-  );
+  const handleCloseLightbox = () => update({ focusedGroupPhotoId: null });
 
-  const handlePrevLightbox = useCallback(
-    (idx: number) => {
+  const handlePrevLightbox = (idx: number) => {
       const prev = idx > 0 ? idx - 1 : activeGroupPhotos.length - 1;
       if (activeGroupPhotos.length > 0)
         update({ focusedGroupPhotoId: activeGroupPhotos[prev].id });
-    },
-    [activeGroupPhotos, update],
-  );
+    };
 
-  const handleNextLightbox = useCallback(
-    (idx: number) => {
+  const handleNextLightbox = (idx: number) => {
       const next = idx < activeGroupPhotos.length - 1 ? idx + 1 : 0;
       if (activeGroupPhotos.length > 0)
         update({ focusedGroupPhotoId: activeGroupPhotos[next].id });
-    },
-    [activeGroupPhotos, update],
-  );
+    };
 
-  const handleUngroupLightbox = useCallback(
-    (photoId: string) => {
+  const handleUngroupLightbox = (photoId: string) => {
       confirmBulkRemove([photoId]);
       update({ focusedGroupPhotoId: null });
-    },
-    [confirmBulkRemove, update],
-  );
+    };
 
-  const handleSetGroupCoverLightbox = useCallback(
-    (photoId: string) => setCover(photoId),
-    [setCover],
-  );
+  const handleSetGroupCoverLightbox = (photoId: string) => setCover(photoId);
 
-  const handleToggleHiddenLightbox = useCallback(
-    (p: Photo) => {
+  const handleToggleHiddenLightbox = (p: Photo) => {
       const newStatus = !p.is_hidden;
       persistPhotoChange(p.id, { is_hidden: newStatus });
-    },
-    [persistPhotoChange],
-  );
+    };
 
   return (
     <>

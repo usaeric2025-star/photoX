@@ -62,6 +62,10 @@ export function LightboxImageSection({
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
     >
+      <div className="absolute top-4 left-4 z-20 flex items-center bg-black/40 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs font-mono">
+        {index + 1} / {slides.length}
+      </div>
+
       <div className="absolute top-4 right-4 z-20 flex gap-2">
         <button 
           type="button"

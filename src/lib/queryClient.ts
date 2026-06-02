@@ -16,8 +16,11 @@ export const queryClient = new QueryClient({
   }),
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000,
+      staleTime: 30 * 1000,
+      gcTime: 10 * 60 * 1000,
       retry: 1,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: true,
       // 翻页时保留旧数据
       // @ts-ignore
       placeholderData: (previousData: unknown) => previousData,

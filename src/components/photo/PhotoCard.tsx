@@ -12,7 +12,7 @@ async function togglePinAction(prevState: { error: string | null }, formData: Fo
   try {
     const { error } = await supabase.from('furniture_items').update({ is_pinned: !currentPinned }).eq('id', photoId);
     if (error) throw error;
-    queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
+    queryClient.invalidateQueries({ queryKey: photoKeys.all });
     return { error: null };
   } catch (err) {
     const message = err instanceof Error ? err.message : '置顶失败';
@@ -55,13 +55,11 @@ import { getCacheBustedImageUrl } from '../../lib/ui-helpers';
 import { ResponsivePhoto } from '../shared/ResponsivePhoto';
 import { usePermission, useFilters, useCategories, useTags, useErrorHandler } from '../../hooks';
 import { useAdminActions } from '@/features/admin/useAdminActions';
-import { useTogglePin } from '@/hooks/core/mutations/useTogglePin';
 
 import { toast } from '@/lib/ui/toast';
 import { cn } from '@/lib/utils';
 import { translations } from '@/lib/translations';
 import { useUIStore, useShallow } from '@/store/useUIStore';
-import { useMemo } from 'react';
 
 export interface PhotoCardProps {
   variant: GalleryVariant;
@@ -183,15 +181,11 @@ export const PhotoCard = React.memo(({
   tags: propsTags,
   imgVariant
 }: PhotoCardProps) => {
-  const { isSelected, isMultiSelect, toggleSelected, update, columns } = useUIStore(
-    useShallow((s) => ({
-      isSelected: s.selectedIds.includes(photo.id),
-      isMultiSelect: s.isMultiSelect,
-      toggleSelected: s.toggleSelected,
-      update: s.update,
-      columns: s.columns
-    }))
-  );
+  const isSelected = useUIStore((s) => s.selectedIds.includes(photo.id));
+  const isMultiSelect = useUIStore((s) => s.isMultiSelect);
+  const toggleSelected = useUIStore((s) => s.toggleSelected);
+  const update = useUIStore((s) => s.update);
+  const columns = useUIStore((s) => s.columns);
   
   const resolvedImgVariant = imgVariant || (columns <= 3 ? 'md' : 'sm');
   
@@ -211,17 +205,17 @@ export const PhotoCard = React.memo(({
 
   const categoryId = photo.category_id ? String(photo.category_id) : '';
   
-  const displayCatName = useMemo(() => {
-    const category = categories.find(c => String(c.id) === categoryId);
-    return category ? (category[lang as keyof Category] as string || category.name) : '';
-  }, [categories, categoryId, lang]);
-
-  const photoTags = useMemo(() => {
-    const tagIdsList = Array.isArray(photo.tag_ids) ? photo.tag_ids : [];
-    return tagIdsList
-      .map(id => tags.find(t => String(t.id) === String(id))?.name ?? '')
-      .filter(Boolean);
-  }, [tags, photo.tag_ids]);
+  const displayCatName = (() => {                
+    const category = categories.find(c => String(c.id) === categoryId);                
+    return category ? (category[lang as keyof Category] as string || category.name) : '';                
+  })();                
+                
+  const photoTags = (() => {                
+    const tagIdsList = Array.isArray(photo.tag_ids) ? photo.tag_ids : [];                
+    return tagIdsList                
+      .map(id => tags.find(t => String(t.id) === String(id))?.name ?? '')                
+      .filter(Boolean);                
+  })();
 
   const { can } = usePermission();
 

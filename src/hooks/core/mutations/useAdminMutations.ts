@@ -4,8 +4,10 @@ import { addTagToDB, updateTagInDB, deleteTagFromDB } from '@/services/tag/comma
 import { addCategoryToDB, updateCategoryInDB, deleteCategoryFromDB } from '@/services/category/commands';
 import { addManufacturerToDB, updateManufacturerInDB, deleteManufacturerFromDB } from '@/services/manufacturer/commands';
 import { photoKeys } from '@/lib/queryKeys';
+import { useQueryClient } from '@tanstack/react-query';
+import { useInvalidatePhotos } from '@/hooks/queries/useInvalidatePhotos';
 
-export const useAddTagMutation = createMutationHook({
+export const useTagCreate = createMutationHook({
   entity: 'Tag', 
   action: 'Add',
   mutationFn: addTagToDB,
@@ -13,7 +15,7 @@ export const useAddTagMutation = createMutationHook({
   onSuccessMessage: '标签添加成功',
 });
 
-export const useUpdateTagMutation = createMutationHook({
+export const useTagEdit = createMutationHook({
   entity: 'Tag',
   action: 'Update',
   mutationFn: ({ id, updates }: { id: string; updates: Partial<Tag> }) => updateTagInDB(id, updates),
@@ -21,7 +23,7 @@ export const useUpdateTagMutation = createMutationHook({
   onSuccessMessage: '标签更新成功',
 });
 
-export const useDeleteTagMutation = createMutationHook({
+export const useTagDelete = createMutationHook({
   entity: 'Tag',
   action: 'Delete',
   mutationFn: deleteTagFromDB,
@@ -29,7 +31,7 @@ export const useDeleteTagMutation = createMutationHook({
   onSuccessMessage: '标签删除成功',
 });
 
-export const useAddCategoryMutation = createMutationHook({
+export const useCategoryCreate = createMutationHook({
   entity: 'Category',
   action: 'Add',
   mutationFn: addCategoryToDB,
@@ -37,7 +39,7 @@ export const useAddCategoryMutation = createMutationHook({
   onSuccessMessage: '分类添加成功',
 });
 
-export const useUpdateCategoryMutation = createMutationHook({
+export const useCategoryEdit = createMutationHook({
   entity: 'Category',
   action: 'Update',
   mutationFn: ({ id, updates }: { id: string; updates: Partial<Category> }) => updateCategoryInDB(id, updates),
@@ -45,7 +47,7 @@ export const useUpdateCategoryMutation = createMutationHook({
   onSuccessMessage: '分类更新成功',
 });
 
-export const useDeleteCategoryMutation = createMutationHook({
+export const useCategoryDelete = createMutationHook({
   entity: 'Category',
   action: 'Delete',
   mutationFn: deleteCategoryFromDB,
@@ -53,7 +55,7 @@ export const useDeleteCategoryMutation = createMutationHook({
   onSuccessMessage: '分类删除成功',
 });
 
-export const useAddManufacturerMutation = createMutationHook({
+export const useManufacturerCreate = createMutationHook({
   entity: 'Manufacturer',
   action: 'Add',
   mutationFn: addManufacturerToDB,
@@ -61,7 +63,7 @@ export const useAddManufacturerMutation = createMutationHook({
   onSuccessMessage: '厂商添加成功',
 });
 
-export const useUpdateManufacturerMutation = createMutationHook({
+export const useManufacturerEdit = createMutationHook({
   entity: 'Manufacturer',
   action: 'Update',
   mutationFn: ({ id, updates }: { id: string; updates: Partial<Manufacturer> }) => updateManufacturerInDB(id, updates),
@@ -69,10 +71,30 @@ export const useUpdateManufacturerMutation = createMutationHook({
   onSuccessMessage: '厂商更新成功',
 });
 
-export const useDeleteManufacturerMutation = createMutationHook({
+export const useManufacturerDelete = createMutationHook({
   entity: 'Manufacturer',
   action: 'Delete',
   mutationFn: deleteManufacturerFromDB,
   invalidateKeys: [photoKeys.manufacturers()],
   onSuccessMessage: '厂商删除成功',
 });
+
+export const useSyncMutation = () => {
+  const queryClient = useQueryClient();
+  const invalidatePhotos = useInvalidatePhotos();
+
+  return createMutationHook({
+    entity: 'Sync',
+    action: 'Run',
+    mutationFn: async (type: 'push' | 'pull') => {
+      if (type === 'pull') {
+        invalidatePhotos();
+        await queryClient.invalidateQueries({ queryKey: ['tags'] });
+        await queryClient.invalidateQueries({ queryKey: ['categories'] });
+        await queryClient.invalidateQueries({ queryKey: ['manufacturers'] });
+        await queryClient.invalidateQueries({ queryKey: ['groups'] });
+      }
+    },
+    onSuccessMessage: '同步完成',
+  })();
+};

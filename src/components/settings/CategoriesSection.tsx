@@ -1,6 +1,6 @@
 import React from 'react';
 import { Category } from '../../types';
-import { useUIStore, useShallow } from '@/store/useUIStore';
+import { useUIStore } from '@/store/useUIStore';
 
 interface CategoriesSectionProps {
   categories: Category[];
@@ -10,7 +10,7 @@ interface CategoriesSectionProps {
 export function CategoriesSection({ 
   categories, cardClass 
 }: CategoriesSectionProps) {
-  const { appLang } = useUIStore(useShallow(s => ({ appLang: s.appLang })));
+  const appLang = useUIStore((s) => s.appLang);
 
   return (
     <section className={cardClass} id="section-categories">

@@ -30,11 +30,9 @@ export function AdminScreen() {
   const onRefresh = () => syncMut('pull');
   const cloudCount = 0;
 
-  const { lang, update, viewMode } = useUIStore(useShallow(s => ({
-    lang: s.appLang,
-    update: s.update,
-    viewMode: s.viewMode
-  })));
+  const lang = useUIStore((s) => s.appLang);
+  const update = useUIStore((s) => s.update);
+  const viewMode = useUIStore((s) => s.viewMode);
   
   const onManageClick = () => update({ activeScreen: 'manage' });
 

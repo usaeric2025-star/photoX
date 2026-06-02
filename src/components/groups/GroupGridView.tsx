@@ -64,10 +64,8 @@ export function GroupGridView({
   hasNextPage,
   variant = 'public-showcase'
 }: GroupGridViewProps & { virtualGridRef?: React.Ref<any>, isLoading?: boolean }) {
-  const { lang, columns } = useUIStore(useShallow(s => ({
-    lang: s.appLang,
-    columns: s.columns
-  })));
+  const lang = useUIStore((s) => s.appLang);
+  const columns = useUIStore((s) => s.columns);
   const t = translations[lang as keyof typeof translations as keyof typeof translations] || translations.en;
 
   let header = null;

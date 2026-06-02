@@ -20,15 +20,60 @@
 | 按钮 | `XxxButton` | `UploadButton` |
 
 ### Hooks
+- ✅ 自定义 Hook 必须以 `use` 开头，后跟大写字母
+- ✅ 工厂生成的 Hook 也必须遵循 `useXxx` 格式
+- ❌ 普通函数不要使用 `use` 前缀
+
 | 类型 | 规则 | 示例 |
 |------|------|------|
 | 服务端数据 | `useXxx`（复数） | `usePhotos`, `useCategories` |
 | UI 状态 | `useUIStore` | 替代 `galleryStore` |
 | 交互工具 | `useXxx` | `useLongPress`, `useDebouncedSearch` |
 
+### 检查命令
+```bash
+# 查找 utils 目录下误用的 use 前缀
+find src/utils -name "use*.ts" -o -name "use*.tsx"
+```
+
 ### Store
 - UI 瞬态：`useUIStore`（columns, viewMode, isMultiSelect, selectedIds, lightboxIndex, activeGroupId）
 - 筛选条件：URL State（不用 Store）
+
+## 缓存失效规则（锁定）
+
+### 核心原则
+- 所有照片写操作（增、删、改、合组、置顶、批量操作）
+- 必须使用 `photoKeys.all` 作为失效键
+- ❌ 禁止使用 `photoKeys.lists()`、`photoKeys.infinite()` 等分支键进行写后刷新
+
+### 理由
+- React Query 的前缀匹配机制 (`photoKeys.all`) 会自动刷新所有子分支（infinite, group, count）
+- 性能代价低（仅标记失效，按需触发），且能彻底杜绝因分支键不匹配导致的 UI 不更新 bug
+
+### 标准用法
+```typescript
+import { useInvalidatePhotos } from "@/hooks";
+
+const invalidatePhotos = useInvalidatePhotos();
+// ... 执行 mutation
+invalidatePhotos(); // 降维打击，清空全域缓存
+```
+
+## 状态管理边界（锁定）
+
+| 状态类型 | 存储位置 | 示例 |
+|----------|----------|------|
+| 服务端数据 | TanStack Query | 照片列表、分类、标签、合组 |
+| URL 持久化 | URL State | 筛选偏好、排序、分页、多选模式 |
+| UI 瞬态 | Zustand (`useUIStore`) | 主题、侧边栏开关、全局弹窗、灯箱索引 |
+| 组件局部 | `useState` / `useMemo` | 简单的 Input 受控、局部勾选 ID 集合 |
+
+## API 契约层（锁定）
+
+1. **类型共享**：前端必须通过 `import type { AppType } from "../../api/app"` 引用后端路由类型。
+2. **RPC 优先**：优先使用 `hono/client` (hc) 进行调用，确保前端参数与后端定义严格对齐。
+3. **禁止 Manual URL**：除非是静态资源或第三方链接，禁止在前端手动拼接 `/api/xxx` 字符串。
 
 ## 禁止项
 - ❌ `forwardRef`（React 19 不需要）

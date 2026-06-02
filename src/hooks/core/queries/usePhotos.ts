@@ -7,8 +7,9 @@ import { PAGINATION } from '@/constants/config';
 
 /**
  * Hook for infinite photo lists (main grid).
+ * Plural naming following PhotoX conventions.
  */
-export const usePhotoInfiniteList = (filters: { 
+export const usePhotos = (filters: { 
   category_id?: string | null; 
   tag_id?: string | null; 
   searchQuery?: string | null; 
@@ -54,7 +55,7 @@ export const usePhotoInfiniteList = (filters: {
     getNextPageParam: (lastPage) => lastPage.nextPage,
     initialPageParam: 1,
     enabled,
-    staleTime: createStaleTime('STABLE'),
+    staleTime: 30 * 1000,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
@@ -66,7 +67,7 @@ export const usePhotoInfiniteList = (filters: {
 /**
  * Hook for infinite group photo lists.
  */
-export const usePhotoInfiniteGroupList = (groupId: string | null, isAdminMode: boolean = false, pageSize: number = 60) => {
+export const useGroupPhotos = (groupId: string | null, isAdminMode: boolean = false, pageSize: number = 60) => {
   return useInfiniteQuery({
     queryKey: photoKeys.infinite({ groupId, isAdminMode, pageSize }),
     queryFn: ({ pageParam = 1 }) => 
@@ -80,6 +81,6 @@ export const usePhotoInfiniteGroupList = (groupId: string | null, isAdminMode: b
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
-    staleTime: createStaleTime('STABLE'),
+    staleTime: 30 * 1000,
   });
 };

@@ -57,11 +57,7 @@ export function AdminHeader({
   });
   const { data: localCount } = usePhotoCount({ source: "local" });
 
-  const { update } = useUIStore(
-    useShallow((s) => ({
-      update: s.update,
-    })),
-  );
+  const update = useUIStore((s) => s.update);
 
   const isSelectionMode = isMultiSelect;
 

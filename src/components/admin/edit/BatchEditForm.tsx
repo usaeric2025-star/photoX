@@ -9,7 +9,7 @@ import {
 } from "../FormShared";
 import { useCategories, useTags, useManufacturers } from "@/hooks";
 import { safeArray } from "@/lib/utils";
-import { useUIStore, useShallow } from "@/store/useUIStore";
+import { useUIStore } from "@/store/useUIStore";
 
 interface BatchEditFormProps {
   formState: Partial<ProductFormData>;
@@ -35,9 +35,7 @@ export function BatchEditForm({
   const { data: categories = [] } = useCategories();
   const { data: manufacturers = [] } = useManufacturers();
   const { data: tags = [] } = useTags();
-  const { appLang } = useUIStore(
-    useShallow((s) => ({ appLang: s.appLang })),
-  );
+  const appLang = useUIStore((s) => s.appLang);
 
   return (
     <div className="space-y-6">

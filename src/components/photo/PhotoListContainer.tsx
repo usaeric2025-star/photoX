@@ -3,7 +3,7 @@ import { Photo, Category, Tag } from '@/types';
 import { GalleryVariant } from '@/types/variant';
 import { VirtualPhotoGrid } from './VirtualPhotoGrid';
 import { PhotoCard } from './PhotoCard';
-import { usePhotoInfiniteList, useFilters, useUrlFilters } from '@/hooks';
+import { usePhotos, useFilters, useUrlFilters } from '@/hooks';
 import { useUIStore } from '@/store/useUIStore';
 import { PAGINATION } from '@/constants/config';
 import { normalizeAdminPhotos } from '@/lib/selectors/photos';
@@ -22,7 +22,7 @@ export function PhotoListContainer({ variant, filters, isAdminMode, categories, 
     columns: s.columns
   }));
 
-  const infiniteQuery = usePhotoInfiniteList({
+  const infiniteQuery = usePhotos({
     category_id: filters.categoryId,
     tag_id: Array.isArray(filters.tagIds) && filters.tagIds.length > 0 ? filters.tagIds[0] : null,
     searchQuery: filters.searchQuery,

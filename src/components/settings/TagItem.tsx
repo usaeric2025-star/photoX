@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Heart, Pencil, Trash2 } from "lucide-react";
 import { Tag } from "../../types";
-import { useUIStore, useShallow } from "@/store/useUIStore";
+import { useUIStore } from "@/store/useUIStore";
 import { useClickAway } from "@/lib/hooks";
 import { useLongPress } from "@shined/react-use";
 
@@ -27,7 +27,7 @@ export function TagItem({
   isPinned,
   togglePin,
 }: TagItemProps) {
-  const { update } = useUIStore(useShallow((s) => ({ update: s.update })));
+  const update = useUIStore((s) => s.update);
 
   const itemRef = useRef<HTMLDivElement>(null);
   useClickAway(itemRef as any, () => {

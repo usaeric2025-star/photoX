@@ -12,7 +12,7 @@ import { backfillThumbHashes } from "@/services/photo/backfillService";
 import {
   normalizeTagName,
   normalizeManufacturerName,
-} from "@/lib/utils/stringHelper";
+} from "@/lib/utils";
 import { fromThrowableAsync } from '@/lib/errorFactory';
 import { toast } from '@/lib/ui/toast';
 import { useErrorHandler, useInvalidatePhotos, useTaskExecutor } from "@/hooks";

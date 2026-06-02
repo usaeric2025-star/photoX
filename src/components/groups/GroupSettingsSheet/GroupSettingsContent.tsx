@@ -2,6 +2,7 @@ import React from "react";
 import { EyeOff, Eye, Plus, Maximize, Sparkles, X, Save } from "lucide-react";
 import { DimensionEditor } from "../../admin/edit/DimensionEditor";
 import { ProductGroup, Dimension } from "../../../types";
+import { UIStoreState } from "@/store/useUIStore";
 
 export function GroupSettingsContent({
   groupData,
@@ -13,7 +14,7 @@ export function GroupSettingsContent({
   setGroupData: React.Dispatch<React.SetStateAction<ProductGroup | null>>;
   handleUpdateGroupData: (updates: Partial<ProductGroup>) => Promise<void>;
   handleBatchUpdateDimensions: (newDims: Dimension[]) => Promise<void>;
-  update: (updates: any) => void;
+  update: (updates: Partial<UIStoreState> | ((state: UIStoreState) => Partial<UIStoreState>)) => void;
 }) {
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar h-[calc(100vh-80px)] pb-20">

@@ -1,18 +1,17 @@
 import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { photoKeys } from '@/lib/queryKeys';
 
 export const useInvalidatePhotos = () => {
   const queryClient = useQueryClient();
 
   const invalidatePhotos = useCallback(() => {
-    // Invalidate infinite list (all filters) - still more specific than ['photos']
-    queryClient.invalidateQueries({ queryKey: ['photos', 'infinite'] });
-    
-    // Invalidate group photos
-    queryClient.invalidateQueries({ queryKey: ['photos', 'group'] });
-    
-    // Invalidate counts
-    queryClient.invalidateQueries({ queryKey: ['photos', 'count'] });
+    // Invalidate all photo queries using prefix matching
+    // refetchType: 'active' ensures we only trigger re-fetch for queries currently mounted/visible
+    return queryClient.invalidateQueries({ 
+      queryKey: photoKeys.all,
+      refetchType: 'active'
+    });
   }, [queryClient]);
 
   return invalidatePhotos;

@@ -13,7 +13,7 @@ import {
   useErrorHandler,
   useGroupDetail,
   useAuth,
-  usePhotoList,
+  useGroupPhotos,
   useUrlFilters
 } from "@/hooks";
 import { useUIStore, useShallow } from "@/store/useUIStore";
@@ -89,11 +89,11 @@ export const useGroupAdminLogic = ({
   );
   const virtualGridRef = useRef<any>(null);
 
-  const { data: dbGroupPhotosData, isLoading: isGroupPhotosLoading } =
-    usePhotoList(activeGroupId || "", isAdminMode);
+  const { data: dbGroupPhotosPages, isLoading: isGroupPhotosLoading } =
+    useGroupPhotos(activeGroupId, isAdminMode);
   const dbGroupPhotos = useMemo(
-    () => dbGroupPhotosData ?? [],
-    [dbGroupPhotosData],
+    () => dbGroupPhotosPages?.pages.flatMap(p => p.photos) ?? [],
+    [dbGroupPhotosPages],
   );
 
   const activeGroupPhotos = useMemo(() => {

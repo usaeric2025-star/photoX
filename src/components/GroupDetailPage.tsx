@@ -5,7 +5,7 @@ import { GalleryVariant } from '@/types/variant';
 import { TranslationType } from '../lib/ui-helpers';
 import { sortGroupPhotos } from '../lib/filters';
 import { filterPhotosByMode } from '@/lib/filters/photoVisibility';
-import { useAdminMode, useErrorHandler, useGroupDetail, useTasks, usePhotoInfiniteGroupList } from '@/hooks';
+import { useAdminMode, useErrorHandler, useGroupDetail, useTasks, useGroupPhotos } from '@/hooks';
 import { GroupDetailSkeleton } from './groups/GroupDetailSkeleton';
 import { PhotoLightbox } from './PhotoLightbox';
 import { Skeleton } from './ui/Skeleton';
@@ -15,6 +15,7 @@ import { useAdminActions } from '@/features/admin/useAdminActions';
 import { useUrlFilters } from '@/hooks/useUrlFilters';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { createTranslate } from '../lib/i18n';
+import { LanguageCode } from '../lib/translations';
 import { Spinner } from './ui/Spinner';
 
 
@@ -29,7 +30,7 @@ export interface GroupDetailPageProps extends GroupAdminShellProps {
   initialPhotoId?: string | null;
   contactWhatsApp?: (photo: Photo) => void;
   variant?: GalleryVariant;
-  onBatchAiAnalyze?: (photos: any[]) => void;
+  onBatchAiAnalyze?: (photos: Photo[]) => void;
 }
 
 export function GroupDetailPage(props: GroupDetailPageProps) {
@@ -39,8 +40,8 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
   const { handleError } = useErrorHandler();
 
   const { setGroupId, setPhotoId } = useUrlFilters();
-  const { lang } = useUIStore(useShallow(s => ({ lang: s.appLang })));
-  const translate = createTranslate(lang as any);
+  const lang = useUIStore((s) => s.appLang);
+  const translate = createTranslate(lang as LanguageCode);
   
   const { tasks } = useTasks();
   const isAnalyzing = tasks.some(task => task.status === 'running' && (task.name.includes('识别') || task.name.includes('分析')));
@@ -66,7 +67,7 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
     isFetchingNextPage,
     isLoading: isGroupPhotosLoading,
     isPlaceholderData: isGroupPhotosPlaceholder
-  } = usePhotoInfiniteGroupList(activeGroupId, isAdminMode, 20);
+  } = useGroupPhotos(activeGroupId, isAdminMode, 20);
 
   // [GROUP-STALE-SIGNAL]
   const isStale = isGroupDataPlaceholder || isGroupPhotosPlaceholder;
@@ -86,13 +87,13 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
 
   const totalGroupPhotosCount = (() => {
     if (!infinitePhotosData?.pages || infinitePhotosData.pages.length === 0) return undefined;
-    return (infinitePhotosData.pages[0] as any).total;
+    return (infinitePhotosData.pages[0] as { total: number }).total;
   })();
 
   const activeGroupPhotos = (() => {
     if (!activeGroupId) return [];
 
-    const groupPhotos = infinitePhotosData?.pages.flatMap(page => page.photos) || [];
+    const groupPhotos = infinitePhotosData?.pages.flatMap((page: { photos: Photo[] }) => page.photos) || [];
 
     const visiblePhotos = filterPhotosByMode(groupPhotos, isAdminMode);
 
@@ -140,13 +141,12 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
     // Explicitly destructure to avoid passing internal React Router/Base UI props like asChild down to child components
     const { 
       activeGroupId: _ag, 
-      update: _sag, 
       shareGroup: _sg, 
       initialPhotoId: _ipi, 
       variant: _v, 
       // Filter out asChild if it somehow exists in props
       ...restProps 
-    } = props as any;
+    } = props;
 
     return <GroupAdminShell initialPhotoId={initialPhotoId} {...restProps} />;
   }
@@ -266,7 +266,7 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
                       contactWhatsApp={props.contactWhatsApp || (() => {})}
                       onEditPhoto={onEditPhoto}
                       onToggleHidden={onToggleHidden}
-                      onAiAnalyze={onAiAnalyze as any}
+                      onAiAnalyze={onAiAnalyze}
                       onCancelAnalyze={onCancelAnalyze}
                       isAnalyzing={isAnalyzing}
                       variant={props.variant}

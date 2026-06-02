@@ -56,12 +56,10 @@ function SidebarItem({ icon: Icon, label, active, onClick, badge, collapsed }: S
 }
 
 export function AdminSidebar() {
-  const { activeScreen, update, appLang, isSidebarCollapsed } = useUIStore(useShallow(s => ({
-    activeScreen: s.activeScreen,
-    update: s.update,
-    appLang: s.appLang,
-    isSidebarCollapsed: s.isSidebarCollapsed
-  })));
+  const activeScreen = useUIStore((s) => s.activeScreen);
+  const update = useUIStore((s) => s.update);
+  const appLang = useUIStore((s) => s.appLang);
+  const isSidebarCollapsed = useUIStore((s) => s.isSidebarCollapsed);
   
   const { can } = usePermission();
   const hasAdminAccess = useAdminMode();

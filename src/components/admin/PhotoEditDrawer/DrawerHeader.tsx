@@ -49,7 +49,7 @@ export function DrawerHeader({
   onErrorClick,
   isRunning,
 }: HeaderProps) {
-  const { update } = useUIStore(useShallow((s) => ({ update: s.update })));
+  const update = useUIStore((s) => s.update);
   return (
     <div className="px-4 py-3 border-b border-slate-200 bg-white shadow-sm flex items-center justify-between gap-3 min-h-[72px]">
       <div className="flex-none flex items-center gap-2">

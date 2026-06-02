@@ -2,7 +2,7 @@ import React from "react";
 import { Spinner } from "@/components/ui/Spinner";
 import { ShieldCheck, PackageSearch, Trash2 } from "lucide-react";
 import { useTaskExecutor } from "@/hooks/core/infra/useTaskExecutor";
-import { useUIStore, useShallow } from "@/store/useUIStore";
+import { useUIStore } from "@/store/useUIStore";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/ui/toast";
 
@@ -22,7 +22,7 @@ export function MaintenanceSection({
   buttonStyles,
 }: Props) {
   const { runTask } = useTaskExecutor();
-  const { update } = useUIStore(useShallow((s) => ({ update: s.update })));
+  const update = useUIStore((s) => s.update);
 
   return (
     <div className={cardClass}>

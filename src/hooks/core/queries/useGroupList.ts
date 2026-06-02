@@ -16,7 +16,7 @@ export const useGroupList = (userId: string) => {
       return result.data;
     },
     select: (data) => data ?? [],
-    staleTime: createStaleTime('STABLE'),
+    staleTime: 60 * 1000,
     placeholderData: keepPreviousData,
   });
 };

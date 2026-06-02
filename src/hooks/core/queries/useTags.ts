@@ -19,7 +19,7 @@ export const useTags = (options?: UseTagsOptions) => {
       syncCache.saveTags(tags).catch(() => {});
       return tags;
     },
-    staleTime: createStaleTime('INFINITY'),
+    staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     placeholderData: keepPreviousData,
     enabled: options?.enabled,

@@ -1,10 +1,14 @@
 import React, { useMemo, useState } from 'react';
 import { RefreshCw, MoreHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useFilters, useCategories, useTags, useTagsDisplay, useSettings } from '@/hooks';
 import { useUIStore } from '@/store/useUIStore';
 import { cn } from '@/lib/utils';
 import { Category } from '@/types';
 import { translations } from '@/lib/translations';
+import { photoKeys } from '@/lib/queryKeys';
+import { loadCategoriesFromCloud } from '@/services/category/queries';
+import { loadTagsFromCloud } from '@/services/tag/queries';
 
 export function FilterPanel() {
     const { filters, setCategory, setTags } = useFilters();
@@ -13,6 +17,23 @@ export function FilterPanel() {
     const { settings } = useSettings();
     const appLang = useUIStore(s => s.appLang);
     const [isExpanded, setIsExpanded] = useState(false);
+    const queryClient = useQueryClient();
+
+    const prefetchCategories = () => {
+        queryClient.prefetchQuery({
+            queryKey: photoKeys.categories(),
+            queryFn: loadCategoriesFromCloud,
+            staleTime: 5 * 60 * 1000,
+        });
+    };
+
+    const prefetchTags = () => {
+        queryClient.prefetchQuery({
+            queryKey: photoKeys.tags(),
+            queryFn: loadTagsFromCloud,
+            staleTime: 5 * 60 * 1000,
+        });
+    };
 
     const t = (translations as any)[appLang];
 
@@ -39,6 +60,7 @@ export function FilterPanel() {
                         <button
                             key={cat.id || 'all'}
                             onClick={() => setCategory(cat.id)}
+                            onMouseEnter={prefetchCategories}
                             className={cn(
                                 "text-[10px] font-bold h-7 px-3 rounded-full transition-all duration-200 flex items-center justify-center cursor-pointer pointer-events-auto",
                                 filters.categoryId === cat.id 
@@ -54,7 +76,7 @@ export function FilterPanel() {
             </div>
 
             {/* Integrated Tags Section matching strict PhotoX specifications */}
-            <div className="mt-1 mb-1.5 px-4">
+            <div className="mt-1 mb-1.5 px-4" onMouseEnter={prefetchTags}>
                 <div className="flex items-center justify-between mb-1 px-0.5">
                     <span className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.05em]">
                         {t.hotTags}

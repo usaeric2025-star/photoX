@@ -44,10 +44,8 @@ export function PhotoLightbox(props: PhotoLightboxProps) {
   } = props;
   const displayPhotos = rawDisplayPhotos ?? [];
   
-  const { update: storeUpdate, lang } = useUIStore(useShallow(s => ({ 
-    update: s.update,
-    lang: s.appLang
-  })));
+  const storeUpdate = useUIStore((s) => s.update);
+  const lang = useUIStore((s) => s.appLang);
 
   const index = displayPhotos.findIndex(p => p.id === photoId);
   const photo = index !== -1 ? displayPhotos[index] : null;

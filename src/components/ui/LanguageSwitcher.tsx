@@ -4,10 +4,8 @@ import { useUIStore, useShallow } from '@/store/useUIStore';
 import { GalleryVariant } from '@/types/variant';
 
 export function LanguageSwitcher({ variant = 'full-management' }: { variant?: GalleryVariant | 'ghost' }) {
-  const { appLang, update } = useUIStore(useShallow(s => ({ 
-    appLang: s.appLang,
-    update: s.update
-  })));
+  const appLang = useUIStore((s) => s.appLang);
+  const update = useUIStore((s) => s.update);
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 

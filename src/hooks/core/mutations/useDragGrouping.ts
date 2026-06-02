@@ -3,6 +3,7 @@ import { movePhotosToGroup } from '@/services/photoMutationService';
 import { useErrorHandler } from '@/hooks';
 import { match } from 'ts-pattern';
 import { fromThrowableAsync } from '@/lib/errorFactory';
+import { photoKeys } from '@/lib/queryKeys';
 
 /**
  * [HOOK-CONTRACT] useDragGrouping
@@ -22,8 +23,8 @@ export const useDragGrouping = (userId: string) => {
         },
         onMutate: async ({ photoIds, targetGroupId }) => {
             // [契約] 樂觀更新前置：取消查詢並備份緩存
-            await queryClient.cancelQueries({ queryKey: ['photos'] });
-            const previousPhotos = queryClient.getQueryData(['photos']);
+            await queryClient.cancelQueries({ queryKey: photoKeys.all });
+            const previousPhotos = queryClient.getQueryData(photoKeys.all);
             
             // 由於 VirtualGrid 的高度穩定性契約，此處僅標記數據更新，不進行 DOM 直接操作
             return { previousPhotos };
@@ -35,11 +36,11 @@ export const useDragGrouping = (userId: string) => {
         },
         onError: (err) => {
             // Handle critical mutation exceptions (e.g. network failure before mutationFn completes)
-            handleError(err as Error, '分組操作發生嚴重錯誤');
+            handleError(err as Error, '分組操作发生严重错误');
         },
         onSettled: () => {
             // [契約] 數據歸一化防線：不論成功失敗，最終均觸發緩存刷新
-            queryClient.invalidateQueries({ queryKey: ['photos'] });
+            queryClient.invalidateQueries({ queryKey: photoKeys.all });
         }
     });
 };

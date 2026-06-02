@@ -2,10 +2,10 @@ import React from "react";
 import { Plus, Heart, RefreshCw } from "lucide-react";
 import { Tag, AppSettings } from "../../types";
 import { TagItem } from "./TagItem";
-import { useUIStore, useShallow } from "@/store/useUIStore";
+import { useUIStore } from "@/store/useUIStore";
 import { useErrorHandler, useTaskExecutor, useTasks } from "@/hooks";
 import { toast } from "@/lib/ui/toast";
-import { normalizeTagName } from "@/lib/utils/stringHelper";
+import { normalizeTagName } from "@/lib/utils";
 import { triggerRefreshTagHotScores } from "../../services/tag/commands";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -40,7 +40,7 @@ export function TagsSection({
   cardClass,
   buttonStyles,
 }: TagsSectionProps) {
-  const { update } = useUIStore(useShallow((s) => ({ update: s.update })));
+  const update = useUIStore((s) => s.update);
   const { handleError } = useErrorHandler();
   const { runTask } = useTaskExecutor();
   const { tasks } = useTasks();

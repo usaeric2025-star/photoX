@@ -167,7 +167,7 @@ export const deletePhotosBatch = async (
   onProgress?: (current: number, total: number) => void,
   signal?: AbortSignal
 ) => {
-  const sPhotos = safeArray(photos);
+  const sPhotos = safeArray<Photo>(photos);
   if (sPhotos.length === 0) return;
   
   const total = sPhotos.length;

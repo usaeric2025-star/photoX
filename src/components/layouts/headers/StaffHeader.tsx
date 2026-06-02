@@ -22,9 +22,7 @@ interface StaffHeaderProps {
 export function StaffHeader({ totalCount, onRefresh, isRefreshing }: StaffHeaderProps) {
   const { user } = useAuth();
   const { settings } = useSettings();
-  const { update } = useUIStore(useShallow(s => ({
-    update: s.update
-  })));
+  const update = useUIStore((s) => s.update);
 
   const handleGoToAdmin = () => {
     update({ viewMode: 'private', activeScreen: 'home' });

@@ -15,27 +15,27 @@ export function useUrlFilters() {
   };
 
   const setCategory = (categoryId: string | null) => {
-    navigate({ search: ((prev: any) => ({ ...prev, category: categoryId || undefined })) as any });
+    navigate({ search: (prev) => ({ ...prev, category: categoryId || undefined }) });
   };
 
   const setSearchQuery = (q: string) => {
-    navigate({ search: ((prev: any) => ({ ...prev, q: q || undefined })) as any });
+    navigate({ search: (prev) => ({ ...prev, q: q || undefined }) });
   };
 
   const setSortOrder = (sort: 'newest' | 'oldest' | 'name') => {
-    navigate({ search: ((prev: any) => ({ ...prev, sort })) as any });
+    navigate({ search: (prev) => ({ ...prev, sort }) });
   };
   
   const setGroupId = (groupId: string | null) => {
-    navigate({ search: ((prev: any) => ({ ...prev, groupId: groupId || undefined })) as any });
+    navigate({ search: (prev) => ({ ...prev, groupId: groupId || undefined }) });
   };
   
   const setPhotoId = (photoId: string | null) => {
-    navigate({ search: ((prev: any) => ({ ...prev, photoId: photoId || undefined })) as any });
+    navigate({ search: (prev) => ({ ...prev, photoId: photoId || undefined }) });
   };
 
   const setShowGroupsCollapsed = (collapsed: boolean) => {
-    navigate({ search: ((prev: any) => ({ ...prev, showGroupsCollapsed: collapsed ? undefined : 'false' })) as any });
+    navigate({ search: (prev) => ({ ...prev, showGroupsCollapsed: collapsed ? undefined : 'false' }) });
   };
 
   return { filters, setCategory, setSearchQuery, setSortOrder, setGroupId, setPhotoId, setShowGroupsCollapsed };

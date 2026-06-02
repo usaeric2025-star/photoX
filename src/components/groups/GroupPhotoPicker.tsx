@@ -10,7 +10,7 @@ import {
   DialogFooter,
 } from "../ui/dialog";
 import { Photo } from "../../types";
-import { usePhotoInfiniteList, useTaskExecutor, useTasks } from "@/hooks";
+import { usePhotos, useTaskExecutor, useTasks, useInvalidatePhotos } from "@/hooks";
 import { PAGINATION } from "../../constants/config";
 import { GroupGridView } from "./GroupGridView";
 import { cn } from "@/lib/utils";
@@ -33,6 +33,7 @@ export function GroupPhotoPicker({
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const { user } = useAuth();
+  const invalidatePhotos = useInvalidatePhotos();
 
   const handlePhotoImport = async (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -64,6 +65,8 @@ export function GroupPhotoPicker({
       showSuccessToast: true,
       showErrorToast: true
     });
+
+    invalidatePhotos();
   };
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { runTask } = useTaskExecutor();
@@ -80,7 +83,7 @@ export function GroupPhotoPicker({
   );
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
-    usePhotoInfiniteList(queryParams, PAGINATION.ADMIN_BATCH_SIZE);
+    usePhotos(queryParams, PAGINATION.ADMIN_BATCH_SIZE);
 
   const photos = useMemo(() => {
     return data?.pages.flatMap((p) => p.photos) || [];

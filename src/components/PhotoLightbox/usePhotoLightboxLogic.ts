@@ -5,6 +5,7 @@ import { useErrorHandler, useTasks, useTaskExecutor } from '../../hooks';
 import { getGroupById } from '@/services/group/queries';
 import { isOk } from '@/lib/errorFactory';
 import { usePhotoDetail } from '@/hooks/core/queries/usePhotoDetail';
+import { toast } from '@/lib/ui/toast';
 
 interface UsePhotoLightboxLogicProps {
   photo: Photo | null;
@@ -79,11 +80,19 @@ export const usePhotoLightboxLogic = ({
     .map(p => ({ src: getCacheBustedImageUrl(p, 'image') })), [displayPhotos]);
 
   const handleShare = () => {
-    if (!photo?.image_hash) return;
-    const url = `${window.location.origin}/h/${photo.image_hash}`;
+    let url = '';
+    if (groupData?.id) {
+       url = `${window.location.origin}/g/${groupData.id}`;
+    } else if (photo?.image_hash) {
+       url = `${window.location.origin}/h/${photo.image_hash}`;
+    } else {
+       return;
+    }
+    
     navigator.clipboard.writeText(url).then(() => {
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
+      toast.success(groupData?.id ? '合组分享链接已复制' : '分享链接已复制');
     }).catch(err => {
       handleError(err, '复制链接失败');
     });

@@ -38,7 +38,7 @@ export function LightboxInfoPanel({
   onToggleHidden, onTogglePinned, onUngroup, onSetGroupCover, contactWhatsApp
 }: LightboxInfoPanelProps) {
   
-  const { update } = useUIStore(useShallow(s => ({ update: s.update })));
+  const update = useUIStore((s) => s.update);
   
   if (!photo) {
     return (

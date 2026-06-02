@@ -7,7 +7,7 @@ import { GalleryVariant } from '@/types/variant';
 import { VirtualPhotoGrid } from '@/components/photo/VirtualPhotoGrid';
 import { PhotoCard } from '@/components/photo/PhotoCard';
 import { AdminFilters } from '@/components/ui/AdminFilters';
-import { useScrollRestoration, useTasks, useMultiSelect, useFilters, usePhotoInfiniteList, useAdminMode, usePermission, useCategories, useTags, useUrlFilters, useTaskExecutor } from '@/hooks';
+import { useScrollRestoration, useTasks, useMultiSelect, useFilters, usePhotos, useAdminMode, usePermission, useCategories, useTags, useUrlFilters, useTaskExecutor } from '@/hooks';
 import { processPhotos } from '@/lib/filters';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { UploadButton } from '@/components/shared/UploadButton';
@@ -62,7 +62,7 @@ export function AdminGridContainer({
   const { data: categories = [] } = useCategories();
   const { data: tags = [] } = useTags();
 
-  const infiniteQuery = usePhotoInfiniteList({
+  const infiniteQuery = usePhotos({
     category_id: filters.categoryId,
     tag_id: Array.isArray(filters.tagIds) && filters.tagIds.length > 0 ? filters.tagIds[0] : null,
     searchQuery: filters.searchQuery,
@@ -143,7 +143,7 @@ export function AdminGridContainer({
         showSuccessToast: true,
         showErrorToast: true
       });
-      queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: photoKeys.all });
     } catch (err) {
       handleError(err, '上传照片失败');
     } finally {

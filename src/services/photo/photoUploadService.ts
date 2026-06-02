@@ -130,7 +130,7 @@ export const savePhotosToCloudBatch = async (
   photos: Photo[],
   onProgress?: (count: number) => void
 ): Promise<Photo[]> => {
-  let sPhotos = safeArray(photos);
+  let sPhotos = safeArray<Photo>(photos);
   if (sPhotos.length === 0) return [];
 
   const { data: { session } } = await supabase.auth.getSession();
@@ -140,7 +140,7 @@ export const savePhotosToCloudBatch = async (
 
   // Pre-filter duplicates
   const uniquePhotos: Photo[] = [];
-  for (const photo of sPhotos) {
+  for (const photo of sPhotos as Photo[]) {
     if (photo.image_hash) {
       const isDuplicate = await checkDuplicate(
         session.user.id, 
@@ -300,7 +300,7 @@ export const savePhotosToCloudBatch = async (
     if (onProgress) onProgress(Math.min(i + chunkSize, payloads.length));
   }
 
-  const photoIdsToUpdate = safeArray(results).map(p => p.id);
+  const photoIdsToUpdate = safeArray<Photo>(results).map(p => p.id);
   
   for (let i = 0; i < photoIdsToUpdate.length; i += 100) {
      const chunkIds = photoIdsToUpdate.slice(i, i + 100);
@@ -308,8 +308,8 @@ export const savePhotosToCloudBatch = async (
   }
 
   const newTagAssociations: { photo_id: string; tag_id: string }[] = [];
-  safeArray(results).forEach(p => {
-    const pTagIds = safeArray(p.tag_ids);
+  safeArray<Photo>(results).forEach(p => {
+    const pTagIds = safeArray<string>(p.tag_ids);
     if (pTagIds.length > 0) {
       pTagIds.forEach(tid => {
         if (tid) newTagAssociations.push({ photo_id: p.id, tag_id: tid });

@@ -3,7 +3,7 @@ import { GalleryVariant } from '@/types/variant';
 import { VirtualPhotoGrid } from '@/components/photo/VirtualPhotoGrid';
 import { PublicFilters } from '@/components/ui/PublicFilters';
 import { useUIStore, useShallow } from '@/store/useUIStore';
-import { usePhotoInfiniteList, useFilters, useSettings, useCategories, useTags, useUrlFilters } from '@/hooks';
+import { usePhotos, useFilters, useSettings, useCategories, useTags, useUrlFilters } from '@/hooks';
 import { processPhotos, cleanPhotos } from '@/lib/filters';
 const updateURL = (params: any) => console.log('updateURL stub', params);
 import { PAGINATION } from '@/constants/config';
@@ -46,7 +46,7 @@ export function PublicGridContainer({
   
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
-  const infiniteQuery = usePhotoInfiniteList({
+  const infiniteQuery = usePhotos({
     category_id: filters.categoryId,
     tag_id: Array.isArray(filters.tagIds) && filters.tagIds.length > 0 ? filters.tagIds[0] : null,
     searchQuery: filters.searchQuery,

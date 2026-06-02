@@ -24,7 +24,7 @@ export function PhotoTagSelector({
   updateTag,
   deleteTag,
 }: PhotoTagSelectorProps) {
-  const { update } = useUIStore(useShallow((s) => ({ update: s.update })));
+  const update = useUIStore((s) => s.update);
   const { handleError } = useErrorHandler();
 
   const cleanSelectedIds = React.useMemo(() => {

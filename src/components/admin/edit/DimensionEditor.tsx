@@ -1,4 +1,3 @@
-import React, { useMemo, useCallback } from 'react';
 import { Sparkles, X as CloseIcon } from 'lucide-react';
 import { Dimension, TranslationType } from '../../../types';
 import { safeArray } from '../../../lib/utils';
@@ -20,11 +19,9 @@ export function DimensionEditor({
   onAiAnalyze,
   t
 }: DimensionEditorProps) {
-  const displayDims = useMemo(() => 
-    dimensions.length > 0 ? dimensions : [{ label: '', length: 0, width: 0, height: 0, unit: 'cm' } as Dimension]
-  , [dimensions]);
+  const displayDims = dimensions.length > 0 ? dimensions : [{ label: '', length: 0, width: 0, height: 0, unit: 'cm' } as Dimension];
 
-  const handleUpdateLabel = useCallback((idx: number, newPrefix: string, newDimPart: string) => {
+  const handleUpdateLabel = (idx: number, newPrefix: string, newDimPart: string) => {
     const finalLabel = newPrefix ? `${newPrefix}: ${newDimPart}` : newDimPart;
     const newDims = [...displayDims];
     newDims[idx] = { ...newDims[idx], label: finalLabel, is_ai: false };
@@ -41,22 +38,22 @@ export function DimensionEditor({
     else if (dMatch) newDims[idx].length = parseFloat(dMatch[1]);
 
     onChange(newDims);
-  }, [displayDims, onChange]);
+  };
 
-  const onAddDimension = useCallback(() => {
+  const onAddDimension = () => {
     onChange([...dimensions, { label: '', length: 0, width: 0, height: 0, unit: 'cm' }]);
-  }, [dimensions, onChange]);
+  };
 
-  const onRemoveDimension = useCallback((idx: number) => {
+  const onRemoveDimension = (idx: number) => {
     onChange(dimensions.filter((_, i) => i !== idx));
-  }, [dimensions, onChange]);
+  };
 
-  const handleUnitChange = useCallback((idx: number, u: string) => {
+  const handleUnitChange = (idx: number, u: string) => {
     const newDims = [...displayDims];
     newDims[idx].unit = u as any;
     newDims[idx].is_ai = false;
     onChange(newDims);
-  }, [displayDims, onChange]);
+  };
 
   return (
     <div className="space-y-3 pt-2">
