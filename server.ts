@@ -1,5 +1,16 @@
 import "dotenv/config";
 import { Hono } from "hono";
+
+// 启动时检查关键环境变量
+console.log("[SERVER] Initializing...");
+console.log("[SERVER] VERCEL_ENV:", process.env.VERCEL_ENV);
+console.log("[SERVER] NODE_ENV:", process.env.NODE_ENV);
+console.log("[SERVER] R2_ENDPOINT exists:", !!process.env.R2_ENDPOINT);
+console.log("[SERVER] R2_ACCESS_KEY_ID exists:", !!process.env.R2_ACCESS_KEY_ID);
+console.log("[SERVER] R2_SECRET_ACCESS_KEY exists:", !!process.env.R2_SECRET_ACCESS_KEY);
+console.log("[SERVER] R2_BUCKET_NAME exists:", !!process.env.R2_BUCKET_NAME);
+console.log("[SERVER] SUPABASE_URL exists:", !!process.env.SUPABASE_URL || !!process.env.VITE_SUPABASE_URL);
+
 import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { cors } from "hono/cors";
