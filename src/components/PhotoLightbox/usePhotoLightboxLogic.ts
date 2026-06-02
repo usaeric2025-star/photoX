@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Photo, Category, Manufacturer, ProductGroup, TranslationType } from '../../types';
 import { getCacheBustedImageUrl } from '../../lib/ui-helpers';
-import { useErrorHandler, useTasks, useTaskExecutor } from '../../hooks';
+import { useErrorHandler, useTasks, useTaskExecutor, usePhotoCount } from '../../hooks';
 import { getGroupById } from '@/services/group/queries';
 import { isOk } from '@/lib/errorFactory';
 import { usePhotoDetail } from '@/hooks/core/queries/usePhotoDetail';
@@ -24,8 +24,9 @@ export const usePhotoLightboxLogic = ({
   lang,
   onPrev,
   onNext,
-  onClose
-}: UsePhotoLightboxLogicProps) => {
+  onClose,
+  isAdminMode = false,
+}: UsePhotoLightboxLogicProps & { isAdminMode?: boolean }) => {
   const { handleError } = useErrorHandler();
   const [isZoomed, setIsZoomed] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
@@ -33,6 +34,8 @@ export const usePhotoLightboxLogic = ({
   
   const { data: detailData, isLoading: isDetailLoading } = usePhotoDetail(photo?.id || '');
   const activePhoto = detailData ?? photo;
+  
+  const { data: totalCount } = usePhotoCount({ isAdminMode });
   
   const [groupData, setGroupData] = useState<ProductGroup | null>(null);
   const [activeLang, setActiveLang] = useState<string>(lang || 'en');
@@ -85,6 +88,8 @@ export const usePhotoLightboxLogic = ({
        url = `${window.location.origin}/g/${groupData.id}`;
     } else if (photo?.image_hash) {
        url = `${window.location.origin}/h/${photo.image_hash}`;
+    } else if (photo?.id) {
+       url = `${window.location.origin}/?photoId=${photo.id}`;
     } else {
        return;
     }
@@ -173,6 +178,7 @@ export const usePhotoLightboxLogic = ({
     onTouchMove,
     onTouchEnd,
     retryImageLoad,
-    activePhoto
+    activePhoto,
+    totalCount: totalCount ?? slides.length
   };
 };

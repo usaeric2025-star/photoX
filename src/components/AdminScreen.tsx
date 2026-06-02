@@ -80,9 +80,36 @@ export function AdminScreen() {
       : `AI 批量识别 (${targetPhotos.length}张)`;
 
     await runTask(taskTitle, async () => {
-      const { supabase } = await import('@/lib/supabase');
-      const { analyzeGroup } = await import("@/services/gemini/groupAnalysis");
-      const { analyzeProductPhoto } = await import("@/services/gemini");
+      let supabase: any;
+      let analyzeGroup: any;
+      let analyzeProductPhoto: any;
+
+      try {
+        const supabaseMod = await import('@/lib/supabase');
+        supabase = supabaseMod.supabase;
+        
+        const analyzeGroupMod = await import("@/services/gemini/groupAnalysis");
+        analyzeGroup = analyzeGroupMod.analyzeGroup;
+
+        const geminiMod = await import("@/services/gemini");
+        analyzeProductPhoto = geminiMod.analyzeProductPhoto;
+      } catch (err: any) {
+        console.error("加载 AI 识别或 Supabase 模块失败:", err);
+        const isDynamicImportError = 
+          err.message?.includes('Failed to fetch dynamically imported module') ||
+          err.name === 'TypeError' ||
+          String(err).includes('dynamically imported module') ||
+          String(err).includes('loading chunk');
+
+        if (isDynamicImportError) {
+          toast.error("检测到系统大版本由于更新产生了缓存割裂，正在为您自动重载页面以加载最新版本...");
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+          return;
+        }
+        throw err;
+      }
       
       let successCount = 0;
       let totalPhotosToProcess = targetPhotos.length;

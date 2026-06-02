@@ -85,7 +85,7 @@ export function PhotoLightbox(props: PhotoLightboxProps) {
   contextTags.forEach(t => { tagMap[String(t.id)] = t.name; });
 
   const isManagement = props.variant === 'full-management' || props.variant === 'staff-workspace';
-  const isAdminMode = useAdminMode() && isManagement;
+  const isAdminMode = useAdminMode() || isManagement;
   const translate = translations[lang as LanguageCode] || translations.en;
 
 
@@ -108,9 +108,10 @@ export function PhotoLightbox(props: PhotoLightboxProps) {
     onTouchMove,
     onTouchEnd,
     retryImageLoad,
-    activePhoto
+    activePhoto,
+    totalCount
   } = usePhotoLightboxLogic({
-    photo, displayPhotos, index, lang, onPrev, onNext, onClose
+    photo, displayPhotos, index, lang, onPrev, onNext, onClose, isAdminMode
   });
 
   useEffect(() => {
@@ -209,13 +210,14 @@ export function PhotoLightbox(props: PhotoLightboxProps) {
                     isImageError={isImageError}
                     setIsImageError={setIsImageError}
                     slides={slides}
+                    totalCount={totalCount}
                     onPrev={onPrev}
                     onNext={onNext}
                     onClose={onClose}
                     onTouchStart={onTouchStart}
                     onTouchMove={onTouchMove}
                     onTouchEnd={onTouchEnd}
-                    onEditPhoto={isAdmin ? onEditPhoto : undefined}
+                    onEditPhoto={isAdminMode ? onEditPhoto : undefined}
                     handleDownload={handleDownload}
                     t={translate}
                     retryImageLoad={retryImageLoad}

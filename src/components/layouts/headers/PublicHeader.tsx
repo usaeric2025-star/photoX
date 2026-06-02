@@ -1,6 +1,7 @@
 import React from 'react';
 import { LogIn, LayoutDashboard, RefreshCw, Camera } from 'lucide-react';
 import { useAuth, useUIStore, useShallow, useSettings } from '@/hooks';
+import { useNavigate } from '@tanstack/react-router';
 
 interface PublicHeaderProps {
   totalCount?: number;
@@ -12,10 +13,12 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
   const { user, isLoading } = useAuth();
   const { settings } = useSettings();
   const update = useUIStore((s) => s.update);
+  const navigate = useNavigate();
 
   const handleAuthAction = () => {
-    // 切换到私有模式，如果未登录，系统会自动引导至登录页
+    // 切换到私有模式，并直接跳转到 /admin 管理端（如果需要登录会有 Auth 守卫兜底）
     update({ viewMode: 'private', activeScreen: 'home' });
+    navigate({ to: '/admin' });
   };
 
   return (

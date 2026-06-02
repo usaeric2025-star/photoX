@@ -17,6 +17,7 @@ interface LightboxImageSectionProps {
   isImageError: boolean;
   setIsImageError: (v: boolean) => void;
   slides: { src: string }[];
+  totalCount?: number;
   onPrev: (e?: React.MouseEvent) => void;
   onNext: (e?: React.MouseEvent) => void;
   onClose: () => void;
@@ -32,7 +33,7 @@ interface LightboxImageSectionProps {
 
 export function LightboxImageSection({
   photo, index, isZoomed, setIsZoomed, isImageLoading, setIsImageLoading,
-  isImageError, setIsImageError, slides, onPrev, onNext, onClose,
+  isImageError, setIsImageError, slides, totalCount, onPrev, onNext, onClose,
   onTouchStart, onTouchMove, onTouchEnd, onEditPhoto,
   handleDownload, t, retryImageLoad, isAdminMode
 }: LightboxImageSectionProps) {
@@ -62,10 +63,6 @@ export function LightboxImageSection({
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
     >
-      <div className="absolute top-4 left-4 z-20 flex items-center bg-black/40 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs font-mono">
-        {index + 1} / {slides.length}
-      </div>
-
       <div className="absolute top-4 right-4 z-20 flex gap-2">
         <button 
           type="button"
@@ -162,6 +159,11 @@ export function LightboxImageSection({
         <div className="w-10 h-10 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-all">
           <ChevronLeft size={24} />
         </div>
+      </div>
+      
+      {/* 底部正中间照片计数 */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center justify-center bg-black/40 hover:bg-black/60 backdrop-blur-md px-4 h-10 rounded-full text-white text-xs sm:text-sm font-semibold tracking-wider select-none transition-all">
+        {index + 1} / {totalCount || slides.length}
       </div>
       
       {isAdminMode && (
