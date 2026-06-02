@@ -111,7 +111,7 @@ export function LightboxInfoPanel({
             >
               {isCopied ? <Check size={16} /> : <Share2 size={16} />}
             </button>
-            {isAdminMode && (
+            {(isAdminMode) && (
               <>
                 <button 
                   onClick={handleAiAnalyze}
@@ -132,7 +132,6 @@ export function LightboxInfoPanel({
                 >
                   {photo.is_hidden ? <EyeOff size={16}/> : <Eye size={16}/>}
                 </button>
-
               </>
             )}
           </div>
