@@ -94,13 +94,42 @@ export const usePhotoLightboxLogic = ({
        return;
     }
     
-    navigator.clipboard.writeText(url).then(() => {
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
-      toast.success(groupData?.id ? '合组分享链接已复制' : '分享链接已复制');
-    }).catch(err => {
-      handleError(err, '复制链接失败');
-    });
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(() => {
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+        toast.success(groupData?.id ? '合组分享链接已复制' : '分享链接已复制');
+      }).catch(err => {
+        fallbackCopyTextToClipboard(url);
+      });
+    } else {
+      fallbackCopyTextToClipboard(url);
+    }
+  };
+
+  const fallbackCopyTextToClipboard = (text: string) => {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    // Avoid scrolling to bottom
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.position = "fixed";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      const successful = document.execCommand('copy');
+      if (successful) {
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+        toast.success(groupData?.id ? '合组分享链接已复制' : '分享链接已复制');
+      } else {
+        toast.error('浏览器不支持自动复制，请手动复制链接');
+      }
+    } catch (err) {
+      toast.error('复制失败，请手动复制');
+    }
+    document.body.removeChild(textArea);
   };
 
   const handleDownload = async () => {

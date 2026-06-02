@@ -18,7 +18,9 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
   const handleAuthAction = () => {
     // 切换到私有模式，并直接跳转到 /admin 管理端（如果需要登录会有 Auth 守卫兜底）
     update({ viewMode: 'private', activeScreen: 'home' });
-    navigate({ to: '/admin' });
+    navigate({ to: '/admin' }).catch(() => {
+      window.location.href = '/admin';
+    });
   };
 
   return (
