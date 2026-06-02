@@ -32,6 +32,8 @@ import { useAdminActions } from "@/features/admin/useAdminActions";
 import { logoutPublic } from "@/lib/publicAuth";
 import { cn } from "@/lib/utils";
 
+import { useNavigate } from '@tanstack/react-router';
+
 interface AdminHeaderProps {
   onRefresh?: () => void;
   isRefreshing?: boolean;
@@ -61,8 +63,10 @@ export function AdminHeader({
 
   const isSelectionMode = isMultiSelect;
 
+  const navigate = useNavigate();
+
   const handleBackToShowcase = () => {
-    update({ viewMode: "public", activeScreen: "gallery" });
+    navigate({ to: '/' });
   };
 
   const handleBatchDelete = async () => {

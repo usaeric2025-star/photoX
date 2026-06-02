@@ -229,7 +229,6 @@ export function PhotoLightbox(props: PhotoLightboxProps) {
                       isGroupDataLoading={isGroupDataLoading}
                       activeLang={activeLang}
                       setActiveLang={setActiveLang}
-                      isAdminMode={isAdminMode}
                       isCopied={isCopied}
                       isAnalyzing={isAnalyzing}
                       t={translate}

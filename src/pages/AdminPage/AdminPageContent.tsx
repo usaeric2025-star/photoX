@@ -49,7 +49,6 @@ export function AdminPageContent() {
   const { settings } = useSettings();
 
   const store = useUIStore(useShallow(s => ({
-    viewMode: s.viewMode,
     update: s.update,
     activeScreen: s.activeScreen,
     
@@ -87,9 +86,7 @@ export function AdminPageContent() {
   const { runTask } = useTaskExecutor();
   const isEffectiveStaffMode = !user && isAdminMode;
 
-  const publicVirtualGridRef = React.useRef<any>(null);
   const handlePublicScrollToTop = () => {
-    publicVirtualGridRef.current?.scrollTo?.(0);
   };
 
 
@@ -108,16 +105,7 @@ export function AdminPageContent() {
     };
   }, [reset]);
 
-  const handleExitPublic = () => {
-    reset();
-    tasks.filter(t => t.status === 'running').forEach(t => cancelTask(t.id));
-    store.update({ viewMode: 'private' });
-  };
 
-  const handleRefreshPublic = () => {
-    if (isSyncing) return;
-    syncMut('pull');
-  };
 
   const lastSyncTime = (() => {
     // [SYNC-STORAGE-IN-RENDER] @ src/pages/AdminPage/AdminPageContent.tsx:108 - Read from storage in render
@@ -151,11 +139,9 @@ export function AdminPageContent() {
           <AdminGlobalModals />
       
         <div className="flex h-screen bg-slate-50 overflow-hidden w-full">
-          {store.viewMode !== 'public' && (
             <div className="hidden lg:block shrink-0 h-full">
               <AdminSidebar />
             </div>
-          )}
 
           <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
               {store.batchEditingIds && store.batchEditingIds.length > 0 && (
@@ -166,27 +152,7 @@ export function AdminPageContent() {
               <div 
                 className={`absolute inset-0 transition-opacity duration-200 ease-out ${store.activeScreen === 'home' || store.activeScreen === 'gallery' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
               >
-                <div className={`absolute inset-0 transition-opacity duration-300 ${store.viewMode === 'private' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
                   <AdminScreen />
-                </div>
-                <div className={`absolute inset-0 transition-opacity duration-300 ${store.viewMode === 'public' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
-                  <div className="flex flex-col h-full bg-slate-50 w-full overflow-hidden">
-                    <PublicHeader 
-                      totalCount={photos?.length}
-                      onRefresh={handleRefreshPublic}
-                      isRefreshing={isSyncing}
-                    />
-                    <div className="flex-1 min-h-0 relative">
-                      <PublicGridContainer 
-                        variant="public-showcase"
-                        onExit={handleExitPublic} 
-                        loginWithGoogle={loginWithGoogle}
-                        onScrollToTop={handlePublicScrollToTop}
-                        virtualGridRef={publicVirtualGridRef}
-                      />
-                    </div>
-                  </div>
-                </div>
               </div>
 
               {(store.activeScreen === 'manage' || store.activeScreen === 'settings') && (

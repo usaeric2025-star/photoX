@@ -13,12 +13,10 @@ interface ToolsMenuProps {
   handleExitStaffMode?: () => void;
   currentLang: string;
   onSetLang: (l: string) => void;
-  adminPreviewMode: 'private' | 'public';
-  toggleAdminPreviewMode: () => void;
 }
 
 export function ToolsMenu({ 
-  show, t, handleOpenSettings, handleExitStaffMode, currentLang, onSetLang, adminPreviewMode, toggleAdminPreviewMode
+  show, t, handleOpenSettings, handleExitStaffMode, currentLang, onSetLang
 }: ToolsMenuProps) {
   const { user, loginWithGoogle, logout } = useAuth();
   const hasAdminAccess = useAdminMode();

@@ -1,7 +1,6 @@
 import { compressImage } from '@/services/storage/uploadService';
-import { calculateMD5FromFile, calculateMD5FromArrayBuffer } from '@/services/utils';
-import { IMAGE_COMPRESS } from '@/constants/config';
 import { generateThumbHash } from '@/lib/image/thumbHash';
+import { IMAGE_COMPRESS } from '@/constants/config';
 
 export interface ProcessedImage {
   hash: string;
@@ -11,17 +10,16 @@ export interface ProcessedImage {
 }
 
 /**
- * Utility to process a raw File: calculate hash and compress to WebP Base64
+ * Utility to process a raw File: generate a pseudo hash and compress to WebP Base64
  */
 export async function processImageFile(file: File): Promise<ProcessedImage> {
-  // 1. Calculate MD5 Hash (for duplicate detection and storage ID)
-  let hash: string;
-  try {
-    hash = await calculateMD5FromFile(file);
-  } catch (e) {
-    const arrayBuffer = await file.arrayBuffer();
-    hash = calculateMD5FromArrayBuffer(arrayBuffer);
-  }
+  // 1. Calculate Pseudo Hash based on file metadata (do not block UI with large file content MD5)
+  const pseudoString = `${file.name}|${file.size}|${file.lastModified}`;
+  const encoder = new TextEncoder();
+  const data = encoder.encode(pseudoString);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
   // 2. Generate ThumbHash
   const thumbHash = await generateThumbHash(file) || undefined;

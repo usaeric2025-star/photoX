@@ -9,8 +9,8 @@ export class DuplicatePhotoError extends Error {
   }
 }
 
-const memoryPseudoHashes = new Set<string>();
-const memoryImageHashes = new Set<string>();
+const memoryPseudoHashes = new Map<string, string>();
+const memoryImageHashes = new Map<string, string>();
 
 /**
  * Unified Deduplication Check
@@ -21,19 +21,21 @@ export const checkDuplicate = async (
   fileSize?: number,
   fileName?: string,
   lastModified?: number,
-  photoId?: string // <-- Added parameter for update case
+  photoId?: string
 ): Promise<boolean> => {
-  // 1. Check Memory Cache (fast pseudo hash)
+  if (!imageHash) return false;
+
+  // 1. Check Memory Cache
   if (fileName && fileSize && lastModified) {
     const pseudoHash = `${fileName}_${fileSize}_${lastModified}`;
-    // If not matching my own ID (skip for now since memory hash doesn't store ID)
-    if (memoryPseudoHashes.has(pseudoHash) && !photoId) {
+    const mappedId = memoryPseudoHashes.get(pseudoHash);
+    if (mappedId && mappedId !== photoId) {
       return true;
     }
   }
 
-  // Check Memory Cache (MD5 hash)
-  if (memoryImageHashes.has(imageHash) && !photoId) {
+  const mappedId = memoryImageHashes.get(imageHash);
+  if (mappedId && mappedId !== photoId) {
     return true;
   }
 
@@ -48,26 +50,43 @@ export const checkDuplicate = async (
       .maybeSingle();
 
     if (data && data.id) {
-      // If we are updating an existing photo, and the mathing ID is the same, it's NOT a duplicate upload
       if (photoId && data.id === photoId) {
         return false;
       }
       
       if (fileName && fileSize && lastModified) {
-        memoryPseudoHashes.add(`${fileName}_${fileSize}_${lastModified}`);
+        memoryPseudoHashes.set(`${fileName}_${fileSize}_${lastModified}`, data.id);
       }
-      memoryImageHashes.add(imageHash);
+      memoryImageHashes.set(imageHash, data.id);
       return true;
     }
   } catch (error) {
     console.warn('DB check timeout or error, proceeding with caution', error);
   }
 
-  // Mark as processing / exists in local cache so concurrent requests get blocked
+  // Mark as processing
+  const storeId = photoId || `cached-${Date.now()}`;
   if (fileName && fileSize && lastModified) {
-    memoryPseudoHashes.add(`${fileName}_${fileSize}_${lastModified}`);
+    memoryPseudoHashes.set(`${fileName}_${fileSize}_${lastModified}`, storeId);
   }
-  memoryImageHashes.add(imageHash);
+  memoryImageHashes.set(imageHash, storeId);
 
   return false;
+};
+
+export const checkDuplicateBatch = (files: File[]) => {
+  const newFiles: File[] = [];
+  const duplicateHashes: string[] = [];
+
+  for (const file of files) {
+    const pseudoHash = `${file.name}_${file.size}_${file.lastModified}`;
+    if (memoryPseudoHashes.has(pseudoHash)) {
+      duplicateHashes.push(pseudoHash);
+    } else {
+      newFiles.push(file);
+      memoryPseudoHashes.set(pseudoHash, `cached-${Date.now()}`);
+    }
+  }
+
+  return { newFiles, duplicateHashes };
 };

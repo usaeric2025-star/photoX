@@ -33,7 +33,6 @@ export interface UIStoreState {
   editPhotoId: string | null;
   batchEditingIds: string[] | null;
   groupSettingsOpen: boolean;
-  viewMode: 'private' | 'public';
   activeScreen: string;
   formState: ProductFormData;
   updateForm: (updates: Partial<ProductFormData> | ((prev: ProductFormData) => Partial<ProductFormData>)) => void;
@@ -91,7 +90,6 @@ export const useUIStore = create<UIStoreState>()((set) => ({
   editPhotoId: safeGetItem(STORAGE_KEYS.EDIT_PHOTO, null, undefined, true),
   batchEditingIds: safeGetItem(STORAGE_KEYS.BATCH_EDITING, null, undefined, true),
   groupSettingsOpen: safeGetItem(STORAGE_KEYS.GROUP_SETTINGS_OPEN, false, (v) => v === 'true', true),
-  viewMode: safeGetItem(STORAGE_KEYS.VIEW_MODE, 'private', (v) => ['private', 'public'].includes(v) ? v : 'private', true) as 'private' | 'public',
   activeScreen: safeGetItem(STORAGE_KEYS.ACTIVE_SCREEN, 'gallery', undefined, true),
   formState: safeGetItem(STORAGE_KEYS.EDIT_FORM_DRAFT, defaultForm, undefined, true),
   updateForm: (updates) => set((state) => {
@@ -160,9 +158,6 @@ export const useUIStore = create<UIStoreState>()((set) => ({
     }
     if ('groupSettingsOpen' in nextState && nextState.groupSettingsOpen !== undefined) {
       safeSetItem(STORAGE_KEYS.GROUP_SETTINGS_OPEN, String(nextState.groupSettingsOpen), true);
-    }
-    if ('viewMode' in nextState && nextState.viewMode !== undefined) {
-      safeSetItem(STORAGE_KEYS.VIEW_MODE, nextState.viewMode, true);
     }
     if ('activeScreen' in nextState && nextState.activeScreen !== undefined) {
       safeSetItem(STORAGE_KEYS.ACTIVE_SCREEN, nextState.activeScreen, true);

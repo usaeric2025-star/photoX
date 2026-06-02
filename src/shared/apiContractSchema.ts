@@ -8,7 +8,9 @@ import { type } from 'arktype';
 // 1. Upload Presign Contracts
 export const UploadPresignReqSchema = type({
   photoId: 'string',
+  'fileKey?': 'string',
   'contentType?': 'string',
+  'imageHash?': 'string',
 });
 export type UploadPresignReq = typeof UploadPresignReqSchema.infer;
 

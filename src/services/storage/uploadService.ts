@@ -60,10 +60,11 @@ export const uploadImages = async (
   userId: string, 
   photoId: string, 
   base64Data: string,
+  imageHash?: string,
   onStatus?: (status: 'compressing' | 'uploading' | 'done') => void,
   onProgress?: (percent: number) => void,
   force = false
-): Promise<{imageUrl: string, thumbUrl: string}> => {
+): Promise<{imageUrl: string, thumbUrl: string, isDuplicate?: boolean}> => {
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!session?.user) {
@@ -104,9 +105,14 @@ export const uploadImages = async (
       }
 
       const presignRes = await api['upload-presign'].$post({
-        json: { photoId: photoId, fileKey: safeFileName, contentType: 'image/webp' }
+        json: { photoId: photoId, fileKey: safeFileName, contentType: 'image/webp', imageHash: isMain ? imageHash : undefined }
       });
       
+      if (presignRes.status === 409) {
+          const result = await presignRes.json();
+          return `DUPLICATE:${result.existingUrl}`;
+      }
+
       if (!presignRes.ok) {
         let errMsg = `获取预签名上传地址失败 (HTTP ${presignRes.status})`;
         try {
@@ -181,7 +187,13 @@ export const uploadImages = async (
       }
     };
 
-    const imageUrl = await uploadFile(originalBase64, `public/${photoId}.webp`, true);
+    const imageUrlResult = await uploadFile(originalBase64, `public/${photoId}.webp`, true);
+    
+    if (imageUrlResult.startsWith('DUPLICATE:')) {
+       return { imageUrl: imageUrlResult.replace('DUPLICATE:', ''), thumbUrl: '', isDuplicate: true };
+    }
+
+    const imageUrl = imageUrlResult;
     const thumbUrl = await uploadFile(thumbBase64, `public/thumb_${photoId}.webp`, false);
 
     return { imageUrl, thumbUrl };

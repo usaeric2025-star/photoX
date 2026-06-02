@@ -32,7 +32,6 @@ export function AdminScreen() {
 
   const lang = useUIStore((s) => s.appLang);
   const update = useUIStore((s) => s.update);
-  const viewMode = useUIStore((s) => s.viewMode);
   
   const onManageClick = () => update({ activeScreen: 'manage' });
 
@@ -265,8 +264,6 @@ export function AdminScreen() {
               onRefresh={onRefresh}
               cloudCount={cloudCount}
               isSyncing={isSyncing}
-              adminPreviewMode={viewMode as any}
-              setAdminPreviewMode={update as any}
               handleBatchAiIdentifyTrigger={async () => {
               const selectedIds = useUIStore.getState().selectedIds;
               if (selectedIds.length > 0) {

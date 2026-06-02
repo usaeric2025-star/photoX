@@ -86,8 +86,27 @@ app.onError((err, c) => {
 // --- API Routes ---
 app.post("/upload-presign", async (c) => {
     try {
-      const { photoId, fileKey, contentType } = await c.req.json();
+      const { photoId, fileKey, contentType, imageHash } = await c.req.json();
       if (!photoId && !fileKey) return c.json({ error: "photoId or fileKey required" }, 400);
+
+      // 排重检查：查询是否已存在相同 hash 的照片
+      if (imageHash) {
+        const supabase = await getSupabaseAdmin();
+        const { data: existing } = await supabase
+          .from("furniture_items")
+          .select("id, image_url")
+          .eq("image_hash", imageHash)
+          .maybeSingle();
+        
+        if (existing) {
+          return c.json({ 
+            success: false,
+            error: "照片已存在",
+            duplicateId: existing.id,
+            existingUrl: existing.image_url 
+          }, 409);
+        }
+      }
       
       const fileName = fileKey ? `photox/public/${fileKey}` : `photox/public/${photoId}.webp`;
       const s3Client = await getR2Client();

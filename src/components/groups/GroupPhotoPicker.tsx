@@ -44,22 +44,48 @@ export function GroupPhotoPicker({
     
     // Simple photo conversion for batch upload
     const files = Array.from(e.target.files);
-    const photoData: Photo[] = files.map(file => ({
-      id: `temp-${crypto.randomUUID()}`,
-      uri: URL.createObjectURL(file), // This is okay for now, but usually need better handling
-      name: file.name,
-      group_id: targetGroupId,
-      created_at: new Date().toISOString(),
-      dimensions: { width: 0, height: 0 },
-      is_hidden: false,
-    } as any));
+    
+    const { checkDuplicateBatch } = await import('@/lib/data/duplicateCheck');
+    const { newFiles: uniqueFiles, duplicateHashes: duplicateFiles } = checkDuplicateBatch(files);
 
-    await runTask(`上传 ${files.length} 张照片`, async ({ updateProgress }) => {
+    if (duplicateFiles.length > 0) {
+      toast.warning(`已跳过 ${duplicateFiles.length} 张重复照片`);
+    }
+
+    if (uniqueFiles.length === 0) {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    const { processImageFiles } = await import('@/lib/image/imageProcess');
+    
+    await runTask(`上传 ${uniqueFiles.length} 张照片`, async ({ updateProgress }) => {
       let completed = 0;
+      
+      const processedImages = await processImageFiles(uniqueFiles, (count, total) => {
+         updateProgress(Math.round((count / total) * 30), `正在准备照片 (${count}/${total})`);
+      });
+
+      const photoData: Photo[] = processedImages.map((result) => ({
+         id: `temp-${crypto.randomUUID()}`,
+         uri: result.dataUrl,
+         image_hash: result.hash,
+         thumb_hash: result.thumbHash,
+         name: result.file.name,
+         group_id: targetGroupId,
+         created_at: new Date().toISOString(),
+         updated_at: new Date().toISOString(),
+         dimensions: { width: 0, height: 0 },
+         is_hidden: false,
+         _fileSize: result.file.size,
+         _fileName: result.file.name,
+         _lastModified: result.file.lastModified
+      } as unknown as Photo));
+
       return await savePhotosToCloudBatch(user.id, photoData, (count) => {
         completed = count;
-        const pct = Math.round((completed / files.length) * 100);
-        updateProgress(pct, `正在保存照片 (${count}/${files.length})`);
+        const pct = 30 + Math.round((completed / uniqueFiles.length) * 70);
+        updateProgress(pct, `正在保存照片 (${count}/${uniqueFiles.length})`);
       });
     }, {
       showSuccessToast: true,

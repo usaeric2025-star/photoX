@@ -15,7 +15,6 @@ interface LightboxInfoPanelProps {
   isGroupDataLoading: boolean;
   activeLang: string;
   setActiveLang: (v: string) => void;
-  isAdminMode: boolean;
   isCopied: boolean;
   isAnalyzing?: boolean;
   t: TranslationType;
@@ -32,9 +31,12 @@ interface LightboxInfoPanelProps {
   onEditPhoto?: (photo: Photo) => void;
 }
 
+import { useLocation } from '@tanstack/react-router';
+
+// ...
 export function LightboxInfoPanel({
   photo, groupData, isGroupDataLoading, activeLang, setActiveLang,
-  isAdminMode, isCopied, isAnalyzing, t, categories,
+  isCopied, isAnalyzing, t, categories,
   manufacturers, tagMap, handleShare, onCancelAnalyze,
   onToggleHidden, onTogglePinned, onUngroup, onSetGroupCover, contactWhatsApp,
   onEditPhoto
@@ -42,6 +44,8 @@ export function LightboxInfoPanel({
   
   const update = useUIStore((s) => s.update);
   const analyzePhoto = useAIPhotoAnalysis();
+  const location = useLocation();
+  const isAdminMode = location.pathname.startsWith('/admin');
   
   if (!photo) {
     return (

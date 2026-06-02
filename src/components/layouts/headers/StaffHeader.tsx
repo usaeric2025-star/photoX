@@ -12,6 +12,7 @@ import {
 import { useAuth, useSettings, useUIStore, useShallow } from '@/hooks';
 import { logoutPublic } from '@/lib/publicAuth';
 import { cn } from '@/lib/utils';
+import { useNavigate } from '@tanstack/react-router';
 
 interface StaffHeaderProps {
   totalCount?: number;
@@ -23,9 +24,10 @@ export function StaffHeader({ totalCount, onRefresh, isRefreshing }: StaffHeader
   const { user } = useAuth();
   const { settings } = useSettings();
   const update = useUIStore((s) => s.update);
+  const navigate = useNavigate();
 
   const handleGoToAdmin = () => {
-    update({ viewMode: 'private', activeScreen: 'home' });
+    navigate({ to: '/admin' });
   };
 
   return (

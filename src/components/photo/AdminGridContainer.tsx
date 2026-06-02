@@ -101,45 +101,46 @@ export function AdminGridContainer({
     const files = e.target.files;
     if (!files || files.length === 0 || !user) return;
 
+    const { checkDuplicateBatch } = await import('@/lib/data/duplicateCheck');
+    const { newFiles: uniqueFiles, duplicateHashes: duplicateFiles } = checkDuplicateBatch(Array.from(files));
+
+    if (duplicateFiles.length > 0) {
+      toast.warning(`已跳过 ${duplicateFiles.length} 张重复照片`);
+    }
+
+    if (uniqueFiles.length === 0) {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
     const taskId = addTask({ 
-      name: `上传 ${files.length} 张照片`,
+      name: `上传 ${uniqueFiles.length} 张照片`,
       message: '正在准备中...'
     });
 
     try {
-      const fileArray = Array.from(files);
-      let preparedCount = 0;
+      const fileArray = Array.from(uniqueFiles);
       
-      const photoData: Photo[] = await Promise.all(
-        fileArray.map(async (file) => {
-          const dataUrl = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-              if (typeof event.target?.result === 'string') {
-                resolve(event.target.result);
-              } else {
-                reject(new Error('Failed to read file as data URL'));
-              }
-            };
-            reader.onerror = () => reject(new Error('读取档案失败 / File read failed'));
-            reader.readAsDataURL(file);
-          });
+      const { processImageFiles } = await import('@/lib/image/imageProcess');
+      const processedImages = await processImageFiles(fileArray, (count, total) => {
+         updateTask(taskId, {
+            progress: Math.round((count / total) * 50),
+            message: `正在准备 (${count}/${total})`
+         });
+      });
 
-          preparedCount++;
-          updateTask(taskId, { 
-            progress: Math.round((preparedCount / files.length) * 50), 
-            message: `正在准备 (${preparedCount}/${files.length})` 
-          });
-
-          return {
-            id: `temp-${crypto.randomUUID()}`,
-            name: file.name.split('.')[0],
-            uri: dataUrl,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          } as Photo;
-        })
-      );
+      const photoData: Photo[] = processedImages.map((result) => ({
+         id: `temp-${crypto.randomUUID()}`,
+         name: result.file.name.split('.')[0],
+         uri: result.dataUrl,
+         image_hash: result.hash,
+         thumb_hash: result.thumbHash,
+         created_at: new Date().toISOString(),
+         updated_at: new Date().toISOString(),
+         _fileSize: result.file.size,
+         _fileName: result.file.name,
+         _lastModified: result.file.lastModified
+      } as unknown as Photo));
 
       updateTask(taskId, { progress: 50, message: `正在上传 ${files.length} 张照片...` });
       

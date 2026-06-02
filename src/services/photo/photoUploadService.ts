@@ -36,7 +36,10 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
   if (!photo.image_url && photo.uri) {
     try {
       const filename = photo.storage_id || photo.id;
-      const { imageUrl, thumbUrl } = await uploadImages(userId, filename, photo.uri, onStatus);
+      const { imageUrl, thumbUrl, isDuplicate } = await uploadImages(userId, filename, photo.uri, photo.image_hash, onStatus);
+      if (isDuplicate) {
+        throw new DuplicatePhotoError();
+      }
       photo.image_url = imageUrl;
       photo.thumb_url = thumbUrl;
     } catch (e) {
@@ -181,7 +184,10 @@ export const savePhotosToCloudBatch = async (
     if (!photo.image_url && photo.uri) {
       try {
         const filename = photo.storage_id || photo.id;
-        const { imageUrl, thumbUrl } = await uploadImages(userId, filename, photo.uri);
+        const { imageUrl, thumbUrl, isDuplicate } = await uploadImages(userId, filename, photo.uri, photo.image_hash);
+        if (isDuplicate) {
+          continue;
+        }
         photo.image_url = imageUrl;
         photo.thumb_url = thumbUrl;
       } catch (e) {

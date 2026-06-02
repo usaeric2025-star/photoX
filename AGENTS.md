@@ -37,7 +37,7 @@ find src/utils -name "use*.ts" -o -name "use*.tsx"
 ```
 
 ### Store
-- UI 瞬态：`useUIStore`（columns, viewMode, isMultiSelect, selectedIds, lightboxIndex, activeGroupId）
+- UI 瞬态：`useUIStore`（columns, isMultiSelect, selectedIds, lightboxIndex, activeGroupId）
 - 筛选条件：URL State（不用 Store）
 
 ## 缓存失效规则（锁定）
@@ -177,15 +177,52 @@ const showAdmin = useAdminMode() && isManagement;
 const showAdmin = useAdminMode() || isManagement;
 ```
 
-## 默认模式规范（锁定）
+## 页面类型与权限判断规范（锁定）
 
-- 登录后默认进入管理模式（viewMode = 'private'）
-- 公开页面预览使用 sessionStorage，不持久化到 localStorage
+### 核心原则
+- ✅ 页面类型（管理模式/公开模式）**只由 URL 决定**
+- ❌ 禁止使用 Zustand 存储 `viewMode` 状态
+- ❌ 禁止使用 localStorage 持久化页面类型
+
+### 权限判断
+```typescript
+// ✅ 正确：基于 URL
+const location = useLocation();
+const isAdmin = location.pathname.startsWith('/admin');
+
+// ❌ 错误：基于 Zustand 状态
+const { viewMode } = useUIStore();
+const isAdmin = viewMode === 'private';
+```
+
+### 模式切换
+```typescript
+// ✅ 正确：导航到对应路由
+navigate({ to: '/admin' });  // 管理模式
+navigate({ to: '/' });       // 公开模式
+
+// ❌ 错误：只改 Zustand 状态
+setViewMode('private');
+```
+
+### 路由结构
+- `/` → 公开页面（PublicPage）
+- `/admin` → 管理后台（AdminPage）
+- 其他路由按需扩展
 
 ## Props 传递规范（锁定）
 
-- ❌ 禁止通过 props 传递业务函数（如 onAiAnalyze、onDelete）
-- ✅ 组件内部使用全局 Hook（如 usePhotoActions）
+## 照片上传排重规范（锁定）
+
+### 核心原则
+- ✅ 数据库 `image_hash` 字段是**唯一可信来源**
+- ✅ 确保 `image_hash` 字段有数据库索引（已存在）
+- ✅ 前端仅做同会话快速排重（`name + size + lastModified`）
+- ❌ 禁止前端计算大文件哈希（已删除 spark-md5）
+
+### 冲突响应
+- 后端返回 HTTP 409 + 已有照片信息
+- 前端提示用户并跳过上传
 
 
 

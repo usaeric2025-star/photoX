@@ -18,7 +18,7 @@ export const ROUTES = {
   LOGIN: '/login',
   GROUP: (id: string) => `/g/${id}`,
   ADMIN_GROUP: (id: string) => `/admin/group/${id}`,
-}
+} as const;
 
 export const DEFAULT_MODEL = 'Gemini 2.5 Flash Lite Preview 09-2025';
 

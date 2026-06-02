@@ -1,4 +1,3 @@
-import SparkMD5 from 'spark-md5';
 import { supabase } from '../lib/supabase';
 
 const NEVER_ALLOWED = ['isAnalyzing', 'exif_data', 'is_hidden', 'tempId', 'isSelected', 'isDragging', 'rawResponse'];
@@ -9,37 +8,6 @@ export const cleanObject = <T extends Record<string, any>>(obj: T): T => {
         delete cleaned[key];
     }
     return cleaned;
-};
-
-export const calculateMD5 = (base64Data: string): string => {
-  try {
-    const base64Content = base64Data.split(',')[1];
-    return SparkMD5.hashBinary(atob(base64Content));
-  } catch (e) {
-    console.error("MD5 calculation error:", e);
-    return `ERR-${Date.now()}`;
-  }
-};
-
-export const calculateMD5FromFile = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const spark = new SparkMD5.ArrayBuffer();
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (e.target?.result instanceof ArrayBuffer) {
-        spark.append(e.target.result);
-        resolve(spark.end());
-      } else {
-        reject(new Error('File read result is not ArrayBuffer'));
-      }
-    };
-    reader.onerror = (e) => reject(e);
-    reader.readAsArrayBuffer(file);
-  });
-};
-
-export const calculateMD5FromArrayBuffer = (buffer: ArrayBuffer): string => {
-  return SparkMD5.ArrayBuffer.hash(buffer);
 };
 
 export const generateItemCode = (): string => {
