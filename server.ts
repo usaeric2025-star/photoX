@@ -42,6 +42,7 @@ export async function getR2Client() {
       secretAccessKey: r2SecretAccessKey,
     },
     forcePathStyle: true,
+    maxAttempts: 1,
   });
 }
 
@@ -140,7 +141,7 @@ const apiRoutes = app
         Body: buffer
       });
       
-      await s3Client.send(command);
+      await s3Client.send(command, { abortSignal: AbortSignal.timeout(8000) });
       
       if (!serverEnv.R2_PUBLIC_URL_PREFIX) throw new Error("R2_PUBLIC_URL_PREFIX missing");
       const publicUrl = `${serverEnv.R2_PUBLIC_URL_PREFIX}/${fileName}`;
@@ -165,7 +166,7 @@ const apiRoutes = app
             Bucket: bucketName,
             Key: key,
           });
-          return s3Client.send(command);
+          return s3Client.send(command, { abortSignal: AbortSignal.timeout(5000) });
       }));
       
       return c.json({ success: true });
@@ -438,7 +439,7 @@ const apiRoutes = app
           Bucket: bucketName,
           MaxKeys: 1,
         });
-        await s3Client.send(command);
+        await s3Client.send(command, { abortSignal: AbortSignal.timeout(4000) });
       } catch (s3Err: any) {
         const errorName = s3Err.name || s3Err.__type || "UnknownError";
         let chineseMessage = "R2 云端连接失败。";
@@ -549,7 +550,10 @@ const apiRoutes = app
 
       let continuationToken: string | undefined;
       do {
-        const list = await s3Client.send(new ListObjectsV2Command({ Bucket: bucket, Prefix: "photox/public/", ContinuationToken: continuationToken }));
+        const list = await s3Client.send(
+          new ListObjectsV2Command({ Bucket: bucket, Prefix: "photox/public/", ContinuationToken: continuationToken }),
+          { abortSignal: AbortSignal.timeout(6000) }
+        );
         list.Contents?.forEach(c => { if (c.Key) r2Files.add(c.Key.split("/").pop()!); });
         continuationToken = list.NextContinuationToken;
       } while (continuationToken);
@@ -585,7 +589,10 @@ const apiRoutes = app
       const r2FilesToClean: string[] = [];
       let continuationToken: string | undefined;
       do {
-        const list = await s3Client.send(new ListObjectsV2Command({ Bucket: bucket, Prefix: "photox/public/", ContinuationToken: continuationToken }));
+        const list = await s3Client.send(
+          new ListObjectsV2Command({ Bucket: bucket, Prefix: "photox/public/", ContinuationToken: continuationToken }),
+          { abortSignal: AbortSignal.timeout(6000) }
+        );
         list.Contents?.forEach(c => {
           if (c.Key) {
             const filename = c.Key.split("/").pop();
@@ -602,7 +609,7 @@ const apiRoutes = app
           return s3Client.send(new DeleteObjectCommand({
             Bucket: bucket,
             Key: key
-          }));
+          }), { abortSignal: AbortSignal.timeout(4000) });
         }));
       }
 

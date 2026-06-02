@@ -4,10 +4,14 @@ import { loadCategoriesFromCloud } from '@/services/category/queries';
 import { photoKeys } from '@/lib/queryKeys';
 import { syncCache } from '@/lib/db/indexedDB';
 
+interface UseCategoriesOptions {
+  enabled?: boolean;
+}
+
 /**
  * Hook to get the list of categories.
  */
-export const useCategories = () => {
+export const useCategories = (options?: UseCategoriesOptions) => {
   const result = useQuery({
     queryKey: photoKeys.categories(),
     queryFn: async () => {
@@ -18,6 +22,7 @@ export const useCategories = () => {
     staleTime: createStaleTime('INFINITY'),
     gcTime: 10 * 60 * 1000,
     placeholderData: keepPreviousData,
+    enabled: options?.enabled,
   });
   return { ...result, data: result.data ?? [] };
 };

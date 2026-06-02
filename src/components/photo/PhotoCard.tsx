@@ -203,8 +203,8 @@ export const PhotoCard = React.memo(({
   const lang = useUIStore(s => s.appLang);
   const t = translations[lang as keyof typeof translations] || translations.en;
   
-  const { data: fetchedCategories } = useCategories();
-  const { data: fetchedTags } = useTags();
+  const { data: fetchedCategories } = useCategories({ enabled: !hideDetails && (!propsCategories || !propsTags) });
+  const { data: fetchedTags } = useTags({ enabled: !hideDetails && (!propsCategories || !propsTags) });
 
   const categories = propsCategories ?? fetchedCategories ?? [];
   const tags = propsTags ?? fetchedTags ?? [];
@@ -294,8 +294,6 @@ export const PhotoCard = React.memo(({
       data-selected={isSelected}
       data-multiselect={isMultiSelect}
       style={{
-        contentVisibility: 'auto',
-        containIntrinsicSize: '300px',
         WebkitTouchCallout: "none",
         WebkitUserSelect: "none",
         userSelect: "none",
@@ -316,7 +314,6 @@ export const PhotoCard = React.memo(({
           "relative aspect-square w-full h-full pointer-events-none transition-all duration-500",
           "group-data-[selected=true]:opacity-60 group-data-[selected=true]:scale-90 group-data-[selected=true]:rounded-xl overflow-hidden"
         )}
-        style={{ contentVisibility: 'auto', containIntrinsicSize: '300px' }}
       >
         <ResponsivePhoto
           photo={photo}
