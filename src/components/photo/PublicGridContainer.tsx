@@ -4,7 +4,7 @@ import { VirtualPhotoGrid } from '@/components/photo/VirtualPhotoGrid';
 import { PublicFilters } from '@/components/ui/PublicFilters';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { usePhotoInfiniteList, useFilters, useSettings, useCategories, useTags, useUrlFilters } from '@/hooks';
-import { processPhotos } from '@/lib/filters';
+import { processPhotos, cleanPhotos } from '@/lib/filters';
 const updateURL = (params: any) => console.log('updateURL stub', params);
 import { PAGINATION } from '@/constants/config';
 import { PhotoLightbox } from '../PhotoLightbox';
@@ -55,7 +55,10 @@ export function PublicGridContainer({
     onlyUngrouped: false
   }, PAGINATION.PUBLIC_PAGE_SIZE, true);
 
-  const rawPhotos = infiniteQuery.data?.pages?.flatMap(p => p.photos) ?? EMPTY_ARRAY;
+  const rawPhotos = useMemo(() => {
+    const flat = infiniteQuery.data?.pages?.flatMap(p => p.photos) ?? EMPTY_ARRAY;
+    return cleanPhotos(flat);
+  }, [infiniteQuery.data?.pages]);
 
   const { displayPhotos, gridPhotos } = useMemo(() => processPhotos(
     rawPhotos,

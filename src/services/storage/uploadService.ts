@@ -34,10 +34,26 @@ export const compressImage = (base64Data: string, maxWidth = 1920, quality = 0.8
       
       resolve(result);
     };
-    img.onerror = (err) => reject(err);
+    img.onerror = () => reject(new Error('图片加载到画布失败，请确保文件格式完整且是有效的图片'));
     img.src = base64Data;
   });
 };
+
+function dataURLToArrayBuffer(dataurl: string): { buffer: ArrayBuffer; mime: string } {
+  const arr = dataurl.split(',');
+  const mimeMatch = arr[0].match(/:(.*?);/);
+  const mime = mimeMatch ? mimeMatch[1] : 'image/webp';
+  if (arr.length < 2) {
+    throw new Error('Invalid data URL format');
+  }
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return { buffer: u8arr.buffer, mime };
+}
 
 export const uploadImages = async (
   userId: string, 
@@ -69,9 +85,16 @@ export const uploadImages = async (
 
     onStatus?.('uploading');
     const uploadFile = async (base64: string, fileName: string, isMain=false) => {
-      const res = await fetch(base64);
-      const blob = await res.blob();
-      const buffer = await blob.arrayBuffer();
+      let buffer: ArrayBuffer;
+      try {
+        const parsed = dataURLToArrayBuffer(base64);
+        buffer = parsed.buffer;
+      } catch (err: any) {
+        console.warn('[uploadService] dataURLToArrayBuffer failed, falling back to fetch', err);
+        const res = await fetch(base64);
+        const blob = await res.blob();
+        buffer = await blob.arrayBuffer();
+      }
 
       let safeFileName = fileName.replace('public/', '');
       if (safeFileName.startsWith('temp-')) {

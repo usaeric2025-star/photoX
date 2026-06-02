@@ -106,13 +106,26 @@ export function AdminGridContainer({
       
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const uri = URL.createObjectURL(file);
+        
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            if (typeof event.target?.result === 'string') {
+              resolve(event.target.result);
+            } else {
+              reject(new Error('Failed to read file as data URL'));
+            }
+          };
+          reader.onerror = () => reject(new Error('读取档案失败 / File read failed'));
+          reader.readAsDataURL(file);
+        });
+
         const id = `temp-${crypto.randomUUID()}`;
         
         photoData.push({
           id,
           name: file.name.split('.')[0],
-          uri,
+          uri: dataUrl,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         } as Photo);
