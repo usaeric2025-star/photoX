@@ -259,6 +259,12 @@ app.get("/admin/diagnose", async (c) => {
         issues.push({ id: 'empty_groups', category: 'integrity', severity: 'P0', title: '空合组', description: '有些合组中没有任何照片', affectedCount: emptyGroups.length, sampleIds: emptyGroups.slice(0, 5).map(g => String(g.id)), autoFixable: true });
       }
 
+      // Ghost Records (No URL or Hash)
+      const ghostRecords = photos.filter(p => !p.image_url || !p.image_hash);
+      if (ghostRecords.length > 0) {
+        issues.push({ id: 'ghost_records', category: 'integrity', severity: 'P0', title: '幽灵记录', description: '数据库中有记录但缺少图片哈希或链接', affectedCount: ghostRecords.length, sampleIds: ghostRecords.slice(0, 5).map(p => p.id), autoFixable: true });
+      }
+
       // member_count mismatch
       const mismatchedGroups = groups?.filter(g => {
          const actualCount = photosByGroup.get(String(g.id)) || 0;
@@ -331,6 +337,15 @@ app.post("/admin/repair/:issueId", async (c) => {
          const emptyGroupIds = groups?.filter(g => !photoGroupIds.has(String(g.id))).map(g => g.id) || [];
          if (emptyGroupIds.length > 0) await supabase.from("groups").delete().in("id", emptyGroupIds);
          return c.json({ success: true, message: `清理了 ${emptyGroupIds.length} 个空合组` });
+      }
+
+      if (issueId === 'ghost_records') {
+        const { error } = await supabase
+          .from("furniture_items")
+          .delete()
+          .or('image_url.is.null,image_url.eq."",image_hash.is.null,image_hash.eq.""');
+        if (error) throw error;
+        return c.json({ success: true, message: '幽灵记录清理完成' });
       }
 
       return c.json({ success: false, error: 'Unsupported repair' }, 400);

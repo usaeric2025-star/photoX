@@ -8,7 +8,9 @@ import {
   ExternalLink,
   Table,
   FileWarning,
-  Bug
+  Bug,
+  Trash2,
+  PackageSearch
 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
@@ -16,6 +18,9 @@ import { fromThrowableAsync } from '@/lib/errorFactory';
 import { toast } from 'sonner';
 import { DiagnosticsReport } from '@/types/diagnostics';
 import { motion, AnimatePresence } from 'motion/react';
+import { useAuth } from '@/hooks';
+import { deduplicatePhotos } from "@/services/photo/photoMaintenanceService";
+import { useUIStore } from '@/store/useUIStore';
 
 
 
@@ -92,6 +97,91 @@ export function DiagnosticsDashboard() {
         setR2Error(`解析 JSON 失败: ${e.message}`);
     }
     setIsDiagnosingR2(false);
+  };
+
+  const [isCleaningOrphans, setIsCleaningOrphans] = useState(false);
+  const [isDeepCleaningStorage, setIsDeepCleaningStorage] = useState(false);
+  const [isDeduplicating, setIsDeduplicating] = useState(false);
+  const [isAuditing, setIsAuditing] = useState(false);
+  const [auditResult, setAuditResult] = useState<any | null>(null);
+
+  const { user } = useAuth();
+  const update = useUIStore(s => s.update);
+
+  const handleDeduplicate = async () => {
+    if (!user) return toast.error("请先登录");
+    if (!confirm('确定要执行排重清理吗？系统将合并完全一致的照片记录。')) return;
+    
+    setIsDeduplicating(true);
+    try {
+      const result = await deduplicatePhotos(user.id);
+      if (result.ok) {
+        toast.success(`排重完成！共清理了 ${result.data.removed} 张重复记录。`);
+        scan();
+      } else {
+        toast.error(`排重失败: ${result.error.message}`);
+      }
+    } catch (e: any) {
+      toast.error(`请求失败: ${e.message}`);
+    } finally {
+      setIsDeduplicating(false);
+    }
+  };
+
+  const handleAudit = async () => {
+    setIsAuditing(true);
+    try {
+      const res = await api.storage.audit.$get();
+      if (!res.ok) throw new Error("对账请求失败");
+      const data = await res.json() as any;
+      if (data.success) {
+        setAuditResult(data.data);
+        toast.success("存储对账完成");
+      } else {
+        toast.error("对账失败");
+      }
+    } catch (e: any) {
+      toast.error(`对账失败: ${e.message}`);
+    } finally {
+      setIsAuditing(false);
+    }
+  };
+
+  const handleCleanOrphans = async () => {
+    if (!confirm('确定要清理幽灵记录吗？此操作不可逆。')) return;
+    setIsCleaningOrphans(true);
+    try {
+      const res = await api.storage['clean-orphans'].$post();
+      const data = await res.json() as any;
+      if (data.success) {
+        toast.success(`清理完成，共移除 ${data.count} 条无效记录`);
+        scan();
+      } else {
+        toast.error(`清理失败: ${data.error}`);
+      }
+    } catch (e: any) {
+      toast.error(`请求失败: ${e.message}`);
+    } finally {
+      setIsCleaningOrphans(false);
+    }
+  };
+
+  const handleDeepCleanStorage = async () => {
+    if (!confirm('确定要执行存储深度清理吗？这会删除 R2 中未在数据库中记录的文件。')) return;
+    setIsDeepCleaningStorage(true);
+    try {
+      const res = await api.storage.clean.$post();
+      const data = await res.json() as any;
+      if (data.success) {
+        toast.success(`清理完成，共移除 ${data.count} 个无主文件`);
+      } else {
+        toast.error(`清理失败: ${data.error}`);
+      }
+    } catch (e: any) {
+      toast.error(`请求失败: ${e.message}`);
+    } finally {
+      setIsDeepCleaningStorage(false);
+    }
   };
 
   useEffect(() => {
@@ -183,9 +273,9 @@ export function DiagnosticsDashboard() {
             }`}>
               <div className="mt-0.5">
                 {r2Result.success ? (
-                  <CheckCircle2 className="w-5 h-5 text-green-500" />
+                   <CheckCircle2 className="w-5 h-5 text-green-500" />
                 ) : (
-                  <ShieldAlert className="w-5 h-5 text-red-500" />
+                   <ShieldAlert className="w-5 h-5 text-red-500" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
@@ -225,6 +315,81 @@ export function DiagnosticsDashboard() {
             )}
           </div>
         )}
+      </div>
+
+      {/* 高级维护工具 */}
+      <div className="bg-white border border-brand-navy/5 rounded-2xl p-6 shadow-sm space-y-4">
+        <div>
+          <h3 className="text-base font-black text-brand-navy tracking-tight">高级维护工具</h3>
+          <p className="text-xs text-brand-navy/60">执行数据库与存储空间的深度同步与清理任务</p>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button
+            onClick={handleCleanOrphans}
+            disabled={isCleaningOrphans}
+            className="flex flex-col items-start gap-2 p-4 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all border border-slate-200 group group-active:scale-95 text-left"
+          >
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-orange-500/10 rounded-lg text-orange-600">
+                <FileWarning className="w-4 h-4" />
+              </div>
+              <span className="text-sm font-bold text-slate-800">清理数据库孤本</span>
+            </div>
+            <p className="text-[10px] text-slate-500">删除数据库中那些没有图片哈希或下载链接的无效记录</p>
+            {isCleaningOrphans && <span className="text-[10px] font-bold text-orange-600 animate-pulse">正在清理中...</span>}
+          </button>
+
+          <button
+            onClick={handleDeepCleanStorage}
+            disabled={isDeepCleaningStorage}
+            className="flex flex-col items-start gap-2 p-4 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all border border-slate-200 group group-active:scale-95 text-left"
+          >
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-blue-500/10 rounded-lg text-blue-600">
+                <RefreshCw className="w-4 h-4" />
+              </div>
+              <span className="text-sm font-bold text-slate-800">清理存储无主文件</span>
+            </div>
+            <p className="text-[10px] text-slate-500">扫描 R2 存储，删除那些在数据库中没有对应引用的残留文件</p>
+            {isDeepCleaningStorage && <span className="text-[10px] font-bold text-blue-600 animate-pulse">正在扫描中...</span>}
+          </button>
+
+          <button
+            onClick={handleDeduplicate}
+            disabled={isDeduplicating}
+            className="flex flex-col items-start gap-2 p-4 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all border border-slate-200 group group-active:scale-95 text-left"
+          >
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-purple-500/10 rounded-lg text-purple-600">
+                <Trash2 className="w-4 h-4" />
+              </div>
+              <span className="text-sm font-bold text-slate-800">重复资产清理</span>
+            </div>
+            <p className="text-[10px] text-slate-500">寻找并合并云端数据库中哈希值完全一致的重复照片记录</p>
+            {isDeduplicating && <span className="text-[10px] font-bold text-purple-600 animate-pulse">正在排重中...</span>}
+          </button>
+
+          <button
+            onClick={handleAudit}
+            disabled={isAuditing}
+            className="flex flex-col items-start gap-2 p-4 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all border border-slate-200 group group-active:scale-95 text-left"
+          >
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-teal-500/10 rounded-lg text-teal-600">
+                <PackageSearch className="w-4 h-4" />
+              </div>
+              <span className="text-sm font-bold text-slate-800">存储资产对账</span>
+            </div>
+            <p className="text-[10px] text-slate-500">深度审计 R2 文件与数据库记录的一致性，发现孤儿或缺失文件</p>
+            {isAuditing && <span className="text-[10px] font-bold text-teal-600 animate-pulse">正在对账中...</span>}
+            {auditResult && (
+              <div className="mt-2 text-[8px] font-bold text-slate-400 bg-white/50 p-1.5 rounded-lg w-full">
+                正常: {auditResult.healthy} | 缺失: {auditResult.missing} | 孤儿: {auditResult.orphans}
+              </div>
+            )}
+          </button>
+        </div>
       </div>
 
       <div className="space-y-3">

@@ -1,7 +1,6 @@
 import React from 'react';
 import { LogoSection } from './LogoSection';
 import { WhatsAppSection } from './WhatsAppSection';
-import { MaintenanceSection } from './MaintenanceSection';
 import { AppSettings, Category, Tag, Manufacturer, Photo } from '@/types';
 
 interface GeneralSettingsProps {

@@ -21,7 +21,6 @@ import { AISettings } from './settings/AISettings';
 import { SyncSettings } from './settings/SyncSettings';
 import { TagsManager } from './settings/TagsManager';
 import { CategoriesManager } from './settings/CategoriesManager';
-import { MaintenanceSection } from './settings/MaintenanceSection';
 import { DiagnosticsDashboard } from './admin/DiagnosticsDashboard';
 import { translations } from '@/lib/translations';
 
@@ -181,13 +180,6 @@ export function SettingsScreen() {
                 tags={tags}
                 manufacturers={manufacturers}
                 handleDeduplicate={handleDeduplicate}
-                cardClass={cardClass}
-                buttonStyles={BUTTON_STYLES}
-              />
-              <MaintenanceSection 
-                onHealthCheck={onRunMaintenance}
-                onDeduplicate={handleDeduplicate}
-                isChecking={isMaintenanceRunning}
                 cardClass={cardClass}
                 buttonStyles={BUTTON_STYLES}
               />
