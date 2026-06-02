@@ -152,14 +152,40 @@ export const fetch = handle(app);
 
 ## Virtua 虚拟滚动规范（锁定）
 
+### 核心配置
+```tsx
+<VList
+  ref={listRef}
+  data={items}
+  itemSize={200}                           // 估算高度
+  shift={false}
+>
+  {(item, index) => (
+    <Component key={item.id} item={item} />
+  )}
+</VList>
+```
+
+禁止事项
+
+· ❌ 禁止使用已废弃的 overscan 属性
+· ❌ 禁止使用 index 作为 key（使用稳定 ID）
+· ❌ 禁止直接传递 children 作为预渲染元素（大数据集）
+
+可选配置
+
+· keepMounted: 保持特定索引（如组头、表单）
+· ssrCount: SSR 场景设置首屏数量
+
 ### 支持的属性（仅这些）
 - ✅ `data` - 数据源
-- ✅ `overscanCount` - 预渲染行数（数值，如 4）
 - ✅ `itemSize` - 固定行高（数值或函数）
 - ✅ `scrollToIndex` - 滚动到指定索引
+- ❌ `overscanCount` - 废除
 - ❌ `estimateSize` - 不支持，使用 `itemSize`
-- ❌ `overscan`（像素单位） - 不支持，使用 `overscanCount`
+- ❌ `overscan`（像素单位） - 不支持，使用 `itemSize`
 - ❌ `scrollTo` - 不支持，使用 `scrollToIndex`
+
 
 ### 返回顶部标准写法
 ```typescript

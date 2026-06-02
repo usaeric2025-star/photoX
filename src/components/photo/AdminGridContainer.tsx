@@ -21,6 +21,7 @@ import { GroupDetailPage } from '../GroupDetailPage';
 import { PAGINATION } from '@/constants/config';
 import { normalizeAdminPhotos } from '@/lib/selectors/photos';
 import { useNavigate } from '@tanstack/react-router';
+import { usePhotoGallery } from '@/features/photos/usePhotoGallery';
 
 interface AdminGridContainerProps {
   variant: GalleryVariant;
@@ -61,15 +62,7 @@ export function AdminGridContainer({
   const { data: categories = [] } = useCategories();
   const { data: tags = [] } = useTags();
 
-  const infiniteQuery = usePhotos({
-    category_id: filters.categoryId,
-    tag_id: Array.isArray(filters.tagIds) && filters.tagIds.length > 0 ? filters.tagIds[0] : null,
-    searchQuery: filters.searchQuery,
-    sortOrder: urlFilters.sortOrder as 'newest' | 'oldest' | 'name',
-    isAdminMode: isAdminMode
-  }, PAGINATION.ADMIN_BATCH_SIZE, true);
-
-  const rawPhotos = infiniteQuery.data?.pages?.flatMap(p => p.photos) ?? EMPTY_ARRAY;
+  const { photos: rawPhotos, infinitePhotosQuery: infiniteQuery } = usePhotoGallery();
 
   const photos = useMemo(() => {
     const normalized = normalizeAdminPhotos(rawPhotos);

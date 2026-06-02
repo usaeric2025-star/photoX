@@ -114,7 +114,7 @@ export function AdminHeader({
           </div>
         )}
         <div className="flex items-center px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold gap-1 shrink-0">
-          <span>{localCount}</span>
+          <span>{countProp !== undefined ? countProp : localCount}</span>
           <span className="text-slate-300">/</span>
           <span>{cloudCount || 0}</span>
         </div>

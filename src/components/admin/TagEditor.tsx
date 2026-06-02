@@ -1,4 +1,5 @@
 import React, { useState, useRef, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { Pencil, Trash2, Heart, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -128,16 +129,16 @@ export function TagEditor({
         })}
       </div>
 
-      {activeActionTag && (
+      {activeActionTag && createPortal(
         <div
-          className="fixed inset-0 z-[200] bg-slate-950/20 flex items-center justify-center p-6 backdrop-blur-md cursor-pointer animate-in fade-in duration-300"
+          className="fixed inset-0 z-[9999] bg-slate-950/40 flex items-center justify-center p-6 backdrop-blur-sm cursor-pointer animate-in fade-in duration-200"
           onClick={() => setActiveActionTag(null)}
           onPointerDown={(e) => {
             if (e.target === e.currentTarget) setActiveActionTag(null);
           }}
         >
           <div
-            className="glass-morphism rounded-3xl p-8 w-full max-w-[280px] shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-200 cursor-default"
+            className="glass-morphism rounded-3xl p-8 w-full max-w-[280px] shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-200 cursor-default bg-white border border-slate-200"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center space-y-1">
@@ -210,7 +211,8 @@ export function TagEditor({
               取消操作 / CANCEL
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Redundant AlertDialog removed since onDeleteTag uses the unified useDelete hook which has its own dialog */}

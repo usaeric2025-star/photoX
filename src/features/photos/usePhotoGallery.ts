@@ -15,7 +15,7 @@ export function usePhotoGallery() {
   logger.debug('📸 filters:', filters);
 
   const isAdminPath = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
-  const pageSize = isAdminPath ? 60 : 20;  // Use fixed numeric sizes to avoid import/rebuild side effects
+  const pageSize = isAdminPath ? PAGINATION.ADMIN_BATCH_SIZE : 20;
 
   const infinitePhotosQuery = usePhotos({
     category_id: filters.categoryId,

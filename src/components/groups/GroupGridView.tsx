@@ -146,6 +146,7 @@ export function GroupGridView({
           index={index}
           hideDetails={true}
           imgVariant="md"
+          hideGroupBadge={true}
           {...extraProps}
         />
       </div>

@@ -70,14 +70,15 @@ export interface PhotoCardProps {
   onClick?: React.MouseEventHandler<any>;
   hideDetails?: boolean;
   imgVariant?: 'sm' | 'md';
+  hideGroupBadge?: boolean;
 }
 
-function PhotoStatusBadges({ photo, variant, isPinned }: { photo: Photo; variant: GalleryVariant; isPinned: boolean }) {
+function PhotoStatusBadges({ photo, variant, isPinned, hideGroupBadge }: { photo: Photo; variant: GalleryVariant; isPinned: boolean; hideGroupBadge?: boolean }) {
   const isManagement = variant === 'full-management' || variant === 'staff-workspace';
   const showGroupsCollapsed = useSearch({ from: '__root__', select: (s: any) => s.showGroupsCollapsed !== 'false' });
   
   // Display group info if photo belongs to a group
-  const shouldShowGroup = showGroupsCollapsed && photo.group_id;
+  const shouldShowGroup = !hideGroupBadge && showGroupsCollapsed && photo.group_id;
 
   const groupCode = photo.group_id ? photo.group_id.slice(-4).toUpperCase() : '';
   const memberCount = photo.group?.member_count ?? 1;
@@ -341,7 +342,7 @@ export const PhotoCard = React.memo(({
         </div>
       )}
       
-      <PhotoStatusBadges photo={photo} variant={variant} isPinned={!!photo.is_pinned} />
+      <PhotoStatusBadges photo={photo} variant={variant} isPinned={!!photo.is_pinned} hideGroupBadge={hideGroupBadge} />
 
       {isManagement && can('photo:toggle-pinned') && (
          <PinButton photoId={photo.id} isPinned={!!photo.is_pinned} />

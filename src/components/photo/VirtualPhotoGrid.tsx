@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { usePerformance } from '@/hooks/usePerformance';
 import { VirtualGrid, VirtualGridHandle } from '@/components/virtualizer/VirtualGrid';
 import { Photo, TranslationType } from '../../types';
@@ -6,6 +6,8 @@ import { useUIStore, useShallow, UIStoreState } from '@/store/useUIStore';
 import { useUrlFilters } from '@/hooks/useUrlFilters';
 import { translations } from '../../lib/translations';
 import { PhotoGridSkeleton } from './PhotoGridSkeleton';
+import { LoadMoreIndicator } from './LoadMoreIndicator';
+import { useImagePreloader } from '@/hooks/useImagePreloader';
 
 interface VirtualPhotoGridProps {
   photos: Photo[];
@@ -52,6 +54,18 @@ export function VirtualPhotoGrid({
     }
   }, [filters.groupId, photos, filters.photoId, ref]);
 
+  const { preloadBatch } = useImagePreloader();
+
+  const handleRangeChange = useCallback((start: number, end: number) => {
+    const preloadStart = Math.max(0, start * columns - 10);
+    const preloadEnd = Math.min(photos.length, end * columns + 10);
+    const urlsToPreload = photos
+      .slice(preloadStart, preloadEnd)
+      .map(item => item.image_url)
+      .filter(Boolean);
+    preloadBatch(urlsToPreload);
+  }, [photos, preloadBatch, columns]);
+
   const isLoading = isFetching && photos.length === 0;
 
   if (isLoading) {
@@ -69,6 +83,9 @@ export function VirtualPhotoGrid({
           ref={ref}
           count={photos.length}
           lanes={columns}
+          itemSize={200}
+          shift={false}
+          onRangeChange={handleRangeChange}
           onEndReached={() => {
             if (hasNextPage && !isFetchingNextPage && onLoadMore) {
               onLoadMore();
@@ -85,51 +102,16 @@ export function VirtualPhotoGrid({
             );
           }}
           footer={
-            <PhotoGridFooter 
-              isFetchingNextPage={!!isFetchingNextPage}
-              hasNextPage={!!hasNextPage}
-              hasPhotos={photos.length > 0}
-              textLoading={t.loading || '正在载入更多...'}
-              textEndOfList={t.endOfList || '已经到底啦'}
-              columns={columns}
-            />
+            <div className="pt-4 pb-8">
+               <LoadMoreIndicator 
+                  isFetchingNextPage={!!isFetchingNextPage}
+                  hasNextPage={!!hasNextPage}
+                  onLoadMore={() => onLoadMore && onLoadMore()}
+               />
+            </div>
           }
         />
       </div>
     </div>
   );
-}
-
-const PhotoGridFooter = ({ 
-  isFetchingNextPage, hasNextPage, hasPhotos, textLoading, textEndOfList, columns 
-}: {
-  isFetchingNextPage: boolean;
-  hasNextPage: boolean;
-  hasPhotos: boolean;
-  textLoading: string;
-  textEndOfList: string;
-  columns: number;
-}) => {
-  if (isFetchingNextPage) {
-    return (
-      <div 
-        className="grid gap-2 p-1.5 sm:p-2 pb-8"
-        style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
-      >
-        {Array.from({ length: columns }).map((_, i) => (
-          <div key={i} className="aspect-[3/4] rounded-2xl overflow-hidden bg-slate-100 animate-pulse border border-slate-50" />
-        ))}
-      </div>
-    );
-  }
-  if (!isFetchingNextPage && !hasNextPage && hasPhotos) {
-    return (
-      <div className="py-4 flex flex-col items-center justify-center gap-2 pb-8">
-        <span className="text-[10px] text-slate-400 font-medium tracking-tight">
-          {textEndOfList}
-        </span>
-      </div>
-    );
-  }
-  return null;
 }

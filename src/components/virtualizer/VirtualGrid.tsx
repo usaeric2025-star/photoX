@@ -34,6 +34,9 @@ export type VirtualGridProps = {
   footer?: React.ReactNode;
   lanes?: number;
   onScroll?: (offset: number) => void;
+  itemSize?: number;
+  shift?: boolean;
+  onRangeChange?: (start: number, end: number) => void;
 };
 
 export const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.Ref<VirtualGridHandle> }) => {
@@ -142,6 +145,9 @@ export const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.
         ref={vlistRef}
         data={listItems}
         onScroll={handleScroll}
+        onRangeChange={props.onRangeChange}
+        itemSize={props.itemSize}
+        shift={props.shift}
         style={{ height: '100%', width: '100%' }}
       >
         {(item) => {
