@@ -73,3 +73,15 @@
 - 零额外配置，零学习成本
 - 与 Vercel 设计理念完美对齐
 
+## 目录结构规则（锁定）
+
+- `api/` → Vercel Serverless 函数（后端）
+  - `api/index.ts` 是入口
+  - `api/app.ts` 是 Hono 路由
+- `src/` → 前端 React 代码（Vite 构建）
+- `server.ts` → 本地开发入口（`tsx server.ts`）
+
+### 禁止事项
+- ❌ 禁止从 `api/` 导入 `src/` 下的文件
+- ❌ 禁止用 Vite 打包后端代码
+

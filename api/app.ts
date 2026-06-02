@@ -3,8 +3,8 @@ import { cors } from "hono/cors";
 import { S3Client, PutObjectCommand, ListObjectsV2Command, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createClient } from "@supabase/supabase-js";
-import { getServerEnv } from "../shared/envSchema";
-import { logTraffic } from "../lib/trafficCapture";
+import { getServerEnv } from "../src/shared/envSchema";
+import { logTraffic } from "../src/lib/trafficCapture";
 
 // Validate env at module level
 const serverEnv = getServerEnv(process.env);

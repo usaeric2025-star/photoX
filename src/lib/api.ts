@@ -1,5 +1,5 @@
 import { hc } from 'hono/client';
-import type { AppType } from '../../server';
+import type { AppType } from '../../api/app';
 
 /**
  * [V2.9-RPC-CONTRACT] Type-safe RPC Client
