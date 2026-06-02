@@ -221,7 +221,17 @@ export function AdminGridContainer({
           onBatchEdit={(ids) => update({ batchEditingIds: ids })}
           onHide={(ids) => adminActions.batchUpdate.mutateAsync({ ids, updates: { is_hidden: true } })}
           onAIIdentify={onBatchAiAnalyze ? (ids) => {
-            const targetPhotos = photos.filter(p => ids.includes(p.id));
+            const selectedGroupIds = new Set<string>();
+            photos.forEach(p => {
+              if (ids.includes(p.id) && p.group_id) {
+                selectedGroupIds.add(p.group_id);
+              }
+            });
+            const groupIdsArray = Array.from(selectedGroupIds);
+
+            const targetPhotos = photos.filter(p => 
+              ids.includes(p.id) || (p.group_id && groupIdsArray.includes(p.group_id))
+            );
             onBatchAiAnalyze(targetPhotos);
           } : undefined}
         />
@@ -235,7 +245,12 @@ export function AdminGridContainer({
           />
         )}
 
-        <GroupDetailPage activeGroupId={urlFilters.groupId} initialPhotoId={urlFilters.photoId} variant={variant} />
+        <GroupDetailPage 
+          activeGroupId={urlFilters.groupId} 
+          initialPhotoId={urlFilters.photoId} 
+          variant={variant} 
+          onBatchAiAnalyze={onBatchAiAnalyze}
+        />
       </motion.div>
     </LayoutGroup>
   );

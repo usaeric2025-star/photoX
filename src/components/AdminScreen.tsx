@@ -62,11 +62,106 @@ export function AdminScreen() {
       return;
     }
 
-    await runTask(`AI 批量属性识别 (${targetPhotos.length}张)`, async () => {
+    // Buckets for categorization
+    const groupedPhotosMap = new Map<string, any[]>();
+    const ungroupedPhotos: any[] = [];
+
+    for (const p of targetPhotos) {
+      if (p.group_id) {
+        if (!groupedPhotosMap.has(p.group_id)) {
+          groupedPhotosMap.set(p.group_id, []);
+        }
+        groupedPhotosMap.get(p.group_id)!.push(p);
+      } else {
+        ungroupedPhotos.push(p);
+      }
+    }
+
+    const taskTitle = groupedPhotosMap.size > 0 
+      ? `AI 批量识别 (${targetPhotos.length}张, ${groupedPhotosMap.size}组)` 
+      : `AI 批量识别 (${targetPhotos.length}张)`;
+
+    await runTask(taskTitle, async () => {
+      const { supabase } = await import('@/lib/supabase');
+      const { analyzeGroup } = await import("@/services/gemini/groupAnalysis");
       const { analyzeProductPhoto } = await import("@/services/gemini");
       
       let successCount = 0;
-      for (const p of targetPhotos) {
+      let totalPhotosToProcess = targetPhotos.length;
+
+      // 1. Process groups first (each group separately!)
+      for (const [groupId, groupPhotos] of Array.from(groupedPhotosMap.entries())) {
+        try {
+          // A. Group Attribute AI Analyze
+          const allTagIds = Array.from(new Set(groupPhotos.flatMap(gp => gp.tag_ids || [])));
+          let tagMap = new Map<string, string>();
+          if (allTagIds.length > 0) {
+            const { data: tagsData } = await supabase.from('tags').select('id, name').in('id', allTagIds);
+            tagMap = new Map((tagsData || []).map(t => [String(t.id), t.name]));
+          }
+          const photosForAnalysis = groupPhotos.map(gp => ({
+            ...gp,
+            tagNames: (gp.tag_ids || []).map((tid: any) => tagMap.get(String(tid)) || '').filter(Boolean)
+          }));
+
+          const groupAnalysis = await analyzeGroup(photosForAnalysis);
+          if (groupAnalysis) {
+            await supabase
+              .from('groups')
+              .update({
+                name: groupAnalysis.name,
+                description: groupAnalysis.description,
+                colors: groupAnalysis.colors,
+                materials: groupAnalysis.materials,
+                name_translations: { zh: groupAnalysis.name },
+                description_translations: { zh: groupAnalysis.description },
+              })
+              .eq('id', groupId);
+          }
+        } catch (err) {
+          console.error(`[AI Group Analyze] Failed for group ${groupId}:`, err);
+        }
+
+        // B. Run individual photo-level analyze on all items of this group
+        for (const p of groupPhotos) {
+          const imageUrl = p.uri || p.image_url;
+          if (!imageUrl) continue;
+
+          try {
+            const result = await analyzeProductPhoto(
+              imageUrl,
+              categories,
+              tags,
+              manufacturers,
+              settings?.gemini_api_key || "",
+              "google",
+              settings?.custom_model || ""
+            );
+
+            if (result) {
+              const updates: any = {};
+              if (result.name) updates.name = result.name;
+              if (result.category_id) updates.category_id = String(result.category_id);
+              if (Array.isArray(result.tag_ids)) {
+                updates.tag_ids = result.tag_ids.map((id: any) => String(id));
+              }
+              if (result.manufacturer_id) updates.manufacturer_id = String(result.manufacturer_id);
+              if (result.model_number) updates.model_number = result.model_number;
+              if (result.manual_code) updates.manual_code = result.manual_code;
+              if (result.description) updates.description = result.description;
+              if (result.price) updates.price = String(result.price);
+
+              await updatePhoto(p.id, updates);
+              successCount++;
+            }
+          } catch (err) {
+            console.error(`Failed to analyze photogroup item ${p.id}:`, err);
+          }
+        }
+      }
+
+      // 2. Process ungrouped photos
+      for (const p of ungroupedPhotos) {
         const imageUrl = p.uri || p.image_url;
         if (!imageUrl) continue;
 
@@ -102,7 +197,7 @@ export function AdminScreen() {
         }
       }
 
-      toast.success(`批量识别完成: 成功识别 ${successCount}/${targetPhotos.length} 张照片`);
+      toast.success(`批量识别完成: 成功识别 ${successCount}/${totalPhotosToProcess} 张照片`);
     });
   }, [categories, tags, manufacturers, settings, runTask, updatePhoto, handleError]);
 
@@ -136,18 +231,30 @@ export function AdminScreen() {
               handleBatchAiIdentifyTrigger={async () => {
               const selectedIds = useUIStore.getState().selectedIds;
               if (selectedIds.length > 0) {
-                // Same logic as floating buttons
+                const selectedGroupIds = new Set<string>();
+                photos.forEach(p => {
+                  if (selectedIds.includes(p.id) && p.group_id) {
+                    selectedGroupIds.add(p.group_id);
+                  }
+                });
+                const groupIdsArray = Array.from(selectedGroupIds);
+
+                let orQuery = `id.in.(${selectedIds.join(',')})`;
+                if (groupIdsArray.length > 0) {
+                  orQuery += `,group_id.in.(${groupIdsArray.join(',')})`;
+                }
+
                 const { supabase } = await import('@/lib/supabase');
                 const { mapSupabasePhoto } = await import('@/services/photo/queries');
                 const { PHOTO_DETAIL_FIELDS } = await import('@/constants/photoFields');
                 const { data } = await supabase
                   .from('furniture_items')
                   .select(PHOTO_DETAIL_FIELDS)
-                  .or(`id.in.(${selectedIds.join(',')}),group_id.in.(${selectedIds.join(',')})`);
+                  .or(orQuery);
                 
                 const dbPhotos = (data || []).map(mapSupabasePhoto);
                 const finalPhotos = dbPhotos.length > 0 ? dbPhotos : photos.filter(p => 
-                  selectedIds.includes(p.id) || (p.group_id && selectedIds.includes(p.group_id))
+                  selectedIds.includes(p.id) || (p.group_id && groupIdsArray.includes(p.group_id))
                 );
                 onBatchAiAnalyze(finalPhotos);
               } else {

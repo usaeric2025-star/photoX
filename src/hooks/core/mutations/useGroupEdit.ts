@@ -76,6 +76,32 @@ export const useGroupPhotosMutation = createMutationHook({
     const previousQueries = queryClient.getQueriesData({ queryKey: ['photos'] });
     const previousGroups = queryClient.getQueriesData({ queryKey: ['groups'] });
 
+    // Gather all existing group IDs of the selected photoIds
+    const affectedGroupIds = new Set<string>();
+    previousQueries.forEach(([_, old]: any) => {
+      if (!old) return;
+      const list = old.pages ? old.pages.flatMap((p: any) => p?.photos || []) : (Array.isArray(old) ? old : []);
+      list.forEach((photo: any) => {
+        if (photo && photoIds.includes(photo.id) && photo.group_id) {
+          affectedGroupIds.add(photo.group_id);
+        }
+      });
+    });
+
+    const expandedPhotoIds = new Set<string>(photoIds);
+    if (affectedGroupIds.size > 0) {
+      previousQueries.forEach(([_, old]: any) => {
+        if (!old) return;
+        const list = old.pages ? old.pages.flatMap((p: any) => p?.photos || []) : (Array.isArray(old) ? old : []);
+        list.forEach((photo: any) => {
+          if (photo && photo.group_id && affectedGroupIds.has(photo.group_id)) {
+            expandedPhotoIds.add(photo.id);
+          }
+        });
+      });
+    }
+    const finalPhotoIdsList = Array.from(expandedPhotoIds);
+
     queryClient.setQueriesData({ queryKey: ['photos'] }, (old: any) => {
       if (!old) return old;
       if (old.pages) {
@@ -86,7 +112,7 @@ export const useGroupPhotosMutation = createMutationHook({
             return {
               ...page,
               photos: page.photos.map((photo: any) => {
-                if (photoIds.includes(photo.id)) {
+                if (finalPhotoIdsList.includes(photo.id)) {
                   return { ...photo, group_id: finalGroupId, is_group_cover: false };
                 }
                 return photo;
@@ -97,7 +123,7 @@ export const useGroupPhotosMutation = createMutationHook({
       }
       if (Array.isArray(old)) {
         return old.map((photo: any) => {
-          if (photoIds.includes(photo.id)) {
+          if (finalPhotoIdsList.includes(photo.id)) {
             return { ...photo, group_id: finalGroupId, is_group_cover: false };
           }
           return photo;

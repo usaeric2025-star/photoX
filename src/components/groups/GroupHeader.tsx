@@ -28,6 +28,7 @@ interface GroupHeaderProps {
   isGroupDataLoading: boolean;
   activeGroupPhotos: Photo[];
   onBatchAiAnalyzeByGroupId?: (groupId: string) => Promise<void | null>;
+  onBatchAiAnalyze?: (photos: Photo[]) => void;
 }
 
 export function GroupHeader({
@@ -37,6 +38,7 @@ export function GroupHeader({
   isGroupDataLoading,
   activeGroupPhotos,
   onBatchAiAnalyzeByGroupId,
+  onBatchAiAnalyze: propOnBatchAiAnalyze,
 }: GroupHeaderProps) {
   const { setGroupId } = useUrlFilters();
   const { update, isMultiSelect, selectedIds } =
@@ -48,7 +50,7 @@ export function GroupHeader({
       })),
     );
 
-  const onBatchAiAnalyze = (photos: Photo[]) => {};
+  const onBatchAiAnalyze = propOnBatchAiAnalyze || ((photos: Photo[]) => {});
   const onBatchEdit = (ids: string[]) => update?.({ batchEditingIds: ids });
 
   return (

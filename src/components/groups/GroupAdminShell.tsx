@@ -21,10 +21,11 @@ export interface GroupAdminShellProps {
   onAiAnalyze?: (photo: Photo) => void;
   onCancelAnalyze?: () => void;
   isAnalyzing?: boolean;
+  onBatchAiAnalyze?: (photos: Photo[]) => void;
 }
 
 export function GroupAdminShell(props: GroupAdminShellProps) {
-  const { onAiAnalyze, onCancelAnalyze, isAnalyzing } = props;
+  const { onAiAnalyze, onCancelAnalyze, isAnalyzing, onBatchAiAnalyze } = props;
   const isAdminMode = useAdminMode();
 
   const { filters, setGroupId, setPhotoId } = useUrlFilters();
@@ -202,6 +203,7 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
                   isGroupDataLoading={isGroupDataLoading}
                   activeGroupPhotos={activeGroupPhotos}
                   onBatchAiAnalyzeByGroupId={analyzeGroupById}
+                  onBatchAiAnalyze={onBatchAiAnalyze}
                 />
 
                 <GroupGridView

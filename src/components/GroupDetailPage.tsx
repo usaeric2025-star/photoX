@@ -29,6 +29,7 @@ export interface GroupDetailPageProps extends GroupAdminShellProps {
   initialPhotoId?: string | null;
   contactWhatsApp?: (photo: Photo) => void;
   variant?: GalleryVariant;
+  onBatchAiAnalyze?: (photos: any[]) => void;
 }
 
 export function GroupDetailPage(props: GroupDetailPageProps) {
