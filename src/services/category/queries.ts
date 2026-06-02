@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { supabase } from '../../lib/supabase';
 import { Category } from '../../types';
 
@@ -9,10 +10,10 @@ export const loadCategoriesFromCloud = async (): Promise<Category[]> => {
     .select('*');
 
   if (error) {
-    console.error("Failed to load categories from TABLE_NAME", TABLE_NAME, ":", JSON.stringify(error, null, 2));
+    logger.error("Failed to load categories from TABLE_NAME", TABLE_NAME, ":", JSON.stringify(error, null, 2));
     return [];
   }
   
-  console.log("Categories loaded successfully from", TABLE_NAME, ":", data);
+  logger.info("Categories loaded successfully from", TABLE_NAME, ":", data);
   return data || [];
 };

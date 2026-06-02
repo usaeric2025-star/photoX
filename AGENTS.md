@@ -42,3 +42,15 @@
 - UI 状态 → `useUIStore`
 - 筛选 → URL State
 - 不需要问「数据从哪里来」
+
+## 日志与性能规范（锁定）
+
+### 规则
+- ✅ 使用 `logger.debug()` 替代 `console.log`
+- ✅ 使用 `logger.info()` 替代 `console.info`
+- ✅ `logger.warn()` / `logger.error()` 始终输出
+- ❌ 禁止在生产环境输出 debug/info 日志
+
+### 性能监控
+- 关键耗时操作使用 `logger.time()` / `logger.timeEnd()`
+- 视图渲染监控使用 `usePerformance('ComponentName')`

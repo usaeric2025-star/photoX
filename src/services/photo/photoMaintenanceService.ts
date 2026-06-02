@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { 
   batchUpdatePhotosInCloud as updatePhotosBatch,
   clearCategoryFromPhotos,
@@ -51,7 +52,7 @@ export const deduplicatePhotos = async (userId?: string): Promise<AppResult<{rem
                removedCount++;
             }
           } catch (e) {
-            console.error(`Failed to remove duplicate ${duplicate.id}:`, e);
+            logger.error(`Failed to remove duplicate ${duplicate.id}:`, e);
           }
         }
       }
@@ -69,7 +70,7 @@ export const scanAndRepairPhotoIds = async (photos: Photo[]): Promise<Photo[]> =
 };
 
 export const repairGroupIntegrity = async (): Promise<{ dissolved: number, synced: number, deleted: number }> => {
-  console.log('[Maintenance] Starting Group Integrity Repair...');
+  logger.info('[Maintenance] Starting Group Integrity Repair...');
   
   // 1. Get all groups
   const { data: groups, error: groupsError } = await supabase.from('groups').select('id, name');
@@ -87,7 +88,7 @@ export const repairGroupIntegrity = async (): Promise<{ dissolved: number, synce
       .eq('group_id', group.id);
 
     if (countError) {
-      console.error(`[Maintenance] Failed to count for group ${group.id}:`, countError);
+      logger.error(`[Maintenance] Failed to count for group ${group.id}:`, countError);
       continue;
     }
 

@@ -29,6 +29,13 @@ export default defineConfig(({mode}) => {
     ],
     build: {
       emptyOutDir: true,
+      minify: mode === 'production' ? 'terser' : 'esbuild',
+      terserOptions: mode === 'production' ? {
+        compress: {
+          drop_console: true,
+          drop_debugger: true,
+        },
+      } : undefined,
       rollupOptions: {
         output: {
           manualChunks(id) {

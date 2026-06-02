@@ -1,3 +1,5 @@
+import { logger } from '@/lib/logger';
+
 type ErrorEvent = {
   id: string;
   message: string;
@@ -47,10 +49,7 @@ export function reportError(error: Error | string | unknown, context?: string) {
   saveToLocalStorage();
   
   // 控制台打印
-  console.group(`🐛 ${message}`);
-  if (context) console.log('Context:', context);
-  if (stack) console.log(stack);
-  console.groupEnd();
+  logger.error(`🐛 ${message}`, context, stack);
 }
 
 // 获取错误历史
@@ -71,10 +70,7 @@ if (typeof window !== 'undefined') {
   (window as any).__errors = errorHistory;
   (window as any).__getErrors = () => getErrorHistory();
   (window as any).__clearErrors = () => clearErrorHistory();
-  console.log(
-    '%c📋 错误追踪已启动',
-    'color: #2563eb; font-weight: bold;'
-  );
-  console.log('  window.__getErrors()  查看错误历史');
-  console.log('  window.__clearErrors() 清空错误历史');
+  logger.info('📋 错误追踪已启动');
+  logger.info('  window.__getErrors()  查看错误历史');
+  logger.info('  window.__clearErrors() 清空错误历史');
 }
