@@ -107,36 +107,39 @@ export function AdminGridContainer({
     });
 
     try {
-      const photoData: Photo[] = [];
+      const fileArray = Array.from(files);
+      let preparedCount = 0;
       
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        updateTask(taskId, { 
-          progress: Math.round(((i) / files.length) * 50), 
-          message: `正在准备 (${i + 1}/${files.length})` 
-        });
+      const photoData: Photo[] = await Promise.all(
+        fileArray.map(async (file) => {
+          const dataUrl = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              if (typeof event.target?.result === 'string') {
+                resolve(event.target.result);
+              } else {
+                reject(new Error('Failed to read file as data URL'));
+              }
+            };
+            reader.onerror = () => reject(new Error('读取档案失败 / File read failed'));
+            reader.readAsDataURL(file);
+          });
 
-        const dataUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = (event) => {
-            if (typeof event.target?.result === 'string') {
-              resolve(event.target.result);
-            } else {
-              reject(new Error('Failed to read file as data URL'));
-            }
-          };
-          reader.onerror = () => reject(new Error('读取档案失败 / File read failed'));
-          reader.readAsDataURL(file);
-        });
+          preparedCount++;
+          updateTask(taskId, { 
+            progress: Math.round((preparedCount / files.length) * 50), 
+            message: `正在准备 (${preparedCount}/${files.length})` 
+          });
 
-        photoData.push({
-          id: `temp-${crypto.randomUUID()}`,
-          name: file.name.split('.')[0],
-          uri: dataUrl,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        } as Photo);
-      }
+          return {
+            id: `temp-${crypto.randomUUID()}`,
+            name: file.name.split('.')[0],
+            uri: dataUrl,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          } as Photo;
+        })
+      );
 
       updateTask(taskId, { progress: 50, message: `正在上传 ${files.length} 张照片...` });
       
