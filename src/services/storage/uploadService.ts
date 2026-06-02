@@ -112,14 +112,22 @@ export const uploadImages = async (
         try {
           const errData = await presignRes.json();
           if (errData && errData.error) {
-            errMsg = typeof errData.error === 'object' ? JSON.stringify(errData.error) : String(errData.error);
+            if (typeof errData.error === 'object') {
+              const errObj = errData.error as any;
+              errMsg += `: ${errObj.message || JSON.stringify(errObj)}`;
+            } else {
+              errMsg += `: ${errData.error}`;
+            }
           }
         } catch (_) {}
         throw new Error(errMsg);
       }
 
       const result = await presignRes.json();
-      if (!result.success) throw new Error(result.error);
+      if (!result.success) {
+        const detail = typeof result.error === 'object' ? ((result.error as any).message || JSON.stringify(result.error)) : String(result.error);
+        throw new Error(`生成预签名地址异常: ${detail}`);
+      }
       const { uploadUrl, publicUrl } = result.data;
 
       try {
@@ -130,12 +138,12 @@ export const uploadImages = async (
         });
 
         if (!uploadRes.ok) {
-          throw new Error(`直接上传 R2 失败: ${uploadRes.statusText}`);
+          throw new Error(`直接上传 R2 失败: HTTP ${uploadRes.status} ${uploadRes.statusText}`);
         }
         
         if (isMain && onProgress) onProgress(100);
         return publicUrl;
-      } catch (browserUploadErr) {
+      } catch (browserUploadErr: any) {
         console.warn(`[uploadService] Browser direct upload to R2 failed (likely due to CORS policy or network). Retrying via server-proxied fallback...`, browserUploadErr);
         // Fallback: upload full base64 to server-proxied direct endpoint
         const fallbackRes = await api['upload-direct'].$post({
@@ -151,15 +159,21 @@ export const uploadImages = async (
           try {
             const errData = await fallbackRes.json();
             if (errData && errData.error) {
-              errMsg = typeof errData.error === 'object' ? JSON.stringify(errData.error) : String(errData.error);
+              if (typeof errData.error === 'object') {
+                const errObj = errData.error as any;
+                errMsg += `: ${errObj.message || JSON.stringify(errObj)}`;
+              } else {
+                errMsg += `: ${errData.error}`;
+              }
             }
           } catch (_) {}
-          throw new Error(errMsg);
+          throw new Error(`${errMsg}. (浏览器直传失败原因: ${browserUploadErr?.message || String(browserUploadErr)})`);
         }
 
         const fallbackResult = await fallbackRes.json();
         if (!fallbackResult.success) {
-          throw new Error(fallbackResult.error || `服务器中转直传失败`);
+          const detail = typeof fallbackResult.error === 'object' ? ((fallbackResult.error as any).message || JSON.stringify(fallbackResult.error)) : String(fallbackResult.error);
+          throw new Error(`服务器中转直传业务报错: ${detail}. (浏览器直传失败原因: ${browserUploadErr?.message || String(browserUploadErr)})`);
         }
 
         if (isMain && onProgress) onProgress(100);

@@ -6,10 +6,25 @@ import * as ErrorMonitor from '@sentry/react';
 export function extractErrorMessage(error: any): string {
   if (!error) return '未知错误';
   if (typeof error === 'string') return error;
-  
+
+  // Helper safely finding clean nested string messages
+  const getMessage = (val: any): string | null => {
+    if (!val) return null;
+    if (typeof val === 'string') return val;
+    if (typeof val === 'object') {
+      if (typeof val.message === 'string') return val.message;
+      if (typeof val.error === 'string') return val.error;
+      if (val.message && typeof val.message === 'object') {
+        const nested = getMessage(val.message);
+        if (nested) return nested;
+      }
+    }
+    return null;
+  };
+
   try {
     if (typeof error === 'object') {
-      // 1. Check for detailed network response structures
+      // 1. Direct checking for structured response or network formats
       if (error.response?.data?.error?.message) {
         return String(error.response.data.error.message);
       }
@@ -22,36 +37,57 @@ export function extractErrorMessage(error: any): string {
       if (error.error && typeof error.error === 'string') {
         return error.error;
       }
-      // 2. Parse raw response text if is an error string
-      if (typeof error.response?.data === 'string') {
-        try {
-          const parsed = JSON.parse(error.response.data);
-          if (parsed?.error?.message) return parsed.error.message;
-          if (parsed?.message) return parsed.message;
-        } catch (_) {}
-        return error.response.data;
-      }
-      // 3. Stringified messages from custom errors (e.g. JSON returned)
-      if (typeof error.message === 'string') {
+      if (error.message && typeof error.message === 'string') {
+        // Double check JSON stringified formats
         try {
           const parsed = JSON.parse(error.message);
-          if (parsed?.error?.message) return parsed.error.message;
-          if (parsed?.message) return parsed.message;
+          if (parsed?.error?.message) return String(parsed.error.message);
+          if (parsed?.message) return String(parsed.message);
         } catch (_) {}
         return error.message;
       }
+      
+      const foundMsg = getMessage(error.message) || getMessage(error.error) || getMessage(error);
+      if (foundMsg) return foundMsg;
+
+      // Status codes and details
+      if (error.statusText) {
+        return `${error.statusText} (Status: ${error.status || 'unknown'})`;
+      }
+      if (error.code) {
+        return `Error Code: ${error.code} ${error.details || ''}`;
+      }
     }
   } catch (_) {}
-  
-  if (error instanceof Error) {
+
+  if (error instanceof Error && error.message) {
     return error.message;
   }
-  
+
+  // Safe fallback serialization avoiding circular dependencies
   try {
-    return JSON.stringify(error);
-  } catch (_) {
-    return String(error);
-  }
+    const cache = new Set();
+    const str = JSON.stringify(error, (key, value) => {
+      if (typeof value === 'object' && value !== null) {
+        if (cache.has(value)) return '[Circular]';
+        cache.add(value);
+      }
+      return value;
+    });
+    if (str && str !== '{}') return str;
+  } catch (_) {}
+
+  // If even that fails or is empty, stringify keys and values
+  try {
+    if (typeof error === 'object') {
+      const keys = Object.keys(error);
+      if (keys.length > 0) {
+        return `[Object Error] Keys: ${keys.join(', ')} | Stringified: ${String(error)}`;
+      }
+    }
+  } catch (_) {}
+
+  return String(error);
 }
 
 export const globalHandleError = (error: any, context: string, silent: boolean = false) => {

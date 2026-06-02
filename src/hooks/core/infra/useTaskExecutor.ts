@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { useTasks } from './useTasks';
 import { reportError } from '@/lib/errorReporter';
 import { toast } from '@/lib/ui/toast';
+import { extractErrorMessage } from '@/lib/error/errorHandler';
 
 /**
  * Hook for executing long-running tasks with background progress tracking.
@@ -39,11 +40,12 @@ export function useTaskExecutor() {
       options?.onSuccess?.(result);
       return result;
     } catch (error) {
+      const errMsg = extractErrorMessage(error);
       if (taskId) {
-        updateTask(taskId, { status: 'error', progress: 100, message: `${name} 失败: ${(error as Error).message || '未知错误'}` });
+        updateTask(taskId, { status: 'error', progress: 100, message: `${name} 失败: ${errMsg}` });
       }
-      reportError(error as Error, name);
-      options?.onError?.(error as Error);
+      reportError(errMsg, name);
+      options?.onError?.(error instanceof Error ? error : new Error(errMsg));
       return null;
     }
   }, [addTask, updateTask]);
