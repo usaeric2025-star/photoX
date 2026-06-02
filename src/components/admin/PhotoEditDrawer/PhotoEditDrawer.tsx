@@ -13,7 +13,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs";
 import { getCacheBustedImageUrl } from "../../../lib/ui-helpers";
 import { translations } from "../../../lib/translations";
 
-import { usePhotoInfiniteList } from "../../../hooks";
+import { 
+  usePhotoInfiniteList,
+  useSettings,
+  useCategories,
+  useTags,
+  useManufacturers,
+  useTaskExecutor,
+  useErrorHandler
+} from "../../../hooks";
+import { toast } from "@/lib/ui/toast";
 import { cleanPhotos } from "../../../lib/filters";
 import { PAGINATION } from "../../../constants/config";
 import { useAdminActions } from "@/features/admin/useAdminActions";
@@ -54,7 +63,53 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
   const onDeletePhoto = (id: string) => adminActions.deletePhoto([id]);
   const onUpdatePhoto = (id: string, data: Partial<Photo>) =>
     adminActions.updatePhoto(id, data);
-  const onAiAnalyze = (photo: Photo) => {};
+
+  const { settings } = useSettings();
+  const { data: categories = [] } = useCategories();
+  const { data: tags = [] } = useTags();
+  const { data: manufacturers = [] } = useManufacturers();
+  const { runTask } = useTaskExecutor();
+  const { handleError } = useErrorHandler();
+
+  const onAiAnalyze = React.useCallback(async (photo: Photo) => {
+    const imageUrl = photo.uri || photo.image_url;
+    if (!imageUrl) {
+      handleError(new Error("照片没有有效的图片地址"), "AI 识别失败");
+      return;
+    }
+
+    await runTask("AI 属性智能识别", async () => {
+      const { analyzeProductPhoto } = await import("@/services/gemini");
+      const result = await analyzeProductPhoto(
+        imageUrl,
+        categories,
+        tags,
+        manufacturers,
+        settings?.gemini_api_key || "",
+        "google",
+        settings?.custom_model || ""
+      );
+
+      if (result) {
+        const updates: any = {};
+        if (result.name) updates.name = result.name;
+        if (result.category_id) updates.category_id = String(result.category_id);
+        if (Array.isArray(result.tag_ids)) {
+          updates.tag_ids = result.tag_ids.map((id: any) => String(id));
+        }
+        if (result.manufacturer_id) updates.manufacturer_id = String(result.manufacturer_id);
+        if (result.model_number) updates.model_number = result.model_number;
+        if (result.manual_code) updates.manual_code = result.manual_code;
+        if (result.description) updates.description = result.description;
+        if (Array.isArray(result.dimensions)) updates.dimensions = result.dimensions;
+        if (result.price) updates.price = String(result.price);
+
+        updateForm(updates);
+        toast.success("AI 属性识别成功并已填入表格");
+      }
+    });
+  }, [categories, tags, manufacturers, settings, runTask, updateForm, handleError]);
+
   const onCancelAnalyze = () => {};
 
   const infinitePhotosQuery = usePhotoInfiniteList(

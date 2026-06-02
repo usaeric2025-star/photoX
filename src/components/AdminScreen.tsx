@@ -1,6 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { AdminGridContainer } from '@/components/photo/AdminGridContainer';
-import { useMultiSelect, useAuth, useTasks, useSyncMutation, useAdminMode } from '@/hooks';
+import { 
+  useMultiSelect, 
+  useAuth, 
+  useTasks, 
+  useSyncMutation, 
+  useAdminMode,
+  useSettings,
+  useCategories,
+  useTags,
+  useManufacturers,
+  useTaskExecutor,
+  useErrorHandler
+} from '@/hooks';
+import { useAdminActions } from '@/features/admin/useAdminActions';
+import { toast } from '@/lib/ui/toast';
 import { usePhotoGallery } from '@/features/photos/usePhotoGallery';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { translations } from '@/lib/translations';
@@ -30,7 +44,63 @@ export function AdminScreen() {
   
   const t = translations[lang as keyof typeof translations] || translations.en;
   
-  const onBatchAiAnalyze = (photos: any[]) => {}; // To be refactored to use task execution
+  const { updatePhoto } = useAdminActions();
+  const { settings } = useSettings();
+  const { data: categories = [] } = useCategories();
+  const { data: tags = [] } = useTags();
+  const { data: manufacturers = [] } = useManufacturers();
+  const { runTask } = useTaskExecutor();
+  const { handleError } = useErrorHandler();
+
+  const onBatchAiAnalyze = React.useCallback(async (targetPhotos: any[]) => {
+    if (!targetPhotos || targetPhotos.length === 0) {
+      toast.error("没有可识别的照片");
+      return;
+    }
+
+    await runTask(`AI 批量属性识别 (${targetPhotos.length}张)`, async () => {
+      const { analyzeProductPhoto } = await import("@/services/gemini");
+      
+      let successCount = 0;
+      for (const p of targetPhotos) {
+        const imageUrl = p.uri || p.image_url;
+        if (!imageUrl) continue;
+
+        try {
+          const result = await analyzeProductPhoto(
+            imageUrl,
+            categories,
+            tags,
+            manufacturers,
+            settings?.gemini_api_key || "",
+            "google",
+            settings?.custom_model || ""
+          );
+
+          if (result) {
+            const updates: any = {};
+            if (result.name) updates.name = result.name;
+            if (result.category_id) updates.category_id = String(result.category_id);
+            if (Array.isArray(result.tag_ids)) {
+              updates.tag_ids = result.tag_ids.map((id: any) => String(id));
+            }
+            if (result.manufacturer_id) updates.manufacturer_id = String(result.manufacturer_id);
+            if (result.model_number) updates.model_number = result.model_number;
+            if (result.manual_code) updates.manual_code = result.manual_code;
+            if (result.description) updates.description = result.description;
+            if (result.price) updates.price = String(result.price);
+
+            await updatePhoto(p.id, updates);
+            successCount++;
+          }
+        } catch (err) {
+          console.error(`Failed to analyze photo ${p.id}:`, err);
+        }
+      }
+
+      toast.success(`批量识别完成: 成功识别 ${successCount}/${targetPhotos.length} 张照片`);
+    });
+  }, [categories, tags, manufacturers, settings, runTask, updatePhoto, handleError]);
 
   const variant = user ? 'full-management' : 'staff-workspace';
 
