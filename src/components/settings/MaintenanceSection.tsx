@@ -75,6 +75,13 @@ export function MaintenanceSection({
           onClick={async () => {
             await runTask("R2 存储对账", async () => {
               const response = await api.storage.audit.$get();
+              if (!response.ok) {
+                throw new Error(`审计请求失败 (HTTP ${response.status})。请检查服务端 R2 凭据与存储映射配置。`);
+              }
+              const contentType = response.headers.get("Content-Type");
+              if (!contentType || !contentType.includes("application/json")) {
+                throw new Error(`审计对接失败: 后端未返回有效的 JSON 数据 (${response.status})`);
+              }
               const result = await response.json();
               if (!result.success) throw new Error("Audit failed");
               const data = result.data;
@@ -95,6 +102,7 @@ export function MaintenanceSection({
             });
           }}
           className={buttonStyles.secondary + " w-full justify-start gap-3"}
+          id="btn-r2-audit"
         >
           <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center">
             <PackageSearch size={16} />
@@ -113,6 +121,13 @@ export function MaintenanceSection({
           onClick={async () => {
             await runTask("清理孤儿文件", async () => {
               const response = await api.storage.clean.$post();
+              if (!response.ok) {
+                throw new Error(`清理请求失败 (HTTP ${response.status})。请确认 R2 擦除权限已授权。`);
+              }
+              const contentType = response.headers.get("Content-Type");
+              if (!contentType || !contentType.includes("application/json")) {
+                throw new Error(`清理失败: 后端未返回有效的 JSON 响应 (${response.status})`);
+              }
               const result = await response.json();
               if (!result.success) throw new Error("Clean failed");
               const data = result.data;
@@ -127,7 +142,7 @@ export function MaintenanceSection({
                 });
               } else {
                 toast.success(
-                  "未发现多余的 R2 孤儿文件，一切洁净！ / Storage is already 100% clean.",
+                  "未发现多余 of R2 孤儿文件，一切洁净！ / Storage is already 100% clean.",
                 );
               }
             });

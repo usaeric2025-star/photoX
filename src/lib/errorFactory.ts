@@ -66,7 +66,24 @@ export function fromThrowable<T>(fn: () => T, context?: string): AppResult<T> {
   try {
     return success(fn());
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+    let message = '';
+    if (err instanceof Error) {
+      message = err.message;
+    } else if (err && typeof err === 'object') {
+      if ('message' in err && typeof (err as any).message === 'string') {
+        message = (err as any).message;
+      } else if ('error' in err && err.error && typeof err.error === 'object' && 'message' in err.error && typeof (err.error as any).message === 'string') {
+        message = (err.error as any).message;
+      } else {
+        try {
+          message = JSON.stringify(err);
+        } catch {
+          message = String(err);
+        }
+      }
+    } else {
+      message = String(err);
+    }
     return errorFactory(message, 'UNKNOWN', context, err);
   }
 }
@@ -78,7 +95,24 @@ export async function fromThrowableAsync<T>(
   try {
     return success(await fn());
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+    let message = '';
+    if (err instanceof Error) {
+      message = err.message;
+    } else if (err && typeof err === 'object') {
+      if ('message' in err && typeof (err as any).message === 'string') {
+        message = (err as any).message;
+      } else if ('error' in err && err.error && typeof err.error === 'object' && 'message' in err.error && typeof (err.error as any).message === 'string') {
+        message = (err.error as any).message;
+      } else {
+        try {
+          message = JSON.stringify(err);
+        } catch {
+          message = String(err);
+        }
+      }
+    } else {
+      message = String(err);
+    }
     return errorFactory(message, 'UNKNOWN', context, err);
   }
 }

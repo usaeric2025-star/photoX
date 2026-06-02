@@ -10,7 +10,7 @@ import {
   FileWarning,
   Bug
 } from 'lucide-react';
-import { client } from '@/lib/api';
+import { client, api } from '@/lib/api';
 import { DiagnosticsReport, DiagnosticIssue } from '@/types/diagnostics';
 import { motion, AnimatePresence } from 'motion/react';
 import { fromThrowableAsync } from '@/lib/errorFactory';
@@ -29,7 +29,7 @@ export function DiagnosticsDashboard() {
     setIsDiagnosingR2(true);
     setR2Error(null);
     const result = await fromThrowableAsync(
-        () => (client as any).admin['diagnose-r2'].$get(),
+        () => api.admin['diagnose-r2'].$get(),
         'diagnoseR2'
     );
 
@@ -66,7 +66,7 @@ export function DiagnosticsDashboard() {
     setIsLoading(true);
     setError(null);
     const result = await fromThrowableAsync(
-        () => (client as any).admin.diagnose.$get(),
+        () => api.admin.diagnose.$get(),
         'runDiagnostics'
     );
     
@@ -92,7 +92,7 @@ export function DiagnosticsDashboard() {
   const runRepair = async (issueId: string) => {
     setIsLoading(true);
     const result = await fromThrowableAsync(
-        () => (client as any).admin.repair[':issueId'].$post({
+        () => api.admin.repair[':issueId'].$post({
             param: { issueId }
         }),
         'runRepair'

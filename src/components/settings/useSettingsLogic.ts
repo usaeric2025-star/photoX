@@ -117,6 +117,13 @@ export const useSettingsLogic = ({
 
       // 3. Storage Audit (Orphans and missing files)
       const auditResp = await fetch("/api/storage/audit");
+      if (!auditResp.ok) {
+        throw new Error(`存储审计失败 (HTTP ${auditResp.status}): 无法连接存储后端。请确认 R2 容器与 Supabase 凭据配置正确。`);
+      }
+      const auditContentType = auditResp.headers.get("Content-Type");
+      if (!auditContentType || !auditContentType.includes("application/json")) {
+        throw new Error(`存储审计失败: 接口未返回有效的 JSON 数据 (${auditResp.status})`);
+      }
       const auditData = await auditResp.json();
       if (auditData.success && auditData.data) {
         const { missing, orphans } = auditData.data;
@@ -136,6 +143,13 @@ export const useSettingsLogic = ({
                   const cleanResp = await fetch("/api/storage/clean", {
                     method: "POST",
                   });
+                  if (!cleanResp.ok) {
+                    throw new Error(`清理存储失败 (HTTP ${cleanResp.status})，无法执行深度文件擦除。`);
+                  }
+                  const cleanContentType = cleanResp.headers.get("Content-Type");
+                  if (!cleanContentType || !cleanContentType.includes("application/json")) {
+                    throw new Error(`清理存储失败: 返回非 JSON 响应 (${cleanResp.status})`);
+                  }
                   const cleanData = await cleanResp.json();
                   if (cleanData.success) {
                     toast.success(

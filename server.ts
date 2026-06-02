@@ -7,6 +7,7 @@ import path from "path";
 import fs from "fs";
 import { S3Client, PutObjectCommand, ListObjectsV2Command, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { createClient } from "@supabase/supabase-js";
 import { getServerEnv } from "./src/shared/envSchema";
 import { logTraffic } from "./src/lib/trafficCapture";
 
@@ -14,10 +15,14 @@ import { logTraffic } from "./src/lib/trafficCapture";
 const serverEnv = getServerEnv(process.env);
 
 export async function getR2Client() {
-  const r2Endpoint = serverEnv.R2_ENDPOINT;
+  let r2Endpoint = serverEnv.R2_ENDPOINT;
   let r2AccessKeyId = serverEnv.R2_ACCESS_KEY_ID || '';
   let r2SecretAccessKey = serverEnv.R2_SECRET_ACCESS_KEY || '';
   
+  if (r2Endpoint && !r2Endpoint.startsWith("http://") && !r2Endpoint.startsWith("https://")) {
+    r2Endpoint = `https://${r2Endpoint}`;
+  }
+
   if (r2AccessKeyId.length === 64 && r2SecretAccessKey.length === 32) {
     const temp = r2AccessKeyId;
     r2AccessKeyId = r2SecretAccessKey;
@@ -75,7 +80,6 @@ app.onError((err, c) => {
 
 // --- Supabase Admin Helper ---
 async function getSupabaseAdmin() {
-  const { createClient } = await import("@supabase/supabase-js");
   const supabaseUrl = serverEnv.VITE_SUPABASE_URL || serverEnv.SUPABASE_URL;
   const supabaseKey = serverEnv.SUPABASE_SERVICE_KEY || serverEnv.VITE_SUPABASE_ANON_KEY; 
   

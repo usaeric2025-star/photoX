@@ -42,13 +42,14 @@ export const client = hc<AppType>(
           platformTip = " [诊断提示: 路径不存在，请检查后台路由重写 vercel.json 映射配置]";
         }
 
-        throw {
-          success: false,
-          error: {
-            message: `服务器响应异常 (HTTP ${resp.status}): ${text.substring(0, 400)}${platformTip}`,
-            code: 'INTERNAL_SERVER_ERROR'
-          }
+        const message = `服务器响应异常 (HTTP ${resp.status}): ${text.substring(0, 400)}${platformTip}`;
+        const errorInstance = new Error(message);
+        (errorInstance as any).success = false;
+        (errorInstance as any).error = {
+          message,
+          code: 'INTERNAL_SERVER_ERROR'
         };
+        throw errorInstance;
       }
       return resp;
     }
