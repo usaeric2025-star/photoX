@@ -168,6 +168,7 @@ export function AdminScreen() {
            <AdminEmptyState t={t} />
          ) : (
            <AdminGridContainer 
+              onBatchAiAnalyze={onBatchAiAnalyze}
              variant={variant}
              handleBatchAiIdentifyTrigger={async () => {
                 onBatchAiAnalyze(photos);

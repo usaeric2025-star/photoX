@@ -1,6 +1,7 @@
-import { useFormStatus } from 'react-dom';
-import { Trash2, Sparkles, Edit, X } from 'lucide-react';
+import React from 'react';
+import { Trash2, Sparkles, Edit, X, FolderPlus, EyeOff } from 'lucide-react';
 import { useUIStore } from '@/store/useUIStore';
+import { useGroupPhotosMutation } from '@/hooks';
 
 interface SelectionToolbarProps {
   onAIIdentify?: (ids: string[]) => void;
@@ -10,67 +11,17 @@ interface SelectionToolbarProps {
   onCopy?: (ids: string[]) => Promise<any>;
 }
 
-function DeleteButton({ onDelete }: { onDelete?: (ids: string[]) => void }) {
-  const { pending } = useFormStatus();
-
-  if (!onDelete) return null;
-
-  return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50"
-    >
-      <Trash2 size={14} />
-      <span>{pending ? '删除中...' : '删除'}</span>
-    </button>
-  );
-}
-
-function AIIdentifyButton({ onAIIdentify }: { onAIIdentify?: (ids: string[]) => void }) {
-  const { pending } = useFormStatus();
-
-  if (!onAIIdentify) return null;
-
-  return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-purple-600 text-white hover:bg-purple-700 transition-colors disabled:opacity-50"
-    >
-      <Sparkles size={14} />
-      <span>{pending ? '识别中...' : 'AI 识别'}</span>
-    </button>
-  );
-}
-
-function BatchEditButton({ onBatchEdit }: { onBatchEdit?: (ids: string[]) => void }) {
-  const { pending } = useFormStatus();
-
-  if (!onBatchEdit) return null;
-
-  return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
-    >
-      <Edit size={14} />
-      <span>{pending ? '保存中...' : '批量编辑'}</span>
-    </button>
-  );
-}
-
 export function SelectionToolbar({
   onAIIdentify,
   onBatchEdit,
   onDelete,
   onHide,
-  onCopy,
 }: SelectionToolbarProps) {
   const { selectedIds, update, isMultiSelect } = useUIStore();
   const count = selectedIds.length;
   const ids = selectedIds;
+
+  const groupMutation = useGroupPhotosMutation();
 
   if (!isMultiSelect || count === 0) return null;
 
@@ -78,35 +29,91 @@ export function SelectionToolbar({
     update({ isMultiSelect: false, selectedIds: [] });
   };
 
+  const handleGroup = async () => {
+    try {
+      await groupMutation.mutateAsync({ photoIds: ids });
+      handleClear();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t shadow-lg safe-bottom">
-      <div className="flex items-center justify-between px-4 py-3">
-        <div className="text-sm text-slate-600">
-          已选择 <span className="font-bold text-blue-600">{count}</span> 张照片
-        </div>
-
-        <div className="flex gap-2">
-          <form action={() => onAIIdentify?.(ids)}>
-            <AIIdentifyButton onAIIdentify={onAIIdentify} />
-          </form>
-
-          <form action={() => onBatchEdit?.(ids)}>
-            <BatchEditButton onBatchEdit={onBatchEdit} />
-          </form>
-
-          <form action={() => onDelete?.(ids)}>
-            <DeleteButton onDelete={onDelete} />
-          </form>
-
-          <button
-            onClick={handleClear}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
-          >
-            <X size={14} />
-            <span>关闭</span>
-          </button>
-        </div>
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 border border-slate-800 backdrop-blur rounded-full px-4 py-2 shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-300">
+      {/* Circle Badge showing selection count */}
+      <div 
+        className="w-7 h-7 flex items-center justify-center rounded-full bg-blue-600 text-white font-bold text-xs ring-4 ring-blue-600/15 shrink-0 select-none cursor-default"
+        title={`已选择 ${count} 张照片`}
+      >
+        {count}
       </div>
+
+      {/* Vertical divider */}
+      <div className="w-[1px] h-6 bg-slate-800" />
+
+      {/* Buttons */}
+      <div className="flex items-center gap-1.5">
+        {onAIIdentify && (
+          <button
+            onClick={() => onAIIdentify(ids)}
+            className="w-9 h-9 flex items-center justify-center rounded-full text-purple-400 hover:text-white hover:bg-purple-600/20 active:scale-95 transition-all"
+            title="AI 属性智能识别"
+          >
+            <Sparkles size={17} />
+          </button>
+        )}
+
+        <button
+          onClick={handleGroup}
+          disabled={groupMutation.isPending}
+          className="w-9 h-9 flex items-center justify-center rounded-full text-emerald-400 hover:text-white hover:bg-emerald-600/20 active:scale-95 transition-all disabled:opacity-50"
+          title="将选中的照片合组"
+        >
+          <FolderPlus size={17} />
+        </button>
+
+        {onBatchEdit && (
+          <button
+            onClick={() => onBatchEdit(ids)}
+            className="w-9 h-9 flex items-center justify-center rounded-full text-blue-400 hover:text-white hover:bg-blue-600/20 active:scale-95 transition-all"
+            title="批量修改属性"
+          >
+            <Edit size={17} />
+          </button>
+        )}
+
+        {onHide && (
+          <button
+            onClick={() => onHide(ids)}
+            className="w-9 h-9 flex items-center justify-center rounded-full text-amber-400 hover:text-white hover:bg-amber-600/20 active:scale-95 transition-all"
+            title="批量隐藏"
+          >
+            <EyeOff size={17} />
+          </button>
+        )}
+
+        {onDelete && (
+          <button
+            onClick={() => onDelete(ids)}
+            className="w-9 h-9 flex items-center justify-center rounded-full text-rose-400 hover:text-white hover:bg-rose-600/20 active:scale-95 transition-all"
+            title="批量删除"
+          >
+            <Trash2 size={17} />
+          </button>
+        )}
+      </div>
+
+      {/* Vertical divider */}
+      <div className="w-[1px] h-6 bg-slate-800" />
+
+      {/* Cancel button */}
+      <button
+        onClick={handleClear}
+        className="w-6 h-6 flex items-center justify-center rounded-full text-slate-400 hover:text-white hover:bg-slate-800 active:scale-90 transition-all"
+        title="关闭多选"
+      >
+        <X size={15} />
+      </button>
     </div>
   );
 }

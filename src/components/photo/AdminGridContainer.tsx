@@ -27,6 +27,7 @@ interface AdminGridContainerProps {
   variant: GalleryVariant;
   handleBatchAiIdentifyTrigger?: () => void;
   batchProgress?: any;
+  onBatchAiAnalyze?: (targetPhotos: any[]) => void;
 }
 
 const EMPTY_ARRAY: Photo[] = [];
@@ -34,7 +35,8 @@ const EMPTY_ARRAY: Photo[] = [];
 export function AdminGridContainer({
   variant,
   handleBatchAiIdentifyTrigger,
-  batchProgress
+  batchProgress,
+  onBatchAiAnalyze
 }: AdminGridContainerProps) {
   const isManagement = variant === 'full-management' || variant === 'staff-workspace';
   useScrollRestoration('admin_gallery_scroll');
@@ -200,6 +202,10 @@ export function AdminGridContainer({
           onDelete={(ids) => adminActions.deletePhoto(ids)}
           onBatchEdit={(ids) => store.update({ batchEditingIds: ids })}
           onHide={(ids) => adminActions.batchUpdate.mutateAsync({ ids, updates: { is_hidden: true } })}
+          onAIIdentify={onBatchAiAnalyze ? (ids) => {
+            const targetPhotos = photos.filter(p => ids.includes(p.id));
+            onBatchAiAnalyze(targetPhotos);
+          } : undefined}
         />
 
         {!urlFilters.groupId && urlFilters.photoId && (

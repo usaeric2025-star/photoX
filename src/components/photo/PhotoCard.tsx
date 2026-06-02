@@ -254,18 +254,18 @@ export const PhotoCard = ({
     cardRef,
     () => {
       longPressTriggered.current = true;
-      if (isManagement && can('photo:edit')) {
+      if (isManagement) {
         if (!isMultiSelect) {
           update({ isMultiSelect: true, selectedIds: [photo.id] } as any);
         } else {
           toggleSelected(photo.id);
         }
         if ('vibrate' in navigator) navigator.vibrate(50);
-      } else if (!isManagement) {
+      } else {
         onShare?.(photo);
       }
     },
-    { delay: 500 }
+    { delay: 400 }
   );
 
   const thumbSrc = getCacheBustedImageUrl(photo, 'thumb');
@@ -281,6 +281,10 @@ export const PhotoCard = ({
       style={{
         contentVisibility: 'auto',
         containIntrinsicSize: '300px',
+        WebkitTouchCallout: "none",
+        WebkitUserSelect: "none",
+        userSelect: "none",
+        touchAction: "manipulation",
       }}
       onClick={handleClick}
       className={cn(

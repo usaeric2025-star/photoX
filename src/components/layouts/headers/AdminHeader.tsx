@@ -5,7 +5,7 @@ import {
   LogOut,
   Settings,
   Menu,
-  Brain,
+  Sparkles,
   ListChecks,
   Image,
   Camera,
@@ -126,7 +126,7 @@ export function AdminHeader({
             className="w-9 h-9 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded-full transition-all active:scale-90"
             title="AI 批量识别"
           >
-            <Brain size={18} />
+            <Sparkles size={18} />
           </button>
         )}
 
