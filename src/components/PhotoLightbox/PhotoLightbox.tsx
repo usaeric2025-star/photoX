@@ -26,7 +26,6 @@ export interface PhotoLightboxProps {
   onEditPhoto?: (photo: Photo) => void;
   onToggleHidden?: (photo: Photo) => void;
   onTogglePinned?: (photo: Photo) => void;
-  onAiAnalyze?: (photo: Photo) => void;
   onCancelAnalyze?: () => void;
   isAnalyzing?: boolean;
   variant?: GalleryVariant;
@@ -71,7 +70,6 @@ export function PhotoLightbox(props: PhotoLightboxProps) {
   const onEditPhoto = props.onEditPhoto ?? ((p: Photo) => storeUpdate({ editPhotoId: p.id } as any));
   const onToggleHidden = props.onToggleHidden ?? ((p: Photo) => actions.updatePhoto(p.id, { is_hidden: !p.is_hidden }));
   const onTogglePinned = props.onTogglePinned ?? ((p: Photo) => actions.updatePhoto(p.id, { is_pinned: !p.is_pinned }));
-  const onAiAnalyze = props.onAiAnalyze ?? ((p: Photo) => {});
   const onCancelAnalyze = props.onCancelAnalyze ?? (() => {});
   const onUngroup = props.onUngroup ?? ((gid: string) => {});
   const onSetGroupCover = props.onSetGroupCover ?? ((id: string, gid: string) => {});
@@ -239,7 +237,6 @@ export function PhotoLightbox(props: PhotoLightboxProps) {
                       manufacturers={manufacturers}
                       tagMap={tagMap}
                       handleShare={handleShare}
-                      onAiAnalyze={isAdminMode ? onAiAnalyze : undefined}
                       onCancelAnalyze={onCancelAnalyze}
                       onToggleHidden={isAdminMode ? onToggleHidden : undefined}
                       onTogglePinned={isAdminMode ? onTogglePinned : undefined}

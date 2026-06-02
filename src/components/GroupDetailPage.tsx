@@ -266,7 +266,6 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
                       contactWhatsApp={props.contactWhatsApp || (() => {})}
                       onEditPhoto={onEditPhoto}
                       onToggleHidden={onToggleHidden}
-                      onAiAnalyze={onAiAnalyze}
                       onCancelAnalyze={onCancelAnalyze}
                       isAnalyzing={isAnalyzing}
                       variant={props.variant}

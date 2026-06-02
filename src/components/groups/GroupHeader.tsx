@@ -19,6 +19,7 @@ import {
 import { useUIStore, useShallow } from "@/store/useUIStore";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
 import { LanguageSwitcher } from "../ui/LanguageSwitcher";
+import { useGroupMutations } from "@/hooks/core/mutations/useGroupMutations";
 
 interface GroupHeaderProps {
   activeGroupId: string | null;
@@ -28,7 +29,6 @@ interface GroupHeaderProps {
   isGroupDataLoading: boolean;
   activeGroupPhotos: Photo[];
   onBatchAiAnalyzeByGroupId?: (groupId: string) => Promise<void | null>;
-  onBatchAiAnalyze?: (photos: Photo[]) => void;
 }
 
 export function GroupHeader({
@@ -38,7 +38,6 @@ export function GroupHeader({
   isGroupDataLoading,
   activeGroupPhotos,
   onBatchAiAnalyzeByGroupId,
-  onBatchAiAnalyze: propOnBatchAiAnalyze,
 }: GroupHeaderProps) {
   const { setGroupId } = useUrlFilters();
   const { update, isMultiSelect, selectedIds } =
@@ -50,7 +49,8 @@ export function GroupHeader({
       })),
     );
 
-  const onBatchAiAnalyze = propOnBatchAiAnalyze || ((photos: Photo[]) => {});
+  const { useBatchAiAnalyze } = useGroupMutations();
+  const onBatchAiAnalyze = (photos: Photo[]) => useBatchAiAnalyze(photos);
   const onBatchEdit = (ids: string[]) => update?.({ batchEditingIds: ids });
 
   return (

@@ -7,6 +7,7 @@ import { getTranslatedCategoryName, getPhotoDisplayName, getManufacturerName } f
 import { useAdminActions } from '@/features/admin/useAdminActions';
 import { Skeleton } from '../ui/Skeleton';
 import { usePermission, useErrorHandler, useTaskExecutor, useTasks } from '@/hooks';
+import { useAIPhotoAnalysis } from '@/hooks/core/mutations/useAIPhotoAnalysis';
 
 interface LightboxInfoPanelProps {
   photo: Photo;
@@ -22,7 +23,6 @@ interface LightboxInfoPanelProps {
   manufacturers: Manufacturer[];
   tagMap: Record<string, string>;
   handleShare: () => void;
-  onAiAnalyze?: (photo: Photo) => void;
   onCancelAnalyze?: () => void;
   onToggleHidden?: (photo: Photo) => void;
   onTogglePinned?: (photo: Photo) => void;
@@ -35,12 +35,13 @@ interface LightboxInfoPanelProps {
 export function LightboxInfoPanel({
   photo, groupData, isGroupDataLoading, activeLang, setActiveLang,
   isAdminMode, isCopied, isAnalyzing, t, categories,
-  manufacturers, tagMap, handleShare, onAiAnalyze, onCancelAnalyze,
+  manufacturers, tagMap, handleShare, onCancelAnalyze,
   onToggleHidden, onTogglePinned, onUngroup, onSetGroupCover, contactWhatsApp,
   onEditPhoto
 }: LightboxInfoPanelProps) {
   
   const update = useUIStore((s) => s.update);
+  const analyzePhoto = useAIPhotoAnalysis();
   
   if (!photo) {
     return (
@@ -79,8 +80,8 @@ export function LightboxInfoPanel({
 
   const handleAiAnalyze = async () => {
     try {
-      if (onAiAnalyze) {
-        await onAiAnalyze(photo);
+      if (analyzePhoto) {
+        await analyzePhoto(photo);
       }
     } catch (err) {
       handleError(err as Error, t.aiAnalyzeFailed || 'AI Analysis Failed');

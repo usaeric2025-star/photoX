@@ -18,14 +18,12 @@ import { translations } from "../../lib/translations";
 
 export interface GroupAdminShellProps {
   initialPhotoId?: string | null;
-  onAiAnalyze?: (photo: Photo) => void;
   onCancelAnalyze?: () => void;
   isAnalyzing?: boolean;
-  onBatchAiAnalyze?: (photos: Photo[]) => void;
 }
 
 export function GroupAdminShell(props: GroupAdminShellProps) {
-  const { onAiAnalyze, onCancelAnalyze, isAnalyzing, onBatchAiAnalyze } = props;
+  const { onCancelAnalyze, isAnalyzing } = props;
   const isAdminMode = useAdminMode();
 
   const { filters, setGroupId, setPhotoId } = useUrlFilters();
@@ -173,7 +171,6 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
                   isGroupDataLoading={isGroupDataLoading}
                   activeGroupPhotos={activeGroupPhotos}
                   onBatchAiAnalyzeByGroupId={analyzeGroupById}
-                  onBatchAiAnalyze={onBatchAiAnalyze}
                 />
 
                 <GroupGridView
@@ -233,7 +230,6 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
                   const photo = activeGroupPhotos[currentIndex];
                   if (!photo) return null;
 
-const actualOnAiAnalyze = onAiAnalyze || (onBatchAiAnalyze ? (p: Photo) => onBatchAiAnalyze([p]) : undefined);
                   return (
                     <PhotoLightbox
                       photoId={focusedGroupPhotoId}
@@ -245,7 +241,6 @@ const actualOnAiAnalyze = onAiAnalyze || (onBatchAiAnalyze ? (p: Photo) => onBat
                       onSetGroupCover={handleSetGroupCoverLightbox}
                       onEditPhoto={handleEditPhoto}
                       onToggleHidden={handleToggleHiddenLightbox}
-                      onAiAnalyze={actualOnAiAnalyze}
                       onCancelAnalyze={onCancelAnalyze}
                       isAnalyzing={isAnalyzing}
                     />
