@@ -4,7 +4,7 @@ import { SheetHeader, SheetTitle } from "../../ui/sheet";
 import { ProductGroup } from "../../../types";
 import { AlertDialogProps } from "@/store/useUIStore";
 import { saveGroup as saveGroupToCloud } from "@/services/group/commands";
-import { useFeedback, useTaskExecutor, useTasks } from "../../../hooks";
+import { useErrorHandler, useTaskExecutor, useTasks } from "../../../hooks";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
 
 export function GroupSettingsHeader({
@@ -21,7 +21,7 @@ export function GroupSettingsHeader({
   
 }) {
   const { setGroupId } = useUrlFilters();
-  const { showError: handleError } = useFeedback();
+  const { handleError } = useErrorHandler();
   const { runTask } = useTaskExecutor();
   const { tasks } = useTasks();
   const isRunning = tasks.some((t) => t.status === "running");

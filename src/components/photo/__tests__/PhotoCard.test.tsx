@@ -10,22 +10,14 @@ vi.mock('../../lib/translations', () => ({
   translations: { en: { loading: '...' } },
 }));
 
-vi.mock('../virtualizer/useInteractionBridge', () => ({
-  useInteractionBridge: () => ({
-    setters: {
-      toggleSelected: vi.fn(),
-      update: vi.fn()},
+vi.mock('@/store/useUIStore', () => ({
+  useUIStore: (selector: any) => selector({
+    selectedIds: [],
+    isMultiSelect: false,
+    toggleSelected: vi.fn(),
+    update: vi.fn(),
   }),
-}));
-
-vi.mock('@/lib/interactionBus', () => ({
-  interactionBus: {
-    current: {
-      selectedIds: new Set(),
-      isMultiSelect: false,
-    },
-    subscribe: vi.fn(() => () => {}),
-  },
+  useShallow: (v: any) => v,
 }));
 
 const mockPhoto = {

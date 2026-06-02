@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { movePhotosToGroup } from '@/services/photoMutationService';
-import { useFeedback } from '@/hooks';
+import { useErrorHandler } from '@/hooks';
 import { match } from 'ts-pattern';
 import { fromThrowableAsync } from '@/lib/errorFactory';
 
@@ -11,7 +11,7 @@ import { fromThrowableAsync } from '@/lib/errorFactory';
  */
 export const useDragGrouping = (userId: string) => {
     const queryClient = useQueryClient();
-    const { handleError } = useFeedback();
+    const { handleError } = useErrorHandler();
 
     return useMutation({
         mutationFn: async ({ photoIds, targetGroupId }: { photoIds: string[], targetGroupId: string | null }) => {

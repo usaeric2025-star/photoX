@@ -3,7 +3,8 @@ import { Plus } from "lucide-react";
 import { Manufacturer } from "../../types";
 import { ManufacturerItem } from "../admin/ManufacturerItem";
 import { useUIStore, useShallow } from "@/store/useUIStore";
-import { useFeedback } from "../../hooks";
+import { useErrorHandler } from "../../hooks";
+import { toast } from "@/lib/ui/toast";
 import { normalizeManufacturerName } from "@/lib/utils/stringHelper";
 
 interface ManufacturersSectionProps {
@@ -27,7 +28,7 @@ export function ManufacturersSection({
   buttonStyles,
 }: ManufacturersSectionProps) {
   const { update } = useUIStore(useShallow((s) => ({ update: s.update })));
-  const { showSuccess, showError } = useFeedback();
+  const { handleError } = useErrorHandler();
 
   const handleAddManufacturer = () => {
     update({
@@ -56,9 +57,9 @@ export function ManufacturersSection({
           if (normalized && normalized !== mfr.name) {
             try {
               await updateManufacturer(String(mfr.id), { name: normalized });
-              showSuccess("厂商更新成功");
+              toast.success("厂商更新成功");
             } catch (e) {
-              showError(e, "更新厂商失败");
+              handleError(e, "更新厂商失败");
             }
           }
         },

@@ -70,14 +70,18 @@ export function AdminHeader({
   };
 
   const handleBatchDelete = async () => {
-    if (
-      window.confirm(
-        `Are you sure you want to delete ${selectedIds.length} photos?`,
-      )
-    ) {
-      await deletePhoto(selectedIds);
-      disable();
-    }
+    update({
+        alertDialog: {
+            title: "确认删除",
+            message: `确认删除这 ${selectedIds.length} 张照片吗？`,
+            confirmLabel: "删除",
+            type: "danger",
+            onConfirm: async () => {
+              await deletePhoto(selectedIds);
+              disable();
+            }
+        }
+    });
   };
 
   const handleBatchHide = async () => {

@@ -53,14 +53,14 @@ import { GalleryVariant } from '@/types/variant';
 import { Layers, Heart, Check, EyeOff } from 'lucide-react';
 import { getCacheBustedImageUrl } from '../../lib/ui-helpers';
 import { ResponsivePhoto } from '../shared/ResponsivePhoto';
-import { usePermission, useFilters, useCategories, useTags } from '../../hooks';
+import { usePermission, useFilters, useCategories, useTags, useErrorHandler } from '../../hooks';
 import { useAdminActions } from '@/features/admin/useAdminActions';
 import { useTogglePin } from '@/hooks/core/mutations/useTogglePin';
-import { useInteractionBridge } from '../virtualizer/useInteractionBridge';
-import { interactionBus } from '@/lib/interactionBus';
+
+import { toast } from '@/lib/ui/toast';
 import { cn } from '@/lib/utils';
 import { translations } from '@/lib/translations';
-import { useUIStore } from '@/store/useUIStore';
+import { useUIStore, useShallow } from '@/store/useUIStore';
 import { useMemo } from 'react';
 
 export interface PhotoCardProps {
@@ -180,8 +180,13 @@ export const PhotoCard = ({
   className = '', onClick,
   hideDetails = false
 }: PhotoCardProps) => {
-  const { setters } = useInteractionBridge();
-  const { filters } = useFilters();
+  const { toggleSelected, update, isMultiSelect, selectedIds } = useUIStore(useShallow(s => ({ 
+    toggleSelected: s.toggleSelected, 
+    update: s.update,
+    isMultiSelect: s.isMultiSelect,
+    selectedIds: s.selectedIds
+  })));
+  const { handleError } = useErrorHandler();
   const cardRef = useRef<HTMLDivElement>(null);
   const isManagement = variant === 'full-management' || variant === 'staff-workspace';
   
@@ -203,32 +208,7 @@ export const PhotoCard = ({
     .map(id => tagMap.get(String(id))?.name ?? '')
     .filter(Boolean);
 
-  // Initial values for the first render to avoid flicker
-  const initialIsSelected = interactionBus.current.selectedIds.has(photo.id);
-  const initialIsMultiSelect = interactionBus.current.isMultiSelect;
-
-  // Subscription for zero-re-render UI updates
-  useEffect(() => {
-    if (!cardRef.current) return;
-
-    const unsubscribe = interactionBus.subscribe((state) => {
-      if (!cardRef.current) return;
-      const isSelected = state.selectedIds.has(photo.id);
-      
-      // Update DOM directly to avoid React re-render overhead in the grid
-      if (cardRef.current.dataset.selected !== String(isSelected)) {
-        cardRef.current.dataset.selected = String(isSelected);
-      }
-      if (cardRef.current.dataset.multiselect !== String(state.isMultiSelect)) {
-        cardRef.current.dataset.multiselect = String(state.isMultiSelect);
-      }
-    });
-
-    return () => { unsubscribe(); };
-  }, [photo.id]);
-
-  // Ensure consistent group count access
-  const photoMemberCount = photo.group?.member_count ?? 1;
+  const isSelected = useMemo(() => selectedIds.includes(photo.id), [selectedIds, photo.id]);
 
   const { can } = usePermission();
 
@@ -242,11 +222,9 @@ export const PhotoCard = ({
       return;
     }
 
-    const { isMultiSelect } = interactionBus.current;
-    
     if (isManagement) {
       if (isMultiSelect && !e.shiftKey) {
-        setters.toggleSelected(photo.id);
+        toggleSelected(photo.id);
       } else if (photo.group_id && onGroupClick) {
         e.stopPropagation();
         e.preventDefault();
@@ -269,12 +247,10 @@ export const PhotoCard = ({
     cardRef,
     () => {
       if (isManagement && can('photo:edit')) {
-        const { isMultiSelect } = interactionBus.current;
         if (!isMultiSelect) {
-          setters.update({ isMultiSelect: true } as any);
-          setters.update({ selectedIds: [photo.id] } as any);
+          update({ isMultiSelect: true, selectedIds: [photo.id] } as any);
         } else {
-          setters.toggleSelected(photo.id);
+          toggleSelected(photo.id);
         }
         if ('vibrate' in navigator) navigator.vibrate(50);
       } else if (!isManagement) {
@@ -288,13 +264,12 @@ export const PhotoCard = ({
 
   const is_hidden = !!photo.is_hidden;
 
-
   return (
     <div 
       ref={cardRef}
       data-photo-id={photo.id}
-      data-selected={initialIsSelected}
-      data-multiselect={initialIsMultiSelect}
+      data-selected={isSelected}
+      data-multiselect={isMultiSelect}
       style={{
         contentVisibility: 'auto',
         containIntrinsicSize: '300px',

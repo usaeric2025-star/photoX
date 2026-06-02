@@ -14,8 +14,8 @@ import {
   normalizeManufacturerName,
 } from "@/lib/utils/stringHelper";
 import { fromThrowableAsync } from '@/lib/errorFactory';
-import { toast } from 'sonner';
-import { useFeedback, useInvalidatePhotos, useTaskExecutor } from "@/hooks";
+import { toast } from '@/lib/ui/toast';
+import { useErrorHandler, useInvalidatePhotos, useTaskExecutor } from "@/hooks";
 
 interface UseSettingsLogicProps {
   user: User | null;
@@ -37,7 +37,7 @@ export const useSettingsLogic = ({
   setSettings,
 }: UseSettingsLogicProps) => {
   const { update } = useUIStore(useShallow((s) => ({ update: s.update })));
-  const { handleError, showSuccess, showError } = useFeedback();
+  const { handleError } = useErrorHandler();
   const invalidatePhotos = useInvalidatePhotos();
   const { runTask } = useTaskExecutor();
 
@@ -83,9 +83,9 @@ export const useSettingsLogic = ({
               const { removed } = result.data;
               if (removed > 0) {
                 await performPullSync();
-                showSuccess(`排重完成！共清理了 ${removed} 张重复记录。`);
+                toast.success(`排重完成！共清理了 ${removed} 张重复记录。`);
               } else {
-                showSuccess("扫描完毕，未发现重复记录。");
+                toast.success("扫描完毕，未发现重复记录。");
               }
             } else {
               handleError(result.error, "排重失败");
@@ -98,7 +98,7 @@ export const useSettingsLogic = ({
   const handleHealthCheck = useCallback(
     async (allPhotos: Photo[]) => {
       try {
-        showSuccess("正在启动系统级一致性巡检...", true);
+        toast.success("正在啟動系統級一致性巡檢...");
 
         // 1. Check data consistency (IDs)
         const broken = await scanAndRepairPhotoIds(allPhotos);
@@ -114,8 +114,8 @@ export const useSettingsLogic = ({
           groupRepair.synced > 0 ||
           groupRepair.deleted > 0
         ) {
-          showSuccess(
-            `合组一致性修复：解散孤立组 ${groupRepair.dissolved} 个，同步计数 ${groupRepair.synced} 个，清理空组 ${groupRepair.deleted} 个`,
+          toast.success(
+            `合組一致性修復：解散孤立組 ${groupRepair.dissolved} 個，同步計數 ${groupRepair.synced} 個，清理空組 ${groupRepair.deleted} 個`,
           );
         }
 
@@ -136,14 +136,14 @@ export const useSettingsLogic = ({
                   confirmLabel: "立即清理",
                   onConfirm: async () => {
                     update({ alertDialog: null });
-                    showSuccess("正在清理存储空间...", true);
+                    toast.success("正在清理存儲空間...");
                     const cleanResp = await fetch("/api/storage/clean", {
                       method: "POST",
                     });
                     const cleanData = await cleanResp.json();
                     if (cleanData.success) {
-                      showSuccess(
-                        `清理完成！共删除 ${cleanData.data.cleanedCount} 个文件。`,
+                      toast.success(
+                        `清理完成！共刪除 ${cleanData.data.cleanedCount} 個文件。`,
                       );
                     }
                   },
@@ -157,7 +157,7 @@ export const useSettingsLogic = ({
         const missingHashes = await getPhotosWithoutThumbHash();
 
         if (!missingHashes || missingHashes.length === 0) {
-          showSuccess("系统诊断完成：所有照片健康度良好");
+          toast.success("系統診斷完成：所有照片健康度良好");
           return;
         }
 
@@ -169,17 +169,17 @@ export const useSettingsLogic = ({
 
         if (backfilledCount > 0) {
           invalidatePhotos();
-          showSuccess(
-            `诊断修复完成，成功回填 ${backfilledCount} 张照片的占位图！`,
+          toast.success(
+            `診斷修復完成，成功回填 ${backfilledCount} 張照片的佔位圖！`,
           );
         } else {
-          showSuccess("诊断完成：未发现需要修复的项目");
+          toast.success("診斷完成：未發現需要修復的项目");
         }
       } catch (err: any) {
-        handleError(err, "诊断失败");
+        handleError(err, "診斷失敗");
       }
     },
-    [handleError, showSuccess, invalidatePhotos, showError],
+    [handleError, invalidatePhotos],
   );
 
   const togglePin = useCallback(
@@ -225,7 +225,7 @@ export const useSettingsLogic = ({
       );
       if (ok) {
         setTestResult({ success: true });
-        showSuccess("测试成功：AI 服务连接正常！");
+        toast.success("測試成功：AI 服務連接正常！");
       } else {
         setTestResult({ success: false, error: "连接失败" });
       }

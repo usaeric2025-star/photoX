@@ -1,5 +1,6 @@
 import React, { useActionState, useOptimistic, startTransition, useEffect } from 'react';
 import { X as CloseIcon, RefreshCcw, Save, Trash2 } from 'lucide-react';
+import { useUIStore } from '@/store/useUIStore';
 import { useBatchEdit } from '@/hooks';
 import { BatchEditForm } from './edit/BatchEditForm';
 import { supabase } from '@/lib/supabase';
@@ -34,6 +35,7 @@ async function batchDeleteAction(prevState: { error: string | null; success?: bo
 function BatchDeleteButton({ selectedIds, onSuccess }: { selectedIds: string[], onSuccess: () => void }) {
   const [state, formAction, isPending] = useActionState(batchDeleteAction, { error: null });
   const [optimisticCount, setOptimisticCount] = useOptimistic(selectedIds.length);
+  const update = useUIStore(s => s.update);
 
   useEffect(() => {
     if (state.success) {
@@ -43,13 +45,21 @@ function BatchDeleteButton({ selectedIds, onSuccess }: { selectedIds: string[], 
 
   const handleDelete = () => {
     if (selectedIds.length === 0) return;
-    if (!window.confirm(`确认删除这 ${selectedIds.length} 项吗？`)) return;
-    
-    startTransition(() => {
-      setOptimisticCount(0);
-      const formData = new FormData();
-      formData.append('photoIds', JSON.stringify(selectedIds));
-      formAction(formData);
+    update({
+        alertDialog: {
+            title: "确认删除",
+            message: `确认删除这 ${selectedIds.length} 项吗？`,
+            confirmLabel: "删除",
+            type: "danger",
+            onConfirm: () => {
+              startTransition(() => {
+                setOptimisticCount(0);
+                const formData = new FormData();
+                formData.append('photoIds', JSON.stringify(selectedIds));
+                formAction(formData);
+              });
+            }
+        }
     });
   };
 

@@ -1,3 +1,4 @@
+import { toast } from '@/lib/ui/toast';
 import { useUIStore } from '@/store/useUIStore';
 import React, { useState, useMemo, useCallback, useRef } from "react";
 import { X, Check, Search, Plus, Upload, Sparkles } from "lucide-react";
@@ -9,7 +10,7 @@ import {
   DialogFooter,
 } from "../ui/dialog";
 import { Photo } from "../../types";
-import { usePhotoInfiniteList, useTaskExecutor, useTasks, useFeedback } from "@/hooks";
+import { usePhotoInfiniteList, useTaskExecutor, useTasks } from "@/hooks";
 import { PAGINATION } from "../../constants/config";
 import { GroupGridView } from "./GroupGridView";
 import { cn } from "@/lib/utils";
@@ -32,7 +33,6 @@ export function GroupPhotoPicker({
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const { user } = useAuth();
-  const { showError, showSuccess } = useFeedback();
 
   const handlePhotoImport = async (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -54,7 +54,7 @@ export function GroupPhotoPicker({
     } as any));
 
     await savePhotosToCloudBatch(user.id, photoData);
-    showSuccess("照片已上传");
+    toast.success("照片已上传");
   };
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { runTask } = useTaskExecutor();

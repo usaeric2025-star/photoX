@@ -2,7 +2,7 @@ import React, { useState, useRef, useMemo } from "react";
 import { Pencil, Trash2, Heart, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
-  useFeedback,
+  useErrorHandler,
   useTagsDisplay,
   useSettings,
   useUIStore,
@@ -36,7 +36,7 @@ export function TagEditor({
   const { update } = useUIStore(useShallow((s) => ({ update: s.update })));
   const [searchTerm, setSearchTerm] = useState("");
   const { settings, updateSettings } = useSettings();
-  const { showError } = useFeedback();
+  const { handleError } = useErrorHandler();
   const [activeActionTag, setActiveActionTag] = useState<Tag | null>(null);
 
   const togglePin = async (tagId: string) => {
@@ -49,7 +49,7 @@ export function TagEditor({
       const nextSettings = { ...settings, pinned_tags: newPinned };
       await updateSettings(nextSettings);
     } catch (err) {
-      showError(err, "切换置顶状态");
+      handleError(err, "切换置顶状态");
     }
   };
 

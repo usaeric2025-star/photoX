@@ -5,7 +5,7 @@ import {
 import { User, ApiResponse } from '@/types';
 import { AlertDialogProps } from '@/store/useUIStore';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { useFeedback } from '@/hooks';
+import { toast } from '@/lib/ui/toast';
 
 interface SyncSectionProps {
   user: User | null;
@@ -30,7 +30,6 @@ export function SyncSection({
   isSyncing,
   update
 }: SyncSectionProps) {
-  const { showSuccess } = useFeedback();
   
   return (
     <div className="bg-brand-navy rounded-[32px] p-6 shadow-xl border border-white/5 space-y-4 relative overflow-hidden group">
@@ -117,7 +116,7 @@ export function SyncSection({
                   onConfirm: async () => {
                     localStorage.removeItem('uuid_v2_cleanup_done');
                     await refreshCloudData(user, true);
-                    showSuccess('本地缓存已重置 / Cache reset');
+                    toast.success('本地缓存已重置 / Cache reset');
                   },
                   type: 'danger'
                 } });

@@ -2,9 +2,10 @@ import { useShallow } from "@/store/useUIStore";
 import React from "react";
 import { TagEditor } from "../TagEditor";
 import { Tag } from "../../../types";
+import { toast } from '@/lib/ui/toast';
 import { useUIStore } from "../../../store";
 import { safeArray } from "../../../lib/utils";
-import { useFeedback } from "../../../hooks";
+import { useErrorHandler } from "@/hooks";
 
 interface PhotoTagSelectorProps {
   tags: Tag[];
@@ -24,7 +25,7 @@ export function PhotoTagSelector({
   deleteTag,
 }: PhotoTagSelectorProps) {
   const { update } = useUIStore(useShallow((s) => ({ update: s.update })));
-  const { showError } = useFeedback();
+  const { handleError } = useErrorHandler();
 
   const cleanSelectedIds = React.useMemo(() => {
     return Array.from(
@@ -88,7 +89,7 @@ export function PhotoTagSelector({
               }
             }
           } catch (err: any) {
-            showError(err, "新增标签失败");
+            handleError(err, "新增标签失败");
           }
         },
       },
@@ -106,7 +107,7 @@ export function PhotoTagSelector({
             try {
               await updateTag(String(tag.id), n.trim());
             } catch (err: any) {
-              showError(err, "编辑标签失败");
+              handleError(err, "编辑标签失败");
             }
           }
         },

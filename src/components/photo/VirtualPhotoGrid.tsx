@@ -5,7 +5,6 @@ import { useUIStore, useShallow } from '@/store/useUIStore';
 import { useUrlFilters } from '@/hooks/useUrlFilters';
 import { translations } from '../../lib/translations';
 import { PhotoGridSkeleton } from './PhotoGridSkeleton';
-import { interactionBus } from '@/lib/interactionBus';
 
 interface VirtualPhotoGridProps {
   photos: Photo[];
@@ -52,19 +51,6 @@ export function VirtualPhotoGrid({
       }
     }
   }, [filters.groupId, photos, filters.photoId, ref]);
-
-  // [INTERACTION-BRIDGE-SYNC]
-  const { update } = useUIStore(useShallow(multiSelectSelector));
-
-  useEffect(() => {
-    const unsubscribe = interactionBus.subscribe((state) => {
-      requestAnimationFrame(() => {
-        update({ isMultiSelectMode: state.isMultiSelect });
-        update({ selectedIds: Array.from(state.selectedIds) });
-      });
-    });
-    return () => { unsubscribe(); };
-  }, [update]);
 
   const isLoading = isFetching && photos.length === 0;
 

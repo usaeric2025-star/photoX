@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { RefreshCw, MoreHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
-import { useFilters, useCategories, useTags } from '@/hooks';
+import { useFilters, useCategories, useTags, useTagsDisplay, useSettings } from '@/hooks';
 import { useUIStore } from '@/store/useUIStore';
 import { cn } from '@/lib/utils';
 import { Category } from '@/types';
@@ -10,6 +10,7 @@ export function FilterPanel() {
     const { filters, setCategory, setTags } = useFilters();
     const { data: categories = [] } = useCategories();
     const { data: tags = [] } = useTags();
+    const { settings } = useSettings();
     const appLang = useUIStore(s => s.appLang);
     const [isExpanded, setIsExpanded] = useState(false);
 
@@ -23,15 +24,11 @@ export function FilterPanel() {
         }))
     ], [categories, appLang, t.all]);
 
-    // Tags (pinned first + sorted by hot score)
-    const sortedTags = useMemo(() => {
-        const pinned = tags.filter(t => t.is_pinned);
-        const others = tags.filter(t => !t.is_pinned).sort((a, b) => (b.hot_score || 0) - (a.hot_score || 0));
-        return [...pinned, ...others];
-    }, [tags]);
+    // Unified Tags Logic using useTagsDisplay
+    const { tagsToRender, pinnedIds, hotIds } = useTagsDisplay(tags, settings);
 
-    const visibleTags = isExpanded ? sortedTags : sortedTags.slice(0, 15);
-    const hiddenCount = sortedTags.length - 15;
+    const visibleTags = isExpanded ? tagsToRender : tagsToRender.slice(0, 15);
+    const hiddenCount = tagsToRender.length - 15;
 
     return (
         <div className="flex flex-col border-t border-slate-100 bg-white relative z-50">
@@ -62,7 +59,7 @@ export function FilterPanel() {
                     <span className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.05em]">
                         {t.hotTags}
                     </span>
-                    {sortedTags.length > 15 && (
+                    {tagsToRender.length > 15 && (
                          <button 
                              onClick={() => setIsExpanded(!isExpanded)}
                              className="text-[10px] p-1.5 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-all cursor-pointer pointer-events-auto"
@@ -77,31 +74,36 @@ export function FilterPanel() {
                     "flex flex-wrap gap-x-1 gap-y-1 items-center",
                     !isExpanded && "max-h-[52px] overflow-hidden content-start"
                 )}>
-                    {visibleTags.map((tag, idx) => (
-                       <button
-                           key={tag.id}
-                           onClick={() => {
-                               const isSelected = filters.tagIds?.includes(tag.id);
-                               const nextTags = isSelected
-                                   ? filters.tagIds?.filter(id => id !== tag.id)
-                                   : [...(filters.tagIds || []), tag.id];
-                               setTags(nextTags);
-                           }}
-                           className={cn(
-                               "h-6 text-[10.5px] px-3 rounded-full transition-all duration-200 flex items-center justify-center cursor-pointer pointer-events-auto border",
-                               // Selected state
-                               filters.tagIds?.includes(tag.id) 
-                                   ? 'bg-[#2563EB] text-white font-semibold border-transparent' 
-                                   : 'bg-[#F3F4F6] text-[#374151] border-[#E5E7EB] hover:border-slate-300',
-                               // Accent for pinned/top tags when not selected
-                               !filters.tagIds?.includes(tag.id) && (tag.is_pinned || idx < 5) 
-                                   ? 'bg-slate-800 text-white border-transparent' 
-                                   : ''
-                           )}
-                       >
-                           {tag.name}
-                       </button>
-                    ))}
+                    {visibleTags.map((tag) => {
+                        const isPinned = pinnedIds.includes(String(tag.id));
+                        const isHot = hotIds.has(String(tag.id));
+                        const isSelected = filters.tagIds?.includes(tag.id);
+
+                        return (
+                           <button
+                               key={tag.id}
+                               onClick={() => {
+                                   const nextTags = isSelected
+                                       ? filters.tagIds?.filter(id => id !== tag.id)
+                                       : [...(filters.tagIds || []), tag.id];
+                                   setTags(nextTags);
+                               }}
+                               className={cn(
+                                   "h-6 text-[10.5px] px-3 rounded-full transition-all duration-200 flex items-center justify-center cursor-pointer pointer-events-auto border",
+                                   // Selected state
+                                   isSelected 
+                                       ? 'bg-[#2563EB] text-white font-semibold border-transparent' 
+                                       : 'bg-[#F3F4F6] text-[#374151] border-[#E5E7EB] hover:border-slate-300',
+                                   // Accent for pinned/hot tags when not selected
+                                   !isSelected && (isPinned || isHot) 
+                                       ? 'bg-slate-800 text-white border-transparent' 
+                                       : ''
+                               )}
+                           >
+                               {tag.name}
+                           </button>
+                        );
+                    })}
                 </div>
             </div>
         </div>

@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient, UseMutationOptions, QueryKey, QueryClient } from '@tanstack/react-query';
-import { useFeedback } from '@/hooks';
+import { useErrorHandler } from '@/hooks';
+import { toast } from '@/lib/ui/toast';
 import { useTaskExecutor } from '@/hooks/core/infra/useTaskExecutor';
 
 export interface MutationConfig<TData, TVariables, TContext> {
@@ -23,7 +24,7 @@ export function createMutationHook<TData = void, TVariables = void, TContext = u
 ) {
   return function useStandardMutation(options?: UseMutationOptions<TData, unknown, TVariables, TContext>) {
     const queryClient = useQueryClient();
-    const { showSuccess, handleError } = useFeedback();
+    const { handleError } = useErrorHandler();
     const { runTask } = useTaskExecutor();
 
     const mutation = useMutation<TData, unknown, TVariables, TContext>({
@@ -45,7 +46,7 @@ export function createMutationHook<TData = void, TVariables = void, TContext = u
           const msg = typeof config.onSuccessMessage === 'function' 
             ? config.onSuccessMessage(data, variables) 
             : config.onSuccessMessage;
-          showSuccess(msg);
+          toast.success(msg);
         }
 
         // Custom success callback

@@ -3,9 +3,9 @@ import { Plus, Heart, RefreshCw } from "lucide-react";
 import { Tag, AppSettings } from "../../types";
 import { TagItem } from "./TagItem";
 import { useUIStore, useShallow } from "@/store/useUIStore";
-import { useFeedback } from "../../hooks";
+import { useErrorHandler, useTaskExecutor, useTasks } from "@/hooks";
+import { toast } from "@/lib/ui/toast";
 import { normalizeTagName } from "@/lib/utils/stringHelper";
-import { useTaskExecutor, useTasks } from "@/hooks";
 import { triggerRefreshTagHotScores } from "../../services/tag/commands";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -41,7 +41,7 @@ export function TagsSection({
   buttonStyles,
 }: TagsSectionProps) {
   const { update } = useUIStore(useShallow((s) => ({ update: s.update })));
-  const { showSuccess, showError } = useFeedback();
+  const { handleError } = useErrorHandler();
   const { runTask } = useTaskExecutor();
   const { tasks } = useTasks();
   const isRunning = tasks.some((t) => t.status === "running");
@@ -69,7 +69,7 @@ export function TagsSection({
           try {
             await addTag(normalized);
           } catch (error: any) {
-            showError(error, "添加标签失败");
+            handleError(error, "添加标签失败");
           }
         },
       },
@@ -198,6 +198,7 @@ export function TagsSection({
               activeTagMenuId={activeTagMenuId}
               setActiveTagMenuId={setActiveTagMenuId}
               handleUpdateTagName={handleUpdateTagName}
+              updateTag={updateTag}
               deleteTag={deleteTag}
               isPinned={(settings?.pinned_tags || []).includes(tag.id)}
               togglePin={togglePin}

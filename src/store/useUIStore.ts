@@ -56,6 +56,13 @@ export interface UIStoreState {
   showOtherFields: boolean;
   isInfiniteMode: boolean;
   filterSubId: string | null;
+  
+  // Interaction state
+  selectedIds: string[];
+  toggleSelected: (id: string) => void;
+  setDraggedPhoto: (id: string | null) => void;
+  updateSelectedIds: (ids: string[]) => void;
+
   update: (updates: Partial<UIStoreState> | ((state: UIStoreState) => Partial<UIStoreState>)) => void;
 }
 
@@ -106,6 +113,15 @@ export const useUIStore = create<UIStoreState>()((set) => ({
   isMultiSelectMode: false,
   draggedPhotoId: null,
   focusedGroupPhotoId: null,
+  selectedIds: [],
+  toggleSelected: (id) => set((state) => {
+    const newSelected = new Set(state.selectedIds);
+    if (newSelected.has(id)) newSelected.delete(id);
+    else newSelected.add(id);
+    return { selectedIds: Array.from(newSelected) };
+  }),
+  setDraggedPhoto: (id) => set({ draggedPhotoId: id }),
+  updateSelectedIds: (ids) => set({ selectedIds: ids }),
   resetUI: () => set({
       selectedIds: [],
       isMultiSelect: false,

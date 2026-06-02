@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Trash2, Download, AlertCircle, AlertTriangle, Info, ShieldAlert, ChevronDown, ChevronUp } from 'lucide-react';
 import { ErrorReporter, LogEntry, ErrorLevel } from '@/lib/errorReporter';
-import { useFeedback } from '@/hooks';
+import { toast } from '@/lib/ui/toast';
 
 const LevelIcon = ({ level }: { level: ErrorLevel }) => {
   switch (level) {
@@ -52,7 +52,6 @@ const LogItem = ({ log }: { log: LogEntry }) => {
 
 export const ErrorLogViewer = () => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
-  const { showSuccess } = useFeedback();
 
   const refreshLogs = useCallback(() => {
     setLogs(ErrorReporter.getLogs());
@@ -66,7 +65,7 @@ export const ErrorLogViewer = () => {
 
   const handleClear = () => {
     ErrorReporter.clearLogs();
-    showSuccess('日志已清除');
+    toast.success('日志已清除');
   };
 
   const handleExport = () => {
@@ -79,7 +78,7 @@ export const ErrorLogViewer = () => {
       linkElement.setAttribute('href', dataUri);
       linkElement.setAttribute('download', exportFileDefaultName);
       linkElement.click();
-      showSuccess('日志已准备导出');
+      toast.success('日志已准备导出');
     } catch (e) {
       console.error('Export failed', e);
     }

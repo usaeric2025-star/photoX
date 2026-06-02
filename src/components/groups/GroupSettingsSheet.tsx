@@ -5,7 +5,7 @@ import { AlertDialogProps, PromptDialogProps } from '@/store/useUIStore';
 import { GroupSettingsHeader } from './GroupSettingsSheet/GroupSettingsHeader';
 import { GroupSettingsContent } from './GroupSettingsSheet/GroupSettingsContent';
 
-import { useAdminMode, useFeedback } from '../../hooks';
+import { useAdminMode } from '../../hooks';
 
 interface GroupSettingsSheetProps {
   showGroupSettings: boolean;

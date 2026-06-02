@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import { Trash2, Pencil } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useUIStore, useShallow } from "@/store/useUIStore";
-import { useClickAway } from "@/hooks/ui";
+import { useClickAway } from "@/lib/hooks";
 import { useLongPress } from "@shined/react-use";
 import { normalizeManufacturerName } from "@/lib/utils/stringHelper";
 

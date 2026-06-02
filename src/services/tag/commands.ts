@@ -5,7 +5,7 @@ import type { AppResult } from '@/lib/errorFactory';
 import { StandardError } from '@/lib/validators/protocol';
 
 const TABLE_NAME = 'tags';
-const ALLOWED_FIELDS = ['id', 'name', 'zh', 'en', 'ms', 'aliases', 'userId'];
+const ALLOWED_FIELDS = ['id', 'name', 'zh', 'en', 'ms', 'aliases', 'userId', 'hot_score'];
 const NEVER_ALLOWED = ['isAnalyzing', 'exif_data', 'is_hidden', 'tempId', 'isSelected', 'isDragging', 'rawResponse'];
 
 const FIELD_MAP: Record<string, string> = {

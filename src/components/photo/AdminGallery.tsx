@@ -14,13 +14,13 @@ import { UploadButton } from '@/components/shared/UploadButton';
 import { SelectionToolbar } from '@/components/shared/SelectionToolbar';
 import { useAdminActions } from '@/features/admin/useAdminActions';
 import { savePhotosToCloudBatch } from "@/services/photo/photoUploadService";
-import { useAuth, useFeedback } from '@/hooks';
+import { useAuth, useErrorHandler } from '@/hooks';
+import { toast } from '@/lib/ui/toast';
 import { PhotoLightbox } from '../PhotoLightbox';
 import { GroupDetailPage } from '../GroupDetailPage';
 import { PAGINATION } from '@/constants/config';
 import { normalizeAdminPhotos } from '@/lib/selectors/photos';
 const updateURL = (params: any) => console.log('updateURL stub', params);
-import { interactionBus } from '@/lib/interactionBus';
 import { useNavigate } from '@tanstack/react-router';
 
 interface AdminGalleryProps {
@@ -90,7 +90,7 @@ export function AdminGallery({
   const scrollToTop = () => virtualGridRef.current?.scrollTo(0);
   const adminActions = useAdminActions();
   const { user } = useAuth();
-  const { showSuccess, showError } = useFeedback();
+  const { handleError } = useErrorHandler();
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -114,10 +114,10 @@ export function AdminGallery({
       }
 
       await savePhotosToCloudBatch(user.id, photoData);
-      showSuccess(`成功上传 ${files.length} 张照片`);
+      toast.success(`成功上传 ${files.length} 张照片`);
       queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
     } catch (err) {
-      showError(err, '上传照片失败');
+      handleError(err, '上传照片失败');
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = '';
     }

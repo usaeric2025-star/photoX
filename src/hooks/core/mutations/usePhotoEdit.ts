@@ -1,25 +1,26 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { photoKeys } from '@/lib/queryKeys';
 import { update } from '@/services/photo/commands';
-import { useFeedback } from '@/hooks';
+import { useErrorHandler } from '@/hooks';
+import { toast } from '@/lib/ui/toast';
 import { Photo } from '@/types';
 import { isErr } from '@/lib/errorFactory';
 
 export function usePhotoEdit() {
   const queryClient = useQueryClient();
-  const { showError, showSuccess } = useFeedback();
+  const { handleError } = useErrorHandler();
 
   return useMutation({
     mutationFn: ({ id, updates }: { id: string; updates: Partial<Photo> }) =>
       update(id, updates),
     onSuccess: (result) => {
       if (isErr(result)) {
-        showError(result.error, '更新失败');
+        handleError(result.error, '更新失败');
         return;
       }
       queryClient.invalidateQueries({ queryKey: photoKeys.all });
-      showSuccess('更新成功');
+      toast.success('更新成功');
     },
-    onError: (err) => showError(err as Error, '更新失败'),
+    onError: (err) => handleError(err as Error, '更新失败'),
   });
 }

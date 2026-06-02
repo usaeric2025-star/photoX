@@ -10,7 +10,7 @@ import {
   useGroupCoverMutation,
   useRemoveFromGroupMutation,
   useAdminMode,
-  useFeedback,
+  useErrorHandler,
   useGroupDetail,
   useAuth,
   usePhotoList,
@@ -42,7 +42,7 @@ export const useGroupAdminLogic = ({
   const onBatchAiAnalyze = (photos: Photo[]) => {};
   const onBatchEdit = (ids: string[]) => update({ batchEditingIds: ids });
 
-  const { showError, showSuccess } = useFeedback();
+  const { handleError } = useErrorHandler();
 
   const { mutate: mutateSetCover } = useGroupCoverMutation();
   const { mutateAsync: removePhotosBatch } = useRemoveFromGroupMutation();
@@ -229,7 +229,7 @@ export const useGroupAdminLogic = ({
                 }
               }
             } catch (err: any) {
-              showError(err, "操作失败");
+              handleError(err, "操作失败");
             }
             update({ alertDialog: null });
           },
@@ -255,10 +255,10 @@ export const useGroupAdminLogic = ({
           await serviceUpdatePhoto(photoId, updates);
         }
       } catch (err: any) {
-        showError(err, "保存照片修改失败");
+        handleError(err, "保存照片修改失败");
       }
     },
-    [showError, onUpdatePhoto],
+    [handleError, onUpdatePhoto],
   );
 
   const handleUpdateGroupData = useCallback(
@@ -275,7 +275,7 @@ export const useGroupAdminLogic = ({
       try {
         const result = await saveGroupToCloud(nextGroupData);
         if (isErr(result)) {
-          showError(result.error, "更新群組資料失敗");
+          handleError(result.error, "更新群組資料失敗");
           return;
         }
         queryClient.invalidateQueries({
@@ -293,14 +293,14 @@ export const useGroupAdminLogic = ({
           }
         }
       } catch (err: any) {
-        showError(err, "更新群組資料失敗");
+        handleError(err, "更新群組資料失敗");
         throw err;
       }
     },
     [
       activeGroupId,
       groupData,
-      showError,
+      handleError,
       onUpdatePhoto,
       onUpdatePhotosBulk,
       dbGroupPhotos,
@@ -351,7 +351,7 @@ export const useGroupAdminLogic = ({
                 );
               }
             } catch (err: any) {
-              showError(err, "批量更新尺寸失败");
+              handleError(err, "批量更新尺寸失败");
               throw err;
             }
             update({ alertDialog: null });
@@ -362,7 +362,7 @@ export const useGroupAdminLogic = ({
     [
       activeGroupId,
       activeGroupPhotos,
-      showError,
+      handleError,
       onUpdatePhoto,
       onUpdatePhotosBulk,
     ],
@@ -394,11 +394,11 @@ export const useGroupAdminLogic = ({
           ),
         );
       } catch (err: any) {
-        showError(err, "保存排序失败");
+        handleError(err, "保存排序失败");
         throw err;
       }
     },
-    [activeGroupPhotos, showError],
+    [activeGroupPhotos, handleError],
   );
 
   const handleBulkAction = useCallback(
@@ -447,6 +447,6 @@ export const useGroupAdminLogic = ({
     handleReorder,
     handleBulkAction,
     setCover,
-    showError,
+    handleError,
     isGroupPhotosLoading};
 };

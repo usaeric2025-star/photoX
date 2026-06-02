@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Photo, Category, Manufacturer, ProductGroup, TranslationType } from '../../types';
 import { getCacheBustedImageUrl } from '../../lib/ui-helpers';
-import { useFeedback, useTasks, useTaskExecutor } from '../../hooks';
+import { useErrorHandler, useTasks, useTaskExecutor } from '../../hooks';
 import { getGroupById } from '@/services/group/queries';
 import { isOk } from '@/lib/errorFactory';
 import { usePhotoDetail } from '@/hooks/core/queries/usePhotoDetail';
@@ -25,7 +25,7 @@ export const usePhotoLightboxLogic = ({
   onNext,
   onClose
 }: UsePhotoLightboxLogicProps) => {
-  const { showError } = useFeedback();
+  const { handleError } = useErrorHandler();
   const [isZoomed, setIsZoomed] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [isImageError, setIsImageError] = useState(false);
@@ -80,7 +80,7 @@ export const usePhotoLightboxLogic = ({
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
     }).catch(err => {
-      showError(err, '复制链接失败');
+      handleError(err, '复制链接失败');
     });
   }, [photo?.image_hash]);
 
@@ -100,7 +100,7 @@ export const usePhotoLightboxLogic = ({
       a.remove();
       window.URL.revokeObjectURL(objUrl);
     } catch (err) {
-      showError(err, '下载图片失败');
+      handleError(err, '下载图片失败');
     }
   }, [photo]);
 

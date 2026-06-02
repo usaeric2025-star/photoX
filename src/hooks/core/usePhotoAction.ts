@@ -2,8 +2,9 @@ import { useActionState, useTransition } from 'react';
 import { updatePhotoAction } from '../../actions/photoActions';
 import { ProductFormData, Photo } from '../../types';
 import { StandardError } from '../../lib/validators/protocol';
-import { useFeedback } from '@/hooks';
+import { toast } from '@/lib/ui/toast';
 import { isOk } from '../../lib/errorFactory';
+import { useErrorHandler } from '@/hooks';
 
 interface ActionState {
   data: Photo | null;
@@ -16,7 +17,7 @@ interface ActionState {
  * React 19 Hook for managing photo updates with validation.
  */
 export function usePhotoAction(id: string, initialData?: Photo | null) {
-  const { showSuccess, showError, handleError } = useFeedback();
+  const { handleError } = useErrorHandler();
   const [isPending, startTransition] = useTransition();
 
   const [state, submitAction] = useActionState(
@@ -24,7 +25,7 @@ export function usePhotoAction(id: string, initialData?: Photo | null) {
       const result = await updatePhotoAction(id, formData);
       
       if (result.ok) {
-        showSuccess('保存成功 / Saved successfully');
+        toast.success('保存成功 / Saved successfully');
         return {
           data: result.data,
           error: null,

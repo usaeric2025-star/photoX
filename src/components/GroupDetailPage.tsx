@@ -5,7 +5,7 @@ import { GalleryVariant } from '@/types/variant';
 import { TranslationType } from '../lib/ui-helpers';
 import { sortGroupPhotos } from '../lib/filters';
 import { filterPhotosByMode } from '@/lib/filters/photoVisibility';
-import { useAdminMode, useFeedback, useGroupDetail, useTasks, usePhotoInfiniteGroupList } from '@/hooks';
+import { useAdminMode, useErrorHandler, useGroupDetail, useTasks, usePhotoInfiniteGroupList } from '@/hooks';
 import { GroupDetailSkeleton } from './groups/GroupDetailSkeleton';
 import { PhotoLightbox } from './PhotoLightbox';
 import { Skeleton } from './ui/Skeleton';
@@ -36,7 +36,7 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
   const { activeGroupId, shareGroup, initialPhotoId, variant } = props;
   const isManagement = props.variant === 'full-management' || props.variant === 'staff-workspace';
   const isAdminMode = useAdminMode() && isManagement;
-  const { showError } = useFeedback();
+  const { handleError } = useErrorHandler();
 
   const { setGroupId, setPhotoId } = useUrlFilters();
   const { lang } = useUIStore(useShallow(s => ({ lang: s.appLang })));

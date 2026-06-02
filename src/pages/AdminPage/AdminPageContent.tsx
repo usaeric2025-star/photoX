@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Home, Cloud, Settings2, Plus, Terminal } from 'lucide-react';
-import { useAuth, useTasks, useSyncMutation, useFeedback, useAdminMode, useTaskExecutor, useMultiSelect, useUrlFilters } from '@/hooks';
+import { useAuth, useTasks, useSyncMutation, useErrorHandler, useAdminMode, useTaskExecutor, useMultiSelect, useUrlFilters } from '@/hooks';
 import { backfillThumbHashes } from '@/services/photo/backfillService';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { DataLoadingContainer } from '@/components/ui/DataLoadingContainer';
@@ -72,7 +72,7 @@ export function AdminPageContent() {
     return () => clearTimeout(timer);
   }, [isLoading]);
 
-  const { showError, showSuccess } = useFeedback();
+  const { handleError } = useErrorHandler();
   const isAdminMode = useAdminMode();
   const { runTask } = useTaskExecutor();
   const isEffectiveStaffMode = !user && isAdminMode;

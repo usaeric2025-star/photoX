@@ -1,4 +1,4 @@
-import { usePhotoEdit, usePhotoDelete, usePhotoBatchEdit, useFeedback } from '@/hooks';
+import { usePhotoEdit, usePhotoDelete, usePhotoBatchEdit } from '@/hooks';
 import type { Photo } from '@/types';
 
 interface PhotoUpdateData {
@@ -18,7 +18,6 @@ export function useAdminActions() {
   const deletePhoto = usePhotoDelete();
   const updatePhoto = usePhotoEdit();
   const batchUpdate = usePhotoBatchEdit();
-  const { showError, showSuccess } = useFeedback();
 
   const handleDeletePhoto = async (ids: string | string[]) => {
     const idList = Array.isArray(ids) ? ids : [ids];

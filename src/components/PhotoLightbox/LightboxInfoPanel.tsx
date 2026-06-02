@@ -6,7 +6,7 @@ import { Dimension, Photo, ProductGroup, TranslationType, Category, Manufacturer
 import { getTranslatedCategoryName, getPhotoDisplayName, getManufacturerName } from '../../lib/ui-helpers';
 import { useAdminActions } from '@/features/admin/useAdminActions';
 import { Skeleton } from '../ui/Skeleton';
-import { usePermission, useFeedback, useTaskExecutor, useTasks } from '@/hooks';
+import { usePermission, useErrorHandler, useTaskExecutor, useTasks } from '@/hooks';
 
 interface LightboxInfoPanelProps {
   photo: Photo;
@@ -60,7 +60,7 @@ export function LightboxInfoPanel({
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
   }, [photo.id]);
 
-  const { showError: handleError } = useFeedback();
+  const { handleError } = useErrorHandler();
 
   const handleAiAnalyze = React.useCallback(async () => {
     try {

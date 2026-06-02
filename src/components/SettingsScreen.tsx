@@ -3,7 +3,8 @@ import {
   ChevronLeft,
   Settings2, Save, ChevronDown
 } from 'lucide-react';
-import { useFeedback } from '@/hooks';
+import { useErrorHandler } from '@/hooks';
+import { toast } from '@/lib/ui/toast';
 import { ErrorLogViewer } from './admin/ErrorLogViewer';
 import { AppSettings, User, ApiResponse } from '@/types';
 import { 
@@ -51,7 +52,7 @@ export function SettingsScreen() {
     if (!file) return;
 
     try {
-      showSuccess("正在上传 Logo...", true);
+      toast.info("正在上传 Logo...", { duration: 2000 });
       const reader = new FileReader();
       reader.onload = async () => {
         const base64Data = reader.result as string;
@@ -67,9 +68,9 @@ export function SettingsScreen() {
         const res = await resp.json();
         if (res.success && res.data.publicUrl) {
           setSettingField('logo_url', res.data.publicUrl);
-          showSuccess("Logo 上传成功");
+          toast.success("Logo 上传成功");
         } else {
-          showError(new Error(res.error || 'Upload failed'), 'Logo 上传失败');
+          handleError(new Error(res.error || 'Upload failed'), 'Logo 上传失败');
         }
       };
       reader.readAsDataURL(file);
@@ -90,7 +91,7 @@ export function SettingsScreen() {
   };
   const t = translations.zh;
 
-  const { showSuccess, showError, handleError } = useFeedback();
+  const { handleError } = useErrorHandler();
   const { user, loginWithGoogle, logout } = useAuth();
   const { settings, geminiApiKey, customModel, accessPasscode, updateSettings } = useSettings();
   const setGeminiApiKey = (key: string) => updateSettings({ ...settings, gemini_api_key: key });
@@ -150,9 +151,9 @@ export function SettingsScreen() {
              if (hasChanges) {
                await saveSettings({ ...settings });
                setHasChanges(false);
-               showSuccess("保存成功 / Saved successfully");
+               toast.success("保存成功 / Saved successfully");
              } else {
-               showSuccess("没有更改需要保存 / No changes to save");
+               toast.info("没有更改需要保存 / No changes to save");
              }
            }}
            className={`p-2 rounded-lg shadow-md active:scale-95 transition-all flex items-center justify-center ${hasChanges ? 'bg-brand-gold hover:bg-brand-gold/90 text-white' : 'bg-brand-navy hover:bg-brand-navy/90 text-white'}`}

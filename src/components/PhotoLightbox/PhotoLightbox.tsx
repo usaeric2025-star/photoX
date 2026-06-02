@@ -10,7 +10,7 @@ import { LightboxImageSection } from './LightboxImageSection';
 import { LightboxInfoPanel } from './LightboxInfoPanel';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { useAdminMode, usePermission, useTasks, useCategories, useManufacturers, useTags, useFeedback } from '../../hooks';
+import { useAdminMode, usePermission, useTasks, useCategories, useManufacturers, useTags, useErrorHandler } from '../../hooks';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { createTranslate } from '@/lib/i18n';
 import { translations, LanguageCode } from '../../lib/translations';
@@ -97,7 +97,7 @@ export function PhotoLightbox(props: PhotoLightboxProps) {
 
 
   const { isAdmin } = usePermission();
-  const { showError } = useFeedback();
+  const { handleError } = useErrorHandler();
 
   const {
     isZoomed, setIsZoomed,
@@ -143,7 +143,7 @@ export function PhotoLightbox(props: PhotoLightboxProps) {
     const timer = setTimeout(() => {
       if (isImageLoading) {
         setIsImageLoading(false);
-        showError(new Error('Timeout'), translate.imageLoadFailed || 'Image load failed.');
+        handleError(new Error('Timeout'), translate.imageLoadFailed || 'Image load failed.');
       }
     }, 10000);
     return () => clearTimeout(timer);

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search, X } from 'lucide-react';
-import { useDebounceFn } from "@/hooks/ui";
+import { useDebounceFn } from "@/lib/hooks";
 import { Input } from './input';
 import { cn } from '@/lib/utils';
 

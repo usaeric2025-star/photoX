@@ -209,11 +209,11 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
                         resetAddState();
                         update({ editPhotoId: null });
                       }}
-                      onErrorClick={(err) => {
-                        const readableError = err.includes("|")
-                          ? err.split("|").slice(1).join(": ")
-                          : err;
-                        logic.showError(new Error(readableError), "AI识别错误");
+                      onErrorClick={(err: any) => {
+                        const readableError = String(err).includes("|")
+                          ? String(err).split("|").slice(1).join(": ")
+                          : String(err);
+                        logic.handleError(new Error(readableError), "AI识别错误");
                       }}
                       isRunning={logic.isRunning}
                     />

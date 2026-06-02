@@ -1,9 +1,10 @@
 import { useState, useCallback } from 'react';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { useAdminActions } from '@/features/admin/useAdminActions';
-import { useFeedback } from '@/hooks';
+import { toast } from '@/lib/ui/toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { photoKeys } from '@/lib/queryKeys';
+import { useErrorHandler } from '@/hooks';
 
 export function useBatchEdit() {
   const queryClient = useQueryClient();
@@ -19,7 +20,7 @@ export function useBatchEdit() {
   })));
 
   const { deletePhoto, updatePhoto, batchUpdate } = useAdminActions();
-  const { showError, showSuccess } = useFeedback();
+  const { handleError } = useErrorHandler();
 
   const [batchIsHiddenApplied, setBatchIsHiddenApplied] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -47,7 +48,7 @@ export function useBatchEdit() {
       update({ batchEditingIds: null });
       resetForm();
     } catch (err) {
-      showError(err as Error, '保存失败');
+      handleError(err as Error, '保存失败');
     } finally {
       setIsSyncing(false);
     }
@@ -60,7 +61,7 @@ export function useBatchEdit() {
       update({ batchEditingIds: null });
       resetForm();
     } catch (err) {
-      showError(err as Error, '删除失败');
+      handleError(err as Error, '删除失败');
     }
   };
 

@@ -10,7 +10,6 @@ export { usePhotoAction } from './core/usePhotoAction';
 export { useScrollRestoration } from '../core/infra/useScrollRestoration';
 
 // Features Hooks
-export { useToast, useFeedback } from './useToast';
 export { useBatchEdit } from '../features/photo/useBatchEdit';
 export { useBatchConfirmation as useBatchConfirmDialog } from '../features/photo/useBatchConfirmDialog';
 export { useMultiSelect } from '../features/photo/usePhotoSelection';
@@ -52,6 +51,7 @@ export { useSyncMutation } from './core/mutations/useSyncMutation';
 
 // Utils
 export { useUIStore, useStore, useShallow } from '../store/useUIStore';
+export { useErrorHandler } from '../lib/error/errorHandler';
 
 
 

@@ -1,0 +1,31 @@
+src/components/admin/edit/PhotoTagSelector.tsx:  const { showError } = useFeedback();
+src/components/admin/TagEditor.tsx:  useFeedback,
+src/components/admin/TagEditor.tsx:  const { showError } = useFeedback();
+src/components/admin/ErrorLogViewer.tsx:import { useFeedback } from '@/hooks';
+src/components/admin/ErrorLogViewer.tsx:  const { showSuccess } = useFeedback();
+src/components/groups/GroupSettingsSheet.tsx:import { useAdminMode, useFeedback } from '../../hooks';
+src/components/groups/GroupSettingsSheet/GroupSettingsHeader.tsx:import { useFeedback, useTaskExecutor, useTasks } from "../../../hooks";
+src/components/groups/GroupSettingsSheet/GroupSettingsHeader.tsx:  const { showError: handleError } = useFeedback();
+src/components/photo/AdminGallery.tsx:import { useAuth, useFeedback } from '@/hooks';
+src/components/photo/AdminGallery.tsx:  const { showSuccess, showError } = useFeedback();
+src/components/SettingsScreen.tsx:import { useFeedback } from '@/hooks';
+src/components/SettingsScreen.tsx:  const { showSuccess, showError, handleError } = useFeedback();
+src/components/PhotoLightbox/PhotoLightbox.tsx:import { useAdminMode, usePermission, useTasks, useCategories, useManufacturers, useTags, useFeedback } from '../../hooks';
+src/components/PhotoLightbox/PhotoLightbox.tsx:  const { showError } = useFeedback();
+src/components/PhotoLightbox/LightboxInfoPanel.tsx:import { usePermission, useFeedback, useTaskExecutor, useTasks } from '@/hooks';
+src/components/PhotoLightbox/LightboxInfoPanel.tsx:  const { showError: handleError } = useFeedback();
+src/components/settings/ExportDataSection.tsx:import { useFeedback } from '../../hooks';
+src/components/settings/ExportDataSection.tsx:  const { showError } = useFeedback();
+src/components/settings/MaintenanceSection.tsx:import { useFeedback } from "@/hooks";
+src/components/settings/MaintenanceSection.tsx:  const { showSuccess } = useFeedback();
+src/components/settings/SyncSection.tsx:import { useFeedback } from '@/hooks';
+src/components/settings/SyncSection.tsx:  const { showSuccess } = useFeedback();
+src/components/settings/TagsSection.tsx:import { useFeedback } from "../../hooks";
+src/components/settings/TagsSection.tsx:  const { showSuccess, showError } = useFeedback();
+src/components/settings/ManufacturersSection.tsx:import { useFeedback } from "../../hooks";
+src/components/settings/ManufacturersSection.tsx:  const { showSuccess, showError } = useFeedback();
+src/components/GroupDetailPage.tsx:import { useAdminMode, useFeedback, useGroupDetail, useTasks, usePhotoInfiniteGroupList } from '@/hooks';
+src/components/GroupDetailPage.tsx:  const { showError } = useFeedback();
+src/pages/AdminPage/AdminPageContent.tsx:import { useAuth, useTasks, useSyncMutation, useFeedback, useAdminMode, useTaskExecutor, useMultiSelect, useUrlFilters } from '@/hooks';
+src/pages/AdminPage/AdminPageContent.tsx:  const { showError, showSuccess } = useFeedback();
+src/pages/PublicPage.tsx:  useFeedback, useTags, useScrollRestoration,

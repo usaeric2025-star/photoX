@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { LogIn, Image as ImageIcon, Sparkles, Cloud, Layers, RefreshCcw, Lock } from 'lucide-react';
-import { useFeedback, useSettings } from '../../hooks';
+import { toast } from '@/lib/ui/toast';
+import { useSettings } from '../../hooks';
 import { useUIStore } from '@/store/useUIStore';
 
 interface LoginScreenProps {
@@ -9,7 +10,7 @@ interface LoginScreenProps {
 }
 
 export function LoginScreen({ loginWithGoogle, isLoading }: LoginScreenProps) {
-  const { showError, showSuccess } = useFeedback();
+
   const { settings } = useSettings();
   const [mode, setMode] = useState<'admin' | 'staff'>('admin');
   const [passInput, setPassInput] = useState('');
@@ -18,11 +19,11 @@ export function LoginScreen({ loginWithGoogle, isLoading }: LoginScreenProps) {
   const handlePasscodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!settings || !settings.access_passcode) {
-      showError(new Error('未在系统设置中配置员工密码 / Staff passcode is not configured in settings'), '验证失败');
+      toast.error('验证失败: 未在系统设置中配置员工密码 / Staff passcode is not configured in settings');
       return;
     }
     if (passInput === settings.access_passcode) {
-      showSuccess('员工模式登录成功 / Staff mode entered successfully');
+      toast.success('员工模式登录成功 / Staff mode entered successfully');
       window.location.reload();
     } else {
       setPassError(true);
@@ -82,7 +83,7 @@ export function LoginScreen({ loginWithGoogle, isLoading }: LoginScreenProps) {
                 try {
                   await loginWithGoogle();
                 } catch(e) {
-                  showError(e, '登录失败');
+                  toast.error(`登录失败: ${e instanceof Error ? e.message : 'Unknown error'}`);
                 }
               }}
               disabled={isLoading}

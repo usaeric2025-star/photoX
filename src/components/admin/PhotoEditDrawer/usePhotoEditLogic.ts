@@ -4,7 +4,7 @@ import {
   useCategories, useTags, useManufacturers,
   useTagCreate, useTagEdit, useTagDelete,
   useManufacturerCreate, useManufacturerEdit, useManufacturerDelete,
-  useFeedback, useTaskExecutor, useTasks
+  useErrorHandler, useTaskExecutor, useTasks
 } from '../../../hooks';
 import { Photo, ProductFormData, Tag, Manufacturer } from '../../../types';
 import { usePhotoAction } from '@/hooks/core/usePhotoAction';
@@ -37,7 +37,7 @@ export const usePhotoEditLogic = (props: Props) => {
     update: s.update,
     appLang: s.appLang
   })));
-  const { showError, showSuccess } = useFeedback();
+  const { handleError } = useErrorHandler();
 
   const { data: categories = [] } = useCategories();
   const { data: tags = [] } = useTags();
@@ -123,7 +123,7 @@ export const usePhotoEditLogic = (props: Props) => {
       } as Photo;
       analyzeSingle(p).catch(()=>{});
     } else {
-      showError(new Error('AI识别上下文缺失'), 'AI识别配置错误');
+      handleError(new Error('AI识别上下文缺失'), 'AI识别配置错误');
     }
   };
 
@@ -134,6 +134,6 @@ export const usePhotoEditLogic = (props: Props) => {
     rotatePhoto,
     handleSave, toggleHidden, triggerAiAnalyze,
     isAnalyzing, aiDebugInfo, isPartOfGroup, isSyncing, isRotating, isRunning,
-    isSavingAction, appLang, showError
+    isSavingAction, appLang, handleError
   };
 };

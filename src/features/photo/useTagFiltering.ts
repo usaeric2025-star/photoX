@@ -10,16 +10,15 @@ export function useTagsDisplay(tags: Tag[], settings?: AppSettings) {
 
   const hotIds = useMemo(() => {
     const hotTagsCount = settings?.hot_tags_count ?? 9;
-    const hotTagThreshold = settings?.hot_tag_threshold ?? 1;
+    const hotTagThreshold = settings?.hot_tag_threshold ?? 0;
 
-    const candidates = tags.map(tag => ({
-      ...tag,
-      hot_score: tag.hot_score || 0
-    })).filter(tag => 
-      !tag.is_pinned && 
-      !pinnedIds.includes(String(tag.id)) && 
-      (tag.hot_score || 0) >= hotTagThreshold
-    );
+    const candidates = tags
+      .filter(tag => !pinnedIds.includes(String(tag.id))) // Mutual Exclusivity: Exclude pinned tags from hot section
+      .map(tag => ({
+        ...tag,
+        hot_score: tag.hot_score || 0
+      }))
+      .filter(tag => (tag.hot_score || 0) >= hotTagThreshold);
 
     const sorted = [...candidates].sort((a, b) => {
       const diff = (b.hot_score || 0) - (a.hot_score || 0);

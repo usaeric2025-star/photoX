@@ -5,7 +5,7 @@ import { Skeleton } from '../components/ui/Skeleton';
 import { cleanPhotos, filterPhotos, groupPhotos } from '../lib/filters';
 import { 
   useCategories, usePhotoInfiniteList, usePhotoCount, 
-  useFeedback, useTags, useScrollRestoration,
+  useTags, useScrollRestoration,
   useMultiSelect, useSyncMutation, useTasks
 } from '@/hooks';
 import { useUIStore, useShallow } from '@/store/useUIStore';

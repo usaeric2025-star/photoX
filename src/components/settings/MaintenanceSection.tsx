@@ -2,9 +2,9 @@ import React from "react";
 import { Spinner } from "@/components/ui/Spinner";
 import { ShieldCheck, PackageSearch, Trash2 } from "lucide-react";
 import { useTaskExecutor } from "@/hooks/core/infra/useTaskExecutor";
-import { useFeedback } from "@/hooks";
 import { useUIStore, useShallow } from "@/store/useUIStore";
 import { api } from "@/lib/api";
+import { toast } from "@/lib/ui/toast";
 
 interface Props {
   onHealthCheck: () => Promise<void>;
@@ -23,7 +23,6 @@ export function MaintenanceSection({
 }: Props) {
   const { runTask } = useTaskExecutor();
   const { update } = useUIStore(useShallow((s) => ({ update: s.update })));
-  const { showSuccess } = useFeedback();
 
   return (
     <div className={cardClass}>
@@ -89,7 +88,7 @@ export function MaintenanceSection({
                   },
                 });
               } else {
-                showSuccess(
+                toast.success(
                   "存储对账完成，一致性完美匹配 / Storage consistency verified! All good.",
                 );
               }
@@ -127,7 +126,7 @@ export function MaintenanceSection({
                   },
                 });
               } else {
-                showSuccess(
+                toast.success(
                   "未发现多余的 R2 孤儿文件，一切洁净！ / Storage is already 100% clean.",
                 );
               }
