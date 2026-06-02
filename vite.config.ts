@@ -29,13 +29,6 @@ export default defineConfig(({mode}) => {
     ],
     build: {
       emptyOutDir: true,
-      minify: mode === 'production' ? 'terser' : 'esbuild',
-      terserOptions: mode === 'production' ? {
-        compress: {
-          drop_console: true,
-          drop_debugger: true,
-        },
-      } : undefined,
       rollupOptions: {
         output: {
           manualChunks(id) {
@@ -45,6 +38,9 @@ export default defineConfig(({mode}) => {
           }
         }
       }
+    },
+    esbuild: {
+      pure: mode === 'production' ? ['console.log', 'console.info', 'console.debug'] : [],
     },
     define: {
       'process.env.NODE_ENV': JSON.stringify(mode),

@@ -36,9 +36,10 @@ export function SelectionToolbar({
 
   const handleGroup = async () => {
     const currentIds = [...ids];
+    const targetGroupId = crypto.randomUUID();
     handleClear(); // 立即清除选择状态，提升即时感
     try {
-      await groupMutation.mutateAsync({ photoIds: currentIds });
+      await groupMutation.mutateAsync({ photoIds: currentIds, targetGroupId });
     } catch (err) {
       console.error(err);
       // 如果失败可以考虑恢复状态，但通常简单刷新更稳健

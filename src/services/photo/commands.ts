@@ -242,6 +242,7 @@ export const groupPhotos = async (photoIds: string[], predefinedGroupId?: string
     throw new Error('至少需要选择两张照片才能成组');
   }
   const groupId = predefinedGroupId || crypto.randomUUID();
+  let isNewGroup = false;
 
   // Check if group already exists in the groups table
   const { data: existingGroup } = await supabase
@@ -273,6 +274,7 @@ export const groupPhotos = async (photoIds: string[], predefinedGroupId?: string
       console.error('[groupPhotos] Failed to create group in database:', insertError);
       throw new Error(`创建合并群组失败: ${insertError.message || JSON.stringify(insertError)}`);
     }
+    isNewGroup = true;
   }
 
   const res = await updatePhotosGroupInCloud(photoIds, { 
@@ -280,8 +282,10 @@ export const groupPhotos = async (photoIds: string[], predefinedGroupId?: string
     is_group_cover: false 
   });
   
-  const { syncGroupMemberCount } = await import('../photoMutationService');
-  await syncGroupMemberCount(groupId);
+  if (!isNewGroup) {
+    const { syncGroupMemberCount } = await import('../photoMutationService');
+    await syncGroupMemberCount(groupId);
+  }
   return res;
 };
 
