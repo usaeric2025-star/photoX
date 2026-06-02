@@ -12,6 +12,7 @@ import { DetailsTab } from "./DetailsTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs";
 import { getCacheBustedImageUrl } from "../../../lib/ui-helpers";
 import { translations } from "../../../lib/translations";
+import { analyzeProductPhoto } from "@/services/geminiService";
 
 import { 
   usePhotos,
@@ -80,7 +81,6 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
     }
 
     await runTask("AI 属性智能识别", async () => {
-      const { analyzeProductPhoto } = await import("@/services/gemini");
       const result = await analyzeProductPhoto(
         imageUrl,
         categories,

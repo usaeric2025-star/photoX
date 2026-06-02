@@ -111,7 +111,7 @@ export function LightboxInfoPanel({
             >
               {isCopied ? <Check size={16} /> : <Share2 size={16} />}
             </button>
-            {isAdminMode && canEdit && (
+            {isAdminMode && (
               <>
                 <button 
                   onClick={handleAiAnalyze}
@@ -169,7 +169,7 @@ export function LightboxInfoPanel({
           </div>
         )}
 
-        {isAdminMode && canEdit && photo.group_id && (
+        {isAdminMode && photo.group_id && (
           <div className="grid grid-cols-2 gap-2 mt-2">
                <button 
                  onClick={() => onUngroup?.(photo.id)}
