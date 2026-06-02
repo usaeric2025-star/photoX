@@ -15,11 +15,8 @@ export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
     return <FullPageLoading />;
   }
 
-  // 2. 验证确实未通过，则跳转至首页
-  if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
-
+  // 2. We no longer redirect to home if unauthenticated.
+  // We let AdminPageContent render, which will display the LoginScreen.
   return <>{children}</>;
 }
 
