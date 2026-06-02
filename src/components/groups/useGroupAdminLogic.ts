@@ -227,8 +227,7 @@ export const useGroupAdminLogic = ({
             : `确定要将选中的 ${ids.length} 张照片移出群组吗？`,
           onConfirm: async () => {
             try {
-              update({ isMultiSelect: false });
-              update({ selectedIds: [] });
+              update({ isMultiSelect: false, selectedIds: [] });
 
               if (activeGroupId) {
                 const targetIds = isDissolving
@@ -426,14 +425,12 @@ export const useGroupAdminLogic = ({
           selectedIds.includes(p.id),
         );
         onBatchAiAnalyze?.(targetPhotos);
-        update({ isMultiSelect: false });
-        update({ selectedIds: [] });
+        update({ isMultiSelect: false, selectedIds: [] });
       } else if (action === "remove") {
         confirmBulkRemove(selectedIds);
       } else if (action === "batch") {
         onBatchEdit?.(selectedIds);
-        update({ isMultiSelect: false });
-        update({ selectedIds: [] });
+        update({ isMultiSelect: false, selectedIds: [] });
       }
     },
     [

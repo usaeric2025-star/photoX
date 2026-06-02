@@ -193,16 +193,13 @@ export const PhotoCard = ({
   const { data: categories = [] } = useCategories();
   const { data: tags = [] } = useTags();
 
-  const categoryMap = new Map(categories.map(c => [String(c.id), c]));
-  const tagMap = new Map(tags.map(t => [String(t.id), t]));
-  
   const categoryId = photo.category_id ? String(photo.category_id) : '';
-  const category = categoryMap.get(categoryId);
+  const category = categories.find(c => String(c.id) === categoryId);
   const displayCatName = category ? (category[lang as keyof Category] as string || category.name) : '';
 
   const tagIdsList = Array.isArray(photo.tag_ids) ? photo.tag_ids : [];
   const photoTags = tagIdsList
-    .map(id => tagMap.get(String(id))?.name ?? '')
+    .map(id => tags.find(t => String(t.id) === String(id))?.name ?? '')
     .filter(Boolean);
 
   const { can } = usePermission();

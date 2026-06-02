@@ -27,8 +27,7 @@ export function StaffHeader({ totalCount, onRefresh, isRefreshing }: StaffHeader
   })));
 
   const handleGoToAdmin = () => {
-    update({ viewMode: 'private' });
-    update({ activeScreen: 'manage' });
+    update({ viewMode: 'private', activeScreen: 'manage' });
   };
 
   return (

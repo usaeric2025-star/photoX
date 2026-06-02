@@ -32,15 +32,17 @@ export const useMultiSelect = () => {
   })));
 
   const enable = useCallback((initialId?: string) => {
-    update({ isMultiSelect: true });
-    if (initialId) {
-      update({ selectedIds: [initialId] });
-    }
+    update({ 
+      isMultiSelect: true, 
+      selectedIds: initialId ? [initialId] : [] 
+    });
   }, [update]);
 
   const disable = useCallback(() => {
-    update({ isMultiSelect: false });
-    update({ selectedIds: [] });
+    update({ 
+      isMultiSelect: false, 
+      selectedIds: [] 
+    });
   }, [update]);
 
   const toggle = useCallback((id: string) => {
@@ -56,15 +58,19 @@ export const useMultiSelect = () => {
   }, [update]);
 
   const reset = useCallback(() => {
-    update({ isMultiSelect: false });
-    update({ selectedIds: [] });
+    update({ 
+      isMultiSelect: false, 
+      selectedIds: [] 
+    });
   }, [update]);
 
   const selectAll = useCallback((ids: string[]) => {
-    update({ isMultiSelect: true });
     const current = (useUIStore.getState().selectedIds) ?? [];
     const combined = new Set([...current, ...ids]);
-    update({ selectedIds: Array.from(combined) });
+    update({ 
+      isMultiSelect: true, 
+      selectedIds: Array.from(combined) 
+    });
   }, [update]);
 
   const deselectAllForList = useCallback((ids: string[]) => {

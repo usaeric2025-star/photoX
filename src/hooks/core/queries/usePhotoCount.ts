@@ -34,7 +34,7 @@ export const usePhotoCount = (
       }
       return getPhotoCount(filters.category_id, filters.tag_id, filters.searchQuery, isAdminMode);
     },
-    staleTime: source === 'local' ? 5000 : createStaleTime('REALTIME'),
+    staleTime: source === 'local' ? 5000 : createStaleTime('STABLE'),
     refetchOnMount: true,
   });
 };

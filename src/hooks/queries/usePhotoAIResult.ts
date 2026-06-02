@@ -22,6 +22,6 @@ export const usePhotoAIResult = (photoId?: string) => {
       return data;
     },
     enabled: !!photoId,
-    staleTime: createStaleTime('REALTIME'), // 5 minutes
+    staleTime: createStaleTime('STABLE'), // 5 minutes
   });
 };

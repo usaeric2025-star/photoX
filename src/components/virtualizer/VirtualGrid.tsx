@@ -48,7 +48,19 @@ export const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.
     (window as any).process?.env?.NODE_ENV === 'test'
   );
 
-  const listItems = (() => {
+  const listItemsCacheRef = useRef<{ count: number; rowCount: number; hasHeader: boolean; hasFooter: boolean; items: any[] } | null>(null);
+
+  const hasHeader = !!props.header;
+  const hasFooter = !!props.footer;
+
+  let listItems = listItemsCacheRef.current?.items;
+  if (
+    !listItems || 
+    listItemsCacheRef.current?.count !== props.count || 
+    listItemsCacheRef.current?.rowCount !== rowCount || 
+    listItemsCacheRef.current?.hasHeader !== hasHeader || 
+    listItemsCacheRef.current?.hasFooter !== hasFooter
+  ) {
     const items: Array<{ type: 'header' | 'row' | 'footer'; content?: React.ReactNode; rowIndex?: number }> = [];
     if (props.header) {
       items.push({ type: 'header', content: props.header });
@@ -59,9 +71,9 @@ export const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.
     if (props.footer) {
       items.push({ type: 'footer', content: props.footer });
     }
-    console.log('📊 [VirtualGrid] Computed listItems:', { count: props.count, rowCount, listItemsLength: items.length });
-    return items;
-  })();
+    listItems = items;
+    listItemsCacheRef.current = { count: props.count, rowCount, hasHeader, hasFooter, items };
+  }
 
   useImperativeHandle(ref, () => ({
     scrollToIndex: (index: number) => {

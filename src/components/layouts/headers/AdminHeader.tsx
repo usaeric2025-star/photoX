@@ -66,8 +66,7 @@ export function AdminHeader({
   const isSelectionMode = isMultiSelect;
 
   const handleBackToShowcase = () => {
-    update({ viewMode: "public" });
-    update({ activeScreen: "gallery" });
+    update({ viewMode: "public", activeScreen: "gallery" });
   };
 
   const handleBatchDelete = async () => {

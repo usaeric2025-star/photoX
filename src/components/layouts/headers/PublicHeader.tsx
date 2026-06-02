@@ -17,8 +17,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
 
   const handleAuthAction = () => {
     // 切换到私有模式，如果未登录，系统会自动引导至登录页
-    update({ viewMode: 'private' });
-    update({ activeScreen: 'manage' });
+    update({ viewMode: 'private', activeScreen: 'manage' });
   };
 
   return (

@@ -125,8 +125,7 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
     (e: React.MouseEvent | React.TouchEvent, photo: Photo) => {
       if (e && typeof e.preventDefault === "function") e.preventDefault();
       if (isAdminMode) {
-        update({ isMultiSelect: true });
-        update({ selectedIds: [photo.id] });
+        update({ isMultiSelect: true, selectedIds: [photo.id] });
         if ("vibrate" in navigator) navigator.vibrate(50);
       }
     },
