@@ -11,6 +11,7 @@ export function useUrlFilters() {
     sortOrder: search.sort ?? 'newest',
     groupId: search.groupId ?? null,
     photoId: search.photoId ?? null,
+    showGroupsCollapsed: search.showGroupsCollapsed !== 'false',
   };
 
   const setCategory = (categoryId: string | null) => {
@@ -33,5 +34,9 @@ export function useUrlFilters() {
     navigate({ search: ((prev: any) => ({ ...prev, photoId: photoId || undefined })) as any });
   };
 
-  return { filters, setCategory, setSearchQuery, setSortOrder, setGroupId, setPhotoId };
+  const setShowGroupsCollapsed = (collapsed: boolean) => {
+    navigate({ search: ((prev: any) => ({ ...prev, showGroupsCollapsed: collapsed ? undefined : 'false' })) as any });
+  };
+
+  return { filters, setCategory, setSearchQuery, setSortOrder, setGroupId, setPhotoId, setShowGroupsCollapsed };
 }

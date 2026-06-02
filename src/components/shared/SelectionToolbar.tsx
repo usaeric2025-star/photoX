@@ -1,7 +1,7 @@
 import React from 'react';
 import { Trash2, Sparkles, Edit, X, FolderPlus, EyeOff } from 'lucide-react';
 import { useUIStore } from '@/store/useUIStore';
-import { useGroupPhotosMutation } from '@/hooks';
+import { useGroupPhotosMutation, useUrlFilters } from '@/hooks';
 import { useAIGroup } from '@/hooks/core/mutations/useAIGroup';
 
 interface SelectionToolbarProps {
@@ -27,6 +27,7 @@ export function SelectionToolbar({
 
   const groupMutation = useGroupPhotosMutation();
   const { handleAIAction } = useAIGroup();
+  const { setShowGroupsCollapsed } = useUrlFilters();
 
   if (!isMultiSelect || count === 0) return null;
 
@@ -38,6 +39,7 @@ export function SelectionToolbar({
     const currentIds = [...ids];
     const targetGroupId = crypto.randomUUID();
     handleClear(); // 立即清除选择状态，提升即时感
+    setShowGroupsCollapsed(true); // 自动开启置顶合组的折叠模式，确保用户立竿见影地在界面上看到它们汇聚成一卡片
     try {
       await groupMutation.mutateAsync({ photoIds: currentIds, targetGroupId });
     } catch (err) {
@@ -47,6 +49,7 @@ export function SelectionToolbar({
   };
 
   const handleAI = () => {
+    setShowGroupsCollapsed(true); // AI合组前自动开启置顶合组的折叠模式，提升智能观感
     if (onAIIdentify) {
       onAIIdentify(ids);
     } else {

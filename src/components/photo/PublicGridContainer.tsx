@@ -33,8 +33,8 @@ export function PublicGridContainer({
   const { filters } = useFilters();
   const { settings } = useSettings(); 
   
-  const { setSearch, setShowGroupsCollapsed } = useFilters();
-  const { filters: urlFilters, setGroupId, setPhotoId, setSortOrder } = useUrlFilters();
+  const { setSearch } = useFilters();
+  const { filters: urlFilters, setGroupId, setPhotoId, setSortOrder, setShowGroupsCollapsed } = useUrlFilters();
 
   const { 
     update, columns, showWhatsAppChoice, appLang
@@ -64,7 +64,7 @@ export function PublicGridContainer({
     filters,
     urlFilters,
     {
-      showGroupsCollapsed: filters.showGroupsCollapsed,
+      showGroupsCollapsed: urlFilters.showGroupsCollapsed,
       isAdminModeOverride: false
     }
   ), [rawPhotos, categories, tags, filters, urlFilters]);
@@ -121,7 +121,7 @@ export function PublicGridContainer({
       photo={photo}
       index={index}
       variant={variant}
-      showGroupsCollapsed={filters.showGroupsCollapsed}
+      showGroupsCollapsed={urlFilters.showGroupsCollapsed}
       onGroupClick={(gid, pid) => handleGroupClick(gid, pid || photo.id)}
       onLightboxOpen={handleLightboxOpen}
       onShare={handleShare}
@@ -140,12 +140,12 @@ export function PublicGridContainer({
               updateURL({ view: cols === 2 ? 'list' : 'grid' });
           }}
           currentColumns={columns}
-          onToggleGroups={() => setShowGroupsCollapsed(!filters.showGroupsCollapsed)}
-          showGroupsCollapsed={filters.showGroupsCollapsed}
+          onToggleGroups={() => setShowGroupsCollapsed(!urlFilters.showGroupsCollapsed)}
+          showGroupsCollapsed={urlFilters.showGroupsCollapsed}
         />
         <div className="flex-1 overflow-hidden bg-brand-bg relative">
             <VirtualPhotoGrid 
-              key={`photo-grid-${filters.showGroupsCollapsed ? 'collapsed' : 'expanded'}-${filters.searchQuery || ''}`}
+              key={`photo-grid-${urlFilters.showGroupsCollapsed ? 'collapsed' : 'expanded'}-${filters.searchQuery || ''}`}
               photos={gridPhotos}
               isFetching={infiniteQuery.isLoading}
               isFetchingNextPage={infiniteQuery.isFetchingNextPage}

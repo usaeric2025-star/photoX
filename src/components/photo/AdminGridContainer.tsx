@@ -47,8 +47,8 @@ export function AdminGridContainer({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const navigate = useNavigate();
-  const { filters, setSearch, setShowGroupsCollapsed } = useFilters();
-  const { filters: urlFilters, setGroupId, setPhotoId, setSortOrder } = useUrlFilters();
+  const { filters, setSearch } = useFilters();
+  const { filters: urlFilters, setGroupId, setPhotoId, setSortOrder, setShowGroupsCollapsed } = useUrlFilters();
   const update = useUIStore(s => s.update);
   const columns = useUIStore(s => s.columns);
   const processingIds = useUIStore(s => s.processingIds);
@@ -84,7 +84,7 @@ export function AdminGridContainer({
     filters,
     urlFilters,
     {
-      showGroupsCollapsed: filters.showGroupsCollapsed,
+      showGroupsCollapsed: urlFilters.showGroupsCollapsed,
       isAdminModeOverride: isAdminMode
     }
   ), [photos, categories, tags, filters, urlFilters, isAdminMode]);
@@ -147,7 +147,7 @@ export function AdminGridContainer({
       photo={photo}
       index={index}
       variant={variant}
-      showGroupsCollapsed={filters.showGroupsCollapsed}
+      showGroupsCollapsed={urlFilters.showGroupsCollapsed}
       onGroupClick={(gid, pid) => handleGroupClick(gid, pid || photo.id)}
       onLightboxOpen={handleLightboxOpen}
     />
@@ -166,13 +166,13 @@ export function AdminGridContainer({
               updateURL({ view: cols === 2 ? 'list' : 'grid' });
           }}
           currentColumns={columns}
-          onToggleGroups={() => setShowGroupsCollapsed(!filters.showGroupsCollapsed)}
-          showGroupsCollapsed={filters.showGroupsCollapsed}
+          onToggleGroups={() => setShowGroupsCollapsed(!urlFilters.showGroupsCollapsed)}
+          showGroupsCollapsed={urlFilters.showGroupsCollapsed}
         />
 
         <div className="flex-1 overflow-hidden bg-brand-bg relative">
            <VirtualPhotoGrid 
-             key={`photo-grid-${filters.showGroupsCollapsed ? 'collapsed' : 'expanded'}-${filters.searchQuery || ''}`}
+             key={`photo-grid-${urlFilters.showGroupsCollapsed ? 'collapsed' : 'expanded'}-${filters.searchQuery || ''}`}
              photos={gridPhotos}
              isFetching={infiniteQuery.isLoading}
              isFetchingNextPage={infiniteQuery.isFetchingNextPage}
