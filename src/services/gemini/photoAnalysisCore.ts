@@ -24,7 +24,7 @@ export const analyzeProductPhoto = async (
 ) => {
   const apiKey = customApiKey;
 
-  let modelName = customModel || 'Gemini 2.5 Flash Lite Preview 09-2025';
+  let modelName = customModel || 'google/gemini-2.5-flash-lite-preview-09-2025';
   
   if (!modelName.includes('/')) {
      modelName = 'google/' + modelName;

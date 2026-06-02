@@ -85,7 +85,7 @@ export function PhotoLightbox(props: PhotoLightboxProps) {
   contextTags.forEach(t => { tagMap[String(t.id)] = t.name; });
 
   const isManagement = props.variant === 'full-management' || props.variant === 'staff-workspace';
-  const isAdminMode = useAdminMode() || isManagement;
+  const isAdminMode = useAdminMode() && isManagement;
   const translate = translations[lang as LanguageCode] || translations.en;
 
 

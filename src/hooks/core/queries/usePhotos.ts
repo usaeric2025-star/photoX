@@ -1,5 +1,5 @@
 import { createStaleTime } from '@/shared/freshnessSchema';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { loadAllPhotosFromCloud, loadPhotosByGroupIdPaginated } from '@/services/photo/queries';
 import { photoKeys } from '@/lib/queryKeys';
 import { syncCache } from '@/lib/db/indexedDB';
@@ -68,11 +68,45 @@ export const usePhotos = (filters: {
  * Hook for infinite group photo lists.
  */
 export const useGroupPhotos = (groupId: string | null, isAdminMode: boolean = false, pageSize: number = 60) => {
+  const queryClient = useQueryClient();
+
   return useInfiniteQuery({
     queryKey: photoKeys.infinite({ groupId, isAdminMode, pageSize }),
-    queryFn: ({ pageParam = 1 }) => 
-      loadPhotosByGroupIdPaginated(groupId!, pageParam, pageSize, isAdminMode),
+    queryFn: async ({ pageParam = 1 }) => {
+      const res = await loadPhotosByGroupIdPaginated(groupId!, pageParam, pageSize, isAdminMode);
+      return {
+        photos: res.photos,
+        total: res.total,
+        hasMore: res.photos.length >= pageSize
+      };
+    },
     enabled: !!groupId,
+    placeholderData: () => {
+      if (!groupId) return undefined;
+      const allQueries = queryClient.getQueriesData<any>({ queryKey: photoKeys.all });
+      const dict = new Map();
+      allQueries.forEach(([_k, data]) => {
+        if (data?.pages) {
+          data.pages.forEach((p: any) => {
+            if (p.photos) {
+              p.photos.forEach((photo: any) => {
+                if (photo.group_id === groupId) {
+                  dict.set(photo.id, photo);
+                }
+              });
+            }
+          });
+        }
+      });
+      const cached = Array.from(dict.values());
+      if (cached.length > 0) {
+        return {
+          pages: [{ photos: cached, total: cached.length, hasMore: false }],
+          pageParams: [1]
+        };
+      }
+      return undefined;
+    },
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {
       const loaded = allPages.reduce((sum, p) => sum + p.photos.length, 0);

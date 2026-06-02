@@ -41,7 +41,7 @@ export function AdminGridContainer({
   useScrollRestoration('admin_gallery_scroll');
   
   const { can } = usePermission();
-  const isAdminMode = useAdminMode() || isManagement;
+  const isAdminMode = useAdminMode() && isManagement;
   const { tasks, addTask, updateTask } = useTasks();
   const { runTask } = useTaskExecutor();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -176,18 +176,13 @@ export function AdminGridContainer({
     setPhotoId(photo.id);
   };
 
-  const renderCard = (photo: Photo, index: number) => (
+  const renderCard = useCallback((photo: Photo, index: number) => (
     <PhotoCard 
       photo={photo}
       index={index}
       variant={variant}
-      categories={categories}
-      tags={tags}
-      showGroupsCollapsed={urlFilters.showGroupsCollapsed}
-      onGroupClick={(gid, pid) => handleGroupClick(gid, pid || photo.id)}
-      onLightboxOpen={handleLightboxOpen}
     />
-  );
+  ), [variant]);
 
   return (
     <LayoutGroup id="admin-gallery">
@@ -200,7 +195,7 @@ export function AdminGridContainer({
           onColumnsChange={(cols) => {
               update({ columns: cols as 2 | 3 | 5 });
               navigate({ 
-                search: (prev) => ({ ...prev, view: cols === 2 ? 'list' : 'grid' }) 
+                to: '.', search: (prev: any) => ({ ...prev, view: cols === 2 ? 'list' : 'grid' } as any) 
               });
           }}
           currentColumns={columns}

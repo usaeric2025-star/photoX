@@ -40,7 +40,7 @@ export default function PublicPage() {
   };
 
   const virtualGridRef = useRef<any>(null);
-  const handleScrollToTop = () => virtualGridRef.current?.scrollTo(0);
+  const handleScrollToTop = () => virtualGridRef.current?.scrollTo?.(0);
 
   useEffect(() => {
     document.title = 'PhotoX | 商品画册';

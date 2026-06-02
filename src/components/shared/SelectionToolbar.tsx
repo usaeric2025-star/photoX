@@ -54,6 +54,7 @@ export function SelectionToolbar({
   };
 
   const handleAI = () => {
+    handleClear(); // 立即清除选择状态，提升即时感
     setShowGroupsCollapsed(true); // AI合组前自动开启置顶合组的折叠模式，提升智能观感
     if (onAIIdentify) {
       onAIIdentify(ids);

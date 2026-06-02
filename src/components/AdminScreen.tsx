@@ -122,7 +122,7 @@ export function AdminScreen() {
           let tagMap = new Map<string, string>();
           if (allTagIds.length > 0) {
             const { data: tagsData } = await supabase.from('tags').select('id, name').in('id', allTagIds);
-            tagMap = new Map((tagsData || []).map(t => [String(t.id), t.name]));
+            tagMap = new Map((tagsData || []).map((t: any) => [String(t.id), t.name]));
           }
           const photosForAnalysis = groupPhotos.map(gp => ({
             ...gp,

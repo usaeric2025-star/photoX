@@ -120,19 +120,13 @@ export function PublicGridContainer({
     update({ showWhatsAppChoice: true });
   };
 
-  const renderCard = (photo: Photo, index: number) => (
+  const renderCard = useCallback((photo: Photo, index: number) => (
     <PhotoCard 
       photo={photo}
       index={index}
       variant={variant}
-      categories={categories}
-      tags={tags}
-      showGroupsCollapsed={urlFilters.showGroupsCollapsed}
-      onGroupClick={(gid, pid) => handleGroupClick(gid, pid || photo.id)}
-      onLightboxOpen={handleLightboxOpen}
-      onShare={handleShare}
     />
-  );
+  ), [variant]);
 
   return (
     <div className="flex flex-col h-full bg-brand-bg w-full overflow-hidden text-text">
@@ -144,7 +138,7 @@ export function PublicGridContainer({
           onColumnsChange={(cols) => {
               update({ columns: cols as 2 | 3 | 5 });
               navigate({ 
-                search: (prev) => ({ ...prev, view: cols === 2 ? 'list' : 'grid' }) 
+                to: '.', search: (prev: any) => ({ ...prev, view: cols === 2 ? 'list' : 'grid' } as any) 
               });
           }}
           currentColumns={columns}

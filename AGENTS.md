@@ -150,4 +150,42 @@ export const fetch = handle(app);
 - ❌ 禁止 `export default handle(app)`（在某些 ES Modules 编译阶段，Vercel 构建可能报错或解析失败）
 - ❌ 禁止动态导入 `await import("./app")`
 
+## Virtua 虚拟滚动规范（锁定）
+
+### 支持的属性（仅这些）
+- ✅ `data` - 数据源
+- ✅ `overscanCount` - 预渲染行数（数值，如 4）
+- ✅ `itemSize` - 固定行高（数值或函数）
+- ✅ `scrollToIndex` - 滚动到指定索引
+- ❌ `estimateSize` - 不支持，使用 `itemSize`
+- ❌ `overscan`（像素单位） - 不支持，使用 `overscanCount`
+- ❌ `scrollTo` - 不支持，使用 `scrollToIndex`
+
+### 返回顶部标准写法
+```typescript
+listRef.current?.scrollToIndex(0);  // ✅ 正确
+listRef.current?.scrollTo(0);        // ❌ 错误
+```
+
+## 权限判断规范（锁定）
+
+```typescript
+// ✅ 正确：严格判断
+const showAdmin = useAdminMode() && isManagement;
+
+// ❌ 错误：宽松判断
+const showAdmin = useAdminMode() || isManagement;
+```
+
+## 默认模式规范（锁定）
+
+- 登录后默认进入管理模式（viewMode = 'private'）
+- 公开页面预览使用 sessionStorage，不持久化到 localStorage
+
+## Props 传递规范（锁定）
+
+- ❌ 禁止通过 props 传递业务函数（如 onAiAnalyze、onDelete）
+- ✅ 组件内部使用全局 Hook（如 usePhotoActions）
+
+
 

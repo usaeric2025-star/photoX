@@ -87,6 +87,12 @@ export function AdminPageContent() {
   const { runTask } = useTaskExecutor();
   const isEffectiveStaffMode = !user && isAdminMode;
 
+  const publicVirtualGridRef = React.useRef<any>(null);
+  const handlePublicScrollToTop = () => {
+    publicVirtualGridRef.current?.scrollTo?.(0);
+  };
+
+
   logger.debug('📸 照片数量:', photos?.length, '加载状态:', isLoading, '强制显示:', forceShow);
 
   const { tasks, cancelTask } = useTasks();
@@ -175,8 +181,8 @@ export function AdminPageContent() {
                         variant="public-showcase"
                         onExit={handleExitPublic} 
                         loginWithGoogle={loginWithGoogle}
-                        onScrollToTop={() => {}}
-                        virtualGridRef={null}
+                        onScrollToTop={handlePublicScrollToTop}
+                        virtualGridRef={publicVirtualGridRef}
                       />
                     </div>
                   </div>

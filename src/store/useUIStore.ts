@@ -91,7 +91,7 @@ export const useUIStore = create<UIStoreState>()((set) => ({
   editPhotoId: safeGetItem(STORAGE_KEYS.EDIT_PHOTO, null, undefined, true),
   batchEditingIds: safeGetItem(STORAGE_KEYS.BATCH_EDITING, null, undefined, true),
   groupSettingsOpen: safeGetItem(STORAGE_KEYS.GROUP_SETTINGS_OPEN, false, (v) => v === 'true', true),
-  viewMode: safeGetItem(STORAGE_KEYS.VIEW_MODE, 'public', (v) => ['private', 'public'].includes(v) ? v : 'public') as 'private' | 'public',
+  viewMode: safeGetItem(STORAGE_KEYS.VIEW_MODE, 'private', (v) => ['private', 'public'].includes(v) ? v : 'private', true) as 'private' | 'public',
   activeScreen: safeGetItem(STORAGE_KEYS.ACTIVE_SCREEN, 'gallery', undefined, true),
   formState: safeGetItem(STORAGE_KEYS.EDIT_FORM_DRAFT, defaultForm, undefined, true),
   updateForm: (updates) => set((state) => {
@@ -162,7 +162,7 @@ export const useUIStore = create<UIStoreState>()((set) => ({
       safeSetItem(STORAGE_KEYS.GROUP_SETTINGS_OPEN, String(nextState.groupSettingsOpen), true);
     }
     if ('viewMode' in nextState && nextState.viewMode !== undefined) {
-      safeSetItem(STORAGE_KEYS.VIEW_MODE, nextState.viewMode);
+      safeSetItem(STORAGE_KEYS.VIEW_MODE, nextState.viewMode, true);
     }
     if ('activeScreen' in nextState && nextState.activeScreen !== undefined) {
       safeSetItem(STORAGE_KEYS.ACTIVE_SCREEN, nextState.activeScreen, true);
@@ -172,9 +172,6 @@ export const useUIStore = create<UIStoreState>()((set) => ({
     }
     if ('appLang' in nextState && nextState.appLang !== undefined) {
       safeSetItem(STORAGE_KEYS.LANG, nextState.appLang);
-    }
-    if ('viewMode' in nextState && nextState.viewMode !== undefined) {
-      safeSetItem(STORAGE_KEYS.VIEW_MODE, nextState.viewMode);
     }
     
     return nextState as any;

@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { reportError } from '@/lib/errorTracker';
 import { queryClient } from '@/lib/queryClient';
 import { photoKeys } from '@/lib/queryKeys';
+import { useSearch, useNavigate } from '@tanstack/react-router';
 
 async function togglePinAction(prevState: { error: string | null }, formData: FormData) {
   const photoId = formData.get('photoId') as string;
@@ -65,20 +66,15 @@ export interface PhotoCardProps {
   variant: GalleryVariant;
   photo: Photo;
   index: number;
-  showGroupsCollapsed: boolean;
-  onGroupClick?: (groupId: string, photoId?: string) => void;
-  onLightboxOpen: (photo: Photo) => void;
-  onShare?: (photo: Photo) => void;
   className?: string;
   onClick?: React.MouseEventHandler<any>;
   hideDetails?: boolean;
-  categories?: Category[];
-  tags?: Tag[];
   imgVariant?: 'sm' | 'md';
 }
 
-function PhotoStatusBadges({ photo, variant, showGroupsCollapsed, isPinned }: { photo: Photo; variant: GalleryVariant; showGroupsCollapsed: boolean; isPinned: boolean }) {
+function PhotoStatusBadges({ photo, variant, isPinned }: { photo: Photo; variant: GalleryVariant; isPinned: boolean }) {
   const isManagement = variant === 'full-management' || variant === 'staff-workspace';
+  const showGroupsCollapsed = useSearch({ from: '__root__', select: (s: any) => s.showGroupsCollapsed !== 'false' });
   
   // Display group info if photo belongs to a group
   const shouldShowGroup = showGroupsCollapsed && photo.group_id;
@@ -171,14 +167,9 @@ const toTitleCase = (str: string) => {
  * the virtualizer loop will cause infinite update depth loop.
  */
 export const PhotoCard = React.memo(({ 
-  variant, photo, index, showGroupsCollapsed,
-  onGroupClick, 
-  onLightboxOpen, 
-  onShare,
+  variant, photo, index,
   className = '', onClick,
   hideDetails = false,
-  categories: propsCategories,
-  tags: propsTags,
   imgVariant
 }: PhotoCardProps) => {
   const isSelected = useUIStore((s) => s.selectedIds.includes(photo.id));
@@ -186,7 +177,11 @@ export const PhotoCard = React.memo(({
   const toggleSelected = useUIStore((s) => s.toggleSelected);
   const update = useUIStore((s) => s.update);
   const columns = useUIStore((s) => s.columns);
+  const navigate = useNavigate();
   
+  const showGroupsCollapsed = useSearch({ from: '__root__', select: (s: any) => s.showGroupsCollapsed !== 'false' });
+  const hasSearchQuery = useSearch({ from: '__root__', select: (s: any) => !!s.q?.trim() });
+
   const resolvedImgVariant = imgVariant || (columns <= 3 ? 'md' : 'sm');
   
   const { handleError } = useErrorHandler();
@@ -197,11 +192,11 @@ export const PhotoCard = React.memo(({
   const lang = useUIStore(s => s.appLang);
   const t = translations[lang as keyof typeof translations] || translations.en;
   
-  const { data: fetchedCategories } = useCategories({ enabled: !hideDetails && (!propsCategories || !propsTags) });
-  const { data: fetchedTags } = useTags({ enabled: !hideDetails && (!propsCategories || !propsTags) });
+  const { data: fetchedCategories = [] } = useCategories({ enabled: !hideDetails });
+  const { data: fetchedTags = [] } = useTags({ enabled: !hideDetails });
 
-  const categories = propsCategories ?? fetchedCategories ?? [];
-  const tags = propsTags ?? fetchedTags ?? [];
+  const categories = fetchedCategories;
+  const tags = fetchedTags;
 
   const categoryId = photo.category_id ? String(photo.category_id) : '';
   
@@ -220,9 +215,13 @@ export const PhotoCard = React.memo(({
   const { can } = usePermission();
 
   const handleOpenLightbox = () => {
-    onLightboxOpen(photo);
+    navigate({ to: '.', search: (prev: any) => ({ ...prev, photoId: photo.id } as any) });
   };
     
+  const handleGroupClickLogic = (gid: string, pid?: string) => {
+    navigate({ to: '.', search: (prev: any) => ({ ...prev, photoId: hasSearchQuery ? pid : undefined, groupId: gid } as any) });
+  };
+
   const handleClick = (e: React.MouseEvent) => {
     if (longPressTriggered.current) {
       longPressTriggered.current = false;
@@ -241,18 +240,18 @@ export const PhotoCard = React.memo(({
         e.stopPropagation();
         e.preventDefault();
         toggleSelected(photo.id);
-      } else if (photo.group_id && onGroupClick) {
+      } else if (photo.group_id) {
         e.stopPropagation();
         e.preventDefault();
-        onGroupClick(photo.group_id, photo.id);
+        handleGroupClickLogic(photo.group_id, photo.id);
       } else {
         handleOpenLightbox();
       }
     } else {
-      if (photo.group_id && onGroupClick) {
+      if (photo.group_id) {
         e.stopPropagation();
         e.preventDefault();
-        onGroupClick(photo.group_id, photo.id);
+        handleGroupClickLogic(photo.group_id, photo.id);
       } else {
         handleOpenLightbox();
       }
@@ -271,7 +270,8 @@ export const PhotoCard = React.memo(({
         }
         if ('vibrate' in navigator) navigator.vibrate(50);
       } else {
-        onShare?.(photo);
+        (window as any)._pendingPhoto = photo;
+        update({ showWhatsAppChoice: true });
       }
     },
     { delay: 400 }
@@ -341,7 +341,7 @@ export const PhotoCard = React.memo(({
         </div>
       )}
       
-      <PhotoStatusBadges photo={photo} variant={variant} showGroupsCollapsed={showGroupsCollapsed} isPinned={!!photo.is_pinned} />
+      <PhotoStatusBadges photo={photo} variant={variant} isPinned={!!photo.is_pinned} />
 
       {isManagement && can('photo:toggle-pinned') && (
          <PinButton photoId={photo.id} isPinned={!!photo.is_pinned} />

@@ -1,5 +1,5 @@
 import { createMutationHook } from './factory';
-import { groupKeys } from '@/lib/queryKeys';
+import { groupKeys, photoKeys } from '@/lib/queryKeys';
 import { createGroup, updateGroup, deleteGroupFromCloud } from '@/services/group/commands';
 import { groupPhotos, removePhotosFromGroup, setPhotoAsGroupCoverInCloud } from '@/services/photo/commands';
 import { ungroupPhotos } from '@/services/photo/photoMaintenanceService';
@@ -48,6 +48,31 @@ export const useGroupPhotosMutation = createMutationHook({
   },
   invalidateKeys: [['photos'], ['groups'], groupKeys.all],
   onSuccessMessage: '合组成功',
+  optimisticUpdate: async ({ photoIds, targetGroupId }, queryClient) => {
+    await queryClient.cancelQueries({ queryKey: photoKeys.all });
+    
+    // Very basic fast UI reaction
+    const finalGroupId = targetGroupId || 'optimistic-group-id';
+    
+    // Invalidate everything to be safe anyway, but let's at least update lists roughly
+    queryClient.setQueriesData<any>({ queryKey: photoKeys.all }, (oldData: any) => {
+      if (!oldData) return oldData;
+      if (oldData.pages && Array.isArray(oldData.pages)) {
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: any) => ({
+            ...page,
+            photos: page.photos.map((p: any) => 
+              photoIds.includes(p.id) ? { ...p, group_id: finalGroupId, group: { id: finalGroupId, name: 'AI 合组', member_count: photoIds.length, cover_photo_id: photoIds[0], colors: [], materials: [], is_hidden: false } } : p
+            )
+          }))
+        };
+      }
+      return oldData;
+    });
+    
+    return {};
+  }
 });
 
 export const useRemoveFromGroupMutation = createMutationHook({

@@ -37,8 +37,6 @@ describe('PhotoCard', () => {
           variant="full-management"
           photo={mockPhoto as any}
           index={0}
-          showGroupsCollapsed={false}
-          onLightboxOpen={vi.fn()}
         />
       </QueryClientProvider>
     );

@@ -233,6 +233,7 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
                   const photo = activeGroupPhotos[currentIndex];
                   if (!photo) return null;
 
+const actualOnAiAnalyze = onAiAnalyze || (onBatchAiAnalyze ? (p: Photo) => onBatchAiAnalyze([p]) : undefined);
                   return (
                     <PhotoLightbox
                       photoId={focusedGroupPhotoId}
@@ -244,7 +245,7 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
                       onSetGroupCover={handleSetGroupCoverLightbox}
                       onEditPhoto={handleEditPhoto}
                       onToggleHidden={handleToggleHiddenLightbox}
-                      onAiAnalyze={onAiAnalyze}
+                      onAiAnalyze={actualOnAiAnalyze}
                       onCancelAnalyze={onCancelAnalyze}
                       isAnalyzing={isAnalyzing}
                     />

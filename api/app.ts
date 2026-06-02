@@ -423,7 +423,7 @@ app.post("/ai/analyze-group", async (c) => {
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-        body: JSON.stringify({ model: "google/gemini-2.0-flash-exp:free", messages: [{ role: "user", content: prompt }], response_format: { type: "json_object" }, max_tokens: 1000 })
+        body: JSON.stringify({ model: "google/gemini-2.5-flash-lite-preview-09-2025", messages: [{ role: "user", content: prompt }], response_format: { type: "json_object" }, max_tokens: 1000 })
       });
       if (!response.ok) return c.json({ error: await response.text() }, response.status as any);
       const data = await response.json();
@@ -440,7 +440,7 @@ app.post("/ai/analyze-photo-v2", async (c) => {
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-        body: JSON.stringify({ model: "google/gemini-2.0-flash-exp:free", messages: [{ role: "user", content: prompt }], response_format: { type: "json_object" }, max_tokens: 1000 })
+        body: JSON.stringify({ model: "google/gemini-2.5-flash-lite-preview-09-2025", messages: [{ role: "user", content: prompt }], response_format: { type: "json_object" }, max_tokens: 1000 })
       });
       if (!response.ok) return c.json({ error: await response.text() }, response.status as any);
       const data = await response.json();
