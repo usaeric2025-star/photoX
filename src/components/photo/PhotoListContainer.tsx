@@ -30,11 +30,9 @@ export function PhotoListContainer({ variant, filters, isAdminMode, categories, 
     isAdminMode: isAdminMode
   }, PAGINATION.ADMIN_BATCH_SIZE, true);
 
-  const rawPhotos = useMemo(() => {
-    return infiniteQuery.data?.pages?.flatMap(p => p.photos) ?? [];
-  }, [infiniteQuery.data]);
+  const rawPhotos = infiniteQuery.data?.pages?.flatMap(p => p.photos) ?? [];
 
-  const photos = useMemo(() => normalizeAdminPhotos(rawPhotos), [rawPhotos]);
+  const photos = normalizeAdminPhotos(rawPhotos);
 
   return (
     <VirtualPhotoGrid

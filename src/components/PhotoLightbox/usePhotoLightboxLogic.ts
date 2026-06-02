@@ -67,13 +67,11 @@ export const usePhotoLightboxLogic = ({
     }
   }, [activePhoto?.id, activePhoto?.group_id, runTask]);
 
-  const slides = useMemo(() => {
-    return (displayPhotos || [])
-      .filter(p => !!p)
-      .map(p => ({ src: getCacheBustedImageUrl(p, 'image') }));
-  }, [displayPhotos]);
+  const slides = (displayPhotos || [])
+    .filter(p => !!p)
+    .map(p => ({ src: getCacheBustedImageUrl(p, 'image') }));
 
-  const handleShare = useCallback(() => {
+  const handleShare = () => {
     if (!photo?.image_hash) return;
     const url = `${window.location.origin}/h/${photo.image_hash}`;
     navigator.clipboard.writeText(url).then(() => {
@@ -82,9 +80,9 @@ export const usePhotoLightboxLogic = ({
     }).catch(err => {
       handleError(err, '复制链接失败');
     });
-  }, [photo?.image_hash]);
+  };
 
-  const handleDownload = useCallback(async () => {
+  const handleDownload = async () => {
     const url = photo?.image_url || photo?.uri;
     if (!url) return;
     
@@ -102,7 +100,7 @@ export const usePhotoLightboxLogic = ({
     } catch (err) {
       handleError(err, '下载图片失败');
     }
-  }, [photo]);
+  };
 
   const onTouchStart = (e: React.TouchEvent) => {
     setTouchEndX(null);

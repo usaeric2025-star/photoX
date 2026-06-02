@@ -132,5 +132,4 @@ const PhotoGridFooter = ({
     );
   }
   return null;
-};
-PhotoGridFooter.displayName = 'PhotoGridFooter';
+}

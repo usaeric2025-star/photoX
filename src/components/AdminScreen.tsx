@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AdminGallery } from '@/components/photo/AdminGallery';
+import { AdminGridContainer } from '@/components/photo/AdminGridContainer';
 import { useMultiSelect, useAuth, useTasks, useSyncMutation, useAdminMode } from '@/hooks';
 import { usePhotoGallery } from '@/features/photos/usePhotoGallery';
 import { useUIStore, useShallow } from '@/store/useUIStore';
@@ -92,7 +92,7 @@ export function AdminScreen() {
          ) : photos.length === 0 && !isSyncing ? (
            <AdminEmptyState t={t} />
          ) : (
-           <AdminGallery 
+           <AdminGridContainer 
              variant={variant}
              handleBatchAiIdentifyTrigger={async () => {
                 onBatchAiAnalyze(photos);

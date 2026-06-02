@@ -44,7 +44,6 @@ export interface UIStoreState {
   isPhotoPickerOpen: boolean;
   photoPickerGroupId: string | null;
   isMultiSelect: boolean;
-  selectedIds: string[];
   alertDialog: AlertDialogProps | null;
   promptDialog: PromptDialogProps | null;
   isMultiSelectMode: boolean;
@@ -113,7 +112,6 @@ export const useUIStore = create<UIStoreState>()((set) => ({
   isMultiSelectMode: false,
   draggedPhotoId: null,
   focusedGroupPhotoId: null,
-  selectedIds: [],
   toggleSelected: (id) => set((state) => {
     const newSelected = new Set(state.selectedIds);
     if (newSelected.has(id)) newSelected.delete(id);

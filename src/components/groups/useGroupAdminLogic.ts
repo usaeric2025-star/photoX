@@ -237,7 +237,7 @@ export const useGroupAdminLogic = ({
       });
     },
     [
-      showError,
+      handleError,
       dbGroupPhotos,
       activeGroupId,
       removePhotosBatch,

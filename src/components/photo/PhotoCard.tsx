@@ -100,8 +100,7 @@ function PhotoStatusBadges({ photo, variant, showGroupsCollapsed, isPinned }: { 
       )}
     </div>
   );
-};
-PhotoStatusBadges.displayName = 'PhotoStatusBadges';
+}
 
 function SelectionOverlay({ isSelected }: { isSelected: boolean }) {
   return (
@@ -120,7 +119,6 @@ function SelectionOverlay({ isSelected }: { isSelected: boolean }) {
     </div>
   );
 }
-SelectionOverlay.displayName = 'SelectionOverlay';
 
 function PhotoInfoFooter({ displayCatName, photoTags, hideTags, categoryId, tagIds }: { 
   displayCatName: string; 
@@ -158,8 +156,7 @@ function PhotoInfoFooter({ displayCatName, photoTags, hideTags, categoryId, tagI
         )}
     </div>
   );
-};
-PhotoInfoFooter.displayName = 'PhotoInfoFooter';
+}
 
 const toTitleCase = (str: string) => {
   if (!str) return '';
@@ -196,8 +193,8 @@ export const PhotoCard = ({
   const { data: categories = [] } = useCategories();
   const { data: tags = [] } = useTags();
 
-  const categoryMap = useMemo(() => new Map(categories.map(c => [String(c.id), c])), [categories]);
-  const tagMap = useMemo(() => new Map(tags.map(t => [String(t.id), t])), [tags]);
+  const categoryMap = new Map(categories.map(c => [String(c.id), c]));
+  const tagMap = new Map(tags.map(t => [String(t.id), t]));
   
   const categoryId = photo.category_id ? String(photo.category_id) : '';
   const category = categoryMap.get(categoryId);
@@ -208,7 +205,7 @@ export const PhotoCard = ({
     .map(id => tagMap.get(String(id))?.name ?? '')
     .filter(Boolean);
 
-  const isSelected = useMemo(() => selectedIds.includes(photo.id), [selectedIds, photo.id]);
+  const isSelected = selectedIds.includes(photo.id);
 
   const { can } = usePermission();
 
@@ -333,6 +330,4 @@ export const PhotoCard = ({
       />
     </div>
   );
-};
-
-PhotoCard.displayName = 'PhotoCard';
+}

@@ -50,21 +50,18 @@ export const useSettingsLogic = ({
   const [activeTagMenuId, setActiveTagMenuId] = useState<string | null>(null);
   const [saveTimer, setSaveTimer] = useState<NodeJS.Timeout | null>(null);
 
-  const debouncedSave = useCallback(
-    (newSettings: AppSettings) => {
-      if (saveTimer) clearTimeout(saveTimer);
-      const timer = setTimeout(() => {
-        saveSettings(newSettings).catch((err) =>
-          handleError(err, "保存设置失败"),
-        );
-        setHasChanges(false);
-      }, 1500);
-      setSaveTimer(timer);
-    },
-    [saveSettings, saveTimer, handleError],
-  );
+  const debouncedSave = (newSettings: AppSettings) => {
+    if (saveTimer) clearTimeout(saveTimer);
+    const timer = setTimeout(() => {
+      saveSettings(newSettings).catch((err) =>
+        handleError(err, "保存设置失败"),
+      );
+      setHasChanges(false);
+    }, 1500);
+    setSaveTimer(timer);
+  };
 
-  const handleDeduplicate = useCallback(async () => {
+  const handleDeduplicate = async () => {
     if (!user) {
       handleError(new Error("请先登录云端"), "操作失败");
       return;
@@ -93,124 +90,115 @@ export const useSettingsLogic = ({
           },
       },
     });
-  }, [user, update, performPullSync, handleError, showSuccess]);
+  };
 
-  const handleHealthCheck = useCallback(
-    async (allPhotos: Photo[]) => {
-      try {
-        toast.success("正在啟動系統級一致性巡檢...");
+  const handleHealthCheck = async (allPhotos: Photo[]) => {
+    try {
+      toast.success("正在啟動系統級一致性巡檢...");
 
-        // 1. Check data consistency (IDs)
-        const broken = await scanAndRepairPhotoIds(allPhotos);
-        if (broken.length > 0) {
-          console.warn(`[HealthCheck] Found ${broken.length} broken IDs`);
-        }
+      // 1. Check data consistency (IDs)
+      const broken = await scanAndRepairPhotoIds(allPhotos);
+      if (broken.length > 0) {
+        console.warn(`[HealthCheck] Found ${broken.length} broken IDs`);
+      }
 
-        // 2. Repair Group Integrity (The "Orphaned group" and "Member count" fix) - HIGH PRIORITY
-        const groupRepair = await repairGroupIntegrity();
-        console.log("[HealthCheck] Group repair results:", groupRepair);
-        if (
-          groupRepair.dissolved > 0 ||
-          groupRepair.synced > 0 ||
-          groupRepair.deleted > 0
-        ) {
-          toast.success(
-            `合組一致性修復：解散孤立組 ${groupRepair.dissolved} 個，同步計數 ${groupRepair.synced} 個，清理空組 ${groupRepair.deleted} 個`,
+      // 2. Repair Group Integrity (The "Orphaned group" and "Member count" fix) - HIGH PRIORITY
+      const groupRepair = await repairGroupIntegrity();
+      console.log("[HealthCheck] Group repair results:", groupRepair);
+      if (
+        groupRepair.dissolved > 0 ||
+        groupRepair.synced > 0 ||
+        groupRepair.deleted > 0
+      ) {
+        toast.success(
+          `合組一致性修復：解散孤立組 ${groupRepair.dissolved} 個，同步計數 ${groupRepair.synced} 個，清理空組 ${groupRepair.deleted} 個`,
+        );
+      }
+
+      // 3. Storage Audit (Orphans and missing files)
+      const auditResp = await fetch("/api/storage/audit");
+      const auditData = await auditResp.json();
+      if (auditData.success && auditData.data) {
+        const { missing, orphans } = auditData.data;
+        if (missing > 0 || orphans > 0) {
+          console.warn(
+            `[Storage Audit] Missing: ${missing}, Orphans: ${orphans}`,
           );
-        }
-
-        // 3. Storage Audit (Orphans and missing files)
-        const auditResp = await fetch("/api/storage/audit");
-        const auditData = await auditResp.json();
-        if (auditData.success && auditData.data) {
-          const { missing, orphans } = auditData.data;
-          if (missing > 0 || orphans > 0) {
-            console.warn(
-              `[Storage Audit] Missing: ${missing}, Orphans: ${orphans}`,
-            );
-            if (orphans > 0) {
-              update({
-                alertDialog: {
-                  title: "发现孤儿文件 / Orphans Found",
-                  message: `存储空间中发现了 ${orphans} 个不再被数据库使用的文件。是否要清理这些“废弃孤本”以释放空间？`,
-                  confirmLabel: "立即清理",
-                  onConfirm: async () => {
-                    update({ alertDialog: null });
-                    toast.success("正在清理存儲空間...");
-                    const cleanResp = await fetch("/api/storage/clean", {
-                      method: "POST",
-                    });
-                    const cleanData = await cleanResp.json();
-                    if (cleanData.success) {
-                      toast.success(
-                        `清理完成！共刪除 ${cleanData.data.cleanedCount} 個文件。`,
-                      );
-                    }
-                  },
+          if (orphans > 0) {
+            update({
+              alertDialog: {
+                title: "发现孤儿文件 / Orphans Found",
+                message: `存储空间中发现了 ${orphans} 个不再被数据库使用的文件。是否要清理这些“废弃孤本”以释放空间？`,
+                confirmLabel: "立即清理",
+                onConfirm: async () => {
+                  update({ alertDialog: null });
+                  toast.success("正在清理存儲空間...");
+                  const cleanResp = await fetch("/api/storage/clean", {
+                    method: "POST",
+                  });
+                  const cleanData = await cleanResp.json();
+                  if (cleanData.success) {
+                    toast.success(
+                      `清理完成！共刪除 ${cleanData.data.cleanedCount} 個文件。`,
+                    );
+                  }
                 },
-              });
-            }
+              },
+            });
           }
         }
-
-        // 3. Check for missing hashes
-        const missingHashes = await getPhotosWithoutThumbHash();
-
-        if (!missingHashes || missingHashes.length === 0) {
-          toast.success("系統診斷完成：所有照片健康度良好");
-          return;
-        }
-
-        // 3. Otherwise perform the auto-repair loop
-        let backfilledCount = 0;
-        await backfillThumbHashes((stats) => {
-          backfilledCount = stats.success;
-        });
-
-        if (backfilledCount > 0) {
-          invalidatePhotos();
-          toast.success(
-            `診斷修復完成，成功回填 ${backfilledCount} 張照片的佔位圖！`,
-          );
-        } else {
-          toast.success("診斷完成：未發現需要修復的项目");
-        }
-      } catch (err: any) {
-        handleError(err, "診斷失敗");
       }
-    },
-    [handleError, invalidatePhotos],
-  );
 
-  const togglePin = useCallback(
-    (tagId: string) => {
-      const currentPinned = settings?.pinned_tags || [];
-      let nextPinned;
-      if (currentPinned.includes(tagId)) {
-        nextPinned = currentPinned.filter((id: string) => id !== tagId);
+      // 3. Check for missing hashes
+      const missingHashes = await getPhotosWithoutThumbHash();
+
+      if (!missingHashes || missingHashes.length === 0) {
+        toast.success("系統診斷完成：所有照片健康度良好");
+        return;
+      }
+
+      // 3. Otherwise perform the auto-repair loop
+      let backfilledCount = 0;
+      await backfillThumbHashes((stats) => {
+        backfilledCount = stats.success;
+      });
+
+      if (backfilledCount > 0) {
+        invalidatePhotos();
+        toast.success(
+          `診斷修復完成，成功回填 ${backfilledCount} 張照片的佔位圖！`,
+        );
       } else {
-        nextPinned = [...currentPinned, tagId];
+        toast.success("診斷完成：未發現需要修復的项目");
       }
-      const nextSettings = { ...settings, pinned_tags: nextPinned };
-      setSettings(nextSettings);
-      setHasChanges(true);
-      debouncedSave(nextSettings);
-    },
-    [settings, setSettings, debouncedSave],
-  );
+    } catch (err: any) {
+      handleError(err, "診斷失敗");
+    }
+  };
 
-  const setSettingField = useCallback(
-    <K extends keyof AppSettings>(field: K, value: AppSettings[K]) => {
-      const current = settings || {};
-      const newSettings = { ...current, [field]: value };
-      setSettings(newSettings);
-      setHasChanges(true);
-      debouncedSave(newSettings);
-    },
-    [settings, setSettings, debouncedSave],
-  );
+  const togglePin = (tagId: string) => {
+    const currentPinned = settings?.pinned_tags || [];
+    let nextPinned;
+    if (currentPinned.includes(tagId)) {
+      nextPinned = currentPinned.filter((id: string) => id !== tagId);
+    } else {
+      nextPinned = [...currentPinned, tagId];
+    }
+    const nextSettings = { ...settings, pinned_tags: nextPinned };
+    setSettings(nextSettings);
+    setHasChanges(true);
+    debouncedSave(nextSettings);
+  };
 
-  const testConnection = useCallback(async () => {
+  const setSettingField = <K extends keyof AppSettings>(field: K, value: AppSettings[K]) => {
+    const current = settings || {};
+    const newSettings = { ...current, [field]: value };
+    setSettings(newSettings);
+    setHasChanges(true);
+    debouncedSave(newSettings);
+  };
+
+  const testConnection = async () => {
     if (!settings?.gemini_api_key) return;
     setTestResult({ loading: true });
 
@@ -235,7 +223,7 @@ export const useSettingsLogic = ({
     } finally {
       setTestResult((prev) => (prev ? { ...prev, loading: false } : null));
     }
-  }, [settings, showSuccess, handleError]);
+  };
 
   return {
     testResult,

@@ -8,7 +8,7 @@ import { syncCache } from '@/lib/db/indexedDB';
 import { photoKeys } from '@/lib/queryKeys';
 import { AdminPageContent } from './AdminPageContent';
 
-export function AdminView() {
+export function AdminPage() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -40,4 +40,4 @@ export function AdminView() {
   );
 };
 
-export default AdminView;
+export default AdminPage;

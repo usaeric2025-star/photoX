@@ -23,7 +23,7 @@ import { normalizeAdminPhotos } from '@/lib/selectors/photos';
 const updateURL = (params: any) => console.log('updateURL stub', params);
 import { useNavigate } from '@tanstack/react-router';
 
-interface AdminGalleryProps {
+interface AdminGridContainerProps {
   variant: GalleryVariant;
   handleBatchAiIdentifyTrigger?: () => void;
   batchProgress?: any;
@@ -31,11 +31,11 @@ interface AdminGalleryProps {
 
 const EMPTY_ARRAY: Photo[] = [];
 
-export function AdminGallery({
+export function AdminGridContainer({
   variant,
   handleBatchAiIdentifyTrigger,
   batchProgress
-}: AdminGalleryProps) {
+}: AdminGridContainerProps) {
   const isManagement = variant === 'full-management' || variant === 'staff-workspace';
   useScrollRestoration('admin_gallery_scroll');
   
@@ -64,13 +64,11 @@ export function AdminGallery({
     isAdminMode: isAdminMode
   }, PAGINATION.ADMIN_BATCH_SIZE, true);
 
-  const rawPhotos = useMemo(() => {
-    return infiniteQuery.data?.pages?.flatMap(p => p.photos) ?? EMPTY_ARRAY;
-  }, [infiniteQuery.data]);
+  const rawPhotos = infiniteQuery.data?.pages?.flatMap(p => p.photos) ?? EMPTY_ARRAY;
 
-  const photos = useMemo(() => normalizeAdminPhotos(rawPhotos), [rawPhotos]);
+  const photos = normalizeAdminPhotos(rawPhotos);
 
-  const { displayPhotos, gridPhotos } = useMemo(() => processPhotos(
+  const { displayPhotos, gridPhotos } = processPhotos(
     photos,
     categories,
     tags,
@@ -80,11 +78,9 @@ export function AdminGallery({
       showGroupsCollapsed: filters.showGroupsCollapsed,
       isAdminModeOverride: isAdminMode
     }
-  ), [photos, categories, tags, filters, urlFilters, isAdminMode]);
+  );
 
-  const isAnalyzing = useMemo(() => {
-    return tasks.some(t => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析')));
-  }, [tasks]);
+  const isAnalyzing = tasks.some(t => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析')));
 
   const virtualGridRef = useRef<any>(null);
   const scrollToTop = () => virtualGridRef.current?.scrollTo(0);
@@ -124,20 +120,20 @@ export function AdminGallery({
   };
 
   // activePhoto can be removed if not needed, but keep activePhotoId
-  const handleGroupClick = useCallback((gid: string, photoId?: string) => {
+  const handleGroupClick = (gid: string, photoId?: string) => {
      setPhotoId(null);
      setGroupId(gid);
      // Only set activePhotoId if searching or wanted to anchor
      if (filters.searchQuery && filters.searchQuery.trim()) {
          setPhotoId(photoId || null);
      }
-  }, [filters.searchQuery, setPhotoId, setGroupId]);
+  };
 
-  const handleLightboxOpen = useCallback((photo: Photo) => {
+  const handleLightboxOpen = (photo: Photo) => {
     setPhotoId(photo.id);
-  }, [setPhotoId]);
+  };
 
-  const renderCard = useCallback((photo: Photo, index: number) => (
+  const renderCard = (photo: Photo, index: number) => (
     <PhotoCard 
       photo={photo}
       index={index}
@@ -146,7 +142,7 @@ export function AdminGallery({
       onGroupClick={(gid, pid) => handleGroupClick(gid, pid || photo.id)}
       onLightboxOpen={handleLightboxOpen}
     />
-  ), [variant, filters.showGroupsCollapsed, handleGroupClick, handleLightboxOpen]);
+  );
 
   return (
     <LayoutGroup id="admin-gallery">

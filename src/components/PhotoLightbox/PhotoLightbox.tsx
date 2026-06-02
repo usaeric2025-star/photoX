@@ -50,26 +50,26 @@ export function PhotoLightbox(props: PhotoLightboxProps) {
     lang: s.appLang
   })));
 
-  const index = React.useMemo(() => displayPhotos.findIndex(p => p.id === photoId), [displayPhotos, photoId]);
+  const index = displayPhotos.findIndex(p => p.id === photoId);
   const photo = index !== -1 ? displayPhotos[index] : null;
   
-  const changePhotoId = React.useCallback((id: string | null) => {
+  const changePhotoId = (id: string | null) => {
       onPhotoIdChange(id);
-  }, [onPhotoIdChange]);
+  };
   
-  const onPrev = React.useCallback((e?: React.MouseEvent) => {
+  const onPrev = (e?: React.MouseEvent) => {
     e?.stopPropagation();
     if (index > 0) changePhotoId(displayPhotos[index - 1].id);
-  }, [index, displayPhotos, changePhotoId]);
+  };
 
-  const onNext = React.useCallback((e?: React.MouseEvent) => {
+  const onNext = (e?: React.MouseEvent) => {
     e?.stopPropagation();
     if (index < displayPhotos.length - 1) changePhotoId(displayPhotos[index + 1].id);
-  }, [index, displayPhotos, changePhotoId]);
+  };
 
   const actions = useAdminActions();
   const { tasks } = useTasks();
-  const storeIsAnalyzing = React.useMemo(() => tasks.some(task => task.status === 'running' && (task.name.includes('识别') || task.name.includes('分析'))), [tasks]);
+  const storeIsAnalyzing = tasks.some(task => task.status === 'running' && (task.name.includes('识别') || task.name.includes('分析')));
 
   const onEditPhoto = props.onEditPhoto ?? ((p: Photo) => storeUpdate({ editPhotoId: p.id } as any));
   const onToggleHidden = props.onToggleHidden ?? ((p: Photo) => actions.updatePhoto(p.id, { is_hidden: !p.is_hidden }));
@@ -84,15 +84,12 @@ export function PhotoLightbox(props: PhotoLightboxProps) {
   const { data: manufacturers = [] } = useManufacturers();
   const { data: contextTags = [] } = useTags();
   
-  const tagMap = React.useMemo(() => {
-    const map: Record<string, string> = { };
-    contextTags.forEach(t => { map[String(t.id)] = t.name; });
-    return map;
-  }, [contextTags]);
+  const tagMap: Record<string, string> = { };
+  contextTags.forEach(t => { tagMap[String(t.id)] = t.name; });
 
   const isManagement = props.variant === 'full-management' || props.variant === 'staff-workspace';
   const isAdminMode = useAdminMode() && isManagement;
-  const translate = React.useMemo(() => (translations[lang as LanguageCode] || translations.en), [lang]);
+  const translate = translations[lang as LanguageCode] || translations.en;
 
 
 
@@ -147,7 +144,7 @@ export function PhotoLightbox(props: PhotoLightboxProps) {
       }
     }, 10000);
     return () => clearTimeout(timer);
-  }, [isImageLoading, index, showError, translate.imageLoadFailed]);
+  }, [isImageLoading, index, handleError, translate.imageLoadFailed]);
 
   const isOpen = index !== null && !!activePhoto;
 

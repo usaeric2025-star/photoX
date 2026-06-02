@@ -48,7 +48,7 @@ export const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.
     (window as any).process?.env?.NODE_ENV === 'test'
   );
 
-  const listItems = React.useMemo(() => {
+  const listItems = (() => {
     const items: Array<{ type: 'header' | 'row' | 'footer'; content?: React.ReactNode; rowIndex?: number }> = [];
     if (props.header) {
       items.push({ type: 'header', content: props.header });
@@ -61,7 +61,7 @@ export const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.
     }
     console.log('📊 [VirtualGrid] Computed listItems:', { count: props.count, rowCount, listItemsLength: items.length });
     return items;
-  }, [props.header, props.footer, rowCount, props.count]);
+  })();
 
   useImperativeHandle(ref, () => ({
     scrollToIndex: (index: number) => {
@@ -77,7 +77,7 @@ export const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.
   const onEndReachedRef = useRef(props.onEndReached);
   useEffect(() => { onEndReachedRef.current = props.onEndReached; }, [props.onEndReached]);
 
-  const handleScroll = React.useCallback((offset: number) => {
+  const handleScroll = (offset: number) => {
     props.onScroll?.(offset);
     if (vlistRef.current) {
       const { scrollSize, viewportSize } = vlistRef.current;
@@ -85,7 +85,7 @@ export const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.
         onEndReachedRef.current?.();
       }
     }
-  }, [props.onScroll]);
+  };
 
   if (isTestEnv) {
     return (
@@ -182,7 +182,5 @@ export const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.
     </div>
   );
 };
-
-VirtualGrid.displayName = 'VirtualGrid';
 
 export default VirtualGrid;

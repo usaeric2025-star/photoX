@@ -1,17 +1,18 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { VirtualGrid } from '@/components/virtualizer/VirtualGrid';
-import { useInteractionBridge } from '@/components/virtualizer/useInteractionBridge';
+import { useUIStore } from '@/store/useUIStore';
 import { motion, LayoutGroup } from 'motion/react';
 
 // Isolated benchmark page
 export default function VirtualizerBenchmark() {
-  const { state, setters } = useInteractionBridge();
+  const selectedIds = useUIStore(s => s.selectedIds);
+  const toggleSelected = useUIStore(s => s.toggleSelected);
 
   // 1. Grouped Scenario: <100 items (simulating collapsed/grouped cards)
-  const groupedItems = useMemo(() => Array.from({ length: 80 }).map((_, i) => ({ id: `group-${i}`, type: 'group' })), []);
+  const groupedItems = Array.from({ length: 80 }).map((_, i) => ({ id: `group-${i}`, type: 'group' }));
   
   // 2. Grid Scenario: 10,000 items (simulating massive grid)
-  const gridItems = useMemo(() => Array.from({ length: 10000 }).map((_, i) => ({ id: `photo-${i}`, type: 'photo' })), []);
+  const gridItems = Array.from({ length: 10000 }).map((_, i) => ({ id: `photo-${i}`, type: 'photo' }));
 
   return (
     <div className="p-8 space-y-12">
@@ -39,10 +40,10 @@ export default function VirtualizerBenchmark() {
           <VirtualGrid
             count={gridItems.length}
             renderItem={(index) => (
-              <div 
+               <div 
                 className="aspect-square bg-slate-100 rounded flex items-center justify-center text-xs text-slate-400 border border-slate-200"
-                data-selected={state.selectedIds.has(gridItems[index].id)}
-                onClick={() => setters.toggleSelected(gridItems[index].id)}
+                data-selected={selectedIds.includes(gridItems[index].id)}
+                onClick={() => toggleSelected(gridItems[index].id)}
               >
                 Photo {index}
               </div>

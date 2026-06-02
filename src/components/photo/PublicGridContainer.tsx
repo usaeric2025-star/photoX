@@ -15,7 +15,7 @@ import { WhatsAppChoiceDialog } from '../WhatsAppChoiceDialog';
 import { translations } from '@/lib/translations';
 import { Photo } from '@/types';
 
-interface PublicGalleryProps {
+interface PublicGridContainerProps {
   variant: GalleryVariant;
   onScrollToTop: () => void;
   virtualGridRef: any;
@@ -25,11 +25,11 @@ interface PublicGalleryProps {
 
 const EMPTY_ARRAY: Photo[] = [];
 
-export function PublicGallery({
+export function PublicGridContainer({
   variant,
   onScrollToTop,
   virtualGridRef
-}: PublicGalleryProps) {
+}: PublicGridContainerProps) {
   const { filters } = useFilters();
   const { settings } = useSettings(); 
   
@@ -44,7 +44,7 @@ export function PublicGallery({
   const { data: categories = [] } = useCategories();
   const { data: tags = [] } = useTags();
   
-  const t = useMemo(() => translations[appLang as keyof typeof translations] || translations.en, [appLang]);
+  const t = translations[appLang as keyof typeof translations] || translations.en;
 
   const infiniteQuery = usePhotoInfiniteList({
     category_id: filters.categoryId,
@@ -55,11 +55,9 @@ export function PublicGallery({
     onlyUngrouped: false
   }, PAGINATION.PUBLIC_PAGE_SIZE, true);
 
-  const rawPhotos = useMemo(() => {
-    return infiniteQuery.data?.pages?.flatMap(p => p.photos) ?? EMPTY_ARRAY;
-  }, [infiniteQuery.data]);
+  const rawPhotos = infiniteQuery.data?.pages?.flatMap(p => p.photos) ?? EMPTY_ARRAY;
 
-  const { displayPhotos, gridPhotos } = useMemo(() => processPhotos(
+  const { displayPhotos, gridPhotos } = processPhotos(
     rawPhotos,
     categories,
     tags,
@@ -69,16 +67,16 @@ export function PublicGallery({
       showGroupsCollapsed: filters.showGroupsCollapsed,
       isAdminModeOverride: false
     }
-  ), [rawPhotos, categories, tags, filters, urlFilters]);
+  );
 
-  const handleGroupClick = useCallback((gid: string, photoId?: string) => {
+  const handleGroupClick = (gid: string, photoId?: string) => {
     setPhotoId(null);
     setGroupId(gid);                
     // Only set activePhotoId (anchor) if search query is active
     if (filters.searchQuery && filters.searchQuery.trim()) {
         setPhotoId(photoId || null);
     }
-  }, [filters.searchQuery, setPhotoId, setGroupId]);
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -96,11 +94,11 @@ export function PublicGallery({
   }, [update]);
 
 
-  const handleLightboxOpen = useCallback((photo: Photo) => {
+  const handleLightboxOpen = (photo: Photo) => {
     setPhotoId(photo.id);
-  }, [setPhotoId]);
+  };
 
-  const openWhatsApp = useCallback((phone: string) => {
+  const openWhatsApp = (phone: string) => {
     const cleanPhone = phone.replace(/[^\d+]/g, '');
     const pendingPhoto = (window as any)._pendingPhoto;
     let text = 'Hello, I\'m interested in your products.';
@@ -111,14 +109,14 @@ export function PublicGallery({
     }
     const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
-  }, []);
+  };
 
-  const handleShare = useCallback((photo: Photo) => {
+  const handleShare = (photo: Photo) => {
     (window as any)._pendingPhoto = photo;
     update({ showWhatsAppChoice: true });
-  }, [update]);
+  };
 
-  const renderCard = useCallback((photo: Photo, index: number) => (
+  const renderCard = (photo: Photo, index: number) => (
     <PhotoCard 
       photo={photo}
       index={index}
@@ -128,7 +126,7 @@ export function PublicGallery({
       onLightboxOpen={handleLightboxOpen}
       onShare={handleShare}
     />
-  ), [variant, filters.showGroupsCollapsed, handleGroupClick, handleLightboxOpen, handleShare]);
+  );
 
   return (
     <div className="flex flex-col h-full bg-brand-bg w-full overflow-hidden text-text">

@@ -15,16 +15,11 @@ import { safeArray } from '@/lib/utils';
 import { useQueryClient } from '@tanstack/react-query';
 import { DataLoadingContainer } from '@/components/ui/DataLoadingContainer';
 import { saveData, syncCache } from '@/lib/db/indexedDB';
-import { PublicGallery } from '@/components/photo/PublicGallery';
+import { PublicGridContainer } from '@/components/photo/PublicGridContainer';
 import { PublicHeader } from '@/components/layouts/headers/PublicHeader';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-// import { AdminProvider } from '@/contexts/PhotoActionsContext';
 
-/* Removed ErrorFallback component */
-
-const EMPTY_TAGS: Tag[] = [];
-
-export default function PublicView() {
+export default function PublicPage() {
   // 滚动恢复
   useScrollRestoration('public_view_scroll');
   
@@ -39,10 +34,10 @@ export default function PublicView() {
   const { mutateAsync: syncMut } = useSyncMutation();
   const isSyncing = tasks.some(t => t.status === 'running' && (t.name.includes('同步') || t.name.includes('Sync')));
 
-  const handleRefresh = useCallback(() => {
+  const handleRefresh = () => {
     if (isSyncing) return;
     syncMut('pull');
-  }, [isSyncing, syncMut]);
+  };
 
   const virtualGridRef = useRef<any>(null);
   const handleScrollToTop = () => virtualGridRef.current?.scrollTo(0);
@@ -65,10 +60,10 @@ export default function PublicView() {
         <div className="flex-1 min-h-0 relative">
           <DataLoadingContainer
             isLoading={isLoading}
-            hasData={true} // Data will be handled inside PublicGallery
+            hasData={true} // Data will be handled inside PublicGridContainer
           >
             <ErrorBoundary>
-                <PublicGallery 
+                <PublicGridContainer 
                   variant="public-showcase"
                   onScrollToTop={handleScrollToTop}
                   virtualGridRef={virtualGridRef}

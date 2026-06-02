@@ -14,7 +14,8 @@ import { GroupDetailPage } from '@/components/GroupDetailPage';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { LoginScreen } from '@/components/admin/LoginScreen';
 import { AdminScreen } from '@/components/AdminScreen';
-import { PublicGallery } from '@/components/photo/PublicGallery';
+import { PublicGridContainer } from '@/components/photo/PublicGridContainer';
+import { AdminGridContainer } from '@/components/photo/AdminGridContainer';
 import { PublicHeader } from '@/components/layouts/headers/PublicHeader';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { useFilters } from '@/features/filters/useFilters';
@@ -92,22 +93,22 @@ export function AdminPageContent() {
     };
   }, [reset]);
 
-  const handleExitPublic = useCallback(() => {
+  const handleExitPublic = () => {
     reset();
     tasks.filter(t => t.status === 'running').forEach(t => cancelTask(t.id));
     store.update({ viewMode: 'private' });
-  }, [store.update, tasks, cancelTask, reset]);
+  };
 
-  const handleRefreshPublic = useCallback(() => {
+  const handleRefreshPublic = () => {
     if (isSyncing) return;
     syncMut('pull');
-  }, [isSyncing, syncMut]);
+  };
 
-  const lastSyncTime = React.useMemo(() => {
-    // [SYNC-STORAGE-IN-RENDER] @ src/pages/AdminPage/AdminPageContent.tsx:108 - Read from storage in useMemo to avoid repeated sync reads
+  const lastSyncTime = (() => {
+    // [SYNC-STORAGE-IN-RENDER] @ src/pages/AdminPage/AdminPageContent.tsx:108 - Read from storage in render
     const saved = localStorage.getItem('lastSyncTime');
     return saved ? new Date(saved).getTime() : null;
-  }, []);
+  })();
 
   const adminRef = React.useRef(adminActions);
   const storeRef = React.useRef(store);
@@ -205,7 +206,7 @@ export function AdminPageContent() {
                       isStaff={isEffectiveStaffMode}
                     />
                     <div className="flex-1 min-h-0 relative">
-                      <PublicGallery 
+                      <PublicGridContainer 
                         variant="public-showcase"
                         onExit={handleExitPublic} 
                         loginWithGoogle={loginWithGoogle}

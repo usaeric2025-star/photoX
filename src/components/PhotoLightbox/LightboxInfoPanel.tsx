@@ -47,12 +47,12 @@ export function LightboxInfoPanel({
   const { tasks } = useTasks();
   const isRunning = tasks.some(t => t.status === 'running');
 
-  const displayTags = React.useMemo(() => {
+  const displayTags = (() => {
     const rawIds = Array.isArray(photo.tag_ids) ? photo.tag_ids : [];
     return rawIds
       .map(tid => tagMap[String(tid)])
       .filter((tagName): tagName is string => !!tagName && tagName.trim() !== '');
-  }, [photo.id, photo.tag_ids, tagMap]);
+  })();
 
   // Use ref to handle scroll reset without remounting the whole container
   const scrollRef = React.useRef<HTMLDivElement>(null);
@@ -62,7 +62,7 @@ export function LightboxInfoPanel({
 
   const { handleError } = useErrorHandler();
 
-  const handleAiAnalyze = React.useCallback(async () => {
+  const handleAiAnalyze = async () => {
     try {
       if (onAiAnalyze) {
         await onAiAnalyze(photo);
@@ -70,7 +70,7 @@ export function LightboxInfoPanel({
     } catch (err) {
       handleError(err as Error, t.aiAnalyzeFailed || 'AI Analysis Failed');
     }
-  }, [onAiAnalyze, photo, handleError, t.aiAnalyzeFailed]);
+  };
 
 
   return (

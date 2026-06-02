@@ -19,7 +19,7 @@ import { Spinner } from './ui/Spinner';
 import { Activity } from 'react';
 
 
-// Add displayPhotos and update for compatibility with PublicGallery
+// Add displayPhotos and update for compatibility with PublicGridContainer
 export interface GroupDetailPageProps extends GroupAdminShellProps {
   activeGroupId: string | null;
   onClose?: () => void;
@@ -43,7 +43,7 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
   const translate = createTranslate(lang as any);
   
   const { tasks } = useTasks();
-  const isAnalyzing = useMemo(() => tasks.some(task => task.status === 'running' && (task.name.includes('识别') || task.name.includes('分析'))), [tasks]);
+  const isAnalyzing = tasks.some(task => task.status === 'running' && (task.name.includes('识别') || task.name.includes('分析')));
   
   const adminActions = useAdminActions();
   const onEditPhoto = (p: Photo | string) => {};
@@ -84,12 +84,12 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
     }
   }, [activeGroupId, initialPhotoId]);
 
-  const totalGroupPhotosCount = useMemo(() => {
+  const totalGroupPhotosCount = (() => {
     if (!infinitePhotosData?.pages || infinitePhotosData.pages.length === 0) return undefined;
     return (infinitePhotosData.pages[0] as any).total;
-  }, [infinitePhotosData]);
+  })();
 
-  const activeGroupPhotos = useMemo(() => {
+  const activeGroupPhotos = (() => {
     if (!activeGroupId) return [];
 
     const groupPhotos = infinitePhotosData?.pages.flatMap(page => page.photos) || [];
@@ -97,7 +97,7 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
     const visiblePhotos = filterPhotosByMode(groupPhotos, isAdminMode);
 
     return sortGroupPhotos(visiblePhotos);
-  }, [activeGroupId, infinitePhotosData, isAdminMode]);
+  })();
 
   const initializedRef = useRef(false);
   useEffect(() => {

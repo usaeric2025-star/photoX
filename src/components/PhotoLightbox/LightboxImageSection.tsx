@@ -36,9 +36,9 @@ export function LightboxImageSection({
   onTouchStart, onTouchMove, onTouchEnd, onEditPhoto,
   handleDownload, t, retryImageLoad, isAdminMode
 }: LightboxImageSectionProps) {
-  const placeholderDataUrl = useMemo(() => thumbHashToDataURL(photo.thumb_hash), [photo.thumb_hash]);
+  const placeholderDataUrl = thumbHashToDataURL(photo.thumb_hash);
 
-  const initialSrc = useMemo(() => getCacheBustedImageUrl(photo, 'image'), [photo]);
+  const initialSrc = getCacheBustedImageUrl(photo, 'image');
   const [currentSrc, setCurrentSrc] = useState(initialSrc);
   const [hasFallbackTried, setHasFallbackTried] = useState(false);
 
