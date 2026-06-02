@@ -14,6 +14,7 @@ import {
   useGroupDetail,
   useAuth,
   usePhotoList,
+  useUrlFilters
 } from "@/hooks";
 import { useUIStore, useShallow } from "@/store/useUIStore";
 import { groupKeys } from "@/lib/queryKeys";
@@ -26,10 +27,11 @@ export const useGroupAdminLogic = ({
   const { user } = useAuth();
   const isAdminMode = useAdminMode();
   const queryClient = useQueryClient();
-  const {
-    activeGroupId, appLang, isMultiSelect, selectedIds, groupSettingsOpen, batchEditingIds, focusedGroupPhotoId, draggedPhotoId, update
-  } = useUIStore(
-    useShallow((s) => ({ activeGroupId: s.activeGroupId, update: s.update, appLang: s.appLang, isMultiSelect: s.isMultiSelect, selectedIds: s.selectedIds, groupSettingsOpen: s.groupSettingsOpen, batchEditingIds: s.batchEditingIds, focusedGroupPhotoId: s.focusedGroupPhotoId, draggedPhotoId: s.draggedPhotoId })),
+  const { filters, setGroupId } = useUrlFilters();
+  const activeGroupId = filters.groupId;
+  
+  const { appLang, isMultiSelect, selectedIds, groupSettingsOpen, batchEditingIds, focusedGroupPhotoId, draggedPhotoId, update } = useUIStore(
+    useShallow((s) => ({ update: s.update, appLang: s.appLang, isMultiSelect: s.isMultiSelect, selectedIds: s.selectedIds, groupSettingsOpen: s.groupSettingsOpen, batchEditingIds: s.batchEditingIds, focusedGroupPhotoId: s.focusedGroupPhotoId, draggedPhotoId: s.draggedPhotoId })),
   );
 
   const adminActions = useAdminActions();
@@ -223,7 +225,7 @@ export const useGroupAdminLogic = ({
                 sessionStorage.removeItem(`draft_group_${activeGroupId}`);
 
                 if (isDissolving) {
-                  update?.({ activeGroupId: null, activePhotoId: null });
+                  setGroupId(null);
                 }
               }
             } catch (err: any) {

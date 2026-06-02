@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { VirtualGrid, VirtualGridHandle } from '@/components/virtualizer/VirtualGrid';
 import { Photo, TranslationType } from '../../types';
 import { useUIStore, useShallow } from '@/store/useUIStore';
+import { useUrlFilters } from '@/hooks/useUrlFilters';
 import { translations } from '../../lib/translations';
 import { PhotoGridSkeleton } from './PhotoGridSkeleton';
 import { interactionBus } from '@/lib/interactionBus';
@@ -14,32 +15,33 @@ interface VirtualPhotoGridProps {
   onLoadMore?: () => void;
   renderCard: (photo: Photo, index: number) => React.ReactNode;
   columns: number;
+  ref?: React.Ref<VirtualGridHandle>;
 }
 
 const multiSelectSelector = (s: any) => ({
   update: s.update
 });
 
-export const VirtualPhotoGrid = React.forwardRef<VirtualGridHandle, VirtualPhotoGridProps>(({
+export function VirtualPhotoGrid({
   photos,
   isFetching,
   isFetchingNextPage,
   hasNextPage,
   onLoadMore,
   renderCard,
-  columns
-}, ref) => {
-  const { appLang, activeGroupId, activePhotoId } = useUIStore(useShallow(s => ({ 
-    appLang: s.appLang,
-    activeGroupId: s.activeGroupId,
-    activePhotoId: s.activePhotoId
+  columns,
+  ref
+}: VirtualPhotoGridProps) {
+  const { filters } = useUrlFilters();
+  const { appLang } = useUIStore(useShallow(s => ({ 
+    appLang: s.appLang
   })));
   const t = (translations[appLang as keyof typeof translations] || translations.en) as TranslationType;
 
   // Anchoring logic: when returning from a group detail view
   useEffect(() => {
-    if (activeGroupId === null && photos.length > 0) {
-      const targetId = activePhotoId;
+    if (filters.groupId === null && photos.length > 0) {
+      const targetId = filters.photoId;
       if (targetId) {
         const index = photos.findIndex(p => p.id === targetId || p.group_id === targetId);
         if (index !== -1) {
@@ -49,7 +51,7 @@ export const VirtualPhotoGrid = React.forwardRef<VirtualGridHandle, VirtualPhoto
         }
       }
     }
-  }, [activeGroupId, photos, activePhotoId, ref]);
+  }, [filters.groupId, photos, filters.photoId, ref]);
 
   // [INTERACTION-BRIDGE-SYNC]
   const { update } = useUIStore(useShallow(multiSelectSelector));
@@ -110,9 +112,7 @@ export const VirtualPhotoGrid = React.forwardRef<VirtualGridHandle, VirtualPhoto
       </div>
     </div>
   );
-});
-
-VirtualPhotoGrid.displayName = 'VirtualPhotoGrid';
+}
 
 const PhotoGridFooter = ({ 
   isFetchingNextPage, hasNextPage, hasPhotos, textLoading, textEndOfList, columns 

@@ -3,7 +3,8 @@ import { GalleryVariant } from '@/types/variant';
 import { VirtualPhotoGrid } from '@/components/photo/VirtualPhotoGrid';
 import { PublicFilters } from '@/components/ui/PublicFilters';
 import { useUIStore, useShallow } from '@/store/useUIStore';
-import { usePhotoInfiniteList, useFilters, usePhotoFilters, useSettings, useCategories, useTags } from '@/hooks';
+import { usePhotoInfiniteList, useFilters, useSettings, useCategories, useTags, useUrlFilters } from '@/hooks';
+import { processPhotos } from '@/lib/filters';
 const updateURL = (params: any) => console.log('updateURL stub', params);
 import { PAGINATION } from '@/constants/config';
 import { PhotoLightbox } from '../PhotoLightbox';
@@ -33,9 +34,11 @@ export function PublicGallery({
   const { settings } = useSettings(); 
   
   const { setSearch, setShowGroupsCollapsed } = useFilters();
+  const { filters: urlFilters, setGroupId, setPhotoId, setSortOrder } = useUrlFilters();
+
   const { 
-    update, sortOrder, activeGroupId, activePhotoId, columns, showWhatsAppChoice, appLang
-  } = useUIStore(useShallow(s => ({ update: s.update, sortOrder: s.sortOrder, activeGroupId: s.activeGroupId, activePhotoId: s.activePhotoId, columns: s.columns, showWhatsAppChoice: s.showWhatsAppChoice, appLang: s.appLang })));
+    update, columns, showWhatsAppChoice, appLang
+  } = useUIStore(useShallow(s => ({ update: s.update, columns: s.columns, showWhatsAppChoice: s.showWhatsAppChoice, appLang: s.appLang })));
 
   const publicSettings = settings;
   const { data: categories = [] } = useCategories();
@@ -47,7 +50,7 @@ export function PublicGallery({
     category_id: filters.categoryId,
     tag_id: Array.isArray(filters.tagIds) && filters.tagIds.length > 0 ? filters.tagIds[0] : null,
     searchQuery: filters.searchQuery,
-    sortOrder: sortOrder,
+    sortOrder: urlFilters.sortOrder as 'newest' | 'oldest' | 'name',
     isAdminMode: false,
     onlyUngrouped: false
   }, PAGINATION.PUBLIC_PAGE_SIZE, true);
@@ -56,24 +59,26 @@ export function PublicGallery({
     return infiniteQuery.data?.pages?.flatMap(p => p.photos) ?? EMPTY_ARRAY;
   }, [infiniteQuery.data]);
 
-  const { displayPhotos, gridPhotos } = usePhotoFilters(
+  const { displayPhotos, gridPhotos } = useMemo(() => processPhotos(
     rawPhotos,
     categories,
     tags,
+    filters,
+    urlFilters,
     {
       showGroupsCollapsed: filters.showGroupsCollapsed,
       isAdminModeOverride: false
     }
-  );
+  ), [rawPhotos, categories, tags, filters, urlFilters]);
 
   const handleGroupClick = useCallback((gid: string, photoId?: string) => {
-    update({ activePhotoId: null });
-    update({ activeGroupId: gid });                
+    setPhotoId(null);
+    setGroupId(gid);                
     // Only set activePhotoId (anchor) if search query is active
     if (filters.searchQuery && filters.searchQuery.trim()) {
-        update({ activePhotoId: photoId || null });
+        setPhotoId(photoId || null);
     }
-  }, [update, filters.searchQuery]);
+  }, [filters.searchQuery, setPhotoId, setGroupId]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -92,8 +97,8 @@ export function PublicGallery({
 
 
   const handleLightboxOpen = useCallback((photo: Photo) => {
-    update({ activePhotoId: photo.id });
-  }, [update]);
+    setPhotoId(photo.id);
+  }, [setPhotoId]);
 
   const openWhatsApp = useCallback((phone: string) => {
     const cleanPhone = phone.replace(/[^\d+]/g, '');
@@ -130,8 +135,8 @@ export function PublicGallery({
         <PublicFilters 
           onSearch={setSearch}
           searchQuery={filters.searchQuery || ''}
-          onSortChange={() => update({ sortOrder: sortOrder === 'newest' ? 'oldest' : 'newest' })}
-          currentSort={sortOrder}
+          onSortChange={() => setSortOrder(urlFilters.sortOrder === 'newest' ? 'oldest' : 'newest')}
+          currentSort={urlFilters.sortOrder as 'newest' | 'oldest' | 'name'}
           onColumnsChange={(cols) => {
               update({ columns: cols as 2 | 3 | 5 });
               updateURL({ view: cols === 2 ? 'list' : 'grid' });
@@ -154,11 +159,12 @@ export function PublicGallery({
             />
         </div>
 
-        {!activeGroupId && activePhotoId && (
+        {!urlFilters.groupId && urlFilters.photoId && (
           <PhotoLightbox 
-            photoId={activePhotoId}
+            photoId={urlFilters.photoId}
             displayPhotos={displayPhotos}
-            onClose={() => update({ activePhotoId: null })}
+            onClose={() => setPhotoId(null)}
+            onPhotoIdChange={setPhotoId}
             contactWhatsApp={(photo) => {
               (window as any)._pendingPhoto = photo;
               update({ showWhatsAppChoice: true });
@@ -168,11 +174,8 @@ export function PublicGallery({
         )}
 
         <GroupDetailPage
-          activeGroupId={activeGroupId}
-          
-          
-          initialPhotoId={activePhotoId}
-          
+          activeGroupId={urlFilters.groupId}
+          initialPhotoId={urlFilters.photoId}
           variant={variant}
         />
 

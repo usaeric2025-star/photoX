@@ -7,7 +7,8 @@ import { GalleryVariant } from '@/types/variant';
 import { VirtualPhotoGrid } from '@/components/photo/VirtualPhotoGrid';
 import { PhotoCard } from '@/components/photo/PhotoCard';
 import { AdminFilters } from '@/components/ui/AdminFilters';
-import { useScrollRestoration, useTasks, useMultiSelect, useFilters, usePhotoFilters, usePhotoInfiniteList, useAdminMode, usePermission, useCategories, useTags } from '@/hooks';
+import { useScrollRestoration, useTasks, useMultiSelect, useFilters, usePhotoInfiniteList, useAdminMode, usePermission, useCategories, useTags, useUrlFilters } from '@/hooks';
+import { processPhotos } from '@/lib/filters';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { UploadButton } from '@/components/shared/UploadButton';
 import { SelectionToolbar } from '@/components/shared/SelectionToolbar';
@@ -45,13 +46,10 @@ export function AdminGallery({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const navigate = useNavigate();
-  const { filters, setFilters, setSearch, setShowGroupsCollapsed } = useFilters();
+  const { filters, setSearch, setShowGroupsCollapsed } = useFilters();
+  const { filters: urlFilters, setGroupId, setPhotoId, setSortOrder } = useUrlFilters();
   const store = useUIStore(useShallow(s => ({
       update: s.update,
-      sortOrder: s.sortOrder,
-      lightboxIndex: s.lightboxIndex,
-      activeGroupId: s.activeGroupId,
-      activePhotoId: s.activePhotoId,
       columns: s.columns
     })));
 
@@ -62,7 +60,7 @@ export function AdminGallery({
     category_id: filters.categoryId,
     tag_id: Array.isArray(filters.tagIds) && filters.tagIds.length > 0 ? filters.tagIds[0] : null,
     searchQuery: filters.searchQuery,
-    sortOrder: store.sortOrder,
+    sortOrder: urlFilters.sortOrder as 'newest' | 'oldest' | 'name',
     isAdminMode: isAdminMode
   }, PAGINATION.ADMIN_BATCH_SIZE, true);
 
@@ -72,15 +70,17 @@ export function AdminGallery({
 
   const photos = useMemo(() => normalizeAdminPhotos(rawPhotos), [rawPhotos]);
 
-  const { displayPhotos, gridPhotos } = usePhotoFilters(
+  const { displayPhotos, gridPhotos } = useMemo(() => processPhotos(
     photos,
     categories,
     tags,
+    filters,
+    urlFilters,
     {
       showGroupsCollapsed: filters.showGroupsCollapsed,
       isAdminModeOverride: isAdminMode
     }
-  );
+  ), [photos, categories, tags, filters, urlFilters, isAdminMode]);
 
   const isAnalyzing = useMemo(() => {
     return tasks.some(t => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析')));
@@ -125,17 +125,17 @@ export function AdminGallery({
 
   // activePhoto can be removed if not needed, but keep activePhotoId
   const handleGroupClick = useCallback((gid: string, photoId?: string) => {
-     store.update({ activePhotoId: null });
-     store.update({ activeGroupId: gid });
+     setPhotoId(null);
+     setGroupId(gid);
      // Only set activePhotoId if searching or wanted to anchor
      if (filters.searchQuery && filters.searchQuery.trim()) {
-         store.update({ activePhotoId: photoId || null });
+         setPhotoId(photoId || null);
      }
-  }, [store.update, store.update, filters.searchQuery]);
+  }, [filters.searchQuery, setPhotoId, setGroupId]);
 
   const handleLightboxOpen = useCallback((photo: Photo) => {
-    store.update({ activePhotoId: photo.id });
-  }, [store.update]);
+    setPhotoId(photo.id);
+  }, [setPhotoId]);
 
   const renderCard = useCallback((photo: Photo, index: number) => (
     <PhotoCard 
@@ -154,8 +154,8 @@ export function AdminGallery({
         <AdminFilters 
           onSearch={setSearch}
           searchQuery={filters.searchQuery || ''}
-          onSortChange={() => store.update({ sortOrder: store.sortOrder === 'newest' ? 'oldest' : 'newest' })}
-          currentSort={store.sortOrder}
+          onSortChange={() => setSortOrder(urlFilters.sortOrder === 'newest' ? 'oldest' : 'newest')}
+          currentSort={urlFilters.sortOrder as 'newest' | 'oldest' | 'name'}
           onColumnsChange={(cols) => {
               store.update({ columns: cols as 2 | 3 | 5 });
               updateURL({ view: cols === 2 ? 'list' : 'grid' });
@@ -206,16 +206,16 @@ export function AdminGallery({
           onHide={(ids) => adminActions.batchUpdate.mutateAsync({ ids, updates: { is_hidden: true } })}
         />
 
-        {!store.activeGroupId && store.activePhotoId && (
-          <PhotoLightbox onClose={() => store.update({ activePhotoId: null })}  
-            photoId={store.activePhotoId}
+        {!urlFilters.groupId && urlFilters.photoId && (
+          <PhotoLightbox onClose={() => setPhotoId(null)}  
+            photoId={urlFilters.photoId}
             displayPhotos={displayPhotos}
-            
+            onPhotoIdChange={setPhotoId}
             variant={variant}
           />
         )}
 
-        <GroupDetailPage activeGroupId={store.activeGroupId} initialPhotoId={store.activePhotoId} variant={variant}  />
+        <GroupDetailPage activeGroupId={urlFilters.groupId} initialPhotoId={urlFilters.photoId} variant={variant} />
       </motion.div>
     </LayoutGroup>
   );

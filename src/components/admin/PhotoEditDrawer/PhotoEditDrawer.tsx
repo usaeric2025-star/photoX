@@ -17,6 +17,7 @@ import { usePhotoInfiniteList } from "../../../hooks";
 import { cleanPhotos } from "../../../lib/filters";
 import { PAGINATION } from "../../../constants/config";
 import { useAdminActions } from "@/features/admin/useAdminActions";
+import { useUrlFilters } from "@/hooks/useUrlFilters";
 import { useFilters } from "@/features/filters/useFilters";
 
 /**
@@ -31,13 +32,14 @@ interface PhotoEditDrawerProps {
 
 export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
   const { filters } = useFilters();
+  const { filters: urlFilters } = useUrlFilters();
   const {
     categoryId: filterCatId,
     tagIds: filterTagIds,
     searchQuery: debouncedSearchQuery,
   } = filters;
 
-  const { editPhotoId, formState, updateForm, newPhotoData, appLang, sortOrder, update } = useUIStore(
+  const { editPhotoId, formState, updateForm, newPhotoData, appLang, update } = useUIStore(
     useShallow((s) => ({
       editPhotoId: s.editPhotoId,
       formState: s.formState,
@@ -45,7 +47,6 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
       newPhotoData: s.newPhotoData,
       update: s.update,
       appLang: s.appLang,
-      sortOrder: s.sortOrder
     })),
   );
 
@@ -64,7 +65,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
           ? filterTagIds[0]
           : null,
       searchQuery: debouncedSearchQuery,
-      sortOrder: sortOrder,
+      sortOrder: urlFilters.sortOrder,
       isAdminMode: true,
     },
     PAGINATION.ADMIN_BATCH_SIZE,

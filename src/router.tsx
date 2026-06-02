@@ -33,13 +33,18 @@ interface RouterContext {
  * [V2.8-URL-STATE] Search Params Schema
  * Defining the contract for gallery filters.
  */
-interface GallerySearchParams {
+export interface GallerySearchParams {
   q?: string;
   category?: string;
   manufacturer?: string;
-  sort?: 'date' | 'name' | 'popularity';
+  sort?: 'newest' | 'oldest' | 'name';
   view?: 'grid' | 'list';
   authError?: string;
+  
+  photoId?: string;      // 灯箱当前照片 ID
+  groupId?: string;      // 当前选中的合组 ID
+  columns?: string;      // 列数（2/3/4/5）
+  showGroupsCollapsed?: 'true' | 'false';  // 合组折叠状态
 }
 
 // Helper for lazy loading with retry
@@ -104,6 +109,10 @@ const indexRoute = createRoute({
       sort: (search.sort as GallerySearchParams['sort']) || undefined,
       view: (search.view as GallerySearchParams['view']) || undefined,
       authError: (search.authError as string) || undefined,
+      photoId: (search.photoId as string) || undefined,
+      groupId: (search.groupId as string) || undefined,
+      columns: (search.columns as string) || undefined,
+      showGroupsCollapsed: (search.showGroupsCollapsed as GallerySearchParams['showGroupsCollapsed']) || undefined,
     };
   },
   loader: async ({ context }) => {
@@ -158,6 +167,10 @@ const groupRoute = createRoute({
       q: (search.q as string) || undefined,
       category: (search.category as string) || undefined,
       sort: (search.sort as GallerySearchParams['sort']) || undefined,
+      photoId: (search.photoId as string) || undefined,
+      groupId: (search.groupId as string) || undefined,
+      columns: (search.columns as string) || undefined,
+      showGroupsCollapsed: (search.showGroupsCollapsed as GallerySearchParams['showGroupsCollapsed']) || undefined,
     };
   },
   loader: async ({ params: { groupId }, context }) => {

@@ -1,9 +1,8 @@
-import { usePhotoInfiniteList } from '@/hooks';
+import { usePhotoInfiniteList, useUrlFilters } from '@/hooks';
 import { useFilters } from '@/features/filters/useFilters';
 import { cleanPhotos } from '@/lib/filters';
 import { PAGINATION } from '@/constants/config';
 import { useMemo, useEffect } from 'react';
-import { useUIStore, useShallow } from '@/store/useUIStore';
 import { queryClient } from '@/lib/queryClient';
 import { photoKeys } from '@/lib/queryKeys';
 
@@ -11,9 +10,9 @@ export function usePhotoGallery() {
   console.log('📸 usePhotoGallery 被调用');
 
   const { filters } = useFilters();
+  const { filters: urlFilters } = useUrlFilters();
   console.log('📸 filters:', filters);
 
-  const { sortOrder } = useUIStore(useShallow(s => ({ sortOrder: s.sortOrder })));
   const isAdminPath = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
   const pageSize = isAdminPath ? 60 : 20;  // Use fixed numeric sizes to avoid import/rebuild side effects
 
@@ -21,7 +20,7 @@ export function usePhotoGallery() {
     category_id: filters.categoryId,
     tag_id: filters.tagIds.length > 0 ? filters.tagIds[0] : null,
     searchQuery: filters.searchQuery,
-    sortOrder: sortOrder || 'newest',
+    sortOrder: urlFilters.sortOrder || 'newest',
     isAdminMode: true,
   }, pageSize, true);  // enabled is explicitly true
 

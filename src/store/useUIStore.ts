@@ -30,8 +30,6 @@ export interface PromptDialogProps {
 export interface UIStoreState {
   columns: 2 | 3 | 5;
   lightboxIndex: number | null;
-  activeGroupId: string | null;
-  activePhotoId: string | null;
   editPhotoId: string | null;
   batchEditingIds: string[] | null;
   groupSettingsOpen: boolean;
@@ -57,7 +55,6 @@ export interface UIStoreState {
   newPhotoData: string | null;
   showOtherFields: boolean;
   isInfiniteMode: boolean;
-  sortOrder: 'newest' | 'oldest' | 'name';
   filterSubId: string | null;
   update: (updates: Partial<UIStoreState> | ((state: UIStoreState) => Partial<UIStoreState>)) => void;
 }
@@ -82,8 +79,6 @@ export const useUIStore = create<UIStoreState>()((set) => ({
     return (n === 2 || n === 3 || n === 5) ? n : 3;
   }),
   lightboxIndex: null,
-  activeGroupId: safeGetItem(STORAGE_KEYS.ACTIVE_GROUP, null, undefined, true),
-  activePhotoId: safeGetItem(STORAGE_KEYS.ACTIVE_PHOTO, null, undefined, true),
   editPhotoId: safeGetItem(STORAGE_KEYS.EDIT_PHOTO, null, undefined, true),
   batchEditingIds: safeGetItem(STORAGE_KEYS.BATCH_EDITING, null, undefined, true),
   groupSettingsOpen: safeGetItem(STORAGE_KEYS.GROUP_SETTINGS_OPEN, false, (v) => v === 'true', true),
@@ -115,7 +110,6 @@ export const useUIStore = create<UIStoreState>()((set) => ({
       selectedIds: [],
       isMultiSelect: false,
       editPhotoId: null,
-      activeGroupId: null,
       batchEditingIds: null,
       formState: defaultForm
     }),
@@ -123,23 +117,12 @@ export const useUIStore = create<UIStoreState>()((set) => ({
   newPhotoData: null,
   showOtherFields: false,
   isInfiniteMode: false,
-  sortOrder: safeGetItem(STORAGE_KEYS.SORT_ORDER, 'newest', (v) => ['newest', 'oldest', 'name'].includes(v) ? v : 'newest') as 'newest' | 'oldest' | 'name',
   filterSubId: null,
   update: (updates) => set((state) => {
     const nextState = typeof updates === 'function' ? updates(state) : updates;
     
     if ('columns' in nextState && nextState.columns !== undefined) {
       safeSetItem(STORAGE_KEYS.COLUMNS, nextState.columns);
-    }
-    if ('activeGroupId' in nextState) {
-      safeSetItem(STORAGE_KEYS.ACTIVE_GROUP, nextState.activeGroupId, true);
-      if (nextState.activeGroupId === null) {
-        safeSetItem(STORAGE_KEYS.ACTIVE_PHOTO, null, true);
-        nextState.activePhotoId = null;
-      }
-    }
-    if ('activePhotoId' in nextState) {
-      safeSetItem(STORAGE_KEYS.ACTIVE_PHOTO, nextState.activePhotoId, true);
     }
     if ('editPhotoId' in nextState) {
       safeSetItem(STORAGE_KEYS.EDIT_PHOTO, nextState.editPhotoId, true);
@@ -165,8 +148,8 @@ export const useUIStore = create<UIStoreState>()((set) => ({
     if ('appLang' in nextState && nextState.appLang !== undefined) {
       safeSetItem(STORAGE_KEYS.LANG, nextState.appLang);
     }
-    if ('sortOrder' in nextState && nextState.sortOrder !== undefined) {
-      safeSetItem(STORAGE_KEYS.SORT_ORDER, nextState.sortOrder);
+    if ('viewMode' in nextState && nextState.viewMode !== undefined) {
+      safeSetItem(STORAGE_KEYS.VIEW_MODE, nextState.viewMode);
     }
     
     return nextState as any;

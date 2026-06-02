@@ -5,6 +5,7 @@ import { ProductGroup } from "../../../types";
 import { AlertDialogProps } from "@/store/useUIStore";
 import { saveGroup as saveGroupToCloud } from "@/services/group/commands";
 import { useFeedback, useTaskExecutor, useTasks } from "../../../hooks";
+import { useUrlFilters } from "@/hooks/useUrlFilters";
 
 export function GroupSettingsHeader({
   groupData,
@@ -19,6 +20,7 @@ export function GroupSettingsHeader({
   setShowGroupSettings: (show: boolean) => void;
   
 }) {
+  const { setGroupId } = useUrlFilters();
   const { showError: handleError } = useFeedback();
   const { runTask } = useTaskExecutor();
   const { tasks } = useTasks();
@@ -50,7 +52,7 @@ export function GroupSettingsHeader({
                       async () => {
                         if (onUngroup && activeGroupId) {
                           onUngroup(activeGroupId);
-                          update({ activeGroupId: null });
+                          setGroupId(null);
                           setShowGroupSettings(false);
                         }
                         update({ alertDialog: null });

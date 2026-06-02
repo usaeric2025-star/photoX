@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import { 
   BarChart3, 
   Settings2, 
@@ -68,13 +68,13 @@ export function AdminSidebar() {
   const { settings } = useSettings();
   const { mutateAsync: syncMut } = useSyncMutation();
 
-  const handleImport = useCallback(() => {
+  const handleImport = () => {
     // Import action logic if needed
-  }, []);
+  };
 
-  const onRefresh = useCallback(() => {
+  const onRefresh = () => {
     syncMut('pull');
-  }, [syncMut]);
+  };
 
   const { user, loginWithGoogle, logout } = useAuth();
   const isEffectiveStaffMode = hasAdminAccess && !user;
@@ -306,4 +306,5 @@ export function AdminSidebar() {
       </div>
     </aside>
   );
-};
+}
+;

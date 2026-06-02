@@ -48,7 +48,6 @@ function PinButton({ photoId, isPinned }: { photoId: string; isPinned: boolean }
     </button>
   );
 }
-import { useDraggable } from '@dnd-kit/core';
 import { Photo, Category } from '../../types';
 import { GalleryVariant } from '@/types/variant';
 import { Layers, Heart, Check, EyeOff } from 'lucide-react';
@@ -232,9 +231,6 @@ export const PhotoCard = ({
   const photoMemberCount = photo.group?.member_count ?? 1;
 
   const { can } = usePermission();
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
-    id: photo.id,
-  });
 
   const handleOpenLightbox = () => {
     onLightboxOpen(photo);
@@ -295,18 +291,13 @@ export const PhotoCard = ({
 
   return (
     <div 
-      ref={(node) => {
-        cardRef.current = node;
-        setNodeRef(node);
-      }}
+      ref={cardRef}
       data-photo-id={photo.id}
       data-selected={initialIsSelected}
       data-multiselect={initialIsMultiSelect}
-      {...listeners}
-      {...attributes}
       style={{
-        ... { contentVisibility: 'auto', containIntrinsicSize: '300px' },
-        transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+        contentVisibility: 'auto',
+        containIntrinsicSize: '300px',
       }}
       onClick={handleClick}
       className={cn(

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Home, Cloud, Settings2, Plus, Terminal } from 'lucide-react';
-import { useAuth, useTasks, useSyncMutation, useFeedback, useAdminMode, useTaskExecutor, useMultiSelect } from '@/hooks';
+import { useAuth, useTasks, useSyncMutation, useFeedback, useAdminMode, useTaskExecutor, useMultiSelect, useUrlFilters } from '@/hooks';
 import { backfillThumbHashes } from '@/services/photo/backfillService';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { DataLoadingContainer } from '@/components/ui/DataLoadingContainer';
@@ -40,7 +40,8 @@ export function AdminPageContent() {
     photosError: (infinitePhotosQuery as any)?.error?.message 
   });
 
-  const { filters } = useFilters();
+  const { filters: userFilters } = useFilters();
+  const { filters: urlFilters } = useUrlFilters();
   const { deletePhoto, updatePhoto } = useAdminActions();
   const adminActions = useAdminActions();
 
@@ -52,11 +53,11 @@ export function AdminPageContent() {
     editPhotoId: s.editPhotoId,
     newPhotoData: s.newPhotoData,
     batchEditingIds: s.batchEditingIds,
-    activeGroupId: s.activeGroupId})));
+  })));
 
   const isStaffMode = false; // Persistent staff mode via localStorage is removed
   const setIsStaffMode = (val: boolean) => {};
-  const { groupPhotos } = useGroupView(store.activeGroupId);
+  const { groupPhotos } = useGroupView(urlFilters.groupId);
 
   const isLoading = isAuthLoading || isPhotosLoading;
 

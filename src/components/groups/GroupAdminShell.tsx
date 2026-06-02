@@ -9,6 +9,7 @@ import { SelectionToolbar } from "../shared/SelectionToolbar";
 import { useGroupAdminLogic } from "./useGroupAdminLogic";
 import { GroupGridView } from "./GroupGridView";
 import { GroupPhotoPicker } from "./GroupPhotoPicker";
+import { useUrlFilters } from "@/hooks/useUrlFilters";
 
 import { useAdminMode } from "@/hooks";
 import { useAdminActions } from "@/features/admin/useAdminActions";
@@ -26,9 +27,9 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
   const { onAiAnalyze, onCancelAnalyze, isAnalyzing } = props;
   const isAdminMode = useAdminMode();
 
-  const { activeGroupId, appLang, isPhotoPickerOpen, photoPickerGroupId, update } = useUIStore(
+  const { filters, setGroupId, setPhotoId } = useUrlFilters();
+  const { appLang, isPhotoPickerOpen, photoPickerGroupId, update } = useUIStore(
     useShallow((s) => ({
-      activeGroupId: s.activeGroupId,
       update: s.update,
       appLang: s.appLang,
       isPhotoPickerOpen: s.isPhotoPickerOpen,
@@ -179,9 +180,9 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
   return (
     <>
       <AnimatePresence mode="wait">
-        {activeGroupId !== null && (
+        {filters.groupId !== null && (
           <motion.div
-            key={activeGroupId}
+            key={filters.groupId}
             ref={containerRef}
             onScroll={handleScroll}
             initial={{ opacity: 0 }}
@@ -196,7 +197,7 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
               <>
                 {/* Top Header */}
                 <GroupHeader update={update} 
-                  activeGroupId={activeGroupId}
+                  activeGroupId={filters.groupId}
                   
                   isAdminMode={isAdminMode}
                   groupData={groupData}
@@ -206,7 +207,7 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
                 />
 
                 <GroupGridView
-                  key={activeGroupId}
+                  key={filters.groupId}
                   virtualGridRef={virtualGridRef}
                   photos={activeGroupPhotos}
                   isLoading={isGroupPhotosLoading}
@@ -229,10 +230,10 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
             <GroupPhotoPicker
               isOpen={!!isPhotoPickerOpen}
               onClose={() => update({ isPhotoPickerOpen: false })}
-              groupId={activeGroupId || ""}
+              groupId={filters.groupId || ""}
               onAdd={async (ids) => {
-                if (activeGroupId) {
-                  await handleAddToGroup(ids, activeGroupId);
+                if (filters.groupId) {
+                  await handleAddToGroup(ids, filters.groupId);
                 }
               }}
             />
@@ -241,7 +242,7 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
             <GroupSettingsSheet 
               showGroupSettings={groupSettingsOpen}
               setShowGroupSettings={(show) => update({ groupSettingsOpen: show })}
-              activeGroupId={activeGroupId}
+              activeGroupId={filters.groupId}
               groupData={groupData}
               setGroupData={setGroupData}
               onUngroup={onUngroup}
@@ -268,7 +269,7 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
                       photoId={focusedGroupPhotoId}
                       displayPhotos={activeGroupPhotos}
                       onClose={handleCloseLightbox}
-                      onPhotoIdChange={(id) => update({ activePhotoId: id })}
+                      onPhotoIdChange={setPhotoId}
                       contactWhatsApp={() => {}}
                       onUngroup={handleUngroupLightbox}
                       onSetGroupCover={handleSetGroupCoverLightbox}

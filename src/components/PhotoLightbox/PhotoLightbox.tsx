@@ -20,7 +20,7 @@ export interface PhotoLightboxProps {
   photoId: string | null;
   displayPhotos: Photo[];
   onClose: () => void;
-  onPhotoIdChange?: (id: string | null) => void;
+  onPhotoIdChange: (id: string | null) => void;
   contactWhatsApp?: (photo: Photo) => void;
   onUngroup?: (photoId: string) => void;
   onSetGroupCover?: (photoId: string, groupId: string) => void;
@@ -54,12 +54,8 @@ export function PhotoLightbox(props: PhotoLightboxProps) {
   const photo = index !== -1 ? displayPhotos[index] : null;
   
   const changePhotoId = React.useCallback((id: string | null) => {
-    if (onPhotoIdChange) {
       onPhotoIdChange(id);
-    } else {
-      storeUpdate({ activePhotoId: id });
-    }
-  }, [onPhotoIdChange, storeUpdate]);
+  }, [onPhotoIdChange]);
   
   const onPrev = React.useCallback((e?: React.MouseEvent) => {
     e?.stopPropagation();
@@ -154,6 +150,17 @@ export function PhotoLightbox(props: PhotoLightboxProps) {
   }, [isImageLoading, index, showError, translate.imageLoadFailed]);
 
   const isOpen = index !== null && !!activePhoto;
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
 
   const DialogBackdrop = Dialog.Backdrop as any;
   const DialogPopup = Dialog.Popup as any;

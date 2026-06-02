@@ -11,13 +11,13 @@ export { useScrollRestoration } from '../core/infra/useScrollRestoration';
 
 // Features Hooks
 export { useToast, useFeedback } from './useToast';
-export { usePhotoFilters } from './usePhotoFilters';
 export { useBatchEdit } from '../features/photo/useBatchEdit';
 export { useBatchConfirmation as useBatchConfirmDialog } from '../features/photo/useBatchConfirmDialog';
 export { useMultiSelect } from '../features/photo/usePhotoSelection';
 export { useTagsDisplay } from '../features/photo/useTagFiltering';
 export { useAdminCategory } from '../features/admin/useCategoryManagement';
 export { useFilters } from '../features/filters/useFilters';
+export { useUrlFilters } from './useUrlFilters';
 
 // Queries
 export { usePhotoInfiniteList, usePhotoInfiniteGroupList } from './core/queries/useInfinitePhotos';

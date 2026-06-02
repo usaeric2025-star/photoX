@@ -2,6 +2,64 @@ import { Photo, Category, Tag } from '../types';
 import { isValidPhoto } from './typeGuard';
 import { filterPhotosByMode } from './filters/photoVisibility';
 
+export interface FilterOptions {
+  searchQuery?: string;
+  filterCatId?: string | null;
+  filterSubId?: string | null;
+  filterTagIds?: string[];
+  sortOrder?: 'newest' | 'oldest' | 'name';
+  isAdminMode?: boolean;
+  isStaffMode?: boolean;
+}
+
+export function processPhotos(
+  photos: Photo[],
+  categories: Category[],
+  tags: Tag[],
+  userFilters: any,
+  urlFilters: any,
+  options: {
+    showGroupsCollapsed?: boolean;
+    isAdminModeOverride?: boolean;
+  } = {}
+) {
+  const showGroups = options.showGroupsCollapsed ?? userFilters.showGroupsCollapsed;
+  const isAdminMode = options.isAdminModeOverride ?? false;
+
+  const tagMap = new Map<string, string[]>();
+  tags.forEach(t => {
+    const terms = [t.name.toLowerCase()];
+    if (Array.isArray(t.aliases)) {
+      t.aliases.forEach(a => terms.push(a.toLowerCase()));
+    }
+    tagMap.set(String(t.id), terms);
+  });
+    
+  const catMap = new Map<string, string[]>();
+  categories.forEach(c => {
+    const terms = [(c.name || '').toLowerCase()];
+    if (Array.isArray(c.aliases)) {
+      c.aliases.forEach(a => terms.push(a.toLowerCase()));
+    }
+    catMap.set(String(c.id), terms);
+  });
+
+  const validPhotos = (photos || []).filter(isValidPhoto);
+    
+  const displayPhotos = filterPhotos(validPhotos, {
+    searchQuery: userFilters.searchQuery,
+    filterCatId: userFilters.categoryId,
+    filterSubId: null,
+    filterTagIds: userFilters.tagIds,
+    sortOrder: urlFilters.sortOrder as 'newest' | 'oldest' | 'name',
+    isAdminMode: isAdminMode,
+  }, tags, categories, tagMap, catMap);
+
+  const gridPhotos = groupPhotos(displayPhotos, showGroups, urlFilters.sortOrder as 'newest' | 'oldest' | 'name');
+
+  return { displayPhotos, gridPhotos };
+}
+
 export const cleanPhotos = (photos: unknown[]): Photo[] => {
   if (!Array.isArray(photos)) return [];
   

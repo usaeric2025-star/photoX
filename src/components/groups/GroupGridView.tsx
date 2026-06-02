@@ -1,4 +1,4 @@
-import React, { useRef, useMemo, useCallback } from 'react';
+import React, { useRef } from 'react';
 import { Photo, ProductGroup } from '../../types';
 import { GalleryVariant } from '@/types/variant';
 import { Layers, Quote } from 'lucide-react';
@@ -23,11 +23,11 @@ interface GroupGridViewProps {
   variant?: GalleryVariant;
 }
 
-const MemoizedFooter = React.memo(({ 
+function GroupGridFooter({ 
   isFetchingNextPage, hasNextPage, hasPhotos, textLoading, textEndOfList 
 }: { 
   isFetchingNextPage: boolean, hasNextPage: boolean, hasPhotos: boolean, textLoading: string, textEndOfList: string 
-}) => {
+}) {
   if (isFetchingNextPage) {
     return (
       <div className="py-8 flex flex-col items-center justify-center gap-2 pb-16">
@@ -48,8 +48,7 @@ const MemoizedFooter = React.memo(({
     );
   }
   return null;
-});
-MemoizedFooter.displayName = 'MemoizedFooter';
+}
 
 export function GroupGridView({
   photos,
@@ -69,13 +68,11 @@ export function GroupGridView({
     lang: s.appLang,
     columns: s.columns
   })));
-  const t = React.useMemo(() => translations[lang as keyof typeof translations as keyof typeof translations] || translations.en, [lang]);
+  const t = translations[lang as keyof typeof translations as keyof typeof translations] || translations.en;
 
-  const header = useMemo(() => {
-    if (!groupData || (!groupData.description && (!groupData.colors || groupData.colors.length === 0) && (!groupData.materials || groupData.materials.length === 0))) {
-      return null;
-    }
-    return (
+  let header = null;
+  if (groupData && (groupData.description || (groupData.colors && groupData.colors.length > 0) || (groupData.materials && groupData.materials.length > 0))) {
+    header = (
       <div className="p-3 sm:p-6 pb-0">
         <div className={`mb-8 p-6 rounded-[2rem] border-2 shadow-sm relative overflow-hidden group ${groupData.is_hidden ? 'bg-slate-50 border-slate-200' : 'bg-white border-indigo-50'}`}>
           <div className={`absolute top-0 right-0 p-8 opacity-5 ${groupData.is_hidden ? 'text-slate-400' : 'text-indigo-600'}`}>
@@ -122,9 +119,9 @@ export function GroupGridView({
         </div>
       </div>
     );
-  }, [groupData]);
+  }
 
-  const renderItem = useCallback((index: number) => {
+  const renderItem = (index: number) => {
     if (isLoading) {
       return (
         <div className="p-1 h-full w-full">
@@ -156,7 +153,7 @@ export function GroupGridView({
         />
       </div>
     );
-  }, [isLoading, photos, variant, onPhotoClick, highlightId, getPhotoProps]);
+  };
 
   return (
     <div className={`w-full h-full relative ${groupData?.is_hidden ? 'grayscale opacity-70' : ''}`}>
@@ -167,7 +164,7 @@ export function GroupGridView({
         onEndReached={onEndReached}
         header={header}
         footer={
-          <MemoizedFooter 
+          <GroupGridFooter 
             isFetchingNextPage={!!isFetchingNextPage}
             hasNextPage={!!hasNextPage}
             hasPhotos={photos.length > 0}
