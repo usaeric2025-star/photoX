@@ -565,8 +565,7 @@ const apiRoutes = app
         body: JSON.stringify({
           model: modelName.replace('openrouter/', ''),
           messages: [{ role: "user", content: promptText }],
-          response_format: { type: "json_object" },
-          max_tokens: 1024
+          max_tokens: 1000
         })
       });
 
@@ -576,8 +575,111 @@ const apiRoutes = app
       }
 
       const data = await response.json();
-      return c.json(data);
+      const textOutput = data.choices[0]?.message?.content;
+      return c.json(JSON.parse(textOutput || "{}"));
     } catch (error: any) {
+      console.error("[translate] Error:", error);
+      return c.json({ error: error.message }, 500);
+    }
+  })
+  .post("/ai/analyze-group", async (c) => {
+    try {
+      const { photoDetails } = await c.req.json();
+      const apiKey = serverEnv.GEMINI_API_KEY;
+      
+      if (!apiKey) return c.json({ error: "Server API key not configured" }, 500);
+
+      const modelName = "google/gemini-2.0-flash-exp:free";
+
+      const prompt = `你是一个产品分析专家。请根据以下照片的名称和标签，分析这个产品合组。
+照片信息：
+${photoDetails}
+
+请分析它们的共同特征，并返回适合该合组的名称、介绍、颜色和材质。
+必须返回以下 JSON 格式：
+{
+  "name": "合组名称（2-6个字）",
+  "description": "合组介绍（20-50字）",
+  "colors": ["颜色1", "颜色2"],
+  "materials": ["材质1", "材质2"]
+}`;
+
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`,
+          "X-Title": "PhotoX AI"
+        },
+        body: JSON.stringify({
+          model: modelName,
+          messages: [{ role: "user", content: prompt }],
+          response_format: { type: "json_object" },
+          max_tokens: 1000
+        })
+      });
+
+      if (!response.ok) {
+        const err = await response.text();
+        return c.json({ error: err }, response.status as any);
+      }
+
+      const data = await response.json();
+      const textOutput = data.choices[0]?.message?.content;
+      return c.json(JSON.parse(textOutput || "{}"));
+    } catch (error: any) {
+      console.error("[analyze-group] Error:", error);
+      return c.json({ error: error.message }, 500);
+    }
+  })
+  .post("/ai/analyze-photo-v2", async (c) => {
+    try {
+      const { photoDetail } = await c.req.json();
+      const apiKey = serverEnv.GEMINI_API_KEY;
+      
+      if (!apiKey) return c.json({ error: "Server API key not configured" }, 500);
+
+      const modelName = "google/gemini-2.0-flash-exp:free";
+
+      const prompt = `你是一个产品分析专家。请分析这张照片：
+${photoDetail}
+
+请返回优化后的名称、分类、标签、颜色、材质和描述。
+必须返回以下 JSON 格式：
+{
+  "name": "优化后的产品名称",
+  "category": "分类名称",
+  "tags": ["标签1", "标签2"],
+  "colors": ["颜色1", "颜色2"],
+  "materials": ["材质1", "材质2"],
+  "description": "完善后的产品描述"
+}`;
+
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`,
+          "X-Title": "PhotoX AI"
+        },
+        body: JSON.stringify({
+          model: modelName,
+          messages: [{ role: "user", content: prompt }],
+          response_format: { type: "json_object" },
+          max_tokens: 1000
+        })
+      });
+
+      if (!response.ok) {
+        const err = await response.text();
+        return c.json({ error: err }, response.status as any);
+      }
+
+      const data = await response.json();
+      const textOutput = data.choices[0]?.message?.content;
+      return c.json(JSON.parse(textOutput || "{}"));
+    } catch (error: any) {
+      console.error("[analyze-photo-v2] Error:", error);
       return c.json({ error: error.message }, 500);
     }
   });

@@ -42,6 +42,10 @@ export default function PublicPage() {
   const virtualGridRef = useRef<any>(null);
   const handleScrollToTop = () => virtualGridRef.current?.scrollTo(0);
 
+  useEffect(() => {
+    document.title = 'PhotoX | 商品画册';
+  }, []);
+
   // ========== 8. 正常渲染 ==========
   return (
     <div className="flex flex-col h-full w-full bg-slate-50 overflow-hidden" id="public-view">

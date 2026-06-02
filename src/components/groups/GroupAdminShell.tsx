@@ -179,16 +179,15 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
 
   return (
     <>
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         {filters.groupId !== null && (
           <motion.div
-            key={filters.groupId}
             ref={containerRef}
             onScroll={handleScroll}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.15 }}
             className="fixed inset-0 z-[200] bg-brand-bg overflow-hidden pt-safe flex flex-col"
           >
             {isLoading && activeGroupPhotos.length === 0 ? (
@@ -207,7 +206,6 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
                 />
 
                 <GroupGridView
-                  key={filters.groupId}
                   virtualGridRef={virtualGridRef}
                   photos={activeGroupPhotos}
                   isLoading={isGroupPhotosLoading}

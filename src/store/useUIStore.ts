@@ -55,10 +55,13 @@ export interface UIStoreState {
   showOtherFields: boolean;
   isInfiniteMode: boolean;
   filterSubId: string | null;
+  processingIds: string[];
   
   // Interaction state
   selectedIds: string[];
   toggleSelected: (id: string) => void;
+  addProcessingIds: (ids: string[]) => void;
+  removeProcessingIds: (ids: string[]) => void;
   setDraggedPhoto: (id: string | null) => void;
   updateSelectedIds: (ids: string[]) => void;
 
@@ -107,6 +110,7 @@ export const useUIStore = create<UIStoreState>()((set) => ({
   photoPickerGroupId: null,
   isMultiSelect: false,
   selectedIds: [],
+  processingIds: [],
   alertDialog: null,
   promptDialog: null,
   isMultiSelectMode: false,
@@ -118,10 +122,17 @@ export const useUIStore = create<UIStoreState>()((set) => ({
     else newSelected.add(id);
     return { selectedIds: Array.from(newSelected) };
   }),
+  addProcessingIds: (ids) => set((state) => ({ 
+    processingIds: Array.from(new Set([...state.processingIds, ...ids])) 
+  })),
+  removeProcessingIds: (ids) => set((state) => ({ 
+    processingIds: state.processingIds.filter(id => !ids.includes(id)) 
+  })),
   setDraggedPhoto: (id) => set({ draggedPhotoId: id }),
   updateSelectedIds: (ids) => set({ selectedIds: ids }),
   resetUI: () => set({
       selectedIds: [],
+      processingIds: [],
       isMultiSelect: false,
       editPhotoId: null,
       batchEditingIds: null,

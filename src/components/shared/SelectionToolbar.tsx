@@ -2,6 +2,7 @@ import React from 'react';
 import { Trash2, Sparkles, Edit, X, FolderPlus, EyeOff } from 'lucide-react';
 import { useUIStore } from '@/store/useUIStore';
 import { useGroupPhotosMutation } from '@/hooks';
+import { useAIGroup } from '@/hooks/core/mutations/useAIGroup';
 
 interface SelectionToolbarProps {
   onAIIdentify?: (ids: string[]) => void;
@@ -22,6 +23,7 @@ export function SelectionToolbar({
   const ids = selectedIds;
 
   const groupMutation = useGroupPhotosMutation();
+  const { handleAIAction } = useAIGroup();
 
   if (!isMultiSelect || count === 0) return null;
 
@@ -35,6 +37,14 @@ export function SelectionToolbar({
       handleClear();
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleAI = () => {
+    if (onAIIdentify) {
+      onAIIdentify(ids);
+    } else {
+      handleAIAction(ids);
     }
   };
 
@@ -53,15 +63,13 @@ export function SelectionToolbar({
 
       {/* Buttons */}
       <div className="flex items-center gap-1.5">
-        {onAIIdentify && (
-          <button
-            onClick={() => onAIIdentify(ids)}
-            className="w-9 h-9 flex items-center justify-center rounded-full text-purple-400 hover:text-white hover:bg-purple-600/20 active:scale-95 transition-all"
-            title="AI 属性智能识别"
-          >
-            <Sparkles size={17} />
-          </button>
-        )}
+        <button
+          onClick={handleAI}
+          className="w-9 h-9 flex items-center justify-center rounded-full text-purple-400 hover:text-white hover:bg-purple-600/20 active:scale-95 transition-all"
+          title={count === 1 ? 'AI 智能识别' : 'AI 智能合组'}
+        >
+          <Sparkles size={17} />
+        </button>
 
         <button
           onClick={handleGroup}

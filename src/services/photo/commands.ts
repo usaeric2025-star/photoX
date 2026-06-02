@@ -260,7 +260,6 @@ export const groupPhotos = async (photoIds: string[], predefinedGroupId?: string
         id: groupId,
         name: '新合并群组',
         description: '',
-        description_translations: {},
         colors: [],
         materials: [],
         is_hidden: false,

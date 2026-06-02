@@ -12,6 +12,7 @@ export function AdminPage() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    document.title = 'PhotoX | 管理后台';
     // Prefetch categories in the background
     queryClient.prefetchQuery({
       queryKey: photoKeys.categories(),

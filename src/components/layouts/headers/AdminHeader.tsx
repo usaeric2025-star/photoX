@@ -9,6 +9,7 @@ import {
   ListChecks,
   Image,
   Camera,
+  LayoutGrid,
 } from "lucide-react";
 import { LanguageSwitcher } from "../../ui/LanguageSwitcher";
 import {
@@ -111,7 +112,7 @@ export function AdminHeader({
             </span>
           </div>
         )}
-        <div className="flex items-center px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs font-bold gap-1 shrink-0">
+        <div className="flex items-center px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold gap-1 shrink-0">
           <span>{localCount}</span>
           <span className="text-slate-300">/</span>
           <span>{cloudCount || 0}</span>
@@ -201,7 +202,7 @@ export function AdminHeader({
           className="w-9 h-9 flex items-center justify-center bg-slate-100 text-slate-500 rounded-full hover:bg-slate-200 transition-all active:scale-95 shrink-0 ml-1"
           title="切换至照片展厅"
         >
-          <Image size={18} />
+          <LayoutGrid size={18} />
         </button>
       </div>
     </header>

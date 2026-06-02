@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Photo, Category, Manufacturer, ProductGroup, TranslationType } from '../../types';
 import { getCacheBustedImageUrl } from '../../lib/ui-helpers';
 import { useErrorHandler, useTasks, useTaskExecutor } from '../../hooks';
@@ -52,9 +52,16 @@ export const usePhotoLightboxLogic = ({
     setActiveLang(lang || 'en');
   }, [lang]);
 
+  // Track the current image URL to avoid flashing loading state if same image
+  const lastImageUrl = useRef<string | null>(null);
+
   useEffect(() => {
-    setIsImageLoading(true);
-    setIsImageError(false);
+    const currentUrl = activePhoto?.image_url || activePhoto?.uri;
+    if (currentUrl !== lastImageUrl.current) {
+      setIsImageLoading(true);
+      setIsImageError(false);
+      lastImageUrl.current = currentUrl || null;
+    }
     
     if (activePhoto?.group_id) {
       runTask('获取产品组数据', async () => {
@@ -67,9 +74,9 @@ export const usePhotoLightboxLogic = ({
     }
   }, [activePhoto?.id, activePhoto?.group_id, runTask]);
 
-  const slides = (displayPhotos || [])
+  const slides = useMemo(() => (displayPhotos || [])
     .filter(p => !!p)
-    .map(p => ({ src: getCacheBustedImageUrl(p, 'image') }));
+    .map(p => ({ src: getCacheBustedImageUrl(p, 'image') })), [displayPhotos]);
 
   const handleShare = () => {
     if (!photo?.image_hash) return;

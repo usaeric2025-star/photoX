@@ -16,7 +16,6 @@ import { useUrlFilters } from '@/hooks/useUrlFilters';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { createTranslate } from '../lib/i18n';
 import { Spinner } from './ui/Spinner';
-import { Activity } from 'react';
 
 
 // Add displayPhotos and update for compatibility with PublicGridContainer
@@ -154,9 +153,8 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
   const isOpen = activeGroupId !== null;
 
   return (
-    <Activity mode={isOpen ? 'visible' : 'hidden'}>
-        <div className="fixed inset-0 z-[200] bg-brand-bg overflow-hidden pt-safe flex flex-col">
-          {isLoading && !infinitePhotosData ? (
+    <div className={`fixed inset-0 z-[200] bg-brand-bg overflow-hidden pt-safe flex flex-col ${!isOpen ? 'hidden' : ''}`}>
+      {isLoading && !infinitePhotosData ? (
             <GroupDetailSkeleton />
           ) : (
             <>
@@ -275,7 +273,6 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
                  );
              })()}
         </div>
-    </Activity>
   );
 };
 

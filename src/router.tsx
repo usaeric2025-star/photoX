@@ -2,7 +2,8 @@ import {
   createRootRouteWithContext, 
   createRoute, 
   createRouter,
-  Outlet
+  Outlet,
+  redirect
 } from '@tanstack/react-router';
 import { ROUTES } from './config/constants';
 import { lazy, Suspense } from 'react';
@@ -16,6 +17,7 @@ import { photoKeys, groupKeys } from '@/lib/queryKeys';
 import { createStaleTime } from '@/shared/freshnessSchema';
 import { getGroupById } from '@/services/group/queries';
 import { AdminAuthGuard } from '@/components/AdminAuthGuard';
+import { checkPublicAuth } from '@/lib/publicAuth';
 
 /**
  * [V2.10-ROUTER-PERMISSION-INTEGRATED] Router Context Definition
@@ -114,6 +116,32 @@ const indexRoute = createRoute({
       columns: (search.columns as string) || undefined,
       showGroupsCollapsed: (search.showGroupsCollapsed as GallerySearchParams['showGroupsCollapsed']) || undefined,
     };
+  },
+  beforeLoad: async ({ search }) => {
+    if (search.authError) return;
+    
+    // [PERFORMANCE-STRATEGY] Synchronous session key presence check for high-speed instant redirect
+    const hasSessionKey = typeof window !== 'undefined' && 
+      Object.keys(window.localStorage || {}).some(key => key.startsWith('sb-') && key.endsWith('-auth-token'));
+    if (hasSessionKey) {
+      throw redirect({
+        to: ROUTES.ADMIN,
+      });
+    }
+
+    try {
+      const res = await checkPublicAuth();
+      if (res.isAuthenticated) {
+        throw redirect({
+          to: ROUTES.ADMIN,
+        });
+      }
+    } catch (err) {
+      if (err && typeof err === 'object' && ('to' in err || 'isRedirect' in err || 'statusCode' in err)) {
+        throw err;
+      }
+      console.warn('[indexRoute/beforeLoad] Auth check for redirection skipped:', err);
+    }
   },
   loader: async ({ context }) => {
     const { queryClient } = context;

@@ -66,9 +66,15 @@ export function AdminGridContainer({
     isAdminMode: isAdminMode
   }, PAGINATION.ADMIN_BATCH_SIZE, true);
 
+  const { processingIds } = useUIStore(useShallow(s => ({ processingIds: s.processingIds })));
+
   const rawPhotos = infiniteQuery.data?.pages?.flatMap(p => p.photos) ?? EMPTY_ARRAY;
 
-  const photos = normalizeAdminPhotos(rawPhotos);
+  const photos = useMemo(() => {
+    const normalized = normalizeAdminPhotos(rawPhotos);
+    if (!processingIds || processingIds.length === 0) return normalized;
+    return normalized.filter(p => !processingIds.includes(p.id));
+  }, [rawPhotos, processingIds]);
 
   const { displayPhotos, gridPhotos } = processPhotos(
     photos,

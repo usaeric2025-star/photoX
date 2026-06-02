@@ -1,4 +1,3 @@
-import { Activity } from 'react';
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Dialog } from '@base-ui/react/dialog';
@@ -163,8 +162,7 @@ export function PhotoLightbox(props: PhotoLightboxProps) {
   const DialogPopup = Dialog.Popup as any;
 
   return (
-    <Activity mode={isOpen ? 'visible' : 'hidden'}>
-      <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
         <Dialog.Portal keepMounted>
           <Dialog.Backdrop 
             render={(backdropProps) => {
@@ -256,6 +254,5 @@ export function PhotoLightbox(props: PhotoLightboxProps) {
           />
         </Dialog.Portal>
       </Dialog.Root>
-    </Activity>
   );
 };

@@ -30,8 +30,18 @@ export const useGroupAdminLogic = ({
   const { filters, setGroupId } = useUrlFilters();
   const activeGroupId = filters.groupId;
   
-  const { appLang, isMultiSelect, selectedIds, groupSettingsOpen, batchEditingIds, focusedGroupPhotoId, draggedPhotoId, update } = useUIStore(
-    useShallow((s) => ({ update: s.update, appLang: s.appLang, isMultiSelect: s.isMultiSelect, selectedIds: s.selectedIds, groupSettingsOpen: s.groupSettingsOpen, batchEditingIds: s.batchEditingIds, focusedGroupPhotoId: s.focusedGroupPhotoId, draggedPhotoId: s.draggedPhotoId })),
+  const { appLang, isMultiSelect, selectedIds, groupSettingsOpen, batchEditingIds, focusedGroupPhotoId, draggedPhotoId, processingIds, update } = useUIStore(
+    useShallow((s) => ({ 
+        update: s.update, 
+        appLang: s.appLang, 
+        isMultiSelect: s.isMultiSelect, 
+        selectedIds: s.selectedIds, 
+        groupSettingsOpen: s.groupSettingsOpen, 
+        batchEditingIds: s.batchEditingIds, 
+        focusedGroupPhotoId: s.focusedGroupPhotoId, 
+        draggedPhotoId: s.draggedPhotoId,
+        processingIds: s.processingIds 
+    })),
   );
 
   const adminActions = useAdminActions();
@@ -88,7 +98,13 @@ export const useGroupAdminLogic = ({
 
   const activeGroupPhotos = useMemo(() => {
     if (!activeGroupId) return [];
-    const groupPhotos = dbGroupPhotos;
+    let groupPhotos = dbGroupPhotos;
+    
+    // Filter out processing if any
+    if (processingIds && processingIds.length > 0) {
+        groupPhotos = groupPhotos.filter(p => !processingIds.includes(p.id));
+    }
+
     return filterPhotosByMode(groupPhotos, isAdminMode).sort((a, b) => {
       if (a.is_group_cover) return -1;
       if (b.is_group_cover) return 1;

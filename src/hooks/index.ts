@@ -52,6 +52,7 @@ export { useSyncMutation } from './core/mutations/useSyncMutation';
 // Utils
 export { useUIStore, useStore, useShallow } from '../store/useUIStore';
 export { useErrorHandler } from '../lib/error/errorHandler';
+export { useTranslation } from './useTranslation';
 
 
 
