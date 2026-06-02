@@ -82,13 +82,21 @@ export function GroupPhotoPicker({
          _lastModified: result.file.lastModified
       } as unknown as Photo));
 
-      return await savePhotosToCloudBatch(user.id, photoData, (count) => {
+      const savedPhotos = await savePhotosToCloudBatch(user.id, photoData, (count) => {
         completed = count;
         const pct = 30 + Math.round((completed / uniqueFiles.length) * 70);
         updateProgress(pct, `正在保存照片 (${count}/${uniqueFiles.length})`);
       });
+      
+      const skippedCloud = photoData.length - savedPhotos.length;
+      if (skippedCloud > 0) {
+        toast.success(`成功上传 ${savedPhotos.length} 张，云端排重跳过 ${skippedCloud} 张`);
+      } else {
+        toast.success(`上传成功 (${savedPhotos.length} 张)`);
+      }
+      return savedPhotos;
     }, {
-      showSuccessToast: true,
+      showSuccessToast: false,
       showErrorToast: true
     });
 

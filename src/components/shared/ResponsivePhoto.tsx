@@ -1,8 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Photo } from '@/types';
 import { thumbHashToDataURL } from '@/lib/image/thumbHash';
 import { ContractedImage } from './ContractedImage';
 import { ImageOff } from 'lucide-react';
+
+const loadedSrcCache = new Set<string>();
 
 interface ResponsivePhotoProps {
   photo: Photo;
@@ -19,14 +21,24 @@ export function ResponsivePhoto({
   className = '',
   imgClassName = ''
 }: ResponsivePhotoProps) {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [hasError, setHasError] = useState(false);
-
   if (!photo) return null;
 
   const src = variant === 'md' 
     ? (photo.thumbnail_md_url || photo.thumbnail_sm_url || photo.image_url)
     : (photo.thumbnail_sm_url || photo.image_url || photo.uri);
+
+  const [isLoaded, setIsLoaded] = useState(() => src ? loadedSrcCache.has(src) : false);
+  const [hasError, setHasError] = useState(false);
+
+  // If src changes, update state
+  useEffect(() => {
+    if (src && loadedSrcCache.has(src)) {
+       setIsLoaded(true);
+    } else {
+       setIsLoaded(false);
+    }
+    setHasError(false);
+  }, [src]);
 
   const placeholderDataUrl = useMemo(() => {
     if (!photo.thumb_hash) return null;
@@ -51,7 +63,7 @@ export function ResponsivePhoto({
     >
       {placeholderDataUrl && !hasError && (
         <div 
-          className="absolute inset-0 z-0 bg-cover bg-center pointer-events-none filter blur-lg scale-105 transition-opacity duration-500 ease-in-out"
+          className="absolute inset-0 z-0 bg-cover bg-center pointer-events-none filter blur-lg scale-105 transition-opacity duration-300 ease-in-out"
           style={{ 
             backgroundImage: `url(${placeholderDataUrl})`,
             opacity: isLoaded ? 0 : 1,
@@ -69,19 +81,20 @@ export function ResponsivePhoto({
           <ContractedImage
             src={src}
             alt={photo.name || 'Photo'}
+            priority={isLoaded}
             width={variant === 'md' ? [320, 640, 800] : [320, 640]}
             aspectRatio={String(aspectRatio)}
-  
             onLoad={async (e: any) => {
                if (e.target instanceof HTMLImageElement) {
                   await e.target.decode().catch(() => {});
                }
+               if (src) loadedSrcCache.add(src);
                setIsLoaded(true);
             }}
             onError={() => {
               setHasError(true);
             }}
-            className={`${imgClassName} absolute inset-0 z-10 w-full h-full transition-opacity duration-300 ease-out`}
+            className={`${imgClassName} absolute inset-0 z-10 w-full h-full transition-opacity duration-200 ease-out`}
             style={{ 
                opacity: isLoaded ? 1 : 0,
                willChange: 'opacity' 

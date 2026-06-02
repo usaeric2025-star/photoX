@@ -35,7 +35,7 @@ export function ContractedImage({
          alt={alt || 'Product Image'}
          loading={priority ? "eager" : "lazy"}
          fetchPriority={priority ? "high" : "low"}
-         decoding="async"
+         decoding={priority ? "auto" : "async"}
          onLoad={onLoad}
          onError={onError}
          style={{ aspectRatio }}

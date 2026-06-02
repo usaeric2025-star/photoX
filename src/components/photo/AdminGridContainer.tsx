@@ -144,16 +144,22 @@ export function AdminGridContainer({
 
       updateTask(taskId, { progress: 50, message: `正在上传 ${files.length} 张照片...` });
       
-      await savePhotosToCloudBatch(user.id, photoData, (count) => {
-        const pct = 50 + Math.round((count / files.length) * 50);
+      const savedPhotos = await savePhotosToCloudBatch(user.id, photoData, (count) => {
+        const pct = 50 + Math.round((count / uniqueFiles.length) * 50);
         updateTask(taskId, { 
           progress: pct, 
-          message: `正在保存 (${count}/${files.length})` 
+          message: `正在保存 (${count}/${uniqueFiles.length})` 
         });
       });
 
+      const skippedCloud = photoData.length - savedPhotos.length;
       updateTask(taskId, { status: 'completed', progress: 100, message: '上传完成' });
-      toast.success('上传成功');
+      
+      if (skippedCloud > 0) {
+        toast.success(`成功上传 ${savedPhotos.length} 张，云端排重跳过 ${skippedCloud} 张`);
+      } else {
+        toast.success(`上传成功 (${savedPhotos.length} 张)`);
+      }
       queryClient.invalidateQueries({ queryKey: photoKeys.all });
     } catch (err) {
       handleError(err, '上传照片失败');
