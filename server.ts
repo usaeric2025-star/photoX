@@ -2,8 +2,8 @@ import "dotenv/config";
 import path from "path";
 import fs from "fs";
 import { serve } from "@hono/node-server";
-import { app } from "./api/app";
-import { getServerEnv } from "./src/shared/envSchema";
+import { app } from "./api/app.js";
+import { getServerEnv } from "./api/shared/envSchema.js";
 
 // 启动校验
 const serverEnv = getServerEnv(process.env);
