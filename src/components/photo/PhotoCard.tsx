@@ -177,12 +177,11 @@ export const PhotoCard = ({
   className = '', onClick,
   hideDetails = false
 }: PhotoCardProps) => {
-  const { toggleSelected, update, isMultiSelect, selectedIds } = useUIStore(useShallow(s => ({ 
-    toggleSelected: s.toggleSelected, 
-    update: s.update,
-    isMultiSelect: s.isMultiSelect,
-    selectedIds: s.selectedIds
-  })));
+  const isSelected = useUIStore(s => s.selectedIds.includes(photo.id));
+  const isMultiSelect = useUIStore(s => s.isMultiSelect);
+  const toggleSelected = useUIStore(s => s.toggleSelected);
+  const update = useUIStore(s => s.update);
+  
   const { handleError } = useErrorHandler();
   const cardRef = useRef<HTMLDivElement>(null);
   const longPressTriggered = useRef(false);
@@ -205,8 +204,6 @@ export const PhotoCard = ({
   const photoTags = tagIdsList
     .map(id => tagMap.get(String(id))?.name ?? '')
     .filter(Boolean);
-
-  const isSelected = selectedIds.includes(photo.id);
 
   const { can } = usePermission();
 

@@ -29,7 +29,6 @@ export function AdminToolbar({
         totalCount={photos?.length}
         onRefresh={onRefresh}
         isRefreshing={isSyncing}
-        isStaff={variant === 'staff-workspace'}
       />
     );
   }

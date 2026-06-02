@@ -37,7 +37,7 @@ export function StaffHeader({ totalCount, onRefresh, isRefreshing }: StaffHeader
         {settings?.logo_url ? (
           <img src={settings.logo_url} className="h-6 sm:h-7 w-auto object-contain shrink-0" alt="Logo" />
         ) : (
-          <div className="flex items-center gap-1.5 font-bold tracking-tighter text-slate-900">
+          <div className="flex items-center gap-1.5 font-bold tracking-tighter text-slate-900 cursor-pointer" onClick={handleGoToAdmin}>
             <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center shadow-sm text-white shrink-0">
               <Camera size={18} className="stroke-[2.5]" />
             </div>

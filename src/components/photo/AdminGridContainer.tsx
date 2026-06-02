@@ -44,16 +44,19 @@ export function AdminGridContainer({
   const { can } = usePermission();
   const isAdminMode = useAdminMode() || isManagement;
   const { tasks } = useTasks();
-  const { isMultiSelect, selectedIds, disable } = useMultiSelect();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const navigate = useNavigate();
   const { filters, setSearch, setShowGroupsCollapsed } = useFilters();
   const { filters: urlFilters, setGroupId, setPhotoId, setSortOrder } = useUrlFilters();
-  const store = useUIStore(useShallow(s => ({
-      update: s.update,
-      columns: s.columns
-    })));
+  const update = useUIStore(s => s.update);
+  const columns = useUIStore(s => s.columns);
+  const processingIds = useUIStore(s => s.processingIds);
+  const isMultiSelect = useUIStore(s => s.isMultiSelect);
+
+  const disable = useCallback(() => {
+    update({ isMultiSelect: false, selectedIds: [] });
+  }, [update]);
 
   const { data: categories = [] } = useCategories();
   const { data: tags = [] } = useTags();
@@ -66,8 +69,6 @@ export function AdminGridContainer({
     isAdminMode: isAdminMode
   }, PAGINATION.ADMIN_BATCH_SIZE, true);
 
-  const { processingIds } = useUIStore(useShallow(s => ({ processingIds: s.processingIds })));
-
   const rawPhotos = infiniteQuery.data?.pages?.flatMap(p => p.photos) ?? EMPTY_ARRAY;
 
   const photos = useMemo(() => {
@@ -76,7 +77,7 @@ export function AdminGridContainer({
     return normalized.filter(p => !processingIds.includes(p.id));
   }, [rawPhotos, processingIds]);
 
-  const { displayPhotos, gridPhotos } = processPhotos(
+  const { displayPhotos, gridPhotos } = useMemo(() => processPhotos(
     photos,
     categories,
     tags,
@@ -86,7 +87,7 @@ export function AdminGridContainer({
       showGroupsCollapsed: filters.showGroupsCollapsed,
       isAdminModeOverride: isAdminMode
     }
-  );
+  ), [photos, categories, tags, filters, urlFilters, isAdminMode]);
 
   const isAnalyzing = tasks.some(t => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析')));
 
@@ -161,10 +162,10 @@ export function AdminGridContainer({
           onSortChange={() => setSortOrder(urlFilters.sortOrder === 'newest' ? 'oldest' : 'newest')}
           currentSort={urlFilters.sortOrder as 'newest' | 'oldest' | 'name'}
           onColumnsChange={(cols) => {
-              store.update({ columns: cols as 2 | 3 | 5 });
+              update({ columns: cols as 2 | 3 | 5 });
               updateURL({ view: cols === 2 ? 'list' : 'grid' });
           }}
-          currentColumns={store.columns}
+          currentColumns={columns}
           onToggleGroups={() => setShowGroupsCollapsed(!filters.showGroupsCollapsed)}
           showGroupsCollapsed={filters.showGroupsCollapsed}
         />
@@ -179,7 +180,7 @@ export function AdminGridContainer({
              onLoadMore={infiniteQuery.fetchNextPage}
              renderCard={renderCard}
              ref={virtualGridRef} 
-             columns={store.columns}
+             columns={columns}
            />
            <input
              id="admin-quick-add-input"
@@ -197,16 +198,25 @@ export function AdminGridContainer({
           scrollToTop={scrollToTop}
           onAdd={() => fileInputRef.current?.click()}
           onBatchAiIdentify={() => {}}
-          onBatchEdit={() => store.update({ batchEditingIds: selectedIds })}
+          onBatchEdit={() => {
+            const currentSelected = useUIStore.getState().selectedIds;
+            update({ batchEditingIds: currentSelected });
+          }}
           onGroup={() => {}}
-          onDelete={() => adminActions.deletePhoto(Array.from(selectedIds))}
-          onToggleVisibility={() => adminActions.batchUpdate.mutateAsync({ ids: Array.from(selectedIds), updates: { is_hidden: true } })}
+          onDelete={() => {
+            const currentSelected = useUIStore.getState().selectedIds;
+            adminActions.deletePhoto(Array.from(currentSelected));
+          }}
+          onToggleVisibility={() => {
+            const currentSelected = useUIStore.getState().selectedIds;
+            adminActions.batchUpdate.mutateAsync({ ids: Array.from(currentSelected), updates: { is_hidden: true } });
+          }}
           onClearSelection={disable}
         />
 
         <SelectionToolbar
           onDelete={(ids) => adminActions.deletePhoto(ids)}
-          onBatchEdit={(ids) => store.update({ batchEditingIds: ids })}
+          onBatchEdit={(ids) => update({ batchEditingIds: ids })}
           onHide={(ids) => adminActions.batchUpdate.mutateAsync({ ids, updates: { is_hidden: true } })}
           onAIIdentify={onBatchAiAnalyze ? (ids) => {
             const targetPhotos = photos.filter(p => ids.includes(p.id));

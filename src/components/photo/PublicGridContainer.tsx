@@ -57,7 +57,7 @@ export function PublicGridContainer({
 
   const rawPhotos = infiniteQuery.data?.pages?.flatMap(p => p.photos) ?? EMPTY_ARRAY;
 
-  const { displayPhotos, gridPhotos } = processPhotos(
+  const { displayPhotos, gridPhotos } = useMemo(() => processPhotos(
     rawPhotos,
     categories,
     tags,
@@ -67,7 +67,7 @@ export function PublicGridContainer({
       showGroupsCollapsed: filters.showGroupsCollapsed,
       isAdminModeOverride: false
     }
-  );
+  ), [rawPhotos, categories, tags, filters, urlFilters]);
 
   const handleGroupClick = (gid: string, photoId?: string) => {
     setPhotoId(null);

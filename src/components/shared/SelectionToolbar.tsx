@@ -18,7 +18,10 @@ export function SelectionToolbar({
   onDelete,
   onHide,
 }: SelectionToolbarProps) {
-  const { selectedIds, update, isMultiSelect } = useUIStore();
+  const selectedIds = useUIStore(s => s.selectedIds);
+  const isMultiSelect = useUIStore(s => s.isMultiSelect);
+  const update = useUIStore(s => s.update);
+  
   const count = selectedIds.length;
   const ids = selectedIds;
 
@@ -32,11 +35,13 @@ export function SelectionToolbar({
   };
 
   const handleGroup = async () => {
+    const currentIds = [...ids];
+    handleClear(); // 立即清除选择状态，提升即时感
     try {
-      await groupMutation.mutateAsync({ photoIds: ids });
-      handleClear();
+      await groupMutation.mutateAsync({ photoIds: currentIds });
     } catch (err) {
       console.error(err);
+      // 如果失败可以考虑恢复状态，但通常简单刷新更稳健
     }
   };
 

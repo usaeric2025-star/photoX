@@ -203,7 +203,6 @@ export function AdminPageContent() {
                       totalCount={photos?.length}
                       onRefresh={handleRefreshPublic}
                       isRefreshing={isSyncing}
-                      isStaff={isEffectiveStaffMode}
                     />
                     <div className="flex-1 min-h-0 relative">
                       <PublicGridContainer 
