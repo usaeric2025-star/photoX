@@ -58,6 +58,11 @@ export function AdminScreen() {
       return;
     }
 
+    if (!settings?.gemini_api_key) {
+      toast.error("请先在‘管理后台 -> 系统配置’中配置 Gemini API 密钥再使用 AI 识别功能。");
+      return;
+    }
+
     await runTask(`AI 批量属性识别 (${targetPhotos.length}张)`, async () => {
       const { analyzeProductPhoto } = await import("@/services/gemini");
       

@@ -78,6 +78,11 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
       return;
     }
 
+    if (!settings?.gemini_api_key) {
+      toast.error("请先在‘管理后台 -> 系统配置’中配置 Gemini API 密钥再使用 AI 识别功能。");
+      return;
+    }
+
     await runTask("AI 属性智能识别", async () => {
       const { analyzeProductPhoto } = await import("@/services/gemini");
       const result = await analyzeProductPhoto(

@@ -185,6 +185,7 @@ export const PhotoCard = ({
   })));
   const { handleError } = useErrorHandler();
   const cardRef = useRef<HTMLDivElement>(null);
+  const longPressTriggered = useRef(false);
   const isManagement = variant === 'full-management' || variant === 'staff-workspace';
   
   const lang = useUIStore(s => s.appLang);
@@ -214,13 +215,22 @@ export const PhotoCard = ({
   };
     
   const handleClick = (e: React.MouseEvent) => {
+    if (longPressTriggered.current) {
+      longPressTriggered.current = false;
+      e.stopPropagation();
+      e.preventDefault();
+      return;
+    }
+
     if (onClick) {
       onClick(e);
       return;
     }
 
     if (isManagement) {
-      if (isMultiSelect && !e.shiftKey) {
+      if (isMultiSelect) {
+        e.stopPropagation();
+        e.preventDefault();
         toggleSelected(photo.id);
       } else if (photo.group_id && onGroupClick) {
         e.stopPropagation();
@@ -243,6 +253,7 @@ export const PhotoCard = ({
   useLongPress(
     cardRef,
     () => {
+      longPressTriggered.current = true;
       if (isManagement && can('photo:edit')) {
         if (!isMultiSelect) {
           update({ isMultiSelect: true, selectedIds: [photo.id] } as any);
@@ -299,18 +310,23 @@ export const PhotoCard = ({
         />
       </div>
 
-      {isManagement && (
-        <div className="hidden group-data-[multiselect=true]:flex absolute top-0 left-0 w-full h-full transition-all duration-300 items-center justify-center p-3 sm:p-4 pointer-events-none z-10 group-data-[selected=true]:bg-blue-500/10">
-          <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 transition-all flex items-center justify-center pointer-events-none bg-white/40 border-white/60 shadow-sm opacity-0 md:group-hover:opacity-100 group-data-[selected=true]:bg-blue-600 group-data-[selected=true]:border-white group-data-[selected=true]:shadow-xl group-data-[selected=true]:scale-110 group-data-[selected=true]:opacity-100">
-            <div className="hidden group-data-[selected=true]:block">
+      {isManagement && isMultiSelect && (
+        <div className="absolute inset-0 w-full h-full transition-all duration-300 flex items-center justify-center p-3 sm:p-4 pointer-events-none z-10 bg-blue-500/10">
+          <div className={cn(
+            "w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 transition-all flex items-center justify-center pointer-events-none shadow-sm",
+            isSelected 
+              ? "bg-blue-600 border-white shadow-xl scale-110 opacity-100" 
+              : "bg-white/40 border-white/60 opacity-60 md:group-hover:opacity-100"
+          )}>
+            {isSelected && (
               <Check size={16} className="text-white" />
-            </div>
+            )}
           </div>
         </div>
       )}
 
-      {isManagement && is_hidden && (
-        <div className="group-data-[multiselect=true]:hidden absolute inset-0 bg-black/10 backdrop-blur-[0.5px] flex items-center justify-center pointer-events-none z-10">
+      {isManagement && is_hidden && !isMultiSelect && (
+        <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px] flex items-center justify-center pointer-events-none z-10">
           <EyeOff size={24} className="text-white/60 drop-shadow" />
         </div>
       )}

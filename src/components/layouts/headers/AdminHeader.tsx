@@ -5,9 +5,10 @@ import {
   LogOut,
   Settings,
   Menu,
-  Sparkles,
+  Brain,
   ListChecks,
-  Eye,
+  Image,
+  Camera,
 } from "lucide-react";
 import { LanguageSwitcher } from "../../ui/LanguageSwitcher";
 import {
@@ -94,26 +95,26 @@ export function AdminHeader({
   return (
     <header className="h-14 sm:h-16 shrink-0 border-b px-2 sm:px-4 flex items-center justify-between bg-white border-slate-200 text-slate-800 z-30 font-sans overflow-hidden">
       <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 flex-nowrap">
-        <h1 className="text-lg sm:text-xl font-black text-slate-900 tracking-tighter whitespace-nowrap shrink-0 flex items-center">
-          {settings?.logo_url ? (
-            <img
-              src={settings.logo_url}
-              className="h-6 sm:h-7 w-auto object-contain shrink-0"
-              alt="Logo"
-            />
-          ) : (
-            <span>
+        {settings?.logo_url ? (
+          <img
+            src={settings.logo_url}
+            className="h-6 sm:h-7 w-auto object-contain shrink-0"
+            alt="Logo"
+          />
+        ) : (
+          <div className="flex items-center gap-1.5 font-bold tracking-tighter text-slate-900">
+            <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center shadow-sm text-white shrink-0">
+              <Camera size={18} className="stroke-[2.5]" />
+            </div>
+            <span className="text-lg font-black tracking-tighter">
               PHOT<span className="text-blue-600">O</span>X
             </span>
-          )}
-        </h1>
-        <div className="flex flex-row items-center gap-1 sm:gap-1.5">
-          <div className="px-1.5 sm:px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold whitespace-nowrap shrink-0">
-            L: {localCount}
           </div>
-          <div className="px-1.5 sm:px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 text-[10px] font-bold whitespace-nowrap shrink-0 border border-blue-100">
-            C: {cloudCount || 0}
-          </div>
+        )}
+        <div className="flex items-center px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs font-bold gap-1 shrink-0">
+          <span>{localCount}</span>
+          <span className="text-slate-300">/</span>
+          <span>{cloudCount || 0}</span>
         </div>
       </div>
 
@@ -125,7 +126,7 @@ export function AdminHeader({
             className="w-9 h-9 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded-full transition-all active:scale-90"
             title="AI 批量识别"
           >
-            <Sparkles size={18} />
+            <Brain size={18} />
           </button>
         )}
 
@@ -200,7 +201,7 @@ export function AdminHeader({
           className="w-9 h-9 flex items-center justify-center bg-slate-100 text-slate-500 rounded-full hover:bg-slate-200 transition-all active:scale-95 shrink-0 ml-1"
           title="切换至照片展厅"
         >
-          <Eye size={18} />
+          <Image size={18} />
         </button>
       </div>
     </header>
