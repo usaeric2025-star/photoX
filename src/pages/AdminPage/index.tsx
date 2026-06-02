@@ -1,6 +1,5 @@
 import { createStaleTime } from '@/shared/freshnessSchema';
 import React, { useEffect } from 'react';
-console.log('AdminView 开始渲染');
 import { useQueryClient } from '@tanstack/react-query';
 import { loadCategoriesFromCloud } from '@/services/category/queries';
 import { loadTagsFromCloud } from '@/services/tag/queries';

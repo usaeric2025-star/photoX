@@ -25,17 +25,18 @@ import { usePhotoGallery } from '@/features/photos/usePhotoGallery';
 import { User, Photo } from '@/types';
 import { TranslationType, getCacheBustedImageUrl } from '@/lib/ui-helpers';
 import { LanguageCode } from '@/lib/translations';
+import { logger } from '@/lib/logger';
 
 /* Removed ErrorFallback component */
 
 export function AdminPageContent() {
-  console.log('🔍 AdminPageContent 组件渲染');
+  logger.debug('🔍 AdminPageContent 组件渲染');
 
   const { user, isLoading: isAuthLoading, loginWithGoogle } = useAuth();
-  console.log('🔍 useAuth 结果:', { user: user?.email, isAuthLoading });
+  logger.debug('🔍 useAuth 结果:', { user: user?.email, isAuthLoading });
 
   const { photos, isLoading: isPhotosLoading, infinitePhotosQuery } = usePhotoGallery();
-  console.log('🔍 usePhotoGallery 结果:', { 
+  logger.debug('🔍 usePhotoGallery 结果:', { 
     photosCount: photos?.length, 
     isPhotosLoading, 
     photosError: (infinitePhotosQuery as any)?.error?.message 
@@ -67,7 +68,7 @@ export function AdminPageContent() {
   useEffect(() => {
     if (!isLoading) return;
     const timer = setTimeout(() => {
-      console.warn('⚠️ Loading 超时，强制显示内容');
+      logger.warn('⚠️ Loading 超时，强制显示内容');
       setForceShow(true);
     }, 10000);
     return () => clearTimeout(timer);
@@ -78,7 +79,7 @@ export function AdminPageContent() {
   const { runTask } = useTaskExecutor();
   const isEffectiveStaffMode = !user && isAdminMode;
 
-  console.log('📸 照片数量:', photos?.length, '加载状态:', isLoading, '强制显示:', forceShow);
+  logger.debug('📸 照片数量:', photos?.length, '加载状态:', isLoading, '强制显示:', forceShow);
 
   const { tasks, cancelTask } = useTasks();
   const { mutateAsync: syncMut } = useSyncMutation();
@@ -120,13 +121,13 @@ export function AdminPageContent() {
   // NOTE: photoActions might not be used here since we deleted contexts earlier.
 
   if (!isAuthLoading && !user && !isStaffMode) {
-    console.log('🔍 条件触发: 无用户且非StaffMode，显示登录页');
+    logger.debug('🔍 条件触发: 无用户且非StaffMode，显示登录页');
     return <LoginScreen loginWithGoogle={loginWithGoogle} isLoading={isSyncing} />;
   }
 
   // 员工模式：显示受限限制界面
   if (!user && isStaffMode) {
-    console.log('🔍 显示员工模式受限界面');
+    logger.debug('🔍 显示员工模式受限界面');
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 font-sans">
         <div className="w-full max-w-md bg-white border border-slate-200 rounded-[24px] p-8 shadow-sm space-y-6">
@@ -168,7 +169,7 @@ export function AdminPageContent() {
     );
   }
 
-  console.log('🔍 条件通过: 有用户或StaffMode，显示管理内容');
+  logger.debug('🔍 条件通过: 有用户或StaffMode，显示管理内容');
 
   return (
     <ErrorBoundary>

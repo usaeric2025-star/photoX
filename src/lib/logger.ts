@@ -1,5 +1,9 @@
-const isDev = import.meta.env.DEV;
-const isTest = import.meta.env.MODE === 'test';
+const isDev = typeof process !== 'undefined' 
+  ? process.env.NODE_ENV !== 'production' 
+  : (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV);
+const isTest = typeof process !== 'undefined'
+  ? process.env.NODE_ENV === 'test'
+  : (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.MODE === 'test');
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 

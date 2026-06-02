@@ -5,13 +5,14 @@ import { PAGINATION } from '@/constants/config';
 import { useMemo, useEffect } from 'react';
 import { queryClient } from '@/lib/queryClient';
 import { photoKeys } from '@/lib/queryKeys';
+import { logger } from '@/lib/logger';
 
 export function usePhotoGallery() {
-  console.log('📸 usePhotoGallery 被调用');
+  logger.debug('📸 usePhotoGallery 被调用');
 
   const { filters } = useFilters();
   const { filters: urlFilters } = useUrlFilters();
-  console.log('📸 filters:', filters);
+  logger.debug('📸 filters:', filters);
 
   const isAdminPath = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
   const pageSize = isAdminPath ? 60 : 20;  // Use fixed numeric sizes to avoid import/rebuild side effects
@@ -24,14 +25,14 @@ export function usePhotoGallery() {
     isAdminMode: true,
   }, pageSize, true);  // enabled is explicitly true
 
-  console.log('📸 useInfinitePhotos 状态:', {
+  logger.debug('📸 useInfinitePhotos 状态:', {
     isLoading: infinitePhotosQuery.isLoading,
     status: infinitePhotosQuery.status,
     error: (infinitePhotosQuery as any).error?.message
   });
 
   // Detailed debug logging
-  console.log('📸 usePhotoGallery 详细状态:', {
+  logger.debug('📸 usePhotoGallery 详细状态:', {
     filters: filters,
     pageSize,
     isLoading: infinitePhotosQuery.isLoading,
@@ -40,7 +41,7 @@ export function usePhotoGallery() {
 
   // Debug log to ensure execution
   useEffect(() => {
-    console.log('[DEBUG] usePhotoGallery query executed:', {
+    logger.debug('[DEBUG] usePhotoGallery query executed:', {
       status: infinitePhotosQuery.status,
       fetchStatus: infinitePhotosQuery.fetchStatus,
       dataLength: infinitePhotosQuery.data?.pages?.length
