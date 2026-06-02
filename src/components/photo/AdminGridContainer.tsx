@@ -7,7 +7,7 @@ import { GalleryVariant } from '@/types/variant';
 import { VirtualPhotoGrid } from '@/components/photo/VirtualPhotoGrid';
 import { PhotoCard } from '@/components/photo/PhotoCard';
 import { AdminFilters } from '@/components/ui/AdminFilters';
-import { useScrollRestoration, useTasks, useMultiSelect, useFilters, usePhotoInfiniteList, useAdminMode, usePermission, useCategories, useTags, useUrlFilters } from '@/hooks';
+import { useScrollRestoration, useTasks, useMultiSelect, useFilters, usePhotoInfiniteList, useAdminMode, usePermission, useCategories, useTags, useUrlFilters, useTaskExecutor } from '@/hooks';
 import { processPhotos } from '@/lib/filters';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { UploadButton } from '@/components/shared/UploadButton';
@@ -44,6 +44,7 @@ export function AdminGridContainer({
   const { can } = usePermission();
   const isAdminMode = useAdminMode() || isManagement;
   const { tasks } = useTasks();
+  const { runTask } = useTaskExecutor();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const navigate = useNavigate();
@@ -131,8 +132,17 @@ export function AdminGridContainer({
         } as Photo);
       }
 
-      await savePhotosToCloudBatch(user.id, photoData);
-      toast.success(`成功上传 ${files.length} 张照片`);
+      await runTask(`上传 ${files.length} 张照片`, async ({ updateProgress }) => {
+        let completed = 0;
+        return await savePhotosToCloudBatch(user.id, photoData, (count) => {
+          completed = count;
+          const pct = Math.round((completed / files.length) * 100);
+          updateProgress(pct, `正在保存照片 (${count}/${files.length})`);
+        });
+      }, {
+        showSuccessToast: true,
+        showErrorToast: true
+      });
       queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
     } catch (err) {
       handleError(err, '上传照片失败');

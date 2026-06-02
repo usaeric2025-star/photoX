@@ -1,6 +1,5 @@
 import { hc } from 'hono/client';
 import type { AppType } from '../../server';
-import { clientEnv } from '../shared/envSchema';
 
 /**
  * [V2.9-RPC-CONTRACT] Type-safe RPC Client

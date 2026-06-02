@@ -8,6 +8,7 @@ import { mapToDb, normalizeDimensionsBeforeSave } from './photoMappingUtils';
 import { checkDuplicate, DuplicatePhotoError } from '@/lib/data/duplicateCheck';
 import { generateItemCode } from '../utils';
 import { StandardError } from '@/lib/validators/protocol';
+import { extractErrorMessage } from '@/lib/error/errorHandler';
 
 export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: (s: string) => void): Promise<string> => {
   const { data: { session } } = await supabase.auth.getSession();
@@ -39,7 +40,7 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
       photo.image_url = imageUrl;
       photo.thumb_url = thumbUrl;
     } catch (e) {
-      const message = e instanceof Error ? e.message : String(e)
+      const message = extractErrorMessage(e);
       throw new StandardError(message, { 
         originalError: e,
         aiDebugHint: `[savePhotoToCloud] 底層異常: ${message}` 
@@ -184,7 +185,7 @@ export const savePhotosToCloudBatch = async (
         photo.image_url = imageUrl;
         photo.thumb_url = thumbUrl;
       } catch (e) {
-        const message = e instanceof Error ? e.message : String(e)
+        const message = extractErrorMessage(e);
         throw new StandardError(message, { 
           originalError: e,
           aiDebugHint: `[uploadPhotosBatch] 底層異常: ${message}` 

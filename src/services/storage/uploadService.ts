@@ -2,6 +2,7 @@ import { supabase } from '../../lib/supabase';
 import { STORAGE } from './storageConfig';
 import { api } from '@/lib/api';
 import { StandardError } from '@/lib/validators/protocol';
+import { extractErrorMessage } from '@/lib/error/errorHandler';
 
 export const compressImage = (base64Data: string, maxWidth = 1920, quality = 0.8): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -107,7 +108,14 @@ export const uploadImages = async (
       });
       
       if (!presignRes.ok) {
-        throw new Error('Failed to get presigned upload URL from backend');
+        let errMsg = `获取预签名上传地址失败 (HTTP ${presignRes.status})`;
+        try {
+          const errData = await presignRes.json();
+          if (errData && errData.error) {
+            errMsg = typeof errData.error === 'object' ? JSON.stringify(errData.error) : String(errData.error);
+          }
+        } catch (_) {}
+        throw new Error(errMsg);
       }
 
       const result = await presignRes.json();
@@ -122,7 +130,7 @@ export const uploadImages = async (
         });
 
         if (!uploadRes.ok) {
-          throw new Error(`Upload to R2 failed: ${uploadRes.statusText}`);
+          throw new Error(`直接上传 R2 失败: ${uploadRes.statusText}`);
         }
         
         if (isMain && onProgress) onProgress(100);
@@ -139,12 +147,19 @@ export const uploadImages = async (
         });
 
         if (!fallbackRes.ok) {
-          throw new Error(`Server-proxied direct upload fallback failed with HTTP ${fallbackRes.status}`);
+          let errMsg = `服务器中转直传失败 (HTTP ${fallbackRes.status})`;
+          try {
+            const errData = await fallbackRes.json();
+            if (errData && errData.error) {
+              errMsg = typeof errData.error === 'object' ? JSON.stringify(errData.error) : String(errData.error);
+            }
+          } catch (_) {}
+          throw new Error(errMsg);
         }
 
         const fallbackResult = await fallbackRes.json();
         if (!fallbackResult.success) {
-          throw new Error(fallbackResult.error || `Server-proxied direct upload fallback failed`);
+          throw new Error(fallbackResult.error || `服务器中转直传失败`);
         }
 
         if (isMain && onProgress) onProgress(100);
@@ -157,7 +172,7 @@ export const uploadImages = async (
 
     return { imageUrl, thumbUrl };
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error)
+    const message = extractErrorMessage(error);
     throw new StandardError(`图片处理异常: ${message}`, { 
       originalError: error,
       aiDebugHint: `[uploadToR2] 底層異常: ${message}` 

@@ -53,8 +53,17 @@ export function GroupPhotoPicker({
       is_hidden: false,
     } as any));
 
-    await savePhotosToCloudBatch(user.id, photoData);
-    toast.success("照片已上传");
+    await runTask(`上传 ${files.length} 张照片`, async ({ updateProgress }) => {
+      let completed = 0;
+      return await savePhotosToCloudBatch(user.id, photoData, (count) => {
+        completed = count;
+        const pct = Math.round((completed / files.length) * 100);
+        updateProgress(pct, `正在保存照片 (${count}/${files.length})`);
+      });
+    }, {
+      showSuccessToast: true,
+      showErrorToast: true
+    });
   };
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { runTask } = useTaskExecutor();
