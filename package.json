@@ -17,6 +17,7 @@
     "check:schema-compat": "npx tsx scripts/schema-compat-check.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1058.0",
     "@aws-sdk/s3-request-presigner": "^3.1053.0",
     "@base-ui/react": "^1.5.0",
     "@fontsource-variable/geist": "^5.2.8",
@@ -35,6 +36,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "dotenv": "^17.4.2",
     "esbuild": "^0.28.0",
     "hono": "^4.12.23",
     "jsonrepair": "^3.14.0",
@@ -58,14 +60,12 @@
     "zustand": "^5.0.13"
   },
   "devDependencies": {
-    "@aws-sdk/client-s3": "^3.1053.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/react": "latest",
     "@types/react-dom": "latest",
     "@vitejs/plugin-react": "^6.0.2",
     "babel-plugin-react-compiler": "1.0.0",
-    "dotenv": "^17.4.2",
     "eslint-plugin-react-compiler": "^19.1.0-rc.2",
     "eslint-plugin-react-hooks": "5.2.0",
     "fake-indexeddb": "^6.2.5",
