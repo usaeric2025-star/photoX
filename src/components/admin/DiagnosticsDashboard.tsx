@@ -20,6 +20,48 @@ export function DiagnosticsDashboard() {
   const [report, setReport] = useState<DiagnosticsReport | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  const [r2Result, setR2Result] = useState<any | null>(null);
+  const [isDiagnosingR2, setIsDiagnosingR2] = useState(false);
+  const [r2Error, setR2Error] = useState<string | null>(null);
+
+  const runR2Diagnostics = async () => {
+    setIsDiagnosingR2(true);
+    setR2Error(null);
+    const result = await fromThrowableAsync(
+        () => (client as any).admin['diagnose-r2'].$get(),
+        'diagnoseR2'
+    );
+
+    if (!result.ok) {
+        setR2Error(`诊断请求失败: ${result.message}`);
+        toast.error('R2 诊断接口异常');
+        setIsDiagnosingR2(false);
+        return;
+    }
+
+    const res = result.data as Response;
+    if (!res.ok) {
+        setR2Error(`HTTP 异常 ${res.status}`);
+        toast.error('R2 诊断请求失败');
+        setIsDiagnosingR2(false);
+        return;
+    }
+
+    try {
+        const data = await res.json();
+        setR2Result(data);
+        if (data.success) {
+            toast.success('R2 存储连接测试成功');
+        } else {
+            toast.error('R2 存储测试未通过，请检查下方报告');
+        }
+    } catch (e: any) {
+        setR2Error(`解析 JSON 失败: ${e.message}`);
+    }
+    setIsDiagnosingR2(false);
+  };
+
   const runDiagnostics = async () => {
     setIsLoading(true);
     setError(null);
@@ -76,6 +118,7 @@ export function DiagnosticsDashboard() {
 
   useEffect(() => {
     runDiagnostics();
+    runR2Diagnostics();
   }, []);
 
   const severityColors = {
@@ -124,6 +167,84 @@ export function DiagnosticsDashboard() {
           <StatCard label="上次扫描" value="刚刚" sub={new Date(report.timestamp).toLocaleTimeString()} color="navy" />
         </div>
       )}
+
+      {/* R2 存储连通性诊断 */}
+      <div className="bg-white border border-brand-navy/5 rounded-2xl p-6 shadow-sm space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-base font-black text-brand-navy tracking-tight">R2 存储连通性诊断</h3>
+            <p className="text-xs text-brand-navy/60">实时验证 Cloudflare R2 云端存储的端点、凭证和读写权限</p>
+          </div>
+          <button
+            onClick={runR2Diagnostics}
+            disabled={isDiagnosingR2}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-brand-navy text-white rounded-xl text-xs font-bold disabled:opacity-50 hover:bg-brand-navy/90 transition-all active:scale-95"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isDiagnosingR2 ? 'animate-spin' : ''}`} />
+            {isDiagnosingR2 ? '测试中...' : '测试 R2 连接'}
+          </button>
+        </div>
+
+        {r2Error && (
+          <div className="p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-red-600 text-xs font-semibold">
+            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+            <p>{r2Error}</p>
+          </div>
+        )}
+
+        {r2Result && (
+          <div className="space-y-4">
+            {/* Status indicator */}
+            <div className={`p-4 rounded-xl border flex items-start gap-3 ${
+              r2Result.success 
+                ? 'bg-green-500/5 border-green-500/10 text-green-700' 
+                : 'bg-red-500/5 border-red-500/10 text-red-700'
+            }`}>
+              <div className="mt-0.5">
+                {r2Result.success ? (
+                  <CheckCircle2 className="w-5 h-5 text-green-500" />
+                ) : (
+                  <ShieldAlert className="w-5 h-5 text-red-500" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="text-sm font-bold text-gray-900">
+                  {r2Result.success ? 'R2 连通性测试通过' : 'R2 连通性测试未通过'}
+                </h4>
+                <div className="text-xs mt-1 text-gray-500 font-medium leading-relaxed">
+                  {r2Result.success 
+                    ? r2Result.message 
+                    : `在 [${r2Result.stage}] 阶段异常: ${r2Result.error}`
+                  }
+                </div>
+              </div>
+            </div>
+
+            {/* Environmental & Key list */}
+            {r2Result.details?.configState && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 font-sans">
+                {Object.entries(r2Result.details.configState).map(([key, state]: [string, any]) => (
+                  <div key={key} className="p-3 bg-brand-navy/5 border border-brand-navy/5 rounded-xl flex flex-col justify-between">
+                    <span className="text-[10px] font-mono text-brand-navy/40 truncate">{key}</span>
+                    <div className="flex items-center justify-between mt-1.5">
+                      <span className="text-xs font-bold font-mono truncate text-brand-navy/80">
+                        {state.exists ? (state.preview || '已配置') : '未配置'}
+                      </span>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-black uppercase ${
+                        state.exists 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {state.exists ? 'OK' : 'MISSING'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       <div className="space-y-3">
         <AnimatePresence mode="popLayout">

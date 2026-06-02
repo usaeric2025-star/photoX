@@ -374,6 +374,112 @@ const apiRoutes = app
       return c.json({ success: false, error: e.message }, 500);
     }
   })
+  .get("/admin/diagnose-r2", async (c) => {
+    try {
+      const issues: string[] = [];
+      const envKeys = [
+        "R2_ENDPOINT",
+        "R2_ACCESS_KEY_ID",
+        "R2_SECRET_ACCESS_KEY",
+        "R2_BUCKET_NAME",
+        "R2_PUBLIC_URL_PREFIX"
+      ];
+      
+      const configState: Record<string, any> = {};
+      
+      for (const key of envKeys) {
+        const val = process.env[key] || (serverEnv as any)[key];
+        configState[key] = {
+          exists: !!val,
+          length: val ? String(val).length : 0,
+          preview: val ? (key.includes("SECRET") || key.includes("KEY")
+            ? `${String(val).substring(0, 4)}...${String(val).slice(-4)}`
+            : String(val)) : null
+        };
+        if (!val) {
+          issues.push(`环境变量 ${key} 缺失`);
+        }
+      }
+
+      if (issues.length > 0) {
+        return c.json({
+          success: false,
+          stage: "env_check",
+          error: "存储相关环境变量配置不完整，请前往对应控制台配置环境变量",
+          details: { issues, configState }
+        });
+      }
+
+      // Try instantiating client
+      let s3Client;
+      try {
+        s3Client = await getR2Client();
+      } catch (clientErr: any) {
+        return c.json({
+          success: false,
+          stage: "instantiation",
+          error: `R2 客户端实例初始化失败: ${clientErr.message || String(clientErr)}`,
+          details: { configState }
+        });
+      }
+
+      // Try list-bucket to test connectivity and credentials validity
+      try {
+        const bucketName = serverEnv.R2_BUCKET_NAME;
+        if (!bucketName) {
+          throw new Error("R2_BUCKET_NAME 存储桶名称未定义");
+        }
+        
+        const command = new ListObjectsV2Command({
+          Bucket: bucketName,
+          MaxKeys: 1,
+        });
+        await s3Client.send(command);
+      } catch (s3Err: any) {
+        const errorName = s3Err.name || s3Err.__type || "UnknownError";
+        let chineseMessage = "R2 云端连接失败。";
+        
+        if (errorName === "InvalidAccessKeyId" || s3Err.message?.includes("AccessKeyId")) {
+          chineseMessage += "Access Key ID 无效，请检查填写是否正确";
+        } else if (errorName === "SignatureDoesNotMatch" || s3Err.message?.includes("signature")) {
+          chineseMessage += "Secret Access Key 或凭据签名不匹配，请检查是否填反或填错了";
+        } else if (errorName === "NoSuchBucket" || s3Err.message?.includes("bucket")) {
+          chineseMessage += "Bucket 存储桶名在 R2 账户下不存在，请核实存储桶名";
+        } else if (errorName === "ENOTFOUND" || s3Err.message?.includes("ENOTFOUND")) {
+          chineseMessage += "Endpoint 地址域名无法解析，请检查 R2_ENDPOINT 域名格式是否正确，不宜带 bucket 名";
+        } else {
+          chineseMessage += `错误详情: ${s3Err.message || String(s3Err)}`;
+        }
+
+        return c.json({
+          success: false,
+          stage: "connection",
+          error: chineseMessage,
+          details: { 
+            configState,
+            s3ErrorName: errorName,
+            s3ErrorCode: s3Err.code || s3Err.$metadata?.httpStatusCode,
+            s3HttpStatus: s3Err.$metadata?.httpStatusCode,
+            s3Message: s3Err.message
+          }
+        });
+      }
+
+      return c.json({
+        success: true,
+        stage: "ready",
+        message: "R2 云端存储连接成功！配置与读写凭据 100% 完整可用。",
+        details: { configState }
+      });
+    } catch (globalErr: any) {
+      return c.json({
+        success: false,
+        stage: "global",
+        error: `R2 诊断发生未知代码异常: ${globalErr.message}`,
+        stack: globalErr.stack
+      });
+    }
+  })
   .post("/admin/repair/:issueId", async (c) => {
     try {
       const issueId = c.req.param('issueId');
@@ -776,7 +882,13 @@ async function bootstrap() {
   console.log(`>>> Hono Server listening on 0.0.0.0:${PORT}`);
 }
 
-if (serverEnv.VERCEL !== "1") {
+const isVercelEnvironment = typeof process !== "undefined" && (
+  process.env.VERCEL === "1" || 
+  process.env.NOW_BUILDER !== undefined || 
+  process.env.AWS_LAMBDA_FUNCTION_NAME !== undefined
+);
+
+if (!isVercelEnvironment) {
   bootstrap().catch(err => {
     console.error("CRITICAL: Bootstrap failed", err);
   });
