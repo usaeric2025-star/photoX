@@ -277,6 +277,7 @@ export function AdminGridContainer({
             displayPhotos={displayPhotos}
             onPhotoIdChange={setPhotoId}
             variant={variant}
+            onAiAnalyze={onBatchAiAnalyze ? (p: Photo) => onBatchAiAnalyze([p]) : undefined}
           />
         )}
 

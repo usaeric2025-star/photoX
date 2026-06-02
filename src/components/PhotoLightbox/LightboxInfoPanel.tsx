@@ -29,13 +29,15 @@ interface LightboxInfoPanelProps {
   onUngroup?: (photoId: string) => void;
   onSetGroupCover?: (photoId: string, groupId: string) => void;
   contactWhatsApp?: (photo: Photo) => void;
+  onEditPhoto?: (photo: Photo) => void;
 }
 
 export function LightboxInfoPanel({
   photo, groupData, isGroupDataLoading, activeLang, setActiveLang,
   isAdminMode, isCopied, isAnalyzing, t, categories,
   manufacturers, tagMap, handleShare, onAiAnalyze, onCancelAnalyze,
-  onToggleHidden, onTogglePinned, onUngroup, onSetGroupCover, contactWhatsApp
+  onToggleHidden, onTogglePinned, onUngroup, onSetGroupCover, contactWhatsApp,
+  onEditPhoto
 }: LightboxInfoPanelProps) {
   
   const update = useUIStore((s) => s.update);
@@ -52,7 +54,7 @@ export function LightboxInfoPanel({
     );
   }
 
-  const onEditPhoto = (p: Photo) => update({ editPhotoId: p.id });
+  const handleEditPhoto = onEditPhoto || ((p: Photo) => update({ editPhotoId: p.id }));
   const { canEdit } = usePermission();
   const mfrName = getManufacturerName(photo.manufacturer_id || undefined, manufacturers);
   const photoDisplayName = getPhotoDisplayName(photo, categories, activeLang, t);
@@ -121,7 +123,7 @@ export function LightboxInfoPanel({
                   {isAnalyzing ? <X size={16} /> : <Sparkles size={16} />}
                 </button>
                 <button 
-                  onClick={(e) => { e.stopPropagation(); if (onEditPhoto) onEditPhoto(photo); }}
+                  onClick={(e) => { e.stopPropagation(); if (handleEditPhoto) handleEditPhoto(photo); }}
                   className="w-9 h-9 flex items-center justify-center bg-slate-100 text-slate-500 hover:bg-slate-200 rounded-xl transition-all"
                 >
                   <Edit3 size={16}/>

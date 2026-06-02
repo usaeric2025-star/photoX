@@ -245,6 +245,7 @@ export function PhotoLightbox(props: PhotoLightboxProps) {
                       onTogglePinned={isAdminMode ? onTogglePinned : undefined}
                       onUngroup={isAdminMode ? onUngroup : undefined}
                       onSetGroupCover={isAdminMode ? onSetGroupCover : undefined}
+                      onEditPhoto={isAdminMode ? onEditPhoto : undefined}
                       contactWhatsApp={contactWhatsApp}
                     />
                   )}

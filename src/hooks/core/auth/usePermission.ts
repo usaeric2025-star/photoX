@@ -2,6 +2,7 @@ import { useMemo, useCallback } from 'react';
 import { useAuth } from './useAuth';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { ROLE_PERMISSIONS, getEffectiveRole, Capability } from '@/config/permissions';
+import { useSettings } from '../infra/useSettings';
 
 /**
  * Unified permission and capability checking hook.
@@ -9,7 +10,13 @@ import { ROLE_PERMISSIONS, getEffectiveRole, Capability } from '@/config/permiss
  */
 export function usePermission() {
   const { user } = useAuth();
-  const role = useMemo(() => getEffectiveRole(user || null, false), [user]);
+  const { settings } = useSettings();
+  
+  const isStaffMode = typeof window !== 'undefined' && 
+    window.localStorage.getItem('ais_mock_auth_passcode') === settings?.access_passcode && 
+    !!settings?.access_passcode;
+    
+  const role = useMemo(() => getEffectiveRole(user || null, isStaffMode), [user, isStaffMode]);
   const permissions = useMemo(() => ROLE_PERMISSIONS[role] || [], [role]);
 
   /**

@@ -55,7 +55,13 @@ export function useAuth() {
       });
     },
     logout: async () => {
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem('ais_mock_auth_passcode');
+      }
       await supabase.auth.signOut();
+      if (typeof window !== 'undefined') {
+        window.location.reload();
+      }
     },
   };
 }

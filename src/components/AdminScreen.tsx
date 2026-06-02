@@ -150,7 +150,10 @@ export function AdminScreen() {
         // B. Run individual photo-level analyze on all items of this group
         for (const p of groupPhotos) {
           const imageUrl = p.uri || p.image_url;
-          if (!imageUrl) continue;
+          if (!imageUrl) {
+            toast.error(`照片 (${p.id}) 缺少图片链接`);
+            continue;
+          }
 
           try {
             const result = await analyzeProductPhoto(
@@ -179,8 +182,9 @@ export function AdminScreen() {
               await updatePhoto(p.id, updates);
               successCount++;
             }
-          } catch (err) {
+          } catch (err: any) {
             console.error(`Failed to analyze photogroup item ${p.id}:`, err);
+            handleError(err, `组内照片识别失败: ${p.name || '照片'} - ${err.message || ''}`);
           }
         }
       }
@@ -188,7 +192,10 @@ export function AdminScreen() {
       // 2. Process ungrouped photos
       for (const p of ungroupedPhotos) {
         const imageUrl = p.uri || p.image_url;
-        if (!imageUrl) continue;
+        if (!imageUrl) {
+          toast.error(`照片 (${p.id}) 缺少图片链接`);
+          continue;
+        }
 
         try {
           const result = await analyzeProductPhoto(
@@ -217,12 +224,19 @@ export function AdminScreen() {
             await updatePhoto(p.id, updates);
             successCount++;
           }
-        } catch (err) {
+        } catch (err: any) {
           console.error(`Failed to analyze photo ${p.id}:`, err);
+          handleError(err, `识别失败: ${p.name || '照片'} - ${err.message || ''}`);
         }
       }
 
-      toast.success(`批量识别完成: 成功识别 ${successCount}/${totalPhotosToProcess} 张照片`);
+      if (successCount === 0 && totalPhotosToProcess > 0) {
+        toast.error(`全部识别失败或未更新 (${totalPhotosToProcess} 张), 请查看控制台或错误提示`);
+      } else if (successCount < totalPhotosToProcess) {
+        toast.warning(`部分识别失败: 成功 ${successCount}/${totalPhotosToProcess} 张`);
+      } else {
+        toast.success(`批量识别完成: 成功识别 ${successCount}/${totalPhotosToProcess} 张照片`);
+      }
     });
   }, [categories, tags, manufacturers, settings, runTask, updatePhoto, handleError]);
 
