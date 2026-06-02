@@ -5,11 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build:client": "vite build",
-    "build:server": "vite build --ssr server-build.ts --mode ssr --outDir dist/server",
-    "build": "npm run clean && npm run build:client && npm run build:server",
+    "build": "vite build",
     "vercel-build": "npm run build",
-    "start": "NODE_ENV=production node dist/server/server-build.js",
+    "start": "NODE_ENV=production tsx server.ts",
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
