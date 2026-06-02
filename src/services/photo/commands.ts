@@ -237,19 +237,50 @@ export const deletePhotosBatch = async (
   }
 };
 
-export const groupPhotos = async (photoIds: string[], predefinedGroupId?: string) => {
+export const groupPhotos = async (photoIds: string[], predefinedGroupId?: string, expandGroups: boolean = false) => {
   if (photoIds.length <= 1) {
     throw new Error('至少需要选择两张照片才能成组');
   }
   const groupId = predefinedGroupId || crypto.randomUUID();
   let isNewGroup = false;
 
-  // Check if group already exists in the groups table
+  // 1. Get previous group_ids for the selected photos
+  const validIds = photoIds.filter(id => id && !id.startsWith('temp-'));
+  const { data: selectedPhotos } = await supabase
+    .from(DB_CONFIG.TABLE_NAME)
+    .select('id, group_id')
+    .in('id', validIds);
+
+  const previousGroupIds = Array.from(new Set(
+    selectedPhotos
+      ?.map(p => p.group_id)
+      .filter((gid): gid is string => !!gid) || []
+  ));
+
+  // 2. Expand groups if requested
+  let finalPhotoIds = [...photoIds];
+  if (expandGroups && previousGroupIds.length > 0) {
+    const { data: groupPhotosData } = await supabase
+      .from(DB_CONFIG.TABLE_NAME)
+      .select('id')
+      .in('group_id', previousGroupIds);
+
+    if (groupPhotosData) {
+      finalPhotoIds = Array.from(new Set([
+        ...photoIds,
+        ...groupPhotosData.map(p => p.id)
+      ]));
+    }
+  }
+
+  // 3. Check if group already exists in the groups table
   const { data: existingGroup } = await supabase
     .from('groups')
     .select('id')
     .eq('id', groupId)
     .maybeSingle();
+
+  const coverPhotoId = finalPhotoIds[0] || null;
 
   if (!existingGroup) {
     const { data: { session } } = await supabase.auth.getSession();
@@ -265,7 +296,8 @@ export const groupPhotos = async (photoIds: string[], predefinedGroupId?: string
         materials: [],
         is_hidden: false,
         user_id: userId,
-        member_count: photoIds.length,
+        member_count: finalPhotoIds.length,
+        cover_photo_id: coverPhotoId,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       });
@@ -277,16 +309,55 @@ export const groupPhotos = async (photoIds: string[], predefinedGroupId?: string
     isNewGroup = true;
   }
 
-  const res = await updatePhotosGroupInCloud(photoIds, { 
-    group_id: groupId,
-    is_group_cover: false 
-  });
+  // 4. Update group_id and is_group_cover for the photos in supabase
+  const updatePromises = [];
+  if (coverPhotoId) {
+    updatePromises.push(
+      updatePhotosGroupInCloud([coverPhotoId], {
+        group_id: groupId,
+        is_group_cover: true
+      })
+    );
+  }
   
+  const nonCoverIds = finalPhotoIds.filter(id => id !== coverPhotoId);
+  if (nonCoverIds.length > 0) {
+    updatePromises.push(
+      updatePhotosGroupInCloud(nonCoverIds, {
+        group_id: groupId,
+        is_group_cover: false
+      })
+    );
+  }
+
+  await Promise.all(updatePromises);
+  
+  // 5. Cleanup the previous groups that lost elements
+  if (previousGroupIds.length > 0) {
+    const { syncGroupMemberCount, ungroupPhotos } = await import('../photoMutationService');
+    for (const prevGid of previousGroupIds) {
+      if (prevGid === groupId) continue;
+
+      const { data: remaining } = await supabase
+        .from(DB_CONFIG.TABLE_NAME)
+        .select('id')
+        .eq('group_id', prevGid);
+
+      if (!remaining || remaining.length <= 1) {
+        await ungroupPhotos(prevGid);
+      } else {
+        await syncGroupMemberCount(prevGid);
+      }
+    }
+  }
+
   if (!isNewGroup) {
     const { syncGroupMemberCount } = await import('../photoMutationService');
     await syncGroupMemberCount(groupId);
   }
-  return res;
+
+  // Return structure that fits expected output or results
+  return { finalPhotoIds, newGroupId: groupId };
 };
 
 export const removePhotosFromGroup = async (photoIds: string[], groupId: string) => {

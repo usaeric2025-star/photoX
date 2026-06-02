@@ -27,7 +27,7 @@ export function SelectionToolbar({
 
   const groupMutation = useGroupPhotosMutation();
   const { handleAIAction } = useAIGroup();
-  const { setShowGroupsCollapsed } = useUrlFilters();
+  const { filters: urlFilters, setShowGroupsCollapsed } = useUrlFilters();
 
   if (!isMultiSelect || count === 0) return null;
 
@@ -38,10 +38,15 @@ export function SelectionToolbar({
   const handleGroup = async () => {
     const currentIds = [...ids];
     const targetGroupId = crypto.randomUUID();
+    const isCollapsed = urlFilters?.showGroupsCollapsed !== false;
     handleClear(); // 立即清除选择状态，提升即时感
     setShowGroupsCollapsed(true); // 自动开启置顶合组的折叠模式，确保用户立竿见影地在界面上看到它们汇聚成一卡片
     try {
-      await groupMutation.mutateAsync({ photoIds: currentIds, targetGroupId });
+      await groupMutation.mutateAsync({ 
+        photoIds: currentIds, 
+        targetGroupId, 
+        expandGroups: isCollapsed 
+      });
     } catch (err) {
       console.error(err);
       // 如果失败可以考虑恢复状态，但通常简单刷新更稳健

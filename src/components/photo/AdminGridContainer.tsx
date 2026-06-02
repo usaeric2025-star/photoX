@@ -147,6 +147,8 @@ export function AdminGridContainer({
       photo={photo}
       index={index}
       variant={variant}
+      categories={categories}
+      tags={tags}
       showGroupsCollapsed={urlFilters.showGroupsCollapsed}
       onGroupClick={(gid, pid) => handleGroupClick(gid, pid || photo.id)}
       onLightboxOpen={handleLightboxOpen}

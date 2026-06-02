@@ -34,4 +34,22 @@ module.exports = {
       }
     ]
   },
+  overrides: [
+    {
+      files: ['src/components/photo/PhotoCard.tsx'],
+      rules: {
+        'no-restricted-syntax': [
+          'error',
+          {
+            'selector': "CallExpression[callee.name='useUIStore'] > ArrowFunctionExpression[body.type='MemberExpression'][body.property.name='selectedIds']",
+            'message': '❌ PhotoCard 禁止直接订阅 selectedIds 数组。请使用精确的 boolean 订阅（例如：useUIStore(s => s.selectedIds.includes(photo.id))）以避免不必要的重渲染卡顿。'
+          },
+          {
+            'selector': "CallExpression[callee.name='useUIStore'] > ArrowFunctionExpression[body.type='ObjectExpression'] Property[key.name='selectedIds']",
+            'message': '❌ PhotoCard 禁止返回含有 selectedIds 的对象。请使用精确的 boolean 订阅以避免不必要的重渲染卡顿。'
+          }
+        ]
+      }
+    }
+  ]
 };

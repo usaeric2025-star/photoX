@@ -47,7 +47,7 @@ export function AdminHeader({
 }: AdminHeaderProps) {
   const { user } = useAuth();
   const { settings } = useSettings();
-  const { isMultiSelect, selectedIds, disable, enable } = useMultiSelect();
+  const { isMultiSelect, disable, enable } = useMultiSelect();
   const { deletePhoto, batchUpdate } = useAdminActions();
 
   // 获取云端总数与本地缓存数
@@ -70,6 +70,7 @@ export function AdminHeader({
   };
 
   const handleBatchDelete = async () => {
+    const selectedIds = useUIStore.getState().selectedIds || [];
     update({
         alertDialog: {
             title: "确认删除",
@@ -85,6 +86,7 @@ export function AdminHeader({
   };
 
   const handleBatchHide = async () => {
+    const selectedIds = useUIStore.getState().selectedIds || [];
     await batchUpdate.mutateAsync({
       ids: selectedIds,
       updates: { is_hidden: true },

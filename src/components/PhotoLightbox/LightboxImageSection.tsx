@@ -36,7 +36,15 @@ export function LightboxImageSection({
   onTouchStart, onTouchMove, onTouchEnd, onEditPhoto,
   handleDownload, t, retryImageLoad, isAdminMode
 }: LightboxImageSectionProps) {
-  const placeholderDataUrl = thumbHashToDataURL(photo.thumb_hash);
+  if (!photo) {
+    return (
+      <div className={`relative ${isZoomed ? 'flex-1' : 'flex-none md:flex-1'} bg-black flex items-center justify-center h-[42vh] md:h-full`}>
+        <div className="w-12 h-12 border-4 border-slate-700 border-t-white rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  const placeholderDataUrl = photo.thumb_hash ? thumbHashToDataURL(photo.thumb_hash) : null;
 
   const initialSrc = getCacheBustedImageUrl(photo, 'image');
   const [currentSrc, setCurrentSrc] = useState(initialSrc);

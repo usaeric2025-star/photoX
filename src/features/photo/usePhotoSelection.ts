@@ -25,11 +25,8 @@ import { useCallback } from 'react';
  * }
  */
 export const useMultiSelect = () => {
-  const { isMultiSelect, selectedIds, update } = useUIStore(useShallow((state) => ({
-    isMultiSelect: state.isMultiSelect,
-    selectedIds: state.selectedIds ?? [],
-    update: state.update,
-  })));
+  const isMultiSelect = useUIStore((state) => state.isMultiSelect);
+  const update = useUIStore((state) => state.update);
 
   const enable = useCallback((initialId?: string) => {
     update({ 
@@ -78,9 +75,8 @@ export const useMultiSelect = () => {
     update(state => ({ selectedIds: current.filter(id => !ids.includes(id)) }));
   }, [update]);
 
-  return {
+  const result = {
     isMultiSelect,
-    selectedIds,
     enable,
     disable,
     toggle,
@@ -90,4 +86,14 @@ export const useMultiSelect = () => {
     deselectAllForList,
     activeClearSelection: clear,
   };
+
+  Object.defineProperty(result, 'selectedIds', {
+    get() {
+      return useUIStore.getState().selectedIds || [];
+    },
+    enumerable: true,
+    configurable: true,
+  });
+
+  return result;
 };

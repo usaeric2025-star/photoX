@@ -52,13 +52,12 @@ export function useAIGroup() {
     
         if (groupError) throw groupError;
     
-        // 4. 更新照片的 group_id
-        const { error: updateError } = await supabase
-          .from('furniture_items')
-          .update({ group_id: group.id })
-          .in('id', photoIds);
-    
-        if (updateError) throw updateError;
+        // 4. 更新照片的 group_id 并清理原有的组合
+        const searchParams = new URLSearchParams(window.location.search);
+        const isCollapsed = searchParams.get('showGroupsCollapsed') !== 'false';
+        
+        const { groupPhotos } = await import('@/services/photo/commands');
+        await groupPhotos(photoIds, group.id, isCollapsed);
     
         return group;
     } finally {

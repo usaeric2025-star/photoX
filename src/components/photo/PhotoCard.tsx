@@ -48,7 +48,7 @@ function PinButton({ photoId, isPinned }: { photoId: string; isPinned: boolean }
     </button>
   );
 }
-import { Photo, Category } from '../../types';
+import { Photo, Category, Tag } from '../../types';
 import { GalleryVariant } from '@/types/variant';
 import { Layers, Heart, Check, EyeOff } from 'lucide-react';
 import { getCacheBustedImageUrl } from '../../lib/ui-helpers';
@@ -74,6 +74,8 @@ export interface PhotoCardProps {
   className?: string;
   onClick?: React.MouseEventHandler<any>;
   hideDetails?: boolean;
+  categories?: Category[];
+  tags?: Tag[];
 }
 
 function PhotoStatusBadges({ photo, variant, showGroupsCollapsed, isPinned }: { photo: Photo; variant: GalleryVariant; showGroupsCollapsed: boolean; isPinned: boolean }) {
@@ -169,18 +171,20 @@ const toTitleCase = (str: string) => {
  * Any animation requiring React state or refs that triggers setStates inside
  * the virtualizer loop will cause infinite update depth loop.
  */
-export const PhotoCard = ({ 
+export const PhotoCard = React.memo(({ 
   variant, photo, index, showGroupsCollapsed,
   onGroupClick, 
   onLightboxOpen, 
   onShare,
   className = '', onClick,
-  hideDetails = false
+  hideDetails = false,
+  categories: propsCategories,
+  tags: propsTags
 }: PhotoCardProps) => {
-  const isSelected = useUIStore(s => s.selectedIds.includes(photo.id));
-  const isMultiSelect = useUIStore(s => s.isMultiSelect);
-  const toggleSelected = useUIStore(s => s.toggleSelected);
-  const update = useUIStore(s => s.update);
+  const isSelected = useUIStore((s) => s.selectedIds.includes(photo.id));
+  const isMultiSelect = useUIStore((s) => s.isMultiSelect);
+  const toggleSelected = useUIStore((s) => s.toggleSelected);
+  const update = useUIStore((s) => s.update);
   
   const { handleError } = useErrorHandler();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -190,17 +194,25 @@ export const PhotoCard = ({
   const lang = useUIStore(s => s.appLang);
   const t = translations[lang as keyof typeof translations] || translations.en;
   
-  const { data: categories = [] } = useCategories();
-  const { data: tags = [] } = useTags();
+  const { data: fetchedCategories } = useCategories();
+  const { data: fetchedTags } = useTags();
+
+  const categories = propsCategories ?? fetchedCategories ?? [];
+  const tags = propsTags ?? fetchedTags ?? [];
 
   const categoryId = photo.category_id ? String(photo.category_id) : '';
-  const category = categories.find(c => String(c.id) === categoryId);
-  const displayCatName = category ? (category[lang as keyof Category] as string || category.name) : '';
+  
+  const displayCatName = useMemo(() => {
+    const category = categories.find(c => String(c.id) === categoryId);
+    return category ? (category[lang as keyof Category] as string || category.name) : '';
+  }, [categories, categoryId, lang]);
 
-  const tagIdsList = Array.isArray(photo.tag_ids) ? photo.tag_ids : [];
-  const photoTags = tagIdsList
-    .map(id => tags.find(t => String(t.id) === String(id))?.name ?? '')
-    .filter(Boolean);
+  const photoTags = useMemo(() => {
+    const tagIdsList = Array.isArray(photo.tag_ids) ? photo.tag_ids : [];
+    return tagIdsList
+      .map(id => tags.find(t => String(t.id) === String(id))?.name ?? '')
+      .filter(Boolean);
+  }, [tags, photo.tag_ids]);
 
   const { can } = usePermission();
 
@@ -344,4 +356,4 @@ export const PhotoCard = ({
       />
     </div>
   );
-}
+});

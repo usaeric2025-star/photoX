@@ -51,7 +51,7 @@ export function UploadButton({
   scrollToTop,
   contactWhatsApp,
 }: UploadButtonProps) {
-  const { isMultiSelect, selectedIds } = useMultiSelect();
+  const { isMultiSelect } = useMultiSelect();
   const { can } = usePermission();
   const isManagement = variant === 'full-management' || variant === 'staff-workspace';
 

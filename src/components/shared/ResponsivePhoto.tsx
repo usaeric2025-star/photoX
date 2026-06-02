@@ -22,6 +22,8 @@ export function ResponsivePhoto({
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
 
+  if (!photo) return null;
+
   const src = variant === 'md' 
     ? (photo.thumbnail_md_url || photo.thumbnail_sm_url || photo.image_url)
     : (photo.thumbnail_sm_url || photo.image_url || photo.uri);

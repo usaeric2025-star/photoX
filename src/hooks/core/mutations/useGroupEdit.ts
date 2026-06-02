@@ -60,10 +60,10 @@ export const useGroupEdit = createMutationHook({
 export const useGroupPhotosMutation = createMutationHook({
   entity: 'Group',
   action: 'GroupPhotos',
-  mutationFn: async ({ photoIds, targetGroupId }: { photoIds: string[], targetGroupId?: string }) => {
+  mutationFn: async ({ photoIds, targetGroupId, expandGroups }: { photoIds: string[], targetGroupId?: string, expandGroups?: boolean }) => {
     const finalGroupId = targetGroupId || crypto.randomUUID();
-    await groupPhotos(photoIds, finalGroupId);
-    return { photoIds, newGroupId: finalGroupId };
+    const result = await groupPhotos(photoIds, finalGroupId, expandGroups);
+    return { photoIds: result.finalPhotoIds || photoIds, newGroupId: finalGroupId };
   },
   invalidateKeys: [['photos'], ['groups']],
   onSuccessMessage: '合组成功',

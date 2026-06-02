@@ -39,6 +39,19 @@ export function LightboxInfoPanel({
 }: LightboxInfoPanelProps) {
   
   const { update } = useUIStore(useShallow(s => ({ update: s.update })));
+  
+  if (!photo) {
+    return (
+      <div className="w-full md:w-[450px] flex flex-col bg-white overflow-hidden shadow-2xl z-10 relative p-6 space-y-4">
+        <div className="animate-pulse space-y-4">
+          <div className="h-6 bg-slate-200 rounded w-2/3"></div>
+          <div className="h-32 bg-slate-200 rounded"></div>
+          <div className="h-10 bg-slate-200 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
   const onEditPhoto = (p: Photo) => update({ editPhotoId: p.id });
   const { canEdit } = usePermission();
   const mfrName = getManufacturerName(photo.manufacturer_id || undefined, manufacturers);

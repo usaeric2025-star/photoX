@@ -38,7 +38,6 @@ export function AdminScreen() {
   
   const onManageClick = () => update({ activeScreen: 'manage' });
 
-  const { selectedIds, clear } = useMultiSelect();
   const hasAdminAccess = useAdminMode();
   const isEffectiveStaffMode = hasAdminAccess && !user;
   
@@ -135,6 +134,7 @@ export function AdminScreen() {
               adminPreviewMode={viewMode as any}
               setAdminPreviewMode={update as any}
               handleBatchAiIdentifyTrigger={async () => {
+              const selectedIds = useUIStore.getState().selectedIds;
               if (selectedIds.length > 0) {
                 // Same logic as floating buttons
                 const { supabase } = await import('@/lib/supabase');
