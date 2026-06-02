@@ -106,6 +106,26 @@ export async function update(id: string, updates: Partial<Photo>): Promise<AppRe
       .update(dbUpdates)
       .eq('id', id);
     if (error) return errorFactory(error.message, 'DB_ERROR', 'update', error);
+
+    // If tag_ids is present, update photo_tags relationship
+    if ('tag_ids' in updates) {
+      const { error: deleteTagsError } = await supabase.from('photo_tags').delete().eq('photo_id', id);
+      if (deleteTagsError) {
+        console.error('[update/photo_tags] Failed to delete existing tags:', deleteTagsError);
+      }
+      const uTagIds = safeArray(updates.tag_ids);
+      if (uTagIds.length > 0) {
+        const tagAssociations = uTagIds.map(tagId => ({
+          photo_id: id,
+          tag_id: tagId
+        }));
+        const { error: insertTagsError } = await supabase.from('photo_tags').insert(tagAssociations);
+        if (insertTagsError) {
+          console.error('[update/photo_tags] Failed to insert new tags:', insertTagsError);
+        }
+      }
+    }
+
     return success(null);
 }
 
@@ -116,6 +136,28 @@ export async function batchUpdate(ids: string[], updates: Partial<Photo>): Promi
       .update(dbUpdates)
       .in('id', ids);
     if (error) return errorFactory(error.message, 'DB_ERROR', 'batchUpdate', error);
+
+    // If tag_ids is present, update photo_tags relationship for all photos in the batch
+    if ('tag_ids' in updates) {
+      const { error: deleteTagsError } = await supabase.from('photo_tags').delete().in('photo_id', ids);
+      if (deleteTagsError) {
+        console.error('[batchUpdate/photo_tags] Failed to delete existing tags:', deleteTagsError);
+      }
+      const uTagIds = safeArray(updates.tag_ids);
+      if (uTagIds.length > 0) {
+        const tagAssociations = ids.flatMap(photoId => 
+          uTagIds.map(tagId => ({
+            photo_id: photoId,
+            tag_id: tagId
+          }))
+        );
+        const { error: insertTagsError } = await supabase.from('photo_tags').insert(tagAssociations);
+        if (insertTagsError) {
+          console.error('[batchUpdate/photo_tags] Failed to insert new tags:', insertTagsError);
+        }
+      }
+    }
+
     return success(null);
 }
 
@@ -200,6 +242,40 @@ export const groupPhotos = async (photoIds: string[], predefinedGroupId?: string
     throw new Error('至少需要选择两张照片才能成组');
   }
   const groupId = predefinedGroupId || crypto.randomUUID();
+
+  // Check if group already exists in the groups table
+  const { data: existingGroup } = await supabase
+    .from('groups')
+    .select('id')
+    .eq('id', groupId)
+    .maybeSingle();
+
+  if (!existingGroup) {
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    
+    const { error: insertError } = await supabase
+      .from('groups')
+      .insert({
+        id: groupId,
+        name: '新合并群组',
+        description: '',
+        description_translations: {},
+        colors: [],
+        materials: [],
+        is_hidden: false,
+        user_id: userId,
+        member_count: photoIds.length,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+      
+    if (insertError) {
+      console.error('[groupPhotos] Failed to create group in database:', insertError);
+      throw new Error(`创建合并群组失败: ${insertError.message || JSON.stringify(insertError)}`);
+    }
+  }
+
   const res = await updatePhotosGroupInCloud(photoIds, { 
     group_id: groupId,
     is_group_cover: false 
