@@ -6,10 +6,10 @@
   "scripts": {
     "dev": "tsx server.ts",
     "build:client": "vite build",
-    "build:server": "node esbuild.config.js",
+    "build:server": "vite build --ssr server-build.ts --mode ssr --outDir dist/server",
     "build": "npm run clean && npm run build:client && npm run build:server",
     "vercel-build": "npm run build",
-    "start": "NODE_ENV=production node dist/server.js",
+    "start": "NODE_ENV=production node dist/server/server-build.js",
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",

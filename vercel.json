@@ -5,7 +5,7 @@
   ],
   "functions": {
     "api/index.ts": {
-      "includeFiles": "dist/server.js"
+      "includeFiles": "dist/server/server-build.js"
     }
   }
 }

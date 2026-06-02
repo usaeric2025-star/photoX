@@ -19,10 +19,10 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "../dist/server.js": ["server.ts"]
+      "../dist/server/server-build.js": ["server-build.ts"]
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
-  "include": ["src", "server.ts", "api", "esbuild.config.js"]
+  "include": ["src", "server.ts", "server-build.ts", "api"]
 }

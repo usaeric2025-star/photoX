@@ -29,15 +29,25 @@ export default defineConfig(({mode}) => {
     ],
     build: {
       emptyOutDir: true,
+      outDir: mode === 'ssr' ? 'dist/server' : 'dist/client',
       rollupOptions: {
         output: {
           manualChunks(id) {
-            if (id.includes('node_modules')) {
+            if (id.includes('node_modules') && mode !== 'ssr') {
               return 'vendor';
             }
           }
         }
       }
+    },
+    ssr: {
+      noExternal: ['hono', '@hono/node-server', 'arktype'],
+      external: [
+        '@aws-sdk/client-s3',
+        '@aws-sdk/s3-request-presigner',
+        '@supabase/supabase-js',
+        'dotenv'
+      ],
     },
     esbuild: {
       pure: mode === 'production' ? ['console.log', 'console.info', 'console.debug'] : [],
