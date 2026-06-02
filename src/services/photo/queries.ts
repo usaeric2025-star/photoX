@@ -96,7 +96,7 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw): Photo {
       image_url: normalizeStoredUrl(item.image_url || ''),
       thumb_url: normalizeStoredUrl(item.thumb_url || item.image_url || ''),
       thumbnail_sm_url: normalizeStoredUrl(item.thumbnail_sm_url || item.thumb_url || item.image_url || ''),
-      thumbnail_md_url: normalizeStoredUrl(item.thumbnail_md_url || item.thumb_url || item.image_url || ''),
+      thumbnail_md_url: normalizeStoredUrl(item.thumbnail_md_url || item.image_url || ''),
       thumb_hash: item.thumb_hash || '',
       exif_data: item.exif_data ?? null,
       created_at: created_at || new Date().toISOString(),

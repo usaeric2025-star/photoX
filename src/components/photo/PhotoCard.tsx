@@ -76,6 +76,7 @@ export interface PhotoCardProps {
   hideDetails?: boolean;
   categories?: Category[];
   tags?: Tag[];
+  imgVariant?: 'sm' | 'md';
 }
 
 function PhotoStatusBadges({ photo, variant, showGroupsCollapsed, isPinned }: { photo: Photo; variant: GalleryVariant; showGroupsCollapsed: boolean; isPinned: boolean }) {
@@ -179,12 +180,20 @@ export const PhotoCard = React.memo(({
   className = '', onClick,
   hideDetails = false,
   categories: propsCategories,
-  tags: propsTags
+  tags: propsTags,
+  imgVariant
 }: PhotoCardProps) => {
-  const isSelected = useUIStore((s) => s.selectedIds.includes(photo.id));
-  const isMultiSelect = useUIStore((s) => s.isMultiSelect);
-  const toggleSelected = useUIStore((s) => s.toggleSelected);
-  const update = useUIStore((s) => s.update);
+  const { isSelected, isMultiSelect, toggleSelected, update, columns } = useUIStore(
+    useShallow((s) => ({
+      isSelected: s.selectedIds.includes(photo.id),
+      isMultiSelect: s.isMultiSelect,
+      toggleSelected: s.toggleSelected,
+      update: s.update,
+      columns: s.columns
+    }))
+  );
+  
+  const resolvedImgVariant = imgVariant || (columns <= 3 ? 'md' : 'sm');
   
   const { handleError } = useErrorHandler();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -311,7 +320,7 @@ export const PhotoCard = React.memo(({
       >
         <ResponsivePhoto
           photo={photo}
-          variant="sm"
+          variant={resolvedImgVariant}
           aspectRatio={1}
           imgClassName={cn(
             "w-full h-full object-cover transition-transform duration-700 group-hover:scale-110",

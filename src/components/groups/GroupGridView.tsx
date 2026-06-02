@@ -149,6 +149,7 @@ export function GroupGridView({
           showGroupsCollapsed={false}
           onLightboxOpen={onPhotoClick}
           hideDetails={true}
+          imgVariant="md"
           {...extraProps}
         />
       </div>
