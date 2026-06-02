@@ -157,6 +157,8 @@ export function AdminGridContainer({
     } catch (err) {
       handleError(err, '上传照片失败');
       updateTask(taskId, { status: 'error', progress: 100, message: '上传失败' });
+      const { removeFromDuplicateCache } = await import('@/lib/data/duplicateCheck');
+      uniqueFiles.forEach(file => removeFromDuplicateCache(file));
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = '';
     }

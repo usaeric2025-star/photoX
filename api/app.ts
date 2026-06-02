@@ -94,17 +94,42 @@ app.post("/upload-presign", async (c) => {
         const supabase = await getSupabaseAdmin();
         const { data: existing } = await supabase
           .from("furniture_items")
-          .select("id, image_url")
+          .select("id, image_url, image_hash")
           .eq("image_hash", imageHash)
           .maybeSingle();
         
         if (existing) {
+          // 只有存在有效 image_url 的才算是真正的重复
+          if (existing.image_url && (existing.image_url.startsWith('http') || existing.image_url.startsWith('https'))) {
+            return c.json({ 
+              success: false,
+              error: "照片已存在",
+              duplicateId: existing.id,
+              existingUrl: existing.image_url 
+            }, 409);
+          }
+          
+          // 如果记录存在但没有图片，允许覆盖 (resume 模式)
+          // 前端会使用已有的 photoId 继续后续逻辑
           return c.json({ 
-            success: false,
-            error: "照片已存在",
-            duplicateId: existing.id,
-            existingUrl: existing.image_url 
-          }, 409);
+            success: true, 
+            data: { 
+              resuming: true,
+              photoId: existing.id,
+              uploadUrl: await (async () => {
+                const fileName = `photox/public/${existing.id}.webp`;
+                const s3Client = await getR2Client();
+                const bucketName = serverEnv.R2_BUCKET_NAME;
+                const command = new PutObjectCommand({
+                  Bucket: bucketName!,
+                  Key: fileName,
+                  ContentType: contentType || 'image/webp',
+                });
+                return getSignedUrl(s3Client, command, { expiresIn: 300 });
+              })(),
+              publicUrl: `${serverEnv.R2_PUBLIC_URL_PREFIX}/photox/public/${existing.id}.webp`
+            } 
+          });
         }
       }
       
@@ -351,6 +376,32 @@ app.get("/storage/audit", async (c) => {
       r2Files.forEach(f => { if (!dbFiles.has(f)) orphans++; });
 
       return c.json({ success: true, data: { healthy, missing, orphans } });
+    } catch (e: any) {
+      return c.json({ success: false, error: e.message }, 500);
+    }
+});
+
+app.post("/storage/clean-orphans", async (c) => {
+    try {
+      const supabase = await getSupabaseAdmin();
+      const { data: orphans, error } = await supabase
+        .from("furniture_items")
+        .select("id")
+        .or('image_url.is.null,image_url.eq.""');
+
+      if (error) throw error;
+      if (!orphans || orphans.length === 0) {
+        return c.json({ success: true, count: 0 });
+      }
+
+      const ids = orphans.map(o => o.id);
+      const { error: delError } = await supabase
+        .from("furniture_items")
+        .delete()
+        .in("id", ids);
+
+      if (delError) throw delError;
+      return c.json({ success: true, count: ids.length, ids });
     } catch (e: any) {
       return c.json({ success: false, error: e.message }, 500);
     }

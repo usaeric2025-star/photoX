@@ -43,9 +43,11 @@ export const checkDuplicate = async (
   try {
     const { data, error } = await supabase
       .from(DB_CONFIG.TABLE_NAME)
-      .select('id')
+      .select('id, image_url')
       .eq('image_hash', imageHash)
       .eq('user_id', userId)
+      .not('image_url', 'is', null)
+      .neq('image_url', '')
       .limit(1)
       .maybeSingle();
 
@@ -90,3 +92,12 @@ export const checkDuplicateBatch = (files: File[]) => {
 
   return { newFiles, duplicateHashes };
 };
+
+export const removeFromDuplicateCache = (file: File, imageHash?: string) => {
+  const pseudoHash = `${file.name}_${file.size}_${file.lastModified}`;
+  memoryPseudoHashes.delete(pseudoHash);
+  if (imageHash) {
+    memoryImageHashes.delete(imageHash);
+  }
+};
+

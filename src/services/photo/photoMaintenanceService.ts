@@ -64,6 +64,34 @@ export const deduplicatePhotos = async (userId?: string): Promise<AppResult<{rem
   }
 };
 
+export const cleanUpOrphanRecords = async (): Promise<{ count: number }> => {
+  logger.info('[Maintenance] Starting Orphan Records Cleanup...');
+  try {
+    const { data: orphans, error } = await supabase
+      .from(DB_CONFIG.TABLE_NAME)
+      .select('id')
+      .or('image_url.is.null,image_url.eq.""');
+
+    if (error) throw error;
+    if (!orphans || orphans.length === 0) {
+      return { count: 0 };
+    }
+
+    const ids = orphans.map(o => o.id);
+    const { error: delError } = await supabase
+      .from(DB_CONFIG.TABLE_NAME)
+      .delete()
+      .in('id', ids);
+
+    if (delError) throw delError;
+    logger.info(`[Maintenance] Successfully removed ${ids.length} orphan records.`);
+    return { count: ids.length };
+  } catch (err) {
+    logger.error('[Maintenance] Failed to clean orphans:', err);
+    throw err;
+  }
+};
+
 export const scanAndRepairPhotoIds = async (photos: Photo[]): Promise<Photo[]> => {
   const brokenPhotos = photos.filter(p => !p.id || p.id.startsWith('temp-'));
   return brokenPhotos;

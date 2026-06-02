@@ -59,46 +59,52 @@ export function GroupPhotoPicker({
 
     const { processImageFiles } = await import('@/lib/image/imageProcess');
     
-    await runTask(`上传 ${uniqueFiles.length} 张照片`, async ({ updateProgress }) => {
-      let completed = 0;
-      
-      const processedImages = await processImageFiles(uniqueFiles, (count, total) => {
-         updateProgress(Math.round((count / total) * 30), `正在准备照片 (${count}/${total})`);
-      });
+    try {
+      await runTask(`上传 ${uniqueFiles.length} 张照片`, async ({ updateProgress }) => {
+        let completed = 0;
+        
+        const processedImages = await processImageFiles(uniqueFiles, (count, total) => {
+           updateProgress(Math.round((count / total) * 30), `正在准备照片 (${count}/${total})`);
+        });
 
-      const photoData: Photo[] = processedImages.map((result) => ({
-         id: `temp-${crypto.randomUUID()}`,
-         uri: result.dataUrl,
-         image_hash: result.hash,
-         thumb_hash: result.thumbHash,
-         name: result.file.name,
-         group_id: targetGroupId,
-         created_at: new Date().toISOString(),
-         updated_at: new Date().toISOString(),
-         dimensions: { width: 0, height: 0 },
-         is_hidden: false,
-         _fileSize: result.file.size,
-         _fileName: result.file.name,
-         _lastModified: result.file.lastModified
-      } as unknown as Photo));
+        const photoData: Photo[] = processedImages.map((result) => ({
+           id: `temp-${crypto.randomUUID()}`,
+           uri: result.dataUrl,
+           image_hash: result.hash,
+           thumb_hash: result.thumbHash,
+           name: result.file.name,
+           group_id: targetGroupId,
+           created_at: new Date().toISOString(),
+           updated_at: new Date().toISOString(),
+           dimensions: { width: 0, height: 0 },
+           is_hidden: false,
+           _fileSize: result.file.size,
+           _fileName: result.file.name,
+           _lastModified: result.file.lastModified
+        } as unknown as Photo));
 
-      const savedPhotos = await savePhotosToCloudBatch(user.id, photoData, (count) => {
-        completed = count;
-        const pct = 30 + Math.round((completed / uniqueFiles.length) * 70);
-        updateProgress(pct, `正在保存照片 (${count}/${uniqueFiles.length})`);
+        const savedPhotos = await savePhotosToCloudBatch(user.id, photoData, (count) => {
+          completed = count;
+          const pct = 30 + Math.round((completed / uniqueFiles.length) * 70);
+          updateProgress(pct, `正在保存照片 (${count}/${uniqueFiles.length})`);
+        });
+        
+        const skippedCloud = photoData.length - savedPhotos.length;
+        if (skippedCloud > 0) {
+          toast.success(`成功上传 ${savedPhotos.length} 张，云端排重跳过 ${skippedCloud} 张`);
+        } else {
+          toast.success(`上传成功 (${savedPhotos.length} 张)`);
+        }
+        return savedPhotos;
+      }, {
+        showSuccessToast: false,
+        showErrorToast: true
       });
-      
-      const skippedCloud = photoData.length - savedPhotos.length;
-      if (skippedCloud > 0) {
-        toast.success(`成功上传 ${savedPhotos.length} 张，云端排重跳过 ${skippedCloud} 张`);
-      } else {
-        toast.success(`上传成功 (${savedPhotos.length} 张)`);
-      }
-      return savedPhotos;
-    }, {
-      showSuccessToast: false,
-      showErrorToast: true
-    });
+    } catch (e) {
+      const { removeFromDuplicateCache } = await import('@/lib/data/duplicateCheck');
+      uniqueFiles.forEach(file => removeFromDuplicateCache(file));
+      throw e;
+    }
 
     invalidatePhotos();
   };

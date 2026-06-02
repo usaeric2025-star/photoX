@@ -56,6 +56,31 @@ function dataURLToArrayBuffer(dataurl: string): { buffer: ArrayBuffer; mime: str
   return { buffer: u8arr.buffer, mime };
 }
 
+export const uploadWithRetry = async (
+  userId: string, 
+  photoId: string, 
+  base64Data: string,
+  imageHash?: string,
+  onStatus?: (status: 'compressing' | 'uploading' | 'done') => void,
+  onProgress?: (percent: number) => void,
+  maxRetries = 3
+): Promise<{imageUrl: string, thumbUrl: string, isDuplicate?: boolean}> => {
+  let lastError: any;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await uploadImages(userId, photoId, base64Data, imageHash, onStatus, onProgress);
+    } catch (err) {
+      lastError = err;
+      if (i < maxRetries - 1) {
+        const delay = Math.pow(2, i) * 1000;
+        await new Promise(resolve => setTimeout(resolve, delay));
+        console.warn(`[Upload] Attempt ${i + 1} failed, retrying in ${delay}ms...`, err);
+      }
+    }
+  }
+  throw lastError;
+};
+
 export const uploadImages = async (
   userId: string, 
   photoId: string, 
