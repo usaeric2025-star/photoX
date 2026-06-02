@@ -4,7 +4,7 @@ import { useRef, useCallback } from 'react';
 const preloadedUrls = new Set<string>();
 
 export const useImagePreloader = () => {
-  const preloadTimerRef = useRef<NodeJS.Timeout>();
+  const preloadTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const preloadImage = useCallback((url: string) => {
     if (!url || preloadedUrls.has(url)) return;

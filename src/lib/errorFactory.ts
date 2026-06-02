@@ -1,3 +1,13 @@
+export class ErrorFactory {
+  static wrap(originalError: unknown, operation: string, resource?: string): Error {
+    const msg = resource 
+      ? `[${operation}] ${resource}: ${originalError instanceof Error ? originalError.message : String(originalError)}`
+      : `[${operation}]: ${originalError instanceof Error ? originalError.message : String(originalError)}`;
+    
+    return new Error(msg, { cause: originalError });
+  }
+}
+
 export type ErrorCode = 
   | 'NETWORK_ERROR'
   | 'AUTH_ERROR'

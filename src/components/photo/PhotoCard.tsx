@@ -171,7 +171,8 @@ export const PhotoCard = React.memo(({
   variant, photo, index,
   className = '', onClick,
   hideDetails = false,
-  imgVariant
+  imgVariant,
+  hideGroupBadge = false,
 }: PhotoCardProps) => {
   const isSelected = useUIStore((s) => s.selectedIds.includes(photo.id));
   const isMultiSelect = useUIStore((s) => s.isMultiSelect);

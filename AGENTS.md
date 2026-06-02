@@ -246,9 +246,25 @@ setViewMode('private');
 - ✅ 前端仅做同会话快速排重（`name + size + lastModified`）
 - ❌ 禁止前端计算大文件哈希（已删除 spark-md5）
 
-### 冲突响应
-- 后端返回 HTTP 409 + 已有照片信息
-- 前端提示用户并跳过上传
+## 错误处理规范（锁定）
+
+### 铁律
+- ❌ 禁止在 catch 中抛出无上下文的通用错误
+- ✅ 必须使用 `ErrorFactory.wrap(originalError, operation, resource?)`
+- ✅ 原始错误作为 `cause` 传递，保留完整堆栈
+
+### 示例
+```typescript
+// ✅ 正确
+catch (e) {
+  throw ErrorFactory.wrap(e, '上传照片', file.name);
+}
+
+// ❌ 错误
+catch (e) {
+  throw ErrorFactory.create({ code: ErrorCode.UPLOAD_FAILED, ... });
+}
+```
 
 
 
