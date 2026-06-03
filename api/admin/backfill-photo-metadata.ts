@@ -25,26 +25,27 @@ export async function processBackfillBatch(
   // 1. Fetch all records with valid image_url and image_hash to see what remains to be backfilled.
   const { data: allPhotos, error: fetchError } = await supabase
     .from("furniture_items")
-    .select("id, name, name_en, name_ms, dimensions, description, description_translations, image_url, image_hash")
+    .select("id, name, name_en, name_ms, dimensions, description, description_translations, image_url, image_hash, category_id")
     .not("image_url", "is", null)
     .neq("image_url", "")
     .not("image_hash", "is", null)
     .neq("image_hash", "");
 
-  if (fetchError) {
-    throw fetchError;
-  }
+  const { data: categories, error: catError } = await supabase
+    .from("categories")
+    .select("id, name");
+
+  if (fetchError) throw fetchError;
+  if (catError) throw catError;
 
   // 2. Filter in JS for accurate eligibility
   const eligible = (allPhotos || []).filter((photo: any) => {
     const needsDims = !photo.dimensions || !Array.isArray(photo.dimensions) || photo.dimensions.length === 0;
-    const needsNames = !photo.name_en || photo.name_en === "" || !photo.name_ms || photo.name_ms === "" || !photo.name || photo.name === "" || photo.name === "图片";
     
-    const hasDesc = photo.description && photo.description.trim() !== "";
-    const hasTrans = photo.description_translations && typeof photo.description_translations === 'object';
-    const needsDescTrans = hasDesc && (!hasTrans || !photo.description_translations.en || !photo.description_translations.ms);
+    // Check if category is missing (needs backfill)
+    const needsCategory = !photo.category_id;
     
-    return needsDims || needsNames || needsDescTrans;
+    return needsDims || needsCategory;
   });
 
   const totalRemaining = eligible.length;
@@ -98,7 +99,7 @@ export async function processBackfillBatch(
         }
       }
 
-      // Canonical Naming & Translation Fill
+      // Canonical Naming & Dimensions Fill
       if (sizeExtracted) {
         if (currentDims.length === 0) {
           updates.dimensions = [
@@ -112,35 +113,21 @@ export async function processBackfillBatch(
             }
           ];
         }
-
-        const canonicalName = `${width}x${height} 图片`;
-        if (!photo.name || photo.name === "" || photo.name === "图片") {
-          updates.name = canonicalName;
-        }
-
-        if (!photo.name_en || photo.name_en === "") {
-          updates.name_en = `${width}x${height} Image`;
-        }
-
-        if (!photo.name_ms || photo.name_ms === "") {
-          updates.name_ms = `Gambar ${width}x${height}`;
-        }
       }
 
-      // Translate description if missing
-      const hasDesc = photo.description && photo.description.trim() !== "";
-      const hasTrans = photo.description_translations && typeof photo.description_translations === 'object';
-      const needsDescTrans = hasDesc && (!hasTrans || !photo.description_translations.en || !photo.description_translations.ms);
-
-      if (needsDescTrans && apiKey) {
+      // Identify Category
+      const needsCategory = !photo.category_id;
+      if (needsCategory && photo.description && apiKey) {
         try {
-          const promptText = `Translate this product description into English and Bahasa Melayu (Malay).
-Input: "${photo.description}"
+          const promptText = `Translate this product description into English and Bahasa Melayu (Malay) and identify the right category.
+Input Description: "${photo.description}"
+Available Categories: ${JSON.stringify(categories)}
 
 Your response MUST match this exact JSON schema:
 {
   "en": "translated english description",
-  "ms": "translated malay description"
+  "ms": "translated malay description",
+  "category_id": "the exact ID from Available Categories"
 }`;
           const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
             method: "POST",
@@ -161,18 +148,23 @@ Your response MUST match this exact JSON schema:
             const resData = await response.json();
             const content = resData.choices?.[0]?.message?.content || JSON.stringify(resData);
             
-            let parsedTrans: any = null;
+            let parsedRes: any = null;
             try {
               const match = content.match(/\{[\s\S]*\}/);
-              parsedTrans = JSON.parse(match ? match[0] : content);
+              parsedRes = JSON.parse(match ? match[0] : content);
             } catch (_) {}
 
-            if (parsedTrans && (parsedTrans.en || parsedTrans.ms)) {
-              updates.description_translations = {
-                zh: photo.description || '',
-                en: parsedTrans.en || photo.description_translations?.en || '',
-                ms: parsedTrans.ms || photo.description_translations?.ms || ''
-              };
+            if (parsedRes) {
+              if (parsedRes.en || parsedRes.ms) {
+                updates.description_translations = {
+                  zh: photo.description || '',
+                  en: parsedRes.en || photo.description_translations?.en || '',
+                  ms: parsedRes.ms || photo.description_translations?.ms || ''
+                };
+              }
+              if (parsedRes.category_id && categories?.some((c: any) => c.id === parsedRes.category_id)) {
+                updates.category_id = parsedRes.category_id;
+              }
             }
           }
         } catch (err: any) {
@@ -181,7 +173,7 @@ Your response MUST match this exact JSON schema:
       }
 
       // Sanitization: Only allow allowed fields to be updated
-      const allowedFields = ['dimensions', 'name', 'name_en', 'name_ms', 'description_translations'];
+      const allowedFields = ['dimensions', 'category_id', 'description_translations'];
       const sanitizedUpdates: any = {};
       for (const key in updates) {
         if (allowedFields.includes(key)) {
