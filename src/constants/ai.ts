@@ -3,9 +3,9 @@ export const AI_PROMPTS = {
 Task: Meticulously inspect every portion of the furniture image and tables to extract comprehensive structured product details with high-precision values and full-scale translations.
 
 【CRITICAL DIRECTIVE: DETECT ALL ITEMS & VARIANTS】
-- Do not skip ANY item, row, table, variant, seat, or listed model number/size in the image or drawing! 
-- If multiple items, custom sizes, drawers, side cabinets, dining chairs, tables, or models are listed or drawn together, you MUST isolate and extract EACH distinct variant as a separate object in the "dimensions" array.
-- Look at both textual specifications and visual layout to find all elements! Avoid dropping details or giving incomplete results.
+- Extract all sizes for variants EXPLICITLY LISTED in the text/catalog table.
+- However, if the image simply shows a stack of the SAME product (like multiple mattresses) with no distinct text labels, DO NOT generate 4-5 fake variants. Just provide ONE main product dimension.
+- Do not skip an item if it's explicitly drawn with distinct measurements.
 
 【CORE DATA FIELDS (STRICTLY USE snake_case ONLY)】
 - "name": Highly descriptive product series identifier or brand name (e.g., "Mero Modern Dining Table Set"). If explicitly specified in the image text, prioritize that wording exactly. Otherwise, generate an elegant name.

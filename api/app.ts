@@ -1580,7 +1580,15 @@ app.post("/ai/analyze-group", async (c) => {
       const { photoDetails } = await c.req.json();
       const apiKey = serverEnv.GEMINI_API_KEY;
       if (!apiKey) return c.json({ error: "Server API key not configured" }, 500);
-      const prompt = `你是一个产品分析专家...分析结果以JSON返回...${photoDetails}`;
+      const prompt = `你是一个家具产品系列合并专家。根据以下这些被分到同一系列的单品的数据，为整个家具系列生成通用的元数据。请以纯JSON格式返回。
+所需的JSON结构如下:
+{
+  "name": "系列名称(英文, 如 Mero Modern Dining Set)",
+  "description": "一段中文的系列综合介绍，概括这些产品的特点",
+  "colors": ["通用颜色(英文)"],
+  "materials": ["通用材质(英文)"]
+}
+单品列表信息: ${photoDetails}`;
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
@@ -1597,7 +1605,17 @@ app.post("/ai/analyze-photo-v2", async (c) => {
       const { photoDetail } = await c.req.json();
       const apiKey = serverEnv.GEMINI_API_KEY;
       if (!apiKey) return c.json({ error: "Server API key not configured" }, 500);
-      const prompt = `你是一个产品分析专家...分析结果以JSON返回...${photoDetail}`;
+      const prompt = `你是一个产品元数据分析专家。根据提供的家具产品当前信息，补充并优化丢失的元数据，并返回专业的结果。请以纯JSON格式返回，不要有额外的标记。
+所需的JSON结构如下:
+{
+  "name": "更好的产品名称(英文)",
+  "category": "推断最适合的分类ID或名称",
+  "tags": ["适合的标签1", "标签2", "标签3"],
+  "colors": ["颜色1(英文)"],
+  "materials": ["材质(英文)"],
+  "description": "一段中文的新描述"
+}
+当前产品信息: ${photoDetail}`;
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },

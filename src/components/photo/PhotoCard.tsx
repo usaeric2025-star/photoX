@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { useActionState, useOptimistic, startTransition } from 'react';
-import { useLongPress } from "@mantine/hooks";
+import { useLongPress } from '@/hooks/useLongPress';
 import { supabase } from '@/lib/supabase';
 import { reportError } from '@/lib/errorTracker';
 import { queryClient } from '@/lib/queryClient';
@@ -62,7 +62,7 @@ import { downloadPhotoAsJpeg } from '@/lib/download';
 import { toast } from '@/lib/ui/toast';
 import { cn } from '@/lib/utils';
 import { translations } from '@/lib/translations';
-import { useUIStore } from '@/store/useUIStore';
+import { useUIStore, useColumns } from '@/store/useUIStore';
 import { PhotoStatusBadges } from './PhotoStatusBadges';
 
 export interface PhotoCardProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -152,7 +152,7 @@ export const PhotoCard = React.memo(({
   const isMultiSelect = useUIStore((s) => s.isMultiSelect);
   const toggleSelected = useUIStore((s) => s.toggleSelected);
   const update = useUIStore((s) => s.update);
-  const columns = useUIStore((s) => s.columns);
+  const [columns] = useColumns();
   const navigate = useNavigate();
   
   const showGroupsCollapsed = useSearch({ from: '__root__', select: (s: any) => s.showGroupsCollapsed !== 'false' });
@@ -219,7 +219,7 @@ export const PhotoCard = React.memo(({
         e.stopPropagation();
         e.preventDefault();
         toggleSelected(photo.id);
-      } else if (photo.is_group_cover && showGroupsCollapsed && !hasSearchQuery) {
+      } else if (photo.group_id && showGroupsCollapsed && !hasSearchQuery) {
         // [RULE-LOCK] Group card in list -> Group detail page
         e.stopPropagation();
         e.preventDefault();
@@ -229,7 +229,7 @@ export const PhotoCard = React.memo(({
         handleOpenLightbox();
       }
     } else {
-      if (photo.is_group_cover && showGroupsCollapsed && !hasSearchQuery) {
+      if (photo.group_id && showGroupsCollapsed && !hasSearchQuery) {
         e.stopPropagation();
         e.preventDefault();
         handleGroupNavigate(photo.group_id!);
@@ -239,20 +239,23 @@ export const PhotoCard = React.memo(({
     }
   };
 
-  const longPress = useLongPress(() => {
-    longPressTriggered.current = true;
-    if (isManagement) {
-      if (!isMultiSelect) {
-        update({ isMultiSelect: true, selectedIds: [photo.id] } as any);
+  useLongPress(cardRef, {
+    delay: 600,
+    onLongPress: () => {
+      longPressTriggered.current = true;
+      if (isManagement) {
+        if (!isMultiSelect) {
+          update({ isMultiSelect: true, selectedIds: [photo.id] } as any);
+        } else {
+          toggleSelected(photo.id);
+        }
+        if ('vibrate' in navigator) navigator.vibrate(50);
       } else {
-        toggleSelected(photo.id);
+        (window as any)._pendingPhoto = photo;
+        update({ showWhatsAppChoice: true });
       }
-      if ('vibrate' in navigator) navigator.vibrate(50);
-    } else {
-      (window as any)._pendingPhoto = photo;
-      update({ showWhatsAppChoice: true });
     }
-  }, { threshold: 600 });
+  });
 
   const thumbSrc = getCacheBustedImageUrl(photo, 'thumb');
 
@@ -261,7 +264,6 @@ export const PhotoCard = React.memo(({
   return (
     <div 
       ref={cardRef}
-      {...longPress}
       data-photo-id={photo.id}
       data-selected={isSelected}
       data-multiselect={isMultiSelect}

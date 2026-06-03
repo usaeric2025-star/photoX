@@ -4,7 +4,7 @@ import { GalleryVariant } from '@/types/variant';
 import { VirtualPhotoGrid } from './VirtualPhotoGrid';
 import { PhotoCard } from './PhotoCard';
 import { usePhotos, useFilters, useUrlFilters } from '@/hooks';
-import { useUIStore } from '@/store/useUIStore';
+import { useUIStore, useColumns } from '@/store/useUIStore';
 import { PAGINATION } from '@/constants/config';
 import { normalizeAdminPhotos } from '@/lib/selectors/photos';
 
@@ -18,9 +18,7 @@ interface PhotoListContainerProps {
 
 export function PhotoListContainer({ variant, filters, isAdminMode, categories, tags }: PhotoListContainerProps) {
   const { filters: urlFilters } = useUrlFilters();
-  const store = useUIStore(s => ({
-    columns: s.columns
-  }));
+  const [columns] = useColumns();
 
   const infiniteQuery = usePhotos({
     category_id: filters.categoryId,
@@ -41,7 +39,7 @@ export function PhotoListContainer({ variant, filters, isAdminMode, categories, 
       isFetchingNextPage={infiniteQuery.isFetchingNextPage}
       hasNextPage={!!infiniteQuery.hasNextPage}
       onLoadMore={infiniteQuery.fetchNextPage}
-      columns={store.columns}
+      columns={columns}
       renderCard={(photo, index) => (
         // This part needs to be passed in correctly or defined here.
         // Assuming PhotoListContainer or its parent will handle card rendering.

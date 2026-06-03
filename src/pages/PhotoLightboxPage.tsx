@@ -20,6 +20,7 @@ export const PhotoLightboxPage = () => {
   const updateUIStore = useUIStore((s) => s.update);
   const adminActions = useAdminActions();
   const currentPhoto = currentIndex >= 0 ? photos[currentIndex] : null;
+  const [showInfo, setShowInfo] = React.useState(false);
   
   if (!isOpen) return null;
 
@@ -95,16 +96,32 @@ export const PhotoLightboxPage = () => {
         onEdit={handleEdit}
         onDelete={handleDelete}
         onAiAnalyze={handleAiAnalyze}
+        showInfo={showInfo}
+        setShowInfo={setShowInfo}
       />
       
-      {/* [RESTORED] Sidebar Information Panel */}
-      {currentPhoto && (
-        <PhotoInfoPanel 
-          photo={currentPhoto}
-          mode={mode as 'single' | 'group'}
-          isOpen={true} // Lightbox controls visibility
-          onClose={close}
-        />
+      {/* Sidebar Information Panel - Rendered above Lightbox with absolute positioning */}
+      {currentPhoto && showInfo && (
+        <>
+          <div 
+            className="fixed inset-0 z-[10000] bg-black/20 backdrop-blur-sm/50 transition-opacity"
+            onClick={() => setShowInfo(false)}
+          />
+          <div className="fixed right-0 top-0 h-full w-[380px] pointer-events-none flex items-center z-[10001] p-0">
+            <PhotoInfoPanel 
+              data={data}
+              mode={mode as 'single' | 'group'}
+              showEdit={showEdit}
+              showDelete={showDelete}
+              showAi={showAi}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onAiAnalyze={handleAiAnalyze}
+              onClose={() => setShowInfo(false)}
+              className="pointer-events-auto w-full h-full shadow-2xl shadow-black/20 border-l border-white/20 bg-background/95 backdrop-blur-2xl animate-in slide-in-from-right duration-300 ease-out overflow-y-auto"
+            />
+          </div>
+        </>
       )}
     </div>
   );

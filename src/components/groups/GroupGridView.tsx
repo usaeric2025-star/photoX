@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import { Photo, ProductGroup } from '../../types';
 import { GalleryVariant } from '@/types/variant';
 import { Layers, Quote } from 'lucide-react';
-import { useUIStore, useShallow } from '@/store/useUIStore';
+import { useUIStore, useShallow, useColumns } from '@/store/useUIStore';
 import { translations } from '../../lib/translations';
 import { PhotoCard } from '../photo/PhotoCard';
 import { VirtualGrid } from '@/components/virtualizer/VirtualGrid';
@@ -65,8 +65,10 @@ export function GroupGridView({
   variant = 'public-showcase'
 }: GroupGridViewProps & { virtualGridRef?: React.Ref<any>, isLoading?: boolean }) {
   const lang = useUIStore((s) => s.appLang);
-  const columns = useUIStore((s) => s.columns);
   const t = translations[lang as keyof typeof translations as keyof typeof translations] || translations.en;
+  const isMobile = window.innerWidth < 640;
+  const isTablet = window.innerWidth >= 640 && window.innerWidth < 1024;
+  const denseColumns = isMobile ? 3 : (isTablet ? 4 : 5);
 
   let header = null;
   if (groupData && (groupData.description || (groupData.colors && groupData.colors.length > 0) || (groupData.materials && groupData.materials.length > 0))) {
@@ -159,7 +161,7 @@ export function GroupGridView({
       <VirtualGrid
         ref={virtualGridRef}
         count={isLoading ? 12 : photos.length}
-        lanes={columns}
+        lanes={denseColumns}
         onEndReached={onEndReached}
         header={header}
         footer={

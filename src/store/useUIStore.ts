@@ -4,8 +4,10 @@ import { STORAGE_KEYS, safeGetItem, safeSetItem } from '@/lib/storage';
 import { ProductFormData } from '../types';
 import { useLocalStorage } from '@mantine/hooks';
 
-export function useAppLang() {
-  return useLocalStorage<string>({ key: STORAGE_KEYS.LANG, defaultValue: 'en' });
+export function useAppLang(): [string, (val: 'zh' | 'en' | 'ms') => void] {
+  const lang = useUIStore(s => s.appLang);
+  const setLang = (val: 'zh' | 'en' | 'ms') => useUIStore.getState().update({ appLang: val });
+  return [lang, setLang];
 }
 
 export function useSidebarCollapsed() {
@@ -41,6 +43,7 @@ export interface PromptDialogProps {
 }
 
 export interface UIStoreState {
+  appLang: 'zh' | 'en' | 'ms';
   lightboxIndex: number | null;
   editPhotoId: string | null;
   batchEditingIds: string[] | null;
@@ -93,6 +96,7 @@ const defaultForm: ProductFormData = {
 };
 
 export const useUIStore = create<UIStoreState>()((set) => ({
+  appLang: safeGetItem(STORAGE_KEYS.LANG, 'en', undefined, false) as 'zh' | 'en' | 'ms',
   lightboxIndex: null,
   editPhotoId: safeGetItem(STORAGE_KEYS.EDIT_PHOTO, null, undefined, true),
   batchEditingIds: safeGetItem(STORAGE_KEYS.BATCH_EDITING, null, undefined, true),
@@ -149,6 +153,9 @@ export const useUIStore = create<UIStoreState>()((set) => ({
   update: (updates) => set((state) => {
     const nextState = typeof updates === 'function' ? updates(state) : updates;
     
+    if ('appLang' in nextState && nextState.appLang !== undefined) {
+      safeSetItem(STORAGE_KEYS.LANG, nextState.appLang, false);
+    }
     if ('editPhotoId' in nextState) {
       safeSetItem(STORAGE_KEYS.EDIT_PHOTO, nextState.editPhotoId, true);
       if (!nextState.editPhotoId) {

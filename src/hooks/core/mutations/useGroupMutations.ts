@@ -46,33 +46,8 @@ export const useGroupPhotosMutation = createMutationHook({
     const result = await groupPhotos(photoIds, finalGroupId, expandGroups);
     return { photoIds: result.finalPhotoIds || photoIds, newGroupId: finalGroupId };
   },
-  invalidateKeys: [['photos'], ['groups'], groupKeys.all],
+  invalidateKeys: [photoKeys.all, groupKeys.all],
   onSuccessMessage: '合组成功',
-  optimisticUpdate: async ({ photoIds, targetGroupId }, queryClient) => {
-    await queryClient.cancelQueries({ queryKey: photoKeys.all });
-    
-    // Very basic fast UI reaction
-    const finalGroupId = targetGroupId || 'optimistic-group-id';
-    
-    // Invalidate everything to be safe anyway, but let's at least update lists roughly
-    queryClient.setQueriesData<any>({ queryKey: photoKeys.all }, (oldData: any) => {
-      if (!oldData) return oldData;
-      if (oldData.pages && Array.isArray(oldData.pages)) {
-        return {
-          ...oldData,
-          pages: oldData.pages.map((page: any) => ({
-            ...page,
-            photos: page.photos.map((p: any) => 
-              photoIds.includes(p.id) ? { ...p, group_id: finalGroupId, group: { id: finalGroupId, name: 'AI 合组', member_count: photoIds.length, cover_photo_id: photoIds[0], colors: [], materials: [], is_hidden: false } } : p
-            )
-          }))
-        };
-      }
-      return oldData;
-    });
-    
-    return {};
-  }
 });
 
 export const useRemoveFromGroupMutation = createMutationHook({
@@ -80,21 +55,15 @@ export const useRemoveFromGroupMutation = createMutationHook({
   action: 'RemovePhotos',
   mutationFn: ({ photoIds, groupId }: { photoIds: string[]; groupId: string }) => 
     removePhotosFromGroup(photoIds, groupId),
-  invalidateKeys: [['photos'], ['groups'], groupKeys.all],
+  invalidateKeys: [photoKeys.all, groupKeys.all],
   onSuccessMessage: '已移出群组',
-  optimisticUpdate: async ({ photoIds }: { photoIds: string[]; groupId: string }, queryClient: QueryClient) => {
-    // Basic optimistic update logic from before can be here or simplified since invalidateKeys is set
-    await queryClient.cancelQueries({ queryKey: ['photos'] });
-    await queryClient.cancelQueries({ queryKey: ['groups'] });
-    return {};
-  }
 });
 
 export const useUngroupMutation = createMutationHook({
   entity: 'Group',
   action: 'Ungroup',
   mutationFn: (groupId: string) => ungroupPhotos(groupId),
-  invalidateKeys: [['groups'], groupKeys.all],
+  invalidateKeys: [photoKeys.all, groupKeys.all],
   onSuccessMessage: '群组已解散',
 });
 

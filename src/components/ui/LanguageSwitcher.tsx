@@ -84,19 +84,21 @@ export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dro
   }
 
   return (
-    <div className="flex items-center p-1 rounded-full border border-brand-navy/20 bg-white/50 backdrop-blur shadow-sm overflow-hidden h-9 sm:h-10">
+    <div className="flex items-center p-1 rounded-full border border-brand-navy/20 bg-white/80 backdrop-blur-lg shadow-sm overflow-hidden h-10 sm:h-11">
       {langs.map(l => (
         <button 
           key={l.code} 
           onClick={() => update({ appLang: l.code as any })} 
-          className={`flex-1 px-3 sm:px-5 h-full flex items-center justify-center rounded-full text-[10px] sm:text-[12px] font-black uppercase tracking-wider transition-all duration-300 ${
+          className={`relative flex-1 px-3 sm:px-6 h-full flex items-center justify-center rounded-full text-[10px] sm:text-[13px] font-black uppercase tracking-wider transition-all duration-500 ${
             appLang === l.code 
-              ? 'bg-brand-navy text-white shadow-lg scale-[1.02] ring-2 ring-brand-navy/10' 
-              : 'text-brand-navy/40 hover:text-brand-navy/70 hover:bg-white/80'
+              ? 'bg-brand-navy text-white shadow-[0_4px_12px_rgba(var(--brand-navy-rgb),0.3)] scale-[1.05] z-10' 
+              : 'text-brand-navy/40 hover:text-brand-navy/70 hover:bg-white/50'
           }`}
         >
-          {l.code === 'zh' ? '中文' : l.code.toUpperCase()}
-          {appLang === l.code && <div className="absolute -bottom-1 w-1 h-1 bg-white rounded-full sm:hidden" />}
+          <span className="relative z-10">{l.code === 'zh' ? '中文' : l.code.toUpperCase()}</span>
+          {appLang === l.code && (
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-full opacity-50" />
+          )}
         </button>
       ))}
     </div>
