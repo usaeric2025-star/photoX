@@ -121,21 +121,24 @@ const indexRoute = createRoute({
     if (search.authError) return;
     
     // [PERFORMANCE-STRATEGY] Synchronous session key presence check for high-speed instant redirect
-    const hasSessionKey = typeof window !== 'undefined' && 
-      Object.keys(window.localStorage || {}).some(key => key.startsWith('sb-') && key.endsWith('-auth-token'));
-    if (hasSessionKey) {
-      throw redirect({
-        to: ROUTES.ADMIN,
-      });
-    }
+    // const hasSessionKey = typeof window !== 'undefined' && 
+    //   Object.keys(window.localStorage || {}).some(key => key.startsWith('sb-') && key.endsWith('-auth-token'));
+    // if (hasSessionKey) {
+    //   throw redirect({
+    //     to: ROUTES.ADMIN,
+    //   });
+    // }
 
     try {
+      // Allow admins to access home for preview
+      /*
       const res = await checkPublicAuth();
       if (res.isAuthenticated) {
         throw redirect({
           to: ROUTES.ADMIN,
         });
       }
+      */
     } catch (err) {
       if (err && typeof err === 'object' && ('to' in err || 'isRedirect' in err || 'statusCode' in err)) {
         throw err;
