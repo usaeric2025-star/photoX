@@ -123,6 +123,9 @@ export function DiagnosticsDashboard() {
     latency?: number;
     status?: number;
     statusText?: string;
+    url?: string;
+    contentType?: string | null;
+    isRealImage?: boolean;
   } | null>(null);
 
   const { user } = useAuth();
@@ -302,10 +305,15 @@ export function DiagnosticsDashboard() {
       if (result.success) {
         setWorkerResult({ 
           success: true, 
-          message: 'Worker 响应成功 (Server-side Check)', 
+          message: result.data.isRealImage 
+            ? 'Worker 成功生成缩略图 (GET Request)' 
+            : 'Worker 响应成功 (Head Request)', 
           latency: result.data.latency,
           status: result.data.status,
-          statusText: result.data.statusText
+          statusText: result.data.statusText,
+          url: result.data.url,
+          contentType: result.data.contentType,
+          isRealImage: result.data.isRealImage
         });
         toast.success('Worker 连通性测试成功');
       } else {
@@ -507,12 +515,39 @@ export function DiagnosticsDashboard() {
                 {workerResult.success && workerResult.status && (
                   <span className="block mt-1 text-gray-400 font-normal">
                     HTTP Response: {workerResult.status} {workerResult.statusText || ''}
+                    {workerResult.contentType && ` | Type: ${workerResult.contentType}`}
                   </span>
                 )}
               </p>
-              {workerResult.success && (
-                <div className="mt-2 text-[10px] font-mono text-brand-navy/40 break-all select-all">
-                  API: {import.meta.env.VITE_THUMBNAIL_WORKER_URL}
+              {workerResult.url && (
+                <div className="mt-3 space-y-2">
+                  <div className="text-[10px] font-mono text-brand-navy/40 flex flex-col gap-1">
+                    <span className="opacity-60">Tested Endpoint:</span>
+                    <a href={workerResult.url} target="_blank" rel="noreferrer" className="text-brand-navy hover:underline truncate block">
+                      {workerResult.url}
+                    </a>
+                  </div>
+                  
+                  {workerResult.success && workerResult.isRealImage && (
+                    <div className="pt-2">
+                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Live Preview:</div>
+                      <div className="relative w-20 h-20 rounded-lg border border-brand-navy/10 bg-slate-50 overflow-hidden shadow-inner group">
+                        <img 
+                          src={workerResult.url} 
+                          alt="Worker Test"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-[10px] text-red-400 px-1 text-center font-medium">预览加载失败</div>';
+                          }}
+                        />
+                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors pointer-events-none" />
+                      </div>
+                      <p className="text-[9px] text-slate-400 mt-1.5 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                        实时缩略图已成功渲染
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

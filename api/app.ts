@@ -556,19 +556,47 @@ app.post("/admin-repair", async (c) => {
       }
 
       if (issueId === 'diagnose_worker') {
+        const { testImageUrl } = await c.req.json();
         const workerUrl = (serverEnv as any).VITE_THUMBNAIL_WORKER_URL || process.env.VITE_THUMBNAIL_WORKER_URL;
         if (!workerUrl) {
           return c.json({ success: false, error: "未在服务器检测到 VITE_THUMBNAIL_WORKER_URL 环境变量，请在 Vercel 后台设置并重新部署" });
         }
 
+        let targetUrl = workerUrl;
+        let isRealImage = false;
+
+        if (testImageUrl) {
+          const base = workerUrl.replace(/\/$/, '');
+          const urlObj = new URL(testImageUrl);
+          const path = urlObj.pathname.startsWith('/') ? urlObj.pathname : `/${urlObj.pathname}`;
+          targetUrl = `${base}${cleanPath(path)}?w=200&h=200`;
+          isRealImage = true;
+        } else {
+          // If no test image, try to find one random image from DB to test "real" connectivity
+          const { data: randomPhoto } = await supabase
+            .from('furniture_items')
+            .select('image_url')
+            .limit(1)
+            .single();
+          
+          if (randomPhoto?.image_url) {
+            const base = workerUrl.replace(/\/$/, '');
+            try {
+              const urlObj = new URL(randomPhoto.image_url);
+              const path = urlObj.pathname;
+              targetUrl = `${base}${path.startsWith('/') ? path : '/' + path}?w=200&h=200`;
+              isRealImage = true;
+            } catch (e) {}
+          }
+        }
+
         const start = performance.now();
         try {
-          // Add a simple timeout to the check
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 5000);
+          const timeoutId = setTimeout(() => controller.abort(), 8000);
           
-          const res = await fetch(workerUrl, { 
-            method: 'HEAD',
+          const res = await fetch(targetUrl, { 
+            method: 'GET', // Use GET instead of HEAD for more realistic test
             signal: controller.signal
           });
           
@@ -582,10 +610,13 @@ app.post("/admin-repair", async (c) => {
                 data: {
                   status: res.status,
                   statusText: res.statusText,
-                  url: workerUrl
+                  url: targetUrl,
+                  isRealImage
                 }
             });
           }
+
+          const contentType = res.headers.get('content-type');
 
           return c.json({ 
             success: true, 
@@ -593,12 +624,18 @@ app.post("/admin-repair", async (c) => {
               status: res.status,
               statusText: res.statusText,
               latency: Math.round(end - start),
-              url: workerUrl
+              url: targetUrl,
+              contentType,
+              isRealImage
             }
           });
         } catch (e: any) {
           return c.json({ success: false, error: `Worker 连通性异常: ${e.message}. 请检查 URL 是否正确及 Worker 是否已部署。` });
         }
+      }
+
+      function cleanPath(p: string) {
+        return p.startsWith('/') ? p : `/${p}`;
       }
 
       if (issueId === 'diagnose_r2') {
