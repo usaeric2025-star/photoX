@@ -21,7 +21,8 @@ import {
   useTags,
   useManufacturers,
   useTaskExecutor,
-  useErrorHandler
+  useErrorHandler,
+  usePhotoDetail
 } from "../../../hooks";
 import { toast } from "@/lib/ui/toast";
 import { cleanPhotos } from "../../../lib/filters";
@@ -68,6 +69,8 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
   const { runTask } = useTaskExecutor();
   const { handleError } = useErrorHandler();
 
+  const { data: detailPhoto, isLoading: isDetailLoading } = usePhotoDetail(editPhotoId || '');
+
   const onAiAnalyze = React.useCallback(async (photo: Photo) => {
     const imageUrl = photo.uri || photo.image_url;
     if (!imageUrl) {
@@ -92,26 +95,44 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
       );
 
       if (result) {
-        const updates: any = {};
-        if (result.name) updates.name = result.name;
-        if (result.name_en) updates.name_en = result.name_en;
-        if (result.name_ms) updates.name_ms = result.name_ms;
-        if (result.category_id) updates.category_id = String(result.category_id);
-        if (Array.isArray(result.tag_ids)) {
-          updates.tag_ids = result.tag_ids.map((id: any) => String(id));
-        }
-        if (result.manufacturer_id) updates.manufacturer_id = String(result.manufacturer_id);
-        if (result.model_number) updates.model_number = result.model_number;
-        if (result.manual_code) updates.manual_code = result.manual_code;
-        if (result.description) updates.description = result.description;
-        if (result.description_translations) {
-          updates.description_translations = result.description_translations;
-        }
-        if (Array.isArray(result.dimensions)) updates.dimensions = result.dimensions;
-        if (result.price) updates.price = String(result.price);
+        updateForm((prev) => {
+          const updates: any = {};
 
-        updateForm(updates);
-        toast.success("AI 属性识别成功并已填入表格");
+          // 1. Name logic: Only if empty OR is just numbers
+          const currentName = (prev.name || '').trim();
+          const isNumeric = /^\d+$/.test(currentName);
+          if (!currentName || isNumeric) {
+            if (result.name) updates.name = result.name;
+          }
+
+          // 2. Other basic fields: Only if empty/unset
+          if (!prev.category_id && result.category_id) updates.category_id = String(result.category_id);
+          
+          if ((!prev.tag_ids || prev.tag_ids.length === 0) && Array.isArray(result.tag_ids)) {
+            updates.tag_ids = result.tag_ids.map((id: any) => String(id));
+          }
+
+          if (!prev.manufacturer_id && result.manufacturer_id) updates.manufacturer_id = String(result.manufacturer_id);
+          if (!prev.model_number && result.model_number) updates.model_number = result.model_number;
+          if (!prev.manual_code && result.manual_code) updates.manual_code = result.manual_code;
+          if (!prev.description && result.description) updates.description = result.description;
+          
+          if (result.description_translations && (!prev.description_translations || (!prev.description_translations.en && !prev.description_translations.ms))) {
+             updates.description_translations = {
+               ...prev.description_translations,
+               ...result.description_translations
+             };
+          }
+
+          if ((!prev.dimensions || prev.dimensions.length === 0) && Array.isArray(result.dimensions)) {
+            updates.dimensions = result.dimensions;
+          }
+
+          if (!prev.price && result.price) updates.price = String(result.price);
+
+          return { ...prev, ...updates };
+        });
+        toast.success("AI 属性识别成功并已补全空白字段");
       }
     });
   }, [categories, tags, manufacturers, settings, runTask, updateForm, handleError]);
@@ -145,28 +166,25 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
       lastInitializedIdRef.current = null;
       return;
     }
-    if (editPhotoId !== lastInitializedIdRef.current) {
-      const photo = photos.find((p: Photo) => p.id === editPhotoId);
-      if (photo) {
-        lastInitializedIdRef.current = editPhotoId;
-        updateForm({
-          name: photo.name || "",
-          category_id: photo.category_id || "",
-          tag_ids: Array.isArray(photo.tag_ids) ? photo.tag_ids : [],
-          manufacturer_id: photo.manufacturer_id || "",
-          item_code: photo.item_code || "",
-          model_number: photo.model_number || "",
-          manual_code: photo.manual_code || "",
-          description: photo.description || "",
-          description_translations: photo.description_translations || { zh: photo.description || '', en: '', ms: '' },
-          dimensions: Array.isArray(photo.dimensions) ? photo.dimensions : [],
-          is_hidden: photo.is_hidden || false,
-          price: photo.price || "",
-          is_group_cover: photo.is_group_cover || false,
-        });
-      }
+    if (editPhotoId !== lastInitializedIdRef.current && detailPhoto) {
+      lastInitializedIdRef.current = editPhotoId;
+      updateForm({
+        name: detailPhoto.name || "",
+        category_id: detailPhoto.category_id || "",
+        tag_ids: Array.isArray(detailPhoto.tag_ids) ? detailPhoto.tag_ids : [],
+        manufacturer_id: detailPhoto.manufacturer_id || "",
+        item_code: detailPhoto.item_code || "",
+        model_number: detailPhoto.model_number || "",
+        manual_code: detailPhoto.manual_code || "",
+        description: detailPhoto.description || "",
+        description_translations: detailPhoto.description_translations || { zh: detailPhoto.description || '', en: '', ms: '' },
+        dimensions: Array.isArray(detailPhoto.dimensions) ? detailPhoto.dimensions : [],
+        is_hidden: detailPhoto.is_hidden || false,
+        price: detailPhoto.price || "",
+        is_group_cover: detailPhoto.is_group_cover || false,
+      });
     }
-  }, [editPhotoId, photos, updateForm]);
+  }, [editPhotoId, detailPhoto, updateForm]);
 
   React.useEffect(() => {
     const handleAIResult = (event: Event) => {

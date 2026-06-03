@@ -20,6 +20,7 @@ export { useUrlFilters } from './useUrlFilters';
 
 // Queries
 export { usePhotos, useGroupPhotos } from './core/queries/usePhotos';
+export { usePhotoDetail } from './core/queries/usePhotoDetail';
 export { usePhotoCount } from './core/queries/usePhotoCount';
 export { useCategories } from './core/queries/useCategories';
 export { useTags } from './core/queries/useTags';

@@ -72,6 +72,7 @@ const defaultForm: ProductFormData = {
   category_id: '',
   tag_ids: [],
   manufacturer_id: '',
+  item_code: '',
   model_number: '',
   manual_code: '',
   description: '',

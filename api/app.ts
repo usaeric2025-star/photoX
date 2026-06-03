@@ -260,7 +260,7 @@ app.get("/admin/diagnose", async (c) => {
         { data: categories, error: cErr },
         { data: manufacturers, error: mErr },
       ] = await Promise.all([
-        supabase.from("furniture_items").select("id, group_id, category_id, manufacturer_id, image_hash, image_url, thumb_hash, name"),
+        supabase.from("furniture_items").select("id, group_id, category_id, manufacturer_id, image_hash, image_url, thumb_hash, name, item_code"),
         supabase.from("groups").select("id, name, member_count"),
         supabase.from("categories").select("id"),
         supabase.from("manufacturers").select("id"),
@@ -350,14 +350,30 @@ app.get("/admin/diagnose", async (c) => {
           category: 'integrity', 
           severity: 'P1', 
           title: '临时路径未转 UUID', 
-          description: `检测到有 ${tempUrlPhotos.length} 张照片仍然使用带有 temp- 标识的临时 R2 文件路径。点击下方按钮可自动将物理 R2 文件名复制重命名为标准照片 UUID，并清理无用临时文件（保证 100% 数据一致性及文件名美化）。`, 
+          description: `检测到有 ${tempUrlPhotos.length} 张照片仍然使用带有 temp- 标识的临时 R2 文件路径。点击立即修复可自动清理文件系统。`, 
           affectedCount: tempUrlPhotos.length, 
           sampleIds: tempUrlPhotos.slice(0, 5).map(p => p.id), 
           autoFixable: true 
         });
       }
 
-      return c.json({ timestamp: Date.now(), totalIssues: issues.length, issuesBySeverity: { P0: issues.filter(i => i.severity === 'P0').length, P1: issues.filter(i => i.severity === 'P1').length, P2: 0, P3: 0 }, issues });
+      // Non-standard Item Codes
+      const compliantRegex = /^X-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/;
+      const nonStandardCodes = photos.filter(p => p.item_code && !compliantRegex.test(p.item_code));
+      if (nonStandardCodes.length > 0) {
+        issues.push({
+          id: 'non_standard_item_codes',
+          category: 'consistency',
+          severity: 'P2',
+          title: '系统编号格式不规范',
+          description: `检测到有 ${nonStandardCodes.length} 条记录使用了旧格式（如 FUR-xxx）或非标准格式的系统编号。点击修复将统一收敛为 X-XXXXXXXX 格式。`,
+          affectedCount: nonStandardCodes.length,
+          sampleIds: nonStandardCodes.slice(0, 5).map(p => p.id),
+          autoFixable: true
+        });
+      }
+
+      return c.json({ timestamp: Date.now(), totalIssues: issues.length, issuesBySeverity: { P0: issues.filter(i => i.severity === 'P0').length, P1: issues.filter(i => i.severity === 'P1').length, P2: issues.filter(i => i.severity === 'P2').length, P3: 0 }, issues });
     } catch (e: any) {
       return c.json({ success: false, error: e.message }, 500);
     }
@@ -659,7 +675,7 @@ app.post("/admin/repair", async (c) => {
           .from("furniture_items")
           .select("id, image_url")
           .like("image_url", "%/temp-%")
-          .limit(100); // Process in batches of 100 to avoid timeouts
+          .limit(100); 
         
         if (fetchError) throw fetchError;
         if (!targets || targets.length === 0) {
@@ -683,22 +699,18 @@ app.post("/admin/repair", async (c) => {
             const rawPath = urlObj.pathname;
             const sourceKey = rawPath.startsWith('/') ? rawPath.slice(1) : rawPath;
 
-            // Target key: photox/public/${photo.id}.webp
             const targetKey = `photox/public/${photo.id}.webp`;
 
-            // 1. Copy object in R2
             await s3Client.send(new CopyObjectCommand({
               Bucket: bucket,
-              CopySource: `${bucket}/${sourceKey}`, // CopySource format: bucket-name/key
+              CopySource: `${bucket}/${sourceKey}`, 
               Key: targetKey
             }));
 
-            // 2. Generate new public URL
             const newPublicUrl = publicUrlPrefix.startsWith('http') 
               ? `${publicUrlPrefix.replace(/\/$/, '')}/${targetKey}`
               : `https://${publicUrlPrefix}/${targetKey}`;
 
-            // 3. Update DB
             const { error: updateError } = await supabase
               .from("furniture_items")
               .update({ image_url: newPublicUrl, updated_at: new Date().toISOString() })
@@ -706,7 +718,6 @@ app.post("/admin/repair", async (c) => {
 
             if (updateError) throw updateError;
 
-            // 4. Delete old object in R2
             await s3Client.send(new DeleteObjectCommand({
               Bucket: bucket,
               Key: sourceKey
@@ -723,8 +734,40 @@ app.post("/admin/repair", async (c) => {
           success: true, 
           count: successCount,
           failed: failCount,
-          message: `成功处理了 ${successCount} 张临时路径照片。已将存储文件名安全升级为标准 UUID，并更新数据库链接！`
+          message: `成功处理了 ${successCount} 张临时路径照片。`
         });
+      }
+
+      if (issueId === 'non_standard_item_codes') {
+        const { data: targets, error: fetchError } = await supabase
+          .from("furniture_items")
+          .select("id, item_code")
+          .not("item_code", "is", null);
+
+        if (fetchError) throw fetchError;
+        
+        const compliantRegex = /^X-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/;
+        const legacyPhotos = targets?.filter(p => p.item_code && !compliantRegex.test(p.item_code)) || [];
+        
+        if (legacyPhotos.length === 0) return c.json({ success: true, count: 0, message: "所有编号已规范" });
+        
+        // Process max 50
+        const batch = legacyPhotos.slice(0, 50);
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        
+        const updates = batch.map(p => {
+          let random = '';
+          for (let i = 0; i < 8; i++) {
+            random += chars.charAt(Math.floor(Math.random() * chars.length));
+          }
+          return { id: p.id, item_code: `X-${random}` };
+        });
+
+        await Promise.all(updates.map(u => 
+          supabase.from("furniture_items").update({ item_code: u.item_code }).eq("id", u.id)
+        ));
+
+        return c.json({ success: true, count: updates.length, message: `已规范 ${updates.length} 条编号格式` });
       }
 
       if (issueId === 'diagnose_r2') {
@@ -1082,6 +1125,64 @@ app.post("/storage/repair-hashes", async (c) => {
       success: true, 
       count: repairedCount,
       message: `成功修复了 ${repairedCount} 条记录的哈希值`
+    });
+  } catch (e: any) {
+    return c.json({ success: false, error: e.message }, 500);
+  }
+});
+
+/**
+ * [LONG-TERM-FIX] Normalize Item Codes
+ * Identifies legacy "FUR-" or non-compliant codes and replaces them with the new "X-" format.
+ */
+app.post("/maintenance/normalize-item-codes", async (c) => {
+  try {
+    const supabase = await getSupabaseAdmin();
+    
+    // 1. Fetch all photos that have a code
+    const { data: photos, error: fetchError } = await supabase
+      .from("furniture_items")
+      .select("id, item_code")
+      .not("item_code", "is", null);
+
+    if (fetchError) throw fetchError;
+    if (!photos) return c.json({ success: true, count: 0 });
+
+    // 2. Identify non-compliant codes
+    // Pattern: X-[8 Alphanumeric (no O, I, 1, 0)]
+    const compliantRegex = /^X-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/;
+    const legacyPhotos = photos.filter(p => !compliantRegex.test(p.item_code || ''));
+
+    if (legacyPhotos.length === 0) {
+      return c.json({ success: true, count: 0, message: "所有编号已规范，无需处理" });
+    }
+
+    // 3. Batch Update (Process max 50 for safety per turn)
+    const targets = legacyPhotos.slice(0, 50);
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    
+    const updates = targets.map(p => {
+      let random = '';
+      for (let i = 0; i < 8; i++) {
+        random += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return {
+        id: p.id,
+        item_code: `X-${random}`
+      };
+    });
+
+    // Supabase doesn't support bulk update with different values easily in a single query
+    // We do them one by one but in parallel (Promise.all)
+    await Promise.all(updates.map(u => 
+      supabase.from("furniture_items").update({ item_code: u.item_code }).eq("id", u.id)
+    ));
+
+    return c.json({ 
+      success: true, 
+      count: updates.length,
+      remaining: legacyPhotos.length - updates.length,
+      message: `成功规范了 ${updates.length} 条记录的系统编号`
     });
   } catch (e: any) {
     return c.json({ success: false, error: e.message }, 500);

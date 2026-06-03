@@ -7,10 +7,8 @@ export const useInvalidatePhotos = () => {
 
   const invalidatePhotos = useCallback(() => {
     // Invalidate all photo queries using prefix matching
-    // refetchType: 'active' ensures we only trigger re-fetch for queries currently mounted/visible
     return queryClient.invalidateQueries({ 
-      queryKey: photoKeys.all,
-      refetchType: 'active'
+      queryKey: photoKeys.all
     });
   }, [queryClient]);
 

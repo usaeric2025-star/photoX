@@ -11,13 +11,24 @@ export const cleanObject = <T extends Record<string, any>>(obj: T): T => {
 };
 
 export const generateItemCode = (): string => {
-  const date = new Date().toISOString().split('T')[0].replace(/-/g, '');
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Removed O, I, 1, 0
   let random = '';
-  for (let i = 0; i < 6; i++) {
+  // Increased to 8 characters for much lower collision probability (approx 1 in 2.8 trillion)
+  for (let i = 0; i < 8; i++) {
     random += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  return `FUR-${date}-${random}`;
+  return `X-${random}`; // e.g. X-A8B9C2D4
+};
+
+/**
+ * Derives a short, human-readable code from a UUID for display purposes.
+ * This ensures consistency when talking to AI or searching manually.
+ */
+export const getDisplayGroupCode = (groupId?: string | null): string => {
+  if (!groupId) return '';
+  // Use the last 6 characters of the UUID, prefixed with G-
+  const short = groupId.split('-').pop()?.slice(-6).toUpperCase() || '';
+  return `G-${short}`;
 };
 
 /**

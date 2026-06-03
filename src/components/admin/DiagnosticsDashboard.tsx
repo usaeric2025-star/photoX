@@ -121,6 +121,7 @@ export function DiagnosticsDashboard() {
   const [isBackfilling, setIsBackfilling] = useState(false);
   const [backfillProgress, setBackfillProgress] = useState<{ processed: number; totalRemaining: number; results: any[] } | null>(null);
 
+  const [isNormalizingCodes, setIsNormalizingCodes] = useState(false);
   const [isTestingWorker, setIsTestingWorker] = useState(false);
   const [workerResult, setWorkerResult] = useState<{ 
     success: boolean; 
@@ -334,6 +335,28 @@ export function DiagnosticsDashboard() {
     }
   };
 
+  const handleNormalizeItemCodes = async () => {
+    if (!confirm('确定要规范所有系统编号吗？这将把旧格式（如 FUR-xxx）转换为新格式（X-XXXXXXXX）。此操作不可逆，将影响搜索和 AI 对话。')) return;
+    setIsNormalizingCodes(true);
+    try {
+      const res = await api.maintenance['normalize-item-codes'].$post();
+      const data = await res.json() as any;
+      if (data.success) {
+        toast.success(data.message || `成功规范 ${data.count} 条编号`);
+        if (data.remaining > 0) {
+          toast.info(`还有约 ${data.remaining} 条记录待规范，可再次点击`, { duration: 5000 });
+        }
+        scan();
+      } else {
+        toast.error(`规范失败: ${data.error}`);
+      }
+    } catch (e: any) {
+      toast.error(`请求失败: ${e.message}`);
+    } finally {
+      setIsNormalizingCodes(false);
+    }
+  };
+
   const handleTestWorker = async () => {
     setIsTestingWorker(true);
     try {
@@ -477,379 +500,86 @@ export function DiagnosticsDashboard() {
         </div>
       )}
 
-      {/* R2 存储连通性诊断 */}
-      <div className="bg-white border border-brand-navy/5 rounded-2xl p-6 shadow-sm space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-base font-black text-brand-navy tracking-tight">R2 存储连通性诊断</h3>
-            <p className="text-xs text-brand-navy/60">实时验证 Cloudflare R2 云端存储的端点、凭证和读写权限</p>
+      {/* 基础设施诊断 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* R2 存储连通性诊断 */}
+        <div className="bg-white border border-brand-navy/5 rounded-2xl p-6 shadow-sm space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-black text-brand-navy tracking-tight">R2 存储及 CDN 连通性</h3>
+              <p className="text-xs text-brand-navy/60">验证 Cloudflare R2 读写权限</p>
+            </div>
+            <button
+              onClick={runR2Diagnostics}
+              disabled={isDiagnosingR2}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-navy text-white rounded-xl text-xs font-bold disabled:opacity-50 active:scale-95 transition-all"
+            >
+              <RefreshCw className={`w-3 h-3 ${isDiagnosingR2 ? 'animate-spin' : ''}`} />
+              测试 R2
+            </button>
           </div>
-          <button
-            onClick={runR2Diagnostics}
-            disabled={isDiagnosingR2}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-brand-navy text-white rounded-xl text-xs font-bold disabled:opacity-50 hover:bg-brand-navy/90 transition-all active:scale-95"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isDiagnosingR2 ? 'animate-spin' : ''}`} />
-            {isDiagnosingR2 ? '测试中...' : '测试 R2 连接'}
-          </button>
-        </div>
 
-        {r2Error && (
-          <div className="p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-red-600 text-xs font-semibold">
-            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-            <p>{r2Error}</p>
-          </div>
-        )}
-
-        {r2Result && (
-          <div className="space-y-4">
-            {/* Status indicator */}
+          {r2Result && (
             <div className={`p-4 rounded-xl border flex items-start gap-3 ${
               r2Result.success 
                 ? 'bg-green-500/5 border-green-500/10 text-green-700' 
                 : 'bg-red-500/5 border-red-500/10 text-red-700'
             }`}>
               <div className="mt-0.5">
-                {r2Result.success ? (
-                   <CheckCircle2 className="w-5 h-5 text-green-500" />
-                ) : (
-                   <ShieldAlert className="w-5 h-5 text-red-500" />
-                )}
+                {r2Result.success ? <CheckCircle2 className="w-4 h-4" /> : <ShieldAlert className="w-4 h-4" />}
               </div>
               <div className="flex-1 min-w-0">
-                <h4 className="text-sm font-bold text-gray-900">
-                  {r2Result.success ? 'R2 连通性测试通过' : 'R2 连通性测试未通过'}
+                <h4 className="text-xs font-bold">
+                  {r2Result.success ? 'R2 连通性测试通过' : 'R2 状态异常'}
                 </h4>
-                <div className="text-xs mt-1 text-gray-500 font-medium leading-relaxed">
-                  {r2Result.success 
-                    ? r2Result.message 
-                    : `在 [${r2Result.stage}] 阶段异常: ${r2Result.error}`
-                  }
+                <div className="text-[10px] mt-1 opacity-80 leading-relaxed font-mono truncate">
+                  {r2Result.success ? r2Result.message : `${r2Result.stage}: ${r2Result.error}`}
                 </div>
               </div>
             </div>
-
-            {/* Environmental & Key list */}
-            {r2Result.details?.configState && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 font-sans">
-                {Object.entries(r2Result.details.configState).map(([key, state]: [string, any]) => (
-                  <div key={key} className="p-3 bg-brand-navy/5 border border-brand-navy/5 rounded-xl flex flex-col justify-between">
-                    <span className="text-[10px] font-mono text-brand-navy/40 truncate">{key}</span>
-                    <div className="flex items-center justify-between mt-1.5">
-                      <span className="text-xs font-bold font-mono truncate text-brand-navy/80">
-                        {state.exists ? (state.preview || '已配置') : '未配置'}
-                      </span>
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-black uppercase ${
-                        state.exists 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {state.exists ? 'OK' : 'MISSING'}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Thumbnail Worker 诊断 */}
-      <div className="bg-white border border-brand-navy/5 rounded-2xl p-6 shadow-sm space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-base font-black text-brand-navy tracking-tight flex items-center gap-2">
-              <Zap className="w-4 h-4 text-brand-gold" />
-              缩略图 Worker 诊断
-            </h3>
-            <p className="text-xs text-brand-navy/60">验证 Cloudflare Worker 实时缩略图生成服务的在线状态与响应速度</p>
-          </div>
-          <button
-            onClick={handleTestWorker}
-            disabled={isTestingWorker}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-brand-gold text-white rounded-xl text-xs font-bold disabled:opacity-50 hover:bg-brand-gold/90 transition-all active:scale-95"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isTestingWorker ? 'animate-spin' : ''}`} />
-            {isTestingWorker ? '测试中...' : '测试 Worker'}
-          </button>
-        </div>
-
-        {workerResult && (
-          <div className={`p-4 rounded-xl border flex items-start gap-3 ${
-            workerResult.success 
-              ? 'bg-green-500/5 border-green-500/10 text-green-700' 
-              : 'bg-red-500/5 border-red-500/10 text-red-700'
-          }`}>
-            <div className="mt-0.5">
-              {workerResult.success ? (
-                 <CheckCircle2 className="w-5 h-5 text-green-500" />
-              ) : (
-                 <ShieldAlert className="w-5 h-5 text-red-500" />
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between">
-                <h4 className="text-sm font-bold text-gray-900">
-                  {workerResult.success ? 'Worker 运行正常' : 'Worker 异常'}
-                </h4>
-                {workerResult.latency && (
-                  <span className="text-[10px] font-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
-                    {workerResult.latency}ms
-                  </span>
-                )}
-              </div>
-              <p className="text-xs mt-1 text-gray-500 font-medium leading-relaxed">
-                {workerResult.message}
-                {workerResult.success && workerResult.status && (
-                  <span className="block mt-1 text-gray-400 font-normal">
-                    HTTP Response: {workerResult.status} {workerResult.statusText || ''}
-                    {workerResult.contentType && ` | Type: ${workerResult.contentType}`}
-                  </span>
-                )}
-              </p>
-              {workerResult.url && (
-                <div className="mt-3 space-y-2">
-                  <div className="text-[10px] font-mono text-brand-navy/40 flex flex-col gap-1">
-                    <span className="opacity-60">Tested Endpoint:</span>
-                    <a href={workerResult.url} target="_blank" rel="noreferrer" className="text-brand-navy hover:underline truncate block">
-                      {workerResult.url}
-                    </a>
-                  </div>
-                  
-                  {workerResult.success && workerResult.isRealImage && (
-                    <div className="pt-2">
-                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Live Preview:</div>
-                      <div className="relative w-20 h-20 rounded-lg border border-brand-navy/10 bg-slate-50 overflow-hidden shadow-inner group">
-                        <img 
-                          src={workerResult.url} 
-                          alt="Worker Test"
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-[10px] text-red-400 px-1 text-center font-medium">预览加载失败</div>';
-                          }}
-                        />
-                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors pointer-events-none" />
-                      </div>
-                      <p className="text-[9px] text-slate-400 mt-1.5 flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                        实时缩略图已成功渲染
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* 高级维护工具 */}
-      <div className="bg-white border border-brand-navy/5 rounded-2xl p-6 shadow-sm space-y-6">
-        <div>
-          <h3 className="text-base font-black text-brand-navy tracking-tight uppercase tracking-widest text-[11px] mb-4">高级维护工具</h3>
-        </div>
-        
-        {/* 数据清理 */}
-        <div className="space-y-3">
-          <h4 className="text-[10px] font-black text-brand-navy/30 uppercase tracking-widest px-1">数据清理</h4>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <button
-              onClick={handleCleanupRedundant}
-              disabled={isCleaningRedundant}
-              className="flex flex-col items-start gap-2 p-4 bg-amber-50 hover:bg-amber-100 rounded-xl transition-all border border-amber-200 group group-active:scale-95 text-left"
-            >
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-amber-500/10 rounded-lg text-amber-600">
-                  <Fingerprint className="w-4 h-4" />
-                </div>
-                <span className="text-sm font-bold text-slate-800">清理冗余 URL 记录</span>
-              </div>
-              <p className="text-[10px] text-slate-500 uppercase tracking-wider">合并具有完全相同 URL 的多余记录（修复恢复脚本遗留问题）</p>
-              {isCleaningRedundant && <span className="text-[10px] font-bold text-amber-600 animate-pulse">正在清理中...</span>}
-            </button>
-
-            <button
-              onClick={handleCleanOrphans}
-              disabled={isCleaningOrphans}
-              className="flex flex-col items-start gap-2 p-4 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all border border-slate-200 group group-active:scale-95 text-left"
-            >
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-orange-500/10 rounded-lg text-orange-600">
-                  <FileWarning className="w-4 h-4" />
-                </div>
-                <span className="text-sm font-bold text-slate-800">清理数据库孤本</span>
-              </div>
-              <p className="text-[10px] text-slate-500 uppercase tracking-wider">删除数据库中无 URL / 无 Hash 的无效记录</p>
-              {isCleaningOrphans && <span className="text-[10px] font-bold text-orange-600 animate-pulse">正在清理中...</span>}
-            </button>
-
-            <button
-              onClick={handleDeepCleanStorage}
-              disabled={isDeepCleaningStorage}
-              className="flex flex-col items-start gap-2 p-4 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all border border-slate-200 group group-active:scale-95 text-left"
-            >
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-blue-500/10 rounded-lg text-blue-600">
-                  <RefreshCw className="w-4 h-4" />
-                </div>
-                <span className="text-sm font-bold text-slate-800">清理存储无主文件</span>
-              </div>
-              <p className="text-[10px] text-slate-500 uppercase tracking-wider">扫描 R2 存储，删除未在数据库引用的孤立文件</p>
-              {isDeepCleaningStorage && <span className="text-[10px] font-bold text-blue-600 animate-pulse">正在扫描中...</span>}
-            </button>
-          </div>
-        </div>
-
-        {/* 数据恢复 */}
-        <div className="space-y-3">
-          <h4 className="text-[10px] font-black text-brand-navy/30 uppercase tracking-widest px-1">数据恢复与美化</h4>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <button
-              onClick={handleBulkFixUrls}
-              disabled={isAuditing}
-              className="flex flex-col items-start gap-2 p-4 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all border border-slate-200 group group-active:scale-95 text-left"
-            >
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-blue-500/10 rounded-lg text-blue-600">
-                  <RefreshCw className="w-4 h-4" />
-                </div>
-                <span className="text-sm font-bold text-slate-800">标准化/修复图片 URL</span>
-              </div>
-              <p className="text-[10px] text-slate-500 uppercase tracking-wider">将所有数据库中的图片 URL 标准化为无前缀 R2 路径</p>
-              {isAuditing && <span className="text-[10px] font-bold text-blue-600 animate-pulse">正在修复中...</span>}
-            </button>
-            <button
-              onClick={handleCleanupTempUrls}
-              disabled={isCleaningTemp}
-              className="flex flex-col items-start gap-2 p-4 bg-purple-50 hover:bg-purple-100 rounded-xl transition-all border border-purple-200 group group-active:scale-95 text-left"
-            >
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-purple-500/10 rounded-lg text-purple-600">
-                  <Fingerprint className="w-4 h-4" />
-                </div>
-                <span className="text-sm font-bold text-slate-800">临时路径改 UUID</span>
-              </div>
-              <p className="text-[10px] text-slate-500 uppercase tracking-wider">自动将物理储存文件由 temp-1xxx 转换为标准干净的 UUID 命名</p>
-              {isCleaningTemp && <span className="text-[10px] font-bold text-purple-600 animate-pulse">正在清理中...</span>}
-            </button>
-            <button
-              onClick={handleImportOrphans}
-              disabled={isAuditing}
-              className="flex flex-col items-start gap-2 p-4 bg-green-50 hover:bg-green-100 rounded-xl transition-all border border-green-200 group group-active:scale-95 text-left"
-            >
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-green-500/10 rounded-lg text-green-600">
-                  <CloudDownload className="w-4 h-4" />
-                </div>
-                <span className="text-sm font-bold text-slate-800">恢复孤儿照片</span>
-              </div>
-              <p className="text-[10px] text-slate-500 uppercase tracking-wider">从云端找回丢失记录并自动补全哈希 (去重保护)</p>
-              {isAuditing && <span className="text-[10px] font-bold text-green-600 animate-pulse">正在处理中...</span>}
-            </button>
-            <button
-              onClick={handleBackfillPhotoMetadata}
-              disabled={isBackfilling}
-              className="flex flex-col items-start gap-2 p-4 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-all border border-indigo-200 group group-active:scale-95 text-left"
-            >
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-600">
-                  <Zap className="w-4 h-4" />
-                </div>
-                <span className="text-sm font-bold text-indigo-950">批量修复旧照片元数据</span>
-              </div>
-              <p className="text-[10px] text-slate-500 uppercase tracking-wider">下载原图自动提取尺寸生产 canonical 命名，使用 AI 补全多语言翻译</p>
-              {isBackfilling && <span className="text-[10px] font-bold text-indigo-600 animate-pulse">正在提取中...</span>}
-            </button>
-          </div>
-
-          {backfillProgress && (
-            <motion.div 
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              className="mt-3 p-4 bg-indigo-50/50 border border-indigo-100 rounded-2xl space-y-3"
-            >
-              <div className="flex justify-between items-center text-xs">
-                <span className="font-bold text-indigo-950 flex items-center gap-1.5 animate-pulse">
-                  <span className="w-2 h-2 rounded-full bg-indigo-600" />
-                  元数据修复补全进度
-                </span>
-                <span className="font-mono text-slate-600">
-                  已处理: <strong className="text-indigo-700">{backfillProgress.processed}</strong> | 剩余待补全: <strong className="text-indigo-700">{backfillProgress.totalRemaining}</strong>
-                </span>
-              </div>
-              <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                <div 
-                  className="bg-indigo-600 h-full transition-all duration-350 ease-out"
-                  style={{ width: `${Math.max(5, (backfillProgress.processed / (backfillProgress.processed + backfillProgress.totalRemaining || 1)) * 100)}%` }}
-                />
-              </div>
-              {backfillProgress.results.length > 0 && (
-                <div className="text-[11px] text-slate-500 space-y-1 bg-white border border-slate-100 p-2.5 rounded-xl max-h-32 overflow-y-auto font-mono">
-                  {backfillProgress.results.map((res: any, idx: number) => (
-                    <div key={res.id + '-' + idx} className="flex justify-between items-center py-0.5 border-b border-slate-50 last:border-0">
-                      <span className="text-slate-800 font-bold truncate max-w-[70%]">{res.name || '图片'} <span className="text-slate-400 font-normal">({res.id.slice(0, 8)})</span></span>
-                      <span className={`text-[10px] font-black px-1.5 py-0.5 rounded uppercase ${
-                        res.status === 'success' ? 'text-green-600 bg-green-50' : res.status === 'skipped' ? 'text-amber-600 bg-amber-50' : 'text-red-500 bg-red-50'
-                      }`}>
-                        {res.status === 'success' ? '已修复' : res.status === 'skipped' ? '无需修复' : `失败: ${res.error || '未知'}`}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </motion.div>
           )}
         </div>
 
-        {/* 数据去重 */}
-        <div className="space-y-3">
-          <h4 className="text-[10px] font-black text-brand-navy/30 uppercase tracking-widest px-1">数据去重</h4>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* Thumbnail Worker 诊断 */}
+        <div className="bg-white border border-brand-navy/5 rounded-2xl p-6 shadow-sm space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-black text-brand-navy tracking-tight">缩略图生成服务</h3>
+              <p className="text-xs text-brand-navy/60">验证全局边缘 Worker 响应速度</p>
+            </div>
             <button
-              onClick={handleDeduplicate}
-              disabled={isDeduplicating}
-              className="flex flex-col items-start gap-2 p-4 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all border border-slate-200 group group-active:scale-95 text-left"
+              onClick={handleTestWorker}
+              disabled={isTestingWorker}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-gold text-white rounded-xl text-xs font-bold disabled:opacity-50 active:scale-95 transition-all"
             >
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-purple-500/10 rounded-lg text-purple-600">
-                  <Trash2 className="w-4 h-4" />
-                </div>
-                <span className="text-sm font-bold text-slate-800">重复资产清理</span>
-              </div>
-              <p className="text-[10px] text-slate-500 uppercase tracking-wider">寻找并合并数据库中哈希值一致的重复记录</p>
-              {isDeduplicating && <span className="text-[10px] font-bold text-purple-600 animate-pulse">正在排重中...</span>}
+              <RefreshCw className={`w-3 h-3 ${isTestingWorker ? 'animate-spin' : ''}`} />
+              测试 Worker
             </button>
           </div>
-        </div>
 
-        {/* 审计 */}
-        <div className="space-y-3">
-          <h4 className="text-[10px] font-black text-brand-navy/30 uppercase tracking-widest px-1">审计</h4>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <button
-              onClick={handleAudit}
-              disabled={isAuditing}
-              className="flex flex-col items-start gap-2 p-4 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all border border-slate-200 group group-active:scale-95 text-left"
-            >
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-teal-500/10 rounded-lg text-teal-600">
-                  <PackageSearch className="w-4 h-4" />
-                </div>
-                <span className="text-sm font-bold text-slate-800">存储资产对账</span>
+          {workerResult && (
+            <div className={`p-4 rounded-xl border flex items-start gap-3 ${
+              workerResult.success 
+                ? 'bg-brand-gold/5 border-brand-gold/10 text-brand-gold' 
+                : 'bg-red-500/5 border-red-500/10 text-red-700'
+            }`}>
+              <div className="mt-0.5">
+                {workerResult.success ? <Zap className="w-4 h-4" /> : <ShieldAlert className="w-4 h-4" />}
               </div>
-              <p className="text-[10px] text-slate-500 uppercase tracking-wider">深度审计 R2 文件与数据库的一致性，生成对账报告</p>
-              {isAuditing && <span className="text-[10px] font-bold text-teal-600 animate-pulse">正在对账中...</span>}
-              {auditResult && (
-                <div className="mt-2 text-[8px] font-bold text-slate-400 bg-white/50 p-1.5 rounded-lg w-full">
-                  正常: {auditResult.healthy} | 缺失: {auditResult.missing} | 孤儿: {auditResult.orphans}
+              <div className="flex-1 min-w-0">
+                <h4 className="text-xs font-bold">
+                  {workerResult.success ? 'Worker 运行正常' : 'Worker 配置异常'}
+                </h4>
+                <div className="text-[10px] mt-1 opacity-80 leading-relaxed font-mono">
+                  {workerResult.message} {workerResult.latency && `(${workerResult.latency}ms)`}
                 </div>
-              )}
-            </button>
-          </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
+      {/* 智能故障修复列表 */}
       <div className="space-y-3">
         <AnimatePresence mode="popLayout">
           {report?.issues.map((issue) => (
@@ -857,38 +587,27 @@ export function DiagnosticsDashboard() {
               key={issue.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white border border-brand-navy/5 rounded-2xl overflow-hidden shadow-sm"
+              className="bg-white border border-brand-navy/5 rounded-2xl overflow-hidden shadow-sm hover:border-brand-navy/10 transition-colors"
             >
               <div className="p-4 flex items-start gap-4">
-                <div className={`p-3 rounded-xl ${severityColors[issue.severity]}`}>
-                  {issue.severity === 'P0' ? <ShieldAlert className="w-6 h-6" /> : <AlertTriangle className="w-6 h-6" />}
+                <div className={`p-2.5 rounded-xl ${severityColors[issue.severity]}`}>
+                  {issue.severity === 'P0' ? <ShieldAlert size={20} /> : <AlertTriangle size={20} />}
                 </div>
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded uppercase border ${severityColors[issue.severity]}`}>
+                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded uppercase border ${severityColors[issue.severity]}`}>
                       {issue.severity}
                     </span>
-                    <span className="text-[10px] font-black text-brand-navy/30 uppercase flex items-center gap-1">
-                      {categoryIcons[issue.category]}
-                      {issue.category}
-                    </span>
-                    <h3 className="text-base font-bold text-brand-navy">{issue.title}</h3>
+                    <h3 className="text-sm font-bold text-brand-navy">{issue.title}</h3>
                   </div>
-                  <p className="text-sm text-brand-navy/60 mb-3">{issue.description}</p>
+                  <p className="text-xs text-brand-navy/60 mb-3">{issue.description}</p>
                   
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                       <span className="text-xs font-bold text-brand-navy px-2 py-1 bg-brand-navy/5 rounded-lg">
+                       <span className="text-[10px] font-bold text-brand-navy/40 px-2 py-1 bg-brand-navy/5 rounded-lg">
                          受影响: {issue.affectedCount}
                        </span>
-                       <div className="flex -space-x-1">
-                         {issue.sampleIds.slice(0, 3).map(sid => (
-                           <div key={sid} className="w-6 h-6 rounded-full bg-brand-navy/10 border-2 border-white flex items-center justify-center text-[8px] font-bold text-brand-navy/40">
-                             {sid.slice(-2)}
-                           </div>
-                         ))}
-                       </div>
                     </div>
                     
                     <div className="flex items-center gap-2">
@@ -896,18 +615,9 @@ export function DiagnosticsDashboard() {
                         <button 
                           onClick={() => runRepair(issue.id)}
                           disabled={isLoading}
-                          className="text-xs font-bold text-brand-gold px-3 py-1.5 bg-brand-gold/5 rounded-xl border border-brand-gold/10 hover:bg-brand-gold/10 transition-colors disabled:opacity-50"
+                          className="text-[11px] font-black text-brand-gold px-4 py-1.5 bg-brand-gold/5 rounded-xl border border-brand-gold/10 hover:bg-brand-gold/10 transition-colors disabled:opacity-50 active:scale-95"
                         >
                           立即自动修复
-                        </button>
-                      )}
-                      {issue.id === 'missing_hashes' && (
-                        <button 
-                          onClick={handleForceDeleteHashes}
-                          disabled={isLoading}
-                          className="text-xs font-bold text-red-500 px-3 py-1.5 bg-red-500/5 rounded-xl border border-red-500/10 hover:bg-red-500/10 transition-colors disabled:opacity-50"
-                        >
-                          强制删除无效记录
                         </button>
                       )}
                     </div>
@@ -919,18 +629,165 @@ export function DiagnosticsDashboard() {
         </AnimatePresence>
 
         {report?.totalIssues === 0 && !isLoading && (
-          <div className="py-20 flex flex-col items-center justify-center text-center space-y-4">
-             <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center text-green-500">
-               <CheckCircle2 className="w-8 h-8" />
+          <div className="py-12 flex flex-col items-center justify-center text-center space-y-4 bg-white rounded-3xl border border-dashed border-slate-200">
+             <div className="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center text-green-500">
+               <CheckCircle2 size={24} />
              </div>
              <div>
-               <h3 className="text-lg font-bold text-brand-navy">数据非常健康</h3>
-               <p className="text-sm text-brand-navy/40">扫描完毕，未发现任何 P0 或 P1 级别的异常记录</p>
+               <h3 className="text-base font-bold text-brand-navy">数据非常健康</h3>
+               <p className="text-xs text-brand-navy/40">扫描完毕，未发现任何同步或完整性问题</p>
              </div>
           </div>
         )}
       </div>
+
+      {/* 高级维护工具栏 */}
+      <div className="bg-slate-50 border border-slate-100 rounded-[32px] p-6 lg:p-8 space-y-8">
+        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">高级维护工具箱 / ADVANCED TOOLKIT</h3>
+        
+        {/* 第一组：数据资产同步 */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 px-1">
+            <CloudDownload size={14} className="text-blue-500" />
+            <h4 className="text-xs font-black text-slate-700">云端存储与同步</h4>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <ToolButton 
+              title="图片对账审计" 
+              desc="审计 R2 与数据库一致性"
+              icon={<PackageSearch size={16} />}
+              onClick={handleAudit}
+              loading={isAuditing}
+              color="blue"
+            />
+            <ToolButton 
+              title="恢复孤儿照片" 
+              desc="找回丢失的云端记录"
+              icon={<CloudDownload size={16} />}
+              onClick={handleImportOrphans}
+              loading={isAuditing}
+              color="green"
+            />
+            <ToolButton 
+              title="深度清理存储" 
+              desc="移除 R2 无主文件"
+              icon={<Trash2 size={16} />}
+              onClick={handleDeepCleanStorage}
+              loading={isDeepCleaningStorage}
+              color="red"
+            />
+          </div>
+        </div>
+
+        {/* 第二组：数据库规范 */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 px-1">
+            <Fingerprint size={14} className="text-brand-navy" />
+            <h4 className="text-xs font-black text-slate-700">数据质量规范</h4>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <ToolButton 
+              title="URL 标准化" 
+              desc="修复图片链接前缀"
+              icon={<RefreshCw size={16} />}
+              onClick={handleBulkFixUrls}
+              loading={isAuditing}
+              color="navy"
+            />
+            <ToolButton 
+              title="资产去重排重" 
+              desc="合并重复哈希记录"
+              icon={<Fingerprint size={16} />}
+              onClick={handleDeduplicate}
+              loading={isDeduplicating}
+              color="purple"
+            />
+            <ToolButton 
+              title="修复元数据" 
+              desc="AI 批量翻译与修复"
+              icon={<Zap size={16} />}
+              onClick={handleBackfillPhotoMetadata}
+              loading={isBackfilling}
+              color="indigo"
+            />
+          </div>
+        </div>
+
+        {/* 第三组：系统架构演进 */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 px-1">
+            <ShieldAlert size={14} className="text-amber-500" />
+            <h4 className="text-xs font-black text-slate-700">系统架构演进</h4>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <ToolButton 
+              title="规范系统编号" 
+              desc="统一 X-XXXXXXXX 格式"
+              icon={<Fingerprint size={16} />}
+              onClick={handleNormalizeItemCodes}
+              loading={isNormalizingCodes}
+              color="orange"
+            />
+            <ToolButton 
+              title="物理路径 UUID 化" 
+              desc="转换 temp-xxx 路径"
+              icon={<RefreshCw size={16} />}
+              onClick={handleCleanupTempUrls}
+              loading={isCleaningTemp}
+              color="amber"
+            />
+            <ToolButton 
+              title="清理冗余记录" 
+              desc="移除重复 URL 脏数据"
+              icon={<Trash2 size={16} />}
+              onClick={handleCleanupRedundant}
+              loading={isCleaningRedundant}
+              color="red"
+            />
+          </div>
+        </div>
+      </div>
     </div>
+  );
+}
+
+function ToolButton({ title, desc, icon, onClick, loading, color }: {
+  title: string;
+  desc: string;
+  icon: React.ReactNode;
+  onClick: () => void;
+  loading: boolean;
+  color: 'blue' | 'green' | 'red' | 'navy' | 'purple' | 'indigo' | 'orange' | 'amber';
+}) {
+  const colorMap = {
+    blue: 'bg-blue-50 hover:bg-blue-100 text-blue-600 border-blue-100',
+    green: 'bg-green-50 hover:bg-green-100 text-green-600 border-green-100',
+    red: 'bg-red-50 hover:bg-red-100 text-red-600 border-red-100',
+    navy: 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200',
+    purple: 'bg-purple-50 hover:bg-purple-100 text-purple-600 border-purple-100',
+    indigo: 'bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border-indigo-100',
+    orange: 'bg-orange-50 hover:bg-orange-100 text-orange-600 border-orange-100',
+    amber: 'bg-amber-50 hover:bg-amber-100 text-amber-600 border-amber-100',
+  };
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={loading}
+      className={`flex flex-col gap-2 p-4 rounded-2xl border transition-all active:scale-95 text-left group ${colorMap[color as keyof typeof colorMap]} disabled:opacity-50`}
+    >
+      <div className="flex items-center gap-2">
+        <div className="p-2 bg-white/50 rounded-lg shadow-sm">
+          {icon}
+        </div>
+        <span className="text-xs font-black tracking-tight">{title}</span>
+      </div>
+      <p className="text-[9px] opacity-70 uppercase font-bold tracking-wider leading-tight">{desc}</p>
+      {loading && <div className="mt-1 flex items-center gap-2">
+        <div className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" />
+        <span className="text-[10px] font-black animate-pulse uppercase">处理中...</span>
+      </div>}
+    </button>
   );
 }
 

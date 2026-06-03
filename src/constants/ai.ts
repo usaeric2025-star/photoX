@@ -9,13 +9,9 @@ Task: Meticulously inspect every portion of the furniture image and tables to ex
 
 【CORE DATA FIELDS (STRICTLY USE snake_case ONLY)】
 - "name": Highly descriptive product series identifier or brand name (e.g., "Mero Modern Dining Table Set"). If explicitly specified in the image text, prioritize that wording exactly. Otherwise, generate an elegant name.
-- "model_number": SKU/Serial/Model code(s). If multiple models appear or are mentioned in the image, join them with "/" (e.g., "C101/C102/C103"). Never miss any model numbers!
 - "price": Numeric estimated or listed price. Default to 0.
 - "description": Professional summary in 【简体中文 (Simplified Chinese)】. Detail materials, design, functionality, and distinguish any multiple variants/sizes/options.
 - "description_translations": A REQUIRED object containing complete, professional descriptions in different languages translating the primary Chinese "description":
-  - "zh": Summary in 【简体中文 (Simplified Chinese)】 (should be identical to the main "description" field).
-  - "en": Fluent, natural summary in 【English】.
-  - "ms": Fluent, natural summary in 【Bahasa Melayu】.
 - "category_id": ${categoryContext} (For matching, consider the English definition and names heavily first. Prioritize English classification alignment).
 - "tag_ids": Map to exactly 3 most relevant tag IDs from this list: ${tagsJson}. Filter down or fill up to ensure EXACTLY 3 tags are selected.
 - "new_tags": If no existing tags fit, create 1-3 new keyword tags in English/Malay (e.g., "LEATHER", "RATTAN"). NO CHINESE.
@@ -45,7 +41,6 @@ Task: Meticulously inspect every portion of the furniture image and tables to ex
 Target Response Schema:
 {
   "name": "Product Name",
-  "model_number": "ModelA/ModelB",
   "category_id": "category-id-example",
   "dimensions": [
     { "label": "Model A Table", "length": 140, "width": 80, "height": 75, "unit": "cm", "isAIEstimated": false },

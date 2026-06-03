@@ -207,9 +207,11 @@ export const analyzeProductPhoto = async (
     if (dataToProcess.newTags && !dataToProcess.new_tags) {
       dataToProcess.new_tags = dataToProcess.newTags;
     }
-    if (dataToProcess.modelNumber && !dataToProcess.model_number) {
-      dataToProcess.model_number = dataToProcess.modelNumber;
-    }
+    
+    // [V2.60] Manual fields block: model_number and item_code are manual and numeric only.
+    // AI should not suggest these. We clear them if they exist in output.
+    dataToProcess.model_number = null;
+    dataToProcess.item_code = null;
     
     // 1. Resolve naming priority
     let finalName = '';

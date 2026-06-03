@@ -8,6 +8,8 @@ import { useAdminActions } from '@/features/admin/useAdminActions';
 import { Skeleton } from '../ui/Skeleton';
 import { usePermission, useErrorHandler, useTaskExecutor, useTasks } from '@/hooks';
 import { useAIPhotoAnalysis } from '@/hooks/core/mutations/useAIPhotoAnalysis';
+import { getDisplayGroupCode } from '@/services/utils';
+import { Layers } from 'lucide-react';
 
 interface LightboxInfoPanelProps {
   photo: Photo;
@@ -149,12 +151,27 @@ export function LightboxInfoPanel({
           </div>
         </div>
 
-        {(photo.price || photo.model_number) && (
+        {(photo.price || photo.model_number || photo.item_code) && (
           <div className="flex flex-wrap items-stretch gap-3">
              {photo.price && (
                <div className="bg-brand-navy text-brand-bg px-4 py-2 rounded-2xl shadow-md flex-1 min-w-[120px]">
                  <span className="text-[10px] font-bold uppercase tracking-widest block opacity-70 mb-0.5">{(t as any).price}</span>
                  <p className="text-xl font-bold leading-none">{photo.price}</p>
+               </div>
+             )}
+             {photo.item_code && (
+               <div className="bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-2xl flex-1 min-w-[100px] flex flex-col justify-center">
+                 <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter block mb-0">系统编号 / SYS</span>
+                 <p className="font-mono font-bold text-slate-500 text-[11px] tracking-tight">{photo.item_code}</p>
+               </div>
+             )}
+             {photo.group_id && (
+               <div className="bg-blue-50 border border-blue-100 px-3 py-1.5 rounded-2xl flex-1 min-w-[100px] flex flex-col justify-center">
+                 <span className="text-[8px] font-bold text-blue-400 uppercase tracking-tighter block mb-0 flex items-center gap-1">
+                   <Layers size={8} />
+                   合组编号 / GRP
+                 </span>
+                 <p className="font-mono font-bold text-blue-600 text-[11px] tracking-tight">{getDisplayGroupCode(photo.group_id)}</p>
                </div>
              )}
              {photo.model_number && (
@@ -208,7 +225,13 @@ export function LightboxInfoPanel({
                  const dimStr = prefixMatch ? prefixMatch[2] : label;
                  
                  return (
-                   <div key={i} className="bg-white p-3.5 border border-slate-100 rounded-[24px] col-span-2 shadow-sm hover:shadow-md transition-shadow">
+                   <div key={i} className="bg-white p-3.5 border border-slate-100 rounded-[24px] col-span-2 shadow-sm hover:shadow-md transition-shadow relative">
+                      {dim.is_ai && (
+                        <div className="absolute -top-2 -right-1 z-10 flex items-center gap-1 bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full border border-purple-100 shadow-sm">
+                          <Sparkles size={8} className="animate-pulse" />
+                          <span className="text-[8px] font-black uppercase tracking-tighter">AI 识别</span>
+                        </div>
+                      )}
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           {prefix && (

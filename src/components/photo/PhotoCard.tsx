@@ -52,10 +52,11 @@ function PinButton({ photoId, isPinned }: { photoId: string; isPinned: boolean }
 import { Photo, Category, Tag } from '../../types';
 import { GalleryVariant } from '@/types/variant';
 import { Layers, Heart, Check, EyeOff } from 'lucide-react';
-import { getCacheBustedImageUrl } from '../../lib/ui-helpers';
+import { getCacheBustedImageUrl, getPhotoDisplayName } from '../../lib/ui-helpers';
 import { ResponsivePhoto } from '../shared/ResponsivePhoto';
 import { usePermission, useFilters, useCategories, useTags, useErrorHandler } from '../../hooks';
 import { useAdminActions } from '@/features/admin/useAdminActions';
+import { getDisplayGroupCode } from '@/services/utils';
 
 import { toast } from '@/lib/ui/toast';
 import { cn } from '@/lib/utils';
@@ -78,15 +79,19 @@ function PhotoStatusBadges({ photo, variant, isPinned, hideGroupBadge }: { photo
   // Display group info if photo belongs to a group
   const shouldShowGroup = !hideGroupBadge && showGroupsCollapsed && photo.group_id;
 
-  const groupCode = photo.group_id ? photo.group_id.slice(-4).toUpperCase() : '';
+  const groupCode = getDisplayGroupCode(photo.group_id);
   const memberCount = photo.group?.member_count ?? 1;
 
   return (
     <div className="absolute top-1.5 left-1.5 z-10 flex gap-1 flex-col pointer-events-none">
       {shouldShowGroup && (
-        <div className="backdrop-blur-md px-1.5 py-0.5 rounded-md text-[10px] text-white font-bold flex items-center gap-1 border border-white/20 shadow-sm bg-blue-600/80">
+        <div className="backdrop-blur-md px-1.5 py-0.5 rounded-md text-[10px] text-white font-bold flex items-center gap-1.5 border border-white/20 shadow-sm bg-blue-600/80">
           <Layers size={10} strokeWidth={2.5} />
-          <span>{memberCount}</span>
+          <div className="flex items-center gap-1">
+            <span className="opacity-70 text-[8px] font-mono">{groupCode}</span>
+            <span className="w-1 h-1 rounded-full bg-white/40" />
+            <span>{memberCount}</span>
+          </div>
         </div>
       )}
       {isManagement && isPinned && (
