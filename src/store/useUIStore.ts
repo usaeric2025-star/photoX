@@ -96,7 +96,14 @@ const defaultForm: ProductFormData = {
 };
 
 export const useUIStore = create<UIStoreState>()((set) => ({
-  appLang: safeGetItem(STORAGE_KEYS.LANG, 'en', undefined, false) as 'zh' | 'en' | 'ms',
+  appLang: (() => {
+    const raw = safeGetItem(STORAGE_KEYS.LANG, 'en', undefined, false);
+    if (!raw) return 'en';
+    const lower = String(raw).toLowerCase();
+    if (lower.startsWith('zh')) return 'zh';
+    if (lower.startsWith('ms')) return 'ms';
+    return 'en';
+  })() as 'zh' | 'en' | 'ms',
   lightboxIndex: null,
   editPhotoId: safeGetItem(STORAGE_KEYS.EDIT_PHOTO, null, undefined, true),
   batchEditingIds: safeGetItem(STORAGE_KEYS.BATCH_EDITING, null, undefined, true),

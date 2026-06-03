@@ -88,9 +88,9 @@ export function PublicGridContainer({
     const handleResize = () => {
       const isMobile = window.innerWidth <= 768;
       if (isMobile) {
-        update({ columns: 3 });
+        setColumns(3);
       } else {
-        update({ columns: 5 }); // Default desktop to 5
+        setColumns(5); // Default desktop to 5
       }
     };
     handleResize(); 

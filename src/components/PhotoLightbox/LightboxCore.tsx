@@ -59,48 +59,41 @@ export const LightboxCore = ({
       slides={slides}
       plugins={LIGHTBOX_PLUGINS}
       render={{
-        toolbar: ({ toolbar }) => (
+        // Render default toolbar plus custom buttons
+        toolbar: ({ toolbar }: any) => (
           <>
             {toolbar}
-            {setShowInfo && (
-              <button
-                onClick={() => setShowInfo(!showInfo)}
-                className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[1050] flex items-center gap-2 px-5 py-2.5 rounded-full bg-black/60 backdrop-blur-xl text-white border border-white/20 shadow-2xl hover:bg-black/80 hover:scale-[1.02] active:scale-[0.98] transition-all"
-              >
-                <Info size={16} className={showInfo ? "opacity-50" : ""} />
-                <span className="text-sm font-bold tracking-wide">{showInfo ? "关闭信息" : "照片信息"}</span>
-              </button>
-            )}
           </>
         ),
+        // Overwrite the download button with multiple actions
         buttonDownload: () => (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5 mr-2">
             {showEdit && (
-              <button 
-                type="button" 
-                className="yarl__button" 
+              <button
                 onClick={() => {
                   const photo = photos[index];
                   if (photo) onEdit?.(photo);
                 }}
-                title="编辑照片"
+                className="yarl__button hover:text-blue-400 transition-colors"
+                aria-label="编辑"
+                title="编辑"
               >
-                <Pencil size={20} />
+                <Pencil size={22} />
               </button>
             )}
-            <button 
-              type="button" 
-              className="yarl__button" 
+            <button
               onClick={() => {
                 const photo = photos[index];
                 if (photo) downloadPhotoAsJpeg(photo.image_url);
               }}
-              title="下载原图"
+              className="yarl__button hover:text-blue-400 transition-colors"
+              aria-label="下载"
+              title="下载"
             >
               <Download size={22} />
             </button>
           </div>
-        )
+        ),
       }}
       {...LIGHTBOX_OPTIONS}
     />

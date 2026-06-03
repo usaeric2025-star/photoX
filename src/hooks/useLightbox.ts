@@ -67,20 +67,11 @@ export const useLightbox = () => {
   const currentPhoto = currentIndex >= 0 ? photos[currentIndex] : null;
   
   const close = () => {
-    if (groupId) {
-      // In a group context: keep the group, only clear the photo
-      navigate({
-        to: isAdmin ? '/admin/group/$groupId' : '/group/$groupId',
-        params: { groupId },
-        search: (prev: any) => ({ ...prev, photoId: undefined })
-      });
-    } else {
-      // Single photo mode: go back to list
-      navigate({
-        to: isAdmin ? '/admin' : '/',
-        search: (prev: any) => ({ ...prev, photoId: undefined })
-      });
-    }
+    navigate({
+      to: location.pathname,
+      search: (prev: any) => ({ ...prev, photoId: undefined }),
+      replace: true
+    });
   };
   
   // Rule 5: Standard return values

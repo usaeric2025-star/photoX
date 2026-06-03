@@ -61,6 +61,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
     initialValues: {
       name: "",
       category_id: null,
+      manufacturer_id: null,
       tag_ids: [],
       description: "",
       item_code: "",

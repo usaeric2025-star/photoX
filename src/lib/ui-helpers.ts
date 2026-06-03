@@ -12,18 +12,20 @@ export const getTranslatedCategoryName = (
   lang: string,
   t: TranslationType
 ): string => {
-  if (!catId) return t.uncategorized;
+  if (!catId) return "";
   
   const catIdStr = String(catId);
   const activeCat = categories.find(c => String(c.id) === catIdStr || (c as any).code === catIdStr);
   
-  if (!activeCat) return t.uncategorized;
+  if (!activeCat) return "";
 
-  const name = lang === 'zh' ? (activeCat.zh || activeCat.name) : 
-               lang === 'en' ? (activeCat.en || activeCat.name || activeCat.zh) :
-               lang === 'ms' ? (activeCat.ms || activeCat.name || activeCat.en || activeCat.zh) : activeCat.name;
+  const nameTrans = (activeCat as any).name_translations || {};
 
-  return name || catIdStr;
+  const name = lang === 'zh' ? (activeCat.zh || nameTrans.zh || activeCat.name || activeCat.en || nameTrans.en) : 
+               lang === 'en' ? (activeCat.en || nameTrans.en || activeCat.name || activeCat.zh || nameTrans.zh) :
+               lang === 'ms' ? (activeCat.ms || nameTrans.ms || activeCat.name || activeCat.en || nameTrans.en) : activeCat.name;
+
+  return name || "";
 };
 
 /**

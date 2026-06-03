@@ -124,7 +124,7 @@ export function ManufacturerList({
 }
 
 function ManufacturerButton({ mfr, isSelected, onSelect, onEdit, onDelete, update }: any) {
-  const btnRef = React.useRef<HTMLButtonElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
   useLongPress(btnRef, {
     delay: 600,
     onLongPress: () => {

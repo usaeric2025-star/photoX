@@ -1,7 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { X, MessageCircle, Download } from 'lucide-react';
-import { downloadPhotoAsJpeg } from '../lib/download';
+import { X, MessageCircle } from 'lucide-react';
 
 import { AppSettings } from '../types';
 
@@ -76,21 +75,6 @@ export function WhatsAppChoiceDialog({
             >
               <MessageCircle size={20} />
               <span>{t.whatsAppInquiry}</span>
-            </button>
-          )}
-          {pendingPhoto && (
-            <button 
-              onClick={() => {
-                downloadPhotoAsJpeg(pendingPhoto.image_url);
-                onClose();
-              }}
-              className="w-full py-4 px-6 bg-slate-800 text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] transition-all"
-            >
-              <Download size={20} />
-              <div className="flex-1 flex flex-col items-start px-2">
-                <span className="text-[10px] opacity-70 uppercase tracking-widest">Messenger 兼容</span>
-                <span className="leading-tight">保存为 JPEG 照片</span>
-              </div>
             </button>
           )}
         </div>

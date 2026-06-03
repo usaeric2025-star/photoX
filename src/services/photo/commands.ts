@@ -134,7 +134,7 @@ export async function update(id: string, updates: Partial<Photo>): Promise<AppRe
         updates.updated_at = new Date().toISOString();
         delete updates.uri;
       } catch (uploadErr: any) {
-        return errorFactory(uploadErr.message, 'STORAGE_ERROR', 'update', uploadErr);
+        return errorFactory(uploadErr.message, 'UPLOAD_FAILED', 'update', uploadErr);
       }
     }
 

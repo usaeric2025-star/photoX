@@ -228,7 +228,7 @@ export function TagEditor({
 }
 
 function TagButton({ tag, isSelected, isHot, isPinned, isDisabled, onToggle, onLongPress: onLongPressProp }: any) {
-  const btnRef = React.useRef<HTMLButtonElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
   useLongPress(btnRef, {
     delay: 600,
     onLongPress: onLongPressProp

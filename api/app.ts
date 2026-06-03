@@ -1580,7 +1580,7 @@ app.post("/ai/analyze-group", async (c) => {
       const { photoDetails } = await c.req.json();
       const apiKey = serverEnv.GEMINI_API_KEY;
       if (!apiKey) return c.json({ error: "Server API key not configured" }, 500);
-      const prompt = `你是一个家具产品系列合并专家。根据以下这些被分到同一系列的单品的数据，为整个家具系列生成通用的元数据。请以纯JSON格式返回。
+      const prompt = `你是一个家具产品系列合并分析专家。根据以下这些被分到同一系列的单品的数据，为整个家具系列生成通用的元数据。请以纯JSON格式返回。
 所需的JSON结构如下:
 {
   "name": "系列名称(英文, 如 Mero Modern Dining Set)",

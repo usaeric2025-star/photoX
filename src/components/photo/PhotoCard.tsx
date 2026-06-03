@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { reportError } from '@/lib/errorTracker';
 import { queryClient } from '@/lib/queryClient';
 import { photoKeys } from '@/lib/queryKeys';
+import { getTranslatedCategoryName } from '@/lib/ui-helpers';
 import { useSearch, useNavigate } from '@tanstack/react-router';
 
 async function togglePinAction(prevState: { error: string | null }, formData: FormData) {
@@ -57,7 +58,6 @@ import { ResponsivePhoto } from '../shared/ResponsivePhoto';
 import { usePermission, useFilters, useCategories, useTags, useErrorHandler } from '../../hooks';
 import { useAdminActions } from '@/features/admin/useAdminActions';
 import { getDisplayGroupCode } from '@/services/utils';
-import { downloadPhotoAsJpeg } from '@/lib/download';
 
 import { toast } from '@/lib/ui/toast';
 import { cn } from '@/lib/utils';
@@ -163,6 +163,7 @@ export const PhotoCard = React.memo(({
   const { handleError } = useErrorHandler();
   const cardRef = useRef<HTMLDivElement>(null);
   const longPressTriggered = useRef(false);
+  const resetTimerRef = useRef<number | null>(null);
   const isManagement = variant === 'full-management' || variant === 'staff-workspace';
   
   const lang = useUIStore(s => s.appLang);
@@ -176,10 +177,7 @@ export const PhotoCard = React.memo(({
 
   const categoryId = photo.category_id ? String(photo.category_id) : '';
   
-  const displayCatName = (() => {                
-    const category = categories.find(c => String(c.id) === categoryId);                
-    return category ? (category[lang as keyof Category] as string || category.name) : '';                
-  })();                
+  const displayCatName = getTranslatedCategoryName(categoryId, categories, lang, t);                
                 
   const photoTags = (() => {                
     const tagIdsList = Array.isArray(photo.tag_ids) ? photo.tag_ids : [];                
@@ -203,7 +201,6 @@ export const PhotoCard = React.memo(({
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (longPressTriggered.current) {
-      longPressTriggered.current = false;
       e.stopPropagation();
       e.preventDefault();
       return;
@@ -243,6 +240,10 @@ export const PhotoCard = React.memo(({
     delay: 600,
     onLongPress: () => {
       longPressTriggered.current = true;
+      if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
+      resetTimerRef.current = window.setTimeout(() => {
+        longPressTriggered.current = false;
+      }, 300);
       if (isManagement) {
         if (!isMultiSelect) {
           update({ isMultiSelect: true, selectedIds: [photo.id] } as any);

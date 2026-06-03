@@ -1,6 +1,8 @@
 import React from 'react';
 import { Photo, ProductGroup } from '@/types/photo';
 import { Category, Tag } from '@/types/photo';
+import { getTranslatedCategoryName } from '@/lib/ui-helpers';
+import { translations } from '@/lib/translations';
 import { useCategories } from '@/hooks/core/queries/useCategories';
 import { useTags } from '@/hooks/core/queries/useTags';
 import { useUIStore } from '@/store/useUIStore';
@@ -98,10 +100,7 @@ export function PhotoInfoPanel({
   if (!isGroup) {
     const photo = data as Photo;
     if (photo.category_id) {
-       const cat = fetchedCategories.find(c => String(c.id) === String(photo.category_id));
-       if (cat) {
-         displayCategoryName = (cat[appLang as keyof Category] as string) || cat.name || '';
-       }
+       displayCategoryName = getTranslatedCategoryName(photo.category_id, fetchedCategories, appLang, translations[appLang]);
     }
     if (Array.isArray(photo.tag_ids) && photo.tag_ids.length > 0) {
        displayTagNames = photo.tag_ids.map(id => {
