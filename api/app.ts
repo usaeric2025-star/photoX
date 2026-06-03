@@ -562,15 +562,17 @@ app.post("/admin-repair", async (c) => {
           return c.json({ success: false, error: "未在服务器检测到 VITE_THUMBNAIL_WORKER_URL 环境变量，请在 Vercel 后台设置并重新部署" });
         }
 
-        let targetUrl = workerUrl;
+        const base = workerUrl.replace(/\/$/, '');
+        let targetUrl = base;
         let isRealImage = false;
 
         if (testImageUrl) {
-          const base = workerUrl.replace(/\/$/, '');
-          const urlObj = new URL(testImageUrl);
-          const path = urlObj.pathname.startsWith('/') ? urlObj.pathname : `/${urlObj.pathname}`;
-          targetUrl = `${base}${cleanPath(path)}?w=200&h=200`;
-          isRealImage = true;
+          try {
+            const urlObj = new URL(testImageUrl);
+            const path = urlObj.pathname;
+            targetUrl = `${base}${path.startsWith('/') ? path : '/' + path}?w=200&h=200`;
+            isRealImage = true;
+          } catch (e) {}
         } else {
           // If no test image, try to find one random image from DB to test "real" connectivity
           const { data: randomPhoto } = await supabase
@@ -580,7 +582,6 @@ app.post("/admin-repair", async (c) => {
             .single();
           
           if (randomPhoto?.image_url) {
-            const base = workerUrl.replace(/\/$/, '');
             try {
               const urlObj = new URL(randomPhoto.image_url);
               const path = urlObj.pathname;
@@ -596,7 +597,7 @@ app.post("/admin-repair", async (c) => {
           const timeoutId = setTimeout(() => controller.abort(), 8000);
           
           const res = await fetch(targetUrl, { 
-            method: 'GET', // Use GET instead of HEAD for more realistic test
+            method: 'GET',
             signal: controller.signal
           });
           
