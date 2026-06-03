@@ -81,7 +81,7 @@ const PublicPage = lazyWithRetry(() => import('@/pages/PublicPage'), 'PublicPage
 const AdminPage = lazyWithRetry(() => import('@/pages/AdminPage'), 'AdminPage');
 const MaintenanceHistoryPage = lazyWithRetry(() => import('@/pages/AdminPage/MaintenanceHistoryPage'), 'MaintenanceHistoryPage');
 const TasksPage = lazyWithRetry(() => import('@/pages/AdminPage/TasksPage'), 'TasksPage');
-const PhotoLightboxPage = lazy(() => import('@/pages/PhotoLightboxPage'));
+const PhotoLightboxPage = lazyWithRetry(() => import('@/pages/PhotoLightboxPage'), 'PhotoLightboxPage');
 
 // 1. Root Route
 export const rootRoute = createRootRouteWithContext<RouterContext>()({

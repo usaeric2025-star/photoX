@@ -118,11 +118,6 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
     return (
       <>
         <div className="flex items-center gap-1.5 shrink-0">
-            {preview && (
-              <span className="text-[11px] font-medium text-blue-600 bg-blue-50/70 px-2 py-0.5 rounded-md border border-blue-100 animate-in fade-in zoom-in duration-300 shrink-0">
-                影响 {preview.affectedCount} 项
-              </span>
-            )}
             <Button 
               variant="outline" 
               size="sm" 
@@ -131,7 +126,7 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
               className="text-[11px] h-7 px-2.5 font-medium border-slate-200 hover:bg-slate-50 rounded-lg text-slate-700 transition-all shrink-0"
             >
               {isPreviewing ? <Loader2 className="w-3 h-3 animate-spin mr-1.5" /> : null}
-              预览
+              {preview ? "已预检" : "预览"}
             </Button>
             <Button 
               variant={danger ? "destructive" : "default"} 

@@ -22,6 +22,11 @@ export const LightboxCore = ({ open, onClose, photos, currentIndex = 0, onIndexC
   const [index, setIndex] = useState(currentIndex);
   const slides = toLightboxSlides(photos);
   
+  // Keep index synchronized with currentIndex prop
+  React.useEffect(() => {
+    setIndex(currentIndex);
+  }, [currentIndex]);
+  
   if (slides.length === 0) return null;
 
   return (
@@ -30,9 +35,9 @@ export const LightboxCore = ({ open, onClose, photos, currentIndex = 0, onIndexC
       close={onClose}
       index={index}
       on={{ 
-        view: ({ index }) => {
-          setIndex(index);
-          onIndexChange?.(index);
+        view: ({ index: newIndex }) => {
+          setIndex(newIndex);
+          onIndexChange?.(newIndex);
         } 
       }}
       slides={slides}

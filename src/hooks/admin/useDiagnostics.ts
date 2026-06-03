@@ -4,6 +4,7 @@ import { api } from '@/lib/api';
 import { fromThrowableAsync } from '@/lib/errorFactory';
 import { toast } from 'sonner';
 import { DiagnosticsReport } from '@/types/diagnostics';
+import { photoKeys, groupKeys } from '@/lib/queryKeys';
 
 /**
  * [ATOMIC-HOOK] useDiagnostics
@@ -49,7 +50,8 @@ export function useDiagnostics() {
     },
     onSuccess: (data) => {
       toast.success(data.message || "修复成功");
-      queryClient.invalidateQueries({ queryKey: [['photos'], ['groups']] });
+      queryClient.invalidateQueries({ queryKey: photoKeys.all });
+      queryClient.invalidateQueries({ queryKey: groupKeys.all });
       refreshReport();
     },
     onError: (err: any) => toast.error(`修复尝试失败: ${err.message}`)
@@ -67,7 +69,11 @@ export function useDiagnostics() {
     }
   });
 
-  const refreshReport = () => scan();
+  const refreshReport = () => {
+    scan();
+    queryClient.invalidateQueries({ queryKey: photoKeys.all });
+    queryClient.invalidateQueries({ queryKey: groupKeys.all });
+  };
 
   const runR2Diagnostics = async () => {
     setIsDiagnosingR2(true);

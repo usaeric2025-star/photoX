@@ -4,6 +4,7 @@ import { useGroupPhotos } from "./core/queries/usePhotos";
 import { useGroupDetail } from "./core/queries/useGroupDetail";
 import { useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { Photo } from "@/types";
 
 /**
  * [ATOMIC-HOOK] useLightbox
@@ -27,16 +28,28 @@ export const useLightbox = () => {
   const isGroupMode = !!groupId; // Within a group's context
 
   const photos = useMemo(() => {
+    let list: Photo[] = [];
     if (!!groupId) {
       // Flatten infinite query pages for the lightbox if in group context
       const allPhotos = groupPhotos?.pages.flatMap(page => page.photos) ?? [];
       // If we have a single photo already, ensure it's in the list if not fetched yet
       if (singlePhoto && !allPhotos.find(p => p.id === singlePhoto.id)) {
-        return [singlePhoto, ...allPhotos];
+        list = [singlePhoto, ...allPhotos];
+      } else {
+        list = allPhotos;
       }
-      return allPhotos;
+    } else {
+      list = singlePhoto ? [singlePhoto] : [];
     }
-    return singlePhoto ? [singlePhoto] : [];
+
+    // Keep unique photos by checking their stable ids
+    const seen = new Set<string>();
+    return list.filter((p) => {
+      if (!p || !p.id) return false;
+      if (seen.has(p.id)) return false;
+      seen.add(p.id);
+      return true;
+    });
   }, [groupId, groupPhotos, singlePhoto]);
 
   const currentIndex = useMemo(() => {

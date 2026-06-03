@@ -11,6 +11,7 @@ import { MaintenanceTool } from './Diagnostics/MaintenanceTool';
 import { ISSUE_ACTIONS } from '@/features/maintenance/issueActions';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from '@tanstack/react-router';
+import { useUIStore } from '@/store/useUIStore';
 
 const severityColors = {
   P0: 'bg-red-50 text-red-600 border-red-100',
@@ -26,6 +27,7 @@ const severityColors = {
  */
 export function DiagnosticsDashboard() {
   const navigate = useNavigate();
+  const updateUIStore = useUIStore((s) => s.update);
   const { 
     report, isLoading, refreshReport, runRepair,
     runR2Diagnostics, isDiagnosingR2, r2Result,
@@ -35,7 +37,7 @@ export function DiagnosticsDashboard() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <ShieldCheck className="w-8 h-8 text-brand-navy" />
           <div className="space-y-0.5">
@@ -43,11 +45,14 @@ export function DiagnosticsDashboard() {
             <p className="text-xs text-slate-500 font-medium">REAL-TIME SYSTEM DIAGNOSIS & RECOVERY ENGINE</p>
           </div>
         </div>
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 flex-wrap">
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => navigate({ to: '/admin/tasks' })}
+            onClick={() => {
+              updateUIStore({ activeScreen: 'tasks' });
+              navigate({ to: '/admin/tasks' });
+            }}
             className="rounded-xl bg-slate-950 text-white hover:bg-slate-850 border-none transition-all h-9 px-4 text-xs font-medium gap-1.5 shadow-sm"
           >
             <Zap size={14} className="text-yellow-400 fill-yellow-400 animate-pulse" />
@@ -56,7 +61,10 @@ export function DiagnosticsDashboard() {
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => navigate({ to: '/admin/history/maintenance' })}
+            onClick={() => {
+              updateUIStore({ activeScreen: 'history_maintenance' });
+              navigate({ to: '/admin/history/maintenance' });
+            }}
             className="rounded-xl bg-white border-slate-250 text-slate-700 hover:text-slate-900 hover:bg-slate-50 transition-all h-9 px-4 text-xs font-medium gap-1.5"
           >
             <History size={14} className="text-slate-500" />
@@ -251,12 +259,12 @@ export function DiagnosticsDashboard() {
                   </div>
                   <p className="text-xs text-brand-navy/60 mb-3">{issue.description}</p>
                   
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-[10px] font-bold text-brand-navy/40 px-2 py-1 bg-brand-navy/5 rounded-lg">
-                       受影响: {issue.affectedCount}
+                  <div className="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t border-slate-100/60 mt-1">
+                    <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 px-2.5 py-1 bg-slate-100/70 rounded-full shrink-0">
+                       受影响: {issue.affectedCount} 项
                     </div>
                     
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-2 flex-wrap min-w-0">
                        {ISSUE_ACTIONS[issue.id] ? (
                          <MaintenanceTool 
                            issueId={issue.id}

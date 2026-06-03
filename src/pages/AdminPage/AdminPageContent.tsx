@@ -18,6 +18,7 @@ import { PublicGridContainer } from '@/components/photo/PublicGridContainer';
 import { AdminGridContainer } from '@/components/photo/AdminGridContainer';
 import { PublicHeader } from '@/components/layouts/headers/PublicHeader';
 import TasksPage from '@/pages/AdminPage/TasksPage';
+import MaintenanceHistoryPage from '@/pages/AdminPage/MaintenanceHistoryPage';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { useFilters } from '@/features/filters/useFilters';
 import { useGroupView } from '@/features/groups/useGroupView';
@@ -175,6 +176,12 @@ export function AdminPageContent() {
               {store.activeScreen === 'tasks' && (
                 <div className="absolute inset-0 z-20 bg-slate-50 p-8 overflow-y-auto w-full no-scrollbar">
                   <TasksPage />
+                </div>
+              )}
+
+              {store.activeScreen === 'history_maintenance' && (
+                <div className="absolute inset-0 z-20 bg-slate-50 p-8 overflow-y-auto w-full no-scrollbar">
+                  <MaintenanceHistoryPage />
                 </div>
               )}
             </main>

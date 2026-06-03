@@ -891,9 +891,33 @@ app.get("/storage/audit", async (c) => {
 app.post("/admin/maintenance/member-count-mismatch/preview", async (c) => {
     try {
         const supabase = await getSupabaseAdmin();
-        // This logic is simplified from the main diagnose endpoint
-        const { data: groups } = await supabase.rpc('get_groups_with_counts');
-        const mismatches = (groups || []).filter((g: any) => g.member_count !== g.actual_count);
+        const [
+          { data: photos, error: pErr },
+          { data: groups, error: gErr },
+        ] = await Promise.all([
+          supabase.from("furniture_items").select("id, group_id"),
+          supabase.from("groups").select("id, name, member_count"),
+        ]);
+        if (pErr) throw pErr;
+        if (gErr) throw gErr;
+
+        const photosByGroup = new Map<string, number>();
+        photos?.forEach(p => { 
+          if (p.group_id) { 
+            const gid = String(p.group_id); 
+            photosByGroup.set(gid, (photosByGroup.get(gid) || 0) + 1); 
+          } 
+        });
+
+        const mismatches = groups?.filter(g => {
+           const actualCount = photosByGroup.get(String(g.id)) || 0;
+           return g.member_count !== actualCount;
+        }).map(g => ({
+           id: g.id,
+           name: g.name,
+           actual_count: photosByGroup.get(String(g.id)) || 0,
+           member_count: g.member_count ?? 0
+        })) || [];
         
         return c.json({
             affectedCount: mismatches.length,
@@ -946,8 +970,33 @@ app.get("/admin/maintenance/job/:jobId", async (c) => {
 app.post("/admin/repair/member-count-mismatch/execute", async (c) => {
     try {
         const supabase = await getSupabaseAdmin();
-        const { data: groups } = await supabase.rpc('get_groups_with_counts');
-        const mismatches = (groups || []).filter((g: any) => g.member_count !== g.actual_count);
+        const [
+          { data: photos, error: pErr },
+          { data: groups, error: gErr },
+        ] = await Promise.all([
+          supabase.from("furniture_items").select("id, group_id"),
+          supabase.from("groups").select("id, name, member_count"),
+        ]);
+        if (pErr) throw pErr;
+        if (gErr) throw gErr;
+
+        const photosByGroup = new Map<string, number>();
+        photos?.forEach(p => { 
+          if (p.group_id) { 
+            const gid = String(p.group_id); 
+            photosByGroup.set(gid, (photosByGroup.get(gid) || 0) + 1); 
+          } 
+        });
+
+        const mismatches = groups?.filter(g => {
+           const actualCount = photosByGroup.get(String(g.id)) || 0;
+           return g.member_count !== actualCount;
+        }).map(g => ({
+           id: g.id,
+           name: g.name,
+           actual_count: photosByGroup.get(String(g.id)) || 0,
+           member_count: g.member_count ?? 0
+        })) || [];
         
         if (mismatches.length === 0) {
             return c.json({ success: true, message: "所有计数均已同步" });
@@ -968,7 +1017,7 @@ app.post("/admin/repair/member-count-mismatch/execute", async (c) => {
                 const group = mismatches[i];
                 try {
                     await supabase
-                        .from('photo_groups')
+                        .from('groups') // Update groups instead of photo_groups
                         .update({ member_count: group.actual_count })
                         .eq('id', group.id);
 
