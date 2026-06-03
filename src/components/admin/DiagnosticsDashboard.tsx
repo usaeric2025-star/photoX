@@ -12,7 +12,8 @@ import {
   Trash2,
   PackageSearch,
   CloudDownload,
-  Fingerprint
+  Fingerprint,
+  Zap
 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
@@ -114,6 +115,9 @@ export function DiagnosticsDashboard() {
   const [isCleaningRedundant, setIsCleaningRedundant] = useState(false);
   const [isAuditing, setIsAuditing] = useState(false);
   const [auditResult, setAuditResult] = useState<any | null>(null);
+
+  const [isTestingWorker, setIsTestingWorker] = useState(false);
+  const [workerResult, setWorkerResult] = useState<{ success: boolean; message: string; latency?: number } | null>(null);
 
   const { user } = useAuth();
   const update = useUIStore(s => s.update);
@@ -281,6 +285,45 @@ export function DiagnosticsDashboard() {
     }
   };
 
+  const handleTestWorker = async () => {
+    const workerUrl = import.meta.env.VITE_THUMBNAIL_WORKER_URL;
+    if (!workerUrl) {
+      setWorkerResult({ success: false, message: '未配置 VITE_THUMBNAIL_WORKER_URL 环境变量' });
+      return;
+    }
+
+    setIsTestingWorker(true);
+    const start = performance.now();
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
+      const res = await fetch(workerUrl, { 
+        method: 'HEAD',
+        signal: controller.signal,
+        mode: 'no-cors' 
+      });
+      
+      clearTimeout(timeoutId);
+      const end = performance.now();
+      
+      setWorkerResult({ 
+        success: true, 
+        message: 'Worker 响应成功 (Head Request)', 
+        latency: Math.round(end - start) 
+      });
+      toast.success('Worker 连通性测试成功');
+    } catch (e: any) {
+      setWorkerResult({ 
+        success: false, 
+        message: `Worker 连接失败: ${e.message || '检测超时或 DNS 错误'}` 
+      });
+      toast.error('Worker 连接失败');
+    } finally {
+      setIsTestingWorker(false);
+    }
+  };
+
   useEffect(() => {
     scan();
     runR2Diagnostics();
@@ -410,6 +453,63 @@ export function DiagnosticsDashboard() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+      </div>
+
+      {/* Thumbnail Worker 诊断 */}
+      <div className="bg-white border border-brand-navy/5 rounded-2xl p-6 shadow-sm space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-base font-black text-brand-navy tracking-tight flex items-center gap-2">
+              <Zap className="w-4 h-4 text-brand-gold" />
+              缩略图 Worker 诊断
+            </h3>
+            <p className="text-xs text-brand-navy/60">验证 Cloudflare Worker 实时缩略图生成服务的在线状态与响应速度</p>
+          </div>
+          <button
+            onClick={handleTestWorker}
+            disabled={isTestingWorker}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-brand-gold text-white rounded-xl text-xs font-bold disabled:opacity-50 hover:bg-brand-gold/90 transition-all active:scale-95"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isTestingWorker ? 'animate-spin' : ''}`} />
+            {isTestingWorker ? '测试中...' : '测试 Worker'}
+          </button>
+        </div>
+
+        {workerResult && (
+          <div className={`p-4 rounded-xl border flex items-start gap-3 ${
+            workerResult.success 
+              ? 'bg-green-500/5 border-green-500/10 text-green-700' 
+              : 'bg-red-500/5 border-red-500/10 text-red-700'
+          }`}>
+            <div className="mt-0.5">
+              {workerResult.success ? (
+                 <CheckCircle2 className="w-5 h-5 text-green-500" />
+              ) : (
+                 <ShieldAlert className="w-5 h-5 text-red-500" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-bold text-gray-900">
+                  {workerResult.success ? 'Worker 运行正常' : 'Worker 异常'}
+                </h4>
+                {workerResult.latency && (
+                  <span className="text-[10px] font-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+                    {workerResult.latency}ms
+                  </span>
+                )}
+              </div>
+              <p className="text-xs mt-1 text-gray-500 font-medium leading-relaxed">
+                {workerResult.message}
+              </p>
+              {workerResult.success && (
+                <div className="mt-2 text-[10px] font-mono text-brand-navy/40 break-all select-all">
+                  API: {import.meta.env.VITE_THUMBNAIL_WORKER_URL}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

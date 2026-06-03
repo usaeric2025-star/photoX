@@ -18,7 +18,6 @@ import {
 } from "../../components/ui/dropdown-menu";
 import { useUIStore, useShallow } from "@/store/useUIStore";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
-import { LanguageSwitcher } from "../ui/LanguageSwitcher";
 import { useGroupMutations } from "@/hooks/core/mutations/useGroupMutations";
 
 interface GroupHeaderProps {

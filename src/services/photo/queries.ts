@@ -1,11 +1,19 @@
 import { supabase } from '../../lib/supabase';
 import { DB_CONFIG } from '../../constants/config';
 import { Photo } from '../../types';
-import { normalizeSearchQuery } from '@/lib/utils';
+import { normalizeSearchQuery, getPathFromUrl } from '@/lib/utils';
 import { VISIBILITY_OR_QUERY } from '../../constants/photoConstants';
 import { PAGINATION } from '../../config/constants';
 import { PHOTO_LIST_FIELDS } from '../../constants/photoFields';
 import { SupabasePhotoRaw } from '@/types/supabase';
+
+// Helper for Worker Thumbnail generation
+const getThumbnailUrl = (imageUrl: string, width: number = 400, height: number = 400) => {
+  const workerUrl = import.meta.env.VITE_THUMBNAIL_WORKER_URL;
+  if (!workerUrl || !imageUrl) return imageUrl;
+  const path = getPathFromUrl(imageUrl);
+  return `${workerUrl.replace(/\/$/, '')}${path}?w=${width}&h=${height}`;
+};
 
 export function normalizeStoredUrl(url: string | undefined | null): string {
     if (!url) return '';
@@ -82,6 +90,8 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw): Photo {
     const category_id = item.category_id ? String(item.category_id) : null;
     const manufacturer_id = item.manufacturer_id ? String(item.manufacturer_id) : null;
     
+    const imageUrl = normalizeStoredUrl(item.image_url || '');
+    
     return {
       id: String(item.id),
       storage_id: storageId,
@@ -93,10 +103,10 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw): Photo {
       category_id: category_id,
       manufacturer_id: manufacturer_id,
       description: item.description || '',
-      image_url: normalizeStoredUrl(item.image_url || ''),
-      thumb_url: normalizeStoredUrl(item.thumb_url || item.image_url || ''),
-      thumbnail_sm_url: normalizeStoredUrl(item.thumbnail_sm_url || item.thumb_url || item.image_url || ''),
-      thumbnail_md_url: normalizeStoredUrl(item.thumbnail_md_url || item.image_url || ''),
+      image_url: imageUrl,
+      thumb_url: getThumbnailUrl(imageUrl, 400, 400),
+      thumbnail_sm_url: getThumbnailUrl(imageUrl, 200, 200),
+      thumbnail_md_url: getThumbnailUrl(imageUrl, 800, 800),
       thumb_hash: item.thumb_hash || '',
       exif_data: item.exif_data ?? null,
       created_at: created_at || new Date().toISOString(),

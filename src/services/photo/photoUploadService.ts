@@ -36,12 +36,11 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
   if (!photo.image_url && photo.uri) {
     try {
       const filename = photo.storage_id || photo.id;
-      const { imageUrl, thumbUrl, isDuplicate } = await uploadImages(userId, filename, photo.uri, photo.image_hash, onStatus);
+      const { imageUrl, isDuplicate } = await uploadImages(userId, filename, photo.uri, photo.image_hash, onStatus);
       if (isDuplicate) {
         throw new DuplicatePhotoError();
       }
       photo.image_url = imageUrl;
-      photo.thumb_url = thumbUrl;
     } catch (e) {
       const message = extractErrorMessage(e);
       throw new StandardError(message, { 
@@ -184,12 +183,11 @@ export const savePhotosToCloudBatch = async (
     if (!photo.image_url && photo.uri) {
       try {
         const filename = photo.storage_id || photo.id;
-        const { imageUrl, thumbUrl, isDuplicate } = await uploadImages(userId, filename, photo.uri, photo.image_hash);
+        const { imageUrl, isDuplicate } = await uploadImages(userId, filename, photo.uri, photo.image_hash);
         if (isDuplicate) {
           continue;
         }
         photo.image_url = imageUrl;
-        photo.thumb_url = thumbUrl;
       } catch (e) {
         const message = extractErrorMessage(e);
         throw new StandardError(message, { 
@@ -216,7 +214,6 @@ export const savePhotosToCloudBatch = async (
       manufacturer_id: photo.manufacturer_id || null,
       description: photo.description || '',
       image_url: photo.image_url,
-      thumb_url: photo.thumb_url || null,
       dimensions: photo.dimensions || null,
       model_number: photo.model_number || '',
       description_translations: photo.description_translations || null,

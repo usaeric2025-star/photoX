@@ -19,7 +19,6 @@ export interface Photo {
   name: string; // AI generated name
   description?: string; // AI generated description
   image_url: string; // Public URL in Storage
-  thumb_url?: string; 
   thumbnail_sm_url?: string; // w=300
   thumbnail_md_url?: string; // w=800
   thumb_hash?: string; // ThumbHash placeholder

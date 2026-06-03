@@ -53,7 +53,6 @@ export function StaffHeader({ totalCount, onRefresh, isRefreshing }: StaffHeader
       </div>
 
       <div className="flex items-center gap-1 sm:gap-2 flex-nowrap shrink-0">
-        <LanguageSwitcher variant="ghost" />
         {onRefresh && (
           <button 
             onClick={onRefresh}
@@ -79,6 +78,14 @@ export function StaffHeader({ totalCount, onRefresh, isRefreshing }: StaffHeader
                   Staff Account
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="mx-2 my-1 bg-slate-100" />                
+
+                <div className="px-3 py-1.5 flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-slate-400">LANGUAGE</span>
+                  <LanguageSwitcher mode="dropdown" />
+                </div>
+
+                <DropdownMenuSeparator className="mx-2 my-1 bg-slate-100" />
+
                 <DropdownMenuItem 
                   onClick={handleGoToAdmin}
                   className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-slate-50 cursor-pointer transition-colors border-none"

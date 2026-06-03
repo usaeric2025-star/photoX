@@ -1,10 +1,20 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Globe, ChevronDown } from 'lucide-react';
 import { useUIStore } from '@/store/useUIStore';
-import { GalleryVariant } from '@/types/variant';
 
-export function LanguageSwitcher({ variant = 'full-management' }: { variant?: GalleryVariant | 'ghost' }) {
+export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dropdown' }) {
   const appLang = useUIStore((s) => s.appLang);
   const update = useUIStore((s) => s.update);
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setIsOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const langs = [
     { code: 'zh', label: '中文' },
@@ -12,8 +22,48 @@ export function LanguageSwitcher({ variant = 'full-management' }: { variant?: Ga
     { code: 'ms', label: 'BM' }
   ];
 
+  if (mode === 'dropdown') {
+    const currentLabel = langs.find(l => l.code === appLang)?.label || 'EN';
+    return (
+      <div className="relative" ref={ref}>
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsOpen(!isOpen);
+          }}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors"
+        >
+          <Globe size={14} className="text-slate-500" />
+          <span className="text-[11px] font-black uppercase text-slate-700">{currentLabel}</span>
+          <ChevronDown size={12} className={`text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        </button>
+
+        {isOpen && (
+          <div className="absolute top-full right-0 mt-1 w-28 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-[100]">
+            {langs.map(l => (
+              <button
+                key={l.code}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  update({ appLang: l.code as any });
+                  setIsOpen(false);
+                }}
+                className={`w-full text-left px-3 py-2 text-[11px] font-bold transition-colors ${
+                  appLang === l.code ? 'text-brand-navy bg-brand-navy/5' : 'text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                {l.label}
+                {appLang === l.code && <span className="ml-2 text-[8px] opacity-40">●</span>}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <div className={`flex items-center p-0.5 rounded-full border border-brand-navy/10 bg-brand-navy/5 shadow-inner overflow-hidden ${variant === 'ghost' ? 'h-7' : 'h-9'}`}>
+    <div className="flex items-center p-0.5 rounded-full border border-brand-navy/10 bg-brand-navy/5 shadow-inner overflow-hidden h-8 sm:h-9">
       {langs.map(l => (
         <button 
           key={l.code} 
@@ -24,7 +74,7 @@ export function LanguageSwitcher({ variant = 'full-management' }: { variant?: Ga
               : 'text-brand-navy/50 hover:text-brand-navy hover:bg-white/50'
           }`}
         >
-          {l.label}
+          {l.code === 'zh' ? '中文' : l.code.toUpperCase()}
         </button>
       ))}
     </div>

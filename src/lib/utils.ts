@@ -26,3 +26,15 @@ export function normalizeManufacturerName(name: string): string {
 export function normalizeSearchQuery(query: string): string {
   return query?.trim() || '';
 }
+
+export function getPathFromUrl(url: string): string {
+  if (!url) return '';
+  try {
+    const parsed = new URL(url);
+    // Return pathname (e.g. /photox/public/xxx.webp)
+    return parsed.pathname;
+  } catch (e) {
+    // If it's already a path or invalid URL, return as is
+    return url.startsWith('/') ? url : `/${url}`;
+  }
+}

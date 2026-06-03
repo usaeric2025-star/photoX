@@ -297,6 +297,19 @@ catch (e) {
 4. 先运行「清理冗余 URL」工具修复历史错误。
 5. 再次运行「恢复孤儿照片」。
 
+## 缩略图架构规范（锁定，2026-06-03）
+
+### 核心原则
+- ✅ **按需生成**：缩略图由 Cloudflare Worker 实时生成，R2 仅存储原图。
+- ✅ **移除物理列**：数据库 `furniture_items` 表不再使用 `thumb_url` 列，查询时通过 `image_url` 动态映射。
+- ✅ **前端渲染**：使用 `getPathFromUrl` 辅助函数提取路径，并拼接 `VITE_THUMBNAIL_WORKER_URL`。
+- ✅ **清理策略**：管理后台审计工具不再扫描 `thumb_` 前缀的文件，恢复脚本必须过滤所有包含 `thumb`, `temp`, `thumbnail` 的 R2 文件。
+
+### 实施标准
+- 缩略图参数：`w` 为宽度，`h` 为高度（默认 400x400）。
+- 映射位置：`src/services/photo/queries.ts` 中的 `mapSupabasePhoto` 函数。
+- 上传逻辑：`uploadService.ts` 移除缩略图压缩与二次上传步骤，仅上传原图。
+
 
 
 

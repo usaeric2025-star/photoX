@@ -46,7 +46,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
 
       {/* 右侧：刷新 & 管理/登录入口 */}
       <div className="flex items-center gap-1 sm:gap-2 flex-nowrap shrink-0">
-        <LanguageSwitcher variant="ghost" />
+        <LanguageSwitcher mode="buttons" />
         
         {onRefresh && (
           <button 

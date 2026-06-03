@@ -6,14 +6,20 @@ export interface ResizeOptions {
 export function resolveImageUrl(url: string, options: ResizeOptions = {}): string {
   if (!url || url.startsWith('data:')) return url;
   
-  // R2 identification: If it contains 'r2' in the domain or matches common R2 patterns
-  // Alternatively, we can check if it DOES NOT contain 'supabase.co' (Supabase) 
-  // and DOES NOT contain 'localhost' (Dev). 
-  // Let's use a more explicit check for R2 or custom CDN domains that support CF resizing.
+  const workerUrl = import.meta.env.VITE_THUMBNAIL_WORKER_URL;
+  const isWorkerUrl = workerUrl && url.startsWith(workerUrl);
+
+  // If it's already a worker URL, it likely has ?w=... already. 
+  // We can choose to update it or leave it. 
+  // ContractedImage calls this with width.
+  if (isWorkerUrl) {
+    if (!options.width) return url;
+    const cleanUrl = url.split('?')[0];
+    return `${cleanUrl}?w=${options.width}&h=${options.width}`;
+  }
+
   const isResizingSupported = url.includes('r2.dev') || 
-                              url.includes('cloudflarestorage.com') ||
-                              url.includes('cdn.') || // Common for custom CDNs
-                              url.includes('photo-static'); // Hypothetical app specific domain
+                              url.includes('cloudflarestorage.com');
 
   if (!isResizingSupported) {
     return url;

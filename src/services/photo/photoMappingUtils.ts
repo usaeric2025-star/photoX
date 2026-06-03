@@ -8,7 +8,7 @@ export const FIELD_MAP: Record<string, string> = {};
 export const ALLOWED_FIELDS = [
   'id', 'name', 'description', 'description_translations', 'category_id', 'manufacturer_id',
   'tag_ids', 'dimensions', 'model_number', 'manual_code', 'group_id', 'is_group_cover', 'is_pinned',
-  'image_url', 'thumb_url', 'thumb_hash', 'price', 'note', 'type', 'group_order', 'updated_at', 'created_at',
+  'image_url', 'thumb_hash', 'price', 'note', 'type', 'group_order', 'updated_at', 'created_at',
   'user_id', 'is_hidden', 'is_analyzing', 'image_hash', 'item_code'
 ];
 
