@@ -117,7 +117,13 @@ export function DiagnosticsDashboard() {
   const [auditResult, setAuditResult] = useState<any | null>(null);
 
   const [isTestingWorker, setIsTestingWorker] = useState(false);
-  const [workerResult, setWorkerResult] = useState<{ success: boolean; message: string; latency?: number } | null>(null);
+  const [workerResult, setWorkerResult] = useState<{ 
+    success: boolean; 
+    message: string; 
+    latency?: number;
+    status?: number;
+    statusText?: string;
+  } | null>(null);
 
   const { user } = useAuth();
   const update = useUIStore(s => s.update);
@@ -297,7 +303,9 @@ export function DiagnosticsDashboard() {
         setWorkerResult({ 
           success: true, 
           message: 'Worker 响应成功 (Server-side Check)', 
-          latency: result.data.latency 
+          latency: result.data.latency,
+          status: result.data.status,
+          statusText: result.data.statusText
         });
         toast.success('Worker 连通性测试成功');
       } else {
@@ -496,6 +504,11 @@ export function DiagnosticsDashboard() {
               </div>
               <p className="text-xs mt-1 text-gray-500 font-medium leading-relaxed">
                 {workerResult.message}
+                {workerResult.success && workerResult.status && (
+                  <span className="block mt-1 text-gray-400 font-normal">
+                    HTTP Response: {workerResult.status} {workerResult.statusText || ''}
+                  </span>
+                )}
               </p>
               {workerResult.success && (
                 <div className="mt-2 text-[10px] font-mono text-brand-navy/40 break-all select-all">

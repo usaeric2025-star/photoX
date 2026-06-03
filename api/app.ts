@@ -383,9 +383,9 @@ app.get("/admin/diagnose-r2", async (c) => {
     }
 });
 
-app.post("/admin/repair/:issueId", async (c) => {
+app.post("/admin-repair", async (c) => {
     try {
-      const issueId = c.req.param('issueId');
+      const { issueId } = await c.req.json();
       const supabase = await getSupabaseAdmin();
       
       if (issueId === 'member_count_mismatch') {
@@ -558,23 +558,34 @@ app.post("/admin/repair/:issueId", async (c) => {
       if (issueId === 'diagnose_worker') {
         const workerUrl = (serverEnv as any).VITE_THUMBNAIL_WORKER_URL || process.env.VITE_THUMBNAIL_WORKER_URL;
         if (!workerUrl) {
-          return c.json({ success: false, error: "未设置 VITE_THUMBNAIL_WORKER_URL 环境变量" });
+          return c.json({ success: false, error: "未在服务器检测到 VITE_THUMBNAIL_WORKER_URL 环境变量，请在 Vercel 后台设置并重新部署" });
         }
 
         const start = performance.now();
         try {
-          const res = await fetch(workerUrl, { method: 'HEAD' });
+          // Add a simple timeout to the check
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000);
+          
+          const res = await fetch(workerUrl, { 
+            method: 'HEAD',
+            signal: controller.signal
+          });
+          
+          clearTimeout(timeoutId);
           const end = performance.now();
+          
           return c.json({ 
             success: true, 
             data: {
               status: res.status,
+              statusText: res.statusText,
               latency: Math.round(end - start),
               url: workerUrl
             }
           });
         } catch (e: any) {
-          return c.json({ success: false, error: `Worker 连接失败: ${e.message}` });
+          return c.json({ success: false, error: `Worker 连通性异常: ${e.message}. 请检查 URL 是否正确及 Worker 是否已部署。` });
         }
       }
 
