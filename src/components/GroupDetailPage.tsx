@@ -159,7 +159,10 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
   const isOpen = activeGroupId !== null;
 
   return (
-    <div className={`fixed inset-0 z-[200] bg-brand-bg overflow-hidden pt-safe flex flex-col ${!isOpen ? 'hidden' : ''}`}>
+    <div 
+      className={`fixed inset-0 z-[200] bg-brand-bg overflow-hidden pt-safe flex flex-col ${!isOpen ? 'hidden' : ''}`}
+      onClick={(e) => { if (e.target === e.currentTarget) { setGroupId(null); setPhotoId(null); } }}
+    >
       {isLoading && !infinitePhotosData ? (
             <GroupDetailSkeleton />
           ) : (
@@ -168,7 +171,8 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
                <div className="flex-shrink-0 sticky top-0 bg-brand-bg/90 backdrop-blur-md z-[100] px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-100">
                   <div className="flex items-center gap-3">
                     <button 
-                      onClick={(e) => { e.stopPropagation(); setGroupId(null); setPhotoId(null); }}
+                      type="button"
+                      onClick={() => { setGroupId(null); setPhotoId(null); }}
                       className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors"
                     >
                       <ChevronLeft size={24} />
@@ -197,6 +201,7 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
                   <div className="flex items-center gap-2">
                     {shareGroup && (
                       <button 
+                        type="button"
                         onClick={() => shareGroup(activeGroupPhotos)}
                         className="w-10 h-10 flex items-center justify-center text-blue-500 hover:text-blue-600 rounded-full hover:bg-blue-50 transition-colors"
                       >
@@ -204,7 +209,8 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
                       </button>
                     )}
                     <button 
-                        onClick={(e) => { e.stopPropagation(); setGroupId(null); setPhotoId(null); }}
+                        type="button"
+                        onClick={() => { setGroupId(null); setPhotoId(null); }}
                         className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors"
                     >
                         <X size={24} />
