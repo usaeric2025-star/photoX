@@ -106,7 +106,7 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
             : [...state.selectedIds, photo.id],
         }));
       } else {
-        update({ focusedGroupPhotoId: photo.id });
+        setPhotoId(photo.id);
       }
     };
 
@@ -119,22 +119,30 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
       }
     };
 
-  const handleCloseLightbox = () => update({ focusedGroupPhotoId: null });
+  const handleCloseLightbox = () => {
+    setPhotoId(null);
+    update({ focusedGroupPhotoId: null });
+  };
 
   const handlePrevLightbox = (idx: number) => {
       const prev = idx > 0 ? idx - 1 : activeGroupPhotos.length - 1;
-      if (activeGroupPhotos.length > 0)
+      if (activeGroupPhotos.length > 0) {
+        setPhotoId(activeGroupPhotos[prev].id);
         update({ focusedGroupPhotoId: activeGroupPhotos[prev].id });
+      }
     };
 
   const handleNextLightbox = (idx: number) => {
       const next = idx < activeGroupPhotos.length - 1 ? idx + 1 : 0;
-      if (activeGroupPhotos.length > 0)
+      if (activeGroupPhotos.length > 0) {
+        setPhotoId(activeGroupPhotos[next].id);
         update({ focusedGroupPhotoId: activeGroupPhotos[next].id });
+      }
     };
 
   const handleUngroupLightbox = (photoId: string) => {
       confirmBulkRemove([photoId]);
+      setPhotoId(null);
       update({ focusedGroupPhotoId: null });
     };
 
@@ -222,17 +230,17 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
 
             {/* Unified Photo Lightbox */}
             <AnimatePresence>
-              {focusedGroupPhotoId &&
+              {filters.photoId &&
                 (() => {
                   const currentIndex = activeGroupPhotos.findIndex(
-                    (p) => p.id === focusedGroupPhotoId,
+                    (p) => p.id === filters.photoId,
                   );
                   const photo = activeGroupPhotos[currentIndex];
                   if (!photo) return null;
 
                   return (
                     <PhotoLightbox
-                      photoId={focusedGroupPhotoId}
+                      photoId={filters.photoId}
                       displayPhotos={activeGroupPhotos}
                       onClose={handleCloseLightbox}
                       onPhotoIdChange={setPhotoId}

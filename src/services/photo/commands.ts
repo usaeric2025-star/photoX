@@ -25,7 +25,8 @@ export const updatePhoto = async (
     throw new Error('无效的照片ID，操作被终止');
   }
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session) throw new Error('NO_ACTIVE_SESSION');
+  const isLocalStorageStaff = typeof window !== 'undefined' && !!window.localStorage.getItem('ais_mock_auth_passcode');
+  if (!session && !isLocalStorageStaff) throw new Error('NO_ACTIVE_SESSION');
 
   if (updates.is_group_cover === true) {
     let groupId = updates.group_id;
@@ -54,7 +55,7 @@ export const updatePhoto = async (
 
   if (updates.uri && updates.uri.startsWith('data:image')) {
     const { uploadImages } = await import('../storage');
-    const { imageUrl } = await uploadImages(session.user.id, photoId, updates.uri, undefined, undefined, undefined, true);
+    const { imageUrl } = await uploadImages(session?.user?.id || 'staff', photoId, updates.uri, undefined, undefined, undefined, true);
     updates.image_url = imageUrl;
     updates.updated_at = new Date().toISOString();
     delete updates.uri;

@@ -39,8 +39,8 @@ export function DiagnosticsDashboard() {
 
   const { isPending: isRepairing, mutate: repair } = useMutation({
     mutationFn: async (issueId: string) => {
-      const res = await api.admin.repair[':issueId'].$post({
-        param: { issueId }
+      const res = await api.admin.repair.$post({
+        json: { issueId }
       });
       if (!res.ok) {
         const errorData = await res.json() as any;
@@ -50,6 +50,8 @@ export function DiagnosticsDashboard() {
     },
     onSuccess: (data) => {
         toast.success(data.message || "修复成功");
+        queryClient.invalidateQueries({ queryKey: ['photos'] });
+        queryClient.invalidateQueries({ queryKey: ['groups'] });
         scan(); // Refresh after repair
     },
     onError: (err: any) => {
@@ -113,6 +115,7 @@ export function DiagnosticsDashboard() {
   const [isDeepCleaningStorage, setIsDeepCleaningStorage] = useState(false);
   const [isDeduplicating, setIsDeduplicating] = useState(false);
   const [isCleaningRedundant, setIsCleaningRedundant] = useState(false);
+  const [isCleaningTemp, setIsCleaningTemp] = useState(false);
   const [isAuditing, setIsAuditing] = useState(false);
   const [auditResult, setAuditResult] = useState<any | null>(null);
 
@@ -130,6 +133,27 @@ export function DiagnosticsDashboard() {
 
   const { user } = useAuth();
   const update = useUIStore(s => s.update);
+
+  const handleCleanupTempUrls = async () => {
+    if (!confirm('确定要将这些临时路径 (temp-) 复制重命名并转换为标准 UUID 文件名吗？这将对 R2 存储空间完成原地升级，保证数据 100% 格式美化与安全对齐。')) return;
+    setIsCleaningTemp(true);
+    try {
+      const res = await api.admin.repair.$post({
+        json: { issueId: 'cleanup_temp_urls' }
+      });
+      const data = await res.json() as any;
+      if (data.success) {
+        toast.success(data.message);
+        scan();
+      } else {
+        toast.error(`处理失败: ${data.error}`);
+      }
+    } catch (e: any) {
+      toast.error(`请求失败: ${e.message}`);
+    } finally {
+      setIsCleaningTemp(false);
+    }
+  };
 
   const handleDeduplicate = async () => {
     if (!user) return toast.error("请先登录");
@@ -193,8 +217,8 @@ export function DiagnosticsDashboard() {
     if (!confirm('确定要合并并清理冗余记录吗？相同 URL 的照片将只保留最早的一条。这会修复因恢复脚本缺陷导致的重复数据。')) return;
     setIsCleaningRedundant(true);
     try {
-      const res = await api.admin.repair[':issueId'].$post({
-        param: { issueId: 'cleanup_redundant' }
+      const res = await api.admin.repair.$post({
+        json: { issueId: 'cleanup_redundant' }
       });
       const data = await res.json() as any;
       if (data.success) {
@@ -290,8 +314,8 @@ export function DiagnosticsDashboard() {
     if (!confirm('确定要强制删除所有缺失哈希的记录吗？这些照片可能已经损坏或无法关联 R2 文件。此操作不可撤销。')) return;
     setIsAuditing(true);
     try {
-      const res = await api.admin.repair[':issueId'].$post({
-        param: { issueId: 'force_delete_missing_hashes' }
+      const res = await api.admin.repair.$post({
+        json: { issueId: 'force_delete_missing_hashes' }
       });
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json() as any;
@@ -311,7 +335,7 @@ export function DiagnosticsDashboard() {
   const handleTestWorker = async () => {
     setIsTestingWorker(true);
     try {
-      const res = await api['admin-repair'].$post({
+      const res = await api.admin.repair.$post({
         json: { issueId: 'diagnose_worker' }
       });
       const result = await res.json();
@@ -628,8 +652,8 @@ export function DiagnosticsDashboard() {
 
         {/* 数据恢复 */}
         <div className="space-y-3">
-          <h4 className="text-[10px] font-black text-brand-navy/30 uppercase tracking-widest px-1">数据恢复</h4>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <h4 className="text-[10px] font-black text-brand-navy/30 uppercase tracking-widest px-1">数据恢复与美化</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <button
               onClick={handleBulkFixUrls}
               disabled={isAuditing}
@@ -643,6 +667,20 @@ export function DiagnosticsDashboard() {
               </div>
               <p className="text-[10px] text-slate-500 uppercase tracking-wider">将所有数据库中的图片 URL 标准化为无前缀 R2 路径</p>
               {isAuditing && <span className="text-[10px] font-bold text-blue-600 animate-pulse">正在修复中...</span>}
+            </button>
+            <button
+              onClick={handleCleanupTempUrls}
+              disabled={isCleaningTemp}
+              className="flex flex-col items-start gap-2 p-4 bg-purple-50 hover:bg-purple-100 rounded-xl transition-all border border-purple-200 group group-active:scale-95 text-left"
+            >
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-purple-500/10 rounded-lg text-purple-600">
+                  <Fingerprint className="w-4 h-4" />
+                </div>
+                <span className="text-sm font-bold text-slate-800">临时路径改 UUID</span>
+              </div>
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider">自动将物理储存文件由 temp-1xxx 转换为标准干净的 UUID 命名</p>
+              {isCleaningTemp && <span className="text-[10px] font-bold text-purple-600 animate-pulse">正在清理中...</span>}
             </button>
             <button
               onClick={handleImportOrphans}

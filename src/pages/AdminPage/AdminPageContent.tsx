@@ -46,7 +46,7 @@ export function AdminPageContent() {
   const { filters: urlFilters } = useUrlFilters();
   const { deletePhoto, updatePhoto } = useAdminActions();
   const adminActions = useAdminActions();
-  const { settings } = useSettings();
+  const { settings, isLoading: isSettingsLoading } = useSettings();
 
   const store = useUIStore(useShallow(s => ({
     update: s.update,
@@ -68,7 +68,7 @@ export function AdminPageContent() {
   };
   const { groupPhotos } = useGroupView(urlFilters.groupId);
 
-  const isLoading = isAuthLoading || isPhotosLoading;
+  const isLoading = isAuthLoading || isPhotosLoading || isSettingsLoading;
 
   // 添加 loading 超时强制显示
   const [forceShow, setForceShow] = useState(false);

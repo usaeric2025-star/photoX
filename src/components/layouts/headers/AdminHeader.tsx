@@ -10,6 +10,14 @@ import {
   Image,
   Camera,
   LayoutGrid,
+  BarChart3,
+  Tag,
+  Layers,
+  Terminal,
+  Home,
+  Wrench,
+  Plus,
+  Cloud,
 } from "lucide-react";
 import { LanguageSwitcher } from "../../ui/LanguageSwitcher";
 import {
@@ -27,6 +35,8 @@ import {
   useSettings,
   useMultiSelect,
   usePhotoCount,
+  usePermission,
+  useAdminMode,
 } from "@/hooks";
 import { useAdminActions } from "@/features/admin/useAdminActions";
 import { logoutPublic } from "@/lib/publicAuth";
@@ -48,6 +58,10 @@ export function AdminHeader({
   onBatchAiIdentify,
 }: AdminHeaderProps) {
   const { user } = useAuth();
+  const { isStaff, can } = usePermission();
+  const isAdminPath = useAdminMode();
+  const isEffectiveStaffMode = isAdminPath && !user;
+
   const { settings } = useSettings();
   const { isMultiSelect, disable, enable } = useMultiSelect();
   const { deletePhoto, batchUpdate } = useAdminActions();
@@ -67,6 +81,13 @@ export function AdminHeader({
 
   const handleBackToShowcase = () => {
     navigate({ to: '/', search: { preview: 'true' } as any });
+  };
+
+  const handleImport = () => {
+    update({ activeScreen: 'home' });
+    setTimeout(() => {
+      document.getElementById('admin-quick-add-input')?.click();
+    }, 150);
   };
 
   const handleBatchDelete = async () => {
@@ -157,27 +178,113 @@ export function AdminHeader({
         </button>
 
         {/* 4. 菜单 (语言、管理、退出) */}
-        {user && (
+        {(user || isStaff || isEffectiveStaffMode) && (
           <DropdownMenu>
             <DropdownMenuTrigger className="h-10 w-10 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded-full transition-all cursor-pointer shrink-0 outline-none ml-1 border border-slate-100">
               <Menu size={22} />
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="w-64 mt-2 rounded-2xl p-2 bg-white shadow-2xl border border-slate-200 z-50 text-slate-700"
+              className="w-64 mt-2 rounded-2xl p-2 bg-white shadow-2xl border border-slate-200 z-50 text-slate-700 max-h-[85vh] overflow-y-auto"
             >
               <DropdownMenuLabel className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                 <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center text-white overflow-hidden text-[8px]">
-                  {user.photo_url ? (
+                  {user?.photo_url ? (
                     <img src={user.photo_url} referrerPolicy="no-referrer" />
                   ) : (
                     <UserIcon size={10} />
                   )}
                 </div>
-                {user.email?.split("@")[0]}
+                {user ? (user.email?.split("@")[0]) : 'STAFF'}
               </DropdownMenuLabel>
 
               <DropdownMenuSeparator className="mx-2 my-1 bg-slate-100" />
+
+              {/* Mobile-Only Navigation Links */}
+              <div className="lg:hidden px-2 py-1 flex flex-col gap-0.5">
+                <span className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">导航 / Menu</span>
+                
+                <DropdownMenuItem
+                  onClick={handleImport}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 focus:bg-slate-100 cursor-pointer transition-colors border-none"
+                >
+                  <Plus size={15} className="text-blue-600" />
+                  <span className="text-xs font-semibold text-slate-900">快速导入照片</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onClick={() => update({ activeScreen: "home" })}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 focus:bg-slate-100 cursor-pointer transition-colors border-none"
+                >
+                  <Home size={15} />
+                  <span className="text-xs font-medium">照片库 / Gallery</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onClick={() => update({ activeScreen: "dashboard" })}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 focus:bg-slate-100 cursor-pointer transition-colors border-none"
+                >
+                  <BarChart3 size={15} />
+                  <span className="text-xs font-medium">仪表盘 / Dashboard</span>
+                </DropdownMenuItem>
+
+                {can('photo:edit') && (
+                  <>
+                    <DropdownMenuItem
+                      onClick={() => update({ activeScreen: "manage" })}
+                      className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 focus:bg-slate-100 cursor-pointer transition-colors border-none"
+                    >
+                      <Cloud size={15} />
+                      <span className="text-xs font-medium">云端存储管理</span>
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem
+                      onClick={() => update({ activeScreen: "ai_settings" })}
+                      className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 focus:bg-slate-100 cursor-pointer transition-colors border-none"
+                    >
+                      <Sparkles size={15} />
+                      <span className="text-xs font-medium">AI 智能配置</span>
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem
+                      onClick={() => update({ activeScreen: "structure" })}
+                      className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 focus:bg-slate-100 cursor-pointer transition-colors border-none"
+                    >
+                      <Layers size={15} />
+                      <span className="text-xs font-medium">分类 / 厂商管理</span>
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem
+                      onClick={() => update({ activeScreen: "tags" })}
+                      className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 focus:bg-slate-100 cursor-pointer transition-colors border-none"
+                    >
+                      <Tag size={15} />
+                      <span className="text-xs font-medium">标签管理</span>
+                    </DropdownMenuItem>
+                  </>
+                )}
+                
+                {can('admin:dashboard:access') && (
+                  <>
+                    <DropdownMenuItem
+                      onClick={() => update({ activeScreen: "settings" })}
+                      className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 focus:bg-slate-100 cursor-pointer transition-colors border-none"
+                    >
+                      <Wrench size={15} />
+                      <span className="text-xs font-medium">系统设置与维护</span>
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem
+                      onClick={() => update({ activeScreen: "logs" })}
+                      className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 focus:bg-slate-100 cursor-pointer transition-colors border-none"
+                    >
+                      <Terminal size={15} />
+                      <span className="text-xs font-medium">系统日志</span>
+                    </DropdownMenuItem>
+                  </>
+                )}
+                <DropdownMenuSeparator className="mx-2 my-1 bg-slate-100" />
+              </div>
 
               <div className="px-2 py-1.5 flex flex-col gap-1.5">
                 <span className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Language</span>
@@ -186,23 +293,40 @@ export function AdminHeader({
 
               <DropdownMenuSeparator className="mx-2 my-1 bg-slate-100" />
 
-              <DropdownMenuItem
-                onClick={() => update({ activeScreen: "settings" })}
-                className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-slate-100 focus:bg-slate-100 cursor-pointer transition-colors border-none"
-              >
-                <Settings size={16} />
-                <span className="text-sm font-semibold text-slate-900">管理后台</span>
-              </DropdownMenuItem>
+              {can('admin:dashboard:access') && (
+                <DropdownMenuItem
+                  onClick={() => update({ activeScreen: "settings" })}
+                  className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-slate-100 focus:bg-slate-100 cursor-pointer transition-colors border-none"
+                >
+                  <Settings size={16} />
+                  <span className="text-sm font-semibold text-slate-900">管理后台</span>
+                </DropdownMenuItem>
+              )}
 
-              <DropdownMenuSeparator className="mx-2 my-1 bg-slate-100" />
-
-              <DropdownMenuItem
-                onClick={() => logoutPublic()}
-                className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-red-600 hover:bg-red-50 focus:bg-red-50 cursor-pointer transition-colors mt-1 border-none"
-              >
-                <LogOut size={16} />
-                <span className="text-sm font-semibold">退出登录</span>
-              </DropdownMenuItem>
+              {user ? (
+                <DropdownMenuItem
+                  onClick={async () => {
+                     const { logoutPublic } = await import("@/lib/publicAuth");
+                     logoutPublic();
+                     window.location.reload();
+                  }}
+                  className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-red-600 hover:bg-red-50 focus:bg-red-50 cursor-pointer transition-colors mt-1 border-none"
+                >
+                  <LogOut size={16} />
+                  <span className="text-sm font-semibold">登出账号</span>
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem
+                  onClick={() => {
+                    window.localStorage.removeItem('ais_mock_auth_passcode');
+                    window.location.reload();
+                  }}
+                  className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-red-600 hover:bg-red-50 focus:bg-red-50 cursor-pointer transition-colors mt-1 border-none"
+                >
+                  <LogOut size={16} />
+                  <span className="text-sm font-semibold">退出员工模式</span>
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         )}

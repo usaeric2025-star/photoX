@@ -12,15 +12,18 @@ import { extractErrorMessage } from '@/lib/error/errorHandler';
 
 export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: (s: string) => void): Promise<string> => {
   const { data: { session } } = await supabase.auth.getSession();
+  const isLocalStorageStaff = typeof window !== 'undefined' && !!window.localStorage.getItem('ais_mock_auth_passcode');
 
-  if (!session?.user) {
+  if (!session?.user && !isLocalStorageStaff) {
     throw new StandardError('鉴权失败: 无活跃会话', { aiDebugHint: '[savePhotoToCloud] userId extraction failed' });
   }
+
+  const actUserId = session?.user?.id || userId || 'staff';
 
   // Pre-insert duplicate check
   if (photo.image_hash) {
      const isDuplicate = await checkDuplicate(
-       session.user.id, 
+       actUserId, 
        photo.image_hash, 
        (photo as any)._fileSize, 
        (photo as any)._fileName, 
@@ -62,7 +65,7 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
   
   const payload: Record<string, unknown> = mapToDb({
     ...photo,
-    user_id: session.user.id,
+    user_id: actUserId,
   }, true); // Always map to DB as if new
   
   if (!payload.id) {
@@ -136,22 +139,25 @@ export const savePhotosToCloudBatch = async (
   if (sPhotos.length === 0) return [];
 
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) {
+  const isLocalStorageStaff = typeof window !== 'undefined' && !!window.localStorage.getItem('ais_mock_auth_passcode');
+  if (!session?.user && !isLocalStorageStaff) {
     throw new StandardError('No active session for database', { aiDebugHint: '[uploadPhotosBatch] userId extraction failed' });
   }
+
+  const actUserId = session?.user?.id || userId || 'staff';
 
   // Pre-filter duplicates
   const uniquePhotos: Photo[] = [];
   for (const photo of sPhotos as Photo[]) {
     if (photo.image_hash) {
-      const isDuplicate = await checkDuplicate(
-        session.user.id, 
-        photo.image_hash, 
-        (photo as any)._fileSize, 
-        (photo as any)._fileName, 
-        (photo as any)._lastModified,
-        photo.id
-      );
+       const isDuplicate = await checkDuplicate(
+         actUserId, 
+         photo.image_hash, 
+         (photo as any)._fileSize, 
+         (photo as any)._fileName, 
+         (photo as any)._lastModified,
+         photo.id
+       );
       if (isDuplicate) {
         continue;
       }
@@ -205,7 +211,7 @@ export const savePhotosToCloudBatch = async (
     normalizeDimensionsBeforeSave(photo.dimensions);
 
     const payload: Record<string, unknown> = {
-      user_id: session.user.id,
+      user_id: actUserId,
       item_code: photo.item_code || generateItemCode(),
       manual_code: photo.manual_code || '',
       image_hash: photo.image_hash,

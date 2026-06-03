@@ -17,7 +17,7 @@ const s3Client = new S3Client({
 });
 
 async function audit() {
-  const { data: photos, error } = await supabase.from("furniture_items").select("image_url, thumb_url");
+  const { data: photos, error } = await supabase.from("furniture_items").select("image_url");
   if (error) throw error;
 
   const r2Files: Set<string> = new Set();
@@ -25,7 +25,6 @@ async function audit() {
 
   photos.forEach(p => {
     if (p.image_url?.includes("r2")) dbFiles.add(p.image_url.split("/").pop()!);
-    if (p.thumb_url?.includes("r2")) dbFiles.add(p.thumb_url.split("/").pop()!);
   });
 
   const bucket = "photox-storage";

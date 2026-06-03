@@ -342,6 +342,21 @@ app.get("/admin/diagnose", async (c) => {
          issues.push({ id: 'member_count_mismatch', category: 'consistency', severity: 'P0', title: '成员数不匹配', description: '合组记录的成员数量与实际照片数量不符', affectedCount: mismatchedGroups.length, sampleIds: mismatchedGroups.slice(0, 5).map(g => String(g.id)), autoFixable: true });
       }
 
+      // Photos with temporary URLs
+      const tempUrlPhotos = photos.filter(p => p.image_url && p.image_url.includes('/temp-'));
+      if (tempUrlPhotos.length > 0) {
+        issues.push({ 
+          id: 'cleanup_temp_urls', 
+          category: 'integrity', 
+          severity: 'P1', 
+          title: '临时路径未转 UUID', 
+          description: `检测到有 ${tempUrlPhotos.length} 张照片仍然使用带有 temp- 标识的临时 R2 文件路径。点击下方按钮可自动将物理 R2 文件名复制重命名为标准照片 UUID，并清理无用临时文件（保证 100% 数据一致性及文件名美化）。`, 
+          affectedCount: tempUrlPhotos.length, 
+          sampleIds: tempUrlPhotos.slice(0, 5).map(p => p.id), 
+          autoFixable: true 
+        });
+      }
+
       return c.json({ timestamp: Date.now(), totalIssues: issues.length, issuesBySeverity: { P0: issues.filter(i => i.severity === 'P0').length, P1: issues.filter(i => i.severity === 'P1').length, P2: 0, P3: 0 }, issues });
     } catch (e: any) {
       return c.json({ success: false, error: e.message }, 500);
@@ -383,7 +398,7 @@ app.get("/admin/diagnose-r2", async (c) => {
     }
 });
 
-app.post("/admin-repair", async (c) => {
+app.post("/admin/repair", async (c) => {
     try {
       const { issueId } = await c.req.json();
       const supabase = await getSupabaseAdmin();
@@ -637,6 +652,79 @@ app.post("/admin-repair", async (c) => {
 
       function cleanPath(p: string) {
         return p.startsWith('/') ? p : `/${p}`;
+      }
+
+      if (issueId === 'cleanup_temp_urls') {
+        const { data: targets, error: fetchError } = await supabase
+          .from("furniture_items")
+          .select("id, image_url")
+          .like("image_url", "%/temp-%")
+          .limit(100); // Process in batches of 100 to avoid timeouts
+        
+        if (fetchError) throw fetchError;
+        if (!targets || targets.length === 0) {
+          return c.json({ success: true, count: 0, message: "没有发现需要重命名的临时 URL 记录" });
+        }
+
+        const s3Client = await getR2Client();
+        const bucket = serverEnv.R2_BUCKET_NAME;
+        const publicUrlPrefix = serverEnv.R2_PUBLIC_URL_PREFIX;
+        if (!bucket || !publicUrlPrefix) throw new Error("Storage config missing");
+
+        const { CopyObjectCommand, DeleteObjectCommand } = await import("@aws-sdk/client-s3");
+        let successCount = 0;
+        let failCount = 0;
+
+        for (const photo of targets) {
+          try {
+            if (!photo.image_url) continue;
+
+            const urlObj = new URL(photo.image_url);
+            const rawPath = urlObj.pathname;
+            const sourceKey = rawPath.startsWith('/') ? rawPath.slice(1) : rawPath;
+
+            // Target key: photox/public/${photo.id}.webp
+            const targetKey = `photox/public/${photo.id}.webp`;
+
+            // 1. Copy object in R2
+            await s3Client.send(new CopyObjectCommand({
+              Bucket: bucket,
+              CopySource: `${bucket}/${sourceKey}`, // CopySource format: bucket-name/key
+              Key: targetKey
+            }));
+
+            // 2. Generate new public URL
+            const newPublicUrl = publicUrlPrefix.startsWith('http') 
+              ? `${publicUrlPrefix.replace(/\/$/, '')}/${targetKey}`
+              : `https://${publicUrlPrefix}/${targetKey}`;
+
+            // 3. Update DB
+            const { error: updateError } = await supabase
+              .from("furniture_items")
+              .update({ image_url: newPublicUrl, updated_at: new Date().toISOString() })
+              .eq("id", photo.id);
+
+            if (updateError) throw updateError;
+
+            // 4. Delete old object in R2
+            await s3Client.send(new DeleteObjectCommand({
+              Bucket: bucket,
+              Key: sourceKey
+            }));
+
+            successCount++;
+          } catch (err) {
+            console.error(`Failed to rename photo ${photo.id} in R2:`, err);
+            failCount++;
+          }
+        }
+
+        return c.json({ 
+          success: true, 
+          count: successCount,
+          failed: failCount,
+          message: `成功处理了 ${successCount} 张临时路径照片。已将存储文件名安全升级为标准 UUID，并更新数据库链接！`
+        });
       }
 
       if (issueId === 'diagnose_r2') {

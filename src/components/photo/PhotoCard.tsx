@@ -62,12 +62,10 @@ import { cn } from '@/lib/utils';
 import { translations } from '@/lib/translations';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 
-export interface PhotoCardProps {
+export interface PhotoCardProps extends React.HTMLAttributes<HTMLDivElement> {
   variant: GalleryVariant;
   photo: Photo;
   index: number;
-  className?: string;
-  onClick?: React.MouseEventHandler<any>;
   hideDetails?: boolean;
   imgVariant?: 'sm' | 'md';
   hideGroupBadge?: boolean;
@@ -173,6 +171,7 @@ export const PhotoCard = React.memo(({
   hideDetails = false,
   imgVariant,
   hideGroupBadge = false,
+  ...props
 }: PhotoCardProps) => {
   const isSelected = useUIStore((s) => s.selectedIds.includes(photo.id));
   const isMultiSelect = useUIStore((s) => s.isMultiSelect);
@@ -224,7 +223,7 @@ export const PhotoCard = React.memo(({
     navigate({ to: '.', search: (prev: any) => ({ ...prev, photoId: hasSearchQuery ? pid : undefined, groupId: gid } as any) });
   };
 
-  const handleClick = (e: React.MouseEvent) => {
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (longPressTriggered.current) {
       longPressTriggered.current = false;
       e.stopPropagation();
@@ -294,6 +293,7 @@ export const PhotoCard = React.memo(({
         WebkitUserSelect: "none",
         userSelect: "none",
         touchAction: "manipulation",
+        ...props.style
       }}
       onClick={handleClick}
       className={cn(
@@ -304,6 +304,7 @@ export const PhotoCard = React.memo(({
         isManagement && is_hidden && "ring-2 ring-yellow-400/50 grayscale-[0.3]",
         className
       )}
+      {...props}
     >
       <div 
         className={cn(

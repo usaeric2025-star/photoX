@@ -67,7 +67,10 @@ export function AdminSidebar() {
   const { mutateAsync: syncMut } = useSyncMutation();
 
   const handleImport = () => {
-    // Import action logic if needed
+    update({ activeScreen: 'home' });
+    setTimeout(() => {
+      document.getElementById('admin-quick-add-input')?.click();
+    }, 150);
   };
 
   const onRefresh = () => {

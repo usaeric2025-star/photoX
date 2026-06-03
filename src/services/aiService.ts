@@ -37,10 +37,12 @@ export const analyzePhoto = async (photoId: string): Promise<AppResult<any>> => 
       supabase.from('settings').select('*').maybeSingle()
     ]);
 
-    const apiKey = (settings as any)?.gemini_api_key;
+    const apiKey = (settings as any)?.gemini_api_key || (settings as any)?.api_key;
     if (!apiKey) {
       throw new Error('Gemini API Key 未配置，请前往设置页面');
     }
+
+    const customModel = (settings as any)?.custom_model || (settings as any)?.model_name || '';
 
     // 3. Call AI Core
     const result = await analyzeProductPhoto(
@@ -50,7 +52,7 @@ export const analyzePhoto = async (photoId: string): Promise<AppResult<any>> => 
       manufacturers || [],
       apiKey,
       'google',
-      (settings as any)?.custom_model || '',
+      customModel,
       photo.category_id,
       photo.name
     );

@@ -94,7 +94,7 @@ export function AdminGridContainer({
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files || files.length === 0 || !user) return;
+    if (!files || files.length === 0 || !isManagement) return;
 
     const { newFiles: uniqueFiles, duplicateHashes: duplicateFiles } = checkDuplicateBatch(Array.from(files));
 
@@ -137,7 +137,7 @@ export function AdminGridContainer({
 
       updateTask(taskId, { progress: 50, message: `正在上传 ${files.length} 张照片...` });
       
-      const savedPhotos = await savePhotosToCloudBatch(user.id, photoData, (count) => {
+      const savedPhotos = await savePhotosToCloudBatch(user?.id || 'staff', photoData, (count) => {
         const pct = 50 + Math.round((count / uniqueFiles.length) * 50);
         updateTask(taskId, { 
           progress: pct, 
