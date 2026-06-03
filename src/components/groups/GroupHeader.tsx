@@ -18,6 +18,7 @@ import {
 } from "../../components/ui/dropdown-menu";
 import { useUIStore, useShallow } from "@/store/useUIStore";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
+import { useNavigate } from "@tanstack/react-router";
 import { useGroupMutations } from "@/hooks/core/mutations/useGroupMutations";
 
 interface GroupHeaderProps {
@@ -39,6 +40,12 @@ export function GroupHeader({
   onBatchAiAnalyzeByGroupId,
 }: GroupHeaderProps) {
   const { setGroupId } = useUrlFilters();
+  const navigate = useNavigate();
+  const isAdmin = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+
+  const handleClose = () => {
+    navigate({ to: isAdmin ? '/admin' : '/', search: (prev: any) => ({ ...prev, groupId: undefined, photoId: undefined }) });
+  };
   const { update, isMultiSelect, selectedIds } =
     useUIStore(
       useShallow((s) => ({
@@ -56,7 +63,7 @@ export function GroupHeader({
     <div className="flex-shrink-0 sticky top-0 bg-brand-bg/90 backdrop-blur-md z-[100] px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-100">
       <div className="flex items-center gap-3">
         <button
-          onClick={() => setGroupId(null)}
+          onClick={handleClose}
           className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors"
         >
           <ChevronLeft size={24} />
@@ -82,6 +89,12 @@ export function GroupHeader({
                     activeGroupPhotos[0]?.item_code ||
                     `GROUP ${activeGroupId?.slice(-4)}`}
                 </h2>
+                {groupData && (
+                  <span className="bg-blue-50 text-blue-600 text-[10px] font-black px-2 py-0.5 rounded-lg border border-blue-100 flex items-center gap-1">
+                    <span className="opacity-50">CODE:</span>
+                    {activeGroupId?.slice(-6).toUpperCase()}
+                  </span>
+                )}
                 {isAdminMode && (
                   <Pencil
                     size={12}
@@ -200,7 +213,7 @@ export function GroupHeader({
         )}
         {!isAdminMode && (
           <button
-            onClick={() => setGroupId(null)}
+            onClick={handleClose}
             className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors"
           >
             <X size={24} />
@@ -208,7 +221,7 @@ export function GroupHeader({
         )}
         {isAdminMode && (
           <button
-            onClick={() => setGroupId(null)}
+            onClick={handleClose}
             className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors ml-2 border border-slate-200 bg-white"
           >
             <X size={20} />

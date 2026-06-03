@@ -1,6 +1,7 @@
 import { AI_PROMPTS } from '../../constants/ai';
 import { extractJsonObject } from '../../lib/aiParsing';
 import { api } from '@/lib/api';
+import { DEFAULT_AI_MODEL } from '@/config/ai';
 
 export const translateDescription = async (
   zhText: string,
@@ -130,7 +131,7 @@ Your response MUST match this exact JSON schema:
 
   const isProxy = !apiKey;
   const fetchUrl = isProxy ? '/api/ai/translate' : 'https://openrouter.ai/api/v1/chat/completions';
-  const modelName = customModel || 'google/gemini-2.5-flash-lite';
+  const modelName = customModel || DEFAULT_AI_MODEL;
 
   try {
     let response: Response;

@@ -17,6 +17,7 @@ import { AdminScreen } from '@/components/AdminScreen';
 import { PublicGridContainer } from '@/components/photo/PublicGridContainer';
 import { AdminGridContainer } from '@/components/photo/AdminGridContainer';
 import { PublicHeader } from '@/components/layouts/headers/PublicHeader';
+import TasksPage from '@/pages/AdminPage/TasksPage';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { useFilters } from '@/features/filters/useFilters';
 import { useGroupView } from '@/features/groups/useGroupView';
@@ -152,7 +153,11 @@ export function AdminPageContent() {
               <div 
                 className={`absolute inset-0 transition-opacity duration-200 ease-out ${store.activeScreen === 'home' || store.activeScreen === 'gallery' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
               >
-                  <AdminScreen />
+                  {urlFilters.groupId ? (
+                    <GroupDetailPage />
+                  ) : (
+                    <AdminScreen />
+                  )}
               </div>
 
               {(store.activeScreen === 'manage' || store.activeScreen === 'settings') && (
@@ -164,6 +169,12 @@ export function AdminPageContent() {
               {store.activeScreen === 'dashboard' && (
                 <div className="absolute inset-0 z-20 bg-slate-50">
                   <StatisticsScreen />
+                </div>
+              )}
+
+              {store.activeScreen === 'tasks' && (
+                <div className="absolute inset-0 z-20 bg-slate-50 p-8 overflow-y-auto w-full no-scrollbar">
+                  <TasksPage />
                 </div>
               )}
             </main>

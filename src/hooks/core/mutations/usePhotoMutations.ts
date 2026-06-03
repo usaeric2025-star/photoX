@@ -16,7 +16,15 @@ export const usePhotoDelete = createMutationHook({
   action: 'Delete',
   mutationFn: (ids: string | string[]) => deleteMany(Array.isArray(ids) ? ids : [ids]),
   invalidateKeys: [photoKeys.all],
-  onSuccessMessage: '照片已删除',
+  onSuccessMessage: (data: any) => {
+    if (data && typeof data === 'object' && 'successCount' in data) {
+      if (data.failureCount > 0) {
+        return `批量删除：成功 ${data.successCount}, 失败 ${data.failureCount}`;
+      }
+      return `已下架 ${data.successCount} 张照片`;
+    }
+    return '照片已删除';
+  },
 });
 
 export const usePhotoBatchEdit = createMutationHook({
@@ -24,7 +32,15 @@ export const usePhotoBatchEdit = createMutationHook({
   action: 'BatchUpdate',
   mutationFn: ({ ids, updates }: { ids: string[]; updates: Partial<Photo> }) => batchUpdate(ids, updates),
   invalidateKeys: [photoKeys.all],
-  onSuccessMessage: '批量更新成功',
+  onSuccessMessage: (data: any) => {
+    if (data && typeof data === 'object' && 'successCount' in data) {
+      if (data.failureCount > 0) {
+        return `批量操作：成功 ${data.successCount}, 失败 ${data.failureCount}`;
+      }
+      return `批量操作已完成 (${data.successCount})`;
+    }
+    return '批量更新成功';
+  },
 });
 
 export const useTogglePin = createMutationHook({

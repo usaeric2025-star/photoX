@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { DEFAULT_AI_MODEL } from "./lib/aiConfig.js";
 import { cors } from "hono/cors";
 import { S3Client, PutObjectCommand, ListObjectsV2Command, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -50,6 +51,8 @@ async function getSupabaseAdmin() {
   }
   return createClient(supabaseUrl, supabaseKey);
 }
+
+const normalizeUrl = (u: string) => u.toLowerCase().trim().split('?')[0].replace(/\/$/, '');
 
 // --- Hono App Implementation ---
 export const app = new Hono().basePath("/api");
@@ -782,6 +785,274 @@ app.post("/admin/repair", async (c) => {
     }
 });
 
+// --- Maintenance System: Previews and Jobs ---
+
+const jobStore = new Map<string, any>();
+
+// 1. Comprehensive Storage Audit
+app.get("/api/storage/audit", async (c) => {
+    try {
+        const supabase = await getSupabaseAdmin();
+        const r2 = await getR2Client();
+        const bucket = process.env.R2_BUCKET_NAME!;
+        const publicUrlPrefix = (process.env.VITE_STORAGE_PUBLIC_URL || "").replace(/\/$/, '');
+
+        // 1. Get all DB records
+        const { data: dbPhotos } = await supabase
+            .from("furniture_items")
+            .select("id, image_url, name")
+            .not("image_url", "is", null);
+
+        const dbRecords = (dbPhotos || []).map(p => ({
+            id: p.id,
+            name: p.name,
+            url: p.image_url,
+            normalized: normalizeUrl(p.image_url)
+        }));
+
+        const dbNormalizedSet = new Set(dbRecords.map(r => r.normalized));
+
+        // 2. List R2 objects
+        const r2KeysSet = new Set<string>();
+        let isTruncated = true;
+        let continuationToken: string | undefined;
+
+        while (isTruncated) {
+            const listCommand = new ListObjectsV2Command({
+                Bucket: bucket,
+                Prefix: "photox/public/",
+                ContinuationToken: continuationToken
+            });
+            const response = await r2.send(listCommand);
+            
+            (response.Contents || []).forEach(obj => {
+                const key = obj.Key!;
+                const isThumb = /thumb|temp|thumbnail|_t\.webp/i.test(key);
+                if (!isThumb) {
+                    r2KeysSet.add(key);
+                }
+            });
+            
+            isTruncated = response.IsTruncated || false;
+            continuationToken = response.NextContinuationToken;
+        }
+
+        // 3. Categorize
+        const orphans: any[] = []; // R2 yes, DB no
+        const ghosts: any[] = [];  // DB yes, R2 no
+        const healthy: any[] = []; // Both yes
+
+        // Check for Orphans (R2 only)
+        r2KeysSet.forEach(key => {
+            const publicUrl = publicUrlPrefix.startsWith('http') 
+              ? `${publicUrlPrefix}/${key}`
+              : `https://${publicUrlPrefix}/${key}`;
+            
+            if (!dbNormalizedSet.has(normalizeUrl(publicUrl))) {
+                orphans.push({ key, url: publicUrl });
+            }
+        });
+
+        // Check for Ghosts (DB only)
+        dbRecords.forEach(record => {
+            // Reconstruct the expected R2 key from URL
+            // This assumes the URL structure is consistent
+            const urlObj = new URL(record.url);
+            const key = urlObj.pathname.replace(/^\//, '');
+            
+            if (r2KeysSet.has(key)) {
+                healthy.push(record);
+            } else {
+                ghosts.push(record);
+            }
+        });
+
+        return c.json({ 
+            success: true, 
+            data: { 
+                healthyCount: healthy.length,
+                orphans: {
+                    count: orphans.length,
+                    samples: orphans.slice(0, 5)
+                },
+                ghosts: {
+                    count: ghosts.length,
+                    samples: ghosts.slice(0, 5)
+                }
+            } 
+        });
+    } catch (e: any) {
+        console.error("Audit failed:", e);
+        return c.json({ success: false, error: e.message }, 500);
+    }
+});
+
+// 2. Member Count Preview
+app.post("/api/admin/maintenance/member-count-mismatch/preview", async (c) => {
+    try {
+        const supabase = await getSupabaseAdmin();
+        // This logic is simplified from the main diagnose endpoint
+        const { data: groups } = await supabase.rpc('get_groups_with_counts');
+        const mismatches = (groups || []).filter((g: any) => g.member_count !== g.actual_count);
+        
+        return c.json({
+            affectedCount: mismatches.length,
+            samples: mismatches.slice(0, 5).map((m: any) => m.name)
+        });
+    } catch (e: any) {
+        return c.json({ success: false, error: e.message }, 500);
+    }
+});
+
+// 3. Missing Hash Preview
+app.post("/api/admin/maintenance/missing-hash/preview", async (c) => {
+    try {
+        const supabase = await getSupabaseAdmin();
+        const { count } = await supabase
+            .from('furniture_items')
+            .select('*', { count: 'exact', head: true })
+            .is('image_hash', null);
+            
+        return c.json({
+            affectedCount: count || 0
+        });
+    } catch (e: any) {
+        return c.json({ success: false, error: e.message }, 500);
+    }
+});
+
+// 4. Unified Job Polling
+app.get("/api/admin/maintenance/jobs", async (c) => {
+  const jobs = Array.from(jobStore.entries()).map(([id, data]) => ({ id, ...data }));
+  return c.json(jobs);
+});
+
+app.get("/api/admin/maintenance/job/:jobId", async (c) => {
+  const jobId = c.req.param("jobId");
+  const job = jobStore.get(jobId);
+  if (!job) {
+    return c.json({ 
+      status: 'completed', 
+      progress: 100, 
+      processed: 0, 
+      total: 0, 
+      message: 'Job completed or not found' 
+    });
+  }
+  return c.json(job);
+});
+
+// Member Count Repair with Job
+app.post("/api/admin/repair/member-count-mismatch/execute", async (c) => {
+    try {
+        const supabase = await getSupabaseAdmin();
+        const { data: groups } = await supabase.rpc('get_groups_with_counts');
+        const mismatches = (groups || []).filter((g: any) => g.member_count !== g.actual_count);
+        
+        if (mismatches.length === 0) {
+            return c.json({ success: true, message: "所有计数均已同步" });
+        }
+
+        const jobId = `sync_members_${Date.now()}`;
+        jobStore.set(jobId, {
+            status: 'processing',
+            progress: 0,
+            processed: 0,
+            total: mismatches.length,
+            message: `开始同步 ${mismatches.length} 个合组计数...`
+        });
+
+        // Background sync
+        (async () => {
+            for (let i = 0; i < mismatches.length; i++) {
+                const group = mismatches[i];
+                try {
+                    await supabase
+                        .from('photo_groups')
+                        .update({ member_count: group.actual_count })
+                        .eq('id', group.id);
+
+                    const progress = Math.round(((i + 1) / mismatches.length) * 100);
+                    jobStore.set(jobId, {
+                        status: i === mismatches.length - 1 ? 'completed' : 'processing',
+                        progress,
+                        processed: i + 1,
+                        total: mismatches.length,
+                        message: `已同步: ${group.name}`
+                    });
+                } catch (err) {
+                    console.error(`Failed to sync group ${group.id}:`, err);
+                }
+            }
+            setTimeout(() => jobStore.delete(jobId), 300000);
+        })();
+
+        return c.json({ success: true, jobId, message: "已启动同步任务" });
+    } catch (e: any) {
+        return c.json({ success: false, error: e.message }, 500);
+    }
+});
+
+// Missing Hash Repair with Job
+app.post("/api/admin/repair/missing-hash/execute", async (c) => {
+    try {
+        const supabase = await getSupabaseAdmin();
+        const { data: missingHashPhotos } = await supabase
+            .from('furniture_items')
+            .select('id, image_url, name')
+            .is('image_hash', null);
+            
+        if (!missingHashPhotos || missingHashPhotos.length === 0) {
+            return c.json({ success: true, message: "所有照片均已补全哈希" });
+        }
+
+        const jobId = `backfill_hash_${Date.now()}`;
+        jobStore.set(jobId, {
+            status: 'processing',
+            progress: 0,
+            processed: 0,
+            total: missingHashPhotos.length,
+            message: `开始补全 ${missingHashPhotos.length} 张照片的哈希...`
+        });
+
+        // Background process
+        (async () => {
+            const crypto = await import('node:crypto');
+            for (let i = 0; i < missingHashPhotos.length; i++) {
+                const photo = missingHashPhotos[i];
+                try {
+                    const response = await fetch(photo.image_url);
+                    if (response.ok) {
+                        const buffer = await response.arrayBuffer();
+                        const hash = crypto.createHash('md5').update(Buffer.from(buffer)).digest('hex');
+                        
+                        await supabase
+                            .from('furniture_items')
+                            .update({ image_hash: hash })
+                            .eq('id', photo.id);
+                    }
+
+                    const progress = Math.round(((i + 1) / missingHashPhotos.length) * 100);
+                    jobStore.set(jobId, {
+                        status: i === missingHashPhotos.length - 1 ? 'completed' : 'processing',
+                        progress,
+                        processed: i + 1,
+                        total: missingHashPhotos.length,
+                        message: `已处理: ${photo.name || photo.id}`
+                    });
+                } catch (err) {
+                    console.error(`Failed to hash photo ${photo.id}:`, err);
+                }
+            }
+            setTimeout(() => jobStore.delete(jobId), 300000);
+        })();
+
+        return c.json({ success: true, jobId, message: "已启动哈希补全任务" });
+    } catch (e: any) {
+        return c.json({ success: false, error: e.message }, 500);
+    }
+});
+
 app.get("/health", (c) => {
     return c.json({ success: true, data: { status: "ok", uptime: process.uptime(), timestamp: Date.now() } });
 });
@@ -1021,54 +1292,87 @@ app.post("/storage/import-orphans", async (c) => {
       }
 
       // 5. Create DB records (Batch size 50)
-      const toCreate = [];
-      const crypto = await import('node:crypto');
-      const importBatch = orphans.slice(0, 50);
-      
-      for (const key of importBatch) {
-        try {
-          const publicUrl = publicUrlPrefix.startsWith('http') 
-            ? `${publicUrlPrefix.replace(/\/$/, '')}/${key}`
-            : `https://${publicUrlPrefix}/${key}`;
-          const filename = key.split('/').pop() || "";
-          const nameCandidate = filename.split('.')[0] || "恢复的照片";
-          
-          // Double check normalization in a local set for this batch to prevent concurrent overlaps
-          if (dbUrls.has(normalizeUrl(publicUrl))) continue;
+      const jobId = `restore_orphans_${Date.now()}`;
+      jobStore.set(jobId, {
+        status: 'processing',
+        progress: 10,
+        processed: 0,
+        total: orphans.length,
+        message: `开始恢复 ${orphans.length} 张孤儿照片...`
+      });
 
-          // Calculate Hash
-          const response = await fetch(publicUrl);
-          let hash = null;
-          if (response.ok) {
-            const buffer = await response.arrayBuffer();
-            hash = crypto.createHash('md5').update(Buffer.from(buffer)).digest('hex');
+      // Background task (simulated for simplicity but real enough for polling)
+      (async () => {
+        const toCreate = [];
+        const crypto = await import('node:crypto');
+        const importBatch = orphans.slice(0, 50);
+        
+        for (let i = 0; i < importBatch.length; i++) {
+          const key = importBatch[i];
+          try {
+            const publicUrl = publicUrlPrefix.startsWith('http') 
+              ? `${publicUrlPrefix.replace(/\/$/, '')}/${key}`
+              : `https://${publicUrlPrefix}/${key}`;
+            const filename = key.split('/').pop() || "";
+            const nameCandidate = filename.split('.')[0] || "恢复的照片";
+            
+            if (dbUrls.has(normalizeUrl(publicUrl))) continue;
+
+            const response = await fetch(publicUrl);
+            let hash = null;
+            if (response.ok) {
+              const buffer = await response.arrayBuffer();
+              hash = crypto.createHash('md5').update(Buffer.from(buffer)).digest('hex');
+            }
+
+            toCreate.push({
+              name: nameCandidate,
+              image_url: publicUrl,
+              description: `[自动恢复] 源文件: ${filename}`,
+              is_hidden: false, 
+              image_hash: hash 
+            });
+            
+            dbUrls.add(normalizeUrl(publicUrl));
+            
+            // Update progress
+            const progress = Math.min(10 + Math.round((i / importBatch.length) * 80), 90);
+            jobStore.set(jobId, {
+              status: 'processing',
+              progress,
+              processed: i + 1,
+              total: orphans.length,
+              message: `正在处理: ${filename}`
+            });
+          } catch (err) {
+            console.error(`Failed to process orphan ${key}:`, err);
           }
-
-          toCreate.push({
-            name: nameCandidate,
-            image_url: publicUrl,
-            description: `[自动恢复] 源文件: ${filename}`,
-            is_hidden: false, 
-            image_hash: hash 
-          });
-          
-          // Mark as seen for immediate next checks
-          dbUrls.add(normalizeUrl(publicUrl));
-        } catch (err) {
-          console.error(`Failed to process orphan ${key}:`, err);
         }
-      }
 
-      if (toCreate.length > 0) {
-        const { error } = await supabase.from("furniture_items").insert(toCreate);
-        if (error) throw error;
-      }
+        if (toCreate.length > 0) {
+          const { error } = await supabase.from("furniture_items").insert(toCreate);
+          if (error) {
+            jobStore.set(jobId, { status: 'failed', progress: 100, error: error.message });
+            return;
+          }
+        }
+
+        jobStore.set(jobId, {
+          status: 'completed',
+          progress: 100,
+          processed: importBatch.length,
+          total: orphans.length,
+          message: `恢复完成！成功找回 ${toCreate.length} 张照片。系统已自动补全哈希并过滤了缩略图。`
+        });
+        
+        // Auto-cleanup job after 5 mins
+        setTimeout(() => jobStore.delete(jobId), 300000);
+      })();
 
       return c.json({ 
         success: true, 
-        count: toCreate.length, 
-        remaining: orphans.length - importBatch.length,
-        message: `成功从云端找回并导入了 ${toCreate.length} 张照片。系统已自动补全哈希并过滤了缩略图。` 
+        jobId,
+        message: `已启动恢复任务，正在处理 ${Math.min(50, orphans.length)} 条记录...` 
       });
     } catch (e: any) {
       return c.json({ success: false, error: e.message }, 500);
@@ -1231,7 +1535,7 @@ app.post("/ai/analyze-group", async (c) => {
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-        body: JSON.stringify({ model: "google/gemini-2.5-flash-lite", messages: [{ role: "user", content: prompt }], response_format: { type: "json_object" }, max_tokens: 1000 })
+        body: JSON.stringify({ model: DEFAULT_AI_MODEL, messages: [{ role: "user", content: prompt }], response_format: { type: "json_object" }, max_tokens: 1000 })
       });
       if (!response.ok) return c.json({ error: await response.text() }, response.status as any);
       const data = await response.json();
@@ -1248,7 +1552,7 @@ app.post("/ai/analyze-photo-v2", async (c) => {
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-        body: JSON.stringify({ model: "google/gemini-2.5-flash-lite", messages: [{ role: "user", content: prompt }], response_format: { type: "json_object" }, max_tokens: 1000 })
+        body: JSON.stringify({ model: DEFAULT_AI_MODEL, messages: [{ role: "user", content: prompt }], response_format: { type: "json_object" }, max_tokens: 1000 })
       });
       if (!response.ok) return c.json({ error: await response.text() }, response.status as any);
       const data = await response.json();

@@ -43,8 +43,12 @@ export function createMutationHook<TData = void, TVariables = void, TContext = u
 
         // Show feedback
         if (config.onSuccessMessage) {
+          const actualData = (data && typeof data === 'object' && 'ok' in data && 'data' in data) 
+            ? (data as any).data 
+            : data;
+          
           const msg = typeof config.onSuccessMessage === 'function' 
-            ? config.onSuccessMessage(data, variables) 
+            ? config.onSuccessMessage(actualData, variables) 
             : config.onSuccessMessage;
           toast.success(msg);
         }

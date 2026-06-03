@@ -1,89 +1,63 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { Component, ReactNode } from 'react';
 
 interface Props {
   children: ReactNode;
+  fallback?: ReactNode;
 }
 
 interface State {
   hasError: boolean;
-  error: Error | null;
+  error?: Error;
 }
 
-/**
- * @remarks
- * Agent v3.0 Intelligent ErrorBoundary.
- * Provides diagnosis logging and manual recovery mechanism.
- * fallback MUST be static JSX to prevent recursion.
- * componentDidCatch 嚴禁任何副作用，僅允許 console.error
- */
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error: Error): State {
+  static getDerivedStateFromError(error: Error) {
     return { hasError: true, error };
   }
 
-  /**
-   * Static report method for non-component code
-   */
-  static report(error: Error, context: string) {
-    console.error(`[EB-DIAG-REPORT] context: ${context} | error: ${error.message}`);
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    // 生产环境下可以对接 Sentry 等日志系统
+    console.error('ErrorBoundary caught:', error, errorInfo);
   }
-
-  componentDidCatch(error: Error, info: ErrorInfo) {
-    // Structured diagnostic logging for Agent v3.0
-    const source = (error.stack?.split('\n')[1] || 'unknown').trim();
-    const trigger = error.message || 'unspecified error';
-    const boundary = info?.componentStack?.split('\n')[1]?.trim() || 'unknown boundary';
-    
-    console.error(`[EB-DIAG] source: ${source} | trigger: ${trigger} | boundary: ${boundary}`);
-    console.error(`[EB-DIAG] stack: ${error.stack}`);
-  }
-
-  handleReset = () => {
-    this.setState({ hasError: false, error: null });
-  };
 
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ 
-          padding: '24px', 
-          textAlign: 'center', 
-          border: '1px solid #fee2e2', 
-          backgroundColor: '#fef2f2', 
-          borderRadius: '12px',
-          margin: '16px',
-          boxShadow: '0 4px 12px -2px rgba(0,0,0,0.05)'
-        }}>
-          <h2 style={{ fontSize: '16px', fontWeight: 'bold', color: '#991b1b', marginBottom: '4px' }}>
-            區塊載入失敗 / Loading Error
-          </h2>
-          <p style={{ fontSize: '12px', color: '#b91c1c', marginBottom: '16px', opacity: 0.8 }}>
-            {this.state.error?.message || '發生未知錯誤'}
-          </p>
-          <button 
-            onClick={this.handleReset}
-            style={{
-              padding: '8px 24px',
-              backgroundColor: '#ef4444',
-              color: 'white',
-              borderRadius: '8px',
-              fontSize: '13px',
-              fontWeight: '700',
-              cursor: 'pointer',
-              border: 'none',
-              boxShadow: '0 2px 4px rgba(239, 68, 68, 0.2)'
-            }}
-          >
-            重試 / Retry
-          </button>
-        </div>
+        this.props.fallback || (
+          <div className="min-h-[400px] w-full flex items-center justify-center p-8 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+            <div className="text-center space-y-4 max-w-md">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 text-red-600 mb-2">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900 tracking-tight">出错了</h2>
+              <p className="text-slate-500 text-sm leading-relaxed">
+                {this.state.error?.message || '组件渲染过程中发生了意外错误，请尝试重新加载页面'}
+              </p>
+              <div className="flex gap-3 justify-center pt-4">
+                <button
+                  onClick={() => window.location.reload()}
+                  className="px-6 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all active:scale-95"
+                >
+                  刷新页面
+                </button>
+                <button
+                  onClick={() => (window.location.href = '/')}
+                  className="px-6 py-2.5 border border-slate-200 bg-white text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all active:scale-95"
+                >
+                  返回首页
+                </button>
+              </div>
+            </div>
+          </div>
+        )
       );
     }
+
     return this.props.children;
   }
 }

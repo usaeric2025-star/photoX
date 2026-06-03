@@ -18,6 +18,8 @@ import { saveData, syncCache } from '@/lib/db/indexedDB';
 import { PublicGridContainer } from '@/components/photo/PublicGridContainer';
 import { PublicHeader } from '@/components/layouts/headers/PublicHeader';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { GroupDetailPage } from '@/components/GroupDetailPage';
+import { useUrlFilters } from '@/hooks/useUrlFilters';
 
 export default function PublicPage() {
   // 滚动恢复
@@ -26,6 +28,8 @@ export default function PublicPage() {
   const navigate = useNavigate();
   const search = useSearch({ strict: false });
   const authError = (search as any).authError;
+  const { filters } = useUrlFilters();
+  const groupId = filters.groupId;
   
   const { data: count } = usePhotoCount({});
   const { isLoading } = usePhotos({});
@@ -67,6 +71,9 @@ export default function PublicPage() {
             hasData={true} // Data will be handled inside PublicGridContainer
           >
             <ErrorBoundary>
+                {groupId && (
+                  <GroupDetailPage variant="public-showcase" activeGroupId={groupId} />
+                )}
                 <PublicGridContainer 
                   variant="public-showcase"
                   onScrollToTop={handleScrollToTop}

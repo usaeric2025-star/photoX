@@ -8,12 +8,12 @@ import { sortGroupPhotos } from '../lib/filters';
 import { filterPhotosByMode } from '@/lib/filters/photoVisibility';
 import { useAdminMode, useErrorHandler, useGroupDetail, useTasks, useGroupPhotos } from '@/hooks';
 import { GroupDetailSkeleton } from './groups/GroupDetailSkeleton';
-import { PhotoLightbox } from './PhotoLightbox';
 import { Skeleton } from './ui/Skeleton';
 import { GroupGridView } from './groups/GroupGridView';
 import { GroupAdminShell, GroupAdminShellProps } from './groups/GroupAdminShell';
 import { useAdminActions } from '@/features/admin/useAdminActions';
 import { useUrlFilters } from '@/hooks/useUrlFilters';
+import { useNavigate } from '@tanstack/react-router';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { createTranslate } from '../lib/i18n';
 import { LanguageCode } from '../lib/translations';
@@ -21,8 +21,8 @@ import { Spinner } from './ui/Spinner';
 
 
 // Add displayPhotos and update for compatibility with PublicGridContainer
-export interface GroupDetailPageProps extends GroupAdminShellProps {
-  activeGroupId: string | null;
+export interface GroupDetailPageProps extends Partial<GroupAdminShellProps> {
+  activeGroupId?: string | null;
   onClose?: () => void;
   displayPhotos?: Photo[];
   onLongPressStart?: (photo: Photo) => void;
@@ -35,12 +35,15 @@ export interface GroupDetailPageProps extends GroupAdminShellProps {
 }
 
 export function GroupDetailPage(props: GroupDetailPageProps) {
-  const { activeGroupId, shareGroup, initialPhotoId, variant } = props;
-  const isManagement = props.variant === 'full-management' || props.variant === 'staff-workspace';
+  const { shareGroup, variant } = props;
+  const navigate = useNavigate();
+  const { filters, setGroupId, setPhotoId } = useUrlFilters();
+  const activeGroupId = filters.groupId;
+  const initialPhotoId = filters.photoId;
+  
+  const isManagement = variant === 'full-management' || variant === 'staff-workspace' || window.location.pathname.startsWith('/admin');
   const isAdminMode = useAdminMode() && isManagement;
   const { handleError } = useErrorHandler();
-
-  const { setGroupId, setPhotoId } = useUrlFilters();
   const lang = useUIStore((s) => s.appLang);
   const translate = createTranslate(lang as LanguageCode);
   
@@ -154,10 +157,14 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
 
   const isOpen = activeGroupId !== null;
 
+  const handleClose = () => {
+    navigate({ to: isAdminMode ? '/admin' : '/', search: (prev: any) => ({ ...prev, groupId: undefined, photoId: undefined }) });
+  };
+
   return (
     <div 
       className={`fixed inset-0 z-[200] bg-brand-bg overflow-hidden pt-safe flex flex-col ${!isOpen ? 'hidden' : ''}`}
-      onClick={(e) => { if (e.target === e.currentTarget) { setGroupId(null); setPhotoId(null); } }}
+      onClick={(e) => { if (e.target === e.currentTarget) { handleClose(); } }}
     >
       {isLoading && !infinitePhotosData ? (
             <GroupDetailSkeleton />
@@ -168,7 +175,7 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
                   <div className="flex items-center gap-3">
                     <button 
                       type="button"
-                      onClick={() => { setGroupId(null); setPhotoId(null); }}
+                      onClick={handleClose}
                       className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors"
                     >
                       <ChevronLeft size={24} />
@@ -206,7 +213,7 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
                     )}
                     <button 
                         type="button"
-                        onClick={() => { setGroupId(null); setPhotoId(null); }}
+                        onClick={handleClose}
                         className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors"
                     >
                         <X size={24} />
@@ -257,20 +264,6 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
                 </div>
             </>
           )}
-
-           {/* Unified Photo Lightbox */}
-           <PhotoLightbox 
-             photoId={focusedGroupPhotoId}
-             displayPhotos={activeGroupPhotos}
-             onClose={() => setPhotoId(null)}
-             onPhotoIdChange={setPhotoId}
-             contactWhatsApp={props.contactWhatsApp || (() => {})}
-             onEditPhoto={onEditPhoto}
-             onToggleHidden={onToggleHidden}
-             onCancelAnalyze={onCancelAnalyze}
-             isAnalyzing={isAnalyzing}
-             variant={props.variant}
-           />
         </div>
   );
 };

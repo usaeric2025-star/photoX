@@ -79,6 +79,9 @@ function lazyWithRetry(importFn: () => Promise<any>, pageName: string) {
 
 const PublicPage = lazyWithRetry(() => import('@/pages/PublicPage'), 'PublicPage');
 const AdminPage = lazyWithRetry(() => import('@/pages/AdminPage'), 'AdminPage');
+const MaintenanceHistoryPage = lazyWithRetry(() => import('@/pages/AdminPage/MaintenanceHistoryPage'), 'MaintenanceHistoryPage');
+const TasksPage = lazyWithRetry(() => import('@/pages/AdminPage/TasksPage'), 'TasksPage');
+const PhotoLightboxPage = lazy(() => import('@/pages/PhotoLightboxPage'));
 
 // 1. Root Route
 export const rootRoute = createRootRouteWithContext<RouterContext>()({
@@ -93,6 +96,7 @@ export const rootRoute = createRootRouteWithContext<RouterContext>()({
   component: () => (
     <Suspense fallback={<PageSkeleton />}>
       <Outlet />
+      <PhotoLightboxPage />
     </Suspense>
   ),
 });
@@ -236,13 +240,46 @@ const adminRoute = createRoute({
   ),
 });
 
+const adminHistoryRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/history/maintenance',
+  component: MaintenanceHistoryPage,
+});
+
+const adminTasksRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/tasks',
+  component: TasksPage,
+});
+
+const adminGroupRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/group/$groupId',
+  validateSearch: (search: Record<string, unknown>): GallerySearchParams => {
+    return {
+      photoId: (search.photoId as string) || undefined,
+      columns: (search.columns as string) || undefined,
+    };
+  },
+  loader: async ({ params: { groupId }, context }) => {
+    const { queryClient } = context;
+    if (!queryClient || !groupId) return;
+    await queryClient.prefetchQuery({
+      queryKey: groupKeys.detail(groupId, 'STABLE'),
+      queryFn: () => getGroupById(groupId),
+      staleTime: createStaleTime('STABLE'),
+    });
+  },
+  component: AdminPage, // AdminPage handles the layout
+});
+
 // 3. Route Tree
-const routeTree = rootRoute.addChildren([
+export const routeTree = rootRoute.addChildren([
   indexRoute,
   hashRoute,
   groupRoute,
   gRoute,
-  adminRoute,
+  adminRoute.addChildren([adminHistoryRoute, adminTasksRoute, adminGroupRoute]),
 ]);
 
 // 4. Create Router

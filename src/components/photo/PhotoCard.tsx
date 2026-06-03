@@ -51,17 +51,19 @@ function PinButton({ photoId, isPinned }: { photoId: string; isPinned: boolean }
 }
 import { Photo, Category, Tag } from '../../types';
 import { GalleryVariant } from '@/types/variant';
-import { Layers, Heart, Check, EyeOff } from 'lucide-react';
+import { Layers, Heart, Check, EyeOff, Download } from 'lucide-react';
 import { getCacheBustedImageUrl, getPhotoDisplayName } from '../../lib/ui-helpers';
 import { ResponsivePhoto } from '../shared/ResponsivePhoto';
 import { usePermission, useFilters, useCategories, useTags, useErrorHandler } from '../../hooks';
 import { useAdminActions } from '@/features/admin/useAdminActions';
 import { getDisplayGroupCode } from '@/services/utils';
+import { downloadPhotoAsJpeg } from '@/lib/download';
 
 import { toast } from '@/lib/ui/toast';
 import { cn } from '@/lib/utils';
 import { translations } from '@/lib/translations';
-import { useUIStore, useShallow } from '@/store/useUIStore';
+import { useUIStore } from '@/store/useUIStore';
+import { PhotoStatusBadges } from './PhotoStatusBadges';
 
 export interface PhotoCardProps extends React.HTMLAttributes<HTMLDivElement> {
   variant: GalleryVariant;
@@ -70,37 +72,6 @@ export interface PhotoCardProps extends React.HTMLAttributes<HTMLDivElement> {
   hideDetails?: boolean;
   imgVariant?: 'sm' | 'md';
   hideGroupBadge?: boolean;
-}
-
-function PhotoStatusBadges({ photo, variant, isPinned, hideGroupBadge }: { photo: Photo; variant: GalleryVariant; isPinned: boolean; hideGroupBadge?: boolean }) {
-  const isManagement = variant === 'full-management' || variant === 'staff-workspace';
-  const showGroupsCollapsed = useSearch({ from: '__root__', select: (s: any) => s.showGroupsCollapsed !== 'false' });
-  
-  // Display group info if photo belongs to a group
-  const shouldShowGroup = !hideGroupBadge && showGroupsCollapsed && photo.group_id;
-
-  const groupCode = getDisplayGroupCode(photo.group_id);
-  const memberCount = photo.group?.member_count ?? 1;
-
-  return (
-    <div className="absolute top-1.5 left-1.5 z-10 flex gap-1 flex-col pointer-events-none">
-      {shouldShowGroup && (
-        <div className="backdrop-blur-md px-1.5 py-0.5 rounded-md text-[10px] text-white font-bold flex items-center gap-1.5 border border-white/20 shadow-sm bg-blue-600/80">
-          <Layers size={10} strokeWidth={2.5} />
-          <div className="flex items-center gap-1">
-            <span className="opacity-70 text-[8px] font-mono">{groupCode}</span>
-            <span className="w-1 h-1 rounded-full bg-white/40" />
-            <span>{memberCount}</span>
-          </div>
-        </div>
-      )}
-      {isManagement && isPinned && (
-        <div className="bg-amber-500 text-white px-1 py-0.5 rounded text-[8px] font-bold flex items-center gap-0.5 border border-white/10 shadow-sm">
-          <Heart size={8} className="fill-current" />
-        </div>
-      )}
-    </div>
-  );
 }
 
 function SelectionOverlay({ isSelected }: { isSelected: boolean }) {
@@ -219,13 +190,16 @@ export const PhotoCard = React.memo(({
   })();
 
   const { can } = usePermission();
+  const location = window.location;
+  const isAdmin = location.pathname.startsWith('/admin');
 
   const handleOpenLightbox = () => {
     navigate({ to: '.', search: (prev: any) => ({ ...prev, photoId: photo.id } as any) });
   };
     
-  const handleGroupClickLogic = (gid: string, pid?: string) => {
-    navigate({ to: '.', search: (prev: any) => ({ ...prev, photoId: hasSearchQuery ? pid : undefined, groupId: gid } as any) });
+  const handleGroupNavigate = (gid: string) => {
+    const targetPath = isAdmin ? `/admin/group/${gid}` : `/group/${gid}`;
+    navigate({ to: targetPath });
   };
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -246,18 +220,20 @@ export const PhotoCard = React.memo(({
         e.stopPropagation();
         e.preventDefault();
         toggleSelected(photo.id);
-      } else if (photo.group_id) {
+      } else if (photo.is_group_cover && showGroupsCollapsed && !hasSearchQuery) {
+        // [RULE-LOCK] Group card in list -> Group detail page
         e.stopPropagation();
         e.preventDefault();
-        handleGroupClickLogic(photo.group_id, photo.id);
+        handleGroupNavigate(photo.group_id!);
       } else {
+        // [RULE-LOCK] Regular photo or in group page -> Lightbox
         handleOpenLightbox();
       }
     } else {
-      if (photo.group_id) {
+      if (photo.is_group_cover && showGroupsCollapsed && !hasSearchQuery) {
         e.stopPropagation();
         e.preventDefault();
-        handleGroupClickLogic(photo.group_id, photo.id);
+        handleGroupNavigate(photo.group_id!);
       } else {
         handleOpenLightbox();
       }
@@ -349,7 +325,12 @@ export const PhotoCard = React.memo(({
         </div>
       )}
       
-      <PhotoStatusBadges photo={photo} variant={variant} isPinned={!!photo.is_pinned} hideGroupBadge={hideGroupBadge} />
+      <PhotoStatusBadges 
+        photo={photo} 
+        variant={variant} 
+        isPinned={!!photo.is_pinned} 
+        hideGroupBadge={hideGroupBadge || !showGroupsCollapsed} 
+      />
 
       {isManagement && can('photo:toggle-pinned') && (
          <PinButton photoId={photo.id} isPinned={!!photo.is_pinned} />

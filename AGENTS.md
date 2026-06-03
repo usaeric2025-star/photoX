@@ -310,6 +310,84 @@ catch (e) {
 - 映射位置：`src/services/photo/queries.ts` 中的 `mapSupabasePhoto` 函数。
 - 上传逻辑：`uploadService.ts` 移除缩略图压缩与二次上传步骤，仅上传原图。
 
+## 后台维护系统规范（锁定，2026-06-03）
 
+### 核心原则
+- ✅ 每个维护操作必须支持预览（Preview before Execute）
+- ✅ 危险操作必须二次确认（confirm/alertDialog）
+- ✅ 耗时操作必须显示进度反馈
+- ✅ 所有执行结果必须记录日志（暂由后端 console 输出保证，未来迁移至 maintenance_logs 表）
 
+### 禁止事项
+- ❌ 禁止无预览直接大批量修改数据
+- ❌ 禁止无进度反馈的耗时操作
+- ❌ 禁止在诊断面板只报错不提供修复入口
 
+### 统一架构
+- ✅ 新增维护工具统一使用 `@/components/admin/Diagnostics/MaintenanceTool` 组件
+- ✅ 维护逻辑与 API 映射收敛于 `@/features/maintenance/issueActions`
+- ✅ 后端业务逻辑保持在 `/api/app.ts` 中封装，由前端 MaintenanceTool 统一调用
+
+## 通知与反馈规范（锁定，2026-06-03）
+
+### 核心原则
+- ✅ **唯一出口**：所有通知必须使用 `sonner` 的 `toast`。
+- ✅ **禁止原生**：严禁使用 `window.alert()` 或 `window.confirm()`（交互请使用 `useUIStore` 的 `alertDialog`）。
+- ✅ **可执行建议**：系统级错误通知应尽可能包含修复建议或「查看诊断」按钮。
+- ✅ **异步追踪**：所有耗时操作（上传、批量更新、导出）必须显示进度或 Loading 状态。
+
+### 统一用法
+```typescript
+// 简单成功
+toast.success('操作已完成');
+
+// 带动作的错误
+toast.error('发现数据完整性问题', {
+  action: {
+    label: '去诊断',
+    onClick: () => navigate({ to: '/admin/diagnostics' })
+  }
+});
+```
+
+## 任务中心适配规范（锁定，2026-06-03）
+- ✅ **非破坏性更新**：不重写 `useTaskExecutor` 和 `TasksList`，采用适配层聚合数据。
+- ✅ **全局入口**：在 `/admin/tasks` 提供所有（前端+后端）任务的统一视图。
+- ✅ **自动刷新**：任务页面应具备自动轮询后端 Job 状态的能力。
+
+## 灯箱与合组跳转核心规则（锁定）
+
+### 1. 核心原则
+- ✅ **URL 唯一事实来源**：禁用 Zustand 存储页面级 ID，所有显示逻辑必须依赖 URL 参数（`photoId`, `groupId`）。
+- ✅ **路由驱动权限**：所有管理操作权限必须前置校验 `pathname.startsWith('/admin')`。
+
+### 2. 点击与导航映射
+| 点击目标 | 场景 | 跳转目标 | 预期行为 |
+|----------|------|----------|----------|
+| 单张照片 | 公开列表 | `/?photoId={id}` | 弹灯箱 |
+| 单张照片 | 管理列表 | `/admin?photoId={id}` | 弹灯箱 |
+| 合组卡片 | 列表页 | `/group/{id}` 或 `/admin/group/{id}` | **进入详情页**，不弹灯箱 |
+| 照片 | 合组详情页 | `/group/{gid}?photoId={id}` | 弹灯箱，支持在组内切换 |
+
+### 3. 灯箱与面板渲染逻辑
+- ✅ **自动上下文**：`useLightbox` 必须根据 URL 中的 `groupId` 自动加载对应合组的照片流作为灯箱序列。
+- ✅ **面板隔离**：信息面板（`PhotoInfoPanel`）必须严格区分 `mode="group"` 和 `mode="single"`，不混合显示。
+- ✅ **编辑权限**：编辑按钮显示必须同时满足 `isAdmin` 且路由匹配当前查看的实体类型。
+
+### 4. 退出逻辑
+- ✅ **层级返回**：灯箱关闭时行为区分模式：
+  - **单张模式**：回到 `/admin` 或 `/`。
+  - **合组模式**：回到 `/admin/group/{groupId}` 或 `/group/{groupId}`，保留合组上下文。
+- ✅ **状态清理**：退出合组详情页时需显式清理 `groupId`，导航回根路径。
+
+## 错误处理与降级规范（锁定，2026-06-03）
+
+### 1. 核心原则
+- ✅ **全量包裹**：所有主要页面和 App 根组件必须包裹 `ErrorBoundary`。
+- ✅ **数据韧性**：所有关键数据查询必须处理 `isLoading` / `isError` 状态，禁止在数据缺失时读取属性。
+- ✅ **友好反馈**：发生致命错误时必须提供「刷新」或「返回首页」的交互入口。
+
+### 2. 场景化降级
+- ✅ **灯箱缺失**：若 `photoId` 指向的照片不存在或加载失败，必须显示 `LightboxFallback`。
+- ✅ **列表空态**：列表页无数据时需使用 `EmptyState` 组件。
+- ✅ **网络异常**：`useQueryWithFallback` 钩子必须自动触发错误通知（Toast）。

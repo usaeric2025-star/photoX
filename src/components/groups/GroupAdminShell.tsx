@@ -1,7 +1,6 @@
 import React from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Photo } from "../../types";
-import { PhotoLightbox } from "../PhotoLightbox";
 import { GroupSettingsSheet } from "./GroupSettingsSheet";
 import { GroupDetailSkeleton } from "./GroupDetailSkeleton";
 import { GroupHeader } from "./GroupHeader";
@@ -227,34 +226,6 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
               
               t={translate}
             />
-
-            {/* Unified Photo Lightbox */}
-            <AnimatePresence>
-              {filters.photoId &&
-                (() => {
-                  const currentIndex = activeGroupPhotos.findIndex(
-                    (p) => p.id === filters.photoId,
-                  );
-                  const photo = activeGroupPhotos[currentIndex];
-                  if (!photo) return null;
-
-                  return (
-                    <PhotoLightbox
-                      photoId={filters.photoId}
-                      displayPhotos={activeGroupPhotos}
-                      onClose={handleCloseLightbox}
-                      onPhotoIdChange={setPhotoId}
-                      contactWhatsApp={() => {}}
-                      onUngroup={handleUngroupLightbox}
-                      onSetGroupCover={handleSetGroupCoverLightbox}
-                      onEditPhoto={handleEditPhoto}
-                      onToggleHidden={handleToggleHiddenLightbox}
-                      onCancelAnalyze={onCancelAnalyze}
-                      isAnalyzing={isAnalyzing}
-                    />
-                  );
-                })()}
-            </AnimatePresence>
           </motion.div>
         )}
       </AnimatePresence>

@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { RouterProvider } from '@tanstack/react-router';
 import { router } from './router';
 import { migrateStorage } from '@/lib/storage';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { clearExpiredCaches } from './lib/db/indexedDB';
 import { globalHandleError } from './lib/error/errorHandler';
 import { logger } from '@/lib/logger';
@@ -26,7 +27,9 @@ export default function AppRoutes() {
   }), []);
 
   return (
-    <RouterProvider router={router} context={routerContext} />
+    <ErrorBoundary>
+      <RouterProvider router={router} context={routerContext} />
+    </ErrorBoundary>
   );
 }
 

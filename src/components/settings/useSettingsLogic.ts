@@ -1,7 +1,8 @@
 import { useState, useCallback } from "react";
 import { AppSettings, Tag, Manufacturer, Category, User, Photo } from "@/types";
+import { DEFAULT_AI_MODEL } from '@/config/ai';
 import { useUIStore, useShallow } from "@/store/useUIStore";
-import { testAiConnection } from "@/services/geminiService";
+import { testAiConnection } from "@/services/gemini";
 import { getPhotosWithoutThumbHash } from "@/services/photo/queries";
 import {
   deduplicatePhotos,
@@ -188,7 +189,7 @@ export const useSettingsLogic = ({
     try {
       const provider = (settings as any).ai_provider || "google";
       const model =
-        settings.custom_model || 'google/gemini-2.5-flash-lite';
+        settings.custom_model || DEFAULT_AI_MODEL;
       const ok = await testAiConnection(
         settings.gemini_api_key,
         provider,

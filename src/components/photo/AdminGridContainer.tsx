@@ -18,7 +18,6 @@ import { useAdminActions } from '@/features/admin/useAdminActions';
 import { savePhotosToCloudBatch } from "@/services/photo/photoUploadService";
 import { useAuth, useErrorHandler } from '@/hooks';
 import { toast } from '@/lib/ui/toast';
-import { PhotoLightbox } from '../PhotoLightbox';
 import { GroupDetailPage } from '../GroupDetailPage';
 import { PAGINATION } from '@/constants/config';
 import { normalizeAdminPhotos } from '@/lib/selectors/photos';
@@ -266,15 +265,6 @@ export function AdminGridContainer({
             onBatchAiAnalyze(targetPhotos);
           } : undefined}
         />
-
-        {!urlFilters.groupId && urlFilters.photoId && (
-          <PhotoLightbox onClose={() => setPhotoId(null)}  
-            photoId={urlFilters.photoId}
-            displayPhotos={displayPhotos}
-            onPhotoIdChange={setPhotoId}
-            variant={variant}
-          />
-        )}
 
         <GroupDetailPage 
           activeGroupId={urlFilters.groupId} 

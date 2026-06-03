@@ -1,4 +1,3 @@
-export * from './PhotoLightbox';
-export * from './usePhotoLightboxLogic';
-export * from './LightboxImageSection';
-export * from './LightboxInfoPanel';
+export * from './LightboxCore';
+export * from './lightboxConfig';
+export * from './lightboxSlides';

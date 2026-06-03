@@ -12,7 +12,8 @@ import {
   Plus,
   Cloud,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Zap
 } from 'lucide-react';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { reportError } from '@/lib/errorReporter';
@@ -196,6 +197,13 @@ export function AdminSidebar() {
               collapsed={isSidebarCollapsed}
               active={activeScreen === 'settings'} 
               onClick={() => update({ activeScreen: 'settings' })}
+            />
+            <SidebarItem 
+              icon={Zap} 
+              label="全局任务监控" 
+              collapsed={isSidebarCollapsed}
+              active={activeScreen === 'tasks'} 
+              onClick={() => update({ activeScreen: 'tasks' })}
             />
             <SidebarItem 
               icon={Terminal} 

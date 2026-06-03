@@ -12,7 +12,7 @@ import { DetailsTab } from "./DetailsTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs";
 import { getCacheBustedImageUrl } from "../../../lib/ui-helpers";
 import { translations } from "../../../lib/translations";
-import { analyzeProductPhoto } from "@/services/geminiService";
+import { analyzeProductPhoto } from "@/services/gemini";
 
 import { 
   usePhotos,
@@ -25,6 +25,7 @@ import {
   usePhotoDetail
 } from "../../../hooks";
 import { toast } from "@/lib/ui/toast";
+import { applyAIResult } from '@/lib/ai/aiMerger';
 import { cleanPhotos } from "../../../lib/filters";
 import { PAGINATION } from "../../../constants/config";
 import { useAdminActions } from "@/features/admin/useAdminActions";
@@ -192,34 +193,13 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
       const result = customEvent.detail;
       if (!result) return;
 
-      const updates: any = {};
-      if (result.name) updates.name = result.name;
-      if (result.category) {
-        // Need to find category ID by name
-        const cat = categories.find(c => 
-          c.name.toLowerCase() === result.category.toLowerCase() || 
-          c.en?.toLowerCase() === result.category.toLowerCase() ||
-          c.zh?.toLowerCase() === result.category.toLowerCase()
-        );
-        if (cat) updates.category_id = cat.id;
-      }
-      if (Array.isArray(result.tags)) {
-        // Find tag IDs by name
-        const tagIds = result.tags.map((tagName: string) => {
-          const tag = tags.find(t => t.name.toLowerCase() === tagName.toLowerCase());
-          return tag?.id;
-        }).filter(Boolean);
-        if (tagIds.length > 0) updates.tag_ids = tagIds;
-      }
-      if (result.description) updates.description = result.description;
-      if (Array.isArray(result.colors)) {
-        // If the form has colors field, but let's see. 
-        // Based on useUIStore, formState doesn't have colors/materials directly for single photos, 
-        // but maybe we can append to description or something if not exist.
-        // For now, let's just stick to what's in ProductFormData.
-      }
+      const merged = applyAIResult(formState, result, {
+        categories,
+        tags,
+        preserveFields: ['name', 'category_id'] // Example: keep manually entered name/category
+      });
       
-      updateForm(updates);
+      updateForm(merged);
     };
 
     window.addEventListener('ai-analysis-result', handleAIResult);

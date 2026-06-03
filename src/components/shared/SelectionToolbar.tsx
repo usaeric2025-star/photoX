@@ -117,7 +117,17 @@ export function SelectionToolbar({
 
         {onDelete && (
           <button
-            onClick={() => onDelete(ids)}
+            onClick={() => {
+              update({
+                alertDialog: {
+                  title: `确定要删除选中的 ${count} 张照片吗？`,
+                  message: '此操作不可撤销，照片将从云端彻底移除。',
+                  type: 'danger',
+                  confirmLabel: '删除',
+                  onConfirm: () => onDelete(ids),
+                }
+              });
+            }}
             className="w-9 h-9 flex items-center justify-center rounded-full text-rose-400 hover:text-white hover:bg-rose-600/20 active:scale-95 transition-all"
             title="批量删除"
           >

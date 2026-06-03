@@ -1,5 +1,5 @@
 import { Photo } from '../types';
-import { analyzeProductPhoto } from './geminiService';
+import { analyzeProductPhoto } from './gemini';
 import { supabase } from '@/lib/supabase';
 import { DB_CONFIG } from '@/constants/config';
 import { ok, err, AppResult } from '@/lib/errorFactory';

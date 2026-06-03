@@ -17,6 +17,7 @@ export { useTagsDisplay } from '../features/photo/useTagFiltering';
 export { useAdminCategory } from '../features/admin/useCategoryManagement';
 export { useFilters } from '../features/filters/useFilters';
 export { useUrlFilters } from './useUrlFilters';
+export { useLightbox } from './useLightbox';
 
 // Queries
 export { usePhotos, useGroupPhotos } from './core/queries/usePhotos';

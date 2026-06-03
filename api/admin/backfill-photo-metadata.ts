@@ -1,4 +1,5 @@
 import sizeOf from "image-size";
+import { DEFAULT_AI_MODEL } from "../lib/aiConfig.js";
 
 export interface PhotoBackfillCandidate {
   id: string;
@@ -137,7 +138,7 @@ Your response MUST match this exact JSON schema:
               "X-Title": "PhotoX AI"
             },
             body: JSON.stringify({
-              model: "google/gemini-2.5-flash-lite",
+              model: DEFAULT_AI_MODEL,
               messages: [{ role: "user", content: promptText }],
               response_format: { type: "json_object" },
               max_tokens: 1000

@@ -90,13 +90,32 @@ import { errorFactory, success } from '@/lib/errorFactory';
 import type { AppResult } from '@/lib/errorFactory';
 // ... other imports
 
-export async function deleteMany(ids: string[]): Promise<AppResult<null>> {
-    const { error } = await supabase
+export interface BatchActionResult {
+  successCount: number;
+  failureCount: number;
+  failedItems: { id: string; reason: string }[];
+}
+
+export async function deleteMany(ids: string[]): Promise<AppResult<BatchActionResult>> {
+    const { data, error } = await supabase
       .from(DB_CONFIG.TABLE_NAME)
       .delete()
-      .in('id', ids);
-    if (error) return errorFactory(error.message, 'DB_ERROR', 'deleteMany', error);
-    return success(null);
+      .in('id', ids)
+      .select('id');
+    
+    if (error) {
+      // If bulk fails, we might want to try one by one to find why, but for now:
+      return errorFactory(error.message, 'DB_ERROR', 'deleteMany', error);
+    }
+
+    const deletedIds = new Set(data?.map(d => d.id) || []);
+    const failedItems = ids.filter(id => !deletedIds.has(id)).map(id => ({ id, reason: 'Unknown or Permission Denied' }));
+
+    return success({
+      successCount: deletedIds.size,
+      failureCount: failedItems.length,
+      failedItems
+    });
 }
 
 export async function update(id: string, updates: Partial<Photo>): Promise<AppResult<null>> {
@@ -129,20 +148,32 @@ export async function update(id: string, updates: Partial<Photo>): Promise<AppRe
     return success(null);
 }
 
-export async function batchUpdate(ids: string[], updates: Partial<Photo>): Promise<AppResult<null>> {
+export async function batchUpdate(ids: string[], updates: Partial<Photo>): Promise<AppResult<BatchActionResult>> {
     const dbUpdates = mapToDb(updates);
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from(DB_CONFIG.TABLE_NAME)
       .update(dbUpdates)
-      .in('id', ids);
-    if (error) return errorFactory(error.message, 'DB_ERROR', 'batchUpdate', error);
+      .in('id', ids)
+      .select('id');
 
-    // If tag_ids is present, update photo_tags relationship for all photos in the batch
-    if ('tag_ids' in updates) {
-      const { error: deleteTagsError } = await supabase.from('photo_tags').delete().in('photo_id', ids);
-      if (deleteTagsError) {
-        console.error('[batchUpdate/photo_tags] Failed to delete existing tags:', deleteTagsError);
+    if (error) {
+      const failedItems: { id: string; reason: string }[] = [];
+      let successCount = 0;
+
+      for (const id of ids) {
+        const { error: singleError } = await supabase.from(DB_CONFIG.TABLE_NAME).update(dbUpdates).eq('id', id);
+        if (singleError) failedItems.push({ id, reason: singleError.message });
+        else successCount++;
       }
+
+      return success({ successCount, failureCount: failedItems.length, failedItems });
+    }
+
+    const updatedIds = new Set(data?.map(d => d.id) || []);
+    const failedOnes = ids.filter(id => !updatedIds.has(id)).map(id => ({ id, reason: 'Not found or unchanged' }));
+
+    if ('tag_ids' in updates) {
+      await supabase.from('photo_tags').delete().in('photo_id', ids);
       const uTagIds = safeArray(updates.tag_ids);
       if (uTagIds.length > 0) {
         const tagAssociations = ids.flatMap(photoId => 
@@ -151,14 +182,15 @@ export async function batchUpdate(ids: string[], updates: Partial<Photo>): Promi
             tag_id: tagId
           }))
         );
-        const { error: insertTagsError } = await supabase.from('photo_tags').insert(tagAssociations);
-        if (insertTagsError) {
-          console.error('[batchUpdate/photo_tags] Failed to insert new tags:', insertTagsError);
-        }
+        await supabase.from('photo_tags').insert(tagAssociations);
       }
     }
 
-    return success(null);
+    return success({
+      successCount: updatedIds.size,
+      failureCount: failedOnes.length,
+      failedItems: failedOnes
+    });
 }
 
 export const deletePhotosBatch = async (

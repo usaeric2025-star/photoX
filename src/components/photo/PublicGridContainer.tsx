@@ -6,7 +6,6 @@ import { useUIStore, useShallow } from '@/store/useUIStore';
 import { usePhotos, useFilters, useSettings, useCategories, useTags, useUrlFilters } from '@/hooks';
 import { processPhotos, cleanPhotos } from '@/lib/filters';
 import { PAGINATION } from '@/constants/config';
-import { PhotoLightbox } from '../PhotoLightbox';
 import { GroupDetailPage } from '../GroupDetailPage';
 import { PhotoCard } from './PhotoCard';
 import { PublicFloatingActions } from './PublicFloatingActions';
@@ -158,20 +157,6 @@ export function PublicGridContainer({
               columns={columns}
             />
         </div>
-
-        {!urlFilters.groupId && urlFilters.photoId && (
-          <PhotoLightbox 
-            photoId={urlFilters.photoId}
-            displayPhotos={displayPhotos}
-            onClose={() => setPhotoId(null)}
-            onPhotoIdChange={setPhotoId}
-            contactWhatsApp={(photo) => {
-              (window as any)._pendingPhoto = photo;
-              update({ showWhatsAppChoice: true });
-            }}
-            variant={variant}
-          />
-        )}
 
         <GroupDetailPage
           activeGroupId={urlFilters.groupId}

@@ -1,4 +1,5 @@
 import { Category, Tag, Manufacturer, Dimension } from '../../types';
+import { DEFAULT_AI_MODEL } from '@/config/ai';
 import { normalizeTagIds } from '@/lib/ai/aiNormalizer';
 import { api } from '@/lib/api';
 import { AI_CONFIG } from '../../constants/config';
@@ -24,7 +25,7 @@ export const analyzeProductPhoto = async (
 ) => {
   const apiKey = customApiKey;
 
-  let modelName = customModel || 'google/gemini-2.5-flash-lite';
+  let modelName = customModel || DEFAULT_AI_MODEL;
   
   if (!modelName.includes('/')) {
      modelName = 'google/' + modelName;
