@@ -97,53 +97,55 @@ export const scanAndRepairPhotoIds = async (photos: Photo[]): Promise<Photo[]> =
   return brokenPhotos;
 };
 
-export const repairGroupIntegrity = async (): Promise<{ dissolved: number, synced: number, deleted: number }> => {
-  logger.info('[Maintenance] Starting Group Integrity Repair...');
+export const standardizePhotoUrl = (url: string): string => {
+  if (!url) return '';
+  // 移除 worker URL 前缀 (VITE_THUMBNAIL_WORKER_URL)
+  const workerUrl = import.meta.env.VITE_THUMBNAIL_WORKER_URL;
+  let normalized = workerUrl ? url.replace(workerUrl, '') : url;
   
-  // 1. Get all groups
-  const { data: groups, error: groupsError } = await supabase.from('groups').select('id, name');
-  if (groupsError) throw groupsError;
+  // 移除常见缩略图前缀和后缀
+  normalized = normalized
+    .replace(/^\//, '') // 移除前导斜杠
+    .replace(/^thumb_/, '')
+    .replace(/^thumbnails\//, '')
+    .replace(/_t\.webp$/, '.webp')
+    .replace(/\?.*$/, ''); // 移除查询参数
+    
+  return normalized;
+};
 
-  let dissolved = 0;
-  let synced = 0;
-  let deleted = 0;
+export const bulkFixPhotoUrls = async (): Promise<{ updated: number, errors: number }> => {
+  logger.info('[Maintenance] Starting Bulk Fix Photo URLs...');
+  
+  const { data: photos, error } = await supabase
+    .from(DB_CONFIG.TABLE_NAME)
+    .select('id, image_url');
 
-  for (const group of safeArray<any>(groups)) {
-    // Count actual members
-    const { count, error: countError } = await supabase
-      .from(DB_CONFIG.TABLE_NAME)
-      .select('id', { count: 'exact', head: true })
-      .eq('group_id', group.id);
+  if (error) throw error;
+  if (!photos) return { updated: 0, errors: 0 };
 
-    if (countError) {
-      logger.error(`[Maintenance] Failed to count for group ${group.id}:`, countError);
-      continue;
-    }
+  let updated = 0;
+  let errors = 0;
 
-    const actualCount = count || 0;
-
-    if (actualCount <= 1) {
-      if (actualCount === 1) {
-        // Dissolve group
-        await supabase
-          .from(DB_CONFIG.TABLE_NAME)
-          .update({ group_id: null, is_group_cover: false, is_pinned: false })
-          .eq('group_id', group.id);
-        dissolved++;
+  for (const photo of photos) {
+    if (!photo.image_url) continue;
+    
+    const standardUrl = standardizePhotoUrl(photo.image_url);
+    if (standardUrl !== photo.image_url) {
+      const { error: updateError } = await supabase
+        .from(DB_CONFIG.TABLE_NAME)
+        .update({ image_url: standardUrl })
+        .eq('id', photo.id);
+        
+      if (updateError) {
+        logger.error(`Failed to update ${photo.id}:`, updateError);
+        errors++;
+      } else {
+        updated++;
       }
-      
-      // Delete empty or now-empty group
-      await supabase.from('groups').delete().eq('id', group.id);
-      deleted++;
-    } else {
-      // Sync count
-      await supabase
-        .from('groups')
-        .update({ member_count: actualCount })
-        .eq('id', group.id);
-      synced++;
     }
   }
-
-  return { dissolved, synced, deleted };
+  
+  logger.info(`[Maintenance] Bulk Fix completed: ${updated} updated, ${errors} errors.`);
+  return { updated, errors };
 };

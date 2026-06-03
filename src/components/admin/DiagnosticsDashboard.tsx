@@ -22,7 +22,7 @@ import { toast } from 'sonner';
 import { DiagnosticsReport } from '@/types/diagnostics';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '@/hooks';
-import { deduplicatePhotos } from "@/services/photo/photoMaintenanceService";
+import { deduplicatePhotos, bulkFixPhotoUrls } from "@/services/photo/photoMaintenanceService";
 import { useUIStore } from '@/store/useUIStore';
 
 
@@ -225,6 +225,20 @@ export function DiagnosticsDashboard() {
       toast.error(`请求失败: ${e.message}`);
     } finally {
       setIsDeepCleaningStorage(false);
+    }
+  };
+
+  const handleBulkFixUrls = async () => {
+    if (!confirm('确定要将所有图片 URL 标准化吗？这将修复损坏的图像链接并移除缩略图前缀。')) return;
+    setIsAuditing(true);
+    try {
+      const result = await bulkFixPhotoUrls();
+      toast.success(`修复完成：${result.updated} 条URL更新，${result.errors} 条失败。`);
+      scan();
+    } catch (e: any) {
+      toast.error(`修复失败: ${e.message}`);
+    } finally {
+      setIsAuditing(false);
     }
   };
 
@@ -616,6 +630,20 @@ export function DiagnosticsDashboard() {
         <div className="space-y-3">
           <h4 className="text-[10px] font-black text-brand-navy/30 uppercase tracking-widest px-1">数据恢复</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              onClick={handleBulkFixUrls}
+              disabled={isAuditing}
+              className="flex flex-col items-start gap-2 p-4 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all border border-slate-200 group group-active:scale-95 text-left"
+            >
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-blue-500/10 rounded-lg text-blue-600">
+                  <RefreshCw className="w-4 h-4" />
+                </div>
+                <span className="text-sm font-bold text-slate-800">标准化/修复图片 URL</span>
+              </div>
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider">将所有数据库中的图片 URL 标准化为无前缀 R2 路径</p>
+              {isAuditing && <span className="text-[10px] font-bold text-blue-600 animate-pulse">正在修复中...</span>}
+            </button>
             <button
               onClick={handleImportOrphans}
               disabled={isAuditing}
