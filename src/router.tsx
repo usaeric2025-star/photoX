@@ -47,6 +47,7 @@ export interface GallerySearchParams {
   groupId?: string;      // 当前选中的合组 ID
   columns?: string;      // 列数（2/3/4/5）
   showGroupsCollapsed?: 'true' | 'false';  // 合组折叠状态
+  preview?: 'true' | 'false';      // 预览模式
 }
 
 // Helper for lazy loading with retry
@@ -115,30 +116,31 @@ const indexRoute = createRoute({
       groupId: (search.groupId as string) || undefined,
       columns: (search.columns as string) || undefined,
       showGroupsCollapsed: (search.showGroupsCollapsed as GallerySearchParams['showGroupsCollapsed']) || undefined,
+      preview: (search.preview as GallerySearchParams['preview']) || undefined,
     };
   },
   beforeLoad: async ({ search }) => {
-    if (search.authError) return;
+    if (search.authError || search.preview === 'true') return;
     
-    // [PERFORMANCE-STRATEGY] Synchronous session key presence check for high-speed instant redirect
-    // const hasSessionKey = typeof window !== 'undefined' && 
-    //   Object.keys(window.localStorage || {}).some(key => key.startsWith('sb-') && key.endsWith('-auth-token'));
-    // if (hasSessionKey) {
-    //   throw redirect({
-    //     to: ROUTES.ADMIN,
-    //   });
-    // }
+
+
+    // [INSURANCE] Synchronous session key presence check for high-speed instant redirect
+    const hasSessionKey = typeof window !== 'undefined' && 
+      Object.keys(window.localStorage || {}).some(key => key.startsWith('sb-') && key.endsWith('-auth-token'));
+    
+    if (hasSessionKey || localStorage.getItem('ais_mock_auth_passcode')) {
+      throw redirect({
+        to: ROUTES.ADMIN,
+      });
+    }
 
     try {
-      // Allow admins to access home for preview
-      /*
       const res = await checkPublicAuth();
       if (res.isAuthenticated) {
         throw redirect({
           to: ROUTES.ADMIN,
         });
       }
-      */
     } catch (err) {
       if (err && typeof err === 'object' && ('to' in err || 'isRedirect' in err || 'statusCode' in err)) {
         throw err;

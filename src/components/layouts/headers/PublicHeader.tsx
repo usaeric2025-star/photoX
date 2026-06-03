@@ -1,8 +1,17 @@
 import React from 'react';
-import { LogIn, LayoutDashboard, RefreshCw, Camera } from 'lucide-react';
+import { LogIn, LayoutDashboard, RefreshCw, Camera, Menu, User as UserIcon, LogOut, Settings, LayoutGrid } from 'lucide-react';
 import { useAuth, useUIStore, useShallow, useSettings } from '@/hooks';
 import { useNavigate } from '@tanstack/react-router';
 import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { logoutPublic } from "@/lib/publicAuth";
 
 interface PublicHeaderProps {
   totalCount?: number;
@@ -17,7 +26,6 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
   const navigate = useNavigate();
 
   const handleAuthAction = () => {
-    // Navigate directly to /admin
     navigate({ to: '/admin' });
   };
 
@@ -46,8 +54,6 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
 
       {/* 右侧：刷新 & 管理/登录入口 */}
       <div className="flex items-center gap-1 sm:gap-2 flex-nowrap shrink-0">
-        <LanguageSwitcher mode="buttons" />
-        
         {onRefresh && (
           <button 
             onClick={onRefresh}
@@ -59,27 +65,82 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
           </button>
         )}
 
-        {isLoading ? (
-          <div className="w-9 h-9 rounded-full bg-slate-50 animate-pulse shrink-0" />
-        ) : (
-          <button
-            onClick={handleAuthAction}
-            className="flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-slate-900 text-white hover:bg-slate-800 transition-all active:scale-95 text-[11px] font-bold shrink-0 ml-1 shadow-sm leading-none"
-            title={user ? "进入管理后台" : "登录系统"}
+        {/* 3. 切换至管理后台按钮 (固定在右上角) */}
+        <button
+          onClick={handleAuthAction}
+          className="w-10 h-10 flex items-center justify-center bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-all active:scale-95 shrink-0 ml-1 border border-blue-100"
+          title="管理后台"
+        >
+          <LayoutDashboard size={20} />
+        </button>
+
+        {/* 4. 菜单 (语言、登录、退出) */}
+        <DropdownMenu>
+          <DropdownMenuTrigger className="h-10 w-10 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded-full transition-all cursor-pointer shrink-0 outline-none ml-1 border border-slate-100">
+            <Menu size={22} />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            className="w-64 mt-2 rounded-2xl p-2 bg-white shadow-2xl border border-slate-200 z-50 text-slate-700"
           >
+             {user ? (
+                <>
+                  <DropdownMenuLabel className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center text-white overflow-hidden text-[8px]">
+                      {user.photo_url ? (
+                        <img src={user.photo_url} referrerPolicy="no-referrer" />
+                      ) : (
+                        <UserIcon size={10} />
+                      )}
+                    </div>
+                    {user.email?.split("@")[0]}
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="mx-2 my-1 bg-slate-100" />
+                </>
+             ) : (
+                <DropdownMenuLabel className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  GUEST
+                </DropdownMenuLabel>
+             )}
+
+            <div className="px-2 py-1.5 flex flex-col gap-1.5">
+              <span className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Language</span>
+              <LanguageSwitcher mode="segmented" />
+            </div>
+
+            <DropdownMenuSeparator className="mx-2 my-1 bg-slate-100" />
+
             {user ? (
               <>
-                <LayoutDashboard size={14} />
-                <span className="hidden sm:inline">管理中心</span>
+                 <DropdownMenuItem
+                  onClick={() => navigate({ to: '/admin' })}
+                  className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-slate-100 focus:bg-slate-100 cursor-pointer transition-colors border-none"
+                >
+                  <Settings size={16} />
+                  <span className="text-sm font-semibold text-slate-900">管理中心</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator className="mx-2 my-1 bg-slate-100" />
+
+                <DropdownMenuItem
+                  onClick={() => logoutPublic()}
+                  className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-red-600 hover:bg-red-50 focus:bg-red-50 cursor-pointer transition-colors mt-1 border-none"
+                >
+                  <LogOut size={16} />
+                  <span className="text-sm font-semibold">退出登录</span>
+                </DropdownMenuItem>
               </>
             ) : (
-              <>
-                <LogIn size={14} />
-                <span className="hidden sm:inline">登录</span>
-              </>
+               <DropdownMenuItem
+                onClick={() => navigate({ to: '/admin' })}
+                className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-blue-600 hover:bg-blue-50 focus:bg-blue-50 cursor-pointer transition-colors border-none"
+              >
+                <LogIn size={16} />
+                <span className="text-sm font-semibold">登录后台</span>
+              </DropdownMenuItem>
             )}
-          </button>
-        )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );

@@ -71,12 +71,16 @@ export function LightboxImageSection({
             e.stopPropagation();
             setIsZoomed(true);
           }} 
-          className="w-10 h-10 bg-black/20 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/40 transition-all"
+          className="w-10 h-10 bg-black/20 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/40 transition-all pointer-events-auto"
           title="缩放"
         >
           <Maximize size={20} />
         </button>
-        <button onClick={onClose} className="w-10 h-10 bg-black/20 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/40 transition-all">
+        <button 
+          type="button"
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onClose(); }} 
+          className="w-10 h-10 bg-black/20 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/40 transition-all pointer-events-auto"
+        >
           <X size={20} />
         </button>
       </div>

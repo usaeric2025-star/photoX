@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect, useRef, Suspense } from 'react';
 import { ChevronLeft, X, Share2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Photo } from '../types';
 import { GalleryVariant } from '@/types/variant';
 import { TranslationType } from '../lib/ui-helpers';
@@ -55,9 +56,7 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(initialPhotoId || null);
 
   useEffect(() => {
-    if (initialPhotoId) {
-      setFocusedGroupPhotoId(initialPhotoId);
-    }
+    setFocusedGroupPhotoId(initialPhotoId || null);
   }, [initialPhotoId]);
 
   const virtualGridRef = useRef<{ scrollToIndex: (args: { index: number; align?: string; behavior?: string }) => void } | null>(null);
@@ -258,29 +257,21 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
           )}
 
            {/* Unified Photo Lightbox */}
-           {focusedGroupPhotoId && (() => {
-                 const currentIndex = activeGroupPhotos.findIndex(p => p.id === focusedGroupPhotoId);
-                 const photo = activeGroupPhotos[currentIndex];
-                 if (!photo) return null;
-
-                 return (
-                    <PhotoLightbox 
-                      photoId={focusedGroupPhotoId}
-                      displayPhotos={activeGroupPhotos}
-                      onClose={() => { setFocusedGroupPhotoId(null); setPhotoId(null); }}
-                      onPhotoIdChange={(id) => {
-                        setFocusedGroupPhotoId(id);
-                        setPhotoId(id);
-                      }}
-                      contactWhatsApp={props.contactWhatsApp || (() => {})}
-                      onEditPhoto={onEditPhoto}
-                      onToggleHidden={onToggleHidden}
-                      onCancelAnalyze={onCancelAnalyze}
-                      isAnalyzing={isAnalyzing}
-                      variant={props.variant}
-                    />
-                 );
-             })()}
+           <PhotoLightbox 
+             photoId={focusedGroupPhotoId}
+             displayPhotos={activeGroupPhotos}
+             onClose={() => { setFocusedGroupPhotoId(null); setPhotoId(null); }}
+             onPhotoIdChange={(id) => {
+               setFocusedGroupPhotoId(id);
+               setPhotoId(id);
+             }}
+             contactWhatsApp={props.contactWhatsApp || (() => {})}
+             onEditPhoto={onEditPhoto}
+             onToggleHidden={onToggleHidden}
+             onCancelAnalyze={onCancelAnalyze}
+             isAnalyzing={isAnalyzing}
+             variant={props.variant}
+           />
         </div>
   );
 };

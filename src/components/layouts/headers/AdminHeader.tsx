@@ -66,7 +66,7 @@ export function AdminHeader({
   const navigate = useNavigate();
 
   const handleBackToShowcase = () => {
-    navigate({ to: '/' });
+    navigate({ to: '/', search: {} as any });
   };
 
   const handleBatchDelete = async () => {
@@ -147,15 +147,24 @@ export function AdminHeader({
           <ListChecks size={18} />
         </button>
 
-        {/* 3. 菜单 (语言、管理、展厅、退出) */}
+        {/* 3. 切换至展厅按钮 (固定在右上角) */}
+        <button
+          onClick={handleBackToShowcase}
+          className="w-10 h-10 flex items-center justify-center bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-all active:scale-95 shrink-0 ml-1 border border-blue-100"
+          title="预览展厅"
+        >
+          <LayoutGrid size={20} />
+        </button>
+
+        {/* 4. 菜单 (语言、管理、退出) */}
         {user && (
           <DropdownMenu>
-            <DropdownMenuTrigger className="h-9 w-9 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded-full transition-all cursor-pointer shrink-0 outline-none ml-1">
-              <Menu size={20} />
+            <DropdownMenuTrigger className="h-10 w-10 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded-full transition-all cursor-pointer shrink-0 outline-none ml-1 border border-slate-100">
+              <Menu size={22} />
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="w-56 mt-2 rounded-2xl p-2 bg-white shadow-2xl border border-slate-200 z-50 text-slate-700"
+              className="w-64 mt-2 rounded-2xl p-2 bg-white shadow-2xl border border-slate-200 z-50 text-slate-700"
             >
               <DropdownMenuLabel className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                 <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center text-white overflow-hidden text-[8px]">
@@ -170,9 +179,9 @@ export function AdminHeader({
 
               <DropdownMenuSeparator className="mx-2 my-1 bg-slate-100" />
 
-              <div className="px-3 py-1.5 flex items-center justify-between">
-                <span className="text-[10px] font-bold text-slate-400">LANGUAGE</span>
-                <LanguageSwitcher mode="dropdown" />
+              <div className="px-2 py-1.5 flex flex-col gap-1.5">
+                <span className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Language</span>
+                <LanguageSwitcher mode="segmented" />
               </div>
 
               <DropdownMenuSeparator className="mx-2 my-1 bg-slate-100" />
@@ -183,14 +192,6 @@ export function AdminHeader({
               >
                 <Settings size={16} />
                 <span className="text-sm font-semibold text-slate-900">管理后台</span>
-              </DropdownMenuItem>
-
-              <DropdownMenuItem
-                 onClick={handleBackToShowcase}
-                 className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-slate-100 focus:bg-slate-100 cursor-pointer transition-colors mt-1 border-none"
-              >
-                <LayoutGrid size={16} />
-                <span className="text-sm font-semibold text-slate-900">打开公开展厅</span>
               </DropdownMenuItem>
 
               <DropdownMenuSeparator className="mx-2 my-1 bg-slate-100" />

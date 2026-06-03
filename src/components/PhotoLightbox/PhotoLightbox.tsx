@@ -142,7 +142,7 @@ export function PhotoLightbox(props: PhotoLightboxProps) {
     return () => clearTimeout(timer);
   }, [isImageLoading, index, handleError, translate.imageLoadFailed]);
 
-  const isOpen = index !== null && !!activePhoto;
+  const isOpen = index !== null && index !== -1 && !!activePhoto;
 
   useEffect(() => {
     if (isOpen) {
@@ -189,15 +189,6 @@ export function PhotoLightbox(props: PhotoLightboxProps) {
                   transition={{ duration: 0.2 }}
                   className={`fixed inset-0 z-[500] bg-brand-bg flex ${isZoomed ? 'flex-col' : 'flex-col md:flex-row'} overflow-hidden focus:outline-none`}
                 >
-                  {/* Always visible close button */}
-                  <button
-                    onClick={onClose}
-                    className="fixed top-4 right-4 z-[501] w-10 h-10 bg-black/50 hover:bg-black/70 rounded-full text-white flex items-center justify-center transition-all"
-                    aria-label={translate.close}
-                  >
-                    <X size={20} />
-                  </button>
-
                   <LightboxImageSection 
                     photo={activePhoto!}
                     index={index!}

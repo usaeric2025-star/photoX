@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Globe, ChevronDown } from 'lucide-react';
 import { useUIStore } from '@/store/useUIStore';
 
-export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dropdown' }) {
+export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dropdown' | 'segmented' }) {
   const appLang = useUIStore((s) => s.appLang);
   const update = useUIStore((s) => s.update);
   const [isOpen, setIsOpen] = useState(false);
@@ -58,6 +58,29 @@ export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dro
             ))}
           </div>
         )}
+      </div>
+    );
+  }
+
+  if (mode === 'segmented') {
+    return (
+      <div className="flex items-center bg-slate-100 p-1 rounded-xl h-9">
+        {langs.map(l => (
+          <button
+            key={l.code}
+            onClick={(e) => {
+              e.stopPropagation();
+              update({ appLang: l.code as any });
+            }}
+            className={`flex-1 flex items-center justify-center h-full rounded-lg text-[10px] font-bold transition-all ${
+              appLang === l.code 
+                ? 'bg-white text-blue-600 shadow-sm' 
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            {l.label}
+          </button>
+        ))}
       </div>
     );
   }

@@ -7,24 +7,21 @@ export function resolveImageUrl(url: string, options: ResizeOptions = {}): strin
   if (!url || url.startsWith('data:')) return url;
   
   const workerUrl = import.meta.env.VITE_THUMBNAIL_WORKER_URL;
-  const isWorkerUrl = workerUrl && url.startsWith(workerUrl);
-
-  // If it's already a worker URL, it likely has ?w=... already. 
-  // We can choose to update it or leave it. 
-  // ContractedImage calls this with width.
-  if (isWorkerUrl) {
-    if (!options.width) return url;
+  
+  if (workerUrl) {
     const cleanUrl = url.split('?')[0];
-    return `${cleanUrl}?w=${options.width}&h=${options.width}`;
+    const width = options.width || 400; // Default
+    return `${workerUrl.replace(/\/$/, '')}${cleanUrl.replace(/^.*\.dev/, '')}?w=${width}&h=${width}`;
   }
 
+  // Fallback for direct R2 resizing (if for some reason worker is not configured)
   const isResizingSupported = url.includes('r2.dev') || 
                               url.includes('cloudflarestorage.com');
-
+  
   if (!isResizingSupported) {
     return url;
   }
-
+  
   const { width, format = 'auto' } = options;
   const params = new URLSearchParams();
   if (width) params.append('width', width.toString());
