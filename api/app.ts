@@ -303,14 +303,14 @@ app.get("/admin/diagnose", async (c) => {
       }
 
       // Incomplete Records (Has URL but No Hash - DANGEROUS TO DELETE)
-      const missingHashes = photos.filter(p => p.image_url && (!p.image_hash || p.image_hash === ''));
+      const missingHashes = photos.filter(p => p.image_url && (!p.image_hash || p.image_hash.trim() === ''));
       if (missingHashes.length > 0) {
         issues.push({ 
           id: 'missing_hashes', 
           category: 'integrity', 
           severity: 'P1', 
           title: '缺少哈希的记录', 
-          description: '这些照片有图片链接但没有哈希值，可能导致排重失效。', 
+          description: '这些照片有图片链接但没有哈希值，可能导致排重失效。您可以尝试自动修复（重新计算）或直接删除这些记录。', 
           affectedCount: missingHashes.length, 
           sampleIds: missingHashes.slice(0, 5).map(p => p.id), 
           autoFixable: true 
@@ -450,7 +450,7 @@ app.post("/admin/repair/:issueId", async (c) => {
         const { data: targets } = await supabase
           .from("furniture_items")
           .select("id, image_url")
-          .is("image_hash", null)
+          .or('image_hash.is.null,image_hash.eq.""')
           .not("image_url", "is", null)
           .limit(20);
 
@@ -471,6 +471,20 @@ app.post("/admin/repair/:issueId", async (c) => {
           }
         }
         return c.json({ success: true, message: `已修复 ${repairedCount} 条哈希记录` });
+      }
+
+      if (issueId === 'force_delete_missing_hashes') {
+        const { data: targets } = await supabase
+          .from("furniture_items")
+          .select("id")
+          .or('image_hash.is.null,image_hash.eq.""');
+        
+        const ids = targets?.map(t => t.id) || [];
+        if (ids.length > 0) {
+          const { error } = await supabase.from("furniture_items").delete().in("id", ids);
+          if (error) throw error;
+        }
+        return c.json({ success: true, message: `已强制删除 ${ids.length} 条缺失哈希的损坏记录` });
       }
 
       return c.json({ success: false, error: 'Unsupported repair' }, 400);
@@ -654,16 +668,18 @@ app.post("/storage/import-orphans", async (c) => {
         continuationToken = list.NextContinuationToken;
       } while (continuationToken);
 
-      // 2. Get all DB filenames (more robust than URL check)
+      // 2. Get all DB URLs (more robust than filename check)
       const { data: existingPhotos } = await supabase.from("furniture_items").select("image_url");
-      const dbFilenames = new Set(
-        existingPhotos?.map(p => p.image_url?.split('/').pop()).filter(Boolean)
+      const dbUrls = new Set(
+        existingPhotos?.map(p => p.image_url).filter(Boolean)
       );
 
-      // 3. Find unique orphans (file exists in R2 but not indexed in DB)
+      // 3. Find unique orphans (full URL exists in R2 but not indexed in DB)
       const orphans = r2Keys.filter(key => {
-        const filename = key.split('/').pop();
-        return filename && !dbFilenames.has(filename);
+        const publicUrl = publicUrlPrefix.startsWith('http') 
+          ? `${publicUrlPrefix.replace(/\/$/, '')}/${key}`
+          : `https://${publicUrlPrefix}/${key}`;
+        return !dbUrls.has(publicUrl);
       });
 
       if (orphans.length === 0) {
@@ -676,7 +692,9 @@ app.post("/storage/import-orphans", async (c) => {
       
       for (const key of orphans.slice(0, 50)) {
         try {
-          const publicUrl = `https://${publicUrlPrefix}/${key}`;
+          const publicUrl = publicUrlPrefix.startsWith('http') 
+            ? `${publicUrlPrefix.replace(/\/$/, '')}/${key}`
+            : `https://${publicUrlPrefix}/${key}`;
           const filename = key.split('/').pop() || "";
           const nameCandidate = filename.split('.')[0] || "恢复的照片";
           
@@ -726,7 +744,7 @@ app.post("/storage/repair-hashes", async (c) => {
     const { data: targets, error: fetchError } = await supabase
       .from("furniture_items")
       .select("id, image_url, image_hash")
-      .is("image_hash", null)
+      .or('image_hash.is.null,image_hash.eq.""')
       .not("image_url", "is", null)
       .limit(20); 
 

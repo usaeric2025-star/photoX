@@ -37,15 +37,22 @@ export function DiagnosticsDashboard() {
   const queryClient = useQueryClient();
 
   const { isPending: isRepairing, mutate: repair } = useMutation({
-    mutationFn: (issueId: string) => api.admin.repair[':issueId'].$post({
+    mutationFn: async (issueId: string) => {
+      const res = await api.admin.repair[':issueId'].$post({
         param: { issueId }
-    }),
-    onSuccess: () => {
-        toast.success("修复成功");
+      });
+      if (!res.ok) {
+        const errorData = await res.json() as any;
+        throw new Error(errorData?.error || `HTTP ${res.status}`);
+      }
+      return res.json() as any;
+    },
+    onSuccess: (data) => {
+        toast.success(data.message || "修复成功");
         scan(); // Refresh after repair
     },
     onError: (err: any) => {
-        toast.error(`修复失败: ${err.message}`);
+        toast.error(`修复尝试失败: ${err.message}`);
     }
   });
 
@@ -211,6 +218,7 @@ export function DiagnosticsDashboard() {
     setIsAuditing(true);
     try {
       const res = await api.storage['repair-hashes'].$post();
+      if (!res.ok) throw new Error(await res.text());
       const data = await res.json() as any;
       if (data.success) {
         if (data.count > 0) {
@@ -221,6 +229,28 @@ export function DiagnosticsDashboard() {
         }
       } else {
         toast.error(`修复失败: ${data.error}`);
+      }
+    } catch (e: any) {
+      toast.error(`请求失败: ${e.message}`);
+    } finally {
+      setIsAuditing(false);
+    }
+  };
+
+  const handleForceDeleteHashes = async () => {
+    if (!confirm('确定要强制删除所有缺失哈希的记录吗？这些照片可能已经损坏或无法关联 R2 文件。此操作不可撤销。')) return;
+    setIsAuditing(true);
+    try {
+      const res = await api.admin.repair[':issueId'].$post({
+        param: { issueId: 'force_delete_missing_hashes' }
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json() as any;
+      if (data.success) {
+        toast.success(data.message);
+        scan();
+      } else {
+        toast.error(`强制删除失败: ${data.error}`);
       }
     } catch (e: any) {
       toast.error(`请求失败: ${e.message}`);
@@ -514,15 +544,26 @@ export function DiagnosticsDashboard() {
                        </div>
                     </div>
                     
-                    {issue.autoFixable && (
-                      <button 
-                        onClick={() => runRepair(issue.id)}
-                        disabled={isLoading}
-                        className="text-xs font-bold text-brand-gold px-3 py-1.5 bg-brand-gold/5 rounded-xl border border-brand-gold/10 hover:bg-brand-gold/10 transition-colors disabled:opacity-50"
-                      >
-                        立即自动修复
-                      </button>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {issue.autoFixable && (
+                        <button 
+                          onClick={() => runRepair(issue.id)}
+                          disabled={isLoading}
+                          className="text-xs font-bold text-brand-gold px-3 py-1.5 bg-brand-gold/5 rounded-xl border border-brand-gold/10 hover:bg-brand-gold/10 transition-colors disabled:opacity-50"
+                        >
+                          立即自动修复
+                        </button>
+                      )}
+                      {issue.id === 'missing_hashes' && (
+                        <button 
+                          onClick={handleForceDeleteHashes}
+                          disabled={isLoading}
+                          className="text-xs font-bold text-red-500 px-3 py-1.5 bg-red-500/5 rounded-xl border border-red-500/10 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                        >
+                          强制删除无效记录
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

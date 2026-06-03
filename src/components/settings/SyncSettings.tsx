@@ -17,7 +17,6 @@ interface SyncSettingsProps {
   categories: Category[];
   tags: Tag[];
   manufacturers: Manufacturer[];
-  handleDeduplicate: () => Promise<void>;
   cardClass: string;
   buttonStyles: any;
 }
@@ -46,7 +45,6 @@ export function SyncSettings(props: SyncSettingsProps) {
         user={props.user}
         cardClass={props.cardClass}
         buttonStyles={props.buttonStyles}
-        handleDeduplicate={props.handleDeduplicate}
       />
     </>
   );

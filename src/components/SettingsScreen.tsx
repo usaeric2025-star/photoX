@@ -109,7 +109,6 @@ export function SettingsScreen() {
     activeTagMenuId, setActiveTagMenuId,
     debouncedSave,
     testConnection,
-    handleDeduplicate,
     handleHealthCheck,
     togglePin,
     setSettingField
@@ -180,7 +179,6 @@ export function SettingsScreen() {
                 categories={categories}
                 tags={tags}
                 manufacturers={manufacturers}
-                handleDeduplicate={handleDeduplicate}
                 cardClass={cardClass}
                 buttonStyles={BUTTON_STYLES}
               />

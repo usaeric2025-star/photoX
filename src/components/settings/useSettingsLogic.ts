@@ -61,37 +61,6 @@ export const useSettingsLogic = ({
     setSaveTimer(timer);
   };
 
-  const handleDeduplicate = async () => {
-    if (!user) {
-      handleError(new Error("请先登录云端"), "操作失败");
-      return;
-    }
-
-    update({
-      alertDialog: {
-        title: "确认执行排重清理吗？",
-        message:
-          "系统将扫描云端数据库，保留最早上传的版本，删除重复的照片记录。此操作不可撤销。",
-        confirmLabel: "执行排重",
-          onConfirm: async () => {
-            update({ alertDialog: null });
-            const result = await deduplicatePhotos(user.id);
-            if (result.ok) {
-              const { removed } = result.data;
-              if (removed > 0) {
-                await performPullSync();
-                toast.success(`排重完成！共清理了 ${removed} 张重复记录。`);
-              } else {
-                toast.success("扫描完毕，未发现重复记录。");
-              }
-            } else {
-              handleError(result.error, "排重失败");
-            }
-          },
-      },
-    });
-  };
-
   const handleHealthCheck = async (allPhotos: Photo[]) => {
     try {
       toast.success("正在啟動系統級一致性巡檢...");
@@ -248,7 +217,6 @@ export const useSettingsLogic = ({
     setActiveTagMenuId,
     debouncedSave,
     testConnection,
-    handleDeduplicate,
     handleHealthCheck,
     togglePin,
     setSettingField,

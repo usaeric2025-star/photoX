@@ -12,11 +12,10 @@ interface ExportDataSectionProps {
   user: User | null;
   cardClass: string;
   buttonStyles: { [key in 'primary' | 'secondary' | 'accent']: string };
-  handleDeduplicate: () => Promise<void>;
 }
 
 export function ExportDataSection({
-  photos, categories, tags, manufacturers, isSyncing, user, cardClass, buttonStyles, handleDeduplicate
+  photos, categories, tags, manufacturers, isSyncing, user, cardClass, buttonStyles
 }: ExportDataSectionProps) {
   const { handleError } = useErrorHandler();
   return (
@@ -26,13 +25,6 @@ export function ExportDataSection({
           数据维护
         </h4>
         <div className="grid grid-cols-2 gap-3">
-          <button 
-            onClick={handleDeduplicate}
-            disabled={isSyncing || !user}
-            className={buttonStyles.accent + " col-span-2"}
-          >
-            <Trash2 size={16} /> 排重清理 / Clean Duplicates
-          </button>
           <button 
             onClick={() => {
               const data = JSON.stringify({ photos, categories, tags, manufacturers });
