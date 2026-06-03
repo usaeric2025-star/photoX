@@ -104,7 +104,6 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw): Photo {
       manufacturer_id: manufacturer_id,
       description: item.description || '',
       image_url: imageUrl,
-      thumb_url: getThumbnailUrl(imageUrl, 400, 400),
       thumbnail_sm_url: getThumbnailUrl(imageUrl, 200, 200),
       thumbnail_md_url: getThumbnailUrl(imageUrl, 800, 800),
       thumb_hash: item.thumb_hash || '',

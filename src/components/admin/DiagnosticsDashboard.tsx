@@ -286,39 +286,32 @@ export function DiagnosticsDashboard() {
   };
 
   const handleTestWorker = async () => {
-    const workerUrl = import.meta.env.VITE_THUMBNAIL_WORKER_URL;
-    if (!workerUrl) {
-      setWorkerResult({ success: false, message: '未配置 VITE_THUMBNAIL_WORKER_URL 环境变量' });
-      return;
-    }
-
     setIsTestingWorker(true);
-    const start = performance.now();
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-      
-      const res = await fetch(workerUrl, { 
-        method: 'HEAD',
-        signal: controller.signal,
-        mode: 'no-cors' 
+      const res = await api['admin-repair'].$post({
+        json: { issueId: 'diagnose_worker' }
       });
+      const result = await res.json();
       
-      clearTimeout(timeoutId);
-      const end = performance.now();
-      
-      setWorkerResult({ 
-        success: true, 
-        message: 'Worker 响应成功 (Head Request)', 
-        latency: Math.round(end - start) 
-      });
-      toast.success('Worker 连通性测试成功');
+      if (result.success) {
+        setWorkerResult({ 
+          success: true, 
+          message: 'Worker 响应成功 (Server-side Check)', 
+          latency: result.data.latency 
+        });
+        toast.success('Worker 连通性测试成功');
+      } else {
+        setWorkerResult({ 
+          success: false, 
+          message: result.error || 'Worker 检查失败' 
+        });
+        toast.error('Worker 配置异常');
+      }
     } catch (e: any) {
       setWorkerResult({ 
         success: false, 
-        message: `Worker 连接失败: ${e.message || '检测超时或 DNS 错误'}` 
+        message: `API 请求失败: ${e.message}` 
       });
-      toast.error('Worker 连接失败');
     } finally {
       setIsTestingWorker(false);
     }

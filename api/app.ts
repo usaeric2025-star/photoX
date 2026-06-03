@@ -487,7 +487,7 @@ app.post("/admin/repair/:issueId", async (c) => {
         while (hasMoreRows) {
           const { data: batch, error: batchError } = await supabase
             .from('furniture_items')
-            .select('id, image_url, group_id, is_hidden, name, tags, created_at')
+            .select('id, image_url, group_id, is_hidden, name, photo_tags(tag_id), created_at')
             .order('created_at', { ascending: true })
             .range(fromIdx, fromIdx + stepIdx - 1);
           
@@ -512,7 +512,6 @@ app.post("/admin/repair/:issueId", async (c) => {
         });
 
         const toDelete: string[] = [];
-        let mergedCount = 0;
 
         for (const [_, group] of urlGroups) {
           if (group.length <= 1) continue;
@@ -533,7 +532,9 @@ app.post("/admin/repair/:issueId", async (c) => {
             if (best.is_hidden && !current.is_hidden) return current;
             
             // Priority 4: Has tags
-            if (current.tags?.length && !best.tags?.length) return current;
+            const currentTags = current.photo_tags?.length || 0;
+            const bestTags = best.photo_tags?.length || 0;
+            if (currentTags > bestTags) return current;
             
             // Default: Earliest wins
             return best;
@@ -542,7 +543,6 @@ app.post("/admin/repair/:issueId", async (c) => {
           group.forEach(r => {
             if (r.id !== best.id) toDelete.push(r.id);
           });
-          mergedCount++;
         }
 
         if (toDelete.length > 0) {
@@ -553,6 +553,35 @@ app.post("/admin/repair/:issueId", async (c) => {
         }
         
         return c.json({ success: true, message: `已成功合并并清理了 ${toDelete.length} 条重复记录，保留了包含元数据的优质版本。` });
+      }
+
+      if (issueId === 'diagnose_worker') {
+        const workerUrl = (serverEnv as any).VITE_THUMBNAIL_WORKER_URL || process.env.VITE_THUMBNAIL_WORKER_URL;
+        if (!workerUrl) {
+          return c.json({ success: false, error: "未设置 VITE_THUMBNAIL_WORKER_URL 环境变量" });
+        }
+
+        const start = performance.now();
+        try {
+          const res = await fetch(workerUrl, { method: 'HEAD' });
+          const end = performance.now();
+          return c.json({ 
+            success: true, 
+            data: {
+              status: res.status,
+              latency: Math.round(end - start),
+              url: workerUrl
+            }
+          });
+        } catch (e: any) {
+          return c.json({ success: false, error: `Worker 连接失败: ${e.message}` });
+        }
+      }
+
+      if (issueId === 'diagnose_r2') {
+        const res = await fetch(`${c.req.url.split('/admin')[0]}/admin/diagnose-r2`);
+        const data = await res.json();
+        return c.json(data);
       }
 
       return c.json({ success: false, error: 'Unsupported repair' }, 400);

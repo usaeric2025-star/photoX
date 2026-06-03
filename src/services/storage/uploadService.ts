@@ -64,7 +64,7 @@ export const uploadWithRetry = async (
   onStatus?: (status: 'compressing' | 'uploading' | 'done') => void,
   onProgress?: (percent: number) => void,
   maxRetries = 3
-): Promise<{imageUrl: string, thumbUrl: string, isDuplicate?: boolean}> => {
+): Promise<{imageUrl: string, isDuplicate?: boolean}> => {
   let lastError: any;
   for (let i = 0; i < maxRetries; i++) {
     try {
@@ -89,7 +89,7 @@ export const uploadImages = async (
   onStatus?: (status: 'compressing' | 'uploading' | 'done') => void,
   onProgress?: (percent: number) => void,
   force = false
-): Promise<{imageUrl: string, thumbUrl: string, isDuplicate?: boolean}> => {
+): Promise<{imageUrl: string, isDuplicate?: boolean}> => {
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!session?.user) {
@@ -99,16 +99,6 @@ export const uploadImages = async (
   try {
     onStatus?.('compressing');
     const originalBase64 = await compressImage(base64Data, 2048, 0.85); 
-    let thumbBase64: string;
-    try {
-        thumbBase64 = await compressImage(base64Data, 400, 0.6);
-    } catch (e: unknown) {
-        if ((e as Error).name === 'QuotaExceededError') {
-             thumbBase64 = originalBase64;
-        } else {
-             throw e;
-        }
-    }
 
     onStatus?.('uploading');
     const uploadFile = async (base64: string, fileName: string, isMain=false) => {
@@ -169,10 +159,10 @@ export const uploadImages = async (
     const imageUrlResult = await uploadFile(originalBase64, `public/${photoId}.webp`, true);
     
     if (imageUrlResult.startsWith('DUPLICATE:')) {
-       return { imageUrl: imageUrlResult.replace('DUPLICATE:', ''), thumbUrl: '', isDuplicate: true };
+       return { imageUrl: imageUrlResult.replace('DUPLICATE:', ''), isDuplicate: true };
     }
 
-    return { imageUrl: imageUrlResult, thumbUrl: '' };
+    return { imageUrl: imageUrlResult };
   } catch (error: unknown) {
     const message = extractErrorMessage(error);
     throw new StandardError(`图片处理异常: ${message}`, { 

@@ -54,9 +54,8 @@ export const updatePhoto = async (
 
   if (updates.uri && updates.uri.startsWith('data:image')) {
     const { uploadImages } = await import('../storage');
-    const { imageUrl, thumbUrl } = await uploadImages(session.user.id, photoId, updates.uri, undefined, undefined, undefined, true);
+    const { imageUrl } = await uploadImages(session.user.id, photoId, updates.uri, undefined, undefined, undefined, true);
     updates.image_url = imageUrl;
-    updates.thumb_url = thumbUrl;
     updates.updated_at = new Date().toISOString();
     delete updates.uri;
   }

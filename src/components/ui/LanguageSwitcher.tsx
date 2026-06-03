@@ -63,12 +63,12 @@ export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dro
   }
 
   return (
-    <div className="flex items-center p-0.5 rounded-full border border-brand-navy/10 bg-brand-navy/5 shadow-inner overflow-hidden h-8 sm:h-9">
+    <div className="flex items-center p-0.5 rounded-full border border-brand-navy/10 bg-brand-navy/5 shadow-inner overflow-hidden h-7 sm:h-9">
       {langs.map(l => (
         <button 
           key={l.code} 
           onClick={() => update({ appLang: l.code as any })} 
-          className={`px-3 sm:px-4 h-full flex items-center justify-center rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all ${
+          className={`px-2 sm:px-4 h-full flex items-center justify-center rounded-full text-[9px] sm:text-[11px] font-black uppercase tracking-wider transition-all ${
             appLang === l.code 
               ? 'bg-brand-navy text-white shadow-md' 
               : 'text-brand-navy/50 hover:text-brand-navy hover:bg-white/50'
