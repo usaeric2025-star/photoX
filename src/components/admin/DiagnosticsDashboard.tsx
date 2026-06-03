@@ -118,6 +118,8 @@ export function DiagnosticsDashboard() {
   const [isCleaningTemp, setIsCleaningTemp] = useState(false);
   const [isAuditing, setIsAuditing] = useState(false);
   const [auditResult, setAuditResult] = useState<any | null>(null);
+  const [isBackfilling, setIsBackfilling] = useState(false);
+  const [backfillProgress, setBackfillProgress] = useState<{ processed: number; totalRemaining: number; results: any[] } | null>(null);
 
   const [isTestingWorker, setIsTestingWorker] = useState(false);
   const [workerResult, setWorkerResult] = useState<{ 
@@ -368,6 +370,55 @@ export function DiagnosticsDashboard() {
       });
     } finally {
       setIsTestingWorker(false);
+    }
+  };
+
+  const handleBackfillPhotoMetadata = async () => {
+    if (!confirm('确定要执行旧照片元数据的批量自动提取、补全与多语言翻译吗？系统将从 R2 获取高保真物理尺寸，并进行智能命名和翻译补全，且绝对不覆盖您已人工编辑的数据。')) return;
+    setIsBackfilling(true);
+    setBackfillProgress(null);
+
+    let currentProcessed = 0;
+    let remaining = 999;
+
+    try {
+      while (remaining > 0) {
+        // [APF-CONTRACT] Invoke backfill endpoint strictly via RPC proxy
+        const response = await api.admin['backfill-photo-metadata'].$post({
+          json: { limit: 5 }
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP 异常 ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (!data.success) {
+          throw new Error(data.error || '服务器处理意外中断');
+        }
+
+        currentProcessed += data.processed;
+        remaining = data.totalRemaining;
+
+        setBackfillProgress({
+          processed: currentProcessed,
+          totalRemaining: remaining,
+          results: data.results || []
+        });
+
+        if (data.processed === 0 || remaining === 0) {
+          break;
+        }
+
+        // Delay slightly for smooth transition
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+      toast.success('批量补全旧照片元数据及多语言翻译全部完成！');
+      scan();
+    } catch (e: any) {
+      toast.error(`修复已意外中断: ${e.message}`);
+    } finally {
+      setIsBackfilling(false);
     }
   };
 
@@ -653,7 +704,7 @@ export function DiagnosticsDashboard() {
         {/* 数据恢复 */}
         <div className="space-y-3">
           <h4 className="text-[10px] font-black text-brand-navy/30 uppercase tracking-widest px-1">数据恢复与美化</h4>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <button
               onClick={handleBulkFixUrls}
               disabled={isAuditing}
@@ -696,7 +747,59 @@ export function DiagnosticsDashboard() {
               <p className="text-[10px] text-slate-500 uppercase tracking-wider">从云端找回丢失记录并自动补全哈希 (去重保护)</p>
               {isAuditing && <span className="text-[10px] font-bold text-green-600 animate-pulse">正在处理中...</span>}
             </button>
+            <button
+              onClick={handleBackfillPhotoMetadata}
+              disabled={isBackfilling}
+              className="flex flex-col items-start gap-2 p-4 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-all border border-indigo-200 group group-active:scale-95 text-left"
+            >
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-600">
+                  <Zap className="w-4 h-4" />
+                </div>
+                <span className="text-sm font-bold text-indigo-950">批量修复旧照片元数据</span>
+              </div>
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider">下载原图自动提取尺寸生产 canonical 命名，使用 AI 补全多语言翻译</p>
+              {isBackfilling && <span className="text-[10px] font-bold text-indigo-600 animate-pulse">正在提取中...</span>}
+            </button>
           </div>
+
+          {backfillProgress && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="mt-3 p-4 bg-indigo-50/50 border border-indigo-100 rounded-2xl space-y-3"
+            >
+              <div className="flex justify-between items-center text-xs">
+                <span className="font-bold text-indigo-950 flex items-center gap-1.5 animate-pulse">
+                  <span className="w-2 h-2 rounded-full bg-indigo-600" />
+                  元数据修复补全进度
+                </span>
+                <span className="font-mono text-slate-600">
+                  已处理: <strong className="text-indigo-700">{backfillProgress.processed}</strong> | 剩余待补全: <strong className="text-indigo-700">{backfillProgress.totalRemaining}</strong>
+                </span>
+              </div>
+              <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                <div 
+                  className="bg-indigo-600 h-full transition-all duration-350 ease-out"
+                  style={{ width: `${Math.max(5, (backfillProgress.processed / (backfillProgress.processed + backfillProgress.totalRemaining || 1)) * 100)}%` }}
+                />
+              </div>
+              {backfillProgress.results.length > 0 && (
+                <div className="text-[11px] text-slate-500 space-y-1 bg-white border border-slate-100 p-2.5 rounded-xl max-h-32 overflow-y-auto font-mono">
+                  {backfillProgress.results.map((res: any, idx: number) => (
+                    <div key={res.id + '-' + idx} className="flex justify-between items-center py-0.5 border-b border-slate-50 last:border-0">
+                      <span className="text-slate-800 font-bold truncate max-w-[70%]">{res.name || '图片'} <span className="text-slate-400 font-normal">({res.id.slice(0, 8)})</span></span>
+                      <span className={`text-[10px] font-black px-1.5 py-0.5 rounded uppercase ${
+                        res.status === 'success' ? 'text-green-600 bg-green-50' : res.status === 'skipped' ? 'text-amber-600 bg-amber-50' : 'text-red-500 bg-red-50'
+                      }`}>
+                        {res.status === 'success' ? '已修复' : res.status === 'skipped' ? '无需修复' : `失败: ${res.error || '未知'}`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          )}
         </div>
 
         {/* 数据去重 */}

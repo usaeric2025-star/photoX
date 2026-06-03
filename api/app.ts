@@ -1155,4 +1155,18 @@ app.post("/ai/analyze-photo-v2", async (c) => {
     } catch (error: any) { return c.json({ error: error.message }, 500); }
 });
 
+app.post("/admin/backfill-photo-metadata", async (c) => {
+    try {
+      const supabase = await getSupabaseAdmin();
+      const apiKey = serverEnv.GEMINI_API_KEY;
+      const { limit } = await c.req.json().catch(() => ({ limit: 5 }));
+      
+      const { processBackfillBatch } = await import("./admin/backfill-photo-metadata.js");
+      const result = await processBackfillBatch(supabase, apiKey, limit);
+      return c.json(result);
+    } catch (error: any) {
+      return c.json({ success: false, error: error.message }, 500);
+    }
+});
+
 export type AppType = typeof app;
