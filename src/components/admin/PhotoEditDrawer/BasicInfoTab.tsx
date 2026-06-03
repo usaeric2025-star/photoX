@@ -1,6 +1,5 @@
 import React from 'react';
-import { Lock } from 'lucide-react';
-import { Spinner } from '@/components/ui/Spinner';
+import { Lock, Loader2 } from 'lucide-react';
 import { ProductFormData } from '../../../types';
 
 interface Props {
@@ -24,7 +23,7 @@ export function BasicInfoTab({
              <div className="aspect-square rounded-2xl overflow-hidden bg-slate-900 shadow-lg border-2 border-white relative">
                 {isProcessingImage && (
                   <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40">
-                    <Spinner size="md" className="text-white" />
+                    <Loader2 size={24} className="text-white animate-spin" />
                   </div>
                 )}
                 <img src={previewSrc} className="w-full h-full object-contain" alt="Preview" />

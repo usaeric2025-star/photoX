@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useRef, Suspense } from 'react';
-import { ChevronLeft, X, Share2 } from 'lucide-react';
+import { ChevronLeft, X, Share2, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Photo } from '../types';
 import { GalleryVariant } from '@/types/variant';
@@ -17,7 +17,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { createTranslate } from '../lib/i18n';
 import { LanguageCode } from '../lib/translations';
-import { Spinner } from './ui/Spinner';
+// import removed
 
 
 // Add displayPhotos and update for compatibility with PublicGridContainer
@@ -243,7 +243,7 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
 
                 {/* [GROUP-STALE-SIGNAL] */}
                 <div className={`flex-1 min-h-0 flex flex-col transition-opacity duration-300 ${isStale ? "opacity-60" : "opacity-100"}`}>
-                  <Suspense fallback={<Spinner />}>
+                  <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="animate-spin text-slate-400" /></div>}>
                     <GroupGridView 
                         key={activeGroupId}
                         variant={variant}

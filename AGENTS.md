@@ -391,3 +391,20 @@ toast.error('发现数据完整性问题', {
 - ✅ **灯箱缺失**：若 `photoId` 指向的照片不存在或加载失败，必须显示 `LightboxFallback`。
 - ✅ **列表空态**：列表页无数据时需使用 `EmptyState` 组件。
 - ✅ **网络异常**：`useQueryWithFallback` 钩子必须自动触发错误通知（Toast）。
+
+## 标准加载与错误处理模式（锁定，2026-06-03）
+
+### 列表加载
+- ✅ 使用 `PhotoGridSkeleton`
+- ❌ 禁止使用 `<Spinner />`
+
+### 表单/提交
+- ✅ 使用 Mutation 的 `isPending`
+- ❌ 禁止手动 `useState` 管理 loading
+
+### 错误反馈
+- ✅ 使用 `toast.error`
+- ❌ 禁止 `alert()`
+
+### 详情页加载
+- ✅ 使用 `GroupDetailSkeleton` 或对应骨架屏

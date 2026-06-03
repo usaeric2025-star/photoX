@@ -8,11 +8,11 @@ import {
   Sparkles,
   Save,
   Trash2,
+  Loader2,
 } from "lucide-react";
 import { Skeleton } from "../../ui/Skeleton";
 import { useUIStore } from "../../../store";
 import { ProductFormData } from "../../../types";
-import { Spinner } from "@/components/ui/Spinner";
 
 interface HeaderProps {
   editPhotoId: string | null;
@@ -105,7 +105,7 @@ export function DrawerHeader({
             className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border shadow-sm transition-all disabled:opacity-50 ${isAnalyzing ? "bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed" : "bg-purple-50 text-purple-600 border-purple-100 active:bg-purple-200"}`}
           >
             {isAnalyzing ? (
-              <Spinner size="sm" className="text-current" />
+              <Loader2 size={16} className="text-current animate-spin" />
             ) : (
               <Sparkles size={18} />
             )}
@@ -150,7 +150,7 @@ export function DrawerHeader({
           className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border shadow-sm transition-all disabled:opacity-50 ${isSyncing || isRunning ? "bg-blue-400 text-white border-blue-400 cursor-wait" : "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20 active:bg-blue-700"}`}
         >
           {isSyncing || isRunning ? (
-            <Spinner size="sm" className="text-current" />
+            <Loader2 size={16} className="text-current animate-spin" />
           ) : (
             <Save size={18} />
           )}

@@ -2,6 +2,12 @@ import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 import 'fake-indexeddb/auto';
 
+window.ResizeObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}));
+
 // Global mocks if needed
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
