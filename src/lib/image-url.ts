@@ -9,9 +9,16 @@ export function resolveImageUrl(url: string, options: ResizeOptions = {}): strin
   const workerUrl = import.meta.env.VITE_THUMBNAIL_WORKER_URL;
   
   if (workerUrl) {
-    const cleanUrl = url.split('?')[0];
     const width = options.width || 400; // Default
-    return `${workerUrl.replace(/\/$/, '')}${cleanUrl.replace(/^.*\.dev/, '')}?w=${width}&h=${width}`;
+    try {
+      const urlObj = new URL(url);
+      const path = urlObj.pathname;
+      return `${workerUrl.replace(/\/$/, '')}${path}?w=${width}&h=${width}`;
+    } catch (e) {
+      // Fallback if URL parsing fails
+      const cleanUrl = url.split('?')[0];
+      return `${workerUrl.replace(/\/$/, '')}/${cleanUrl.split('/').pop()}?w=${width}&h=${width}`;
+    }
   }
 
   // Fallback for direct R2 resizing (if for some reason worker is not configured)

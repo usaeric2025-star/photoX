@@ -66,7 +66,7 @@ export function AdminHeader({
   const navigate = useNavigate();
 
   const handleBackToShowcase = () => {
-    navigate({ to: '/', search: {} as any });
+    navigate({ to: '/', search: { preview: 'true' } as any });
   };
 
   const handleBatchDelete = async () => {
@@ -147,16 +147,7 @@ export function AdminHeader({
           <ListChecks size={18} />
         </button>
 
-        {/* 3. 切换至展厅按钮 (固定在右上角) */}
-        <button
-          onClick={handleBackToShowcase}
-          className="w-10 h-10 flex items-center justify-center bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-all active:scale-95 shrink-0 ml-1 border border-blue-100"
-          title="预览展厅"
-        >
-          <LayoutGrid size={20} />
-        </button>
-
-        {/* 4. 菜单 (语言、管理、退出) */}
+        {/* 3. 菜单 (语言、管理、退出) */}
         {user && (
           <DropdownMenu>
             <DropdownMenuTrigger className="h-10 w-10 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded-full transition-all cursor-pointer shrink-0 outline-none ml-1 border border-slate-100">
@@ -206,6 +197,15 @@ export function AdminHeader({
             </DropdownMenuContent>
           </DropdownMenu>
         )}
+
+        {/* 4. 切换至展厅按钮 (固定在右上角) */}
+        <button
+          onClick={handleBackToShowcase}
+          className="w-10 h-10 flex items-center justify-center bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-all active:scale-95 shrink-0 ml-1 border border-blue-100"
+          title="预览展厅"
+        >
+          <LayoutGrid size={20} />
+        </button>
       </div>
     </header>
   );
