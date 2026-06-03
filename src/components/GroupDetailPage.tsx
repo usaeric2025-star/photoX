@@ -52,7 +52,13 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
   const onAiAnalyze = async (p: Photo) => {};
   const onCancelAnalyze = () => {};
   
-  const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
+  const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(initialPhotoId || null);
+
+  useEffect(() => {
+    if (initialPhotoId) {
+      setFocusedGroupPhotoId(initialPhotoId);
+    }
+  }, [initialPhotoId]);
 
   const virtualGridRef = useRef<{ scrollToIndex: (args: { index: number; align?: string; behavior?: string }) => void } | null>(null);
   const [currentHighlightId, setCurrentHighlightId] = useState<string | null>(null);
@@ -261,8 +267,11 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
                     <PhotoLightbox 
                       photoId={focusedGroupPhotoId}
                       displayPhotos={activeGroupPhotos}
-                      onClose={() => setFocusedGroupPhotoId(null)}
-                      onPhotoIdChange={setFocusedGroupPhotoId}
+                      onClose={() => { setFocusedGroupPhotoId(null); setPhotoId(null); }}
+                      onPhotoIdChange={(id) => {
+                        setFocusedGroupPhotoId(id);
+                        setPhotoId(id);
+                      }}
                       contactWhatsApp={props.contactWhatsApp || (() => {})}
                       onEditPhoto={onEditPhoto}
                       onToggleHidden={onToggleHidden}

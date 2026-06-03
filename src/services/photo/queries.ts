@@ -10,9 +10,16 @@ import { SupabasePhotoRaw } from '@/types/supabase';
 // Helper for Worker Thumbnail generation
 const getThumbnailUrl = (imageUrl: string, width: number = 400, height: number = 400) => {
   const workerUrl = import.meta.env.VITE_THUMBNAIL_WORKER_URL;
-  if (!workerUrl || !imageUrl) return imageUrl;
+  if (!workerUrl || !imageUrl || !workerUrl.startsWith('http')) return imageUrl;
+  
   const path = getPathFromUrl(imageUrl);
-  return `${workerUrl.replace(/\/$/, '')}${path}?w=${width}&h=${height}`;
+  if (!path) return imageUrl;
+  
+  // Ensure exactly one slash between workerUrl and path
+  const base = workerUrl.replace(/\/$/, '');
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  
+  return `${base}${cleanPath}?w=${width}&h=${height}`;
 };
 
 export function normalizeStoredUrl(url: string | undefined | null): string {

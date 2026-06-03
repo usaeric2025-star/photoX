@@ -575,6 +575,18 @@ app.post("/admin-repair", async (c) => {
           clearTimeout(timeoutId);
           const end = performance.now();
           
+          if (!res.ok) {
+            return c.json({ 
+                success: false, 
+                error: `Worker 响应异常 (HTTP ${res.status}): ${res.statusText || 'Unknown Error'}`,
+                data: {
+                  status: res.status,
+                  statusText: res.statusText,
+                  url: workerUrl
+                }
+            });
+          }
+
           return c.json({ 
             success: true, 
             data: {
