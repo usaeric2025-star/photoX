@@ -19,16 +19,16 @@ export const PhotoLightboxPage = () => {
   
   const updateUIStore = useUIStore((s) => s.update);
   const adminActions = useAdminActions();
-  const currentPhoto = photos[currentIndex];
+  const currentPhoto = currentIndex >= 0 ? photos[currentIndex] : null;
   
   if (!isOpen) return null;
 
-  // Show loading skeleton or similar if data is still being fetched
-  if (isLoading && photos.length === 0) {
+  // [OPTIMIZATION] Directly show the frame if we have photos from list cache
+  // This allows the lightbox to show the cached thumbnail while the detail loads
+  if (photos.length === 0 && isLoading) {
     return (
       <div className="fixed inset-0 bg-black/95 z-[250] flex flex-col items-center justify-center animate-in fade-in duration-300">
         <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin mb-4" />
-        <p className="text-white/60 text-sm font-medium">正在加载照片 / Loading...</p>
       </div>
     );
   }
@@ -41,7 +41,7 @@ export const PhotoLightboxPage = () => {
   const handleEdit = () => {
     if (currentPhoto) {
       updateUIStore({ editPhotoId: currentPhoto.id });
-      close(); // Close the lightbox cleanly so the custom edit drawer sheet has focus
+      close(); 
     }
   };
 
@@ -78,23 +78,35 @@ export const PhotoLightboxPage = () => {
   };
   
   return (
-    <LightboxCore
-      open={isOpen}
-      onClose={close}
-      photos={photos}
-      currentIndex={currentIndex}
-      onIndexChange={(idx) => {
-        const photo = photos[idx];
-        if (photo) setPhotoId(photo.id);
-      }}
-      mode={mode as 'single' | 'group'}
-      showEdit={showEdit}
-      showDelete={showDelete}
-      showAi={showAi}
-      onEdit={handleEdit}
-      onDelete={handleDelete}
-      onAiAnalyze={handleAiAnalyze}
-    />
+    <div className="contents">
+      <LightboxCore
+        open={isOpen}
+        onClose={close}
+        photos={photos}
+        currentIndex={currentIndex}
+        onIndexChange={(idx) => {
+          const photo = photos[idx];
+          if (photo) setPhotoId(photo.id);
+        }}
+        mode={mode as 'single' | 'group'}
+        showEdit={showEdit}
+        showDelete={showDelete}
+        showAi={showAi}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        onAiAnalyze={handleAiAnalyze}
+      />
+      
+      {/* [RESTORED] Sidebar Information Panel */}
+      {currentPhoto && (
+        <PhotoInfoPanel 
+          photo={currentPhoto}
+          mode={mode as 'single' | 'group'}
+          isOpen={true} // Lightbox controls visibility
+          onClose={close}
+        />
+      )}
+    </div>
   );
 };
 

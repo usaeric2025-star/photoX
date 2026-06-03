@@ -57,11 +57,14 @@ export const useLightbox = () => {
   const currentIndex = useMemo(() => {
     if (!photoId || photos.length === 0) return 0;
     const idx = photos.findIndex(p => p.id === photoId);
-    return idx === -1 ? 0 : idx;
+    // If not found yet, but we are loading, keep the index stable if possible 
+    // or return -1 to indicate "searching" to the UI
+    return idx;
   }, [photos, photoId]);
 
   const isOpen = !!photoId;
-  const currentPhoto = photos[currentIndex];
+  // Use a safely indexed access, or null if idx is -1
+  const currentPhoto = currentIndex >= 0 ? photos[currentIndex] : null;
   
   const close = () => {
     if (groupId) {

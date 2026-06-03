@@ -35,7 +35,7 @@ export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dro
         </button>
 
         {isOpen && (
-          <div className="absolute top-full right-0 mt-1 w-28 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-[100]">
+          <div className="absolute top-full right-0 mt-2 w-32 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-[100] animate-in fade-in zoom-in-95 duration-200">
             {langs.map(l => (
               <button
                 key={l.code}
@@ -44,12 +44,14 @@ export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dro
                   update({ appLang: l.code as any });
                   close();
                 }}
-                className={`w-full text-left px-3 py-2 text-[11px] font-bold transition-colors ${
-                  appLang === l.code ? 'text-brand-navy bg-brand-navy/5' : 'text-slate-600 hover:bg-slate-50'
+                className={`w-[calc(100%-16px)] mx-2 mb-1 last:mb-0 text-left px-3 py-2.5 rounded-xl text-[11px] font-black transition-all flex items-center justify-between ${
+                  appLang === l.code 
+                    ? 'text-white bg-brand-navy shadow-md' 
+                    : 'text-slate-600 hover:bg-slate-50'
                 }`}
               >
                 {l.label}
-                {appLang === l.code && <span className="ml-2 text-[8px] opacity-40">●</span>}
+                {appLang === l.code && <div className="w-1.5 h-1.5 bg-white rounded-full shadow-sm" />}
               </button>
             ))}
           </div>
@@ -60,7 +62,7 @@ export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dro
 
   if (mode === 'segmented') {
     return (
-      <div className="flex items-center bg-slate-100 p-1 rounded-xl h-9">
+      <div className="flex items-center bg-slate-100/80 p-1 rounded-2xl h-10 w-full max-w-[240px]">
         {langs.map(l => (
           <button
             key={l.code}
@@ -68,10 +70,10 @@ export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dro
               e.stopPropagation();
               update({ appLang: l.code as any });
             }}
-            className={`flex-1 flex items-center justify-center h-full rounded-lg text-[10px] font-bold transition-all ${
+            className={`flex-1 flex items-center justify-center h-full rounded-xl text-[11px] font-black tracking-tight transition-all duration-300 ${
               appLang === l.code 
-                ? 'bg-white text-blue-600 shadow-sm' 
-                : 'text-slate-500 hover:text-slate-700'
+                ? 'bg-white text-brand-navy shadow-sm scale-[1.02]' 
+                : 'text-slate-400 hover:text-slate-600'
             }`}
           >
             {l.label}
@@ -82,18 +84,19 @@ export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dro
   }
 
   return (
-    <div className="flex items-center p-0.5 rounded-full border border-brand-navy/10 bg-brand-navy/5 shadow-inner overflow-hidden h-7 sm:h-9">
+    <div className="flex items-center p-1 rounded-full border border-brand-navy/20 bg-white/50 backdrop-blur shadow-sm overflow-hidden h-9 sm:h-10">
       {langs.map(l => (
         <button 
           key={l.code} 
           onClick={() => update({ appLang: l.code as any })} 
-          className={`px-2 sm:px-4 h-full flex items-center justify-center rounded-full text-[9px] sm:text-[11px] font-black uppercase tracking-wider transition-all ${
+          className={`flex-1 px-3 sm:px-5 h-full flex items-center justify-center rounded-full text-[10px] sm:text-[12px] font-black uppercase tracking-wider transition-all duration-300 ${
             appLang === l.code 
-              ? 'bg-brand-navy text-white shadow-md' 
-              : 'text-brand-navy/50 hover:text-brand-navy hover:bg-white/50'
+              ? 'bg-brand-navy text-white shadow-lg scale-[1.02] ring-2 ring-brand-navy/10' 
+              : 'text-brand-navy/40 hover:text-brand-navy/70 hover:bg-white/80'
           }`}
         >
           {l.code === 'zh' ? '中文' : l.code.toUpperCase()}
+          {appLang === l.code && <div className="absolute -bottom-1 w-1 h-1 bg-white rounded-full sm:hidden" />}
         </button>
       ))}
     </div>

@@ -38,7 +38,21 @@ export function PhotoInfoPanel({
   onAiAnalyze,
   className
 }: PhotoInfoPanelProps) {
-  if (!data) return null;
+  if (!data) {
+    return (
+      <div className={cn("flex flex-col h-full bg-white/95 backdrop-blur-md border-l border-slate-200 p-6 space-y-8 max-w-sm w-80", className)}>
+        <div className="space-y-3">
+          <div className="h-2 w-16 bg-slate-100 rounded-full animate-pulse" />
+          <div className="h-8 w-full bg-slate-100 rounded-xl animate-pulse" />
+        </div>
+        <div className="flex gap-2">
+          <div className="h-6 w-20 bg-slate-100 rounded-full animate-pulse" />
+          <div className="h-6 w-20 bg-slate-100 rounded-full animate-pulse" />
+        </div>
+        <div className="h-48 w-full bg-slate-100/50 rounded-2xl animate-pulse" />
+      </div>
+    );
+  }
 
   const isGroup = mode === 'group' && 'member_count' in data;
   

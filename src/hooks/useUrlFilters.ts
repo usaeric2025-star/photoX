@@ -24,7 +24,7 @@ export function useUrlFilters() {
   };
 
   const setSortOrder = (sort: 'newest' | 'oldest' | 'name') => {
-    navigate({ search: { ...search, sort } as any });
+    navigate({ search: { ...search, sort: sort === 'newest' ? undefined : sort } as any });
   };
   
   const setGroupId = (groupId: string | null) => {
