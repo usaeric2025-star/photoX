@@ -113,7 +113,7 @@ export function useMaintenanceActions(onSuccess?: () => void) {
         onConfirm: async () => {
           setIsNormalizingCodes(true);
           try {
-            const res = await api.maintenance['normalize-item-codes'].$post();
+            const res = await api.admin.repair.$post({ json: { issueId: 'non_standard_item_codes' } });
             const data = await res.json() as any;
             if (data.success) {
               toast.success(data.message);

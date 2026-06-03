@@ -43,71 +43,93 @@ export function DiagnosticsDashboard() {
             <p className="text-xs text-slate-500 font-medium">REAL-TIME SYSTEM DIAGNOSIS & RECOVERY ENGINE</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <Button 
             variant="outline" 
             size="sm"
             onClick={() => navigate({ to: '/admin/tasks' })}
-            className="rounded-full bg-slate-900 text-white hover:bg-slate-800 border-none transition-all h-9 px-4 text-[10px] font-black uppercase tracking-widest gap-2 shadow-lg"
+            className="rounded-xl bg-slate-950 text-white hover:bg-slate-850 border-none transition-all h-9 px-4 text-xs font-medium gap-1.5 shadow-sm"
           >
-            <Zap size={14} className="text-yellow-400 fill-yellow-400" />
+            <Zap size={14} className="text-yellow-400 fill-yellow-400 animate-pulse" />
             任务指挥部
           </Button>
           <Button 
             variant="outline" 
             size="sm"
             onClick={() => navigate({ to: '/admin/history/maintenance' })}
-            className="rounded-full bg-white border-slate-200 text-slate-600 hover:text-brand-navy hover:border-brand-navy transition-all h-9 px-4 text-[10px] font-black uppercase tracking-widest gap-2"
+            className="rounded-xl bg-white border-slate-250 text-slate-700 hover:text-slate-900 hover:bg-slate-50 transition-all h-9 px-4 text-xs font-medium gap-1.5"
           >
-            <History size={14} />
+            <History size={14} className="text-slate-500" />
             维护序列历史
           </Button>
           <Button 
-            variant="ghost" 
+            variant="outline" 
             size="icon"
             onClick={() => {
               refreshReport();
               runAudit();
             }}
             disabled={isLoading}
-            className="rounded-full hover:bg-slate-100 transition-colors"
+            className="rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors h-9 w-9 flex items-center justify-center shrink-0"
           >
-            <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} />
+            <RefreshCw size={16} className={isLoading ? "animate-spin text-slate-500" : "text-slate-500"} />
           </Button>
         </div>
       </div>
 
       {/* 核心指标统计 */}
-      {/* ... previous content ... */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: '异常记录 (P0)', value: report?.totalIssues || 0, color: 'text-red-600' },
+          { label: '重要发现 (P1/P2)', value: (report?.issuesBySeverity.P1 || 0) + (report?.issuesBySeverity.P2 || 0), color: 'text-slate-900' },
+          { label: '最后扫描', value: report?.timestamp ? new Date(report.timestamp).toLocaleTimeString() : '-', color: 'text-slate-500 font-mono' },
+        ].map((stat, i) => (
+          <div key={i} className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex flex-col justify-between h-24">
+            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{stat.label}</p>
+            <p className={`text-2xl font-semibold mt-1 tracking-tight ${stat.color}`}>{stat.value}</p>
+          </div>
+        ))}
+        <button 
+          onClick={() => {
+            refreshReport();
+            runAudit();
+          }}
+          disabled={isLoading}
+          className="bg-slate-900 text-white hover:bg-slate-800 rounded-2xl p-4 shadow-sm flex flex-col items-center justify-center gap-1 group active:scale-95 transition-all disabled:opacity-50 h-24 justify-center"
+        >
+          <RefreshCw className={`w-4 h-4 text-white ${isLoading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
+          <span className="text-xs font-semibold mt-1">全域扫描</span>
+        </button>
+      </div>
 
       {/* R2 对账可视化 (P0) */}
-      <div className="bg-white border border-brand-navy/5 rounded-[32px] p-6 shadow-sm overflow-hidden relative">
-        <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
+      <div className="bg-white border border-slate-100 rounded-[24px] p-6 shadow-sm overflow-hidden relative">
+        <div className="absolute top-0 right-0 p-8 opacity-[0.02] pointer-events-none">
           <PackageSearch size={120} />
         </div>
         
         <div className="flex items-center justify-between mb-6">
           <div className="space-y-1">
-            <h3 className="text-sm font-black text-brand-navy uppercase tracking-tight flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-slate-800 uppercase tracking-tight flex items-center gap-2">
               <PackageSearch size={18} className="text-blue-500" />
               R2 云端对账审计报告
             </h3>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Consistency Audit between R2 Storage and Database</p>
+            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Consistency Audit between R2 Storage and Database</p>
           </div>
           <Button 
-            variant="ghost" 
+            variant="outline" 
             size="sm" 
             onClick={runAudit} 
             disabled={isAuditing}
-            className="text-[10px] font-black uppercase tracking-widest h-8 px-4 rounded-full"
+            className="text-xs font-medium h-8 px-4 rounded-xl text-slate-700 hover:bg-slate-50"
           >
-            {isAuditing ? <RefreshCw size={12} className="animate-spin mr-2" /> : <RefreshCw size={12} className="mr-2" />}
+            {isAuditing ? <Loader2 size={12} className="animate-spin mr-1.5" /> : null}
             重新审计
           </Button>
         </div>
 
         {auditResult ? (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-in fade-in duration-300">
             {/* 可视化条形图 */}
             {(() => {
               const healthy = auditResult?.healthyCount ?? 0;
@@ -116,8 +138,8 @@ export function DiagnosticsDashboard() {
               const total = healthy + orphans + ghosts;
               const getWidth = (val: number) => total > 0 ? (val / total) * 100 : 0;
               return (
-                <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden flex">
-                  <div className="h-full bg-green-500 transition-all duration-1000" style={{ width: `${getWidth(healthy)}%` }} />
+                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden flex">
+                  <div className="h-full bg-green-500 transition-all duration-1000 animate-pulse" style={{ width: `${getWidth(healthy)}%` }} />
                   <div className="h-full bg-blue-500 transition-all duration-1000" style={{ width: `${getWidth(orphans)}%` }} />
                   <div className="h-full bg-red-500 transition-all duration-1000" style={{ width: `${getWidth(ghosts)}%` }} />
                 </div>
@@ -126,72 +148,61 @@ export function DiagnosticsDashboard() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Healthy */}
-              <div className="p-4 rounded-2xl bg-green-50/50 border border-green-100/50 space-y-3">
+              <div className="p-4 rounded-2xl bg-green-50/40 border border-green-100/50 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-green-600">完美同步 (Healthy)</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-green-600">完美同步 (Healthy)</span>
                   <CheckCircle2 size={14} className="text-green-500" />
                 </div>
-                <div className="text-2xl font-black text-green-700">{auditResult?.healthyCount ?? 0}</div>
-                <p className="text-[10px] text-green-600/70 font-bold uppercase">数据库与云端物理文件完全匹配</p>
+                <div className="text-2xl font-bold text-green-700 leading-none">{auditResult?.healthyCount ?? 0}</div>
+                <p className="text-[10px] text-green-600/70 font-medium">数据库与云端物理文件完全匹配</p>
               </div>
 
               {/* Orphans */}
-              <div className="p-4 rounded-2xl bg-blue-50/50 border border-blue-100/50 space-y-3">
+              <div className="p-4 rounded-2xl bg-blue-50/40 border border-blue-100/50 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-blue-600">孤儿文件 (Orphans)</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-600">孤儿文件 (Orphans)</span>
                   <CloudDownload size={14} className="text-blue-500" />
                 </div>
-                <div className="text-2xl font-black text-blue-700">{auditResult?.orphans?.count ?? 0}</div>
+                <div className="text-2xl font-bold text-blue-700 leading-none">{auditResult?.orphans?.count ?? 0}</div>
                 <div className="space-y-1">
-                   <p className="text-[10px] text-blue-600/70 font-bold uppercase truncate">R2 有文件但数据库丢失记录</p>
+                   <p className="text-[10px] text-blue-600/70 font-medium truncate">R2 有文件但数据库丢失记录</p>
                    {(auditResult?.orphans?.count ?? 0) > 0 && (
-                     <p className="text-[9px] text-blue-400 truncate">例: {auditResult?.orphans?.samples?.[0]?.key}</p>
+                     <p className="text-[9px] text-blue-400 font-mono truncate">例: {auditResult?.orphans?.samples?.[0]?.key}</p>
                    )}
                 </div>
               </div>
 
               {/* Ghosts */}
-              <div className="p-4 rounded-2xl bg-red-50/50 border border-red-100/50 space-y-3">
+              <div className="p-4 rounded-2xl bg-red-50/40 border border-red-100/50 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-red-600">幽灵记录 (Ghosts)</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-red-600">幽灵记录 (Ghosts)</span>
                   <Trash2 size={14} className="text-red-500" />
                 </div>
-                <div className="text-2xl font-black text-red-700">{auditResult?.ghosts?.count ?? 0}</div>
+                <div className="text-2xl font-bold text-red-700 leading-none">{auditResult?.ghosts?.count ?? 0}</div>
                 <div className="space-y-1">
-                   <p className="text-[10px] text-red-600/70 font-bold uppercase truncate">数据库有记录但云端文件已丢失</p>
+                   <p className="text-[10px] text-red-600/70 font-medium truncate">数据库有记录但云端文件已丢失</p>
                    {(auditResult?.ghosts?.count ?? 0) > 0 && (
-                     <p className="text-[9px] text-red-400 truncate">例: {auditResult?.ghosts?.samples?.[0]?.name}</p>
+                     <p className="text-[9px] text-red-450 font-mono truncate">例: {auditResult?.ghosts?.samples?.[0]?.name}</p>
                    )}
                 </div>
               </div>
             </div>
           </div>
         ) : (
-          <div className="h-32 flex flex-col items-center justify-center border-2 border-dashed border-slate-100 rounded-2xl">
-            <Loader2 className="w-6 h-6 animate-spin text-slate-300" />
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">{isAuditing ? '正在全量对账...' : '等待审计...'}</p>
+          <div className="h-32 flex flex-col items-center justify-center border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/30">
+            {isAuditing ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
+                <p className="text-[10px] font-medium text-slate-500 uppercase tracking-widest mt-2">正在进行全量数据对账审计...</p>
+              </>
+            ) : (
+              <>
+                <PackageSearch className="w-6 h-6 text-slate-300 mb-2" />
+                <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">暂无审计缓存，请点击上方按钮开始对账</p>
+              </>
+            )}
           </div>
         )}
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: '异常记录 (P0)', value: report?.totalIssues || 0, color: 'text-red-500' },
-          { label: '重要发现 (P1/P2)', value: (report?.issuesBySeverity.P1 || 0) + (report?.issuesBySeverity.P2 || 0), color: 'text-brand-navy' },
-          { label: '最后扫描', value: report?.timestamp ? new Date(report.timestamp).toLocaleTimeString() : '-', color: 'text-slate-400' },
-        ].map((stat, i) => (
-          <div key={i} className="bg-white border border-brand-navy/5 rounded-2xl p-4 shadow-sm">
-            <p className="text-[10px] font-black text-brand-navy/30 uppercase tracking-widest">{stat.label}</p>
-            <p className={`text-2xl font-black mt-1 ${stat.color}`}>{stat.value}</p>
-          </div>
-        ))}
-        <button 
-          onClick={refreshReport}
-          disabled={isLoading}
-          className="bg-brand-navy text-white rounded-2xl p-4 shadow-lg shadow-brand-navy/20 flex flex-col items-center justify-center gap-1 group active:scale-95 transition-all disabled:opacity-50"
-        >
-          <RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
-          <span className="text-xs font-bold">全域扫描</span>
-        </button>
       </div>
 
       {/* 基础设施诊断 */}

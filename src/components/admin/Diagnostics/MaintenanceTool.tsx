@@ -102,6 +102,7 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
     } catch (e: any) {
       toast.error(`启动执行失败: ${e.message}`);
       setIsExecuting(false);
+      setProgress(0);
     }
   };
 
@@ -116,9 +117,9 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
   if (compact) {
     return (
       <>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 shrink-0">
             {preview && (
-              <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100 animate-in fade-in zoom-in duration-300">
+              <span className="text-[11px] font-medium text-blue-600 bg-blue-50/70 px-2 py-0.5 rounded-md border border-blue-100 animate-in fade-in zoom-in duration-300 shrink-0">
                 影响 {preview.affectedCount} 项
               </span>
             )}
@@ -127,7 +128,7 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
               size="sm" 
               onClick={handlePreview}
               disabled={isPreviewing || isExecuting}
-              className="text-[9px] h-7 px-3 font-black uppercase tracking-widest border-slate-200"
+              className="text-[11px] h-7 px-2.5 font-medium border-slate-200 hover:bg-slate-50 rounded-lg text-slate-700 transition-all shrink-0"
             >
               {isPreviewing ? <Loader2 className="w-3 h-3 animate-spin mr-1.5" /> : null}
               预览
@@ -137,7 +138,7 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
               size="sm"
               onClick={onExecuteClick} 
               disabled={isExecuting || isPreviewing}
-              className={`text-[9px] h-7 px-3 font-black uppercase tracking-widest ${danger ? "" : "bg-brand-navy text-white hover:bg-brand-navy/90"}`}
+              className={`text-[11px] h-7 px-2.5 font-medium rounded-lg transition-all shrink-0 ${danger ? "" : "bg-slate-900 text-white hover:bg-slate-800"}`}
             >
               {isExecuting ? <Loader2 className="w-3 h-3 animate-spin mr-1.5" /> : null}
               {isExecuting ? `${progress}%` : "修复"}
@@ -188,9 +189,9 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
               size="sm" 
               onClick={handlePreview}
               disabled={isPreviewing || isExecuting}
-              className="text-[10px] h-8 px-4 font-black uppercase tracking-widest"
+              className="text-xs h-8 px-3.5 font-medium rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 transition-all"
             >
-              {isPreviewing ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : null}
+              {isPreviewing ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : null}
               预览范围
             </Button>
             <Button 
@@ -198,9 +199,9 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
               size="sm"
               onClick={onExecuteClick} 
               disabled={isExecuting || isPreviewing}
-              className="text-[10px] h-8 px-4 font-black uppercase tracking-widest"
+              className={`text-xs h-8 px-3.5 font-medium rounded-xl transition-all ${danger ? "" : "bg-slate-900 text-white hover:bg-slate-800"}`}
             >
-              {isExecuting ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : null}
+              {isExecuting ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : null}
               {isExecuting ? "执行中" : "开始执行"}
             </Button>
           </div>

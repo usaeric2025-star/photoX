@@ -790,7 +790,7 @@ app.post("/admin/repair", async (c) => {
 const jobStore = new Map<string, any>();
 
 // 1. Comprehensive Storage Audit
-app.get("/api/storage/audit", async (c) => {
+app.get("/storage/audit", async (c) => {
     try {
         const supabase = await getSupabaseAdmin();
         const r2 = await getR2Client();
@@ -888,7 +888,7 @@ app.get("/api/storage/audit", async (c) => {
 });
 
 // 2. Member Count Preview
-app.post("/api/admin/maintenance/member-count-mismatch/preview", async (c) => {
+app.post("/admin/maintenance/member-count-mismatch/preview", async (c) => {
     try {
         const supabase = await getSupabaseAdmin();
         // This logic is simplified from the main diagnose endpoint
@@ -905,7 +905,7 @@ app.post("/api/admin/maintenance/member-count-mismatch/preview", async (c) => {
 });
 
 // 3. Missing Hash Preview
-app.post("/api/admin/maintenance/missing-hash/preview", async (c) => {
+app.post("/admin/maintenance/missing-hash/preview", async (c) => {
     try {
         const supabase = await getSupabaseAdmin();
         const { count } = await supabase
@@ -922,12 +922,12 @@ app.post("/api/admin/maintenance/missing-hash/preview", async (c) => {
 });
 
 // 4. Unified Job Polling
-app.get("/api/admin/maintenance/jobs", async (c) => {
+app.get("/admin/maintenance/jobs", async (c) => {
   const jobs = Array.from(jobStore.entries()).map(([id, data]) => ({ id, ...data }));
   return c.json(jobs);
 });
 
-app.get("/api/admin/maintenance/job/:jobId", async (c) => {
+app.get("/admin/maintenance/job/:jobId", async (c) => {
   const jobId = c.req.param("jobId");
   const job = jobStore.get(jobId);
   if (!job) {
@@ -943,7 +943,7 @@ app.get("/api/admin/maintenance/job/:jobId", async (c) => {
 });
 
 // Member Count Repair with Job
-app.post("/api/admin/repair/member-count-mismatch/execute", async (c) => {
+app.post("/admin/repair/member-count-mismatch/execute", async (c) => {
     try {
         const supabase = await getSupabaseAdmin();
         const { data: groups } = await supabase.rpc('get_groups_with_counts');
@@ -994,7 +994,7 @@ app.post("/api/admin/repair/member-count-mismatch/execute", async (c) => {
 });
 
 // Missing Hash Repair with Job
-app.post("/api/admin/repair/missing-hash/execute", async (c) => {
+app.post("/admin/repair/missing-hash/execute", async (c) => {
     try {
         const supabase = await getSupabaseAdmin();
         const { data: missingHashPhotos } = await supabase

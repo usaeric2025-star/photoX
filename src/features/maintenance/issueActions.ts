@@ -78,9 +78,9 @@ export const ISSUE_ACTIONS: Record<string, MaintenanceAction> = {
       return { affectedCount: issue?.affectedCount || 0 };
     },
     execute: async () => {
-       const res = await api.maintenance['normalize-item-codes'].$post();
+       const res = await api.admin.repair.$post({ json: { issueId: 'non_standard_item_codes' } });
        const data = await res.json() as any;
-       return { jobId: 'norm', message: data.message };
+       return { jobId: 'cleanup', message: data.message || `已规范 ${data.count || 0} 条编号格式` };
     }
   },
   empty_groups: {
