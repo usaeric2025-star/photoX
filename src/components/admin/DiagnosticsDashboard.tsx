@@ -363,107 +363,113 @@ export function DiagnosticsDashboard() {
       </div>
 
       {/* 高级维护工具 */}
-      <div className="bg-white border border-brand-navy/5 rounded-2xl p-6 shadow-sm space-y-4">
+      <div className="bg-white border border-brand-navy/5 rounded-2xl p-6 shadow-sm space-y-6">
         <div>
-          <h3 className="text-base font-black text-brand-navy tracking-tight">高级维护工具</h3>
-          <p className="text-xs text-brand-navy/60">执行数据库与存储空间的深度同步与清理任务</p>
+          <h3 className="text-base font-black text-brand-navy tracking-tight uppercase tracking-widest text-[11px] mb-4">高级维护工具</h3>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <button
-            onClick={handleCleanOrphans}
-            disabled={isCleaningOrphans}
-            className="flex flex-col items-start gap-2 p-4 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all border border-slate-200 group group-active:scale-95 text-left"
-          >
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-orange-500/10 rounded-lg text-orange-600">
-                <FileWarning className="w-4 h-4" />
+        {/* 数据清理 */}
+        <div className="space-y-3">
+          <h4 className="text-[10px] font-black text-brand-navy/30 uppercase tracking-widest px-1">数据清理</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              onClick={handleCleanOrphans}
+              disabled={isCleaningOrphans}
+              className="flex flex-col items-start gap-2 p-4 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all border border-slate-200 group group-active:scale-95 text-left"
+            >
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-orange-500/10 rounded-lg text-orange-600">
+                  <FileWarning className="w-4 h-4" />
+                </div>
+                <span className="text-sm font-bold text-slate-800">清理数据库孤本</span>
               </div>
-              <span className="text-sm font-bold text-slate-800">清理数据库孤本</span>
-            </div>
-            <p className="text-[10px] text-slate-500">删除数据库中那些没有图片哈希或下载链接的无效记录</p>
-            {isCleaningOrphans && <span className="text-[10px] font-bold text-orange-600 animate-pulse">正在清理中...</span>}
-          </button>
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider">删除数据库中无 URL / 无 Hash 的无效记录</p>
+              {isCleaningOrphans && <span className="text-[10px] font-bold text-orange-600 animate-pulse">正在清理中...</span>}
+            </button>
 
-          <button
-            onClick={handleDeepCleanStorage}
-            disabled={isDeepCleaningStorage}
-            className="flex flex-col items-start gap-2 p-4 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all border border-slate-200 group group-active:scale-95 text-left"
-          >
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-blue-500/10 rounded-lg text-blue-600">
-                <RefreshCw className="w-4 h-4" />
+            <button
+              onClick={handleDeepCleanStorage}
+              disabled={isDeepCleaningStorage}
+              className="flex flex-col items-start gap-2 p-4 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all border border-slate-200 group group-active:scale-95 text-left"
+            >
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-blue-500/10 rounded-lg text-blue-600">
+                  <RefreshCw className="w-4 h-4" />
+                </div>
+                <span className="text-sm font-bold text-slate-800">清理存储无主文件</span>
               </div>
-              <span className="text-sm font-bold text-slate-800">清理存储无主文件</span>
-            </div>
-            <p className="text-[10px] text-slate-500">扫描 R2 存储，删除那些在数据库中没有对应引用的残留文件</p>
-            {isDeepCleaningStorage && <span className="text-[10px] font-bold text-blue-600 animate-pulse">正在扫描中...</span>}
-          </button>
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider">扫描 R2 存储，删除未在数据库引用的孤立文件</p>
+              {isDeepCleaningStorage && <span className="text-[10px] font-bold text-blue-600 animate-pulse">正在扫描中...</span>}
+            </button>
+          </div>
+        </div>
 
-          <button
-            onClick={handleDeduplicate}
-            disabled={isDeduplicating}
-            className="flex flex-col items-start gap-2 p-4 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all border border-slate-200 group group-active:scale-95 text-left"
-          >
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-purple-500/10 rounded-lg text-purple-600">
-                <Trash2 className="w-4 h-4" />
+        {/* 数据恢复 */}
+        <div className="space-y-3">
+          <h4 className="text-[10px] font-black text-brand-navy/30 uppercase tracking-widest px-1">数据恢复</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              onClick={handleImportOrphans}
+              disabled={isAuditing}
+              className="flex flex-col items-start gap-2 p-4 bg-green-50 hover:bg-green-100 rounded-xl transition-all border border-green-200 group group-active:scale-95 text-left"
+            >
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-green-500/10 rounded-lg text-green-600">
+                  <CloudDownload className="w-4 h-4" />
+                </div>
+                <span className="text-sm font-bold text-slate-800">恢复孤儿照片</span>
               </div>
-              <span className="text-sm font-bold text-slate-800">重复资产清理</span>
-            </div>
-            <p className="text-[10px] text-slate-500">寻找并合并云端数据库中哈希值完全一致的重复照片记录</p>
-            {isDeduplicating && <span className="text-[10px] font-bold text-purple-600 animate-pulse">正在排重中...</span>}
-          </button>
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider">从云端找回丢失记录并自动补全哈希 (去重保护)</p>
+              {isAuditing && <span className="text-[10px] font-bold text-green-600 animate-pulse">正在处理中...</span>}
+            </button>
+          </div>
+        </div>
 
-          <button
-            onClick={handleAudit}
-            disabled={isAuditing}
-            className="flex flex-col items-start gap-2 p-4 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all border border-slate-200 group group-active:scale-95 text-left"
-          >
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-teal-500/10 rounded-lg text-teal-600">
-                <PackageSearch className="w-4 h-4" />
+        {/* 数据去重 */}
+        <div className="space-y-3">
+          <h4 className="text-[10px] font-black text-brand-navy/30 uppercase tracking-widest px-1">数据去重</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              onClick={handleDeduplicate}
+              disabled={isDeduplicating}
+              className="flex flex-col items-start gap-2 p-4 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all border border-slate-200 group group-active:scale-95 text-left"
+            >
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-purple-500/10 rounded-lg text-purple-600">
+                  <Trash2 className="w-4 h-4" />
+                </div>
+                <span className="text-sm font-bold text-slate-800">重复资产清理</span>
               </div>
-              <span className="text-sm font-bold text-slate-800">存储资产对账</span>
-            </div>
-            <p className="text-[10px] text-slate-500">深度审计 R2 文件与数据库记录的一致性，发现孤儿或缺失文件</p>
-            {isAuditing && <span className="text-[10px] font-bold text-teal-600 animate-pulse">正在对账中...</span>}
-            {auditResult && (
-              <div className="mt-2 text-[8px] font-bold text-slate-400 bg-white/50 p-1.5 rounded-lg w-full">
-                正常: {auditResult.healthy} | 缺失: {auditResult.missing} | 孤儿: {auditResult.orphans}
-              </div>
-            )}
-          </button>
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider">寻找并合并数据库中哈希值一致的重复记录</p>
+              {isDeduplicating && <span className="text-[10px] font-bold text-purple-600 animate-pulse">正在排重中...</span>}
+            </button>
+          </div>
+        </div>
 
-          <button
-            onClick={handleImportOrphans}
-            disabled={isAuditing}
-            className="flex flex-col items-start gap-2 p-4 bg-green-50 hover:bg-green-100 rounded-xl transition-all border border-green-200 group group-active:scale-95 text-left"
-          >
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-green-500/10 rounded-lg text-green-600">
-                <CloudDownload className="w-4 h-4" />
+        {/* 审计 */}
+        <div className="space-y-3">
+          <h4 className="text-[10px] font-black text-brand-navy/30 uppercase tracking-widest px-1">审计</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              onClick={handleAudit}
+              disabled={isAuditing}
+              className="flex flex-col items-start gap-2 p-4 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all border border-slate-200 group group-active:scale-95 text-left"
+            >
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-teal-500/10 rounded-lg text-teal-600">
+                  <PackageSearch className="w-4 h-4" />
+                </div>
+                <span className="text-sm font-bold text-slate-800">存储资产对账</span>
               </div>
-              <span className="text-sm font-bold text-slate-800">恢复孤儿照片</span>
-            </div>
-            <p className="text-[10px] text-slate-500 uppercase tracking-wider">从云端找回丢失记录 (自动去重)</p>
-            {isAuditing && <span className="text-[10px] font-bold text-green-600 animate-pulse">正在导入中...</span>}
-          </button>
-
-          <button
-            onClick={handleRepairHashes}
-            disabled={isAuditing}
-            className="flex flex-col items-start gap-2 p-4 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-all border border-indigo-200 group group-active:scale-95 text-left"
-          >
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-600">
-                <Fingerprint className="w-4 h-4" />
-              </div>
-              <span className="text-sm font-bold text-slate-800">补全缺失哈希</span>
-            </div>
-            <p className="text-[10px] text-slate-500 uppercase tracking-wider">下载图片并重新计算 SHA256 (用于排重)</p>
-            {isAuditing && <span className="text-[10px] font-bold text-indigo-600 animate-pulse">正在计算中...</span>}
-          </button>
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider">深度审计 R2 文件与数据库的一致性，生成对账报告</p>
+              {isAuditing && <span className="text-[10px] font-bold text-teal-600 animate-pulse">正在对账中...</span>}
+              {auditResult && (
+                <div className="mt-2 text-[8px] font-bold text-slate-400 bg-white/50 p-1.5 rounded-lg w-full">
+                  正常: {auditResult.healthy} | 缺失: {auditResult.missing} | 孤儿: {auditResult.orphans}
+                </div>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 

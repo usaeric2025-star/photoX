@@ -55,7 +55,7 @@ export function processPhotos(
     isAdminMode: isAdminMode,
   }, tags, categories, tagMap, catMap);
 
-  const gridPhotos = groupPhotos(displayPhotos, showGroups, urlFilters.sortOrder as 'newest' | 'oldest' | 'name');
+  const gridPhotos = groupPhotos(displayPhotos, showGroups, urlFilters.sortOrder as 'newest' | 'oldest' | 'name', undefined, isAdminMode);
 
   return { displayPhotos, gridPhotos };
 }
@@ -248,8 +248,12 @@ export function filterPhotos(
     if (a.is_pinned && !b.is_pinned) return -1;
     if (!a.is_pinned && b.is_pinned) return 1;
     
-    if (a.is_hidden && !b.is_hidden) return 1;
-    if (!a.is_hidden && b.is_hidden) return -1;
+    // In public mode, hidden items might still exist in some sub-arrays but shouldn't be here.
+    // In admin mode, we sort hidden items to the end UNLESS we specifically want to see them at their natural position.
+    if (!isAdminMode) {
+      if (a.is_hidden && !b.is_hidden) return 1;
+      if (!a.is_hidden && b.is_hidden) return -1;
+    }
     
     if (sortOrder === 'name') {
       return (a.name || '').localeCompare(b.name || '');
@@ -279,7 +283,7 @@ export function sortGroupPhotos(photos: Photo[]): Photo[] {
   });
 }
 
-export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortOrder: 'newest' | 'oldest' | 'name' = 'newest', globalPhotos?: Photo[]): Photo[] {
+export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortOrder: 'newest' | 'oldest' | 'name' = 'newest', globalPhotos?: Photo[], isAdminMode: boolean = false): Photo[] {
   if (photos.length === 0) return [];
 
   const groups = new Map<string, Photo[]>();
@@ -357,8 +361,10 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortO
     if (a.is_pinned && !b.is_pinned) return -1;
     if (!a.is_pinned && b.is_pinned) return 1;
 
-    if (a.is_hidden && !b.is_hidden) return 1;
-    if (!a.is_hidden && b.is_hidden) return -1;
+    if (!isAdminMode) {
+      if (a.is_hidden && !b.is_hidden) return 1;
+      if (!a.is_hidden && b.is_hidden) return -1;
+    }
 
     if (sortOrder === 'name') {
       return (a.name || '').localeCompare(b.name || '');

@@ -310,10 +310,10 @@ app.get("/admin/diagnose", async (c) => {
           category: 'integrity', 
           severity: 'P1', 
           title: '缺少哈希的记录', 
-          description: '这些照片有图片链接但没有哈希值，可能导致排重失效。建议保留并修复。', 
+          description: '这些照片有图片链接但没有哈希值，可能导致排重失效。', 
           affectedCount: missingHashes.length, 
           sampleIds: missingHashes.slice(0, 5).map(p => p.id), 
-          autoFixable: false // Should not be automatically deleted
+          autoFixable: true 
         });
       }
 
@@ -444,6 +444,33 @@ app.post("/admin/repair/:issueId", async (c) => {
           if (error) throw error;
         }
         return c.json({ success: true, message: `空合组清理完成: ${emptyIds.length}个` });
+      }
+
+      if (issueId === 'missing_hashes') {
+        const { data: targets } = await supabase
+          .from("furniture_items")
+          .select("id, image_url")
+          .is("image_hash", null)
+          .not("image_url", "is", null)
+          .limit(20);
+
+        if (!targets || targets.length === 0) return c.json({ success: true, count: 0, message: '没有发现待修复记录' });
+
+        let repairedCount = 0;
+        const crypto = await import('node:crypto');
+        for (const target of targets) {
+          try {
+            const resp = await fetch(target.image_url!);
+            if (!resp.ok) continue;
+            const buffer = await resp.arrayBuffer();
+            const hash = crypto.createHash('sha256').update(Buffer.from(buffer)).digest('hex');
+            await supabase.from("furniture_items").update({ image_hash: hash }).eq("id", target.id);
+            repairedCount++;
+          } catch (e) {
+            console.error(e);
+          }
+        }
+        return c.json({ success: true, message: `已修复 ${repairedCount} 条哈希记录` });
       }
 
       return c.json({ success: false, error: 'Unsupported repair' }, 400);
@@ -601,7 +628,7 @@ app.post("/storage/clean", async (c) => {
         }));
       }
 
-      return c.json({ success: true, data: { cleanedCount: r2FilesToClean.length, files: r2FilesToClean } });
+      return c.json({ success: true, count: r2FilesToClean.length, files: r2FilesToClean });
     } catch (e: any) {
       return c.json({ success: false, error: e.message }, 500);
     }
@@ -627,14 +654,16 @@ app.post("/storage/import-orphans", async (c) => {
         continuationToken = list.NextContinuationToken;
       } while (continuationToken);
 
-      // 2. Get all DB URLs to prevent duplicates
+      // 2. Get all DB filenames (more robust than URL check)
       const { data: existingPhotos } = await supabase.from("furniture_items").select("image_url");
-      const dbUrls = new Set(existingPhotos?.map(p => p.image_url).filter(Boolean));
+      const dbFilenames = new Set(
+        existingPhotos?.map(p => p.image_url?.split('/').pop()).filter(Boolean)
+      );
 
-      // 3. Find unique orphans (not in DB)
+      // 3. Find unique orphans (file exists in R2 but not indexed in DB)
       const orphans = r2Keys.filter(key => {
-        const publicUrl = `https://${publicUrlPrefix}/${key}`;
-        return !dbUrls.has(publicUrl);
+        const filename = key.split('/').pop();
+        return filename && !dbFilenames.has(filename);
       });
 
       if (orphans.length === 0) {
@@ -642,21 +671,35 @@ app.post("/storage/import-orphans", async (c) => {
       }
 
       // 4. Create DB records (Batch of 50 to avoid timeout)
-      const toCreate = orphans.slice(0, 50).map(key => {
-        const publicUrl = `https://${publicUrlPrefix}/${key}`;
-        const filename = key.split('/').pop() || "";
-        const nameCandidate = filename.split('.')[0] || "恢复的照片";
-        
-        return {
-          name: nameCandidate,
-          image_url: publicUrl,
-          thumb_url: publicUrl,
-          description: `[自动恢复] 源文件: ${filename}`,
-          is_hidden: true,
-          // We don't have hash yet, will be fixed by repair-hashes endpoint
-          image_hash: null 
-        };
-      });
+      const toCreate = [];
+      const crypto = await import('node:crypto');
+      
+      for (const key of orphans.slice(0, 50)) {
+        try {
+          const publicUrl = `https://${publicUrlPrefix}/${key}`;
+          const filename = key.split('/').pop() || "";
+          const nameCandidate = filename.split('.')[0] || "恢复的照片";
+          
+          // Calculate Hash
+          const response = await fetch(publicUrl);
+          let hash = null;
+          if (response.ok) {
+            const buffer = await response.arrayBuffer();
+            hash = crypto.createHash('sha256').update(Buffer.from(buffer)).digest('hex');
+          }
+
+          toCreate.push({
+            name: nameCandidate,
+            image_url: publicUrl,
+            thumb_url: publicUrl,
+            description: `[自动恢复] 源文件: ${filename}`,
+            is_hidden: false, // Make it visible by default as requested
+            image_hash: hash 
+          });
+        } catch (err) {
+          console.error(`Failed to process orphan ${key}:`, err);
+        }
+      }
 
       const { error } = await supabase.from("furniture_items").insert(toCreate);
       if (error) throw error;
@@ -665,7 +708,7 @@ app.post("/storage/import-orphans", async (c) => {
         success: true, 
         count: toCreate.length, 
         remaining: orphans.length - toCreate.length,
-        message: `从云端找回了 ${toCreate.length} 张未登记的照片。请在管理后台查看“隐藏”照片进行整理。` 
+        message: `成功从云端找回并导入了 ${toCreate.length} 张照片。系统已在导入时自动补全了哈希值。` 
       });
     } catch (e: any) {
       return c.json({ success: false, error: e.message }, 500);
@@ -679,13 +722,13 @@ app.post("/storage/import-orphans", async (c) => {
 app.post("/storage/repair-hashes", async (c) => {
   try {
     const supabase = await getSupabaseAdmin();
-    // 1. Find records with URL but no hash
+    // 1. Find records with URL but no hash (Check both null and empty string)
     const { data: targets, error: fetchError } = await supabase
       .from("furniture_items")
-      .select("id, image_url")
-      .or('image_hash.is.null,image_hash.eq.""')
-      .not('image_url', 'is', null)
-      .limit(10); // Low limit because processing image is heavy
+      .select("id, image_url, image_hash")
+      .is("image_hash", null)
+      .not("image_url", "is", null)
+      .limit(20); 
 
     if (fetchError) throw fetchError;
     if (!targets || targets.length === 0) {
