@@ -10,7 +10,8 @@ import {
   FileWarning,
   Bug,
   Trash2,
-  PackageSearch
+  PackageSearch,
+  CloudDownload
 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
@@ -119,7 +120,7 @@ export function DiagnosticsDashboard() {
         toast.success(`排重完成！共清理了 ${result.data.removed} 张重复记录。`);
         scan();
       } else {
-        toast.error(`排重失败: ${result.error.message}`);
+        toast.error(`排重失败: ${result.message}`);
       }
     } catch (e: any) {
       toast.error(`请求失败: ${e.message}`);
@@ -181,6 +182,24 @@ export function DiagnosticsDashboard() {
       toast.error(`请求失败: ${e.message}`);
     } finally {
       setIsDeepCleaningStorage(false);
+    }
+  };
+
+  const handleImportOrphans = async () => {
+    setIsAuditing(true);
+    try {
+      const res = await api.storage['import-orphans'].$post();
+      const data = await res.json() as any;
+      if (data.success) {
+        toast.success(data.message || `成功恢复 ${data.count} 张照片`);
+        scan();
+      } else {
+        toast.error(`恢复失败: ${data.error}`);
+      }
+    } catch (e: any) {
+      toast.error(`请求失败: ${e.message}`);
+    } finally {
+      setIsAuditing(false);
     }
   };
 
@@ -388,6 +407,21 @@ export function DiagnosticsDashboard() {
                 正常: {auditResult.healthy} | 缺失: {auditResult.missing} | 孤儿: {auditResult.orphans}
               </div>
             )}
+          </button>
+
+          <button
+            onClick={handleImportOrphans}
+            disabled={isAuditing}
+            className="flex flex-col items-start gap-2 p-4 bg-green-50 hover:bg-green-100 rounded-xl transition-all border border-green-200 group group-active:scale-95 text-left"
+          >
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-green-500/10 rounded-lg text-green-600">
+                <CloudDownload className="w-4 h-4" />
+              </div>
+              <span className="text-sm font-bold text-slate-800">恢复孤儿照片</span>
+            </div>
+            <p className="text-[10px] text-slate-500">发现存储中有但数据库没记录的照片，将其重新导入数据库</p>
+            {isAuditing && <span className="text-[10px] font-bold text-green-600 animate-pulse">正在恢复中...</span>}
           </button>
         </div>
       </div>

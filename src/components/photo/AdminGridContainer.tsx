@@ -8,7 +8,9 @@ import { VirtualPhotoGrid } from '@/components/photo/VirtualPhotoGrid';
 import { PhotoCard } from '@/components/photo/PhotoCard';
 import { AdminFilters } from '@/components/ui/AdminFilters';
 import { useScrollRestoration, useTasks, useMultiSelect, useFilters, usePhotos, useAdminMode, usePermission, useCategories, useTags, useUrlFilters, useTaskExecutor } from '@/hooks';
+import { processImageFiles } from '@/lib/image/imageProcess';
 import { processPhotos } from '@/lib/filters';
+import { checkDuplicateBatch, removeFromDuplicateCache, checkDuplicate } from '@/lib/data/duplicateCheck';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { UploadButton } from '@/components/shared/UploadButton';
 import { SelectionToolbar } from '@/components/shared/SelectionToolbar';
@@ -94,11 +96,10 @@ export function AdminGridContainer({
     const files = e.target.files;
     if (!files || files.length === 0 || !user) return;
 
-    const { checkDuplicateBatch } = await import('@/lib/data/duplicateCheck');
     const { newFiles: uniqueFiles, duplicateHashes: duplicateFiles } = checkDuplicateBatch(Array.from(files));
 
     if (duplicateFiles.length > 0) {
-      toast.warning(`已跳过 ${duplicateFiles.length} 张重复照片`);
+      toast.warning(`已重新检查并跳过 ${duplicateFiles.length} 张重复照片`);
     }
 
     if (uniqueFiles.length === 0) {
@@ -114,7 +115,6 @@ export function AdminGridContainer({
     try {
       const fileArray = Array.from(uniqueFiles);
       
-      const { processImageFiles } = await import('@/lib/image/imageProcess');
       const processedImages = await processImageFiles(fileArray, (count, total) => {
          updateTask(taskId, {
             progress: Math.round((count / total) * 50),
@@ -157,7 +157,6 @@ export function AdminGridContainer({
     } catch (err) {
       handleError(err, '上传照片失败');
       updateTask(taskId, { status: 'error', progress: 100, message: '上传失败' });
-      const { removeFromDuplicateCache } = await import('@/lib/data/duplicateCheck');
       uniqueFiles.forEach(file => removeFromDuplicateCache(file));
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = '';

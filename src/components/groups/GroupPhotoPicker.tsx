@@ -16,6 +16,8 @@ import { GroupGridView } from "./GroupGridView";
 import { cn } from "@/lib/utils";
 import { savePhotosToCloudBatch } from "@/services/photo/photoUploadService";
 import { useAuth } from "@/hooks/core/auth/useAuth";
+import { processImageFiles } from '@/lib/image/imageProcess';
+import { checkDuplicateBatch, removeFromDuplicateCache } from '@/lib/data/duplicateCheck';
 
 interface GroupPhotoPickerProps {
   isOpen: boolean;
@@ -45,11 +47,10 @@ export function GroupPhotoPicker({
     // Simple photo conversion for batch upload
     const files = Array.from(e.target.files);
     
-    const { checkDuplicateBatch } = await import('@/lib/data/duplicateCheck');
     const { newFiles: uniqueFiles, duplicateHashes: duplicateFiles } = checkDuplicateBatch(files);
 
     if (duplicateFiles.length > 0) {
-      toast.warning(`已跳过 ${duplicateFiles.length} 张重复照片`);
+      toast.warning(`已重新检查并跳过 ${duplicateFiles.length} 张重复照片`);
     }
 
     if (uniqueFiles.length === 0) {
@@ -57,8 +58,6 @@ export function GroupPhotoPicker({
       return;
     }
 
-    const { processImageFiles } = await import('@/lib/image/imageProcess');
-    
     try {
       await runTask(`上传 ${uniqueFiles.length} 张照片`, async ({ updateProgress }) => {
         let completed = 0;

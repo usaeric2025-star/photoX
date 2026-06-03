@@ -155,6 +155,34 @@ app.post("/upload-presign", async (c) => {
     }
 });
 
+app.post("/upload/validate", async (c) => {
+    try {
+      const { imageHash, fileSize, fileName } = await c.req.json();
+      if (!imageHash) return c.json({ error: "imageHash required" }, 400);
+
+      const supabase = await getSupabaseAdmin();
+      const { data: existing } = await supabase
+        .from("furniture_items")
+        .select("id, image_url, name, image_hash")
+        .eq("image_hash", imageHash)
+        .maybeSingle();
+
+      if (existing) {
+        const isGhost = !existing.image_url || existing.image_url === '';
+        return c.json({ 
+          exists: true, 
+          isGhost,
+          photoId: existing.id,
+          existingUrl: existing.image_url 
+        });
+      }
+
+      return c.json({ exists: false });
+    } catch(e: any) {
+      return c.json({ success: false, error: e.message }, 500);
+    }
+});
+
 app.post("/upload-direct", async (c) => {
     try {
       const { base64Data, fileKey, contentType } = await c.req.json();
@@ -259,10 +287,49 @@ app.get("/admin/diagnose", async (c) => {
         issues.push({ id: 'empty_groups', category: 'integrity', severity: 'P0', title: '空合组', description: '有些合组中没有任何照片', affectedCount: emptyGroups.length, sampleIds: emptyGroups.slice(0, 5).map(g => String(g.id)), autoFixable: true });
       }
 
-      // Ghost Records (No URL or Hash)
-      const ghostRecords = photos.filter(p => !p.image_url || !p.image_hash);
-      if (ghostRecords.length > 0) {
-        issues.push({ id: 'ghost_records', category: 'integrity', severity: 'P0', title: '幽灵记录', description: '数据库中有记录但缺少图片哈希或链接', affectedCount: ghostRecords.length, sampleIds: ghostRecords.slice(0, 5).map(p => p.id), autoFixable: true });
+      // Ghost Records (No URL AND No Hash)
+      const completeGhosts = photos.filter(p => (!p.image_url || p.image_url === '') && (!p.image_hash || p.image_hash === ''));
+      if (completeGhosts.length > 0) {
+        issues.push({ 
+          id: 'ghost_records', 
+          category: 'integrity', 
+          severity: 'P0', 
+          title: '完全幽灵记录', 
+          description: '数据库中有记录但完全没有图片链接和哈希，属于无用垃圾数据', 
+          affectedCount: completeGhosts.length, 
+          sampleIds: completeGhosts.slice(0, 5).map(p => p.id), 
+          autoFixable: true 
+        });
+      }
+
+      // Incomplete Records (Has URL but No Hash - DANGEROUS TO DELETE)
+      const missingHashes = photos.filter(p => p.image_url && (!p.image_hash || p.image_hash === ''));
+      if (missingHashes.length > 0) {
+        issues.push({ 
+          id: 'missing_hashes', 
+          category: 'integrity', 
+          severity: 'P1', 
+          title: '缺少哈希的记录', 
+          description: '这些照片有图片链接但没有哈希值，可能导致排重失效。建议保留并修复。', 
+          affectedCount: missingHashes.length, 
+          sampleIds: missingHashes.slice(0, 5).map(p => p.id), 
+          autoFixable: false // Should not be automatically deleted
+        });
+      }
+
+      // Incomplete Records (Has Hash but No URL - GHOST)
+      const missingUrls = photos.filter(p => p.image_hash && (!p.image_url || p.image_url === ''));
+      if (missingUrls.length > 0) {
+        issues.push({ 
+          id: 'missing_urls', 
+          category: 'integrity', 
+          severity: 'P0', 
+          title: '缺少链接的照片', 
+          description: '这些记录有哈希但没有图片链接，无法正常显示。', 
+          affectedCount: missingUrls.length, 
+          sampleIds: missingUrls.slice(0, 5).map(p => p.id), 
+          autoFixable: true 
+        });
       }
 
       // member_count mismatch
@@ -340,12 +407,43 @@ app.post("/admin/repair/:issueId", async (c) => {
       }
 
       if (issueId === 'ghost_records') {
-        const { error } = await supabase
+        const { data: ghosts } = await supabase
           .from("furniture_items")
-          .delete()
-          .or('image_url.is.null,image_url.eq."",image_hash.is.null,image_hash.eq.""');
-        if (error) throw error;
-        return c.json({ success: true, message: '幽灵记录清理完成' });
+          .select("id")
+          .is("image_url", null)
+          .is("image_hash", null);
+        
+        const ids = ghosts?.map(g => g.id) || [];
+        if (ids.length > 0) {
+          const { error } = await supabase.from("furniture_items").delete().in("id", ids);
+          if (error) throw error;
+        }
+        return c.json({ success: true, message: `完全幽灵记录清理完成: ${ids.length}条` });
+      }
+
+      if (issueId === 'missing_urls') {
+        // Only delete records that have NO URL and NO meaningful data
+        const { data: records } = await supabase
+          .from("furniture_items")
+          .select("id")
+          .is("image_url", null);
+
+        const ids = records?.map(r => r.id) || [];
+        if (ids.length > 0) {
+          const { error } = await supabase.from("furniture_items").delete().in("id", ids);
+          if (error) throw error;
+        }
+        return c.json({ success: true, message: `无链接记录清理完成: ${ids.length}条` });
+      }
+
+      if (issueId === 'empty_groups') {
+        const { data: groups } = await supabase.from('groups').select('id, member_count');
+        const emptyIds = groups?.filter(g => (g.member_count || 0) === 0).map(g => g.id) || [];
+        if (emptyIds.length > 0) {
+          const { error } = await supabase.from('groups').delete().in('id', emptyIds);
+          if (error) throw error;
+        }
+        return c.json({ success: true, message: `空合组清理完成: ${emptyIds.length}个` });
       }
 
       return c.json({ success: false, error: 'Unsupported repair' }, 400);
@@ -365,32 +463,75 @@ app.get("/storage/audit", async (c) => {
       const bucket = serverEnv.R2_BUCKET_NAME;
       if (!bucket) throw new Error("R2_BUCKET_NAME missing");
 
-      const { data: photos, error } = await supabase.from("furniture_items").select("id, image_url, thumb_url");
+      const { data: photos, error } = await supabase.from("furniture_items").select("id, image_url, thumb_url, image_hash");
       if (error) throw error;
 
       const r2Files: Set<string> = new Set();
-      const dbFiles: Set<string> = new Set();
+      const dbFilesMap: Map<string, string[]> = new Map(); // filename -> photoIds
 
       photos.forEach(p => {
-        if (p.image_url?.includes("r2")) dbFiles.add(p.image_url.split("/").pop()!);
-        if (p.thumb_url?.includes("r2")) dbFiles.add(p.thumb_url.split("/").pop()!);
+        const urls = [p.image_url, p.thumb_url].filter(u => u && u.includes('r2.dev'));
+        urls.forEach(url => {
+          const filename = url!.split('/').pop();
+          if (filename) {
+            if (!dbFilesMap.has(filename)) dbFilesMap.set(filename, []);
+            dbFilesMap.get(filename)!.push(p.id);
+          }
+        });
       });
 
       let continuationToken: string | undefined;
+      const r2Keys: string[] = [];
       do {
         const list = await s3Client.send(
           new ListObjectsV2Command({ Bucket: bucket, Prefix: "photox/public/", ContinuationToken: continuationToken }),
           { abortSignal: AbortSignal.timeout(6000) }
         );
-        list.Contents?.forEach(c => { if (c.Key) r2Files.add(c.Key.split("/").pop()!); });
+        list.Contents?.forEach(c => { 
+          if (c.Key) {
+            r2Keys.push(c.Key);
+            const filename = c.Key.split("/").pop();
+            if (filename) r2Files.add(filename);
+          }
+        });
         continuationToken = list.NextContinuationToken;
       } while (continuationToken);
 
       let healthy = 0, missing = 0, orphans = 0;
-      dbFiles.forEach(f => { if (r2Files.has(f)) healthy++; else missing++; });
-      r2Files.forEach(f => { if (!dbFiles.has(f)) orphans++; });
+      const orphanKeys: string[] = [];
+      const missingIds: string[] = [];
 
-      return c.json({ success: true, data: { healthy, missing, orphans } });
+      // Check DB files existence in R2
+      for (const [filename, ids] of dbFilesMap.entries()) {
+        if (r2Files.has(filename)) {
+          healthy++;
+        } else {
+          missing++;
+          missingIds.push(...ids);
+        }
+      }
+
+      // Check R2 files existence in DB
+      r2Keys.forEach(key => {
+        const filename = key.split('/').pop();
+        if (filename && !dbFilesMap.has(filename)) {
+          orphans++;
+          orphanKeys.push(key);
+        }
+      });
+
+      return c.json({ 
+        success: true, 
+        data: { 
+          healthy, 
+          missing, 
+          orphans,
+          missingIds: missingIds.slice(0, 100),
+          orphanKeys: orphanKeys.slice(0, 100),
+          totalR2Records: r2Keys.length,
+          totalDbRecords: photos.length
+        } 
+      });
     } catch (e: any) {
       return c.json({ success: false, error: e.message }, 500);
     }
@@ -461,6 +602,62 @@ app.post("/storage/clean", async (c) => {
       }
 
       return c.json({ success: true, data: { cleanedCount: r2FilesToClean.length, files: r2FilesToClean } });
+    } catch (e: any) {
+      return c.json({ success: false, error: e.message }, 500);
+    }
+});
+
+app.post("/storage/import-orphans", async (c) => {
+    try {
+      const supabase = await getSupabaseAdmin();
+      const s3Client = await getR2Client();
+      const bucket = serverEnv.R2_BUCKET_NAME;
+      const publicUrlPrefix = serverEnv.R2_PUBLIC_URL_PREFIX;
+      
+      if (!bucket || !publicUrlPrefix) throw new Error("Storage config missing");
+
+      // 1. Get all R2 files
+      let continuationToken: string | undefined;
+      const r2Keys: string[] = [];
+      do {
+        const list = await s3Client.send(
+          new ListObjectsV2Command({ Bucket: bucket, Prefix: "photox/public/", ContinuationToken: continuationToken })
+        );
+        list.Contents?.forEach(c => { if (c.Key) r2Keys.push(c.Key); });
+        continuationToken = list.NextContinuationToken;
+      } while (continuationToken);
+
+      // 2. Get all DB files
+      const { data: photos } = await supabase.from("furniture_items").select("image_url");
+      const dbFilenames = new Set(photos?.map(p => p.image_url?.split('/').pop()).filter(Boolean));
+
+      // 3. Find orphans
+      const orphans = r2Keys.filter(key => {
+        const filename = key.split('/').pop();
+        return filename && !dbFilenames.has(filename);
+      });
+
+      if (orphans.length === 0) {
+        return c.json({ success: true, count: 0, message: "没有发现孤儿文件" });
+      }
+
+      // 4. Create DB records (Batch of 50)
+      const toCreate = orphans.slice(0, 50).map(key => {
+        const publicUrl = `https://${publicUrlPrefix}/${key}`;
+        const name = key.split('/').pop()?.split('.')[0] || "Recovered Photo";
+        return {
+          name: name,
+          image_url: publicUrl,
+          thumb_url: publicUrl,
+          description: "从存储孤儿文件自动恢复",
+          is_hidden: true 
+        };
+      });
+
+      const { error } = await supabase.from("furniture_items").insert(toCreate);
+      if (error) throw error;
+
+      return c.json({ success: true, count: toCreate.length, message: `成功从存储恢复 ${toCreate.length} 张照片` });
     } catch (e: any) {
       return c.json({ success: false, error: e.message }, 500);
     }

@@ -65,7 +65,12 @@ export function LightboxInfoPanel({
   const photoDisplayName = getPhotoDisplayName(photo, categories, activeLang, t);
   
   const { tasks } = useTasks();
-  const isRunning = tasks.some(t => t.status === 'running');
+  const isThisPhotoAnalyzing = tasks.some(t => 
+    t.status === 'running' && 
+    (t.name.includes(photo.id) || (photo.name && t.name.includes(photo.name)))
+  );
+  const isGlobalRunning = tasks.some(t => t.status === 'running' && t.name.includes('同步'));
+  const isButtonDisabled = isThisPhotoAnalyzing || isGlobalRunning;
 
   const displayTags = (() => {
     const rawIds = Array.isArray(photo.tag_ids) ? photo.tag_ids : [];
@@ -122,7 +127,7 @@ export function LightboxInfoPanel({
               <>
                 <button 
                   onClick={handleAiAnalyze}
-                  disabled={isRunning}
+                  disabled={isButtonDisabled}
                   className={`w-9 h-9 flex items-center justify-center rounded-xl border border-blue-100 transition-all disabled:opacity-50 ${isAnalyzing ? 'bg-red-50 text-red-600 border-red-100 hover:bg-red-100' : 'bg-blue-50 text-blue-600'}`}
                 >
                   {isAnalyzing ? <X size={16} /> : <Sparkles size={16} />}

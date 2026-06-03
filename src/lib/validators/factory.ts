@@ -10,7 +10,7 @@ import { Validator } from './protocol';
 export const createPhotoValidator = (): Validator<any> => {
     // ArkType requires strict mode for inference, but we are bypassing for compatibility
     const photoSchema = type({
-        id: 'string',
+        'id?': 'string',
         'user_id?': 'string',
         'name?': 'string|null',
         'description?': 'string|null',

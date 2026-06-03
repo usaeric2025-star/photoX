@@ -12,7 +12,7 @@ import {
 } from '@/store/useUIStore';
 import { 
   useCategories, useTags, useManufacturers, usePhotos,
-  useAdminCategory, useAuth, useSettings
+  useAdminCategory, useAuth, useSettings, usePhotoCount
 } from '@/hooks';
 import { useSettingsLogic } from './settings/useSettingsLogic';
 import { SettingsTabs } from './settings/SettingsTabs';
@@ -78,8 +78,9 @@ export function SettingsScreen() {
 
   const performPushSync = async () => { await syncMut('push'); };
   const performPullSync = async () => { await syncMut('pull'); };
+  const { data: totalPhotoCount = 0 } = usePhotoCount();
+  const cloudCount = totalPhotoCount;
   const refreshCloudData = async () => { await syncMut('pull'); };
-  const cloudCount = 0;
   
   const isSyncing = tasks.some(t => t.name.includes('同步') && t.status === 'running');
   const isMaintenanceRunning = tasks.some(t => (t.name.includes('维护') || t.name.includes('诊断')) && t.status === 'running');

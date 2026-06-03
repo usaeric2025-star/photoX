@@ -82,11 +82,12 @@ export const checkDuplicateBatch = (files: File[]) => {
 
   for (const file of files) {
     const pseudoHash = `${file.name}_${file.size}_${file.lastModified}`;
+    // Don't eagerly block in batch check if we want to allow DB retry
+    // Only block if we are SURE it's already in the *current* session's successful upload list
     if (memoryPseudoHashes.has(pseudoHash)) {
       duplicateHashes.push(pseudoHash);
     } else {
       newFiles.push(file);
-      memoryPseudoHashes.set(pseudoHash, `cached-${Date.now()}`);
     }
   }
 
