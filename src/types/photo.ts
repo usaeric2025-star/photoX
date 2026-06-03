@@ -143,6 +143,7 @@ export interface ProductFormData {
   is_hidden: boolean;
   price: string;
   is_group_cover: boolean;
+  uri?: string;
 }
 
 export interface PhotoAIResult {

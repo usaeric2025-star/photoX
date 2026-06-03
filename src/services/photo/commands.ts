@@ -119,6 +119,25 @@ export async function deleteMany(ids: string[]): Promise<AppResult<BatchActionRe
 }
 
 export async function update(id: string, updates: Partial<Photo>): Promise<AppResult<null>> {
+    // Handle URI (image data update) - crucial for rotation save
+    if (updates.uri && updates.uri.startsWith('data:image')) {
+      const { data: { session } } = await supabase.auth.getSession();
+      const isLocalStorageStaff = typeof window !== 'undefined' && !!window.localStorage.getItem('ais_mock_auth_passcode');
+      if (!session && !isLocalStorageStaff) {
+          return errorFactory('NO_ACTIVE_SESSION', 'AUTH_ERROR', 'update');
+      }
+
+      const { uploadImages } = await import('../storage');
+      try {
+        const { imageUrl } = await uploadImages(session?.user?.id || 'staff', id, updates.uri, undefined, undefined, undefined, true);
+        updates.image_url = imageUrl;
+        updates.updated_at = new Date().toISOString();
+        delete updates.uri;
+      } catch (uploadErr: any) {
+        return errorFactory(uploadErr.message, 'STORAGE_ERROR', 'update', uploadErr);
+      }
+    }
+
     const dbUpdates = mapToDb(updates);
     const { error } = await supabase
       .from(DB_CONFIG.TABLE_NAME)

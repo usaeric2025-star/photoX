@@ -120,7 +120,13 @@ export const uploadImages = async (
       }
 
       const presignRes = await api['upload-presign'].$post({
-        json: { photoId: photoId, fileKey: safeFileName, contentType: 'image/webp', imageHash: isMain ? imageHash : undefined }
+        json: { 
+          photoId: photoId, 
+          fileKey: safeFileName, 
+          contentType: 'image/webp', 
+          imageHash: isMain ? imageHash : undefined,
+          force: force
+        }
       });
       
       if (presignRes.status === 409) {

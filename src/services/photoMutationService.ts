@@ -51,6 +51,17 @@ export const updatePhotoInCloud = async (photoId: string, updates: Partial<Photo
 
   const dbUpdates = mapToDb(cleanUpdates);
   
+  // [STORAGE-PARADYM] Handle image data URI if present (e.g. from rotation)
+  if (cleanUpdates.uri && cleanUpdates.uri.startsWith('data:image')) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      const { uploadImages } = await import('./storage');
+      const { imageUrl } = await uploadImages(session.user.id, photoId, cleanUpdates.uri, undefined, undefined, undefined, true);
+      dbUpdates.image_url = imageUrl;
+      dbUpdates.updated_at = new Date().toISOString();
+    }
+  }
+
   let { error } = await supabase
     .from(DB_CONFIG.TABLE_NAME)
     .update(dbUpdates)

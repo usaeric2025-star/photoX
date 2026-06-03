@@ -12,6 +12,7 @@ interface PhotoUpdateData {
   group_id?: string | null;
   group_order?: number;
   price?: string;
+  uri?: string; 
 }
 
 export function useAdminActions() {

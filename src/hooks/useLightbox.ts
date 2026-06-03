@@ -21,11 +21,13 @@ export const useLightbox = () => {
   const isAdmin = location.pathname.startsWith('/admin');
   
   // Use enabled condition to avoid unnecessary requests
-  const { data: singlePhoto } = usePhotoDetail(photoId || '');
-  const { data: groupDetail } = useGroupDetail(groupId || '');
-  const { data: groupPhotos } = useGroupPhotos(groupId, false, 100);
+  const { data: singlePhoto, isLoading: isSingleLoading } = usePhotoDetail(photoId || '');
+  const { data: groupDetail, isLoading: isGroupLoading } = useGroupDetail(groupId || '');
+  const { data: groupPhotos, isLoading: isPhotosLoading } = useGroupPhotos(groupId, false, 100);
   
   const isGroupMode = !!groupId; // Within a group's context
+  
+  const isLoading = isSingleLoading || (isGroupMode && (isGroupLoading || isPhotosLoading));
 
   const photos = useMemo(() => {
     let list: Photo[] = [];
@@ -91,6 +93,7 @@ export const useLightbox = () => {
     photoId, 
     setPhotoId,
     mode,
+    isLoading,
     // When in groupDetail but photoId is also present, 'data' for info panel is the photo
     // except if the user specifically wants the group info? 
     // Usually a photo-lightbox sidebar shows the photo info.

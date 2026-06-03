@@ -21,7 +21,7 @@ interface Props {
 }
 
 export const usePhotoEditLogic = (props: Props) => {
-  const { photos, editPhotoId, form, newPhotoData, editPhotoPreview, analyzeSingle } = props;
+  const { photos, editPhotoId, form, newPhotoData, editPhotoPreview, analyzeSingle, saveNewPhoto } = props;
   const { tasks } = useTasks();
   const isAnalyzing = useMemo(() => tasks.some(t => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析'))), [tasks]);
   const isSyncing = useMemo(() => tasks.some(t => t.status === 'running' && (t.name.includes('同步') || t.name.includes('导入'))), [tasks]);
@@ -137,8 +137,14 @@ export const usePhotoEditLogic = (props: Props) => {
 
   const handleSave = async () => {
     if (!editPhotoId) return;
-    // [V2.8] Use the R19 Action Paradigm
-    runUpdate(form.values);
+    
+    // If we have a custom saveNewPhoto (which handles rotated image data in PhotoEditDrawer)
+    if (saveNewPhoto) {
+      await saveNewPhoto();
+    } else {
+      // Fallback
+      runUpdate(form.values);
+    }
   };
 
   const toggleHidden = async () => {
