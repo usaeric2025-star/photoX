@@ -3,7 +3,7 @@ import { Trash2, Pencil } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useUIStore, useShallow } from "@/store/useUIStore";
 import { useClickAway } from "@/lib/hooks";
-import { useLongPress } from "@shined/react-use";
+import { useLongPress } from "@mantine/hooks";
 import { normalizeManufacturerName } from "@/lib/utils";
 
 import { Manufacturer } from "../../types";
@@ -29,17 +29,14 @@ export const ManufacturerItem = ({
     if (activeMenuId === manufacturer.id) setActiveMenuId(null);
   });
 
-  useLongPress(
-    menuRef,
-    () => {
-      setActiveMenuId(manufacturer.id);
-    },
-    { delay: 500 }
-  );
+  const longPress = useLongPress(() => {
+    setActiveMenuId(manufacturer.id);
+  }, { threshold: 500 });
 
   return (
     <div
       ref={menuRef}
+      {...longPress}
       className={`bg-white border border-brand-navy/10 pl-3 pr-2 py-1 rounded-full flex items-center gap-2 shadow-sm transition-all active:scale-95 relative ${activeMenuId === manufacturer.id ? "bg-brand-gold/10 border-brand-gold/30 scale-95" : ""}`}
     >
       <div className="flex flex-col">

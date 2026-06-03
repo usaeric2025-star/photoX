@@ -2,7 +2,7 @@ import { getTranslatedCategoryName } from "../../lib/ui-helpers";
 import { createTranslate } from "@/lib/i18n";
 import { translations, LanguageCode } from "../../lib/translations";
 import { Category, Manufacturer } from "../../types";
-import { useLongPress } from "@shined/react-use";
+import { useLongPress } from "@mantine/hooks";
 import { Pencil, Trash2 } from "lucide-react";
 import { useUIStore, useShallow } from "@/store/useUIStore";
 import { useRef } from "react";
@@ -124,8 +124,7 @@ export function ManufacturerList({
 }
 
 function ManufacturerButton({ mfr, isSelected, onSelect, onEdit, onDelete, update }: any) {
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  useLongPress(buttonRef, () => {
+  const longPress = useLongPress(() => {
     if (onEdit || onDelete) {
       update({
         alertDialog: {
@@ -141,11 +140,11 @@ function ManufacturerButton({ mfr, isSelected, onSelect, onEdit, onDelete, updat
         },
       });
     }
-  }, { delay: 500 });
+  }, { threshold: 500 });
 
   return (
     <button
-      ref={buttonRef}
+      {...longPress}
       onClick={() => onSelect(isSelected ? null : String(mfr.id))}
       className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${isSelected ? "bg-slate-800 text-white border-slate-800 shadow-lg" : "bg-white border-slate-200 text-slate-600 active:bg-slate-50"}`}
     >

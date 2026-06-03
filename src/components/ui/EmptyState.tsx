@@ -21,8 +21,10 @@ export function EmptyState({
     <div className={cn("flex flex-col items-center justify-center py-12 px-4 text-center", className)}>
       <div className="mb-4">{icon}</div>
       <h3 className="text-lg font-semibold text-slate-700">{title}</h3>
-      {description && <p className="mt-1 text-slate-500 max-w-sm">{description}</p>}
-      {action && <div className="mt-6">{action}</div>}
+      {description ? (
+        <p className="mt-1 text-slate-500 max-w-sm">{description}</p>
+      ) : null}
+      {action ? <div className="mt-6">{action}</div> : null}
     </div>
   );
 };

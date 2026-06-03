@@ -406,5 +406,32 @@ toast.error('发现数据完整性问题', {
 - ✅ 使用 `toast.error`
 - ❌ 禁止 `alert()`
 
-### 详情页加载
-- ✅ 使用 `GroupDetailSkeleton` 或对应骨架屏
+## 缓存持久化规范（锁定）
+
+- ✅ Query 缓存持久化到 IndexedDB
+- ✅ 只持久化 `photos` / `groups` / `categories` / `tags` / `manufacturers`
+- ✅ 不持久化 mutation / 编辑 / 上传状态
+- ✅ 缓存有效期 7 天，自动清理
+- ❌ 禁止持久化分页/筛选状态（已在 URL 中）
+
+## Hook 使用规范（锁定）
+
+### 通用工具 Hook（优先使用 @mantine/hooks）
+- ✅ 弹窗开关：`useDisclosure`
+- ✅ 本地存储：`useLocalStorage`
+- ✅ 防抖/节流：`useDebouncedValue` / `useThrottledValue` / `useDebouncedCallback`
+- ✅ 媒体查询：`useMediaQuery`
+- ✅ 悬停/焦点：`useHover` / `useFocus`
+- ✅ 剪贴板：`useClipboard`
+- ✅ 窗口滚动：`useWindowScroll`
+
+### 业务 Hook（保持现状，不迁移）
+- 数据获取：`usePhotos`, `useGroups` 等
+- 状态管理：`useLightbox`, `useTaskExecutor` 等
+- 路由/URL：`useUrlFilters`
+- 权限：`useAdminMode`
+
+## 性能优化原则（非必要不优化，锁定）
+- ✅ **性能优先原则**：性能优化应当建立在真实确认的瓶颈基础上。
+- ❌ **非必要不优化**：除非遇到真实性能瓶颈，否则禁止主动进行 `async-parallel`、`bundle-dynamic-imports`、`bundle-barrel-imports` 等复杂优化，以保持架构的简单与可维护性。
+

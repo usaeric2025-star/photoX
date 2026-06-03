@@ -12,12 +12,12 @@ import {
 } from "lucide-react";
 import { Skeleton } from "../../ui/Skeleton";
 import { useUIStore } from "../../../store";
+import { UseFormReturnType } from "@mantine/form";
 import { ProductFormData } from "../../../types";
 
 interface HeaderProps {
   editPhotoId: string | null;
-  formState: ProductFormData;
-  updateForm: (updates: Partial<ProductFormData>) => void;
+  form: UseFormReturnType<ProductFormData>;
   isAnalyzing: boolean;
   aiDebugInfo: any;
   isPartOfGroup: boolean;
@@ -34,8 +34,7 @@ interface HeaderProps {
 
 export function DrawerHeader({
   editPhotoId,
-  formState,
-  updateForm,
+  form,
   isAnalyzing,
   aiDebugInfo,
   isPartOfGroup,
@@ -49,6 +48,8 @@ export function DrawerHeader({
   onErrorClick,
   isRunning,
 }: HeaderProps) {
+  const formState = form.values;
+  const updateForm = (updates: Partial<ProductFormData>) => form.setValues(updates);
   const update = useUIStore((s) => s.update);
   return (
     <div className="px-4 py-3 border-b border-slate-200 bg-white shadow-sm flex items-center justify-between gap-3 min-h-[72px]">

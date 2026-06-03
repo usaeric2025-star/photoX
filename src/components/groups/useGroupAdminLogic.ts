@@ -18,6 +18,7 @@ import {
 } from "@/hooks";
 import { useUIStore, useShallow } from "@/store/useUIStore";
 import { groupKeys } from "@/lib/queryKeys";
+import { useDisclosure } from "@mantine/hooks";
 
 export const useGroupAdminLogic = ({
   initialPhotoId,
@@ -83,7 +84,8 @@ export const useGroupAdminLogic = ({
 
   // const [isMultiSelectMode, update] = useState(false);
   // const [selectedPhotoIds, setSelectedPhotoIds] = useState<string[]>([]);
-  const [showGroupSettings, setShowGroupSettings] = useState(false);
+  const [showGroupSettings, { open, close }] = useDisclosure(false);
+  const setShowGroupSettings = (show: boolean) => show ? open() : close();
   const [currentHighlightId, setCurrentHighlightId] = useState<string | null>(
     null,
   );

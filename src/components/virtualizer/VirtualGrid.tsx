@@ -36,7 +36,6 @@ export type VirtualGridProps = {
   onScroll?: (offset: number) => void;
   itemSize?: number;
   shift?: boolean;
-  onRangeChange?: (start: number, end: number) => void;
 };
 
 export const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.Ref<VirtualGridHandle> }) => {

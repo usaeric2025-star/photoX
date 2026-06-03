@@ -1,7 +1,7 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect } from 'react';
 
 export function useClickAway<T extends HTMLElement>(
-  ref: React.RefObject<T>,
+  ref: React.RefObject<T | null>,
   callback: () => void
 ) {
   useEffect(() => {
@@ -19,25 +19,3 @@ export function useClickAway<T extends HTMLElement>(
   }, [ref, callback]);
 }
 
-export function useDebounceFn<T extends (...args: any[]) => any>(
-  callback: T,
-  options: { wait: number }
-) {
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  const run = useCallback(
-    (...args: Parameters<T>) => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      timeoutRef.current = setTimeout(() => {
-        callback(...args);
-      }, options.wait);
-    },
-    [callback, options.wait]
-  );
-
-  const cancel = useCallback(() => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-  }, []);
-
-  return { run, cancel };
-}

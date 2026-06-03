@@ -1,5 +1,6 @@
 import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query';
 import { reportError } from './errorTracker';
+import { createIDBPersister } from './persister';
 
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
@@ -17,13 +18,16 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 30 * 1000,
-      gcTime: 10 * 60 * 1000,
+      gcTime: 7 * 24 * 60 * 60 * 1000,
       retry: 1,
       refetchOnWindowFocus: false,
-      refetchOnReconnect: true,
-      // 翻页时保留旧数据
-      // @ts-ignore
-      placeholderData: (previousData: unknown) => previousData,
+      refetchOnReconnect: false,
+      refetchOnMount: false,
     },
   },
+});
+
+// 创建持久化实例
+export const persister = createIDBPersister({
+  maxAge: 7 * 24 * 60 * 60 * 1000,
 });

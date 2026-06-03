@@ -1,9 +1,9 @@
-import { useUIStore } from '@/store/useUIStore';
+import { useAppLang } from '@/store/useUIStore';
 
 type Translations = Record<string, string> | null | undefined;
 
 export function useTranslation() {
-  const appLang = useUIStore((s) => s.appLang);
+  const [appLang] = useAppLang();
 
   const t = (translations: Translations, fallback?: string) => {
     if (!translations) return fallback || '';

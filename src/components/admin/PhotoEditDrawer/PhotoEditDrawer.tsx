@@ -1,7 +1,8 @@
 import React from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Dialog } from "@base-ui/react/dialog";
-import { Photo } from "../../../types";
+import { useForm } from "@mantine/form";
+import { ProductFormData, Photo } from "../../../types";
 import { HeadlessSlot } from "../../../lib/component-contract";
 import { usePhotoEditLogic } from "./usePhotoEditLogic";
 import { DrawerHeader } from "./DrawerHeader";
@@ -52,11 +53,25 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
   } = filters;
 
   const editPhotoId = useUIStore((s) => s.editPhotoId);
-  const formState = useUIStore((s) => s.formState);
-  const updateForm = useUIStore((s) => s.updateForm);
   const newPhotoData = useUIStore((s) => s.newPhotoData);
   const update = useUIStore((s) => s.update);
   const appLang = useUIStore((s) => s.appLang);
+
+  const form = useForm<ProductFormData>({
+    initialValues: {
+      name: "",
+      category_id: null,
+      tag_ids: [],
+      description: "",
+      item_code: "",
+      manual_code: "",
+      model_number: "",
+      dimensions: [],
+      is_hidden: false,
+      price: "",
+      is_group_cover: false,
+    },
+  });
 
   const adminActions = useAdminActions();
   const onDeletePhoto = (id: string) => adminActions.deletePhoto([id]);
@@ -70,7 +85,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
   const { runTask } = useTaskExecutor();
   const { handleError } = useErrorHandler();
 
-  const { data: detailPhoto, isLoading: isDetailLoading } = usePhotoDetail(editPhotoId || '');
+  const { data: detailPhoto } = usePhotoDetail(editPhotoId || '');
 
   const onAiAnalyze = React.useCallback(async (photo: Photo) => {
     const imageUrl = photo.uri || photo.image_url;
@@ -96,39 +111,27 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
       );
 
       if (result) {
-        updateForm((prev) => {
+        form.setValues((prev) => {
           const updates: any = {};
-
-          // 1. Name logic: Only if empty OR is just numbers
           const currentName = (prev.name || '').trim();
           const isNumeric = /^\d+$/.test(currentName);
           if (!currentName || isNumeric) {
             if (result.name) updates.name = result.name;
           }
-
-          // 2. Other basic fields: Only if empty/unset
           if (!prev.category_id && result.category_id) updates.category_id = String(result.category_id);
-          
           if ((!prev.tag_ids || prev.tag_ids.length === 0) && Array.isArray(result.tag_ids)) {
             updates.tag_ids = result.tag_ids.map((id: any) => String(id));
           }
-
           if (!prev.manufacturer_id && result.manufacturer_id) updates.manufacturer_id = String(result.manufacturer_id);
           if (!prev.model_number && result.model_number) updates.model_number = result.model_number;
           if (!prev.manual_code && result.manual_code) updates.manual_code = result.manual_code;
           if (!prev.description && result.description) updates.description = result.description;
-          
           if (result.description_translations && (!prev.description_translations || (!prev.description_translations.en && !prev.description_translations.ms))) {
-             updates.description_translations = {
-               ...prev.description_translations,
-               ...result.description_translations
-             };
+             updates.description_translations = { ...prev.description_translations, ...result.description_translations };
           }
-
           if ((!prev.dimensions || prev.dimensions.length === 0) && Array.isArray(result.dimensions)) {
             updates.dimensions = result.dimensions;
           }
-
           if (!prev.price && result.price) updates.price = String(result.price);
 
           return { ...prev, ...updates };
@@ -136,7 +139,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
         toast.success("AI 属性识别成功并已补全空白字段");
       }
     });
-  }, [categories, tags, manufacturers, settings, runTask, updateForm, handleError]);
+  }, [categories, tags, manufacturers, settings, runTask, form, handleError]);
 
   const onCancelAnalyze = () => {};
 
@@ -169,7 +172,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
     }
     if (editPhotoId !== lastInitializedIdRef.current && detailPhoto) {
       lastInitializedIdRef.current = editPhotoId;
-      updateForm({
+      form.setValues({
         name: detailPhoto.name || "",
         category_id: detailPhoto.category_id || "",
         tag_ids: Array.isArray(detailPhoto.tag_ids) ? detailPhoto.tag_ids : [],
@@ -185,7 +188,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
         is_group_cover: detailPhoto.is_group_cover || false,
       });
     }
-  }, [editPhotoId, detailPhoto, updateForm]);
+  }, [editPhotoId, detailPhoto, form]);
 
   React.useEffect(() => {
     const handleAIResult = (event: Event) => {
@@ -193,23 +196,20 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
       const result = customEvent.detail;
       if (!result) return;
 
-      const merged = applyAIResult(formState, result, {
+      const merged = applyAIResult(form.values, result, {
         categories,
         tags,
-        preserveFields: ['name', 'category_id'] // Example: keep manually entered name/category
+        preserveFields: ['name', 'category_id']
       });
       
-      updateForm(merged);
+      form.setValues(merged);
     };
 
     window.addEventListener('ai-analysis-result', handleAIResult);
     return () => window.removeEventListener('ai-analysis-result', handleAIResult);
-  }, [categories, tags, updateForm]);
+  }, [categories, tags, form]);
 
-  const t =
-    translations[
-      appLang as keyof typeof translations as keyof typeof translations
-    ] || translations.en;
+  const t = translations[appLang as keyof typeof translations] || translations.en;
 
   const editPhotoPreview = React.useMemo(() => {
     if (!editPhotoId) return null;
@@ -226,18 +226,13 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
   const logic = usePhotoEditLogic({
     photos,
     editPhotoId,
-    formState,
-    updateForm,
+    form,
     newPhotoData,
     editPhotoPreview: editPhotoId && photos.find((p: Photo) => p.id === editPhotoId) ? getCacheBustedImageUrl(photos.find((p: Photo) => p.id === editPhotoId)!, "image") : null,
-    analyzeSingle: async (p: Photo) => {
-      if (onAiAnalyze) {
-        return onAiAnalyze(p);
-      }
-    },
+    analyzeSingle: async (p: Photo) => onAiAnalyze ? onAiAnalyze(p) : undefined,
     saveNewPhoto: async () => {
       if (editPhotoId && onUpdatePhoto) {
-        const updates: Partial<Photo> & { uri?: string } = { ...formState };
+        const updates: Partial<Photo> & { uri?: string } = { ...form.values };
         if (newPhotoData) {
           updates.uri = newPhotoData;
         }
@@ -279,8 +274,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
                 >
                   <DrawerHeader
                     editPhotoId={editPhotoId}
-                    formState={formState}
-                    updateForm={updateForm}
+                    form={form}
                     isAnalyzing={logic.isAnalyzing}
                     aiDebugInfo={logic.aiDebugInfo}
                     isPartOfGroup={logic.isPartOfGroup}
@@ -352,8 +346,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
                         <TabsContent value="basic">
                           <BasicInfoTab
                             editPhotoId={editPhotoId}
-                            formState={formState}
-                            updateForm={updateForm}
+                            form={form}
                             previewSrc={newPhotoData || editPhotoPreview}
                             isProcessingImage={logic.isRotating}
                             onRotate={logic.rotatePhoto}
@@ -362,8 +355,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
 
                         <TabsContent value="org">
                           <OrgTab
-                            formState={formState}
-                            updateForm={updateForm}
+                            form={form}
                             categories={logic.categories}
                             tags={logic.tags}
                             manufacturers={logic.manufacturers}
@@ -404,8 +396,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
 
                         <TabsContent value="details">
                           <DetailsTab
-                            formState={formState}
-                            updateForm={updateForm}
+                            form={form}
                             showAiButton={true}
                             isAnalyzing={logic.isAnalyzing}
                             onAiAnalyze={logic.triggerAiAnalyze}

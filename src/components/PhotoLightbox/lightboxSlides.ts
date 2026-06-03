@@ -23,6 +23,7 @@ export const toLightboxSlides = (photos: Photo[]) => {
       width: originalWidth,
       height: originalHeight,
       alt: photo.name || "",
+      photo, // Pass the full photo object for metadata rendering
     };
   });
 };

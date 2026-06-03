@@ -68,33 +68,23 @@ export const PhotoLightboxPage = () => {
   };
   
   return (
-    <div className="fixed inset-0 z-[200] flex animate-in fade-in duration-300 overflow-hidden">
-      <div className="flex-1 relative bg-black">
-        <LightboxCore
-          open={isOpen}
-          onClose={close}
-          photos={photos}
-          currentIndex={currentIndex}
-          onIndexChange={(idx) => {
-            const photo = photos[idx];
-            if (photo) setPhotoId(photo.id);
-          }}
-        />
-      </div>
-
-      {/* Info Panel - Displaying metadata for current photo or group context */}
-      <PhotoInfoPanel 
-        mode={mode as 'single' | 'group'}
-        data={data}
-        showEdit={showEdit}
-        showDelete={showDelete}
-        showAi={showAi}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onAiAnalyze={handleAiAnalyze}
-        className="hidden md:flex shrink-0 animate-in slide-in-from-right duration-500 ease-out z-[210] shadow-2xl"
-      />
-    </div>
+    <LightboxCore
+      open={isOpen}
+      onClose={close}
+      photos={photos}
+      currentIndex={currentIndex}
+      onIndexChange={(idx) => {
+        const photo = photos[idx];
+        if (photo) setPhotoId(photo.id);
+      }}
+      mode={mode as 'single' | 'group'}
+      showEdit={showEdit}
+      showDelete={showDelete}
+      showAi={showAi}
+      onEdit={handleEdit}
+      onDelete={handleDelete}
+      onAiAnalyze={handleAiAnalyze}
+    />
   );
 };
 

@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
+import { UseFormReturnType } from '@mantine/form';
 import { useUIStore, useShallow } from '../../../store';
 import { 
   useCategories, useTags, useManufacturers,
@@ -11,8 +12,7 @@ import { usePhotoAction } from '@/hooks/core/usePhotoAction';
 
 interface Props {
   editPhotoId: string | null;
-  formState: ProductFormData;
-  updateForm: (updates: Partial<ProductFormData>) => void;
+  form: UseFormReturnType<ProductFormData>;
   photos: Photo[];
   newPhotoData?: string | null;
   editPhotoPreview?: string | null;
@@ -21,7 +21,7 @@ interface Props {
 }
 
 export const usePhotoEditLogic = (props: Props) => {
-  const { photos, editPhotoId, formState, updateForm, newPhotoData, editPhotoPreview, analyzeSingle, saveNewPhoto } = props;
+  const { photos, editPhotoId, form, newPhotoData, editPhotoPreview, analyzeSingle } = props;
   const { tasks } = useTasks();
   const isAnalyzing = useMemo(() => tasks.some(t => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析'))), [tasks]);
   const isSyncing = useMemo(() => tasks.some(t => t.status === 'running' && (t.name.includes('同步') || t.name.includes('导入'))), [tasks]);
@@ -138,12 +138,12 @@ export const usePhotoEditLogic = (props: Props) => {
   const handleSave = async () => {
     if (!editPhotoId) return;
     // [V2.8] Use the R19 Action Paradigm
-    runUpdate(formState);
+    runUpdate(form.values);
   };
 
   const toggleHidden = async () => {
-    const nextValue = !formState.is_hidden;
-    updateForm({ is_hidden: nextValue }); // optimistic
+    const nextValue = !form.values.is_hidden;
+    form.setFieldValue('is_hidden', nextValue); // optimistic
     
     if (editPhotoId && !editPhotoId.startsWith('temp-')) {
         await runTask('更新可见性', async () => {
@@ -163,7 +163,7 @@ export const usePhotoEditLogic = (props: Props) => {
     if (analyzeSingle) {
       const p = { 
         id: editPhotoId || '', uri: data, image_url: data, 
-        category_id: formState.category_id || undefined 
+        category_id: form.values.category_id || undefined 
       } as Photo;
       analyzeSingle(p).catch(()=>{});
     } else {

@@ -1,15 +1,14 @@
 import { createStaleTime } from '@/shared/freshnessSchema';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import * as ErrorMonitor from "@sentry/react";
 import { Toaster } from 'sonner';
-import { QueryClientProvider } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { Analytics } from '@vercel/analytics/react';
 import App from './App';
 import { TaskProvider } from '@/hooks';
 import { setupGlobalErrorHandling } from './lib/errorHandling';
 import { reportError } from './lib/errorTracker';
-import { queryClient } from './lib/queryClient';
+import { queryClient, persister } from './lib/queryClient';
 import { setupDevErrorHelper } from './lib/devErrorHelper';
 import './index.css';
 import { clientEnv } from './shared/envSchema';
@@ -42,12 +41,6 @@ if (!clientEnv.DEV) {
   });
 }
 
-ErrorMonitor.init({
-  dsn: "https://5056f30974504ff1becd3b5da98a68af@app.glitchtip.com/23689",
-  environment: clientEnv.MODE || 'development',
-  tracesSampleRate: 1.0,
-});
-
 const container = document.getElementById("root");
 if (container) {
   const root = createRoot(container, {
@@ -64,13 +57,13 @@ if (container) {
   
   root.render(
     <StrictMode>
-      <QueryClientProvider client={queryClient}>
+      <PersistQueryClientProvider client={queryClient} persistOptions={{ persister }}>
         <Toaster position="bottom-center" richColors closeButton expand={false} visibleToasts={2} swipeDirections={['left', 'right']} />
         <TaskProvider>
           <App />
           <Analytics />
         </TaskProvider>
-      </QueryClientProvider>
+      </PersistQueryClientProvider>
     </StrictMode>
   );
 

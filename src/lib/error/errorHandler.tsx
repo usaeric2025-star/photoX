@@ -1,7 +1,6 @@
 import React, { useCallback } from 'react';
 import { toast } from '@/lib/ui/toast';
 import { logErrorToSupabase } from '@/services/logService';
-import * as ErrorMonitor from '@sentry/react';
 
 export function extractErrorMessage(error: any): string {
   if (!error) return '未知错误';
@@ -130,11 +129,11 @@ export const globalHandleError = (error: any, context: string, silent: boolean =
   });
 
   // Capture in GlitchTip/ErrorMonitor safely
-  try {
-    ErrorMonitor.captureException(error instanceof Error ? error : new Error(message));
-  } catch (e) {
-    console.error('Error in error reporting service:', e);
-  }
+  // try {
+  //   ErrorMonitor.captureException(error instanceof Error ? error : new Error(message));
+  // } catch (e) {
+  //   console.error('Error in error reporting service:', e);
+  // }
   
   // UI Toast Notification with Diagnostic Clipboard Copy
   if (!silent) {

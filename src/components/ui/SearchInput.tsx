@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search, X } from 'lucide-react';
-import { useDebounceFn } from "@/lib/hooks";
+import { useDebouncedCallback } from '@mantine/hooks';
 import { Input } from './input';
 import { cn } from '@/lib/utils';
 
@@ -30,9 +30,9 @@ export const SearchInput = ({
     setValue(controlledValue);
   }, [controlledValue]);
 
-  const { run: debouncedSearch, cancel } = useDebounceFn((val: string) => {
+  const debouncedSearch = useDebouncedCallback((val: string) => {
     onSearch(val);
-  }, { wait: delay });
+  }, delay);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -42,7 +42,7 @@ export const SearchInput = ({
 
   const handleClear = () => {
     setValue('');
-    cancel(); // Cancel any pending debounced search
+    debouncedSearch.cancel(); // Cancel any pending debounced search
     onSearch('');
   };
 

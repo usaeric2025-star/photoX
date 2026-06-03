@@ -26,7 +26,6 @@ const severityColors = {
  * UI components extracted to DiagnosticCard and MaintenanceToolButton.
  */
 export function DiagnosticsDashboard() {
-  const navigate = useNavigate();
   const updateUIStore = useUIStore((s) => s.update);
   const { 
     report, isLoading, refreshReport, runRepair,
@@ -51,7 +50,6 @@ export function DiagnosticsDashboard() {
             size="sm"
             onClick={() => {
               updateUIStore({ activeScreen: 'tasks' });
-              navigate({ to: '/admin/tasks' });
             }}
             className="rounded-xl bg-slate-950 text-white hover:bg-slate-850 border-none transition-all h-9 px-4 text-xs font-medium gap-1.5 shadow-sm"
           >
@@ -63,7 +61,6 @@ export function DiagnosticsDashboard() {
             size="sm"
             onClick={() => {
               updateUIStore({ activeScreen: 'history_maintenance' });
-              navigate({ to: '/admin/history/maintenance' });
             }}
             className="rounded-xl bg-white border-slate-250 text-slate-700 hover:text-slate-900 hover:bg-slate-50 transition-all h-9 px-4 text-xs font-medium gap-1.5"
           >

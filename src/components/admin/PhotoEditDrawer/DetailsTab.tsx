@@ -1,11 +1,11 @@
 import React from 'react';
 import { DimensionEditor } from '../edit/DimensionEditor';
+import { UseFormReturnType } from '@mantine/form';
 import { ProductFormData, Dimension, TranslationType } from '../../../types';
 import { safeArray } from '../../../lib/utils';
 
 interface Props {
-  formState: ProductFormData;
-  updateForm: (updates: Partial<ProductFormData>) => void;
+  form: UseFormReturnType<ProductFormData>;
   showAiButton: boolean;
   isAnalyzing: boolean;
   onAiAnalyze: () => void;
@@ -13,8 +13,10 @@ interface Props {
 }
 
 export function DetailsTab({
-  formState, updateForm, showAiButton, isAnalyzing, onAiAnalyze, t
+  form, showAiButton, isAnalyzing, onAiAnalyze, t
 }: Props) {
+  const formState = form.values;
+  const updateForm = (updates: Partial<ProductFormData>) => form.setValues(updates);
   return (
     <div className="m-0 p-4 space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
       <DimensionEditor 

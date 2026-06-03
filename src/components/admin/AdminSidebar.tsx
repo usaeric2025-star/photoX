@@ -15,7 +15,7 @@ import {
   ChevronRight,
   Zap
 } from 'lucide-react';
-import { useUIStore, useShallow } from '@/store/useUIStore';
+import { useUIStore, useShallow, useAppLang, useSidebarCollapsed } from '@/store/useUIStore';
 import { reportError } from '@/lib/errorReporter';
 import { useAuth, usePermission, useSettings, useSyncMutation, useAdminMode } from '@/hooks';
 
@@ -59,8 +59,8 @@ function SidebarItem({ icon: Icon, label, active, onClick, badge, collapsed }: S
 export function AdminSidebar() {
   const activeScreen = useUIStore((s) => s.activeScreen);
   const update = useUIStore((s) => s.update);
-  const appLang = useUIStore((s) => s.appLang);
-  const isSidebarCollapsed = useUIStore((s) => s.isSidebarCollapsed);
+  const appLang = useAppLang()[0];
+  const [isSidebarCollapsed, setSidebarCollapsed] = useSidebarCollapsed();
   
   const { can } = usePermission();
   const hasAdminAccess = useAdminMode();
@@ -85,7 +85,7 @@ export function AdminSidebar() {
     <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-72'} bg-brand-bg border-r border-brand-navy/5 flex flex-col h-screen sticky top-0 overflow-hidden transition-all duration-300 relative`}>
       {/* Toggle Button */}
       <button
-        onClick={() => update({ isSidebarCollapsed: !isSidebarCollapsed })}
+        onClick={() => setSidebarCollapsed(!isSidebarCollapsed)}
         className="absolute top-6 -right-3 z-50 bg-white border border-brand-navy/10 rounded-full p-1 shadow-sm text-brand-navy hover:bg-brand-navy/5"
       >
         {isSidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}

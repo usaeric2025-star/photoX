@@ -16,6 +16,7 @@ import { ISSUE_ACTIONS } from "@/features/maintenance/issueActions";
 import { PreviewResult } from "@/features/maintenance/maintenanceTypes";
 import { toast } from "sonner";
 import { Loader2, ShieldAlert } from "lucide-react";
+import { useDisclosure } from '@mantine/hooks';
 
 interface MaintenanceToolProps {
   issueId: string;
@@ -37,7 +38,7 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
   const [isExecuting, setIsExecuting] = useState(false);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [showConfirm, setShowConfirm] = useState(false);
+  const [showConfirm, { open: openConfirm, close: closeConfirm }] = useDisclosure(false);
 
   if (!action) return null;
 
@@ -108,7 +109,7 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
 
   const onExecuteClick = () => {
     if (danger) {
-      setShowConfirm(true);
+      openConfirm();
     } else {
       handleExecute();
     }
@@ -140,7 +141,7 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
             </Button>
         </div>
 
-        <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <AlertDialog open={showConfirm} onOpenChange={(isOpened) => isOpened ? openConfirm() : closeConfirm()}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>确认执行操作？</AlertDialogTitle>
@@ -153,7 +154,7 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
               <AlertDialogAction 
                 variant="destructive" 
                 onClick={() => {
-                  setShowConfirm(false);
+                  closeConfirm();
                   handleExecute();
                 }}
               >
@@ -168,23 +169,23 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
 
   return (
     <>
-      <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm space-y-4 hover:border-brand-navy/10 transition-colors">
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-black text-brand-navy uppercase tracking-tight">{finalTitle}</h3>
-              {danger && <ShieldAlert size={14} className="text-red-500" />}
+      <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm space-y-4 hover:border-brand-navy/10 transition-colors w-full">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 w-full">
+          <div className="space-y-1 flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-sm font-bold text-slate-900 tracking-tight">{finalTitle}</h3>
+              {danger && <ShieldAlert size={14} className="text-red-500 shrink-0" />}
             </div>
-            {description && <p className="text-xs text-slate-500">{description}</p>}
+            {description && <p className="text-xs text-slate-500 leading-relaxed break-words">{description}</p>}
           </div>
           
-          <div className="flex gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto mt-1 sm:mt-0">
             <Button 
               variant="outline" 
               size="sm" 
               onClick={handlePreview}
               disabled={isPreviewing || isExecuting}
-              className="text-xs h-8 px-3.5 font-medium rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 transition-all"
+              className="text-xs h-8 px-3.5 font-medium rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 transition-all flex-1 sm:flex-initial justify-center"
             >
               {isPreviewing ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : null}
               预览范围
@@ -194,7 +195,7 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
               size="sm"
               onClick={onExecuteClick} 
               disabled={isExecuting || isPreviewing}
-              className={`text-xs h-8 px-3.5 font-medium rounded-xl transition-all ${danger ? "" : "bg-slate-900 text-white hover:bg-slate-800"}`}
+              className={`text-xs h-8 px-3.5 font-semibold rounded-xl transition-all flex-1 sm:flex-initial justify-center ${danger ? "" : "bg-slate-900 text-white hover:bg-slate-800"}`}
             >
               {isExecuting ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : null}
               {isExecuting ? "执行中" : "开始执行"}
@@ -227,7 +228,7 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
         )}
       </div>
 
-      <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
+      <AlertDialog open={showConfirm} onOpenChange={(isOpened) => isOpened ? openConfirm() : closeConfirm()}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>确认执行操作？</AlertDialogTitle>
@@ -240,7 +241,7 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
             <AlertDialogAction 
               variant="destructive" 
               onClick={() => {
-                setShowConfirm(false);
+                closeConfirm();
                 handleExecute();
               }}
             >

@@ -28,6 +28,8 @@ interface UseSettingsLogicProps {
   setSettings: (s: AppSettings) => void;
 }
 
+import { useDebouncedCallback } from '@mantine/hooks';
+
 export const useSettingsLogic = ({
   user,
   settings,
@@ -49,18 +51,13 @@ export const useSettingsLogic = ({
   } | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [activeTagMenuId, setActiveTagMenuId] = useState<string | null>(null);
-  const [saveTimer, setSaveTimer] = useState<NodeJS.Timeout | null>(null);
 
-  const debouncedSave = (newSettings: AppSettings) => {
-    if (saveTimer) clearTimeout(saveTimer);
-    const timer = setTimeout(() => {
-      saveSettings(newSettings).catch((err) =>
-        handleError(err, "保存设置失败"),
-      );
-      setHasChanges(false);
-    }, 1500);
-    setSaveTimer(timer);
-  };
+  const debouncedSave = useDebouncedCallback((newSettings: AppSettings) => {
+    saveSettings(newSettings).catch((err) =>
+      handleError(err, "保存设置失败"),
+    );
+    setHasChanges(false);
+  }, 1500);
 
   const handleHealthCheck = async (allPhotos: Photo[]) => {
     try {

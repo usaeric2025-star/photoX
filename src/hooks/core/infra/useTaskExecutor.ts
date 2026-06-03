@@ -21,7 +21,11 @@ export function useTaskExecutor() {
       silent?: boolean;
     }
   ): Promise<T | null> => {
-    const taskId = options?.silent ? null : addTask({ name });
+    const isUpload = name.includes('上传') || name.toLowerCase().includes('upload');
+    const isAi = name.includes('AI') || name.includes('识别') || name.toLowerCase().includes('analysis');
+    const isSilent = options?.silent ?? !(isUpload || isAi);
+
+    const taskId = isSilent ? null : addTask({ name });
 
     const updateProgress = (pct: number, msg?: string) => {
       if (taskId) {
@@ -34,7 +38,7 @@ export function useTaskExecutor() {
       if (taskId) {
         updateTask(taskId, { status: 'completed', progress: 100, message: `${name} 成功` });
       }
-      if (!options?.silent && options?.showSuccessToast !== false) {
+      if (!isSilent && options?.showSuccessToast !== false) {
         toast.success(`${name} 完成`);
       }
       options?.onSuccess?.(result);

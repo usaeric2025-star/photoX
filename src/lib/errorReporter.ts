@@ -1,4 +1,3 @@
-import * as ErrorMonitor from "@sentry/react";
 import { globalHandleError } from '@/lib/error/errorHandler';
 import { clientEnv } from '../shared/envSchema';
 
@@ -57,9 +56,6 @@ export const ErrorReporter = {
       message: enrichedError.message,
       stack
     });
-
-    // 3. Optional: Production Report (GlitchTip)
-    ErrorMonitor.captureException(enrichedError);
 
     // 4. Global Handle (Toast etc)
     globalHandleError(enrichedError, context, silent || level === 'info' || level === 'warn');

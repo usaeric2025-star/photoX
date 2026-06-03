@@ -2,6 +2,19 @@ import { create } from 'zustand';
 import { useShallow } from 'zustand/shallow';
 import { STORAGE_KEYS, safeGetItem, safeSetItem } from '@/lib/storage';
 import { ProductFormData } from '../types';
+import { useLocalStorage } from '@mantine/hooks';
+
+export function useAppLang() {
+  return useLocalStorage<string>({ key: STORAGE_KEYS.LANG, defaultValue: 'en' });
+}
+
+export function useSidebarCollapsed() {
+  return useLocalStorage<boolean>({ key: STORAGE_KEYS.SIDEBAR_COLLAPSED, defaultValue: false });
+}
+
+export function useColumns() {
+  return useLocalStorage<2 | 3 | 5>({ key: STORAGE_KEYS.COLUMNS, defaultValue: 3 });
+}
 
 export interface AlertDialogProps {
   title: string;
@@ -28,7 +41,6 @@ export interface PromptDialogProps {
 }
 
 export interface UIStoreState {
-  columns: 2 | 3 | 5;
   lightboxIndex: number | null;
   editPhotoId: string | null;
   batchEditingIds: string[] | null;
@@ -37,9 +49,7 @@ export interface UIStoreState {
   formState: ProductFormData;
   updateForm: (updates: Partial<ProductFormData> | ((prev: ProductFormData) => Partial<ProductFormData>)) => void;
   resetForm: () => void;
-  isSidebarCollapsed: boolean;
   showPassPrompt: boolean;
-  appLang: string;
   isPhotoPickerOpen: boolean;
   photoPickerGroupId: string | null;
   isMultiSelect: boolean;
@@ -83,10 +93,6 @@ const defaultForm: ProductFormData = {
 };
 
 export const useUIStore = create<UIStoreState>()((set) => ({
-  columns: safeGetItem(STORAGE_KEYS.COLUMNS, 3, (v) => {
-    const n = Number(v);
-    return (n === 2 || n === 3 || n === 5) ? n : 3;
-  }),
   lightboxIndex: null,
   editPhotoId: safeGetItem(STORAGE_KEYS.EDIT_PHOTO, null, undefined, true),
   batchEditingIds: safeGetItem(STORAGE_KEYS.BATCH_EDITING, null, undefined, true),
@@ -102,9 +108,7 @@ export const useUIStore = create<UIStoreState>()((set) => ({
     sessionStorage.removeItem(STORAGE_KEYS.EDIT_FORM_DRAFT);
     set({ formState: defaultForm });
   },
-  isSidebarCollapsed: safeGetItem(STORAGE_KEYS.SIDEBAR_COLLAPSED, false, (v) => v === 'true'),
   showPassPrompt: false,
-  appLang: safeGetItem(STORAGE_KEYS.LANG, 'en'),
   isPhotoPickerOpen: false,
   photoPickerGroupId: null,
   isMultiSelect: false,
@@ -145,9 +149,6 @@ export const useUIStore = create<UIStoreState>()((set) => ({
   update: (updates) => set((state) => {
     const nextState = typeof updates === 'function' ? updates(state) : updates;
     
-    if ('columns' in nextState && nextState.columns !== undefined) {
-      safeSetItem(STORAGE_KEYS.COLUMNS, nextState.columns);
-    }
     if ('editPhotoId' in nextState) {
       safeSetItem(STORAGE_KEYS.EDIT_PHOTO, nextState.editPhotoId, true);
       if (!nextState.editPhotoId) {
@@ -162,12 +163,6 @@ export const useUIStore = create<UIStoreState>()((set) => ({
     }
     if ('activeScreen' in nextState && nextState.activeScreen !== undefined) {
       safeSetItem(STORAGE_KEYS.ACTIVE_SCREEN, nextState.activeScreen, true);
-    }
-    if ('isSidebarCollapsed' in nextState && nextState.isSidebarCollapsed !== undefined) {
-      safeSetItem(STORAGE_KEYS.SIDEBAR_COLLAPSED, String(nextState.isSidebarCollapsed));
-    }
-    if ('appLang' in nextState && nextState.appLang !== undefined) {
-      safeSetItem(STORAGE_KEYS.LANG, nextState.appLang);
     }
     
     return nextState as any;

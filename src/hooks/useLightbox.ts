@@ -3,7 +3,7 @@ import { usePhotoDetail } from "./core/queries/usePhotoDetail";
 import { useGroupPhotos } from "./core/queries/usePhotos";
 import { useGroupDetail } from "./core/queries/useGroupDetail";
 import { useMemo } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useLocation } from "@tanstack/react-router";
 import { Photo } from "@/types";
 
 /**
@@ -13,11 +13,11 @@ import { Photo } from "@/types";
  */
 export const useLightbox = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   
   const { filters, setPhotoId, setGroupId } = useUrlFilters();
   const { photoId, groupId } = filters;
   
-  const location = typeof window !== 'undefined' ? window.location : { pathname: '' };
   const isAdmin = location.pathname.startsWith('/admin');
   
   // Use enabled condition to avoid unnecessary requests

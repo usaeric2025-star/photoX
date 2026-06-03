@@ -1,20 +1,22 @@
 import React from 'react';
 import { Lock, Loader2 } from 'lucide-react';
+import { UseFormReturnType } from '@mantine/form';
 import { ProductFormData } from '../../../types';
 
 interface Props {
   editPhotoId: string | null;
-  formState: ProductFormData;
-  updateForm: (updates: Partial<ProductFormData>) => void;
+  form: UseFormReturnType<ProductFormData>;
   previewSrc?: string | null;
   isProcessingImage: boolean;
   onRotate: () => void;
 }
 
 export function BasicInfoTab({ 
-  editPhotoId, formState, updateForm, previewSrc, 
+  editPhotoId, form, previewSrc, 
   isProcessingImage, onRotate 
 }: Props) {
+  const formState = form.values;
+  const updateForm = (updates: Partial<ProductFormData>) => form.setValues(updates);
   return (
     <div className="m-0 p-4 space-y-5 animate-in fade-in slide-in-from-left-2 duration-300">
       <div className="flex gap-4 items-start">

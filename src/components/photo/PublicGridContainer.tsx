@@ -2,7 +2,7 @@ import React, { useMemo, useCallback, useEffect } from 'react';
 import { GalleryVariant } from '@/types/variant';
 import { VirtualPhotoGrid } from '@/components/photo/VirtualPhotoGrid';
 import { PublicFilters } from '@/components/ui/PublicFilters';
-import { useUIStore, useShallow } from '@/store/useUIStore';
+import { useUIStore, useShallow, useAppLang, useColumns } from '@/store/useUIStore';
 import { usePhotos, useFilters, useSettings, useCategories, useTags, useUrlFilters } from '@/hooks';
 import { processPhotos, cleanPhotos } from '@/lib/filters';
 import { PAGINATION } from '@/constants/config';
@@ -37,8 +37,11 @@ export function PublicGridContainer({
   const { filters: urlFilters, setGroupId, setPhotoId, setSortOrder, setShowGroupsCollapsed } = useUrlFilters();
 
   const { 
-    update, columns, showWhatsAppChoice, appLang
-  } = useUIStore(useShallow(s => ({ update: s.update, columns: s.columns, showWhatsAppChoice: s.showWhatsAppChoice, appLang: s.appLang })));
+    update, showWhatsAppChoice
+  } = useUIStore(useShallow(s => ({ update: s.update, showWhatsAppChoice: s.showWhatsAppChoice })));
+  
+  const [appLang] = useAppLang();
+  const [columns, setColumns] = useColumns();
 
   const publicSettings = settings;
   const { data: categories = [] } = useCategories();
@@ -135,7 +138,7 @@ export function PublicGridContainer({
           onSortChange={() => setSortOrder(urlFilters.sortOrder === 'newest' ? 'oldest' : 'newest')}
           currentSort={urlFilters.sortOrder as 'newest' | 'oldest' | 'name'}
           onColumnsChange={(cols) => {
-              update({ columns: cols as 2 | 3 | 5 });
+              setColumns(cols as 2 | 3 | 5);
               navigate({ 
                 to: '.', search: (prev: any) => ({ ...prev, view: cols === 2 ? 'list' : 'grid' } as any) 
               });

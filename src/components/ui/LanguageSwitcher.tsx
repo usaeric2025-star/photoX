@@ -1,20 +1,16 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { Globe, ChevronDown } from 'lucide-react';
 import { useUIStore } from '@/store/useUIStore';
+import { useDisclosure } from '@mantine/hooks';
+import { useClickAway } from '@/lib/hooks';
 
 export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dropdown' | 'segmented' }) {
   const appLang = useUIStore((s) => s.appLang);
   const update = useUIStore((s) => s.update);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, { toggle, close }] = useDisclosure(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setIsOpen(false);
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  useClickAway(ref as any, () => close());
 
   const langs = [
     { code: 'zh', label: '中文' },
@@ -29,7 +25,7 @@ export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dro
         <button 
           onClick={(e) => {
             e.stopPropagation();
-            setIsOpen(!isOpen);
+            toggle();
           }}
           className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors"
         >
@@ -46,7 +42,7 @@ export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dro
                 onClick={(e) => {
                   e.stopPropagation();
                   update({ appLang: l.code as any });
-                  setIsOpen(false);
+                  close();
                 }}
                 className={`w-full text-left px-3 py-2 text-[11px] font-bold transition-colors ${
                   appLang === l.code ? 'text-brand-navy bg-brand-navy/5' : 'text-slate-600 hover:bg-slate-50'

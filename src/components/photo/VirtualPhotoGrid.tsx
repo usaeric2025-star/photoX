@@ -56,15 +56,6 @@ export function VirtualPhotoGrid({
 
   const { preloadBatch } = useImagePreloader();
 
-  const handleRangeChange = useCallback((start: number, end: number) => {
-    const preloadStart = Math.max(0, start * columns - 10);
-    const preloadEnd = Math.min(photos.length, end * columns + 10);
-    const urlsToPreload = photos
-      .slice(preloadStart, preloadEnd)
-      .map(item => item.image_url)
-      .filter(Boolean);
-    preloadBatch(urlsToPreload);
-  }, [photos, preloadBatch, columns]);
 
   const isLoading = isFetching && photos.length === 0;
 
@@ -85,7 +76,6 @@ export function VirtualPhotoGrid({
           lanes={columns}
           itemSize={200}
           shift={false}
-          onRangeChange={handleRangeChange}
           onEndReached={() => {
             if (hasNextPage && !isFetchingNextPage && onLoadMore) {
               onLoadMore();

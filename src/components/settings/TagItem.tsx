@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { X, Heart, Pencil, Trash2 } from "lucide-react";
 import { Tag } from "../../types";
 import { useClickAway } from "@/lib/hooks";
-import { useLongPress } from "@shined/react-use";
+import { useLongPress } from "@mantine/hooks";
 
 interface TagItemProps {
   tag: Tag;
@@ -32,13 +32,9 @@ export function TagItem({
     if (activeTagMenuId === tag.id) setActiveTagMenuId(null);
   });
 
-  useLongPress(
-    itemRef,
-    () => {
-      setActiveTagMenuId(tag.id);
-    },
-    { delay: 500 }
-  );
+  const longPress = useLongPress(() => {
+    setActiveTagMenuId(tag.id);
+  }, { threshold: 500 });
 
   const handleDeleteClick = () => {
     deleteTag(tag.id);
@@ -65,6 +61,7 @@ export function TagItem({
   return (
     <div
       ref={itemRef}
+      {...longPress}
       className={`bg-white border border-brand-navy/10 pl-4 pr-2 py-1.5 rounded-full flex items-center gap-2 shadow-sm transition-all active:scale-95 relative ${activeTagMenuId === tag.id ? "bg-brand-gold/10 border-brand-gold/30 scale-95" : ""}`}
     >
       <div className="flex flex-col">

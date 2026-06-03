@@ -1,12 +1,20 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { format } from 'date-fns';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, History, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import { ROUTES } from '@/config/constants';
+
+// Helper for MM-dd HH:mm
+const formatLogDate = (date: Date) => {
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  const hh = String(date.getHours()).padStart(2, '0');
+  const min = String(date.getMinutes()).padStart(2, '0');
+  return `${mm}-${dd} ${hh}:${min}`;
+};
 
 /**
  * [PAGE] MaintenanceHistoryPage
@@ -77,7 +85,7 @@ export const MaintenanceHistoryPage = () => {
               ].map((log) => (
                 <TableRow key={log.id} className="hover:bg-slate-50/50 transition-colors cursor-default group">
                   <TableCell className="text-xs font-mono text-slate-400">
-                    {format(log.time, 'MM-dd HH:mm')}
+                    {formatLogDate(log.time)}
                   </TableCell>
                   <TableCell>
                     <span className="text-xs font-black text-brand-navy uppercase tracking-tight">{log.action}</span>

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Home, Cloud, Settings2, Plus, Terminal } from 'lucide-react';
+import { Home, Cloud, Settings2, Plus, Terminal, X } from 'lucide-react';
 import { useAuth, useTasks, useSyncMutation, useErrorHandler, useAdminMode, useTaskExecutor, useMultiSelect, useUrlFilters, useSettings } from '@/hooks';
 import { backfillThumbHashes } from '@/services/photo/backfillService';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -168,20 +168,50 @@ export function AdminPageContent() {
               )}
 
               {store.activeScreen === 'dashboard' && (
-                <div className="absolute inset-0 z-20 bg-slate-50">
-                  <StatisticsScreen />
+                <div className="absolute inset-0 z-20 bg-slate-50 flex flex-col">
+                  <div className="flex justify-end p-4 shrink-0 bg-slate-50/80 backdrop-blur-md sticky top-0 z-30 border-b border-slate-100">
+                    <button 
+                      onClick={() => store.update({ activeScreen: 'gallery' })}
+                      className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-500 hover:text-slate-900"
+                    >
+                      <X size={24} />
+                    </button>
+                  </div>
+                  <div className="flex-1 overflow-y-auto w-full no-scrollbar px-8 pb-8">
+                    <StatisticsScreen />
+                  </div>
                 </div>
               )}
 
               {store.activeScreen === 'tasks' && (
-                <div className="absolute inset-0 z-20 bg-slate-50 p-8 overflow-y-auto w-full no-scrollbar">
-                  <TasksPage />
+                <div className="absolute inset-0 z-20 bg-slate-50 flex flex-col">
+                  <div className="flex justify-end p-4 shrink-0 bg-slate-50/80 backdrop-blur-md sticky top-0 z-30 border-b border-slate-100">
+                    <button 
+                      onClick={() => store.update({ activeScreen: 'gallery' })}
+                      className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-500 hover:text-slate-900"
+                    >
+                      <X size={24} />
+                    </button>
+                  </div>
+                  <div className="flex-1 overflow-y-auto w-full no-scrollbar p-8">
+                    <TasksPage />
+                  </div>
                 </div>
               )}
 
               {store.activeScreen === 'history_maintenance' && (
-                <div className="absolute inset-0 z-20 bg-slate-50 p-8 overflow-y-auto w-full no-scrollbar">
-                  <MaintenanceHistoryPage />
+                <div className="absolute inset-0 z-20 bg-slate-50 flex flex-col">
+                  <div className="flex justify-end p-4 shrink-0 bg-slate-50/80 backdrop-blur-md sticky top-0 z-30 border-b border-slate-100">
+                    <button 
+                      onClick={() => store.update({ activeScreen: 'gallery' })}
+                      className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-500 hover:text-slate-900"
+                    >
+                      <X size={24} />
+                    </button>
+                  </div>
+                  <div className="flex-1 overflow-y-auto w-full no-scrollbar p-8">
+                    <MaintenanceHistoryPage />
+                  </div>
                 </div>
               )}
             </main>

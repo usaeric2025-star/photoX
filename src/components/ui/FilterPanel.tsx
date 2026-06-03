@@ -1,8 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { RefreshCw, MoreHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useFilters, useCategories, useTags, useTagsDisplay, useSettings } from '@/hooks';
-import { useUIStore } from '@/store/useUIStore';
+import { useAppLang } from '@/store/useUIStore';
+import { useDisclosure } from '@mantine/hooks';
 import { cn } from '@/lib/utils';
 import { Category } from '@/types';
 import { translations } from '@/lib/translations';
@@ -15,8 +16,8 @@ export function FilterPanel() {
     const { data: categories = [] } = useCategories();
     const { data: tags = [] } = useTags();
     const { settings } = useSettings();
-    const appLang = useUIStore(s => s.appLang);
-    const [isExpanded, setIsExpanded] = useState(false);
+    const [appLang] = useAppLang();
+    const [isExpanded, { toggle: toggleExpanded }] = useDisclosure(false);
     const queryClient = useQueryClient();
 
     const prefetchCategories = () => {
@@ -35,7 +36,7 @@ export function FilterPanel() {
         });
     };
 
-    const t = (translations as any)[appLang];
+    const t = (translations as any)[appLang] || translations.en;
 
     const categoryList = useMemo(() => [
         { id: null, name: t.all },
@@ -83,7 +84,7 @@ export function FilterPanel() {
                     </span>
                     {tagsToRender.length > 15 && (
                          <button 
-                             onClick={() => setIsExpanded(!isExpanded)}
+                             onClick={() => toggleExpanded()}
                              className="text-[10px] p-1.5 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-all cursor-pointer pointer-events-auto"
                              title={isExpanded ? t.collapse : t.more(hiddenCount)}
                          >

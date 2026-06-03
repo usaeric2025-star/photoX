@@ -1,12 +1,12 @@
 import React from 'react';
 import { FormSectionHeader, CategoryGrid, ManufacturerList } from '../FormShared';
 import { PhotoTagSelector } from '../edit/PhotoTagSelector';
+import { UseFormReturnType } from '@mantine/form';
 import { Category, Tag, Manufacturer, ProductFormData } from '../../../types';
 import { safeArray } from '../../../lib/utils';
 
 interface Props {
-  formState: ProductFormData;
-  updateForm: (updates: Partial<ProductFormData>) => void;
+  form: UseFormReturnType<ProductFormData>;
   categories: Category[];
   tags: Tag[];
   manufacturers: Manufacturer[];
@@ -21,10 +21,12 @@ interface Props {
 }
 
 export function OrgTab({
-  formState, updateForm, categories, tags, manufacturers, appLang,
+  form, categories, tags, manufacturers, appLang,
   onAddTag, onUpdateTag, onDeleteTag,
   onAddManufacturer, onEditManufacturer, onDeleteManufacturer
 }: Props) {
+  const formState = form.values;
+  const updateForm = (updates: Partial<ProductFormData>) => form.setValues(updates);
   return (
     <div className="m-0 p-4 space-y-6 animate-in fade-in slide-in-from-right-2 duration-300">
       <section className="space-y-4">

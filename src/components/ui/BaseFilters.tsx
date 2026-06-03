@@ -1,7 +1,7 @@
 import React from 'react';
 import { ArrowUpDown, Layers, Grid2x2, Grid3x3, LayoutGrid, ShieldAlert } from 'lucide-react';
 import { SearchInput } from './SearchInput';
-import { useUIStore } from '@/store/useUIStore';
+import { useUIStore, useAppLang } from '@/store/useUIStore';
 import { translations } from '@/lib/translations';
 
 interface BaseFiltersProps {
@@ -25,8 +25,8 @@ export function BaseFilters({
   onToggleGroups,
   showGroupsCollapsed,
 }: BaseFiltersProps) {
-  const appLang = useUIStore(s => s.appLang);
-  const t = (translations as any)[appLang];
+  const [appLang] = useAppLang();
+  const t = (translations as any)[appLang] || translations.en;
 
   const toggleColumns = () => {
     const nextCols = currentColumns === 2 ? 3 : currentColumns === 3 ? 5 : 2;

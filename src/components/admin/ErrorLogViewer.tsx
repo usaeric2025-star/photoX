@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Trash2, Download, AlertCircle, AlertTriangle, Info, ShieldAlert, ChevronDown, ChevronUp } from 'lucide-react';
 import { ErrorReporter, LogEntry, ErrorLevel } from '@/lib/errorReporter';
 import { toast } from '@/lib/ui/toast';
+import { useDisclosure } from '@mantine/hooks';
 
 const LevelIcon = ({ level }: { level: ErrorLevel }) => {
   switch (level) {
@@ -13,13 +14,13 @@ const LevelIcon = ({ level }: { level: ErrorLevel }) => {
 };
 
 const LogItem = ({ log }: { log: LogEntry }) => {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, { toggle }] = useDisclosure(false);
   const timeStr = new Date(log.time).toLocaleTimeString();
   const dateStr = new Date(log.time).toLocaleDateString();
 
   return (
     <div className="border-b border-slate-100 last:border-0 py-3">
-      <div className="flex items-start gap-3 cursor-pointer group" onClick={() => setExpanded(!expanded)}>
+      <div className="flex items-start gap-3 cursor-pointer group" onClick={toggle}>
         <div className="mt-0.5">
           <LevelIcon level={log.level} />
         </div>

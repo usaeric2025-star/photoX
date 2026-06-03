@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { useActionState, useOptimistic, startTransition } from 'react';
-import { useLongPress } from "@shined/react-use";
+import { useLongPress } from "@mantine/hooks";
 import { supabase } from '@/lib/supabase';
 import { reportError } from '@/lib/errorTracker';
 import { queryClient } from '@/lib/queryClient';
@@ -51,7 +51,7 @@ function PinButton({ photoId, isPinned }: { photoId: string; isPinned: boolean }
 }
 import { Photo, Category, Tag } from '../../types';
 import { GalleryVariant } from '@/types/variant';
-import { Layers, Heart, Check, EyeOff, Download } from 'lucide-react';
+import { Layers, Heart, Check, EyeOff } from 'lucide-react';
 import { getCacheBustedImageUrl, getPhotoDisplayName } from '../../lib/ui-helpers';
 import { ResponsivePhoto } from '../shared/ResponsivePhoto';
 import { usePermission, useFilters, useCategories, useTags, useErrorHandler } from '../../hooks';
@@ -99,20 +99,19 @@ function PhotoInfoFooter({ displayCatName, photoTags, hideTags, categoryId, tagI
   categoryId?: string | number | null;
   tagIds?: string[];
 }) {
-  if (hideTags) return null;
   const { filters, setCategory, setTags } = useFilters();
 
 
   return (
     <div className="absolute bottom-0 left-0 w-full z-20 pointer-events-auto p-2 pt-8 flex flex-col gap-1.5 bg-gradient-to-t from-black/95 via-black/65 to-transparent">
-        {displayCatName && (
+        {displayCatName ? (
             <span 
               className="text-[9px] text-brand-gold font-bold tracking-widest leading-none truncate px-1.5 py-0.5 rounded bg-black/65 backdrop-blur-sm w-fit uppercase border border-brand-gold/30 shadow-md"
             >
             {displayCatName.toUpperCase()}
             </span>
-        )}
-        {photoTags && photoTags.length > 0 && (
+        ) : null}
+        {!hideTags && photoTags && photoTags.length > 0 ? (
             <div className="flex flex-row gap-1.5 overflow-x-auto no-scrollbar pointer-events-auto pb-1 px-1">
                 {photoTags.map((tag, i) => {
                     return (
@@ -125,7 +124,7 @@ function PhotoInfoFooter({ displayCatName, photoTags, hideTags, categoryId, tagI
                     );
                 })}
             </div>
-        )}
+        ) : null}
     </div>
   );
 }
@@ -240,24 +239,20 @@ export const PhotoCard = React.memo(({
     }
   };
 
-  useLongPress(
-    cardRef,
-    () => {
-      longPressTriggered.current = true;
-      if (isManagement) {
-        if (!isMultiSelect) {
-          update({ isMultiSelect: true, selectedIds: [photo.id] } as any);
-        } else {
-          toggleSelected(photo.id);
-        }
-        if ('vibrate' in navigator) navigator.vibrate(50);
+  const longPress = useLongPress(() => {
+    longPressTriggered.current = true;
+    if (isManagement) {
+      if (!isMultiSelect) {
+        update({ isMultiSelect: true, selectedIds: [photo.id] } as any);
       } else {
-        (window as any)._pendingPhoto = photo;
-        update({ showWhatsAppChoice: true });
+        toggleSelected(photo.id);
       }
-    },
-    { delay: 400 }
-  );
+      if ('vibrate' in navigator) navigator.vibrate(50);
+    } else {
+      (window as any)._pendingPhoto = photo;
+      update({ showWhatsAppChoice: true });
+    }
+  }, { threshold: 600 });
 
   const thumbSrc = getCacheBustedImageUrl(photo, 'thumb');
 
@@ -266,6 +261,7 @@ export const PhotoCard = React.memo(({
   return (
     <div 
       ref={cardRef}
+      {...longPress}
       data-photo-id={photo.id}
       data-selected={isSelected}
       data-multiselect={isMultiSelect}

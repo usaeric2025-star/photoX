@@ -11,12 +11,13 @@ import { useScrollRestoration, useTasks, useMultiSelect, useFilters, usePhotos, 
 import { processImageFiles } from '@/lib/image/imageProcess';
 import { processPhotos } from '@/lib/filters';
 import { checkDuplicateBatch, removeFromDuplicateCache, checkDuplicate } from '@/lib/data/duplicateCheck';
-import { useUIStore, useShallow } from '@/store/useUIStore';
+import { useUIStore, useShallow, useColumns } from '@/store/useUIStore';
 import { UploadButton } from '@/components/shared/UploadButton';
 import { SelectionToolbar } from '@/components/shared/SelectionToolbar';
 import { useAdminActions } from '@/features/admin/useAdminActions';
 import { savePhotosToCloudBatch } from "@/services/photo/photoUploadService";
 import { useAuth, useErrorHandler } from '@/hooks';
+import { ErrorFactory } from '@/lib/errorFactory';
 import { toast } from '@/lib/ui/toast';
 import { GroupDetailPage } from '../GroupDetailPage';
 import { PAGINATION } from '@/constants/config';
@@ -52,7 +53,7 @@ export function AdminGridContainer({
   const { filters, setSearch } = useFilters();
   const { filters: urlFilters, setGroupId, setPhotoId, setSortOrder, setShowGroupsCollapsed } = useUrlFilters();
   const update = useUIStore(s => s.update);
-  const columns = useUIStore(s => s.columns);
+  const [columns, setColumns] = useColumns();
   const processingIds = useUIStore(s => s.processingIds);
   const isMultiSelect = useUIStore(s => s.isMultiSelect);
 
@@ -154,7 +155,7 @@ export function AdminGridContainer({
       }
       queryClient.invalidateQueries({ queryKey: photoKeys.all });
     } catch (err) {
-      handleError(err, '上传照片失败');
+      handleError(ErrorFactory.wrap(err, '上传照片'), '上传照片失败');
       updateTask(taskId, { status: 'error', progress: 100, message: '上传失败' });
       uniqueFiles.forEach(file => removeFromDuplicateCache(file));
     } finally {
@@ -178,6 +179,7 @@ export function AdminGridContainer({
 
   const renderCard = useCallback((photo: Photo, index: number) => (
     <PhotoCard 
+      key={photo.id}
       photo={photo}
       index={index}
       variant={variant}
@@ -193,7 +195,7 @@ export function AdminGridContainer({
           onSortChange={() => setSortOrder(urlFilters.sortOrder === 'newest' ? 'oldest' : 'newest')}
           currentSort={urlFilters.sortOrder as 'newest' | 'oldest' | 'name'}
           onColumnsChange={(cols) => {
-              update({ columns: cols as 2 | 3 | 5 });
+              setColumns(cols as 2 | 3 | 5);
               navigate({ 
                 to: '.', search: (prev: any) => ({ ...prev, view: cols === 2 ? 'list' : 'grid' } as any) 
               });

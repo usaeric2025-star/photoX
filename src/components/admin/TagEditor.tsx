@@ -12,7 +12,7 @@ import {
 import { Tag } from "@/types";
 import { ErrorFactory } from "@/lib/errorFactory";
 import { SearchInput } from "@/components/ui/SearchInput";
-import { useLongPress } from "@shined/react-use";
+import { useLongPress } from "@mantine/hooks";
 
 interface TagEditorProps {
   tags: Tag[];
@@ -227,14 +227,13 @@ export function TagEditor({
   );
 }
 
-function TagButton({ tag, isSelected, isHot, isPinned, isDisabled, onToggle, onLongPress }: any) {
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  useLongPress(buttonRef, () => onLongPress(), { delay: 500 });
+function TagButton({ tag, isSelected, isHot, isPinned, isDisabled, onToggle, onLongPress: onLongPressProp }: any) {
+  const longPress = useLongPress(() => onLongPressProp(), { threshold: 500 });
 
   return (
     <div className="relative">
       <button
-        ref={buttonRef}
+        {...longPress}
         type="button"
         style={{
           WebkitTouchCallout: "none",
