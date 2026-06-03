@@ -2,6 +2,7 @@ import React from 'react';
 import { LogIn, LayoutDashboard, RefreshCw, Camera } from 'lucide-react';
 import { useAuth, useUIStore, useShallow, useSettings } from '@/hooks';
 import { useNavigate } from '@tanstack/react-router';
+import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
 
 interface PublicHeaderProps {
   totalCount?: number;
@@ -45,6 +46,8 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
 
       {/* 右侧：刷新 & 管理/登录入口 */}
       <div className="flex items-center gap-1 sm:gap-2 flex-nowrap shrink-0">
+        <LanguageSwitcher variant="ghost" />
+        
         {onRefresh && (
           <button 
             onClick={onRefresh}

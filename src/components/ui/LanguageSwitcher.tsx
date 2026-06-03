@@ -1,86 +1,32 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Globe } from 'lucide-react';
-import { useUIStore, useShallow } from '@/store/useUIStore';
+import React from 'react';
+import { useUIStore } from '@/store/useUIStore';
 import { GalleryVariant } from '@/types/variant';
 
 export function LanguageSwitcher({ variant = 'full-management' }: { variant?: GalleryVariant | 'ghost' }) {
   const appLang = useUIStore((s) => s.appLang);
   const update = useUIStore((s) => s.update);
-  const [isOpen, setIsOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setIsOpen(false);
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const langs = [
     { code: 'zh', label: '中文' },
-    { code: 'en', label: 'English' },
-    { code: 'ms', label: 'Melayu' }
+    { code: 'en', label: 'EN' },
+    { code: 'ms', label: 'BM' }
   ];
 
-  const getButtonClass = () => {
-    if (variant === 'public-showcase') {
-      return "h-9 px-2.5 flex items-center gap-1.5 rounded-full border border-[#ECECEC] bg-white text-[#555555] shadow-none hover:bg-[#F1F3F4] transition-all";
-    }
-    if (variant === 'ghost') {
-      return "h-9 w-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl text-brand-navy/60 hover:text-brand-navy bg-white border border-brand-navy/10 shadow-sm transition-all";
-    }
-    return "h-9 sm:h-10 px-2.5 sm:px-3 flex items-center gap-1.5 sm:gap-2 rounded-xl text-brand-navy/60 hover:text-brand-navy bg-white border border-brand-navy/10 shadow-sm transition-all";
-  };
-
-  if (variant === 'public-showcase') {
-    return (
-      <div className="flex items-center bg-[#F7F7F7] p-0.5 rounded-full border border-[#ECECEC] h-9 shrink-0 flex-nowrap">
-        {[
-          { code: 'zh', label: '中文' },
-          { code: 'en', label: 'EN' },
-          { code: 'ms', label: 'BM' }
-        ].map(l => (
-          <button 
-            key={l.code} 
-            onClick={() => update({ appLang: l.code as any })} 
-            className={`px-1.5 sm:px-3 h-8 flex items-center justify-center rounded-full text-[11px] sm:text-[12px] font-bold whitespace-nowrap transition-all ${appLang === l.code ? 'bg-[#1A1C3E] text-white shadow-sm' : 'text-[#888888] hover:text-[#1A1A1A]'}`}
-          >
-            {l.label}
-          </button>
-        ))}
-      </div>
-    );
-  }
-
-  const currentDisplay = langs.find(l => l.code === appLang)?.label || 'English';
-
   return (
-    <div className="relative" ref={ref}>
-      <button 
-        onClick={() => setIsOpen(!isOpen)}
-        className={getButtonClass()}
-      >
-        <Globe size={18} />
-        {variant !== 'ghost' && <span className="text-[10px] font-bold tracking-tight hidden sm:inline">{currentDisplay}</span>}
-      </button>
-      
-      {isOpen && (
-        <div className="absolute top-full right-0 mt-2 bg-white rounded-xl shadow-xl border border-brand-navy/10 py-2 w-32 z-50">
-          {langs.map(l => (
-            <button
-              key={l.code}
-              onClick={() => {
-                update({ appLang: l.code as any });
-                setIsOpen(false);
-              }}
-              className={`w-full text-left px-4 py-2 transition-colors flex items-center justify-between ${appLang === l.code ? 'text-white font-bold bg-[#1A1C3E]' : 'text-slate-600 font-medium hover:bg-slate-50'}`}
-            >
-              <span className="text-sm">{l.label}</span>
-            </button>
-          ))}
-        </div>
-      )}
+    <div className={`flex items-center p-0.5 rounded-full border border-brand-navy/10 bg-brand-navy/5 shadow-inner overflow-hidden ${variant === 'ghost' ? 'h-7' : 'h-9'}`}>
+      {langs.map(l => (
+        <button 
+          key={l.code} 
+          onClick={() => update({ appLang: l.code as any })} 
+          className={`px-3 sm:px-4 h-full flex items-center justify-center rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all ${
+            appLang === l.code 
+              ? 'bg-brand-navy text-white shadow-md' 
+              : 'text-brand-navy/50 hover:text-brand-navy hover:bg-white/50'
+          }`}
+        >
+          {l.label}
+        </button>
+      ))}
     </div>
   );
-};
+}

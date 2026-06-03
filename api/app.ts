@@ -487,6 +487,39 @@ app.post("/admin/repair/:issueId", async (c) => {
         return c.json({ success: true, message: `已强制删除 ${ids.length} 条缺失哈希的损坏记录` });
       }
 
+      if (issueId === 'cleanup_redundant') {
+        // SQL partition-based cleanup for duplicate URLs
+        // We delete records where the same image_url exists, keeping the oldest one
+        const { data, error } = await supabase.rpc('get_duplicate_image_urls');
+        // If RPC isn't available, we do it in TS (safer for this environment)
+        const { data: allPhotos } = await supabase.from('furniture_items').select('id, image_url, created_at').order('created_at', { ascending: true });
+        
+        if (!allPhotos) return c.json({ success: false, error: 'Failed to fetch photos' });
+        
+        const seen = new Set<string>();
+        const toDelete: string[] = [];
+        
+        allPhotos.forEach(p => {
+          if (!p.image_url) return;
+          const normalized = p.image_url.toLowerCase().trim();
+          if (seen.has(normalized)) {
+            toDelete.push(p.id);
+          } else {
+            seen.add(normalized);
+          }
+        });
+
+        if (toDelete.length > 0) {
+          // Batch delete in chunks of 100
+          for (let i = 0; i < toDelete.length; i += 100) {
+            const batch = toDelete.slice(i, i + 100);
+            await supabase.from('furniture_items').delete().in('id', batch);
+          }
+        }
+        
+        return c.json({ success: true, message: `已成功合并并清理了 ${toDelete.length} 条重复记录` });
+      }
+
       return c.json({ success: false, error: 'Unsupported repair' }, 400);
     } catch (e: any) {
       return c.json({ success: false, error: e.message }, 500);
@@ -504,8 +537,26 @@ app.get("/storage/audit", async (c) => {
       const bucket = serverEnv.R2_BUCKET_NAME;
       if (!bucket) throw new Error("R2_BUCKET_NAME missing");
 
-      const { data: photos, error } = await supabase.from("furniture_items").select("id, image_url, thumb_url, image_hash");
-      if (error) throw error;
+      const photos: any[] = [];
+      let fromIdx = 0;
+      const stepIdx = 1000;
+      let hasMoreRows = true;
+
+      while (hasMoreRows) {
+        const { data: batch, error: batchError } = await supabase
+          .from("furniture_items")
+          .select("id, image_url, thumb_url, image_hash")
+          .range(fromIdx, fromIdx + stepIdx - 1);
+        
+        if (batchError) throw batchError;
+        if (!batch || batch.length === 0) {
+          hasMoreRows = false;
+        } else {
+          photos.push(...batch);
+          fromIdx += stepIdx;
+          if (batch.length < stepIdx) hasMoreRows = false;
+        }
+      }
 
       const r2Files: Set<string> = new Set();
       const dbFilesMap: Map<string, string[]> = new Map(); // filename -> photoIds
@@ -554,6 +605,9 @@ app.get("/storage/audit", async (c) => {
 
       // Check R2 files existence in DB
       r2Keys.forEach(key => {
+        // 关键修复：审计时也排除缩略图，避免误报孤儿文件数
+        if (key.includes('thumb') || key.startsWith('thumbnails/')) return;
+
         const filename = key.split('/').pop();
         if (filename && !dbFilesMap.has(filename)) {
           orphans++;
@@ -657,7 +711,10 @@ app.post("/storage/import-orphans", async (c) => {
       
       if (!bucket || !publicUrlPrefix) throw new Error("Storage config missing");
 
-      // 1. Get all R2 files
+      // 1. Normalize URL helper
+      const normalizeUrl = (u: string) => u.toLowerCase().trim().split('?')[0].replace(/\/$/, '');
+
+      // 2. Get all R2 files
       let continuationToken: string | undefined;
       const r2Keys: string[] = [];
       do {
@@ -668,29 +725,54 @@ app.post("/storage/import-orphans", async (c) => {
         continuationToken = list.NextContinuationToken;
       } while (continuationToken);
 
-      // 2. Get all DB URLs (more robust than filename check)
-      const { data: existingPhotos } = await supabase.from("furniture_items").select("image_url");
-      const dbUrls = new Set(
-        existingPhotos?.map(p => p.image_url).filter(Boolean)
-      );
+      // 3. Get all DB URLs (original and thumbnails, support full pagination)
+      const dbUrls = new Set<string>();
+      let from = 0;
+      const step = 1000;
+      let hasMore = true;
 
-      // 3. Find unique orphans (full URL exists in R2 but not indexed in DB)
+      while (hasMore) {
+        const { data: batch, error: fetchError } = await supabase
+          .from("furniture_items")
+          .select("image_url, thumb_url")
+          .range(from, from + step - 1);
+        
+        if (fetchError) throw fetchError;
+        if (!batch || batch.length === 0) {
+          hasMore = false;
+        } else {
+          batch.forEach(p => {
+            if (p.image_url) dbUrls.add(normalizeUrl(p.image_url));
+            if (p.thumb_url) dbUrls.add(normalizeUrl(p.thumb_url));
+          });
+          from += step;
+          if (batch.length < step) hasMore = false;
+        }
+      }
+
+      // 4. Find unique orphans
       const orphans = r2Keys.filter(key => {
+        // Robust thumbnail filtering
+        const lowers = key.toLowerCase();
+        if (lowers.includes('thumb') || lowers.includes('/thumbnails/') || lowers.endsWith('_t.webp')) return false;
+
         const publicUrl = publicUrlPrefix.startsWith('http') 
           ? `${publicUrlPrefix.replace(/\/$/, '')}/${key}`
           : `https://${publicUrlPrefix}/${key}`;
-        return !dbUrls.has(publicUrl);
+        
+        return !dbUrls.has(normalizeUrl(publicUrl));
       });
 
       if (orphans.length === 0) {
         return c.json({ success: true, count: 0, message: "所有云端文件已与数据库对齐，无需恢复" });
       }
 
-      // 4. Create DB records (Batch of 50 to avoid timeout)
+      // 5. Create DB records (Batch size 50)
       const toCreate = [];
       const crypto = await import('node:crypto');
+      const importBatch = orphans.slice(0, 50);
       
-      for (const key of orphans.slice(0, 50)) {
+      for (const key of importBatch) {
         try {
           const publicUrl = publicUrlPrefix.startsWith('http') 
             ? `${publicUrlPrefix.replace(/\/$/, '')}/${key}`
@@ -698,6 +780,9 @@ app.post("/storage/import-orphans", async (c) => {
           const filename = key.split('/').pop() || "";
           const nameCandidate = filename.split('.')[0] || "恢复的照片";
           
+          // Double check normalization in a local set for this batch to prevent concurrent overlaps
+          if (dbUrls.has(normalizeUrl(publicUrl))) continue;
+
           // Calculate Hash
           const response = await fetch(publicUrl);
           let hash = null;
@@ -711,22 +796,27 @@ app.post("/storage/import-orphans", async (c) => {
             image_url: publicUrl,
             thumb_url: publicUrl,
             description: `[自动恢复] 源文件: ${filename}`,
-            is_hidden: false, // Make it visible by default as requested
+            is_hidden: false, 
             image_hash: hash 
           });
+          
+          // Mark as seen for immediate next checks
+          dbUrls.add(normalizeUrl(publicUrl));
         } catch (err) {
           console.error(`Failed to process orphan ${key}:`, err);
         }
       }
 
-      const { error } = await supabase.from("furniture_items").insert(toCreate);
-      if (error) throw error;
+      if (toCreate.length > 0) {
+        const { error } = await supabase.from("furniture_items").insert(toCreate);
+        if (error) throw error;
+      }
 
       return c.json({ 
         success: true, 
         count: toCreate.length, 
-        remaining: orphans.length - toCreate.length,
-        message: `成功从云端找回并导入了 ${toCreate.length} 张照片。系统已在导入时自动补全了哈希值。` 
+        remaining: orphans.length - importBatch.length,
+        message: `成功从云端找回并导入了 ${toCreate.length} 张照片。系统已自动补全哈希并过滤了缩略图。` 
       });
     } catch (e: any) {
       return c.json({ success: false, error: e.message }, 500);

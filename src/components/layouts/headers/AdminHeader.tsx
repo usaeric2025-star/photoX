@@ -121,6 +121,8 @@ export function AdminHeader({
       </div>
 
       <div className="flex items-center gap-1 sm:gap-2 flex-nowrap shrink-0">
+        <LanguageSwitcher variant="ghost" />
+        
         {/* 1. AI 识别 */}
         {onBatchAiIdentify && (
           <button
@@ -166,15 +168,6 @@ export function AdminHeader({
                 </div>
                 {user.email?.split("@")[0]}
               </DropdownMenuLabel>
-
-              <DropdownMenuSeparator className="mx-2 my-1 bg-slate-100" />
-
-              <div className="px-3 py-1.5 flex items-center justify-between">
-                <span className="text-xs font-semibold text-slate-400">
-                  Language
-                </span>
-                <LanguageSwitcher variant="full-management" />
-              </div>
 
               <DropdownMenuSeparator className="mx-2 my-1 bg-slate-100" />
 

@@ -111,6 +111,7 @@ export function DiagnosticsDashboard() {
   const [isCleaningOrphans, setIsCleaningOrphans] = useState(false);
   const [isDeepCleaningStorage, setIsDeepCleaningStorage] = useState(false);
   const [isDeduplicating, setIsDeduplicating] = useState(false);
+  const [isCleaningRedundant, setIsCleaningRedundant] = useState(false);
   const [isAuditing, setIsAuditing] = useState(false);
   const [auditResult, setAuditResult] = useState<any | null>(null);
 
@@ -172,6 +173,27 @@ export function DiagnosticsDashboard() {
       toast.error(`请求失败: ${e.message}`);
     } finally {
       setIsCleaningOrphans(false);
+    }
+  };
+
+  const handleCleanupRedundant = async () => {
+    if (!confirm('确定要合并并清理冗余记录吗？相同 URL 的照片将只保留最早的一条。这会修复因恢复脚本缺陷导致的重复数据。')) return;
+    setIsCleaningRedundant(true);
+    try {
+      const res = await api.admin.repair[':issueId'].$post({
+        param: { issueId: 'cleanup_redundant' }
+      });
+      const data = await res.json() as any;
+      if (data.success) {
+        toast.success(data.message);
+        scan();
+      } else {
+        toast.error(`处理失败: ${data.error}`);
+      }
+    } catch (e: any) {
+      toast.error(`请求失败: ${e.message}`);
+    } finally {
+      setIsCleaningRedundant(false);
     }
   };
 
@@ -402,6 +424,21 @@ export function DiagnosticsDashboard() {
         <div className="space-y-3">
           <h4 className="text-[10px] font-black text-brand-navy/30 uppercase tracking-widest px-1">数据清理</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              onClick={handleCleanupRedundant}
+              disabled={isCleaningRedundant}
+              className="flex flex-col items-start gap-2 p-4 bg-amber-50 hover:bg-amber-100 rounded-xl transition-all border border-amber-200 group group-active:scale-95 text-left"
+            >
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-amber-500/10 rounded-lg text-amber-600">
+                  <Fingerprint className="w-4 h-4" />
+                </div>
+                <span className="text-sm font-bold text-slate-800">清理冗余 URL 记录</span>
+              </div>
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider">合并具有完全相同 URL 的多余记录（修复恢复脚本遗留问题）</p>
+              {isCleaningRedundant && <span className="text-[10px] font-bold text-amber-600 animate-pulse">正在清理中...</span>}
+            </button>
+
             <button
               onClick={handleCleanOrphans}
               disabled={isCleaningOrphans}
