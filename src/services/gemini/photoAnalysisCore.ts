@@ -24,28 +24,63 @@ export const analyzeProductPhoto = async (
 ) => {
   const apiKey = customApiKey;
 
-  let modelName = customModel || 'google/gemini-2.5-flash-lite-preview-09-2025';
+  let modelName = customModel || 'google/gemini-2.5-flash-lite';
   
   if (!modelName.includes('/')) {
      modelName = 'google/' + modelName;
+  }
+
+  // Extract original physical dimensions from base64Image or URL if possible
+  let physicalSize: { width: number; height: number } | null = null;
+  if (base64Image) {
+    if (base64Image.startsWith('http://') || base64Image.startsWith('https://')) {
+      try {
+        const urlObj = new URL(base64Image);
+        const w = Number(urlObj.searchParams.get('w') || urlObj.searchParams.get('width'));
+        const h = Number(urlObj.searchParams.get('h') || urlObj.searchParams.get('height'));
+        if (w && h) {
+          physicalSize = { width: w, height: h };
+        }
+      } catch (_) {}
+    }
+    if (!physicalSize && typeof window !== 'undefined') {
+      try {
+        physicalSize = await new Promise<{ width: number; height: number } | null>((resolve) => {
+          const img = new Image();
+          if (base64Image.startsWith('http')) {
+            img.crossOrigin = 'Anonymous';
+          }
+          img.onload = () => {
+            resolve({
+              width: img.naturalWidth || img.width,
+              height: img.naturalHeight || img.height
+            });
+          };
+          img.onerror = () => resolve(null);
+          img.src = base64Image;
+        });
+      } catch (e) {
+        console.warn('[analyzeProductPhoto] Size extraction non-fatal error:', e);
+      }
+    }
   }
   
   let processedBase64Image = base64Image;
   try {
      processedBase64Image = await convertToJpegAndResize(base64Image, 1000, signal);
   } catch (e) {
-     const message = e instanceof Error ? e.message : String(e)
-     throw new StandardError(message, { 
-       originalError: e,
-       aiDebugHint: `[analyzeProductPhoto/preprocessing] 底層異常: Image preprocessing failed - ${message}` 
-     });
+     console.warn('[analyzeProductPhoto/preprocessing] Non-fatal image preprocessing fallback:', e);
+     processedBase64Image = base64Image;
   }
 
   const categoriesJson = (categories || []).map(c => ({
     id: c.id, 
-    name: c.name || ''
+    name: c.name || '',
+    zh: c.zh || c.name || '',
+    en: c.en || c.name || '',
+    aliases: c.aliases || []
   }));
-  const tagsJson = JSON.stringify((tags || []).map(t => ({ id: t.id, name: t.name })));
+  const tagsJson = JSON.stringify((tags || []).map(t => ({ id: t.id, name: t.name, aliases: t.aliases || [] })));
   const categoryContext = targetCategoryId
     ? `【强制要求】系统已预设分类为: ${(categories || []).find(c => String(c.id) === String(targetCategoryId))?.name} (id: ${targetCategoryId})`
     : "请从清单选择最合适的分类. 已有分类列表: " + JSON.stringify(categoriesJson);
@@ -176,34 +211,98 @@ export const analyzeProductPhoto = async (
       dataToProcess.model_number = dataToProcess.modelNumber;
     }
     
+    // 1. Resolve naming priority
+    let finalName = '';
+    if (physicalSize) {
+      finalName = `${physicalSize.width}x${physicalSize.height} 图片`;
+    } else if (dataToProcess.name && String(dataToProcess.name).trim() !== '') {
+      finalName = String(dataToProcess.name).trim();
+    }
+    dataToProcess.name = finalName;
+
+    // 2. Resolve dimensions priority & strip overall terms
+    if (physicalSize) {
+      dataToProcess.dimensions = [
+        {
+          label: `${physicalSize.width}x${physicalSize.height} 图片`,
+          width: physicalSize.width,
+          height: physicalSize.height,
+          length: 0,
+          unit: 'cm',
+          isAIEstimated: false
+        }
+      ];
+    } else {
+      let safeDims: Dimension[] = [];
+      if (Array.isArray(dataToProcess.dimensions)) {
+        safeDims = dataToProcess.dimensions as Dimension[];
+      } else if (dataToProcess.dimensions && typeof dataToProcess.dimensions === 'object') {
+        safeDims = [dataToProcess.dimensions] as unknown as Dimension[];
+      }
+      
+      // Filter out overall and total terms
+      safeDims = safeDims.filter((d: any) => {
+        const lbl = String(d?.label || '').toLowerCase();
+        return !lbl.includes('overall') && !lbl.includes('total');
+      });
+      
+      dataToProcess.dimensions = normalizeDimensions(safeDims);
+    }
+
+    dataToProcess.tag_ids = normalizeTagIds(dataToProcess.tag_ids || dataToProcess.tagIds, tags || []);
     dataToProcess.description = dataToProcess.description || '';
     dataToProcess.manual_code = null;
 
-    let safeDims: Dimension[] = [];
-    if (Array.isArray(dataToProcess.dimensions)) {
-      safeDims = dataToProcess.dimensions as Dimension[];
-    } else if (dataToProcess.dimensions && typeof dataToProcess.dimensions === 'object') {
-      safeDims = [dataToProcess.dimensions] as unknown as Dimension[];
+    // Translate fields dynamically!
+    try {
+      const { translateProductFields } = await import('./translationCore');
+      const translationResult = await translateProductFields({
+        name: dataToProcess.name || undefined,
+        description: dataToProcess.description || undefined
+      }, apiKey, modelName, signal);
+
+      dataToProcess.name_en = translationResult.name_en || dataToProcess.name || '';
+      dataToProcess.name_ms = translationResult.name_ms || dataToProcess.name || '';
+
+      dataToProcess.description_translations = {
+        zh: dataToProcess.description || '',
+        en: translationResult.description_en || dataToProcess.description_translations?.en || dataToProcess.description || '',
+        ms: translationResult.description_ms || dataToProcess.description_translations?.ms || dataToProcess.description || ''
+      };
+    } catch (e) {
+      console.warn('[analyzeProductPhoto] Fields translation failed, using fallbacks:', e);
+      dataToProcess.name_en = dataToProcess.name_en || dataToProcess.name || '';
+      dataToProcess.name_ms = dataToProcess.name_ms || dataToProcess.name || '';
+      dataToProcess.description_translations = {
+        zh: dataToProcess.description || '',
+        en: dataToProcess.description_translations?.en || dataToProcess.description || '',
+        ms: dataToProcess.description_translations?.ms || dataToProcess.description || ''
+      };
     }
-    
-    dataToProcess.dimensions = normalizeDimensions(safeDims);
-    dataToProcess.tag_ids = normalizeTagIds(dataToProcess.tag_ids || dataToProcess.tagIds, tags || []);
 
     let resolvedCategoryId: string | null = null;
     const catIdToCheck = String(dataToProcess.category_id || '').trim();
     if (catIdToCheck) {
-      // 1. Exact or case-insensitive match
+      // 1. Exact or case-insensitive match (Check English en/zh/name/code)
       let match = (categories || []).find(c => 
         String(c.id) === catIdToCheck || 
-        String(c.name || '').toLowerCase() === catIdToCheck.toLowerCase()
+        String(c.name || '').toLowerCase() === catIdToCheck.toLowerCase() ||
+        String(c.en || '').toLowerCase() === catIdToCheck.toLowerCase() ||
+        String(c.zh || '').toLowerCase() === catIdToCheck.toLowerCase()
       );
       
-      // 2. Fuzzy match: check if the AI output contains the category name or vice versa
+      // 2. Fuzzy match checks
       if (!match) {
         match = (categories || []).find(c => {
           const name = String(c.name || '').toLowerCase().trim();
+          const en = String(c.en || '').toLowerCase().trim();
+          const zh = String(c.zh || '').toLowerCase().trim();
           const checkNormalized = catIdToCheck.toLowerCase();
-          return (name && (checkNormalized.includes(name) || name.includes(checkNormalized)));
+          return (
+            (name && (checkNormalized.includes(name) || name.includes(checkNormalized))) ||
+            (en && (checkNormalized.includes(en) || en.includes(checkNormalized))) ||
+            (zh && (checkNormalized.includes(zh) || zh.includes(checkNormalized)))
+          );
         });
       }
       

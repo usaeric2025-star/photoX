@@ -11,7 +11,7 @@ import { isErr } from '@/lib/errorFactory';
 const TABLE_NAME = 'groups';
 
 const ALLOWED_FIELDS = [
-    'id', 'name', 'description', 'colors', 'materials',
+    'id', 'name', 'name_en', 'name_ms', 'name_translations', 'description', 'description_translations', 'colors', 'materials',
     'is_hidden', 'cover_photo_id', 'user_id', 'created_at', 'updated_at'
 ];
 

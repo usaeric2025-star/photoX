@@ -17,6 +17,8 @@ export interface Photo {
   model_number?: string; // Manufacturer model number
   image_hash: string; // MD5 fingerprint
   name: string; // AI generated name
+  name_en?: string;
+  name_ms?: string;
   description?: string; // AI generated description
   image_url: string; // Public URL in Storage
   thumbnail_sm_url?: string; // w=300
@@ -99,6 +101,8 @@ export interface Manufacturer {
 export interface ProductGroup {
   id: string;
   name: string;
+  name_en?: string;
+  name_ms?: string;
   description: string | null;
   description_translations?: {
     zh?: string;
@@ -118,6 +122,8 @@ export interface ProductGroup {
 
 export interface ProductFormData {
   name: string;
+  name_en?: string;
+  name_ms?: string;
   category_id: string | null;
   manufacturer_id: string | null;
   tag_ids: string[];

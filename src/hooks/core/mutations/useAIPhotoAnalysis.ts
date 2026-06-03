@@ -34,11 +34,13 @@ export function useAIPhotoAnalysis() {
         await photoMutationService.update(photo.id, {
            name: result.data.name,
            description: result.data.description,
+           description_translations: result.data.description_translations,
            category_id: result.data.category_id,
            tag_ids: result.data.tag_ids,
            manufacturer_id: result.data.manufacturer_id,
            model_number: result.data.model_number,
-           price: result.data.price
+           price: result.data.price,
+           dimensions: result.data.dimensions
         });
 
         queryClient.invalidateQueries({ queryKey: photoKeys.all });

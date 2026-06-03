@@ -94,6 +94,8 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
       if (result) {
         const updates: any = {};
         if (result.name) updates.name = result.name;
+        if (result.name_en) updates.name_en = result.name_en;
+        if (result.name_ms) updates.name_ms = result.name_ms;
         if (result.category_id) updates.category_id = String(result.category_id);
         if (Array.isArray(result.tag_ids)) {
           updates.tag_ids = result.tag_ids.map((id: any) => String(id));
@@ -102,6 +104,9 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
         if (result.model_number) updates.model_number = result.model_number;
         if (result.manual_code) updates.manual_code = result.manual_code;
         if (result.description) updates.description = result.description;
+        if (result.description_translations) {
+          updates.description_translations = result.description_translations;
+        }
         if (Array.isArray(result.dimensions)) updates.dimensions = result.dimensions;
         if (result.price) updates.price = String(result.price);
 
@@ -152,6 +157,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
           model_number: photo.model_number || "",
           manual_code: photo.manual_code || "",
           description: photo.description || "",
+          description_translations: photo.description_translations || { zh: photo.description || '', en: '', ms: '' },
           dimensions: Array.isArray(photo.dimensions) ? photo.dimensions : [],
           is_hidden: photo.is_hidden || false,
           price: photo.price || "",

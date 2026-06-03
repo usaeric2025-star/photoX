@@ -36,16 +36,42 @@ export function useAIGroup() {
         const analysis = await analyzeGroup(photosWithTags);
         const { name, description, colors, materials } = analysis;
     
+        // Translate the group fields dynamically!
+        let name_en = name || '';
+        let name_ms = name || '';
+        let description_en = description || '';
+        let description_ms = description || '';
+
+        try {
+          const { data: settingsData } = await supabase.from('settings').select('gemini_api_key, custom_model').single();
+          const { translateProductFields } = await import('@/services/gemini/translationCore');
+          const pTranslations = await translateProductFields({
+            name,
+            description,
+            colors,
+            materials
+          }, settingsData?.gemini_api_key || '', settingsData?.custom_model || '');
+
+          name_en = pTranslations.name_en || name || '';
+          name_ms = pTranslations.name_ms || name || '';
+          description_en = pTranslations.description_en || description || '';
+          description_ms = pTranslations.description_ms || description || '';
+        } catch (e) {
+          console.warn('[createAIGroup] Group translations skipped:', e);
+        }
+
         // 3. 创建合组
         const { data: group, error: groupError } = await supabase
           .from('groups')
           .insert({
             name,
+            name_en,
+            name_ms,
             description,
             colors,
             materials,
-            name_translations: { zh: name },
-            description_translations: { zh: description },
+            name_translations: { zh: name, en: name_en, ms: name_ms },
+            description_translations: { zh: description, en: description_en, ms: description_ms },
           })
           .select()
           .single();

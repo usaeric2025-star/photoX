@@ -55,7 +55,8 @@ export const convertToJpegAndResize = async (imageBase: string, maxWidth: number
     };
     img.onerror = (e) => {
         signal?.removeEventListener('abort', abortHandler);
-        reject(new Error(`Image conversion failed`));
+        console.warn('[imageProcessor] Client-side image loading failed on canvas (likely CORS block or network issue). Falling back to original image:', e);
+        resolve(imageBase);
     };
     img.src = imageBase;
   });

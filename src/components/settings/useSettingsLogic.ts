@@ -188,7 +188,7 @@ export const useSettingsLogic = ({
     try {
       const provider = (settings as any).ai_provider || "google";
       const model =
-        settings.custom_model || 'google/gemini-2.5-flash-lite-preview-09-2025';
+        settings.custom_model || 'google/gemini-2.5-flash-lite';
       const ok = await testAiConnection(
         settings.gemini_api_key,
         provider,
