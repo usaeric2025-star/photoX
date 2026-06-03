@@ -121,6 +121,7 @@ export interface ProductGroup {
 }
 
 export interface ProductFormData {
+  id?: string;
   name: string;
   name_en?: string;
   name_ms?: string;
@@ -133,6 +134,7 @@ export interface ProductFormData {
     en?: string;
     ms?: string;
   };
+  item_code: string;
   manual_code: string;
   model_number: string;
   dimensions: Dimension[];

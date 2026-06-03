@@ -54,9 +54,19 @@ export function BasicInfoTab({
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
         <div className="space-y-1.5">
-          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">編號 / CODE</h3>
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">系统内部编号 / SYSTEM CODE</h3>
+          <input 
+            type="text" 
+            placeholder="系统编号..." 
+            value={formState.item_code || ''} 
+            onChange={e => updateForm({ item_code: e.target.value })} 
+            className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl text-xs font-mono font-bold outline-none focus:border-blue-500 shadow-sm opacity-80" 
+          />
+        </div>
+        <div className="space-y-1.5">
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">价格编号 / CODE</h3>
           <input 
             type="text" 
             placeholder="編號..." 

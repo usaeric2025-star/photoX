@@ -106,9 +106,9 @@ export function DimensionEditor({
                   <div className="flex items-center justify-between pl-1">
                     <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">{t.part}</span>
                     {dim.is_ai && (
-                      <div className="flex items-center gap-0.5 text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
-                        <Sparkles size={8} />
-                        <span className="text-[8px] font-black">AI</span>
+                      <div className="flex items-center gap-1 text-purple-600 bg-purple-50 px-2 py-1 rounded-lg border border-purple-100 shadow-sm">
+                        <Sparkles size={10} className="animate-pulse" />
+                        <span className="text-[9px] font-black tracking-tighter">AI 识别</span>
                       </div>
                     )}
                   </div>

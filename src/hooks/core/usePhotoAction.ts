@@ -4,7 +4,7 @@ import { ProductFormData, Photo } from '../../types';
 import { StandardError } from '../../lib/validators/protocol';
 import { toast } from '@/lib/ui/toast';
 import { isOk } from '../../lib/errorFactory';
-import { useErrorHandler } from '@/hooks';
+import { useErrorHandler, useInvalidatePhotos } from '@/hooks';
 
 interface ActionState {
   data: Photo | null;
@@ -18,6 +18,7 @@ interface ActionState {
  */
 export function usePhotoAction(id: string, initialData?: Photo | null) {
   const { handleError } = useErrorHandler();
+  const invalidatePhotos = useInvalidatePhotos();
   const [isPending, startTransition] = useTransition();
 
   const [state, submitAction] = useActionState(
@@ -26,6 +27,7 @@ export function usePhotoAction(id: string, initialData?: Photo | null) {
       
       if (result.ok) {
         toast.success('保存成功 / Saved successfully');
+        invalidatePhotos();
         return {
           data: result.data,
           error: null,

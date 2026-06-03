@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { LogIn, Image as ImageIcon, Sparkles, Cloud, Layers, RefreshCcw, Lock } from 'lucide-react';
+import { LogIn, Image as ImageIcon, Sparkles, Cloud, Layers, RefreshCcw, Lock, X } from 'lucide-react';
 import { toast } from '@/lib/ui/toast';
 import { useSettings } from '../../hooks';
 import { useUIStore } from '@/store/useUIStore';
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 
 interface LoginScreenProps {
   loginWithGoogle: () => Promise<void>;
@@ -11,7 +11,7 @@ interface LoginScreenProps {
 }
 
 export function LoginScreen({ loginWithGoogle, isLoading }: LoginScreenProps) {
-
+  const navigate = useNavigate();
   const { settings } = useSettings();
   const [mode, setMode] = useState<'admin' | 'staff'>('admin');
   const [passInput, setPassInput] = useState('');
@@ -33,7 +33,19 @@ export function LoginScreen({ loginWithGoogle, isLoading }: LoginScreenProps) {
   };
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-8 bg-white overflow-y-auto">
+    <div className="flex-1 flex flex-col items-center justify-center p-8 bg-white overflow-y-auto relative">
+      {/* Absolute Close Button */}
+      <div className="absolute top-6 right-6">
+        <Link 
+          to="/" 
+          search={{ preview: 'true' } as any}
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-900 border border-slate-100 transition-all active:scale-90"
+          title="关闭 / Close"
+        >
+          <X size={20} />
+        </Link>
+      </div>
+
       <div className="w-full max-w-sm space-y-12 flex flex-col items-center">
         {/* Branding */}
         <div className="flex flex-col items-center gap-4">

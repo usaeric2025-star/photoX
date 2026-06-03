@@ -154,6 +154,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
           category_id: photo.category_id || "",
           tag_ids: Array.isArray(photo.tag_ids) ? photo.tag_ids : [],
           manufacturer_id: photo.manufacturer_id || "",
+          item_code: photo.item_code || "",
           model_number: photo.model_number || "",
           manual_code: photo.manual_code || "",
           description: photo.description || "",

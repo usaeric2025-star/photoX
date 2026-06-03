@@ -229,7 +229,8 @@ export const analyzeProductPhoto = async (
           height: physicalSize.height,
           length: 0,
           unit: 'cm',
-          isAIEstimated: false
+          is_ai: true,
+          is_ai_estimated: false
         }
       ];
     } else {
@@ -246,23 +247,27 @@ export const analyzeProductPhoto = async (
         return !lbl.includes('overall') && !lbl.includes('total');
       });
       
-      dataToProcess.dimensions = normalizeDimensions(safeDims);
+      dataToProcess.dimensions = normalizeDimensions(safeDims).map(d => ({ ...d, is_ai: true }));
     }
 
     dataToProcess.tag_ids = normalizeTagIds(dataToProcess.tag_ids || dataToProcess.tagIds, tags || []);
     dataToProcess.description = dataToProcess.description || '';
-    dataToProcess.manual_code = null;
+    
+    // 1.5 [V2.50] If AI suggests a manual code, keep it instead of clearing it
+    if (dataToProcess.manual_code === undefined || dataToProcess.manual_code === '') {
+        dataToProcess.manual_code = null;
+    }
 
-    // Translate fields dynamically!
+    // Translate fields dynamically! - Only translate description if needed
     try {
       const { translateProductFields } = await import('./translationCore');
       const translationResult = await translateProductFields({
-        name: dataToProcess.name || undefined,
+        // Only translate description if it contains Chinese, otherwise keep as is
         description: dataToProcess.description || undefined
       }, apiKey, modelName, signal);
 
-      dataToProcess.name_en = translationResult.name_en || dataToProcess.name || '';
-      dataToProcess.name_ms = translationResult.name_ms || dataToProcess.name || '';
+      dataToProcess.name_en = dataToProcess.name || '';
+      dataToProcess.name_ms = dataToProcess.name || '';
 
       dataToProcess.description_translations = {
         zh: dataToProcess.description || '',
