@@ -11,7 +11,8 @@ import {
   Bug,
   Trash2,
   PackageSearch,
-  CloudDownload
+  CloudDownload,
+  Fingerprint
 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
@@ -192,9 +193,34 @@ export function DiagnosticsDashboard() {
       const data = await res.json() as any;
       if (data.success) {
         toast.success(data.message || `成功恢复 ${data.count} 张照片`);
+        if (data.remaining > 0) {
+          toast.info(`还有约 ${data.remaining} 张照片待恢复，可再次点击`, { duration: 5000 });
+        }
         scan();
       } else {
         toast.error(`恢复失败: ${data.error}`);
+      }
+    } catch (e: any) {
+      toast.error(`请求失败: ${e.message}`);
+    } finally {
+      setIsAuditing(false);
+    }
+  };
+
+  const handleRepairHashes = async () => {
+    setIsAuditing(true);
+    try {
+      const res = await api.storage['repair-hashes'].$post();
+      const data = await res.json() as any;
+      if (data.success) {
+        if (data.count > 0) {
+          toast.success(data.message);
+          scan();
+        } else {
+          toast.info("没有发现需要修复的哈希值");
+        }
+      } else {
+        toast.error(`修复失败: ${data.error}`);
       }
     } catch (e: any) {
       toast.error(`请求失败: ${e.message}`);
@@ -420,8 +446,23 @@ export function DiagnosticsDashboard() {
               </div>
               <span className="text-sm font-bold text-slate-800">恢复孤儿照片</span>
             </div>
-            <p className="text-[10px] text-slate-500">发现存储中有但数据库没记录的照片，将其重新导入数据库</p>
-            {isAuditing && <span className="text-[10px] font-bold text-green-600 animate-pulse">正在恢复中...</span>}
+            <p className="text-[10px] text-slate-500 uppercase tracking-wider">从云端找回丢失记录 (自动去重)</p>
+            {isAuditing && <span className="text-[10px] font-bold text-green-600 animate-pulse">正在导入中...</span>}
+          </button>
+
+          <button
+            onClick={handleRepairHashes}
+            disabled={isAuditing}
+            className="flex flex-col items-start gap-2 p-4 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-all border border-indigo-200 group group-active:scale-95 text-left"
+          >
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-600">
+                <Fingerprint className="w-4 h-4" />
+              </div>
+              <span className="text-sm font-bold text-slate-800">补全缺失哈希</span>
+            </div>
+            <p className="text-[10px] text-slate-500 uppercase tracking-wider">下载图片并重新计算 SHA256 (用于排重)</p>
+            {isAuditing && <span className="text-[10px] font-bold text-indigo-600 animate-pulse">正在计算中...</span>}
           </button>
         </div>
       </div>

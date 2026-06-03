@@ -627,40 +627,105 @@ app.post("/storage/import-orphans", async (c) => {
         continuationToken = list.NextContinuationToken;
       } while (continuationToken);
 
-      // 2. Get all DB files
-      const { data: photos } = await supabase.from("furniture_items").select("image_url");
-      const dbFilenames = new Set(photos?.map(p => p.image_url?.split('/').pop()).filter(Boolean));
+      // 2. Get all DB URLs to prevent duplicates
+      const { data: existingPhotos } = await supabase.from("furniture_items").select("image_url");
+      const dbUrls = new Set(existingPhotos?.map(p => p.image_url).filter(Boolean));
 
-      // 3. Find orphans
+      // 3. Find unique orphans (not in DB)
       const orphans = r2Keys.filter(key => {
-        const filename = key.split('/').pop();
-        return filename && !dbFilenames.has(filename);
+        const publicUrl = `https://${publicUrlPrefix}/${key}`;
+        return !dbUrls.has(publicUrl);
       });
 
       if (orphans.length === 0) {
-        return c.json({ success: true, count: 0, message: "没有发现孤儿文件" });
+        return c.json({ success: true, count: 0, message: "所有云端文件已与数据库对齐，无需恢复" });
       }
 
-      // 4. Create DB records (Batch of 50)
+      // 4. Create DB records (Batch of 50 to avoid timeout)
       const toCreate = orphans.slice(0, 50).map(key => {
         const publicUrl = `https://${publicUrlPrefix}/${key}`;
-        const name = key.split('/').pop()?.split('.')[0] || "Recovered Photo";
+        const filename = key.split('/').pop() || "";
+        const nameCandidate = filename.split('.')[0] || "恢复的照片";
+        
         return {
-          name: name,
+          name: nameCandidate,
           image_url: publicUrl,
           thumb_url: publicUrl,
-          description: "从存储孤儿文件自动恢复",
-          is_hidden: true 
+          description: `[自动恢复] 源文件: ${filename}`,
+          is_hidden: true,
+          // We don't have hash yet, will be fixed by repair-hashes endpoint
+          image_hash: null 
         };
       });
 
       const { error } = await supabase.from("furniture_items").insert(toCreate);
       if (error) throw error;
 
-      return c.json({ success: true, count: toCreate.length, message: `成功从存储恢复 ${toCreate.length} 张照片` });
+      return c.json({ 
+        success: true, 
+        count: toCreate.length, 
+        remaining: orphans.length - toCreate.length,
+        message: `从云端找回了 ${toCreate.length} 张未登记的照片。请在管理后台查看“隐藏”照片进行整理。` 
+      });
     } catch (e: any) {
       return c.json({ success: false, error: e.message }, 500);
     }
+});
+
+/**
+ * [LONG-TERM-FIX] Repair Missing Hashes
+ * Downloads the image, calculates hash, and updates the DB.
+ */
+app.post("/storage/repair-hashes", async (c) => {
+  try {
+    const supabase = await getSupabaseAdmin();
+    // 1. Find records with URL but no hash
+    const { data: targets, error: fetchError } = await supabase
+      .from("furniture_items")
+      .select("id, image_url")
+      .or('image_hash.is.null,image_hash.eq.""')
+      .not('image_url', 'is', null)
+      .limit(10); // Low limit because processing image is heavy
+
+    if (fetchError) throw fetchError;
+    if (!targets || targets.length === 0) {
+      return c.json({ success: true, count: 0, message: "没有发现需要修复哈希的记录" });
+    }
+
+    let repairedCount = 0;
+    const crypto = await import('node:crypto');
+
+    for (const target of targets) {
+      try {
+        if (!target.image_url) continue;
+
+        // Fetch the image
+        const response = await fetch(target.image_url);
+        if (!response.ok) continue;
+
+        const buffer = await response.arrayBuffer();
+        const hash = crypto.createHash('sha256').update(Buffer.from(buffer)).digest('hex');
+
+        // Update DB
+        await supabase
+          .from("furniture_items")
+          .update({ image_hash: hash })
+          .eq("id", target.id);
+        
+        repairedCount++;
+      } catch (err) {
+        console.error(`Failed to repair hash for ${target.id}:`, err);
+      }
+    }
+
+    return c.json({ 
+      success: true, 
+      count: repairedCount,
+      message: `成功修复了 ${repairedCount} 条记录的哈希值`
+    });
+  } catch (e: any) {
+    return c.json({ success: false, error: e.message }, 500);
+  }
 });
 
 app.post("/ai/analyze", async (c) => {
