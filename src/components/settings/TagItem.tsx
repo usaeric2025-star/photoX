@@ -2,7 +2,6 @@ import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Heart, Pencil, Trash2 } from "lucide-react";
 import { Tag } from "../../types";
-import { useUIStore } from "@/store/useUIStore";
 import { useClickAway } from "@/lib/hooks";
 import { useLongPress } from "@shined/react-use";
 
@@ -27,7 +26,6 @@ export function TagItem({
   isPinned,
   togglePin,
 }: TagItemProps) {
-  const update = useUIStore((s) => s.update);
 
   const itemRef = useRef<HTMLDivElement>(null);
   useClickAway(itemRef as any, () => {
@@ -43,16 +41,7 @@ export function TagItem({
   );
 
   const handleDeleteClick = () => {
-    update({
-      alertDialog: {
-        title: "确认删除",
-        message: `确定要删除「${tag.name}」吗？此操作不可恢复。`,
-        confirmLabel: "删除",
-        cancelLabel: "取消",
-        type: "danger",
-        onConfirm: () => deleteTag(tag.id),
-      },
-    });
+    deleteTag(tag.id);
   };
 
   const handleTogglePin = (e: React.MouseEvent) => {
@@ -69,16 +58,7 @@ export function TagItem({
 
   const handleMenuDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    update({
-      alertDialog: {
-        title: "确认删除",
-        message: `确定要删除「${tag.name}」吗？此操作不可恢复。`,
-        confirmLabel: "删除",
-        cancelLabel: "取消",
-        type: "danger",
-        onConfirm: () => deleteTag(tag.id),
-      },
-    });
+    deleteTag(tag.id);
     setActiveTagMenuId(null);
   };
 
@@ -127,22 +107,6 @@ export function TagItem({
             >
               <Pencil size={12} /> 编辑 / EDIT
             </button>
-            <div className="px-3 py-2 space-y-1">
-              <div className="flex justify-between items-center">
-                <span className="text-white/50 text-[9px] font-black uppercase tracking-widest">热度 / HOT: {tag.hot_score || 0}</span>
-              </div>
-              <input 
-                type="range" 
-                min="0" 
-                max="100" 
-                value={tag.hot_score || 0}
-                onChange={(e) => {
-                  const val = parseInt(e.target.value);
-                  void updateTag(tag.id, { hot_score: val });
-                }}
-                className="w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-brand-gold"
-              />
-            </div>
             <button
               onClick={handleMenuDeleteClick}
               className="px-3 py-2 text-red-400 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2"

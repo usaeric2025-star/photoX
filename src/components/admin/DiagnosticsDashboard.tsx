@@ -109,20 +109,20 @@ export function DiagnosticsDashboard() {
         {auditResult ? (
           <div className="space-y-6">
             {/* 可视化条形图 */}
-            <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden flex">
-              <div 
-                className="h-full bg-green-500 transition-all duration-1000" 
-                style={{ width: `${(auditResult.healthyCount / (auditResult.healthyCount + auditResult.orphans.count + auditResult.ghosts.count)) * 100}%` }}
-              />
-              <div 
-                className="h-full bg-blue-500 transition-all duration-1000" 
-                style={{ width: `${(auditResult.orphans.count / (auditResult.healthyCount + auditResult.orphans.count + auditResult.ghosts.count)) * 100}%` }}
-              />
-              <div 
-                className="h-full bg-red-500 transition-all duration-1000" 
-                style={{ width: `${(auditResult.ghosts.count / (auditResult.healthyCount + auditResult.orphans.count + auditResult.ghosts.count)) * 100}%` }}
-              />
-            </div>
+            {(() => {
+              const healthy = auditResult?.healthyCount ?? 0;
+              const orphans = auditResult?.orphans?.count ?? 0;
+              const ghosts = auditResult?.ghosts?.count ?? 0;
+              const total = healthy + orphans + ghosts;
+              const getWidth = (val: number) => total > 0 ? (val / total) * 100 : 0;
+              return (
+                <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden flex">
+                  <div className="h-full bg-green-500 transition-all duration-1000" style={{ width: `${getWidth(healthy)}%` }} />
+                  <div className="h-full bg-blue-500 transition-all duration-1000" style={{ width: `${getWidth(orphans)}%` }} />
+                  <div className="h-full bg-red-500 transition-all duration-1000" style={{ width: `${getWidth(ghosts)}%` }} />
+                </div>
+              );
+            })()}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Healthy */}
@@ -131,7 +131,7 @@ export function DiagnosticsDashboard() {
                   <span className="text-[10px] font-black uppercase tracking-widest text-green-600">完美同步 (Healthy)</span>
                   <CheckCircle2 size={14} className="text-green-500" />
                 </div>
-                <div className="text-2xl font-black text-green-700">{auditResult.healthyCount}</div>
+                <div className="text-2xl font-black text-green-700">{auditResult?.healthyCount ?? 0}</div>
                 <p className="text-[10px] text-green-600/70 font-bold uppercase">数据库与云端物理文件完全匹配</p>
               </div>
 
@@ -141,11 +141,11 @@ export function DiagnosticsDashboard() {
                   <span className="text-[10px] font-black uppercase tracking-widest text-blue-600">孤儿文件 (Orphans)</span>
                   <CloudDownload size={14} className="text-blue-500" />
                 </div>
-                <div className="text-2xl font-black text-blue-700">{auditResult.orphans.count}</div>
+                <div className="text-2xl font-black text-blue-700">{auditResult?.orphans?.count ?? 0}</div>
                 <div className="space-y-1">
                    <p className="text-[10px] text-blue-600/70 font-bold uppercase truncate">R2 有文件但数据库丢失记录</p>
-                   {auditResult.orphans.count > 0 && (
-                     <p className="text-[9px] text-blue-400 truncate">例: {auditResult.orphans.samples[0]?.key}</p>
+                   {(auditResult?.orphans?.count ?? 0) > 0 && (
+                     <p className="text-[9px] text-blue-400 truncate">例: {auditResult?.orphans?.samples?.[0]?.key}</p>
                    )}
                 </div>
               </div>
@@ -156,11 +156,11 @@ export function DiagnosticsDashboard() {
                   <span className="text-[10px] font-black uppercase tracking-widest text-red-600">幽灵记录 (Ghosts)</span>
                   <Trash2 size={14} className="text-red-500" />
                 </div>
-                <div className="text-2xl font-black text-red-700">{auditResult.ghosts.count}</div>
+                <div className="text-2xl font-black text-red-700">{auditResult?.ghosts?.count ?? 0}</div>
                 <div className="space-y-1">
                    <p className="text-[10px] text-red-600/70 font-bold uppercase truncate">数据库有记录但云端文件已丢失</p>
-                   {auditResult.ghosts.count > 0 && (
-                     <p className="text-[9px] text-red-400 truncate">例: {auditResult.ghosts.samples[0]?.name}</p>
+                   {(auditResult?.ghosts?.count ?? 0) > 0 && (
+                     <p className="text-[9px] text-red-400 truncate">例: {auditResult?.ghosts?.samples?.[0]?.name}</p>
                    )}
                 </div>
               </div>

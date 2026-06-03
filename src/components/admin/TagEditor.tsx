@@ -10,6 +10,7 @@ import {
   useShallow,
 } from "@/hooks";
 import { Tag } from "@/types";
+import { ErrorFactory } from "@/lib/errorFactory";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { useLongPress } from "@shined/react-use";
 
@@ -192,7 +193,13 @@ export function TagEditor({
                       title: `彻底删除标签 / Permanent Delete: #${activeActionTag.name}`,
                       message:
                         "无法撤销且会从所有照片中移除 / This will be permanently removed from all photos.",
-                      onConfirm: () => onDeleteTag(activeActionTag.id),
+                      onConfirm: () => {
+                        try {
+                          onDeleteTag(activeActionTag.id);
+                        } catch (e) {
+                           throw ErrorFactory.wrap(e, "彻底删除标签", activeActionTag.name);
+                        }
+                      },
                       confirmLabel: "删除",
                       type: "danger",
                     },
