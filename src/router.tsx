@@ -249,6 +249,43 @@ const routeTree = rootRoute.addChildren([
 export const router = createRouter({ 
   routeTree,
   defaultPreload: 'intent',
+  parseSearch: (searchStr) => {
+    const params = new URLSearchParams(searchStr);
+    const result: Record<string, any> = {};
+    params.forEach((value, key) => {
+      if (value === 'true' || value === 'false') {
+        result[key] = value;
+        return;
+      }
+      if (value.startsWith('"') && value.endsWith('"')) {
+        try {
+          result[key] = JSON.parse(value);
+          return;
+        } catch (_) {}
+      }
+      try {
+        if (value.startsWith('{') || value.startsWith('[')) {
+          result[key] = JSON.parse(value);
+          return;
+        }
+      } catch (_) {}
+      result[key] = value;
+    });
+    return result;
+  },
+  stringifySearch: (search) => {
+    const params = new URLSearchParams();
+    Object.entries(search).forEach(([key, value]) => {
+      if (value === undefined || value === null) return;
+      if (typeof value === 'object') {
+        params.set(key, JSON.stringify(value));
+      } else {
+        params.set(key, String(value));
+      }
+    });
+    const str = params.toString();
+    return str ? `?${str}` : '';
+  },
   context: {
     user: null,
     role: 'guest',

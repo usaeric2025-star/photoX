@@ -21,9 +21,30 @@ export const updatePhotoInCloud = async (photoId: string, updates: Partial<Photo
   const cleanUpdates = { ...updates };
   delete cleanUpdates.id;
 
+  // [SANITIZE] Explicitly enforce string/null contract for DB fields
+  const cUpdates = cleanUpdates as any;
+
+  if (cUpdates.category_id !== undefined && cUpdates.category_id !== null) {
+      cUpdates.category_id = String(cUpdates.category_id);
+  } else {
+      cUpdates.category_id = null;
+  }
+  
+  if (cUpdates.manufacturer_id !== undefined && cUpdates.manufacturer_id !== null) {
+      cUpdates.manufacturer_id = String(cUpdates.manufacturer_id);
+  } else {
+      cUpdates.manufacturer_id = null;
+  }
+  
+  if (cUpdates.price !== undefined && cUpdates.price !== null) {
+      cUpdates.price = String(cUpdates.price);
+  } else {
+      cUpdates.price = null;
+  }
+
   // [APF-CONTRACT] Validate updates before processing
   const validator = createPhotoValidator();
-  const validationRes = validator.validate(cleanUpdates);
+  const validationRes = validator.validate(cUpdates);
   if (!validationRes.ok) {
     throw new Error(`Validation Failed: ${validationRes.message}.`);
   }
@@ -81,12 +102,34 @@ export const batchUpdatePhotosInCloud = async (
   
   // [APF-CONTRACT] Validate updates before batch processing
   const validator = createPhotoValidator();
-  const validationRes = validator.validate(updates);
+  
+  // [SANITIZE] Explicitly enforce string/null contract for DB fields
+  const cleanUpdates = { ...updates };
+  const cUpdates = cleanUpdates as any;
+  if (cUpdates.category_id !== undefined && cUpdates.category_id !== null) {
+      cUpdates.category_id = String(cUpdates.category_id);
+  } else {
+      cUpdates.category_id = null;
+  }
+  
+  if (cUpdates.manufacturer_id !== undefined && cUpdates.manufacturer_id !== null) {
+      cUpdates.manufacturer_id = String(cUpdates.manufacturer_id);
+  } else {
+      cUpdates.manufacturer_id = null;
+  }
+  
+  if (cUpdates.price !== undefined && cUpdates.price !== null) {
+      cUpdates.price = String(cUpdates.price);
+  } else {
+      cUpdates.price = null;
+  }
+
+  const validationRes = validator.validate(cUpdates);
     if (!validationRes.ok) {
         throw new Error(`Batch Validation Failed: ${validationRes.message}.`);
     }
 
-  const dbUpdates = mapToDb(updates);
+  const dbUpdates = mapToDb(cUpdates);
   
   for (let i = 0; i < ids.length; i += BATCH_SIZE) {
     if (signal?.aborted) throw new Error('Operation aborted');

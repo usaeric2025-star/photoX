@@ -103,6 +103,25 @@ export const globalHandleError = (error: any, context: string, silent: boolean =
     return;
   }
 
+  // Gracefully handle Vite dynamic import / Chunk Load Errors from redeployment
+  if (
+    message.includes('Failed to fetch dynamically imported module') ||
+    message.includes('dynamically imported module') ||
+    /dynamically imported module/i.test(message)
+  ) {
+    const RELOAD_KEY = 'photo_x_chunk_reload_attempts';
+    const lastReload = sessionStorage.getItem(RELOAD_KEY);
+    const now = Date.now();
+    if (!lastReload || now - Number(lastReload) > 15000) {
+      sessionStorage.setItem(RELOAD_KEY, String(now));
+      toast.info('系统已检测到有最新更新，正在为您自动刷新页面并同步新版本...', { duration: 5000 });
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+      return;
+    }
+  }
+
   console.error(`[PhotoX Core Error] [${context}] Detailed Info:`, {
     rawError: error,
     message,

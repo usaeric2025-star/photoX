@@ -70,9 +70,31 @@ export const usePhotoEditLogic = (props: Props) => {
 
     await runTask('旋转图片', async () => {
       const img = new Image();
-      if (src.startsWith('http')) img.crossOrigin = 'Anonymous';
-      img.src = src;
-      await img.decode();
+      let finalSrc = src;
+      if (src.startsWith('http')) {
+        img.crossOrigin = 'anonymous';
+        // Add cache-busting timestamp to bypass browser cached image without CORS header
+        try {
+          const urlObj = new URL(src);
+          urlObj.searchParams.set('t', String(Date.now()));
+          finalSrc = urlObj.toString();
+        } catch (_) {
+          finalSrc = src + (src.indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now();
+        }
+      }
+      img.src = finalSrc;
+      
+      // Fallback for decode support on older/stricter decoders, wrapped in error boundary
+      try {
+        await img.decode();
+      } catch (decodeErr) {
+        console.warn('[rotatePhoto] Standard img.decode failed, falling back to onload promise:', decodeErr);
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => resolve();
+          img.onerror = () => reject(new Error('图片加载或解码失败，请确认网络连接或刷新页面重试。'));
+          if (img.complete) resolve();
+        });
+      }
 
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');

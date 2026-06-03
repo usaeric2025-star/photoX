@@ -180,19 +180,28 @@ Your response MUST match this exact JSON schema:
         }
       }
 
+      // Sanitization: Only allow allowed fields to be updated
+      const allowedFields = ['dimensions', 'name', 'name_en', 'name_ms', 'description_translations'];
+      const sanitizedUpdates: any = {};
+      for (const key in updates) {
+        if (allowedFields.includes(key)) {
+          sanitizedUpdates[key] = updates[key];
+        }
+      }
+
       // Perform update if any fields changed
-      if (Object.keys(updates).length > 0) {
+      if (Object.keys(sanitizedUpdates).length > 0) {
         const { error: updateError } = await supabase
           .from("furniture_items")
-          .update(updates)
+          .update(sanitizedUpdates)
           .eq("id", photo.id);
 
         if (updateError) throw updateError;
         results.push({
           id: photo.id,
-          name: updates.name || photo.name,
+          name: sanitizedUpdates.name || photo.name,
           status: "success",
-          details: Object.keys(updates)
+          details: Object.keys(sanitizedUpdates)
         });
       } else {
         results.push({

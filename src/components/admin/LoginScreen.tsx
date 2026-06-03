@@ -3,6 +3,7 @@ import { LogIn, Image as ImageIcon, Sparkles, Cloud, Layers, RefreshCcw, Lock } 
 import { toast } from '@/lib/ui/toast';
 import { useSettings } from '../../hooks';
 import { useUIStore } from '@/store/useUIStore';
+import { Link } from '@tanstack/react-router';
 
 interface LoginScreenProps {
   loginWithGoogle: () => Promise<void>;
@@ -137,6 +138,16 @@ export function LoginScreen({ loginWithGoogle, isLoading }: LoginScreenProps) {
             By connecting, you agree to the <br/>
             <span className="text-slate-900 cursor-pointer hover:underline font-bold">Terms of Service</span> and <span className="text-slate-900 cursor-pointer hover:underline font-bold">Privacy Policy</span>
           </p>
+
+          <div className="flex justify-center pt-2">
+            <Link 
+              to="/" 
+              search={{ preview: 'true' } as any}
+              className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 text-xs font-bold py-2.5 px-5 rounded-2xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-all active:scale-[0.97] shadow-sm tracking-tight"
+            >
+              ← 返回公开展示页 / Back to Showcase
+            </Link>
+          </div>
         </div>
       </div>
     </div>
