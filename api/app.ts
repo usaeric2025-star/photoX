@@ -159,16 +159,60 @@ app.post("/ai/test", async (c) => {
     }
 });
 
+app.post("/ai/test/primary", async (c) => {
+    try {
+        const supabase = await getSupabaseAdmin();
+        const { data: settings } = await supabase.from('settings').select('ai_provider').limit(1).single();
+        const provider = settings?.ai_provider || 'openrouter';
+        const config = await getAIConfig(provider);
+        const testPayload = { 
+            model: provider === 'agnes' ? 'agnes-2.0-flash' : 'google/gemini-2.0-flash-exp:free', 
+            prompt: 'hello', 
+            imageBase64: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=' 
+        };
+        await callProvider(config.baseUrl, config.apiKey, testPayload);
+        return c.json({ success: true, provider });
+    } catch (e: any) {
+        return c.json({ success: false, error: e.message }, 500);
+    }
+});
+
+app.post("/ai/test/secondary", async (c) => {
+    try {
+        const supabase = await getSupabaseAdmin();
+        const { data: settings } = await supabase.from('settings').select('ai_provider').limit(1).single();
+        const primaryProvider = settings?.ai_provider || 'openrouter';
+        const provider = primaryProvider === 'openrouter' ? 'agnes' : 'openrouter';
+        
+        const config = await getAIConfig(provider);
+        const testPayload = { 
+            model: provider === 'agnes' ? 'agnes-2.0-flash' : 'google/gemini-2.0-flash-exp:free', 
+            prompt: 'hello', 
+            imageBase64: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=' 
+        };
+        await callProvider(config.baseUrl, config.apiKey, testPayload);
+        return c.json({ success: true, provider });
+    } catch (e: any) {
+        return c.json({ success: false, error: e.message }, 500);
+    }
+});
+
 app.post("/ai/dispatch", async (c) => {
   try {
     const { task, payload } = await c.req.json();
     const errors: any[] = [];
+    const supabase = await getSupabaseAdmin();
+
+    // 1. 确定主/次提供商
+    const { data: settings } = await supabase.from('settings').select('ai_provider').limit(1).single();
+    const primaryProvider = settings?.ai_provider || 'openrouter';
+    const secondaryProvider = primaryProvider === 'openrouter' ? 'agnes' : 'openrouter';
     
-    // 尝试的提供商列表
-    const providersToTry = ['openrouter', 'agnes']; // 根据配置添加更多
+    const providersToTry = [primaryProvider, secondaryProvider];
 
     for (const providerName of providersToTry) {
         try {
+            console.log(`Trying provider: ${providerName}`);
             const config = await getAIConfig(providerName);
             return c.json(await callProvider(config.baseUrl, config.apiKey, payload));
         } catch (e: any) {
