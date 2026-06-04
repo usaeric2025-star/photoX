@@ -3,6 +3,7 @@ import { Tag } from '../../types';
 import { errorFactory, success } from '@/lib/errorFactory';
 import type { AppResult } from '@/lib/errorFactory';
 import { StandardError } from '@/lib/validators/protocol';
+import { ErrorFactory } from '../../lib/error/ErrorFactory';
 
 const TABLE_NAME = 'tags';
 const ALLOWED_FIELDS = ['id', 'name', 'zh', 'en', 'ms', 'aliases', 'userId', 'hot_score'];
@@ -99,14 +100,14 @@ export const removeTagFromPhoto = async (photoId: string, tagId: string): Promis
 export const addTagToDB = async (name: string): Promise<Tag> => {
     const normalizedName = name.toUpperCase().trim();
     const result = await createTag({ name: normalizedName } as Tag);
-    if (!result.ok) throw new Error(result.message);
+    if (!result.ok) throw ErrorFactory.wrap(new Error(result.message), 'addTagToDB', name);
     const tag = result.data;
     return { ...tag, id: String(tag.id) } as Tag;
 };
 
 export const batchCreateTags = async (names: string[]): Promise<Map<string, string>> => {
     const result = await batchCreateTagsInCloud(names.map(name => ({ name: name.toUpperCase().trim() })));
-    if (!result.ok) throw new Error(result.message);
+    if (!result.ok) throw ErrorFactory.wrap(new Error(result.message), 'batchCreateTags', names.join(', '));
     const data = result.data;
     const map = new Map<string, string>();
     (data || []).forEach(t => map.set(t.name, String(t.id)));

@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { DB_CONFIG } from '../constants/config';
+import { ErrorFactory } from '../lib/error/ErrorFactory';
 
 import { AppSettings } from '../types';
 
@@ -75,13 +76,13 @@ export const saveSettings = async (settings: Partial<AppSettings> & Record<strin
             
         if (upsertError) {
             console.error("Error upserting settings:", upsertError);
-            throw upsertError;
+            throw ErrorFactory.wrap(upsertError, 'saveSettings');
         }
         
         return true;
     } catch (err: unknown) {
         console.error("Error in saveSettings:", err);
-        throw err;
+        throw ErrorFactory.wrap(err instanceof Error ? err : new Error(String(err)), 'saveSettings');
     }
 };
 
@@ -97,7 +98,7 @@ export const uploadLogo = async (file: File) => {
 
         if (uploadError) {
             console.error("Supabase Logo Upload Error:", uploadError);
-            throw new Error(`Logo 上傳失敗: ${uploadError.message}`);
+            throw ErrorFactory.wrap(uploadError, 'uploadLogo', fileName);
         }
 
         const { data: { publicUrl } } = supabase.storage
@@ -116,6 +117,6 @@ export const uploadLogo = async (file: File) => {
         return publicUrl;
     } catch (err: unknown) {
         console.error("Logo upload process error:", err);
-        throw err;
+        throw ErrorFactory.wrap(err instanceof Error ? err : new Error(String(err)), 'uploadLogo');
     }
 };

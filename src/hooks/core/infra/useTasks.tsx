@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { ErrorFactory } from '../../../lib/error/ErrorFactory';
 import { motion, AnimatePresence } from 'motion/react';
 import { Loader2, X, ChevronUp, ChevronDown, CheckCircle2, AlertCircle, PlayCircle } from 'lucide-react';
 
@@ -170,7 +171,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
 
 export const useTasks = () => {
   const context = useContext(TaskContext);
-  if (!context) throw new Error('useTasks must be used within TaskProvider');
+  if (!context) throw ErrorFactory.wrap(new Error('useTasks must be used within TaskProvider'), 'useTasks');
   return context;
 };
 

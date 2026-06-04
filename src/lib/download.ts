@@ -1,4 +1,5 @@
 import { toast } from "sonner";
+import { ErrorFactory } from './error/ErrorFactory';
 
 /**
  * 将图片 URL 转换为 JPEG 并触发下载
@@ -10,7 +11,7 @@ export async function downloadPhotoAsJpeg(url: string, filename?: string) {
   
   try {
     const response = await fetch(url, { mode: 'cors' });
-    if (!response.ok) throw new Error('网络响应异常');
+    if (!response.ok) throw ErrorFactory.wrap(new Error('网络响应异常'), 'downloadPhotoAsJpeg - fetch');
     
     const blob = await response.blob();
     
@@ -20,7 +21,7 @@ export async function downloadPhotoAsJpeg(url: string, filename?: string) {
     
     await new Promise((resolve, reject) => {
       img.onload = resolve;
-      img.onerror = () => reject(new Error('图片加载失败'));
+      img.onerror = () => reject(ErrorFactory.wrap(new Error('图片加载失败'), 'downloadPhotoAsJpeg - loadImage'));
       img.src = objectUrl;
     });
 
@@ -30,7 +31,7 @@ export async function downloadPhotoAsJpeg(url: string, filename?: string) {
     canvas.height = img.naturalHeight;
     
     const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('无法创建 Canvas 上下文');
+    if (!ctx) throw ErrorFactory.wrap(new Error('无法创建 Canvas 上下文'), 'downloadPhotoAsJpeg - canvasContext');
     
     // 填充白色背景（防止透明转 JPEG 变黑）
     ctx.fillStyle = '#FFFFFF';

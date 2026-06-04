@@ -1,5 +1,6 @@
 import { api } from '@/lib/api';
 import { Photo } from '@/types/photo';
+import { ErrorFactory } from '../../lib/error/ErrorFactory';
 
 interface GroupAnalysisResult {
   name: string;
@@ -26,7 +27,7 @@ export async function analyzeGroup(photos: Photo[]): Promise<GroupAnalysisResult
 
   if (!response.ok) {
     const error = await response.json() as any;
-    throw new Error(error.error || 'AI 智能合组分析失败');
+    throw ErrorFactory.wrap(new Error(error.error || 'AI 智能合组分析失败'), 'analyzeGroup');
   }
 
   return await response.json();
@@ -41,7 +42,7 @@ export async function analyzeSinglePhoto(photo: Photo): Promise<PhotoAnalysisRes
 
   if (!response.ok) {
     const error = await response.json() as any;
-    throw new Error(error.error || 'AI 单张识别分析失败');
+    throw ErrorFactory.wrap(new Error(error.error || 'AI 单张识别分析失败'), 'analyzeSinglePhoto', photo.id);
   }
 
   return await response.json();

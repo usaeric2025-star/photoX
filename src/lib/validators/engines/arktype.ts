@@ -1,6 +1,7 @@
 import { type Type, type } from 'arktype';
 import { success, errorFactory, type AppResult } from '@/lib/errorFactory';
 import { Validator, StandardError, ValidatorMeta } from '../protocol';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 /**
  * @validator-contract ArkTypeValidator
@@ -36,7 +37,7 @@ export class ArkTypeValidator<T> implements Validator<T> {
     serialize(): ValidatorMeta {
         try {
             if (!this.meta) {
-                throw new Error('Meta information is corrupted or missing');
+                throw ErrorFactory.wrap(new Error('Meta information is corrupted or missing'), 'serializeMetadata');
             }
             return this.meta;
         } catch (e) {

@@ -1,3 +1,4 @@
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { type } from "arktype";
 import { redirect } from "@tanstack/react-router";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -34,7 +35,7 @@ export function validateAccess(contract: RouteAccessContract, context: { user: a
   // Validate schema first for robust type-safety
   const check = RouteAccessContractSchema(contract);
   if (check instanceof type.errors) {
-    throw new Error(`RouteAccessContract schema violation: ${check.summary}`);
+    throw ErrorFactory.wrap(new Error(`RouteAccessContract schema violation: ${check.summary}`), 'validateAccess');
   }
 
   const { user, role } = context;

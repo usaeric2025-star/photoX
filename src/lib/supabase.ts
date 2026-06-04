@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { ErrorFactory } from './error/ErrorFactory';
 
 /**
  * 安全获取环境变量
@@ -23,11 +24,11 @@ const supabaseAnonKey = getEnv('VITE_SUPABASE_ANON_KEY');
 
 // 验证环境变量
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
+  throw ErrorFactory.wrap(new Error(
     `Missing Supabase environment variables.\n` +
     `VITE_SUPABASE_URL: ${!!supabaseUrl}\n` +
     `VITE_SUPABASE_ANON_KEY: ${!!supabaseAnonKey}`
-  );
+  ), 'supabaseInitialization');
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {

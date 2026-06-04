@@ -79,6 +79,22 @@ export const useManufacturerDelete = createMutationHook({
   onSuccessMessage: '厂商删除成功',
 });
 
+export const useRepairMutation = createMutationHook({
+  entity: 'Admin',
+  action: 'Repair',
+  mutationFn: async (issueId: string) => {
+    const { api } = await import('@/lib/api');
+    const res = await api.admin.repair.$post({ json: { issueId } });
+    if (!res.ok) {
+        const errorData = await res.json() as any;
+        throw ErrorFactory.wrap(new Error(errorData?.error || `HTTP ${res.status}`), 'runRepair', issueId);
+    }
+    return res.json() as any;
+  },
+  invalidateKeys: [photoKeys.all, groupKeys.all],
+  onSuccessMessage: '修复成功',
+});
+
 export const useSyncMutation = () => {
   const queryClient = useQueryClient();
   const invalidatePhotos = useInvalidatePhotos();
@@ -89,12 +105,20 @@ export const useSyncMutation = () => {
     mutationFn: async (type: 'push' | 'pull') => {
       if (type === 'pull') {
         invalidatePhotos();
-        await queryClient.invalidateQueries({ queryKey: ['tags'] });
-        await queryClient.invalidateQueries({ queryKey: ['categories'] });
-        await queryClient.invalidateQueries({ queryKey: ['manufacturers'] });
-        await queryClient.invalidateQueries({ queryKey: ['groups'] });
+        await queryClient.invalidateQueries({ queryKey: [photoKeys.tags()] });
+        await queryClient.invalidateQueries({ queryKey: [photoKeys.categories()] });
+        await queryClient.invalidateQueries({ queryKey: [photoKeys.manufacturers()] });
+        await queryClient.invalidateQueries({ queryKey: [groupKeys.all] });
       }
     },
     onSuccessMessage: '同步完成',
   })();
+};
+
+export const useAdminMutations = () => {
+  const repair = useRepairMutation();
+
+  return {
+    useRepairMutation: () => repair,
+  };
 };

@@ -6,6 +6,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { clearExpiredCaches } from './lib/db/indexedDB';
 import { globalHandleError } from './lib/error/errorHandler';
 import { logger } from '@/lib/logger';
+import { Analytics } from '@vercel/analytics/react';
 
 export default function AppRoutes() {
   useEffect(() => {
@@ -29,6 +30,7 @@ export default function AppRoutes() {
   return (
     <ErrorBoundary>
       <RouterProvider router={router} context={routerContext} />
+      <Analytics />
     </ErrorBoundary>
   );
 }

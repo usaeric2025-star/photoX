@@ -3,15 +3,17 @@ import { useQuery } from '@tanstack/react-query';
 import { storageKeys } from '@/lib/queryKeys';
 import { StorageAuditResSchema } from '@/shared/apiContractSchema';
 import { type } from 'arktype';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { api } from '@/lib/api';
 
 export function R2AuditReport() {
   const { data, isLoading, error } = useQuery({
     queryKey: storageKeys.audit(),
     queryFn: async () => {
-      const resp = await fetch('/api/storage/audit');
+      const resp = await api.storage.audit.$get();
       const json = await resp.json();
       const check = StorageAuditResSchema(json);
-      if (check instanceof type.errors) throw new Error('Invalid response');
+      if (check instanceof type.errors) throw ErrorFactory.wrap(new Error('Invalid response'), 'checkStorageHealth');
       return check;
     }
   });

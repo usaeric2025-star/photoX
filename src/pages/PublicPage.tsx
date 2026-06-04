@@ -97,7 +97,8 @@ export default function PublicPage() {
   );
 }
 
+import { ErrorFactory } from '../lib/error/ErrorFactory';
+
 function AuthErrorThrower({ message }: { message: string }) {
-  throw new Error(message);
-  return null;
+  throw ErrorFactory.wrap(new Error(message), 'AuthErrorThrower');
 }

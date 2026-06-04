@@ -358,7 +358,7 @@ export const groupPhotos = async (photoIds: string[], predefinedGroupId?: string
       
     if (insertError) {
       console.error('[groupPhotos] Failed to create group in database:', insertError);
-      throw new Error(`创建合并群组失败: ${insertError.message || JSON.stringify(insertError)}`);
+      throw ErrorFactory.wrap(new Error(`创建合并群组失败: ${insertError.message || JSON.stringify(insertError)}`), 'groupPhotos', groupId);
     }
     isNewGroup = true;
   }
@@ -450,7 +450,7 @@ export const updatePhotosGroupInCloud = async (photoIds: string[], updates: Reco
     .select('id');
     
   if (error) {
-    throw new Error(error.message || JSON.stringify(error));
+    throw ErrorFactory.wrap(error, 'updatePhotosGroupInCloud', photoIds.join(', '));
   }
   
   return data;
@@ -466,7 +466,7 @@ export const setPhotoAsGroupCoverInCloud = async (photoId: string | null, groupI
     .eq('group_id', groupId);
 
   if (unsetError) {
-    throw new Error(unsetError.message || JSON.stringify(unsetError));
+    throw ErrorFactory.wrap(unsetError, 'setPhotoAsGroupCoverInCloud', groupId);
   }
 
   if (photoId) {
@@ -478,7 +478,7 @@ export const setPhotoAsGroupCoverInCloud = async (photoId: string | null, groupI
         .eq('id', photoId);
 
       if (setError) {
-        throw new Error(setError.message || JSON.stringify(setError));
+        throw ErrorFactory.wrap(setError, 'setPhotoAsGroupCoverInCloud', photoId);
       }
     }
   }

@@ -5,6 +5,7 @@ import { fromThrowableAsync } from '@/lib/errorFactory';
 import { toast } from 'sonner';
 import { DiagnosticsReport } from '@/types/diagnostics';
 import { photoKeys, groupKeys } from '@/lib/queryKeys';
+import { ErrorFactory } from '../../lib/error/ErrorFactory';
 
 /**
  * [ATOMIC-HOOK] useDiagnostics
@@ -44,7 +45,7 @@ export function useDiagnostics() {
       const res = await api.admin.repair.$post({ json: { issueId } });
       if (!res.ok) {
         const errorData = await res.json() as any;
-        throw new Error(errorData?.error || `HTTP ${res.status}`);
+        throw ErrorFactory.wrap(new Error(errorData?.error || `HTTP ${res.status}`), 'runRepair', issueId);
       }
       return res.json() as any;
     },

@@ -2,6 +2,7 @@ import { createMutationHook } from './factory';
 import { Photo } from '@/types';
 import { update, deleteMany, batchUpdate } from '@/services/photo/commands';
 import { photoKeys } from '@/lib/queryKeys';
+import { uploadService } from '@/services/storage/uploadService';
 
 export const usePhotoEdit = createMutationHook({
   entity: 'Photo',
@@ -51,6 +52,15 @@ export const useTogglePin = createMutationHook({
   onSuccessMessage: (data, { isPinned }) => isPinned ? '已置顶' : '已取消置顶',
 });
 
+export const useUploadPhotos = createMutationHook({
+  entity: 'Photo',
+  action: 'Upload',
+  mutationFn: ({ files, onProgress }: { files: File[]; onProgress: (p: number) => void }) => 
+    uploadService.upload(files, onProgress),
+  invalidateKeys: [photoKeys.all],
+  onSuccessMessage: '上传完成',
+});
+
 /**
  * Hook for complex photo domain mutations that require custom logic
  */
@@ -59,11 +69,13 @@ export const usePhotoMutations = () => {
   const remove = usePhotoDelete();
   const batchEdit = usePhotoBatchEdit();
   const togglePin = useTogglePin();
+  const upload = useUploadPhotos();
 
   return {
     edit,
     remove,
     batchEdit,
     togglePin,
+    upload,
   };
 };

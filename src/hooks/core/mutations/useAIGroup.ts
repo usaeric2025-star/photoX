@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { analyzeGroup, analyzeSinglePhoto } from '@/services/gemini/groupAnalysis';
 import { useUIStore } from '@/store/useUIStore';
 import { photoKeys, groupKeys } from '@/lib/queryKeys';
+import { ErrorFactory } from '../../../lib/error/ErrorFactory';
 
 export function useAIGroup() {
   const queryClient = useQueryClient();
@@ -19,8 +20,8 @@ export function useAIGroup() {
           .select('id, name, tag_ids')
           .in('id', photoIds);
     
-        if (error) throw error;
-        if (!photos || photos.length === 0) throw new Error('未找到所选照片');
+        if (error) throw ErrorFactory.wrap(error, 'createAIGroup - fetchPhotos');
+        if (!photos || photos.length === 0) throw ErrorFactory.wrap(new Error('未找到所选照片'), 'createAIGroup', photoIds.join(', '));
     
         // 为了让 AI 更好的分析，我们需要获取标签名称。
         const allTagIds = Array.from(new Set(photos.flatMap(p => p.tag_ids || [])));
@@ -76,7 +77,7 @@ export function useAIGroup() {
           .select()
           .single();
     
-        if (groupError) throw groupError;
+        if (groupError) throw ErrorFactory.wrap(groupError, 'createAIGroup - insertGroup');
     
         // 4. 更新照片的 group_id 并清理原有的组合
         const searchParams = new URLSearchParams(window.location.search);
@@ -102,8 +103,8 @@ export function useAIGroup() {
           .eq('id', photoId)
           .single();
     
-        if (error) throw error;
-        if (!photo) throw new Error('未找到照片信息');
+        if (error) throw ErrorFactory.wrap(error, 'recognizeSinglePhoto - fetchPhoto');
+        if (!photo) throw ErrorFactory.wrap(new Error('未找到照片信息'), 'recognizeSinglePhoto', photoId);
     
         // 同步获取标签名
         const { data: tagsData } = await supabase.from('tags').select('id, name').in('id', photo.tag_ids || []);

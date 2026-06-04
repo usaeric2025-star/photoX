@@ -1,8 +1,10 @@
+import { ErrorFactory } from '../lib/error/ErrorFactory';
 import React from 'react';
 import { 
   ChevronLeft,
   Settings2, Save, ChevronDown
 } from 'lucide-react';
+import { api } from '@/lib/api';
 import { useErrorHandler } from '@/hooks';
 import { toast } from '@/lib/ui/toast';
 import { ErrorLogViewer } from './admin/ErrorLogViewer';
@@ -53,14 +55,12 @@ export function SettingsScreen() {
       const reader = new FileReader();
       reader.onload = async () => {
         const base64Data = reader.result as string;
-        const resp = await fetch('/api/upload-direct', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+        const resp = await api.uploadDirect.$post({
+          json: {
             base64Data,
             fileKey: `settings/logo_${Date.now()}.webp`,
             contentType: file.type
-          })
+          }
         });
         const res = await resp.json();
         if (res.success && res.data.publicUrl) {
@@ -223,9 +223,9 @@ export function SettingsScreen() {
                 categories={categories}
                 deleteCategory={deleteCategory}
                 updateCategory={async (id, data) => { const r = await updateCategory(id, data); return !!r; }}
-                addCategory={async (name: string) => { const r = await addCategory(name); if (!r) throw new Error("Failed"); return r; }}
+                addCategory={async (name: string) => { const r = await addCategory(name); if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addCategory', name); return r; }}
                 manufacturers={manufacturers}
-                addManufacturer={async (name) => { const r = await addManufacturer(name); if (!r) throw new Error("Failed"); return r; }}
+                addManufacturer={async (name) => { const r = await addManufacturer(name); if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addManufacturer', name); return r; }}
                 updateManufacturer={async (id, data) => { const r = await updateManufacturer(id, data); return !!r; }}
                 deleteManufacturer={deleteManufacturer}
                 cardClass={cardClass}
@@ -234,7 +234,7 @@ export function SettingsScreen() {
               <TagsManager 
                 tags={tags}
                 settings={settings}
-                addTag={async (name) => { const r = await addTag(name); if (!r) throw new Error("Failed"); return r; }}
+                addTag={async (name) => { const r = await addTag(name); if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addTag', name); return r; }}
                 updateTag={async (id, data) => { const r = await updateTag(id, data); return !!r; }}
                 activeTagMenuId={activeTagMenuId}
                 setActiveTagMenuId={setActiveTagMenuId}

@@ -442,3 +442,31 @@ toast.error('发现数据完整性问题', {
 - ✅ 所有服务端错误必须走 `useAppError` 输出 toast。
 - ✅ 缓存失效必须使用 `photoKeys.all()` 或 `groupKeys.all()` 降维打击。
 
+## 异步任务架构规范（锁定）
+
+### 职责分层
+- **createMutation 工厂**：原子写操作（API 调用 + 缓存失效 + 错误处理 + Toast）
+- **useTaskExecutor**：流程编排（进度追蹤 + 并发控制 + 重试 + 任务队列 UI）
+
+### 组合规则
+- ✅ TaskExecutor 内部调用的业务逻辑必须封装为标准 Mutation
+- ✅ TaskExecutor 使用 `mutateAsync` 调用 Mutation
+- ❌ 禁止在 TaskExecutor 中直接调用 service/API 函数
+- ❌ 禁止用 createMutation 替换 TaskExecutor（两者职责不同）
+
+### 错误处理
+- Mutation 负责 Toast + 日志
+- TaskExecutor 负责更新任务状态 UI（不重复 Toast）
+
+## React 19 原生 Hook 使用规范（锁定）
+
+### 允许使用
+- ✅ React Compiler（自动 memo，与现有架构正交，已启用）
+
+### 禁止使用（已有更优方案）
+- ❌ `useActionState` → 用 TanStack Mutation + createMutation 工厂
+- ❌ `useOptimistic` → 用 Mutation onMutate + Query Cache 更新
+- ❌ `use()` → 用 `useQuery` / `useInfiniteQuery`
+- ❌ `useFormStatus` → 用 Mutation 的 `isPending`
+
+

@@ -5,6 +5,7 @@ import { photoKeys } from '@/lib/queryKeys';
 import { useErrorHandler, useTasks } from '@/hooks';
 import { toast } from '@/lib/ui/toast';
 import { isOk } from '@/lib/errorFactory';
+import { ErrorFactory } from '../../lib/error/ErrorFactory';
 
 export function useAIPhotoAnalysis() {
   const { addTask, updateTask } = useTasks();
@@ -47,12 +48,12 @@ export function useAIPhotoAnalysis() {
         toast.success(`AI 识别完成并已更新: ${result.data.name || '照片'}`);
         return result.data;
       } else {
-        throw new Error(result.message);
+        throw ErrorFactory.wrap(new Error(result.message), 'analyzePhoto', photo.id);
       }
     } catch (err: any) {
       updateTask(taskId, { status: 'error', progress: 100, message: `识别失败: ${err.message}` });
       handleError(err, 'AI 解析失败');
-      throw err;
+      throw ErrorFactory.wrap(err, 'analyzePhoto', photo.id);
     }
   }, [addTask, updateTask, handleError]);
 

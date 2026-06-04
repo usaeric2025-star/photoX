@@ -14,9 +14,11 @@ import {
   normalizeTagName,
   normalizeManufacturerName,
 } from "@/lib/utils";
+import { api } from "@/lib/api";
 import { fromThrowableAsync } from '@/lib/errorFactory';
 import { toast } from '@/lib/ui/toast';
 import { useErrorHandler, useInvalidatePhotos, useTaskExecutor } from "@/hooks";
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 interface UseSettingsLogicProps {
   user: User | null;
@@ -83,13 +85,13 @@ export const useSettingsLogic = ({
       }
 
       // 3. Storage Audit (Orphans and missing files)
-      const auditResp = await fetch("/api/storage/audit");
+      const auditResp = await api.storage.audit.$get();
       if (!auditResp.ok) {
-        throw new Error(`存储审计失败 (HTTP ${auditResp.status}): 无法连接存储后端。请确认 R2 容器与 Supabase 凭据配置正确。`);
+        throw ErrorFactory.wrap(new Error(`存储审计失败 (HTTP ${auditResp.status}): 无法连接存储后端。请确认 R2 容器与 Supabase 凭据配置正确。`), 'checkStorageHealth');
       }
       const auditContentType = auditResp.headers.get("Content-Type");
       if (!auditContentType || !auditContentType.includes("application/json")) {
-        throw new Error(`存储审计失败: 接口未返回有效的 JSON 数据 (${auditResp.status})`);
+        throw ErrorFactory.wrap(new Error(`存储审计失败: 接口未返回有效的 JSON 数据 (${auditResp.status})`), 'checkStorageHealth');
       }
       const auditData = await auditResp.json();
       if (auditData.success && auditData.data) {
@@ -107,15 +109,13 @@ export const useSettingsLogic = ({
                 onConfirm: async () => {
                   update({ alertDialog: null });
                   toast.success("正在清理存儲空間...");
-                  const cleanResp = await fetch("/api/storage/clean", {
-                    method: "POST",
-                  });
+                  const cleanResp = await api.storage.clean.$post({});
                   if (!cleanResp.ok) {
-                    throw new Error(`清理存储失败 (HTTP ${cleanResp.status})，无法执行深度文件擦除。`);
+                    throw ErrorFactory.wrap(new Error(`清理存储失败 (HTTP ${cleanResp.status})，无法执行深度文件擦除。`), 'cleanOrphanFiles');
                   }
                   const cleanContentType = cleanResp.headers.get("Content-Type");
                   if (!cleanContentType || !cleanContentType.includes("application/json")) {
-                    throw new Error(`清理存储失败: 返回非 JSON 响应 (${cleanResp.status})`);
+                    throw ErrorFactory.wrap(new Error(`清理存储失败: 返回非 JSON 响应 (${cleanResp.status})`), 'cleanOrphanFiles');
                   }
                   const cleanData = await cleanResp.json();
                   if (cleanData.success) {
