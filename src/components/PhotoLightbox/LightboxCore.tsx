@@ -74,18 +74,18 @@ export const LightboxCore = ({
         ),
         // Overwrite the download button with multiple actions
         buttonDownload: () => (
-          <div className="flex items-center gap-1.5 mr-2">
+          <div className="flex items-center gap-0.5 mr-2">
             {showEdit && (
               <button
                 onClick={() => {
                   const photo = photos[index];
                   if (photo) onEdit?.(photo);
                 }}
-                className="yarl__button hover:text-blue-400 transition-colors"
+                className="yarl__button !p-2 rounded-full hover:bg-slate-100/10 transition-all"
                 aria-label="编辑"
                 title="编辑"
               >
-                <Pencil size={22} />
+                <Pencil size={18} />
               </button>
             )}
             <button
@@ -93,11 +93,11 @@ export const LightboxCore = ({
                 const photo = photos[index];
                 if (photo) downloadPhotoAsJpeg(photo.image_url);
               }}
-              className="yarl__button hover:text-blue-400 transition-colors"
+              className="yarl__button !p-2 rounded-full hover:bg-slate-100/10 transition-all"
               aria-label="下载"
               title="下载"
             >
-              <Download size={22} />
+              <Download size={18} />
             </button>
           </div>
         ),

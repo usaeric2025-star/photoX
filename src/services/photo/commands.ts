@@ -343,8 +343,6 @@ export const groupPhotos = async (photoIds: string[], predefinedGroupId?: string
       .insert({
         id: groupId,
         name: 'Unset Group',
-        name_en: 'New Combined Group',
-        name_ms: 'Kumpulan Baru',
         description: '',
         colors: [],
         materials: [],

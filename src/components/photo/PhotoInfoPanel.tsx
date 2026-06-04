@@ -240,40 +240,39 @@ export function PhotoInfoPanel({
             {/* Product Metadata */}
             <section className="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
               <div className="p-3 border-b border-slate-100 flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5"><Briefcase size={12} /> {l.metadata}</span>
-                {/* ID hint */}
-                <span className="text-[8px] font-mono text-slate-300/30 hover:text-slate-400 transition-colors cursor-help" title={`ID: ${(data as Photo).id}`}>{(data as Photo).id?.split('-')[0]}</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-1.5"><Briefcase size={12} /> {l.metadata}</span>
+                <span className="text-[8px] font-mono text-slate-400 cursor-help" title={`ID: ${(data as Photo).id}`}>{(data as Photo).id?.split('-')[0]}</span>
               </div>
-              <div className="p-3 space-y-3">
+              <div className="p-4 space-y-4">
                 {/* Codes */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <span className="text-[9px] uppercase font-bold text-slate-400 block mb-0.5">{l.itemCode}</span>
-                    <span className="text-xs font-mono font-medium text-slate-700">{(data as Photo).item_code || '-'}</span>
+                    <span className="text-[9px] uppercase font-bold text-slate-400 block mb-1 tracking-wider">{l.itemCode}</span>
+                    <span className="text-sm font-mono font-semibold text-slate-900">{(data as Photo).item_code || '-'}</span>
                   </div>
                   <div>
-                    <span className="text-[9px] uppercase font-bold text-slate-400 block mb-0.5">{l.modelNumber}</span>
-                    <span className="text-xs font-mono font-medium text-slate-700">{(data as Photo).model_number || '-'}</span>
+                    <span className="text-[9px] uppercase font-bold text-slate-400 block mb-1 tracking-wider">{l.modelNumber}</span>
+                    <span className="text-sm font-mono font-semibold text-slate-900">{(data as Photo).model_number || '-'}</span>
                   </div>
                   {/* Price */}
-                  <div className="col-span-2 flex justify-between bg-white p-2 rounded-lg border border-slate-100">
+                  <div className="col-span-2 flex justify-between bg-white/50 p-3 rounded-xl border border-slate-100 shadow-sm">
                     <div>
-                      <span className="text-[9px] uppercase font-bold text-slate-400 block mb-0.5">{l.priceOrCode}</span>
-                      <span className="text-xs font-semibold text-slate-700">
-                        {[(data as Photo).price ? `$${(data as Photo).price}` : '', (data as Photo).manual_code].filter(Boolean).join(' · ') || '-'}
+                      <span className="text-[9px] uppercase font-bold text-slate-400 block mb-1 tracking-wider">{l.priceOrCode}</span>
+                      <span className="text-sm font-semibold text-slate-900">
+                        {[(data as Photo).price ? `$${(data as Photo).price}` : '', (data as Photo).manual_code].filter(Boolean).join(' • ') || '-'}
                       </span>
                     </div>
                     {(data as Photo).width ? (
                        <div className="text-right">
-                         <span className="text-[9px] uppercase font-bold text-slate-400 block mb-0.5">{l.imgSize}</span>
-                         <span className="text-[10px] font-mono text-slate-500">{(data as Photo).width}x{(data as Photo).height}</span>
+                         <span className="text-[9px] uppercase font-bold text-slate-400 block mb-1 tracking-wider">{l.imgSize}</span>
+                         <span className="text-[11px] font-mono text-slate-600">{(data as Photo).width} × {(data as Photo).height}</span>
                        </div>
                     ) : null}
                   </div>
                   {/* Manufacturer */}
                   <div className="col-span-2">
-                    <span className="text-[9px] uppercase font-bold text-slate-400 block mb-0.5">{l.manufacturer}</span>
-                    <span className="text-xs font-medium text-slate-700">{displayManufacturerName || '-'}</span>
+                    <span className="text-[9px] uppercase font-bold text-slate-400 block mb-1 tracking-wider">{l.manufacturer}</span>
+                    <span className="text-sm font-medium text-slate-900">{displayManufacturerName || '-'}</span>
                   </div>
                 </div>
               </div>

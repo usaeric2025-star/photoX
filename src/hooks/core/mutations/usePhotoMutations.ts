@@ -2,7 +2,7 @@ import { createMutationHook } from './factory';
 import { Photo } from '@/types';
 import { update, deleteMany, batchUpdate } from '@/services/photo/commands';
 import { photoKeys } from '@/lib/queryKeys';
-import { uploadService } from '@/services/storage/uploadService';
+import { uploadImages } from '@/services/storage/uploadService';
 
 export const usePhotoEdit = createMutationHook({
   entity: 'Photo',
@@ -55,8 +55,8 @@ export const useTogglePin = createMutationHook({
 export const useUploadPhotos = createMutationHook({
   entity: 'Photo',
   action: 'Upload',
-  mutationFn: ({ files, onProgress }: { files: File[]; onProgress: (p: number) => void }) => 
-    uploadService.upload(files, onProgress),
+  mutationFn: async ({ userId, photoId, base64Data, onProgress }: { userId: string; photoId: string; base64Data: string; onProgress: (p: number) => void }) => 
+    uploadImages(userId, photoId, base64Data, undefined, undefined, onProgress),
   invalidateKeys: [photoKeys.all],
   onSuccessMessage: '上传完成',
 });
