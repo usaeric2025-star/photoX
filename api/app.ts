@@ -566,7 +566,8 @@ app.post("/admin/settings/save-key", async (c) => {
         const { provider, apiKey, model } = await c.req.json();
         if (!provider || !apiKey) return c.json({ success: false, error: "缺少必要參數" }, 400);
 
-        // 1. 預驗證：嘗試調用一次 API
+        // 1. 預驗證：嘗試調用一次 API（僅作為提醒或警告，絕不阻塞保存）
+        let testWarning = "";
         try {
             const baseUrl = provider === 'agnes' 
                 ? 'https://apihub.agnes-ai.com/v1' 
@@ -593,16 +594,13 @@ app.post("/admin/settings/save-key", async (c) => {
             const testRes = await callProvider(baseUrl, apiKey, testPayload);
             if (!testRes.ok) {
                 const errorDetail = await testRes.json().catch(() => ({}));
-                return c.json({ 
-                    success: false, 
-                    error: `密鑰驗證失敗: ${errorDetail?.error?.message || testRes.statusText || '供應商拒絕請求'}` 
-                }, 401);
+                testWarning = `（注意：當前遠端連線驗證未通過，但配置已強制保存。原因：${errorDetail?.error?.message || testRes.statusText || '供應商拒絕連線'}）`;
             }
         } catch (e: any) {
-            return c.json({ success: false, error: `網絡連通性測試失敗: ${e.message}` }, 500);
+            testWarning = `（注意：當前網絡連通性測試失敗，但配置已強制保存。原因：${e.message}）`;
         }
 
-        // 2. 驗證通過，執行加密存儲
+        // 2. 執行加密存存储（無論連線測試結果如何，百分之百為用戶落庫保存）
         const supabase = await getSupabaseAdmin();
         const encryptedKey = encrypt(apiKey);
         
@@ -615,7 +613,10 @@ app.post("/admin/settings/save-key", async (c) => {
 
         if (error) throw error;
         
-        return c.json({ success: true, message: "密鑰驗證通過並加密保存" });
+        return c.json({ 
+            success: true, 
+            message: `密鑰已加密保存！${testWarning}` 
+        });
     } catch (e: any) {
         console.error("Save key failed:", e);
         return c.json({ success: false, error: e.message }, 500);

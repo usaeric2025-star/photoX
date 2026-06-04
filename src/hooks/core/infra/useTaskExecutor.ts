@@ -19,6 +19,7 @@ export function useTaskExecutor() {
       showSuccessToast?: boolean;
       showErrorToast?: boolean;
       silent?: boolean;
+      rethrow?: boolean;
     }
   ): Promise<T | null> => {
     const isUpload = name.includes('上传') || name.toLowerCase().includes('upload');
@@ -55,7 +56,12 @@ export function useTaskExecutor() {
         toast.error(`${name} 失敗: ${errMsg}`);
       }
       
-      options?.onError?.(error instanceof Error ? error : new Error(errMsg));
+      const actualError = error instanceof Error ? error : new Error(errMsg);
+      options?.onError?.(actualError);
+      
+      if (options?.rethrow) {
+        throw actualError;
+      }
       return null;
     }
   }, [addTask, updateTask]);
