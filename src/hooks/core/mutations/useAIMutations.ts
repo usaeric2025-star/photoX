@@ -1,7 +1,7 @@
 import { createMutationHook } from './factory';
 import { analyzeGroup } from '@/services/gemini/groupAnalysis';
 import { supabase } from '@/lib/supabase';
-import { ErrorFactory } from '../../lib/error/ErrorFactory';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { groupKeys, photoKeys } from '@/lib/queryKeys';
 
 export const useAIGroupMutation = createMutationHook({

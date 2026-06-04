@@ -14,6 +14,25 @@ export interface MutationConfig<TData, TVariables, TContext> {
   rollback?: (error: unknown, variables: TVariables, context: TContext | undefined, queryClient: QueryClient) => void;
 }
 
+// Utility for automatic error reporting
+function reportErrorToSystem(error: any, action: string, level: 'low' | 'medium' | 'high' | 'critical' = 'medium') {
+    const payload = JSON.stringify({
+        level,
+        message: error.message || String(error),
+        stack: error.stack,
+        context: action
+    });
+    
+    // Use navigator.sendBeacon for fast, reliable reporting
+    if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
+        navigator.sendBeacon('/api/log/event', new Blob([payload], {type: 'application/json'}));
+    }
+    
+    if (level === 'critical') {
+        toast.error('严重错误：部分操作数据未同步，已上报至系统后台');
+    }
+}
+
 /**
  * Standardized factory for creation of PhotoX mutation hooks.
  * Automatically handles task execution, loading states, success/error feedback,
@@ -64,9 +83,20 @@ export function createMutationHook<TData = void, TVariables = void, TContext = u
           config.rollback(err, variables, context, queryClient);
         }
 
+        // --- 核心：闭环报告 ---
+        const actionName = `${config.entity}${config.action}`;
+        let level: 'low' | 'medium' | 'high' | 'critical' = 'medium';
+        
+        if (context) {
+           level = 'high';
+        } else {
+           level = 'critical';
+        }
+        
+        reportErrorToSystem(err, actionName, level);
+
         // Handle feedback
-        // Note: msg in config is not directly used for toast, extracted from error.
-        handleError(err, `${config.entity}${config.action}`, false);
+        handleError(err, actionName, false);
 
         // Custom error callback
         if (options?.onError) {

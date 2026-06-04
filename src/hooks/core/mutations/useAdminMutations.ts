@@ -6,6 +6,7 @@ import { addManufacturerToDB, updateManufacturerInDB, deleteManufacturerFromDB }
 import { photoKeys, groupKeys } from '@/lib/queryKeys';
 import { useQueryClient } from '@tanstack/react-query';
 import { useInvalidatePhotos } from '@/hooks/queries/useInvalidatePhotos';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 export const useTagCreate = createMutationHook({
   entity: 'Tag', 

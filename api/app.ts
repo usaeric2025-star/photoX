@@ -1114,6 +1114,66 @@ app.get("/admin/maintenance/job/:jobId", async (c) => {
   return c.json(job);
 });
 
+// 5. Error Logging System
+app.post("/log/event", async (c) => {
+    try {
+        const { level, message, stack, context, user_id } = await c.req.json();
+        const supabase = await getSupabaseAdmin();
+        
+        const { error } = await supabase.from("error_events").insert({
+            level: level || 'medium',
+            message,
+            stack,
+            context,
+            user_id
+        });
+
+        // Fail silently if table missing or insert failed (e.g. in development)
+        if (error) console.warn("Log event failed, skipping:", error.message);
+        return c.json({ success: true });
+    } catch (e: any) {
+        console.error("Log event exception:", e);
+        return c.json({ success: true }); // Return success to avoid blocking
+    }
+});
+
+// 6. Public Error Log Viewer (Safe)
+app.get("/error-log", async (c) => {
+    try {
+        const supabase = await getSupabaseAdmin();
+        const { data, error } = await supabase
+            .from("error_events")
+            .select("created_at, level, message")
+            .order("created_at", { ascending: false })
+            .limit(50);
+            
+        if (error) throw error;
+
+        let html = `
+            <html>
+                <head><title>System Error Log</title></head>
+                <body style="font-family: sans-serif; padding: 20px;">
+                    <h1>System Error Log</h1>
+                    <table border="1" style="width: 100%; border-collapse: collapse;">
+                        <tr><th>Time</th><th>Level</th><th>Message</th></tr>
+        `;
+        
+        data?.forEach(log => {
+            html += `<tr>
+                <td>${log.created_at}</td>
+                <td>${log.level}</td>
+                <td>${log.message}</td>
+            </tr>`;
+        });
+        
+        html += `</table></body></html>`;
+        
+        return c.html(html);
+    } catch (e: any) {
+        return c.text("Error log unavailable", 500);
+    }
+});
+
 // Member Count Repair with Job
 app.post("/admin/repair/member-count-mismatch/execute", async (c) => {
     try {
