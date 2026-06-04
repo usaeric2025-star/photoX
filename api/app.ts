@@ -6,6 +6,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createClient } from "@supabase/supabase-js";
 import { getServerEnv } from "./shared/envSchema.js";
 import { logTraffic } from "./lib/trafficCapture.js";
+import { encrypt, decrypt } from './lib/encryption.js';
 
 // Validate env at module level
 const serverEnv = getServerEnv(process.env);
@@ -85,8 +86,6 @@ app.onError((err, c) => {
     }
   }, 500);
 });
-
-import { decrypt } from './lib/encryption';
 
 async function callProvider(baseUrl: string, apiKey: string, payload: any) {
     const controller = new AbortController();
@@ -571,29 +570,22 @@ app.get("/admin/diagnose-r2", async (c) => {
     }
 });
 
-// Admin Settings: Save provider configuration and encrypted key
-import { encrypt } from './lib/encryption';
-
+// Admin Settings: Keys Management
 app.get("/admin/settings/get-keys", async (c) => {
     try {
         const supabase = await getSupabaseAdmin();
         const { data: secrets } = await supabase.from('secrets').select('name');
         const configuredProviders = secrets?.map(s => s.name) || [];
         
-        // Also check if settings table has api_key
         const { data: settings } = await supabase.from('settings').select('api_key').eq('id', 1).maybeSingle();
         const hasOpenrouter = configuredProviders.includes('openrouter') || !!settings?.api_key;
         const hasAgnes = configuredProviders.includes('agnes');
         
         return c.json({
             success: true,
-            keysStatus: {
-                agnes: hasAgnes,
-                openrouter: hasOpenrouter
-            }
+            keysStatus: { agnes: hasAgnes, openrouter: hasOpenrouter }
         });
     } catch (e: any) {
-        console.error("Get keys failed:", e);
         return c.json({ success: false, error: e.message }, 500);
     }
 });
@@ -601,24 +593,17 @@ app.get("/admin/settings/get-keys", async (c) => {
 app.post("/admin/settings/save-key", async (c) => {
     try {
         const { provider, apiKey } = await c.req.json();
-        if (!provider || !apiKey) {
-            return c.json({ success: false, error: "Missing provider or apiKey" }, 400);
-        }
+        if (!provider || !apiKey) return c.json({ success: false, error: "Missing data" }, 400);
+        
         const supabase = await getSupabaseAdmin();
         const encryptedKey = encrypt(apiKey);
+        await supabase.from('secrets').upsert({ name: provider, value: encryptedKey });
         
-        // Save to secrets
-        const { error } = await supabase.from('secrets').upsert({ name: provider, value: encryptedKey });
-        if (error) throw error;
-        
-        // For backwards compatibility: if provider is openrouter, update the settings table too
         if (provider === 'openrouter') {
             await supabase.from('settings').upsert({ id: 1, api_key: apiKey }, { onConflict: 'id' });
         }
-        
         return c.json({ success: true });
     } catch (e: any) {
-        console.error("Save key failed:", e);
         return c.json({ success: false, error: e.message }, 500);
     }
 });

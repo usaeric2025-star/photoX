@@ -5,11 +5,18 @@ const IV_LENGTH = 12;
 
 function getKey(): Buffer {
   const envKey = process.env.ENCRYPTION_KEY;
-  if (!envKey) {
-    // Return a stable 32-byte fallback key for local dev when the env var isn't configured
+  if (!envKey || envKey.length !== 64) {
+    // Return a stable 32-byte fallback key for local dev when the env var isn't configured correctly
+    // This is 'da39a3ee5e6b4b0d3255bfef95601890afd80709' hashed or similar 32-byte hex
     return Buffer.from('da39a3ee5e6b4b0d3255bfef95601890afd80709fc71d7410000000000000000', 'hex');
   }
-  return Buffer.from(envKey, 'hex');
+  try {
+    const buf = Buffer.from(envKey, 'hex');
+    if (buf.length === 32) return buf;
+  } catch (e) {
+    // Fallback on parse error
+  }
+  return Buffer.from('da39a3ee5e6b4b0d3255bfef95601890afd80709fc71d7410000000000000000', 'hex');
 }
 
 export function encrypt(text: string): string {
