@@ -36,30 +36,43 @@ export function SelectionToolbar({
   };
 
   const handleGroup = async () => {
+    if (ids.length <= 1) {
+      update({
+        alertDialog: {
+          title: '无法合组',
+          message: '请至少选择两张照片才能进行合组。',
+          type: 'info',
+        }
+      });
+      return;
+    }
+
     const currentIds = [...ids];
     const targetGroupId = crypto.randomUUID();
     const isCollapsed = urlFilters?.showGroupsCollapsed !== false;
-    handleClear(); // 立即清除选择状态，提升即时感
-    setShowGroupsCollapsed(true); // 自动开启置顶合组的折叠模式，确保用户立竿见影地在界面上看到它们汇聚成一卡片
+    
     try {
-      await groupMutation.mutateAsync({ 
+      await groupMutation.execute({ 
         photoIds: currentIds, 
         targetGroupId, 
         expandGroups: isCollapsed 
       });
+      handleClear(); 
+      setShowGroupsCollapsed(true);
     } catch (err) {
       console.error(err);
-      // 如果失败可以考虑恢复状态，但通常简单刷新更稳健
     }
   };
 
-  const handleAI = () => {
-    handleClear(); // 立即清除选择状态，提升即时感
-    setShowGroupsCollapsed(true); // AI合组前自动开启置顶合组的折叠模式，提升智能观感
+  const handleAI = async () => {
     if (onAIIdentify) {
       onAIIdentify(ids);
+      handleClear();
+      setShowGroupsCollapsed(true);
     } else {
-      handleAIAction(ids);
+      await handleAIAction(ids);
+      handleClear();
+      setShowGroupsCollapsed(true);
     }
   };
 

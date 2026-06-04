@@ -1,5 +1,5 @@
 import React from "react";
-import { Info } from "lucide-react";
+import { Info, Tag as TagIcon, Grid } from "lucide-react";
 import { createPortal } from "react-dom";
 import { LightboxCore } from "@/components/PhotoLightbox/LightboxCore";
 import { useLightbox } from "@/hooks/useLightbox";
@@ -7,6 +7,10 @@ import { PhotoInfoPanel } from "@/components/photo/PhotoInfoPanel";
 import { LightboxFallback } from "@/components/PhotoLightbox/LightboxFallback";
 import { useUIStore } from "@/store/useUIStore";
 import { useAdminActions } from "@/features/admin/useAdminActions";
+import { useTags } from "@/hooks/core/queries/useTags";
+import { useCategories } from "@/hooks/core/queries/useCategories";
+import { getTranslatedCategoryName } from "@/lib/ui-helpers";
+import { translations } from "@/lib/translations";
 
 /**
  * [PAGE] PhotoLightboxPage
@@ -20,9 +24,13 @@ export const PhotoLightboxPage = () => {
   } = useLightbox();
   
   const updateUIStore = useUIStore((s) => s.update);
+  const appLang = useUIStore((s) => s.appLang);
   const adminActions = useAdminActions();
   const currentPhoto = currentIndex >= 0 ? photos[currentIndex] : null;
   const [showInfo, setShowInfo] = React.useState(false);
+  
+  const { data: tags = [] } = useTags();
+  const { data: categories = [] } = useCategories();
   
   if (!isOpen) return null;
 
@@ -98,19 +106,14 @@ export const PhotoLightboxPage = () => {
         onEdit={handleEdit}
         onDelete={handleDelete}
         onAiAnalyze={handleAiAnalyze}
-        showInfo={showInfo}
-        setShowInfo={setShowInfo}
-      />
-      {currentPhoto && typeof document !== "undefined" && createPortal(
-        <>
-          {/* The Sidebar Panel */}
-          {showInfo && (
+        renderSidebar={() => 
+          showInfo && currentPhoto ? (
             <>
               <div 
-                className="fixed inset-0 z-[10000] bg-black/20 backdrop-blur-sm/50 transition-opacity"
+                className="absolute inset-0 z-[10] bg-black/20 backdrop-blur-sm/50 transition-opacity"
                 onClick={() => setShowInfo(false)}
               />
-              <div className="fixed right-0 top-0 h-full w-full md:w-[380px] pointer-events-none flex items-center z-[10001] p-0">
+              <div className="absolute right-0 top-0 h-full w-full md:w-[380px] pointer-events-none flex items-center z-[11] p-0">
                 <PhotoInfoPanel 
                   data={data}
                   mode={mode as 'single' | 'group'}
@@ -125,24 +128,77 @@ export const PhotoLightboxPage = () => {
                 />
               </div>
             </>
-          )}
+          ) : null
+        }
+        renderFloatingButton={() => {
+          if (!currentPhoto) return null;
+          
+          let displayCategoryName = '';
+          if (currentPhoto.category_id) {
+            displayCategoryName = getTranslatedCategoryName(currentPhoto.category_id, categories, appLang, translations[appLang]);
+          }
+          
+          let displayTagNames: string[] = [];
+          if (Array.isArray(currentPhoto.tag_ids)) {
+            displayTagNames = currentPhoto.tag_ids.map(id => {
+              const t = tags.find(tag => String(tag.id) === String(id));
+              return t ? t.name : '';
+            }).filter(Boolean);
+          }
 
-          {/* Floating Action Button for Info Panel Toggle */}
-          <button
-            onClick={() => setShowInfo(!showInfo)}
-            className="fixed bottom-6 right-6 md:right-1/2 md:translate-x-1/2 z-[10502] flex items-center justify-center gap-2 px-5 py-3 md:py-2.5 rounded-full bg-black/70 backdrop-blur-xl text-white border border-white/20 shadow-2xl hover:bg-black/90 active:scale-[0.96] transition-all group"
-          >
-            <div className="md:hidden">
-              {showInfo ? <span className="font-bold text-lg">✕</span> : <Info size={24} />}
-            </div>
-            <div className="hidden md:flex items-center gap-2">
-              <Info size={16} className={showInfo ? "opacity-50" : "group-hover:scale-110 transition-transform"} />
-              <span className="text-sm font-bold tracking-wide">{showInfo ? "关闭信息" : "照片信息"}</span>
-            </div>
-          </button>
-        </>,
-        document.body
-      )}
+          return (
+            <>
+              {/* Photo Simplified Info Overlay */}
+              {!showInfo && (
+                <div className="absolute bottom-[10px] left-4 md:bottom-[12px] md:left-6 z-[12] pointer-events-none flex flex-col items-start justify-end max-w-[70%] md:max-w-[60%] select-none">
+                  {currentPhoto.name && (
+                    <h2 className="text-white text-lg md:text-xl font-bold tracking-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)] mb-1.5 line-clamp-2">
+                      {currentPhoto.name}
+                    </h2>
+                  )}
+                  
+                  {(displayCategoryName || displayTagNames.length > 0) && (
+                    <div className="flex flex-wrap gap-1.5 drop-shadow-md">
+                       {displayCategoryName && (
+                         <span className="flex items-center gap-1.5 text-[10px] md:text-xs font-semibold text-white/90 bg-white/20 backdrop-blur-md px-2 py-1 rounded border border-white/20 shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+                           <Grid size={10} /> {displayCategoryName}
+                         </span>
+                       )}
+                       {displayTagNames.slice(0, 3).map((tag, i) => (
+                         <span key={i} className="flex items-center gap-0.5 text-[10px] md:text-xs font-semibold text-white/90 bg-black/50 backdrop-blur-md px-2 py-1 rounded border border-white/10 shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+                           #{tag}
+                         </span>
+                       ))}
+                       {displayTagNames.length > 3 && (
+                         <span className="text-[10px] md:text-xs font-semibold text-white/70 bg-black/50 backdrop-blur-md px-2 py-1 rounded border border-white/10 shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+                           +{displayTagNames.length - 3}
+                         </span>
+                       )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Floating Action Button for Info Panel Toggle */}
+              <button
+                onClick={() => setShowInfo(!showInfo)}
+                // onPointerDown blocks yarl from catching the click as a backdrop swipe
+                onPointerDown={(e) => e.stopPropagation()}
+                className="absolute bottom-[10px] right-4 md:bottom-[12px] md:right-6 z-[12] flex items-center justify-center gap-2 w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full bg-black/70 backdrop-blur-xl text-white border border-white/20 shadow-2xl hover:bg-black/90 active:scale-[0.96] transition-all group pointer-events-auto"
+                title={showInfo ? "关闭信息" : "展开详细信息"}
+              >
+                <div className="md:hidden flex items-center justify-center">
+                  {showInfo ? <span className="font-bold text-lg leading-none">✕</span> : <Info size={18} />}
+                </div>
+                <div className="hidden md:flex items-center gap-2">
+                  <Info size={16} className={showInfo ? "opacity-50" : "group-hover:scale-110 transition-transform"} />
+                  <span className="text-xs font-bold tracking-wide">{showInfo ? "关闭详情" : "属性信息"}</span>
+                </div>
+              </button>
+            </>
+          );
+        }}
+      />
     </div>
   );
 };

@@ -25,15 +25,15 @@ interface LightboxCoreProps {
   onEdit?: (photo: Photo) => void;
   onDelete?: (photo: Photo) => void;
   onAiAnalyze?: (photo: Photo) => void;
-  showInfo?: boolean;
-  setShowInfo?: (show: boolean) => void;
+  renderSidebar?: () => React.ReactNode;
+  renderFloatingButton?: () => React.ReactNode;
 }
 
 export const LightboxCore = ({ 
   open, onClose, photos, currentIndex = 0, onIndexChange,
   mode = 'single', showEdit, showDelete, showAi,
   onEdit, onDelete, onAiAnalyze,
-  showInfo, setShowInfo
+  renderSidebar, renderFloatingButton
 }: LightboxCoreProps) => {
   const [index, setIndex] = useState(currentIndex);
   const slides = toLightboxSlides(photos);
@@ -59,6 +59,13 @@ export const LightboxCore = ({
       slides={slides}
       plugins={LIGHTBOX_PLUGINS}
       render={{
+        // Custom interactive controls overlaid on lightbox
+        controls: () => (
+          <>
+            {renderSidebar?.()}
+            {renderFloatingButton?.()}
+          </>
+        ),
         // Render default toolbar plus custom buttons
         toolbar: ({ toolbar }: any) => (
           <>

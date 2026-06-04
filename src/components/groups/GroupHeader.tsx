@@ -7,6 +7,7 @@ import {
   MoreVertical,
   X,
   Plus,
+  FolderMinus,
 } from "lucide-react";
 import { Photo, ProductGroup } from "../../types";
 import { Skeleton } from "../ui/Skeleton";
@@ -205,6 +206,32 @@ export function GroupHeader({
                   <Sparkles size={16} className="text-purple-500" />
                   <span className="text-sm font-bold text-slate-700">
                     AI 識別 / AI Identify
+                  </span>
+                </DropdownMenuItem>
+                <div className="h-px bg-slate-100 my-1" />
+                <DropdownMenuItem
+                  onClick={() => {
+                    update?.({ 
+                      alertDialog: {
+                        title: '解散合组',
+                        message: '确定要解散此合组吗？组内的照片将被移出但不会被删除。',
+                        type: 'danger',
+                        onConfirm: async () => {
+                           if (!activeGroupId) return;
+                           try {
+                              const { ungroupPhotos } = await import('@/services/photo/photoMaintenanceService');
+                              await ungroupPhotos(activeGroupId);
+                              window.location.reload(); // simple and effective for hard reload on group dissolve
+                           } catch (err) {}
+                        }
+                      }
+                    });
+                  }}
+                  className="px-4 py-3 cursor-pointer flex items-center gap-2 hover:bg-red-50 focus:bg-red-50 outline-none"
+                >
+                  <FolderMinus size={16} className="text-red-500" />
+                  <span className="text-sm font-bold text-red-600">
+                    解散该合组 / Dissolve Group
                   </span>
                 </DropdownMenuItem>
               </DropdownMenuContent>

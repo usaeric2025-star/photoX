@@ -5,6 +5,7 @@ import { getTranslatedCategoryName } from '@/lib/ui-helpers';
 import { translations } from '@/lib/translations';
 import { useCategories } from '@/hooks/core/queries/useCategories';
 import { useTags } from '@/hooks/core/queries/useTags';
+import { useManufacturers } from '@/hooks/core/queries/useManufacturers';
 import { useUIStore } from '@/store/useUIStore';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -47,6 +48,8 @@ export function PhotoInfoPanel({
   onClose,
   className
 }: PhotoInfoPanelProps) {
+  const [descLang, setDescLang] = React.useState<'zh' | 'en'>('zh');
+
   if (!data) {
     return (
       <div className={cn("flex flex-col h-full bg-white/95 backdrop-blur-md border-l border-slate-200 overflow-y-auto no-scrollbar max-w-sm w-80", className)}>
@@ -89,6 +92,7 @@ export function PhotoInfoPanel({
 
   const { data: fetchedCategories = [] } = useCategories();
   const { data: fetchedTags = [] } = useTags();
+  const { data: fetchedManufacturers = [] } = useManufacturers();
   const appLang = useUIStore((s) => s.appLang);
 
   const isGroup = mode === 'group' && 'member_count' in data;
@@ -96,6 +100,7 @@ export function PhotoInfoPanel({
   // Resolve labels dynamically
   let displayCategoryName = '';
   let displayTagNames: string[] = [];
+  let displayManufacturerName = '';
   
   if (!isGroup) {
     const photo = data as Photo;
@@ -107,6 +112,10 @@ export function PhotoInfoPanel({
          const t = fetchedTags.find(tag => String(tag.id) === String(id));
          return t ? t.name : '';
        }).filter(Boolean);
+    }
+    if (photo.manufacturer_id) {
+       const m = fetchedManufacturers.find(mfr => String(mfr.id) === String(photo.manufacturer_id));
+       if (m) displayManufacturerName = m.name;
     }
   }
 
@@ -147,8 +156,11 @@ export function PhotoInfoPanel({
         {isGroup ? (
           /* Group Mode View */
           <>
-            <section>
-              <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Basic Info</h4>
+            <section className="relative">
+              <div className="flex justify-between items-start mb-2">
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Basic Info</h4>
+                <span className="text-[8px] font-mono text-slate-300/30 hover:text-slate-400 transition-colors cursor-help" title={`Group ID: ${data.id}`}>{data.id?.split('-')[0]}</span>
+              </div>
               <h2 className="text-xl font-bold text-slate-900 mb-2">{data.name}</h2>
               <div className="flex flex-wrap gap-2 mb-4">
                 <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 px-2.5 py-1">
@@ -166,69 +178,139 @@ export function PhotoInfoPanel({
         ) : (
           /* Single Photo Mode View */
           <>
-            <section>
-              <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Display Name</h4>
-              <h2 className="text-xl font-bold text-slate-900 mb-2">{(data as Photo).name}</h2>
-              
-              <div className="flex flex-wrap gap-2 mb-4">
-                {displayCategoryName && (
-                  <Badge variant="outline" className="bg-brand-navy/5 text-brand-navy border-brand-navy/10 px-2.5 py-1">
-                    <Grid size={12} className="mr-1.5 opacity-60" />
-                    {displayCategoryName}
-                  </Badge>
-                )}
-                {(data as Photo).item_code && (
-                  <Badge variant="outline" className="bg-slate-50 text-slate-500 border-slate-200 px-2.5 py-1 font-mono text-[10px]">
-                    {(data as Photo).item_code}
-                  </Badge>
-                )}
+            <section className="relative">
+              <div className="flex justify-between items-start mb-2">
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Basic Info</h4>
+                {/* Status dot */}
+                <div 
+                  title={(data as Photo).is_hidden ? "已隐藏 (Hidden)" : "公开展示 (Public)"} 
+                  className={cn("w-2.5 h-2.5 rounded-full shadow-sm ring-2 ring-white", (data as Photo).is_hidden ? "bg-red-500" : "bg-green-500")} 
+                />
+              </div>
+              <h2 className="text-xl font-bold text-slate-900 mb-1">{(data as Photo).name || 'Unknown'}</h2>
+              {(data as Photo).name_en && (
+                <h3 className="text-sm font-medium text-slate-500 mb-3">{(data as Photo).name_en}</h3>
+              )}
+            </section>
+
+            {/* Product Metadata */}
+            <section className="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
+              <div className="p-3 border-b border-slate-100 flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5"><Briefcase size={12} /> Metadata</span>
+                {/* ID hint */}
+                <span className="text-[8px] font-mono text-slate-300/30 hover:text-slate-400 transition-colors cursor-help" title={`ID: ${(data as Photo).id}`}>{(data as Photo).id?.split('-')[0]}</span>
+              </div>
+              <div className="p-3 space-y-3">
+                {/* Codes */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <span className="text-[9px] uppercase font-bold text-slate-400 block mb-0.5">Item Code</span>
+                    <span className="text-xs font-mono font-medium text-slate-700">{(data as Photo).item_code || '-'}</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] uppercase font-bold text-slate-400 block mb-0.5">Model Number</span>
+                    <span className="text-xs font-mono font-medium text-slate-700">{(data as Photo).model_number || '-'}</span>
+                  </div>
+                  {/* Price */}
+                  <div className="col-span-2 flex justify-between bg-white p-2 rounded-lg border border-slate-100">
+                    <div>
+                      <span className="text-[9px] uppercase font-bold text-slate-400 block mb-0.5">Price / Manual Code</span>
+                      <span className="text-xs font-semibold text-slate-700">
+                        {[(data as Photo).price ? `$${(data as Photo).price}` : '', (data as Photo).manual_code].filter(Boolean).join(' · ') || '-'}
+                      </span>
+                    </div>
+                    {(data as Photo).width ? (
+                       <div className="text-right">
+                         <span className="text-[9px] uppercase font-bold text-slate-400 block mb-0.5">Img Size</span>
+                         <span className="text-[10px] font-mono text-slate-500">{(data as Photo).width}x{(data as Photo).height}</span>
+                       </div>
+                    ) : null}
+                  </div>
+                  {/* Manufacturer */}
+                  <div className="col-span-2">
+                    <span className="text-[9px] uppercase font-bold text-slate-400 block mb-0.5">Manufacturer</span>
+                    <span className="text-xs font-medium text-slate-700">{displayManufacturerName || '-'}</span>
+                  </div>
+                </div>
               </div>
             </section>
 
-            {/* Description */}
-            {(data as Photo).description && (
+            {/* Furniture Dimensions */}
+            {Array.isArray((data as Photo).dimensions) && (data as Photo).dimensions!.length > 0 && (
               <section>
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Description</h4>
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  {(data as Photo).description}
-                </p>
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 flex items-center gap-1.5"><Maximize2 size={12} /> Dimensions</h4>
+                <div className="space-y-2">
+                  {(data as Photo).dimensions!.map((dim, idx) => (
+                    <div key={idx} className="flex flex-col text-xs p-2.5 bg-slate-50 rounded-lg border border-slate-100">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="font-bold text-slate-700 flex items-center gap-1">
+                          {dim.label || 'Standard'}
+                          {dim.is_ai && <Sparkles size={10} className="text-blue-500" title="AI Estimated" />}
+                        </span>
+                        <span className="text-[9px] uppercase font-bold text-slate-400">{dim.unit}</span>
+                      </div>
+                      <span className="font-mono text-slate-600">
+                        {dim.length}L × {dim.width}W × {dim.height}H
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </section>
             )}
 
-            {/* Attributes Grid */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Dimensions</span>
-                <div className="flex items-center gap-2 text-slate-700">
-                  <Maximize2 size={14} className="opacity-40" />
-                  <span className="text-xs font-semibold">
-                    {(data as Photo).width} × {(data as Photo).height}
-                  </span>
-                </div>
-              </div>
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Status</span>
-                <div className="flex items-center gap-2 text-slate-700">
-                  {(data as Photo).is_hidden ? (
-                    <Badge variant="destructive" className="text-[9px] h-5">已隐藏</Badge>
-                  ) : (
-                    <Badge variant="default" className="bg-green-500 hover:bg-green-600 text-[9px] h-5">公开展示</Badge>
+            {/* Description (multilingual) */}
+            {((data as Photo).description || (data as Photo).description_translations?.en) && (
+              <section className="space-y-3">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+                    Description
+                    <Sparkles size={10} className="text-blue-500" title="AI Generated" />
+                  </h4>
+                  {/* Language Toggle */}
+                  {((data as Photo).description && (data as Photo).description_translations?.en) && (
+                    <div className="flex bg-slate-100 rounded border border-slate-200 p-0.5">
+                      <button 
+                        onClick={() => setDescLang('zh')} 
+                        className={cn("text-[9px] font-bold px-2 py-0.5 rounded transition-all", descLang === 'zh' ? "bg-white shadow-sm text-slate-800" : "text-slate-400 hover:text-slate-600")}
+                      >
+                        ZH
+                      </button>
+                      <button 
+                        onClick={() => setDescLang('en')} 
+                        className={cn("text-[9px] font-bold px-2 py-0.5 rounded transition-all", descLang === 'en' ? "bg-white shadow-sm text-slate-800" : "text-slate-400 hover:text-slate-600")}
+                      >
+                        EN
+                      </button>
+                    </div>
                   )}
                 </div>
-              </div>
-            </div>
+                
+                <div className="text-sm text-slate-700 leading-relaxed bg-slate-50/50 p-3 rounded-lg border border-slate-100">
+                  {descLang === 'en' 
+                    ? ((data as Photo).description_translations?.en || (data as Photo).description)
+                    : ((data as Photo).description || (data as Photo).description_translations?.en)
+                  }
+                </div>
+              </section>
+            )}
 
-            {/* Tags */}
-            {displayTagNames.length > 0 && (
+             {/* Classification */}
+            {(displayCategoryName || displayTagNames.length > 0) && (
               <section>
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 flex items-center gap-2">
-                  <TagIcon size={12} /> Tags
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5 mb-3">
+                  <Grid size={12} /> Classification
                 </h4>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-2">
+                  {displayCategoryName && (
+                    <Badge variant="outline" className="bg-brand-navy/5 text-brand-navy border-brand-navy/10 px-2.5 py-1 shadow-sm">
+                      <Grid size={12} className="mr-1.5 opacity-60" />
+                      {displayCategoryName}
+                    </Badge>
+                  )}
                   {displayTagNames.map((tag: string) => (
                     <span 
                       key={tag}
-                      className="text-[10px] font-bold text-slate-600 px-2 py-1 bg-slate-100 rounded-full hover:bg-slate-200 transition-colors cursor-default"
+                      className="text-[10.5px] font-semibold text-brand-navy/70 px-2.5 py-1 bg-brand-navy/5 rounded-full cursor-default border border-brand-navy/10 shadow-sm"
                     >
                       #{tag}
                     </span>
@@ -242,3 +324,4 @@ export function PhotoInfoPanel({
     </div>
   );
 }
+

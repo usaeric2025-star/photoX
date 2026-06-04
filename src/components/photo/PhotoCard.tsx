@@ -103,16 +103,16 @@ function PhotoInfoFooter({ displayCatName, photoTags, hideTags, categoryId, tagI
 
 
   return (
-    <div className="absolute bottom-0 left-0 w-full z-20 pointer-events-auto p-2 pt-8 flex flex-col gap-1.5 bg-gradient-to-t from-black/95 via-black/65 to-transparent">
+    <div className="absolute bottom-0 left-0 w-full z-20 pointer-events-auto p-1.5 pt-8 flex flex-col gap-1.5 bg-gradient-to-t from-black/95 via-black/65 to-transparent">
         {displayCatName ? (
             <span 
-              className="text-[9px] text-brand-gold font-bold tracking-widest leading-none truncate px-1.5 py-0.5 rounded bg-black/65 backdrop-blur-sm w-fit uppercase border border-brand-gold/30 shadow-md"
+              className="text-[9px] text-brand-gold font-bold tracking-widest leading-none truncate px-1.5 py-0.5 rounded bg-black/65 backdrop-blur-sm w-fit uppercase border border-brand-gold/30 shadow-md ml-0.5"
             >
             {displayCatName.toUpperCase()}
             </span>
         ) : null}
         {!hideTags && photoTags && photoTags.length > 0 ? (
-            <div className="flex flex-row gap-1.5 overflow-x-auto no-scrollbar pointer-events-auto pb-1 px-1">
+            <div className="flex flex-row gap-1.5 overflow-x-auto no-scrollbar pointer-events-auto px-0.5 pb-0.5">
                 {photoTags.map((tag, i) => {
                     return (
                         <span 
