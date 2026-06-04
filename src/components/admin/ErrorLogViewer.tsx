@@ -1,8 +1,20 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React from 'react';
 import { Trash2, Download, AlertCircle, AlertTriangle, Info, ShieldAlert, ChevronDown, ChevronUp } from 'lucide-react';
-import { ErrorReporter, LogEntry, ErrorLevel } from '@/lib/errorReporter';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
 import { toast } from '@/lib/ui/toast';
 import { useDisclosure } from '@mantine/hooks';
+
+type ErrorLevel = 'critical' | 'error' | 'warn' | 'medium' | 'low' | 'info';
+
+interface LogEntry {
+  id: string;
+  created_at: string;
+  level: ErrorLevel;
+  message: string;
+  stack?: string;
+  context?: string;
+}
 
 const LevelIcon = ({ level }: { level: ErrorLevel }) => {
   switch (level) {
@@ -10,16 +22,17 @@ const LevelIcon = ({ level }: { level: ErrorLevel }) => {
     case 'error': return <AlertCircle className="text-orange-500" size={14} />;
     case 'warn': return <AlertTriangle className="text-amber-500" size={14} />;
     case 'info': return <Info className="text-blue-500" size={14} />;
+    default: return <Info className="text-slate-500" size={14} />;
   }
 };
 
 const LogItem = ({ log }: { log: LogEntry }) => {
   const [expanded, { toggle }] = useDisclosure(false);
-  const timeStr = new Date(log.time).toLocaleTimeString();
-  const dateStr = new Date(log.time).toLocaleDateString();
+  const timeStr = new Date(log.created_at).toLocaleTimeString();
+  const dateStr = new Date(log.created_at).toLocaleDateString();
 
   return (
-    <div className="border-b border-slate-100 last:border-0 py-3">
+    <div className={`border-b border-slate-100 last:border-0 py-3 ${log.level === 'critical' ? 'bg-red-50/30' : ''}`}>
       <div className="flex items-start gap-3 cursor-pointer group" onClick={toggle}>
         <div className="mt-0.5">
           <LevelIcon level={log.level} />
@@ -28,7 +41,7 @@ const LogItem = ({ log }: { log: LogEntry }) => {
           <div className="flex items-center gap-2 mb-0.5">
             <span className="text-[10px] font-bold text-slate-400 tabular-nums">{dateStr} {timeStr}</span>
             <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-100 font-black text-slate-500 uppercase tracking-tighter">
-              {log.context}
+              {log.context || 'global'}
             </span>
           </div>
           <p className="text-[12px] font-medium text-slate-700 leading-snug line-clamp-2 group-hover:line-clamp-none transition-all">
@@ -52,38 +65,31 @@ const LogItem = ({ log }: { log: LogEntry }) => {
 };
 
 export const ErrorLogViewer = () => {
-  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const queryClient = useQueryClient();
 
-  const refreshLogs = useCallback(() => {
-    setLogs(ErrorReporter.getLogs());
-  }, []);
-
-  useEffect(() => {
-    refreshLogs();
-    window.addEventListener('error_logs_updated', refreshLogs);
-    return () => window.removeEventListener('error_logs_updated', refreshLogs);
-  }, [refreshLogs]);
-
-  const handleClear = () => {
-    ErrorReporter.clearLogs();
-    toast.success('日志已清除');
-  };
-
-  const handleExport = () => {
-    try {
-      const dataStr = JSON.stringify(logs, null, 2);
-      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-      const exportFileDefaultName = `photox_logs_${new Date().toISOString().split('T')[0]}.json`;
-      
-      const linkElement = document.createElement('a');
-      linkElement.setAttribute('href', dataUri);
-      linkElement.setAttribute('download', exportFileDefaultName);
-      linkElement.click();
-      toast.success('日志已准备导出');
-    } catch (e) {
-      console.error('Export failed', e);
+  const { data: logs = [], refetch } = useQuery({
+    queryKey: ['error_logs'],
+    queryFn: async () => {
+        const { data, error } = await supabase
+            .from('error_events')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(100);
+        if (error) throw error;
+        return data as LogEntry[];
     }
-  };
+  });
+
+  const clearMutation = useMutation({
+      mutationFn: async () => {
+          const { error } = await supabase.from('error_events').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+          if (error) throw error;
+      },
+      onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ['error_logs'] });
+          toast.success('日志已清除');
+      }
+  });
 
   return (
     <div className="bg-white p-6 rounded-[32px] border border-brand-navy/10 mt-4 shadow-sm">
@@ -95,22 +101,13 @@ export const ErrorLogViewer = () => {
         
         <div className="flex items-center gap-2">
           {logs.length > 0 && (
-            <>
-              <button 
-                onClick={handleExport}
-                className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-colors"
-                title="导出日志"
-              >
-                <Download size={14} />
-              </button>
-              <button 
-                onClick={handleClear}
+             <button 
+                onClick={() => clearMutation.mutate()}
                 className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-100 transition-colors"
                 title="清除日志"
               >
                 <Trash2 size={14} />
               </button>
-            </>
           )}
         </div>
       </div>

@@ -22,6 +22,24 @@ export const fetchSettings = async () => {
     if (data) {
         data.gemini_api_key = data.api_key;
         data.custom_model = data.model_name;
+        data.provider = data.ai_provider || 'openrouter';
+        
+        // Fetch key status from backend to support safe, masked keys in frontend guards
+        try {
+            const keysRes = await fetch('/api/admin/settings/get-keys');
+            if (keysRes.ok) {
+                const keysData = await keysRes.json();
+                if (keysData.success && keysData.keysStatus) {
+                    const status = keysData.keysStatus;
+                    // If either Agnes AI or OpenRouter has an encrypted key, populate gemini_api_key with placeholder
+                    if (status.agnes || status.openrouter || data.api_key) {
+                        data.gemini_api_key = data.api_key || "••••••••••••••••";
+                    }
+                }
+            }
+        } catch (e) {
+            console.error("Failed to fetch keys status from backend in fetchSettings:", e);
+        }
         
         if (data.tags_json) {
             try {
@@ -42,10 +60,19 @@ export const saveSettings = async (settings: Partial<AppSettings> & Record<strin
         
         // Map fields to requested columns
         if (payload.gemini_api_key !== undefined) {
-            payload.api_key = payload.gemini_api_key;
+            if (payload.gemini_api_key === "••••••••••••••••") {
+                // Ignore placeholder to prevent overwriting correct DB api_key with dummy text
+                delete payload.gemini_api_key;
+            } else {
+                payload.api_key = payload.gemini_api_key;
+            }
         }
         if (payload.custom_model !== undefined) {
             payload.model_name = payload.custom_model;
+        }
+        if (payload.provider !== undefined) {
+            (payload as any).ai_provider = payload.provider;
+            delete payload.provider;
         }
 
         // Handle hot tags

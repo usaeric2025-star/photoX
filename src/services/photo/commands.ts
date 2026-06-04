@@ -333,7 +333,20 @@ export const groupPhotos = async (
     throw ErrorFactory.wrap(rpcError, 'groupPhotos/merge_groups', targetGroupId);
   }
 
-  // 3. 设置封面图 (RPC 可能不处理)
+  // 2.5 确保选中的每张照片其 group_id 均设为 targetGroupId 并重置 cover 状态
+  const { error: photoUpdateError } = await supabase
+    .from(DB_CONFIG.TABLE_NAME)
+    .update({ 
+      group_id: targetGroupId,
+      is_group_cover: false 
+    })
+    .in('id', validIds);
+
+  if (photoUpdateError) {
+    throw ErrorFactory.wrap(photoUpdateError, 'groupPhotos/updateSelectedPhotos', targetGroupId);
+  }
+
+  // 3. 设置第一张照片为封面图
   const coverPhotoId = validIds[0] || null;
   if (coverPhotoId) {
     await supabase.from(DB_CONFIG.TABLE_NAME).update({ is_group_cover: true }).eq('id', coverPhotoId);

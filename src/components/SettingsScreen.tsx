@@ -145,15 +145,16 @@ export function SettingsScreen() {
         <h2 className="font-black text-xs text-brand-navy border border-brand-navy/10 px-3 py-1 rounded-xl bg-white shadow-sm inline-block italic leading-none uppercase tracking-widest flex-1 ml-1">系统设置 / System Settings</h2>
         <button 
            onClick={async () => {
-             if (hasChanges) {
+             try {
                await saveSettings({ ...settings });
                setHasChanges(false);
                toast.success("保存成功 / Saved successfully");
-             } else {
-               toast.info("没有更改需要保存 / No changes to save");
+             } catch (err) {
+               console.error("Save settings failed:", err);
+               toast.error("保存失败，请检查连接");
              }
            }}
-           className={`p-2 rounded-lg shadow-md active:scale-95 transition-all flex items-center justify-center ${hasChanges ? 'bg-brand-gold hover:bg-brand-gold/90 text-white' : 'bg-brand-navy hover:bg-brand-navy/90 text-white'}`}
+           className={`p-2 rounded-lg shadow-md active:scale-95 transition-all flex items-center justify-center bg-brand-gold hover:bg-brand-gold/90 text-white`}
         >
             <Save size={16} />
         </button>

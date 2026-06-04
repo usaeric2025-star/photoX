@@ -113,27 +113,32 @@ async function getAIConfig(providerName?: string) {
   const supabase = await getSupabaseAdmin();
 
   // 1. 获取当前设置的提供商
-  const { data: settings } = await supabase
+  const { data: settingsData } = await supabase
     .from('settings')
-    .select('ai_provider')
-    .limit(1)
-    .single();
+    .select('ai_provider, api_key')
+    .eq('id', 1)
+    .maybeSingle();
 
-  const provider = providerName || settings?.ai_provider || 'openrouter';
+  const provider = providerName || settingsData?.ai_provider || 'openrouter';
 
-  // 2. 获取对应的 API Key
+  // 2. 从 secrets 表获取密文 key
   const { data: secret } = await supabase
     .from('secrets')
     .select('value')
     .eq('name', provider)
     .maybeSingle();
 
-  if (!secret?.value) {
-      throw new Error(`AI configuration not found for provider: ${provider}`);
+  let apiKey: string | null = null;
+  if (secret?.value) {
+    apiKey = decrypt(secret.value);
+  } else if (provider === 'openrouter' && settingsData?.api_key) {
+    // 降级使用 settings 表里的 api_key
+    apiKey = settingsData.api_key;
   }
 
-  // 3. 解密 Key
-  const apiKey = decrypt(secret.value);
+  if (!apiKey) {
+      throw new Error(`AI configuration API key not found for provider: ${provider}`);
+  }
 
   const baseUrl = provider === 'agnes' 
     ? 'https://apihub.agnes-ai.com/v1'
@@ -537,7 +542,8 @@ app.get("/admin/diagnose-r2", async (c) => {
       const configState: Record<string, any> = {};
       
       for (const key of envKeys) {
-        const val = process.env[key] || (serverEnv as any)[key];
+        // Use process.env directly to avoid throwing on missing key
+        const val = process.env[key];
         configState[key] = { exists: !!val, length: val ? String(val).length : 0 };
         if (!val) issues.push(`环境变量 ${key} 缺失`);
       }
@@ -552,7 +558,7 @@ app.get("/admin/diagnose-r2", async (c) => {
       }
 
       try {
-        const bucketName = serverEnv.R2_BUCKET_NAME;
+        const bucketName = process.env.R2_BUCKET_NAME;
         const command = new ListObjectsV2Command({ Bucket: bucketName, MaxKeys: 1 });
         await s3Client.send(command, { abortSignal: AbortSignal.timeout(4000) });
       } catch (s3Err: any) {
@@ -561,7 +567,76 @@ app.get("/admin/diagnose-r2", async (c) => {
 
       return c.json({ success: true, stage: "ready", message: "R2 连接成功！", details: { configState } });
     } catch (globalErr: any) {
-      return c.json({ success: false, error: globalErr.message });
+      return c.json({ success: false, error: globalErr.message || "未知诊断错误" });
+    }
+});
+
+// Admin Settings: Save provider configuration and encrypted key
+import { encrypt } from './lib/encryption';
+
+app.get("/admin/settings/get-keys", async (c) => {
+    try {
+        const supabase = await getSupabaseAdmin();
+        const { data: secrets } = await supabase.from('secrets').select('name');
+        const configuredProviders = secrets?.map(s => s.name) || [];
+        
+        // Also check if settings table has api_key
+        const { data: settings } = await supabase.from('settings').select('api_key').eq('id', 1).maybeSingle();
+        const hasOpenrouter = configuredProviders.includes('openrouter') || !!settings?.api_key;
+        const hasAgnes = configuredProviders.includes('agnes');
+        
+        return c.json({
+            success: true,
+            keysStatus: {
+                agnes: hasAgnes,
+                openrouter: hasOpenrouter
+            }
+        });
+    } catch (e: any) {
+        console.error("Get keys failed:", e);
+        return c.json({ success: false, error: e.message }, 500);
+    }
+});
+
+app.post("/admin/settings/save-key", async (c) => {
+    try {
+        const { provider, apiKey } = await c.req.json();
+        if (!provider || !apiKey) {
+            return c.json({ success: false, error: "Missing provider or apiKey" }, 400);
+        }
+        const supabase = await getSupabaseAdmin();
+        const encryptedKey = encrypt(apiKey);
+        
+        // Save to secrets
+        const { error } = await supabase.from('secrets').upsert({ name: provider, value: encryptedKey });
+        if (error) throw error;
+        
+        // For backwards compatibility: if provider is openrouter, update the settings table too
+        if (provider === 'openrouter') {
+            await supabase.from('settings').upsert({ id: 1, api_key: apiKey }, { onConflict: 'id' });
+        }
+        
+        return c.json({ success: true });
+    } catch (e: any) {
+        console.error("Save key failed:", e);
+        return c.json({ success: false, error: e.message }, 500);
+    }
+});
+
+app.post("/admin/settings/save-provider", async (c) => {
+    try {
+        const { provider } = await c.req.json();
+        if (!provider) {
+            return c.json({ success: false, error: "Missing provider" }, 400);
+        }
+        const supabase = await getSupabaseAdmin();
+        const { error } = await supabase.from('settings').upsert({ id: 1, ai_provider: provider }, { onConflict: 'id' });
+        if (error) throw error;
+        
+        return c.json({ success: true });
+    } catch (e: any) {
+        console.error("Save provider failed:", e);
+        return c.json({ success: false, error: e.message }, 500);
     }
 });
 
@@ -1149,6 +1224,14 @@ app.get("/error-log", async (c) => {
             
         if (error) throw error;
 
+        // Escape helper for basic XSS protection
+        const escapeHtml = (unsafe: string) => unsafe
+             .replace(/&/g, "&amp;")
+             .replace(/</g, "&lt;")
+             .replace(/>/g, "&gt;")
+             .replace(/"/g, "&quot;")
+             .replace(/'/g, "&#039;");
+
         let html = `
             <html>
                 <head><title>System Error Log</title></head>
@@ -1162,7 +1245,7 @@ app.get("/error-log", async (c) => {
             html += `<tr>
                 <td>${log.created_at}</td>
                 <td>${log.level}</td>
-                <td>${log.message}</td>
+                <td>${escapeHtml(log.message || '')}</td>
             </tr>`;
         });
         
