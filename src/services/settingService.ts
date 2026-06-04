@@ -22,15 +22,17 @@ export const fetchSettings = async () => {
     if (data) {
         data.gemini_api_key = data.api_key;
         data.custom_model = data.model_name;
-        data.provider = data.ai_provider || 'openrouter';
+        data.provider = 'openrouter'; // Default
         
-        // Fetch key status from backend to support safe, masked keys in frontend guards
+        // Fetch key status and primary provider from backend
         try {
             const keysRes = await fetch('/api/admin/settings/get-keys');
             if (keysRes.ok) {
                 const keysData = await keysRes.json();
                 if (keysData.success && keysData.keysStatus) {
                     const status = keysData.keysStatus;
+                    data.provider = status.primaryProvider || 'openrouter';
+                    
                     // If either Agnes AI or OpenRouter has an encrypted key, populate gemini_api_key with placeholder
                     if (status.agnes || status.openrouter || data.api_key) {
                         data.gemini_api_key = data.api_key || "••••••••••••••••";
@@ -59,7 +61,7 @@ export const fetchSettings = async () => {
  * 嚴禁將前端狀態字段 (UI state) 直接傳入數據庫
  */
 const SETTINGS_COLUMNS = [
-    'id', 'logo_url', 'ai_provider', 'api_key', 'model_name', 
+    'id', 'logo_url', 'api_key', 'model_name', 
     'access_passcode', 'whatsapp_1', 'whatsapp_1_name', 
     'whatsapp_2', 'whatsapp_2_name', 'tags_json', 'updated_at'
 ];
@@ -74,17 +76,26 @@ export const saveSettings = async (settings: Partial<AppSettings> & Record<strin
         
         const mapping: Record<string, string> = {
             'gemini_api_key': 'api_key',
-            'custom_model': 'model_name',
-            'provider': 'ai_provider'
+            'custom_model': 'model_name'
         };
 
         // 2. 根據白名單構建最終 Payload
         Object.entries(rawPayload).forEach(([key, value]) => {
             const dbKey = mapping[key] || key;
+            if (dbKey === 'ai_provider') return; // Explicit exclude
             if (SETTINGS_COLUMNS.includes(dbKey)) {
                 payload[dbKey] = value;
             }
         });
+
+        // 2.1 特別處理首選供應商 (經由專用 API)
+        if (rawPayload.provider) {
+            void fetch('/api/admin/settings/save-provider', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ provider: rawPayload.provider })
+            });
+        }
 
         // 3. 處理熱點標籤 JSON
         if (rawPayload.pinned_tags || rawPayload.hot_tags_count !== undefined) {

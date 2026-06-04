@@ -125,7 +125,16 @@ export async function getAIProvider(providerName: string, supabase: any) {
     if (!apiKey) throw new Error(`未配置 ${providerName} 的 API 密鑰`);
 
     const { data: settings } = await supabase.from('settings').select('model_name').eq('id', 1).maybeSingle();
-    const config = { apiKey, model: settings?.model_name };
+    
+    // 優先確保 Agnes 使用正確的預設模型
+    let model = settings?.model_name;
+    if (providerName === 'agnes') {
+        model = 'agnes-2.0-flash';
+    } else if (providerName === 'openrouter' && (!model || model.startsWith('agnes'))) {
+        model = 'google/gemini-2.0-flash-exp:free';
+    }
+
+    const config = { apiKey, model };
 
     if (providerName === 'agnes') return new AgnesProvider(config);
     return new OpenRouterProvider(config);

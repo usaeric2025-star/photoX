@@ -18,7 +18,7 @@ export const useAIGroupMutation = createMutationHook({
     if (!photos || photos.length === 0) throw ErrorFactory.wrap(new Error('未找到所选照片'), 'useAIGroupMutation', photoIds.join(', '));
 
     // 2. AI 分析
-    const analysis = await analyzeGroup(photos);
+    const analysis = await analyzeGroup(photos as unknown as import('@/types/photo').Photo[]);
     const { name, description, colors, materials } = analysis;
 
     // 获取翻译逻辑（这里可以扩展，目前先使用分析出来的基本字段）

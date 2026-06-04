@@ -111,8 +111,9 @@ app.post("/ai/test", async (c) => {
 
 app.post("/ai/test/primary", async (c) => {
     const supabase = await getSupabaseAdmin();
-    const { data: settings } = await supabase.from('settings').select('ai_provider').limit(1).single();
-    const provider = settings?.ai_provider || 'openrouter';
+    // 優先從 secrets 讀取首選供應商
+    const { data: primarySecret } = await supabase.from('secrets').select('value').eq('name', 'PRIMARY_AI_PROVIDER').maybeSingle();
+    const provider = primarySecret?.value || 'openrouter';
     
     const ai = await getAIProvider(provider, supabase);
     const result = await ai.chat([{ role: 'user', content: 'hi' }]);
@@ -125,8 +126,8 @@ app.post("/ai/dispatch", async (c) => {
     const { payload } = await c.req.json();
     const supabase = await getSupabaseAdmin();
 
-    const { data: settings } = await supabase.from('settings').select('ai_provider').limit(1).single();
-    const primary = settings?.ai_provider || 'openrouter';
+    const { data: primarySecret } = await supabase.from('secrets').select('value').eq('name', 'PRIMARY_AI_PROVIDER').maybeSingle();
+    const primary = primarySecret?.value || 'openrouter';
     const secondary = primary === 'openrouter' ? 'agnes' : 'openrouter';
     
     const errors: string[] = [];
@@ -481,16 +482,23 @@ app.get("/admin/diagnose-r2", async (c) => {
 app.get("/admin/settings/get-keys", async (c) => {
     try {
         const supabase = await getSupabaseAdmin();
-        const { data: secrets } = await supabase.from('secrets').select('name');
+        const { data: secrets } = await supabase.from('secrets').select('name, value');
         const configuredProviders = secrets?.map(s => s.name) || [];
         
         const { data: settings } = await supabase.from('settings').select('api_key').eq('id', 1).maybeSingle();
         const hasOpenrouter = configuredProviders.includes('openrouter') || !!settings?.api_key;
         const hasAgnes = configuredProviders.includes('agnes');
         
+        // 獲取首選供應商
+        const primarySecret = secrets?.find(s => s.name === 'PRIMARY_AI_PROVIDER');
+        
         return c.json({
             success: true,
-            keysStatus: { agnes: hasAgnes, openrouter: hasOpenrouter }
+            keysStatus: { 
+                agnes: hasAgnes, 
+                openrouter: hasOpenrouter, 
+                primaryProvider: primarySecret?.value || 'openrouter' 
+            }
         });
     } catch (e: any) {
         return c.json({ success: false, error: e.message }, 500);
@@ -509,7 +517,7 @@ app.post("/admin/settings/save-key", async (c) => {
                 : 'https://openrouter.ai/api/v1';
             
             const testPayload = {
-                model: model || (provider === 'agnes' ? 'agnes-ai' : 'google/gemini-2.0-flash-exp:free'),
+                model: model || (provider === 'agnes' ? 'agnes-2.0-flash' : 'google/gemini-2.0-flash-exp:free'),
                 messages: [{ role: 'user', content: 'hi' }],
                 max_tokens: 1
             };
@@ -553,7 +561,12 @@ app.post("/admin/settings/save-provider", async (c) => {
             return c.json({ success: false, error: "Missing provider" }, 400);
         }
         const supabase = await getSupabaseAdmin();
-        const { error } = await supabase.from('settings').upsert({ id: 1, ai_provider: provider }, { onConflict: 'id' });
+        // 將首選供應商存入 secrets 表而非 settings 表，以避免 schema cache 錯誤
+        const { error } = await supabase.from('secrets').upsert({ 
+            name: 'PRIMARY_AI_PROVIDER', 
+            value: provider,
+            updated_at: new Date().toISOString()
+        });
         if (error) throw error;
         
         return c.json({ success: true });

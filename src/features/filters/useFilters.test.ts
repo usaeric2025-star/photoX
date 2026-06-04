@@ -1,14 +1,8 @@
 import { renderHook, act } from '@testing-library/react';
-import { useFilters, filtersService } from './useFilters';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { useFilters } from './useFilters';
+import { describe, it, expect } from 'vitest';
 
-describe('useFilters (XState)', () => {
-  beforeEach(() => {
-    act(() => {
-      filtersService.send({ type: 'RESET' });
-    });
-  });
-
+describe('useFilters (Zustand)', () => {
   it('should initialize with default values', () => {
     const { result } = renderHook(() => useFilters());
     expect(result.current.filters.categoryId).toBeNull();
@@ -31,14 +25,6 @@ describe('useFilters (XState)', () => {
       result.current.setSearch('test search');
     });
     expect(result.current.filters.searchQuery).toBe('test search');
-  });
-
-  it('should update group collapsed state', () => {
-    const { result } = renderHook(() => useFilters());
-    act(() => {
-      result.current.setShowGroupsCollapsed(false);
-    });
-    expect(result.current.filters.showGroupsCollapsed).toBe(false);
   });
 
   it('should reset filters', () => {
