@@ -5,7 +5,7 @@ import { mapToDb } from './photo/photoMappingUtils';
 import { safeArray } from '../lib/utils';
 import { createPhotoValidator } from '../lib/validators/factory';
 import { generateItemCode } from './utils';
-import { isErr } from '@/lib/errorFactory';
+import { ErrorFactory } from '../lib/error/ErrorFactory';
 
 /**
  * Service for all photo-related write operations (Insert, Update, Delete).
@@ -14,7 +14,7 @@ import { isErr } from '@/lib/errorFactory';
 
 export const updatePhotoInCloud = async (photoId: string, updates: Partial<Photo> & Record<string, unknown>) => {
   if (!photoId || photoId.startsWith('temp-')) {
-    throw new Error('无效的照片ID，操作被终止');
+    throw ErrorFactory.wrap(new Error('无效的照片ID，操作被终止'), 'updatePhotoInCloud', photoId);
   }
   
   // Clean up updates
@@ -46,7 +46,7 @@ export const updatePhotoInCloud = async (photoId: string, updates: Partial<Photo
   const validator = createPhotoValidator();
   const validationRes = validator.validate(cUpdates);
   if (!validationRes.ok) {
-    throw new Error(`Validation Failed: ${validationRes.message}.`);
+    throw ErrorFactory.wrap(new Error(`Validation Failed: ${validationRes.message}.`), 'updatePhotoInCloud', photoId);
   }
 
   const dbUpdates = mapToDb(cleanUpdates);
@@ -78,7 +78,7 @@ export const updatePhotoInCloud = async (photoId: string, updates: Partial<Photo
   }
     
   if (error) {
-    throw new Error(error.message || JSON.stringify(error));
+    throw ErrorFactory.wrap(error, 'updatePhotoInCloud', photoId);
   }
 
   // Handle tags if present
@@ -137,13 +137,13 @@ export const batchUpdatePhotosInCloud = async (
 
   const validationRes = validator.validate(cUpdates);
     if (!validationRes.ok) {
-        throw new Error(`Batch Validation Failed: ${validationRes.message}.`);
+        throw ErrorFactory.wrap(new Error(`Batch Validation Failed: ${validationRes.message}.`), 'batchUpdatePhotosInCloud', userId);
     }
 
   const dbUpdates = mapToDb(cUpdates);
   
   for (let i = 0; i < ids.length; i += BATCH_SIZE) {
-    if (signal?.aborted) throw new Error('Operation aborted');
+    if (signal?.aborted) throw ErrorFactory.wrap(new Error('Operation aborted'), 'batchUpdatePhotosInCloud', userId);
     
     const chunkIds = ids.slice(i, i + BATCH_SIZE);
     
@@ -174,7 +174,7 @@ export const batchUpdatePhotosInCloud = async (
     // Sync tags if provided
     if ('tag_ids' in updates) {
        for (const photoId of chunkIds) {
-          if (signal?.aborted) throw new Error('Operation aborted');
+          if (signal?.aborted) throw ErrorFactory.wrap(new Error('Operation aborted'), 'batchUpdatePhotosInCloud - syncTags', photoId);
           await syncPhotoTags(photoId, safeArray(updates.tag_ids));
        }
     }
@@ -253,7 +253,7 @@ export const deletePhotoFromCloud = async (userId: string, photo: Photo): Promis
     .match({ id: photoId, user_id: userId });
 
   if (error) {
-    throw new Error(error.message || JSON.stringify(error));
+    throw ErrorFactory.wrap(error, 'deletePhotoFromCloud', photoId);
   }
 
   // Physical Cleanup

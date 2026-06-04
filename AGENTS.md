@@ -435,3 +435,10 @@ toast.error('发现数据完整性问题', {
 - ✅ **性能优先原则**：性能优化应当建立在真实确认的瓶颈基础上。
 - ❌ **非必要不优化**：除非遇到真实性能瓶颈，否则禁止主动进行 `async-parallel`、`bundle-dynamic-imports`、`bundle-barrel-imports` 等复杂优化，以保持架构的简单与可维护性。
 
+## 错误处理与 Mutation 规范（锁定）
+- ❌ 禁止直接 `throw new Error()`，必须用 `ErrorFactory.wrap()`。
+- ❌ 禁止在组件中直接使用 `useMutation`，必须用 `mutations/*` 下的工厂生成。
+- ✅ 所有 Mutation 必须通过 `createMutationHook` 工厂生成。
+- ✅ 所有服务端错误必须走 `useAppError` 输出 toast。
+- ✅ 缓存失效必须使用 `photoKeys.all()` 或 `groupKeys.all()` 降维打击。
+

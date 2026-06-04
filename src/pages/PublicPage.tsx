@@ -18,6 +18,7 @@ import { saveData, syncCache } from '@/lib/db/indexedDB';
 import { PublicGridContainer } from '@/components/photo/PublicGridContainer';
 import { PublicHeader } from '@/components/layouts/headers/PublicHeader';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { toast } from 'sonner';
 import { GroupDetailPage } from '@/components/GroupDetailPage';
 import { useUrlFilters } from '@/hooks/useUrlFilters';
 
@@ -38,9 +39,18 @@ export default function PublicPage() {
   const { mutateAsync: syncMut } = useSyncMutation();
   const isSyncing = tasks.some(t => t.status === 'running' && (t.name.includes('同步') || t.name.includes('Sync')));
 
-  const handleRefresh = () => {
-    if (isSyncing) return;
-    syncMut('pull');
+  const handleRefresh = async () => {
+    if (isSyncing) {
+       toast.warning('同步正在进行中...');
+       return;
+    }
+    
+    try {
+      await syncMut('pull');
+      toast.success('同步已完成');
+    } catch (e: any) {
+      toast.error(`同步失败: ${e.message || '未知错误'}`);
+    }
   };
 
   const virtualGridRef = useRef<any>(null);

@@ -6,6 +6,7 @@ import { PAGINATION } from '../../config/constants';
 import { safeArray } from '../../lib/utils';
 import { mapToDb } from './photoMappingUtils';
 import { ungroupPhotos } from './photoMaintenanceService';
+import { ErrorFactory } from '../../lib/error/ErrorFactory';
 import { 
   updatePhotoInCloud as updatePhotoInCloudNew,
   deletePhotoFromCloud as deletePhotoFromCloudNew,
@@ -22,11 +23,11 @@ export const updatePhoto = async (
   setPhotos?: React.Dispatch<React.SetStateAction<Photo[]>>
 ): Promise<void> => {
   if (!photoId || photoId.startsWith('temp-')) {
-    throw new Error('无效的照片ID，操作被终止');
+    throw ErrorFactory.wrap(new Error('无效的照片ID，操作被终止'), 'updatePhoto', photoId);
   }
   const { data: { session } } = await supabase.auth.getSession();
   const isLocalStorageStaff = typeof window !== 'undefined' && !!window.localStorage.getItem('ais_mock_auth_passcode');
-  if (!session && !isLocalStorageStaff) throw new Error('NO_ACTIVE_SESSION');
+  if (!session && !isLocalStorageStaff) throw ErrorFactory.wrap(new Error('NO_ACTIVE_SESSION'), 'updatePhoto', photoId);
 
   if (updates.is_group_cover === true) {
     let groupId = updates.group_id;
@@ -226,7 +227,7 @@ export const deletePhotosBatch = async (
   const affectedGroupIds = new Set<string>();
   
   for (let i = 0; i < sPhotos.length; i += BATCH_SIZE) {
-    if (signal?.aborted) throw new Error('Operation aborted');
+    if (signal?.aborted) throw ErrorFactory.wrap(new Error('Operation aborted'), 'deletePhotosBatch', userId);
     
     const chunk = sPhotos.slice(i, i + BATCH_SIZE);
     const ids = chunk.map(p => p.id).filter(id => id && !id.startsWith('temp-'));
@@ -241,7 +242,7 @@ export const deletePhotosBatch = async (
       .eq('user_id', userId);
     
     if (error) {
-      throw new Error(error.message || JSON.stringify(error));
+      throw ErrorFactory.wrap(error, 'deletePhotosBatch', userId);
     }
     
     const potentiallyDeletable = chunk.filter(p => !!p.image_url);
@@ -290,7 +291,7 @@ export const deletePhotosBatch = async (
 
 export const groupPhotos = async (photoIds: string[], predefinedGroupId?: string, expandGroups: boolean = false) => {
   if (photoIds.length <= 1) {
-    throw new Error('至少需要选择两张照片才能成组');
+    throw ErrorFactory.wrap(new Error('至少需要选择两张照片才能成组'), 'groupPhotos', photoIds.join(', '));
   }
   const groupId = predefinedGroupId || crypto.randomUUID();
   let isNewGroup = false;

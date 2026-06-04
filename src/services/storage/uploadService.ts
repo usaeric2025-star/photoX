@@ -3,6 +3,7 @@ import { STORAGE } from './storageConfig';
 import { api } from '@/lib/api';
 import { StandardError } from '@/lib/validators/protocol';
 import { extractErrorMessage } from '@/lib/error/errorHandler';
+import { ErrorFactory } from '../../lib/error/ErrorFactory';
 
 export const compressImage = (base64Data: string, maxWidth = 1920, quality = 0.8): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -22,7 +23,7 @@ export const compressImage = (base64Data: string, maxWidth = 1920, quality = 0.8
 
       const ctx = canvas.getContext('2d');
       if (!ctx) {
-        reject(new Error('Failed to get canvas context'));
+        reject(ErrorFactory.wrap(new Error('Failed to get canvas context'), 'compressImage'));
         return;
       }
 
@@ -35,7 +36,7 @@ export const compressImage = (base64Data: string, maxWidth = 1920, quality = 0.8
       
       resolve(result);
     };
-    img.onerror = () => reject(new Error('图片加载到画布失败，请确保文件格式完整且是有效的图片'));
+    img.onerror = () => reject(ErrorFactory.wrap(new Error('图片加载到画布失败，请确保文件格式完整且是有效的图片'), 'compressImage'));
     img.src = base64Data;
   });
 };
@@ -45,7 +46,7 @@ function dataURLToArrayBuffer(dataurl: string): { buffer: ArrayBuffer; mime: str
   const mimeMatch = arr[0].match(/:(.*?);/);
   const mime = mimeMatch ? mimeMatch[1] : 'image/webp';
   if (arr.length < 2) {
-    throw new Error('Invalid data URL format');
+    throw ErrorFactory.wrap(new Error('Invalid data URL format'), 'dataURLToArrayBuffer');
   }
   const bstr = atob(arr[1]);
   let n = bstr.length;
@@ -93,7 +94,7 @@ export const uploadImages = async (
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!session?.user) {
-    throw new Error('No active session for storage');
+    throw ErrorFactory.wrap(new Error('No active session for storage'), 'uploadImages', userId);
   }
 
   try {
@@ -135,11 +136,11 @@ export const uploadImages = async (
       }
 
       if (!presignRes.ok) {
-        throw new Error(`获取预签名上传地址失败 (HTTP ${presignRes.status})`);
+        throw ErrorFactory.wrap(new Error(`获取预签名上传地址失败 (HTTP ${presignRes.status})`), 'uploadFile', photoId);
       }
 
       const result = await presignRes.json();
-      if (!result.success) throw new Error(String(result.error));
+      if (!result.success) throw ErrorFactory.wrap(new Error(String(result.error)), 'uploadFile', photoId);
       
       const { uploadUrl, publicUrl } = result.data;
 
@@ -155,7 +156,7 @@ export const uploadImages = async (
         const fallbackRes = await api['upload-direct'].$post({
           json: { base64Data: base64, fileKey: safeFileName, contentType: 'image/webp' }
         });
-        if (!fallbackRes.ok) throw new Error('服务器中转上传失败');
+        if (!fallbackRes.ok) throw ErrorFactory.wrap(new Error('服务器中转上传失败'), 'uploadFile', photoId);
         const fallbackResult = await fallbackRes.json();
         if (isMain && onProgress) onProgress(100);
         return fallbackResult.data.publicUrl;

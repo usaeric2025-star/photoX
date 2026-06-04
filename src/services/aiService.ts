@@ -3,6 +3,7 @@ import { analyzeProductPhoto } from './gemini';
 import { supabase } from '@/lib/supabase';
 import { DB_CONFIG } from '@/constants/config';
 import { ok, err, AppResult } from '@/lib/errorFactory';
+import { ErrorFactory } from '../lib/error/ErrorFactory';
 
 /**
  * [V2.0-SERVICE-SINGLETON] AI Photo Analysis Service
@@ -17,11 +18,11 @@ export const analyzePhoto = async (photoId: string): Promise<AppResult<any>> => 
       .single();
 
     if (fetchError || !photo) {
-      throw new Error(fetchError?.message || '未找到照片记录');
+      throw ErrorFactory.wrap(new Error(fetchError?.message || '未找到照片记录'), 'analyzePhoto', photoId);
     }
 
     if (!photo.image_url) {
-      throw new Error('该照片没有可供识别的图片链接');
+      throw ErrorFactory.wrap(new Error('该照片没有可供识别的图片链接'), 'analyzePhoto', photoId);
     }
 
     // 2. Load context (categories, tags, etc)
@@ -39,7 +40,7 @@ export const analyzePhoto = async (photoId: string): Promise<AppResult<any>> => 
 
     const apiKey = (settings as any)?.gemini_api_key || (settings as any)?.api_key;
     if (!apiKey) {
-      throw new Error('Gemini API Key 未配置，请前往设置页面');
+      throw ErrorFactory.wrap(new Error('Gemini API Key 未配置，请前往设置页面'), 'analyzePhoto', photoId);
     }
 
     const customModel = (settings as any)?.custom_model || (settings as any)?.model_name || '';

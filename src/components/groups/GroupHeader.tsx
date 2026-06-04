@@ -78,7 +78,7 @@ export function GroupHeader({
 
   return (
     <div className="flex-shrink-0 sticky top-0 bg-brand-bg/90 backdrop-blur-md z-[100] px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-100">
-      <div className="flex items-center gap-3 overflow-hidden">
+      <div className="flex items-center gap-3 min-w-0 flex-1">
         <button
           onClick={handleClose}
           className="w-10 h-10 flex-shrink-0 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors"
@@ -86,7 +86,7 @@ export function GroupHeader({
           <ChevronLeft size={24} />
         </button>
         <div
-          className="flex flex-col cursor-pointer group overflow-hidden"
+          className="flex flex-col cursor-pointer group min-w-0 flex-1"
           onClick={() => {
             if (isAdminMode) {
               update?.({ groupSettingsOpen: true } as any);
@@ -98,7 +98,7 @@ export function GroupHeader({
               <Skeleton className="h-6 w-32 bg-slate-200 animate-pulse" />
             ) : (
               <>
-                <h2 className="text-lg font-black text-slate-800 tracking-tight uppercase truncate">
+                <h2 className="text-base sm:text-lg font-black text-slate-800 tracking-tight uppercase truncate flex-1 min-w-0">
                   {/* [FIELD-LEVEL-FALLBACK] Render group name, first photo name, or ID as last resort */}
                   {groupData?.name ||
                     activeGroupPhotos[0]?.name ||

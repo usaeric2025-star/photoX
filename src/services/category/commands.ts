@@ -1,5 +1,6 @@
 import { supabase } from '../../lib/supabase';
 import { Category } from '../../types';
+import { ErrorFactory } from '../../lib/error/ErrorFactory';
 
 const TABLE_NAME = 'categories';
 
@@ -31,7 +32,7 @@ export const updateCategory = async (categoryId: string, updates: Partial<Catego
         .eq('id', categoryId);
 
     if (error) {
-        throw new Error(error.message);
+        throw ErrorFactory.wrap(error, 'updateCategory', categoryId);
     }
 };
 
@@ -44,7 +45,7 @@ export const createCategory = async (categoryData: Omit<Category, 'id'>) => {
         .single();
 
     if (error) {
-        throw new Error(error.message);
+        throw ErrorFactory.wrap(error, 'createCategory', categoryData.name);
     }
     return data;
 };
@@ -55,7 +56,7 @@ export const deleteCategory = async (categoryId: string) => {
         .delete()
         .eq('id', categoryId);
     if (error) {
-        throw new Error(error.message);
+        throw ErrorFactory.wrap(error, 'deleteCategory', categoryId);
     }
 };
 

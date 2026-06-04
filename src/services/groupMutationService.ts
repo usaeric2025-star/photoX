@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { ProductGroup } from '../types';
 import { createGroupValidator } from '../lib/validators/factory';
-import { isErr } from '@/lib/errorFactory';
+import { ErrorFactory } from '../lib/error/ErrorFactory';
 
 /**
  * Service for all group-related write operations.
@@ -50,7 +50,7 @@ export const updateGroupInCloud = async (groupId: string, updates: Partial<Produ
     const validator = createGroupValidator();
     const validationRes = validator.validate(updates);
     if (!validationRes.ok) {
-        throw new Error(`Group Update Validation Failed: ${validationRes.message}.`);
+        throw ErrorFactory.wrap(new Error(validationRes.message), 'Group Update Validation Failed');
     }
 
     const userId = await getCurrentUserId();
@@ -61,7 +61,7 @@ export const updateGroupInCloud = async (groupId: string, updates: Partial<Produ
         .eq('id', groupId);
 
     if (error) {
-        throw new Error(`Update Group Fail: ${error.message}`);
+        throw ErrorFactory.wrap(error, 'Update Group Fail');
     }
 };
 
@@ -70,7 +70,7 @@ export const createGroupInCloud = async (groupData: ProductGroup) => {
     const validator = createGroupValidator();
     const validationRes = validator.validate(groupData);
     if (!validationRes.ok) {
-        throw new Error(`Group Creation Validation Failed: ${validationRes.message}.`);
+        throw ErrorFactory.wrap(new Error(validationRes.message), 'Group Creation Validation Failed');
     }
 
     const userId = await getCurrentUserId();
@@ -82,7 +82,7 @@ export const createGroupInCloud = async (groupData: ProductGroup) => {
         .single();
 
     if (error) {
-        throw new Error(`Create Group Fail: ${error.message}`);
+        throw ErrorFactory.wrap(error, 'Create Group Fail');
     }
     return data;
 };
@@ -95,7 +95,7 @@ export const upsertGroupInCloud = async (group: Partial<ProductGroup> & { id: st
         .upsert(dbUpdates, { onConflict: 'id' });
 
     if (error) {
-        throw new Error(`Upsert Group Fail: ${error.message}`);
+        throw ErrorFactory.wrap(error, 'Upsert Group Fail');
     }
 };
 
@@ -106,7 +106,7 @@ export const deleteGroupFromCloud = async (id: string, userId?: string) => {
     }
     const { error } = await query;
     if (error) {
-        throw new Error(`Delete Group Fail: ${error.message}`);
+        throw ErrorFactory.wrap(error, 'Delete Group Fail');
     }
 };
 

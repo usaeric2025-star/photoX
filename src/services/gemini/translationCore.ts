@@ -2,6 +2,7 @@ import { AI_PROMPTS } from '../../constants/ai';
 import { extractJsonObject } from '../../lib/aiParsing';
 import { api } from '@/lib/api';
 import { DEFAULT_AI_MODEL } from '@/config/ai';
+import { ErrorFactory } from '../../lib/error/ErrorFactory';
 
 export const translateDescription = async (
   zhText: string,
@@ -44,9 +45,9 @@ export const translateDescription = async (
 
     if (!response.ok) {
        if (response.status === 404 && fetchUrl.startsWith('/api/')) {
-          throw new Error("部署环境不支持代理，请在设置中配置 API Key");
+          throw ErrorFactory.wrap(new Error("部署环境不支持代理，请在设置中配置 API Key"), 'translateDescription');
        }
-       throw new Error(`翻译失败: ${response.statusText}`);
+       throw ErrorFactory.wrap(new Error(`翻译失败: ${response.statusText}`), 'translateDescription');
     }
     
     const result = await response.json();
@@ -161,7 +162,7 @@ Your response MUST match this exact JSON schema:
     }
 
     if (!response.ok) {
-      throw new Error(`Fields translation HTTP error: ${response.statusText}`);
+      throw ErrorFactory.wrap(new Error(`Fields translation HTTP error: ${response.statusText}`), 'translateProductFields');
     }
 
     const resJson = await response.json();

@@ -27,7 +27,14 @@ export function AdminScreen() {
   const { tasks } = useTasks();
   const { mutateAsync: syncMut } = useSyncMutation();
   const isSyncing = tasks.some(t => t.name.includes('同步') && t.status === 'running');
-  const onRefresh = () => syncMut('pull');
+  const onRefresh = async () => {
+    try {
+      await syncMut('pull');
+      toast.success('同步已完成');
+    } catch (e: any) {
+      toast.error(`同步失败: ${e.message || '未知错误'}`);
+    }
+  };
   const cloudCount = 0;
 
   const lang = useUIStore((s) => s.appLang);

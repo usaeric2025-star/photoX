@@ -1,5 +1,6 @@
 import { supabase } from '../../lib/supabase';
 import { SubCategory as Manufacturer } from '../../types';
+import { ErrorFactory } from '../../lib/error/ErrorFactory';
 
 const TABLE_NAME = 'manufacturers';
 const ALLOWED_FIELDS = ['id', 'name', 'aliases'];
@@ -29,7 +30,7 @@ export const updateManufacturer = async (id: string, updates: Partial<Manufactur
         .eq('id', id);
 
     if (error) {
-        throw new Error(error.message);
+        throw ErrorFactory.wrap(error, 'updateManufacturer', id);
     }
 };
 
@@ -42,7 +43,7 @@ export const createManufacturer = async (data: Omit<Manufacturer, 'id'>) => {
         .single();
 
     if (error) {
-        throw new Error(error.message);
+        throw ErrorFactory.wrap(error, 'createManufacturer', data.name);
     }
     return inserted;
 };
@@ -53,7 +54,7 @@ export const deleteManufacturer = async (id: string) => {
         .delete()
         .eq('id', id);
     if (error) {
-        throw new Error(error.message);
+        throw ErrorFactory.wrap(error, 'deleteManufacturer', id);
     }
 };
 
