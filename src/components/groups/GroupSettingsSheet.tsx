@@ -13,7 +13,7 @@ interface GroupSettingsSheetProps {
   activeGroupId: string | null;
   groupData: ProductGroup | null;
   setGroupData: React.Dispatch<React.SetStateAction<ProductGroup | null>>;
-  onUngroup?: (groupId: string) => void;
+  onUngroup?: (groupId: string) => Promise<void> | void;
   update: (updates: any) => void;
   handleUpdateGroupData: (updates: Partial<ProductGroup>) => Promise<void>;
   handleBatchUpdateDimensions: (newDims: Dimension[]) => Promise<void>;

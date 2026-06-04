@@ -34,6 +34,24 @@ export function DiagnosticsDashboard() {
     runAudit, isAuditing, auditResult
   } = useDiagnostics();
 
+  const combinedIssues = React.useMemo(() => {
+    const list = [...(report?.issues || [])];
+    const orphansCount = auditResult?.orphans?.count ?? 0;
+    if (orphansCount > 0) {
+      list.push({
+        id: 'orphan_files',
+        category: 'integrity',
+        severity: 'P1',
+        title: '云端存储包含孤儿物理文件 (Storage Orphans Found)',
+        description: `Cloudflare R2 存储中存在 ${orphansCount} 个无数据库归档对账的物理图片文件（例如: ${auditResult?.orphans?.samples?.[0]?.key || ''}）。点击立即处理将自动扫描、生成智能描述与多语言配置并重建数据库归档。`,
+        affectedCount: orphansCount,
+        sampleIds: [],
+        autoFixable: true
+      });
+    }
+    return list;
+  }, [report?.issues, auditResult]);
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -234,7 +252,7 @@ export function DiagnosticsDashboard() {
       {/* 智能故障修复列表 */}
       <div className="space-y-3">
         <AnimatePresence mode="popLayout">
-          {report?.issues.map((issue) => (
+          {combinedIssues.map((issue) => (
             <motion.div
               layout
               key={issue.id}
@@ -266,7 +284,10 @@ export function DiagnosticsDashboard() {
                          <MaintenanceTool 
                            issueId={issue.id}
                            compact
-                           onSuccess={refreshReport}
+                           onSuccess={() => {
+                             refreshReport();
+                             runAudit();
+                           }}
                          />
                        ) : (
                          <button 
@@ -285,7 +306,7 @@ export function DiagnosticsDashboard() {
           ))}
         </AnimatePresence>
 
-        {report?.totalIssues === 0 && !isLoading && (
+        {combinedIssues.length === 0 && !isLoading && (
           <div className="py-12 flex flex-col items-center justify-center text-center space-y-4 bg-white rounded-3xl border border-dashed border-slate-200">
              <div className="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center text-green-500">
                <CheckCircle2 size={24} />

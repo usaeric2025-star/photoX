@@ -15,7 +15,7 @@ export function GroupSettingsHeader({
   setShowGroupSettings}: {
   groupData: ProductGroup | null;
   activeGroupId: string | null;
-  onUngroup?: (groupId: string) => void;
+  onUngroup?: (groupId: string) => Promise<void> | void;
   update: (updates: any) => void;
   setShowGroupSettings: (show: boolean) => void;
   
@@ -51,7 +51,7 @@ export function GroupSettingsHeader({
                       "解散群组",
                       async () => {
                         if (onUngroup && activeGroupId) {
-                          onUngroup(activeGroupId);
+                          await onUngroup(activeGroupId);
                           setGroupId(null);
                           setShowGroupSettings(false);
                         }

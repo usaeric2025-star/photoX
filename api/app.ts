@@ -107,7 +107,7 @@ app.post("/ai/test", async (c) => {
         aiConfig = { apiKey, model };
     } else {
         // 從 DB 獲取
-        const { data: secret } = await supabase.from('secrets').select('value').eq('name', provider).maybeSingle();
+        const { data: secret } = await supabase.from('secrets').select('value').eq('key', provider).maybeSingle();
         if (!secret?.value) throw new Error(`未配置 ${provider} 的 API 密鑰`);
         const { decrypt } = await import('./lib/encryption.js');
         aiConfig = { apiKey: decrypt(secret.value), model };
@@ -140,7 +140,7 @@ app.post("/ai/test", async (c) => {
 app.post("/ai/test/primary", async (c) => {
     const supabase = await getSupabaseAdmin();
     // 優先從 secrets 讀取首選供應商
-    const { data: primarySecret } = await supabase.from('secrets').select('value').eq('name', 'PRIMARY_AI_PROVIDER').maybeSingle();
+    const { data: primarySecret } = await supabase.from('secrets').select('value').eq('key', 'PRIMARY_AI_PROVIDER').maybeSingle();
     const provider = primarySecret?.value || 'openrouter';
     
     const ai = await getAIProvider(provider, supabase);
@@ -154,7 +154,7 @@ app.post("/ai/dispatch", async (c) => {
     const { payload } = await c.req.json();
     const supabase = await getSupabaseAdmin();
 
-    const { data: primarySecret } = await supabase.from('secrets').select('value').eq('name', 'PRIMARY_AI_PROVIDER').maybeSingle();
+    const { data: primarySecret } = await supabase.from('secrets').select('value').eq('key', 'PRIMARY_AI_PROVIDER').maybeSingle();
     const primary = primarySecret?.value || 'openrouter';
     const secondary = primary === 'openrouter' ? 'agnes' : 'openrouter';
     
@@ -510,15 +510,15 @@ app.get("/admin/diagnose-r2", async (c) => {
 app.get("/admin/settings/get-keys", async (c) => {
     try {
         const supabase = await getSupabaseAdmin();
-        const { data: secrets } = await supabase.from('secrets').select('name, value');
-        const configuredProviders = secrets?.map(s => s.name) || [];
+        const { data: secrets } = await supabase.from('secrets').select('key, value');
+        const configuredProviders = secrets?.map(s => s.key) || [];
         
         const { data: settings } = await supabase.from('settings').select('api_key').eq('id', 1).maybeSingle();
         const hasOpenrouter = configuredProviders.includes('openrouter') || !!settings?.api_key;
         const hasAgnes = configuredProviders.includes('agnes');
         
         // 獲取首選供應商
-        const primarySecret = secrets?.find(s => s.name === 'PRIMARY_AI_PROVIDER');
+        const primarySecret = secrets?.find(s => s.key === 'PRIMARY_AI_PROVIDER');
         
         return c.json({
             success: true,
@@ -606,7 +606,7 @@ app.post("/admin/settings/save-key", async (c) => {
         
         // 僅保存到 secrets 表
         const { error } = await supabase.from('secrets').upsert({ 
-            name: provider, 
+            key: provider, 
             value: encryptedKey,
             updated_at: new Date().toISOString()
         });
@@ -632,7 +632,7 @@ app.post("/admin/settings/save-provider", async (c) => {
         const supabase = await getSupabaseAdmin();
         // 將首選供應商存入 secrets 表而非 settings 表，以避免 schema cache 錯誤
         const { error } = await supabase.from('secrets').upsert({ 
-            name: 'PRIMARY_AI_PROVIDER', 
+            key: 'PRIMARY_AI_PROVIDER', 
             value: provider,
             updated_at: new Date().toISOString()
         });

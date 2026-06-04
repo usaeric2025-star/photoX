@@ -10,7 +10,7 @@ import { GroupGridView } from "./GroupGridView";
 import { GroupPhotoPicker } from "./GroupPhotoPicker";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
 
-import { useAdminMode } from "@/hooks";
+import { useAdminMode, useGroupMutations } from "@/hooks";
 import { useAdminActions } from "@/features/admin/useAdminActions";
 import { useUIStore, useShallow } from "@/store/useUIStore";
 import { translations } from "../../lib/translations";
@@ -32,8 +32,9 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
   const update = useUIStore((s) => s.update);
 
   const adminActions = useAdminActions();
-  const onUngroup = (groupId: string) => {
-    /* To be implemented properly via useAdminActions */
+  const { dissolve } = useGroupMutations();
+  const onUngroup = async (groupId: string) => {
+    await dissolve.execute(groupId);
   };
   const storeEditPhoto = (p: Photo | string) =>
     update({ editPhotoId: typeof p === "string" ? p : p.id });

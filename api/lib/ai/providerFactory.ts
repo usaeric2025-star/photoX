@@ -109,7 +109,7 @@ export class OpenRouterProvider extends BaseAIProvider {
 
 export async function getAIProvider(providerName: string, supabase: any) {
     // 優先從 secrets 讀取
-    const { data: secret } = await supabase.from('secrets').select('value').eq('name', providerName).maybeSingle();
+    const { data: secret } = await supabase.from('secrets').select('value').eq('key', providerName).maybeSingle();
     let apiKey = '';
     
     if (secret?.value) {
