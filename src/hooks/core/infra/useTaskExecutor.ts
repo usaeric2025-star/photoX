@@ -24,7 +24,7 @@ export function useTaskExecutor() {
   ): Promise<T | null> => {
     const isUpload = name.includes('上传') || name.toLowerCase().includes('upload');
     const isAi = name.includes('AI') || name.includes('识别') || name.toLowerCase().includes('analysis');
-    const isSilent = options?.silent ?? !(isUpload || isAi);
+    const isSilent = options?.silent ?? (isUpload || isAi);
 
     const taskId = isSilent ? null : addTask({ name });
 
@@ -59,7 +59,8 @@ export function useTaskExecutor() {
       const actualError = error instanceof Error ? error : new Error(errMsg);
       options?.onError?.(actualError);
       
-      if (options?.rethrow) {
+      const shouldRethrow = options?.rethrow ?? true;
+      if (shouldRethrow) {
         throw actualError;
       }
       return null;

@@ -3,6 +3,7 @@ import { Trash2, Sparkles, Edit, X, FolderPlus, EyeOff } from 'lucide-react';
 import { useUIStore } from '@/store/useUIStore';
 import { useGroupPhotosMutation, useUrlFilters } from '@/hooks';
 import { useAIGroup } from '@/hooks/core/mutations/useAIGroup';
+import { toast } from '@/lib/ui/toast';
 
 interface SelectionToolbarProps {
   onAIIdentify?: (ids: string[]) => void;

@@ -89,11 +89,15 @@ export function createMutationHook<TData = void, TVariables = void, TContext = u
         // --- 核心：闭环报告 ---
         const actionName = `${config.entity}${config.action}`;
         let level: 'low' | 'medium' | 'high' | 'critical' = 'medium';
+        const prevData = (context as any)?.previousData;
         
-        if (context) {
+        if (context && prevData) {
            level = 'high';
         } else {
            level = 'critical';
+           toast.error('资料可能不一致，请重新整理页面', {
+             duration: Infinity,
+           });
         }
         
         reportErrorToSystem(err, actionName, level);
