@@ -1,7 +1,7 @@
 import React from 'react';
 import { Trash2, Download, AlertCircle, AlertTriangle, Info, ShieldAlert, ChevronDown, ChevronUp } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import { toast } from '@/lib/ui/toast';
 import { useDisclosure } from '@mantine/hooks';
 
@@ -70,20 +70,18 @@ export const ErrorLogViewer = () => {
   const { data: logs = [], refetch } = useQuery({
     queryKey: ['error_logs'],
     queryFn: async () => {
-        const { data, error } = await supabase
-            .from('error_events')
-            .select('*')
-            .order('created_at', { ascending: false })
-            .limit(100);
-        if (error) throw error;
-        return data as LogEntry[];
+        const res = await api.admin['error-events'].$get();
+        const json = await res.json();
+        if (!json.success) throw new Error(json.error || '获取日志失败');
+        return json.data as LogEntry[];
     }
   });
 
   const clearMutation = useMutation({
       mutationFn: async () => {
-          const { error } = await supabase.from('error_events').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-          if (error) throw error;
+          const res = await api.admin['error-events'].clear.$post();
+          const json = await res.json();
+          if (!json.success) throw new Error(json.error || '清除日志失败');
       },
       onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ['error_logs'] });

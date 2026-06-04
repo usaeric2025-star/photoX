@@ -1,7 +1,23 @@
 export class ErrorFactory {
+  static normalizeError(err: unknown): { message: string; stack?: string } {
+    if (err instanceof Error) {
+      return { message: err.message, stack: err.stack };
+    }
+    if (typeof err === 'string') {
+      return { message: err };
+    }
+    if (typeof err === 'object' && err !== null) {
+      const anyErr = err as any;
+      const rawMessage = anyErr.message || anyErr.error || anyErr.msg || JSON.stringify(err);
+      const message = typeof rawMessage === 'object' ? JSON.stringify(rawMessage) : String(rawMessage);
+      return { message: message.slice(0, 500) };
+    }
+    return { message: 'Unknown error' };
+  }
+
   static wrap(error: unknown, operation: string, resource?: string) {
-    const message = error instanceof Error ? error.message : String(error);
-    const wrapped = new Error(`[${operation}] ${resource ? `(${resource}) ` : ''}${message}`);
+    const normalized = this.normalizeError(error);
+    const wrapped = new Error(`[${operation}] ${resource ? `(${resource}) ` : ''}${normalized.message}`);
     (wrapped as any).originalError = error;
     (wrapped as any).operation = operation;
     (wrapped as any).resource = resource;

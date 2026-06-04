@@ -324,27 +324,28 @@ export const groupPhotos = async (
   ));
 
   // 2. 调用原子化 RPC 合并合组
-  const { data: rpcData, error: rpcError } = await supabase.rpc('merge_groups', {
-    source_group_ids: sourceGroupIds,
-    target_group_id: targetGroupId
-  });
+  try {
+    const { data: rpcData, error: rpcError } = await supabase.rpc('merge_groups', {
+      source_group_ids: sourceGroupIds,
+      target_group_id: targetGroupId
+    });
 
-  if (rpcError) {
-    throw ErrorFactory.wrap(rpcError, 'groupPhotos/merge_groups', targetGroupId);
-  }
+    if (rpcError) throw rpcError;
 
-  // 2.5 确保选中的每张照片其 group_id 均设为 targetGroupId 并重置 cover 状态
-  const { error: photoUpdateError } = await supabase
-    .from(DB_CONFIG.TABLE_NAME)
-    .update({ 
-      group_id: targetGroupId,
-      is_group_cover: false 
-    })
-    .in('id', validIds);
+    // 2.5 确保选中的每张照片其 group_id 均设为 targetGroupId 并重置 cover 状态
+    const { error: photoUpdateError } = await supabase
+      .from(DB_CONFIG.TABLE_NAME)
+      .update({ 
+        group_id: targetGroupId,
+        is_group_cover: false 
+      })
+      .in('id', validIds);
 
-  if (photoUpdateError) {
-    console.error('[groupPhotos] updateSelectedPhotos error:', photoUpdateError);
-    throw ErrorFactory.wrap(photoUpdateError, 'groupPhotos/updateSelectedPhotos', targetGroupId);
+    if (photoUpdateError) throw photoUpdateError;
+  } catch (err) {
+    const normalized = ErrorFactory.normalizeError(err);
+    console.error('[groupPhotos] error:', normalized);
+    throw ErrorFactory.wrap(normalized.message, 'GroupGroupPhotos', targetGroupId);
   }
 
   // 3. 设置第一张照片为封面图

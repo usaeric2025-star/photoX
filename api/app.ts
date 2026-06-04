@@ -533,6 +533,34 @@ app.get("/admin/settings/get-keys", async (c) => {
     }
 });
 
+app.get("/admin/error-events", async (c) => {
+    try {
+        const supabase = await getSupabaseAdmin();
+        const { data, error } = await supabase
+            .from('error_events')
+            .select('*')
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        return c.json({ success: true, data });
+    } catch (e: any) {
+        return c.json({ success: false, error: e.message }, 500);
+    }
+});
+
+app.post("/admin/error-events/clear", async (c) => {
+    try {
+        const supabase = await getSupabaseAdmin();
+        const { error } = await supabase
+            .from('error_events')
+            .delete()
+            .neq('id', '00000000-0000-0000-0000-000000000000');
+        if (error) throw error;
+        return c.json({ success: true });
+    } catch (e: any) {
+        return c.json({ success: false, error: e.message }, 500);
+    }
+});
+
 app.post("/admin/settings/save-key", async (c) => {
     try {
         const { provider, apiKey, model } = await c.req.json();

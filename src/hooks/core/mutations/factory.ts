@@ -2,6 +2,7 @@ import { useMutation, useQueryClient, UseMutationOptions, QueryKey, QueryClient 
 import { useErrorHandler } from '@/hooks';
 import { toast } from '@/lib/ui/toast';
 import { useTaskExecutor } from '@/hooks/core/infra/useTaskExecutor';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 export interface MutationConfig<TData, TVariables, TContext> {
   entity: string;
@@ -16,10 +17,12 @@ export interface MutationConfig<TData, TVariables, TContext> {
 
 // Utility for automatic error reporting
 function reportErrorToSystem(error: any, action: string, level: 'low' | 'medium' | 'high' | 'critical' = 'medium') {
+    const normalized = ErrorFactory.normalizeError(error);
+      
     const payload = JSON.stringify({
         level,
-        message: error.message || String(error),
-        stack: error.stack,
+        message: normalized.message,
+        stack: normalized.stack || error?.stack,
         context: action
     });
     

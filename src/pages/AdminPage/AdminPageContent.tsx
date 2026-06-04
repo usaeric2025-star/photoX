@@ -19,6 +19,7 @@ import { AdminGridContainer } from '@/components/photo/AdminGridContainer';
 import { PublicHeader } from '@/components/layouts/headers/PublicHeader';
 import TasksPage from '@/pages/AdminPage/TasksPage';
 import MaintenanceHistoryPage from '@/pages/AdminPage/MaintenanceHistoryPage';
+import { ErrorLogViewer } from '@/components/admin/ErrorLogViewer';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { useFilters } from '@/features/filters/useFilters';
 import { useGroupView } from '@/features/groups/useGroupView';
@@ -211,6 +212,22 @@ export function AdminPageContent() {
                   </div>
                   <div className="flex-1 overflow-y-auto w-full no-scrollbar p-8">
                     <MaintenanceHistoryPage />
+                  </div>
+                </div>
+              )}
+
+              {store.activeScreen === 'error-logs' && (
+                <div className="absolute inset-0 z-20 bg-slate-50 flex flex-col">
+                  <div className="flex justify-end p-4 shrink-0 bg-slate-50/80 backdrop-blur-md sticky top-0 z-30 border-b border-slate-100">
+                    <button 
+                      onClick={() => store.update({ activeScreen: 'gallery' })}
+                      className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-500 hover:text-slate-900"
+                    >
+                      <X size={24} />
+                    </button>
+                  </div>
+                  <div className="flex-1 overflow-y-auto w-full no-scrollbar p-8">
+                    <ErrorLogViewer />
                   </div>
                 </div>
               )}

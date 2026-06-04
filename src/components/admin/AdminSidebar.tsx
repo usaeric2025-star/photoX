@@ -13,7 +13,8 @@ import {
   Cloud,
   ChevronLeft,
   ChevronRight,
-  Zap
+  Zap,
+  Bug
 } from 'lucide-react';
 import { useUIStore, useShallow, useAppLang, useSidebarCollapsed } from '@/store/useUIStore';
 import { reportError } from '@/lib/errorReporter';
@@ -211,6 +212,13 @@ export function AdminSidebar() {
               collapsed={isSidebarCollapsed}
               active={activeScreen === 'logs'} 
               onClick={() => update({ activeScreen: 'logs' })}
+            />
+            <SidebarItem 
+              icon={Bug} 
+              label="错误信息" 
+              collapsed={isSidebarCollapsed}
+              active={activeScreen === 'error-logs'} 
+              onClick={() => update({ activeScreen: 'error-logs' })}
             />
           </div>
         )}
