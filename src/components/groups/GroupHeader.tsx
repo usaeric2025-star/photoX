@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
 import { useUIStore, useShallow } from "@/store/useUIStore";
+import { toast } from "sonner";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
 import { useNavigate } from "@tanstack/react-router";
 import { useGroupMutations } from "@/hooks/core/mutations/useGroupMutations";
@@ -47,43 +48,57 @@ export function GroupHeader({
   const handleClose = () => {
     navigate({ to: isAdmin ? '/admin' : '/', search: (prev: any) => ({ ...prev, groupId: undefined, photoId: undefined }) });
   };
-  const { update, isMultiSelect, selectedIds } =
+  const { update, isMultiSelect, selectedIds, appLang } =
     useUIStore(
       useShallow((s) => ({
         update: s.update,
         isMultiSelect: s.isMultiSelect,
-        selectedIds: s.selectedIds
+        selectedIds: s.selectedIds,
+        appLang: s.appLang
       })),
     );
 
-  const { useBatchAiAnalyze } = useGroupMutations();
+  const { useBatchAiAnalyze, dissolve } = useGroupMutations();
   const onBatchAiAnalyze = (photos: Photo[]) => useBatchAiAnalyze(photos);
   const onBatchEdit = (ids: string[]) => update?.({ batchEditingIds: ids });
 
+  const l = {
+    addPhotos: appLang === 'zh' ? '添加照片' : appLang === 'ms' ? 'Tambah Foto' : 'Add Photos',
+    batchEdit: appLang === 'zh' ? '批量编辑' : appLang === 'ms' ? 'Edit Pukal' : 'Batch Edit',
+    aiIdentify: appLang === 'zh' ? 'AI 識別' : appLang === 'ms' ? 'Kenal Pasti AI' : 'AI Identify',
+    dissolve: appLang === 'zh' ? '解散合组' : appLang === 'ms' ? 'Bubarkan' : 'Dissolve',
+    dissolveConfirm: appLang === 'zh' ? '确定要解散此合组吗？组内的照片将被移出但不会被删除。' : appLang === 'ms' ? 'Adakah anda pasti mahu membubarkan kumpulan ini? Foto akan dikeluarkan tetapi tidak dipadamkan.' : 'Are you sure you want to dissolve this group? Photos will be removed but not deleted.',
+    database: appLang === 'zh' ? '群组数据库' : appLang === 'ms' ? 'Pangkalan Data' : 'Database',
+    cover: appLang === 'zh' ? '封面' : appLang === 'ms' ? 'Kulit' : 'Cover',
+    photos: appLang === 'zh' ? '张照片' : appLang === 'ms' ? 'foto' : 'photos',
+    menu: appLang === 'zh' ? '菜单' : appLang === 'ms' ? 'Menu' : 'Menu',
+    edit: appLang === 'zh' ? '编辑' : appLang === 'ms' ? 'Edit' : 'Edit', 
+    ai: 'AI'
+  };
+
   return (
     <div className="flex-shrink-0 sticky top-0 bg-brand-bg/90 backdrop-blur-md z-[100] px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-100">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 overflow-hidden">
         <button
           onClick={handleClose}
-          className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors"
+          className="w-10 h-10 flex-shrink-0 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors"
         >
           <ChevronLeft size={24} />
         </button>
-
         <div
-          className="flex flex-col cursor-pointer group"
+          className="flex flex-col cursor-pointer group overflow-hidden"
           onClick={() => {
             if (isAdminMode) {
               update?.({ groupSettingsOpen: true } as any);
             }
           }}
         >
-          <div className="flex items-center gap-2 min-h-[1.75rem]">
+          <div className="flex items-center gap-2 min-h-[1.75rem] overflow-hidden">
             {isGroupDataLoading ? (
               <Skeleton className="h-6 w-32 bg-slate-200 animate-pulse" />
             ) : (
               <>
-                <h2 className="text-lg font-black text-slate-800 tracking-tight uppercase">
+                <h2 className="text-lg font-black text-slate-800 tracking-tight uppercase truncate">
                   {/* [FIELD-LEVEL-FALLBACK] Render group name, first photo name, or ID as last resort */}
                   {groupData?.name ||
                     activeGroupPhotos[0]?.name ||
@@ -91,7 +106,7 @@ export function GroupHeader({
                     `GROUP ${activeGroupId?.slice(-4)}`}
                 </h2>
                 {groupData && (
-                  <span className="bg-blue-50 text-blue-600 text-[10px] font-black px-2 py-0.5 rounded-lg border border-blue-100 flex items-center gap-1">
+                  <span className="flex-shrink-0 bg-blue-50 text-blue-600 text-[10px] font-black px-2 py-0.5 rounded-lg border border-blue-100 flex items-center gap-1">
                     <span className="opacity-50">CODE:</span>
                     {activeGroupId?.slice(-6).toUpperCase()}
                   </span>
@@ -99,27 +114,34 @@ export function GroupHeader({
                 {isAdminMode && (
                   <Pencil
                     size={12}
-                    className="text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="flex-shrink-0 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity"
                   />
                 )}
               </>
             )}
           </div>
-          <div className="min-h-[1rem]">
+          <div className="min-h-[1rem] overflow-hidden">
             {isGroupDataLoading ? (
               <Skeleton className="h-3 w-40 mt-1 bg-slate-100 animate-pulse" />
             ) : (
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">
-                {groupData?.name
-                  ? `封面产品: ${activeGroupPhotos[0]?.name || ""}`
-                  : `${activeGroupPhotos.length} 张照片 / Photos`}
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none flex items-center gap-2 truncate">
+                <span className="truncate">
+                  {groupData?.name
+                    ? `${l.cover}: ${activeGroupPhotos[0]?.name || ""}`
+                    : `${activeGroupPhotos.length} ${l.photos}`}
+                </span>
+                {activeGroupId && (
+                  <span className="flex-shrink-0 font-mono opacity-50 bg-slate-100/50 px-1 py-0.5 rounded border border-slate-200">
+                    ID: {activeGroupId.split('-')[0]}
+                  </span>
+                )}
               </p>
             )}
           </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5 sm:gap-2 ml-2">
         {isAdminMode && (
           <div className="flex items-center gap-1.5 sm:gap-2">
             <button
@@ -130,34 +152,15 @@ export function GroupHeader({
                 }
               }}
               className="w-10 h-10 flex-shrink-0 flex items-center justify-center border border-emerald-200 rounded-xl bg-emerald-50 text-emerald-600 shadow-sm active:scale-95 transition-all"
-              title="添加照片 / Add Photos"
+              title={l.addPhotos}
             >
               <Plus size={20} />
             </button>
 
             <button
-              onClick={() => {
-                if (selectedIds.length > 0 && onBatchAiAnalyze) {
-                  onBatchAiAnalyze(
-                    activeGroupPhotos.filter((p) => selectedIds.includes(p.id)),
-                  );
-                } else if (onBatchAiAnalyzeByGroupId && activeGroupId) {
-                  onBatchAiAnalyzeByGroupId(activeGroupId);
-                } else if (onBatchAiAnalyze) {
-                  onBatchAiAnalyze(activeGroupPhotos);
-                }
-              }}
-              className="hidden sm:flex px-3 h-10 items-center justify-center border border-[#7A00E6]/20 rounded-xl bg-[#F3E8FF] text-[#7A00E6] font-bold shadow-sm active:scale-95 transition-all gap-1.5"
-              title="AI 整組處理"
-            >
-              <Sparkles size={16} />
-              <span className="text-xs">AI</span>
-            </button>
-
-            <button
               onClick={() => update?.({ groupSettingsOpen: true } as any)}
               className="w-10 h-10 flex-shrink-0 flex items-center justify-center border border-indigo-200 rounded-xl bg-indigo-50 text-indigo-600 shadow-sm active:scale-95 transition-all"
-              title="群组数据库"
+              title={l.database}
             >
               <Settings2 size={18} />
             </button>
@@ -168,7 +171,7 @@ export function GroupHeader({
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="w-48 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-[200]"
+                className="w-44 sm:w-48 bg-white rounded-2xl shadow-xl border border-slate-100 py-1 z-[200]"
               >
                 <DropdownMenuItem
                   onClick={() => {
@@ -180,11 +183,11 @@ export function GroupHeader({
                     update?.({ isMultiSelect: false });
                     update?.({ selectedIds: [] });
                   }}
-                  className="px-4 py-3 cursor-pointer flex items-center gap-2 hover:bg-slate-50 focus:bg-slate-50 outline-none"
+                  className="px-3 sm:px-4 py-2.5 sm:py-3 cursor-pointer flex items-center gap-2 hover:bg-slate-50 focus:bg-slate-50 outline-none"
                 >
-                  <Pencil size={16} className="text-slate-500" />
-                  <span className="text-sm font-bold text-slate-700">
-                    批量编辑 / Batch Edit
+                  <Pencil size={15} className="text-slate-500" />
+                  <span className="text-xs sm:text-sm font-bold text-slate-700 truncate">
+                    {l.edit}
                   </span>
                 </DropdownMenuItem>
                 <DropdownMenuItem
@@ -201,11 +204,11 @@ export function GroupHeader({
                       onBatchAiAnalyze(activeGroupPhotos);
                     }
                   }}
-                  className="px-4 py-3 cursor-pointer flex items-center gap-2 hover:bg-slate-50 focus:bg-slate-50 outline-none"
+                  className="px-3 sm:px-4 py-2.5 sm:py-3 cursor-pointer flex items-center gap-2 hover:bg-slate-50 focus:bg-slate-50 outline-none"
                 >
-                  <Sparkles size={16} className="text-purple-500" />
-                  <span className="text-sm font-bold text-slate-700">
-                    AI 識別 / AI Identify
+                  <Sparkles size={15} className="text-purple-500" />
+                  <span className="text-xs sm:text-sm font-bold text-slate-700 truncate">
+                    {l.ai}
                   </span>
                 </DropdownMenuItem>
                 <div className="h-px bg-slate-100 my-1" />
@@ -213,47 +216,38 @@ export function GroupHeader({
                   onClick={() => {
                     update?.({ 
                       alertDialog: {
-                        title: '解散合组',
-                        message: '确定要解散此合组吗？组内的照片将被移出但不会被删除。',
+                        title: l.dissolve,
+                        message: l.dissolveConfirm,
                         type: 'danger',
                         onConfirm: async () => {
                            if (!activeGroupId) return;
                            try {
-                              const { ungroupPhotos } = await import('@/services/photo/photoMaintenanceService');
-                              await ungroupPhotos(activeGroupId);
-                              window.location.reload(); // simple and effective for hard reload on group dissolve
-                           } catch (err) {}
+                              await dissolve.mutateAsync(activeGroupId);
+                              handleClose();
+                           } catch (err) {
+                              toast.error(`${l.dissolve} ${appLang === 'zh' ? '失败' : appLang === 'ms' ? 'gagal' : 'failed'}: ${(err as Error).message}`);
+                           }
                         }
                       }
                     });
                   }}
-                  className="px-4 py-3 cursor-pointer flex items-center gap-2 hover:bg-red-50 focus:bg-red-50 outline-none"
+                  className="px-3 sm:px-4 py-2.5 sm:py-3 cursor-pointer flex items-center gap-2 hover:bg-red-50 focus:bg-red-50 outline-none"
                 >
-                  <FolderMinus size={16} className="text-red-500" />
-                  <span className="text-sm font-bold text-red-600">
-                    解散该合组 / Dissolve Group
+                  <FolderMinus size={15} className="text-red-500" />
+                  <span className="text-xs sm:text-sm font-bold text-red-600 truncate">
+                    {l.dissolve}
                   </span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         )}
-        {!isAdminMode && (
-          <button
-            onClick={handleClose}
-            className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors"
-          >
-            <X size={24} />
-          </button>
-        )}
-        {isAdminMode && (
-          <button
-            onClick={handleClose}
-            className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors ml-2 border border-slate-200 bg-white"
-          >
-            <X size={20} />
-          </button>
-        )}
+        <button
+          onClick={handleClose}
+          className="w-10 h-10 flex-shrink-0 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors ml-1 border border-slate-200 bg-white"
+        >
+          <X size={20} />
+        </button>
       </div>
     </div>
   );

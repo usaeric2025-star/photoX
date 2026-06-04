@@ -51,6 +51,21 @@ export function DrawerHeader({
   const formState = form.values;
   const updateForm = (updates: Partial<ProductFormData>) => form.setValues(updates);
   const update = useUIStore((s) => s.update);
+  const appLang = useUIStore((s) => s.appLang);
+
+  const l = {
+    hidden: appLang === 'zh' ? '屏蔽' : appLang === 'ms' ? 'Sembunyi' : 'Hide',
+    visible: appLang === 'zh' ? '显示' : appLang === 'ms' ? 'Tunjuk' : 'Show',
+    editTitle: appLang === 'zh' ? '编辑产品信息' : appLang === 'ms' ? 'Edit Maklumat' : 'Edit Product',
+    analyzeTitle: appLang === 'zh' ? '分析新产品' : appLang === 'ms' ? 'Analisis Produk' : 'Analyze Product',
+    cover: appLang === 'zh' ? '封面' : appLang === 'ms' ? 'Muka' : 'Cover',
+    deleteConfirm: appLang === 'zh' ? '确认删除' : appLang === 'ms' ? 'Sahkan Padam' : 'Confirm Delete',
+    deleteMessage: appLang === 'zh' ? '确定要删除此照片吗？此操作不可恢复。' : appLang === 'ms' ? 'Adakah anda pasti mahu memadamkan foto ini? Tindakan ini tidak dapat diubah.' : 'Are you sure you want to delete this photo? This action cannot be undone.',
+    deleteLabel: appLang === 'zh' ? '删除' : appLang === 'ms' ? 'Padam' : 'Delete',
+    cancelLabel: appLang === 'zh' ? '取消' : appLang === 'ms' ? 'Batal' : 'Cancel',
+    analyzeError: appLang === 'zh' ? '识别失败' : appLang === 'ms' ? 'Gagal Kenal Pasti' : 'Identify Failed',
+  };
+
   return (
     <div className="px-4 py-3 border-b border-slate-200 bg-white shadow-sm flex items-center justify-between gap-3 min-h-[72px]">
       <div className="flex-none flex items-center gap-2">
@@ -64,7 +79,7 @@ export function DrawerHeader({
               {aiDebugInfo.error.includes("|")
                 ? aiDebugInfo.error.split("|")[2] ||
                   aiDebugInfo.error.split("|")[1] ||
-                  "识别失败"
+                  l.analyzeError
                 : aiDebugInfo.error}
             </span>
           </div>
@@ -75,7 +90,7 @@ export function DrawerHeader({
           >
             {formState.is_hidden ? <EyeOff size={10} /> : <Eye size={10} />}
             <span className="text-[9px] font-bold uppercase tracking-widest leading-none">
-              {formState.is_hidden ? "屏蔽" : "显示"}
+              {formState.is_hidden ? l.hidden : l.visible}
             </span>
           </div>
         )}
@@ -83,7 +98,7 @@ export function DrawerHeader({
 
       <div className="flex-1 flex flex-col items-center justify-center min-w-0 px-2">
         <h2 className="font-black text-sm text-slate-800 tracking-tight leading-tight uppercase truncate w-full text-center">
-          {editPhotoId ? "编辑产品信息" : "分析新产品"}
+          {editPhotoId ? l.editTitle : l.analyzeTitle}
         </h2>
         <p className="text-[8px] font-bold text-slate-400 tracking-widest uppercase">
           {editPhotoId ? "Product Details" : "Analyze Product"}
@@ -120,7 +135,7 @@ export function DrawerHeader({
             }
             className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border shadow-sm transition-all ${formState.is_group_cover ? "bg-blue-600 text-white border-blue-600" : "bg-slate-50 text-slate-500 border-slate-200 active:bg-slate-100"}`}
           >
-            <div className="text-[10px] font-bold">封面</div>
+            <div className="text-[10px] font-bold">{l.cover}</div>
           </button>
         )}
 
@@ -129,10 +144,10 @@ export function DrawerHeader({
             onClick={() => {
               update({
                 alertDialog: {
-                  title: "确认删除",
-                  message: "确定要删除此照片吗？此操作不可恢复。",
-                  confirmLabel: "删除",
-                  cancelLabel: "取消",
+                  title: l.deleteConfirm,
+                  message: l.deleteMessage,
+                  confirmLabel: l.deleteLabel,
+                  cancelLabel: l.cancelLabel,
                   type: "danger",
                   onConfirm: () => onDelete(),
                 },

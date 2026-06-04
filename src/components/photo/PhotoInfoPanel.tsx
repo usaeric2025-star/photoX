@@ -48,11 +48,11 @@ export function PhotoInfoPanel({
   onClose,
   className
 }: PhotoInfoPanelProps) {
-  const [descLang, setDescLang] = React.useState<'zh' | 'en'>('zh');
+  const [descLang, setDescLang] = React.useState<'zh' | 'en' | 'ms'>('zh');
 
   if (!data) {
     return (
-      <div className={cn("flex flex-col h-full bg-white/95 backdrop-blur-md border-l border-slate-200 overflow-y-auto no-scrollbar max-w-sm w-80", className)}>
+      <div className={cn("flex flex-col h-full bg-white/95 backdrop-blur-md border-l border-slate-200 overflow-y-auto no-scrollbar", className)}>
         {/* Header Skeleton */}
         <div className="p-4 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white/90 z-10">
           <div className="flex items-center gap-2">
@@ -64,9 +64,8 @@ export function PhotoInfoPanel({
             <div className="w-8 h-8 bg-slate-100 rounded-lg animate-pulse" />
           </div>
         </div>
-
         {/* Content Skeleton */}
-        <div className="p-6 flex flex-col gap-8">
+        <div className="p-6 flex flex-col gap-8 pb-32">
           <section className="space-y-3">
             <div className="h-2 w-20 bg-slate-50 rounded-full animate-pulse" />
             <div className="h-8 w-full bg-slate-100 rounded-xl animate-pulse" />
@@ -119,32 +118,77 @@ export function PhotoInfoPanel({
     }
   }
 
+  const l = {
+    groupDetails: appLang === 'zh' ? '合组详情' : appLang === 'ms' ? 'Butiran Kumpulan' : 'Group Details',
+    photoDetails: appLang === 'zh' ? '照片资料' : appLang === 'ms' ? 'Butiran Foto' : 'Photo Details',
+    basicInfo: appLang === 'zh' ? '基本信息' : appLang === 'ms' ? 'Maklumat Asas' : 'Basic Info',
+    hidden: appLang === 'zh' ? '已隐藏' : appLang === 'ms' ? 'Sembunyi' : 'Hidden',
+    public: appLang === 'zh' ? '公开展示' : appLang === 'ms' ? 'Umum' : 'Public',
+    metadata: appLang === 'zh' ? '元数据' : appLang === 'ms' ? 'Metadata' : 'Metadata',
+    systemId: appLang === 'zh' ? '系统ID' : appLang === 'ms' ? 'ID Sistem' : 'System ID',
+    itemCode: appLang === 'zh' ? '货品编号' : appLang === 'ms' ? 'Kod Item' : 'Item Code',
+    modelNumber: appLang === 'zh' ? '型号' : appLang === 'ms' ? 'Nombor Model' : 'Model Number',
+    priceOrCode: appLang === 'zh' ? '价格 / 手动编号' : appLang === 'ms' ? 'Harga / Kod Manual' : 'Price / Manual Code',
+    imgSize: appLang === 'zh' ? '图片尺寸' : appLang === 'ms' ? 'Saiz Imej' : 'Img Size',
+    manufacturer: appLang === 'zh' ? '制造商' : appLang === 'ms' ? 'Pengeluar' : 'Manufacturer',
+    dimensions: appLang === 'zh' ? '尺寸' : appLang === 'ms' ? 'Dimensi' : 'Dimensions',
+    standard: appLang === 'zh' ? '标准' : appLang === 'ms' ? 'Standard' : 'Standard',
+    classification: appLang === 'zh' ? '分类信息' : appLang === 'ms' ? 'Klasifikasi' : 'Classification',
+    description: appLang === 'zh' ? '描述' : appLang === 'ms' ? 'Penerangan' : 'Description',
+    aiEstimated: appLang === 'zh' ? 'AI 预估' : appLang === 'ms' ? 'Anggaran AI' : 'AI Estimated',
+    aiGenerated: appLang === 'zh' ? 'AI 生成' : appLang === 'ms' ? 'Janaan AI' : 'AI Generated',
+    unknown: appLang === 'zh' ? '未知' : appLang === 'ms' ? 'Tidak diketahui' : 'Unknown',
+    members: appLang === 'zh' ? ' 个成员' : appLang === 'ms' ? ' ahli' : ' members',
+    close: appLang === 'zh' ? '关闭' : appLang === 'ms' ? 'Tutup' : 'Close',
+    edit: appLang === 'zh' ? '编辑' : appLang === 'ms' ? 'Edit' : 'Edit',
+    delete: appLang === 'zh' ? '删除' : appLang === 'ms' ? 'Padam' : 'Delete',
+    aiAnalyze: appLang === 'zh' ? 'AI 分析' : appLang === 'ms' ? 'Analisis AI' : 'AI Analyze',
+  };
+
+  const hasZh = !!(data as Photo).description;
+  const hasEn = !!(data as Photo).description_translations?.en;
+  const hasMs = !!(data as Photo).description_translations?.ms;
+  
+  const showLanguageToggle = [hasZh, hasEn, hasMs].filter(Boolean).length > 1;
+
+  let displayDesc = '';
+  if (descLang === 'ms' && hasMs) displayDesc = (data as Photo).description_translations!.ms!;
+  else if (descLang === 'en' && hasEn) displayDesc = (data as Photo).description_translations!.en!;
+  else if (descLang === 'zh' && hasZh) displayDesc = (data as Photo).description!;
+  
+  // if current language is empty, fallback to available
+  if (!displayDesc) {
+     if (hasEn) displayDesc = (data as Photo).description_translations!.en!;
+     else if (hasZh) displayDesc = (data as Photo).description!;
+     else if (hasMs) displayDesc = (data as Photo).description_translations!.ms!;
+  }
+
   return (
-    <div className={cn("flex flex-col h-full bg-white/95 backdrop-blur-md border-l border-slate-200 overflow-y-auto no-scrollbar max-w-sm w-80", className)}>
+    <div className={cn("flex flex-col h-full bg-white/95 backdrop-blur-md border-l border-slate-200 overflow-y-auto no-scrollbar", className)}>
       {/* Header with Actions */}
       <div className="p-4 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white/90 z-10">
         <h3 className="font-bold text-slate-900 flex items-center gap-2">
           {isGroup ? <Layers size={18} className="text-brand-navy" /> : <Info size={18} className="text-brand-navy" />}
-          {isGroup ? '合组详情' : '照片详情'}
+          {isGroup ? l.groupDetails : l.photoDetails}
         </h3>
         <div className="flex items-center gap-1">
           {showAi && !isGroup && (
-            <Button variant="ghost" size="icon" onClick={onAiAnalyze} title="AI分析" className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+            <Button variant="ghost" size="icon" onClick={onAiAnalyze} title={l.aiAnalyze} className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50">
               <Sparkles size={16} />
             </Button>
           )}
           {showEdit && (
-            <Button variant="ghost" size="icon" onClick={onEdit} title="编辑" className="h-8 w-8 text-slate-600">
+            <Button variant="ghost" size="icon" onClick={onEdit} title={l.edit} className="h-8 w-8 text-slate-600">
               <Pencil size={16} />
             </Button>
           )}
           {showDelete && (
-            <Button variant="ghost" size="icon" onClick={onDelete} title="删除" className="h-8 w-8 text-red-600 hover:bg-red-50">
+            <Button variant="ghost" size="icon" onClick={onDelete} title={l.delete} className="h-8 w-8 text-red-600 hover:bg-red-50">
               <Trash2 size={16} />
             </Button>
           )}
           {onClose && (
-            <Button variant="ghost" size="icon" onClick={onClose} title="关闭" className="h-8 w-8 text-slate-400 hover:text-slate-600 hover:bg-slate-100 ml-1">
+            <Button variant="ghost" size="icon" onClick={onClose} title={l.close} className="h-8 w-8 text-slate-400 hover:text-slate-600 hover:bg-slate-100 ml-1">
               <X size={18} />
             </Button>
           )}
@@ -152,20 +196,20 @@ export function PhotoInfoPanel({
       </div>
 
       {/* Content */}
-      <div className="p-6 flex flex-col gap-8">
+      <div className="p-6 flex flex-col gap-8 pb-[100px] md:pb-6">
         {isGroup ? (
           /* Group Mode View */
           <>
             <section className="relative">
               <div className="flex justify-between items-start mb-2">
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Basic Info</h4>
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">{l.basicInfo}</h4>
                 <span className="text-[8px] font-mono text-slate-300/30 hover:text-slate-400 transition-colors cursor-help" title={`Group ID: ${data.id}`}>{data.id?.split('-')[0]}</span>
               </div>
               <h2 className="text-xl font-bold text-slate-900 mb-2">{data.name}</h2>
               <div className="flex flex-wrap gap-2 mb-4">
                 <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 px-2.5 py-1">
                   <Grid size={12} className="mr-1.5 opacity-60" />
-                  {data.member_count} 个成员
+                  {data.member_count}{l.members}
                 </Badge>
               </div>
               {data.description && (
@@ -180,14 +224,14 @@ export function PhotoInfoPanel({
           <>
             <section className="relative">
               <div className="flex justify-between items-start mb-2">
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Basic Info</h4>
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">{l.basicInfo}</h4>
                 {/* Status dot */}
                 <div 
-                  title={(data as Photo).is_hidden ? "已隐藏 (Hidden)" : "公开展示 (Public)"} 
+                  title={(data as Photo).is_hidden ? l.hidden : l.public} 
                   className={cn("w-2.5 h-2.5 rounded-full shadow-sm ring-2 ring-white", (data as Photo).is_hidden ? "bg-red-500" : "bg-green-500")} 
                 />
               </div>
-              <h2 className="text-xl font-bold text-slate-900 mb-1">{(data as Photo).name || 'Unknown'}</h2>
+              <h2 className="text-xl font-bold text-slate-900 mb-1">{(data as Photo).name || l.unknown}</h2>
               {(data as Photo).name_en && (
                 <h3 className="text-sm font-medium text-slate-500 mb-3">{(data as Photo).name_en}</h3>
               )}
@@ -196,7 +240,7 @@ export function PhotoInfoPanel({
             {/* Product Metadata */}
             <section className="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
               <div className="p-3 border-b border-slate-100 flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5"><Briefcase size={12} /> Metadata</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5"><Briefcase size={12} /> {l.metadata}</span>
                 {/* ID hint */}
                 <span className="text-[8px] font-mono text-slate-300/30 hover:text-slate-400 transition-colors cursor-help" title={`ID: ${(data as Photo).id}`}>{(data as Photo).id?.split('-')[0]}</span>
               </div>
@@ -204,31 +248,31 @@ export function PhotoInfoPanel({
                 {/* Codes */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <span className="text-[9px] uppercase font-bold text-slate-400 block mb-0.5">Item Code</span>
+                    <span className="text-[9px] uppercase font-bold text-slate-400 block mb-0.5">{l.itemCode}</span>
                     <span className="text-xs font-mono font-medium text-slate-700">{(data as Photo).item_code || '-'}</span>
                   </div>
                   <div>
-                    <span className="text-[9px] uppercase font-bold text-slate-400 block mb-0.5">Model Number</span>
+                    <span className="text-[9px] uppercase font-bold text-slate-400 block mb-0.5">{l.modelNumber}</span>
                     <span className="text-xs font-mono font-medium text-slate-700">{(data as Photo).model_number || '-'}</span>
                   </div>
                   {/* Price */}
                   <div className="col-span-2 flex justify-between bg-white p-2 rounded-lg border border-slate-100">
                     <div>
-                      <span className="text-[9px] uppercase font-bold text-slate-400 block mb-0.5">Price / Manual Code</span>
+                      <span className="text-[9px] uppercase font-bold text-slate-400 block mb-0.5">{l.priceOrCode}</span>
                       <span className="text-xs font-semibold text-slate-700">
                         {[(data as Photo).price ? `$${(data as Photo).price}` : '', (data as Photo).manual_code].filter(Boolean).join(' · ') || '-'}
                       </span>
                     </div>
                     {(data as Photo).width ? (
                        <div className="text-right">
-                         <span className="text-[9px] uppercase font-bold text-slate-400 block mb-0.5">Img Size</span>
+                         <span className="text-[9px] uppercase font-bold text-slate-400 block mb-0.5">{l.imgSize}</span>
                          <span className="text-[10px] font-mono text-slate-500">{(data as Photo).width}x{(data as Photo).height}</span>
                        </div>
                     ) : null}
                   </div>
                   {/* Manufacturer */}
                   <div className="col-span-2">
-                    <span className="text-[9px] uppercase font-bold text-slate-400 block mb-0.5">Manufacturer</span>
+                    <span className="text-[9px] uppercase font-bold text-slate-400 block mb-0.5">{l.manufacturer}</span>
                     <span className="text-xs font-medium text-slate-700">{displayManufacturerName || '-'}</span>
                   </div>
                 </div>
@@ -238,14 +282,14 @@ export function PhotoInfoPanel({
             {/* Furniture Dimensions */}
             {Array.isArray((data as Photo).dimensions) && (data as Photo).dimensions!.length > 0 && (
               <section>
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 flex items-center gap-1.5"><Maximize2 size={12} /> Dimensions</h4>
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 flex items-center gap-1.5"><Maximize2 size={12} /> {l.dimensions}</h4>
                 <div className="space-y-2">
                   {(data as Photo).dimensions!.map((dim, idx) => (
                     <div key={idx} className="flex flex-col text-xs p-2.5 bg-slate-50 rounded-lg border border-slate-100">
                       <div className="flex justify-between items-center mb-1">
                         <span className="font-bold text-slate-700 flex items-center gap-1">
-                          {dim.label || 'Standard'}
-                          {dim.is_ai && <Sparkles size={10} className="text-blue-500" title="AI Estimated" />}
+                          {dim.label || l.standard}
+                          {dim.is_ai && <Sparkles size={10} className="text-blue-500" title={l.aiEstimated} />}
                         </span>
                         <span className="text-[9px] uppercase font-bold text-slate-400">{dim.unit}</span>
                       </div>
@@ -259,37 +303,46 @@ export function PhotoInfoPanel({
             )}
 
             {/* Description (multilingual) */}
-            {((data as Photo).description || (data as Photo).description_translations?.en) && (
+            {(hasZh || hasEn || hasMs) && (
               <section className="space-y-3">
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
-                    Description
-                    <Sparkles size={10} className="text-blue-500" title="AI Generated" />
+                    {l.description}
+                    {(data as Photo).is_ai_described && <Sparkles size={10} className="text-blue-500" title={l.aiGenerated} />}
                   </h4>
                   {/* Language Toggle */}
-                  {((data as Photo).description && (data as Photo).description_translations?.en) && (
+                  {showLanguageToggle && (
                     <div className="flex bg-slate-100 rounded border border-slate-200 p-0.5">
-                      <button 
-                        onClick={() => setDescLang('zh')} 
-                        className={cn("text-[9px] font-bold px-2 py-0.5 rounded transition-all", descLang === 'zh' ? "bg-white shadow-sm text-slate-800" : "text-slate-400 hover:text-slate-600")}
-                      >
-                        ZH
-                      </button>
-                      <button 
-                        onClick={() => setDescLang('en')} 
-                        className={cn("text-[9px] font-bold px-2 py-0.5 rounded transition-all", descLang === 'en' ? "bg-white shadow-sm text-slate-800" : "text-slate-400 hover:text-slate-600")}
-                      >
-                        EN
-                      </button>
+                      {hasZh && (
+                        <button 
+                          onClick={() => setDescLang('zh')} 
+                          className={cn("text-[9px] font-bold px-2 py-0.5 rounded transition-all flex items-center gap-1", descLang === 'zh' ? "bg-white shadow-sm text-slate-800" : "text-slate-400 hover:text-slate-600")}
+                        >
+                          ZH
+                        </button>
+                      )}
+                      {hasEn && (
+                        <button 
+                          onClick={() => setDescLang('en')} 
+                          className={cn("text-[9px] font-bold px-2 py-0.5 rounded transition-all flex items-center gap-1", descLang === 'en' ? "bg-white shadow-sm text-slate-800" : "text-slate-400 hover:text-slate-600")}
+                        >
+                          EN
+                        </button>
+                      )}
+                      {hasMs && (
+                        <button 
+                          onClick={() => setDescLang('ms')} 
+                          className={cn("text-[9px] font-bold px-2 py-0.5 rounded transition-all flex items-center gap-1", descLang === 'ms' ? "bg-white shadow-sm text-slate-800" : "text-slate-400 hover:text-slate-600")}
+                        >
+                          MS
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
                 
-                <div className="text-sm text-slate-700 leading-relaxed bg-slate-50/50 p-3 rounded-lg border border-slate-100">
-                  {descLang === 'en' 
-                    ? ((data as Photo).description_translations?.en || (data as Photo).description)
-                    : ((data as Photo).description || (data as Photo).description_translations?.en)
-                  }
+                <div className="text-sm text-slate-700 leading-relaxed bg-slate-50/50 p-3 rounded-lg border border-slate-100 whitespace-pre-wrap">
+                  {displayDesc}
                 </div>
               </section>
             )}
@@ -298,7 +351,7 @@ export function PhotoInfoPanel({
             {(displayCategoryName || displayTagNames.length > 0) && (
               <section>
                 <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5 mb-3">
-                  <Grid size={12} /> Classification
+                  <Grid size={12} /> {l.classification}
                 </h4>
                 <div className="flex flex-wrap gap-2">
                   {displayCategoryName && (
