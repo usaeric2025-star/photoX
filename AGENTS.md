@@ -469,4 +469,21 @@ toast.error('发现数据完整性问题', {
 - ❌ `use()` → 用 `useQuery` / `useInfiniteQuery`
 - ❌ `useFormStatus` → 用 Mutation 的 `isPending`
 
+## 多语言架构规范（锁定）
+
+### 数据库设计
+- ✅ `groups` 表：`name` 字段存储 JSON，格式为 `{ zh: string, en: string, ms: string }`
+- ✅ `furniture_items` 表：`name` 字段存储 JSON，格式同上
+- ❌ 禁止使用 `name_en`、`name_ms` 等独立列
+
+### 代码规范
+- ✅ 写入时：`{ name: { zh, en, ms } }`
+- ✅ 读取时：`const displayName = group.name[language] ?? group.name.zh`
+- ❌ 禁止直接访问 `group.name_en` 或 `group.name_ms`
+
+### 故障排查
+- 报错 `Could not find 'name_en' column` → 检查代码是否错误写入了 `name_en`
+- 数据库不需要添加 `name_en` 列，保持 `name` JSON 列即可
+
+
 

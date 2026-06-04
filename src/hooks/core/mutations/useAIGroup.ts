@@ -65,14 +65,10 @@ export function useAIGroup() {
         const { data: group, error: groupError } = await supabase
           .from('groups')
           .insert({
-            name,
-            name_en,
-            name_ms,
-            description,
+            name: { zh: name, en: name_en, ms: name_ms },
+            description: { zh: description, en: description_en, ms: description_ms },
             colors,
             materials,
-            name_translations: { zh: name, en: name_en, ms: name_ms },
-            description_translations: { zh: description, en: description_en, ms: description_ms },
           })
           .select()
           .single();

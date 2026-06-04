@@ -172,11 +172,15 @@ export function AdminScreen() {
               settings?.custom_model || ""
             );
 
-            if (result) {
+             if (result) {
               const updates: any = {};
-              if (result.name) updates.name = result.name;
-              if (result.name_en) updates.name_en = result.name_en;
-              if (result.name_ms) updates.name_ms = result.name_ms;
+              if (result.name || result.name_en || result.name_ms) {
+                updates.name = {
+                  zh: result.name || '',
+                  en: result.name_en || result.name || '',
+                  ms: result.name_ms || result.name || ''
+                };
+              }
               if (result.category_id) updates.category_id = String(result.category_id);
               if (Array.isArray(result.tag_ids)) {
                 updates.tag_ids = result.tag_ids.map((id: any) => String(id));
@@ -222,9 +226,13 @@ export function AdminScreen() {
 
           if (result) {
             const updates: any = {};
-            if (result.name) updates.name = result.name;
-            if (result.name_en) updates.name_en = result.name_en;
-            if (result.name_ms) updates.name_ms = result.name_ms;
+            if (result.name || result.name_en || result.name_ms) {
+              updates.name = {
+                zh: result.name || '',
+                en: result.name_en || result.name || '',
+                ms: result.name_ms || result.name || ''
+              };
+            }
             if (result.category_id) updates.category_id = String(result.category_id);
             if (Array.isArray(result.tag_ids)) {
               updates.tag_ids = result.tag_ids.map((id: any) => String(id));

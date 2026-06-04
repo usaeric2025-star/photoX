@@ -135,31 +135,15 @@ Your response MUST match this exact JSON schema:
   const modelName = customModel || DEFAULT_AI_MODEL;
 
   try {
-    let response: Response;
-    if (isProxy) {
-      response = await api.ai.translate.$post({
-        json: {
-          promptText: prompt,
-          customModel: modelName
+    const response = await api.ai.dispatch.$post({
+      json: {
+        task: 'translate',
+        payload: {
+          prompt: prompt,
+          model: modelName.replace('openrouter/', ''),
         }
-      }, { signal }) as any;
-    } else {
-      response = await fetch(fetchUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-          'HTTP-Referer': window.location.origin
-        },
-        body: JSON.stringify({
-          model: modelName.includes('/') ? modelName : `google/${modelName}`,
-          messages: [{ role: 'user', content: prompt }],
-          response_format: { type: 'json_object' },
-          max_tokens: 1024
-        }),
-        signal
-      });
-    }
+      }
+    }, { signal }) as any;
 
     if (!response.ok) {
       throw ErrorFactory.wrap(new Error(`Fields translation HTTP error: ${response.statusText}`), 'translateProductFields');

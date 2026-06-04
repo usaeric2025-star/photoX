@@ -110,41 +110,16 @@ export const analyzeProductPhoto = async (
       combinedSignal = signal || timeoutAbort.signal;
     }
 
-    const isProxy = fetchUrl.startsWith('/api/');
-    let fetchResponse: Response;
-
-    if (isProxy) {
-      fetchResponse = await api.ai.analyze.$post({
-        json: {
-          base64Image: processedBase64Image,
-          promptText,
-          customModel: modelName,
-        }
-      }, { signal: combinedSignal }) as any;
-    } else {
-      fetchResponse = await fetch(fetchUrl, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
+    const fetchResponse = await api.ai.dispatch.$post({
+      json: {
+        task: 'analyzePhoto',
+        payload: {
+          prompt: promptText,
+          imageBase64: processedBase64Image,
           model: modelName.replace('openrouter/', ''),
-          messages: [
-            {
-              role: "user",
-              content: [
-                { type: "text", text: promptText },
-                {
-                  type: "image_url",
-                  image_url: { url: processedBase64Image }
-                }
-              ]
-            }
-          ],
-          response_format: { type: "json_object" },
-          max_tokens: 1024,
-        }),
-        signal: combinedSignal
-      });
-    }
+        }
+      }
+    }, { signal: combinedSignal }) as any;
 
     clearTimeout(timeoutId);
 

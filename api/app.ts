@@ -86,7 +86,77 @@ app.onError((err, c) => {
   }, 500);
 });
 
+import { decrypt } from './lib/encryption';
+
+async function callProvider(baseUrl: string, apiKey: string, payload: any) {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            model: payload.model, 
+            messages: [{ role: 'user', content: [{ type: 'text', text: payload.prompt }, { type: 'image_url', image_url: { url: payload.imageBase64 } }] }] 
+        })
+    });
+    if (!response.ok) throw new Error(`Provider returned ${response.status}`);
+    return response.json();
+}
+
+async function getAIConfig(providerName?: string) {
+  const supabase = await getSupabaseAdmin();
+
+  // 1. 获取当前设置的提供商
+  const { data: settings } = await supabase
+    .from('settings')
+    .select('ai_provider')
+    .limit(1)
+    .single();
+
+  const provider = providerName || settings?.ai_provider || 'openrouter';
+
+  // 2. 获取对应的 API Key
+  const { data: secret } = await supabase
+    .from('secrets')
+    .select('value')
+    .eq('name', provider)
+    .maybeSingle();
+
+  if (!secret?.value) {
+      throw new Error(`AI configuration not found for provider: ${provider}`);
+  }
+
+  // 3. 解密 Key
+  const apiKey = decrypt(secret.value);
+
+  const baseUrl = provider === 'agnes' 
+    ? 'https://apihub.agnes-ai.com/v1'
+    : 'https://openrouter.ai/api/v1';
+
+  return { provider, apiKey, baseUrl };
+}
+
 // --- API Routes ---
+app.post("/ai/dispatch", async (c) => {
+  try {
+    const { task, payload } = await c.req.json();
+    
+    // 1. 尝试首选提供商
+    let config = await getAIConfig();
+    try {
+        return c.json(await callProvider(config.baseUrl, config.apiKey, payload));
+    } catch (e) {
+        console.warn(`Primary provider ${config.provider} failed, falling back:`, e);
+        
+        // 2. 自动降级到 OpenRouter/Gemini
+        config = await getAIConfig('openrouter');
+        return c.json(await callProvider(config.baseUrl, config.apiKey, payload));
+    }
+    
+  } catch (error: any) {
+    console.error('AI Dispatch failed:', error);
+    return c.json({ success: false, error: error.message || 'AI Dispatch failed' }, 500);
+  }
+});
+
 app.post("/upload-presign", async (c) => {
     try {
       const { photoId, fileKey, contentType, imageHash } = await c.req.json();

@@ -42,11 +42,33 @@ export function AISecuritySection({
           </span>
         </summary>
         <div className="px-6 pb-6 space-y-3 pt-2 border-t border-brand-navy/5">
+          <div className="space-y-4">
+            <p className="text-[9px] font-black text-brand-navy/40 uppercase ml-1 tracking-widest">AI 提供商 / AI Provider</p>
+            <select
+              className={`${inputClass} w-full`}
+              value={localStorage.getItem('AI_PRIMARY_PROVIDER') || 'agnes'}
+              onChange={(e) => {
+                localStorage.setItem('AI_PRIMARY_PROVIDER', e.target.value);
+                toast.success("已切换 AI 提供商 / Provider switched");
+              }}
+            >
+              <option value="agnes">Agnes AI (免费 / Free)</option>
+              <option value="gemini">Gemini (OpenRouter)</option>
+            </select>
+          </div>
           <div className="space-y-1">
-            <p className="text-[9px] font-black text-brand-navy/40 uppercase ml-1 tracking-widest">AI API 密钥 / AI API Key</p>
+            <p className="text-[9px] font-black text-brand-navy/40 uppercase ml-1 tracking-widest">Agnes API 密钥 / Agnes API Key</p>
             <input 
               type="password" 
-              placeholder="输入 API 密钥 / Enter API Key..."
+              placeholder="输入 Agnes API 密钥..."
+              className={`${inputClass} font-mono w-full`}
+            />
+          </div>
+          <div className="space-y-1">
+            <p className="text-[9px] font-black text-brand-navy/40 uppercase ml-1 tracking-widest">AI API 密钥 (Gemini/OpenRouter) / AI API Key</p>
+            <input 
+              type="password" 
+              placeholder="输入 API 密钥..."
               className={`${inputClass} font-mono w-full`}
               value={geminiApiKey}
               onChange={(e) => {
