@@ -3,7 +3,7 @@ import { Tag, Category, Manufacturer } from '@/types';
 import { addTagToDB, updateTagInDB, deleteTagFromDB } from '@/services/tag/commands';
 import { addCategoryToDB, updateCategoryInDB, deleteCategoryFromDB } from '@/services/category/commands';
 import { addManufacturerToDB, updateManufacturerInDB, deleteManufacturerFromDB } from '@/services/manufacturer/commands';
-import { photoKeys } from '@/lib/queryKeys';
+import { photoKeys, groupKeys } from '@/lib/queryKeys';
 import { useQueryClient } from '@tanstack/react-query';
 import { useInvalidatePhotos } from '@/hooks/queries/useInvalidatePhotos';
 

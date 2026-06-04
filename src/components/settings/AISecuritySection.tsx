@@ -1,5 +1,6 @@
 import React from 'react';
 import { Sparkles, CheckCircle2, AlertCircle, Lock } from 'lucide-react';
+import { toast } from 'sonner';
 import { AppSettings } from '../../types';
 
 interface AISecuritySectionProps {
@@ -55,6 +56,28 @@ export function AISecuritySection({
               <option value="agnes">Agnes AI (免费 / Free)</option>
               <option value="gemini">Gemini (OpenRouter)</option>
             </select>
+            <div className="grid grid-cols-2 gap-2">
+              <button 
+                onClick={async () => {
+                  try {
+                    const res = await fetch('/api/ai/test', { method: 'POST', body: JSON.stringify({ provider: 'agnes' }), headers: {'Content-Type': 'application/json'} });
+                    if (res.ok) toast.success("Agnes 连接成功");
+                    else toast.error("Agnes 连接失败");
+                  } catch { toast.error("Agnes 测试请求错误"); }
+                }}
+                className="py-2 bg-brand-navy text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
+              >测试 Agnes</button>
+              <button 
+                onClick={async () => {
+                  try {
+                    const res = await fetch('/api/ai/test', { method: 'POST', body: JSON.stringify({ provider: 'openrouter' }), headers: {'Content-Type': 'application/json'} });
+                    if (res.ok) toast.success("OpenRouter 连接成功");
+                    else toast.error("OpenRouter 连接失败");
+                  } catch { toast.error("OpenRouter 测试请求错误"); }
+                }}
+                className="py-2 bg-brand-gold text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
+              >测试 OpenRouter</button>
+            </div>
           </div>
           <div className="space-y-1">
             <p className="text-[9px] font-black text-brand-navy/40 uppercase ml-1 tracking-widest">Agnes API 密钥 / Agnes API Key</p>

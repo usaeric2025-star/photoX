@@ -135,6 +135,22 @@ async function getAIConfig(providerName?: string) {
 }
 
 // --- API Routes ---
+app.post("/ai/test", async (c) => {
+    try {
+        const { provider } = await c.req.json();
+        const config = await getAIConfig(provider);
+        const testPayload = { 
+            model: provider === 'agnes' ? 'agnes-2.0-flash' : 'google/gemini-2.0-flash-exp:free', 
+            prompt: 'hello', 
+            imageBase64: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=' 
+        };
+        await callProvider(config.baseUrl, config.apiKey, testPayload);
+        return c.json({ success: true });
+    } catch (e: any) {
+        return c.json({ success: false, error: e.message }, 500);
+    }
+});
+
 app.post("/ai/dispatch", async (c) => {
   try {
     const { task, payload } = await c.req.json();
