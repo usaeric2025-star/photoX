@@ -254,6 +254,12 @@ const adminTasksRoute = createRoute({
   component: TasksPage,
 });
 
+const adminErrorLogsRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/error-logs',
+  component: AdminPage,
+});
+
 const adminGroupRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: '/group/$groupId',
@@ -281,7 +287,7 @@ export const routeTree = rootRoute.addChildren([
   hashRoute,
   groupRoute,
   gRoute,
-  adminRoute.addChildren([adminHistoryRoute, adminTasksRoute, adminGroupRoute]),
+  adminRoute.addChildren([adminHistoryRoute, adminTasksRoute, adminErrorLogsRoute, adminGroupRoute]),
 ]);
 
 // 4. Create Router

@@ -146,9 +146,10 @@ export function AdminGridContainer({
             updated_at: new Date().toISOString()
           } as unknown as Photo;
 
-          const saved = await savePhotoToCloud(user?.id || 'staff', tempPhoto);
-          if (saved) {
-            savedPhotos.push(saved);
+          const savedId = await savePhotoToCloud(user?.id || 'staff', tempPhoto);
+          if (savedId) {
+            const finalPhoto = { ...tempPhoto, id: savedId };
+            savedPhotos.push(finalPhoto);
             successCount++;
           }
 

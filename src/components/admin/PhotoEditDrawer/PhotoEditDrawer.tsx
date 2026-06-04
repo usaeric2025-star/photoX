@@ -104,7 +104,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
       const resp = await analyzePhoto(photo.id);
 
       if (resp.ok) {
-        const result = resp.value;
+        const result = resp.data;
         form.setValues((prev) => {
           const updates: any = {};
           const currentName = (prev.name || '').trim();
@@ -145,7 +145,8 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
         });
         toast.success("AI 屬性識別成功並已補全空白字段（由 Agnes 提供動態翻譯）");
       } else {
-        toast.error(`識別失敗: ${resp.error}`);
+        const errorMsg = (resp as any).message || "AI 分析失敗";
+        toast.error(`識別失敗: ${errorMsg}`);
       }
     });
   }, [categories, tags, manufacturers, settings, runTask, form, handleError]);

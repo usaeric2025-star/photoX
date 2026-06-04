@@ -97,8 +97,8 @@ export function AdminScreen() {
         try {
           const resp = await analyzePhoto(p.id);
           
-          if (resp.ok) {
-            const result = resp.value;
+          if (resp && 'ok' in resp && resp.ok) {
+            const result = resp.data;
             const updates: any = {};
             
             if (result.name) {
@@ -121,9 +121,13 @@ export function AdminScreen() {
 
             await updatePhoto(p.id, updates);
             successCount++;
+          } else {
+            const errorMsg = (resp as any)?.message || "AI 分析失敗";
+            toast.error(`${p.name || '照片'} 識別失敗: ${errorMsg}`);
           }
         } catch (err: any) {
           console.error(`Failed to analyze photo ${p.id}:`, err);
+          toast.error(`${p.name || '照片'} 处理异常: ${err.message}`);
         }
       }
 

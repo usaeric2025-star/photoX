@@ -249,6 +249,7 @@ function TagButton({ tag, isSelected, isHot, isPinned, isDisabled, onToggle, onL
           WebkitUserSelect: "none",
           userSelect: "none",
           touchAction: "none",
+          pointerEvents: "auto",
         }}
         onClick={(e) => {
           e.stopPropagation();

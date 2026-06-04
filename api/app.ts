@@ -68,6 +68,18 @@ async function callProvider(url: string, key: string, payload: any) {
 
 const normalizeUrl = (u: string) => u.toLowerCase().trim().split('?')[0].replace(/\/$/, '');
 
+const logEvent = async (level: string, message: string, context?: string, stack?: string) => {
+    try {
+        const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+        const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY; 
+        if (!supabaseUrl || !supabaseKey) return;
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        await supabase.from("error_events").insert({ level, message, context, stack });
+    } catch (e) {
+        console.error("CRITICAL: Failed to log internal event:", e);
+    }
+};
+
 // --- Hono App Implementation ---
 export const app = new Hono().basePath("/api");
 
@@ -269,10 +281,10 @@ Target Response Schema:
         let data: any;
         try {
             // Clean markdown if present
-            const cleanJson = aiResult.content.replace(/```json\n|\n```|```/g, '').trim();
+            const cleanJson = (aiResult.text || '').replace(/```json\n|\n```|```/g, '').trim();
             data = JSON.parse(cleanJson);
         } catch (e) {
-            console.error("Failed to parse AI JSON:", aiResult.content);
+            console.error("Failed to parse AI JSON:", aiResult.text);
             throw new Error("AI returned invalid JSON format");
         }
 
@@ -289,7 +301,7 @@ Target Response Schema:
                 const transResult = await agnes.chat([{ role: 'user', content: transPrompt }]);
                 if (transResult.success) {
                     try {
-                        const translations = JSON.parse(transResult.content.replace(/```json\n|\n```|```/g, '').trim());
+                        const translations = JSON.parse((transResult.text || '').replace(/```json\n|\n```|```/g, '').trim());
                         data.description_translations = {
                             zh: data.description,
                             en: translations.en,
@@ -303,7 +315,7 @@ Target Response Schema:
                 const dimResult = await agnes.chat([{ role: 'user', content: dimPrompt }]);
                 if (dimResult.success) {
                     try {
-                        const dims = JSON.parse(dimResult.content.replace(/```json\n|\n```|```/g, '').trim());
+                        const dims = JSON.parse((dimResult.text || '').replace(/```json\n|\n```|```/g, '').trim());
                         if (dims.width_cm || dims.height_cm || dims.depth_cm) {
                              data.dimensions = data.dimensions || [];
                              data.dimensions.push({
@@ -324,6 +336,8 @@ Target Response Schema:
 
         return c.json({ success: true, data });
     } catch (e: any) {
+        console.error("AI Analysis failed:", e);
+        await logEvent('error', `AI Analysis failed: ${e.message}`, '/ai/analyze', e.stack);
         return c.json({ success: false, error: e.message }, 500);
     }
 });
@@ -2031,7 +2045,7 @@ app.post("/maintenance/normalize-item-codes", async (c) => {
   }
 });
 
-app.post("/ai/analyze", async (c) => {
+app.post("/ai/analyze-base64", async (c) => {
     try {
       const { base64Image, customModel, promptText } = await c.req.json();
       const apiKey = serverEnv.GEMINI_API_KEY;
@@ -2196,9 +2210,18 @@ app.post("/admin/repair/agnes-translate", async (c) => {
                     const ai = await getAIProvider(provider, supabase, model);
                     const res = await ai.chat([{ role: 'user', content: prompt }]);
                     
-                    if (res.success && res.content) {
-                        const { extractJsonObject } = await import('./lib/ai/aiParsing.js');
-                        const parsed = extractJsonObject(res.content);
+                    if (res.success && res.text) {
+                        const cleanJson = (res.text || '').replace(/```json\n|\n```|```/g, '').trim();
+                        let parsed: any;
+                        try {
+                            parsed = JSON.parse(cleanJson);
+                        } catch (e) {
+                            const match = cleanJson.match(/\{[\s\S]*\}/);
+                            if (match) {
+                                try { parsed = JSON.parse(match[0]); } catch(e2) {}
+                            }
+                        }
+
                         if (parsed) {
                             await supabase.from("furniture_items").update({
                                 description: parsed.zh || photo.description,
@@ -2253,9 +2276,18 @@ app.post("/admin/repair/agnes-dimension", async (c) => {
                     const ai = await getAIProvider(provider, supabase, model);
                     const res = await ai.chat([{ role: 'user', content: prompt }]);
                     
-                    if (res.success && res.content) {
-                        const { extractJsonObject } = await import('./lib/ai/aiParsing.js');
-                        const parsed = extractJsonObject(res.content);
+                    if (res.success && res.text) {
+                        const cleanJson = (res.text || '').replace(/```json\n|\n```|```/g, '').trim();
+                        let parsed: any;
+                        try {
+                            parsed = JSON.parse(cleanJson);
+                        } catch (e) {
+                            const match = cleanJson.match(/\{[\s\S]*\}/);
+                            if (match) {
+                                try { parsed = JSON.parse(match[0]); } catch(e2) {}
+                            }
+                        }
+
                         if (parsed) {
                             await supabase.from("furniture_items").update({
                                 dimensions: [{

@@ -56,7 +56,7 @@ export function useLongPress(
       const clientY = 'touches' in e ? e.touches[0].clientY : (e as PointerEvent).clientY;
       const dx = clientX - startPos.current.x;
       const dy = clientY - startPos.current.y;
-      if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+      if (Math.abs(dx) > 15 || Math.abs(dy) > 15) {
         clearTimer();
       }
     };
@@ -85,13 +85,8 @@ export function useLongPress(
       e.preventDefault();
     };
 
-    // Use touch events primarily for mobile reliability
-    el.addEventListener('touchstart', handleStart as any, { passive: false });
-    el.addEventListener('touchmove', handleMove as any, { passive: true });
-    el.addEventListener('touchend', handleEnd as any, { passive: false });
-    el.addEventListener('touchcancel', handleEnd as any);
-    
-    // Pointer events for desktop
+    // We use pointer events as the primary source for modern reliability
+    // They handle both touch and mouse consistently
     el.addEventListener('pointerdown', handleStart as any);
     el.addEventListener('pointermove', handleMove as any);
     el.addEventListener('pointerup', handleEnd as any);
@@ -100,11 +95,6 @@ export function useLongPress(
 
     return () => {
       clearTimer();
-      el.removeEventListener('touchstart', handleStart as any);
-      el.removeEventListener('touchmove', handleMove as any);
-      el.removeEventListener('touchend', handleEnd as any);
-      el.removeEventListener('touchcancel', handleEnd as any);
-      
       el.removeEventListener('pointerdown', handleStart as any);
       el.removeEventListener('pointermove', handleMove as any);
       el.removeEventListener('pointerup', handleEnd as any);

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Home, Cloud, Settings2, Plus, Terminal, X } from 'lucide-react';
+import { useLocation } from '@tanstack/react-router';
 import { useAuth, useTasks, useSyncMutation, useErrorHandler, useAdminMode, useTaskExecutor, useMultiSelect, useUrlFilters, useSettings } from '@/hooks';
 import { backfillThumbHashes } from '@/services/photo/backfillService';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -59,6 +60,33 @@ export function AdminPageContent() {
     newPhotoData: s.newPhotoData,
     batchEditingIds: s.batchEditingIds,
   })));
+
+  const location = useLocation();
+  const isAdminPath = location.pathname.startsWith('/admin');
+  
+  // Sync URL to store for compatibility with old components if needed, 
+  // but prefer using location directly.
+  useEffect(() => {
+    if (location.pathname === '/admin/error-logs') {
+      store.update({ activeScreen: 'error-logs' });
+    } else if (location.pathname === '/admin/tasks') {
+      store.update({ activeScreen: 'tasks' });
+    } else if (location.pathname === '/admin/history/maintenance') {
+      store.update({ activeScreen: 'history_maintenance' });
+    } else if (location.pathname === '/admin') {
+       // Only set to home if we aren't in another sub-screen
+       // (this is a bit messy because of the old state architecture)
+       if (store.activeScreen === 'error-logs' || store.activeScreen === 'tasks' || store.activeScreen === 'history_maintenance') {
+         store.update({ activeScreen: 'home' });
+       }
+    }
+  }, [location.pathname, store.update, store.activeScreen]);
+
+  // Determine active screen from either store or URL
+  const currentScreen = location.pathname === '/admin/error-logs' ? 'error-logs' :
+                        location.pathname === '/admin/tasks' ? 'tasks' :
+                        location.pathname === '/admin/history/maintenance' ? 'history_maintenance' :
+                        store.activeScreen;
 
   const isStaffMode = typeof window !== 'undefined' && 
     window.localStorage.getItem('ais_mock_auth_passcode') === settings?.access_passcode && 
@@ -153,7 +181,7 @@ export function AdminPageContent() {
               
             <main className="flex-1 relative overflow-hidden">
               <div 
-                className={`absolute inset-0 transition-opacity duration-200 ease-out ${store.activeScreen === 'home' || store.activeScreen === 'gallery' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
+                className={`absolute inset-0 transition-opacity duration-200 ease-out ${currentScreen === 'home' || currentScreen === 'gallery' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
               >
                   {urlFilters.groupId ? (
                     <GroupDetailPage />
@@ -162,13 +190,13 @@ export function AdminPageContent() {
                   )}
               </div>
 
-              {(store.activeScreen === 'manage' || store.activeScreen === 'settings') && (
+              {(currentScreen === 'manage' || currentScreen === 'settings') && (
                 <div className="absolute inset-0 z-20 bg-slate-50">
                   <SettingsScreen />
                 </div>
               )}
 
-              {store.activeScreen === 'dashboard' && (
+              {currentScreen === 'dashboard' && (
                 <div className="absolute inset-0 z-20 bg-slate-50 flex flex-col">
                   <div className="flex justify-end p-4 shrink-0 bg-slate-50/80 backdrop-blur-md sticky top-0 z-30 border-b border-slate-100">
                     <button 
@@ -184,7 +212,7 @@ export function AdminPageContent() {
                 </div>
               )}
 
-              {store.activeScreen === 'tasks' && (
+              {currentScreen === 'tasks' && (
                 <div className="absolute inset-0 z-20 bg-slate-50 flex flex-col">
                   <div className="flex justify-end p-4 shrink-0 bg-slate-50/80 backdrop-blur-md sticky top-0 z-30 border-b border-slate-100">
                     <button 
@@ -200,7 +228,7 @@ export function AdminPageContent() {
                 </div>
               )}
 
-              {store.activeScreen === 'history_maintenance' && (
+              {currentScreen === 'history_maintenance' && (
                 <div className="absolute inset-0 z-20 bg-slate-50 flex flex-col">
                   <div className="flex justify-end p-4 shrink-0 bg-slate-50/80 backdrop-blur-md sticky top-0 z-30 border-b border-slate-100">
                     <button 
@@ -216,7 +244,7 @@ export function AdminPageContent() {
                 </div>
               )}
 
-              {store.activeScreen === 'error-logs' && (
+              {currentScreen === 'error-logs' && (
                 <div className="absolute inset-0 z-20 bg-slate-50 flex flex-col">
                   <div className="flex justify-end p-4 shrink-0 bg-slate-50/80 backdrop-blur-md sticky top-0 z-30 border-b border-slate-100">
                     <button 

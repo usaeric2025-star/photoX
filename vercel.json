@@ -1,4 +1,7 @@
 {
+  "redirects": [
+    { "source": "/error-log", "destination": "/api/error-log" }
+  ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index.ts" },
     { "source": "/(.*)", "destination": "/index.html" }

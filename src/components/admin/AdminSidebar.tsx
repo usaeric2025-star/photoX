@@ -16,6 +16,7 @@ import {
   Zap,
   Bug
 } from 'lucide-react';
+import { useNavigate, useLocation } from '@tanstack/react-router';
 import { useUIStore, useShallow, useAppLang, useSidebarCollapsed } from '@/store/useUIStore';
 import { reportError } from '@/lib/errorReporter';
 import { useAuth, usePermission, useSettings, useSyncMutation, useAdminMode } from '@/hooks';
@@ -58,8 +59,19 @@ function SidebarItem({ icon: Icon, label, active, onClick, badge, collapsed }: S
 }
 
 export function AdminSidebar() {
-  const activeScreen = useUIStore((s) => s.activeScreen);
-  const update = useUIStore((s) => s.update);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const store = useUIStore(useShallow(s => ({
+    activeScreen: s.activeScreen,
+    update: s.update
+  })));
+  
+  const activeScreen = location.pathname === '/admin/error-logs' ? 'error-logs' :
+                     location.pathname === '/admin/tasks' ? 'tasks' :
+                     location.pathname === '/admin/history/maintenance' ? 'history_maintenance' :
+                     store.activeScreen;
+
+  const update = store.update;
   const appLang = useAppLang()[0];
   const [isSidebarCollapsed, setSidebarCollapsed] = useSidebarCollapsed();
   
@@ -204,7 +216,7 @@ export function AdminSidebar() {
               label="全局任务监控" 
               collapsed={isSidebarCollapsed}
               active={activeScreen === 'tasks'} 
-              onClick={() => update({ activeScreen: 'tasks' })}
+              onClick={() => navigate({ to: '/admin/tasks' })}
             />
             <SidebarItem 
               icon={Terminal} 
@@ -218,7 +230,7 @@ export function AdminSidebar() {
               label="错误信息" 
               collapsed={isSidebarCollapsed}
               active={activeScreen === 'error-logs'} 
-              onClick={() => update({ activeScreen: 'error-logs' })}
+              onClick={() => navigate({ to: '/admin/error-logs' })}
             />
           </div>
         )}
