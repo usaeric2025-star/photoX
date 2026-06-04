@@ -16,9 +16,9 @@ interface AISecuritySectionProps {
 }
 
 export function AISecuritySection({
-  geminiApiKey,
+  geminiApiKey: initialGeminiKey,
   setGeminiApiKey,
-  customModel,
+  customModel: initialCustomModel,
   setCustomModel,
   setSettingField,
   cardClass,
@@ -26,7 +26,32 @@ export function AISecuritySection({
 }: AISecuritySectionProps) {
   const [keysStatus, setKeysStatus] = React.useState({ agnes: false, openrouter: false });
   const [agnesKey, setAgnesKey] = React.useState('');
+  
+  // Local draft states to prevent rapid re-renders from parent/query invalidation
+  const [localCustomModel, setLocalCustomModel] = React.useState(initialCustomModel || '');
+  const [localOpenRouterKey, setLocalOpenRouterKey] = React.useState(initialGeminiKey || '');
+
   const [isTesting, setIsTesting] = React.useState<'agnes' | 'openrouter' | null>(null);
+  const [isEditingOpenRouter, setIsEditingOpenRouter] = React.useState(false);
+  const [isEditingAgnes, setIsEditingAgnes] = React.useState(false);
+
+  // Use refs to track initialization so we don't overwrite user typing
+  const modelInit = React.useRef(false);
+  const keyInit = React.useRef(false);
+
+  React.useEffect(() => {
+    if (!modelInit.current && initialCustomModel) {
+        setLocalCustomModel(initialCustomModel);
+        modelInit.current = true;
+    }
+  }, [initialCustomModel]);
+
+  React.useEffect(() => {
+    if (!keyInit.current && initialGeminiKey) {
+        setLocalOpenRouterKey(initialGeminiKey);
+        keyInit.current = true;
+    }
+  }, [initialGeminiKey]);
 
   const fetchKeysStatus = async () => {
     try {
@@ -37,6 +62,9 @@ export function AISecuritySection({
           setKeysStatus(data.keysStatus);
           if (data.keysStatus.agnes) {
             setAgnesKey('••••••••••••••••');
+          }
+           if (data.keysStatus.openrouter) {
+            setLocalOpenRouterKey('••••••••••••••••');
           }
         }
       }
@@ -52,14 +80,14 @@ export function AISecuritySection({
   const handleTest = async (provider: 'agnes' | 'openrouter') => {
     setIsTesting(provider);
     try {
-      const targetKey = provider === 'agnes' ? agnesKey : geminiApiKey;
+      const targetKey = provider === 'agnes' ? agnesKey : localOpenRouterKey;
       const res = await fetch('/api/ai/test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           provider,
           apiKey: targetKey === "••••••••••••••••" ? "" : targetKey,
-          model: provider === 'openrouter' ? customModel : undefined
+          model: provider === 'openrouter' ? localCustomModel : undefined
         })
       });
       const data = await res.json();
@@ -95,8 +123,11 @@ export function AISecuritySection({
         toast.success(`${provider === 'agnes' ? 'Agnes' : 'OpenRouter'} 密鑰已保存`);
         if (provider === 'agnes') {
             setAgnesKey('••••••••••••••••');
+            setIsEditingAgnes(false);
         } else {
-            setGeminiApiKey('••••••••••••••••');
+            setLocalOpenRouterKey('••••••••••••••••');
+            setGeminiApiKey('••••••••••••••••'); // Sync to parent if needed
+            setIsEditingOpenRouter(false);
         }
         await fetchKeysStatus();
       } else {
@@ -126,38 +157,62 @@ export function AISecuritySection({
                    <h5 className="text-[10px] font-black text-brand-navy uppercase tracking-tight">OpenRouter Config</h5>
                    <p className="text-[8px] text-brand-navy/40 font-bold uppercase tracking-widest">任務：圖片識別</p>
                 </div>
-                {keysStatus.openrouter && <div className="px-2 py-0.5 bg-green-50 text-green-600 rounded-full text-[8px] font-black uppercase">已激活</div>}
+                <div className="flex items-center gap-2">
+                  {keysStatus.openrouter && <div className="px-2 py-0.5 bg-green-50 text-green-600 rounded-full text-[8px] font-black uppercase">已激活</div>}
+                  <button 
+                    onClick={() => {
+                      setIsEditingOpenRouter(!isEditingOpenRouter);
+                      if (!isEditingOpenRouter && localOpenRouterKey === "••••••••••••••••") setLocalOpenRouterKey("");
+                    }}
+                    className={`text-[8px] font-black px-2 py-0.5 rounded-full transition-colors ${isEditingOpenRouter ? 'bg-slate-200 text-slate-600' : 'bg-brand-navy text-white'}`}
+                  >
+                    {isEditingOpenRouter ? '取消' : '編輯'}
+                  </button>
+                </div>
              </div>
              
              <div className="space-y-2">
-                 <input 
-                    type="text" 
-                    placeholder="模型型號 (預設: google/gemini-2.5-flash-lite)"
-                    className={`${inputClass} w-full bg-slate-50 text-[10px] font-bold`}
-                    value={customModel || ''}
-                    onChange={(e) => setCustomModel(e.target.value)}
-                    onBlur={(e) => setSettingField('custom_model' as any, e.target.value)}
-                 />
+                 <div className="flex items-center gap-2">
+                   <span className="text-[8px] font-black text-brand-navy/40 uppercase whitespace-nowrap">Model ID</span>
+                   <input 
+                      type="text" 
+                      placeholder="模型型號 (預設: google/gemini-2.0-flash-exp:free)"
+                      className={`${inputClass} flex-1 bg-slate-50 text-[10px] font-bold`}
+                      value={localCustomModel}
+                      onChange={(e) => setLocalCustomModel(e.target.value)}
+                      onBlur={(e) => {
+                        setSettingField('custom_model' as any, e.target.value);
+                        setCustomModel(e.target.value);
+                      }}
+                      disabled={!isEditingOpenRouter}
+                   />
+                 </div>
+                 
                  <div className="relative">
                     <input
-                        type="password"
+                        type={isEditingOpenRouter ? "text" : "password"}
                         placeholder="OpenRouter API Key..."
-                        className={`${inputClass} font-mono w-full bg-slate-50 pr-16`}
-                        value={geminiApiKey}
-                        onChange={(e) => setGeminiApiKey(e.target.value)}
-                        onFocus={() => { if (geminiApiKey === "••••••••••••••••") setGeminiApiKey(""); }}
+                        className={`${inputClass} font-mono w-full ${isEditingOpenRouter ? 'bg-white border-brand-navy/20' : 'bg-slate-50'} pr-16`}
+                        value={localOpenRouterKey}
+                        onChange={(e) => setLocalOpenRouterKey(e.target.value)}
+                        disabled={!isEditingOpenRouter}
+                        autoFocus={isEditingOpenRouter}
                     />
-                    <button 
-                         onClick={() => saveKey('openrouter', geminiApiKey)} 
-                         disabled={isSaving === 'openrouter'}
-                         className="absolute right-1 top-1 py-1 px-3 bg-brand-navy text-white text-[8px] font-bold rounded-lg hover:bg-brand-navy/90 transition-colors disabled:opacity-50 animate-pulse"
-                     >
-                         {isSaving === 'openrouter' ? '..' : '保存'}
-                     </button>
+                    {isEditingOpenRouter && (
+                      <button 
+                           onClick={() => saveKey('openrouter', localOpenRouterKey)} 
+                           disabled={isSaving === 'openrouter'}
+                           className="absolute right-1 top-1 py-1 px-4 bg-brand-gold text-brand-navy text-[10px] font-black rounded-lg shadow-sm hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                       >
+                           {isSaving === 'openrouter' ? '..' : '保存'}
+                       </button>
+                    )}
                  </div>
-                 <button onClick={() => handleTest('openrouter')} disabled={isTesting !== null} className="w-full text-[10px] font-black p-2 bg-slate-100 hover:bg-slate-200 transition-colors rounded-lg">
-                   {isTesting === 'openrouter' ? '測試中...' : '測試連線'}
-                 </button>
+                 {!isEditingOpenRouter && (
+                   <button onClick={() => handleTest('openrouter')} disabled={isTesting !== null} className="w-full text-[10px] font-black p-2 bg-slate-100 hover:bg-slate-200 transition-colors rounded-lg flex items-center justify-center gap-2">
+                     {isTesting === 'openrouter' ? '測試中...' : '測試 OpenRouter 連線'}
+                   </button>
+                 )}
              </div>
           </div>
 
@@ -168,32 +223,48 @@ export function AISecuritySection({
                    <h5 className="text-[10px] font-black text-brand-navy uppercase tracking-tight">Agnes AI Config</h5>
                    <p className="text-[8px] text-brand-navy/40 font-bold uppercase tracking-widest">任務：Chat/Gen</p>
                 </div>
-                {keysStatus.agnes && <div className="px-2 py-0.5 bg-green-50 text-green-600 rounded-full text-[8px] font-black uppercase">已激活</div>}
+                <div className="flex items-center gap-2">
+                  {keysStatus.agnes && <div className="px-2 py-0.5 bg-green-50 text-green-600 rounded-full text-[8px] font-black uppercase">已激活</div>}
+                  <button 
+                    onClick={() => {
+                      setIsEditingAgnes(!isEditingAgnes);
+                      if (!isEditingAgnes && agnesKey === "••••••••••••••••") setAgnesKey("");
+                    }}
+                    className={`text-[8px] font-black px-2 py-0.5 rounded-full transition-colors ${isEditingAgnes ? 'bg-slate-200 text-slate-600' : 'bg-brand-navy text-white'}`}
+                  >
+                    {isEditingAgnes ? '取消' : '編輯'}
+                  </button>
+                </div>
              </div>
              
-             <div className="font-mono text-[10px] text-brand-navy/60 bg-slate-50 p-2 rounded-lg">
+             <div className="font-mono text-[8px] text-brand-navy/60 bg-slate-50 p-2 rounded-lg border border-brand-navy/5">
                 固定模型: agnes-2.0-flash / agnes-image-2.1-flash 等
              </div>
              <div className="relative">
                  <input
-                     type="password"
+                     type={isEditingAgnes ? "text" : "password"}
                      placeholder="Agnes API Key..."
-                     className={`${inputClass} font-mono w-full bg-slate-50 pr-16`}
+                     className={`${inputClass} font-mono w-full ${isEditingAgnes ? 'bg-white border-brand-navy/20' : 'bg-slate-50'} pr-16`}
                      value={agnesKey}
                      onChange={(e) => setAgnesKey(e.target.value)}
-                     onFocus={() => { if (agnesKey === "••••••••••••••••") setAgnesKey(""); }}
+                     disabled={!isEditingAgnes}
+                     autoFocus={isEditingAgnes}
                  />
-                 <button 
-                    onClick={() => saveKey('agnes', agnesKey)} 
-                    disabled={isSaving === 'agnes'}
-                    className="absolute right-1 top-1 py-1 px-3 bg-brand-navy text-white text-[8px] font-bold rounded-lg hover:bg-brand-navy/90 transition-colors disabled:opacity-50"
-                 >
-                    {isSaving === 'agnes' ? '..' : '保存'}
-                 </button>
+                 {isEditingAgnes && (
+                   <button 
+                      onClick={() => saveKey('agnes', agnesKey)} 
+                      disabled={isSaving === 'agnes'}
+                      className="absolute right-1 top-1 py-1 px-4 bg-brand-gold text-brand-navy text-[10px] font-black rounded-lg shadow-sm hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                   >
+                      {isSaving === 'agnes' ? '..' : '保存'}
+                   </button>
+                 )}
              </div>
-             <button onClick={() => handleTest('agnes')} disabled={isTesting !== null} className="w-full text-[10px] font-black p-2 bg-slate-100 hover:bg-slate-200 transition-colors rounded-lg">
-               {isTesting === 'agnes' ? '測試中...' : '測試連線'}
-             </button>
+             {!isEditingAgnes && (
+               <button onClick={() => handleTest('agnes')} disabled={isTesting !== null} className="w-full text-[10px] font-black p-2 bg-slate-100 hover:bg-slate-200 transition-colors rounded-lg flex items-center justify-center gap-2">
+                 {isTesting === 'agnes' ? '測試中...' : '測試 Agnes 連線'}
+               </button>
+             )}
           </div>
         </div>
       </div>

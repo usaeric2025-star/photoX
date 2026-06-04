@@ -177,6 +177,157 @@ app.post("/ai/run", async (c) => {
     return c.json(result);
 });
 
+app.post("/ai/analyze", async (c) => {
+    try {
+        const { photoId, imageUrl } = await c.req.json();
+        const supabase = await getSupabaseAdmin();
+        
+        let finalImageUrl = imageUrl;
+        let photoName = "";
+        let categoryId = "";
+
+        if (photoId) {
+            const { data: photo } = await supabase.from('furniture_items').select('image_url, name, category_id').eq('id', photoId).single();
+            if (photo) {
+                finalImageUrl = photo.image_url;
+                photoName = photo.name || "";
+                categoryId = photo.category_id || "";
+            }
+        }
+
+        if (!finalImageUrl) throw new Error("Image URL is required for analysis");
+
+        // 1. Fetch context
+        const [
+            { data: categories },
+            { data: tags },
+            { data: manufacturers },
+            { data: openrouterSecret },
+            { data: customModelSecret }
+        ] = await Promise.all([
+            supabase.from('categories').select('*'),
+            supabase.from('tags').select('*'),
+            supabase.from('manufacturers').select('*'),
+            supabase.from('secrets').select('value').eq('key', 'openrouter').maybeSingle(),
+            supabase.from('settings').select('custom_model').maybeSingle()
+        ]);
+
+        if (!openrouterSecret?.value) throw new Error("OpenRouter API Key not configured in secrets");
+        
+        const { decrypt } = await import('./lib/encryption.js');
+        const apiKey = decrypt(openrouterSecret.value);
+        const model = (customModelSecret as any)?.custom_model || 'google/gemini-2.0-flash-exp:free';
+
+        // 2. Identification via OpenRouter (Gemini)
+        const { OpenRouterProvider } = await import('./lib/ai/providerFactory.js');
+        const provider = new OpenRouterProvider({ apiKey, model });
+        
+        // Build the prompt using the existing constant logic
+        // Since we are on server, we can't easily import from @/constants/ai
+        // We'll define a minimal version or look for it in the workspace
+        
+        const prompt = `Role: Elite Furniture Data Analyst.
+Task: Inspect the furniture image/tables to extract comprehensive structured details.
+
+【CRITICAL DIRECTIVES】
+- "description": Professional summary in 【简体中文 (Simplified Chinese)】. Detail materials, design, functionality, and specific variants.
+- "dimensions": Extract ALL variants/options displayed. Use specific labels (e.g., "Dining Table", "Chair C102").
+  - "length": Numeric length (cm).
+  - "width": Numeric width (cm).
+  - "height": Numeric height (cm).
+  - "unit": "cm"
+  - "isAIEstimated": boolean.
+
+【CONSTRAINTS】
+- Output raw JSON only.
+- NO Chinese characters EXCEPT in "description".
+- Use empty string "" or 0 or [] for missing data.
+
+Target Response Schema:
+{
+  "name": "Product Name",
+  "price": 0,
+  "model_number": "...",
+  "dimensions": [
+    { "label": "Model A Table", "length": 140, "width": 80, "height": 75, "unit": "cm", "isAIEstimated": false }
+  ],
+  "description": "家具描述内容（必须使用简体中文）...",
+  "tag_ids": [],
+  "new_tags": ["FABRIC"]
+}`;
+
+        const messages = [
+            { role: 'user', content: [
+                { type: 'image_url', image_url: { url: finalImageUrl } },
+                { type: 'text', text: prompt }
+            ]}
+        ];
+
+        const aiResult = await provider.chat(messages);
+        if (!aiResult.success) throw new Error(aiResult.error);
+
+        let data: any;
+        try {
+            // Clean markdown if present
+            const cleanJson = aiResult.content.replace(/```json\n|\n```|```/g, '').trim();
+            data = JSON.parse(cleanJson);
+        } catch (e) {
+            console.error("Failed to parse AI JSON:", aiResult.content);
+            throw new Error("AI returned invalid JSON format");
+        }
+
+        // 3. Agnes Post-processing (Translations & Dimensions)
+        try {
+            const { data: agnesSecret } = await supabase.from('secrets').select('value').eq('key', 'agnes').maybeSingle();
+            if (agnesSecret?.value) {
+                const agnesApiKey = decrypt(agnesSecret.value);
+                const { AgnesProvider } = await import('./lib/ai/providerFactory.js');
+                const agnes = new AgnesProvider({ apiKey: agnesApiKey, model: 'agnes-2.0-flash' });
+                
+                // Translate description
+                const transPrompt = `Translate the following furniture description into English (en) and Malay (ms). Return as JSON: { "en": "...", "ms": "..." }. Content: ${data.description}`;
+                const transResult = await agnes.chat([{ role: 'user', content: transPrompt }]);
+                if (transResult.success) {
+                    try {
+                        const translations = JSON.parse(transResult.content.replace(/```json\n|\n```|```/g, '').trim());
+                        data.description_translations = {
+                            zh: data.description,
+                            en: translations.en,
+                            ms: translations.ms
+                        };
+                    } catch (e) {}
+                }
+
+                // Extract dimensions from description
+                const dimPrompt = `Extract numeric dimensions (width, height, depth in cm) from this text: "${data.description}". Return JSON: { "width_cm": number, "height_cm": number, "depth_cm": number }`;
+                const dimResult = await agnes.chat([{ role: 'user', content: dimPrompt }]);
+                if (dimResult.success) {
+                    try {
+                        const dims = JSON.parse(dimResult.content.replace(/```json\n|\n```|```/g, '').trim());
+                        if (dims.width_cm || dims.height_cm || dims.depth_cm) {
+                             data.dimensions = data.dimensions || [];
+                             data.dimensions.push({
+                                 label: '規格 (Agnes)',
+                                 width: dims.width_cm || 0,
+                                 height: dims.height_cm || 0,
+                                 length: dims.depth_cm || 0,
+                                 unit: 'cm',
+                                 isAIEstimated: true
+                             });
+                        }
+                    } catch (e) {}
+                }
+            }
+        } catch (agnesErr) {
+            console.warn("Agnes processing failed:", agnesErr);
+        }
+
+        return c.json({ success: true, data });
+    } catch (e: any) {
+        return c.json({ success: false, error: e.message }, 500);
+    }
+});
+
 app.post("/upload-presign", async (c) => {
     try {
       const { photoId, fileKey, contentType, imageHash } = await c.req.json();

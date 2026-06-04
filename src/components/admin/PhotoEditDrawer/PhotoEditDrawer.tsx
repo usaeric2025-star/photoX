@@ -13,7 +13,7 @@ import { DetailsTab } from "./DetailsTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs";
 import { getCacheBustedImageUrl } from "../../../lib/ui-helpers";
 import { translations } from "../../../lib/translations";
-import { analyzeProductPhoto } from "@/services/gemini";
+import { analyzePhoto } from "@/services/aiService";
 
 import { 
   usePhotos,
@@ -100,18 +100,11 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
       return;
     }
 
-    await runTask("AI 属性智能识别", async () => {
-      const result = await analyzeProductPhoto(
-        imageUrl,
-        categories,
-        tags,
-        manufacturers,
-        settings?.gemini_api_key || "",
-        "google",
-        settings?.custom_model || ""
-      );
+    await runTask("AI 属性智能識別", async () => {
+      const resp = await analyzePhoto(photo.id);
 
-      if (result) {
+      if (resp.ok) {
+        const result = resp.value;
         form.setValues((prev) => {
           const updates: any = {};
           const currentName = (prev.name || '').trim();
@@ -127,17 +120,32 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
           if (!prev.model_number && result.model_number) updates.model_number = result.model_number;
           if (!prev.manual_code && result.manual_code) updates.manual_code = result.manual_code;
           if (!prev.description && result.description) updates.description = result.description;
-          if (result.description_translations && (!prev.description_translations || (!prev.description_translations.en && !prev.description_translations.ms))) {
-             updates.description_translations = { ...prev.description_translations, ...result.description_translations };
+          
+          if (result.description_translations) {
+             updates.description_translations = { 
+               ...prev.description_translations, 
+               ...result.description_translations,
+               zh: result.description_translations.zh || result.description || prev.description_translations?.zh || prev.description
+             };
           }
+          
           if ((!prev.dimensions || prev.dimensions.length === 0) && Array.isArray(result.dimensions)) {
             updates.dimensions = result.dimensions;
+          } else if (Array.isArray(result.dimensions) && result.dimensions.length > 0) {
+            // If we already have dimensions, append Agnes ones if they look like specifications
+            const agnesDims = result.dimensions.filter((d: any) => d.label?.includes('Agnes'));
+            if (agnesDims.length > 0) {
+              updates.dimensions = [...(prev.dimensions || []), ...agnesDims];
+            }
           }
+          
           if (!prev.price && result.price) updates.price = String(result.price);
 
           return { ...prev, ...updates };
         });
-        toast.success("AI 属性识别成功并已补全空白字段");
+        toast.success("AI 屬性識別成功並已補全空白字段（由 Agnes 提供動態翻譯）");
+      } else {
+        toast.error(`識別失敗: ${resp.error}`);
       }
     });
   }, [categories, tags, manufacturers, settings, runTask, form, handleError]);

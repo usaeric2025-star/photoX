@@ -184,22 +184,26 @@ export function PhotoInfoPanel({
     aiAnalyze: appLang === 'zh' ? 'AI 分析' : appLang === 'ms' ? 'Analisis AI' : 'AI Analyze',
   };
 
-  const hasZh = !!(data as Photo).description;
+  const hasZh = !!(data as Photo).description_translations?.zh || !!(data as Photo).description;
   const hasEn = !!(data as Photo).description_translations?.en;
   const hasMs = !!(data as Photo).description_translations?.ms;
   
   const showLanguageToggle = [hasZh, hasEn, hasMs].filter(Boolean).length > 1;
 
   let displayDesc = '';
-  if (descLang === 'ms' && hasMs) displayDesc = (data as Photo).description_translations!.ms!;
-  else if (descLang === 'en' && hasEn) displayDesc = (data as Photo).description_translations!.en!;
-  else if (descLang === 'zh' && hasZh) displayDesc = (data as Photo).description!;
+  if (descLang === 'ms' && hasMs) {
+    displayDesc = (data as Photo).description_translations!.ms!;
+  } else if (descLang === 'en' && hasEn) {
+    displayDesc = (data as Photo).description_translations!.en!;
+  } else if (descLang === 'zh' && hasZh) {
+    displayDesc = (data as Photo).description_translations?.zh || (data as Photo).description || '';
+  }
   
-  // if current language is empty, fallback to available
+  // fallback mechanism: if preferred language is empty, try others in order
   if (!displayDesc) {
-     if (hasEn) displayDesc = (data as Photo).description_translations!.en!;
-     else if (hasZh) displayDesc = (data as Photo).description!;
-     else if (hasMs) displayDesc = (data as Photo).description_translations!.ms!;
+    if (hasZh) displayDesc = (data as Photo).description_translations?.zh || (data as Photo).description || '';
+    else if (hasEn) displayDesc = (data as Photo).description_translations!.en!;
+    else if (hasMs) displayDesc = (data as Photo).description_translations!.ms!;
   }
 
   return (
