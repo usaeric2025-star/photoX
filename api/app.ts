@@ -1024,8 +1024,8 @@ app.get("/storage/audit", async (c) => {
     try {
         const supabase = await getSupabaseAdmin();
         const r2 = await getR2Client();
-        const bucket = process.env.R2_BUCKET_NAME!;
-        const publicUrlPrefix = (process.env.VITE_STORAGE_PUBLIC_URL || "").replace(/\/$/, '');
+        const bucket = serverEnv.R2_BUCKET_NAME!;
+        const publicUrlPrefix = (serverEnv.R2_PUBLIC_URL_PREFIX || "").replace(/\/$/, '');
 
         // 1. Get all DB records
         const { data: dbPhotos } = await supabase

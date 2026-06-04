@@ -70,7 +70,10 @@ export function AISecuritySection({
     }
   };
 
+  const [isSaving, setIsSaving] = React.useState<'agnes' | 'openrouter' | null>(null);
+
   const saveKey = async (provider: 'agnes' | 'openrouter', apiKey: string) => {
+    setIsSaving(provider);
     try {
       const res = await fetch('/api/admin/settings/save-key', {
         method: 'POST',
@@ -80,13 +83,16 @@ export function AISecuritySection({
       const data = await res.json();
       if (res.ok && data.success) {
         toast.success(`${provider === 'agnes' ? 'Agnes' : 'OpenRouter'} 密鑰已保存`);
-        if (provider === 'agnes') setAgnesKey('');
+        if (provider === 'agnes') setAgnesKey('••••••••••••••••');
         else setGeminiApiKey('••••••••••••••••');
         fetchKeysStatus();
       } else {
         toast.error("保存失敗");
       }
     } catch { toast.error("請求超時"); }
+    finally {
+      setIsSaving(null);
+    }
   };
 
   return (
@@ -127,7 +133,13 @@ export function AISecuritySection({
                         value={geminiApiKey === "••••••••••••••••" ? "" : geminiApiKey}
                         onChange={(e) => setGeminiApiKey(e.target.value)}
                     />
-                    <button onClick={() => saveKey('openrouter', geminiApiKey)} className="absolute right-1 top-1 py-1 px-2 bg-brand-navy text-white text-[8px] rounded-lg">保存</button>
+                    <button 
+                         onClick={() => saveKey('openrouter', geminiApiKey)} 
+                         disabled={isSaving === 'openrouter'}
+                         className="absolute right-1 top-1 py-1 px-3 bg-brand-navy text-white text-[8px] font-bold rounded-lg hover:bg-brand-navy/90 transition-colors disabled:opacity-50"
+                     >
+                         {isSaving === 'openrouter' ? '..' : '保存'}
+                     </button>
                  </div>
                  <button onClick={() => handleTest('openrouter')} className="w-full text-[9px] font-black p-2 bg-slate-100 rounded-lg">測試連線</button>
              </div>
@@ -154,7 +166,13 @@ export function AISecuritySection({
                      value={agnesKey}
                      onChange={(e) => setAgnesKey(e.target.value)}
                  />
-                 <button onClick={() => saveKey('agnes', agnesKey)} className="absolute right-1 top-1 py-1 px-2 bg-brand-navy text-white text-[8px] rounded-lg">保存</button>
+                 <button 
+                    onClick={() => saveKey('agnes', agnesKey)} 
+                    disabled={isSaving === 'agnes'}
+                    className="absolute right-1 top-1 py-1 px-3 bg-brand-navy text-white text-[8px] font-bold rounded-lg hover:bg-brand-navy/90 transition-colors disabled:opacity-50"
+                 >
+                    {isSaving === 'agnes' ? '..' : '保存'}
+                 </button>
              </div>
              <button onClick={() => handleTest('agnes')} className="w-full text-[9px] font-black p-2 bg-slate-100 rounded-lg">測試連線</button>
           </div>
