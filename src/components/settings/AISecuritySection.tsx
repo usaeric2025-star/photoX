@@ -176,7 +176,7 @@ export function AISecuritySection({
                    <span className="text-[8px] font-black text-brand-navy/40 uppercase whitespace-nowrap">Model ID</span>
                    <input 
                       type="text" 
-                      placeholder="模型型號 (預設: google/gemini-2.0-flash-exp:free)"
+                      placeholder="模型型號 (預設: google/gemini-2.5-flash-lite)"
                       className={`${inputClass} flex-1 bg-slate-50 text-[10px] font-bold`}
                       value={localCustomModel}
                       onChange={(e) => setLocalCustomModel(e.target.value)}

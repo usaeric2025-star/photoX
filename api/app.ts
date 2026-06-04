@@ -216,7 +216,7 @@ app.post("/ai/analyze", async (c) => {
         
         const { decrypt } = await import('./lib/encryption.js');
         const apiKey = decrypt(openrouterSecret.value);
-        const model = (customModelSecret as any)?.custom_model || 'google/gemini-2.0-flash-exp:free';
+        const model = (customModelSecret as any)?.custom_model || 'google/gemini-2.5-flash-lite';
 
         // 2. Identification via OpenRouter (Gemini)
         const { OpenRouterProvider } = await import('./lib/ai/providerFactory.js');
