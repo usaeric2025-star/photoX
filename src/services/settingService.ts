@@ -54,62 +54,61 @@ export const fetchSettings = async () => {
     return data;
 };
 
+/**
+ * 核心設置字段白名單 (Database Columns Only)
+ * 嚴禁將前端狀態字段 (UI state) 直接傳入數據庫
+ */
+const SETTINGS_COLUMNS = [
+    'id', 'logo_url', 'ai_provider', 'api_key', 'model_name', 
+    'access_passcode', 'whatsapp_1', 'whatsapp_1_name', 
+    'whatsapp_2', 'whatsapp_2_name', 'tags_json', 'updated_at'
+];
+
 export const saveSettings = async (settings: Partial<AppSettings> & Record<string, unknown>) => {
     try {
-        const payload = { ...settings };
+        const rawPayload = { ...settings };
+        const payload: Record<string, any> = { id: 1 };
         
-        // Map fields to requested columns
-        if (payload.gemini_api_key !== undefined) {
-            if (payload.gemini_api_key === "••••••••••••••••") {
-                // Ignore placeholder to prevent overwriting correct DB api_key with dummy text
-                delete payload.gemini_api_key;
-            } else {
-                payload.api_key = payload.gemini_api_key;
-            }
-        }
-        if (payload.custom_model !== undefined) {
-            payload.model_name = payload.custom_model;
-        }
-        if (payload.provider !== undefined) {
-            (payload as any).ai_provider = payload.provider;
-            delete payload.provider;
-        }
+        // 1. 字段映射與預處理
+        if (rawPayload.gemini_api_key === "••••••••••••••••") delete rawPayload.gemini_api_key;
+        
+        const mapping: Record<string, string> = {
+            'gemini_api_key': 'api_key',
+            'custom_model': 'model_name',
+            'provider': 'ai_provider'
+        };
 
-        // Handle hot tags
-        if (payload.pinned_tags || payload.hot_tags_count !== undefined || payload.hot_tag_threshold !== undefined) {
+        // 2. 根據白名單構建最終 Payload
+        Object.entries(rawPayload).forEach(([key, value]) => {
+            const dbKey = mapping[key] || key;
+            if (SETTINGS_COLUMNS.includes(dbKey)) {
+                payload[dbKey] = value;
+            }
+        });
+
+        // 3. 處理熱點標籤 JSON
+        if (rawPayload.pinned_tags || rawPayload.hot_tags_count !== undefined) {
             payload.tags_json = JSON.stringify({
-                pinned_tags: payload.pinned_tags || [],
-                hot_tags_count: payload.hot_tags_count ?? 9,
-                hot_tag_threshold: payload.hot_tag_threshold ?? 1,
+                pinned_tags: rawPayload.pinned_tags || [],
+                hot_tags_count: rawPayload.hot_tags_count ?? 9,
+                hot_tag_threshold: rawPayload.hot_tag_threshold ?? 1,
             });
         }
 
-        // REMOVE all redundant fields that are now in separate tables
-        delete payload.gemini_api_key;
-        delete payload.custom_model;
-        delete payload.categories;
-        delete payload.tags; // Keep tags_json!
-        delete payload.manufacturers;
-        delete payload.manufacturers_json;
-        delete payload.categories_json;
-        
-        delete payload.pinned_tags;
-        delete payload.hot_tags_count;
-        delete payload.hot_tag_threshold;
+        payload.updated_at = new Date().toISOString();
 
         const { error: upsertError } = await supabase
             .from('settings')
-            .upsert({ ...payload, id: 1 }, { onConflict: 'id' });
+            .upsert(payload, { onConflict: 'id' });
             
         if (upsertError) {
-            console.error("Error upserting settings:", upsertError);
-            throw ErrorFactory.wrap(upsertError, 'saveSettings');
+            throw new Error(`DB_ERROR: ${upsertError.message || 'Unknown database error'}`);
         }
         
         return true;
-    } catch (err: unknown) {
-        console.error("Error in saveSettings:", err);
-        throw ErrorFactory.wrap(err instanceof Error ? err : new Error(String(err)), 'saveSettings');
+    } catch (err: any) {
+        console.error("Save settings fatal error:", err);
+        throw ErrorFactory.wrap(err, 'saveSettings');
     }
 };
 

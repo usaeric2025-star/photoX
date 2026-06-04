@@ -62,7 +62,8 @@ export function AISecuritySection({
       if (data.success) {
         toast.success(`${provider === 'agnes' ? 'Agnes' : 'OpenRouter'} 连接成功！`);
       } else {
-        toast.error(`${provider === 'agnes' ? 'Agnes' : 'OpenRouter'} 异常: ${data.error || '500 Error'}`);
+        const errMsg = typeof data.error === 'object' ? JSON.stringify(data.error) : (data.error || '500 Error');
+        toast.error(`${provider === 'agnes' ? 'Agnes' : 'OpenRouter'} 异常: ${errMsg}`);
       }
     } catch {
       toast.error("测试请求错误或超时");
@@ -125,39 +126,62 @@ export function AISecuritySection({
                 </div>
                 
                 <div className="space-y-3">
-                  <div className="space-y-1">
-                    <input 
-                      type="password" 
-                      placeholder={keysStatus.agnes ? "•••••••••••••••• (已保存)" : "輸入 Agnes API 密鑰..."}
-                      className={`${inputClass} font-mono w-full bg-slate-50`}
-                      value={agnesKey}
-                      onChange={(e) => setAgnesKey(e.target.value)}
-                      onBlur={async () => {
-                        if (!agnesKey) return;
-                        try {
-                          const res = await fetch('/api/admin/settings/save-key', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ provider: 'agnes', apiKey: agnesKey, model: 'agnes-ai' })
-                          });
-                          const data = await res.json();
-                          if (res.ok && data.success) {
-                            toast.success("Agnes 密鑰驗證通過");
-                            setAgnesKey('');
-                            fetchKeysStatus();
-                          } else {
-                            toast.error(data.error || "驗證失敗");
-                          }
-                        } catch { toast.error("請求超時"); }
-                      }}
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <p className="text-[9px] font-black text-brand-navy/40 uppercase ml-1 tracking-widest">模型型號 / Model</p>
+                      <input 
+                        type="text" 
+                        placeholder="默認: agnes-2.0-flash"
+                        className={`${inputClass} w-full bg-slate-50 text-[10px] font-bold`}
+                        value={customModel.includes('agnes') ? customModel : 'agnes-2.0-flash'}
+                        onChange={(e) => setCustomModel(e.target.value)}
+                        onBlur={(e) => setSettingField('custom_model' as any, e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1 relative">
+                      <p className="text-[9px] font-black text-brand-navy/40 uppercase ml-1 tracking-widest">API 密鑰 / Key</p>
+                      <div className="relative group">
+                        <input 
+                          type="password" 
+                          placeholder={keysStatus.agnes ? "•••••••••••••••• (已保存)" : "輸入 Agnes API 密鑰..."}
+                          className={`${inputClass} font-mono w-full bg-slate-50 pr-16`}
+                          value={agnesKey}
+                          onChange={(e) => setAgnesKey(e.target.value)}
+                        />
+                        {agnesKey && (
+                          <button 
+                            onClick={async () => {
+                              try {
+                                const res = await fetch('/api/admin/settings/save-key', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ provider: 'agnes', apiKey: agnesKey, model: customModel || 'agnes-2.0-flash' })
+                                });
+                                const data = await res.json();
+                                if (res.ok && data.success) {
+                                  toast.success("Agnes 密鑰已保存");
+                                  setAgnesKey('');
+                                  fetchKeysStatus();
+                                } else {
+                                  const errMsg = typeof data.error === 'object' ? JSON.stringify(data.error) : (data.error || "驗證失敗");
+                                  toast.error(errMsg);
+                                }
+                              } catch { toast.error("請求超時"); }
+                            }}
+                            className="absolute right-1 top-1/2 -translate-y-1/2 px-2 py-1 bg-brand-navy text-white text-[8px] font-black uppercase rounded-lg shadow-sm"
+                          >
+                            保存
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                   <button 
                     disabled={isTesting === 'agnes'}
                     onClick={() => handleTest('agnes')}
-                    className="w-full py-3 bg-brand-navy text-white rounded-2xl text-[9px] font-black uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand-navy/10"
+                    className="w-full py-3 bg-brand-navy/5 text-brand-navy border border-brand-navy/10 rounded-2xl text-[9px] font-black uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2"
                   >
-                    {isTesting === 'agnes' ? '正在診斷...' : '立即測試連通性'}
+                    {isTesting === 'agnes' ? '正在診斷...' : '測試連通性'}
                   </button>
                 </div>
               </div>
@@ -179,43 +203,53 @@ export function AISecuritySection({
                       className={`${inputClass} w-full bg-slate-50 text-[10px] font-bold`}
                       value={customModel}
                       onChange={(e) => setCustomModel(e.target.value)}
-                      onBlur={(e) => setSettingField('custom_model', e.target.value)}
+                      onBlur={(e) => {
+                        if (e.target.value !== customModel) {
+                          setSettingField('custom_model' as any, e.target.value);
+                        }
+                      }}
                     />
                   </div>
-                  <div className="space-y-1">
+                  <div className="relative group">
                     <input 
                       type="password" 
                       placeholder={keysStatus.openrouter || geminiApiKey === "••••••••••••••••" ? "•••••••••••••••• (已保存)" : "輸入 OpenRouter API 密鑰..."}
-                      className={`${inputClass} font-mono w-full bg-slate-50`}
+                      className={`${inputClass} font-mono w-full bg-slate-50 pr-24`}
                       value={geminiApiKey === "••••••••••••••••" ? "" : geminiApiKey}
                       onChange={(e) => setGeminiApiKey(e.target.value)}
-                      onBlur={async (e) => {
-                        const val = e.target.value;
-                        if (!val || val === "••••••••••••••••") return;
-                        try {
-                          const res = await fetch('/api/admin/settings/save-key', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ provider: 'openrouter', apiKey: val, model: customModel })
-                          });
-                          const data = await res.json();
-                          if (res.ok && data.success) {
-                            toast.success("OpenRouter 已同步");
-                            setSettingField('gemini_api_key', val);
-                            fetchKeysStatus();
-                          } else {
-                            toast.error(data.error || "校驗失敗");
-                          }
-                        } catch { toast.error("同步超時"); }
-                      }}
                     />
+                    {geminiApiKey && geminiApiKey !== "••••••••••••••••" && (
+                      <button 
+                        onClick={async () => {
+                          try {
+                            const res = await fetch('/api/admin/settings/save-key', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ provider: 'openrouter', apiKey: geminiApiKey, model: customModel })
+                            });
+                            const data = await res.json();
+                            if (res.ok && data.success) {
+                              toast.success("OpenRouter 已保存");
+                              setSettingField('gemini_api_key', geminiApiKey);
+                              fetchKeysStatus();
+                            } else {
+                              const errMsg = typeof data.error === 'object' ? JSON.stringify(data.error) : (data.error || "校驗失敗");
+                              toast.error(errMsg);
+                            }
+                          } catch { toast.error("同步超時"); }
+                        }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 bg-brand-gold text-white text-[8px] font-black uppercase rounded-lg shadow-sm"
+                      >
+                        保存
+                      </button>
+                    )}
                   </div>
                   <button 
                     disabled={isTesting === 'openrouter'}
                     onClick={() => handleTest('openrouter')}
-                    className="w-full py-3 bg-brand-gold text-white rounded-2xl text-[9px] font-black uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand-gold/10"
+                    className="w-full py-3 bg-brand-gold/5 text-brand-gold border border-brand-gold/10 rounded-2xl text-[9px] font-black uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2"
                   >
-                    {isTesting === 'openrouter' ? '正在診斷...' : '立即測試連通性'}
+                    {isTesting === 'openrouter' ? '正在診斷...' : '測試連接性'}
                   </button>
                 </div>
               </div>
@@ -238,7 +272,11 @@ export function AISecuritySection({
                   className={`${inputClass} font-mono tracking-widest w-full bg-slate-50`}
                   value={accessPasscode}
                   onChange={(e) => setAccessPasscode(e.target.value)}
-                  onBlur={(e) => setSettingField('access_passcode', e.target.value)}
+                  onBlur={(e) => {
+                    if (e.target.value !== accessPasscode) {
+                       setSettingField('access_passcode', e.target.value);
+                    }
+                  }}
                 />
               </div>
               <div className="p-4 bg-brand-navy/[0.02] rounded-2xl border border-brand-navy/5">
@@ -267,6 +305,7 @@ export function AISecuritySection({
           onChange={(e) => setAccessPasscode(e.target.value)}
           onBlur={(e) => setSettingField('access_passcode', e.target.value)}
         />
+
       </div>
     </div>
   );

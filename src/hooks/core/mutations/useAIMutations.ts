@@ -11,7 +11,7 @@ export const useAIGroupMutation = createMutationHook({
     // 1. 获取照片信息
     const { data: photos, error } = await supabase
       .from('furniture_items')
-      .select('id, name, tag_ids')
+      .select('*')
       .in('id', photoIds);
 
     if (error) throw ErrorFactory.wrap(error, 'useAIGroupMutation - fetchPhotos');

@@ -40,7 +40,7 @@ export abstract class BaseAIProvider {
 
 export class AgnesProvider extends BaseAIProvider {
     name = "agnes";
-    defaultModel = "agnes-ai";
+    defaultModel = "agnes-2.0-flash";
     baseUrl = "https://apihub.agnes-ai.com/v1";
 
     async chat(messages: any[]): Promise<AIResponse> {

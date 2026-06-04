@@ -42,6 +42,7 @@ export function SelectionToolbar({
           title: '无法合组',
           message: '请至少选择两张照片才能进行合组。',
           type: 'info',
+          onConfirm: () => update({ alertDialog: null }),
         }
       });
       return;

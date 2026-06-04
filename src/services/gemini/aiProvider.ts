@@ -1,4 +1,4 @@
-import { reportError } from '@/lib/error/errorReporter';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 export type AIProvider = 'agnes' | 'gemini';
 
@@ -18,7 +18,6 @@ export async function callAIAnalysis(
     return await callGeminiAPI(prompt, imageBase64, modelName, apiKey, signal);
   } catch (error) {
     console.warn(`[${provider}] failed, falling back to gemini:`, error);
-    await reportError(error, `AI analysis fallback to gemini`);
     return await callGeminiAPI(prompt, imageBase64, modelName, apiKey, signal);
   }
 }
