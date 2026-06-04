@@ -56,7 +56,11 @@ export function AISecuritySection({
       const res = await fetch('/api/ai/test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ provider })
+        body: JSON.stringify({ 
+          provider,
+          apiKey: provider === 'agnes' ? agnesKey : (geminiApiKey === "••••••••••••••••" ? "" : geminiApiKey),
+          model: customModel
+        })
       });
       const data = await res.json();
       if (data.success) {

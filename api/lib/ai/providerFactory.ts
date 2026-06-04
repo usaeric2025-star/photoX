@@ -128,12 +128,20 @@ export async function getAIProvider(providerName: string, supabase: any) {
     
     // 優先確保 Agnes 使用正確的預設模型
     let model = settings?.model_name;
+    
+    // 如果是 Agnes，強制預設模型，或者是用戶自定義模型
     if (providerName === 'agnes') {
-        model = 'agnes-2.0-flash';
-    } else if (providerName === 'openrouter' && (!model || model.startsWith('agnes'))) {
-        model = 'google/gemini-2.0-flash-exp:free';
+        if (!model || model.startsWith('google/') || model.includes('gemini')) {
+             model = 'agnes-2.0-flash';
+        }
+    } else if (providerName === 'openrouter') {
+        // 若 OpenRouter 誤用了 Agnes 模型，強制修正
+        if (!model || model.startsWith('agnes')) {
+            model = 'google/gemini-2.0-flash-exp:free';
+        }
     }
-
+    
+    console.log(`[getAIProvider] Using provider: ${providerName}, model: ${model}`);  
     const config = { apiKey, model };
 
     if (providerName === 'agnes') return new AgnesProvider(config);

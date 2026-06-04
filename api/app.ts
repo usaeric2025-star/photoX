@@ -98,12 +98,40 @@ app.onError((err, c) => {
 
 // --- API Routes ---
 app.post("/ai/test", async (c) => {
-    const { provider } = await c.req.json();
+    const { provider, apiKey, model } = await c.req.json();
     const supabase = await getSupabaseAdmin();
+    
+    // 如果傳入 apiKey/model，則使用傳入的，否則從 DB 獲取
+    let aiConfig: any;
+    if (apiKey) {
+        aiConfig = { apiKey, model };
+    } else {
+        // 從 DB 獲取
+        const { data: secret } = await supabase.from('secrets').select('value').eq('name', provider).maybeSingle();
+        if (!secret?.value) throw new Error(`未配置 ${provider} 的 API 密鑰`);
+        const { decrypt } = await import('./lib/encryption.js');
+        aiConfig = { apiKey: decrypt(secret.value), model };
+    }
+    
     const ai = await getAIProvider(provider, supabase);
+    // ... 需要將 aiConfig 傳給 getAIProvider ...
+    // Actually, getAIProvider is what loads from DB.
+    // I need to change getAIProvider signature or just handle it here.
+    // Let's just handle it here by creating the provider directly.
+    
+    let aiProvider: any;
+    if (provider === 'agnes') {
+        const { AgnesProvider } = await import('./lib/ai/providerFactory.js');
+         if (!aiConfig.model) aiConfig.model = 'agnes-2.0-flash';
+         aiProvider = new AgnesProvider(aiConfig);
+    } else {
+        const { OpenRouterProvider } = await import('./lib/ai/providerFactory.js');
+        if (!aiConfig.model) aiConfig.model = 'google/gemini-2.0-flash-exp:free';
+        aiProvider = new OpenRouterProvider(aiConfig);
+    }
     
     // Use a minimal check instead of a full image analyze
-    const result = await ai.chat([{ role: 'user', content: 'Connection test' }]);
+    const result = await aiProvider.chat([{ role: 'user', content: 'Connection test' }]);
     if (!result.success) throw new Error(result.error);
     
     return c.json({ success: true, provider });
