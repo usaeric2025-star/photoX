@@ -40,6 +40,7 @@ export function TagEditor({
   const { settings, updateSettings } = useSettings();
   const { handleError } = useErrorHandler();
   const [activeActionTag, setActiveActionTag] = useState<Tag | null>(null);
+  const portalOpenedAt = useRef<number>(0);
 
   const togglePin = async (tagId: string) => {
     try {
@@ -124,7 +125,10 @@ export function TagEditor({
               isPinned={isPinned}
               isDisabled={isDisabled}
               onToggle={onToggleTag}
-              onLongPress={() => setActiveActionTag(tag)}
+              onLongPress={() => {
+                portalOpenedAt.current = Date.now();
+                setActiveActionTag(tag);
+              }}
             />
           );
         })}
@@ -132,14 +136,15 @@ export function TagEditor({
 
       {activeActionTag && createPortal(
         <div
-          className="fixed inset-0 z-[9999] bg-slate-950/40 flex items-center justify-center p-6 backdrop-blur-sm cursor-pointer animate-in fade-in duration-200"
-          onClick={() => setActiveActionTag(null)}
+          className="fixed inset-0 z-[10000] bg-slate-950/40 flex items-center justify-center p-6 backdrop-blur-sm animate-in fade-in duration-200"
           onPointerDown={(e) => {
+            // Prevent closure on the same click/touch that opened it
+            if (Date.now() - portalOpenedAt.current < 400) return;
             if (e.target === e.currentTarget) setActiveActionTag(null);
           }}
         >
           <div
-            className="glass-morphism rounded-3xl p-8 w-full max-w-[280px] shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-200 cursor-default bg-white border border-slate-200"
+            className="glass-morphism rounded-3xl p-8 w-full max-w-[280px] shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-200 bg-white border border-slate-200"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center space-y-1">
@@ -230,7 +235,7 @@ export function TagEditor({
 function TagButton({ tag, isSelected, isHot, isPinned, isDisabled, onToggle, onLongPress: onLongPressProp }: any) {
   const btnRef = useRef<HTMLButtonElement>(null);
   useLongPress(btnRef, {
-    delay: 600,
+    delay: 400,
     onLongPress: onLongPressProp
   });
 
@@ -243,7 +248,7 @@ function TagButton({ tag, isSelected, isHot, isPinned, isDisabled, onToggle, onL
           WebkitTouchCallout: "none",
           WebkitUserSelect: "none",
           userSelect: "none",
-          touchAction: "manipulation",
+          touchAction: "none",
         }}
         onClick={(e) => {
           e.stopPropagation();

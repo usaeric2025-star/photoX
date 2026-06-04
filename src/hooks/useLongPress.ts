@@ -63,11 +63,21 @@ export function useLongPress(
 
     const handleEnd = (e: PointerEvent | TouchEvent) => {
       clearTimer();
-      if (isLongPress.current && e.cancelable) {
-         // Try to prevent click if it was a long press, though native click might still fire.
-         // Calling e.preventDefault() on touchend can block click.
-         // We do this to prevent standard click event when a long press occurred.
-         e.preventDefault();
+      if (isLongPress.current) {
+        if (e.cancelable) e.preventDefault();
+        
+        // Add a one-time capture listener to swallow the following click
+        const swallowClick = (clickEvent: MouseEvent) => {
+          clickEvent.stopImmediatePropagation();
+          clickEvent.preventDefault();
+          el.removeEventListener('click', swallowClick, true);
+        };
+        el.addEventListener('click', swallowClick, true);
+        
+        // Safety timeout to remove the listener if no click fires
+        setTimeout(() => {
+          el.removeEventListener('click', swallowClick, true);
+        }, 50);
       }
     };
 

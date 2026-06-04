@@ -96,10 +96,11 @@ export function AdminGridContainer({
     const files = e.target.files;
     if (!files || files.length === 0 || !isManagement) return;
 
-    const { newFiles: uniqueFiles, duplicateHashes: duplicateFiles } = checkDuplicateBatch(Array.from(files));
+    const fileArray = Array.from(files);
+    const { newFiles: uniqueFiles, duplicateHashes } = checkDuplicateBatch(fileArray);
 
-    if (duplicateFiles.length > 0) {
-      toast.warning(`已重新检查并跳过 ${duplicateFiles.length} 张重复照片`);
+    if (duplicateHashes.length > 0) {
+      toast.warning(`已跳过 ${duplicateHashes.length} 张本地重复照片`);
     }
 
     if (uniqueFiles.length === 0) {
@@ -108,56 +109,72 @@ export function AdminGridContainer({
     }
 
     const taskId = addTask({ 
-      name: `上传 ${uniqueFiles.length} 张照片`,
-      message: '正在准备中...'
+      name: `批量上传 (${uniqueFiles.length}张)`,
+      message: '正在初始化队列...'
     });
 
     try {
-      const fileArray = Array.from(uniqueFiles);
-      
-      const processedImages = await processImageFiles(fileArray, (count, total) => {
-         updateTask(taskId, {
-            progress: Math.round((count / total) * 50),
-            message: `正在准备 (${count}/${total})`
-         });
-      });
+      const savedPhotos: Photo[] = [];
+      let successCount = 0;
 
-      const photoData: Photo[] = processedImages.map((result) => ({
-         id: `temp-${crypto.randomUUID()}`,
-         name: result.file.name.split('.')[0],
-         uri: result.dataUrl,
-         image_hash: result.hash,
-         thumb_hash: result.thumbHash,
-         created_at: new Date().toISOString(),
-         updated_at: new Date().toISOString(),
-         _fileSize: result.file.size,
-         _fileName: result.file.name,
-         _lastModified: result.file.lastModified
-      } as unknown as Photo));
+      // Import services sequentially to save initial memory
+      const { processImageFile } = await import('@/lib/image/imageProcess');
+      const { savePhotoToCloud } = await import("@/services/photo/photoUploadService");
 
-      updateTask(taskId, { progress: 50, message: `正在上传 ${files.length} 张照片...` });
-      
-      const savedPhotos = await savePhotosToCloudBatch(user?.id || 'staff', photoData, (count) => {
-        const pct = 50 + Math.round((count / uniqueFiles.length) * 50);
+      // Sequential Processing Loop - Crucial for Mobile Stability
+      for (let i = 0; i < uniqueFiles.length; i++) {
+        const file = uniqueFiles[i];
+        const progress = Math.round((i / uniqueFiles.length) * 100);
+        
         updateTask(taskId, { 
-          progress: pct, 
-          message: `正在保存 (${count}/${uniqueFiles.length})` 
+          progress, 
+          message: `正在处理第 ${i + 1}/${uniqueFiles.length} 张: ${file.name}` 
         });
-      });
 
-      const skippedCloud = photoData.length - savedPhotos.length;
-      updateTask(taskId, { status: 'completed', progress: 100, message: '上传完成' });
-      
-      if (skippedCloud > 0) {
-        toast.success(`成功上传 ${savedPhotos.length} 张，云端排重跳过 ${skippedCloud} 张`);
-      } else {
-        toast.success(`上传成功 (${savedPhotos.length} 张)`);
+        try {
+          // 1. Process (Resize, ThumbHash) - One at a time to save RAM
+          const processed = await processImageFile(file);
+          
+          // 2. Upload to Cloud
+          const tempPhoto: Photo = {
+            id: `temp-${crypto.randomUUID()}`,
+            name: processed.file.name.split('.')[0],
+            uri: processed.dataUrl,
+            image_hash: processed.hash,
+            thumb_hash: processed.thumbHash,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          } as unknown as Photo;
+
+          const saved = await savePhotoToCloud(user?.id || 'staff', tempPhoto);
+          if (saved) {
+            savedPhotos.push(saved);
+            successCount++;
+          }
+
+          // Force garbage collection hint (release dataUrl)
+          (processed as any).dataUrl = '';
+        } catch (itemErr) {
+          console.error(`Failed to process/upload ${file.name}:`, itemErr);
+        }
       }
+
+      updateTask(taskId, { status: 'completed', progress: 100, message: `上传完成: 成功 ${successCount} 张` });
+      toast.success(`上传完成 (成功 ${successCount}/${uniqueFiles.length})`);
+      
       queryClient.invalidateQueries({ queryKey: photoKeys.all });
+
+      // 3. Auto AI Identification (Optional Feature)
+      if (savedPhotos.length > 0 && onBatchAiAnalyze) {
+        // We wait a bit to let the list refresh
+        setTimeout(() => {
+          onBatchAiAnalyze(savedPhotos);
+        }, 1000);
+      }
+
     } catch (err) {
-      handleError(ErrorFactory.wrap(err, '上传照片'), '上传照片失败');
-      updateTask(taskId, { status: 'error', progress: 100, message: '上传失败' });
-      uniqueFiles.forEach(file => removeFromDuplicateCache(file));
+      handleError(ErrorFactory.wrap(err, '批量操作'), '上传失败');
+      updateTask(taskId, { status: 'error', progress: 100, message: '执行中断' });
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = '';
     }

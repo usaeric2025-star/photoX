@@ -86,160 +86,32 @@ export function AdminScreen() {
       : `AI 批量识别 (${targetPhotos.length}张)`;
 
     await runTask(taskTitle, async () => {
-      let supabase: any;
-      let analyzeGroup: any;
-      let analyzeProductPhoto: any;
-
-      try {
-        const supabaseMod = await import('@/lib/supabase');
-        supabase = supabaseMod.supabase;
-        
-        const analyzeGroupMod = await import("@/services/gemini/groupAnalysis");
-        analyzeGroup = analyzeGroupMod.analyzeGroup;
-
-        const geminiMod = await import("@/services/gemini");
-        analyzeProductPhoto = geminiMod.analyzeProductPhoto;
-      } catch (err: any) {
-        console.error("加载 AI 识别或 Supabase 模块失败:", err);
-        const isDynamicImportError = 
-          err.message?.includes('Failed to fetch dynamically imported module') ||
-          err.name === 'TypeError' ||
-          String(err).includes('dynamically imported module') ||
-          String(err).includes('loading chunk');
-
-        if (isDynamicImportError) {
-          toast.error("检测到系统大版本由于更新产生了缓存割裂，正在为您自动重载页面以加载最新版本...");
-          setTimeout(() => {
-            window.location.reload();
-          }, 1500);
-          return;
-        }
-        throw err;
-      }
-      
       let successCount = 0;
-      let totalPhotosToProcess = targetPhotos.length;
+      const totalPhotosToProcess = targetPhotos.length;
 
-      // 1. Process groups first (each group separately!)
-      for (const [groupId, groupPhotos] of Array.from(groupedPhotosMap.entries())) {
+      // Import the service
+      const { analyzePhoto } = await import('@/services/aiService');
+      
+      // Process one by one (better for tracking progress and memory on mobile)
+      for (const p of targetPhotos) {
         try {
-          // A. Group Attribute AI Analyze
-          const allTagIds = Array.from(new Set(groupPhotos.flatMap(gp => gp.tag_ids || [])));
-          let tagMap = new Map<string, string>();
-          if (allTagIds.length > 0) {
-            const { data: tagsData } = await supabase.from('tags').select('id, name').in('id', allTagIds);
-            tagMap = new Map((tagsData || []).map((t: any) => [String(t.id), t.name]));
-          }
-          const photosForAnalysis = groupPhotos.map(gp => ({
-            ...gp,
-            tagNames: (gp.tag_ids || []).map((tid: any) => tagMap.get(String(tid)) || '').filter(Boolean)
-          }));
-
-          const groupAnalysis = await analyzeGroup(photosForAnalysis);
-          if (groupAnalysis) {
-            await supabase
-              .from('groups')
-              .update({
-                name: groupAnalysis.name,
-                description: groupAnalysis.description,
-                colors: groupAnalysis.colors,
-                materials: groupAnalysis.materials,
-                name_translations: { zh: groupAnalysis.name },
-                description_translations: { zh: groupAnalysis.description },
-              })
-              .eq('id', groupId);
-          }
-        } catch (err) {
-          console.error(`[AI Group Analyze] Failed for group ${groupId}:`, err);
-        }
-
-        // B. Run individual photo-level analyze on all items of this group
-        for (const p of groupPhotos) {
-          const imageUrl = p.uri || p.image_url;
-          if (!imageUrl) {
-            toast.error(`照片 (${p.id}) 缺少图片链接`);
-            continue;
-          }
-
-          try {
-            const result = await analyzeProductPhoto(
-              imageUrl,
-              categories,
-              tags,
-              manufacturers,
-              settings?.gemini_api_key || "",
-              "google",
-              settings?.custom_model || ""
-            );
-
-             if (result) {
-              const updates: any = {};
-              if (result.name || result.name_en || result.name_ms) {
-                updates.name = {
-                  zh: result.name || '',
-                  en: result.name_en || result.name || '',
-                  ms: result.name_ms || result.name || ''
-                };
-              }
-              if (result.category_id) updates.category_id = String(result.category_id);
-              if (Array.isArray(result.tag_ids)) {
-                updates.tag_ids = result.tag_ids.map((id: any) => String(id));
-              }
-              if (result.manufacturer_id) updates.manufacturer_id = String(result.manufacturer_id);
-              if (result.model_number) updates.model_number = result.model_number;
-              if (result.manual_code) updates.manual_code = result.manual_code;
-              if (result.description) updates.description = result.description;
-              if (result.description_translations) {
-                updates.description_translations = result.description_translations;
-              }
-              if (Array.isArray(result.dimensions)) updates.dimensions = result.dimensions;
-              if (result.price) updates.price = String(result.price);
-
-              await updatePhoto(p.id, updates);
-              successCount++;
-            }
-          } catch (err: any) {
-            console.error(`Failed to analyze photogroup item ${p.id}:`, err);
-            handleError(err, `组内照片识别失败: ${p.name || '照片'} - ${err.message || ''}`);
-          }
-        }
-      }
-
-      // 2. Process ungrouped photos
-      for (const p of ungroupedPhotos) {
-        const imageUrl = p.uri || p.image_url;
-        if (!imageUrl) {
-          toast.error(`照片 (${p.id}) 缺少图片链接`);
-          continue;
-        }
-
-        try {
-          const result = await analyzeProductPhoto(
-            imageUrl,
-            categories,
-            tags,
-            manufacturers,
-            settings?.gemini_api_key || "",
-            "google",
-            settings?.custom_model || ""
-          );
-
-          if (result) {
+          const resp = await analyzePhoto(p.id);
+          
+          if (resp.ok) {
+            const result = resp.value;
             const updates: any = {};
-            if (result.name || result.name_en || result.name_ms) {
+            
+            if (result.name) {
               updates.name = {
-                zh: result.name || '',
-                en: result.name_en || result.name || '',
-                ms: result.name_ms || result.name || ''
+                zh: result.name,
+                en: result.description_translations?.en || result.name,
+                ms: result.description_translations?.ms || result.name
               };
             }
             if (result.category_id) updates.category_id = String(result.category_id);
             if (Array.isArray(result.tag_ids)) {
               updates.tag_ids = result.tag_ids.map((id: any) => String(id));
             }
-            if (result.manufacturer_id) updates.manufacturer_id = String(result.manufacturer_id);
-            if (result.model_number) updates.model_number = result.model_number;
-            if (result.manual_code) updates.manual_code = result.manual_code;
             if (result.description) updates.description = result.description;
             if (result.description_translations) {
               updates.description_translations = result.description_translations;
@@ -252,16 +124,15 @@ export function AdminScreen() {
           }
         } catch (err: any) {
           console.error(`Failed to analyze photo ${p.id}:`, err);
-          handleError(err, `识别失败: ${p.name || '照片'} - ${err.message || ''}`);
         }
       }
 
       if (successCount === 0 && totalPhotosToProcess > 0) {
-        toast.error(`全部识别失败或未更新 (${totalPhotosToProcess} 张), 请查看控制台或错误提示`);
+        toast.error(`全部识别失败 (${totalPhotosToProcess} 张)`);
       } else if (successCount < totalPhotosToProcess) {
-        toast.warning(`部分识别失败: 成功 ${successCount}/${totalPhotosToProcess} 张`);
+        toast.warning(`部分识别完成: 成功 ${successCount}/${totalPhotosToProcess}`);
       } else {
-        toast.success(`批量识别完成: 成功识别 ${successCount}/${totalPhotosToProcess} 张照片`);
+        toast.success(`批量识别成功: ${successCount} 张照片已完成`);
       }
     });
   }, [categories, tags, manufacturers, settings, runTask, updatePhoto, handleError]);

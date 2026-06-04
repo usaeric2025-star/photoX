@@ -30,7 +30,7 @@ export const ManufacturerItem = ({
   });
 
   useLongPress(menuRef, {
-    delay: 600,
+    delay: 400,
     onLongPress: () => {
       setActiveMenuId(manufacturer.id);
     }
@@ -39,6 +39,7 @@ export const ManufacturerItem = ({
   return (
     <div
       ref={menuRef}
+      style={{ touchAction: "none" }}
       className={`bg-white border border-brand-navy/10 pl-3 pr-2 py-1 rounded-full flex items-center gap-2 shadow-sm transition-all active:scale-95 relative ${activeMenuId === manufacturer.id ? "bg-brand-gold/10 border-brand-gold/30 scale-95" : ""}`}
     >
       <div className="flex flex-col">

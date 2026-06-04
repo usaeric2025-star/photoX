@@ -7,6 +7,8 @@ import { ChevronLeft, History, CheckCircle2, XCircle, Clock } from 'lucide-react
 import { useNavigate } from '@tanstack/react-router';
 import { ROUTES } from '@/config/constants';
 
+import { useUIStore } from '@/store/useUIStore';
+
 // Helper for MM-dd HH:mm
 const formatLogDate = (date: Date) => {
   const mm = String(date.getMonth() + 1).padStart(2, '0');
@@ -22,6 +24,8 @@ const formatLogDate = (date: Date) => {
  */
 export const MaintenanceHistoryPage = () => {
   const navigate = useNavigate();
+  const update = useUIStore(s => s.update);
+  const activeScreen = useUIStore(s => s.activeScreen);
   
   const { data: logs, isLoading } = useQuery({
     queryKey: ['maintenance', 'logs'],
@@ -33,6 +37,14 @@ export const MaintenanceHistoryPage = () => {
     }
   });
 
+  const handleBack = () => {
+    if (activeScreen === 'history_maintenance') {
+      update({ activeScreen: 'gallery' });
+    } else {
+      navigate({ to: ROUTES.ADMIN });
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-8 animate-in fade-in slide-in-from-bottom-2">
       <div className="flex items-center justify-between">
@@ -40,7 +52,7 @@ export const MaintenanceHistoryPage = () => {
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={() => navigate({ to: ROUTES.ADMIN })}
+            onClick={handleBack}
             className="rounded-full"
           >
             <ChevronLeft className="w-5 h-5" />

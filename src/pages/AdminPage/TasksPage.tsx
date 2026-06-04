@@ -2,7 +2,7 @@ import React from 'react';
 import { 
   History, CheckCircle2, AlertCircle, Clock, 
   Terminal, RefreshCw, BarChart3, Database, 
-  Zap, PackageSearch
+  Zap, PackageSearch, ChevronLeft
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useGlobalTasks } from '@/hooks/admin/useGlobalTasks';
@@ -10,9 +10,11 @@ import { UnifiedTask } from '@/features/tasks/taskTypes';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { useUIStore } from '@/store/useUIStore';
 
 export default function TasksPage() {
   const { tasks, isLoading, refetch } = useGlobalTasks();
+  const update = useUIStore(s => s.update);
 
   const stats = {
     total: tasks.length,
@@ -24,16 +26,26 @@ export default function TasksPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-brand-navy text-white rounded-2xl flex items-center justify-center shadow-lg">
-              <Terminal size={20} />
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => update({ activeScreen: 'gallery' })}
+            className="rounded-full shrink-0"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </Button>
+          <div className="space-y-1">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-brand-navy text-white rounded-2xl flex items-center justify-center shadow-lg">
+                <Terminal size={20} />
+              </div>
+              <h1 className="text-3xl font-black text-brand-navy tracking-tight uppercase">任务指挥部</h1>
             </div>
-            <h1 className="text-3xl font-black text-brand-navy tracking-tight uppercase">全局任务中心</h1>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">
+              Task Monitoring & Control
+            </p>
           </div>
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">
-            Global Task & Backend Job Monitoring
-          </p>
         </div>
         
         <Button 
