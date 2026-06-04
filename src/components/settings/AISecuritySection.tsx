@@ -131,14 +131,17 @@ export function AISecuritySection({
                     const res = await fetch('/api/admin/settings/save-key', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ provider: 'agnes', apiKey: agnesKey })
+                      body: JSON.stringify({ provider: 'agnes', apiKey: agnesKey, model: 'agnes-ai' })
                     });
-                    if (res.ok) {
-                      toast.success("Agnes 密钥已保存并加密");
+                    const data = await res.json();
+                    if (res.ok && data.success) {
+                      toast.success("Agnes 密鑰驗證通過並加密保存");
                       setAgnesKey('');
                       fetchKeysStatus();
+                    } else {
+                      toast.error(data.error || "Agnes 密鑰驗證失敗");
                     }
-                  } catch { toast.error("密钥保存失败"); }
+                  } catch { toast.error("密鑰保存請求超時"); }
                 }}
               />
             </div>
@@ -147,7 +150,7 @@ export function AISecuritySection({
               onClick={() => handleTest('agnes')}
               className="w-full py-2 bg-brand-navy text-white rounded-xl text-[9px] font-black uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2"
             >
-              {isTesting === 'agnes' ? '正在检测...' : '立即测试 Agnes'}
+              {isTesting === 'agnes' ? '正在檢測...' : '立即測試 Agnes'}
             </button>
           </div>
         </div>
@@ -160,7 +163,7 @@ export function AISecuritySection({
           </div>
           <div className="space-y-3">
             <div className="space-y-1">
-              <p className="text-[9px] font-black text-brand-navy/40 uppercase ml-1 tracking-widest">模型型号 / Model</p>
+              <p className="text-[9px] font-black text-brand-navy/40 uppercase ml-1 tracking-widest">模型型號 / Model</p>
               <input 
                 type="text" 
                 placeholder="例如: google/gemini-2.0-flash-exp:free"
@@ -171,26 +174,31 @@ export function AISecuritySection({
               />
             </div>
             <div className="space-y-1">
-              <p className="text-[9px] font-black text-brand-navy/40 uppercase ml-1 tracking-widest">API 密钥</p>
+              <p className="text-[9px] font-black text-brand-navy/40 uppercase ml-1 tracking-widest">API 密鑰</p>
               <input 
                 type="password" 
-                placeholder={keysStatus.openrouter || geminiApiKey === "••••••••••••••••" ? "•••••••••••••••• (已保存)" : "输入 API 密钥..."}
+                placeholder={keysStatus.openrouter || geminiApiKey === "••••••••••••••••" ? "•••••••••••••••• (已保存)" : "輸入 API 密鑰..."}
                 className={`${inputClass} font-mono w-full bg-white`}
                 value={geminiApiKey === "••••••••••••••••" ? "" : geminiApiKey}
                 onChange={(e) => setGeminiApiKey(e.target.value)}
                 onBlur={async (e) => {
                   const val = e.target.value;
                   if (!val || val === "••••••••••••••••") return;
-                  setSettingField('gemini_api_key', val);
                   try {
-                    await fetch('/api/admin/settings/save-key', {
+                    const res = await fetch('/api/admin/settings/save-key', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ provider: 'openrouter', apiKey: val })
+                      body: JSON.stringify({ provider: 'openrouter', apiKey: val, model: customModel })
                     });
-                    toast.success("OpenRouter 密钥已同步");
-                    fetchKeysStatus();
-                  } catch { toast.error("同步失败"); }
+                    const data = await res.json();
+                    if (res.ok && data.success) {
+                      toast.success("OpenRouter 密鑰驗證通過並同步");
+                      setSettingField('gemini_api_key', val);
+                      fetchKeysStatus();
+                    } else {
+                      toast.error(data.error || "OpenRouter 密鑰校驗失敗");
+                    }
+                  } catch { toast.error("同步超時"); }
                 }}
               />
             </div>

@@ -592,18 +592,49 @@ app.get("/admin/settings/get-keys", async (c) => {
 
 app.post("/admin/settings/save-key", async (c) => {
     try {
-        const { provider, apiKey } = await c.req.json();
-        if (!provider || !apiKey) return c.json({ success: false, error: "Missing data" }, 400);
-        
+        const { provider, apiKey, model } = await c.req.json();
+        if (!provider || !apiKey) return c.json({ success: false, error: "缺少必要參數" }, 400);
+
+        // 1. 預驗證：嘗試調用一次 API
+        try {
+            const baseUrl = provider === 'agnes' 
+                ? 'https://apihub.agnes-ai.com/v1' 
+                : 'https://openrouter.ai/api/v1';
+            
+            const testPayload = {
+                model: model || (provider === 'agnes' ? 'agnes-ai' : 'google/gemini-2.0-flash-exp:free'),
+                messages: [{ role: 'user', content: 'hi' }],
+                max_tokens: 1
+            };
+
+            const testRes = await callProvider(baseUrl, apiKey, testPayload);
+            if (!testRes.ok) {
+                const errorDetail = await testRes.json().catch(() => ({}));
+                return c.json({ 
+                    success: false, 
+                    error: `密鑰驗證失敗: ${errorDetail?.error?.message || testRes.statusText || '供應商拒絕請求'}` 
+                }, 401);
+            }
+        } catch (e: any) {
+            return c.json({ success: false, error: `網絡連通性測試失敗: ${e.message}` }, 500);
+        }
+
+        // 2. 驗證通過，執行加密存儲
         const supabase = await getSupabaseAdmin();
         const encryptedKey = encrypt(apiKey);
-        await supabase.from('secrets').upsert({ name: provider, value: encryptedKey });
         
-        if (provider === 'openrouter') {
-            await supabase.from('settings').upsert({ id: 1, api_key: apiKey }, { onConflict: 'id' });
-        }
-        return c.json({ success: true });
+        // 僅保存到 secrets 表
+        const { error } = await supabase.from('secrets').upsert({ 
+            name: provider, 
+            value: encryptedKey,
+            updated_at: new Date().toISOString()
+        });
+
+        if (error) throw error;
+        
+        return c.json({ success: true, message: "密鑰驗證通過並加密保存" });
     } catch (e: any) {
+        console.error("Save key failed:", e);
         return c.json({ success: false, error: e.message }, 500);
     }
 });
