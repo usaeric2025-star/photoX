@@ -37,13 +37,14 @@ export function resolveImageUrl(url: string, options: ResizeOptions = {}): strin
   return `${url}${url.includes('?') ? '&' : '?'}${params.toString()}`;
 }
 
-export function getThumbnailUrl(originalUrl: string, width: number) {
+export function getThumbnailUrl(originalUrl: string, width: number, updatedAt?: string) {
   const workerUrl = import.meta.env.VITE_THUMBNAIL_WORKER_URL;
   if (!workerUrl || !originalUrl) return originalUrl;
   
   try {
     const url = new URL(originalUrl);
-    return `${workerUrl.replace(/\/$/, '')}${url.pathname}?w=${width}`;
+    const cacheBuster = updatedAt ? `&t=${new Date(updatedAt).getTime()}` : '';
+    return `${workerUrl.replace(/\/$/, '')}${url.pathname}?w=${width}${cacheBuster}`;
   } catch (e) {
     return originalUrl;
   }

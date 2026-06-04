@@ -8,13 +8,13 @@ export const toLightboxSlides = (photos: Photo[]) => {
     const aspectRatio = originalHeight / originalWidth;
 
     const generateSource = (width: number) => ({
-      src: getThumbnailUrl(photo.image_url, width),
+      src: getThumbnailUrl(photo.image_url, width, photo.updated_at),
       width,
       height: Math.round(width * aspectRatio),
     });
 
     return {
-      src: getThumbnailUrl(photo.image_url, 1920),
+      src: getThumbnailUrl(photo.image_url, 1920, photo.updated_at),
       srcSet: [
         generateSource(320),
         generateSource(640),
