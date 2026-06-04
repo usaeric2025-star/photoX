@@ -343,6 +343,7 @@ export const groupPhotos = async (
     .in('id', validIds);
 
   if (photoUpdateError) {
+    console.error('[groupPhotos] updateSelectedPhotos error:', photoUpdateError);
     throw ErrorFactory.wrap(photoUpdateError, 'groupPhotos/updateSelectedPhotos', targetGroupId);
   }
 
