@@ -572,8 +572,20 @@ app.post("/admin/settings/save-key", async (c) => {
                 ? 'https://apihub.agnes-ai.com/v1' 
                 : 'https://openrouter.ai/api/v1';
             
+            // 💡 預防性修正：測試連通性時，Agnes 必須強制使用其原生的 'agnes-2.0-flash'，避免因為前端選中的 OpenRouter/Gemini 模型污染導致校驗失敗！
+            let testModel = model;
+            if (provider === 'agnes') {
+                if (!testModel || testModel.startsWith('google/') || testModel.startsWith('meta/') || testModel.startsWith('anthropic/') || testModel.includes('gemini')) {
+                    testModel = 'agnes-2.0-flash';
+                }
+            } else {
+                if (!testModel || testModel.startsWith('agnes')) {
+                    testModel = 'google/gemini-2.0-flash-exp:free';
+                }
+            }
+
             const testPayload = {
-                model: model || (provider === 'agnes' ? 'agnes-2.0-flash' : 'google/gemini-2.0-flash-exp:free'),
+                model: testModel,
                 messages: [{ role: 'user', content: 'hi' }],
                 max_tokens: 1
             };

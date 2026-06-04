@@ -49,6 +49,12 @@ export function useTaskExecutor() {
         updateTask(taskId, { status: 'error', progress: 100, message: `${name} 失败: ${errMsg}` });
       }
       reportError(errMsg, name);
+      
+      // 💡 提升診斷體驗：默認在主界面彈出 toast.error 錯誤提示，防範“失敗不報警”的不良體感
+      if (!isSilent && options?.showErrorToast !== false) {
+        toast.error(`${name} 失敗: ${errMsg}`);
+      }
+      
       options?.onError?.(error instanceof Error ? error : new Error(errMsg));
       return null;
     }
