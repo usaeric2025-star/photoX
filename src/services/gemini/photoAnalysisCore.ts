@@ -236,32 +236,7 @@ export const analyzeProductPhoto = async (
         dataToProcess.manual_code = null;
     }
 
-    // Translate fields dynamically! - Only translate description if needed
-    try {
-      const { translateProductFields } = await import('./translationCore');
-      const translationResult = await translateProductFields({
-        // Only translate description if it contains Chinese, otherwise keep as is
-        description: dataToProcess.description || undefined
-      }, apiKey, modelName, signal);
-
-      dataToProcess.name_en = dataToProcess.name || '';
-      dataToProcess.name_ms = dataToProcess.name || '';
-
-      dataToProcess.description_translations = {
-        zh: dataToProcess.description || '',
-        en: translationResult.description_en || dataToProcess.description_translations?.en || dataToProcess.description || '',
-        ms: translationResult.description_ms || dataToProcess.description_translations?.ms || dataToProcess.description || ''
-      };
-    } catch (e) {
-      console.warn('[analyzeProductPhoto] Fields translation failed, using fallbacks:', e);
-      dataToProcess.name_en = dataToProcess.name_en || dataToProcess.name || '';
-      dataToProcess.name_ms = dataToProcess.name_ms || dataToProcess.name || '';
-      dataToProcess.description_translations = {
-        zh: dataToProcess.description || '',
-        en: dataToProcess.description_translations?.en || dataToProcess.description || '',
-        ms: dataToProcess.description_translations?.ms || dataToProcess.description || ''
-      };
-    }
+    // Translation and further dimension refinement are now handled by Agnes in the orchestration layer (aiService.ts)
 
     let resolvedCategoryId: string | null = null;
     const catIdToCheck = String(dataToProcess.category_id || '').trim();

@@ -136,5 +136,36 @@ export const ISSUE_ACTIONS: Record<string, MaintenanceAction> = {
       const res = await api.admin.maintenance.job[':jobId'].$get({ param: { jobId } });
       return await res.json() as any;
     }
+  },
+  agnes_retranslate: {
+    name: 'Agnes 全量重翻',
+    preview: async () => {
+      // Small sample preview
+      return { affectedCount: 30, message: '单次任务上限 30 条' };
+    },
+    execute: async () => {
+      const res = await api.admin.repair['agnes-translate'].$post();
+      const data = await res.json() as any;
+      return { jobId: data.jobId, message: '翻译任务已启动' };
+    },
+    getStatus: async (jobId) => {
+      const res = await api.admin.maintenance.job[':jobId'].$get({ param: { jobId } });
+      return await res.json() as any;
+    }
+  },
+  agnes_redimension: {
+    name: 'Agnes 尺寸重提',
+    preview: async () => {
+      return { affectedCount: 30, message: '单次任务上限 30 条' };
+    },
+    execute: async () => {
+      const res = await api.admin.repair['agnes-dimension'].$post();
+      const data = await res.json() as any;
+      return { jobId: data.jobId, message: '尺寸提取任务已启动' };
+    },
+    getStatus: async (jobId) => {
+      const res = await api.admin.maintenance.job[':jobId'].$get({ param: { jobId } });
+      return await res.json() as any;
+    }
   }
 };

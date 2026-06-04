@@ -63,7 +63,7 @@ export const fetchSettings = async () => {
  * 嚴禁將前端狀態字段 (UI state) 直接傳入數據庫
  */
 const SETTINGS_COLUMNS = [
-    'id', 'logo_url', 'api_key', 'openrouter_model',
+    'id', 'logo_url', 'openrouter_model',
     'access_passcode', 'whatsapp_1', 'whatsapp_1_name', 
     'whatsapp_2', 'whatsapp_2_name', 'tags_json', 'updated_at'
 ];
@@ -78,7 +78,6 @@ export const saveSettings = async (settings: Partial<AppSettings> & Record<strin
         if (rawPayload.api_key) delete rawPayload.api_key;
         
         const mapping: Record<string, string> = {
-            'gemini_api_key': 'api_key',
             'custom_model': 'openrouter_model'
         };
 

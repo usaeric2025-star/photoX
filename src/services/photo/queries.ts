@@ -203,7 +203,9 @@ export const loadAllPhotosFromCloud = async (
     isAdminMode: boolean = false,
     signal?: AbortSignal,
     sortOrder?: 'asc' | 'desc' | 'newest' | 'oldest' | 'name' | string | null,
-    onlyUngrouped: boolean = false
+    onlyUngrouped: boolean = false,
+    manufacturerId?: string | null,
+    isHidden?: boolean | null
 ): Promise<Photo[]> => {
     const selectQuery = PHOTO_LIST_FIELDS;
 
@@ -221,6 +223,12 @@ export const loadAllPhotosFromCloud = async (
 
   if (!isAdminMode) {
     query = query.or(VISIBILITY_OR_QUERY);
+  } else if (isHidden !== undefined && isHidden !== null) {
+    query = query.eq('is_hidden', isHidden);
+  }
+
+  if (manufacturerId) {
+    query = query.eq('manufacturer_id', manufacturerId);
   }
 
   if (since) {

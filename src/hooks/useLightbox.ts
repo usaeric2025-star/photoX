@@ -26,11 +26,13 @@ export const useLightbox = () => {
   const { data: groupPhotos, isLoading: isPhotosLoading } = useGroupPhotos(groupId, false, 100);
   const { data: allGalleryPhotos, isLoading: isGalleryLoading } = usePhotos({
     category_id: filters.categoryId,
-    tag_id: null,
+    tag_id: filters.tagId,
+    manufacturer_id: filters.manufacturerId,
     searchQuery: filters.searchQuery,
     sortOrder: filters.sortOrder,
     isAdminMode: isAdmin,
     onlyUngrouped: false,
+    is_hidden: filters.isHidden,
   }, 100, !groupId);
   
   const isGroupMode = !!groupId; // Within a group's context

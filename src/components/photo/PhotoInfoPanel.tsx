@@ -18,10 +18,14 @@ import {
   Sparkles,
   Pencil,
   Trash2,
-  X
+  X,
+  Heart
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useLongPress } from '@/hooks/useLongPress';
+import { createPortal } from "react-dom";
+import { toast } from '@/lib/ui/toast';
 
 interface PhotoInfoPanelProps {
   mode: 'single' | 'group';
@@ -36,6 +40,33 @@ interface PhotoInfoPanelProps {
   className?: string;
 }
 
+interface TagBadgeProps {
+  tag: Tag;
+  isAdmin: boolean;
+  onLongPress: (tag: Tag) => void;
+}
+
+function TagBadge({ tag, isAdmin, onLongPress }: TagBadgeProps) {
+  const btnRef = React.useRef<HTMLSpanElement>(null);
+  
+  useLongPress(btnRef, {
+    delay: 600,
+    onLongPress: () => isAdmin && onLongPress(tag)
+  });
+
+  return (
+    <span 
+      ref={btnRef}
+      className={cn(
+        "text-[10.5px] font-semibold text-brand-navy/70 px-2.5 py-1 bg-brand-navy/5 rounded-full border border-brand-navy/10 shadow-sm transition-all active:scale-95 touch-none select-none",
+        isAdmin && "cursor-pointer hover:bg-brand-navy/10"
+      )}
+    >
+      #{tag.name}
+    </span>
+  );
+}
+
 export function PhotoInfoPanel({
   mode,
   data,
@@ -48,7 +79,14 @@ export function PhotoInfoPanel({
   onClose,
   className
 }: PhotoInfoPanelProps) {
-  const [descLang, setDescLang] = React.useState<'zh' | 'en' | 'ms'>('zh');
+  const appLang = useUIStore((s) => s.appLang);
+  const [descLang, setDescLang] = React.useState<'zh' | 'en' | 'ms'>(appLang as any || 'zh');
+
+  React.useEffect(() => {
+    if (appLang === 'zh' || appLang === 'en' || appLang === 'ms') {
+      setDescLang(appLang as any);
+    }
+  }, [appLang]);
 
   if (!data) {
     return (
@@ -92,13 +130,15 @@ export function PhotoInfoPanel({
   const { data: fetchedCategories = [] } = useCategories();
   const { data: fetchedTags = [] } = useTags();
   const { data: fetchedManufacturers = [] } = useManufacturers();
-  const appLang = useUIStore((s) => s.appLang);
+  const update = useUIStore((s) => s.update);
+  const [activeActionTag, setActiveActionTag] = React.useState<Tag | null>(null);
+  const isAdmin = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
 
   const isGroup = mode === 'group' && 'member_count' in data;
   
   // Resolve labels dynamically
   let displayCategoryName = '';
-  let displayTagNames: string[] = [];
+  let displayTags: Tag[] = [];
   let displayManufacturerName = '';
   
   if (!isGroup) {
@@ -107,10 +147,9 @@ export function PhotoInfoPanel({
        displayCategoryName = getTranslatedCategoryName(photo.category_id, fetchedCategories, appLang, translations[appLang]);
     }
     if (Array.isArray(photo.tag_ids) && photo.tag_ids.length > 0) {
-       displayTagNames = photo.tag_ids.map(id => {
-         const t = fetchedTags.find(tag => String(tag.id) === String(id));
-         return t ? t.name : '';
-       }).filter(Boolean);
+       displayTags = photo.tag_ids.map(id => {
+         return fetchedTags.find(tag => String(tag.id) === String(id));
+       }).filter(Boolean) as Tag[];
     }
     if (photo.manufacturer_id) {
        const m = fetchedManufacturers.find(mfr => String(mfr.id) === String(photo.manufacturer_id));
@@ -359,7 +398,7 @@ export function PhotoInfoPanel({
             )}
 
              {/* Classification */}
-            {(displayCategoryName || displayTagNames.length > 0) && (
+            {(displayCategoryName || displayTags.length > 0) && (
               <section>
                 <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5 mb-3">
                   <Grid size={12} /> {l.classification}
@@ -371,16 +410,67 @@ export function PhotoInfoPanel({
                       {displayCategoryName}
                     </Badge>
                   )}
-                  {displayTagNames.map((tag: string) => (
-                    <span 
-                      key={tag}
-                      className="text-[10.5px] font-semibold text-brand-navy/70 px-2.5 py-1 bg-brand-navy/5 rounded-full cursor-default border border-brand-navy/10 shadow-sm"
-                    >
-                      #{tag}
-                    </span>
+                  {displayTags.map((tag: Tag) => (
+                    <TagBadge 
+                      key={tag.id} 
+                      tag={tag} 
+                      isAdmin={isAdmin}
+                      onLongPress={(t) => setActiveActionTag(t)}
+                    />
                   ))}
                 </div>
               </section>
+            )}
+
+            {activeActionTag && createPortal(
+              <div
+                className="fixed inset-0 z-[9999] bg-slate-950/40 flex items-center justify-center p-6 backdrop-blur-sm cursor-pointer animate-in fade-in duration-200"
+                onClick={() => setActiveActionTag(null)}
+              >
+                <div
+                  className="glass-morphism rounded-3xl p-8 w-full max-w-[280px] shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-200 cursor-default bg-white border border-slate-200"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="text-center space-y-1">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                      标签管理 / TAG
+                    </span>
+                    <div className="text-lg font-black text-slate-900">
+                      #{activeActionTag.name}
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <button
+                      type="button"
+                      className="w-full flex items-center justify-center gap-3 text-blue-600 bg-blue-50/50 backdrop-blur-sm border border-blue-100/50 font-bold py-4 rounded-2xl hover:bg-blue-100 transition-all cursor-pointer shadow-sm shadow-blue-500/5"
+                      onClick={() => {
+                        toast.info(appLang === 'zh' ? '請在設置頁面管理標籤詳情' : 'Please manage tag details in Settings');
+                        setActiveActionTag(null);
+                      }}
+                    >
+                      <Pencil size={18} strokeWidth={2.5} /> {appLang === 'zh' ? '管理標籤' : 'Manage Tag'}
+                    </button>
+                    <button
+                      type="button"
+                      className="w-full flex items-center justify-center gap-3 text-red-600 bg-red-50/50 backdrop-blur-sm border border-red-100/50 font-bold py-4 rounded-2xl hover:bg-red-100 transition-all cursor-pointer shadow-sm shadow-red-500/5"
+                      onClick={() => {
+                        toast.error(appLang === 'zh' ? '請在設置頁面刪除' : 'Delete in Settings');
+                        setActiveActionTag(null);
+                      }}
+                    >
+                      <Trash2 size={18} strokeWidth={2.5} /> {appLang === 'zh' ? '刪除標籤' : 'Delete Tag'}
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    className="w-full text-slate-400 text-[10px] font-black uppercase tracking-tighter pt-2 active:text-slate-600 cursor-pointer"
+                    onClick={() => setActiveActionTag(null)}
+                  >
+                    取消操作 / CANCEL
+                  </button>
+                </div>
+              </div>,
+              document.body
             )}
           </>
         )}

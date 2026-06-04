@@ -16,6 +16,8 @@ export const usePhotos = (filters: {
   sortOrder?: 'asc' | 'desc' | string | null;
   isAdminMode?: boolean;
   onlyUngrouped?: boolean;
+  manufacturer_id?: string | null;
+  is_hidden?: boolean | null;
 }, limit: number = PAGINATION.PUBLIC_PAGE_SIZE, enabled: boolean = true) => {
   return useInfiniteQuery({
     queryKey: photoKeys.infinite({ 
@@ -25,6 +27,8 @@ export const usePhotos = (filters: {
       sortOrder: filters.sortOrder ?? null,
       isAdminMode: filters.isAdminMode ?? false,
       onlyUngrouped: filters.onlyUngrouped ?? false, 
+      manufacturer_id: filters.manufacturer_id ?? null,
+      is_hidden: filters.is_hidden ?? null,
       limit 
     }),
     queryFn: async ({ pageParam = 1, signal }) => {
@@ -40,7 +44,9 @@ export const usePhotos = (filters: {
         filters.isAdminMode || false,
         signal,
         filters.sortOrder,
-        filters.onlyUngrouped || false
+        filters.onlyUngrouped || false,
+        filters.manufacturer_id,
+        filters.is_hidden
       );
 
       if (pageParam === 1 && !filters.searchQuery && !filters.category_id && !filters.tag_id) {

@@ -38,6 +38,7 @@ interface RouterContext {
 export interface GallerySearchParams {
   q?: string;
   category?: string;
+  tag?: string;          // Added for tag filtering
   manufacturer?: string;
   sort?: 'newest' | 'oldest' | 'name';
   view?: 'grid' | 'list';
@@ -48,6 +49,7 @@ export interface GallerySearchParams {
   columns?: string;      // 列数（2/3/4/5）
   showGroupsCollapsed?: 'true' | 'false';  // 合组折叠状态
   preview?: 'true' | 'false';      // 预览模式
+  hidden?: 'true' | 'false';       // 隐藏照片显影控制
 }
 
 // Helper for lazy loading with retry

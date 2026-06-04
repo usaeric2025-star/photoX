@@ -8,11 +8,14 @@ export function useUrlFilters() {
 
   const filters = {
     categoryId: search.category ?? null,
+    tagId: search.tag ?? null,
+    manufacturerId: search.manufacturer ?? null,
     searchQuery: search.q ?? '',
     sortOrder: search.sort ?? 'newest',
     groupId: params.groupId || search.groupId || null,
     photoId: search.photoId ?? null,
     showGroupsCollapsed: search.showGroupsCollapsed !== 'false',
+    isHidden: search.hidden === 'true',
   };
 
   const setCategory = (categoryId: string | null) => {

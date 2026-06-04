@@ -99,11 +99,13 @@ export function GroupHeader({
             ) : (
               <>
                 <h2 className="text-base sm:text-lg font-black text-slate-800 tracking-tight uppercase truncate flex-1 min-w-0">
-                  {groupData?.name ||
-                    activeGroupPhotos[0]?.name ||
-                    activeGroupPhotos[0]?.item_code ||
-                    `GROUP ${activeGroupId?.slice(-4)}`}
+                  {groupData?.name || `GROUP ${activeGroupId?.slice(-4)}`}
                 </h2>
+                {activeGroupId && (
+                  <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200/50">
+                    ID: {activeGroupId.split('-')[0]}
+                  </span>
+                )}
                 {isAdminMode && (
                   <Pencil
                     size={12}

@@ -388,7 +388,7 @@ export const groupPhotos = async (
       .update({ 
         group_id: targetGroupId,
         is_group_cover: false,
-        user_id: supabase.rpc('coalesce_user_id', { target_user_id: userId })
+        user_id: userId
       })
       .in('id', validIds);
 

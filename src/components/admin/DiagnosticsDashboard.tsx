@@ -367,6 +367,27 @@ export function DiagnosticsDashboard() {
             />
           </div>
         </div>
+        {/* 第四组：Agnes 驱动的 AI 修复 */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 px-1 text-xs font-black text-slate-700">
+            <Zap size={14} className="text-purple-500" />
+            AGNES AI 引擎驱动
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <MaintenanceTool 
+              issueId="agnes_retranslate"
+              title="Agnes 全量重翻" 
+              description="使用 Agnes 2.0 引擎对所有存量照片进行三语（中、英、马）精准校对与翻译"
+              onSuccess={refreshReport}
+            />
+            <MaintenanceTool 
+              issueId="agnes_redimension"
+              title="Agnes 尺寸重提" 
+              description="使用 Agnes 驱动的尺寸提取模型，修正旧版本中尺寸识别不准的问题（单次 30 条）"
+              onSuccess={refreshReport}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

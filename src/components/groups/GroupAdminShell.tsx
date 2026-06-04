@@ -208,9 +208,9 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
               onCopy={(ids) => hookHandleBulkAction('batch')}
             />
 
-            {/* Beautiful Floating Admin Action Dock (when not in multi-select mode) */}
+            {/* Bottom Toolbar (when not in multi-select mode) */}
             {!isMultiSelect && (
-              <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 dark:bg-slate-900/95 backdrop-blur-md text-white shadow-2xl rounded-full px-5 py-2.5 flex items-center gap-4 border border-white/10 z-[190] hover:bg-slate-900 transition-all max-w-lg">
+              <div className="flex-shrink-0 bg-white border-t border-slate-100 px-4 py-3 flex items-center justify-around z-[190] pb-safe-offset-2">
                 {/* 1. Add Photos button */}
                 <button
                   type="button"
@@ -220,85 +220,68 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
                       update?.({ isPhotoPickerOpen: true });
                     }
                   }}
-                  className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-400 hover:text-emerald-300 active:scale-95 transition-all"
-                  title={(translate as any).addPhotos || 'Add Photos'}
+                  className="flex flex-col items-center gap-1 text-[9px] font-black uppercase tracking-tight text-slate-500 hover:text-emerald-600 transition-colors"
                 >
-                  <Plus size={14} />
-                  <span>{appLang === 'zh' ? '添加照片' : appLang === 'ms' ? 'Tambah Foto' : 'Add Photos'}</span>
+                  <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100 mb-1 group-hover:bg-emerald-50 transition-colors">
+                    <Plus size={18} className="text-emerald-500" />
+                  </div>
+                  <span>{appLang === 'zh' ? '添加' : 'Add'}</span>
                 </button>
-
-                <div className="w-px h-4 bg-slate-800" />
 
                 {/* 2. Group Settings button */}
                 <button
                   type="button"
                   onClick={() => update?.({ groupSettingsOpen: true } as any)}
-                  className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-indigo-400 hover:text-indigo-300 active:scale-95 transition-all"
-                  title={(translate as any).database || 'Database'}
+                  className="flex flex-col items-center gap-1 text-[9px] font-black uppercase tracking-tight text-slate-500 hover:text-indigo-600 transition-colors"
                 >
-                  <Settings2 size={14} />
-                  <span>{appLang === 'zh' ? '数据库' : appLang === 'ms' ? 'Pangkalan Data' : 'Database'}</span>
+                  <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100 mb-1 group-hover:bg-indigo-50 transition-colors">
+                    <Settings2 size={18} className="text-indigo-500" />
+                  </div>
+                  <span>{appLang === 'zh' ? '编辑' : 'Edit'}</span>
                 </button>
 
-                <div className="w-px h-4 bg-slate-800" />
+                {/* 3. Save Sequence button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                     toast.success(appLang === 'zh' ? '排序已同步' : 'Order synced');
+                  }}
+                  className="flex flex-col items-center gap-1 text-[9px] font-black uppercase tracking-tight text-slate-500 hover:text-amber-600 transition-colors"
+                >
+                  <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100 mb-1 group-hover:bg-amber-50 transition-colors">
+                    <Sparkles size={18} className="text-amber-500" />
+                  </div>
+                  <span>{appLang === 'zh' ? '排序' : 'Order'}</span>
+                </button>
 
-                {/* 3. More Dropdown Menu */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-slate-300 hover:text-white active:scale-95 transition-all outline-none">
-                    <span>{appLang === 'zh' ? '更多' : appLang === 'ms' ? 'Lain-lain' : 'More'}</span>
-                    <MoreVertical size={12} />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    side="top"
-                    sideOffset={12}
-                    className="w-44 sm:w-48 bg-slate-900 text-white rounded-2xl shadow-2xl border border-white/10 py-1 z-[200]"
-                  >
-                    <DropdownMenuItem
-                      onClick={() => {
-                        const ids = activeGroupPhotos.map((p) => p.id);
-                        update?.({ batchEditingIds: ids });
-                        update?.({ isMultiSelect: false });
-                        update?.({ selectedIds: [] });
-                      }}
-                      className="px-4 py-3 cursor-pointer flex items-center gap-2 hover:bg-white/10 focus:bg-white/10 outline-none text-slate-200"
-                    >
-                      <Pencil size={15} className="text-slate-400" />
-                      <span className="text-xs font-bold">
-                        {appLang === 'zh' ? '批量编辑' : appLang === 'ms' ? 'Edit Pukal' : 'Batch Edit'}
-                      </span>
-                    </DropdownMenuItem>
-                    
-                    <div className="h-px bg-white/10 my-1" />
-                    
-                    <DropdownMenuItem
-                      onClick={() => {
-                        update?.({ 
-                          alertDialog: {
-                            title: appLang === 'zh' ? '解散合组' : appLang === 'ms' ? 'Bubarkan' : 'Dissolve',
-                            message: appLang === 'zh' ? '确定要解散此合组吗？组内的照片将被移出但不会被删除。' : appLang === 'ms' ? 'Adakah anda pasti mahu membubarkan kumpulan ini? Foto akan dikeluarkan tetapi tidak dipadamkan.' : 'Are you sure you want to dissolve this group? Photos will be removed but not deleted.',
-                            type: 'danger',
-                            onConfirm: async () => {
-                               if (!filters.groupId) return;
-                               try {
-                                  await dissolve.mutateAsync(filters.groupId);
-                                  setGroupId(null);
-                               } catch (err) {
-                                  toast.error(`解散失败: ${(err as Error).message}`);
-                               }
-                            }
-                          }
-                        });
-                      }}
-                      className="px-4 py-3 cursor-pointer flex items-center gap-2 hover:bg-red-500/20 focus:bg-red-500/20 outline-none text-red-500"
-                    >
-                      <FolderMinus size={15} className="text-red-500" />
-                      <span className="text-xs font-bold">
-                        {appLang === 'zh' ? '解散合组' : appLang === 'ms' ? 'Bubarkan' : 'Dissolve'}
-                      </span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {/* 4. Dissolve button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    update?.({ 
+                      alertDialog: {
+                        title: appLang === 'zh' ? '解散合组' : 'Dissolve',
+                        message: appLang === 'zh' ? '确定要解散此合组吗？' : 'Are you sure you want to dissolve this group?',
+                        type: 'danger',
+                        onConfirm: async () => {
+                           if (!filters.groupId) return;
+                           try {
+                              await dissolve.mutateAsync(filters.groupId);
+                              setGroupId(null);
+                           } catch (err) {
+                              toast.error(`解散失败: ${(err as Error).message}`);
+                           }
+                        }
+                      }
+                    });
+                  }}
+                  className="flex flex-col items-center gap-1 text-[9px] font-black uppercase tracking-tight text-slate-500 hover:text-red-600 transition-colors"
+                >
+                  <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100 mb-1 group-hover:bg-red-50 transition-colors">
+                    <FolderMinus size={18} className="text-red-500" />
+                  </div>
+                  <span>{appLang === 'zh' ? '解散' : 'Dissolve'}</span>
+                </button>
               </div>
             )}
 

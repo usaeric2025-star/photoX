@@ -2014,5 +2014,131 @@ app.post("/api/groups/merge", async (c) => {
     }
 });
 
+app.post("/admin/repair/agnes-translate", async (c) => {
+    try {
+        const supabase = await getSupabaseAdmin();
+        const { data: photos, error } = await supabase
+            .from("furniture_items")
+            .select("id, description, description_translations")
+            .order('updated_at', { ascending: false })
+            .limit(30);
+
+        if (error) throw error;
+        if (!photos || photos.length === 0) return c.json({ success: true, count: 0 });
+
+        const jobId = `agnes_trans_${Date.now()}`;
+        jobStore.set(jobId, { status: 'processing', progress: 0, total: photos.length });
+
+        // Lazy load agnes orchestration logic would be better if extracted, but we can call it directly
+        // However, for simplicity in this sandbox, we'll implement a loop
+        (async () => {
+            let processed = 0;
+            for (const photo of photos) {
+                try {
+                    // We need to call the internal AI dispatch for Agnes
+                    const prompt = `You are Agnes, a professional translator. Translate this description into Simplified Chinese (zh), English (en), and Malay (ms). JSON output: { "zh": "...", "en": "...", "ms": "..." }. Input: "${photo.description}"`;
+                    const { apiKeyKey, provider, model } = await getTaskConfig('text_chat');
+                    const { data: secret } = await supabase.from('secrets').select('value').eq('key', apiKeyKey).maybeSingle();
+                    const { decrypt } = await import('./lib/encryption.js');
+                    const apiKey = decrypt(secret?.value || '');
+                    
+                    const ai = await getAIProvider(provider, supabase, model);
+                    const res = await ai.chat([{ role: 'user', content: prompt }]);
+                    
+                    if (res.success && res.content) {
+                        const { extractJsonObject } = await import('./lib/ai/aiParsing.js');
+                        const parsed = extractJsonObject(res.content);
+                        if (parsed) {
+                            await supabase.from("furniture_items").update({
+                                description: parsed.zh || photo.description,
+                                description_translations: {
+                                    zh: parsed.zh || photo.description,
+                                    en: parsed.en || photo.description,
+                                    ms: parsed.ms || photo.description
+                                }
+                            }).eq("id", photo.id);
+                        }
+                    }
+                } catch (e) {
+                    console.error(`agnes-translate failed for ${photo.id}`, e);
+                }
+                processed++;
+                jobStore.set(jobId, { status: 'processing', progress: Math.round((processed / photos.length) * 100), total: photos.length });
+            }
+            jobStore.set(jobId, { status: 'completed', progress: 100 });
+        })();
+
+        return c.json({ success: true, jobId });
+    } catch (e: any) {
+        return c.json({ success: false, error: e.message }, 500);
+    }
+});
+
+app.post("/admin/repair/agnes-dimension", async (c) => {
+    try {
+        const supabase = await getSupabaseAdmin();
+        const { data: photos, error } = await supabase
+            .from("furniture_items")
+            .select("id, description")
+            .order('updated_at', { ascending: false })
+            .limit(30);
+
+        if (error) throw error;
+        if (!photos || photos.length === 0) return c.json({ success: true, count: 0 });
+
+        const jobId = `agnes_dim_${Date.now()}`;
+        jobStore.set(jobId, { status: 'processing', progress: 0, total: photos.length });
+
+        (async () => {
+            let processed = 0;
+            for (const photo of photos) {
+                try {
+                    const prompt = `You are Agnes. Extract dimensions (width, height, depth) from this text. NO unit conversion. JSON output: { "width_cm": number, "height_cm": number, "depth_cm": number }. Input: "${photo.description}"`;
+                    const { apiKeyKey, provider, model } = await getTaskConfig('text_chat');
+                    const { data: secret } = await supabase.from('secrets').select('value').eq('key', apiKeyKey).maybeSingle();
+                    const { decrypt } = await import('./lib/encryption.js');
+                    const apiKey = decrypt(secret?.value || '');
+                    
+                    const ai = await getAIProvider(provider, supabase, model);
+                    const res = await ai.chat([{ role: 'user', content: prompt }]);
+                    
+                    if (res.success && res.content) {
+                        const { extractJsonObject } = await import('./lib/ai/aiParsing.js');
+                        const parsed = extractJsonObject(res.content);
+                        if (parsed) {
+                            await supabase.from("furniture_items").update({
+                                dimensions: [{
+                                    label: '标准',
+                                    width: parsed.width_cm || 0,
+                                    height: parsed.height_cm || 0,
+                                    length: parsed.depth_cm || 0,
+                                    unit: 'cm',
+                                    is_ai: true
+                                }]
+                            }).eq("id", photo.id);
+                        }
+                    }
+                } catch (e) {
+                    console.error(`agnes-dimension failed for ${photo.id}`, e);
+                }
+                processed++;
+                jobStore.set(jobId, { status: 'processing', progress: Math.round((processed / photos.length) * 100), total: photos.length });
+            }
+            jobStore.set(jobId, { status: 'completed', progress: 100 });
+        })();
+
+        return c.json({ success: true, jobId });
+    } catch (e: any) {
+        return c.json({ success: false, error: e.message }, 500);
+    }
+});
+
+app.get("/admin/maintenance/job/:jobId", async (c) => {
+    const jobId = c.req.param("jobId");
+    const job = jobStore.get(jobId);
+    if (!job) return c.json({ status: 'not_found' });
+    return c.json(job);
+});
+
 export type AppType = typeof app;
 

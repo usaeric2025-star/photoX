@@ -72,7 +72,7 @@ export function createMutationHook<TData = void, TVariables = void, TContext = u
           const msg = typeof config.onSuccessMessage === 'function' 
             ? config.onSuccessMessage(actualData, variables) 
             : config.onSuccessMessage;
-          toast.success(msg);
+          toast.success(msg, { duration: 2000 });
         }
 
         // Custom success callback
@@ -115,7 +115,8 @@ export function createMutationHook<TData = void, TVariables = void, TContext = u
 
     const execute = async (variables: TVariables) => {
       const taskName = `${config.entity}${config.action}`;
-      return await runTask(taskName, () => mutation.mutateAsync(variables), { rethrow: true });
+      const isLongTask = config.entity === 'Photo' && (config.action === 'Upload' || config.action === 'Analysis');
+      return await runTask(taskName, () => mutation.mutateAsync(variables), { rethrow: true, showProgress: isLongTask });
     };
 
     return {

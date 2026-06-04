@@ -45,8 +45,8 @@ export const analyzePhoto = async (photoId: string): Promise<AppResult<any>> => 
 
      const customModel = (settings as any)?.custom_model || '';
 
-    // 3. Call AI Core
-    const result = await analyzeProductPhoto(
+    // 3. Call AI Core (Gemini Identification)
+    const geminiResult = await analyzeProductPhoto(
       photo.image_url,
       categories || [],
       tags || [],
@@ -58,9 +58,40 @@ export const analyzePhoto = async (photoId: string): Promise<AppResult<any>> => 
       photo.name
     );
 
-    // 4. Update the photo record with AI suggestions (optional, or just return result)
-    // For consistency with PhotoEditDrawer, we just return the result and let the UI handle the "Apply" step
-    return ok(result);
+    // 4. Agnes Post-processing (Parallel, non-blocking for main identification)
+    // Note: We use geminiResult.description as input for Agnes
+    try {
+      const { agnesService } = await import('./agnesService');
+      const [translations, dimensions] = await Promise.all([
+        agnesService.translate(geminiResult.description, signal),
+        agnesService.extractDimensions(geminiResult.description, signal)
+      ]);
+
+      geminiResult.description_translations = {
+        zh: translations.zh,
+        en: translations.en,
+        ms: translations.ms
+      };
+      // Keep the main description field in sync
+      geminiResult.description = translations.zh;
+
+      if (dimensions.width_cm || dimensions.height_cm || dimensions.depth_cm) {
+        geminiResult.dimensions = [
+          {
+            label: '标准',
+            width: dimensions.width_cm || 0,
+            height: dimensions.height_cm || 0,
+            length: dimensions.depth_cm || 0,
+            unit: 'cm',
+            is_ai: true
+          }
+        ];
+      }
+    } catch (agnesErr) {
+      console.warn('[analyzePhoto] Agnes processing failed, using Gemini fallbacks:', agnesErr);
+    }
+
+    return ok(geminiResult);
   } catch (e: any) {
     return err(e.message || 'AI 分析异常', 'UNKNOWN');
   }
