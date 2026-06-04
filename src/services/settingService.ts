@@ -75,6 +75,7 @@ export const saveSettings = async (settings: Partial<AppSettings> & Record<strin
         
         // 1. 字段映射與預處理
         if (rawPayload.gemini_api_key === "••••••••••••••••") delete rawPayload.gemini_api_key;
+        if (rawPayload.api_key) delete rawPayload.api_key;
         
         const mapping: Record<string, string> = {
             'gemini_api_key': 'api_key',

@@ -143,7 +143,7 @@ export function AISecuritySection({
                         type="password"
                         placeholder="OpenRouter API Key..."
                         className={`${inputClass} font-mono w-full bg-slate-50 pr-16`}
-                        value={geminiApiKey}
+                        value={geminiApiKey === "••••••••••••••••" ? "" : geminiApiKey}
                         onChange={(e) => setGeminiApiKey(e.target.value)}
                     />
                     <button 
@@ -178,7 +178,7 @@ export function AISecuritySection({
                      type="password"
                      placeholder="Agnes API Key..."
                      className={`${inputClass} font-mono w-full bg-slate-50 pr-16`}
-                     value={agnesKey}
+                     value={agnesKey === "••••••••••••••••" ? "" : agnesKey}
                      onChange={(e) => setAgnesKey(e.target.value)}
                  />
                  <button 

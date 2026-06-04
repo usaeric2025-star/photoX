@@ -1,6 +1,6 @@
 import { useUrlFilters } from "./useUrlFilters";
 import { usePhotoDetail } from "./core/queries/usePhotoDetail";
-import { useGroupPhotos } from "./core/queries/usePhotos";
+import { useGroupPhotos, usePhotos } from "./core/queries/usePhotos";
 import { useGroupDetail } from "./core/queries/useGroupDetail";
 import { useMemo } from "react";
 import { useNavigate, useLocation } from "@tanstack/react-router";
@@ -24,24 +24,29 @@ export const useLightbox = () => {
   const { data: singlePhoto, isLoading: isSingleLoading } = usePhotoDetail(photoId || '');
   const { data: groupDetail, isLoading: isGroupLoading } = useGroupDetail(groupId || '');
   const { data: groupPhotos, isLoading: isPhotosLoading } = useGroupPhotos(groupId, false, 100);
+  const { data: allGalleryPhotos, isLoading: isGalleryLoading } = usePhotos({
+    category_id: filters.categoryId,
+    tag_id: null,
+    searchQuery: filters.searchQuery,
+    sortOrder: filters.sortOrder,
+    isAdminMode: isAdmin,
+    onlyUngrouped: false,
+  }, 100, !groupId);
   
   const isGroupMode = !!groupId; // Within a group's context
   
-  const isLoading = isSingleLoading || (isGroupMode && (isGroupLoading || isPhotosLoading));
+  const isLoading = isSingleLoading || (isGroupMode ? (isGroupLoading || isPhotosLoading) : isGalleryLoading);
 
   const photos = useMemo(() => {
     let list: Photo[] = [];
-    if (!!groupId) {
-      // Flatten infinite query pages for the lightbox if in group context
-      const allPhotos = groupPhotos?.pages.flatMap(page => page.photos) ?? [];
-      // If we have a single photo already, ensure it's in the list if not fetched yet
-      if (singlePhoto && !allPhotos.find(p => p.id === singlePhoto.id)) {
-        list = [singlePhoto, ...allPhotos];
-      } else {
-        list = allPhotos;
-      }
+    const sourceData = isGroupMode ? groupPhotos : allGalleryPhotos;
+    const allPhotosList = sourceData?.pages.flatMap(page => page.photos) ?? [];
+    
+    // If we have a single photo already, ensure it's in the list if not fetched yet
+    if (singlePhoto && !allPhotosList.find(p => p.id === singlePhoto.id)) {
+      list = [singlePhoto, ...allPhotosList];
     } else {
-      list = singlePhoto ? [singlePhoto] : [];
+      list = allPhotosList;
     }
 
     // Keep unique photos by checking their stable ids
@@ -52,7 +57,7 @@ export const useLightbox = () => {
       seen.add(p.id);
       return true;
     });
-  }, [groupId, groupPhotos, singlePhoto]);
+  }, [groupId, groupPhotos, allGalleryPhotos, singlePhoto, isGroupMode]);
 
   const currentIndex = useMemo(() => {
     if (!photoId || photos.length === 0) return 0;

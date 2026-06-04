@@ -19,14 +19,14 @@ export function useTaskExecutor() {
       showSuccessToast?: boolean;
       showErrorToast?: boolean;
       silent?: boolean;
+      showProgress?: boolean;
       rethrow?: boolean;
     }
   ): Promise<T | null> => {
-    const isUpload = name.includes('上传') || name.toLowerCase().includes('upload');
-    const isAi = name.includes('AI') || name.includes('识别') || name.toLowerCase().includes('analysis');
-    const isSilent = options?.silent ?? (isUpload || isAi);
+    const showProgress = options?.showProgress ?? false;
+    const isSilent = options?.silent ?? true;
 
-    const taskId = isSilent ? null : addTask({ name });
+    const taskId = showProgress ? addTask({ name }) : null;
 
     const updateProgress = (pct: number, msg?: string) => {
       if (taskId) {
@@ -51,8 +51,7 @@ export function useTaskExecutor() {
       }
       reportError(errMsg, name);
       
-      // 💡 提升診斷體驗：默認在主界面彈出 toast.error 錯誤提示，防範“失敗不報警”的不良體感
-      if (!isSilent && options?.showErrorToast !== false) {
+      if (options?.showErrorToast !== false) { // Always show errors
         toast.error(`${name} 失敗: ${errMsg}`);
       }
       
