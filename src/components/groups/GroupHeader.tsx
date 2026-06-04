@@ -99,18 +99,11 @@ export function GroupHeader({
             ) : (
               <>
                 <h2 className="text-base sm:text-lg font-black text-slate-800 tracking-tight uppercase truncate flex-1 min-w-0">
-                  {/* [FIELD-LEVEL-FALLBACK] Render group name, first photo name, or ID as last resort */}
                   {groupData?.name ||
                     activeGroupPhotos[0]?.name ||
                     activeGroupPhotos[0]?.item_code ||
                     `GROUP ${activeGroupId?.slice(-4)}`}
                 </h2>
-                {groupData && (
-                  <span className="flex-shrink-0 bg-blue-50 text-blue-600 text-[10px] font-black px-2 py-0.5 rounded-lg border border-blue-100 flex items-center gap-1">
-                    <span className="opacity-50">CODE:</span>
-                    {activeGroupId?.slice(-6).toUpperCase()}
-                  </span>
-                )}
                 {isAdminMode && (
                   <Pencil
                     size={12}
@@ -120,128 +113,10 @@ export function GroupHeader({
               </>
             )}
           </div>
-          <div className="min-h-[1rem] overflow-hidden">
-            {isGroupDataLoading ? (
-              <Skeleton className="h-3 w-40 mt-1 bg-slate-100 animate-pulse" />
-            ) : (
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none flex items-center gap-2 truncate">
-                <span className="truncate">
-                  {groupData?.name
-                    ? `${l.cover}: ${activeGroupPhotos[0]?.name || ""}`
-                    : `${activeGroupPhotos.length} ${l.photos}`}
-                </span>
-                {activeGroupId && (
-                  <span className="flex-shrink-0 font-mono opacity-50 bg-slate-100/50 px-1 py-0.5 rounded border border-slate-200">
-                    ID: {activeGroupId.split('-')[0]}
-                  </span>
-                )}
-              </p>
-            )}
-          </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-1.5 sm:gap-2 ml-2">
-        {isAdminMode && (
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <button
-              onClick={() => {
-                if (activeGroupId) {
-                  update?.({ photoPickerGroupId: activeGroupId });
-                  update?.({ isPhotoPickerOpen: true });
-                }
-              }}
-              className="w-10 h-10 flex-shrink-0 flex items-center justify-center border border-emerald-200 rounded-xl bg-emerald-50 text-emerald-600 shadow-sm active:scale-95 transition-all"
-              title={l.addPhotos}
-            >
-              <Plus size={20} />
-            </button>
-
-            <button
-              onClick={() => update?.({ groupSettingsOpen: true } as any)}
-              className="w-10 h-10 flex-shrink-0 flex items-center justify-center border border-indigo-200 rounded-xl bg-indigo-50 text-indigo-600 shadow-sm active:scale-95 transition-all"
-              title={l.database}
-            >
-              <Settings2 size={18} />
-            </button>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger className="w-10 h-10 flex-shrink-0 flex items-center justify-center border border-slate-200 rounded-xl bg-white text-slate-700 shadow-sm active:scale-95 transition-all">
-                <MoreVertical size={18} />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="w-44 sm:w-48 bg-white rounded-2xl shadow-xl border border-slate-100 py-1 z-[200]"
-              >
-                <DropdownMenuItem
-                  onClick={() => {
-                    const ids =
-                      selectedIds.length > 0
-                        ? selectedIds
-                        : activeGroupPhotos.map((p) => p.id);
-                    if (onBatchEdit) onBatchEdit(ids);
-                    update?.({ isMultiSelect: false });
-                    update?.({ selectedIds: [] });
-                  }}
-                  className="px-3 sm:px-4 py-2.5 sm:py-3 cursor-pointer flex items-center gap-2 hover:bg-slate-50 focus:bg-slate-50 outline-none"
-                >
-                  <Pencil size={15} className="text-slate-500" />
-                  <span className="text-xs sm:text-sm font-bold text-slate-700 truncate">
-                    {l.edit}
-                  </span>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => {
-                    if (selectedIds.length > 0 && onBatchAiAnalyze) {
-                      onBatchAiAnalyze(
-                        activeGroupPhotos.filter((p) =>
-                          selectedIds.includes(p.id),
-                        ),
-                      );
-                    } else if (onBatchAiAnalyzeByGroupId && activeGroupId) {
-                      onBatchAiAnalyzeByGroupId(activeGroupId);
-                    } else if (onBatchAiAnalyze) {
-                      onBatchAiAnalyze(activeGroupPhotos);
-                    }
-                  }}
-                  className="px-3 sm:px-4 py-2.5 sm:py-3 cursor-pointer flex items-center gap-2 hover:bg-slate-50 focus:bg-slate-50 outline-none"
-                >
-                  <Sparkles size={15} className="text-purple-500" />
-                  <span className="text-xs sm:text-sm font-bold text-slate-700 truncate">
-                    {l.ai}
-                  </span>
-                </DropdownMenuItem>
-                <div className="h-px bg-slate-100 my-1" />
-                <DropdownMenuItem
-                  onClick={() => {
-                    update?.({ 
-                      alertDialog: {
-                        title: l.dissolve,
-                        message: l.dissolveConfirm,
-                        type: 'danger',
-                        onConfirm: async () => {
-                           if (!activeGroupId) return;
-                           try {
-                              await dissolve.mutateAsync(activeGroupId);
-                              handleClose();
-                           } catch (err) {
-                              toast.error(`${l.dissolve} ${appLang === 'zh' ? '失败' : appLang === 'ms' ? 'gagal' : 'failed'}: ${(err as Error).message}`);
-                           }
-                        }
-                      }
-                    });
-                  }}
-                  className="px-3 sm:px-4 py-2.5 sm:py-3 cursor-pointer flex items-center gap-2 hover:bg-red-50 focus:bg-red-50 outline-none"
-                >
-                  <FolderMinus size={15} className="text-red-500" />
-                  <span className="text-xs sm:text-sm font-bold text-red-600 truncate">
-                    {l.dissolve}
-                  </span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        )}
+      <div className="flex items-center ml-2">
         <button
           onClick={handleClose}
           className="w-10 h-10 flex-shrink-0 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors ml-1 border border-slate-200 bg-white"

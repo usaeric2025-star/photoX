@@ -332,6 +332,75 @@ app.post("/r2-delete", async (c) => {
     }
 });
 
+app.post("/admin/delete-photos", async (c) => {
+    try {
+      const { ids } = await c.req.json();
+      if (!ids || !Array.isArray(ids)) {
+        return c.json({ success: false, error: "ids array required" }, 400);
+      }
+
+      const supabase = await getSupabaseAdmin();
+      
+      // 1. Fetch current photos to get their image_url and check if we need physical delete
+      const { data: photosData, error: fetchError } = await supabase
+        .from("furniture_items")
+        .select("id, image_url")
+        .in("id", ids);
+
+      if (fetchError) throw fetchError;
+
+      // 2. Delete database records (bypassing RLS because we use Admin Client!)
+      const { error: deleteError } = await supabase
+        .from("furniture_items")
+        .delete()
+        .in("id", ids);
+
+      if (deleteError) throw deleteError;
+
+      // 3. Physical delete from R2 to keep R2 tidy and cleanly aligned
+      if (photosData && photosData.length > 0) {
+        const s3Client = await getR2Client();
+        const bucketName = serverEnv.R2_BUCKET_NAME;
+        if (bucketName) {
+          const fileKeys = photosData
+            .map(p => {
+              if (!p.image_url) return null;
+              // Extract the Key (e.g. photox/public/your-uuid.webp) from URL path
+              try {
+                const url = new URL(p.image_url);
+                return url.pathname.replace(/^\//, ''); // removes leading slash
+              } catch {
+                if (p.image_url.includes("photox/public/")) {
+                  return "photox/public/" + p.image_url.split("photox/public/")[1];
+                }
+                return null;
+              }
+            })
+            .filter(Boolean) as string[];
+
+          if (fileKeys.length > 0) {
+            await Promise.all(fileKeys.map(async (key) => {
+              try {
+                const command = new DeleteObjectCommand({
+                  Bucket: bucketName,
+                  Key: key,
+                });
+                await s3Client.send(command, { abortSignal: AbortSignal.timeout(5000) });
+              } catch (r2Err) {
+                console.error(`Failed to delete key ${key} from R2 during database delete:`, r2Err);
+              }
+            }));
+          }
+        }
+      }
+
+      return c.json({ success: true, count: ids.length });
+    } catch(e: any) {
+      console.error("[delete-photos] failed:", e);
+      return c.json({ success: false, error: e.message }, 500);
+    }
+});
+
 app.get("/photos", async (c) => {
     try {
       const supabase = await getSupabaseAdmin();
@@ -565,44 +634,10 @@ app.post("/admin/error-events/clear", async (c) => {
 
 app.post("/admin/settings/save-key", async (c) => {
     try {
-        const { provider, apiKey, model } = await c.req.json();
+        const { provider, apiKey } = await c.req.json();
         if (!provider || !apiKey) return c.json({ success: false, error: "缺少必要參數" }, 400);
 
-        // 1. 預驗證：嘗試調用一次 API（僅作為提醒或警告，絕不阻塞保存）
-        let testWarning = "";
-        try {
-            const baseUrl = provider === 'agnes' 
-                ? 'https://apihub.agnes-ai.com/v1' 
-                : 'https://openrouter.ai/api/v1';
-            
-            // 💡 預防性修正：測試連通性時，Agnes 必須強制使用其原生的 'agnes-2.0-flash'，避免因為前端選中的 OpenRouter/Gemini 模型污染導致校驗失敗！
-            let testModel = model;
-            if (provider === 'agnes') {
-                if (!testModel || testModel.startsWith('google/') || testModel.startsWith('meta/') || testModel.startsWith('anthropic/') || testModel.includes('gemini')) {
-                    testModel = 'agnes-2.0-flash';
-                }
-            } else {
-                if (!testModel || testModel.startsWith('agnes')) {
-                    testModel = 'google/gemini-2.0-flash-exp:free';
-                }
-            }
-
-            const testPayload = {
-                model: testModel,
-                messages: [{ role: 'user', content: 'hi' }],
-                max_tokens: 1
-            };
-
-            const testRes = await callProvider(baseUrl, apiKey, testPayload);
-            if (!testRes.ok) {
-                const errorDetail = await testRes.json().catch(() => ({}));
-                testWarning = `（注意：當前遠端連線驗證未通過，但配置已強制保存。原因：${errorDetail?.error?.message || testRes.statusText || '供應商拒絕連線'}）`;
-            }
-        } catch (e: any) {
-            testWarning = `（注意：當前網絡連通性測試失敗，但配置已強制保存。原因：${e.message}）`;
-        }
-
-        // 2. 執行加密存存储（無論連線測試結果如何，百分之百為用戶落庫保存）
+        // 執行加密存存储，百分之百快速為用戶落庫保存
         const supabase = await getSupabaseAdmin();
         const encryptedKey = encrypt(apiKey);
         
@@ -617,7 +652,7 @@ app.post("/admin/settings/save-key", async (c) => {
         
         return c.json({ 
             success: true, 
-            message: `密鑰已加密保存！${testWarning}` 
+            message: `密鑰已加密保存！` 
         });
     } catch (e: any) {
         console.error("Save key failed:", e);
@@ -1579,6 +1614,10 @@ app.post("/storage/import-orphans", async (c) => {
       // 1. Normalize URL helper
       const normalizeUrl = (u: string) => u.toLowerCase().trim().split('?')[0].replace(/\/$/, '');
 
+      // 获取当前操作者的 user_id
+      const { data: session } = await supabase.auth.getSession();
+      const userId = session?.session?.user?.id;
+
       // 2. Get all R2 files
       let continuationToken: string | undefined;
       const r2Keys: string[] = [];
@@ -1677,7 +1716,8 @@ app.post("/storage/import-orphans", async (c) => {
               image_url: publicUrl,
               description: `[自动恢复] 源文件: ${filename}`,
               is_hidden: false, 
-              image_hash: hash 
+              image_hash: hash,
+              user_id: userId
             });
             
             dbUrls.add(normalizeUrl(publicUrl));

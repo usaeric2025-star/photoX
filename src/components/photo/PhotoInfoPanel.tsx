@@ -164,7 +164,7 @@ export function PhotoInfoPanel({
   }
 
   return (
-    <div className={cn("flex flex-col h-full bg-white/95 backdrop-blur-md border-l border-slate-200 overflow-y-auto no-scrollbar", className)}>
+    <div className={cn("flex flex-col h-full bg-white/95 backdrop-blur-md border-l border-slate-200 overflow-y-auto no-scrollbar select-text", className)}>
       {/* Header with Actions */}
       <div className="p-4 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white/90 z-10">
         <h3 className="font-bold text-slate-900 flex items-center gap-2">
@@ -232,6 +232,10 @@ export function PhotoInfoPanel({
                 />
               </div>
               <h2 className="text-xl font-bold text-slate-900 mb-1">{(data as Photo).name || l.unknown}</h2>
+              <div className="flex items-center gap-1.5 mb-3 text-[10px] font-mono text-slate-500/80 select-all cursor-text bg-slate-50 border border-slate-100 px-2 py-1 rounded-md w-fit">
+                <span className="text-[9px] uppercase font-bold text-slate-400/90 tracking-wider">ID:</span>
+                <span>{(data as Photo).id}</span>
+              </div>
               {(data as Photo).name_en && (
                 <h3 className="text-sm font-medium text-slate-500 mb-3">{(data as Photo).name_en}</h3>
               )}
@@ -246,6 +250,14 @@ export function PhotoInfoPanel({
               <div className="p-4 space-y-4">
                 {/* Codes */}
                 <div className="grid grid-cols-2 gap-4">
+                  {/* System ID / 系統內部編號 */}
+                  <div className="col-span-2 bg-white/60 hover:bg-white border border-slate-200/60 p-3 rounded-lg shadow-sm transition-colors">
+                    <span className="text-[9px] uppercase font-bold text-slate-400 block mb-1 tracking-wider">{l.systemId}</span>
+                    <span className="text-[11px] font-mono font-medium text-slate-700 select-all break-all cursor-text block leading-normal bg-slate-50/50 p-2 rounded border border-slate-200/30">
+                      {(data as Photo).id}
+                    </span>
+                  </div>
+
                   <div>
                     <span className="text-[9px] uppercase font-bold text-slate-400 block mb-1 tracking-wider">{l.itemCode}</span>
                     <span className="text-sm font-mono font-semibold text-slate-900">{(data as Photo).item_code || '-'}</span>

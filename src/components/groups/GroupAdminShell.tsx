@@ -14,6 +14,14 @@ import { useAdminMode, useGroupMutations } from "@/hooks";
 import { useAdminActions } from "@/features/admin/useAdminActions";
 import { useUIStore, useShallow } from "@/store/useUIStore";
 import { translations } from "../../lib/translations";
+import { Plus, Settings2, MoreVertical, Pencil, Sparkles, FolderMinus } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import { toast } from "sonner";
 
 export interface GroupAdminShellProps {
   initialPhotoId?: string | null;
@@ -199,6 +207,100 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
               onHide={(ids) => adminActions.batchUpdate.mutateAsync({ ids, updates: { is_hidden: true } })}
               onCopy={(ids) => hookHandleBulkAction('batch')}
             />
+
+            {/* Beautiful Floating Admin Action Dock (when not in multi-select mode) */}
+            {!isMultiSelect && (
+              <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 dark:bg-slate-900/95 backdrop-blur-md text-white shadow-2xl rounded-full px-5 py-2.5 flex items-center gap-4 border border-white/10 z-[190] hover:bg-slate-900 transition-all max-w-lg">
+                {/* 1. Add Photos button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (filters.groupId) {
+                      update?.({ photoPickerGroupId: filters.groupId });
+                      update?.({ isPhotoPickerOpen: true });
+                    }
+                  }}
+                  className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-400 hover:text-emerald-300 active:scale-95 transition-all"
+                  title={(translate as any).addPhotos || 'Add Photos'}
+                >
+                  <Plus size={14} />
+                  <span>{appLang === 'zh' ? '添加照片' : appLang === 'ms' ? 'Tambah Foto' : 'Add Photos'}</span>
+                </button>
+
+                <div className="w-px h-4 bg-slate-800" />
+
+                {/* 2. Group Settings button */}
+                <button
+                  type="button"
+                  onClick={() => update?.({ groupSettingsOpen: true } as any)}
+                  className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-indigo-400 hover:text-indigo-300 active:scale-95 transition-all"
+                  title={(translate as any).database || 'Database'}
+                >
+                  <Settings2 size={14} />
+                  <span>{appLang === 'zh' ? '数据库' : appLang === 'ms' ? 'Pangkalan Data' : 'Database'}</span>
+                </button>
+
+                <div className="w-px h-4 bg-slate-800" />
+
+                {/* 3. More Dropdown Menu */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-slate-300 hover:text-white active:scale-95 transition-all outline-none">
+                    <span>{appLang === 'zh' ? '更多' : appLang === 'ms' ? 'Lain-lain' : 'More'}</span>
+                    <MoreVertical size={12} />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    side="top"
+                    sideOffset={12}
+                    className="w-44 sm:w-48 bg-slate-900 text-white rounded-2xl shadow-2xl border border-white/10 py-1 z-[200]"
+                  >
+                    <DropdownMenuItem
+                      onClick={() => {
+                        const ids = activeGroupPhotos.map((p) => p.id);
+                        update?.({ batchEditingIds: ids });
+                        update?.({ isMultiSelect: false });
+                        update?.({ selectedIds: [] });
+                      }}
+                      className="px-4 py-3 cursor-pointer flex items-center gap-2 hover:bg-white/10 focus:bg-white/10 outline-none text-slate-200"
+                    >
+                      <Pencil size={15} className="text-slate-400" />
+                      <span className="text-xs font-bold">
+                        {appLang === 'zh' ? '批量编辑' : appLang === 'ms' ? 'Edit Pukal' : 'Batch Edit'}
+                      </span>
+                    </DropdownMenuItem>
+                    
+                    <div className="h-px bg-white/10 my-1" />
+                    
+                    <DropdownMenuItem
+                      onClick={() => {
+                        update?.({ 
+                          alertDialog: {
+                            title: appLang === 'zh' ? '解散合组' : appLang === 'ms' ? 'Bubarkan' : 'Dissolve',
+                            message: appLang === 'zh' ? '确定要解散此合组吗？组内的照片将被移出但不会被删除。' : appLang === 'ms' ? 'Adakah anda pasti mahu membubarkan kumpulan ini? Foto akan dikeluarkan tetapi tidak dipadamkan.' : 'Are you sure you want to dissolve this group? Photos will be removed but not deleted.',
+                            type: 'danger',
+                            onConfirm: async () => {
+                               if (!filters.groupId) return;
+                               try {
+                                  await dissolve.mutateAsync(filters.groupId);
+                                  setGroupId(null);
+                               } catch (err) {
+                                  toast.error(`解散失败: ${(err as Error).message}`);
+                               }
+                            }
+                          }
+                        });
+                      }}
+                      className="px-4 py-3 cursor-pointer flex items-center gap-2 hover:bg-red-500/20 focus:bg-red-500/20 outline-none text-red-500"
+                    >
+                      <FolderMinus size={15} className="text-red-500" />
+                      <span className="text-xs font-bold">
+                        {appLang === 'zh' ? '解散合组' : appLang === 'ms' ? 'Bubarkan' : 'Dissolve'}
+                      </span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            )}
 
             {/* Photo Picker for adding photos to group */}
             <GroupPhotoPicker

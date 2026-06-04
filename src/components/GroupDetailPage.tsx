@@ -180,12 +180,12 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
                     >
                       <ChevronLeft size={24} />
                     </button>
-                    <div className={`flex flex-col min-h-[3rem] ${isStale ? "animate-pulse" : ""}`}>
+                    <div className="flex flex-col min-h-[3rem] justify-center">
                       <div className="flex items-center gap-2 min-h-[1.75rem]">
                          {isGroupDataLoading ? (
                            <Skeleton className="h-6 w-32 bg-slate-200" />
                          ) : (
-                           <h2 className="text-lg font-bold text-slate-800 tracking-tight">
+                           <h2 className="text-lg font-black text-slate-800 tracking-tight">
                              {groupData?.name || activeGroupPhotos[0]?.name || `GROUP ${activeGroupId.slice(-4)}`}
                            </h2>
                          )}
@@ -194,8 +194,20 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
                         {isGroupPhotosLoading ? (
                           <Skeleton className="h-3 w-24 mt-1 bg-slate-100" />
                         ) : (
-                          <p className="text-xs text-slate-500 font-normal">
-                            {(totalGroupPhotosCount ?? activeGroupPhotos.length) || groupData?.member_count || 0} 張照片 / Photos
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none flex items-center gap-2 flex-wrap mt-0.5">
+                            <span>{(totalGroupPhotosCount ?? activeGroupPhotos.length) || groupData?.member_count || 0} 張照片 / Photos</span>
+                            {activeGroupId && (
+                              <>
+                                <span className="text-slate-300">•</span>
+                                <span className="text-blue-500/80 bg-blue-50 px-1.5 py-0.5 rounded-md border border-blue-100/50">
+                                  CODE: {activeGroupId.slice(-6).toUpperCase()}
+                                </span>
+                                <span className="text-slate-300">•</span>
+                                <span className="font-mono text-slate-400 opacity-80 bg-slate-100 px-1.5 py-0.5 rounded-md border border-slate-200/50">
+                                  ID: {activeGroupId.split('-')[0]}
+                                </span>
+                              </>
+                            )}
                           </p>
                         )}
                       </div>

@@ -33,7 +33,12 @@ export function AISecuritySection({
       const res = await fetch('/api/admin/settings/get-keys');
       if (res.ok) {
         const data = await res.json();
-        if (data.success) setKeysStatus(data.keysStatus);
+        if (data.success) {
+          setKeysStatus(data.keysStatus);
+          if (data.keysStatus.agnes) {
+            setAgnesKey('••••••••••••••••');
+          }
+        }
       }
     } catch (e) {
       console.error("Failed to fetch keys status:", e);
@@ -47,12 +52,13 @@ export function AISecuritySection({
   const handleTest = async (provider: 'agnes' | 'openrouter') => {
     setIsTesting(provider);
     try {
+      const targetKey = provider === 'agnes' ? agnesKey : geminiApiKey;
       const res = await fetch('/api/ai/test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           provider,
-          apiKey: provider === 'agnes' ? agnesKey : (geminiApiKey === "••••••••••••••••" ? "" : geminiApiKey),
+          apiKey: targetKey === "••••••••••••••••" ? "" : targetKey,
           model: provider === 'openrouter' ? customModel : undefined
         })
       });
@@ -73,6 +79,10 @@ export function AISecuritySection({
   const [isSaving, setIsSaving] = React.useState<'agnes' | 'openrouter' | null>(null);
 
   const saveKey = async (provider: 'agnes' | 'openrouter', apiKey: string) => {
+    if (apiKey === "••••••••••••••••" || !apiKey.trim()) {
+      toast.success(`${provider === 'agnes' ? 'Agnes' : 'OpenRouter'} 密鑰未變更`);
+      return;
+    }
     setIsSaving(provider);
     try {
       const res = await fetch('/api/admin/settings/save-key', {
@@ -83,9 +93,12 @@ export function AISecuritySection({
       const data = await res.json();
       if (res.ok && data.success) {
         toast.success(`${provider === 'agnes' ? 'Agnes' : 'OpenRouter'} 密鑰已保存`);
-        if (provider === 'agnes') setAgnesKey('••••••••••••••••');
-        else setGeminiApiKey('••••••••••••••••');
-        fetchKeysStatus();
+        if (provider === 'agnes') {
+            setAgnesKey('••••••••••••••••');
+        } else {
+            setGeminiApiKey('••••••••••••••••');
+        }
+        await fetchKeysStatus();
       } else {
         toast.error("保存失敗");
       }
@@ -130,18 +143,20 @@ export function AISecuritySection({
                         type="password"
                         placeholder="OpenRouter API Key..."
                         className={`${inputClass} font-mono w-full bg-slate-50 pr-16`}
-                        value={geminiApiKey === "••••••••••••••••" ? "" : geminiApiKey}
+                        value={geminiApiKey}
                         onChange={(e) => setGeminiApiKey(e.target.value)}
                     />
                     <button 
                          onClick={() => saveKey('openrouter', geminiApiKey)} 
                          disabled={isSaving === 'openrouter'}
-                         className="absolute right-1 top-1 py-1 px-3 bg-brand-navy text-white text-[8px] font-bold rounded-lg hover:bg-brand-navy/90 transition-colors disabled:opacity-50"
+                         className="absolute right-1 top-1 py-1 px-3 bg-brand-navy text-white text-[8px] font-bold rounded-lg hover:bg-brand-navy/90 transition-colors disabled:opacity-50 animate-pulse"
                      >
                          {isSaving === 'openrouter' ? '..' : '保存'}
                      </button>
                  </div>
-                 <button onClick={() => handleTest('openrouter')} className="w-full text-[9px] font-black p-2 bg-slate-100 rounded-lg">測試連線</button>
+                 <button onClick={() => handleTest('openrouter')} disabled={isTesting !== null} className="w-full text-[10px] font-black p-2 bg-slate-100 hover:bg-slate-200 transition-colors rounded-lg">
+                   {isTesting === 'openrouter' ? '測試中...' : '測試連線'}
+                 </button>
              </div>
           </div>
 
@@ -174,7 +189,9 @@ export function AISecuritySection({
                     {isSaving === 'agnes' ? '..' : '保存'}
                  </button>
              </div>
-             <button onClick={() => handleTest('agnes')} className="w-full text-[9px] font-black p-2 bg-slate-100 rounded-lg">測試連線</button>
+             <button onClick={() => handleTest('agnes')} disabled={isTesting !== null} className="w-full text-[10px] font-black p-2 bg-slate-100 hover:bg-slate-200 transition-colors rounded-lg">
+               {isTesting === 'agnes' ? '測試中...' : '測試連線'}
+             </button>
           </div>
         </div>
       </div>

@@ -98,25 +98,46 @@ export interface BatchActionResult {
 }
 
 export async function deleteMany(ids: string[]): Promise<AppResult<BatchActionResult>> {
-    const { data, error } = await supabase
-      .from(DB_CONFIG.TABLE_NAME)
-      .delete()
-      .in('id', ids)
-      .select('id');
-    
-    if (error) {
-      // If bulk fails, we might want to try one by one to find why, but for now:
-      return errorFactory(error.message, 'DB_ERROR', 'deleteMany', error);
+    try {
+      const response = await fetch('/api/admin/delete-photos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ ids })
+      });
+      
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || `Delete failed with HTTP ${response.status}`);
+      }
+      
+      return success({
+        successCount: ids.length,
+        failureCount: 0,
+        failedItems: []
+      });
+    } catch(err: any) {
+      console.warn('[deleteMany] Admin endpoint failed, falling back to client-side RLS delete:', err);
+      const { data, error } = await supabase
+        .from(DB_CONFIG.TABLE_NAME)
+        .delete()
+        .in('id', ids)
+        .select('id');
+      
+      if (error) {
+        return errorFactory(error.message, 'DB_ERROR', 'deleteMany', error);
+      }
+
+      const deletedIds = new Set(data?.map(d => d.id) || []);
+      const failedItems = ids.filter(id => !deletedIds.has(id)).map(id => ({ id, reason: 'Unknown or Permission Denied' }));
+
+      return success({
+        successCount: deletedIds.size,
+        failureCount: failedItems.length,
+        failedItems
+      });
     }
-
-    const deletedIds = new Set(data?.map(d => d.id) || []);
-    const failedItems = ids.filter(id => !deletedIds.has(id)).map(id => ({ id, reason: 'Unknown or Permission Denied' }));
-
-    return success({
-      successCount: deletedIds.size,
-      failureCount: failedItems.length,
-      failedItems
-    });
 }
 
 export async function update(id: string, updates: Partial<Photo>): Promise<AppResult<null>> {
@@ -366,7 +387,8 @@ export const groupPhotos = async (
       .from(DB_CONFIG.TABLE_NAME)
       .update({ 
         group_id: targetGroupId,
-        is_group_cover: false 
+        is_group_cover: false,
+        user_id: supabase.rpc('coalesce_user_id', { target_user_id: userId })
       })
       .in('id', validIds);
 
