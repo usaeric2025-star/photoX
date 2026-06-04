@@ -43,7 +43,7 @@ export const analyzePhoto = async (photoId: string): Promise<AppResult<any>> => 
       throw ErrorFactory.wrap(new Error('Gemini API Key 未配置，请前往设置页面'), 'analyzePhoto', photoId);
     }
 
-    const customModel = (settings as any)?.custom_model || (settings as any)?.model_name || '';
+     const customModel = (settings as any)?.custom_model || '';
 
     // 3. Call AI Core
     const result = await analyzeProductPhoto(

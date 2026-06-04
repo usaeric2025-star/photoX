@@ -21,7 +21,7 @@ export const fetchSettings = async () => {
     // Map custom columns back to app expectations
     if (data) {
         data.gemini_api_key = data.api_key;
-        data.custom_model = data.model_name;
+        data.custom_model = data.openrouter_model;
         data.provider = 'openrouter'; // Default
         
         // Fetch key status and primary provider from backend
@@ -33,9 +33,11 @@ export const fetchSettings = async () => {
                     const status = keysData.keysStatus;
                     data.provider = status.primaryProvider || 'openrouter';
                     
-                    // If either Agnes AI or OpenRouter has an encrypted key, populate gemini_api_key with placeholder
-                    if (status.agnes || status.openrouter || data.api_key) {
+                    // Only populate gemini_api_key placeholder if OpenRouter actually has a key
+                    if (status.openrouter || data.api_key) {
                         data.gemini_api_key = data.api_key || "••••••••••••••••";
+                    } else {
+                        data.gemini_api_key = "";
                     }
                 }
             }
@@ -61,7 +63,7 @@ export const fetchSettings = async () => {
  * 嚴禁將前端狀態字段 (UI state) 直接傳入數據庫
  */
 const SETTINGS_COLUMNS = [
-    'id', 'logo_url', 'api_key', 'model_name', 
+    'id', 'logo_url', 'api_key', 'openrouter_model',
     'access_passcode', 'whatsapp_1', 'whatsapp_1_name', 
     'whatsapp_2', 'whatsapp_2_name', 'tags_json', 'updated_at'
 ];
@@ -76,7 +78,7 @@ export const saveSettings = async (settings: Partial<AppSettings> & Record<strin
         
         const mapping: Record<string, string> = {
             'gemini_api_key': 'api_key',
-            'custom_model': 'model_name'
+            'custom_model': 'openrouter_model'
         };
 
         // 2. 根據白名單構建最終 Payload

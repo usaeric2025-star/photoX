@@ -8,6 +8,7 @@ import { getServerEnv } from "./shared/envSchema.js";
 import { logTraffic } from "./lib/trafficCapture.js";
 import { encrypt, decrypt } from './lib/encryption.js';
 import { getAIProvider } from "./lib/ai/providerFactory.js";
+import { getTaskConfig, AITask } from "./lib/ai/taskRouter.js";
 
 // Validate env at module level
 const serverEnv = getServerEnv(process.env);
@@ -150,29 +151,30 @@ app.post("/ai/test/primary", async (c) => {
     return c.json({ success: true, provider });
 });
 
-app.post("/ai/dispatch", async (c) => {
-    const { payload } = await c.req.json();
+app.post("/ai/run", async (c) => {
+    const { task, imageUrl, prompt } = await c.req.json();
+    const { provider, model, apiKeyKey } = await getTaskConfig(task as AITask);
     const supabase = await getSupabaseAdmin();
+    
+    // We need to fetch the key using apiKeyKey ('openrouter' or 'agnes')
+    const { data: secret } = await supabase.from('secrets').select('value').eq('key', apiKeyKey).maybeSingle();
+    if (!secret?.value) throw new Error(`未配置 ${provider} 的 API 密鑰`);
+    const { decrypt } = await import('./lib/encryption.js');
+    const apiKey = decrypt(secret.value);
 
-    const { data: primarySecret } = await supabase.from('secrets').select('value').eq('key', 'PRIMARY_AI_PROVIDER').maybeSingle();
-    const primary = primarySecret?.value || 'openrouter';
-    const secondary = primary === 'openrouter' ? 'agnes' : 'openrouter';
+    // Call provider
+    const ai = await getAIProvider(provider, supabase, model);
     
-    const errors: string[] = [];
-    for (const providerName of [primary, secondary]) {
-        try {
-            const ai = await getAIProvider(providerName, supabase);
-            const result = await ai.chat([
-                { role: 'user', content: payload.prompt }
-            ]);
-            if (result.success) return c.json(result);
-            errors.push(`${providerName}: ${result.error}`);
-        } catch (e: any) {
-            errors.push(`${providerName}: ${e.message}`);
-        }
+    // Construct message payload based on task
+    let messages = [];
+    if (imageUrl) {
+         messages.push({ role: 'user', content: [{ type: 'image_url', image_url: { url: imageUrl } }, { type: 'text', text: prompt || 'Analyze this image' }]});
+    } else {
+         messages.push({ role: 'user', content: prompt });
     }
-    
-    throw new Error(`AI Dispatch all failed: ${errors.join('; ')}`);
+
+    const result = await ai.chat(messages);
+    return c.json(result);
 });
 
 app.post("/upload-presign", async (c) => {

@@ -107,7 +107,7 @@ export class OpenRouterProvider extends BaseAIProvider {
     }
 }
 
-export async function getAIProvider(providerName: string, supabase: any) {
+export async function getAIProvider(providerName: string, supabase: any, modelOverride?: string) {
     // 優先從 secrets 讀取
     const { data: secret } = await supabase.from('secrets').select('value').eq('key', providerName).maybeSingle();
     let apiKey = '';
@@ -124,22 +124,7 @@ export async function getAIProvider(providerName: string, supabase: any) {
 
     if (!apiKey) throw new Error(`未配置 ${providerName} 的 API 密鑰`);
 
-    const { data: settings } = await supabase.from('settings').select('model_name').eq('id', 1).maybeSingle();
-    
-    // 優先確保 Agnes 使用正確的預設模型
-    let model = settings?.model_name;
-    
-    // 如果是 Agnes，強制預設模型，或者是用戶自定義模型
-    if (providerName === 'agnes') {
-        if (!model || model.startsWith('google/') || model.includes('gemini')) {
-             model = 'agnes-2.0-flash';
-        }
-    } else if (providerName === 'openrouter') {
-        // 若 OpenRouter 誤用了 Agnes 模型，強制修正
-        if (!model || model.startsWith('agnes')) {
-            model = 'google/gemini-2.0-flash-exp:free';
-        }
-    }
+    let model = modelOverride || 'agnes-2.0-flash'; // Fallback for testing
     
     console.log(`[getAIProvider] Using provider: ${providerName}, model: ${model}`);  
     const config = { apiKey, model };
