@@ -14,38 +14,27 @@ export const useAIGroupMutation = createMutationHook({
       .select('id, name, tag_ids')
       .in('id', photoIds);
 
-    if (error) throw ErrorFactory.wrap(error, 'createAIGroup - fetchPhotos');
-    if (!photos || photos.length === 0) throw ErrorFactory.wrap(new Error('未找到所选照片'), 'createAIGroup', photoIds.join(', '));
+    if (error) throw ErrorFactory.wrap(error, 'useAIGroupMutation - fetchPhotos');
+    if (!photos || photos.length === 0) throw ErrorFactory.wrap(new Error('未找到所选照片'), 'useAIGroupMutation', photoIds.join(', '));
 
     // 2. AI 分析
     const analysis = await analyzeGroup(photos);
     const { name, description, colors, materials } = analysis;
 
-    // Translation logic (shortened for brevity, preserving essence)
-    let name_translations = { zh: name, en: name, ms: name };
-    let description_translations = { zh: description, en: description, ms: description };
+    // 获取翻译逻辑（这里可以扩展，目前先使用分析出来的基本字段）
+    const name_translations = { zh: name, en: name, ms: name };
+    const description_translations = { zh: description, en: description, ms: description };
 
-    // 3. 创建合组
-    const { data: group, error: groupError } = await supabase
-      .from('groups')
-      .insert({
-        name,
-        description,
-        colors,
-        materials,
-        name_translations,
-        description_translations,
-      })
-      .select()
-      .single();
-
-    if (groupError) throw ErrorFactory.wrap(groupError, 'createAIGroup - insertGroup');
-
-    // 4. 更新照片的 group_id
+    // 3. 执行合组（合并照片、创建组、清理旧组）
     const { groupPhotos } = await import('@/services/photo/commands');
-    await groupPhotos(photoIds, group.id, true);
+    const result = await groupPhotos(photoIds, undefined, true, {
+      name: name_translations,
+      description: description_translations,
+      colors,
+      materials
+    });
 
-    return group;
+    return result;
   },
   invalidateKeys: [photoKeys.all, groupKeys.all],
   onSuccessMessage: '合组成功',

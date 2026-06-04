@@ -89,16 +89,24 @@ app.onError((err, c) => {
 import { decrypt } from './lib/encryption';
 
 async function callProvider(baseUrl: string, apiKey: string, payload: any) {
-    const response = await fetch(`${baseUrl}/chat/completions`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-            model: payload.model, 
-            messages: [{ role: 'user', content: [{ type: 'text', text: payload.prompt }, { type: 'image_url', image_url: { url: payload.imageBase64 } }] }] 
-        })
-    });
-    if (!response.ok) throw new Error(`Provider returned ${response.status}`);
-    return response.json();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+    
+    try {
+        const response = await fetch(`${baseUrl}/chat/completions`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                model: payload.model, 
+                messages: [{ role: 'user', content: [{ type: 'text', text: payload.prompt }, { type: 'image_url', image_url: { url: payload.imageBase64 } }] }] 
+            }),
+            signal: controller.signal
+        });
+        if (!response.ok) throw new Error(`Provider returned ${response.status}`);
+        return response.json();
+    } finally {
+        clearTimeout(timeoutId);
+    }
 }
 
 async function getAIConfig(providerName?: string) {
@@ -154,22 +162,32 @@ app.post("/ai/test", async (c) => {
 app.post("/ai/dispatch", async (c) => {
   try {
     const { task, payload } = await c.req.json();
+    const errors: any[] = [];
     
-    // 1. 尝试首选提供商
-    let config = await getAIConfig();
-    try {
-        return c.json(await callProvider(config.baseUrl, config.apiKey, payload));
-    } catch (e) {
-        console.warn(`Primary provider ${config.provider} failed, falling back:`, e);
-        
-        // 2. 自动降级到 OpenRouter/Gemini
-        config = await getAIConfig('openrouter');
-        return c.json(await callProvider(config.baseUrl, config.apiKey, payload));
+    // 尝试的提供商列表
+    const providersToTry = ['openrouter', 'agnes']; // 根据配置添加更多
+
+    for (const providerName of providersToTry) {
+        try {
+            const config = await getAIConfig(providerName);
+            return c.json(await callProvider(config.baseUrl, config.apiKey, payload));
+        } catch (e: any) {
+            console.warn(`Provider ${providerName} failed:`, e.message);
+            errors.push({ provider: providerName, error: e.message });
+        }
     }
     
+    // 如果全部失败
+    throw new Error(`AI Dispatch failed for all providers: ${errors.map(e => `${e.provider}: ${e.error}`).join('; ')}`);
+    
   } catch (error: any) {
-    console.error('AI Dispatch failed:', error);
-    return c.json({ success: false, error: error.message || 'AI Dispatch failed' }, 500);
+    console.error('AI Dispatch all failed:', error);
+    return c.json({ 
+        success: false, 
+        error: error.message || 'AI Dispatch failed',
+        code: 'AI_PROVIDER_ERROR',
+        details: error.message // 供前端调试
+    }, 500);
   }
 });
 
@@ -1727,4 +1745,40 @@ app.post("/admin/backfill-photo-metadata", async (c) => {
     }
 });
 
+app.post("/api/groups/merge", async (c) => {
+    try {
+        const { sourceGroupIds, targetGroupId } = await c.req.json();
+        
+        if (!sourceGroupIds || !targetGroupId) {
+            return c.json({ success: false, error: "Missing required parameters", code: 'BAD_REQUEST' }, 400);
+        }
+
+        const supabase = await getSupabaseAdmin();
+        const { data, error } = await supabase.rpc('merge_groups', {
+            source_group_ids: sourceGroupIds,
+            target_group_id: targetGroupId,
+        });
+        
+        if (error || !data?.success) {
+            console.error('[API Merge Groups] RPC Error', { error, data });
+            return c.json({ 
+                success: false, 
+                error: error?.message || data?.error || "Merge failed",
+                code: 'MERGE_FAILED',
+                context: { sourceGroupIds, targetGroupId }
+            }, 500);
+        }
+        
+        return c.json({ success: true, data: { movedCount: data.moved_count } });
+    } catch (e: any) {
+        console.error('[API Merge Groups] Exception', e);
+        return c.json({ 
+            success: false, 
+            error: e.message,
+            code: 'INTERNAL_SERVER_ERROR'
+        }, 500);
+    }
+});
+
 export type AppType = typeof app;
+

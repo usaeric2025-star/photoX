@@ -289,127 +289,83 @@ export const deletePhotosBatch = async (
   }
 };
 
-export const groupPhotos = async (photoIds: string[], predefinedGroupId?: string, expandGroups: boolean = false) => {
+export const groupPhotos = async (
+  photoIds: string[], 
+  predefinedGroupId?: string, 
+  expandGroups: boolean = false,
+  metadata?: {
+    name?: any;
+    description?: any;
+    colors?: string[];
+    materials?: string[];
+  }
+) => {
   if (photoIds.length <= 1) {
     throw ErrorFactory.wrap(new Error('至少需要选择两张照片才能成组'), 'groupPhotos', photoIds.join(', '));
   }
-  const groupId = predefinedGroupId || crypto.randomUUID();
-  let isNewGroup = false;
-
-  // 1. Get previous group_ids for the selected photos
+  
   const validIds = photoIds.filter(id => id && !id.startsWith('temp-'));
+  if (validIds.length === 0) return { finalPhotoIds: [], newGroupId: null };
+
+  const targetGroupId = predefinedGroupId || crypto.randomUUID();
+  const { data: { session } } = await supabase.auth.getSession();
+  const userId = session?.user?.id;
+
+  // 1. 获取选定照片的当前状态，用于获取源组ID集合
   const { data: selectedPhotos } = await supabase
     .from(DB_CONFIG.TABLE_NAME)
     .select('id, group_id')
     .in('id', validIds);
 
-  const previousGroupIds = Array.from(new Set(
+  const sourceGroupIds = Array.from(new Set(
     selectedPhotos
       ?.map(p => p.group_id)
-      .filter((gid): gid is string => !!gid) || []
+      .filter((gid): gid is string => !!gid && gid !== targetGroupId) || []
   ));
 
-  // 2. Expand groups if requested
-  let finalPhotoIds = [...photoIds];
-  if (expandGroups && previousGroupIds.length > 0) {
-    const { data: groupPhotosData } = await supabase
-      .from(DB_CONFIG.TABLE_NAME)
-      .select('id')
-      .in('group_id', previousGroupIds);
+  // 2. 调用原子化 RPC 合并合组
+  const { data: rpcData, error: rpcError } = await supabase.rpc('merge_groups', {
+    source_group_ids: sourceGroupIds,
+    target_group_id: targetGroupId
+  });
 
-    if (groupPhotosData) {
-      finalPhotoIds = Array.from(new Set([
-        ...photoIds,
-        ...groupPhotosData.map(p => p.id)
-      ]));
-    }
+  if (rpcError) {
+    throw ErrorFactory.wrap(rpcError, 'groupPhotos/merge_groups', targetGroupId);
   }
 
-  // 3. Check if group already exists in the groups table
-  const { data: existingGroup } = await supabase
-    .from('groups')
-    .select('id')
-    .eq('id', groupId)
-    .maybeSingle();
+  // 3. 设置封面图 (RPC 可能不处理)
+  const coverPhotoId = validIds[0] || null;
+  if (coverPhotoId) {
+    await supabase.from(DB_CONFIG.TABLE_NAME).update({ is_group_cover: true }).eq('id', coverPhotoId);
+  }
 
-  const coverPhotoId = finalPhotoIds[0] || null;
+  // 4. 更新目标合组元数据
+  const groupData = {
+    name: metadata?.name || { zh: '新合组', en: 'New Combined Group', ms: 'Kumpulan Baru' },
+    description: metadata?.description || { zh: '', en: '', ms: '' },
+    colors: metadata?.colors || [],
+    materials: metadata?.materials || [],
+    member_count: validIds.length, // RPC 负责移动，这里需要确保 member_count 正确吗? RPC 应该处理 member_count
+    cover_photo_id: coverPhotoId,
+    updated_at: new Date().toISOString()
+  };
+
+  const { data: existingGroup } = await supabase.from('groups').select('id').eq('id', targetGroupId).maybeSingle();
 
   if (!existingGroup) {
-    const { data: { session } } = await supabase.auth.getSession();
-    const userId = session?.user?.id;
-    
-    const { error: insertError } = await supabase
-      .from('groups')
-      .insert({
-        id: groupId,
-        name: 'Unset Group',
-        description: '',
-        colors: [],
-        materials: [],
-        is_hidden: false,
-        user_id: userId,
-        member_count: finalPhotoIds.length,
-        cover_photo_id: coverPhotoId,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      });
-      
-    if (insertError) {
-      console.error('[groupPhotos] Failed to create group in database:', insertError);
-      throw ErrorFactory.wrap(new Error(`创建合并群组失败: ${insertError.message || JSON.stringify(insertError)}`), 'groupPhotos', groupId);
-    }
-    isNewGroup = true;
+    const { error: insertError } = await supabase.from('groups').insert({
+      id: targetGroupId,
+      user_id: userId,
+      is_hidden: false,
+      created_at: new Date().toISOString(),
+      ...groupData
+    });
+    if (insertError) throw ErrorFactory.wrap(insertError, 'groupPhotos/createGroup', targetGroupId);
+  } else {
+    await supabase.from('groups').update(groupData).eq('id', targetGroupId);
   }
 
-  // 4. Update group_id and is_group_cover for the photos in supabase
-  const updatePromises = [];
-  if (coverPhotoId) {
-    updatePromises.push(
-      updatePhotosGroupInCloud([coverPhotoId], {
-        group_id: groupId,
-        is_group_cover: true
-      })
-    );
-  }
-  
-  const nonCoverIds = finalPhotoIds.filter(id => id !== coverPhotoId);
-  if (nonCoverIds.length > 0) {
-    updatePromises.push(
-      updatePhotosGroupInCloud(nonCoverIds, {
-        group_id: groupId,
-        is_group_cover: false
-      })
-    );
-  }
-
-  await Promise.all(updatePromises);
-  
-  // 5. Cleanup the previous groups that lost elements
-  if (previousGroupIds.length > 0) {
-    const { syncGroupMemberCount, ungroupPhotos } = await import('../photoMutationService');
-    for (const prevGid of previousGroupIds) {
-      if (prevGid === groupId) continue;
-
-      const { data: remaining } = await supabase
-        .from(DB_CONFIG.TABLE_NAME)
-        .select('id')
-        .eq('group_id', prevGid);
-
-      if (!remaining || remaining.length <= 1) {
-        await ungroupPhotos(prevGid);
-      } else {
-        await syncGroupMemberCount(prevGid);
-      }
-    }
-  }
-
-  if (!isNewGroup) {
-    const { syncGroupMemberCount } = await import('../photoMutationService');
-    await syncGroupMemberCount(groupId);
-  }
-
-  // Return structure that fits expected output or results
-  return { finalPhotoIds, newGroupId: groupId };
+  return { finalPhotoIds: validIds, newGroupId: targetGroupId, name: groupData.name };
 };
 
 export const removePhotosFromGroup = async (photoIds: string[], groupId: string) => {

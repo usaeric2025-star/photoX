@@ -61,30 +61,21 @@ export function useAIGroup() {
           console.warn('[createAIGroup] Group translations skipped:', e);
         }
 
-        // 3. 创建合组
-        const { data: group, error: groupError } = await supabase
-          .from('groups')
-          .insert({
-            name: { zh: name, en: name_en, ms: name_ms },
-            description: { zh: description, en: description_en, ms: description_ms },
-            colors,
-            materials,
-          })
-          .select()
-          .single();
-    
-        if (groupError) throw ErrorFactory.wrap(groupError, 'createAIGroup - insertGroup');
-    
-        // 4. 更新照片的 group_id 并清理原有的组合
+        // 3. 执行合组（合并照片、创建组、清理旧组）
         const searchParams = new URLSearchParams(window.location.search);
         const isCollapsed = searchParams.get('showGroupsCollapsed') !== 'false';
         
         const { groupPhotos } = await import('@/services/photo/commands');
-        await groupPhotos(photoIds, group.id, isCollapsed);
+        
+        const result = await groupPhotos(photoIds, undefined, isCollapsed, {
+            name: { zh: name, en: name_en, ms: name_ms },
+            description: { zh: description, en: description_en, ms: description_ms },
+            colors,
+            materials
+        });
     
-        return group;
+        return result;
     } finally {
-        // 其实 resetUI 会清理 processingIds，但在 error 时我们也需要确保清理
         removeProcessingIds(photoIds);
     }
   };
@@ -133,11 +124,13 @@ export function useAIGroup() {
       return;
     }
 
+    const appLang = (localStorage.getItem('app_lang') || 'zh') as 'zh' | 'en' | 'ms';
+
     const promise = (async () => {
         if (photoIds.length === 1) {
             return await recognizeSinglePhoto(photoIds[0]);
         } else {
-            const group = await createAIGroup(photoIds);
+            const result = await createAIGroup(photoIds);
             
             // 重置 UI
             resetUI();
@@ -148,14 +141,16 @@ export function useAIGroup() {
                 queryClient.invalidateQueries({ queryKey: groupKeys.all })
             ]);
             
-            return group;
+            return result;
         }
     })();
 
     toast.promise(promise, {
         loading: photoIds.length === 1 ? 'AI 正在分析照片...' : 'AI 正在智能合组...',
         success: (data: any) => {
-             return photoIds.length === 1 ? 'AI 分析完成，已填充表单' : `已成功创建合组：${data.name}`;
+             if (photoIds.length === 1) return 'AI 分析完成，已填充表单';
+             const displayName = data.name?.[appLang] || data.name?.zh || '新合组';
+             return `已成功创建合组：${displayName}`;
         },
         error: (err) => err instanceof Error ? err.message : 'AI 处理失败'
     });
