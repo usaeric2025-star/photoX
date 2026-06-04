@@ -5,7 +5,7 @@ import { photoKeys } from '@/lib/queryKeys';
 import { useErrorHandler, useTasks } from '@/hooks';
 import { toast } from '@/lib/ui/toast';
 import { isOk } from '@/lib/errorFactory';
-import { ErrorFactory } from '../../lib/error/ErrorFactory';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 export function useAIPhotoAnalysis() {
   const { addTask, updateTask } = useTasks();

@@ -22,6 +22,30 @@ import { toast } from 'sonner';
 import { GroupDetailPage } from '@/components/GroupDetailPage';
 import { useUrlFilters } from '@/hooks/useUrlFilters';
 
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { AlertCircle } from 'lucide-react';
+
+// Error display component
+const AuthErrorDisplay = ({ message }: { message: string }) => (
+  <div className="flex-1 flex items-center justify-center p-8 bg-slate-50 text-center">
+    <div className="max-w-md space-y-6 animate-in fade-in zoom-in duration-500">
+      <div className="w-16 h-16 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto shadow-sm">
+        <AlertCircle size={32} />
+      </div>
+      <div className="space-y-2">
+        <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight">身份驗證錯誤</h2>
+        <p className="text-slate-500 text-sm leading-relaxed">{message}</p>
+      </div>
+      <button 
+        onClick={() => window.location.href = '/'}
+        className="w-full py-4 bg-brand-navy text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-brand-navy/10 active:scale-95 transition-all"
+      >
+        重新嘗試連接
+      </button>
+    </div>
+  </div>
+);
+
 export default function PublicPage() {
   // 滚动恢复
   useScrollRestoration('public_view_scroll');
@@ -69,11 +93,7 @@ export default function PublicPage() {
         isRefreshing={isSyncing}
       />
       {authError ? (
-        <div className="flex-1 flex items-center justify-center p-8 bg-slate-50">
-          <ErrorBoundary>
-            <AuthErrorThrower message={authError} />
-          </ErrorBoundary>
-        </div>
+        <AuthErrorDisplay message={authError} />
       ) : (
         <div className="flex-1 min-h-0 relative">
           <DataLoadingContainer
@@ -97,8 +117,3 @@ export default function PublicPage() {
   );
 }
 
-import { ErrorFactory } from '../lib/error/ErrorFactory';
-
-function AuthErrorThrower({ message }: { message: string }) {
-  throw ErrorFactory.wrap(new Error(message), 'AuthErrorThrower');
-}

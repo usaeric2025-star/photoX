@@ -288,7 +288,7 @@ export function PhotoInfoPanel({
                       <div className="flex justify-between items-center mb-1">
                         <span className="font-bold text-slate-700 flex items-center gap-1">
                           {dim.label || l.standard}
-                          {dim.is_ai && <Sparkles size={10} className="text-blue-500" title={l.aiEstimated} />}
+                          {dim.is_ai && <Sparkles size={10} className="text-blue-500" aria-label={l.aiEstimated} />}
                         </span>
                         <span className="text-[9px] uppercase font-bold text-slate-400">{dim.unit}</span>
                       </div>
@@ -307,7 +307,7 @@ export function PhotoInfoPanel({
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
                     {l.description}
-                    {(data as Photo).is_ai_described && <Sparkles size={10} className="text-blue-500" title={l.aiGenerated} />}
+                    {(data as Photo).is_ai_described && <Sparkles size={10} className="text-blue-500" aria-label={l.aiGenerated} />}
                   </h4>
                   {/* Language Toggle */}
                   {showLanguageToggle && (

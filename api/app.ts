@@ -7,6 +7,7 @@ import { createClient } from "@supabase/supabase-js";
 import { getServerEnv } from "./shared/envSchema.js";
 import { logTraffic } from "./lib/trafficCapture.js";
 import { encrypt, decrypt } from './lib/encryption.js';
+import { getAIProvider } from "./lib/ai/providerFactory.js";
 
 // Validate env at module level
 const serverEnv = getServerEnv(process.env);
@@ -53,6 +54,17 @@ async function getSupabaseAdmin() {
   return createClient(supabaseUrl, supabaseKey);
 }
 
+async function callProvider(url: string, key: string, payload: any) {
+  return fetch(`${url}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${key}`
+    },
+    body: JSON.stringify(payload)
+  });
+}
+
 const normalizeUrl = (u: string) => u.toLowerCase().trim().split('?')[0].replace(/\/$/, '');
 
 // --- Hono App Implementation ---
@@ -72,171 +84,66 @@ app.use("*", async (c, next) => {
 
 // Global Exception Handler
 app.onError((err, c) => {
-  console.error('[Hono Global Error]', {
-    message: err.message,
-    stack: err.stack,
-    context: c.req.path
-  });
+  const status = (err as any).status || 500;
+  console.error(`[API Error] ${c.req.method} ${c.req.path}: ${err.message}`, err);
   
   return c.json({
     success: false,
     error: {
-      message: err.message,
-      code: 'INTERNAL_SERVER_ERROR'
+      message: err.message || "Internal Server Error",
+      code: (err as any).code || 'INTERNAL_SERVER_ERROR'
     }
-  }, 500);
+  }, status);
 });
-
-async function callProvider(baseUrl: string, apiKey: string, payload: any) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
-    
-    try {
-        const response = await fetch(`${baseUrl}/chat/completions`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                model: payload.model, 
-                messages: [{ role: 'user', content: [{ type: 'text', text: payload.prompt }, { type: 'image_url', image_url: { url: payload.imageBase64 } }] }] 
-            }),
-            signal: controller.signal
-        });
-        if (!response.ok) throw new Error(`Provider returned ${response.status}`);
-        return response.json();
-    } finally {
-        clearTimeout(timeoutId);
-    }
-}
-
-async function getAIConfig(providerName?: string) {
-  const supabase = await getSupabaseAdmin();
-
-  // 1. 获取当前设置的提供商
-  const { data: settingsData } = await supabase
-    .from('settings')
-    .select('ai_provider, api_key')
-    .eq('id', 1)
-    .maybeSingle();
-
-  const provider = providerName || settingsData?.ai_provider || 'openrouter';
-
-  // 2. 从 secrets 表获取密文 key
-  const { data: secret } = await supabase
-    .from('secrets')
-    .select('value')
-    .eq('name', provider)
-    .maybeSingle();
-
-  let apiKey: string | null = null;
-  if (secret?.value) {
-    apiKey = decrypt(secret.value);
-  } else if (provider === 'openrouter' && settingsData?.api_key) {
-    // 降级使用 settings 表里的 api_key
-    apiKey = settingsData.api_key;
-  }
-
-  if (!apiKey) {
-      throw new Error(`AI configuration API key not found for provider: ${provider}`);
-  }
-
-  const baseUrl = provider === 'agnes' 
-    ? 'https://apihub.agnes-ai.com/v1'
-    : 'https://openrouter.ai/api/v1';
-
-  return { provider, apiKey, baseUrl };
-}
 
 // --- API Routes ---
 app.post("/ai/test", async (c) => {
-    try {
-        const { provider } = await c.req.json();
-        const config = await getAIConfig(provider);
-        const testPayload = { 
-            model: provider === 'agnes' ? 'agnes-2.0-flash' : 'google/gemini-2.0-flash-exp:free', 
-            prompt: 'hello', 
-            imageBase64: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=' 
-        };
-        await callProvider(config.baseUrl, config.apiKey, testPayload);
-        return c.json({ success: true });
-    } catch (e: any) {
-        return c.json({ success: false, error: e.message }, 500);
-    }
+    const { provider } = await c.req.json();
+    const supabase = await getSupabaseAdmin();
+    const ai = await getAIProvider(provider, supabase);
+    
+    // Use a minimal check instead of a full image analyze
+    const result = await ai.chat([{ role: 'user', content: 'Connection test' }]);
+    if (!result.success) throw new Error(result.error);
+    
+    return c.json({ success: true, provider });
 });
 
 app.post("/ai/test/primary", async (c) => {
-    try {
-        const supabase = await getSupabaseAdmin();
-        const { data: settings } = await supabase.from('settings').select('ai_provider').limit(1).single();
-        const provider = settings?.ai_provider || 'openrouter';
-        const config = await getAIConfig(provider);
-        const testPayload = { 
-            model: provider === 'agnes' ? 'agnes-2.0-flash' : 'google/gemini-2.0-flash-exp:free', 
-            prompt: 'hello', 
-            imageBase64: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=' 
-        };
-        await callProvider(config.baseUrl, config.apiKey, testPayload);
-        return c.json({ success: true, provider });
-    } catch (e: any) {
-        return c.json({ success: false, error: e.message }, 500);
-    }
-});
-
-app.post("/ai/test/secondary", async (c) => {
-    try {
-        const supabase = await getSupabaseAdmin();
-        const { data: settings } = await supabase.from('settings').select('ai_provider').limit(1).single();
-        const primaryProvider = settings?.ai_provider || 'openrouter';
-        const provider = primaryProvider === 'openrouter' ? 'agnes' : 'openrouter';
-        
-        const config = await getAIConfig(provider);
-        const testPayload = { 
-            model: provider === 'agnes' ? 'agnes-2.0-flash' : 'google/gemini-2.0-flash-exp:free', 
-            prompt: 'hello', 
-            imageBase64: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=' 
-        };
-        await callProvider(config.baseUrl, config.apiKey, testPayload);
-        return c.json({ success: true, provider });
-    } catch (e: any) {
-        return c.json({ success: false, error: e.message }, 500);
-    }
+    const supabase = await getSupabaseAdmin();
+    const { data: settings } = await supabase.from('settings').select('ai_provider').limit(1).single();
+    const provider = settings?.ai_provider || 'openrouter';
+    
+    const ai = await getAIProvider(provider, supabase);
+    const result = await ai.chat([{ role: 'user', content: 'hi' }]);
+    if (!result.success) throw new Error(result.error);
+    
+    return c.json({ success: true, provider });
 });
 
 app.post("/ai/dispatch", async (c) => {
-  try {
-    const { task, payload } = await c.req.json();
-    const errors: any[] = [];
+    const { payload } = await c.req.json();
     const supabase = await getSupabaseAdmin();
 
-    // 1. 确定主/次提供商
     const { data: settings } = await supabase.from('settings').select('ai_provider').limit(1).single();
-    const primaryProvider = settings?.ai_provider || 'openrouter';
-    const secondaryProvider = primaryProvider === 'openrouter' ? 'agnes' : 'openrouter';
+    const primary = settings?.ai_provider || 'openrouter';
+    const secondary = primary === 'openrouter' ? 'agnes' : 'openrouter';
     
-    const providersToTry = [primaryProvider, secondaryProvider];
-
-    for (const providerName of providersToTry) {
+    const errors: string[] = [];
+    for (const providerName of [primary, secondary]) {
         try {
-            console.log(`Trying provider: ${providerName}`);
-            const config = await getAIConfig(providerName);
-            return c.json(await callProvider(config.baseUrl, config.apiKey, payload));
+            const ai = await getAIProvider(providerName, supabase);
+            const result = await ai.chat([
+                { role: 'user', content: payload.prompt }
+            ]);
+            if (result.success) return c.json(result);
+            errors.push(`${providerName}: ${result.error}`);
         } catch (e: any) {
-            console.warn(`Provider ${providerName} failed:`, e.message);
-            errors.push({ provider: providerName, error: e.message });
+            errors.push(`${providerName}: ${e.message}`);
         }
     }
     
-    // 如果全部失败
-    throw new Error(`AI Dispatch failed for all providers: ${errors.map(e => `${e.provider}: ${e.error}`).join('; ')}`);
-    
-  } catch (error: any) {
-    console.error('AI Dispatch all failed:', error);
-    return c.json({ 
-        success: false, 
-        error: error.message || 'AI Dispatch failed',
-        code: 'AI_PROVIDER_ERROR',
-        details: error.message // 供前端调试
-    }, 500);
-  }
+    throw new Error(`AI Dispatch all failed: ${errors.join('; ')}`);
 });
 
 app.post("/upload-presign", async (c) => {

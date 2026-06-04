@@ -39,6 +39,7 @@ export interface Photo {
   is_group_cover?: boolean;
   is_pinned?: boolean; 
   is_analyzing?: boolean;
+  is_ai_described?: boolean;
   is_hidden?: boolean;
   group_order?: number;
   user_id?: string;

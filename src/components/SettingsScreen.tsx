@@ -124,13 +124,13 @@ export function SettingsScreen() {
 
   const inputClass = "flex-1 min-w-0 bg-brand-navy/5 border border-brand-navy/10 p-3 rounded-2xl text-sm outline-none focus:border-brand-gold focus:bg-white shadow-inner font-normal tracking-tight placeholder:text-brand-navy/30 text-brand-navy";
   const cardClass = "bg-white rounded-[32px] p-6 shadow-sm border border-brand-navy/10 space-y-4";
-  const [activeTab, setActiveTab] = React.useState('cloud');
+  const [activeTab, setActiveTab] = React.useState('sync');
 
   React.useEffect(() => {
-    if (activeScreen === 'ai_settings') setActiveTab('app');
-    if (activeScreen === 'manage') setActiveTab('cloud');
-    if (activeScreen === 'structure' || activeScreen === 'tags') setActiveTab('content');
-    if (activeScreen === 'settings') setActiveTab('cloud');
+    if (activeScreen === 'ai_settings') setActiveTab('ai');
+    if (activeScreen === 'manage') setActiveTab('sync');
+    if (activeScreen === 'structure' || activeScreen === 'tags') setActiveTab('assets');
+    if (activeScreen === 'settings') setActiveTab('sync');
   }, [activeScreen]);
 
   return (
@@ -165,7 +165,7 @@ export function SettingsScreen() {
         <SettingsTabs activeTab={activeTab} onTabChange={setActiveTab} />
         
         <div className="space-y-6">
-          {activeTab === 'cloud' && (
+          {activeTab === 'sync' && (
             <>
               <SyncSettings 
                 user={user || null}
@@ -187,21 +187,8 @@ export function SettingsScreen() {
             </>
           )}
 
-          {activeTab === 'app' && (
+          {activeTab === 'ai' && (
             <>
-              <GeneralSettings 
-                settings={settings}
-                handleLogoUpload={handleLogoUpload}
-                categories={categories}
-                tags={tags}
-                manufacturers={manufacturers}
-                photos={photos}
-                onHealthCheck={handleHealthCheck}
-                setSettingField={setSettingField}
-                cardClass={cardClass}
-                inputClass={inputClass}
-                buttonStyles={BUTTON_STYLES}
-              />
               <AISettings 
                 geminiApiKey={geminiApiKey}
                 setGeminiApiKey={setGeminiApiKey}
@@ -215,10 +202,23 @@ export function SettingsScreen() {
                 cardClass={cardClass}
                 inputClass={inputClass}
               />
+              <GeneralSettings 
+                settings={settings}
+                handleLogoUpload={handleLogoUpload}
+                categories={categories}
+                tags={tags}
+                manufacturers={manufacturers}
+                photos={photos}
+                onHealthCheck={handleHealthCheck}
+                setSettingField={setSettingField}
+                cardClass={cardClass}
+                inputClass={inputClass}
+                buttonStyles={BUTTON_STYLES}
+              />
             </>
           )}
 
-          {activeTab === 'content' && (
+          {activeTab === 'assets' && (
             <>
               <CategoriesManager 
                 categories={categories}
@@ -250,7 +250,7 @@ export function SettingsScreen() {
             </>
           )}
 
-          {activeTab === 'health' && (
+          {activeTab === 'status' && (
             <DiagnosticsDashboard />
           )}
         </div>

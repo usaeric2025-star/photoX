@@ -66,13 +66,6 @@ export const LightboxCore = ({
             {renderFloatingButton?.()}
           </>
         ),
-        // Render default toolbar plus custom buttons
-        toolbar: ({ toolbar }: any) => (
-          <>
-            {toolbar}
-          </>
-        ),
-        // Overwrite the download button with multiple actions
         buttonDownload: () => (
           <div className="flex items-center gap-0.5 mr-2">
             {showEdit && (

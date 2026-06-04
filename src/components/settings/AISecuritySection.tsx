@@ -74,169 +74,199 @@ export function AISecuritySection({
   const currentProvider = localStorage.getItem('AI_PRIMARY_PROVIDER') || 'agnes';
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div className="bg-white rounded-[32px] shadow-sm border border-brand-navy/10 p-6 space-y-6" id="section-ai">
-        <div className="flex items-center gap-2">
-          <Sparkles size={16} className="text-brand-gold shrink-0" />
-          <h4 className="font-black text-brand-navy text-[10px] uppercase tracking-widest flex-1">
-            AI 核心配置 / AI Configuration
-          </h4>
-        </div>
-
-        {/* Global Provider Selector */}
-        <div className="p-4 bg-brand-navy/5 rounded-2xl space-y-2">
-          <p className="text-[9px] font-black text-brand-navy/40 uppercase tracking-widest ml-1">当前首选提供商 / Primary Provider</p>
-          <select
-            className={`${inputClass} w-full bg-white`}
-            value={currentProvider}
-            onChange={async (e) => {
-              const val = e.target.value;
-              localStorage.setItem('AI_PRIMARY_PROVIDER', val);
-              setSettingField('provider', val);
-              try {
-                await fetch('/api/admin/settings/save-provider', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ provider: val })
-                });
-                toast.success(`已切换为 ${val === 'agnes' ? 'Agnes AI' : 'OpenRouter'}`);
-              } catch (err) {
-                console.error("Failed to save provider to DB:", err);
-              }
-            }}
-          >
-            <option value="agnes">Agnes AI (稳定推荐 & 免费)</option>
-            <option value="openrouter">OpenRouter (Gemini 支持)</option>
-          </select>
-        </div>
-
-        {/* Agnes AI Config Group */}
-        <div className={`p-4 rounded-2xl border-2 transition-all ${currentProvider === 'agnes' ? 'border-brand-gold bg-brand-gold/5' : 'border-transparent bg-gray-50 opacity-60'}`}>
-          <div className="flex items-center justify-between mb-3">
-            <h5 className="text-[10px] font-black text-brand-navy uppercase tracking-tighter">Agnes AI 配置</h5>
-            {keysStatus.agnes && <CheckCircle2 size={12} className="text-green-500" />}
+    <div className="grid grid-cols-1 gap-6">
+      <div className="bg-white rounded-[32px] shadow-sm border border-brand-navy/10 overflow-hidden" id="section-ai">
+        <div className="p-6 border-b border-brand-navy/5 flex items-center justify-between bg-slate-50/50">
+          <div className="flex items-center gap-2">
+            <Sparkles size={16} className="text-brand-gold shrink-0" />
+            <h4 className="font-black text-brand-navy text-[10px] uppercase tracking-widest">
+              智能引擎 / Intelligence Engine
+            </h4>
           </div>
-          <div className="space-y-3">
-            <div className="space-y-1">
-              <p className="text-[9px] font-black text-brand-navy/40 uppercase ml-1 tracking-widest">Agnes API 密钥</p>
-              <input 
-                type="password" 
-                placeholder={keysStatus.agnes ? "•••••••••••••••• (已保存)" : "输入 API 密钥..."}
-                className={`${inputClass} font-mono w-full bg-white`}
-                value={agnesKey}
-                onChange={(e) => setAgnesKey(e.target.value)}
-                onBlur={async () => {
-                  if (!agnesKey) return;
+          <div className="flex gap-1 bg-white p-1 rounded-2xl border border-brand-navy/5 shadow-sm">
+            {['agnes', 'openrouter'].map((p) => (
+              <button
+                key={p}
+                onClick={async () => {
+                  localStorage.setItem('AI_PRIMARY_PROVIDER', p);
+                  setSettingField('provider', p as any);
                   try {
-                    const res = await fetch('/api/admin/settings/save-key', {
+                    await fetch('/api/admin/settings/save-provider', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ provider: 'agnes', apiKey: agnesKey, model: 'agnes-ai' })
+                      body: JSON.stringify({ provider: p })
                     });
-                    const data = await res.json();
-                    if (res.ok && data.success) {
-                      toast.success("Agnes 密鑰驗證通過並加密保存");
-                      setAgnesKey('');
-                      fetchKeysStatus();
-                    } else {
-                      toast.error(data.error || "Agnes 密鑰驗證失敗");
-                    }
-                  } catch { toast.error("密鑰保存請求超時"); }
+                    toast.success(`已切換為 ${p === 'agnes' ? 'Agnes AI' : 'OpenRouter'}`);
+                  } catch (err) {}
                 }}
-              />
-            </div>
-            <button 
-              disabled={isTesting === 'agnes'}
-              onClick={() => handleTest('agnes')}
-              className="w-full py-2 bg-brand-navy text-white rounded-xl text-[9px] font-black uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2"
-            >
-              {isTesting === 'agnes' ? '正在檢測...' : '立即測試 Agnes'}
-            </button>
+                className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
+                  currentProvider === p 
+                    ? 'bg-brand-navy text-white shadow-md' 
+                    : 'text-brand-navy/40 hover:text-brand-navy/60'
+                }`}
+              >
+                {p}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* OpenRouter Config Group */}
-        <div className={`p-4 rounded-2xl border-2 transition-all ${currentProvider === 'openrouter' ? 'border-brand-gold bg-brand-gold/5' : 'border-transparent bg-gray-50 opacity-60'}`}>
-          <div className="flex items-center justify-between mb-3">
-            <h5 className="text-[10px] font-black text-brand-navy uppercase tracking-tighter">OpenRouter 配置</h5>
-            {(keysStatus.openrouter || geminiApiKey === "••••••••••••••••") && <CheckCircle2 size={12} className="text-green-500" />}
+        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Provider Config Area */}
+          <div className="space-y-4">
+            {currentProvider === 'agnes' ? (
+              <div className="animate-in fade-in slide-in-from-left-4 duration-300">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="space-y-0.5">
+                    <h5 className="text-[10px] font-black text-brand-navy uppercase tracking-tight">Agnes AI Config</h5>
+                    <p className="text-[8px] text-brand-navy/40 font-bold uppercase tracking-widest">穩定推薦 · 快速解析</p>
+                  </div>
+                  {keysStatus.agnes && <div className="px-2 py-0.5 bg-green-50 text-green-600 rounded-full text-[8px] font-black uppercase">已激活</div>}
+                </div>
+                
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <input 
+                      type="password" 
+                      placeholder={keysStatus.agnes ? "•••••••••••••••• (已保存)" : "輸入 Agnes API 密鑰..."}
+                      className={`${inputClass} font-mono w-full bg-slate-50`}
+                      value={agnesKey}
+                      onChange={(e) => setAgnesKey(e.target.value)}
+                      onBlur={async () => {
+                        if (!agnesKey) return;
+                        try {
+                          const res = await fetch('/api/admin/settings/save-key', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ provider: 'agnes', apiKey: agnesKey, model: 'agnes-ai' })
+                          });
+                          const data = await res.json();
+                          if (res.ok && data.success) {
+                            toast.success("Agnes 密鑰驗證通過");
+                            setAgnesKey('');
+                            fetchKeysStatus();
+                          } else {
+                            toast.error(data.error || "驗證失敗");
+                          }
+                        } catch { toast.error("請求超時"); }
+                      }}
+                    />
+                  </div>
+                  <button 
+                    disabled={isTesting === 'agnes'}
+                    onClick={() => handleTest('agnes')}
+                    className="w-full py-3 bg-brand-navy text-white rounded-2xl text-[9px] font-black uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand-navy/10"
+                  >
+                    {isTesting === 'agnes' ? '正在診斷...' : '立即測試連通性'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="space-y-0.5">
+                    <h5 className="text-[10px] font-black text-brand-navy uppercase tracking-tight">OpenRouter Config</h5>
+                    <p className="text-[8px] text-brand-navy/40 font-bold uppercase tracking-widest">自由擴展 · 多模型支持</p>
+                  </div>
+                  {(keysStatus.openrouter || geminiApiKey === "••••••••••••••••") && <div className="px-2 py-0.5 bg-green-50 text-green-600 rounded-full text-[8px] font-black uppercase">已激活</div>}
+                </div>
+
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <input 
+                      type="text" 
+                      placeholder="模型型號 (如: google/gemini-2.0-flash-exp:free)"
+                      className={`${inputClass} w-full bg-slate-50 text-[10px] font-bold`}
+                      value={customModel}
+                      onChange={(e) => setCustomModel(e.target.value)}
+                      onBlur={(e) => setSettingField('custom_model', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <input 
+                      type="password" 
+                      placeholder={keysStatus.openrouter || geminiApiKey === "••••••••••••••••" ? "•••••••••••••••• (已保存)" : "輸入 OpenRouter API 密鑰..."}
+                      className={`${inputClass} font-mono w-full bg-slate-50`}
+                      value={geminiApiKey === "••••••••••••••••" ? "" : geminiApiKey}
+                      onChange={(e) => setGeminiApiKey(e.target.value)}
+                      onBlur={async (e) => {
+                        const val = e.target.value;
+                        if (!val || val === "••••••••••••••••") return;
+                        try {
+                          const res = await fetch('/api/admin/settings/save-key', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ provider: 'openrouter', apiKey: val, model: customModel })
+                          });
+                          const data = await res.json();
+                          if (res.ok && data.success) {
+                            toast.success("OpenRouter 已同步");
+                            setSettingField('gemini_api_key', val);
+                            fetchKeysStatus();
+                          } else {
+                            toast.error(data.error || "校驗失敗");
+                          }
+                        } catch { toast.error("同步超時"); }
+                      }}
+                    />
+                  </div>
+                  <button 
+                    disabled={isTesting === 'openrouter'}
+                    onClick={() => handleTest('openrouter')}
+                    className="w-full py-3 bg-brand-gold text-white rounded-2xl text-[9px] font-black uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand-gold/10"
+                  >
+                    {isTesting === 'openrouter' ? '正在診斷...' : '立即測試連通性'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-          <div className="space-y-3">
-            <div className="space-y-1">
-              <p className="text-[9px] font-black text-brand-navy/40 uppercase ml-1 tracking-widest">模型型號 / Model</p>
-              <input 
-                type="text" 
-                placeholder="例如: google/gemini-2.0-flash-exp:free"
-                className={`${inputClass} w-full bg-white`}
-                value={customModel}
-                onChange={(e) => setCustomModel(e.target.value)}
-                onBlur={(e) => setSettingField('custom_model', e.target.value)}
-              />
+
+          {/* Security Area */}
+          <div className="space-y-4 border-l border-brand-navy/5 pl-6 hidden md:block">
+            <div className="flex items-center gap-2 mb-4">
+              <Lock size={14} className="text-brand-navy/20" />
+              <h5 className="text-[10px] font-black text-brand-navy uppercase tracking-tight">安全訪問 / Security</h5>
             </div>
-            <div className="space-y-1">
-              <p className="text-[9px] font-black text-brand-navy/40 uppercase ml-1 tracking-widest">API 密鑰</p>
-              <input 
-                type="password" 
-                placeholder={keysStatus.openrouter || geminiApiKey === "••••••••••••••••" ? "•••••••••••••••• (已保存)" : "輸入 API 密鑰..."}
-                className={`${inputClass} font-mono w-full bg-white`}
-                value={geminiApiKey === "••••••••••••••••" ? "" : geminiApiKey}
-                onChange={(e) => setGeminiApiKey(e.target.value)}
-                onBlur={async (e) => {
-                  const val = e.target.value;
-                  if (!val || val === "••••••••••••••••") return;
-                  try {
-                    const res = await fetch('/api/admin/settings/save-key', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ provider: 'openrouter', apiKey: val, model: customModel })
-                    });
-                    const data = await res.json();
-                    if (res.ok && data.success) {
-                      toast.success("OpenRouter 密鑰驗證通過並同步");
-                      setSettingField('gemini_api_key', val);
-                      fetchKeysStatus();
-                    } else {
-                      toast.error(data.error || "OpenRouter 密鑰校驗失敗");
-                    }
-                  } catch { toast.error("同步超時"); }
-                }}
-              />
+            
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <p className="text-[9px] font-black text-brand-navy/40 uppercase ml-1 tracking-widest">員工管理口令</p>
+                <input 
+                  type="password" 
+                  placeholder="設置管理口令..."
+                  className={`${inputClass} font-mono tracking-widest w-full bg-slate-50`}
+                  value={accessPasscode}
+                  onChange={(e) => setAccessPasscode(e.target.value)}
+                  onBlur={(e) => setSettingField('access_passcode', e.target.value)}
+                />
+              </div>
+              <div className="p-4 bg-brand-navy/[0.02] rounded-2xl border border-brand-navy/5">
+                <p className="text-[9px] text-brand-navy/40 font-bold leading-relaxed uppercase tracking-wide">
+                  提示：口令用於保護高敏感操作。請確保定期更換以維持系統安全。
+                </p>
+              </div>
             </div>
-            <button 
-              disabled={isTesting === 'openrouter'}
-              onClick={() => handleTest('openrouter')}
-              className="w-full py-2 bg-brand-gold text-white rounded-xl text-[9px] font-black uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2"
-            >
-              {isTesting === 'openrouter' ? '正在检测...' : '立即测试 OpenRouter'}
-            </button>
           </div>
         </div>
       </div>
 
-      {/* Security Section */}
-      <div className="bg-white rounded-[32px] shadow-sm border border-brand-navy/10 p-6 space-y-6" id="section-security">
+      {/* Mobile Security (Visible only on small screens) */}
+      <div className="md:hidden bg-white rounded-[32px] shadow-sm border border-brand-navy/10 p-6 space-y-4">
         <div className="flex items-center gap-2">
           <Lock size={16} className="text-brand-navy shrink-0" />
-          <h4 className="font-black text-brand-navy text-[10px] uppercase tracking-widest flex-1">
-            安全与口令 / Security
+          <h4 className="font-black text-brand-navy text-[10px] uppercase tracking-widest">
+            安全與口令 / Security
           </h4>
         </div>
-        <div className="space-y-4">
-          <div className="space-y-1">
-            <p className="text-[9px] font-black text-brand-navy/40 uppercase ml-1 tracking-widest">员工管理口令 / Admin Passcode</p>
-            <input 
-              type="password" 
-              placeholder="设置后台管理口令..."
-              className={`${inputClass} font-mono tracking-widest w-full`}
-              value={accessPasscode}
-              onChange={(e) => setAccessPasscode(e.target.value)}
-              onBlur={(e) => setSettingField('access_passcode', e.target.value)}
-            />
-            <p className="text-[8px] text-brand-navy/30 px-1 mt-1 font-medium leading-relaxed">
-              执行内部操作（如 AI 分析、批量删除）时需要此验证口令。
-            </p>
-          </div>
-        </div>
+        <input 
+          type="password" 
+          placeholder="設置管理口令..."
+          className={`${inputClass} font-mono tracking-widest w-full bg-slate-50`}
+          value={accessPasscode}
+          onChange={(e) => setAccessPasscode(e.target.value)}
+          onBlur={(e) => setSettingField('access_passcode', e.target.value)}
+        />
       </div>
     </div>
   );
