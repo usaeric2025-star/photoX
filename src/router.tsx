@@ -115,12 +115,12 @@ const authGuard = async ({ context, location }: { context: { user: any }, locati
     const groupMatch = location.pathname.match(/^\/group\/(.+)$/);
     if (groupMatch) {
       console.log('[authGuard] Redirecting logged-in user to admin group:', groupMatch[1]);
-      throw redirect({ to: `/admin/group/${groupMatch[1]}` });
+      throw redirect({ to: `/admin/group/${groupMatch[1]}` as any });
     }
     // 任何其他路徑都轉往後台
     if (location.pathname !== ROUTES.ADMIN) {
       console.log('[authGuard] Redirecting logged-in user to admin:', location.pathname);
-      throw redirect({ to: ROUTES.ADMIN });
+      throw redirect({ to: ROUTES.ADMIN as any });
     }
     console.log('[authGuard] Allowing access to admin');
     return;
@@ -129,7 +129,7 @@ const authGuard = async ({ context, location }: { context: { user: any }, locati
   // 未登入且訪問後台 → 轉到登入頁
   if (!user && location.pathname.startsWith('/admin')) {
     console.log('[authGuard] Redirecting unauthenticated user to login:', location.pathname);
-    throw redirect({ to: '/login' });
+    throw redirect({ to: '/login' as any });
   }
 };
 

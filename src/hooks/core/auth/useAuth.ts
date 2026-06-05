@@ -1,7 +1,9 @@
+import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { User } from '@/types';
 import { useLocalStorage } from '@mantine/hooks';
+import { router } from '@/router';
 
 // 带超时的 getUser（5秒）
 async function getUserWithTimeout(): Promise<User | null> {
@@ -47,6 +49,28 @@ export function useAuth() {
     refetchOnReconnect: false,
     retry: 1,
   });
+
+  useEffect(() => {
+    if (user) {
+      router.update({
+        context: {
+          user: user,
+          role: 'admin',
+          can: () => true,
+          availableActions: [],
+        },
+      });
+    } else {
+      router.update({
+        context: {
+          user: null,
+          role: 'guest',
+          can: () => false,
+          availableActions: [],
+        },
+      });
+    }
+  }, [user]);
 
   return {
     user: user ?? null,

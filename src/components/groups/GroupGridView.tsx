@@ -15,7 +15,7 @@ interface GroupGridViewProps {
   onPhotoContextMenu?: (e: React.MouseEvent, photo: Photo) => void;
   isMultiSelectMode?: boolean;
   selectedPhotoIds?: string[];
-  getPhotoProps?: (photo: Photo) => React.HTMLAttributes<HTMLDivElement>;
+  getPhotoProps?: (photo: Photo) => any;
   highlightId?: string | null;
   onEndReached?: () => void;
   isFetchingNextPage?: boolean;

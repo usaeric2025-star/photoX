@@ -7,6 +7,8 @@ import { clearExpiredCaches } from './lib/db/indexedDB';
 import { globalHandleError } from './lib/error/errorHandler';
 import { logger } from '@/lib/logger';
 import { Analytics } from '@vercel/analytics/react';
+import { useAuth } from '@/hooks/core/auth/useAuth';
+import { LoadingScreen } from '@/components/LoadingScreen';
 
 export default function AppRoutes() {
   useEffect(() => {
@@ -20,12 +22,18 @@ export default function AppRoutes() {
     pathname: window.location.pathname 
   });
 
+  const { user, isLoading } = useAuth();
+
   const routerContext = useMemo(() => ({
-    user: null,
-    role: 'guest' as const,
-    can: () => false,
+    user: user ?? null,
+    role: user ? ('admin' as const) : ('guest' as const),
+    can: () => !!user,
     availableActions: [],
-  }), []);
+  }), [user]);
+
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <ErrorBoundary>
