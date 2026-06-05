@@ -21,16 +21,16 @@ const buttonVariants = cva(
       },
       size: {
         default:
-          "h-9 gap-2 px-4 rounded-lg",
-        xs: "h-6 gap-1 rounded-[min(var(--radius-md),10px)] px-2 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
-        lg: "h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-        icon: "size-8",
+          "min-h-[44px] sm:min-h-0 sm:h-9 gap-2 px-4 py-2 sm:py-0 rounded-lg",
+        xs: "min-h-[44px] sm:min-h-0 sm:h-6 gap-1 rounded-[min(var(--radius-md),10px)] px-2 py-1 sm:py-0 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
+        sm: "min-h-[44px] sm:min-h-0 sm:h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-3 py-2 sm:py-0 sm:px-2.5 text-sm sm:text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
+        lg: "min-h-[48px] sm:min-h-0 sm:h-9 gap-1.5 px-4 py-2.5 sm:py-0 sm:px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+        icon: "min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 sm:size-8",
         "icon-xs":
-          "size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
+          "min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 sm:size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
         "icon-sm":
-          "size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
-        "icon-lg": "size-9",
+          "min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 sm:size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
+        "icon-lg": "min-h-[48px] min-w-[48px] sm:min-h-0 sm:min-w-0 sm:size-9",
       },
     },
     defaultVariants: {

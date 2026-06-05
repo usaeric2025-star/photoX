@@ -245,9 +245,6 @@ export function PhotoInfoPanel({
                 />
               </div>
               <h2 className="text-xl font-bold text-slate-900 mb-1">{(data as Photo).name || l.unknown}</h2>
-              <div className="mb-3">
-                <CopyableId className="w-fit" id={(data as Photo).id} label="ID" />
-              </div>
               {(data as Photo).name_en && (
                 <h3 className="text-sm font-medium text-slate-500 mb-3">{(data as Photo).name_en}</h3>
               )}

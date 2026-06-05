@@ -21,7 +21,7 @@ Task: Inspect the furniture image/tables to extract comprehensive structured det
 
 Target Response Schema:
 {
-  "name": "Product Name",
+  "name": "Short English Name (e.g., 'Dining Set')",
   "category_id": "category-id-example",
   "dimensions": [
     { "label": "Model A Table", "length": 140, "width": 80, "height": 75, "unit": "cm", "isAIEstimated": false }

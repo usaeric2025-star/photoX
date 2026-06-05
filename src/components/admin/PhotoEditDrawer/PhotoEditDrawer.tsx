@@ -118,7 +118,9 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
           const currentName = (prev.name || '').trim();
           const isNumeric = /^\d+$/.test(currentName);
           if (!currentName || isNumeric) {
-            if (result.name) updates.name = result.name;
+            if (result.name) {
+              updates.name = result.name;
+            }
           }
           if (!prev.category_id && result.category_id) updates.category_id = String(result.category_id);
           if ((!prev.tag_ids || prev.tag_ids.length === 0) && Array.isArray(result.tag_ids)) {

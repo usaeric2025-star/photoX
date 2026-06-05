@@ -117,7 +117,7 @@ export function DimensionEditor({
                     placeholder="如: WD" 
                     value={prefix} 
                     onChange={e => handleUpdateLabel(idx, e.target.value.toUpperCase().trim(), dimensionsPart)}
-                    className="w-full p-2 rounded-xl border border-slate-200 bg-white text-xs font-bold focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all" 
+                    className="w-full p-2 rounded-xl border border-slate-200 bg-white text-base sm:text-xs font-bold focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all" 
                   />
                 </div>
                 <div className="col-span-3 space-y-1">
@@ -144,7 +144,7 @@ export function DimensionEditor({
                   placeholder={isAnalyzing ? "AI 识别中..." : "H94 x W96 x D23"} 
                   value={dimensionsPart || (isAnalyzing ? "" : "")} 
                   onChange={e => handleUpdateLabel(idx, prefix, e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-sm font-bold focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all" 
+                  className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-base sm:text-sm font-bold focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all" 
                 />
               </div>
             </div>

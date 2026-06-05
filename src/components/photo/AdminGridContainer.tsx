@@ -172,14 +172,6 @@ export function AdminGridContainer({
       
       queryClient.invalidateQueries({ queryKey: photoKeys.all });
 
-      // 3. Auto AI Identification (Optional Feature)
-      if (savedPhotos.length > 0 && onBatchAiAnalyze) {
-        // We wait a bit to let the list refresh
-        setTimeout(() => {
-          onBatchAiAnalyze(savedPhotos);
-        }, 1000);
-      }
-
     } catch (err) {
       handleError(ErrorFactory.wrap(err, '批量操作'), '上传失败');
       updateTask(taskId, { status: 'error', progress: 100, message: '执行中断' });

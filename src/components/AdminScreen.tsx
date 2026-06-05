@@ -102,11 +102,7 @@ export function AdminScreen() {
             const updates: any = {};
             
             if (result.name) {
-              updates.name = {
-                zh: result.name,
-                en: result.description_translations?.en || result.name,
-                ms: result.description_translations?.ms || result.name
-              };
+              updates.name = result.name; // Keep it simple and short as requested
             }
             if (result.category_id) updates.category_id = String(result.category_id);
             if (Array.isArray(result.tag_ids)) {

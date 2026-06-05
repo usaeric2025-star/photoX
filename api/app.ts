@@ -234,15 +234,17 @@ app.post("/ai/analyze", async (c) => {
         const { OpenRouterProvider } = await import('./lib/ai/providerFactory.js');
         const provider = new OpenRouterProvider({ apiKey, model });
         
-        // Build the prompt using the existing constant logic
-        // Since we are on server, we can't easily import from @/constants/ai
-        // We'll define a minimal version or look for it in the workspace
+        const categoriesContext = (categories || []).map(c => ({ id: c.id, name: c.name, zh: c.zh })).slice(0, 50);
+        const tagsContext = (tags || []).map(t => ({ id: t.id, name: t.name, aliases: t.aliases })).slice(0, 100);
         
         const prompt = `Role: Elite Furniture Data Analyst.
 Task: Inspect the furniture image/tables to extract comprehensive structured details.
 
 【CRITICAL DIRECTIVES】
 - "description": Professional summary in 【简体中文 (Simplified Chinese)】. Detail materials, design, functionality, and specific variants.
+- "category_id": MUST be one of these IDs exactly: ${JSON.stringify(categoriesContext)}
+- "tag_ids": Map to up to 3 most relevant tag IDs from this list: ${JSON.stringify(tagsContext)}. ALL MUST BE VALID UUIDs from the list.
+- "new_tags": Keyword tags in English/Malay (e.g., "LEATHER"). NO CHINESE.
 - "dimensions": Extract ALL variants/options displayed. Use specific labels (e.g., "Dining Table", "Chair C102").
   - "length": Numeric length (cm).
   - "width": Numeric width (cm).
@@ -257,14 +259,15 @@ Task: Inspect the furniture image/tables to extract comprehensive structured det
 
 Target Response Schema:
 {
-  "name": "Product Name",
+  "name": "Short English Name (e.g., 'Dining Set')",
+  "category_id": "category-id-example",
   "price": 0,
   "model_number": "...",
   "dimensions": [
     { "label": "Model A Table", "length": 140, "width": 80, "height": 75, "unit": "cm", "isAIEstimated": false }
   ],
   "description": "家具描述内容（必须使用简体中文）...",
-  "tag_ids": [],
+  "tag_ids": ["tag-id-1", "tag-id-2"],
   "new_tags": ["FABRIC"]
 }`;
 

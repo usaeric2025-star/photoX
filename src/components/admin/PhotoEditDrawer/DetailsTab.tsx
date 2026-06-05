@@ -46,7 +46,7 @@ export function DetailsTab({
                   description_translations: { ...(formState.description_translations || {}), zh: val } 
                 });
               }} 
-              className="w-full p-4 rounded-2xl border border-slate-200 bg-white h-32 text-sm font-medium outline-none focus:border-blue-500 shadow-sm" 
+              className="w-full p-4 rounded-2xl border border-slate-200 bg-white h-32 text-base sm:text-sm font-medium outline-none focus:border-blue-500 shadow-sm" 
             />
           </div>
 
@@ -61,7 +61,7 @@ export function DetailsTab({
                   description_translations: { ...(formState.description_translations || {}), en: val } 
                 });
               }} 
-              className="w-full p-4 rounded-2xl border border-slate-200 bg-white h-32 text-sm font-medium outline-none focus:border-blue-500 shadow-sm" 
+              className="w-full p-4 rounded-2xl border border-slate-200 bg-white h-32 text-base sm:text-sm font-medium outline-none focus:border-blue-500 shadow-sm" 
             />
           </div>
 
@@ -77,7 +77,7 @@ export function DetailsTab({
                   description_translations: { ...(formState.description_translations || {}), ms: val } 
                 });
               }} 
-              className="w-full p-4 rounded-2xl border border-slate-200 bg-white h-32 text-sm font-medium outline-none focus:border-blue-500 shadow-sm" 
+              className="w-full p-4 rounded-2xl border border-slate-200 bg-white h-32 text-base sm:text-sm font-medium outline-none focus:border-blue-500 shadow-sm" 
             />
           </div>
         </div>

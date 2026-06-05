@@ -126,33 +126,7 @@ const indexRoute = createRoute({
     };
   },
   beforeLoad: async ({ search }) => {
-    if (search.authError || search.preview === 'true') return;
-    
-
-
-    // [INSURANCE] Synchronous session key presence check for high-speed instant redirect
-    const hasSessionKey = typeof window !== 'undefined' && 
-      Object.keys(window.localStorage || {}).some(key => key.startsWith('sb-') && key.endsWith('-auth-token'));
-    
-    if (hasSessionKey || localStorage.getItem('ais_mock_auth_passcode')) {
-      throw redirect({
-        to: ROUTES.ADMIN,
-      });
-    }
-
-    try {
-      const res = await checkPublicAuth();
-      if (res.isAuthenticated) {
-        throw redirect({
-          to: ROUTES.ADMIN,
-        });
-      }
-    } catch (err) {
-      if (err && typeof err === 'object' && ('to' in err || 'isRedirect' in err || 'statusCode' in err)) {
-        throw err;
-      }
-      console.warn('[indexRoute/beforeLoad] Auth check for redirection skipped:', err);
-    }
+    // Empty beforeLoad to allow everyone (admins and guests) to view the public page
   },
   loader: async ({ context }) => {
     const { queryClient } = context;

@@ -62,9 +62,6 @@ export const usePhotos = (filters: {
     initialPageParam: 1,
     enabled,
     staleTime: 30 * 1000,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
   });
@@ -118,9 +115,6 @@ export const useGroupPhotos = (groupId: string | null, isAdminMode: boolean = fa
       const loaded = allPages.reduce((sum, p) => sum + p.photos.length, 0);
       return (loaded < lastPage.total && lastPage.photos.length > 0) ? allPages.length + 1 : undefined;
     },
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
     staleTime: 30 * 1000,
   });
 };

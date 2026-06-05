@@ -61,7 +61,7 @@ export function GroupSettingsContent({
               onBlur={(e) => {
                 if (groupData) handleUpdateGroupData({ name: e.target.value });
               }}
-              className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-sm font-black text-slate-800 outline-none focus:border-indigo-500 transition-all shadow-sm"
+              className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-base sm:text-sm font-black text-slate-800 outline-none focus:border-indigo-500 transition-all shadow-sm"
               placeholder="例如: 意式极简沙发系列..."
             />
           </div>
@@ -104,7 +104,7 @@ export function GroupSettingsContent({
                       },
                     });
                 }}
-                className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-sm font-bold text-slate-600 outline-none focus:border-indigo-500 transition-all shadow-sm h-20 resize-none"
+                className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-base sm:text-sm font-bold text-slate-600 outline-none focus:border-indigo-500 transition-all shadow-sm h-20 resize-none"
                 placeholder="描述这个系列的中文设计理念..."
               />
             </div>
@@ -140,7 +140,7 @@ export function GroupSettingsContent({
                       },
                     });
                 }}
-                className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-sm font-bold text-slate-600 outline-none focus:border-indigo-500 transition-all shadow-sm h-20 resize-none"
+                className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-base sm:text-sm font-bold text-slate-600 outline-none focus:border-indigo-500 transition-all shadow-sm h-20 resize-none"
                 placeholder="Describe this series design concept in English..."
               />
             </div>
@@ -176,7 +176,7 @@ export function GroupSettingsContent({
                       },
                     });
                 }}
-                className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-sm font-bold text-slate-600 outline-none focus:border-indigo-500 transition-all shadow-sm h-20 resize-none"
+                className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-base sm:text-sm font-bold text-slate-600 outline-none focus:border-indigo-500 transition-all shadow-sm h-20 resize-none"
                 placeholder="Terangkan konsep siri ini dalam Bahasa Melayu..."
               />
             </div>

@@ -50,7 +50,16 @@ function AlertDialogContent({
         data-slot="alert-dialog-content"
         data-size={size}
         className={cn(
-          "group/alert-dialog-content fixed top-1/2 left-1/2 z-[5000] grid w-[90%] sm:w-full max-w-[400px] sm:max-w-md -translate-x-1/2 -translate-y-1/2 gap-6 rounded-2xl bg-popover p-6 sm:p-8 text-popover-foreground shadow-2xl ring-1 ring-foreground/5 duration-200 outline-none data-[size=sm]:max-w-xs data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          "group/alert-dialog-content fixed z-[5000] grid w-full gap-6 bg-popover text-popover-foreground shadow-2xl ring-1 ring-foreground/5 duration-200 outline-none",
+          // Mobile Default (Bottom Sheet)
+          "inset-x-0 bottom-0 rounded-t-3xl p-6 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]",
+          "data-open:animate-in data-open:fade-in-0 data-open:slide-in-from-bottom-[100%]",
+          "data-closed:animate-out data-closed:fade-out-0 data-closed:slide-out-to-bottom-[100%]",
+          // Desktop (Centered Modal)
+          "sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:max-w-md sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl sm:p-8 sm:pb-8",
+          "sm:data-open:slide-in-from-bottom-0 sm:data-open:zoom-in-95",
+          "sm:data-closed:slide-out-to-bottom-0 sm:data-closed:zoom-out-95",
+          "data-[size=sm]:sm:max-w-xs",
           className
         )}
         {...props}
