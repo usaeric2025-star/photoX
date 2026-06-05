@@ -3,13 +3,7 @@ import { AppSettings, Tag, Manufacturer, Category, User, Photo } from "@/types";
 import { DEFAULT_AI_MODEL } from '@/config/ai';
 import { useUIStore, useShallow } from "@/store/useUIStore";
 import { testAiConnection } from "@/services/gemini";
-import { getPhotosWithoutThumbHash } from "@/services/photo/queries";
-import {
-  deduplicatePhotos,
-  scanAndRepairPhotoIds,
-  repairGroupIntegrity,
-} from "@/services/photo/photoMaintenanceService";
-import { backfillThumbHashes } from "@/services/photo/backfillService";
+import { runHealthCheck } from "@/services/photo/healthFlow";
 import {
   normalizeTagName,
   normalizeManufacturerName,
@@ -63,95 +57,30 @@ export const useSettingsLogic = ({
 
   const handleHealthCheck = async (allPhotos: Photo[]) => {
     try {
-      toast.success("正在啟動系統級一致性巡檢...");
-
-      // 1. Check data consistency (IDs)
-      const broken = await scanAndRepairPhotoIds(allPhotos);
-      if (broken.length > 0) {
-        console.warn(`[HealthCheck] Found ${broken.length} broken IDs`);
-      }
-
-      // 2. Repair Group Integrity (The "Orphaned group" and "Member count" fix) - HIGH PRIORITY
-      const groupRepair = await repairGroupIntegrity();
-      console.log("[HealthCheck] Group repair results:", groupRepair);
-      if (
-        groupRepair.dissolved > 0 ||
-        groupRepair.synced > 0 ||
-        groupRepair.deleted > 0
-      ) {
-        toast.success(
-          `合組一致性修復：解散孤立組 ${groupRepair.dissolved} 個，同步計數 ${groupRepair.synced} 個，清理空組 ${groupRepair.deleted} 個`,
-        );
-      }
-
-      // 3. Storage Audit (Orphans and missing files)
-      const auditResp = await api.storage.audit.$get();
-      if (!auditResp.ok) {
-        throw ErrorFactory.wrap(new Error(`存储审计失败 (HTTP ${auditResp.status}): 无法连接存储后端。请确认 R2 容器与 Supabase 凭据配置正确。`), 'checkStorageHealth');
-      }
-      const auditContentType = auditResp.headers.get("Content-Type");
-      if (!auditContentType || !auditContentType.includes("application/json")) {
-        throw ErrorFactory.wrap(new Error(`存储审计失败: 接口未返回有效的 JSON 数据 (${auditResp.status})`), 'checkStorageHealth');
-      }
-      const auditData = await auditResp.json();
-      if (auditData.success && auditData.data) {
-        const { missing, orphans } = auditData.data;
-        if (missing > 0 || orphans > 0) {
-          console.warn(
-            `[Storage Audit] Missing: ${missing}, Orphans: ${orphans}`,
-          );
-          if (orphans > 0) {
-            update({
-              alertDialog: {
-                title: "发现孤儿文件 / Orphans Found",
-                message: `存储空间中发现了 ${orphans} 个不再被数据库使用的文件。是否要清理这些“废弃孤本”以释放空间？`,
-                confirmLabel: "立即清理",
-                onConfirm: async () => {
-                  update({ alertDialog: null });
-                  toast.success("正在清理存儲空間...");
-                  const cleanResp = await api.storage.clean.$post({});
-                  if (!cleanResp.ok) {
-                    throw ErrorFactory.wrap(new Error(`清理存储失败 (HTTP ${cleanResp.status})，无法执行深度文件擦除。`), 'cleanOrphanFiles');
-                  }
-                  const cleanContentType = cleanResp.headers.get("Content-Type");
-                  if (!cleanContentType || !cleanContentType.includes("application/json")) {
-                    throw ErrorFactory.wrap(new Error(`清理存储失败: 返回非 JSON 响应 (${cleanResp.status})`), 'cleanOrphanFiles');
-                  }
-                  const cleanData = await cleanResp.json();
-                  if (cleanData.success) {
-                    toast.success(
-                      `清理完成！共刪除 ${cleanData.data.cleanedCount} 個文件。`,
-                    );
-                  }
-                },
+      await runHealthCheck(allPhotos, async (orphans) => {
+        return new Promise((resolve) => {
+          update({
+            alertDialog: {
+              title: "发现孤儿文件 / Orphans Found",
+              message: `存储空间中发现了 ${orphans} 个不再被数据库使用的文件。是否要清理这些“废弃孤本”以释放空间？`,
+              confirmLabel: "立即清理",
+              onConfirm: async () => {
+                update({ alertDialog: null });
+                toast.success("正在清理存儲空間...");
+                const cleanResp = await api.storage.clean.$post({});
+                if (!cleanResp.ok) {
+                  throw ErrorFactory.wrap(new Error(`清理存储失败 (HTTP ${cleanResp.status})，无法执行深度文件擦除。`), 'cleanOrphanFiles');
+                }
+                const cleanData = await cleanResp.json();
+                if (cleanData.success) {
+                  toast.success(`清理完成！共刪除 ${cleanData.data.cleanedCount} 個文件。`);
+                }
+                resolve();
               },
-            });
-          }
-        }
-      }
-
-      // 3. Check for missing hashes
-      const missingHashes = await getPhotosWithoutThumbHash();
-
-      if (!missingHashes || missingHashes.length === 0) {
-        toast.success("系統診斷完成：所有照片健康度良好");
-        return;
-      }
-
-      // 3. Otherwise perform the auto-repair loop
-      let backfilledCount = 0;
-      await backfillThumbHashes((stats) => {
-        backfilledCount = stats.success;
-      });
-
-      if (backfilledCount > 0) {
-        invalidatePhotos();
-        toast.success(
-          `診斷修復完成，成功回填 ${backfilledCount} 張照片的佔位圖！`,
-        );
-      } else {
-        toast.success("診斷完成：未發現需要修復的项目");
-      }
+            },
+          });
+        });
+      }, invalidatePhotos);
     } catch (err: any) {
       handleError(err, "診斷失敗");
     }

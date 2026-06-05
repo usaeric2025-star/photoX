@@ -12,6 +12,7 @@ import { ISSUE_ACTIONS } from '@/features/maintenance/issueActions';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from '@tanstack/react-router';
 import { useUIStore } from '@/store/useUIStore';
+import { formatters } from '@/utils/formatters';
 
 const severityColors = {
   P0: 'bg-red-50 text-red-600 border-red-100',
@@ -105,7 +106,7 @@ export function DiagnosticsDashboard() {
         {[
           { label: '异常记录 (P0)', value: report?.totalIssues || 0, color: 'text-red-600' },
           { label: '重要发现 (P1/P2)', value: (report?.issuesBySeverity.P1 || 0) + (report?.issuesBySeverity.P2 || 0), color: 'text-slate-900' },
-          { label: '最后扫描', value: report?.timestamp ? new Date(report.timestamp).toLocaleTimeString() : '-', color: 'text-slate-500 font-mono' },
+          { label: '最后扫描', value: report?.timestamp ? formatters.dateTime(report.timestamp) : '-', color: 'text-slate-500 font-mono' },
         ].map((stat, i) => (
           <div key={i} className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex flex-col justify-between h-24">
             <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{stat.label}</p>

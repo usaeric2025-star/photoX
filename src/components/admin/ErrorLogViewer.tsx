@@ -4,32 +4,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { toast } from '@/lib/ui/toast';
 import { useDisclosure } from '@mantine/hooks';
+import { formatters } from '@/utils/formatters';
 
 type ErrorLevel = 'critical' | 'error' | 'warn' | 'medium' | 'low' | 'info';
-
-interface LogEntry {
-  id: string;
-  created_at: string;
-  level: ErrorLevel;
-  message: string;
-  stack?: string;
-  context?: string;
-}
-
-const LevelIcon = ({ level }: { level: ErrorLevel }) => {
-  switch (level) {
-    case 'critical': return <ShieldAlert className="text-red-600" size={14} />;
-    case 'error': return <AlertCircle className="text-orange-500" size={14} />;
-    case 'warn': return <AlertTriangle className="text-amber-500" size={14} />;
-    case 'info': return <Info className="text-blue-500" size={14} />;
-    default: return <Info className="text-slate-500" size={14} />;
-  }
-};
-
+...
 const LogItem = ({ log }: { log: LogEntry }) => {
   const [expanded, { toggle }] = useDisclosure(false);
-  const timeStr = new Date(log.created_at).toLocaleTimeString();
-  const dateStr = new Date(log.created_at).toLocaleDateString();
+  const dateTimeStr = formatters.dateTime(log.created_at);
 
   return (
     <div className={`border-b border-slate-100 last:border-0 py-3 ${log.level === 'critical' ? 'bg-red-50/30' : ''}`}>
@@ -39,7 +20,7 @@ const LogItem = ({ log }: { log: LogEntry }) => {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-[10px] font-bold text-slate-400 tabular-nums">{dateStr} {timeStr}</span>
+            <span className="text-[10px] font-bold text-slate-400 tabular-nums">{dateTimeStr}</span>
             <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-100 font-black text-slate-500 uppercase tracking-tighter">
               {log.context || 'global'}
             </span>

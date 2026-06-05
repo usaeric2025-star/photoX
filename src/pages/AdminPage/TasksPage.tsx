@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useUIStore } from '@/store/useUIStore';
+import { formatters } from '@/utils/formatters';
 
 export default function TasksPage() {
   const { tasks, isLoading, refetch } = useGlobalTasks();
@@ -96,7 +97,7 @@ export default function TasksPage() {
               任务队列演练
             </h3>
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-              Last Updated: {new Date().toLocaleTimeString()}
+              Last Updated: {formatters.time(new Date())}
             </div>
           </div>
 
@@ -164,7 +165,7 @@ function TaskItem({ task }: { task: UnifiedTask }) {
         <div className="flex items-center gap-3 text-[10px] font-bold text-slate-400">
           <span className="flex items-center gap-1">
             <Clock size={10} />
-            {new Date(task.createdAt).toLocaleTimeString()}
+            {formatters.time(task.createdAt)}
           </span>
           {task.total && (
              <span className="bg-slate-100 px-2 py-0.5 rounded text-slate-500">

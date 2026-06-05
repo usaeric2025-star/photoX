@@ -18,6 +18,14 @@ export const formatters = {
     }).format(new Date(date));
   },
 
+  time: (date: Date | string | number) => {
+    return new Intl.DateTimeFormat('zh-TW', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    }).format(new Date(date));
+  },
+
   // File size
   fileSize: (bytes: number) => {
     if (bytes === 0) return '0 B';
