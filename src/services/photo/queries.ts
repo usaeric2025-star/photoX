@@ -8,7 +8,7 @@ import { PHOTO_LIST_FIELDS } from '../../constants/photoFields';
 import { SupabasePhotoRaw } from '@/types/supabase';
 
 // Helper for Worker Thumbnail generation
-const getThumbnailUrl = (imageUrl: string, width: number = 400, height: number = 400, updatedAt?: string) => {
+const getThumbnailUrl = (imageUrl: string, width: number = 400, height: number = 400) => {
   const workerUrl = import.meta.env.VITE_THUMBNAIL_WORKER_URL;
   if (!workerUrl || !imageUrl || !workerUrl.startsWith('http')) return imageUrl;
   
@@ -18,9 +18,8 @@ const getThumbnailUrl = (imageUrl: string, width: number = 400, height: number =
   // Ensure exactly one slash between workerUrl and path
   const base = workerUrl.replace(/\/$/, '');
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  const cacheBuster = updatedAt ? `&t=${new Date(updatedAt).getTime()}` : '';
   
-  return `${base}${cleanPath}?w=${width}&h=${height}${cacheBuster}`;
+  return `${base}${cleanPath}?w=${width}&h=${height}`;
 };
 
 export function normalizeStoredUrl(url: string | undefined | null): string {
@@ -127,8 +126,8 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw): Photo {
       manufacturer_id: manufacturer_id,
       description: parseTranslation(item.description),
       image_url: imageUrl,
-      thumbnail_sm_url: getThumbnailUrl(imageUrl, 200, 200, updated_at),
-      thumbnail_md_url: getThumbnailUrl(imageUrl, 800, 800, updated_at),
+      thumbnail_sm_url: getThumbnailUrl(imageUrl, 200, 200),
+      thumbnail_md_url: getThumbnailUrl(imageUrl, 800, 800),
       thumb_hash: item.thumb_hash || '',
       exif_data: item.exif_data ?? null,
       created_at: created_at || new Date().toISOString(),

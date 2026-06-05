@@ -166,10 +166,13 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
             
             if (!prev.price && result.price) updates.price = String(result.price);
 
-            return { ...prev, ...updates };
+            const merged = { ...prev, ...updates };
+            // Auto-save the AI result
+            onUpdatePhoto(photo.id, merged); 
+            return merged;
           });
         updateProgress(100, appLang === 'zh' ? '识别成功' : 'Success');
-        toast.success("AI 屬性識別成功並已補全空白字段（由 Agnes 提供動態翻譯）");
+        toast.success("AI 屬性識別成功並已自動保存");
       } else {
         const errorMsg = (resp as any).message || "AI 分析失敗";
         toast.error(`識別失敗: ${errorMsg}`);

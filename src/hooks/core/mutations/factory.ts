@@ -107,6 +107,8 @@ export function createMutationHook<TData = any, TVariables = any, TContext = unk
       ...options
     });
     
+    // createMutation already handles onMutate, onError, onSettled internally!
+    // The previous implementation was redundant and potentially blocking.
     const mut = mutation(options);
     
     return {
