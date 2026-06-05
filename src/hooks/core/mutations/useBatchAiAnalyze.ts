@@ -122,7 +122,7 @@ export function useBatchAiAnalyze() {
       } else {
         toast.success(`识别成功: ${successCount} 张照片${groupId ? '及合组' : ''}已处理完成`);
       }
-    });
+    }, { showProgress: true, showSuccessToast: false });
 
   }, [runTask, updatePhoto]);
 

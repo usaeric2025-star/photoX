@@ -299,17 +299,42 @@ Target Response Schema:
                 const { AgnesProvider } = await import('./lib/ai/providerFactory.js');
                 const agnes = new AgnesProvider({ apiKey: agnesApiKey, model: 'agnes-2.0-flash' });
                 
-                // Translate description
-                const transPrompt = `Translate the following furniture description into English (en) and Malay (ms). Return as JSON: { "en": "...", "ms": "..." }. Content: ${data.description}`;
+                // Translate name and description into 3 languages using Agnes
+                const transPrompt = `Translate the given furniture name and furniture description into Simplified Chinese (zh), English (en - UPPERCASE), and Malay (ms - UPPERCASE).
+Input Name: "${data.name}"
+Input Description: "${data.description}"
+
+Return EXACTLY JSON of this schema:
+{
+  "name_translations": {
+    "zh": "...",
+    "en": "...",
+    "ms": "..."
+  },
+  "description_translations": {
+    "zh": "...",
+    "en": "...",
+    "ms": "..."
+  }
+}`;
                 const transResult = await agnes.chat([{ role: 'user', content: transPrompt }]);
                 if (transResult.success) {
                     try {
                         const translations = JSON.parse((transResult.text || '').replace(/```json\n|\n```|```/g, '').trim());
-                        data.description_translations = {
-                            zh: data.description,
-                            en: translations.en,
-                            ms: translations.ms
-                        };
+                        if (translations.name_translations) {
+                            data.name_translations = {
+                                zh: translations.name_translations.zh || data.name || '',
+                                en: (translations.name_translations.en || data.name || '').toUpperCase(),
+                                ms: (translations.name_translations.ms || data.name || '').toUpperCase()
+                            };
+                        }
+                        if (translations.description_translations) {
+                            data.description_translations = {
+                                zh: translations.description_translations.zh || data.description || '',
+                                en: translations.description_translations.en || data.description || '',
+                                ms: translations.description_translations.ms || data.description || ''
+                            };
+                        }
                     } catch (e) {}
                 }
 

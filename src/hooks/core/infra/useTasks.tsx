@@ -161,7 +161,7 @@ function BackgroundTaskPanel() {
   if (!hasTasks) return null;
 
   return (
-    <div className={`fixed ${isAvoidingSelection ? 'bottom-24' : 'bottom-6'} left-6 z-[600] flex flex-col items-start gap-3 transition-all duration-300`}>
+    <div className={`fixed ${isAvoidingSelection ? 'bottom-24' : 'bottom-6'} left-6 z-[10000] flex flex-col items-start gap-3 transition-all duration-300`}>
       <AnimatePresence>
         {isExpanded && (
           <motion.div

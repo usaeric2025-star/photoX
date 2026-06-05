@@ -290,7 +290,10 @@ export const usePhotoEditor = (props: Props) => {
   const triggerAiAnalyze = () => {
     if (isAnalyzing) return;
     const data = newPhotoData || editPhotoPreview;
-    if (!data) return;
+    if (!data) {
+      handleError(new Error(appLang === 'zh' ? '照片没有有效的图片地址，无法进行 AI 识别' : 'The photo has no valid image URL, AI recognition cannot be performed'), 'AI识别失败');
+      return;
+    }
     
     if (analyzeSingle) {
       const p = { 

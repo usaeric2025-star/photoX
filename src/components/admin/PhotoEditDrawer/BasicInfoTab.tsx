@@ -43,41 +43,85 @@ export function BasicInfoTab({
         )}
         <div className="flex-1 space-y-3">
           <div className="space-y-3">
-            {/* ZH Name */}
-            <div className="space-y-1.5">
-              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">产品名称 (中文 / ZH)</h3>
-              <input 
-                key={editPhotoId || 'new'}
-                type="text" 
-                placeholder="輸入名稱..." 
-                value={formState.name?.zh || ""} 
-                onChange={e => updateForm({ name: { ...formState.name, zh: e.target.value.toUpperCase().trim() } })} 
-                className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-base md:text-sm font-bold outline-none focus:border-blue-500 shadow-sm" 
-              />
-            </div>
+            {/* Multi-language Name Inputs Row/Table */}
+            <div className="space-y-2.5 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+              <div className="flex items-center justify-between px-1 border-b border-slate-200/60 pb-1.5">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">产品名称语言配置 / PRODUCT NAME TRANSLATIONS</span>
+              </div>
+              
+              <div className="space-y-2">
+                {/* Chinese */}
+                <div className="flex gap-2 items-center">
+                  <div className="w-16 shrink-0">
+                    <span className="text-[9px] font-bold bg-slate-200 text-slate-700 px-2 py-1 rounded-md uppercase tracking-wider block text-center">ZH / 中文</span>
+                  </div>
+                  <input 
+                    key={`${editPhotoId || 'new'}-zh`}
+                    type="text" 
+                    placeholder="请输入中文商品名称..." 
+                    value={formState.name?.zh || ""} 
+                    onChange={e => {
+                      const val = e.target.value.toUpperCase();
+                      updateForm({ 
+                        name: { 
+                          zh: val,
+                          en: formState.name?.en || "",
+                          ms: formState.name?.ms || ""
+                        } 
+                      });
+                    }} 
+                    className="flex-1 bg-white border border-slate-200 px-3 py-2 rounded-xl text-xs font-bold outline-none focus:border-blue-500 shadow-sm" 
+                  />
+                </div>
 
-            {/* EN Name */}
-            <div className="space-y-1.5">
-              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Product Name (EN)</h3>
-              <input 
-                type="text" 
-                placeholder="Enter name..." 
-                value={formState.name?.en || ""} 
-                onChange={e => updateForm({ name: { ...formState.name, en: e.target.value.toUpperCase().trim() } })} 
-                className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-base md:text-sm font-bold outline-none focus:border-blue-500 shadow-sm" 
-              />
-            </div>
+                {/* English */}
+                <div className="flex gap-2 items-center">
+                  <div className="w-16 shrink-0">
+                    <span className="text-[9px] font-bold bg-blue-50 text-blue-600 px-2 py-1 rounded-md uppercase tracking-wider block text-center border border-blue-100/50">EN / 英文</span>
+                  </div>
+                  <input 
+                    key={`${editPhotoId || 'new'}-en`}
+                    type="text" 
+                    placeholder="Enter English product name..." 
+                    value={formState.name?.en || ""} 
+                    onChange={e => {
+                      const val = e.target.value.toUpperCase();
+                      updateForm({ 
+                        name: { 
+                          zh: formState.name?.zh || "",
+                          en: val,
+                          ms: formState.name?.ms || ""
+                        } 
+                      });
+                    }} 
+                    className="flex-1 bg-white border border-slate-200 px-3 py-2 rounded-xl text-xs font-bold outline-none focus:border-blue-500 shadow-sm" 
+                  />
+                </div>
 
-            {/* MS Name */}
-            <div className="space-y-1.5">
-              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Nama Produk (MS)</h3>
-              <input 
-                type="text" 
-                placeholder="Masukkan nama..." 
-                value={formState.name?.ms || ""} 
-                onChange={e => updateForm({ name: { ...formState.name, ms: e.target.value.toUpperCase().trim() } })} 
-                className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-base md:text-sm font-bold outline-none focus:border-blue-500 shadow-sm" 
-              />
+                {/* Malay */}
+                <div className="flex gap-2 items-center">
+                  <div className="w-16 shrink-0">
+                    <span className="text-[9px] font-bold bg-emerald-50 text-emerald-600 px-2 py-1 rounded-md uppercase tracking-wider block text-center border border-emerald-100/50">MS / 马来</span>
+                  </div>
+                  <input 
+                    key={`${editPhotoId || 'new'}-ms`}
+                    type="text" 
+                    placeholder="Masukkan nama produk..." 
+                    value={formState.name?.ms || ""} 
+                    onChange={e => {
+                      const val = e.target.value.toUpperCase();
+                      updateForm({ 
+                        name: { 
+                          zh: formState.name?.zh || "",
+                          en: formState.name?.en || "",
+                          ms: val
+                        } 
+                      });
+                    }} 
+                    className="flex-1 bg-white border border-slate-200 px-3 py-2 rounded-xl text-xs font-bold outline-none focus:border-blue-500 shadow-sm" 
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>

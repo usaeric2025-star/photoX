@@ -108,18 +108,30 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
       return;
     }
 
-    await runTask("AI 属性智能識別", async () => {
+    await runTask("AI 属性智能識別", async ({ updateProgress }) => {
+      updateProgress(30, appLang === 'zh' ? 'AI 识别中...' : 'Identifying...');
       const resp = await analyzePhoto(photo.id);
 
       if (resp.ok) {
+        updateProgress(85, appLang === 'zh' ? '正在应用数据...' : 'Applying data...');
         const result = resp.data;
           form.setValues((prev) => {
             const updates: any = {};
             const currentNameZh = (prev.name?.zh || '').trim();
             const isNumeric = /^\d+$/.test(currentNameZh);
             if (!currentNameZh || isNumeric) {
-              if (result.name) {
-                updates.name = { ...prev.name, zh: result.name };
+              if (result.name_translations) {
+                updates.name = {
+                  zh: result.name_translations.zh || prev.name?.zh || '',
+                  en: (result.name_translations.en || prev.name?.en || '').toUpperCase(),
+                  ms: (result.name_translations.ms || prev.name?.ms || '').toUpperCase()
+                };
+              } else if (result.name) {
+                updates.name = { 
+                  zh: result.name, 
+                  en: (prev.name?.en || result.name).toUpperCase(), 
+                  ms: (prev.name?.ms || result.name).toUpperCase() 
+                };
               }
             }
             if (!prev.category_id && result.category_id) updates.category_id = String(result.category_id);
@@ -143,25 +155,27 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
             }
             
             if ((!prev.dimensions || prev.dimensions.length === 0) && Array.isArray(result.dimensions)) {
-              updates.dimensions = result.dimensions;
+               updates.dimensions = result.dimensions;
             } else if (Array.isArray(result.dimensions) && result.dimensions.length > 0) {
-              // If we already have dimensions, append Agnes ones if they look like specifications
-              const agnesDims = result.dimensions.filter((d: any) => d.label?.includes('Agnes'));
-              if (agnesDims.length > 0) {
-                updates.dimensions = [...(prev.dimensions || []), ...agnesDims];
-              }
+               // If we already have dimensions, append Agnes ones if they look like specifications
+               const agnesDims = result.dimensions.filter((d: any) => d.label?.includes('Agnes'));
+               if (agnesDims.length > 0) {
+                 updates.dimensions = [...(prev.dimensions || []), ...agnesDims];
+               }
             }
             
             if (!prev.price && result.price) updates.price = String(result.price);
 
             return { ...prev, ...updates };
           });
+        updateProgress(100, appLang === 'zh' ? '识别成功' : 'Success');
         toast.success("AI 屬性識別成功並已補全空白字段（由 Agnes 提供動態翻譯）");
       } else {
         const errorMsg = (resp as any).message || "AI 分析失敗";
         toast.error(`識別失敗: ${errorMsg}`);
+        throw new Error(errorMsg);
       }
-    });
+    }, { showProgress: true, showSuccessToast: false });
   }, [categories, tags, manufacturers, settings, runTask, form, handleError]);
 
   const onCancelAnalyze = () => {};
@@ -253,9 +267,9 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
 
   const editPhotoPreview = React.useMemo(() => {
     if (!editPhotoId) return null;
-    const photo = photos.find((p: Photo) => p.id === editPhotoId);
+    const photo = detailPhoto || photos.find((p: Photo) => p.id === editPhotoId);
     return photo ? getCacheBustedImageUrl(photo, "image") : null;
-  }, [editPhotoId, photos]);
+  }, [editPhotoId, photos, detailPhoto]);
 
   const resetAddState = () => {
     update({ newPhotoData: null });
@@ -268,7 +282,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
     editPhotoId,
     form,
     newPhotoData,
-    editPhotoPreview: editPhotoId && photos.find((p: Photo) => p.id === editPhotoId) ? getCacheBustedImageUrl(photos.find((p: Photo) => p.id === editPhotoId)!, "image") : null,
+    editPhotoPreview: (editPhotoId && (detailPhoto || photos.find((p: Photo) => p.id === editPhotoId))) ? getCacheBustedImageUrl((detailPhoto || photos.find((p: Photo) => p.id === editPhotoId))!, "image") : null,
     analyzeSingle: async (p: Photo) => onAiAnalyze ? onAiAnalyze(p) : undefined,
     saveNewPhoto: async () => {
       if (editPhotoId && onUpdatePhoto) {
