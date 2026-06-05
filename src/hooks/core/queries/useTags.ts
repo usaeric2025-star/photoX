@@ -1,7 +1,7 @@
 import { createStaleTime } from '@/shared/freshnessSchema';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { loadTagsFromCloud } from '@/services/tag/queries';
-import { photoKeys } from '@/lib/queryKeys';
+import { tagKeys } from '@/lib/queryKeys';
 import { syncCache } from '@/lib/db/indexedDB';
 
 interface UseTagsOptions {
@@ -13,7 +13,7 @@ interface UseTagsOptions {
  */
 export const useTags = (options?: UseTagsOptions) => {
   const result = useQuery({
-    queryKey: photoKeys.tags(),
+    queryKey: tagKeys.tags(),
     queryFn: async () => {
       const tags = await loadTagsFromCloud();
       syncCache.saveTags(tags).catch(() => {});

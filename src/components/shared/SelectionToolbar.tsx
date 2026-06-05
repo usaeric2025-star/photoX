@@ -50,6 +50,7 @@ export function SelectionToolbar({
     }
 
     const currentIds = [...ids];
+    const prevSelection = [...ids]; // Capture current state for rollback
     const targetGroupId = crypto.randomUUID();
     const isCollapsed = urlFilters?.showGroupsCollapsed !== false;
     
@@ -63,6 +64,8 @@ export function SelectionToolbar({
       setShowGroupsCollapsed(true);
     } catch (err) {
       console.error(err);
+      // rollback state
+      update({ isMultiSelect: true, selectedIds: prevSelection });
     }
   };
 

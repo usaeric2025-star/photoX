@@ -3,7 +3,7 @@ import { Tag, Category, Manufacturer } from '@/types';
 import { addTagToDB, updateTagInDB, deleteTagFromDB } from '@/services/tag/commands';
 import { addCategoryToDB, updateCategoryInDB, deleteCategoryFromDB } from '@/services/category/commands';
 import { addManufacturerToDB, updateManufacturerInDB, deleteManufacturerFromDB } from '@/services/manufacturer/commands';
-import { photoKeys, groupKeys } from '@/lib/queryKeys';
+import { tagKeys, categoryKeys, manufacturerKeys, photoKeys, groupKeys } from '@/lib/queryKeys';
 import { useQueryClient } from '@tanstack/react-query';
 import { useInvalidatePhotos } from '@/hooks/queries/useInvalidatePhotos';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
@@ -12,7 +12,7 @@ export const useTagCreate = createMutationHook({
   entity: 'Tag', 
   action: 'Add',
   mutationFn: addTagToDB,
-  invalidateKeys: [photoKeys.tags()],
+  invalidateKeys: [tagKeys.tags()],
   onSuccessMessage: '标签添加成功',
 });
 
@@ -20,7 +20,7 @@ export const useTagEdit = createMutationHook({
   entity: 'Tag',
   action: 'Update',
   mutationFn: ({ id, updates }: { id: string; updates: Partial<Tag> }) => updateTagInDB(id, updates),
-  invalidateKeys: [photoKeys.tags()],
+  invalidateKeys: [tagKeys.tags()],
   onSuccessMessage: '标签更新成功',
 });
 
@@ -106,9 +106,9 @@ export const useSyncMutation = () => {
     mutationFn: async (type: 'push' | 'pull') => {
       if (type === 'pull') {
         invalidatePhotos();
-        await queryClient.invalidateQueries({ queryKey: [photoKeys.tags()] });
-        await queryClient.invalidateQueries({ queryKey: [photoKeys.categories()] });
-        await queryClient.invalidateQueries({ queryKey: [photoKeys.manufacturers()] });
+        await queryClient.invalidateQueries({ queryKey: [tagKeys.tags()] });
+        await queryClient.invalidateQueries({ queryKey: [categoryKeys.categories()] });
+        await queryClient.invalidateQueries({ queryKey: [manufacturerKeys.manufacturers()] });
         await queryClient.invalidateQueries({ queryKey: [groupKeys.all] });
       }
     },

@@ -1,45 +1,45 @@
-import { DataFreshnessPolicy, createStaleTime, createGcTime } from '../shared/freshnessSchema';
+import type { Filters } from '@/types/photo';
 
-// [QUERY-KEY-CONTRACT-INTEGRATED] [CACHE-VERSION-RESILIENT]
-export const SCHEMA_VERSION = 'v2.23-contract';
-
-export const photoKeys = {
-  all: ['photos', SCHEMA_VERSION] as const,
-  lists: () => [...photoKeys.all, 'list'] as const,
-  list: (filters: Record<string, any>, freshness: DataFreshnessPolicy = 'REALTIME') => 
-    [...photoKeys.lists(), filters, { freshness }] as const,
-  infinite: (filters: Record<string, any>, freshness: DataFreshnessPolicy = 'REALTIME') => 
-    [...photoKeys.all, 'infinite', filters, { freshness }] as const,
-  count: (filters: Record<string, any>, freshness: DataFreshnessPolicy = 'REALTIME') => 
-    [...photoKeys.all, 'count', filters, { freshness }] as const,
-  group: (groupId: string, freshness: DataFreshnessPolicy = 'STABLE') => 
-    [...photoKeys.all, 'group', groupId, { freshness }] as const,
-  detail: (photoId: string, freshness: DataFreshnessPolicy = 'REALTIME') => 
-    [...photoKeys.all, 'detail', photoId, { freshness }] as const,
-  tags: () => ['tags', SCHEMA_VERSION] as const,
-  categories: () => ['categories', SCHEMA_VERSION] as const,
-  manufacturers: () => ['manufacturers', SCHEMA_VERSION] as const,
+export const queryKeys = {
+  photos: {
+    all: ['photos'] as const,
+    lists: () => [...queryKeys.photos.all, 'list'] as const,
+    list: (filters: Filters) => [...queryKeys.photos.lists(), filters] as const,
+    details: () => [...queryKeys.photos.all, 'detail'] as const,
+    detail: (id: string) => [...queryKeys.photos.details(), id] as const,
+    infinite: () => [...queryKeys.photos.all, 'infinite'] as const,
+    count: () => [...queryKeys.photos.all, 'count'] as const,
+  },
+  groups: {
+    all: ['groups'] as const,
+    lists: () => [...queryKeys.groups.all, 'list'] as const,
+    list: (filters: Filters) => [...queryKeys.groups.lists(), filters] as const,
+    detail: (id: string) => [...queryKeys.groups.all, 'detail', id] as const,
+  },
+  tags: {
+    all: ['tags'] as const,
+    list: () => [...queryKeys.tags.all, 'list'] as const,
+    tags: () => [...queryKeys.tags.all] as const,
+  },
+  categories: {
+    all: ['categories'] as const,
+    list: () => [...queryKeys.categories.all, 'list'] as const,
+    categories: () => [...queryKeys.categories.all] as const,
+  },
+  manufacturers: {
+    all: ['manufacturers'] as const,
+    list: () => [...queryKeys.manufacturers.all, 'list'] as const,
+    manufacturers: () => [...queryKeys.manufacturers.all] as const,
+  },
+  settings: {
+    all: ['settings'] as const,
+  },
 };
 
-export const groupKeys = {
-  all: ['groups', SCHEMA_VERSION] as const,
-  list: (freshness: DataFreshnessPolicy = 'STABLE') => [...groupKeys.all, 'list', { freshness }] as const,
-  detail: (groupId: string, freshness: DataFreshnessPolicy = 'STABLE') => 
-    [...groupKeys.all, 'detail', groupId, { freshness }] as const,
-};
-
-export const settingsKeys = {
-  all: ['settings', SCHEMA_VERSION] as const,
-  list: (freshness: DataFreshnessPolicy = 'ARCHIVE') => [...settingsKeys.all, { freshness }] as const,
-};
-
-export const storageKeys = {
-  all: ['storage', SCHEMA_VERSION] as const,
-  audit: () => [...storageKeys.all, 'audit'] as const,
-};
-
-// 工具替換導出
-export { createStaleTime, createGcTime };
-
-export type PhotoQueryKey = ReturnType<typeof photoKeys.list>;
-export type GroupQueryKey = ReturnType<typeof groupKeys.detail>;
+// Backwards compatibility for existing imports
+export const photoKeys = queryKeys.photos;
+export const groupKeys = queryKeys.groups;
+export const tagKeys = queryKeys.tags;
+export const categoryKeys = queryKeys.categories;
+export const manufacturerKeys = queryKeys.manufacturers;
+export const settingsKeys = queryKeys.settings;

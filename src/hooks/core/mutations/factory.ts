@@ -1,127 +1,108 @@
-import { useMutation, useQueryClient, UseMutationOptions, QueryKey, QueryClient } from '@tanstack/react-query';
-import { useErrorHandler } from '@/hooks';
-import { toast } from '@/lib/ui/toast';
-import { useTaskExecutor } from '@/hooks/core/infra/useTaskExecutor';
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { useMutation, useQueryClient, QueryKey, QueryClient, UseMutationOptions } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
-export interface MutationConfig<TData, TVariables, TContext> {
-  entity: string;
-  action: string;
+interface MutationConfig<TData, TVariables, TContext> {
   mutationFn: (variables: TVariables) => Promise<TData>;
-  invalidateKeys?: QueryKey[];
-  onSuccessMessage?: string | ((data: TData, variables: TVariables) => string);
-  errorMessage?: string | ((error: unknown, variables: TVariables) => string);
-  optimisticUpdate?: (variables: TVariables, queryClient: QueryClient) => Promise<TContext | void>;
-  rollback?: (error: unknown, variables: TVariables, context: TContext | undefined, queryClient: QueryClient) => void;
+  
+  // ✅ 强制使用 readonly tuple，不接受 unknown[]
+  queryKey: readonly unknown[] | ((variables: TVariables) => readonly unknown[]);
+  
+  // ✅ 优化：乐观更新函数
+  optimisticUpdate?: (oldData: TData | undefined, variables: TVariables) => TData;
+  
+  // 既有配置
+  onSuccess?: (data: TData, variables: TVariables) => void;
+  onError?: (error: Error, variables: TVariables, context?: TContext) => void;
+  entity?: string;
+  action?: string;
+  errorTitle?: string;
+  successMessage?: string;
+  errorMessage?: string;
 }
 
-// Utility for automatic error reporting
-function reportErrorToSystem(error: any, action: string, level: 'low' | 'medium' | 'high' | 'critical' = 'medium') {
-    const normalized = ErrorFactory.normalizeError(error);
-      
-    const payload = JSON.stringify({
-        level,
-        message: normalized.message,
-        stack: normalized.stack || error?.stack,
-        context: action
-    });
-    
-    // Use navigator.sendBeacon for fast, reliable reporting
-    if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
-        navigator.sendBeacon('/api/log/event', new Blob([payload], {type: 'application/json'}));
-    }
-    
-    if (level === 'critical') {
-        toast.error('严重错误：部分操作数据未同步，已上报至系统后台');
-    }
-}
-
-/**
- * Standardized factory for creation of PhotoX mutation hooks.
- * Automatically handles task execution, loading states, success/error feedback,
- * and cache invalidation.
- */
-export function createMutationHook<TData = void, TVariables = void, TContext = unknown>(
-  config: MutationConfig<TData, TVariables, TContext>
-) {
-  return function useStandardMutation(options?: UseMutationOptions<TData, unknown, TVariables, TContext>) {
+export function createMutation<TData, TVariables>(config: MutationConfig<TData, TVariables, unknown>) {
+  return function useStandardMutation(options?: any) {
     const queryClient = useQueryClient();
-    const { handleError } = useErrorHandler();
-    const { runTask } = useTaskExecutor();
-
-    const mutation = useMutation<TData, unknown, TVariables, TContext>({
-      mutationFn: config.mutationFn,
-      onMutate: async (variables) => {
-        if (config.optimisticUpdate) {
-          return await config.optimisticUpdate(variables, queryClient) as TContext;
+    const getQueryKey = (variables: TVariables) => {
+        if (typeof config.queryKey === 'function') {
+        return (config.queryKey as any)(variables);
         }
-        return undefined as TContext;
-      },
-      onSuccess: (data, variables, context) => {
-        // Invalidate caches
-        if (config.invalidateKeys) {
-          config.invalidateKeys.forEach(key => queryClient.invalidateQueries({ queryKey: key }));
-        }
-
-        // Show feedback
-        if (config.onSuccessMessage) {
-          const actualData = (data && typeof data === 'object' && 'ok' in data && 'data' in data) 
-            ? (data as any).data 
-            : data;
-          
-          const msg = typeof config.onSuccessMessage === 'function' 
-            ? config.onSuccessMessage(actualData, variables) 
-            : config.onSuccessMessage;
-          toast.success(msg, { duration: 2000 });
-        }
-
-        // Custom success callback
-        if (options?.onSuccess) {
-          (options.onSuccess as any)(data, variables, context);
-        }
-      },
-      onError: (err, variables, context) => {
-        // Rollback optimistic update
-        if (config.rollback) {
-          config.rollback(err, variables, context, queryClient);
-        }
-
-        // --- 核心：闭环报告 ---
-        const actionName = `${config.entity}${config.action}`;
-        let level: 'low' | 'medium' | 'high' | 'critical' = 'medium';
-        const prevData = (context as any)?.previousData;
-        
-        if (context && prevData) {
-           level = 'high';
-        } else {
-           level = 'critical';
-           toast.error('资料可能不一致，请重新整理页面', {
-             duration: Infinity,
-           });
-        }
-        
-        reportErrorToSystem(err, actionName, level);
-
-        // Handle feedback
-        handleError(err, actionName, false);
-
-        // Custom error callback
-        if (options?.onError) {
-          (options.onError as any)(err, variables, context);
-        }
-      },
-      ...options,
-    });
-
-    const execute = async (variables: TVariables) => {
-      const taskName = `${config.entity}${config.action}`;
-      const isLongTask = config.entity === 'Photo' && (config.action === 'Upload' || config.action === 'Analysis' || config.action === 'Delete' || config.action === 'BatchUpdate');
-      return await runTask(taskName, () => mutation.mutateAsync(variables), { rethrow: true, showProgress: isLongTask });
+        return config.queryKey;
     };
+    
+    return useMutation({
+        mutationFn: config.mutationFn,
+        onMutate: async (variables) => {
+        const queryKey = getQueryKey(variables);
+        await queryClient.cancelQueries({ queryKey });
+        const previousData = queryClient.getQueryData<TData>(queryKey);
+        if (config.optimisticUpdate) {
+            const newData = config.optimisticUpdate(previousData, variables);
+            if (newData !== undefined) {
+            queryClient.setQueryData(queryKey, newData);
+            }
+        }
+        return { previousData, queryKey };
+        },
+        onError: (error, variables, context: any) => {
+        if (context?.previousData !== undefined) {
+            queryClient.setQueryData(context.queryKey, context.previousData);
+        }
+        const isRollbackFailure = !context?.previousData;
+        const errorPayload = {
+            source: 'frontend_mutation',
+            level: isRollbackFailure ? 'critical' : 'high',
+            title: isRollbackFailure ? 'OPTIMISTIC_ROLLBACK_FAILED' : (config.errorTitle || 'Mutation Failed'),
+            message: error instanceof Error ? error.message : String(error),
+            context: {
+            entity: config.entity,
+            action: config.action,
+            variables,
+            hasPreviousData: !!context?.previousData,
+            }
+        };
+        if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
+            const blob = new Blob([JSON.stringify(errorPayload)], { type: 'application/json' });
+            navigator.sendBeacon('/api/log/event', blob);
+        } else {
+            fetch('/api/log/event', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(errorPayload),
+            keepalive: true
+            }).catch(console.error);
+        }
+        if (isRollbackFailure) {
+            toast.error('操作失败，数据可能不一致，请重新整理页面', { duration: 10000 });
+        } else {
+            toast.error(config.errorMessage || '操作失败，已回滚');
+        }
+        config.onError?.(error as Error, variables, context);
+        },
+        onSettled: (data, error, variables) => {
+        const queryKey = getQueryKey(variables);
+        queryClient.invalidateQueries({ queryKey });
+        config.onSuccess?.(data as TData, variables);
+        },
+        ...options
+    });
+  }
+}
 
+export function createMutationHook<TData = void, TVariables = void, TContext = unknown>(config: any) {
+  return function useStandardMutation(options?: any) {
+    const mutation = createMutation({
+      mutationFn: config.mutationFn,
+      queryKey: config.invalidateKeys?.[0],                // Shim
+      optimisticUpdate: (oldData: any, variables: any) => oldData, // Shim
+      ...options
+    })(options);
+    
     return {
       ...mutation,
-      execute,
+      execute: mutation.mutateAsync
     };
   };
 }
+
+

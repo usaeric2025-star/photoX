@@ -483,7 +483,42 @@ toast.error('发现数据完整性问题', {
 
 ### 故障排查
 - 报错 `Could not find 'name_en' column` → 检查代码是否错误写入了 `name_en`
-- 数据库不需要添加 `name_en` 列，保持 `name` JSON 列即可
+
+## 乐观更新规范（锁定）
+
+### ✅ 正确做法
+
+使用 `createMutation` 工厂的 `optimisticUpdate` 参数：
+
+```typescript
+const deleteMutation = createMutation({
+  mutationFn: (id) => api.deletePhoto(id),
+  queryKey: ['photos'],  // 自动快取管理
+  optimisticUpdate: (oldData, id) => oldData?.filter(p => p.id !== id),
+});
+```
+
+工厂自动处理：
+
+· onMutate：保存快照、执行乐观更新
+· onError：还原快照、critical 上报、持久化横幅
+· onSettled：失效快取
+
+❌ 禁止项
+
+· 禁止手动编写 onMutate / onError 的快照管理逻辑
+· 禁止使用 React 19 useOptimistic（破坏 Query Cache 全局一致性）
+· 禁止两套乐观更新机制共存
+
+📌 特殊情况
+
+如果 queryKey 需要根据 variables 动态决定（如精确失效单笔资料）：
+
+```typescript
+queryKey: (id) => ['photos', id],  // 支持函数形式
+optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
+```
+
 
 
 
