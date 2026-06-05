@@ -16,10 +16,16 @@ export interface Photo {
   manual_code?: string; // Hidden price code
   model_number?: string; // Manufacturer model number
   image_hash: string; // MD5 fingerprint
-  name: string; // AI generated name
-  name_en?: string;
-  name_ms?: string;
-  description?: string; // AI generated description
+  name: {
+    zh: string;
+    en?: string;
+    ms?: string;
+  }; 
+  description: {
+    zh?: string;
+    en?: string;
+    ms?: string;
+  } | null;
   image_url: string; // Public URL in Storage
   width?: number; // Pixel width
   height?: number; // Pixel height
@@ -30,11 +36,6 @@ export interface Photo {
   exif_data?: Record<string, unknown> | null;
   created_at: string;
   updated_at?: string;
-  description_translations?: {
-    zh?: string;
-    en?: string;
-    ms?: string;
-  };
   group_id?: string | null;
   is_group_cover?: boolean;
   is_pinned?: boolean; 
@@ -57,7 +58,11 @@ export interface Photo {
   metadata?: Record<string, any>;
   group?: {
       id: string;
-      name: string;
+      name: {
+        zh: string;
+        en?: string;
+        ms?: string;
+      };
       color: string | null;
       cover_photo_id: string | null;
       member_count: number;
@@ -103,15 +108,16 @@ export interface Manufacturer {
 
 export interface ProductGroup {
   id: string;
-  name: string;
-  name_en?: string;
-  name_ms?: string;
-  description: string | null;
-  description_translations?: {
-    zh?: string;
+  name: {
+    zh: string;
     en?: string;
     ms?: string;
   };
+  description: {
+    zh?: string;
+    en?: string;
+    ms?: string;
+  } | null;
   colors: string[];
   materials: string[];
   dimensions?: Dimension[] | null;
@@ -125,14 +131,15 @@ export interface ProductGroup {
 
 export interface ProductFormData {
   id?: string;
-  name: string;
-  name_en?: string;
-  name_ms?: string;
+  name: {
+    zh: string;
+    en?: string;
+    ms?: string;
+  };
   category_id: string | null;
   manufacturer_id: string | null;
   tag_ids: string[];
-  description: string;
-  description_translations?: {
+  description: {
     zh?: string;
     en?: string;
     ms?: string;

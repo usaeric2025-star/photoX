@@ -6,7 +6,9 @@ import { GalleryVariant } from '@/types/variant';
 import { TranslationType } from '../lib/ui-helpers';
 import { sortGroupPhotos } from '../lib/filters';
 import { filterPhotosByMode } from '@/lib/filters/photoVisibility';
-import { useAdminMode, useErrorHandler, useGroupDetail, useTasks, useGroupPhotos } from '@/hooks';
+import { useAdminMode, useErrorHandler, useGroupDetail, useTasks, useGroupPhotos, useCategories } from '@/hooks';
+import { translations } from '../lib/translations';
+import { getPhotoDisplayName } from '../lib/ui-helpers';
 import { GroupDetailSkeleton } from './groups/GroupDetailSkeleton';
 import { Skeleton } from './ui/Skeleton';
 import { GroupGridView } from './groups/GroupGridView';
@@ -46,6 +48,8 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
   const isAdminMode = useAdminMode() && isManagement;
   const { handleError } = useErrorHandler();
   const lang = useUIStore((s) => s.appLang);
+  const t = translations[lang as keyof typeof translations] || translations.en;
+  const { data: categories = [] } = useCategories();
   const translate = createTranslate(lang as LanguageCode);
   
   const { tasks } = useTasks();
@@ -140,6 +144,24 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
     }
   }, [activeGroupId, initialPhotoId, activeGroupPhotos]);
 
+  const groupDisplayName = useMemo(() => {
+    if (!groupData) return '';
+    const name = groupData.name;
+    if (typeof name === 'object') {
+      return name[lang as keyof typeof name] || name.zh || '';
+    }
+    return String(name || '');
+  }, [groupData, lang]);
+
+  const groupDisplayDescription = useMemo(() => {
+    if (!groupData?.description) return '';
+    const desc = groupData.description;
+    if (typeof desc === 'object') {
+      return desc[lang as keyof typeof desc] || (desc as any).zh || '';
+    }
+    return String(desc || '');
+  }, [groupData, lang]);
+
   if (!activeGroupId) return null;
 
   if (isAdminMode) {
@@ -164,7 +186,7 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
 
   return (
     <div 
-      className={`fixed inset-0 z-[200] bg-brand-bg overflow-hidden pt-safe flex flex-col ${!isOpen ? 'hidden' : ''}`}
+      className={`absolute inset-0 z-[20] bg-brand-bg overflow-hidden flex flex-col ${!isOpen ? 'hidden' : ''}`}
       onClick={(e) => { if (e.target === e.currentTarget) { handleClose(); } }}
     >
       {isLoading && !infinitePhotosData ? (
@@ -187,7 +209,7 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
                            <Skeleton className="h-6 w-32 bg-slate-200" />
                          ) : (
                            <h2 className="text-lg font-black text-slate-800 tracking-tight">
-                             {groupData?.name || activeGroupPhotos[0]?.name || `GROUP ${activeGroupId.slice(-4)}`}
+                             {groupDisplayName || (activeGroupPhotos[0] ? getPhotoDisplayName(activeGroupPhotos[0], categories, lang, t) : '') || `GROUP ${activeGroupId.slice(-4)}`}
                            </h2>
                          )}
                       </div>
@@ -233,7 +255,7 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
                 </div>
                 
                 {/* Series Story Section */}
-                {(isGroupDataLoading || groupData?.description) && (
+                {(isGroupDataLoading || groupDisplayDescription) && (
                   <div className="px-5 py-4 bg-white border-b border-slate-100">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="w-1 h-3 bg-blue-600 rounded-full" />
@@ -246,7 +268,7 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
                       </div>
                     ) : (
                       <p className="text-sm font-medium text-slate-600 leading-relaxed whitespace-pre-wrap italic">
-                        {groupData?.description}
+                        {groupDisplayDescription}
                       </p>
                     )}
                   </div>

@@ -102,8 +102,8 @@ export function useBatchAiAnalyze() {
               updateProgress(95, '正在保存合组信息...');
               const { updateGroup } = await import('@/services/group/commands');
               await updateGroup(groupId, {
-                 name: { zh: name, en: name_en, ms: name_ms },
-                 description: { zh: description, en: description_en, ms: description_ms },
+                 name: { zh: name, en: name_en, ms: name_ms } as any,
+                 description: { zh: description, en: description_en, ms: description_ms } as any,
                  colors,
                  materials
               });

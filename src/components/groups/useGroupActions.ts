@@ -25,10 +25,19 @@ export const useGroupActions = (
     async (photoId: string) => {
       const isAlreadyCover = groupData?.cover_photo_id === photoId;
       const targetPhotoId = isAlreadyCover ? null : photoId;
+      
+      const { toast } = await import('@/lib/ui/toast');
       mutateSetCover({
         photoId: targetPhotoId,
         groupId: activeGroupId || undefined,
       });
+
+      if (!isAlreadyCover) {
+        toast.success(groupData?.name?.zh ? `已将照片设为 "${groupData.name.zh}" 的封面` : '已成功设置合组封面');
+      } else {
+        toast.info('已取消合组封面');
+      }
+
       setGroupData((prev: any) =>
         prev
           ? {

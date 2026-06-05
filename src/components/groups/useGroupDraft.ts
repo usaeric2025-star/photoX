@@ -43,8 +43,8 @@ export const useGroupDraft = (
     } else if (activeGroupId && !isGroupDataLoading) {
       setGroupData({
         id: activeGroupId,
-        name: "",
-        description: "",
+        name: { zh: "" },
+        description: { zh: "" },
         colors: [],
         materials: [],
         cover_photo_id: null,

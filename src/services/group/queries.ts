@@ -21,8 +21,8 @@ export const loadGroupsFromCloud = async (userId: string): Promise<AppResult<Pro
 
     const groups = (data || []).map(item => ({
       id: item.id,
-      name: item.name,
-      description: item.description,
+      name: (item.name && typeof item.name === 'object') ? item.name : { zh: String(item.name || '') },
+      description: (item.description && typeof item.description === 'object') ? item.description : { zh: String(item.description || '') },
       colors: item.colors || [],
       materials: item.materials || [],
       cover_photo_id: item.cover_photo_id,
@@ -51,9 +51,8 @@ export const getGroupById = async (id: string): Promise<AppResult<ProductGroup |
 
     const result: ProductGroup = {
       id: data.id,
-      name: data.name,
-      description: data.description,
-      description_translations: data.description_translations,
+      name: (data.name && typeof data.name === 'object') ? data.name : { zh: String(data.name || '') },
+      description: (data.description && typeof data.description === 'object') ? data.description : { zh: String(data.description || '') },
       colors: data.colors || [],
       materials: data.materials || [],
       cover_photo_id: data.cover_photo_id,

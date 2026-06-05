@@ -4,7 +4,7 @@ import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/thumbnails.css";
 import "yet-another-react-lightbox/plugins/captions.css";
 import "yet-another-react-lightbox/plugins/counter.css";
-import { Download, Pencil, Trash2, Info } from "lucide-react";
+import { Download, Pencil, Trash2, Info, Crown, Sparkles } from "lucide-react";
 import { Photo, ProductGroup } from "@/types";
 import { LIGHTBOX_PLUGINS, LIGHTBOX_OPTIONS } from "./lightboxConfig";
 import { toLightboxSlides } from "./lightboxSlides";
@@ -22,17 +22,19 @@ interface LightboxCoreProps {
   showEdit?: boolean;
   showDelete?: boolean;
   showAi?: boolean;
+  showSetCover?: boolean;
   onEdit?: (photo: Photo) => void;
   onDelete?: (photo: Photo) => void;
   onAiAnalyze?: (photo: Photo) => void;
+  onSetCover?: (photo: Photo) => void;
   renderSidebar?: () => React.ReactNode;
   renderFloatingButton?: () => React.ReactNode;
 }
 
 export const LightboxCore = ({ 
   open, onClose, photos, currentIndex = 0, onIndexChange,
-  mode = 'single', showEdit, showDelete, showAi,
-  onEdit, onDelete, onAiAnalyze,
+  mode = 'single', showEdit, showDelete, showAi, showSetCover,
+  onEdit, onDelete, onAiAnalyze, onSetCover,
   renderSidebar, renderFloatingButton
 }: LightboxCoreProps) => {
   const [index, setIndex] = useState(currentIndex);
@@ -68,6 +70,19 @@ export const LightboxCore = ({
         ),
         buttonDownload: () => (
           <div className="flex items-center gap-0.5 mr-2">
+            {showSetCover && (
+              <button
+                onClick={() => {
+                  const photo = photos[index];
+                  if (photo) onSetCover?.(photo);
+                }}
+                className="yarl__button !p-2 rounded-full hover:bg-slate-100/10 transition-all text-amber-400"
+                aria-label="设为封面"
+                title="设为封面"
+              >
+                <Crown size={18} fill="currentColor" />
+              </button>
+            )}
             {showEdit && (
               <button
                 onClick={() => {

@@ -165,27 +165,31 @@ export function PhotoInfoPanel({
     aiAnalyze: appLang === 'zh' ? 'AI 分析' : appLang === 'ms' ? 'Analisis AI' : 'AI Analyze',
   };
 
-  const hasZh = !!(data as Photo).description_translations?.zh || !!(data as Photo).description;
-  const hasEn = !!(data as Photo).description_translations?.en;
-  const hasMs = !!(data as Photo).description_translations?.ms;
+  const hasZh = !!(data as Photo).description?.zh;
+  const hasEn = !!(data as Photo).description?.en;
+  const hasMs = !!(data as Photo).description?.ms;
   
   const showLanguageToggle = [hasZh, hasEn, hasMs].filter(Boolean).length > 1;
 
   let displayDesc = '';
+  const photo = data as Photo;
   if (descLang === 'ms' && hasMs) {
-    displayDesc = (data as Photo).description_translations!.ms!;
+    displayDesc = photo.description!.ms!;
   } else if (descLang === 'en' && hasEn) {
-    displayDesc = (data as Photo).description_translations!.en!;
+    displayDesc = photo.description!.en!;
   } else if (descLang === 'zh' && hasZh) {
-    displayDesc = (data as Photo).description_translations?.zh || (data as Photo).description || '';
+    displayDesc = photo.description?.zh || '';
   }
   
   // fallback mechanism: if preferred language is empty, try others in order
   if (!displayDesc) {
-    if (hasZh) displayDesc = (data as Photo).description_translations?.zh || (data as Photo).description || '';
-    else if (hasEn) displayDesc = (data as Photo).description_translations!.en!;
-    else if (hasMs) displayDesc = (data as Photo).description_translations!.ms!;
+    if (hasZh) displayDesc = photo.description?.zh || '';
+    else if (hasEn) displayDesc = photo.description!.en!;
+    else if (hasMs) displayDesc = photo.description!.ms!;
   }
+
+  const displayName = typeof data.name === 'object' ? (data.name[appLang as keyof typeof data.name] || data.name.zh) : data.name;
+  const displayNameEn = typeof data.name === 'object' ? data.name.en : null;
 
   return (
     <div className={cn("flex flex-col h-full bg-white/95 backdrop-blur-md border-l border-slate-200 overflow-y-auto no-scrollbar select-text", className)}>
@@ -218,7 +222,7 @@ export function PhotoInfoPanel({
                 <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">{l.basicInfo}</h4>
                 <CopyableId className="bg-transparent border-none text-slate-400 p-0" id={data.id} label="GROUP ID" />
               </div>
-              <h2 className="text-xl font-bold text-slate-900 mb-2">{data.name}</h2>
+              <h2 className="text-xl font-bold text-slate-900 mb-2">{displayName}</h2>
               <div className="flex flex-wrap gap-2 mb-4">
                 <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 px-2.5 py-1">
                   <Grid size={12} className="mr-1.5 opacity-60" />
@@ -244,9 +248,9 @@ export function PhotoInfoPanel({
                   className={cn("w-2.5 h-2.5 rounded-full shadow-sm ring-2 ring-white", (data as Photo).is_hidden ? "bg-red-500" : "bg-green-500")} 
                 />
               </div>
-              <h2 className="text-xl font-bold text-slate-900 mb-1">{(data as Photo).name || l.unknown}</h2>
-              {(data as Photo).name_en && (
-                <h3 className="text-sm font-medium text-slate-500 mb-3">{(data as Photo).name_en}</h3>
+              <h2 className="text-xl font-bold text-slate-900 mb-1">{displayName || l.unknown}</h2>
+              {displayNameEn && (
+                <h3 className="text-sm font-medium text-slate-500 mb-3">{displayNameEn}</h3>
               )}
             </section>
 

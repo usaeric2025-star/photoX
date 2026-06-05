@@ -9,11 +9,13 @@ import {
   Save,
   Trash2,
   Loader2,
+  Star,
 } from "lucide-react";
 import { Skeleton } from "../../ui/Skeleton";
 import { useUIStore } from "../../../store";
 import { UseFormReturnType } from "@mantine/form";
 import { ProductFormData } from "../../../types";
+import { toast } from "sonner";
 
 interface HeaderProps {
   editPhotoId: string | null;
@@ -133,12 +135,15 @@ export function DrawerHeader({
 
         {isPartOfGroup && (
           <button
-            onClick={() =>
-              updateForm({ is_group_cover: !formState.is_group_cover })
-            }
-            className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border shadow-sm transition-all ${formState.is_group_cover ? "bg-blue-600 text-white border-blue-600" : "bg-slate-50 text-slate-500 border-slate-200 active:bg-slate-100"}`}
+            onClick={() => {
+              const newState = !formState.is_group_cover;
+              updateForm({ is_group_cover: newState });
+              toast.success(newState ? (appLang === 'zh' ? '已设为封面' : 'Set as cover') : (appLang === 'zh' ? '已取消封面' : 'Removed from cover'));
+            }}
+            title={l.cover}
+            className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border shadow-sm transition-all ${formState.is_group_cover ? "bg-amber-500 text-white border-amber-500 hover:bg-amber-600" : "bg-white text-amber-500 border-amber-200 hover:bg-amber-50 active:scale-95"}`}
           >
-            <div className="text-[10px] font-bold">{l.cover}</div>
+            <Star size={20} className={formState.is_group_cover ? "fill-white" : "fill-transparent"} />
           </button>
         )}
 

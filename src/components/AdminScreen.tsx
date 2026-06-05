@@ -74,48 +74,6 @@ export function AdminScreen() {
   
   return (
     <div className="flex flex-col absolute inset-0 bg-slate-50 overflow-hidden" id="main-admin-screen">
-            <AdminToolbar 
-              variant={variant}
-              photos={photos}
-              onManageClick={onManageClick}
-              loginWithGoogle={loginWithGoogle}
-              onRefresh={onRefresh}
-              cloudCount={cloudCount}
-              isSyncing={isSyncing}
-              handleBatchAiIdentifyTrigger={async () => {
-              const selectedIds = useUIStore.getState().selectedIds;
-              if (selectedIds.length > 0) {
-                const selectedGroupIds = new Set<string>();
-                photos.forEach(p => {
-                  if (selectedIds.includes(p.id) && p.group_id) {
-                    selectedGroupIds.add(p.group_id);
-                  }
-                });
-                const groupIdsArray = Array.from(selectedGroupIds);
-
-                let orQuery = `id.in.(${selectedIds.join(',')})`;
-                if (groupIdsArray.length > 0) {
-                  orQuery += `,group_id.in.(${groupIdsArray.join(',')})`;
-                }
-
-                const { supabase } = await import('@/lib/supabase');
-                const { mapSupabasePhoto } = await import('@/services/photo/queries');
-                const { PHOTO_DETAIL_FIELDS } = await import('@/constants/photoFields');
-                const { data } = await supabase
-                  .from('furniture_items')
-                  .select(PHOTO_DETAIL_FIELDS)
-                  .or(orQuery);
-                
-                const dbPhotos = (data || []).map(mapSupabasePhoto);
-                const finalPhotos = dbPhotos.length > 0 ? dbPhotos : photos.filter(p => 
-                  selectedIds.includes(p.id) || (p.group_id && groupIdsArray.includes(p.group_id))
-                );
-                onBatchAiAnalyze(finalPhotos);
-              } else {
-                onBatchAiAnalyze(photos);
-              }
-         }}
-       />
        <div className="flex-1 min-h-0 relative">
          {!shouldShowContent ? (
            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-slate-400 bg-slate-50">

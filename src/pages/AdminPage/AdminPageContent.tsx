@@ -1,9 +1,10 @@
-import React, { useCallback, useEffect, useState, lazy, Suspense } from 'react';
+import React, { useCallback, useEffect, useState, lazy, Suspense, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Home, Cloud, Settings2, Plus, Terminal, X } from 'lucide-react';
+import { Home, Cloud, Settings2, Plus, Terminal, X, Loader2 } from 'lucide-react';
 import { useLocation } from '@tanstack/react-router';
-import { useAuth, useTasks, useSyncMutation, useErrorHandler, useAdminMode, useTaskExecutor, useMultiSelect, useUrlFilters, useSettings } from '@/hooks';
+import { useAuth, useTasks, useSyncMutation, useErrorHandler, useAdminMode, useTaskExecutor, useMultiSelect, useUrlFilters, useSettings, useCategories } from '@/hooks';
 import { backfillThumbHashes } from '@/services/photo/backfillService';
+import { logger } from '@/lib/logger';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { DataLoadingContainer } from '@/components/ui/DataLoadingContainer';
 import { BatchEditScreen } from '@/components/admin/BatchEditScreen';
@@ -17,6 +18,9 @@ import { AdminScreen } from '@/components/AdminScreen';
 import { PublicGridContainer } from '@/components/photo/PublicGridContainer';
 import { AdminGridContainer } from '@/components/photo/AdminGridContainer';
 import { PublicHeader } from '@/components/layouts/headers/PublicHeader';
+import { AdminHeader } from '@/components/layouts/headers/AdminHeader';
+import { useBatchAiAnalyze } from '@/hooks/core/mutations/useBatchAiAnalyze';
+import { translations } from '@/lib/translations';
 import TasksPage from '@/pages/AdminPage/TasksPage';
 import MaintenanceHistoryPage from '@/pages/AdminPage/MaintenanceHistoryPage';
 import { ErrorLogViewer } from '@/components/admin/ErrorLogViewer';
@@ -24,10 +28,10 @@ import { useUIStore, useShallow } from '@/store/useUIStore';
 import { useGroupView } from '@/features/groups/useGroupView';
 import { useAdminActions } from '@/features/admin/useAdminActions';
 import { usePhotoGallery } from '@/features/photos/usePhotoGallery';
-import { User, Photo } from '@/types';
+import { User, Photo, Category } from '@/types';
 import { TranslationType, getCacheBustedImageUrl } from '@/lib/ui-helpers';
 import { LanguageCode } from '@/lib/translations';
-import { logger } from '@/lib/logger';
+import { toast } from '@/lib/ui/toast';
 
 /* Removed ErrorFallback component */
 
@@ -100,6 +104,71 @@ export function AdminPageContent() {
   };
   const { groupPhotos } = useGroupView(urlFilters.groupId);
 
+  const { data: categories = [] } = useCategories();
+  const appLang = useUIStore(s => s.appLang);
+
+  const currentCategoryName = useMemo(() => {
+    if (!urlFilters.categoryId) return null;
+    const cat = categories.find(c => c.id === urlFilters.categoryId);
+    if (!cat) return null;
+    return (cat[appLang as keyof Category] as string) || (cat.name as string);
+  }, [urlFilters.categoryId, categories, appLang]);
+
+  const pageTitle = useMemo(() => {
+    if (urlFilters.groupId) return appLang === 'zh' ? '合组详情' : appLang === 'ms' ? 'Butiran Kumpulan' : 'Group Details';
+    if (currentScreen === 'dashboard') return appLang === 'zh' ? '数据看板' : appLang === 'ms' ? 'Papan Pemuka' : 'Dashboard';
+    if (currentScreen === 'tasks') return appLang === 'zh' ? '任务中心' : appLang === 'ms' ? 'Pusat Tugasan' : 'Task Center';
+    if (currentScreen === 'history_maintenance') return appLang === 'zh' ? '维护历史' : appLang === 'ms' ? 'Sejarah Penyelenggaraan' : 'Maintenance';
+    if (currentScreen === 'error-logs') return appLang === 'zh' ? '系统日志' : appLang === 'ms' ? 'Log Sistem' : 'Logs';
+    if (currentCategoryName) return currentCategoryName;
+    return appLang === 'zh' ? '全部照片' : appLang === 'ms' ? 'Semua Foto' : 'All Photos';
+  }, [urlFilters.groupId, currentScreen, currentCategoryName, appLang]);
+
+  const { handleBatchAiAnalyze } = useBatchAiAnalyze();
+
+  const handleBatchAiAnalyzeTrigger = async () => {
+    const selectedIds = useUIStore.getState().selectedIds;
+    if (selectedIds.length > 0) {
+      const selectedGroupIds = new Set<string>();
+      photos.forEach(p => {
+        if (selectedIds.includes(p.id) && p.group_id) {
+          selectedGroupIds.add(p.group_id);
+        }
+      });
+      const groupIdsArray = Array.from(selectedGroupIds);
+
+      let orQuery = `id.in.(${selectedIds.join(',')})`;
+      if (groupIdsArray.length > 0) {
+        orQuery += `,group_id.in.(${groupIdsArray.join(',')})`;
+      }
+
+      const { supabase } = await import('@/lib/supabase');
+      const { mapSupabasePhoto } = await import('@/services/photo/queries');
+      const { PHOTO_DETAIL_FIELDS } = await import('@/constants/photoFields');
+      const { data } = await supabase
+        .from('furniture_items')
+        .select(PHOTO_DETAIL_FIELDS)
+        .or(orQuery);
+      
+      const dbPhotos = (data || []).map(mapSupabasePhoto);
+      const finalPhotos = dbPhotos.length > 0 ? dbPhotos : photos.filter(p => 
+        selectedIds.includes(p.id) || (p.group_id && groupIdsArray.includes(p.group_id))
+      );
+      handleBatchAiAnalyze(finalPhotos);
+    } else {
+      handleBatchAiAnalyze(photos);
+    }
+  };
+
+  const onRefresh = async () => {
+    try {
+      await syncMut('pull');
+      toast.success(appLang === 'zh' ? '同步已完成' : appLang === 'ms' ? 'Penyegerakan Selesai' : 'Sync completed');
+    } catch (e: any) {
+      toast.error(`${appLang === 'zh' ? '同步失败' : appLang === 'ms' ? 'Gagal Segerak' : 'Sync failed'}: ${e.message || '未知错误'}`);
+    }
+  };
+
   const isLoading = isAuthLoading || isPhotosLoading || isSettingsLoading;
 
   // 添加 loading 超时强制显示
@@ -158,7 +227,26 @@ export function AdminPageContent() {
   // 未认证且未登录，显示登录屏
   if (!isAuthLoading && !user && !isStaffMode) {
     logger.debug('🔍 条件触发: 无用户且非StaffMode，显示登录页');
-    return <LoginScreen loginWithGoogle={loginWithGoogle} isLoading={isSyncing} />;
+    return (
+      <div className="h-screen w-full">
+        <LoginScreen loginWithGoogle={loginWithGoogle} isLoading={isSyncing} />
+      </div>
+    );
+  }
+
+  // Auth is still loading - show stable layout with loading state instead of unmounting everything
+  if (isAuthLoading && !user && !isStaffMode && !forceShow) {
+    return (
+      <div className="flex h-screen bg-slate-50 overflow-hidden w-full">
+        <div className="hidden lg:block shrink-0 h-full">
+          <div className="w-72 bg-white border-r border-slate-100 flex flex-col h-full animate-pulse" />
+        </div>
+        <div className="flex-1 flex flex-col h-full items-center justify-center">
+          <Loader2 className="animate-spin text-blue-500 mb-4" size={32} />
+          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest animate-pulse">验证身份中 / Authenticating...</p>
+        </div>
+      </div>
+    );
   }
 
   logger.debug('🔍 条件通过: 有用户或StaffMode，显示管理内容');
@@ -175,6 +263,14 @@ export function AdminPageContent() {
             </div>
 
           <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
+              <AdminHeader 
+                onRefresh={onRefresh}
+                isRefreshing={isSyncing}
+                totalCount={photos?.length}
+                onBatchAiIdentify={handleBatchAiAnalyzeTrigger}
+                title={pageTitle}
+              />
+
               {store.batchEditingIds && store.batchEditingIds.length > 0 && (
                 <BatchEditScreen />
               )}

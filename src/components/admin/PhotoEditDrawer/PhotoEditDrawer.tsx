@@ -61,11 +61,11 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
 
   const form = useForm<ProductFormData>({
     initialValues: {
-      name: "",
+      name: { zh: "", en: "", ms: "" },
       category_id: null,
       manufacturer_id: null,
       tag_ids: [],
-      description: "",
+      description: { zh: "", en: "", ms: "" },
       item_code: "",
       manual_code: "",
       model_number: "",
@@ -113,46 +113,49 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
 
       if (resp.ok) {
         const result = resp.data;
-        form.setValues((prev) => {
-          const updates: any = {};
-          const currentName = (prev.name || '').trim();
-          const isNumeric = /^\d+$/.test(currentName);
-          if (!currentName || isNumeric) {
-            if (result.name) {
-              updates.name = result.name;
+          form.setValues((prev) => {
+            const updates: any = {};
+            const currentNameZh = (prev.name?.zh || '').trim();
+            const isNumeric = /^\d+$/.test(currentNameZh);
+            if (!currentNameZh || isNumeric) {
+              if (result.name) {
+                updates.name = { ...prev.name, zh: result.name };
+              }
             }
-          }
-          if (!prev.category_id && result.category_id) updates.category_id = String(result.category_id);
-          if ((!prev.tag_ids || prev.tag_ids.length === 0) && Array.isArray(result.tag_ids)) {
-            updates.tag_ids = result.tag_ids.map((id: any) => String(id));
-          }
-          if (!prev.manufacturer_id && result.manufacturer_id) updates.manufacturer_id = String(result.manufacturer_id);
-          if (!prev.model_number && result.model_number) updates.model_number = result.model_number;
-          if (!prev.manual_code && result.manual_code) updates.manual_code = result.manual_code;
-          if (!prev.description && result.description) updates.description = result.description;
-          
-          if (result.description_translations) {
-             updates.description_translations = { 
-               ...prev.description_translations, 
-               ...result.description_translations,
-               zh: result.description_translations.zh || result.description || prev.description_translations?.zh || prev.description
-             };
-          }
-          
-          if ((!prev.dimensions || prev.dimensions.length === 0) && Array.isArray(result.dimensions)) {
-            updates.dimensions = result.dimensions;
-          } else if (Array.isArray(result.dimensions) && result.dimensions.length > 0) {
-            // If we already have dimensions, append Agnes ones if they look like specifications
-            const agnesDims = result.dimensions.filter((d: any) => d.label?.includes('Agnes'));
-            if (agnesDims.length > 0) {
-              updates.dimensions = [...(prev.dimensions || []), ...agnesDims];
+            if (!prev.category_id && result.category_id) updates.category_id = String(result.category_id);
+            if ((!prev.tag_ids || prev.tag_ids.length === 0) && Array.isArray(result.tag_ids)) {
+              updates.tag_ids = result.tag_ids.map((id: any) => String(id));
             }
-          }
-          
-          if (!prev.price && result.price) updates.price = String(result.price);
+            if (!prev.manufacturer_id && result.manufacturer_id) updates.manufacturer_id = String(result.manufacturer_id);
+            if (!prev.model_number && result.model_number) updates.model_number = result.model_number;
+            if (!prev.manual_code && result.manual_code) updates.manual_code = result.manual_code;
+            
+            if (result.description && !prev.description?.zh) {
+               updates.description = { ...prev.description, zh: result.description };
+            }
+            
+            if (result.description_translations) {
+               updates.description = { 
+                 ...prev.description, 
+                 ...result.description_translations,
+                 zh: result.description_translations.zh || result.description || prev.description?.zh
+               };
+            }
+            
+            if ((!prev.dimensions || prev.dimensions.length === 0) && Array.isArray(result.dimensions)) {
+              updates.dimensions = result.dimensions;
+            } else if (Array.isArray(result.dimensions) && result.dimensions.length > 0) {
+              // If we already have dimensions, append Agnes ones if they look like specifications
+              const agnesDims = result.dimensions.filter((d: any) => d.label?.includes('Agnes'));
+              if (agnesDims.length > 0) {
+                updates.dimensions = [...(prev.dimensions || []), ...agnesDims];
+              }
+            }
+            
+            if (!prev.price && result.price) updates.price = String(result.price);
 
-          return { ...prev, ...updates };
-        });
+            return { ...prev, ...updates };
+          });
         toast.success("AI 屬性識別成功並已補全空白字段（由 Agnes 提供動態翻譯）");
       } else {
         const errorMsg = (resp as any).message || "AI 分析失敗";
@@ -199,20 +202,19 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
     if (editPhotoId !== lastInitializedIdRef.current && detailPhoto) {
       lastInitializedIdRef.current = editPhotoId;
       form.setValues({
-        name: detailPhoto.name || "",
+        name: typeof detailPhoto.name === 'object' ? detailPhoto.name : { zh: detailPhoto.name || '', en: '', ms: '' },
         category_id: detailPhoto.category_id || "",
         tag_ids: Array.isArray(detailPhoto.tag_ids) ? detailPhoto.tag_ids : [],
         manufacturer_id: detailPhoto.manufacturer_id || "",
         item_code: detailPhoto.item_code || "",
         model_number: detailPhoto.model_number || "",
         manual_code: detailPhoto.manual_code || "",
-        description: detailPhoto.description || "",
-        description_translations: detailPhoto.description_translations || { zh: detailPhoto.description || '', en: '', ms: '' },
+        description: typeof detailPhoto.description === 'object' ? detailPhoto.description : { zh: detailPhoto.description || '', en: '', ms: '' },
         dimensions: Array.isArray(detailPhoto.dimensions) ? detailPhoto.dimensions : [],
         is_hidden: detailPhoto.is_hidden || false,
         price: detailPhoto.price || "",
         is_group_cover: detailPhoto.is_group_cover || false,
-      });
+      }) as any;
     }
   }, [editPhotoId, detailPhoto, form]);
 

@@ -187,7 +187,7 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 z-[200] bg-brand-bg overflow-hidden pt-safe flex flex-col"
+            className="absolute inset-0 z-[20] bg-brand-bg overflow-hidden flex flex-col"
           >
             {isLoading && activeGroupPhotos.length === 0 ? (
               <GroupDetailSkeleton />

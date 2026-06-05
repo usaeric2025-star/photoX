@@ -42,16 +42,43 @@ export function BasicInfoTab({
           </div>
         )}
         <div className="flex-1 space-y-3">
-          <div className="space-y-1.5">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">产品名称 / PRODUCT NAME</h3>
-            <input 
-              key={editPhotoId || 'new'}
-              type="text" 
-              placeholder="輸入名稱..." 
-              defaultValue={formState.name} 
-              onBlur={e => updateForm({ name: e.target.value.toUpperCase().trim() })} 
-              className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-base md:text-sm font-bold outline-none focus:border-blue-500 shadow-sm" 
-            />
+          <div className="space-y-3">
+            {/* ZH Name */}
+            <div className="space-y-1.5">
+              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">产品名称 (中文 / ZH)</h3>
+              <input 
+                key={editPhotoId || 'new'}
+                type="text" 
+                placeholder="輸入名稱..." 
+                value={formState.name?.zh || ""} 
+                onChange={e => updateForm({ name: { ...formState.name, zh: e.target.value.toUpperCase().trim() } })} 
+                className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-base md:text-sm font-bold outline-none focus:border-blue-500 shadow-sm" 
+              />
+            </div>
+
+            {/* EN Name */}
+            <div className="space-y-1.5">
+              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Product Name (EN)</h3>
+              <input 
+                type="text" 
+                placeholder="Enter name..." 
+                value={formState.name?.en || ""} 
+                onChange={e => updateForm({ name: { ...formState.name, en: e.target.value.toUpperCase().trim() } })} 
+                className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-base md:text-sm font-bold outline-none focus:border-blue-500 shadow-sm" 
+              />
+            </div>
+
+            {/* MS Name */}
+            <div className="space-y-1.5">
+              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Nama Produk (MS)</h3>
+              <input 
+                type="text" 
+                placeholder="Masukkan nama..." 
+                value={formState.name?.ms || ""} 
+                onChange={e => updateForm({ name: { ...formState.name, ms: e.target.value.toUpperCase().trim() } })} 
+                className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-base md:text-sm font-bold outline-none focus:border-blue-500 shadow-sm" 
+              />
+            </div>
           </div>
         </div>
       </div>

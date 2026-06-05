@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layers, Heart, ShieldAlert } from 'lucide-react';
+import { Layers, Heart, ShieldAlert, Crown } from 'lucide-react';
 import { Photo } from '@/types';
 import { GalleryVariant } from '@/types/variant';
 import { getDisplayGroupCode } from '@/services/utils';
@@ -32,6 +32,9 @@ export function PhotoStatusBadges({
 
   // Hidden Status label
   const hiddenLabel = appLang === 'zh' ? '已隐藏' : appLang === 'ms' ? 'Sembunyi' : 'Hidden';
+  const coverLabel = appLang === 'zh' ? '封面' : appLang === 'ms' ? 'Muka' : 'Cover';
+
+  const isCover = photo.is_group_cover || (photo.group_id && photo.group?.cover_photo_id === photo.id);
 
   return (
     <div className="absolute top-2 left-2 flex flex-wrap gap-1 z-10 pointer-events-none select-none">
@@ -40,6 +43,14 @@ export function PhotoStatusBadges({
         <div className="backdrop-blur-md px-1.5 py-0.5 rounded-md text-[10px] text-white font-bold flex items-center gap-1.5 border border-white/20 shadow-sm bg-blue-600/80">
           <Layers size={10} strokeWidth={2.5} />
           <span>{memberCount}</span>
+        </div>
+      )}
+
+      {/* Cover Badge */}
+      {isCover && (
+        <div className="bg-amber-500 px-1.5 py-0.5 rounded-md text-[9px] text-white font-black flex items-center gap-1 shadow-sm border border-white/20">
+          <Crown size={9} fill="currentColor" />
+          <span>{coverLabel}</span>
         </div>
       )}
 

@@ -64,6 +64,14 @@ export const useGroupAdminLogic = ({
     [dbGroupPhotosPages],
   );
 
+  const {
+    groupData,
+    setGroupData,
+    isGroupDataLoading,
+    handleUpdateGroupData,
+    removeDraftGroup
+  } = useGroupDraft(activeGroupId, dbGroupPhotos, onUpdatePhoto, handleError);
+
   const activeGroupPhotos = useMemo(() => {
     if (!activeGroupId) return [];
     let groupPhotos = dbGroupPhotos;
@@ -72,9 +80,16 @@ export const useGroupAdminLogic = ({
         groupPhotos = groupPhotos.filter(p => !processingIds.includes(p.id));
     }
 
-    return filterPhotosByMode(groupPhotos, isAdminMode).sort((a, b) => {
-      if (a.is_group_cover) return -1;
-      if (b.is_group_cover) return 1;
+    return filterPhotosByMode(groupPhotos, isAdminMode)
+      .map(p => ({
+        ...p,
+        is_group_cover: groupData?.cover_photo_id === p.id || !!p.is_group_cover
+      }))
+      .sort((a, b) => {
+      const isACover = a.is_group_cover;
+      const isBCover = b.is_group_cover;
+      if (isACover && !isBCover) return -1;
+      if (!isACover && isBCover) return 1;
       if (a.group_order !== undefined && b.group_order !== undefined) {
         return a.group_order - b.group_order;
       }
@@ -82,15 +97,7 @@ export const useGroupAdminLogic = ({
       if (b.group_order !== undefined) return 1;
       return (a.item_code || "").localeCompare(b.item_code || "");
     });
-  }, [activeGroupId, dbGroupPhotos, processingIds, isAdminMode]);
-
-  const {
-    groupData,
-    setGroupData,
-    isGroupDataLoading,
-    handleUpdateGroupData,
-    removeDraftGroup
-  } = useGroupDraft(activeGroupId, dbGroupPhotos, onUpdatePhoto, handleError);
+  }, [activeGroupId, dbGroupPhotos, processingIds, isAdminMode, groupData?.cover_photo_id]);
 
   const {
     setCover,

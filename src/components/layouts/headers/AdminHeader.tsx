@@ -44,12 +44,14 @@ import { cn } from "@/lib/utils";
 import { ROUTES } from "@/config/constants";
 
 import { useNavigate, Link } from '@tanstack/react-router';
+import { translations } from "@/lib/translations";
 
 interface AdminHeaderProps {
   onRefresh?: () => void;
   isRefreshing?: boolean;
   totalCount?: number;
   onBatchAiIdentify?: () => void;
+  title?: string;
 }
 
 import { useLocalStorage } from '@mantine/hooks';
@@ -59,6 +61,7 @@ export function AdminHeader({
   isRefreshing,
   totalCount: countProp,
   onBatchAiIdentify,
+  title,
 }: AdminHeaderProps) {
   const { user } = useAuth();
   const { isStaff, can } = usePermission();
@@ -86,6 +89,9 @@ export function AdminHeader({
   const isSelectionMode = isMultiSelect;
 
   const navigate = useNavigate();
+
+  const lang = useUIStore((s) => s.appLang);
+  const t = translations[lang as keyof typeof translations] || translations.en;
 
   const handleImport = () => {
     update({ activeScreen: 'home' });
@@ -127,6 +133,13 @@ export function AdminHeader({
           <span className="text-slate-300">/</span>
           <span>{cloudCount || 0}</span>
         </div>
+        {title && (
+          <div className="hidden sm:flex items-center ml-2 border-l border-slate-200 pl-4 h-6">
+            <h1 className="text-xs font-black text-slate-800 uppercase tracking-widest truncate max-w-[200px]">
+              {title}
+            </h1>
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-1 sm:gap-2 flex-nowrap shrink-0">
@@ -136,7 +149,7 @@ export function AdminHeader({
           <button
             onClick={onBatchAiIdentify}
             className="w-9 h-9 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded-full transition-all active:scale-90"
-            title="AI 批量识别"
+            title={t.batchAi}
           >
             <Sparkles size={18} />
           </button>
@@ -151,17 +164,16 @@ export function AdminHeader({
               ? "bg-blue-600 text-white"
               : "text-slate-500 hover:bg-slate-100",
           )}
-          title="多选模式"
+          title={t.multiSelect}
         >
           <ListChecks size={18} />
         </button>
 
         {/* 3. 切换至展厅按钮 */}
         <Link
-          to={ROUTES.PREVIEW}
-          target="_blank"
+          to={ROUTES.HOME}
           className="w-10 h-10 flex items-center justify-center bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-all active:scale-95 shrink-0 ml-1 border border-blue-100"
-          title="预览展厅"
+          title={t.gallery}
         >
           <LayoutGrid size={20} />
         </Link>
@@ -191,14 +203,14 @@ export function AdminHeader({
 
               {/* Mobile-Only Navigation Links */}
               <div className="lg:hidden px-2 py-1 flex flex-col gap-0.5">
-                <span className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">导航 / Menu</span>
+                <span className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t.galleryName || '导航'}</span>
                 
                 <DropdownMenuItem
                   onClick={handleImport}
                   className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 focus:bg-slate-100 cursor-pointer transition-colors border-none"
                 >
                   <Plus size={15} className="text-blue-600" />
-                  <span className="text-xs font-semibold text-slate-900">快速导入照片</span>
+                  <span className="text-xs font-semibold text-slate-900">{t.quickImport}</span>
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
@@ -206,7 +218,7 @@ export function AdminHeader({
                   className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 focus:bg-slate-100 cursor-pointer transition-colors border-none"
                 >
                   <Home size={15} />
-                  <span className="text-xs font-medium">照片库 / Gallery</span>
+                  <span className="text-xs font-medium">{t.gallery}</span>
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
@@ -214,7 +226,7 @@ export function AdminHeader({
                   className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 focus:bg-slate-100 cursor-pointer transition-colors border-none"
                 >
                   <BarChart3 size={15} />
-                  <span className="text-xs font-medium">仪表盘 / Dashboard</span>
+                  <span className="text-xs font-medium">{t.dashboard}</span>
                 </DropdownMenuItem>
 
                 {can('photo:edit') && (
@@ -224,7 +236,7 @@ export function AdminHeader({
                       className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 focus:bg-slate-100 cursor-pointer transition-colors border-none"
                     >
                       <Cloud size={15} />
-                      <span className="text-xs font-medium">云端存储管理</span>
+                      <span className="text-xs font-medium">{t.cloudStorage}</span>
                     </DropdownMenuItem>
 
                     <DropdownMenuItem
@@ -232,7 +244,7 @@ export function AdminHeader({
                       className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 focus:bg-slate-100 cursor-pointer transition-colors border-none"
                     >
                       <Sparkles size={15} />
-                      <span className="text-xs font-medium">AI 智能配置</span>
+                      <span className="text-xs font-medium">{t.aiConfig}</span>
                     </DropdownMenuItem>
 
                     <DropdownMenuItem
@@ -240,7 +252,7 @@ export function AdminHeader({
                       className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 focus:bg-slate-100 cursor-pointer transition-colors border-none"
                     >
                       <Layers size={15} />
-                      <span className="text-xs font-medium">分类 / 厂商管理</span>
+                      <span className="text-xs font-medium">{t.structure}</span>
                     </DropdownMenuItem>
 
                     <DropdownMenuItem
@@ -248,7 +260,7 @@ export function AdminHeader({
                       className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 focus:bg-slate-100 cursor-pointer transition-colors border-none"
                     >
                       <Tag size={15} />
-                      <span className="text-xs font-medium">标签管理</span>
+                      <span className="text-xs font-medium">{t.tagManage}</span>
                     </DropdownMenuItem>
                   </>
                 )}
@@ -260,7 +272,7 @@ export function AdminHeader({
                       className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 focus:bg-slate-100 cursor-pointer transition-colors border-none"
                     >
                       <Wrench size={15} />
-                      <span className="text-xs font-medium">系统设置与维护</span>
+                      <span className="text-xs font-medium">{t.systemMaint}</span>
                     </DropdownMenuItem>
 
                     <DropdownMenuItem
@@ -268,7 +280,7 @@ export function AdminHeader({
                       className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 focus:bg-slate-100 cursor-pointer transition-colors border-none"
                     >
                       <Terminal size={15} />
-                      <span className="text-xs font-medium">系统日志</span>
+                      <span className="text-xs font-medium">{t.systemLogs}</span>
                     </DropdownMenuItem>
                   </>
                 )}
@@ -288,7 +300,7 @@ export function AdminHeader({
                   className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-slate-100 focus:bg-slate-100 cursor-pointer transition-colors border-none"
                 >
                   <Settings size={16} />
-                  <span className="text-sm font-semibold text-slate-900">管理后台</span>
+                  <span className="text-sm font-semibold text-slate-900">{t.adminPanel}</span>
                 </DropdownMenuItem>
               )}
 
@@ -302,7 +314,7 @@ export function AdminHeader({
                   className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-red-600 hover:bg-red-50 focus:bg-red-50 cursor-pointer transition-colors mt-1 border-none"
                 >
                   <LogOut size={16} />
-                  <span className="text-sm font-semibold">登出账号</span>
+                  <span className="text-sm font-semibold">{t.logoutAccount}</span>
                 </DropdownMenuItem>
               ) : (
                 <DropdownMenuItem
@@ -313,7 +325,7 @@ export function AdminHeader({
                   className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-red-600 hover:bg-red-50 focus:bg-red-50 cursor-pointer transition-colors mt-1 border-none"
                 >
                   <LogOut size={16} />
-                  <span className="text-sm font-semibold">退出员工模式</span>
+                  <span className="text-sm font-semibold">{t.exitStaffMode}</span>
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>

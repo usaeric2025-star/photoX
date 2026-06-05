@@ -47,24 +47,70 @@ export function GroupSettingsContent({
         </div>
 
         <div className="space-y-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-          <div className="space-y-2">
-            <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">
-              系列正式名称 (Group Display Name)
-            </label>
-            <input
-              value={groupData?.name || ""}
-              onChange={(e) =>
-                setGroupData((prev) =>
-                  prev ? { ...prev, name: e.target.value } : null,
-                )
-              }
-              onBlur={(e) => {
-                if (groupData) handleUpdateGroupData({ name: e.target.value });
-              }}
-              className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-base sm:text-sm font-black text-slate-800 outline-none focus:border-indigo-500 transition-all shadow-sm"
-              placeholder="例如: 意式极简沙发系列..."
-            />
-          </div>
+            <div className="space-y-4">
+              {/* ZH Name */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">
+                  系列正式名称 (中文 / ZH)
+                </label>
+                <input
+                  value={groupData?.name?.zh || ""}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setGroupData((prev) =>
+                      prev ? { ...prev, name: { ...prev.name, zh: val } } : null
+                    );
+                  }}
+                  onBlur={(e) => {
+                    if (groupData) handleUpdateGroupData({ name: { ...groupData.name, zh: e.target.value } });
+                  }}
+                  className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-base sm:text-sm font-black text-slate-800 outline-none focus:border-indigo-500 transition-all shadow-sm"
+                  placeholder="例如: 意式极简沙发系列..."
+                />
+              </div>
+
+              {/* EN Name */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">
+                  Series Name (English / EN)
+                </label>
+                <input
+                  value={groupData?.name?.en || ""}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setGroupData((prev) =>
+                      prev ? { ...prev, name: { ...prev.name, en: val } } : null
+                    );
+                  }}
+                  onBlur={(e) => {
+                    if (groupData) handleUpdateGroupData({ name: { ...groupData.name, en: e.target.value } });
+                  }}
+                  className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-base sm:text-sm font-black text-slate-800 outline-none focus:border-indigo-500 transition-all shadow-sm"
+                  placeholder="e.g.: Italian Minimalist Sofa Series..."
+                />
+              </div>
+
+              {/* MS Name */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">
+                  Nama Siri (Malay / MS)
+                </label>
+                <input
+                  value={groupData?.name?.ms || ""}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setGroupData((prev) =>
+                      prev ? { ...prev, name: { ...prev.name, ms: val } } : null
+                    );
+                  }}
+                  onBlur={(e) => {
+                    if (groupData) handleUpdateGroupData({ name: { ...groupData.name, ms: e.target.value } });
+                  }}
+                  className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-base sm:text-sm font-black text-slate-800 outline-none focus:border-indigo-500 transition-all shadow-sm"
+                  placeholder="msl.: Siri Sofa Minimalis Itali..."
+                />
+              </div>
+            </div>
 
           <div className="space-y-4">
             {/* ZH */}
@@ -74,8 +120,7 @@ export function GroupSettingsContent({
               </label>
               <textarea
                 value={
-                  groupData?.description_translations?.zh ||
-                  groupData?.description ||
+                  groupData?.description?.zh ||
                   ""
                 }
                 onChange={(e) => {
@@ -84,9 +129,8 @@ export function GroupSettingsContent({
                     prev
                       ? {
                           ...prev,
-                          description: val,
-                          description_translations: {
-                            ...prev.description_translations,
+                          description: {
+                            ...prev.description,
                             zh: val,
                           },
                         }
@@ -97,9 +141,8 @@ export function GroupSettingsContent({
                   const val = e.target.value;
                   if (groupData)
                     handleUpdateGroupData({
-                      description: val,
-                      description_translations: {
-                        ...groupData.description_translations,
+                      description: {
+                        ...groupData.description,
                         zh: val,
                       },
                     });
@@ -115,15 +158,15 @@ export function GroupSettingsContent({
                 Series Story (English / EN)
               </label>
               <textarea
-                value={groupData?.description_translations?.en || ""}
+                value={groupData?.description?.en || ""}
                 onChange={(e) => {
                   const val = e.target.value;
                   setGroupData((prev) =>
                     prev
                       ? {
                           ...prev,
-                          description_translations: {
-                            ...prev.description_translations,
+                          description: {
+                            ...prev.description,
                             en: val,
                           },
                         }
@@ -134,8 +177,8 @@ export function GroupSettingsContent({
                   const val = e.target.value;
                   if (groupData)
                     handleUpdateGroupData({
-                      description_translations: {
-                        ...groupData.description_translations,
+                      description: {
+                        ...groupData.description,
                         en: val,
                       },
                     });
@@ -151,15 +194,15 @@ export function GroupSettingsContent({
                 Kisah Siri (Malay / MS)
               </label>
               <textarea
-                value={groupData?.description_translations?.ms || ""}
+                value={groupData?.description?.ms || ""}
                 onChange={(e) => {
                   const val = e.target.value;
                   setGroupData((prev) =>
                     prev
                       ? {
                           ...prev,
-                          description_translations: {
-                            ...prev.description_translations,
+                          description: {
+                            ...prev.description,
                             ms: val,
                           },
                         }
@@ -170,8 +213,8 @@ export function GroupSettingsContent({
                   const val = e.target.value;
                   if (groupData)
                     handleUpdateGroupData({
-                      description_translations: {
-                        ...groupData.description_translations,
+                      description: {
+                        ...groupData.description,
                         ms: val,
                       },
                     });

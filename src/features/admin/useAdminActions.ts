@@ -3,8 +3,16 @@ import type { Photo } from '@/types';
 import { useUIStore } from '@/store/useUIStore';
 
 interface PhotoUpdateData {
-  name?: string;
-  description?: string;
+  name?: {
+    zh: string;
+    en?: string;
+    ms?: string;
+  };
+  description?: {
+    zh?: string;
+    en?: string;
+    ms?: string;
+  } | null;
   category_id?: string | null;
   manufacturer_id?: string | null;
   tag_ids?: string[];

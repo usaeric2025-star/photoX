@@ -6,7 +6,7 @@ import {
   Layers, 
   Terminal,
   Home,
-  Sparkles,
+  Brain,
   Wrench,
   LogIn,
   Plus,
@@ -14,7 +14,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Zap,
-  Bug
+  Bug,
+  LayoutGrid
 } from 'lucide-react';
 import { useNavigate, useLocation } from '@tanstack/react-router';
 import { useUIStore, useShallow, useAppLang, useSidebarCollapsed } from '@/store/useUIStore';
@@ -142,6 +143,15 @@ export function AdminSidebar() {
         <div className="space-y-1">
           {!isSidebarCollapsed && <p className="text-[10px] font-bold text-brand-navy/30 uppercase tracking-[0.2em] px-4 mb-2">主控台 / Dashboard</p>}
           <SidebarItem 
+            icon={Home} 
+            label="公开展厅 / Showcase" 
+            collapsed={isSidebarCollapsed}
+            active={false} 
+            onClick={() => {
+              navigate({ to: '/' });
+            }} 
+          />
+          <SidebarItem 
             icon={BarChart3} 
             label="仪表盘 / Dashboard" 
             collapsed={isSidebarCollapsed}
@@ -151,12 +161,13 @@ export function AdminSidebar() {
             }} 
           />
           <SidebarItem 
-            icon={Home} 
-            label="照片库 / Gallery" 
+            icon={LayoutGrid} 
+            label="管理后台 / Admin" 
             collapsed={isSidebarCollapsed}
             active={activeScreen === 'home'} 
             onClick={() => {
               update({ activeScreen: 'home' });
+              navigate({ to: '/admin' });
             }} 
           />
         </div>
@@ -174,7 +185,7 @@ export function AdminSidebar() {
           )}
           {can('photo:edit') && (
             <SidebarItem 
-              icon={Sparkles} 
+              icon={Brain} 
               label="AI 智能配置" 
               collapsed={isSidebarCollapsed}
               active={activeScreen === 'ai_settings'} 

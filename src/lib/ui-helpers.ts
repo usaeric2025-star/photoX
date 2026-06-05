@@ -37,14 +37,16 @@ export const getPhotoDisplayName = (
   lang: string,
   t: TranslationType
 ): string => {
-  const isPlaceholder = !photo.name || 
-    photo.name === t.furnitureRecord || 
-    photo.name === 'Furniture Record' || 
-    photo.name === '未命名产品' || 
-    photo.name === (translations as any)['zh']?.furnitureRecord ||
-    photo.name === (translations as any)['en']?.furnitureRecord;
+  const photoNameStr = typeof photo.name === 'object' ? (photo.name[lang as keyof typeof photo.name] || photo.name.zh) : photo.name;
+  
+  const isPlaceholder = !photoNameStr || 
+    photoNameStr === t.furnitureRecord || 
+    photoNameStr === 'Furniture Record' || 
+    photoNameStr === '未命名产品' || 
+    photoNameStr === (translations as any)['zh']?.furnitureRecord ||
+    photoNameStr === (translations as any)['en']?.furnitureRecord;
 
-  if (!isPlaceholder) return photo.name;
+  if (!isPlaceholder) return photoNameStr || "";
   
   const catName = getTranslatedCategoryName(photo.category_id || undefined, categories, lang, t);
   if (catName && catName !== t.uncategorized) return catName;

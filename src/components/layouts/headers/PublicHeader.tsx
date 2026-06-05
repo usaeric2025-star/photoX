@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { logoutPublic } from "@/lib/publicAuth";
+import { translations } from "@/lib/translations";
 
 interface PublicHeaderProps {
   totalCount?: number;
@@ -24,6 +25,9 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
   const { settings } = useSettings();
   const update = useUIStore((s) => s.update);
   const navigate = useNavigate();
+
+  const lang = useUIStore(s => s.appLang);
+  const t = translations[lang as keyof typeof translations] || translations.en;
 
   const handleAuthAction = () => {
     navigate({ to: '/admin' });
@@ -47,7 +51,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
         )}
         {totalCount !== undefined && (
           <span className="px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold whitespace-nowrap shrink-0 uppercase tracking-widest leading-none">
-            {totalCount} Photos
+            {t.photosCount(totalCount)}
           </span>
         )}
       </div>
@@ -59,7 +63,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
             onClick={onRefresh}
             disabled={isRefreshing}
             className="w-9 h-9 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all active:scale-90 shrink-0"
-            title="刷新数据"
+            title={t.refresh}
           >
             <RefreshCw size={18} className={isRefreshing ? 'animate-spin' : ''} />
           </button>
@@ -69,7 +73,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
         <button
           onClick={handleAuthAction}
           className="w-10 h-10 flex items-center justify-center bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-all active:scale-95 shrink-0 ml-1 border border-blue-100"
-          title="管理后台"
+          title={t.adminPanel}
         >
           <LayoutDashboard size={20} />
         </button>
@@ -117,7 +121,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
                   className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-red-600 hover:bg-red-50 focus:bg-red-50 cursor-pointer transition-colors mt-1 border-none"
                 >
                   <LogOut size={16} />
-                  <span className="text-sm font-semibold">退出登录</span>
+                  <span className="text-sm font-semibold">{t.logoutAccount}</span>
                 </DropdownMenuItem>
               </>
             )}

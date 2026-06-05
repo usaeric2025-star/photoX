@@ -261,6 +261,8 @@ export const PhotoCard = React.memo(({
 
   const is_hidden = !!photo.is_hidden;
 
+  const isCover = photo.is_group_cover || (photo.group_id && photo.group?.cover_photo_id === photo.id);
+
   return (
     <div 
       ref={cardRef}
@@ -281,6 +283,7 @@ export const PhotoCard = React.memo(({
         "md:hover:shadow-xl md:hover:scale-[1.01] active:scale-[0.98]",
         "data-[selected=true]:ring-4 data-[selected=true]:ring-blue-500 data-[selected=true]:scale-[0.96] data-[selected=true]:z-10 data-[selected=true]:shadow-lg",
         isManagement && is_hidden && "ring-2 ring-yellow-400/50 grayscale-[0.3]",
+        isCover && "ring-2 ring-amber-400 z-10 shadow-amber-100 shadow-md",
         className
       )}
       {...props}

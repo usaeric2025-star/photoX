@@ -100,7 +100,7 @@ export function GroupHeader({
             ) : (
               <>
                 <h2 className="text-base sm:text-lg font-black text-slate-800 tracking-tight uppercase truncate flex-1 min-w-0">
-                  {groupData?.name || `GROUP ${activeGroupId?.slice(-4)}`}
+                  {(typeof groupData?.name === 'object' ? (groupData?.name?.[appLang as keyof typeof groupData.name] || groupData?.name?.zh) : groupData?.name) || `GROUP ${activeGroupId?.slice(-4)}`}
                 </h2>
                 {activeGroupId && (
                   <CopyableId className="bg-slate-100/50 border-slate-200/50" id={activeGroupId} label="ID" />
@@ -117,10 +117,19 @@ export function GroupHeader({
         </div>
       </div>
 
-      <div className="flex items-center ml-2">
+      <div className="flex items-center ml-2 gap-2">
+        {isAdminMode && onBatchAiAnalyzeByGroupId && (
+          <button
+            onClick={() => onBatchAiAnalyzeByGroupId(activeGroupId!)}
+            className="w-10 h-10 flex-shrink-0 flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded-full transition-all active:scale-90 border border-blue-100 bg-blue-50"
+            title={l.aiIdentify}
+          >
+            <Sparkles size={18} />
+          </button>
+        )}
         <button
           onClick={handleClose}
-          className="w-10 h-10 flex-shrink-0 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors ml-1 border border-slate-200 bg-white"
+          className="w-10 h-10 flex-shrink-0 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors border border-slate-200 bg-white"
         >
           <X size={20} />
         </button>

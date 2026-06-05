@@ -84,7 +84,7 @@ export function GroupGridView({
               <div>
                   <h3 className={`text-[10px] font-black uppercase tracking-[0.2em] mb-1 ${groupData.is_hidden ? 'text-slate-400' : 'text-indigo-400'}`}>系列故事 / Series Story</h3>
                   <p className="text-sm font-bold text-slate-600 leading-relaxed max-w-2xl">
-                    {groupData.description || '暂无系列说明 / No description yet.'}
+                    {groupData.description ? (typeof groupData.description === 'object' ? (groupData.description[lang as keyof typeof groupData.description] || (groupData.description as any).zh) : groupData.description) : '暂无系列说明 / No description yet.'}
                   </p>
               </div>
               

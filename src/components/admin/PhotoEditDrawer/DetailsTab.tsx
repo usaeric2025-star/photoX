@@ -38,12 +38,11 @@ export function DetailsTab({
             <span className="text-[9px] font-black text-slate-400 uppercase px-1">中文说明 / CHINESE</span>
             <textarea 
               placeholder="输入中文产品说明..." 
-              value={formState.description_translations?.zh || formState.description || ''} 
+              value={formState.description?.zh || ''} 
               onChange={e => {
                 const val = e.target.value;
                 updateForm({ 
-                  description: val, 
-                  description_translations: { ...(formState.description_translations || {}), zh: val } 
+                  description: { ...formState.description, zh: val } 
                 });
               }} 
               className="w-full p-4 rounded-2xl border border-slate-200 bg-white h-32 text-base sm:text-sm font-medium outline-none focus:border-blue-500 shadow-sm" 
@@ -54,11 +53,11 @@ export function DetailsTab({
             <span className="text-[9px] font-black text-slate-400 uppercase px-1">English Description</span>
             <textarea 
               placeholder="Enter English description..." 
-              value={formState.description_translations?.en || ''} 
+              value={formState.description?.en || ''} 
               onChange={e => {
                 const val = e.target.value;
                 updateForm({ 
-                  description_translations: { ...(formState.description_translations || {}), en: val } 
+                  description: { ...formState.description, en: val } 
                 });
               }} 
               className="w-full p-4 rounded-2xl border border-slate-200 bg-white h-32 text-base sm:text-sm font-medium outline-none focus:border-blue-500 shadow-sm" 
@@ -70,11 +69,11 @@ export function DetailsTab({
             <span className="text-[9px] font-black text-slate-400 uppercase px-1">Bahasa Melayu</span>
             <textarea 
               placeholder="Masukkan penerangan Bahasa Melayu..." 
-              value={formState.description_translations?.ms || ''} 
+              value={formState.description?.ms || ''} 
               onChange={e => {
                 const val = e.target.value;
                 updateForm({ 
-                  description_translations: { ...(formState.description_translations || {}), ms: val } 
+                  description: { ...formState.description, ms: val } 
                 });
               }} 
               className="w-full p-4 rounded-2xl border border-slate-200 bg-white h-32 text-base sm:text-sm font-medium outline-none focus:border-blue-500 shadow-sm" 

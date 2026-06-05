@@ -9,10 +9,12 @@ import { useUIStore } from "@/store/useUIStore";
 import { useAdminActions } from "@/features/admin/useAdminActions";
 import { useTags } from "@/hooks/core/queries/useTags";
 import { useCategories } from "@/hooks/core/queries/useCategories";
+import { useGroupCoverMutation } from "@/hooks/core/mutations/useGroupMutations";
 import { getTranslatedCategoryName } from "@/lib/ui-helpers";
 import { translations } from "@/lib/translations";
 import { useDisclosure } from "@mantine/hooks";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { toast } from "@/lib/ui/toast";
 
 /**
  * [PAGE] PhotoLightboxPage
@@ -22,13 +24,24 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 export const PhotoLightboxPage = () => {
   const { 
     isOpen, close, photos, currentIndex, setPhotoId,
-    mode, data, showEdit, showDelete, showAi, isLoading
+    mode, data, showEdit, showDelete, showAi, isLoading, groupId
   } = useLightbox();
   
   const updateUIStore = useUIStore((s) => s.update);
   const appLang = useUIStore((s) => s.appLang);
   const adminActions = useAdminActions();
+  const { mutateAsync: setCoverMut } = useGroupCoverMutation();
   const currentPhoto = currentIndex >= 0 ? photos[currentIndex] : null;
+
+  const handleSetCover = async (photo: any) => {
+    if (!groupId) return;
+    try {
+      await setCoverMut({ groupId, photoId: photo.id });
+      toast.success(photo.name?.zh ? `已将 "${photo.name.zh}" 设为封面` : '封面设置成功');
+    } catch (e) {
+      toast.error('设置封面失败');
+    }
+  };
   const [showInfo, setShowInfo] = React.useState(false);
   const [isDeleteOpen, deleteDialog] = useDisclosure(false);
   
@@ -68,6 +81,8 @@ export const PhotoLightboxPage = () => {
     }
   };
   
+  const currentPhotoDisplayName = currentPhoto ? (typeof currentPhoto.name === 'object' ? (currentPhoto.name[appLang as keyof typeof currentPhoto.name] || currentPhoto.name.zh) : currentPhoto.name) : '';
+
   return (
     <div className="contents">
       <LightboxCore
@@ -83,9 +98,11 @@ export const PhotoLightboxPage = () => {
         showEdit={showEdit}
         showDelete={showDelete}
         showAi={showAi}
+        showSetCover={!!groupId && showEdit}
         onEdit={handleEdit}
         onDelete={handleDelete}
         onAiAnalyze={handleAiAnalyze}
+        onSetCover={handleSetCover}
         renderSidebar={() => 
           showInfo && currentPhoto ? (
             <>
@@ -131,9 +148,9 @@ export const PhotoLightboxPage = () => {
               {/* Photo Simplified Info Overlay */}
               {!showInfo && (
                 <div className="absolute bottom-[10px] left-4 md:bottom-[12px] md:left-6 z-[12] pointer-events-none flex flex-col items-start justify-end max-w-[70%] md:max-w-[60%] select-none">
-                  {currentPhoto.name && (
+                  {currentPhotoDisplayName && (
                     <h2 className="text-white text-lg md:text-xl font-bold tracking-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)] mb-1.5 line-clamp-2">
-                      {currentPhoto.name}
+                      {currentPhotoDisplayName}
                     </h2>
                   )}
                   
@@ -187,7 +204,7 @@ export const PhotoLightboxPage = () => {
         open={isDeleteOpen}
         onOpenChange={deleteDialog.toggle}
         title="确认删除照片"
-        description={`您确定要彻底删除该照片 "${currentPhoto?.name}" 吗？此操作无法撤销。`}
+        description={`您确定要彻底删除该照片 "${currentPhotoDisplayName}" 吗？此操作无法撤销。`}
         confirmText="立即删除"
         variant="destructive"
         onConfirm={async () => {

@@ -12,11 +12,10 @@ export const RootRouter = ({ children }: { children: React.ReactNode }) => {
     return <LoadingScreen />;
   }
 
-  // If logged in, redirect to admin page
-  if (isAuthenticated) {
-    return <Navigate to={ROUTES.ADMIN} replace />;
-  }
-
+  // [V2.10-REMOVED-FORCED-REDIRECT]
+  // Allow admins to see the public home page for smooth transitions
+  // If they want to go to admin, they can use the sidebar/header links.
+  
   // Otherwise, render the requested route (e.g. PublicPage)
   return <>{children}</>;
 };

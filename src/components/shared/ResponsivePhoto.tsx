@@ -80,7 +80,7 @@ export function ResponsivePhoto({
         src && (
           <ContractedImage
             src={src}
-            alt={photo.name || 'Photo'}
+            alt={typeof photo.name === 'object' ? (photo.name.zh || 'Photo') : (photo.name || 'Photo')}
             priority={isLoaded}
             width={variant === 'md' ? [320, 640, 800] : [320, 640]}
             aspectRatio={String(aspectRatio)}

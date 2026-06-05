@@ -76,7 +76,7 @@ export const cleanPhotos = (photos: unknown[]): Photo[] => {
       return {
         ...p,
         id: String(p.id),
-        name: String(p.name || ''),
+        name: (p.name && typeof p.name === 'object') ? p.name : { zh: String(p.name || '') },
         item_code: String(p.item_code || ''),
         image_hash: String(p.image_hash || ''),
         image_url: String(p.image_url || ''),
@@ -169,24 +169,27 @@ export function filterPhotos(
 
     result = result.filter(p => {
       // Basic text fields (item_code, name, manual_code, etc)
+      const nameZh = typeof p.name === 'object' ? (p.name.zh || '') : (p.name || '');
+      const nameEn = typeof p.name === 'object' ? (p.name.en || '') : '';
+      const nameMs = typeof p.name === 'object' ? (p.name.ms || '') : '';
+      
+      const descObj = (p.description as any) || {};
+      const descZh = typeof p.description === 'object' ? (descObj.zh || '') : (p.description || '');
+      const descEn = typeof p.description === 'object' ? (descObj.en || '') : '';
+      const descMs = typeof p.description === 'object' ? (descObj.ms || '') : '';
+
       const hasBasicMatch = 
-        (p.name || '').toLowerCase().includes(q) || 
+        nameZh.toLowerCase().includes(q) || 
+        nameEn.toLowerCase().includes(q) ||
+        nameMs.toLowerCase().includes(q) ||
         (p.manual_code || '').toLowerCase().includes(q) ||
         (p.model_number || '').toLowerCase().includes(q) ||
         (p.item_code || '').toLowerCase().includes(q) ||
-        (p.description || '').toLowerCase().includes(q);
+        descZh.toLowerCase().includes(q) ||
+        descEn.toLowerCase().includes(q) ||
+        descMs.toLowerCase().includes(q);
       
       if (hasBasicMatch) return true;
-
-      // Translation fields
-      if (p.description_translations) {
-        const trans = p.description_translations;
-        if (
-          (trans.zh || '').toLowerCase().includes(q) ||
-          (trans.en || '').toLowerCase().includes(q) ||
-          (trans.ms || '').toLowerCase().includes(q)
-        ) return true;
-      }
 
       // Tags match (including aliases)
       const pTagIds = Array.isArray(p.tag_ids) ? p.tag_ids : [];
@@ -318,7 +321,7 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortO
              member_count: trueMemberCount
            } : {
              id: p.group_id,
-             name: 'Group',
+             name: { zh: 'Group' },
              color: null,
              cover_photo_id: null,
              member_count: trueMemberCount
@@ -349,7 +352,9 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortO
     }
 
     if (sortOrder === 'name') {
-      return (a.name || '').localeCompare(b.name || '');
+      const nameA = typeof a.name === 'object' ? (a.name.zh || '') : (a.name || '');
+      const nameB = typeof b.name === 'object' ? (b.name.zh || '') : (b.name || '');
+      return nameA.localeCompare(nameB);
     }
 
     return sortOrder === 'oldest' ? a._time! - b._time! : b._time! - a._time!;

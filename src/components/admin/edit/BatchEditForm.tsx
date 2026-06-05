@@ -54,8 +54,14 @@ export function BatchEditForm({
           type="text"
           placeholder="输入统一产品名称..."
           className="w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 shadow-sm font-bold placeholder:text-slate-300"
-          value={formState.name}
-          onChange={(e) => handleUpdateForm({ name: e.target.value })}
+          value={typeof formState.name === 'object' ? (formState.name.zh || '') : (formState.name || '')}
+          onChange={(e) => handleUpdateForm({ 
+            name: { 
+              zh: e.target.value, 
+              en: e.target.value, 
+              ms: e.target.value 
+            } 
+          })}
         />
       </section>
 
