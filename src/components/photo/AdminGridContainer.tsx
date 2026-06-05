@@ -285,12 +285,7 @@ export function AdminGridContainer({
           } : undefined}
         />
 
-        <GroupDetailPage 
-          activeGroupId={urlFilters.groupId} 
-          initialPhotoId={urlFilters.photoId} 
-          variant={variant} 
-          onBatchAiAnalyze={onBatchAiAnalyze}
-        />
+        {/* GroupDetailPage moved to AdminPageContent for better layer management */}
         <ConfirmDialog
           open={isDeleteOpen}
           onOpenChange={deleteDialog.toggle}

@@ -70,8 +70,30 @@ export function GroupGridView({
   const isTablet = window.innerWidth >= 640 && window.innerWidth < 1024;
   const denseColumns = isMobile ? 3 : (isTablet ? 4 : 5);
 
+  const groupDisplayDescription = React.useMemo(() => {
+    if (!groupData) return '';
+    const desc = groupData.description;
+    if (!desc) return '';
+    let val = '';
+    if (typeof desc === 'string') {
+      try {
+        const parsed = JSON.parse(desc);
+        val = parsed[lang] || parsed.zh || parsed.en || parsed.ms || '';
+      } catch (e) {
+        val = desc;
+      }
+    } else if (typeof desc === 'object') {
+      val = (desc as any)[lang] || (desc as any).zh || (desc as any).en || (desc as any).ms || '';
+    }
+    return typeof val === 'string' ? val.trim() : '';
+  }, [groupData, lang]);
+
+  const hasDescription = !!groupDisplayDescription;
+  const hasColors = groupData?.colors && groupData.colors.length > 0;
+  const hasMaterials = groupData?.materials && groupData.materials.length > 0;
+
   let header = null;
-  if (groupData && (groupData.description || (groupData.colors && groupData.colors.length > 0) || (groupData.materials && groupData.materials.length > 0))) {
+  if (groupData && (hasDescription || hasColors || hasMaterials)) {
     header = (
       <div className="p-3 sm:p-6 pb-0">
         <div className={`mb-8 p-6 rounded-[2rem] border-2 shadow-sm relative overflow-hidden group ${groupData.is_hidden ? 'bg-slate-50 border-slate-200' : 'bg-white border-indigo-50'}`}>
@@ -83,8 +105,8 @@ export function GroupGridView({
             <div className="flex-1 space-y-4">
               <div>
                   <h3 className={`text-[10px] font-black uppercase tracking-[0.2em] mb-1 ${groupData.is_hidden ? 'text-slate-400' : 'text-indigo-400'}`}>系列故事 / Series Story</h3>
-                  <p className="text-sm font-bold text-slate-600 leading-relaxed max-w-2xl">
-                    {groupData.description ? (typeof groupData.description === 'object' ? (groupData.description[lang as keyof typeof groupData.description] || (groupData.description as any).zh) : groupData.description) : '暂无系列说明 / No description yet.'}
+                  <p className="text-sm font-bold text-slate-600 leading-relaxed max-w-2xl whitespace-pre-wrap">
+                    {groupDisplayDescription || '无描述 / No description'}
                   </p>
               </div>
               

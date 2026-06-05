@@ -125,24 +125,35 @@ export const useGroupAdminLogic = ({
     handleError
   );
 
+  const hasScrolledRef = useRef<{ id: string | null; groupId: string | null }>({ id: null, groupId: null });
+
   useEffect(() => {
     if (activeGroupId && initialPhotoId) {
-      setCurrentHighlightId(initialPhotoId);
-      const timer = setTimeout(() => setCurrentHighlightId(null), 5000);
+      // Prevent scrolling multiple times for the same initialPhotoId within the same group
+      if (hasScrolledRef.current.id === initialPhotoId && hasScrolledRef.current.groupId === activeGroupId) {
+          return;
+      }
 
       const index = activeGroupPhotos.findIndex((p) => p.id === initialPhotoId);
       if (index !== -1) {
+        hasScrolledRef.current = { id: initialPhotoId, groupId: activeGroupId };
+        setCurrentHighlightId(initialPhotoId);
+        const timer = setTimeout(() => setCurrentHighlightId(null), 5000);
+
         setTimeout(() => {
           virtualGridRef.current?.scrollToIndex({
             index,
             align: "center",
             behavior: "auto",
-          });
+        });
         }, 100);
+
+        return () => clearTimeout(timer);
       }
-      return () => clearTimeout(timer);
+    } else {
+        hasScrolledRef.current = { id: null, groupId: null };
     }
-  }, [activeGroupId, initialPhotoId, activeGroupPhotos]);
+  }, [activeGroupId, initialPhotoId, activeGroupPhotos.length]);
 
   useEffect(() => {
     if (activeGroupId && containerRef.current) {

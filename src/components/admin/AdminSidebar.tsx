@@ -96,7 +96,7 @@ export function AdminSidebar() {
   const isEffectiveStaffMode = hasAdminAccess && !user;
 
   return (
-    <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-72'} bg-brand-bg border-r border-brand-navy/5 flex flex-col h-screen sticky top-0 overflow-hidden transition-all duration-300 relative`}>
+    <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-72'} bg-brand-bg border-r border-brand-navy/5 flex flex-col h-screen sticky top-0 overflow-hidden transition-all duration-300 relative z-40`}>
       {/* Toggle Button */}
       <button
         onClick={() => setSidebarCollapsed(!isSidebarCollapsed)}

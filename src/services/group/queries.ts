@@ -19,10 +19,25 @@ export const loadGroupsFromCloud = async (userId: string): Promise<AppResult<Pro
       return errorFactory(`Failed to fetch groups: ${error.message}`, 'DB_ERROR', 'loadGroupsFromCloud', error);
     }
 
+    const parseTranslation = (val: any) => {
+      if (!val) return { zh: '' };
+      if (typeof val === 'object') return val;
+      if (typeof val === 'string') {
+        try {
+          const parsed = JSON.parse(val);
+          if (parsed && typeof parsed === 'object') return parsed;
+        } catch (e) {
+          // Not JSON
+        }
+        return { zh: val };
+      }
+      return { zh: String(val) };
+    };
+
     const groups = (data || []).map(item => ({
       id: item.id,
-      name: (item.name && typeof item.name === 'object') ? item.name : { zh: String(item.name || '') },
-      description: (item.description && typeof item.description === 'object') ? item.description : { zh: String(item.description || '') },
+      name: parseTranslation(item.name),
+      description: parseTranslation(item.description),
       colors: item.colors || [],
       materials: item.materials || [],
       cover_photo_id: item.cover_photo_id,
@@ -49,10 +64,25 @@ export const getGroupById = async (id: string): Promise<AppResult<ProductGroup |
 
     if (!data) return success(null);
 
+    const parseTranslation = (val: any) => {
+      if (!val) return { zh: '' };
+      if (typeof val === 'object') return val;
+      if (typeof val === 'string') {
+        try {
+          const parsed = JSON.parse(val);
+          if (parsed && typeof parsed === 'object') return parsed;
+        } catch (e) {
+          // Not JSON
+        }
+        return { zh: val };
+      }
+      return { zh: String(val) };
+    };
+
     const result: ProductGroup = {
       id: data.id,
-      name: (data.name && typeof data.name === 'object') ? data.name : { zh: String(data.name || '') },
-      description: (data.description && typeof data.description === 'object') ? data.description : { zh: String(data.description || '') },
+      name: parseTranslation(data.name),
+      description: parseTranslation(data.description),
       colors: data.colors || [],
       materials: data.materials || [],
       cover_photo_id: data.cover_photo_id,

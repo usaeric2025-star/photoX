@@ -103,9 +103,6 @@ export default function PublicPage() {
             hasData={true} // Data will be handled inside PublicGridContainer
           >
             <ErrorBoundary>
-                {groupId && (
-                  <GroupDetailPage variant="public-showcase" activeGroupId={groupId} />
-                )}
                 <PublicGridContainer 
                   variant="public-showcase"
                   onScrollToTop={handleScrollToTop}
@@ -115,6 +112,7 @@ export default function PublicPage() {
           </DataLoadingContainer>
         </div>
       )}
+      <GroupDetailPage variant="public-showcase" />
     </div>
   );
 }

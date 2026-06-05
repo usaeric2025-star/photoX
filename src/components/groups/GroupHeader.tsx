@@ -78,7 +78,7 @@ export function GroupHeader({
   };
 
   return (
-    <div className="flex-shrink-0 sticky top-0 bg-brand-bg/90 backdrop-blur-md z-[100] px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-100">
+    <div className="flex-shrink-0 sticky top-0 bg-white z-[100] px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-100">
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <button
           onClick={handleClose}

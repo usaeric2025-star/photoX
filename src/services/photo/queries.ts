@@ -44,6 +44,21 @@ export function normalizeStoredUrl(url: string | undefined | null): string {
     return processedUrl;
 }
 
+const parseTranslation = (val: any) => {
+    if (!val) return { zh: '' };
+    if (typeof val === 'object') return val as { zh: string; en?: string; ms?: string };
+    if (typeof val === 'string') {
+      try {
+        const parsed = JSON.parse(val);
+        if (parsed && typeof parsed === 'object') return parsed;
+      } catch (e) {
+        // Not JSON
+      }
+      return { zh: val };
+    }
+    return { zh: String(val) };
+};
+
 export function mapSupabasePhoto(item: SupabasePhotoRaw): Photo {
     if (!item) return {} as Photo;
     
@@ -107,10 +122,10 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw): Photo {
       manual_code: item.manual_code || '',
       model_number: item.model_number || '',
       image_hash: item.image_hash || '',
-      name: (item.name && typeof item.name === 'object') ? (item.name as any) : { zh: String(item.name || 'Unnamed Product') },
+      name: parseTranslation(item.name),
       category_id: category_id,
       manufacturer_id: manufacturer_id,
-      description: (item.description && typeof item.description === 'object') ? (item.description as any) : { zh: String(item.description || '') },
+      description: parseTranslation(item.description),
       image_url: imageUrl,
       thumbnail_sm_url: getThumbnailUrl(imageUrl, 200, 200, updated_at),
       thumbnail_md_url: getThumbnailUrl(imageUrl, 800, 800, updated_at),
@@ -121,7 +136,7 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw): Photo {
       group_id: group_id_val,
       group: group ? {
           id: group.id,
-          name: (group.name && typeof group.name === 'object') ? (group.name as any) : { zh: String(group.name || 'Group') },
+          name: parseTranslation(group.name),
           color: group.color,
           cover_photo_id: group.cover_photo_id,
           member_count: group.member_count ?? 1,
@@ -170,7 +185,7 @@ async function hydrateGroupInfo(photos: Photo[]): Promise<Photo[]> {
       
       groupMap.set(String(g.id), {
         id: String(g.id),
-        name: g.name || '',
+        name: parseTranslation(g.name),
         color: colorValue || '#3b82f6',
         cover_photo_id: g.cover_photo_id || null,
         member_count: g.member_count ?? 1

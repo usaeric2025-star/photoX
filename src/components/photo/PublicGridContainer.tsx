@@ -159,11 +159,7 @@ export function PublicGridContainer({
             />
         </div>
 
-        <GroupDetailPage
-          activeGroupId={urlFilters.groupId}
-          initialPhotoId={urlFilters.photoId}
-          variant={variant}
-        />
+        {/* GroupDetailPage moved to PublicPage for better layering */}
 
         <PublicFloatingActions 
           onScrollToTop={onScrollToTop} 

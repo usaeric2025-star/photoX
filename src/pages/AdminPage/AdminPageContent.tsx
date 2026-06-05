@@ -280,7 +280,7 @@ export function AdminPageContent() {
                 className={`absolute inset-0 transition-all duration-300 ease-out ${currentScreen === 'home' || currentScreen === 'gallery' ? 'opacity-100 z-10 scale-100' : 'opacity-0 z-0 pointer-events-none scale-[0.98]'}`}
               >
                   {urlFilters.groupId ? (
-                    <GroupDetailPage />
+                    null
                   ) : (
                     <AdminScreen />
                   )}
@@ -397,6 +397,11 @@ export function AdminPageContent() {
         </div>
       </div>
       </DataLoadingContainer>
+
+      <GroupDetailPage 
+        variant={user ? 'full-management' : 'staff-workspace'} 
+        onBatchAiAnalyze={handleBatchAiAnalyzeTrigger}
+      />
     </ErrorBoundary>
   );
 };

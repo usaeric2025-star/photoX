@@ -34,7 +34,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
   };
 
   return (
-    <header className="h-14 sm:h-16 shrink-0 border-b px-2 sm:px-4 flex items-center justify-between bg-white border-slate-200 z-30 font-sans overflow-hidden">
+    <header className="h-14 sm:h-16 shrink-0 border-b px-2 sm:px-4 flex items-center justify-between bg-white border-slate-200 z-40 font-sans overflow-hidden">
       {/* 左侧：Logo & 计数 */}
       <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 flex-nowrap">
         {settings?.logo_url ? (

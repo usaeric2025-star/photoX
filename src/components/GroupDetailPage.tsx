@@ -125,24 +125,33 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
     };
   }, [activeGroupId]);
 
+  const hasScrolledRef = useRef<{ id: string | null; groupId: string | null }>({ id: null, groupId: null });
+
   useEffect(() => {
     if (activeGroupId && activeGroupPhotos.length > 0 && !initializedRef.current) {
         initializedRef.current = true;
-        if (initialPhotoId) {
-            // Auto-scroll to the photo if list is loaded
-            const index = activeGroupPhotos.findIndex(p => p.id === initialPhotoId);
-            if (index !== -1) {
-                setTimeout(() => {
-                    virtualGridRef.current?.scrollToIndex({
-                        index,
-                        align: 'start',
-                        behavior: 'smooth'
-                    });
-                }, 300);
-            }
-        }
     }
-  }, [activeGroupId, initialPhotoId, activeGroupPhotos]);
+
+    if (activeGroupId && initialPhotoId) {
+        if (hasScrolledRef.current.id === initialPhotoId && hasScrolledRef.current.groupId === activeGroupId) {
+            return;
+        }
+
+        const index = activeGroupPhotos.findIndex(p => p.id === initialPhotoId);
+        if (index !== -1) {
+            hasScrolledRef.current = { id: initialPhotoId, groupId: activeGroupId };
+            setTimeout(() => {
+                virtualGridRef.current?.scrollToIndex({
+                    index,
+                    align: 'start',
+                    behavior: 'smooth'
+                });
+            }, 300);
+        }
+    } else {
+        hasScrolledRef.current = { id: null, groupId: null };
+    }
+  }, [activeGroupId, initialPhotoId, activeGroupPhotos.length]);
 
   const groupDisplayName = useMemo(() => {
     if (!groupData) return '';
@@ -157,9 +166,10 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
     if (!groupData?.description) return '';
     const desc = groupData.description;
     if (typeof desc === 'object') {
-      return desc[lang as keyof typeof desc] || (desc as any).zh || '';
+      const val = desc[lang as keyof typeof desc] || (desc as any).zh || '';
+      return val.trim();
     }
-    return String(desc || '');
+    return String(desc || '').trim();
   }, [groupData, lang]);
 
   if (!activeGroupId) return null;
@@ -181,20 +191,26 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
   const isOpen = activeGroupId !== null;
 
   const handleClose = () => {
-    navigate({ to: isAdminMode ? '/admin' : '/', search: (prev: any) => ({ ...prev, groupId: undefined, photoId: undefined }) });
+    navigate({ to: isManagement ? '/admin' : '/', search: (prev: any) => ({ ...prev, groupId: undefined, photoId: undefined }) });
   };
 
   return (
-    <div 
-      className={`absolute inset-0 z-[20] bg-brand-bg overflow-hidden flex flex-col ${!isOpen ? 'hidden' : ''}`}
-      onClick={(e) => { if (e.target === e.currentTarget) { handleClose(); } }}
-    >
-      {isLoading && !infinitePhotosData ? (
-            <GroupDetailSkeleton />
-          ) : (
-            <>
-               {/* Top Header */}
-               <div className="flex-shrink-0 sticky top-0 bg-brand-bg/90 backdrop-blur-md z-[100] px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-100">
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.98 }}
+          transition={{ duration: 0.1, ease: "easeOut" }}
+          className="fixed inset-0 z-[200] bg-white overflow-hidden flex flex-col"
+          onClick={(e) => { if (e.target === e.currentTarget) { handleClose(); } }}
+        >
+          {isLoading && !infinitePhotosData ? (
+                <GroupDetailSkeleton />
+              ) : (
+                <>
+                   {/* Top Header */}
+                   <div className="flex-shrink-0 sticky top-0 bg-white z-[100] px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-100">
                   <div className="flex items-center gap-3">
                     <button 
                       type="button"
@@ -217,7 +233,7 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
                         {isGroupPhotosLoading ? (
                           <Skeleton className="h-3 w-24 mt-1 bg-slate-100" />
                         ) : (
-                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none flex items-center gap-2 flex-wrap mt-0.5">
+                          <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none flex items-center gap-2 flex-wrap mt-0.5">
                             <span>{(totalGroupPhotosCount ?? activeGroupPhotos.length) || groupData?.member_count || 0} 張照片 / Photos</span>
                             {activeGroupId && (
                               <>
@@ -229,7 +245,7 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
                                 <CopyableId className="opacity-80" id={activeGroupId} label="ID" />
                               </>
                             )}
-                          </p>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -254,26 +270,6 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
                   </div>
                 </div>
                 
-                {/* Series Story Section */}
-                {(isGroupDataLoading || groupDisplayDescription) && (
-                  <div className="px-5 py-4 bg-white border-b border-slate-100">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-1 h-3 bg-blue-600 rounded-full" />
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{translate('seriesStory') || 'Series Story'}</span>
-                    </div>
-                    {isGroupDataLoading ? (
-                      <div className="space-y-2">
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-4 w-5/6" />
-                      </div>
-                    ) : (
-                      <p className="text-sm font-medium text-slate-600 leading-relaxed whitespace-pre-wrap italic">
-                        {groupDisplayDescription}
-                      </p>
-                    )}
-                  </div>
-                )}
-
                 {/* [GROUP-STALE-SIGNAL] */}
                 <div className={`flex-1 min-h-0 flex flex-col transition-opacity duration-300 ${isStale ? "opacity-60" : "opacity-100"}`}>
                   <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="animate-spin text-slate-400" /></div>}>
@@ -297,7 +293,9 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
                 </div>
             </>
           )}
-        </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 

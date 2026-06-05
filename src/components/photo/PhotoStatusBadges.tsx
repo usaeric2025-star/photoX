@@ -10,6 +10,7 @@ interface PhotoStatusBadgesProps {
   variant: GalleryVariant;
   isPinned: boolean;
   hideGroupBadge?: boolean;
+  showCoverBadge?: boolean;
 }
 
 /**
@@ -20,7 +21,8 @@ export function PhotoStatusBadges({
   photo, 
   variant, 
   isPinned, 
-  hideGroupBadge 
+  hideGroupBadge,
+  showCoverBadge = false
 }: PhotoStatusBadgesProps) {
   const isManagement = variant === 'full-management' || variant === 'staff-workspace';
   const appLang = useUIStore(s => s.appLang);
@@ -47,10 +49,9 @@ export function PhotoStatusBadges({
       )}
 
       {/* Cover Badge */}
-      {isCover && (
-        <div className="bg-amber-500 px-1.5 py-0.5 rounded-md text-[9px] text-white font-black flex items-center gap-1 shadow-sm border border-white/20">
-          <Crown size={9} fill="currentColor" />
-          <span>{coverLabel}</span>
+      {isCover && showCoverBadge && (
+        <div className="bg-amber-500 p-1 rounded-md text-white flex items-center justify-center shadow-sm border border-white/20">
+          <Crown size={10} fill="currentColor" />
         </div>
       )}
 
