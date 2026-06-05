@@ -19,6 +19,30 @@ export const usePhotoEdit = createMutationHook({
   action: 'Update',
   mutationFn: ({ id, updates }: { id: string; updates: Partial<Photo> }) => update(id, updates),
   invalidateKeys: [photoKeys.all],
+  optimisticUpdate: async ({ id, updates }: { id: string; updates: Partial<Photo> }, queryClient: any) => {
+    await queryClient.cancelQueries({ queryKey: photoKeys.all });
+    const previousData = queryClient.getQueryData(photoKeys.all);
+
+    queryClient.setQueriesData({ queryKey: photoKeys.all }, (old: any) => {
+      if (!old || !old.pages) return old;
+      return {
+        ...old,
+        pages: old.pages.map((page: any) => ({
+          ...page,
+          photos: page.photos.map((p: Photo) => 
+            p.id === id ? { ...p, ...updates } : p
+          ),
+        })),
+      };
+    });
+
+    return { previousData };
+  },
+  rollback: (_err: any, _vars: any, context: any, queryClient: any) => {
+    if (context?.previousData) {
+      queryClient.setQueriesData({ queryKey: photoKeys.all }, context.previousData);
+    }
+  },
   onSuccessMessage: '照片更新成功',
 });
 

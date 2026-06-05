@@ -3,7 +3,8 @@ import {
   ChevronLeft,
   Pencil,
   X,
-  Edit2
+  Edit2,
+  Copy
 } from "lucide-react";
 import { Photo, ProductGroup } from "../../types";
 import { Skeleton } from "../ui/Skeleton";
@@ -11,6 +12,8 @@ import { useUIStore, useShallow } from "@/store/useUIStore";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
 import { useNavigate } from "@tanstack/react-router";
 import { useGroupMutations } from "@/hooks/core/mutations/useGroupMutations";
+import { useClipboard } from "@mantine/hooks";
+import { toast } from "sonner";
 
 interface GroupHeaderProps {
   activeGroupId: string | null;
@@ -48,6 +51,7 @@ export function GroupHeader({
     );
 
   const { useBatchAiAnalyze } = useGroupMutations();
+  const clipboard = useClipboard();
   const onBatchEdit = (ids: string[]) => update?.({ batchEditingIds: ids });
 
   const l = {
@@ -92,7 +96,17 @@ export function GroupHeader({
                     )}
                   </div>
                   {activeGroupId && (
-                    <span className="text-xs text-slate-400 font-mono">ID: {activeGroupId.slice(-8)}</span>
+                    <button
+                      onClick={() => {
+                        clipboard.copy(activeGroupId);
+                        toast.success("Group ID copied to clipboard");
+                      }}
+                      className="text-xs text-slate-400 font-mono hover:text-indigo-600 flex items-center gap-1 transition-colors"
+                      title="Click to copy ID"
+                    >
+                      ID: {activeGroupId.slice(-8)}
+                      <Copy size={10} />
+                    </button>
                   )}
                   {displayDesc && (
                     <p className="text-xs text-slate-500 truncate">{displayDesc}</p>
