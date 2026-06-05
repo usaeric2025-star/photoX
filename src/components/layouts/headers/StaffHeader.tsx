@@ -31,7 +31,7 @@ export function StaffHeader({ totalCount, onRefresh, isRefreshing }: StaffHeader
   };
 
   return (
-    <header className="h-14 sm:h-16 shrink-0 border-b px-2 sm:px-4 flex items-center justify-between bg-indigo-50 border-indigo-200 z-30 font-sans overflow-hidden">
+    <header className="h-14 sm:h-16 shrink-0 border-b px-2 sm:px-4 flex items-center justify-between bg-indigo-50 border-indigo-200 z-header font-sans overflow-hidden">
       <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 flex-nowrap">
         {settings?.logo_url ? (
           <img src={settings.logo_url} className="h-6 sm:h-7 w-auto object-contain shrink-0" alt="Logo" />
@@ -70,7 +70,7 @@ export function StaffHeader({ totalCount, onRefresh, isRefreshing }: StaffHeader
               <DropdownMenuTrigger className="h-9 w-9 flex items-center justify-center text-indigo-600 hover:bg-indigo-100 rounded-full transition-all cursor-pointer shrink-0 outline-none border border-indigo-200">
                 <Menu size={18} />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 mt-2 rounded-2xl p-2 bg-white shadow-xl border border-slate-200 z-50">
+              <DropdownMenuContent align="end" className="w-56 mt-2 rounded-2xl p-2 bg-white shadow-xl border border-slate-200 z-dropdown">
                 <DropdownMenuLabel className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                   <div className="w-5 h-5 rounded-full bg-indigo-600 flex items-center justify-center text-white overflow-hidden text-[8px]">
                     {user.photo_url ? <img src={user.photo_url} referrerPolicy="no-referrer" /> : <UserIcon size={10} />}

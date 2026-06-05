@@ -202,7 +202,7 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.98 }}
           transition={{ duration: 0.1, ease: "easeOut" }}
-          className="fixed inset-0 z-[200] bg-white overflow-hidden flex flex-col"
+          className="fixed inset-0 z-overlay bg-white overflow-hidden flex flex-col"
           onClick={(e) => { if (e.target === e.currentTarget) { handleClose(); } }}
         >
           {isLoading && !infinitePhotosData ? (
@@ -210,7 +210,7 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
               ) : (
                 <>
                    {/* Top Header */}
-                   <div className="flex-shrink-0 sticky top-0 bg-white z-[100] px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-100">
+                   <div className="flex-shrink-0 sticky top-0 bg-white z-sticky px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-100">
                   <div className="flex items-center gap-3">
                     <button 
                       type="button"
@@ -288,6 +288,7 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
                         hasNextPage={hasNextPage}
                         highlightId={currentHighlightId}
                         onPhotoClick={(photo) => setPhotoId(photo.id)} 
+                        getPhotoProps={(photo) => ({ showCoverBadge: true })}
                     />
                   </Suspense>
                 </div>

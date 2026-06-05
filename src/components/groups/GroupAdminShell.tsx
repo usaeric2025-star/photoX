@@ -97,6 +97,7 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
 
   const stableGetPhotoProps = 
     (photo: Photo) => ({
+      showCoverBadge: true,
       draggable:
         dragState.current.isAdminMode && !dragState.current.isMultiSelect,
       onDragStart: () => update({ draggedPhotoId: photo.id }),
@@ -187,7 +188,7 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.98 }}
             transition={{ duration: 0.1 }}
-            className="fixed inset-0 z-[200] bg-white overflow-hidden flex flex-col"
+            className="fixed inset-0 z-overlay bg-white overflow-hidden flex flex-col"
           >
             {isLoading && activeGroupPhotos.length === 0 ? (
               <GroupDetailSkeleton />

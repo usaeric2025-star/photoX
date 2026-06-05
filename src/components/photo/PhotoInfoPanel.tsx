@@ -165,28 +165,24 @@ export function PhotoInfoPanel({
     aiAnalyze: appLang === 'zh' ? 'AI 分析' : appLang === 'ms' ? 'Analisis AI' : 'AI Analyze',
   };
 
+  // Helper to extract translation with fallback
+  const getTransDescription = (desc: any) => {
+    if (!desc) return '';
+    if (typeof desc === 'string') return desc;
+    if (descLang === 'ms' && desc.ms) return desc.ms;
+    if (descLang === 'en' && desc.en) return desc.en;
+    if (descLang === 'zh' && desc.zh) return desc.zh;
+
+    return desc.zh || desc.en || desc.ms || '';
+  };
+
   const hasZh = !!(data as Photo).description?.zh;
   const hasEn = !!(data as Photo).description?.en;
   const hasMs = !!(data as Photo).description?.ms;
   
   const showLanguageToggle = [hasZh, hasEn, hasMs].filter(Boolean).length > 1;
 
-  let displayDesc = '';
-  const photo = data as Photo;
-  if (descLang === 'ms' && hasMs) {
-    displayDesc = photo.description!.ms!;
-  } else if (descLang === 'en' && hasEn) {
-    displayDesc = photo.description!.en!;
-  } else if (descLang === 'zh' && hasZh) {
-    displayDesc = photo.description?.zh || '';
-  }
-  
-  // fallback mechanism: if preferred language is empty, try others in order
-  if (!displayDesc) {
-    if (hasZh) displayDesc = photo.description?.zh || '';
-    else if (hasEn) displayDesc = photo.description!.en!;
-    else if (hasMs) displayDesc = photo.description!.ms!;
-  }
+  const displayDesc = getTransDescription(data.description);
 
   const displayName = typeof data.name === 'object' ? (data.name[appLang as keyof typeof data.name] || data.name.zh) : data.name;
   const displayNameEn = typeof data.name === 'object' ? data.name.en : null;
@@ -229,9 +225,9 @@ export function PhotoInfoPanel({
                   {data.member_count}{l.members}
                 </Badge>
               </div>
-              {data.description && (
+              {displayDesc && (
                 <p className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100 italic">
-                  "{data.description}"
+                  "{displayDesc}"
                 </p>
               )}
             </section>

@@ -155,17 +155,27 @@ export const useGroupAdminLogic = ({
     }
   }, [activeGroupId, initialPhotoId, activeGroupPhotos.length]);
 
+  const isScrollRestoredRef = useRef(false);
+
   useEffect(() => {
-    if (activeGroupId && containerRef.current) {
+    if (activeGroupId && containerRef.current && !isScrollRestoredRef.current) {
       if (groupScrollStr !== '0' && !initialPhotoId) {
         setTimeout(() => {
           if (containerRef.current) {
             containerRef.current.scrollTop = parseInt(groupScrollStr, 10);
+            isScrollRestoredRef.current = true;
           }
         }, 50);
+      } else {
+        isScrollRestoredRef.current = true;
       }
     }
-  }, [activeGroupId, initialPhotoId, groupScrollStr]);
+  }, [activeGroupId, initialPhotoId]);
+
+  useEffect(() => {
+    // Reset scroll restored flag when group changes
+    isScrollRestoredRef.current = false;
+  }, [activeGroupId]);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     if (activeGroupId) {

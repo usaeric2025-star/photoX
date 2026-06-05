@@ -74,6 +74,7 @@ export interface PhotoCardProps extends React.HTMLAttributes<HTMLDivElement> {
   hideDetails?: boolean;
   imgVariant?: 'sm' | 'md';
   hideGroupBadge?: boolean;
+  showCoverBadge?: boolean;
 }
 
 function SelectionOverlay({ isSelected }: { isSelected: boolean }) {
@@ -259,9 +260,6 @@ export const PhotoCard = React.memo(({
 
   const thumbSrc = getCacheBustedImageUrl(photo, 'thumb');
 
-  const activeGroupIdInUrl = useSearch({ from: '__root__', select: (s: any) => s.groupId });
-  const isInGroupView = !!activeGroupIdInUrl;
-
   const is_hidden = !!photo.is_hidden;
 
   const isCover = photo.is_group_cover || (photo.group_id && photo.group?.cover_photo_id === photo.id);
@@ -286,7 +284,7 @@ export const PhotoCard = React.memo(({
         "md:hover:shadow-xl md:hover:scale-[1.01] active:scale-[0.98]",
         "data-[selected=true]:ring-4 data-[selected=true]:ring-blue-500 data-[selected=true]:scale-[0.96] data-[selected=true]:z-10 data-[selected=true]:shadow-lg",
         isManagement && is_hidden && "ring-2 ring-yellow-400/50 grayscale-[0.3]",
-        isCover && isInGroupView && "ring-2 ring-amber-400 shadow-amber-100/50 shadow-sm",
+        isCover && props.showCoverBadge && "ring-2 ring-amber-400 shadow-amber-100/50 shadow-sm",
         className
       )}
       {...props}
@@ -334,7 +332,7 @@ export const PhotoCard = React.memo(({
         variant={variant} 
         isPinned={!!photo.is_pinned} 
         hideGroupBadge={hideGroupBadge || !showGroupsCollapsed} 
-        showCoverBadge={isInGroupView}
+        showCoverBadge={props.showCoverBadge}
       />
 
       {isManagement && can('photo:toggle-pinned') && (

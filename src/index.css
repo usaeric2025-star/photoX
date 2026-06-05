@@ -14,6 +14,19 @@
   --color-brand-purple-bg: #F3E8FF;
   --font-sans: "Geist Variable", "Inter", "Noto Sans SC", ui-sans-serif, system-ui, sans-serif;
   
+  /* Semantic z-index */
+  --z-index-base: 0;
+  --z-index-card: 10;
+  --z-index-dropdown: 20;
+  --z-index-sticky: 30;
+  --z-index-header: 40;
+  --z-index-sidebar: 40;
+  --z-index-drawer: 50;
+  --z-index-modal: 50;
+  --z-index-overlay: 200;
+  --z-index-toast: 300;
+  --z-index-max: 999;
+
   /* 自定义呼吸动画 */
   @keyframes breathing {
     0%, 100% { transform: scale(1); opacity: 0.95; box-shadow: 0 0 0px rgba(212, 168, 83, 0); }
