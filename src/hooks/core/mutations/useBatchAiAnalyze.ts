@@ -80,21 +80,28 @@ export function useBatchAiAnalyze() {
               const analysis = await analyzeGroup(photosWithTags);
               const { name, description, colors, materials } = analysis;
 
-              let name_en = name || '';
-              let name_ms = name || '';
-              let description_en = description || '';
-              let description_ms = description || '';
+              let finalName = { ...name };
+              let finalDescription = {
+                zh: description,
+                en: description,
+                ms: description
+              };
 
               try {
                 updateProgress(85, '正在翻译合组信息...');
                 const { data: settingsData } = await supabase.from('settings').select('gemini_api_key, custom_model').single();
                 const { translateProductFields } = await import('@/services/gemini/translationCore');
-                const pTranslations = await translateProductFields({ name, description, colors, materials }, settingsData?.gemini_api_key || '', settingsData?.custom_model || '');
+                const pTranslations = await translateProductFields({
+                  name: name.zh,
+                  description,
+                  colors,
+                  materials
+                }, settingsData?.gemini_api_key || '', settingsData?.custom_model || '');
 
-                name_en = pTranslations.name_en || name || '';
-                name_ms = pTranslations.name_ms || name || '';
-                description_en = pTranslations.description_en || description || '';
-                description_ms = pTranslations.description_ms || description || '';
+                finalName.en = pTranslations.name_en || name.en || name.zh;
+                finalName.ms = pTranslations.name_ms || name.ms || name.zh;
+                finalDescription.en = pTranslations.description_en || description;
+                finalDescription.ms = pTranslations.description_ms || description;
               } catch (e) {
                 console.warn('Group translations skipped:', e);
               }
@@ -102,8 +109,8 @@ export function useBatchAiAnalyze() {
               updateProgress(95, '正在保存合组信息...');
               const { updateGroup } = await import('@/services/group/commands');
               await updateGroup(groupId, {
-                 name: { zh: name, en: name_en, ms: name_ms } as any,
-                 description: { zh: description, en: description_en, ms: description_ms } as any,
+                 name: finalName as any,
+                 description: finalDescription as any,
                  colors,
                  materials
               });

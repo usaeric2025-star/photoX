@@ -206,21 +206,8 @@ export const clearManufacturerFromPhotos = async (mfrId: string) => {
 };
 
 export const ungroupPhotos = async (groupId: string) => {
-  // Clear group_id for all photos in this group
-  const { error: updateError } = await supabase
-    .from(DB_CONFIG.TABLE_NAME)
-    .update({ 
-      group_id: null, 
-      is_pinned: false,
-      is_group_cover: false
-    })
-    .eq('group_id', groupId);
-
-  if (updateError) throw updateError;
-
-  // Then delete the group entry itself
-  const { deleteGroupFromCloud } = await import('./groupMutationService');
-  await deleteGroupFromCloud(groupId);
+  const { error } = await supabase.rpc('dissolve_group', { group_id: groupId });
+  if (error) throw error;
 };
 
 export const syncGroupMemberCount = async (groupId: string) => {
@@ -290,27 +277,16 @@ export const deletePhotoFromCloud = async (userId: string, photo: Photo): Promis
   return { dissolvedGroupId };
 };
 
-export const movePhotosToGroup = async (userId: string, photoIds: string[], targetGroupId: string | null) => {
-  // [CONSISTENCY-STRATEGY] Sync counts for both source and target groups
-  const { data: originalPhotos } = await supabase
-    .from(DB_CONFIG.TABLE_NAME)
-    .select('group_id')
-    .in('id', photoIds);
-  
-  const sourceGroupIds = Array.from(new Set(originalPhotos?.map(p => p.group_id).filter(Boolean))) as string[];
-
-  const result = await batchUpdatePhotosInCloud(userId, photoIds, { group_id: targetGroupId });
-
-  // Sync source groups
-  for (const gid of sourceGroupIds) {
-    await syncGroupMemberCount(gid);
-  }
-  // Sync target group
-  if (targetGroupId) {
-    await syncGroupMemberCount(targetGroupId);
-  }
-
-  return result;
+export const movePhotosToGroup = async (
+  userId: string, 
+  photoIds: string[], 
+  targetGroupId: string | null
+) => {
+  const { error } = await supabase.rpc('move_photos_to_group', {
+    photo_ids: photoIds,
+    target_group_id: targetGroupId
+  });
+  if (error) throw error;
 };
 
 export const updatePhotoHiddenState = async (photoId: string, is_hidden: boolean) => {

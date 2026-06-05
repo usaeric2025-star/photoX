@@ -308,7 +308,7 @@ export const deletePhotosBatch = async (
 export const groupPhotos = async (
   photoIds: string[], 
   predefinedGroupId?: string, 
-  expandGroups: boolean = false,
+  expandGroups: boolean = true,
   metadata?: {
     name?: any;
     description?: any;
@@ -327,7 +327,7 @@ export const groupPhotos = async (
   const { data: { session } } = await supabase.auth.getSession();
   const userId = session?.user?.id;
 
-  // 1. 获取选定照片的当前状态，用于获取源组ID集合（用于客户端应用层审计与容错）
+  // 1. 获取选定照片的当前状态，用于获取源组ID集合
   const { data: selectedPhotos } = await supabase
     .from(DB_CONFIG.TABLE_NAME)
     .select('id, group_id')
@@ -339,8 +339,28 @@ export const groupPhotos = async (
       .filter((gid): gid is string => !!gid && gid !== targetGroupId) || []
   ));
 
-  // 2. 提前写入/更新目标合组元数据，确保外键约束 100% 满足
-  const coverPhotoId = validIds[0] || null;
+  // 提取出本次选中的本身就不属于任何合组的照片（即 group_id 为空）
+  const ungroupedValidIds = validIds.filter(id => {
+    const photo = selectedPhotos?.find(p => p.id === id);
+    return !photo?.group_id;
+  });
+
+  // Calculate final list of all photo IDs that will belong to targetGroupId.
+  // We always expand the source groups to prevent orphaning details of groups being merged.
+  let finalPhotoIds = [...validIds];
+  if (sourceGroupIds.length > 0) {
+    const { data: siblingPhotos } = await supabase
+      .from(DB_CONFIG.TABLE_NAME)
+      .select('id')
+      .in('group_id', sourceGroupIds);
+    if (siblingPhotos && siblingPhotos.length > 0) {
+      const siblingIds = siblingPhotos.map(p => p.id);
+      finalPhotoIds = Array.from(new Set([...finalPhotoIds, ...siblingIds]));
+    }
+  }
+
+  // 2. 提前在 groups 表中创建/更新目标群组，确保外键约束满足
+  const coverPhotoId = finalPhotoIds[0] || null;
   const groupData = {
     name: metadata?.name || { zh: '新合组', en: 'New Combined Group', ms: 'Kumpulan Baru' },
     description: metadata?.description || { zh: '', en: '', ms: '' },
@@ -359,14 +379,14 @@ export const groupPhotos = async (
         user_id: userId,
         is_hidden: false,
         created_at: new Date().toISOString(),
-        member_count: validIds.length,
+        member_count: finalPhotoIds.length,
         ...groupData
       });
       if (insertError) throw insertError;
     } else {
       const { error: updateError } = await supabase.from('groups').update({
         ...groupData,
-        member_count: validIds.length
+        member_count: finalPhotoIds.length
       }).eq('id', targetGroupId);
       if (updateError) throw updateError;
     }
@@ -376,59 +396,55 @@ export const groupPhotos = async (
     throw ErrorFactory.wrap(normalized.message, 'GroupGroupPhotos/prepareGroup', targetGroupId);
   }
 
-  // 3. 将所有选中的照片的 group_id 设为 targetGroupId 并重置 cover & pinned 状态
+  // 3. 执行原子化归户与合并
   try {
-    const { error: photoUpdateError } = await supabase
-      .from(DB_CONFIG.TABLE_NAME)
-      .update({ 
-        group_id: targetGroupId,
-        is_group_cover: false,
-        user_id: userId
-      })
-      .in('id', validIds);
+    // 3.1 归并所有源合组
+    if (sourceGroupIds.length > 0) {
+      const { error: rpcError } = await supabase.rpc('merge_groups', {
+        source_group_ids: sourceGroupIds,
+        target_group_id: targetGroupId
+      });
+      if (rpcError) throw rpcError;
+    }
 
-    if (photoUpdateError) throw photoUpdateError;
+    // 3.2 归并所有选中的单张照片
+    if (ungroupedValidIds.length > 0) {
+      const { error: ungroupedUpdateError } = await supabase
+        .from(DB_CONFIG.TABLE_NAME)
+        .update({ 
+          group_id: targetGroupId,
+          is_group_cover: false,
+          user_id: userId
+        })
+        .in('id', ungroupedValidIds);
+      if (ungroupedUpdateError) throw ungroupedUpdateError;
+    }
 
-    // 💡 设置第一张照片为封面图
+    // 3.3 重置目标群组内所有封面状态并指定新封面，保证唯一无冲突
     if (coverPhotoId) {
-      await supabase.from(DB_CONFIG.TABLE_NAME).update({ is_group_cover: true }).eq('id', coverPhotoId);
+      await supabase.from(DB_CONFIG.TABLE_NAME)
+        .update({ is_group_cover: false })
+        .eq('group_id', targetGroupId);
+
+      await supabase.from(DB_CONFIG.TABLE_NAME)
+        .update({ is_group_cover: true })
+        .eq('id', coverPhotoId);
     }
   } catch (err) {
     const normalized = ErrorFactory.normalizeError(err);
-    console.error('[groupPhotos] error:', normalized);
-    throw ErrorFactory.wrap(normalized.message, 'GroupGroupPhotos', targetGroupId);
+    console.error('[groupPhotos/mergeAction] error:', normalized);
+    throw ErrorFactory.wrap(normalized.message, 'GroupGroupPhotos/mergeAction', targetGroupId);
   }
 
-  // 4. 触发器兼容的后置自动化回落清理（用于对未完成 SQL 触发器升级的环境，提供 100% 完美的前端防灾降级双保险）
+  // 4. 后置快速同步 (仅做一次目标群组的数量同步)
   try {
     const { syncGroupMemberCount } = await import('../photoMutationService');
-    
-    // 如果存在合并来源组，对旧组做实时统计
-    if (sourceGroupIds.length > 0) {
-      for (const sourceGroupId of sourceGroupIds) {
-        if (sourceGroupId === targetGroupId) continue;
-        const { data: remaining } = await supabase
-          .from(DB_CONFIG.TABLE_NAME)
-          .select('id')
-          .eq('group_id', sourceGroupId);
-          
-        if (remaining && remaining.length <= 1) {
-          // 如果旧组合并后只剩下 <= 1 张照片，自动释放它，避免由于垃圾状态产生的“一张照片的幽灵合组”
-          await ungroupPhotos(sourceGroupId);
-        } else if (remaining) {
-          await syncGroupMemberCount(sourceGroupId);
-        }
-      }
-    }
-    
-    // 强制同步一次目标合组的数量
     await syncGroupMemberCount(targetGroupId);
   } catch (syncErr) {
-    // 降级清理非核心链路错误，不影响核心合组流程完成
-    console.warn('[groupPhotos/postCleanup] non-fatal sync error:', syncErr);
+    console.warn('[groupPhotos/postCleanup] Target count sync warning:', syncErr);
   }
 
-  return { finalPhotoIds: validIds, newGroupId: targetGroupId, name: groupData.name };
+  return { finalPhotoIds, newGroupId: targetGroupId, name: groupData.name };
 };
 
 export const removePhotosFromGroup = async (photoIds: string[], groupId: string) => {

@@ -49,11 +49,25 @@ export const useGroupPhotosMutation = createMutationHook({
   queryKey: photoKeys.lists(), // Ensure optimistic updates operate on list data
   optimisticUpdate: (oldPhotos: any, variables: { photoIds: string[], targetGroupId?: string }) => {
     if (!oldPhotos) return oldPhotos;
-    return oldPhotos.map((photo: any) =>
-      variables.photoIds.includes(photo.id)
-        ? { ...photo, group_id: variables.targetGroupId }
-        : photo
-    );
+    
+    // Find the groups containing any of the selected photo IDs to merge their siblings optimistically too
+    const sourceGroupIds = oldPhotos
+      .filter((p: any) => variables.photoIds.includes(p.id) && p.group_id)
+      .map((p: any) => p.group_id);
+
+    return oldPhotos.map((photo: any) => {
+      const isInSelected = variables.photoIds.includes(photo.id);
+      const isPartofMergedGroups = photo.group_id && sourceGroupIds.includes(photo.group_id);
+
+      if (isInSelected || isPartofMergedGroups) {
+        return { 
+          ...photo, 
+          group_id: variables.targetGroupId,
+          is_group_cover: photo.id === variables.photoIds[0]
+        };
+      }
+      return photo;
+    });
   },
   invalidateKeys: [photoKeys.all, groupKeys.all],
   onSuccessMessage: '合组成功',
