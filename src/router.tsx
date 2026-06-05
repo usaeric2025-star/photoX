@@ -102,6 +102,32 @@ export const rootRoute = createRootRouteWithContext<RouterContext>()({
   ),
 });
 
+// 定義鑑權函數
+const authGuard = async ({ context, location }: { context: { user: any }, location: { pathname: string } }) => {
+  const { user } = context;
+  const searchParams = new URLSearchParams(window.location.search);
+  const isPreview = location.pathname === '/preview' || searchParams.get('preview') === 'true';
+  
+  // 1. 未登入訪問後台 → 跳轉登入
+  if (!user && location.pathname.startsWith('/admin')) {
+    throw redirect({ to: '/login' });
+  }
+  
+  // 2. 已登入訪問首頁 → 跳轉後台
+  if (user && (location.pathname === '/' || location.pathname === ROUTES.HOME)) {
+    throw redirect({ to: ROUTES.ADMIN });
+  }
+  
+  // 3. 已登入訪問群組詳情 → 跳轉後台對應頁面
+  const groupMatch = location.pathname.match(/^\/group\/(.+)$/);
+  if (user && groupMatch && !isPreview) {
+    throw redirect({ to: `/admin/group/${groupMatch[1]}` });
+  }
+  
+  // 4. 其他情況 → 正常渲染
+  return;
+};
+
 import { type } from 'arktype';
 import { PAGINATION } from '@/constants/config';
 import { PHOTO_QUERY_CONFIG } from '@/lib/photoQueryConfig';
@@ -124,9 +150,7 @@ const indexRoute = createRoute({
       showGroupsCollapsed: (search.showGroupsCollapsed as GallerySearchParams['showGroupsCollapsed']) || undefined,
     };
   },
-  beforeLoad: async ({ search }) => {
-    // Empty beforeLoad to allow the RootRouter component to handle redirect logic cleanly based on auth state
-  },
+  beforeLoad: authGuard,
   loader: async ({ context }) => {
     const { queryClient } = context;
     if (!queryClient) return;
@@ -236,6 +260,7 @@ const hashRoute = createRoute({
 const groupRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/group/$groupId',
+  beforeLoad: authGuard,
   validateSearch: (search: Record<string, unknown>): GallerySearchParams => {
     return {
       q: (search.q as string) || undefined,
@@ -278,6 +303,7 @@ const gRoute = createRoute({
 const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: ROUTES.ADMIN,
+  beforeLoad: authGuard,
   component: AdminPage,
 });
 
