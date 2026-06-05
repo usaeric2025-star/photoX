@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { useDisclosure } from '@mantine/hooks';
 import { Sparkles, FolderPlus, Edit, EyeOff, Trash2, X } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -30,6 +31,8 @@ export function SelectionToolbar({
 
   const count = selectedIds.length;
   const ids = selectedIds;
+  
+  console.log('SelectionToolbar rendering - isMultiSelect:', isMultiSelect, 'count:', count);
 
   const groupMutation = useGroupPhotosMutation();
   const { handleAIAction } = useAIGroup();
@@ -79,8 +82,8 @@ export function SelectionToolbar({
     }
   };
 
-  return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 border border-slate-800 backdrop-blur rounded-full px-4 py-2 shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-300">
+  return createPortal(
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] bg-slate-900/95 border border-slate-800 backdrop-blur rounded-full px-4 py-2 shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-300">
       {/* Circle Badge showing selection count */}
       <div 
         className="w-7 h-7 flex items-center justify-center rounded-full bg-blue-600 text-white font-bold text-xs ring-4 ring-blue-600/15 shrink-0 select-none cursor-default"
@@ -173,6 +176,7 @@ export function SelectionToolbar({
       >
         <X size={15} />
       </button>
-    </div>
+    </div>,
+    document.body
   );
 }

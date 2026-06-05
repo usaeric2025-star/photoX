@@ -77,7 +77,7 @@ export function useLongPress(
         // Safety timeout to remove the listener if no click fires
         setTimeout(() => {
           el.removeEventListener('click', swallowClick, true);
-        }, 50);
+        }, 300);
       }
     };
 

@@ -130,7 +130,11 @@ export const useUIStore = create<UIStoreState>()((set) => ({
     const newSelected = new Set(state.selectedIds);
     if (newSelected.has(id)) newSelected.delete(id);
     else newSelected.add(id);
-    return { selectedIds: Array.from(newSelected) };
+    const selectedArray = Array.from(newSelected);
+    return { 
+      selectedIds: selectedArray,
+      isMultiSelect: selectedArray.length > 0 ? state.isMultiSelect : false
+    };
   }),
   addProcessingIds: (ids) => set((state) => ({ 
     processingIds: Array.from(new Set([...state.processingIds, ...ids])) 
