@@ -103,10 +103,9 @@ export const rootRoute = createRootRouteWithContext<RouterContext>()({
 });
 
 // 定義鑑權函數
-const authGuard = async ({ context, location }: { context: { user: any }, location: { pathname: string } }) => {
+const authGuard = async ({ context, location }: { context: { user: any }, location: { pathname: string; search: any } }) => {
   const { user } = context;
-  const searchParams = new URLSearchParams(window.location.search);
-  const isPreview = location.pathname === '/preview' || searchParams.get('preview') === 'true';
+  const isPreview = location.search?.preview === 'true';
   
   // 1. 未登入訪問後台 → 跳轉登入
   if (!user && location.pathname.startsWith('/admin')) {
