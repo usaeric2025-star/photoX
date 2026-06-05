@@ -109,10 +109,10 @@ export function GroupHeader({
                       className="flex-shrink-0 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity"
                     />
                   )}
+                 {activeGroupId && (
+                    <CopyableId className="bg-slate-100/50 border-slate-200/50 w-fit" id={activeGroupId} label="ID" />
+                  )}
                 </div>
-                {activeGroupId && (
-                  <CopyableId className="bg-slate-100/50 border-slate-200/50 w-fit" id={activeGroupId} label="ID" />
-                )}
               </>
             )}
           </div>

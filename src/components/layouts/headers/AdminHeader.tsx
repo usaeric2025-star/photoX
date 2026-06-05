@@ -205,13 +205,6 @@ export function AdminHeader({
               <div className="lg:hidden px-2 py-1 flex flex-col gap-0.5">
                 <span className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t.galleryName || '导航'}</span>
                 
-                <DropdownMenuItem
-                  onClick={handleImport}
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 focus:bg-slate-100 cursor-pointer transition-colors border-none"
-                >
-                  <Plus size={15} className="text-blue-600" />
-                  <span className="text-xs font-semibold text-slate-900">{t.quickImport}</span>
-                </DropdownMenuItem>
 
                 <DropdownMenuItem
                   onClick={() => update({ activeScreen: "home" })}

@@ -58,7 +58,7 @@ export function UploadButton({
 
     return (
       <>
-        {!isMultiSelect && onAdd && (
+        {onAdd && (
           <AddButton onAdd={onAdd} />
         )}
       </>

@@ -46,6 +46,15 @@ export const useGroupPhotosMutation = createMutationHook({
     const result = await groupPhotos(photoIds, finalGroupId, expandGroups);
     return { photoIds: result.finalPhotoIds || photoIds, newGroupId: finalGroupId };
   },
+  queryKey: photoKeys.lists(), // Ensure optimistic updates operate on list data
+  optimisticUpdate: (oldPhotos: any, variables: { photoIds: string[], targetGroupId?: string }) => {
+    if (!oldPhotos) return oldPhotos;
+    return oldPhotos.map((photo: any) =>
+      variables.photoIds.includes(photo.id)
+        ? { ...photo, group_id: variables.targetGroupId }
+        : photo
+    );
+  },
   invalidateKeys: [photoKeys.all, groupKeys.all],
   onSuccessMessage: '合组成功',
 });

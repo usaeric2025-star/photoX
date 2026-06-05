@@ -87,11 +87,17 @@ export function createMutation<TData, TVariables, TContext = unknown>(config: Mu
 
 export function createMutationHook<TData = any, TVariables = any, TContext = unknown>(config: any) {
   return function useStandardMutation(options?: any) {
+    const queryClient = useQueryClient();
     const mutation = createMutation<TData, TVariables, TContext>({
       mutationFn: config.mutationFn,
       queryKey: config.queryKey || config.invalidateKeys?.[0] || ['unknown'],
       optimisticUpdate: config.optimisticUpdate,
-      onSuccess: config.onSuccess,
+      onSuccess: (data, variables) => {
+        if (config.invalidateKeys) {
+          config.invalidateKeys.forEach((key: any) => queryClient.invalidateQueries({ queryKey: key }));
+        }
+        config.onSuccess?.(data, variables);
+      },
       onError: config.onError,
       entity: config.entity,
       action: config.action,
