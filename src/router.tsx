@@ -105,26 +105,26 @@ export const rootRoute = createRootRouteWithContext<RouterContext>()({
 // 定義鑑權函數
 const authGuard = async ({ context, location }: { context: { user: any }, location: { pathname: string; search: any } }) => {
   const { user } = context;
-  const isPreview = location.search?.preview === 'true';
-  
-  // 1. 未登入訪問後台 → 跳轉登入
+  const isPreviewRoute = location.pathname === '/preview';
+
+  // 已登入且非預覽頁面 → 強制轉到後台
+  if (user && !isPreviewRoute) {
+    // 處理群組頁面的轉換
+    const groupMatch = location.pathname.match(/^\/group\/(.+)$/);
+    if (groupMatch) {
+      throw redirect({ to: `/admin/group/${groupMatch[1]}` });
+    }
+    // 任何其他路徑都轉往後台
+    if (location.pathname !== ROUTES.ADMIN) {
+      throw redirect({ to: ROUTES.ADMIN });
+    }
+    return;
+  }
+
+  // 未登入且訪問後台 → 轉到登入頁
   if (!user && location.pathname.startsWith('/admin')) {
     throw redirect({ to: '/login' });
   }
-  
-  // 2. 已登入訪問首頁 → 跳轉後台
-  if (user && (location.pathname === '/' || location.pathname === ROUTES.HOME)) {
-    throw redirect({ to: ROUTES.ADMIN });
-  }
-  
-  // 3. 已登入訪問群組詳情 → 跳轉後台對應頁面
-  const groupMatch = location.pathname.match(/^\/group\/(.+)$/);
-  if (user && groupMatch && !isPreview) {
-    throw redirect({ to: `/admin/group/${groupMatch[1]}` });
-  }
-  
-  // 4. 其他情況 → 正常渲染
-  return;
 };
 
 import { type } from 'arktype';
@@ -194,7 +194,7 @@ const indexRoute = createRoute({
 
 const previewRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: ROUTES.PREVIEW,
+  path: '/preview', // Explicitly set to /preview
   validateSearch: (search: Record<string, unknown>): GallerySearchParams => {
     return {
       q: (search.q as string) || undefined,
