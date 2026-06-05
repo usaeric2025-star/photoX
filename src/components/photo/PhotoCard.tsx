@@ -283,7 +283,7 @@ export const PhotoCard = ({
         "before:absolute before:inset-0 before:z-30 before:pointer-events-none before:transition-all before:duration-300",
         "md:hover:shadow-xl md:hover:scale-[1.01] active:scale-[0.98]",
         "data-[selected=true]:ring-4 data-[selected=true]:ring-blue-500 data-[selected=true]:scale-[0.96] data-[selected=true]:z-10 data-[selected=true]:shadow-lg",
-        isManagement && is_hidden && "ring-2 ring-yellow-400/50 grayscale-[0.3]",
+        is_hidden && "ring-2 ring-slate-400 shadow-slate-300/50 shadow-sm grayscale-[0.3]",
         isCover && props.showCoverBadge && "ring-2 ring-amber-400 shadow-amber-100/50 shadow-sm",
         className
       )}

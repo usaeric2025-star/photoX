@@ -10,6 +10,7 @@ import {
   Trash2,
   Loader2,
   Star,
+  LogOut,
 } from "lucide-react";
 import { Skeleton } from "../../ui/Skeleton";
 import { useUIStore } from "../../../store";
@@ -31,6 +32,7 @@ interface HeaderProps {
   onToggleHidden: () => void;
   onClose: () => void;
   onErrorClick: (err: string) => void;
+  onRemoveFromGroup?: () => void;
   isRunning?: boolean;
   totalPhotosCount?: number;
 }
@@ -105,8 +107,6 @@ export function DrawerHeader({
           {editPhotoId ? l.editTitle : l.analyzeTitle}
         </h2>
         <p className="text-[8px] font-bold text-slate-400 tracking-widest uppercase">
-          {editPhotoId ? "Product Details" : "Analyze Product"}
-          {totalPhotosCount !== undefined && ` • Total: ${totalPhotosCount}`}
         </p>
       </div>
 
@@ -144,6 +144,16 @@ export function DrawerHeader({
             className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border shadow-sm transition-all ${formState.is_group_cover ? "bg-amber-500 text-white border-amber-500 hover:bg-amber-600" : "bg-white text-amber-500 border-amber-200 hover:bg-amber-50 active:scale-95"}`}
           >
             <Star size={20} className={formState.is_group_cover ? "fill-white" : "fill-transparent"} />
+          </button>
+        )}
+
+        {isPartOfGroup && onRemoveFromGroup && (
+          <button
+            onClick={onRemoveFromGroup}
+            title="移出合组"
+            className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600 border border-slate-200 shadow-sm hover:bg-slate-200 active:scale-95 transition-all"
+          >
+            <LogOut size={18} />
           </button>
         )}
 

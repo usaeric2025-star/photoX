@@ -27,7 +27,8 @@ import {
   useManufacturers,
   useTaskExecutor,
   useErrorHandler,
-  usePhotoDetail
+  usePhotoDetail,
+  useRemoveFromGroupMutation
 } from "../../../hooks";
 import { toast } from "@/lib/ui/toast";
 import { applyAIResult } from '@/lib/ai/aiMerger';
@@ -77,12 +78,21 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
   });
 
   const adminActions = useAdminActions();
+  const { mutateAsync: removeFromGroup } = useRemoveFromGroupMutation();
   const [isDeleteOpen, deleteDialog] = useDisclosure(false);
   const [isAddMfrOpen, addMfrDialog] = useDisclosure(false);
   const [isEditMfrOpen, editMfrDialog] = useDisclosure(false);
   const [editingMfr, setEditingMfr] = React.useState<{ id: string; name: string } | null>(null);
 
   const onDeletePhoto = () => deleteDialog.open();
+  
+  const onRemoveFromGroup = async () => {
+    if (editPhotoId && detailPhoto?.group_id) {
+        await removeFromGroup({ photoIds: [editPhotoId], groupId: detailPhoto.group_id });
+        update({ editPhotoId: null });
+        toast.success("已移出合组");
+    }
+  };
   
   const onUpdatePhoto = (id: string, data: Partial<Photo>) =>
     adminActions.updatePhoto(id, data);
@@ -343,6 +353,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
                     }
                     onSave={logic.handleSave}
                     onToggleHidden={logic.toggleHidden}
+                    onRemoveFromGroup={onRemoveFromGroup}
                     onClose={() => {
                       resetAddState();
                       update({ editPhotoId: null });
