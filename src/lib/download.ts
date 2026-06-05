@@ -15,6 +15,19 @@ export async function downloadPhotoAsJpeg(url: string, filename?: string) {
     
     const blob = await response.blob();
     
+    // If it's already a jpeg, download directly
+    if (blob.type === 'image/jpeg') {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = finalFilename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+        toast.success('已开始下载', { id: toastId });
+        return;
+    }
+    
     // 创建 HTMLImageElement 加载图片
     const img = new Image();
     const objectUrl = URL.createObjectURL(blob);

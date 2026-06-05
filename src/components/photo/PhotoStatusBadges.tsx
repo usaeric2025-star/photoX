@@ -36,7 +36,7 @@ export function PhotoStatusBadges({
   const hiddenLabel = appLang === 'zh' ? '已隐藏' : appLang === 'ms' ? 'Sembunyi' : 'Hidden';
   const coverLabel = appLang === 'zh' ? '封面' : appLang === 'ms' ? 'Muka' : 'Cover';
 
-  const isCover = photo.is_group_cover || (photo.group_id && photo.group?.cover_photo_id === photo.id);
+  const isCover = photo.is_group_cover;
 
   return (
     <div className="absolute top-2 left-2 flex flex-wrap gap-1 z-10 pointer-events-none select-none">

@@ -3,7 +3,7 @@ import { Photo } from '@/types/photo';
 import { ErrorFactory } from '../../lib/error/ErrorFactory';
 
 interface GroupAnalysisResult {
-  name: string;
+  name: { zh: string; en: string; ms: string };
   description: string;
   colors: string[];
   materials: string[];

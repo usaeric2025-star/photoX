@@ -36,29 +36,31 @@ export function useAIGroup() {
         // 2. AI 分析
         const analysis = await analyzeGroup(photosWithTags);
         const { name, description, colors, materials } = analysis;
-    
-        // Translate the group fields dynamically!
-        let name_en = name || '';
-        let name_ms = name || '';
-        let description_en = description || '';
-        let description_ms = description || '';
+        
+        let finalName = name; // { zh, en, ms }
+        let finalDescription = {
+          zh: description,
+          en: description,
+          ms: description
+        };
 
         try {
           const { data: settingsData } = await supabase.from('settings').select('gemini_api_key, custom_model').single();
           const { translateProductFields } = await import('@/services/gemini/translationCore');
           const pTranslations = await translateProductFields({
-            name,
+            name: name.zh,
             description,
             colors,
             materials
           }, settingsData?.gemini_api_key || '', settingsData?.custom_model || '');
 
-          name_en = pTranslations.name_en || name || '';
-          name_ms = pTranslations.name_ms || name || '';
-          description_en = pTranslations.description_en || description || '';
-          description_ms = pTranslations.description_ms || description || '';
+          finalName.en = pTranslations.name_en || name.en || name.zh;
+          finalName.ms = pTranslations.name_ms || name.ms || name.zh;
+          finalDescription.en = pTranslations.description_en || description;
+          finalDescription.ms = pTranslations.description_ms || description;
         } catch (e) {
           console.warn('[createAIGroup] Group translations skipped:', e);
+          console.log('[createAIGroup] Raw analysis result:', analysis);
         }
 
         // 3. 执行合组（合并照片、创建组、清理旧组）
@@ -68,8 +70,8 @@ export function useAIGroup() {
         const { groupPhotos } = await import('@/services/photo/commands');
         
         const result = await groupPhotos(photoIds, undefined, isCollapsed, {
-            name: { zh: name, en: name_en, ms: name_ms },
-            description: { zh: description, en: description_en, ms: description_ms },
+            name: finalName,
+            description: finalDescription,
             colors,
             materials
         });

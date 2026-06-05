@@ -40,6 +40,7 @@ export const LightboxCore = ({
   renderSidebar, renderFloatingButton
 }: LightboxCoreProps) => {
   const [index, setIndex] = useState(currentIndex);
+  const [showDetails, setShowDetails] = useState(true);
   const { settings } = useSettings();
   const lang = (settings?.language as 'zh' | 'en' | 'ms') || 'zh';
   const slides = toLightboxSlides(photos, lang);
@@ -63,12 +64,20 @@ export const LightboxCore = ({
         } 
       }}
       slides={slides}
-      plugins={LIGHTBOX_PLUGINS}
+      plugins={LIGHTBOX_PLUGINS.filter(p => p.name !== 'captions')}
       render={{
         // Custom interactive controls overlaid on lightbox
         controls: () => (
           <>
-            {renderSidebar?.()}
+            <button
+              onClick={() => setShowDetails(!showDetails)}
+              className="yarl__button !p-2 rounded-full hover:bg-slate-100/10 transition-all absolute top-2 right-2 z-50 text-white"
+              aria-label="Toggle details"
+              title="Toggle details"
+            >
+                <Info size={18} />
+            </button>
+            {showDetails && renderSidebar?.()}
             {renderFloatingButton?.()}
           </>
         ),
@@ -84,7 +93,7 @@ export const LightboxCore = ({
                 aria-label="设为封面"
                 title="设为封面"
               >
-                <Crown size={18} fill="currentColor" />
+                <Crown size={18} className="fill-current" />
               </button>
             )}
             {showEdit && (

@@ -2135,7 +2135,7 @@ app.post("/ai/analyze-group", async (c) => {
       const prompt = `你是一个家具产品系列合并分析专家。根据以下这些被分到同一系列的单品的数据，为整个家具系列生成通用的元数据。请以纯JSON格式返回。
 所需的JSON结构如下:
 {
-  "name": "系列名称(英文, 如 Mero Modern Dining Set)",
+  "name": { "zh": "系列名称(中文)", "en": "系列名称(英文)", "ms": "系列名称(马来语)" },
   "description": "一段中文的系列综合介绍，概括这些产品的特点",
   "colors": ["通用颜色(英文)"],
   "materials": ["通用材质(英文)"]

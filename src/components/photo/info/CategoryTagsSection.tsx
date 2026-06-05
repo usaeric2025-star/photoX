@@ -54,21 +54,23 @@ export function CategoryTagsSection({ categoryName, tags, isAdmin, appLang, text
       <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5 mb-3">
         <Grid size={12} /> {texts.classification}
       </h4>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-col gap-2">
         {categoryName && (
-          <Badge variant="outline" className="bg-brand-navy/5 text-brand-navy border-brand-navy/10 px-2.5 py-1 shadow-sm">
+          <Badge variant="outline" className="bg-brand-navy/5 text-brand-navy border-brand-navy/10 px-2.5 py-1 shadow-sm w-fit">
             <Grid size={12} className="mr-1.5 opacity-60" />
             {categoryName}
           </Badge>
         )}
-        {tags.map((tag: Tag) => (
-          <TagBadge 
-            key={tag.id} 
-            tag={tag} 
-            isAdmin={isAdmin}
-            onLongPress={(t) => setActiveActionTag(t)}
-          />
-        ))}
+        <div className="flex flex-wrap gap-2">
+          {tags.map((tag: Tag) => (
+            <TagBadge 
+              key={tag.id} 
+              tag={tag} 
+              isAdmin={isAdmin}
+              onLongPress={(t) => setActiveActionTag(t)}
+            />
+          ))}
+        </div>
       </div>
 
       {activeActionTag && createPortal(

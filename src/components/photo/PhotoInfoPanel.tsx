@@ -197,7 +197,7 @@ export function PhotoInfoPanel({
         </h3>
         <ActionButtons 
           isGroup={isGroup} 
-          showAi={showAi} 
+          showAi={isGroup ? false : showAi} 
           showEdit={showEdit} 
           showDelete={showDelete} 
           onAiAnalyze={onAiAnalyze} 
