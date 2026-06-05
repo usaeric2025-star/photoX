@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useCallback, useState } from 'react';
+import React, { useRef, useCallback, useState } from 'react';
 import { queryClient } from '@/lib/queryClient';
 import { photoKeys } from '@/lib/queryKeys';
 import { motion, AnimatePresence, LayoutGroup } from 'motion/react';
@@ -67,13 +67,13 @@ export function AdminGridContainer({
 
   const { photos: rawPhotos, infinitePhotosQuery: infiniteQuery } = usePhotoGallery();
 
-  const photos = useMemo(() => {
+  const photos = (() => {
     const normalized = normalizeAdminPhotos(rawPhotos);
     if (!processingIds || processingIds.length === 0) return normalized;
     return normalized.filter(p => !processingIds.includes(p.id));
-  }, [rawPhotos, processingIds]);
+  })();
 
-  const { displayPhotos, gridPhotos } = useMemo(() => processPhotos(
+  const { displayPhotos, gridPhotos } = processPhotos(
     photos,
     categories,
     tags,
@@ -83,7 +83,7 @@ export function AdminGridContainer({
       showGroupsCollapsed: urlFilters.showGroupsCollapsed,
       isAdminModeOverride: isAdminMode
     }
-  ), [photos, categories, tags, urlFilters, isAdminMode]);
+  );
 
   const [isDeleteOpen, deleteDialog] = useDisclosure(false);
   const [idsToDelete, setIdsToDelete] = useState<string[]>([]);
@@ -194,14 +194,14 @@ export function AdminGridContainer({
     setPhotoId(photo.id);
   };
 
-  const renderCard = useCallback((photo: Photo, index: number) => (
+  const renderCard = (photo: Photo, index: number) => (
     <PhotoCard 
       key={photo.id}
       photo={photo}
       index={index}
       variant={variant}
     />
-  ), [variant]);
+  );
 
   return (
     <LayoutGroup id="admin-gallery">

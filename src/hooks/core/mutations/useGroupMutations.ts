@@ -34,7 +34,7 @@ export const useGroupCoverMutation = createMutationHook({
   action: 'SetCover',
   mutationFn: ({ groupId, photoId }: { groupId: string | undefined; photoId: string | null }) => 
     setPhotoAsGroupCoverInCloud(photoId, groupId || ''),
-  invalidateKeys: [groupKeys.all],
+  invalidateKeys: [groupKeys.all, photoKeys.all],
   onSuccessMessage: '封面设置成功',
 });
 

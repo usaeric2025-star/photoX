@@ -140,7 +140,7 @@ const toTitleCase = (str: string) => {
  * Any animation requiring React state or refs that triggers setStates inside
  * the virtualizer loop will cause infinite update depth loop.
  */
-export const PhotoCard = React.memo(({ 
+export const PhotoCard = ({ 
   variant, photo, index,
   className = '', onClick,
   hideDetails = false,
@@ -348,4 +348,4 @@ export const PhotoCard = React.memo(({
       />
     </div>
   );
-});
+};

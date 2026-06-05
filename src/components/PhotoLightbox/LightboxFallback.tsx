@@ -13,7 +13,7 @@ interface LightboxFallbackProps {
  */
 export const LightboxFallback = ({ onClose, message = '无法加载照片数据' }: LightboxFallbackProps) => {
   return (
-    <div className="fixed inset-0 bg-black/95 z-[250] flex flex-col items-center justify-center p-6 animate-in fade-in duration-300">
+    <div className="fixed inset-0 bg-black/95 z-max flex flex-col items-center justify-center p-6 animate-in fade-in duration-300">
       <button
         onClick={onClose}
         className="absolute top-6 right-6 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all active:scale-90"

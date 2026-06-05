@@ -39,13 +39,16 @@ export function VirtualPhotoGrid({
   const appLang = useUIStore((s) => s.appLang);
   const t = (translations[appLang as keyof typeof translations] || translations.en) as TranslationType;
 
+  const isScrollRestoredRef = useRef(false);
+
   // Anchoring logic: when returning from a group detail view
   useEffect(() => {
-    if (filters.groupId === null && photos.length > 0) {
+    if (filters.groupId === null && photos.length > 0 && !isScrollRestoredRef.current) {
       const targetId = filters.photoId;
       if (targetId) {
         const index = photos.findIndex(p => p.id === targetId || p.group_id === targetId);
         if (index !== -1) {
+          isScrollRestoredRef.current = true;
           setTimeout(() => {
             (ref as React.RefObject<VirtualGridHandle>)?.current?.scrollToIndex(index);
           }, 100);
@@ -53,6 +56,13 @@ export function VirtualPhotoGrid({
       }
     }
   }, [filters.groupId, photos, filters.photoId, ref]);
+
+  useEffect(() => {
+    // Reset flag if groupId changes (e.g. going back into a group)
+    if (filters.groupId !== null) {
+      isScrollRestoredRef.current = false;
+    }
+  }, [filters.groupId]);
 
   const { preloadBatch } = useImagePreloader();
 

@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { GalleryVariant } from '@/types/variant';
 import { VirtualPhotoGrid } from '@/components/photo/VirtualPhotoGrid';
 import { PublicFilters } from '@/components/ui/PublicFilters';
@@ -56,12 +56,12 @@ export function PublicGridContainer({
     onlyUngrouped: false
   }, PAGINATION.PUBLIC_PAGE_SIZE, true);
 
-  const rawPhotos = useMemo(() => {
+  const rawPhotos = (() => {
     const flat = infiniteQuery.data?.pages?.flatMap(p => p.photos) ?? EMPTY_ARRAY;
     return cleanPhotos(flat);
-  }, [infiniteQuery.data?.pages]);
+  })();
 
-  const { displayPhotos, gridPhotos } = useMemo(() => processPhotos(
+  const { displayPhotos, gridPhotos } = processPhotos(
     rawPhotos,
     categories,
     tags,
@@ -71,7 +71,7 @@ export function PublicGridContainer({
       showGroupsCollapsed: urlFilters.showGroupsCollapsed,
       isAdminModeOverride: false
     }
-  ), [rawPhotos, categories, tags, urlFilters]);
+  );
 
   const handleGroupClick = (gid: string, photoId?: string) => {
     setPhotoId(null);
@@ -120,13 +120,13 @@ export function PublicGridContainer({
     update({ showWhatsAppChoice: true });
   };
 
-  const renderCard = useCallback((photo: Photo, index: number) => (
+  const renderCard = (photo: Photo, index: number) => (
     <PhotoCard 
       photo={photo}
       index={index}
       variant={variant}
     />
-  ), [variant]);
+  );
 
   return (
     <div className="flex flex-col h-full bg-brand-bg w-full overflow-hidden text-text">

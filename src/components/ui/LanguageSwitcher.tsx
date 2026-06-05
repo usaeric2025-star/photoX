@@ -32,7 +32,7 @@ export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dro
         </button>
 
         {isOpen && (
-          <div className="absolute top-full right-0 mt-2 w-32 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-[100] animate-in fade-in zoom-in-95 duration-200">
+          <div className="absolute top-full right-0 mt-2 w-32 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-dropdown animate-in fade-in zoom-in-95 duration-200">
             {langs.map(l => (
               <button
                 key={l.code}

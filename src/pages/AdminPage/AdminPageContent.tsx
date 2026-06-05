@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, lazy, Suspense, useMemo } from 'react';
+import React, { useCallback, useEffect, useState, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Home, Cloud, Settings2, Plus, Terminal, X, Loader2 } from 'lucide-react';
 import { useLocation } from '@tanstack/react-router';
@@ -107,14 +107,14 @@ export function AdminPageContent() {
   const { data: categories = [] } = useCategories();
   const appLang = useUIStore(s => s.appLang);
 
-  const currentCategoryName = useMemo(() => {
+  const currentCategoryName = (() => {
     if (!urlFilters.categoryId) return null;
     const cat = categories.find(c => c.id === urlFilters.categoryId);
     if (!cat) return null;
     return (cat[appLang as keyof Category] as string) || (cat.name as string);
-  }, [urlFilters.categoryId, categories, appLang]);
+  })();
 
-  const pageTitle = useMemo(() => {
+  const pageTitle = (() => {
     if (urlFilters.groupId) return appLang === 'zh' ? '合组详情' : appLang === 'ms' ? 'Butiran Kumpulan' : 'Group Details';
     if (currentScreen === 'dashboard') return appLang === 'zh' ? '数据看板' : appLang === 'ms' ? 'Papan Pemuka' : 'Dashboard';
     if (currentScreen === 'tasks') return appLang === 'zh' ? '任务中心' : appLang === 'ms' ? 'Pusat Tugasan' : 'Task Center';
@@ -122,7 +122,7 @@ export function AdminPageContent() {
     if (currentScreen === 'error-logs') return appLang === 'zh' ? '系统日志' : appLang === 'ms' ? 'Log Sistem' : 'Logs';
     if (currentCategoryName) return currentCategoryName;
     return appLang === 'zh' ? '全部照片' : appLang === 'ms' ? 'Semua Foto' : 'All Photos';
-  }, [urlFilters.groupId, currentScreen, currentCategoryName, appLang]);
+  })();
 
   const { handleBatchAiAnalyze } = useBatchAiAnalyze();
 

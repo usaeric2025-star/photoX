@@ -70,7 +70,7 @@ export function GroupGridView({
   const isTablet = window.innerWidth >= 640 && window.innerWidth < 1024;
   const denseColumns = isMobile ? 3 : (isTablet ? 4 : 5);
 
-  const groupDisplayDescription = React.useMemo(() => {
+  const groupDisplayDescription = (() => {
     if (!groupData) return '';
     const desc = groupData.description;
     if (!desc) return '';
@@ -86,7 +86,7 @@ export function GroupGridView({
       val = (desc as any)[lang] || (desc as any).zh || (desc as any).en || (desc as any).ms || '';
     }
     return typeof val === 'string' ? val.trim() : '';
-  }, [groupData, lang]);
+  })();
 
   const hasDescription = !!groupDisplayDescription;
   const hasColors = groupData?.colors && groupData.colors.length > 0;

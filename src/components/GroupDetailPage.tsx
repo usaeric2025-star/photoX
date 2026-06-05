@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { ChevronLeft, X, Share2, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Photo } from '../types';
@@ -153,16 +153,16 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
     }
   }, [activeGroupId, initialPhotoId, activeGroupPhotos.length]);
 
-  const groupDisplayName = useMemo(() => {
+  const groupDisplayName = (() => {
     if (!groupData) return '';
     const name = groupData.name;
     if (typeof name === 'object') {
       return name[lang as keyof typeof name] || name.zh || '';
     }
     return String(name || '');
-  }, [groupData, lang]);
+  })();
 
-  const groupDisplayDescription = useMemo(() => {
+  const groupDisplayDescription = (() => {
     if (!groupData?.description) return '';
     const desc = groupData.description;
     if (typeof desc === 'object') {
@@ -170,7 +170,7 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
       return val.trim();
     }
     return String(desc || '').trim();
-  }, [groupData, lang]);
+  })();
 
   if (!activeGroupId) return null;
 

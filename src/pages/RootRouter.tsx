@@ -1,20 +1,28 @@
 import React from 'react';
-import { Navigate, useNavigate, useRouterState } from '@tanstack/react-router';
+import { Navigate, useRouterState } from '@tanstack/react-router';
 import { useAuth } from '@/hooks/core/auth/useAuth';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { ROUTES } from '@/config/constants';
-import { useStore } from '@tanstack/react-store';
 
 export const RootRouter = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading, isPending } = useAuth();
+  const search = useRouterState({ select: (s) => s.location.search as Record<string, any> });
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   
   if (isLoading || isPending) {
     return <LoadingScreen />;
   }
 
-  // [V2.10-REMOVED-FORCED-REDIRECT]
-  // Allow admins to see the public home page for smooth transitions
-  // If they want to go to admin, they can use the sidebar/header links.
+  // Admin routing logic:
+  // - ✅ 已登录 + 无 `?preview=true` → `replace` 跳转 `/admin`
+  // - ✅ 已登录 + 有 `?preview=true` → 停留公开页
+  const isPreviewRoute = pathname.startsWith(ROUTES.PREVIEW) || search.preview === 'true' || search.preview === true;
+  const isPublicRootLike = pathname === '/' || pathname === ROUTES.HOME || pathname.startsWith('/group/');
+
+  if (isAuthenticated && !isPreviewRoute && isPublicRootLike) {
+    const targetPath = pathname.startsWith('/group/') ? `/admin${pathname}` : ROUTES.ADMIN;
+    return <Navigate to={targetPath} replace />;
+  }
   
   // Otherwise, render the requested route (e.g. PublicPage)
   return <>{children}</>;
