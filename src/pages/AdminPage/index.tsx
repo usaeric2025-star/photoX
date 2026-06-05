@@ -6,12 +6,15 @@ import { loadTagsFromCloud } from '@/services/tag/queries';
 import { syncCache } from '@/lib/db/indexedDB';
 import { categoryKeys, tagKeys } from '@/lib/queryKeys';
 import { AdminPageContent } from './AdminPageContent';
+import { useUIStore } from '@/store/useUIStore';
 
 export function AdminPage() {
   const queryClient = useQueryClient();
 
+  const { appLang } = useUIStore();
+
   useEffect(() => {
-    document.title = 'PhotoX | 管理后台';
+    document.title = appLang === 'zh' ? 'PhotoX | 管理后台' : 'PhotoX | Admin';
     // Prefetch categories in the background
     queryClient.prefetchQuery({
       queryKey: categoryKeys.categories(),

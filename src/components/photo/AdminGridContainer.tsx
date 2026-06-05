@@ -248,7 +248,7 @@ export function AdminGridContainer({
           variant={variant}
           scrollToTop={scrollToTop}
           onAdd={() => fileInputRef.current?.click()}
-          onBatchAiIdentify={() => {}}
+          onBatchAiIdentify={handleBatchAiIdentifyTrigger}
           onBatchEdit={() => {
             const currentSelected = useUIStore.getState().selectedIds;
             update({ batchEditingIds: currentSelected });

@@ -25,6 +25,8 @@ import {
 } from "../ui/dropdown-menu";
 import { toast } from "sonner";
 
+import { useBatchAiAnalyze } from "@/hooks/core/mutations/useBatchAiAnalyze";
+
 export interface GroupAdminShellProps {
   initialPhotoId?: string | null;
   onCancelAnalyze?: () => void;
@@ -44,6 +46,7 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
   const [isDissolveOpen, dissolveDialog] = useDisclosure(false);
   const adminActions = useAdminActions();
   const { dissolve } = useGroupMutations();
+  const { handleBatchAiAnalyze } = useBatchAiAnalyze();
   const onUngroup = async (groupId: string) => {
     await (dissolve.execute as any)(groupId);
   };
@@ -252,18 +255,18 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
                   <span>{appLang === 'zh' ? '编辑' : 'Edit'}</span>
                 </button>
 
-                {/* 3. Save Sequence button */}
+                {/* 3. AI Analyze button */}
                 <button
                   type="button"
                   onClick={() => {
-                     toast.success(appLang === 'zh' ? '排序已同步' : 'Order synced');
+                    handleBatchAiAnalyze(activeGroupPhotos, filters.groupId || undefined);
                   }}
-                  className="flex flex-col items-center gap-1 text-[9px] font-black uppercase tracking-tight text-slate-500 hover:text-amber-600 transition-colors"
+                  className="flex flex-col items-center gap-1 text-[9px] font-black uppercase tracking-tight text-slate-500 hover:text-blue-600 transition-colors relative"
                 >
-                  <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100 mb-1 group-hover:bg-amber-50 transition-colors">
-                    <Sparkles size={18} className="text-amber-500" />
+                  <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100 mb-1 group-hover:bg-blue-50 transition-colors relative overflow-hidden">
+                    <Sparkles size={18} className="text-blue-500" />
                   </div>
-                  <span>{appLang === 'zh' ? '排序' : 'Order'}</span>
+                  <span>{appLang === 'zh' ? 'AI 识别' : 'AI Identify'}</span>
                 </button>
 
                 {/* 4. Dissolve button */}

@@ -43,7 +43,7 @@ import { logoutPublic } from "@/lib/publicAuth";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/config/constants";
 
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate, Link } from '@tanstack/react-router';
 
 interface AdminHeaderProps {
   onRefresh?: () => void;
@@ -86,10 +86,6 @@ export function AdminHeader({
   const isSelectionMode = isMultiSelect;
 
   const navigate = useNavigate();
-
-  const handleBackToShowcase = () => {
-    navigate({ to: ROUTES.PREVIEW });
-  };
 
   const handleImport = () => {
     update({ activeScreen: 'home' });
@@ -161,13 +157,14 @@ export function AdminHeader({
         </button>
 
         {/* 3. 切换至展厅按钮 */}
-        <button
-          onClick={handleBackToShowcase}
+        <Link
+          to={ROUTES.PREVIEW}
+          target="_blank"
           className="w-10 h-10 flex items-center justify-center bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-all active:scale-95 shrink-0 ml-1 border border-blue-100"
           title="预览展厅"
         >
           <LayoutGrid size={20} />
-        </button>
+        </Link>
 
         {/* 4. 菜单 (语言、管理、退出) */}
         {(user || isStaff || isEffectiveStaffMode) && (

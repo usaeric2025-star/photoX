@@ -21,6 +21,7 @@ import { translations } from '@/lib/translations';
 import { AdminToolbar } from '@/pages/AdminPage/AdminToolbar';
 import { AdminEmptyState } from '@/pages/AdminPage/AdminEmptyState';
 
+import { useBatchAiAnalyze } from '@/hooks/core/mutations/useBatchAiAnalyze';
 export function AdminScreen() {
   const { user, loginWithGoogle } = useAuth();
   const { photos, isLoading: isLoadingPhotos } = usePhotoGallery();
@@ -54,88 +55,7 @@ export function AdminScreen() {
   const { data: manufacturers = [] } = useManufacturers();
   const { runTask } = useTaskExecutor();
   const { handleError } = useErrorHandler();
-
-  const onBatchAiAnalyze = React.useCallback(async (targetPhotos: any[]) => {
-    if (!targetPhotos || targetPhotos.length === 0) {
-      toast.error("没有可识别的照片");
-      return;
-    }
-
-    if (!settings?.gemini_api_key) {
-      toast.error("请先在‘管理后台 -> 系统配置’中配置 Gemini API 密钥再使用 AI 识别功能。");
-      return;
-    }
-
-    // Buckets for categorization
-    const groupedPhotosMap = new Map<string, any[]>();
-    const ungroupedPhotos: any[] = [];
-
-    for (const p of targetPhotos) {
-      if (p.group_id) {
-        if (!groupedPhotosMap.has(p.group_id)) {
-          groupedPhotosMap.set(p.group_id, []);
-        }
-        groupedPhotosMap.get(p.group_id)!.push(p);
-      } else {
-        ungroupedPhotos.push(p);
-      }
-    }
-
-    const taskTitle = groupedPhotosMap.size > 0 
-      ? `AI 批量识别 (${targetPhotos.length}张, ${groupedPhotosMap.size}组)` 
-      : `AI 批量识别 (${targetPhotos.length}张)`;
-
-    await runTask(taskTitle, async () => {
-      let successCount = 0;
-      const totalPhotosToProcess = targetPhotos.length;
-
-      // Import the service
-      const { analyzePhoto } = await import('@/services/aiService');
-      
-      // Process one by one (better for tracking progress and memory on mobile)
-      for (const p of targetPhotos) {
-        try {
-          const resp = await analyzePhoto(p.id);
-          
-          if (resp && 'ok' in resp && resp.ok) {
-            const result = resp.data;
-            const updates: any = {};
-            
-            if (result.name) {
-              updates.name = result.name; // Keep it simple and short as requested
-            }
-            if (result.category_id) updates.category_id = String(result.category_id);
-            if (Array.isArray(result.tag_ids)) {
-              updates.tag_ids = result.tag_ids.map((id: any) => String(id));
-            }
-            if (result.description) updates.description = result.description;
-            if (result.description_translations) {
-              updates.description_translations = result.description_translations;
-            }
-            if (Array.isArray(result.dimensions)) updates.dimensions = result.dimensions;
-            if (result.price) updates.price = String(result.price);
-
-            await updatePhoto(p.id, updates);
-            successCount++;
-          } else {
-            const errorMsg = (resp as any)?.message || "AI 分析失敗";
-            toast.error(`${p.name || '照片'} 識別失敗: ${errorMsg}`);
-          }
-        } catch (err: any) {
-          console.error(`Failed to analyze photo ${p.id}:`, err);
-          toast.error(`${p.name || '照片'} 处理异常: ${err.message}`);
-        }
-      }
-
-      if (successCount === 0 && totalPhotosToProcess > 0) {
-        toast.error(`全部识别失败 (${totalPhotosToProcess} 张)`);
-      } else if (successCount < totalPhotosToProcess) {
-        toast.warning(`部分识别完成: 成功 ${successCount}/${totalPhotosToProcess}`);
-      } else {
-        toast.success(`批量识别成功: ${successCount} 张照片已完成`);
-      }
-    });
-  }, [categories, tags, manufacturers, settings, runTask, updatePhoto, handleError]);
+  const { handleBatchAiAnalyze: onBatchAiAnalyze } = useBatchAiAnalyze();
 
   const variant = user ? 'full-management' : 'staff-workspace';
 

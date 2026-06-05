@@ -181,7 +181,7 @@ export function AdminPageContent() {
               
             <main className="flex-1 relative overflow-hidden">
               <div 
-                className={`absolute inset-0 transition-opacity duration-200 ease-out ${currentScreen === 'home' || currentScreen === 'gallery' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
+                className={`absolute inset-0 transition-all duration-300 ease-out ${currentScreen === 'home' || currentScreen === 'gallery' ? 'opacity-100 z-10 scale-100' : 'opacity-0 z-0 pointer-events-none scale-[0.98]'}`}
               >
                   {urlFilters.groupId ? (
                     <GroupDetailPage />
@@ -190,75 +190,107 @@ export function AdminPageContent() {
                   )}
               </div>
 
-              {(currentScreen === 'manage' || currentScreen === 'settings') && (
-                <div className="absolute inset-0 z-20 bg-slate-50">
-                  <SettingsScreen />
-                </div>
-              )}
+              <AnimatePresence>
+                {(currentScreen === 'manage' || currentScreen === 'settings') && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute inset-0 z-20 bg-slate-50"
+                  >
+                    <SettingsScreen />
+                  </motion.div>
+                )}
 
-              {currentScreen === 'dashboard' && (
-                <div className="absolute inset-0 z-20 bg-slate-50 flex flex-col">
-                  <div className="flex justify-end p-4 shrink-0 bg-slate-50/80 backdrop-blur-md sticky top-0 z-30 border-b border-slate-100">
-                    <button 
-                      onClick={() => store.update({ activeScreen: 'gallery' })}
-                      className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-500 hover:text-slate-900"
-                    >
-                      <X size={24} />
-                    </button>
-                  </div>
-                  <div className="flex-1 overflow-y-auto w-full no-scrollbar px-8 pb-8">
-                    <StatisticsScreen />
-                  </div>
-                </div>
-              )}
+                {currentScreen === 'dashboard' && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute inset-0 z-20 bg-slate-50 flex flex-col"
+                  >
+                    <div className="flex justify-end p-4 shrink-0 bg-slate-50/80 backdrop-blur-md sticky top-0 z-30 border-b border-slate-100">
+                      <button 
+                        onClick={() => store.update({ activeScreen: 'gallery' })}
+                        className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-500 hover:text-slate-900"
+                      >
+                        <X size={24} />
+                      </button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto w-full no-scrollbar px-8 pb-8">
+                      <StatisticsScreen />
+                    </div>
+                  </motion.div>
+                )}
 
-              {currentScreen === 'tasks' && (
-                <div className="absolute inset-0 z-20 bg-slate-50 flex flex-col">
-                  <div className="flex justify-end p-4 shrink-0 bg-slate-50/80 backdrop-blur-md sticky top-0 z-30 border-b border-slate-100">
-                    <button 
-                      onClick={() => store.update({ activeScreen: 'gallery' })}
-                      className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-500 hover:text-slate-900"
-                    >
-                      <X size={24} />
-                    </button>
-                  </div>
-                  <div className="flex-1 overflow-y-auto w-full no-scrollbar p-8">
-                    <TasksPage />
-                  </div>
-                </div>
-              )}
+                {currentScreen === 'tasks' && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute inset-0 z-20 bg-slate-50 flex flex-col"
+                  >
+                    <div className="flex justify-end p-4 shrink-0 bg-slate-50/80 backdrop-blur-md sticky top-0 z-30 border-b border-slate-100">
+                      <button 
+                        onClick={() => store.update({ activeScreen: 'gallery' })}
+                        className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-500 hover:text-slate-900"
+                      >
+                        <X size={24} />
+                      </button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto w-full no-scrollbar p-8">
+                      <TasksPage />
+                    </div>
+                  </motion.div>
+                )}
 
-              {currentScreen === 'history_maintenance' && (
-                <div className="absolute inset-0 z-20 bg-slate-50 flex flex-col">
-                  <div className="flex justify-end p-4 shrink-0 bg-slate-50/80 backdrop-blur-md sticky top-0 z-30 border-b border-slate-100">
-                    <button 
-                      onClick={() => store.update({ activeScreen: 'gallery' })}
-                      className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-500 hover:text-slate-900"
-                    >
-                      <X size={24} />
-                    </button>
-                  </div>
-                  <div className="flex-1 overflow-y-auto w-full no-scrollbar p-8">
-                    <MaintenanceHistoryPage />
-                  </div>
-                </div>
-              )}
+                {currentScreen === 'history_maintenance' && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute inset-0 z-20 bg-slate-50 flex flex-col"
+                  >
+                    <div className="flex justify-end p-4 shrink-0 bg-slate-50/80 backdrop-blur-md sticky top-0 z-30 border-b border-slate-100">
+                      <button 
+                        onClick={() => store.update({ activeScreen: 'gallery' })}
+                        className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-500 hover:text-slate-900"
+                      >
+                        <X size={24} />
+                      </button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto w-full no-scrollbar p-8">
+                      <MaintenanceHistoryPage />
+                    </div>
+                  </motion.div>
+                )}
 
-              {currentScreen === 'error-logs' && (
-                <div className="absolute inset-0 z-20 bg-slate-50 flex flex-col">
-                  <div className="flex justify-end p-4 shrink-0 bg-slate-50/80 backdrop-blur-md sticky top-0 z-30 border-b border-slate-100">
-                    <button 
-                      onClick={() => store.update({ activeScreen: 'gallery' })}
-                      className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-500 hover:text-slate-900"
-                    >
-                      <X size={24} />
-                    </button>
-                  </div>
-                  <div className="flex-1 overflow-y-auto w-full no-scrollbar p-8">
-                    <ErrorLogViewer />
-                  </div>
-                </div>
-              )}
+                {currentScreen === 'error-logs' && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute inset-0 z-20 bg-slate-50 flex flex-col"
+                  >
+                    <div className="flex justify-end p-4 shrink-0 bg-slate-50/80 backdrop-blur-md sticky top-0 z-30 border-b border-slate-100">
+                      <button 
+                        onClick={() => store.update({ activeScreen: 'gallery' })}
+                        className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-500 hover:text-slate-900"
+                      >
+                        <X size={24} />
+                      </button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto w-full no-scrollbar p-8">
+                      <ErrorLogViewer />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </main>
 
           <AnimatePresence>
