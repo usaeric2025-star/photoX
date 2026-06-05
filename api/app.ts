@@ -2133,6 +2133,8 @@ app.post("/ai/analyze-group", async (c) => {
       const apiKey = serverEnv.GEMINI_API_KEY;
       if (!apiKey) return c.json({ error: "Server API key not configured" }, 500);
       const prompt = `你是一个家具产品系列合并分析专家。根据以下这些被分到同一系列的单品的数据，为整个家具系列生成通用的元数据。请以纯JSON格式返回。
+如果某些信息无法得出，请返回空字符串 "" 或空数组 []，严禁使用“新合组”、“New Group”等预测性或占位文字。
+
 所需的JSON结构如下:
 {
   "name": { "zh": "系列名称(中文)", "en": "系列名称(英文)", "ms": "系列名称(马来语)" },

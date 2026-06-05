@@ -39,7 +39,7 @@ export function useBatchAiAnalyze() {
             }
             if (result.category_id) updates.category_id = String(result.category_id);
             if (Array.isArray(result.tag_ids)) {
-              updates.tag_ids = result.tag_ids.map((id: any) => String(id));
+              updates.tag_ids = result.tag_ids.slice(0, 3).map((id: any) => String(id));
             }
             if (result.description) updates.description = result.description;
             if (result.description_translations) {

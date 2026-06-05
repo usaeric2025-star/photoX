@@ -77,6 +77,9 @@ export const LightboxCore = ({
             >
                 <Info size={18} />
             </button>
+            <div className="absolute top-2 left-1/2 -translate-x-1/2 z-50 text-white font-medium bg-black/50 px-3 py-1 rounded-full text-sm">
+                 {index + 1} / {totalCount || slides.length}
+            </div>
             {showDetails && renderSidebar?.()}
             {renderFloatingButton?.()}
           </>
@@ -121,17 +124,7 @@ export const LightboxCore = ({
               <Download size={18} />
             </button>
           </div>
-        ),
-        counter: ({ currentIndex: c, total }) => {
-            if (totalCount !== undefined) {
-                return (
-                    <div className="yarl__counter">
-                        {c + 1} / {totalCount}
-                    </div>
-                );
-            }
-            return <div className="yarl__counter">{c + 1} / {total}</div>;
-        }
+        )
       }}
       {...LIGHTBOX_OPTIONS}
     />
