@@ -548,19 +548,38 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 - **非 React 环境**（如 `errorTracker.ts`、Worker、脚本）：允许使用原生 `localStorage` / `sessionStorage`
 - **React 元件 / Hook 内**：必须使用 Mantine 的 `useLocalStorage` / `useSessionStorage`
 
-## 路由规范（锁定）
+## 路由与认证规范（锁定）
 
-- ❌ 禁止在多个文件中分散实现路由跳转逻辑
-- ✅ 所有根路由 `/` 的跳转逻辑必须集中在 `RootRouter.tsx` 或等效的根路由配置中
-- ✅ 已登录 + 无 `?preview=true` → `replace` 跳转 `/admin`
-- ✅ 已登录 + 有 `?preview=true` → 停留公开页
-- ✅ 必须处理 `isLoading` 状态，避免闪烁
+### 1. 认证状态（唯一来源）
 
-### 禁止事项
+- ✅ 使用 `useAuth.ts` 管理认证状态
+- ✅ 监听 `supabase.auth.onAuthStateChange` 即时更新
+- ✅ React Query 缓存 `staleTime: Infinity`，手动清除
 
-- ❌ 禁止在 `useEffect` 中直接 `router.push`（应使用 `replace`）
-- ❌ 禁止在未判断 `isLoading` 时就跳转
-- ❌ 禁止在 `AdminAuthGuard` 中再次实现登录跳转逻辑
+### 2. 路由守卫（集中管理）
+
+- ✅ 所有守卫逻辑集中在 `router.tsx` 的 `authGuard`
+- ❌ 禁止在 `authGuard` 中使用 `redirect` 跳转
+- ❌ 禁止在元件内使用 `navigate` 做权限跳转
+
+### 3. 状态桥接（关键！）
+
+- ✅ 在 `App.tsx` 中监听 `user` 变化
+- ✅ 变化时调用 `router.invalidate()` 强制路由重新评估
+
+### 4. URL 设计规范（锁定）
+
+- ✅ URL 代表资源，不因登录状态而改变
+- ✅ 路径稳定性：登录/登出后在同一 URL 状态下显示不同内容
+- ✅ 登入表单：直接内嵌在 `/admin` 路径对应的组件中
+- ✅ 公开路径：`/`、`/group/{id}`、`/error-log`
+- ✅ 管理路径：`/admin` 开始的路径
+- ✅ 登出：訪問 `/logout` 触发登出，后返回 `/`
+
+### 5. 路由结构
+
+- ❌ 禁止使用独立 `/login` 路由，避免 404
+
 
 ## 排序规范（锁定）
 

@@ -24,6 +24,13 @@ export default function AppRoutes() {
 
   const { user, isLoading } = useAuth();
 
+  useEffect(() => {
+    if (!isLoading) {
+      logger.info('🔑 Auth status changed, invalidating router...', { hasUser: !!user });
+      router.invalidate();
+    }
+  }, [user, isLoading]);
+
   const routerContext = useMemo(() => ({
     user: user ?? null,
     role: user ? ('admin' as const) : ('guest' as const),

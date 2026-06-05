@@ -1,9 +1,8 @@
 import { useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { User } from '@/types';
 import { useLocalStorage } from '@mantine/hooks';
-import { router } from '@/router';
 
 // 带超时的 getUser（5秒）
 async function getUserWithTimeout(): Promise<User | null> {
@@ -35,6 +34,8 @@ async function getUserWithTimeout(): Promise<User | null> {
 }
 
 export function useAuth() {
+  const queryClient = useQueryClient();
+  
   const [, , removePasscode] = useLocalStorage({
     key: 'ais_mock_auth_passcode',
     defaultValue: '',
@@ -51,26 +52,17 @@ export function useAuth() {
   });
 
   useEffect(() => {
-    if (user) {
-      router.update({
-        context: {
-          user: user,
-          role: 'admin',
-          can: () => true,
-          availableActions: [],
-        },
-      });
-    } else {
-      router.update({
-        context: {
-          user: null,
-          role: 'guest',
-          can: () => false,
-          availableActions: [],
-        },
-      });
-    }
-  }, [user]);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('[useAuth] onAuthStateChange event received:', event, !!session?.user);
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+        queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [queryClient]);
 
   return {
     user: user ?? null,
