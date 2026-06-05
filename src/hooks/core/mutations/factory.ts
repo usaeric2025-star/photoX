@@ -115,7 +115,7 @@ export function createMutationHook<TData = void, TVariables = void, TContext = u
 
     const execute = async (variables: TVariables) => {
       const taskName = `${config.entity}${config.action}`;
-      const isLongTask = config.entity === 'Photo' && (config.action === 'Upload' || config.action === 'Analysis');
+      const isLongTask = config.entity === 'Photo' && (config.action === 'Upload' || config.action === 'Analysis' || config.action === 'Delete' || config.action === 'BatchUpdate');
       return await runTask(taskName, () => mutation.mutateAsync(variables), { rethrow: true, showProgress: isLongTask });
     };
 

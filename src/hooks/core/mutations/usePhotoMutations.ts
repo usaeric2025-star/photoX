@@ -17,6 +17,37 @@ export const usePhotoDelete = createMutationHook({
   action: 'Delete',
   mutationFn: (ids: string | string[]) => deleteMany(Array.isArray(ids) ? ids : [ids]),
   invalidateKeys: [photoKeys.all],
+  optimisticUpdate: async (ids, queryClient) => {
+    const idList = Array.isArray(ids) ? ids : [ids];
+    const idSet = new Set(idList);
+
+    // Cancel any outgoing refetches
+    await Promise.all([
+      queryClient.cancelQueries({ queryKey: photoKeys.all }),
+    ]);
+
+    // Snapshot the previous values
+    const previousData = queryClient.getQueryData(photoKeys.all);
+
+    // Optimistically update all infinite queries matching photoKeys.all
+    queryClient.setQueriesData({ queryKey: photoKeys.all }, (old: any) => {
+      if (!old || !old.pages) return old;
+      return {
+        ...old,
+        pages: old.pages.map((page: any) => ({
+          ...page,
+          photos: page.photos.filter((p: Photo) => !idSet.has(p.id)),
+        })),
+      };
+    });
+
+    return { previousData };
+  },
+  rollback: (_err, _vars, context, queryClient) => {
+    if (context?.previousData) {
+      queryClient.setQueriesData({ queryKey: photoKeys.all }, context.previousData);
+    }
+  },
   onSuccessMessage: (data: any) => {
     if (data && typeof data === 'object' && 'successCount' in data) {
       if (data.failureCount > 0) {
@@ -33,6 +64,35 @@ export const usePhotoBatchEdit = createMutationHook({
   action: 'BatchUpdate',
   mutationFn: ({ ids, updates }: { ids: string[]; updates: Partial<Photo> }) => batchUpdate(ids, updates),
   invalidateKeys: [photoKeys.all],
+  optimisticUpdate: async ({ ids, updates }, queryClient) => {
+    const idSet = new Set(ids);
+
+    await Promise.all([
+      queryClient.cancelQueries({ queryKey: photoKeys.all }),
+    ]);
+
+    const previousData = queryClient.getQueryData(photoKeys.all);
+
+    queryClient.setQueriesData({ queryKey: photoKeys.all }, (old: any) => {
+      if (!old || !old.pages) return old;
+      return {
+        ...old,
+        pages: old.pages.map((page: any) => ({
+          ...page,
+          photos: page.photos.map((p: Photo) => 
+            idSet.has(p.id) ? { ...p, ...updates } : p
+          ),
+        })),
+      };
+    });
+
+    return { previousData };
+  },
+  rollback: (_err, _vars, context, queryClient) => {
+    if (context?.previousData) {
+      queryClient.setQueriesData({ queryKey: photoKeys.all }, context.previousData);
+    }
+  },
   onSuccessMessage: (data: any) => {
     if (data && typeof data === 'object' && 'successCount' in data) {
       if (data.failureCount > 0) {
@@ -49,6 +109,30 @@ export const useTogglePin = createMutationHook({
   action: 'TogglePin',
   mutationFn: ({ id, isPinned }: { id: string; isPinned: boolean }) => update(id, { is_pinned: isPinned }),
   invalidateKeys: [photoKeys.all],
+  optimisticUpdate: async ({ id, isPinned }, queryClient) => {
+    await queryClient.cancelQueries({ queryKey: photoKeys.all });
+    const previousData = queryClient.getQueryData(photoKeys.all);
+
+    queryClient.setQueriesData({ queryKey: photoKeys.all }, (old: any) => {
+      if (!old || !old.pages) return old;
+      return {
+        ...old,
+        pages: old.pages.map((page: any) => ({
+          ...page,
+          photos: page.photos.map((p: Photo) => 
+            p.id === id ? { ...p, is_pinned: isPinned } : p
+          ),
+        })),
+      };
+    });
+
+    return { previousData };
+  },
+  rollback: (_err, _vars, context, queryClient) => {
+    if (context?.previousData) {
+      queryClient.setQueriesData({ queryKey: photoKeys.all }, context.previousData);
+    }
+  },
   onSuccessMessage: (data, { isPinned }) => isPinned ? '已置顶' : '已取消置顶',
 });
 

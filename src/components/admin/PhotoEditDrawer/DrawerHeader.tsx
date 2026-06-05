@@ -30,6 +30,7 @@ interface HeaderProps {
   onClose: () => void;
   onErrorClick: (err: string) => void;
   isRunning?: boolean;
+  totalPhotosCount?: number;
 }
 
 export function DrawerHeader({
@@ -47,6 +48,7 @@ export function DrawerHeader({
   onClose,
   onErrorClick,
   isRunning,
+  totalPhotosCount,
 }: HeaderProps) {
   const formState = form.values;
   const updateForm = (updates: Partial<ProductFormData>) => form.setValues(updates);
@@ -102,6 +104,7 @@ export function DrawerHeader({
         </h2>
         <p className="text-[8px] font-bold text-slate-400 tracking-widest uppercase">
           {editPhotoId ? "Product Details" : "Analyze Product"}
+          {totalPhotosCount !== undefined && ` • Total: ${totalPhotosCount}`}
         </p>
       </div>
 

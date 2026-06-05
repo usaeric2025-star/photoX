@@ -108,7 +108,7 @@ export function AdminHeader({
 
   const handleBatchHide = async () => {
     const selectedIds = useUIStore.getState().selectedIds || [];
-    await batchUpdate.mutateAsync({
+    await batchUpdate.execute({
       ids: selectedIds,
       updates: { is_hidden: true },
     });

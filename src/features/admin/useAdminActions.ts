@@ -26,21 +26,11 @@ export function useAdminActions() {
   const handleDeletePhoto = async (ids: string | string[]) => {
     const idList = Array.isArray(ids) ? ids : [ids];
     if (idList.length === 0) return;
-
-    updateStore({
-      alertDialog: {
-        title: appLang === 'zh' ? '確認刪除' : 'Confirm Delete',
-        message: appLang === 'zh' 
-          ? `確定要永久刪除這 ${idList.length} 張照片嗎？此操作不可撤銷。` 
-          : `Are you sure you want to permanently delete these ${idList.length} photos? This cannot be undone.`,
-        type: 'danger',
-        onConfirm: async () => {
-          try {
-            await deletePhoto.mutateAsync(idList);
-          } catch (err) {}
-        }
-      }
-    });
+    try {
+      await deletePhoto.execute(idList);
+    } catch (err) {
+      throw err;
+    }
   };
 
   const handleUpdatePhoto = async (id: string, updates: PhotoUpdateData) => {

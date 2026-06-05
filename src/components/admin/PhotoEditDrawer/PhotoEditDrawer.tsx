@@ -17,6 +17,7 @@ import { analyzePhoto } from "@/services/aiService";
 
 import { 
   usePhotos,
+  usePhotoCount,
   useSettings,
   useCategories,
   useTags,
@@ -75,7 +76,16 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
   });
 
   const adminActions = useAdminActions();
-  const onDeletePhoto = (id: string) => adminActions.deletePhoto([id]);
+  const onDeletePhoto = (id: string) => 
+    update({
+      alertDialog: {
+        title: "确定要删除此照片吗？",
+        message: "此操作不可撤销，照片将从云端彻底移除。",
+        onConfirm: () => adminActions.deletePhoto([id]),
+        confirmLabel: "删除",
+        type: "danger",
+      },
+    });
   const onUpdatePhoto = (id: string, data: Partial<Photo>) =>
     adminActions.updatePhoto(id, data);
 
@@ -167,11 +177,20 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
     PAGINATION.ADMIN_BATCH_SIZE,
   );
 
+  const photoCountQuery = usePhotoCount({
+    category_id: filterCatId,
+    tag_id: Array.isArray(filterTagIds) && filterTagIds.length > 0 ? filterTagIds[0] : null,
+    searchQuery: debouncedSearchQuery,
+    isAdminMode: true,
+  });
+
   const photos = React.useMemo(() => {
     const allPhotos =
       infinitePhotosQuery.data?.pages.flatMap((p) => p.photos) || [];
     return cleanPhotos(allPhotos);
   }, [infinitePhotosQuery.data]);
+
+  const totalPhotosCount = photoCountQuery.data || 0;
 
   const lastInitializedIdRef = React.useRef<string | null>(null);
 
@@ -292,20 +311,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
                     onAbort={onCancelAnalyze}
                     onAiAnalyze={logic.triggerAiAnalyze}
                     onDelete={
-                      onDeletePhoto
-                        ? () => {
-                            update({
-                              alertDialog: {
-                                title: "确定要删除此照片吗？",
-                                message:
-                                  "此操作不可撤销，照片将从云端彻底移除。",
-                                onConfirm: () => onDeletePhoto!(editPhotoId!),
-                                confirmLabel: "删除",
-                                type: "danger",
-                              },
-                            });
-                          }
-                        : undefined
+                      onDeletePhoto ? () => onDeletePhoto(editPhotoId!) : undefined
                     }
                     onSave={logic.handleSave}
                     onToggleHidden={logic.toggleHidden}
@@ -320,6 +326,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
                       logic.handleError(new Error(readableError), "AI识别错误");
                     }}
                     isRunning={logic.isRunning}
+                    totalPhotosCount={totalPhotosCount}
                   />
 
                   <div className="flex-1 overflow-hidden flex flex-col pt-2">

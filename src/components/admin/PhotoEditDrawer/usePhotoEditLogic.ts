@@ -54,29 +54,13 @@ export const usePhotoEditLogic = (props: Props) => {
   const addTag = async (name: string) => { const tag = await addTagMut(name); return tag.id; };
   const updateTag = async (id: string, updates: Partial<Tag>) => { await updateTagMut({ id, updates }); return true; };
   const deleteTag = async (id: string) => {
-    update({
-      alertDialog: {
-        title: '确定要删除此标签吗？',
-        message: '此操作将从所有已关联的产品中移除此标签。',
-        type: 'danger',
-        onConfirm: () => deleteTagMut(id),
-        confirmLabel: '删除',
-      }
-    });
+    await deleteTagMut(id);
     return true;
   };
   const addManufacturer = async (name: string) => { return await addManMut(name); };
   const updateManufacturer = async (id: string, updates: Partial<Manufacturer>) => { await updateManMut({ id, updates }); return true; };
   const deleteManufacturer = async (id: string) => {
-    update({
-      alertDialog: {
-        title: '确定要删除此生产商吗？',
-        message: '确定要删除此生产商吗？',
-        type: 'danger',
-        onConfirm: () => deleteManMut(id),
-        confirmLabel: '删除',
-      }
-    });
+    await deleteManMut(id);
     return true;
   };
 

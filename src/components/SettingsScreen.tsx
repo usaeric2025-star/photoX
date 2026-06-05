@@ -99,8 +99,50 @@ export function SettingsScreen() {
   const saveSettings = async (s: Partial<AppSettings>) => { await updateSettings(s); };
 
   const {
-      updateTag, deleteTag, updateCategory, deleteCategory, addCategory, 
-      addManufacturer, updateManufacturer, deleteManufacturer, addTag
+      updateTag, updateCategory, addCategory, 
+      addManufacturer, updateManufacturer, addTag
+  } = useAdminCategory({ update });
+
+  const deleteTag = (id: string) => {
+    update({
+      alertDialog: {
+        title: '确定要删除此标签吗？',
+        message: '此操作将从所有已关联的产品中移除此标签。',
+        type: 'danger',
+        onConfirm: () => deleteTagRaw(id),
+        confirmLabel: '删除',
+      }
+    });
+  };
+
+  const deleteCategory = (id: string) => {
+    update({
+      alertDialog: {
+        title: '确定要删除此分类吗？',
+        message: '这将导致该分类下的产品失去分类关联。',
+        type: 'danger',
+        onConfirm: () => deleteCategoryRaw(id),
+        confirmLabel: '删除',
+      }
+    });
+  };
+
+  const deleteManufacturer = (id: string) => {
+    update({
+      alertDialog: {
+        title: '确定要删除此生产商吗？',
+        message: '确定要删除此生产商吗？',
+        type: 'danger',
+        onConfirm: () => deleteManufacturerRaw(id),
+        confirmLabel: '删除',
+      }
+    });
+  };
+
+  const { 
+      deleteTag: deleteTagRaw, 
+      deleteCategory: deleteCategoryRaw, 
+      deleteManufacturer: deleteManufacturerRaw 
   } = useAdminCategory({ update });
 
   const {

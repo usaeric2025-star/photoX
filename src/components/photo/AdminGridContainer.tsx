@@ -257,19 +257,35 @@ export function AdminGridContainer({
           onGroup={() => {}}
           onDelete={() => {
             const currentSelected = useUIStore.getState().selectedIds;
-            adminActions.deletePhoto(Array.from(currentSelected));
+            update({
+              alertDialog: {
+                title: "确认删除",
+                message: `确认删除这 ${currentSelected.length} 张照片吗？`,
+                onConfirm: () => adminActions.deletePhoto(Array.from(currentSelected)),
+                confirmLabel: "删除",
+                type: "danger",
+              }
+            });
           }}
           onToggleVisibility={() => {
             const currentSelected = useUIStore.getState().selectedIds;
-            adminActions.batchUpdate.mutateAsync({ ids: Array.from(currentSelected), updates: { is_hidden: true } });
+            adminActions.batchUpdate.execute({ ids: Array.from(currentSelected), updates: { is_hidden: true } });
           }}
           onClearSelection={disable}
         />
 
         <SelectionToolbar
-          onDelete={(ids) => adminActions.deletePhoto(ids)}
+          onDelete={(ids) => update({
+            alertDialog: {
+              title: "确认删除",
+              message: `确认删除这 ${ids.length} 张照片吗？`,
+              onConfirm: () => adminActions.deletePhoto(ids),
+              confirmLabel: "删除",
+              type: "danger",
+            }
+          })}
           onBatchEdit={(ids) => update({ batchEditingIds: ids })}
-          onHide={(ids) => adminActions.batchUpdate.mutateAsync({ ids, updates: { is_hidden: true } })}
+          onHide={(ids) => adminActions.batchUpdate.execute({ ids, updates: { is_hidden: true } })}
           onAIIdentify={onBatchAiAnalyze ? (ids) => {
             const selectedGroupIds = new Set<string>();
             photos.forEach(p => {

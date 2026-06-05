@@ -56,13 +56,24 @@ export function useBatchEdit() {
 
   const handleDelete = async () => {
     if (!batchEditingIds || batchEditingIds.length === 0) return;
-    try {
-      await deletePhoto(batchEditingIds);
-      update({ batchEditingIds: null });
-      resetForm();
-    } catch (err) {
-      handleError(err as Error, '删除失败');
-    }
+    
+    update({
+      alertDialog: {
+        title: "确认删除",
+        message: `确认删除这 ${batchEditingIds.length} 张照片吗？`,
+        onConfirm: async () => {
+          try {
+            await deletePhoto(batchEditingIds);
+            update({ batchEditingIds: null });
+            resetForm();
+          } catch (err) {
+            handleError(err as Error, '删除失败');
+          }
+        },
+        confirmLabel: "删除",
+        type: "danger",
+      }
+    });
   };
 
   return {
