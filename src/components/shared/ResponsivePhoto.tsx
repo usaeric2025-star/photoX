@@ -91,8 +91,12 @@ export function ResponsivePhoto({
                if (src) loadedSrcCache.add(src);
                setIsLoaded(true);
             }}
-            onError={() => {
-              setHasError(true);
+            onError={(e) => {
+               if (e.currentTarget.src !== '/fallback-image.jpg') {
+                 e.currentTarget.src = '/fallback-image.jpg';
+               } else {
+                 setHasError(true);
+               }
             }}
             className={`${imgClassName} absolute inset-0 z-10 w-full h-full transition-opacity duration-200 ease-out`}
             style={{ 

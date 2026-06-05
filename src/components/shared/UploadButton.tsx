@@ -15,7 +15,7 @@ function AddButton({ onAdd }: { onAdd: () => void }) {
       transition={{ duration: 0.1 }}
       onClick={onAdd}
       type="button"
-      className={`${buttonStyles.button} bg-blue-600 fixed bottom-6 right-6 z-toast rounded-full shadow-lg hover:shadow-xl transition-shadow disabled:opacity-50`}
+      className={`${buttonStyles.button} bg-blue-600 fixed bottom-6 right-6 z-[20000] rounded-full shadow-lg hover:shadow-xl transition-shadow disabled:opacity-50`}
       title="Add Photo"
     >
       <Plus size={28} />
