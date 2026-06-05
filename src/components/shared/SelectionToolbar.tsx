@@ -82,7 +82,7 @@ export function SelectionToolbar({
   };
 
   return createPortal(
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 border border-slate-800 backdrop-blur rounded-full px-4 py-2 shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-300">
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 border border-slate-800 backdrop-blur rounded-full px-4 py-2 shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-300">
       {/* Circle Badge showing selection count */}
       <div 
         className="w-7 h-7 flex items-center justify-center rounded-full bg-blue-600 text-white font-bold text-xs ring-4 ring-blue-600/15 shrink-0 select-none cursor-default"
