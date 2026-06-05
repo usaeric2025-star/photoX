@@ -2,6 +2,8 @@ import { useUrlFilters } from "./useUrlFilters";
 import { usePhotoDetail } from "./core/queries/usePhotoDetail";
 import { useGroupPhotos, usePhotos } from "./core/queries/usePhotos";
 import { useGroupDetail } from "./core/queries/useGroupDetail";
+import { useQuery } from '@tanstack/react-query';
+import { getPhotoCount } from "@/services/photo/queries";
 import { useMemo } from "react";
 import { useNavigate, useLocation } from "@tanstack/react-router";
 import { Photo } from "@/types";
@@ -36,6 +38,12 @@ export const useLightbox = () => {
     onlyUngrouped: false,
     is_hidden: filters.is_hidden,
   }, PHOTO_QUERY_CONFIG.limit, !groupId);
+  
+  const { data: totalCount } = useQuery({
+    queryKey: ['photos', 'totalCount', filters],
+    queryFn: () => getPhotoCount(filters.categoryId, filters.tagId, filters.searchQuery, isAdmin),
+    enabled: !groupId,
+  });
   
   const isGroupMode = !!groupId; // Within a group's context
   
@@ -105,6 +113,7 @@ export const useLightbox = () => {
     // wait, isOpen is only true if photoId is present.
     data: mode === 'group' ? (currentPhoto || groupDetail) : currentPhoto,
     items: photos,
+    totalCount,
     showEdit: isAdmin,
     showDelete: isAdmin,
     showAi: isAdmin && mode === 'single'

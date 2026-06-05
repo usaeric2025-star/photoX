@@ -24,7 +24,7 @@ import { toast } from "@/lib/ui/toast";
 export const PhotoLightboxPage = () => {
   const { 
     isOpen, close, photos, currentIndex, setPhotoId,
-    mode, data, showEdit, showDelete, showAi, isLoading, groupId
+    mode, data, showEdit, showDelete, showAi, isLoading, groupId, totalCount
   } = useLightbox();
   
   const updateUIStore = useUIStore((s) => s.update);
@@ -89,6 +89,7 @@ export const PhotoLightboxPage = () => {
         open={isOpen}
         onClose={close}
         photos={photos}
+        totalCount={totalCount}
         currentIndex={currentIndex}
         onIndexChange={(idx) => {
           const photo = photos[idx];

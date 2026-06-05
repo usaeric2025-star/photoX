@@ -327,14 +327,14 @@ Return EXACTLY JSON of this schema. Do not include any other text except the JSO
                         const jsonText = (transResult.text || '').replace(/```json\n|\n```|```/g, '').trim();
                         const translations = JSON.parse(jsonText);
                         
-                        // Additional safety check: If translations are missing/invalid, fallback to defaults carefully
-                        const isChineseOnly = (str: string) => !/[a-zA-Z]/.test(str);
+                        // Additional safety check: Ensure translated ZH looks like Chinese/contains no English. Otherwise fallback to original name
+                        const containsEnglish = (str: string) => /[a-zA-Z]/.test(str);
                         const zhName = translations.name_translations?.zh;
-                        const safeZhName = (zhName && !isChineseOnly(zhName)) ? zhName : (data.name || '');
+                        const safeZhName = (zhName && !containsEnglish(zhName)) ? zhName : (data.name || '');
                         
                         if (translations.name_translations) {
                             data.name_translations = {
-                                zh: safeZhName || data.name || '',
+                                zh: safeZhName,
                                 en: (translations.name_translations.en || data.name || '').toUpperCase(),
                                 ms: (translations.name_translations.ms || data.name || '').toUpperCase()
                             };

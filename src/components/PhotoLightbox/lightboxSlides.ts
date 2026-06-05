@@ -1,7 +1,7 @@
 import { Photo } from "@/types";
 import { getThumbnailUrl } from "@/lib/image-url";
 
-export const toLightboxSlides = (photos: Photo[]) => {
+export const toLightboxSlides = (photos: Photo[], lang: 'zh' | 'en' | 'ms' = 'zh') => {
   return photos.map(photo => {
     const originalWidth = photo.width || 1920;
     const originalHeight = photo.height || 1080;
@@ -22,7 +22,9 @@ export const toLightboxSlides = (photos: Photo[]) => {
       ],
       width: originalWidth,
       height: originalHeight,
-      alt: typeof photo.name === 'object' ? (photo.name.zh || "") : String(photo.name || ""),
+      alt: typeof photo.name === 'object' ? (photo.name[lang] || photo.name.zh || "") : String(photo.name || ""),
+      title: typeof photo.name === 'object' ? (photo.name[lang] || photo.name.zh || "") : String(photo.name || ""),
+      description: "",
       photo, // Pass the full photo object for metadata rendering
     };
   });

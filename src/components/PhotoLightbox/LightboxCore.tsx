@@ -10,6 +10,7 @@ import { LIGHTBOX_PLUGINS, LIGHTBOX_OPTIONS } from "./lightboxConfig";
 import { toLightboxSlides } from "./lightboxSlides";
 import { downloadPhotoAsJpeg } from "@/lib/download";
 import { PhotoInfoPanel } from "../photo/PhotoInfoPanel";
+import { useSettings } from "@/hooks/core/infra/useSettings";
 
 interface LightboxCoreProps {
   open: boolean;
@@ -27,18 +28,21 @@ interface LightboxCoreProps {
   onDelete?: (photo: Photo) => void;
   onAiAnalyze?: (photo: Photo) => void;
   onSetCover?: (photo: Photo) => void;
+  totalCount?: number;
   renderSidebar?: () => React.ReactNode;
   renderFloatingButton?: () => React.ReactNode;
 }
 
 export const LightboxCore = ({ 
-  open, onClose, photos, currentIndex = 0, onIndexChange,
+  open, onClose, photos, currentIndex = 0, onIndexChange, totalCount,
   mode = 'single', showEdit, showDelete, showAi, showSetCover,
   onEdit, onDelete, onAiAnalyze, onSetCover,
   renderSidebar, renderFloatingButton
 }: LightboxCoreProps) => {
   const [index, setIndex] = useState(currentIndex);
-  const slides = toLightboxSlides(photos);
+  const { settings } = useSettings();
+  const lang = (settings?.language as 'zh' | 'en' | 'ms') || 'zh';
+  const slides = toLightboxSlides(photos, lang);
   
   // Keep index synchronized with currentIndex prop
   React.useEffect(() => {
@@ -109,6 +113,16 @@ export const LightboxCore = ({
             </button>
           </div>
         ),
+        counter: ({ currentIndex: c, total }) => {
+            if (totalCount !== undefined) {
+                return (
+                    <div className="yarl__counter">
+                        {c + 1} / {totalCount}
+                    </div>
+                );
+            }
+            return <div className="yarl__counter">{c + 1} / {total}</div>;
+        }
       }}
       {...LIGHTBOX_OPTIONS}
     />
