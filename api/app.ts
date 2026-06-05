@@ -300,30 +300,41 @@ Target Response Schema:
                 const agnes = new AgnesProvider({ apiKey: agnesApiKey, model: 'agnes-2.0-flash' });
                 
                 // Translate name and description into 3 languages using Agnes
-                const transPrompt = `Translate the given furniture name and furniture description into Simplified Chinese (zh), English (en - UPPERCASE), and Malay (ms - UPPERCASE).
+                const transPrompt = `Translate the given furniture name and furniture description into:
+1. Simplified Chinese (zh) - ONLY Chinese characters
+2. English (en) - ONLY English, UPPERCASE
+3. Malay (ms) - ONLY Malay, UPPERCASE
+
 Input Name: "${data.name}"
 Input Description: "${data.description}"
 
-Return EXACTLY JSON of this schema:
+Return EXACTLY JSON of this schema. Do not include any other text except the JSON:
 {
   "name_translations": {
-    "zh": "...",
-    "en": "...",
-    "ms": "..."
+    "zh": "Simplified Chinese translation of the name, no English",
+    "en": "English name in UPPERCASE",
+    "ms": "Malay name in UPPERCASE"
   },
   "description_translations": {
-    "zh": "...",
-    "en": "...",
-    "ms": "..."
+    "zh": "Simplified Chinese description of the furniture, no English",
+    "en": "English description",
+    "ms": "Malay description"
   }
 }`;
                 const transResult = await agnes.chat([{ role: 'user', content: transPrompt }]);
                 if (transResult.success) {
                     try {
-                        const translations = JSON.parse((transResult.text || '').replace(/```json\n|\n```|```/g, '').trim());
+                        const jsonText = (transResult.text || '').replace(/```json\n|\n```|```/g, '').trim();
+                        const translations = JSON.parse(jsonText);
+                        
+                        // Additional safety check: If translations are missing/invalid, fallback to defaults carefully
+                        const isChineseOnly = (str: string) => !/[a-zA-Z]/.test(str);
+                        const zhName = translations.name_translations?.zh;
+                        const safeZhName = (zhName && !isChineseOnly(zhName)) ? zhName : (data.name || '');
+                        
                         if (translations.name_translations) {
                             data.name_translations = {
-                                zh: translations.name_translations.zh || data.name || '',
+                                zh: safeZhName || data.name || '',
                                 en: (translations.name_translations.en || data.name || '').toUpperCase(),
                                 ms: (translations.name_translations.ms || data.name || '').toUpperCase()
                             };
@@ -335,7 +346,9 @@ Return EXACTLY JSON of this schema:
                                 ms: translations.description_translations.ms || data.description || ''
                             };
                         }
-                    } catch (e) {}
+                    } catch (e) {
+                        console.error('Translation parsing failed', e);
+                    }
                 }
 
                 // Extract dimensions from description
@@ -344,7 +357,7 @@ Return EXACTLY JSON of this schema:
                 if (dimResult.success) {
                     try {
                         const dims = JSON.parse((dimResult.text || '').replace(/```json\n|\n```|```/g, '').trim());
-                        if (dims.width_cm || dims.height_cm || dims.depth_cm) {
+                        if (dims && (dims.width_cm > 0 || dims.height_cm > 0 || dims.depth_cm > 0)) {
                              data.dimensions = data.dimensions || [];
                              data.dimensions.push({
                                  label: '規格 (Agnes)',
