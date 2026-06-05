@@ -37,7 +37,7 @@ export function useAIPhotoAnalysis() {
            description: result.data.description,
            description_translations: result.data.description_translations,
            category_id: result.data.category_id,
-           tag_ids: result.data.tag_ids,
+           tag_ids: Array.isArray(result.data.tag_ids) ? result.data.tag_ids.slice(0, 3) : [],
            manufacturer_id: result.data.manufacturer_id,
            model_number: result.data.model_number,
            price: result.data.price,

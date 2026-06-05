@@ -352,23 +352,31 @@ Return EXACTLY JSON of this schema. Do not include any other text except the JSO
                 }
 
                 // Extract dimensions from description
-                const dimPrompt = `Extract numeric dimensions (width, height, depth in cm) from this text: "${data.description}". Return JSON: { "width_cm": number, "height_cm": number, "depth_cm": number }`;
+                const dimPrompt = `Extract numeric dimensions (width, height, depth in cm) from this text: "${data.description}". Return JSON: { "width_cm": number|null, "height_cm": number|null, "depth_cm": number|null }. If no dimensions are found, return all as 0 or null.`;
                 const dimResult = await agnes.chat([{ role: 'user', content: dimPrompt }]);
                 if (dimResult.success) {
                     try {
-                        const dims = JSON.parse((dimResult.text || '').replace(/```json\n|\n```|```/g, '').trim());
-                        if (dims && (dims.width_cm > 0 || dims.height_cm > 0 || dims.depth_cm > 0)) {
+                        const dims = JSON.parse((dimResult.text || '').replace(/```json\n|\n```|```/g, '').trim()) || {};
+                        
+                        // Strict numeric validation
+                        const width = typeof dims.width_cm === 'number' && dims.width_cm > 0 ? dims.width_cm : 0;
+                        const height = typeof dims.height_cm === 'number' && dims.height_cm > 0 ? dims.height_cm : 0;
+                        const depth = typeof dims.depth_cm === 'number' && dims.depth_cm > 0 ? dims.depth_cm : 0;
+
+                        if (width > 0 || height > 0 || depth > 0) {
                              data.dimensions = data.dimensions || [];
                              data.dimensions.push({
                                  label: '規格 (Agnes)',
-                                 width: dims.width_cm || 0,
-                                 height: dims.height_cm || 0,
-                                 length: dims.depth_cm || 0,
+                                 width,
+                                 height,
+                                 length: depth, // assuming depth maps to length
                                  unit: 'cm',
                                  isAIEstimated: true
                              });
                         }
-                    } catch (e) {}
+                    } catch (e) {
+                         console.error("Failed to parse dimensions from Agnes", e);
+                    }
                 }
             }
         } catch (agnesErr) {
