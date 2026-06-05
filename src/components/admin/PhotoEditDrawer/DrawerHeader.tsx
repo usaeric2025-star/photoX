@@ -51,6 +51,7 @@ export function DrawerHeader({
   onToggleHidden,
   onClose,
   onErrorClick,
+  onRemoveFromGroup,
   isRunning,
   totalPhotosCount,
 }: HeaderProps) {

@@ -2,16 +2,18 @@ import { Dimension } from '../../types';
 
 export function isPlaceholderDimension(dim: Partial<Dimension> | null | undefined): boolean {
   if (!dim) return true;
-  const label = String(dim.label || '').trim();
-  if (label === '' || label === '-') return true;
   const lengthVal = Number(dim.length) || 0;
   const widthVal = Number(dim.width) || 0;
   const heightVal = Number(dim.height) || 0;
+
+  // If all numeric values are 0, it's a placeholder/incomplete data
   if (lengthVal === 0 && widthVal === 0 && heightVal === 0) {
-    if (!/[A-Za-z0-9]/.test(label) || label === '-') {
-      return true;
-    }
+    return true;
   }
+  
+  const label = String(dim.label || '').trim();
+  if (label === '' || label === '-') return true;
+
   return false;
 }
 
@@ -49,10 +51,10 @@ export const normalizeDimensions = (dims: Dimension[]): Dimension[] => {
 
         if (hasH || hasW || hasD || hasL) {
           // 1️⃣ Strict identification by labels (H/W/D/L)
-          const hMatch = parsingPart.match(/H\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
-          const wMatch = parsingPart.match(/W\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
-          const lMatch = parsingPart.match(/L\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
-          const dMatch = parsingPart.match(/D\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
+          const hMatch = parsingPart.match(/H\s*[:：=x*]?\s*(\d+(\.\d+)?)\s*(cm|mm|in|inch|寸)?/i);
+          const wMatch = parsingPart.match(/W\s*[:：=x*]?\s*(\d+(\.\d+)?)\s*(cm|mm|in|inch|寸)?/i);
+          const lMatch = parsingPart.match(/L\s*[:：=x*]?\s*(\d+(\.\d+)?)\s*(cm|mm|in|inch|寸)?/i);
+          const dMatch = parsingPart.match(/D\s*[:：=x*]?\s*(\d+(\.\d+)?)\s*(cm|mm|in|inch|寸)?/i);
 
           if (hMatch) height = parseFloat(hMatch[1]);
           

@@ -24,11 +24,18 @@ export function useBatchAiAnalyze() {
       // 1. Analyze photos
       const { analyzePhoto } = await import('@/services/aiService');
       
+      const withTimeout = (promise: Promise<any>, ms: number) => {
+          const timeout = new Promise((_, reject) =>
+              setTimeout(() => reject(new Error('请求超时')), ms)
+          );
+          return Promise.race([promise, timeout]);
+      };
+      
       for (let i = 0; i < targetPhotos.length; i++) {
         const p = targetPhotos[i];
         try {
           updateProgress(progress, `正在识别照片 ${i + 1}/${totalPhotosToProcess}...`);
-          const resp = await analyzePhoto(p.id);
+          const resp = await withTimeout(analyzePhoto(p.id), 60000); // 60s timeout
           
           if (resp && 'ok' in resp && resp.ok) {
             const result = resp.data;
@@ -77,7 +84,7 @@ export function useBatchAiAnalyze() {
                 tagNames: (p.tag_ids || []).map((tid: string) => tagMap.get(String(tid)) || '').filter(Boolean)
               })) as any;
 
-              const analysis = await analyzeGroup(photosWithTags);
+              const analysis = await withTimeout(analyzeGroup(photosWithTags), 120000); // 120s timeout
               const { name, description, colors, materials } = analysis;
 
               let finalName = { ...name };
