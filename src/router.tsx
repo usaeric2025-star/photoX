@@ -106,23 +106,29 @@ export const rootRoute = createRootRouteWithContext<RouterContext>()({
 const authGuard = async ({ context, location }: { context: { user: any }, location: { pathname: string; search: any } }) => {
   const { user } = context;
   const isPreviewRoute = location.pathname === '/preview';
+  
+  console.log('[authGuard] Checking:', { pathname: location.pathname, hasUser: !!user, isPreviewRoute });
 
   // 已登入且非預覽頁面 → 強制轉到後台
   if (user && !isPreviewRoute) {
     // 處理群組頁面的轉換
     const groupMatch = location.pathname.match(/^\/group\/(.+)$/);
     if (groupMatch) {
+      console.log('[authGuard] Redirecting logged-in user to admin group:', groupMatch[1]);
       throw redirect({ to: `/admin/group/${groupMatch[1]}` });
     }
     // 任何其他路徑都轉往後台
     if (location.pathname !== ROUTES.ADMIN) {
+      console.log('[authGuard] Redirecting logged-in user to admin:', location.pathname);
       throw redirect({ to: ROUTES.ADMIN });
     }
+    console.log('[authGuard] Allowing access to admin');
     return;
   }
 
   // 未登入且訪問後台 → 轉到登入頁
   if (!user && location.pathname.startsWith('/admin')) {
+    console.log('[authGuard] Redirecting unauthenticated user to login:', location.pathname);
     throw redirect({ to: '/login' });
   }
 };
