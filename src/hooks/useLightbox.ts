@@ -5,6 +5,8 @@ import { useGroupDetail } from "./core/queries/useGroupDetail";
 import { useMemo } from "react";
 import { useNavigate, useLocation } from "@tanstack/react-router";
 import { Photo } from "@/types";
+import { PAGINATION } from "@/constants/config";
+import { PHOTO_QUERY_CONFIG } from "@/lib/photoQueryConfig";
 
 /**
  * [ATOMIC-HOOK] useLightbox
@@ -33,7 +35,7 @@ export const useLightbox = () => {
     isAdminMode: isAdmin,
     onlyUngrouped: false,
     is_hidden: filters.is_hidden,
-  }, 100, !groupId);
+  }, PHOTO_QUERY_CONFIG.limit, !groupId);
   
   const isGroupMode = !!groupId; // Within a group's context
   

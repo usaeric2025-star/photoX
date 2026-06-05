@@ -14,6 +14,7 @@ export const UI = {
 
 export const ROUTES = {
   HOME: '/',
+  PREVIEW: '/preview',
   ADMIN: '/admin',
   LOGIN: '/login',
   GROUP: (id: string) => `/g/${id}`,

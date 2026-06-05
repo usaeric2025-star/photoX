@@ -235,6 +235,18 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
     return () => window.removeEventListener('ai-analysis-result', handleAIResult);
   }, [categories, tags, form]);
 
+  React.useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (form.isDirty()) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [form]);
+
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
   const editPhotoPreview = React.useMemo(() => {

@@ -327,7 +327,7 @@ export const loadAllPhotosFromCloud = async (
   } else {
     // 默认：最新上传优先
     query = query.order('created_at', { ascending: false })
-                 .order('id', { ascending: false });
+                 .order('id', { ascending: true });
   }
 
   // 3. 兜底及拖拽/合组顺序
@@ -403,7 +403,8 @@ export const loadPhotosByGroupId = async (groupId: string, isAdminMode: boolean 
     }
     
     query = query.order('is_hidden', { ascending: true, nullsFirst: true })
-                 .order('created_at', { ascending: false });
+                 .order('created_at', { ascending: false })
+                 .order('id', { ascending: true });
 
     const { data, error } = await query;
 
@@ -465,6 +466,7 @@ export const loadPhotosByGroupIdPaginated = async (
     query.order('is_group_cover', { ascending: false })
          .order('is_hidden', { ascending: true, nullsFirst: true })
          .order('created_at', { ascending: false })
+         .order('id', { ascending: true })
          .range(from, to)
   ]);
 

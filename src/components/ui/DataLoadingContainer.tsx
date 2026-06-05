@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FullPageLoading } from '../FullPageLoading';
+import { LoadingScreen } from '../LoadingScreen';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface DataLoadingContainerProps {
@@ -54,7 +54,7 @@ export function DataLoadingContainer({
 
       <AnimatePresence>
         {showLoader && (
-          <FullPageLoading key="global-loader" />
+          <LoadingScreen key="global-loader" />
         )}
         <motion.div
             key="content-frame"

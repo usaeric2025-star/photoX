@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { User } from '@/types';
+import { useLocalStorage } from '@mantine/hooks';
 
 // 带超时的 getUser（5秒）
 async function getUserWithTimeout(): Promise<User | null> {
@@ -32,6 +33,11 @@ async function getUserWithTimeout(): Promise<User | null> {
 }
 
 export function useAuth() {
+  const [, , removePasscode] = useLocalStorage({
+    key: 'ais_mock_auth_passcode',
+    defaultValue: '',
+  });
+
   const { data: user, isLoading, isPending } = useQuery({
     queryKey: ['auth', 'user'],
     queryFn: getUserWithTimeout,
@@ -51,12 +57,12 @@ export function useAuth() {
     loginWithGoogle: async () => {
       await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: window.location.origin + '/admin' }
+        options: { redirectTo: window.location.href }
       });
     },
     logout: async () => {
       if (typeof window !== 'undefined') {
-        window.localStorage.removeItem('ais_mock_auth_passcode');
+        removePasscode();
       }
       await supabase.auth.signOut();
       if (typeof window !== 'undefined') {

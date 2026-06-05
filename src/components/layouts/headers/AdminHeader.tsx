@@ -41,6 +41,7 @@ import {
 import { useAdminActions } from "@/features/admin/useAdminActions";
 import { logoutPublic } from "@/lib/publicAuth";
 import { cn } from "@/lib/utils";
+import { ROUTES } from "@/config/constants";
 
 import { useNavigate } from '@tanstack/react-router';
 
@@ -50,6 +51,8 @@ interface AdminHeaderProps {
   totalCount?: number;
   onBatchAiIdentify?: () => void;
 }
+
+import { useLocalStorage } from '@mantine/hooks';
 
 export function AdminHeader({
   onRefresh,
@@ -61,6 +64,11 @@ export function AdminHeader({
   const { isStaff, can } = usePermission();
   const isAdminPath = useAdminMode();
   const isEffectiveStaffMode = isAdminPath && !user;
+
+  const [, , removePasscode] = useLocalStorage({
+    key: 'ais_mock_auth_passcode',
+    defaultValue: '',
+  });
 
   const { settings } = useSettings();
   const { isMultiSelect, disable, enable } = useMultiSelect();
@@ -80,7 +88,7 @@ export function AdminHeader({
   const navigate = useNavigate();
 
   const handleBackToShowcase = () => {
-    navigate({ to: '/', search: { preview: 'true' } as any });
+    navigate({ to: ROUTES.PREVIEW });
   };
 
   const handleImport = () => {
@@ -302,7 +310,7 @@ export function AdminHeader({
               ) : (
                 <DropdownMenuItem
                   onClick={() => {
-                    window.localStorage.removeItem('ais_mock_auth_passcode');
+                    removePasscode();
                     window.location.reload();
                   }}
                   className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-red-600 hover:bg-red-50 focus:bg-red-50 cursor-pointer transition-colors mt-1 border-none"

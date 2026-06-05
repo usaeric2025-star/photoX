@@ -243,25 +243,7 @@ export function filterPhotos(
     });
   }
 
-  // 6. Sort
-  result.sort((a, b) => {
-    if (a.is_pinned && !b.is_pinned) return -1;
-    if (!a.is_pinned && b.is_pinned) return 1;
-    
-    // In public mode, hidden items might still exist in some sub-arrays but shouldn't be here.
-    // In admin mode, we sort hidden items to the end UNLESS we specifically want to see them at their natural position.
-    if (!isAdminMode) {
-      if (a.is_hidden && !b.is_hidden) return 1;
-      if (!a.is_hidden && b.is_hidden) return -1;
-    }
-    
-    if (sortOrder === 'name') {
-      return (a.name || '').localeCompare(b.name || '');
-    }
-    
-    return sortOrder === 'oldest' ? a._time! - b._time! : b._time! - a._time!;
-  });
-
+  // 6. Return without sorting to respect backend order
   return result;
 }
 

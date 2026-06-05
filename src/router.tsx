@@ -16,8 +16,8 @@ import { QueryClient } from '@tanstack/react-query';
 import { photoKeys, groupKeys } from '@/lib/queryKeys';
 import { createStaleTime } from '@/shared/freshnessSchema';
 import { getGroupById } from '@/services/group/queries';
-import { AdminAuthGuard } from '@/components/AdminAuthGuard';
 import { checkPublicAuth } from '@/lib/publicAuth';
+import { RootRouter } from '@/pages/RootRouter';
 
 /**
  * [V2.10-ROUTER-PERMISSION-INTEGRATED] Router Context Definition
@@ -48,7 +48,6 @@ export interface GallerySearchParams {
   groupId?: string;      // 当前选中的合组 ID
   columns?: string;      // 列数（2/3/4/5）
   showGroupsCollapsed?: 'true' | 'false';  // 合组折叠状态
-  preview?: 'true' | 'false';      // 预览模式
   hidden?: 'true' | 'false';       // 隐藏照片显影控制
 }
 
@@ -105,6 +104,7 @@ export const rootRoute = createRootRouteWithContext<RouterContext>()({
 
 import { type } from 'arktype';
 import { PAGINATION } from '@/constants/config';
+import { PHOTO_QUERY_CONFIG } from '@/lib/photoQueryConfig';
 
 // 2. Main Routes
 const indexRoute = createRoute({
@@ -122,11 +122,10 @@ const indexRoute = createRoute({
       groupId: (search.groupId as string) || undefined,
       columns: (search.columns as string) || undefined,
       showGroupsCollapsed: (search.showGroupsCollapsed as GallerySearchParams['showGroupsCollapsed']) || undefined,
-      preview: (search.preview as GallerySearchParams['preview']) || undefined,
     };
   },
   beforeLoad: async ({ search }) => {
-    // Empty beforeLoad to allow everyone (admins and guests) to view the public page
+    // Empty beforeLoad to allow the RootRouter component to handle redirect logic cleanly based on auth state
   },
   loader: async ({ context }) => {
     const { queryClient } = context;
@@ -138,7 +137,7 @@ const indexRoute = createRoute({
       sortOrder: null,
       isAdminMode: false,
       onlyUngrouped: false,
-      limit: PAGINATION.PUBLIC_PAGE_SIZE
+      limit: PHOTO_QUERY_CONFIG.limit
     }, 'REALTIME');
 
     queryClient.prefetchInfiniteQuery({
@@ -148,7 +147,65 @@ const indexRoute = createRoute({
         const photos = await loadAllPhotosFromCloud(
           undefined,
           0,
-          PAGINATION.PUBLIC_PAGE_SIZE,
+          PHOTO_QUERY_CONFIG.limit,
+          undefined,
+          undefined,
+          undefined,
+          false
+        );
+        return {
+          photos: photos || [],
+          nextPage: undefined
+        };
+      },
+      initialPageParam: 1,
+      staleTime: createStaleTime('REALTIME'),
+    });
+  },
+  component: () => (
+    <RootRouter>
+      <PublicPage />
+    </RootRouter>
+  ),
+});
+
+const previewRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: ROUTES.PREVIEW,
+  validateSearch: (search: Record<string, unknown>): GallerySearchParams => {
+    return {
+      q: (search.q as string) || undefined,
+      category: (search.category as string) || undefined,
+      manufacturer: (search.manufacturer as string) || undefined,
+      sort: (search.sort as GallerySearchParams['sort']) || undefined,
+      view: (search.view as GallerySearchParams['view']) || undefined,
+      photoId: (search.photoId as string) || undefined,
+      groupId: (search.groupId as string) || undefined,
+      columns: (search.columns as string) || undefined,
+      showGroupsCollapsed: (search.showGroupsCollapsed as GallerySearchParams['showGroupsCollapsed']) || undefined,
+    };
+  },
+  loader: async ({ context }) => {
+    const { queryClient } = context;
+    if (!queryClient) return;
+    const queryKey = photoKeys.infinite({ 
+      category_id: null,
+      tag_id: null,
+      searchQuery: null,
+      sortOrder: null,
+      isAdminMode: false,
+      onlyUngrouped: false,
+      limit: PHOTO_QUERY_CONFIG.limit
+    }, 'REALTIME');
+
+    queryClient.prefetchInfiniteQuery({
+      queryKey,
+      queryFn: async () => {
+        const { loadAllPhotosFromCloud } = await import('./services/photo/queries');
+        const photos = await loadAllPhotosFromCloud(
+          undefined,
+          0,
+          PHOTO_QUERY_CONFIG.limit,
           undefined,
           undefined,
           undefined,
@@ -169,7 +226,11 @@ const indexRoute = createRoute({
 const hashRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/h/$hash',
-  component: PublicPage,
+  component: () => (
+    <RootRouter>
+      <PublicPage />
+    </RootRouter>
+  ),
 });
 
 const groupRoute = createRoute({
@@ -196,24 +257,28 @@ const groupRoute = createRoute({
       staleTime: createStaleTime('STABLE'),
     });
   },
-  component: PublicPage,
+  component: () => (
+    <RootRouter>
+      <PublicPage />
+    </RootRouter>
+  ),
 });
 
 // For backward compatibility
 const gRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/g/$groupId',
-  component: PublicPage,
+  component: () => (
+    <RootRouter>
+      <PublicPage />
+    </RootRouter>
+  ),
 });
 
 const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: ROUTES.ADMIN,
-  component: () => (
-    <AdminAuthGuard>
-      <AdminPage />
-    </AdminAuthGuard>
-  ),
+  component: AdminPage,
 });
 
 const adminHistoryRoute = createRoute({
@@ -258,15 +323,19 @@ const adminGroupRoute = createRoute({
 // 3. Route Tree
 export const routeTree = rootRoute.addChildren([
   indexRoute,
+  previewRoute,
   hashRoute,
   groupRoute,
   gRoute,
   adminRoute.addChildren([adminHistoryRoute, adminTasksRoute, adminErrorLogsRoute, adminGroupRoute]),
 ]);
 
+import { NotFoundPage } from './pages/NotFoundPage';
+
 // 4. Create Router
 export const router = createRouter({ 
   routeTree,
+  defaultNotFoundComponent: NotFoundPage,
   defaultPreload: 'intent',
   parseSearch: (searchStr) => {
     const params = new URLSearchParams(searchStr);

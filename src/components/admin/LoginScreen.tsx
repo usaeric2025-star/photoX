@@ -4,6 +4,7 @@ import { toast } from '@/lib/ui/toast';
 import { useSettings } from '../../hooks';
 import { useUIStore } from '@/store/useUIStore';
 import { Link, useNavigate } from '@tanstack/react-router';
+import { ROUTES } from '@/config/constants';
 
 import { useLocalStorage } from '@mantine/hooks';
 
@@ -43,8 +44,7 @@ export function LoginScreen({ loginWithGoogle, isLoading }: LoginScreenProps) {
       {/* Absolute Close Button */}
       <div className="absolute top-6 right-6">
         <Link 
-          to="/" 
-          search={{ preview: 'true' } as any}
+          to={ROUTES.PREVIEW} 
           className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-900 border border-slate-100 transition-all active:scale-90"
           title="关闭 / Close"
         >
@@ -159,8 +159,7 @@ export function LoginScreen({ loginWithGoogle, isLoading }: LoginScreenProps) {
 
           <div className="flex justify-center pt-2">
             <Link 
-              to="/" 
-              search={{ preview: 'true' } as any}
+              to={ROUTES.PREVIEW} 
               className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 text-xs font-bold py-2.5 px-5 rounded-2xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-all active:scale-[0.97] shadow-sm tracking-tight"
             >
               ← 返回公开展示页 / Back to Showcase

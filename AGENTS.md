@@ -548,6 +548,37 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 - **非 React 环境**（如 `errorTracker.ts`、Worker、脚本）：允许使用原生 `localStorage` / `sessionStorage`
 - **React 元件 / Hook 内**：必须使用 Mantine 的 `useLocalStorage` / `useSessionStorage`
 
+## 路由规范（锁定）
+
+- ❌ 禁止在多个文件中分散实现路由跳转逻辑
+- ✅ 所有根路由 `/` 的跳转逻辑必须集中在 `RootRouter.tsx` 或等效的根路由配置中
+- ✅ 已登录 + 无 `?preview=true` → `replace` 跳转 `/admin`
+- ✅ 已登录 + 有 `?preview=true` → 停留公开页
+- ✅ 必须处理 `isLoading` 状态，避免闪烁
+
+### 禁止事项
+
+- ❌ 禁止在 `useEffect` 中直接 `router.push`（应使用 `replace`）
+- ❌ 禁止在未判断 `isLoading` 时就跳转
+- ❌ 禁止在 `AdminAuthGuard` 中再次实现登录跳转逻辑
+
+## 排序规范（锁定）
+
+### 后端
+
+- ✅ 所有列表查询必须使用 `ORDER BY created_at DESC, id ASC`
+- ✅ 原因：确保 `created_at` 相同且在进行分页时，排序结果稳定（deterministic）
+
+### 前端
+
+- ✅ 直接使用后端回传的顺序
+- ❌ 禁止对列表资料做任何 `sort()` 操作（除了必须纯前端处理的分组视图内部顺序，但底层列表尽量保持不要重排，如果是在内存里使用 `urlFilters` 可以处理，但从接口进来的不该在组件层重复排）
+
+### 配置
+
+- ✅ 所有分页/滚动加载的 `limit` 必须使用常量或集中配置（推荐 `LIMIT` 定义在 `PHOTO_QUERY_CONFIG`）
+- ❌ 禁止在各组件中手写不同的 `limit` 值
+
 
 
 

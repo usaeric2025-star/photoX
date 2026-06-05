@@ -4,6 +4,7 @@ import { loadAllPhotosFromCloud, loadPhotosByGroupIdPaginated } from '@/services
 import { photoKeys } from '@/lib/queryKeys';
 import { syncCache } from '@/lib/db/indexedDB';
 import { PAGINATION } from '@/constants/config';
+import { PHOTO_QUERY_CONFIG } from '@/lib/photoQueryConfig';
 
 /**
  * Hook for infinite photo lists (main grid).
@@ -18,7 +19,7 @@ export const usePhotos = (filters: {
   onlyUngrouped?: boolean;
   manufacturer_id?: string | null;
   is_hidden?: boolean | null;
-}, limit: number = PAGINATION.PUBLIC_PAGE_SIZE, enabled: boolean = true) => {
+}, limit: number = PHOTO_QUERY_CONFIG.limit, enabled: boolean = true) => {
   return useInfiniteQuery({
     queryKey: photoKeys.infinite({ 
       category_id: filters.category_id ?? null,
