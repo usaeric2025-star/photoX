@@ -69,15 +69,7 @@ export const LightboxCore = ({
         // Custom interactive controls overlaid on lightbox
         controls: () => (
           <>
-            <button
-              onClick={() => setShowDetails(!showDetails)}
-              className="yarl__button !p-2 rounded-full hover:bg-slate-100/10 transition-all absolute top-2 right-2 z-50 text-white"
-              aria-label="Toggle details"
-              title="Toggle details"
-            >
-                <Info size={18} />
-            </button>
-            <div className="absolute top-2 left-1/2 -translate-x-1/2 z-50 text-white font-medium bg-black/50 px-3 py-1 rounded-full text-sm">
+            <div className="absolute top-2 left-2 z-50 text-white font-medium bg-black/50 px-3 py-1 rounded-full text-sm">
                  {index + 1} / {totalCount || slides.length}
             </div>
             {showDetails && renderSidebar?.()}
