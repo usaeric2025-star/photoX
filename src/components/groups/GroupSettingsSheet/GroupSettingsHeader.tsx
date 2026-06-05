@@ -2,7 +2,8 @@ import React from "react";
 import { Settings2, Trash2, X } from "lucide-react";
 import { SheetHeader, SheetTitle } from "../../ui/sheet";
 import { ProductGroup } from "../../../types";
-import { AlertDialogProps } from "@/store/useUIStore";
+import { useDisclosure } from "@mantine/hooks";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { saveGroup as saveGroupToCloud } from "@/services/group/commands";
 import { useErrorHandler, useTaskExecutor, useTasks } from "../../../hooks";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
@@ -11,12 +12,10 @@ export function GroupSettingsHeader({
   groupData,
   activeGroupId,
   onUngroup,
-  update,
   setShowGroupSettings}: {
   groupData: ProductGroup | null;
   activeGroupId: string | null;
   onUngroup?: (groupId: string) => Promise<void> | void;
-  update: (updates: any) => void;
   setShowGroupSettings: (show: boolean) => void;
   
 }) {
@@ -25,6 +24,7 @@ export function GroupSettingsHeader({
   const { runTask } = useTaskExecutor();
   const { tasks } = useTasks();
   const isRunning = tasks.some((t) => t.status === "running");
+  const [isDissolveOpen, dissolveDialog] = useDisclosure(false);
 
   return (
     <SheetHeader className="p-4 border-b border-slate-50 bg-indigo-600 text-white space-y-0 flex-row items-center justify-between">
@@ -37,38 +37,34 @@ export function GroupSettingsHeader({
       <div className="flex items-center gap-2">
         <button
           disabled={isRunning}
-          onClick={() => {
-            if (onUngroup && activeGroupId) {
-              update({
-                alertDialog: {
-                  title: "确认删除",
-                  message: "确定要解散（删除）整个群组吗？此操作不可恢复。",
-                  confirmLabel: "删除",
-                  cancelLabel: "取消",
-                  type: "danger",
-                  onConfirm: async () => {
-                    await runTask(
-                      "解散群组",
-                      async () => {
-                        if (onUngroup && activeGroupId) {
-                          await onUngroup(activeGroupId);
-                          setGroupId(null);
-                          setShowGroupSettings(false);
-                        }
-                        update({ alertDialog: null });
-                      },
-                      { showSuccessToast: true, silent: true },
-                    );
-                  },
-                },
-              });
-            }
-          }}
+          onClick={dissolveDialog.open}
           className="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-white/10 text-white hover:bg-white/20 transition-all active:scale-95 disabled:opacity-50"
           title="解散群组"
         >
           <Trash2 size={14} />
         </button>
+        
+        <ConfirmDialog
+          open={isDissolveOpen}
+          onOpenChange={dissolveDialog.toggle}
+          title="确认删除"
+          description="确定要解散（删除）整个群组吗？此操作不可恢复。"
+          confirmText="删除"
+          variant="destructive"
+          onConfirm={async () => {
+            await runTask(
+              "解散群组",
+              async () => {
+                if (onUngroup && activeGroupId) {
+                  await onUngroup(activeGroupId);
+                  setGroupId(null);
+                  setShowGroupSettings(false);
+                }
+              },
+              { showSuccessToast: true, silent: true },
+            );
+          }}
+        />
 
         <button
           disabled={isRunning}

@@ -34,7 +34,6 @@ export function SyncSettings(props: SyncSettingsProps) {
         refreshCloudData={props.refreshCloudData}
         cloudCount={props.cloudCount}
         isSyncing={props.isSyncing}
-        update={update}
       />
       <ExportDataSection 
         photos={props.photos}

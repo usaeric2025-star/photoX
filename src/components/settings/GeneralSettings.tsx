@@ -10,7 +10,6 @@ interface GeneralSettingsProps {
   tags: Tag[];
   manufacturers: Manufacturer[];
   photos: Photo[];
-  onHealthCheck: (photos: Photo[]) => Promise<void>;
   setSettingField: (field: keyof AppSettings, value: any) => void;
   cardClass: string;
   inputClass: string;
@@ -24,7 +23,6 @@ export function GeneralSettings({
   tags, 
   manufacturers,
   photos,
-  onHealthCheck,
   setSettingField,
   cardClass,
   inputClass,

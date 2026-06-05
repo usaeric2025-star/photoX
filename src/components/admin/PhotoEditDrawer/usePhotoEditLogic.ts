@@ -51,16 +51,16 @@ export const usePhotoEditLogic = (props: Props) => {
   const { mutateAsync: deleteManMut } = useManufacturerDelete();
 
 
-  const addTag = async (name: string) => { const tag = await addTagMut(name); return tag.id; };
-  const updateTag = async (id: string, updates: Partial<Tag>) => { await updateTagMut({ id, updates }); return true; };
+  const addTag = async (name: string) => { const tag = await (addTagMut as any)(name); return tag.id; };
+  const updateTag = async (id: string, updates: Partial<Tag>) => { await (updateTagMut as any)({ id, updates }); return true; };
   const deleteTag = async (id: string) => {
-    await deleteTagMut(id);
+    await (deleteTagMut as any)(id);
     return true;
   };
-  const addManufacturer = async (name: string) => { return await addManMut(name); };
-  const updateManufacturer = async (id: string, updates: Partial<Manufacturer>) => { await updateManMut({ id, updates }); return true; };
+  const addManufacturer = async (name: string) => { return await (addManMut as any)(name); };
+  const updateManufacturer = async (id: string, updates: Partial<Manufacturer>) => { await (updateManMut as any)({ id, updates }); return true; };
   const deleteManufacturer = async (id: string) => {
-    await deleteManMut(id);
+    await (deleteManMut as any)(id);
     return true;
   };
 

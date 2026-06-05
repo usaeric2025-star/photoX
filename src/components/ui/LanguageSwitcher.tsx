@@ -1,16 +1,13 @@
 import React, { useRef } from 'react';
 import { Globe, ChevronDown } from 'lucide-react';
 import { useUIStore } from '@/store/useUIStore';
-import { useDisclosure } from '@mantine/hooks';
-import { useClickAway } from '@/lib/hooks';
+import { useDisclosure, useClickOutside } from '@mantine/hooks';
 
 export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dropdown' | 'segmented' }) {
   const appLang = useUIStore((s) => s.appLang);
   const update = useUIStore((s) => s.update);
   const [isOpen, { toggle, close }] = useDisclosure(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useClickAway(ref as any, () => close());
+  const ref = useClickOutside(() => close());
 
   const langs = [
     { code: 'zh', label: '中文' },

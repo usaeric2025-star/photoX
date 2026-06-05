@@ -144,18 +144,7 @@ export function DrawerHeader({
 
         {editPhotoId && onDelete && (
           <button
-            onClick={() => {
-              update({
-                alertDialog: {
-                  title: l.deleteConfirm,
-                  message: l.deleteMessage,
-                  confirmLabel: l.deleteLabel,
-                  cancelLabel: l.cancelLabel,
-                  type: "danger",
-                  onConfirm: () => onDelete(),
-                },
-              });
-            }}
+            onClick={onDelete}
             disabled={isRunning}
             className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-red-50 text-red-500 border border-red-100 shadow-sm active:bg-red-100 transition-all font-bold disabled:opacity-50"
           >

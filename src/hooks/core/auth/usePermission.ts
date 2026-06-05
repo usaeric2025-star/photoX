@@ -3,6 +3,7 @@ import { useAuth } from './useAuth';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { ROLE_PERMISSIONS, getEffectiveRole, Capability } from '@/config/permissions';
 import { useSettings } from '../infra/useSettings';
+import { useLocalStorage } from '@mantine/hooks';
 
 /**
  * Unified permission and capability checking hook.
@@ -12,9 +13,12 @@ export function usePermission() {
   const { user } = useAuth();
   const { settings } = useSettings();
   
-  const isStaffMode = typeof window !== 'undefined' && 
-    window.localStorage.getItem('ais_mock_auth_passcode') === settings?.access_passcode && 
-    !!settings?.access_passcode;
+  const [passcode] = useLocalStorage({
+    key: 'ais_mock_auth_passcode',
+    defaultValue: '',
+  });
+
+  const isStaffMode = passcode === settings?.access_passcode && !!settings?.access_passcode;
     
   const role = useMemo(() => getEffectiveRole(user || null, isStaffMode), [user, isStaffMode]);
   const permissions = useMemo(() => ROLE_PERMISSIONS[role] || [], [role]);

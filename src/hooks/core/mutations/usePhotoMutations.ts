@@ -17,7 +17,7 @@ export const usePhotoDelete = createMutationHook({
   action: 'Delete',
   mutationFn: (ids: string | string[]) => deleteMany(Array.isArray(ids) ? ids : [ids]),
   invalidateKeys: [photoKeys.all],
-  optimisticUpdate: async (ids, queryClient) => {
+  optimisticUpdate: async (ids: string | string[], queryClient: any) => {
     const idList = Array.isArray(ids) ? ids : [ids];
     const idSet = new Set(idList);
 
@@ -43,7 +43,7 @@ export const usePhotoDelete = createMutationHook({
 
     return { previousData };
   },
-  rollback: (_err, _vars, context, queryClient) => {
+  rollback: (_err: any, _vars: any, context: any, queryClient: any) => {
     if (context?.previousData) {
       queryClient.setQueriesData({ queryKey: photoKeys.all }, context.previousData);
     }
@@ -64,7 +64,7 @@ export const usePhotoBatchEdit = createMutationHook({
   action: 'BatchUpdate',
   mutationFn: ({ ids, updates }: { ids: string[]; updates: Partial<Photo> }) => batchUpdate(ids, updates),
   invalidateKeys: [photoKeys.all],
-  optimisticUpdate: async ({ ids, updates }, queryClient) => {
+  optimisticUpdate: async ({ ids, updates }: { ids: string[]; updates: Partial<Photo> }, queryClient: any) => {
     const idSet = new Set(ids);
 
     await Promise.all([
@@ -88,7 +88,7 @@ export const usePhotoBatchEdit = createMutationHook({
 
     return { previousData };
   },
-  rollback: (_err, _vars, context, queryClient) => {
+  rollback: (_err: any, _vars: any, context: any, queryClient: any) => {
     if (context?.previousData) {
       queryClient.setQueriesData({ queryKey: photoKeys.all }, context.previousData);
     }
@@ -109,7 +109,7 @@ export const useTogglePin = createMutationHook({
   action: 'TogglePin',
   mutationFn: ({ id, isPinned }: { id: string; isPinned: boolean }) => update(id, { is_pinned: isPinned }),
   invalidateKeys: [photoKeys.all],
-  optimisticUpdate: async ({ id, isPinned }, queryClient) => {
+  optimisticUpdate: async ({ id, isPinned }: { id: string; isPinned: boolean }, queryClient: any) => {
     await queryClient.cancelQueries({ queryKey: photoKeys.all });
     const previousData = queryClient.getQueryData(photoKeys.all);
 
@@ -128,12 +128,12 @@ export const useTogglePin = createMutationHook({
 
     return { previousData };
   },
-  rollback: (_err, _vars, context, queryClient) => {
+  rollback: (_err: any, _vars: any, context: any, queryClient: any) => {
     if (context?.previousData) {
       queryClient.setQueriesData({ queryKey: photoKeys.all }, context.previousData);
     }
   },
-  onSuccessMessage: (data, { isPinned }) => isPinned ? '已置顶' : '已取消置顶',
+  onSuccessMessage: (data: any, { isPinned }: { isPinned: boolean }) => isPinned ? '已置顶' : '已取消置顶',
 });
 
 export const useUploadPhotos = createMutationHook({

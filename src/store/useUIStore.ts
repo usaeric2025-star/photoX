@@ -56,8 +56,6 @@ export interface UIStoreState {
   isPhotoPickerOpen: boolean;
   photoPickerGroupId: string | null;
   isMultiSelect: boolean;
-  alertDialog: AlertDialogProps | null;
-  promptDialog: PromptDialogProps | null;
   isMultiSelectMode: boolean;
   draggedPhotoId: string | null;
   focusedGroupPhotoId: string | null;
@@ -125,8 +123,6 @@ export const useUIStore = create<UIStoreState>()((set) => ({
   isMultiSelect: false,
   selectedIds: [],
   processingIds: [],
-  alertDialog: null,
-  promptDialog: null,
   isMultiSelectMode: false,
   draggedPhotoId: null,
   focusedGroupPhotoId: null,

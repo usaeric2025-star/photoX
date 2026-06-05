@@ -1,18 +1,18 @@
 import React, { useMemo } from 'react';
 import { RefreshCw, MoreHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useFilters, useCategories, useTags, useTagsDisplay, useSettings } from '@/hooks';
+import { useCategories, useTags, useTagsDisplay, useSettings, useUrlFilters } from '@/hooks';
 import { useAppLang } from '@/store/useUIStore';
 import { useDisclosure } from '@mantine/hooks';
 import { cn } from '@/lib/utils';
 import { Category } from '@/types';
 import { translations } from '@/lib/translations';
-import { photoKeys } from '@/lib/queryKeys';
+import { categoryKeys, tagKeys } from '@/lib/queryKeys';
 import { loadCategoriesFromCloud } from '@/services/category/queries';
 import { loadTagsFromCloud } from '@/services/tag/queries';
 
 export function FilterPanel() {
-    const { filters, setCategory, setTags } = useFilters();
+    const { filters: urlFilters, setCategory, setTagId } = useUrlFilters();
     const { data: categories = [] } = useCategories();
     const { data: tags = [] } = useTags();
     const { settings } = useSettings();
@@ -22,7 +22,7 @@ export function FilterPanel() {
 
     const prefetchCategories = () => {
         queryClient.prefetchQuery({
-            queryKey: photoKeys.categories(),
+            queryKey: categoryKeys.categories(),
             queryFn: loadCategoriesFromCloud,
             staleTime: 5 * 60 * 1000,
         });
@@ -30,7 +30,7 @@ export function FilterPanel() {
 
     const prefetchTags = () => {
         queryClient.prefetchQuery({
-            queryKey: photoKeys.tags(),
+            queryKey: tagKeys.tags(),
             queryFn: loadTagsFromCloud,
             staleTime: 5 * 60 * 1000,
         });
@@ -64,7 +64,7 @@ export function FilterPanel() {
                             onMouseEnter={prefetchCategories}
                             className={cn(
                                 "text-[10px] font-bold h-7 px-3 rounded-full transition-all duration-200 flex items-center justify-center cursor-pointer pointer-events-auto",
-                                filters.categoryId === cat.id 
+                                urlFilters.categoryId === cat.id 
                                     ? 'bg-[#2563EB] text-white shadow-sm shadow-blue-500/10' 
                                     : 'bg-[#F3F4F6] text-[#374151] hover:bg-[#E5E7EB]'
                             )}
@@ -100,16 +100,13 @@ export function FilterPanel() {
                     {visibleTags.map((tag) => {
                         const isPinned = pinnedIds.includes(String(tag.id));
                         const isHot = hotIds.has(String(tag.id));
-                        const isSelected = filters.tagIds?.includes(tag.id);
+                        const isSelected = urlFilters.tagId === tag.id;
 
                         return (
                            <button
                                key={tag.id}
                                onClick={() => {
-                                   const nextTags = isSelected
-                                       ? filters.tagIds?.filter(id => id !== tag.id)
-                                       : [...(filters.tagIds || []), tag.id];
-                                   setTags(nextTags);
+                                   setTagId(isSelected ? null : tag.id);
                                }}
                                className={cn(
                                    "h-6 text-[10.5px] px-3 rounded-full transition-all duration-200 flex items-center justify-center cursor-pointer pointer-events-auto border",

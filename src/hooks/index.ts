@@ -11,11 +11,9 @@ export { useScrollRestoration } from '../core/infra/useScrollRestoration';
 
 // Features Hooks
 export { useBatchEdit } from '../features/photo/useBatchEdit';
-export { useBatchConfirmation as useBatchConfirmDialog } from '../features/photo/useBatchConfirmDialog';
 export { useMultiSelect } from '../features/photo/usePhotoSelection';
 export { useTagsDisplay } from '../features/photo/useTagFiltering';
 export { useAdminCategory } from '../features/admin/useCategoryManagement';
-export { useFilters } from '../features/filters/useFilters';
 export { useUrlFilters } from './useUrlFilters';
 export { useLightbox } from './useLightbox';
 
@@ -26,7 +24,7 @@ export { usePhotoCount } from './core/queries/usePhotoCount';
 export { useCategories } from './core/queries/useCategories';
 export { useTags } from './core/queries/useTags';
 export { useManufacturers } from './core/queries/useManufacturers';
-export { useGroupList } from './core/queries/useGroupList';
+export { useGroups } from './core/queries/useGroups';
 export { useGroupDetail } from './core/queries/useGroupDetail';
 export { useInvalidatePhotos } from './queries/useInvalidatePhotos';
 

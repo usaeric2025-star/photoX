@@ -87,6 +87,7 @@ export const updatePhoto = async (
   }
 };
 
+import { api } from '@/lib/api';
 import { errorFactory, success } from '@/lib/errorFactory';
 import type { AppResult } from '@/lib/errorFactory';
 // ... other imports
@@ -99,13 +100,7 @@ export interface BatchActionResult {
 
 export async function deleteMany(ids: string[]): Promise<AppResult<BatchActionResult>> {
     try {
-      const response = await fetch('/api/admin/delete-photos', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ ids })
-      });
+      const response = await api.admin['delete-photos'].$post({ json: { ids } });
       
       const result = await response.json();
       if (!response.ok || !result.success) {

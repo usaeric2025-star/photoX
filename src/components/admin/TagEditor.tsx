@@ -2,6 +2,8 @@ import React, { useState, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { Pencil, Trash2, Heart, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useDisclosure } from "@mantine/hooks";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   useErrorHandler,
   useTagsDisplay,
@@ -35,12 +37,12 @@ export function TagEditor({
   onRenameTagRequest,
   showHotEffects = false,
 }: TagEditorProps) {
-  const { update } = useUIStore(useShallow((s) => ({ update: s.update })));
   const [searchTerm, setSearchTerm] = useState("");
   const { settings, updateSettings } = useSettings();
   const { handleError } = useErrorHandler();
   const [activeActionTag, setActiveActionTag] = useState<Tag | null>(null);
   const portalOpenedAt = useRef<number>(0);
+  const [isDeleteOpen, deleteDialog] = useDisclosure(false);
 
   const togglePin = async (tagId: string) => {
     try {
@@ -193,22 +195,7 @@ export function TagEditor({
                 type="button"
                 className="w-full flex items-center justify-center gap-3 text-red-600 bg-red-50/50 backdrop-blur-sm border border-red-100/50 font-bold py-4 rounded-2xl hover:bg-red-100 transition-all cursor-pointer shadow-sm shadow-red-500/5"
                 onClick={() => {
-                  update({
-                    alertDialog: {
-                      title: `彻底删除标签 / Permanent Delete: #${activeActionTag.name}`,
-                      message:
-                        "无法撤销且会从所有照片中移除 / This will be permanently removed from all photos.",
-                      onConfirm: () => {
-                        try {
-                          onDeleteTag(activeActionTag.id);
-                        } catch (e) {
-                           throw ErrorFactory.wrap(e, "彻底删除标签", activeActionTag.name);
-                        }
-                      },
-                      confirmLabel: "删除",
-                      type: "danger",
-                    },
-                  });
+                  deleteDialog.open();
                   setActiveActionTag(null);
                 }}
               >
@@ -227,7 +214,23 @@ export function TagEditor({
         document.body
       )}
 
-      {/* Redundant AlertDialog removed since onDeleteTag uses the unified useDelete hook which has its own dialog */}
+      {activeActionTag && (
+        <ConfirmDialog
+          open={isDeleteOpen}
+          onOpenChange={deleteDialog.toggle}
+          title={`彻底删除标签 / Permanent Delete: #${activeActionTag.name}`}
+          description="无法撤销且会从所有照片中移除 / This will be permanently removed from all photos."
+          confirmText="删除"
+          variant="destructive"
+          onConfirm={() => {
+            try {
+              onDeleteTag(activeActionTag.id);
+            } catch (e) {
+              throw ErrorFactory.wrap(e, "彻底删除标签", activeActionTag.name);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

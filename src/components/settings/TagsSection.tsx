@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { Plus, Heart, RefreshCw } from "lucide-react";
+import { useDisclosure } from "@mantine/hooks";
 import { Tag, AppSettings } from "../../types";
 import { TagItem } from "./TagItem";
-import { useUIStore } from "@/store/useUIStore";
+import { PromptDialog } from "@/components/ui/PromptDialog";
 import { useErrorHandler, useTaskExecutor, useTasks } from "@/hooks";
 import { toast } from "@/lib/ui/toast";
 import { normalizeTagName } from "@/lib/utils";
@@ -40,12 +41,15 @@ export function TagsSection({
   cardClass,
   buttonStyles,
 }: TagsSectionProps) {
-  const update = useUIStore((s) => s.update);
   const { handleError } = useErrorHandler();
   const { runTask } = useTaskExecutor();
   const { tasks } = useTasks();
   const isRunning = tasks.some((t) => t.status === "running");
   const queryClient = useQueryClient();
+
+  const [isAddOpen, addDialog] = useDisclosure(false);
+  const [isEditOpen, editDialog] = useDisclosure(false);
+  const [editingTag, setEditingTag] = useState<Tag | null>(null);
 
   const handleRefreshHotScores = async () => {
     await runTask(
@@ -56,40 +60,6 @@ export function TagsSection({
       },
       { showSuccessToast: true, silent: true },
     );
-  };
-
-  const handleAddTag = () => {
-    update({
-      promptDialog: {
-        title: "新增标签",
-        message: "输入标签名称:",
-        onSubmit: async (name: string) => {
-          if (!name.trim()) return;
-          const normalized = name.trim().toUpperCase();
-          try {
-            await addTag(normalized);
-          } catch (error: any) {
-            handleError(error, "添加标签失败");
-          }
-        },
-      },
-    });
-  };
-
-  const handleUpdateTagName = (tag: Tag) => {
-    update({
-      promptDialog: {
-        title: "编辑标签名 / Edit Tag Name",
-        message: "输入新的标签名称 / Enter new tag name:",
-        placeholder: tag.name,
-        onSubmit: async (newName: string) => {
-          const normalized = normalizeTagName(newName);
-          if (normalized && normalized !== tag.name) {
-            await updateTag(tag.id, { name: normalized });
-          }
-        },
-      },
-    });
   };
 
   return (
@@ -104,7 +74,7 @@ export function TagsSection({
         </span>
       </div>
       <div className="flex flex-wrap gap-2 items-center justify-between">
-        <button onClick={handleAddTag} className={buttonStyles.accent}>
+        <button onClick={addDialog.open} className={buttonStyles.accent}>
           <Plus size={16} /> 新增标签 / Add Tag
         </button>
         <div className="flex flex-wrap items-center gap-3.5 bg-brand-navy/5 px-4 py-2 rounded-2xl border border-brand-navy/10">
@@ -177,7 +147,7 @@ export function TagsSection({
             disabled={isRunning}
             className="px-3 py-1.5 bg-brand-gold hover:bg-brand-gold/85 text-brand-navy font-black text-[10px] uppercase tracking-wider rounded-xl transition-all shadow-sm flex items-center gap-1 cursor-pointer disabled:opacity-50"
             title="重新计算所有标签的使用次数和热度分值"
-          >
+           >
             <RefreshCw size={12} />
             <span>刷新热门标签 / Refresh</span>
           </button>
@@ -197,7 +167,10 @@ export function TagsSection({
               tag={tag}
               activeTagMenuId={activeTagMenuId}
               setActiveTagMenuId={setActiveTagMenuId}
-              handleUpdateTagName={handleUpdateTagName}
+              handleUpdateTagName={(t) => {
+                setEditingTag(t);
+                editDialog.open();
+              }}
               updateTag={updateTag}
               deleteTag={deleteTag}
               isPinned={(settings?.pinned_tags || []).includes(tag.id)}
@@ -205,6 +178,37 @@ export function TagsSection({
             />
           ))}
       </div>
+
+      <PromptDialog
+        open={isAddOpen}
+        onOpenChange={addDialog.toggle}
+        title="新增标签"
+        description="输入标签名称:"
+        onConfirm={async (name: string) => {
+          if (!name.trim()) return;
+          const normalized = name.trim().toUpperCase();
+          try {
+            await addTag(normalized);
+          } catch (error: any) {
+            handleError(error, "添加标签失败");
+          }
+        }}
+      />
+
+      <PromptDialog
+        open={isEditOpen}
+        onOpenChange={editDialog.toggle}
+        title="编辑标签名 / Edit Tag Name"
+        description="输入新的标签名称 / Enter new tag name:"
+        placeholder={editingTag?.name}
+        onConfirm={async (newName: string) => {
+          const normalized = normalizeTagName(newName);
+          if (normalized && editingTag && normalized !== editingTag.name) {
+            await updateTag(editingTag.id, { name: normalized });
+          }
+          setEditingTag(null);
+        }}
+      />
     </section>
   );
 }

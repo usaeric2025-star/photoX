@@ -1,4 +1,4 @@
-import { compressImage } from '@/services/storage/uploadService';
+import { compressImage } from '@/services/storage/uploadUtils';
 import { generateThumbHash } from '@/lib/image/thumbHash';
 import { IMAGE_COMPRESS } from '@/constants/config';
 

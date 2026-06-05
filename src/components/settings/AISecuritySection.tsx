@@ -3,6 +3,8 @@ import { Sparkles, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { AppSettings } from '../../types';
 
+import { api } from '@/lib/api';
+
 interface AISecuritySectionProps {
   geminiApiKey: string;
   setGeminiApiKey: (key: string) => void;
@@ -55,7 +57,7 @@ export function AISecuritySection({
 
   const fetchKeysStatus = async () => {
     try {
-      const res = await fetch('/api/admin/settings/get-keys');
+      const res = await api.admin.settings['get-keys'].$get() as any;
       if (res.ok) {
         const data = await res.json();
         if (data.success) {
@@ -81,15 +83,13 @@ export function AISecuritySection({
     setIsTesting(provider);
     try {
       const targetKey = provider === 'agnes' ? agnesKey : localOpenRouterKey;
-      const res = await fetch('/api/ai/test', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+      const res = await api.ai.test.$post({
+        json: { 
           provider,
           apiKey: targetKey === "••••••••••••••••" ? "" : targetKey,
           model: provider === 'openrouter' ? localCustomModel : undefined
-        })
-      });
+        }
+      }) as any;
       const data = await res.json();
       if (data.success) {
         toast.success(`${provider === 'agnes' ? 'Agnes' : 'OpenRouter'} 连接成功！`);
@@ -108,19 +108,17 @@ export function AISecuritySection({
 
   const saveKey = async (provider: 'agnes' | 'openrouter', apiKey: string) => {
     if (apiKey === "••••••••••••••••" || !apiKey.trim()) {
-      toast.success(`${provider === 'agnes' ? 'Agnes' : 'OpenRouter'} 密鑰未變更`);
+      toast.success(`${provider === 'agnes' ? 'Agnes' : 'OpenRouter'} 密钥未变更`);
       return;
     }
     setIsSaving(provider);
     try {
-      const res = await fetch('/api/admin/settings/save-key', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ provider, apiKey })
-      });
+      const res = await api.admin.settings['save-key'].$post({
+        json: { provider, apiKey }
+      }) as any;
       const data = await res.json();
       if (res.ok && data.success) {
-        toast.success(`${provider === 'agnes' ? 'Agnes' : 'OpenRouter'} 密鑰已保存`);
+        toast.success(`${provider === 'agnes' ? 'Agnes' : 'OpenRouter'} 密钥已保存`);
         if (provider === 'agnes') {
             setAgnesKey('••••••••••••••••');
             setIsEditingAgnes(false);
@@ -131,9 +129,9 @@ export function AISecuritySection({
         }
         await fetchKeysStatus();
       } else {
-        toast.error("保存失敗");
+        toast.error("保存失败");
       }
-    } catch { toast.error("請求超時"); }
+    } catch { toast.error("请求超时"); }
     finally {
       setIsSaving(null);
     }

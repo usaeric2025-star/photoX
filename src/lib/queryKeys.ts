@@ -1,20 +1,36 @@
-import type { Filters } from '@/types/photo';
+export interface PhotoFilters {
+  category_id?: string | null;
+  tag_id?: string | null;
+  manufacturer_id?: string | null;
+  searchQuery?: string | null;
+  sortOrder?: string | null;
+  groupId?: string | null;
+  photoId?: string | null;
+  isAdminMode?: boolean;
+  onlyUngrouped?: boolean;
+  is_hidden?: boolean;
+  limit?: number;
+  pageSize?: number;
+}
+
+const PHOTO_ALL = ['photos'] as const;
+const GROUP_ALL = ['groups'] as const;
 
 export const queryKeys = {
   photos: {
-    all: ['photos'] as const,
-    lists: () => [...queryKeys.photos.all, 'list'] as const,
-    list: (filters: Filters) => [...queryKeys.photos.lists(), filters] as const,
-    details: () => [...queryKeys.photos.all, 'detail'] as const,
-    detail: (id: string) => [...queryKeys.photos.details(), id] as const,
-    infinite: () => [...queryKeys.photos.all, 'infinite'] as const,
-    count: () => [...queryKeys.photos.all, 'count'] as const,
+    all: PHOTO_ALL,
+    lists: () => [...PHOTO_ALL, 'list'] as const,
+    list: (filters?: PhotoFilters) => [...PHOTO_ALL, 'list', filters] as const,
+    details: () => [...PHOTO_ALL, 'detail'] as const,
+    detail: (id: string) => [...PHOTO_ALL, 'detail', id] as const,
+    infinite: (filters?: PhotoFilters, freshness?: string) => [...PHOTO_ALL, 'infinite', filters, freshness],
+    count: (filters?: PhotoFilters) => [...PHOTO_ALL, 'count', filters],
   },
   groups: {
-    all: ['groups'] as const,
-    lists: () => [...queryKeys.groups.all, 'list'] as const,
-    list: (filters: Filters) => [...queryKeys.groups.lists(), filters] as const,
-    detail: (id: string) => [...queryKeys.groups.all, 'detail', id] as const,
+    all: GROUP_ALL,
+    lists: () => [...GROUP_ALL, 'list'] as const,
+    list: (filters?: any) => [...GROUP_ALL, 'list', filters] as const,
+    detail: (id: string, freshness?: string) => [...GROUP_ALL, 'detail', id, freshness],
   },
   tags: {
     all: ['tags'] as const,
@@ -33,6 +49,13 @@ export const queryKeys = {
   },
   settings: {
     all: ['settings'] as const,
+    lists: () => [...queryKeys.settings.all, 'list'] as const,
+    list: () => [...queryKeys.settings.lists()] as const,
+    detail: (key: string) => [...queryKeys.settings.all, 'detail', key] as const,
+  },
+  storage: {
+    all: ['storage'] as const,
+    audit: () => [...queryKeys.storage.all, 'audit'] as const,
   },
 };
 
@@ -43,3 +66,4 @@ export const tagKeys = queryKeys.tags;
 export const categoryKeys = queryKeys.categories;
 export const manufacturerKeys = queryKeys.manufacturers;
 export const settingsKeys = queryKeys.settings;
+export const storageKeys = queryKeys.storage;

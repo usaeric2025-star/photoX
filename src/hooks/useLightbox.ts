@@ -32,7 +32,7 @@ export const useLightbox = () => {
     sortOrder: filters.sortOrder,
     isAdminMode: isAdmin,
     onlyUngrouped: false,
-    is_hidden: filters.isHidden,
+    is_hidden: filters.is_hidden,
   }, 100, !groupId);
   
   const isGroupMode = !!groupId; // Within a group's context

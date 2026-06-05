@@ -6,7 +6,6 @@ import { useAuth, useTasks, useSyncMutation, useErrorHandler, useAdminMode, useT
 import { backfillThumbHashes } from '@/services/photo/backfillService';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { DataLoadingContainer } from '@/components/ui/DataLoadingContainer';
-import { AdminGlobalModals } from '@/components/admin/AdminGlobalModals';
 import { BatchEditScreen } from '@/components/admin/BatchEditScreen';
 import { StatisticsScreen } from '@/components/admin/StatisticsScreen';
 import { SettingsScreen } from '@/components/SettingsScreen';
@@ -22,7 +21,6 @@ import TasksPage from '@/pages/AdminPage/TasksPage';
 import MaintenanceHistoryPage from '@/pages/AdminPage/MaintenanceHistoryPage';
 import { ErrorLogViewer } from '@/components/admin/ErrorLogViewer';
 import { useUIStore, useShallow } from '@/store/useUIStore';
-import { useFilters } from '@/features/filters/useFilters';
 import { useGroupView } from '@/features/groups/useGroupView';
 import { useAdminActions } from '@/features/admin/useAdminActions';
 import { usePhotoGallery } from '@/features/photos/usePhotoGallery';
@@ -33,8 +31,14 @@ import { logger } from '@/lib/logger';
 
 /* Removed ErrorFallback component */
 
+import { useLocalStorage } from '@mantine/hooks';
+
 export function AdminPageContent() {
   logger.debug('🔍 AdminPageContent 组件渲染');
+  const [passcode, setPasscode, removePasscode] = useLocalStorage({
+    key: 'ais_mock_auth_passcode',
+    defaultValue: '',
+  });
 
   const { user, isLoading: isAuthLoading, loginWithGoogle } = useAuth();
   logger.debug('🔍 useAuth 结果:', { user: user?.email, isAuthLoading });
@@ -46,7 +50,6 @@ export function AdminPageContent() {
     photosError: (infinitePhotosQuery as any)?.error?.message 
   });
 
-  const { filters: userFilters } = useFilters();
   const { filters: urlFilters } = useUrlFilters();
   const { deletePhoto, updatePhoto } = useAdminActions();
   const adminActions = useAdminActions();
@@ -88,12 +91,10 @@ export function AdminPageContent() {
                         location.pathname === '/admin/history/maintenance' ? 'history_maintenance' :
                         store.activeScreen;
 
-  const isStaffMode = typeof window !== 'undefined' && 
-    window.localStorage.getItem('ais_mock_auth_passcode') === settings?.access_passcode && 
-    !!settings?.access_passcode;
+  const isStaffMode = passcode === settings?.access_passcode && !!settings?.access_passcode;
   const setIsStaffMode = (val: boolean) => {
     if (!val) {
-      window.localStorage.removeItem('ais_mock_auth_passcode');
+      removePasscode();
       window.location.reload();
     }
   };
@@ -138,11 +139,12 @@ export function AdminPageContent() {
 
 
 
-  const lastSyncTime = (() => {
-    // [SYNC-STORAGE-IN-RENDER] @ src/pages/AdminPage/AdminPageContent.tsx:108 - Read from storage in render
-    const saved = localStorage.getItem('lastSyncTime');
-    return saved ? new Date(saved).getTime() : null;
-  })();
+  const [lastSyncTimeVal] = useLocalStorage<string | null>({
+    key: 'lastSyncTime',
+    defaultValue: null,
+  });
+
+  const lastSyncTime = lastSyncTimeVal ? new Date(lastSyncTimeVal).getTime() : null;
 
   const adminRef = React.useRef(adminActions);
   const storeRef = React.useRef(store);
@@ -167,8 +169,6 @@ export function AdminPageContent() {
           isLoading={isLoading && !forceShow}
           hasData={(!!photos && photos.length > 0) || forceShow}
         >
-          <AdminGlobalModals />
-      
         <div className="flex h-screen bg-slate-50 overflow-hidden w-full">
             <div className="hidden lg:block shrink-0 h-full">
               <AdminSidebar />

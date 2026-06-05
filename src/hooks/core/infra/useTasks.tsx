@@ -3,6 +3,8 @@ import { ErrorFactory } from '../../../lib/error/ErrorFactory';
 import { motion, AnimatePresence } from 'motion/react';
 import { Loader2, X, ChevronUp, ChevronDown, CheckCircle2, AlertCircle, PlayCircle } from 'lucide-react';
 
+import { useLocalStorage } from '@mantine/hooks';
+
 export type TaskStatus = 'running' | 'completed' | 'error' | 'cancelled';
 
 export interface BackgroundTask {
@@ -34,37 +36,21 @@ const STORAGE_KEY = 'photox_background_tasks';
 export function TaskProvider({ children }: { children: React.ReactNode }) {
   const cancelCallbacks = useRef<Map<string, () => void>>(new Map());
 
-  const [tasks, setTasks] = useState<BackgroundTask[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
+  const [tasks, setTasks] = useLocalStorage<BackgroundTask[]>({
+    key: STORAGE_KEY,
+    defaultValue: [],
+    serialize: (value) => JSON.stringify(value.map(({ onCancel: _, ...t }) => t)),
+    deserialize: (value) => {
       try {
-        const parsed = JSON.parse(saved);
-        // Only keep recent tasks, and mark running ones as potentially needing resume
-        return parsed.map((t: BackgroundTask) => ({
-          ...t,
-          // We don't mark them as running immediately if we want to wait for the resume logic
-        }));
+        const parsed = JSON.parse(value || '[]');
+        return parsed.map((t: any) => ({ ...t }));
       } catch (e) {
         return [];
       }
     }
-    return [];
   });
 
   const [isAvoidingSelection, setAvoidingSelection] = useState(false);
-
-  const saveTasks = (newTasks: BackgroundTask[]) => {
-    // Exclude functional elements prior to storage
-    const serializable = newTasks.map(({ onCancel, ...t }) => t);
-    // [AUTH-STORAGE-BLOCK] @ src/hooks/core/infra/useTasks.tsx:60 - Push storage write to next frame to avoid blocking UI during auth/sync
-    requestAnimationFrame(() => {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(serializable));
-      } catch (e) {
-        console.error('Failed to save tasks to localStorage:', e);
-      }
-    });
-  };
 
   const addTask = useCallback((taskData: Omit<BackgroundTask, 'id' | 'status' | 'progress'>) => {
     const id = Math.random().toString(36).substring(2, 9);
@@ -72,52 +58,36 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       cancelCallbacks.current.set(id, taskData.onCancel);
     }
     const newTask: BackgroundTask = { ...taskData, id, status: 'running', progress: 0 };
-    setTasks(prev => {
-      const updated = [...prev, newTask];
-      saveTasks(updated);
-      return updated;
-    });
+    setTasks(prev => [...prev, newTask]);
     return id;
-  }, []);
+  }, [setTasks]);
 
   const updateTask = useCallback((id: string, updates: Partial<BackgroundTask>) => {
     if (updates.status && updates.status !== 'running') {
       cancelCallbacks.current.delete(id);
     }
-    setTasks(prev => {
-      const updated = prev.map(t => {
-        if (t.id === id) {
-          const newStatus = updates.status || t.status;
-          const isFinished = newStatus !== 'running';
-          return { 
-            ...t, 
-            ...updates, 
-            finished_at: isFinished && !t.finished_at ? Date.now() : t.finished_at 
-          };
-        }
-        return t;
-      });
-      saveTasks(updated);
-      return updated;
-    });
-  }, []);
+    setTasks(prev => prev.map(t => {
+      if (t.id === id) {
+        const newStatus = updates.status || t.status;
+        const isFinished = newStatus !== 'running';
+        return { 
+          ...t, 
+          ...updates, 
+          finished_at: isFinished && !t.finished_at ? Date.now() : t.finished_at 
+        };
+      }
+      return t;
+    }));
+  }, [setTasks]);
 
   const removeTask = useCallback((id: string) => {
     cancelCallbacks.current.delete(id);
-    setTasks(prev => {
-      const updated = prev.filter(t => t.id !== id);
-      saveTasks(updated);
-      return updated;
-    });
-  }, []);
+    setTasks(prev => prev.filter(t => t.id !== id));
+  }, [setTasks]);
 
   const clearCompleted = useCallback(() => {
-    setTasks(prev => {
-      const updated = prev.filter(t => t.status === 'running');
-      saveTasks(updated);
-      return updated;
-    });
-  }, []);
+    setTasks(prev => prev.filter(t => t.status === 'running'));
+  }, [setTasks]);
 
   const cancelTask = useCallback((id: string) => {
     const cb = cancelCallbacks.current.get(id);
@@ -150,12 +120,11 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
           if (t.finished_at && now - t.finished_at > 8000) return false;
           return true;
         });
-        if (next.length !== prev.length) saveTasks(next);
         return next;
       });
     }, 2000);
     return () => clearInterval(timer);
-  }, []);
+  }, [setTasks]);
 
   const value = React.useMemo(() => ({
     tasks, addTask, updateTask, removeTask, clearCompleted, isAvoidingSelection, setAvoidingSelection, cancelTask, isTaskRunning

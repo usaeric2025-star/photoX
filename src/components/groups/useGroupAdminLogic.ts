@@ -33,7 +33,6 @@ export const useGroupAdminLogic = ({
   
   const { appLang, isMultiSelect, selectedIds, groupSettingsOpen, batchEditingIds, focusedGroupPhotoId, draggedPhotoId, processingIds, update } = useUIStore(
     useShallow((s) => ({ 
-        update: s.update, 
         appLang: s.appLang, 
         isMultiSelect: s.isMultiSelect, 
         selectedIds: s.selectedIds, 
@@ -41,7 +40,8 @@ export const useGroupAdminLogic = ({
         batchEditingIds: s.batchEditingIds, 
         focusedGroupPhotoId: s.focusedGroupPhotoId, 
         draggedPhotoId: s.draggedPhotoId,
-        processingIds: s.processingIds 
+        processingIds: s.processingIds,
+        update: s.update
     })),
   );
 
@@ -214,51 +214,58 @@ export const useGroupAdminLogic = ({
     }
   }, [selectedIds.length, isMultiSelect]);
 
-  const confirmBulkRemove = useCallback(
-    (ids: string[]) => {
-      // Determine the true remaining count (including hidden photos)
+  const performBulkRemove = useCallback(
+    async (ids: string[]) => {
       const allGroupPhotos = dbGroupPhotos;
       const remainingCount = allGroupPhotos.length - ids.length;
       const isDissolving = remainingCount <= 1;
 
-      update({
-        alertDialog: {
-          title: isDissolving ? "确认解散群组" : "确认批量移出",
-          message: isDissolving
-            ? `移出后该组将只剩 ${remainingCount} 张照片。系统会自动将剩余照片也移出并解散群组。确定继续吗？`
-            : `确定要将选中的 ${ids.length} 张照片移出群组吗？`,
-          onConfirm: async () => {
-            try {
-              update({ isMultiSelect: false, selectedIds: [] });
+      try {
+        update({ isMultiSelect: false, selectedIds: [] });
 
-              if (activeGroupId) {
-                const targetIds = isDissolving
-                  ? allGroupPhotos.map((p) => p.id)
-                  : ids;
-                await removePhotosBatch({
-                  photoIds: targetIds,
-                  groupId: activeGroupId,
-                });
-                sessionStorage.removeItem(`draft_group_${activeGroupId}`);
+        if (activeGroupId) {
+          const targetIds = isDissolving
+            ? allGroupPhotos.map((p) => p.id)
+            : ids;
+          await removePhotosBatch({
+            photoIds: targetIds,
+            groupId: activeGroupId,
+          });
+          sessionStorage.removeItem(`draft_group_${activeGroupId}`);
 
-                if (isDissolving) {
-                  setGroupId(null);
-                }
-              }
-            } catch (err: any) {
-              handleError(err, "操作失败");
-            }
-            update({ alertDialog: null });
-          },
-        },
-      });
+          if (isDissolving) {
+            setGroupId(null);
+          }
+        }
+      } catch (err: any) {
+        handleError(err, "操作失败");
+      }
     },
     [
       handleError,
       dbGroupPhotos,
       activeGroupId,
       removePhotosBatch,
+      setGroupId,
+      update
     ],
+  );
+
+  const getBulkRemoveInfo = useCallback(
+    (ids: string[]) => {
+      const allGroupPhotos = dbGroupPhotos;
+      const remainingCount = allGroupPhotos.length - ids.length;
+      const isDissolving = remainingCount <= 1;
+
+      return {
+        isDissolving,
+        title: isDissolving ? "确认解散群组" : "确认批量移出",
+        message: isDissolving
+          ? `移出后该组将只剩 ${remainingCount} 张照片。系统会自动将剩余照片也移出并解散群组。确定继续吗？`
+          : `确定要将选中的 ${ids.length} 张照片移出群组吗？`,
+      };
+    },
+    [dbGroupPhotos],
   );
 
   const persistPhotoChange = useCallback(
@@ -341,40 +348,31 @@ export const useGroupAdminLogic = ({
     async (newDims: Dimension[]) => {
       if (!activeGroupId || newDims.length === 0) return;
 
-      update({
-        alertDialog: {
-          title: "确认批量修改尺寸",
-          message: `确定要将群组内所有 ${activeGroupPhotos.length} 张照片的尺寸更新为当前设置吗？此操作不可撤销。`,
-          onConfirm: async () => {
-            try {
-              if (onUpdatePhotosBulk) {
-                await onUpdatePhotosBulk(
-                  activeGroupPhotos.map((p) => p.id),
-                  { dimensions: newDims },
-                );
-              } else if (onUpdatePhoto) {
-                await Promise.all(
-                  activeGroupPhotos.map((p) =>
-                    onUpdatePhoto(p.id, { dimensions: newDims }),
-                  ),
-                );
-              } else {
-                const { updatePhoto: serviceUpdatePhoto } =
-                  await import("@/services/photo/commands");
-                await Promise.all(
-                  activeGroupPhotos.map((p) =>
-                    serviceUpdatePhoto(p.id, { dimensions: newDims }),
-                  ),
-                );
-              }
-            } catch (err: any) {
-              handleError(err, "批量更新尺寸失败");
-              throw err;
-            }
-            update({ alertDialog: null });
-          },
-        },
-      });
+      try {
+        if (onUpdatePhotosBulk) {
+          await onUpdatePhotosBulk(
+            activeGroupPhotos.map((p) => p.id),
+            { dimensions: newDims },
+          );
+        } else if (onUpdatePhoto) {
+          await Promise.all(
+            activeGroupPhotos.map((p) =>
+              onUpdatePhoto(p.id, { dimensions: newDims }),
+            ),
+          );
+        } else {
+          const { updatePhoto: serviceUpdatePhoto } =
+            await import("@/services/photo/commands");
+          await Promise.all(
+            activeGroupPhotos.map((p) =>
+              serviceUpdatePhoto(p.id, { dimensions: newDims }),
+            ),
+          );
+        }
+      } catch (err: any) {
+        handleError(err, "批量更新尺寸失败");
+        throw err;
+      }
     },
     [
       activeGroupId,
@@ -429,7 +427,7 @@ export const useGroupAdminLogic = ({
         onBatchAiAnalyze?.(targetPhotos);
         update({ isMultiSelect: false, selectedIds: [] });
       } else if (action === "remove") {
-        confirmBulkRemove(selectedIds);
+        // Handled by component layer via confirmBulkRemove callback
       } else if (action === "batch") {
         onBatchEdit?.(selectedIds);
         update({ isMultiSelect: false, selectedIds: [] });
@@ -437,10 +435,10 @@ export const useGroupAdminLogic = ({
     },
     [
       activeGroupPhotos,
-      confirmBulkRemove,
       onBatchAiAnalyze,
       onBatchEdit,
       selectedIds,
+      update
     ],
   );
 
@@ -454,7 +452,8 @@ export const useGroupAdminLogic = ({
     virtualGridRef,
     currentHighlightId,
     handleScroll,
-    confirmBulkRemove,
+    confirmBulkRemove: getBulkRemoveInfo,
+    performBulkRemove,
     persistPhotoChange,
     handleUpdateGroupData,
     handleToggleTag,

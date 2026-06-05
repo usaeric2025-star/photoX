@@ -2,6 +2,9 @@ import React from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Dialog } from "@base-ui/react/dialog";
 import { useForm } from "@mantine/form";
+import { useDisclosure } from "@mantine/hooks";
+import { ConfirmDialog } from "../../ui/ConfirmDialog";
+import { PromptDialog } from "../../ui/PromptDialog";
 import { ProductFormData, Photo } from "../../../types";
 import { HeadlessSlot } from "../../../lib/component-contract";
 import { usePhotoEditLogic } from "./usePhotoEditLogic";
@@ -32,7 +35,6 @@ import { cleanPhotos } from "../../../lib/filters";
 import { PAGINATION } from "../../../constants/config";
 import { useAdminActions } from "@/features/admin/useAdminActions";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
-import { useFilters } from "@/features/filters/useFilters";
 
 /**
  * [V2.14-SLOT-CONTRACT] PhotoEditDrawer Props
@@ -45,13 +47,12 @@ interface PhotoEditDrawerProps {
 }
 
 export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
-  const { filters } = useFilters();
   const { filters: urlFilters } = useUrlFilters();
   const {
     categoryId: filterCatId,
-    tagIds: filterTagIds,
+    tagId: filterTagId,
     searchQuery: debouncedSearchQuery,
-  } = filters;
+  } = urlFilters;
 
   const editPhotoId = useUIStore((s) => s.editPhotoId);
   const newPhotoData = useUIStore((s) => s.newPhotoData);
@@ -76,16 +77,13 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
   });
 
   const adminActions = useAdminActions();
-  const onDeletePhoto = (id: string) => 
-    update({
-      alertDialog: {
-        title: "确定要删除此照片吗？",
-        message: "此操作不可撤销，照片将从云端彻底移除。",
-        onConfirm: () => adminActions.deletePhoto([id]),
-        confirmLabel: "删除",
-        type: "danger",
-      },
-    });
+  const [isDeleteOpen, deleteDialog] = useDisclosure(false);
+  const [isAddMfrOpen, addMfrDialog] = useDisclosure(false);
+  const [isEditMfrOpen, editMfrDialog] = useDisclosure(false);
+  const [editingMfr, setEditingMfr] = React.useState<{ id: string; name: string } | null>(null);
+
+  const onDeletePhoto = () => deleteDialog.open();
+  
   const onUpdatePhoto = (id: string, data: Partial<Photo>) =>
     adminActions.updatePhoto(id, data);
 
@@ -166,10 +164,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
   const infinitePhotosQuery = usePhotos(
     {
       category_id: filterCatId,
-      tag_id:
-        Array.isArray(filterTagIds) && filterTagIds.length > 0
-          ? filterTagIds[0]
-          : null,
+      tag_id: filterTagId,
       searchQuery: debouncedSearchQuery,
       sortOrder: urlFilters.sortOrder,
       isAdminMode: true,
@@ -179,7 +174,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
 
   const photoCountQuery = usePhotoCount({
     category_id: filterCatId,
-    tag_id: Array.isArray(filterTagIds) && filterTagIds.length > 0 ? filterTagIds[0] : null,
+    tag_id: filterTagId,
     searchQuery: debouncedSearchQuery,
     isAdminMode: true,
   });
@@ -311,7 +306,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
                     onAbort={onCancelAnalyze}
                     onAiAnalyze={logic.triggerAiAnalyze}
                     onDelete={
-                      onDeletePhoto ? () => onDeletePhoto(editPhotoId!) : undefined
+                      onDeletePhoto ? () => onDeletePhoto() : undefined
                     }
                     onSave={logic.handleSave}
                     onToggleHidden={logic.toggleHidden}
@@ -327,6 +322,20 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
                     }}
                     isRunning={logic.isRunning}
                     totalPhotosCount={totalPhotosCount}
+                  />
+
+                  <ConfirmDialog
+                    open={isDeleteOpen}
+                    onOpenChange={deleteDialog.toggle}
+                    title="确定要删除此照片吗？"
+                    description="此操作不可撤销，照片将从云端彻底移除。"
+                    confirmText="删除"
+                    variant="destructive"
+                    onConfirm={async () => {
+                      if (editPhotoId) {
+                        await adminActions.deletePhoto([editPhotoId]);
+                      }
+                    }}
                   />
 
                   <div className="flex-1 overflow-hidden flex flex-col pt-2">
@@ -380,31 +389,10 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
                             onAddTag={logic.addTag}
                             onUpdateTag={logic.updateTag}
                             onDeleteTag={logic.deleteTag}
-                            onAddManufacturer={() => {
-                              update({
-                                promptDialog: {
-                                  title: "新增厂商 / New Manufacturer",
-                                  placeholder: "输入厂商名称",
-                                  onSubmit: async (name: string) => {
-                                    await logic.addManufacturer(name);
-                                  },
-                                },
-                              });
-                            }}
+                            onAddManufacturer={addMfrDialog.open}
                             onEditManufacturer={(mfr) => {
-                              update({
-                                promptDialog: {
-                                  title: "编辑生产商 / Edit Manufacturer",
-                                  placeholder: mfr.name,
-                                  onSubmit: async (name: string) => {
-                                    const trimmed = name.trim();
-                                    if (trimmed)
-                                      await logic.updateManufacturer(mfr.id, {
-                                        name: trimmed,
-                                      });
-                                  },
-                                },
-                              });
+                              setEditingMfr(mfr);
+                              editMfrDialog.open();
                             }}
                             onUpdateManufacturer={logic.updateManufacturer}
                             onDeleteManufacturer={logic.deleteManufacturer}
@@ -420,6 +408,31 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
                             t={t}
                           />
                         </TabsContent>
+
+                        <PromptDialog
+                          open={isAddMfrOpen}
+                          onOpenChange={addMfrDialog.toggle}
+                          title="新增厂商 / New Manufacturer"
+                          placeholder="输入厂商名称"
+                          onConfirm={async (name: string) => {
+                            await logic.addManufacturer(name);
+                          }}
+                        />
+
+                        <PromptDialog
+                          open={isEditMfrOpen}
+                          onOpenChange={editMfrDialog.toggle}
+                          title="编辑生产商 / Edit Manufacturer"
+                          placeholder={editingMfr?.name || "输入新名称"}
+                          onConfirm={async (name: string) => {
+                            const trimmed = name.trim();
+                            if (trimmed && editingMfr)
+                              await logic.updateManufacturer(editingMfr.id, {
+                                name: trimmed,
+                              });
+                            setEditingMfr(null);
+                          }}
+                        />
                       </div>
                     </Tabs>
                   </div>

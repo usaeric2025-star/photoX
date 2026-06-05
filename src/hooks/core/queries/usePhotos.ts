@@ -28,7 +28,7 @@ export const usePhotos = (filters: {
       isAdminMode: filters.isAdminMode ?? false,
       onlyUngrouped: filters.onlyUngrouped ?? false, 
       manufacturer_id: filters.manufacturer_id ?? null,
-      is_hidden: filters.is_hidden ?? null,
+      is_hidden: filters.is_hidden ?? undefined,
       limit 
     }),
     queryFn: async ({ pageParam = 1, signal }) => {

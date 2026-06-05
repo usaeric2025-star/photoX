@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Photo } from "../../types";
+import { useDisclosure } from "@mantine/hooks";
+import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { GroupSettingsSheet } from "./GroupSettingsSheet";
 import { GroupDetailSkeleton } from "./GroupDetailSkeleton";
 import { GroupHeader } from "./GroupHeader";
@@ -39,24 +41,34 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
   const photoPickerGroupId = useUIStore((s) => s.photoPickerGroupId);
   const update = useUIStore((s) => s.update);
 
+  const [isDissolveOpen, dissolveDialog] = useDisclosure(false);
   const adminActions = useAdminActions();
   const { dissolve } = useGroupMutations();
   const onUngroup = async (groupId: string) => {
-    await dissolve.execute(groupId);
+    await (dissolve.execute as any)(groupId);
   };
   const storeEditPhoto = (p: Photo | string) =>
     update({ editPhotoId: typeof p === "string" ? p : p.id });
   const analyzeGroupById = async (id: string) => {}; // Unused or needs porting
   const handleAddToGroup = async (ids: string[], groupId: string) => {
-    await adminActions.batchUpdate.mutateAsync({
+    await (adminActions.batchUpdate.mutateAsync as any)({
       ids,
       updates: { group_id: groupId },
     });
   };
 
-  const { activeGroupPhotos, focusedGroupPhotoId, draggedPhotoId, groupSettingsOpen, groupData, setGroupData, isGroupDataLoading, containerRef, virtualGridRef, currentHighlightId, handleScroll, confirmBulkRemove, persistPhotoChange, handleUpdateGroupData, handleBatchUpdateDimensions, handleReorder, isMultiSelect, setCover, isGroupPhotosLoading, handleBulkAction: hookHandleBulkAction } = useGroupAdminLogic({
+  const [isBulkRemoveOpen, bulkRemoveDialog] = useDisclosure(false);
+  const [bulkRemoveRequest, setBulkRemoveRequest] = useState<{ ids: string[], title: string, message: string } | null>(null);
+
+  const { activeGroupPhotos, focusedGroupPhotoId, draggedPhotoId, groupSettingsOpen, groupData, setGroupData, isGroupDataLoading, containerRef, virtualGridRef, currentHighlightId, handleScroll, confirmBulkRemove, performBulkRemove, persistPhotoChange, handleUpdateGroupData, handleBatchUpdateDimensions, handleReorder, isMultiSelect, setCover, isGroupPhotosLoading, handleBulkAction: hookHandleBulkAction } = useGroupAdminLogic({
     initialPhotoId: props.initialPhotoId,
   });
+
+  const handleBulkRemoveRequest = (ids: string[]) => {
+    const info = confirmBulkRemove(ids);
+    setBulkRemoveRequest({ ids, ...info });
+    bulkRemoveDialog.open();
+  };
 
   const translate =
     translations[
@@ -149,7 +161,7 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
     };
 
   const handleUngroupLightbox = (photoId: string) => {
-      confirmBulkRemove([photoId]);
+      handleBulkRemoveRequest([photoId]);
       setPhotoId(null);
       update({ focusedGroupPhotoId: null });
     };
@@ -203,8 +215,8 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
 
             {/* Unified Multi-Select Floating Bar */}
             <SelectionToolbar
-              onDelete={confirmBulkRemove}
-              onHide={(ids) => adminActions.batchUpdate.mutateAsync({ ids, updates: { is_hidden: true } })}
+              onDelete={handleBulkRemoveRequest}
+              onHide={(ids) => (adminActions.batchUpdate.mutateAsync as any)({ ids, updates: { is_hidden: true } })}
               onCopy={(ids) => hookHandleBulkAction('batch')}
             />
 
@@ -257,24 +269,7 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
                 {/* 4. Dissolve button */}
                 <button
                   type="button"
-                  onClick={() => {
-                    update?.({ 
-                      alertDialog: {
-                        title: appLang === 'zh' ? '解散合组' : 'Dissolve',
-                        message: appLang === 'zh' ? '确定要解散此合组吗？' : 'Are you sure you want to dissolve this group?',
-                        type: 'danger',
-                        onConfirm: async () => {
-                           if (!filters.groupId) return;
-                           try {
-                              await dissolve.mutateAsync(filters.groupId);
-                              setGroupId(null);
-                           } catch (err) {
-                              toast.error(`解散失败: ${(err as Error).message}`);
-                           }
-                        }
-                      }
-                    });
-                  }}
+                  onClick={dissolveDialog.open}
                   className="flex flex-col items-center gap-1 text-[9px] font-black uppercase tracking-tight text-slate-500 hover:text-red-600 transition-colors"
                 >
                   <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100 mb-1 group-hover:bg-red-50 transition-colors">
@@ -284,6 +279,39 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
                 </button>
               </div>
             )}
+            
+            <ConfirmDialog
+              open={isDissolveOpen}
+              onOpenChange={dissolveDialog.toggle}
+              title={appLang === 'zh' ? '解散合组' : 'Dissolve'}
+              description={appLang === 'zh' ? '确定要解散此合组吗？' : 'Are you sure you want to dissolve this group?'}
+              confirmText={appLang === 'zh' ? '确定' : 'Confirm'}
+              variant="destructive"
+              onConfirm={async () => {
+                 if (!filters.groupId) return;
+                 try {
+                    await (dissolve.mutateAsync as any)(filters.groupId);
+                    setGroupId(null);
+                 } catch (err) {
+                    toast.error(`解散失败: ${(err as Error).message}`);
+                 }
+              }}
+            />
+
+            <ConfirmDialog
+              open={isBulkRemoveOpen}
+              onOpenChange={bulkRemoveDialog.toggle}
+              title={bulkRemoveRequest?.title || ""}
+              description={bulkRemoveRequest?.message || ""}
+              confirmText={appLang === 'zh' ? '确定' : 'Confirm'}
+              variant="destructive"
+              onConfirm={async () => {
+                if (bulkRemoveRequest) {
+                  await performBulkRemove(bulkRemoveRequest.ids);
+                  setBulkRemoveRequest(null);
+                }
+              }}
+            />
 
             {/* Photo Picker for adding photos to group */}
             <GroupPhotoPicker

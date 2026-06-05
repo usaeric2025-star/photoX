@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { EyeOff, Eye, Plus, Maximize, Sparkles, X, Save } from "lucide-react";
+import { useDisclosure } from "@mantine/hooks";
+import { PromptDialog } from "@/components/ui/PromptDialog";
 import { DimensionEditor } from "../../admin/edit/DimensionEditor";
 import { ProductGroup, Dimension } from "../../../types";
 import { UIStoreState } from "@/store/useUIStore";
@@ -16,6 +18,9 @@ export function GroupSettingsContent({
   handleBatchUpdateDimensions: (newDims: Dimension[]) => Promise<void>;
   update: (updates: Partial<UIStoreState> | ((state: UIStoreState) => Partial<UIStoreState>)) => void;
 }) {
+  const [isAddColorOpen, addColorDialog] = useDisclosure(false);
+  const [isAddMaterialOpen, addMaterialDialog] = useDisclosure(false);
+
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar h-[calc(100vh-80px)] pb-20">
       {/* Series Identity */}
@@ -215,23 +220,22 @@ export function GroupSettingsContent({
                 </div>
               ))}
               <button
-                onClick={() =>
-                  update({
-                    promptDialog: {
-                      title: "Add Color",
-                      message: "Enter Color Hex Code (#FF0000):",
-                      onSubmit: (c: string) => {
-                        if (c && c.trim())
-                          handleUpdateGroupData({
-                            colors: [...(groupData?.colors || []), c.trim()]});
-                      },
-                    },
-                  })
-                }
+                onClick={addColorDialog.open}
                 className="w-8 h-8 rounded-lg border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-300 hover:text-indigo-400"
               >
                 <Plus size={16} />
               </button>
+              <PromptDialog
+                open={isAddColorOpen}
+                onOpenChange={addColorDialog.toggle}
+                title="Add Color"
+                description="Enter Color Hex Code (#FF0000):"
+                onConfirm={(c: string) => {
+                  if (c && c.trim())
+                    handleUpdateGroupData({
+                      colors: [...(groupData?.colors || []), c.trim()]});
+                }}
+              />
             </div>
           </div>
 
@@ -263,28 +267,27 @@ export function GroupSettingsContent({
                 ),
               )}
               <button
-                onClick={() =>
-                  update({
-                    promptDialog: {
-                      title: "添加材质 / Add Material",
-                      message: "请输入新材质名称:",
-                      placeholder: "如: 黄铜, 皮革, 实木, Leather...",
-                      onSubmit: (m: string) => {
-                        if (m && m.trim())
-                          handleUpdateGroupData({
-                            materials: [
-                              ...(groupData?.materials || []),
-                              m.trim(),
-                            ]});
-                      },
-                    },
-                  })
-                }
+                onClick={addMaterialDialog.open}
                 className="px-3 py-1 rounded-lg border border-dashed border-slate-200 bg-white flex items-center justify-center gap-1 text-slate-400 hover:text-indigo-600 text-xs font-bold transition-colors cursor-pointer"
               >
                 <Plus size={12} />
                 <span>添加材质</span>
               </button>
+              <PromptDialog
+                open={isAddMaterialOpen}
+                onOpenChange={addMaterialDialog.toggle}
+                title="添加材质 / Add Material"
+                description="请输入新材质名称:"
+                placeholder="如: 黄铜, 皮革, 实木, Leather..."
+                onConfirm={(m: string) => {
+                  if (m && m.trim())
+                    handleUpdateGroupData({
+                      materials: [
+                        ...(groupData?.materials || []),
+                        m.trim(),
+                      ]});
+                }}
+              />
             </div>
           </div>
         </div>

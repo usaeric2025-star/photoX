@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useCallback } from 'react';
+import React, { useMemo, useRef, useCallback, useState } from 'react';
 import { queryClient } from '@/lib/queryClient';
 import { photoKeys } from '@/lib/queryKeys';
 import { motion, AnimatePresence, LayoutGroup } from 'motion/react';
@@ -7,7 +7,7 @@ import { GalleryVariant } from '@/types/variant';
 import { VirtualPhotoGrid } from '@/components/photo/VirtualPhotoGrid';
 import { PhotoCard } from '@/components/photo/PhotoCard';
 import { AdminFilters } from '@/components/ui/AdminFilters';
-import { useScrollRestoration, useTasks, useMultiSelect, useFilters, usePhotos, useAdminMode, usePermission, useCategories, useTags, useUrlFilters, useTaskExecutor } from '@/hooks';
+import { useScrollRestoration, useTasks, useMultiSelect, usePhotos, useAdminMode, usePermission, useCategories, useTags, useUrlFilters, useTaskExecutor } from '@/hooks';
 import { processImageFiles } from '@/lib/image/imageProcess';
 import { processPhotos } from '@/lib/filters';
 import { checkDuplicateBatch, removeFromDuplicateCache, checkDuplicate } from '@/lib/data/duplicateCheck';
@@ -24,6 +24,8 @@ import { PAGINATION } from '@/constants/config';
 import { normalizeAdminPhotos } from '@/lib/selectors/photos';
 import { useNavigate } from '@tanstack/react-router';
 import { usePhotoGallery } from '@/features/photos/usePhotoGallery';
+import { useDisclosure } from '@mantine/hooks';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 interface AdminGridContainerProps {
   variant: GalleryVariant;
@@ -50,8 +52,7 @@ export function AdminGridContainer({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const navigate = useNavigate();
-  const { filters, setSearch } = useFilters();
-  const { filters: urlFilters, setGroupId, setPhotoId, setSortOrder, setShowGroupsCollapsed } = useUrlFilters();
+  const { filters: urlFilters, setGroupId, setPhotoId, setSortOrder, setShowGroupsCollapsed, setSearchQuery } = useUrlFilters();
   const update = useUIStore(s => s.update);
   const [columns, setColumns] = useColumns();
   const processingIds = useUIStore(s => s.processingIds);
@@ -76,15 +77,21 @@ export function AdminGridContainer({
     photos,
     categories,
     tags,
-    filters,
+    urlFilters as any,
     urlFilters,
     {
       showGroupsCollapsed: urlFilters.showGroupsCollapsed,
       isAdminModeOverride: isAdminMode
     }
-  ), [photos, categories, tags, filters, urlFilters, isAdminMode]);
+  ), [photos, categories, tags, urlFilters, isAdminMode]);
 
-  const isAnalyzing = tasks.some(t => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析')));
+  const [isDeleteOpen, deleteDialog] = useDisclosure(false);
+  const [idsToDelete, setIdsToDelete] = useState<string[]>([]);
+  
+  const initiateDelete = (ids: string[]) => {
+    setIdsToDelete(ids);
+    deleteDialog.open();
+  };
 
   const virtualGridRef = useRef<any>(null);
   const scrollToTop = () => virtualGridRef.current?.scrollTo(0);
@@ -186,7 +193,7 @@ export function AdminGridContainer({
      setPhotoId(null);
      setGroupId(gid);
      // Only set activePhotoId if searching or wanted to anchor
-     if (filters.searchQuery && filters.searchQuery.trim()) {
+     if (urlFilters.searchQuery && urlFilters.searchQuery.trim()) {
          setPhotoId(photoId || null);
      }
   };
@@ -208,8 +215,8 @@ export function AdminGridContainer({
     <LayoutGroup id="admin-gallery">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col h-full bg-brand-bg w-full overflow-hidden text-text">
         <AdminFilters 
-          onSearch={setSearch}
-          searchQuery={filters.searchQuery || ''}
+          onSearch={setSearchQuery}
+          searchQuery={urlFilters.searchQuery || ''}
           onSortChange={() => setSortOrder(urlFilters.sortOrder === 'newest' ? 'oldest' : 'newest')}
           currentSort={urlFilters.sortOrder as 'newest' | 'oldest' | 'name'}
           onColumnsChange={(cols) => {
@@ -224,7 +231,7 @@ export function AdminGridContainer({
         />
         <div className="flex-1 overflow-hidden bg-brand-bg relative">
            <VirtualPhotoGrid 
-             key={`photo-grid-${urlFilters.showGroupsCollapsed ? 'collapsed' : 'expanded'}-${filters.searchQuery || ''}`}
+             key={`photo-grid-${urlFilters.showGroupsCollapsed ? 'collapsed' : 'expanded'}-${urlFilters.searchQuery || ''}`}
              photos={gridPhotos}
              isFetching={infiniteQuery.isLoading}
              isFetchingNextPage={infiniteQuery.isFetchingNextPage}
@@ -257,15 +264,7 @@ export function AdminGridContainer({
           onGroup={() => {}}
           onDelete={() => {
             const currentSelected = useUIStore.getState().selectedIds;
-            update({
-              alertDialog: {
-                title: "确认删除",
-                message: `确认删除这 ${currentSelected.length} 张照片吗？`,
-                onConfirm: () => adminActions.deletePhoto(Array.from(currentSelected)),
-                confirmLabel: "删除",
-                type: "danger",
-              }
-            });
+            initiateDelete(Array.from(currentSelected));
           }}
           onToggleVisibility={() => {
             const currentSelected = useUIStore.getState().selectedIds;
@@ -275,15 +274,7 @@ export function AdminGridContainer({
         />
 
         <SelectionToolbar
-          onDelete={(ids) => update({
-            alertDialog: {
-              title: "确认删除",
-              message: `确认删除这 ${ids.length} 张照片吗？`,
-              onConfirm: () => adminActions.deletePhoto(ids),
-              confirmLabel: "删除",
-              type: "danger",
-            }
-          })}
+          onDelete={(ids) => initiateDelete(ids)}
           onBatchEdit={(ids) => update({ batchEditingIds: ids })}
           onHide={(ids) => adminActions.batchUpdate.execute({ ids, updates: { is_hidden: true } })}
           onAIIdentify={onBatchAiAnalyze ? (ids) => {
@@ -307,6 +298,15 @@ export function AdminGridContainer({
           initialPhotoId={urlFilters.photoId} 
           variant={variant} 
           onBatchAiAnalyze={onBatchAiAnalyze}
+        />
+        <ConfirmDialog
+          open={isDeleteOpen}
+          onOpenChange={deleteDialog.toggle}
+          title="确认删除"
+          description={`确认删除这 ${idsToDelete.length} 张照片吗？`}
+          confirmText="删除"
+          variant="destructive"
+          onConfirm={() => adminActions.deletePhoto(idsToDelete)}
         />
       </motion.div>
     </LayoutGroup>

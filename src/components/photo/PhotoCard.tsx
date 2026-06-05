@@ -55,7 +55,7 @@ import { GalleryVariant } from '@/types/variant';
 import { Layers, Heart, Check, EyeOff } from 'lucide-react';
 import { getCacheBustedImageUrl, getPhotoDisplayName } from '../../lib/ui-helpers';
 import { ResponsivePhoto } from '../shared/ResponsivePhoto';
-import { usePermission, useFilters, useCategories, useTags, useErrorHandler } from '../../hooks';
+import { usePermission, useCategories, useTags, useErrorHandler } from '../../hooks';
 import { useAdminActions } from '@/features/admin/useAdminActions';
 import { getDisplayGroupCode } from '@/services/utils';
 
@@ -99,9 +99,6 @@ function PhotoInfoFooter({ displayCatName, photoTags, hideTags, categoryId, tagI
   categoryId?: string | number | null;
   tagIds?: string[];
 }) {
-  const { filters, setCategory, setTags } = useFilters();
-
-
   return (
     <div className="absolute bottom-0 left-0 w-full z-20 pointer-events-auto p-1.5 pt-8 flex flex-col gap-1.5 bg-gradient-to-t from-black/95 via-black/65 to-transparent">
         {displayCatName ? (

@@ -20,7 +20,7 @@ interface MutationConfig<TData, TVariables, TContext> {
   errorMessage?: string;
 }
 
-export function createMutation<TData, TVariables>(config: MutationConfig<TData, TVariables, unknown>) {
+export function createMutation<TData, TVariables, TContext = unknown>(config: MutationConfig<TData, TVariables, TContext>) {
   return function useStandardMutation(options?: any) {
     const queryClient = useQueryClient();
     const getQueryKey = (variables: TVariables) => {
@@ -32,7 +32,7 @@ export function createMutation<TData, TVariables>(config: MutationConfig<TData, 
     
     return useMutation({
         mutationFn: config.mutationFn,
-        onMutate: async (variables) => {
+        onMutate: async (variables: TVariables) => {
         const queryKey = getQueryKey(variables);
         await queryClient.cancelQueries({ queryKey });
         const previousData = queryClient.getQueryData<TData>(queryKey);
@@ -42,9 +42,9 @@ export function createMutation<TData, TVariables>(config: MutationConfig<TData, 
             queryClient.setQueryData(queryKey, newData);
             }
         }
-        return { previousData, queryKey };
+        return { previousData, queryKey } as unknown as TContext;
         },
-        onError: (error, variables, context: any) => {
+        onError: (error: Error, variables: TVariables, context: any) => {
         if (context?.previousData !== undefined) {
             queryClient.setQueryData(context.queryKey, context.previousData);
         }
@@ -77,9 +77,9 @@ export function createMutation<TData, TVariables>(config: MutationConfig<TData, 
         } else {
             toast.error(config.errorMessage || '操作失败，已回滚');
         }
-        config.onError?.(error as Error, variables, context);
+        config.onError?.(error, variables, context);
         },
-        onSettled: (data, error, variables) => {
+        onSettled: (data: TData | undefined, error: Error | null, variables: TVariables) => {
         const queryKey = getQueryKey(variables);
         queryClient.invalidateQueries({ queryKey });
         config.onSuccess?.(data as TData, variables);
@@ -89,18 +89,27 @@ export function createMutation<TData, TVariables>(config: MutationConfig<TData, 
   }
 }
 
-export function createMutationHook<TData = void, TVariables = void, TContext = unknown>(config: any) {
+export function createMutationHook<TData = any, TVariables = any, TContext = unknown>(config: any) {
   return function useStandardMutation(options?: any) {
-    const mutation = createMutation({
+    const mutation = createMutation<TData, TVariables, TContext>({
       mutationFn: config.mutationFn,
-      queryKey: config.invalidateKeys?.[0],                // Shim
-      optimisticUpdate: (oldData: any, variables: any) => oldData, // Shim
+      queryKey: config.queryKey || config.invalidateKeys?.[0] || ['unknown'],
+      optimisticUpdate: config.optimisticUpdate,
+      onSuccess: config.onSuccess,
+      onError: config.onError,
+      entity: config.entity,
+      action: config.action,
+      errorTitle: config.errorTitle,
+      successMessage: config.successMessage || config.onSuccessMessage,
+      errorMessage: config.errorMessage,
       ...options
-    })(options);
+    });
+    
+    const mut = mutation(options);
     
     return {
-      ...mutation,
-      execute: mutation.mutateAsync
+      ...mut,
+      execute: (variables: TVariables) => mut.mutateAsync(variables as any)
     };
   };
 }

@@ -1,8 +1,9 @@
 import React, { useState, useRef } from "react";
 import { Trash2, Pencil } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { useUIStore, useShallow } from "@/store/useUIStore";
-import { useClickAway } from "@/lib/hooks";
+import { useDisclosure, useClickOutside } from "@mantine/hooks";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { PromptDialog } from "@/components/ui/PromptDialog";
 import { useLongPress } from "@/hooks/useLongPress";
 import { normalizeManufacturerName } from "@/lib/utils";
 
@@ -19,17 +20,17 @@ export const ManufacturerItem = ({
   onUpdate,
   onDelete,
 }: ManufacturerProps) => {
-  const { update } = useUIStore(useShallow((s) => ({ update: s.update })));
   const [activeMenuId, setActiveMenuId] = useState<string | number | null>(
     null,
   );
+  const [isEditOpen, editDialog] = useDisclosure(false);
+  const [isDeleteOpen, deleteDialog] = useDisclosure(false);
 
-  const menuRef = useRef<HTMLDivElement>(null);
-  useClickAway(menuRef as any, () => {
+  const menuRef = useClickOutside(() => {
     if (activeMenuId === manufacturer.id) setActiveMenuId(null);
   });
 
-  useLongPress(menuRef, {
+  useLongPress(menuRef as any, {
     delay: 400,
     onLongPress: () => {
       setActiveMenuId(manufacturer.id);
@@ -59,19 +60,7 @@ export const ManufacturerItem = ({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                useUIStore.getState().update({
-                  promptDialog: {
-                    title: "编辑厂商名称 / Edit Manufacturer",
-                    message: "输入新的名称 / Enter new name:",
-                    placeholder: manufacturer.name,
-                    onSubmit: (name) => {
-                      if (name) {
-                        const normalized = normalizeManufacturerName(name);
-                        onUpdate({ ...manufacturer, name: normalized });
-                      }
-                    },
-                  },
-                });
+                editDialog.open();
                 setActiveMenuId(null);
               }}
               className="px-3 py-2 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2"
@@ -81,16 +70,7 @@ export const ManufacturerItem = ({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                update({
-                  alertDialog: {
-                    title: "确认删除",
-                    message: `确定要删除「${manufacturer.name}」吗？此操作不可恢复。`,
-                    confirmLabel: "删除",
-                    cancelLabel: "取消",
-                    type: "danger",
-                    onConfirm: () => onDelete(manufacturer.id),
-                  },
-                });
+                deleteDialog.open();
                 setActiveMenuId(null);
               }}
               className="px-3 py-2 text-red-400 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2"
@@ -101,6 +81,31 @@ export const ManufacturerItem = ({
           </motion.div>
         )}
       </AnimatePresence>
+
+      <PromptDialog
+        open={isEditOpen}
+        onOpenChange={editDialog.toggle}
+        title="编辑厂商名称 / Edit Manufacturer"
+        description="输入新的名称 / Enter new name:"
+        defaultValue={manufacturer.name}
+        placeholder={manufacturer.name}
+        onConfirm={(name) => {
+          if (name) {
+            const normalized = normalizeManufacturerName(name);
+            onUpdate({ ...manufacturer, name: normalized });
+          }
+        }}
+      />
+      
+      <ConfirmDialog
+        open={isDeleteOpen}
+        onOpenChange={deleteDialog.toggle}
+        title="确认删除"
+        description={`确定要删除「${manufacturer.name}」吗？此操作不可恢复。`}
+        confirmText="删除"
+        variant="destructive"
+        onConfirm={() => onDelete(manufacturer.id)}
+      />
     </div>
   );
 };

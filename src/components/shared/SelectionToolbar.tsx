@@ -1,8 +1,10 @@
 import React from 'react';
-import { Trash2, Sparkles, Edit, X, FolderPlus, EyeOff } from 'lucide-react';
-import { useUIStore } from '@/store/useUIStore';
+import { useDisclosure } from '@mantine/hooks';
+import { Sparkles, FolderPlus, Edit, EyeOff, Trash2, X } from 'lucide-react';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useGroupPhotosMutation, useUrlFilters } from '@/hooks';
 import { useAIGroup } from '@/hooks/core/mutations/useAIGroup';
+import { useUIStore } from '@/store/useUIStore';
 import { toast } from '@/lib/ui/toast';
 
 interface SelectionToolbarProps {
@@ -19,10 +21,13 @@ export function SelectionToolbar({
   onDelete,
   onHide,
 }: SelectionToolbarProps) {
-  const selectedIds = useUIStore(s => s.selectedIds);
-  const isMultiSelect = useUIStore(s => s.isMultiSelect);
-  const update = useUIStore(s => s.update);
+  const selectedIds = useUIStore((s: any) => s.selectedIds);
+  const isMultiSelect = useUIStore((s: any) => s.isMultiSelect);
+  const update = useUIStore((s: any) => s.update);
   
+  const [isGroupAlertOpen, groupAlert] = useDisclosure(false);
+  const [isDeleteAlertOpen, deleteAlert] = useDisclosure(false);
+
   const count = selectedIds.length;
   const ids = selectedIds;
 
@@ -38,14 +43,7 @@ export function SelectionToolbar({
 
   const handleGroup = async () => {
     if (ids.length <= 1) {
-      update({
-        alertDialog: {
-          title: '无法合组',
-          message: '请至少选择两张照片才能进行合组。',
-          type: 'info',
-          onConfirm: () => update({ alertDialog: null }),
-        }
-      });
+      groupAlert.open();
       return;
     }
 
@@ -135,17 +133,7 @@ export function SelectionToolbar({
 
         {onDelete && (
           <button
-            onClick={() => {
-              update({
-                alertDialog: {
-                  title: `确定要删除选中的 ${count} 张照片吗？`,
-                  message: '此操作不可撤销，照片将从云端彻底移除。',
-                  type: 'danger',
-                  confirmLabel: '删除',
-                  onConfirm: () => onDelete(ids),
-                }
-              });
-            }}
+            onClick={() => deleteAlert.open()}
             className="w-9 h-9 flex items-center justify-center rounded-full text-rose-400 hover:text-white hover:bg-rose-600/20 active:scale-95 transition-all"
             title="批量删除"
           >
@@ -153,6 +141,26 @@ export function SelectionToolbar({
           </button>
         )}
       </div>
+
+      <ConfirmDialog
+        open={isGroupAlertOpen}
+        onOpenChange={groupAlert.toggle}
+        title="无法合组"
+        description="请至少选择两张照片才能进行合组。"
+        onConfirm={() => {}}
+      />
+      
+      {onDelete && (
+        <ConfirmDialog
+          open={isDeleteAlertOpen}
+          onOpenChange={deleteAlert.toggle}
+          title={`确定要删除选中的 ${count} 张照片吗？`}
+          description="此操作不可撤销，照片将从云端彻底移除。"
+          confirmText="删除"
+          variant="destructive"
+          onConfirm={() => onDelete(ids)}
+        />
+      )}
 
       {/* Vertical divider */}
       <div className="w-[1px] h-6 bg-slate-800" />

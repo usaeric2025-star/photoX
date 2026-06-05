@@ -1,5 +1,5 @@
 import { ErrorFactory } from '../lib/error/ErrorFactory';
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   ChevronLeft,
   Settings2, Save, ChevronDown
@@ -12,6 +12,8 @@ import { AppSettings, User, ApiResponse } from '@/types';
 import { 
   useUIStore, useShallow
 } from '@/store/useUIStore';
+import { useDisclosure } from '@mantine/hooks';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { 
   useCategories, useTags, useManufacturers, usePhotos,
   useAdminCategory, useAuth, useSettings, usePhotoCount
@@ -84,9 +86,6 @@ export function SettingsScreen() {
   
   const isSyncing = tasks.some(t => t.name.includes('同步') && t.status === 'running');
   const isMaintenanceRunning = tasks.some(t => (t.name.includes('维护') || t.name.includes('诊断')) && t.status === 'running');
-  const onRunMaintenance = async () => {
-    await handleHealthCheck(photos);
-  };
   const t = translations.zh;
 
   const { handleError } = useErrorHandler();
@@ -103,40 +102,27 @@ export function SettingsScreen() {
       addManufacturer, updateManufacturer, addTag
   } = useAdminCategory({ update });
 
+  const [tagToDelete, setTagToDelete] = useState<string | null>(null);
+  const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
+  const [manufacturerToDelete, setManufacturerToDelete] = useState<string | null>(null);
+
+  const [isTagDeleteOpen, tagDeleteDialog] = useDisclosure(false);
+  const [isCategoryDeleteOpen, categoryDeleteDialog] = useDisclosure(false);
+  const [isManufacturerDeleteOpen, manufacturerDeleteDialog] = useDisclosure(false);
+
   const deleteTag = (id: string) => {
-    update({
-      alertDialog: {
-        title: '确定要删除此标签吗？',
-        message: '此操作将从所有已关联的产品中移除此标签。',
-        type: 'danger',
-        onConfirm: () => deleteTagRaw(id),
-        confirmLabel: '删除',
-      }
-    });
+    setTagToDelete(id);
+    tagDeleteDialog.open();
   };
 
   const deleteCategory = (id: string) => {
-    update({
-      alertDialog: {
-        title: '确定要删除此分类吗？',
-        message: '这将导致该分类下的产品失去分类关联。',
-        type: 'danger',
-        onConfirm: () => deleteCategoryRaw(id),
-        confirmLabel: '删除',
-      }
-    });
+    setCategoryToDelete(id);
+    categoryDeleteDialog.open();
   };
 
   const deleteManufacturer = (id: string) => {
-    update({
-      alertDialog: {
-        title: '确定要删除此生产商吗？',
-        message: '确定要删除此生产商吗？',
-        type: 'danger',
-        onConfirm: () => deleteManufacturerRaw(id),
-        confirmLabel: '删除',
-      }
-    });
+    setManufacturerToDelete(id);
+    manufacturerDeleteDialog.open();
   };
 
   const { 
@@ -151,7 +137,6 @@ export function SettingsScreen() {
     activeTagMenuId, setActiveTagMenuId,
     debouncedSave,
     testConnection,
-    handleHealthCheck,
     togglePin,
     setSettingField
   } = useSettingsLogic({
@@ -251,7 +236,6 @@ export function SettingsScreen() {
                 tags={tags}
                 manufacturers={manufacturers}
                 photos={photos}
-                onHealthCheck={handleHealthCheck}
                 setSettingField={setSettingField}
                 cardClass={cardClass}
                 inputClass={inputClass}
@@ -297,6 +281,33 @@ export function SettingsScreen() {
           )}
         </div>
       </div>
+      <ConfirmDialog
+        open={isTagDeleteOpen}
+        onOpenChange={tagDeleteDialog.toggle}
+        title="确定要删除此标签吗？"
+        description="此操作将从所有已关联的产品中移除此标签。"
+        confirmText="删除"
+        variant="destructive"
+        onConfirm={async () => { if (tagToDelete) await deleteTagRaw(tagToDelete); }}
+      />
+      <ConfirmDialog
+        open={isCategoryDeleteOpen}
+        onOpenChange={categoryDeleteDialog.toggle}
+        title="确定要删除此分类吗？"
+        description="这将导致该分类下的产品失去分类关联。"
+        confirmText="删除"
+        variant="destructive"
+        onConfirm={async () => { if (categoryToDelete) await deleteCategoryRaw(categoryToDelete); }}
+      />
+      <ConfirmDialog
+        open={isManufacturerDeleteOpen}
+        onOpenChange={manufacturerDeleteDialog.toggle}
+        title="确定要删除此生产商吗？"
+        description="确定要删除此生产商吗？"
+        confirmText="删除"
+        variant="destructive"
+        onConfirm={async () => { if (manufacturerToDelete) await deleteManufacturerRaw(manufacturerToDelete); }}
+      />
     </div>
   );
 };

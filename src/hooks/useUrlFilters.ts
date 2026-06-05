@@ -15,11 +15,15 @@ export function useUrlFilters() {
     groupId: params.groupId || search.groupId || null,
     photoId: search.photoId ?? null,
     showGroupsCollapsed: search.showGroupsCollapsed !== 'false',
-    isHidden: search.hidden === 'true',
+    is_hidden: search.hidden === 'true',
   };
 
   const setCategory = (categoryId: string | null) => {
     navigate({ search: { ...search, category: categoryId || undefined } as any });
+  };
+
+  const setTagId = (tagId: string | null) => {
+    navigate({ search: { ...search, tag: tagId || undefined } as any });
   };
 
   const setSearchQuery = (q: string) => {
@@ -42,5 +46,5 @@ export function useUrlFilters() {
     navigate({ search: { ...search, showGroupsCollapsed: collapsed ? undefined : 'false' } as any });
   };
 
-  return { filters, setCategory, setSearchQuery, setSortOrder, setGroupId, setPhotoId, setShowGroupsCollapsed };
+  return { filters, setCategory, setTagId, setSearchQuery, setSortOrder, setGroupId, setPhotoId, setShowGroupsCollapsed };
 }

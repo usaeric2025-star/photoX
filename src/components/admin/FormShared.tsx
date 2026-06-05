@@ -6,6 +6,8 @@ import { useLongPress } from "@/hooks/useLongPress";
 import { Pencil, Trash2 } from "lucide-react";
 import { useUIStore, useShallow } from "@/store/useUIStore";
 import { useRef } from "react";
+import { useDisclosure } from "@mantine/hooks";
+import { MenuDialog } from "@/components/ui/MenuDialog";
 
 interface SectionHeaderProps {
   title: string;
@@ -115,7 +117,6 @@ export function ManufacturerList({
             onSelect={onSelect}
             onEdit={onEdit}
             onDelete={onDelete}
-            update={update}
           />
         );
       })}
@@ -123,37 +124,40 @@ export function ManufacturerList({
   );
 }
 
-function ManufacturerButton({ mfr, isSelected, onSelect, onEdit, onDelete, update }: any) {
+function ManufacturerButton({ mfr, isSelected, onSelect, onEdit, onDelete }: any) {
   const btnRef = useRef<HTMLButtonElement>(null);
+  const [isMenuOpen, menuDialog] = useDisclosure(false);
+
   useLongPress(btnRef, {
     delay: 600,
     onLongPress: () => {
       if (onEdit || onDelete) {
-        update({
-          alertDialog: {
-            title: `管理厂商: ${mfr.name}`,
-            message: "请选择操作",
-            secondaryAction: {
-              label: "编辑",
-              onClick: () => onEdit?.(mfr),
-            },
-            onConfirm: () => onDelete?.(mfr),
-            confirmLabel: "删除",
-            type: "danger",
-          },
-        });
+        menuDialog.open();
       }
     }
   });
 
   return (
-    <button
-      ref={btnRef}
-      type="button"
-      onClick={() => onSelect(isSelected ? null : String(mfr.id))}
-      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${isSelected ? "bg-slate-800 text-white border-slate-800 shadow-lg" : "bg-white border-slate-200 text-slate-600 active:bg-slate-50"}`}
-    >
-      {(mfr.name || "").toUpperCase()}
-    </button>
+    <>
+      <button
+        ref={btnRef}
+        type="button"
+        onClick={() => onSelect(isSelected ? null : String(mfr.id))}
+        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${isSelected ? "bg-slate-800 text-white border-slate-800 shadow-lg" : "bg-white border-slate-200 text-slate-600 active:bg-slate-50"}`}
+      >
+        {(mfr.name || "").toUpperCase()}
+      </button>
+      <MenuDialog
+        open={isMenuOpen}
+        onOpenChange={menuDialog.toggle}
+        title={`管理厂商: ${mfr.name}`}
+        description="请选择操作"
+        primaryActionLabel="删除"
+        primaryActionVariant="destructive"
+        onPrimaryAction={() => onDelete?.(mfr)}
+        secondaryActionLabel="编辑"
+        onSecondaryAction={() => onEdit?.(mfr)}
+      />
+    </>
   );
 }

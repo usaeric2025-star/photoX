@@ -3,7 +3,7 @@ import { Photo, Category, Tag } from '@/types';
 import { GalleryVariant } from '@/types/variant';
 import { VirtualPhotoGrid } from './VirtualPhotoGrid';
 import { PhotoCard } from './PhotoCard';
-import { usePhotos, useFilters, useUrlFilters } from '@/hooks';
+import { usePhotos, useUrlFilters } from '@/hooks';
 import { useUIStore, useColumns } from '@/store/useUIStore';
 import { PAGINATION } from '@/constants/config';
 import { normalizeAdminPhotos } from '@/lib/selectors/photos';
@@ -16,14 +16,14 @@ interface PhotoListContainerProps {
   tags: Tag[];
 }
 
-export function PhotoListContainer({ variant, filters, isAdminMode, categories, tags }: PhotoListContainerProps) {
+export function PhotoListContainer({ variant, isAdminMode, categories, tags }: Omit<PhotoListContainerProps, 'filters'>) {
   const { filters: urlFilters } = useUrlFilters();
   const [columns] = useColumns();
 
   const infiniteQuery = usePhotos({
-    category_id: filters.categoryId,
-    tag_id: Array.isArray(filters.tagIds) && filters.tagIds.length > 0 ? filters.tagIds[0] : null,
-    searchQuery: filters.searchQuery,
+    category_id: urlFilters.categoryId,
+    tag_id: urlFilters.tagId,
+    searchQuery: urlFilters.searchQuery,
     sortOrder: urlFilters.sortOrder,
     isAdminMode: isAdminMode
   }, PAGINATION.ADMIN_BATCH_SIZE, true);

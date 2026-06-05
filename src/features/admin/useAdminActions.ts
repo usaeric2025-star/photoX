@@ -35,7 +35,7 @@ export function useAdminActions() {
 
   const handleUpdatePhoto = async (id: string, updates: PhotoUpdateData) => {
     try {
-      await updatePhoto.mutateAsync({ id, updates });
+      await (updatePhoto.mutateAsync as any)({ id, updates });
       // Feedback is handled in the hook
     } catch (err) {
       // Error feedback is handled in the hook

@@ -11,6 +11,8 @@ import { useTags } from "@/hooks/core/queries/useTags";
 import { useCategories } from "@/hooks/core/queries/useCategories";
 import { getTranslatedCategoryName } from "@/lib/ui-helpers";
 import { translations } from "@/lib/translations";
+import { useDisclosure } from "@mantine/hooks";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 /**
  * [PAGE] PhotoLightboxPage
@@ -28,6 +30,7 @@ export const PhotoLightboxPage = () => {
   const adminActions = useAdminActions();
   const currentPhoto = currentIndex >= 0 ? photos[currentIndex] : null;
   const [showInfo, setShowInfo] = React.useState(false);
+  const [isDeleteOpen, deleteDialog] = useDisclosure(false);
   
   const { data: tags = [] } = useTags();
   const { data: categories = [] } = useCategories();
@@ -56,30 +59,7 @@ export const PhotoLightboxPage = () => {
     }
   };
 
-  const handleDelete = () => {
-    if (currentPhoto) {
-      updateUIStore({
-        alertDialog: {
-          title: "确认删除照片",
-          message: `您确定要彻底删除该照片 "${currentPhoto.name}" 吗？此操作无法撤销。`,
-          confirmLabel: "立即删除",
-          type: "danger",
-          onConfirm: async () => {
-            try {
-              await adminActions.deletePhoto([currentPhoto.id]);
-              updateUIStore({ alertDialog: null });
-              close();
-            } catch (err) {
-              updateUIStore({ alertDialog: null });
-            }
-          },
-          onCancel: () => {
-            updateUIStore({ alertDialog: null });
-          }
-        }
-      });
-    }
-  };
+  const handleDelete = () => deleteDialog.open();
 
   const handleAiAnalyze = () => {
     if (currentPhoto) {
@@ -201,6 +181,24 @@ export const PhotoLightboxPage = () => {
               </button>
             </>
           );
+        }}
+      />
+      <ConfirmDialog
+        open={isDeleteOpen}
+        onOpenChange={deleteDialog.toggle}
+        title="确认删除照片"
+        description={`您确定要彻底删除该照片 "${currentPhoto?.name}" 吗？此操作无法撤销。`}
+        confirmText="立即删除"
+        variant="destructive"
+        onConfirm={async () => {
+          if (currentPhoto) {
+            try {
+              await adminActions.deletePhoto([currentPhoto.id]);
+              close();
+            } catch (err) {
+              // Handle error
+            }
+          }
         }}
       />
     </div>

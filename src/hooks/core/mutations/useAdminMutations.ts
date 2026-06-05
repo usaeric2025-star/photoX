@@ -28,7 +28,7 @@ export const useTagDelete = createMutationHook({
   entity: 'Tag',
   action: 'Delete',
   mutationFn: deleteTagFromDB,
-  invalidateKeys: [photoKeys.tags()],
+  invalidateKeys: [tagKeys.tags()],
   onSuccessMessage: '标签删除成功',
 });
 
@@ -36,7 +36,7 @@ export const useCategoryCreate = createMutationHook({
   entity: 'Category',
   action: 'Add',
   mutationFn: addCategoryToDB,
-  invalidateKeys: [photoKeys.categories()],
+  invalidateKeys: [categoryKeys.categories()],
   onSuccessMessage: '分类添加成功',
 });
 
@@ -44,7 +44,7 @@ export const useCategoryEdit = createMutationHook({
   entity: 'Category',
   action: 'Update',
   mutationFn: ({ id, updates }: { id: string; updates: Partial<Category> }) => updateCategoryInDB(id, updates),
-  invalidateKeys: [photoKeys.categories()],
+  invalidateKeys: [categoryKeys.categories()],
   onSuccessMessage: '分类更新成功',
 });
 
@@ -52,7 +52,7 @@ export const useCategoryDelete = createMutationHook({
   entity: 'Category',
   action: 'Delete',
   mutationFn: deleteCategoryFromDB,
-  invalidateKeys: [photoKeys.categories()],
+  invalidateKeys: [categoryKeys.categories()],
   onSuccessMessage: '分类删除成功',
 });
 
@@ -60,7 +60,7 @@ export const useManufacturerCreate = createMutationHook({
   entity: 'Manufacturer',
   action: 'Add',
   mutationFn: addManufacturerToDB,
-  invalidateKeys: [photoKeys.manufacturers()],
+  invalidateKeys: [manufacturerKeys.manufacturers()],
   onSuccessMessage: '厂商添加成功',
 });
 
@@ -68,7 +68,7 @@ export const useManufacturerEdit = createMutationHook({
   entity: 'Manufacturer',
   action: 'Update',
   mutationFn: ({ id, updates }: { id: string; updates: Partial<Manufacturer> }) => updateManufacturerInDB(id, updates),
-  invalidateKeys: [photoKeys.manufacturers()],
+  invalidateKeys: [manufacturerKeys.manufacturers()],
   onSuccessMessage: '厂商更新成功',
 });
 
@@ -76,7 +76,7 @@ export const useManufacturerDelete = createMutationHook({
   entity: 'Manufacturer',
   action: 'Delete',
   mutationFn: deleteManufacturerFromDB,
-  invalidateKeys: [photoKeys.manufacturers()],
+  invalidateKeys: [manufacturerKeys.manufacturers()],
   onSuccessMessage: '厂商删除成功',
 });
 

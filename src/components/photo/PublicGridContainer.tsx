@@ -3,7 +3,7 @@ import { GalleryVariant } from '@/types/variant';
 import { VirtualPhotoGrid } from '@/components/photo/VirtualPhotoGrid';
 import { PublicFilters } from '@/components/ui/PublicFilters';
 import { useUIStore, useShallow, useAppLang, useColumns } from '@/store/useUIStore';
-import { usePhotos, useFilters, useSettings, useCategories, useTags, useUrlFilters } from '@/hooks';
+import { usePhotos, useSettings, useCategories, useTags, useUrlFilters } from '@/hooks';
 import { processPhotos, cleanPhotos } from '@/lib/filters';
 import { PAGINATION } from '@/constants/config';
 import { GroupDetailPage } from '../GroupDetailPage';
@@ -29,12 +29,10 @@ export function PublicGridContainer({
   onScrollToTop,
   virtualGridRef
 }: PublicGridContainerProps) {
-  const { filters } = useFilters();
   const { settings } = useSettings(); 
   
-  const { setSearch } = useFilters();
   const navigate = useNavigate();
-  const { filters: urlFilters, setGroupId, setPhotoId, setSortOrder, setShowGroupsCollapsed } = useUrlFilters();
+  const { filters: urlFilters, setGroupId, setPhotoId, setSortOrder, setShowGroupsCollapsed, setSearchQuery } = useUrlFilters();
 
   const { 
     update, showWhatsAppChoice
@@ -50,9 +48,9 @@ export function PublicGridContainer({
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
   const infiniteQuery = usePhotos({
-    category_id: filters.categoryId,
-    tag_id: Array.isArray(filters.tagIds) && filters.tagIds.length > 0 ? filters.tagIds[0] : null,
-    searchQuery: filters.searchQuery,
+    category_id: urlFilters.categoryId,
+    tag_id: urlFilters.tagId,
+    searchQuery: urlFilters.searchQuery,
     sortOrder: urlFilters.sortOrder as 'newest' | 'oldest' | 'name',
     isAdminMode: false,
     onlyUngrouped: false
@@ -67,19 +65,19 @@ export function PublicGridContainer({
     rawPhotos,
     categories,
     tags,
-    filters,
+    urlFilters as any, // Cast generic filters or ensure compat
     urlFilters,
     {
       showGroupsCollapsed: urlFilters.showGroupsCollapsed,
       isAdminModeOverride: false
     }
-  ), [rawPhotos, categories, tags, filters, urlFilters]);
+  ), [rawPhotos, categories, tags, urlFilters]);
 
   const handleGroupClick = (gid: string, photoId?: string) => {
     setPhotoId(null);
     setGroupId(gid);                
     // Only set activePhotoId (anchor) if search query is active
-    if (filters.searchQuery && filters.searchQuery.trim()) {
+    if (urlFilters.searchQuery && urlFilters.searchQuery.trim()) {
         setPhotoId(photoId || null);
     }
   };
@@ -133,8 +131,8 @@ export function PublicGridContainer({
   return (
     <div className="flex flex-col h-full bg-brand-bg w-full overflow-hidden text-text">
         <PublicFilters 
-          onSearch={setSearch}
-          searchQuery={filters.searchQuery || ''}
+          onSearch={setSearchQuery}
+          searchQuery={urlFilters.searchQuery || ''}
           onSortChange={() => setSortOrder(urlFilters.sortOrder === 'newest' ? 'oldest' : 'newest')}
           currentSort={urlFilters.sortOrder as 'newest' | 'oldest' | 'name'}
           onColumnsChange={(cols) => {
@@ -149,7 +147,7 @@ export function PublicGridContainer({
         />
         <div className="flex-1 overflow-hidden bg-brand-bg relative">
             <VirtualPhotoGrid 
-              key={`photo-grid-${urlFilters.showGroupsCollapsed ? 'collapsed' : 'expanded'}-${filters.searchQuery || ''}`}
+              key={`photo-grid-${urlFilters.showGroupsCollapsed ? 'collapsed' : 'expanded'}-${urlFilters.searchQuery || ''}`}
               photos={gridPhotos}
               isFetching={infiniteQuery.isLoading}
               isFetchingNextPage={infiniteQuery.isFetchingNextPage}

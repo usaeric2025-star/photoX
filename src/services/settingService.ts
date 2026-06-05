@@ -4,6 +4,8 @@ import { ErrorFactory } from '../lib/error/ErrorFactory';
 
 import { AppSettings } from '../types';
 
+import { api } from '@/lib/api';
+
 export const fetchSettings = async () => {
     const { data, error } = await supabase
         .from('settings')
@@ -26,7 +28,7 @@ export const fetchSettings = async () => {
         
         // Fetch key status and primary provider from backend
         try {
-            const keysRes = await fetch('/api/admin/settings/get-keys');
+            const keysRes = await api.admin.settings['get-keys'].$get() as any;
             if (keysRes.ok) {
                 const keysData = await keysRes.json();
                 if (keysData.success && keysData.keysStatus) {
@@ -92,10 +94,8 @@ export const saveSettings = async (settings: Partial<AppSettings> & Record<strin
 
         // 2.1 特別處理首選供應商 (經由專用 API)
         if (rawPayload.provider) {
-            void fetch('/api/admin/settings/save-provider', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ provider: rawPayload.provider })
+            void api.admin.settings['save-provider'].$post({
+                json: { provider: rawPayload.provider }
             });
         }
 

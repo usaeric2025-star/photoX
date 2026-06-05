@@ -120,11 +120,11 @@ export function useAIGroup() {
 
   const handleAIAction = async (photoIds: string[]) => {
     if (photoIds.length === 0) {
-      toast.error('请先选择照片');
+      toast.error('请先選擇照片');
       return;
     }
 
-    const appLang = (localStorage.getItem('app_lang') || 'zh') as 'zh' | 'en' | 'ms';
+    const lang = useUIStore.getState().appLang;
 
     const promise = (async () => {
         if (photoIds.length === 1) {
@@ -149,7 +149,7 @@ export function useAIGroup() {
         loading: photoIds.length === 1 ? 'AI 正在分析照片...' : 'AI 正在智能合组...',
         success: (data: any) => {
              if (photoIds.length === 1) return 'AI 分析完成，已填充表单';
-             const displayName = data.name?.[appLang] || data.name?.zh || '新合组';
+             const displayName = data.name?.[lang] || data.name?.zh || '新合组';
              return `已成功创建合组：${displayName}`;
         },
         error: (err) => err instanceof Error ? err.message : 'AI 处理失败'

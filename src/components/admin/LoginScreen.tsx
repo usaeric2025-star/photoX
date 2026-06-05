@@ -5,6 +5,8 @@ import { useSettings } from '../../hooks';
 import { useUIStore } from '@/store/useUIStore';
 import { Link, useNavigate } from '@tanstack/react-router';
 
+import { useLocalStorage } from '@mantine/hooks';
+
 interface LoginScreenProps {
   loginWithGoogle: () => Promise<void>;
   isLoading?: boolean;
@@ -16,6 +18,10 @@ export function LoginScreen({ loginWithGoogle, isLoading }: LoginScreenProps) {
   const [mode, setMode] = useState<'admin' | 'staff'>('admin');
   const [passInput, setPassInput] = useState('');
   const [passError, setPassError] = useState(false);
+  const [, setPasscode] = useLocalStorage({
+    key: 'ais_mock_auth_passcode',
+    defaultValue: '',
+  });
 
   const handlePasscodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,7 +31,7 @@ export function LoginScreen({ loginWithGoogle, isLoading }: LoginScreenProps) {
     }
     if (passInput === settings.access_passcode) {
       toast.success('员工模式登录成功 / Staff mode entered successfully');
-      window.localStorage.setItem('ais_mock_auth_passcode', String(passInput));
+      setPasscode(String(passInput));
       window.location.reload();
     } else {
       setPassError(true);

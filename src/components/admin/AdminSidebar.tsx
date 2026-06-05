@@ -88,7 +88,7 @@ export function AdminSidebar() {
   };
 
   const onRefresh = () => {
-    syncMut('pull');
+    (syncMut as any)('pull');
   };
 
   const { user, loginWithGoogle, logout } = useAuth();

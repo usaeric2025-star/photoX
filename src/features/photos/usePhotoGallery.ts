@@ -1,5 +1,4 @@
 import { usePhotos, useUrlFilters } from '@/hooks';
-import { useFilters } from '@/features/filters/useFilters';
 import { cleanPhotos } from '@/lib/filters';
 import { PAGINATION } from '@/constants/config';
 import { useMemo, useEffect } from 'react';
@@ -10,19 +9,20 @@ import { logger } from '@/lib/logger';
 export function usePhotoGallery() {
   logger.debug('📸 usePhotoGallery 被调用');
 
-  const { filters } = useFilters();
   const { filters: urlFilters } = useUrlFilters();
-  logger.debug('📸 filters:', filters);
+  logger.debug('📸 urlFilters:', urlFilters);
 
   const isAdminPath = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
   const pageSize = isAdminPath ? PAGINATION.ADMIN_BATCH_SIZE : 20;
 
   const infinitePhotosQuery = usePhotos({
-    category_id: filters.categoryId,
-    tag_id: filters.tagIds.length > 0 ? filters.tagIds[0] : null,
-    searchQuery: filters.searchQuery,
+    category_id: urlFilters.categoryId,
+    tag_id: urlFilters.tagId,
+    searchQuery: urlFilters.searchQuery,
     sortOrder: urlFilters.sortOrder || 'newest',
-    isAdminMode: true,
+    isAdminMode: isAdminPath,
+    is_hidden: urlFilters.is_hidden, 
+    manufacturer_id: urlFilters.manufacturerId,
   }, pageSize, true);  // enabled is explicitly true
 
   logger.debug('📸 useInfinitePhotos 状态:', {
@@ -33,7 +33,7 @@ export function usePhotoGallery() {
 
   // Detailed debug logging
   logger.debug('📸 usePhotoGallery 详细状态:', {
-    filters: filters,
+    urlFilters: urlFilters,
     pageSize,
     isLoading: infinitePhotosQuery.isLoading,
     dataLength: infinitePhotosQuery.data?.pages?.flatMap(p => p.photos)?.length

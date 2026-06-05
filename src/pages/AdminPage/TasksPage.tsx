@@ -10,6 +10,7 @@ import { UnifiedTask } from '@/features/tasks/taskTypes';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { useUIStore } from '@/store/useUIStore';
 import { formatters } from '@/utils/formatters';
 
@@ -103,10 +104,10 @@ export default function TasksPage() {
 
           <div className="space-y-4">
             {tasks.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-slate-300 space-y-3">
-                <PackageSearch size={48} className="opacity-20" />
-                <p className="text-sm font-black uppercase tracking-widest">暂无记录</p>
-              </div>
+              <EmptyState 
+                title="暂无记录" 
+                icon={<PackageSearch size={48} className="opacity-20" />}
+              />
             ) : (
               <div className="grid gap-4">
                 <AnimatePresence mode="popLayout">

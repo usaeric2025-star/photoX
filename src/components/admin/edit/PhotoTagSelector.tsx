@@ -1,9 +1,8 @@
-import { useShallow } from "@/store/useUIStore";
-import React from "react";
+import React, { useState } from "react";
+import { useDisclosure } from "@mantine/hooks";
+import { PromptDialog } from "@/components/ui/PromptDialog";
 import { TagEditor } from "../TagEditor";
 import { Tag } from "../../../types";
-import { toast } from '@/lib/ui/toast';
-import { useUIStore } from "../../../store";
 import { safeArray } from "../../../lib/utils";
 import { useErrorHandler } from "@/hooks";
 
@@ -24,8 +23,10 @@ export function PhotoTagSelector({
   updateTag,
   deleteTag,
 }: PhotoTagSelectorProps) {
-  const update = useUIStore((s) => s.update);
   const { handleError } = useErrorHandler();
+  const [isAddOpen, addDialog] = useDisclosure(false);
+  const [isEditOpen, editDialog] = useDisclosure(false);
+  const [editingTag, setEditingTag] = useState<Tag | null>(null);
 
   const cleanSelectedIds = React.useMemo(() => {
     return Array.from(
@@ -60,12 +61,30 @@ export function PhotoTagSelector({
     }
   };
 
-  const onQuickAdd = () => {
-    update({
-      promptDialog: {
-        title: "新增标签 / Add Tag",
-        message: "输入标签名称 / Enter Tag Name",
-        onSubmit: async (name: string) => {
+  const onQuickAdd = () => addDialog.open();
+  const onRenameTagRequest = (tag: Tag) => {
+    setEditingTag(tag);
+    editDialog.open();
+  };
+
+  return (
+    <>
+      <TagEditor
+        tags={sortedTags}
+        selectedTagIds={cleanSelectedIds}
+        onToggleTag={handleToggleTag}
+        onUpdateTag={updateTag}
+        onDeleteTag={deleteTag}
+        onQuickAdd={onQuickAdd}
+        onRenameTagRequest={onRenameTagRequest}
+        showHotEffects={false}
+      />
+      <PromptDialog
+        open={isAddOpen}
+        onOpenChange={addDialog.toggle}
+        title="新增标签 / Add Tag"
+        description="输入标签名称 / Enter Tag Name"
+        onConfirm={async (name: string) => {
           const trimmed = name.trim();
           if (!trimmed) return;
 
@@ -91,40 +110,26 @@ export function PhotoTagSelector({
           } catch (err: any) {
             handleError(err, "新增标签失败");
           }
-        },
-      },
-    });
-  };
-
-  const onRenameTagRequest = (tag: Tag) => {
-    update({
-      promptDialog: {
-        title: "编辑标签 / Edit Tag",
-        message: "输入标签名称 / Enter Tag Name:",
-        placeholder: tag.name,
-        onSubmit: async (n: string) => {
-          if (n && n.trim()) {
-            try {
-              await updateTag(String(tag.id), n.trim());
-            } catch (err: any) {
-              handleError(err, "编辑标签失败");
+        }}
+      />
+      {editingTag && (
+        <PromptDialog
+          open={isEditOpen}
+          onOpenChange={editDialog.toggle}
+          title="编辑标签 / Edit Tag"
+          description="输入标签名称 / Enter Tag Name:"
+          defaultValue={editingTag.name}
+          onConfirm={async (n: string) => {
+            if (n && n.trim()) {
+              try {
+                await updateTag(String(editingTag.id), n.trim());
+              } catch (err: any) {
+                handleError(err, "编辑标签失败");
+              }
             }
-          }
-        },
-      },
-    });
-  };
-
-  return (
-    <TagEditor
-      tags={sortedTags}
-      selectedTagIds={cleanSelectedIds}
-      onToggleTag={handleToggleTag}
-      onUpdateTag={updateTag}
-      onDeleteTag={deleteTag}
-      onQuickAdd={onQuickAdd}
-      onRenameTagRequest={onRenameTagRequest}
-      showHotEffects={false}
-    />
+          }}
+        />
+      )}
+    </>
   );
 }

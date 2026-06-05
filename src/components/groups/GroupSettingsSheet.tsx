@@ -30,10 +30,17 @@ export function GroupSettingsSheet(props: GroupSettingsSheetProps) {
     isAdminMode
   };
 
+  const headerProps = {
+    groupData: childProps.groupData,
+    activeGroupId: childProps.activeGroupId,
+    onUngroup: childProps.onUngroup,
+    setShowGroupSettings: childProps.setShowGroupSettings,
+  };
+
   return (
     <Sheet open={props.showGroupSettings} onOpenChange={props.setShowGroupSettings}>
       <SheetContent side="right" showCloseButton={false} className="w-full sm:max-w-[400px] p-0 border-l border-slate-100 bg-white">
-        <GroupSettingsHeader {...childProps} />
+        <GroupSettingsHeader {...headerProps} />
         <GroupSettingsContent {...childProps} />
       </SheetContent>
     </Sheet>

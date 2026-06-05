@@ -3,9 +3,10 @@ import {
   Cloud, LogOut, CloudUpload, CloudDownload, Database 
 } from 'lucide-react';
 import { User, ApiResponse } from '@/types';
-import { AlertDialogProps } from '@/store/useUIStore';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { toast } from '@/lib/ui/toast';
+import { useDisclosure } from '@mantine/hooks';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 interface SyncSectionProps {
   user: User | null;
@@ -16,7 +17,6 @@ interface SyncSectionProps {
   refreshCloudData: (user: User | null, force?: boolean) => Promise<void>;
   cloudCount: number | null;
   isSyncing: boolean;
-  update: (updates: any) => void;
 }
 
 export function SyncSection({
@@ -28,8 +28,8 @@ export function SyncSection({
   refreshCloudData,
   cloudCount,
   isSyncing,
-  update
 }: SyncSectionProps) {
+  const [isResetOpen, resetDialog] = useDisclosure(false);
   
   return (
     <div className="bg-brand-navy rounded-[32px] p-6 shadow-xl border border-white/5 space-y-4 relative overflow-hidden group">
@@ -109,18 +109,7 @@ export function SyncSection({
               <span className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Local Cache</span>
             </div>
             <button 
-              onClick={async () => {
-                update({ alertDialog: {
-                  title: '确认清空 / Reset Cache',
-                  message: '确定要清空本地数据缓存并从云端完整拉取吗？ / Reset local cache and re-sync from cloud?',
-                  onConfirm: async () => {
-                    localStorage.removeItem('uuid_v2_cleanup_done');
-                    await refreshCloudData(user, true);
-                    toast.success('本地缓存已重置 / Cache reset');
-                  },
-                  type: 'danger'
-                } });
-              }}
+              onClick={resetDialog.open}
               className="text-[9px] font-black text-brand-gold hover:text-white uppercase tracking-[0.2em] px-4 py-2 border border-brand-gold/30 rounded-full bg-brand-gold/5 transition-all active:scale-95"
             >
               Reset & Full Sync
@@ -128,6 +117,19 @@ export function SyncSection({
           </div>
         </div>
       )}
+      <ConfirmDialog
+        open={isResetOpen}
+        onOpenChange={resetDialog.toggle}
+        title="确认清空 / Reset Cache"
+        description="确定要清空本地数据缓存并从云端完整拉取吗？ / Reset local cache and re-sync from cloud?"
+        confirmText="Reset"
+        variant="destructive"
+        onConfirm={async () => {
+          localStorage.removeItem('uuid_v2_cleanup_done');
+          await refreshCloudData(user, true);
+          toast.success('本地缓存已重置 / Cache reset');
+        }}
+      />
     </div>
   );
 };

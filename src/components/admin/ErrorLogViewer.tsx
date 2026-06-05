@@ -7,7 +7,27 @@ import { useDisclosure } from '@mantine/hooks';
 import { formatters } from '@/utils/formatters';
 
 type ErrorLevel = 'critical' | 'error' | 'warn' | 'medium' | 'low' | 'info';
-...
+
+interface LogEntry {
+  id: string;
+  level: ErrorLevel;
+  message: string;
+  context?: string;
+  created_at: string;
+  stack?: string;
+}
+const LevelIcon = ({ level }: { level: ErrorLevel }) => {
+  switch (level) {
+    case 'critical': return <ShieldAlert size={14} className="text-red-600" />;
+    case 'error': return <AlertCircle size={14} className="text-red-500" />;
+    case 'warn': return <AlertTriangle size={14} className="text-amber-500" />;
+    case 'medium': return <AlertTriangle size={14} className="text-amber-400" />;
+    case 'low': return <Info size={14} className="text-blue-400" />;
+    case 'info': return <Info size={14} className="text-slate-400" />;
+    default: return <Info size={14} className="text-slate-400" />;
+  }
+};
+
 const LogItem = ({ log }: { log: LogEntry }) => {
   const [expanded, { toggle }] = useDisclosure(false);
   const dateTimeStr = formatters.dateTime(log.created_at);

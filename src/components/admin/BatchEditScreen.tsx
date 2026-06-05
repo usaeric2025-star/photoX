@@ -1,6 +1,7 @@
 import React, { useActionState, useOptimistic, startTransition, useEffect } from 'react';
 import { X as CloseIcon, RefreshCcw, Save, Trash2 } from 'lucide-react';
-import { useUIStore } from '@/store/useUIStore';
+import { useDisclosure } from '@mantine/hooks';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useBatchEdit } from '@/hooks';
 import { BatchEditForm } from './edit/BatchEditForm';
 import { supabase } from '@/lib/supabase';
@@ -35,7 +36,7 @@ async function batchDeleteAction(prevState: { error: string | null; success?: bo
 function BatchDeleteButton({ selectedIds, onSuccess }: { selectedIds: string[], onSuccess: () => void }) {
   const [state, formAction, isPending] = useActionState(batchDeleteAction, { error: null });
   const [optimisticCount, setOptimisticCount] = useOptimistic(selectedIds.length);
-  const update = useUIStore(s => s.update);
+  const [isDeleteOpen, deleteDialog] = useDisclosure(false);
 
   useEffect(() => {
     if (state.success) {
@@ -45,21 +46,15 @@ function BatchDeleteButton({ selectedIds, onSuccess }: { selectedIds: string[], 
 
   const handleDelete = () => {
     if (selectedIds.length === 0) return;
-    update({
-        alertDialog: {
-            title: "确认删除",
-            message: `确认删除这 ${selectedIds.length} 项吗？`,
-            confirmLabel: "删除",
-            type: "danger",
-            onConfirm: () => {
-              startTransition(() => {
-                setOptimisticCount(0);
-                const formData = new FormData();
-                formData.append('photoIds', JSON.stringify(selectedIds));
-                formAction(formData);
-              });
-            }
-        }
+    deleteDialog.open();
+  };
+
+  const confirmDelete = () => {
+    startTransition(() => {
+      setOptimisticCount(0);
+      const formData = new FormData();
+      formData.append('photoIds', JSON.stringify(selectedIds));
+      formAction(formData);
     });
   };
 
@@ -76,6 +71,15 @@ function BatchDeleteButton({ selectedIds, onSuccess }: { selectedIds: string[], 
         <Trash2 size={16} />
         {isPending ? '删除中...' : `删除 (${optimisticCount})`}
       </button>
+      <ConfirmDialog
+          open={isDeleteOpen}
+          onOpenChange={deleteDialog.toggle}
+          title="确认删除"
+          description={`确认删除这 ${selectedIds.length} 项吗？`}
+          confirmText="删除"
+          variant="destructive"
+          onConfirm={confirmDelete}
+      />
       {state.error && <span className="absolute top-full left-0 mt-1 min-w-max text-[10px] bg-red-500 text-white px-2 py-1 rounded shadow">{state.error}</span>}
     </div>
   );

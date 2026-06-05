@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Heart, Pencil, Trash2 } from "lucide-react";
 import { Tag } from "../../types";
-import { useClickAway } from "@/lib/hooks";
+import { useClickOutside } from "@mantine/hooks";
 import { useLongPress } from "@/hooks/useLongPress";
 
 interface TagItemProps {
@@ -27,12 +27,11 @@ export function TagItem({
   togglePin,
 }: TagItemProps) {
 
-  const itemRef = useRef<HTMLDivElement>(null);
-  useClickAway(itemRef as any, () => {
+  const itemRef = useClickOutside(() => {
     if (activeTagMenuId === tag.id) setActiveTagMenuId(null);
   });
 
-  useLongPress(itemRef, {
+  useLongPress(itemRef as any, {
     delay: 400,
     onLongPress: () => {
       setActiveTagMenuId(tag.id);

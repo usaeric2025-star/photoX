@@ -7,7 +7,7 @@ import { isErr } from '@/lib/errorFactory';
 /**
  * Hook to get the list of groups.
  */
-export const useGroupList = (userId: string) => {
+export const useGroups = (userId: string) => {
   return useQuery({
     queryKey: groupKeys.list(),
     queryFn: async () => {

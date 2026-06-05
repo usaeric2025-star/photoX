@@ -35,7 +35,6 @@ export const useSettingsLogic = ({
   performPullSync,
   setSettings,
 }: UseSettingsLogicProps) => {
-  const { update } = useUIStore(useShallow((s) => ({ update: s.update })));
   const { handleError } = useErrorHandler();
   const invalidatePhotos = useInvalidatePhotos();
   const { runTask } = useTaskExecutor();
@@ -54,37 +53,6 @@ export const useSettingsLogic = ({
     );
     setHasChanges(false);
   }, 1500);
-
-  const handleHealthCheck = async (allPhotos: Photo[]) => {
-    try {
-      await runHealthCheck(allPhotos, async (orphans) => {
-        return new Promise((resolve) => {
-          update({
-            alertDialog: {
-              title: "发现孤儿文件 / Orphans Found",
-              message: `存储空间中发现了 ${orphans} 个不再被数据库使用的文件。是否要清理这些“废弃孤本”以释放空间？`,
-              confirmLabel: "立即清理",
-              onConfirm: async () => {
-                update({ alertDialog: null });
-                toast.success("正在清理存儲空間...");
-                const cleanResp = await api.storage.clean.$post({});
-                if (!cleanResp.ok) {
-                  throw ErrorFactory.wrap(new Error(`清理存储失败 (HTTP ${cleanResp.status})，无法执行深度文件擦除。`), 'cleanOrphanFiles');
-                }
-                const cleanData = await cleanResp.json();
-                if (cleanData.success) {
-                  toast.success(`清理完成！共刪除 ${cleanData.data.cleanedCount} 個文件。`);
-                }
-                resolve();
-              },
-            },
-          });
-        });
-      }, invalidatePhotos);
-    } catch (err: any) {
-      handleError(err, "診斷失敗");
-    }
-  };
 
   const togglePin = (tagId: string) => {
     const currentPinned = settings?.pinned_tags || [];
@@ -144,7 +112,6 @@ export const useSettingsLogic = ({
     setActiveTagMenuId,
     debouncedSave,
     testConnection,
-    handleHealthCheck,
     togglePin,
     setSettingField,
   };

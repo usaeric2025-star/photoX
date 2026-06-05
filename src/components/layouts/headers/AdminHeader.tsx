@@ -90,22 +90,6 @@ export function AdminHeader({
     }, 150);
   };
 
-  const handleBatchDelete = async () => {
-    const selectedIds = useUIStore.getState().selectedIds || [];
-    update({
-        alertDialog: {
-            title: "确认删除",
-            message: `确认删除这 ${selectedIds.length} 张照片吗？`,
-            confirmLabel: "删除",
-            type: "danger",
-            onConfirm: async () => {
-              await deletePhoto(selectedIds);
-              disable();
-            }
-        }
-    });
-  };
-
   const handleBatchHide = async () => {
     const selectedIds = useUIStore.getState().selectedIds || [];
     await batchUpdate.execute({
