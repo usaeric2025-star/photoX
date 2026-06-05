@@ -29,7 +29,7 @@ export { useGroupDetail } from './core/queries/useGroupDetail';
 export { useInvalidatePhotos } from './queries/useInvalidatePhotos';
 
 // Mutations
-export { usePhotoEdit, usePhotoDelete, usePhotoBatchEdit, useTogglePin, usePhotoMutations } from './core/mutations/usePhotoMutations';
+export { usePhotoEdit, usePhotoDelete, usePhotoBatchEdit, useTogglePin } from './core/usePhotoEditor';
 export { 
   useTagCreate, useTagEdit, useTagDelete,
   useCategoryCreate, useCategoryEdit, useCategoryDelete,

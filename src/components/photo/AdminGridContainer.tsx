@@ -94,7 +94,7 @@ export function AdminGridContainer({
   };
 
   const virtualGridRef = useRef<any>(null);
-  const scrollToTop = () => virtualGridRef.current?.scrollTo(0);
+  const scrollToTop = () => virtualGridRef.current?.scrollToIndex(0);
   const adminActions = useAdminActions();
   const { user } = useAuth();
   const { handleError } = useErrorHandler();

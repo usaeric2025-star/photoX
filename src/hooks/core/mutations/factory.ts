@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient, QueryKey, QueryClient, UseMutationOptions } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { api } from '@/lib/api';
 
 interface MutationConfig<TData, TVariables, TContext> {
   mutationFn: (variables: TVariables) => Promise<TData>;
@@ -65,12 +66,7 @@ export function createMutation<TData, TVariables, TContext = unknown>(config: Mu
             const blob = new Blob([JSON.stringify(errorPayload)], { type: 'application/json' });
             navigator.sendBeacon('/api/log/event', blob);
         } else {
-            fetch('/api/log/event', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(errorPayload),
-            keepalive: true
-            }).catch(console.error);
+            api.log.event.$post({ json: errorPayload as any }).catch(console.error);
         }
         if (isRollbackFailure) {
             toast.error('操作失败，数据可能不一致，请重新整理页面', { duration: 10000 });

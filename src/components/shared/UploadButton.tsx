@@ -5,18 +5,16 @@ import { buttonStyles } from '../../styles/buttonStyles';
 import { useMultiSelect, usePermission } from '../../hooks';
 import { Photo } from '../../types';
 import { GalleryVariant } from '@/types/variant';
-import { useFormStatus } from 'react-dom';
 
 function AddButton({ onAdd }: { onAdd: () => void }) {
-  const { pending } = useFormStatus();
   return (
     <motion.button
       initial={{ opacity: 0, scale: 0.5 }}
       animate={{ opacity: 1, scale: 1 }}
       whileTap={{ scale: 0.97 }}
       transition={{ duration: 0.1 }}
-      type="submit"
-      disabled={pending}
+      onClick={onAdd}
+      type="button"
       className={`${buttonStyles.button} bg-blue-600 fixed bottom-6 right-6 z-[100] rounded-full shadow-lg hover:shadow-xl transition-shadow disabled:opacity-50`}
       title="Add Photo"
     >
@@ -61,9 +59,7 @@ export function UploadButton({
     return (
       <>
         {!isMultiSelect && onAdd && (
-          <form action={onAdd}>
-            <AddButton onAdd={onAdd} />
-          </form>
+          <AddButton onAdd={onAdd} />
         )}
       </>
     );
@@ -92,4 +88,4 @@ export function UploadButton({
       )}
     </div>
   );
-};
+}

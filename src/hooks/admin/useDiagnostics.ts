@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { fromThrowableAsync } from '@/lib/errorFactory';
 import { toast } from 'sonner';
@@ -12,33 +12,22 @@ import { ErrorFactory } from '../../lib/error/ErrorFactory';
  * Handles infrastructure and data integrity diagnostics
  */
 export function useDiagnostics() {
-  const [report, setReport] = useState<DiagnosticsReport | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [r2Result, setR2Result] = useState<any | null>(null);
-  const [isDiagnosingR2, setIsDiagnosingR2] = useState(false);
-  const [isTestingWorker, setIsTestingWorker] = useState(false);
-  const [workerResult, setWorkerResult] = useState<any | null>(null);
-  const [auditResult, setAuditResult] = useState<any | null>(null);
-  const [isAuditing, setIsAuditing] = useState(false);
-
   const queryClient = useQueryClient();
 
-  const runAudit = async () => {
-    setIsAuditing(true);
-    try {
+  const { data: auditResult, isLoading: isAuditing, refetch: runAudit } = useQuery({
+    queryKey: ['diagnostics', 'audit'],
+    queryFn: async () => {
       const res = await api.storage.audit.$get();
       const data = await res.json() as any;
-      if (data.success) {
-        setAuditResult(data.data);
-      } else {
+      if (!data.success) {
         toast.error('对账审计失败');
+        throw new Error('对账审计失败');
       }
-    } catch (e: any) {
-      toast.error(`审计错误: ${e.message}`);
-    } finally {
-      setIsAuditing(false);
-    }
-  };
+      return data.data;
+    },
+    retry: false,
+    staleTime: 1000 * 60 * 5,
+  });
 
   const { isPending: isRepairing, mutate: repair } = useMutation({
     mutationFn: async (issueId: string) => {
@@ -53,22 +42,24 @@ export function useDiagnostics() {
       toast.success(data.message || "修复成功");
       queryClient.invalidateQueries({ queryKey: photoKeys.all });
       queryClient.invalidateQueries({ queryKey: groupKeys.all });
-      refreshReport();
+      queryClient.invalidateQueries({ queryKey: ['diagnostics'] });
     },
     onError: (err: any) => toast.error(`修复尝试失败: ${err.message}`)
   });
 
-  const { isPending: isScanning, mutate: scan } = useMutation({
-    mutationFn: () => api.admin.diagnose.$get(),
-    onSuccess: async (res) => {
-      const data = await (res as unknown as Response).json();
-      setReport(data);
+  const { data: report, isLoading: isScanning, error: scanErrorObj, refetch: scan } = useQuery({
+    queryKey: ['diagnostics', 'report'],
+    queryFn: async () => {
+      const res = await api.admin.diagnose.$get();
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+      return await res.json() as unknown as DiagnosticsReport;
     },
-    onError: (err: any) => {
-      setError(`扫描失败: ${err.message}`);
-      toast.error('诊断运行失败');
-    }
+    retry: false,
   });
+
+  const scanError = scanErrorObj ? `扫描失败: ${(scanErrorObj as Error).message}` : null;
 
   const refreshReport = () => {
     scan();
@@ -76,34 +67,47 @@ export function useDiagnostics() {
     queryClient.invalidateQueries({ queryKey: groupKeys.all });
   };
 
-  const runR2Diagnostics = async () => {
-    setIsDiagnosingR2(true);
-    const result = await fromThrowableAsync(() => api.admin['diagnose-r2'].$get(), 'diagnoseR2');
-    if (!result.ok) {
-      toast.error('R2 诊断接口异常');
-      setIsDiagnosingR2(false);
-      return;
-    }
-    const res = result.data as Response;
-    if (res.ok) {
+  const { data: r2Result, isLoading: isDiagnosingR2, refetch: runR2DiagnosticsQuery } = useQuery({
+    queryKey: ['diagnostics', 'r2'],
+    queryFn: async () => {
+      const result = await fromThrowableAsync(() => api.admin['diagnose-r2'].$get(), 'diagnoseR2');
+      if (!result.ok) {
+        toast.error('R2 诊断接口异常');
+        throw new Error('R2 诊断接口异常');
+      }
+      const res = result.data as Response;
+      if (!res.ok) {
+        throw new Error('R2 存储测试未通过');
+      }
       const data = await res.json();
-      setR2Result(data);
-      if (data.success) toast.success('R2 存储连接测试成功');
-      else toast.error('R2 存储测试未通过');
-    }
-    setIsDiagnosingR2(false);
+      if (data.success) {
+        toast.success('R2 存储连接测试成功');
+      } else {
+        toast.error('R2 存储测试未通过');
+      }
+      return data;
+    },
+    retry: false,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const runR2Diagnostics = () => {
+    runR2DiagnosticsQuery();
   };
+
+  const [isTestingWorker, setIsTestingWorker] = useState(false);
+  const [workerResult, setWorkerResult] = useState<any | null>(null);
 
   const handleTestWorker = async () => {
     setIsTestingWorker(true);
     try {
       const res = await api.admin.repair.$post({ json: { issueId: 'diagnose_worker' } });
-      const result = await res.json();
+      const result = await res.json() as any;
       if (result.success) {
         setWorkerResult({ 
           success: true, 
-          message: result.data.isRealImage ? 'Worker 成功生成缩略图' : 'Worker 响应成功',
-          latency: result.data.latency 
+          message: result.data?.isRealImage ? 'Worker 成功生成缩略图' : 'Worker 响应成功',
+          latency: result.data?.latency 
         });
         toast.success('Worker 连通性测试成功');
       } else {
@@ -116,26 +120,20 @@ export function useDiagnostics() {
     }
   };
 
-  useEffect(() => {
-    refreshReport();
-    runR2Diagnostics();
-    runAudit();
-  }, []);
-
   return {
-    report,
+    report: report || null,
     isLoading: isScanning || isRepairing || isAuditing,
-    error,
+    error: scanError,
     refreshReport,
     runRepair: repair,
     runR2Diagnostics,
     isDiagnosingR2,
-    r2Result,
+    r2Result: r2Result || null,
     handleTestWorker,
     isTestingWorker,
     workerResult,
-    runAudit,
+    runAudit: () => runAudit(),
     isAuditing,
-    auditResult
+    auditResult: auditResult || null
   };
 }

@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
 import { useNavigate } from "@tanstack/react-router";
 import { useGroupMutations } from "@/hooks/core/mutations/useGroupMutations";
+import { CopyableId } from '@/components/ui/CopyableId';
 
 interface GroupHeaderProps {
   activeGroupId: string | null;
@@ -102,9 +103,7 @@ export function GroupHeader({
                   {groupData?.name || `GROUP ${activeGroupId?.slice(-4)}`}
                 </h2>
                 {activeGroupId && (
-                  <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200/50">
-                    ID: {activeGroupId.split('-')[0]}
-                  </span>
+                  <CopyableId className="bg-slate-100/50 border-slate-200/50" id={activeGroupId} label="ID" />
                 )}
                 {isAdminMode && (
                   <Pencil

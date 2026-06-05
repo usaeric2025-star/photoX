@@ -150,7 +150,7 @@ export const fetch = handle(app);
 - ❌ 禁止 `export default handle(app)`（在某些 ES Modules 编译阶段，Vercel 构建可能报错或解析失败）
 - ❌ 禁止动态导入 `await import("./app")`
 
-## Virtua 虚拟滚动规范（锁定）
+## Virtua 虚拟滚动规范（修正）
 
 ### 核心配置
 ```tsx
@@ -184,13 +184,15 @@ export const fetch = handle(app);
 - ❌ `overscanCount` - 废除
 - ❌ `estimateSize` - 不支持，使用 `itemSize`
 - ❌ `overscan`（像素单位） - 不支持，使用 `itemSize`
-- ❌ `scrollTo` - 不支持，使用 `scrollToIndex`
 
-
-### 返回顶部标准写法
+### 返回顶部与恢复滚动标准写法
+- ✅ **导航跳转**：使用 `scrollToIndex(0)` 回到顶部
+- ✅ **恢复滚动位置**：允许使用 `scrollTo(pixel)` 精确恢复历史位置
+- ❌ 禁止使用 `scrollTo(0)` 作为通用的「回到顶部」写法（应使用 `scrollToIndex`）
 ```typescript
-listRef.current?.scrollToIndex(0);  // ✅ 正确
-listRef.current?.scrollTo(0);        // ❌ 错误
+listRef.current?.scrollToIndex(0); // ✅ 正确（回到顶部）
+listRef.current?.scrollTo(savedPixels); // ✅ 正确（恢复精确位置）
+listRef.current?.scrollTo(0); // ❌ 错误（取代了 scrollToIndex(0)）
 ```
 
 ## 权限判断规范（锁定）
@@ -458,16 +460,38 @@ toast.error('发现数据完整性问题', {
 - Mutation 负责 Toast + 日志
 - TaskExecutor 负责更新任务状态 UI（不重复 Toast）
 
-## React 19 原生 Hook 使用规范（锁定）
+## React 19 Hooks 使用規範（鎖定）
 
-### 允许使用
-- ✅ React Compiler（自动 memo，与现有架构正交，已启用）
+### ❌ 禁止使用
 
-### 禁止使用（已有更优方案）
-- ❌ `useActionState` → 用 TanStack Mutation + createMutation 工厂
-- ❌ `useOptimistic` → 用 Mutation onMutate + Query Cache 更新
-- ❌ `use()` → 用 `useQuery` / `useInfiniteQuery`
-- ❌ `useFormStatus` → 用 Mutation 的 `isPending`
+- `useOptimistic`：樂觀更新統一使用 `createMutation` 工廠的 `optimisticUpdate`
+- `useActionState`：表單狀態統一使用 `useMutation` + 本地狀態
+- `useFormStatus`：表單提交狀態統一使用 `useTaskExecutor` 或元件本地 `useState`
+
+### ✅ 允許使用
+
+- 僅限**與服務器數據完全無關**的純 UI 互動（非常罕見）
+
+### 理由
+
+- 確保 Query Cache 作為單一事實來源
+- 保持架構一致性，降低決策成本
+- 避免樂觀更新與全局狀態不同步
+
+## 系統模式統一與選擇規範（鎖定，2026-06-05）
+
+為避免「兩套模式」並存造成的混亂，PhotoX 已鎖定以下架構選擇：
+
+| 領域 | 鎖定方案 | 禁用/棄用方案 |
+|------|----------|----------------|
+| 樂觀更新 | ✅ `createMutation` 工廠 | ❌ `useOptimistic` |
+| 表單狀態 | ✅ `useMutation` + 本地狀態 | ❌ `useActionState` |
+| 表單提交狀態 | ✅ `useState` 或 `useTaskExecutor` | ❌ `useFormStatus` |
+| 數據獲取 | ✅ TanStack `useQuery` | ❌ `useEffect` + `fetch` |
+| 跨元件儲存 | ✅ Mantine `useLocalStorage` | ❌ 手寫 `localStorage` (React 內) |
+| API 調用 | ✅ Hono RPC (`api.*.$post`) | ❌ 手寫 `fetch('/api/...')` |
+| 篩選狀態 | ✅ URL Filters (`useUrlFilters`) | ❌ Zustand filter store |
+| 彈窗管理 | ✅ `ConfirmDialog` + `useDisclosure` | ❌ 全域 `alertDialog` |
 
 ## 多语言架构规范（锁定）
 
@@ -518,6 +542,11 @@ const deleteMutation = createMutation({
 queryKey: (id) => ['photos', id],  // 支持函数形式
 optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 ```
+
+## 例外情况说明（锁定，2026-06-05）
+
+- **非 React 环境**（如 `errorTracker.ts`、Worker、脚本）：允许使用原生 `localStorage` / `sessionStorage`
+- **React 元件 / Hook 内**：必须使用 Mantine 的 `useLocalStorage` / `useSessionStorage`
 
 
 

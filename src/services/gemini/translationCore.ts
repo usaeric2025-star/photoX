@@ -135,13 +135,10 @@ Your response MUST match this exact JSON schema:
   const modelName = customModel || DEFAULT_AI_MODEL;
 
   try {
-    const response = await api.ai.dispatch.$post({
+    const response = await api.ai.translate.$post({
       json: {
-        task: 'translate',
-        payload: {
-          prompt: prompt,
-          model: modelName.replace('openrouter/', ''),
-        }
+        promptText: prompt,
+        customModel: modelName.replace('openrouter/', '')
       }
     }, { signal }) as any;
 

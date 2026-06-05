@@ -110,14 +110,11 @@ export const analyzeProductPhoto = async (
       combinedSignal = signal || timeoutAbort.signal;
     }
 
-    const fetchResponse = await api.ai.dispatch.$post({
+    const fetchResponse = await api.ai['analyze-base64'].$post({
       json: {
-        task: 'analyzePhoto',
-        payload: {
-          prompt: promptText,
-          imageBase64: processedBase64Image,
-          model: modelName.replace('openrouter/', ''),
-        }
+        promptText: promptText,
+        base64Image: processedBase64Image,
+        customModel: modelName.replace('openrouter/', ''),
       }
     }, { signal: combinedSignal }) as any;
 

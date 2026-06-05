@@ -17,6 +17,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { createTranslate } from '../lib/i18n';
 import { LanguageCode } from '../lib/translations';
+import { CopyableId } from '@/components/ui/CopyableId';
 // import removed
 
 
@@ -203,9 +204,7 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
                                   CODE: {activeGroupId.slice(-6).toUpperCase()}
                                 </span>
                                 <span className="text-slate-300">•</span>
-                                <span className="font-mono text-slate-400 opacity-80 bg-slate-100 px-1.5 py-0.5 rounded-md border border-slate-200/50">
-                                  ID: {activeGroupId.split('-')[0]}
-                                </span>
+                                <CopyableId className="opacity-80" id={activeGroupId} label="ID" />
                               </>
                             )}
                           </p>

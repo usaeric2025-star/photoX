@@ -1,4 +1,5 @@
-import React, { useActionState, useOptimistic, startTransition, useEffect } from 'react';
+import React, { startTransition, useEffect } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X as CloseIcon, RefreshCcw, Save, Trash2 } from 'lucide-react';
 import { useDisclosure } from '@mantine/hooks';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -6,43 +7,26 @@ import { useBatchEdit } from '@/hooks';
 import { BatchEditForm } from './edit/BatchEditForm';
 import { supabase } from '@/lib/supabase';
 import { reportError } from '@/lib/errorTracker';
-import { queryClient } from '@/lib/queryClient';
 import { photoKeys } from '@/lib/queryKeys';
 
-import { fromThrowableAsync } from '@/lib/errorFactory';
-
-async function batchDeleteAction(prevState: { error: string | null; success?: boolean }, formData: FormData) {
-  const photoIdsStr = formData.get('photoIds') as string;
-  if (!photoIdsStr) return { error: null };
-  const photoIds = JSON.parse(photoIdsStr);
-  
-  const result = await fromThrowableAsync(
-      async () => {
-          const { data, error } = await supabase.from('furniture_items').delete().in('id', photoIds);
-          if (error) throw error;
-          return data;
-      },
-      'batchDeleteAction'
-  );
-  
-  if (!result.ok) {
-     return { error: result.message, success: false };
-  }
-  
-  queryClient.invalidateQueries({ queryKey: photoKeys.all });
-  return { error: null, success: true };
-}
-
 function BatchDeleteButton({ selectedIds, onSuccess }: { selectedIds: string[], onSuccess: () => void }) {
-  const [state, formAction, isPending] = useActionState(batchDeleteAction, { error: null });
-  const [optimisticCount, setOptimisticCount] = useOptimistic(selectedIds.length);
   const [isDeleteOpen, deleteDialog] = useDisclosure(false);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    if (state.success) {
+  const deleteMutation = useMutation({
+    mutationFn: async (photoIds: string[]) => {
+      const { data, error } = await supabase.from('furniture_items').delete().in('id', photoIds);
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: photoKeys.all });
       onSuccess();
+    },
+    onError: (err) => {
+      reportError(err as Error, 'BatchDeleteAction');
     }
-  }, [state.success, onSuccess]);
+  });
 
   const handleDelete = () => {
     if (selectedIds.length === 0) return;
@@ -50,26 +34,23 @@ function BatchDeleteButton({ selectedIds, onSuccess }: { selectedIds: string[], 
   };
 
   const confirmDelete = () => {
-    startTransition(() => {
-      setOptimisticCount(0);
-      const formData = new FormData();
-      formData.append('photoIds', JSON.stringify(selectedIds));
-      formAction(formData);
-    });
+    deleteMutation.mutate(selectedIds);
   };
+
+  const isPending = deleteMutation.isPending;
 
   return (
     <div className="relative">
       <button 
         onClick={handleDelete}
-        disabled={isPending || optimisticCount === 0}
+        disabled={isPending || selectedIds.length === 0}
         className="h-10 px-3 bg-red-50 text-red-500 
         rounded-xl flex items-center justify-center gap-1.5
         active:bg-red-100 transition-colors disabled:opacity-50 text-sm font-bold"
         title="批量删除"
       >
         <Trash2 size={16} />
-        {isPending ? '删除中...' : `删除 (${optimisticCount})`}
+        {isPending ? '删除中...' : `删除 (${selectedIds.length})`}
       </button>
       <ConfirmDialog
           open={isDeleteOpen}
@@ -80,7 +61,7 @@ function BatchDeleteButton({ selectedIds, onSuccess }: { selectedIds: string[], 
           variant="destructive"
           onConfirm={confirmDelete}
       />
-      {state.error && <span className="absolute top-full left-0 mt-1 min-w-max text-[10px] bg-red-500 text-white px-2 py-1 rounded shadow">{state.error}</span>}
+      {deleteMutation.isError && <span className="absolute top-full left-0 mt-1 min-w-max text-[10px] bg-red-500 text-white px-2 py-1 rounded shadow">{(deleteMutation.error as Error).message}</span>}
     </div>
   );
 }

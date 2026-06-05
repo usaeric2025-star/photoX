@@ -1,42 +1,44 @@
-import React, { useRef, useEffect } from 'react';
-import { useActionState, useOptimistic, startTransition } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLongPress } from '@/hooks/useLongPress';
 import { supabase } from '@/lib/supabase';
 import { reportError } from '@/lib/errorTracker';
-import { queryClient } from '@/lib/queryClient';
 import { photoKeys } from '@/lib/queryKeys';
 import { getTranslatedCategoryName } from '@/lib/ui-helpers';
 import { useSearch, useNavigate } from '@tanstack/react-router';
 
-async function togglePinAction(prevState: { error: string | null }, formData: FormData) {
-  const photoId = formData.get('photoId') as string;
-  const currentPinned = formData.get('currentPinned') === 'true';
-  try {
-    const { error } = await supabase.from('furniture_items').update({ is_pinned: !currentPinned }).eq('id', photoId);
-    if (error) throw error;
-    queryClient.invalidateQueries({ queryKey: photoKeys.all });
-    return { error: null };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : '置顶失败';
-    reportError(err, `TogglePin photoId=${photoId}`);
-    return { error: message };
-  }
-}
-
 function PinButton({ photoId, isPinned }: { photoId: string; isPinned: boolean }) {
-  const [optimisticPinned, setOptimisticPinned] = useOptimistic(isPinned);
-  const [state, formAction, isPending] = useActionState(togglePinAction, { error: null });
+  const queryClient = useQueryClient();
+  const [optimisticPinned, setOptimisticPinned] = useState(isPinned);
+
+  useEffect(() => {
+    setOptimisticPinned(isPinned);
+  }, [isPinned]);
+
+  const togglePinMutation = useMutation({
+    mutationFn: async ({ id, currentPinned }: { id: string; currentPinned: boolean }) => {
+      const { error } = await supabase.from('furniture_items').update({ is_pinned: !currentPinned }).eq('id', id);
+      if (error) throw error;
+      return !currentPinned;
+    },
+    onMutate: async ({ currentPinned }) => {
+      setOptimisticPinned(!currentPinned);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: photoKeys.all });
+    },
+    onError: (err, { currentPinned }) => {
+      setOptimisticPinned(currentPinned); // Rollback
+      reportError(err as Error, `TogglePin photoId=${photoId}`);
+    }
+  });
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    startTransition(() => {
-      setOptimisticPinned(!optimisticPinned);
-      const formData = new FormData();
-      formData.append('photoId', photoId);
-      formData.append('currentPinned', String(optimisticPinned));
-      formAction(formData);
-    });
+    togglePinMutation.mutate({ id: photoId, currentPinned: isPinned });
   };
+
+  const isPending = togglePinMutation.isPending;
 
   return (
     <button 
@@ -46,7 +48,7 @@ function PinButton({ photoId, isPinned }: { photoId: string; isPinned: boolean }
       data-pinned={optimisticPinned ? 'true' : 'false'}
     >
       <Heart size={12} className={optimisticPinned ? 'fill-current' : ''} />
-      {state.error && <span className="absolute right-0 top-full mt-1 text-[8px] bg-red-500 text-white px-1 py-0.5 rounded shadow-sm whitespace-nowrap">{state.error}</span>}
+      {togglePinMutation.isError && <span className="absolute right-0 top-full mt-1 text-[8px] bg-red-500 text-white px-1 py-0.5 rounded shadow-sm whitespace-nowrap">{(togglePinMutation.error as Error).message}</span>}
     </button>
   );
 }

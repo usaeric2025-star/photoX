@@ -27,6 +27,15 @@ import { useLongPress } from '@/hooks/useLongPress';
 import { createPortal } from "react-dom";
 import { toast } from '@/lib/ui/toast';
 
+import { DimensionsSection } from './info/DimensionsSection';
+import { MetadataSection } from './info/MetadataSection';
+import { CategoryTagsSection } from './info/CategoryTagsSection';
+import { CopyableId } from '@/components/ui/CopyableId';
+
+import { DescriptionSection } from './info/DescriptionSection';
+import { ActionButtons } from './info/ActionButtons';
+import { SupportedLanguage } from './info/LanguageTabs';
+
 interface PhotoInfoPanelProps {
   mode: 'single' | 'group';
   data: Photo | ProductGroup | any;
@@ -38,33 +47,6 @@ interface PhotoInfoPanelProps {
   onAiAnalyze?: () => void;
   onClose?: () => void;
   className?: string;
-}
-
-interface TagBadgeProps {
-  tag: Tag;
-  isAdmin: boolean;
-  onLongPress: (tag: Tag) => void;
-}
-
-function TagBadge({ tag, isAdmin, onLongPress }: TagBadgeProps) {
-  const btnRef = React.useRef<HTMLSpanElement>(null);
-  
-  useLongPress(btnRef, {
-    delay: 600,
-    onLongPress: () => isAdmin && onLongPress(tag)
-  });
-
-  return (
-    <span 
-      ref={btnRef}
-      className={cn(
-        "text-[10.5px] font-semibold text-brand-navy/70 px-2.5 py-1 bg-brand-navy/5 rounded-full border border-brand-navy/10 shadow-sm transition-all active:scale-95 touch-none select-none",
-        isAdmin && "cursor-pointer hover:bg-brand-navy/10"
-      )}
-    >
-      #{tag.name}
-    </span>
-  );
 }
 
 export function PhotoInfoPanel({
@@ -80,7 +62,7 @@ export function PhotoInfoPanel({
   className
 }: PhotoInfoPanelProps) {
   const appLang = useUIStore((s) => s.appLang);
-  const [descLang, setDescLang] = React.useState<'zh' | 'en' | 'ms'>(appLang as any || 'zh');
+  const [descLang, setDescLang] = React.useState<SupportedLanguage>(appLang as any || 'zh');
 
   React.useEffect(() => {
     if (appLang === 'zh' || appLang === 'en' || appLang === 'ms') {
@@ -131,7 +113,6 @@ export function PhotoInfoPanel({
   const { data: fetchedTags = [] } = useTags();
   const { data: fetchedManufacturers = [] } = useManufacturers();
   const update = useUIStore((s) => s.update);
-  const [activeActionTag, setActiveActionTag] = React.useState<Tag | null>(null);
   const isAdmin = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
 
   const isGroup = mode === 'group' && 'member_count' in data;
@@ -214,28 +195,17 @@ export function PhotoInfoPanel({
           {isGroup ? <Layers size={18} className="text-brand-navy" /> : <Info size={18} className="text-brand-navy" />}
           {isGroup ? l.groupDetails : l.photoDetails}
         </h3>
-        <div className="flex items-center gap-1">
-          {showAi && !isGroup && (
-            <Button variant="ghost" size="icon" onClick={onAiAnalyze} title={l.aiAnalyze} className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50">
-              <Sparkles size={16} />
-            </Button>
-          )}
-          {showEdit && (
-            <Button variant="ghost" size="icon" onClick={onEdit} title={l.edit} className="h-8 w-8 text-slate-600">
-              <Pencil size={16} />
-            </Button>
-          )}
-          {showDelete && (
-            <Button variant="ghost" size="icon" onClick={onDelete} title={l.delete} className="h-8 w-8 text-red-600 hover:bg-red-50">
-              <Trash2 size={16} />
-            </Button>
-          )}
-          {onClose && (
-            <Button variant="ghost" size="icon" onClick={onClose} title={l.close} className="h-8 w-8 text-slate-400 hover:text-slate-600 hover:bg-slate-100 ml-1">
-              <X size={18} />
-            </Button>
-          )}
-        </div>
+        <ActionButtons 
+          isGroup={isGroup} 
+          showAi={showAi} 
+          showEdit={showEdit} 
+          showDelete={showDelete} 
+          onAiAnalyze={onAiAnalyze} 
+          onEdit={onEdit} 
+          onDelete={onDelete} 
+          onClose={onClose} 
+          texts={l} 
+        />
       </div>
 
       {/* Content */}
@@ -246,7 +216,7 @@ export function PhotoInfoPanel({
             <section className="relative">
               <div className="flex justify-between items-start mb-2">
                 <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">{l.basicInfo}</h4>
-                <span className="text-[8px] font-mono text-slate-300/30 hover:text-slate-400 transition-colors cursor-help" title={`Group ID: ${data.id}`}>{data.id?.split('-')[0]}</span>
+                <CopyableId className="bg-transparent border-none text-slate-400 p-0" id={data.id} label="GROUP ID" />
               </div>
               <h2 className="text-xl font-bold text-slate-900 mb-2">{data.name}</h2>
               <div className="flex flex-wrap gap-2 mb-4">
@@ -275,9 +245,8 @@ export function PhotoInfoPanel({
                 />
               </div>
               <h2 className="text-xl font-bold text-slate-900 mb-1">{(data as Photo).name || l.unknown}</h2>
-              <div className="flex items-center gap-1.5 mb-3 text-[10px] font-mono text-slate-500/80 select-all cursor-text bg-slate-50 border border-slate-100 px-2 py-1 rounded-md w-fit">
-                <span className="text-[9px] uppercase font-bold text-slate-400/90 tracking-wider">ID:</span>
-                <span>{(data as Photo).id}</span>
+              <div className="mb-3">
+                <CopyableId className="w-fit" id={(data as Photo).id} label="ID" />
               </div>
               {(data as Photo).name_en && (
                 <h3 className="text-sm font-medium text-slate-500 mb-3">{(data as Photo).name_en}</h3>
@@ -285,197 +254,38 @@ export function PhotoInfoPanel({
             </section>
 
             {/* Product Metadata */}
-            <section className="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
-              <div className="p-3 border-b border-slate-100 flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-1.5"><Briefcase size={12} /> {l.metadata}</span>
-                <span className="text-[8px] font-mono text-slate-400 cursor-help" title={`ID: ${(data as Photo).id}`}>{(data as Photo).id?.split('-')[0]}</span>
-              </div>
-              <div className="p-4 space-y-4">
-                {/* Codes */}
-                <div className="grid grid-cols-2 gap-4">
-                  {/* System ID / 系統內部編號 */}
-                  <div className="col-span-2 bg-white/60 hover:bg-white border border-slate-200/60 p-3 rounded-lg shadow-sm transition-colors">
-                    <span className="text-[9px] uppercase font-bold text-slate-400 block mb-1 tracking-wider">{l.systemId}</span>
-                    <span className="text-[11px] font-mono font-medium text-slate-700 select-all break-all cursor-text block leading-normal bg-slate-50/50 p-2 rounded border border-slate-200/30">
-                      {(data as Photo).id}
-                    </span>
-                  </div>
-
-                  <div>
-                    <span className="text-[9px] uppercase font-bold text-slate-400 block mb-1 tracking-wider">{l.itemCode}</span>
-                    <span className="text-sm font-mono font-semibold text-slate-900">{(data as Photo).item_code || '-'}</span>
-                  </div>
-                  <div>
-                    <span className="text-[9px] uppercase font-bold text-slate-400 block mb-1 tracking-wider">{l.modelNumber}</span>
-                    <span className="text-sm font-mono font-semibold text-slate-900">{(data as Photo).model_number || '-'}</span>
-                  </div>
-                  {/* Price */}
-                  <div className="col-span-2 flex justify-between bg-white/50 p-3 rounded-xl border border-slate-100 shadow-sm">
-                    <div>
-                      <span className="text-[9px] uppercase font-bold text-slate-400 block mb-1 tracking-wider">{l.priceOrCode}</span>
-                      <span className="text-sm font-semibold text-slate-900">
-                        {[(data as Photo).price ? `$${(data as Photo).price}` : '', (data as Photo).manual_code].filter(Boolean).join(' • ') || '-'}
-                      </span>
-                    </div>
-                    {(data as Photo).width ? (
-                       <div className="text-right">
-                         <span className="text-[9px] uppercase font-bold text-slate-400 block mb-1 tracking-wider">{l.imgSize}</span>
-                         <span className="text-[11px] font-mono text-slate-600">{(data as Photo).width} × {(data as Photo).height}</span>
-                       </div>
-                    ) : null}
-                  </div>
-                  {/* Manufacturer */}
-                  <div className="col-span-2">
-                    <span className="text-[9px] uppercase font-bold text-slate-400 block mb-1 tracking-wider">{l.manufacturer}</span>
-                    <span className="text-sm font-medium text-slate-900">{displayManufacturerName || '-'}</span>
-                  </div>
-                </div>
-              </div>
-            </section>
+            <MetadataSection 
+              photo={data as Photo} 
+              manufacturerName={displayManufacturerName} 
+              texts={l as any} 
+            />
 
             {/* Furniture Dimensions */}
-            {Array.isArray((data as Photo).dimensions) && (data as Photo).dimensions!.length > 0 && (
-              <section>
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 flex items-center gap-1.5"><Maximize2 size={12} /> {l.dimensions}</h4>
-                <div className="space-y-2">
-                  {(data as Photo).dimensions!.map((dim, idx) => (
-                    <div key={idx} className="flex flex-col text-xs p-2.5 bg-slate-50 rounded-lg border border-slate-100">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="font-bold text-slate-700 flex items-center gap-1">
-                          {dim.label || l.standard}
-                          {dim.is_ai && <Sparkles size={10} className="text-blue-500" aria-label={l.aiEstimated} />}
-                        </span>
-                        <span className="text-[9px] uppercase font-bold text-slate-400">{dim.unit}</span>
-                      </div>
-                      <span className="font-mono text-slate-600">
-                        {dim.length}L × {dim.width}W × {dim.height}H
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
+            <DimensionsSection 
+              dimensions={(data as Photo).dimensions || undefined} 
+              texts={l as any} 
+            />
 
             {/* Description (multilingual) */}
-            {(hasZh || hasEn || hasMs) && (
-              <section className="space-y-3">
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
-                    {l.description}
-                    {(data as Photo).is_ai_described && <Sparkles size={10} className="text-blue-500" aria-label={l.aiGenerated} />}
-                  </h4>
-                  {/* Language Toggle */}
-                  {showLanguageToggle && (
-                    <div className="flex bg-slate-100 rounded border border-slate-200 p-0.5">
-                      {hasZh && (
-                        <button 
-                          onClick={() => setDescLang('zh')} 
-                          className={cn("text-[9px] font-bold px-2 py-0.5 rounded transition-all flex items-center gap-1", descLang === 'zh' ? "bg-white shadow-sm text-slate-800" : "text-slate-400 hover:text-slate-600")}
-                        >
-                          ZH
-                        </button>
-                      )}
-                      {hasEn && (
-                        <button 
-                          onClick={() => setDescLang('en')} 
-                          className={cn("text-[9px] font-bold px-2 py-0.5 rounded transition-all flex items-center gap-1", descLang === 'en' ? "bg-white shadow-sm text-slate-800" : "text-slate-400 hover:text-slate-600")}
-                        >
-                          EN
-                        </button>
-                      )}
-                      {hasMs && (
-                        <button 
-                          onClick={() => setDescLang('ms')} 
-                          className={cn("text-[9px] font-bold px-2 py-0.5 rounded transition-all flex items-center gap-1", descLang === 'ms' ? "bg-white shadow-sm text-slate-800" : "text-slate-400 hover:text-slate-600")}
-                        >
-                          MS
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-                
-                <div className="text-sm text-slate-700 leading-relaxed bg-slate-50/50 p-3 rounded-lg border border-slate-100 whitespace-pre-wrap">
-                  {displayDesc}
-                </div>
-              </section>
-            )}
+            <DescriptionSection 
+              photo={data as Photo}
+              hasZh={hasZh}
+              hasEn={hasEn}
+              hasMs={hasMs}
+              descLang={descLang}
+              setDescLang={setDescLang}
+              displayDesc={displayDesc}
+              texts={l as any}
+            />
 
              {/* Classification */}
-            {(displayCategoryName || displayTags.length > 0) && (
-              <section>
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5 mb-3">
-                  <Grid size={12} /> {l.classification}
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {displayCategoryName && (
-                    <Badge variant="outline" className="bg-brand-navy/5 text-brand-navy border-brand-navy/10 px-2.5 py-1 shadow-sm">
-                      <Grid size={12} className="mr-1.5 opacity-60" />
-                      {displayCategoryName}
-                    </Badge>
-                  )}
-                  {displayTags.map((tag: Tag) => (
-                    <TagBadge 
-                      key={tag.id} 
-                      tag={tag} 
-                      isAdmin={isAdmin}
-                      onLongPress={(t) => setActiveActionTag(t)}
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {activeActionTag && createPortal(
-              <div
-                className="fixed inset-0 z-[9999] bg-slate-950/40 flex items-center justify-center p-6 backdrop-blur-sm cursor-pointer animate-in fade-in duration-200"
-                onClick={() => setActiveActionTag(null)}
-              >
-                <div
-                  className="glass-morphism rounded-3xl p-8 w-full max-w-[280px] shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-200 cursor-default bg-white border border-slate-200"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="text-center space-y-1">
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                      标签管理 / TAG
-                    </span>
-                    <div className="text-lg font-black text-slate-900">
-                      #{activeActionTag.name}
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <button
-                      type="button"
-                      className="w-full flex items-center justify-center gap-3 text-blue-600 bg-blue-50/50 backdrop-blur-sm border border-blue-100/50 font-bold py-4 rounded-2xl hover:bg-blue-100 transition-all cursor-pointer shadow-sm shadow-blue-500/5"
-                      onClick={() => {
-                        toast.info(appLang === 'zh' ? '請在設置頁面管理標籤詳情' : 'Please manage tag details in Settings');
-                        setActiveActionTag(null);
-                      }}
-                    >
-                      <Pencil size={18} strokeWidth={2.5} /> {appLang === 'zh' ? '管理標籤' : 'Manage Tag'}
-                    </button>
-                    <button
-                      type="button"
-                      className="w-full flex items-center justify-center gap-3 text-red-600 bg-red-50/50 backdrop-blur-sm border border-red-100/50 font-bold py-4 rounded-2xl hover:bg-red-100 transition-all cursor-pointer shadow-sm shadow-red-500/5"
-                      onClick={() => {
-                        toast.error(appLang === 'zh' ? '請在設置頁面刪除' : 'Delete in Settings');
-                        setActiveActionTag(null);
-                      }}
-                    >
-                      <Trash2 size={18} strokeWidth={2.5} /> {appLang === 'zh' ? '刪除標籤' : 'Delete Tag'}
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    className="w-full text-slate-400 text-[10px] font-black uppercase tracking-tighter pt-2 active:text-slate-600 cursor-pointer"
-                    onClick={() => setActiveActionTag(null)}
-                  >
-                    取消操作 / CANCEL
-                  </button>
-                </div>
-              </div>,
-              document.body
-            )}
+            <CategoryTagsSection 
+              categoryName={displayCategoryName} 
+              tags={displayTags} 
+              isAdmin={isAdmin} 
+              appLang={appLang} 
+              texts={l as any} 
+            />
           </>
         )}
       </div>

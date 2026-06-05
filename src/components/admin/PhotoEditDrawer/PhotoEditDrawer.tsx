@@ -7,7 +7,7 @@ import { ConfirmDialog } from "../../ui/ConfirmDialog";
 import { PromptDialog } from "../../ui/PromptDialog";
 import { ProductFormData, Photo } from "../../../types";
 import { HeadlessSlot } from "../../../lib/component-contract";
-import { usePhotoEditLogic } from "./usePhotoEditLogic";
+import { usePhotoEditor } from "../../../hooks/core/usePhotoEditor";
 import { DrawerHeader } from "./DrawerHeader";
 import { useUIStore } from "../../../store";
 import { BasicInfoTab } from "./BasicInfoTab";
@@ -247,7 +247,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
     update({ batchEditingIds: null });
   };
 
-  const logic = usePhotoEditLogic({
+  const logic = usePhotoEditor({
     photos,
     editPhotoId,
     form,

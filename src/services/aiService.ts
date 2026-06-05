@@ -1,3 +1,4 @@
+import { api } from '@/lib/api';
 import { Photo } from '../types';
 import { analyzeProductPhoto } from './gemini';
 import { supabase } from '@/lib/supabase';
@@ -10,13 +11,7 @@ import { ErrorFactory } from '../lib/error/ErrorFactory';
  */
 export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promise<AppResult<any>> => {
   try {
-     const resp = await fetch('/api/ai/analyze', {
-       method: 'POST',
-       headers: { 'Content-Type': 'application/json' },
-       body: JSON.stringify({ photoId }),
-       signal
-     });
-
+     const resp = await api.ai.analyze.$post({ json: { photoId } }) as any;
      const data = await resp.json();
      if (data.success) {
        return ok(data.data);

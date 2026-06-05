@@ -1,10 +1,11 @@
-import { useActionState, useTransition } from 'react';
+import { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { updatePhotoAction } from '../../actions/photoActions';
 import { ProductFormData, Photo } from '../../types';
 import { StandardError } from '../../lib/validators/protocol';
 import { toast } from '@/lib/ui/toast';
-import { isOk } from '../../lib/errorFactory';
 import { useErrorHandler, useInvalidatePhotos } from '@/hooks';
+import { ErrorFactory } from '../../lib/error/ErrorFactory';
 
 interface ActionState {
   data: Photo | null;
@@ -14,46 +15,55 @@ interface ActionState {
 
 /**
  * [V2.8-FORM-PARADYM]
- * React 19 Hook for managing photo updates with validation.
+ * React Query Hook for managing photo updates with validation.
  */
 export function usePhotoAction(id: string, initialData?: Photo | null) {
   const { handleError } = useErrorHandler();
   const invalidatePhotos = useInvalidatePhotos();
-  const [isPending, startTransition] = useTransition();
+  
+  const [state, setState] = useState<ActionState>({ 
+    data: initialData || null, 
+    error: null, 
+    status: 'idle' 
+  });
 
-  const [state, submitAction] = useActionState(
-    async (prevState: ActionState, formData: ProductFormData): Promise<ActionState> => {
+  const mutation = useMutation({
+    mutationFn: async (formData: ProductFormData) => {
       const result = await updatePhotoAction(id, formData);
-      
-      if (result.ok) {
-        toast.success('保存成功 / Saved successfully');
-        invalidatePhotos();
-        return {
-          data: result.data,
-          error: null,
-          status: 'success'
-        };
-      } else {
-        handleError(new Error(result.message), `保存失败: ${result.context || result.message}`);
-        return {
-          data: prevState.data,
-          error: result as any,
-          status: 'error'
-        };
+      if (!result.ok) {
+        throw ErrorFactory.wrap(new Error(result.message), 'updatePhotoAction', id);
       }
+      return result;
     },
-    { data: initialData || null, error: null, status: 'idle' }
-  );
+    onMutate: () => {
+      setState(prev => ({ ...prev, status: 'pending' }));
+    },
+    onSuccess: (result) => {
+      toast.success('保存成功 / Saved successfully');
+      invalidatePhotos();
+      setState({
+        data: result.data,
+        error: null,
+        status: 'success'
+      });
+    },
+    onError: (err) => {
+      handleError(err, `保存失败: ${err.message}`);
+      setState(prev => ({
+        data: prev.data,
+        error: { message: err.message, code: 'UNKNOWN_ERROR', ok: false, context: '' } as any,
+        status: 'error'
+      }));
+    }
+  });
 
   const runUpdate = (data: ProductFormData) => {
-    startTransition(() => {
-      submitAction(data);
-    });
+    mutation.mutate(data);
   };
 
   return {
     state,
-    isPending,
+    isPending: mutation.isPending,
     runUpdate
   };
 }
