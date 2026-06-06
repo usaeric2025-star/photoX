@@ -199,7 +199,8 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
         
         // Auto-save the AI result directly to DB
         updateProgress(90, appLang === 'zh' ? '正在自动保存...' : 'Auto-saving...');
-        console.log('[AI Raw Debug]', result);
+        // [AI Raw Debug] cleaning up debug log
+
         await onUpdatePhoto(photo.id, merged); 
         
         updateProgress(100, appLang === 'zh' ? '识别并保存成功' : 'Success');

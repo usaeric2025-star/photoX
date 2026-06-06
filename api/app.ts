@@ -1742,7 +1742,13 @@ app.post("/storage/import-orphans", async (c) => {
 
       // 获取当前操作者的 user_id
       const { data: session } = await supabase.auth.getSession();
-      const userId = session?.session?.user?.id;
+      let userId = session?.session?.user?.id;
+      
+      if (!userId) {
+         // Fallback: Get a valid user to assign ownership
+         const { data: users } = await supabase.from('users').select('id').limit(1);
+         userId = users?.[0]?.id || '00000000-0000-0000-0000-000000000000';
+      }
 
       // 2. Get all R2 files
       let continuationToken: string | undefined;
@@ -1843,7 +1849,7 @@ app.post("/storage/import-orphans", async (c) => {
               description: `[自动恢复] 源文件: ${filename}`,
               is_hidden: false, 
               image_hash: hash,
-              user_id: userId || '00000000-0000-0000-0000-000000000000'
+              user_id: userId
             });
             
             dbUrls.add(normalizeUrl(publicUrl));

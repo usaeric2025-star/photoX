@@ -1,3 +1,5 @@
+export type ErrorSeverity = 'low' | 'medium' | 'high' | 'critical';
+
 export class ErrorFactory {
   static normalizeError(err: unknown): { message: string; stack?: string } {
     if (err instanceof Error) {
@@ -15,12 +17,13 @@ export class ErrorFactory {
     return { message: 'Unknown error' };
   }
 
-  static wrap(error: unknown, operation: string, resource?: string) {
+  static wrap(error: unknown, operation: string, resource?: string, severity: ErrorSeverity = 'high') {
     const normalized = this.normalizeError(error);
     const wrapped = new Error(`[${operation}] ${resource ? `(${resource}) ` : ''}${normalized.message}`);
     (wrapped as any).originalError = error;
     (wrapped as any).operation = operation;
     (wrapped as any).resource = resource;
+    (wrapped as any).severity = severity;
     return wrapped;
   }
 }

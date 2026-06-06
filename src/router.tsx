@@ -106,7 +106,7 @@ export const rootRoute = createRootRouteWithContext<RouterContext>()({
 const authGuard = async ({ context, location }: { context: { user: any }, location: { pathname: string; search: any } }) => {
   const { user } = context;
   // Guard only checks permissions/logs, does not handle redirections
-  console.log('[authGuard] Checking access:', { pathname: location.pathname, hasUser: !!user });
+  logger.debug('[authGuard] Checking access:', { pathname: location.pathname, hasUser: !!user });
   return;
 };
 

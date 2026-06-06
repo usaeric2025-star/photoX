@@ -640,6 +640,28 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 - ❌ 禁止直接调 `z-index` 解决弹窗与工具列冲突
 - ❌ 禁止在全域层级观察 DOM（MutationObserver）
 
+## 新功能开发检查清单（完整版）
+
+### 数据一致性
+- [ ] Mutation 是否使用 createMutation 工厂？
+- [ ] 表单是否用 structuredClone 创建本地草稿，Query 数据保持只读？
+- [ ] 乐观更新是否在 onMutate 中完成，onSuccess 仅做副作用？
+- [ ] 错误严重度是否由业务语义显式声明？
+
+### UI 与交互
+- [ ] 弹窗是否上报 activeDialogCount？
+- [ ] 错误通知是否统一使用 sonner？
+- [ ] API 调用是否使用 Hono RPC？
+
+### 性能
+- [ ] 列表页是否使用 select 缩小订阅字段？
+- [ ] Zustand 是否使用 selector 精确订阅？
+- [ ] 是否优先依赖 React Compiler，仅在瓶颈时手动 memo？
+
+---
+
+## PhotoX 架构重构阶段：COMPLETED
+
 
 
 

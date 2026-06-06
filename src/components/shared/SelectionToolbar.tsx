@@ -5,7 +5,7 @@ import { Sparkles, FolderPlus, Edit, EyeOff, Trash2, X } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useGroupPhotosMutation, useUrlFilters } from '@/hooks';
 import { useAIGroup } from '@/hooks/core/mutations/useAIGroup';
-import { useUIStore } from '@/store/useUIStore';
+import { useUIStore, useIsAnyDialogOpen } from '@/store/useUIStore';
 import { toast } from 'sonner';
 
 interface SelectionToolbarProps {
@@ -28,7 +28,7 @@ export function SelectionToolbar({
   
   const [isGroupAlertOpen, groupAlert] = useDisclosure(false);
 
-  const activeDialogCount = useUIStore((s: any) => s.activeDialogCount);
+  const isAnyDialogOpen = useIsAnyDialogOpen();
   
   const count = selectedIds.length;
   const ids = selectedIds;
@@ -39,7 +39,7 @@ export function SelectionToolbar({
   const { handleAIAction } = useAIGroup();
   const { filters: urlFilters, setShowGroupsCollapsed } = useUrlFilters();
 
-  if (activeDialogCount > 0 || !isMultiSelect || count === 0) return null;
+  if (isAnyDialogOpen || !isMultiSelect || count === 0) return null;
 
   const handleClear = () => {
     update({ isMultiSelect: false, selectedIds: [] });

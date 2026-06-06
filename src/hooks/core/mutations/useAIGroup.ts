@@ -60,7 +60,8 @@ export function useAIGroup() {
           finalDescription.ms = pTranslations.description_ms || description;
         } catch (e) {
           console.warn('[createAIGroup] Group translations skipped:', e);
-          console.log('[createAIGroup] Raw analysis result:', analysis);
+          // [createAIGroup] debug log removed
+
         }
 
         // 3. 执行合组（合并照片、创建组、清理旧组）

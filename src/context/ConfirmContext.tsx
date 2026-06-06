@@ -14,7 +14,7 @@ interface ConfirmContextType {
 
 const ConfirmContext = createContext<ConfirmContextType | undefined>(undefined);
 
-export const ConfirmProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export function ConfirmProvider({ children }: { children: React.ReactNode }) {
   const [resolveConfirm, setResolveConfirm] = useState<(value: boolean) => void>();
   const [open, setOpen] = useState(false);
   const [options, setOptions] = useState<ConfirmOptions>({ title: '', description: '' });

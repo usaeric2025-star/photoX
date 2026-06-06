@@ -96,6 +96,8 @@ const defaultForm: ProductFormData = {
   is_group_cover: false
 };
 
+export const useIsAnyDialogOpen = () => useUIStore((s) => s.activeDialogCount > 0);
+
 export const useUIStore = create<UIStoreState>()((set) => ({
   appLang: (() => {
     const raw = safeGetItem(STORAGE_KEYS.LANG, 'en', undefined, false);
