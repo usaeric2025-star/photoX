@@ -11,10 +11,13 @@ interface DimensionsSectionProps {
     standard: string;
     aiEstimated: string;
   };
+  otherItems?: string[];
 }
 
-export function DimensionsSection({ dimensions, appLang, texts }: DimensionsSectionProps) {
+export function DimensionsSection({ dimensions, appLang, texts, otherItems = [] }: DimensionsSectionProps) {
   if (!Array.isArray(dimensions) || dimensions.length === 0) return null;
+
+  const filteredDimensions = dimensions.filter(d => !!(d.height || d.width || d.length));
 
   return (
     <section>
@@ -22,7 +25,7 @@ export function DimensionsSection({ dimensions, appLang, texts }: DimensionsSect
         <Maximize2 size={12} /> {texts.dimensions}
       </h4>
       <div className="space-y-2">
-        {dimensions.map((dim, idx) => (
+        {filteredDimensions.map((dim, idx) => (
           <div key={idx} className="flex flex-col text-xs p-2.5 bg-slate-50 rounded-lg border border-slate-100">
             <div className="flex justify-between items-center mb-1">
               <span className="font-bold text-slate-700 flex items-center gap-1">

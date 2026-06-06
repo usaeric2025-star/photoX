@@ -166,9 +166,20 @@ export function PhotoInfoPanel({
     aiAnalyze: appLang === 'zh' ? 'AI 分析' : appLang === 'ms' ? 'Analisis AI' : 'AI Analyze',
   };
 
+  // Description and Name splitting
   const displayDesc = getSafeText(data.description, descLang);
-  const displayName = getSafeText(data.name, appLang);
+  const rawDisplayName = getSafeText(data.name, appLang);
   const displayNameEn = getSafeText(data.name, 'en');
+
+  // Name splitting logic: + > , > ；
+  // Main name: before delimiter, Others: after
+  const splitNames = (name: string): { main: string, others: string[] } => {
+    const parts = name.split(/[+\,；]+/).map(p => p.trim()).filter(Boolean);
+    if (parts.length <= 1) return { main: name, others: [] };
+    return { main: parts[0], others: parts.slice(1) };
+  };
+  const { main: displayName, others: otherNameItems } = splitNames(rawDisplayName || '');
+  const { main: displayNameMainEn } = splitNames(displayNameEn || '');
 
   const hasZh = !!(data as Photo).description?.zh;
   const hasEn = !!(data as Photo).description?.en;
@@ -233,8 +244,8 @@ export function PhotoInfoPanel({
                 />
               </div>
               <h2 className="text-xl font-bold text-slate-900 mb-1">{displayName || l.unknown}</h2>
-              {displayNameEn && (
-                <h3 className="text-sm font-medium text-slate-500 mb-3">{displayNameEn}</h3>
+              {displayNameMainEn && (
+                <h3 className="text-sm font-medium text-slate-500 mb-3">{displayNameMainEn}</h3>
               )}
             </section>
 
@@ -249,8 +260,10 @@ export function PhotoInfoPanel({
             <DimensionsSection 
               dimensions={(data as Photo).dimensions || undefined} 
               appLang={appLang}
-              texts={l as any} 
+              texts={l as any}
+              otherItems={otherNameItems}
             />
+
 
             {/* Description (multilingual) */}
             <DescriptionSection 
