@@ -95,40 +95,6 @@ function SelectionOverlay({ isSelected }: { isSelected: boolean }) {
   );
 }
 
-function PhotoInfoFooter({ displayCatName, photoTags, hideTags, categoryId, tagIds }: { 
-  displayCatName: string; 
-  photoTags: string[];
-  hideTags?: boolean;
-  categoryId?: string | number | null;
-  tagIds?: string[];
-}) {
-  return (
-    <div className="absolute bottom-0 left-0 w-full z-20 pointer-events-auto p-1.5 pt-8 flex flex-col gap-1.5 bg-gradient-to-t from-black/95 via-black/65 to-transparent">
-        {displayCatName ? (
-            <span 
-              className="text-[9px] text-brand-gold font-bold tracking-widest leading-none truncate px-1.5 py-0.5 rounded bg-black/65 backdrop-blur-sm w-fit uppercase border border-brand-gold/30 shadow-md ml-0.5"
-            >
-            {displayCatName.toUpperCase()}
-            </span>
-        ) : null}
-        {!hideTags && photoTags && photoTags.length > 0 ? (
-            <div className="flex flex-row gap-1.5 overflow-x-auto no-scrollbar pointer-events-auto px-0.5 pb-0.5">
-                {photoTags.map((tag, i) => {
-                    return (
-                        <span 
-                            key={tag}
-                            className="text-[8px] text-slate-100 font-semibold px-1.5 py-0.5 rounded bg-black/65 backdrop-blur-md leading-tight border border-white/10 whitespace-nowrap"
-                        >
-                        {tag}
-                        </span>
-                    );
-                })}
-            </div>
-        ) : null}
-    </div>
-  );
-}
-
 const toTitleCase = (str: string) => {
   if (!str) return '';
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
@@ -185,6 +151,8 @@ export const PhotoCard = ({
       .map(id => tags.find(t => String(t.id) === String(id))?.name ?? '')                
       .filter(Boolean);                
   })();
+
+  const displayName = getPhotoDisplayName(photo, categories, lang, t);
 
   const { can } = usePermission();
   const location = window.location;
@@ -339,13 +307,36 @@ export const PhotoCard = ({
          <PinButton photoId={photo.id} isPinned={!!photo.is_pinned} />
       )}
 
-      <PhotoInfoFooter 
-        displayCatName={displayCatName} 
-        photoTags={photoTags}
-        hideTags={hideDetails}
-        categoryId={photo.category_id}
-        tagIds={photo.tag_ids}
-      />
+      {/* Info Overlay Panel */}
+      {!hideDetails && (
+        <div className="absolute bottom-0 left-0 w-full z-20 pointer-events-auto p-1.5 pt-8 flex flex-col gap-1 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
+          {displayName && (
+            <span className="text-[10px] sm:text-[11px] text-white font-black tracking-tight leading-tight line-clamp-2 px-1 drop-shadow-md uppercase">
+              {displayName}
+            </span>
+          )}
+          
+          <div className="flex flex-wrap items-center gap-1 mt-0.5">
+            {displayCatName && (
+              <span className="text-[8px] bg-white/20 backdrop-blur-md text-white px-1.5 py-0.5 rounded-full font-black tracking-tighter uppercase border border-white/10 whitespace-nowrap shadow-sm">
+                {displayCatName}
+              </span>
+            )}
+            
+            {isManagement && photo.is_hidden && (
+              <span className="text-[8px] bg-red-500 text-white px-1.5 py-0.5 rounded-full font-black tracking-tighter uppercase whitespace-nowrap shadow-sm border border-red-400/50">
+                HIDDEN
+              </span>
+            )}
+
+            {!hideDetails && photoTags && photoTags.slice(0, 2).map(tag => (
+              <span key={tag} className="text-[8px] bg-black/40 backdrop-blur-sm text-slate-100 px-1.5 py-0.5 rounded-full font-bold tracking-tighter uppercase border border-white/5 whitespace-nowrap">
+                #{tag}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

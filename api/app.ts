@@ -249,8 +249,10 @@ Task: Inspect the furniture image to extract comprehensive structured details an
 
 【PRECISE DIMENSIONS (OCR)】
 - Locate all measurement charts or text overlays (H=, W=, D=, etc.).
-- "dimensions": Array of { "label": string, "value": number, "unit": "cm" }.
-- EXAMPLE: [{"label": "Single Seat", "value": 188, "unit": "cm"}]
+- "dimensions": Array of { "label": string, "length": number, "width": number, "height": number, "unit": string }.
+- USE THE UNIT FOUND ON THE IMAGE (e.g., "mm", "cm", "inch"). If no unit is clear, default to "cm".
+- EXAMPLE: [{"label": "Single Seat", "height": 188, "width": 45, "length": 50, "unit": "cm"}]
+- NOTE: "length" can also be used for "depth (D)".
 
 【THOROUGH TRANSLATIONS】
 Generate precise name and description translations for:
@@ -267,7 +269,7 @@ Target Response Schema:
 {
   "name": "...",
   "category_id": "...",
-  "dimensions": [{ "label": "...", "value": 0, "unit": "cm" }],
+  "dimensions": [{ "label": "...", "length": 0, "width": 0, "height": 0, "unit": "cm" }],
   "description": "...",
   "tag_ids": ["..."],
   "new_tags": ["..."],
@@ -294,8 +296,8 @@ Target Response Schema:
             
             // Map the unified translations back to the expected structure
             if (data.translations) {
-               data.name_translations = data.translations.name;
-               data.description_translations = data.translations.description;
+               data.name = data.translations.name;
+               data.description = data.translations.description;
                delete data.translations;
             }
         } catch (e) {
