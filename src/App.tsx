@@ -9,6 +9,7 @@ import { logger } from '@/lib/logger';
 import { Analytics } from '@vercel/analytics/react';
 import { useAuth } from '@/hooks/core/auth/useAuth';
 import { LoadingScreen } from '@/components/LoadingScreen';
+import { ConfirmProvider } from './context/ConfirmContext';
 
 export default function AppRoutes() {
   useEffect(() => {
@@ -44,7 +45,9 @@ export default function AppRoutes() {
 
   return (
     <ErrorBoundary>
-      <RouterProvider router={router} context={routerContext} />
+      <ConfirmProvider>
+        <RouterProvider router={router} context={routerContext} />
+      </ConfirmProvider>
       <Analytics />
     </ErrorBoundary>
   );

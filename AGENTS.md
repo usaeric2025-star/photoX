@@ -599,5 +599,27 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 - ❌ 禁止在各组件中手写不同的 `limit` 值
 
 
+## 架构极致化规范（锁定）
+
+### Mutation
+- ✅ 所有写操作必须使用 `createMutation` 工厂
+- ❌ 禁止直接使用 `useMutation`
+
+### 快取更新
+- ✅ 优先使用 `setQueryData` 精準更新
+- ❌ 禁止为单笔操作 `invalidateQueries` 整个列表
+
+### Zustand
+- ✅ 必须使用 selector 精确订阅
+- ❌ 禁止无参调用 `useUIStore()`
+
+### TanStack Query
+- ✅ 列表页使用 `select` 缩小订阅字段
+- ✅ 使用 `placeholderData: keepPreviousData`
+
+### Virtua
+- ✅ 生产环境配置 `overscan`、`shift`、`estimateSize`
+
+
 
 

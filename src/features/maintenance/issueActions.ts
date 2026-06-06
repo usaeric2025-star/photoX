@@ -119,24 +119,6 @@ export const ISSUE_ACTIONS: Record<string, MaintenanceAction> = {
       return await res.json() as any;
     }
   },
-  cleanup_temp_urls: {
-    name: '物理路径 UUID 化',
-    preview: async () => {
-       const res = await api.admin.diagnose.$get();
-       const data = await res.json() as any;
-       const issue = data.issues?.find((i: any) => i.id === 'cleanup_temp_urls');
-       return { affectedCount: issue?.affectedCount || 0 };
-    },
-    execute: async () => {
-       const res = await api.admin.repair.$post({ json: { issueId: 'cleanup_temp_urls' } });
-       const data = await res.json() as any;
-       return { jobId: 'uuid', message: data.message };
-    },
-    getStatus: async (jobId) => {
-      const res = await api.admin.maintenance.job[':jobId'].$get({ param: { jobId } });
-      return await res.json() as any;
-    }
-  },
   agnes_retranslate: {
     name: 'Agnes 全量重翻',
     preview: async () => {

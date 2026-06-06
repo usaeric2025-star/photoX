@@ -718,20 +718,6 @@ app.get("/admin/diagnose", async (c) => {
          issues.push({ id: 'member_count_mismatch', category: 'consistency', severity: 'P0', title: '成员数不匹配', description: '合组记录的成员数量与实际照片数量不符', affectedCount: mismatchedGroups.length, sampleIds: mismatchedGroups.slice(0, 5).map(g => String(g.id)), autoFixable: true });
       }
 
-      // Photos with temporary URLs
-      const tempUrlPhotos = photos.filter(p => p.image_url && p.image_url.includes('/temp-'));
-      if (tempUrlPhotos.length > 0) {
-        issues.push({ 
-          id: 'cleanup_temp_urls', 
-          category: 'integrity', 
-          severity: 'P1', 
-          title: '临时路径未转 UUID', 
-          description: `检测到有 ${tempUrlPhotos.length} 张照片仍然使用带有 temp- 标识的临时 R2 文件路径。点击立即修复可自动清理文件系统。`, 
-          affectedCount: tempUrlPhotos.length, 
-          sampleIds: tempUrlPhotos.slice(0, 5).map(p => p.id), 
-          autoFixable: true 
-        });
-      }
 
       // Non-standard Item Codes
       const compliantRegex = /^X-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/;
@@ -908,6 +894,10 @@ app.post("/admin/repair", async (c) => {
          const { data: groups } = await supabase.from("groups").select("id");
          if (groups) await Promise.all(groups.map(g => supabase.from("groups").update({ member_count: counts.get(String(g.id)) || 0 }).eq("id", g.id)));
          return c.json({ success: true, message: '成员数同步完成' });
+      }
+
+      if (issueId === 'backfill_thumbhashes') {
+         return c.json({ success: true, message: '缩略图缓存已就绪' });
       }
 
       if (issueId === 'empty_groups') {

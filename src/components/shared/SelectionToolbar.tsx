@@ -7,6 +7,7 @@ import { useGroupPhotosMutation, useUrlFilters } from '@/hooks';
 import { useAIGroup } from '@/hooks/core/mutations/useAIGroup';
 import { useUIStore } from '@/store/useUIStore';
 import { toast } from '@/lib/ui/toast';
+import { useConfirm } from '@/context/ConfirmContext';
 
 interface SelectionToolbarProps {
   onAIIdentify?: (ids: string[]) => void;
@@ -25,6 +26,7 @@ export function SelectionToolbar({
   const selectedIds = useUIStore((s: any) => s.selectedIds);
   const isMultiSelect = useUIStore((s: any) => s.isMultiSelect);
   const update = useUIStore((s: any) => s.update);
+  const confirm = useConfirm();
   
   const [isGroupAlertOpen, groupAlert] = useDisclosure(false);
 
@@ -41,6 +43,18 @@ export function SelectionToolbar({
 
   const handleClear = () => {
     update({ isMultiSelect: false, selectedIds: [] });
+  };
+
+  const handleDelete = async () => {
+    if (!onDelete) return;
+    const confirmed = await confirm({
+      title: `确定要删除选中的 ${count} 张照片吗？`,
+      description: '此操作不可撤销，照片将从云端彻底移除。',
+      variant: 'destructive',
+    });
+    if (confirmed) {
+      onDelete(ids);
+    }
   };
 
   const handleGroup = async () => {
@@ -82,7 +96,7 @@ export function SelectionToolbar({
   };
 
   return createPortal(
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 border border-slate-800 backdrop-blur rounded-full px-4 py-2 shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-300">
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-header bg-slate-900/95 border border-slate-800 backdrop-blur rounded-full px-4 py-2 shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-300">
       {/* Circle Badge showing selection count */}
       <div 
         className="w-7 h-7 flex items-center justify-center rounded-full bg-blue-600 text-white font-bold text-xs ring-4 ring-blue-600/15 shrink-0 select-none cursor-default"
@@ -135,7 +149,7 @@ export function SelectionToolbar({
 
         {onDelete && (
           <button
-            onClick={() => onDelete(ids)}
+            onClick={handleDelete}
             className="w-9 h-9 flex items-center justify-center rounded-full text-rose-400 hover:text-white hover:bg-rose-600/20 active:scale-95 transition-all"
             title="批量删除"
           >
