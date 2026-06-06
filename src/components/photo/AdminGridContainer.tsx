@@ -18,7 +18,7 @@ import { useAdminActions } from '@/features/admin/useAdminActions';
 import { savePhotosToCloudBatch } from "@/services/photo/photoUploadService";
 import { useAuth, useErrorHandler } from '@/hooks';
 import { ErrorFactory } from '@/lib/errorFactory';
-import { toast } from '@/lib/ui/toast';
+import { toast } from 'sonner';
 import { GroupDetailPage } from '../GroupDetailPage';
 import { PAGINATION } from '@/constants/config';
 import { normalizeAdminPhotos } from '@/lib/selectors/photos';

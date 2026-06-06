@@ -61,7 +61,7 @@ import { usePermission, useCategories, useTags, useErrorHandler } from '../../ho
 import { useAdminActions } from '@/features/admin/useAdminActions';
 import { getDisplayGroupCode } from '@/services/utils';
 
-import { toast } from '@/lib/ui/toast';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { translations } from '@/lib/translations';
 import { useUIStore, useColumns } from '@/store/useUIStore';

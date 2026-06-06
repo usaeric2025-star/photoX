@@ -2,7 +2,7 @@ import React from 'react';
 import { Trash2, Download, AlertCircle, AlertTriangle, Info, ShieldAlert, ChevronDown, ChevronUp } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { toast } from '@/lib/ui/toast';
+import { toast } from 'sonner';
 import { useDisclosure } from '@mantine/hooks';
 import { formatters } from '@/utils/formatters';
 

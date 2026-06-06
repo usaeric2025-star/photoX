@@ -1843,7 +1843,7 @@ app.post("/storage/import-orphans", async (c) => {
               description: `[自动恢复] 源文件: ${filename}`,
               is_hidden: false, 
               image_hash: hash,
-              user_id: userId || 'system'
+              user_id: userId || '00000000-0000-0000-0000-000000000000'
             });
             
             dbUrls.add(normalizeUrl(publicUrl));

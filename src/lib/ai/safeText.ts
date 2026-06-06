@@ -12,12 +12,16 @@ export function getSafeText(field: any, locale: string = 'zh'): string {
       data = JSON.parse(data);
     } catch (e) {
       // It's a broken JSON string.
-      // Try a simple regex for finding the locale value: "zh":"value"
-      const regex = new RegExp(`"${locale}"\\s*:\\s*"([^"]+)"`);
+      // 1. Try a simple regex for finding the locale value: "zh":"value"
+      const regex = new RegExp(`"${locale}"\\s*:\\s*"([^"]+)`); // Allowing missing closing quote
       const match = data.match(regex);
       if (match) return match[1];
+
+      // 2. If no match for locale, try to extract any JSON value: "key":"value"
+      const anyMatch = data.match(/"[^"]+":"([^"]+)/);
+      if (anyMatch) return anyMatch[1];
       
-      // Fallback: If no match for locale, just strip all JSON-like characters to make it readable
+      // 3. Fallback: If still nothing, just return raw string or make it readable
       return data.replace(/[{}"\\]/g, ' ').replace(locale, '').replace(':', ' ').trim();
     }
   }

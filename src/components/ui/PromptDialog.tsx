@@ -10,6 +10,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
+import { useUIStore } from '@/store/useUIStore';
 
 interface PromptDialogProps {
   open: boolean;
@@ -32,14 +33,21 @@ export const PromptDialog = ({
 }: PromptDialogProps) => {
   const [value, setValue] = useState(defaultValue);
 
+  const handleOpenChange = (isOpen: boolean) => {
+    if (isOpen) useUIStore.getState().incrementDialogCount();
+    else useUIStore.getState().decrementDialogCount();
+    onOpenChange(isOpen);
+  };
+
   const handleConfirm = async () => {
     await onConfirm(value);
     onOpenChange(false);
+    useUIStore.getState().decrementDialogCount();
     setValue('');
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog open={open} onOpenChange={handleOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>

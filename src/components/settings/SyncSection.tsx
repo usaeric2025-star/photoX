@@ -4,7 +4,7 @@ import {
 } from 'lucide-react';
 import { User, ApiResponse } from '@/types';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { toast } from '@/lib/ui/toast';
+import { toast } from 'sonner';
 import { useDisclosure } from '@mantine/hooks';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 

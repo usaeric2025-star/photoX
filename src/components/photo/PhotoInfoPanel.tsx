@@ -25,7 +25,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useLongPress } from '@/hooks/useLongPress';
 import { createPortal } from "react-dom";
-import { toast } from '@/lib/ui/toast';
+import { toast } from 'sonner';
 import { getSafeText } from '@/lib/ai/safeText';
 
 import { DimensionsSection } from './info/DimensionsSection';

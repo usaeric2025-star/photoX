@@ -31,7 +31,7 @@ import { usePhotoGallery } from '@/features/photos/usePhotoGallery';
 import { User, Photo, Category } from '@/types';
 import { TranslationType, getCacheBustedImageUrl } from '@/lib/ui-helpers';
 import { LanguageCode } from '@/lib/translations';
-import { toast } from '@/lib/ui/toast';
+import { toast } from 'sonner';
 
 /* Removed ErrorFallback component */
 

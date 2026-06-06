@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { Grid, Pencil, Trash2 } from 'lucide-react';
 import { createPortal } from "react-dom";
-import { toast } from '@/lib/ui/toast';
+import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Tag } from '@/types/photo';
 import { cn } from '@/lib/utils';

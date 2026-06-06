@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { toast } from '@/lib/ui/toast';
+import { toast } from 'sonner';
 import { logErrorToSupabase } from '@/services/logService';
 
 export function extractErrorMessage(error: any): string {

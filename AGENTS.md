@@ -633,6 +633,14 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 ### Virtua
 - ✅ 生产环境配置 `overscan`、`shift`、`estimateSize`
 
+## 弹窗与工具列协调规范（锁定，2026-06-06）
+
+- ✅ 所有全域弹窗（ConfirmDialog / PromptDialog）必须上报 `useUIStore`
+- ✅ 工具列订阅 `activeDialogCount`， >0 时自动隐藏
+- ❌ 禁止直接调 `z-index` 解决弹窗与工具列冲突
+- ❌ 禁止在全域层级观察 DOM（MutationObserver）
+
+
 
 
 

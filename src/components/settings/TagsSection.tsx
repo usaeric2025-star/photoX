@@ -5,7 +5,7 @@ import { Tag, AppSettings } from "../../types";
 import { TagItem } from "./TagItem";
 import { PromptDialog } from "@/components/ui/PromptDialog";
 import { useErrorHandler, useTaskExecutor, useTasks } from "@/hooks";
-import { toast } from "@/lib/ui/toast";
+import { toast } from 'sonner';
 import { normalizeTagName } from "@/lib/utils";
 import { triggerRefreshTagHotScores } from "../../services/tag/commands";
 import { useQueryClient } from "@tanstack/react-query";

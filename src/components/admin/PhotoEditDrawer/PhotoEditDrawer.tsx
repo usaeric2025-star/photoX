@@ -30,7 +30,7 @@ import {
   usePhotoDetail,
   useRemoveFromGroupMutation
 } from "../../../hooks";
-import { toast } from "@/lib/ui/toast";
+import { toast } from 'sonner';
 import { applyAIResult } from '@/lib/ai/aiMerger';
 import { mergeSplitDimensions } from '@/lib/ai/dimensionMerger';
 import { cleanPhotos } from "../../../lib/filters";

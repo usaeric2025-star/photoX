@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { LogIn, Image as ImageIcon, Sparkles, Cloud, Layers, RefreshCcw, Lock, X } from 'lucide-react';
-import { toast } from '@/lib/ui/toast';
+import { toast } from 'sonner';
 import { useSettings } from '../../hooks';
 import { useUIStore } from '@/store/useUIStore';
 import { Link, useNavigate } from '@tanstack/react-router';

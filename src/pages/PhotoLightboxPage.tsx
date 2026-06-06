@@ -14,7 +14,7 @@ import { getTranslatedCategoryName } from "@/lib/ui-helpers";
 import { translations } from "@/lib/translations";
 import { useDisclosure } from "@mantine/hooks";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { toast } from "@/lib/ui/toast";
+import { toast } from 'sonner';
 
 /**
  * [PAGE] PhotoLightboxPage

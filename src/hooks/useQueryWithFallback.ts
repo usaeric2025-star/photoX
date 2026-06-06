@@ -1,5 +1,5 @@
 import { UseQueryResult } from '@tanstack/react-query';
-import { toast } from '@/lib/ui/toast';
+import { toast } from 'sonner';
 import { useEffect } from 'react';
 
 interface QueryFallbackOptions {

@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { useAdminActions } from '@/features/admin/useAdminActions';
-import { toast } from '@/lib/ui/toast';
+import { toast } from 'sonner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { photoKeys } from '@/lib/queryKeys';
 import { useErrorHandler } from '@/hooks';

@@ -3,7 +3,7 @@ import type { Photo } from '@/types';
 import { queryClient } from '@/lib/queryClient';
 import { photoKeys } from '@/lib/queryKeys';
 import { useErrorHandler, useTasks } from '@/hooks';
-import { toast } from '@/lib/ui/toast';
+import { toast } from 'sonner';
 import { isOk } from '@/lib/errorFactory';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 

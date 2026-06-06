@@ -10,7 +10,7 @@ import {
 } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { fromThrowableAsync } from '@/lib/errorFactory';
-import { toast } from '@/lib/ui/toast';
+import { toast } from 'sonner';
 import { useErrorHandler, useInvalidatePhotos, useTaskExecutor } from "@/hooks";
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 

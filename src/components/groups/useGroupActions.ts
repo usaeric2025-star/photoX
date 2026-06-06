@@ -24,7 +24,7 @@ export const useGroupActions = (
       const isAlreadyCover = groupData?.cover_photo_id === photoId;
       const targetPhotoId = isAlreadyCover ? null : photoId;
       
-      const { toast } = await import('@/lib/ui/toast');
+      const { toast } = await import('sonner');
       mutateSetCover({
         photoId: targetPhotoId,
         groupId: activeGroupId || undefined,

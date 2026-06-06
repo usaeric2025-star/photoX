@@ -5,7 +5,7 @@ import { Manufacturer } from "../../types";
 import { ManufacturerItem } from "../admin/ManufacturerItem";
 import { PromptDialog } from "@/components/ui/PromptDialog";
 import { useErrorHandler } from "../../hooks";
-import { toast } from "@/lib/ui/toast";
+import { toast } from 'sonner';
 import { normalizeManufacturerName } from "@/lib/utils";
 
 interface ManufacturersSectionProps {

@@ -8,6 +8,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useUIStore } from '@/store/useUIStore';
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -32,18 +33,26 @@ export const ConfirmDialog = ({
   cancelText = '取消',
   variant = 'default',
 }: ConfirmDialogProps) => {
+  const handleOpenChange = (isOpen: boolean) => {
+    if (isOpen) useUIStore.getState().incrementDialogCount();
+    else useUIStore.getState().decrementDialogCount();
+    onOpenChange(isOpen);
+  };
+  
   const handleConfirm = async () => {
     await onConfirm();
     onOpenChange(false);
+    useUIStore.getState().decrementDialogCount();
   };
 
   const handleCancel = () => {
     onCancel?.();
     onOpenChange(false);
+    useUIStore.getState().decrementDialogCount();
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog open={open} onOpenChange={handleOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>

@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query';
 import { updatePhotoAction } from '../../actions/photoActions';
 import { ProductFormData, Photo } from '../../types';
 import { StandardError } from '../../lib/validators/protocol';
-import { toast } from '@/lib/ui/toast';
+import { toast } from 'sonner';
 import { useErrorHandler, useInvalidatePhotos } from '@/hooks';
 import { ErrorFactory } from '../../lib/error/ErrorFactory';
 

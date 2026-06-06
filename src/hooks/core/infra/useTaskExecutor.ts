@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useTasks } from './useTasks';
 import { reportError } from '@/lib/errorReporter';
-import { toast } from '@/lib/ui/toast';
+import { toast } from 'sonner';
 import { extractErrorMessage } from '@/lib/error/errorHandler';
 
 /**
@@ -52,7 +52,7 @@ export function useTaskExecutor() {
       reportError(errMsg, name);
       
       if (options?.showErrorToast !== false) { // Always show errors
-        toast.error(`${name} 失敗: ${errMsg}`);
+        toast.error(`${name} 失敗`, errMsg);
       }
       
       const actualError = error instanceof Error ? error : new Error(errMsg);

@@ -1,4 +1,4 @@
-import { toast } from '@/lib/ui/toast';
+import { toast } from 'sonner';
 import { useUIStore } from '@/store/useUIStore';
 import React, { useState, useMemo, useCallback, useRef } from "react";
 import { X, Check, Search, Plus, Upload, Sparkles } from "lucide-react";

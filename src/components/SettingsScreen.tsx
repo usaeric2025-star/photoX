@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useErrorHandler } from '@/hooks';
-import { toast } from '@/lib/ui/toast';
+import { toast } from 'sonner';
 import { ErrorLogViewer } from './admin/ErrorLogViewer';
 import { AppSettings, User, ApiResponse } from '@/types';
 import { 

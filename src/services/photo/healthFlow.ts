@@ -6,7 +6,7 @@ import {
 } from "@/services/photo/photoMaintenanceService";
 import { backfillThumbHashes } from "@/services/photo/backfillService";
 import { getPhotosWithoutThumbHash } from "@/services/photo/queries";
-import { toast } from '@/lib/ui/toast';
+import { toast } from 'sonner';
 
 export const runHealthCheck = async (
   allPhotos: any[], 

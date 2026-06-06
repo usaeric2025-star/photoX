@@ -6,7 +6,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useGroupPhotosMutation, useUrlFilters } from '@/hooks';
 import { useAIGroup } from '@/hooks/core/mutations/useAIGroup';
 import { useUIStore } from '@/store/useUIStore';
-import { toast } from '@/lib/ui/toast';
+import { toast } from 'sonner';
 
 interface SelectionToolbarProps {
   onAIIdentify?: (ids: string[]) => void;
@@ -28,16 +28,18 @@ export function SelectionToolbar({
   
   const [isGroupAlertOpen, groupAlert] = useDisclosure(false);
 
+  const activeDialogCount = useUIStore((s: any) => s.activeDialogCount);
+  
   const count = selectedIds.length;
   const ids = selectedIds;
   
-  console.log('SelectionToolbar rendering - isMultiSelect:', isMultiSelect, 'count:', count);
+  // No MutationObserver needed
 
   const groupMutation = useGroupPhotosMutation();
   const { handleAIAction } = useAIGroup();
   const { filters: urlFilters, setShowGroupsCollapsed } = useUrlFilters();
 
-  if (!isMultiSelect || count === 0) return null;
+  if (activeDialogCount > 0 || !isMultiSelect || count === 0) return null;
 
   const handleClear = () => {
     update({ isMultiSelect: false, selectedIds: [] });

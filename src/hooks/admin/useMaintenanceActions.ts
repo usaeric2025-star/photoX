@@ -27,7 +27,7 @@ export function useMaintenanceActions(onSuccess?: () => void) {
       const data = await res.json() as any;
       if (data.success) toast.success("存储对账完成");
     } catch (e: any) {
-      toast.error(`对账失败: ${e.message}`);
+      toast.error(`对账失败: ${e.message}`, e.stack);
     } finally { setIsAuditing(false); }
   };
 
@@ -41,7 +41,7 @@ export function useMaintenanceActions(onSuccess?: () => void) {
         onSuccess?.();
       }
     } catch (e: any) {
-      toast.error(`恢复失败: ${e.message}`);
+      toast.error(`恢复失败: ${e.message}`, e.stack);
     } finally { setIsAuditing(false); }
   };
 
@@ -74,7 +74,7 @@ export function useMaintenanceActions(onSuccess?: () => void) {
         toast.success(`成功补全 ${data.processed} 条记录`);
         onSuccess?.();
       }
-    } catch (e: any) { toast.error(e.message); }
+    } catch (e: any) { toast.error(e.message, e.stack); }
     finally { setIsBackfilling(false); }
   };
 

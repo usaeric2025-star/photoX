@@ -66,6 +66,7 @@ export interface UIStoreState {
   isInfiniteMode: boolean;
   filterSubId: string | null;
   processingIds: string[];
+  activeDialogCount: number;
   
   // Interaction state
   selectedIds: string[];
@@ -74,6 +75,8 @@ export interface UIStoreState {
   removeProcessingIds: (ids: string[]) => void;
   setDraggedPhoto: (id: string | null) => void;
   updateSelectedIds: (ids: string[]) => void;
+  incrementDialogCount: () => void;
+  decrementDialogCount: () => void;
 
   update: (updates: Partial<UIStoreState> | ((state: UIStoreState) => Partial<UIStoreState>)) => void;
 }
@@ -150,13 +153,17 @@ export const useUIStore = create<UIStoreState>()((set) => ({
       isMultiSelect: false,
       editPhotoId: null,
       batchEditingIds: null,
-      formState: defaultForm
+      formState: defaultForm,
+      activeDialogCount: 0
     }),
   showWhatsAppChoice: false,
   newPhotoData: null,
   showOtherFields: false,
   isInfiniteMode: false,
   filterSubId: null,
+  activeDialogCount: 0,
+  incrementDialogCount: () => set((state) => ({ activeDialogCount: state.activeDialogCount + 1 })),
+  decrementDialogCount: () => set((state) => ({ activeDialogCount: Math.max(0, state.activeDialogCount - 1) })),
   update: (updates) => set((state) => {
     const nextState = typeof updates === 'function' ? updates(state) : updates;
     

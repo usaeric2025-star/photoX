@@ -18,6 +18,17 @@ import { toast } from "sonner";
 import { Loader2, ShieldAlert } from "lucide-react";
 import { useDisclosure } from '@mantine/hooks';
 
+const showError = (message: string, description?: string) => {
+  toast.error(message, {
+    description,
+    action: {
+      label: '📋 复制',
+      onClick: () => navigator.clipboard.writeText(`${message}${description ? `\n\n详情: ${description}` : ''}`),
+    },
+    duration: 10000,
+  });
+};
+
 interface MaintenanceToolProps {
   issueId: string;
   title?: string;
@@ -48,7 +59,7 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
       const result = await action.preview();
       setPreview(result);
     } catch (e: any) {
-      toast.error(`预检失败: ${e.message}`);
+      showError(`预检失败: ${e.message}`, e.stack);
     } finally {
       setIsPreviewing(false);
     }
@@ -73,14 +84,14 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
             toast.success(status.message || "执行成功");
             if (onSuccess) onSuccess();
           } else {
-            toast.error(status.error || "执行失败");
+            showError(status.error || "执行失败", status.error);
           }
           setTimeout(() => setProgress(0), 2000);
         }
-      } catch (e) {
+      } catch (e: any) {
         clearInterval(interval);
         setIsExecuting(false);
-        toast.error("轮询状态失败");
+        showError("轮询状态失败", e.message);
       }
     }, 2000);
   };
@@ -101,7 +112,7 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
       }
       setPreview(null);
     } catch (e: any) {
-      toast.error(`启动执行失败: ${e.message}`);
+      showError(`启动执行失败: ${e.message}`, e.stack);
       setIsExecuting(false);
       setProgress(0);
     }
