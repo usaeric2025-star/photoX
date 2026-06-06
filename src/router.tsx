@@ -18,7 +18,6 @@ import { createStaleTime } from '@/shared/freshnessSchema';
 import { getGroupById } from '@/services/group/queries';
 import { checkPublicAuth } from '@/lib/publicAuth';
 import { RootRouter } from '@/pages/RootRouter';
-import { logger } from '@/lib/logger';
 
 /**
  * [V2.10-ROUTER-PERMISSION-INTEGRATED] Router Context Definition
