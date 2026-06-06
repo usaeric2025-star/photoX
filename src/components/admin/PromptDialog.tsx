@@ -10,6 +10,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
+import { useUIStore } from '@/store/useUIStore';
 
 import { DialogData } from '../../types';
 
@@ -22,7 +23,12 @@ export function PromptDialog({ dialog, onClose }: PromptDialogProps) {
   const [value, setValue] = useState('');
 
   useEffect(() => {
-    if (dialog) setValue('');
+    if (dialog) {
+        setValue('');
+        useUIStore.getState().incrementDialogCount();
+    } else {
+        useUIStore.getState().decrementDialogCount();
+    }
   }, [dialog]);
 
   return (

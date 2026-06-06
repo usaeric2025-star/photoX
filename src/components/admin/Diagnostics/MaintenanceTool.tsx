@@ -17,6 +17,7 @@ import { PreviewResult } from "@/features/maintenance/maintenanceTypes";
 import { toast } from "sonner";
 import { Loader2, ShieldAlert } from "lucide-react";
 import { useDisclosure } from '@mantine/hooks';
+import { useUIStore } from '@/store/useUIStore';
 
 const showError = (message: string, description?: string) => {
   toast.error(message, {
@@ -152,7 +153,11 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
             </Button>
         </div>
 
-        <AlertDialog open={showConfirm} onOpenChange={(isOpened) => isOpened ? openConfirm() : closeConfirm()}>
+        <AlertDialog open={showConfirm} onOpenChange={(isOpened) => {
+          if (isOpened) useUIStore.getState().incrementDialogCount();
+          else useUIStore.getState().decrementDialogCount();
+          isOpened ? openConfirm() : closeConfirm();
+        }}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>确认执行操作？</AlertDialogTitle>
@@ -239,7 +244,11 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
         )}
       </div>
 
-      <AlertDialog open={showConfirm} onOpenChange={(isOpened) => isOpened ? openConfirm() : closeConfirm()}>
+      <AlertDialog open={showConfirm} onOpenChange={(isOpened) => {
+        if (isOpened) useUIStore.getState().incrementDialogCount();
+        else useUIStore.getState().decrementDialogCount();
+        isOpened ? openConfirm() : closeConfirm();
+      }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>确认执行操作？</AlertDialogTitle>

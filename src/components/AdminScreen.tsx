@@ -75,12 +75,14 @@ export function AdminScreen() {
   return (
     <div className="flex flex-col absolute inset-0 bg-slate-50 overflow-hidden z-50" id="main-admin-screen">
        {/* Close Button */}
-       <button 
-         onClick={() => window.location.href = '/'} 
-         className="absolute top-4 right-4 z-[60] p-2 bg-white rounded-full shadow-lg border border-slate-200"
-       >
-         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-       </button>
+       {shouldShowContent && (
+         <button 
+           onClick={() => window.location.href = '/'} 
+           className="absolute top-2 right-2 z-[60] p-1.5 bg-white rounded-full shadow-sm border border-slate-200 hover:bg-slate-50"
+         >
+           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+         </button>
+       )}
        <div className="flex-1 min-h-0 relative">
          {!shouldShowContent ? (
            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-slate-400 bg-slate-50">
