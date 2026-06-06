@@ -19,7 +19,9 @@ interface PhotoAnalysisResult {
 }
 
 export async function analyzeGroup(photos: Photo[]): Promise<GroupAnalysisResult> {
-  const photoDetails = photos.map(p => `- 名称: ${p.name}, 标签: ${p.tagNames?.join(',') || '无'}`).join('\n');
+  const photoDetails = photos.map(p => 
+    `- 名称: ${p.name}, 标签: ${p.tagNames?.join(',') || '无'}, 描述: ${p.description || '无'}`
+  ).join('\n');
   
   const response = await api.ai['analyze-group'].$post({
     json: { photoDetails }

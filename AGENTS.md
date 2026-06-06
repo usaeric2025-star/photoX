@@ -599,15 +599,21 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 - ❌ 禁止在各组件中手写不同的 `limit` 值
 
 
+
 ## 架构极致化规范（锁定）
 
 ### Mutation
 - ✅ 所有写操作必须使用 `createMutation` 工厂
 - ❌ 禁止直接使用 `useMutation`
 
-### 快取更新
-- ✅ 优先使用 `setQueryData` 精準更新
-- ❌ 禁止为单笔操作 `invalidateQueries` 整个列表
+### 快取更新（铁律）
+- ✅ 必须同时使用两种机制：
+  1. `setQueryData`：更新当前页面 / 列表 / 明细（避免闪烁）
+  2. `invalidateQueries`：同步其他页面 / 其他列表（确保一致性）
+- ✅ 优先影响范围：
+  - 当前画面：用 `setQueryData`
+  - 其他查询：用 `invalidateQueries`
+- ❌ 禁止只做其中一种
 
 ### Zustand
 - ✅ 必须使用 selector 精确订阅
@@ -619,6 +625,7 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 
 ### Virtua
 - ✅ 生产环境配置 `overscan`、`shift`、`estimateSize`
+
 
 
 

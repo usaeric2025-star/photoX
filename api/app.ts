@@ -245,12 +245,10 @@ Task: Inspect the furniture image/tables to extract comprehensive structured det
 - "category_id": MUST be one of these IDs exactly: ${JSON.stringify(categoriesContext)}
 - "tag_ids": Map to up to 3 most relevant tag IDs from this list: ${JSON.stringify(tagsContext)}. ALL MUST BE VALID UUIDs from the list.
 - "new_tags": Keyword tags in English/Malay (e.g., "LEATHER"). NO CHINESE.
-- "dimensions": Extract ALL variants/options displayed. Use specific labels (e.g., "Dining Table", "Chair C102").
-  - "length": Numeric length (cm).
-  - "width": Numeric width (cm).
-  - "height": Numeric height (cm).
-  - "unit": "cm"
-  - "isAIEstimated": boolean.
+- "dimensions": Extract ALL variants/options displayed. PERFORM PRECISE OCR on the image. Look for patterns like H=188cm, W=120cm, D=45cm, h188cm, h 188cm, 188cm height, etc. 
+   - OUTPUT FORMAT: Provide an array of objects: { "label": string (specific variant/option), "value": number, "unit": "cm" }.
+   - EXAMPLE: [{"label": "1 seater", "value": 188, "unit": "cm"}, {"label": "2 seater", "value": 150, "unit": "cm"}]
+   - STRICT RULE: Do not use Agnes or any intermediate service for dimension parsing. Extract and structure them directly from the image.
 
 【CONSTRAINTS】
 - Output raw JSON only.
@@ -261,10 +259,8 @@ Target Response Schema:
 {
   "name": "Short English Name (e.g., 'Dining Set')",
   "category_id": "category-id-example",
-  "price": 0,
-  "model_number": "...",
   "dimensions": [
-    { "label": "Model A Table", "length": 140, "width": 80, "height": 75, "unit": "cm", "isAIEstimated": false }
+    { "label": "Model A Table", "value": 140, "unit": "cm" }
   ],
   "description": "家具描述内容（必须使用简体中文）...",
   "tag_ids": ["tag-id-1", "tag-id-2"],
@@ -348,34 +344,6 @@ Return EXACTLY JSON of this schema. Do not include any other text except the JSO
                         }
                     } catch (e) {
                         console.error('Translation parsing failed', e);
-                    }
-                }
-
-                // Extract dimensions from description
-                const dimPrompt = `Extract numeric dimensions (width, height, depth in cm) from this text: "${data.description}". Return JSON: { "width_cm": number|null, "height_cm": number|null, "depth_cm": number|null }. If no dimensions are found, return all as 0 or null.`;
-                const dimResult = await agnes.chat([{ role: 'user', content: dimPrompt }]);
-                if (dimResult.success) {
-                    try {
-                        const dims = JSON.parse((dimResult.text || '').replace(/```json\n|\n```|```/g, '').trim()) || {};
-                        
-                        // Strict numeric validation
-                        const width = typeof dims.width_cm === 'number' && dims.width_cm > 0 ? dims.width_cm : 0;
-                        const height = typeof dims.height_cm === 'number' && dims.height_cm > 0 ? dims.height_cm : 0;
-                        const depth = typeof dims.depth_cm === 'number' && dims.depth_cm > 0 ? dims.depth_cm : 0;
-
-                        if (width > 0 || height > 0 || depth > 0) {
-                             data.dimensions = data.dimensions || [];
-                             data.dimensions.push({
-                                 label: '規格 (Agnes)',
-                                 width,
-                                 height,
-                                 length: depth, // assuming depth maps to length
-                                 unit: 'cm',
-                                 isAIEstimated: true
-                             });
-                        }
-                    } catch (e) {
-                         console.error("Failed to parse dimensions from Agnes", e);
                     }
                 }
             }

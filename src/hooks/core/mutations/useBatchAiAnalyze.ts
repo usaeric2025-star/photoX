@@ -14,10 +14,13 @@ export function useBatchAiAnalyze() {
       return;
     }
 
+    const toastId = toast.loading(`开始进行 ${targetPhotos.length} 张照片的 AI 识别...`);
+
     const taskTitle = groupId ? `AI 智能识别 (合组 + ${targetPhotos.length}张照片)` : `AI 批量识别 (${targetPhotos.length}张)`;
 
-    await runTask(taskTitle, async ({ updateProgress }) => {
-      let successCount = 0;
+    try {
+      await runTask(taskTitle, async ({ updateProgress }) => {
+        let successCount = 0;
       const totalPhotosToProcess = targetPhotos.length;
       let progress = 0;
 
@@ -73,7 +76,7 @@ export function useBatchAiAnalyze() {
             
             // fetch fresh photos with tags for the group
             const { supabase } = await import('@/lib/supabase');
-            const { data: photos } = await supabase.from('furniture_items').select('id, name, tag_ids').in('id', targetPhotos.map(p => p.id));
+            const { data: photos } = await supabase.from('furniture_items').select('id, name, tag_ids, description').in('id', targetPhotos.map(p => p.id));
             
             if (photos) {
               const allTagIds = Array.from(new Set(photos.flatMap(p => p.tag_ids || [])));
@@ -137,7 +140,9 @@ export function useBatchAiAnalyze() {
         toast.success(`识别成功: ${successCount} 张照片${groupId ? '及合组' : ''}已处理完成`);
       }
     }, { showProgress: true, showSuccessToast: false });
-
+    } finally {
+      toast.dismiss(toastId);
+    }
   }, [runTask, updatePhoto]);
 
   return { handleBatchAiAnalyze };

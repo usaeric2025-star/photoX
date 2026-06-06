@@ -166,12 +166,6 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
             
             if ((!prev.dimensions || prev.dimensions.length === 0) && Array.isArray(result.dimensions)) {
                updates.dimensions = result.dimensions;
-            } else if (Array.isArray(result.dimensions) && result.dimensions.length > 0) {
-               // If we already have dimensions, append Agnes ones if they look like specifications
-               const agnesDims = result.dimensions.filter((d: any) => d.label?.includes('Agnes'));
-               if (agnesDims.length > 0) {
-                 updates.dimensions = [...(prev.dimensions || []), ...agnesDims];
-               }
             }
             
             if (!prev.price && result.price) updates.price = String(result.price);
