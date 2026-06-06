@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'motion/react';
 import { Zap, User as UserIcon, LogOut, Settings, Menu, LayoutDashboard, RefreshCw, Camera } from 'lucide-react';
 import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
 import { 
@@ -60,7 +61,16 @@ export function StaffHeader({ totalCount, onRefresh, isRefreshing }: StaffHeader
             className="w-9 h-9 flex items-center justify-center text-indigo-600 hover:bg-indigo-100 rounded-full transition-all active:scale-90 shrink-0"
             title="刷新数据"
           >
-            <RefreshCw size={18} className={isRefreshing ? 'animate-pulse' : ''} />
+            <motion.div
+              animate={{ rotate: isRefreshing ? 360 : 0 }}
+              transition={{
+                repeat: isRefreshing ? Infinity : 0,
+                duration: 1,
+                ease: "linear",
+              }}
+            >
+              <RefreshCw size={18} className={isRefreshing ? "text-indigo-400" : ""} />
+            </motion.div>
           </button>
         )}
 

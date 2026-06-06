@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Home, Cloud, Settings2, Plus, Terminal, X, Loader2 } from 'lucide-react';
-import { useLocation } from '@tanstack/react-router';
+import { useLocation, useNavigate } from '@tanstack/react-router';
 import { useAuth, useTasks, useSyncMutation, useErrorHandler, useAdminMode, useTaskExecutor, useMultiSelect, useUrlFilters, useSettings, useCategories } from '@/hooks';
 import { backfillThumbHashes } from '@/services/photo/backfillService';
 import { logger } from '@/lib/logger';
@@ -18,7 +18,7 @@ import { AdminScreen } from '@/components/AdminScreen';
 import { PublicGridContainer } from '@/components/photo/PublicGridContainer';
 import { AdminGridContainer } from '@/components/photo/AdminGridContainer';
 import { PublicHeader } from '@/components/layouts/headers/PublicHeader';
-import { AdminHeader } from '@/components/layouts/headers/AdminHeader';
+import { DedicatedAdminHeader } from '@/components/layouts/headers/DedicatedAdminHeader';
 import { useBatchAiAnalyze } from '@/hooks/core/mutations/useBatchAiAnalyze';
 import { translations } from '@/lib/translations';
 import TasksPage from '@/pages/AdminPage/TasksPage';
@@ -69,6 +69,7 @@ export function AdminPageContent() {
   })));
 
   const location = useLocation();
+  const navigate = useNavigate();
   const isAdminPath = location.pathname.startsWith('/admin');
   
   // Sync URL to store for compatibility with old components if needed, 
@@ -263,11 +264,11 @@ export function AdminPageContent() {
             </div>
 
           <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
-              <AdminHeader 
+              <DedicatedAdminHeader 
                 onRefresh={onRefresh}
                 isRefreshing={isSyncing}
                 totalCount={photos?.length}
-                onBatchAiIdentify={handleBatchAiAnalyzeTrigger}
+                onExitAdmin={() => navigate({ to: '/' })}
                 title={pageTitle}
               />
 
@@ -287,7 +288,7 @@ export function AdminPageContent() {
               </div>
 
               <AnimatePresence>
-                {(currentScreen === 'manage' || currentScreen === 'settings' || currentScreen === 'structure') && (
+                {(currentScreen === 'manage' || currentScreen === 'settings' || currentScreen === 'structure' || currentScreen === 'logs') && (
                   <motion.div 
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}

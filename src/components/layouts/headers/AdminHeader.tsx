@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "motion/react";
 import {
   RefreshCw,
   User as UserIcon,
@@ -152,6 +153,27 @@ export function AdminHeader({
             title={t.batchAi}
           >
             <Sparkles size={18} />
+          </button>
+        )}
+
+        {/* 0. 刷新按钮 */}
+        {onRefresh && (
+          <button
+            onClick={onRefresh}
+            disabled={isRefreshing}
+            className="w-9 h-9 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded-full transition-all active:scale-90"
+            title="刷新数据"
+          >
+            <motion.div
+              animate={{ rotate: isRefreshing ? 360 : 0 }}
+              transition={{
+                repeat: isRefreshing ? Infinity : 0,
+                duration: 1,
+                ease: "linear",
+              }}
+            >
+              <RefreshCw size={18} className={isRefreshing ? "text-blue-500" : "text-slate-500"} />
+            </motion.div>
           </button>
         )}
 
