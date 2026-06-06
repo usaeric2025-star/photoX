@@ -135,7 +135,7 @@ export function PhotoInfoPanel({
     }
     if (photo.manufacturer_id) {
        const m = fetchedManufacturers.find(mfr => String(mfr.id) === String(photo.manufacturer_id));
-       if (m) displayManufacturerName = m.name;
+       if (m) displayManufacturerName = getSafeText(m.name, appLang);
     }
   }
 
@@ -248,6 +248,7 @@ export function PhotoInfoPanel({
             {/* Furniture Dimensions */}
             <DimensionsSection 
               dimensions={(data as Photo).dimensions || undefined} 
+              appLang={appLang}
               texts={l as any} 
             />
 

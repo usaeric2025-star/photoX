@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { useUIStore } from '@/store/useUIStore';
 
 interface ConfirmOptions {
   title: string;
@@ -18,6 +19,11 @@ export const ConfirmProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [resolveConfirm, setResolveConfirm] = useState<(value: boolean) => void>();
   const [open, setOpen] = useState(false);
   const [options, setOptions] = useState<ConfirmOptions>({ title: '', description: '' });
+  const updateStore = useUIStore(s => s.update);
+
+  useEffect(() => {
+    updateStore({ isGlobalDialogOpen: open });
+  }, [open, updateStore]);
 
   const confirm = useCallback((options: ConfirmOptions) => {
     setOptions(options);

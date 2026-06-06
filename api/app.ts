@@ -299,10 +299,17 @@ Task: Inspect furniture image to extract comprehensive structured details and pr
 
         // Final sanity check on dimensions - ensure no "(Agnes)" labels creep in from AI training bias
         if (Array.isArray(data.dimensions)) {
-            data.dimensions = data.dimensions.map((d: any) => ({
-                ...d,
-                label: d.label?.replace(/\(Agnes\)/gi, '').trim() || '規格'
-            }));
+            data.dimensions = data.dimensions.map((d: any) => {
+                let unit = String(d.unit || 'inch').toLowerCase().trim();
+                if (unit === 'in' || unit === 'inc' || unit === 'inches') unit = 'inch';
+                if (!['inch', 'cm', 'mm'].includes(unit)) unit = 'inch'; // Default to inch if unknown
+
+                return {
+                    ...d,
+                    label: d.label?.replace(/\(Agnes\)/gi, '').replace(/[:：]\s*$/, '').trim() || '规格',
+                    unit
+                };
+            });
         }
 
         return c.json({ success: true, data });

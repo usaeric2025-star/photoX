@@ -1,3 +1,4 @@
+import React, { useEffect } from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -8,6 +9,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useUIStore } from '@/store/useUIStore';
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -32,6 +34,22 @@ export const ConfirmDialog = ({
   cancelText = '取消',
   variant = 'default',
 }: ConfirmDialogProps) => {
+  const updateStore = useUIStore(s => s.update);
+
+  useEffect(() => {
+    // If this dialog is part of a context-based provider, it might already be handled,
+    // but doing it here ensures ALL dialogs of this type trigger the global lock.
+    if (open) {
+      updateStore({ isGlobalDialogOpen: true });
+    } else {
+      // Small delay to prevent flickering if another dialog opens immediately
+      const timer = setTimeout(() => {
+        updateStore({ isGlobalDialogOpen: false });
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [open, updateStore]);
+
   const handleConfirm = async () => {
     await onConfirm();
     onOpenChange(false);
@@ -44,7 +62,7 @@ export const ConfirmDialog = ({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="z-modal">
+      <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>

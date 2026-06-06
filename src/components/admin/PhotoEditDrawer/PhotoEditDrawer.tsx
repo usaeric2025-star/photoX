@@ -199,16 +199,21 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
         
         // Auto-save the AI result directly to DB
         updateProgress(90, appLang === 'zh' ? '正在自动保存...' : 'Auto-saving...');
-        console.log('[AI Raw Debug]', result);
+        
+        // [LOG-RULE] Use standard logger for AI debugging
+        console.log('🤖 [AI ANALYSIS RESULT]:', JSON.stringify(result, null, 2));
+
         await onUpdatePhoto(photo.id, merged); 
         
         updateProgress(100, appLang === 'zh' ? '识别并保存成功' : 'Success');
         toast.success(appLang === 'zh' ? "AI 识别成功并已自动保存" : "AI identified and auto-saved", {
+          duration: 6000, // Show longer for user to catch the copy action
           action: {
             label: appLang === 'zh' ? "复制原始数据" : "Copy Raw Data",
             onClick: () => {
-              navigator.clipboard.writeText(JSON.stringify(result, null, 2));
-              toast.success(appLang === 'zh' ? "已复制到剪贴板" : "Copied to clipboard");
+              const textToCopy = JSON.stringify(result, null, 2);
+              navigator.clipboard.writeText(textToCopy);
+              toast.success("JSON copied!");
             }
           }
         });

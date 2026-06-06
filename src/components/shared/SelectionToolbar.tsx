@@ -7,7 +7,6 @@ import { useGroupPhotosMutation, useUrlFilters } from '@/hooks';
 import { useAIGroup } from '@/hooks/core/mutations/useAIGroup';
 import { useUIStore } from '@/store/useUIStore';
 import { toast } from '@/lib/ui/toast';
-import { useConfirm } from '@/context/ConfirmContext';
 
 interface SelectionToolbarProps {
   onAIIdentify?: (ids: string[]) => void;
@@ -25,8 +24,9 @@ export function SelectionToolbar({
 }: SelectionToolbarProps) {
   const selectedIds = useUIStore((s: any) => s.selectedIds);
   const isMultiSelect = useUIStore((s: any) => s.isMultiSelect);
+  const isGlobalDialogOpen = useUIStore((s: any) => s.isGlobalDialogOpen);
+  const lightboxIndex = useUIStore((s: any) => s.lightboxIndex);
   const update = useUIStore((s: any) => s.update);
-  const confirm = useConfirm();
   
   const [isGroupAlertOpen, groupAlert] = useDisclosure(false);
 
@@ -34,6 +34,8 @@ export function SelectionToolbar({
   const ids = selectedIds;
   
   console.log('SelectionToolbar rendering - isMultiSelect:', isMultiSelect, 'count:', count);
+  
+  if (isGlobalDialogOpen || lightboxIndex !== null) return null;
 
   const groupMutation = useGroupPhotosMutation();
   const { handleAIAction } = useAIGroup();
@@ -47,14 +49,7 @@ export function SelectionToolbar({
 
   const handleDelete = async () => {
     if (!onDelete) return;
-    const confirmed = await confirm({
-      title: `确定要删除选中的 ${count} 张照片吗？`,
-      description: '此操作不可撤销，照片将从云端彻底移除。',
-      variant: 'destructive',
-    });
-    if (confirmed) {
-      onDelete(ids);
-    }
+    onDelete(ids);
   };
 
   const handleGroup = async () => {

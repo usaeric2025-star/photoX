@@ -1,5 +1,6 @@
 import { Photo, Category, Manufacturer } from '../types';
 import { translations, LanguageCode } from './translations';
+import { getSafeText } from './ai/safeText';
 
 export type TranslationType = typeof translations.en;
 
@@ -19,13 +20,8 @@ export const getTranslatedCategoryName = (
   
   if (!activeCat) return "";
 
-  const nameTrans = (activeCat as any).name_translations || {};
-
-  const name = lang === 'zh' ? (activeCat.zh || nameTrans.zh || activeCat.name || activeCat.en || nameTrans.en) : 
-               lang === 'en' ? (activeCat.en || nameTrans.en || activeCat.name || activeCat.zh || nameTrans.zh) :
-               lang === 'ms' ? (activeCat.ms || nameTrans.ms || activeCat.name || activeCat.en || nameTrans.en) : activeCat.name;
-
-  return name || "";
+  // The 'name' field itself might be a JSON object now in the database
+  return getSafeText(activeCat.name || activeCat.zh || (activeCat as any).name_translations, lang);
 };
 
 /**
@@ -37,7 +33,7 @@ export const getPhotoDisplayName = (
   lang: string,
   t: TranslationType
 ): string => {
-  const photoNameStr = typeof photo.name === 'object' ? (photo.name[lang as keyof typeof photo.name] || photo.name.zh) : photo.name;
+  const photoNameStr = getSafeText(photo.name, lang);
   
   const isPlaceholder = !photoNameStr || 
     photoNameStr === t.furnitureRecord || 
@@ -86,11 +82,12 @@ export const getCacheBustedImageUrl = (photo: Photo, type: 'image' | 'thumb' = '
  */
 export const getManufacturerName = (
   mfrId: string | undefined,
-  manufacturers: Manufacturer[]
+  manufacturers: Manufacturer[],
+  lang: string = 'zh'
 ): string => {
   if (!mfrId) return '';
   const activeMfr = manufacturers.find(m => String(m.id) === String(mfrId));
-  return activeMfr ? (activeMfr.name || '').toUpperCase() : '';
+  return activeMfr ? getSafeText(activeMfr.name, lang).toUpperCase() : '';
 };
 
 /**

@@ -6,14 +6,16 @@ import { Badge } from '@/components/ui/badge';
 import { Tag } from '@/types/photo';
 import { cn } from '@/lib/utils';
 import { useLongPress } from '@/hooks/useLongPress';
+import { getSafeText } from '@/lib/ai/safeText';
 
 interface TagBadgeProps {
   tag: Tag;
   isAdmin: boolean;
+  appLang: string;
   onLongPress: (tag: Tag) => void;
 }
 
-function TagBadge({ tag, isAdmin, onLongPress }: TagBadgeProps) {
+function TagBadge({ tag, isAdmin, appLang, onLongPress }: TagBadgeProps) {
   const btnRef = useRef<HTMLSpanElement>(null);
   
   useLongPress(btnRef, {
@@ -29,7 +31,7 @@ function TagBadge({ tag, isAdmin, onLongPress }: TagBadgeProps) {
         isAdmin && "cursor-pointer hover:bg-brand-navy/10"
       )}
     >
-      #{tag.name}
+      #{getSafeText(tag.name, appLang)}
     </span>
   );
 }
@@ -67,6 +69,7 @@ export function CategoryTagsSection({ categoryName, tags, isAdmin, appLang, text
               key={tag.id} 
               tag={tag} 
               isAdmin={isAdmin}
+              appLang={appLang}
               onLongPress={(t) => setActiveActionTag(t)}
             />
           ))}
@@ -87,7 +90,7 @@ export function CategoryTagsSection({ categoryName, tags, isAdmin, appLang, text
                 标签管理 / TAG
               </span>
               <div className="text-lg font-black text-slate-900">
-                #{activeActionTag.name}
+                #{getSafeText(activeActionTag.name, appLang)}
               </div>
             </div>
             <div className="space-y-3">

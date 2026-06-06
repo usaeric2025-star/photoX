@@ -1,9 +1,11 @@
 import React from 'react';
 import { Maximize2, Sparkles } from 'lucide-react';
 import { Dimension } from '@/types/photo';
+import { getSafeText } from '@/lib/ai/safeText';
 
 interface DimensionsSectionProps {
   dimensions?: Dimension[];
+  appLang: string;
   texts: {
     dimensions: string;
     standard: string;
@@ -11,7 +13,7 @@ interface DimensionsSectionProps {
   };
 }
 
-export function DimensionsSection({ dimensions, texts }: DimensionsSectionProps) {
+export function DimensionsSection({ dimensions, appLang, texts }: DimensionsSectionProps) {
   if (!Array.isArray(dimensions) || dimensions.length === 0) return null;
 
   return (
@@ -24,11 +26,11 @@ export function DimensionsSection({ dimensions, texts }: DimensionsSectionProps)
           <div key={idx} className="flex flex-col text-xs p-2.5 bg-slate-50 rounded-lg border border-slate-100">
             <div className="flex justify-between items-center mb-1">
               <span className="font-bold text-slate-700 flex items-center gap-1">
-                {(dim.label || '').replace(/[:：]\s*$/, '') || texts.standard}
+                {(getSafeText(dim.label, appLang) || '').replace(/[:：]\s*$/, '') || texts.standard}
                 {dim.is_ai && <Sparkles size={10} className="text-blue-500" aria-label={texts.aiEstimated} />}
               </span>
               <span className="text-[9px] uppercase font-bold text-slate-400">
-                {dim.unit === 'in' ? 'inch' : dim.unit}
+                {dim.unit}
               </span>
             </div>
             <span className="font-mono text-slate-600">
