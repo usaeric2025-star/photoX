@@ -15,6 +15,7 @@ interface ConfirmDialogProps {
   title: string;
   description: string;
   onConfirm: () => void | Promise<void>;
+  onCancel?: () => void;
   confirmText?: string;
   cancelText?: string;
   variant?: 'destructive' | 'default';
@@ -26,12 +27,18 @@ export const ConfirmDialog = ({
   title,
   description,
   onConfirm,
+  onCancel,
   confirmText = '確認',
   cancelText = '取消',
   variant = 'default',
 }: ConfirmDialogProps) => {
   const handleConfirm = async () => {
     await onConfirm();
+    onOpenChange(false);
+  };
+
+  const handleCancel = () => {
+    onCancel?.();
     onOpenChange(false);
   };
 
@@ -43,7 +50,7 @@ export const ConfirmDialog = ({
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>{cancelText}</AlertDialogCancel>
+          <AlertDialogCancel onClick={handleCancel}>{cancelText}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
             className={variant === 'destructive' ? 'bg-red-600 hover:bg-red-700' : ''}

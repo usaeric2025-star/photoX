@@ -237,34 +237,44 @@ app.post("/ai/analyze", async (c) => {
         const categoriesContext = (categories || []).map(c => ({ id: c.id, name: c.name, zh: c.zh })).slice(0, 50);
         const tagsContext = (tags || []).map(t => ({ id: t.id, name: t.name, aliases: t.aliases })).slice(0, 100);
         
-        const prompt = `Role: Elite Furniture Data Analyst.
-Task: Inspect the furniture image/tables to extract comprehensive structured details.
+        const prompt = `Role: Elite Furniture Data Analyst & Multi-language Specialist.
+Task: Inspect the furniture image to extract comprehensive structured details and provide professional translations.
 
-【CRITICAL DIRECTIVES】
-- "description": Professional summary in 【简体中文 (Simplified Chinese)】. Detail materials, design, functionality, and specific variants.
+【CORE DATA EXTRACTION】
+- "name": Concise English identifying name (e.g., "Modern L-Shape Sofa").
+- "description": Detailed functional & material summary in 【简体中文 (Simplified Chinese)】.
 - "category_id": MUST be one of these IDs exactly: ${JSON.stringify(categoriesContext)}
-- "tag_ids": Map to up to 3 most relevant tag IDs from this list: ${JSON.stringify(tagsContext)}. ALL MUST BE VALID UUIDs from the list.
-- "new_tags": Keyword tags in English/Malay (e.g., "LEATHER"). NO CHINESE.
-- "dimensions": Extract ALL variants/options displayed. PERFORM PRECISE OCR on the image. Look for patterns like H=188cm, W=120cm, D=45cm, h188cm, h 188cm, 188cm height, etc. 
-   - OUTPUT FORMAT: Provide an array of objects: { "label": string (specific variant/option), "value": number, "unit": "cm" }.
-   - EXAMPLE: [{"label": "1 seater", "value": 188, "unit": "cm"}, {"label": "2 seater", "value": 150, "unit": "cm"}]
-   - STRICT RULE: Do not use Agnes or any intermediate service for dimension parsing. Extract and structure them directly from the image.
+- "tag_ids": Map to up to 3 most relevant tag IDs from this list: ${JSON.stringify(tagsContext)}.
+- "new_tags": EXTRACT Material (e.g., "SOLID WOOD", "FABRIC") and Style (e.g., "SCANDINAVIAN"). English/Malay only.
+
+【PRECISE DIMENSIONS (OCR)】
+- Locate all measurement charts or text overlays (H=, W=, D=, etc.).
+- "dimensions": Array of { "label": string, "value": number, "unit": "cm" }.
+- EXAMPLE: [{"label": "Single Seat", "value": 188, "unit": "cm"}]
+
+【THOROUGH TRANSLATIONS】
+Generate precise name and description translations for:
+1. zh: Simplified Chinese (Mainland China standard)
+2. en: English (Professional Furniture Terms, UPPERCASE)
+3. ms: Bahasa Melayu (Furniture Terminology, UPPERCASE)
 
 【CONSTRAINTS】
-- Output raw JSON only.
-- NO Chinese characters EXCEPT in "description".
-- Use empty string "" or 0 or [] for missing data.
+- Output raw JSON only. 
+- DO NOT hallucinate. If data is missing, use "" or [].
+- "tag_ids" must be valid UUIDs from the provided list.
 
 Target Response Schema:
 {
-  "name": "Short English Name (e.g., 'Dining Set')",
-  "category_id": "category-id-example",
-  "dimensions": [
-    { "label": "Model A Table", "value": 140, "unit": "cm" }
-  ],
-  "description": "家具描述内容（必须使用简体中文）...",
-  "tag_ids": ["tag-id-1", "tag-id-2"],
-  "new_tags": ["FABRIC"]
+  "name": "...",
+  "category_id": "...",
+  "dimensions": [{ "label": "...", "value": 0, "unit": "cm" }],
+  "description": "...",
+  "tag_ids": ["..."],
+  "new_tags": ["..."],
+  "translations": {
+    "name": { "zh": "...", "en": "...", "ms": "..." },
+    "description": { "zh": "...", "en": "...", "ms": "..." }
+  }
 }`;
 
         const messages = [
@@ -279,76 +289,26 @@ Target Response Schema:
 
         let data: any;
         try {
-            // Clean markdown if present
             const cleanJson = (aiResult.text || '').replace(/```json\n|\n```|```/g, '').trim();
             data = JSON.parse(cleanJson);
+            
+            // Map the unified translations back to the expected structure
+            if (data.translations) {
+               data.name_translations = data.translations.name;
+               data.description_translations = data.translations.description;
+               delete data.translations;
+            }
         } catch (e) {
             console.error("Failed to parse AI JSON:", aiResult.text);
             throw new Error("AI returned invalid JSON format");
         }
 
-        // 3. Agnes Post-processing (Translations & Dimensions)
-        try {
-            const { data: agnesSecret } = await supabase.from('secrets').select('value').eq('key', 'agnes').maybeSingle();
-            if (agnesSecret?.value) {
-                const agnesApiKey = decrypt(agnesSecret.value);
-                const { AgnesProvider } = await import('./lib/ai/providerFactory.js');
-                const agnes = new AgnesProvider({ apiKey: agnesApiKey, model: 'agnes-2.0-flash' });
-                
-                // Translate name and description into 3 languages using Agnes
-                const transPrompt = `Translate the given furniture name and furniture description into:
-1. Simplified Chinese (zh) - ONLY Chinese characters
-2. English (en) - ONLY English, UPPERCASE
-3. Malay (ms) - ONLY Malay, UPPERCASE
-
-Input Name: "${data.name}"
-Input Description: "${data.description}"
-
-Return EXACTLY JSON of this schema. Do not include any other text except the JSON:
-{
-  "name_translations": {
-    "zh": "Simplified Chinese translation of the name, no English",
-    "en": "English name in UPPERCASE",
-    "ms": "Malay name in UPPERCASE"
-  },
-  "description_translations": {
-    "zh": "Simplified Chinese description of the furniture, no English",
-    "en": "English description",
-    "ms": "Malay description"
-  }
-}`;
-                const transResult = await agnes.chat([{ role: 'user', content: transPrompt }]);
-                if (transResult.success) {
-                    try {
-                        const jsonText = (transResult.text || '').replace(/```json\n|\n```|```/g, '').trim();
-                        const translations = JSON.parse(jsonText);
-                        
-                        // Additional safety check: Ensure translated ZH looks like Chinese/contains no English. Otherwise fallback to original name
-                        const containsEnglish = (str: string) => /[a-zA-Z]/.test(str);
-                        const zhName = translations.name_translations?.zh;
-                        const safeZhName = (zhName && !containsEnglish(zhName)) ? zhName : (data.name || '');
-                        
-                        if (translations.name_translations) {
-                            data.name_translations = {
-                                zh: safeZhName,
-                                en: (translations.name_translations.en || data.name || '').toUpperCase(),
-                                ms: (translations.name_translations.ms || data.name || '').toUpperCase()
-                            };
-                        }
-                        if (translations.description_translations) {
-                            data.description_translations = {
-                                zh: translations.description_translations.zh || data.description || '',
-                                en: translations.description_translations.en || data.description || '',
-                                ms: translations.description_translations.ms || data.description || ''
-                            };
-                        }
-                    } catch (e) {
-                        console.error('Translation parsing failed', e);
-                    }
-                }
-            }
-        } catch (agnesErr) {
-            console.warn("Agnes processing failed:", agnesErr);
+        // Final sanity check on dimensions - ensure no "(Agnes)" labels creep in from AI training bias
+        if (Array.isArray(data.dimensions)) {
+            data.dimensions = data.dimensions.map((d: any) => ({
+                ...d,
+                label: d.label?.replace(/\(Agnes\)/gi, '').trim() || '規格'
+            }));
         }
 
         return c.json({ success: true, data });
