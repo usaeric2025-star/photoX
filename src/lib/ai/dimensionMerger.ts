@@ -1,4 +1,4 @@
-import { Dimension } from '../types';
+import { Dimension } from '../../types';
 
 /**
  * Merges split dimensions that belong to the same component.

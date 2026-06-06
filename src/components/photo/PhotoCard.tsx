@@ -309,26 +309,35 @@ export const PhotoCard = ({
 
       {/* Info Overlay Panel */}
       {!hideDetails && (
-        <div className="absolute bottom-0 left-0 w-full z-20 pointer-events-auto p-1.5 pt-8 flex flex-col gap-1 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
-          <div className="flex flex-wrap items-center gap-1 mt-0.5">
-            {displayCatName && (
-              <span className="text-[8px] bg-white/20 backdrop-blur-md text-white px-1.5 py-0.5 rounded-full font-black tracking-tighter uppercase border border-white/10 whitespace-nowrap shadow-sm">
+        <div className="absolute bottom-0 left-0 w-full z-20 pointer-events-auto p-1.5 pt-6 flex flex-col gap-1.5 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
+          {/* Main Category Badge */}
+          {displayCatName && (
+            <div className="px-0.5">
+              <span className="text-[9px] bg-white text-black px-2 py-0.5 rounded-full font-black tracking-tighter uppercase shadow-lg inline-block">
                 {displayCatName}
               </span>
-            )}
-            
-            {isManagement && photo.is_hidden && (
-              <span className="text-[8px] bg-red-500 text-white px-1.5 py-0.5 rounded-full font-black tracking-tighter uppercase whitespace-nowrap shadow-sm border border-red-400/50">
-                HIDDEN
-              </span>
-            )}
+              
+              {isManagement && photo.is_hidden && (
+                <span className="ml-1.5 text-[8px] bg-red-600 text-white px-1.5 py-0.5 rounded-full font-black tracking-tighter uppercase shadow-sm border border-red-500/50 inline-block">
+                  HIDDEN
+                </span>
+              )}
+            </div>
+          )}
 
-            {!hideDetails && photoTags && photoTags.slice(0, 3).map(tag => (
-              <span key={tag} className="text-[8px] bg-black/40 backdrop-blur-sm text-slate-100 px-1.5 py-0.5 rounded-full font-bold tracking-tighter uppercase border border-white/5 whitespace-nowrap">
-                #{tag}
-              </span>
-            ))}
-          </div>
+          {/* Tags Row - Forced Single Line with Scroll */}
+          {!hideDetails && photoTags && photoTags.length > 0 && (
+            <div className="flex flex-nowrap items-center gap-1 overflow-x-auto no-scrollbar scroll-smooth pb-0.5 px-0.5">
+              {photoTags.map(tag => (
+                <span 
+                  key={tag} 
+                  className="shrink-0 text-[8px] bg-black/50 backdrop-blur-md text-slate-200 px-1.5 py-0.5 rounded-full font-bold tracking-tighter uppercase border border-white/10 whitespace-nowrap"
+                >
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

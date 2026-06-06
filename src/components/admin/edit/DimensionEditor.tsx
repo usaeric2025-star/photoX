@@ -137,7 +137,7 @@ export function DimensionEditor({
                         onClick={() => handleUnitChange(idx, u)}
                         className={`flex-1 py-2 rounded-xl text-[9px] sm:text-[10px] font-bold transition-all border ${dim.unit === u ? 'bg-slate-800 text-white border-slate-800 shadow-md translate-z-1' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}
                       >
-                        {u === 'inch' ? 'in' : u}
+                        {u}
                       </button>
                     ))}
                   </div>

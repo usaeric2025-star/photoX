@@ -148,17 +148,22 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
           }
         }
         if (!prev.category_id && result.category_id) updates.category_id = String(result.category_id);
-        if ((!prev.tag_ids || prev.tag_ids.length === 0) && Array.isArray(result.tag_ids)) {
-          updates.tag_ids = result.tag_ids.map((id: any) => String(id));
+        
+        // Merge tags 防覆蓋: Keep existing tags, append AI tags up to limit (3)
+        const existingTags = prev.tag_ids || [];
+        const aiTags = (result.tag_ids || []).map((id: any) => String(id));
+        const mergedTagIds = [...existingTags];
+        for (const tid of aiTags) {
+          if (!mergedTagIds.includes(tid) && mergedTagIds.length < 3) {
+            mergedTagIds.push(tid);
+          }
         }
+        updates.tag_ids = mergedTagIds;
+
         if (!prev.manufacturer_id && result.manufacturer_id) updates.manufacturer_id = String(result.manufacturer_id);
         if (!prev.model_number && result.model_number) updates.model_number = result.model_number;
         if (!prev.group_id && result.group_id) updates.group_id = String(result.group_id);
         if (!prev.manual_code && result.manual_code) updates.manual_code = result.manual_code;
-        
-        if (result.description && !prev.description?.zh) {
-           updates.description = { ...prev.description, zh: result.description };
-        }
         
         if (result.description_translations) {
            updates.description = { 
@@ -166,16 +171,24 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
              ...result.description_translations,
              zh: result.description_translations.zh || result.description || prev.description?.zh
            };
+        } else if (result.description && !prev.description?.zh) {
+           updates.description = { ...prev.description, zh: result.description };
         }
         
+        // Handle dimensions defensive + standardization
         if ((!prev.dimensions || prev.dimensions.length === 0) && Array.isArray(result.dimensions)) {
            const mergedDims = mergeSplitDimensions(result.dimensions);
            updates.dimensions = mergedDims.map((d: any) => {
-             // If label is just a name and not already a prefix, make it a prefix
-             if (d.label && !d.label.includes(':') && !d.label.includes('H') && !d.label.includes('W')) {
-               return { ...d, label: `${d.label}: ` };
-             }
-             return d;
+             // Basic defensive validation
+             const label = (d.label || '').trim();
+             return {
+               ...d,
+               label: label && !label.includes(':') ? `${label}: ` : label,
+               height: Number(d.height) || 0,
+               width: Number(d.width) || 0,
+               length: Number(d.length) || 0,
+               unit: d.unit === 'in' || d.unit === 'inches' ? 'inch' : (d.unit || 'cm')
+             };
            });
         }
         

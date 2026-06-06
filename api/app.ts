@@ -240,52 +240,42 @@ app.post("/ai/analyze", async (c) => {
         const tagsContext = (tags || []).map(t => ({ id: t.id, name: t.name, aliases: t.aliases })).slice(0, 100);
         const groupsContext = (groups || []).map(g => ({ id: g.id, name: typeof g.name === 'object' ? g.name.zh : g.name }));
         
-        const prompt = `Role: Elite Furniture Data Analyst & Multi-language Specialist.
-Task: Inspect the furniture image to extract comprehensive structured details and provide professional translations.
+        const prompt = `Role: Elite Furniture Data Analyst.
+Task: Inspect furniture image to extract comprehensive structured details and professional translations.
 
 【CORE DATA EXTRACTION】
-- "name": Concise English identifying name (e.g., "Modern L-Shape Sofa").
-- "description": Detailed functional & material summary in 【简体中文 (Simplified Chinese)】.
+- "name": Concise identifying name in English (UPPERCASE).
 - "category_id": MUST be one of these IDs exactly: ${JSON.stringify(categoriesContext)}
-- "tag_ids": Map to up to 3 most relevant tag IDs from this list: ${JSON.stringify(tagsContext)}.
-- "new_tags": EXTRACT Material (e.g., "SOLID WOOD", "FABRIC") and Style (e.g., "SCANDINAVIAN"). English/Malay only.
-- "group_id": If the item belongs to a specific collection or product series mentioned in the context, use its ID: ${JSON.stringify(groupsContext)}. Otherwise leave null.
+- "tag_ids": Map up to 3 most relevant tag IDs from: ${JSON.stringify(tagsContext)}.
+- "new_tags": Extract Material/Style (EN/MS only, UPPERCASE).
+- "group_id": Match to existing series if mentioned: ${JSON.stringify(groupsContext)}.
 
 【PRECISE DIMENSIONS (OCR)】
-- Locate all measurement charts or text overlays (H=, W=, D=, etc.).
-- "dimensions": MUST be an array of objects GROUPED BY FURNITURE ITEM.
+- Extract H, W, D from charts or text.
+- "dimensions": Array of objects. ONE OBJECT PER ITEM (e.g., Sofa should be one object with H/W/D).
 - SCHEMA: { "label": string, "length": number, "width": number, "height": number, "unit": string }.
-- CRITICAL: Read the unit directly (e.g., "inch", "mm", "cm"). If the image says 35", the unit is "inch" and value is 35.
-- ONE OBJECT PER ITEM: "Sofa" should be one object with height, width, and length. DO NOT create separate objects for "Sofa H", "Sofa W", etc.
-- If the image says "H35" D32" W66"", extract as ONE object: { "label": "Main Item", "height": 35, "width": 66, "length": 32, "unit": "inch" }.
-- "label": Use the item name (e.g., "Sofa", "Stool", "Cabinet"). If no name is clear, use "Dimensions".
-- "length": MUST be used for "depth (D)" or "Depth".
+- IMPORTANT: "length" is "Depth (D)".
+- UNIT: Use exactly what is in the image (e.g., "inch", "mm", "cm"). If the image says 35", unit is "inch".
+- DO NOT translate dimension labels. Keep original product names.
 
-【THOROUGH TRANSLATIONS】
-Generate precise name and description translations for:
-1. zh: Simplified Chinese (Mainland China standard). 
-   - THE DESCRIPTION MUST EXPLICITLY INCLUDE ALL EXTRACTED DIMENSIONS WITH THEIR ORIGINAL LABELS (e.g., "沙发尺寸: 高 35 英寸 x 宽 66 英寸 x 深 32 英寸").
-2. en: English (Professional Furniture Terms, UPPERCASE).
-3. ms: Bahasa Melayu (Furniture Terminology, UPPERCASE).
+【TRANSLATIONS】
+1. zh: Simplified Chinese description. FOCUS ON FEATURES/MATERIALS. DO NOT REPEAT DIMENSION NUMBERS HERE.
+2. en: English description (UPPERCASE).
+3. ms: Bahasa Melayu description (UPPERCASE).
 
 【CONSTRAINTS】
-- Output raw JSON only. 
-- DO NOT hallucinate. If data is missing, use "" or [].
-- "tag_ids" must be valid UUIDs from the provided list.
-
-Target Response Schema:
+- Output raw JSON only. NO HALLUCINATION.
 {
-  "name": "...",
+  "name": {"zh": "...", "en": "...", "ms": "..."},
   "category_id": "...",
-  "group_id": "...",
-  "dimensions": [{ "label": "...", "length": 0, "width": 0, "height": 0, "unit": "cm" }],
-  "description": "...",
+  "group_id": null,
+  "dimensions": [{ "label": "...", "length": 0, "width": 0, "height": 0, "unit": "inch" }],
+  "description": {"zh": "...", "en": "...", "ms": "..."},
   "tag_ids": ["..."],
   "new_tags": ["..."],
-  "translations": {
-    "name": { "zh": "...", "en": "...", "ms": "..." },
-    "description": { "zh": "...", "en": "...", "ms": "..." }
-  }
+  "manufacturer_id": null,
+  "model_number": "...",
+  "price": "..."
 }`;
 
         const messages = [
@@ -302,13 +292,6 @@ Target Response Schema:
         try {
             const cleanJson = (aiResult.text || '').replace(/```json\n|\n```|```/g, '').trim();
             data = JSON.parse(cleanJson);
-            
-            // Map the unified translations back to the expected structure
-            if (data.translations) {
-               data.name = data.translations.name;
-               data.description = data.translations.description;
-               delete data.translations;
-            }
         } catch (e) {
             console.error("Failed to parse AI JSON:", aiResult.text);
             throw new Error("AI returned invalid JSON format");

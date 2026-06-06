@@ -151,6 +151,7 @@ export interface ProductFormData {
   is_hidden: boolean;
   price: string;
   is_group_cover: boolean;
+  group_id?: string | null;
   uri?: string;
 }
 

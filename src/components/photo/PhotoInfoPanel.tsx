@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 import { useLongPress } from '@/hooks/useLongPress';
 import { createPortal } from "react-dom";
 import { toast } from '@/lib/ui/toast';
+import { getSafeText } from '@/lib/ai/safeText';
 
 import { DimensionsSection } from './info/DimensionsSection';
 import { MetadataSection } from './info/MetadataSection';
@@ -165,27 +166,14 @@ export function PhotoInfoPanel({
     aiAnalyze: appLang === 'zh' ? 'AI 分析' : appLang === 'ms' ? 'Analisis AI' : 'AI Analyze',
   };
 
-  // Helper to extract translation with fallback
-  const getTransDescription = (desc: any) => {
-    if (!desc) return '';
-    if (typeof desc === 'string') return desc;
-    if (descLang === 'ms' && desc.ms) return desc.ms;
-    if (descLang === 'en' && desc.en) return desc.en;
-    if (descLang === 'zh' && desc.zh) return desc.zh;
-
-    return desc.zh || desc.en || desc.ms || '';
-  };
+  const displayDesc = getSafeText(data.description, descLang);
+  const displayName = getSafeText(data.name, appLang);
+  const displayNameEn = getSafeText(data.name, 'en');
 
   const hasZh = !!(data as Photo).description?.zh;
   const hasEn = !!(data as Photo).description?.en;
   const hasMs = !!(data as Photo).description?.ms;
-  
   const showLanguageToggle = [hasZh, hasEn, hasMs].filter(Boolean).length > 1;
-
-  const displayDesc = getTransDescription(data.description);
-
-  const displayName = typeof data.name === 'object' ? (data.name[appLang as keyof typeof data.name] || data.name.zh) : data.name;
-  const displayNameEn = typeof data.name === 'object' ? data.name.en : null;
 
   return (
     <div className={cn("flex flex-col h-full bg-white/95 backdrop-blur-md border-l border-slate-200 overflow-y-auto no-scrollbar select-text", className)}>
