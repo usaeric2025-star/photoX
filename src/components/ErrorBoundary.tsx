@@ -1,4 +1,5 @@
 import React, { Component, ReactNode } from 'react';
+import { toast } from 'sonner';
 
 interface Props {
   children: ReactNode;
@@ -21,9 +22,17 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // 生产环境下可以对接 Sentry 等日志系统
     console.error('ErrorBoundary caught:', error, errorInfo);
   }
+
+  handleCopyError = () => {
+    const errorText = `${this.state.error?.message || 'Unknown error'}\n\n${this.state.error?.stack || ''}`;
+    navigator.clipboard.writeText(errorText).then(() => {
+      toast.success('错误信息已复制到剪贴板');
+    }).catch(() => {
+      toast.error('复制失败');
+    });
+  };
 
   render() {
     if (this.state.hasError) {
@@ -44,6 +53,12 @@ export class ErrorBoundary extends Component<Props, State> {
                   className="px-6 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all active:scale-95"
                 >
                   刷新页面
+                </button>
+                <button
+                  onClick={this.handleCopyError}
+                  className="px-6 py-2.5 border border-slate-200 bg-white text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all active:scale-95"
+                >
+                  复制错误信息
                 </button>
                 <button
                   onClick={() => (window.location.href = '/')}

@@ -18,6 +18,7 @@ import { createStaleTime } from '@/shared/freshnessSchema';
 import { getGroupById } from '@/services/group/queries';
 import { checkPublicAuth } from '@/lib/publicAuth';
 import { RootRouter } from '@/pages/RootRouter';
+import { logger } from '@/lib/logger';
 
 /**
  * [V2.10-ROUTER-PERMISSION-INTEGRATED] Router Context Definition
@@ -106,7 +107,6 @@ export const rootRoute = createRootRouteWithContext<RouterContext>()({
 const authGuard = async ({ context, location }: { context: { user: any }, location: { pathname: string; search: any } }) => {
   const { user } = context;
   // Guard only checks permissions/logs, does not handle redirections
-  logger.debug('[authGuard] Checking access:', { pathname: location.pathname, hasUser: !!user });
   return;
 };
 
