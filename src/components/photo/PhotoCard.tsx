@@ -310,12 +310,6 @@ export const PhotoCard = ({
       {/* Info Overlay Panel */}
       {!hideDetails && (
         <div className="absolute bottom-0 left-0 w-full z-20 pointer-events-auto p-1.5 pt-8 flex flex-col gap-1 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
-          {displayName && (
-            <span className="text-[10px] sm:text-[11px] text-white font-black tracking-tight leading-tight line-clamp-2 px-1 drop-shadow-md uppercase">
-              {displayName}
-            </span>
-          )}
-          
           <div className="flex flex-wrap items-center gap-1 mt-0.5">
             {displayCatName && (
               <span className="text-[8px] bg-white/20 backdrop-blur-md text-white px-1.5 py-0.5 rounded-full font-black tracking-tighter uppercase border border-white/10 whitespace-nowrap shadow-sm">
@@ -329,7 +323,7 @@ export const PhotoCard = ({
               </span>
             )}
 
-            {!hideDetails && photoTags && photoTags.slice(0, 2).map(tag => (
+            {!hideDetails && photoTags && photoTags.slice(0, 3).map(tag => (
               <span key={tag} className="text-[8px] bg-black/40 backdrop-blur-sm text-slate-100 px-1.5 py-0.5 rounded-full font-bold tracking-tighter uppercase border border-white/5 whitespace-nowrap">
                 #{tag}
               </span>

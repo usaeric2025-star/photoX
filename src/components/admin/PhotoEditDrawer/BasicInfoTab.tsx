@@ -1,7 +1,9 @@
 import React from 'react';
-import { Lock, Loader2 } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Lock, Loader2, Maximize2, X } from 'lucide-react';
 import { UseFormReturnType } from '@mantine/form';
 import { ProductFormData } from '../../../types';
+import { useDisclosure } from '@mantine/hooks';
 
 interface Props {
   editPhotoId: string | null;
@@ -17,18 +19,26 @@ export function BasicInfoTab({
 }: Props) {
   const formState = form.values;
   const updateForm = (updates: Partial<ProductFormData>) => form.setValues(updates);
+  const [zoomed, { open: openZoom, close: closeZoom }] = useDisclosure(false);
+
   return (
     <div className="m-0 p-4 space-y-5 animate-in fade-in slide-in-from-left-2 duration-300">
       <div className="flex gap-4 items-start">
         {previewSrc && (
           <div className="w-1/3 shrink-0 space-y-2">
-             <div className="aspect-square rounded-2xl overflow-hidden bg-slate-900 shadow-lg border-2 border-white relative">
+             <div 
+               className="aspect-square rounded-2xl overflow-hidden bg-slate-900 shadow-lg border-2 border-white relative group cursor-zoom-in"
+               onClick={openZoom}
+             >
                 {isProcessingImage && (
                   <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40">
                     <Loader2 size={24} className="text-white animate-spin" />
                   </div>
                 )}
                 <img src={previewSrc} className="w-full h-full object-contain" alt="Preview" />
+                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <Maximize2 className="text-white drop-shadow-md" size={20} />
+                </div>
              </div>
              <div className="flex gap-2">
                <button 
@@ -42,8 +52,8 @@ export function BasicInfoTab({
           </div>
         )}
         <div className="flex-1 space-y-3">
+          {/* ... existing multi-language inputs ... */}
           <div className="space-y-3">
-            {/* Multi-language Name Inputs Row/Table */}
             <div className="space-y-2 bg-slate-50/50 p-3 rounded-xl border border-slate-100">
               <div className="flex items-center px-0.5 border-b border-slate-200/60 pb-1">
                 <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">产品名称翻译 / TRANSLATIONS</span>
@@ -164,6 +174,26 @@ export function BasicInfoTab({
           />
         </div>
       </div>
+
+      {/* Zoom Modal */}
+      {zoomed && previewSrc && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
+          <button 
+            onClick={closeZoom}
+            className="absolute top-4 right-4 z-10 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
+          >
+            <X size={24} />
+          </button>
+          <div className="relative w-full h-full flex items-center justify-center p-4 lg:p-12">
+            <img 
+              src={previewSrc} 
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-300" 
+              alt="Zoomed" 
+            />
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };

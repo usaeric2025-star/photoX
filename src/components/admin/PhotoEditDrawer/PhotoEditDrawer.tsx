@@ -32,6 +32,7 @@ import {
 } from "../../../hooks";
 import { toast } from "@/lib/ui/toast";
 import { applyAIResult } from '@/lib/ai/aiMerger';
+import { mergeSplitDimensions } from '@/lib/ai/dimensionMerger';
 import { cleanPhotos } from "../../../lib/filters";
 import { PAGINATION } from "../../../constants/config";
 import { useAdminActions } from "@/features/admin/useAdminActions";
@@ -125,65 +126,86 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
       if (resp.ok) {
         updateProgress(85, appLang === 'zh' ? '正在应用数据...' : 'Applying data...');
         const result = resp.data;
-          form.setValues((prev) => {
-            const updates: any = {};
-            const currentNameZh = (prev.name?.zh || '').trim();
-            const isNumeric = /^\d+$/.test(currentNameZh);
-            if (!currentNameZh || isNumeric) {
-              if (result.name_translations) {
-                updates.name = {
-                  zh: result.name_translations.zh || prev.name?.zh || '',
-                  en: (result.name_translations.en || prev.name?.en || '').toUpperCase(),
-                  ms: (result.name_translations.ms || prev.name?.ms || '').toUpperCase()
-                };
-              } else if (result.name) {
-                updates.name = { 
-                  zh: result.name, 
-                  en: (prev.name?.en || result.name).toUpperCase(), 
-                  ms: (prev.name?.ms || result.name).toUpperCase() 
-                };
-              }
-            }
-            if (!prev.category_id && result.category_id) updates.category_id = String(result.category_id);
-            if ((!prev.tag_ids || prev.tag_ids.length === 0) && Array.isArray(result.tag_ids)) {
-              updates.tag_ids = result.tag_ids.map((id: any) => String(id));
-            }
-            if (!prev.manufacturer_id && result.manufacturer_id) updates.manufacturer_id = String(result.manufacturer_id);
-            if (!prev.model_number && result.model_number) updates.model_number = result.model_number;
-            if (!prev.manual_code && result.manual_code) updates.manual_code = result.manual_code;
-            
-            if (result.description && !prev.description?.zh) {
-               updates.description = { ...prev.description, zh: result.description };
-            }
-            
-            if (result.description_translations) {
-               updates.description = { 
-                 ...prev.description, 
-                 ...result.description_translations,
-                 zh: result.description_translations.zh || result.description || prev.description?.zh
-               };
-            }
-            
-            if ((!prev.dimensions || prev.dimensions.length === 0) && Array.isArray(result.dimensions)) {
-               updates.dimensions = result.dimensions;
-            }
-            
-            if (!prev.price && result.price) updates.price = String(result.price);
+        
+        const prev = form.values;
+        const updates: any = {};
+        const currentNameZh = (prev.name?.zh || '').trim();
+        const isNumeric = /^\d+$/.test(currentNameZh);
+        
+        if (!currentNameZh || isNumeric) {
+          if (result.name_translations) {
+            updates.name = {
+              zh: result.name_translations.zh || prev.name?.zh || '',
+              en: (result.name_translations.en || prev.name?.en || '').toUpperCase(),
+              ms: (result.name_translations.ms || prev.name?.ms || '').toUpperCase()
+            };
+          } else if (result.name) {
+            updates.name = { 
+              zh: result.name, 
+              en: (prev.name?.en || result.name).toUpperCase(), 
+              ms: (prev.name?.ms || result.name).toUpperCase() 
+            };
+          }
+        }
+        if (!prev.category_id && result.category_id) updates.category_id = String(result.category_id);
+        if ((!prev.tag_ids || prev.tag_ids.length === 0) && Array.isArray(result.tag_ids)) {
+          updates.tag_ids = result.tag_ids.map((id: any) => String(id));
+        }
+        if (!prev.manufacturer_id && result.manufacturer_id) updates.manufacturer_id = String(result.manufacturer_id);
+        if (!prev.model_number && result.model_number) updates.model_number = result.model_number;
+        if (!prev.group_id && result.group_id) updates.group_id = String(result.group_id);
+        if (!prev.manual_code && result.manual_code) updates.manual_code = result.manual_code;
+        
+        if (result.description && !prev.description?.zh) {
+           updates.description = { ...prev.description, zh: result.description };
+        }
+        
+        if (result.description_translations) {
+           updates.description = { 
+             ...prev.description, 
+             ...result.description_translations,
+             zh: result.description_translations.zh || result.description || prev.description?.zh
+           };
+        }
+        
+        if ((!prev.dimensions || prev.dimensions.length === 0) && Array.isArray(result.dimensions)) {
+           const mergedDims = mergeSplitDimensions(result.dimensions);
+           updates.dimensions = mergedDims.map((d: any) => {
+             // If label is just a name and not already a prefix, make it a prefix
+             if (d.label && !d.label.includes(':') && !d.label.includes('H') && !d.label.includes('W')) {
+               return { ...d, label: `${d.label}: ` };
+             }
+             return d;
+           });
+        }
+        
+        if (!prev.price && result.price) updates.price = String(result.price);
 
-            const merged = { ...prev, ...updates };
-            // Auto-save the AI result
-            onUpdatePhoto(photo.id, merged); 
-            return merged;
-          });
-        updateProgress(100, appLang === 'zh' ? '识别成功' : 'Success');
-        toast.success("AI 屬性識別成功並已自動保存");
+        const merged = { ...prev, ...updates };
+        form.setValues(merged);
+        
+        // Auto-save the AI result directly to DB
+        updateProgress(90, appLang === 'zh' ? '正在自动保存...' : 'Auto-saving...');
+        console.log('[AI Raw Debug]', result);
+        await onUpdatePhoto(photo.id, merged); 
+        
+        updateProgress(100, appLang === 'zh' ? '识别并保存成功' : 'Success');
+        toast.success(appLang === 'zh' ? "AI 识别成功并已自动保存" : "AI identified and auto-saved", {
+          action: {
+            label: appLang === 'zh' ? "复制原始数据" : "Copy Raw Data",
+            onClick: () => {
+              navigator.clipboard.writeText(JSON.stringify(result, null, 2));
+              toast.success(appLang === 'zh' ? "已复制到剪贴板" : "Copied to clipboard");
+            }
+          }
+        });
       } else {
         const errorMsg = (resp as any).message || "AI 分析失敗";
         toast.error(`識別失敗: ${errorMsg}`);
         throw new Error(errorMsg);
       }
     }, { showProgress: true, showSuccessToast: false });
-  }, [categories, tags, manufacturers, settings, runTask, form, handleError]);
+  }, [categories, tags, manufacturers, settings, runTask, onUpdatePhoto, form, handleError, appLang]);
 
   const onCancelAnalyze = () => {};
 

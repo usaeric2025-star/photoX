@@ -11,9 +11,14 @@ export function validateDimension(dim: Dimension | null | undefined): Dimension 
   
   if (aiUnit === 'inch' || aiUnit === 'in' || aiUnit === 'inc') return { ...dim, unit: 'inch' };
   if (aiUnit === 'mm') return { ...dim, unit: 'mm' };
+  if (aiUnit === 'cm') return { ...dim, unit: 'cm' };
+  if (aiUnit === 'm') return { ...dim, unit: 'm' || 'cm' };
   
-  if (value > 200) return { ...dim, unit: 'mm' };
-  if (value > 50) return { ...dim, unit: 'cm' };
-  if (value <= 0) return { ...dim, unit: 'cm' };
-  return { ...dim, unit: 'cm' };
+  // If no unit provided, apply simple heuristics but prefer cm
+  if (!aiUnit) {
+    if (value > 300) return { ...dim, unit: 'mm' };
+    return { ...dim, unit: 'cm' };
+  }
+  
+  return dim;
 }

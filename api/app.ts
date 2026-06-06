@@ -214,12 +214,14 @@ app.post("/ai/analyze", async (c) => {
             { data: categories },
             { data: tags },
             { data: manufacturers },
+            { data: groups },
             { data: openrouterSecret },
             { data: customModelSecret }
         ] = await Promise.all([
             supabase.from('categories').select('*'),
             supabase.from('tags').select('*'),
             supabase.from('manufacturers').select('*'),
+            supabase.from('groups').select('id, name').order('created_at', { ascending: false }).limit(40),
             supabase.from('secrets').select('value').eq('key', 'openrouter').maybeSingle(),
             supabase.from('settings').select('custom_model').maybeSingle()
         ]);
@@ -236,6 +238,7 @@ app.post("/ai/analyze", async (c) => {
         
         const categoriesContext = (categories || []).map(c => ({ id: c.id, name: c.name, zh: c.zh })).slice(0, 50);
         const tagsContext = (tags || []).map(t => ({ id: t.id, name: t.name, aliases: t.aliases })).slice(0, 100);
+        const groupsContext = (groups || []).map(g => ({ id: g.id, name: typeof g.name === 'object' ? g.name.zh : g.name }));
         
         const prompt = `Role: Elite Furniture Data Analyst & Multi-language Specialist.
 Task: Inspect the furniture image to extract comprehensive structured details and provide professional translations.
@@ -246,19 +249,24 @@ Task: Inspect the furniture image to extract comprehensive structured details an
 - "category_id": MUST be one of these IDs exactly: ${JSON.stringify(categoriesContext)}
 - "tag_ids": Map to up to 3 most relevant tag IDs from this list: ${JSON.stringify(tagsContext)}.
 - "new_tags": EXTRACT Material (e.g., "SOLID WOOD", "FABRIC") and Style (e.g., "SCANDINAVIAN"). English/Malay only.
+- "group_id": If the item belongs to a specific collection or product series mentioned in the context, use its ID: ${JSON.stringify(groupsContext)}. Otherwise leave null.
 
 【PRECISE DIMENSIONS (OCR)】
 - Locate all measurement charts or text overlays (H=, W=, D=, etc.).
-- "dimensions": Array of { "label": string, "length": number, "width": number, "height": number, "unit": string }.
-- USE THE UNIT FOUND ON THE IMAGE (e.g., "mm", "cm", "inch"). If no unit is clear, default to "cm".
-- EXAMPLE: [{"label": "Single Seat", "height": 188, "width": 45, "length": 50, "unit": "cm"}]
-- NOTE: "length" can also be used for "depth (D)".
+- "dimensions": MUST be an array of objects GROUPED BY FURNITURE ITEM.
+- SCHEMA: { "label": string, "length": number, "width": number, "height": number, "unit": string }.
+- CRITICAL: Read the unit directly (e.g., "inch", "mm", "cm"). If the image says 35", the unit is "inch" and value is 35.
+- ONE OBJECT PER ITEM: "Sofa" should be one object with height, width, and length. DO NOT create separate objects for "Sofa H", "Sofa W", etc.
+- If the image says "H35" D32" W66"", extract as ONE object: { "label": "Main Item", "height": 35, "width": 66, "length": 32, "unit": "inch" }.
+- "label": Use the item name (e.g., "Sofa", "Stool", "Cabinet"). If no name is clear, use "Dimensions".
+- "length": MUST be used for "depth (D)" or "Depth".
 
 【THOROUGH TRANSLATIONS】
 Generate precise name and description translations for:
-1. zh: Simplified Chinese (Mainland China standard)
-2. en: English (Professional Furniture Terms, UPPERCASE)
-3. ms: Bahasa Melayu (Furniture Terminology, UPPERCASE)
+1. zh: Simplified Chinese (Mainland China standard). 
+   - THE DESCRIPTION MUST EXPLICITLY INCLUDE ALL EXTRACTED DIMENSIONS WITH THEIR ORIGINAL LABELS (e.g., "沙发尺寸: 高 35 英寸 x 宽 66 英寸 x 深 32 英寸").
+2. en: English (Professional Furniture Terms, UPPERCASE).
+3. ms: Bahasa Melayu (Furniture Terminology, UPPERCASE).
 
 【CONSTRAINTS】
 - Output raw JSON only. 
@@ -269,6 +277,7 @@ Target Response Schema:
 {
   "name": "...",
   "category_id": "...",
+  "group_id": "...",
   "dimensions": [{ "label": "...", "length": 0, "width": 0, "height": 0, "unit": "cm" }],
   "description": "...",
   "tag_ids": ["..."],

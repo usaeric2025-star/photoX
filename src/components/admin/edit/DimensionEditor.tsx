@@ -88,7 +88,15 @@ export function DimensionEditor({
           const label = dim.label || '';
           const prefixMatch = label.match(/^([A-Z0-9\u4e00-\u9fa5]+)\s*[:：]\s*(.*)$/i);
           const prefix = prefixMatch ? prefixMatch[1] : '';
-          const dimensionsPart = prefixMatch ? prefixMatch[2] : label;
+          
+          // Generate a display string if dimensionsPart is empty but we have values
+          let dimensionsPart = prefixMatch ? prefixMatch[2] : label;
+          if (!dimensionsPart && (dim.height || dim.width || dim.length)) {
+            const h = dim.height ? `H${dim.height}` : '';
+            const w = dim.width ? `W${dim.width}` : '';
+            const l = dim.length ? `L${dim.length}` : '';
+            dimensionsPart = [h, w, l].filter(Boolean).join(' x ');
+          }
 
           return (
             <div key={`dim-${idx}`} className="bg-slate-50 p-3 sm:p-4 rounded-2xl border border-slate-100 space-y-3 relative group">
