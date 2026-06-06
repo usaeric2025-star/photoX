@@ -58,9 +58,9 @@ export function AdminGridContainer({
   const processingIds = useUIStore(s => s.processingIds);
   const isMultiSelect = useUIStore(s => s.isMultiSelect);
 
-  const disable = useCallback(() => {
+  const disable = () => {
     update({ isMultiSelect: false, selectedIds: [] });
-  }, [update]);
+  };
 
   const { data: categories = [] } = useCategories();
   const { data: tags = [] } = useTags();

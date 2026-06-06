@@ -47,7 +47,7 @@ export function DataLoadingContainer({
               width: { duration: 2, ease: 'easeOut', repeat: Infinity, repeatDelay: 0.5 },
               opacity: { duration: 0.2 }
             }}
-            className="fixed top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-blue-500 via-amber-500 to-blue-500 z-[9999] pointer-events-none"
+            className="fixed top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-blue-500 via-amber-500 to-blue-500 z-[var(--z-index-max)] pointer-events-none"
           />
         )}
       </AnimatePresence>

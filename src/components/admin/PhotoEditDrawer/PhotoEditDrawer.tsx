@@ -199,21 +199,16 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
         
         // Auto-save the AI result directly to DB
         updateProgress(90, appLang === 'zh' ? '正在自动保存...' : 'Auto-saving...');
-        
-        // [LOG-RULE] Use standard logger for AI debugging
-        console.log('🤖 [AI ANALYSIS RESULT]:', JSON.stringify(result, null, 2));
-
+        console.log('[AI Raw Debug]', result);
         await onUpdatePhoto(photo.id, merged); 
         
         updateProgress(100, appLang === 'zh' ? '识别并保存成功' : 'Success');
         toast.success(appLang === 'zh' ? "AI 识别成功并已自动保存" : "AI identified and auto-saved", {
-          duration: 6000, // Show longer for user to catch the copy action
           action: {
             label: appLang === 'zh' ? "复制原始数据" : "Copy Raw Data",
             onClick: () => {
-              const textToCopy = JSON.stringify(result, null, 2);
-              navigator.clipboard.writeText(textToCopy);
-              toast.success("JSON copied!");
+              navigator.clipboard.writeText(JSON.stringify(result, null, 2));
+              toast.success(appLang === 'zh' ? "已复制到剪贴板" : "Copied to clipboard");
             }
           }
         });
@@ -360,7 +355,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-[599] bg-black/20 backdrop-blur-sm"
+                  className="fixed inset-0 z-[var(--z-index-max)] bg-black/20 backdrop-blur-sm"
                 />
               }
             />
@@ -371,7 +366,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 20 }}
                   transition={{ duration: 0.2, ease: "easeOut" }}
-                  className="fixed inset-0 z-[600] bg-slate-50 flex flex-col pt-safe pb-safe shadow-2xl focus:outline-none"
+                  className="fixed inset-0 z-[var(--z-index-max)] bg-slate-50 flex flex-col pt-safe pb-safe shadow-2xl focus:outline-none"
                 >
                   <DrawerHeader
                     editPhotoId={editPhotoId}

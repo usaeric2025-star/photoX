@@ -138,7 +138,7 @@ export function TagEditor({
 
       {activeActionTag && createPortal(
         <div
-          className="fixed inset-0 z-[10000] bg-slate-950/40 flex items-center justify-center p-6 backdrop-blur-sm animate-in fade-in duration-200"
+          className="fixed inset-0 z-[var(--z-index-max)] bg-slate-950/40 flex items-center justify-center p-6 backdrop-blur-sm animate-in fade-in duration-200"
           onPointerDown={(e) => {
             // Prevent closure on the same click/touch that opened it
             if (Date.now() - portalOpenedAt.current < 400) return;

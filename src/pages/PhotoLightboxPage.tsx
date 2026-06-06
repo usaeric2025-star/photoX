@@ -54,7 +54,7 @@ export const PhotoLightboxPage = () => {
   // This allows the lightbox to show the cached thumbnail while the detail loads
   if (photos.length === 0 && isLoading) {
     return (
-      <div className="fixed inset-0 bg-black/95 z-[250] flex flex-col items-center justify-center animate-in fade-in duration-300">
+      <div className="fixed inset-0 bg-black/95 z-[var(--z-index-toast)] flex flex-col items-center justify-center animate-in fade-in duration-300">
         <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin mb-4" />
       </div>
     );
@@ -108,10 +108,10 @@ export const PhotoLightboxPage = () => {
           showInfo && currentPhoto ? (
             <>
               <div 
-                className="absolute inset-0 z-[10] bg-black/20 backdrop-blur-sm/50 transition-opacity"
+                className="absolute inset-0 z-[var(--z-index-card)] bg-black/20 backdrop-blur-sm/50 transition-opacity"
                 onClick={() => setShowInfo(false)}
               />
-              <div className="absolute right-0 top-0 h-full w-full md:w-[380px] pointer-events-none flex items-center z-[11] p-0">
+              <div className="absolute right-0 top-0 h-full w-full md:w-[380px] pointer-events-none flex items-center z-[var(--z-index-card)] p-0">
                 <PhotoInfoPanel 
                   data={data}
                   mode={mode as 'single' | 'group'}
@@ -148,7 +148,7 @@ export const PhotoLightboxPage = () => {
             <>
               {/* Photo Simplified Info Overlay */}
               {!showInfo && (
-                <div className="absolute bottom-[10px] left-4 md:bottom-[12px] md:left-6 z-[12] pointer-events-none flex flex-col items-start justify-end max-w-[70%] md:max-w-[60%] select-none">
+                <div className="absolute bottom-[10px] left-4 md:bottom-[12px] md:left-6 z-[var(--z-index-dropdown)] pointer-events-none flex flex-col items-start justify-end max-w-[70%] md:max-w-[60%] select-none">
                   {currentPhotoDisplayName && (
                     <h2 className="text-white text-lg md:text-xl font-bold tracking-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)] mb-1.5 line-clamp-2">
                       {currentPhotoDisplayName}
@@ -182,7 +182,7 @@ export const PhotoLightboxPage = () => {
                 onClick={() => setShowInfo(!showInfo)}
                 // onPointerDown blocks yarl from catching the click as a backdrop swipe
                 onPointerDown={(e) => e.stopPropagation()}
-                className="absolute bottom-[10px] right-4 md:bottom-[12px] md:right-6 z-[12] flex items-center justify-center gap-2 w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full bg-black/70 backdrop-blur-xl text-white border border-white/20 shadow-2xl hover:bg-black/90 active:scale-[0.96] transition-all group pointer-events-auto"
+                className="absolute bottom-[10px] right-4 md:bottom-[12px] md:right-6 z-[var(--z-index-dropdown)] flex items-center justify-center gap-2 w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full bg-black/70 backdrop-blur-xl text-white border border-white/20 shadow-2xl hover:bg-black/90 active:scale-[0.96] transition-all group pointer-events-auto"
                 title={showInfo ? (appLang === 'zh' ? '关闭信息' : appLang === 'ms' ? 'Tutup Maklumat' : 'Close Info') : (appLang === 'zh' ? '展开详细信息' : appLang === 'ms' ? 'Tunjuk Butiran' : 'Show Details')}
               >
                 <div className="md:hidden flex items-center justify-center">

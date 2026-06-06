@@ -68,6 +68,10 @@ export function thumbHashToDataURL(hash: string | undefined): string | undefined
     return thumbHashCache.get(hash);
   }
   try {
+    // Basic validation to ensure only valid base64 characters are present
+    if (/[^A-Za-z0-9+/=]/.test(hash)) {
+      return undefined;
+    }
     const binary = Uint8Array.from(atob(hash), c => c.charCodeAt(0));
     const dataUrl = thumbhash.thumbHashToDataURL(binary);
     if (dataUrl) {
@@ -75,7 +79,6 @@ export function thumbHashToDataURL(hash: string | undefined): string | undefined
     }
     return dataUrl;
   } catch (e) {
-    console.error('[ThumbHash] Conversion failed:', e);
     return undefined;
   }
 }

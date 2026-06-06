@@ -7,6 +7,7 @@ import { useDisclosure } from '@mantine/hooks';
 import { cn } from '@/lib/utils';
 import { Category } from '@/types';
 import { translations } from '@/lib/translations';
+import { getSafeText } from '@/lib/ai/safeText';
 import { categoryKeys, tagKeys } from '@/lib/queryKeys';
 import { loadCategoriesFromCloud } from '@/services/category/queries';
 import { loadTagsFromCloud } from '@/services/tag/queries';
@@ -42,9 +43,11 @@ export function FilterPanel() {
         { id: null, name: t.all },
         ...categories.map(c => ({
             ...c,
-            name: (c[appLang as keyof Category] as string) || c.name
+            name: getSafeText(c, appLang)
         }))
     ], [categories, appLang, t.all]);
+
+    console.debug('[FilterPanel] Rendering. Current categoryId in URL:', urlFilters.categoryId, 'Categories count:', categoryList.length);
 
     // Unified Tags Logic using useTagsDisplay
     const { tagsToRender, pinnedIds, hotIds } = useTagsDisplay(tags, settings);
@@ -53,24 +56,28 @@ export function FilterPanel() {
     const hiddenCount = tagsToRender.length - 15;
 
     return (
-        <div className="flex flex-col border-t border-slate-100 bg-white relative z-50">
+        <div className="flex flex-col border-t border-slate-100 bg-white relative z-20">
             {/* Minimalist Premium grid for categories (2 rows, 4 columns) */}
             <div className="px-4 pt-3 pb-3 border-b border-slate-50">
                 <div className="grid grid-cols-4 gap-1.5">
                     {categoryList.slice(0, 8).map(cat => (
                         <button
                             key={cat.id || 'all'}
-                            onClick={() => setCategory(cat.id)}
+                            onClick={() => {                
+                                console.debug('[FilterPanel] Category clicked:', cat.id);
+                                setCategory(cat.id);
+                            }}
+
                             onMouseEnter={prefetchCategories}
                             className={cn(
-                                "text-[10px] font-bold h-7 px-3 rounded-full transition-all duration-200 flex items-center justify-center cursor-pointer pointer-events-auto",
-                                urlFilters.categoryId === cat.id 
-                                    ? 'bg-[#2563EB] text-white shadow-sm shadow-blue-500/10' 
+                                "text-[10px] font-bold h-7 px-3 rounded-full transition-all duration-100 flex items-center justify-center cursor-pointer pointer-events-auto active:scale-95",
+                                urlFilters.categoryId === cat.id || (urlFilters.categoryId !== null && cat.id !== null && String(urlFilters.categoryId) === String(cat.id))
+                                    ? 'bg-[#2563EB] text-white shadow-sm shadow-blue-500/20' 
                                     : 'bg-[#F3F4F6] text-[#374151] hover:bg-[#E5E7EB]'
                             )}
-                            title={cat.name}
+                            title={cat.name || t.all}
                         >
-                            {(cat.name || '').toUpperCase()}
+                            {(cat.name || t.all || 'Unnamed').toUpperCase()}
                         </button>
                     ))}
                 </div>
@@ -100,7 +107,7 @@ export function FilterPanel() {
                     {visibleTags.map((tag) => {
                         const isPinned = pinnedIds.includes(String(tag.id));
                         const isHot = hotIds.has(String(tag.id));
-                        const isSelected = urlFilters.tagId === tag.id;
+                        const isSelected = urlFilters.tagId === tag.id || (urlFilters.tagId !== null && tag.id !== null && String(urlFilters.tagId) === String(tag.id));
 
                         return (
                            <button

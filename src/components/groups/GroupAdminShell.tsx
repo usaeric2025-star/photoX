@@ -226,7 +226,7 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
 
             {/* Bottom Toolbar (when not in multi-select mode) */}
             {!isMultiSelect && (
-              <div className="flex-shrink-0 bg-white border-t border-slate-100 px-4 py-3 flex items-center justify-around z-[190] pb-safe-offset-2">
+              <div className="flex-shrink-0 bg-white border-t border-slate-100 px-4 py-3 flex items-center justify-around z-[var(--z-index-overlay)] pb-safe-offset-2">
                 {/* 1. Add Photos button */}
                 <button
                   type="button"

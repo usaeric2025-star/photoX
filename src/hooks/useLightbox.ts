@@ -4,7 +4,6 @@ import { useGroupPhotos, usePhotos } from "./core/queries/usePhotos";
 import { useGroupDetail } from "./core/queries/useGroupDetail";
 import { useQuery } from '@tanstack/react-query';
 import { getPhotoCount } from "@/services/photo/queries";
-import { useMemo } from "react";
 import { useNavigate, useLocation } from "@tanstack/react-router";
 import { Photo } from "@/types";
 import { PAGINATION } from "@/constants/config";
@@ -49,7 +48,7 @@ export const useLightbox = () => {
   
   const isLoading = isSingleLoading || (isGroupMode ? (isGroupLoading || isPhotosLoading) : isGalleryLoading);
 
-  const photos = useMemo(() => {
+  const photos = (() => {
     let list: Photo[] = [];
     const sourceData = isGroupMode ? groupPhotos : allGalleryPhotos;
     const allPhotosList = sourceData?.pages.flatMap(page => page.photos) ?? [];
@@ -71,14 +70,14 @@ export const useLightbox = () => {
       seen.add(p.id);
       return true;
     });
-  }, [groupId, groupPhotos, allGalleryPhotos, singlePhoto, isGroupMode]);
+  })();
 
-  const currentIndex = useMemo(() => {
+  const currentIndex = (() => {
     if (!photoId || photos.length === 0) return 0;
     const idx = photos.findIndex(p => p.id === photoId);
     if (idx === -1) return 0;
     return idx;
-  }, [photos, photoId]);
+  })();
 
   const isOpen = !!photoId;
   // Use a safely indexed access, or null if idx is -1

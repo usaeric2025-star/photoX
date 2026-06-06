@@ -8,7 +8,11 @@ export function getSafeText(field: any, locale: string = 'zh'): string {
   
   // If it's an object with language keys
   if (typeof field === 'object') {
-    return field[locale] || field.zh || field.en || field.ms || '';
+    const val = field[locale] || field.zh || field.en || field.ms || field.name;
+    if (typeof val === 'string') return val;
+    if (typeof val === 'object') return JSON.stringify(val);
+    if (val !== undefined && val !== null) return String(val);
+    return '';
   }
   
   return String(field);

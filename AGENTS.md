@@ -60,21 +60,6 @@ const invalidatePhotos = useInvalidatePhotos();
 invalidatePhotos(); // 降维打击，清空全域缓存
 ```
 
-## 样式与 Z-Index 规范（锁定）
-- ✅ 顶部导航栏：`z-header` (50)
-- ✅ 底部悬浮工具栏 (SelectionToolbar)：`z-header` (50)
-- ✅ 上传按钮 (UploadButton)：`z-sticky` (40)
-- ✅ 全量弹窗/对话框 (AlertDialog / ConfirmDialog)：Radix 默认 z-index
-
-### 全域弹窗与底部工具列共存规范
-- ✅ 工具列必须监听 `isGlobalDialogOpen`（来自 `useUIStore`）
-- ✅ 弹窗开启时，工具列必须：
-  - 隐藏（最稳，`if (isGlobalDialogOpen) return null`）
-  - 或设为 `pointer-events: none`
-- ❌ 禁止两者同时处於可点击状态
-
-**原因**：避免 Portal 元件之间的遮罩与焦点冲突
-
 ## 状态管理边界（锁定）
 
 | 状态类型 | 存储位置 | 示例 |
@@ -614,6 +599,13 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 - ❌ 禁止在各组件中手写不同的 `limit` 值
 
 
+
+## 编码补充（2026-06-06）
+
+### 例外情况：useMemo 可用于稳定 Query Key
+
+- ✅ 当物件作为 `useQuery` 的 `queryKey` 或参数时，可使用 `useMemo`
+- ❌ 一般渲染逻辑仍禁止手动记忆化
 
 ## 架构极致化规范（锁定）
 

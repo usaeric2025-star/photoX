@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useDisclosure } from "@mantine/hooks";
 import { PromptDialog } from "@/components/ui/PromptDialog";
 import { TagEditor } from "../TagEditor";
@@ -28,20 +28,17 @@ export function PhotoTagSelector({
   const [isEditOpen, editDialog] = useDisclosure(false);
   const [editingTag, setEditingTag] = useState<Tag | null>(null);
 
-  const cleanSelectedIds = React.useMemo(() => {
-    return Array.from(
+  const cleanSelectedIds = Array.from(
       new Set(
         safeArray(selectedTagIds)
           .map((id) => String(id).trim())
           .filter(Boolean),
       ),
     );
-  }, [selectedTagIds]);
 
   const [initialSelectedIds] = React.useState(() => cleanSelectedIds);
 
-  const sortedTags = React.useMemo(() => {
-    return [...tags].sort((a, b) => {
+  const sortedTags = [...tags].sort((a, b) => {
       const isASelected = initialSelectedIds.includes(String(a.id));
       const isBSelected = initialSelectedIds.includes(String(b.id));
 
@@ -50,7 +47,6 @@ export function PhotoTagSelector({
 
       return a.name.localeCompare(b.name, undefined, { numeric: true });
     });
-  }, [tags, initialSelectedIds]);
 
   const handleToggleTag = (tag: Tag) => {
     const strId = String(tag.id);

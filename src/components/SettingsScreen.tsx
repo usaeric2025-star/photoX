@@ -161,7 +161,7 @@ export function SettingsScreen() {
   }, [activeScreen]);
 
   return (
-    <div className="fixed inset-0 z-[500] bg-brand-bg flex flex-col pt-safe">
+    <div className="fixed inset-0 z-[var(--z-index-max)] bg-brand-bg flex flex-col pt-safe">
       <div className="px-6 py-4 flex items-center gap-3 bg-brand-bg sticky top-0 z-10">
         <button 
           onClick={() => update({ activeScreen: 'home' })} 

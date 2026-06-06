@@ -35,7 +35,7 @@ export function DiagnosticsDashboard() {
     runAudit, isAuditing, auditResult
   } = useDiagnostics();
 
-  const combinedIssues = React.useMemo(() => {
+  const combinedIssues = (() => {
     const list = [...(report?.issues || [])];
     const orphansCount = auditResult?.orphans?.count ?? 0;
     if (orphansCount > 0) {
@@ -51,7 +51,7 @@ export function DiagnosticsDashboard() {
       });
     }
     return list;
-  }, [report?.issues, auditResult]);
+  })();
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">

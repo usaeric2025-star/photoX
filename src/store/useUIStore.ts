@@ -66,7 +66,6 @@ export interface UIStoreState {
   isInfiniteMode: boolean;
   filterSubId: string | null;
   processingIds: string[];
-  isGlobalDialogOpen: boolean;
   
   // Interaction state
   selectedIds: string[];
@@ -157,7 +156,6 @@ export const useUIStore = create<UIStoreState>()((set) => ({
   newPhotoData: null,
   showOtherFields: false,
   isInfiniteMode: false,
-  isGlobalDialogOpen: false,
   filterSubId: null,
   update: (updates) => set((state) => {
     const nextState = typeof updates === 'function' ? updates(state) : updates;

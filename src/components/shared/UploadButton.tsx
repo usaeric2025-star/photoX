@@ -5,7 +5,6 @@ import { buttonStyles } from '../../styles/buttonStyles';
 import { useMultiSelect, usePermission } from '../../hooks';
 import { Photo } from '../../types';
 import { GalleryVariant } from '@/types/variant';
-import { useUIStore } from '@/store/useUIStore';
 
 function AddButton({ onAdd }: { onAdd: () => void }) {
   return (
@@ -52,10 +51,7 @@ export function UploadButton({
 }: UploadButtonProps) {
   const { isMultiSelect } = useMultiSelect();
   const { can } = usePermission();
-  const isGlobalDialogOpen = useUIStore(s => s.isGlobalDialogOpen);
   const isManagement = variant === 'full-management' || variant === 'staff-workspace';
-
-  if (isGlobalDialogOpen) return null;
 
   if (isManagement) {
     if (!can('photo:edit')) return null;

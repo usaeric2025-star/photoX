@@ -18,7 +18,7 @@ export function RefreshMenu({ show, isInfiniteMode, t, toggleInfinite }: Refresh
           initial={{ opacity: 0, y: 10, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 10, scale: 0.95 }}
-          className="absolute top-full left-0 mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-brand-navy/10 overflow-hidden z-[120]"
+          className="absolute top-full left-0 mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-brand-navy/10 overflow-hidden z-[var(--z-index-dropdown)]"
         >
           <button 
             onClick={toggleInfinite}

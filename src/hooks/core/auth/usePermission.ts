@@ -1,4 +1,3 @@
-import { useMemo, useCallback } from 'react';
 import { useAuth } from './useAuth';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { ROLE_PERMISSIONS, getEffectiveRole, Capability } from '@/config/permissions';
@@ -20,17 +19,17 @@ export function usePermission() {
 
   const isStaffMode = passcode === settings?.access_passcode && !!settings?.access_passcode;
     
-  const role = useMemo(() => getEffectiveRole(user || null, isStaffMode), [user, isStaffMode]);
-  const permissions = useMemo(() => ROLE_PERMISSIONS[role] || [], [role]);
+  const role = getEffectiveRole(user || null, isStaffMode);
+  const permissions = ROLE_PERMISSIONS[role] || [];
 
   /**
    * Check if the current context has a specific capability.
    */
-  const can = useCallback((capability: Capability): boolean => {
+  const can = (capability: Capability): boolean => {
     return permissions.includes(capability);
-  }, [permissions]);
+  };
 
-  return useMemo(() => ({
+  return {
     role,
     can,
     // Legacy flags for backward compatibility during migration
@@ -41,5 +40,5 @@ export function usePermission() {
     canBatchEdit: permissions.includes('photo:batch-edit'),
     canManageSystem: permissions.includes('system:settings'),
     userId: user?.id
-  }), [role, permissions, can, user?.id]);
+  };
 }

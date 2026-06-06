@@ -8,7 +8,7 @@ export const LoadingScreen = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 flex items-center justify-center bg-white/90 backdrop-blur-sm z-[9999]"
+      className="fixed inset-0 flex items-center justify-center bg-white/90 backdrop-blur-sm z-[var(--z-index-max)]"
       id="full-page-loading"
     >
       <motion.div

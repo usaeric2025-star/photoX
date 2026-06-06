@@ -1,4 +1,3 @@
-import { useCallback } from "react";
 import { Photo, Dimension } from "@/types";
 import { useGroupCoverMutation, useRemoveFromGroupMutation } from "@/hooks";
 
@@ -21,8 +20,7 @@ export const useGroupActions = (
   const { mutate: mutateSetCover } = useGroupCoverMutation();
   const { mutateAsync: removePhotosBatch } = useRemoveFromGroupMutation();
 
-  const setCover = useCallback(
-    async (photoId: string) => {
+  const setCover = async (photoId: string) => {
       const isAlreadyCover = groupData?.cover_photo_id === photoId;
       const targetPhotoId = isAlreadyCover ? null : photoId;
       
@@ -46,12 +44,9 @@ export const useGroupActions = (
             }
           : prev,
       );
-    },
-    [mutateSetCover, activeGroupId, groupData?.cover_photo_id, setGroupData],
-  );
+    };
 
-  const getBulkRemoveInfo = useCallback(
-    (ids: string[]) => {
+  const getBulkRemoveInfo = (ids: string[]) => {
       const allGroupPhotos = dbGroupPhotos || [];
       const remainingCount = allGroupPhotos.length - ids.length;
       const isDissolving = remainingCount <= 1;
@@ -63,12 +58,9 @@ export const useGroupActions = (
           ? `移出后该组将只剩 ${remainingCount} 张照片。系统会自动将剩余照片也移出并解散群组。确定继续吗？`
           : `确定要将选中的 ${ids.length} 张照片移出群组吗？`,
       };
-    },
-    [dbGroupPhotos],
-  );
+    };
 
-  const performBulkRemove = useCallback(
-    async (ids: string[]) => {
+  const performBulkRemove = async (ids: string[]) => {
       const allGroupPhotos = dbGroupPhotos || [];
       const remainingCount = allGroupPhotos.length - ids.length;
       const isDissolving = remainingCount <= 1;
@@ -93,20 +85,9 @@ export const useGroupActions = (
       } catch (err: any) {
         handleError(err, "操作失败");
       }
-    },
-    [
-      handleError,
-      dbGroupPhotos,
-      activeGroupId,
-      removePhotosBatch,
-      setGroupId,
-      update,
-      removeDraftGroup
-    ],
-  );
+    };
 
-  const persistPhotoChange = useCallback(
-    async (photoId: string, updates: Partial<Photo>) => {
+  const persistPhotoChange = async (photoId: string, updates: Partial<Photo>) => {
       try {
         if (onUpdatePhoto) {
           await onUpdatePhoto(photoId, updates);
@@ -118,24 +99,18 @@ export const useGroupActions = (
       } catch (err: any) {
         handleError(err, "保存照片修改失败");
       }
-    },
-    [handleError, onUpdatePhoto],
-  );
+    };
 
-  const handleToggleTag = useCallback(
-    (photo: Photo, tagId: string) => {
+  const handleToggleTag = (photo: Photo, tagId: string) => {
       const currentTags = Array.isArray(photo.tag_ids) ? photo.tag_ids : [];
       const nextTags = currentTags.includes(tagId)
         ? currentTags.filter((id) => id !== tagId)
         : [...currentTags, tagId];
 
       persistPhotoChange(photo.id, { tag_ids: nextTags });
-    },
-    [persistPhotoChange],
-  );
+    };
 
-  const handleBatchUpdateDimensions = useCallback(
-    async (newDims: Dimension[]) => {
+  const handleBatchUpdateDimensions = async (newDims: Dimension[]) => {
       if (!activeGroupId || newDims.length === 0) return;
 
       try {
@@ -163,18 +138,9 @@ export const useGroupActions = (
         handleError(err, "批量更新尺寸失败");
         throw err;
       }
-    },
-    [
-      activeGroupId,
-      activeGroupPhotos,
-      handleError,
-      onUpdatePhoto,
-      onUpdatePhotosBulk,
-    ],
-  );
+    };
 
-  const handleReorder = useCallback(
-    async (draggedId: string, targetId: string) => {
+  const handleReorder = async (draggedId: string, targetId: string) => {
       if (draggedId === targetId) return;
 
       const dragIdx = activeGroupPhotos.findIndex((p) => p.id === draggedId);
@@ -203,12 +169,9 @@ export const useGroupActions = (
         handleError(err, "保存排序失败");
         throw err;
       }
-    },
-    [activeGroupPhotos, handleError],
-  );
+    };
 
-  const handleBulkAction = useCallback(
-    async (action: "ai" | "remove" | "batch") => {
+  const handleBulkAction = async (action: "ai" | "remove" | "batch") => {
       if (selectedIds.length === 0) return;
 
       if (action === "ai") {
@@ -223,15 +186,7 @@ export const useGroupActions = (
         onBatchEdit?.(selectedIds);
         update({ isMultiSelect: false, selectedIds: [] });
       }
-    },
-    [
-      activeGroupPhotos,
-      onBatchAiAnalyze,
-      onBatchEdit,
-      selectedIds,
-      update
-    ],
-  );
+    };
 
   return {
     setCover,

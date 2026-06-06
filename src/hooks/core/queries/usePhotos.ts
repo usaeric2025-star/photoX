@@ -62,7 +62,8 @@ export const usePhotos = (filters: {
     getNextPageParam: (lastPage) => lastPage.nextPage,
     initialPageParam: 1,
     enabled,
-    staleTime: 30 * 1000,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
   });

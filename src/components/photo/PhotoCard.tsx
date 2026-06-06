@@ -75,6 +75,8 @@ export interface PhotoCardProps extends React.HTMLAttributes<HTMLDivElement> {
   imgVariant?: 'sm' | 'md';
   hideGroupBadge?: boolean;
   showCoverBadge?: boolean;
+  displayCatName?: string;
+  photoTags?: string[];
 }
 
 function SelectionOverlay({ isSelected }: { isSelected: boolean }) {
@@ -112,6 +114,8 @@ export const PhotoCard = ({
   hideDetails = false,
   imgVariant,
   hideGroupBadge = false,
+  displayCatName: propDisplayCatName,
+  photoTags: propPhotoTags,
   ...props
 }: PhotoCardProps) => {
   const isSelected = useUIStore((s) => s.selectedIds.includes(photo.id));
@@ -135,17 +139,17 @@ export const PhotoCard = ({
   const lang = useUIStore(s => s.appLang);
   const t = translations[lang as keyof typeof translations] || translations.en;
   
-  const { data: fetchedCategories = [] } = useCategories({ enabled: !hideDetails });
-  const { data: fetchedTags = [] } = useTags({ enabled: !hideDetails });
+  const { data: fetchedCategories = [] } = useCategories({ enabled: !hideDetails && !propDisplayCatName });
+  const { data: fetchedTags = [] } = useTags({ enabled: !hideDetails && !propPhotoTags });
 
   const categories = fetchedCategories;
   const tags = fetchedTags;
 
   const categoryId = photo.category_id ? String(photo.category_id) : '';
   
-  const displayCatName = getTranslatedCategoryName(categoryId, categories, lang, t);                
+  const displayCatName = propDisplayCatName ?? getTranslatedCategoryName(categoryId, categories, lang, t);
                 
-  const photoTags = (() => {                
+  const photoTags = propPhotoTags ?? (() => {                
     const tagIdsList = Array.isArray(photo.tag_ids) ? photo.tag_ids : [];                
     return tagIdsList                
       .map(id => tags.find(t => String(t.id) === String(id))?.name ?? '')                

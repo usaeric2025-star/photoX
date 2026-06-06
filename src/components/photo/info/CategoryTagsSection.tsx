@@ -78,7 +78,7 @@ export function CategoryTagsSection({ categoryName, tags, isAdmin, appLang, text
 
       {activeActionTag && createPortal(
         <div
-          className="fixed inset-0 z-[9999] bg-slate-950/40 flex items-center justify-center p-6 backdrop-blur-sm cursor-pointer animate-in fade-in duration-200"
+          className="fixed inset-0 z-[var(--z-index-max)] bg-slate-950/40 flex items-center justify-center p-6 backdrop-blur-sm animate-in fade-in duration-200"
           onClick={() => setActiveActionTag(null)}
         >
           <div

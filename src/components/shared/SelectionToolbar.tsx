@@ -24,8 +24,6 @@ export function SelectionToolbar({
 }: SelectionToolbarProps) {
   const selectedIds = useUIStore((s: any) => s.selectedIds);
   const isMultiSelect = useUIStore((s: any) => s.isMultiSelect);
-  const isGlobalDialogOpen = useUIStore((s: any) => s.isGlobalDialogOpen);
-  const lightboxIndex = useUIStore((s: any) => s.lightboxIndex);
   const update = useUIStore((s: any) => s.update);
   
   const [isGroupAlertOpen, groupAlert] = useDisclosure(false);
@@ -34,8 +32,6 @@ export function SelectionToolbar({
   const ids = selectedIds;
   
   console.log('SelectionToolbar rendering - isMultiSelect:', isMultiSelect, 'count:', count);
-  
-  if (isGlobalDialogOpen || lightboxIndex !== null) return null;
 
   const groupMutation = useGroupPhotosMutation();
   const { handleAIAction } = useAIGroup();

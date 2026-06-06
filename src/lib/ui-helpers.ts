@@ -20,8 +20,12 @@ export const getTranslatedCategoryName = (
   
   if (!activeCat) return "";
 
-  // The 'name' field itself might be a JSON object now in the database
-  return getSafeText(activeCat.name || activeCat.zh || (activeCat as any).name_translations, lang);
+  const result = getSafeText(activeCat, lang);
+  if (typeof result === 'object') {
+    console.error('getTranslatedCategoryName returned an object:', result);
+    return JSON.stringify(result);
+  }
+  return result;
 };
 
 /**
@@ -82,12 +86,11 @@ export const getCacheBustedImageUrl = (photo: Photo, type: 'image' | 'thumb' = '
  */
 export const getManufacturerName = (
   mfrId: string | undefined,
-  manufacturers: Manufacturer[],
-  lang: string = 'zh'
+  manufacturers: Manufacturer[]
 ): string => {
   if (!mfrId) return '';
   const activeMfr = manufacturers.find(m => String(m.id) === String(mfrId));
-  return activeMfr ? getSafeText(activeMfr.name, lang).toUpperCase() : '';
+  return activeMfr ? (activeMfr.name || '').toUpperCase() : '';
 };
 
 /**
