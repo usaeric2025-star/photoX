@@ -18,43 +18,18 @@ import { toast } from 'sonner';
 import { usePhotoGallery } from '@/features/photos/usePhotoGallery';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { translations } from '@/lib/translations';
-import { AdminToolbar } from '@/pages/AdminPage/AdminToolbar';
 import { AdminEmptyState } from '@/pages/AdminPage/AdminEmptyState';
 
-import { useBatchAiAnalyze } from '@/hooks/core/mutations/useBatchAiAnalyze';
+import { useBatchAiAnalyze } from '@/hooks/useBatchAiAnalyze';
 export function AdminScreen() {
-  const { user, loginWithGoogle } = useAuth();
+  const { user } = useAuth();
   const { photos, isLoading: isLoadingPhotos } = usePhotoGallery();
   const { tasks } = useTasks();
-  const { mutateAsync: syncMut } = useSyncMutation();
   const isSyncing = tasks.some(t => t.name.includes('同步') && t.status === 'running');
-  const onRefresh = async () => {
-    try {
-      await syncMut('pull');
-      toast.success('同步已完成');
-    } catch (e: any) {
-      toast.error(`同步失败: ${e.message || '未知错误'}`);
-    }
-  };
-  const cloudCount = 0;
-
+  
   const lang = useUIStore((s) => s.appLang);
-  const update = useUIStore((s) => s.update);
-  
-  const onManageClick = () => update({ activeScreen: 'manage' });
-
-  const hasAdminAccess = useAdminMode();
-  const isEffectiveStaffMode = hasAdminAccess && !user;
-  
   const t = translations[lang as keyof typeof translations] || translations.en;
   
-  const { updatePhoto } = useAdminActions();
-  const { settings } = useSettings();
-  const { data: categories = [] } = useCategories();
-  const { data: tags = [] } = useTags();
-  const { data: manufacturers = [] } = useManufacturers();
-  const { runTask } = useTaskExecutor();
-  const { handleError } = useErrorHandler();
   const { handleBatchAiAnalyze: onBatchAiAnalyze } = useBatchAiAnalyze();
 
   const variant = user ? 'full-management' : 'staff-workspace';
@@ -73,9 +48,7 @@ export function AdminScreen() {
   const shouldShowContent = !isLoadingPhotos || forceShow;
   
   return (
-    <div className="flex flex-col absolute inset-0 bg-slate-50 overflow-hidden z-50" id="main-admin-screen">
-       {/* Placeholder to keep layout */}
-       <div className="absolute top-2 right-2 z-[60]" />
+    <div className="flex flex-col h-full bg-slate-50 overflow-hidden relative" id="main-admin-screen">
        <div className="flex-1 min-h-0 relative">
          {!shouldShowContent ? (
            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-slate-400 bg-slate-50">

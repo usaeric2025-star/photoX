@@ -12,9 +12,9 @@ import {
   useShallow,
 } from "@/hooks";
 import { Tag } from "@/types";
-import { ErrorFactory } from "@/lib/errorFactory";
+import { ErrorFactory } from "@/lib/error/ErrorFactory";
 import { SearchInput } from "@/components/ui/SearchInput";
-import { useLongPress } from "@/hooks/useLongPress";
+import { useLongPress } from "@/hooks/core/useLongPress";
 
 interface TagEditorProps {
   tags: Tag[];

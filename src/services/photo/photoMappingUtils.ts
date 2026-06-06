@@ -1,7 +1,7 @@
 import { Photo } from '../../types';
 import { safeArray } from '../../lib/utils';
 import { validateDimension } from '@/lib/validators/dimensionValidator';
-import { generateItemCode } from '../utils';
+import { generateItemCode } from './utils';
 
 export const FIELD_MAP: Record<string, string> = {};
 

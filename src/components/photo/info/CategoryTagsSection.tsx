@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Tag } from '@/types/photo';
 import { cn } from '@/lib/utils';
-import { useLongPress } from '@/hooks/useLongPress';
+import { useLongPress } from '@/hooks/core/useLongPress';
 import { getSafeText } from '@/lib/ai/safeText';
 
 interface TagBadgeProps {

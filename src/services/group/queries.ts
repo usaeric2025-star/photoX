@@ -1,5 +1,5 @@
-import { errorFactory, success } from '@/lib/errorFactory';
-import type { AppResult } from '@/lib/errorFactory';
+import { errorFactory, success } from '@/lib/error/ErrorFactory';
+import type { AppResult } from '@/types/api';
 import { supabase } from '../../lib/supabase';
 import { ProductGroup } from '../../types';
 

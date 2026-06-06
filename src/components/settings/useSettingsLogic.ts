@@ -9,10 +9,9 @@ import {
   normalizeManufacturerName,
 } from "@/lib/utils";
 import { api } from "@/lib/api";
-import { fromThrowableAsync } from '@/lib/errorFactory';
+import { fromThrowableAsync, ErrorFactory } from '@/lib/error/ErrorFactory';
 import { toast } from 'sonner';
 import { useErrorHandler, useInvalidatePhotos, useTaskExecutor } from "@/hooks";
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 interface UseSettingsLogicProps {
   user: User | null;

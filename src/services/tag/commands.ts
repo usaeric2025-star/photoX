@@ -1,9 +1,8 @@
 import { supabase } from '../../lib/supabase';
 import { Tag } from '../../types';
-import { errorFactory, success } from '@/lib/errorFactory';
-import type { AppResult } from '@/lib/errorFactory';
+import { errorFactory, success, ErrorFactory } from '@/lib/error/ErrorFactory';
+import type { AppResult } from '@/types/api';
 import { StandardError } from '@/lib/validators/protocol';
-import { ErrorFactory } from '../../lib/error/ErrorFactory';
 
 const TABLE_NAME = 'tags';
 const ALLOWED_FIELDS = ['id', 'name', 'zh', 'en', 'ms', 'aliases', 'userId', 'hot_score'];

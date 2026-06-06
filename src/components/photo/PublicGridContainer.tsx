@@ -53,8 +53,9 @@ export function PublicGridContainer({
     searchQuery: urlFilters.searchQuery,
     sortOrder: urlFilters.sortOrder as 'newest' | 'oldest' | 'name',
     isAdminMode: false,
-    onlyUngrouped: false
-  }, PAGINATION.PUBLIC_PAGE_SIZE, true);
+    onlyUngrouped: false,
+    limit: PAGINATION.PUBLIC_PAGE_SIZE
+  }, { enabled: true });
 
   const rawPhotos = (() => {
     const flat = infiniteQuery.data?.pages?.flatMap(p => p.photos) ?? EMPTY_ARRAY;

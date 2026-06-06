@@ -3,9 +3,7 @@ import { Photo, ProductGroup } from '@/types/photo';
 import { Category, Tag } from '@/types/photo';
 import { getTranslatedCategoryName } from '@/lib/ui-helpers';
 import { translations } from '@/lib/translations';
-import { useCategories } from '@/hooks/core/queries/useCategories';
-import { useTags } from '@/hooks/core/queries/useTags';
-import { useManufacturers } from '@/hooks/core/queries/useManufacturers';
+import { useCategories, useTags, useManufacturers } from '@/hooks';
 import { useUIStore } from '@/store/useUIStore';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -23,7 +21,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useLongPress } from '@/hooks/useLongPress';
+import { useLongPress } from '@/hooks/core/useLongPress';
 import { createPortal } from "react-dom";
 import { toast } from 'sonner';
 import { getSafeText } from '@/lib/ai/safeText';

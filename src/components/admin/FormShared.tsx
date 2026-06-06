@@ -2,7 +2,7 @@ import { getTranslatedCategoryName } from "../../lib/ui-helpers";
 import { createTranslate } from "@/lib/i18n";
 import { translations, LanguageCode } from "../../lib/translations";
 import { Category, Manufacturer } from "../../types";
-import { useLongPress } from "@/hooks/useLongPress";
+import { useLongPress } from "@/hooks/core/useLongPress";
 import { Pencil, Trash2 } from "lucide-react";
 import { useUIStore, useShallow } from "@/store/useUIStore";
 import { useRef } from "react";

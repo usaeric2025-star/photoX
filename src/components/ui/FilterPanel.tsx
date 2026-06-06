@@ -1,16 +1,18 @@
 import React, { useMemo } from 'react';
 import { RefreshCw, MoreHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useCategories, useTags, useTagsDisplay, useSettings, useUrlFilters } from '@/hooks';
+import { useCategories, useTags, useTagsDisplay, useSettings, useUrlFilters, useAdminMode } from '@/hooks';
 import { useAppLang } from '@/store/useUIStore';
 import { useDisclosure } from '@mantine/hooks';
 import { cn } from '@/lib/utils';
 import { Category } from '@/types';
 import { translations } from '@/lib/translations';
 import { getSafeText } from '@/lib/ai/safeText';
-import { categoryKeys, tagKeys } from '@/lib/queryKeys';
+import { categoryKeys, tagKeys, photoKeys } from '@/lib/queryKeys';
 import { loadCategoriesFromCloud } from '@/services/category/queries';
 import { loadTagsFromCloud } from '@/services/tag/queries';
+import { loadAllPhotosFromCloud } from '@/services/photo/queries';
+import { PHOTO_QUERY_CONFIG } from '@/lib/photoQueryConfig';
 
 export function FilterPanel() {
     const { filters: urlFilters, setCategory, setTagId } = useUrlFilters();
@@ -20,21 +22,38 @@ export function FilterPanel() {
     const [appLang] = useAppLang();
     const [isExpanded, { toggle: toggleExpanded }] = useDisclosure(false);
     const queryClient = useQueryClient();
+    const isAdminMode = useAdminMode();
 
-    const prefetchCategories = () => {
-        queryClient.prefetchQuery({
-            queryKey: categoryKeys.categories(),
-            queryFn: loadCategoriesFromCloud,
-            staleTime: 5 * 60 * 1000,
-        });
-    };
+    const prefetchCategoryPhotos = (categoryId: string | null) => {
+        // Only prefetch if we aren't already looking at it
+        if (urlFilters.categoryId === categoryId) return;
 
-    const prefetchTags = () => {
-        queryClient.prefetchQuery({
-            queryKey: tagKeys.tags(),
-            queryFn: loadTagsFromCloud,
-            staleTime: 5 * 60 * 1000,
-        });
+        queryClient.prefetchInfiniteQuery({
+            queryKey: photoKeys.infinite({ 
+              category_id: categoryId || null,
+              tag_id: urlFilters.tagId,
+              searchQuery: urlFilters.searchQuery,
+              sortOrder: urlFilters.sortOrder,
+              isAdminMode: isAdminMode,
+              limit: PHOTO_QUERY_CONFIG.limit
+            }),
+            queryFn: async ({ pageParam = 1 }: any) => {
+              const photos = await loadAllPhotosFromCloud(
+                undefined,
+                (pageParam as number) - 1,
+                PHOTO_QUERY_CONFIG.limit,
+                categoryId,
+                urlFilters.tagId,
+                urlFilters.searchQuery,
+                isAdminMode,
+                undefined,
+                urlFilters.sortOrder
+              );
+              return { photos: photos || [], nextPage: (photos || []).length >= PHOTO_QUERY_CONFIG.limit ? (pageParam as number) + 1 : undefined };
+            },
+            initialPageParam: 1,
+            staleTime: 2 * 60 * 1000,
+        } as any);
     };
 
     const t = (translations as any)[appLang] || translations.en;
@@ -68,7 +87,7 @@ export function FilterPanel() {
                                 setCategory(cat.id);
                             }}
 
-                            onMouseEnter={prefetchCategories}
+                            onMouseEnter={() => prefetchCategoryPhotos(cat.id)}
                             className={cn(
                                 "text-[10px] font-bold h-7 px-3 rounded-full transition-all duration-100 flex items-center justify-center cursor-pointer pointer-events-auto active:scale-95",
                                 urlFilters.categoryId === cat.id || (urlFilters.categoryId !== null && cat.id !== null && String(urlFilters.categoryId) === String(cat.id))
@@ -84,7 +103,7 @@ export function FilterPanel() {
             </div>
 
             {/* Integrated Tags Section matching strict PhotoX specifications */}
-            <div className="mt-1 mb-1.5 px-4" onMouseEnter={prefetchTags}>
+            <div className="mt-1 mb-1.5 px-4">
                 <div className="flex items-center justify-between mb-1 px-0.5">
                     <span className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.05em]">
                         {t.hotTags}

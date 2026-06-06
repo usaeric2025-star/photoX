@@ -1,96 +1,18 @@
 import { supabase } from '../../lib/supabase';
 import { DB_CONFIG } from '../../constants/config';
-import { Photo } from '../../types';
-import { ok, err, type Result } from '@/lib/errorFactory';
+import { Photo, ProductFormData } from '../../types';
+import { ok, err, isErr, ErrorFactory, success, errorFactory, fromThrowableAsync } from '@/lib/error/ErrorFactory';
+import type { Result, AppResult } from '@/types/api';
 import { PAGINATION } from '../../config/constants';
 import { safeArray } from '../../lib/utils';
 import { mapToDb } from './photoMappingUtils';
-import { ungroupPhotos } from './photoMaintenanceService';
-import { ErrorFactory } from '../../lib/error/ErrorFactory';
-import { 
-  updatePhotoInCloud as updatePhotoInCloudNew,
-  deletePhotoFromCloud as deletePhotoFromCloudNew,
-  updatePhotoHiddenState as updatePhotoHiddenNew
-} from '../photoMutationService';
-
-export const updatePhotoInCloud = updatePhotoInCloudNew;
-export const updatePhotoHidden = updatePhotoHiddenNew;
-export const deletePhotoFromCloud = deletePhotoFromCloudNew;
-
-export const updatePhoto = async (
-  photoId: string, 
-  updates: Partial<Photo>,
-  setPhotos?: React.Dispatch<React.SetStateAction<Photo[]>>
-): Promise<void> => {
-  if (!photoId || photoId.startsWith('temp-')) {
-    throw ErrorFactory.wrap(new Error('无效的照片ID，操作被终止'), 'updatePhoto', photoId);
-  }
-  const { data: { session } } = await supabase.auth.getSession();
-  const isLocalStorageStaff = typeof window !== 'undefined' && !!window.localStorage.getItem('ais_mock_auth_passcode');
-  if (!session && !isLocalStorageStaff) throw ErrorFactory.wrap(new Error('NO_ACTIVE_SESSION'), 'updatePhoto', photoId);
-
-  if (updates.is_group_cover === true) {
-    let groupId = updates.group_id;
-    if (!groupId) {
-      const { data } = await supabase
-        .from(DB_CONFIG.TABLE_NAME)
-        .select('group_id')
-        .eq('id', photoId)
-        .maybeSingle();
-      if (data?.group_id) {
-        groupId = data.group_id;
-      }
-    }
-
-    if (groupId) {
-      await supabase
-        .from(DB_CONFIG.TABLE_NAME)
-        .update({ is_group_cover: false })
-        .eq('group_id', groupId);
-
-      if (setPhotos) {
-        setPhotos(prev => prev.map(p => p.group_id === groupId ? { ...p, is_group_cover: false } : p));
-      }
-    }
-  }
-
-  if (updates.uri && updates.uri.startsWith('data:image')) {
-    const { uploadImages } = await import('../storage');
-    const { imageUrl } = await uploadImages(session?.user?.id || 'staff', photoId, updates.uri, undefined, undefined, undefined, true);
-    updates.image_url = imageUrl;
-    updates.updated_at = new Date().toISOString();
-    delete updates.uri;
-  }
-
-  const dbUpdates = mapToDb(updates);
-  
-  if (setPhotos) setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, ...updates } : p));
-  
-  await updatePhotoInCloud(photoId, dbUpdates);
-  
-  if (updates.group_id !== undefined || 'group_id' in updates) {
-    const { syncGroupMemberCount } = await import('../photoMutationService');
-    const gid = updates.group_id;
-    if (gid) await syncGroupMemberCount(gid);
-  }
-    
-  if ('tag_ids' in updates) {
-      await supabase.from('photo_tags').delete().eq('photo_id', photoId);
-      const uTagIds = safeArray(updates.tag_ids);
-      if (uTagIds.length > 0) {
-          const tagAssociations = uTagIds.map(tagId => ({
-              photo_id: photoId,
-              tag_id: tagId
-          }));
-          await supabase.from('photo_tags').insert(tagAssociations);
-      }
-  }
-};
-
+import { generateItemCode } from './utils';
+import { createPhotoValidator } from '../../lib/validators/factory';
 import { api } from '@/lib/api';
-import { errorFactory, success } from '@/lib/errorFactory';
-import type { AppResult } from '@/lib/errorFactory';
-// ... other imports
+
+/**
+ * Consolidating all photo mutation logic here from photoMutationService and photoActions.
+ */
 
 export interface BatchActionResult {
   successCount: number;
@@ -98,15 +20,179 @@ export interface BatchActionResult {
   failedItems: { id: string; reason: string }[];
 }
 
+// --- Internal Helper: Sync Tags ---
+export const syncPhotoTags = async (photoId: string, tagIds: string[]) => {
+  await supabase.from('photo_tags').delete().eq('photo_id', photoId);
+  if (tagIds.length > 0) {
+    const associations = tagIds.map(tagId => ({
+      photo_id: photoId,
+      tag_id: tagId
+    }));
+    const { error } = await supabase.from('photo_tags').insert(associations);
+    if (error) throw error;
+  }
+};
+
+// --- Core Update Command ---
+export async function updatePhoto(id: string, updates: Partial<Photo> & Record<string, any>): Promise<AppResult<Photo | null>> {
+  if (!id || id.startsWith('temp-')) {
+    return errorFactory('无效的照片ID', 'VALIDATION_ERROR', 'updatePhoto', id);
+  }
+
+  // 1. Validation
+  const validator = createPhotoValidator();
+  const validationRes = validator.validate(updates);
+  if (!validationRes.ok) {
+    return errorFactory(validationRes.message, 'VALIDATION_ERROR', 'updatePhoto', updates);
+  }
+
+  try {
+    // 2. Handle image data URI if present (e.g. from rotation)
+    if (updates.uri && updates.uri.startsWith('data:image')) {
+      const { data: { session } } = await supabase.auth.getSession();
+      const isLocalStorageStaff = typeof window !== 'undefined' && !!window.localStorage.getItem('ais_mock_auth_passcode');
+      
+      if (!session && !isLocalStorageStaff) {
+        return errorFactory('NO_ACTIVE_SESSION', 'AUTH_ERROR', 'updatePhoto');
+      }
+
+      const { uploadImages } = await import('../storage');
+      const { imageUrl } = await uploadImages(session?.user?.id || 'staff', id, updates.uri, undefined, undefined, undefined, true);
+      updates.image_url = imageUrl;
+      updates.updated_at = new Date().toISOString();
+      delete updates.uri;
+    }
+
+    // 3. Special handling for group cover
+    if (updates.is_group_cover === true) {
+      let groupId = updates.group_id;
+      if (!groupId) {
+        const { data } = await supabase
+          .from(DB_CONFIG.TABLE_NAME)
+          .select('group_id')
+          .eq('id', id)
+          .maybeSingle();
+        if (data?.group_id) groupId = data.group_id;
+      }
+
+      if (groupId) {
+        await supabase
+          .from(DB_CONFIG.TABLE_NAME)
+          .update({ is_group_cover: false })
+          .eq('group_id', groupId);
+      }
+    }
+
+    const dbUpdates = mapToDb(updates);
+    
+    // 4. Update Database
+    let { error } = await supabase
+      .from(DB_CONFIG.TABLE_NAME)
+      .update(dbUpdates)
+      .eq('id', id);
+      
+    if (error && error.message.includes('furniture_items_item_code_key')) {
+      console.warn("Item code collision during update, regenerating...");
+      const retryUpdates = { ...dbUpdates, item_code: generateItemCode() };
+      const { error: retryError } = await supabase
+        .from(DB_CONFIG.TABLE_NAME)
+        .update(retryUpdates)
+        .eq('id', id);
+      error = retryError;
+    }
+      
+    if (error) return errorFactory(error.message, 'DB_ERROR', 'updatePhoto', error);
+
+    // 5. Handle tags
+    if ('tag_ids' in updates) {
+      await syncPhotoTags(id, safeArray(updates.tag_ids));
+    }
+
+    // 6. Handle group member count sync if group_id changed
+    if (updates.group_id !== undefined || 'group_id' in updates) {
+       const gid = updates.group_id;
+       if (gid) {
+         const { syncGroupMemberCount } = await import('./commands'); // Recursive-ish but fine for now or move helper
+         await syncGroupMemberCount(gid);
+       }
+    }
+
+    return success(null);
+  } catch (err: any) {
+    return errorFactory(err.message || 'Update failed', 'UNKNOWN', 'updatePhoto', err);
+  }
+}
+
+// Alias for legacy support
+export const update = updatePhoto;
+
+// --- Batch Update ---
+export async function batchUpdate(ids: string[], updates: Partial<Photo>): Promise<AppResult<BatchActionResult>> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return errorFactory('Session required', 'AUTH_ERROR', 'batchUpdate');
+  const userId = session.user.id;
+
+  const validator = createPhotoValidator();
+  const validationRes = validator.validate(updates);
+  if (!validationRes.ok) {
+    return errorFactory(validationRes.message, 'VALIDATION_ERROR', 'batchUpdate', updates);
+  }
+
+  const dbUpdates = mapToDb(updates);
+  
+  const { data, error } = await supabase
+    .from(DB_CONFIG.TABLE_NAME)
+    .update(dbUpdates)
+    .in('id', ids)
+    .select('id');
+
+  if (error) {
+    // Attempt one-by-one if batch fails (e.g. unique constraint)
+    const failedItems: { id: string; reason: string }[] = [];
+    let successCount = 0;
+
+    for (const id of ids) {
+      const { error: singleError } = await supabase.from(DB_CONFIG.TABLE_NAME).update(dbUpdates).eq('id', id);
+      if (singleError) failedItems.push({ id, reason: singleError.message });
+      else successCount++;
+    }
+
+    return success({ successCount, failureCount: failedItems.length, failedItems });
+  }
+
+  const updatedIds = new Set(data?.map(d => d.id) || []);
+  const failedOnes = ids.filter(id => !updatedIds.has(id)).map(id => ({ id, reason: 'Not found or unchanged' }));
+
+  // Tags
+  if ('tag_ids' in updates) {
+    await supabase.from('photo_tags').delete().in('photo_id', ids);
+    const uTagIds = safeArray(updates.tag_ids);
+    if (uTagIds.length > 0) {
+      const tagAssociations = ids.flatMap(photoId => 
+        uTagIds.map(tagId => ({
+          photo_id: photoId,
+          tag_id: tagId
+        }))
+      );
+      await supabase.from('photo_tags').insert(tagAssociations);
+    }
+  }
+
+  return success({
+    successCount: updatedIds.size,
+    failureCount: failedOnes.length,
+    failedItems: failedOnes
+  });
+}
+
+// --- Delete ---
 export async function deleteMany(ids: string[]): Promise<AppResult<BatchActionResult>> {
     try {
       const response = await api.admin['delete-photos'].$post({ json: { ids } });
-      
       const result = await response.json();
       if (!response.ok || !result.success) {
         throw new Error(result.error || `Delete failed with HTTP ${response.status}`);
       }
-      
       return success({
         successCount: ids.length,
         failureCount: 0,
@@ -120,12 +206,10 @@ export async function deleteMany(ids: string[]): Promise<AppResult<BatchActionRe
         .in('id', ids)
         .select('id');
       
-      if (error) {
-        return errorFactory(error.message, 'DB_ERROR', 'deleteMany', error);
-      }
+      if (error) return errorFactory(error.message, 'DB_ERROR', 'deleteMany', error);
 
       const deletedIds = new Set(data?.map(d => d.id) || []);
-      const failedItems = ids.filter(id => !deletedIds.has(id)).map(id => ({ id, reason: 'Unknown or Permission Denied' }));
+      const failedItems = ids.filter(id => !deletedIds.has(id)).map(id => ({ id, reason: 'Permission Denied' }));
 
       return success({
         successCount: deletedIds.size,
@@ -135,203 +219,95 @@ export async function deleteMany(ids: string[]): Promise<AppResult<BatchActionRe
     }
 }
 
-export async function update(id: string, updates: Partial<Photo>): Promise<AppResult<null>> {
-    // Handle URI (image data update) - crucial for rotation save
-    if (updates.uri && updates.uri.startsWith('data:image')) {
-      const { data: { session } } = await supabase.auth.getSession();
-      const isLocalStorageStaff = typeof window !== 'undefined' && !!window.localStorage.getItem('ais_mock_auth_passcode');
-      if (!session && !isLocalStorageStaff) {
-          return errorFactory('NO_ACTIVE_SESSION', 'AUTH_ERROR', 'update');
-      }
+export const deletePhoto = async (photo: Photo): Promise<AppResult<{ dissolvedGroupId?: string }>> => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return errorFactory('Session required', 'AUTH_ERROR', 'deletePhoto');
+  const userId = session.user.id;
 
-      const { uploadImages } = await import('../storage');
-      try {
-        const { imageUrl } = await uploadImages(session?.user?.id || 'staff', id, updates.uri, undefined, undefined, undefined, true);
-        updates.image_url = imageUrl;
-        updates.updated_at = new Date().toISOString();
-        delete updates.uri;
-      } catch (uploadErr: any) {
-        return errorFactory(uploadErr.message, 'UPLOAD_FAILED', 'update', uploadErr);
-      }
-    }
-
-    const dbUpdates = mapToDb(updates);
-    const { error } = await supabase
-      .from(DB_CONFIG.TABLE_NAME)
-      .update(dbUpdates)
-      .eq('id', id);
-    if (error) return errorFactory(error.message, 'DB_ERROR', 'update', error);
-
-    // If tag_ids is present, update photo_tags relationship
-    if ('tag_ids' in updates) {
-      const { error: deleteTagsError } = await supabase.from('photo_tags').delete().eq('photo_id', id);
-      if (deleteTagsError) {
-        console.error('[update/photo_tags] Failed to delete existing tags:', deleteTagsError);
-      }
-      const uTagIds = safeArray(updates.tag_ids);
-      if (uTagIds.length > 0) {
-        const tagAssociations = uTagIds.map(tagId => ({
-          photo_id: id,
-          tag_id: tagId
-        }));
-        const { error: insertTagsError } = await supabase.from('photo_tags').insert(tagAssociations);
-        if (insertTagsError) {
-          console.error('[update/photo_tags] Failed to insert new tags:', insertTagsError);
-        }
-      }
-    }
-
-    return success(null);
-}
-
-export async function batchUpdate(ids: string[], updates: Partial<Photo>): Promise<AppResult<BatchActionResult>> {
-    const dbUpdates = mapToDb(updates);
-    const { data, error } = await supabase
-      .from(DB_CONFIG.TABLE_NAME)
-      .update(dbUpdates)
-      .in('id', ids)
-      .select('id');
-
-    if (error) {
-      const failedItems: { id: string; reason: string }[] = [];
-      let successCount = 0;
-
-      for (const id of ids) {
-        const { error: singleError } = await supabase.from(DB_CONFIG.TABLE_NAME).update(dbUpdates).eq('id', id);
-        if (singleError) failedItems.push({ id, reason: singleError.message });
-        else successCount++;
-      }
-
-      return success({ successCount, failureCount: failedItems.length, failedItems });
-    }
-
-    const updatedIds = new Set(data?.map(d => d.id) || []);
-    const failedOnes = ids.filter(id => !updatedIds.has(id)).map(id => ({ id, reason: 'Not found or unchanged' }));
-
-    if ('tag_ids' in updates) {
-      await supabase.from('photo_tags').delete().in('photo_id', ids);
-      const uTagIds = safeArray(updates.tag_ids);
-      if (uTagIds.length > 0) {
-        const tagAssociations = ids.flatMap(photoId => 
-          uTagIds.map(tagId => ({
-            photo_id: photoId,
-            tag_id: tagId
-          }))
-        );
-        await supabase.from('photo_tags').insert(tagAssociations);
-      }
-    }
-
-    return success({
-      successCount: updatedIds.size,
-      failureCount: failedOnes.length,
-      failedItems: failedOnes
-    });
-}
-
-export const deletePhotosBatch = async (
-  userId: string, 
-  photos: Photo[], 
-  onProgress?: (current: number, total: number) => void,
-  signal?: AbortSignal
-) => {
-  const sPhotos = safeArray<Photo>(photos);
-  if (sPhotos.length === 0) return;
-  
-  const total = sPhotos.length;
-  const BATCH_SIZE = PAGINATION.DEFAULT_PAGE_SIZE;
-  const affectedGroupIds = new Set<string>();
-  
-  for (let i = 0; i < sPhotos.length; i += BATCH_SIZE) {
-    if (signal?.aborted) throw ErrorFactory.wrap(new Error('Operation aborted'), 'deletePhotosBatch', userId);
-    
-    const chunk = sPhotos.slice(i, i + BATCH_SIZE);
-    const ids = chunk.map(p => p.id).filter(id => id && !id.startsWith('temp-'));
-    if (ids.length === 0) continue;
-
-    chunk.forEach(p => { if (p.group_id) affectedGroupIds.add(p.group_id); });
-    
+  try {
     const { error } = await supabase
       .from(DB_CONFIG.TABLE_NAME)
       .delete()
-      .in('id', ids)
-      .eq('user_id', userId);
-    
-    if (error) {
-      throw ErrorFactory.wrap(error, 'deletePhotosBatch', userId);
+      .match({ id: photo.id, user_id: userId });
+
+    if (error) throw error;
+
+    // Physical Cleanup
+    if (photo.image_url) {
+       const { count } = await supabase
+          .from(DB_CONFIG.TABLE_NAME)
+          .select('id', { count: 'exact', head: true })
+          .eq('image_url', photo.image_url);
+        
+       if (count === 0) {
+          const { cleanupPhysicalStorage } = await import('../storage');
+          await cleanupPhysicalStorage([photo.storage_id || photo.id], [photo.image_url]);
+       }
     }
     
-    const potentiallyDeletable = chunk.filter(p => !!p.image_url);
-    const keysToRemove: string[] = [];
-    const urlsToRemove: string[] = [];
-    
-    for (const p of potentiallyDeletable) {
-      if (!p.image_url) continue;
-      const { count } = await supabase
-        .from(DB_CONFIG.TABLE_NAME)
-        .select('*', { count: 'exact', head: true })
-        .eq('image_url', p.image_url);
-      
-      if (count === 0) {
-        const filename = p.storage_id || p.id;
-        keysToRemove.push(filename);
-        urlsToRemove.push(p.image_url);
-      }
-    }
-    
-    if (keysToRemove.length > 0) {
-        // Actually, let's keep it consistent with what was in photos.ts
-        const { cleanupPhysicalStorage: cleanup } = await import('../storage');
-        await cleanup(keysToRemove, urlsToRemove);
-    }
-    
-    if (onProgress) onProgress(Math.min(i + BATCH_SIZE, total), total);
-  }
-  
-  if (affectedGroupIds.size > 0) {
-    for (const groupId of affectedGroupIds) {
+    let dissolvedGroupId: string | undefined;
+    if (photo.group_id) {
       const { data: remaining } = await supabase
         .from(DB_CONFIG.TABLE_NAME)
         .select('id')
-        .eq('group_id', groupId);
+        .eq('group_id', photo.group_id);
         
       if (remaining && remaining.length <= 1) {
-        await ungroupPhotos(groupId);
-      } else if (remaining) {
-        const { syncGroupMemberCount } = await import('../photoMutationService');
-        await syncGroupMemberCount(groupId);
+        await ungroupPhotos(photo.group_id);
+        dissolvedGroupId = photo.group_id;
+      } else {
+        await syncGroupMemberCount(photo.group_id);
       }
     }
+
+    return success({ dissolvedGroupId });
+  } catch (err: any) {
+    return errorFactory(err.message, 'DB_ERROR', 'deletePhoto', err);
   }
+};
+
+// --- Grouping Operations ---
+
+export const ungroupPhotos = async (groupId: string) => {
+  const { error } = await supabase.rpc('dissolve_group', { group_id: groupId });
+  if (error) throw error;
+};
+
+export const syncGroupMemberCount = async (groupId: string) => {
+  if (!groupId) return;
+  const { count, error: countError } = await supabase
+    .from(DB_CONFIG.TABLE_NAME)
+    .select('id', { count: 'exact', head: true })
+    .eq('group_id', groupId);
+
+  if (countError) return;
+
+  await supabase
+    .from('groups')
+    .update({ member_count: count || 0 })
+    .eq('id', groupId);
 };
 
 export const groupPhotos = async (
   photoIds: string[], 
   predefinedGroupId?: string, 
-  expandGroups: boolean = true,
   metadata?: {
     name?: any;
     description?: any;
-    colors?: string[];
-    materials?: string[];
   }
 ) => {
   if (photoIds.length <= 1) {
-    throw ErrorFactory.wrap(new Error('至少需要选择两张照片才能成组'), 'groupPhotos', photoIds.join(', '));
+    throw new Error('至少需要选择两张照片才能成组');
   }
   
-  const validIds = photoIds.filter(id => id && !id.startsWith('temp-'));
-  if (validIds.length === 0) return { finalPhotoIds: [], newGroupId: null };
-
   const targetGroupId = predefinedGroupId || crypto.randomUUID();
   const { data: { session } } = await supabase.auth.getSession();
   const userId = session?.user?.id;
 
-  // 1. 获取选定照片的当前状态，用于获取源组ID集合
   const { data: selectedPhotos } = await supabase
     .from(DB_CONFIG.TABLE_NAME)
     .select('id, group_id')
-    .in('id', validIds);
+    .in('id', photoIds);
 
   const sourceGroupIds = Array.from(new Set(
     selectedPhotos
@@ -339,181 +315,101 @@ export const groupPhotos = async (
       .filter((gid): gid is string => !!gid && gid !== targetGroupId) || []
   ));
 
-  // 提取出本次选中的本身就不属于任何合组的照片（即 group_id 为空）
-  const ungroupedValidIds = validIds.filter(id => {
-    const photo = selectedPhotos?.find(p => p.id === id);
-    return !photo?.group_id;
+  const ungroupedValidIds = photoIds.filter(id => {
+    const p = selectedPhotos?.find(x => x.id === id);
+    return !p?.group_id;
   });
 
-  // Calculate final list of all photo IDs that will belong to targetGroupId.
-  // We always expand the source groups to prevent orphaning details of groups being merged.
-  let finalPhotoIds = [...validIds];
-  if (sourceGroupIds.length > 0) {
-    const { data: siblingPhotos } = await supabase
-      .from(DB_CONFIG.TABLE_NAME)
-      .select('id')
-      .in('group_id', sourceGroupIds);
-    if (siblingPhotos && siblingPhotos.length > 0) {
-      const siblingIds = siblingPhotos.map(p => p.id);
-      finalPhotoIds = Array.from(new Set([...finalPhotoIds, ...siblingIds]));
-    }
-  }
-
-  // 2. 提前在 groups 表中创建/更新目标群组，确保外键约束满足
-  const coverPhotoId = finalPhotoIds[0] || null;
+  // Prepare Group Record
   const groupData = {
     name: metadata?.name || { zh: '新合组', en: 'New Combined Group', ms: 'Kumpulan Baru' },
     description: metadata?.description || { zh: '', en: '', ms: '' },
-    colors: metadata?.colors || [],
-    materials: metadata?.materials || [],
-    cover_photo_id: coverPhotoId,
     updated_at: new Date().toISOString()
   };
 
-  try {
-    const { data: existingGroup } = await supabase.from('groups').select('id').eq('id', targetGroupId).maybeSingle();
+  const { data: existingGroup } = await supabase.from('groups').select('id').eq('id', targetGroupId).maybeSingle();
 
-    if (!existingGroup) {
-      const { error: insertError } = await supabase.from('groups').insert({
-        id: targetGroupId,
-        user_id: userId,
-        is_hidden: false,
-        created_at: new Date().toISOString(),
-        member_count: finalPhotoIds.length,
-        ...groupData
-      });
-      if (insertError) throw insertError;
-    } else {
-      const { error: updateError } = await supabase.from('groups').update({
-        ...groupData,
-        member_count: finalPhotoIds.length
-      }).eq('id', targetGroupId);
-      if (updateError) throw updateError;
-    }
-  } catch (err) {
-    const normalized = ErrorFactory.normalizeError(err);
-    console.error('[groupPhotos/prepareGroup] error:', normalized);
-    throw ErrorFactory.wrap(normalized.message, 'GroupGroupPhotos/prepareGroup', targetGroupId);
+  if (!existingGroup) {
+    await supabase.from('groups').insert({
+      id: targetGroupId,
+      user_id: userId,
+      is_hidden: false,
+      created_at: new Date().toISOString(),
+      ...groupData
+    });
+  } else {
+    await supabase.from('groups').update(groupData).eq('id', targetGroupId);
   }
 
-  // 3. 执行原子化归户与合并
-  try {
-    // 3.1 归并所有源合组
-    if (sourceGroupIds.length > 0) {
-      const { error: rpcError } = await supabase.rpc('merge_groups', {
-        source_group_ids: sourceGroupIds,
-        target_group_id: targetGroupId
-      });
-      if (rpcError) throw rpcError;
-    }
-
-    // 3.2 归并所有选中的单张照片
-    if (ungroupedValidIds.length > 0) {
-      const { error: ungroupedUpdateError } = await supabase
-        .from(DB_CONFIG.TABLE_NAME)
-        .update({ 
-          group_id: targetGroupId,
-          is_group_cover: false,
-          user_id: userId || '00000000-0000-0000-0000-000000000000'
-        })
-        .in('id', ungroupedValidIds);
-      if (ungroupedUpdateError) throw ungroupedUpdateError;
-    }
-
-    // 3.3 重置目标群组内所有封面状态并指定新封面，保证唯一无冲突
-    if (coverPhotoId) {
-      await supabase.from(DB_CONFIG.TABLE_NAME)
-        .update({ is_group_cover: false })
-        .eq('group_id', targetGroupId);
-
-      await supabase.from(DB_CONFIG.TABLE_NAME)
-        .update({ is_group_cover: true })
-        .eq('id', coverPhotoId);
-    }
-  } catch (err) {
-    const normalized = ErrorFactory.normalizeError(err);
-    console.error('[groupPhotos/mergeAction] error:', normalized);
-    throw ErrorFactory.wrap(normalized.message, 'GroupGroupPhotos/mergeAction', targetGroupId);
+  // Merge
+  if (sourceGroupIds.length > 0) {
+    await supabase.rpc('merge_groups', {
+      source_group_ids: sourceGroupIds,
+      target_group_id: targetGroupId
+    });
   }
 
-  // 4. 后置快速同步 (仅做一次目标群组的数量同步)
-  try {
-    const { syncGroupMemberCount } = await import('../photoMutationService');
-    await syncGroupMemberCount(targetGroupId);
-  } catch (syncErr) {
-    console.warn('[groupPhotos/postCleanup] Target count sync warning:', syncErr);
+  if (ungroupedValidIds.length > 0) {
+    await supabase
+      .from(DB_CONFIG.TABLE_NAME)
+      .update({ group_id: targetGroupId, is_group_cover: false })
+      .in('id', ungroupedValidIds);
   }
 
-  return { finalPhotoIds, newGroupId: targetGroupId, name: groupData.name };
+  await syncGroupMemberCount(targetGroupId);
+  return { newGroupId: targetGroupId };
 };
 
-export const removePhotosFromGroup = async (photoIds: string[], groupId: string) => {
-  if (photoIds.length === 0) return;
+export const updatePhotoHidden = async (photoId: string, is_hidden: boolean): Promise<AppResult<null>> => {
+  const res = await updatePhoto(photoId, { is_hidden, updated_at: new Date().toISOString() });
+  return res as AppResult<null>;
+};
 
-  await updatePhotosGroupInCloud(photoIds, { 
-    group_id: null,
-    is_group_cover: false,
-    is_pinned: false
+export const updatePhotoHiddenState = updatePhotoHidden;
+
+export const movePhotosToGroup = async (photoIds: string[], targetGroupId: string | null) => {
+  const { error } = await supabase.rpc('move_photos_to_group', {
+    photo_ids: photoIds,
+    target_group_id: targetGroupId
   });
-
-  const { syncGroupMemberCount } = await import('../photoMutationService');
-
-  const { data: remainingPhotos, error } = await supabase
-    .from(DB_CONFIG.TABLE_NAME)
-    .select('id')
-    .eq('group_id', groupId);
-
-  if (!error && remainingPhotos) {
-    if (remainingPhotos.length <= 1) {
-      await ungroupPhotos(groupId);
-    } else {
-      await syncGroupMemberCount(groupId);
-    }
-  }
+  if (error) throw error;
 };
 
-export const updatePhotosGroupInCloud = async (photoIds: string[], updates: Record<string, any>) => {
-  const validIds = photoIds.filter(id => id && !id.startsWith('temp-'));
-  if (validIds.length === 0) return;
-
+export const clearCategoryFromPhotos = async (categoryId: string) => {
   const { data, error } = await supabase
     .from(DB_CONFIG.TABLE_NAME)
-    .update(updates)
-    .in('id', validIds)
+    .update({ category_id: null })
+    .eq('category_id', categoryId)
     .select('id');
     
-  if (error) {
-    throw ErrorFactory.wrap(error, 'updatePhotosGroupInCloud', photoIds.join(', '));
-  }
-  
+  if (error) throw error;
   return data;
 };
 
-export const updatePhotosGroup = updatePhotosGroupInCloud;
-export const setPhotoAsGroupCoverInCloud = async (photoId: string | null, groupId: string) => {
+export const clearManufacturerFromPhotos = async (mfrId: string) => {
+  const { data, error } = await supabase
+    .from(DB_CONFIG.TABLE_NAME)
+    .update({ manufacturer_id: null })
+    .eq('manufacturer_id', mfrId)
+    .select('id');
+    
+  if (error) throw error;
+  return data;
+};
+
+export const setPhotoAsGroupCover = async (photoId: string | null, groupId: string) => {
   if (!groupId) return;
 
-  const { error: unsetError } = await supabase
+  await supabase
     .from(DB_CONFIG.TABLE_NAME)
     .update({ is_group_cover: false })
     .eq('group_id', groupId);
 
-  if (unsetError) {
-    throw ErrorFactory.wrap(unsetError, 'setPhotoAsGroupCoverInCloud', groupId);
-  }
-
   if (photoId) {
-    const validPhotoId = photoId && !photoId.startsWith('temp-');
-    if (validPhotoId) {
-      const { error: setError } = await supabase
-        .from(DB_CONFIG.TABLE_NAME)
-        .update({ is_group_cover: true })
-        .eq('id', photoId);
-
-      if (setError) {
-        throw ErrorFactory.wrap(setError, 'setPhotoAsGroupCoverInCloud', photoId);
-      }
-    }
+    await supabase
+      .from(DB_CONFIG.TABLE_NAME)
+      .update({ is_group_cover: true })
+      .eq('id', photoId);
   }
 
   await supabase

@@ -8,7 +8,7 @@ import { extractJsonObject } from '../../lib/aiParsing';
 import { convertToJpegAndResize } from './imageProcessor';
 import { normalizeDimensions } from './dimensionNormalizer';
 import { translateDescription } from './translationCore';
-import { cleanObject } from '../utils';
+import { cleanObject } from '../photo/utils';
 import { StandardError } from '@/lib/validators/protocol';
 
 export const analyzeProductPhoto = async (

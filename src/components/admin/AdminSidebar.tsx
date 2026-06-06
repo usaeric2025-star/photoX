@@ -15,26 +15,31 @@ import {
   ChevronRight,
   Zap,
   Bug,
-  LayoutGrid
+  LayoutGrid,
+  RefreshCw
 } from 'lucide-react';
 import { useNavigate, useLocation } from '@tanstack/react-router';
 import { useUIStore, useShallow, useAppLang, useSidebarCollapsed } from '@/store/useUIStore';
 import { reportError } from '@/lib/errorReporter';
-import { useAuth, usePermission, useSettings, useSyncMutation, useAdminMode } from '@/hooks';
+import { useAuth, usePermission, useSettings, useSyncMutation, useAdminMode, usePhotos } from '@/hooks';
+import { useQueryClient } from '@tanstack/react-query';
+import { photoKeys } from '@/lib/queryKeys';
 
 interface SidebarItemProps {
   icon: React.ElementType;
   label: string;
   active: boolean;
   onClick: () => void;
+  onMouseEnter?: () => void;
   badge?: string | number;
   collapsed?: boolean;
 }
 
-function SidebarItem({ icon: Icon, label, active, onClick, badge, collapsed }: SidebarItemProps) {
+function SidebarItem({ icon: Icon, label, active, onClick, onMouseEnter, badge, collapsed }: SidebarItemProps) {
   return (
     <button 
       onClick={onClick}
+      onMouseEnter={onMouseEnter}
       className={`w-full flex items-center justify-between py-3 rounded-2xl transition-all group ${
         active 
           ? 'bg-brand-navy text-white shadow-lg' 
@@ -80,6 +85,14 @@ export function AdminSidebar() {
   const hasAdminAccess = useAdminMode();
   const { settings } = useSettings();
   const { mutateAsync: syncMut } = useSyncMutation();
+  const queryClient = useQueryClient();
+
+  const handlePrefetch = (key: any) => {
+    queryClient.prefetchInfiniteQuery({
+      queryKey: key,
+      initialPageParam: 0,
+    });
+  };
 
   const handleImport = () => {
     update({ activeScreen: 'home' });
@@ -96,7 +109,7 @@ export function AdminSidebar() {
   const isEffectiveStaffMode = hasAdminAccess && !user;
 
   return (
-    <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-72'} bg-brand-bg border-r border-brand-navy/5 flex flex-col h-screen sticky top-0 overflow-hidden transition-all duration-300 relative z-40`}>
+    <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-72'} bg-brand-bg border-r border-brand-navy/5 hidden sm:flex flex-col h-screen sticky top-0 overflow-hidden transition-all duration-300 relative z-40`}>
       {/* Toggle Button */}
       <button
         onClick={() => setSidebarCollapsed(!isSidebarCollapsed)}
@@ -337,10 +350,10 @@ export function AdminSidebar() {
           )}
           <button 
            onClick={onRefresh}
-           title="Settings"
-           className="w-7 h-7 rounded-lg bg-brand-navy text-white flex items-center justify-center active:scale-95 transition-transform shadow-md"
+           title="Sync Cloud"
+           className="w-7 h-7 rounded-lg bg-slate-900 text-white flex items-center justify-center active:scale-95 transition-transform shadow-md hover:bg-black"
           >
-            <Settings2 size={12} />
+            <RefreshCw size={12} />
           </button>
         </div>
       </div>

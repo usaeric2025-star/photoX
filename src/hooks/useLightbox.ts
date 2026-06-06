@@ -1,13 +1,14 @@
 import { useUrlFilters } from "./useUrlFilters";
-import { usePhotoDetail } from "./core/queries/usePhotoDetail";
-import { useGroupPhotos, usePhotos } from "./core/queries/usePhotos";
-import { useGroupDetail } from "./core/queries/useGroupDetail";
+import { usePhotoDetail } from "./usePhotoDetail";
+import { useGroupPhotos, usePhotos } from "./usePhotos";
+import { useGroupDetail } from "./useGroupDetail";
 import { useQuery } from '@tanstack/react-query';
 import { getPhotoCount } from "@/services/photo/queries";
 import { useNavigate, useLocation } from "@tanstack/react-router";
 import { Photo } from "@/types";
 import { PAGINATION } from "@/constants/config";
 import { PHOTO_QUERY_CONFIG } from "@/lib/photoQueryConfig";
+import { useEffect } from "react";
 
 /**
  * [ATOMIC-HOOK] useLightbox
@@ -36,7 +37,8 @@ export const useLightbox = () => {
     isAdminMode: isAdmin,
     onlyUngrouped: false,
     is_hidden: filters.is_hidden,
-  }, PHOTO_QUERY_CONFIG.limit, !groupId);
+    limit: PHOTO_QUERY_CONFIG.limit
+  }, { enabled: !groupId });
   
   const { data: totalCount } = useQuery({
     queryKey: ['photos', 'totalCount', filters],
@@ -93,6 +95,22 @@ export const useLightbox = () => {
   
   // Rule 5: Standard return values
   const mode = groupId ? 'group' : 'single';
+  
+  // Smart Prefetch: Preload neighbor images into browser cache
+  useEffect(() => {
+    if (photoId && photos.length > 0) {
+      const nextIdx = (currentIndex + 1) % photos.length;
+      const prevIdx = (currentIndex - 1 + photos.length) % photos.length;
+      
+      const targets = [photos[nextIdx], photos[prevIdx]];
+      targets.forEach(p => {
+        if (p?.image_url) {
+          const img = new Image();
+          img.src = p.image_url;
+        }
+      });
+    }
+  }, [photoId, photos, currentIndex]);
   
   return { 
     isOpen, 

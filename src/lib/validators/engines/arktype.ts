@@ -1,7 +1,7 @@
 import { type Type, type } from 'arktype';
-import { success, errorFactory, type AppResult } from '@/lib/errorFactory';
-import { Validator, StandardError, ValidatorMeta } from '../protocol';
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { success, errorFactory, ErrorFactory } from '@/lib/error/ErrorFactory';
+import { type AppResult } from '@/types/api';
+import { Validator, ValidatorMeta } from '../protocol';
 
 /**
  * @validator-contract ArkTypeValidator

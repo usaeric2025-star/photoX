@@ -1,3 +1,5 @@
+import { AppResult, AppError, AppSuccess, ErrorCode } from '@/types/api';
+
 export type ErrorSeverity = 'low' | 'medium' | 'high' | 'critical';
 
 export class ErrorFactory {
@@ -25,5 +27,61 @@ export class ErrorFactory {
     (wrapped as any).resource = resource;
     (wrapped as any).severity = severity;
     return wrapped;
+  }
+
+  static createError(
+    message: string,
+    code: ErrorCode = 'UNKNOWN',
+    context?: string,
+    cause?: unknown
+  ): AppError {
+    return {
+      ok: false,
+      error: true,
+      message,
+      code,
+      context,
+      timestamp: Date.now(),
+      cause,
+    };
+  }
+
+  static success<T>(data: T): AppSuccess<T> {
+    return { ok: true, data };
+  }
+}
+
+// Global utility exports for convenience
+export const errorFactory = ErrorFactory.createError;
+export const success = ErrorFactory.success;
+export const ok = success;
+export const err = errorFactory;
+
+export function isErr<T>(result: AppResult<T>): result is AppError {
+  return !result.ok;
+}
+
+export function isOk<T>(result: AppResult<T>): result is AppSuccess<T> {
+  return result.ok;
+}
+
+export function fromThrowable<T>(fn: () => T, context?: string): AppResult<T> {
+  try {
+    return success(fn());
+  } catch (err) {
+    const error = ErrorFactory.normalizeError(err);
+    return ErrorFactory.createError(error.message, 'UNKNOWN', context, err);
+  }
+}
+
+export async function fromThrowableAsync<T>(
+  fn: () => Promise<T>,
+  context?: string
+): Promise<AppResult<T>> {
+  try {
+    return success(await fn());
+  } catch (err) {
+    const error = ErrorFactory.normalizeError(err);
+    return ErrorFactory.createError(error.message, 'UNKNOWN', context, err);
   }
 }

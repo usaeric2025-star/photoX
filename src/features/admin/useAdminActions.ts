@@ -31,14 +31,10 @@ export function useAdminActions() {
   const updateStore = useUIStore(s => s.update);
   const appLang = useUIStore(s => s.appLang);
 
-  const handleDeletePhoto = async (ids: string | string[]) => {
+  const handleDeletePhoto = (ids: string | string[]) => {
     const idList = Array.isArray(ids) ? ids : [ids];
     if (idList.length === 0) return;
-    try {
-      await deletePhoto.execute(idList);
-    } catch (err) {
-      throw err;
-    }
+    deletePhoto.mutate(idList);
   };
 
   const handleUpdatePhoto = async (id: string, updates: PhotoUpdateData) => {

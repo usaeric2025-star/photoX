@@ -1,0 +1,22 @@
+import { createMutation } from './core/mutationFactory';
+import { movePhotosToGroup } from '@/services/photo/commands';
+import { photoKeys } from '@/lib/queryKeys';
+
+/**
+ * [HOOK-CONTRACT] useDragGrouping
+ * Handle optimistic grouping updates using factory pattern.
+ */
+export const useDragGrouping = () => {
+    return createMutation({
+        mutationFn: async ({ photoIds, targetGroupId }: { photoIds: string[], targetGroupId: string | null }) => {
+            return await movePhotosToGroup(photoIds, targetGroupId);
+        },
+        queryKey: photoKeys.all,
+        // Optional: Add optimistic update if needed, but based on the original 
+        // code, it wasn't really doing a true optimistic object update.
+        // I will keep it simple as requested by architectural rules (setQueryData preference).
+        entity: 'photos',
+        action: 'movePhotosToGroup',
+        errorTitle: '批量移动照片至分組失败',
+    });
+};

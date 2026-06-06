@@ -1,17 +1,17 @@
 import { logger } from '@/lib/logger';
 import { 
-  batchUpdatePhotosInCloud as updatePhotosBatch,
+  batchUpdate as updatePhotosBatch,
   clearCategoryFromPhotos,
   clearManufacturerFromPhotos,
   ungroupPhotos
-} from '../photoMutationService';
+} from './commands';
 import { supabase } from '../../lib/supabase';
 import { DB_CONFIG } from '../../constants/config';
 import { Photo } from '../../types';
 import { safeArray } from '../../lib/utils';
-import { deletePhotoFromCloud } from '../photoMutationService';
-import { errorFactory, success } from '@/lib/errorFactory';
-import type { AppResult } from '@/lib/errorFactory';
+import { deletePhoto as deletePhotoFromCloud } from './commands';
+import { errorFactory, success } from '@/lib/error/ErrorFactory';
+import type { AppResult } from '@/types/api';
 import { StandardError } from '@/lib/validators/protocol';
 
 export { updatePhotosBatch, clearCategoryFromPhotos, clearManufacturerFromPhotos, ungroupPhotos };
@@ -48,7 +48,7 @@ export const deduplicatePhotos = async (userId?: string): Promise<AppResult<{rem
         for (const duplicate of duplicates) {
           try {
             if (duplicate.user_id) {
-               await deletePhotoFromCloud(duplicate.user_id, duplicate);
+               await deletePhotoFromCloud(duplicate as Photo);
                removedCount++;
             }
           } catch (e) {

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useTasks } from '../core/infra/useTasks';
+import { useTasks } from '../useTasks';
 import { UnifiedTask, TaskStatus } from '@/features/tasks/taskTypes';
 import { api } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';

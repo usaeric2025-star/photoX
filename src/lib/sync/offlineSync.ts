@@ -1,5 +1,5 @@
 import { opsCache, PendingOp } from '@/lib/db/indexedDB';
-import { updatePhotoInCloud, deletePhotoFromCloud, updatePhotosGroupInCloud } from '@/services/photo/commands';
+import { updatePhoto } from '@/services/photo/commands';
 
 /**
  * Syncs pending operations stored in IndexedDB to the backend
@@ -23,7 +23,7 @@ export async function syncPendingOperations(userId: string) {
       switch (op.type) {
         case 'update':
           if (typeof op.photoId === 'string') {
-            await updatePhotoInCloud(op.photoId, op.payload);
+            await updatePhoto(op.photoId, op.payload);
           }
           break;
         case 'delete':
@@ -36,7 +36,7 @@ export async function syncPendingOperations(userId: string) {
         case 'hide':
         case 'unhide':
           if (typeof op.photoId === 'string') {
-             await updatePhotoInCloud(op.photoId, { is_hidden: op.type === 'hide' });
+             await updatePhoto(op.photoId, { is_hidden: op.type === 'hide' });
           }
           break;
       }

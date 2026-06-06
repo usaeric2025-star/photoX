@@ -1,7 +1,7 @@
 import { useAuth } from './useAuth';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { ROLE_PERMISSIONS, getEffectiveRole, Capability } from '@/config/permissions';
-import { useSettings } from '../infra/useSettings';
+import { useSettings } from '@/hooks/useSettings';
 import { useLocalStorage } from '@mantine/hooks';
 
 /**

@@ -4,7 +4,7 @@ import { useDisclosure } from '@mantine/hooks';
 import { Sparkles, FolderPlus, Edit, EyeOff, Trash2, X } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useGroupPhotosMutation, useUrlFilters } from '@/hooks';
-import { useAIGroup } from '@/hooks/core/mutations/useAIGroup';
+import { useAIGroup } from '@/hooks/useAIGroup';
 import { useUIStore, useIsAnyDialogOpen } from '@/store/useUIStore';
 import { toast } from 'sonner';
 
@@ -12,8 +12,8 @@ interface SelectionToolbarProps {
   onAIIdentify?: (ids: string[]) => void;
   onBatchEdit?: (ids: string[]) => void;
   onDelete?: (ids: string[]) => void;
-  onHide?: (ids: string[]) => Promise<any>;
-  onCopy?: (ids: string[]) => Promise<any>;
+  onHide?: (ids: string[]) => void | Promise<any>;
+  onCopy?: (ids: string[]) => void | Promise<any>;
 }
 
 export function SelectionToolbar({
@@ -62,10 +62,9 @@ export function SelectionToolbar({
     const isCollapsed = urlFilters?.showGroupsCollapsed !== false;
     
     try {
-      await groupMutation.execute({ 
+      await groupMutation.mutateAsync({ 
         photoIds: currentIds, 
-        targetGroupId, 
-        expandGroups: isCollapsed 
+        targetGroupId
       });
       handleClear(); 
       setShowGroupsCollapsed(true);

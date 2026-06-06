@@ -6,11 +6,12 @@ import "yet-another-react-lightbox/plugins/captions.css";
 import "yet-another-react-lightbox/plugins/counter.css";
 import { Download, Pencil, Trash2, Info, Crown, Sparkles } from "lucide-react";
 import { Photo, ProductGroup } from "@/types";
+import { useUIStore } from "@/store/useUIStore";
 import { LIGHTBOX_PLUGINS, LIGHTBOX_OPTIONS } from "./lightboxConfig";
 import { toLightboxSlides } from "./lightboxSlides";
 import { downloadPhotoAsJpeg } from "@/lib/download";
 import { PhotoInfoPanel } from "../photo/PhotoInfoPanel";
-import { useSettings } from "@/hooks/core/infra/useSettings";
+import { useSettings } from "@/hooks/useSettings";
 
 interface LightboxCoreProps {
   open: boolean;
@@ -41,8 +42,7 @@ export const LightboxCore = ({
 }: LightboxCoreProps) => {
   const [index, setIndex] = useState(currentIndex);
   const [showDetails, setShowDetails] = useState(true);
-  const { settings } = useSettings();
-  const lang = (settings?.language as 'zh' | 'en' | 'ms') || 'zh';
+  const lang = useUIStore(s => s.appLang);
   const slides = toLightboxSlides(photos, lang);
   
   // Keep index synchronized with currentIndex prop

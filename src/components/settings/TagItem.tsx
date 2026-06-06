@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { X, Heart, Pencil, Trash2 } from "lucide-react";
 import { Tag } from "../../types";
 import { useClickOutside } from "@mantine/hooks";
-import { useLongPress } from "@/hooks/useLongPress";
+import { useLongPress } from "@/hooks/core/useLongPress";
 
 interface TagItemProps {
   tag: Tag;

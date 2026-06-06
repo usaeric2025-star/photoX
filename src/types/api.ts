@@ -8,6 +8,34 @@ export interface ApiResponse<T = unknown> {
   status?: number;
 }
 
+export type ErrorCode = 
+  | 'NETWORK_ERROR'
+  | 'AUTH_ERROR'
+  | 'NOT_FOUND'
+  | 'VALIDATION_ERROR'
+  | 'UPLOAD_FAILED'
+  | 'DB_ERROR'
+  | 'PERMISSION_DENIED'
+  | 'UNKNOWN';
+
+export interface AppError {
+  ok: false;
+  error: true;
+  message: string;
+  code: ErrorCode;
+  context?: string;
+  timestamp: number;
+  cause?: unknown;
+}
+
+export interface AppSuccess<T> {
+  ok: true;
+  data: T;
+}
+
+export type AppResult<T> = AppSuccess<T> | AppError;
+export type Result<T, E = any> = AppResult<T>;
+
 export interface BatchEditPayload {
   ids: string[];
   updates: Partial<Photo>;

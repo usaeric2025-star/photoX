@@ -35,7 +35,10 @@ export function PhotoListContainer({ variant, isAdminMode, categories, tags }: O
     isAdminMode: isAdminMode
   }), [urlFilters.categoryId, urlFilters.tagId, urlFilters.searchQuery, urlFilters.sortOrder, isAdminMode]);
 
-  const infiniteQuery = usePhotos(filterParams, PAGINATION.ADMIN_BATCH_SIZE, true);
+  const infiniteQuery = usePhotos({
+    ...filterParams,
+    limit: PAGINATION.ADMIN_BATCH_SIZE
+  }, { enabled: true });
 
   const rawPhotos = infiniteQuery.data?.pages?.flatMap(p => p.photos) ?? [];
 

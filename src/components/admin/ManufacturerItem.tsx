@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { useDisclosure, useClickOutside } from "@mantine/hooks";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { PromptDialog } from "@/components/ui/PromptDialog";
-import { useLongPress } from "@/hooks/useLongPress";
+import { useLongPress } from "@/hooks/core/useLongPress";
 import { normalizeManufacturerName } from "@/lib/utils";
 
 import { Manufacturer } from "../../types";

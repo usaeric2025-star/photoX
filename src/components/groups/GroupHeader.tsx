@@ -11,7 +11,7 @@ import { Skeleton } from "../ui/Skeleton";
 import { useUIStore, useShallow } from "@/store/useUIStore";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
 import { useNavigate } from "@tanstack/react-router";
-import { useGroupMutations } from "@/hooks/core/mutations/useGroupMutations";
+import { useGroupMutations } from "@/hooks";
 import { useClipboard } from "@mantine/hooks";
 import { toast } from "sonner";
 

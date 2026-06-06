@@ -122,7 +122,7 @@ export function GroupPhotoPicker({
   );
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
-    usePhotos(queryParams, PAGINATION.ADMIN_BATCH_SIZE);
+    usePhotos({ ...queryParams, limit: PAGINATION.ADMIN_BATCH_SIZE });
 
   const photos = useMemo(() => {
     return data?.pages.flatMap((p) => p.photos) || [];

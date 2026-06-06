@@ -1,13 +1,20 @@
 // Core Hooks
 export { useAuth } from './core/auth/useAuth';
-export { useSettings } from './core/infra/useSettings';
-export { useTaskExecutor } from './core/infra/useTaskExecutor';
-export { TaskProvider, useTasks } from './core/infra/useTasks';
+export { useSettings } from './useSettings';
+export { useTaskExecutor } from './useTaskExecutor';
+export { TaskProvider, useTasks } from './useTasks';
 export { usePermission } from './core/auth/usePermission';
-export { useSyncEngine } from './core/infra/useSyncEngine';
+export { useSyncEngine } from './useSyncEngine';
 export { useAdminMode } from './core/auth/useAdminMode';
-export { usePhotoAction } from './core/usePhotoAction';
+export { usePhotoAction } from './usePhotoAction';
+export { usePhotoUpload } from './usePhotoUpload';
 export { useScrollRestoration } from '../core/infra/useScrollRestoration';
+export { useLongPress } from './core/useLongPress';
+export { usePerformance } from './core/usePerformance';
+export { useTranslation } from './core/useTranslation';
+export { useAppLocale } from './core/useAppLocale';
+export { useImagePreloader } from './core/useImagePreloader';
+export { useQueryWithFallback } from './core/useQueryWithFallback';
 
 // Features Hooks
 export { useBatchEdit } from '../features/photo/useBatchEdit';
@@ -18,37 +25,37 @@ export { useUrlFilters } from './useUrlFilters';
 export { useLightbox } from './useLightbox';
 
 // Queries
-export { usePhotos, useGroupPhotos } from './core/queries/usePhotos';
-export { usePhotoDetail } from './core/queries/usePhotoDetail';
-export { usePhotoCount } from './core/queries/usePhotoCount';
-export { useCategories } from './core/queries/useCategories';
-export { useTags } from './core/queries/useTags';
-export { useManufacturers } from './core/queries/useManufacturers';
-export { useGroups } from './core/queries/useGroups';
-export { useGroupDetail } from './core/queries/useGroupDetail';
-export { useInvalidatePhotos } from './queries/useInvalidatePhotos';
+export { usePhotos, useGroupPhotos } from './usePhotos';
+export { usePhotoDetail } from './usePhotoDetail';
+export { usePhotoCount } from './usePhotoCount';
+export { useCategories } from './useCategories';
+export { useTags } from './useTags';
+export { useManufacturers } from './useManufacturers';
+export { useGroups } from './useGroups';
+export { useGroupDetail } from './useGroupDetail';
+export { useInvalidatePhotos } from './useInvalidatePhotos';
+export { usePhotoAIResult } from './usePhotoAIResult';
 
 // Mutations
-export { usePhotoEdit, usePhotoDelete, usePhotoBatchEdit, useTogglePin } from './core/usePhotoEditor';
+export { usePhotoEdit, usePhotoDelete, usePhotoBatchEdit, useTogglePin } from './usePhotoEditor';
 export { 
   useTagCreate, useTagEdit, useTagDelete,
   useCategoryCreate, useCategoryEdit, useCategoryDelete,
   useManufacturerCreate, useManufacturerEdit, useManufacturerDelete,
   useSyncMutation
-} from './core/mutations/useAdminMutations';
+} from './useAdminMutations';
 export { 
   useGroupCreate, useGroupUpdate, useGroupDelete, useGroupCoverMutation, 
   useGroupPhotosMutation, useRemoveFromGroupMutation, useUngroupMutation, 
   useGroupMutations 
-} from './core/mutations/useGroupMutations';
-export { useSettingsUpdateMutation, useSettingsMutations } from './core/mutations/useSettingsMutations';
-export { useAIGroup } from './core/mutations/useAIGroup';
+} from './useGroupMutations';
+export { useSettingsUpdateMutation, useSettingsMutations } from './useSettingsMutations';
+export { useAIGroup } from './useAIGroup';
 
 
 // Utils
-export { useUIStore, useStore, useShallow } from '../store/useUIStore';
+export { useUIStore, useStore, useShallow, useColumns } from '../store/useUIStore';
 export { useErrorHandler } from '../lib/error/errorHandler';
-export { useTranslation } from './useTranslation';
 
 
 

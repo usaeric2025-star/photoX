@@ -23,7 +23,8 @@ export function usePhotoGallery() {
     isAdminMode: isAdminPath,
     is_hidden: urlFilters.is_hidden, 
     manufacturer_id: urlFilters.manufacturerId,
-  }, pageSize, true);  // enabled is explicitly true
+    limit: pageSize
+  }, { enabled: true });  // enabled is explicitly true
 
   logger.debug('📸 useInfinitePhotos 状态:', {
     isLoading: infinitePhotosQuery.isLoading,

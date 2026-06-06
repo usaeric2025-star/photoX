@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { toast } from 'sonner';
-import { logErrorToSupabase } from '@/services/logService';
+import { logErrorToSupabase } from '@/services/error-log/commands';
 
 export function extractErrorMessage(error: any): string {
   if (!error) return '未知错误';

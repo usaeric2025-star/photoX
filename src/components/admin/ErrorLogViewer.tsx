@@ -80,7 +80,7 @@ export const ErrorLogViewer = () => {
 
   const clearMutation = useMutation({
       mutationFn: async () => {
-          const res = await api.admin['error-events'].clear.$post();
+          const res = await api.admin['error-events-clear'].$post();
           const json = await res.json();
           if (!json.success) throw new Error(json.error || '清除日志失败');
       },

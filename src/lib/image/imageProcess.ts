@@ -7,6 +7,8 @@ export interface ProcessedImage {
   dataUrl: string;
   file: File;
   thumbHash?: string;
+  width: number;
+  height: number;
 }
 
 /**
@@ -39,11 +41,20 @@ export async function processImageFile(file: File): Promise<ProcessedImage> {
     IMAGE_COMPRESS.QUALITY
   );
 
+  // 5. Get Dimensions
+  const dimensions = await new Promise<{width: number, height: number}>((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve({ width: img.width, height: img.height });
+    img.src = compressedUri;
+  });
+
   return {
     hash,
     dataUrl: compressedUri,
     file,
-    thumbHash
+    thumbHash,
+    width: dimensions.width,
+    height: dimensions.height
   };
 }
 
@@ -87,11 +98,19 @@ export async function processImageFiles(
         const thumbHash = await generateThumbHash(rawUri) || undefined;
         const compressedUri = await compressImage(rawUri, IMAGE_COMPRESS.MAX_WIDTH, IMAGE_COMPRESS.QUALITY);
         
+        const dimensions = await new Promise<{width: number, height: number}>((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve({ width: img.width, height: img.height });
+          img.src = compressedUri;
+        });
+
         return {
           hash,
           dataUrl: compressedUri,
           file,
-          thumbHash
+          thumbHash,
+          width: dimensions.width,
+          height: dimensions.height
         };
       })
     );

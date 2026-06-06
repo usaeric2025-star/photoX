@@ -424,6 +424,19 @@ toast.error('发现数据完整性问题', {
 
 ## Hook 使用规范（锁定）
 
+### Hook 存放与目录规范
+
+| 目录 | 用途 | 特征 | 範例 |
+| :--- | :--- | :--- | :--- |
+| `src/hooks/core/` | **核心/通用 Hook** | 无关业务逻辑，可在其他专案复用 | `useAuth`, `useLocalStorage`, `useDisclosure` |
+| `src/hooks/` | **业务逻辑 Hook** | 依赖 PhotoX 的型别、API 或特定业务流程 | `usePhotos`, `useLightbox`, `usePhotoUpload` |
+| `src/components/xxx/` | **组件私有 Hook** | 仅供单一特定组件使用的逻辑封装 | `usePhotoEditDrawer` |
+
+#### 规则
+- ✅ **核心分离**：`core/` 下禁止出现包含业务逻辑或特定领域型别的 Hook。
+- ✅ **扁平结构**：主要业务 Hook 应位于 `src/hooks/` 根目录，以便快速索引。
+- ✅ **禁止重复**：全域严禁出现同名 Hook（如同时存在 `hooks/useX.ts` 与 `hooks/core/useX.ts`）。
+
 ### 通用工具 Hook（优先使用 @mantine/hooks）
 - ✅ 弹窗开关：`useDisclosure`
 - ✅ 本地存储：`useLocalStorage`
@@ -645,6 +658,51 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 - ✅ 工具列订阅 `activeDialogCount`， >0 时自动隐藏
 - ❌ 禁止直接调 `z-index` 解决弹窗与工具列冲突
 - ❌ 禁止在全域层级观察 DOM（MutationObserver）
+
+## 文件命名與目錄規範（鎖定）
+
+### 一、目錄職責
+
+- ✅ `src/hooks/core/`：通用、可跨專案複用的 Hook（如 `useAuth`、`useDebounce`、`useLocalStorage`）
+- ✅ `src/hooks/`：與 PhotoX 業務邏輯相關的 Hook（如 `usePhotos`、`useGroups`、`useLightbox`）
+- ✅ `src/services/[domain]/commands.ts`：所有寫入邏輯（Mutation、RPC）
+- ✅ `src/services/[domain]/queries.ts`：所有讀取邏輯（TanStack Query）
+- ❌ 禁止新增 `src/actions/` 目錄或類似 `*Actions.ts` 檔案
+- ❌ 禁止在 `src/hooks/` 根目錄新建非業務 Hook
+
+### 二、文件命名規則
+
+| 類型 | 範例 | 規則 |
+| --- | --- | --- |
+| 通用 Hook | `useDisclosure.ts` | 駝峰式，`use` 前綴，放在 `core/` |
+| 業務 Hook | `usePhotoMutations.ts` | 駝峰式，`use[Domain][Purpose]`，範圍為 PhotoX |
+| UI 組件 | `ConfirmDialog.tsx` | PascalCase，放在 `components/ui/` |
+| 業務組件 | `PhotoCard.tsx` | PascalCase，按領域分目錄 |
+| 頁面 | `AdminPageContent.tsx` | PascalCase，按功能模塊分目錄 |
+| 工具函數 | `formatters.ts` | 小寫 kebab-case，按功能域聚合 |
+| 類型定義 | `photo.ts` | 小寫 kebab-case，按領域命名，禁止 `Types` 後綴 |
+| 服務層 | `uploadService.ts` | 駝峰式，名稱包含具體動作，放在 `services/[domain]/` |
+
+### 三、禁止事項
+
+- ❌ 禁止文件名使用 `utils.ts`、`helpers.ts`、`index.ts` 以外的模糊名稱
+- ❌ 禁止同一層級混用 `AdminXxx` / `XxxAdmin` / `xxx-admin`
+- ❌ 禁止不同目錄下出現同名檔案（如兩個 `useLightbox.ts`）
+- ❌ 禁止空檔案或僅數行的殘留檔案（< 10 行）
+
+### 四、驗收標準
+
+- ✅ 每次重構後必須執行 `find src -name "*.ts" -exec basename {} \; | sort | uniq -c | sort -rn | head -20` 檢查同名檔案
+- ✅ AGENTS.md 中的規範作為 PR 審查依據，不符合即退回
+
+---
+
+## 鉤子工廠 (Hook Factories)
+- ✅ `mutationFactory.ts`：所有寫操作 Mutation 的唯一來源。
+- ✅ `queryFactory.ts`：標準化查詢 (Query/InfiniteQuery) 的封裝。
+- ❌ 禁止在組件中手動拼接 `onMutate` 等樂觀更新邏輯，必須封裝入工廠。
+
+---
 
 ## 新功能开发检查清单
 - [ ] Mutation 是否使用 createMutation 工厂？

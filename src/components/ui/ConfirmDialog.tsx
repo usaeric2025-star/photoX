@@ -40,9 +40,13 @@ export const ConfirmDialog = ({
   };
   
   const handleConfirm = async () => {
-    await onConfirm();
     onOpenChange(false);
     useUIStore.getState().decrementDialogCount();
+    try {
+      await onConfirm();
+    } catch (e) {
+      console.error("[ConfirmDialog] execution failed:", e);
+    }
   };
 
   const handleCancel = () => {

@@ -7,7 +7,7 @@ import { ConfirmDialog } from "../../ui/ConfirmDialog";
 import { PromptDialog } from "../../ui/PromptDialog";
 import { ProductFormData, Photo } from "../../../types";
 import { HeadlessSlot } from "../../../lib/component-contract";
-import { usePhotoEditor } from "../../../hooks/core/usePhotoEditor";
+import { usePhotoEditor } from "../../../hooks/usePhotoEditor";
 import { DrawerHeader } from "./DrawerHeader";
 import { useUIStore } from "../../../store";
 import { BasicInfoTab } from "./BasicInfoTab";
@@ -16,7 +16,7 @@ import { DetailsTab } from "./DetailsTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs";
 import { getCacheBustedImageUrl } from "../../../lib/ui-helpers";
 import { translations } from "../../../lib/translations";
-import { analyzePhoto } from "@/services/aiService";
+import { analyzePhoto } from "@/services/ai/commands";
 
 import { 
   usePhotos,
@@ -230,8 +230,8 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
       searchQuery: debouncedSearchQuery,
       sortOrder: urlFilters.sortOrder,
       isAdminMode: true,
-    },
-    PAGINATION.ADMIN_BATCH_SIZE,
+      limit: PAGINATION.ADMIN_BATCH_SIZE,
+    }
   );
 
   const photoCountQuery = usePhotoCount({

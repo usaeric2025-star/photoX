@@ -25,7 +25,7 @@ import {
 } from "../ui/dropdown-menu";
 import { toast } from "sonner";
 
-import { useBatchAiAnalyze } from "@/hooks/core/mutations/useBatchAiAnalyze";
+import { useBatchAiAnalyze } from "@/hooks/useBatchAiAnalyze";
 
 export interface GroupAdminShellProps {
   initialPhotoId?: string | null;

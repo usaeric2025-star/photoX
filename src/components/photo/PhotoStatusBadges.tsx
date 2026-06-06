@@ -2,7 +2,7 @@ import React from 'react';
 import { Layers, Heart, ShieldAlert, Crown } from 'lucide-react';
 import { Photo } from '@/types';
 import { GalleryVariant } from '@/types/variant';
-import { getDisplayGroupCode } from '@/services/utils';
+import { getDisplayGroupCode } from '@/services/photo/utils';
 import { useUIStore } from '@/store/useUIStore';
 
 interface PhotoStatusBadgesProps {

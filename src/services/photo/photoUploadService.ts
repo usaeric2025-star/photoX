@@ -6,7 +6,7 @@ import { uploadImages } from '../storage';
 import { safeArray } from '../../lib/utils';
 import { mapToDb, normalizeDimensionsBeforeSave } from './photoMappingUtils';
 import { checkDuplicate, DuplicatePhotoError } from '@/lib/data/duplicateCheck';
-import { generateItemCode } from '../utils';
+import { generateItemCode } from './utils';
 import { StandardError } from '@/lib/validators/protocol';
 import { extractErrorMessage } from '@/lib/error/errorHandler';
 
@@ -24,19 +24,29 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
     throw new StandardError('Critical: Missing user_id for photo operation', { aiDebugHint: '[uploadPhotosBatch] actUserId is missing' });
   }
 
-  // Pre-insert duplicate check
+  // Pre-insert duplicate check & Meta-Reservation to prevent orphans
   if (photo.image_hash) {
-     const isDuplicate = await checkDuplicate(
-       actUserId, 
-       photo.image_hash, 
-       (photo as any)._fileSize, 
-       (photo as any)._fileName, 
-       (photo as any)._lastModified,
-       photo.id
-     );
-     if (isDuplicate) {
-        throw new DuplicatePhotoError();
-     }
+      const isDuplicate = await checkDuplicate(
+        actUserId, 
+        photo.image_hash, 
+        (photo as any)._fileSize, 
+        (photo as any)._fileName, 
+        (photo as any)._lastModified,
+        photo.id
+      );
+      if (isDuplicate) {
+         throw new DuplicatePhotoError();
+      }
+      
+      // Safety Pre-Upsert: Reserve the entry in DB before uploading to R2
+      // This ensures that even if upload fails, we have the shell of the record
+      const safetyPayload = mapToDb({
+        ...photo,
+        user_id: actUserId,
+        image_url: photo.image_url ?? undefined, // Fix null vs undefined
+      }, true);
+      
+      await supabase.from(DB_CONFIG.TABLE_NAME).upsert(safetyPayload, { onConflict: 'id' });
   }
 
   // Upload image if it doesn't have an image_url yet but has a uri
@@ -193,24 +203,69 @@ export const savePhotosToCloudBatch = async (
     }
   });
 
-  for (const photo of sPhotos) {
-    if (!photo.image_url && photo.uri) {
-      try {
-        const filename = photo.storage_id || photo.id;
-        const { imageUrl, isDuplicate } = await uploadImages(userId, filename, photo.uri, photo.image_hash);
-        if (isDuplicate) {
-          continue;
-        }
-        photo.image_url = imageUrl;
-      } catch (e) {
-        const message = extractErrorMessage(e);
-        throw new StandardError(message, { 
-          originalError: e,
-          aiDebugHint: `[uploadPhotosBatch] 底層異常: ${message}` 
-        });
-      }
-    }
+  // Step 1: Meta-Reservation (Batch) to secure IDs and Item Codes
+  // This helps prevent orphans by ensuring DB knows about these files before they hit R2
+  const reservationPayloads = sPhotos.map(photo => {
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(photo.id || '');
+    const dbData = mapToDb({ ...photo, user_id: actUserId }, true);
+    const payload: any = {
+      ...dbData,
+      updated_at: new Date().toISOString()
+    };
+    if (isUUID) payload.id = photo.id;
+    return payload;
+  });
+
+  const chunkSize = PAGINATION.CHUNK_SIZE;
+  for (let i = 0; i < reservationPayloads.length; i += chunkSize) {
+    const chunk = reservationPayloads.slice(i, i + chunkSize);
+    await supabase.from(DB_CONFIG.TABLE_NAME).upsert(chunk, { onConflict: 'id' });
   }
+
+  // Step 2: Upload images in parallel with concurrency control
+  const CONCURRENCY_LIMIT = 5; 
+  const uploadQueue = [...sPhotos];
+  const totalToUpload = uploadQueue.length;
+  let completedCount = 0;
+  const uploadTasks: Promise<void>[] = [];
+
+  for (let i = 0; i < Math.min(CONCURRENCY_LIMIT, uploadQueue.length); i++) {
+    const worker = async () => {
+      while (uploadQueue.length > 0) {
+        const photo = uploadQueue.shift();
+        if (!photo) break;
+        
+        if (!photo.image_url && photo.uri) {
+          try {
+            const filename = photo.storage_id || photo.id;
+            const { imageUrl } = await uploadImages(userId, filename, photo.uri, photo.image_hash);
+            photo.image_url = imageUrl;
+            
+            // Incremental Update: Sync the URL back to DB as soon as EACH photo finishes
+            await supabase
+              .from(DB_CONFIG.TABLE_NAME)
+              .update({ image_url: imageUrl, updated_at: new Date().toISOString() })
+              .eq('id', photo.id);
+            
+            completedCount++;
+            if (onProgress) onProgress(completedCount);
+          } catch (e) {
+            console.error(`[uploadPhotosBatch] Failed to upload ${photo.id}:`, e);
+            // Even on failure, we increment progress so the UI doesn't hang
+            completedCount++;
+            if (onProgress) onProgress(completedCount);
+          }
+        } else {
+          // Already has URL or no URI
+          completedCount++;
+          if (onProgress) onProgress(completedCount);
+        }
+      }
+    };
+    uploadTasks.push(worker());
+  }
+
+  await Promise.all(uploadTasks);
 
   const results: Photo[] = [...sPhotos.map(p => ({ ...p }))];
   const payloads = sPhotos.map(photo => {
@@ -242,7 +297,7 @@ export const savePhotosToCloudBatch = async (
     return payload;
   });
 
-  const chunkSize = PAGINATION.CHUNK_SIZE;
+  // Re-finalize with any updated metadata in chunk-wise upserts
   for (let i = 0; i < payloads.length; i += chunkSize) {
     const chunk = payloads.slice(i, i + chunkSize);
     let savedRows: { id: string; image_hash: string }[] | null = null;

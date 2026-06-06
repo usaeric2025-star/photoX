@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ProductGroup, Photo } from "@/types";
-import { useGroupDetail } from "@/hooks/core/queries/useGroupDetail";
+import { useGroupDetail } from "@/hooks";
 import { useAuth } from "@/hooks/core/auth/useAuth";
 import { saveGroup as saveGroupToCloud } from "@/services/group/commands";
-import { isErr } from "@/lib/errorFactory";
+import { isErr } from "@/lib/error/ErrorFactory";
 import { useSessionStorage } from "@mantine/hooks";
 import { groupKeys } from "@/lib/queryKeys";
 

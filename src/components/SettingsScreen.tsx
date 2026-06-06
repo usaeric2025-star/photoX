@@ -80,7 +80,7 @@ export function SettingsScreen() {
 
   const performPushSync = async () => { await syncMut('push'); };
   const performPullSync = async () => { await syncMut('pull'); };
-  const { data: totalPhotoCount = 0 } = usePhotoCount();
+  const { data: totalPhotoCount = 0 } = usePhotoCount(undefined);
   const cloudCount = totalPhotoCount;
   const refreshCloudData = async () => { await syncMut('pull'); };
   
@@ -142,8 +142,8 @@ export function SettingsScreen() {
   } = useSettingsLogic({
     user: user || null,
     settings,
-    geminiApiKey,
-    customModel,
+    geminiApiKey: geminiApiKey || "",
+    customModel: customModel || "",
     saveSettings,
     performPullSync,
     setSettings: (s: AppSettings) => { void updateSettings(s as Partial<AppSettings>); }
@@ -217,13 +217,13 @@ export function SettingsScreen() {
           {activeTab === 'ai' && (
             <>
               <AISettings 
-                geminiApiKey={geminiApiKey}
+                geminiApiKey={geminiApiKey || ""}
                 setGeminiApiKey={setGeminiApiKey}
-                customModel={customModel}
+                customModel={customModel || ""}
                 setCustomModel={setCustomModel}
                 testConnection={testConnection}
                 testResult={testResult}
-                accessPasscode={accessPasscode}
+                accessPasscode={accessPasscode || ""}
                 setAccessPasscode={setAccessPasscode}
                 setSettingField={setSettingField}
                 cardClass={cardClass}

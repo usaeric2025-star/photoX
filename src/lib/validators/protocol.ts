@@ -1,4 +1,4 @@
-import { type AppResult } from '@/lib/errorFactory';
+import type { AppResult } from '@/types/api';
 
 /**
  * @validator-contract StandardError

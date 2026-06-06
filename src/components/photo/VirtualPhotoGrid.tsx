@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { usePerformance } from '@/hooks/usePerformance';
+import { usePerformance } from '@/hooks/core/usePerformance';
 import { VirtualGrid, VirtualGridHandle } from '@/components/virtualizer/VirtualGrid';
 import { Photo, TranslationType } from '../../types';
 import { useUIStore, useShallow, UIStoreState } from '@/store/useUIStore';
@@ -7,7 +7,7 @@ import { useUrlFilters } from '@/hooks/useUrlFilters';
 import { translations } from '../../lib/translations';
 import { PhotoGridSkeleton } from './PhotoGridSkeleton';
 import { LoadMoreIndicator } from './LoadMoreIndicator';
-import { useImagePreloader } from '@/hooks/useImagePreloader';
+import { useImagePreloader } from '@/hooks';
 
 interface VirtualPhotoGridProps {
   photos: Photo[];

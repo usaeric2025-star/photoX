@@ -129,6 +129,8 @@ export interface ProductGroup {
   member_count?: number;
 }
 
+export type Group = ProductGroup;
+
 export interface ProductFormData {
   id?: string;
   name: {
