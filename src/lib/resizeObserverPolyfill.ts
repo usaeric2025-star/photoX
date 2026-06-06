@@ -6,3 +6,5 @@ window.ResizeObserver = class extends OriginalRO {
     });
   }
 };
+
+export {};
