@@ -110,7 +110,7 @@ export function AdminHeader({
   };
 
   return (
-    <header className="h-14 sm:h-16 shrink-0 border-b px-2 sm:px-4 flex items-center justify-between bg-white border-slate-200 text-slate-800 z-header font-sans overflow-hidden">
+    <header className="h-14 sm:h-16 shrink-0 border-b px-2 sm:px-4 flex items-center justify-between bg-white border-slate-200 text-slate-800 z-[40] relative font-sans overflow-hidden">
       <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 flex-nowrap">
         {settings?.logo_url ? (
           <img
@@ -179,11 +179,11 @@ export function AdminHeader({
         </Link>
         <Link
           to="/"
-          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full text-xs font-bold transition-all active:scale-95 ml-1"
+          className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full text-xs font-bold transition-all active:scale-95 ml-1"
           title="返回前台"
         >
           <Home size={14} />
-          <span>前台</span>
+          <span className="hidden sm:inline">前台</span>
         </Link>
 
         {/* 4. 菜单 (语言、管理、退出) */}

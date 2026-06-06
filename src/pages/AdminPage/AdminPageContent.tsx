@@ -287,7 +287,7 @@ export function AdminPageContent() {
               </div>
 
               <AnimatePresence>
-                {(currentScreen === 'manage' || currentScreen === 'settings') && (
+                {(currentScreen === 'manage' || currentScreen === 'settings' || currentScreen === 'structure') && (
                   <motion.div 
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
