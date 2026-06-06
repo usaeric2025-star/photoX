@@ -80,7 +80,7 @@ export default function PublicPage() {
   const virtualGridRef = useRef<any>(null);
   const handleScrollToTop = () => virtualGridRef.current?.scrollTo?.(0);
 
-  const { appLang } = useUIStore();
+  const appLang = useUIStore((s) => s.appLang);
 
   useEffect(() => {
     document.title = appLang === 'zh' ? 'PhotoX | 商品画册' : 'PhotoX | Catalog';

@@ -75,10 +75,16 @@ invalidatePhotos(); // 降维打击，清空全域缓存
 2. **RPC 优先**：优先使用 `hono/client` (hc) 进行调用，确保前端参数与后端定义严格对齐。
 3. **禁止 Manual URL**：除非是静态资源或第三方链接，禁止在前端手动拼接 `/api/xxx` 字符串。
 
+## React Compiler 决策（锁定）
+- ❌ 生产环境禁用 React Compiler（等待 Stable + Vite 官方支持）
+- ✅ 依赖 React 19 原生性能 + Virtua + Query select + Zustand selector
+- ❌ 禁止预防性添加 useMemo/useCallback
+- ✅ 仅在 Profiler 证实瓶颈或第三方库要求时手动 memo，并附注释
+
 ## 禁止项
 - ❌ `forwardRef`（React 19 不需要）
 - ❌ `React.FC`
-- ❌ 手动 `useCallback`/`useMemo`/`React.memo`（Compiler 处理）
+- ❌ 任何未经验证的实验性编译插件
 - ❌ `useStaticData` 模式
 - ❌ `View` 后缀（用 `Page` 或 `Grid`）
 
@@ -640,23 +646,13 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 - ❌ 禁止直接调 `z-index` 解决弹窗与工具列冲突
 - ❌ 禁止在全域层级观察 DOM（MutationObserver）
 
-## 新功能开发检查清单（完整版）
-
-### 数据一致性
+## 新功能开发检查清单
 - [ ] Mutation 是否使用 createMutation 工厂？
-- [ ] 表单是否用 structuredClone 创建本地草稿，Query 数据保持只读？
-- [ ] 乐观更新是否在 onMutate 中完成，onSuccess 仅做副作用？
-- [ ] 错误严重度是否由业务语义显式声明？
-
-### UI 与交互
+- [ ] 表单是否用 structuredClone 创建本地草稿？
+- [ ] 乐观更新是否在 onMutate 完成，onSuccess 仅做副作用？
 - [ ] 弹窗是否上报 activeDialogCount？
-- [ ] 错误通知是否统一使用 sonner？
-- [ ] API 调用是否使用 Hono RPC？
-
-### 性能
-- [ ] 列表页是否使用 select 缩小订阅字段？
-- [ ] Zustand 是否使用 selector 精确订阅？
-- [ ] 是否优先依赖 React Compiler，仅在瓶颈时手动 memo？
+- [ ] API 是否使用 Hono RPC？
+- [ ] 翻译字段是否通过 mapToDb 归一化？
 
 ---
 

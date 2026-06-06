@@ -34,7 +34,18 @@ export function useMaintenanceActions(onSuccess?: () => void) {
   const handleImportOrphans = async () => {
     setIsAuditing(true);
     try {
-      const res = await api.storage['import-orphans'].$post();
+      let query: { userId?: string } | undefined;
+      try {
+        const { supabase } = await import("@/lib/supabase");
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.id) {
+          query = { userId: session.user.id };
+        }
+      } catch (e) {
+        console.warn("[handleImportOrphans] Failed to retrieve session:", e);
+      }
+
+      const res = await api.storage['import-orphans'].$post(query ? { query } : undefined);
       const data = await res.json() as any;
       if (data.success) {
         toast.success(data.message || "恢复完成");

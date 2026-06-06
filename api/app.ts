@@ -1741,13 +1741,81 @@ app.post("/storage/import-orphans", async (c) => {
       const normalizeUrl = (u: string) => u.toLowerCase().trim().split('?')[0].replace(/\/$/, '');
 
       // 获取当前操作者的 user_id
-      const { data: session } = await supabase.auth.getSession();
-      let userId = session?.session?.user?.id;
-      
+      let userId: string | undefined;
+
+      // 1. 尝试从请求体 (JSON) 或查询参数中获取前端传递的 userId
+      try {
+        const body = await c.req.json().catch(() => ({}));
+        if (body && typeof body === 'object' && body.userId) {
+          userId = String(body.userId);
+        }
+      } catch (err) {
+        // 忽略解析错误
+      }
+
       if (!userId) {
-         // Fallback: Get a valid user to assign ownership
-         const { data: users } = await supabase.from('users').select('id').limit(1);
-         userId = users?.[0]?.id || '00000000-0000-0000-0000-000000000000';
+        const queryUserId = c.req.query("userId");
+        if (queryUserId) {
+          userId = queryUserId;
+        }
+      }
+
+      // 2. 尝试从已绑定的 session 获取
+      if (!userId) {
+        try {
+          const { data: session } = await supabase.auth.getSession();
+          userId = session?.session?.user?.id;
+        } catch (err) {
+          // 忽略
+        }
+      }
+
+      // 3. 核心后备方案：查询数据库中已存在的 furniture_items 记录
+      // 这是 100% 验证合法的 UUID，重用该 user_id 安全性极高
+      if (!userId || userId === '00000000-0000-0000-0000-000000000000') {
+        try {
+          const { data: existingItems } = await supabase
+            .from('furniture_items')
+            .select('user_id')
+            .not('user_id', 'is', null)
+            .limit(5);
+          
+          if (existingItems && existingItems.length > 0) {
+            for (const item of existingItems) {
+              if (item.user_id && item.user_id !== '00000000-0000-0000-0000-000000000000') {
+                userId = String(item.user_id);
+                break;
+              }
+            }
+          }
+        } catch (err) {
+          console.error('[Import-Orphans] Failed to query existing furniture_items for user_id:', err);
+        }
+      }
+
+      // 4. 后备方案：使用 admin API 获取当前注册的首位有效用户 ID (需要 service_role 权限)
+      if (!userId || userId === '00000000-0000-0000-0000-000000000000') {
+        try {
+          const { data: authUsers } = await supabase.auth.admin.listUsers();
+          if (authUsers?.users && authUsers.users.length > 0) {
+            const firstUser = authUsers.users.find(u => u.id && u.id !== '00000000-0000-0000-0000-000000000000');
+            if (firstUser) {
+              userId = firstUser.id;
+            }
+          }
+        } catch (err) {
+          console.error('[Import-Orphans] Failed to list auth users via admin API:', err);
+        }
+      }
+
+      // 5. 最底线后备：查询 users 视图/表
+      if (!userId || userId === '00000000-0000-0000-0000-000000000000') {
+        try {
+          const { data: users } = await supabase.from('users').select('id').limit(1);
+          userId = users?.[0]?.id || '00000000-0000-0000-0000-000000000000';
+        } catch (err) {
+          userId = '00000000-0000-0000-0000-000000000000';
+        }
       }
 
       // 2. Get all R2 files

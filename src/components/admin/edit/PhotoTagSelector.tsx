@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useDisclosure } from "@mantine/hooks";
 import { PromptDialog } from "@/components/ui/PromptDialog";
 import { TagEditor } from "../TagEditor";

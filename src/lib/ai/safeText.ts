@@ -6,34 +6,79 @@ export function getSafeText(field: any, locale: string = 'zh'): string {
   if (!field) return '';
   let data = field;
 
-  // If it is a stringified JSON object
-  if (typeof data === 'string' && data.trim().startsWith('{')) {
-    try {
-      data = JSON.parse(data);
-    } catch (e) {
-      // It's a broken JSON string.
-      // 1. Try a simple regex for finding the locale value: "zh":"value"
-      const regex = new RegExp(`"${locale}"\\s*:\\s*"([^"]+)`); // Allowing missing closing quote
-      const match = data.match(regex);
-      if (match) return match[1];
+  // Keep parsing if it's a string representing JSON (handle nested stringified JSON too!)
+  let parsedCount = 0;
+  while (typeof data === 'string' && parsedCount < 3) {
+    const trimmed = data.trim();
+    // Support strings that might be wrapped in external quotes like "{\"zh\":...}" or start with {
+    if (trimmed.startsWith('{') || (trimmed.startsWith('"') && trimmed.endsWith('"') && trimmed.includes('{'))) {
+      try {
+        let cleanStr = trimmed;
+        if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+          try {
+            cleanStr = JSON.parse(trimmed); // Unescape the wrapper string
+          } catch (e) {
+            // Strip outer quotes manually if JSON.parse fails on wrapper
+            cleanStr = trimmed.slice(1, -1);
+          }
+        }
+        if (typeof cleanStr === 'string' && cleanStr.trim().startsWith('{')) {
+          data = JSON.parse(cleanStr);
+        } else {
+          data = cleanStr;
+        }
+        parsedCount++;
+      } catch (e) {
+        // Fallback: use regex to extract locale key even from a broken JSON string
+        const regex = new RegExp(`"${locale}"\\s*:\\s*"([^"]+)`);
+        const match = trimmed.match(regex);
+        if (match) return match[1];
 
-      // 2. If no match for locale, try to extract any JSON value: "key":"value"
-      const anyMatch = data.match(/"[^"]+":"([^"]+)/);
-      if (anyMatch) return anyMatch[1];
-      
-      // 3. Fallback: If still nothing, just return raw string or make it readable
-      return data.replace(/[{}"\\]/g, ' ').replace(locale, '').replace(':', ' ').trim();
+        const anyMatch = trimmed.match(/"[^"]+":"([^"]+)/);
+        if (anyMatch) return anyMatch[1];
+
+        break;
+      }
+    } else {
+      break;
     }
   }
 
-  if (typeof data === 'string') return data;
+  if (typeof data === 'string') {
+    // If it's still a JSON string for some reason
+    if (data.trim().startsWith('{')) {
+      try {
+        const parsed = JSON.parse(data);
+        if (parsed && typeof parsed === 'object') {
+          data = parsed;
+        }
+      } catch (e) {}
+    } else {
+      return data;
+    }
+  }
   
-  // If it's an object with language keys
-  if (typeof data === 'object') {
-    const val = data[locale] || data.zh || data.en || data.ms || data.name;
-    if (typeof val === 'string') return val;
-    if (typeof val === 'object') return JSON.stringify(val);
-    if (val !== undefined && val !== null) return String(val);
+  if (data && typeof data === 'object') {
+    // Check direct locale entry
+    let val = data[locale];
+    if (val === undefined || val === null) {
+      // Fallback order: zh -> en -> ms -> name
+      val = data.zh || data.en || data.ms || data.name;
+    }
+    
+    // If nested under translation objects, recurse once
+    if (val !== undefined && val !== null) {
+      if (typeof val === 'string') {
+        if (val.trim().startsWith('{')) {
+          return getSafeText(val, locale);
+        }
+        return val;
+      }
+      if (typeof val === 'object') {
+        return getSafeText(val, locale);
+      }
+      return String(val);
+    }
     return '';
   }
   

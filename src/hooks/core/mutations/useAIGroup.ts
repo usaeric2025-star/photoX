@@ -8,7 +8,10 @@ import { ErrorFactory } from '../../../lib/error/ErrorFactory';
 
 export function useAIGroup() {
   const queryClient = useQueryClient();
-  const { update, resetUI, addProcessingIds, removeProcessingIds } = useUIStore();
+  const update = useUIStore((s) => s.update);
+  const resetUI = useUIStore((s) => s.resetUI);
+  const addProcessingIds = useUIStore((s) => s.addProcessingIds);
+  const removeProcessingIds = useUIStore((s) => s.removeProcessingIds);
 
   const createAIGroup = async (photoIds: string[]) => {
     // 乐观更新：加入处理中状态

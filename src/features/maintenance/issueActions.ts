@@ -30,7 +30,18 @@ export const ISSUE_ACTIONS: Record<string, MaintenanceAction> = {
       return { affectedCount: data.data?.orphans || 0 };
     },
     execute: async () => {
-      const res = await api.storage['import-orphans'].$post();
+      let query: { userId?: string } | undefined;
+      try {
+        const { supabase } = await import("@/lib/supabase");
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.id) {
+          query = { userId: session.user.id };
+        }
+      } catch (e) {
+        console.warn("[import-orphans] Failed to retrieve front-end session user id:", e);
+      }
+
+      const res = await api.storage['import-orphans'].$post(query ? { query } : undefined);
       const data = await res.json() as any;
       return { jobId: data.jobId || 'restore_orphans_job', message: data.message };
     },

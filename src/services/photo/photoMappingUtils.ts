@@ -65,6 +65,33 @@ export const mapToDb = (updates: Partial<Photo> & Record<string, unknown>, isCre
                 valueToSave = null;
             }
         }
+        
+        if (key === 'name') {
+            if (typeof value === 'string') {
+                valueToSave = { zh: value, en: '', ms: '' };
+            } else if (value && typeof value === 'object') {
+                const nameObj = value as Record<string, any>;
+                valueToSave = {
+                    zh: String(nameObj.zh || '').trim(),
+                    en: String(nameObj.en || '').trim(),
+                    ms: String(nameObj.ms || '').trim(),
+                };
+            }
+        }
+        
+        if (key === 'description') {
+            if (typeof value === 'string') {
+                valueToSave = { zh: value, en: '', ms: '' };
+            } else if (value && typeof value === 'object') {
+                const descObj = value as Record<string, any>;
+                valueToSave = {
+                    zh: String(descObj.zh || '').trim(),
+                    en: String(descObj.en || '').trim(),
+                    ms: String(descObj.ms || '').trim(),
+                };
+            }
+        }
+
         dbUpdates[key] = valueToSave;
     }
     

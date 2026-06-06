@@ -10,17 +10,7 @@ export default defineConfig(({mode}) => {
   return {
     base: '/',
     plugins: [
-      react({
-        babel: {
-          plugins: [
-            ['babel-plugin-react-compiler', {
-              compilationMode: 'strict',
-              panicThreshold: 'none',
-              target: '19'
-            }]
-          ]
-        }
-      }), 
+      react(), 
       tailwindcss(),
       visualizer({
         filename: 'dist/stats.html',

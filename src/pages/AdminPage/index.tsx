@@ -11,7 +11,7 @@ import { useUIStore } from '@/store/useUIStore';
 export function AdminPage() {
   const queryClient = useQueryClient();
 
-  const { appLang } = useUIStore();
+  const appLang = useUIStore((s) => s.appLang);
 
   useEffect(() => {
     document.title = appLang === 'zh' ? 'PhotoX | 管理后台' : 'PhotoX | Admin';

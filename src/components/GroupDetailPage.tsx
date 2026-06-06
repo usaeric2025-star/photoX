@@ -20,6 +20,7 @@ import { useUIStore, useShallow } from '@/store/useUIStore';
 import { createTranslate } from '../lib/i18n';
 import { LanguageCode } from '../lib/translations';
 import { CopyableId } from '@/components/ui/CopyableId';
+import { getSafeText } from '@/lib/ai/safeText';
 // import removed
 
 
@@ -153,24 +154,9 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
     }
   }, [activeGroupId, initialPhotoId, activeGroupPhotos.length]);
 
-  const groupDisplayName = (() => {
-    if (!groupData) return '';
-    const name = groupData.name;
-    if (typeof name === 'object') {
-      return name[lang as keyof typeof name] || name.zh || '';
-    }
-    return String(name || '');
-  })();
+  const groupDisplayName = groupData ? getSafeText(groupData.name, lang) : '';
 
-  const groupDisplayDescription = (() => {
-    if (!groupData?.description) return '';
-    const desc = groupData.description;
-    if (typeof desc === 'object') {
-      const val = desc[lang as keyof typeof desc] || (desc as any).zh || '';
-      return val.trim();
-    }
-    return String(desc || '').trim();
-  })();
+  const groupDisplayDescription = groupData?.description ? getSafeText(groupData.description, lang).trim() : '';
 
   if (!activeGroupId) return null;
 

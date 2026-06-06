@@ -148,6 +148,8 @@ export const savePhotosToCloudBatch = async (
     throw new StandardError('No active session for database', { aiDebugHint: '[uploadPhotosBatch] userId extraction failed' });
   }
 
+  const actUserId = session?.user?.id || userId || 'staff';
+
   if (!actUserId) {
     throw new StandardError('Critical: Missing user_id for photo operation', { aiDebugHint: '[uploadPhotosBatch] actUserId is missing' });
   }

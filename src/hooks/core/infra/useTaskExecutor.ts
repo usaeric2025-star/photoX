@@ -52,7 +52,7 @@ export function useTaskExecutor() {
       reportError(errMsg, name);
       
       if (options?.showErrorToast !== false) { // Always show errors
-        toast.error(`${name} 失敗`, errMsg);
+        toast.error(`${name} 失敗: ${errMsg}`);
       }
       
       const actualError = error instanceof Error ? error : new Error(errMsg);
