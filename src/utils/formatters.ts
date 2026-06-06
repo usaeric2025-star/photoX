@@ -10,7 +10,6 @@ export const formatters = {
   
   dateTime: (date: Date | string | number) => {
     return new Intl.DateTimeFormat('zh-TW', {
-      year: 'numeric',
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',

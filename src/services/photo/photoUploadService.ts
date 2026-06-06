@@ -19,6 +19,10 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
   }
 
   const actUserId = session?.user?.id || userId || 'staff';
+  
+  if (!actUserId) {
+    throw new StandardError('Critical: Missing user_id for photo operation', { aiDebugHint: '[uploadPhotosBatch] actUserId is missing' });
+  }
 
   // Pre-insert duplicate check
   if (photo.image_hash) {
@@ -144,7 +148,9 @@ export const savePhotosToCloudBatch = async (
     throw new StandardError('No active session for database', { aiDebugHint: '[uploadPhotosBatch] userId extraction failed' });
   }
 
-  const actUserId = session?.user?.id || userId || 'staff';
+  if (!actUserId) {
+    throw new StandardError('Critical: Missing user_id for photo operation', { aiDebugHint: '[uploadPhotosBatch] actUserId is missing' });
+  }
 
   // Pre-filter duplicates
   const uniquePhotos: Photo[] = [];
@@ -211,7 +217,7 @@ export const savePhotosToCloudBatch = async (
     normalizeDimensionsBeforeSave(photo.dimensions);
 
     const payload: Record<string, unknown> = {
-      user_id: actUserId,
+      user_id: actUserId, // Explicit enforcement
       item_code: photo.item_code || generateItemCode(),
       manual_code: photo.manual_code || '',
       image_hash: photo.image_hash,

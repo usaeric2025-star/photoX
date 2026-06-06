@@ -4,18 +4,36 @@
  */
 export function getSafeText(field: any, locale: string = 'zh'): string {
   if (!field) return '';
-  if (typeof field === 'string') return field;
+  let data = field;
+
+  // If it is a stringified JSON object
+  if (typeof data === 'string' && data.trim().startsWith('{')) {
+    try {
+      data = JSON.parse(data);
+    } catch (e) {
+      // It's a broken JSON string.
+      // Try a simple regex for finding the locale value: "zh":"value"
+      const regex = new RegExp(`"${locale}"\\s*:\\s*"([^"]+)"`);
+      const match = data.match(regex);
+      if (match) return match[1];
+      
+      // Fallback: If no match for locale, just strip all JSON-like characters to make it readable
+      return data.replace(/[{}"\\]/g, ' ').replace(locale, '').replace(':', ' ').trim();
+    }
+  }
+
+  if (typeof data === 'string') return data;
   
   // If it's an object with language keys
-  if (typeof field === 'object') {
-    const val = field[locale] || field.zh || field.en || field.ms || field.name;
+  if (typeof data === 'object') {
+    const val = data[locale] || data.zh || data.en || data.ms || data.name;
     if (typeof val === 'string') return val;
     if (typeof val === 'object') return JSON.stringify(val);
     if (val !== undefined && val !== null) return String(val);
     return '';
   }
   
-  return String(field);
+  return String(data);
 }
 
 /**

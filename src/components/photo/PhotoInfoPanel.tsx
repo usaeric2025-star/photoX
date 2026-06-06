@@ -174,6 +174,8 @@ export function PhotoInfoPanel({
   // Name splitting logic: + > , > ；
   // Main name: before delimiter, Others: after
   const splitNames = (name: string): { main: string, others: string[] } => {
+    // 强制清理可能出现的 [object Object] 脏字符串
+    if (name.includes('[object')) return { main: '未命名', others: [] };
     const parts = name.split(/[+\,；]+/).map(p => p.trim()).filter(Boolean);
     if (parts.length <= 1) return { main: name, others: [] };
     return { main: parts[0], others: parts.slice(1) };

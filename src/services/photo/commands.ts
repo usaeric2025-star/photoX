@@ -414,7 +414,7 @@ export const groupPhotos = async (
         .update({ 
           group_id: targetGroupId,
           is_group_cover: false,
-          user_id: userId
+          user_id: userId || 'system'
         })
         .in('id', ungroupedValidIds);
       if (ungroupedUpdateError) throw ungroupedUpdateError;
