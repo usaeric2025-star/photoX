@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useUIStore, useShallow } from '@/store/useUIStore';
+import { useUIStore } from '@/store/useUIStore';
 import { useAdminActions } from '@/features/admin/useAdminActions';
 import { toast } from 'sonner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -8,16 +8,11 @@ import { useErrorHandler } from '@/hooks';
 
 export function useBatchEdit() {
   const queryClient = useQueryClient();
-  const { 
-    batchEditingIds, update,
-    formState, updateForm, resetForm
-  } = useUIStore(useShallow(s => ({
-    batchEditingIds: s.batchEditingIds,
-    update: s.update,
-    formState: s.formState,
-    updateForm: s.updateForm,
-    resetForm: s.resetForm
-  })));
+  const batchEditingIds = useUIStore(s => s.batchEditingIds);
+  const update = useUIStore(s => s.update);
+  const formState = useUIStore(s => s.formState);
+  const updateForm = useUIStore(s => s.updateForm);
+  const resetForm = useUIStore(s => s.resetForm);
 
   const { deletePhoto, updatePhoto, batchUpdate } = useAdminActions();
   const { handleError } = useErrorHandler();

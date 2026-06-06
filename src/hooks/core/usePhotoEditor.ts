@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { UseFormReturnType } from '@mantine/form';
-import { useUIStore, useShallow } from '../../store';
+import { useUIStore } from '../../store';
 import { 
   useCategories, useTags, useManufacturers,
   useTagCreate, useTagEdit, useTagDelete,
@@ -199,10 +199,8 @@ export const usePhotoEditor = (props: Props) => {
   const aiDebugInfo = null;
 
   const { runTask } = useTaskExecutor();
-  const { update, appLang } = useUIStore(useShallow((s: any) => ({
-    update: s.update,
-    appLang: s.appLang
-  })));
+  const update = useUIStore((s) => s.update);
+  const appLang = useUIStore((s) => s.appLang);
   const { handleError } = useErrorHandler();
 
   const { data: categories = [] } = useCategories();

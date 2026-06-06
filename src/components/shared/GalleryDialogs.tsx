@@ -19,13 +19,15 @@ interface GalleryDialogsProps {
 }
 
 export function GalleryDialogs(props: GalleryDialogsProps) {
+  const update = useUIStore((s) => s.update);
+
   return (
     <>
       <AnimatePresence>
         {props.showPassPrompt && (
           <StaffUnlockDialog 
             isOpen={props.showPassPrompt}
-            onClose={() => { useUIStore.getState().update({ showPassPrompt: false }); props.setPassInput(''); props.setPassError(false); }}
+            onClose={() => { update({ showPassPrompt: false }); props.setPassInput(''); props.setPassError(false); }}
             passInput={props.passInput}
             setPassInput={props.setPassInput}
             passError={props.passError}
@@ -35,7 +37,7 @@ export function GalleryDialogs(props: GalleryDialogsProps) {
               e.preventDefault();
               if (props.passInput === props.settings?.access_passcode) {
                 props.setIsStaffMode(true);
-                useUIStore.getState().update({ showPassPrompt: false });
+                update({ showPassPrompt: false });
                 props.setPassInput('');
                 props.navigate({ to: '/admin' });
               } else {
@@ -48,7 +50,7 @@ export function GalleryDialogs(props: GalleryDialogsProps) {
 
       <WhatsAppChoiceDialog 
         isOpen={props.showWhatsAppChoice}
-        onClose={() => useUIStore.getState().update({ showWhatsAppChoice: false })}
+        onClose={() => update({ showWhatsAppChoice: false })}
         settings={props.settings || null}
         t={props.t}
         onSelect={(num) => props.openWhatsApp(num)}
