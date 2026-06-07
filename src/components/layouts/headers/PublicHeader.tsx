@@ -1,6 +1,6 @@
 import React from 'react';
 import { LogIn, LayoutDashboard, RefreshCw, Camera, Menu, User as UserIcon, LogOut, Settings, LayoutGrid, MonitorPlay } from 'lucide-react';
-import { useAuth, useUIStore, useShallow, useSettings, usePhotoCount } from '@/hooks';
+import { useAuth, useUIStore, useShallow, useSettings } from '@/hooks';
 import { useNavigate, useLocation } from '@tanstack/react-router';
 import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
 import {
@@ -28,11 +28,23 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
   const location = useLocation();
   const isAdmin = location.pathname.startsWith('/admin');
 
-  const { data: cloudCount } = usePhotoCount({ source: 'server' });
-  const { data: localCount } = usePhotoCount({ source: 'local' });
-
   const lang = useUIStore(s => s.appLang);
   const t = translations[lang as keyof typeof translations] || translations.en;
+
+  const [cachedLogoUrl, setCachedLogoUrl] = React.useState<string | null>(() => {
+    try {
+      const item = typeof window !== 'undefined' ? window.localStorage.getItem('photox_cached_settings') : null;
+      if (item) {
+        const parsed = JSON.parse(item);
+        return parsed.logo_url || null;
+      }
+    } catch (e) {
+      // ignore
+    }
+    return null;
+  });
+
+  const logoUrl = settings?.logo_url || cachedLogoUrl;
 
   const handleAuthAction = () => {
     if (isAdmin) {
@@ -46,8 +58,17 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
     <header className="h-14 sm:h-16 shrink-0 border-b px-2 sm:px-4 flex items-center justify-between bg-white border-slate-200 z-header font-sans overflow-hidden">
       {/* 左侧：Logo & 计数 */}
       <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 flex-nowrap">
-        {settings?.logo_url ? (
-          <img src={settings.logo_url} className="h-8 sm:h-9 w-auto object-contain shrink-0" alt="Logo" />
+        {logoUrl ? (
+          <img 
+            src={logoUrl} 
+            className="h-8 sm:h-9 w-auto object-contain shrink-0" 
+            alt="Logo" 
+            onLoad={() => {
+              if (settings?.logo_url && settings.logo_url !== cachedLogoUrl) {
+                setCachedLogoUrl(settings.logo_url);
+              }
+            }}
+          />
         ) : (
           <div className="flex items-center gap-1.5 font-bold tracking-tighter text-slate-900">
             <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center shadow-sm text-white shrink-0">
@@ -59,12 +80,11 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
           </div>
         )}
 
-        {/* 本地与云端组合数字展示 */}
-        <div className="flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200/50 rounded-full px-2.5 py-1 select-none shrink-0 cursor-default">
-          <span className="text-[#3b82f6] font-medium">{lang === 'zh' ? '本地' : lang === 'ms' ? 'Lokal' : 'Local'}: <strong className="font-bold">{localCount ?? 0}</strong></span>
-          <span className="text-slate-300">|</span>
-          <span className="text-[#10b981] font-medium">{lang === 'zh' ? '云端' : lang === 'ms' ? 'Awan' : 'Cloud'}: <strong className="font-bold">{cloudCount ?? 0}</strong></span>
-        </div>
+        {totalCount !== undefined && (
+          <span className="px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold whitespace-nowrap shrink-0 uppercase tracking-widest leading-none">
+            {t.photosCount(totalCount)}
+          </span>
+        )}
       </div>
 
       {/* 右侧：刷新 & 管理/登录入口 */}
@@ -84,7 +104,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
         <button
           onClick={handleAuthAction}
           className="w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 ml-1 border bg-white text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-900 shadow-sm"
-          title={isAdmin ? '退出管理后台 (返回主页)' : t.adminPanel}
+          title={isAdmin ? t.viewModePublic : t.viewModeAdmin}
         >
           <LayoutDashboard size={20} />
         </button>
@@ -114,12 +134,12 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
                 </>
              ) : (
                 <DropdownMenuLabel className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                  GUEST
+                  {t.guestLabel}
                 </DropdownMenuLabel>
              )}
 
             <div className="px-2 py-1.5 flex flex-col gap-1.5">
-              <span className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">System</span>
+              <span className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.systemLabel}</span>
               {user && (
                 <>
                   {!isAdmin && (
@@ -139,14 +159,14 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
                     className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-slate-50 focus:bg-slate-50 cursor-pointer transition-colors border-none"
                   >
                     <Settings size={16} />
-                    <span className="text-sm font-semibold">{t.systemSettings || 'Settings'}</span>
+                    <span className="text-sm font-semibold">{t.systemSettings}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => navigate({ to: '/admin/tasks' })}
                     className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-slate-50 focus:bg-slate-50 cursor-pointer transition-colors border-none"
                   >
                     <LayoutGrid size={16} />
-                    <span className="text-sm font-semibold">Task Center</span>
+                    <span className="text-sm font-semibold">{t.taskCenter}</span>
                   </DropdownMenuItem>
                 </>
               )}
@@ -155,7 +175,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
                 className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-slate-50 focus:bg-slate-50 cursor-pointer transition-colors border-none"
               >
                 <LayoutGrid size={16} />
-                <span className="text-sm font-semibold">Error Logs</span>
+                <span className="text-sm font-semibold">{t.errorLogs}</span>
               </DropdownMenuItem>
               <LanguageSwitcher mode="segmented" />
             </div>

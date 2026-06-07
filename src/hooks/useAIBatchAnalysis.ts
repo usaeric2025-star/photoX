@@ -77,7 +77,11 @@ export function useAIBatchAnalysis() {
             
             if (photos) {
               const allTagIds = Array.from(new Set(photos.flatMap(p => p.tag_ids || [])));
-              const { data: tagsData } = await supabase.from('tags').select('id, name').in('id', allTagIds);
+              let tagsData: any[] | null = null;
+              if (allTagIds.length > 0) {
+                const res = await supabase.from('tags').select('id, name').in('id', allTagIds);
+                tagsData = res.data;
+              }
               const tagMap = new Map((tagsData || []).map(t => [String(t.id), t.name]));
               const photosWithTags = photos.map(p => ({
                 ...p,

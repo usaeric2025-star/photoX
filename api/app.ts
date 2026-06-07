@@ -2116,7 +2116,15 @@ app.post("/ai/translate", async (c) => {
 app.post("/ai/analyze-group", async (c) => {
     try {
       const { photoDetails } = await c.req.json();
-      const apiKey = serverEnv.GEMINI_API_KEY;
+      const supabase = await getSupabaseAdmin();
+      const { data: openrouterSecret } = await supabase.from('secrets').select('value').eq('key', 'openrouter').maybeSingle();
+      let apiKey = '';
+      if (openrouterSecret?.value) {
+        const { decrypt } = await import('./lib/encryption.js');
+        apiKey = decrypt(openrouterSecret.value);
+      } else {
+        apiKey = serverEnv.GEMINI_API_KEY || '';
+      }
       if (!apiKey) return c.json({ error: "Server API key not configured" }, 500);
       const prompt = `你是一个家具产品系列合并分析专家。根据以下这些被分到同一系列的单品的数据，为整个家具系列生成通用的元数据。请以纯JSON格式返回。
 如果某些信息无法得出，请返回空字符串 "" 或空数组 []，严禁使用“新合组”、“New Group”等预测性或占位文字。
@@ -2143,7 +2151,15 @@ app.post("/ai/analyze-group", async (c) => {
 app.post("/ai/analyze-photo-v2", async (c) => {
     try {
       const { photoDetail } = await c.req.json();
-      const apiKey = serverEnv.GEMINI_API_KEY;
+      const supabase = await getSupabaseAdmin();
+      const { data: openrouterSecret } = await supabase.from('secrets').select('value').eq('key', 'openrouter').maybeSingle();
+      let apiKey = '';
+      if (openrouterSecret?.value) {
+        const { decrypt } = await import('./lib/encryption.js');
+        apiKey = decrypt(openrouterSecret.value);
+      } else {
+        apiKey = serverEnv.GEMINI_API_KEY || '';
+      }
       if (!apiKey) return c.json({ error: "Server API key not configured" }, 500);
       const prompt = `你是一个产品元数据分析专家。根据提供的家具产品当前信息，补充并优化丢失的元数据，并返回专业的结果。请以纯JSON格式返回，不要有额外的标记。
 所需的JSON结构如下:

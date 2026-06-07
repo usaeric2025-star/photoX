@@ -319,10 +319,14 @@ export const loadAllPhotosFromCloud = async (
     }
 
     let orSegments = [
-      `name.ilike.%${q}%`,
+      `name->>zh.ilike.%${q}%`,
+      `name->>en.ilike.%${q}%`,
+      `name->>ms.ilike.%${q}%`,
       `manual_code.ilike.%${q}%`,
       `model_number.ilike.%${q}%`,
-      `description.ilike.%${q}%`,
+      `description->>zh.ilike.%${q}%`,
+      `description->>en.ilike.%${q}%`,
+      `description->>ms.ilike.%${q}%`,
       `item_code.ilike.%${q}%`
     ];
 
@@ -560,10 +564,14 @@ export const getPhotoCount = async (
     }
 
     let orSegments = [
-      `name.ilike.%${q}%`,
+      `name->>zh.ilike.%${q}%`,
+      `name->>en.ilike.%${q}%`,
+      `name->>ms.ilike.%${q}%`,
       `manual_code.ilike.%${q}%`,
       `model_number.ilike.%${q}%`,
-      `description.ilike.%${q}%`,
+      `description->>zh.ilike.%${q}%`,
+      `description->>en.ilike.%${q}%`,
+      `description->>ms.ilike.%${q}%`,
       `item_code.ilike.%${q}%`
     ];
 

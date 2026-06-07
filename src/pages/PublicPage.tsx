@@ -56,7 +56,13 @@ export default function PublicPage() {
   const { filters } = useUrlFilters();
   const groupId = filters.groupId;
   
-  const { data: count } = usePhotoCount({});
+  const { data: count } = usePhotoCount({
+    category_id: filters.categoryId,
+    tag_id: filters.tagId,
+    searchQuery: filters.searchQuery,
+    isAdminMode: false,
+    source: 'server',
+  });
   const { isLoading } = usePhotos({});
 
   const { tasks } = useTasks();

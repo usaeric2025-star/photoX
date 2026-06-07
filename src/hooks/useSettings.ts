@@ -21,10 +21,25 @@ export const useGetSettings = createQuery<AppSettings, void>({
   staleTime: 60 * 1000, // 1 minute stale time for settings
 });
 
+let initialSettingsCache: AppSettings | null = null;
+const getInitialSettings = (): AppSettings => {
+  if (initialSettingsCache) return initialSettingsCache;
+  try {
+    const item = typeof window !== 'undefined' ? window.localStorage.getItem('photox_cached_settings') : null;
+    if (item) {
+      initialSettingsCache = JSON.parse(item);
+      return initialSettingsCache!;
+    }
+  } catch (e) {
+    // Silent
+  }
+  return {} as AppSettings;
+};
+
 export const useSettings = () => {
   const [cachedSettings, setCachedSettings] = useLocalStorage<AppSettings>({
     key: 'photox_cached_settings',
-    defaultValue: {} as AppSettings,
+    defaultValue: getInitialSettings(),
   });
 
   const { data: qSettings, isLoading } = useGetSettings(undefined);
@@ -37,7 +52,9 @@ export const useSettings = () => {
   }, [qSettings, setCachedSettings]);
 
   // Use cachedSettings immediately for a seamless mount/first-render, fallbacks nicely
-  const settings = (qSettings && Object.keys(qSettings).length > 0) ? qSettings : cachedSettings;
+  const settings = (qSettings && Object.keys(qSettings).length > 0) 
+    ? qSettings 
+    : (Object.keys(cachedSettings).length > 0 ? cachedSettings : getInitialSettings());
 
   return {
     settings,
