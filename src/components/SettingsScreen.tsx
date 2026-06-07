@@ -53,7 +53,7 @@ export function SettingsScreen() {
     if (!file) return;
 
     try {
-      toast.info("正在上传 Logo...", { duration: 2000 });
+      toast.info('正在上传 Logo...', { duration: 2000 });
       const reader = new FileReader();
       reader.onload = async () => {
         const base64Data = reader.result as string;
@@ -67,7 +67,7 @@ export function SettingsScreen() {
         const res = await resp.json();
         if (res.success && res.data.publicUrl) {
           setSettingField('logo_url', res.data.publicUrl);
-          toast.success("Logo 上传成功");
+          toast.success('Logo 上传成功');
         } else {
           handleError(new Error(res.error || 'Upload failed'), 'Logo 上传失败');
         }
@@ -86,7 +86,9 @@ export function SettingsScreen() {
   
   const isSyncing = tasks.some(t => t.name.includes('同步') && t.status === 'running');
   const isMaintenanceRunning = tasks.some(t => (t.name.includes('维护') || t.name.includes('诊断')) && t.status === 'running');
-  const t = translations.zh;
+  
+  const appLang = useUIStore(s => s.appLang);
+  const t = translations[appLang as keyof typeof translations] || translations.en;
 
   const { handleError } = useErrorHandler();
   const { user, loginWithGoogle, logout } = useAuth();
@@ -169,16 +171,14 @@ export function SettingsScreen() {
         >
           <ChevronLeft size={24} />
         </button>
-        <h2 className="font-black text-xs text-brand-navy border border-brand-navy/10 px-3 py-1 rounded-xl bg-white shadow-sm inline-block italic leading-none uppercase tracking-widest flex-1 ml-1">系统设置 / System Settings</h2>
+        <h2 className="font-black text-xs text-brand-navy border border-brand-navy/10 px-3 py-1 rounded-xl bg-white shadow-sm inline-block italic leading-none uppercase tracking-widest flex-1 ml-1">{appLang === 'zh' ? '系统设置' : 'System Settings'}</h2>
         <button 
            onClick={async () => {
              try {
                await saveSettings({ ...settings });
                setHasChanges(false);
-               toast.success("保存成功 / Saved successfully");
              } catch (err) {
                console.error("Save settings failed:", err);
-               toast.error("保存失败，请检查连接");
              }
            }}
            className={`p-2 rounded-lg shadow-md active:scale-95 transition-all flex items-center justify-center bg-brand-gold hover:bg-brand-gold/90 text-white`}
@@ -284,27 +284,27 @@ export function SettingsScreen() {
       <ConfirmDialog
         open={isTagDeleteOpen}
         onOpenChange={tagDeleteDialog.toggle}
-        title="确定要删除此标签吗？"
-        description="此操作将从所有已关联的产品中移除此标签。"
-        confirmText="删除"
+        title={t.confirmDeleteTagTitle}
+        description={t.confirmDeleteTagDesc}
+        confirmText={t.deleteBtn}
         variant="destructive"
         onConfirm={async () => { if (tagToDelete) await deleteTagRaw(tagToDelete); }}
       />
       <ConfirmDialog
         open={isCategoryDeleteOpen}
         onOpenChange={categoryDeleteDialog.toggle}
-        title="确定要删除此分类吗？"
-        description="这将导致该分类下的产品失去分类关联。"
-        confirmText="删除"
+        title={t.confirmDeleteCatTitle}
+        description={t.confirmDeleteCatDesc}
+        confirmText={t.deleteBtn}
         variant="destructive"
         onConfirm={async () => { if (categoryToDelete) await deleteCategoryRaw(categoryToDelete); }}
       />
       <ConfirmDialog
         open={isManufacturerDeleteOpen}
         onOpenChange={manufacturerDeleteDialog.toggle}
-        title="确定要删除此生产商吗？"
-        description="确定要删除此生产商吗？"
-        confirmText="删除"
+        title={t.confirmDeleteMfrTitle}
+        description={t.confirmDeleteMfrTitle}
+        confirmText={t.deleteBtn}
         variant="destructive"
         onConfirm={async () => { if (manufacturerToDelete) await deleteManufacturerRaw(manufacturerToDelete); }}
       />

@@ -38,7 +38,7 @@ export function useTaskExecutor() {
     try {
       const result = await fn({ updateProgress });
       if (taskId) {
-        updateTask(taskId, { status: 'completed', progress: 100, message: `${name} 成功` });
+        updateTask(taskId, { status: 'completed', progress: 100, message: `${name} 完成` });
       }
       hapticFeedback.success();
       if (!isSilent && options?.showSuccessToast !== false) {
@@ -55,7 +55,7 @@ export function useTaskExecutor() {
       reportError(errMsg, name);
       
       if (options?.showErrorToast !== false) { // Always show errors
-        toast.error(`${name} 失敗: ${errMsg}`);
+        toast.error(`${name} 失败: ${errMsg}`);
       }
       
       const actualError = error instanceof Error ? error : new Error(errMsg);

@@ -12,6 +12,7 @@ import { api } from "@/lib/api";
 import { fromThrowableAsync, ErrorFactory } from '@/lib/error/ErrorFactory';
 import { toast } from 'sonner';
 import { useErrorHandler, useInvalidatePhotos, useTaskExecutor } from "@/hooks";
+import { translations } from "@/lib/translations";
 
 interface UseSettingsLogicProps {
   user: User | null;
@@ -37,6 +38,8 @@ export const useSettingsLogic = ({
   const { handleError } = useErrorHandler();
   const invalidatePhotos = useInvalidatePhotos();
   const { runTask } = useTaskExecutor();
+  const appLang = useUIStore(s => s.appLang);
+  const t = translations[appLang as keyof typeof translations] || translations.en;
 
   const [testResult, setTestResult] = useState<{
     success?: boolean;
@@ -47,9 +50,7 @@ export const useSettingsLogic = ({
   const [activeTagMenuId, setActiveTagMenuId] = useState<string | null>(null);
 
   const debouncedSave = useDebouncedCallback((newSettings: AppSettings) => {
-    saveSettings(newSettings).catch((err) =>
-      handleError(err, "保存设置失败"),
-    );
+    saveSettings(newSettings).catch(console.error);
     setHasChanges(false);
   }, 1500);
 
@@ -90,13 +91,13 @@ export const useSettingsLogic = ({
       );
       if (ok) {
         setTestResult({ success: true });
-        toast.success("測試成功：AI 服務連接正常！");
+        toast.success('测试成功：AI 服务连接正常！');
       } else {
-        setTestResult({ success: false, error: "连接失败" });
+        setTestResult({ success: false, error: '连接失败' });
       }
     } catch (e: any) {
       setTestResult({ success: false, error: e.message });
-      handleError(e, "连接失败");
+      handleError(e, '连接失败');
     } finally {
       setTestResult((prev) => (prev ? { ...prev, loading: false } : null));
     }

@@ -12,6 +12,7 @@ import { deduplicatePhotos, bulkFixPhotoUrls } from "@/services/photo/photoMaint
 export function useMaintenanceActions(onSuccess?: () => void) {
   const { user } = useAuth();
   const update = useUIStore(s => s.update);
+  
   const [isAuditing, setIsAuditing] = useState(false);
   const [isDeduplicating, setIsDeduplicating] = useState(false);
   const [isBackfilling, setIsBackfilling] = useState(false);
@@ -60,7 +61,7 @@ export function useMaintenanceActions(onSuccess?: () => void) {
     setIsAuditing(true);
     try {
       const result = await bulkFixPhotoUrls();
-      toast.success(`修复完成：${result.updated} 更新`);
+      toast.success(`修复完成：${result.updated || 0} 更新`);
       onSuccess?.();
     } finally { setIsAuditing(false); }
   };
@@ -95,7 +96,7 @@ export function useMaintenanceActions(onSuccess?: () => void) {
       const res = await api.admin.repair.$post({ json: { issueId: 'non_standard_item_codes' } });
       const data = await res.json() as any;
       if (data.success) {
-        toast.success(data.message);
+        toast.success(data.message || "修复成功");
         onSuccess?.();
       }
     } finally { setIsNormalizingCodes(false); }
@@ -107,7 +108,7 @@ export function useMaintenanceActions(onSuccess?: () => void) {
       const res = await api.admin.repair.$post({ json: { issueId: 'cleanup_temp_urls' } });
       const data = await res.json() as any;
       if (data.success) {
-        toast.success(data.message);
+        toast.success(data.message || "修复成功");
         onSuccess?.();
       }
     } finally { setIsCleaningTemp(false); }
@@ -119,7 +120,7 @@ export function useMaintenanceActions(onSuccess?: () => void) {
       const res = await api.admin.repair.$post({ json: { issueId: 'cleanup_redundant' } });
       const data = await res.json() as any;
       if (data.success) {
-        toast.success(data.message);
+        toast.success(data.message || "修复成功");
         onSuccess?.();
       }
     } finally { setIsCleaningRedundant(false); }

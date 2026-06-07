@@ -13,6 +13,7 @@ import { loadCategoriesFromCloud } from '@/services/category/queries';
 import { loadTagsFromCloud } from '@/services/tag/queries';
 import { loadAllPhotosFromCloud } from '@/services/photo/queries';
 import { PHOTO_QUERY_CONFIG } from '@/lib/photoQueryConfig';
+import { logger } from '@/lib/logger';
 
 export function FilterPanel() {
     const { filters: urlFilters, setCategory, setTagId } = useUrlFilters();
@@ -66,7 +67,7 @@ export function FilterPanel() {
         }))
     ], [categories, appLang, t.all]);
 
-    console.debug('[FilterPanel] Rendering. Current categoryId in URL:', urlFilters.categoryId, 'Categories count:', categoryList.length);
+    logger.debug('[FilterPanel] Rendering. Current categoryId in URL:', urlFilters.categoryId, 'Categories count:', categoryList.length);
 
     // Unified Tags Logic using useTagsDisplay
     const { tagsToRender, pinnedIds, hotIds } = useTagsDisplay(tags, settings);
@@ -83,7 +84,7 @@ export function FilterPanel() {
                         <button
                             key={cat.id || 'all'}
                             onClick={() => {                
-                                console.debug('[FilterPanel] Category clicked:', cat.id);
+                                logger.debug('[FilterPanel] Category clicked:', cat.id);
                                 setCategory(cat.id);
                             }}
 

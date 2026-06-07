@@ -71,9 +71,8 @@ export default function PublicPage() {
     
     try {
       await syncMut('pull');
-      toast.success('同步已完成');
-    } catch (e: any) {
-      toast.error(`同步失败: ${e.message || '未知错误'}`);
+    } catch {
+      // Error handled by mutation
     }
   };
 
@@ -112,7 +111,9 @@ export default function PublicPage() {
           </DataLoadingContainer>
         </div>
       )}
-      <GroupDetailPage variant="public-showcase" />
+      <ErrorBoundary>
+        <GroupDetailPage variant="public-showcase" />
+      </ErrorBoundary>
     </div>
   );
 }

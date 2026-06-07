@@ -22,21 +22,21 @@ export const checkDuplicate = async (
   fileName?: string,
   lastModified?: number,
   photoId?: string
-): Promise<boolean> => {
-  if (!imageHash) return false;
+): Promise<{ isDuplicate: boolean, orphanId?: string }> => {
+  if (!imageHash) return { isDuplicate: false };
 
   // 1. Check Memory Cache
   if (fileName && fileSize && lastModified) {
     const pseudoHash = `${fileName}_${fileSize}_${lastModified}`;
     const mappedId = memoryPseudoHashes.get(pseudoHash);
     if (mappedId && mappedId !== photoId) {
-      return true;
+      return { isDuplicate: true };
     }
   }
 
   const mappedId = memoryImageHashes.get(imageHash);
   if (mappedId && mappedId !== photoId) {
-    return true;
+    return { isDuplicate: true };
   }
 
   // 2. Check Database for MD5 (strongest guarantee)
@@ -46,21 +46,27 @@ export const checkDuplicate = async (
       .select('id, image_url')
       .eq('image_hash', imageHash)
       .eq('user_id', userId)
-      .not('image_url', 'is', null)
-      .neq('image_url', '')
       .limit(1)
       .maybeSingle();
 
     if (data && data.id) {
       if (photoId && data.id === photoId) {
-        return false;
+         if (!data.image_url) {
+           return { isDuplicate: false, orphanId: data.id };
+         }
+         return { isDuplicate: false };
+      }
+      
+      // If it exists but has no URL, it's an orphan! Treat it as not a duplicate so we can overwrite it.
+      if (!data.image_url) {
+        return { isDuplicate: false, orphanId: data.id };
       }
       
       if (fileName && fileSize && lastModified) {
         memoryPseudoHashes.set(`${fileName}_${fileSize}_${lastModified}`, data.id);
       }
       memoryImageHashes.set(imageHash, data.id);
-      return true;
+      return { isDuplicate: true };
     }
   } catch (error) {
     console.warn('DB check timeout or error, proceeding with caution', error);
@@ -73,7 +79,7 @@ export const checkDuplicate = async (
   }
   memoryImageHashes.set(imageHash, storeId);
 
-  return false;
+  return { isDuplicate: false };
 };
 
 export const checkDuplicateBatch = (files: File[]) => {

@@ -1,0 +1,57 @@
+src/hooks/usePhotoEditor.ts:  const isAnalyzing = useMemo(() => tasks.some((t: any) => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析'))), [tasks]);
+src/hooks/usePhotoEditor.ts:  const isSyncing = useMemo(() => tasks.some((t: any) => t.status === 'running' && (t.name.includes('同步') || t.name.includes('导入'))), [tasks]);
+src/hooks/usePhotoEditor.ts:  const isRotating = useMemo(() => tasks.some((t: any) => t.status === 'running' && t.name === '旋转图片'), [tasks]);
+src/hooks/usePhotoEditor.ts:  const isRunning = useMemo(() => isSavingAction || tasks.some((t: any) => t.status === 'running'), [isSavingAction, tasks]);
+src/hooks/useTasks.tsx:        const newStatus = updates.status || t.status;
+src/hooks/useTasks.tsx:          finished_at: isFinished && !t.finished_at ? Date.now() : t.finished_at 
+src/hooks/useTasks.tsx:    setTasks(prev => prev.filter(t => t.id !== id));
+src/hooks/useTasks.tsx:    setTasks(prev => prev.filter(t => t.status === 'running'));
+src/hooks/useTasks.tsx:    return tasks.some(t => t.status === 'running' && t.name.startsWith(namePrefix));
+src/hooks/useTasks.tsx:          if (t.finished_at && now - t.finished_at > 8000) return false;
+src/hooks/useTasks.tsx:  const activeTasks = tasks.filter(t => t.status === 'running');
+src/hooks/useAIGroup.ts:        const tagMap = new Map((tagsData || []).map(t => [String(t.id), t.name]));
+src/hooks/useAIGroup.ts:        const tagMap = new Map((tagsData || []).map(t => [String(t.id), t.name]));
+src/hooks/useBatchAiAnalyze.ts:    const taskTitle = groupId ? t.aiGroupTask(targetPhotos.length) : t.aiBatchTask(targetPhotos.length);
+src/hooks/useBatchAiAnalyze.ts:          updateProgress(progress, t.analyzingPhoto(i + 1, totalPhotosToProcess));
+src/hooks/useBatchAiAnalyze.ts:            updateProgress(75, t.summarizingGroup);
+src/hooks/useBatchAiAnalyze.ts:              const tagMap = new Map((tagsData || []).map(t => [String(t.id), t.name]));
+src/hooks/useBatchAiAnalyze.ts:                updateProgress(85, t.translatingGroup);
+src/hooks/useBatchAiAnalyze.ts:              updateProgress(95, t.savingGroup);
+src/hooks/useAdminMutations.ts:    return (old || []).map(t => t.id === id ? { ...t, ...updates } : t);
+src/hooks/useAdminMutations.ts:    return (old || []).filter(t => t.id !== id);
+src/services/photo/queries.ts:          if (typeof t === 'object' && t.id != null) return String(t.id);
+src/services/photo/queries.ts:    const tagIds = (tagsRes.data || []).map(t => t.id);
+src/services/photo/queries.ts:    const tagIds = (tagsRes.data || []).map(t => t.id);
+src/services/gemini/photoAnalysisCore.ts:  const tagsJson = JSON.stringify((tags || []).map(t => ({ id: t.id, name: t.name, aliases: t.aliases || [] })));
+src/components/ui/FilterPanel.tsx:        { id: null, name: t.all },
+src/components/ui/FilterPanel.tsx:    ], [categories, appLang, t.all]);
+src/components/ui/FilterPanel.tsx:                            title={cat.name || t.all}
+src/components/ui/FilterPanel.tsx:                            {(cat.name || t.all || 'Unnamed').toUpperCase()}
+src/components/ui/FilterPanel.tsx:                             title={isExpanded ? t.collapse : t.more(hiddenCount)}
+src/components/groups/GroupPhotoPicker.tsx:  const isRunning = tasks.some((t) => t.status === "running");
+src/components/groups/GroupSettingsSheet/GroupSettingsHeader.tsx:  const isRunning = tasks.some((t) => t.status === "running");
+src/components/shared/RefreshMenu.tsx:                {isInfiniteMode ? t.infiniteEnabled : t.enableInfinite}
+src/components/shared/RefreshMenu.tsx:                {isInfiniteMode ? t.showAllPhotos : t.lazyLoading}
+src/components/admin/PhotoEditDrawer/PhotoEditDrawer.tsx:                      logic.handleError(new Error(readableError), t.aiIdentifyFailed);
+src/components/admin/PhotoEditDrawer/PhotoEditDrawer.tsx:                          placeholder={editingMfr?.name || t.mfrNamePlaceholder}
+src/components/admin/edit/PhotoTagSelector.tsx:            (t) => t.name.toUpperCase() === trimmed.toUpperCase(),
+src/components/admin/AdminMobileNav.tsx:  const isSyncing = tasks.some(t => t.name.includes('同步') && t.status === 'running');
+src/components/AdminScreen.tsx:  const isSyncing = tasks.some(t => t.name.includes('同步') && t.status === 'running');
+src/components/settings/TagsSection.tsx:  const isRunning = tasks.some((t) => t.status === "running");
+src/components/SettingsScreen.tsx:  const isSyncing = tasks.some(t => t.name.includes('同步') && t.status === 'running');
+src/components/SettingsScreen.tsx:  const isMaintenanceRunning = tasks.some(t => (t.name.includes('维护') || t.name.includes('诊断')) && t.status === 'running');
+src/components/StaffUnlockDialog.tsx:                      handleError(e, t.loginFailed);
+src/lib/ai/aiNormalizer.ts:      const nameMatch = existingTags.find(t => t.name && t.name.toLowerCase() === itemIdStr.toLowerCase());
+src/lib/ai/aiMerger.ts:      const tag = tags.find(t => t.name.toLowerCase() === tagName.toLowerCase());
+src/lib/filters.ts:      t.aliases.forEach(a => terms.push(a.toLowerCase()));
+src/lib/filters.ts:          t.aliases.forEach(a => terms.push(a.toLowerCase()));
+src/lib/ui-helpers.ts:    photoNameStr === t.furnitureRecord || 
+src/lib/ui-helpers.ts:  if (catName && catName !== t.uncategorized) return catName;
+src/lib/ui-helpers.ts:  return t.furniture;
+src/lib/ui-helpers.ts:  return !name || name === t.uncategorized || uncatValues.includes(nameLower);
+src/pages/AdminPage/AdminPageContent.tsx:  const isSyncing = tasks.some(t => t.status === 'running' && t.name.includes('Sync'));
+src/pages/AdminPage/TasksPage.tsx:    active: tasks.filter(t => t.status === 'processing').length,
+src/pages/AdminPage/TasksPage.tsx:    completed: tasks.filter(t => t.status === 'completed').length,
+src/pages/AdminPage/TasksPage.tsx:    failed: tasks.filter(t => t.status === 'failed').length,
+src/pages/PhotoLightboxPage.tsx:              return t ? t.name : '';
+src/pages/PublicPage.tsx:  const isSyncing = tasks.some(t => t.status === 'running' && (t.name.includes('同步') || t.name.includes('Sync')));

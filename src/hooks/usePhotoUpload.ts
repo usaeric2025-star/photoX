@@ -4,12 +4,14 @@ import { checkDuplicateBatch } from '@/lib/data/duplicateCheck';
 import { toast } from 'sonner';
 import { Photo } from '@/types';
 import { hapticFeedback } from '@/lib/ui/haptics';
+import { useUIStore } from '@/store/useUIStore';
 
 export function usePhotoUpload() {
   const { addTask, updateTask } = useTasks();
   const { handleError } = useErrorHandler();
   const invalidatePhotos = useInvalidatePhotos();
   const { user } = useAuth();
+  const appLang = useUIStore(s => s.appLang);
 
   const uploadFiles = useCallback(async (files: FileList | File[]) => {
     const fileArray = Array.from(files);
@@ -44,7 +46,7 @@ export function usePhotoUpload() {
         
         updateTask(taskId, { 
           progress, 
-          message: `正在处理第 ${i + 1}/${uniqueFiles.length} 张: ${file.name}` 
+          message: `正在处理第 ${i + 1}/${uniqueFiles.length} 张: ${file.name}`
         });
 
         try {

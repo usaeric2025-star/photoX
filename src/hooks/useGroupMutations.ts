@@ -159,8 +159,6 @@ export const useGroupMutations = () => {
   const combine = useGroupPhotosMutation();
   const removePhotos = useRemoveFromGroupMutation();
   const dissolve = useUngroupMutation();
-  const useBatchAiAnalyze = async (photos: any[]) => { console.warn("useBatchAiAnalyze not fully extracted yet"); };
-
   return {
     create,
     update,
@@ -169,6 +167,5 @@ export const useGroupMutations = () => {
     combine,
     removePhotos,
     dissolve,
-    useBatchAiAnalyze,
   };
 };

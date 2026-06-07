@@ -6,7 +6,7 @@ import { useUIStore } from '@/store/useUIStore';
 import { photoKeys, groupKeys } from '@/lib/queryKeys';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
-export function useAIGroup() {
+export function useAIAutoGrouping() {
   const queryClient = useQueryClient();
   const update = useUIStore((s) => s.update);
   const resetUI = useUIStore((s) => s.resetUI);
@@ -124,11 +124,9 @@ export function useAIGroup() {
 
   const handleAIAction = async (photoIds: string[]) => {
     if (photoIds.length === 0) {
-      toast.error('请先選擇照片');
+      toast.error('请先选择照片');
       return;
     }
-
-    const lang = useUIStore.getState().appLang;
 
     const promise = (async () => {
         if (photoIds.length === 1) {
@@ -150,13 +148,13 @@ export function useAIGroup() {
     })();
 
     toast.promise(promise, {
-        loading: photoIds.length === 1 ? 'AI 正在分析照片...' : 'AI 正在智能合组...',
+        loading: photoIds.length === 1 ? 'AI 正在识别...' : 'AI 正在分析并合组...',
         success: (data: any) => {
-             if (photoIds.length === 1) return 'AI 分析完成，已填充表单';
-             const displayName = data.name?.[lang] || data.name?.zh || '新合组';
-             return `已成功创建合组：${displayName}`;
+             if (photoIds.length === 1) return 'AI 识别完成';
+             const displayName = data.name?.zh || data.name?.en || '新合组';
+             return `成功创建合组：${displayName}`;
         },
-        error: (err) => err instanceof Error ? err.message : 'AI 处理失败'
+        error: (err) => err instanceof Error ? err.message : '操作失败'
     });
   };
 

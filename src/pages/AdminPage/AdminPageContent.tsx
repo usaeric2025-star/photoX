@@ -17,7 +17,7 @@ import { StatisticsScreen } from '@/components/admin/StatisticsScreen';
 import { SettingsScreen } from '@/components/SettingsScreen';
 import { PhotoEditDrawer } from '@/components/admin/PhotoEditDrawer';
 import { GroupDetailPage } from '@/components/GroupDetailPage';
-import { useBatchAiAnalyze } from '@/hooks/useBatchAiAnalyze';
+import { useAIBatchAnalysis } from '@/hooks/useAIBatchAnalysis';
 import TasksPage from '@/pages/AdminPage/TasksPage';
 import MaintenanceHistoryPage from '@/pages/AdminPage/MaintenanceHistoryPage';
 import { ErrorLogViewer } from '@/components/admin/ErrorLogViewer';
@@ -28,13 +28,14 @@ import { toast } from 'sonner';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { AdminAuthGate } from '@/components/admin/AdminAuthGate';
 import { AdminScreen } from '@/components/AdminScreen';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export function AdminPageContent() {
   const { user } = useAuth();
   const { photos, isLoading: isPhotosLoading } = usePhotoGallery();
   const { filters: urlFilters } = useUrlFilters();
   const { uploadFiles } = usePhotoUpload();
-  const { handleBatchAiAnalyze } = useBatchAiAnalyze();
+  const { handleBatchAiAnalyze } = useAIBatchAnalysis();
   const { mutateAsync: syncMut } = useSyncMutation();
   const { tasks } = useTasks();
   const appLang = useUIStore(s => s.appLang);
@@ -99,9 +100,8 @@ export function AdminPageContent() {
   const onRefresh = async () => {
     try {
       await syncMut('pull');
-      toast.success(appLang === 'zh' ? '同步已完成' : 'Sync completed');
     } catch (e: any) {
-      toast.error(`Sync failed: ${e.message}`);
+      // Error handled by mutationFactory
     }
   };
 
@@ -109,7 +109,7 @@ export function AdminPageContent() {
 
   return (
     <AdminAuthGate isSyncing={isSyncing}>
-      <DataLoadingContainer isLoading={isPhotosLoading} hasData={!!photos}>
+      <DataLoadingContainer isLoading={isPhotosLoading} hasData={true}>
         <AdminLayout
           onRefresh={onRefresh}
           isRefreshing={isSyncing}
@@ -161,10 +161,12 @@ export function AdminPageContent() {
         </AdminLayout>
       </DataLoadingContainer>
 
-      <GroupDetailPage 
-        variant={user ? 'full-management' : 'staff-workspace'} 
-        onBatchAiAnalyze={handleBatchAiAnalyzeTrigger}
-      />
+      <ErrorBoundary>
+        <GroupDetailPage 
+          variant={user ? 'full-management' : 'staff-workspace'} 
+          onBatchAiAnalyze={handleBatchAiAnalyzeTrigger}
+        />
+      </ErrorBoundary>
     </AdminAuthGate>
   );
 }

@@ -2,6 +2,8 @@ import React from 'react';
 import { Sparkles, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { AppSettings } from '../../types';
+import { useUIStore } from '@/store/useUIStore';
+import { translations } from '@/lib/translations';
 
 import { api } from '@/lib/api';
 
@@ -26,6 +28,9 @@ export function AISecuritySection({
   cardClass,
   inputClass
 }: AISecuritySectionProps) {
+  const appLang = useUIStore(s => s.appLang);
+  const t = translations[appLang as keyof typeof translations] || translations.en;
+
   const [keysStatus, setKeysStatus] = React.useState({ agnes: false, openrouter: false });
   const [agnesKey, setAgnesKey] = React.useState('');
   
@@ -92,13 +97,13 @@ export function AISecuritySection({
       }) as any;
       const data = await res.json();
       if (data.success) {
-        toast.success(`${provider === 'agnes' ? 'Agnes' : 'OpenRouter'} 连接成功！`);
+        toast.success(`[${provider}] 测试连通性成功`);
       } else {
         const errMsg = typeof data.error === 'object' ? JSON.stringify(data.error) : (data.error || '500 Error');
-        toast.error(`${provider === 'agnes' ? 'Agnes' : 'OpenRouter'} 异常: ${errMsg}`);
+        toast.error(`[${provider}] 连接异常: ${errMsg}`);
       }
     } catch {
-      toast.error("测试请求错误或超时");
+      toast.error('请求超时或网络异常');
     } finally {
       setIsTesting(null);
     }
@@ -108,7 +113,7 @@ export function AISecuritySection({
 
   const saveKey = async (provider: 'agnes' | 'openrouter', apiKey: string) => {
     if (apiKey === "••••••••••••••••" || !apiKey.trim()) {
-      toast.success(`${provider === 'agnes' ? 'Agnes' : 'OpenRouter'} 密钥未变更`);
+      toast.success('密钥未更改');
       return;
     }
     setIsSaving(provider);
@@ -118,7 +123,7 @@ export function AISecuritySection({
       }) as any;
       const data = await res.json();
       if (res.ok && data.success) {
-        toast.success(`${provider === 'agnes' ? 'Agnes' : 'OpenRouter'} 密钥已保存`);
+        toast.success(`[${provider}] 密钥保存成功`);
         if (provider === 'agnes') {
             setAgnesKey('••••••••••••••••');
             setIsEditingAgnes(false);
@@ -129,9 +134,9 @@ export function AISecuritySection({
         }
         await fetchKeysStatus();
       } else {
-        toast.error("保存失败");
+        toast.error('保存失败');
       }
-    } catch { toast.error("请求超时"); }
+    } catch { toast.error('网络请求异常'); }
     finally {
       setIsSaving(null);
     }
@@ -208,7 +213,7 @@ export function AISecuritySection({
                  </div>
                  {!isEditingOpenRouter && (
                    <button onClick={() => handleTest('openrouter')} disabled={isTesting !== null} className="w-full text-[10px] font-black p-2 bg-slate-100 hover:bg-slate-200 transition-colors rounded-lg flex items-center justify-center gap-2">
-                     {isTesting === 'openrouter' ? '測試中...' : '測試 OpenRouter 連線'}
+                     {isTesting === 'openrouter' ? (appLang === 'zh' ? '测试中...' : 'Testing...') : (appLang === 'zh' ? '测试 OpenRouter 连线' : 'Test OpenRouter Connection')}
                    </button>
                  )}
              </div>
@@ -260,7 +265,7 @@ export function AISecuritySection({
              </div>
              {!isEditingAgnes && (
                <button onClick={() => handleTest('agnes')} disabled={isTesting !== null} className="w-full text-[10px] font-black p-2 bg-slate-100 hover:bg-slate-200 transition-colors rounded-lg flex items-center justify-center gap-2">
-                 {isTesting === 'agnes' ? '測試中...' : '測試 Agnes 連線'}
+                 {isTesting === 'agnes' ? (appLang === 'zh' ? '测试中...' : 'Testing...') : (appLang === 'zh' ? '测试 Agnes 连线' : 'Test Agnes Connection')}
                </button>
              )}
           </div>

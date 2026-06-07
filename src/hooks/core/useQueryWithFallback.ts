@@ -19,7 +19,7 @@ export function useQueryWithFallback<T>(
 
   useEffect(() => {
     if (queryResult.isError && showErrorToast) {
-      toast.error(`${resourceName}加载失败`, {
+      toast.error(`${resourceName} 加载失败`, {
         description: '请检查网络或刷新重试'
       });
     }

@@ -5,6 +5,7 @@ import { useSettings } from '../../hooks';
 import { useUIStore } from '@/store/useUIStore';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { ROUTES } from '@/config/constants';
+import { translations } from '@/lib/translations';
 
 import { useLocalStorage } from '@mantine/hooks';
 
@@ -16,6 +17,9 @@ interface LoginScreenProps {
 export function LoginScreen({ loginWithGoogle, isLoading }: LoginScreenProps) {
   const navigate = useNavigate();
   const { settings } = useSettings();
+  const appLang = useUIStore(s => s.appLang);
+  const t = translations[appLang as keyof typeof translations] || translations.en;
+
   const [mode, setMode] = useState<'admin' | 'staff'>('admin');
   const [passInput, setPassInput] = useState('');
   const [passError, setPassError] = useState(false);
@@ -27,11 +31,11 @@ export function LoginScreen({ loginWithGoogle, isLoading }: LoginScreenProps) {
   const handlePasscodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!settings || !settings.access_passcode) {
-      toast.error('验证失败: 未在系统设置中配置员工密码 / Staff passcode is not configured in settings');
+      toast.error('管理员尚未配置员工访问密码');
       return;
     }
     if (passInput === settings.access_passcode) {
-      toast.success('员工模式登录成功 / Staff mode entered successfully');
+      toast.success('员工登录成功');
       setPasscode(String(passInput));
       window.location.reload();
     } else {
@@ -46,7 +50,7 @@ export function LoginScreen({ loginWithGoogle, isLoading }: LoginScreenProps) {
         <Link 
           to={ROUTES.PREVIEW} 
           className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-900 border border-slate-100 transition-all active:scale-90"
-          title="关闭 / Close"
+          title={appLang === 'zh' ? '关闭' : 'Close'}
         >
           <X size={20} />
         </Link>
@@ -79,7 +83,7 @@ export function LoginScreen({ loginWithGoogle, isLoading }: LoginScreenProps) {
             }`}
             onClick={() => { setMode('admin'); setPassError(false); }}
           >
-            管理员登录 / Admin
+            {t.loginTitleAdmin}
           </button>
           <button
             type="button"
@@ -90,7 +94,7 @@ export function LoginScreen({ loginWithGoogle, isLoading }: LoginScreenProps) {
             }`}
             onClick={() => { setMode('staff'); setPassError(false); }}
           >
-            员工登录 / Staff
+            {t.loginTitleStaff}
           </button>
         </div>
 
@@ -103,7 +107,7 @@ export function LoginScreen({ loginWithGoogle, isLoading }: LoginScreenProps) {
                 try {
                   await loginWithGoogle();
                 } catch(e) {
-                  toast.error(`登录失败: ${e instanceof Error ? e.message : 'Unknown error'}`);
+                  toast.error(`${appLang === 'zh' ? '登录失败' : 'Login failed'}: ${e instanceof Error ? e.message : 'Unknown error'}`);
                 }
               }}
               disabled={isLoading}
@@ -114,7 +118,7 @@ export function LoginScreen({ loginWithGoogle, isLoading }: LoginScreenProps) {
               ) : (
                 <>
                   <LogIn size={20} className="transition-transform group-hover:translate-x-1" /> 
-                  Continue with Google
+                  {t.loginWithGoogle}
                 </>
               )}
             </button>
@@ -123,7 +127,7 @@ export function LoginScreen({ loginWithGoogle, isLoading }: LoginScreenProps) {
               <div className="space-y-2">
                 <input
                   type="password"
-                  placeholder="请输入密码 / Staff Passcode"
+                  placeholder={t.enterPasscode}
                   className={`w-full bg-slate-50 border p-4 h-16 rounded-2xl text-center text-lg font-bold outline-none transition-all ${
                     passError 
                       ? 'border-red-500 bg-red-50' 
@@ -137,7 +141,7 @@ export function LoginScreen({ loginWithGoogle, isLoading }: LoginScreenProps) {
                 />
                 {passError && (
                   <p className="text-[10px] text-red-550 font-bold uppercase tracking-widest text-center mt-1 animate-pulse">
-                    密码错误 / Invalid Code
+                    {t.invalidCode}
                   </p>
                 )}
               </div>
@@ -147,14 +151,14 @@ export function LoginScreen({ loginWithGoogle, isLoading }: LoginScreenProps) {
                 className="w-full bg-slate-900 text-white h-16 rounded-2xl text-[13px] font-bold flex items-center justify-center gap-3 shadow-2xl shadow-slate-900/20 transition-all hover:bg-slate-800 active:scale-[0.97]"
               >
                 <LogIn size={20} />
-                解锁登录 / Unlock & Access
+                {t.unlockAndAccess}
               </button>
             </form>
           )}
           
           <p className="text-[10px] text-slate-400 font-medium text-center leading-relaxed">
-            By connecting, you agree to the <br/>
-            <span className="text-slate-900 cursor-pointer hover:underline font-bold">Terms of Service</span> and <span className="text-slate-900 cursor-pointer hover:underline font-bold">Privacy Policy</span>
+            {t.agreeByConnecting} <br/>
+            <span className="text-slate-900 cursor-pointer hover:underline font-bold">{t.termsOfService}</span> and <span className="text-slate-900 cursor-pointer hover:underline font-bold">{t.privacyPolicy}</span>
           </p>
 
           <div className="flex justify-center pt-2">
@@ -162,7 +166,7 @@ export function LoginScreen({ loginWithGoogle, isLoading }: LoginScreenProps) {
               to={ROUTES.PREVIEW} 
               className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 text-xs font-bold py-2.5 px-5 rounded-2xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-all active:scale-[0.97] shadow-sm tracking-tight"
             >
-              ← 返回公开展示页 / Back to Showcase
+              ← {t.backToShowcase}
             </Link>
           </div>
         </div>

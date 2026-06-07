@@ -50,12 +50,13 @@ export {
   useGroupMutations 
 } from './useGroupMutations';
 export { useSettingsUpdateMutation, useSettingsMutations } from './useSettingsMutations';
-export { useAIGroup } from './useAIGroup';
+export { useAIAutoGrouping } from './useAIAutoGrouping';
+export { useAIBatchAnalysis } from './useAIBatchAnalysis';
 
 
 // Utils
 export { useUIStore, useStore, useShallow, useColumns } from '../store/useUIStore';
-export { useErrorHandler } from '../lib/error/errorHandler';
+export { useErrorHandler } from './core/useErrorHandler';
 
 
 

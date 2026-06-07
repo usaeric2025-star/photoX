@@ -25,6 +25,7 @@ interface MutationConfig<TData, TVariables, TContext> {
 export function createMutation<TData, TVariables, TContext = unknown>(config: MutationConfig<TData, TVariables, TContext>) {
   return function useStandardMutation(options?: any) {
     const queryClient = useQueryClient();
+
     const getQueryKey = (variables: TVariables) => {
         if (typeof config.queryKey === 'function') {
         return (config.queryKey as any)(variables);
@@ -111,7 +112,11 @@ export function createMutationHook<TData = any, TVariables = any, TContext = unk
           config.invalidateKeys.forEach((key: any) => queryClient.invalidateQueries({ queryKey: key }));
         }
         
-        const msg = config.successMessage || config.onSuccessMessage;
+        // Priority: Runtime options > Config successMessage > Config onSuccessMessage
+        // If explicitly set to null/empty string at runtime, we skip the toast.
+        const runtimeMsg = options?.successMessage !== undefined ? options.successMessage : undefined;
+        const msg = runtimeMsg !== undefined ? runtimeMsg : (config.successMessage || config.onSuccessMessage);
+        
         if (msg) {
           const resolvedMsg = typeof msg === 'function' ? msg(data, variables) : msg;
           if (resolvedMsg) {

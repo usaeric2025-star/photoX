@@ -6,7 +6,7 @@
 export * from './photo';
 export * from './api';
 
-import { translations, LanguageCode } from '../lib/translations';
+import { translations } from '../lib/translations';
 
 export type TranslationType = typeof translations['en'];
 
@@ -43,13 +43,6 @@ export interface AppSettings {
   whatsapp_2_name?: string;
   whatsapp_2?: string;
   access_passcode?: string;
-}
-
-export interface AppError {
-  message: string;
-  context?: string;
-  timestamp: number;
-  type?: string;
 }
 
 export interface DialogData {

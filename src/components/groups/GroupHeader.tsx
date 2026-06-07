@@ -14,6 +14,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useGroupMutations } from "@/hooks";
 import { useClipboard } from "@mantine/hooks";
 import { toast } from "sonner";
+import { translations } from "@/lib/translations";
 
 interface GroupHeaderProps {
   activeGroupId: string | null;
@@ -50,9 +51,9 @@ export function GroupHeader({
       })),
     );
 
-  const { useBatchAiAnalyze } = useGroupMutations();
   const clipboard = useClipboard();
   const onBatchEdit = (ids: string[]) => update?.({ batchEditingIds: ids });
+  const t = translations[appLang as keyof typeof translations] || translations.en;
 
   const l = {
     batchEdit: appLang === 'zh' ? '批量编辑' : appLang === 'ms' ? 'Edit Pukal' : 'Batch Edit',
@@ -97,12 +98,13 @@ export function GroupHeader({
                   </div>
                   {activeGroupId && (
                     <button
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         clipboard.copy(activeGroupId);
                         toast.success("Group ID copied to clipboard");
                       }}
                       className="text-xs text-slate-400 font-mono hover:text-indigo-600 flex items-center gap-1 transition-colors"
-                      title="Click to copy ID"
+                      title={appLang === 'zh' ? '点击复制 ID' : 'Click to copy ID'}
                     >
                       ID: {activeGroupId.slice(-8)}
                       <Copy size={10} />

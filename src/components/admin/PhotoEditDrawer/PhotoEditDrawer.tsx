@@ -95,8 +95,8 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
     }
   };
   
-  const onUpdatePhoto = (id: string, data: Partial<Photo>) =>
-    adminActions.updatePhoto(id, data);
+  const onUpdatePhoto = (id: string, data: Partial<Photo>, options?: any) =>
+    adminActions.updatePhoto(id, data, options);
 
   const { settings } = useSettings();
   const { data: categories = [] } = useCategories();
@@ -119,7 +119,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
       return;
     }
 
-    await runTask("AI 属性智能識別", async ({ updateProgress }) => {
+    await runTask("AI 属性智能识别", async ({ updateProgress }) => {
       updateProgress(30, appLang === 'zh' ? 'AI 识别中...' : 'Identifying...');
       const resp = await analyzePhoto(photo.id);
 
@@ -201,7 +201,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
         updateProgress(90, appLang === 'zh' ? '正在自动保存...' : 'Auto-saving...');
         // [AI Raw Debug] cleaning up debug log
 
-        await onUpdatePhoto(photo.id, merged); 
+        await onUpdatePhoto(photo.id, merged, { successMessage: null }); 
         
         updateProgress(100, appLang === 'zh' ? '识别并保存成功' : 'Success');
         toast.success(appLang === 'zh' ? "AI 识别成功并已自动保存" : "AI identified and auto-saved", {
@@ -214,8 +214,8 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
           }
         });
       } else {
-        const errorMsg = (resp as any).message || "AI 分析失敗";
-        toast.error(`識別失敗: ${errorMsg}`);
+        const errorMsg = (resp as any).message || "AI 分析失败";
+        toast.error(`识别失败: ${errorMsg}`);
         throw new Error(errorMsg);
       }
     }, { showProgress: true, showSuccessToast: false });
@@ -392,7 +392,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
                       const readableError = String(err).includes("|")
                         ? String(err).split("|").slice(1).join(": ")
                         : String(err);
-                      logic.handleError(new Error(readableError), "AI识别错误");
+                      logic.handleError(new Error(readableError), t.aiActionFailed);
                     }}
                     isRunning={logic.isRunning}
                     totalPhotosCount={totalPhotosCount}
@@ -401,9 +401,9 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
                   <ConfirmDialog
                     open={isDeleteOpen}
                     onOpenChange={deleteDialog.toggle}
-                    title="确定要删除此照片吗？"
-                    description="此操作不可撤销，照片将从云端彻底移除。"
-                    confirmText="删除"
+                    title={t.confirmDeleteTitle}
+                    description={t.confirmDeleteDesc}
+                    confirmText={t.deleteBtn}
                     variant="destructive"
                     onConfirm={async () => {
                       if (editPhotoId) {
@@ -424,19 +424,19 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
                               value="basic"
                               className="flex-1 rounded-xl text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 transition-all h-full"
                             >
-                              基础 / BASIC
+                              {appLang === 'zh' ? '基础' : 'BASIC'}
                             </TabsTrigger>
                             <TabsTrigger
                               value="org"
                               className="flex-1 rounded-xl text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 transition-all h-full"
                             >
-                              分类 / ORG
+                              {appLang === 'zh' ? '组织' : 'ORG'}
                             </TabsTrigger>
                             <TabsTrigger
                               value="details"
                               className="flex-1 rounded-xl text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 transition-all h-full"
                             >
-                              细节 / DETAIL
+                              {appLang === 'zh' ? '细节' : 'DETAIL'}
                             </TabsTrigger>
                           </TabsList>
                         </div>
@@ -486,8 +486,8 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
                         <PromptDialog
                           open={isAddMfrOpen}
                           onOpenChange={addMfrDialog.toggle}
-                          title="新增厂商 / New Manufacturer"
-                          placeholder="输入厂商名称"
+                          title={t.newMfrTitle}
+                          placeholder={t.mfrNamePlaceholder}
                           onConfirm={async (name: string) => {
                             await logic.addManufacturer(name);
                           }}
@@ -496,8 +496,8 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
                         <PromptDialog
                           open={isEditMfrOpen}
                           onOpenChange={editMfrDialog.toggle}
-                          title="编辑生产商 / Edit Manufacturer"
-                          placeholder={editingMfr?.name || "输入新名称"}
+                          title={t.editMfrTitle}
+                          placeholder={editingMfr?.name || t.mfrNamePlaceholder}
                           onConfirm={async (name: string) => {
                             const trimmed = name.trim();
                             if (trimmed && editingMfr)

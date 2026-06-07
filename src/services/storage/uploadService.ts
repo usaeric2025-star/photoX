@@ -13,12 +13,13 @@ export const uploadWithRetry = async (
   imageHash?: string,
   onStatus?: (status: 'compressing' | 'uploading' | 'done') => void,
   onProgress?: (percent: number) => void,
-  maxRetries = 3
+  maxRetries = 3,
+  force = false
 ): Promise<{imageUrl: string, isDuplicate?: boolean}> => {
   let lastError: any;
   for (let i = 0; i < maxRetries; i++) {
     try {
-      return await uploadImages(userId, photoId, base64Data, imageHash, onStatus, onProgress);
+      return await uploadImages(userId, photoId, base64Data, imageHash, onStatus, onProgress, force);
     } catch (err) {
       lastError = err;
       if (i < maxRetries - 1) {

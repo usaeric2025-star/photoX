@@ -12,7 +12,7 @@ import { usePhotoAction } from '@/hooks/usePhotoAction';
 import { createMutationHook } from './core/mutationFactory';
 import { update, deleteMany, batchUpdate } from '@/services/photo/commands';
 import { photoKeys } from '@/lib/queryKeys';
-import { uploadImages } from '@/services/storage/uploadService';
+import { uploadWithRetry } from '@/services/storage/uploadService';
 
 export const usePhotoEdit = createMutationHook({
   entity: 'Photo',
@@ -109,15 +109,6 @@ export const useTogglePin = createMutationHook({
     };
   },
   onSuccessMessage: (data: any, { isPinned }: { isPinned: boolean }) => isPinned ? '已置顶' : '已取消置顶',
-});
-
-export const useUploadPhotos = createMutationHook({
-  entity: 'Photo',
-  action: 'Upload',
-  mutationFn: async ({ userId, photoId, base64Data, onProgress }: { userId: string; photoId: string; base64Data: string; onProgress: (p: number) => void }) => 
-    uploadImages(userId, photoId, base64Data, undefined, undefined, onProgress),
-  invalidateKeys: [photoKeys.all],
-  onSuccessMessage: '上传完成',
 });
 
 interface Props {
@@ -257,7 +248,7 @@ export const usePhotoEditor = (props: Props) => {
     if (isAnalyzing) return;
     const data = newPhotoData || editPhotoPreview;
     if (!data) {
-      handleError(new Error(appLang === 'zh' ? '照片没有有效的图片地址，无法进行 AI 识别' : 'The photo has no valid image URL, AI recognition cannot be performed'), 'AI识别失败');
+      handleError(new Error('照片没有有效的图片地址，无法进行 AI 识别'), 'AI识别失败');
       return;
     }
     

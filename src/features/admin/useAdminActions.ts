@@ -37,12 +37,12 @@ export function useAdminActions() {
     deletePhoto.mutate(idList);
   };
 
-  const handleUpdatePhoto = async (id: string, updates: PhotoUpdateData) => {
+  const handleUpdatePhoto = async (id: string, updates: PhotoUpdateData, options?: any) => {
     try {
-      await (updatePhoto.mutateAsync as any)({ id, updates });
-      // Feedback is handled in the hook
+      await (updatePhoto.mutateAsync as any)({ id, updates }, options);
     } catch (err) {
       // Error feedback is handled in the hook
+      throw err;
     }
   };
 

@@ -1,5 +1,6 @@
 import { opsCache, PendingOp } from '@/lib/db/indexedDB';
 import { updatePhoto } from '@/services/photo/commands';
+import { logger } from '@/lib/logger';
 
 /**
  * Syncs pending operations stored in IndexedDB to the backend
@@ -16,7 +17,7 @@ export async function syncPendingOperations(userId: string) {
   }
   if (pendingOps.length === 0) return;
 
-  console.debug(`[OfflineSync] Found ${pendingOps.length} pending operations. Starting sync...`);
+  logger.debug(`[OfflineSync] Found ${pendingOps.length} pending operations. Starting sync...`);
 
   for (const op of pendingOps) {
     try {
@@ -59,7 +60,7 @@ export function setupOfflineSyncListener(userId: string | undefined) {
   if (!userId) return;
 
   const handleOnline = () => {
-    console.debug('[OfflineSync] Device is back online. Triggering sync...');
+    logger.debug('[OfflineSync] Device is back online. Triggering sync...');
     syncPendingOperations(userId).catch(err => console.warn('[OfflineSync] auto-sync failed', err));
   };
 

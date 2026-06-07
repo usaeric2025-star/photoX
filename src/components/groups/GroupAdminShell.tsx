@@ -25,7 +25,7 @@ import {
 } from "../ui/dropdown-menu";
 import { toast } from "sonner";
 
-import { useBatchAiAnalyze } from "@/hooks/useBatchAiAnalyze";
+import { useAIBatchAnalysis } from "@/hooks/useAIBatchAnalysis";
 
 export interface GroupAdminShellProps {
   initialPhotoId?: string | null;
@@ -46,7 +46,7 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
   const [isDissolveOpen, dissolveDialog] = useDisclosure(false);
   const adminActions = useAdminActions();
   const { dissolve } = useGroupMutations();
-  const { handleBatchAiAnalyze } = useBatchAiAnalyze();
+  const { handleBatchAiAnalyze } = useAIBatchAnalysis();
   const onUngroup = async (groupId: string) => {
     await (dissolve.execute as any)(groupId);
   };
@@ -297,7 +297,7 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
                     await (dissolve.mutateAsync as any)(filters.groupId);
                     setGroupId(null);
                  } catch (err) {
-                    toast.error(`解散失败: ${(err as Error).message}`);
+                    // Handled by mutation
                  }
               }}
             />

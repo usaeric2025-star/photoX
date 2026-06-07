@@ -4,7 +4,7 @@ import { useDisclosure } from '@mantine/hooks';
 import { Sparkles, FolderPlus, Edit, EyeOff, Trash2, X } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useGroupPhotosMutation, useUrlFilters } from '@/hooks';
-import { useAIGroup } from '@/hooks/useAIGroup';
+import { useAIAutoGrouping } from '@/hooks/useAIAutoGrouping';
 import { useUIStore, useIsAnyDialogOpen } from '@/store/useUIStore';
 import { toast } from 'sonner';
 
@@ -36,7 +36,7 @@ export function SelectionToolbar({
   // No MutationObserver needed
 
   const groupMutation = useGroupPhotosMutation();
-  const { handleAIAction } = useAIGroup();
+  const { handleAIAction } = useAIAutoGrouping();
   const { filters: urlFilters, setShowGroupsCollapsed } = useUrlFilters();
 
   if (isAnyDialogOpen || !isMultiSelect || count === 0) return null;

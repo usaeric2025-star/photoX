@@ -83,7 +83,7 @@ export const useGroupActions = (
           }
         }
       } catch (err: any) {
-        handleError(err, "操作失败");
+        // Handled by mutation
       }
     };
 

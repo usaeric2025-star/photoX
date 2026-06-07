@@ -30,7 +30,6 @@ export function useBatchEdit() {
         delete updates.is_hidden;
       }
       
-      // Filter out empty fields to avoid overwriting with empty values
       const cleanUpdates: any = {};
       Object.entries(updates).forEach(([key, value]) => {
         if (value !== '' && value !== undefined && value !== null) {
@@ -42,8 +41,8 @@ export function useBatchEdit() {
       await batchUpdate.mutateAsync({ ids: batchEditingIds, updates: cleanUpdates });
       update({ batchEditingIds: null });
       resetForm();
-    } catch (err) {
-      handleError(err as Error, '保存失败');
+    } catch {
+      // Error is handled by the mutation hook automatically (toast + revert)
     } finally {
       setIsSyncing(false);
     }
@@ -51,14 +50,9 @@ export function useBatchEdit() {
 
   const handleDelete = async () => {
     if (!batchEditingIds || batchEditingIds.length === 0) return;
-    
-    try {
-      await deletePhoto(batchEditingIds);
-      update({ batchEditingIds: null });
-      resetForm();
-    } catch (err) {
-      handleError(err as Error, '删除失败');
-    }
+    deletePhoto(batchEditingIds);
+    update({ batchEditingIds: null });
+    resetForm();
   };
 
   return {

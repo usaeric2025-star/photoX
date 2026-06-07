@@ -188,9 +188,4 @@ export const globalHandleError = (error: any, context: string, silent: boolean =
   }
 };
 
-export const useErrorHandler = () => {
-  const handleError = useCallback((error: any, context: string, silent: boolean = false) => {
-    globalHandleError(error, context, silent);
-  }, []);
-  return { handleError };
-};
+

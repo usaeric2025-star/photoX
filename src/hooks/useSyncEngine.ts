@@ -6,6 +6,7 @@ import { getPhotoCount } from '@/services/photo/queries';
 import { useQueryClient } from '@tanstack/react-query';
 import { useInvalidatePhotos, useAuth, useTaskExecutor, useSyncMutation, useSettings } from '@/hooks';
 import { setupOfflineSyncListener } from '@/lib/sync/offlineSync';
+import { logger } from '@/lib/logger';
 
 export const useSyncEngine = () => {
   const { user } = useAuth();
@@ -33,7 +34,7 @@ export const useSyncEngine = () => {
           const { cleanUpOrphanRecords } = await import('@/services/photo/photoMaintenanceService');
           const result = await cleanUpOrphanRecords();
           if (result.count > 0) {
-            console.info(`[Self-Healing] Automatically removed ${result.count} orphan records.`);
+            logger.info(`[Self-Healing] Automatically removed ${result.count} orphan records.`);
             invalidatePhotos();
           }
         } catch (e) {

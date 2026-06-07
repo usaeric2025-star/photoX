@@ -322,69 +322,70 @@ export function DiagnosticsDashboard() {
 
       {/* 高级维护工具栏 */}
       <div className="bg-slate-50 border border-slate-100 rounded-[32px] p-6 lg:p-8 space-y-8">
-        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">高级维护工具箱 / ADVANCED TOOLKIT</h3>
+        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">系统维护指令中心 / SYSTEM MAINTENANCE CENTER</h3>
         
-        {/* 第一组：数据资产同步 */}
+        {/* 第一组：必要定期检查 (Routine Checks) */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 px-1 text-xs font-black text-slate-700">
-            <CloudDownload size={14} className="text-blue-500" />
-            云端存储与同步
+            <CheckCircle2 size={14} className="text-emerald-500" />
+            常规健康与数据同步 (Routine Sync & Health)
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <MaintenanceTool 
-              issueId="orphan_files"
-              title="找回孤儿照片" 
-              description="扫描 R2 云端并恢复那些在数据库中丢失记录的照片"
+              issueId="member_count_mismatch"
+              title="校对合组成员数" 
+              description="合组记录的成员数量与实际照片数量不符时执行此同步，修正计数显示不准的问题。"
               onSuccess={refreshReport}
             />
             <MaintenanceTool 
-              issueId="member_count_mismatch"
-              title="修复成员数" 
-              description="合组记录的成员数量与实际照片数量不符时执行同步"
+              issueId="orphan_files"
+              title="找回云端孤儿照片" 
+              description="扫描 R2 云端存储，如果在云端发现有照片但在数据库中丢失了记录，会尝试补全并恢复。"
+              onSuccess={refreshReport}
+            />
+            <MaintenanceTool 
+              issueId="empty_groups"
+              title="清理空合组" 
+              description="删除由于移除图片等原因不再包含任何照片的空组，保持数据整洁。"
               onSuccess={refreshReport}
             />
           </div>
         </div>
 
-        {/* 第三组：系统架构演进 */}
+        {/* 第二组：极端情况与系统深度清理 (Advanced Cleanup) */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 px-1 text-xs font-black text-slate-700">
             <ShieldAlert size={14} className="text-amber-500" />
-            系统安全性与清理
+            极端恢复与系统清理 (Advanced Recovery & Cleanup)
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <MaintenanceTool 
               issueId="ghost_records"
-              title="清理幽灵记录" 
-              description="移除数据库中完全损坏（无图无哈希）的废弃数据"
+              title="清理幽灵数据记录" 
+              description="【危险操作】兜底清理数据库中完全损坏（无头无哈希无URL）的无效废弃记录。"
               danger
-              onSuccess={refreshReport}
-            />
-            <MaintenanceTool 
-              issueId="cleanup_temp_urls"
-              title="物理路径 UUID 化" 
-              description="将存量的临时 temp- 路径转换为规范的 UUID 存储结构"
               onSuccess={refreshReport}
             />
           </div>
         </div>
-        {/* 第四组：Agnes 驱动的 AI 修复 */}
+
+        {/* 第三组：AI 大规模重构与未来演进 (AI Orchestration) */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 px-1 text-xs font-black text-slate-700">
             <Zap size={14} className="text-purple-500" />
-            AGNES AI 引擎驱动
+            AGNES AI 批处理与智能演进 (AI Deep Operations)
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <MaintenanceTool 
               issueId="agnes_retranslate"
-              title="Agnes 全量重翻" 
-              description="使用 Agnes 2.0 引擎对所有存量照片进行三语（中、英、马）精准校对与翻译"
+              title="Agnes 全量语种校对" 
+              description="利用 Agnes AI 引擎对存量照片进行底层级别的三语（中文、英文、马来文）深度校对与翻译。"
               onSuccess={refreshReport}
             />
             <MaintenanceTool 
               issueId="agnes_redimension"
-              title="Agnes 尺寸重提" 
-              description="使用 Agnes 驱动的尺寸提取模型，修正旧版本中尺寸识别不准的问题（单次 30 条）"
+              title="Agnes 深度尺寸重提" 
+              description="提取图片信息中的隐式尺寸描述，利用模型更正或者重新提取旧版本库中的遗漏尺寸属性。"
               onSuccess={refreshReport}
             />
           </div>

@@ -2,7 +2,7 @@ import { PostgrestError } from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabase';
 import { DB_CONFIG, PAGINATION } from '../../constants/config';
 import { Photo } from '../../types';
-import { uploadImages } from '../storage';
+import { uploadWithRetry } from '../storage';
 import { safeArray } from '../../lib/utils';
 import { mapToDb, normalizeDimensionsBeforeSave } from './photoMappingUtils';
 import { checkDuplicate, DuplicatePhotoError } from '@/lib/data/duplicateCheck';
@@ -26,7 +26,7 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
 
   // Pre-insert duplicate check & Meta-Reservation to prevent orphans
   if (photo.image_hash) {
-      const isDuplicate = await checkDuplicate(
+      const dbCheck = await checkDuplicate(
         actUserId, 
         photo.image_hash, 
         (photo as any)._fileSize, 
@@ -34,8 +34,12 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
         (photo as any)._lastModified,
         photo.id
       );
-      if (isDuplicate) {
+      if (dbCheck.isDuplicate) {
          throw new DuplicatePhotoError();
+      }
+      
+      if (dbCheck.orphanId) {
+        photo.id = dbCheck.orphanId; // Recover the original ID and overwrite it
       }
       
       // Safety Pre-Upsert: Reserve the entry in DB before uploading to R2
@@ -53,7 +57,7 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
   if (!photo.image_url && photo.uri) {
     try {
       const filename = photo.storage_id || photo.id;
-      const { imageUrl, isDuplicate } = await uploadImages(userId, filename, photo.uri, photo.image_hash, onStatus);
+      const { imageUrl, isDuplicate } = await uploadWithRetry(userId, filename, photo.uri, photo.image_hash, onStatus);
       if (isDuplicate) {
         throw new DuplicatePhotoError();
       }
@@ -168,7 +172,7 @@ export const savePhotosToCloudBatch = async (
   const uniquePhotos: Photo[] = [];
   for (const photo of sPhotos as Photo[]) {
     if (photo.image_hash) {
-       const isDuplicate = await checkDuplicate(
+       const dbCheck = await checkDuplicate(
          actUserId, 
          photo.image_hash, 
          (photo as any)._fileSize, 
@@ -176,8 +180,11 @@ export const savePhotosToCloudBatch = async (
          (photo as any)._lastModified,
          photo.id
        );
-      if (isDuplicate) {
+      if (dbCheck.isDuplicate) {
         continue;
+      }
+      if (dbCheck.orphanId) {
+        photo.id = dbCheck.orphanId;
       }
     }
     uniquePhotos.push(photo);
@@ -238,7 +245,7 @@ export const savePhotosToCloudBatch = async (
         if (!photo.image_url && photo.uri) {
           try {
             const filename = photo.storage_id || photo.id;
-            const { imageUrl } = await uploadImages(userId, filename, photo.uri, photo.image_hash);
+            const { imageUrl } = await uploadWithRetry(userId, filename, photo.uri, photo.image_hash);
             photo.image_url = imageUrl;
             
             // Incremental Update: Sync the URL back to DB as soon as EACH photo finishes

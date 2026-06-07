@@ -7,6 +7,8 @@ import { PromptDialog } from "@/components/ui/PromptDialog";
 import { useErrorHandler } from "../../hooks";
 import { toast } from 'sonner';
 import { normalizeManufacturerName } from "@/lib/utils";
+import { useUIStore } from "@/store/useUIStore";
+import { translations } from "@/lib/translations";
 
 interface ManufacturersSectionProps {
   manufacturers: Manufacturer[];
@@ -30,13 +32,15 @@ export function ManufacturersSection({
 }: ManufacturersSectionProps) {
   const { handleError } = useErrorHandler();
   const [isAddOpen, addDialog] = useDisclosure(false);
+  const appLang = useUIStore(s => s.appLang);
+  const t = translations[appLang as keyof typeof translations] || translations.en;
 
   return (
     <section className={cardClass} id="section-manufacturers">
       <div className="flex items-center justify-between">
         <h3 className="font-black text-brand-navy text-[10px] uppercase tracking-widest flex items-center gap-2">
           <div className="w-1.5 h-3.5 bg-brand-navy rounded-full"></div>
-          生产商设定 / Manufacturers
+          {appLang === 'zh' ? '生产商设定' : 'Manufacturers Setting'}
         </h3>
         <span className="text-[10px] text-brand-navy/40 font-black uppercase">
           {(manufacturers || []).length} Items
@@ -44,7 +48,7 @@ export function ManufacturersSection({
       </div>
       <div className="flex gap-2">
         <button onClick={addDialog.open} className={buttonStyles.accent}>
-          <Plus size={16} /> 新增生产商 / Add New
+          <Plus size={16} /> {appLang === 'zh' ? '新增生产商' : 'Add New'}
         </button>
       </div>
       <div className="flex flex-wrap gap-2 p-3 bg-brand-navy/5 rounded-[28px] border border-brand-navy/10 shadow-inner min-h-[48px]">
@@ -55,9 +59,8 @@ export function ManufacturersSection({
             onUpdate={async (mfr) => {
               try {
                 await updateManufacturer(String(mfr.id), { name: mfr.name });
-                toast.success("厂商更新成功");
               } catch (e) {
-                handleError(e, "更新厂商失败");
+                // Handled in mutation
               }
             }}
             onDelete={(id) => deleteManufacturer(String(id))}
@@ -68,8 +71,8 @@ export function ManufacturersSection({
       <PromptDialog
         open={isAddOpen}
         onOpenChange={addDialog.toggle}
-        title="新增生产商 / Add Manufacturer"
-        description="输入生产商名称 / Enter manufacturer name:"
+        title={t.newMfrTitle}
+        description={t.mfrNamePlaceholder}
         onConfirm={async (name: string) => {
           if (!name.trim()) return;
           const normalized = normalizeManufacturerName(name);

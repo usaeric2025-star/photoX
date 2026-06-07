@@ -56,8 +56,8 @@ export async function updatePhoto(id: string, updates: Partial<Photo> & Record<s
         return errorFactory('NO_ACTIVE_SESSION', 'AUTH_ERROR', 'updatePhoto');
       }
 
-      const { uploadImages } = await import('../storage');
-      const { imageUrl } = await uploadImages(session?.user?.id || 'staff', id, updates.uri, undefined, undefined, undefined, true);
+      const { uploadWithRetry } = await import('../storage');
+      const { imageUrl } = await uploadWithRetry(session?.user?.id || 'staff', id, updates.uri, undefined, undefined, undefined, 3, true);
       updates.image_url = imageUrl;
       updates.updated_at = new Date().toISOString();
       delete updates.uri;

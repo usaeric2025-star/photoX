@@ -13,7 +13,8 @@ export const runHealthCheck = async (
   onAuditFound: (orphans: number) => Promise<void>,
   invalidatePhotos: () => void
 ) => {
-  toast.success("正在啟動系統級一致性巡檢...");
+
+  toast.success("正在启动系统级健康检查...");
 
   // 1. Data consistency (IDs)
   const broken = await scanAndRepairPhotoIds(allPhotos);
@@ -24,7 +25,7 @@ export const runHealthCheck = async (
   // 2. Group Integrity
   const groupRepair = await repairGroupIntegrity();
   if (groupRepair.dissolved > 0 || groupRepair.synced > 0 || groupRepair.deleted > 0) {
-    toast.success(`合組一致性修復：解散孤立組 ${groupRepair.dissolved} 個，同步計數 ${groupRepair.synced} 個，清理空組 ${groupRepair.deleted} 個`);
+    toast.success(`合组一致性修复：解散孤立组 ${groupRepair.dissolved} 个，同步计数 ${groupRepair.synced} 个，清理空组 ${groupRepair.deleted} 个`);
   }
 
   // 3. Storage Audit
@@ -43,7 +44,7 @@ export const runHealthCheck = async (
   // 4. Missing hashes
   const missingHashes = await getPhotosWithoutThumbHash();
   if (!missingHashes || missingHashes.length === 0) {
-    toast.success("系統診斷完成：所有照片健康度良好");
+    toast.success("系统诊断完成：未发现需要修复的项目");
     return;
   }
 
@@ -54,8 +55,8 @@ export const runHealthCheck = async (
 
   if (backfilledCount > 0) {
     invalidatePhotos();
-    toast.success(`診斷修復完成，成功回填 ${backfilledCount} 張照片的佔位圖！`);
+    toast.success(`诊断修复完成，成功回填 ${backfilledCount} 张照片的占位图！`);
   } else {
-    toast.success("診斷完成：未發現需要修復的项目");
+    toast.success("诊断完成：未发现需要修复的项目");
   }
 };

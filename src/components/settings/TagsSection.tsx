@@ -190,7 +190,7 @@ export function TagsSection({
           try {
             await addTag(normalized);
           } catch (error: any) {
-            handleError(error, "添加标签失败");
+            // Error mapped internally by mutation
           }
         }}
       />
