@@ -1,5 +1,6 @@
 import { hc } from 'hono/client';
 import type { AppType } from '../../api/app';
+import { supabase } from '@/lib/supabase';
 
 /**
  * [V2.9-RPC-CONTRACT] Type-safe RPC Client
@@ -8,7 +9,15 @@ export const client = hc<AppType>(
   typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000',
   {
     async fetch(input: string | Request | URL, init?: RequestInit) {
-      const resp = await fetch(input, init);
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      
+      const headers = new Headers(init?.headers);
+      if (token && !headers.has('Authorization')) {
+        headers.set('Authorization', `Bearer ${token}`);
+      }
+      
+      const resp = await fetch(input, { ...init, headers });
       
       // If it's not JSON, it might be the server crashing or returning HTML
       const contentType = resp.headers.get("Content-Type");

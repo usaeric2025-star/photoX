@@ -1,7 +1,11 @@
 # PhotoX 架构规则（永久锁定）
 
-## 核心原则
-1. 服务端数据 → TanStack Query
+## 后端架构规约（锁定，2026-06-07）
+
+- `api/handlers/`：存储所有请求处理器（Handlers），按领域划分。
+- `api/lib/`：存储所有后端共用工具库。
+- `api/types/`：存储所有共用类型定义。
+- `api/app.ts`：仅负责核心中间件（CORS, Logging）、路由挂载 (`app.route`) 和类型导出，禁止编写任何业务逻辑。
 2. 前端 UI 状态 → Zustand（只存瞬态）
 3. 筛选条件 → URL State
 4. ❌ Context 传递业务数据
