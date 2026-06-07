@@ -80,8 +80,11 @@ export async function createGroup(data: ProductGroup): Promise<AppResult<Product
 
 export async function updateGroup(id: string, updates: Partial<ProductGroup>): Promise<AppResult<ProductGroup>> {
     const validator = createGroupValidator();
-    const validationRes = validator.validate(updates);
-    if (!validationRes.ok) return validationRes as AppResult<ProductGroup>;
+    const validationRes = validator.validate({ ...updates, id });
+    if (!validationRes.ok) {
+        console.error('Group validation failed for group update:', { ...updates, id }, validationRes);
+        return validationRes as AppResult<ProductGroup>;
+    }
 
     const userId = await getCurrentUserId();
     const dbUpdates = mapToDb(updates, userId);

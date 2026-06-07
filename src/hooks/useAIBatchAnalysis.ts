@@ -3,6 +3,58 @@ import type { Photo } from '@/types';
 import { useTaskExecutor, useInvalidatePhotos } from '@/hooks';
 import { toast } from 'sonner';
 
+function hasExistingInfo(p: Photo): boolean {
+  const descriptionAny = p.description as any;
+  const nameAny = p.name as any;
+
+  // 1. Check description
+  if (descriptionAny) {
+    if (typeof descriptionAny === 'object') {
+      const zhDesc = descriptionAny.zh || '';
+      const enDesc = descriptionAny.en || '';
+      const msDesc = descriptionAny.ms || '';
+      if (
+        (zhDesc && zhDesc.trim() !== '' && zhDesc !== '[object Object]' && zhDesc !== '{}') ||
+        (enDesc && enDesc.trim() !== '' && enDesc !== '[object Object]' && enDesc !== '{}') ||
+        (msDesc && msDesc.trim() !== '' && msDesc !== '[object Object]' && msDesc !== '{}')
+      ) {
+        return true;
+      }
+    } else if (typeof descriptionAny === 'string') {
+      const descStr = descriptionAny.trim();
+      if (descStr !== '' && descStr !== '[object Object]' && descStr !== '{}') {
+        return true;
+      }
+    }
+  }
+
+  // 2. Check name
+  if (nameAny) {
+    if (typeof nameAny === 'object') {
+      const zhName = nameAny.zh || '';
+      const enName = nameAny.en || '';
+      const msName = nameAny.ms || '';
+      // Name is real if it is non-empty and is not purely numeric (placeholder code)
+      if (zhName && zhName.trim() !== '' && !/^\d+$/.test(zhName.trim())) {
+        return true;
+      }
+      if (enName && enName.trim() !== '' && !/^\d+$/.test(enName.trim())) {
+        return true;
+      }
+      if (msName && msName.trim() !== '' && !/^\d+$/.test(msName.trim())) {
+        return true;
+      }
+    } else if (typeof nameAny === 'string') {
+      const nameStr = nameAny.trim();
+      if (nameStr !== '' && !/^\d+$/.test(nameStr)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 export function useAIBatchAnalysis() {
   const { runTask } = useTaskExecutor();
   const invalidatePhotos = useInvalidatePhotos();
@@ -15,7 +67,7 @@ export function useAIBatchAnalysis() {
 
     const taskTitle = groupId ? `智能合组分析 (${targetPhotos.length}张)` : `批量 AI 分析 (${targetPhotos.length}张)`;
 
-    toast.promise(runTask(taskTitle, async ({ updateProgress }) => {
+    await runTask(taskTitle, async ({ updateProgress }) => {
         let successCount: number = 0;
         const totalPhotosToProcess = targetPhotos.length;
         let progress = 0;
@@ -33,6 +85,15 @@ export function useAIBatchAnalysis() {
         
         for (let i = 0; i < targetPhotos.length; i++) {
           const p = targetPhotos[i];
+          
+          if (hasExistingInfo(p)) {
+            console.log(`Skipping photo ${p.id} from AI analysis as it already holds meaningful descriptive metadata.`);
+            successCount++;
+            progress = ((i + 1) / totalPhotosToProcess) * (groupId ? 70 : 100);
+            updateProgress(progress, `保留已有信息: ${i + 1}/${totalPhotosToProcess}`);
+            continue;
+          }
+
           try {
             updateProgress(progress, `正在分析照片 ${i + 1}/${totalPhotosToProcess}`);
             const resp = await withTimeout(analyzePhoto(p.id), 60000); // 60s timeout
@@ -62,6 +123,8 @@ export function useAIBatchAnalysis() {
           progress = ((i + 1) / totalPhotosToProcess) * (groupId ? 70 : 100);
           updateProgress(progress);
         }
+
+        let groupSuccess = false;
 
         // 2. Analyze group
         if (groupId) {
@@ -116,12 +179,17 @@ export function useAIBatchAnalysis() {
 
                 updateProgress(95, '正在保存合组...');
                 const { updateGroup } = await import('@/services/group/commands');
-                await updateGroup(groupId, {
+                const updateRes = await updateGroup(groupId, {
                    name: finalName as any,
                    description: finalDescription as any,
                    colors,
                    materials
                 });
+                
+                if (updateRes && 'ok' in updateRes && !updateRes.ok) {
+                  throw new Error(updateRes.message || '保存合组失败');
+                }
+                groupSuccess = true;
               }
            } catch (e: any) {
               console.error('Group analysis failed', e);
@@ -130,12 +198,19 @@ export function useAIBatchAnalysis() {
         }
         
         await invalidatePhotos();
+        if (groupId && groupSuccess) {
+          if (successCount > 0) {
+            toast.success(`成功分析并更新合组信息，且更新了 ${successCount} 张照片`);
+          } else {
+            toast.success('成功分析并更新合组信息');
+          }
+        } else if (successCount > 0) {
+          toast.success(`成功分析 ${successCount} 张照片`);
+        } else {
+          toast.success('分析完成 (无更新)');
+        }
         return successCount;
-    }, { showProgress: true, showSuccessToast: false }) as Promise<number>, {
-        loading: '正在执行 AI 分析...',
-        success: (count: number) => (count || 0) > 0 ? `成功分析 ${count} 张照片` : '分析完成 (无更新)',
-        error: (err) => `分析失败: ${err.message}`
-    });
+    }, { showProgress: true, showSuccessToast: false });
   }, [runTask, invalidatePhotos]);
 
   return { handleBatchAiAnalyze };

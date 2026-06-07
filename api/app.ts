@@ -2149,7 +2149,9 @@ app.post("/ai/analyze-group", async (c) => {
       });
       if (!response.ok) return c.json({ error: await response.text() }, response.status as any);
       const data = await response.json();
-      return c.json(JSON.parse(data.choices[0]?.message?.content || "{}"));
+      const rawContent = data.choices[0]?.message?.content || "{}";
+      const cleanContent = rawContent.replace(/```json\n?|```\n?|\n```/g, "").trim();
+      return c.json(JSON.parse(cleanContent));
     } catch (error: any) { return c.json({ error: error.message }, 500); }
 });
 
@@ -2184,7 +2186,9 @@ app.post("/ai/analyze-photo-v2", async (c) => {
       });
       if (!response.ok) return c.json({ error: await response.text() }, response.status as any);
       const data = await response.json();
-      return c.json(JSON.parse(data.choices[0]?.message?.content || "{}"));
+      const rawContent = data.choices[0]?.message?.content || "{}";
+      const cleanContent = rawContent.replace(/```json\n?|```\n?|\n```/g, "").trim();
+      return c.json(JSON.parse(cleanContent));
     } catch (error: any) { return c.json({ error: error.message }, 500); }
 });
 
