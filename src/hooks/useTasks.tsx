@@ -31,24 +31,10 @@ interface TaskContextType {
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'photox_background_tasks';
-
 export function TaskProvider({ children }: { children: React.ReactNode }) {
   const cancelCallbacks = useRef<Map<string, () => void>>(new Map());
 
-  const [tasks, setTasks] = useLocalStorage<BackgroundTask[]>({
-    key: STORAGE_KEY,
-    defaultValue: [],
-    serialize: (value) => JSON.stringify(value.map(({ onCancel: _, ...t }) => t)),
-    deserialize: (value) => {
-      try {
-        const parsed = JSON.parse(value || '[]');
-        return parsed.map((t: any) => ({ ...t }));
-      } catch (e) {
-        return [];
-      }
-    }
-  });
+  const [tasks, setTasks] = useState<BackgroundTask[]>([]);
 
   const [isAvoidingSelection, setAvoidingSelection] = useState(false);
 
@@ -110,21 +96,21 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     return tasks.some(t => t.status === 'running' && t.name.startsWith(namePrefix));
   }, [tasks]);
 
-  // Auto-remove completed/cancelled tasks after 8 seconds
+  // Auto-remove completed/cancelled tasks after 3 seconds for a snappier experience
   React.useEffect(() => {
     const timer = setInterval(() => {
       setTasks(prev => {
         const now = Date.now();
         const next = prev.filter(t => {
           if (t.status === 'running') return true;
-          if (t.finished_at && now - t.finished_at > 8000) return false;
+          if (t.finished_at && now - t.finished_at > 3000) return false;
           return true;
         });
         return next;
       });
-    }, 2000);
+    }, 1000);
     return () => clearInterval(timer);
-  }, [setTasks]);
+  }, []);
 
   const value = React.useMemo(() => ({
     tasks, addTask, updateTask, removeTask, clearCompleted, isAvoidingSelection, setAvoidingSelection, cancelTask, isTaskRunning
@@ -151,14 +137,14 @@ function BackgroundTaskPanel() {
   const activeTasks = tasks.filter(t => t.status === 'running');
   const hasTasks = tasks.length > 0;
 
-  // Auto expand when there are active tasks starting, auto-collapse when finished after 4s
+  // Auto expand when there are active tasks starting, auto-collapse when finished after 2s
   useEffect(() => {
     if (activeTasks.length > 0) {
       setIsExpanded(true);
     } else {
       const timer = setTimeout(() => {
         setIsExpanded(false);
-      }, 4000);
+      }, 2000);
       return () => clearTimeout(timer);
     }
   }, [activeTasks.length]);
@@ -197,12 +183,7 @@ function BackgroundTaskPanel() {
                     className="p-3 bg-white rounded-2xl border border-slate-50 hover:border-slate-100 transition-all group relative overflow-hidden"
                   >
                     {task.status === 'running' && (
-                      <motion.div 
-                        className="absolute bottom-0 left-0 h-[2px] bg-blue-500/20 w-full"
-                        initial={{ scaleX: 0 }}
-                        animate={{ scaleX: 1 }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      />
+                      <div className="absolute bottom-0 left-0 h-[2px] bg-blue-500/20 w-full animate-pulse" />
                     )}
                     <div className="flex items-center justify-between mb-2">
                        <div className="flex items-center gap-2 truncate flex-1 mr-2">
@@ -238,16 +219,14 @@ function BackgroundTaskPanel() {
                     
                     <div className="flex items-center gap-3">
                       <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                        <motion.div 
-                          className={`h-full rounded-full ${
+                        <div 
+                          className={`h-full rounded-full transition-all duration-300 ease-out ${
                             task.status === 'completed' ? 'bg-green-500' : 
                             task.status === 'error' ? 'bg-red-500' : 
                             task.status === 'cancelled' ? 'bg-slate-400' :
                             'bg-blue-500'
                           }`}
-                          initial={{ width: 0 }}
-                          animate={{ width: `${task.progress}%` }}
-                          transition={{ type: 'spring', damping: 20, stiffness: 100 }}
+                          style={{ width: `${task.progress}%` }}
                         />
                       </div>
                       <span className="text-[9px] font-black text-slate-400 w-8 text-right tabular-nums">
