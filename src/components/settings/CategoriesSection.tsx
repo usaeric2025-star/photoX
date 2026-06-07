@@ -12,12 +12,6 @@ export function CategoriesSection({
 }: CategoriesSectionProps) {
   const appLang = useUIStore((s) => s.appLang);
 
-  const sortedCategories = [...categories].sort((a, b) => {
-    const orderA = a.sort_order !== undefined ? a.sort_order : Number(a.id);
-    const orderB = b.sort_order !== undefined ? b.sort_order : Number(b.id);
-    return orderA - orderB;
-  });
-
   return (
     <section className={cardClass} id="section-categories">
       <div className="flex items-center justify-between">
@@ -29,7 +23,7 @@ export function CategoriesSection({
       </div>
 
       <div className="flex flex-wrap gap-2 p-3 bg-brand-navy/5 rounded-[28px] border border-brand-navy/10 shadow-inner min-h-[48px]">
-        {sortedCategories.map(cat => {
+        {categories.map(cat => {
           const displayName = cat[appLang as keyof Pick<Category, 'zh' | 'en' | 'ms'>] || cat.name || '未命名分类';
           return (
             <div 

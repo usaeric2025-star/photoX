@@ -57,17 +57,10 @@ export function CategoryGrid({
   onSelect,
   appLang,
 }: CategorySelectorProps) {
-  const sortedCategories = [...categories]
-    .filter((cat) => cat && cat.id)
-    .sort((a, b) => {
-      const orderA = a.sort_order !== undefined ? a.sort_order : Number(a.id);
-      const orderB = b.sort_order !== undefined ? b.sort_order : Number(b.id);
-      return orderA - orderB;
-    });
-
   return (
     <div className="grid grid-cols-4 gap-1.5 px-0.5">
-      {sortedCategories
+      {categories
+        .filter((cat) => cat && cat.id)
         .map((cat) => {
           const isSelected = String(selectedId || "") === String(cat.id || "");
           const dict = translations[appLang as LanguageCode] || translations.en;
