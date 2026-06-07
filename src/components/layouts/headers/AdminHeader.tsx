@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Camera, Menu, User as UserIcon, LogOut, Settings, LayoutGrid, MonitorPlay } from 'lucide-react';
+import { LayoutDashboard, Camera, Menu, User as UserIcon, LogOut, Settings, LayoutGrid, MonitorPlay, CheckSquare, X } from 'lucide-react';
 import { useAuth, useUIStore, useSettings } from '@/hooks';
 import { useNavigate } from '@tanstack/react-router';
 import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
@@ -20,6 +20,8 @@ export function AdminHeader() {
   const navigate = useNavigate();
 
   const lang = useUIStore(s => s.appLang);
+  const isMultiSelect = useUIStore(s => s.isMultiSelect);
+  const update = useUIStore(s => s.update);
   const t = translations[lang as keyof typeof translations] || translations.en;
 
   const handleAuthAction = () => {
@@ -47,13 +49,35 @@ export function AdminHeader() {
 
       {/* 右侧：管理/登录入口 */}
       <div className="flex items-center gap-1 sm:gap-2 flex-nowrap shrink-0">
-        {/* 3. 切换至前台体验按钮 */}
+        {/* 选择模式/多选 按钮 */}
+        <button
+          onClick={() => update({ isMultiSelect: !isMultiSelect })}
+          className={`w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 ml-1 border ${
+            isMultiSelect 
+              ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700 shadow-sm' 
+              : 'bg-white text-slate-600 hover:bg-slate-100 border-slate-200 shadow-sm'
+          }`}
+          title={isMultiSelect ? "退出多选" : "选择模式 / 多选"}
+        >
+          <CheckSquare size={18} />
+        </button>
+
+        {/* 3. 切换至前台体验按钮 (与 PublicHeader 统一使用 LayoutDashboard 图案的按钮) */}
         <button
           onClick={handleAuthAction}
-          className="w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 ml-1 border bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200 shadow-sm"
-          title="退出管理后台 (返回主页)"
+          className="w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 ml-1 border bg-white text-slate-600 border-slate-200 hover:bg-slate-100 shadow-sm"
+          title="切换至公开模式 (返回主页)"
         >
-          <MonitorPlay size={20} />
+          <LayoutDashboard size={20} />
+        </button>
+
+        {/* 另外在进入管理后台时，在里面给他一个关闭的按钮可以回到管理页面 (主展示页面) */}
+        <button
+          onClick={() => navigate({ to: '/' })}
+          className="w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 ml-1 border border-slate-200 bg-white text-slate-500 hover:text-red-600 hover:bg-red-50 hover:border-red-100 shadow-sm"
+          title="关闭 (返回主页)"
+        >
+          <X size={20} />
         </button>
 
         {/* 4. 菜单 (语言、登录、退出) */}
@@ -89,13 +113,6 @@ export function AdminHeader() {
               <span className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">System</span>
               {user && (
                 <>
-                  <DropdownMenuItem
-                    onClick={() => navigate({ to: '/' })}
-                    className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-slate-50 focus:bg-slate-50 cursor-pointer transition-colors border-none"
-                  >
-                    <MonitorPlay size={16} />
-                    <span className="text-sm font-semibold">Public View</span>
-                  </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {
                         useUIStore.getState().update({ activeScreen: 'settings' });

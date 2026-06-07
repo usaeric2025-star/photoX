@@ -75,13 +75,13 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
           </button>
         )}
 
-        {/* 3. 切换至管理后台按钮 */}
+        {/* 3. 切换至管理后台按钮 (与 AdminHeader 统一使用 LayoutDashboard 图案的按钮和外观) */}
         <button
           onClick={handleAuthAction}
-          className={`w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 ml-1 border ${isAdmin ? 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100' : 'bg-blue-50 text-blue-600 hover:bg-blue-100 border-blue-100'}`}
+          className="w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 ml-1 border bg-white text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-900 shadow-sm"
           title={isAdmin ? '退出管理后台 (返回主页)' : t.adminPanel}
         >
-          {isAdmin ? <MonitorPlay size={20} /> : <LayoutDashboard size={20} />}
+          <LayoutDashboard size={20} />
         </button>
 
         {/* 4. 菜单 (语言、登录、退出) */}
@@ -117,21 +117,13 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
               <span className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">System</span>
               {user && (
                 <>
-                  {!isAdmin ? (
+                  {!isAdmin && (
                     <DropdownMenuItem
                       onClick={() => navigate({ to: '/admin' })}
                       className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-slate-50 focus:bg-slate-50 cursor-pointer transition-colors border-none"
                     >
                       <LayoutDashboard size={16} />
                       <span className="text-sm font-semibold">{t.adminPanel}</span>
-                    </DropdownMenuItem>
-                  ) : (
-                    <DropdownMenuItem
-                      onClick={() => navigate({ to: '/' })}
-                      className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-slate-50 focus:bg-slate-50 cursor-pointer transition-colors border-none"
-                    >
-                      <MonitorPlay size={16} />
-                      <span className="text-sm font-semibold">Public View</span>
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem

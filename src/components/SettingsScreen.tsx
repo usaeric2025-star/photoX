@@ -168,31 +168,50 @@ export function SettingsScreen({ onClose }: SettingsScreenProps) {
 
   return (
     <div className="fixed inset-0 z-[var(--z-index-max)] bg-brand-bg flex flex-col pt-safe">
-      <div className="px-6 py-4 flex items-center gap-3 bg-brand-bg sticky top-0 z-10 shrink-0">
-        <button 
-          onClick={() => {
-            if (onClose) onClose();
-            else update({ activeScreen: 'gallery' });
-          }} 
-          className="p-2 -ml-2 text-brand-navy/60 hover:bg-slate-200 transition-colors rounded-full active:bg-brand-navy/10"
-        >
-          <X size={24} />
-        </button>
-        <span className="font-extrabold text-[10px] text-brand-navy border border-brand-navy/10 px-3 py-1.5 rounded-xl bg-white shadow-sm inline-block italic leading-none tracking-[0.2em] flex-1 ml-1 uppercase">{appLang === 'zh' ? '系统设置' : 'System Settings'}</span>
-        <button 
-           onClick={async () => {
-             try {
-               await saveSettings({ ...settings });
-               setHasChanges(false);
-             } catch (err) {
-               console.error("Save settings failed:", err);
-             }
-           }}
-           className={`p-2 rounded-lg shadow-md active:scale-95 transition-all flex items-center justify-center bg-brand-gold hover:bg-brand-gold/90 text-white`}
-        >
-            <Save size={16} />
-        </button>
-        <Settings2 size={20} className="text-brand-navy/20" />
+      <div className="px-6 py-4 flex items-center justify-between bg-white border-b border-slate-200 sticky top-0 z-10 shrink-0 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-slate-800 flex items-center justify-center shadow-sm text-white shrink-0">
+            <Settings2 size={18} className="stroke-[2.5]" />
+          </div>
+          <span className="font-black text-lg tracking-tight text-slate-800">
+            {appLang === 'zh' ? '系统设置' : 'System Settings'}
+          </span>
+          {hasChanges && (
+            <span className="text-[10px] bg-amber-50 text-amber-600 border border-amber-200 px-2.5 py-1 rounded-full font-bold uppercase tracking-widest animate-pulse">
+              {appLang === 'zh' ? '有未保存修改' : 'Unsaved Changes'}
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button 
+             onClick={async () => {
+               try {
+                 await saveSettings({ ...settings });
+                 setHasChanges(false);
+                 toast.success(appLang === 'zh' ? '系统设置已保存' : 'Settings saved successfully');
+               } catch (err) {
+                 console.error("Save settings failed:", err);
+               }
+             }}
+             className="h-10 px-4 rounded-full shadow-sm bg-brand-gold hover:bg-brand-gold/90 text-white flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 hover:shadow-md cursor-pointer"
+             title={appLang === 'zh' ? '保存设置' : 'Save Settings'}
+          >
+              <Save size={16} />
+              <span>{appLang === 'zh' ? '保存' : 'Save'}</span>
+          </button>
+          
+          <button 
+            onClick={() => {
+              if (onClose) onClose();
+              else update({ activeScreen: 'gallery' });
+            }} 
+            className="w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 border border-slate-200 bg-white text-slate-500 hover:text-red-600 hover:bg-red-50 hover:border-red-100 shadow-sm cursor-pointer"
+            title={appLang === 'zh' ? '关闭并返回管理模式' : 'Close and Return'}
+          >
+            <X size={20} />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 md:p-6 no-scrollbar pb-32">
