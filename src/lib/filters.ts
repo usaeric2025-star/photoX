@@ -250,6 +250,16 @@ export function filterPhotos(
   return result;
 }
 
+function smartCompare(a: string, b: string): number {
+  const numA = Number(a);
+  const numB = Number(b);
+  // Check if both are valid numbers and not empty strings or just whitespace
+  if (!isNaN(numA) && !isNaN(numB) && a.trim() !== '' && b.trim() !== '' && a === String(numA) && b === String(numB)) {
+    return numA - numB;
+  }
+  return a.localeCompare(b);
+}
+
 export function sortGroupPhotos(photos: Photo[]): Photo[] {
   return [...photos].sort((a, b) => {
     if (a.is_group_cover && !b.is_group_cover) return -1;
@@ -264,7 +274,7 @@ export function sortGroupPhotos(photos: Photo[]): Photo[] {
     if (aOrder !== undefined) return -1;
     if (bOrder !== undefined) return 1;
 
-    return (a.item_code || '').localeCompare(b.item_code || '');
+    return smartCompare(a.item_code || '', b.item_code || '');
   });
 }
 
@@ -373,7 +383,7 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortO
     if (sortOrder === 'name') {
       const nameA = a._groupCoverName ?? (typeof a.name === 'object' ? (a.name.zh || '') : (a.name || ''));
       const nameB = b._groupCoverName ?? (typeof b.name === 'object' ? (b.name.zh || '') : (b.name || ''));
-      cmp = nameA.localeCompare(nameB);
+      cmp = smartCompare(nameA, nameB);
     } else {
       cmp = sortOrder === 'oldest' ? a._time! - b._time! : b._time! - a._time!;
     }

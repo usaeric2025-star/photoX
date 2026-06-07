@@ -88,6 +88,7 @@ export interface Category {
   subcategories: SubCategory[];
   user_id?: string;
   code?: string;
+  sort_order?: number;
 }
 
 export interface Tag {

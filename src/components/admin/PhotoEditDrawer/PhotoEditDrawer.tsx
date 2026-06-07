@@ -288,7 +288,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
   }, [editPhotoId, detailPhoto, form]);
 
   React.useEffect(() => {
-    const handleAIResult = (event: Event) => {
+    const handleAIResult = async (event: Event) => {
       const customEvent = event as CustomEvent;
       const result = customEvent.detail;
       if (!result) return;
@@ -300,11 +300,21 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
       });
       
       form.setValues(merged);
+
+      // AI识别自动保存（满足“ai识别之后，如果有结果请自动保存”需求）
+      if (editPhotoId && onUpdatePhoto) {
+        try {
+          await onUpdatePhoto(editPhotoId, merged, { successMessage: null });
+          toast.success(appLang === 'zh' ? "AI 识别结果已自动保存" : "AI recognition result auto-saved");
+        } catch (error) {
+          console.error("AI auto-saving failed:", error);
+        }
+      }
     };
 
     window.addEventListener('ai-analysis-result', handleAIResult);
     return () => window.removeEventListener('ai-analysis-result', handleAIResult);
-  }, [categories, tags, form]);
+  }, [categories, tags, form, editPhotoId, onUpdatePhoto, appLang]);
 
   React.useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -342,12 +352,22 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
     saveNewPhoto: async () => {
       if (editPhotoId && onUpdatePhoto) {
         const updates: Partial<Photo> & { uri?: string } = { ...form.values };
+        
+        // 仅在明确有新数据时保存，防止空数据覆写
         if (newPhotoData) {
           updates.uri = newPhotoData;
         }
+
+        // 简单的完整性校验：至少要有名称或描述
+        if (!updates.name?.zh && !updates.description?.zh) {
+           toast.error("照片信息不完整，无法保存 / Incomplete information");
+           return;
+        }
+
         await onUpdatePhoto(editPhotoId, updates as Partial<Photo>);
         update({ newPhotoData: null });
         update({ editPhotoId: null });
+        form.resetDirty();
       }
     },
   });

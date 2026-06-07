@@ -7,7 +7,8 @@ export const TABLE_NAME = 'categories';
 export const loadCategoriesFromCloud = async (): Promise<Category[]> => {
   const { data, error } = await supabase
     .from(TABLE_NAME)
-    .select('*');
+    .select('*')
+    .order('sort_order', { ascending: true });
 
   if (error) {
     logger.error("Failed to load categories from TABLE_NAME", TABLE_NAME, ":", JSON.stringify(error, null, 2));

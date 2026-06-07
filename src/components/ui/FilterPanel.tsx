@@ -59,13 +59,21 @@ export function FilterPanel() {
 
     const t = (translations as any)[appLang] || translations.en;
 
-    const categoryList = useMemo(() => [
-        { id: null, name: t.all },
-        ...categories.map(c => ({
-            ...c,
-            name: getSafeText(c, appLang)
-        }))
-    ], [categories, appLang, t.all]);
+    const categoryList = useMemo(() => {
+        const sortedCats = [...categories].sort((a, b) => {
+            const orderA = a.sort_order !== undefined ? a.sort_order : Number(a.id);
+            const orderB = b.sort_order !== undefined ? b.sort_order : Number(b.id);
+            return orderA - orderB;
+        });
+
+        return [
+            { id: null, name: t.all },
+            ...sortedCats.map(c => ({
+                ...c,
+                name: getSafeText(c, appLang)
+            }))
+        ];
+    }, [categories, appLang, t.all]);
 
     logger.debug('[FilterPanel] Rendering. Current categoryId in URL:', urlFilters.categoryId, 'Categories count:', categoryList.length);
 
