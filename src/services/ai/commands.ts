@@ -16,7 +16,20 @@ export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promi
      if (data.success) {
        return ok(data.data);
      } else {
-       return err(data.error || 'AI 分析失败');
+       let errorMsg = data.error || 'AI 分析失败';
+       if (typeof errorMsg === 'string' && errorMsg.startsWith('{')) {
+          try {
+             const parsed = JSON.parse(errorMsg);
+             if (parsed.error && typeof parsed.error === 'object' && parsed.error.message) {
+                errorMsg = parsed.error.message;
+             } else if (typeof parsed.error === 'string') {
+                errorMsg = parsed.error;
+             }
+          } catch (e) {
+             // ignore
+          }
+       }
+       return err(errorMsg);
      }
   } catch (e: any) {
     if (e.name === 'AbortError') return err('请求已取消');

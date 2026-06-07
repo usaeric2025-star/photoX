@@ -9,6 +9,7 @@ import { logTraffic } from "./lib/trafficCapture.js";
 import { encrypt, decrypt } from './lib/encryption.js';
 import { getAIProvider } from "./lib/ai/providerFactory.js";
 import { getTaskConfig, AITask } from "./lib/ai/taskRouter.js";
+import { getModel } from "./lib/ai/modelHelper.js";
 
 // Validate env at module level
 const serverEnv = getServerEnv(process.env);
@@ -230,7 +231,7 @@ app.post("/ai/analyze", async (c) => {
         
         const { decrypt } = await import('./lib/encryption.js');
         const apiKey = decrypt(openrouterSecret.value);
-        const model = (customModelSecret as any)?.openrouter_model || 'google/gemini-2.5-flash-lite';
+        const model = await getModel(supabase);
 
         // 2. Identification via OpenRouter (Gemini)
         const { OpenRouterProvider } = await import('./lib/ai/providerFactory.js');
@@ -2091,17 +2092,8 @@ app.post("/ai/analyze-base64", async (c) => {
       const apiKey = serverEnv.GEMINI_API_KEY;
       if (!apiKey) return c.json({ error: "Server API key not configured" }, 500);
 
-      let modelName = customModel;
-      if (!modelName) {
-         try {
-            const supabase = await getSupabaseAdmin();
-            const { data: settings } = await supabase.from('settings').select('openrouter_model').maybeSingle();
-            modelName = settings?.openrouter_model;
-         } catch (_) {}
-      }
-      if (!modelName) {
-         modelName = "google/gemini-2.5-flash-lite";
-      }
+      let modelName = customModel || await getModel(await getSupabaseAdmin());
+
 
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
@@ -2119,17 +2111,7 @@ app.post("/ai/translate", async (c) => {
       const apiKey = serverEnv.GEMINI_API_KEY;
       if (!apiKey) return c.json({ error: "Server API key not configured" }, 500);
 
-      let modelName = customModel;
-      if (!modelName) {
-         try {
-            const supabase = await getSupabaseAdmin();
-            const { data: settings } = await supabase.from('settings').select('openrouter_model').maybeSingle();
-            modelName = settings?.openrouter_model;
-         } catch (_) {}
-      }
-      if (!modelName) {
-         modelName = "google/gemini-2.5-flash-lite";
-      }
+      let modelName = customModel || await getModel(await getSupabaseAdmin());
 
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
@@ -2206,8 +2188,7 @@ app.post("/ai/analyze-photo-v2", async (c) => {
   "description": "一段中文的新描述"
 }
 当前产品信息: ${photoDetail}`;
-      const { data: settings } = await supabase.from('settings').select('openrouter_model').maybeSingle();
-      const model = settings?.openrouter_model || 'google/gemini-2.5-flash-lite';
+      const model = await getModel(supabase);
 
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
