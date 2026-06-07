@@ -3,50 +3,83 @@ import type { Photo } from '@/types';
 import { useTaskExecutor, useInvalidatePhotos } from '@/hooks';
 import { toast } from 'sonner';
 
-function hasExistingInfo(p: Photo): boolean {
-  const descriptionAny = p.description as any;
-  const nameAny = p.name as any;
+function isPlaceholderName(nameStr: string): boolean {
+  if (!nameStr) return true;
+  const s = nameStr.trim().toLowerCase();
+  if (s === '' || s === 'null' || s === 'undefined' || s === '{}' || s === '[object object]') {
+    return true;
+  }
+  // 1. Purely numeric name, or 32-character MD5 hash / 36-character UUID
+  if (/^\d+$/.test(s) || /^[a-f0-9]{32}$/.test(s) || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s)) {
+    return true;
+  }
+  // 2. Typical camera prefix filenames, screenshots, downloads, or generic web uploads
+  if (
+    s.startsWith('img_') ||
+    s.startsWith('dsc_') ||
+    s.startsWith('pxl_') ||
+    s.startsWith('screenshot') ||
+    s.startsWith('upload_') ||
+    s.startsWith('temp-') ||
+    s.startsWith('image_') ||
+    s.startsWith('img-') ||
+    s.startsWith('dsc-') ||
+    /^(img|dsc|pxl)\d+/i.test(s)
+  ) {
+    return true;
+  }
+  return false;
+}
 
-  // 1. Check description
-  if (descriptionAny) {
-    if (typeof descriptionAny === 'object') {
-      const zhDesc = descriptionAny.zh || '';
-      const enDesc = descriptionAny.en || '';
-      const msDesc = descriptionAny.ms || '';
-      if (
-        (zhDesc && zhDesc.trim() !== '' && zhDesc !== '[object Object]' && zhDesc !== '{}') ||
-        (enDesc && enDesc.trim() !== '' && enDesc !== '[object Object]' && enDesc !== '{}') ||
-        (msDesc && msDesc.trim() !== '' && msDesc !== '[object Object]' && msDesc !== '{}')
-      ) {
-        return true;
-      }
-    } else if (typeof descriptionAny === 'string') {
-      const descStr = descriptionAny.trim();
-      if (descStr !== '' && descStr !== '[object Object]' && descStr !== '{}') {
-        return true;
-      }
-    }
+function isMeaningfulText(text: any): boolean {
+  if (!text) return false;
+  if (typeof text === 'object') {
+    const zh = String(text.zh || '').trim();
+    const en = String(text.en || '').trim();
+    const ms = String(text.ms || '').trim();
+    const checkStr = (str: string) => {
+      return str !== '' && str !== '[object Object]' && str !== '{}' && str !== 'null' && str !== 'undefined';
+    };
+    return checkStr(zh) || checkStr(en) || checkStr(ms);
+  }
+  if (typeof text === 'string') {
+    const s = text.trim();
+    return s !== '' && s !== '[object Object]' && s !== '{}' && s !== 'null' && s !== 'undefined';
+  }
+  return false;
+}
+
+function hasExistingInfo(p: Photo): boolean {
+  // 1. Check description - if there's any user-written description, it wins
+  if (isMeaningfulText(p.description)) {
+    return true;
   }
 
-  // 2. Check name
-  if (nameAny) {
-    if (typeof nameAny === 'object') {
-      const zhName = nameAny.zh || '';
-      const enName = nameAny.en || '';
-      const msName = nameAny.ms || '';
-      // Name is real if it is non-empty and is not purely numeric (placeholder code)
-      if (zhName && zhName.trim() !== '' && !/^\d+$/.test(zhName.trim())) {
+  // 2. Check category or custom tags
+  if (p.category_id && p.category_id !== 'uncategorized') {
+    return true;
+  }
+  if (Array.isArray(p.tag_ids) && p.tag_ids.length > 0) {
+    return true;
+  }
+
+  // 3. Check name
+  const nameVal = p.name;
+  if (nameVal) {
+    if (typeof nameVal === 'object') {
+      const zhName = String(nameVal.zh || '').trim();
+      const enName = String(nameVal.en || '').trim();
+      const msName = String(nameVal.ms || '').trim();
+      
+      const hasRealZh = zhName !== '' && !isPlaceholderName(zhName);
+      const hasRealEn = enName !== '' && !isPlaceholderName(enName);
+      const hasRealMs = msName !== '' && !isPlaceholderName(msName);
+      
+      if (hasRealZh || hasRealEn || hasRealMs) {
         return true;
       }
-      if (enName && enName.trim() !== '' && !/^\d+$/.test(enName.trim())) {
-        return true;
-      }
-      if (msName && msName.trim() !== '' && !/^\d+$/.test(msName.trim())) {
-        return true;
-      }
-    } else if (typeof nameAny === 'string') {
-      const nameStr = nameAny.trim();
-      if (nameStr !== '' && !/^\d+$/.test(nameStr)) {
+    } else if (typeof nameVal === 'string') {
+      if (!isPlaceholderName(nameVal)) {
         return true;
       }
     }
@@ -88,7 +121,6 @@ export function useAIBatchAnalysis() {
           
           if (hasExistingInfo(p)) {
             console.log(`Skipping photo ${p.id} from AI analysis as it already holds meaningful descriptive metadata.`);
-            successCount++;
             progress = ((i + 1) / totalPhotosToProcess) * (groupId ? 70 : 100);
             updateProgress(progress, `保留已有信息: ${i + 1}/${totalPhotosToProcess}`);
             continue;
