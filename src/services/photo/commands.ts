@@ -83,38 +83,19 @@ export async function updatePhoto(id: string, updates: Partial<Photo> & Record<s
       }
     }
 
-    const dbUpdates = mapToDb(updates);
+    // 4. Update Database via admin backend route to safely bypass RLS for both real Google Auth and passcode/mock guest staff
+    const response = await api.admin.photo.update.$post({
+      json: { id, updates }
+    });
     
-    // 4. Update Database
-    let { error } = await supabase
-      .from(DB_CONFIG.TABLE_NAME)
-      .update(dbUpdates)
-      .eq('id', id);
-      
-    if (error && error.message.includes('furniture_items_item_code_key')) {
-      console.warn("Item code collision during update, regenerating...");
-      const retryUpdates = { ...dbUpdates, item_code: generateItemCode() };
-      const { error: retryError } = await supabase
-        .from(DB_CONFIG.TABLE_NAME)
-        .update(retryUpdates)
-        .eq('id', id);
-      error = retryError;
+    if (!response.ok) {
+      const errorText = await response.text();
+      return errorFactory(errorText || 'Server error', 'UNKNOWN', 'updatePhoto');
     }
-      
-    if (error) return errorFactory(error.message, 'DB_ERROR', 'updatePhoto', error);
-
-    // 5. Handle tags
-    if ('tag_ids' in updates) {
-      await syncPhotoTags(id, safeArray(updates.tag_ids));
-    }
-
-    // 6. Handle group member count sync if group_id changed
-    if (updates.group_id !== undefined || 'group_id' in updates) {
-       const gid = updates.group_id;
-       if (gid) {
-         const { syncGroupMemberCount } = await import('./commands'); // Recursive-ish but fine for now or move helper
-         await syncGroupMemberCount(gid);
-       }
+    
+    const result = await response.json() as any;
+    if (!result.success) {
+      return errorFactory(result.error || 'Update failed', 'DB_ERROR', 'updatePhoto');
     }
 
     return success(null);

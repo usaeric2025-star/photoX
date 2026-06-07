@@ -2251,6 +2251,110 @@ app.post("/api/groups/merge", async (c) => {
     }
 });
 
+app.post("/admin/photo/update", async (c) => {
+    try {
+        const { id, updates } = await c.req.json();
+        if (!id) return c.json({ success: false, error: "id is required" }, 400);
+
+        const supabase = await getSupabaseAdmin();
+        
+        // 1. Fetch old record for key transitions (group_id change)
+        const { data: currentPhoto } = await supabase
+            .from("furniture_items")
+            .select("group_id, tag_ids")
+            .eq("id", id)
+            .maybeSingle();
+
+        const oldGroupId = currentPhoto?.group_id;
+
+        // 2. Filter changes with whitelist
+        const ALLOWED_FIELDS = [
+          'id', 'name', 'name_en', 'name_ms', 'description', 'description_translations', 'category_id', 'manufacturer_id',
+          'tag_ids', 'dimensions', 'model_number', 'manual_code', 'group_id', 'is_group_cover', 'is_pinned',
+          'image_url', 'thumb_hash', 'price', 'note', 'type', 'group_order', 'updated_at', 'created_at',
+          'user_id', 'is_hidden', 'is_analyzing', 'image_hash', 'item_code'
+        ];
+
+        const dbUpdates: Record<string, any> = {};
+        for (const key of ALLOWED_FIELDS) {
+            if (updates && key in updates) {
+                dbUpdates[key] = updates[key];
+            }
+        }
+
+        // Clean name/description values
+        const cleanTranslation = (val: any) => {
+            if (!val) return { zh: '' };
+            if (typeof val === 'object') return val;
+            return { zh: String(val) };
+        };
+
+        if ('name' in dbUpdates) {
+            dbUpdates.name = cleanTranslation(dbUpdates.name);
+        }
+        if ('description' in dbUpdates) {
+            dbUpdates.description = cleanTranslation(dbUpdates.description);
+        }
+
+        dbUpdates.updated_at = new Date().toISOString();
+
+        // 3. Database update with Admin client (bypasses RLS)
+        const { error, data } = await supabase
+            .from("furniture_items")
+            .update(dbUpdates)
+            .eq("id", id)
+            .select()
+            .single();
+
+        if (error) {
+            console.error('[API Update Photo] Error updating photo:', error);
+            return c.json({ success: false, error: error.message }, 500);
+        }
+
+        // 4. Synchronize tags
+        if (updates.tag_ids && Array.isArray(updates.tag_ids)) {
+            await supabase.from('photo_tags').delete().eq('photo_id', id);
+            const associations = updates.tag_ids.map((tagId: string) => ({
+                photo_id: id,
+                tag_id: tagId,
+            }));
+            if (associations.length > 0) {
+                await supabase.from('photo_tags').insert(associations);
+            }
+        }
+
+        // 5. Member count recalculation
+        if (oldGroupId && oldGroupId !== updates.group_id) {
+            const { count: oldPhotoCount } = await supabase
+                .from("furniture_items")
+                .select("*", { count: "exact", head: true })
+                .eq("group_id", oldGroupId);
+            
+            await supabase
+                .from("groups")
+                .update({ member_count: oldPhotoCount || 0 })
+                .eq("id", oldGroupId);
+        }
+
+        if (updates.group_id) {
+            const { count: newPhotoCount } = await supabase
+                .from("furniture_items")
+                .select("*", { count: "exact", head: true })
+                .eq("group_id", updates.group_id);
+            
+            await supabase
+                .from("groups")
+                .update({ member_count: newPhotoCount || 0 })
+                .eq("id", updates.group_id);
+        }
+
+        return c.json({ success: true, data });
+    } catch (e: any) {
+        console.error('[API Update Photo] Exception:', e);
+        return c.json({ success: false, error: e.message }, 500);
+    }
+});
+
 app.post("/admin/repair/agnes-translate", async (c) => {
     try {
         const supabase = await getSupabaseAdmin();
@@ -2272,8 +2376,22 @@ app.post("/admin/repair/agnes-translate", async (c) => {
             let processed = 0;
             for (const photo of photos) {
                 try {
+                    // Safe string representation for description object
+                    let descStr = "";
+                    if (typeof photo.description === 'string') {
+                        descStr = photo.description;
+                    } else if (photo.description && typeof photo.description === 'object') {
+                        const dObj = photo.description as any;
+                        descStr = dObj.zh || dObj.en || dObj.ms || "";
+                    }
+
+                    if (!descStr || descStr.includes("[object Object]") || descStr.includes("[对象 对象]")) {
+                        processed++;
+                        continue;
+                    }
+
                     // We need to call the internal AI dispatch for Agnes
-                    const prompt = `You are Agnes, a professional translator. Translate this description into Simplified Chinese (zh), English (en), and Malay (ms). JSON output: { "zh": "...", "en": "...", "ms": "..." }. Input: "${photo.description}"`;
+                    const prompt = `You are Agnes, a professional translator. Translate this description into Simplified Chinese (zh), English (en), and Malay (ms). JSON output: { "zh": "...", "en": "...", "ms": "..." }. Input: "${descStr}"`;
                     const { apiKeyKey, provider, model } = await getTaskConfig('text_chat');
                     const { data: secret } = await supabase.from('secrets').select('value').eq('key', apiKeyKey).maybeSingle();
                     const { decrypt } = await import('./lib/encryption.js');
@@ -2296,11 +2414,11 @@ app.post("/admin/repair/agnes-translate", async (c) => {
 
                         if (parsed) {
                             await supabase.from("furniture_items").update({
-                                description: parsed.zh || photo.description,
+                                description: parsed.zh || descStr,
                                 description_translations: {
-                                    zh: parsed.zh || photo.description,
-                                    en: parsed.en || photo.description,
-                                    ms: parsed.ms || photo.description
+                                    zh: parsed.zh || descStr,
+                                    en: parsed.en || descStr,
+                                    ms: parsed.ms || descStr
                                 }
                             }).eq("id", photo.id);
                         }
