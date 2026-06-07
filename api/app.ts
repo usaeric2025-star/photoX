@@ -244,7 +244,10 @@ app.post("/ai/analyze", async (c) => {
 Task: Inspect furniture image to extract comprehensive structured details and professional translations.
 
 【CORE DATA EXTRACTION】
-- "name": Concise identifying name in English (UPPERCASE).
+- "name": A multi-language object containing the translated product name. All language keys ("zh", "en", "ms") MUST be present. No prefixes like "zh:", "en:", "ms:" allowed.
+  - "zh": Simplified Chinese name
+  - "en": English name (UPPERCASE)
+  - "ms": Bahasa Melayu/Malay name (UPPERCASE)
 - "category_id": MUST be one of these IDs exactly: ${JSON.stringify(categoriesContext)}
 - "tag_ids": Map up to 3 most relevant tag IDs from: ${JSON.stringify(tagsContext)}.
 - "new_tags": Extract Material/Style (EN/MS only, UPPERCASE).
@@ -259,12 +262,14 @@ Task: Inspect furniture image to extract comprehensive structured details and pr
 - DO NOT translate dimension labels. Keep original product names.
 
 【TRANSLATIONS】
-1. zh: Simplified Chinese description. FOCUS ON FEATURES/MATERIALS. DO NOT REPEAT DIMENSION NUMBERS HERE.
-2. en: English description (UPPERCASE).
-3. ms: Bahasa Melayu description (UPPERCASE).
+- "description": A multi-language object containing the translated product description. No prefixes like "zh:", "en:", "ms:" allowed in the values.
+  - "zh": Simplified Chinese description. FOCUS ON FEATURES/MATERIALS. DO NOT REPEAT DIMENSION NUMBERS HERE.
+  - "en": English description (UPPERCASE).
+  - "ms": Bahasa Melayu/Malay description (UPPERCASE).
 
 【CONSTRAINTS】
-- Output raw JSON only. NO HALLUCINATION.
+- Output raw JSON only. NO HALLUCINATION. Do not output any markdown wrapper formatting outside of standard json object (or you may use standard markdown \`\`\`json box but prefer pure raw json).
+- DO NOT prefix any of the output values under "zh", "en", "ms" with raw locale strings like "zh:", "zh：", "en:", "ms:".
 {
   "name": {"zh": "...", "en": "...", "ms": "..."},
   "category_id": "...",

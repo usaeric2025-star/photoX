@@ -1,5 +1,30 @@
 
 /**
+ * Clean up redundant language tag prefixes like "zh:", "en:", "ms:" or quotes from the string.
+ */
+export function cleanTranslationPrefixes(str: string): string {
+  if (!str) return '';
+  let result = str.trim();
+  
+  // Strip outer quotes if any
+  if (result.startsWith('"') && result.endsWith('"')) {
+    result = result.substring(1, result.length - 1).trim();
+  } else if (result.startsWith("'") && result.endsWith("'")) {
+    result = result.substring(1, result.length - 1).trim();
+  }
+  
+  // Clean prefixes like "zh:", "zh：", "en:", "en：", "ms:", "ms：", "cn:", "cn：" (case insensitive)
+  const prefixRegex = /^(zh|en|ms|cn|zh-cn|malay|chinese|english)\s*[:：]\s*/i;
+  let matchCount = 0;
+  while (prefixRegex.test(result) && matchCount < 3) {
+    result = result.replace(prefixRegex, '').trim();
+    matchCount++;
+  }
+  
+  return result;
+}
+
+/**
  * Safe text accessor for multi-language fields that might be strings or JSON.
  */
 export function getSafeText(field: any, locale: string = 'zh'): string {
@@ -32,10 +57,10 @@ export function getSafeText(field: any, locale: string = 'zh'): string {
         // Fallback: use regex to extract locale key even from a broken JSON string
         const regex = new RegExp(`"${locale}"\\s*:\\s*"([^"]+)`);
         const match = trimmed.match(regex);
-        if (match) return match[1];
+        if (match) return cleanTranslationPrefixes(match[1]);
 
         const anyMatch = trimmed.match(/"[^"]+":"([^"]+)/);
-        if (anyMatch) return anyMatch[1];
+        if (anyMatch) return cleanTranslationPrefixes(anyMatch[1]);
 
         break;
       }
@@ -54,7 +79,7 @@ export function getSafeText(field: any, locale: string = 'zh'): string {
         }
       } catch (e) {}
     } else {
-      return data;
+      return cleanTranslationPrefixes(data);
     }
   }
   
@@ -72,17 +97,18 @@ export function getSafeText(field: any, locale: string = 'zh'): string {
         if (val.trim().startsWith('{')) {
           return getSafeText(val, locale);
         }
-        return val;
+        return cleanTranslationPrefixes(val);
       }
       if (typeof val === 'object') {
+        // Check if nested is actually { zh: "..." } etc.
         return getSafeText(val, locale);
       }
-      return String(val);
+      return cleanTranslationPrefixes(String(val));
     }
     return '';
   }
   
-  return String(data);
+  return cleanTranslationPrefixes(String(data));
 }
 
 /**

@@ -133,7 +133,13 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
         const isNumeric = /^\d+$/.test(currentNameZh);
         
         if (!currentNameZh || isNumeric) {
-          if (result.name_translations) {
+          if (result.name && typeof result.name === 'object') {
+            updates.name = {
+              zh: result.name.zh || prev.name?.zh || '',
+              en: (result.name.en || prev.name?.en || '').toUpperCase(),
+              ms: (result.name.ms || prev.name?.ms || '').toUpperCase()
+            };
+          } else if (result.name_translations) {
             updates.name = {
               zh: result.name_translations.zh || prev.name?.zh || '',
               en: (result.name_translations.en || prev.name?.en || '').toUpperCase(),
@@ -165,7 +171,13 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
         if (!prev.group_id && result.group_id) updates.group_id = String(result.group_id);
         if (!prev.manual_code && result.manual_code) updates.manual_code = result.manual_code;
         
-        if (result.description_translations) {
+        if (result.description && typeof result.description === 'object') {
+          updates.description = {
+            zh: result.description.zh || prev.description?.zh || '',
+            en: result.description.en || prev.description?.en || '',
+            ms: result.description.ms || prev.description?.ms || ''
+          };
+        } else if (result.description_translations) {
            updates.description = { 
              ...prev.description, 
              ...result.description_translations,

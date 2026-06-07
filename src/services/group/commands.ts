@@ -3,6 +3,7 @@ import type { AppResult } from '@/types/api';
 import { supabase } from '../../lib/supabase';
 import { ProductGroup } from '../../types';
 import { createGroupValidator } from '../../lib/validators/factory';
+import { cleanTranslationPrefixes } from '@/lib/ai/safeText';
 
 /**
  * Consolidating all group mutation logic here.
@@ -16,6 +17,41 @@ const mapToDb = (updates: Partial<ProductGroup> & Record<string, unknown>, userI
     if (userId && !dbUpdates.user_id) {
         dbUpdates.user_id = userId;
     }
+
+    if ('name' in dbUpdates) {
+        const val = dbUpdates.name;
+        if (typeof val === 'string') {
+            dbUpdates.name = { zh: cleanTranslationPrefixes(val).trim(), en: '', ms: '' };
+        } else if (val && typeof val === 'object') {
+            let nameObj = val as Record<string, any>;
+            if (nameObj.zh && typeof nameObj.zh === 'object' && ('zh' in nameObj.zh || 'en' in nameObj.zh || 'ms' in nameObj.zh)) {
+                nameObj = nameObj.zh;
+            }
+            dbUpdates.name = {
+                zh: cleanTranslationPrefixes(String(nameObj.zh || '')).trim(),
+                en: cleanTranslationPrefixes(String(nameObj.en || '')).trim(),
+                ms: cleanTranslationPrefixes(String(nameObj.ms || '')).trim(),
+            };
+        }
+    }
+
+    if ('description' in dbUpdates) {
+        const val = dbUpdates.description;
+        if (typeof val === 'string') {
+            dbUpdates.description = { zh: cleanTranslationPrefixes(val).trim(), en: '', ms: '' };
+        } else if (val && typeof val === 'object') {
+            let descObj = val as Record<string, any>;
+            if (descObj.zh && typeof descObj.zh === 'object' && ('zh' in descObj.zh || 'en' in descObj.zh || 'ms' in descObj.zh)) {
+                descObj = descObj.zh;
+            }
+            dbUpdates.description = {
+                zh: cleanTranslationPrefixes(String(descObj.zh || '')).trim(),
+                en: cleanTranslationPrefixes(String(descObj.en || '')).trim(),
+                ms: cleanTranslationPrefixes(String(descObj.ms || '')).trim(),
+            };
+        }
+    }
+
     return dbUpdates;
 };
 

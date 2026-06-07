@@ -14,6 +14,7 @@ import { translations } from "@/lib/translations";
 import { useDisclosure } from "@mantine/hooks";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { toast } from 'sonner';
+import { getSafeText } from "@/lib/ai/safeText";
 
 /**
  * [PAGE] PhotoLightboxPage
@@ -36,7 +37,8 @@ export const PhotoLightboxPage = () => {
     if (!groupId) return;
     try {
       await setCoverMut({ groupId, photoId: photo.id });
-      toast.success(photo.name?.zh ? `已将 "${photo.name.zh}" 设为封面` : '封面设置成功');
+      const displayName = getSafeText(photo.name, appLang);
+      toast.success(displayName ? `已将 "${displayName}" 设为封面` : '封面设置成功');
     } catch (e) {
       toast.error('设置封面失败');
     }

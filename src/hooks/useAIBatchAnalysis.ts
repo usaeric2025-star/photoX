@@ -15,9 +15,8 @@ export function useAIBatchAnalysis() {
 
     const taskTitle = groupId ? `智能合组分析 (${targetPhotos.length}张)` : `批量 AI 分析 (${targetPhotos.length}张)`;
 
-    await runTask(taskTitle, async ({ updateProgress }) => {
-      try {
-        let successCount = 0;
+    toast.promise(runTask(taskTitle, async ({ updateProgress }) => {
+        let successCount: number = 0;
         const totalPhotosToProcess = targetPhotos.length;
         let progress = 0;
 
@@ -42,25 +41,19 @@ export function useAIBatchAnalysis() {
               const result = resp.data;
               const updates: any = {};
               
-              if (result.name) {
-                updates.name = result.name;
-              }
+              if (result.name) updates.name = result.name;
               if (result.category_id) updates.category_id = String(result.category_id);
               if (Array.isArray(result.tag_ids)) {
                 updates.tag_ids = result.tag_ids.slice(0, 3).map((id: any) => String(id));
               }
               if (result.description) updates.description = result.description;
-              if (result.description_translations) {
-                updates.description_translations = result.description_translations;
-              }
+              if (result.description_translations) updates.description_translations = result.description_translations;
               if (Array.isArray(result.dimensions)) updates.dimensions = result.dimensions;
               if (result.price) updates.price = String(result.price);
 
               const updateResult = await directUpdatePhoto(p.id, updates);
               if (updateResult && 'ok' in updateResult && updateResult.ok) {
                 successCount++;
-              } else {
-                console.error(`Failed to update photo ${p.id} database record:`, updateResult);
               }
             }
           } catch (err: any) {
@@ -76,7 +69,6 @@ export function useAIBatchAnalysis() {
               updateProgress(75, '正在总结合组...');
               const { analyzeGroup } = await import('@/services/gemini/groupAnalysis');
               
-              // fetch fresh photos with tags for the group
               const { supabase } = await import('@/lib/supabase');
               const { data: photos } = await supabase.from('furniture_items').select('id, name, tag_ids, description').in('id', targetPhotos.map(p => p.id));
               
@@ -133,22 +125,17 @@ export function useAIBatchAnalysis() {
               }
            } catch (e: any) {
               console.error('Group analysis failed', e);
-              toast.error(`总结合组保存失败: ${e.message}`);
+              throw e;
            }
-           updateProgress(100);
         }
-
-        if (successCount === 0 && totalPhotosToProcess > 0) {
-          toast.error(`分析 ${totalPhotosToProcess} 张 ${groupId ? '组内' : ''}照片均失败 / AI Analysis failed`);
-        } else if (successCount < totalPhotosToProcess) {
-          toast.warning(`部分分析成功 (${successCount}/${totalPhotosToProcess}张${groupId ? '组内照' : ''})`);
-        } else {
-          toast.success(`成功分析 ${successCount} 张${groupId ? '组内' : ''}照片 / AI Analysis complete`);
-        }
-      } finally {
+        
         await invalidatePhotos();
-      }
-    }, { showProgress: true, showSuccessToast: false });
+        return successCount;
+    }, { showProgress: true, showSuccessToast: false }) as Promise<number>, {
+        loading: '正在执行 AI 分析...',
+        success: (count: number) => (count || 0) > 0 ? `成功分析 ${count} 张照片` : '分析完成 (无更新)',
+        error: (err) => `分析失败: ${err.message}`
+    });
   }, [runTask, invalidatePhotos]);
 
   return { handleBatchAiAnalyze };

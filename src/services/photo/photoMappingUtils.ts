@@ -2,6 +2,7 @@ import { Photo } from '../../types';
 import { safeArray } from '../../lib/utils';
 import { validateDimension } from '@/lib/validators/dimensionValidator';
 import { generateItemCode } from './utils';
+import { cleanTranslationPrefixes } from '@/lib/ai/safeText';
 
 export const FIELD_MAP: Record<string, string> = {};
 
@@ -68,26 +69,34 @@ export const mapToDb = (updates: Partial<Photo> & Record<string, unknown>, isCre
         
         if (key === 'name') {
             if (typeof value === 'string') {
-                valueToSave = { zh: value, en: '', ms: '' };
+                valueToSave = { zh: cleanTranslationPrefixes(value).trim(), en: '', ms: '' };
             } else if (value && typeof value === 'object') {
-                const nameObj = value as Record<string, any>;
+                let nameObj = value as Record<string, any>;
+                // Defensive unwrapping: if the child 'zh' property is itself a translation object, unwrap it
+                if (nameObj.zh && typeof nameObj.zh === 'object' && ('zh' in nameObj.zh || 'en' in nameObj.zh || 'ms' in nameObj.zh)) {
+                    nameObj = nameObj.zh;
+                }
                 valueToSave = {
-                    zh: String(nameObj.zh || '').trim(),
-                    en: String(nameObj.en || '').trim(),
-                    ms: String(nameObj.ms || '').trim(),
+                    zh: cleanTranslationPrefixes(String(nameObj.zh || '')).trim(),
+                    en: cleanTranslationPrefixes(String(nameObj.en || '')).trim(),
+                    ms: cleanTranslationPrefixes(String(nameObj.ms || '')).trim(),
                 };
             }
         }
         
         if (key === 'description') {
             if (typeof value === 'string') {
-                valueToSave = { zh: value, en: '', ms: '' };
+                valueToSave = { zh: cleanTranslationPrefixes(value).trim(), en: '', ms: '' };
             } else if (value && typeof value === 'object') {
-                const descObj = value as Record<string, any>;
+                let descObj = value as Record<string, any>;
+                // Defensive unwrapping: if the child 'zh' property is itself a translation object, unwrap it
+                if (descObj.zh && typeof descObj.zh === 'object' && ('zh' in descObj.zh || 'en' in descObj.zh || 'ms' in descObj.zh)) {
+                    descObj = descObj.zh;
+                }
                 valueToSave = {
-                    zh: String(descObj.zh || '').trim(),
-                    en: String(descObj.en || '').trim(),
-                    ms: String(descObj.ms || '').trim(),
+                    zh: cleanTranslationPrefixes(String(descObj.zh || '')).trim(),
+                    en: cleanTranslationPrefixes(String(descObj.en || '')).trim(),
+                    ms: cleanTranslationPrefixes(String(descObj.ms || '')).trim(),
                 };
             }
         }

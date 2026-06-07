@@ -3,6 +3,7 @@ import { Photo } from '@/types';
 import { thumbHashToDataURL } from '@/lib/image/thumbHash';
 import { ContractedImage } from './ContractedImage';
 import { ImageOff } from 'lucide-react';
+import { getSafeText } from '@/lib/ai/safeText';
 
 const loadedSrcCache = new Set<string>();
 
@@ -80,7 +81,7 @@ export function ResponsivePhoto({
         src && (
           <ContractedImage
             src={src}
-            alt={typeof photo.name === 'object' ? (photo.name.zh || 'Photo') : (photo.name || 'Photo')}
+            alt={getSafeText(photo.name) || 'Photo'}
             priority={isLoaded}
             width={variant === 'md' ? [320, 640, 800] : [320, 640]}
             aspectRatio={String(aspectRatio)}
