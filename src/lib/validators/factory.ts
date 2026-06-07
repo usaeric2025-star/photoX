@@ -12,8 +12,8 @@ export const createPhotoValidator = (): Validator<any> => {
     const photoSchema = type({
         'id?': 'string',
         'user_id?': 'string',
-        'name?': 'string|null',
-        'description?': 'string|null',
+        'name?': 'string|Record<string, string>|null',
+        'description?': 'string|Record<string, string>|null',
         'description_translations?': 'Record<string, string>|null',
         'category_id?': 'string|null',
         'manufacturer_id?': 'string|null',

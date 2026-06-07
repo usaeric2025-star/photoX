@@ -4,11 +4,16 @@ import { createGroup, updateGroup, deleteGroupFromCloud } from '@/services/group
 import { groupPhotos, movePhotosToGroup, setPhotoAsGroupCover } from '@/services/photo/commands';
 import { ungroupPhotos } from '@/services/photo/photoMaintenanceService';
 import { QueryClient } from '@tanstack/react-query';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 export const useGroupCreate = createMutationHook({
   entity: 'Group',
   action: 'Create',
-  mutationFn: createGroup,
+  mutationFn: async (variables: any) => {
+    const res = await createGroup(variables);
+    if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Create Group');
+    return res.data;
+  },
   queryKey: groupKeys.all,
   optimisticUpdate: (oldGroups: any, variables: any) => {
     return [...(oldGroups || []), { id: 'temp-' + Date.now(), ...variables, member_count: 0 }];
@@ -20,7 +25,11 @@ export const useGroupCreate = createMutationHook({
 export const useGroupUpdate = createMutationHook({
   entity: 'Group',
   action: 'Update',
-  mutationFn: ({ id, updates }: { id: string; updates: any }) => updateGroup(id, updates),
+  mutationFn: async ({ id, updates }: { id: string; updates: any }) => {
+    const res = await updateGroup(id, updates);
+    if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Update Group', id);
+    return res.data;
+  },
   optimisticUpdate: (oldGroups: any, variables: { id: string; updates: any }) => {
     if (!oldGroups) return oldGroups;
     return oldGroups.map((group: any) =>
@@ -36,7 +45,11 @@ export const useGroupUpdate = createMutationHook({
 export const useGroupDelete = createMutationHook({
   entity: 'Group',
   action: 'Delete',
-  mutationFn: deleteGroupFromCloud,
+  mutationFn: async (id: string) => {
+    const res = await deleteGroupFromCloud(id);
+    if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Delete Group', id);
+    return res.data;
+  },
   optimisticUpdate: (oldGroups: any, variables: string) => {
     if (!oldGroups) return oldGroups;
     return oldGroups.filter((group: any) => group.id !== variables);

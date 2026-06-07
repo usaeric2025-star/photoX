@@ -13,11 +13,16 @@ import { createMutationHook } from './core/mutationFactory';
 import { update, deleteMany, batchUpdate } from '@/services/photo/commands';
 import { photoKeys } from '@/lib/queryKeys';
 import { uploadWithRetry } from '@/services/storage/uploadService';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 export const usePhotoEdit = createMutationHook({
   entity: 'Photo',
   action: 'Update',
-  mutationFn: ({ id, updates }: { id: string; updates: Partial<Photo> }) => update(id, updates),
+  mutationFn: async ({ id, updates }: { id: string; updates: Partial<Photo> }) => {
+    const res = await update(id, updates);
+    if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Update Photo', id);
+    return res.data;
+  },
   invalidateKeys: [photoKeys.all],
   optimisticUpdate: (old: any, { id, updates }: { id: string; updates: Partial<Photo> }) => {
     if (!old || !old.pages) return old;
@@ -37,7 +42,11 @@ export const usePhotoEdit = createMutationHook({
 export const usePhotoDelete = createMutationHook({
   entity: 'Photo',
   action: 'Delete',
-  mutationFn: (ids: string | string[]) => deleteMany(Array.isArray(ids) ? ids : [ids]),
+  mutationFn: async (ids: string | string[]) => {
+    const res = await deleteMany(Array.isArray(ids) ? ids : [ids]);
+    if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Delete Photos');
+    return res.data;
+  },
   invalidateKeys: [photoKeys.all],
   optimisticUpdate: (old: any, ids: string | string[]) => {
     const idList = Array.isArray(ids) ? ids : [ids];
@@ -65,7 +74,11 @@ export const usePhotoDelete = createMutationHook({
 export const usePhotoBatchEdit = createMutationHook({
   entity: 'Photo',
   action: 'BatchUpdate',
-  mutationFn: ({ ids, updates }: { ids: string[]; updates: Partial<Photo> }) => batchUpdate(ids, updates),
+  mutationFn: async ({ ids, updates }: { ids: string[]; updates: Partial<Photo> }) => {
+    const res = await batchUpdate(ids, updates);
+    if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Batch Update Photos', ids.join(','));
+    return res.data;
+  },
   invalidateKeys: [photoKeys.all],
   optimisticUpdate: (old: any, { ids, updates }: { ids: string[]; updates: Partial<Photo> }) => {
     const idSet = new Set(ids);
@@ -94,7 +107,11 @@ export const usePhotoBatchEdit = createMutationHook({
 export const useTogglePin = createMutationHook({
   entity: 'Photo',
   action: 'TogglePin',
-  mutationFn: ({ id, isPinned }: { id: string; isPinned: boolean }) => update(id, { is_pinned: isPinned }),
+  mutationFn: async ({ id, isPinned }: { id: string; isPinned: boolean }) => {
+    const res = await update(id, { is_pinned: isPinned });
+    if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Toggle Pin Photo', id);
+    return res.data;
+  },
   invalidateKeys: [photoKeys.all],
   optimisticUpdate: (old: any, { id, isPinned }: { id: string; isPinned: boolean }) => {
     if (!old || !old.pages) return old;

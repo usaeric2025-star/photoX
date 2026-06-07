@@ -2148,8 +2148,7 @@ app.post("/ai/analyze-group", async (c) => {
   "materials": ["通用材质(英文)"]
 }
 单品列表信息: ${photoDetails}`;
-      const { data: settings } = await supabase.from('settings').select('openrouter_model').maybeSingle();
-      const model = settings?.openrouter_model || 'google/gemini-2.5-flash-lite';
+      const model = await getModel(supabase);
 
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
