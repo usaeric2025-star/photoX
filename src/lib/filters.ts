@@ -333,9 +333,7 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortO
         // Flat expansion but bind them under the same time logic so they stay together
         sorted.forEach(member => {
            const time = groupMaxTime.get(member.group_id as string)!;
-           // Subtracting a tiny amount per index could keep them ordered internally, but their index does it
-           const idx = sorted.indexOf(member);
-           const m = { ...member, _time: time - idx }; // slight offset to keep internal order
+           const m = { ...member, _time: time }; // Same exact time to group them
            representatives.push(m);
         });
       }
@@ -355,6 +353,24 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortO
       const nameA = typeof a.name === 'object' ? (a.name.zh || '') : (a.name || '');
       const nameB = typeof b.name === 'object' ? (b.name.zh || '') : (b.name || '');
       return nameA.localeCompare(nameB);
+    }
+    
+    // Sort items within the same group precisely
+    if (a.group_id && b.group_id && a.group_id === b.group_id) {
+       // Custom sort to match sortGroupPhotos inside library
+       if (a.is_group_cover && !b.is_group_cover) return -1;
+       if (!a.is_group_cover && b.is_group_cover) return 1;
+       
+       const aOrder = a.group_order ?? (a as any).group_order;
+       const bOrder = b.group_order ?? (b as any).group_order;
+
+       if (aOrder !== undefined && bOrder !== undefined) {
+         return aOrder - bOrder;
+       }
+       if (aOrder !== undefined) return -1;
+       if (bOrder !== undefined) return 1;
+
+       return (a.item_code || '').localeCompare(b.item_code || '');
     }
 
     return sortOrder === 'oldest' ? a._time! - b._time! : b._time! - a._time!;

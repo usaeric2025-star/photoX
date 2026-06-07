@@ -25,7 +25,7 @@ import { useUIStore, useShallow } from '@/store/useUIStore';
 import { usePhotoGallery } from '@/features/photos/usePhotoGallery';
 import { Category } from '@/types';
 import { toast } from 'sonner';
-import { AdminLayout } from '@/components/admin/AdminLayout';
+import { PublicHeader } from '@/components/layouts/headers/PublicHeader';
 import { AdminAuthGate } from '@/components/admin/AdminAuthGate';
 import { AdminScreen } from '@/components/AdminScreen';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -110,13 +110,13 @@ export function AdminPageContent() {
   return (
     <AdminAuthGate isSyncing={isSyncing}>
       <DataLoadingContainer isLoading={isPhotosLoading} hasData={true}>
-        <AdminLayout
-          onRefresh={onRefresh}
-          isRefreshing={isSyncing}
-          totalCount={photos?.length}
-          onExit={() => navigate({ to: '/' })}
-          title={pageTitle}
-        >
+        <div className="flex flex-col h-screen bg-slate-50 overflow-hidden w-full relative">
+          <PublicHeader 
+            totalCount={photos?.length}
+            onRefresh={onRefresh}
+            isRefreshing={isSyncing}
+          />
+          <main className="flex-1 relative overflow-hidden pb-16 sm:pb-0">
           {store.batchEditingIds && store.batchEditingIds.length > 0 && <BatchEditScreen />}
           
           <div className={`absolute inset-0 transition-all duration-300 ${currentScreen === 'home' || currentScreen === 'gallery' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
@@ -158,7 +158,8 @@ export function AdminPageContent() {
           <AnimatePresence>
             {(store.editPhotoId || store.newPhotoData) && <PhotoEditDrawer />}
           </AnimatePresence>
-        </AdminLayout>
+          </main>
+        </div>
       </DataLoadingContainer>
 
       <ErrorBoundary>

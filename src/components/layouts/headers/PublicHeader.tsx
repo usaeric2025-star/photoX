@@ -109,6 +109,34 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
 
             <div className="px-2 py-1.5 flex flex-col gap-1.5">
               <span className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">System</span>
+              {user && (
+                <>
+                  <DropdownMenuItem
+                    onClick={() => navigate({ to: '/admin' })}
+                    className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-slate-50 focus:bg-slate-50 cursor-pointer transition-colors border-none"
+                  >
+                    <LayoutDashboard size={16} />
+                    <span className="text-sm font-semibold">{t.adminPanel}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                       navigate({ to: '/admin' });
+                       useUIStore.getState().update({ activeScreen: 'settings' });
+                    }}
+                    className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-slate-50 focus:bg-slate-50 cursor-pointer transition-colors border-none"
+                  >
+                    <Settings size={16} />
+                    <span className="text-sm font-semibold">{t.systemSettings || 'Settings'}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => navigate({ to: '/admin/tasks' })}
+                    className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-slate-50 focus:bg-slate-50 cursor-pointer transition-colors border-none"
+                  >
+                    <LayoutGrid size={16} />
+                    <span className="text-sm font-semibold">Task Center</span>
+                  </DropdownMenuItem>
+                </>
+              )}
               <DropdownMenuItem
                 onClick={() => navigate({ to: '/error-log' })}
                 className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-slate-50 focus:bg-slate-50 cursor-pointer transition-colors border-none"
