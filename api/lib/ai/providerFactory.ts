@@ -1,4 +1,5 @@
 import { decrypt } from "../encryption.js";
+import { getModel } from "./modelHelper.js";
 
 export interface AIResponse {
     success: boolean;
@@ -124,7 +125,14 @@ export async function getAIProvider(providerName: string, supabase: any, modelOv
 
     if (!apiKey) throw new Error(`未配置 ${providerName} 的 API 密鑰`);
 
-    let model = modelOverride || 'agnes-2.0-flash'; // Fallback for testing
+    let model = modelOverride;
+    if (!model) {
+        if (providerName === 'openrouter') {
+            model = await getModel(supabase);
+        } else {
+            model = 'agnes-2.0-flash';
+        }
+    }
     
     console.log(`[getAIProvider] Using provider: ${providerName}, model: ${model}`);  
     const config = { apiKey, model };

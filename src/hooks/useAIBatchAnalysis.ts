@@ -38,13 +38,15 @@ function isMeaningfulText(text: any): boolean {
     const en = String(text.en || '').trim();
     const ms = String(text.ms || '').trim();
     const checkStr = (str: string) => {
-      return str !== '' && str !== '[object Object]' && str !== '{}' && str !== 'null' && str !== 'undefined';
+      const lower = str.toLowerCase();
+      return str !== '' && lower !== '[object object]' && lower !== '[对象 对象]' && lower !== '对象 对象' && str !== '{}' && str !== 'null' && str !== 'undefined';
     };
     return checkStr(zh) || checkStr(en) || checkStr(ms);
   }
   if (typeof text === 'string') {
     const s = text.trim();
-    return s !== '' && s !== '[object Object]' && s !== '{}' && s !== 'null' && s !== 'undefined';
+    const lower = s.toLowerCase();
+    return s !== '' && lower !== '[object object]' && lower !== '[对象 对象]' && lower !== '对象 对象' && s !== '{}' && s !== 'null' && s !== 'undefined';
   }
   return false;
 }

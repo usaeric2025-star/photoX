@@ -223,14 +223,14 @@ app.post("/ai/analyze", async (c) => {
             supabase.from('manufacturers').select('*'),
             supabase.from('groups').select('id, name').order('created_at', { ascending: false }).limit(40),
             supabase.from('secrets').select('value').eq('key', 'openrouter').maybeSingle(),
-            supabase.from('settings').select('custom_model').maybeSingle()
+            supabase.from('settings').select('openrouter_model').maybeSingle()
         ]);
 
         if (!openrouterSecret?.value) throw new Error("OpenRouter API Key not configured in secrets");
         
         const { decrypt } = await import('./lib/encryption.js');
         const apiKey = decrypt(openrouterSecret.value);
-        const model = (customModelSecret as any)?.custom_model || 'google/gemini-2.5-flash-lite';
+        const model = (customModelSecret as any)?.openrouter_model || 'google/gemini-2.5-flash-lite';
 
         // 2. Identification via OpenRouter (Gemini)
         const { OpenRouterProvider } = await import('./lib/ai/providerFactory.js');
@@ -2090,7 +2090,19 @@ app.post("/ai/analyze-base64", async (c) => {
       const { base64Image, customModel, promptText } = await c.req.json();
       const apiKey = serverEnv.GEMINI_API_KEY;
       if (!apiKey) return c.json({ error: "Server API key not configured" }, 500);
-      const modelName = customModel || "google/gemini-1.5-flash";
+
+      let modelName = customModel;
+      if (!modelName) {
+         try {
+            const supabase = await getSupabaseAdmin();
+            const { data: settings } = await supabase.from('settings').select('openrouter_model').maybeSingle();
+            modelName = settings?.openrouter_model;
+         } catch (_) {}
+      }
+      if (!modelName) {
+         modelName = "google/gemini-2.5-flash-lite";
+      }
+
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}`, "X-Title": "PhotoX AI" },
@@ -2106,7 +2118,19 @@ app.post("/ai/translate", async (c) => {
       const { customModel, promptText } = await c.req.json();
       const apiKey = serverEnv.GEMINI_API_KEY;
       if (!apiKey) return c.json({ error: "Server API key not configured" }, 500);
-      const modelName = customModel || "google/gemini-1.5-flash";
+
+      let modelName = customModel;
+      if (!modelName) {
+         try {
+            const supabase = await getSupabaseAdmin();
+            const { data: settings } = await supabase.from('settings').select('openrouter_model').maybeSingle();
+            modelName = settings?.openrouter_model;
+         } catch (_) {}
+      }
+      if (!modelName) {
+         modelName = "google/gemini-2.5-flash-lite";
+      }
+
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
@@ -2132,7 +2156,7 @@ app.post("/ai/analyze-group", async (c) => {
       }
       if (!apiKey) return c.json({ error: "Server API key not configured" }, 500);
       const prompt = `你是一个家具产品系列合并分析专家。根据以下这些被分到同一系列的单品的数据，为整个家具系列生成通用的元数据。请以纯JSON格式返回。
-如果某些信息无法得出，请返回空字符串 "" 或空数组 []，严禁使用“新合组”、“New Group”等预测性或占位文字。
+如果某些信息无法得出，请返回空字符串 "" 或空数组 []，严禁使用“新合组”、“New Group”等预测性 or占位文字。
 
 所需的JSON结构如下:
 {
@@ -2142,10 +2166,13 @@ app.post("/ai/analyze-group", async (c) => {
   "materials": ["通用材质(英文)"]
 }
 单品列表信息: ${photoDetails}`;
+      const { data: settings } = await supabase.from('settings').select('openrouter_model').maybeSingle();
+      const model = settings?.openrouter_model || 'google/gemini-2.5-flash-lite';
+
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-        body: JSON.stringify({ model: DEFAULT_AI_MODEL, messages: [{ role: "user", content: prompt }], response_format: { type: "json_object" }, max_tokens: 1000 })
+        body: JSON.stringify({ model, messages: [{ role: "user", content: prompt }], response_format: { type: "json_object" }, max_tokens: 1000 })
       });
       if (!response.ok) return c.json({ error: await response.text() }, response.status as any);
       const data = await response.json();
@@ -2179,10 +2206,13 @@ app.post("/ai/analyze-photo-v2", async (c) => {
   "description": "一段中文的新描述"
 }
 当前产品信息: ${photoDetail}`;
+      const { data: settings } = await supabase.from('settings').select('openrouter_model').maybeSingle();
+      const model = settings?.openrouter_model || 'google/gemini-2.5-flash-lite';
+
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-        body: JSON.stringify({ model: DEFAULT_AI_MODEL, messages: [{ role: "user", content: prompt }], response_format: { type: "json_object" }, max_tokens: 1000 })
+        body: JSON.stringify({ model, messages: [{ role: "user", content: prompt }], response_format: { type: "json_object" }, max_tokens: 1000 })
       });
       if (!response.ok) return c.json({ error: await response.text() }, response.status as any);
       const data = await response.json();

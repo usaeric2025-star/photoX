@@ -1,5 +1,5 @@
 import sizeOf from "image-size";
-import { DEFAULT_AI_MODEL } from "../lib/aiConfig.js";
+import { getModel } from "../lib/ai/modelHelper.js";
 
 export interface PhotoBackfillCandidate {
   id: string;
@@ -38,6 +38,8 @@ export async function processBackfillBatch(
 
   if (fetchError) throw fetchError;
   if (catError) throw catError;
+
+  const modelNameCombined = await getModel(supabase);
 
   // 2. Filter in JS for accurate eligibility
   const eligible = (allPhotos || []).filter((photo: any) => {
@@ -138,7 +140,7 @@ Your response MUST match this exact JSON schema:
               "X-Title": "PhotoX AI"
             },
             body: JSON.stringify({
-              model: DEFAULT_AI_MODEL,
+              model: modelNameCombined,
               messages: [{ role: "user", content: promptText }],
               response_format: { type: "json_object" },
               max_tokens: 1000

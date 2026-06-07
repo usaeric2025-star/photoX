@@ -22,11 +22,15 @@ async function getSupabaseAdmin() {
 export async function getTaskConfig(task: AITask) {
   const supabase = await getSupabaseAdmin();
   if (task === 'image_recognition') {
-    // NOTE: Using secrets table as a workaround since settings table column 'openrouter_model' is not yet present
-    const { data } = await supabase.from('secrets').select('value').eq('key', 'OPENROUTER_MODEL').maybeSingle();
+    const { data: settings } = await supabase.from('settings').select('openrouter_model').maybeSingle();
+    let model = settings?.openrouter_model;
+    if (!model) {
+      const { data: secret } = await supabase.from('secrets').select('value').eq('key', 'OPENROUTER_MODEL').maybeSingle();
+      model = secret?.value || 'google/gemini-2.0-flash-exp:free';
+    }
     return {
       provider: 'openrouter',
-      model: data?.value || 'google/gemini-2.0-flash-exp:free',
+      model,
       apiKeyKey: 'openrouter'
     };
   } else {
