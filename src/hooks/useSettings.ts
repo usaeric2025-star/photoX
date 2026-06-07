@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { useLocalStorage } from '@mantine/hooks';
 import { createQuery } from './core/queryFactory';
 import { fetchSettings } from '@/services/settings/queries';
 import { syncCache } from '@/lib/db/indexedDB';
@@ -20,8 +22,22 @@ export const useGetSettings = createQuery<AppSettings, void>({
 });
 
 export const useSettings = () => {
-  const { data: settings = {} as AppSettings, isLoading } = useGetSettings(undefined);
+  const [cachedSettings, setCachedSettings] = useLocalStorage<AppSettings>({
+    key: 'photox_cached_settings',
+    defaultValue: {} as AppSettings,
+  });
+
+  const { data: qSettings, isLoading } = useGetSettings(undefined);
   const updateMutation = useSettingsUpdateMutation();
+
+  useEffect(() => {
+    if (qSettings && Object.keys(qSettings).length > 0) {
+      setCachedSettings(qSettings);
+    }
+  }, [qSettings, setCachedSettings]);
+
+  // Use cachedSettings immediately for a seamless mount/first-render, fallbacks nicely
+  const settings = (qSettings && Object.keys(qSettings).length > 0) ? qSettings : cachedSettings;
 
   return {
     settings,

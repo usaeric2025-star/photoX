@@ -279,7 +279,19 @@ export const loadAllPhotosFromCloud = async (
     
     const [tagsRes, catsRes] = await Promise.all([
       supabase.from('tags').select('id').ilike('name', `%${q}%`),
-      supabase.from('categories').select('id').or(`name.ilike.%${q}%,zh.ilike.%${q}%,en.ilike.%${q}%,ms.ilike.%${q}%`)
+      (async () => {
+        try {
+          const res = await supabase.from('categories').select('id').or(`name.ilike.%${q}%,zh.ilike.%${q}%,en.ilike.%${q}%,ms.ilike.%${q}%`);
+          if (res.error) {
+            const fallback = await supabase.from('categories').select('id').ilike('name', `%${q}%`);
+            if (fallback.error) throw fallback.error;
+            return fallback;
+          }
+          return res;
+        } catch {
+          return await supabase.from('categories').select('id').ilike('name', `%${q}%`);
+        }
+      })()
     ]);
 
     if (tagsRes.error || catsRes.error) {
@@ -510,7 +522,19 @@ export const getPhotoCount = async (
     
     const [tagsRes, catsRes] = await Promise.all([
       supabase.from('tags').select('id').ilike('name', `%${q}%`),
-      supabase.from('categories').select('id').or(`name.ilike.%${q}%,zh.ilike.%${q}%,en.ilike.%${q}%,ms.ilike.%${q}%`)
+      (async () => {
+        try {
+          const res = await supabase.from('categories').select('id').or(`name.ilike.%${q}%,zh.ilike.%${q}%,en.ilike.%${q}%,ms.ilike.%${q}%`);
+          if (res.error) {
+            const fallback = await supabase.from('categories').select('id').ilike('name', `%${q}%`);
+            if (fallback.error) throw fallback.error;
+            return fallback;
+          }
+          return res;
+        } catch {
+          return await supabase.from('categories').select('id').ilike('name', `%${q}%`);
+        }
+      })()
     ]);
 
     if (tagsRes.error || catsRes.error) {

@@ -1,6 +1,6 @@
 import React from 'react';
-import { LayoutDashboard, Camera, Menu, User as UserIcon, LogOut, Settings, LayoutGrid, MonitorPlay, CheckSquare, X } from 'lucide-react';
-import { useAuth, useUIStore, useSettings } from '@/hooks';
+import { LayoutDashboard, Camera, Menu, User as UserIcon, LogOut, Settings, LayoutGrid, MonitorPlay, CheckSquare, Sparkles } from 'lucide-react';
+import { useAuth, useUIStore, useSettings, usePhotoCount } from '@/hooks';
 import { useNavigate } from '@tanstack/react-router';
 import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
 import {
@@ -14,7 +14,11 @@ import {
 import { logoutPublic } from "@/lib/publicAuth";
 import { translations } from "@/lib/translations";
 
-export function AdminHeader() {
+interface AdminHeaderProps {
+  onAiAnalyze?: () => void;
+}
+
+export function AdminHeader({ onAiAnalyze }: AdminHeaderProps) {
   const { user } = useAuth();
   const { settings } = useSettings();
   const navigate = useNavigate();
@@ -23,6 +27,9 @@ export function AdminHeader() {
   const isMultiSelect = useUIStore(s => s.isMultiSelect);
   const update = useUIStore(s => s.update);
   const t = translations[lang as keyof typeof translations] || translations.en;
+
+  const { data: cloudCount } = usePhotoCount({ source: 'server' });
+  const { data: localCount } = usePhotoCount({ source: 'local' });
 
   const handleAuthAction = () => {
     navigate({ to: '/' });
@@ -33,9 +40,9 @@ export function AdminHeader() {
       {/* 左侧：Logo & 计数 */}
       <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 flex-nowrap">
         {settings?.logo_url ? (
-          <img src={settings.logo_url} className="h-6 sm:h-7 w-auto object-contain shrink-0" alt="Logo" />
+          <img src={settings.logo_url} className="h-8 sm:h-9 w-auto object-contain shrink-0" alt="Logo" />
         ) : (
-          <div className="flex items-center gap-1.5 font-bold tracking-tighter text-slate-800">
+          <div className="flex items-center gap-1.5 font-bold tracking-tighter text-slate-850">
             <div className="w-8 h-8 rounded-xl bg-slate-800 flex items-center justify-center shadow-sm text-white shrink-0">
               <Camera size={18} className="stroke-[2.5]" />
             </div>
@@ -45,6 +52,13 @@ export function AdminHeader() {
             <span className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1 hidden sm:inline-block">Admin</span>
           </div>
         )}
+
+        {/* 本地与云端组合数字展示 */}
+        <div className="flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200/50 rounded-full px-2.5 py-1 select-none shrink-0 cursor-default">
+          <span className="text-[#3b82f6] font-medium">{lang === 'zh' ? '本地' : lang === 'ms' ? 'Lokal' : 'Local'}: <strong className="font-bold">{localCount ?? 0}</strong></span>
+          <span className="text-slate-300">|</span>
+          <span className="text-[#10b981] font-medium">{lang === 'zh' ? '云端' : lang === 'ms' ? 'Awan' : 'Cloud'}: <strong className="font-bold">{cloudCount ?? 0}</strong></span>
+        </div>
       </div>
 
       {/* 右侧：管理/登录入口 */}
@@ -62,22 +76,24 @@ export function AdminHeader() {
           <CheckSquare size={18} />
         </button>
 
-        {/* 3. 切换至前台体验按钮 (与 PublicHeader 统一使用 LayoutDashboard 图案的按钮) */}
+        {/* AI 智能识别 按钮 next to check screen */}
+        {onAiAnalyze && (
+          <button
+            onClick={onAiAnalyze}
+            className="w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 ml-1 border bg-white text-purple-600 border-purple-200 hover:bg-purple-50 hover:text-purple-700 shadow-sm"
+            title={lang === 'zh' ? 'AI 属性智能识别' : 'AI Smart Identification'}
+          >
+            <Sparkles size={18} className="animate-pulse" />
+          </button>
+        )}
+
+        {/* 3. 切换至前台体验按钮 (标准 LayoutDashboard 样式) */}
         <button
           onClick={handleAuthAction}
-          className="w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 ml-1 border bg-white text-slate-600 border-slate-200 hover:bg-slate-100 shadow-sm"
+          className="w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 ml-1 border bg-white text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-900 shadow-sm"
           title="切换至公开模式 (返回主页)"
         >
           <LayoutDashboard size={20} />
-        </button>
-
-        {/* 另外在进入管理后台时，在里面给他一个关闭的按钮可以回到管理页面 (主展示页面) */}
-        <button
-          onClick={() => navigate({ to: '/' })}
-          className="w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 ml-1 border border-slate-200 bg-white text-slate-500 hover:text-red-600 hover:bg-red-50 hover:border-red-100 shadow-sm"
-          title="关闭 (返回主页)"
-        >
-          <X size={20} />
         </button>
 
         {/* 4. 菜单 (语言、登录、退出) */}

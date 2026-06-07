@@ -1,6 +1,6 @@
 import React from 'react';
 import { LogIn, LayoutDashboard, RefreshCw, Camera, Menu, User as UserIcon, LogOut, Settings, LayoutGrid, MonitorPlay } from 'lucide-react';
-import { useAuth, useUIStore, useShallow, useSettings } from '@/hooks';
+import { useAuth, useUIStore, useShallow, useSettings, usePhotoCount } from '@/hooks';
 import { useNavigate, useLocation } from '@tanstack/react-router';
 import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
 import {
@@ -28,6 +28,9 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
   const location = useLocation();
   const isAdmin = location.pathname.startsWith('/admin');
 
+  const { data: cloudCount } = usePhotoCount({ source: 'server' });
+  const { data: localCount } = usePhotoCount({ source: 'local' });
+
   const lang = useUIStore(s => s.appLang);
   const t = translations[lang as keyof typeof translations] || translations.en;
 
@@ -44,7 +47,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
       {/* 左侧：Logo & 计数 */}
       <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 flex-nowrap">
         {settings?.logo_url ? (
-          <img src={settings.logo_url} className="h-6 sm:h-7 w-auto object-contain shrink-0" alt="Logo" />
+          <img src={settings.logo_url} className="h-8 sm:h-9 w-auto object-contain shrink-0" alt="Logo" />
         ) : (
           <div className="flex items-center gap-1.5 font-bold tracking-tighter text-slate-900">
             <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center shadow-sm text-white shrink-0">
@@ -55,11 +58,13 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
             </span>
           </div>
         )}
-        {totalCount !== undefined && (
-          <span className="px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold whitespace-nowrap shrink-0 uppercase tracking-widest leading-none">
-            {t.photosCount(totalCount)}
-          </span>
-        )}
+
+        {/* 本地与云端组合数字展示 */}
+        <div className="flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200/50 rounded-full px-2.5 py-1 select-none shrink-0 cursor-default">
+          <span className="text-[#3b82f6] font-medium">{lang === 'zh' ? '本地' : lang === 'ms' ? 'Lokal' : 'Local'}: <strong className="font-bold">{localCount ?? 0}</strong></span>
+          <span className="text-slate-300">|</span>
+          <span className="text-[#10b981] font-medium">{lang === 'zh' ? '云端' : lang === 'ms' ? 'Awan' : 'Cloud'}: <strong className="font-bold">{cloudCount ?? 0}</strong></span>
+        </div>
       </div>
 
       {/* 右侧：刷新 & 管理/登录入口 */}

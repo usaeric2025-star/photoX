@@ -111,7 +111,7 @@ export function AdminPageContent() {
     <AdminAuthGate isSyncing={isSyncing}>
       <DataLoadingContainer isLoading={isPhotosLoading} hasData={true}>
         <div className="flex flex-col h-screen bg-slate-50 overflow-hidden w-full relative">
-          {(currentScreen === 'gallery' || currentScreen === 'home') && <AdminHeader />}
+          {(currentScreen === 'gallery' || currentScreen === 'home') && <AdminHeader onAiAnalyze={handleBatchAiAnalyzeTrigger} />}
           <main className="flex-1 relative overflow-hidden pb-16 sm:pb-0">
           {store.batchEditingIds && store.batchEditingIds.length > 0 && <BatchEditScreen />}
           
