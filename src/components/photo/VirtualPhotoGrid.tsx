@@ -1,5 +1,4 @@
 import React, { useEffect, useRef } from 'react';
-import { usePerformance } from '@/hooks/core/usePerformance';
 import { VirtualGrid, VirtualGridHandle } from '@/components/virtualizer/VirtualGrid';
 import { Photo, TranslationType } from '../../types';
 import { useUIStore, useShallow, UIStoreState } from '@/store/useUIStore';
@@ -34,7 +33,6 @@ export function VirtualPhotoGrid({
   columns,
   ref
 }: VirtualPhotoGridProps) {
-  usePerformance('VirtualPhotoGrid');
   const { filters } = useUrlFilters();
   const appLang = useUIStore((s) => s.appLang);
   const t = (translations[appLang as keyof typeof translations] || translations.en) as TranslationType;

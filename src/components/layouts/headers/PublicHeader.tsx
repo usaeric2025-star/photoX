@@ -1,7 +1,7 @@
 import React from 'react';
-import { LogIn, LayoutDashboard, RefreshCw, Camera, Menu, User as UserIcon, LogOut, Settings, LayoutGrid } from 'lucide-react';
+import { LogIn, LayoutDashboard, RefreshCw, Camera, Menu, User as UserIcon, LogOut, Settings, LayoutGrid, MonitorPlay } from 'lucide-react';
 import { useAuth, useUIStore, useShallow, useSettings } from '@/hooks';
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate, useLocation } from '@tanstack/react-router';
 import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
 import {
   DropdownMenu,
@@ -25,12 +25,18 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
   const { settings } = useSettings();
   const update = useUIStore((s) => s.update);
   const navigate = useNavigate();
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith('/admin');
 
   const lang = useUIStore(s => s.appLang);
   const t = translations[lang as keyof typeof translations] || translations.en;
 
   const handleAuthAction = () => {
-    navigate({ to: '/admin' });
+    if (isAdmin) {
+      navigate({ to: '/' });
+    } else {
+      navigate({ to: '/admin' });
+    }
   };
 
   return (
@@ -58,7 +64,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
 
       {/* 右侧：刷新 & 管理/登录入口 */}
       <div className="flex items-center gap-1 sm:gap-2 flex-nowrap shrink-0">
-        {onRefresh && (
+        {onRefresh && !isAdmin && (
           <button 
             onClick={onRefresh}
             disabled={isRefreshing}
@@ -72,10 +78,10 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
         {/* 3. 切换至管理后台按钮 */}
         <button
           onClick={handleAuthAction}
-          className="w-10 h-10 flex items-center justify-center bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-all active:scale-95 shrink-0 ml-1 border border-blue-100"
-          title={t.adminPanel}
+          className={`w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 ml-1 border ${isAdmin ? 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100' : 'bg-blue-50 text-blue-600 hover:bg-blue-100 border-blue-100'}`}
+          title={isAdmin ? '退出管理后台 (返回主页)' : t.adminPanel}
         >
-          <LayoutDashboard size={20} />
+          {isAdmin ? <MonitorPlay size={20} /> : <LayoutDashboard size={20} />}
         </button>
 
         {/* 4. 菜单 (语言、登录、退出) */}
@@ -111,13 +117,23 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
               <span className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">System</span>
               {user && (
                 <>
-                  <DropdownMenuItem
-                    onClick={() => navigate({ to: '/admin' })}
-                    className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-slate-50 focus:bg-slate-50 cursor-pointer transition-colors border-none"
-                  >
-                    <LayoutDashboard size={16} />
-                    <span className="text-sm font-semibold">{t.adminPanel}</span>
-                  </DropdownMenuItem>
+                  {!isAdmin ? (
+                    <DropdownMenuItem
+                      onClick={() => navigate({ to: '/admin' })}
+                      className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-slate-50 focus:bg-slate-50 cursor-pointer transition-colors border-none"
+                    >
+                      <LayoutDashboard size={16} />
+                      <span className="text-sm font-semibold">{t.adminPanel}</span>
+                    </DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem
+                      onClick={() => navigate({ to: '/' })}
+                      className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-slate-50 focus:bg-slate-50 cursor-pointer transition-colors border-none"
+                    >
+                      <MonitorPlay size={16} />
+                      <span className="text-sm font-semibold">Public View</span>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem
                     onClick={() => {
                        navigate({ to: '/admin' });

@@ -2,7 +2,7 @@ import { ErrorFactory } from '../lib/error/ErrorFactory';
 import React, { useState } from 'react';
 import { 
   ChevronLeft,
-  Settings2, Save, ChevronDown
+  Settings2, Save, ChevronDown, X
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useErrorHandler } from '@/hooks';
@@ -37,7 +37,11 @@ const BUTTON_STYLES = {
   accent: "px-5 py-2.5 bg-brand-gold hover:bg-brand-gold/90 text-white rounded-2xl text-[11px] font-bold uppercase tracking-tight shadow-md active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50",
 };
 
-export function SettingsScreen() {
+interface SettingsScreenProps {
+  onClose?: () => void;
+}
+
+export function SettingsScreen({ onClose }: SettingsScreenProps) {
   const update = useUIStore((s) => s.update);
   const activeScreen = useUIStore((s) => s.activeScreen);
   
@@ -164,14 +168,17 @@ export function SettingsScreen() {
 
   return (
     <div className="fixed inset-0 z-[var(--z-index-max)] bg-brand-bg flex flex-col pt-safe">
-      <div className="px-6 py-4 flex items-center gap-3 bg-brand-bg sticky top-0 z-10">
+      <div className="px-6 py-4 flex items-center gap-3 bg-brand-bg sticky top-0 z-10 shrink-0">
         <button 
-          onClick={() => update({ activeScreen: 'home' })} 
-          className="p-2 -ml-2 text-brand-navy/50 hover:text-brand-navy transition-colors rounded-full active:bg-brand-navy/5"
+          onClick={() => {
+            if (onClose) onClose();
+            else update({ activeScreen: 'gallery' });
+          }} 
+          className="p-2 -ml-2 text-brand-navy/60 hover:bg-slate-200 transition-colors rounded-full active:bg-brand-navy/10"
         >
-          <ChevronLeft size={24} />
+          <X size={24} />
         </button>
-        <h2 className="font-black text-xs text-brand-navy border border-brand-navy/10 px-3 py-1 rounded-xl bg-white shadow-sm inline-block italic leading-none uppercase tracking-widest flex-1 ml-1">{appLang === 'zh' ? '系统设置' : 'System Settings'}</h2>
+        <span className="font-extrabold text-[10px] text-brand-navy border border-brand-navy/10 px-3 py-1.5 rounded-xl bg-white shadow-sm inline-block italic leading-none tracking-[0.2em] flex-1 ml-1 uppercase">{appLang === 'zh' ? '系统设置' : 'System Settings'}</span>
         <button 
            onClick={async () => {
              try {

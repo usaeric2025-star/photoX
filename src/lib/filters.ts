@@ -327,20 +327,22 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortO
              member_count: trueMemberCount
            }
         };
-        cover._time = groupMaxTime.get(p.group_id)!;
-        representatives.push(cover);
+        (cover as any)._time = groupMaxTime.get(p.group_id)!;
+        (cover as any)._groupCoverName = typeof sorted[0].name === 'object' ? (sorted[0].name.zh || '') : (sorted[0].name || '');
+        representatives.push(cover as any);
       } else {
-        // Flat expansion but bind them under the same time logic so they stay together
+        // Flat expansion but bind them under the same time and name logic so they stay together
+        const coverNameZh = typeof sorted[0].name === 'object' ? (sorted[0].name.zh || '') : (sorted[0].name || '');
         sorted.forEach(member => {
            const time = groupMaxTime.get(member.group_id as string)!;
-           const m = { ...member, _time: time }; // Same exact time to group them
+           const m = { ...member, _time: time, _groupCoverName: coverNameZh }; 
            representatives.push(m);
         });
       }
     }
   });
   
-  representatives.sort((a, b) => {
+  representatives.sort((a: any, b: any) => {
     if (a.is_pinned && !b.is_pinned) return -1;
     if (!a.is_pinned && b.is_pinned) return 1;
 
@@ -349,31 +351,39 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortO
       if (!a.is_hidden && b.is_hidden) return -1;
     }
 
-    if (sortOrder === 'name') {
-      const nameA = typeof a.name === 'object' ? (a.name.zh || '') : (a.name || '');
-      const nameB = typeof b.name === 'object' ? (b.name.zh || '') : (b.name || '');
-      return nameA.localeCompare(nameB);
-    }
-    
-    // Sort items within the same group precisely
+    // 1. Are they exactly in the same group?
     if (a.group_id && b.group_id && a.group_id === b.group_id) {
        // Custom sort to match sortGroupPhotos inside library
        if (a.is_group_cover && !b.is_group_cover) return -1;
        if (!a.is_group_cover && b.is_group_cover) return 1;
        
-       const aOrder = a.group_order ?? (a as any).group_order;
-       const bOrder = b.group_order ?? (b as any).group_order;
+       const aOrder = a.group_order ?? a.group_order;
+       const bOrder = b.group_order ?? b.group_order;
 
        if (aOrder !== undefined && bOrder !== undefined) {
-         return aOrder - bOrder;
-       }
-       if (aOrder !== undefined) return -1;
-       if (bOrder !== undefined) return 1;
+         if (aOrder !== bOrder) return aOrder - bOrder;
+       } else if (aOrder !== undefined) return -1;
+       else if (bOrder !== undefined) return 1;
 
        return (a.item_code || '').localeCompare(b.item_code || '');
     }
 
-    return sortOrder === 'oldest' ? a._time! - b._time! : b._time! - a._time!;
+    // 2. Different groups (or ungrouped vs grouped, etc)
+    let cmp = 0;
+    if (sortOrder === 'name') {
+      const nameA = a._groupCoverName ?? (typeof a.name === 'object' ? (a.name.zh || '') : (a.name || ''));
+      const nameB = b._groupCoverName ?? (typeof b.name === 'object' ? (b.name.zh || '') : (b.name || ''));
+      cmp = nameA.localeCompare(nameB);
+    } else {
+      cmp = sortOrder === 'oldest' ? a._time! - b._time! : b._time! - a._time!;
+    }
+
+    if (cmp !== 0) return cmp;
+
+    // 3. Tie-breaker to ensure different groups/ungrouped items with exact same time/name don't interleave
+    const gA = a.group_id || a.id;
+    const gB = b.group_id || b.id;
+    return gA.localeCompare(gB);
   });
   
   return representatives;

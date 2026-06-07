@@ -38,11 +38,7 @@ export const MaintenanceHistoryPage = () => {
   });
 
   const handleBack = () => {
-    if (activeScreen === 'history_maintenance') {
-      update({ activeScreen: 'gallery' });
-    } else {
-      navigate({ to: ROUTES.ADMIN });
-    }
+    update({ activeScreen: 'gallery' });
   };
 
   return (

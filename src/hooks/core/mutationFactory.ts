@@ -40,19 +40,44 @@ export function createMutation<TData, TVariables, TContext = unknown>(config: Mu
         const queryKey = getQueryKey(variables);
         // Fire and forget cancellation to avoid blocking the optimistic update
         queryClient.cancelQueries({ queryKey });
-        const previousData = queryClient.getQueryData<TData>(queryKey);
+        
+        let previousData: any = undefined;
+        
         if (config.optimisticUpdate) {
-            const newData = config.optimisticUpdate(previousData, variables);
-            if (newData !== undefined) {
-            queryClient.setQueryData(queryKey, newData);
+            // For root keys like ['photos'], we need to update all matching query instances (like infinite lists)
+            const queriesData = queryClient.getQueriesData({ queryKey });
+            if (queriesData.length > 0) {
+              // Store previous states for rollback
+              previousData = queriesData; 
+              
+              // Apply optimistic update to all matching query states
+              queriesData.forEach(([key, oldData]) => {
+                const newData = config.optimisticUpdate!(oldData as any, variables);
+                if (newData !== undefined) {
+                  queryClient.setQueryData(key, newData);
+                }
+              });
+            } else {
+              // Fallback for direct exact matches
+              previousData = queryClient.getQueryData<TData>(queryKey);
+              const newData = config.optimisticUpdate(previousData as any, variables);
+              if (newData !== undefined) {
+                  queryClient.setQueryData(queryKey, newData);
+              }
             }
         }
-        return { previousData, queryKey, startTime } as unknown as TContext;
+        return { previousData, queryKey, startTime, isMultiQuery: Array.isArray(previousData) && previousData.length > 0 && Array.isArray(previousData[0]) } as unknown as TContext;
         },
         onError: (error: Error, variables: TVariables, context: any) => {
         hapticFeedback.error();
         if (context?.previousData !== undefined) {
-            queryClient.setQueryData(context.queryKey, context.previousData);
+            if (context.isMultiQuery) {
+              context.previousData.forEach(([key, oldData]: [QueryKey, any]) => {
+                queryClient.setQueryData(key, oldData);
+              });
+            } else {
+              queryClient.setQueryData(context.queryKey, context.previousData);
+            }
         }
         const isRollbackFailure = !context?.previousData;
         const duration = performance.now() - (context?.startTime || 0);
@@ -93,7 +118,7 @@ export function createMutation<TData, TVariables, TContext = unknown>(config: Mu
         },
         onSettled: (data: TData | undefined, error: Error | null, variables: TVariables) => {
         const queryKey = getQueryKey(variables);
-        queryClient.invalidateQueries({ queryKey });
+        queryClient.invalidateQueries({ queryKey, refetchType: 'all' });
         },
         ...options
     });
@@ -109,7 +134,7 @@ export function createMutationHook<TData = any, TVariables = any, TContext = unk
       optimisticUpdate: config.optimisticUpdate,
       onSuccess: (data, variables) => {
         if (config.invalidateKeys) {
-          config.invalidateKeys.forEach((key: any) => queryClient.invalidateQueries({ queryKey: key }));
+          config.invalidateKeys.forEach((key: any) => queryClient.invalidateQueries({ queryKey: key, refetchType: 'all' }));
         }
         
         // Priority: Runtime options > Config successMessage > Config onSuccessMessage

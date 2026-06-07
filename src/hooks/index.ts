@@ -10,7 +10,6 @@ export { usePhotoAction } from './usePhotoAction';
 export { usePhotoUpload } from './usePhotoUpload';
 export { useScrollRestoration } from '../core/infra/useScrollRestoration';
 export { useLongPress } from './core/useLongPress';
-export { usePerformance } from './core/usePerformance';
 export { useTranslation } from './core/useTranslation';
 export { useAppLocale } from './core/useAppLocale';
 export { useImagePreloader } from './core/useImagePreloader';

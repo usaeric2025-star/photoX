@@ -107,22 +107,7 @@ export function AdminGridContainer({
 
         <UploadButton 
           variant={variant}
-          scrollToTop={scrollToTop}
           onAdd={() => document.getElementById('admin-quick-add-input')?.click()}
-          onBatchAiIdentify={handleBatchAiIdentifyTrigger}
-          onBatchEdit={() => {
-            const currentSelected = useUIStore.getState().selectedIds;
-            initiateBatchEdit(Array.from(currentSelected));
-          }}
-          onDelete={() => {
-            const currentSelected = useUIStore.getState().selectedIds;
-            initiateDelete(Array.from(currentSelected));
-          }}
-          onToggleVisibility={() => {
-            const currentSelected = useUIStore.getState().selectedIds;
-            initiateHide(Array.from(currentSelected));
-          }}
-          onClearSelection={disableMultiSelect}
         />
 
         <SelectionToolbar

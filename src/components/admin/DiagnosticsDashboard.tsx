@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   RefreshCw, CheckCircle2, ShieldAlert, AlertTriangle, 
   Trash2, PackageSearch, CloudDownload, Zap, Fingerprint, History, ShieldCheck,
-  Loader2
+  Loader2, ChevronDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useDiagnostics } from '@/hooks/admin/useDiagnostics';
@@ -27,6 +27,7 @@ const severityColors = {
  * UI components extracted to DiagnosticCard and MaintenanceToolButton.
  */
 export function DiagnosticsDashboard() {
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const updateUIStore = useUIStore((s) => s.update);
   const { 
     report, isLoading, refreshReport, runRepair,
@@ -352,43 +353,65 @@ export function DiagnosticsDashboard() {
           </div>
         </div>
 
-        {/* 第二组：极端情况与系统深度清理 (Advanced Cleanup) */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 px-1 text-xs font-black text-slate-700">
-            <ShieldAlert size={14} className="text-amber-500" />
-            极端恢复与系统清理 (Advanced Recovery & Cleanup)
-          </div>
-          <div className="grid grid-cols-1 gap-4">
-            <MaintenanceTool 
-              issueId="ghost_records"
-              title="清理幽灵数据记录" 
-              description="【危险操作】兜底清理数据库中完全损坏（无头无哈希无URL）的无效废弃记录。"
-              danger
-              onSuccess={refreshReport}
-            />
-          </div>
-        </div>
+        {/* 高级与一次性操作，默认折叠 */}
+        <div className="space-y-4 pt-4 border-t border-slate-200/60">
+          <button 
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="flex items-center gap-2 w-full px-1 py-2 text-xs font-black text-slate-500 hover:text-slate-800 transition-colors uppercase tracking-wider"
+          >
+            <ChevronDown size={14} className={`transition-transform duration-300 ${showAdvanced ? 'rotate-180' : ''}`} />
+            高级清理与 AI 实验工具 (Advanced / Experimental)
+          </button>
+          
+          <AnimatePresence>
+            {showAdvanced && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden space-y-8 pt-2"
+              >
+                {/* 第二组：极端情况与系统深度清理 (Advanced Cleanup) */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 px-1 text-xs font-bold text-slate-700">
+                    <ShieldAlert size={14} className="text-amber-500" />
+                    极端恢复与废弃清理
+                  </div>
+                  <div className="grid grid-cols-1 gap-4">
+                    <MaintenanceTool 
+                      issueId="ghost_records"
+                      title="清理幽灵数据记录" 
+                      description="【危险操作】兜底清理数据库中完全损坏（无头无哈希无URL）的无效记录。通常为一次性操作。"
+                      danger
+                      onSuccess={refreshReport}
+                    />
+                  </div>
+                </div>
 
-        {/* 第三组：AI 大规模重构与未来演进 (AI Orchestration) */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 px-1 text-xs font-black text-slate-700">
-            <Zap size={14} className="text-purple-500" />
-            AGNES AI 批处理与智能演进 (AI Deep Operations)
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <MaintenanceTool 
-              issueId="agnes_retranslate"
-              title="Agnes 全量语种校对" 
-              description="利用 Agnes AI 引擎对存量照片进行底层级别的三语（中文、英文、马来文）深度校对与翻译。"
-              onSuccess={refreshReport}
-            />
-            <MaintenanceTool 
-              issueId="agnes_redimension"
-              title="Agnes 深度尺寸重提" 
-              description="提取图片信息中的隐式尺寸描述，利用模型更正或者重新提取旧版本库中的遗漏尺寸属性。"
-              onSuccess={refreshReport}
-            />
-          </div>
+                {/* 第三组：AI 大规模重构与未来演进 (AI Orchestration) */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 px-1 text-xs font-bold text-slate-700">
+                    <Zap size={14} className="text-purple-500" />
+                    AGNES AI 批处理 (按需执行)
+                  </div>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <MaintenanceTool 
+                      issueId="agnes_retranslate"
+                      title="Agnes 全量语种校对" 
+                      description="利用 AI 引擎对存量照片进行底层语种机翻校对。批量调用消耗大，非必要不执行。"
+                      onSuccess={refreshReport}
+                    />
+                    <MaintenanceTool 
+                      issueId="agnes_redimension"
+                      title="Agnes 深度尺寸重提" 
+                      description="利用 AI 模型更正旧数据库中的遗漏尺寸属性。仅在引入新解析策略时一次性执行。"
+                      onSuccess={refreshReport}
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>

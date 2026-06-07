@@ -126,7 +126,7 @@ export function AdminPageContent() {
           <AnimatePresence>
             {['manage', 'settings', 'structure', 'logs'].includes(currentScreen) && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-20 bg-slate-50">
-                <SettingsScreen />
+                <SettingsScreen onClose={() => store.update({ activeScreen: 'gallery' })} />
               </motion.div>
             )}
 

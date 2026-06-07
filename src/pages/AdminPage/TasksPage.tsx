@@ -1,3 +1,4 @@
+import { useNavigate } from '@tanstack/react-router';
 import React from 'react';
 import { 
   History, CheckCircle2, AlertCircle, Clock, 
@@ -17,6 +18,7 @@ import { formatters } from '@/utils/formatters';
 export default function TasksPage() {
   const { tasks, isLoading, refetch } = useGlobalTasks();
   const update = useUIStore(s => s.update);
+  const navigate = useNavigate();
 
   const stats = {
     total: tasks.length,
