@@ -395,21 +395,6 @@ export const loadAllPhotosFromCloud = async (
 export const loadPhotosByGroupId = async (groupId: string, isAdminMode: boolean = false): Promise<Photo[]> => {
     if (!groupId) return [];
 
-    try {
-        const { data, error } = await supabase.rpc('get_group_with_photos', { group_uuid: groupId });
-        if (error) throw error;
-        if (data) {
-            const rows = Array.isArray(data) ? data : (data.photos || []);
-            let photos = rows.map((item: SupabasePhotoRaw) => mapSupabasePhoto(item));
-            if (!isAdminMode) {
-               photos = photos.filter((p: Photo) => !p.is_hidden);
-            }
-            return photos;
-        }
-    } catch (e) {
-        // Fallback or handle error
-    }
-
     let query = supabase
         .from(DB_CONFIG.TABLE_NAME)
         .select('*')
@@ -419,7 +404,8 @@ export const loadPhotosByGroupId = async (groupId: string, isAdminMode: boolean 
         query = query.or(VISIBILITY_OR_QUERY);
     }
     
-    query = query.order('is_hidden', { ascending: true, nullsFirst: true })
+    query = query.order('is_group_cover', { ascending: false })
+                 .order('is_hidden', { ascending: true, nullsFirst: true })
                  .order('created_at', { ascending: false })
                  .order('id', { ascending: true });
 
@@ -446,22 +432,6 @@ export const loadPhotosByGroupIdPaginated = async (
 
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
-
-  try {
-    const { data, error } = await supabase.rpc('get_group_with_photos', { group_uuid: groupId });
-    if (error) throw error;
-    if (data) {
-       const rows = Array.isArray(data) ? data : (data.photos || []);
-       let photos = rows.map((item: SupabasePhotoRaw) => mapSupabasePhoto(item));
-       if (!isAdminMode) {
-          photos = photos.filter((p: Photo) => !p.is_hidden);
-       }
-       const paginatedPhotos = photos.slice(from, to + 1);
-       return { photos: paginatedPhotos, total: photos.length || data.total_count || 0 };
-    }
-  } catch (e) {
-      // Fallback
-  }
 
   let countQuery = supabase
     .from(DB_CONFIG.TABLE_NAME)

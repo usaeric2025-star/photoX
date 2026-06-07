@@ -17,6 +17,7 @@ interface VirtualPhotoGridProps {
   renderCard: (photo: Photo, index: number) => React.ReactNode;
   columns: number;
   ref?: React.Ref<VirtualGridHandle>;
+  restoreKey?: string;
 }
 
 const multiSelectSelector = (s: UIStoreState) => ({
@@ -31,38 +32,54 @@ export function VirtualPhotoGrid({
   onLoadMore,
   renderCard,
   columns,
-  ref
+  ref,
+  restoreKey
 }: VirtualPhotoGridProps) {
   const { filters } = useUrlFilters();
   const appLang = useUIStore((s) => s.appLang);
   const t = (translations[appLang as keyof typeof translations] || translations.en) as TranslationType;
 
+  const internalGridRef = useRef<VirtualGridHandle | null>(null);
+  // Merge refs
+  const gridRef = (node: VirtualGridHandle | null) => {
+    internalGridRef.current = node;
+    if (typeof ref === 'function') {
+      ref(node);
+    } else if (ref) {
+      (ref as React.MutableRefObject<VirtualGridHandle | null>).current = node;
+    }
+  };
+
   const isScrollRestoredRef = useRef(false);
 
-  // Anchoring logic: when returning from a group detail view
+  // Offset restoration
   useEffect(() => {
-    if (filters.groupId === null && photos.length > 0 && !isScrollRestoredRef.current) {
-      const targetId = filters.photoId;
-      if (targetId) {
-        const index = photos.findIndex(p => p.id === targetId || p.group_id === targetId);
-        if (index !== -1) {
-          isScrollRestoredRef.current = true;
-          setTimeout(() => {
-            (ref as React.RefObject<VirtualGridHandle>)?.current?.scrollToIndex(index);
-          }, 100);
-        }
+    if (restoreKey && photos.length > 0 && !isScrollRestoredRef.current && internalGridRef.current) {
+      const saved = sessionStorage.getItem(restoreKey);
+      if (saved) {
+        try {
+          const offset = parseFloat(saved);
+          if (!isNaN(offset) && offset > 0) {
+            isScrollRestoredRef.current = true;
+            // timeout allows vlist to measure container
+            setTimeout(() => {
+              internalGridRef.current?.scrollTo(offset);
+            }, 10);
+            return; // Don't do index anchor if we have offset
+          }
+        } catch (e) {}
       }
     }
-  }, [filters.groupId, photos, filters.photoId, ref]);
+  }, [restoreKey, photos]);
 
-  useEffect(() => {
-    // Reset flag if groupId changes (e.g. going back into a group)
-    if (filters.groupId !== null) {
-      isScrollRestoredRef.current = false;
+  const handleScroll = (offset: number) => {
+    if (restoreKey) {
+      sessionStorage.setItem(restoreKey, offset.toString());
     }
-  }, [filters.groupId]);
+  };
 
   const { preloadBatch } = useImagePreloader();
+
 
 
   const isLoading = isFetching && photos.length === 0;
@@ -79,11 +96,12 @@ export function VirtualPhotoGrid({
     <div className="h-full w-full overscroll-y-contain relative">
       <div className="h-full w-full">
         <VirtualGrid
-          ref={ref}
+          ref={gridRef}
           count={photos.length}
           lanes={columns}
           itemSize={200}
           shift={false}
+          onScroll={handleScroll}
           onEndReached={() => {
             if (hasNextPage && !isFetchingNextPage && onLoadMore) {
               onLoadMore();

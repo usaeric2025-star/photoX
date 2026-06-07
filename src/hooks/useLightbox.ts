@@ -89,7 +89,8 @@ export const useLightbox = () => {
     navigate({
       to: location.pathname,
       search: (prev: any) => ({ ...prev, photoId: undefined }),
-      replace: true
+      replace: true,
+      resetScroll: false
     });
   };
   

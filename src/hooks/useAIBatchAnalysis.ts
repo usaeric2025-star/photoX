@@ -14,12 +14,9 @@ export function useAIBatchAnalysis() {
       return;
     }
 
-    const toastId = toast.loading(`准备分析 ${targetPhotos.length} 张照片...`);
-
     const taskTitle = groupId ? `智能合组分析 (${targetPhotos.length}张)` : `批量 AI 分析 (${targetPhotos.length}张)`;
 
-    try {
-      await runTask(taskTitle, async ({ updateProgress }) => {
+    await runTask(taskTitle, async ({ updateProgress }) => {
         let successCount = 0;
       const totalPhotosToProcess = targetPhotos.length;
       let progress = 0;
@@ -140,9 +137,6 @@ export function useAIBatchAnalysis() {
         toast.success(`成功分析 ${successCount} 张${groupId ? '组内' : ''}照片 / AI Analysis complete`);
       }
     }, { showProgress: true, showSuccessToast: false });
-    } finally {
-      toast.dismiss(toastId);
-    }
   }, [runTask, updatePhoto]);
 
   return { handleBatchAiAnalyze };

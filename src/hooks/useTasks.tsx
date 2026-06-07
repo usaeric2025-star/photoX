@@ -151,17 +151,22 @@ function BackgroundTaskPanel() {
   const activeTasks = tasks.filter(t => t.status === 'running');
   const hasTasks = tasks.length > 0;
 
-  // Auto expand when there are active tasks starting
+  // Auto expand when there are active tasks starting, auto-collapse when finished after 4s
   useEffect(() => {
     if (activeTasks.length > 0) {
       setIsExpanded(true);
+    } else {
+      const timer = setTimeout(() => {
+        setIsExpanded(false);
+      }, 4000);
+      return () => clearTimeout(timer);
     }
   }, [activeTasks.length]);
 
   if (!hasTasks) return null;
 
   return (
-    <div className={`fixed ${isAvoidingSelection ? 'bottom-32' : 'bottom-20'} left-6 z-header flex flex-col items-start gap-3 transition-all duration-300`}>
+    <div className={`fixed ${isAvoidingSelection ? 'bottom-32' : 'bottom-20'} left-6 z-toast flex flex-col items-start gap-3 transition-all duration-300`}>
       <AnimatePresence>
         {isExpanded && (
           <motion.div

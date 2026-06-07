@@ -40,11 +40,11 @@ export function useUrlFilters() {
   };
   
   const setGroupId = (groupId: string | null) => {
-    navigate({ search: { ...search, groupId: groupId || undefined } as any });
+    navigate({ search: { ...search, groupId: groupId || undefined } as any, resetScroll: false });
   };
   
   const setPhotoId = (photoId: string | null) => {
-    navigate({ search: { ...search, photoId: photoId || undefined } as any });
+    navigate({ search: { ...search, photoId: photoId || undefined } as any, resetScroll: false });
   };
 
   const setShowGroupsCollapsed = (collapsed: boolean) => {

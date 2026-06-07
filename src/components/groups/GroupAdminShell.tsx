@@ -209,6 +209,7 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
                   virtualGridRef={virtualGridRef}
                   photos={activeGroupPhotos}
                   isLoading={isGroupPhotosLoading}
+                  groupData={groupData}
                   highlightId={currentHighlightId}
                   onPhotoClick={handlePhotoClick}
                   onPhotoContextMenu={handlePhotoContextMenu}

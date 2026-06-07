@@ -177,7 +177,7 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
   const isOpen = activeGroupId !== null;
 
   const handleClose = () => {
-    navigate({ to: isManagement ? '/admin' : '/', search: (prev: any) => ({ ...prev, groupId: undefined, photoId: undefined }) });
+    navigate({ to: isManagement ? '/admin' : '/', search: (prev: any) => ({ ...prev, groupId: undefined, photoId: undefined }), resetScroll: false });
   };
 
   return (

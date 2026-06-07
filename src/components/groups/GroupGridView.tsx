@@ -144,11 +144,12 @@ export function GroupGridView({
   }
 
   const renderItem = (index: number) => {
-    if (isLoading) {
+    const photo = photos[index];
+    if (isLoading || !photo) {
       return (
         <div className="p-1 h-full w-full">
           <div className="bg-white rounded-[1.25rem] border border-slate-100 p-1.5 flex flex-col h-full animate-pulse shadow-sm">
-            <div className="aspect-square rounded-xl bg-slate-100/80 relative overflow-hidden" />
+            <div className="aspect-square rounded-xl bg-slate-100/80 relative overflow-hidden bg-slate-100" />
             <div className="mt-2.5 px-1 pb-1 space-y-1.5">
               <div className="h-3 w-2/3 bg-slate-100 rounded-lg" />
               <div className="h-2 w-1/2 bg-slate-50 rounded-lg" />
@@ -157,8 +158,6 @@ export function GroupGridView({
         </div>
       );
     }
-    const photo = photos[index];
-    if (!photo) return null;
     const isHighlighted = highlightId === photo.id;
     const extraProps = getPhotoProps ? getPhotoProps(photo) : {};
     
@@ -182,7 +181,7 @@ export function GroupGridView({
     <div className={`w-full h-full relative ${groupData?.is_hidden ? 'grayscale opacity-70' : ''}`}>
       <VirtualGrid
         ref={virtualGridRef}
-        count={isLoading ? 12 : photos.length}
+        count={isLoading ? 12 : (groupData?.member_count && groupData.member_count > photos.length ? groupData.member_count : photos.length)}
         lanes={denseColumns}
         onEndReached={onEndReached}
         header={header}

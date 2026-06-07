@@ -25,7 +25,7 @@ import { useUIStore, useShallow } from '@/store/useUIStore';
 import { usePhotoGallery } from '@/features/photos/usePhotoGallery';
 import { Category } from '@/types';
 import { toast } from 'sonner';
-import { PublicHeader } from '@/components/layouts/headers/PublicHeader';
+import { AdminHeader } from '@/components/layouts/headers/AdminHeader';
 import { AdminAuthGate } from '@/components/admin/AdminAuthGate';
 import { AdminScreen } from '@/components/AdminScreen';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -111,11 +111,7 @@ export function AdminPageContent() {
     <AdminAuthGate isSyncing={isSyncing}>
       <DataLoadingContainer isLoading={isPhotosLoading} hasData={true}>
         <div className="flex flex-col h-screen bg-slate-50 overflow-hidden w-full relative">
-          <PublicHeader 
-            totalCount={photos?.length}
-            onRefresh={onRefresh}
-            isRefreshing={isSyncing}
-          />
+          <AdminHeader />
           <main className="flex-1 relative overflow-hidden pb-16 sm:pb-0">
           {store.batchEditingIds && store.batchEditingIds.length > 0 && <BatchEditScreen />}
           

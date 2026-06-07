@@ -149,6 +149,7 @@ export function PublicGridContainer({
         <div className="flex-1 overflow-hidden bg-brand-bg relative">
             <VirtualPhotoGrid 
               key={`photo-grid-${urlFilters.showGroupsCollapsed ? 'collapsed' : 'expanded'}-${urlFilters.searchQuery || ''}`}
+              restoreKey="public_view_scroll_vlist"
               photos={gridPhotos}
               isFetching={infiniteQuery.isLoading}
               isFetchingNextPage={infiniteQuery.isFetchingNextPage}
