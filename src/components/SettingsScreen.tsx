@@ -1,11 +1,11 @@
-import { ErrorFactory } from '../lib/error/ErrorFactory';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import React, { useState } from 'react';
 import { 
   ChevronLeft,
   Settings2, Save, ChevronDown, X
 } from 'lucide-react';
 import { api } from '@/lib/api';
-import { useErrorHandler } from '@/hooks';
+
 import { toast } from 'sonner';
 import { ErrorLogViewer } from './admin/ErrorLogViewer';
 import { AppSettings, User, ApiResponse } from '@/types';
@@ -69,7 +69,7 @@ export function SettingsScreen({ onClose }: SettingsScreenProps) {
   const appLang = useUIStore(s => s.appLang);
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
-  const { handleError } = useErrorHandler();
+  
   const { user, loginWithGoogle, logout } = useAuth();
   const { settings, geminiApiKey, customModel, accessPasscode, updateSettings } = useSettings();
   const setGeminiApiKey = (key: string) => updateSettings({ ...settings, gemini_api_key: key });

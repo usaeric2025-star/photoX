@@ -1,3 +1,4 @@
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { GroupDetailPage } from '../../GroupDetailPage';
@@ -5,7 +6,6 @@ import { GroupDetailPage } from '../../GroupDetailPage';
 // Mock necessary hooks and dependencies
 vi.mock('@/hooks', () => ({
   useAdminMode: () => false,
-  useErrorHandler: () => ({ handleError: vi.fn() }),
   useGroupDetail: () => ({ data: { name: 'Mock Group', member_count: 5 }, isLoading: false }),
   useTasks: () => ({ tasks: [] }),
   useGroupPhotos: () => ({ 

@@ -1,10 +1,10 @@
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useState, useRef, useEffect } from "react";
 import { Photo } from "../../types";
 import { filterPhotosByMode } from "@/lib/filters/photoVisibility";
 import { useAdminActions } from "@/hooks/admin/useAdminActions";
 import {
   useAdminMode,
-  useErrorHandler,
   useGroupPhotos,
   useUrlFilters
 } from "@/hooks";
@@ -40,7 +40,7 @@ export const useGroupAdminLogic = () => {
   const onBatchAiAnalyze = (photos: Photo[]) => {};
   const onBatchEdit = (ids: string[]) => update({ batchEditingIds: ids });
 
-  const { handleError } = useErrorHandler();
+  
 
   const [groupScrollStr, setGroupScrollStr] = useSessionStorage<string>({
     key: `group_scroll_${activeGroupId || 'default'}`,
@@ -64,7 +64,7 @@ export const useGroupAdminLogic = () => {
     isGroupDataLoading,
     handleUpdateGroupData,
     removeDraftGroup
-  } = useGroupDraft(activeGroupId, dbGroupPhotos, onUpdatePhoto, handleError);
+  } = useGroupDraft(activeGroupId, dbGroupPhotos, onUpdatePhoto);
 
   const activeGroupPhotos = (() => {
     if (!activeGroupId) return [];
@@ -115,8 +115,7 @@ export const useGroupAdminLogic = () => {
     onUpdatePhoto,
     onUpdatePhotosBulk,
     onBatchAiAnalyze,
-    onBatchEdit,
-    handleError
+    onBatchEdit
   );
 
   const hasScrolledRef = useRef<{ id: string | null; groupId: string | null }>({ id: null, groupId: null });
@@ -202,7 +201,6 @@ export const useGroupAdminLogic = () => {
     handleReorder,
     handleBulkAction,
     setCover,
-    handleError,
-    isGroupPhotosLoading
+        isGroupPhotosLoading
   };
 };

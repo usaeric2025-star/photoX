@@ -1,3 +1,4 @@
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import React, { useState, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { Pencil, Trash2, Heart, X } from "lucide-react";
@@ -5,14 +6,12 @@ import { cn } from "@/lib/utils";
 import { useDisclosure } from "@mantine/hooks";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
-  useErrorHandler,
   usePhotoFilter,
   useSettings,
   useUIStore,
   useShallow,
 } from "@/hooks";
 import { Tag } from "@/types";
-import { ErrorFactory } from "@/lib/error/ErrorFactory";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { useLongPress } from "@/hooks/core/useLongPress";
 
@@ -39,7 +38,7 @@ export function TagEditor({
 }: TagEditorProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const { settings, updateSettings } = useSettings();
-  const { handleError } = useErrorHandler();
+  
   const [activeActionTag, setActiveActionTag] = useState<Tag | null>(null);
   const portalOpenedAt = useRef<number>(0);
   const [isDeleteOpen, deleteDialog] = useDisclosure(false);
@@ -54,7 +53,7 @@ export function TagEditor({
       const nextSettings = { ...settings, pinned_tags: newPinned };
       await updateSettings(nextSettings);
     } catch (err) {
-      handleError(err, "切换置顶状态");
+      ErrorFactory.handle(err, "切换置顶状态");
     }
   };
 

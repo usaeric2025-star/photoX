@@ -1,10 +1,12 @@
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { useTaskExecutor, useTasks } from "@/hooks";
 import React, { useState } from "react";
 import { Plus, Heart, RefreshCw } from "lucide-react";
 import { useDisclosure } from "@mantine/hooks";
 import { Tag, AppSettings } from "../../types";
 import { TagItem } from "./TagItem";
 import { PromptDialog } from "@/components/ui/PromptDialog";
-import { useErrorHandler, useTaskExecutor, useTasks } from "@/hooks";
+
 import { toast } from 'sonner';
 import { normalizeTagName } from "@/lib/utils";
 import { triggerRefreshTagHotScores } from "../../services/tag/commands";
@@ -41,7 +43,7 @@ export function TagsSection({
   cardClass,
   buttonStyles,
 }: TagsSectionProps) {
-  const { handleError } = useErrorHandler();
+  
   const { runTask } = useTaskExecutor();
   const { tasks } = useTasks();
   const isRunning = tasks.some((t) => t.status === "running");

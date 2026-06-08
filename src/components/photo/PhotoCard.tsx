@@ -1,3 +1,4 @@
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import React, { useRef, useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLongPress } from '@/hooks/core/useLongPress';
@@ -7,13 +8,14 @@ import { photoKeys } from '@/lib/queryKeys';
 import { getTranslatedCategoryName } from '@/lib/ui-helpers';
 import { useSearch, useNavigate } from '@tanstack/react-router';
 
+import { useCategories, useTags, usePermission } from '@/hooks';
 import { PinButton } from './PinButton';
 import { Photo, Category, Tag } from '../../types';
 import { Layers, Heart, Check, EyeOff } from 'lucide-react';
 import { getCacheBustedImageUrl, getPhotoDisplayName } from '../../lib/ui-helpers';
 import { getSafeText } from '@/lib/ai/safeText';
 import { ResponsivePhoto } from '../shared/ResponsivePhoto';
-import { usePermission, useCategories, useTags, useErrorHandler } from '../../hooks';
+
 import { useAdminActions } from '@/hooks/admin/useAdminActions';
 import { getDisplayGroupCode } from '@/services/photo/utils';
 
@@ -67,7 +69,7 @@ export const PhotoCard = React.memo(({
 
   const resolvedImgVariant = imgVariant || (columns <= 3 ? 'md' : 'sm');
   
-  const { handleError } = useErrorHandler();
+  
   const cardRef = useRef<HTMLDivElement>(null);
   const longPressTriggered = useRef(false);
   const resetTimerRef = useRef<number | null>(null);

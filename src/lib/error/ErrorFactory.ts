@@ -1,4 +1,5 @@
 import { AppResult, AppError, AppSuccess, ErrorCode } from '@/types/api';
+import { globalHandleError } from './errorHandler';
 
 export type { AppResult, AppError, AppSuccess, ErrorCode };
 
@@ -51,6 +52,10 @@ export class ErrorFactory {
   static success<T>(data: T): AppSuccess<T> {
     return { ok: true, data };
   }
+
+  static handle(error: unknown, context: string = '未知操作', silent: boolean = false) {
+    globalHandleError(error, context, silent);
+  }
 }
 
 // Global utility exports for convenience
@@ -58,6 +63,7 @@ export const errorFactory = ErrorFactory.createError;
 export const success = ErrorFactory.success;
 export const ok = success;
 export const err = errorFactory;
+export const handleError = ErrorFactory.handle;
 
 export function isErr<T>(result: AppResult<T>): result is AppError {
   return !result.ok;

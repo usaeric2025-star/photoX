@@ -1,3 +1,4 @@
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 // Core Hooks
 export { useAuth } from './core/auth/useAuth';
 export { useSettings } from './useSettings';
@@ -52,7 +53,6 @@ export { useAIBatchAnalysis } from './useAIBatchAnalysis';
 
 // Utils
 export { useUIStore, useStore, useShallow, useColumns } from '../store/useUIStore';
-export { useErrorHandler } from './core/useErrorHandler';
 
 
 

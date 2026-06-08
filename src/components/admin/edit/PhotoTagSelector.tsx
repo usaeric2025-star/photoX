@@ -1,10 +1,11 @@
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import React, { useState } from "react";
 import { useDisclosure } from "@mantine/hooks";
 import { PromptDialog } from "@/components/ui/PromptDialog";
 import { TagEditor } from "../TagEditor";
 import { Tag } from "../../../types";
 import { safeArray } from "../../../lib/utils";
-import { useErrorHandler } from "@/hooks";
+
 
 interface PhotoTagSelectorProps {
   tags: Tag[];
@@ -23,7 +24,7 @@ export function PhotoTagSelector({
   updateTag,
   deleteTag,
 }: PhotoTagSelectorProps) {
-  const { handleError } = useErrorHandler();
+  
   const [isAddOpen, addDialog] = useDisclosure(false);
   const [isEditOpen, editDialog] = useDisclosure(false);
   const [editingTag, setEditingTag] = useState<Tag | null>(null);
@@ -104,7 +105,7 @@ export function PhotoTagSelector({
               }
             }
           } catch (err: any) {
-            handleError(err, "新增标签失败");
+            ErrorFactory.handle(err, "新增标签失败");
           }
         }}
       />
@@ -120,7 +121,7 @@ export function PhotoTagSelector({
               try {
                 await updateTag(String(editingTag.id), n.trim());
               } catch (err: any) {
-                handleError(err, "编辑标签失败");
+                ErrorFactory.handle(err, "编辑标签失败");
               }
             }
           }}

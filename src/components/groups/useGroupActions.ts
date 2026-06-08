@@ -1,3 +1,4 @@
+import { ErrorFactory } from "@/lib/error/ErrorFactory";
 import { Photo, Dimension } from "@/types";
 import { useGroupCoverMutation, useRemoveFromGroupMutation } from "@/hooks";
 
@@ -14,8 +15,7 @@ export const useGroupActions = (
   onUpdatePhoto: (id: string, data: any) => Promise<any>,
   onUpdatePhotosBulk: (ids: string[], data: any) => Promise<any>,
   onBatchAiAnalyze: (photos: Photo[]) => void,
-  onBatchEdit: (ids: string[]) => void,
-  handleError: (err: any, msg: string) => void
+  onBatchEdit: (ids: string[]) => void
 ) => {
   const { mutate: mutateSetCover } = useGroupCoverMutation();
   const { mutateAsync: removePhotosBatch } = useRemoveFromGroupMutation();
@@ -97,7 +97,7 @@ export const useGroupActions = (
           await serviceUpdatePhoto(photoId, updates);
         }
       } catch (err: any) {
-        handleError(err, "保存照片修改失败");
+        ErrorFactory.handle(err, "保存照片修改失败");
       }
     };
 
@@ -135,7 +135,7 @@ export const useGroupActions = (
           );
         }
       } catch (err: any) {
-        handleError(err, "批量更新尺寸失败");
+        ErrorFactory.handle(err, "批量更新尺寸失败");
         throw err;
       }
     };
@@ -166,7 +166,7 @@ export const useGroupActions = (
           ),
         );
       } catch (err: any) {
-        handleError(err, "保存排序失败");
+        ErrorFactory.handle(err, "保存排序失败");
         throw err;
       }
     };

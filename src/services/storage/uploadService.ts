@@ -5,6 +5,7 @@ import { ErrorFactory, success } from '@/lib/error/ErrorFactory';
 import { withErrorHandling } from '@/lib/error/wrapper';
 import { AppResult } from '@/types/api';
 import { compressImage, dataURLToArrayBuffer } from './uploadUtils';
+import { resolveUploadStrategy } from './uploadStateMachine';
 
 export interface UploadResult {
   imageUrl: string;
@@ -101,18 +102,33 @@ export const uploadImages = async (
     const { uploadUrl, publicUrl } = result.data;
 
     try {
-      await fetch(uploadUrl, {
+      const uploadRes = await fetch(uploadUrl, {
         method: 'PUT',
         headers: { 'Content-Type': 'image/webp' },
         body: new Uint8Array(buffer)
       });
+      if (!uploadRes.ok) {
+         throw new Error(`R2 Upload failed with HTTP ${uploadRes.status}: ${await uploadRes.text().catch(() => '')}`);
+      }
       if (isMain && onProgress) onProgress(100);
       return publicUrl;
     } catch (browserUploadErr: any) {
+      console.warn('[Upload] Browser direct upload via presigned URL failed, evaluating fallback...', browserUploadErr);
+      
+      const strategy = resolveUploadStrategy(buffer.byteLength, browserUploadErr);
+      
+      if (strategy.status === 'failed') {
+          throw ErrorFactory.wrap(new Error(strategy.userMessage || strategy.reason), 'uploadFile', photoId);
+      }
+      
+      // status === 'relay'
+      console.warn('[Upload] Falling back to server relay...', strategy.status === 'relay' ? strategy.endpoint : '/api/upload-direct');
       const fallbackRes = await api['upload-direct'].$post({
         json: { base64Data: base64, fileKey: safeFileName, contentType: 'image/webp' }
       });
-      if (!fallbackRes.ok) throw ErrorFactory.wrap(new Error('服务器中转上传失败'), 'uploadFile', photoId);
+      if (!fallbackRes.ok) {
+         throw ErrorFactory.wrap(new Error(`服务器中转上传失败 (HTTP ${fallbackRes.status}): ${await fallbackRes.text().catch(()=>'')}`), 'uploadFile', photoId);
+      }
       const fallbackResult = await fallbackRes.json();
       if (isMain && onProgress) onProgress(100);
       return fallbackResult.data.publicUrl;

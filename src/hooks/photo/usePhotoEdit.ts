@@ -1,11 +1,12 @@
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { useInvalidatePhotos } from '@/hooks';
 import { useMemo, useEffect, useState } from 'react';
 import { Photo, ProductFormData } from '@/types';
 import { useFormDraft } from '@/hooks/useFormDraft';
 import { useMutation } from '@tanstack/react-query';
 import { updatePhoto } from '@/services/photo/commands';
 import { toast } from 'sonner';
-import { useErrorHandler, useInvalidatePhotos } from '@/hooks';
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
+
 
 export interface PhotoEditFormReturn {
   values: ProductFormData;
@@ -23,7 +24,7 @@ export interface PhotoEditFormReturn {
  * 替換了原有的 usePhotoEditForm 與 usePhotoAction。
  */
 export function usePhotoEdit(initialPhoto: Photo | null): PhotoEditFormReturn {
-  const { handleError } = useErrorHandler();
+  
   const invalidatePhotos = useInvalidatePhotos();
   
   const emptyPhoto: ProductFormData = {
@@ -73,7 +74,7 @@ export function usePhotoEdit(initialPhoto: Photo | null): PhotoEditFormReturn {
       invalidatePhotos();
     },
     onError: (err) => {
-      handleError(err, `保存失敗: ${err.message}`);
+      ErrorFactory.handle(err, `保存失敗: ${err.message}`);
     }
   });
 

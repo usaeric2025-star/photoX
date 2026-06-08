@@ -3,6 +3,8 @@ import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { hapticFeedback } from '@/lib/ui/haptics';
 
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
+
 interface MutationConfig<TData, TVariables, TContext> {
   mutationFn: (variables: TVariables) => Promise<TData>;
   
@@ -101,10 +103,9 @@ export function createMutation<TData, TVariables, TContext = unknown>(config: Mu
         } else {
             api.log.event.$post({ json: errorPayload as any }).catch(console.error);
         }
+        ErrorFactory.handle(error, config.errorTitle || config.action || '操作失败');
         if (isRollbackFailure) {
-            toast.error('操作失败，数据可能不一致，请重新整理页面', { duration: 10000 });
-        } else {
-            toast.error(config.errorMessage || '操作失败，已回滚');
+            toast.error('数据可能不一致，请重新整理页面', { duration: 10000 });
         }
         config.onError?.(error, variables, context);
         },

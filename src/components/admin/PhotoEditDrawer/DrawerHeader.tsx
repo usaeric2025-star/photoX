@@ -1,3 +1,4 @@
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useShallow } from "@/store/useUIStore";
 import React from "react";
 import {
@@ -25,7 +26,6 @@ import {
   useAdminActions,
   usePhotoDelete,
   useTaskExecutor,
-  useErrorHandler,
   useSettings,
   PhotoEditFormReturn,
 } from "../../../hooks";

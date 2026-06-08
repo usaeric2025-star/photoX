@@ -1,6 +1,8 @@
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useCallback } from 'react';
-import { useTasks, useErrorHandler, useInvalidatePhotos, useAuth } from '@/hooks';
+
 import { checkDuplicateBatch } from '@/lib/data/duplicateCheck';
+import { useTasks, useInvalidatePhotos, useAuth } from '@/hooks';
 import { toast } from 'sonner';
 import { Photo } from '@/types';
 import { hapticFeedback } from '@/lib/ui/haptics';
@@ -8,7 +10,7 @@ import { useUIStore } from '@/store/useUIStore';
 
 export function usePhotoUpload() {
   const { addTask, updateTask } = useTasks();
-  const { handleError } = useErrorHandler();
+  
   const invalidatePhotos = useInvalidatePhotos();
   const { user } = useAuth();
   const appLang = useUIStore(s => s.appLang);
@@ -73,6 +75,7 @@ export function usePhotoUpload() {
           successCount++;
         } catch (err: any) {
           console.error(`[Upload] Failed for ${file.name}:`, err);
+          ErrorFactory.handle(err, `照片上传失败: ${file.name}`);
           failureCount++;
           // We don't stop the whole batch for one failure
         }
@@ -97,13 +100,13 @@ export function usePhotoUpload() {
 
     } catch (err: any) {
       hapticFeedback.error();
-      handleError(err, '批量上传异常中止');
+      ErrorFactory.handle(err, '批量上传异常中止');
       updateTask(taskId, { 
         status: 'error', 
         message: '上传过程中断'
       });
     }
-  }, [addTask, updateTask, handleError, invalidatePhotos]);
+  }, [addTask, updateTask, invalidatePhotos]);
 
   return { uploadFiles };
 }

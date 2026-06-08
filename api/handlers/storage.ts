@@ -9,7 +9,30 @@ import { requireRealUser } from "../lib/auth.js";
 const serverEnv = getServerEnv(process.env);
 export const storage = new Hono();
 
-// Upload Routes
+storage.post("/log-error", async (c) => {
+    try {
+        const body = await c.req.json();
+        const payload = {
+            error_message: String(body.error_message || 'Unknown error').substring(0, 5000),
+            stack_trace: body.stack_trace || null,
+            component_stack: body.component_stack || null,
+            url: body.url || '',
+            metadata: body.metadata || {}
+        };
+        const supabase = await getSupabaseAdmin();
+        const { error } = await supabase
+            .from('system_logs')
+            .insert([payload]);
+        if (error) {
+            console.error("Failed to insert system_log:", error);
+            return c.json({ success: false, error: error.message }, 500);
+        }
+        return c.json({ success: true });
+    } catch (e: any) {
+        console.error("Error logging via /log-error", e);
+        return c.json({ success: false, error: e.message }, 500);
+    }
+});
 storage.post("/upload-direct", async (c) => {
     try {
       await requireRealUser(c);

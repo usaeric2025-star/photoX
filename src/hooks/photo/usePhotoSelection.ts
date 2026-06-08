@@ -1,7 +1,8 @@
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useUIStore } from '@/store/useUIStore';
 import { useCallback, useState } from 'react';
 import { useAdminActions } from '@/hooks/admin/useAdminActions';
-import { useErrorHandler } from '@/hooks';
+
 
 /**
  * usePhotoSelection
@@ -18,7 +19,7 @@ export const usePhotoSelection = () => {
   const resetForm = useUIStore(s => s.resetForm);
 
   const { deletePhoto, batchUpdate } = useAdminActions();
-  const { handleError } = useErrorHandler();
+  
 
   const [batchIsHiddenApplied, setBatchIsHiddenApplied] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -97,7 +98,7 @@ export const usePhotoSelection = () => {
       update({ batchEditingIds: null });
       resetForm();
     } catch (e: any) {
-      handleError(e, '批量保存失敗');
+      ErrorFactory.handle(e, '批量保存失敗');
     } finally {
       setIsSyncing(false);
     }

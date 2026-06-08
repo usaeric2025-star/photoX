@@ -1,3 +1,4 @@
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import React from "react";
 import { Settings2, Trash2, X, Copy } from "lucide-react";
 import { SheetHeader, SheetTitle } from "../../ui/sheet";
@@ -5,7 +6,8 @@ import { ProductGroup } from "../../../types";
 import { useDisclosure, useClipboard } from "@mantine/hooks";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { saveGroup as saveGroupToCloud } from "@/services/group/commands";
-import { useErrorHandler, useTaskExecutor, useTasks } from "../../../hooks";
+
+import { useTaskExecutor, useTasks } from "@/hooks";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
 import { toast } from "sonner";
 
@@ -21,7 +23,7 @@ export function GroupSettingsHeader({
   
 }) {
   const { setGroupId } = useUrlFilters();
-  const { handleError } = useErrorHandler();
+  
   const { runTask } = useTaskExecutor();
   const { tasks } = useTasks();
   const isRunning = tasks.some((t) => t.status === "running");

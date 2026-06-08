@@ -1,3 +1,4 @@
+import { ErrorFactory } from "@/lib/error/ErrorFactory";
 import { useState, useEffect, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ProductGroup, Photo } from "@/types";
@@ -11,8 +12,7 @@ import { groupKeys } from "@/lib/queryKeys";
 export const useGroupDraft = (
   activeGroupId: string | null,
   dbGroupPhotos: Photo[] | undefined,
-  onUpdatePhoto: (id: string, data: any) => Promise<any>,
-  handleError: (err: any, msg: string) => void
+  onUpdatePhoto: (id: string, data: any) => Promise<any>
 ) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -75,7 +75,7 @@ export const useGroupDraft = (
       try {
         const result = await saveGroupToCloud(nextGroupData);
         if (isErr(result)) {
-          handleError(result.error, "更新群組資料失敗");
+          ErrorFactory.handle(result.error, "更新群組資料失敗");
           return;
         }
         queryClient.invalidateQueries({
@@ -92,14 +92,13 @@ export const useGroupDraft = (
           }
         }
       } catch (err: any) {
-        handleError(err, "更新群組資料失敗");
+        ErrorFactory.handle(err, "更新群組資料失敗");
         throw err;
       }
     },
     [
       activeGroupId,
       groupData,
-      handleError,
       onUpdatePhoto,
       dbGroupPhotos,
       queryClient,

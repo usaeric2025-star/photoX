@@ -790,10 +790,18 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 - 當實際反饋證明某個抽象是多餘的，果斷移除
 - 所有架構演進必須記錄到本文件，包含引入原因和移除條件
 
+## 上传架构规范（锁定）
 
+- ✅ R2 预签名直传为主路径（无大小限制）
+- ✅ 服务端中转仅作为 < 4MB 文件的 fallback
+- ✅ ≥ 4MB 文件直传失败时提示用户重试，禁止走中转
+- ❌ 禁止设置全局文件大小上限来规避基础设施限制
+- ❌ 禁止将 Vercel body limit 等技术约束暴露为产品规格
 
+## 日志写入规范（锁定）
 
-
-
-
-
+- ✅ 所有错误日志通过 POST /api/log-error 写入
+- ✅ 该端点使用 supabaseAdmin，不受 RLS 限制
+- ✅ 前端 logErrorToSupabase() 内部封装此 API 调用
+- ❌ 禁止在任何前端代码中直接 supabase.from('system_logs').insert()
+- ❌ 禁止日志写入依赖用户认证状态

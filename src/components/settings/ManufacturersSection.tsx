@@ -1,10 +1,11 @@
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import React from "react";
 import { Plus } from "lucide-react";
 import { useDisclosure } from "@mantine/hooks";
 import { Manufacturer } from "../../types";
 import { ManufacturerItem } from "../admin/ManufacturerItem";
 import { PromptDialog } from "@/components/ui/PromptDialog";
-import { useErrorHandler } from "../../hooks";
+
 import { toast } from 'sonner';
 import { normalizeManufacturerName } from "@/lib/utils";
 import { useUIStore } from "@/store/useUIStore";
@@ -30,7 +31,7 @@ export function ManufacturersSection({
   cardClass,
   buttonStyles,
 }: ManufacturersSectionProps) {
-  const { handleError } = useErrorHandler();
+  
   const [isAddOpen, addDialog] = useDisclosure(false);
   const appLang = useUIStore(s => s.appLang);
   const t = translations[appLang as keyof typeof translations] || translations.en;

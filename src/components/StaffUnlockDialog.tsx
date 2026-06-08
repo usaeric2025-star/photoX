@@ -1,7 +1,8 @@
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import React from 'react';
 import { motion } from 'motion/react';
 import { Lock, LogIn } from 'lucide-react';
-import { useErrorHandler } from '@/hooks/core/useErrorHandler';
+
 
 interface StaffUnlockDialogProps {
   isOpen: boolean;
@@ -19,7 +20,7 @@ export function StaffUnlockDialog({
   isOpen, onClose, passInput, setPassInput, passError, onSubmit, onLogin, loginWithGoogle, t
 }: StaffUnlockDialogProps) {
   if (!isOpen) return null;
-  const { handleError } = useErrorHandler();
+  
 
   return (
     <motion.div 
@@ -87,7 +88,7 @@ export function StaffUnlockDialog({
                       // Don't close modal immediately to show intent
                       await loginWithGoogle?.();
                     } catch (e: any) { 
-                      handleError(e, t.loginFailed);
+                      ErrorFactory.handle(e, t.loginFailed);
                     }
                   }}
                   className="w-full py-3 px-4 rounded-2xl font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all text-sm flex items-center justify-center gap-2"

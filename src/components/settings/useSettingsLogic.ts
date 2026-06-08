@@ -9,9 +9,10 @@ import {
   normalizeManufacturerName,
 } from "@/lib/utils";
 import { api } from "@/lib/api";
+import { useTaskExecutor, useInvalidatePhotos } from "@/hooks";
 import { fromThrowableAsync, ErrorFactory } from '@/lib/error/ErrorFactory';
 import { toast } from 'sonner';
-import { useErrorHandler, useInvalidatePhotos, useTaskExecutor } from "@/hooks";
+
 import { translations } from "@/lib/translations";
 
 interface UseSettingsLogicProps {
@@ -35,7 +36,7 @@ export const useSettingsLogic = ({
   performPullSync,
   setSettings,
 }: UseSettingsLogicProps) => {
-  const { handleError } = useErrorHandler();
+  
   const invalidatePhotos = useInvalidatePhotos();
   const { runTask } = useTaskExecutor();
   const appLang = useUIStore(s => s.appLang);

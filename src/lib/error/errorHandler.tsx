@@ -1,6 +1,7 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import { toast } from 'sonner';
 import { logErrorToSupabase } from '@/services/error-log/commands';
+import { useClipboard } from '@mantine/hooks';
 
 export function extractErrorMessage(error: any): string {
   if (!error) return '未知错误';
@@ -89,6 +90,54 @@ export function extractErrorMessage(error: any): string {
   return String(error);
 }
 
+function ErrorToastUI({ message, context, stack }: { message: string; context: string; stack: string }) {
+  const clipboard = useClipboard({ timeout: 2000 });
+  const simpleReport = [
+    `🚨 【错误信息 / Error】: ${message}`,
+    `📌 【发生位置 / Context】: ${context} (${typeof window !== 'undefined' ? window.location.pathname : ''})`,
+    stack ? `🥞 【堆栈痕迹 / Stack Trace (Top 5)】:\n${stack}` : '',
+    `🕒 【触发时间 / Time】: ${new Date().toLocaleString()}`
+  ].filter(Boolean).join('\n\n');
+
+  const handleCopy = () => {
+    // try modern API via hook first
+    clipboard.copy(simpleReport);
+    toast.success('诊断报告已复制，可提交给管理员！');
+    
+    // Fallback for iFrame without clipboard-write permission
+    if (typeof document !== 'undefined') {
+      try {
+        const textArea = document.createElement("textarea");
+        textArea.value = simpleReport;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        textArea.remove();
+      } catch (err) {
+        console.warn('Fallback clipboard copy failed:', err);
+      }
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-1.5 mt-1 relative z-10 pointer-events-auto">
+      <p className="text-[11px] text-red-700 font-mono break-all line-clamp-3 bg-red-50/50 p-1.5 rounded border border-red-100/50">
+        {message}
+      </p>
+      <button 
+        onClick={handleCopy}
+        className="self-start text-[9px] font-bold text-red-600 border border-red-200 bg-red-50/50 hover:bg-red-50 hover:text-red-700 cursor-pointer font-sans tracking-wide px-2 py-0.5 rounded-full mt-1 flex items-center gap-1 transition-all active:scale-95"
+      >
+        📋 {clipboard.copied ? '已复制 Copied' : '复制详细错误诊断 Copy Error'}
+      </button>
+    </div>
+  );
+}
+
 export const globalHandleError = (error: any, context: string, silent: boolean = false) => {
   const message = extractErrorMessage(error);
   
@@ -139,37 +188,15 @@ export const globalHandleError = (error: any, context: string, silent: boolean =
   if (!silent) {
     try {
         toast.dismiss();
-        toast.error(`出错了 [${context}]`, {
-          description: (
-            typeof window !== 'undefined' ? (
-              <div className="flex flex-col gap-1.5 mt-1">
-                <p className="text-[11px] text-red-700 font-mono break-all line-clamp-3 bg-red-50/50 p-1.5 rounded border border-red-100/50">{message}</p>
-                <button 
-                  onClick={() => {
-                    const tv = typeof error === 'object' && error !== null;
-                    const truncatedStack = error instanceof Error && error.stack
-                      ? error.stack.split('\n').slice(0, 5).join('\n') // Keep top 5 frames for readability
-                      : (error?.stack ? String(error.stack).split('\n').slice(0, 5).join('\n') : '');
-                    
-                    const simpleReport = [
-                      `🚨 【错误信息 / Error】: ${message}`,
-                      `📌 【发生位置 / Context】: ${context} (${window.location.pathname})`,
-                      truncatedStack ? `🥞 【堆栈痕迹 / Stack Trace (Top 5)】:\n${truncatedStack}` : '',
-                      `🕒 【触发时间 / Time】: ${new Date().toLocaleString()}`
-                    ].filter(Boolean).join('\n\n');
+        
+        const truncatedStack = error instanceof Error && error.stack
+          ? error.stack.split('\n').slice(0, 5).join('\n')
+          : (error?.stack ? String(error.stack).split('\n').slice(0, 5).join('\n') : '');
 
-                    navigator.clipboard.writeText(simpleReport)
-                      .then(() => toast.success('诊断报告已复制，可提交给管理员！'))
-                      .catch(() => {});
-                  }}
-                  className="self-start text-[9px] font-bold text-red-600 border border-red-200 bg-red-50/50 hover:bg-red-50 font-sans tracking-wide px-2 py-0.5 rounded-full mt-1 flex items-center gap-1 transition animate-pulse"
-                  id="diag-btn"
-                >
-                  📋 复制详细错误诊断
-                </button>
-              </div>
-            ) : String(message)
-          ),
+        toast.error(`出错了 [${context}]`, {
+          description: typeof window !== 'undefined' ? (
+            <ErrorToastUI message={message} context={context} stack={truncatedStack} />
+          ) : String(message),
           duration: 10000
         });
     } catch(e) {
