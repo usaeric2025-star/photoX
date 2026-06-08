@@ -25,7 +25,7 @@ adminErrorEvents.post("/error-events-clear", async (c) => {
         const { error } = await supabase
             .from('system_logs')
             .delete()
-            .neq('id', '00000000-0000-0000-0000-000000000000');
+            .neq('id', -1);
         if (error) throw error;
         return c.json({ success: true });
     } catch (e: any) {

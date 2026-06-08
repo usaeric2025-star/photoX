@@ -18,9 +18,6 @@ import { SettingsScreen } from '@/components/SettingsScreen';
 import { PhotoEditDrawer } from '@/components/admin/PhotoEditDrawer';
 import { GroupDetailPage } from '@/components/GroupDetailPage';
 import { useAIBatchAnalysis } from '@/hooks/useAIBatchAnalysis';
-import TasksPage from '@/pages/AdminPage/TasksPage';
-import MaintenanceHistoryPage from '@/pages/AdminPage/MaintenanceHistoryPage';
-import { ErrorLogViewer } from '@/components/admin/ErrorLogViewer';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { usePhotoGallery } from '@/hooks/photo/usePhotoGallery';
 import { Category } from '@/types';
@@ -53,8 +50,12 @@ export function AdminPageContent() {
   // Sync URL to store 
   useEffect(() => {
     const path = location.pathname;
-    if (['/admin/error-logs', '/admin/tasks', '/admin/history/maintenance'].includes(path)) {
-      store.update({ activeScreen: 'settings' });
+    if (path === '/admin/tasks') {
+      store.update({ activeScreen: 'tasks' });
+    } else if (path === '/admin/error-logs') {
+      store.update({ activeScreen: 'error-logs' });
+    } else if (path === '/admin/history/maintenance') {
+      store.update({ activeScreen: 'history_maintenance' });
     } else if (path === '/admin' && (['error-logs', 'tasks', 'history_maintenance'].includes(store.activeScreen))) {
       store.update({ activeScreen: 'gallery' });
     }
@@ -95,29 +96,34 @@ export function AdminPageContent() {
           <main className="flex-1 relative overflow-hidden pb-16 sm:pb-0">
           {(currentScreen === 'home' || currentScreen === 'gallery') && store.batchEditingIds && store.batchEditingIds.length > 0 && <BatchEditScreen />}
           
-          <div className="absolute inset-0 transition-all duration-300">
-            {(currentScreen === 'home' || currentScreen === 'gallery') && !urlFilters.groupId && (
+          <AnimatePresence mode="wait">
+            {(currentScreen === 'home' || currentScreen === 'gallery') && !urlFilters.groupId ? (
               <motion.div 
+                key="admin-gallery"
                 initial={{ opacity: 0 }} 
                 animate={{ opacity: 1 }} 
                 exit={{ opacity: 0 }}
-                className="h-full w-full"
+                transition={{ duration: 0.2 }}
+                className="absolute inset-0"
               >
                 <AdminScreen />
               </motion.div>
-            )}
-          </div>
-
-          <AnimatePresence>
-            {['manage', 'settings', 'structure', 'logs', 'tasks', 'history_maintenance', 'error-logs'].includes(currentScreen) && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-20 bg-slate-50">
+            ) : currentScreen === 'dashboard' ? (
+              <ScreenWrapper key="admin-dashboard" onClose={() => store.update({ activeScreen: 'gallery' })}>
+                <StatisticsScreen />
+              </ScreenWrapper>
+            ) : ['manage', 'settings', 'structure', 'logs', 'tasks', 'history_maintenance', 'error-logs', 'diagnose'].includes(currentScreen) ? (
+              <motion.div 
+                key="admin-settings-container"
+                initial={{ opacity: 0, scale: 0.98 }} 
+                animate={{ opacity: 1, scale: 1 }} 
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.2 }}
+                className="absolute inset-0 z-20 bg-slate-50"
+              >
                 <SettingsScreen onClose={() => store.update({ activeScreen: 'gallery' })} />
               </motion.div>
-            )}
-
-            {currentScreen === 'dashboard' && (
-              <ScreenWrapper onClose={() => store.update({ activeScreen: 'gallery' })}><StatisticsScreen /></ScreenWrapper>
-            )}
+            ) : null}
           </AnimatePresence>
 
           <input 

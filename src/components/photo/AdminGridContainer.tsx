@@ -25,14 +25,17 @@ export function AdminGridContainer() {
   useScrollRestoration('admin_gallery_scroll');
   
   const navigate = useNavigate();
-  const { setSortOrder, setShowGroupsCollapsed, setSearchQuery } = useUrlFilters();
+  const { filters: urlFilters, setShowGroupsCollapsed, setSearchQuery, setSortOrder } = useUrlFilters();
+  const showGroupsCollapsed = urlFilters.showGroupsCollapsed !== false;
+  const hasSearchQuery = !!urlFilters.searchQuery?.trim();
+  
   const update = useUIStore(s => s.update);
   const [columns, setColumns] = useColumns();
   const isMultiSelect = useUIStore(s => s.isMultiSelect);
 
   // 1. Data Layer
   const { 
-    gridPhotos, photos, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage, urlFilters 
+    gridPhotos, photos, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage 
   } = useAdminPhotos();
 
   // 2. Action Layer
@@ -54,8 +57,10 @@ export function AdminGridContainer() {
       key={photo.id}
       photo={photo}
       index={index}
+      showGroupsCollapsed={showGroupsCollapsed}
+      hasSearchQuery={hasSearchQuery}
     />
-  ), []);
+  ), [showGroupsCollapsed, hasSearchQuery]);
 
   const disableMultiSelect = () => {
     update({ isMultiSelect: false, selectedIds: [] });

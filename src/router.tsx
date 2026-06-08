@@ -17,6 +17,7 @@ import { photoKeys, groupKeys } from '@/lib/queryKeys';
 import { createStaleTime } from '@/shared/freshnessSchema';
 import { getGroupById } from '@/services/group/queries';
 import { checkPublicAuth } from '@/lib/publicAuth';
+import { GlobalStatus } from './components/shared/GlobalStatus';
 
 /**
  * [V2.10-ROUTER-PERMISSION-INTEGRATED] Router Context Definition
@@ -80,8 +81,6 @@ function lazyWithRetry(importFn: () => Promise<any>, pageName: string) {
 
 const PublicPage = lazyWithRetry(() => import('./pages/PublicPage'), 'PublicPage');
 const AdminPage = lazyWithRetry(() => import('./pages/AdminPage/index'), 'AdminPage');
-const MaintenanceHistoryPage = lazyWithRetry(() => import('./pages/AdminPage/MaintenanceHistoryPage'), 'MaintenanceHistoryPage');
-const TasksPage = lazyWithRetry(() => import('./pages/AdminPage/TasksPage'), 'TasksPage');
 const PhotoLightboxPage = lazy(() => import('./pages/PhotoLightboxPage'));
 
 // 1. Root Route
@@ -98,6 +97,7 @@ export const rootRoute = createRootRouteWithContext<RouterContext>()({
     <Suspense fallback={<PageSkeleton />}>
       <Outlet />
       <PhotoLightboxPage />
+      <GlobalStatus />
     </Suspense>
   ),
 });
@@ -281,13 +281,13 @@ const adminRoute = createRoute({
 const adminHistoryRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: '/history/maintenance',
-  component: MaintenanceHistoryPage,
+  component: AdminPage,
 });
 
 const adminTasksRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: '/tasks',
-  component: TasksPage,
+  component: AdminPage,
 });
 
 const adminErrorLogsRoute = createRoute({
@@ -359,36 +359,41 @@ export const router = createRouter({
     const params = new URLSearchParams(searchStr);
     const result: Record<string, any> = {};
     params.forEach((value, key) => {
-      if (value === 'true' || value === 'false') {
-        result[key] = value;
-        return;
-      }
-      if (value.startsWith('"') && value.endsWith('"')) {
-        try {
-          result[key] = JSON.parse(value);
-          return;
-        } catch (_) {}
-      }
+      if (!value) return;
       try {
-        if (value.startsWith('{') || value.startsWith('[')) {
-          result[key] = JSON.parse(value);
+        if (value === 'true' || value === 'false') {
+          result[key] = value === 'true';
           return;
         }
-      } catch (_) {}
-      result[key] = value;
+        if ((value.startsWith('"') && value.endsWith('"')) || 
+            (value.startsWith('{') && value.endsWith('}')) || 
+            (value.startsWith('[') && value.endsWith(']'))) {
+          result[key] = JSON.parse(value);
+        } else {
+          result[key] = value;
+        }
+      } catch (_) {
+        result[key] = value;
+      }
     });
     return result;
   },
   stringifySearch: (search) => {
     const params = new URLSearchParams();
-    Object.entries(search).forEach(([key, value]) => {
-      if (value === undefined || value === null) return;
-      if (typeof value === 'object') {
-        params.set(key, JSON.stringify(value));
-      } else {
-        params.set(key, String(value));
-      }
-    });
+    if (search && typeof search === 'object') {
+      Object.entries(search).forEach(([key, value]) => {
+        if (value === undefined || value === null) return;
+        if (typeof value === 'object') {
+          try {
+            params.set(key, JSON.stringify(value));
+          } catch (_) {
+            params.set(key, String(value));
+          }
+        } else {
+          params.set(key, String(value));
+        }
+      });
+    }
     const str = params.toString();
     return str ? `?${str}` : '';
   },

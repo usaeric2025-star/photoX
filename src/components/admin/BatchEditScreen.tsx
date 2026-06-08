@@ -9,32 +9,24 @@ import { supabase } from '@/lib/supabase';
 import { reportError } from '@/lib/errorTracker';
 import { photoKeys } from '@/lib/queryKeys';
 
+import { usePhotoDelete } from '@/hooks/usePhotoMutations';
+
 function BatchDeleteButton({ selectedIds, onSuccess }: { selectedIds: string[], onSuccess: () => void }) {
   const [isDeleteOpen, deleteDialog] = useDisclosure(false);
-  const queryClient = useQueryClient();
-
-  const deleteMutation = useMutation({
-    mutationFn: async (photoIds: string[]) => {
-      const { data, error } = await supabase.from('furniture_items').delete().in('id', photoIds);
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: photoKeys.all });
-      onSuccess();
-    },
-    onError: (err) => {
-      reportError(err as Error, 'BatchDeleteAction');
-    }
-  });
+  const deleteMutation = usePhotoDelete();
 
   const handleDelete = () => {
     if (selectedIds.length === 0) return;
     deleteDialog.open();
   };
 
-  const confirmDelete = () => {
-    deleteMutation.mutate(selectedIds);
+  const confirmDelete = async () => {
+    try {
+      await deleteMutation.mutateAsync(selectedIds);
+      onSuccess();
+    } catch (err) {
+      // Error handled by mutationFactory or manually if needed for local UI
+    }
   };
 
   const isPending = deleteMutation.isPending;
@@ -61,7 +53,6 @@ function BatchDeleteButton({ selectedIds, onSuccess }: { selectedIds: string[], 
           variant="destructive"
           onConfirm={confirmDelete}
       />
-      {deleteMutation.isError && <span className="absolute top-full left-0 mt-1 min-w-max text-[10px] bg-red-500 text-white px-2 py-1 rounded shadow">{(deleteMutation.error as Error).message}</span>}
     </div>
   );
 }

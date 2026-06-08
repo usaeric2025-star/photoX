@@ -108,37 +108,44 @@ export function SelectionToolbar({
   };
 
   return createPortal(
-    <motion.div 
-      layout
-      className={cn(
-        "fixed bottom-6 left-1/2 -translate-x-1/2 z-header bg-slate-900/95 border border-slate-800 backdrop-blur rounded-full shadow-2xl flex items-center transition-all duration-300",
-        isMinimized ? "px-2 py-2 gap-1" : "px-4 py-2 gap-3"
-      )}
-      initial={{ y: 100, x: "-50%", opacity: 0 }}
-      animate={{ y: 0, x: "-50%", opacity: 1 }}
-    >
-      <div 
+    <div className="fixed bottom-6 inset-x-0 z-header flex justify-center pointer-events-none px-4">
+      <motion.div 
+        layout
+        className={cn(
+          "pointer-events-auto bg-slate-900/95 border border-slate-800 backdrop-blur rounded-full shadow-2xl flex items-center gap-3 transition-shadow duration-300",
+          isMinimized ? "px-2 py-2" : "px-5 py-2.5"
+        )}
+        initial={{ y: 50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 50, opacity: 0 }}
+        transition={{ 
+          type: "spring", 
+          stiffness: 400, 
+          damping: 30,
+          layout: { duration: 0.2 }
+        }}
+      >
+      <motion.div 
+        layout
         onClick={() => setIsMinimized(!isMinimized)}
         className={cn(
-          "flex items-center justify-center rounded-full bg-blue-600 text-white font-bold transition-all cursor-pointer hover:bg-blue-500 active:scale-90 select-none",
+          "flex items-center justify-center rounded-full bg-blue-600 text-white font-bold transition-all cursor-pointer hover:bg-blue-500 active:scale-95 select-none",
           isMinimized ? "w-10 h-10 text-sm" : "w-7 h-7 text-xs ring-4 ring-blue-600/15"
         )}
         title={isMinimized ? "点击展开工具栏" : `已选择 ${count} 张照片 (点击收起)`}
       >
         {count}
-      </div>
+      </motion.div>
 
-      <AnimatePresence mode="wait">
-        {!isMinimized && (
-          <motion.div 
-            key="expanded-toolbar"
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: "auto", opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
-            className="flex items-center gap-3 overflow-hidden"
-          >
-            <div className="w-[1px] h-6 bg-slate-800" />
-            <div className="flex items-center gap-1.5 sm:gap-1">
+      {!isMinimized && (
+        <motion.div 
+          layout
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex items-center gap-3"
+        >
+          <div className="w-[1px] h-6 bg-slate-800" />
+          <div className="flex items-center gap-1">
               <button
                 onClick={handleAI}
                 className="w-11 h-11 sm:w-9 sm:h-9 flex items-center justify-center rounded-full text-purple-400 hover:text-white hover:bg-purple-600/20 active:scale-95 transition-all outline-none"
@@ -188,7 +195,6 @@ export function SelectionToolbar({
             </div>
           </motion.div>
         )}
-      </AnimatePresence>
 
       <div className="w-[1px] h-6 bg-slate-800" />
 
@@ -207,7 +213,8 @@ export function SelectionToolbar({
         description="请至少选择两张照片才能进行合组。"
         onConfirm={() => {}}
       />
-    </motion.div>,
+      </motion.div>
+    </div>,
     document.body
   );
 }

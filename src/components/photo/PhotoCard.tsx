@@ -34,6 +34,8 @@ export interface PhotoCardProps extends React.HTMLAttributes<HTMLDivElement> {
   showCoverBadge?: boolean;
   displayCatName?: string;
   photoTags?: string[];
+  showGroupsCollapsed?: boolean;
+  hasSearchQuery?: boolean;
 }
 
 const toTitleCase = (str: string) => {
@@ -55,6 +57,8 @@ export const PhotoCard = React.memo(({
   hideGroupBadge = false,
   displayCatName: propDisplayCatName,
   photoTags: propPhotoTags,
+  showGroupsCollapsed = true,
+  hasSearchQuery = false,
   ...props
 }: PhotoCardProps) => {
   const isSelected = useUIStore((s) => s.selectedIds.includes(photo.id));
@@ -64,9 +68,6 @@ export const PhotoCard = React.memo(({
   const [columns] = useColumns();
   const navigate = useNavigate();
   
-  const showGroupsCollapsed = useSearch({ from: '__root__', select: (s: any) => s.showGroupsCollapsed !== 'false' });
-  const hasSearchQuery = useSearch({ from: '__root__', select: (s: any) => !!s.q?.trim() });
-
   const resolvedImgVariant = imgVariant || (columns <= 3 ? 'md' : 'sm');
   
   
