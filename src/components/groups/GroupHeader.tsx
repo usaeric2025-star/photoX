@@ -57,8 +57,8 @@ export function GroupHeader({
     batchEdit: appLang === 'zh' ? '批量编辑' : appLang === 'ms' ? 'Edit Pukal' : 'Batch Edit',
   };
 
-  const displayName = (typeof groupData?.name === 'object' ? (groupData?.name?.[appLang as keyof typeof groupData.name] || groupData?.name?.zh) : groupData?.name) || `GROUP ${activeGroupId?.slice(-4)}`;
-  const displayDesc = (typeof groupData?.description === 'object' ? (groupData?.description?.[appLang as keyof typeof groupData.description] || groupData?.description?.zh) : groupData?.description) || '';
+  const displayName = (typeof groupData?.name === 'object' ? (groupData?.name?.[appLang as keyof typeof groupData.name] || groupData?.name?.zh || groupData?.name?.en || groupData?.name?.ms) : groupData?.name) || `GROUP ${activeGroupId?.slice(-4)}`;
+  const displayDesc = (typeof groupData?.description === 'object' ? (groupData?.description?.[appLang as keyof typeof groupData.description] || groupData?.description?.zh || groupData?.description?.en || groupData?.description?.ms) : groupData?.description) || '';
 
   return (
     <div className="flex flex-col border-b border-slate-100 bg-white">
@@ -108,9 +108,6 @@ export function GroupHeader({
                       <Copy size={10} />
                     </button>
                   )}
-                  {displayDesc && (
-                    <p className="text-xs text-slate-500 truncate">{displayDesc}</p>
-                  )}
                 </>
               )}
             </div>
@@ -125,15 +122,20 @@ export function GroupHeader({
         </button>
       </div>
 
-      {isAdminMode && (
+      {(displayDesc || isAdminMode) && (
         <div className="px-4 sm:px-6 pb-4">
-          <button
-            onClick={() => onBatchEdit(activeGroupPhotos.map(p => p.id))}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium transition-colors"
-          >
-            <Edit2 size={14} />
-            {l.batchEdit}
-          </button>
+          {displayDesc && (
+            <p className="text-sm text-slate-600 mb-3">{displayDesc}</p>
+          )}
+          {isAdminMode && (
+            <button
+              onClick={() => onBatchEdit(activeGroupPhotos.map(p => p.id))}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium transition-colors"
+            >
+              <Edit2 size={14} />
+              {l.batchEdit}
+            </button>
+          )}
         </div>
       )}
     </div>

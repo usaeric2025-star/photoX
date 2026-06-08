@@ -825,6 +825,7 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 
 - ✅ 所有照片查询必须通过 `mapSupabasePhoto` 转换，严格使用 `photo.tags` 获取标签数据。
 - ❌ 禁止在组件或 Hook 中手写 `photo_tags` JOIN 查询或进行标签数据的二次加工（如 `map(t => t.name)`）。
+- ✅ 照片对象中禁止存在 `tagNames` 冗余字段。
 
 ## 战略预留点规范（锁定）
 

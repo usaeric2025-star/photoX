@@ -15,8 +15,7 @@ export const usePhotoEditMutation = createMutationHook({
     if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Update Photo', id);
     return res.data;
   },
-  invalidateKeys: [photoKeys.all],
-  optimisticUpdate: optimistic.infinite.update<Photo>(),
+  invalidateKeys: (vars) => [photoKeys.all, ['photo', vars.id]],
   onSuccessMessage: '照片更新成功',
 });
 
@@ -31,8 +30,7 @@ export const usePhotoDelete = createMutationHook({
     if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Delete Photos');
     return res.data;
   },
-  invalidateKeys: [photoKeys.all],
-  optimisticUpdate: optimistic.infinite.remove<Photo>(),
+  invalidateKeys: (vars) => [photoKeys.all, ...((Array.isArray(vars) ? vars : [vars]).map(id => ['photo', id]))],
   onSuccessMessage: (data: any) => {
     if (data && typeof data === 'object' && 'successCount' in data) {
       if (data.failureCount > 0) {
@@ -55,8 +53,7 @@ export const usePhotoBatchEdit = createMutationHook({
     if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Batch Update Photos', ids.join(','));
     return res.data;
   },
-  invalidateKeys: [photoKeys.all],
-  optimisticUpdate: optimistic.infinite.batchUpdate<Photo>(),
+  invalidateKeys: (vars) => [photoKeys.all, ...((Array.isArray(vars.ids) ? vars.ids : [vars.ids]).map(id => ['photo', id]))],
   onSuccessMessage: (data: any) => {
     if (data && typeof data === 'object' && 'successCount' in data) {
       if (data.failureCount > 0) {
@@ -79,7 +76,7 @@ export const useTogglePin = createMutationHook({
     if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Toggle Pin Photo', id);
     return res.data;
   },
-  invalidateKeys: [photoKeys.all],
+  invalidateKeys: (vars) => [photoKeys.all, ['photo', vars.id]],
   optimisticUpdate: (old: any, { id, isPinned }: { id: string; isPinned: boolean }) => 
     optimistic.infinite.update<Photo>()(old, { id, updates: { is_pinned: isPinned } as any }),
   onSuccessMessage: (data: any, { isPinned }: { isPinned: boolean }) => isPinned ? '已置顶' : '已取消置顶',
