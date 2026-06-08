@@ -12,7 +12,7 @@ import {
   AlertDialogHeader, 
   AlertDialogTitle 
 } from "@/components/ui/alert-dialog";
-import { ISSUE_ACTIONS } from "@/lib/maintenance/issueActions";
+import { ISSUE_ACTIONS } from "@/lib/maintenance";
 import { PreviewResult } from "@/lib/maintenance/maintenanceTypes";
 import { toast } from "sonner";
 import { Loader2, ShieldAlert } from "lucide-react";

@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useDiagnostics } from '@/hooks/admin/useDiagnostics';
 import { DiagnosticCard } from './Diagnostics/DiagnosticCard';
 import { MaintenanceTool } from './Diagnostics/MaintenanceTool';
-import { ISSUE_ACTIONS } from '@/lib/maintenance/issueActions';
+import { ISSUE_ACTIONS } from '@/lib/maintenance';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from '@tanstack/react-router';
 import { useUIStore } from '@/store/useUIStore';
