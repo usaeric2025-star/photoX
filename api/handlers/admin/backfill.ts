@@ -3,7 +3,7 @@ import { getSupabaseAdmin } from "../../lib/supabase.js";
 
 export const adminBackfill = new Hono();
 
-adminBackfill.post("/", async (c) => {
+adminBackfill.post("/backfill-photo-metadata", async (c) => {
     try {
         // This is a complex route, would trigger background task logic.
         // For now, simple placeholder to preserve structure.

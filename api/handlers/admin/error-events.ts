@@ -3,7 +3,7 @@ import { getSupabaseAdmin } from "../../lib/supabase.js";
 
 export const adminErrorEvents = new Hono();
 
-adminErrorEvents.get("/", async (c) => {
+adminErrorEvents.get("/error-events", async (c) => {
     try {
         const supabase = await getSupabaseAdmin();
         const { data, error } = await supabase
@@ -17,7 +17,7 @@ adminErrorEvents.get("/", async (c) => {
     }
 });
 
-adminErrorEvents.post("/clear", async (c) => {
+adminErrorEvents.post("/error-events-clear", async (c) => {
     try {
         const supabase = await getSupabaseAdmin();
         const { error } = await supabase

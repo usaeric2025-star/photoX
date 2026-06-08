@@ -4,7 +4,7 @@ import { getServerEnv } from "./shared/envSchema.js";
 import { logTraffic } from "./lib/trafficCapture.js";
 import { requireRealUser } from "./lib/auth.js";
 import { getSupabaseAdmin } from "./lib/supabase.js";
-import { admin } from "./handlers/admin.js";
+import { admin } from "./handlers/admin/index.js";
 import { ai } from "./handlers/ai.js";
 import { storage } from "./handlers/storage.js";
 
@@ -59,7 +59,7 @@ app.use("/admin/*", async (c, next) => {
 // --- API Routes (Distributed) ---
 app.route("/admin", admin);
 app.route("/ai", ai);
-app.route("/storage", storage);
+app.route("/", storage);
 
 // --- Core Utility Routes ---
 app.get("/health", (c) => {

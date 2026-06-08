@@ -140,24 +140,68 @@ export function useAIBatchAnalysis() {
             const resp = await withTimeout(analyzePhoto(p.id), 60000); // 60s timeout
             
             if (resp && 'ok' in resp && resp.ok) {
-              const result = resp.data;
-              const updates: any = {};
-              
-              if (result.name) updates.name = result.name;
-              if (result.category_id) updates.category_id = String(result.category_id);
-              if (Array.isArray(result.tag_ids)) {
-                updates.tag_ids = result.tag_ids.slice(0, 3).map((id: any) => String(id));
+              let result = resp.data;
+              if (Array.isArray(result) && result.length > 0) {
+                result = result[0];
               }
-              if (result.description) updates.description = result.description;
-              if (result.description_translations) updates.description_translations = result.description_translations;
-              if (Array.isArray(result.dimensions)) updates.dimensions = result.dimensions;
-              if (result.price) updates.price = String(result.price);
+              if (result && typeof result === 'object') {
+                const updates: any = {};
+                
+                if (result.name) {
+                  updates.name = typeof result.name === 'object' ? result.name : { zh: String(result.name), en: '', ms: '' };
+                }
+                
+                if (result.category_id !== undefined && result.category_id !== null) {
+                  const cat = result.category_id;
+                  if (Array.isArray(cat) && cat.length > 0) {
+                    const first = cat[0];
+                    updates.category_id = String(first.id ?? first.category_id ?? first);
+                  } else if (typeof cat === 'object' && cat !== null) {
+                    updates.category_id = String(cat.id ?? cat.category_id ?? '');
+                  } else {
+                    updates.category_id = String(cat);
+                  }
+                  if (updates.category_id === 'undefined' || updates.category_id === 'null' || updates.category_id === '[object Object]') {
+                    delete updates.category_id;
+                  }
+                }
+                
+                if (Array.isArray(result.tag_ids)) {
+                  updates.tag_ids = result.tag_ids.slice(0, 5).map((id: any) => {
+                    if (id && typeof id === 'object') {
+                      return String(id.id ?? id.tag_id ?? id.name ?? '');
+                    }
+                    return String(id);
+                  }).filter((id: string) => id && id !== 'undefined' && id !== 'null' && id !== '[object Object]');
+                }
+                
+                if (result.description) {
+                  updates.description = typeof result.description === 'object' ? result.description : { zh: String(result.description), en: '', ms: '' };
+                }
+                
+                if (result.description_translations) {
+                  updates.description_translations = result.description_translations;
+                }
+                
+                if (Array.isArray(result.dimensions)) {
+                  updates.dimensions = result.dimensions;
+                }
+                
+                if (result.price !== undefined && result.price !== null) {
+                  updates.price = String(result.price);
+                }
 
-              const updateResult = await directUpdatePhoto(p.id, updates);
-              if (updateResult && 'ok' in updateResult && updateResult.ok) {
-                successCount++;
-                await invalidatePhotos();
+                if (Object.keys(updates).length > 0) {
+                  const updateResult = await directUpdatePhoto(p.id, updates);
+                  if (updateResult && 'ok' in updateResult && updateResult.ok) {
+                    successCount++;
+                    await invalidatePhotos();
+                  }
+                }
               }
+            } else {
+              const errorMsg = (resp && 'message' in resp ? resp.message : null) || 'AI Analysis Failed';
+              console.error(`Failed to analyze photo ${p.id}:`, errorMsg);
             }
           } catch (err: any) {
             console.error(`Failed to analyze photo ${p.id}:`, err);
@@ -175,20 +219,46 @@ export function useAIBatchAnalysis() {
               const { analyzeGroup } = await import('@/services/gemini/groupAnalysis');
               
               const { supabase } = await import('@/lib/supabase');
-              const { data: photos } = await supabase.from('furniture_items').select('id, name, tag_ids, description').in('id', targetPhotos.map(p => p.id));
+              const { data: photos, error: fetchError } = await supabase
+                .from('furniture_items')
+                .select('id, name, description, photo_tags(tag_id)')
+                .in('id', targetPhotos.map(p => p.id));
               
+              if (fetchError) {
+                console.error('Failed to fetch photos for group analysis:', fetchError);
+                throw new Error('获取产品用于合组分析时失败 / Failed to fetch photos for group analysis: ' + fetchError.message);
+              }
+
               if (photos) {
-                const allTagIds = Array.from(new Set(photos.flatMap(p => p.tag_ids || [])));
+                // Collect all tag ids from the joined array
+                const tagIdSet = new Set<string>();
+                photos.forEach((p: any) => {
+                   if (Array.isArray(p.photo_tags)) {
+                      p.photo_tags.forEach((pt: any) => {
+                         if (pt && pt.tag_id) tagIdSet.add(String(pt.tag_id));
+                      });
+                   }
+                });
+                const allTagIds = Array.from(tagIdSet);
                 let tagsData: any[] | null = null;
                 if (allTagIds.length > 0) {
                   const res = await supabase.from('tags').select('id, name').in('id', allTagIds);
                   tagsData = res.data;
                 }
                 const tagMap = new Map((tagsData || []).map(t => [String(t.id), t.name]));
-                const photosWithTags = photos.map(p => ({
-                  ...p,
-                  tagNames: (p.tag_ids || []).map((tid: string) => tagMap.get(String(tid)) || '').filter(Boolean)
-                })) as any;
+                const photosWithTags = photos.map((p: any) => {
+                  const mappedTags: string[] = [];
+                  if (Array.isArray(p.photo_tags)) {
+                     p.photo_tags.forEach((pt: any) => {
+                        const name = tagMap.get(String(pt.tag_id));
+                        if (name) mappedTags.push(name);
+                     });
+                  }
+                  return {
+                    ...p,
+                    tagNames: mappedTags
+                  };
+                });
 
                 const analysis = await withTimeout(analyzeGroup(photosWithTags), 120000); // 120s timeout
                 const { name, description, colors, materials } = analysis;

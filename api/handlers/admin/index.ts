@@ -9,9 +9,9 @@ import { adminBackfill } from './backfill.js';
 
 export const admin = new Hono()
   .route("/", adminPhotos)
-  .route("/", adminSettings)
+  .route("/settings", adminSettings)
   .route("/", adminErrorEvents)
   .route("/", adminDiagnose)
   .route("/", adminRepair)
-  .route("/", adminMaintenance)
+  .route("/maintenance", adminMaintenance)
   .route("/", adminBackfill);

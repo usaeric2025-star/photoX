@@ -6,7 +6,7 @@ import { getR2Client } from "../../lib/storage.js";
 const serverEnv = getServerEnv(process.env);
 export const adminRepair = new Hono();
 
-adminRepair.post("/", async (c) => {
+adminRepair.post("/repair", async (c) => {
     try {
       const { issueId } = await c.req.json();
       const supabase = await getSupabaseAdmin();

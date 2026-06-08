@@ -7,7 +7,7 @@ import { ListObjectsV2Command } from "@aws-sdk/client-s3";
 const serverEnv = getServerEnv(process.env);
 export const adminDiagnose = new Hono();
 
-adminDiagnose.get("/", async (c) => {
+adminDiagnose.get("/diagnose", async (c) => {
     try {
       const supabase = await getSupabaseAdmin();
       const issues: any[] = [];
@@ -120,7 +120,7 @@ adminDiagnose.get("/", async (c) => {
     }
 });
 
-adminDiagnose.get("/r2", async (c) => {
+adminDiagnose.get("/diagnose-r2", async (c) => {
     try {
       const issues: string[] = [];
       const envKeys = ["R2_ENDPOINT", "R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY", "R2_BUCKET_NAME", "R2_PUBLIC_URL_PREFIX"];
