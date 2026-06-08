@@ -20,12 +20,27 @@ export const getTranslatedCategoryName = (
   
   if (!activeCat) return "";
 
-  const result = getSafeText(activeCat.name, lang);
-  if (typeof result === 'object') {
-    console.error('getTranslatedCategoryName returned an object:', result);
-    return JSON.stringify(result);
+  // 1. Try direct locale properties on the category object (e.g. activeCat.zh, activeCat.en, activeCat.ms)
+  if (lang && (activeCat as any)[lang]) {
+    return String((activeCat as any)[lang]);
   }
-  return result;
+
+  // 2. Try nested translations under name_translations
+  if ((activeCat as any).name_translations && typeof (activeCat as any).name_translations === 'object') {
+    const trans = (activeCat as any).name_translations;
+    const val = trans[lang] || trans.zh || trans.en;
+    if (val) return String(val);
+  }
+
+  // 3. Fallback to name field
+  if (activeCat.name) {
+    const result = getSafeText(activeCat.name, lang);
+    if (result && typeof result === 'string') return result;
+  }
+
+  // 4. Fallback search looking up properties
+  const fallback = activeCat.zh || activeCat.en || activeCat.ms || (activeCat as any).code || "";
+  return String(fallback);
 };
 
 /**

@@ -96,6 +96,113 @@ function hasExistingInfo(p: Photo): boolean {
   return hasRealName && hasRealDescription;
 }
 
+function findCategoryByFuzzy(catInput: any, categories: any[]): string | null {
+  if (!catInput) return null;
+  
+  const searchStrings: string[] = [];
+  
+  if (typeof catInput === 'object' && catInput !== null) {
+    if (catInput.id && typeof catInput.id === 'string' && catInput.id.length > 10) {
+      const matching = categories.find(c => String(c.id).toLowerCase() === catInput.id.toLowerCase());
+      if (matching) return matching.id;
+    }
+    if (catInput.name) searchStrings.push(String(catInput.name));
+    if (catInput.zh) searchStrings.push(String(catInput.zh));
+    if (catInput.en) searchStrings.push(String(catInput.en));
+  } else if (typeof catInput === 'string') {
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(catInput)) {
+      const matching = categories.find(c => String(c.id).toLowerCase() === catInput.toLowerCase());
+      if (matching) return matching.id;
+    }
+    searchStrings.push(catInput);
+  }
+  
+  for (const s of searchStrings) {
+    const term = s.trim().toLowerCase();
+    if (!term) continue;
+    
+    // Explicit matches on properties
+    let match = categories.find(c => 
+      String(c.id).toLowerCase() === term ||
+      String(c.name || '').toLowerCase() === term ||
+      String(c.zh || '').toLowerCase() === term ||
+      String(c.en || '').toLowerCase() === term ||
+      String(c.ms || '').toLowerCase() === term
+    );
+    if (match) return match.id;
+    
+    // Substring / Inclusion Matches
+    match = categories.find(c => 
+      String(c.name || '').toLowerCase().includes(term) ||
+      term.includes(String(c.name || '').toLowerCase()) ||
+      String(c.zh || '').toLowerCase().includes(term) ||
+      term.includes(String(c.zh || '').toLowerCase()) ||
+      (Array.isArray(c.aliases) && c.aliases.some((a: string) => String(a).toLowerCase().includes(term) || term.includes(String(a).toLowerCase())))
+    );
+    if (match) return match.id;
+  }
+  
+  return null;
+}
+
+function resolveTagIds(tagInputs: any[], tags: any[]): string[] {
+  if (!Array.isArray(tagInputs)) return [];
+  const resolvedIds = new Set<string>();
+  
+  for (const input of tagInputs) {
+    if (!input) continue;
+    
+    let searchString = '';
+    let incomingId = '';
+    
+    if (typeof input === 'object' && input !== null) {
+      if (input.id && typeof input.id === 'string' && input.id.length > 10) {
+        incomingId = input.id;
+      }
+      searchString = String(input.name || input.zh || input.tag_name || '');
+    } else {
+      const str = String(input);
+      if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str)) {
+        incomingId = str;
+      } else {
+        searchString = str;
+      }
+    }
+    
+    if (incomingId) {
+      const match = tags.find(t => String(t.id).toLowerCase() === incomingId.toLowerCase());
+      if (match) {
+        resolvedIds.add(match.id);
+        continue;
+      }
+    }
+    
+    if (searchString) {
+      const term = searchString.trim().toLowerCase();
+      if (!term) continue;
+      
+      let match = tags.find(t => 
+        String(t.name || '').toLowerCase() === term ||
+        String(t.id).toLowerCase() === term
+      );
+      
+      if (!match) {
+        match = tags.find(t => 
+          String(t.name || '').toLowerCase().includes(term) ||
+          term.includes(String(t.name || '').toLowerCase()) ||
+          (Array.isArray(t.aliases) && t.aliases.some((a: string) => String(a).toLowerCase().includes(term) || term.includes(String(a).toLowerCase())))
+        );
+      }
+      
+      if (match) {
+        resolvedIds.add(match.id);
+      }
+    }
+  }
+  
+  return Array.from(resolvedIds);
+}
+
 export function useAIBatchAnalysis() {
   const { runTask } = useTaskExecutor();
   const invalidatePhotos = useInvalidatePhotos();
@@ -117,6 +224,21 @@ export function useAIBatchAnalysis() {
         // 1. Analyze photos
         const { analyzePhoto } = await import('@/services/ai/commands');
         const { updatePhoto: directUpdatePhoto } = await import('@/services/photo/commands');
+        const { supabase } = await import('@/lib/supabase');
+
+        // Prefetch categories and tags once to resolve names/IDs cleanly
+        let dbCategories: any[] = [];
+        let dbTags: any[] = [];
+        try {
+          const [{ data: catsRes }, { data: tagsRes }] = await Promise.all([
+            supabase.from('categories').select('*'),
+            supabase.from('tags').select('*'),
+          ]);
+          if (catsRes) dbCategories = catsRes;
+          if (tagsRes) dbTags = tagsRes;
+        } catch (e) {
+          console.error("Failed to prefetch categories/tags for resolution", e);
+        }
         
         const withTimeout = (promise: Promise<any>, ms: number) => {
             const timeout = new Promise((_, reject) =>
@@ -152,27 +274,21 @@ export function useAIBatchAnalysis() {
                 }
                 
                 if (result.category_id !== undefined && result.category_id !== null) {
-                  const cat = result.category_id;
-                  if (Array.isArray(cat) && cat.length > 0) {
-                    const first = cat[0];
-                    updates.category_id = String(first.id ?? first.category_id ?? first);
-                  } else if (typeof cat === 'object' && cat !== null) {
-                    updates.category_id = String(cat.id ?? cat.category_id ?? '');
+                  const resolvedCategoryId = findCategoryByFuzzy(result.category_id, dbCategories);
+                  if (resolvedCategoryId) {
+                    updates.category_id = resolvedCategoryId;
                   } else {
-                    updates.category_id = String(cat);
-                  }
-                  if (updates.category_id === 'undefined' || updates.category_id === 'null' || updates.category_id === '[object Object]') {
-                    delete updates.category_id;
+                    console.warn(`Could not resolve category UUID for input:`, result.category_id);
                   }
                 }
                 
                 if (Array.isArray(result.tag_ids)) {
-                  updates.tag_ids = result.tag_ids.slice(0, 5).map((id: any) => {
-                    if (id && typeof id === 'object') {
-                      return String(id.id ?? id.tag_id ?? id.name ?? '');
-                    }
-                    return String(id);
-                  }).filter((id: string) => id && id !== 'undefined' && id !== 'null' && id !== '[object Object]');
+                  const resolvedTagIds = resolveTagIds(result.tag_ids, dbTags);
+                  if (resolvedTagIds.length > 0) {
+                    updates.tag_ids = resolvedTagIds.slice(0, 5);
+                  } else {
+                    console.warn(`Could not resolve tag UUIDs for inputs:`, result.tag_ids);
+                  }
                 }
                 
                 if (result.description) {
@@ -196,6 +312,9 @@ export function useAIBatchAnalysis() {
                   if (updateResult && 'ok' in updateResult && updateResult.ok) {
                     successCount++;
                     await invalidatePhotos();
+                  } else {
+                    const failMsg = (updateResult && 'message' in updateResult ? updateResult.message : '') || '无法更新数据库记录';
+                    console.error(`Failed db update for photo ${p.id}:`, failMsg);
                   }
                 }
               }
@@ -218,7 +337,6 @@ export function useAIBatchAnalysis() {
               updateProgress(75, '正在总结合组...');
               const { analyzeGroup } = await import('@/services/gemini/groupAnalysis');
               
-              const { supabase } = await import('@/lib/supabase');
               const { data: photos, error: fetchError } = await supabase
                 .from('furniture_items')
                 .select('id, name, description, photo_tags(tag_id)')
@@ -325,13 +443,20 @@ export function useAIBatchAnalysis() {
         await invalidatePhotos();
         
         let finalMessage = "分析完成 (无更新)";
+        if (groupId) {
+          await queryClient.invalidateQueries({ queryKey: groupKeys.detail(groupId) });
+        }
         if (groupId && groupSuccess) {
           await queryClient.invalidateQueries({ queryKey: groupKeys.all });
           finalMessage = successCount > 0 
-            ? `成功分析并更新合组信息，且更新了 ${successCount} 张照片`
-            : "成功分析并更新合组信息";
+            ? `成功分析并更新合组信息，且更新了 ${successCount} 张照片 / Succeeded in updating group details and analyzing ${successCount} photos!`
+            : "成功分析并更新合组信息 / Succeeded in analyzing and updating group details!";
+          toast.success(finalMessage);
         } else if (successCount > 0) {
-          finalMessage = `成功分析 ${successCount} 张照片`;
+          finalMessage = `成功分析 ${successCount} 张照片 / Successfully analyzed ${successCount} photos!`;
+          toast.success(finalMessage);
+        } else {
+          toast.info("分析完成，没有发现需要更新的数据 / Analysis complete, no fields required updating.");
         }
 
         // 更新任务中心消息，代替额外的 Toast
