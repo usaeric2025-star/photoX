@@ -270,7 +270,13 @@ export function useAIBatchAnalysis() {
                 const updates: any = {};
                 
                 if (result.name) {
-                  updates.name = typeof result.name === 'object' ? result.name : { zh: String(result.name), en: '', ms: '' };
+                  const oldName = typeof p.name === 'object' ? p.name : { zh: String(p.name || ''), en: '', ms: '' };
+                  const newName = typeof result.name === 'object' ? result.name : { zh: String(result.name), en: '', ms: '' };
+                  updates.name = {
+                    zh: newName.zh || oldName.zh || '',
+                    en: newName.en || oldName.en || '',
+                    ms: newName.ms || oldName.ms || '',
+                  };
                 }
                 
                 if (result.category_id !== undefined && result.category_id !== null) {
@@ -292,7 +298,13 @@ export function useAIBatchAnalysis() {
                 }
                 
                 if (result.description) {
-                  updates.description = typeof result.description === 'object' ? result.description : { zh: String(result.description), en: '', ms: '' };
+                  const oldDesc = typeof p.description === 'object' ? p.description : { zh: String(p.description || ''), en: '', ms: '' };
+                  const newDesc = typeof result.description === 'object' ? result.description : { zh: String(result.description), en: '', ms: '' };
+                  updates.description = {
+                    zh: newDesc.zh || oldDesc.zh || '',
+                    en: newDesc.en || oldDesc.en || '',
+                    ms: newDesc.ms || oldDesc.ms || '',
+                  };
                 }
                 
                 if (result.description_translations) {
