@@ -14,11 +14,12 @@ import {
 import { logoutPublic } from "@/lib/publicAuth";
 import { translations } from "@/lib/translations";
 
-interface AdminHeaderProps {
-  onAiAnalyze?: () => void;
-}
+import { useAdminBatchActions } from '@/hooks/useAdminBatchActions';
 
-export function AdminHeader({ onAiAnalyze }: AdminHeaderProps) {
+interface AdminHeaderProps {}
+
+export function AdminHeader({}: AdminHeaderProps) {
+  const { handleBatchAiIdentifyTrigger } = useAdminBatchActions();
   const { user } = useAuth();
   const { settings } = useSettings();
   const navigate = useNavigate();
@@ -101,15 +102,13 @@ export function AdminHeader({ onAiAnalyze }: AdminHeaderProps) {
         </button>
 
         {/* AI 智能识别 按钮 next to check screen */}
-        {onAiAnalyze && (
-          <button
-            onClick={onAiAnalyze}
-            className="w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 ml-1 border bg-white text-purple-600 border-purple-200 hover:bg-purple-50 hover:text-purple-700 shadow-sm"
-            title={t.aiSmartIdentify}
-          >
-            <Sparkles size={18} className="animate-pulse" />
-          </button>
-        )}
+        <button
+          onClick={() => handleBatchAiIdentifyTrigger()}
+          className="w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 ml-1 border bg-white text-purple-600 border-purple-200 hover:bg-purple-50 hover:text-purple-700 shadow-sm"
+          title={t.aiSmartIdentify}
+        >
+          <Sparkles size={18} className="animate-pulse" />
+        </button>
 
         {/* 3. 切换至前台体验按钮 (标准 LayoutDashboard 样式) */}
         <button

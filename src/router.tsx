@@ -17,7 +17,6 @@ import { photoKeys, groupKeys } from '@/lib/queryKeys';
 import { createStaleTime } from '@/shared/freshnessSchema';
 import { getGroupById } from '@/services/group/queries';
 import { checkPublicAuth } from '@/lib/publicAuth';
-import { RootRouter } from '@/pages/RootRouter';
 
 /**
  * [V2.10-ROUTER-PERMISSION-INTEGRATED] Router Context Definition
@@ -49,6 +48,7 @@ export interface GallerySearchParams {
   columns?: string;      // 列数（2/3/4/5）
   showGroupsCollapsed?: 'true' | 'false';  // 合组折叠状态
   hidden?: 'true' | 'false';       // 隐藏照片显影控制
+  onlyUngrouped?: 'true' | 'false'; // 仅显示未分组照片
 }
 
 // Helper for lazy loading with retry
@@ -122,6 +122,7 @@ const indexRoute = createRoute({
     return {
       q: (search.q as string) || undefined,
       category: (search.category as string) || undefined,
+      tag: (search.tag as string) || undefined,
       manufacturer: (search.manufacturer as string) || undefined,
       sort: (search.sort as GallerySearchParams['sort']) || undefined,
       view: (search.view as GallerySearchParams['view']) || undefined,
@@ -130,6 +131,8 @@ const indexRoute = createRoute({
       groupId: (search.groupId as string) || undefined,
       columns: (search.columns as string) || undefined,
       showGroupsCollapsed: (search.showGroupsCollapsed as GallerySearchParams['showGroupsCollapsed']) || undefined,
+      onlyUngrouped: (search.onlyUngrouped as GallerySearchParams['onlyUngrouped']) || undefined,
+      hidden: (search.hidden as GallerySearchParams['hidden']) || undefined,
     };
   },
   beforeLoad: authGuard,
@@ -168,11 +171,7 @@ const indexRoute = createRoute({
       staleTime: createStaleTime('REALTIME'),
     });
   },
-  component: () => (
-    <RootRouter>
-      <PublicPage />
-    </RootRouter>
-  ),
+  component: PublicPage,
 });
 
 const previewRoute = createRoute({
@@ -182,6 +181,7 @@ const previewRoute = createRoute({
     return {
       q: (search.q as string) || undefined,
       category: (search.category as string) || undefined,
+      tag: (search.tag as string) || undefined,
       manufacturer: (search.manufacturer as string) || undefined,
       sort: (search.sort as GallerySearchParams['sort']) || undefined,
       view: (search.view as GallerySearchParams['view']) || undefined,
@@ -189,6 +189,8 @@ const previewRoute = createRoute({
       groupId: (search.groupId as string) || undefined,
       columns: (search.columns as string) || undefined,
       showGroupsCollapsed: (search.showGroupsCollapsed as GallerySearchParams['showGroupsCollapsed']) || undefined,
+      onlyUngrouped: (search.onlyUngrouped as GallerySearchParams['onlyUngrouped']) || undefined,
+      hidden: (search.hidden as GallerySearchParams['hidden']) || undefined,
     };
   },
   loader: async ({ context }) => {
@@ -232,11 +234,7 @@ const previewRoute = createRoute({
 const hashRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/h/$hash',
-  component: () => (
-    <RootRouter>
-      <PublicPage />
-    </RootRouter>
-  ),
+  component: PublicPage,
 });
 
 const groupRoute = createRoute({
@@ -264,31 +262,21 @@ const groupRoute = createRoute({
       staleTime: createStaleTime('STABLE'),
     });
   },
-  component: () => (
-    <RootRouter>
-      <PublicPage />
-    </RootRouter>
-  ),
+  component: PublicPage,
 });
 
 // For backward compatibility
 const gRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/g/$groupId',
-  component: () => (
-    <RootRouter>
-      <PublicPage />
-    </RootRouter>
-  ),
+  component: PublicPage,
 });
 
 const publicErrorLogRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/error-log',
   component: () => (
-    <RootRouter>
-      <PublicErrorLogPage />
-    </RootRouter>
+    <PublicErrorLogPage />
   ),
 });
 

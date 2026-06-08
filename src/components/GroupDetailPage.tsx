@@ -2,18 +2,15 @@ import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { ChevronLeft, X, Share2, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Photo } from '../types';
-import { GalleryVariant } from '@/types/variant';
 import { TranslationType } from '../lib/ui-helpers';
-import { sortGroupPhotos } from '../lib/filters';
-import { filterPhotosByMode } from '@/lib/filters/photoVisibility';
-import { useAdminMode, useErrorHandler, useGroupDetail, useTasks, useGroupPhotos, useCategories } from '@/hooks';
+import { useAdminMode, useGroupDetail, useGroupPhotos, useCategories } from '@/hooks';
 import { translations } from '../lib/translations';
 import { getPhotoDisplayName } from '../lib/ui-helpers';
 import { GroupDetailSkeleton } from './groups/GroupDetailSkeleton';
 import { Skeleton } from './ui/Skeleton';
 import { GroupGridView } from './groups/GroupGridView';
-import { GroupAdminShell, GroupAdminShellProps } from './groups/GroupAdminShell';
-import { useAdminActions } from '@/features/admin/useAdminActions';
+import { GroupAdminShell } from './groups/GroupAdminShell';
+import { useAdminActions } from '@/hooks/admin/useAdminActions';
 import { useUrlFilters } from '@/hooks/useUrlFilters';
 import { useNavigate } from '@tanstack/react-router';
 import { useUIStore, useShallow } from '@/store/useUIStore';
@@ -21,55 +18,27 @@ import { createTranslate } from '../lib/i18n';
 import { LanguageCode } from '../lib/translations';
 import { CopyableId } from '@/components/ui/CopyableId';
 import { getSafeText } from '@/lib/ai/safeText';
-// import removed
-
 
 // Add displayPhotos and update for compatibility with PublicGridContainer
-export interface GroupDetailPageProps extends Partial<GroupAdminShellProps> {
-  activeGroupId?: string | null;
-  onClose?: () => void;
-  displayPhotos?: Photo[];
-  onLongPressStart?: (photo: Photo) => void;
-  onLongPressEnd?: () => void;
-  shareGroup?: (photos: Photo[]) => void;
-  initialPhotoId?: string | null;
-  contactWhatsApp?: (photo: Photo) => void;
-  variant?: GalleryVariant;
-  onBatchAiAnalyze?: (photos: Photo[]) => void;
-}
+export interface GroupDetailPageProps {}
 
-export function GroupDetailPage(props: GroupDetailPageProps) {
-  const { shareGroup, variant } = props;
+export function GroupDetailPage({}: GroupDetailPageProps) {
   const navigate = useNavigate();
-  const { filters, setGroupId, setPhotoId } = useUrlFilters();
+  const { filters, setPhotoId } = useUrlFilters();
   const activeGroupId = filters.groupId;
   const initialPhotoId = filters.photoId;
   
-  const isManagement = variant === 'full-management' || variant === 'staff-workspace' || window.location.pathname.startsWith('/admin');
+  const isManagement = window.location.pathname.startsWith('/admin');
   const isAdminMode = useAdminMode() && isManagement;
-  const { handleError } = useErrorHandler();
   const lang = useUIStore((s) => s.appLang);
   const t = translations[lang as keyof typeof translations] || translations.en;
   const { data: categories = [] } = useCategories();
-  const translate = createTranslate(lang as LanguageCode);
   
-  const { tasks } = useTasks();
-  const isAnalyzing = tasks.some(task => task.status === 'running' && (task.name.includes('识别') || task.name.includes('分析')));
-  
-  const adminActions = useAdminActions();
-  const onEditPhoto = (p: Photo | string) => {};
-  const onToggleHidden = async (p: Photo) => { await adminActions.updatePhoto(p.id, { is_hidden: !p.is_hidden }); };
-  const onAiAnalyze = async (p: Photo) => {};
-  const onCancelAnalyze = () => {};
-  
-  const focusedGroupPhotoId = initialPhotoId || null;
-
   const virtualGridRef = useRef<{ scrollToIndex: (args: { index: number; align?: string; behavior?: string }) => void } | null>(null);
   const [currentHighlightId, setCurrentHighlightId] = useState<string | null>(null);
 
   const { data: groupData, isLoading: isGroupDataLoading, isPlaceholderData: isGroupDataPlaceholder } = useGroupDetail(activeGroupId);
 
-  // Paginated group photos via React Query Infinite Query
   const {
     data: infinitePhotosData,
     fetchNextPage,
@@ -79,15 +48,12 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
     isPlaceholderData: isGroupPhotosPlaceholder
   } = useGroupPhotos(activeGroupId, isAdminMode, 20);
 
-  // [GROUP-STALE-SIGNAL]
   const isStale = isGroupDataPlaceholder || isGroupPhotosPlaceholder;
-
   const isLoading = isGroupPhotosLoading || isGroupDataLoading;
 
   useEffect(() => {
     if (activeGroupId && initialPhotoId) {
        setCurrentHighlightId(initialPhotoId);
-       // Clear highlight after 5 seconds
        const timer = setTimeout(() => setCurrentHighlightId(null), 5000);
        return () => clearTimeout(timer);
     } else {
@@ -102,12 +68,7 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
 
   const activeGroupPhotos = (() => {
     if (!activeGroupId) return [];
-
-    const groupPhotos = infinitePhotosData?.pages.flatMap((page: { photos: Photo[] }) => page.photos) || [];
-
-    const visiblePhotos = filterPhotosByMode(groupPhotos, isAdminMode);
-
-    return sortGroupPhotos(visiblePhotos);
+    return infinitePhotosData?.pages.flatMap((page: any) => page.photos) || [];
   })();
 
   const initializedRef = useRef(false);
@@ -138,7 +99,7 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
             return;
         }
 
-        const index = activeGroupPhotos.findIndex(p => p.id === initialPhotoId);
+        const index = activeGroupPhotos.findIndex((p: any) => p.id === initialPhotoId);
         if (index !== -1) {
             hasScrolledRef.current = { id: initialPhotoId, groupId: activeGroupId };
             setTimeout(() => {
@@ -156,22 +117,10 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
 
   const groupDisplayName = groupData ? getSafeText(groupData.name, lang) : '';
 
-  const groupDisplayDescription = groupData?.description ? getSafeText(groupData.description, lang).trim() : '';
-
   if (!activeGroupId) return null;
 
   if (isAdminMode) {
-    // Explicitly destructure to avoid passing internal React Router/Base UI props like asChild down to child components
-    const { 
-      activeGroupId: _ag, 
-      shareGroup: _sg, 
-      initialPhotoId: _ipi, 
-      variant: _v, 
-      // Filter out asChild if it somehow exists in props
-      ...restProps 
-    } = props;
-
-    return <GroupAdminShell initialPhotoId={initialPhotoId} {...restProps} />;
+    return <GroupAdminShell />;
   }
 
   const isOpen = activeGroupId !== null;
@@ -237,15 +186,6 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {shareGroup && (
-                      <button 
-                        type="button"
-                        onClick={() => shareGroup(activeGroupPhotos)}
-                        className="w-10 h-10 flex items-center justify-center text-blue-500 hover:text-blue-600 rounded-full hover:bg-blue-50 transition-colors"
-                      >
-                        <Share2 size={24} />
-                      </button>
-                    )}
                     <button 
                         type="button"
                         onClick={handleClose}
@@ -261,7 +201,6 @@ export function GroupDetailPage(props: GroupDetailPageProps) {
                   <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="animate-spin text-slate-400" /></div>}>
                     <GroupGridView 
                         key={activeGroupId}
-                        variant={variant}
                         onEndReached={() => {
                         if (hasNextPage && !isFetchingNextPage) {
                             fetchNextPage();

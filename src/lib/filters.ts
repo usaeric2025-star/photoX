@@ -1,4 +1,5 @@
 import { Photo, Category, Tag } from '../types';
+import { logger } from './logger';
 import { isValidPhoto } from './typeGuard';
 import { filterPhotosByMode } from './filters/photoVisibility';
 
@@ -21,85 +22,61 @@ export function processPhotos(
   options: {
     showGroupsCollapsed?: boolean;
     isAdminModeOverride?: boolean;
+    bypassFilter?: boolean;
   } = {}
 ) {
-  const showGroups = options.showGroupsCollapsed ?? userFilters.showGroupsCollapsed;
-  const isAdminMode = options.isAdminModeOverride ?? false;
+  return logger.track('processPhotos', 16, () => {
+    const showGroups = options.showGroupsCollapsed ?? userFilters.showGroupsCollapsed;
+    const isAdminMode = options.isAdminModeOverride ?? false;
+    const bypassFilter = options.bypassFilter ?? false; // Default to false to ensure filtering works
 
-  const tagMap = new Map<string, string[]>();
-  tags.forEach(t => {
-    const terms = [t.name.toLowerCase()];
-    if (Array.isArray(t.aliases)) {
-      t.aliases.forEach(a => terms.push(a.toLowerCase()));
+    let displayPhotos = (photos || []).filter(isValidPhoto);
+      
+    if (!bypassFilter) {
+      const tagMap = new Map<string, string[]>();
+      tags.forEach(t => {
+        const terms = [t.name.toLowerCase()];
+        if (Array.isArray(t.aliases)) {
+          t.aliases.forEach(a => terms.push(a.toLowerCase()));
+        }
+        tagMap.set(String(t.id), terms);
+      });
+        
+      const catMap = new Map<string, string[]>();
+      categories.forEach(c => {
+        const terms = [(c.name || '').toLowerCase()];
+        if (Array.isArray(c.aliases)) {
+          c.aliases.forEach(a => terms.push(a.toLowerCase()));
+        }
+        catMap.set(String(c.id), terms);
+      });
+
+      displayPhotos = filterPhotos(displayPhotos, {
+        searchQuery: userFilters.searchQuery,
+        filterCatId: userFilters.categoryId,
+        filterSubId: null,
+        filterTagIds: userFilters.tagIds,
+        sortOrder: urlFilters.sortOrder as 'newest' | 'oldest' | 'name',
+        isAdminMode: isAdminMode,
+      }, tags, categories, tagMap, catMap);
     }
-    tagMap.set(String(t.id), terms);
+
+    const gridPhotos = groupPhotos(displayPhotos, showGroups, urlFilters.sortOrder as 'newest' | 'oldest' | 'name', undefined, isAdminMode);
+
+    return { displayPhotos, gridPhotos };
   });
-    
-  const catMap = new Map<string, string[]>();
-  categories.forEach(c => {
-    const terms = [(c.name || '').toLowerCase()];
-    if (Array.isArray(c.aliases)) {
-      c.aliases.forEach(a => terms.push(a.toLowerCase()));
-    }
-    catMap.set(String(c.id), terms);
-  });
-
-  const validPhotos = (photos || []).filter(isValidPhoto);
-    
-  const displayPhotos = filterPhotos(validPhotos, {
-    searchQuery: userFilters.searchQuery,
-    filterCatId: userFilters.categoryId,
-    filterSubId: null,
-    filterTagIds: userFilters.tagIds,
-    sortOrder: urlFilters.sortOrder as 'newest' | 'oldest' | 'name',
-    isAdminMode: isAdminMode,
-  }, tags, categories, tagMap, catMap);
-
-  const gridPhotos = groupPhotos(displayPhotos, showGroups, urlFilters.sortOrder as 'newest' | 'oldest' | 'name', undefined, isAdminMode);
-
-  return { displayPhotos, gridPhotos };
 }
 
-export const cleanPhotos = (photos: unknown[]): Photo[] => {
+// Global utility exports for deduplication and basic mapping are now deprecated in favor of mapSupabasePhoto in services
+/** @deprecated Use mapSupabasePhoto in src/services/photo/mapping.ts instead */
+export const cleanPhotos = (photos: Photo[]): Photo[] => {
   if (!Array.isArray(photos)) return [];
-  
-  const mapped = photos
-    .filter((p): p is Record<string, unknown> => {
-      if (p == null || typeof p !== 'object') return false;
-      if (!isValidPhoto(p)) {
-        return false;
-      }
-      return true;
-    })
-    .map(p => {
-      const created_at = String(p.created_at || (p as any).created_at || new Date().toISOString());
-      return {
-        ...p,
-        id: String(p.id),
-        name: (p.name && typeof p.name === 'object') ? p.name : { zh: String(p.name || '') },
-        item_code: String(p.item_code || ''),
-        image_hash: String(p.image_hash || ''),
-        image_url: String(p.image_url || ''),
-        created_at,
-        tag_ids: Array.isArray(p.tag_ids) ? p.tag_ids.map(String) : [],
-        dimensions: Array.isArray(p.dimensions) ? p.dimensions as any[] : [],
-        created_at_timestamp: new Date(created_at).getTime(),
-        is_pinned: !!(p as any).is_pinned || !!p.is_pinned
-      } as Photo;
-    });
-
-  // Deduplicate by ID first
+  // Deduplicate by ID only
   const idMap = new Map<string, Photo>();
-  mapped.forEach(p => {
-    const existing = idMap.get(p.id);
-    if (!existing || (p.is_pinned && !existing.is_pinned) || (p.created_at_timestamp! > existing.created_at_timestamp!)) {
-      idMap.set(p.id, p);
-    }
+  photos.filter(isValidPhoto).forEach(p => {
+    idMap.set(p.id, p);
   });
-
-  // Then by ID (deduplicate by DB ID only)
-  const idResults = Array.from(idMap.values());
-  return idResults;
+  return Array.from(idMap.values());
 };
 
 export interface FilterOptions {
@@ -133,12 +110,7 @@ export function filterPhotos(
   } = options;
 
   // 1. Basic Visibility Filter
-  const filteredPhotos = filterPhotosByMode(photos, isAdminMode || isStaffMode);
-
-  let result = filteredPhotos.map(p => ({
-    ...p,
-    _time: p.created_at_timestamp || new Date(p.created_at || (p as any).created_at || 0).getTime()
-  }));
+  let result = filterPhotosByMode(photos, isAdminMode || isStaffMode);
 
   // 2. Search Filter
   if (searchQuery) {
@@ -289,7 +261,7 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortO
       if (!groups.has(p.group_id)) groups.set(p.group_id, []);
       groups.get(p.group_id)!.push(p);
 
-      const time = p.created_at_timestamp || new Date(p.created_at || (p as any).created_at || 0).getTime();
+      const time = (p as any)._time || 0;
       const maxT = groupMaxTime.get(p.group_id) || 0;
       groupMaxTime.set(p.group_id, Math.max(maxT, time));
     }
@@ -310,10 +282,8 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortO
 
   photos.forEach(p => {
     if (!p.group_id) {
-      // For ungroupped items, just give them their own time
-      const time = p.created_at_timestamp || new Date(p.created_at || (p as any).created_at || 0).getTime();
-      const item = { ...p, _time: time };
-      representatives.push(item);
+      // For ungroupped items, just use their pre-calculated time
+      representatives.push(p);
     } else if (!groupsSeen.has(p.group_id)) {
       groupsSeen.add(p.group_id);
       const groupList = groups.get(p.group_id) || [];

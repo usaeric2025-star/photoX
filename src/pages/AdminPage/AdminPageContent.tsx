@@ -22,13 +22,14 @@ import TasksPage from '@/pages/AdminPage/TasksPage';
 import MaintenanceHistoryPage from '@/pages/AdminPage/MaintenanceHistoryPage';
 import { ErrorLogViewer } from '@/components/admin/ErrorLogViewer';
 import { useUIStore, useShallow } from '@/store/useUIStore';
-import { usePhotoGallery } from '@/features/photos/usePhotoGallery';
+import { usePhotoGallery } from '@/hooks/photo/usePhotoGallery';
 import { Category } from '@/types';
 import { toast } from 'sonner';
 import { AdminHeader } from '@/components/layouts/headers/AdminHeader';
 import { AdminAuthGate } from '@/components/admin/AdminAuthGate';
 import { AdminScreen } from '@/components/AdminScreen';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { GlobalTaskCenter } from '@/components/tasks/GlobalTaskCenter';
 
 export function AdminPageContent() {
   const { user } = useAuth();
@@ -81,22 +82,6 @@ export function AdminPageContent() {
     return appLang === 'zh' ? '全部照片' : appLang === 'ms' ? 'Semua Foto' : 'All Photos';
   })();
 
-  const handleBatchAiAnalyzeTrigger = async () => {
-    const selectedIds = useUIStore.getState().selectedIds;
-    if (selectedIds.length > 0) {
-      const selectedGroupIds = new Set<string>();
-      photos.forEach(p => {
-        if (selectedIds.includes(p.id) && p.group_id) selectedGroupIds.add(p.group_id);
-      });
-      const targetPhotos = photos.filter(p => 
-        selectedIds.includes(p.id) || (p.group_id && selectedGroupIds.has(p.group_id))
-      );
-      handleBatchAiAnalyze(targetPhotos);
-    } else {
-      handleBatchAiAnalyze(photos);
-    }
-  };
-
   const onRefresh = async () => {
     try {
       await syncMut('pull');
@@ -111,7 +96,7 @@ export function AdminPageContent() {
     <AdminAuthGate isSyncing={isSyncing}>
       <DataLoadingContainer isLoading={isPhotosLoading} hasData={true}>
         <div className="flex flex-col h-screen bg-slate-50 overflow-hidden w-full relative">
-          {(currentScreen === 'gallery' || currentScreen === 'home') && <AdminHeader onAiAnalyze={handleBatchAiAnalyzeTrigger} />}
+          {(currentScreen === 'gallery' || currentScreen === 'home') && <AdminHeader />}
           <main className="flex-1 relative overflow-hidden pb-16 sm:pb-0">
           {store.batchEditingIds && store.batchEditingIds.length > 0 && <BatchEditScreen />}
           
@@ -159,11 +144,9 @@ export function AdminPageContent() {
       </DataLoadingContainer>
 
       <ErrorBoundary>
-        <GroupDetailPage 
-          variant={user ? 'full-management' : 'staff-workspace'} 
-          onBatchAiAnalyze={handleBatchAiAnalyzeTrigger}
-        />
+        <GroupDetailPage />
       </ErrorBoundary>
+      <GlobalTaskCenter />
     </AdminAuthGate>
   );
 }

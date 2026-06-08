@@ -34,6 +34,30 @@ class Logger {
   timeEnd(label: string) {
     if (this.enabled) console.timeEnd(`[TIMER] ${label}`);
   }
+
+  /**
+   * 性能追蹤工具
+   * @param label 標籤
+   * @param threshold 閾值（毫秒），超過此值將輸出警告
+   * @param fn 執行的函數
+   */
+  track<T>(label: string, threshold: number, fn: () => T): T {
+    const start = performance.now();
+    const result = fn();
+    const duration = performance.now() - start;
+    
+    if (duration > threshold) {
+      console.warn(`[PERF] ${label} exceeded threshold (${threshold}ms): ${duration.toFixed(2)}ms`);
+      // Record incident for diagnostics
+      import('./perfAudit').then(({ perfAudit }) => {
+        perfAudit.record({ label, duration, threshold });
+      }).catch(() => {});
+    } else if (this.enabled) {
+      this.debug(`${label} took ${duration.toFixed(2)}ms`);
+    }
+    
+    return result;
+  }
 }
 
 export const logger = new Logger();

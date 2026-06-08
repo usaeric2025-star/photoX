@@ -125,7 +125,7 @@ export function GroupPhotoPicker({
     usePhotos({ ...queryParams, limit: PAGINATION.ADMIN_BATCH_SIZE });
 
   const photos = useMemo(() => {
-    return data?.pages.flatMap((p) => p.photos) || [];
+    return data?.pages.flatMap((p: any) => p.photos) || [];
   }, [data]);
 
   const handleToggleSelect = useCallback((photo: Photo) => {

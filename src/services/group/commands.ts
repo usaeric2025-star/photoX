@@ -1,13 +1,13 @@
-import { errorFactory, success, fromThrowableAsync } from '@/lib/error/ErrorFactory';
+import { success } from '@/lib/error/ErrorFactory';
+import { withSupabase } from '@/lib/error/supabaseWrapper';
+import { withErrorHandling } from '@/lib/error/wrapper';
 import type { AppResult } from '@/types/api';
 import { supabase } from '../../lib/supabase';
+import { DB_CONFIG } from '../../constants/config';
 import { ProductGroup } from '../../types';
 import { createGroupValidator } from '../../lib/validators/factory';
 import { cleanTranslationPrefixes } from '@/lib/ai/safeText';
-
-/**
- * Consolidating all group mutation logic here.
- */
+import { ungroupPhotos, syncGroupMemberCount } from '@/services/photo/groupUtils';
 
 const TABLE_NAME = 'groups';
 
@@ -61,6 +61,7 @@ const getCurrentUserId = async (): Promise<string | undefined> => {
 };
 
 export async function createGroup(data: ProductGroup): Promise<AppResult<ProductGroup>> {
+  return withErrorHandling(async () => {
     const validator = createGroupValidator();
     const validationRes = validator.validate(data);
     if (!validationRes.ok) return validationRes as AppResult<ProductGroup>;
@@ -68,57 +69,67 @@ export async function createGroup(data: ProductGroup): Promise<AppResult<Product
     const userId = await getCurrentUserId();
     const dbData = mapToDb(data as any, userId);
     
-    const { error, data: inserted } = await supabase
+    const query = supabase
         .from(TABLE_NAME)
         .insert(dbData)
         .select()
         .single();
 
-    if (error) return errorFactory(error.message, 'DB_ERROR', 'createGroup', error);
-    return success(inserted);
+    const res = await withSupabase(query, 'createGroup');
+    if (!res.ok) return res;
+    return success(res.data);
+  }, 'createGroup');
 }
 
 export async function updateGroup(id: string, updates: Partial<ProductGroup>): Promise<AppResult<ProductGroup>> {
+  return withErrorHandling(async () => {
     const validator = createGroupValidator();
-    const validationRes = validator.validate({ ...updates, id });
-    if (!validationRes.ok) {
-        console.error('Group validation failed for group update:', { ...updates, id }, validationRes);
-        return validationRes as AppResult<ProductGroup>;
-    }
+    const validationRes = validator.validate({ ...updates, id } as any);
+    if (!validationRes.ok) return validationRes as AppResult<ProductGroup>;
 
     const userId = await getCurrentUserId();
     const dbUpdates = mapToDb(updates, userId);
     
-    const { error, data: updated } = await supabase
+    const query = supabase
         .from(TABLE_NAME)
         .update(dbUpdates)
         .eq('id', id)
         .select()
         .single();
 
-    if (error) return errorFactory(error.message, 'DB_ERROR', 'updateGroup', error);
-    return success(updated);
+    const res = await withSupabase(query, 'updateGroup');
+    if (!res.ok) return res;
+    return success(res.data);
+  }, 'updateGroup');
 }
 
 export async function upsertGroup(group: Partial<ProductGroup> & { id: string }): Promise<AppResult<void>> {
+  return withErrorHandling(async () => {
     const userId = await getCurrentUserId();
     const dbUpdates = mapToDb(group, userId);
-    const { error } = await supabase
+    const query = supabase
         .from(TABLE_NAME)
         .upsert(dbUpdates, { onConflict: 'id' });
 
-    if (error) return errorFactory(error.message, 'DB_ERROR', 'upsertGroup', error);
+    const res = await withSupabase(query, 'upsertGroup');
+    if (!res.ok) return res;
     return success(undefined);
+  }, 'upsertGroup');
 }
 
 export async function deleteGroup(id: string): Promise<AppResult<void>> {
+  return withErrorHandling(async () => {
+    const ungroupRes = await ungroupPhotos(id);
+    if (!ungroupRes.ok) return ungroupRes;
+
     const userId = await getCurrentUserId();
     let query = supabase.from(TABLE_NAME).delete().eq('id', id);
     if (userId) query = query.eq('user_id', userId);
     
-    const { error } = await query;
-    if (error) return errorFactory(error.message, 'DB_ERROR', 'deleteGroup', error);
+    const res = await withSupabase(query, 'deleteGroup');
+    if (!res.ok) return res;
     return success(undefined);
+  }, 'deleteGroup');
 }
 
 // Action aliases for legacy or specific naming compliance
@@ -126,3 +137,138 @@ export const createGroupAction = createGroup;
 export const updateGroupAction = updateGroup;
 export const saveGroup = upsertGroup;
 export const deleteGroupFromCloud = deleteGroup;
+
+export { ungroupPhotos, syncGroupMemberCount } from '@/services/photo/groupUtils';
+
+export const groupPhotos = async (
+  photoIds: string[], 
+  predefinedGroupId?: string, 
+  metadata?: {
+    name?: any;
+    description?: any;
+  }
+): Promise<AppResult<{ newGroupId: string }>> => {
+  return withErrorHandling(async () => {
+    if (photoIds.length <= 1) {
+      throw new Error('至少需要選擇兩張照片才能成組');
+    }
+    
+    const targetGroupId = predefinedGroupId || crypto.randomUUID();
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+
+    const querySelected = supabase
+      .from(DB_CONFIG.TABLE_NAME)
+      .select('id, group_id')
+      .in('id', photoIds);
+
+    const selectedRes = await withSupabase(querySelected, 'groupPhotos/select');
+    if (!selectedRes.ok) return selectedRes;
+
+    const sourceGroupIds = Array.from(new Set(
+      (selectedRes.data || [])
+        .map(p => p.group_id)
+        .filter((gid): gid is string => !!gid && gid !== targetGroupId)
+    ));
+
+    const ungroupedValidIds = photoIds.filter(id => {
+      const p = selectedRes.data?.find(x => x.id === id);
+      return !p?.group_id;
+    });
+
+    // Prepare Group Record
+    const groupData = {
+      name: metadata?.name || { zh: '新合組', en: 'New Combined Group', ms: 'Kumpulan Baru' },
+      description: metadata?.description || { zh: '', en: '', ms: '' },
+      updated_at: new Date().toISOString()
+    };
+
+    const checkQuery = supabase.from('groups').select('id').eq('id', targetGroupId).maybeSingle();
+    const checkRes = await withSupabase(checkQuery, 'groupPhotos/check');
+    if (!checkRes.ok) return checkRes;
+
+    if (!checkRes.data) {
+      const insertQuery = supabase.from('groups').insert({
+        id: targetGroupId,
+        user_id: userId,
+        is_hidden: false,
+        created_at: new Date().toISOString(),
+        ...groupData
+      });
+      const insertRes = await withSupabase(insertQuery, 'groupPhotos/insert');
+      if (!insertRes.ok) return insertRes;
+    } else {
+      const updateQuery = supabase.from('groups').update(groupData).eq('id', targetGroupId);
+      const updateRes = await withSupabase(updateQuery, 'groupPhotos/update');
+      if (!updateRes.ok) return updateRes;
+    }
+
+    // Merge
+    if (sourceGroupIds.length > 0) {
+      const mergeQuery = supabase.rpc('merge_groups', {
+        source_group_ids: sourceGroupIds,
+        target_group_id: targetGroupId
+      });
+      const mergeRes = await withSupabase(mergeQuery, 'groupPhotos/merge');
+      if (!mergeRes.ok) return mergeRes;
+    }
+
+    if (ungroupedValidIds.length > 0) {
+      const updatePhotoQuery = supabase
+        .from(DB_CONFIG.TABLE_NAME)
+        .update({ group_id: targetGroupId, is_group_cover: false })
+        .in('id', ungroupedValidIds);
+      const updatePhotoRes = await withSupabase(updatePhotoQuery, 'groupPhotos/updatePhotos');
+      if (!updatePhotoRes.ok) return updatePhotoRes;
+    }
+
+    const syncRes = await syncGroupMemberCount(targetGroupId);
+    if (!syncRes.ok) return syncRes;
+
+    return success({ newGroupId: targetGroupId });
+  }, 'groupPhotos');
+};
+
+export const movePhotosToGroup = async (photoIds: string[], targetGroupId: string | null): Promise<AppResult<void>> => {
+  return withErrorHandling(async () => {
+    const query = supabase.rpc('move_photos_to_group', {
+      photo_ids: photoIds,
+      target_group_id: targetGroupId
+    });
+    const res = await withSupabase(query, 'movePhotosToGroup');
+    if (!res.ok) return res;
+    return success(undefined);
+  }, 'movePhotosToGroup');
+};
+
+export const setPhotoAsGroupCover = async (photoId: string | null, groupId: string): Promise<AppResult<void>> => {
+  return withErrorHandling(async () => {
+    if (!groupId) throw new Error('GroupId is required');
+
+    const resetQuery = supabase
+      .from(DB_CONFIG.TABLE_NAME)
+      .update({ is_group_cover: false })
+      .eq('group_id', groupId);
+
+    const resetRes = await withSupabase(resetQuery, 'setPhotoAsGroupCover/reset');
+    if (!resetRes.ok) return resetRes;
+
+    if (photoId) {
+      const setQuery = supabase
+        .from(DB_CONFIG.TABLE_NAME)
+        .update({ is_group_cover: true })
+        .eq('id', photoId);
+      const setRes = await withSupabase(setQuery, 'setPhotoAsGroupCover/set');
+      if (!setRes.ok) return setRes;
+    }
+
+    const updateGroupQuery = supabase
+      .from('groups')
+      .update({ cover_photo_id: photoId || null })
+      .eq('id', groupId);
+    const updateGroupRes = await withSupabase(updateGroupQuery, 'setPhotoAsGroupCover/updateGroup');
+    if (!updateGroupRes.ok) return updateGroupRes;
+
+    return success(undefined);
+  }, 'setPhotoAsGroupCover');
+};

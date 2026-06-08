@@ -1,20 +1,42 @@
 import React from 'react';
 import { DimensionEditor } from '../edit/DimensionEditor';
 import { UseFormReturnType } from '@mantine/form';
-import { ProductFormData, Dimension, TranslationType } from '../../../types';
+import { ProductFormData, Dimension } from '../../../types';
 import { safeArray } from '../../../lib/utils';
+import { useUIStore } from '../../../store';
+import { useTasks, useSettings, useTaskExecutor, usePhotoDetail } from '../../../hooks';
+import { translations } from '../../../lib/translations';
+import { analyzePhoto } from '@/services/ai/commands';
+import { toast } from 'sonner';
 
 interface Props {
   form: UseFormReturnType<ProductFormData>;
-  showAiButton: boolean;
-  isAnalyzing: boolean;
-  onAiAnalyze: () => void;
-  t: TranslationType;
 }
 
-export function DetailsTab({
-  form, showAiButton, isAnalyzing, onAiAnalyze, t
-}: Props) {
+export function DetailsTab({ form }: Props) {
+  const editPhotoId = useUIStore((s) => s.editPhotoId);
+  const appLang = useUIStore((s) => s.appLang);
+  const { tasks } = useTasks();
+  const { settings } = useSettings();
+  const { runTask } = useTaskExecutor();
+  const { data: detailPhoto } = usePhotoDetail(editPhotoId || '');
+
+  const isAnalyzing = tasks.some(t => t.status === 'running' && t.name === 'AI 属性智能识别');
+  const t = translations[appLang as keyof typeof translations] || translations.en;
+
+  const onAiAnalyze = async () => {
+    if (!editPhotoId || !settings?.gemini_api_key) {
+      toast.error("Google Gemini API Key is required.");
+      return;
+    }
+    await runTask("AI 属性智能识别", async () => {
+      const resp = await analyzePhoto(editPhotoId);
+      if (resp.ok && resp.data) {
+        toast.success("AI 识别成功");
+      }
+    });
+  };
+
   const formState = form.values;
   const updateForm = (updates: Partial<ProductFormData>) => form.setValues(updates);
   return (
@@ -22,7 +44,7 @@ export function DetailsTab({
       <DimensionEditor 
         dimensions={safeArray<Dimension>(formState.dimensions)}
         onChange={(newDims) => updateForm({ dimensions: newDims })}
-        showAiButton={showAiButton}
+        showAiButton={true}
         isAnalyzing={isAnalyzing}
         onAiAnalyze={onAiAnalyze}
         t={t}

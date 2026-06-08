@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useDiagnostics } from '@/hooks/admin/useDiagnostics';
 import { DiagnosticCard } from './Diagnostics/DiagnosticCard';
 import { MaintenanceTool } from './Diagnostics/MaintenanceTool';
-import { ISSUE_ACTIONS } from '@/features/maintenance/issueActions';
+import { ISSUE_ACTIONS } from '@/lib/maintenance/issueActions';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from '@tanstack/react-router';
 import { useUIStore } from '@/store/useUIStore';
@@ -26,18 +26,38 @@ const severityColors = {
  * Logic extracted to useDiagnostics and useMaintenanceActions hooks.
  * UI components extracted to DiagnosticCard and MaintenanceToolButton.
  */
+import { usePerformanceAudit } from '@/hooks/admin/usePerformanceAudit';
+
 export function DiagnosticsDashboard() {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const updateUIStore = useUIStore((s) => s.update);
   const { 
     report, isLoading, refreshReport, runRepair,
     runR2Diagnostics, isDiagnosingR2, r2Result,
-    handleTestWorker, isTestingWorker, workerResult,
+    handleTestWorker, isTestingWorker: _unusedIsTesting, workerResult: _unusedResult,
     runAudit, isAuditing, auditResult
   } = useDiagnostics();
+  const { performanceIssues, clearAudits } = usePerformanceAudit();
+
+  const [localWorkerResult, setLocalWorkerResult] = useState<any>(null);
+
+  const onTestWorker = async () => {
+    const res = await handleTestWorker();
+    if (res) setLocalWorkerResult(res);
+  };
+
+  const internalRunRepair = async (issueId: string) => {
+    if (issueId.startsWith('perf_')) {
+      clearAudits();
+      toast.success('性能统计已重置 / Performance audit cleared');
+      refreshReport();
+      return;
+    }
+    await runRepair(issueId);
+  };
 
   const combinedIssues = (() => {
-    const list = [...(report?.issues || [])];
+    const list = [...(report?.issues || []), ...performanceIssues];
     const orphansCount = auditResult?.orphans?.count ?? 0;
     if (orphansCount > 0) {
       list.push({
@@ -244,9 +264,9 @@ export function DiagnosticsDashboard() {
           title="缩略图生成服务"
           desc="验证全局边缘 Worker 响应速度"
           icon={<Zap size={16} />}
-          onTest={handleTestWorker}
-          isLoading={isTestingWorker}
-          result={workerResult}
+          onTest={onTestWorker}
+          isLoading={isLoading}
+          result={localWorkerResult}
           successColor="text-brand-gold"
         />
       </div>
@@ -282,24 +302,24 @@ export function DiagnosticsDashboard() {
                     </div>
                     
                     <div className="flex items-center gap-2 flex-wrap min-w-0">
-                       {ISSUE_ACTIONS[issue.id] ? (
-                         <MaintenanceTool 
-                           issueId={issue.id}
-                           compact
-                           onSuccess={() => {
-                             refreshReport();
-                             runAudit();
-                           }}
-                         />
-                       ) : (
-                         <button 
-                           onClick={() => runRepair(issue.id)}
-                           disabled={isLoading}
-                           className="text-[11px] font-black text-brand-gold px-4 py-1.5 bg-brand-gold/5 rounded-xl border border-brand-gold/10 hover:bg-brand-gold/10 transition-colors disabled:opacity-50 active:scale-95"
-                         >
-                           立即自动修复
-                         </button>
-                       )}
+                        {ISSUE_ACTIONS[issue.id] ? (
+                          <MaintenanceTool 
+                            issueId={issue.id}
+                            compact
+                            onSuccess={() => {
+                              refreshReport();
+                              runAudit();
+                            }}
+                          />
+                        ) : (
+                          <button 
+                            onClick={() => internalRunRepair(issue.id)}
+                            disabled={isLoading}
+                            className="text-[11px] font-black text-brand-gold px-4 py-1.5 bg-brand-gold/5 rounded-xl border border-brand-gold/10 hover:bg-brand-gold/10 transition-colors disabled:opacity-50 active:scale-95"
+                          >
+                            {issue.id.startsWith('perf_') ? '了解并忽略' : '立即自动修复'}
+                          </button>
+                        )}
                     </div>
                   </div>
                 </div>

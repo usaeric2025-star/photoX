@@ -13,7 +13,7 @@ import { GroupPhotoPicker } from "./GroupPhotoPicker";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
 
 import { useAdminMode, useGroupMutations } from "@/hooks";
-import { useAdminActions } from "@/features/admin/useAdminActions";
+import { useAdminActions } from "@/hooks/admin/useAdminActions";
 import { useUIStore, useShallow } from "@/store/useUIStore";
 import { translations } from "../../lib/translations";
 import { Plus, Settings2, MoreVertical, Pencil, Sparkles, FolderMinus } from "lucide-react";
@@ -27,32 +27,25 @@ import { toast } from "sonner";
 
 import { useAIBatchAnalysis } from "@/hooks/useAIBatchAnalysis";
 
-export interface GroupAdminShellProps {
-  initialPhotoId?: string | null;
-  onCancelAnalyze?: () => void;
-  isAnalyzing?: boolean;
-}
-
-export function GroupAdminShell(props: GroupAdminShellProps) {
-  const { onCancelAnalyze, isAnalyzing } = props;
+export function GroupAdminShell() {
   const isAdminMode = useAdminMode();
-
   const { filters, setGroupId, setPhotoId } = useUrlFilters();
   const appLang = useUIStore((s) => s.appLang);
   const isPhotoPickerOpen = useUIStore((s) => s.isPhotoPickerOpen);
-  const photoPickerGroupId = useUIStore((s) => s.photoPickerGroupId);
   const update = useUIStore((s) => s.update);
 
   const [isDissolveOpen, dissolveDialog] = useDisclosure(false);
   const adminActions = useAdminActions();
   const { dissolve } = useGroupMutations();
   const { handleBatchAiAnalyze } = useAIBatchAnalysis();
+  
   const onUngroup = async (groupId: string) => {
     await (dissolve.execute as any)(groupId);
   };
+  
   const storeEditPhoto = (p: Photo | string) =>
     update({ editPhotoId: typeof p === "string" ? p : p.id });
-  const analyzeGroupById = async (id: string) => {}; // Unused or needs porting
+    
   const handleAddToGroup = async (ids: string[], groupId: string) => {
     await (adminActions.batchUpdate.mutateAsync as any)({
       ids,
@@ -63,9 +56,27 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
   const [isBulkRemoveOpen, bulkRemoveDialog] = useDisclosure(false);
   const [bulkRemoveRequest, setBulkRemoveRequest] = useState<{ ids: string[], title: string, message: string } | null>(null);
 
-  const { activeGroupPhotos, focusedGroupPhotoId, draggedPhotoId, groupSettingsOpen, groupData, setGroupData, isGroupDataLoading, containerRef, virtualGridRef, currentHighlightId, handleScroll, confirmBulkRemove, performBulkRemove, persistPhotoChange, handleUpdateGroupData, handleBatchUpdateDimensions, handleReorder, isMultiSelect, setCover, isGroupPhotosLoading, handleBulkAction: hookHandleBulkAction } = useGroupAdminLogic({
-    initialPhotoId: props.initialPhotoId,
-  });
+  const { 
+    activeGroupPhotos, 
+    groupSettingsOpen, 
+    groupData, 
+    setGroupData, 
+    isGroupDataLoading, 
+    containerRef, 
+    virtualGridRef, 
+    currentHighlightId, 
+    handleScroll, 
+    confirmBulkRemove, 
+    performBulkRemove, 
+    persistPhotoChange, 
+    handleUpdateGroupData, 
+    handleBatchUpdateDimensions, 
+    handleReorder, 
+    isMultiSelect, 
+    setCover, 
+    isGroupPhotosLoading, 
+    handleBulkAction: hookHandleBulkAction 
+  } = useGroupAdminLogic();
 
   const handleBulkRemoveRequest = (ids: string[]) => {
     const info = confirmBulkRemove(ids);
@@ -73,19 +84,19 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
     bulkRemoveDialog.open();
   };
 
-  const translate =
-    translations[
-      appLang as keyof typeof translations as keyof typeof translations
-    ] || translations.en;
+  const translate = translations[appLang as keyof typeof translations] || translations.en;
 
   const isLoading = isGroupPhotosLoading || isGroupDataLoading;
 
   const dragState = React.useRef({
-    draggedPhotoId,
+    draggedPhotoId: useUIStore.getState().draggedPhotoId,
     handleReorder,
     isAdminMode,
     isMultiSelect,
   });
+  
+  const draggedPhotoId = useUIStore(s => s.draggedPhotoId);
+  
   React.useEffect(() => {
     dragState.current = {
       draggedPhotoId,
@@ -95,87 +106,41 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
     };
   }, [draggedPhotoId, handleReorder, isAdminMode, isMultiSelect]);
 
-  const stableGetPhotoProps = 
-    (photo: Photo) => ({
-      showCoverBadge: true,
-      draggable:
-        dragState.current.isAdminMode && !dragState.current.isMultiSelect,
-      onDragStart: () => update({ draggedPhotoId: photo.id }),
-      onDragOver: (e: React.DragEvent) => e.preventDefault(),
-      onDrop: (e: React.DragEvent) => {
-        if (e && typeof e.preventDefault === "function") e.preventDefault();
-        const currentDraggedId = dragState.current.draggedPhotoId;
-        if (currentDraggedId) {
-          dragState.current.handleReorder(currentDraggedId, photo.id);
-          update({ draggedPhotoId: null });
-        }
-      },
-    });
-
-  const handleEditPhoto = 
-    (p: Photo) => {
-      if (storeEditPhoto) {
-        storeEditPhoto(p);
-      } else {
-        update({ editPhotoId: p.id });
-      }
-    };
-
-  const handlePhotoClick = 
-    (photo: Photo) => {
-      if (isMultiSelect) {
-        update((state) => ({
-          selectedIds: state.selectedIds.includes(photo.id)
-            ? state.selectedIds.filter((id) => id !== photo.id)
-            : [...state.selectedIds, photo.id],
-        }));
-      } else {
-        setPhotoId(photo.id);
-      }
-    };
-
-  const handlePhotoContextMenu = 
-    (e: React.MouseEvent | React.TouchEvent, photo: Photo) => {
+  const stableGetPhotoProps = (photo: Photo) => ({
+    showCoverBadge: true,
+    draggable: dragState.current.isAdminMode && !dragState.current.isMultiSelect,
+    onDragStart: () => update({ draggedPhotoId: photo.id }),
+    onDragOver: (e: React.DragEvent) => e.preventDefault(),
+    onDrop: (e: React.DragEvent) => {
       if (e && typeof e.preventDefault === "function") e.preventDefault();
-      if (isAdminMode) {
-        update({ isMultiSelect: true, selectedIds: [photo.id] });
-        if ("vibrate" in navigator) navigator.vibrate(50);
+      const currentDraggedId = dragState.current.draggedPhotoId;
+      if (currentDraggedId) {
+        dragState.current.handleReorder(currentDraggedId, photo.id);
+        update({ draggedPhotoId: null });
       }
-    };
+    },
+  });
 
-  const handleCloseLightbox = () => {
-    setPhotoId(null);
-    update({ focusedGroupPhotoId: null });
+  const handlePhotoClick = (photo: Photo) => {
+    if (isMultiSelect) {
+      const selectedIds = useUIStore.getState().selectedIds;
+      update({
+        selectedIds: selectedIds.includes(photo.id)
+          ? selectedIds.filter((id) => id !== photo.id)
+          : [...selectedIds, photo.id],
+      });
+    } else {
+      setPhotoId(photo.id);
+    }
   };
 
-  const handlePrevLightbox = (idx: number) => {
-      const prev = idx > 0 ? idx - 1 : activeGroupPhotos.length - 1;
-      if (activeGroupPhotos.length > 0) {
-        setPhotoId(activeGroupPhotos[prev].id);
-        update({ focusedGroupPhotoId: activeGroupPhotos[prev].id });
-      }
-    };
-
-  const handleNextLightbox = (idx: number) => {
-      const next = idx < activeGroupPhotos.length - 1 ? idx + 1 : 0;
-      if (activeGroupPhotos.length > 0) {
-        setPhotoId(activeGroupPhotos[next].id);
-        update({ focusedGroupPhotoId: activeGroupPhotos[next].id });
-      }
-    };
-
-  const handleUngroupLightbox = (photoId: string) => {
-      handleBulkRemoveRequest([photoId]);
-      setPhotoId(null);
-      update({ focusedGroupPhotoId: null });
-    };
-
-  const handleSetGroupCoverLightbox = (photoId: string) => setCover(photoId);
-
-  const handleToggleHiddenLightbox = (p: Photo) => {
-      const newStatus = !p.is_hidden;
-      persistPhotoChange(p.id, { is_hidden: newStatus });
-    };
+  const handlePhotoContextMenu = (e: React.MouseEvent | React.TouchEvent, photo: Photo) => {
+    if (e && typeof e.preventDefault === "function") e.preventDefault();
+    if (isAdminMode) {
+      update({ isMultiSelect: true, selectedIds: [photo.id] });
+      if ("vibrate" in navigator) navigator.vibrate(50);
+    }
+  };
 
   return (
     <>
@@ -202,7 +167,6 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
                   groupData={groupData}
                   isGroupDataLoading={isGroupDataLoading}
                   activeGroupPhotos={activeGroupPhotos}
-                  onBatchAiAnalyzeByGroupId={analyzeGroupById}
                 />
 
                 <GroupGridView

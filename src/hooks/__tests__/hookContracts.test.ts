@@ -2,7 +2,7 @@ import { renderHook } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import fs from 'fs';
 import path from 'path';
-import { useMultiSelect } from '@/features/photo/usePhotoSelection';
+import { usePhotoSelection } from '@/hooks/photo/usePhotoSelection';
 
 // Mock zustand gallery store for rendering test hooks
 vi.mock('@/store/useUIStore', () => ({
@@ -53,8 +53,7 @@ describe('Hook Rigid Contracts [HOOK-CONTRACT]', () => {
   it('[HOOK-CONTRACT] 模組 JSDoc @hook-contract 註釋檢查', () => {
     // Read files to ensure JSDoc "@hook-contract" exists
     const filesToAudit = [
-      path.join(process.cwd(), 'src/hooks/useInfinitePhotoCursorPagination.ts'),
-      path.join(process.cwd(), 'src/features/photo/usePhotoSelection.ts'),
+      path.join(process.cwd(), 'src/features/photos/usePhotoSelection.ts'),
     ];
 
     filesToAudit.forEach((filepath) => {
@@ -67,8 +66,8 @@ describe('Hook Rigid Contracts [HOOK-CONTRACT]', () => {
     });
   });
 
-  it('[HOOK-CONTRACT] 返回值結構完整性 (useMultiSelect)', () => {
-    const { result } = renderHook(() => useMultiSelect());
+  it('[HOOK-CONTRACT] 返回值結構完整性 (usePhotoSelection)', () => {
+    const { result } = renderHook(() => usePhotoSelection());
     const returned = result.current;
 
     // Must be object, NOT tuple/array

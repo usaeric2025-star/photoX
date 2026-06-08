@@ -3,7 +3,7 @@ import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks';
 import { useUIStore } from '@/store/useUIStore';
-import { deduplicatePhotos, bulkFixPhotoUrls } from "@/services/photo/photoMaintenanceService";
+import { deduplicatePhotos, bulkFixPhotoUrls } from "@/services/photo/maintenance";
 
 /**
  * [ATOMIC-HOOK] useMaintenanceActions

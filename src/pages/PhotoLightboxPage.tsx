@@ -6,7 +6,7 @@ import { useLightbox } from "@/hooks/useLightbox";
 import { PhotoInfoPanel } from "@/components/photo/PhotoInfoPanel";
 import { LightboxFallback } from "@/components/PhotoLightbox/LightboxFallback";
 import { useUIStore } from "@/store/useUIStore";
-import { useAdminActions } from "@/features/admin/useAdminActions";
+import { useAdminActions } from "@/hooks/admin/useAdminActions";
 import { useTags, useCategories } from "@/hooks";
 import { useGroupCoverMutation } from "@/hooks";
 import { getTranslatedCategoryName } from "@/lib/ui-helpers";

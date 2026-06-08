@@ -65,6 +65,8 @@ export const syncCache = {
   saveTags: (tags: any[]) => saveData('cached_tags', tags),
   getSettings: () => loadData('cached_settings'),
   saveSettings: (settings: any) => saveData('cached_settings', settings),
+  getTasks: () => loadData('cached_tasks'),
+  saveTasks: (tasks: any[]) => saveData('cached_tasks', tasks),
 };
 
 /**

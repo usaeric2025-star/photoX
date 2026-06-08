@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { GalleryVariant } from '@/types/variant';
 import { VirtualPhotoGrid } from '@/components/photo/VirtualPhotoGrid';
 import { PublicFilters } from '@/components/ui/PublicFilters';
 import { useUIStore, useShallow, useAppLang, useColumns } from '@/store/useUIStore';
@@ -15,7 +14,6 @@ import { Photo } from '@/types';
 import { useNavigate } from '@tanstack/react-router';
 
 interface PublicGridContainerProps {
-  variant: GalleryVariant;
   onScrollToTop: () => void;
   virtualGridRef: any;
   onExit?: () => void;
@@ -25,7 +23,6 @@ interface PublicGridContainerProps {
 const EMPTY_ARRAY: Photo[] = [];
 
 export function PublicGridContainer({
-  variant,
   onScrollToTop,
   virtualGridRef
 }: PublicGridContainerProps) {
@@ -57,22 +54,19 @@ export function PublicGridContainer({
     limit: PAGINATION.PUBLIC_PAGE_SIZE
   }, { enabled: true });
 
-  const rawPhotos = (() => {
-    const flat = infiniteQuery.data?.pages?.flatMap(p => p.photos) ?? EMPTY_ARRAY;
-    return cleanPhotos(flat);
-  })();
+  const rawPhotos = (infiniteQuery.data as any)?.photos ?? EMPTY_ARRAY;
 
-  const { displayPhotos, gridPhotos } = processPhotos(
+  const { displayPhotos, gridPhotos } = React.useMemo(() => processPhotos(
     rawPhotos,
     categories,
     tags,
-    urlFilters as any, // Cast generic filters or ensure compat
+    urlFilters as any,
     urlFilters,
     {
       showGroupsCollapsed: urlFilters.showGroupsCollapsed,
       isAdminModeOverride: false
     }
-  );
+  ), [rawPhotos, categories, tags, urlFilters]);
 
   const handleGroupClick = (gid: string, photoId?: string) => {
     setPhotoId(null);
@@ -121,13 +115,12 @@ export function PublicGridContainer({
     update({ showWhatsAppChoice: true });
   };
 
-  const renderCard = (photo: Photo, index: number) => (
+  const renderCard = React.useCallback((photo: Photo, index: number) => (
     <PhotoCard 
-      photo={photo}
+      photo={photo} 
       index={index}
-      variant={variant}
     />
-  );
+  ), []);
 
   return (
     <div className="flex flex-col h-full bg-brand-bg w-full overflow-hidden text-text">

@@ -47,7 +47,7 @@ export function BaseFilters({
 
       <button
         onClick={onSortChange}
-        className="h-[34px] w-[34px] flex items-center justify-center rounded-full hover:bg-slate-100 border border-slate-200/80 transition-colors"
+        className="h-10 sm:h-[34px] w-10 sm:w-[34px] flex items-center justify-center rounded-full hover:bg-slate-100 border border-slate-200/80 transition-colors"
         title={`排序: ${currentSort === 'newest' ? '最新优先' : '最早优先'}`}
       >
         <ArrowUpDown size={15} className="text-slate-600" />
@@ -55,7 +55,7 @@ export function BaseFilters({
 
       <button
         onClick={toggleColumns}
-        className="h-[34px] w-[34px] flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors border border-slate-200/80"
+        className="h-10 sm:h-[34px] w-10 sm:w-[34px] flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors border border-slate-200/80"
         title={`列数切换: 当前 ${currentColumns} 列`}
       >
         {currentColumns === 2 && <Grid2x2 size={15} className="text-slate-600" />}
@@ -65,7 +65,7 @@ export function BaseFilters({
 
       <button
         onClick={onToggleGroups}
-        className={`h-[34px] w-[34px] flex items-center justify-center rounded-full transition-colors border border-slate-200/80 ${showGroupsCollapsed ? 'bg-blue-500 text-white border-blue-500' : 'hover:bg-slate-100 text-slate-600'}`}
+        className={`h-10 sm:h-[34px] w-10 sm:w-[34px] flex items-center justify-center rounded-full transition-colors border border-slate-200/80 ${showGroupsCollapsed ? 'bg-blue-500 text-white border-blue-500' : 'hover:bg-slate-100 text-slate-600'}`}
         title={showGroupsCollapsed ? '展开合组' : '折叠合组'}
       >
         <Layers size={15} />

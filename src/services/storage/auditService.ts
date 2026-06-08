@@ -1,20 +1,25 @@
 import { api } from '@/lib/api';
-import { ErrorFactory } from '../../lib/error/ErrorFactory';
+import { withErrorHandling } from '@/lib/error/wrapper';
+import { AppResult } from '@/types/api';
 
-export const checkStorageHealth = async (): Promise<{ healthy: number, missing: number, orphans: number }> => {
-  const res = await api.storage.audit.$get();
-  const result = await res.json();
-  if (!res.ok || !result.success) {
-    throw ErrorFactory.wrap(new Error((result as any).error || 'Failed to audit storage'), 'checkStorageHealth');
-  }
-  return result.data;
+export const checkStorageHealth = async (): Promise<AppResult<{ healthy: number, missing: number, orphans: number }>> => {
+  return withErrorHandling(async () => {
+    const res = await api.storage.audit.$get();
+    const result = await res.json();
+    if (!res.ok || !result.success) {
+      throw new Error((result as any).error || 'Failed to audit storage');
+    }
+    return result.data;
+  }, 'checkStorageHealth', 'high');
 };
 
-export const cleanOrphanedFiles = async (): Promise<{ success: boolean, cleanedCount: number }> => {
-  const res = await api.storage.clean.$post();
-  const result = await res.json();
-  if (!res.ok || !result.success) {
-    throw ErrorFactory.wrap(new Error((result as any).error || 'Failed to clean storage'), 'cleanOrphanedFiles');
-  }
-  return { success: result.success, cleanedCount: result.data?.cleanedCount || (result as any).cleanedCount };
+export const cleanOrphanedFiles = async (): Promise<AppResult<{ success: boolean, cleanedCount: number }>> => {
+  return withErrorHandling(async () => {
+    const res = await api.storage.clean.$post();
+    const result = await res.json();
+    if (!res.ok || !result.success) {
+      throw new Error((result as any).error || 'Failed to clean storage');
+    }
+    return { success: result.success, cleanedCount: result.data?.cleanedCount || (result as any).cleanedCount };
+  }, 'cleanOrphanedFiles', 'high');
 };

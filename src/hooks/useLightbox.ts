@@ -40,11 +40,17 @@ export const useLightbox = () => {
     limit: PHOTO_QUERY_CONFIG.limit
   }, { enabled: !groupId });
   
-  const { data: totalCount } = useQuery({
+  const { data: countResult } = useQuery({
     queryKey: ['photos', 'totalCount', filters],
-    queryFn: () => getPhotoCount(filters.categoryId, filters.tagId, filters.searchQuery, isAdmin),
+    queryFn: async () => {
+      const res = await getPhotoCount(filters.categoryId, filters.tagId, filters.searchQuery, isAdmin);
+      if (!res.ok) throw new Error(res.message);
+      return res.data;
+    },
     enabled: !groupId,
   });
+  
+  const totalCount = countResult ?? 0;
   
   const isGroupMode = !!groupId; // Within a group's context
   
@@ -53,10 +59,10 @@ export const useLightbox = () => {
   const photos = (() => {
     let list: Photo[] = [];
     const sourceData = isGroupMode ? groupPhotos : allGalleryPhotos;
-    const allPhotosList = sourceData?.pages.flatMap(page => page.photos) ?? [];
+    const allPhotosList = (sourceData?.pages as any[])?.flatMap(page => page.photos) ?? [];
     
     if (singlePhoto) {
-      list = allPhotosList.map(p => p.id === singlePhoto.id ? { ...p, ...singlePhoto } : p);
+      list = allPhotosList.map((p: any) => p.id === singlePhoto.id ? { ...p, ...singlePhoto } : p);
       if (!list.find(p => p.id === singlePhoto.id)) {
         list = [singlePhoto, ...list];
       }

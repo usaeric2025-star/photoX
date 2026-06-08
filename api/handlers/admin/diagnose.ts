@@ -1,7 +1,10 @@
 import { Hono } from 'hono';
 import { getSupabaseAdmin } from "../../lib/supabase.js";
 import { getR2Client } from "../../lib/storage.js";
+import { getServerEnv } from "../../shared/envSchema.js";
+import { ListObjectsV2Command } from "@aws-sdk/client-s3";
 
+const serverEnv = getServerEnv(process.env);
 export const adminDiagnose = new Hono();
 
 adminDiagnose.get("/", async (c) => {

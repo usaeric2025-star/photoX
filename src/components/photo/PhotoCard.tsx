@@ -9,12 +9,11 @@ import { useSearch, useNavigate } from '@tanstack/react-router';
 
 import { PinButton } from './PinButton';
 import { Photo, Category, Tag } from '../../types';
-import { GalleryVariant } from '@/types/variant';
 import { Layers, Heart, Check, EyeOff } from 'lucide-react';
 import { getCacheBustedImageUrl, getPhotoDisplayName } from '../../lib/ui-helpers';
 import { ResponsivePhoto } from '../shared/ResponsivePhoto';
 import { usePermission, useCategories, useTags, useErrorHandler } from '../../hooks';
-import { useAdminActions } from '@/features/admin/useAdminActions';
+import { useAdminActions } from '@/hooks/admin/useAdminActions';
 import { getDisplayGroupCode } from '@/services/photo/utils';
 
 import { toast } from 'sonner';
@@ -24,7 +23,6 @@ import { useUIStore, useColumns } from '@/store/useUIStore';
 import { PhotoStatusBadges } from './PhotoStatusBadges';
 
 export interface PhotoCardProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant: GalleryVariant;
   photo: Photo;
   index: number;
   hideDetails?: boolean;
@@ -33,24 +31,6 @@ export interface PhotoCardProps extends React.HTMLAttributes<HTMLDivElement> {
   showCoverBadge?: boolean;
   displayCatName?: string;
   photoTags?: string[];
-}
-
-function SelectionOverlay({ isSelected }: { isSelected: boolean }) {
-  return (
-    <div className={cn(
-      "absolute top-0 left-0 w-full h-full transition-all duration-500 flex items-center justify-center p-3 sm:p-4 pointer-events-none z-10",
-      isSelected ? "bg-blue-500/5 backdrop-blur-[1px]" : "bg-transparent"
-    )}>
-       <div className={cn(
-         "w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 transition-all duration-300 flex items-center justify-center pointer-events-none shadow-sm",
-         isSelected 
-           ? "bg-blue-600 border-white shadow-blue-500/50 scale-110 opacity-100" 
-           : "bg-white/40 border-white/60 opacity-0 md:group-hover:opacity-100"
-       )}>
-          {isSelected && <Check size={18} className="text-white animate-in zoom-in-50 duration-300" />}
-       </div>
-    </div>
-  );
 }
 
 const toTitleCase = (str: string) => {
@@ -64,8 +44,8 @@ const toTitleCase = (str: string) => {
  * Any animation requiring React state or refs that triggers setStates inside
  * the virtualizer loop will cause infinite update depth loop.
  */
-export const PhotoCard = ({ 
-  variant, photo, index,
+export const PhotoCard = React.memo(({ 
+  photo, index,
   className = '', onClick,
   hideDetails = false,
   imgVariant,
@@ -90,40 +70,42 @@ export const PhotoCard = ({
   const cardRef = useRef<HTMLDivElement>(null);
   const longPressTriggered = useRef(false);
   const resetTimerRef = useRef<number | null>(null);
-  const isManagement = variant === 'full-management' || variant === 'staff-workspace';
+  const isManagement = window.location.pathname.startsWith('/admin');
   
   const lang = useUIStore(s => s.appLang);
   const t = translations[lang as keyof typeof translations] || translations.en;
   
-  const { data: fetchedCategories = [] } = useCategories(undefined, { enabled: !hideDetails && !propDisplayCatName });
-  const { data: fetchedTags = [] } = useTags(undefined, { enabled: !hideDetails && !propPhotoTags });
-
-  const categories = fetchedCategories;
-  const tags = fetchedTags;
+  const { data: categories = [] } = useCategories();
+  const { data: tags = [] } = useTags();
 
   const categoryId = photo.category_id ? String(photo.category_id) : '';
   
-  const displayCatName = propDisplayCatName ?? getTranslatedCategoryName(categoryId, categories, lang, t);
-                
-  const photoTags = propPhotoTags ?? (() => {                
+  const displayCatName = React.useMemo(() => 
+    propDisplayCatName ?? getTranslatedCategoryName(categoryId, categories, lang, t),
+    [propDisplayCatName, categoryId, categories, lang, t]
+  );
+                 
+  const photoTags = React.useMemo(() => {
+    if (propPhotoTags) return propPhotoTags;
     const tagIdsList = Array.isArray(photo.tag_ids) ? photo.tag_ids : [];                
     return tagIdsList                
       .map(id => tags.find(t => String(t.id) === String(id))?.name ?? '')                
       .filter(Boolean);                
-  })();
+  }, [propPhotoTags, photo.tag_ids, tags]);
 
-  const displayName = getPhotoDisplayName(photo, categories, lang, t);
+  const displayName = React.useMemo(() => 
+    getPhotoDisplayName(photo, categories, lang, t),
+    [photo, categories, lang, t]
+  );
 
   const { can } = usePermission();
-  const location = window.location;
-  const isAdmin = location.pathname.startsWith('/admin');
 
   const handleOpenLightbox = () => {
     navigate({ to: '.', search: (prev: any) => ({ ...prev, photoId: photo.id } as any) });
   };
     
   const handleGroupNavigate = (gid: string) => {
-    const targetPath = isAdmin ? `/admin/group/${gid}` : `/group/${gid}`;
+    const targetPath = isManagement ? `/admin/group/${gid}` : `/group/${gid}`;
     navigate({ to: targetPath });
   };
 
@@ -257,7 +239,6 @@ export const PhotoCard = ({
       
       <PhotoStatusBadges 
         photo={photo} 
-        variant={variant} 
         isPinned={!!photo.is_pinned} 
         hideGroupBadge={hideGroupBadge || !showGroupsCollapsed} 
         showCoverBadge={props.showCoverBadge}
@@ -302,4 +283,7 @@ export const PhotoCard = ({
       )}
     </div>
   );
-};
+});
+
+// Explicit display name for debugging
+PhotoCard.displayName = 'PhotoCard';

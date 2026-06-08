@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X as CloseIcon, RefreshCcw, Save, Trash2 } from 'lucide-react';
 import { useDisclosure } from '@mantine/hooks';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { useBatchEdit } from '@/hooks';
+import { usePhotoSelection } from '@/hooks';
 import { BatchEditForm } from './edit/BatchEditForm';
 import { supabase } from '@/lib/supabase';
 import { reportError } from '@/lib/errorTracker';
@@ -79,7 +79,7 @@ export const BatchEditScreen = () => {
     batchIsHiddenApplied,
     setBatchIsHiddenApplied,
     logic
-  } = useBatchEdit();
+  } = usePhotoSelection();
 
   return (
     <div className="fixed inset-0 z-[var(--z-index-max)] bg-slate-50 flex flex-col pt-safe">

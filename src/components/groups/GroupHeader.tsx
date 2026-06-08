@@ -23,7 +23,6 @@ interface GroupHeaderProps {
   groupData: ProductGroup | null;
   isGroupDataLoading: boolean;
   activeGroupPhotos: Photo[];
-  onBatchAiAnalyzeByGroupId?: (groupId: string) => Promise<void | null>;
 }
 
 export function GroupHeader({
@@ -32,7 +31,6 @@ export function GroupHeader({
   groupData,
   isGroupDataLoading,
   activeGroupPhotos,
-  onBatchAiAnalyzeByGroupId,
 }: GroupHeaderProps) {
   const { setGroupId } = useUrlFilters();
   const navigate = useNavigate();

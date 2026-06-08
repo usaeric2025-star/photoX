@@ -23,11 +23,13 @@ export const usePhotoCount = createQuery<number, PhotoCountFilters | undefined>(
       isAdminMode: f.isAdminMode ?? false
     }), f.source || 'server'];
   },
-  queryFn: (filters) => {
+  queryFn: async (filters) => {
     const f = filters || {};
-    if (f.source === 'local') {
-      return getLocalPhotoCount();
-    }
-    return getPhotoCount(f.category_id, f.tag_id, f.searchQuery, f.isAdminMode || false);
+    const res = await (f.source === 'local' 
+      ? getLocalPhotoCount() 
+      : getPhotoCount(f.category_id, f.tag_id, f.searchQuery, f.isAdminMode || false));
+    
+    if (!res.ok) throw new Error(res.message);
+    return res.data;
   }
 });

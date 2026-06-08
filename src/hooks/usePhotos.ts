@@ -3,8 +3,9 @@ import { loadAllPhotosFromCloud, loadPhotosByGroupIdPaginated } from '@/services
 import { photoKeys } from '@/lib/queryKeys';
 import { syncCache } from '@/lib/db/indexedDB';
 import { PHOTO_QUERY_CONFIG } from '@/lib/photoQueryConfig';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, InfiniteData } from '@tanstack/react-query';
 import { Photo } from '../types';
+import { useMemo } from 'react';
 
 interface PhotoFilters {
   category_id?: string | null;
@@ -19,9 +20,35 @@ interface PhotoFilters {
 }
 
 /**
+ * Standard flattening selector for photos
+ */
+const flattenPhotos = (data: InfiniteData<any>) => {
+  const allPhotos = data.pages.flatMap((page) => page.photos || []) as Photo[];
+  
+  // Deduplicate by ID and pre-calculate derived fields for performance
+  const seen = new Set();
+  const photos = allPhotos.filter(p => {
+    if (!p.id || seen.has(p.id)) return false;
+    seen.add(p.id);
+    
+    // Inject _time here so it's calculated only once per fetch
+    if (!(p as any)._time) {
+      (p as any)._time = p.created_at_timestamp || new Date(p.created_at || (p as any).created_at || 0).getTime();
+    }
+    
+    return true;
+  });
+
+  return {
+    ...data,
+    photos
+  };
+};
+
+/**
  * Hook for infinite photo lists (main grid).
  */
-export const usePhotos = createInfiniteQuery<{photos: Photo[], nextPage?: number}, PhotoFilters>({
+export const usePhotos = createInfiniteQuery<{photos: Photo[], nextPage?: number}, PhotoFilters, any>({
   queryKey: (filters) => photoKeys.infinite({
     category_id: filters.category_id ?? null,
     tag_id: filters.tag_id ?? null,
@@ -35,7 +62,7 @@ export const usePhotos = createInfiniteQuery<{photos: Photo[], nextPage?: number
   }),
   queryFn: async (filters, pageParam, signal) => {
     const limit = filters.limit ?? PHOTO_QUERY_CONFIG.limit;
-    const photos = await loadAllPhotosFromCloud(
+    const res = await loadAllPhotosFromCloud(
       undefined,
       pageParam - 1,
       limit,
@@ -50,6 +77,9 @@ export const usePhotos = createInfiniteQuery<{photos: Photo[], nextPage?: number
       filters.is_hidden
     );
 
+    if (!res.ok) throw new Error(res.message);
+    const photos = res.data;
+
     if (pageParam === 1 && !filters.searchQuery && !filters.category_id && !filters.tag_id) {
       syncCache.savePhotos(photos).catch(() => {});
     }
@@ -60,32 +90,36 @@ export const usePhotos = createInfiniteQuery<{photos: Photo[], nextPage?: number
     };
   },
   getNextPageParam: (lastPage) => lastPage.nextPage,
+  select: flattenPhotos,
   staleTime: 5 * 60 * 1000,
 });
 
 /**
  * Hook for infinite group photo lists.
  */
-export const useGroupPhotosResult = createInfiniteQuery<{photos: Photo[], total: number, hasMore: boolean}, { groupId: string | null; isAdminMode: boolean; pageSize: number }>({
+export const useGroupPhotosResult = createInfiniteQuery<{photos: Photo[], total: number, hasMore: boolean}, { groupId: string | null; isAdminMode: boolean; pageSize: number }, any>({
   queryKey: (vars) => photoKeys.infinite(vars),
   queryFn: async ({ groupId, isAdminMode, pageSize }, pageParam) => {
     const res = await loadPhotosByGroupIdPaginated(groupId!, pageParam, pageSize, isAdminMode);
+    if (!res.ok) throw new Error(res.message);
+    const data = res.data;
     return {
-      photos: res.photos,
-      total: res.total,
-      hasMore: res.photos.length >= pageSize
+      photos: data.photos,
+      total: data.total,
+      hasMore: data.photos.length >= pageSize
     };
   },
   getNextPageParam: (lastPage, allPages) => {
     const loaded = allPages.reduce((sum, p) => sum + p.photos.length, 0);
     return (loaded < lastPage.total && lastPage.photos.length > 0) ? allPages.length + 1 : undefined;
   },
+  select: flattenPhotos,
   staleTime: 30 * 1000,
 });
 
 export const useGroupPhotos = (groupId: string | null, isAdminMode: boolean = false, pageSize: number = 60) => {
   const queryClient = useQueryClient();
-  return useGroupPhotosResult({ groupId, isAdminMode, pageSize }, {
+  const query = useGroupPhotosResult({ groupId, isAdminMode, pageSize }, {
     enabled: !!groupId,
     placeholderData: (prev: any) => {
         if (prev) return prev;
@@ -101,7 +135,7 @@ export const useGroupPhotos = (groupId: string | null, isAdminMode: boolean = fa
                     dict.set(photo.id, photo);
                   }
                 });
-              }
+               }
             });
           }
         });
@@ -109,10 +143,16 @@ export const useGroupPhotos = (groupId: string | null, isAdminMode: boolean = fa
         if (cached.length > 0) {
           return {
             pages: [{ photos: cached, total: cached.length, hasMore: false }],
-            pageParams: [1]
+            pageParams: [1],
+            photos: cached
           };
         }
         return undefined;
       }
   });
+
+  return {
+    ...query,
+    photos: query.data?.photos ?? []
+  };
 };

@@ -24,7 +24,7 @@ const multiSelectSelector = (s: UIStoreState) => ({
   update: s.update
 });
 
-export function VirtualPhotoGrid({
+export const VirtualPhotoGrid = React.memo(({
   photos,
   isFetching,
   isFetchingNextPage,
@@ -34,7 +34,7 @@ export function VirtualPhotoGrid({
   columns,
   ref,
   restoreKey
-}: VirtualPhotoGridProps) {
+}: VirtualPhotoGridProps) => {
   const { filters } = useUrlFilters();
   const appLang = useUIStore((s) => s.appLang);
   const t = (translations[appLang as keyof typeof translations] || translations.en) as TranslationType;
@@ -84,6 +84,16 @@ export function VirtualPhotoGrid({
 
   const isLoading = isFetching && photos.length === 0;
 
+  const internalRenderItem = React.useCallback((index: number) => {
+    const photo = photos[index];
+    if (!photo) return null;
+    return (
+      <div className="p-1.5 sm:p-2 w-full">
+        {renderCard(photo, index)}
+      </div>
+    );
+  }, [photos, renderCard]);
+
   if (isLoading) {
     return (
       <div className="absolute inset-0 z-10 bg-brand-bg overflow-y-auto">
@@ -108,15 +118,7 @@ export function VirtualPhotoGrid({
             }
           }}
           containerClassName="px-2 pt-2 pb-4"
-          renderItem={(index) => {
-            const photo = photos[index];
-            if (!photo) return null;
-            return (
-              <div className="p-1.5 sm:p-2 w-full">
-                {renderCard(photo, index)}
-              </div>
-            );
-          }}
+          renderItem={internalRenderItem}
           footer={
             <div className="pt-4 pb-8">
                <LoadMoreIndicator 
@@ -130,4 +132,6 @@ export function VirtualPhotoGrid({
       </div>
     </div>
   );
-}
+});
+
+VirtualPhotoGrid.displayName = 'VirtualPhotoGrid';

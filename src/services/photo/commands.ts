@@ -1,6 +1,10 @@
 import { supabase } from '../../lib/supabase';
 import { DB_CONFIG } from '../../constants/config';
-import { Photo, ProductFormData } from '../../types';
+import { Photo } from '../../types';
+import { ungroupPhotos, syncGroupMemberCount } from '@/services/photo/groupUtils';
+import { syncBatchPhotoTags } from '@/services/tag/commands';
+import { withErrorHandling } from '@/lib/error/wrapper';
+import { withSupabase } from '@/lib/error/supabaseWrapper';
 import { ok, err, isErr, ErrorFactory, success, errorFactory, fromThrowableAsync } from '@/lib/error/ErrorFactory';
 import type { Result, AppResult } from '@/types/api';
 import { PAGINATION } from '../../config/constants';
@@ -20,88 +24,60 @@ export interface BatchActionResult {
   failedItems: { id: string; reason: string }[];
 }
 
-// --- Internal Helper: Sync Tags ---
-export const syncPhotoTags = async (photoId: string, tagIds: string[]) => {
-  await supabase.from('photo_tags').delete().eq('photo_id', photoId);
-  if (tagIds.length > 0) {
-    const associations = tagIds.map(tagId => ({
-      photo_id: photoId,
-      tag_id: tagId
-    }));
-    const { error } = await supabase.from('photo_tags').insert(associations);
-    if (error) throw error;
-  }
-};
-
 // --- Core Update Command ---
-export async function updatePhoto(id: string, updates: Partial<Photo> & Record<string, any>): Promise<AppResult<Photo | null>> {
-  if (!id || id.startsWith('temp-')) {
-    return errorFactory('无效的照片ID', 'VALIDATION_ERROR', 'updatePhoto', id);
-  }
+export async function updatePhoto(id: string, updates: Partial<Photo>): Promise<AppResult<Photo | null>> {
+  return withErrorHandling(async () => {
+    if (!id || id.startsWith('temp-')) {
+      throw new Error('无效的照片ID');
+    }
 
-  // 1. Validation
-  const validator = createPhotoValidator();
-  const validationRes = validator.validate(updates);
-  if (!validationRes.ok) {
-    return errorFactory(validationRes.message, 'VALIDATION_ERROR', 'updatePhoto', updates);
-  }
+    // 1. Validation
+    const validator = createPhotoValidator();
+    const validationRes = validator.validate(updates);
+    if (!validationRes.ok) return validationRes as AppResult<Photo | null>;
 
-  try {
     // 2. Handle image data URI if present (e.g. from rotation)
     if (updates.uri && updates.uri.startsWith('data:image')) {
       const { data: { session } } = await supabase.auth.getSession();
-      const isLocalStorageStaff = typeof window !== 'undefined' && !!window.localStorage.getItem('ais_mock_auth_passcode');
-      
-      if (!session && !isLocalStorageStaff) {
-        return errorFactory('NO_ACTIVE_SESSION', 'AUTH_ERROR', 'updatePhoto');
-      }
+      if (!session) throw new Error('NO_ACTIVE_SESSION');
 
       const { uploadWithRetry } = await import('../storage');
-      const { imageUrl } = await uploadWithRetry(session?.user?.id || 'staff', id, updates.uri, undefined, undefined, undefined, 3, true);
-      updates.image_url = imageUrl;
+      const uploadRes = await uploadWithRetry(session.user.id, id, updates.uri, undefined, undefined, undefined, 3, true);
+      if (!uploadRes.ok) return uploadRes as any;
+      
+      updates.image_url = uploadRes.data.imageUrl;
       updates.updated_at = new Date().toISOString();
       delete updates.uri;
     }
 
     // 3. Special handling for group cover
     if (updates.is_group_cover === true) {
-      let groupId = updates.group_id;
-      if (!groupId) {
-        const { data } = await supabase
-          .from(DB_CONFIG.TABLE_NAME)
-          .select('group_id')
-          .eq('id', id)
-          .maybeSingle();
-        if (data?.group_id) groupId = data.group_id;
-      }
-
-      if (groupId) {
+      const { data } = await supabase
+        .from(DB_CONFIG.TABLE_NAME)
+        .select('group_id')
+        .eq('id', id)
+        .maybeSingle();
+      
+      if (data?.group_id) {
         await supabase
           .from(DB_CONFIG.TABLE_NAME)
           .update({ is_group_cover: false })
-          .eq('group_id', groupId);
+          .eq('group_id', data.group_id);
       }
     }
 
-    // 4. Update Database via admin backend route to safely bypass RLS for both real Google Auth and passcode/mock guest staff
+    // 4. Update Database via admin backend route
     const response = await api.admin.photo.update.$post({
-      json: { id, updates }
+      json: { id, updates: updates as any }
     });
     
-    if (!response.ok) {
-      const errorText = await response.text();
-      return errorFactory(errorText || 'Server error', 'UNKNOWN', 'updatePhoto');
-    }
-    
-    const result = await response.json() as any;
-    if (!result.success) {
-      return errorFactory(result.error || 'Update failed', 'DB_ERROR', 'updatePhoto');
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      throw new Error(result.error || 'Update failed');
     }
 
     return success(null);
-  } catch (err: any) {
-    return errorFactory(err.message || 'Update failed', 'UNKNOWN', 'updatePhoto', err);
-  }
+  }, 'updatePhoto');
 }
 
 // Alias for legacy support
@@ -109,117 +85,90 @@ export const update = updatePhoto;
 
 // --- Batch Update ---
 export async function batchUpdate(ids: string[], updates: Partial<Photo>): Promise<AppResult<BatchActionResult>> {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return errorFactory('Session required', 'AUTH_ERROR', 'batchUpdate');
-  const userId = session.user.id;
+  return withErrorHandling(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('Session required');
 
-  const validator = createPhotoValidator();
-  const validationRes = validator.validate(updates);
-  if (!validationRes.ok) {
-    return errorFactory(validationRes.message, 'VALIDATION_ERROR', 'batchUpdate', updates);
-  }
+    const validator = createPhotoValidator();
+    const validationRes = validator.validate(updates);
+    if (!validationRes.ok) return validationRes as AppResult<BatchActionResult>;
 
-  const dbUpdates = mapToDb(updates);
-  
-  const { data, error } = await supabase
-    .from(DB_CONFIG.TABLE_NAME)
-    .update(dbUpdates)
-    .in('id', ids)
-    .select('id');
+    const dbUpdates = mapToDb(updates);
+    
+    const query = supabase
+      .from(DB_CONFIG.TABLE_NAME)
+      .update(dbUpdates)
+      .in('id', ids)
+      .select('id');
 
-  if (error) {
-    // Attempt one-by-one if batch fails (e.g. unique constraint)
-    const failedItems: { id: string; reason: string }[] = [];
-    let successCount = 0;
+    const res = await withSupabase(query, 'batchUpdate');
+    
+    if (!res.ok) {
+      // Fallback
+      const failedItems: { id: string; reason: string }[] = [];
+      let successCount = 0;
 
-    for (const id of ids) {
-      const { error: singleError } = await supabase.from(DB_CONFIG.TABLE_NAME).update(dbUpdates).eq('id', id);
-      if (singleError) failedItems.push({ id, reason: singleError.message });
-      else successCount++;
+      for (const id of ids) {
+        const { error } = await supabase.from(DB_CONFIG.TABLE_NAME).update(dbUpdates).eq('id', id);
+        if (error) failedItems.push({ id, reason: error.message });
+        else successCount++;
+      }
+      return success({ successCount, failureCount: failedItems.length, failedItems });
     }
 
-    return success({ successCount, failureCount: failedItems.length, failedItems });
-  }
+    const updatedIds = new Set(res.data?.map(d => d.id) || []);
+    const failedOnes = ids.filter(id => !updatedIds.has(id)).map(id => ({ id, reason: 'Not found or unchanged' }));
 
-  const updatedIds = new Set(data?.map(d => d.id) || []);
-  const failedOnes = ids.filter(id => !updatedIds.has(id)).map(id => ({ id, reason: 'Not found or unchanged' }));
-
-  // Tags
-  if ('tag_ids' in updates) {
-    await supabase.from('photo_tags').delete().in('photo_id', ids);
-    const uTagIds = safeArray(updates.tag_ids);
-    if (uTagIds.length > 0) {
-      const tagAssociations = ids.flatMap(photoId => 
-        uTagIds.map(tagId => ({
-          photo_id: photoId,
-          tag_id: tagId
-        }))
-      );
-      await supabase.from('photo_tags').insert(tagAssociations);
+    if ('tag_ids' in updates) {
+      await syncBatchPhotoTags(ids, safeArray<string>(updates.tag_ids));
     }
-  }
 
-  return success({
-    successCount: updatedIds.size,
-    failureCount: failedOnes.length,
-    failedItems: failedOnes
-  });
+    return success({
+      successCount: updatedIds.size,
+      failureCount: failedOnes.length,
+      failedItems: failedOnes
+    });
+  }, 'batchUpdate');
 }
 
 // --- Delete ---
 export async function deleteMany(ids: string[]): Promise<AppResult<BatchActionResult>> {
+  return withErrorHandling(async () => {
     try {
       const response = await api.admin['delete-photos'].$post({ json: { ids } });
       const result = await response.json();
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || `Delete failed with HTTP ${response.status}`);
-      }
-      return success({
-        successCount: ids.length,
-        failureCount: 0,
-        failedItems: []
-      });
-    } catch(err: any) {
-      console.warn('[deleteMany] Admin endpoint failed, falling back to client-side RLS delete:', err);
-      const { data, error } = await supabase
-        .from(DB_CONFIG.TABLE_NAME)
-        .delete()
-        .in('id', ids)
-        .select('id');
+      if (!response.ok || !result.success) throw new Error(result.error || 'Admin delete failed');
       
-      if (error) return errorFactory(error.message, 'DB_ERROR', 'deleteMany', error);
+      return success({ successCount: ids.length, failureCount: 0, failedItems: [] });
+    } catch(err: any) {
+      const query = supabase.from(DB_CONFIG.TABLE_NAME).delete().in('id', ids).select('id');
+      const res = await withSupabase(query, 'deleteMany/fallback');
+      if (!res.ok) return res as any;
 
-      const deletedIds = new Set(data?.map(d => d.id) || []);
-      const failedItems = ids.filter(id => !deletedIds.has(id)).map(id => ({ id, reason: 'Permission Denied' }));
+      const deletedIds = new Set(res.data?.map(d => d.id) || []);
+      const failed = ids.filter(id => !deletedIds.has(id)).map(id => ({ id, reason: 'Permission Denied or Not Found' }));
 
-      return success({
-        successCount: deletedIds.size,
-        failureCount: failedItems.length,
-        failedItems
-      });
+      return success({ successCount: deletedIds.size, failureCount: failed.length, failedItems: failed });
     }
+  }, 'deleteMany');
 }
 
 export const deletePhoto = async (photo: Photo): Promise<AppResult<{ dissolvedGroupId?: string }>> => {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return errorFactory('Session required', 'AUTH_ERROR', 'deletePhoto');
-  const userId = session.user.id;
+  return withErrorHandling(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('Session required');
 
-  try {
-    const { error } = await supabase
+    const query = supabase
       .from(DB_CONFIG.TABLE_NAME)
       .delete()
-      .match({ id: photo.id, user_id: userId });
+      .match({ id: photo.id, user_id: session.user.id });
 
-    if (error) throw error;
+    const res = await withSupabase(query, 'deletePhoto');
+    if (!res.ok) return res as any;
 
-    // Physical Cleanup
+    // Physical Cleanup logic remains (only if needed)
     if (photo.image_url) {
-       const { count } = await supabase
-          .from(DB_CONFIG.TABLE_NAME)
-          .select('id', { count: 'exact', head: true })
-          .eq('image_url', photo.image_url);
-        
+       const { count } = await supabase.from(DB_CONFIG.TABLE_NAME).select('id', { count: 'exact', head: true }).eq('image_url', photo.image_url);
        if (count === 0) {
           const { cleanupPhysicalStorage } = await import('../storage');
           await cleanupPhysicalStorage([photo.storage_id || photo.id], [photo.image_url]);
@@ -228,11 +177,7 @@ export const deletePhoto = async (photo: Photo): Promise<AppResult<{ dissolvedGr
     
     let dissolvedGroupId: string | undefined;
     if (photo.group_id) {
-      const { data: remaining } = await supabase
-        .from(DB_CONFIG.TABLE_NAME)
-        .select('id')
-        .eq('group_id', photo.group_id);
-        
+      const { data: remaining } = await supabase.from(DB_CONFIG.TABLE_NAME).select('id').eq('group_id', photo.group_id);
       if (remaining && remaining.length <= 1) {
         await ungroupPhotos(photo.group_id);
         dissolvedGroupId = photo.group_id;
@@ -242,104 +187,9 @@ export const deletePhoto = async (photo: Photo): Promise<AppResult<{ dissolvedGr
     }
 
     return success({ dissolvedGroupId });
-  } catch (err: any) {
-    return errorFactory(err.message, 'DB_ERROR', 'deletePhoto', err);
-  }
+  }, 'deletePhoto');
 };
 
-// --- Grouping Operations ---
-
-export const ungroupPhotos = async (groupId: string) => {
-  const { error } = await supabase.rpc('dissolve_group', { group_id: groupId });
-  if (error) throw error;
-};
-
-export const syncGroupMemberCount = async (groupId: string) => {
-  if (!groupId) return;
-  const { count, error: countError } = await supabase
-    .from(DB_CONFIG.TABLE_NAME)
-    .select('id', { count: 'exact', head: true })
-    .eq('group_id', groupId);
-
-  if (countError) return;
-
-  await supabase
-    .from('groups')
-    .update({ member_count: count || 0 })
-    .eq('id', groupId);
-};
-
-export const groupPhotos = async (
-  photoIds: string[], 
-  predefinedGroupId?: string, 
-  metadata?: {
-    name?: any;
-    description?: any;
-  }
-) => {
-  if (photoIds.length <= 1) {
-    throw new Error('至少需要选择两张照片才能成组');
-  }
-  
-  const targetGroupId = predefinedGroupId || crypto.randomUUID();
-  const { data: { session } } = await supabase.auth.getSession();
-  const userId = session?.user?.id;
-
-  const { data: selectedPhotos } = await supabase
-    .from(DB_CONFIG.TABLE_NAME)
-    .select('id, group_id')
-    .in('id', photoIds);
-
-  const sourceGroupIds = Array.from(new Set(
-    selectedPhotos
-      ?.map(p => p.group_id)
-      .filter((gid): gid is string => !!gid && gid !== targetGroupId) || []
-  ));
-
-  const ungroupedValidIds = photoIds.filter(id => {
-    const p = selectedPhotos?.find(x => x.id === id);
-    return !p?.group_id;
-  });
-
-  // Prepare Group Record
-  const groupData = {
-    name: metadata?.name || { zh: '新合组', en: 'New Combined Group', ms: 'Kumpulan Baru' },
-    description: metadata?.description || { zh: '', en: '', ms: '' },
-    updated_at: new Date().toISOString()
-  };
-
-  const { data: existingGroup } = await supabase.from('groups').select('id').eq('id', targetGroupId).maybeSingle();
-
-  if (!existingGroup) {
-    await supabase.from('groups').insert({
-      id: targetGroupId,
-      user_id: userId,
-      is_hidden: false,
-      created_at: new Date().toISOString(),
-      ...groupData
-    });
-  } else {
-    await supabase.from('groups').update(groupData).eq('id', targetGroupId);
-  }
-
-  // Merge
-  if (sourceGroupIds.length > 0) {
-    await supabase.rpc('merge_groups', {
-      source_group_ids: sourceGroupIds,
-      target_group_id: targetGroupId
-    });
-  }
-
-  if (ungroupedValidIds.length > 0) {
-    await supabase
-      .from(DB_CONFIG.TABLE_NAME)
-      .update({ group_id: targetGroupId, is_group_cover: false })
-      .in('id', ungroupedValidIds);
-  }
-
-  await syncGroupMemberCount(targetGroupId);
-  return { newGroupId: targetGroupId };
-};
 
 export const updatePhotoHidden = async (photoId: string, is_hidden: boolean): Promise<AppResult<null>> => {
   const res = await updatePhoto(photoId, { is_hidden, updated_at: new Date().toISOString() });
@@ -347,54 +197,3 @@ export const updatePhotoHidden = async (photoId: string, is_hidden: boolean): Pr
 };
 
 export const updatePhotoHiddenState = updatePhotoHidden;
-
-export const movePhotosToGroup = async (photoIds: string[], targetGroupId: string | null) => {
-  const { error } = await supabase.rpc('move_photos_to_group', {
-    photo_ids: photoIds,
-    target_group_id: targetGroupId
-  });
-  if (error) throw error;
-};
-
-export const clearCategoryFromPhotos = async (categoryId: string) => {
-  const { data, error } = await supabase
-    .from(DB_CONFIG.TABLE_NAME)
-    .update({ category_id: null })
-    .eq('category_id', categoryId)
-    .select('id');
-    
-  if (error) throw error;
-  return data;
-};
-
-export const clearManufacturerFromPhotos = async (mfrId: string) => {
-  const { data, error } = await supabase
-    .from(DB_CONFIG.TABLE_NAME)
-    .update({ manufacturer_id: null })
-    .eq('manufacturer_id', mfrId)
-    .select('id');
-    
-  if (error) throw error;
-  return data;
-};
-
-export const setPhotoAsGroupCover = async (photoId: string | null, groupId: string) => {
-  if (!groupId) return;
-
-  await supabase
-    .from(DB_CONFIG.TABLE_NAME)
-    .update({ is_group_cover: false })
-    .eq('group_id', groupId);
-
-  if (photoId) {
-    await supabase
-      .from(DB_CONFIG.TABLE_NAME)
-      .update({ is_group_cover: true })
-      .eq('id', photoId);
-  }
-
-  await supabase
-    .from('groups')
-    .update({ cover_photo_id: photoId || null })
-    .eq('id', groupId);
-};

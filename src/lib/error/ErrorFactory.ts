@@ -1,5 +1,7 @@
 import { AppResult, AppError, AppSuccess, ErrorCode } from '@/types/api';
 
+export type { AppResult, AppError, AppSuccess, ErrorCode };
+
 export type ErrorSeverity = 'low' | 'medium' | 'high' | 'critical';
 
 export class ErrorFactory {

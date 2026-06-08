@@ -3,16 +3,20 @@ import { cors } from "hono/cors";
 import { getServerEnv } from "./shared/envSchema.js";
 import { logTraffic } from "./lib/trafficCapture.js";
 import { requireRealUser } from "./lib/auth.js";
+import { getSupabaseAdmin } from "./lib/supabase.js";
 import { admin } from "./handlers/admin.js";
 import { ai } from "./handlers/ai.js";
 import { storage } from "./handlers/storage.js";
 
+// Validate env at module level
 const serverEnv = getServerEnv(process.env);
+
 export const app = new Hono().basePath("/api");
 
-// Middleware
+// --- Middleware ---
 app.use("*", cors());
 app.use("*", async (c, next) => {
+    // 1% sample rate for production, 100% for dev
     if (serverEnv.NODE_ENV === 'production') {
         if (Math.random() < 0.01) logTraffic(c.req, null);
     } else {
@@ -20,26 +24,6 @@ app.use("*", async (c, next) => {
     }
     await next();
 });
-
-// Auth Middleware for Administrative Routes
-app.use("/admin/*", async (c, next) => {
-    // Whitelist public-accessible admin routes
-    if (c.req.path.endsWith('/admin/settings/get-keys')) {
-        await next();
-        return;
-    }
-    try {
-        await requireRealUser(c);
-        await next();
-    } catch (e: any) {
-        return c.json({ success: false, error: e.message }, 401);
-    }
-});
-
-// Mount Routes
-app.route("/admin", admin);
-app.route("/ai", ai);
-app.route("/storage", storage);
 
 // Global Exception Handler
 app.onError((err, c) => {
@@ -55,15 +39,39 @@ app.onError((err, c) => {
   }, status);
 });
 
-// Export type
+// Auth Middleware for Administrative Routes
+app.use("/admin/*", async (c, next) => {
+    // Whitelist public-accessible admin routes
+    if (c.req.path.endsWith('/admin/settings/get-keys')) {
+        await next();
+        return;
+    }
 
+    try {
+        await requireRealUser(c);
+        await next();
+    } catch (e: any) {
+        console.error(`[Auth Error] ${c.req.path}: ${e.message}`);
+        return c.json({ success: false, error: e.message }, 401);
+    }
+});
 
+// --- API Routes (Distributed) ---
+app.route("/admin", admin);
+app.route("/ai", ai);
+app.route("/storage", storage);
 
-
-
-
-
-
+// --- Core Utility Routes ---
+app.get("/health", (c) => {
+    return c.json({ 
+        success: true, 
+        data: { 
+            status: "ok", 
+            uptime: process.uptime(), 
+            timestamp: Date.now(),
+            version: "1.2.0-modular"
+        } 
+    });
+});
 
 export type AppType = typeof app;
-

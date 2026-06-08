@@ -6,7 +6,7 @@ import { cleanPhotos, filterPhotos, groupPhotos } from '../lib/filters';
 import { 
   useCategories, usePhotos, usePhotoCount, 
   useTags, useScrollRestoration,
-  useMultiSelect, useSyncMutation, useTasks
+  usePhotoSelection, useSyncMutation, useTasks
 } from '@/hooks';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { PAGINATION, ROUTES, UI } from '@/config/constants';
@@ -63,7 +63,6 @@ export default function PublicPage() {
     isAdminMode: false,
     source: 'server',
   });
-  const { isLoading } = usePhotos({});
 
   const { tasks } = useTasks();
   const { mutateAsync: syncMut } = useSyncMutation();
@@ -103,13 +102,12 @@ export default function PublicPage() {
         <AuthErrorDisplay message={authError} />
       ) : (
         <div className="flex-1 min-h-0 relative">
-          <DataLoadingContainer
-            isLoading={isLoading}
-            hasData={true} // Data will be handled inside PublicGridContainer
-          >
+            <DataLoadingContainer
+              isLoading={false} // Loading handled internally by GridContainer
+              hasData={true}
+            >
             <ErrorBoundary>
                 <PublicGridContainer 
-                  variant="public-showcase"
                   onScrollToTop={handleScrollToTop}
                   virtualGridRef={virtualGridRef}
                 />
@@ -118,7 +116,7 @@ export default function PublicPage() {
         </div>
       )}
       <ErrorBoundary>
-        <GroupDetailPage variant="public-showcase" />
+        <GroupDetailPage />
       </ErrorBoundary>
     </div>
   );

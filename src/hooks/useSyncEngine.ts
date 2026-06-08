@@ -2,7 +2,7 @@ import { useCallback, useEffect } from 'react';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { User } from '@/types';
 import { fetchSettings } from '@/services/settings/queries';
-import { getPhotoCount } from '@/services/photo/queries';
+import { getPhotoCount } from '@/services/photo';
 import { useQueryClient } from '@tanstack/react-query';
 import { useInvalidatePhotos, useAuth, useTaskExecutor, useSyncMutation, useSettings } from '@/hooks';
 import { setupOfflineSyncListener } from '@/lib/sync/offlineSync';
@@ -31,7 +31,7 @@ export const useSyncEngine = () => {
     if (user?.id) {
       const healOrphans = async () => {
         try {
-          const { cleanUpOrphanRecords } = await import('@/services/photo/photoMaintenanceService');
+          const { cleanUpOrphanRecords } = await import('@/services/photo/maintenance/cleanup');
           const result = await cleanUpOrphanRecords();
           if (result.count > 0) {
             logger.info(`[Self-Healing] Automatically removed ${result.count} orphan records.`);
@@ -53,13 +53,18 @@ export const useSyncEngine = () => {
     if (!userAccount) return;
     
     await runTask('同步云端数据', async () => {
-        const [newSettings, count] = await Promise.all([
+        const [newSettings, photoCountRes] = await Promise.all([
           fetchSettings(),
           getPhotoCount()
         ]);
         
         if (newSettings) await updateSettings(newSettings);
-        setCloudCount(count);
+        
+        if (photoCountRes.ok) {
+          setCloudCount(photoCountRes.data);
+        } else {
+           logger.error('[SyncEngine] Failed to fetch photo count:', photoCountRes.message);
+        }
         
         invalidatePhotos();
         await Promise.all([

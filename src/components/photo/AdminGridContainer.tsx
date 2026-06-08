@@ -1,7 +1,6 @@
 import React, { useRef } from 'react';
 import { motion, LayoutGroup } from 'motion/react';
 import { Photo } from '@/types';
-import { GalleryVariant } from '@/types/variant';
 import { VirtualPhotoGrid } from '@/components/photo/VirtualPhotoGrid';
 import { PhotoCard } from '@/components/photo/PhotoCard';
 import { AdminFilters } from '@/components/ui/AdminFilters';
@@ -18,20 +17,11 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useAdminPhotos } from '@/hooks/admin/useAdminPhotos';
 import { useAdminSelectionActions } from '@/hooks/admin/useAdminSelectionActions';
 
-interface AdminGridContainerProps {
-  variant: GalleryVariant;
-  handleBatchAiIdentifyTrigger?: () => void;
-  batchProgress?: any;
-  onBatchAiAnalyze?: (targetPhotos: any[]) => void;
-}
+import { useAdminBatchActions } from '@/hooks/useAdminBatchActions';
 
-export function AdminGridContainer({
-  variant,
-  handleBatchAiIdentifyTrigger,
-  batchProgress,
-  onBatchAiAnalyze
-}: AdminGridContainerProps) {
-  const isManagement = variant === 'full-management' || variant === 'staff-workspace';
+export function AdminGridContainer() {
+  const { handleBatchAiIdentifyTrigger } = useAdminBatchActions();
+  const isManagement = window.location.pathname.startsWith('/admin');
   useScrollRestoration('admin_gallery_scroll');
   
   const navigate = useNavigate();
@@ -43,7 +33,7 @@ export function AdminGridContainer({
   // 1. Data Layer
   const { 
     gridPhotos, photos, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage, urlFilters 
-  } = useAdminPhotos(isManagement);
+  } = useAdminPhotos();
 
   // 2. Action Layer
   const {
@@ -59,18 +49,17 @@ export function AdminGridContainer({
   const virtualGridRef = useRef<any>(null);
   const scrollToTop = () => virtualGridRef.current?.scrollToIndex(0);
 
-  const disableMultiSelect = () => {
-    update({ isMultiSelect: false, selectedIds: [] });
-  };
-
-  const renderCard = (photo: Photo, index: number) => (
+  const renderCard = React.useCallback((photo: Photo, index: number) => (
     <PhotoCard 
       key={photo.id}
       photo={photo}
       index={index}
-      variant={variant}
     />
-  );
+  ), []);
+
+  const disableMultiSelect = () => {
+    update({ isMultiSelect: false, selectedIds: [] });
+  };
 
   return (
     <LayoutGroup id="admin-gallery">
@@ -107,7 +96,6 @@ export function AdminGridContainer({
         </div>
 
         <UploadButton 
-          variant={variant}
           onAdd={() => document.getElementById('admin-quick-add-input')?.click()}
         />
 
@@ -115,20 +103,7 @@ export function AdminGridContainer({
           onDelete={initiateDelete}
           onBatchEdit={initiateBatchEdit}
           onHide={initiateHide}
-          onAIIdentify={onBatchAiAnalyze ? (ids) => {
-            const selectedGroupIds = new Set<string>();
-            photos.forEach(p => {
-              if (ids.includes(p.id) && p.group_id) {
-                selectedGroupIds.add(p.group_id);
-              }
-            });
-            const groupIdsArray = Array.from(selectedGroupIds);
-
-            const targetPhotos = photos.filter(p => 
-              ids.includes(p.id) || (p.group_id && groupIdsArray.includes(p.group_id))
-            );
-            onBatchAiAnalyze(targetPhotos);
-          } : undefined}
+          onAIIdentify={(ids) => handleBatchAiIdentifyTrigger(ids)}
         />
 
         <ConfirmDialog

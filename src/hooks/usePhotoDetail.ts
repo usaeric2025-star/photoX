@@ -11,7 +11,11 @@ export const usePhotoDetail = (photoId: string) => {
 
   return useQuery({
     queryKey: photoKeys.detail(photoId),
-    queryFn: () => loadPhotoById(photoId),
+    queryFn: async () => {
+      const res = await loadPhotoById(photoId);
+      if (!res.ok) throw new Error(res.message);
+      return res.data;
+    },
     enabled: !!photoId,
     initialData: () => {
       // 1. Try to find in detail cache

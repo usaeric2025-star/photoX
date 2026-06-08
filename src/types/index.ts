@@ -5,6 +5,7 @@
 
 export * from './photo';
 export * from './api';
+export * from './tasks';
 
 import { translations } from '../lib/translations';
 

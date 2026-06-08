@@ -9,6 +9,8 @@ import { Category } from '../types';
  */
 export const useCategories = createQuery<Category[]>({
   queryKey: () => categoryKeys.categories(),
+  staleTime: 1000 * 60 * 60 * 24, // 24 hours (very stable)
+  gcTime: 1000 * 60 * 60 * 24,
   queryFn: async () => {
     const cats = await loadCategoriesFromCloud();
     // Sort consistently: first by sort_order, then by numeric/string ID as a fallback.

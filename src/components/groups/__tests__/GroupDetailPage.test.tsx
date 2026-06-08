@@ -31,8 +31,8 @@ vi.mock('@tanstack/react-router', () => ({
 }));
 
 describe('GroupDetailPage', () => {
-  it('renders correctly with given groupId', () => {
-    render(<GroupDetailPage activeGroupId="mock-id" />);
+  it('renders correctly', () => {
+    render(<GroupDetailPage />);
     // Simply check if header elements appear
     expect(screen.getByText(/Mock Group/i)).toBeDefined();
   });

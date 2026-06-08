@@ -90,11 +90,11 @@ export const resolveTagIdsBatch = async (
   
   // 3. Batch create missing tags
   if (namesToCreate.length > 0) {
-    try {
-      const newTagsMap = await batchCreateTags(namesToCreate);
-      newTagsMap.forEach(id => resultIds.push(id));
-    } catch (err) {
-      console.error('Failed to resolve tags batch:', err);
+    const result = await batchCreateTags(namesToCreate);
+    if (result.ok) {
+      result.data.forEach(id => resultIds.push(id));
+    } else {
+      console.error('Failed to resolve tags batch:', result.message);
     }
   }
   

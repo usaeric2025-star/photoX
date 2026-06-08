@@ -8,7 +8,7 @@ import {
   ArrowUpRight,
   HardDrive
 } from 'lucide-react';
-import { usePhotoGallery } from '@/features/photos/usePhotoGallery';
+import { usePhotoGallery } from '@/hooks/photo/usePhotoGallery';
 import { useCategories, useTags } from '@/hooks';
 import { motion } from 'motion/react';
 
@@ -41,12 +41,12 @@ export function StatisticsScreen() {
   const { data: tags = [] } = useTags();
 
   const totalPhotos = photos?.length || 0;
-  const groupsCount = photos?.filter(p => !!p.group_id).reduce((acc, p) => {
+  const groupsCount = photos?.filter((p: any) => !!p.group_id).reduce((acc: any, p: any) => {
     if (p.group_id) acc.add(p.group_id);
     return acc;
   }, new Set<string>()).size || 0;
 
-  const hiddenCount = photos?.filter(p => p.is_hidden).length || 0;
+  const hiddenCount = photos?.filter((p: any) => p.is_hidden).length || 0;
   
   // Fake storage calculation for now (average 200KB per photo)
   const estStorage = (totalPhotos * 0.2).toFixed(1);

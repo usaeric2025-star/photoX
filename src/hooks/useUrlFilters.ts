@@ -16,6 +16,7 @@ export function useUrlFilters() {
     photoId: search.photoId ?? null,
     showGroupsCollapsed: search.showGroupsCollapsed !== 'false',
     is_hidden: search.hidden === 'true',
+    onlyUngrouped: search.onlyUngrouped === 'true',
     view: search.view || 'grid',
   };
 
@@ -24,15 +25,15 @@ export function useUrlFilters() {
   };
 
   const setCategory = (categoryId: string | null) => {
-    navigate({ search: { ...search, category: categoryId || undefined } as any });
+    navigate({ search: { ...search, category: categoryId || undefined, tag: undefined, q: undefined } as any });
   };
 
   const setTagId = (tagId: string | null) => {
-    navigate({ search: { ...search, tag: tagId || undefined } as any });
+    navigate({ search: { ...search, tag: tagId || undefined, category: undefined, q: undefined } as any });
   };
 
   const setSearchQuery = (q: string) => {
-    navigate({ search: { ...search, q: q || undefined } as any });
+    navigate({ search: { ...search, q: q || undefined, category: undefined, tag: undefined } as any });
   };
 
   const setSortOrder = (sort: 'newest' | 'oldest' | 'name') => {

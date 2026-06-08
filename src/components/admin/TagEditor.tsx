@@ -6,7 +6,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   useErrorHandler,
-  useTagsDisplay,
+  usePhotoFilter,
   useSettings,
   useUIStore,
   useShallow,
@@ -58,7 +58,7 @@ export function TagEditor({
     }
   };
 
-  const { hotIds: hotTagsSet, pinnedIds } = useTagsDisplay(tags, settings);
+  const { hotIds: hotTagsSet, pinnedIds } = usePhotoFilter(tags, settings);
 
   const filteredTags = useMemo(() => {
     const list = (

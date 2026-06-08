@@ -30,21 +30,23 @@ export function createQuery<TData, TVariables = void>(config: {
   };
 }
 
-export function createInfiniteQuery<TData, TVariables = any>(config: {
+export function createInfiniteQuery<TData, TVariables = any, TResult = InfiniteData<TData>>(config: {
   queryKey: (variables: TVariables) => readonly unknown[];
   queryFn: (variables: TVariables, pageParam: number, signal?: AbortSignal) => Promise<TData>;
   getNextPageParam: (lastPage: TData, allPages: TData[]) => any;
+  select?: (data: InfiniteData<TData>) => TResult;
   staleTime?: number;
   gcTime?: number;
 }) {
   return function useStandardInfiniteQuery(variables: TVariables, options?: any) {
-    return useInfiniteQuery<TData, Error, InfiniteData<TData>, any, number>({
+    return useInfiniteQuery<TData, Error, TResult, any, number>({
       queryKey: config.queryKey(variables),
       queryFn: ({ pageParam = 1, signal }) => config.queryFn(variables, pageParam as number, signal),
       initialPageParam: 1,
       getNextPageParam: config.getNextPageParam,
       staleTime: config.staleTime ?? 5 * 60 * 1000,
       gcTime: config.gcTime ?? 30 * 60 * 1000,
+      select: config.select as any,
       ...options
     });
   };

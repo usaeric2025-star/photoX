@@ -1,11 +1,7 @@
 # PhotoX 架构规则（永久锁定）
 
-## 后端架构规约（锁定，2026-06-07）
-
-- `api/handlers/`：存储所有请求处理器（Handlers），按领域划分。
-- `api/lib/`：存储所有后端共用工具库。
-- `api/types/`：存储所有共用类型定义。
-- `api/app.ts`：仅负责核心中间件（CORS, Logging）、路由挂载 (`app.route`) 和类型导出，禁止编写任何业务逻辑。
+## 核心原则
+1. 服务端数据 → TanStack Query
 2. 前端 UI 状态 → Zustand（只存瞬态）
 3. 筛选条件 → URL State
 4. ❌ Context 传递业务数据
@@ -367,6 +363,19 @@ toast.error('发现数据完整性问题', {
 - ✅ **全局入口**：在 `/admin/tasks` 提供所有（前端+后端）任务的统一视图。
 - ✅ **自动刷新**：任务页面应具备自动轮询后端 Job 状态的能力。
 
+## Snippet 架构路径规范（锁定，2026-06-07）
+
+### 核心原则
+- ✅ **Snippet 即文档**：`.vscode/photox.code-snippets` 中定义的 Snippet 是项目的「可执行架构文档」。
+- ✅ **强制使用**：AI 在编写 Service 函数、Mutation、Query Key 或单元测试时，**必须优先参考 Snippet 定义的结构**。
+- ✅ **路径依赖**：任何不符合 Snippet 定义的「手写」架构实现（如手动维护乐观更新快照、直接 throw 錯誤而不使用 `withErrorHandling`）均视为架构违规。
+
+### 关键触发词
+- `aresult` → 创建 Service 函数（AppResult 签名）
+- `optdsl` → 实现乐观更新（DSL 操作符）
+- `cmut` → 脚本化 Mutation Hook
+- `qkey` → 链式 Query Key Builder
+
 ## 灯箱与合组跳转核心规则（锁定）
 
 ### 1. 核心原则
@@ -464,8 +473,10 @@ toast.error('发现数据完整性问题', {
 - ❌ 禁止直接 `throw new Error()`，必须用 `ErrorFactory.wrap()`。
 - ❌ 禁止在组件中直接使用 `useMutation`，必须用 `mutations/*` 下的工厂生成。
 - ✅ 所有 Mutation 必须通过 `createMutationHook` 工厂生成。
-- ✅ 所有服务端错误必须走 `useAppError` 输出 toast。
+- ✅ 服务器端错误统一通过工厂 onError 报告（Toast + 上报）。
+- ✅ 组件层调用 mutateAsync 时必须包裹 try/catch，仅用于控制 UI 流程（如关闭弹窗），禁止在 catch 中执行任何错误提示操作。
 - ✅ 缓存失效必须使用 `photoKeys.all()` 或 `groupKeys.all()` 降维打击。
+
 
 ## 异步任务架构规范（锁定）
 
@@ -718,7 +729,68 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 
 ---
 
-## PhotoX 架构重构阶段：COMPLETED
+## 错误处理规范（严格锁定）
+
+### Service 层（src/services/）
+- ✅ 所有公开函数必须返回 `AppResult<T>`
+- ✅ 使用 `withErrorHandling` 包裝器消除样板代碼
+- ❌ 禁止 `throw new Error()`（包括参数校验）
+- ❌ 禁止在同一函數中混用 throw 和 return
+- ⚠️ `withErrorHandling` 唯一职责：显式转换 `throw` 为 `AppResult`。严禁在其中进行业务检查、批处理等逻辑。
+
+### Hook 层（src/hooks/）
+- ✅ 在 Mutation 工厂中检查 `result.ok`，失败时触发 onError
+- ❌ 禁止对 Service 层調用使用 try/catch
+
+### 基础设施层（api/lib/, src/utils/）
+- ✅ 允许 throw（网络错误、JSON 解析失败等非预期错误）
+- ✅ Service 层通过 withErrorHandling 捕獲並轉換為 AppResult
+
+---
+
+## 目錄結構演進記錄
+
+- 2024 Q3: 引入 `features/` 目錄，嘗試 Vertical Slice 架構
+- 2025 Q2: 移除 `features/`，回歸技術分層
+- 原因: 項目規模未達 Vertical Slice 閾值（團隊<3人，Feature<8個），features/ 退化為冗餘間接層
+- 重新評估條件: 團隊 ≥ 3人 AND Feature ≥ 8個 AND 每個 Feature 有完整四層（UI/Hook/Service/Type）
+
+## Hooks 目錄規範（鎖定）
+
+### 結構
+- `hooks/core/` — 通用 Hook，零業務依賴，禁止 import `services/` 或其他 `hooks/`
+- `hooks/[domain]/` — 業務 Hook，按實體組織（photo/group/admin）
+- 每個 domain 目錄必須有 `index.ts` 統一導出（強制配置 JSDoc 註釋）
+
+### 依賴矩陣（鎖定）
+
+| Hook | 依賴 services/ | 依賴 store | 被哪些組件使用 |
+|------|---------------|-----------|--------------|
+| `usePhotoEdit` | ❌ | ❌ | `PhotoEditDrawer` |
+| `usePhotoSelection` | `photo/commands` | `useUIStore(selectedIds)` | `AdminGridContainer` |
+| `usePhotoFilter` | ❌ | ❌ | `PublicGridContainer`, `FilterPanel` |
+| `usePhotoGallery` | `photo/queries` | `useUrlFilters` | 所有網格列表組件 |
+| `useGroupView` | `group/queries` | ❌ | `GroupDetailPage` |
+| `useAdminPhotos` | `photo/queries` | ❌ | `AdminPageContent` |
+
+### 依賴規則（嚴格單向）
+- `core/` → ❌ 禁止 import `[domain]/` 或 `services/`
+- `[domain]/` → ✅ 可 import `services/` + `store/` + `core/`
+- `[domain]/` → ❌ 禁止 import 其他 `[domain]/`
+- `components/` → ✅ 可 import `hooks/` | ❌ 禁止直接 import `services/`
+
+### 合併原則
+- 同一交互流程的多個 Hook 應合併為單一文件
+- 判斷標準：是否總被同一組件同時使用
+- 禁止為每個小功能創建獨立 Hook 文件
+
+## 架構決策原則
+
+- 架構決策沒有「永遠正確」，只有「當前規模下的最優解」
+- 當實際反饋證明某個抽象是多餘的，果斷移除
+- 所有架構演進必須記錄到本文件，包含引入原因和移除條件
+
+
 
 
 

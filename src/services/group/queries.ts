@@ -1,97 +1,66 @@
-import { errorFactory, success } from '@/lib/error/ErrorFactory';
+import { success } from '@/lib/error/ErrorFactory';
+import { withSupabase } from '@/lib/error/supabaseWrapper';
+import { withErrorHandling } from '@/lib/error/wrapper';
 import type { AppResult } from '@/types/api';
 import { supabase } from '../../lib/supabase';
 import { ProductGroup } from '../../types';
 
 export const TABLE_NAME = 'groups';
 
+const parseTranslation = (val: any) => {
+  if (!val) return { zh: '' };
+  if (typeof val === 'object') return val;
+  if (typeof val === 'string') {
+    try {
+      const parsed = JSON.parse(val);
+      if (parsed && typeof parsed === 'object') return parsed;
+    } catch (e) {
+      // Not JSON
+    }
+    return { zh: val };
+  }
+  return { zh: String(val) };
+};
+
+const mapGroup = (item: any): ProductGroup => ({
+  id: item.id,
+  name: parseTranslation(item.name),
+  description: parseTranslation(item.description),
+  colors: item.colors || [],
+  materials: item.materials || [],
+  cover_photo_id: item.cover_photo_id,
+  is_hidden: (item.is_hidden ?? false) as boolean,
+  created_at: item.created_at,
+  updated_at: item.updated_at,
+  user_id: item.user_id,
+  member_count: item.member_count ?? 1
+});
+
 export const loadGroupsFromCloud = async (userId: string): Promise<AppResult<ProductGroup[]>> => {
-    const { data, error } = await supabase
+  return withErrorHandling(async () => {
+    const query = supabase
       .from(TABLE_NAME)
       .select('*')
       .or('is_hidden.eq.false,is_hidden.is.null');
 
-    if (error) {
-      if (error.message.includes('relation "groups" does not exist')) {
-        console.warn("Table 'groups' does not exist in DB yet.");
-        return success([]);
-      }
-      return errorFactory(`Failed to fetch groups: ${error.message}`, 'DB_ERROR', 'loadGroupsFromCloud', error);
-    }
-
-    const parseTranslation = (val: any) => {
-      if (!val) return { zh: '' };
-      if (typeof val === 'object') return val;
-      if (typeof val === 'string') {
-        try {
-          const parsed = JSON.parse(val);
-          if (parsed && typeof parsed === 'object') return parsed;
-        } catch (e) {
-          // Not JSON
-        }
-        return { zh: val };
-      }
-      return { zh: String(val) };
-    };
-
-    const groups = (data || []).map(item => ({
-      id: item.id,
-      name: parseTranslation(item.name),
-      description: parseTranslation(item.description),
-      colors: item.colors || [],
-      materials: item.materials || [],
-      cover_photo_id: item.cover_photo_id,
-      is_hidden: (item.is_hidden ?? false) as boolean,
-      created_at: item.created_at,
-      updated_at: item.updated_at,
-      user_id: item.user_id,
-      member_count: item.member_count ?? 1
-    }));
-    return success(groups);
+    const res = await withSupabase(query, 'loadGroupsFromCloud');
+    if (!res.ok) return res;
+    
+    return success((res.data || []).map(mapGroup));
+  }, 'loadGroupsFromCloud');
 };
 
 export const getGroupById = async (id: string): Promise<AppResult<ProductGroup | null>> => {
-    const { data, error } = await supabase
+  return withErrorHandling(async () => {
+    const query = supabase
       .from(TABLE_NAME)
       .select('*')
       .eq('id', id)
-      .single();
+      .maybeSingle();
 
-    if (error) {
-      if (error.code === 'PGRST116') return success(null);
-      return errorFactory(`Failed to fetch group: ${error.message}`, 'DB_ERROR', 'getGroupById', error);
-    }
-
-    if (!data) return success(null);
-
-    const parseTranslation = (val: any) => {
-      if (!val) return { zh: '' };
-      if (typeof val === 'object') return val;
-      if (typeof val === 'string') {
-        try {
-          const parsed = JSON.parse(val);
-          if (parsed && typeof parsed === 'object') return parsed;
-        } catch (e) {
-          // Not JSON
-        }
-        return { zh: val };
-      }
-      return { zh: String(val) };
-    };
-
-    const result: ProductGroup = {
-      id: data.id,
-      name: parseTranslation(data.name),
-      description: parseTranslation(data.description),
-      colors: data.colors || [],
-      materials: data.materials || [],
-      cover_photo_id: data.cover_photo_id,
-      is_hidden: (data.is_hidden ?? false) as boolean,
-      created_at: data.created_at,
-      updated_at: data.updated_at,
-      user_id: data.user_id,
-      member_count: data.member_count ?? 1
-    };
+    const res = await withSupabase(query, 'getGroupById');
+    if (!res.ok) return res;
     
-    return success(result);
+    return success(res.data ? mapGroup(res.data) : null);
+  }, 'getGroupById');
 };

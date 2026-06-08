@@ -1,16 +1,16 @@
 import { useMemo } from 'react';
 import { usePhotos, useUrlFilters, useCategories, useTags, useAdminMode, usePermission } from '@/hooks';
-import { normalizeAdminPhotos } from '@/lib/selectors/photos';
 import { processPhotos } from '@/lib/filters';
 import { useUIStore } from '@/store/useUIStore';
-import { usePhotoGallery } from '@/features/photos/usePhotoGallery';
+import { usePhotoGallery } from '@/hooks/photo/usePhotoGallery';
 import { Photo } from '@/types';
 
 /**
  * Encapsulated hook for admin photo data processing.
  * Handles fetching, normalization, processing IDs (hidden while processing), and filters.
  */
-export const useAdminPhotos = (isManagement: boolean) => {
+export const useAdminPhotos = () => {
+    const isManagement = window.location.pathname.startsWith('/admin');
     const isAdminMode = useAdminMode() && isManagement;
     const { filters: urlFilters } = useUrlFilters();
     const processingIds = useUIStore(s => s.processingIds);
@@ -20,9 +20,8 @@ export const useAdminPhotos = (isManagement: boolean) => {
     const { photos: rawPhotos, infinitePhotosQuery } = usePhotoGallery();
 
     const photos = useMemo(() => {
-        const normalized = normalizeAdminPhotos(rawPhotos);
-        if (!processingIds || processingIds.length === 0) return normalized;
-        return normalized.filter(p => !processingIds.includes(p.id));
+        if (!processingIds || processingIds.length === 0) return rawPhotos;
+        return rawPhotos.filter((p: any) => !processingIds.includes(p.id));
     }, [rawPhotos, processingIds]);
 
     const { displayPhotos, gridPhotos } = useMemo(() => {

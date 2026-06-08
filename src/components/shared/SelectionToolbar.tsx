@@ -101,10 +101,10 @@ export function SelectionToolbar({
       <div className="w-[1px] h-6 bg-slate-800" />
 
       {/* Buttons */}
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1.5 sm:gap-1">
         <button
           onClick={handleAI}
-          className="w-9 h-9 flex items-center justify-center rounded-full text-purple-400 hover:text-white hover:bg-purple-600/20 active:scale-95 transition-all"
+          className="w-11 h-11 sm:w-9 sm:h-9 flex items-center justify-center rounded-full text-purple-400 hover:text-white hover:bg-purple-600/20 active:scale-95 transition-all"
           title={count === 1 ? 'AI 智能识别' : 'AI 智能合组'}
         >
           <Sparkles size={17} />
@@ -113,7 +113,7 @@ export function SelectionToolbar({
         <button
           onClick={handleGroup}
           disabled={groupMutation.isPending}
-          className="w-9 h-9 flex items-center justify-center rounded-full text-emerald-400 hover:text-white hover:bg-emerald-600/20 active:scale-95 transition-all disabled:opacity-50"
+          className="w-11 h-11 sm:w-9 sm:h-9 flex items-center justify-center rounded-full text-emerald-400 hover:text-white hover:bg-emerald-600/20 active:scale-95 transition-all disabled:opacity-50"
           title="将选中的照片合组"
         >
           <FolderPlus size={17} />
@@ -122,7 +122,7 @@ export function SelectionToolbar({
         {onBatchEdit && (
           <button
             onClick={() => onBatchEdit(ids)}
-            className="w-9 h-9 flex items-center justify-center rounded-full text-blue-400 hover:text-white hover:bg-blue-600/20 active:scale-95 transition-all"
+            className="w-11 h-11 sm:w-9 sm:h-9 flex items-center justify-center rounded-full text-blue-400 hover:text-white hover:bg-blue-600/20 active:scale-95 transition-all"
             title="批量修改属性"
           >
             <Edit size={17} />
@@ -132,7 +132,7 @@ export function SelectionToolbar({
         {onHide && (
           <button
             onClick={() => onHide(ids)}
-            className="w-9 h-9 flex items-center justify-center rounded-full text-amber-400 hover:text-white hover:bg-amber-600/20 active:scale-95 transition-all"
+            className="w-11 h-11 sm:w-9 sm:h-9 flex items-center justify-center rounded-full text-amber-400 hover:text-white hover:bg-amber-600/20 active:scale-95 transition-all"
             title="批量隐藏"
           >
             <EyeOff size={17} />
@@ -142,7 +142,7 @@ export function SelectionToolbar({
         {onDelete && (
           <button
             onClick={handleDelete}
-            className="w-9 h-9 flex items-center justify-center rounded-full text-rose-400 hover:text-white hover:bg-rose-600/20 active:scale-95 transition-all"
+            className="w-11 h-11 sm:w-9 sm:h-9 flex items-center justify-center rounded-full text-rose-400 hover:text-white hover:bg-rose-600/20 active:scale-95 transition-all"
             title="批量删除"
           >
             <Trash2 size={17} />
@@ -164,7 +164,7 @@ export function SelectionToolbar({
       {/* Cancel button */}
       <button
         onClick={handleClear}
-        className="w-6 h-6 flex items-center justify-center rounded-full text-slate-400 hover:text-white hover:bg-slate-800 active:scale-90 transition-all"
+        className="w-8 h-8 sm:w-6 sm:h-6 flex items-center justify-center rounded-full text-slate-400 hover:text-white hover:bg-slate-800 active:scale-90 transition-all"
         title="关闭多选"
       >
         <X size={15} />

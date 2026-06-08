@@ -1,42 +1,27 @@
 import React from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Dialog } from "@base-ui/react/dialog";
-import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { ConfirmDialog } from "../../ui/ConfirmDialog";
-import { PromptDialog } from "../../ui/PromptDialog";
 import { ProductFormData, Photo } from "../../../types";
 import { HeadlessSlot } from "../../../lib/component-contract";
-import { usePhotoEditor } from "../../../hooks/usePhotoEditor";
 import { DrawerHeader } from "./DrawerHeader";
 import { useUIStore } from "../../../store";
 import { BasicInfoTab } from "./BasicInfoTab";
 import { OrgTab } from "./OrgTab";
 import { DetailsTab } from "./DetailsTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs";
-import { getCacheBustedImageUrl } from "../../../lib/ui-helpers";
 import { translations } from "../../../lib/translations";
-import { analyzePhoto } from "@/services/ai/commands";
 
 import { 
-  usePhotos,
-  usePhotoCount,
-  useSettings,
-  useCategories,
-  useTags,
-  useManufacturers,
-  useTaskExecutor,
-  useErrorHandler,
   usePhotoDetail,
-  useRemoveFromGroupMutation
+  usePhotoEdit,
+  usePhotoDelete,
+  usePhotoEditMutation
 } from "../../../hooks";
 import { toast } from 'sonner';
-import { applyAIResult } from '@/lib/ai/aiMerger';
-import { mergeSplitDimensions } from '@/lib/ai/dimensionMerger';
-import { cleanPhotos } from "../../../lib/filters";
-import { PAGINATION } from "../../../constants/config";
-import { useAdminActions } from "@/features/admin/useAdminActions";
-import { useUrlFilters } from "@/hooks/useUrlFilters";
+import { useTasks } from "@/hooks/useTasks";
+import { UseFormReturnType } from "@mantine/form";
 
 /**
  * [V2.14-SLOT-CONTRACT] PhotoEditDrawer Props
@@ -49,328 +34,49 @@ interface PhotoEditDrawerProps {
 }
 
 export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
-  const { filters: urlFilters } = useUrlFilters();
-  const {
-    categoryId: filterCatId,
-    tagId: filterTagId,
-    searchQuery: debouncedSearchQuery,
-  } = urlFilters;
-
   const editPhotoId = useUIStore((s) => s.editPhotoId);
   const newPhotoData = useUIStore((s) => s.newPhotoData);
   const update = useUIStore((s) => s.update);
   const appLang = useUIStore((s) => s.appLang);
 
-  const form = useForm<ProductFormData>({
-    initialValues: {
-      name: { zh: "", en: "", ms: "" },
-      category_id: null,
-      manufacturer_id: null,
-      tag_ids: [],
-      description: { zh: "", en: "", ms: "" },
-      item_code: "",
-      manual_code: "",
-      model_number: "",
-      dimensions: [],
-      is_hidden: false,
-      price: "",
-      is_group_cover: false,
-    },
-  });
-
-  const adminActions = useAdminActions();
-  const { mutateAsync: removeFromGroup } = useRemoveFromGroupMutation();
-  const [isDeleteOpen, deleteDialog] = useDisclosure(false);
-  const [isAddMfrOpen, addMfrDialog] = useDisclosure(false);
-  const [isEditMfrOpen, editMfrDialog] = useDisclosure(false);
-  const [editingMfr, setEditingMfr] = React.useState<{ id: string; name: string } | null>(null);
-
-  const onDeletePhoto = () => deleteDialog.open();
-  
-  const onRemoveFromGroup = async () => {
-    if (editPhotoId && detailPhoto?.group_id) {
-        await removeFromGroup({ photoIds: [editPhotoId], groupId: detailPhoto.group_id });
-        update({ editPhotoId: null });
-        toast.success("已移出合组");
-    }
-  };
-  
-  const onUpdatePhoto = (id: string, data: Partial<Photo>, options?: any) =>
-    adminActions.updatePhoto(id, data, options);
-
-  const { settings } = useSettings();
-  const { data: categories = [] } = useCategories();
-  const { data: tags = [] } = useTags();
-  const { data: manufacturers = [] } = useManufacturers();
-  const { runTask } = useTaskExecutor();
-  const { handleError } = useErrorHandler();
-
   const { data: detailPhoto } = usePhotoDetail(editPhotoId || '');
+  const form = usePhotoEdit(detailPhoto || null);
 
-  const onAiAnalyze = React.useCallback(async (photo: Photo) => {
-    const imageUrl = photo.uri || photo.image_url;
-    if (!imageUrl) {
-      handleError(new Error("照片没有有效的图片地址"), "AI 识别失败");
-      return;
-    }
+  const { mutateAsync: updatePhotoMutation } = usePhotoEditMutation();
+  const { mutateAsync: deletePhoto } = usePhotoDelete();
 
-    if (!settings?.gemini_api_key) {
-      toast.error("请先在‘管理后台 -> 系统配置’中配置 Gemini API 密钥再使用 AI 识别功能。");
-      return;
-    }
+  const [isDeleteOpen, deleteDialog] = useDisclosure(false);
 
-    await runTask("AI 属性智能识别", async ({ updateProgress }) => {
-      updateProgress(30, appLang === 'zh' ? 'AI 识别中...' : 'Identifying...');
-      const resp = await analyzePhoto(photo.id);
+  const { tasks } = useTasks();
 
-      if (resp.ok) {
-        updateProgress(85, appLang === 'zh' ? '正在应用数据...' : 'Applying data...');
-        const result = resp.data;
-        
-        const prev = form.values;
-        const updates: any = {};
-        const currentNameZh = (prev.name?.zh || '').trim();
-        const isNumeric = /^\d+$/.test(currentNameZh);
-        
-        if (!currentNameZh || isNumeric) {
-          if (result.name && typeof result.name === 'object') {
-            updates.name = {
-              zh: result.name.zh || prev.name?.zh || '',
-              en: (result.name.en || prev.name?.en || '').toUpperCase(),
-              ms: (result.name.ms || prev.name?.ms || '').toUpperCase()
-            };
-          } else if (result.name_translations) {
-            updates.name = {
-              zh: result.name_translations.zh || prev.name?.zh || '',
-              en: (result.name_translations.en || prev.name?.en || '').toUpperCase(),
-              ms: (result.name_translations.ms || prev.name?.ms || '').toUpperCase()
-            };
-          } else if (result.name) {
-            updates.name = { 
-              zh: result.name, 
-              en: (prev.name?.en || result.name).toUpperCase(), 
-              ms: (prev.name?.ms || result.name).toUpperCase() 
-            };
-          }
-        }
-        if (!prev.category_id && result.category_id) updates.category_id = String(result.category_id);
-        
-        // Merge tags 防覆蓋: Keep existing tags, append AI tags up to limit (3)
-        const existingTags = prev.tag_ids || [];
-        const aiTags = (result.tag_ids || []).map((id: any) => String(id));
-        const mergedTagIds = [...existingTags];
-        for (const tid of aiTags) {
-          if (!mergedTagIds.includes(tid) && mergedTagIds.length < 3) {
-            mergedTagIds.push(tid);
-          }
-        }
-        updates.tag_ids = mergedTagIds;
+  const editPhotoPreview = form.values.uri || detailPhoto?.image_url || '';
+  const resetAddState = () => update({ newPhotoData: null });
 
-        if (!prev.manufacturer_id && result.manufacturer_id) updates.manufacturer_id = String(result.manufacturer_id);
-        if (!prev.model_number && result.model_number) updates.model_number = result.model_number;
-        if (!prev.group_id && result.group_id) updates.group_id = String(result.group_id);
-        if (!prev.manual_code && result.manual_code) updates.manual_code = result.manual_code;
-        
-        if (result.description && typeof result.description === 'object') {
-          updates.description = {
-            zh: result.description.zh || prev.description?.zh || '',
-            en: result.description.en || prev.description?.en || '',
-            ms: result.description.ms || prev.description?.ms || ''
-          };
-        } else if (result.description_translations) {
-           updates.description = { 
-             ...prev.description, 
-             ...result.description_translations,
-             zh: result.description_translations.zh || result.description || prev.description?.zh
-           };
-        } else if (result.description && !prev.description?.zh) {
-           updates.description = { ...prev.description, zh: result.description };
-        }
-        
-        // Handle dimensions defensive + standardization
-        if ((!prev.dimensions || prev.dimensions.length === 0) && Array.isArray(result.dimensions)) {
-           const mergedDims = mergeSplitDimensions(result.dimensions);
-           updates.dimensions = mergedDims.map((d: any) => {
-             // Basic defensive validation
-             const label = (d.label || '').trim();
-             return {
-               ...d,
-               label: label && !label.includes(':') ? `${label}: ` : label,
-               height: Number(d.height) || 0,
-               width: Number(d.width) || 0,
-               length: Number(d.length) || 0,
-               unit: d.unit === 'in' || d.unit === 'inches' ? 'inch' : (d.unit || 'cm')
-             };
-           });
-        }
-        
-        if (!prev.price && result.price) updates.price = String(result.price);
-
-        const merged = { ...prev, ...updates };
-        form.setValues(merged);
-        
-        // Auto-save the AI result directly to DB
-        updateProgress(90, appLang === 'zh' ? '正在自动保存...' : 'Auto-saving...');
-        // [AI Raw Debug] cleaning up debug log
-
-        await onUpdatePhoto(photo.id, merged, { successMessage: null }); 
-        
-        updateProgress(100, appLang === 'zh' ? '识别并保存成功' : 'Success');
-        toast.success(appLang === 'zh' ? "AI 识别成功并已自动保存" : "AI identified and auto-saved", {
-          action: {
-            label: appLang === 'zh' ? "复制原始数据" : "Copy Raw Data",
-            onClick: () => {
-              navigator.clipboard.writeText(JSON.stringify(result, null, 2));
-              toast.success(appLang === 'zh' ? "已复制到剪贴板" : "Copied to clipboard");
-            }
-          }
-        });
-      } else {
-        const errorMsg = (resp as any).message || "AI 分析失败";
-        toast.error(`识别失败: ${errorMsg}`);
-        throw new Error(errorMsg);
-      }
-    }, { showProgress: true, showSuccessToast: false });
-  }, [categories, tags, manufacturers, settings, runTask, onUpdatePhoto, form, handleError, appLang]);
-
-  const onCancelAnalyze = () => {};
-
-  const infinitePhotosQuery = usePhotos(
-    {
-      category_id: filterCatId,
-      tag_id: filterTagId,
-      searchQuery: debouncedSearchQuery,
-      sortOrder: urlFilters.sortOrder,
-      isAdminMode: true,
-      limit: PAGINATION.ADMIN_BATCH_SIZE,
-    }
-  );
-
-  const photoCountQuery = usePhotoCount({
-    category_id: filterCatId,
-    tag_id: filterTagId,
-    searchQuery: debouncedSearchQuery,
-    isAdminMode: true,
-  });
-
-  const photos = React.useMemo(() => {
-    const allPhotos =
-      infinitePhotosQuery.data?.pages.flatMap((p) => p.photos) || [];
-    return cleanPhotos(allPhotos);
-  }, [infinitePhotosQuery.data]);
-
-  const totalPhotosCount = photoCountQuery.data || 0;
-
-  const lastInitializedIdRef = React.useRef<string | null>(null);
-
-  React.useEffect(() => {
-    if (!editPhotoId) {
-      lastInitializedIdRef.current = null;
-      return;
-    }
-    if (editPhotoId !== lastInitializedIdRef.current && detailPhoto) {
-      lastInitializedIdRef.current = editPhotoId;
-      form.setValues({
-        name: typeof detailPhoto.name === 'object' ? detailPhoto.name : { zh: detailPhoto.name || '', en: '', ms: '' },
-        category_id: detailPhoto.category_id || "",
-        tag_ids: Array.isArray(detailPhoto.tag_ids) ? detailPhoto.tag_ids : [],
-        manufacturer_id: detailPhoto.manufacturer_id || "",
-        item_code: detailPhoto.item_code || "",
-        model_number: detailPhoto.model_number || "",
-        manual_code: detailPhoto.manual_code || "",
-        description: typeof detailPhoto.description === 'object' ? detailPhoto.description : { zh: detailPhoto.description || '', en: '', ms: '' },
-        dimensions: Array.isArray(detailPhoto.dimensions) ? detailPhoto.dimensions : [],
-        is_hidden: detailPhoto.is_hidden || false,
-        price: detailPhoto.price || "",
-        is_group_cover: detailPhoto.is_group_cover || false,
-      }) as any;
-    }
-  }, [editPhotoId, detailPhoto, form]);
-
-  React.useEffect(() => {
-    const handleAIResult = async (event: Event) => {
-      const customEvent = event as CustomEvent;
-      const result = customEvent.detail;
-      if (!result) return;
-
-      const merged = applyAIResult(form.values, result, {
-        categories,
-        tags,
-        preserveFields: ['name', 'category_id']
-      });
-      
-      form.setValues(merged);
-
-      // AI识别自动保存（满足“ai识别之后，如果有结果请自动保存”需求）
-      if (editPhotoId && onUpdatePhoto) {
-        try {
-          await onUpdatePhoto(editPhotoId, merged, { successMessage: null });
-          toast.success(appLang === 'zh' ? "AI 识别结果已自动保存" : "AI recognition result auto-saved");
-        } catch (error) {
-          console.error("AI auto-saving failed:", error);
-        }
-      }
-    };
-
-    window.addEventListener('ai-analysis-result', handleAIResult);
-    return () => window.removeEventListener('ai-analysis-result', handleAIResult);
-  }, [categories, tags, form, editPhotoId, onUpdatePhoto, appLang]);
-
-  React.useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (form.isDirty()) {
-        e.preventDefault();
-        e.returnValue = '';
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [form]);
+  const isRunning = React.useMemo(() => tasks.some((t: any) => t.status === 'running'), [tasks]);
 
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
-  const editPhotoPreview = React.useMemo(() => {
-    if (!editPhotoId) return null;
-    const photo = detailPhoto || photos.find((p: Photo) => p.id === editPhotoId);
-    return photo ? getCacheBustedImageUrl(photo, "image") : null;
-  }, [editPhotoId, photos, detailPhoto]);
-
-  const resetAddState = () => {
-    update({ newPhotoData: null });
-    update({ editPhotoId: null });
-    update({ batchEditingIds: null });
-  };
-
-  const logic = usePhotoEditor({
-    photos,
-    editPhotoId,
-    form,
-    newPhotoData,
-    editPhotoPreview: (editPhotoId && (detailPhoto || photos.find((p: Photo) => p.id === editPhotoId))) ? getCacheBustedImageUrl((detailPhoto || photos.find((p: Photo) => p.id === editPhotoId))!, "image") : null,
-    analyzeSingle: async (p: Photo) => onAiAnalyze ? onAiAnalyze(p) : undefined,
-    saveNewPhoto: async () => {
-      if (editPhotoId && onUpdatePhoto) {
-        const updates: Partial<Photo> & { uri?: string } = { ...form.values };
-        
-        // 仅在明确有新数据时保存，防止空数据覆写
-        if (newPhotoData) {
-          updates.uri = newPhotoData;
-        }
-
-        // 简单的完整性校验：至少要有名称或描述
-        if (!updates.name?.zh && !updates.description?.zh) {
-           toast.error("照片信息不完整，无法保存 / Incomplete information");
-           return;
-        }
-
-        await onUpdatePhoto(editPhotoId, updates as Partial<Photo>);
-        update({ newPhotoData: null });
-        update({ editPhotoId: null });
-        form.resetDirty();
+  const handleSave = async () => {
+    if (!editPhotoId) return;
+    
+    try {
+      const updates: Partial<Photo> & { uri?: string } = { ...form.values };
+      if (newPhotoData) {
+        updates.uri = newPhotoData;
       }
-    },
-  });
+
+      if (!updates.name?.zh && !updates.description?.zh) {
+        toast.error("照片信息不完整 / Incomplete information");
+        return;
+      }
+
+      await updatePhotoMutation({ id: editPhotoId, updates: updates as Partial<Photo> });
+      update({ newPhotoData: null });
+      update({ editPhotoId: null });
+    } catch (err) {
+      // Error toasted by mutation factory
+    }
+  };
 
   const isOpen = !!(editPhotoId || newPhotoData);
 
@@ -402,32 +108,13 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
                   className="fixed inset-0 z-[var(--z-index-max)] bg-slate-50 flex flex-col pt-safe pb-safe shadow-2xl focus:outline-none"
                 >
                   <DrawerHeader
-                    editPhotoId={editPhotoId}
-                    form={form}
-                    isAnalyzing={logic.isAnalyzing}
-                    aiDebugInfo={logic.aiDebugInfo}
-                    isPartOfGroup={logic.isPartOfGroup}
-                    isSyncing={logic.isSyncing}
-                    onAbort={onCancelAnalyze}
-                    onAiAnalyze={logic.triggerAiAnalyze}
-                    onDelete={
-                      onDeletePhoto ? () => onDeletePhoto() : undefined
-                    }
-                    onSave={logic.handleSave}
-                    onToggleHidden={logic.toggleHidden}
-                    onRemoveFromGroup={onRemoveFromGroup}
+                    form={form as UseFormReturnType<ProductFormData>}
+                    onSave={handleSave}
                     onClose={() => {
                       resetAddState();
                       update({ editPhotoId: null });
                     }}
-                    onErrorClick={(err: any) => {
-                      const readableError = String(err).includes("|")
-                        ? String(err).split("|").slice(1).join(": ")
-                        : String(err);
-                      logic.handleError(new Error(readableError), t.aiActionFailed);
-                    }}
-                    isRunning={logic.isRunning}
-                    totalPhotosCount={totalPhotosCount}
+                    previewSrc={newPhotoData || editPhotoPreview}
                   />
 
                   <ConfirmDialog
@@ -439,7 +126,10 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
                     variant="destructive"
                     onConfirm={async () => {
                       if (editPhotoId) {
-                        await adminActions.deletePhoto([editPhotoId]);
+                        try {
+                          await deletePhoto([editPhotoId]);
+                          update({ editPhotoId: null });
+                        } catch (err) {}
                       }
                     }}
                   />
@@ -477,68 +167,21 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
                       <div className="flex-1 overflow-y-auto no-scrollbar pt-2 container mx-auto max-w-4xl px-4 pb-12">
                         <TabsContent value="basic">
                           <BasicInfoTab
-                            editPhotoId={editPhotoId}
-                            form={form}
-                            previewSrc={newPhotoData || editPhotoPreview}
-                            isProcessingImage={logic.isRotating}
-                            onRotate={logic.rotatePhoto}
+                            form={form as UseFormReturnType<ProductFormData>}
                           />
                         </TabsContent>
 
                         <TabsContent value="org">
                           <OrgTab
-                            form={form}
-                            categories={logic.categories}
-                            tags={logic.tags}
-                            manufacturers={logic.manufacturers}
-                            appLang={logic.appLang}
-                            onAddTag={logic.addTag}
-                            onUpdateTag={logic.updateTag}
-                            onDeleteTag={logic.deleteTag}
-                            onAddManufacturer={addMfrDialog.open}
-                            onEditManufacturer={(mfr) => {
-                              setEditingMfr(mfr);
-                              editMfrDialog.open();
-                            }}
-                            onUpdateManufacturer={logic.updateManufacturer}
-                            onDeleteManufacturer={logic.deleteManufacturer}
+                            form={form as UseFormReturnType<ProductFormData>}
                           />
                         </TabsContent>
 
                         <TabsContent value="details">
                           <DetailsTab
-                            form={form}
-                            showAiButton={true}
-                            isAnalyzing={logic.isAnalyzing}
-                            onAiAnalyze={logic.triggerAiAnalyze}
-                            t={t}
+                            form={form as UseFormReturnType<ProductFormData>}
                           />
                         </TabsContent>
-
-                        <PromptDialog
-                          open={isAddMfrOpen}
-                          onOpenChange={addMfrDialog.toggle}
-                          title={t.newMfrTitle}
-                          placeholder={t.mfrNamePlaceholder}
-                          onConfirm={async (name: string) => {
-                            await logic.addManufacturer(name);
-                          }}
-                        />
-
-                        <PromptDialog
-                          open={isEditMfrOpen}
-                          onOpenChange={editMfrDialog.toggle}
-                          title={t.editMfrTitle}
-                          placeholder={editingMfr?.name || t.mfrNamePlaceholder}
-                          onConfirm={async (name: string) => {
-                            const trimmed = name.trim();
-                            if (trimmed && editingMfr)
-                              await logic.updateManufacturer(editingMfr.id, {
-                                name: trimmed,
-                              });
-                            setEditingMfr(null);
-                          }}
-                        />
                       </div>
                     </Tabs>
                   </div>

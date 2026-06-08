@@ -2,29 +2,37 @@ import React from 'react';
 import { FormSectionHeader, CategoryGrid, ManufacturerList } from '../FormShared';
 import { PhotoTagSelector } from '../edit/PhotoTagSelector';
 import { UseFormReturnType } from '@mantine/form';
-import { Category, Tag, Manufacturer, ProductFormData } from '../../../types';
+import { ProductFormData, Manufacturer, Tag } from '../../../types';
 import { safeArray } from '../../../lib/utils';
+import { useCategories, useTags, useManufacturers, useTagCreate, useTagEdit, useTagDelete, useManufacturerCreate, useManufacturerEdit, useManufacturerDelete } from '../../../hooks';
+import { useUIStore } from '../../../store';
+import { useDisclosure } from '@mantine/hooks';
+import { PromptDialog } from '../../ui/PromptDialog';
+import { translations } from '../../../lib/translations';
 
 interface Props {
   form: UseFormReturnType<ProductFormData>;
-  categories: Category[];
-  tags: Tag[];
-  manufacturers: Manufacturer[];
-  appLang: string;
-  onAddTag: (name: string) => Promise<string>;
-  onUpdateTag: (id: string, updates: Partial<Tag>) => Promise<boolean>;
-  onDeleteTag: (id: string) => Promise<boolean>;
-  onAddManufacturer: () => void;
-  onEditManufacturer: (mfr: Manufacturer) => void;
-  onUpdateManufacturer: (id: string, updates: Partial<Manufacturer>) => Promise<boolean>;
-  onDeleteManufacturer: (id: string) => void;
 }
 
-export function OrgTab({
-  form, categories, tags, manufacturers, appLang,
-  onAddTag, onUpdateTag, onDeleteTag,
-  onAddManufacturer, onEditManufacturer, onDeleteManufacturer
-}: Props) {
+export function OrgTab({ form }: Props) {
+  const appLang = useUIStore((s) => s.appLang);
+  const { data: categories = [] } = useCategories();
+  const { data: tags = [] } = useTags();
+  const { data: manufacturers = [] } = useManufacturers();
+  
+  const { mutateAsync: addTagMut } = useTagCreate();
+  const { mutateAsync: updateTagMut } = useTagEdit();
+  const { mutateAsync: deleteTagMut } = useTagDelete();
+  const { mutateAsync: addManMut } = useManufacturerCreate();
+  const { mutateAsync: updateManMut } = useManufacturerEdit();
+  const { mutateAsync: deleteManMut } = useManufacturerDelete();
+
+  const [isAddMfrOpen, addMfrDialog] = useDisclosure(false);
+  const [isEditMfrOpen, editMfrDialog] = useDisclosure(false);
+  const [editingMfr, setEditingMfr] = React.useState<{ id: string; name: string } | null>(null);
+
+  const t = translations[appLang as keyof typeof translations] || translations.en;
+
   const formState = form.values;
   const updateForm = (updates: Partial<ProductFormData>) => form.setValues(updates);
   return (
@@ -44,9 +52,12 @@ export function OrgTab({
               tags={tags}
               selectedTagIds={safeArray<string>(formState.tag_ids)}
               onChange={(newIds) => updateForm({ tag_ids: newIds })}
-              addTag={onAddTag}
-              updateTag={(id, name) => onUpdateTag(id, { name })}
-              deleteTag={onDeleteTag}
+              addTag={async (name) => {
+                const res = await addTagMut(name);
+                return res.id;
+              }}
+              updateTag={(id, name) => updateTagMut({ id, updates: { name } })}
+              deleteTag={(id) => deleteTagMut(id)}
            />
         </section>
 
@@ -54,16 +65,42 @@ export function OrgTab({
         <FormSectionHeader 
           title="厂商名称" 
           subtitle="MANUFACTURER" 
-          onAction={onAddManufacturer} 
+          onAction={addMfrDialog.open} 
         />
         <ManufacturerList 
           manufacturers={manufacturers}
           selectedId={formState?.manufacturer_id}
           onSelect={(id) => updateForm({ manufacturer_id: id })}
-          onEdit={onEditManufacturer}
-          onDelete={(mfr) => onDeleteManufacturer(mfr.id)}
+          onEdit={(mfr) => {
+            setEditingMfr(mfr);
+            editMfrDialog.open();
+          }}
+          onDelete={(mfr) => deleteManMut(mfr.id)}
         />
       </section>
+
+      <PromptDialog
+        open={isAddMfrOpen}
+        onOpenChange={addMfrDialog.toggle}
+        title={t.newMfrTitle}
+        placeholder={t.mfrNamePlaceholder}
+        onConfirm={async (name: string) => {
+          await addManMut(name);
+        }}
+      />
+
+      <PromptDialog
+        open={isEditMfrOpen}
+        onOpenChange={editMfrDialog.toggle}
+        title={t.editMfrTitle}
+        placeholder={editingMfr?.name || t.mfrNamePlaceholder}
+        onConfirm={async (name: string) => {
+          const trimmed = name.trim();
+          if (trimmed && editingMfr)
+            await updateManMut({ id: editingMfr.id, updates: { name: trimmed } });
+          setEditingMfr(null);
+        }}
+      />
     </div>
   );
 };

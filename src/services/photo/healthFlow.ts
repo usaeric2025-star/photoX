@@ -1,10 +1,9 @@
 import { api } from '@/lib/api';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import {
-  scanAndRepairPhotoIds,
   repairGroupIntegrity,
-} from "@/services/photo/photoMaintenanceService";
-import { backfillThumbHashes } from "@/services/photo/backfillService";
+} from "@/services/photo/maintenance";
+import { backfillThumbHashes } from "@/services/photo/maintenance/backfill";
 import { getPhotosWithoutThumbHash } from "@/services/photo/queries";
 import { toast } from 'sonner';
 
@@ -16,11 +15,11 @@ export const runHealthCheck = async (
 
   toast.success("正在启动系统级健康检查...");
 
-  // 1. Data consistency (IDs)
-  const broken = await scanAndRepairPhotoIds(allPhotos);
-  if (broken.length > 0) {
-    console.warn(`[HealthCheck] Found ${broken.length} broken IDs`);
-  }
+// 1. Data consistency (IDs)
+// const broken = await scanAndRepairPhotoIds(allPhotos);
+// if (broken.length > 0) {
+//   console.warn(`[HealthCheck] Found ${broken.length} broken IDs`);
+// }
 
   // 2. Group Integrity
   const groupRepair = await repairGroupIntegrity();
@@ -42,8 +41,8 @@ export const runHealthCheck = async (
   }
 
   // 4. Missing hashes
-  const missingHashes = await getPhotosWithoutThumbHash();
-  if (!missingHashes || missingHashes.length === 0) {
+  const res = await getPhotosWithoutThumbHash();
+  if (!res.ok || res.data.length === 0) {
     toast.success("系统诊断完成：未发现需要修复的项目");
     return;
   }

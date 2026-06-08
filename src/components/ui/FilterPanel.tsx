@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { RefreshCw, MoreHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useCategories, useTags, useTagsDisplay, useSettings, useUrlFilters, useAdminMode } from '@/hooks';
+import { useCategories, useTags, usePhotoFilter, useSettings, useUrlFilters, useAdminMode } from '@/hooks';
 import { useAppLang } from '@/store/useUIStore';
 import { useDisclosure } from '@mantine/hooks';
 import { cn } from '@/lib/utils';
@@ -11,7 +11,7 @@ import { getSafeText } from '@/lib/ai/safeText';
 import { categoryKeys, tagKeys, photoKeys } from '@/lib/queryKeys';
 import { loadCategoriesFromCloud } from '@/services/category/queries';
 import { loadTagsFromCloud } from '@/services/tag/queries';
-import { loadAllPhotosFromCloud } from '@/services/photo/queries';
+import { loadAllPhotosFromCloud } from '@/services/photo';
 import { PHOTO_QUERY_CONFIG } from '@/lib/photoQueryConfig';
 import { logger } from '@/lib/logger';
 
@@ -39,7 +39,7 @@ export function FilterPanel() {
               limit: PHOTO_QUERY_CONFIG.limit
             }),
             queryFn: async ({ pageParam = 1 }: any) => {
-              const photos = await loadAllPhotosFromCloud(
+              const res = await loadAllPhotosFromCloud(
                 undefined,
                 (pageParam as number) - 1,
                 PHOTO_QUERY_CONFIG.limit,
@@ -50,7 +50,9 @@ export function FilterPanel() {
                 undefined,
                 urlFilters.sortOrder
               );
-              return { photos: photos || [], nextPage: (photos || []).length >= PHOTO_QUERY_CONFIG.limit ? (pageParam as number) + 1 : undefined };
+              if (!res.ok) throw new Error(res.message);
+              const photos = res.data || [];
+              return { photos, nextPage: photos.length >= PHOTO_QUERY_CONFIG.limit ? (pageParam as number) + 1 : undefined };
             },
             initialPageParam: 1,
             staleTime: 2 * 60 * 1000,
@@ -69,8 +71,8 @@ export function FilterPanel() {
 
     logger.debug('[FilterPanel] Rendering. Current categoryId in URL:', urlFilters.categoryId, 'Categories count:', categoryList.length);
 
-    // Unified Tags Logic using useTagsDisplay
-    const { tagsToRender, pinnedIds, hotIds } = useTagsDisplay(tags, settings);
+    // Unified Tags Logic using usePhotoFilter
+    const { tagsToRender, pinnedIds, hotIds } = usePhotoFilter(tags, settings);
 
     const visibleTags = isExpanded ? tagsToRender : tagsToRender.slice(0, 15);
     const hiddenCount = tagsToRender.length - 15;

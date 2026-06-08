@@ -3,19 +3,16 @@ import { Plus } from 'lucide-react';
 import { motion } from 'motion/react';
 import { buttonStyles } from '../../styles/buttonStyles';
 import { usePermission } from '../../hooks';
-import { GalleryVariant } from '@/types/variant';
 
 interface UploadButtonProps {
-  variant: GalleryVariant;
   onAdd?: () => void;
 }
 
 export function UploadButton({
-  variant,
   onAdd
 }: UploadButtonProps) {
   const { can } = usePermission();
-  const isManagement = variant === 'full-management' || variant === 'staff-workspace';
+  const isManagement = window.location.pathname.startsWith('/admin');
 
   if (!isManagement || !can('photo:edit') || !onAdd) return null;
 

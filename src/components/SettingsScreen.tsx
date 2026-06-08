@@ -28,7 +28,7 @@ import { CategoriesManager } from './settings/CategoriesManager';
 import { DiagnosticsDashboard } from './admin/DiagnosticsDashboard';
 import { translations } from '@/lib/translations';
 
-import { usePhotoGallery } from '@/features/photos/usePhotoGallery';
+import { usePhotoGallery } from '@/hooks/photo/usePhotoGallery';
 import { useSyncMutation, useTasks } from '@/hooks';
 
 const BUTTON_STYLES = {
@@ -54,32 +54,7 @@ export function SettingsScreen({ onClose }: SettingsScreenProps) {
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      toast.info('正在上传 Logo...', { duration: 2000 });
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const base64Data = reader.result as string;
-        const resp = await api.uploadDirect.$post({
-          json: {
-            base64Data,
-            fileKey: `settings/logo_${Date.now()}.webp`,
-            contentType: file.type
-          }
-        });
-        const res = await resp.json();
-        if (res.success && res.data.publicUrl) {
-          setSettingField('logo_url', res.data.publicUrl);
-          toast.success('Logo 上传成功');
-        } else {
-          handleError(new Error(res.error || 'Upload failed'), 'Logo 上传失败');
-        }
-      };
-      reader.readAsDataURL(file);
-    } catch (err: any) {
-      handleError(err, 'Logo 上传失败');
-    }
+    if (file) await uploadLogo(file);
   };
 
   const performPushSync = async () => { await syncMut('push'); };
@@ -144,7 +119,8 @@ export function SettingsScreen({ onClose }: SettingsScreenProps) {
     debouncedSave,
     testConnection,
     togglePin,
-    setSettingField
+    setSettingField,
+    uploadLogo
   } = useSettingsLogic({
     user: user || null,
     settings,
@@ -247,7 +223,7 @@ export function SettingsScreen({ onClose }: SettingsScreenProps) {
                 setGeminiApiKey={setGeminiApiKey}
                 customModel={customModel || ""}
                 setCustomModel={setCustomModel}
-                testConnection={testConnection}
+                testConnection={async () => { await testConnection(); }}
                 testResult={testResult}
                 accessPasscode={accessPasscode || ""}
                 setAccessPasscode={setAccessPasscode}

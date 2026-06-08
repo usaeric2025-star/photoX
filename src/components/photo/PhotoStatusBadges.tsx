@@ -1,13 +1,11 @@
 import React from 'react';
 import { Layers, Heart, ShieldAlert, Crown } from 'lucide-react';
 import { Photo } from '@/types';
-import { GalleryVariant } from '@/types/variant';
 import { getDisplayGroupCode } from '@/services/photo/utils';
 import { useUIStore } from '@/store/useUIStore';
 
 interface PhotoStatusBadgesProps {
   photo: Photo;
-  variant: GalleryVariant;
   isPinned: boolean;
   hideGroupBadge?: boolean;
   showCoverBadge?: boolean;
@@ -19,12 +17,11 @@ interface PhotoStatusBadgesProps {
  */
 export function PhotoStatusBadges({ 
   photo, 
-  variant, 
   isPinned, 
   hideGroupBadge,
   showCoverBadge = false
 }: PhotoStatusBadgesProps) {
-  const isManagement = variant === 'full-management' || variant === 'staff-workspace';
+  const isManagement = window.location.pathname.startsWith('/admin');
   const appLang = useUIStore(s => s.appLang);
   
   // Display group info logic

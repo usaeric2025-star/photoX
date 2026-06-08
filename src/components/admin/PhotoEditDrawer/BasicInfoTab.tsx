@@ -4,19 +4,56 @@ import { Lock, Loader2, Maximize2, X } from 'lucide-react';
 import { UseFormReturnType } from '@mantine/form';
 import { ProductFormData } from '../../../types';
 import { useDisclosure } from '@mantine/hooks';
+import { useUIStore } from '../../../store';
+import { usePhotoDetail, useTaskExecutor, useTasks } from '../../../hooks';
 
 interface Props {
-  editPhotoId: string | null;
   form: UseFormReturnType<ProductFormData>;
-  previewSrc?: string | null;
-  isProcessingImage: boolean;
-  onRotate: () => void;
 }
 
-export function BasicInfoTab({ 
-  editPhotoId, form, previewSrc, 
-  isProcessingImage, onRotate 
-}: Props) {
+export function BasicInfoTab({ form }: Props) {
+  const editPhotoId = useUIStore((s) => s.editPhotoId);
+  const newPhotoData = useUIStore((s) => s.newPhotoData);
+  const update = useUIStore((s) => s.update);
+  const { data: detailPhoto } = usePhotoDetail(editPhotoId || '');
+  const { runTask } = useTaskExecutor();
+  const { tasks } = useTasks();
+  
+  const previewSrc = newPhotoData || detailPhoto?.image_url;
+  const isProcessingImage = tasks.some(t => t.status === 'running' && t.name === '旋转图片');
+
+  const onRotate = async () => {
+    if (!previewSrc) return;
+
+    await runTask('旋转图片', async () => {
+      const img = new Image();
+      let finalSrc = previewSrc;
+      if (previewSrc.startsWith('http')) {
+        img.crossOrigin = 'anonymous';
+        finalSrc = previewSrc + (previewSrc.indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now();
+      }
+      img.src = finalSrc;
+      
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error('图片加载失败'));
+      });
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      canvas.width = img.height;
+      canvas.height = img.width;
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate((90 * Math.PI) / 180);
+      ctx.drawImage(img, -img.width / 2, -img.height / 2);
+
+      const newData = canvas.toDataURL('image/jpeg', 0.95);
+      update({ newPhotoData: newData });
+    }, { silent: true });
+  };
+
   const formState = form.values;
   const updateForm = (updates: Partial<ProductFormData>) => form.setValues(updates);
   const [zoomed, { open: openZoom, close: closeZoom }] = useDisclosure(false);

@@ -1,0 +1,72 @@
+{
+	"AppResult Function": {
+		"prefix": "aresult",
+		"body": [
+			"export const ${1:functionName} = async (${2:params}): Promise<AppResult<${3:ReturnType}>> => {",
+			"\treturn withErrorHandling(async () => {",
+			"\t\t$0",
+			"\t}, '${1:functionName}');",
+			"}"
+		],
+		"description": "Create a service function that returns AppResult"
+	},
+	"withSupabase": {
+		"prefix": "wsup",
+		"body": [
+			"return withSupabase(",
+			"\t$0,",
+			"\t'${1:context}'",
+			");"
+		],
+		"description": "withSupabase wrapper for Supabase queries"
+	},
+	"Optimistic Update DSL": {
+		"prefix": "optdsl",
+		"body": [
+			"optimisticUpdate: optimistic.infinite.${1|update,remove,add,batchUpdate|}<${2:Entity}>()"
+		],
+		"description": "Use optimistic update DSL instead of manual cache manipulation"
+	},
+	"createMutation": {
+		"prefix": "cmut",
+		"body": [
+			"export const use${1:Action}${2:Entity} = createMutationHook({",
+			"\tentity: '${2:Entity}',",
+			"\taction: '${1:Action}',",
+			"\tmutationFn: async (${3:params}) => {",
+			"\t\tconst res = await ${4:serviceCall}(${3:params});",
+			"\t\tif (!res.ok) throw ErrorFactory.wrap(new Error(res.message), '${1:Action} ${2:Entity}');",
+			"\t\treturn res.data;",
+			"\t},",
+			"\tinvalidateKeys: [${5:keys}.all],",
+			"\toptimisticUpdate: optimistic.infinite.${6|update,remove,add,batchUpdate|}<${2:Entity}>(),",
+			"\tonSuccessMessage: '${7:成功}',",
+			"});"
+		],
+		"description": "Create a new mutation hook using the factory"
+	},
+	"Query Key Builder Usage": {
+		"prefix": "qkey",
+		"body": [
+			"photoKeys.builder()",
+			"\t.category(${1:categoryId})",
+			"\t.tag(${2:tagId})",
+			"\t.search(${3:query})",
+			"\t.infinite()"
+		],
+		"description": "Chain-able Query Key builder for Photos"
+	},
+	"Service Unit Test": {
+		"prefix": "testsvc",
+		"body": [
+			"describe('${1:ServiceName}', () => {",
+			"\tit('should ${2:behave correctly}', async () => {",
+			"\t\tconst res = await ${1:ServiceName}(${3:args});",
+			"\t\texpect(res.ok).toBe(true);",
+			"\t\texpect(res.data).toEqual($0);",
+			"\t});",
+			"});"
+		],
+		"description": "Standard service unit test pattern using AppResult"
+	}
+}

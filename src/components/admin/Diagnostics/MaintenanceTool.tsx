@@ -12,20 +12,17 @@ import {
   AlertDialogHeader, 
   AlertDialogTitle 
 } from "@/components/ui/alert-dialog";
-import { ISSUE_ACTIONS } from "@/features/maintenance/issueActions";
-import { PreviewResult } from "@/features/maintenance/maintenanceTypes";
+import { ISSUE_ACTIONS } from "@/lib/maintenance/issueActions";
+import { PreviewResult } from "@/lib/maintenance/maintenanceTypes";
 import { toast } from "sonner";
 import { Loader2, ShieldAlert } from "lucide-react";
 import { useDisclosure } from '@mantine/hooks';
 import { useUIStore } from '@/store/useUIStore';
+import { useTaskExecutor, useTasks } from '@/hooks';
 
 const showError = (message: string, description?: string) => {
   toast.error(message, {
     description,
-    action: {
-      label: '📋 复制',
-      onClick: () => navigator.clipboard.writeText(`${message}${description ? `\n\n详情: ${description}` : ''}`),
-    },
     duration: 10000,
   });
 };
@@ -39,10 +36,6 @@ interface MaintenanceToolProps {
   compact?: boolean;
 }
 
-/**
- * [ATOMIC-COMPONENT] MaintenanceTool
- * Unified maintenance tool with preview and progress tracking.
- */
 export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess, compact }: MaintenanceToolProps) => {
   const action = ISSUE_ACTIONS[issueId];
   const finalTitle = title || action?.name || "未知工具";
@@ -51,6 +44,8 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [showConfirm, { open: openConfirm, close: closeConfirm }] = useDisclosure(false);
+  const { runTask } = useTaskExecutor();
+  const { updateTask } = useTasks();
 
   if (!action) return null;
 
@@ -66,57 +61,65 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
     }
   };
 
-  const pollJobStatus = async (jobId: string) => {
-    if (!action.getStatus) {
-      setProgress(100);
-      setIsExecuting(false);
-      return;
-    }
-
-    const interval = setInterval(async () => {
-      try {
-        const status = await action.getStatus!(jobId);
-        setProgress(status.progress);
-        
-        if (status.status === 'completed' || status.status === 'failed') {
-          clearInterval(interval);
-          setIsExecuting(false);
-          if (status.status === 'completed') {
-            toast.success(status.message || "执行成功");
-            if (onSuccess) onSuccess();
-          } else {
-            showError(status.error || "执行失败", status.error);
-          }
-          setTimeout(() => setProgress(0), 2000);
-        }
-      } catch (e: any) {
-        clearInterval(interval);
-        setIsExecuting(false);
-        showError("轮询状态失败", e.message);
-      }
-    }, 2000);
-  };
-
   const handleExecute = async () => {
     setIsExecuting(true);
     setProgress(5);
-    try {
-      const { jobId, message } = await action.execute();
-      if (jobId === 'sync' || jobId === 'cleanup') {
-        setProgress(100);
-        toast.success(message || "执行完成");
-        setIsExecuting(false);
-        if (onSuccess) onSuccess();
-        setTimeout(() => setProgress(0), 1000);
-      } else {
-        await pollJobStatus(jobId);
+    
+    await runTask(
+      finalTitle,
+      async ({ updateProgress, taskId }) => {
+        const { jobId, message } = await action.execute();
+        
+        // Update task with jobId immediately after execution starts for persistence rescue
+        if (taskId && jobId) {
+          updateTask(taskId, { jobId, issueId });
+        }
+        
+        if (jobId === 'sync' || jobId === 'cleanup') {
+          updateProgress(100, message || "已完成");
+          setProgress(100);
+          return true;
+        }
+
+        // Background polling for long tasks
+        return new Promise((resolve, reject) => {
+          // Even though we're polling here, we store metadata so if we reload, JobResumer can take over
+          const interval = setInterval(async () => {
+            try {
+              const status = await action.getStatus!(jobId);
+              setProgress(status.progress);
+              updateProgress(status.progress, status.message);
+              
+              if (status.status === 'completed') {
+                clearInterval(interval);
+                resolve(true);
+              } else if (status.status === 'failed') {
+                clearInterval(interval);
+                reject(new Error(status.error || "执行失败"));
+              }
+            } catch (e) {
+              clearInterval(interval);
+              reject(e);
+            }
+          }, 2000);
+        });
+      },
+      {
+        issueId,
+        onSuccess: () => {
+          setIsExecuting(false);
+          setPreview(null);
+          if (onSuccess) onSuccess();
+          setTimeout(() => setProgress(0), 1000);
+        },
+        onError: (e: any) => {
+          setIsExecuting(false);
+          setProgress(0);
+          showError(`执行失败: ${e.message}`);
+        },
+        showSuccessToast: true
       }
-      setPreview(null);
-    } catch (e: any) {
-      showError(`启动执行失败: ${e.message}`, e.stack);
-      setIsExecuting(false);
-      setProgress(0);
-    }
+    );
   };
 
   const onExecuteClick = () => {

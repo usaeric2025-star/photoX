@@ -1,6 +1,5 @@
 import React, { useRef } from 'react';
 import { Photo, ProductGroup } from '../../types';
-import { GalleryVariant } from '@/types/variant';
 import { Layers, Quote } from 'lucide-react';
 import { useUIStore, useShallow, useColumns } from '@/store/useUIStore';
 import { translations } from '../../lib/translations';
@@ -20,7 +19,6 @@ interface GroupGridViewProps {
   onEndReached?: () => void;
   isFetchingNextPage?: boolean;
   hasNextPage?: boolean;
-  variant?: GalleryVariant;
 }
 
 function GroupGridFooter({ 
@@ -62,7 +60,6 @@ export function GroupGridView({
   isLoading = false,
   isFetchingNextPage,
   hasNextPage,
-  variant = 'public-showcase'
 }: GroupGridViewProps & { virtualGridRef?: React.Ref<any>, isLoading?: boolean }) {
   const lang = useUIStore((s) => s.appLang);
   const t = translations[lang as keyof typeof translations as keyof typeof translations] || translations.en;
@@ -164,7 +161,6 @@ export function GroupGridView({
     return (
       <div className="p-1 w-full">
         <PhotoCard
-          variant={variant}
           photo={photo}
           index={index}
           hideDetails={false}

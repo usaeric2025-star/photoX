@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useGlobalTasks } from '@/hooks/admin/useGlobalTasks';
-import { UnifiedTask } from '@/features/tasks/taskTypes';
+import { UnifiedTask } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';

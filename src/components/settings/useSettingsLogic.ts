@@ -76,31 +76,68 @@ export const useSettingsLogic = ({
     debouncedSave(newSettings);
   };
 
+  const uploadLogo = async (file: File) => {
+    return runTask(
+      appLang === 'zh' ? '上传系统 Logo' : 'Upload System Logo',
+      async () => {
+        const reader = new FileReader();
+        const base64Data = await new Promise<string>((resolve, reject) => {
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+
+        const resp = await api.uploadDirect.$post({
+          json: {
+            base64Data,
+            fileKey: `settings/logo_${Date.now()}.webp`,
+            contentType: file.type
+          }
+        });
+        
+        const res = await resp.json() as any;
+        if (!res.success || !res.data.publicUrl) {
+          throw new Error(res.error || 'Upload failed');
+        }
+        
+        setSettingField('logo_url', res.data.publicUrl);
+        return res.data.publicUrl;
+      }
+    );
+  };
+
   const testConnection = async () => {
     if (!settings?.gemini_api_key) return;
-    setTestResult({ loading: true });
-
-    try {
-      const provider = (settings as any).ai_provider || "google";
-      const model =
-        settings.custom_model || DEFAULT_AI_MODEL;
-      const ok = await testAiConnection(
-        settings.gemini_api_key,
-        provider,
-        model,
-      );
-      if (ok) {
-        setTestResult({ success: true });
-        toast.success('测试成功：AI 服务连接正常！');
-      } else {
-        setTestResult({ success: false, error: '连接失败' });
-      }
-    } catch (e: any) {
-      setTestResult({ success: false, error: e.message });
-      handleError(e, '连接失败');
-    } finally {
-      setTestResult((prev) => (prev ? { ...prev, loading: false } : null));
-    }
+    
+    return runTask(
+      appLang === 'zh' ? '测试 AI 服务连接' : 'Test AI Connection',
+      async () => {
+        setTestResult({ loading: true });
+        try {
+          const provider = (settings as any).ai_provider || "google";
+          const model = settings.custom_model || DEFAULT_AI_MODEL;
+          const ok = await testAiConnection(
+            settings.gemini_api_key || "",
+            provider,
+            model,
+          );
+          
+          if (ok) {
+            setTestResult({ success: true });
+            return true;
+          } else {
+            setTestResult({ success: false, error: '连接失败' });
+            throw new Error('连接失败');
+          }
+        } catch (e: any) {
+          setTestResult({ success: false, error: e.message });
+          throw e;
+        } finally {
+          setTestResult((prev) => (prev ? { ...prev, loading: false } : null));
+        }
+      },
+      { showSuccessToast: true }
+    );
   };
 
   return {
@@ -114,5 +151,6 @@ export const useSettingsLogic = ({
     testConnection,
     togglePin,
     setSettingField,
+    uploadLogo
   };
 };

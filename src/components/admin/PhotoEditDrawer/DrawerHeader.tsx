@@ -15,8 +15,20 @@ import {
 import { Skeleton } from "../../ui/Skeleton";
 import { useUIStore } from "../../../store";
 import { UseFormReturnType } from "@mantine/form";
-import { ProductFormData } from "../../../types";
+import { ProductFormData, Photo } from "../../../types";
 import { toast } from "sonner";
+import { useDisclosure } from "@mantine/hooks";
+import {
+  usePhotoDetail,
+  useTasks,
+  useRemoveFromGroupMutation,
+  usePhotoEdit,
+  usePhotoDelete,
+  useTaskExecutor,
+  useErrorHandler,
+  useSettings,
+} from "../../../hooks";
+import { analyzePhoto } from "@/services/ai/commands";
 
 interface HeaderProps {
   editPhotoId: string | null;
@@ -38,27 +50,81 @@ interface HeaderProps {
 }
 
 export function DrawerHeader({
-  editPhotoId,
   form,
-  isAnalyzing,
-  aiDebugInfo,
-  isPartOfGroup,
-  isSyncing,
-  onAbort,
-  onAiAnalyze,
-  onDelete,
   onSave,
-  onToggleHidden,
   onClose,
-  onErrorClick,
-  onRemoveFromGroup,
-  isRunning,
-  totalPhotosCount,
-}: HeaderProps) {
+  previewSrc,
+}: {
+  form: UseFormReturnType<ProductFormData>;
+  onSave: () => void;
+  onClose: () => void;
+  previewSrc?: string;
+}) {
   const formState = form.values;
-  const updateForm = (updates: Partial<ProductFormData>) => form.setValues(updates);
-  const update = useUIStore((s) => s.update);
+  
+  const editPhotoId = useUIStore((s) => s.editPhotoId);
   const appLang = useUIStore((s) => s.appLang);
+  
+  const { data: detailPhoto } = usePhotoDetail(editPhotoId || '');
+  const { tasks } = useTasks();
+  const isAnalyzing = React.useMemo(() => tasks.some((t: any) => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析'))), [tasks]);
+  const isSyncing = React.useMemo(() => tasks.some((t: any) => t.status === 'running' && (t.name.includes('同步') || t.name.includes('导入'))), [tasks]);
+  const isRunning = React.useMemo(() => tasks.some((t: any) => t.status === 'running'), [tasks]);
+
+  const { mutateAsync: removeFromGroup } = useRemoveFromGroupMutation();
+  const { mutateAsync: updatePhoto } = usePhotoEdit();
+  const { mutateAsync: deletePhoto } = usePhotoDelete();
+  const { runTask } = useTaskExecutor();
+  const { settings } = useSettings();
+  const [isDeleteOpen, deleteDialog] = useDisclosure(false);
+
+  const isPartOfGroup = !!detailPhoto?.group_id;
+
+  const onRemoveFromGroup = async () => {
+    if (editPhotoId && detailPhoto?.group_id) {
+      await removeFromGroup({ photoIds: [editPhotoId], groupId: detailPhoto.group_id });
+      useUIStore.getState().update({ editPhotoId: null });
+    }
+  };
+
+  const onToggleHidden = async () => {
+    const nextValue = !formState.is_hidden;
+    form.setFieldValue('is_hidden', nextValue);
+    if (editPhotoId) {
+      await updatePhoto({ id: editPhotoId, updates: { is_hidden: nextValue } });
+    }
+  };
+
+  const onDelete = () => {
+    if (confirm(appLang === 'zh' ? '确定要删除此照片吗？' : 'Are you sure you want to delete this photo?')) {
+       if (editPhotoId) {
+          deletePhoto([editPhotoId]).then(() => {
+            useUIStore.getState().update({ editPhotoId: null });
+          });
+       }
+    }
+  };
+
+  const onAiAnalyze = async () => {
+    const imageUrl = previewSrc || detailPhoto?.image_url;
+    if (!imageUrl || !editPhotoId) return;
+
+    if (!settings?.gemini_api_key) {
+      toast.error("Google Gemini API Key is required.");
+      return;
+    }
+
+    await runTask("AI Analyzing", async () => {
+      const resp = await analyzePhoto(editPhotoId);
+      if (resp.ok && resp.data) {
+        const result = resp.data;
+        if (!form.values.name?.zh && result.name) {
+           form.setFieldValue('name', typeof result.name === 'object' ? result.name : { zh: result.name, en: '', ms: '' });
+        }
+        toast.success("AI Analysis Completed");
+      }
+    });
+  };
 
   const l = {
     hidden: appLang === 'zh' ? '屏蔽' : appLang === 'ms' ? 'Sembunyi' : 'Hide',
@@ -76,31 +142,15 @@ export function DrawerHeader({
   return (
     <div className="px-4 py-3 border-b border-slate-200 bg-white shadow-sm flex items-center justify-between gap-3 min-h-[72px]">
       <div className="flex-none flex items-center gap-2">
-        {aiDebugInfo?.error ? (
-          <div
-            onClick={() => onErrorClick(aiDebugInfo.error)}
-            className="bg-red-50 border border-red-200 text-red-600 px-3 py-1.5 rounded-xl text-[10px] font-bold flex items-center gap-1 cursor-help max-w-[140px]"
-          >
-            <Skeleton className="w-1 h-1 rounded-full bg-red-400 shrink-0" />
-            <span className="truncate">
-              {aiDebugInfo.error.includes("|")
-                ? aiDebugInfo.error.split("|")[2] ||
-                  aiDebugInfo.error.split("|")[1] ||
-                  l.analyzeError
-                : aiDebugInfo.error}
-            </span>
-          </div>
-        ) : (
-          <div
-            onClick={onToggleHidden}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border cursor-pointer whitespace-nowrap ${formState.is_hidden ? "bg-orange-50 border-orange-200 text-orange-600" : "bg-green-50 border-green-200 text-green-600"}`}
-          >
-            {formState.is_hidden ? <EyeOff size={10} /> : <Eye size={10} />}
-            <span className="text-[9px] font-bold uppercase tracking-widest leading-none">
-              {formState.is_hidden ? l.hidden : l.visible}
-            </span>
-          </div>
-        )}
+        <div
+          onClick={onToggleHidden}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border cursor-pointer whitespace-nowrap ${formState.is_hidden ? "bg-orange-50 border-orange-200 text-orange-600" : "bg-green-50 border-green-200 text-green-600"}`}
+        >
+          {formState.is_hidden ? <EyeOff size={10} /> : <Eye size={10} />}
+          <span className="text-[9px] font-bold uppercase tracking-widest leading-none">
+            {formState.is_hidden ? l.hidden : l.visible}
+          </span>
+        </div>
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center min-w-0 px-2">
@@ -113,17 +163,9 @@ export function DrawerHeader({
 
       <div className="flex-1 flex items-center justify-end gap-2">
         <div className="flex items-center gap-1.5">
-          {isAnalyzing && onAbort && (
-            <button
-              onClick={onAbort}
-              className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-orange-50 text-orange-600 border border-orange-100 shadow-sm"
-            >
-              <CloseIcon size={18} />
-            </button>
-          )}
           <button
             onClick={onAiAnalyze}
-            disabled={(isAnalyzing && !onAbort) || isRunning}
+            disabled={isAnalyzing || isRunning}
             className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border shadow-sm transition-all disabled:opacity-50 ${isAnalyzing ? "bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed" : "bg-purple-50 text-purple-600 border-purple-100 active:bg-purple-200"}`}
           >
             {isAnalyzing ? (
@@ -138,7 +180,7 @@ export function DrawerHeader({
           <button
             onClick={() => {
               const newState = !formState.is_group_cover;
-              updateForm({ is_group_cover: newState });
+              form.setFieldValue('is_group_cover', newState);
               toast.success(newState ? (appLang === 'zh' ? '已设为封面' : 'Set as cover') : (appLang === 'zh' ? '已取消封面' : 'Removed from cover'));
             }}
             title={l.cover}
@@ -148,7 +190,7 @@ export function DrawerHeader({
           </button>
         )}
 
-        {isPartOfGroup && onRemoveFromGroup && (
+        {isPartOfGroup && (
           <button
             onClick={onRemoveFromGroup}
             title="移出合组"
@@ -158,7 +200,7 @@ export function DrawerHeader({
           </button>
         )}
 
-        {editPhotoId && onDelete && (
+        {editPhotoId && (
           <button
             onClick={onDelete}
             disabled={isRunning}

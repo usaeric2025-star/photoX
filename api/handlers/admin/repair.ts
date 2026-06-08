@@ -186,11 +186,11 @@ adminRepair.post("/", async (c) => {
         } catch (e: any) {
           return c.json({ success: false, error: `Worker 连通性异常: ${e.message}. 请检查 URL 是否正确及 Worker 是否已部署。` });
         }
-      } else {
-        return c.json({ success: false, error: "未知的修复指令" });
       }
+
+      return c.json({ success: false, error: "未知的维护操作 ID" }, 400);
     } catch (e: any) {
-        console.error('[API Repair Error]', e);
+        console.error('[Admin Repair] Critical Exception:', e);
         return c.json({ success: false, error: e.message }, 500);
     }
 });

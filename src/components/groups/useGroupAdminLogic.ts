@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Photo } from "../../types";
 import { filterPhotosByMode } from "@/lib/filters/photoVisibility";
-import { useAdminActions } from "@/features/admin/useAdminActions";
+import { useAdminActions } from "@/hooks/admin/useAdminActions";
 import {
   useAdminMode,
   useErrorHandler,
@@ -13,14 +13,11 @@ import { useDisclosure, useSessionStorage } from "@mantine/hooks";
 import { useGroupDraft } from "./useGroupDraft";
 import { useGroupActions } from "./useGroupActions";
 
-export const useGroupAdminLogic = ({
-  initialPhotoId,
-}: {
-  initialPhotoId?: string | null;
-}) => {
+export const useGroupAdminLogic = () => {
   const isAdminMode = useAdminMode();
   const { filters, setGroupId } = useUrlFilters();
   const activeGroupId = filters.groupId;
+  const initialPhotoId = filters.photoId;
   
   const { isMultiSelect, selectedIds, groupSettingsOpen, batchEditingIds, focusedGroupPhotoId, draggedPhotoId, processingIds, update } = useUIStore(
     useShallow((s) => ({ 
@@ -59,7 +56,7 @@ export const useGroupAdminLogic = ({
   const { data: dbGroupPhotosPages, isLoading: isGroupPhotosLoading } =
     useGroupPhotos(activeGroupId, isAdminMode);
   
-  const dbGroupPhotos = (() => dbGroupPhotosPages?.pages.flatMap(p => p.photos) ?? [])();
+  const dbGroupPhotos = (() => dbGroupPhotosPages?.pages.flatMap((p: any) => p.photos) ?? [])();
 
   const {
     groupData,
@@ -74,7 +71,7 @@ export const useGroupAdminLogic = ({
     let groupPhotos = dbGroupPhotos;
     
     if (processingIds && processingIds.length > 0) {
-        groupPhotos = groupPhotos.filter(p => !processingIds.includes(p.id));
+        groupPhotos = groupPhotos.filter((p: any) => !processingIds.includes(p.id));
     }
 
     return filterPhotosByMode(groupPhotos, isAdminMode)

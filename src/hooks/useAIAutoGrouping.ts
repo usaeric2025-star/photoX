@@ -71,7 +71,7 @@ export function useAIAutoGrouping() {
         const searchParams = new URLSearchParams(window.location.search);
         const isCollapsed = searchParams.get('showGroupsCollapsed') !== 'false';
         
-        const { groupPhotos } = await import('@/services/photo/commands');
+        const { groupPhotos } = await import('@/services/group/commands');
         
         const result = await groupPhotos(photoIds, undefined, {
             name: finalName,

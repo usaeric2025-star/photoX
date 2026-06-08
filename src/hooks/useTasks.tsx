@@ -5,6 +5,8 @@ import { Loader2, X, ChevronUp, ChevronDown, CheckCircle2, AlertCircle, PlayCirc
 
 import { useLocalStorage } from '@mantine/hooks';
 
+import { JobResumer } from '@/components/tasks/JobResumer';
+
 export type TaskStatus = 'running' | 'completed' | 'error' | 'cancelled';
 
 export interface BackgroundTask {
@@ -15,6 +17,8 @@ export interface BackgroundTask {
   message?: string;
   finished_at?: number;
   onCancel?: () => void;
+  jobId?: string; // For server-side jobs
+  issueId?: string; // For diagnostics mapping
 }
 
 interface TaskContextType {
@@ -35,8 +39,42 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   const cancelCallbacks = useRef<Map<string, () => void>>(new Map());
 
   const [tasks, setTasks] = useState<BackgroundTask[]>([]);
-
   const [isAvoidingSelection, setAvoidingSelection] = useState(false);
+  const tasksRef = useRef<BackgroundTask[]>([]);
+  tasksRef.current = tasks;
+
+  // Load from IndexedDB on mount
+  useEffect(() => {
+    const initTasks = async () => {
+      const { syncCache } = await import('@/lib/db/indexedDB');
+      const savedTasks = await syncCache.getTasks();
+      if (savedTasks && Array.isArray(savedTasks)) {
+        // Filter out completed tasks that are too old already
+        const now = Date.now();
+        const validTasks = savedTasks.filter(t => {
+          if (t.status === 'running') return true;
+          if (t.finished_at && now - t.finished_at < 3000) return true;
+          return false;
+        }).map(t => ({
+          ...t,
+          onCancel: undefined // Functions can't be persisted
+        }));
+        setTasks(validTasks);
+      }
+    };
+    initTasks();
+  }, []);
+
+  // Sync to IndexedDB on any change
+  useEffect(() => {
+    const persistTasks = async () => {
+      const { syncCache } = await import('@/lib/db/indexedDB');
+      // Strip onCancel before saving
+      const serializableTasks = tasks.map(({ onCancel, ...rest }) => rest);
+      await syncCache.saveTasks(serializableTasks);
+    };
+    persistTasks();
+  }, [tasks]);
 
   const addTask = useCallback((taskData: Omit<BackgroundTask, 'id' | 'status' | 'progress'>) => {
     const id = Math.random().toString(36).substring(2, 9);
@@ -119,6 +157,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   return (
     <TaskContext.Provider value={value}>
       {children}
+      <JobResumer />
       <BackgroundTaskPanel />
     </TaskContext.Provider>
   );

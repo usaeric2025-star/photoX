@@ -13,7 +13,10 @@ export function useTaskExecutor() {
 
   const runTask = useCallback(async <T,>(
     name: string,
-    fn: (ctx: { updateProgress: (pct: number, msg?: string) => void }) => Promise<T>,
+    fn: (ctx: { 
+      updateProgress: (pct: number, msg?: string) => void;
+      taskId: string | null;
+    }) => Promise<T>,
     options?: {
       onSuccess?: (result: T) => void;
       onError?: (error: Error) => void;
@@ -22,12 +25,18 @@ export function useTaskExecutor() {
       silent?: boolean;
       showProgress?: boolean;
       rethrow?: boolean;
+      jobId?: string;
+      issueId?: string;
     }
   ): Promise<T | null> => {
     const showProgress = options?.showProgress ?? !options?.silent;
     const isSilent = options?.silent ?? false;
 
-    const taskId = showProgress ? addTask({ name }) : null;
+    const taskId = showProgress ? addTask({ 
+      name, 
+      jobId: options?.jobId,
+      issueId: options?.issueId
+    }) : null;
 
     const updateProgress = (pct: number, msg?: string) => {
       if (taskId) {
@@ -36,7 +45,7 @@ export function useTaskExecutor() {
     };
 
     try {
-      const result = await fn({ updateProgress });
+      const result = await fn({ updateProgress, taskId });
       if (taskId) {
         updateTask(taskId, { status: 'completed', progress: 100, message: `${name} 完成` });
       }

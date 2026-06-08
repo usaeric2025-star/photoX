@@ -1,5 +1,5 @@
 import React from 'react';
-import { useTogglePin } from '@/hooks/usePhotoEditor';
+import { useTogglePin } from '@/hooks';
 import { Heart } from 'lucide-react';
 
 export function PinButton({ photoId, isPinned }: { photoId: string; isPinned: boolean }) {

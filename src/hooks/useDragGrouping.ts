@@ -1,5 +1,5 @@
 import { createMutation } from './core/mutationFactory';
-import { movePhotosToGroup } from '@/services/photo/commands';
+import { movePhotosToGroup } from '@/services/group/commands';
 import { photoKeys } from '@/lib/queryKeys';
 
 /**

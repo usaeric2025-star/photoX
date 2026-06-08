@@ -34,7 +34,6 @@ describe('PhotoCard', () => {
     const { container } = render(
       <QueryClientProvider client={queryClient}>
         <PhotoCard
-          variant="full-management"
           photo={mockPhoto as any}
           index={0}
         />

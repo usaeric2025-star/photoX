@@ -2,11 +2,10 @@
 export { useAuth } from './core/auth/useAuth';
 export { useSettings } from './useSettings';
 export { useTaskExecutor } from './useTaskExecutor';
-export { TaskProvider, useTasks } from './useTasks';
+export { TaskProvider, useTasks, type BackgroundTask } from './useTasks';
 export { usePermission } from './core/auth/usePermission';
 export { useSyncEngine } from './useSyncEngine';
 export { useAdminMode } from './core/auth/useAdminMode';
-export { usePhotoAction } from './usePhotoAction';
 export { usePhotoUpload } from './usePhotoUpload';
 export { useScrollRestoration } from '../core/infra/useScrollRestoration';
 export { useLongPress } from './core/useLongPress';
@@ -15,11 +14,10 @@ export { useAppLocale } from './core/useAppLocale';
 export { useImagePreloader } from './core/useImagePreloader';
 export { useQueryWithFallback } from './core/useQueryWithFallback';
 
-// Features Hooks
-export { useBatchEdit } from '../features/photo/useBatchEdit';
-export { useMultiSelect } from '../features/photo/usePhotoSelection';
-export { useTagsDisplay } from '../features/photo/useTagFiltering';
-export { useAdminCategory } from '../features/admin/useCategoryManagement';
+// Domain Hooks
+export * from './admin';
+export * from './photo';
+export * from './groups';
 export { useUrlFilters } from './useUrlFilters';
 export { useLightbox } from './useLightbox';
 
@@ -36,7 +34,7 @@ export { useInvalidatePhotos } from './useInvalidatePhotos';
 export { usePhotoAIResult } from './usePhotoAIResult';
 
 // Mutations
-export { usePhotoEdit, usePhotoDelete, usePhotoBatchEdit, useTogglePin } from './usePhotoEditor';
+export { usePhotoEditMutation, usePhotoDelete, usePhotoBatchEdit, useTogglePin } from './usePhotoMutations';
 export { 
   useTagCreate, useTagEdit, useTagDelete,
   useCategoryCreate, useCategoryEdit, useCategoryDelete,
