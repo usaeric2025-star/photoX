@@ -179,28 +179,41 @@ export function useAIBatchAnalysis() {
                 const analysis = await withTimeout(analyzeGroup(photosWithTags), 120000); // 120s timeout
                 const { name, description, colors, materials } = analysis;
 
-                let finalName = { ...name };
-                let finalDescription = {
-                  zh: description,
-                  en: description,
-                  ms: description
-                };
+                let finalName = { zh: '', en: '', ms: '' };
+                if (name && typeof name === 'object') {
+                  finalName.zh = name.zh || '';
+                  finalName.en = name.en || '';
+                  finalName.ms = name.ms || '';
+                } else if (typeof name === 'string') {
+                  finalName.zh = name;
+                }
+
+                let finalDescription = { zh: '', en: '', ms: '' };
+                if (description && typeof description === 'object') {
+                  finalDescription.zh = description.zh || '';
+                  finalDescription.en = description.en || '';
+                  finalDescription.ms = description.ms || '';
+                } else if (typeof description === 'string') {
+                  finalDescription.zh = description;
+                  finalDescription.en = description;
+                  finalDescription.ms = description;
+                }
 
                 try {
                   updateProgress(85, '正在翻译合组信息...');
                   const { data: settingsData } = await supabase.from('settings').select('gemini_api_key, custom_model').single();
                   const { translateProductFields } = await import('@/services/gemini/translationCore');
                   const pTranslations = await translateProductFields({
-                    name: name.zh,
-                    description,
+                    name: finalName.zh,
+                    description: finalDescription.zh,
                     colors,
                     materials
                   }, settingsData?.gemini_api_key || '', settingsData?.custom_model || '');
 
-                  finalName.en = pTranslations.name_en || name.en || name.zh;
-                  finalName.ms = pTranslations.name_ms || name.ms || name.zh;
-                  finalDescription.en = pTranslations.description_en || description;
-                  finalDescription.ms = pTranslations.description_ms || description;
+                  finalName.en = pTranslations.name_en || finalName.en || finalName.zh;
+                  finalName.ms = pTranslations.name_ms || finalName.ms || finalName.zh;
+                  finalDescription.en = pTranslations.description_en || finalDescription.en || finalDescription.zh;
+                  finalDescription.ms = pTranslations.description_ms || finalDescription.ms || finalDescription.zh;
                 } catch (e) {
                   console.warn('Group translations skipped:', e);
                 }

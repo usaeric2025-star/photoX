@@ -9,6 +9,39 @@ import { decrypt } from '../lib/encryption.js';
 const serverEnv = getServerEnv(process.env);
 export const ai = new Hono();
 
+function extractJSON(text: string): any {
+  if (!text) return {};
+  const trimmed = text.trim();
+  // 1. Try raw parsing
+  try {
+    return JSON.parse(trimmed);
+  } catch (e) {
+    // ignore and continue
+  }
+
+  // 2. Try cleaning standard markdown code sections
+  let cleaned = trimmed.replace(/```(json|yaml)?\n?|```\n?|\n```/g, "").trim();
+  try {
+    return JSON.parse(cleaned);
+  } catch (e) {
+    // ignore and continue
+  }
+
+  // 3. Match from the first brace to the last brace
+  const firstBrace = trimmed.indexOf('{');
+  const lastBrace = trimmed.lastIndexOf('}');
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    const candidate = trimmed.substring(firstBrace, lastBrace + 1);
+    try {
+      return JSON.parse(candidate);
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  throw new Error("Failed to parse AI response as JSON: " + trimmed.substring(0, 300));
+}
+
 ai.post("/test", async (c) => {
     const { provider, apiKey, model } = await c.req.json();
     const supabase = await getSupabaseAdmin();
@@ -99,9 +132,15 @@ ai.post("/analyze", async (c) => {
             supabase.from('secrets').select('value').eq('key', 'openrouter').maybeSingle(),
         ]);
 
-        if (!openrouterSecret?.value) throw new Error("OpenRouter API Key not configured in secrets");
+        let apiKey = '';
+        if (openrouterSecret?.value) {
+            apiKey = decrypt(openrouterSecret.value);
+        } else {
+            apiKey = serverEnv.GEMINI_API_KEY || '';
+        }
+
+        if (!apiKey) throw new Error("OpenRouter API Key or GEMINI_API_KEY not configured in environment or secrets");
         
-        const apiKey = decrypt(openrouterSecret.value);
         const model = await getModel(supabase);
 
         const provider = new OpenRouterProvider({ apiKey, model });
@@ -138,10 +177,9 @@ Ensure raw JSON output.`;
 
         let data: any;
         try {
-            const cleanJson = (aiResult.text || '').replace(/```json\n|\n```|```/g, '').trim();
-            data = JSON.parse(cleanJson);
+            data = extractJSON(aiResult.text || '');
         } catch (e) {
-            throw new Error("AI returned invalid JSON format");
+            throw new Error("AI returned invalid JSON format: " + (aiResult.text || '').substring(0, 200));
         }
 
         return c.json({ success: true, data });
@@ -183,7 +221,9 @@ ai.post("/translate", async (c) => {
       });
       if (!response.ok) return c.json({ error: await response.text() }, response.status as any);
       const data = await response.json();
-      return c.json(JSON.parse(data.choices[0]?.message?.content || "{}"));
+      const rawContent = data.choices[0]?.message?.content || "{}";
+      const parsedData = extractJSON(rawContent);
+      return c.json(parsedData);
     } catch (error: any) { return c.json({ error: error.message }, 500); }
 });
 
@@ -201,7 +241,7 @@ ai.post("/analyze-group", async (c) => {
       if (!apiKey) return c.json({ error: "Server API key not configured" }, 500);
       
       const prompt = `您是家具系列/合组设计与分析专家。
-请根据以下单品列表的详细信息进行分析，生成一个具有整体性、设计感的家具系列/合组信息。
+请根据以下单品列表的详细信息进行 analysis，生成一个具有整体性、设计感的家具系列/合组信息。
 
 【输入单品列表】:
 ${photoDetails}
@@ -234,8 +274,8 @@ ${photoDetails}
       if (!response.ok) return c.json({ error: await response.text() }, response.status as any);
       const data = await response.json();
       const rawContent = data.choices[0]?.message?.content || "{}";
-      const cleanContent = rawContent.replace(/```json\n?|```\n?|\n```/g, "").trim();
-      return c.json(JSON.parse(cleanContent));
+      const parsedData = extractJSON(rawContent);
+      return c.json(parsedData);
     } catch (error: any) { return c.json({ error: error.message }, 500); }
 });
 
@@ -286,7 +326,7 @@ ${photoDetail}
       if (!response.ok) return c.json({ error: await response.text() }, response.status as any);
       const data = await response.json();
       const rawContent = data.choices[0]?.message?.content || "{}";
-      const cleanContent = rawContent.replace(/```json\n?|```\n?|\n```/g, "").trim();
-      return c.json(JSON.parse(cleanContent));
+      const parsedData = extractJSON(rawContent);
+      return c.json(parsedData);
     } catch (error: any) { return c.json({ error: error.message }, 500); }
 });
