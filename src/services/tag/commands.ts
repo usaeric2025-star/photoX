@@ -124,6 +124,26 @@ export const removeTagFromPhoto = async (photoId: string, tagId: string): Promis
 };
 
 /**
+ * Syncs a set of tags for a single photo.
+ * @precondition Photo exists.
+ * @postcondition Tag associations updated.
+ */
+export const syncPhotoTags = async (photoId: string, tagIds: string[]): Promise<AppResult<void>> => {
+    const { error: deleteError } = await supabase.from('photo_tags').delete().eq('photo_id', photoId);
+    if (deleteError) return errorFactory(deleteError.message, 'DB_ERROR', 'syncPhotoTags/delete', deleteError);
+
+    if (tagIds.length > 0) {
+        const associations = tagIds.map(tagId => ({
+            photo_id: photoId,
+            tag_id: tagId
+        }));
+        const { error: insertError } = await supabase.from('photo_tags').insert(associations);
+        if (insertError) return errorFactory(insertError.message, 'DB_ERROR', 'syncPhotoTags/insert', insertError);
+    }
+    return success(undefined);
+};
+
+/**
  * Syncs a set of photos with a new set of tags.
  * @precondition Photos exist.
  * @postcondition Tag associations updated.

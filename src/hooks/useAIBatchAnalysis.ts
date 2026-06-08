@@ -221,12 +221,10 @@ export function useAIBatchAnalysis() {
         const totalPhotosToProcess = targetPhotos.length;
         let progress = 0;
 
-        // 1. Analyze photos
-        const { analyzePhoto } = await import('@/services/ai/commands');
-        const { updatePhoto: directUpdatePhoto } = await import('@/services/photo/commands');
         const { supabase } = await import('@/lib/supabase');
+        const { data: settingsData } = await supabase.from('settings').select('gemini_api_key, custom_model').single();
 
-        // Prefetch categories and tags once to resolve names/IDs cleanly
+        // Prefetch categories and tags once
         let dbCategories: any[] = [];
         let dbTags: any[] = [];
         try {
@@ -240,18 +238,10 @@ export function useAIBatchAnalysis() {
           console.error("Failed to prefetch categories/tags for resolution", e);
         }
         
-        const withTimeout = (promise: Promise<any>, ms: number) => {
-            const timeout = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('请求超时')), ms)
-            );
-            return Promise.race([promise, timeout]);
-        };
-        
         for (let i = 0; i < targetPhotos.length; i++) {
           const p = targetPhotos[i];
           
           if (hasExistingInfo(p)) {
-            console.log(`Skipping photo ${p.id} from AI analysis as it already holds meaningful descriptive metadata.`);
             progress = ((i + 1) / totalPhotosToProcess) * (groupId ? 70 : 100);
             updateProgress(progress, `保留已有信息: ${i + 1}/${totalPhotosToProcess}`);
             continue;
@@ -259,80 +249,15 @@ export function useAIBatchAnalysis() {
 
           try {
             updateProgress(progress, `正在分析照片 ${i + 1}/${totalPhotosToProcess}`);
-            const resp = await withTimeout(analyzePhoto(p.id), 60000); // 60s timeout
+            const { analyzeAndSavePhoto } = await import('@/services/ai/orchestration');
             
-            if (resp && 'ok' in resp && resp.ok) {
-              let result = resp.data;
-              if (Array.isArray(result) && result.length > 0) {
-                result = result[0];
-              }
-              if (result && typeof result === 'object') {
-                const updates: any = {};
-                
-                if (result.name) {
-                  const oldName = typeof p.name === 'object' ? p.name : { zh: String(p.name || ''), en: '', ms: '' };
-                  const newName = typeof result.name === 'object' ? result.name : { zh: String(result.name), en: '', ms: '' };
-                  updates.name = {
-                    zh: newName.zh || oldName.zh || '',
-                    en: newName.en || oldName.en || '',
-                    ms: newName.ms || oldName.ms || '',
-                  };
-                }
-                
-                if (result.category_id !== undefined && result.category_id !== null) {
-                  const resolvedCategoryId = findCategoryByFuzzy(result.category_id, dbCategories);
-                  if (resolvedCategoryId) {
-                    updates.category_id = resolvedCategoryId;
-                  } else {
-                    console.warn(`Could not resolve category UUID for input:`, result.category_id);
-                  }
-                }
-                
-                if (Array.isArray(result.tag_ids)) {
-                  const resolvedTagIds = resolveTagIds(result.tag_ids, dbTags);
-                  if (resolvedTagIds.length > 0) {
-                    updates.tags = resolvedTagIds.slice(0, 5).map(id => ({ id }));
-                  } else {
-                    console.warn(`Could not resolve tag UUIDs for inputs:`, result.tag_ids);
-                  }
-                }
-                
-                if (result.description) {
-                  const oldDesc = typeof p.description === 'object' ? p.description : { zh: String(p.description || ''), en: '', ms: '' };
-                  const newDesc = typeof result.description === 'object' ? result.description : { zh: String(result.description), en: '', ms: '' };
-                  updates.description = {
-                    zh: newDesc.zh || oldDesc.zh || '',
-                    en: newDesc.en || oldDesc.en || '',
-                    ms: newDesc.ms || oldDesc.ms || '',
-                  };
-                }
-                
-                if (result.description_translations) {
-                  updates.description_translations = result.description_translations;
-                }
-                
-                if (Array.isArray(result.dimensions)) {
-                  updates.dimensions = result.dimensions;
-                }
-                
-                if (result.price !== undefined && result.price !== null) {
-                  updates.price = String(result.price);
-                }
-
-                if (Object.keys(updates).length > 0) {
-                  const updateResult = await directUpdatePhoto(p.id, updates);
-                  if (updateResult && 'ok' in updateResult && updateResult.ok) {
-                    successCount++;
-                    await invalidatePhotos();
-                  } else {
-                    const failMsg = (updateResult && 'message' in updateResult ? updateResult.message : '') || '无法更新数据库记录';
-                    console.error(`Failed db update for photo ${p.id}:`, failMsg);
-                  }
-                }
-              }
+            const result = await analyzeAndSavePhoto(p, settingsData, dbTags, dbCategories);
+            
+            if (result.success) {
+                successCount++;
+                await invalidatePhotos();
             } else {
-              const errorMsg = (resp && 'message' in resp ? resp.message : null) || 'AI Analysis Failed';
-              console.error(`Failed to analyze photo ${p.id}:`, errorMsg);
+                console.error(`Failed AI processing for photo ${p.id}:`, result.error);
             }
           } catch (err: any) {
             console.error(`Failed to analyze photo ${p.id}:`, err);
@@ -340,6 +265,7 @@ export function useAIBatchAnalysis() {
           progress = ((i + 1) / totalPhotosToProcess) * (groupId ? 70 : 100);
           updateProgress(progress);
         }
+
 
         let groupSuccess = false;
 

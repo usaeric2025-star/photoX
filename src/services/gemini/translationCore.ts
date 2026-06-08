@@ -84,23 +84,15 @@ export async function translateProductFields(
   name_ms: string;
   description_en: string;
   description_ms: string;
-  colors_en: string[];
-  colors_ms: string[];
-  materials_en: string[];
-  materials_ms: string[];
 }> {
   const result = {
     name_en: '',
     name_ms: '',
     description_en: '',
     description_ms: '',
-    colors_en: [] as string[],
-    colors_ms: [] as string[],
-    materials_en: [] as string[],
-    materials_ms: [] as string[]
   };
 
-  if (!fields.name && !fields.description && !fields.category && (!fields.colors || fields.colors.length === 0) && (!fields.materials || fields.materials.length === 0)) {
+  if (!fields.name && !fields.description) {
     return result;
   }
 
@@ -108,26 +100,18 @@ export async function translateProductFields(
 Input details:
 ${fields.name ? `- NAME: "${fields.name}"` : ''}
 ${fields.description ? `- DESCRIPTION: "${fields.description}"` : ''}
-${fields.category ? `- CATEGORY: "${fields.category}"` : ''}
-${fields.colors && fields.colors.length > 0 ? `- COLORS: ${JSON.stringify(fields.colors)}` : ''}
-${fields.materials && fields.materials.length > 0 ? `- MATERIALS: ${JSON.stringify(fields.materials)}` : ''}
 
 【CRITICAL RULES】
 1. Translate accurately and professionally.
 2. Maintain brand names and terminology if applicable.
-3. Keep the same array indexes and sizes for COLORS and MATERIALS.
-4. Output raw JSON object without markdown formatting.
+3. Output raw JSON object without markdown formatting.
 
 Your response MUST match this exact JSON schema:
 {
   "name_en": "translated english name",
   "name_ms": "translated malay name",
   "description_en": "translated english description",
-  "description_ms": "translated malay description",
-  "colors_en": ["color1_en", "color2_en", ...],
-  "colors_ms": ["color1_malay", "color2_malay", ...],
-  "materials_en": ["material1_en", "material2_en", ...],
-  "materials_ms": ["material1_malay", "material2_malay", ...]
+  "description_ms": "translated malay description"
 }`;
 
   const isProxy = !apiKey;
@@ -151,26 +135,18 @@ Your response MUST match this exact JSON schema:
     const parsed = extractJsonObject(content);
 
     if (parsed) {
-      result.name_en = parsed.name_en || '';
-      result.name_ms = parsed.name_ms || '';
-      result.description_en = parsed.description_en || '';
-      result.description_ms = parsed.description_ms || '';
-      if (Array.isArray(parsed.colors_en)) result.colors_en = parsed.colors_en;
-      if (Array.isArray(parsed.colors_ms)) result.colors_ms = parsed.colors_ms;
-      if (Array.isArray(parsed.materials_en)) result.materials_en = parsed.materials_en;
-      if (Array.isArray(parsed.materials_ms)) result.materials_ms = parsed.materials_ms;
+        result.name_en = parsed.name_en || '';
+        result.name_ms = parsed.name_ms || '';
+        result.description_en = parsed.description_en || '';
+        result.description_ms = parsed.description_ms || '';
+      }
+    } catch (err) {
+      console.error('[translateProductFields] Non-fatal translation error, using fallbacks:', err);
+      result.name_en = fields.name || '';
+      result.name_ms = fields.name || '';
+      result.description_en = fields.description || '';
+      result.description_ms = fields.description || '';
     }
-  } catch (err) {
-    console.error('[translateProductFields] Non-fatal translation error, using fallbacks:', err);
-    result.name_en = fields.name || '';
-    result.name_ms = fields.name || '';
-    result.description_en = fields.description || '';
-    result.description_ms = fields.description || '';
-    result.colors_en = fields.colors || [];
-    result.colors_ms = fields.colors || [];
-    result.materials_en = fields.materials || [];
-    result.materials_ms = fields.materials || [];
-  }
 
   return result;
 }
