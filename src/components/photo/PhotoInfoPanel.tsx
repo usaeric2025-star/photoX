@@ -3,7 +3,7 @@ import { Photo, ProductGroup } from '@/types/photo';
 import { Category, Tag } from '@/types/photo';
 import { getTranslatedCategoryName } from '@/lib/ui-helpers';
 import { translations } from '@/lib/translations';
-import { useCategories, useTags, useManufacturers } from '@/hooks';
+import { useCategories, useManufacturers } from '@/hooks';
 import { useUIStore } from '@/store/useUIStore';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -76,7 +76,6 @@ export function PhotoInfoPanel({
   }
 
   const { data: fetchedCategories = [] } = useCategories();
-  const { data: fetchedTags = [] } = useTags();
   const { data: fetchedManufacturers = [] } = useManufacturers();
   const update = useUIStore((s) => s.update);
   const isAdmin = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');

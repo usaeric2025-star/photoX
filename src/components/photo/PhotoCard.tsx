@@ -8,7 +8,7 @@ import { photoKeys } from '@/lib/queryKeys';
 import { getTranslatedCategoryName } from '@/lib/ui-helpers';
 import { useSearch, useNavigate } from '@tanstack/react-router';
 
-import { useTranslation, useIsManagement, usePermission, useCategories, useTags } from '@/hooks';
+import { useTranslation, useIsManagement, usePermission, useCategories } from '@/hooks';
 import { PinButton } from './PinButton';
 import { Photo, Category, Tag } from '../../types';
 import { Layers, Heart, Check, EyeOff } from 'lucide-react';
@@ -86,10 +86,8 @@ export const PhotoCard = React.memo(({
   const { lang, uiTranslations: t } = useTranslation();
   
   const { data: fetchedCategories = [] } = useCategories();
-  const { data: fetchedTags = [] } = useTags();
 
   const categories = sharedCategories || fetchedCategories;
-  const tags = sharedTags || fetchedTags;
 
   const categoryId = photo.category_id ? String(photo.category_id) : '';
   
