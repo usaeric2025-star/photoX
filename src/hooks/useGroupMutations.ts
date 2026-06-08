@@ -54,6 +54,27 @@ export const useGroupCoverMutation = createMutationHook({
     if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Set Group Cover');
     return res.data;
   },
+  queryKey: photoKeys.all,
+  optimisticUpdate: (oldData: any, variables: { groupId: string | undefined; photoId: string | null }) => {
+    if (!oldData || !oldData.pages) return oldData;
+    return {
+      ...oldData,
+      pages: oldData.pages.map((page: any) => ({
+        ...page,
+        photos: page.photos?.map((p: any) => {
+          if (p.group_id === variables.groupId) {
+            return { ...p, is_group_cover: p.id === variables.photoId };
+          }
+          return p;
+        }) || page.items?.map((p: any) => {
+          if (p.group_id === variables.groupId) {
+            return { ...p, is_group_cover: p.id === variables.photoId };
+          }
+          return p;
+        }),
+      })),
+    };
+  },
   invalidateKeys: [groupKeys.all, photoKeys.all],
   onSuccessMessage: '封面設置成功',
 });
@@ -65,6 +86,14 @@ export const useGroupPhotosMutation = createMutationHook({
     const res = await groupPhotos(photoIds, targetGroupId);
     if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Group Photos');
     return res.data;
+  },
+  queryKey: photoKeys.all,
+  optimisticUpdate: (oldData: any, variables: { photoIds: string[], targetGroupId?: string }) => {
+    const gid = variables.targetGroupId || 'temp-group-id';
+    return optimistic.infinite.batchUpdate<Photo>()(oldData, {
+      ids: variables.photoIds,
+      updates: { group_id: gid } as any
+    });
   },
   invalidateKeys: [photoKeys.all, groupKeys.all],
   onSuccessMessage: '合組成功',
@@ -78,6 +107,13 @@ export const useRemoveFromGroupMutation = createMutationHook({
     if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Remove From Group');
     return res.data;
   },
+  queryKey: photoKeys.all,
+  optimisticUpdate: (oldData: any, variables: { photoIds: string[]; groupId: string }) => {
+    return optimistic.infinite.batchUpdate<Photo>()(oldData, {
+      ids: variables.photoIds,
+      updates: { group_id: null } as any
+    });
+  },
   invalidateKeys: [photoKeys.all, groupKeys.all],
   onSuccessMessage: '已移出群組',
 });
@@ -89,6 +125,18 @@ export const useUngroupMutation = createMutationHook({
     const res = await ungroupPhotos(groupId);
     if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Ungroup Photos');
     return res.data;
+  },
+  queryKey: photoKeys.all,
+  optimisticUpdate: (oldData: any, groupId: string) => {
+    if (!oldData || !oldData.pages) return oldData;
+    return {
+      ...oldData,
+      pages: oldData.pages.map((page: any) => ({
+        ...page,
+        photos: page.photos?.map((p: any) => p.group_id === groupId ? { ...p, group_id: null, is_group_cover: false } : p)
+             || page.items?.map((p: any) => p.group_id === groupId ? { ...p, group_id: null, is_group_cover: false } : p),
+      })),
+    };
   },
   invalidateKeys: [photoKeys.all, groupKeys.all],
   onSuccessMessage: '群組已解散',
