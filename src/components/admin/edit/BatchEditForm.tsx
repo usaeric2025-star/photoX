@@ -1,7 +1,8 @@
 import React from "react";
 import { EyeOff, Eye, RefreshCcw } from "lucide-react";
-import { ProductFormData, Photo } from "@/types";
+import { ProductFormData, Photo, Tag } from "@/types";
 import { PhotoTagSelector } from "./PhotoTagSelector";
+import { getTagIds, getTagsFromIds } from "@/services/photo/utils";
 import {
   FormSectionHeader,
   CategoryGrid,
@@ -168,8 +169,11 @@ export function BatchEditForm({
       <section className="space-y-4">
         <PhotoTagSelector
           tags={tags}
-          selectedTagIds={safeArray<string>(formState.tag_ids)}
-          onChange={(newIds) => handleUpdateForm({ tag_ids: newIds })}
+          selectedTagIds={getTagIds(formState.tags)}
+          onChange={(newIds) => {
+            const newTags = getTagsFromIds(newIds, tags);
+            handleUpdateForm({ tags: newTags });
+          }}
           addTag={addTag}
           updateTag={updateTag}
           deleteTag={deleteTag}

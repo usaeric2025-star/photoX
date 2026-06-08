@@ -169,7 +169,7 @@ export const loadAllPhotosFromCloud = async (
       try {
         const { data: coverData, error: coverError } = await supabase
           .from(DB_CONFIG.TABLE_NAME)
-          .select('*')
+          .select(PHOTO_LIST_FIELDS)
           .in('group_id', missingGroupCovers)
           .eq('is_group_cover', true);
 
@@ -191,7 +191,7 @@ export const loadPhotosByGroupId = async (groupId: string, isAdminMode: boolean 
 
   let query = supabase
       .from(DB_CONFIG.TABLE_NAME)
-      .select('*')
+      .select(PHOTO_LIST_FIELDS)
       .eq('group_id', groupId);
 
   if (!isAdminMode) {
@@ -228,7 +228,7 @@ export const loadPhotosByGroupIdPaginated = async (
 
     let query = supabase
       .from(DB_CONFIG.TABLE_NAME)
-      .select('*')
+      .select(PHOTO_LIST_FIELDS)
       .eq('group_id', groupId);
 
     if (!isAdminMode) {
@@ -356,6 +356,20 @@ export const getLocalPhotoCount = async (): Promise<AppResult<number>> => {
     const photos = await syncCache.getPhotos();
     return Array.isArray(photos) ? photos.length : 0;
   }, 'getLocalPhotoCount');
+};
+
+export const loadPhotosByIds = async (ids: string[]): Promise<AppResult<Photo[]>> => {
+  return withErrorHandling(async () => {
+    if (!ids || ids.length === 0) return [];
+
+    const { data, error } = await supabase
+      .from(DB_CONFIG.TABLE_NAME)
+      .select(PHOTO_LIST_FIELDS)
+      .in('id', ids);
+
+    if (error) throw error;
+    return (data || []).map(item => mapSupabasePhoto(item));
+  }, 'loadPhotosByIds');
 };
 
 export const getPhotosWithoutThumbHash = async (): Promise<AppResult<{ id: string }[]>> => {

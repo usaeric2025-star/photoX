@@ -138,11 +138,8 @@ export const PhotoLightboxPage = () => {
           }
           
           let displayTagNames: string[] = [];
-          if (Array.isArray(currentPhoto.tag_ids)) {
-            displayTagNames = currentPhoto.tag_ids.map(id => {
-              const t = tags.find(tag => String(tag.id) === String(id));
-              return t ? t.name : '';
-            }).filter(Boolean);
+          if (Array.isArray(currentPhoto.tags)) {
+            displayTagNames = currentPhoto.tags.map(tag => tag.name).filter(Boolean);
           }
 
           return (

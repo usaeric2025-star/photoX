@@ -164,9 +164,9 @@ export function filterPhotos(
       if (hasBasicMatch) return true;
 
       // Tags match (including aliases)
-      const pTagIds = Array.isArray(p.tag_ids) ? p.tag_ids : [];
-      const hasTagMatch = pTagIds.some(tid => {
-        const terms = tagMap.get(String(tid));
+      const pTags = Array.isArray(p.tags) ? p.tags : [];
+      const hasTagMatch = pTags.some(t => {
+        const terms = tagMap.get(String(t.id));
         return terms && terms.some(term => term.includes(q));
       });
       if (hasTagMatch) return true;
@@ -200,14 +200,14 @@ export function filterPhotos(
 
       // 3.3 Tag Match
       if (filterTagIds.length > 0) {
-        const pTagIds = Array.isArray(p.tag_ids) ? p.tag_ids.map(String) : (typeof p.tag_ids === 'string' ? [String(p.tag_ids)] : []);
+        const pTags = Array.isArray(p.tags) ? p.tags : [];
         const matchesAllTagsSelected = filterTagIds.every(tid => {
           const strTid = String(tid);
-          if (pTagIds.includes(strTid)) return true;
+          if (pTags.some(t => String(t.id) === strTid)) return true;
           
           const fallbackName = tagFallbackMap.get(tid);
           if (fallbackName) {
-            return pTagIds.some(pt => String(pt).toLowerCase() === fallbackName);
+            return pTags.some(t => String(t.name).toLowerCase() === fallbackName);
           }
           return false;
         });

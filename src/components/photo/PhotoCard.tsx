@@ -59,6 +59,7 @@ export const PhotoCard = React.memo(({
   photoTags: propPhotoTags,
   showGroupsCollapsed = true,
   hasSearchQuery = false,
+  showCoverBadge,
   ...props
 }: PhotoCardProps) => {
   const isSelected = useUIStore((s) => s.selectedIds.includes(photo.id));
@@ -91,14 +92,10 @@ export const PhotoCard = React.memo(({
                  
   const photoTags = React.useMemo(() => {
     if (propPhotoTags) return propPhotoTags;
-    const tagIdsList = Array.isArray(photo.tag_ids) ? photo.tag_ids : [];                
-    return tagIdsList                
-      .map(id => {
-        const t = tags.find(t => String(t.id) === String(id));
-        return t ? getSafeText(t.name, lang) : '';
-      })                
+    return (photo.tags || [])                
+      .map(t => getSafeText(t.name, lang))                
       .filter(Boolean);                
-  }, [propPhotoTags, photo.tag_ids, tags, lang]);
+  }, [propPhotoTags, photo.tags, lang]);
 
   const displayName = React.useMemo(() => 
     getPhotoDisplayName(photo, categories, lang, t),
@@ -201,7 +198,7 @@ export const PhotoCard = React.memo(({
         "md:hover:shadow-xl md:hover:scale-[1.01] active:scale-[0.98]",
         "data-[selected=true]:ring-4 data-[selected=true]:ring-blue-500 data-[selected=true]:scale-[0.96] data-[selected=true]:z-10 data-[selected=true]:shadow-lg",
         is_hidden && "ring-2 ring-slate-400 shadow-slate-300/50 shadow-sm grayscale-[0.3]",
-        isCover && props.showCoverBadge && "ring-2 ring-amber-400 shadow-amber-100/50 shadow-sm",
+        isCover && showCoverBadge && "ring-2 ring-amber-400 shadow-amber-100/50 shadow-sm",
         className
       )}
       {...props}
@@ -248,7 +245,7 @@ export const PhotoCard = React.memo(({
         photo={photo} 
         isPinned={!!photo.is_pinned} 
         hideGroupBadge={hideGroupBadge || !showGroupsCollapsed} 
-        showCoverBadge={props.showCoverBadge}
+        showCoverBadge={showCoverBadge}
       />
 
       {isManagement && can('photo:toggle-pinned') && (

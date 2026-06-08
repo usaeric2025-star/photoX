@@ -1,4 +1,6 @@
 import { supabase } from '../../lib/supabase';
+import { Tag } from '../../types';
+import { safeArray } from '../../lib/utils';
 
 const NEVER_ALLOWED = ['isAnalyzing', 'exif_data', 'is_hidden', 'tempId', 'isSelected', 'isDragging', 'rawResponse'];
 
@@ -39,3 +41,9 @@ export const getDatabaseUUID = async (): Promise<string> => {
   if (!error && data) return data;
   return crypto.randomUUID(); 
 };
+
+// Tag management utils to unify conversion
+export const getTagIds = (tags: Tag[] | undefined) => safeArray<Tag>(tags).map(t => String(t.id));
+
+export const getTagsFromIds = (ids: string[], allAvailableTags: Tag[]) => 
+  ids.map(id => allAvailableTags.find(t => String(t.id) === id)).filter(Boolean) as Tag[];

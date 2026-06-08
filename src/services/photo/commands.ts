@@ -66,14 +66,20 @@ export async function updatePhoto(id: string, updates: Partial<Photo>): Promise<
       }
     }
 
+    const dbUpdates = mapToDb(updates);
+
     // 4. Update Database via admin backend route
     const response = await api.admin.photo.update.$post({
-      json: { id, updates: updates as any }
+      json: { id, updates: dbUpdates as any }
     });
     
     const result = await response.json();
     if (!response.ok || !result.success) {
       throw new Error(result.error || 'Update failed');
+    }
+
+    if ('tags' in updates && Array.isArray(updates.tags)) {
+      await syncBatchPhotoTags([id], updates.tags.map(t => String(t.id)));
     }
 
     return success(null);
@@ -119,8 +125,8 @@ export async function batchUpdate(ids: string[], updates: Partial<Photo>): Promi
     const updatedIds = new Set(res.data?.map(d => d.id) || []);
     const failedOnes = ids.filter(id => !updatedIds.has(id)).map(id => ({ id, reason: 'Not found or unchanged' }));
 
-    if ('tag_ids' in updates) {
-      await syncBatchPhotoTags(ids, safeArray<string>(updates.tag_ids));
+    if ('tags' in updates && Array.isArray(updates.tags)) {
+      await syncBatchPhotoTags(ids, updates.tags.map(t => String(t.id)));
     }
 
     return success({

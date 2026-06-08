@@ -3,6 +3,7 @@ import { FormSectionHeader, CategoryGrid, ManufacturerList } from '../FormShared
 import { PhotoTagSelector } from '../edit/PhotoTagSelector';
 import { ProductFormData, Manufacturer, Tag } from '../../../types';
 import { PhotoEditFormReturn } from '@/hooks/photo/usePhotoEdit';
+import { getTagIds, getTagsFromIds } from '../../../services/photo/utils';
 import { safeArray } from '../../../lib/utils';
 import { useCategories, useTags, useManufacturers, useTagCreate, useTagEdit, useTagDelete, useManufacturerCreate, useManufacturerEdit, useManufacturerDelete } from '../../../hooks';
 import { useUIStore } from '../../../store';
@@ -50,8 +51,11 @@ export function OrgTab({ form }: Props) {
       <section className="space-y-2">
            <PhotoTagSelector 
               tags={tags}
-              selectedTagIds={safeArray<string>(formState.tag_ids)}
-              onChange={(newIds) => updateForm({ tag_ids: newIds })}
+              selectedTagIds={getTagIds(formState.tags)}
+              onChange={(newIds) => {
+                const newTags = getTagsFromIds(newIds, tags);
+                updateForm({ tags: newTags });
+              }}
               addTag={async (name) => {
                 const res = await addTagMut(name);
                 return res.id;

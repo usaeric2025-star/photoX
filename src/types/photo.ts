@@ -48,7 +48,7 @@ export interface Photo {
   uri?: string; 
   category_id: string | null; 
   manufacturer_id: string | null;
-  tag_ids: string[]; 
+  tags?: Tag[]; 
   price?: string;
   note?: string;
   sub_category?: string | null;
@@ -68,7 +68,6 @@ export interface Photo {
       member_count: number;
   } | null;
   categoryName: string;
-  tagNames: string[];
   manufacturerName: string;
 }
 
@@ -141,7 +140,7 @@ export interface ProductFormData {
   };
   category_id: string | null;
   manufacturer_id: string | null;
-  tag_ids: string[];
+  tags: Tag[];
   description: {
     zh?: string;
     en?: string;

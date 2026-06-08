@@ -102,12 +102,12 @@ export const useGroupActions = (
     };
 
   const handleToggleTag = (photo: Photo, tagId: string) => {
-      const currentTags = Array.isArray(photo.tag_ids) ? photo.tag_ids : [];
-      const nextTags = currentTags.includes(tagId)
-        ? currentTags.filter((id) => id !== tagId)
-        : [...currentTags, tagId];
+      const currentTags = Array.isArray(photo.tags) ? photo.tags : [];
+      const nextTags = currentTags.some(t => String(t.id) === tagId)
+        ? currentTags.filter((t) => String(t.id) !== tagId)
+        : [...currentTags, { id: tagId, name: '', aliases: [] }];
 
-      persistPhotoChange(photo.id, { tag_ids: nextTags });
+      persistPhotoChange(photo.id, { tags: nextTags });
     };
 
   const handleBatchUpdateDimensions = async (newDims: Dimension[]) => {

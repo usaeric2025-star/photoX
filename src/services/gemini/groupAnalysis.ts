@@ -42,7 +42,8 @@ export async function analyzeGroup(photos: Photo[]): Promise<GroupAnalysisResult
   const photoDetails = photos.map(p => {
     const nameStr = formatField(p.name);
     const descStr = formatField(p.description);
-    return `- 名称: ${nameStr}, 标签: ${p.tagNames?.join(',') || '无'}, 描述: ${descStr || '无'}`;
+    const tagNames = (p.tags || []).map(t => t.name).join(',');
+    return `- 名称: ${nameStr}, 标签: ${tagNames || '无'}, 描述: ${descStr || '无'}`;
   }).join('\n');
   
   const response = await api.ai['analyze-group'].$post({
@@ -60,7 +61,8 @@ export async function analyzeGroup(photos: Photo[]): Promise<GroupAnalysisResult
 export async function analyzeSinglePhoto(photo: Photo): Promise<PhotoAnalysisResult> {
   const nameStr = formatField(photo.name);
   const descStr = formatField(photo.description);
-  const photoDetail = `- 名称: ${nameStr}\n- 现有分类: ${photo.categoryName}\n- 现有标签: ${photo.tagNames?.join(',') || '无'}\n- 描述: ${descStr || '无'}`;
+  const tagNames = (photo.tags || []).map(t => t.name).join(',');
+  const photoDetail = `- 名称: ${nameStr}\n- 现有分类: ${photo.categoryName}\n- 现有标签: ${tagNames || '无'}\n- 描述: ${descStr || '无'}`;
   
   const response = await api.ai['analyze-photo-v2'].$post({
     json: { photoDetail }

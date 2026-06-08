@@ -209,10 +209,17 @@ ai.post("/analyze-base64", async (c) => {
 ai.post("/translate", async (c) => {
     try {
       const { customModel, promptText } = await c.req.json();
-      const apiKey = serverEnv.GEMINI_API_KEY;
+      const supabase = await getSupabaseAdmin();
+      const { data: openrouterSecret } = await supabase.from('secrets').select('value').eq('key', 'openrouter').maybeSingle();
+      let apiKey = '';
+      if (openrouterSecret?.value) {
+        apiKey = decrypt(openrouterSecret.value);
+      } else {
+        apiKey = serverEnv.GEMINI_API_KEY || '';
+      }
       if (!apiKey) return c.json({ error: "Server API key not configured" }, 500);
 
-      let modelName = customModel || await getModel(await getSupabaseAdmin());
+      let modelName = customModel || await getModel(supabase);
 
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",

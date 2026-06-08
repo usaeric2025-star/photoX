@@ -285,7 +285,7 @@ export function useAIBatchAnalysis() {
                 if (Array.isArray(result.tag_ids)) {
                   const resolvedTagIds = resolveTagIds(result.tag_ids, dbTags);
                   if (resolvedTagIds.length > 0) {
-                    updates.tag_ids = resolvedTagIds.slice(0, 5);
+                    updates.tags = resolvedTagIds.slice(0, 5).map(id => ({ id }));
                   } else {
                     console.warn(`Could not resolve tag UUIDs for inputs:`, result.tag_ids);
                   }
@@ -336,47 +336,17 @@ export function useAIBatchAnalysis() {
            try {
               updateProgress(75, '正在总结合组...');
               const { analyzeGroup } = await import('@/services/gemini/groupAnalysis');
+              const { loadPhotosByIds } = await import('@/services/photo/read');
               
-              const { data: photos, error: fetchError } = await supabase
-                .from('furniture_items')
-                .select('id, name, description, photo_tags(tag_id)')
-                .in('id', targetPhotos.map(p => p.id));
-              
-              if (fetchError) {
-                console.error('Failed to fetch photos for group analysis:', fetchError);
-                throw new Error('获取产品用于合组分析时失败 / Failed to fetch photos for group analysis: ' + fetchError.message);
+              const res = await loadPhotosByIds(targetPhotos.map(p => p.id));
+              if (!res.ok) {
+                console.error('Failed to fetch photos for group analysis:', res.message);
+                throw new Error('获取产品用于合组分析时失败 / Failed to fetch photos for group analysis: ' + res.message);
               }
 
+              const photos = res.data;
               if (photos) {
-                // Collect all tag ids from the joined array
-                const tagIdSet = new Set<string>();
-                photos.forEach((p: any) => {
-                   if (Array.isArray(p.photo_tags)) {
-                      p.photo_tags.forEach((pt: any) => {
-                         if (pt && pt.tag_id) tagIdSet.add(String(pt.tag_id));
-                      });
-                   }
-                });
-                const allTagIds = Array.from(tagIdSet);
-                let tagsData: any[] | null = null;
-                if (allTagIds.length > 0) {
-                  const res = await supabase.from('tags').select('id, name').in('id', allTagIds);
-                  tagsData = res.data;
-                }
-                const tagMap = new Map((tagsData || []).map(t => [String(t.id), t.name]));
-                const photosWithTags = photos.map((p: any) => {
-                  const mappedTags: string[] = [];
-                  if (Array.isArray(p.photo_tags)) {
-                     p.photo_tags.forEach((pt: any) => {
-                        const name = tagMap.get(String(pt.tag_id));
-                        if (name) mappedTags.push(name);
-                     });
-                  }
-                  return {
-                    ...p,
-                    tagNames: mappedTags
-                  };
-                });
+                const photosWithTags = photos;
 
                 const analysis = await withTimeout(analyzeGroup(photosWithTags), 120000); // 120s timeout
                 const { name, description, colors, materials } = analysis;

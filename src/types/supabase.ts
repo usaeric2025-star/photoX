@@ -33,7 +33,7 @@ export interface SupabasePhotoRaw {
   categories?: { name: string } | null;
   photo_tags?: Array<{ 
     tag_id?: string | number;
-    tags?: { name: string } 
+    tags?: { id?: string | number; name: any } | Array<{ id?: string | number; name: any }> | null;
   }> | null;
   group?: {
     id: string;

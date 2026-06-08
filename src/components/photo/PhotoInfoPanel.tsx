@@ -126,10 +126,8 @@ export function PhotoInfoPanel({
     if (photo.category_id) {
        displayCategoryName = getTranslatedCategoryName(photo.category_id, fetchedCategories, appLang, translations[appLang]);
     }
-    if (Array.isArray(photo.tag_ids) && photo.tag_ids.length > 0) {
-       displayTags = photo.tag_ids.map(id => {
-         return fetchedTags.find(tag => String(tag.id) === String(id));
-       }).filter(Boolean) as Tag[];
+    if (Array.isArray(photo.tags) && photo.tags.length > 0) {
+        displayTags = photo.tags;
     }
     if (photo.manufacturer_id) {
        const m = fetchedManufacturers.find(mfr => String(mfr.id) === String(photo.manufacturer_id));

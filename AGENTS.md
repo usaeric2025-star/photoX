@@ -814,3 +814,26 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 - ✅ 前端 logErrorToSupabase() 内部封装此 API 调用
 - ❌ 禁止在任何前端代码中直接 supabase.from('system_logs').insert()
 - ❌ 禁止日志写入依赖用户认证状态
+
+## Supabase 关联查询规范（锁定）
+
+- ✅ photo_tags 与 tags 的 JOIN 必须显式指定外键：
+  `tags!photo_tags_tag_id_fkey(id, name)`
+- ❌ 禁止使用模糊关联 `photo_tags(tags(...))`
+
+## 照片映射规范（锁定）
+
+- ✅ 所有照片查询必须通过 `mapSupabasePhoto` 转换，严格使用 `photo.tags` 获取标签数据。
+- ❌ 禁止在组件或 Hook 中手写 `photo_tags` JOIN 查询或进行标签数据的二次加工（如 `map(t => t.name)`）。
+
+## 战略预留点规范（锁定）
+
+- mutationFactory → 生命週期鉤子（樂觀更新/分析/任務聯動）
+- AppResult → Service 層統一返回類型
+- Zustand Slice → Store 模組化拆分
+
+### 预留点纪律
+- ✅ 仅定义接口/类型/空模板，不实作业务逻辑
+- ✅ 由明确触发条件驱动启用，不使用率或日曆驅动
+- ❌ 禁止在无触发条件时提前消费预留点
+- ❌ 禁止因「预留了就用一下」的心态引入过度工程

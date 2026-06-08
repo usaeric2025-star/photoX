@@ -82,7 +82,7 @@ export const uploadSinglePhoto = async (
     if (!saveResult.ok) throw new Error(saveResult.message);
     
     // Tag Sync
-    const tagSync = await syncPhotoTagsInDB(photo.id, photo.tag_ids || []);
+    const tagSync = await syncPhotoTagsInDB(photo.id, (photo.tags || []).map(t => String(t.id)));
     if (!tagSync.ok) console.warn("Failed to sync photo tags:", tagSync.message);
 
     return { id: photo.id, is_duplicate };

@@ -32,7 +32,7 @@ export function usePhotoEdit(initialPhoto: Photo | null): PhotoEditFormReturn {
     description: { zh: '', en: '', ms: '' },
     category_id: null,
     manufacturer_id: null,
-    tag_ids: [],
+    tags: [],
     item_code: '',
     manual_code: '',
     model_number: '',

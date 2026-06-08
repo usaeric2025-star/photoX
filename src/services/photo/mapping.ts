@@ -1,6 +1,6 @@
 import { getPathFromUrl } from '@/lib/utils';
 import { SupabasePhotoRaw } from '@/types/supabase';
-import { Photo } from '@/types';
+import { Photo, Tag } from '@/types';
 
 export const getThumbnailUrl = (imageUrl: string, width: number = 400, height: number = 400, imageHash?: string) => {
   const workerUrl = import.meta.env.VITE_THUMBNAIL_WORKER_URL;
@@ -66,28 +66,30 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw): Photo {
       }
     }
 
-    let tag_ids: string[] = [];
+    const tags: Tag[] = [];
     if (Array.isArray(item.photo_tags)) {
-      tag_ids = item.photo_tags
-        .map((pt) => {
-          if (pt == null) return null;
-          if (typeof pt === 'object') {
-            const typedPt = pt as any;
-            if (typedPt.tag_id != null) return String(typedPt.tag_id);
-            if (typedPt.tags && typedPt.tags.id != null) return String(typedPt.tags.id);
-            if (typedPt.id != null) return String(typedPt.id);
-          }
-          return String(pt);
-        })
-        .filter((id: string | null) => id != null && id !== 'undefined' && id !== 'null' && id !== '') as string[];
+      item.photo_tags.forEach((pt: any) => {
+        if (pt && pt.tags) {
+            const rawTag = Array.isArray(pt.tags) ? pt.tags[0] : pt.tags;
+            if (rawTag) {
+                tags.push({
+                    id: String(rawTag.id ?? pt.tag_id ?? ''),
+                    name: parseTranslation(rawTag.name).zh,
+                    aliases: [],
+                });
+            }
+        }
+      });
     } else if (Array.isArray(item.tags)) {
-      tag_ids = (item.tags as { id: string | number }[])
-        .map((t) => {
-          if (t == null) return null;
-          if (typeof t === 'object' && t.id != null) return String(t.id);
-          return String(t);
-        })
-        .filter((id: string | null) => id != null && id !== 'undefined' && id !== 'null' && id !== '') as string[];
+      item.tags.forEach((t: any) => {
+        if (t) {
+            tags.push({
+                id: String(t.id),
+                name: parseTranslation(t.name).zh,
+                aliases: [],
+            });
+        }
+      });
     }
 
     const group_id_val = item.group_id ? String(item.group_id) : undefined;
@@ -138,11 +140,10 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw): Photo {
       user_id: user_id,
       uri: normalizeStoredUrl(item.image_url || ''),
       price: item.price ? String(item.price) : '',
-      tag_ids: Array.isArray(tag_ids) ? tag_ids : [],
+      tags: tags,
       dimensions: Array.isArray(item.dimensions) ? (item.dimensions as Photo['dimensions']) : [],
       created_at_timestamp: item.created_at_timestamp,
       categoryName: '',
-      tagNames: [],
       manufacturerName: ''
     };
 }

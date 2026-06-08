@@ -18,23 +18,15 @@ export function useAIAutoGrouping() {
     addProcessingIds(photoIds);
     try {
         // 1. 获取照片信息
-        const { data: photos, error } = await supabase
-          .from('furniture_items')
-          .select('id, name, tag_ids')
-          .in('id', photoIds);
+        const { loadPhotosByIds } = await import('@/services/photo/read');
+        const res = await loadPhotosByIds(photoIds);
     
-        if (error) throw ErrorFactory.wrap(error, 'createAIGroup - fetchPhotos');
-        if (!photos || photos.length === 0) throw ErrorFactory.wrap(new Error('未找到所选照片'), 'createAIGroup', photoIds.join(', '));
+        if (!res.ok) throw res as any;
+        const photos = res.data || [];
+        if (photos.length === 0) throw ErrorFactory.wrap(new Error('未找到所选照片'), 'createAIGroup', photoIds.join(', '));
     
-        // 为了让 AI 更好的分析，我们需要获取标签名称。
-        const allTagIds = Array.from(new Set(photos.flatMap(p => p.tag_ids || [])));
-        const { data: tagsData } = await supabase.from('tags').select('id, name').in('id', allTagIds);
-        const tagMap = new Map((tagsData || []).map(t => [String(t.id), t.name]));
-    
-        const photosWithTags = photos.map(p => ({
-          ...p,
-          tagNames: (p.tag_ids || []).map((tid: string) => tagMap.get(String(tid)) || '').filter(Boolean)
-        })) as any;
+        // 为了让 AI 更好的分析，我们直接使用 photos。
+        const photosWithTags = photos;
     
         // 2. AI 分析
         const analysis = await analyzeGroup(photosWithTags);
@@ -88,22 +80,15 @@ export function useAIAutoGrouping() {
     addProcessingIds([photoId]);
     try {
         // 获取照片信息
-        const { data: photo, error } = await supabase
-          .from('furniture_items')
-          .select('*')
-          .eq('id', photoId)
-          .single();
+        const { loadPhotosByIds } = await import('@/services/photo/read');
+        const res = await loadPhotosByIds([photoId]);
     
-        if (error) throw ErrorFactory.wrap(error, 'recognizeSinglePhoto - fetchPhoto');
+        if (!res.ok) throw res as any;
+        const photo = res.data?.[0];
         if (!photo) throw ErrorFactory.wrap(new Error('未找到照片信息'), 'recognizeSinglePhoto', photoId);
     
-        // 同步获取标签名
-        const { data: tagsData } = await supabase.from('tags').select('id, name').in('id', photo.tag_ids || []);
-        const tagMap = new Map((tagsData || []).map(t => [String(t.id), t.name]));
-        const photoWithTags = {
-          ...photo,
-          tagNames: (photo.tag_ids || []).map((tid: any) => tagMap.get(String(tid)) || '').filter(Boolean)
-        } as any;
+        // 映射照片信息
+        const photoWithTags = photo;
     
         // AI 分析
         const result = await analyzeSinglePhoto(photoWithTags);
