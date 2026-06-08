@@ -115,14 +115,50 @@ export function DrawerHeader({
       return;
     }
 
-    await runTask("AI Analyzing", async () => {
+    await runTask(appLang === 'zh' ? "AI 属性智能识别" : "AI Analyzing", async () => {
       const resp = await analyzePhoto(editPhotoId);
       if (resp.ok && resp.data) {
         const result = resp.data;
-        if (!form.values.name?.zh && result.name) {
-           form.setFieldValue('name', typeof result.name === 'object' ? result.name : { zh: result.name, en: '', ms: '' });
+        const updates: any = {};
+        
+        if (result.name) {
+          updates.name = typeof result.name === 'object' ? result.name : { zh: result.name, en: '', ms: '' };
         }
-        toast.success("AI Analysis Completed");
+        if (result.category_id) {
+          updates.category_id = String(result.category_id);
+        }
+        if (Array.isArray(result.tag_ids)) {
+          updates.tag_ids = result.tag_ids.slice(0, 5).map((id: any) => String(id));
+        }
+        if (result.description) {
+          updates.description = typeof result.description === 'object' ? result.description : { zh: result.description, en: '', ms: '' };
+        }
+        if (Array.isArray(result.dimensions)) {
+          updates.dimensions = result.dimensions;
+        }
+        if (result.price) {
+          updates.price = String(result.price);
+        }
+
+        form.setValues(updates);
+
+        try {
+          await updatePhoto({ id: editPhotoId, updates });
+          toast.success(
+            appLang === 'zh' 
+              ? 'AI 识别完成，已自动保存修改！' 
+              : 'AI analysis completed and changes auto-saved!'
+          );
+        } catch (saveError: any) {
+          console.error("Auto-save failed:", saveError);
+          toast.warning(
+            appLang === 'zh' 
+              ? 'AI 识别成功，但自动保存失败（已临时更新至表单）' 
+              : 'AI analysis completed but auto-save failed (form values populated).'
+          );
+        }
+      } else {
+        throw new Error((resp as any).message || 'AI 属性智能识别失败');
       }
     });
   };

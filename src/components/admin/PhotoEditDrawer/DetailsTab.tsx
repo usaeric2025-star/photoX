@@ -4,7 +4,7 @@ import { ProductFormData, Dimension } from '../../../types';
 import { PhotoEditFormReturn } from '@/hooks/photo/usePhotoEdit';
 import { safeArray } from '../../../lib/utils';
 import { useUIStore } from '../../../store';
-import { useTasks, useSettings, useTaskExecutor, usePhotoDetail } from '../../../hooks';
+import { useTasks, useSettings, useTaskExecutor, usePhotoDetail, useAdminActions } from '../../../hooks';
 import { translations } from '../../../lib/translations';
 import { analyzePhoto } from '@/services/ai/commands';
 import { toast } from 'sonner';
@@ -20,6 +20,7 @@ export function DetailsTab({ form }: Props) {
   const { settings } = useSettings();
   const { runTask } = useTaskExecutor();
   const { data: detailPhoto } = usePhotoDetail(editPhotoId || '');
+  const { updatePhoto: { mutateAsync: updatePhoto } } = useAdminActions();
 
   const isAnalyzing = tasks.some(t => t.status === 'running' && t.name === 'AI 属性智能识别');
   const t = translations[appLang as keyof typeof translations] || translations.en;
@@ -32,7 +33,47 @@ export function DetailsTab({ form }: Props) {
     await runTask("AI 属性智能识别", async () => {
       const resp = await analyzePhoto(editPhotoId);
       if (resp.ok && resp.data) {
-        toast.success("AI 识别成功");
+        const result = resp.data;
+        const updates: any = {};
+        
+        if (result.name) {
+          updates.name = typeof result.name === 'object' ? result.name : { zh: result.name, en: '', ms: '' };
+        }
+        if (result.category_id) {
+          updates.category_id = String(result.category_id);
+        }
+        if (Array.isArray(result.tag_ids)) {
+          updates.tag_ids = result.tag_ids.slice(0, 5).map((id: any) => String(id));
+        }
+        if (result.description) {
+          updates.description = typeof result.description === 'object' ? result.description : { zh: result.description, en: '', ms: '' };
+        }
+        if (Array.isArray(result.dimensions)) {
+          updates.dimensions = result.dimensions;
+        }
+        if (result.price) {
+          updates.price = String(result.price);
+        }
+
+        form.setValues(updates);
+
+        try {
+          await updatePhoto({ id: editPhotoId, updates });
+          toast.success(
+            appLang === 'zh' 
+              ? 'AI 识别完成，已自动保存修改！' 
+              : 'AI analysis completed and changes auto-saved!'
+          );
+        } catch (saveError: any) {
+          console.error("Auto-save failed:", saveError);
+          toast.warning(
+            appLang === 'zh' 
+              ? 'AI 识别成功，但自动保存失败（已临时更新至表单）' 
+              : 'AI analysis completed but auto-save failed (form values populated).'
+          );
+        }
+      } else {
+        throw new Error((resp as any).message || 'AI 属性智能识别失败');
       }
     });
   };

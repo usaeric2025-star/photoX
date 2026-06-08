@@ -5,10 +5,26 @@ import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { groupKeys } from '@/lib/queryKeys';
 
+function isPlaceholderText(str: string): boolean {
+  if (!str) return true;
+  const s = str.trim().toLowerCase();
+  if (s === '' || s === 'null' || s === 'undefined' || s === '{}' || s === '[object object]' || s === 'n/a' || s === 'na' || s === 'none') {
+    return true;
+  }
+  const placeholders = ['暂无', '置顶', '无', '未命名', '不知名', '说明', '请填写', '描述', '产品描述', '暂无说明', '未命名产品'];
+  if (placeholders.some(p => s.includes(p))) {
+    return true;
+  }
+  return false;
+}
+
 function isPlaceholderName(nameStr: string): boolean {
   if (!nameStr) return true;
   const s = nameStr.trim().toLowerCase();
   if (s === '' || s === 'null' || s === 'undefined' || s === '{}' || s === '[object object]') {
+    return true;
+  }
+  if (isPlaceholderText(s)) {
     return true;
   }
   // 1. Purely numeric name, or 32-character MD5 hash / 36-character UUID
@@ -40,39 +56,36 @@ function isMeaningfulText(text: any): boolean {
     const en = String(text.en || '').trim();
     const ms = String(text.ms || '').trim();
     const checkStr = (str: string) => {
-      const lower = str.toLowerCase();
-      return str !== '' && lower !== '[object object]' && lower !== '[对象 对象]' && lower !== '对象 对象' && str !== '{}' && str !== 'null' && str !== 'undefined';
+      if (isPlaceholderText(str)) return false;
+      return str.length > 5;
     };
     return checkStr(zh) || checkStr(en) || checkStr(ms);
   }
   if (typeof text === 'string') {
-    const s = text.trim();
-    const lower = s.toLowerCase();
-    return s !== '' && lower !== '[object object]' && lower !== '[对象 对象]' && lower !== '对象 对象' && s !== '{}' && s !== 'null' && s !== 'undefined';
+    return !isPlaceholderText(text) && text.trim().length > 5;
   }
   return false;
 }
 
 function hasExistingInfo(p: Photo): boolean {
-  // Only skip analyzing the photo if it has BOTH a meaningful name and a meaningful description already.
-  // If either is empty or a placeholder, we should let the AI analyze it to supplement the missing details!
   let hasRealName = false;
-  const nameVal = p.name;
+  const nameVal = p.name as any;
   if (nameVal) {
     if (typeof nameVal === 'object') {
       const zhName = String(nameVal.zh || '').trim();
       const enName = String(nameVal.en || '').trim();
       const msName = String(nameVal.ms || '').trim();
       
-      const hasRealZh = zhName !== '' && !isPlaceholderName(zhName);
-      const hasRealEn = enName !== '' && !isPlaceholderName(enName);
-      const hasRealMs = msName !== '' && !isPlaceholderName(msName);
+      const hasRealZh = zhName !== '' && !isPlaceholderName(zhName) && !isPlaceholderText(zhName) && zhName.length > 2;
+      const hasRealEn = enName !== '' && !isPlaceholderName(enName) && !isPlaceholderText(enName) && enName.length > 2;
+      const hasRealMs = msName !== '' && !isPlaceholderName(msName) && !isPlaceholderText(msName) && msName.length > 2;
       
       if (hasRealZh || hasRealEn || hasRealMs) {
         hasRealName = true;
       }
-    } else if (typeof nameVal === 'string') {
-      if (!isPlaceholderName(nameVal)) {
+    } else {
+      const nameStr = String(nameVal).trim();
+      if (!isPlaceholderName(nameStr) && !isPlaceholderText(nameStr) && nameStr.length > 2) {
         hasRealName = true;
       }
     }
@@ -143,6 +156,7 @@ export function useAIBatchAnalysis() {
               const updateResult = await directUpdatePhoto(p.id, updates);
               if (updateResult && 'ok' in updateResult && updateResult.ok) {
                 successCount++;
+                await invalidatePhotos();
               }
             }
           } catch (err: any) {
