@@ -12,8 +12,7 @@ import {
   AlertDialogHeader, 
   AlertDialogTitle 
 } from "@/components/ui/alert-dialog";
-import { ISSUE_ACTIONS } from "@/lib/maintenance";
-import { PreviewResult } from "@/lib/maintenance/maintenanceTypes";
+import { ISSUE_ACTIONS, PreviewResult } from "@/lib/maintenance";
 import { toast } from "sonner";
 import { Loader2, ShieldAlert } from "lucide-react";
 import { useDisclosure } from '@mantine/hooks';
