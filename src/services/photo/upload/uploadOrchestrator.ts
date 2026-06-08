@@ -35,11 +35,12 @@ export const uploadSinglePhoto = async (
             photo.id
         );
         if (dbCheck.isDuplicate) {
-             throw new DuplicatePhotoError();
+             console.log(`[Upload] Skipping duplicate photo: ${photo.id || (photo as any)._fileName}. Existing ID: ${dbCheck.existingId}`);
+             return dbCheck.existingId || photo.id || 'duplicate';
         }
         
         if (dbCheck.orphanId) {
-            photo.id = dbCheck.orphanId;
+             photo.id = dbCheck.orphanId;
         }
 
         const safetyPayload = mapToDb({
@@ -56,7 +57,7 @@ export const uploadSinglePhoto = async (
         const filename = photo.storage_id || photo.id;
         const { imageUrl, isDuplicate } = await uploadToR2(userId, filename, photo.uri, photo.image_hash, onStatus);
         if (isDuplicate) {
-            throw new DuplicatePhotoError();
+            console.log(`[Upload] R2 confirmed duplicate file for ${photo.id}. Reusing URL: ${imageUrl}`);
         }
         photo.image_url = imageUrl;
     }

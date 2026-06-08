@@ -75,7 +75,8 @@ export function usePhotoUpload() {
           successCount++;
         } catch (err: any) {
           console.error(`[Upload] Failed for ${file.name}:`, err);
-          ErrorFactory.handle(err, `照片上传失败: ${file.name}`);
+          // 在批量任务中保持静默，由任务中心最后统一呈现状态
+          ErrorFactory.handle(err, `照片上传失败: ${file.name}`, true);
           failureCount++;
           // We don't stop the whole batch for one failure
         }
@@ -83,13 +84,13 @@ export function usePhotoUpload() {
 
       if (successCount > 0) {
         hapticFeedback.success();
-        toast.success(`成功上传 ${successCount} 张照片`);
+        // 移除冗余的 toast.success，任务中心会显示结果
         invalidatePhotos();
       }
 
       if (failureCount > 0) {
         hapticFeedback.error();
-        toast.error(`${failureCount} 张照片上传失败，请查看日志`);
+        // 移除冗余的 toast.error，任务中心会显示结果
       }
 
       updateTask(taskId, { 

@@ -54,18 +54,14 @@ export function AdminPageContent() {
   // Sync URL to store 
   useEffect(() => {
     const path = location.pathname;
-    if (path === '/admin/error-logs') store.update({ activeScreen: 'error-logs' });
-    else if (path === '/admin/tasks') store.update({ activeScreen: 'tasks' });
-    else if (path === '/admin/history/maintenance') store.update({ activeScreen: 'history_maintenance' });
-    else if (path === '/admin' && (['error-logs', 'tasks', 'history_maintenance'].includes(store.activeScreen))) {
+    if (['/admin/error-logs', '/admin/tasks', '/admin/history/maintenance'].includes(path)) {
+      store.update({ activeScreen: 'settings' });
+    } else if (path === '/admin' && (['error-logs', 'tasks', 'history_maintenance'].includes(store.activeScreen))) {
       store.update({ activeScreen: 'gallery' });
     }
   }, [location.pathname, store.update]);
 
-  const currentScreen = location.pathname === '/admin/error-logs' ? 'error-logs' :
-                        location.pathname === '/admin/tasks' ? 'tasks' :
-                        location.pathname === '/admin/history/maintenance' ? 'history_maintenance' :
-                        store.activeScreen;
+  const currentScreen = store.activeScreen;
 
   const { data: categories = [] } = useCategories();
   const currentCategoryName = urlFilters.categoryId 
@@ -105,7 +101,7 @@ export function AdminPageContent() {
           </div>
 
           <AnimatePresence>
-            {['manage', 'settings', 'structure', 'logs'].includes(currentScreen) && (
+            {['manage', 'settings', 'structure', 'logs', 'tasks', 'history_maintenance', 'error-logs'].includes(currentScreen) && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-20 bg-slate-50">
                 <SettingsScreen onClose={() => store.update({ activeScreen: 'gallery' })} />
               </motion.div>
@@ -113,18 +109,6 @@ export function AdminPageContent() {
 
             {currentScreen === 'dashboard' && (
               <ScreenWrapper onClose={() => store.update({ activeScreen: 'gallery' })}><StatisticsScreen /></ScreenWrapper>
-            )}
-
-            {currentScreen === 'tasks' && (
-              <ScreenWrapper onClose={() => store.update({ activeScreen: 'gallery' })}><TasksPage /></ScreenWrapper>
-            )}
-
-            {currentScreen === 'history_maintenance' && (
-              <ScreenWrapper onClose={() => store.update({ activeScreen: 'gallery' })}><MaintenanceHistoryPage /></ScreenWrapper>
-            )}
-
-            {currentScreen === 'error-logs' && (
-              <ScreenWrapper onClose={() => store.update({ activeScreen: 'gallery' })}><ErrorLogViewer /></ScreenWrapper>
             )}
           </AnimatePresence>
 

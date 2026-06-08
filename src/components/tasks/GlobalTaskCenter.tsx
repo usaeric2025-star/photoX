@@ -4,16 +4,17 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Loader2, X, CheckCircle2, AlertCircle, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { translations } from '@/lib/translations';
+import { useLocation } from '@tanstack/react-router';
 
 export function GlobalTaskCenter() {
+  const location = useLocation();
+  const isAdminPage = location.pathname.startsWith('/admin');
   const { tasks, removeTask, clearCompleted } = useTasks();
   const appLang = useUIStore(s => s.appLang);
   const t = translations[appLang as keyof typeof translations] || translations.en;
-  
-  const activeTasks = tasks.filter((task: any) => task.status === 'running');
   const finishedTasks = tasks.filter((task: any) => task.status !== 'running');
   
-  if (tasks.length === 0) return null;
+  if (tasks.length === 0 || isAdminPage) return null;
 
   return (
     <div className="fixed bottom-6 left-6 z-[60] flex flex-col gap-3 pointer-events-none w-80">

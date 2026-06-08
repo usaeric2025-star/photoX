@@ -6,12 +6,13 @@ import { ErrorSeverity } from './ErrorFactory';
 export const withSupabase = async <T>(
   query: PromiseLike<{ data: T | null; error: PostgrestError | null }>,
   context: string,
-  severity: ErrorSeverity = 'high'
+  severity: ErrorSeverity = 'high',
+  options?: { allowNull?: boolean }
 ): Promise<AppResult<T>> => {
   return withErrorHandling(async () => {
     const { data, error } = await query;
     if (error) throw error;
-    if (data === null) {
+    if (data === null && !options?.allowNull) {
       throw new Error(`${context}: record not found`);
     }
     return data as T;

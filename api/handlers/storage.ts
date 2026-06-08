@@ -12,12 +12,16 @@ export const storage = new Hono();
 storage.post("/log-error", async (c) => {
     try {
         const body = await c.req.json();
+        const metadata = body.metadata || {};
         const payload = {
-            error_message: String(body.error_message || 'Unknown error').substring(0, 5000),
-            stack_trace: body.stack_trace || null,
+            error_message: String(body.error_message || body.message || 'Unknown error').substring(0, 5000),
+            stack_trace: body.stack_trace || body.stack || null,
             component_stack: body.component_stack || null,
             url: body.url || '',
-            metadata: body.metadata || {}
+            context: metadata.context || body.context || 'global',
+            level: metadata.level || body.level || 'error',
+            metadata: metadata,
+            created_at: new Date().toISOString()
         };
         const supabase = await getSupabaseAdmin();
         const { error } = await supabase

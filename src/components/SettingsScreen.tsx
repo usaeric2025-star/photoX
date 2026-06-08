@@ -140,6 +140,7 @@ export function SettingsScreen({ onClose }: SettingsScreenProps) {
     if (activeScreen === 'manage') setActiveTab('sync');
     if (activeScreen === 'structure' || activeScreen === 'tags') setActiveTab('assets');
     if (activeScreen === 'settings') setActiveTab('sync');
+    if (['tasks', 'history_maintenance', 'error-logs', 'logs', 'diagnostics'].includes(activeScreen)) setActiveTab('status');
   }, [activeScreen]);
 
   return (
@@ -212,7 +213,6 @@ export function SettingsScreen({ onClose }: SettingsScreenProps) {
                 cardClass={cardClass}
                 buttonStyles={BUTTON_STYLES}
               />
-              <ErrorLogViewer />
             </>
           )}
 

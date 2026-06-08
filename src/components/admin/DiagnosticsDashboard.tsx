@@ -15,21 +15,29 @@ import { useUIStore } from '@/store/useUIStore';
 import { formatters } from '@/utils/formatters';
 import { toast } from 'sonner';
 
+import { useDisclosure } from '@mantine/hooks';
+import { MaintenanceHistoryPage } from '@/pages/AdminPage/MaintenanceHistoryPage';
+import { ErrorLogViewer } from './ErrorLogViewer';
+import TasksPage from '@/pages/AdminPage/TasksPage';
+import { usePerformanceAudit } from '@/hooks/admin/usePerformanceAudit';
+
 const severityColors = {
   P0: 'bg-red-50 text-red-600 border-red-100',
   P1: 'bg-orange-50 text-orange-600 border-orange-100',
   P2: 'bg-blue-50 text-blue-600 border-blue-100'
 };
 
-/**
- * [REFACTORED] DiagnosticsDashboard
- * Refactored using Atomic Design.
- * Logic extracted to useDiagnostics and useMaintenanceActions hooks.
- * UI components extracted to DiagnosticCard and MaintenanceToolButton.
- */
-import { usePerformanceAudit } from '@/hooks/admin/usePerformanceAudit';
-
 export function DiagnosticsDashboard() {
+  const activeUIScreen = useUIStore(s => s.activeScreen);
+  const [activeTab, setActiveTab] = useState<'diagnosis' | 'tasks' | 'logs' | 'history'>('diagnosis');
+  
+  React.useEffect(() => {
+    if (activeUIScreen === 'tasks') setActiveTab('tasks');
+    if (activeUIScreen === 'error-logs' || activeUIScreen === 'logs') setActiveTab('logs');
+    if (activeUIScreen === 'history_maintenance') setActiveTab('history');
+    if (activeUIScreen === 'diagnostics') setActiveTab('diagnosis');
+  }, [activeUIScreen]);
+
   const [showAdvanced, setShowAdvanced] = useState(false);
   const updateUIStore = useUIStore((s) => s.update);
   const { 
@@ -86,34 +94,35 @@ export function DiagnosticsDashboard() {
           </div>
         </div>
         <div className="flex items-center gap-2.5 flex-wrap">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => {
-              updateUIStore({ activeScreen: 'tasks' });
-            }}
-            className="rounded-xl bg-slate-950 text-white hover:bg-slate-850 border-none transition-all h-9 px-4 text-xs font-medium gap-1.5 shadow-sm"
-          >
-            <Zap size={14} className="text-yellow-400 fill-yellow-400 animate-pulse" />
-            任务指挥部
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => {
-              updateUIStore({ activeScreen: 'history_maintenance' });
-            }}
-            className="rounded-xl bg-white border-slate-250 text-slate-700 hover:text-slate-900 hover:bg-slate-50 transition-all h-9 px-4 text-xs font-medium gap-1.5"
-          >
-            <History size={14} className="text-slate-500" />
-            维护序列历史
-          </Button>
+          <div className="flex bg-slate-100 p-1 rounded-xl gap-1">
+             {[
+               { id: 'diagnosis', label: '诊断 / Diagnosis' },
+               { id: 'tasks', label: '任务 / Tasks' },
+               { id: 'logs', label: '日志 / Logs' },
+               { id: 'history', label: '历史 / History' }
+             ].map(tab => (
+               <button
+                 key={tab.id}
+                 onClick={() => setActiveTab(tab.id as any)}
+                 className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-tight transition-all ${
+                   activeTab === tab.id 
+                    ? 'bg-white text-brand-navy shadow-sm' 
+                    : 'text-slate-400 hover:text-slate-600'
+                 }`}
+               >
+                 {tab.label}
+               </button>
+             ))}
+          </div>
+          
           <Button 
             variant="outline" 
             size="icon"
             onClick={() => {
-              refreshReport();
-              runAudit();
+              if (activeTab === 'diagnosis') {
+                refreshReport();
+                runAudit();
+              }
             }}
             disabled={isLoading}
             className="rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors h-9 w-9 flex items-center justify-center shrink-0"
@@ -123,7 +132,9 @@ export function DiagnosticsDashboard() {
         </div>
       </div>
 
-      {/* 核心指标统计 */}
+      {activeTab === 'diagnosis' && (
+        <div className="space-y-8 animate-in fade-in duration-500">
+          {/* 核心指标统计 */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: '异常记录 (P0)', value: report?.totalIssues || 0, color: 'text-red-600' },
@@ -435,6 +446,26 @@ export function DiagnosticsDashboard() {
           </AnimatePresence>
         </div>
       </div>
+    </div>
+  )}
+
+      {activeTab === 'tasks' && (
+        <div className="animate-in fade-in slide-in-from-bottom-2">
+           <TasksPage />
+        </div>
+      )}
+
+      {activeTab === 'logs' && (
+        <div className="animate-in fade-in slide-in-from-bottom-2">
+           <ErrorLogViewer />
+        </div>
+      )}
+
+      {activeTab === 'history' && (
+        <div className="animate-in fade-in slide-in-from-bottom-2">
+           <MaintenanceHistoryPage />
+        </div>
+      )}
     </div>
   );
 }

@@ -109,7 +109,7 @@ export function useAIBatchAnalysis() {
 
     const taskTitle = groupId ? `智能合组分析 (${targetPhotos.length}张)` : `批量 AI 分析 (${targetPhotos.length}张)`;
 
-    await runTask(taskTitle, async ({ updateProgress }) => {
+    await runTask(taskTitle, async ({ updateProgress, taskId }) => {
         let successCount: number = 0;
         const totalPhotosToProcess = targetPhotos.length;
         let progress = 0;
@@ -323,18 +323,22 @@ export function useAIBatchAnalysis() {
         }
         
         await invalidatePhotos();
+        
+        let finalMessage = "分析完成 (无更新)";
         if (groupId && groupSuccess) {
           await queryClient.invalidateQueries({ queryKey: groupKeys.all });
-          if (successCount > 0) {
-            toast.success(`成功分析并更新合组信息，且更新了 ${successCount} 张照片`);
-          } else {
-            toast.success('成功分析并更新合组信息');
-          }
+          finalMessage = successCount > 0 
+            ? `成功分析并更新合组信息，且更新了 ${successCount} 张照片`
+            : "成功分析并更新合组信息";
         } else if (successCount > 0) {
-          toast.success(`成功分析 ${successCount} 张照片`);
-        } else {
-          toast.success('分析完成 (无更新)');
+          finalMessage = `成功分析 ${successCount} 张照片`;
         }
+
+        // 更新任务中心消息，代替额外的 Toast
+        if (taskId) {
+           updateProgress(100, finalMessage);
+        }
+
         return successCount;
     }, { showProgress: true, showSuccessToast: false });
   }, [runTask, invalidatePhotos, queryClient]);

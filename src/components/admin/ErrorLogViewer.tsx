@@ -11,10 +11,13 @@ type ErrorLevel = 'critical' | 'error' | 'warn' | 'medium' | 'low' | 'info';
 interface LogEntry {
   id: string;
   level: ErrorLevel;
-  message: string;
+  message?: string;
+  error_message?: string;
   context?: string;
   created_at: string;
   stack?: string;
+  stack_trace?: string;
+  metadata?: any;
 }
 const LevelIcon = ({ level }: { level: ErrorLevel }) => {
   switch (level) {
@@ -42,11 +45,11 @@ const LogItem = ({ log }: { log: LogEntry }) => {
           <div className="flex items-center gap-2 mb-0.5">
             <span className="text-[10px] font-bold text-slate-400 tabular-nums">{dateTimeStr}</span>
             <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-100 font-black text-slate-500 uppercase tracking-tighter">
-              {log.context || 'global'}
+              {log.context || (log as any).metadata?.context || 'global'}
             </span>
           </div>
           <p className="text-[12px] font-medium text-slate-700 leading-snug line-clamp-2 group-hover:line-clamp-none transition-all">
-            {log.message}
+            {log.message || log.error_message}
           </p>
         </div>
         <div className="text-slate-300">
@@ -54,10 +57,10 @@ const LogItem = ({ log }: { log: LogEntry }) => {
         </div>
       </div>
       
-      {expanded && log.stack && (
+      {expanded && (log.stack || log.stack_trace) && (
         <div className="mt-3 p-3 bg-slate-50 rounded-xl overflow-x-auto">
           <pre className="text-[9px] font-mono text-slate-500 whitespace-pre leading-relaxed">
-            {log.stack}
+            {log.stack || log.stack_trace}
           </pre>
         </div>
       )}
@@ -87,6 +90,10 @@ export const ErrorLogViewer = () => {
       onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ['error_logs'] });
           toast.success('日志已清除');
+      },
+      onError: (err: any) => {
+          console.error('[ErrorLogViewer] Clear failed:', err);
+          toast.error(`清除失败: ${err.message}`);
       }
   });
 

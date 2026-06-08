@@ -22,7 +22,7 @@ export const checkDuplicate = async (
   fileName?: string,
   lastModified?: number,
   photoId?: string
-): Promise<{ isDuplicate: boolean, orphanId?: string }> => {
+): Promise<{ isDuplicate: boolean, orphanId?: string, existingId?: string }> => {
   if (!imageHash) return { isDuplicate: false };
 
   // 1. Check Memory Cache
@@ -30,13 +30,13 @@ export const checkDuplicate = async (
     const pseudoHash = `${fileName}_${fileSize}_${lastModified}`;
     const mappedId = memoryPseudoHashes.get(pseudoHash);
     if (mappedId && mappedId !== photoId) {
-      return { isDuplicate: true };
+      return { isDuplicate: true, existingId: mappedId };
     }
   }
 
   const mappedId = memoryImageHashes.get(imageHash);
   if (mappedId && mappedId !== photoId) {
-    return { isDuplicate: true };
+    return { isDuplicate: true, existingId: mappedId };
   }
 
   // 2. Check Database for MD5 (strongest guarantee)
@@ -66,7 +66,7 @@ export const checkDuplicate = async (
         memoryPseudoHashes.set(`${fileName}_${fileSize}_${lastModified}`, data.id);
       }
       memoryImageHashes.set(imageHash, data.id);
-      return { isDuplicate: true };
+      return { isDuplicate: true, existingId: data.id };
     }
   } catch (error) {
     console.warn('DB check timeout or error, proceeding with caution', error);

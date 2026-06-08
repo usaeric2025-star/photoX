@@ -9,7 +9,8 @@ adminErrorEvents.get("/error-events", async (c) => {
         const { data, error } = await supabase
             .from('system_logs')
             .select('*')
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false })
+            .limit(300);
         if (error) throw error;
         return c.json({ success: true, data });
     } catch (e: any) {
@@ -20,13 +21,15 @@ adminErrorEvents.get("/error-events", async (c) => {
 adminErrorEvents.post("/error-events-clear", async (c) => {
     try {
         const supabase = await getSupabaseAdmin();
+        // Use a filter that matches all rows regardless of ID type
         const { error } = await supabase
             .from('system_logs')
             .delete()
-            .neq('id', '00000000-0000-0000-0000-000000000000');
+            .not('id', 'is', null);
         if (error) throw error;
         return c.json({ success: true });
     } catch (e: any) {
+        console.error('[Admin] Clear logs failed:', e);
         return c.json({ success: false, error: e.message }, 500);
     }
 });

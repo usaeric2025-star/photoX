@@ -184,7 +184,7 @@ export const groupPhotos = async (
     };
 
     const checkQuery = supabase.from('groups').select('id').eq('id', targetGroupId).maybeSingle();
-    const checkRes = await withSupabase(checkQuery, 'groupPhotos/check');
+    const checkRes = await withSupabase(checkQuery, 'groupPhotos/check', 'high', { allowNull: true });
     if (!checkRes.ok) return checkRes;
 
     if (!checkRes.data) {

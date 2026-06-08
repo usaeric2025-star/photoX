@@ -50,7 +50,12 @@ export function useTaskExecutor() {
         updateTask(taskId, { status: 'completed', progress: 100, message: `${name} 完成` });
       }
       hapticFeedback.success();
-      if (!isSilent && options?.showSuccessToast !== false) {
+      
+      // 遵循 AGENTS.md 规范：若已在任务中心显示进度，则不显示重复 Toast
+      // 除非显式配置 showSuccessToast: true
+      const shouldShowSuccess = options?.showSuccessToast ?? (taskId ? false : !isSilent);
+      
+      if (shouldShowSuccess) {
         toast.success(`${name} 完成`);
       }
       options?.onSuccess?.(result);
