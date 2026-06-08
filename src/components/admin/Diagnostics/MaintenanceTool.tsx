@@ -52,8 +52,8 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
   const handlePreview = async () => {
     setIsPreviewing(true);
     try {
-      const result = await action.preview();
-      setPreview(result);
+      const result = await action.preview?.();
+      setPreview(result || null);
     } catch (e: any) {
       showError(`预检失败: ${e.message}`, e.stack);
     } finally {
@@ -75,7 +75,7 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
           updateTask(taskId, { jobId, issueId });
         }
         
-        if (jobId === 'sync' || jobId === 'cleanup') {
+        if (!jobId || jobId === 'sync' || jobId === 'cleanup') {
           updateProgress(100, message || "已完成");
           setProgress(100);
           return true;
@@ -86,16 +86,18 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
           // Even though we're polling here, we store metadata so if we reload, JobResumer can take over
           const interval = setInterval(async () => {
             try {
-              const status = await action.getStatus!(jobId);
-              setProgress(status.progress);
-              updateProgress(status.progress, status.message);
+              const status: any = await action.getStatus?.(jobId);
+              if (!status) return;
+
+              setProgress(status.progress || 0);
+              updateProgress(status.progress || 0, status.message);
               
               if (status.status === 'completed') {
                 clearInterval(interval);
                 resolve(true);
               } else if (status.status === 'failed') {
                 clearInterval(interval);
-                reject(new Error(status.error || "执行失败"));
+                reject(new Error(status.error || status.message || "执行失败"));
               }
             } catch (e) {
               clearInterval(interval);

@@ -108,7 +108,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
                   className="fixed inset-0 z-[var(--z-index-max)] bg-slate-50 flex flex-col pt-safe pb-safe shadow-2xl focus:outline-none"
                 >
                   <DrawerHeader
-                    form={form as UseFormReturnType<ProductFormData>}
+                    form={form}
                     onSave={handleSave}
                     onClose={() => {
                       resetAddState();
@@ -167,19 +167,19 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
                       <div className="flex-1 overflow-y-auto no-scrollbar pt-2 container mx-auto max-w-4xl px-4 pb-12">
                         <TabsContent value="basic">
                           <BasicInfoTab
-                            form={form as UseFormReturnType<ProductFormData>}
+                            form={form}
                           />
                         </TabsContent>
 
                         <TabsContent value="org">
                           <OrgTab
-                            form={form as UseFormReturnType<ProductFormData>}
+                            form={form}
                           />
                         </TabsContent>
 
                         <TabsContent value="details">
                           <DetailsTab
-                            form={form as UseFormReturnType<ProductFormData>}
+                            form={form}
                           />
                         </TabsContent>
                       </div>

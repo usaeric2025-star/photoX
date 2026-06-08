@@ -50,7 +50,7 @@ export function JobResumer() {
             pollingJobs.current.delete(id);
           } else if (status.status === 'failed') {
             clearInterval(interval);
-            updateTask(id, { status: 'error', message: status.error || '任务执行失败' });
+            updateTask(id, { status: 'error', message: (status as any).error || status.message || '任务执行失败' });
             pollingJobs.current.delete(id);
           }
         } catch (e: any) {

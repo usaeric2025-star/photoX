@@ -1,14 +1,14 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { Lock, Loader2, Maximize2, X } from 'lucide-react';
-import { UseFormReturnType } from '@mantine/form';
 import { ProductFormData } from '../../../types';
 import { useDisclosure } from '@mantine/hooks';
 import { useUIStore } from '../../../store';
 import { usePhotoDetail, useTaskExecutor, useTasks } from '../../../hooks';
+import { PhotoEditFormReturn } from '@/hooks/photo/usePhotoEdit';
 
 interface Props {
-  form: UseFormReturnType<ProductFormData>;
+  form: PhotoEditFormReturn;
 }
 
 export function BasicInfoTab({ form }: Props) {

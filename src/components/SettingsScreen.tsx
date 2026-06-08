@@ -251,11 +251,11 @@ export function SettingsScreen({ onClose }: SettingsScreenProps) {
               <CategoriesManager 
                 categories={categories}
                 deleteCategory={deleteCategory}
-                updateCategory={async (id, data) => { const r = await updateCategory(id, data); return !!r; }}
+                updateCategory={async (id, data) => { const r = await updateCategory({ id, updates: data }); return !!r; }}
                 addCategory={async (name: string) => { const r = await addCategory(name); if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addCategory', name); return r; }}
                 manufacturers={manufacturers}
                 addManufacturer={async (name) => { const r = await addManufacturer(name); if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addManufacturer', name); return r; }}
-                updateManufacturer={async (id, data) => { const r = await updateManufacturer(id, data); return !!r; }}
+                updateManufacturer={async (id, data) => { const r = await updateManufacturer({ id, updates: data }); return !!r; }}
                 deleteManufacturer={deleteManufacturer}
                 cardClass={cardClass}
                 buttonStyles={BUTTON_STYLES}
@@ -264,7 +264,7 @@ export function SettingsScreen({ onClose }: SettingsScreenProps) {
                 tags={tags}
                 settings={settings}
                 addTag={async (name) => { const r = await addTag(name); if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addTag', name); return r; }}
-                updateTag={async (id, data) => { const r = await updateTag(id, data); return !!r; }}
+                updateTag={async (id, data) => { const r = await updateTag({ id, updates: data }); return !!r; }}
                 activeTagMenuId={activeTagMenuId}
                 setActiveTagMenuId={setActiveTagMenuId}
                 deleteTag={deleteTag}

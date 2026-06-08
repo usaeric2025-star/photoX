@@ -7,12 +7,22 @@ import { toast } from 'sonner';
 import { useErrorHandler, useInvalidatePhotos } from '@/hooks';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
+export interface PhotoEditFormReturn {
+  values: ProductFormData;
+  isPending: boolean;
+  isDirty: boolean;
+  setValues: (updates: Partial<ProductFormData>) => void;
+  setFieldValue: (field: keyof ProductFormData, value: any) => void;
+  reset: () => void;
+  save: () => Promise<any>;
+}
+
 /**
  * usePhotoEdit
  * 合併了表單編輯邏輯與提交邏輯。
  * 替換了原有的 usePhotoEditForm 與 usePhotoAction。
  */
-export function usePhotoEdit(initialPhoto: Photo | null) {
+export function usePhotoEdit(initialPhoto: Photo | null): PhotoEditFormReturn {
   const { handleError } = useErrorHandler();
   const invalidatePhotos = useInvalidatePhotos();
   

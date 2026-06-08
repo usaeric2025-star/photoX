@@ -11,6 +11,7 @@ import { PinButton } from './PinButton';
 import { Photo, Category, Tag } from '../../types';
 import { Layers, Heart, Check, EyeOff } from 'lucide-react';
 import { getCacheBustedImageUrl, getPhotoDisplayName } from '../../lib/ui-helpers';
+import { getSafeText } from '@/lib/ai/safeText';
 import { ResponsivePhoto } from '../shared/ResponsivePhoto';
 import { usePermission, useCategories, useTags, useErrorHandler } from '../../hooks';
 import { useAdminActions } from '@/hooks/admin/useAdminActions';
@@ -89,9 +90,12 @@ export const PhotoCard = React.memo(({
     if (propPhotoTags) return propPhotoTags;
     const tagIdsList = Array.isArray(photo.tag_ids) ? photo.tag_ids : [];                
     return tagIdsList                
-      .map(id => tags.find(t => String(t.id) === String(id))?.name ?? '')                
+      .map(id => {
+        const t = tags.find(t => String(t.id) === String(id));
+        return t ? getSafeText(t.name, lang) : '';
+      })                
       .filter(Boolean);                
-  }, [propPhotoTags, photo.tag_ids, tags]);
+  }, [propPhotoTags, photo.tag_ids, tags, lang]);
 
   const displayName = React.useMemo(() => 
     getPhotoDisplayName(photo, categories, lang, t),

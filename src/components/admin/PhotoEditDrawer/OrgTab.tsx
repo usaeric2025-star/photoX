@@ -1,8 +1,8 @@
 import React from 'react';
 import { FormSectionHeader, CategoryGrid, ManufacturerList } from '../FormShared';
 import { PhotoTagSelector } from '../edit/PhotoTagSelector';
-import { UseFormReturnType } from '@mantine/form';
 import { ProductFormData, Manufacturer, Tag } from '../../../types';
+import { PhotoEditFormReturn } from '@/hooks/photo/usePhotoEdit';
 import { safeArray } from '../../../lib/utils';
 import { useCategories, useTags, useManufacturers, useTagCreate, useTagEdit, useTagDelete, useManufacturerCreate, useManufacturerEdit, useManufacturerDelete } from '../../../hooks';
 import { useUIStore } from '../../../store';
@@ -11,7 +11,7 @@ import { PromptDialog } from '../../ui/PromptDialog';
 import { translations } from '../../../lib/translations';
 
 interface Props {
-  form: UseFormReturnType<ProductFormData>;
+  form: PhotoEditFormReturn;
 }
 
 export function OrgTab({ form }: Props) {

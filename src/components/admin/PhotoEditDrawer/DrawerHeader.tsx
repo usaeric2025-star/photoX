@@ -22,17 +22,18 @@ import {
   usePhotoDetail,
   useTasks,
   useRemoveFromGroupMutation,
-  usePhotoEdit,
+  useAdminActions,
   usePhotoDelete,
   useTaskExecutor,
   useErrorHandler,
   useSettings,
+  PhotoEditFormReturn,
 } from "../../../hooks";
 import { analyzePhoto } from "@/services/ai/commands";
 
 interface HeaderProps {
   editPhotoId: string | null;
-  form: UseFormReturnType<ProductFormData>;
+  form: PhotoEditFormReturn;
   isAnalyzing: boolean;
   aiDebugInfo: any;
   isPartOfGroup: boolean;
@@ -55,7 +56,7 @@ export function DrawerHeader({
   onClose,
   previewSrc,
 }: {
-  form: UseFormReturnType<ProductFormData>;
+  form: PhotoEditFormReturn;
   onSave: () => void;
   onClose: () => void;
   previewSrc?: string;
@@ -72,7 +73,7 @@ export function DrawerHeader({
   const isRunning = React.useMemo(() => tasks.some((t: any) => t.status === 'running'), [tasks]);
 
   const { mutateAsync: removeFromGroup } = useRemoveFromGroupMutation();
-  const { mutateAsync: updatePhoto } = usePhotoEdit();
+  const { updatePhoto: { mutateAsync: updatePhoto } } = useAdminActions();
   const { mutateAsync: deletePhoto } = usePhotoDelete();
   const { runTask } = useTaskExecutor();
   const { settings } = useSettings();

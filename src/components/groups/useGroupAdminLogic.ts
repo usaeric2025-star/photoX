@@ -34,7 +34,7 @@ export const useGroupAdminLogic = () => {
 
   const adminActions = useAdminActions();
   const onUpdatePhoto = async (id: string, data: any) =>
-    adminActions.updatePhoto(id, data);
+    adminActions.updatePhoto.mutateAsync({ id, updates: data });
   const onUpdatePhotosBulk = async (ids: string[], data: any) =>
     adminActions.batchUpdate.mutateAsync({ ids, updates: data });
   const onBatchAiAnalyze = (photos: Photo[]) => {};

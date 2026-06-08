@@ -1,7 +1,7 @@
 import React from 'react';
 import { DimensionEditor } from '../edit/DimensionEditor';
-import { UseFormReturnType } from '@mantine/form';
 import { ProductFormData, Dimension } from '../../../types';
+import { PhotoEditFormReturn } from '@/hooks/photo/usePhotoEdit';
 import { safeArray } from '../../../lib/utils';
 import { useUIStore } from '../../../store';
 import { useTasks, useSettings, useTaskExecutor, usePhotoDetail } from '../../../hooks';
@@ -10,7 +10,7 @@ import { analyzePhoto } from '@/services/ai/commands';
 import { toast } from 'sonner';
 
 interface Props {
-  form: UseFormReturnType<ProductFormData>;
+  form: PhotoEditFormReturn;
 }
 
 export function DetailsTab({ form }: Props) {

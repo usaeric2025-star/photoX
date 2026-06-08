@@ -74,7 +74,6 @@ export const BatchEditScreen = () => {
     handleSave,
     handleDelete,
     handleClose,
-    isLocalSaving,
     isSyncing,
     batchIsHiddenApplied,
     setBatchIsHiddenApplied,
@@ -97,12 +96,12 @@ export const BatchEditScreen = () => {
           )}
 
           <button onClick={handleSave}
-            disabled={isLocalSaving || isSyncing}
+            disabled={isSyncing}
             className={`px-3 h-10 bg-blue-600 text-white 
             rounded-xl flex items-center justify-center gap-1.5
-            shadow-md text-sm font-bold transition-all ${(isLocalSaving || isSyncing) ? 'opacity-50 pointer-events-none' : 'active:bg-blue-700'}`}>
-            {(isLocalSaving || isSyncing) ? <RefreshCcw size={16} className="animate-spin" /> : <Save size={16} />}
-            {(isLocalSaving || isSyncing) ? '保存中...' : '保存'}
+            shadow-md text-sm font-bold transition-all ${isSyncing ? 'opacity-50 pointer-events-none' : 'active:bg-blue-700'}`}>
+            {isSyncing ? <RefreshCcw size={16} className="animate-spin" /> : <Save size={16} />}
+            {isSyncing ? '保存中...' : '保存'}
           </button>
           
           <button onClick={handleClose}

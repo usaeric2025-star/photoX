@@ -33,14 +33,12 @@ export function useGlobalTasks() {
 
       unified.push({
         id: lt.id,
-        source: 'ai', // Mostly AI in useTaskExecutor currently
-        type: lt.name,
+        source: 'session', 
         title: lt.name,
         status,
-        progress: lt.progress,
+        progress: lt.progress || 0,
         message: lt.message,
-        createdAt: new Date().toISOString(), // Local tasks don't have start timestamp usually
-        updatedAt: new Date().toISOString()
+        createdAt: Date.now(),
       });
     });
 
@@ -51,27 +49,29 @@ export function useGlobalTasks() {
         if (rj.status === 'completed') status = 'completed';
         if (rj.status === 'failed') status = 'failed';
 
+        // Fix parse int for Date.now 
+        const timestampPart = rj.id.split('_').pop();
+        const parsedTime = parseInt(timestampPart || Date.now().toString());
+
         unified.push({
           id: rj.id,
           source: 'maintenance',
-          type: rj.id.split('_')[0], // Extract prefix
           title: rj.id.startsWith('sync') ? '计数值同步' :
                  rj.id.startsWith('backfill') ? '哈希补全' :
                  rj.id.startsWith('restore') ? '孤儿照片导出' : '系统维护',
           status,
-          progress: rj.progress,
+          progress: rj.progress || 0,
           processed: rj.processed,
           total: rj.total,
           message: rj.message || rj.error,
-          createdAt: new Date(parseInt(rj.id.split('_').pop() || Date.now().toString())).toISOString(),
-          updatedAt: new Date().toISOString(),
+          createdAt: Number.isNaN(parsedTime) ? Date.now() : parsedTime,
           jobId: rj.id
         });
       });
     }
 
     // Sort by updated time (newest first)
-    return unified.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    return unified.sort((a, b) => b.createdAt - a.createdAt);
   }, [localTasks, remoteJobs]);
 
   return {

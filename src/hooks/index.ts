@@ -31,7 +31,6 @@ export { useManufacturers } from './useManufacturers';
 export { useGroups } from './useGroups';
 export { useGroupDetail } from './useGroupDetail';
 export { useInvalidatePhotos } from './useInvalidatePhotos';
-export { usePhotoAIResult } from './usePhotoAIResult';
 
 // Mutations
 export { usePhotoEditMutation, usePhotoDelete, usePhotoBatchEdit, useTogglePin } from './usePhotoMutations';

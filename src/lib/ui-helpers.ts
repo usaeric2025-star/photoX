@@ -20,7 +20,7 @@ export const getTranslatedCategoryName = (
   
   if (!activeCat) return "";
 
-  const result = getSafeText(activeCat, lang);
+  const result = getSafeText(activeCat.name, lang);
   if (typeof result === 'object') {
     console.error('getTranslatedCategoryName returned an object:', result);
     return JSON.stringify(result);

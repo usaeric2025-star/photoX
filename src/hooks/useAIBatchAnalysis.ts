@@ -2,6 +2,8 @@ import { useCallback } from 'react';
 import type { Photo } from '@/types';
 import { useTaskExecutor, useInvalidatePhotos } from '@/hooks';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
+import { groupKeys } from '@/lib/queryKeys';
 
 function isPlaceholderName(nameStr: string): boolean {
   if (!nameStr) return true;
@@ -52,20 +54,9 @@ function isMeaningfulText(text: any): boolean {
 }
 
 function hasExistingInfo(p: Photo): boolean {
-  // 1. Check description - if there's any user-written description, it wins
-  if (isMeaningfulText(p.description)) {
-    return true;
-  }
-
-  // 2. Check category or custom tags
-  if (p.category_id && p.category_id !== 'uncategorized') {
-    return true;
-  }
-  if (Array.isArray(p.tag_ids) && p.tag_ids.length > 0) {
-    return true;
-  }
-
-  // 3. Check name
+  // Only skip analyzing the photo if it has BOTH a meaningful name and a meaningful description already.
+  // If either is empty or a placeholder, we should let the AI analyze it to supplement the missing details!
+  let hasRealName = false;
   const nameVal = p.name;
   if (nameVal) {
     if (typeof nameVal === 'object') {
@@ -78,21 +69,24 @@ function hasExistingInfo(p: Photo): boolean {
       const hasRealMs = msName !== '' && !isPlaceholderName(msName);
       
       if (hasRealZh || hasRealEn || hasRealMs) {
-        return true;
+        hasRealName = true;
       }
     } else if (typeof nameVal === 'string') {
       if (!isPlaceholderName(nameVal)) {
-        return true;
+        hasRealName = true;
       }
     }
   }
 
-  return false;
+  const hasRealDescription = isMeaningfulText(p.description);
+
+  return hasRealName && hasRealDescription;
 }
 
 export function useAIBatchAnalysis() {
   const { runTask } = useTaskExecutor();
   const invalidatePhotos = useInvalidatePhotos();
+  const queryClient = useQueryClient();
 
   const handleBatchAiAnalyze = useCallback(async (targetPhotos: Photo[], groupId?: string) => {
     if (!targetPhotos || targetPhotos.length === 0) {
@@ -233,6 +227,7 @@ export function useAIBatchAnalysis() {
         
         await invalidatePhotos();
         if (groupId && groupSuccess) {
+          await queryClient.invalidateQueries({ queryKey: groupKeys.all });
           if (successCount > 0) {
             toast.success(`成功分析并更新合组信息，且更新了 ${successCount} 张照片`);
           } else {
@@ -245,7 +240,7 @@ export function useAIBatchAnalysis() {
         }
         return successCount;
     }, { showProgress: true, showSuccessToast: false });
-  }, [runTask, invalidatePhotos]);
+  }, [runTask, invalidatePhotos, queryClient]);
 
   return { handleBatchAiAnalyze };
 }

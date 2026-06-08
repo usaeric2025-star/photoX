@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from '@tanstack/react-router';
 import { useUIStore } from '@/store/useUIStore';
 import { formatters } from '@/utils/formatters';
+import { toast } from 'sonner';
 
 const severityColors = {
   P0: 'bg-red-50 text-red-600 border-red-100',
