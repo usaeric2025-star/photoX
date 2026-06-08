@@ -2,14 +2,15 @@ import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useCallback } from 'react';
 
 import { checkDuplicateBatch } from '@/lib/data/duplicateCheck';
-import { useTasks, useInvalidatePhotos, useAuth } from '@/hooks';
+import { useInvalidatePhotos, useAuth } from '@/hooks';
 import { toast } from 'sonner';
 import { Photo } from '@/types';
 import { hapticFeedback } from '@/lib/ui/haptics';
 import { useUIStore } from '@/store/useUIStore';
+import { useUploadProgress } from './useUploadProgress';
 
 export function usePhotoUpload() {
-  const { addTask, updateTask } = useTasks();
+  const { startUploadBatch, updateUploadProgress, completeUploadBatch, errorUploadBatch } = useUploadProgress();
   
   const invalidatePhotos = useInvalidatePhotos();
   const { user } = useAuth();
@@ -29,10 +30,7 @@ export function usePhotoUpload() {
 
     hapticFeedback.medium();
 
-    const taskId = addTask({ 
-      name: `批量上传 (${uniqueFiles.length}张)`,
-      message: '正在初始化队列...'
-    });
+    const taskId = startUploadBatch(uniqueFiles.length);
 
     try {
       // Lazy load processing and upload services
@@ -45,12 +43,8 @@ export function usePhotoUpload() {
 
       for (let i = 0; i < uniqueFiles.length; i++) {
         const file = uniqueFiles[i];
-        const progress = Math.round((i / uniqueFiles.length) * 100);
         
-        updateTask(taskId, { 
-          progress, 
-          message: `正在处理第 ${i + 1}/${uniqueFiles.length} 张: ${file.name}`
-        });
+        updateUploadProgress(taskId, i, uniqueFiles.length, file.name);
 
         try {
           // 1. Process
@@ -99,27 +93,14 @@ export function usePhotoUpload() {
         // 移除冗余的 toast.error，任务中心会显示结果
       }
 
-      const summaryMsg = [
-        successCount > 0 && `成功 ${successCount}`,
-        skippedCount > 0 && `跳过重復 ${skippedCount}`,
-        failureCount > 0 && `失败 ${failureCount}`
-      ].filter(Boolean).join(', ');
-
-      updateTask(taskId, { 
-        status: failureCount === 0 ? 'completed' : failureCount === (uniqueFiles.length) ? 'error' : 'completed',
-        progress: 100, 
-        message: summaryMsg || '上传完成'
-      });
+      completeUploadBatch(taskId, successCount, skippedCount, failureCount, uniqueFiles.length);
 
     } catch (err: any) {
       hapticFeedback.error();
       ErrorFactory.handle(err, '批量上传异常中止');
-      updateTask(taskId, { 
-        status: 'error', 
-        message: '上传过程中断'
-      });
+      errorUploadBatch(taskId);
     }
-  }, [addTask, updateTask, invalidatePhotos]);
+  }, [startUploadBatch, updateUploadProgress, completeUploadBatch, errorUploadBatch, invalidatePhotos, user?.id]);
 
   return { uploadFiles };
 }

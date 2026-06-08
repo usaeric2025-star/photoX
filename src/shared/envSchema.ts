@@ -61,7 +61,7 @@ export function getClientEnv(): ClientEnv {
     return {} as ClientEnv;
   }
   
-  const rawEnv = { ...import.meta.env };
+  const rawEnv: Record<string, any> = typeof import.meta !== 'undefined' && import.meta.env ? { ...import.meta.env } : {};
   const filteredEnv: Record<string, any> = {};
   const allowedKeys = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY', 'MODE', 'DEV', 'PROD'];
   allowedKeys.forEach(key => {

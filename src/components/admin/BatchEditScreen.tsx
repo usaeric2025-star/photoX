@@ -1,15 +1,10 @@
-import React, { startTransition, useEffect } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import React from 'react';
 import { X as CloseIcon, RefreshCcw, Save, Trash2 } from 'lucide-react';
 import { useDisclosure } from '@mantine/hooks';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { usePhotoSelection } from '@/hooks';
-import { BatchEditForm } from './edit/BatchEditForm';
-import { supabase } from '@/lib/supabase';
-import { reportError } from '@/lib/errorTracker';
-import { photoKeys } from '@/lib/queryKeys';
-
 import { usePhotoDelete } from '@/hooks/usePhotoMutations';
+import { BatchEditForm } from './BatchEditForm';
+import { useBatchEditSelection } from './useBatchEditSelection';
 
 function BatchDeleteButton({ selectedIds, onSuccess }: { selectedIds: string[], onSuccess: () => void }) {
   const [isDeleteOpen, deleteDialog] = useDisclosure(false);
@@ -25,7 +20,7 @@ function BatchDeleteButton({ selectedIds, onSuccess }: { selectedIds: string[], 
       await deleteMutation.mutateAsync(selectedIds);
       onSuccess();
     } catch (err) {
-      // Error handled by mutationFactory or manually if needed for local UI
+      // Error handled by mutationFactory
     }
   };
 
@@ -63,13 +58,12 @@ export const BatchEditScreen = () => {
     formState,
     handleUpdateForm,
     handleSave,
-    handleDelete,
     handleClose,
     isSyncing,
     batchIsHiddenApplied,
     setBatchIsHiddenApplied,
     logic
-  } = usePhotoSelection();
+  } = useBatchEditSelection();
 
   return (
     <div className="fixed inset-0 z-[var(--z-index-max)] bg-slate-50 flex flex-col pt-safe">

@@ -31,3 +31,13 @@ export const queryClient = new QueryClient({
 export const persister = createIDBPersister({
   maxAge: 7 * 24 * 60 * 60 * 1000,
 });
+
+/**
+ * 清除持久化缓存（通常用于登出）
+ */
+export const clearPersistence = async () => {
+  if (persister.removeClient) {
+    await persister.removeClient();
+  }
+  queryClient.clear();
+};

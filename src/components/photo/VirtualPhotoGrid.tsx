@@ -1,12 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import { VirtualGrid, VirtualGridHandle } from '@/components/virtualizer/VirtualGrid';
-import { Photo, TranslationType } from '../../types';
+import { Photo, TranslationType, Category, Tag } from '../../types';
 import { useUIStore, useShallow, UIStoreState } from '@/store/useUIStore';
 import { useUrlFilters } from '@/hooks/useUrlFilters';
 import { translations } from '../../lib/translations';
 import { PhotoGridSkeleton } from './PhotoGridSkeleton';
 import { LoadMoreIndicator } from './LoadMoreIndicator';
-import { useImagePreloader } from '@/hooks';
+import { useImagePreloader, useTranslation } from '@/hooks';
 
 interface VirtualPhotoGridProps {
   photos: Photo[];
@@ -14,10 +14,12 @@ interface VirtualPhotoGridProps {
   isFetchingNextPage?: boolean;
   hasNextPage?: boolean;
   onLoadMore?: () => void;
-  renderCard: (photo: Photo, index: number) => React.ReactNode;
+  renderCard: (photo: Photo, index: number, categories: Category[], tags: Tag[]) => React.ReactNode;
   columns: number;
   ref?: React.Ref<VirtualGridHandle>;
   restoreKey?: string;
+  categories?: Category[];
+  tags?: Tag[];
 }
 
 const multiSelectSelector = (s: UIStoreState) => ({
@@ -33,7 +35,9 @@ export const VirtualPhotoGrid = React.memo(({
   renderCard,
   columns,
   ref,
-  restoreKey
+  restoreKey,
+  categories = [],
+  tags = []
 }: VirtualPhotoGridProps) => {
   const { filters } = useUrlFilters();
   const appLang = useUIStore((s) => s.appLang);
@@ -89,10 +93,10 @@ export const VirtualPhotoGrid = React.memo(({
     if (!photo) return null;
     return (
       <div className="p-1.5 sm:p-2 w-full">
-        {renderCard(photo, index)}
+        {renderCard(photo, index, categories, tags)}
       </div>
     );
-  }, [photos, renderCard]);
+  }, [photos, renderCard, categories, tags]);
 
   if (isLoading) {
     return (

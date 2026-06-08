@@ -1,15 +1,13 @@
 import React from 'react';
-import { FormSectionHeader, CategoryGrid, ManufacturerList } from '../FormShared';
-import { PhotoTagSelector } from '../edit/PhotoTagSelector';
-import { ProductFormData, Manufacturer, Tag } from '../../../types';
+import { FormSectionHeader, ManufacturerList } from '../FormShared';
 import { PhotoEditFormReturn } from '@/hooks/photo/usePhotoEdit';
-import { getTagIds, getTagsFromIds } from '../../../services/photo/utils';
-import { safeArray } from '../../../lib/utils';
-import { useCategories, useTags, useManufacturers, useTagCreate, useTagEdit, useTagDelete, useManufacturerCreate, useManufacturerEdit, useManufacturerDelete } from '../../../hooks';
+import { useManufacturers, useManufacturerCreate, useManufacturerEdit, useManufacturerDelete } from '../../../hooks';
 import { useUIStore } from '../../../store';
 import { useDisclosure } from '@mantine/hooks';
 import { PromptDialog } from '../../ui/PromptDialog';
 import { translations } from '../../../lib/translations';
+import { CategorySelect } from './CategorySelect';
+import { TagEditor } from './TagEditor';
 
 interface Props {
   form: PhotoEditFormReturn;
@@ -17,13 +15,8 @@ interface Props {
 
 export function OrgTab({ form }: Props) {
   const appLang = useUIStore((s) => s.appLang);
-  const { data: categories = [] } = useCategories();
-  const { data: tags = [] } = useTags();
   const { data: manufacturers = [] } = useManufacturers();
   
-  const { mutateAsync: addTagMut } = useTagCreate();
-  const { mutateAsync: updateTagMut } = useTagEdit();
-  const { mutateAsync: deleteTagMut } = useTagDelete();
   const { mutateAsync: addManMut } = useManufacturerCreate();
   const { mutateAsync: updateManMut } = useManufacturerEdit();
   const { mutateAsync: deleteManMut } = useManufacturerDelete();
@@ -35,35 +28,13 @@ export function OrgTab({ form }: Props) {
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
   const formState = form.values;
-  const updateForm = (updates: Partial<ProductFormData>) => form.setValues(updates);
+  const updateForm = (updates: any) => form.setValues(updates);
+
   return (
     <div className="m-0 p-4 space-y-6 animate-in fade-in slide-in-from-right-2 duration-300">
-      <section className="space-y-4">
-          <FormSectionHeader title="产品目录" subtitle="CATEGORY *" />
-          <CategoryGrid 
-            categories={categories}
-            selectedId={formState.category_id}
-            onSelect={(id) => updateForm({ category_id: id })}
-            appLang={appLang}
-          />
-      </section>
-
-      <section className="space-y-2">
-           <PhotoTagSelector 
-              tags={tags}
-              selectedTagIds={getTagIds(formState.tags)}
-              onChange={(newIds) => {
-                const newTags = getTagsFromIds(newIds, tags);
-                updateForm({ tags: newTags });
-              }}
-              addTag={async (name) => {
-                const res = await addTagMut(name);
-                return res.id;
-              }}
-              updateTag={(id, name) => updateTagMut({ id, updates: { name } })}
-              deleteTag={(id) => deleteTagMut(id)}
-           />
-        </section>
+      <CategorySelect form={form} />
+      
+      <TagEditor form={form} />
 
       <section className="space-y-4">
         <FormSectionHeader 

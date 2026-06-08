@@ -3,7 +3,7 @@ import { SupabasePhotoRaw } from '@/types/supabase';
 import { Photo, Tag } from '@/types';
 
 export const getThumbnailUrl = (imageUrl: string, width: number = 400, height: number = 400, imageHash?: string) => {
-  const workerUrl = import.meta.env.VITE_THUMBNAIL_WORKER_URL;
+  const workerUrl = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_THUMBNAIL_WORKER_URL : undefined;
   if (!workerUrl || !imageUrl || !workerUrl.startsWith('http')) return imageUrl;
   
   const path = getPathFromUrl(imageUrl);
@@ -51,7 +51,7 @@ export const parseTranslation = (val: any) => {
     return { zh: String(val) };
 };
 
-export function mapSupabasePhoto(item: SupabasePhotoRaw): Photo {
+export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo {
     if (!item) return {} as Photo;
     
     let storageId = item.id;
@@ -69,15 +69,28 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw): Photo {
     const tags: Tag[] = [];
     if (Array.isArray(item.photo_tags)) {
       item.photo_tags.forEach((pt: any) => {
-        if (pt && pt.tags) {
-            const rawTag = Array.isArray(pt.tags) ? pt.tags[0] : pt.tags;
-            if (rawTag) {
-                tags.push({
-                    id: String(rawTag.id ?? pt.tag_id ?? ''),
-                    name: parseTranslation(rawTag.name).zh,
-                    aliases: [],
-                });
+        if (pt) {
+            let tagId = pt.tag_id;
+            let tagName = '';
+            
+            if (pt.tags) {
+                const rawTag = Array.isArray(pt.tags) ? pt.tags[0] : pt.tags;
+                if (rawTag) {
+                    tagId = rawTag.id ?? tagId;
+                    tagName = parseTranslation(rawTag.name).zh;
+                }
+            } else if (allTags) {
+                const matchedTag = allTags.find(t => String(t.id) === String(pt.tag_id));
+                if (matchedTag) {
+                    tagName = matchedTag.name;
+                }
             }
+            
+            tags.push({
+                id: String(tagId ?? ''),
+                name: tagName,
+                aliases: [],
+            });
         }
       });
     } else if (Array.isArray(item.tags)) {

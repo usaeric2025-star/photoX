@@ -11,6 +11,7 @@ import { mapSupabasePhoto } from './mapping';
 import { hydrateGroupInfo } from './with';
 import { normalizeSearchQuery } from '@/lib/utils';
 import { VISIBILITY_OR_QUERY } from '../../constants/photoConstants';
+import { loadTagsFromCloud } from '../tag/queries';
 
 export const loadAllPhotosFromCloud = async (
     since?: string,
@@ -73,59 +74,10 @@ export const loadAllPhotosFromCloud = async (
 
     const normSearchQuery = normalizeSearchQuery(searchQuery || '');
     if (normSearchQuery) {
-      const q = normSearchQuery.replace(/[\\%_]/g, '\\$&');
-      
-      const [tagsRes, catsRes] = await Promise.all([
-        supabase.from('tags').select('id').ilike('name', `%${q}%`),
-        (async () => {
-          try {
-            const res = await supabase.from('categories').select('id').or(`name.ilike.%${q}%,zh.ilike.%${q}%,en.ilike.%${q}%,ms.ilike.%${q}%`);
-            if (res.error) {
-              const fallback = await supabase.from('categories').select('id').ilike('name', `%${q}%`);
-              if (fallback.error) throw fallback.error;
-              return fallback;
-            }
-            return res;
-          } catch {
-            return await supabase.from('categories').select('id').ilike('name', `%${q}%`);
-          }
-        })()
-      ]);
-
-      if (tagsRes.error) throw tagsRes.error;
-      if (catsRes.error) throw catsRes.error;
-
-      const tagIds = (tagsRes.data || []).map(t => t.id);
-      const catIds = (catsRes.data || []).map(c => c.id);
-
-      let photoIdsFromTags: string[] = [];
-      if (tagIds.length > 0) {
-        const { data: ptData, error: ptError } = await supabase.from('photo_tags').select('photo_id').in('tag_id', tagIds);
-        if (ptError) throw ptError;
-        if (ptData) photoIdsFromTags = ptData.map(pt => pt.photo_id);
-      }
-
-      let orSegments = [
-        `name->>zh.ilike.%${q}%`,
-        `name->>en.ilike.%${q}%`,
-        `name->>ms.ilike.%${q}%`,
-        `manual_code.ilike.%${q}%`,
-        `model_number.ilike.%${q}%`,
-        `description->>zh.ilike.%${q}%`,
-        `description->>en.ilike.%${q}%`,
-        `description->>ms.ilike.%${q}%`,
-        `item_code.ilike.%${q}%`
-      ];
-
-      if (catIds.length > 0) {
-        orSegments.push(`category_id.in.(${catIds.join(',')})`);
-      }
-
-      if (photoIdsFromTags.length > 0) {
-        orSegments.push(`id.in.(${photoIdsFromTags.join(',')})`);
-      }
-
-      query = query.or(orSegments.join(','));
+      const { findPhotoIdsBySearch, buildSearchFilter } = await import('./search');
+      const { catIds, photoIdsFromTags, q } = await findPhotoIdsBySearch(normSearchQuery) as any;
+      const filter = buildSearchFilter(catIds, photoIdsFromTags, q);
+      query = query.or(filter);
     }
 
     const from = page * limit;
@@ -153,7 +105,8 @@ export const loadAllPhotosFromCloud = async (
 
     if (error) throw error;
 
-    const fetched = (data || []).map(item => mapSupabasePhoto(item));
+    const allTags = await loadTagsFromCloud();
+    const fetched = (data || []).map(item => mapSupabasePhoto(item, allTags));
 
     const groupIds = Array.from(new Set(fetched.map(p => p.group_id).filter(Boolean))) as string[];
     const missingGroupCovers: string[] = [];
@@ -174,7 +127,7 @@ export const loadAllPhotosFromCloud = async (
           .eq('is_group_cover', true);
 
         if (!coverError && coverData && coverData.length > 0) {
-          const covers = coverData.map(item => mapSupabasePhoto(item));
+          const covers = coverData.map(item => mapSupabasePhoto(item, allTags));
           fetched.push(...covers);
         }
       } catch (e) {
@@ -203,9 +156,10 @@ export const loadPhotosByGroupId = async (groupId: string, isAdminMode: boolean 
                .order('created_at', { ascending: false })
                .order('id', { ascending: true });
 
-  return withSupabase(query, 'loadPhotosByGroupId').then(res => {
+  return withSupabase(query, 'loadPhotosByGroupId').then(async res => {
     if (!res.ok) return res;
-    return success((res.data || []).map(item => mapSupabasePhoto(item)));
+    const allTags = await loadTagsFromCloud();
+    return success((res.data || []).map(item => mapSupabasePhoto(item, allTags)));
   });
 };
 
@@ -248,8 +202,9 @@ export const loadPhotosByGroupIdPaginated = async (
 
     if (queryRes.error) throw queryRes.error;
 
+    const allTags = await loadTagsFromCloud();
     return { 
-      photos: (queryRes.data || []).map(item => mapSupabasePhoto(item)), 
+      photos: (queryRes.data || []).map(item => mapSupabasePhoto(item, allTags)), 
       total: countRes.count || 0 
     };
   }, 'loadPhotosByGroupIdPaginated');
@@ -288,59 +243,10 @@ export const getPhotoCount = async (
 
     const normSearchQuery = normalizeSearchQuery(searchQuery || '');
     if (normSearchQuery) {
-      const q = normSearchQuery.replace(/[\\%_]/g, '\\$&');
-      
-      const [tagsRes, catsRes] = await Promise.all([
-        supabase.from('tags').select('id').ilike('name', `%${q}%`),
-        (async () => {
-          try {
-            const res = await supabase.from('categories').select('id').or(`name.ilike.%${q}%,zh.ilike.%${q}%,en.ilike.%${q}%,ms.ilike.%${q}%`);
-            if (res.error) {
-              const fallback = await supabase.from('categories').select('id').ilike('name', `%${q}%`);
-              if (fallback.error) throw fallback.error;
-              return fallback;
-            }
-            return res;
-          } catch {
-            return await supabase.from('categories').select('id').ilike('name', `%${q}%`);
-          }
-        })()
-      ]);
-
-      if (tagsRes.error) throw tagsRes.error;
-      if (catsRes.error) throw catsRes.error;
-
-      const tagIds = (tagsRes.data || []).map(t => t.id);
-      const catIds = (catsRes.data || []).map(c => c.id);
-
-      let photoIdsFromTags: string[] = [];
-      if (tagIds.length > 0) {
-        const { data: ptData, error: ptError } = await supabase.from('photo_tags').select('photo_id').in('tag_id', tagIds);
-        if (ptError) throw ptError;
-        if (ptData) photoIdsFromTags = ptData.map(pt => pt.photo_id);
-      }
-
-      let orSegments = [
-        `name->>zh.ilike.%${q}%`,
-        `name->>en.ilike.%${q}%`,
-        `name->>ms.ilike.%${q}%`,
-        `manual_code.ilike.%${q}%`,
-        `model_number.ilike.%${q}%`,
-        `description->>zh.ilike.%${q}%`,
-        `description->>en.ilike.%${q}%`,
-        `description->>ms.ilike.%${q}%`,
-        `item_code.ilike.%${q}%`
-      ];
-
-      if (catIds.length > 0) {
-        orSegments.push(`category_id.in.(${catIds.join(',')})`);
-      }
-
-      if (photoIdsFromTags.length > 0) {
-        orSegments.push(`id.in.(${photoIdsFromTags.join(',')})`);
-      }
-
-      query = query.or(orSegments.join(','));
+      const { findPhotoIdsBySearch, buildSearchFilter } = await import('./search');
+      const { catIds, photoIdsFromTags, q } = await findPhotoIdsBySearch(normSearchQuery) as any;
+      const filter = buildSearchFilter(catIds, photoIdsFromTags, q);
+      query = query.or(filter);
     }
 
     const { count, error } = await query;
@@ -368,7 +274,8 @@ export const loadPhotosByIds = async (ids: string[]): Promise<AppResult<Photo[]>
       .in('id', ids);
 
     if (error) throw error;
-    return (data || []).map(item => mapSupabasePhoto(item));
+    const allTags = await loadTagsFromCloud();
+    return (data || []).map(item => mapSupabasePhoto(item, allTags));
   }, 'loadPhotosByIds');
 };
 

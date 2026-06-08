@@ -26,6 +26,8 @@ import { createPortal } from "react-dom";
 import { toast } from 'sonner';
 import { getSafeText } from '@/lib/ai/safeText';
 
+import { InfoPanelSkeleton } from './InfoPanelSkeleton';
+import { splitProductName } from '@/services/ai/utils';
 import { DimensionsSection } from './info/DimensionsSection';
 import { MetadataSection } from './info/MetadataSection';
 import { CategoryTagsSection } from './info/CategoryTagsSection';
@@ -70,42 +72,7 @@ export function PhotoInfoPanel({
   }, [appLang]);
 
   if (!data) {
-    return (
-      <div className={cn("flex flex-col h-full bg-white/95 backdrop-blur-md border-l border-slate-200 overflow-y-auto no-scrollbar", className)}>
-        {/* Header Skeleton */}
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white/90 z-10">
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-5 bg-slate-100 rounded-md animate-pulse" />
-            <div className="w-16 h-4 bg-slate-100 rounded-md animate-pulse" />
-          </div>
-          <div className="flex gap-1">
-            <div className="w-8 h-8 bg-slate-100 rounded-lg animate-pulse" />
-            <div className="w-8 h-8 bg-slate-100 rounded-lg animate-pulse" />
-          </div>
-        </div>
-        {/* Content Skeleton */}
-        <div className="p-6 flex flex-col gap-8 pb-32">
-          <section className="space-y-3">
-            <div className="h-2 w-20 bg-slate-50 rounded-full animate-pulse" />
-            <div className="h-8 w-full bg-slate-100 rounded-xl animate-pulse" />
-            <div className="flex gap-2">
-              <div className="h-6 w-24 bg-slate-50 rounded-lg animate-pulse" />
-              <div className="h-6 w-16 bg-slate-50 rounded-lg animate-pulse" />
-            </div>
-          </section>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="h-16 bg-slate-50/50 rounded-xl border border-slate-100 animate-pulse" />
-            <div className="h-16 bg-slate-50/50 rounded-xl border border-slate-100 animate-pulse" />
-          </div>
-
-          <div className="space-y-4">
-             <div className="h-2 w-12 bg-slate-50 rounded-full animate-pulse" />
-             <div className="h-24 w-full bg-slate-50/50 rounded-2xl animate-pulse" />
-          </div>
-        </div>
-      </div>
-    );
+    return <InfoPanelSkeleton className={className} />;
   }
 
   const { data: fetchedCategories = [] } = useCategories();
@@ -167,17 +134,9 @@ export function PhotoInfoPanel({
   const rawDisplayName = getSafeText(data.name, appLang);
   const displayNameEn = getSafeText(data.name, 'en');
 
-  // Name splitting logic: + > , > ；
-  // Main name: before delimiter, Others: after
-  const splitNames = (name: string): { main: string, others: string[] } => {
-    // 强制清理可能出现的 [object Object] 脏字符串
-    if (name.includes('[object')) return { main: '未命名', others: [] };
-    const parts = name.split(/[+\,；]+/).map(p => p.trim()).filter(Boolean);
-    if (parts.length <= 1) return { main: name, others: [] };
-    return { main: parts[0], others: parts.slice(1) };
-  };
-  const { main: displayName, others: otherNameItems } = splitNames(rawDisplayName || '');
-  const { main: displayNameMainEn } = splitNames(displayNameEn || '');
+  // Name splitting using service utility
+  const { main: displayName, others: otherNameItems } = splitProductName(rawDisplayName || '');
+  const { main: displayNameMainEn } = splitProductName(displayNameEn || '');
 
   const hasZh = !!(data as Photo).description?.zh;
   const hasEn = !!(data as Photo).description?.en;

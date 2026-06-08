@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Layers, Heart, ShieldAlert, Crown } from 'lucide-react';
 import { Photo } from '@/types';
 import { getDisplayGroupCode } from '@/services/photo/utils';
-import { useUIStore } from '@/store/useUIStore';
+import { useTranslation, useIsManagement } from '@/hooks';
 
 interface PhotoStatusBadgesProps {
   photo: Photo;
@@ -15,14 +15,15 @@ interface PhotoStatusBadgesProps {
  * [ATOMIC-COMPONENT] PhotoStatusBadges
  * Standardized status indicators for photos (Groups, Selection, Admin tags)
  */
-export function PhotoStatusBadges({ 
+export const PhotoStatusBadges = memo(({ 
   photo, 
   isPinned, 
   hideGroupBadge,
   showCoverBadge = false
-}: PhotoStatusBadgesProps) {
-  const isManagement = window.location.pathname.startsWith('/admin');
-  const appLang = useUIStore(s => s.appLang);
+}: PhotoStatusBadgesProps) => {
+  const isManagement = useIsManagement();
+  const { lang, uiTranslations: t } = useTranslation();
+  const appLang = lang;
   
   // Display group info logic
   const shouldShowGroup = !hideGroupBadge && photo.group_id;
@@ -69,4 +70,6 @@ export function PhotoStatusBadges({
       )}
     </div>
   );
-}
+});
+
+PhotoStatusBadges.displayName = 'PhotoStatusBadges';

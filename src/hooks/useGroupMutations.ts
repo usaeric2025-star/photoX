@@ -37,11 +37,9 @@ export const useGroupDelete = createMutationHook({
   action: 'Delete',
   mutationFn: async (id: string) => {
     const res = await deleteGroupFromCloud(id);
-    if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Delete Group', id);
+    if (!res.ok) throw new Error(res.message);
     return res.data;
   },
-  queryKey: groupKeys.all,
-  optimisticUpdate: optimistic.infinite.remove<ProductGroup>(),
   invalidateKeys: [groupKeys.all, photoKeys.all],
   onSuccessMessage: '分組已刪除',
 });

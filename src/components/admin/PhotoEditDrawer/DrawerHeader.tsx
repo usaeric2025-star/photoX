@@ -30,6 +30,7 @@ import {
   PhotoEditFormReturn,
 } from "../../../hooks";
 import { analyzePhoto } from "@/services/ai/commands";
+import { usePhotoEditAI } from "./usePhotoEditAI";
 
 interface HeaderProps {
   editPhotoId: string | null;
@@ -79,6 +80,8 @@ export function DrawerHeader({
   const { settings } = useSettings();
   const [isDeleteOpen, deleteDialog] = useDisclosure(false);
 
+  const { handleAiAnalyze } = usePhotoEditAI(form);
+
   const isPartOfGroup = !!detailPhoto?.group_id;
 
   const onRemoveFromGroup = async () => {
@@ -107,84 +110,7 @@ export function DrawerHeader({
   };
 
   const onAiAnalyze = async () => {
-    const imageUrl = previewSrc || detailPhoto?.image_url;
-    if (!imageUrl || !editPhotoId) return;
-
-    if (!settings?.gemini_api_key) {
-      toast.error("Google Gemini API Key is required.");
-      return;
-    }
-
-    await runTask(appLang === 'zh' ? "AI 属性智能识别" : "AI Analyzing", async () => {
-      const resp = await analyzePhoto(editPhotoId);
-      if (resp.ok && resp.data) {
-        let result = resp.data;
-        if (Array.isArray(result) && result.length > 0) {
-          result = result[0];
-        }
-        
-        if (result && typeof result === 'object') {
-          const updates: any = {};
-          
-          if (result.name) {
-            updates.name = typeof result.name === 'object' ? result.name : { zh: String(result.name), en: '', ms: '' };
-          }
-          if (result.category_id !== undefined && result.category_id !== null) {
-            const cat = result.category_id;
-            if (Array.isArray(cat) && cat.length > 0) {
-              const first = cat[0];
-              updates.category_id = String(first.id ?? first.category_id ?? first);
-            } else if (typeof cat === 'object' && cat !== null) {
-              updates.category_id = String(cat.id ?? cat.category_id ?? '');
-            } else {
-              updates.category_id = String(cat);
-            }
-            if (updates.category_id === 'undefined' || updates.category_id === 'null' || updates.category_id === '[object Object]') {
-              delete updates.category_id;
-            }
-          }
-          if (Array.isArray(result.tag_ids)) {
-            updates.tag_ids = result.tag_ids.slice(0, 5).map((id: any) => {
-              if (id && typeof id === 'object') {
-                return String(id.id ?? id.tag_id ?? id.name ?? '');
-              }
-              return String(id);
-            }).filter((id: string) => id && id !== 'undefined' && id !== 'null' && id !== '[object Object]');
-          }
-          if (result.description) {
-            updates.description = typeof result.description === 'object' ? result.description : { zh: String(result.description), en: '', ms: '' };
-          }
-          if (Array.isArray(result.dimensions)) {
-            updates.dimensions = result.dimensions;
-          }
-          if (result.price !== undefined && result.price !== null) {
-            updates.price = String(result.price);
-          }
-
-          form.setValues({ ...form.values, ...updates });
-
-          try {
-            await updatePhoto({ id: editPhotoId, updates });
-            toast.success(
-              appLang === 'zh' 
-                ? 'AI 识别完成，已自动保存修改！' 
-                : 'AI analysis completed and changes auto-saved!'
-            );
-          } catch (saveError: any) {
-            console.error("Auto-save failed:", saveError);
-            toast.warning(
-              appLang === 'zh' 
-                ? 'AI 识别成功，但自动保存失败（已临时更新至表单）' 
-                : 'AI analysis completed but auto-save failed (form values populated).'
-            );
-          }
-        } else {
-          throw new Error('AI 返回的格式异常');
-        }
-      } else {
-        throw new Error((resp as any).message || 'AI 属性智能识别失败');
-      }
-    });
+    await handleAiAnalyze(previewSrc, detailPhoto?.image_url);
   };
 
   const l = {

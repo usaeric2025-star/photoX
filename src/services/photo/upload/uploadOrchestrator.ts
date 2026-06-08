@@ -25,7 +25,7 @@ export const uploadSinglePhoto = async (
     const actUserId = session?.user?.id || userId || 'staff';
     let is_duplicate = false;
     
-    // Duplicate Check
+    // 1. Duplicate Check
     if (photo.image_hash) {
         const dbCheck = await checkDuplicate(
             actUserId, 
@@ -43,17 +43,9 @@ export const uploadSinglePhoto = async (
         if (dbCheck.orphanId) {
              photo.id = dbCheck.orphanId;
         }
-
-        const safetyPayload = mapToDb({
-            ...photo,
-            user_id: actUserId,
-            image_url: photo.image_url ?? undefined,
-        }, true);
-        
-        await upsertPhotoRecord(safetyPayload);
     }
 
-    // R2 Upload
+    // 2. R2 Upload (MUST HAPPEN BEFORE FINAL DB UPSERT)
     if (!photo.image_url && photo.uri) {
         const filename = photo.storage_id || photo.id;
         const { imageUrl, isDuplicate: r2Duplicate } = await uploadToR2(userId, filename, photo.uri, photo.image_hash, onStatus);
@@ -62,6 +54,10 @@ export const uploadSinglePhoto = async (
             is_duplicate = true;
         }
         photo.image_url = imageUrl;
+    }
+
+    if (!photo.image_url) {
+        throw new Error('Upload failed: No image URL generated');
     }
 
     normalizeDimensionsBeforeSave(photo.dimensions);
@@ -77,11 +73,11 @@ export const uploadSinglePhoto = async (
     
     if (!payload.id) payload.id = photo.id;
 
-    // Final Upsert
+    // 3. Final DB Upsert (ONLY AFTER R2 IS SUCCESSFUL)
     const saveResult = await upsertPhotoRecord(payload);
     if (!saveResult.ok) throw new Error(saveResult.message);
     
-    // Tag Sync
+    // 4. Tag Sync
     const tagSync = await syncPhotoTagsInDB(photo.id, (photo.tags || []).map(t => String(t.id)));
     if (!tagSync.ok) console.warn("Failed to sync photo tags:", tagSync.message);
 

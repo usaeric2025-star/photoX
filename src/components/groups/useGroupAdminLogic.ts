@@ -1,5 +1,5 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Photo } from "../../types";
 import { filterPhotosByMode } from "@/lib/filters/photoVisibility";
 import { useAdminActions } from "@/hooks/admin/useAdminActions";
@@ -56,7 +56,10 @@ export const useGroupAdminLogic = () => {
   const { data: dbGroupPhotosPages, isLoading: isGroupPhotosLoading } =
     useGroupPhotos(activeGroupId, isAdminMode);
   
-  const dbGroupPhotos = (() => dbGroupPhotosPages?.pages.flatMap((p: any) => p.photos) ?? [])();
+  const dbGroupPhotos = useMemo(() => 
+    dbGroupPhotosPages?.pages.flatMap((p: any) => p.photos) ?? [],
+    [dbGroupPhotosPages]
+  );
 
   const {
     groupData,
@@ -66,7 +69,7 @@ export const useGroupAdminLogic = () => {
     removeDraftGroup
   } = useGroupDraft(activeGroupId, dbGroupPhotos, onUpdatePhoto);
 
-  const activeGroupPhotos = (() => {
+  const activeGroupPhotos = useMemo(() => {
     if (!activeGroupId) return [];
     let groupPhotos = dbGroupPhotos;
     
@@ -91,7 +94,7 @@ export const useGroupAdminLogic = () => {
       if (b.group_order !== undefined) return 1;
       return (a.item_code || "").localeCompare(b.item_code || "");
     });
-  })();
+  }, [activeGroupId, dbGroupPhotos, processingIds, isAdminMode, groupData?.cover_photo_id]);
 
   const {
     setCover,

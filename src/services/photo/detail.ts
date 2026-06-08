@@ -6,6 +6,7 @@ import { PHOTO_DETAIL_FIELDS } from '@/constants/photoFields';
 import { withSupabase } from '@/lib/error/supabaseWrapper';
 import { success } from '@/lib/error/ErrorFactory';
 import { AppResult } from '@/types/api';
+import { loadTagsFromCloud } from '../tag/queries';
 
 export const loadPhotoById = async (photoId: string): Promise<AppResult<Photo | null>> => {
     if (!photoId) return success(null);
@@ -16,8 +17,11 @@ export const loadPhotoById = async (photoId: string): Promise<AppResult<Photo | 
         .eq('id', photoId)
         .maybeSingle();
 
-    return withSupabase(query, 'loadPhotoById').then(res => {
-      if (!res.ok) return res;
-      return success(res.data ? mapSupabasePhoto(res.data) : null);
-    });
+    const [res, allTags] = await Promise.all([
+      withSupabase(query, 'loadPhotoById'),
+      loadTagsFromCloud().catch(() => [])
+    ]);
+
+    if (!res.ok) return res;
+    return success(res.data ? mapSupabasePhoto(res.data, allTags) : null);
 };

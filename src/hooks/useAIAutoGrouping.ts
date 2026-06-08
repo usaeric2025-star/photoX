@@ -1,10 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { analyzeGroup, analyzeSinglePhoto } from '@/services/gemini/groupAnalysis';
 import { useUIStore } from '@/store/useUIStore';
 import { photoKeys, groupKeys } from '@/lib/queryKeys';
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { autoGroupPhotos } from '@/services/ai/orchestration';
+import { analyzeSinglePhoto } from '@/services/gemini/groupAnalysis';
+import { useSettings } from './useSettings';
 
 export function useAIAutoGrouping() {
   const queryClient = useQueryClient();
@@ -12,65 +13,15 @@ export function useAIAutoGrouping() {
   const resetUI = useUIStore((s) => s.resetUI);
   const addProcessingIds = useUIStore((s) => s.addProcessingIds);
   const removeProcessingIds = useUIStore((s) => s.removeProcessingIds);
+  const { settings } = useSettings();
 
   const createAIGroup = async (photoIds: string[]) => {
-    // 乐观更新：加入处理中状态
     addProcessingIds(photoIds);
     try {
-        // 1. 获取照片信息
-        const { loadPhotosByIds } = await import('@/services/photo/read');
-        const res = await loadPhotosByIds(photoIds);
-    
-        if (!res.ok) throw res as any;
-        const photos = res.data || [];
-        if (photos.length === 0) throw ErrorFactory.wrap(new Error('未找到所选照片'), 'createAIGroup', photoIds.join(', '));
-    
-        // 为了让 AI 更好的分析，我们直接使用 photos。
-        const photosWithTags = photos;
-    
-        // 2. AI 分析
-        const analysis = await analyzeGroup(photosWithTags);
-        const { name, description, colors, materials } = analysis;
+        const result = await autoGroupPhotos(photoIds, settings);
         
-        let finalName = name; // { zh, en, ms }
-        let finalDescription = {
-          zh: description,
-          en: description,
-          ms: description
-        };
-
-        try {
-          const { data: settingsData } = await supabase.from('settings').select('gemini_api_key, custom_model').single();
-          const { translateProductFields } = await import('@/services/gemini/translationCore');
-          const pTranslations = await translateProductFields({
-            name: name.zh,
-            description,
-            colors,
-            materials
-          }, settingsData?.gemini_api_key || '', settingsData?.custom_model || '');
-
-          finalName.en = pTranslations.name_en || name.en || name.zh;
-          finalName.ms = pTranslations.name_ms || name.ms || name.zh;
-          finalDescription.en = pTranslations.description_en || description;
-          finalDescription.ms = pTranslations.description_ms || description;
-        } catch (e) {
-          console.warn('[createAIGroup] Group translations skipped:', e);
-          // [createAIGroup] debug log removed
-
-        }
-
-        // 3. 执行合组（合并照片、创建组、清理旧组）
-        const searchParams = new URLSearchParams(window.location.search);
-        const isCollapsed = searchParams.get('showGroupsCollapsed') !== 'false';
-        
-        const { groupPhotos } = await import('@/services/group/commands');
-        
-        const result = await groupPhotos(photoIds, undefined, {
-            name: finalName,
-            description: finalDescription
-        });
-    
-        return result;
+        if (!result.success) throw new Error(result.error);
+        return result.data;
     } finally {
         removeProcessingIds(photoIds);
     }
@@ -79,24 +30,16 @@ export function useAIAutoGrouping() {
   const recognizeSinglePhoto = async (photoId: string) => {
     addProcessingIds([photoId]);
     try {
-        // 获取照片信息
         const { loadPhotosByIds } = await import('@/services/photo/read');
         const res = await loadPhotosByIds([photoId]);
-    
-        if (!res.ok) throw res as any;
+        if (!res.ok) throw new Error(res.message);
         const photo = res.data?.[0];
-        if (!photo) throw ErrorFactory.wrap(new Error('未找到照片信息'), 'recognizeSinglePhoto', photoId);
+        if (!photo) throw new Error('未找到照片信息');
     
-        // 映射照片信息
-        const photoWithTags = photo;
-    
-        // AI 分析
-        const result = await analyzeSinglePhoto(photoWithTags);
-    
-        // 打开编辑抽屉，传入分析结果
+        const result = await analyzeSinglePhoto(photo);
         update({ editPhotoId: photoId });
         
-        // 通过事件传递分析结果给抽屉
+        // Pass results via event
         setTimeout(() => {
             window.dispatchEvent(new CustomEvent('ai-analysis-result', { detail: result }));
         }, 100);

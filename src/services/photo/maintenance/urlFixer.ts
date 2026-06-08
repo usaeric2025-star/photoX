@@ -4,7 +4,7 @@ import { logger } from '@/lib/logger';
 
 export const standardizePhotoUrl = (url: string): string => {
   if (!url) return '';
-  const workerUrl = import.meta.env.VITE_THUMBNAIL_WORKER_URL;
+  const workerUrl = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_THUMBNAIL_WORKER_URL : undefined;
   let normalized = workerUrl ? url.replace(workerUrl, '') : url;
   
   normalized = normalized

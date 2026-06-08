@@ -438,11 +438,17 @@ toast.error('发现数据完整性问题', {
 
 ## 缓存持久化规范（锁定）
 
-- ✅ Query 缓存持久化到 IndexedDB
-- ✅ 只持久化 `photos` / `groups` / `categories` / `tags` / `manufacturers`
-- ✅ 不持久化 mutation / 编辑 / 上传状态
-- ✅ 缓存有效期 7 天，自动清理
-- ❌ 禁止持久化分页/筛选状态（已在 URL 中）
+### IndexedDB 持久化安全 [P0]
+- ✅ **唯一方案**：使用 IndexedDB 存储（`idb-keyval`），绕过 localStorage 5MB 限制。
+- ✅ **用户隔离**：持久化 Key 必须包含 `userId`（`PhotoX_QueryCache_{userId}`），登出时必须调用 `clearPersistence` 物理清除。
+- ✅ **版本控制**：配置 `PERSIST_VERSION`，当 schema 结构发生 Breaking Change 时提升版本号以强制清空旧缓存，防止渲染崩溃。
+- ✅ **白名单机制**：仅持久化 `photos`, `groups`, `categories`, `tags`, `manufacturers` 等核心业务数据。
+- ❌ **禁止项**：禁止持久化 `mutations`、`tasks`、筛选 URL 状态（URL 已经是事实来源）。
+
+### 生命周期 [P1]
+- ✅ 缓存有效期：7 天。
+- ✅ 启动加载：不信任持久化数据的新鲜度，应用启动时保持 `staleTime` 触发后台静默刷新。
+- ✅ 登出联动：`supabase.auth.signOut` 之前必须同步执行 `clearPersistence`。
 
 ## Hook 使用规范（锁定）
 
@@ -482,9 +488,10 @@ toast.error('发现数据完整性问题', {
 - ❌ 禁止直接 `throw new Error()`，必须用 `ErrorFactory.wrap()`。
 - ❌ 禁止在组件中直接使用 `useMutation`，必须用 `mutations/*` 下的工厂生成。
 - ✅ 所有 Mutation 必须通过 `createMutationHook` 工厂生成。
+- ✅ 声明式失效：必须通过 `invalidateKeys` 配置缓存失效，禁止在 `onSuccess` 中手动调用 `invalidateQueries`（除非有复杂的动态逻辑）。
+- ✅ 降维打击：删除/移动操作必须同时失效所有相关实体的 key（例如 `deleteGroup` 必须失效 `groupKeys.all` 和 `photoKeys.all`）。
 - ✅ 服务器端错误统一通过工厂 onError 报告（Toast + 上报）。
 - ✅ 组件层调用 mutateAsync 时必须包裹 try/catch，仅用于控制 UI 流程（如关闭弹窗），禁止在 catch 中执行任何错误提示操作。
-- ✅ 缓存失效必须使用 `photoKeys.all()` 或 `groupKeys.all()` 降维打击。
 
 
 ## 异步任务架构规范（锁定）
@@ -827,14 +834,47 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 - ❌ 禁止在组件或 Hook 中手写 `photo_tags` JOIN 查询或进行标签数据的二次加工（如 `map(t => t.name)`）。
 - ✅ 照片对象中禁止存在 `tagNames` 冗余字段。
 
-## 战略预留点规范（锁定）
+## 孤本照片防護規範（鎖定）
 
-- mutationFactory → 生命週期鉤子（樂觀更新/分析/任務聯動）
-- AppResult → Service 層統一返回類型
-- Zustand Slice → Store 模組化拆分
+### 預防
+- ✅ 上傳流：先上傳 R2，成功後且獲得 URL 後再回寫 DB 記錄。
+- ✅ 刪除流：先標記為刪除中（is_deleting），非同步或分步清理 R2，最後刪除 DB。
+- ✅ 事務順序：R2 Success -> DB Payload -> Tag Sync.
 
-### 预留点纪律
-- ✅ 仅定义接口/类型/空模板，不实作业务逻辑
-- ✅ 由明确触发条件驱动启用，不使用率或日曆驅动
-- ❌ 禁止在无触发条件时提前消费预留点
-- ❌ 禁止因「预留了就用一下」的心态引入过度工程
+### 自動修復
+- ✅ 數據庫約束：`image_url` 不允許為空且必須以 http 開頭。
+- ✅ 定期清理：管理後台提供「清理孤本照片」按鈕，執行 R2 與 DB 的深度比對。
+
+## 實體刪除規範（鎖定）
+
+- ✅ **關聯優先**：刪除任何被引用的實體（如組、分類、標籤）時，必須先解除所有引用關係。
+- ✅ **手動清理**：即使 DB 有 `ON DELETE SET NULL`，Service 層也必須顯式執行 `update({ ref_id: null })` 以確保前端寫入快取失效。
+- ✅ **緩存聯動**：刪除操作的 Mutation 必須失效所有相關實體的緩存（例如刪組時需失效 `photoKeys.all`）。
+- ❌ 禁止要求用戶通過刷新頁面來解決刪除後的數據殘留。
+
+## AI 分析服务层规范（锁定）
+
+- ✅ 唯一编排入口：`analyzeAndSavePhoto()` in `src/services/ai/orchestration.ts`
+- ✅ 标签写入必须通过 `syncPhotoTags()`，禁止在 `updatePhoto` 中包含 `tag_ids`
+- ✅ 翻译仅针对文本字段（name/description），标签名称不翻译
+- ❌ 禁止在 Hook 层直接组合 AI 调用 + 翻译 + 保存
+- ❌ 禁止在任何 AI 相关代码中使用 `tag_ids` 字段
+
+### 非原子性说明
+- `updatePhoto` 和 `syncPhotoTags` 是两次独立调用
+- 照片保存成功但标签同步失败时，照片仍会保存，标签需手动重试
+- 未来可考虑引入 Supabase RPC 实现事务原子性
+
+## 自动诊断规范（锁定）
+
+- ✅ **核心原则**：主动预防性发现高风险数据问题，利用低成本检测降低维护压力。
+- ✅ **检测项目**：
+  - **孤本照片**：数据库中 `image_url` 缺失或格式错误的记录。
+  - **孤儿引用**：照片 `group_id` 指向已不存在的分组实体。
+  - **AI 服务健康**：验证 `settings` 中 `gemini_api_key` 是否配置。
+- ✅ **执行机制**：每 6 小时自动执行一次，结果写入 `system_logs` (level: 'info'/'warning'/'error', context: 'auto_diagnose')。
+- ✅ **资源复用**：无。复用 `system_logs` 表，不建立新表，不引入第三方库。
+- ✅ **手动联动**：诊断日志集成于 `DiagnosticsDashboard` 的日志面板。
+- ❌ **禁止项**：
+  - 禁止在无用户介入的情况下自动执行破坏性写操作（如自动物理删除 R2 文件）。
+  - 禁止高频率（如每分钟）检测，避免不必要的数据库 IO 开销。

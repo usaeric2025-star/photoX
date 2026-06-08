@@ -6,7 +6,7 @@ export interface ResizeOptions {
 export function resolveImageUrl(url: string, options: ResizeOptions = {}): string {
   if (!url || url.startsWith('data:')) return url;
   
-  const workerUrl = import.meta.env.VITE_THUMBNAIL_WORKER_URL;
+  const workerUrl = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_THUMBNAIL_WORKER_URL : undefined;
   
   if (workerUrl) {
     const width = options.width || 400; // Default
@@ -38,7 +38,7 @@ export function resolveImageUrl(url: string, options: ResizeOptions = {}): strin
 }
 
 export function getThumbnailUrl(originalUrl: string, width: number, updatedAt?: string) {
-  const workerUrl = import.meta.env.VITE_THUMBNAIL_WORKER_URL;
+  const workerUrl = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_THUMBNAIL_WORKER_URL : undefined;
   if (!workerUrl || !originalUrl) return originalUrl;
   
   try {

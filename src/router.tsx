@@ -10,14 +10,13 @@ import { lazy, Suspense } from 'react';
 import { PageSkeleton } from './components/PageSkeleton';
 import { globalHandleError } from './lib/error/errorHandler';
 import { Capability } from './config/permissions';
-import { validateRouteAccess } from './lib/permissions-contract';
-import { validateAccess, RouteAccessContract } from './shared/permissionsSchema';
 import { QueryClient } from '@tanstack/react-query';
 import { photoKeys, groupKeys } from '@/lib/queryKeys';
 import { createStaleTime } from '@/shared/freshnessSchema';
 import { getGroupById } from '@/services/group/queries';
-import { checkPublicAuth } from '@/lib/publicAuth';
 import { GlobalStatus } from './components/shared/GlobalStatus';
+import { authGuard } from './lib/router/routeGuards';
+import { GallerySearchParams } from './types/router';
 
 /**
  * [V2.10-ROUTER-PERMISSION-INTEGRATED] Router Context Definition
@@ -29,27 +28,6 @@ interface RouterContext {
   can: (cap: Capability) => boolean;
   queryClient?: QueryClient;
   availableActions: string[];
-}
-
-/**
- * [V2.8-URL-STATE] Search Params Schema
- * Defining the contract for gallery filters.
- */
-export interface GallerySearchParams {
-  q?: string;
-  category?: string;
-  tag?: string;          // Added for tag filtering
-  manufacturer?: string;
-  sort?: 'newest' | 'oldest' | 'name';
-  view?: 'grid' | 'list';
-  authError?: string;
-  
-  photoId?: string;      // 灯箱当前照片 ID
-  groupId?: string;      // 当前选中的合组 ID
-  columns?: string;      // 列数（2/3/4/5）
-  showGroupsCollapsed?: 'true' | 'false';  // 合组折叠状态
-  hidden?: 'true' | 'false';       // 隐藏照片显影控制
-  onlyUngrouped?: 'true' | 'false'; // 仅显示未分组照片
 }
 
 // Helper for lazy loading with retry
@@ -102,13 +80,6 @@ export const rootRoute = createRootRouteWithContext<RouterContext>()({
   ),
 });
 
-// 定義鑑權函數
-const authGuard = async ({ context, location }: { context: { user: any }, location: { pathname: string; search: any } }) => {
-  const { user } = context;
-  // Guard only checks permissions/logs, does not handle redirections
-  return;
-};
-
 import { type } from 'arktype';
 import { PAGINATION } from '@/constants/config';
 import { PHOTO_QUERY_CONFIG } from '@/lib/photoQueryConfig';
@@ -152,7 +123,7 @@ const indexRoute = createRoute({
       queryKey,
       queryFn: async () => {
         const { loadAllPhotosFromCloud } = await import('./services/photo/queries');
-        const photos = await loadAllPhotosFromCloud(
+        const res = await loadAllPhotosFromCloud(
           undefined,
           0,
           PHOTO_QUERY_CONFIG.limit,
@@ -161,9 +132,11 @@ const indexRoute = createRoute({
           undefined,
           false
         );
+        if (!res.ok) throw new Error(res.message);
+        const photos = res.data || [];
         return {
-          photos: photos || [],
-          nextPage: undefined
+          photos: photos,
+          nextPage: photos.length >= PHOTO_QUERY_CONFIG.limit ? 2 : undefined
         };
       },
       initialPageParam: 1,
@@ -209,7 +182,7 @@ const previewRoute = createRoute({
       queryKey,
       queryFn: async () => {
         const { loadAllPhotosFromCloud } = await import('./services/photo/queries');
-        const photos = await loadAllPhotosFromCloud(
+        const res = await loadAllPhotosFromCloud(
           undefined,
           0,
           PHOTO_QUERY_CONFIG.limit,
@@ -218,9 +191,11 @@ const previewRoute = createRoute({
           undefined,
           false
         );
+        if (!res.ok) throw new Error(res.message);
+        const photos = res.data || [];
         return {
-          photos: photos || [],
-          nextPage: undefined
+          photos: photos,
+          nextPage: photos.length >= PHOTO_QUERY_CONFIG.limit ? 2 : undefined
         };
       },
       initialPageParam: 1,

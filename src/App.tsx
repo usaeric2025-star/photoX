@@ -11,12 +11,17 @@ import { useAuth } from '@/hooks/core/auth/useAuth';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { ConfirmProvider } from './context/ConfirmContext';
 
+import { startAutoDiagnose } from '@/services/maintenance/autoDiagnose';
+
 export default function AppRoutes() {
   useEffect(() => {
     document.title = 'PhotoX';
     // Background cache cleanup and migrations
     migrateStorage();
     clearExpiredCaches(7).catch(err => globalHandleError(err, '本地缓存自动清理失败', true));
+    
+    // Start periodic background diagnosis
+    startAutoDiagnose();
   }, []);
 
   logger.debug('🔍 AppRoutes 渲染:', { 

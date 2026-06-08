@@ -1,5 +1,5 @@
 import { useSearch, useNavigate, useParams } from '@tanstack/react-router';
-import { GallerySearchParams } from '../router';
+import { GallerySearchParams } from '@/types/router';
 
 export function useUrlFilters() {
   const search = useSearch({ from: '__root__' }) as GallerySearchParams;

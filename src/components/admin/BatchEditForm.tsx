@@ -1,13 +1,13 @@
 import React from "react";
 import { EyeOff, Eye, RefreshCcw } from "lucide-react";
 import { ProductFormData, Photo, Tag } from "@/types";
-import { PhotoTagSelector } from "./PhotoTagSelector";
+import { PhotoTagSelector } from "./edit/PhotoTagSelector";
 import { getTagIds, getTagsFromIds } from "@/services/photo/utils";
 import {
   FormSectionHeader,
   CategoryGrid,
   ManufacturerList,
-} from "../FormShared";
+} from "./FormShared";
 import { useCategories, useTags, useManufacturers } from "@/hooks";
 import { safeArray } from "@/lib/utils";
 import { useUIStore } from "@/store/useUIStore";
@@ -36,7 +36,7 @@ export function BatchEditForm({
   const { data: categories = [] } = useCategories();
   const { data: manufacturers = [] } = useManufacturers();
   const { data: tags = [] } = useTags();
-  const appLang = useUIStore((s) => s.appLang);
+  const appLang = useUIStore((s: any) => s.appLang);
 
   return (
     <div className="space-y-6">
@@ -170,7 +170,7 @@ export function BatchEditForm({
         <PhotoTagSelector
           tags={tags}
           selectedTagIds={getTagIds(formState.tags)}
-          onChange={(newIds) => {
+          onChange={(newIds: string[]) => {
             const newTags = getTagsFromIds(newIds, tags);
             handleUpdateForm({ tags: newTags });
           }}

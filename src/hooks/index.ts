@@ -11,6 +11,7 @@ export { usePhotoUpload } from './usePhotoUpload';
 export { useScrollRestoration } from '../core/infra/useScrollRestoration';
 export { useLongPress } from './core/useLongPress';
 export { useTranslation } from './core/useTranslation';
+export { useIsManagement } from './core/useIsManagement';
 export { useAppLocale } from './core/useAppLocale';
 export { useImagePreloader } from './core/useImagePreloader';
 export { useQueryWithFallback } from './core/useQueryWithFallback';

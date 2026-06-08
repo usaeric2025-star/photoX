@@ -7,7 +7,9 @@ import { AdminFilters } from '@/components/ui/AdminFilters';
 import { 
   useScrollRestoration, 
   useUrlFilters, 
-  useColumns 
+  useColumns,
+  useCategories,
+  useTags
 } from '@/hooks';
 import { useUIStore } from '@/store/useUIStore';
 import { UploadButton } from '@/components/shared/UploadButton';
@@ -33,6 +35,9 @@ export function AdminGridContainer() {
   const [columns, setColumns] = useColumns();
   const isMultiSelect = useUIStore(s => s.isMultiSelect);
 
+  const { data: categories = [] } = useCategories();
+  const { data: tags = [] } = useTags();
+
   // 1. Data Layer
   const { 
     gridPhotos, photos, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage 
@@ -52,13 +57,15 @@ export function AdminGridContainer() {
   const virtualGridRef = useRef<any>(null);
   const scrollToTop = () => virtualGridRef.current?.scrollToIndex(0);
 
-  const renderCard = React.useCallback((photo: Photo, index: number) => (
+  const renderCard = React.useCallback((photo: Photo, index: number, categories: any[], tags: any[]) => (
     <PhotoCard 
       key={photo.id}
       photo={photo}
       index={index}
       showGroupsCollapsed={showGroupsCollapsed}
       hasSearchQuery={hasSearchQuery}
+      sharedCategories={categories}
+      sharedTags={tags}
     />
   ), [showGroupsCollapsed, hasSearchQuery]);
 
@@ -97,6 +104,8 @@ export function AdminGridContainer() {
              renderCard={renderCard}
              ref={virtualGridRef} 
              columns={columns}
+             categories={categories}
+             tags={tags}
            />
         </div>
 

@@ -8,7 +8,7 @@ import { photoKeys } from '@/lib/queryKeys';
 import { getTranslatedCategoryName } from '@/lib/ui-helpers';
 import { useSearch, useNavigate } from '@tanstack/react-router';
 
-import { useCategories, useTags, usePermission } from '@/hooks';
+import { useTranslation, useIsManagement, usePermission, useCategories, useTags } from '@/hooks';
 import { PinButton } from './PinButton';
 import { Photo, Category, Tag } from '../../types';
 import { Layers, Heart, Check, EyeOff } from 'lucide-react';
@@ -36,6 +36,10 @@ export interface PhotoCardProps extends React.HTMLAttributes<HTMLDivElement> {
   photoTags?: string[];
   showGroupsCollapsed?: boolean;
   hasSearchQuery?: boolean;
+  /** Optimization: Shared categories for virtual list */
+  sharedCategories?: Category[];
+  /** Optimization: Shared tags for virtual list */
+  sharedTags?: Tag[];
 }
 
 const toTitleCase = (str: string) => {
@@ -60,6 +64,8 @@ export const PhotoCard = React.memo(({
   showGroupsCollapsed = true,
   hasSearchQuery = false,
   showCoverBadge,
+  sharedCategories,
+  sharedTags,
   ...props
 }: PhotoCardProps) => {
   const isSelected = useUIStore((s) => s.selectedIds.includes(photo.id));
@@ -75,13 +81,15 @@ export const PhotoCard = React.memo(({
   const cardRef = useRef<HTMLDivElement>(null);
   const longPressTriggered = useRef(false);
   const resetTimerRef = useRef<number | null>(null);
-  const isManagement = window.location.pathname.startsWith('/admin');
+  const isManagement = useIsManagement();
   
-  const lang = useUIStore(s => s.appLang);
-  const t = translations[lang as keyof typeof translations] || translations.en;
+  const { lang, uiTranslations: t } = useTranslation();
   
-  const { data: categories = [] } = useCategories();
-  const { data: tags = [] } = useTags();
+  const { data: fetchedCategories = [] } = useCategories();
+  const { data: fetchedTags = [] } = useTags();
+
+  const categories = sharedCategories || fetchedCategories;
+  const tags = sharedTags || fetchedTags;
 
   const categoryId = photo.category_id ? String(photo.category_id) : '';
   
@@ -98,7 +106,7 @@ export const PhotoCard = React.memo(({
   }, [propPhotoTags, photo.tags, lang]);
 
   const displayName = React.useMemo(() => 
-    getPhotoDisplayName(photo, categories, lang, t),
+    getPhotoDisplayName(photo, categories, lang, t as any),
     [photo, categories, lang, t]
   );
 

@@ -17,7 +17,7 @@ export function WhatsAppChoiceDialog({
 }: WhatsAppChoiceDialogProps) {
   if (!isOpen) return null;
 
-  const fallback = import.meta.env.VITE_WHATSAPP_NUMBER;
+  const fallback = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_WHATSAPP_NUMBER : '';
   const pendingPhoto = (window as any)._pendingPhoto;
 
   return (

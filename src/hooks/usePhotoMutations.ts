@@ -12,10 +12,10 @@ export const usePhotoEditMutation = createMutationHook({
   action: 'Update',
   mutationFn: async ({ id, updates }: { id: string; updates: Partial<Photo> }) => {
     const res = await update(id, updates);
-    if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Update Photo', id);
+    if (!res.ok) throw new Error(res.message);
     return res.data;
   },
-  invalidateKeys: (vars) => [photoKeys.all, ['photo', vars.id]],
+  invalidateKeys: (vars: { id: string; updates: Partial<Photo> }) => [photoKeys.all, ['photo', vars.id]],
   onSuccessMessage: '照片更新成功',
 });
 
@@ -27,10 +27,13 @@ export const usePhotoDelete = createMutationHook({
   action: 'Delete',
   mutationFn: async (ids: string | string[]) => {
     const res = await deleteMany(Array.isArray(ids) ? ids : [ids]);
-    if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Delete Photos');
+    if (!res.ok) throw new Error(res.message);
     return res.data;
   },
-  invalidateKeys: (vars) => [photoKeys.all, ...((Array.isArray(vars) ? vars : [vars]).map(id => ['photo', id]))],
+  invalidateKeys: (vars: string | string[]) => [
+    photoKeys.all,
+    ...((Array.isArray(vars) ? vars : [vars]).map((id: string) => ['photo', id]))
+  ],
   onSuccessMessage: (data: any) => {
     if (data && typeof data === 'object' && 'successCount' in data) {
       if (data.failureCount > 0) {
@@ -50,10 +53,13 @@ export const usePhotoBatchEdit = createMutationHook({
   action: 'BatchUpdate',
   mutationFn: async ({ ids, updates }: { ids: string[]; updates: Partial<Photo> }) => {
     const res = await batchUpdate(ids, updates);
-    if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Batch Update Photos', ids.join(','));
+    if (!res.ok) throw new Error(res.message);
     return res.data;
   },
-  invalidateKeys: (vars) => [photoKeys.all, ...((Array.isArray(vars.ids) ? vars.ids : [vars.ids]).map(id => ['photo', id]))],
+  invalidateKeys: (vars: { ids: string[]; updates: Partial<Photo> }) => [
+    photoKeys.all,
+    ...((Array.isArray(vars.ids) ? vars.ids : [vars.ids]).map((id: string) => ['photo', id]))
+  ],
   onSuccessMessage: (data: any) => {
     if (data && typeof data === 'object' && 'successCount' in data) {
       if (data.failureCount > 0) {
@@ -73,10 +79,10 @@ export const useTogglePin = createMutationHook({
   action: 'TogglePin',
   mutationFn: async ({ id, isPinned }: { id: string; isPinned: boolean }) => {
     const res = await update(id, { is_pinned: isPinned });
-    if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Toggle Pin Photo', id);
+    if (!res.ok) throw new Error(res.message);
     return res.data;
   },
-  invalidateKeys: (vars) => [photoKeys.all, ['photo', vars.id]],
+  invalidateKeys: (vars: { id: string; isPinned: boolean }) => [photoKeys.all, ['photo', vars.id]],
   optimisticUpdate: (old: any, { id, isPinned }: { id: string; isPinned: boolean }) => 
     optimistic.infinite.update<Photo>()(old, { id, updates: { is_pinned: isPinned } as any }),
   onSuccessMessage: (data: any, { isPinned }: { isPinned: boolean }) => isPinned ? '已置顶' : '已取消置顶',

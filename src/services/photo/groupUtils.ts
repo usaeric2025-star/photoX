@@ -7,6 +7,14 @@ import { withSupabase } from '@/lib/error/supabaseWrapper';
 
 export const ungroupPhotos = async (groupId: string): Promise<AppResult<void>> => {
   return withErrorHandling(async () => {
+    // Manually ensure group_id is null before dissolution to prevent FK errors
+    const manualUpdate = supabase
+      .from(DB_CONFIG.TABLE_NAME)
+      .update({ group_id: null, is_group_cover: false })
+      .eq('group_id', groupId);
+    
+    await withSupabase(manualUpdate, 'ungroupPhotos/manual_nulling', 'high', { allowNull: true });
+
     const query = supabase.rpc('dissolve_group', { group_id: groupId });
     const res = await withSupabase(query, 'ungroupPhotos', 'high', { allowNull: true });
     if (!res.ok) return res;

@@ -2,6 +2,7 @@ import { User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabase';
 import { User } from '../../types';
 import { logger } from '../../lib/logger';
+import { queryClient, clearPersistence } from '../../lib/queryClient';
 
 let wasAuthenticated = false;
 
@@ -37,6 +38,10 @@ export const loginWithGoogle = async () => {
 export const logout = async () => {
   wasAuthenticated = false;
   try {
+    // 1. 清除本地持久化緩存 [CAUSAL-CONSISTENCY]
+    await clearPersistence();
+    
+    // 2. 執行登出
     const res = await supabase.auth.signOut();
     return res;
   } catch (err) {

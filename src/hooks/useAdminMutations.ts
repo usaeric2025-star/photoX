@@ -11,8 +11,11 @@ import { ErrorFactory } from '@/lib/error/ErrorFactory';
 export const useTagCreate = createMutationHook({
   entity: 'Tag', 
   action: 'Add',
-  mutationFn: addTagToDB,
-  queryKey: tagKeys.tags(),
+  mutationFn: async (variables: Partial<Tag>) => {
+    const res = await addTagToDB(variables.name || '');
+    if (!res) throw new Error('标签创建失败');
+    return res;
+  },
   optimisticUpdate: (old: Tag[] | undefined, variables: Partial<Tag>) => {
     return [...(old || []), { id: 'temp-' + Date.now(), ...variables } as Tag];
   },
@@ -23,8 +26,11 @@ export const useTagCreate = createMutationHook({
 export const useTagEdit = createMutationHook({
   entity: 'Tag',
   action: 'Update',
-  mutationFn: ({ id, updates }: { id: string; updates: Partial<Tag> }) => updateTagInDB(id, updates),
-  queryKey: tagKeys.tags(),
+  mutationFn: async ({ id, updates }: { id: string; updates: Partial<Tag> }) => {
+    const res = await updateTagInDB(id, updates);
+    if (!res) throw new Error('标签更新失败');
+    return true;
+  },
   optimisticUpdate: (old: Tag[] | undefined, { id, updates }: { id: string; updates: Partial<Tag> }) => {
     return (old || []).map(t => t.id === id ? { ...t, ...updates } : t);
   },
@@ -35,8 +41,11 @@ export const useTagEdit = createMutationHook({
 export const useTagDelete = createMutationHook({
   entity: 'Tag',
   action: 'Delete',
-  mutationFn: deleteTagFromDB,
-  queryKey: tagKeys.tags(),
+  mutationFn: async (id: string) => {
+    const res = await deleteTagFromDB(id);
+    if (!res) throw new Error('标签删除失败');
+    return true;
+  },
   optimisticUpdate: (old: Tag[] | undefined, id: string) => {
     return (old || []).filter(t => t.id !== id);
   },
@@ -47,8 +56,11 @@ export const useTagDelete = createMutationHook({
 export const useCategoryCreate = createMutationHook({
   entity: 'Category',
   action: 'Add',
-  mutationFn: addCategoryToDB,
-  queryKey: categoryKeys.categories(),
+  mutationFn: async (variables: Partial<Category>) => {
+    const res = await addCategoryToDB(variables.name || '');
+    if (!res) throw new Error('分类创建失败');
+    return res;
+  },
   optimisticUpdate: (old: Category[] | undefined, variables: Partial<Category>) => {
     return [...(old || []), { id: 'temp-' + Date.now(), ...variables } as Category];
   },
@@ -59,8 +71,11 @@ export const useCategoryCreate = createMutationHook({
 export const useCategoryEdit = createMutationHook({
   entity: 'Category',
   action: 'Update',
-  mutationFn: ({ id, updates }: { id: string; updates: Partial<Category> }) => updateCategoryInDB(id, updates),
-  queryKey: categoryKeys.categories(),
+  mutationFn: async ({ id, updates }: { id: string; updates: Partial<Category> }) => {
+    const res = await updateCategoryInDB(id, updates);
+    if (!res) throw new Error('分类更新失败');
+    return true;
+  },
   optimisticUpdate: (old: Category[] | undefined, { id, updates }: { id: string; updates: Partial<Category> }) => {
     return (old || []).map(c => c.id === id ? { ...c, ...updates } : c);
   },
@@ -71,8 +86,11 @@ export const useCategoryEdit = createMutationHook({
 export const useCategoryDelete = createMutationHook({
   entity: 'Category',
   action: 'Delete',
-  mutationFn: deleteCategoryFromDB,
-  queryKey: categoryKeys.categories(),
+  mutationFn: async (id: string) => {
+    const res = await deleteCategoryFromDB(id);
+    if (!res) throw new Error('分类删除失败');
+    return true;
+  },
   optimisticUpdate: (old: Category[] | undefined, id: string) => {
     return (old || []).filter(c => c.id !== id);
   },
@@ -83,8 +101,11 @@ export const useCategoryDelete = createMutationHook({
 export const useManufacturerCreate = createMutationHook({
   entity: 'Manufacturer',
   action: 'Add',
-  mutationFn: addManufacturerToDB,
-  queryKey: manufacturerKeys.manufacturers(),
+  mutationFn: async (variables: Partial<Manufacturer>) => {
+    const res = await addManufacturerToDB(variables.name || '');
+    if (!res) throw new Error('厂商创建失败');
+    return res;
+  },
   optimisticUpdate: (old: Manufacturer[] | undefined, variables: Partial<Manufacturer>) => {
     return [...(old || []), { id: 'temp-' + Date.now(), ...variables } as Manufacturer];
   },
@@ -95,8 +116,11 @@ export const useManufacturerCreate = createMutationHook({
 export const useManufacturerEdit = createMutationHook({
   entity: 'Manufacturer',
   action: 'Update',
-  mutationFn: ({ id, updates }: { id: string; updates: Partial<Manufacturer> }) => updateManufacturerInDB(id, updates),
-  queryKey: manufacturerKeys.manufacturers(),
+  mutationFn: async ({ id, updates }: { id: string; updates: Partial<Manufacturer> }) => {
+    const res = await updateManufacturerInDB(id, updates);
+    if (!res) throw new Error('厂商更新失败');
+    return true;
+  },
   optimisticUpdate: (old: Manufacturer[] | undefined, { id, updates }: { id: string; updates: Partial<Manufacturer> }) => {
     return (old || []).map(m => m.id === id ? { ...m, ...updates } : m);
   },
@@ -107,8 +131,11 @@ export const useManufacturerEdit = createMutationHook({
 export const useManufacturerDelete = createMutationHook({
   entity: 'Manufacturer',
   action: 'Delete',
-  mutationFn: deleteManufacturerFromDB,
-  queryKey: manufacturerKeys.manufacturers(),
+  mutationFn: async (id: string) => {
+    const res = await deleteManufacturerFromDB(id);
+    if (!res) throw new Error('厂商删除失败');
+    return true;
+  },
   optimisticUpdate: (old: Manufacturer[] | undefined, id: string) => {
     return (old || []).filter(m => m.id !== id);
   },
