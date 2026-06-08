@@ -8,7 +8,7 @@ import { withSupabase } from '@/lib/error/supabaseWrapper';
 export const ungroupPhotos = async (groupId: string): Promise<AppResult<void>> => {
   return withErrorHandling(async () => {
     const query = supabase.rpc('dissolve_group', { group_id: groupId });
-    const res = await withSupabase(query, 'ungroupPhotos');
+    const res = await withSupabase(query, 'ungroupPhotos', 'high', { allowNull: true });
     if (!res.ok) return res;
     return success(undefined);
   }, 'ungroupPhotos');
@@ -22,15 +22,15 @@ export const syncGroupMemberCount = async (groupId: string): Promise<AppResult<v
       .select('id', { count: 'exact', head: true })
       .eq('group_id', groupId);
 
-    const countRes = await withSupabase(countQuery, 'syncGroupMemberCount/count') as any;
+    const countRes = await withSupabase(countQuery, 'syncGroupMemberCount/count', 'high', { allowNull: true }) as any;
     if (!countRes.ok) return countRes;
 
     const updateQuery = supabase
       .from('groups')
-      .update({ member_count: countRes.count || 0 })
+      .update({ member_count: countRes.data?.count || 0 })
       .eq('id', groupId);
 
-    const updateRes = await withSupabase(updateQuery, 'syncGroupMemberCount/update');
+    const updateRes = await withSupabase(updateQuery, 'syncGroupMemberCount/update', 'high', { allowNull: true });
     return updateRes;
   }, 'syncGroupMemberCount');
 };

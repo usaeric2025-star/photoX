@@ -170,13 +170,6 @@ export function AdminHeader({}: AdminHeaderProps) {
                   </DropdownMenuItem>
                 </>
               )}
-              <DropdownMenuItem
-                onClick={() => useUIStore.getState().update({ activeScreen: 'error-logs' })}
-                className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-slate-50 focus:bg-slate-50 cursor-pointer transition-colors border-none"
-              >
-                <LayoutGrid size={16} />
-                <span className="text-sm font-semibold">{t.errorLogs}</span>
-              </DropdownMenuItem>
               <LanguageSwitcher mode="segmented" />
             </div>
 

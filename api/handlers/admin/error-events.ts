@@ -21,11 +21,11 @@ adminErrorEvents.get("/error-events", async (c) => {
 adminErrorEvents.post("/error-events-clear", async (c) => {
     try {
         const supabase = await getSupabaseAdmin();
-        // Use a filter that matches all rows regardless of ID type
+        // Use a filter that matches all rows
         const { error } = await supabase
             .from('system_logs')
             .delete()
-            .not('id', 'is', null);
+            .neq('id', '00000000-0000-0000-0000-000000000000');
         if (error) throw error;
         return c.json({ success: true });
     } catch (e: any) {

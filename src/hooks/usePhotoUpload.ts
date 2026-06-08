@@ -41,6 +41,7 @@ export function usePhotoUpload() {
 
       let successCount = 0;
       let failureCount = 0;
+      let skippedCount = duplicateHashes.length;
 
       for (let i = 0; i < uniqueFiles.length; i++) {
         const file = uniqueFiles[i];
@@ -70,19 +71,24 @@ export function usePhotoUpload() {
             created_at: new Date().toISOString(),
           } as any;
 
-          await savePhotoToCloud(user?.id || 'staff', tempPhoto);
-
-          successCount++;
+          const uploadResult = await savePhotoToCloud(user?.id || 'staff', tempPhoto);
+          
+          // Check if it was a server-side duplicate reuse
+          if (uploadResult?.is_duplicate) {
+              skippedCount++;
+          } else {
+              successCount++;
+          }
         } catch (err: any) {
           console.error(`[Upload] Failed for ${file.name}:`, err);
-          // 在批量任务中保持静默，由任务中心最后统一呈现状态
+          // 在批量任务中保持静默，由任务中心最后統一呈現狀態
           ErrorFactory.handle(err, `照片上传失败: ${file.name}`, true);
           failureCount++;
           // We don't stop the whole batch for one failure
         }
       }
 
-      if (successCount > 0) {
+      if (successCount > 0 || skippedCount > 0) {
         hapticFeedback.success();
         // 移除冗余的 toast.success，任务中心会显示结果
         invalidatePhotos();
@@ -93,10 +99,16 @@ export function usePhotoUpload() {
         // 移除冗余的 toast.error，任务中心会显示结果
       }
 
+      const summaryMsg = [
+        successCount > 0 && `成功 ${successCount}`,
+        skippedCount > 0 && `跳过重復 ${skippedCount}`,
+        failureCount > 0 && `失败 ${failureCount}`
+      ].filter(Boolean).join(', ');
+
       updateTask(taskId, { 
-        status: failureCount === 0 ? 'completed' : failureCount === uniqueFiles.length ? 'error' : 'completed',
+        status: failureCount === 0 ? 'completed' : failureCount === (uniqueFiles.length) ? 'error' : 'completed',
         progress: 100, 
-        message: failureCount === 0 ? '全部上传成功' : `上传完成: 成功 ${successCount}, 失败 ${failureCount}`
+        message: summaryMsg || '上传完成'
       });
 
     } catch (err: any) {

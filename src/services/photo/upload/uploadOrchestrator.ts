@@ -13,16 +13,17 @@ export const uploadSinglePhoto = async (
   userId: string, 
   photo: Photo, 
   onStatus?: (s: string) => void
-): Promise<AppResult<string>> => {
+): Promise<AppResult<{ id: string; is_duplicate?: boolean }>> => {
   return withErrorHandling(async () => {
     const { data: { session } } = await supabase.auth.getSession();
     const isLocalStorageStaff = typeof window !== 'undefined' && !!window.localStorage.getItem('ais_mock_auth_passcode');
 
     if (!session?.user && !isLocalStorageStaff) {
-        throw new Error('鉴权失败: 无活跃会话');
+        throw new Error('鉴权失敗: 無活躍會話');
     }
 
     const actUserId = session?.user?.id || userId || 'staff';
+    let is_duplicate = false;
     
     // Duplicate Check
     if (photo.image_hash) {
@@ -36,7 +37,7 @@ export const uploadSinglePhoto = async (
         );
         if (dbCheck.isDuplicate) {
              console.log(`[Upload] Skipping duplicate photo: ${photo.id || (photo as any)._fileName}. Existing ID: ${dbCheck.existingId}`);
-             return dbCheck.existingId || photo.id || 'duplicate';
+             return { id: dbCheck.existingId || photo.id || 'duplicate', is_duplicate: true };
         }
         
         if (dbCheck.orphanId) {
@@ -55,9 +56,10 @@ export const uploadSinglePhoto = async (
     // R2 Upload
     if (!photo.image_url && photo.uri) {
         const filename = photo.storage_id || photo.id;
-        const { imageUrl, isDuplicate } = await uploadToR2(userId, filename, photo.uri, photo.image_hash, onStatus);
-        if (isDuplicate) {
+        const { imageUrl, isDuplicate: r2Duplicate } = await uploadToR2(userId, filename, photo.uri, photo.image_hash, onStatus);
+        if (r2Duplicate) {
             console.log(`[Upload] R2 confirmed duplicate file for ${photo.id}. Reusing URL: ${imageUrl}`);
+            is_duplicate = true;
         }
         photo.image_url = imageUrl;
     }
@@ -83,6 +85,6 @@ export const uploadSinglePhoto = async (
     const tagSync = await syncPhotoTagsInDB(photo.id, photo.tag_ids || []);
     if (!tagSync.ok) console.warn("Failed to sync photo tags:", tagSync.message);
 
-    return photo.id;
+    return { id: photo.id, is_duplicate };
   }, 'uploadSinglePhoto');
 };

@@ -29,7 +29,6 @@ import { AdminHeader } from '@/components/layouts/headers/AdminHeader';
 import { AdminAuthGate } from '@/components/admin/AdminAuthGate';
 import { AdminScreen } from '@/components/AdminScreen';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { GlobalTaskCenter } from '@/components/tasks/GlobalTaskCenter';
 
 export function AdminPageContent() {
   const { user } = useAuth();
@@ -94,10 +93,19 @@ export function AdminPageContent() {
         <div className="flex flex-col h-screen bg-slate-50 overflow-hidden w-full relative">
           {(currentScreen === 'gallery' || currentScreen === 'home') && <AdminHeader />}
           <main className="flex-1 relative overflow-hidden pb-16 sm:pb-0">
-          {store.batchEditingIds && store.batchEditingIds.length > 0 && <BatchEditScreen />}
+          {(currentScreen === 'home' || currentScreen === 'gallery') && store.batchEditingIds && store.batchEditingIds.length > 0 && <BatchEditScreen />}
           
-          <div className={`absolute inset-0 transition-all duration-300 ${currentScreen === 'home' || currentScreen === 'gallery' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
-            {!urlFilters.groupId && <AdminScreen />}
+          <div className="absolute inset-0 transition-all duration-300">
+            {(currentScreen === 'home' || currentScreen === 'gallery') && !urlFilters.groupId && (
+              <motion.div 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                exit={{ opacity: 0 }}
+                className="h-full w-full"
+              >
+                <AdminScreen />
+              </motion.div>
+            )}
           </div>
 
           <AnimatePresence>
@@ -130,7 +138,6 @@ export function AdminPageContent() {
       <ErrorBoundary>
         <GroupDetailPage />
       </ErrorBoundary>
-      <GlobalTaskCenter />
     </AdminAuthGate>
   );
 }

@@ -83,7 +83,6 @@ const AdminPage = lazyWithRetry(() => import('./pages/AdminPage/index'), 'AdminP
 const MaintenanceHistoryPage = lazyWithRetry(() => import('./pages/AdminPage/MaintenanceHistoryPage'), 'MaintenanceHistoryPage');
 const TasksPage = lazyWithRetry(() => import('./pages/AdminPage/TasksPage'), 'TasksPage');
 const PhotoLightboxPage = lazy(() => import('./pages/PhotoLightboxPage'));
-const PublicErrorLogPage = lazyWithRetry(() => import('./pages/PublicErrorLogPage'), 'PublicErrorLogPage');
 
 // 1. Root Route
 export const rootRoute = createRootRouteWithContext<RouterContext>()({
@@ -272,14 +271,6 @@ const gRoute = createRoute({
   component: PublicPage,
 });
 
-const publicErrorLogRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/error-log',
-  component: () => (
-    <PublicErrorLogPage />
-  ),
-});
-
 const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: ROUTES.ADMIN,
@@ -333,7 +324,6 @@ export const routeTree = rootRoute.addChildren([
   hashRoute,
   groupRoute,
   gRoute,
-  publicErrorLogRoute,
   adminRoute.addChildren([adminHistoryRoute, adminTasksRoute, adminErrorLogsRoute, adminGroupRoute]),
 ]);
 

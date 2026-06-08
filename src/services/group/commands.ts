@@ -111,7 +111,7 @@ export async function upsertGroup(group: Partial<ProductGroup> & { id: string })
         .from(TABLE_NAME)
         .upsert(dbUpdates, { onConflict: 'id' });
 
-    const res = await withSupabase(query, 'upsertGroup');
+    const res = await withSupabase(query, 'upsertGroup', 'high', { allowNull: true });
     if (!res.ok) return res;
     return success(undefined);
   }, 'upsertGroup');
@@ -126,7 +126,7 @@ export async function deleteGroup(id: string): Promise<AppResult<void>> {
     let query = supabase.from(TABLE_NAME).delete().eq('id', id);
     if (userId) query = query.eq('user_id', userId);
     
-    const res = await withSupabase(query, 'deleteGroup');
+    const res = await withSupabase(query, 'deleteGroup', 'high', { allowNull: true });
     if (!res.ok) return res;
     return success(undefined);
   }, 'deleteGroup');
@@ -195,11 +195,11 @@ export const groupPhotos = async (
         created_at: new Date().toISOString(),
         ...groupData
       });
-      const insertRes = await withSupabase(insertQuery, 'groupPhotos/insert');
+      const insertRes = await withSupabase(insertQuery, 'groupPhotos/insert', 'high', { allowNull: true });
       if (!insertRes.ok) return insertRes;
     } else {
       const updateQuery = supabase.from('groups').update(groupData).eq('id', targetGroupId);
-      const updateRes = await withSupabase(updateQuery, 'groupPhotos/update');
+      const updateRes = await withSupabase(updateQuery, 'groupPhotos/update', 'high', { allowNull: true });
       if (!updateRes.ok) return updateRes;
     }
 
@@ -209,7 +209,7 @@ export const groupPhotos = async (
         source_group_ids: sourceGroupIds,
         target_group_id: targetGroupId
       });
-      const mergeRes = await withSupabase(mergeQuery, 'groupPhotos/merge');
+      const mergeRes = await withSupabase(mergeQuery, 'groupPhotos/merge', 'high', { allowNull: true });
       if (!mergeRes.ok) return mergeRes;
     }
 
@@ -218,7 +218,7 @@ export const groupPhotos = async (
         .from(DB_CONFIG.TABLE_NAME)
         .update({ group_id: targetGroupId, is_group_cover: false })
         .in('id', ungroupedValidIds);
-      const updatePhotoRes = await withSupabase(updatePhotoQuery, 'groupPhotos/updatePhotos');
+      const updatePhotoRes = await withSupabase(updatePhotoQuery, 'groupPhotos/updatePhotos', 'high', { allowNull: true });
       if (!updatePhotoRes.ok) return updatePhotoRes;
     }
 
@@ -235,7 +235,7 @@ export const movePhotosToGroup = async (photoIds: string[], targetGroupId: strin
       photo_ids: photoIds,
       target_group_id: targetGroupId
     });
-    const res = await withSupabase(query, 'movePhotosToGroup');
+    const res = await withSupabase(query, 'movePhotosToGroup', 'high', { allowNull: true });
     if (!res.ok) return res;
     return success(undefined);
   }, 'movePhotosToGroup');
@@ -250,7 +250,7 @@ export const setPhotoAsGroupCover = async (photoId: string | null, groupId: stri
       .update({ is_group_cover: false })
       .eq('group_id', groupId);
 
-    const resetRes = await withSupabase(resetQuery, 'setPhotoAsGroupCover/reset');
+    const resetRes = await withSupabase(resetQuery, 'setPhotoAsGroupCover/reset', 'high', { allowNull: true });
     if (!resetRes.ok) return resetRes;
 
     if (photoId) {
@@ -258,7 +258,7 @@ export const setPhotoAsGroupCover = async (photoId: string | null, groupId: stri
         .from(DB_CONFIG.TABLE_NAME)
         .update({ is_group_cover: true })
         .eq('id', photoId);
-      const setRes = await withSupabase(setQuery, 'setPhotoAsGroupCover/set');
+      const setRes = await withSupabase(setQuery, 'setPhotoAsGroupCover/set', 'high', { allowNull: true });
       if (!setRes.ok) return setRes;
     }
 
@@ -266,7 +266,7 @@ export const setPhotoAsGroupCover = async (photoId: string | null, groupId: stri
       .from('groups')
       .update({ cover_photo_id: photoId || null })
       .eq('id', groupId);
-    const updateGroupRes = await withSupabase(updateGroupQuery, 'setPhotoAsGroupCover/updateGroup');
+    const updateGroupRes = await withSupabase(updateGroupQuery, 'setPhotoAsGroupCover/updateGroup', 'high', { allowNull: true });
     if (!updateGroupRes.ok) return updateGroupRes;
 
     return success(undefined);
