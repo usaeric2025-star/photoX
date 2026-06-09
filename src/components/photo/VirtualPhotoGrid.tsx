@@ -14,12 +14,11 @@ interface VirtualPhotoGridProps {
   isFetchingNextPage?: boolean;
   hasNextPage?: boolean;
   onLoadMore?: () => void;
-  renderCard: (photo: Photo, index: number, categories: Category[], tags: Tag[]) => React.ReactNode;
+  renderCard: (photo: Photo, index: number, categories: Category[]) => React.ReactNode;
   columns: number;
   ref?: React.Ref<VirtualGridHandle>;
   restoreKey?: string;
   categories?: Category[];
-  tags?: Tag[];
 }
 
 const multiSelectSelector = (s: UIStoreState) => ({
@@ -36,8 +35,7 @@ export const VirtualPhotoGrid = React.memo(({
   columns,
   ref,
   restoreKey,
-  categories = [],
-  tags = []
+  categories = []
 }: VirtualPhotoGridProps) => {
   const { filters } = useUrlFilters();
   const appLang = useUIStore((s) => s.appLang);
@@ -93,10 +91,10 @@ export const VirtualPhotoGrid = React.memo(({
     if (!photo) return null;
     return (
       <div className="p-1.5 sm:p-2 w-full">
-        {renderCard(photo, index, categories, tags)}
+        {renderCard(photo, index, categories)}
       </div>
     );
-  }, [photos, renderCard, categories, tags]);
+  }, [photos, renderCard, categories]);
 
   if (isLoading) {
     return (

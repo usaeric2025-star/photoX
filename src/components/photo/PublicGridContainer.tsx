@@ -115,12 +115,11 @@ export function PublicGridContainer({
     update({ showWhatsAppChoice: true });
   };
 
-  const renderCard = React.useCallback((photo: Photo, index: number, sharedCategories: any[], sharedTags: any[]) => (
+  const renderCard = React.useCallback((photo: Photo, index: number, sharedCategories: any[]) => (
     <PhotoCard 
       photo={photo} 
       index={index}
       sharedCategories={sharedCategories}
-      sharedTags={sharedTags}
     />
   ), []);
 
@@ -154,7 +153,6 @@ export function PublicGridContainer({
               ref={virtualGridRef} 
               columns={columns}
               categories={categories}
-              tags={tags}
             />
         </div>
 

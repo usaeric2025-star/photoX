@@ -1,15 +1,10 @@
 import React from "react";
 import { EyeOff, Eye, RefreshCcw } from "lucide-react";
-import { ProductFormData, Photo, Tag } from "@/types";
+import { ProductFormData } from "@/types";
+import { FormSectionHeader, CategoryGrid, ManufacturerList } from "./FormShared";
 import { PhotoTagSelector } from "./edit/PhotoTagSelector";
 import { getTagIds, getTagsFromIds } from "@/services/photo/utils";
-import {
-  FormSectionHeader,
-  CategoryGrid,
-  ManufacturerList,
-} from "./FormShared";
 import { useCategories, useTags, useManufacturers } from "@/hooks";
-import { safeArray } from "@/lib/utils";
 import { useUIStore } from "@/store/useUIStore";
 
 interface BatchEditFormProps {
@@ -47,123 +42,26 @@ export function BatchEditForm({
         </p>
       </div>
 
-      <section className="space-y-4">
-        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">
-          产品名称 / PRODUCT NAME
-        </h3>
-        <input
-          type="text"
-          placeholder="输入统一产品名称..."
-          className="w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 shadow-sm font-bold placeholder:text-slate-300"
-          value={typeof formState.name === 'object' ? (formState.name.zh || '') : (formState.name || '')}
-          onChange={(e) => handleUpdateForm({ 
-            name: { 
-              zh: e.target.value, 
-              en: e.target.value, 
-              ms: e.target.value 
-            } 
-          })}
-        />
-      </section>
+      <ProductInputSection label="产品名称 / PRODUCT NAME" placeholder="输入统一产品名称..." value={typeof formState.name === 'object' ? (formState.name.zh || '') : (formState.name || '')} onChange={(v) => handleUpdateForm({ name: { zh: v, en: v, ms: v } })} />
+      <ProductInputSection label="产品编号 / ITEM CODE" placeholder="输入统一编号 (如: SK-2024)..." value={formState.manual_code} onChange={(v) => handleUpdateForm({ manual_code: v })} />
+      <ProductInputSection label="型號 / MODEL NUMBER" placeholder="输入统一型号编号 (如: MOD-123)..." value={formState.model_number} onChange={(v) => handleUpdateForm({ model_number: v })} />
+      <ProductInputSection label="價格 / PRICE" placeholder="输入统一价格..." value={formState.price} onChange={(v) => handleUpdateForm({ price: v })} className="text-blue-600" />
 
-      <section className="space-y-4">
-        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">
-          产品编号 / ITEM CODE
-        </h3>
-        <input
-          type="text"
-          placeholder="输入统一编号 (如: SK-2024)..."
-          className="w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 shadow-sm font-bold placeholder:text-slate-300"
-          value={formState.manual_code}
-          onChange={(e) => handleUpdateForm({ manual_code: e.target.value })}
-        />
-      </section>
-
-      <section className="space-y-4">
-        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">
-          型號 / MODEL NUMBER
-        </h3>
-        <input
-          type="text"
-          placeholder="输入统一型号编号 (如: MOD-123)..."
-          className="w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 shadow-sm font-bold placeholder:text-slate-300"
-          value={formState.model_number}
-          onChange={(e) => handleUpdateForm({ model_number: e.target.value })}
-        />
-      </section>
-
-      <section className="space-y-4">
-        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">
-          價格 / PRICE
-        </h3>
-        <input
-          type="text"
-          placeholder="输入统一价格..."
-          className="w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 shadow-sm font-bold placeholder:text-slate-300 text-blue-600"
-          value={formState.price}
-          onChange={(e) => handleUpdateForm({ price: e.target.value })}
-        />
-      </section>
-
-      <section className="space-y-4">
-        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">
-          显示状态 / VISIBILITY
-        </h3>
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={() => {
-              setBatchIsHiddenApplied(true);
-              handleUpdateForm({ is_hidden: false });
-            }}
-            className={`flex-1 flex flex-col items-center justify-center gap-1 p-4 rounded-2xl border-2 transition-all ${batchIsHiddenApplied && !formState.is_hidden ? "bg-green-50 border-green-500 text-green-700" : "bg-white border-slate-50 text-slate-400 border-slate-100"}`}
-          >
-            <Eye size={16} />
-            <span className="text-[10px] font-black uppercase">全部显示</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setBatchIsHiddenApplied(true);
-              handleUpdateForm({ is_hidden: true });
-            }}
-            className={`flex-1 flex flex-col items-center justify-center gap-1 p-4 rounded-2xl border-2 transition-all ${batchIsHiddenApplied && formState.is_hidden ? "bg-orange-50 border-orange-500 text-orange-700" : "bg-white border-slate-50 text-slate-400 border-slate-100"}`}
-          >
-            <EyeOff size={16} />
-            <span className="text-[10px] font-black uppercase">全部屏蔽</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setBatchIsHiddenApplied(false)}
-            className={`flex-1 flex flex-col items-center justify-center gap-1 p-4 rounded-2xl border-2 transition-all ${!batchIsHiddenApplied ? "bg-slate-100 border-slate-400 text-slate-700" : "bg-white border-slate-50 text-slate-400 border-slate-100"}`}
-          >
-            <RefreshCcw size={14} />
-            <span className="text-[10px] font-black uppercase">保持现状</span>
-          </button>
-        </div>
-      </section>
+      <VisibilitySection 
+        batchIsHiddenApplied={batchIsHiddenApplied} 
+        setBatchIsHiddenApplied={setBatchIsHiddenApplied} 
+        is_hidden={formState.is_hidden} 
+        handleUpdateForm={handleUpdateForm} 
+      />
 
       <section className="space-y-4">
         <FormSectionHeader title="产品目录" subtitle="CATEGORY *" />
-        <CategoryGrid
-          categories={categories}
-          selectedId={formState.category_id || null}
-          onSelect={(id) => handleUpdateForm({ category_id: id })}
-          appLang={appLang}
-        />
+        <CategoryGrid categories={categories} selectedId={formState.category_id || null} onSelect={(id) => handleUpdateForm({ category_id: id ? String(id) : null })} appLang={appLang} />
       </section>
 
       <section className="space-y-4">
-        <FormSectionHeader
-          title="厂商名称"
-          subtitle="MANUFACTURER"
-          onAction={quickAddMfr}
-        />
-        <ManufacturerList
-          manufacturers={manufacturers}
-          selectedId={formState?.manufacturer_id || null}
-          onSelect={(id) => handleUpdateForm({ manufacturer_id: id })}
-        />
+        <FormSectionHeader title="厂商名称" subtitle="MANUFACTURER" onAction={quickAddMfr} />
+        <ManufacturerList manufacturers={manufacturers} selectedId={formState?.manufacturer_id || null} onSelect={(id) => handleUpdateForm({ manufacturer_id: id ? String(id) : null })} />
       </section>
 
       <section className="space-y-4">
@@ -180,5 +78,51 @@ export function BatchEditForm({
         />
       </section>
     </div>
+  );
+}
+
+function ProductInputSection({ label, placeholder, value, onChange, className = "" }: { label: string, placeholder: string, value: any, onChange: (v: string) => void, className?: string }) {
+  return (
+    <section className="space-y-4">
+      <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">{label}</h3>
+      <input
+        type="text"
+        placeholder={placeholder}
+        className={`w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 shadow-sm font-bold placeholder:text-slate-300 ${className}`}
+        value={value || ''}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </section>
+  );
+}
+
+function VisibilitySection({ batchIsHiddenApplied, setBatchIsHiddenApplied, is_hidden, handleUpdateForm }: any) {
+  return (
+    <section className="space-y-4">
+      <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">显示状态 / VISIBILITY</h3>
+      <div className="flex gap-3">
+        <button
+          type="button"
+          onClick={() => { setBatchIsHiddenApplied(true); handleUpdateForm({ is_hidden: false }); }}
+          className={`flex-1 flex flex-col items-center justify-center gap-1 p-4 rounded-2xl border-2 transition-all ${batchIsHiddenApplied && !is_hidden ? "bg-green-50 border-green-500 text-green-700" : "bg-white border-slate-50 text-slate-400 border-slate-100"}`}
+        >
+          <Eye size={16} /><span className="text-[10px] font-black uppercase">全部显示</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => { setBatchIsHiddenApplied(true); handleUpdateForm({ is_hidden: true }); }}
+          className={`flex-1 flex flex-col items-center justify-center gap-1 p-4 rounded-2xl border-2 transition-all ${batchIsHiddenApplied && is_hidden ? "bg-orange-50 border-orange-500 text-orange-700" : "bg-white border-slate-50 text-slate-400 border-slate-100"}`}
+        >
+          <EyeOff size={16} /><span className="text-[10px] font-black uppercase">全部屏蔽</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setBatchIsHiddenApplied(false)}
+          className={`flex-1 flex flex-col items-center justify-center gap-1 p-4 rounded-2xl border-2 transition-all ${!batchIsHiddenApplied ? "bg-slate-100 border-slate-400 text-slate-700" : "bg-white border-slate-50 text-slate-400 border-slate-100"}`}
+        >
+          <RefreshCcw size={14} /><span className="text-[10px] font-black uppercase">保持现状</span>
+        </button>
+      </div>
+    </section>
   );
 }
