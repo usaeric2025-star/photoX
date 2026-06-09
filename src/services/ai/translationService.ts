@@ -1,6 +1,6 @@
 import { translateText } from './agnes';
 import { ok, fail } from '@/lib/utils/result';
-import type { AppResult } from '@/lib/types/result';
+import { AppResult } from '@/types/api';
 import type { TranslationResult } from './types';
 
 export const translateFields = async (

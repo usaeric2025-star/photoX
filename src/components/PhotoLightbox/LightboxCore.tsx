@@ -11,7 +11,7 @@ import { LIGHTBOX_PLUGINS, LIGHTBOX_OPTIONS } from "./lightboxConfig";
 import { toLightboxSlides } from "./lightboxSlides";
 import { downloadPhotoAsJpeg } from "@/lib/download";
 import { PhotoInfoPanel } from "../photo/PhotoInfoPanel";
-import { useSettings } from "@/hooks/useSettings";
+import { useSettings } from "@/hooks";
 
 interface LightboxCoreProps {
   open: boolean;

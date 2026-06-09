@@ -1,6 +1,6 @@
 # PhotoX 架构规则（永久锁定）
 
-## 核心原则
+## 核心原则（锁定）
 1. 服务端数据 → TanStack Query
 2. 前端 UI 状态 → Zustand（只存瞬态）
 3. 筛选条件 → URL State
@@ -8,7 +8,7 @@
 5. ❌ Props drilling 超过 2 层
 6. ❌ 预计算层
 
-## 命名规范（强制）
+## 命名规范（强制，锁定）
 
 ### 组件
 | 类型 | 规则 | 示例 |
@@ -69,7 +69,26 @@ invalidatePhotos(); // 降维打击，清空全域缓存
 | UI 瞬态 | Zustand (`useUIStore`) | 主题、侧边栏开关、全局弹窗、灯箱索引 |
 | 组件局部 | `useState` / `useMemo` | 简单的 Input 受控、局部勾选 ID 集合 |
 
-## API 契约层（锁定）
+## 数据验证规范（锁定）
+
+- ✅ **唯一方案**：使用 **ArkType** 进行运行时类型校验。
+- ✅ **共享定义**：校验 Schema 应在 `api/shared/apiContractSchema.ts` 中定义，由前后端通过 `import type` 共享。
+- ❌ **严禁方案**：禁止引入 **Zod**。如果发现项目中有遗留的 Zod 代码，逐步重写为 ArkType。
+- ❌ **禁止逻辑混入**：Validator 只负责数据形状校验，禁止在校验阶段混入复杂的业务逻辑。
+
+### 示例
+```typescript
+import { type } from "arktype";
+
+export const PhotoSchema = type({
+  id: "string",
+  name: "string",
+  "image_url?": "string",
+  "group_id?": "string"
+});
+```
+
+## API 路由架构规范（锁定）
 
 1. **类型共享**：前端必须通过 `import type { AppType } from "../../api/app"` 引用后端路由类型。
 2. **RPC 优先**：优先使用 `hono/client` (hc) 进行调用，确保前端参数与后端定义严格对齐。
@@ -124,7 +143,7 @@ invalidatePhotos(); // 降维打击，清空全域缓存
 - 零额外配置，零学习成本
 - 与 Vercel 设计理念完美对齐
 
-## 目录结构规则（锁定）
+## 目录结构规则（锁定，2026-06-02）
 
 - `api/` → Vercel Serverless 函数（后端）
   - `api/index.ts` 是入口
@@ -156,40 +175,31 @@ export const fetch = handle(app);
 - ❌ 禁止 `export default handle(app)`（在某些 ES Modules 编译阶段，Vercel 构建可能报错或解析失败）
 - ❌ 禁止动态导入 `await import("./app")`
 
-## Virtua 虚拟滚动规范（修正）
+## Virtua 虚拟滚动规范（性能优化版）
+
+### 核心原则
+- ✅ **尺寸匹配**：`itemSize` 必须尽可能接近真实渲染高度。对于响应式栅格，建议使用动态计算或 `estimateSize`。
+- ✅ **减少抖动**：追加数据时确保稳定的 `key`，避免 `VList` 重新测量所有节点。
 
 ### 核心配置
 ```tsx
 <VList
   ref={listRef}
   data={items}
-  itemSize={200}                           // 估算高度
-  shift={false}
+  itemSize={estimatedHeight}               // 响应式或固定高度
+  shift={true}                             // 追加数据时保持位置稳定
 >
-  {(item, index) => (
-    <Component key={item.id} item={item} />
-  )}
+  {(item) => <Component key={item.id} item={item} />}
 </VList>
 ```
 
-禁止事项
-
-· ❌ 禁止使用已废弃的 overscan 属性
-· ❌ 禁止使用 index 作为 key（使用稳定 ID）
-· ❌ 禁止直接传递 children 作为预渲染元素（大数据集）
-
-可选配置
-
-· keepMounted: 保持特定索引（如组头、表单）
-· ssrCount: SSR 场景设置首屏数量
-
-### 支持的属性（仅这些）
+### 属性建议
 - ✅ `data` - 数据源
-- ✅ `itemSize` - 固定行高（数值或函数）
-- ✅ `scrollToIndex` - 滚动到指定索引
-- ❌ `overscanCount` - 废除
-- ❌ `estimateSize` - 不支持，使用 `itemSize`
-- ❌ `overscan`（像素单位） - 不支持，使用 `itemSize`
+- ✅ `itemSize` - 估算高度（推荐根据 columns 动态计算）
+- ✅ `shift` - 建议开启，用于平滑处理分页追加
+- ✅ `scrollToIndex` - 导航跳转首选
+- ❌ `overscanCount` - 已废弃，使用自动缓存策略
+- ❌ `index` 作为 key - 严禁
 
 ### 返回顶部与恢复滚动标准写法
 - ✅ **导航跳转**：使用 `scrollToIndex(0)` 回到顶部
@@ -211,7 +221,7 @@ const showAdmin = useAdminMode() && isManagement;
 const showAdmin = useAdminMode() || isManagement;
 ```
 
-## 页面类型与权限判断规范（锁定）
+## 页面类型与权限判断规范（锁定，2026-06-03）
 
 ### 核心原则
 - ✅ 页面类型（管理模式/公开模式）**只由 URL 决定**
@@ -244,7 +254,11 @@ setViewMode('private');
 - `/admin` → 管理后台（AdminPage）
 - 其他路由按需扩展
 
-## Props 传递规范（锁定）
+## Props 传递规范（锁定，2026-06-03）
+
+- ✅ **性能优先**：在虚拟列表（Virtual List）渲染项中，**严禁** 在子组件内部调用 `useQuery` 或数据量较大的 Hook（如 `useCategories`, `useTags`）。
+- ✅ **共享注入**：必须在父容器中获取数据，并通过 `sharedCategories` / `sharedTags` 等 Props 批量注入子项，以避免数千次重复的数据查找开销。
+- ❌ **禁止 Drilling**：Props 路径严禁超过 2 层。如果需要深层传递，考虑使用细粒度的 Zustand Selector。
 
 ## 照片上传排重规范（锁定）
 
@@ -367,7 +381,7 @@ toast.error('发现数据完整性问题', {
 });
 ```
 
-## 任务中心适配规范（锁定，2026-06-03）
+## 任務中心適配規範（鎖定，2026-06-03）
 - ✅ **非破坏性更新**：不重写 `useTaskExecutor` 和 `TasksList`，采用适配层聚合数据。
 - ✅ **全局入口**：在 `/admin/tasks` 提供所有（前端+后端）任务的统一视图。
 - ✅ **自动刷新**：任务页面应具备自动轮询后端 Job 状态的能力。
@@ -480,9 +494,11 @@ toast.error('发现数据完整性问题', {
 - 路由/URL：`useUrlFilters`
 - 权限：`useAdminMode`
 
-## 性能优化原则（非必要不优化，锁定）
+## 性能优化原则（锁定）
 - ✅ **性能优先原则**：性能优化应当建立在真实确认的瓶颈基础上。
-- ❌ **非必要不优化**：除非遇到真实性能瓶颈，否则禁止主动进行 `async-parallel`、`bundle-dynamic-imports`、`bundle-barrel-imports` 等复杂优化，以保持架构的简单与可维护性。
+- ✅ **数据面优化**：在大数据无限滚动中，优先优化 flatMap / select 下的同步计算。
+- ✅ **渲染面优化**：确保虚拟滚动的 itemSize 与实际高度误差 < 10%，减少闪烁与重复测量。
+- ❌ **非必要不优化**：除非遇到真实性能瓶颈，否则禁止进行盲目的 bundle 拆分或过度工程。
 
 ## 错误处理与 Mutation 规范（锁定）
 - ❌ 禁止直接 `throw new Error()`，必须用 `ErrorFactory.wrap()`。
@@ -852,7 +868,7 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 - ✅ **緩存聯動**：刪除操作的 Mutation 必須失效所有相關實體的緩存（例如刪組時需失效 `photoKeys.all`）。
 - ❌ 禁止要求用戶通過刷新頁面來解決刪除後的數據殘留。
 
-## AI 分析服务层规范（锁定）
+## AI 分析服务层规范（锁定，2026-06-09）
 
 - ✅ 唯一编排入口：`analyzeAndSavePhoto()` in `src/services/ai/orchestration.ts`
 - ✅ 标签写入必须通过 `syncPhotoTags()`，禁止在 `updatePhoto` 中包含 `tag_ids`
@@ -865,7 +881,7 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 - 照片保存成功但标签同步失败时，照片仍会保存，标签需手动重试
 - 未来可考虑引入 Supabase RPC 实现事务原子性
 
-## 自动诊断规范（锁定）
+## 自动诊断规范（锁定，2026-06-09）
 
 - ✅ **核心原则**：主动预防性发现高风险数据问题，利用低成本检测降低维护压力。
 - ✅ **检测项目**：
@@ -878,3 +894,39 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 - ❌ **禁止项**：
   - 禁止在无用户介入的情况下自动执行破坏性写操作（如自动物理删除 R2 文件）。
   - 禁止高频率（如每分钟）检测，避免不必要的数据库 IO 开销。
+
+## AI 审计与生命周期规范（锁定，2026-06-09）
+
+- ✅ **核心原则**：所有 AI 任务必须可回跳、可对账、可审计。
+- ✅ **唯一出口**：所有 AI 写入管道必须集成 `saveAIAuditLog()`。
+- ✅ **核心字段**：必须记录 `task`, `model`, `latency_ms`, `token_usage`, `status`。
+- ✅ **存储策略**：
+  - Hot Storage: `ai_audit_logs` 表（保留 30 天）。
+  - Cold Storage: R2 JSON 归档（长期保留，用于成本审计）。
+- ❌ **禁止项**：禁止在 AI 失败时静默重试而不留日志。
+
+## 多语言三层防护规范（锁定，2026-06-09）
+
+### 第一层：后端清洗 (Sanitization)
+- ✅ 所有入库的 name/description 必须经过 `normalizeI18n()`。
+- ✅ 即使 AI 返回纯字符串，也必须封装为 `{ zh, en, ms }`。
+
+### 第二层：SQL 修复 (Repair)
+- ✅ 管理后台必须提供 `repair_i18n_names` 工具，用于修复存量 string 数据。
+- ✅ 定期扫描并归一化非标准 JSON 字段。
+
+### 第三层：前端降级 (Safe Access)
+- ✅ 渲染层必须使用 `getSafeText()` 或 `safeText()` 助手。
+- ✅ 渲染逻辑：`requested -> zh -> en -> ms -> "-"`。
+- ❌ 禁止在组件内直接使用 `photo.name.en` 等不安全路径。
+
+## 诊断中心路由规范（锁定，2026-06-09）
+
+- ✅ **核心原则**：诊断中心状态必须由 URL 驱动，禁用 Zustand 管理 activeTab。
+- ✅ **路由映射**：
+  - `/admin/diagnose` → 诊断概览
+  - `/admin/tasks` → 任务列表
+  - `/admin/error-logs` → 错误日志
+- ✅ **跳转逻辑**：所有诊断面板间的切换必须使用 `navigate()`。
+
+## ON DELETE SET NULL 约束补充（锁定，2026-06-09）

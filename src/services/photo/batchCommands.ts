@@ -6,7 +6,7 @@ import { withSupabase } from '@/lib/error/supabaseWrapper';
 import { success } from '@/lib/error/ErrorFactory';
 import { AppResult } from '@/types/api';
 import { createPhotoValidator } from '../../lib/validators/factory';
-import { mapToDb } from './photoMappingUtils';
+import { mapToDb } from './toDb';
 import { syncBatchPhotoTags } from '@/services/tag/commands';
 
 export interface BatchActionResult {
@@ -51,10 +51,6 @@ export async function batchUpdate(ids: string[], updates: Partial<Photo>): Promi
 
     const updatedIds = new Set(res.data?.map(d => d.id) || []);
     const failedOnes = ids.filter(id => !updatedIds.has(id)).map(id => ({ id, reason: 'Not found or unchanged' }));
-
-    if ('tags' in updates && Array.isArray(updates.tags)) {
-      await syncBatchPhotoTags(ids, updates.tags.map(t => String(t.id)));
-    }
 
     return success({
       successCount: updatedIds.size,

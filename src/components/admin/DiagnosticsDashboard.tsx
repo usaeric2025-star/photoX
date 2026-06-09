@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useLocation, useNavigate } from '@tanstack/react-router';
 import { 
-  RefreshCw, PackageSearch, Zap, History, ShieldCheck
+  RefreshCw, History, ShieldCheck
 } from 'lucide-react';
 import { useDiagnostics } from '@/hooks/admin/useDiagnostics';
+import { diagnosticRegistry } from './Diagnostics/registry';
 import { DiagnosticCard } from './Diagnostics/DiagnosticCard';
 import { TasksContent } from './Diagnostics/TasksList';
 import { Button } from '@/components/ui/button';
@@ -17,15 +19,25 @@ import { IssueList } from './Diagnostics/IssueList';
 import { MaintenanceCenter } from './Diagnostics/MaintenanceCenter';
 
 export function DiagnosticsDashboard() {
-  const activeUIScreen = useUIStore(s => s.activeScreen);
-  const [activeTab, setActiveTab] = useState<'diagnosis' | 'tasks' | 'logs' | 'history'>('diagnosis');
+  const location = useLocation();
+  const navigate = useNavigate();
   
-  React.useEffect(() => {
-    if (activeUIScreen === 'tasks') setActiveTab('tasks');
-    if (activeUIScreen === 'error-logs' || activeUIScreen === 'logs') setActiveTab('logs');
-    if (activeUIScreen === 'history_maintenance') setActiveTab('history');
-    if (activeUIScreen === 'diagnostics') setActiveTab('diagnosis');
-  }, [activeUIScreen]);
+  const activeTab = (() => {
+    const path = location.pathname;
+    if (path.includes('/tasks')) return 'tasks';
+    if (path.includes('/error-logs')) return 'logs';
+    if (path.includes('/history/maintenance')) return 'history';
+    return 'diagnosis';
+  })();
+
+  const setActiveTab = (tab: 'diagnosis' | 'tasks' | 'logs' | 'history') => {
+    switch (tab) {
+      case 'tasks': navigate({ to: '/admin/tasks' }); break;
+      case 'logs': navigate({ to: '/admin/error-logs' }); break;
+      case 'history': navigate({ to: '/admin/history/maintenance' }); break;
+      default: navigate({ to: '/admin/diagnose' }); break;
+    }
+  };
 
   const { 
     report, isLoading, refreshReport, runRepair,
@@ -50,6 +62,21 @@ export function DiagnosticsDashboard() {
       return;
     }
     await runRepair(issueId);
+  };
+
+  const [pluginResults, setPluginResults] = useState<Record<string, { result: any, loading: boolean }>>({});
+
+  const runPlugin = async (plugin: any) => {
+    setPluginResults(prev => ({ ...prev, [plugin.title]: { ...prev[plugin.title], loading: true } }));
+    try {
+      const res = await plugin.run();
+      setPluginResults(prev => ({ ...prev, [plugin.title]: { result: res, loading: false } }));
+      if (!res.success) toast.error(res.message);
+      else toast.success(res.message);
+    } catch (e: any) {
+      setPluginResults(prev => ({ ...prev, [plugin.title]: { result: { success: false, message: '执行出错', error: e.message }, loading: false } }));
+      toast.error('模块执行异常');
+    }
   };
 
   const combinedIssues = (() => {
@@ -137,23 +164,17 @@ export function DiagnosticsDashboard() {
 
           {/* 基础设施诊断 */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <DiagnosticCard 
-              title="R2 存储及 CDN 连通性"
-              desc="验证 Cloudflare R2 读写权限"
-              icon={<PackageSearch size={16} />}
-              onTest={runR2Diagnostics}
-              isLoading={isDiagnosingR2}
-              result={r2Result}
-            />
-            <DiagnosticCard 
-              title="缩略图生成服务"
-              desc="验证全局边缘 Worker 响应速度"
-              icon={<Zap size={16} />}
-              onTest={onTestWorker}
-              isLoading={isLoading}
-              result={localWorkerResult}
-              successColor="text-brand-gold"
-            />
+            {diagnosticRegistry.map(plugin => (
+              <DiagnosticCard 
+                key={plugin.title}
+                title={plugin.title}
+                desc={plugin.desc}
+                icon={plugin.icon}
+                isLoading={pluginResults[plugin.title]?.loading ?? false}
+                result={pluginResults[plugin.title]?.result ?? null}
+                onTest={() => runPlugin(plugin)}
+              />
+            ))}
           </div>
 
           {/* 智能故障修复列表 */}

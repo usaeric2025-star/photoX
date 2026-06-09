@@ -2,11 +2,10 @@ import React, { useEffect, useRef } from 'react';
 import { VirtualGrid, VirtualGridHandle } from '@/components/virtualizer/VirtualGrid';
 import { Photo, TranslationType, Category, Tag } from '../../types';
 import { useUIStore, useShallow, UIStoreState } from '@/store/useUIStore';
-import { useUrlFilters } from '@/hooks/useUrlFilters';
+import { useImagePreloader, useTranslation, useUrlFilters } from '@/hooks';
 import { translations } from '../../lib/translations';
 import { PhotoGridSkeleton } from './PhotoGridSkeleton';
 import { LoadMoreIndicator } from './LoadMoreIndicator';
-import { useImagePreloader, useTranslation } from '@/hooks';
 
 interface VirtualPhotoGridProps {
   photos: Photo[];
@@ -86,6 +85,29 @@ export const VirtualPhotoGrid = React.memo(({
 
   const isLoading = isFetching && photos.length === 0;
 
+  // Dynamic row height estimation based on columns and container width
+  const [containerWidth, setContainerWidth] = React.useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      if (entries[0]) {
+        setContainerWidth(entries[0].contentRect.width);
+      }
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  const estimatedRowHeight = React.useMemo(() => {
+    // Each card is aspect-square, so height roughly equals width
+    // containerWidth / columns gives the approximate width of a single card
+    // Add some padding/gap (p-1.5 is about 12px horizontally per item)
+    const cardWidth = containerWidth / Math.max(1, columns);
+    return Math.max(150, cardWidth + 12); // Minimum typical height
+  }, [containerWidth, columns]);
+
   const internalRenderItem = React.useCallback((index: number) => {
     const photo = photos[index];
     if (!photo) return null;
@@ -105,14 +127,14 @@ export const VirtualPhotoGrid = React.memo(({
   }
 
   return (
-    <div className="h-full w-full overscroll-y-contain relative">
+    <div ref={containerRef} className="h-full w-full overscroll-y-contain relative">
       <div className="h-full w-full">
         <VirtualGrid
           ref={gridRef}
           count={photos.length}
           lanes={columns}
-          itemSize={200}
-          shift={false}
+          itemSize={estimatedRowHeight}
+          shift={true}
           onScroll={handleScroll}
           onEndReached={() => {
             if (hasNextPage && !isFetchingNextPage && onLoadMore) {

@@ -10,9 +10,7 @@ import { SelectionToolbar } from "../shared/SelectionToolbar";
 import { useGroupAdminLogic } from "./useGroupAdminLogic";
 import { GroupGridView } from "./GroupGridView";
 import { GroupPhotoPicker } from "./GroupPhotoPicker";
-import { useUrlFilters } from "@/hooks/useUrlFilters";
-
-import { useAdminMode, useGroupMutations } from "@/hooks";
+import { useAdminMode, useGroupMutations, useUrlFilters, useAIBatchAnalysis } from "@/hooks";
 import { useAdminActions } from "@/hooks/admin/useAdminActions";
 import { useUIStore, useShallow } from "@/store/useUIStore";
 import { translations } from "../../lib/translations";
@@ -24,8 +22,6 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { toast } from "sonner";
-
-import { useAIBatchAnalysis } from "@/hooks/useAIBatchAnalysis";
 
 export function GroupAdminShell() {
   const isAdminMode = useAdminMode();

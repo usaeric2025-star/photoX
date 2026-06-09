@@ -3,7 +3,7 @@ import { translateFields } from './translationService';
 import { updatePhoto } from '../photo/commands';
 import { syncPhotoTags, loadTagsFromCloud, batchCreateTags } from '../tag';
 import { ok, fail } from '@/lib/utils/result';
-import type { AppResult } from '@/lib/types/result';
+import { AppResult } from '@/types/api';
 import { analyzeGroup, analyzeSinglePhoto } from '../gemini/groupAnalysis';
 import { translateProductFields } from '../gemini/translationCore';
 import { updateGroup } from '../group/commands';
@@ -30,11 +30,11 @@ export const analyzeAndSavePhoto = async (
       settingsData?.custom_model || 'gemini-1.5-flash', 
       settingsData?.gemini_api_key || ''
   );
-  if (!analysis.success) return analysis;
+  if (!analysis.ok) return analysis;
 
   // 2. 補全翻譯 (Model B: Agnes)
   const translation = await translateFields(analysis.data.name, analysis.data.description);
-  if (!translation.success) return translation;
+  if (!translation.ok) return translation;
 
   // 3. 保存照片基礎信息
   const updateResult = await updatePhoto(photo.id, {
@@ -57,39 +57,12 @@ export const analyzeAndSavePhoto = async (
   // 4. 標籤處理 (解決名稱到 ID 的轉換)
   const tagNames = analysis.data.tagNames;
   if (tagNames && tagNames.length > 0) {
-    try {
-      const dbTags = existingTags && existingTags.length > 0 ? existingTags : await loadTagsFromCloud();
-      const tagIds: string[] = [];
-      const missingNames: string[] = [];
-
-      tagNames.forEach((name: string) => {
-        const normalized = name.toUpperCase().trim();
-        const existing = dbTags.find(t => 
-           (t.name && t.name.toUpperCase() === normalized) || 
-           (t.aliases && Array.isArray(t.aliases) && t.aliases.some((a: string) => a.toUpperCase() === normalized))
-        );
-        if (existing) {
-          tagIds.push(String(existing.id));
-        } else {
-          missingNames.push(normalized);
-        }
-      });
-
-      if (missingNames.length > 0) {
-        const createResult = await batchCreateTags(missingNames);
-        if (createResult.ok && createResult.data) {
-          createResult.data.forEach((id: string) => tagIds.push(id));
-        }
-      }
-
-      if (tagIds.length > 0) {
-        const tagSyncResult = await syncPhotoTags(photo.id, tagIds);
-        if (!tagSyncResult.ok) {
-          console.error(`[AI] 標籤同步失敗: ${photo.id}`, tagSyncResult.message);
-        }
-      }
-    } catch (tagErr) {
-      console.warn(`[AI] 標籤解析流程非致命失敗: ${photo.id}`, tagErr);
+    const { resolveTagNamesToIds } = await import('../tag/completion');
+    const { syncPhotoTags } = await import('../tag/commands');
+    
+    const resolveResult = await resolveTagNamesToIds(tagNames, existingTags);
+    if (resolveResult.ok && resolveResult.data.length > 0) {
+        await syncPhotoTags(photo.id, resolveResult.data);
     }
   }
 
@@ -199,3 +172,75 @@ export const analyzeAndSaveGroup = async (
     return fail(err.message || '合组分析失败');
   }
 };
+
+/**
+ * Batch Analysis Orchestration
+ * Moves logic out of hooks for better testability and cleaner components.
+ */
+export async function runBatchAnalysis({
+  targetPhotos,
+  groupId,
+  settings,
+  onProgress
+}: {
+  targetPhotos: any[];
+  groupId?: string;
+  settings: any;
+  onProgress: (progress: number, message?: string) => void;
+}) {
+  const totalPhotosToProcess = targetPhotos.length;
+  let successCount = 0;
+
+  // 1. Prefetch metadata once
+  let dbCategories: any[] = [];
+  let dbTags: any[] = [];
+  try {
+    const [{ data: catsRes }, { data: tagsRes }] = await Promise.all([
+      supabase.from('categories').select('*'),
+      supabase.from('tags').select('*'),
+    ]);
+    if (catsRes) dbCategories = catsRes;
+    if (tagsRes) dbTags = tagsRes;
+  } catch (e) {
+    console.warn("[AI Batch] Prefetch metadata failed", e);
+  }
+
+  // 2. Process photos
+  for (let i = 0; i < targetPhotos.length; i++) {
+    const p = targetPhotos[i];
+    const currentProgress = ((i) / totalPhotosToProcess) * (groupId ? 70 : 100);
+
+    if (hasExistingInfo(p)) {
+      onProgress(currentProgress + (1/totalPhotosToProcess * (groupId ? 70 : 100)), `保留已有信息: ${i + 1}/${totalPhotosToProcess}`);
+      continue;
+    }
+
+    try {
+      onProgress(currentProgress, `正在分析照片 ${i + 1}/${totalPhotosToProcess}`);
+      const result = await analyzeAndSavePhoto(p, settings, dbTags, dbCategories);
+      if (result.ok) successCount++;
+    } catch (err: any) {
+      console.error(`[AI Batch] Photo ${p.id} error:`, err);
+    }
+  }
+
+  // 3. Optional Group Analysis
+  let groupSuccess = false;
+  if (groupId) {
+    onProgress(75, '正在總結整個合組...');
+    try {
+      const { loadPhotosByIds } = await import('../photo/read');
+      const res = await loadPhotosByIds(targetPhotos.map(p => p.id));
+      if (res.ok && res.data) {
+        onProgress(85, '生成合組名稱與描述...');
+        const groupRes = await analyzeAndSaveGroup(groupId, res.data, settings);
+        if (groupRes.ok) groupSuccess = true;
+      }
+    } catch (e) {
+      console.warn('[AI Group] Batch summary failed', e);
+    }
+  }
+
+  onProgress(100, '分析流程完成');
+  return { successCount, groupSuccess };
+}

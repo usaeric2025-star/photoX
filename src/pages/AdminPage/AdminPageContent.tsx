@@ -14,17 +14,17 @@ import { logger } from '@/lib/logger';
 import { DataLoadingContainer } from '@/components/ui/DataLoadingContainer';
 import { BatchEditScreen } from '@/components/admin/BatchEditScreen';
 import { StatisticsScreen } from '@/components/admin/StatisticsScreen';
-import { SettingsScreen } from '@/components/SettingsScreen';
+import { SettingsPage } from '@/components/SettingsPage';
 import { PhotoEditDrawer } from '@/components/admin/PhotoEditDrawer';
 import { GroupDetailPage } from '@/components/GroupDetailPage';
-import { useAIBatchAnalysis } from '@/hooks/useAIBatchAnalysis';
+import { useAIBatchAnalysis } from '@/hooks';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { usePhotoGallery } from '@/hooks/photo/usePhotoGallery';
 import { Category } from '@/types';
 import { toast } from 'sonner';
 import { AdminHeader } from '@/components/layouts/headers/AdminHeader';
 import { AdminAuthGate } from '@/components/admin/AdminAuthGate';
-import { AdminScreen } from '@/components/AdminScreen';
+import { AdminContainer } from '@/components/AdminContainer';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export function AdminPageContent() {
@@ -56,7 +56,9 @@ export function AdminPageContent() {
       store.update({ activeScreen: 'error-logs' });
     } else if (path === '/admin/history/maintenance') {
       store.update({ activeScreen: 'history_maintenance' });
-    } else if (path === '/admin' && (['error-logs', 'tasks', 'history_maintenance'].includes(store.activeScreen))) {
+    } else if (path === '/admin/diagnose') {
+      store.update({ activeScreen: 'diagnose' });
+    } else if (path === '/admin' && (['error-logs', 'tasks', 'history_maintenance', 'diagnose'].includes(store.activeScreen))) {
       store.update({ activeScreen: 'gallery' });
     }
   }, [location.pathname, store.update]);
@@ -106,7 +108,7 @@ export function AdminPageContent() {
                 transition={{ duration: 0.2 }}
                 className="absolute inset-0"
               >
-                <AdminScreen />
+                <AdminContainer />
               </motion.div>
             ) : currentScreen === 'dashboard' ? (
               <ScreenWrapper key="admin-dashboard" onClose={() => store.update({ activeScreen: 'gallery' })}>
@@ -121,7 +123,7 @@ export function AdminPageContent() {
                 transition={{ duration: 0.2 }}
                 className="absolute inset-0 z-20 bg-slate-50"
               >
-                <SettingsScreen onClose={() => store.update({ activeScreen: 'gallery' })} />
+                <SettingsPage onClose={() => store.update({ activeScreen: 'gallery' })} />
               </motion.div>
             ) : null}
           </AnimatePresence>

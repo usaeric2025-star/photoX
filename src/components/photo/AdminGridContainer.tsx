@@ -8,7 +8,8 @@ import {
   useScrollRestoration, 
   useUrlFilters, 
   useColumns,
-  useCategories
+  useCategories,
+  useAdminBatchActions
 } from '@/hooks';
 import { useUIStore } from '@/store/useUIStore';
 import { UploadButton } from '@/components/shared/UploadButton';
@@ -17,8 +18,6 @@ import { useNavigate } from '@tanstack/react-router';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useAdminPhotos } from '@/hooks/admin/useAdminPhotos';
 import { useAdminSelectionActions } from '@/hooks/admin/useAdminSelectionActions';
-
-import { useAdminBatchActions } from '@/hooks/useAdminBatchActions';
 
 export function AdminGridContainer() {
   const { handleBatchAiIdentifyTrigger } = useAdminBatchActions();
@@ -100,6 +99,7 @@ export function AdminGridContainer() {
              onLoadMore={fetchNextPage}
              renderCard={renderCard}
              columns={columns}
+             categories={categories}
            />
         </div>
 

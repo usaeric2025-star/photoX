@@ -17,6 +17,8 @@ export const STORAGE_KEYS = {
   SIDEBAR_COLLAPSED: 'photo_isSidebarCollapsed',
   EDIT_FORM_DRAFT: 'photo_edit_form_draft',
   SORT_ORDER: 'photo_sortOrder',
+  RECENTLY_VIEWED: 'photo_recently_viewed',
+  LAST_MAINTENANCE_RUN: 'photo_last_maintenance_day',
 } as const;
 
 type Validator<T> = (value: any) => T;

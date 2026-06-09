@@ -7,8 +7,7 @@ import { useDisclosure, useClipboard } from "@mantine/hooks";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { saveGroup as saveGroupToCloud } from "@/services/group/commands";
 
-import { useTaskExecutor, useTasks } from "@/hooks";
-import { useUrlFilters } from "@/hooks/useUrlFilters";
+import { useTaskExecutor, useTasks, useUrlFilters } from "@/hooks";
 import { toast } from "sonner";
 
 export function GroupSettingsHeader({

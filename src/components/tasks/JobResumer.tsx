@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { useTasks, BackgroundTask } from '@/hooks/useTasks';
+import { useTasks, type BackgroundTask } from '@/hooks';
 import { ISSUE_ACTIONS } from "@/lib/maintenance";
 import { logger } from '@/lib/logger';
 
@@ -13,14 +13,14 @@ export function JobResumer() {
 
   useEffect(() => {
     // Find tasks that are 'running', have a 'jobId' and 'issueId', but are NOT currently being polled
-    const interruptedJobs = tasks.filter(t => 
+    const interruptedJobs = tasks.filter((t: BackgroundTask) => 
       t.status === 'running' && 
       t.jobId && 
       t.issueId && 
       !pollingJobs.current.has(t.id)
     );
 
-    interruptedJobs.forEach(async (task) => {
+    interruptedJobs.forEach(async (task: BackgroundTask) => {
       const { id, jobId, issueId, name } = task;
       if (!jobId || !issueId) return;
 

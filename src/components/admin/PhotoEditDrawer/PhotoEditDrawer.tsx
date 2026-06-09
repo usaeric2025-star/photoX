@@ -20,7 +20,7 @@ import {
   usePhotoEditMutation
 } from "../../../hooks";
 import { toast } from 'sonner';
-import { useTasks } from "@/hooks/useTasks";
+import { useTasks } from "@/hooks";
 import { UseFormReturnType } from "@mantine/form";
 
 /**

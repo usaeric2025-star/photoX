@@ -14,7 +14,7 @@ import { usePhotos, useTaskExecutor, useTasks, useInvalidatePhotos } from "@/hoo
 import { PAGINATION } from "../../constants/config";
 import { GroupGridView } from "./GroupGridView";
 import { cn } from "@/lib/utils";
-import { savePhotosToCloudBatch } from "@/services/photo/photoUploadService";
+import { savePhotosToCloudBatch } from "@/services/photo/upload";
 import { useAuth } from "@/hooks/core/auth/useAuth";
 import { processImageFiles } from '@/lib/image/imageProcess';
 import { checkDuplicateBatch, removeFromDuplicateCache } from '@/lib/data/duplicateCheck';

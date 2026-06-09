@@ -13,7 +13,7 @@ import { Capability } from './config/permissions';
 import { QueryClient } from '@tanstack/react-query';
 import { photoKeys, groupKeys } from '@/lib/queryKeys';
 import { createStaleTime } from '@/shared/freshnessSchema';
-import { getGroupById } from '@/services/group/queries';
+import { prefetchMainGallery, prefetchGroupDetail } from '@/services/router/loaders';
 import { GlobalStatus } from './components/shared/GlobalStatus';
 import { authGuard } from './lib/router/routeGuards';
 import { GallerySearchParams } from './types/router';
@@ -107,41 +107,9 @@ const indexRoute = createRoute({
   },
   beforeLoad: authGuard,
   loader: async ({ context }) => {
-    const { queryClient } = context;
-    if (!queryClient) return;
-    const queryKey = photoKeys.infinite({ 
-      category_id: null,
-      tag_id: null,
-      searchQuery: null,
-      sortOrder: null,
-      isAdminMode: false,
-      onlyUngrouped: false,
-      limit: PHOTO_QUERY_CONFIG.limit
-    }, 'REALTIME');
-
-    queryClient.prefetchInfiniteQuery({
-      queryKey,
-      queryFn: async () => {
-        const { loadAllPhotosFromCloud } = await import('./services/photo/queries');
-        const res = await loadAllPhotosFromCloud(
-          undefined,
-          0,
-          PHOTO_QUERY_CONFIG.limit,
-          undefined,
-          undefined,
-          undefined,
-          false
-        );
-        if (!res.ok) throw new Error(res.message);
-        const photos = res.data || [];
-        return {
-          photos: photos,
-          nextPage: photos.length >= PHOTO_QUERY_CONFIG.limit ? 2 : undefined
-        };
-      },
-      initialPageParam: 1,
-      staleTime: createStaleTime('REALTIME'),
-    });
+    if (context.queryClient) {
+      await prefetchMainGallery(context.queryClient);
+    }
   },
   component: PublicPage,
 });
@@ -166,41 +134,9 @@ const previewRoute = createRoute({
     };
   },
   loader: async ({ context }) => {
-    const { queryClient } = context;
-    if (!queryClient) return;
-    const queryKey = photoKeys.infinite({ 
-      category_id: null,
-      tag_id: null,
-      searchQuery: null,
-      sortOrder: null,
-      isAdminMode: false,
-      onlyUngrouped: false,
-      limit: PHOTO_QUERY_CONFIG.limit
-    }, 'REALTIME');
-
-    queryClient.prefetchInfiniteQuery({
-      queryKey,
-      queryFn: async () => {
-        const { loadAllPhotosFromCloud } = await import('./services/photo/queries');
-        const res = await loadAllPhotosFromCloud(
-          undefined,
-          0,
-          PHOTO_QUERY_CONFIG.limit,
-          undefined,
-          undefined,
-          undefined,
-          false
-        );
-        if (!res.ok) throw new Error(res.message);
-        const photos = res.data || [];
-        return {
-          photos: photos,
-          nextPage: photos.length >= PHOTO_QUERY_CONFIG.limit ? 2 : undefined
-        };
-      },
-      initialPageParam: 1,
-      staleTime: createStaleTime('REALTIME'),
-    });
+    if (context.queryClient) {
+      await prefetchMainGallery(context.queryClient);
+    }
   },
   component: PublicPage,
 });
@@ -227,14 +163,9 @@ const groupRoute = createRoute({
     };
   },
   loader: async ({ params: { groupId }, context }) => {
-    const { queryClient } = context;
-    if (!queryClient || !groupId) return;
-    const queryKey = groupKeys.detail(groupId, 'STABLE');
-    queryClient.prefetchQuery({
-      queryKey,
-      queryFn: () => getGroupById(groupId),
-      staleTime: createStaleTime('STABLE'),
-    });
+    if (context.queryClient && groupId) {
+      await prefetchGroupDetail(context.queryClient, groupId);
+    }
   },
   component: PublicPage,
 });
@@ -250,6 +181,12 @@ const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: ROUTES.ADMIN,
   beforeLoad: authGuard,
+  component: AdminPage,
+});
+
+const adminDiagnoseRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/diagnose',
   component: AdminPage,
 });
 
@@ -281,13 +218,9 @@ const adminGroupRoute = createRoute({
     };
   },
   loader: async ({ params: { groupId }, context }) => {
-    const { queryClient } = context;
-    if (!queryClient || !groupId) return;
-    await queryClient.prefetchQuery({
-      queryKey: groupKeys.detail(groupId, 'STABLE'),
-      queryFn: () => getGroupById(groupId),
-      staleTime: createStaleTime('STABLE'),
-    });
+    if (context.queryClient && groupId) {
+      await prefetchGroupDetail(context.queryClient, groupId);
+    }
   },
   component: AdminPage, // AdminPage handles the layout
 });
@@ -299,7 +232,13 @@ export const routeTree = rootRoute.addChildren([
   hashRoute,
   groupRoute,
   gRoute,
-  adminRoute.addChildren([adminHistoryRoute, adminTasksRoute, adminErrorLogsRoute, adminGroupRoute]),
+  adminRoute.addChildren([
+    adminDiagnoseRoute, 
+    adminHistoryRoute, 
+    adminTasksRoute, 
+    adminErrorLogsRoute, 
+    adminGroupRoute
+  ]),
 ]);
 
 import { NotFoundPage } from './pages/NotFoundPage';

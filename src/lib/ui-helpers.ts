@@ -38,9 +38,9 @@ export const getTranslatedCategoryName = (
     if (result && typeof result === 'string') return result;
   }
 
-  // 4. Fallback search looking up properties
-  const fallback = activeCat.zh || activeCat.en || activeCat.ms || (activeCat as any).code || "";
-  return String(fallback);
+  // 4. Fallback search looking up properties (Legacy support)
+  const legacyFallback = (activeCat as any).zh || (activeCat as any).en || (activeCat as any).ms || (activeCat as any).code || "";
+  return String(legacyFallback);
 };
 
 /**
@@ -101,11 +101,13 @@ export const getCacheBustedImageUrl = (photo: Photo, type: 'image' | 'thumb' = '
  */
 export const getManufacturerName = (
   mfrId: string | undefined,
-  manufacturers: Manufacturer[]
+  manufacturers: Manufacturer[],
+  lang: string = 'zh'
 ): string => {
   if (!mfrId) return '';
   const activeMfr = manufacturers.find(m => String(m.id) === String(mfrId));
-  return activeMfr ? (activeMfr.name || '').toUpperCase() : '';
+  if (!activeMfr) return '';
+  return getSafeText(activeMfr.name, lang).toUpperCase();
 };
 
 /**

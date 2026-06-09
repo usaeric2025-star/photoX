@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { getSupabaseAdmin } from "../../lib/supabase.js";
 import { getServerEnv } from "../../shared/envSchema.js";
 import { getR2Client } from "../../lib/storage.js";
+import { normalizeI18n } from "../../shared/i18n.js";
 
 const serverEnv = getServerEnv(process.env);
 export const adminRepair = new Hono();
@@ -186,6 +187,32 @@ adminRepair.post("/repair", async (c) => {
         } catch (e: any) {
           return c.json({ success: false, error: `Worker 连通性异常: ${e.message}. 请检查 URL 是否正确及 Worker 是否已部署。` });
         }
+      }
+
+      if (issueId === 'repair_i18n_names') {
+        // Fix furniture_items
+        const { data: items } = await supabase.from("furniture_items").select("id, name, description");
+        const itemsToFix = items?.filter(i => typeof i.name === 'string' || (i.name && !i.name.zh)) || [];
+        
+        for (const item of itemsToFix) {
+          await supabase.from("furniture_items").update({
+            name: normalizeI18n(item.name),
+            description: normalizeI18n(item.description)
+          }).eq("id", item.id);
+        }
+
+        // Fix groups
+        const { data: groups } = await supabase.from("groups").select("id, name, description");
+        const groupsToFix = groups?.filter(g => typeof g.name === 'string' || (g.name && !g.name.zh)) || [];
+
+        for (const group of groupsToFix) {
+          await supabase.from("groups").update({
+            name: normalizeI18n(group.name),
+            description: normalizeI18n(group.description)
+          }).eq("id", group.id);
+        }
+
+        return c.json({ success: true, message: `已修复 ${itemsToFix.length} 个单品和 ${groupsToFix.length} 个合组的语种格式` });
       }
 
       return c.json({ success: false, error: "未知的维护操作 ID" }, 400);

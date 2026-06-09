@@ -9,7 +9,7 @@ import { ok, err, isErr, ErrorFactory, success, errorFactory, fromThrowableAsync
 import type { Result, AppResult } from '@/types/api';
 import { PAGINATION } from '../../config/constants';
 import { safeArray } from '../../lib/utils';
-import { mapToDb } from './photoMappingUtils';
+import { mapToDb } from './toDb';
 import { generateItemCode } from './utils';
 import { createPhotoValidator } from '../../lib/validators/factory';
 import { api } from '@/lib/api';
@@ -70,10 +70,6 @@ export async function updatePhoto(id: string, updates: Partial<Photo>): Promise<
     const result = await response.json();
     if (!response.ok || !result.success) {
       throw new Error(result.error || 'Update failed');
-    }
-
-    if ('tags' in updates && Array.isArray(updates.tags)) {
-      await syncBatchPhotoTags([id], updates.tags.map(t => String(t.id)));
     }
 
     return success(null);

@@ -20,7 +20,7 @@ import { PublicHeader } from '@/components/layouts/headers/PublicHeader';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { toast } from 'sonner';
 import { GroupDetailPage } from '@/components/GroupDetailPage';
-import { useUrlFilters } from '@/hooks/useUrlFilters';
+import { useUrlFilters } from '@/hooks';
 
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { AlertCircle } from 'lucide-react';

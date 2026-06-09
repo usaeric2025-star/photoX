@@ -4,7 +4,7 @@ import {
   repairGroupIntegrity,
 } from "@/services/photo/maintenance";
 import { backfillThumbHashes } from "@/services/photo/maintenance/backfill";
-import { getPhotosWithoutThumbHash } from "@/services/photo/queries";
+import { getPhotosWithoutThumbHash } from "@/services/photo";
 import { toast } from 'sonner';
 
 export const runHealthCheck = async (

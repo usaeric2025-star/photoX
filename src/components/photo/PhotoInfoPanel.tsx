@@ -69,7 +69,7 @@ export function PhotoInfoPanel({
     if (appLang === 'zh' || appLang === 'en' || appLang === 'ms') {
       setDescLang(appLang as any);
     }
-  }, [appLang]);
+  }, [appLang, data, mode]);
 
   if (!data) {
     return <InfoPanelSkeleton className={className} />;

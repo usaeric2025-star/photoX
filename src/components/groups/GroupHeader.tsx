@@ -9,9 +9,8 @@ import {
 import { Photo, ProductGroup } from "../../types";
 import { Skeleton } from "../ui/Skeleton";
 import { useUIStore, useShallow } from "@/store/useUIStore";
-import { useUrlFilters } from "@/hooks/useUrlFilters";
+import { useUrlFilters, useGroupMutations } from "@/hooks";
 import { useNavigate } from "@tanstack/react-router";
-import { useGroupMutations } from "@/hooks";
 import { useClipboard } from "@mantine/hooks";
 import { toast } from "sonner";
 import { translations } from "@/lib/translations";

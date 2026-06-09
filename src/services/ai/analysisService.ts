@@ -2,7 +2,7 @@ import { callGeminiAPI } from '../gemini/geminiClient';
 import { ANALYSIS_PROMPTS } from '../gemini/prompts';
 import { extractJsonObject } from '@/lib/aiParsing';
 import { ok, fail } from '@/lib/utils/result';
-import type { AppResult } from '@/lib/types/result';
+import { AppResult } from '@/types/api';
 import type { AIAnalysisResult } from './types';
 
 export const analyzePhoto = async (

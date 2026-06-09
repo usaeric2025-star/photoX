@@ -2,7 +2,7 @@ import React from "react";
 import { Info, Tag as TagIcon, Grid } from "lucide-react";
 import { createPortal } from "react-dom";
 import { LightboxCore } from "@/components/PhotoLightbox/LightboxCore";
-import { useLightbox } from "@/hooks/useLightbox";
+import { useLightbox } from "@/hooks";
 import { PhotoInfoPanel } from "@/components/photo/PhotoInfoPanel";
 import { LightboxFallback } from "@/components/PhotoLightbox/LightboxFallback";
 import { useUIStore } from "@/store/useUIStore";

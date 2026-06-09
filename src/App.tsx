@@ -1,16 +1,15 @@
-import { useEffect, useMemo } from 'react';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { ConfirmProvider } from './context/ConfirmContext';
 import { RouterProvider } from '@tanstack/react-router';
 import { router } from './router';
+import { Analytics } from '@vercel/analytics/react';
+import { useEffect, useMemo } from 'react';
+import { useAuth } from '@/hooks/core/auth/useAuth';
+import { LoadingScreen } from '@/components/LoadingScreen';
 import { migrateStorage } from '@/lib/storage';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { clearExpiredCaches } from './lib/db/indexedDB';
 import { globalHandleError } from './lib/error/errorHandler';
 import { logger } from '@/lib/logger';
-import { Analytics } from '@vercel/analytics/react';
-import { useAuth } from '@/hooks/core/auth/useAuth';
-import { LoadingScreen } from '@/components/LoadingScreen';
-import { ConfirmProvider } from './context/ConfirmContext';
-
 import { startAutoDiagnose } from '@/services/maintenance/autoDiagnose';
 
 export default function AppRoutes() {

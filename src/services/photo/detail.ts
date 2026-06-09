@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { DB_CONFIG } from '@/constants/config';
 import { Photo } from '@/types';
-import { mapSupabasePhoto } from './mapping';
+import { mapSupabasePhoto } from './fromDb';
 import { PHOTO_DETAIL_FIELDS } from '@/constants/photoFields';
 import { withSupabase } from '@/lib/error/supabaseWrapper';
 import { success } from '@/lib/error/ErrorFactory';

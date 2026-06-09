@@ -2,7 +2,7 @@ import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useInvalidatePhotos } from '@/hooks';
 import { useMemo, useEffect, useState } from 'react';
 import { Photo, ProductFormData } from '@/types';
-import { useFormDraft } from '@/hooks/useFormDraft';
+import { useFormDraft } from '@/hooks';
 import { useMutation } from '@tanstack/react-query';
 import { updatePhoto } from '@/services/photo/commands';
 import { toast } from 'sonner';

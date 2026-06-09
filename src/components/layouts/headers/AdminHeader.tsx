@@ -1,6 +1,6 @@
 import React from 'react';
 import { LayoutDashboard, Camera, Menu, User as UserIcon, LogOut, Settings, LayoutGrid, MonitorPlay, CheckSquare, Sparkles } from 'lucide-react';
-import { useAuth, useUIStore, useSettings, usePhotoCount } from '@/hooks';
+import { useAuth, useUIStore, useSettings, usePhotoCount, useAdminBatchActions } from '@/hooks';
 import { useNavigate } from '@tanstack/react-router';
 import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
 import {
@@ -14,7 +14,6 @@ import {
 import { logoutPublic } from "@/lib/publicAuth";
 import { translations } from "@/lib/translations";
 
-import { useAdminBatchActions } from '@/hooks/useAdminBatchActions';
 
 interface AdminHeaderProps {}
 

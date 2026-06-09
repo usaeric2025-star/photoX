@@ -7,11 +7,11 @@ import { success, errorFactory } from '@/lib/error/ErrorFactory';
 import { AppResult } from '@/types/api';
 import { PAGINATION } from '../../config/constants';
 import { PHOTO_LIST_FIELDS } from '../../constants/photoFields';
-import { mapSupabasePhoto } from './mapping';
+import { mapSupabasePhoto } from './fromDb';
 import { hydrateGroupInfo } from './with';
 import { normalizeSearchQuery } from '@/lib/utils';
 import { VISIBILITY_OR_QUERY } from '../../constants/photoConstants';
-import { loadTagsFromCloud } from '../tag/queries';
+import { loadTagsFromCloud } from '../tag';
 
 export const loadAllPhotosFromCloud = async (
     since?: string,
@@ -28,11 +28,14 @@ export const loadAllPhotosFromCloud = async (
     isHidden?: boolean | null
 ): Promise<AppResult<Photo[]>> => {
   return withErrorHandling(async () => {
-    const selectQuery = PHOTO_LIST_FIELDS;
-
-    let query = supabase
-        .from(DB_CONFIG.TABLE_NAME)
-        .select(selectQuery);
+    const { withRetry } = await import('@/lib/resilience');
+    
+    return withRetry(async () => {
+      const selectQuery = PHOTO_LIST_FIELDS;
+      
+      let query = supabase
+          .from(DB_CONFIG.TABLE_NAME)
+          .select(selectQuery);
 
     if (signal) {
       query = query.abortSignal(signal);
@@ -68,7 +71,7 @@ export const loadAllPhotosFromCloud = async (
       if (photoIdsWithTag.length > 0) {
         query = query.in('id', photoIdsWithTag);
       } else {
-        return [];
+        return success([]);
       }
     }
 
@@ -135,7 +138,9 @@ export const loadAllPhotosFromCloud = async (
       }
     }
 
-    return await hydrateGroupInfo(fetched);
+    const hydrated = await hydrateGroupInfo(fetched);
+    return success(hydrated);
+    });
   }, 'loadAllPhotosFromCloud');
 };
 

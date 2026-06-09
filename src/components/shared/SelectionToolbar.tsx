@@ -5,8 +5,7 @@ import { Sparkles, FolderPlus, Edit, EyeOff, Trash2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { useGroupPhotosMutation, useUrlFilters } from '@/hooks';
-import { useAIAutoGrouping } from '@/hooks/useAIAutoGrouping';
+import { useGroupPhotosMutation, useUrlFilters, useAIAutoGrouping } from '@/hooks';
 import { useUIStore, useIsAnyDialogOpen } from '@/store/useUIStore';
 import { toast } from 'sonner';
 

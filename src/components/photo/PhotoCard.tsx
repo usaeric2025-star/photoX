@@ -82,12 +82,10 @@ export const PhotoCard = React.memo(({
   const longPressTriggered = useRef(false);
   const resetTimerRef = useRef<number | null>(null);
   const isManagement = useIsManagement();
-  
   const { lang, uiTranslations: t } = useTranslation();
   
-  const { data: fetchedCategories = [] } = useCategories();
-
-  const categories = sharedCategories || fetchedCategories;
+  // Use shared categories from parent to avoid per-card hook overhead
+  const categories = sharedCategories || [];
 
   const categoryId = photo.category_id ? String(photo.category_id) : '';
   

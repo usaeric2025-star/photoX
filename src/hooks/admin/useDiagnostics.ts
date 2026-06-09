@@ -4,7 +4,7 @@ import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { toast } from 'sonner';
 import { DiagnosticsReport } from '@/types/diagnostics';
 import { photoKeys, groupKeys } from '@/lib/queryKeys';
-import { useTaskExecutor } from '../useTaskExecutor';
+import { useTaskExecutor } from '../core/useTaskExecutor';
 import { useUIStore } from '@/store/useUIStore';
 
 /**
@@ -125,6 +125,17 @@ export function useDiagnostics() {
     workerResult: null, // Managed by TaskExecutor
     runAudit,
     isAuditing,
-    auditResult: auditResult || null
+    auditResult: auditResult || null,
+    runDailyCleanup: async () => {
+      return runTask(
+        appLang === 'zh' ? '執行全域維護清理 (Daily Cleanup)' : 'Run Daily Maintenance',
+        async () => {
+          const res = await api.admin.maintenance['daily-cleanup'].$post();
+          const data = await res.json() as any;
+          if (!data.success) throw new Error(data.error || 'Cleanup failed');
+          return data;
+        }
+      );
+    }
   };
 }

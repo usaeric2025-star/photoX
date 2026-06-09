@@ -20,6 +20,10 @@ if (clientEnv.DEV) {
 setupGlobalErrorHandling();
 setupDevErrorHelper();
 
+// 啟動每日維護 (P0: Robustness)
+import { dailyWorker } from './services/maintenance/DailyWorker';
+dailyWorker.checkAndRun();
+
 // 挂载全局错误捕获
 if (!clientEnv.DEV) {
   window.addEventListener('error', (event) => {
