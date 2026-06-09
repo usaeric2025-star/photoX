@@ -1,7 +1,10 @@
 import React from 'react';
 import { PhotoGridSkeleton } from './photo/PhotoGridSkeleton';
+import { useColumns } from '@/hooks';
 
 export function PageSkeleton() {
+  const [columns] = useColumns();
+
   return (
     <div className="flex flex-col h-full bg-brand-bg w-full min-h-screen">
       {/* Header Area */}
@@ -21,14 +24,7 @@ export function PageSkeleton() {
 
       {/* Grid area / Waterfall */}
       <div className="flex-1 p-4 overflow-y-auto">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="h-48 animate-pulse bg-gray-200 rounded-xl flex flex-col justify-end p-3">
-              <div className="h-4 bg-gray-300 rounded w-3/4 mb-2 animate-pulse" />
-              <div className="h-3 bg-gray-300 rounded w-1/2 animate-pulse" />
-            </div>
-          ))}
-        </div>
+        <PhotoGridSkeleton columns={columns} count={12} />
       </div>
     </div>
   );

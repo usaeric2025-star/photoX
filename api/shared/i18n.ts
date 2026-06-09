@@ -1,8 +1,14 @@
+export type PossibleI18n = 
+  | string 
+  | { zh?: unknown; en?: unknown; ms?: unknown; name?: unknown } 
+  | null 
+  | undefined;
+
 /**
  * Ensures an object follows the { zh: string, en: string, ms: string } format.
  * Used to normalize AI output or legacy data.
  */
-export function normalizeI18n(input: any, fallbackStr: string = ''): { zh: string; en: string; ms: string } {
+export function normalizeI18n(input: PossibleI18n, fallbackStr: string = ''): { zh: string; en: string; ms: string } {
   if (!input) {
     return { zh: fallbackStr, en: fallbackStr, ms: fallbackStr };
   }

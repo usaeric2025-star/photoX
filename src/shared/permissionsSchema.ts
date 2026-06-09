@@ -28,10 +28,15 @@ export const RouteAccessContractSchema = type({
 
 export type RouteAccessContract = typeof RouteAccessContractSchema.infer;
 
+export interface UserContext {
+  user: { id: string; email: string } | null;
+  role: 'admin' | 'staff' | 'guest';
+}
+
 /**
  * Validates access based on RouteAccessContract and context
  */
-export function validateAccess(contract: RouteAccessContract, context: { user: any; role: string; can: (req: any) => boolean }) {
+export function validateAccess(contract: RouteAccessContract, context: UserContext) {
   // Validate schema first for robust type-safety
   const check = RouteAccessContractSchema(contract);
   if (check instanceof type.errors) {
@@ -57,8 +62,8 @@ export function validateAccess(contract: RouteAccessContract, context: { user: a
     throw redirect({
       to: fallback,
       search: {
-        authError: "admin_required"
-      } as any
+        authError: "admin_required" as const
+      }
     });
   }
 }

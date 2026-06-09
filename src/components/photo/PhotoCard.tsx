@@ -40,6 +40,8 @@ export interface PhotoCardProps extends React.HTMLAttributes<HTMLDivElement> {
   sharedCategories?: Category[];
   /** Optimization: Shared tags for virtual list */
   sharedTags?: Tag[];
+  /** Permission restriction for pin click */
+  canPin?: boolean;
 }
 
 const toTitleCase = (str: string) => {
@@ -66,6 +68,7 @@ export const PhotoCard = React.memo(({
   showCoverBadge,
   sharedCategories,
   sharedTags,
+  canPin,
   ...props
 }: PhotoCardProps) => {
   const isSelected = useUIStore((s) => s.selectedIds.includes(photo.id));
@@ -106,7 +109,9 @@ export const PhotoCard = React.memo(({
     [photo, categories, lang, t]
   );
 
-  const { can } = usePermission();
+  // Optimization: Bypass invoking usePermission local hooks for every item when pre-passed
+  const { can: permissionCan } = usePermission();
+  const actualCanPin = canPin !== undefined ? canPin : permissionCan('photo:toggle-pinned');
 
   const handleOpenLightbox = () => {
     navigate({ to: '.', search: (prev: any) => ({ ...prev, photoId: photo.id } as any) });
@@ -240,8 +245,8 @@ export const PhotoCard = React.memo(({
       )}
 
       {isManagement && is_hidden && !isMultiSelect && (
-        <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px] flex items-center justify-center pointer-events-none z-10">
-          <EyeOff size={24} className="text-white/60 drop-shadow" />
+        <div className="absolute inset-0 bg-black/40 flex items-center justify-center pointer-events-none z-10 animate-fade-in">
+          <EyeOff size={24} className="text-white/80 drop-shadow" />
         </div>
       )}
       
@@ -252,7 +257,7 @@ export const PhotoCard = React.memo(({
         showCoverBadge={showCoverBadge}
       />
 
-      {isManagement && can('photo:toggle-pinned') && (
+      {isManagement && actualCanPin && (
          <PinButton photoId={photo.id} isPinned={!!photo.is_pinned} />
       )}
 
@@ -280,7 +285,7 @@ export const PhotoCard = React.memo(({
               {photoTags.map(tag => (
                 <span 
                   key={tag} 
-                  className="shrink-0 text-[8px] bg-black/50 backdrop-blur-md text-slate-200 px-1.5 py-0.5 rounded-full font-bold tracking-tighter uppercase border border-white/10 whitespace-nowrap"
+                  className="shrink-0 text-[8px] bg-black/75 text-slate-200 px-1.5 py-0.5 rounded-full font-bold tracking-tighter uppercase border border-white/10 whitespace-nowrap"
                 >
                   #{tag}
                 </span>

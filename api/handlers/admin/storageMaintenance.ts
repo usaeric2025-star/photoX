@@ -9,7 +9,8 @@ import {
   StorageAuditResSchema, 
   ImportOrphansReqSchema,
   MaintenanceJobSchema,
-  ApiResponse
+  ApiResponse,
+  MaintenanceJob
 } from "../../shared/apiContractSchema.js";
 import { normalizeUrl, runStorageAudit } from "../../lib/maintenance/storageUtils.js";
 
@@ -17,7 +18,7 @@ const serverEnv = getServerEnv(process.env);
 export const storageMaintenance = new Hono();
 
 // Durable job store could be replaced with Redis/DB later if needed
-const jobStore = new Map<string, any>();
+const jobStore = new Map<string, MaintenanceJob>();
 
 storageMaintenance.get("/storage/audit", async (c) => {
     try {
@@ -307,7 +308,7 @@ storageMaintenance.post("/storage/import-orphans", async (c) => {
         if (toCreate.length > 0) {
           const { error } = await supabase.from("furniture_items").insert(toCreate);
           if (error) {
-            const failData = { status: 'failed', progress: 100, processed: 0, total: orphans.length, message: "数据库写入失败", error: error.message };
+            const failData = { status: 'failed', progress: 100, processed: 0, total: orphans.length, message: "数据库写入失败", error: error.message } as const;
             jobStore.set(jobId, failData);
             return;
           }

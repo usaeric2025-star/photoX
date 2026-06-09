@@ -1,11 +1,8 @@
 import { test, expect } from 'vitest';
 
 const registerDiagnostic = (_arg: any) => {};
-// @ts-ignore
 import GroupHeaderRaw from '@/components/groups/GroupHeader.tsx?raw';
-// @ts-ignore
 import GroupDetailPageRaw from '@/components/GroupDetailPage.tsx?raw';
-// @ts-ignore
 import GroupDetailSkeletonRaw from '@/components/groups/GroupDetailSkeleton.tsx?raw';
 
 const run = async () => {
@@ -38,10 +35,10 @@ const run = async () => {
             message: `Layout integrity and Skeleton DOM compliance verified.`,
             durationMs: Date.now() - start,
         };
-    } catch (e: any) {
+    } catch (e: unknown) {
         return {
             passed: false,
-            message: `Probe error: ${e.message}`,
+            message: `Probe error: ${e instanceof Error ? e.message : String(e)}`,
             durationMs: Date.now() - start,
         };
     }

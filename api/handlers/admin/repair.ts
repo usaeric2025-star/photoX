@@ -184,8 +184,8 @@ adminRepair.post("/repair", async (c) => {
               isRealImage
             }
           });
-        } catch (e: any) {
-          return c.json({ success: false, error: `Worker 连通性异常: ${e.message}. 请检查 URL 是否正确及 Worker 是否已部署。` });
+        } catch (e: unknown) {
+          return c.json({ success: false, error: `Worker 连通性异常: ${e instanceof Error ? e.message : 'Unknown error'}. 请检查 URL 是否正确及 Worker 是否已部署。` });
         }
       }
 
@@ -216,9 +216,9 @@ adminRepair.post("/repair", async (c) => {
       }
 
       return c.json({ success: false, error: "未知的维护操作 ID" }, 400);
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error('[Admin Repair] Critical Exception:', e);
-        return c.json({ success: false, error: e.message }, 500);
+        return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown error' }, 500);
     }
 });
 

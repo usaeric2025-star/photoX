@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks';
 import { useUIStore } from '@/store/useUIStore';
 import { deduplicatePhotos, bulkFixPhotoUrls } from "@/services/photo/maintenance";
+import { handleError } from '@/lib/error/errorHandler';
 
 /**
  * [ATOMIC-HOOK] useMaintenanceActions
@@ -27,8 +28,8 @@ export function useMaintenanceActions(onSuccess?: () => void) {
       const res = await api.storage.audit.$get();
       const data = await res.json() as any;
       if (data.success) toast.success("存储对账完成");
-    } catch (e: any) {
-      toast.error(`对账失败: ${e.message}`, e.stack);
+    } catch (e: unknown) {
+      handleError(e, '存储对账');
     } finally { setIsAuditing(false); }
   };
 
@@ -52,8 +53,8 @@ export function useMaintenanceActions(onSuccess?: () => void) {
         toast.success(data.message || "恢复完成");
         onSuccess?.();
       }
-    } catch (e: any) {
-      toast.error(`恢复失败: ${e.message}`, e.stack);
+    } catch (e: unknown) {
+      handleError(e, '恢复孤儿照片');
     } finally { setIsAuditing(false); }
   };
 
@@ -63,6 +64,8 @@ export function useMaintenanceActions(onSuccess?: () => void) {
       const result = await bulkFixPhotoUrls();
       toast.success(`修复完成：${result.updated || 0} 更新`);
       onSuccess?.();
+    } catch (e: unknown) {
+      handleError(e, '批量修复 URL');
     } finally { setIsAuditing(false); }
   };
 
@@ -74,6 +77,8 @@ export function useMaintenanceActions(onSuccess?: () => void) {
         toast.success(`排重完成！共清理了 ${result.data.removed} 张重复记录。`);
         onSuccess?.();
       }
+    } catch (e: unknown) {
+      handleError(e, '照片排重');
     } finally { setIsDeduplicating(false); }
   };
 
@@ -86,8 +91,9 @@ export function useMaintenanceActions(onSuccess?: () => void) {
         toast.success(`成功补全 ${data.processed} 条记录`);
         onSuccess?.();
       }
-    } catch (e: any) { toast.error(e.message, e.stack); }
-    finally { setIsBackfilling(false); }
+    } catch (e: unknown) {
+      handleError(e, '补全照片元数据');
+    } finally { setIsBackfilling(false); }
   };
 
   const executeNormalizeItemCodes = async () => {

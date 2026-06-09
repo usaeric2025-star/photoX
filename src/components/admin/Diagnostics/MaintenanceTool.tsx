@@ -17,14 +17,8 @@ import { toast } from "sonner";
 import { Loader2, ShieldAlert } from "lucide-react";
 import { useDisclosure } from '@mantine/hooks';
 import { useUIStore } from '@/store/useUIStore';
-import { useTaskExecutor, useTasks } from '@/hooks';
-
-const showError = (message: string, description?: string) => {
-  toast.error(message, {
-    description,
-    duration: 10000,
-  });
-};
+import { useTaskExecutor, useTasks, useTranslation } from '@/hooks';
+import { handleError } from '@/lib/error/errorHandler';
 
 interface MaintenanceToolProps {
   issueId: string;
@@ -36,8 +30,10 @@ interface MaintenanceToolProps {
 }
 
 export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess, compact }: MaintenanceToolProps) => {
+  const { uiTranslations } = useTranslation();
   const action = ISSUE_ACTIONS[issueId];
-  const finalTitle = title || action?.name || "未知工具";
+  const finalTitle = title || action?.name || uiTranslations.processing || "未知工具";
+
   const [preview, setPreview] = useState<PreviewResult | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
   const [isPreviewing, setIsPreviewing] = useState(false);
@@ -53,8 +49,8 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
     try {
       const result = await action.preview?.();
       setPreview(result || null);
-    } catch (e: any) {
-      showError(`预检失败: ${e.message}`, e.stack);
+    } catch (e: unknown) {
+      handleError(e, '预检工具');
     } finally {
       setIsPreviewing(false);
     }
@@ -116,7 +112,6 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
         onError: (e: any) => {
           setIsExecuting(false);
           setProgress(0);
-          showError(`执行失败: ${e.message}`);
         },
         showSuccessToast: true
       }

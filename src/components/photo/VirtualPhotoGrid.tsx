@@ -101,11 +101,13 @@ export const VirtualPhotoGrid = React.memo(({
   }, []);
 
   const estimatedRowHeight = React.useMemo(() => {
-    // Each card is aspect-square, so height roughly equals width
-    // containerWidth / columns gives the approximate width of a single card
-    // Add some padding/gap (p-1.5 is about 12px horizontally per item)
-    const cardWidth = containerWidth / Math.max(1, columns);
-    return Math.max(150, cardWidth + 12); // Minimum typical height
+    // Exact mathematical row height calculation to avoid virtua re-measure lag.
+    // Container horizontal padding is px-2 (16px total). Each lane has equal percentage width.
+    // Each nested photo item has p-1.5 (on mobile) or sm:p-2. PhotoCard is beautifully aspect-square,
+    // making row height exactly equal to one column segment width. Price, category labels are inside.
+    const padding = 16;
+    const cardWidth = (containerWidth - padding) / Math.max(1, columns);
+    return Math.max(80, cardWidth); 
   }, [containerWidth, columns]);
 
   const internalRenderItem = React.useCallback((index: number) => {

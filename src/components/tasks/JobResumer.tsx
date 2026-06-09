@@ -53,7 +53,7 @@ export function JobResumer() {
             updateTask(id, { status: 'error', message: (status as any).error || status.message || '任务执行失败' });
             pollingJobs.current.delete(id);
           }
-        } catch (e: any) {
+        } catch (e: unknown) {
           logger.error(`[JobResumer] Polling error for ${jobId}:`, e);
           // Don't clear interval immediately, maybe it's a transient network error
           // But if it persists, we might want to stop

@@ -167,6 +167,7 @@ export function GroupGridView({
           imgVariant="md"
           hideGroupBadge={true}
           onClick={() => onPhotoClick(photo)}
+          canPin={false}
           {...extraProps}
         />
       </div>

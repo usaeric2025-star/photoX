@@ -47,8 +47,8 @@ ai.post("/run", async (c) => {
         });
 
         return c.json({ success: true, text: data, usage: {} } as ApiResponse);
-    } catch (e: any) {
-        return c.json({ success: false, error: e.message } as ApiResponse, 500);
+    } catch (e: unknown) {
+        return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown error' } as ApiResponse, 500);
     }
 });
 
@@ -101,8 +101,8 @@ ai.post("/analyze", async (c) => {
         });
 
         return c.json({ success: true, data } as ApiResponse);
-    } catch (e: any) {
-        return c.json({ success: false, error: e.message } as ApiResponse, 500);
+    } catch (e: unknown) {
+        return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown error' } as ApiResponse, 500);
     }
 });
 

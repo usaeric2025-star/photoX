@@ -82,7 +82,7 @@ export const useGroupActions = (
             setGroupId(null);
           }
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         // Handled by mutation
       }
     };
@@ -96,7 +96,7 @@ export const useGroupActions = (
             await import("@/services/photo/commands");
           await serviceUpdatePhoto(photoId, updates);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         ErrorFactory.handle(err, "保存照片修改失败");
       }
     };
@@ -134,7 +134,7 @@ export const useGroupActions = (
             ),
           );
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         ErrorFactory.handle(err, "批量更新尺寸失败");
         throw err;
       }
@@ -165,7 +165,7 @@ export const useGroupActions = (
             serviceUpdatePhoto(p.id, { group_order: p.group_order }),
           ),
         );
-      } catch (err: any) {
+      } catch (err: unknown) {
         ErrorFactory.handle(err, "保存排序失败");
         throw err;
       }

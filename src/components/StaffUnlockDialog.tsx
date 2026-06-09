@@ -87,8 +87,8 @@ export function StaffUnlockDialog({
                     try {
                       // Don't close modal immediately to show intent
                       await loginWithGoogle?.();
-                    } catch (e: any) { 
-                      ErrorFactory.handle(e, t.loginFailed);
+                    } catch (e: unknown) { 
+                      ErrorFactory.handle(e as any, t.loginFailed);
                     }
                   }}
                   className="w-full py-3 px-4 rounded-2xl font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all text-sm flex items-center justify-center gap-2"

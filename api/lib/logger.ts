@@ -1,31 +1,39 @@
-type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+export const logger = {
+  error: (message: string, meta?: Record<string, unknown>) => {
+    console.error(JSON.stringify({
+      level: 'error',
+      timestamp: new Date().toISOString(),
+      message,
+      ...meta,
+    }))
+  },
 
-class Logger {
-  private enabled: boolean = process.env.NODE_ENV !== 'production';
+  info: (message: string, meta?: Record<string, unknown>) => {
+    console.info(JSON.stringify({
+      level: 'info',
+      timestamp: new Date().toISOString(),
+      message,
+      ...meta,
+    }))
+  },
 
-  debug(...args: any[]) {
-    if (this.enabled) console.debug('[DEBUG]', ...args);
-  }
+  warn: (message: string, meta?: Record<string, unknown>) => {
+    console.warn(JSON.stringify({
+      level: 'warn',
+      timestamp: new Date().toISOString(),
+      message,
+      ...meta,
+    }))
+  },
 
-  info(...args: any[]) {
-    if (this.enabled) console.info('[INFO]', ...args);
-  }
-
-  warn(...args: any[]) {
-    console.warn('[WARN]', ...args);
-  }
-
-  error(...args: any[]) {
-    console.error('[ERROR]', ...args);
-  }
-
-  time(label: string) {
-    if (this.enabled) console.time(`[TIMER] ${label}`);
-  }
-
-  timeEnd(label: string) {
-    if (this.enabled) console.timeEnd(`[TIMER] ${label}`);
-  }
+  debug: (message: string, meta?: Record<string, unknown>) => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.debug(JSON.stringify({
+        level: 'debug',
+        timestamp: new Date().toISOString(),
+        message,
+        ...meta,
+      }))
+    }
+  },
 }
-
-export const logger = new Logger();

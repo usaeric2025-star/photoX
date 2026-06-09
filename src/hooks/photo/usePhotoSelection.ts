@@ -97,7 +97,7 @@ export const usePhotoSelection = () => {
       await batchUpdate.mutateAsync({ ids, updates: cleanUpdates });
       update({ batchEditingIds: null });
       resetForm();
-    } catch (e: any) {
+    } catch (e: unknown) {
       ErrorFactory.handle(e, '批量保存失敗');
     } finally {
       setIsSyncing(false);

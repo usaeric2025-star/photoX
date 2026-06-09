@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/core/auth/useAuth';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { migrateStorage } from '@/lib/storage';
 import { clearExpiredCaches } from './lib/db/indexedDB';
-import { globalHandleError } from './lib/error/errorHandler';
+import { handleError } from './lib/error/errorHandler';
 import { logger } from '@/lib/logger';
 import { startAutoDiagnose } from '@/services/maintenance/autoDiagnose';
 
@@ -17,7 +17,7 @@ export default function AppRoutes() {
     document.title = 'PhotoX';
     // Background cache cleanup and migrations
     migrateStorage();
-    clearExpiredCaches(7).catch(err => globalHandleError(err, '本地缓存自动清理失败', true));
+    clearExpiredCaches(7).catch(err => handleError(err, '本地缓存自动清理失败', true));
     
     // Start periodic background diagnosis
     startAutoDiagnose();

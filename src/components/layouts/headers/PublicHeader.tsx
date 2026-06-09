@@ -1,6 +1,6 @@
 import React from 'react';
 import { LogIn, LayoutDashboard, RefreshCw, Camera, Menu, User as UserIcon, LogOut, Settings, LayoutGrid, MonitorPlay } from 'lucide-react';
-import { useAuth, useUIStore, useShallow, useSettings } from '@/hooks';
+import { useAuth, useUIStore, useShallow, useSettings, usePermission } from '@/hooks';
 import { useNavigate, useLocation } from '@tanstack/react-router';
 import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
 import {
@@ -23,6 +23,7 @@ interface PublicHeaderProps {
 export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHeaderProps) {
   const { user, isLoading } = useAuth();
   const { settings } = useSettings();
+  const { role } = usePermission();
   const update = useUIStore((s) => s.update);
   const navigate = useNavigate();
   const location = useLocation();
@@ -54,14 +55,24 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
     }
   };
 
+  // Roles background mappings with smooth transition:
+  // - Admin: bg-indigo-50/90 border-indigo-200/50
+  // - Staff: bg-amber-50/85 border-amber-200/50
+  // - Guest/Public: bg-white border-slate-200
+  const headerBgClass = role === 'admin'
+    ? "bg-indigo-50/90 border-indigo-200/50 text-indigo-950"
+    : role === 'staff'
+    ? "bg-amber-50/85 border-amber-200/50 text-amber-950"
+    : "bg-white border-slate-200 text-slate-850";
+
   return (
-    <header className="h-14 sm:h-16 shrink-0 border-b px-2 sm:px-4 flex items-center justify-between bg-white border-slate-200 z-header font-sans overflow-hidden">
+    <header className={`h-14 sm:h-16 shrink-0 border-b px-2.5 sm:px-4 flex items-center justify-between z-header font-sans overflow-hidden transition-colors duration-300 ${headerBgClass}`}>
       {/* 左侧：Logo & 计数 */}
-      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 flex-nowrap">
+      <div className="flex items-center gap-1 sm:gap-3 shrink-0 flex-nowrap">
         {logoUrl ? (
           <img 
             src={logoUrl} 
-            className="h-8 sm:h-9 w-auto object-contain shrink-0" 
+            className="h-7 sm:h-9 w-auto object-contain shrink-0" 
             alt="Logo" 
             onLoad={() => {
               if (settings?.logo_url && settings.logo_url !== cachedLogoUrl) {
@@ -70,48 +81,48 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
             }}
           />
         ) : (
-          <div className="flex items-center gap-1.5 font-bold tracking-tighter text-slate-900">
-            <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center shadow-sm text-white shrink-0">
-              <Camera size={18} className="stroke-[2.5]" />
+          <div className="flex items-center gap-1 font-bold tracking-tighter">
+            <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl flex items-center justify-center shadow-sm text-white shrink-0 ${role === 'admin' ? 'bg-indigo-600' : role === 'staff' ? 'bg-amber-600' : 'bg-blue-600'}`}>
+              <Camera size={14} className="sm:size-4 stroke-[2.5]" />
             </div>
-            <span className="text-lg font-black tracking-tighter">
-              PHOT<span className="text-blue-600">O</span>X
+            <span className="text-sm sm:text-lg font-black tracking-tighter">
+              PHOT<span className={`${role === 'admin' ? 'text-indigo-600' : role === 'staff' ? 'text-amber-600' : 'text-blue-600'}`}>O</span>X
             </span>
           </div>
         )}
 
         {totalCount !== undefined && (
-          <span className="px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold whitespace-nowrap shrink-0 uppercase tracking-widest leading-none">
+          <span className="px-1.5 py-0.5 rounded-full bg-white/60 border border-slate-200/20 text-slate-500 text-[9px] font-bold whitespace-nowrap shrink-0 uppercase tracking-widest leading-none">
             {t.photosCount(totalCount)}
           </span>
         )}
       </div>
 
       {/* 右侧：刷新 & 管理/登录入口 */}
-      <div className="flex items-center gap-1 sm:gap-2 flex-nowrap shrink-0">
+      <div className="flex items-center gap-0.5 sm:gap-2 flex-nowrap shrink-0">
         {onRefresh && (
           <button 
             onClick={onRefresh}
             disabled={isRefreshing}
-            className="w-11 h-11 sm:w-9 sm:h-9 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all active:scale-90 shrink-0"
+            className="w-9 h-9 sm:w-9 sm:h-9 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50/50 rounded-full transition-all active:scale-90 shrink-0"
             title={t.refresh}
           >
-            <RefreshCw size={18} className={isRefreshing ? 'animate-spin' : ''} />
+            <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
           </button>
         )}
 
         {/* 3. 切换至管理后台按钮 (与 AdminHeader 统一使用 LayoutDashboard 图案的按钮和外观) */}
         <button
           onClick={handleAuthAction}
-          className="w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 ml-1 border bg-white text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-900 shadow-sm"
+          className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 border bg-white text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-900 shadow-sm"
           title={isAdmin ? t.viewModePublic : t.viewModeAdmin}
         >
-          <LayoutDashboard size={20} />
+          <LayoutDashboard className="size-4.5 sm:size-5" />
         </button>
 
         {/* 4. 菜单 (语言、登录、退出) */}
         <DropdownMenu>
-          <DropdownMenuTrigger className="h-10 w-10 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded-full transition-all cursor-pointer shrink-0 outline-none ml-1 border border-slate-100">
+          <DropdownMenuTrigger className="h-9 w-9 sm:h-10 sm:w-10 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded-full transition-all cursor-pointer shrink-0 outline-none border border-slate-100 bg-white">
             <Menu size={22} />
           </DropdownMenuTrigger>
           <DropdownMenuContent

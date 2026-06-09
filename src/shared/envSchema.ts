@@ -61,12 +61,12 @@ export function getClientEnv(): ClientEnv {
     return {} as ClientEnv;
   }
   
-  const rawEnv: Record<string, any> = typeof import.meta !== 'undefined' && import.meta.env ? { ...import.meta.env } : {};
-  const filteredEnv: Record<string, any> = {};
-  const allowedKeys = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY', 'MODE', 'DEV', 'PROD'];
+  const rawEnv: Record<string, unknown> = typeof import.meta !== 'undefined' && import.meta.env ? { ...import.meta.env } : {};
+  const filteredEnv: Partial<ClientEnv> = {};
+  const allowedKeys = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY', 'MODE', 'DEV', 'PROD'] as const;
   allowedKeys.forEach(key => {
     if (rawEnv[key] !== undefined) {
-      filteredEnv[key] = rawEnv[key];
+      filteredEnv[key as keyof ClientEnv] = rawEnv[key] as any;
     }
   });
 
@@ -85,7 +85,7 @@ export function getClientEnv(): ClientEnv {
 /**
  * Validates and exports parsed server environment
  */
-export function getServerEnv(envObj: any): ServerEnv {
+export function getServerEnv(envObj: NodeJS.ProcessEnv): ServerEnv {
   const rawEnv = { ...envObj };
   const result = serverEnvSchema(rawEnv);
   if (result instanceof type.errors) {

@@ -79,9 +79,9 @@ export function FilterPanel() {
 
     return (
         <div className="flex flex-col border-t border-slate-100 bg-white relative z-20">
-            {/* Minimalist Premium grid for categories (2 rows, 4 columns) */}
-            <div className="px-4 pt-3 pb-3 border-b border-slate-50">
-                <div className="grid grid-cols-4 gap-1.5">
+            {/* Minimalist Premium categories section: Horizontal scrolling on mobile (no scrollbar), structured grid on desktop */}
+            <div className="border-b border-slate-50/50 bg-white">
+                <div className="flex md:grid md:grid-cols-8 gap-2 overflow-x-auto md:overflow-visible [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-4 py-3 whitespace-nowrap scroll-smooth">
                     {categoryList.slice(0, 8).map(cat => (
                         <button
                             key={cat.id || 'all'}
@@ -89,17 +89,16 @@ export function FilterPanel() {
                                 logger.debug('[FilterPanel] Category clicked:', cat.id);
                                 setCategory(cat.id);
                             }}
-
                             onMouseEnter={() => prefetchCategoryPhotos(cat.id)}
                             className={cn(
-                                "text-[10px] font-bold h-7 px-3 rounded-full transition-all duration-100 flex items-center justify-center cursor-pointer pointer-events-auto active:scale-95",
+                                "text-[11px] font-black h-8 px-4 rounded-full transition-all duration-150 flex items-center justify-center cursor-pointer pointer-events-auto active:scale-95 shrink-0 select-none shadow-sm capitalize",
                                 urlFilters.categoryId === cat.id || (urlFilters.categoryId !== null && cat.id !== null && String(urlFilters.categoryId) === String(cat.id))
-                                    ? 'bg-[#2563EB] text-white shadow-sm shadow-blue-500/20' 
-                                    : 'bg-[#F3F4F6] text-[#374151] hover:bg-[#E5E7EB]'
+                                    ? 'bg-[#2563EB] text-white shadow-md shadow-blue-500/25 border-transparent' 
+                                    : 'bg-[#F3F4F6] text-[#374151] border border-slate-100 hover:bg-[#E5E7EB]'
                             )}
                             title={cat.name || t.all}
                         >
-                            {(cat.name || t.all || 'Unnamed').toUpperCase()}
+                            {(cat.name || t.all || 'Unnamed')}
                         </button>
                     ))}
                 </div>

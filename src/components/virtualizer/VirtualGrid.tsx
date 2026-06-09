@@ -169,7 +169,7 @@ export const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.
             <div 
               key={`row-${rIndex}`}
               data-contract="virtual-grid-row" 
-              style={{ width: '100%' }}
+              style={{ width: '100%', willChange: 'transform' }}
             >
               {isGridLayout ? (
                 <div 

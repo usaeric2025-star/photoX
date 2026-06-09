@@ -1,6 +1,6 @@
 import React from 'react';
 import { LayoutDashboard, Camera, Menu, User as UserIcon, LogOut, Settings, LayoutGrid, MonitorPlay, CheckSquare, Sparkles } from 'lucide-react';
-import { useAuth, useUIStore, useSettings, usePhotoCount, useAdminBatchActions } from '@/hooks';
+import { useAuth, useUIStore, useSettings, usePhotoCount, useAdminBatchActions, usePermission } from '@/hooks';
 import { useNavigate } from '@tanstack/react-router';
 import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
 import {
@@ -21,6 +21,7 @@ export function AdminHeader({}: AdminHeaderProps) {
   const { handleBatchAiIdentifyTrigger } = useAdminBatchActions();
   const { user } = useAuth();
   const { settings } = useSettings();
+  const { role } = usePermission();
   const navigate = useNavigate();
 
   const lang = useUIStore(s => s.appLang);
@@ -50,80 +51,90 @@ export function AdminHeader({}: AdminHeaderProps) {
     navigate({ to: '/' });
   };
 
+  // Roles background mappings:
+  // - Admin: bg-indigo-50/90 border-indigo-200/50
+  // - Staff: bg-amber-50/85 border-amber-200/50
+  // - Guest/Public: bg-white border-slate-200
+  const headerBgClass = role === 'admin'
+    ? "bg-indigo-50/90 border-indigo-200/50 text-indigo-950"
+    : role === 'staff'
+    ? "bg-amber-50/85 border-amber-200/50 text-amber-950"
+    : "bg-white border-slate-200 text-slate-850";
+
   return (
-    <header className="h-14 sm:h-16 shrink-0 border-b px-2 sm:px-4 flex items-center justify-between bg-slate-50 border-slate-200 z-header font-sans overflow-hidden">
+    <header className={`h-14 sm:h-16 shrink-0 border-b px-2.5 sm:px-4 flex items-center justify-between z-header font-sans overflow-hidden transition-colors duration-300 ${headerBgClass}`}>
       {/* 左侧：Logo & 计数 */}
-      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 flex-nowrap">
+      <div className="flex items-center gap-1 sm:gap-3 shrink-0 flex-nowrap">
         {logoUrl ? (
           <img 
-            src={logoUrl} 
-            className="h-8 sm:h-9 w-auto object-contain shrink-0" 
-            alt="Logo" 
-            onLoad={() => {
-              if (settings?.logo_url && settings.logo_url !== cachedLogoUrl) {
-                setCachedLogoUrl(settings.logo_url);
-              }
-            }}
-          />
-        ) : (
-          <div className="flex items-center gap-1.5 font-bold tracking-tighter text-slate-850">
-            <div className="w-8 h-8 rounded-xl bg-slate-800 flex items-center justify-center shadow-sm text-white shrink-0">
-              <Camera size={18} className="stroke-[2.5]" />
+              src={logoUrl} 
+              className="h-7 sm:h-9 w-auto object-contain shrink-0" 
+              alt="Logo" 
+              onLoad={() => {
+                if (settings?.logo_url && settings.logo_url !== cachedLogoUrl) {
+                  setCachedLogoUrl(settings.logo_url);
+                }
+              }}
+            />
+          ) : (
+            <div className="flex items-center gap-1 font-bold tracking-tighter">
+              <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl flex items-center justify-center shadow-sm text-white shrink-0 ${role === 'admin' ? 'bg-indigo-600' : role === 'staff' ? 'bg-amber-600' : 'bg-slate-800'}`}>
+                <Camera size={14} className="sm:size-4 stroke-[2.5]" />
+              </div>
+              <span className="text-sm sm:text-lg font-black tracking-tighter">
+                PHOT<span className={`${role === 'admin' ? 'text-indigo-600' : role === 'staff' ? 'text-amber-600' : 'text-slate-500'}`}>O</span>X
+              </span>
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1 hidden sm:inline-block">Admin</span>
             </div>
-            <span className="text-lg font-black tracking-tighter">
-              PHOT<span className="text-slate-500">O</span>X
-            </span>
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1 hidden sm:inline-block">Admin</span>
+          )}
+  
+          {/* 本地与云端组合数字展示 */}
+          <div className="flex items-center gap-1 sm:gap-2 text-[9px] sm:text-xs font-black bg-white/60 backdrop-blur-sm border border-slate-200/30 rounded-full px-2 py-0.5 sm:px-2.5 sm:py-1 select-none shrink-0 cursor-default">
+            <span className="text-blue-600" title={lang === 'zh' ? '本地 (待同步) 照片数' : 'Local photos waiting for cloud sync'}>{localCount ?? 0}</span>
+            <span className="text-slate-300 font-normal">/</span>
+            <span className="text-emerald-600" title={lang === 'zh' ? '云端已同步照片数' : 'Synced cloud photos'}>{cloudCount ?? 0}</span>
           </div>
-        )}
-
-        {/* 本地与云端组合数字展示 */}
-        <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-black bg-slate-100 border border-slate-200/50 rounded-full px-2.5 py-1 select-none shrink-0 cursor-default">
-          <span className="text-blue-600" title={lang === 'zh' ? '本地 (待同步) 照片数' : 'Local photos waiting for cloud sync'}>{localCount ?? 0}</span>
-          <span className="text-slate-300 font-normal">/</span>
-          <span className="text-emerald-600" title={lang === 'zh' ? '云端已同步照片数' : 'Synced cloud photos'}>{cloudCount ?? 0}</span>
         </div>
-      </div>
-
-      {/* 右侧：管理/登录入口 */}
-      <div className="flex items-center gap-1 sm:gap-2 flex-nowrap shrink-0">
-        {/* 选择模式/多选 按钮 */}
-        <button
-          onClick={() => update({ isMultiSelect: !isMultiSelect })}
-          className={`w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 ml-1 border ${
-            isMultiSelect 
-              ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700 shadow-sm' 
-              : 'bg-white text-slate-600 hover:bg-slate-100 border-slate-200 shadow-sm'
-          }`}
-          title={isMultiSelect ? t.exitSelectMode : t.selectModeToggle}
-        >
-          <CheckSquare size={18} />
-        </button>
-
-        {/* AI 智能识别 按钮 next to check screen */}
-        <button
-          onClick={() => handleBatchAiIdentifyTrigger()}
-          className="w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 ml-1 border bg-white text-purple-600 border-purple-200 hover:bg-purple-50 hover:text-purple-700 shadow-sm"
-          title={t.aiSmartIdentify}
-        >
-          <Sparkles size={18} className="animate-pulse" />
-        </button>
-
-        {/* 3. 切换至前台体验按钮 (标准 LayoutDashboard 样式) */}
-        <button
-          onClick={handleAuthAction}
-          className="w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 ml-1 border bg-white text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-900 shadow-sm"
-          title={t.viewModePublic}
-        >
-          <LayoutDashboard size={20} />
-        </button>
-
-        {/* 4. 菜单 (语言、登录、退出) */}
-        <DropdownMenu>
-          <DropdownMenuTrigger className="h-10 w-10 flex items-center justify-center text-slate-600 hover:bg-slate-200 rounded-full transition-all cursor-pointer shrink-0 outline-none ml-1 border border-slate-200">
-            <Menu size={22} />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
+  
+        {/* 右侧：管理/登录入口 */}
+        <div className="flex items-center gap-0.5 sm:gap-2 flex-nowrap shrink-0">
+          {/* 选择模式/多选 按钮 */}
+          <button
+            onClick={() => update({ isMultiSelect: !isMultiSelect })}
+            className={`w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 border ${
+              isMultiSelect 
+                ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700 shadow-sm' 
+                : 'bg-white text-slate-600 hover:bg-slate-100 border-slate-200 shadow-sm'
+            }`}
+            title={isMultiSelect ? t.exitSelectMode : t.selectModeToggle}
+          >
+            <CheckSquare className="size-4.5 sm:size-5" />
+          </button>
+  
+          {/* AI 智能识别 按钮 next to check screen */}
+          <button
+            onClick={() => handleBatchAiIdentifyTrigger()}
+            className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 border bg-white text-purple-600 border-purple-200 hover:bg-purple-50 hover:text-purple-700 shadow-sm"
+            title={t.aiSmartIdentify}
+          >
+            <Sparkles className="size-4.5 sm:size-5 animate-pulse" />
+          </button>
+  
+          {/* 3. 切换至前台体验按钮 (标准 LayoutDashboard 样式) */}
+          <button
+            onClick={handleAuthAction}
+            className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 border bg-white text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-900 shadow-sm"
+            title={t.viewModePublic}
+          >
+            <LayoutDashboard className="size-4.5 sm:size-5" />
+          </button>
+  
+          {/* 4. 菜单 (语言、登录、退出) */}
+          <DropdownMenu>
+            <DropdownMenuTrigger className="h-9 w-9 sm:h-10 sm:w-10 flex items-center justify-center text-slate-600 hover:bg-slate-200 rounded-full transition-all cursor-pointer shrink-0 outline-none border border-slate-200 bg-white">
+              <Menu size={18} className="sm:size-5" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
             align="end"
             className="w-64 mt-2 rounded-2xl p-2 bg-white shadow-2xl border border-slate-200 z-dropdown text-slate-700"
           >

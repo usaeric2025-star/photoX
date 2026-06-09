@@ -108,7 +108,7 @@ export const AIAnalyzePhotoV2ReqSchema = type({
 // 6. Common API Response Standard (Used by backend internally for assertion)
 export const ApiResponseSchema = type({
   success: 'boolean',
-  'data?': 'any',
+  'data?': 'unknown',
   'error?': 'string',
 });
 export type ApiResponse = typeof ApiResponseSchema.infer;

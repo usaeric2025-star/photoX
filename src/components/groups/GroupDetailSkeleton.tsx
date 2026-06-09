@@ -3,6 +3,19 @@ import { Skeleton } from '../ui/Skeleton';
 import { PhotoGridSkeleton } from '../photo/PhotoGridSkeleton';
 
 export function GroupDetailSkeleton() {
+  const [columns, setColumns] = React.useState(3);
+
+  React.useEffect(() => {
+    const updateColumns = () => {
+      const isMobile = window.innerWidth < 640;
+      const isTablet = window.innerWidth >= 640 && window.innerWidth < 1024;
+      setColumns(isMobile ? 3 : (isTablet ? 4 : 5));
+    };
+    updateColumns();
+    window.addEventListener('resize', updateColumns);
+    return () => window.removeEventListener('resize', updateColumns);
+  }, []);
+
   return (
     <>
       {/* Header Skeleton */}
@@ -34,7 +47,7 @@ export function GroupDetailSkeleton() {
 
       {/* Photo Grid Skeleton */}
       <div className="flex-1 overflow-hidden">
-        <PhotoGridSkeleton columns={3} count={12} />
+        <PhotoGridSkeleton columns={columns} count={12} />
       </div>
     </>
   );

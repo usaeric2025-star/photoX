@@ -9,7 +9,8 @@ import {
   useUrlFilters, 
   useColumns,
   useCategories,
-  useAdminBatchActions
+  useAdminBatchActions,
+  usePermission
 } from '@/hooks';
 import { useUIStore } from '@/store/useUIStore';
 import { UploadButton } from '@/components/shared/UploadButton';
@@ -51,6 +52,9 @@ export function AdminGridContainer() {
       initiateBatchEdit
   } = useAdminSelectionActions();
 
+  const { can } = usePermission();
+  const canPin = can('photo:toggle-pinned');
+
   const virtualGridRef = useRef<any>(null);
   const scrollToTop = () => virtualGridRef.current?.scrollToIndex(0);
 
@@ -62,8 +66,9 @@ export function AdminGridContainer() {
       showGroupsCollapsed={showGroupsCollapsed}
       hasSearchQuery={hasSearchQuery}
       sharedCategories={categories}
+      canPin={canPin}
     />
-  ), [showGroupsCollapsed, hasSearchQuery]);
+  ), [showGroupsCollapsed, hasSearchQuery, canPin]);
 
   const disableMultiSelect = () => {
     update({ isMultiSelect: false, selectedIds: [] });

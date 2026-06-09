@@ -16,7 +16,7 @@ export function groupPhotos(
   photos.forEach(p => {
     if (p.group_id) {
       if (!groups.has(p.group_id)) groups.set(p.group_id, []);
-      groups.get(p.group_id)!.push(p);
+      groups.get(p.group_id)?.push(p);
 
       const time = (p as any)._time || 0;
       const maxT = groupMaxTime.get(p.group_id) || 0;
@@ -48,7 +48,7 @@ export function groupPhotos(
       
       if (showGroupsCollapsed) {
         const trueMemberCount = (globalGroupCounts.has(p.group_id) 
-          ? globalGroupCounts.get(p.group_id)! 
+          ? (globalGroupCounts.get(p.group_id) ?? 0)
           : (sorted[0].group?.member_count || groupList.length));
           
         const cover = {
@@ -64,14 +64,14 @@ export function groupPhotos(
              member_count: trueMemberCount
            }
         };
-        (cover as any)._time = groupMaxTime.get(p.group_id)!;
+        (cover as any)._time = groupMaxTime.get(p.group_id) ?? 0;
         (cover as any)._groupCoverName = typeof sorted[0].name === 'object' ? (sorted[0].name.zh || '') : (sorted[0].name || '');
         representatives.push(cover as any);
       } else {
         // Flat expansion but bind them under the same time and name logic so they stay together
         const coverNameZh = typeof sorted[0].name === 'object' ? (sorted[0].name.zh || '') : (sorted[0].name || '');
         sorted.forEach(member => {
-           const time = groupMaxTime.get(member.group_id as string)!;
+           const time = groupMaxTime.get(member.group_id as string) ?? 0;
            const m = { ...member, _time: time, _groupCoverName: coverNameZh }; 
            representatives.push(m);
         });
@@ -112,7 +112,7 @@ export function groupPhotos(
       const nameB = b._groupCoverName ?? (typeof b.name === 'object' ? (b.name.zh || '') : (b.name || ''));
       cmp = smartCompare(nameA, nameB);
     } else {
-      cmp = sortOrder === 'oldest' ? a._time! - b._time! : b._time! - a._time!;
+      cmp = sortOrder === 'oldest' ? (a._time ?? 0) - (b._time ?? 0) : (b._time ?? 0) - (a._time ?? 0);
     }
 
     if (cmp !== 0) return cmp;

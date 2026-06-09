@@ -73,7 +73,7 @@ export function usePhotoUpload() {
           } else {
               successCount++;
           }
-        } catch (err: any) {
+        } catch (err: unknown) {
           console.error(`[Upload] Failed for ${file.name}:`, err);
           // 在批量任务中保持静默，由任务中心最后統一呈現狀態
           ErrorFactory.handle(err, `照片上传失败: ${file.name}`, true);
@@ -95,7 +95,7 @@ export function usePhotoUpload() {
 
       completeUploadBatch(taskId, successCount, skippedCount, failureCount, uniqueFiles.length);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       hapticFeedback.error();
       ErrorFactory.handle(err, '批量上传异常中止');
       errorUploadBatch(taskId);

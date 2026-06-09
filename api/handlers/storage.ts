@@ -32,9 +32,9 @@ storage.post("/log-error", async (c) => {
             return c.json({ success: false, error: error.message }, 500);
         }
         return c.json({ success: true });
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Error logging via /log-error", e);
-        return c.json({ success: false, error: e.message }, 500);
+        return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown error' }, 500);
     }
 });
 storage.post("/upload-direct", async (c) => {
@@ -47,7 +47,7 @@ storage.post("/upload-direct", async (c) => {
       try {
         const buf = Buffer.from(base64Data.replace(/^data:image\/\w+;base64,/, ''), 'base64');
         uint8Array = new Uint8Array(buf.buffer, buf.byteOffset, buf.length);
-      } catch (err: any) {
+      } catch (err: unknown) {
         throw new Error('Invalid base64 data');
       }
 
@@ -84,7 +84,7 @@ storage.post("/uploadDirect", async (c) => {
       try {
         const buf = Buffer.from(base64Data.replace(/^data:image\/\w+;base64,/, ''), 'base64');
         uint8Array = new Uint8Array(buf.buffer, buf.byteOffset, buf.length);
-      } catch (err: any) {
+      } catch (err: unknown) {
         throw new Error('Invalid base64 data');
       }
 
@@ -175,8 +175,8 @@ storage.post("/upload-presign", async (c) => {
       const publicUrl = `${serverEnv.R2_PUBLIC_URL_PREFIX}/${fileName}`;
       
       return c.json({ success: true, data: { uploadUrl, publicUrl } });
-    } catch(e: any) {
-      return c.json({ success: false, error: e.message }, 500);
+    } catch(e: unknown) {
+      return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown error' }, 500);
     }
 });
 
@@ -203,8 +203,8 @@ storage.post("/r2-delete", async (c) => {
       }));
 
       return c.json({ success: true });
-    } catch(e: any) {
-      return c.json({ success: false, error: e.message }, 500);
+    } catch(e: unknown) {
+      return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown error' }, 500);
     }
 });
 

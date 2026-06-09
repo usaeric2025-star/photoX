@@ -64,8 +64,9 @@ export async function downloadPhotoAsJpeg(url: string, filename?: string) {
     // 资源清理
     URL.revokeObjectURL(objectUrl);
     toast.success('已开始下载', { id: toastId });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Download failed:', error);
-    toast.error(`下载失败: ${error.message || '请尝试长按图片保存'}`, { id: toastId });
+    const msg = error instanceof Error ? error.message : String(error);
+    toast.error(`下载失败: ${msg || '请尝试长按图片保存'}`, { id: toastId });
   }
 }

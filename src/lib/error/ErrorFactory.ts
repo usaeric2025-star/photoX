@@ -1,5 +1,5 @@
 import { AppResult, AppError, AppSuccess, ErrorCode } from '@/types/api';
-import { globalHandleError } from './errorHandler';
+import { handleError as baseHandleError } from './errorHandler';
 
 export type { AppResult, AppError, AppSuccess, ErrorCode };
 
@@ -54,7 +54,7 @@ export class ErrorFactory {
   }
 
   static handle(error: unknown, context: string = '未知操作', silent: boolean = false) {
-    globalHandleError(error, context, silent);
+    baseHandleError(error, context, silent);
   }
 }
 

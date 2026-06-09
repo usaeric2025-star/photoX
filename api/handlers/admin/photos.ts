@@ -12,8 +12,8 @@ adminPhotos.post("/photo/update", async (c) => {
         const { error } = await supabase.from("furniture_items").update(updates).eq("id", id);
         if (error) throw error;
         return c.json({ success: true });
-    } catch (e: any) {
-        return c.json({ success: false, error: e.message }, 500);
+    } catch (e: unknown) {
+        return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown error' }, 500);
     }
 });
 
@@ -78,8 +78,8 @@ adminPhotos.post("/delete-photos", async (c) => {
       }
 
       return c.json({ success: true, count: ids.length });
-    } catch(e: any) {
+    } catch(e: unknown) {
       console.error("[delete-photos] failed:", e);
-      return c.json({ success: false, error: e.message }, 500);
+      return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown error' }, 500);
     }
 });

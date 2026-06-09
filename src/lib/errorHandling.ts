@@ -1,4 +1,4 @@
-import { globalHandleError } from './error/errorHandler';
+import { handleError } from './error/errorHandler';
 
 // Global Unhandled Promise Rejection handler
 export const setupGlobalErrorHandling = () => {
@@ -23,12 +23,12 @@ export const setupGlobalErrorHandling = () => {
     }
 
     // Treat the reason of unhandled promise rejection as the error
-    globalHandleError(reason || new Error(message || 'Unhandled Promise Rejection'), '全局未处理Promise拒绝', true);
+    handleError(reason || new Error(message || 'Unhandled Promise Rejection'), '全局未处理Promise拒绝', true);
   });
 
   window.addEventListener('error', (event) => {
     // Treat the error object or message as the error
-    globalHandleError(event.error || new Error(event.message || '全局运行时错误'), '全局运行时错误');
+    handleError(event.error || new Error(event.message || '全局运行时错误'), '全局运行时错误');
   });
 };
 

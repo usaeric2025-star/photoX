@@ -37,8 +37,8 @@ export async function withRetry<T>(
         return result;
       }
 
-    } catch (err: any) {
-      lastError = err.message || 'Operation failed';
+    } catch (err: unknown) {
+      lastError = err instanceof Error ? err.message : String(err);
     }
 
     if (attempt < maxRetries) {

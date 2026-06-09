@@ -41,7 +41,7 @@ const aiDebugHints: Record<string, string> = {
 /**
  * Validates and exports parsed server environment
  */
-export function getServerEnv(envObj: any): ServerEnv {
+export function getServerEnv(envObj: NodeJS.ProcessEnv): ServerEnv {
   const rawEnv = { ...envObj };
   const result = serverEnvSchema(rawEnv);
   if (result instanceof type.errors) {

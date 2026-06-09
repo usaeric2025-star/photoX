@@ -85,7 +85,7 @@ export function DetailsTab({ form }: Props) {
                 ? 'AI 识别完成，已自动保存修改！' 
                 : 'AI analysis completed and changes auto-saved!'
             );
-          } catch (saveError: any) {
+          } catch (saveError: unknown) {
             console.error("Auto-save failed:", saveError);
             toast.warning(
               appLang === 'zh' 

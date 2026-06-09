@@ -191,7 +191,7 @@ export function TagsSection({
           const normalized = name.trim().toUpperCase();
           try {
             await addTag(normalized);
-          } catch (error: any) {
+          } catch (error: unknown) {
             // Error mapped internally by mutation
           }
         }}

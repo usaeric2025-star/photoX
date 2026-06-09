@@ -4,7 +4,6 @@ import { type } from 'arktype';
 /**
  * [V2.9-COMPONENT-CONTRACT] Component Prop Boundary
  */
-// @ts-ignore
 export const SlotContractSchema = type({
   "requiredSlots": "string[]",
   "optionalSlots?": "string[]",

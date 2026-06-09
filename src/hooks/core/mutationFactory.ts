@@ -2,6 +2,7 @@ import { useMutation, useQueryClient, QueryKey, QueryClient, UseMutationOptions 
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { hapticFeedback } from '@/lib/ui/haptics';
+import { TRACE_HEADER } from '@/lib/constants';
 
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
@@ -45,7 +46,27 @@ export function createMutation<TData, TVariables, TContext = unknown>(config: Mu
     };
     
     return useMutation({
-        mutationFn: config.mutationFn,
+        mutationFn: async (vars: TVariables): Promise<TData> => {
+            try {
+              return await config.mutationFn(vars)
+            } catch (error) {
+              let traceId: string | undefined
+      
+              // ✅ 兼容 Supabase PostgrestError + 標準 fetch Response
+              if (error && typeof error === 'object') {
+                const resp = (error as any).response ?? (error as any).details?.response
+                traceId = resp?.headers?.get(TRACE_HEADER) 
+                  ?? resp?.headers?.get('x-trace-id')
+                  ?? (error as any).traceId
+              }
+      
+              if (traceId && error instanceof Error) {
+                ;(error as any).traceId = traceId
+              }
+      
+              throw error
+            }
+          },
         onMutate: async (variables: TVariables) => {
           const startTime = performance.now();
           const queryKey = getQueryKey(variables);

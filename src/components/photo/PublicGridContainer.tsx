@@ -120,6 +120,7 @@ export function PublicGridContainer({
       photo={photo} 
       index={index}
       sharedCategories={sharedCategories}
+      canPin={false}
     />
   ), []);
 

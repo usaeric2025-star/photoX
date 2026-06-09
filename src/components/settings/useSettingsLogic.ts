@@ -130,8 +130,9 @@ export const useSettingsLogic = ({
             setTestResult({ success: false, error: '连接失败' });
             throw new Error('连接失败');
           }
-        } catch (e: any) {
-          setTestResult({ success: false, error: e.message });
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e);
+          setTestResult({ success: false, error: msg });
           throw e;
         } finally {
           setTestResult((prev) => (prev ? { ...prev, loading: false } : null));

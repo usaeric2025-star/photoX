@@ -8,7 +8,7 @@ import {
 import { ROUTES } from './config/constants';
 import { lazy, Suspense } from 'react';
 import { PageSkeleton } from './components/PageSkeleton';
-import { globalHandleError } from './lib/error/errorHandler';
+import { handleError } from './lib/error/errorHandler';
 import { Capability } from './config/permissions';
 import { QueryClient } from '@tanstack/react-query';
 import { photoKeys, groupKeys } from '@/lib/queryKeys';
@@ -51,7 +51,7 @@ function lazyWithRetry(importFn: () => Promise<any>, pageName: string) {
           return new Promise(() => {}); 
         }
       }
-      globalHandleError(error, `加载页面组件 (${pageName}) 失败`);
+      handleError(error, `加载页面组件 (${pageName}) 失败`);
       throw error;
     })
   );

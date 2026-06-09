@@ -73,8 +73,9 @@ export function DiagnosticsDashboard() {
       setPluginResults(prev => ({ ...prev, [plugin.title]: { result: res, loading: false } }));
       if (!res.success) toast.error(res.message);
       else toast.success(res.message);
-    } catch (e: any) {
-      setPluginResults(prev => ({ ...prev, [plugin.title]: { result: { success: false, message: '执行出错', error: e.message }, loading: false } }));
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setPluginResults(prev => ({ ...prev, [plugin.title]: { result: { success: false, message: '执行出错', error: msg }, loading: false } }));
       toast.error('模块执行异常');
     }
   };

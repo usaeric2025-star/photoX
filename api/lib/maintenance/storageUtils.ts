@@ -53,9 +53,21 @@ export async function runStorageAudit() {
         continuationToken = response.NextContinuationToken;
     }
 
-    const orphans: any[] = []; 
-    const ghosts: any[] = [];  
-    const healthy: any[] = []; 
+    interface OrphanFile {
+        key: string;
+        url: string;
+    }
+
+    interface DbRecord {
+        id: string;
+        name: string;
+        url: string;
+        normalized: string;
+    }
+
+    const orphans: OrphanFile[] = []; 
+    const ghosts: DbRecord[] = [];  
+    const healthy: DbRecord[] = []; 
 
     r2KeysSet.forEach(key => {
         const publicUrl = publicUrlPrefix.startsWith('http') 

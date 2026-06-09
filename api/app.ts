@@ -7,6 +7,9 @@ import { getSupabaseAdmin } from "./lib/supabase.js";
 import { admin } from "./handlers/admin/index.js";
 import { ai } from "./handlers/ai.js";
 import { storage } from "./handlers/storage.js";
+import { getTraceId } from "./lib/error/traceId.js";
+import { logger } from "./lib/logger.js";
+import { AppError, errorFactory } from "./lib/error/AppError.js";
 
 // Validate env at module level
 const serverEnv = getServerEnv(process.env);
@@ -27,17 +30,28 @@ app.use("*", async (c, next) => {
 
 // Global Exception Handler
 app.onError((err, c) => {
-  const status = (err as any).status || 500;
-  console.error(`[API Error] ${c.req.method} ${c.req.path}: ${err.message}`, err);
-  
-  return c.json({
-    success: false,
-    error: {
-      message: err.message || "Internal Server Error",
-      code: (err as any).code || 'INTERNAL_SERVER_ERROR'
-    }
-  }, status);
-});
+  const traceId = getTraceId(c)
+
+  // 轉換為標準 AppError
+  const appError = err instanceof AppError 
+    ? err 
+    : errorFactory.wrap(err, `api.${c.req.path}`, 'HANDLER_ERROR')
+  appError.traceId = traceId
+
+  // 後端日誌記錄
+  logger.error('api.error', {
+    traceId,
+    path: c.req.path,
+    method: c.req.method,
+    code: appError.code,
+    message: appError.message,
+    stack: appError.stack,
+  })
+
+  // 返回標準 AppResult（body 不含 traceId）
+  const status = (err as any).status || 500
+  return c.json(errorFactory.fail(appError), status)
+})
 
 // Auth Middleware for Administrative Routes
 app.use("/admin/*", async (c, next) => {

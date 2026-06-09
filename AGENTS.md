@@ -929,4 +929,33 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
   - `/admin/error-logs` → 错误日志
 - ✅ **跳转逻辑**：所有诊断面板间的切换必须使用 `navigate()`。
 
+## 错误处理贯穿系统规范（锁定，2026-06-09）
+
+## 错误对象架構邊界（鎖定）
+
+- ✅ 後端 AppError 定義在 `api/lib/error/AppError.ts`，為 class
+- ✅ 前端 StandardError 定義在 `src/lib/types/error.ts`，為 interface
+- ❌ 禁止後端 import 前端的錯誤類型
+- ❌ 禁止前端 import 後端的錯誤類別
+- ✅ 兩者通過字段契約對齊，而非代碼共享
+- ✅ traceId 僅通過 Response Header 傳輸，Mutation 工廠為唯一注入點
+
+## 錯誤追蹤貫通規範（鎖定）
+
+- ✅ 所有後端錯誤響應必須附帶 `X-Trace-Id` Header
+- ✅ Trace ID 由後端生成，前端僅提取與傳遞
+- ✅ 複製錯誤內容必須包含 Trace ID
+- ✅ 後端日誌必須記錄同一 Trace ID
+- ✅ 去重 ID 基於 `context + errorCode`
+- ❌ 禁止使用動態 message 作為去重 key
+- ❌ 禁止前端自行生成 Trace ID
+- ❌ 禁止前端額外發送 `/api/log-error` 請求
+
+## 錯誤工廠規範（鎖定）
+
+- ✅ 使用 `errorFactory.create()` 創建新錯誤
+- ✅ 使用 `errorFactory.wrap()` 包裝外部錯誤
+- ✅ 使用 `errorFactory.success()` 返回成功結果
+- ✅ 使用 `errorFactory.fail()` 返回失敗響應
+
 ## ON DELETE SET NULL 约束补充（锁定，2026-06-09）
