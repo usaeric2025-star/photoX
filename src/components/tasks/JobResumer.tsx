@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { useTasks, type BackgroundTask } from '@/hooks';
+import { useTasks, useAuth, type BackgroundTask } from '@/hooks';
 import { ISSUE_ACTIONS } from "@/lib/maintenance";
 import { logger } from '@/lib/logger';
 
@@ -8,33 +8,45 @@ import { logger } from '@/lib/logger';
  * Automatically resumes polling for server-side jobs that were interrupted by a page refresh.
  */
 export function JobResumer() {
+  const { user } = useAuth();
   const { tasks, updateTask } = useTasks();
-  const pollingJobs = useRef<Set<string>>(new Set());
+  // Keep track of active intervals by task id to prevent leaks
+  const activeIntervals = useRef<Map<string, NodeJS.Timeout | number>>(new Map());
 
   useEffect(() => {
+    if (!user) {
+      // Clear all active intervals on sign out
+      activeIntervals.current.forEach((intervalId) => {
+        clearInterval(intervalId as any);
+      });
+      activeIntervals.current.clear();
+      return;
+    }
+
+    const safeTasks = Array.isArray(tasks) ? tasks : [];
+
     // Find tasks that are 'running', have a 'jobId' and 'issueId', but are NOT currently being polled
-    const interruptedJobs = tasks.filter((t: BackgroundTask) => 
+    const interruptedJobs = safeTasks.filter((t: BackgroundTask) => 
       t.status === 'running' && 
       t.jobId && 
       t.issueId && 
-      !pollingJobs.current.has(t.id)
+      !activeIntervals.current.has(t.id)
     );
 
-    interruptedJobs.forEach(async (task: BackgroundTask) => {
+    interruptedJobs.forEach((task: BackgroundTask) => {
       const { id, jobId, issueId, name } = task;
       if (!jobId || !issueId) return;
 
       const action = ISSUE_ACTIONS[issueId];
       if (!action || !action.getStatus) {
-        // If we can't poll, mark as unknown/interrupted
+        // If we can't poll, mark as failed
         updateTask(id, { status: 'error', message: '无法恢复轮詢：未定义的動作或獲取狀態函數' });
         return;
       }
 
       logger.info(`[JobResumer] Resuming polling for task: ${name} (Job: ${jobId})`);
-      pollingJobs.current.add(id);
 
-      // Start polling
+      // Start polling and register in map
       const interval = setInterval(async () => {
         try {
           const status = await action.getStatus!(jobId);
@@ -45,28 +57,48 @@ export function JobResumer() {
           });
 
           if (status.status === 'completed') {
-            clearInterval(interval);
+            const currentInt = activeIntervals.current.get(id);
+            if (currentInt) {
+              clearInterval(currentInt as any);
+              activeIntervals.current.delete(id);
+            }
             updateTask(id, { status: 'completed', progress: 100, message: '任务已完成' });
-            pollingJobs.current.delete(id);
           } else if (status.status === 'failed') {
-            clearInterval(interval);
+            const currentInt = activeIntervals.current.get(id);
+            if (currentInt) {
+              clearInterval(currentInt as any);
+              activeIntervals.current.delete(id);
+            }
             updateTask(id, { status: 'error', message: (status as any).error || status.message || '任务执行失败' });
-            pollingJobs.current.delete(id);
           }
         } catch (e: unknown) {
           logger.error(`[JobResumer] Polling error for ${jobId}:`, e);
-          // Don't clear interval immediately, maybe it's a transient network error
-          // But if it persists, we might want to stop
         }
       }, 3000);
 
-      // Cleanup on unmount or if task removed
-      return () => {
-        clearInterval(interval);
-        pollingJobs.current.delete(id);
-      };
+      activeIntervals.current.set(id, interval);
     });
-  }, [tasks, updateTask]);
+
+    // Clean up active interval mappings for tasks that are no longer running
+    activeIntervals.current.forEach((intervalId, id) => {
+      const task = safeTasks.find(t => t.id === id);
+      if (!task || task.status !== 'running') {
+        clearInterval(intervalId as any);
+        activeIntervals.current.delete(id);
+        logger.info(`[JobResumer] Cleared stale polling interval for task ID: ${id}`);
+      }
+    });
+  }, [tasks, updateTask, user]);
+
+  // Clean up all active intervals when the Component unmounts
+  useEffect(() => {
+    return () => {
+      activeIntervals.current.forEach((intervalId) => {
+        clearInterval(intervalId as any);
+      });
+      activeIntervals.current.clear();
+    };
+  }, []);
 
   return null;
 }

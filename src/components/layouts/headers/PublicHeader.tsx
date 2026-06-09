@@ -88,6 +88,15 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
             <span className="text-sm sm:text-lg font-black tracking-tighter">
               PHOT<span className={`${role === 'admin' ? 'text-indigo-600' : role === 'staff' ? 'text-amber-600' : 'text-blue-600'}`}>O</span>X
             </span>
+            {role === 'admin' ? (
+              <span className="text-[8px] sm:text-[9px] font-black bg-indigo-600 text-white px-1.5 py-0.5 rounded-full uppercase tracking-wider ml-1 select-none">
+                Admin
+              </span>
+            ) : role === 'staff' ? (
+              <span className="text-[8px] sm:text-[9px] font-black bg-amber-600 text-white px-1.5 py-0.5 rounded-full uppercase tracking-wider ml-1 select-none">
+                Staff
+              </span>
+            ) : null}
           </div>
         )}
 

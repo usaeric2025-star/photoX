@@ -103,9 +103,44 @@ export const runDiagnose = async () => {
 export const startAutoDiagnose = () => {
   if (typeof window === 'undefined') return;
   
+  let intervalId: any = null;
+
+  const startPolling = () => {
+    if (intervalId) return;
+    intervalId = setInterval(() => {
+      // Only run diagnosis if tab is active/visible
+      if (!document.hidden) {
+        runDiagnose();
+      }
+    }, 6 * 60 * 60 * 1000); // Every 6 hours
+  };
+
+  const stopPolling = () => {
+    if (intervalId) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+  };
+
   // Initial check after 1 minute (don't block bootstrap)
-  setTimeout(() => runDiagnose(), 60 * 1000);
+  setTimeout(() => {
+    if (!document.hidden) {
+      runDiagnose();
+    }
+  }, 60 * 1000);
   
-  // Every 6 hours
-  setInterval(() => runDiagnose(), 6 * 60 * 60 * 1000);
+  // Listen for page visibility changes
+  const handleVisibilityChange = () => {
+    if (document.hidden) {
+      logger.info('[AutoDiagnose] Tab hidden, pausing diagnose loop');
+      stopPolling();
+    } else {
+      logger.info('[AutoDiagnose] Tab active, resuming/running diagnose');
+      runDiagnose();
+      startPolling();
+    }
+  };
+
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  startPolling();
 };

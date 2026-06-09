@@ -73,11 +73,30 @@ export const VirtualPhotoGrid = React.memo(({
     }
   }, [restoreKey, photos]);
 
+  const scrollTimeoutRef = useRef<number | null>(null);
+
   const handleScroll = (offset: number) => {
     if (restoreKey) {
-      sessionStorage.setItem(restoreKey, offset.toString());
+      if (scrollTimeoutRef.current) {
+        window.clearTimeout(scrollTimeoutRef.current);
+      }
+      scrollTimeoutRef.current = window.setTimeout(() => {
+        try {
+          sessionStorage.setItem(restoreKey, offset.toString());
+        } catch (e) {
+          // ignore sessionStorage full/quota
+        }
+      }, 100);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        window.clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const { preloadBatch } = useImagePreloader();
 
