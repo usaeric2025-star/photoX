@@ -1,3 +1,4 @@
+import React from 'react';
 import { useSearch, useNavigate, useParams } from '@tanstack/react-router';
 import { GallerySearchParams } from '@/types/router';
 
@@ -6,7 +7,7 @@ export function useUrlFilters() {
   const params = useParams({ strict: false }) as any;
   const navigate = useNavigate();
 
-  const filters = {
+  const filters = React.useMemo(() => ({
     categoryId: search.category ?? null,
     tagId: search.tag ?? null,
     manufacturerId: search.manufacturer ?? null,
@@ -18,7 +19,11 @@ export function useUrlFilters() {
     is_hidden: search.hidden === 'true',
     onlyUngrouped: search.onlyUngrouped === 'true',
     view: search.view || 'grid',
-  };
+  }), [
+    search.category, search.tag, search.manufacturer, search.q, search.sort, search.groupId,
+    search.photoId, search.showGroupsCollapsed, search.hidden, search.onlyUngrouped, search.view,
+    params.groupId
+  ]);
 
   const setView = (view: 'grid' | 'list') => {
     navigate({ search: { ...search, view: view === 'grid' ? undefined : 'list' } as any });

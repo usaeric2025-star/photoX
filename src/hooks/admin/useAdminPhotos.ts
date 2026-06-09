@@ -3,6 +3,7 @@ import { useUrlFilters, useCategories, useTags, useAdminMode, useProcessedPhotos
 import { useUIStore } from '@/store/useUIStore';
 import { usePhotoGallery } from '@/hooks/photo/usePhotoGallery';
 import { Photo } from '@/types';
+import { EMPTY_ARRAY } from '@/constants/config';
 
 /**
  * Encapsulated hook for admin photo data processing.
@@ -14,8 +15,8 @@ export const useAdminPhotos = () => {
     const { filters: urlFilters } = useUrlFilters();
     const processingIds = useUIStore(s => s.processingIds);
     
-    const { data: categories = [] } = useCategories();
-    const { data: tags = [] } = useTags();
+    const { data: categories = EMPTY_ARRAY as any[] } = useCategories();
+    const { data: tags = EMPTY_ARRAY as any[] } = useTags();
     const { photos: rawPhotos, infinitePhotosQuery } = usePhotoGallery();
 
     const { process, result, isProcessing: isWorkerProcessing } = useProcessedPhotos();

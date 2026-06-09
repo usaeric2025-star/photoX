@@ -4,7 +4,7 @@ import { PublicFilters } from '@/components/ui/PublicFilters';
 import { useUIStore, useShallow, useAppLang, useColumns } from '@/store/useUIStore';
 import { usePhotos, useSettings, useCategories, useTags, useUrlFilters, useProcessedPhotos } from '@/hooks';
 import { cleanPhotos } from '@/lib/filters';
-import { PAGINATION } from '@/constants/config';
+import { PAGINATION, EMPTY_ARRAY } from '@/constants/config';
 import { GroupDetailPage } from '../GroupDetailPage';
 import { PhotoCard } from './PhotoCard';
 import { PublicFloatingActions } from './PublicFloatingActions';
@@ -19,8 +19,6 @@ interface PublicGridContainerProps {
   onExit?: () => void;
   loginWithGoogle?: () => void;
 }
-
-const EMPTY_ARRAY: Photo[] = [];
 
 export function PublicGridContainer({
   onScrollToTop,
@@ -39,8 +37,8 @@ export function PublicGridContainer({
   const [columns, setColumns] = useColumns();
 
   const publicSettings = settings;
-  const { data: categories = [] } = useCategories();
-  const { data: tags = [] } = useTags();
+  const { data: categories = EMPTY_ARRAY as any[] } = useCategories();
+  const { data: tags = EMPTY_ARRAY as any[] } = useTags();
   
   const { process, result, isProcessing: isWorkerProcessing } = useProcessedPhotos();
   

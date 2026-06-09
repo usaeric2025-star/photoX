@@ -81,7 +81,7 @@ export function FilterPanel() {
         <div className="flex flex-col border-t border-slate-100 bg-white relative z-20">
             {/* Minimalist Premium categories section: Horizontal scrolling on mobile (no scrollbar), structured grid on desktop */}
             <div className="border-b border-slate-50/50 bg-white">
-                <div className="flex md:grid md:grid-cols-8 gap-2 overflow-x-auto md:overflow-visible [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-4 py-3 whitespace-nowrap scroll-smooth">
+                <div className="flex md:grid md:grid-cols-4 gap-2 overflow-x-auto md:overflow-visible [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-4 py-3 whitespace-nowrap scroll-smooth">
                     {categoryList.slice(0, 8).map(cat => (
                         <button
                             key={cat.id || 'all'}

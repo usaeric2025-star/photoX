@@ -8,6 +8,8 @@ export const PAGINATION = {
   VIRTUAL_SCROLL_OVERSCAN: 800,
 };
 
+export const EMPTY_ARRAY: any[] = [];
+
 export const DB_CONFIG = {
   TABLE_NAME: 'furniture_items',
   BUCKET_NAME: 'furniture_images',

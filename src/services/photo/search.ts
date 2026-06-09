@@ -8,18 +8,36 @@ export async function findPhotoIdsBySearch(q: string): Promise<string[]> {
   const escapedQ = normSearchQuery.replace(/[\\%_]/g, '\\$&');
   
   const [tagsRes, catsRes] = await Promise.all([
-    supabase.from('tags').select('id').ilike('name', `%${escapedQ}%`),
     (async () => {
       try {
-        const res = await supabase.from('categories').select('id').or(`name.ilike.%${escapedQ}%,zh.ilike.%${escapedQ}%,en.ilike.%${escapedQ}%,ms.ilike.%${escapedQ}%`);
+        const res = await supabase.from('tags').select('id').ilike('name', `%${escapedQ}%`);
         if (res.error) {
-          const fallback = await supabase.from('categories').select('id').ilike('name', `%${escapedQ}%`);
-          if (fallback.error) throw fallback.error;
+          const jsonRes = await supabase.from('tags').select('id').or(`name->>zh.ilike.%${escapedQ}%`);
+          if (jsonRes.error) return { data: [] };
+          return jsonRes;
+        }
+        return res;
+      } catch {
+        return { data: [], error: null };
+      }
+    })(),
+    (async () => {
+      try {
+        // Assume name is JSONB
+        const res = await supabase.from('categories').select('id').or(`name->>zh.ilike.%${escapedQ}%,name->>en.ilike.%${escapedQ}%,name->>ms.ilike.%${escapedQ}%`);
+        if (res.error) {
+          // Fallback if name is string or standard text columns exist
+          const fallback = await supabase.from('categories').select('id').or(`name.ilike.%${escapedQ}%,zh.ilike.%${escapedQ}%,en.ilike.%${escapedQ}%,ms.ilike.%${escapedQ}%`);
+          if (fallback.error) {
+            const basicFallback = await supabase.from('categories').select('id').ilike('name', `%${escapedQ}%`);
+            if (basicFallback.error) return { data: [] }; // Don't crash search if categories table fails
+            return basicFallback;
+          }
           return fallback;
         }
         return res;
       } catch {
-        return await supabase.from('categories').select('id').ilike('name', `%${escapedQ}%`);
+        return { data: [], error: null }; // Fail silently so search continues for photos/tags
       }
     })()
   ]);

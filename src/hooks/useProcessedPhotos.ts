@@ -62,8 +62,8 @@ export const useProcessedPhotos = () => {
     urlFilters: any,
     options?: any
   ) => {
-    // If worker had a critical error, just run sync
-    if (workerError || !workerRef.current) {
+    // If worker had a critical error, or is disabled, just run sync
+    if (workerError || !workerRef.current || !isUsingWorker) {
       if (isUsingWorker) {
          logger.warn('[PhotoProcessor] Worker not available/failed, using sync fallback');
          setIsUsingWorker(false);
@@ -78,14 +78,22 @@ export const useProcessedPhotos = () => {
     }
 
     setIsProcessing(true);
-    workerRef.current.postMessage({
-      photos,
-      categories,
-      tags,
-      userFilters,
-      urlFilters,
-      options
-    });
+    try {
+      workerRef.current.postMessage({
+        photos,
+        categories,
+        tags,
+        userFilters,
+        urlFilters,
+        options
+      });
+    } catch (e) {
+      logger.error('[PhotoProcessor] postMessage failed (DataCloneError?), falling back to sync', e);
+      setIsUsingWorker(false);
+      const res = processPhotosSync(photos, categories, tags, userFilters, urlFilters, options);
+      setSyncResult(res);
+      setIsProcessing(false);
+    }
   }, [workerError, isUsingWorker]);
 
   // If worker error occurs, switch to sync mode for subsequent calls
