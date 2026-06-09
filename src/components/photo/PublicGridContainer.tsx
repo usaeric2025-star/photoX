@@ -2,8 +2,8 @@ import React, { useEffect } from 'react';
 import { VirtualPhotoGrid } from '@/components/photo/VirtualPhotoGrid';
 import { PublicFilters } from '@/components/ui/PublicFilters';
 import { useUIStore, useShallow, useAppLang, useColumns } from '@/store/useUIStore';
-import { usePhotos, useSettings, useCategories, useTags, useUrlFilters } from '@/hooks';
-import { processPhotos, cleanPhotos } from '@/lib/filters';
+import { usePhotos, useSettings, useCategories, useTags, useUrlFilters, useProcessedPhotos } from '@/hooks';
+import { cleanPhotos } from '@/lib/filters';
 import { PAGINATION } from '@/constants/config';
 import { GroupDetailPage } from '../GroupDetailPage';
 import { PhotoCard } from './PhotoCard';
@@ -42,6 +42,8 @@ export function PublicGridContainer({
   const { data: categories = [] } = useCategories();
   const { data: tags = [] } = useTags();
   
+  const { process, result, isProcessing: isWorkerProcessing } = useProcessedPhotos();
+  
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
   const infiniteQuery = usePhotos({
@@ -56,17 +58,21 @@ export function PublicGridContainer({
 
   const rawPhotos = (infiniteQuery.data as any)?.photos ?? EMPTY_ARRAY;
 
-  const { displayPhotos, gridPhotos } = React.useMemo(() => processPhotos(
-    rawPhotos,
-    categories,
-    tags,
-    urlFilters as any,
-    urlFilters,
-    {
-      showGroupsCollapsed: urlFilters.showGroupsCollapsed,
-      isAdminModeOverride: false
-    }
-  ), [rawPhotos, categories, tags, urlFilters]);
+  useEffect(() => {
+    process(
+      rawPhotos,
+      categories,
+      tags,
+      urlFilters as any,
+      urlFilters,
+      {
+        showGroupsCollapsed: urlFilters.showGroupsCollapsed,
+        isAdminModeOverride: false
+      }
+    );
+  }, [rawPhotos, categories, tags, urlFilters, process]);
+
+  const gridPhotos = result?.gridPhotos || EMPTY_ARRAY;
 
   const handleGroupClick = (gid: string, photoId?: string) => {
     setPhotoId(null);
@@ -146,7 +152,7 @@ export function PublicGridContainer({
               key={`photo-grid-${urlFilters.showGroupsCollapsed ? 'collapsed' : 'expanded'}-${urlFilters.searchQuery || ''}`}
               restoreKey="public_view_scroll_vlist"
               photos={gridPhotos}
-              isFetching={infiniteQuery.isLoading}
+              isFetching={infiniteQuery.isLoading || (isWorkerProcessing && gridPhotos.length === 0)}
               isFetchingNextPage={infiniteQuery.isFetchingNextPage}
               hasNextPage={!!infiniteQuery.hasNextPage}
               onLoadMore={infiniteQuery.fetchNextPage}

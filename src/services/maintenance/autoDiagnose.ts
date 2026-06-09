@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { logger } from '@/lib/logger';
-import { ok, fail } from '@/lib/utils/result';
+import { logResult } from '@/lib/error/errorLogger';
+import { api } from '@/lib/api';
 
 export type DiagnoseIssue = {
   type: 'orphan_photos' | 'orphan_references' | 'ai_service';
@@ -19,6 +20,13 @@ export const runDiagnose = async () => {
   const issues: DiagnoseIssue[] = [];
   
   try {
+    // 0. Pre-flight check: Only run diagnosis if there is an active session to avoid RLS/400 errors for guests
+    const { data: { session } } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
+    if (!session?.user) {
+      logger.info('[AutoDiagnose] No authenticated session. Skipping background check.');
+      return [];
+    }
+
     // 1. Check for Orphan Photos (Invalid URLs or missing URLs)
     const { count: orphanPhotos } = await supabase
       .from('furniture_items')
@@ -67,27 +75,44 @@ export const runDiagnose = async () => {
     }
 
     // 3. AI Service Health Check (Basic connectivity)
-    const { data: settings } = await supabase.from('settings').select('gemini_api_key').single();
-    if (!settings?.gemini_api_key) {
+    let hasAiKey = false;
+    try {
+      const response = await api.admin.settings['get-keys'].$get();
+      if (response.ok) {
+        const res = await response.json();
+        if (res?.success) {
+          hasAiKey = res.keysStatus?.agnes || res.keysStatus?.openrouter;
+        }
+      }
+    } catch (e) {
+      logger.warn('[AutoDiagnose] AI health check failed to fetch keys:', e);
+    }
+
+    if (!hasAiKey) {
       issues.push({
         type: 'ai_service',
         severity: 'warning',
-        message: 'AI 服务未配置：缺少 Gemini API Key',
+        message: 'AI 服务未配置或无法连接：缺少有效 API Key',
         fixable: false
       });
     }
 
-    // Log the result to system_logs (Our primary audit trail)
+    // Log the result to system_logs via logResult (Our primary audit trail)
     const duration = performance.now() - startTime;
-    await supabase.from('system_logs').insert({
-      level: issues.some(i => i.severity === 'critical') ? 'error' : (issues.length > 0 ? 'warning' : 'info'),
-      message: `[AutoDiagnose] 完成检测，耗时 ${duration.toFixed(0)}ms. 发现 ${issues.length} 个问题。`,
-      context: 'auto_diagnose',
-      metadata: { 
-        issues: issues.map(i => ({ type: i.type, severity: i.severity, count: i.count })),
-        duration_ms: duration
-      }
-    });
+    await logResult(
+      {
+        action: 'auto_diagnose',
+        component: 'AutoDiagnose',
+        kind: 'UNKNOWN',
+        metadata: {
+          issues_count: issues.length,
+          issues_summary: issues.map(i => ({ type: i.type, severity: i.severity })),
+          duration_ms: duration
+        }
+      },
+      issues.some(i => i.severity === 'critical') ? 'error' : 'success',
+      { message: `[AutoDiagnose] 完成检测，耗时 ${duration.toFixed(0)}ms. 发现 ${issues.length} 个问题。` }
+    );
 
     logger.info(`[AutoDiagnose] Run completed in ${duration.toFixed(0)}ms. Issues: ${issues.length}`);
     return issues;
@@ -97,11 +122,15 @@ export const runDiagnose = async () => {
   }
 };
 
+let isInitialized = false;
+
 /**
  * Starts the background diagnosis loop.
  */
 export const startAutoDiagnose = () => {
   if (typeof window === 'undefined') return;
+  if (isInitialized) return;
+  isInitialized = true;
   
   let intervalId: any = null;
 

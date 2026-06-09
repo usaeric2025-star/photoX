@@ -38,6 +38,7 @@ export function useGlobalTasks() {
     },
     enabled: isAdmin,
     refetchInterval: isAdmin ? 5000 : false, // Poll every 5 seconds if active
+    staleTime: 4000, // Reuse caches up to 4 seconds to deduplicate simultaneous hooks
   });
 
   // 3. Adapter Logic: Transform to UnifiedTask

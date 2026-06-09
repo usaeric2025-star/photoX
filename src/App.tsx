@@ -18,9 +18,6 @@ export default function AppRoutes() {
     // Background cache cleanup and migrations
     migrateStorage();
     clearExpiredCaches(7).catch(err => handleError(err, '本地缓存自动清理失败', true));
-    
-    // Start periodic background diagnosis
-    startAutoDiagnose();
   }, []);
 
   logger.debug('🔍 AppRoutes 渲染:', { 
@@ -33,6 +30,9 @@ export default function AppRoutes() {
     if (!isLoading) {
       logger.info('🔑 Auth status changed, invalidating router...', { hasUser: !!user });
       router.invalidate();
+      if (user) {
+        startAutoDiagnose();
+      }
     }
   }, [user, isLoading]);
 

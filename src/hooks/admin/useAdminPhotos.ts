@@ -1,6 +1,5 @@
-import { useMemo } from 'react';
-import { usePhotos, useUrlFilters, useCategories, useTags, useAdminMode, usePermission } from '@/hooks';
-import { processPhotos } from '@/lib/filters';
+import { useMemo, useEffect } from 'react';
+import { useUrlFilters, useCategories, useTags, useAdminMode, useProcessedPhotos } from '@/hooks';
 import { useUIStore } from '@/store/useUIStore';
 import { usePhotoGallery } from '@/hooks/photo/usePhotoGallery';
 import { Photo } from '@/types';
@@ -19,13 +18,15 @@ export const useAdminPhotos = () => {
     const { data: tags = [] } = useTags();
     const { photos: rawPhotos, infinitePhotosQuery } = usePhotoGallery();
 
+    const { process, result, isProcessing: isWorkerProcessing } = useProcessedPhotos();
+
     const photos = useMemo(() => {
         if (!processingIds || processingIds.length === 0) return rawPhotos;
         return rawPhotos.filter((p: any) => !processingIds.includes(p.id));
     }, [rawPhotos, processingIds]);
 
-    const { displayPhotos, gridPhotos } = useMemo(() => {
-        return processPhotos(
+    useEffect(() => {
+        process(
             photos,
             categories,
             tags,
@@ -36,13 +37,16 @@ export const useAdminPhotos = () => {
                 isAdminModeOverride: isAdminMode
             }
         );
-    }, [photos, categories, tags, urlFilters, isAdminMode]);
+    }, [photos, categories, tags, urlFilters, isAdminMode, process]);
+
+    const displayPhotos = result?.displayPhotos || [];
+    const gridPhotos = result?.gridPhotos || [];
 
     return {
         photos,
         displayPhotos,
         gridPhotos,
-        isLoading: infinitePhotosQuery.isLoading,
+        isLoading: infinitePhotosQuery.isLoading || (isWorkerProcessing && !result),
         isFetchingNextPage: infinitePhotosQuery.isFetchingNextPage,
         hasNextPage: !!infinitePhotosQuery.hasNextPage,
         fetchNextPage: infinitePhotosQuery.fetchNextPage,

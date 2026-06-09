@@ -20,6 +20,7 @@ export { useUploadProgress } from './core/useUploadProgress';
 export * from './admin';
 export * from './photo';
 export * from './groups';
+export { useProcessedPhotos } from './useProcessedPhotos';
 
 // Utils
 export { useUIStore, useStore, useShallow, useColumns } from '../store/useUIStore';

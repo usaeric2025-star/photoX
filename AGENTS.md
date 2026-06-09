@@ -959,3 +959,11 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 - ✅ 使用 `errorFactory.fail()` 返回失敗響應
 
 ## ON DELETE SET NULL 约束补充（锁定，2026-06-09）
+
+## L3 Web Worker 規範（鎖定，2026-06-09）
+
+- ✅ **核心原則**：耗時的 `processPhotos`（篩選、分組、排序）必須在 Worker 中執行，以保證主線程 60fps 滾動。
+- ✅ **降級策略**：Worker 失敗時必須自動降級到主線程同步執行，並通過 `logger.warn` 記錄。
+- ✅ **唯一出口**：所有照片網格容器必須通過 `useProcessedPhotos` 獲取處理後的數據。
+- ✅ **異步感知**：當 Worker 正在處理時，`isLoading` 應反映此狀態以顯示骨架屏（Skeleton）。
+- ❌ **禁止項**：禁止在主線程直接調用 `processPhotos`（除非是降級路徑或數據量極小的情況）。
