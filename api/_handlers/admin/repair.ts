@@ -7,7 +7,7 @@ import { normalizeI18n } from "../../_shared/i18n.js";
 const serverEnv = getServerEnv(process.env);
 export const adminRepair = new Hono();
 
-adminRepair.post("/repair", async (c) => {
+adminRepair.post("/", async (c) => {
     try {
       const { issueId } = await c.req.json();
       const supabase = await getSupabaseAdmin();

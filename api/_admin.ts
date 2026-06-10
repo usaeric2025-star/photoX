@@ -4,19 +4,17 @@ import { adminSettings } from './_handlers/admin/settings.js';
 import { adminDiagnose } from './_handlers/admin/diagnose.js';
 import { adminRepair } from './_handlers/admin/repair.js';
 import { adminMaintenance } from './_handlers/admin/maintenance.js';
-import { storageMaintenance } from './_handlers/admin/storageMaintenance.js';
 import { adminBackfill } from './_handlers/admin/backfill.js';
 import { adminErrorEvents } from './_handlers/admin/error-events.js';
 
 const app = new Hono();
 
-app.route('/', adminPhotos);
 app.route('/settings', adminSettings);
+app.route('/maintenance', adminMaintenance);
 app.route('/diagnose', adminDiagnose);
 app.route('/repair', adminRepair);
-app.route('/maintenance', adminMaintenance);
-app.route('/storage', storageMaintenance);
-app.route('/backfill', adminBackfill);
-app.route('/events', adminErrorEvents);
+app.route('/backfill-photo-metadata', adminBackfill);
+app.route('/', adminPhotos);
+app.route('/', adminErrorEvents);
 
 export default app;

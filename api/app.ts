@@ -8,6 +8,7 @@ import adminApp from "./_admin.js";
 import { ai } from "./_handlers/ai.js";
 import { tags } from "./_handlers/tags.js";
 import { storage } from "./_handlers/storage.js";
+import { storageMaintenance } from "./_handlers/admin/storageMaintenance.js";
 import { getTraceId } from "./_lib/error/traceId.js";
 import { logger } from "./_lib/logger.js";
 import { AppError, errorFactory } from "./_lib/error/AppError.js";
@@ -77,6 +78,7 @@ app.route("/admin", adminApp);
 app.route("/ai", ai);
 app.route("/tags", tags);
 app.route("/", storage);
+app.route("/", storageMaintenance);
 
 // --- Core Utility Routes ---
 app.get("/health", (c) => {

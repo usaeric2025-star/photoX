@@ -40,7 +40,10 @@ ai.post("/test", async (c) => {
         }
 
         const data = await provider.chat([{ role: 'user', content: 'test connection' }]);
-        if (!data.success) throw new Error(data.error);
+        if (!data.success) {
+            const errorMsg = typeof data.error === 'object' ? JSON.stringify(data.error) : String(data.error || 'Unknown AI error');
+            throw new Error(errorMsg);
+        }
 
         return c.json({ success: true, message: 'Connection successful', data: data.text });
     } catch (e: unknown) {

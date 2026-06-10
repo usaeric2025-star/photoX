@@ -9,6 +9,9 @@ export function extractErrorMessage(error: any): string {
   if (typeof error === 'string') return error;
 
   if (error && typeof error === 'object') {
+    // If the error property is a direct string message (e.g. { success: false, error: "缺少必要參數" })
+    if (error.error && typeof error.error === 'string') return error.error;
+
     // PostgrestError or AppResult.error
     if (error.message && typeof error.message === 'string') return error.message;
     if (error.error?.message) return String(error.error.message);
@@ -27,44 +30,83 @@ export function extractErrorMessage(error: any): string {
 }
 
 const normalizeError = (error: unknown, fallbackContext: string): StandardError => {
-  // 提取 traceId（Mutation 工廠已注入）
-  let traceId: string | undefined
-  if (error && typeof error === 'object' && 'traceId' in error) {
-    traceId = String((error as any).traceId)
-  }
-
-  // 後端返回的 AppResult.error 格式（含 timestamp）
-  if (error && typeof error === 'object' && 'code' in error && 'message' in error) {
-    const err = error as { code: string; message: string; timestamp?: number }
-    return {
-      code: err.code,
-      message: err.message,
-      context: fallbackContext,
-      traceId,
-      timestamp: err.timestamp ?? Date.now(),
+  let target = error;
+  
+  // If we passed an object representing a standard backend response containing an 'error' key
+  if (error && typeof error === 'object' && 'error' in error) {
+    const nestedError = (error as any).error;
+    if (nestedError) {
+      target = nestedError;
     }
   }
 
-  // 標準 Error 物件
-  if (error instanceof Error) {
+  // Extract traceId if available
+  let traceId: string | undefined;
+  if (target && typeof target === 'object' && 'traceId' in target) {
+    traceId = String((target as any).traceId);
+  } else if (error && typeof error === 'object' && 'traceId' in error) {
+    traceId = String((error as any).traceId);
+  }
+
+  // If the extracted target (or nested target) is a string, use it as the message
+  if (typeof target === 'string') {
     return {
       code: 'UNKNOWN_ERROR',
-      message: error.message,
+      message: target,
       context: fallbackContext,
       traceId,
       timestamp: Date.now(),
-      stack: error.stack,
-    }
+    };
   }
 
-  // 兜底
+  // AppResult.error structure or wrapped StandardError
+  if (target && typeof target === 'object' && 'code' in target && 'message' in target) {
+    const err = target as { code: string; message: string; timestamp?: number };
+    return {
+      code: err.code || 'UNKNOWN_ERROR',
+      message: err.message || '未知错误',
+      context: fallbackContext,
+      traceId,
+      timestamp: err.timestamp ?? Date.now(),
+    };
+  }
+
+  // Standard Error instance
+  if (target instanceof Error) {
+    return {
+      code: 'UNKNOWN_ERROR',
+      message: target.message,
+      context: fallbackContext,
+      traceId,
+      timestamp: Date.now(),
+      stack: target.stack,
+    };
+  }
+
+  // Fallback for object with a 'message' field
+  if (target && typeof target === 'object' && 'message' in target) {
+    return {
+      code: (target as any).code || 'UNKNOWN_ERROR',
+      message: String((target as any).message),
+      context: fallbackContext,
+      traceId,
+      timestamp: Date.now(),
+    };
+  }
+
+  // Deep fallback using robust message extraction
+  const extractedMessage = extractErrorMessage(target);
+  const finalMessage = (extractedMessage && extractedMessage !== '[object Object]')
+    ? extractedMessage
+    : (extractErrorMessage(error) !== '[object Object]' ? extractErrorMessage(error) : '未知错误');
+
   return {
     code: 'UNKNOWN_ERROR',
-    message: String(error),
+    message: finalMessage,
     context: fallbackContext,
     traceId,
     timestamp: Date.now(),
-  }
+  };
 }
 
 const getErrorId = (standardError: StandardError): string => {

@@ -7,28 +7,52 @@ import { ListObjectsV2Command } from "@aws-sdk/client-s3";
 const serverEnv = getServerEnv(process.env);
 export const adminDiagnose = new Hono();
 
-adminDiagnose.get("/diagnose", async (c) => {
+adminDiagnose.get("/", async (c) => {
     try {
       const supabase = await getSupabaseAdmin();
       const issues: any[] = [];
-      const [
-        { data: photos, error: pErr },
-        { data: groups, error: gErr },
-        { data: categories, error: cErr },
-        { data: manufacturers, error: mErr },
-        { error: sErr },
-      ] = await Promise.all([
-        supabase.from("furniture_items").select("id, group_id, category_id, manufacturer_id, image_hash, image_url, thumb_hash, name, item_code"),
-        supabase.from("groups").select("id, name, member_count"),
-        supabase.from("categories").select("id"),
-        supabase.from("manufacturers").select("id"),
-        supabase.from("secrets").select("key").limit(1),
-      ]);
+      
+      // Use a shorter timeout for diagnostic queries to prevent Vercel 300s timeout
+      const queryTimeout = 25000; 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), queryTimeout);
 
-      if (pErr) throw pErr;
-      if (!photos) throw new Error("Could not fetch photos");
+      let photos: any[] = [];
+      let groups: any[] = [];
+      let sErr: any = null;
 
-      if (sErr && sErr.code === 'PGRST116' || (sErr && sErr.message?.includes('does not exist'))) {
+      try {
+        const [
+          { data: pData, error: pErr },
+          { data: gData, error: gErr },
+          { data: cData, error: cErr },
+          { data: mData, error: mErr },
+          { error: secretErr },
+        ] = await Promise.all([
+          supabase.from("furniture_items").select("id, group_id, category_id, manufacturer_id, image_hash, image_url, thumb_hash, name, item_code").abortSignal(controller.signal),
+          supabase.from("groups").select("id, name, member_count").abortSignal(controller.signal),
+          supabase.from("categories").select("id").abortSignal(controller.signal),
+          supabase.from("manufacturers").select("id").abortSignal(controller.signal),
+          supabase.from("secrets").select("key").limit(1).abortSignal(controller.signal),
+        ]);
+
+        clearTimeout(timeoutId);
+
+        if (pErr) throw pErr;
+        if (gErr) throw gErr;
+        
+        photos = pData || [];
+        groups = gData || [];
+        sErr = secretErr;
+      } catch (innerErr: any) {
+        clearTimeout(timeoutId);
+        if (innerErr.name === 'AbortError') {
+          return c.json({ success: false, error: "數據庫查詢超時，請稍後重試 (Timeout)" }, 504);
+        }
+        throw innerErr;
+      }
+
+      if (sErr && (sErr.code === 'PGRST116' || sErr.message?.includes('does not exist'))) {
         issues.push({ 
             id: 'missing_secrets_table', 
             category: 'system', 
@@ -133,7 +157,7 @@ adminDiagnose.get("/diagnose", async (c) => {
     }
 });
 
-adminDiagnose.get("/diagnose-r2", async (c) => {
+adminDiagnose.get("/r2", async (c) => {
     try {
       const issues: string[] = [];
       const envKeys = ["R2_ENDPOINT", "R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY", "R2_BUCKET_NAME", "R2_PUBLIC_URL_PREFIX"];

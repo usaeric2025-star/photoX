@@ -67,7 +67,7 @@ adminSettings.post("/save-key", async (c) => {
             key: provider, 
             value: encryptedKey,
             updated_at: new Date().toISOString()
-        });
+        }, { onConflict: 'key' });
 
         if (error) {
             console.error(`Database error saving secret (${provider}):`, error);
@@ -102,7 +102,7 @@ adminSettings.post("/save-provider", async (c) => {
             key: 'PRIMARY_AI_PROVIDER', 
             value: provider,
             updated_at: new Date().toISOString()
-        });
+        }, { onConflict: 'key' });
         
         if (error) {
             console.error(`Database error saving provider preference:`, error);
