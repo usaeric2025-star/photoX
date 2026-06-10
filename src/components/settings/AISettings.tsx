@@ -6,7 +6,6 @@ interface AISettingsProps {
   geminiApiKey: string | undefined;
   setGeminiApiKey: (key: string) => void;
   customModel: string;
-  setCustomModel: (model: string) => void;
   testConnection: () => Promise<void>;
   testResult: { success?: boolean; error?: string; loading?: boolean } | null;
   accessPasscode: string;
@@ -17,5 +16,6 @@ interface AISettingsProps {
 }
 
 export function AISettings(props: AISettingsProps) {
-  return <AISecuritySection {...props} geminiApiKey={props.geminiApiKey || ''} />;
+  const { geminiApiKey, customModel, ...rest } = props;
+  return <AISecuritySection {...rest} geminiApiKey={geminiApiKey || ''} customModel={customModel || ''} />;
 };

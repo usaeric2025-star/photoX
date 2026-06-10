@@ -1,5 +1,13 @@
 # PhotoX 架构规则（永久锁定）
 
+## API 密钥与安全规范 (256gsm 锁定)
+- ✅ **唯一算法标准**：所有保存在数据库中的 API 密钥（如 OpenRouter Key、Gemini Key 均保存在 `secrets` 表）必须且只能使用 `aes-256-gcm` (256gsm) 算法进行高强度加密。
+- ✅ **统一存储结构**：加密结果的格式必须严格为 `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted}`，其中：
+  - IV 长度固定为 12 字节 (`crypto.randomBytes(12)`)。
+  - AuthTag 与加密串以十六进制 (`hex`) 拼接输出。
+  - 禁止将任何敏感密钥以直白明文、低烈度哈希或非标准化（如 CBC、DES 等）形式混入代码库或数据表。
+- ✅ **兼容与容错性**：系统加解密模块必须能对历史 CBC 和明文进行优雅兼容和解密降级，但对所有新录入及更改后的密钥，必须同步以 `aes-256-gcm` 进行重新转换及统一落库 (256gsm 化)。
+
 ## 核心原则（锁定）
 1. 服务端数据 → TanStack Query
 2. 前端 UI 状态 → Zustand（只存瞬态）

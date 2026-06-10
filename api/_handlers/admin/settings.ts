@@ -10,10 +10,8 @@ adminSettings.get("/get-keys", async (c) => {
         const { data: secrets } = await supabase.from('secrets').select('key, value');
         const configuredProviders = secrets?.map((s: any) => s.key) || [];
         
-        const { data: settings } = await supabase.from('settings').select('api_key').eq('id', 1).maybeSingle();
-        
-        const hasOpenrouter = configuredProviders.includes('openrouter') || configuredProviders.includes('openrouter_api_key') || !!settings?.api_key;
-        const hasGemini = configuredProviders.includes('gemini') || configuredProviders.includes('agnes') || configuredProviders.includes('agnes_api_key');
+        const hasOpenrouter = configuredProviders.includes('openrouter');
+        const hasGemini = configuredProviders.includes('gemini');
         
         const primarySecret = secrets?.find((s: any) => s.key === 'PRIMARY_AI_PROVIDER');
         

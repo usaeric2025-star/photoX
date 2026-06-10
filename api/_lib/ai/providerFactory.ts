@@ -142,41 +142,13 @@ export async function getAIProvider(providerName: string, supabase: any, modelOv
         actualProvider = 'gemini';
     }
 
-    // 優先從 secrets 讀取 API Key (Supports legacy and new key naming formats)
-    let secret = null;
-    if (actualProvider === 'gemini') {
-        const { data: geminiSecret } = await supabase.from('secrets').select('value').eq('key', 'gemini').maybeSingle();
-        secret = geminiSecret;
-        if (!secret) {
-            const { data: agnesSecret } = await supabase.from('secrets').select('value').eq('key', 'agnes').maybeSingle();
-            secret = agnesSecret;
-        }
-        if (!secret) {
-            const { data: agnesApiKeySecret } = await supabase.from('secrets').select('value').eq('key', 'agnes_api_key').maybeSingle();
-            secret = agnesApiKeySecret;
-        }
-    } else if (actualProvider === 'openrouter') {
-        const { data: openrouterSecret } = await supabase.from('secrets').select('value').eq('key', 'openrouter').maybeSingle();
-        secret = openrouterSecret;
-        if (!secret) {
-            const { data: openrouterApiKeySecret } = await supabase.from('secrets').select('value').eq('key', 'openrouter_api_key').maybeSingle();
-            secret = openrouterApiKeySecret;
-        }
-    } else {
-        const { data: generalSecret } = await supabase.from('secrets').select('value').eq('key', actualProvider).maybeSingle();
-        secret = generalSecret;
-    }
+    // 從 secrets 讀取統一格式的 API Key
+    const { data: secret } = await supabase.from('secrets').select('value').eq('key', actualProvider).maybeSingle();
 
     let apiKey = '';
     
     if (secret?.value) {
         apiKey = decrypt(secret.value);
-    } else if (actualProvider === 'openrouter') {
-        // 兼容舊版本
-        const { data: settings } = await supabase.from('settings').select('api_key').eq('id', 1).maybeSingle();
-        if (settings?.api_key) {
-            apiKey = settings.api_key;
-        }
     }
 
     if (!apiKey) throw new Error(`未配置 ${actualProvider} API 密鑰`);

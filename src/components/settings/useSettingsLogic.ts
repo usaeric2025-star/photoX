@@ -19,7 +19,6 @@ interface UseSettingsLogicProps {
   user: User | null;
   settings: AppSettings;
   geminiApiKey: string;
-  customModel: string;
   saveSettings: (s: AppSettings) => Promise<any>;
   performPullSync: () => Promise<any>;
   setSettings: (s: AppSettings) => void;
@@ -31,7 +30,6 @@ export const useSettingsLogic = ({
   user,
   settings,
   geminiApiKey,
-  customModel,
   saveSettings,
   performPullSync,
   setSettings,

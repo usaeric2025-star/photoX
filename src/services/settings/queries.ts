@@ -30,8 +30,8 @@ export const fetchSettings = async () => {
                     const status = keysData.keysStatus;
                     data.provider = status.primaryProvider || 'openrouter';
                     
-                    // Only populate gemini_api_key placeholder if OpenRouter actually has a key
-                    if (status.openrouter || data.api_key) {
+                    // Only populate gemini_api_key placeholder if any AI provider has a key
+                    if (status.openrouter || status.gemini || data.api_key) {
                         data.gemini_api_key = data.api_key || "••••••••••••••••";
                     } else {
                         data.gemini_api_key = "";

@@ -27,11 +27,6 @@ export function usePhotoEditAI(form: PhotoEditFormReturn) {
       return;
     }
 
-    if (!settings?.gemini_api_key) {
-      toast.error("Google Gemini API Key is required.");
-      return;
-    }
-
     const toastId = toast.loading(appLang === 'zh' ? '正在智能识别...' : 'AI Analyzing...', { id: 'ai-analyze' });
 
     await runTask(appLang === 'zh' ? "AI 识别" : "AI Identification", async () => {

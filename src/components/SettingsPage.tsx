@@ -73,7 +73,6 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   const { user, loginWithGoogle, logout } = useAuth();
   const { settings, geminiApiKey, customModel, accessPasscode, updateSettings } = useSettings();
   const setGeminiApiKey = (key: string) => updateSettings({ ...settings, gemini_api_key: key });
-  const setCustomModel = (model: string) => updateSettings({ ...settings, custom_model: model });
   const setAccessPasscode = (code: string) => updateSettings({ ...settings, access_passcode: code });
   const setSettings = (s: AppSettings) => { updateSettings(s as any); };
   const saveSettings = async (s: Partial<AppSettings>) => { await updateSettings(s); };
@@ -125,7 +124,6 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
     user: user || null,
     settings,
     geminiApiKey: geminiApiKey || "",
-    customModel: customModel || "",
     saveSettings,
     performPullSync,
     setSettings: (s: AppSettings) => { void updateSettings(s as Partial<AppSettings>); }
@@ -222,7 +220,6 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
                 geminiApiKey={geminiApiKey || ""}
                 setGeminiApiKey={setGeminiApiKey}
                 customModel={customModel || ""}
-                setCustomModel={setCustomModel}
                 testConnection={async () => { await testConnection(); }}
                 testResult={testResult}
                 accessPasscode={accessPasscode || ""}

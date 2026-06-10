@@ -11,7 +11,6 @@ interface AISecuritySectionProps {
   geminiApiKey: string;
   setGeminiApiKey: (key: string) => void;
   customModel: string;
-  setCustomModel: (model: string) => void;
   accessPasscode: string;
   setAccessPasscode: (code: string) => void;
   setSettingField: <K extends keyof AppSettings>(field: K, value: AppSettings[K]) => void;
@@ -22,8 +21,7 @@ interface AISecuritySectionProps {
 export function AISecuritySection({
   geminiApiKey: initialGeminiKey,
   setGeminiApiKey,
-  customModel: initialCustomModel,
-  setCustomModel,
+  customModel,
   setSettingField,
   cardClass,
   inputClass
@@ -34,7 +32,6 @@ export function AISecuritySection({
   const [keysStatus, setKeysStatus] = React.useState({ openrouter: false, gemini: false, primaryProvider: 'openrouter' });
   
   // Local draft states to prevent rapid re-renders from parent/query invalidation
-  const [localCustomModel, setLocalCustomModel] = React.useState(initialCustomModel || '');
   const [localOpenRouterKey, setLocalOpenRouterKey] = React.useState('');
   const [localGeminiKey, setLocalGeminiKey] = React.useState('');
 
@@ -42,16 +39,6 @@ export function AISecuritySection({
   const [isEditingOpenRouter, setIsEditingOpenRouter] = React.useState(false);
   const [isEditingGemini, setIsEditingGemini] = React.useState(false);
   const [isSavingProvider, setIsSavingProvider] = React.useState<boolean | null>(null);
-
-  // Use refs to track initialization so we don't overwrite user typing
-  const modelInit = React.useRef(false);
-
-  React.useEffect(() => {
-    if (!modelInit.current && initialCustomModel) {
-        setLocalCustomModel(initialCustomModel);
-        modelInit.current = true;
-    }
-  }, [initialCustomModel]);
 
   const fetchKeysStatus = async () => {
     try {
@@ -85,7 +72,7 @@ export function AISecuritySection({
         json: { 
           provider,
           apiKey: targetKey === "••••••••••••••••" ? "" : targetKey,
-          model: provider === 'openrouter' ? localCustomModel : 'gemini-1.5-flash'
+          model: provider === 'openrouter' ? (customModel || 'google/gemini-2.5-flash-lite') : 'gemini-1.5-flash'
         }
       }) as any;
       const data = await res.json();
@@ -202,23 +189,7 @@ export function AISecuritySection({
                 </div>
              </div>
              
-             <div className="space-y-2">
-                 <div className="flex items-center gap-2">
-                   <span className="text-[8px] font-black text-brand-navy/40 uppercase whitespace-nowrap">Model ID</span>
-                   <input 
-                      type="text" 
-                      placeholder="google/gemini-2.5-flash-lite"
-                      className={`${inputClass} flex-1 bg-white text-[10px] font-bold h-9`}
-                      value={localCustomModel}
-                      onChange={(e) => setLocalCustomModel(e.target.value)}
-                      onBlur={(e) => {
-                        setSettingField('custom_model' as any, e.target.value);
-                        setCustomModel(e.target.value);
-                      }}
-                      disabled={!isEditingOpenRouter}
-                   />
-                 </div>
-                 
+             <div className="space-y-3">
                  <div className="relative">
                     <input
                         type={isEditingOpenRouter ? "text" : "password"}
@@ -239,6 +210,18 @@ export function AISecuritySection({
                        </button>
                     )}
                  </div>
+
+                 <div className="space-y-1">
+                    <label className="text-[8px] font-bold text-brand-navy/60 uppercase tracking-widest block">自定義模型 / Custom Model ID</label>
+                    <input
+                        type="text"
+                        placeholder="google/gemini-2.5-flash-lite..."
+                        className={`${inputClass} !h-8 text-[11px] w-full bg-white border-brand-navy/10 py-1.5`}
+                        value={customModel || ''}
+                        onChange={(e) => setSettingField('custom_model', e.target.value)}
+                    />
+                 </div>
+
                  {!isEditingOpenRouter && (
                    <button onClick={() => handleTest('openrouter')} disabled={isTesting !== null} className="w-full text-[10px] font-black p-2 bg-white hover:bg-slate-100 transition-colors rounded-xl border border-slate-200 flex items-center justify-center gap-2">
                      {isTesting === 'openrouter' ? 'Testing...' : 'Test Connection'}
