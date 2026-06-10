@@ -32,7 +32,7 @@ export function AISecuritySection({
   const [keysStatus, setKeysStatus] = React.useState({ openrouter: false, gemini: false, primaryProvider: 'openrouter' });
   
   // Local draft states to prevent rapid re-renders from parent/query invalidation
-  const [localOpenRouterKey, setLocalOpenRouterKey] = React.useState('');
+  const [localOpenRouterKey, setLocalOpenRouterKey] = React.useState(initialGeminiKey || '');
   const [localGeminiKey, setLocalGeminiKey] = React.useState('');
 
   const [isTesting, setIsTesting] = React.useState<'openrouter' | 'gemini' | null>(null);
@@ -40,29 +40,38 @@ export function AISecuritySection({
   const [isEditingGemini, setIsEditingGemini] = React.useState(false);
   const [isSavingProvider, setIsSavingProvider] = React.useState<boolean | null>(null);
 
-  const fetchKeysStatus = async () => {
+  const fetchKeysStatus = React.useCallback(async () => {
     try {
-      const res = await api.admin.settings['get-keys'].$get() as any;
+      const res = await api.admin.settings['get-keys'].$get();
       if (res.ok) {
-        const data = await res.json();
+        const data = await res.json() as any;
         if (data.success) {
           setKeysStatus(data.keysStatus);
-          if (data.keysStatus.openrouter) {
-            setLocalOpenRouterKey('••••••••••••••••');
-          }
-          if (data.keysStatus.gemini) {
-            setLocalGeminiKey('••••••••••••••••');
-          }
+          
+          // Initial populate only!
+          setLocalOpenRouterKey(prev => {
+            if (data.keysStatus.openrouter && (!prev || prev === initialGeminiKey)) {
+                return '••••••••••••••••';
+            }
+            return prev;
+          });
+          
+          setLocalGeminiKey(prev => {
+            if (data.keysStatus.gemini && !prev) {
+                return '••••••••••••••••';
+            }
+            return prev;
+          });
         }
       }
     } catch (e) {
       console.error("Failed to fetch keys status:", e);
     }
-  };
+  }, [initialGeminiKey]);
 
   React.useEffect(() => {
     fetchKeysStatus();
-  }, []);
+  }, [fetchKeysStatus]);
 
   const handleTest = async (provider: 'openrouter' | 'gemini') => {
     setIsTesting(provider);
