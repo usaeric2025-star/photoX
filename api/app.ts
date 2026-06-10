@@ -4,7 +4,7 @@ import { getServerEnv } from "./_shared/envSchema.js";
 import { logTraffic } from "./_lib/trafficCapture.js";
 import { requireRealUser } from "./_lib/auth.js";
 import { getSupabaseAdmin } from "./_lib/supabase.js";
-import adminApp from "./admin.js";
+import adminApp from "./_admin.js";
 import { ai } from "./_handlers/ai.js";
 import { tags } from "./_handlers/tags.js";
 import { storage } from "./_handlers/storage.js";

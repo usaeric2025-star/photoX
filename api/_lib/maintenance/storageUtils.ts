@@ -61,7 +61,6 @@ export async function runStorageAudit() {
         
         isTruncated = response.IsTruncated || false;
         continuationToken = response.NextContinuationToken;
-        pagesProcessed++;
     }
 
     interface OrphanFile {
