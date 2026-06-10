@@ -1,11 +1,11 @@
 import { Hono } from 'hono';
-import { adminPhotos } from './_handlers/admin/photos';
-import { adminSettings } from './_handlers/admin/settings';
-import { adminDiagnose } from './_handlers/admin/diagnose';
-import { adminRepair } from './_handlers/admin/repair';
-import { adminMaintenance } from './_handlers/admin/maintenance';
-import { storageMaintenance } from './_handlers/admin/storageMaintenance';
-import { adminBackfill } from './_handlers/admin/backfill';
+import { adminPhotos } from './_handlers/admin/photos.js';
+import { adminSettings } from './_handlers/admin/settings.js';
+import { adminDiagnose } from './_handlers/admin/diagnose.js';
+import { adminRepair } from './_handlers/admin/repair.js';
+import { adminMaintenance } from './_handlers/admin/maintenance.js';
+import { storageMaintenance } from './_handlers/admin/storageMaintenance.js';
+import { adminBackfill } from './_handlers/admin/backfill.js';
 
 const app = new Hono();
 

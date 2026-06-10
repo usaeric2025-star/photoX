@@ -1,12 +1,12 @@
 import { Hono } from 'hono';
 import { type } from 'arktype';
-import { getServerEnv } from '../_shared/envSchema';
-import { getSupabaseAdmin } from '../_lib/supabase';
-import { getModel } from '../_lib/ai/modelHelper';
-import { getAIProvider, OpenRouterProvider, GeminiProvider } from '../_lib/ai/providerFactory';
-import { getTaskConfig, AITask } from '../_lib/ai/taskRouter';
-import { decrypt } from '../_lib/encryption';
-import { executeAITask } from '../_lib/ai/executor';
+import { getServerEnv } from '../_shared/envSchema.js';
+import { getSupabaseAdmin } from '../_lib/supabase.js';
+import { getModel } from '../_lib/ai/modelHelper.js';
+import { getAIProvider, OpenRouterProvider, GeminiProvider } from '../_lib/ai/providerFactory.js';
+import { getTaskConfig, AITask } from '../_lib/ai/taskRouter.js';
+import { decrypt } from '../_lib/encryption.js';
+import { executeAITask } from '../_lib/ai/executor.js';
 import { 
     AIAnalyzeV1ReqSchema, 
     AIRunReqSchema, 
@@ -15,8 +15,8 @@ import {
     AIAnalyzeGroupReqSchema,
     AIAnalyzePhotoV2ReqSchema,
     ApiResponse
-} from '../_shared/apiContractSchema';
-import { AI_PROMPTS } from './ai/prompts';
+} from '../_shared/apiContractSchema.js';
+import { AI_PROMPTS } from './ai/prompts.js';
 
 const serverEnv = getServerEnv(process.env);
 export const ai = new Hono();
@@ -96,18 +96,14 @@ ai.post("/analyze", async (c) => {
 
         if (!finalImageUrl) throw new Error("Image URL is required for analysis");
 
-        const [catRef, tagRef, groupRef, secretRef] = await Promise.all([
+        const [catRef, tagRef, groupRef] = await Promise.all([
             supabase.from('categories').select('*'),
             supabase.from('tags').select('*'),
             supabase.from('groups').select('id, name').order('created_at', { ascending: false }).limit(40),
-            supabase.from('secrets').select('value').eq('key', 'openrouter').maybeSingle(),
         ]);
 
-        const apiKey = secretRef.data?.value ? decrypt(secretRef.data.value) : (serverEnv.GEMINI_API_KEY || '');
-        if (!apiKey) throw new Error("AI API Key not configured");
-        
         const model = await getModel(supabase);
-        const provider = new OpenRouterProvider({ apiKey, model });
+        const provider = await getAIProvider('', supabase, model);
         
         const context = {
             categories: (catRef.data || []).map((c: any) => ({ id: c.id, name: c.name, zh: c.zh })).slice(0, 50),
@@ -127,6 +123,10 @@ ai.post("/analyze", async (c) => {
             metadata: { photoId, imageUrl: finalImageUrl }
         });
 
+        if (data && (data as any)._fallback) {
+            throw new Error((data as any)._error || 'AI analysis failed');
+        }
+
         return c.json({ success: true, data } as ApiResponse);
     } catch (e: unknown) {
         return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown error' } as ApiResponse, 500);
@@ -142,7 +142,7 @@ ai.post("/analyze-base64", async (c) => {
       const { base64Image, customModel, promptText } = check;
       const supabase = await getSupabaseAdmin();
       const model = customModel || await getModel(supabase);
-      const provider = await getAIProvider('openrouter', supabase, model);
+      const provider = await getAIProvider('', supabase, model);
 
       const data = await executeAITask({
           task: 'analyze-base64',
@@ -152,6 +152,10 @@ ai.post("/analyze-base64", async (c) => {
           prompt: promptText || "Analyze this image",
           metadata: { type: 'base64' }
       });
+
+      if (data && (data as any)._fallback) {
+          throw new Error((data as any)._error || 'AI base64 analysis failed');
+      }
 
       return c.json({ success: true, data } as ApiResponse);
     } catch (error: any) { 
@@ -168,7 +172,7 @@ ai.post("/translate", async (c) => {
       const { customModel, promptText } = check;
       const supabase = await getSupabaseAdmin();
       const model = customModel || await getModel(supabase) || "gemini-2.5-flash-lite";
-      const provider = await getAIProvider('openrouter', supabase, model);
+      const provider = await getAIProvider('', supabase, model);
 
       const data = await executeAITask({
           task: 'translate',
@@ -178,6 +182,10 @@ ai.post("/translate", async (c) => {
           prompt: promptText,
           shouldNormalize: false
       });
+
+      if (data && (data as any)._fallback) {
+          throw new Error((data as any)._error || 'AI translation failed');
+      }
 
       return c.json({ success: true, data } as ApiResponse);
     } catch (error: any) { 
@@ -194,7 +202,7 @@ ai.post("/analyze-group", async (c) => {
       const supabase = await getSupabaseAdmin();
       const prompt = AI_PROMPTS.ANALYZE_GROUP(check.photoDetails);
       const model = await getModel(supabase);
-      const provider = await getAIProvider('openrouter', supabase, model);
+      const provider = await getAIProvider('', supabase, model);
 
       const data = await executeAITask({
           task: 'analyze-group',
@@ -203,6 +211,10 @@ ai.post("/analyze-group", async (c) => {
           messages: [{ role: "user", content: prompt }],
           prompt
       });
+
+      if (data && (data as any)._fallback) {
+          throw new Error((data as any)._error || 'AI group analysis failed');
+      }
 
       return c.json({ success: true, data } as ApiResponse);
     } catch (error: any) { 
@@ -219,7 +231,7 @@ ai.post("/analyze-photo-v2", async (c) => {
       const supabase = await getSupabaseAdmin();
       const prompt = AI_PROMPTS.REFINE_PHOTO(check.photoDetail);
       const model = await getModel(supabase);
-      const provider = await getAIProvider('openrouter', supabase, model);
+      const provider = await getAIProvider('', supabase, model);
 
       const data = await executeAITask({
           task: 'analyze-photo-v2',
@@ -228,6 +240,10 @@ ai.post("/analyze-photo-v2", async (c) => {
             messages: [{ role: "user", content: prompt }],
             prompt
         });
+
+      if (data && (data as any)._fallback) {
+          throw new Error((data as any)._error || 'AI refine photo failed');
+      }
 
         return c.json({ success: true, data } as ApiResponse);
     } catch (error: any) { 

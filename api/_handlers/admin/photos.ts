@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { getSupabaseAdmin } from "../../_lib/supabase";
+import { getSupabaseAdmin } from "../../_lib/supabase.js";
 
 export const adminPhotos = new Hono();
 

@@ -64,12 +64,12 @@ export const LightboxCore = ({
       }}
       slides={slides}
       plugins={LIGHTBOX_PLUGINS.filter(p => p.name !== 'captions')}
-      toolbar={{
+       toolbar={{
         buttons: [
           showAi && (
             <IconButton
               key="ai"
-              label="AI 分析"
+              label={"AI 分析" as any}
               icon={Sparkles}
               onClick={() => { const p = photos[index]; if (p) onAiAnalyze?.(p); }}
               className="text-indigo-400 hover:text-indigo-300"
@@ -78,7 +78,7 @@ export const LightboxCore = ({
           showSetCover && (
             <IconButton
               key="cover"
-              label="设为封面"
+              label={"设为封面" as any}
               icon={Crown}
               onClick={() => { const p = photos[index]; if (p) onSetCover?.(p); }}
               className="text-amber-400 hover:text-amber-300"
@@ -87,7 +87,7 @@ export const LightboxCore = ({
           showEdit && (
             <IconButton
               key="edit"
-              label="编辑"
+              label={"编辑" as any}
               icon={Pencil}
               onClick={() => { const p = photos[index]; if (p) onEdit?.(p); }}
             />
@@ -95,7 +95,7 @@ export const LightboxCore = ({
           showDelete && (
             <IconButton
               key="delete"
-              label="删除"
+              label={"删除" as any}
               icon={Trash2}
               onClick={() => { const p = photos[index]; if (p) onDelete?.(p); }}
               className="text-red-400 hover:text-red-300"
@@ -103,11 +103,10 @@ export const LightboxCore = ({
           ),
           <IconButton
             key="download"
-            label="下载"
+            label={"下载" as any}
             icon={Download}
             onClick={() => { const p = photos[index]; if (p) downloadPhotoAsJpeg(p.image_url); }}
           />,
-          "zoom",
           "close",
         ].filter(Boolean) as any[]
       }}

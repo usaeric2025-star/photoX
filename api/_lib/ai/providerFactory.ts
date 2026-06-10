@@ -133,12 +133,40 @@ export class GeminiProvider extends BaseAIProvider {
 }
 
 export async function getAIProvider(providerName: string, supabase: any, modelOverride?: string) {
-    // 從 secrets 讀取首選供應商
+    // 從 secrets 讀取首选供應商
     const { data: primary } = await supabase.from('secrets').select('value').eq('key', 'PRIMARY_AI_PROVIDER').maybeSingle();
-    const actualProvider = providerName || primary?.value || 'openrouter';
+    let actualProvider = providerName || primary?.value || 'openrouter';
 
-    // 優先從 secrets 讀取 API Key
-    const { data: secret } = await supabase.from('secrets').select('value').eq('key', actualProvider).maybeSingle();
+    // Normalize old 'agnes' provider key to 'gemini'
+    if (actualProvider === 'agnes') {
+        actualProvider = 'gemini';
+    }
+
+    // 優先從 secrets 讀取 API Key (Supports legacy and new key naming formats)
+    let secret = null;
+    if (actualProvider === 'gemini') {
+        const { data: geminiSecret } = await supabase.from('secrets').select('value').eq('key', 'gemini').maybeSingle();
+        secret = geminiSecret;
+        if (!secret) {
+            const { data: agnesSecret } = await supabase.from('secrets').select('value').eq('key', 'agnes').maybeSingle();
+            secret = agnesSecret;
+        }
+        if (!secret) {
+            const { data: agnesApiKeySecret } = await supabase.from('secrets').select('value').eq('key', 'agnes_api_key').maybeSingle();
+            secret = agnesApiKeySecret;
+        }
+    } else if (actualProvider === 'openrouter') {
+        const { data: openrouterSecret } = await supabase.from('secrets').select('value').eq('key', 'openrouter').maybeSingle();
+        secret = openrouterSecret;
+        if (!secret) {
+            const { data: openrouterApiKeySecret } = await supabase.from('secrets').select('value').eq('key', 'openrouter_api_key').maybeSingle();
+            secret = openrouterApiKeySecret;
+        }
+    } else {
+        const { data: generalSecret } = await supabase.from('secrets').select('value').eq('key', actualProvider).maybeSingle();
+        secret = generalSecret;
+    }
+
     let apiKey = '';
     
     if (secret?.value) {
