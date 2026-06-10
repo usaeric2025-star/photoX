@@ -9,19 +9,24 @@ export const AI_PROMPTS = {
    */
   ANALYZE_PHOTO: (context: { categories: any[]; tags: any[]; groups: any[] }) => `Role: Elite Furniture Data Analyst.
 Task: Inspect furniture image to extract comprehensive structured details.
-【CORE DATA EXTRACTION】
-- "name": "..." (Chinese name only)
-- "category_id": ${JSON.stringify(context.categories)}
-- "tag_ids": ${JSON.stringify(context.tags)}
-- "group_id": ${JSON.stringify(context.groups)}
 
-【PRECISE DIMENSIONS (OCR)】
-- "dimensions": [{ "label": string, "length": number, "width": number, "height": number, "unit": string }]
+【OUTPUT FORMAT】
+Must be JSON ONLY. Follow this schema exactly:
+{
+  "name": "string (Chinese name)",
+  "description": "string (Chinese description)",
+  "category_id": string (the matched ID from context list),
+  "new_tags": string[],
+  "tag_ids": string[] (the matched IDs from context list),
+  "dimensions": [{ "label": string, "length": number, "width": number, "height": number, "unit": string }]
+}
 
-【TRANSLATIONS】
-- "description": "..." (Chinese description only)
+【CONTEXT DATA】
+Categories: ${JSON.stringify(context.categories)}
+Tags: ${JSON.stringify(context.tags)}
+Groups: ${JSON.stringify(context.groups)}
 
-Ensure raw JSON output.`,
+Instructions: Use the provided Context Data to match category_id and tag_ids. If no exact match, set fields to null or empty.`,
 
   /**
    * Group analysis to create a unified series

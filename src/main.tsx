@@ -68,14 +68,5 @@ if (container) {
     </StrictMode>
   );
 
-  // v2.11.1: 平滑淡出並移除啟動骨架屏 [PERCEIVED-PERFORMANCE-IMPROVED]
-  setTimeout(() => {
-    const skeleton = document.getElementById('app-startup-skeleton');
-    if (skeleton) {
-      skeleton.style.opacity = '0';
-      setTimeout(() => {
-        skeleton.remove();
-      }, 300);
-    }
-  }, 50);
+  // 移除启动骨架屏逻辑，改由 LoadingScreen 控制
 }

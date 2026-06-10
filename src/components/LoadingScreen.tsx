@@ -3,6 +3,16 @@ import { createPortal } from 'react-dom';
 import { motion } from 'motion/react';
 
 export const LoadingScreen = () => {
+  React.useEffect(() => {
+    const skeleton = document.getElementById('app-startup-skeleton');
+    if (skeleton) {
+      skeleton.style.opacity = '0';
+      setTimeout(() => {
+        skeleton.remove();
+      }, 300);
+    }
+  }, []);
+
   const content = (
     <motion.div
       initial={{ opacity: 0 }}

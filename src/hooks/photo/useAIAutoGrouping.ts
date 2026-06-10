@@ -1,10 +1,9 @@
+import { analyzeAndSavePhoto, autoGroupPhotos } from '@/services/ai/orchestration';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useUIStore } from '@/store/useUIStore';
 import { photoKeys, groupKeys } from '@/lib/queryKeys';
-import { autoGroupPhotos } from '@/services/ai/orchestration';
-import { analyzeSinglePhotoDetail as analyzeSinglePhoto } from '@/services/ai/commands';
 
 
 export function useAIAutoGrouping() {
@@ -35,7 +34,7 @@ export function useAIAutoGrouping() {
         const photo = res.data?.[0];
         if (!photo) throw new Error('未找到照片信息');
     
-        const result = await analyzeSinglePhoto(photo);
+        const result = await analyzeAndSavePhoto(photo);
         update({ editPhotoId: photoId });
         
         // Pass results via event

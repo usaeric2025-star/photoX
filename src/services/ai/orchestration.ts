@@ -17,6 +17,11 @@ export const analyzeAndSavePhoto = async (
 ): Promise<AppResult<any>> => {
   const analysis = await analyzePhoto(photo.id);
   if (!analysis.ok) return analysis;
+  
+  // Validate that we have something to update
+  if (!analysis.data.name && !analysis.data.description && (!analysis.data.tagNames || analysis.data.tagNames.length === 0)) {
+      return fail('AI 分析未返回有效结果');
+  }
 
   const translation = await translateFields(analysis.data.name, analysis.data.description);
   if (!translation.ok) return translation;
