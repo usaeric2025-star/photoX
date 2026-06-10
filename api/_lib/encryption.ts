@@ -84,8 +84,8 @@ export function decrypt(text: string): string {
     decrypted += decipher.final('utf8');
     return decrypted;
   } catch (e: any) {
-    console.warn("Decryption failed, returning input text in raw:", e.message);
-    return text;
+    console.warn("[Encryption] Decryption failed:", e.message);
+    throw new Error("API密鑰解密失敗，可能由于加密秘鑰(ENCRYPTION_KEY)已更改。請重新保存您的API密鑰。");
   }
 }
 

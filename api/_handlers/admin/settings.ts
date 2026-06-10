@@ -8,34 +8,25 @@ adminSettings.get("/get-keys", async (c) => {
     try {
         const supabase = await getSupabaseAdmin();
         
-        // 1. Try to get from secrets table (New system)
-        const { data: secrets, error: secretsErr } = await supabase.from('secrets').select('key, value');
-        if (secretsErr) console.warn("Secrets table query warning (might not exist yet):", secretsErr.message);
+        // Parallelize DB queries to reduce latency
+        const [secretsRes, settingsRes] = await Promise.all([
+            supabase.from('secrets').select('key, value'),
+            supabase.from('settings').select('gemini_api_key').maybeSingle()
+        ]);
 
-        const configuredProviders = secrets?.map((s: any) => s.key) || [];
+        const secrets = secretsRes.data || [];
+        const configuredProviders = secrets.map((s: any) => s.key);
         
         let hasOpenrouter = configuredProviders.includes('openrouter');
         let hasGemini = configuredProviders.includes('gemini');
-        
-        const primarySecret = secrets?.find((s: any) => s.key === 'PRIMARY_AI_PROVIDER');
-        
-        // 2. Fallback to settings table (Legacy system) if not found in secrets
+        const primarySecret = secrets.find((s: any) => s.key === 'PRIMARY_AI_PROVIDER');
+
+        // Fallback for UI indicators
         if (!hasGemini || !hasOpenrouter) {
-            try {
-                const { data: settings, error: settingsErr } = await supabase.from('settings').select('gemini_api_key').maybeSingle();
-                if (settingsErr) {
-                    console.warn("Settings table query warning:", settingsErr.message);
-                } else if (settings?.gemini_api_key) {
-                    // If it's the only one we have, we might treat it as gemini or openrouter depending on format
-                    // In PhotoX, gemini_api_key was used for both via different logic
-                    if (settings.gemini_api_key.startsWith('sk-or-')) {
-                       if (!hasOpenrouter) hasOpenrouter = true;
-                    } else {
-                       if (!hasGemini) hasGemini = true;
-                    }
-                }
-            } catch (innerErr: any) {
-                console.warn("Failed to query settings table fallback:", innerErr.message);
+            const legacyKey = settingsRes.data?.gemini_api_key;
+            if (legacyKey) {
+                if (legacyKey.startsWith('sk-or-')) hasOpenrouter = true;
+                else hasGemini = true;
             }
         }
         
@@ -56,9 +47,10 @@ adminSettings.get("/get-keys", async (c) => {
 
 adminSettings.post("/save-key", async (c) => {
     try {
-        const { provider, apiKey } = await c.req.json();
+        let { provider, apiKey } = await c.req.json();
         if (!provider || !apiKey) return c.json({ success: false, error: "缺少必要參數" }, 400);
 
+        apiKey = String(apiKey).trim();
         const supabase = await getSupabaseAdmin();
         const encryptedKey = encrypt(apiKey);
         

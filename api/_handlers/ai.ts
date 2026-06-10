@@ -24,8 +24,10 @@ export const ai = new Hono();
 ai.post("/test", async (c) => {
     try {
         const body = await c.req.json();
-        const { provider: providerName, apiKey, model } = body;
+        let { provider: providerName, apiKey, model } = body;
         
+        if (apiKey) apiKey = String(apiKey).trim();
+
         let provider;
         if (apiKey) {
             if (providerName === 'gemini') {
@@ -39,7 +41,13 @@ ai.post("/test", async (c) => {
             provider = await getAIProvider(providerName, supabase, model);
         }
 
-        const data = await provider.chat([{ role: 'user', content: 'test connection' }]);
+        // Add a timeout for the test connection to avoid long hangs
+        const chatPromise = provider.chat([{ role: 'user', content: 'test connection' }]);
+        const timeoutPromise = new Promise<{ success: false; error: string }>((_, reject) => 
+            setTimeout(() => reject(new Error('AI 連線測試超時 (15s)')), 15000)
+        );
+
+        const data = await Promise.race([chatPromise, timeoutPromise]) as any;
         if (!data.success) {
             const errorMsg = typeof data.error === 'object' ? JSON.stringify(data.error) : String(data.error || 'Unknown AI error');
             throw new Error(errorMsg);

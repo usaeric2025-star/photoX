@@ -111,17 +111,24 @@ export function AISecuritySection({
         json: { provider, apiKey }
       }) as any;
       const data = await res.json();
+      
       if (res.ok && data.success) {
         toast.success(`[System AI] ${provider} 密钥保存成功`);
+        
+        // Immediate UI update
         if (provider === 'openrouter') {
           setLocalOpenRouterKey('••••••••••••••••');
           setGeminiApiKey('••••••••••••••••');
           setIsEditingOpenRouter(false);
+          setKeysStatus(prev => ({ ...prev, openrouter: true }));
         } else {
           setLocalGeminiKey('••••••••••••••••');
           setIsEditingGemini(false);
+          setKeysStatus(prev => ({ ...prev, gemini: true }));
         }
-        await fetchKeysStatus();
+        
+        // Finalize state in background
+        fetchKeysStatus();
       } else {
         handleError(data, '保存失败');
       }
@@ -152,8 +159,9 @@ export function AISecuritySection({
       }) as any;
       const data = await res.json();
       if (res.ok && data.success) {
-        toast.success(`首选引擎已切换为: ${provider === 'openrouter' ? 'Omni (OpenRouter)' : 'Agnes (Native Gemini)'}`);
-        await fetchKeysStatus();
+        toast.success(`首选引擎已切换为: ${provider === 'openrouter' ? 'Omni (OpenRouter)' : 'Agnes (Native)'}`);
+        setKeysStatus(prev => ({ ...prev, primaryProvider: provider }));
+        fetchKeysStatus();
       } else {
         handleError(data, '切换失败');
       }
@@ -217,7 +225,7 @@ export function AISecuritySection({
                  <div className="relative">
                     <input
                         type={isEditingOpenRouter ? "text" : "password"}
-                        placeholder="OpenRouter API Key..."
+                        placeholder="Omni API Key (sk-or-...)"
                         className={`${inputClass} h-10 font-mono w-full ${isEditingOpenRouter ? 'bg-white border-brand-navy/20' : 'bg-slate-50'} pr-16`}
                         value={localOpenRouterKey}
                         onChange={(e) => setLocalOpenRouterKey(e.target.value)}
@@ -262,8 +270,8 @@ export function AISecuritySection({
           <div className="space-y-4 p-5 rounded-3xl bg-blue-50/30 border border-blue-100">
              <div className="flex items-center justify-between mb-4">
                 <div className="space-y-0.5">
-                   <h5 className="text-[10px] font-black text-blue-900 uppercase tracking-tight">Agnes AI (Gemini)</h5>
-                   <p className="text-[8px] text-blue-900/40 font-bold uppercase tracking-widest">原生引擎 / Native Gemini</p>
+                   <h5 className="text-[10px] font-black text-blue-900 uppercase tracking-tight">Agnes AI</h5>
+                   <p className="text-[8px] text-blue-900/40 font-bold uppercase tracking-widest">集成原生引擎 / Native Engine</p>
                 </div>
                 <div className="flex items-center gap-2">
                   {keysStatus.gemini && <div className="px-2 py-0.5 bg-blue-100 text-blue-600 rounded-full text-[8px] font-black uppercase">已激活</div>}
@@ -283,7 +291,7 @@ export function AISecuritySection({
                  <div className="relative">
                     <input
                         type={isEditingGemini ? "text" : "password"}
-                        placeholder="Gemini API Key..."
+                        placeholder="Agnes API Key (sk-...)"
                         className={`${inputClass} h-10 font-mono w-full ${isEditingGemini ? 'bg-white border-blue-300 ring-2 ring-blue-100' : 'bg-blue-50/50'} pr-16`}
                         value={localGeminiKey}
                         onChange={(e) => setLocalGeminiKey(e.target.value)}
@@ -308,7 +316,7 @@ export function AISecuritySection({
                    {isTesting === 'gemini' ? '測試連通性中...' : '测试连通性 / Test Connection'}
                  </button>
                  
-                 <p className="text-[7px] text-blue-900/60 leading-tight"> 用于驱动 Agnes 智能助手及高性能视觉分析任务。原生接口具有更低的延迟与极高的请求上限。</p>
+                 <p className="text-[7px] text-blue-900/60 leading-tight"> 用于驱动 Agnes 智能助手。由于采用兼容 OpenAI 的格式，确保填入是以 `sk-` 开头的有效 API 密钥，享受更稳定的高频请求支持。</p>
              </div>
           </div>
         </div>

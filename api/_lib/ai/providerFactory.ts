@@ -77,54 +77,30 @@ export class OpenRouterProvider extends BaseAIProvider {
 export class GeminiProvider extends BaseAIProvider {
     name = "gemini";
     defaultModel = "gemini-1.5-flash";
-    baseUrl = "https://generativelanguage.googleapis.com/v1beta";
+    baseUrl = "https://apihub.agnes-ai.com/v1";
 
     async chat(messages: any[]): Promise<AIResponse> {
         try {
-            // Transform OpenAI-style messages to Gemini if necessary
-            // For simple test, we just assume text-only or simple structure
-            const contents = messages.map(m => {
-                let parts = [];
-                if (typeof m.content === 'string') {
-                    parts = [{ text: m.content }];
-                } else if (Array.isArray(m.content)) {
-                    parts = m.content.map((c: any) => {
-                        if (c.type === 'text') return { text: c.text };
-                        if (c.type === 'image_url') {
-                            const base64Match = c.image_url.url.match(/^data:image\/(\w+);base64,(.+)$/);
-                            if (base64Match) {
-                                return {
-                                    inline_data: {
-                                        mime_type: `image/${base64Match[1]}`,
-                                        data: base64Match[2]
-                                    }
-                                };
-                            }
-                        }
-                        return { text: '[Unsupported content]' };
-                    });
-                }
-                return {
-                    role: m.role === 'assistant' ? 'model' : 'user',
-                    parts
-                };
-            });
-
-            const modelName = this.config.model || this.defaultModel;
-            const res = await this.fetchWithTimeout(`${this.baseUrl}/models/${modelName}:generateContent?key=${this.config.apiKey}`, {
+            // Agnes API uses OpenAI format, not Gemini's native format
+            const res = await this.fetchWithTimeout(`${this.baseUrl}/chat/completions`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents })
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.config.apiKey}`
+                },
+                body: JSON.stringify({
+                    model: this.config.model || this.defaultModel,
+                    messages
+                })
             });
 
             const data = await res.json();
             if (!res.ok) throw new Error(data.error?.message || data.error || res.statusText);
 
-            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
             return {
                 success: true,
-                text,
-                usage: data.usageMetadata
+                text: data.choices?.[0]?.message?.content,
+                usage: data.usage
             };
         } catch (e: any) {
             return { success: false, error: e.message };
