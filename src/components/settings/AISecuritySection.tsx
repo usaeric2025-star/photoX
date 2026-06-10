@@ -41,6 +41,10 @@ export function AISecuritySection({
   const [isEditingGemini, setIsEditingGemini] = React.useState(false);
   const [isSavingProvider, setIsSavingProvider] = React.useState<boolean | null>(null);
 
+  const [openrouterModel, setOpenrouterModel] = React.useState('');
+  const [geminiModel, setGeminiModel] = React.useState('');
+  const [currentModel, setCurrentModel] = React.useState('gemini-2.0-flash-exp');
+
   const fetchKeysStatus = React.useCallback(async () => {
     try {
       const res = await api.admin.settings['get-keys'].$get();
@@ -48,6 +52,9 @@ export function AISecuritySection({
         const data = await res.json() as any;
         if (data.success) {
           setKeysStatus(data.keysStatus);
+          setCurrentModel(data.currentModel || 'gemini-2.0-flash-exp');
+          setOpenrouterModel(data.keysStatus.openrouter_model || '');
+          setGeminiModel(data.keysStatus.gemini_model || '');
           
           // Initial populate only!
           setLocalOpenRouterKey(prev => {
@@ -81,8 +88,7 @@ export function AISecuritySection({
       const res = await api.ai.test.$post({
         json: { 
           provider,
-          apiKey: targetKey === "••••••••••••••••" ? "" : targetKey,
-          model: provider === 'openrouter' ? (customModel || 'google/gemini-2.5-flash-lite') : 'gemini-1.5-flash'
+          apiKey: targetKey === "••••••••••••••••" ? "" : targetKey
         }
       }) as any;
       const data = await res.json();
@@ -159,7 +165,7 @@ export function AISecuritySection({
       }) as any;
       const data = await res.json();
       if (res.ok && data.success) {
-        toast.success(`首选引擎已切换为: ${provider === 'openrouter' ? 'Omni (OpenRouter)' : 'Agnes (Native)'}`);
+        toast.success(`首选引擎已切换为: ${provider === 'openrouter' ? 'OpenRouter' : 'Agnes'}`);
         setKeysStatus(prev => ({ ...prev, primaryProvider: provider }));
         fetchKeysStatus();
       } else {
@@ -169,6 +175,23 @@ export function AISecuritySection({
       handleError(e, '切换失败: 网络错误');
     }
     finally { setIsSavingProvider(null); }
+  };
+
+  const handleSaveModel = async (provider: 'openrouter' | 'gemini', modelVal: string) => {
+    try {
+      const res = await api.admin.settings['save-model'].$post({
+        json: { provider, model: modelVal }
+      }) as any;
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(`[System AI] ${provider === 'openrouter' ? 'OpenRouter' : 'Agnes'} 自定义模型已保存`);
+        fetchKeysStatus();
+      } else {
+        handleError(data, '模型保存失败');
+      }
+    } catch (e: any) {
+      handleError(e, '模型保存失败: 网络异常');
+    }
   };
 
   return (
@@ -192,7 +215,7 @@ export function AISecuritySection({
                     disabled={isSavingProvider === true}
                     className={`px-3 py-1 rounded-full text-[8px] font-black uppercase transition-all ${keysStatus.primaryProvider === p ? 'bg-white text-brand-navy shadow-sm' : 'text-brand-navy/40 hover:text-brand-navy/60'}`}
                   >
-                    {p === 'openrouter' ? 'Omni' : 'Agnes'}
+                    {p === 'openrouter' ? 'OpenRouter' : 'Agnes'}
                   </button>
                 ))}
               </div>
@@ -204,7 +227,7 @@ export function AISecuritySection({
           <div className="space-y-4 p-5 rounded-3xl bg-slate-50/50 border border-slate-100">
              <div className="flex items-center justify-between mb-4">
                 <div className="space-y-0.5">
-                   <h5 className="text-[10px] font-black text-brand-navy uppercase tracking-tight">Omni (OpenRouter)</h5>
+                   <h5 className="text-[10px] font-black text-brand-navy uppercase tracking-tight">OpenRouter</h5>
                    <p className="text-[8px] text-brand-navy/40 font-bold uppercase tracking-widest">萬能引擎 / Multi-Model</p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -225,7 +248,7 @@ export function AISecuritySection({
                  <div className="relative">
                     <input
                         type={isEditingOpenRouter ? "text" : "password"}
-                        placeholder="Omni API Key (sk-or-...)"
+                        placeholder="OpenRouter API Key (sk-or-...)"
                         className={`${inputClass} h-10 font-mono w-full ${isEditingOpenRouter ? 'bg-white border-brand-navy/20' : 'bg-slate-50'} pr-16`}
                         value={localOpenRouterKey}
                         onChange={(e) => setLocalOpenRouterKey(e.target.value)}
@@ -243,18 +266,19 @@ export function AISecuritySection({
                     )}
                  </div>
 
+                 <div className="space-y-1 mt-2 mb-2">
+                    <label className="text-[10px] font-bold text-brand-navy/60 block">模型型号</label>
+                    <input
+                        type="text"
+                        placeholder="例如: google/gemini-2.5-flash-lite"
+                        className={`${inputClass} !h-8 text-[11px] w-full bg-white border-brand-navy/10 py-1.5`}
+                        value={openrouterModel}
+                        onChange={(e) => setOpenrouterModel(e.target.value)}
+                        onBlur={() => handleSaveModel('openrouter', openrouterModel)}
+                    />
+                 </div>
+                 
                  <div className="grid grid-cols-2 gap-2">
-                    <div className="col-span-2 space-y-1">
-                      <label className="text-[8px] font-bold text-brand-navy/60 uppercase tracking-widest block">自定義模型 / Custom Model ID</label>
-                      <input
-                          type="text"
-                          placeholder="google/gemini-2.5-flash-lite..."
-                          className={`${inputClass} !h-8 text-[11px] w-full bg-white border-brand-navy/10 py-1.5`}
-                          value={customModel || ''}
-                          onChange={(e) => setSettingField('custom_model', e.target.value)}
-                      />
-                    </div>
-                    
                     <button 
                       onClick={() => handleTest('openrouter')} 
                       disabled={isTesting !== null} 
@@ -306,6 +330,18 @@ export function AISecuritySection({
                            {isSaving === 'gemini' ? '..' : '保存'}
                        </button>
                     )}
+                 </div>
+                 
+                 <div className="space-y-1 mt-2 mb-2">
+                    <label className="text-[10px] font-bold text-blue-900/60 block">模型型号</label>
+                    <input
+                        type="text"
+                        placeholder="例如: gemini-2.0-flash-exp"
+                        className={`${inputClass} !h-8 text-[11px] w-full bg-white border-blue-900/10 py-1.5`}
+                        value={geminiModel}
+                        onChange={(e) => setGeminiModel(e.target.value)}
+                        onBlur={() => handleSaveModel('gemini', geminiModel)}
+                    />
                  </div>
                  
                  <button 

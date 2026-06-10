@@ -1,5 +1,5 @@
 import sizeOf from "image-size";
-import { getModel } from "../_lib/ai/modelHelper.js";
+import { getAIProvider } from "../_lib/ai/providerFactory.js";
 
 export interface PhotoBackfillCandidate {
   id: string;
@@ -39,7 +39,8 @@ export async function processBackfillBatch(
   if (fetchError) throw fetchError;
   if (catError) throw catError;
 
-  const modelNameCombined = await getModel(supabase);
+  const provider = await getAIProvider('', supabase);
+  const modelNameCombined = (provider as any).config.model;
 
   // 2. Filter in JS for accurate eligibility
   const eligible = (allPhotos || []).filter((photo: any) => {

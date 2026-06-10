@@ -1,5 +1,32 @@
 import { decrypt } from "../encryption.js";
-import { getModel } from "./modelHelper.js";
+import { getServerEnv } from "../../_shared/envSchema.js";
+
+export const getModel = async (supabase?: any, customModel?: string, providerName?: string): Promise<string> => {
+    if (customModel) return customModel;
+
+    let targetProvider = providerName || 'openrouter';
+
+    if (supabase) {
+        try {
+            // First check secrets table for provider specific model
+            const { data: secretData } = await supabase.from('secrets').select('value').eq('key', `${targetProvider}_model`).maybeSingle();
+            if (secretData?.value) return secretData.value;
+            
+            // Fallback to legacy custom_model setting
+            const { data } = await supabase.from('settings').select('custom_model').eq('id', 1).maybeSingle();
+            if (data?.custom_model) return data.custom_model;
+        } catch (e) {
+            console.warn("[getModel] could not fetch custom model:", e);
+        }
+    }
+
+    try {
+        const env = getServerEnv(process.env as any);
+        if ((env as any).DEFAULT_AI_MODEL) return (env as any).DEFAULT_AI_MODEL;
+    } catch {}
+
+    return targetProvider === 'openrouter' ? 'google/gemini-2.5-flash-lite' : 'gemini-2.0-flash-exp';
+};
 
 export interface AIResponse {
     success: boolean;
@@ -76,7 +103,7 @@ export class OpenRouterProvider extends BaseAIProvider {
 
 export class GeminiProvider extends BaseAIProvider {
     name = "gemini";
-    defaultModel = "gemini-1.5-flash";
+    defaultModel = "gemini-2.0-flash-exp";
     baseUrl = "https://apihub.agnes-ai.com/v1";
 
     async chat(messages: any[]): Promise<AIResponse> {
@@ -113,11 +140,6 @@ export async function getAIProvider(providerName: string, supabase: any, modelOv
     const { data: primary } = await supabase.from('secrets').select('value').eq('key', 'PRIMARY_AI_PROVIDER').maybeSingle();
     let actualProvider = providerName || primary?.value || 'openrouter';
 
-    // Normalize old 'agnes' provider key to 'gemini'
-    if (actualProvider === 'agnes') {
-        actualProvider = 'gemini';
-    }
-
     // 從 secrets 讀取統一格式的 API Key
     let { data: secret } = await supabase.from('secrets').select('value').eq('key', actualProvider).maybeSingle();
 
@@ -151,13 +173,13 @@ export async function getAIProvider(providerName: string, supabase: any, modelOv
         model = 'google/' + model;
     }
     if (!model) {
-        model = await getModel(supabase);
+        model = await getModel(supabase, undefined, actualProvider);
     }
     
     console.log(`[getAIProvider] Using ${actualProvider} with model: ${model}`);  
     const config = { apiKey, model };
 
-    if (actualProvider === 'gemini') {
+    if (actualProvider === 'gemini' || actualProvider === 'agnes') {
         return new GeminiProvider(config);
     }
     return new OpenRouterProvider(config);

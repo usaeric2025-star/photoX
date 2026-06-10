@@ -9,21 +9,22 @@ adminSettings.get("/get-keys", async (c) => {
         const supabase = await getSupabaseAdmin();
         
         // Parallelize DB queries to reduce latency
-        const [secretsRes, settingsRes] = await Promise.all([
-            supabase.from('secrets').select('key, value'),
-            supabase.from('settings').select('gemini_api_key').maybeSingle()
-        ]);
+        const { data: secretsRes, error: secretsErr } = await supabase.from('secrets')
+            .select('key, value')
+            .in('key', ['openrouter', 'gemini', 'PRIMARY_AI_PROVIDER', 'openrouter_model', 'gemini_model']);
 
-        const secrets = secretsRes.data || [];
-        const configuredProviders = secrets.map((s: any) => s.key);
+        const secrets = secretsRes || [];
+        const config: Record<string, string> = {};
+        secrets.forEach((s: any) => { config[s.key] = s.value; });
         
-        let hasOpenrouter = configuredProviders.includes('openrouter');
-        let hasGemini = configuredProviders.includes('gemini');
-        const primarySecret = secrets.find((s: any) => s.key === 'PRIMARY_AI_PROVIDER');
+        let hasOpenrouter = !!config.openrouter;
+        let hasGemini = !!config.gemini;
+        const primarySecret = config.PRIMARY_AI_PROVIDER || 'openrouter';
 
         // Fallback for UI indicators
         if (!hasGemini || !hasOpenrouter) {
-            const legacyKey = settingsRes.data?.gemini_api_key;
+            const { data: settingsRes } = await supabase.from('settings').select('gemini_api_key, custom_model').eq('id', 1).maybeSingle();
+            const legacyKey = settingsRes?.gemini_api_key;
             if (legacyKey) {
                 if (legacyKey.startsWith('sk-or-')) hasOpenrouter = true;
                 else hasGemini = true;
@@ -32,11 +33,15 @@ adminSettings.get("/get-keys", async (c) => {
         
         return c.json({
             success: true,
-            primaryProvider: primarySecret?.value || 'openrouter',
+            primaryProvider: primarySecret,
+            customModel: '', // Deprecated
+            currentModel: 'gemini-2.0-flash-exp', // Deprecated
             keysStatus: { 
                 openrouter: hasOpenrouter, 
                 gemini: hasGemini,
-                primaryProvider: primarySecret?.value || 'openrouter' 
+                primaryProvider: primarySecret,
+                openrouter_model: config.openrouter_model || '',
+                gemini_model: config.gemini_model || ''
             }
         });
     } catch (e: any) {
@@ -79,6 +84,26 @@ adminSettings.post("/save-key", async (c) => {
     } catch (e: any) {
         console.error("Save key failed:", e);
         return c.json({ success: false, error: e.message || "保存失敗，請重試" }, 500);
+    }
+});
+
+adminSettings.post("/save-model", async (c) => {
+    try {
+        const { provider, model } = await c.req.json();
+        const supabase = await getSupabaseAdmin();
+        
+        const key = `${provider}_model`;
+        
+        const { error } = await supabase
+            .from('secrets')
+            .upsert({ key, value: model, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+            
+        if (error) throw error;
+        
+        return c.json({ success: true });
+    } catch (e: any) {
+        console.error("Save model failed:", e);
+        return c.json({ success: false, error: e.message }, 500);
     }
 });
 

@@ -1,5 +1,5 @@
 import { normalizeI18n } from "../../_shared/i18n.js";
-import { saveAIAuditLog } from "./logger.js";
+import { logger } from "../logger.js";
 import { extractJSON } from "./utils.js";
 
 interface AITaskOptions {
@@ -40,8 +40,7 @@ export async function executeAITask(options: AITaskOptions) {
         } catch {}
       }
 
-      saveAIAuditLog({
-        task,
+      logger.info(`AI Task: ${task}`, {
         model,
         provider: provider.name,
         prompt,
@@ -51,7 +50,7 @@ export async function executeAITask(options: AITaskOptions) {
         status: result.success ? 'success' : 'error',
         error_message: result.error,
         request_metadata: metadata
-      }).catch((err: any) => console.warn(`[AuditLog-Silent-Fail] ${err.message}`));
+      });
 
       if (!result.success) {
         throw new Error(result.error || 'AI 調用失敗');

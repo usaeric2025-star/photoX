@@ -1,5 +1,42 @@
 # PhotoX 架构规则（永久锁定）
 
+## AI 模塊規範（鎖定）
+
+### 目錄結構
+- ✅ `api/_lib/ai/providerFactory.ts`：唯一 AI 工廠（含模型獲取）
+- ✅ `api/_lib/ai/executor.ts`：唯一 AI 執行器
+- ✅ `src/services/ai/orchestration.ts`：前端唯一編排入口
+
+### 禁止事項
+- ❌ 禁止在 `providerFactory.ts` 之外獲取模型
+- ❌ 禁止創建獨立的 `logger.ts`（使用統一 `api/_lib/logger.ts`）
+- ❌ 禁止分散 AI 邏輯到多個檔案
+
+## AI 設定面板規範（鎖定）
+
+- ✅ 使用者可配置 API Key
+- ✅ 使用者可配置模型型號（儲存到 settings.custom_model）
+- ✅ 前端顯示當前使用的模型
+- ✅ 提供測試連線按鈕
+- ❌ 禁止硬編碼模型名稱
+- ❌ 禁止前端決定使用哪個模型
+
+## AI 配置規範（鎖定）
+
+### 儲存位置
+- ✅ 所有 AI 配置統一儲存在 `secrets` 表
+- ✅ API Key 使用 key: `openrouter`, `gemini`
+- ✅ 模型使用 key: `openrouter_model`, `gemini_model`
+- ✅ 首選提供商使用 key: `PRIMARY_AI_PROVIDER`
+
+### 前端原則
+- ✅ 測試連線時只傳 `provider` 和 `apiKey`
+- ❌ 禁止前端傳遞 `model` 參數
+
+### 後端原則
+- ✅ 從 `secrets` 表讀取模型配置
+- ❌ 禁止硬編碼模型名稱
+
 ## API 密钥与安全规范 (256gsm 锁定)
 - ✅ **唯一算法标准**：所有保存在数据库中的 API 密钥（如 OpenRouter Key、Gemini Key 均保存在 `secrets` 表）必须且只能使用 `aes-256-gcm` (256gsm) 算法进行高强度加密。
 - ✅ **统一存储结构**：加密结果的格式必须严格为 `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted}`，其中：
