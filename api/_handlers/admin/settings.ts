@@ -7,16 +7,35 @@ export const adminSettings = new Hono();
 adminSettings.get("/get-keys", async (c) => {
     try {
         const supabase = await getSupabaseAdmin();
-        const { data: secrets } = await supabase.from('secrets').select('key, value');
+        
+        // 1. Try to get from secrets table (New system)
+        const { data: secrets, error: secretsErr } = await supabase.from('secrets').select('key, value');
+        if (secretsErr) console.warn("Secrets table query warning (might not exist yet):", secretsErr.message);
+
         const configuredProviders = secrets?.map((s: any) => s.key) || [];
         
-        const hasOpenrouter = configuredProviders.includes('openrouter');
-        const hasGemini = configuredProviders.includes('gemini');
+        let hasOpenrouter = configuredProviders.includes('openrouter');
+        let hasGemini = configuredProviders.includes('gemini');
         
         const primarySecret = secrets?.find((s: any) => s.key === 'PRIMARY_AI_PROVIDER');
         
+        // 2. Fallback to settings table (Legacy system) if not found in secrets
+        if (!hasGemini || !hasOpenrouter) {
+            const { data: settings } = await supabase.from('settings').select('gemini_api_key').single();
+            if (settings?.gemini_api_key) {
+                // If it's the only one we have, we might treat it as gemini or openrouter depending on format
+                // In PhotoX, gemini_api_key was used for both via different logic
+                if (settings.gemini_api_key.startsWith('sk-or-')) {
+                   if (!hasOpenrouter) hasOpenrouter = true;
+                } else {
+                   if (!hasGemini) hasGemini = true;
+                }
+            }
+        }
+        
         return c.json({
             success: true,
+            primaryProvider: primarySecret?.value || 'openrouter',
             keysStatus: { 
                 openrouter: hasOpenrouter, 
                 gemini: hasGemini,
@@ -24,6 +43,7 @@ adminSettings.get("/get-keys", async (c) => {
             }
         });
     } catch (e: any) {
+        console.error("get-keys handler failed:", e);
         return c.json({ success: false, error: e.message }, 500);
     }
 });

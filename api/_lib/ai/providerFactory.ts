@@ -143,12 +143,25 @@ export async function getAIProvider(providerName: string, supabase: any, modelOv
     }
 
     // 從 secrets 讀取統一格式的 API Key
-    const { data: secret } = await supabase.from('secrets').select('value').eq('key', actualProvider).maybeSingle();
+    let { data: secret } = await supabase.from('secrets').select('value').eq('key', actualProvider).maybeSingle();
 
     let apiKey = '';
     
     if (secret?.value) {
         apiKey = decrypt(secret.value);
+    }
+
+    // Fallback logic for legacy settings table
+    if (!apiKey) {
+        const { data: settings } = await supabase.from('settings').select('gemini_api_key').single();
+        if (settings?.gemini_api_key) {
+           // Basic heuristic to decide if the legacy key belongs to this provider
+           if (actualProvider === 'openrouter' && settings.gemini_api_key.startsWith('sk-or-')) {
+               apiKey = decrypt(settings.gemini_api_key);
+           } else if (actualProvider === 'gemini' && !settings.gemini_api_key.startsWith('sk-or-')) {
+               apiKey = decrypt(settings.gemini_api_key);
+           }
+        }
     }
 
     if (!apiKey) throw new Error(`未配置 ${actualProvider} API 密鑰`);

@@ -1,4 +1,4 @@
-import * as crypto from 'crypto';
+import * as crypto from 'node:crypto';
 
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 12;
@@ -41,7 +41,7 @@ export function decrypt(text: string): string {
   }
   const parts = text.split(':');
   
-  // Compat fallback: if 2 parts, try decrypting using aes-256-cbc
+  // Compat fallback: if 2 parts, try decrypting using aes-256-cbc (Legacy system format)
   if (parts.length === 2) {
     try {
       const [ivHex, encryptedHex] = parts;
@@ -53,7 +53,7 @@ export function decrypt(text: string): string {
       const envKey = process.env.ENCRYPTION_KEY || 'photox-secure-salt-key-2026-06!';
       const keyBuf = crypto.scryptSync(envKey, 'salt', 32);
       
-      // AES-256-CBC IV requires 16 bytes. If it's shorter, it will throw.
+      // AES-256-CBC IV requires exactly 16 bytes
       if (iv.length !== 16) {
          return text;
       }
@@ -68,8 +68,9 @@ export function decrypt(text: string): string {
     }
   }
 
-  // Standard aes-256-gcm decryption
+  // Standard aes-256-gcm decryption (3 parts: iv:authTag:encrypted)
   try {
+    if (parts.length < 3) return text;
     const [iv, authTag, encrypted] = parts;
     if (!iv || !authTag || !encrypted) return text;
     

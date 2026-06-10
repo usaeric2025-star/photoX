@@ -16,15 +16,28 @@ adminDiagnose.get("/diagnose", async (c) => {
         { data: groups, error: gErr },
         { data: categories, error: cErr },
         { data: manufacturers, error: mErr },
+        { error: sErr },
       ] = await Promise.all([
         supabase.from("furniture_items").select("id, group_id, category_id, manufacturer_id, image_hash, image_url, thumb_hash, name, item_code"),
         supabase.from("groups").select("id, name, member_count"),
         supabase.from("categories").select("id"),
         supabase.from("manufacturers").select("id"),
+        supabase.from("secrets").select("key").limit(1),
       ]);
 
       if (pErr) throw pErr;
       if (!photos) throw new Error("Could not fetch photos");
+
+      if (sErr && sErr.code === 'PGRST116' || (sErr && sErr.message?.includes('does not exist'))) {
+        issues.push({ 
+            id: 'missing_secrets_table', 
+            category: 'system', 
+            severity: 'P0', 
+            title: '缺失 secrets 数据表', 
+            description: '系统需要 secrets 表来安全存储 API 密钥。当前该表似乎不存在，会导致 API 密钥无法保存或读取。', 
+            autoFixable: false 
+        });
+      }
       
       const groupIds = new Set(groups?.map((g: any) => String(g.id)) || []);
       
