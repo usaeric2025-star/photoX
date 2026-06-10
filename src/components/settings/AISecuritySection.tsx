@@ -31,7 +31,7 @@ export function AISecuritySection({
   const appLang = useUIStore(s => s.appLang);
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
-  const [keysStatus, setKeysStatus] = React.useState({ openrouter: false, gemini: false });
+  const [keysStatus, setKeysStatus] = React.useState({ openrouter: false, gemini: false, primaryProvider: 'openrouter' });
   
   // Local draft states to prevent rapid re-renders from parent/query invalidation
   const [localCustomModel, setLocalCustomModel] = React.useState(initialCustomModel || '');
@@ -41,6 +41,7 @@ export function AISecuritySection({
   const [isTesting, setIsTesting] = React.useState<'openrouter' | 'gemini' | null>(null);
   const [isEditingOpenRouter, setIsEditingOpenRouter] = React.useState(false);
   const [isEditingGemini, setIsEditingGemini] = React.useState(false);
+  const [isSavingProvider, setIsSavingProvider] = React.useState<boolean | null>(null);
 
   // Use refs to track initialization so we don't overwrite user typing
   const modelInit = React.useRef(false);
@@ -134,14 +135,49 @@ export function AISecuritySection({
     }
   };
 
+  const saveProvider = async (provider: string) => {
+    setIsSavingProvider(true);
+    try {
+      const res = await api.admin.settings['save-provider'].$post({
+        json: { provider }
+      }) as any;
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(`首选引擎已切换为: ${provider}`);
+        await fetchKeysStatus();
+      } else {
+        toast.error('切换失败: ' + (data.error || 'Unknown'));
+      }
+    } catch { toast.error('切换失败'); }
+    finally { setIsSavingProvider(null); }
+  };
+
   return (
     <div className="grid grid-cols-1 gap-6">
       <div className="bg-white rounded-[32px] shadow-sm border border-brand-navy/10 overflow-hidden" id="section-ai">
-        <div className="p-6 border-b border-brand-navy/5 flex items-center bg-slate-50/50">
-           <Sparkles size={16} className="text-brand-gold mr-2" />
-           <h4 className="font-black text-brand-navy text-[10px] uppercase tracking-widest">
-              AI 处理器配置 / AI Processors
-           </h4>
+        <div className="p-6 border-b border-brand-navy/5 flex items-center justify-between bg-slate-50/50">
+           <div className="flex items-center">
+             <Sparkles size={16} className="text-brand-gold mr-2" />
+             <h4 className="font-black text-brand-navy text-[10px] uppercase tracking-widest">
+                AI 处理器配置 / AI Processors
+             </h4>
+           </div>
+           
+           <div className="flex items-center gap-2 bg-white/50 p-1 rounded-full border border-slate-200">
+              <span className="text-[8px] font-bold text-brand-navy/60 ml-2 uppercase">首选 / Primary</span>
+              <div className="flex bg-slate-100 rounded-full p-0.5">
+                {['openrouter', 'gemini'].map(p => (
+                  <button
+                    key={p}
+                    onClick={() => saveProvider(p)}
+                    disabled={isSavingProvider === true}
+                    className={`px-3 py-1 rounded-full text-[8px] font-black uppercase transition-all ${keysStatus.primaryProvider === p ? 'bg-white text-brand-navy shadow-sm' : 'text-brand-navy/40 hover:text-brand-navy/60'}`}
+                  >
+                    {p === 'openrouter' ? 'Omni' : 'Agnes'}
+                  </button>
+                ))}
+              </div>
+           </div>
         </div>
 
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">

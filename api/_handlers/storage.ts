@@ -1,10 +1,10 @@
 import { Hono } from "hono";
 import { S3Client, PutObjectCommand, ListObjectsV2Command, DeleteObjectCommand, CopyObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { getSupabaseAdmin } from "../_lib/supabase.js";
-import { getServerEnv } from "../_shared/envSchema.js";
-import { getR2Client } from "../_lib/storage.js";
-import { requireRealUser } from "../_lib/auth.js";
+import { getSupabaseAdmin } from "../_lib/supabase";
+import { getServerEnv } from "../_shared/envSchema";
+import { getR2Client } from "../_lib/storage";
+import { requireRealUser } from "../_lib/auth";
 
 const serverEnv = getServerEnv(process.env);
 export const storage = new Hono();

@@ -21,47 +21,45 @@ export function processPhotos(
     bypassFilter?: boolean;
   } = {}
 ) {
-  return logger.track('processPhotos', 16, () => {
-    const showGroups = options.showGroupsCollapsed ?? userFilters.showGroupsCollapsed;
-    const isAdminMode = options.isAdminModeOverride ?? false;
-    const bypassFilter = options.bypassFilter ?? false; // Default to false to ensure filtering works
+  const showGroups = options.showGroupsCollapsed ?? userFilters.showGroupsCollapsed;
+  const isAdminMode = options.isAdminModeOverride ?? false;
+  const bypassFilter = options.bypassFilter ?? false; // Default to false to ensure filtering works
 
-    let displayPhotos = (photos || []).filter(isValidPhoto);
+  let displayPhotos = (photos || []).filter(isValidPhoto);
+    
+  if (!bypassFilter && (userFilters.searchQuery || userFilters.categoryId || userFilters.tagId)) {
+    // Create maps only if needed for refinement
+    const tagMap = new Map<string, string[]>();
+    tags.forEach(t => {
+      const terms = [t.name.toLowerCase()];
+      if (Array.isArray(t.aliases)) {
+        t.aliases.forEach(a => terms.push(a.toLowerCase()));
+      }
+      tagMap.set(String(t.id), terms);
+    });
       
-    if (!bypassFilter && (userFilters.searchQuery || userFilters.categoryId || userFilters.tagId)) {
-      // Create maps only if needed for refinement
-      const tagMap = new Map<string, string[]>();
-      tags.forEach(t => {
-        const terms = [t.name.toLowerCase()];
-        if (Array.isArray(t.aliases)) {
-          t.aliases.forEach(a => terms.push(a.toLowerCase()));
-        }
-        tagMap.set(String(t.id), terms);
-      });
-        
-      const catMap = new Map<string, string[]>();
-      categories.forEach(c => {
-        const terms = [(c.name || '').toLowerCase()];
-        if (Array.isArray(c.aliases)) {
-          c.aliases.forEach(a => terms.push(a.toLowerCase()));
-        }
-        catMap.set(String(c.id), terms);
-      });
+    const catMap = new Map<string, string[]>();
+    categories.forEach(c => {
+      const terms = [(c.name || '').toLowerCase()];
+      if (Array.isArray(c.aliases)) {
+        c.aliases.forEach(a => terms.push(a.toLowerCase()));
+      }
+      catMap.set(String(c.id), terms);
+    });
 
-      displayPhotos = filterPhotos(displayPhotos, {
-        searchQuery: userFilters.searchQuery,
-        filterCatId: null, // Backend handles
-        filterSubId: null,
-        filterTagIds: [], // Backend handles
-        sortOrder: urlFilters.sortOrder as 'newest' | 'oldest' | 'name',
-        isAdminMode: isAdminMode,
-      }, tags, categories, tagMap, catMap);
-    }
+    displayPhotos = filterPhotos(displayPhotos, {
+      searchQuery: userFilters.searchQuery,
+      filterCatId: null, // Backend handles
+      filterSubId: null,
+      filterTagIds: [], // Backend handles
+      sortOrder: urlFilters.sortOrder as 'newest' | 'oldest' | 'name',
+      isAdminMode: isAdminMode,
+    }, tags, categories, tagMap, catMap);
+  }
 
-    const gridPhotos = groupPhotos(displayPhotos, showGroups, urlFilters.sortOrder as 'newest' | 'oldest' | 'name', undefined, isAdminMode);
+  const gridPhotos = groupPhotos(displayPhotos, showGroups, urlFilters.sortOrder as 'newest' | 'oldest' | 'name', undefined, isAdminMode);
 
-    return { displayPhotos, gridPhotos };
-  });
+  return { displayPhotos, gridPhotos };
 }
 
 // Global utility exports for deduplication and basic mapping are now deprecated in favor of mapSupabasePhoto in services

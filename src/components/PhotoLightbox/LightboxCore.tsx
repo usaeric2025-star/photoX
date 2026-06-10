@@ -4,7 +4,7 @@ import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/thumbnails.css";
 import "yet-another-react-lightbox/plugins/captions.css";
 import "yet-another-react-lightbox/plugins/counter.css";
-import { Download, Pencil, Trash2, Info, Crown, Sparkles } from "lucide-react";
+import { Download, Pencil, Trash2, Crown, Sparkles } from "lucide-react";
 import { Photo, ProductGroup } from "@/types";
 import { useUIStore } from "@/store/useUIStore";
 import { LIGHTBOX_PLUGINS, LIGHTBOX_OPTIONS } from "./lightboxConfig";
@@ -41,7 +41,6 @@ export const LightboxCore = ({
   renderSidebar, renderFloatingButton
 }: LightboxCoreProps) => {
   const [index, setIndex] = useState(currentIndex);
-  const [showDetails, setShowDetails] = useState(true);
   const lang = useUIStore(s => s.appLang);
   const slides = toLightboxSlides(photos, lang);
   
@@ -74,18 +73,31 @@ export const LightboxCore = ({
             </div>
             
             {/* Top Right Tool Area - Shifted left to avoid Close button */}
-            <div className="absolute top-2 right-12 z-50 flex items-center gap-1 sm:gap-2 p-2 pointer-events-auto">
+            <div className="absolute top-2 right-12 sm:right-16 z-50 flex items-center gap-1 sm:gap-2 p-2 pointer-events-auto">
+              {showAi && (
+                <button
+                  onClick={() => {
+                    const photo = photos[index];
+                    if (photo) onAiAnalyze?.(photo);
+                  }}
+                  className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-indigo-500/80 hover:bg-indigo-600 shadow-[0_0_15px_rgba(99,102,241,0.5)] text-white transition-all border border-indigo-300"
+                  aria-label="AI 分析"
+                  title="AI 分析"
+                >
+                  <Sparkles size={16} />
+                </button>
+              )}
               {showSetCover && (
                 <button
                   onClick={() => {
                     const photo = photos[index];
                     if (photo) onSetCover?.(photo);
                   }}
-                  className="w-10 h-10 flex items-center justify-center rounded-full bg-black/30 hover:bg-black/50 text-amber-400 transition-all border border-white/10"
+                  className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-black/40 hover:bg-black/60 text-amber-400 transition-all border border-white/10"
                   aria-label="设为封面"
                   title="设为封面"
                 >
-                  <Crown size={20} className="fill-current" />
+                  <Crown size={16} className="fill-current" />
                 </button>
               )}
               {showEdit && (
@@ -94,11 +106,24 @@ export const LightboxCore = ({
                     const photo = photos[index];
                     if (photo) onEdit?.(photo);
                   }}
-                  className="w-10 h-10 flex items-center justify-center rounded-full bg-black/30 hover:bg-black/50 text-white transition-all border border-white/10"
+                  className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-black/40 hover:bg-black/60 text-white transition-all border border-white/10"
                   aria-label="编辑"
                   title="编辑"
                 >
-                  <Pencil size={20} />
+                  <Pencil size={16} />
+                </button>
+              )}
+              {showDelete && (
+                <button
+                  onClick={() => {
+                    const photo = photos[index];
+                    if (photo) onDelete?.(photo);
+                  }}
+                  className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-black/40 hover:bg-black/60 text-red-400 transition-all border border-white/10"
+                  aria-label="删除"
+                  title="删除"
+                >
+                  <Trash2 size={16} />
                 </button>
               )}
               <button
@@ -106,23 +131,15 @@ export const LightboxCore = ({
                   const photo = photos[index];
                   if (photo) downloadPhotoAsJpeg(photo.image_url);
                 }}
-                className="w-10 h-10 flex items-center justify-center rounded-full bg-black/30 hover:bg-black/50 text-white transition-all border border-white/10"
+                className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-black/40 hover:bg-black/60 text-white transition-all border border-white/10"
                 aria-label="下载"
                 title="下载"
               >
-                <Download size={20} />
-              </button>
-              <button
-                onClick={() => setShowDetails(!showDetails)}
-                className={`w-10 h-10 flex items-center justify-center rounded-full transition-all border border-white/10 ${showDetails ? 'bg-brand-gold text-white shadow-[0_0_15px_rgba(251,191,36,0.3)]' : 'bg-black/30 text-white hover:bg-black/50'}`}
-                aria-label="详情"
-                title="详情"
-              >
-                <Info size={20} />
+                <Download size={16} />
               </button>
             </div>
 
-            {showDetails && renderSidebar?.()}
+            {renderSidebar?.()}
             {renderFloatingButton?.()}
           </>
         ),

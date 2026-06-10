@@ -1,12 +1,12 @@
 import { Hono } from 'hono';
 import { type } from 'arktype';
-import { getServerEnv } from '../_shared/envSchema.js';
-import { getSupabaseAdmin } from '../_lib/supabase.js';
-import { getModel } from '../_lib/ai/modelHelper.js';
-import { getAIProvider, OpenRouterProvider, GeminiProvider } from '../_lib/ai/providerFactory.js';
-import { getTaskConfig, AITask } from '../_lib/ai/taskRouter.js';
-import { decrypt } from '../_lib/encryption.js';
-import { executeAITask } from '../_lib/ai/executor.js';
+import { getServerEnv } from '../_shared/envSchema';
+import { getSupabaseAdmin } from '../_lib/supabase';
+import { getModel } from '../_lib/ai/modelHelper';
+import { getAIProvider, OpenRouterProvider, GeminiProvider } from '../_lib/ai/providerFactory';
+import { getTaskConfig, AITask } from '../_lib/ai/taskRouter';
+import { decrypt } from '../_lib/encryption';
+import { executeAITask } from '../_lib/ai/executor';
 import { 
     AIAnalyzeV1ReqSchema, 
     AIRunReqSchema, 
@@ -15,8 +15,8 @@ import {
     AIAnalyzeGroupReqSchema,
     AIAnalyzePhotoV2ReqSchema,
     ApiResponse
-} from '../_shared/apiContractSchema.js';
-import { AI_PROMPTS } from './ai/prompts.js';
+} from '../_shared/apiContractSchema';
+import { AI_PROMPTS } from './ai/prompts';
 
 const serverEnv = getServerEnv(process.env);
 export const ai = new Hono();
@@ -35,7 +35,8 @@ ai.post("/test", async (c) => {
             }
         } else {
             const supabase = await getSupabaseAdmin();
-            provider = await getAIProvider(providerName || 'openrouter', supabase, model);
+            // Pass providerName or undefined to use primary
+            provider = await getAIProvider(providerName, supabase, model);
         }
 
         const data = await provider.chat([{ role: 'user', content: 'test connection' }]);

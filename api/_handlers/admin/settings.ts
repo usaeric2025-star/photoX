@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
-import { getSupabaseAdmin } from "../../_lib/supabase.js";
-import { encrypt } from '../../_lib/encryption.js';
+import { getSupabaseAdmin } from "../../_lib/supabase";
+import { encrypt } from '../../_lib/encryption';
 
 export const adminSettings = new Hono();
 
@@ -11,7 +11,9 @@ adminSettings.get("/get-keys", async (c) => {
         const configuredProviders = secrets?.map((s: any) => s.key) || [];
         
         const { data: settings } = await supabase.from('settings').select('api_key').eq('id', 1).maybeSingle();
+        
         const hasOpenrouter = configuredProviders.includes('openrouter') || !!settings?.api_key;
+        const hasGemini = configuredProviders.includes('gemini');
         
         const primarySecret = secrets?.find((s: any) => s.key === 'PRIMARY_AI_PROVIDER');
         
@@ -19,6 +21,7 @@ adminSettings.get("/get-keys", async (c) => {
             success: true,
             keysStatus: { 
                 openrouter: hasOpenrouter, 
+                gemini: hasGemini,
                 primaryProvider: primarySecret?.value || 'openrouter' 
             }
         });
