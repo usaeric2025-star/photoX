@@ -19,11 +19,20 @@ import { api } from '@/lib/api';
  */
 
 // --- Core Update Command ---
-export async function updatePhoto(id: string, updates: Partial<Photo>): Promise<AppResult<Photo | null>> {
+export async function updatePhoto(id: string, initialUpdates: Partial<Photo>): Promise<AppResult<Photo | null>> {
   return withErrorHandling(async () => {
     if (!id || id.startsWith('temp-')) {
       throw new Error('无效的照片ID');
     }
+
+    // sanitize updates to remove explicit undefined fields (which causes ArkType validation to fail)
+    const updates = Object.keys(initialUpdates).reduce((acc: any, key) => {
+      const val = initialUpdates[key as keyof typeof initialUpdates];
+      if (val !== undefined) {
+        acc[key] = val;
+      }
+      return acc;
+    }, {} as Partial<Photo>);
 
     // 1. Validation
     const validator = createPhotoValidator();

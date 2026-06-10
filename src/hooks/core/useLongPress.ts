@@ -55,7 +55,7 @@ export function useLongPress(
       const clientY = 'touches' in e ? e.touches[0].clientY : (e as PointerEvent).clientY;
       const dx = clientX - startPos.current.x;
       const dy = clientY - startPos.current.y;
-      if (Math.abs(dx) > 15 || Math.abs(dy) > 15) {
+      if (Math.abs(dx) > 30 || Math.abs(dy) > 30) {
         clearTimer();
       }
     };

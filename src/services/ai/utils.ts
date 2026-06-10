@@ -8,7 +8,7 @@ export const isPlaceholderText = (str: string): boolean => {
   const s = str.trim().toLowerCase();
   
   // Basic technical placeholders
-  const technicalNulls = ['null', 'undefined', '{}', '[object object]', 'n/a', 'na', 'none', '', 'undefined undefined'];
+  const technicalNulls = ['null', 'undefined', '{}', '[object object]', '[对象 对象]', 'n/a', 'na', 'none', '', 'undefined undefined'];
   if (technicalNulls.includes(s)) return true;
   
   // Human placeholders (Chinese)

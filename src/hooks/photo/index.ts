@@ -16,6 +16,7 @@ export * from './useLightbox';
 export * from './useInvalidatePhotos';
 export * from './useCategories';
 export * from './useTags';
+export * from './useTagSearch';
 export * from './useManufacturers';
 export * from './useAIAutoGrouping';
 export * from './useAIBatchAnalysis';

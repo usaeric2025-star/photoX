@@ -11,7 +11,7 @@ interface Props {
   form: PhotoEditFormReturn;
 }
 
-export function BasicInfoTab({ form }: Props) {
+export const BasicInfoTab = React.memo(function BasicInfoTab({ form }: Props) {
   const editPhotoId = useUIStore((s) => s.editPhotoId);
   const newPhotoData = useUIStore((s) => s.newPhotoData);
   const update = useUIStore((s) => s.update);
@@ -22,7 +22,7 @@ export function BasicInfoTab({ form }: Props) {
   const previewSrc = newPhotoData || detailPhoto?.image_url;
   const isProcessingImage = tasks.some(t => t.status === 'running' && t.name === '旋转图片');
 
-  const onRotate = async () => {
+  const onRotate = React.useCallback(async () => {
     if (!previewSrc) return;
 
     await runTask('旋转图片', async () => {
@@ -52,10 +52,10 @@ export function BasicInfoTab({ form }: Props) {
       const newData = canvas.toDataURL('image/jpeg', 0.95);
       update({ newPhotoData: newData });
     }, { silent: true });
-  };
+  }, [previewSrc, runTask, update]);
 
   const formState = form.values;
-  const updateForm = (updates: Partial<ProductFormData>) => form.setValues(updates);
+  const updateForm = React.useCallback((updates: Partial<ProductFormData>) => form.setValues(updates), [form]);
   const [zoomed, { open: openZoom, close: closeZoom }] = useDisclosure(false);
 
   return (
@@ -233,4 +233,4 @@ export function BasicInfoTab({ form }: Props) {
       )}
     </div>
   );
-};
+});

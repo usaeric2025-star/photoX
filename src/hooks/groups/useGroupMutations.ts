@@ -15,7 +15,7 @@ export const useGroupCreate = createMutationHook({
   queryKey: groupKeys.all,
   optimisticUpdate: optimistic.infinite.add<ProductGroup>(),
   invalidateKeys: [groupKeys.all],
-  onSuccessMessage: '分組創建成功',
+  onSuccessMessage: '已创建合组',
 });
 
 export const useGroupUpdate = createMutationHook({
@@ -29,7 +29,7 @@ export const useGroupUpdate = createMutationHook({
   queryKey: groupKeys.all,
   optimisticUpdate: optimistic.infinite.update<ProductGroup>(),
   invalidateKeys: [groupKeys.all],
-  onSuccessMessage: '分組修改成功',
+  onSuccessMessage: '已修改',
 });
 
 export const useGroupDelete = createMutationHook({
@@ -41,7 +41,7 @@ export const useGroupDelete = createMutationHook({
     return res.data;
   },
   invalidateKeys: [groupKeys.all, photoKeys.all],
-  onSuccessMessage: '分組已刪除',
+  onSuccessMessage: '已删除',
 });
 
 export const useGroupCoverMutation = createMutationHook({
@@ -74,7 +74,7 @@ export const useGroupCoverMutation = createMutationHook({
     };
   },
   invalidateKeys: [groupKeys.all, photoKeys.all],
-  onSuccessMessage: '封面設置成功',
+  onSuccessMessage: '已设为封面',
 });
 
 export const useGroupPhotosMutation = createMutationHook({
@@ -94,7 +94,7 @@ export const useGroupPhotosMutation = createMutationHook({
     });
   },
   invalidateKeys: [photoKeys.all, groupKeys.all],
-  onSuccessMessage: '合組成功',
+  onSuccessMessage: '已合组',
 });
 
 export const useRemoveFromGroupMutation = createMutationHook({
@@ -113,7 +113,7 @@ export const useRemoveFromGroupMutation = createMutationHook({
     });
   },
   invalidateKeys: [photoKeys.all, groupKeys.all],
-  onSuccessMessage: '已移出群組',
+  onSuccessMessage: '已移出',
 });
 
 export const useUngroupMutation = createMutationHook({
@@ -137,7 +137,7 @@ export const useUngroupMutation = createMutationHook({
     };
   },
   invalidateKeys: [photoKeys.all, groupKeys.all],
-  onSuccessMessage: '群組已解散',
+  onSuccessMessage: '已解散',
 });
 
 export const useGroupMutations = () => {

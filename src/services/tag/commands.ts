@@ -154,9 +154,10 @@ export const syncBatchPhotoTags = async (photoIds: string[], tagIds: string[]): 
     const { error: deleteError } = await supabase.from('photo_tags').delete().in('photo_id', photoIds);
     if (deleteError) return errorFactory(deleteError.message, 'DB_ERROR', 'syncBatchPhotoTags/delete', deleteError);
 
-    if (tagIds.length > 0) {
+    const limitedTagIds = tagIds.slice(0, 3);
+    if (limitedTagIds.length > 0) {
         const associations = photoIds.flatMap(photoId => 
-            tagIds.map(tagId => ({
+            limitedTagIds.map(tagId => ({
                 photo_id: photoId,
                 tag_id: tagId
             }))

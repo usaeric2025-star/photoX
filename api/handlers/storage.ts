@@ -15,12 +15,13 @@ storage.post("/log-error", async (c) => {
         const metadata = body.metadata || {};
         const payload = {
             error_message: String(body.error_message || body.message || 'Unknown error').substring(0, 5000),
-            stack_trace: body.stack_trace || body.stack || null,
-            component_stack: body.component_stack || null,
+            stack_trace: (body.stack_trace || body.stack || body.component_stack || null) as string | null,
             url: body.url || '',
             context: metadata.context || body.context || 'global',
-            level: metadata.level || body.level || 'error',
-            metadata: metadata,
+            metadata: {
+                ...metadata,
+                level: metadata.level || body.level || 'error'
+            },
             created_at: new Date().toISOString()
         };
         const supabase = await getSupabaseAdmin();

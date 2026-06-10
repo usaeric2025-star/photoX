@@ -13,7 +13,7 @@ export const runHealthCheck = async (
   invalidatePhotos: () => void
 ) => {
 
-  toast.success("正在启动系统级健康检查...");
+  toast.success("系统自检中...");
 
 // 1. Data consistency (IDs)
 // const broken = await scanAndRepairPhotoIds(allPhotos);
@@ -23,27 +23,25 @@ export const runHealthCheck = async (
 
   // 2. Group Integrity
   const groupRepair = await repairGroupIntegrity();
-  if (groupRepair.dissolved > 0 || groupRepair.synced > 0 || groupRepair.deleted > 0) {
-    toast.success(`合组一致性修复：解散孤立组 ${groupRepair.dissolved} 个，同步计数 ${groupRepair.synced} 个，清理空组 ${groupRepair.deleted} 个`);
-  }
+  const repairCount = groupRepair.dissolved + groupRepair.synced + groupRepair.deleted;
 
   // 3. Storage Audit
   const auditResp = await api.storage.audit.$get();
-  if (!auditResp.ok) {
-    throw ErrorFactory.wrap(new Error(`存储审计失败 (HTTP ${auditResp.status})`), 'checkStorageHealth');
-  }
-  const auditData = await auditResp.json();
-  if (auditData.success && auditData.data) {
-    const { orphans } = auditData.data;
-    if (orphans > 0) {
-      await onAuditFound(orphans);
+  if (auditResp.ok) {
+    const auditData = await auditResp.json();
+    if (auditData.success && auditData.data?.orphans > 0) {
+      await onAuditFound(auditData.data.orphans);
     }
   }
 
   // 4. Missing hashes
   const res = await getPhotosWithoutThumbHash();
   if (!res.ok || res.data.length === 0) {
-    toast.success("系统诊断完成：未发现需要修复的项目");
+    if (repairCount > 0) {
+      toast.success(`自检完成：修复 ${repairCount} 项`, { id: 'health-check' });
+    } else {
+      toast.success("系统状态正常", { id: 'health-check' });
+    }
     return;
   }
 
@@ -52,10 +50,13 @@ export const runHealthCheck = async (
     backfilledCount = stats.success;
   });
 
-  if (backfilledCount > 0) {
+  if (backfilledCount > 0 || repairCount > 0) {
     invalidatePhotos();
-    toast.success(`诊断修复完成，成功回填 ${backfilledCount} 张照片的占位图！`);
+    const msgs = [];
+    if (repairCount > 0) msgs.push(`修复合组 ${repairCount}`);
+    if (backfilledCount > 0) msgs.push(`回填占位图 ${backfilledCount}`);
+    toast.success(`自检完成：${msgs.join(', ')}`, { id: 'health-check' });
   } else {
-    toast.success("诊断完成：未发现需要修复的项目");
+    toast.success("系统状态正常", { id: 'health-check' });
   }
 };

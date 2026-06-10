@@ -70,6 +70,7 @@ export function useDiagnostics() {
     refetchOnWindowFocus: false, // Prevent background refetches on focus
     refetchOnReconnect: false,   // Prevent background refetches on reconnect
     retry: false,
+    staleTime: 1000 * 30, // 30 seconds debounce
   });
 
   const refreshReport = () => {

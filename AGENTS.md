@@ -1013,3 +1013,26 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 - ❌ 禁止 Gemini 處理英文/馬來文翻譯
 - ❌ 禁止 Agnes 處理中文識別
 
+## 長期穩定性規範（鎖定，2026-06-10）
+
+### Supabase 客戶端
+- ✅ 使用單例模式，禁止每次請求新建。
+- ✅ 後端 API 使用 `getSupabaseAdmin()` 單例。
+
+### 背景任務
+- ✅ 只有登入用戶才啟動背景診斷（`startAutoDiagnose`）。
+- ✅ 訪客模式下不發送任何需要認證的請求。
+
+### 診斷工具
+- ✅ 使用 React Query 緩存（`staleTime >= 30s`）。
+- ✅ 避免頻繁重複請求。
+
+### 審計日誌
+- ✅ 統一走 POST `/api/log-error`。
+- ❌ 禁止前端直連 Supabase 寫日誌。
+
+### 標籤處理
+- ✅ 數量限制（最多 3 個）只在 `syncPhotoTags` 和 `syncBatchPhotoTags` 執行。
+- ❌ 禁止在前端做限制。
+
+

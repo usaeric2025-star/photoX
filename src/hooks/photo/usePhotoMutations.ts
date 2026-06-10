@@ -10,7 +10,7 @@ import { ErrorFactory } from '@/lib/error/ErrorFactory';
 export const usePhotoEditMutation = createMutationHook({
   entity: 'Photo',
   action: 'Update',
-  mutationFn: async ({ id, updates }: { id: string; updates: Partial<Photo> }) => {
+  mutationFn: async ({ id, updates }: { id: string; updates: Partial<Photo>; silent?: boolean }) => {
     const { tags, ...coreUpdates } = updates;
     const res = await update(id, coreUpdates as any);
     if (!res.ok) throw new Error(res.message);
@@ -22,8 +22,11 @@ export const usePhotoEditMutation = createMutationHook({
     
     return res.data;
   },
-  invalidateKeys: (vars: { id: string; updates: Partial<Photo> }) => [photoKeys.all, ['photo', vars.id]],
-  onSuccessMessage: '照片更新成功',
+  invalidateKeys: (vars: { id: string; updates: Partial<Photo>; silent?: boolean }) => [photoKeys.all, ['photo', vars.id]],
+  onSuccessMessage: (data: any, vars: any) => {
+    if (vars?.silent) return null;
+    return '已更新';
+  },
 });
 
 /**
@@ -74,14 +77,15 @@ export const usePhotoBatchEdit = createMutationHook({
     photoKeys.all,
     ...((Array.isArray(vars.ids) ? vars.ids : [vars.ids]).map((id: string) => ['photo', id]))
   ],
-  onSuccessMessage: (data: any) => {
+  onSuccessMessage: (data: any, vars: any) => {
+    if (vars?.silent) return null;
     if (data && typeof data === 'object' && 'successCount' in data) {
       if (data.failureCount > 0) {
         return `批量操作：成功 ${data.successCount}, 失败 ${data.failureCount}`;
       }
-      return `批量操作已完成 (${data.successCount})`;
+      return `批量操作完成 (${data.successCount})`;
     }
-    return '批量更新成功';
+    return '已更新';
   },
 });
 
@@ -99,5 +103,5 @@ export const useTogglePin = createMutationHook({
   invalidateKeys: (vars: { id: string; isPinned: boolean }) => [photoKeys.all, ['photo', vars.id]],
   optimisticUpdate: (old: any, { id, isPinned }: { id: string; isPinned: boolean }) => 
     optimistic.infinite.update<Photo>()(old, { id, updates: { is_pinned: isPinned } as any }),
-  onSuccessMessage: (data: any, { isPinned }: { isPinned: boolean }) => isPinned ? '已置顶' : '已取消置顶',
+  onSuccessMessage: (data: any, { isPinned }: { isPinned: boolean }) => isPinned ? '已置顶' : '已入库',
 });

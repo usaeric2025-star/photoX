@@ -1,6 +1,7 @@
-import { Sparkles, X as CloseIcon } from 'lucide-react';
+import { Sparkles, X as CloseIcon, Info } from 'lucide-react';
 import { Dimension, TranslationType } from '../../../types';
 import { safeArray } from '../../../lib/utils';
+import { toast } from 'sonner';
 
 interface DimensionEditorProps {
   dimensions: Dimension[];
@@ -58,7 +59,16 @@ export function DimensionEditor({
   return (
     <div className="space-y-3 pt-2">
       <div className="flex items-center justify-between pl-1">
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1 leading-none">{t.dimensionsTitle}</span>
+        <div className="flex items-center gap-1">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1 leading-none">{t.dimensionsTitle}</span>
+          <button 
+            type="button"
+            onClick={() => toast.info('AI 识别可自动提取照片中的尺寸规格信息')}
+            className="text-slate-300 hover:text-slate-500 transition-colors"
+          >
+            <Info size={12} />
+          </button>
+        </div>
         <div className="flex items-center gap-2">
           {showAiButton && (
             <button 

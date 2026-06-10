@@ -2,7 +2,7 @@ import { get, set, del } from 'idb-keyval';
 import { PersistedClient, Persister } from '@tanstack/react-query-persist-client';
 import { supabase } from './supabase';
 
-const PERSIST_VERSION = 1; // [CACHE-VERSIONING]
+const PERSIST_VERSION = 2; // [CACHE-VERSIONING]
 const PERSIST_KEYS = ['photos', 'groups', 'categories', 'tags', 'manufacturers'];
 
 /**

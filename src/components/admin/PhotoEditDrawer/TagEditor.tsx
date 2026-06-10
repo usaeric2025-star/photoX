@@ -13,7 +13,7 @@ interface TagSelectorProps {
 /**
  * Encapsulated Tag Selector for Photo Edit Drawer
  */
-export function TagEditor({ form }: TagSelectorProps) {
+export const TagEditor = React.memo(function TagEditor({ form }: TagSelectorProps) {
   const { data: tags = [] } = useTags();
   
   const { mutateAsync: addTagMut } = useTagCreate();
@@ -21,24 +21,33 @@ export function TagEditor({ form }: TagSelectorProps) {
   const { mutateAsync: deleteTagMut } = useTagDelete();
 
   const formState = form.values;
-  const updateForm = (updates: Partial<ProductFormData>) => form.setValues(updates);
+  const currentTags = formState.tags;
+
+  const updateForm = React.useCallback((updates: Partial<ProductFormData>) => form.setValues(updates), [form]);
+
+  const handleChange = React.useCallback((newIds: string[]) => {
+    const newTags = getTagsFromIds(newIds, tags);
+    updateForm({ tags: newTags });
+  }, [tags, updateForm]);
+
+  const handleAdd = React.useCallback(async (name: string) => {
+    const res = await addTagMut(name);
+    return res.id;
+  }, [addTagMut]);
+
+  const handleUpdate = React.useCallback((id: string, name: string) => updateTagMut({ id, updates: { name } }), [updateTagMut]);
+  const handleDelete = React.useCallback((id: string) => deleteTagMut(id), [deleteTagMut]);
 
   return (
     <section className="space-y-2">
       <PhotoTagSelector 
         tags={tags}
-        selectedTagIds={getTagIds(formState.tags)}
-        onChange={(newIds: string[]) => {
-          const newTags = getTagsFromIds(newIds, tags);
-          updateForm({ tags: newTags });
-        }}
-        addTag={async (name) => {
-          const res = await addTagMut(name);
-          return res.id;
-        }}
-        updateTag={(id, name) => updateTagMut({ id, updates: { name } })}
-        deleteTag={(id) => deleteTagMut(id)}
+        selectedTagIds={getTagIds(currentTags)}
+        onChange={handleChange}
+        addTag={handleAdd}
+        updateTag={handleUpdate}
+        deleteTag={handleDelete}
       />
     </section>
   );
-}
+});

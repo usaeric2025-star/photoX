@@ -2,7 +2,7 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { getServerEnv } from "../shared/envSchema.js";
 
 const serverEnv = getServerEnv(process.env);
-let supabaseAdminInstance: SupabaseClient | null = null;
+let supabaseAdminInstance: any = null;
 
 export async function getSupabaseAdmin() {
   if (supabaseAdminInstance) {
@@ -15,6 +15,8 @@ export async function getSupabaseAdmin() {
   if (!supabaseUrl || !supabaseKey) {
     throw new Error("Supabase credentials missing");
   }
-  supabaseAdminInstance = createClient(supabaseUrl, supabaseKey);
+  supabaseAdminInstance = createClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false }
+  });
   return supabaseAdminInstance;
 }

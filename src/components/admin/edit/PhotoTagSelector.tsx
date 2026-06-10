@@ -51,21 +51,20 @@ export function PhotoTagSelector({
     });
   }, [tags, initialSelectedIds]);
 
-  const handleToggleTag = (tag: Tag) => {
+  const handleToggleTag = React.useCallback((tag: Tag) => {
     const strId = String(tag.id);
     if (cleanSelectedIds.includes(strId)) {
       onChange(cleanSelectedIds.filter((id) => id !== strId));
     } else {
-      if (cleanSelectedIds.length >= 3) return; // 遵循 3 个标签限制
       onChange([...cleanSelectedIds, strId]);
     }
-  };
+  }, [cleanSelectedIds, onChange]);
 
-  const onQuickAdd = () => addDialog.open();
-  const onRenameTagRequest = (tag: Tag) => {
+  const onQuickAdd = React.useCallback(() => addDialog.open(), [addDialog]);
+  const onRenameTagRequest = React.useCallback((tag: Tag) => {
     setEditingTag(tag);
     editDialog.open();
-  };
+  }, [editDialog]);
 
   return (
     <>

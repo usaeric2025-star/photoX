@@ -15,12 +15,21 @@ export interface BatchActionResult {
   failedItems: { id: string; reason: string }[];
 }
 
-export async function batchUpdate(ids: string[], updates: Partial<Photo>): Promise<AppResult<BatchActionResult>> {
+export async function batchUpdate(ids: string[], initialUpdates: Partial<Photo>): Promise<AppResult<BatchActionResult>> {
   return withErrorHandling(async () => {
     if (!ids || ids.length === 0) return success({ successCount: 0, failureCount: 0, failedItems: [] });
 
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw new Error('Session required');
+
+    // sanitize updates to remove explicit undefined fields (which causes ArkType validation to fail)
+    const updates = Object.keys(initialUpdates).reduce((acc: any, key) => {
+      const val = initialUpdates[key as keyof typeof initialUpdates];
+      if (val !== undefined) {
+        acc[key] = val;
+      }
+      return acc;
+    }, {} as Partial<Photo>);
 
     const validator = createPhotoValidator();
     const validationRes = validator.validate(updates);

@@ -74,11 +74,10 @@ export function useAIAutoGrouping() {
     })();
 
     toast.promise(promise, {
-        loading: photoIds.length === 1 ? 'AI 正在识别...' : 'AI 正在分析并合组...',
+        loading: photoIds.length === 1 ? '识别中...' : '合组中...',
         success: (data: any) => {
-             if (photoIds.length === 1) return 'AI 识别完成';
-             const displayName = data.name?.zh || data.name?.en || '新合组';
-             return `成功创建合组：${displayName}`;
+             if (photoIds.length === 1) return '识别完成';
+             return `合组成功`;
         },
         error: (err) => err instanceof Error ? err.message : '操作失败'
     });

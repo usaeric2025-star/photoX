@@ -1,5 +1,5 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import React, { useState, useRef, useMemo } from "react";
+import React, { useState, useRef, useMemo, useDeferredValue } from "react";
 import { createPortal } from "react-dom";
 import { Pencil, Trash2, Heart, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -10,13 +10,14 @@ import {
   useSettings,
   useUIStore,
   useShallow,
+  useTagSearch,
 } from "@/hooks";
 import { Tag } from "@/types";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { useLongPress } from "@/hooks/core/useLongPress";
 
 interface TagEditorProps {
-  tags: Tag[];
+  tags: Tag[]; // Initial tags or global list
   selectedTagIds: string[];
   onToggleTag: (tag: Tag) => void;
   onUpdateTag: (id: string, name: string) => void;
@@ -27,7 +28,7 @@ interface TagEditorProps {
 }
 
 export function TagEditor({
-  tags,
+  tags: allTags,
   selectedTagIds,
   onToggleTag,
   onUpdateTag,
@@ -37,11 +38,15 @@ export function TagEditor({
   showHotEffects = false,
 }: TagEditorProps) {
   const [searchTerm, setSearchTerm] = useState("");
+  const deferredSearchTerm = useDeferredValue(searchTerm);
   const { settings, updateSettings } = useSettings();
   
   const [activeActionTag, setActiveActionTag] = useState<Tag | null>(null);
   const portalOpenedAt = useRef<number>(0);
   const [isDeleteOpen, deleteDialog] = useDisclosure(false);
+
+  // 0. Use server-side search for the keyword
+  const { data: searchResults = [] } = useTagSearch(deferredSearchTerm);
 
   const togglePin = async (tagId: string) => {
     try {
@@ -57,31 +62,31 @@ export function TagEditor({
     }
   };
 
-  const { hotIds: hotTagsSet, pinnedIds } = usePhotoFilter(tags, settings);
+  const { hotIds: hotTagsSet, pinnedIds } = usePhotoFilter(allTags, settings);
 
   const filteredTags = useMemo(() => {
-    // 1. Optimize lookups with Sets
     const selectedSet = new Set(selectedTagIds.map(String));
     const pinnedSet = new Set(pinnedIds.map(String));
     const hotSet = hotTagsSet;
 
-    // 2. Pre-filter by search query
-    const searchLower = searchTerm.trim().toLowerCase();
+    // 1. Data Source
+    let displayList: Tag[] = [];
     
-    // Use an array of unique tags to prevent Set -> Array over and over
-    // If 'tags' inherently has unique IDs, we can just use tags directly or do it once.
-    const uniqueTags = new Map<string | number, Tag>();
-    for (let i = 0; i < tags.length; i++) {
-        uniqueTags.set(tags[i].id, tags[i]);
-    }
-    
-    let list = Array.from(uniqueTags.values());
-    if (searchLower) {
-      list = list.filter((tag) => (tag.name || "").toLowerCase().includes(searchLower));
+    if (!deferredSearchTerm.trim()) {
+      // If no search, show hot/pinned and basic set from allTags (or just a subset)
+      displayList = allTags;
+    } else {
+      // Start with search results
+      displayList = searchResults;
+
+      // Add selected tags if they are missing from search results
+      const searchIds = new Set(searchResults.map(t => String(t.id)));
+      const missingSelected = allTags.filter(t => selectedSet.has(String(t.id)) && !searchIds.has(String(t.id)));
+      displayList = [...displayList, ...missingSelected];
     }
 
-    // 3. Fast sort with pre-calculated rank or flags
-    return list.sort((a, b) => {
+    // 2. Sort Logic
+    return [...displayList].sort((a, b) => {
       const aId = String(a.id);
       const bId = String(b.id);
       
@@ -93,13 +98,9 @@ export function TagEditor({
       const bPinned = pinnedSet.has(bId);
       if (aPinned !== bPinned) return aPinned ? -1 : 1;
 
-      const aHot = hotSet.has(aId);
-      const bHot = hotSet.has(bId);
-      if (aHot !== bHot) return aHot ? -1 : 1;
-
       return a.name.localeCompare(b.name, undefined, { numeric: true });
     });
-  }, [tags, searchTerm, pinnedIds, hotTagsSet, selectedTagIds]);
+  }, [allTags, searchResults, deferredSearchTerm, pinnedIds, hotTagsSet, selectedTagIds]);
 
   return (
     <div className="space-y-2">
@@ -124,7 +125,7 @@ export function TagEditor({
         </div>
       </div>
       <div className="flex flex-wrap gap-2 pb-1 max-h-48 overflow-y-auto content-start">
-        {filteredTags.map((tag: Tag) => {
+        {filteredTags.slice(0, 150).map((tag: Tag) => {
           const isSelected = selectedTagIds.map(String).includes(String(tag.id));
           const isHot = hotTagsSet.has(String(tag.id));
           const isPinned = pinnedIds.includes(String(tag.id));
@@ -146,6 +147,11 @@ export function TagEditor({
             />
           );
         })}
+        {filteredTags.length > 150 && (
+            <div className="w-full text-center py-2 text-[10px] text-slate-400">
+                更多标签请使用搜索... / Search to find more tags
+            </div>
+        )}
       </div>
 
       {activeActionTag && createPortal(
@@ -247,7 +253,7 @@ export function TagEditor({
   );
 }
 
-function TagButton({ tag, isSelected, isHot, isPinned, isDisabled, onToggle, onLongPress: onLongPressProp }: any) {
+const TagButton = React.memo(({ tag, isSelected, isHot, isPinned, isDisabled, onToggle, onLongPress: onLongPressProp }: any) => {
   const btnRef = useRef<HTMLButtonElement>(null);
   useLongPress(btnRef, {
     delay: 400,
@@ -310,5 +316,7 @@ function TagButton({ tag, isSelected, isHot, isPinned, isDisabled, onToggle, onL
       </button>
     </div>
   );
-}
+});
+
+TagButton.displayName = "TagButton";
 

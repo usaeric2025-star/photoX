@@ -36,11 +36,14 @@ export default function AppRoutes() {
       if (prevUserId !== currentUserId) {
         logger.info('🔑 Auth status changed, invalidating router...', { hasUser: !!user });
         router.invalidate();
-        if (user) {
-          startAutoDiagnose();
-        }
       }
       prevUserRef.current = user;
+    }
+  }, [user, isLoading]);
+
+  useEffect(() => {
+    if (user && !isLoading) {
+      startAutoDiagnose();
     }
   }, [user, isLoading]);
 

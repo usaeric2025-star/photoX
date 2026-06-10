@@ -85,15 +85,15 @@ export async function executeAITask(options: AITaskOptions) {
             try {
                 const supabase = await getSupabaseAdmin();
                 const { error } = await supabase.from('system_logs').insert({
-                    level: 'info',
-                    component: 'AI_Executor',
-                    action: 'analyze_photo',
-                    message: `AI analysis completed for photo ${photoId}`,
+                    error_message: `AI analysis completed for photo ${photoId}`,
+                    context: 'AI_Executor',
                     user_id: metadata?.userId || null,
                     metadata: {
-                      photo_id: photoId,
-                      raw_result: rawResultStr,
-                      parsed_data: parsedDataObj
+                        action: 'analyze_photo',
+                        level: 'info',
+                        photo_id: photoId,
+                        raw_result: rawResultStr,
+                        parsed_data: parsedDataObj
                     },
                     created_at: new Date().toISOString()
                 });

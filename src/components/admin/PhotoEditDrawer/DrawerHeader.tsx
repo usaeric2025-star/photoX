@@ -12,6 +12,7 @@ import {
   Loader2,
   Star,
   LogOut,
+  Info,
 } from "lucide-react";
 import { Skeleton } from "../../ui/Skeleton";
 import { useUIStore } from "../../../store";
@@ -116,14 +117,14 @@ export function DrawerHeader({
   const l = {
     hidden: appLang === 'zh' ? '屏蔽' : appLang === 'ms' ? 'Sembunyi' : 'Hide',
     visible: appLang === 'zh' ? '显示' : appLang === 'ms' ? 'Tunjuk' : 'Show',
-    editTitle: appLang === 'zh' ? '编辑产品信息' : appLang === 'ms' ? 'Edit Maklumat' : 'Edit Product',
-    analyzeTitle: appLang === 'zh' ? '分析新产品' : appLang === 'ms' ? 'Analisis Produk' : 'Analyze Product',
+    editTitle: appLang === 'zh' ? '产品编辑' : appLang === 'ms' ? 'Edit Maklumat' : 'Edit Product',
+    analyzeTitle: appLang === 'zh' ? '产品分析' : appLang === 'ms' ? 'Analisis Produk' : 'Analyze Product',
     cover: appLang === 'zh' ? '封面' : appLang === 'ms' ? 'Muka' : 'Cover',
     deleteConfirm: appLang === 'zh' ? '确认删除' : appLang === 'ms' ? 'Sahkan Padam' : 'Confirm Delete',
-    deleteMessage: appLang === 'zh' ? '确定要删除此照片吗？此操作不可恢复。' : appLang === 'ms' ? 'Adakah anda pasti mahu memadamkan foto ini? Tindakan ini tidak dapat diubah.' : 'Are you sure you want to delete this photo? This action cannot be undone.',
+    deleteMessage: appLang === 'zh' ? '确认删除此照片？此操作不可逆。' : appLang === 'ms' ? 'Adakah anda pasti mahu memadamkan foto ini? Tindakan ini tidak dapat diubah.' : 'Are you sure you want to delete this photo? This action cannot be undone.',
     deleteLabel: appLang === 'zh' ? '删除' : appLang === 'ms' ? 'Padam' : 'Delete',
     cancelLabel: appLang === 'zh' ? '取消' : appLang === 'ms' ? 'Batal' : 'Cancel',
-    analyzeError: appLang === 'zh' ? '识别失败' : appLang === 'ms' ? 'Gagal Kenal Pasti' : 'Identify Failed',
+    analyzeError: appLang === 'zh' ? '识别异常' : appLang === 'ms' ? 'Gagal Kenal Pasti' : 'Identify Failed',
   };
 
   return (
@@ -150,6 +151,12 @@ export function DrawerHeader({
 
       <div className="flex-1 flex items-center justify-end gap-2">
         <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => toast.info('点此一键智能提取照片各项参数')}
+            className="text-slate-300 hover:text-slate-500 transition-colors"
+          >
+            <Info size={14} />
+          </button>
           <button
             onClick={onAiAnalyze}
             disabled={isAnalyzing || isRunning}

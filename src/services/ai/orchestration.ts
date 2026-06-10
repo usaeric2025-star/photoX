@@ -37,7 +37,12 @@ export const analyzeAndSavePhoto = async (
       en: translation.data.description.en,
       ms: translation.data.description.ms
     },
-    category_id: analysis.data.category_id ? String(analysis.data.category_id) : null
+    category_id: analysis.data.category_id ? String(analysis.data.category_id) : null,
+    dimensions: analysis.data.dimensions || [],
+    metadata: {
+      ...(photo.metadata || {}),
+      ai_updated_at: new Date().toISOString()
+    }
   });
   if (!updateResult.ok) {
     return fail(updateResult.message);

@@ -26,24 +26,24 @@ adminDiagnose.get("/diagnose", async (c) => {
       if (pErr) throw pErr;
       if (!photos) throw new Error("Could not fetch photos");
       
-      const groupIds = new Set(groups?.map(g => String(g.id)) || []);
+      const groupIds = new Set(groups?.map((g: any) => String(g.id)) || []);
       
       // Orphaned Photos
-      const orphanedPhotos = photos.filter(p => p.group_id && !groupIds.has(String(p.group_id)));
+      const orphanedPhotos = photos.filter((p: any) => p.group_id && !groupIds.has(String(p.group_id)));
       if (orphanedPhotos.length > 0) {
-        issues.push({ id: 'orphaned_photos', category: 'integrity', severity: 'P0', title: '孤儿照片', description: '照片指向了不存在的合组', affectedCount: orphanedPhotos.length, sampleIds: orphanedPhotos.slice(0, 5).map(p => p.id), autoFixable: false });
+        issues.push({ id: 'orphaned_photos', category: 'integrity', severity: 'P0', title: '孤儿照片', description: '照片指向了不存在的合组', affectedCount: orphanedPhotos.length, sampleIds: orphanedPhotos.slice(0, 5).map((p: any) => p.id), autoFixable: false });
       }
 
       // Empty Groups
       const photosByGroup = new Map<string, number>();
-      photos.forEach(p => { if (p.group_id) { const gid = String(p.group_id); photosByGroup.set(gid, (photosByGroup.get(gid) || 0) + 1); } });
-      const emptyGroups = groups?.filter(g => !photosByGroup.has(String(g.id))) || [];
+      photos.forEach((p: any) => { if (p.group_id) { const gid = String(p.group_id); photosByGroup.set(gid, (photosByGroup.get(gid) || 0) + 1); } });
+      const emptyGroups = groups?.filter((g: any) => !photosByGroup.has(String(g.id))) || [];
       if (emptyGroups.length > 0) {
-        issues.push({ id: 'empty_groups', category: 'integrity', severity: 'P0', title: '空合组', description: '有些合组中没有任何照片', affectedCount: emptyGroups.length, sampleIds: emptyGroups.slice(0, 5).map(g => String(g.id)), autoFixable: true });
+        issues.push({ id: 'empty_groups', category: 'integrity', severity: 'P0', title: '空合组', description: '有些合组中没有任何照片', affectedCount: emptyGroups.length, sampleIds: emptyGroups.slice(0, 5).map((g: any) => String(g.id)), autoFixable: true });
       }
 
       // Ghost Records (No URL AND No Hash)
-      const completeGhosts = photos.filter(p => (!p.image_url || p.image_url === '') && (!p.image_hash || p.image_hash === ''));
+      const completeGhosts = photos.filter((p: any) => (!p.image_url || p.image_url === '') && (!p.image_hash || p.image_hash === ''));
       if (completeGhosts.length > 0) {
         issues.push({ 
           id: 'ghost_records', 
@@ -52,13 +52,13 @@ adminDiagnose.get("/diagnose", async (c) => {
           title: '完全幽灵记录', 
           description: '数据库中有记录但完全没有图片链接和哈希，属于无用垃圾数据', 
           affectedCount: completeGhosts.length, 
-          sampleIds: completeGhosts.slice(0, 5).map(p => p.id), 
+          sampleIds: completeGhosts.slice(0, 5).map((p: any) => p.id), 
           autoFixable: true 
         });
       }
 
       // Incomplete Records (Has URL but No Hash - DANGEROUS TO DELETE)
-      const missingHashes = photos.filter(p => p.image_url && (!p.image_hash || p.image_hash.trim() === ''));
+      const missingHashes = photos.filter((p: any) => p.image_url && (!p.image_hash || p.image_hash.trim() === ''));
       if (missingHashes.length > 0) {
         issues.push({ 
           id: 'missing_hashes', 
@@ -67,13 +67,13 @@ adminDiagnose.get("/diagnose", async (c) => {
           title: '缺少哈希的记录', 
           description: '这些照片有图片链接但没有哈希值，可能导致排重失效。您可以尝试自动修复（重新计算）或直接删除这些记录。', 
           affectedCount: missingHashes.length, 
-          sampleIds: missingHashes.slice(0, 5).map(p => p.id), 
+          sampleIds: missingHashes.slice(0, 5).map((p: any) => p.id), 
           autoFixable: true 
         });
       }
 
       // Incomplete Records (Has Hash but No URL - GHOST)
-      const missingUrls = photos.filter(p => p.image_hash && (!p.image_url || p.image_url === ''));
+      const missingUrls = photos.filter((p: any) => p.image_hash && (!p.image_url || p.image_url === ''));
       if (missingUrls.length > 0) {
         issues.push({ 
           id: 'missing_urls', 
@@ -82,25 +82,25 @@ adminDiagnose.get("/diagnose", async (c) => {
           title: '缺少链接的照片', 
           description: '这些记录有哈希但没有图片链接，无法正常显示。', 
           affectedCount: missingUrls.length, 
-          sampleIds: missingUrls.slice(0, 5).map(p => p.id), 
+          sampleIds: missingUrls.slice(0, 5).map((p: any) => p.id), 
           autoFixable: true 
         });
       }
 
       // member_count mismatch
-      const mismatchedGroups = groups?.filter(g => {
+      const mismatchedGroups = groups?.filter((g: any) => {
          const actualCount = photosByGroup.get(String(g.id)) || 0;
          const storedCount = g.member_count ?? 0;
          return actualCount !== storedCount;
       }) || [];
       if (mismatchedGroups.length > 0) {
-         issues.push({ id: 'member_count_mismatch', category: 'consistency', severity: 'P0', title: '成员数不匹配', description: '合组记录的成员数量与实际照片数量不符', affectedCount: mismatchedGroups.length, sampleIds: mismatchedGroups.slice(0, 5).map(g => String(g.id)), autoFixable: true });
+         issues.push({ id: 'member_count_mismatch', category: 'consistency', severity: 'P0', title: '成员数不匹配', description: '合组记录的成员数量与实际照片数量不符', affectedCount: mismatchedGroups.length, sampleIds: mismatchedGroups.slice(0, 5).map((g: any) => String(g.id)), autoFixable: true });
       }
 
 
       // Non-standard Item Codes
       const compliantRegex = /^X-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/;
-      const nonStandardCodes = photos.filter(p => p.item_code && !compliantRegex.test(p.item_code));
+      const nonStandardCodes = photos.filter((p: any) => p.item_code && !compliantRegex.test(p.item_code));
       if (nonStandardCodes.length > 0) {
         issues.push({
           id: 'non_standard_item_codes',
@@ -109,7 +109,7 @@ adminDiagnose.get("/diagnose", async (c) => {
           title: '系统编号格式不规范',
           description: `检测到有 ${nonStandardCodes.length} 条记录使用了旧格式（如 FUR-xxx）或非标准格式的系统编号。点击修复将统一收敛为 X-XXXXXXXX 格式。`,
           affectedCount: nonStandardCodes.length,
-          sampleIds: nonStandardCodes.slice(0, 5).map(p => p.id),
+          sampleIds: nonStandardCodes.slice(0, 5).map((p: any) => p.id),
           autoFixable: true
         });
       }

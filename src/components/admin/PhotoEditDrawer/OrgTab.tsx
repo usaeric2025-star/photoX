@@ -13,7 +13,7 @@ interface Props {
   form: PhotoEditFormReturn;
 }
 
-export function OrgTab({ form }: Props) {
+export const OrgTab = React.memo(function OrgTab({ form }: Props) {
   const appLang = useUIStore((s) => s.appLang);
   const { data: manufacturers = [] } = useManufacturers();
   
@@ -28,7 +28,10 @@ export function OrgTab({ form }: Props) {
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
   const formState = form.values;
-  const updateForm = (updates: any) => form.setValues(updates);
+  const manufacturerId = formState?.manufacturer_id;
+  const tags = formState?.tags;
+
+  const updateForm = React.useCallback((updates: any) => form.setValues(updates), [form]);
 
   return (
     <div className="m-0 p-4 space-y-6 animate-in fade-in slide-in-from-right-2 duration-300">
@@ -44,7 +47,7 @@ export function OrgTab({ form }: Props) {
         />
         <ManufacturerList 
           manufacturers={manufacturers}
-          selectedId={formState?.manufacturer_id}
+          selectedId={manufacturerId}
           onSelect={(id) => updateForm({ manufacturer_id: id })}
           onEdit={(mfr) => {
             setEditingMfr(mfr);
@@ -78,4 +81,4 @@ export function OrgTab({ form }: Props) {
       />
     </div>
   );
-};
+});
