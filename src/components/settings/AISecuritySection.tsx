@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { AppSettings } from '../../types';
 import { useUIStore } from '@/store/useUIStore';
 import { translations } from '@/lib/translations';
+import { handleError } from '@/lib/error/errorHandler';
 
 import { api } from '@/lib/api';
 
@@ -88,11 +89,10 @@ export function AISecuritySection({
       if (data.success) {
         toast.success(`[System AI] ${provider} 测试连通性成功`);
       } else {
-        const errMsg = typeof data.error === 'object' ? JSON.stringify(data.error) : (data.error || '500 Error');
-        toast.error(`[System AI] ${provider} 连接异常: ${errMsg}`);
+        handleError(data, `[System AI] ${provider} 连接异常`);
       }
-    } catch {
-      toast.error('请求超时或网络异常');
+    } catch (e: any) {
+      handleError(e, '请求超时或网络异常');
     } finally {
       setIsTesting(null);
     }
@@ -123,11 +123,12 @@ export function AISecuritySection({
         }
         await fetchKeysStatus();
       } else {
-        toast.error('保存失败');
+        handleError(data, '保存失败');
       }
     } catch (e: any) { 
-      const errorMsg = e.error?.message || e.message || '网络请求异常';
-      toast.error(errorMsg); 
+      handleError(e, '保存密钥失败');
+      
+      const errorMsg = e.error?.message || e.message || '';
       if (errorMsg.includes('secrets')) {
         toast.info('检测到表缺失，请点击：[前往系统故障排查]', {
           action: {
@@ -154,10 +155,10 @@ export function AISecuritySection({
         toast.success(`首选引擎已切换为: ${provider === 'openrouter' ? 'Omni (OpenRouter)' : 'Agnes (Native Gemini)'}`);
         await fetchKeysStatus();
       } else {
-        toast.error('切换失败: ' + (data.error || 'Unknown'));
+        handleError(data, '切换失败');
       }
     } catch (e: any) {
-      toast.error('切换失败: ' + (e.message || '网络错误'));
+      handleError(e, '切换失败: 网络错误');
     }
     finally { setIsSavingProvider(null); }
   };

@@ -1,8 +1,34 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { toast } from 'sonner'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
+}
+
+/**
+ * [UI-FEEDBACK] toastWithError
+ * Centralized error toast with 'Copy Details' action for better developer experience
+ */
+export function toastWithError(err: any, title?: string) {
+  const message = err?.error?.message || err?.message || '操作失败';
+  const detail = JSON.stringify(err, (key, value) => {
+    // Avoid circular or too large data if necessary
+    if (key === 'stack') return value?.substring(0, 500); 
+    return value;
+  }, 2);
+
+  toast.error(title || '出错了', {
+    description: message.length > 50 ? message.substring(0, 47) + '...' : message,
+    action: {
+      label: '复制详情',
+      onClick: () => {
+        navigator.clipboard.writeText(detail);
+        toast.success('错误详情已复制到剪贴板');
+      }
+    },
+    duration: 8000
+  });
 }
 
 export function safeArray<T>(arr: unknown): T[] {

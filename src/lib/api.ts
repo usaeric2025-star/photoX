@@ -54,9 +54,13 @@ export const client = hc<AppType>(
         const message = `服务器响应异常 (HTTP ${resp.status}): ${text.substring(0, 400)}${platformTip}`;
         const errorInstance = new Error(message);
         (errorInstance as any).success = false;
+        (errorInstance as any).status = resp.status;
+        (errorInstance as any).details = text;
+        (errorInstance as any).platformTip = platformTip;
         (errorInstance as any).error = {
           message,
-          code: 'INTERNAL_SERVER_ERROR'
+          code: 'INTERNAL_SERVER_ERROR',
+          details: text
         };
         throw errorInstance;
       }

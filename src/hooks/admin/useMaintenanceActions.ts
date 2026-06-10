@@ -105,6 +105,8 @@ export function useMaintenanceActions(onSuccess?: () => void) {
         toast.success(data.message || "修复成功");
         onSuccess?.();
       }
+    } catch (e: unknown) {
+      handleError(e, '格式化 Item Code');
     } finally { setIsNormalizingCodes(false); }
   };
 
@@ -117,6 +119,8 @@ export function useMaintenanceActions(onSuccess?: () => void) {
         toast.success(data.message || "修复成功");
         onSuccess?.();
       }
+    } catch (e: unknown) {
+      handleError(e, '清理临时 URL');
     } finally { setIsCleaningTemp(false); }
   };
 
@@ -129,6 +133,8 @@ export function useMaintenanceActions(onSuccess?: () => void) {
         toast.success(data.message || "修复成功");
         onSuccess?.();
       }
+    } catch (e: unknown) {
+      handleError(e, '清理冗余 URL');
     } finally { setIsCleaningRedundant(false); }
   };
 
@@ -140,6 +146,8 @@ export function useMaintenanceActions(onSuccess?: () => void) {
       if (data.success) {
         toast.success(`清理完成，共移除 ${data.count} 个文件`);
       }
+    } catch (e: unknown) {
+      handleError(e, '存储深度清理');
     } finally { setIsDeepCleaningStorage(false); }
   };
 

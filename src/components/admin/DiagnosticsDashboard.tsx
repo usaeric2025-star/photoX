@@ -10,6 +10,7 @@ import { TasksContent } from './Diagnostics/TasksList';
 import { Button } from '@/components/ui/button';
 import { useUIStore } from '@/store/useUIStore';
 import { toast } from 'sonner';
+import { handleError } from '@/lib/error/errorHandler';
 
 import { usePerformanceAudit } from '@/hooks/admin/usePerformanceAudit';
 import { ErrorLogViewer } from './ErrorLogViewer';
@@ -71,12 +72,14 @@ export function DiagnosticsDashboard() {
     try {
       const res = await plugin.run();
       setPluginResults(prev => ({ ...prev, [plugin.title]: { result: res, loading: false } }));
-      if (!res.success) toast.error(res.message);
-      else toast.success(res.message);
+      if (!res.success) {
+        handleError(res, `[${plugin.title}] 检查未通过`);
+      } else {
+        toast.success(res.message);
+      }
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : String(e);
-      setPluginResults(prev => ({ ...prev, [plugin.title]: { result: { success: false, message: '执行出错', error: msg }, loading: false } }));
-      toast.error('模块执行异常');
+      setPluginResults(prev => ({ ...prev, [plugin.title]: { result: { success: false, message: '执行出错', error: String(e) }, loading: false } }));
+      handleError(e, `[${plugin.title}] 模块执行异常`);
     }
   };
 

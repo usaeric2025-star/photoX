@@ -1,17 +1,22 @@
 import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query';
 import { logError } from './error/errorLogger';
+import { handleError } from './error/errorHandler';
 import { createIDBPersister } from './persister';
 
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => {
+      // For global query errors, log to server and show detailed toast via handleError
       logError(error, { action: 'Query Failed', component: 'QueryClient', kind: 'NETWORK' });
+      handleError(error, 'Query Failure');
     },
   }),
   mutationCache: new MutationCache({
     onError: (error) => {
+      // Mutation failures are usually critical and need explicit detail copy
       if (error instanceof Error && !error.message.includes('401')) {
         logError(error, { action: 'Mutation Failed', component: 'QueryClient', kind: 'NETWORK' });
+        handleError(error, 'Mutation Failure');
       }
     },
   }),

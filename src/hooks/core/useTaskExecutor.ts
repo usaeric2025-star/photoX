@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useTasks } from './useTasks';
 import { logError } from '@/lib/error/errorLogger';
 import { toast } from 'sonner';
-import { extractErrorMessage } from '@/lib/error/errorHandler';
+import { extractErrorMessage, handleError } from '@/lib/error/errorHandler';
 import { hapticFeedback } from '@/lib/ui/haptics';
 
 /**
@@ -51,8 +51,6 @@ export function useTaskExecutor() {
       }
       hapticFeedback.success();
       
-      // 遵循 AGENTS.md 规范：若已在任务中心显示进度，则不显示重复 Toast
-      // 除非显式配置 showSuccessToast: true
       const shouldShowSuccess = options?.showSuccessToast ?? (taskId ? false : !isSilent);
       
       if (shouldShowSuccess) {
@@ -63,13 +61,15 @@ export function useTaskExecutor() {
     } catch (error) {
       hapticFeedback.error();
       const errMsg = extractErrorMessage(error);
+      const standardErrorMsg = `${name} 失败: ${errMsg}`;
+
       if (taskId) {
-        updateTask(taskId, { status: 'error', progress: 100, message: `${name} 失败: ${errMsg}` });
+        updateTask(taskId, { status: 'error', progress: 100, message: standardErrorMsg });
       }
       logError(error, { action: name, component: 'useTaskExecutor', kind: 'UNKNOWN' });
       
-      if (options?.showErrorToast !== false) { // Always show errors
-        toast.error(`${name} 失败: ${errMsg}`);
+      if (options?.showErrorToast !== false) { 
+        handleError(error, name); // Use global handler with Copy Detail button
       }
       
       const actualError = error instanceof Error ? error : new Error(errMsg);
