@@ -31,18 +31,19 @@ export function AISecuritySection({
   const appLang = useUIStore(s => s.appLang);
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
-  const [keysStatus, setKeysStatus] = React.useState({ openrouter: false });
+  const [keysStatus, setKeysStatus] = React.useState({ openrouter: false, gemini: false });
   
   // Local draft states to prevent rapid re-renders from parent/query invalidation
   const [localCustomModel, setLocalCustomModel] = React.useState(initialCustomModel || '');
-  const [localOpenRouterKey, setLocalOpenRouterKey] = React.useState(initialGeminiKey || '');
+  const [localOpenRouterKey, setLocalOpenRouterKey] = React.useState('');
+  const [localGeminiKey, setLocalGeminiKey] = React.useState('');
 
-  const [isTesting, setIsTesting] = React.useState<'openrouter' | null>(null);
+  const [isTesting, setIsTesting] = React.useState<'openrouter' | 'gemini' | null>(null);
   const [isEditingOpenRouter, setIsEditingOpenRouter] = React.useState(false);
+  const [isEditingGemini, setIsEditingGemini] = React.useState(false);
 
   // Use refs to track initialization so we don't overwrite user typing
   const modelInit = React.useRef(false);
-  const keyInit = React.useRef(false);
 
   React.useEffect(() => {
     if (!modelInit.current && initialCustomModel) {
@@ -50,13 +51,6 @@ export function AISecuritySection({
         modelInit.current = true;
     }
   }, [initialCustomModel]);
-
-  React.useEffect(() => {
-    if (!keyInit.current && initialGeminiKey) {
-        setLocalOpenRouterKey(initialGeminiKey);
-        keyInit.current = true;
-    }
-  }, [initialGeminiKey]);
 
   const fetchKeysStatus = async () => {
     try {
@@ -67,6 +61,9 @@ export function AISecuritySection({
           setKeysStatus(data.keysStatus);
           if (data.keysStatus.openrouter) {
             setLocalOpenRouterKey('••••••••••••••••');
+          }
+          if (data.keysStatus.gemini) {
+            setLocalGeminiKey('••••••••••••••••');
           }
         }
       }
@@ -79,23 +76,23 @@ export function AISecuritySection({
     fetchKeysStatus();
   }, []);
 
-  const handleTest = async (provider: 'openrouter') => {
+  const handleTest = async (provider: 'openrouter' | 'gemini') => {
     setIsTesting(provider);
     try {
-      const targetKey = localOpenRouterKey;
+      const targetKey = provider === 'openrouter' ? localOpenRouterKey : localGeminiKey;
       const res = await api.ai.test.$post({
         json: { 
           provider,
           apiKey: targetKey === "••••••••••••••••" ? "" : targetKey,
-          model: localCustomModel
+          model: provider === 'openrouter' ? localCustomModel : 'gemini-1.5-flash'
         }
       }) as any;
       const data = await res.json();
       if (data.success) {
-        toast.success(`[System AI] 测试连通性成功`);
+        toast.success(`[System AI] ${provider} 测试连通性成功`);
       } else {
         const errMsg = typeof data.error === 'object' ? JSON.stringify(data.error) : (data.error || '500 Error');
-        toast.error(`[System AI] 连接异常: ${errMsg}`);
+        toast.error(`[System AI] ${provider} 连接异常: ${errMsg}`);
       }
     } catch {
       toast.error('请求超时或网络异常');
@@ -104,9 +101,9 @@ export function AISecuritySection({
     }
   };
 
-  const [isSaving, setIsSaving] = React.useState<'openrouter' | null>(null);
+  const [isSaving, setIsSaving] = React.useState<'openrouter' | 'gemini' | null>(null);
 
-  const saveKey = async (provider: 'openrouter', apiKey: string) => {
+  const saveKey = async (provider: 'openrouter' | 'gemini', apiKey: string) => {
     if (apiKey === "••••••••••••••••" || !apiKey.trim()) {
       toast.success('密钥未更改');
       return;
@@ -118,10 +115,15 @@ export function AISecuritySection({
       }) as any;
       const data = await res.json();
       if (res.ok && data.success) {
-        toast.success(`[System AI] 密钥保存成功`);
-        setLocalOpenRouterKey('••••••••••••••••');
-        setGeminiApiKey('••••••••••••••••'); // Sync to parent if needed
-        setIsEditingOpenRouter(false);
+        toast.success(`[System AI] ${provider} 密钥保存成功`);
+        if (provider === 'openrouter') {
+          setLocalOpenRouterKey('••••••••••••••••');
+          setGeminiApiKey('••••••••••••••••');
+          setIsEditingOpenRouter(false);
+        } else {
+          setLocalGeminiKey('••••••••••••••••');
+          setIsEditingGemini(false);
+        }
         await fetchKeysStatus();
       } else {
         toast.error('保存失败');
@@ -138,17 +140,17 @@ export function AISecuritySection({
         <div className="p-6 border-b border-brand-navy/5 flex items-center bg-slate-50/50">
            <Sparkles size={16} className="text-brand-gold mr-2" />
            <h4 className="font-black text-brand-navy text-[10px] uppercase tracking-widest">
-              AI 引擎配置 / AI Engine Configuration
+              AI 处理器配置 / AI Processors
            </h4>
         </div>
 
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* AI Config */}
-          <div className="space-y-4">
+          {/* OpenRouter Config */}
+          <div className="space-y-4 p-4 rounded-3xl bg-slate-50/50 border border-slate-100">
              <div className="flex items-center justify-between mb-4">
                 <div className="space-y-0.5">
-                   <h5 className="text-[10px] font-black text-brand-navy uppercase tracking-tight">System AI Config</h5>
-                   <p className="text-[8px] text-brand-navy/40 font-bold uppercase tracking-widest">任務：智能引擎</p>
+                   <h5 className="text-[10px] font-black text-brand-navy uppercase tracking-tight">OpenRouter (Primary)</h5>
+                   <p className="text-[8px] text-brand-navy/40 font-bold uppercase tracking-widest">萬能引擎 / Multi-Model</p>
                 </div>
                 <div className="flex items-center gap-2">
                   {keysStatus.openrouter && <div className="px-2 py-0.5 bg-green-50 text-green-600 rounded-full text-[8px] font-black uppercase">已激活</div>}
@@ -169,8 +171,8 @@ export function AISecuritySection({
                    <span className="text-[8px] font-black text-brand-navy/40 uppercase whitespace-nowrap">Model ID</span>
                    <input 
                       type="text" 
-                      placeholder="e.g. google/gemini-2.5-flash-lite"
-                      className={`${inputClass} flex-1 bg-slate-50 text-[10px] font-bold`}
+                      placeholder="google/gemini-2.5-flash-lite"
+                      className={`${inputClass} flex-1 bg-white text-[10px] font-bold h-9`}
                       value={localCustomModel}
                       onChange={(e) => setLocalCustomModel(e.target.value)}
                       onBlur={(e) => {
@@ -184,8 +186,8 @@ export function AISecuritySection({
                  <div className="relative">
                     <input
                         type={isEditingOpenRouter ? "text" : "password"}
-                        placeholder="API Key..."
-                        className={`${inputClass} font-mono w-full ${isEditingOpenRouter ? 'bg-white border-brand-navy/20' : 'bg-slate-50'} pr-16`}
+                        placeholder="OpenRouter API Key..."
+                        className={`${inputClass} h-9 font-mono w-full ${isEditingOpenRouter ? 'bg-white border-brand-navy/20' : 'bg-slate-50'} pr-16`}
                         value={localOpenRouterKey}
                         onChange={(e) => setLocalOpenRouterKey(e.target.value)}
                         disabled={!isEditingOpenRouter}
@@ -202,10 +204,60 @@ export function AISecuritySection({
                     )}
                  </div>
                  {!isEditingOpenRouter && (
-                   <button onClick={() => handleTest('openrouter')} disabled={isTesting !== null} className="w-full text-[10px] font-black p-2 bg-slate-100 hover:bg-slate-200 transition-colors rounded-lg flex items-center justify-center gap-2">
-                     {isTesting === 'openrouter' ? (appLang === 'zh' ? '测试中...' : 'Testing...') : (appLang === 'zh' ? '测试连线' : 'Test Connection')}
+                   <button onClick={() => handleTest('openrouter')} disabled={isTesting !== null} className="w-full text-[10px] font-black p-2 bg-white hover:bg-slate-100 transition-colors rounded-xl border border-slate-200 flex items-center justify-center gap-2">
+                     {isTesting === 'openrouter' ? 'Testing...' : 'Test Connection'}
                    </button>
                  )}
+             </div>
+          </div>
+
+          {/* Gemini Config (Agnes) */}
+          <div className="space-y-4 p-4 rounded-3xl bg-blue-50/30 border border-blue-100">
+             <div className="flex items-center justify-between mb-4">
+                <div className="space-y-0.5">
+                   <h5 className="text-[10px] font-black text-blue-900 uppercase tracking-tight">Agnes AI (Gemini)</h5>
+                   <p className="text-[8px] text-blue-900/40 font-bold uppercase tracking-widest">原生引擎 / Native Gemini</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {keysStatus.gemini && <div className="px-2 py-0.5 bg-blue-100 text-blue-600 rounded-full text-[8px] font-black uppercase">已激活</div>}
+                  <button 
+                    onClick={() => {
+                      setIsEditingGemini(!isEditingGemini);
+                      if (!isEditingGemini && localGeminiKey === "••••••••••••••••") setLocalGeminiKey("");
+                    }}
+                    className={`text-[8px] font-black px-2 py-0.5 rounded-full transition-colors ${isEditingGemini ? 'bg-slate-200 text-slate-600' : 'bg-blue-600 text-white'}`}
+                  >
+                    {isEditingGemini ? '取消' : '編輯'}
+                  </button>
+                </div>
+             </div>
+             
+             <div className="space-y-2">
+                 <div className="relative">
+                    <input
+                        type={isEditingGemini ? "text" : "password"}
+                        placeholder="Gemini API Key..."
+                        className={`${inputClass} h-9 font-mono w-full ${isEditingGemini ? 'bg-white border-blue-200' : 'bg-blue-50/50'} pr-16`}
+                        value={localGeminiKey}
+                        onChange={(e) => setLocalGeminiKey(e.target.value)}
+                        disabled={!isEditingGemini}
+                    />
+                    {isEditingGemini && (
+                      <button 
+                           onClick={() => saveKey('gemini', localGeminiKey)} 
+                           disabled={isSaving === 'gemini'}
+                           className="absolute right-1 top-1 py-1 px-4 bg-blue-600 text-white text-[10px] font-black rounded-lg shadow-sm hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                       >
+                           {isSaving === 'gemini' ? '..' : '保存'}
+                       </button>
+                    )}
+                 </div>
+                 {!isEditingGemini && (
+                   <button onClick={() => handleTest('gemini')} disabled={isTesting !== null} className="w-full text-[10px] font-black p-2 bg-white hover:bg-blue-50 transition-colors rounded-xl border border-blue-100 flex items-center justify-center gap-2 text-blue-700">
+                     {isTesting === 'gemini' ? 'Testing...' : 'Test Connection'}
+                   </button>
+                 )}
+                 <p className="text-[7px] text-blue-900/60 leading-tight"> 用于驱动 Agnes 智能助手及高性能视觉分析任务。</p>
              </div>
           </div>
         </div>

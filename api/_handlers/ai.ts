@@ -3,7 +3,7 @@ import { type } from 'arktype';
 import { getServerEnv } from '../_shared/envSchema.js';
 import { getSupabaseAdmin } from '../_lib/supabase.js';
 import { getModel } from '../_lib/ai/modelHelper.js';
-import { getAIProvider, OpenRouterProvider } from '../_lib/ai/providerFactory.js';
+import { getAIProvider, OpenRouterProvider, GeminiProvider } from '../_lib/ai/providerFactory.js';
 import { getTaskConfig, AITask } from '../_lib/ai/taskRouter.js';
 import { decrypt } from '../_lib/encryption.js';
 import { executeAITask } from '../_lib/ai/executor.js';
@@ -20,6 +20,32 @@ import { AI_PROMPTS } from './ai/prompts.js';
 
 const serverEnv = getServerEnv(process.env);
 export const ai = new Hono();
+
+ai.post("/test", async (c) => {
+    try {
+        const body = await c.req.json();
+        const { provider: providerName, apiKey, model } = body;
+        
+        let provider;
+        if (apiKey) {
+            if (providerName === 'gemini') {
+                provider = new GeminiProvider({ apiKey, model: model || 'gemini-1.5-flash' });
+            } else {
+                provider = new OpenRouterProvider({ apiKey, model: model || 'google/gemini-2.5-flash-lite' });
+            }
+        } else {
+            const supabase = await getSupabaseAdmin();
+            provider = await getAIProvider(providerName || 'openrouter', supabase, model);
+        }
+
+        const data = await provider.chat([{ role: 'user', content: 'test connection' }]);
+        if (!data.success) throw new Error(data.error);
+
+        return c.json({ success: true, message: 'Connection successful', data: data.text });
+    } catch (e: unknown) {
+        return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown error' }, 500);
+    }
+});
 
 ai.post("/run", async (c) => {
     try {

@@ -77,29 +77,6 @@ app.route("/ai", ai);
 app.route("/tags", tags);
 app.route("/", storage);
 
-// --- Global Error Logging ---
-app.post("/log-error", async (c) => {
-    try {
-        const body = (await c.req.json()) as any;
-        const supabase = await getSupabaseAdmin();
-        const { error } = await supabase.from('system_logs').insert({
-            level: body.metadata?.level || 'error',
-            message: body.error_message || 'Unknown error',
-            stack: body.stack_trace,
-            trace_id: getTraceId(c),
-            metadata: {
-              ...body.metadata,
-              url: body.url,
-            }
-        });
-        if (error) throw error;
-        return c.json({ success: true });
-    } catch (e: any) {
-        console.error('[Logger API] Failed to store log:', e);
-        return c.json({ success: false, error: e.message }, 500);
-    }
-});
-
 // --- Core Utility Routes ---
 app.get("/health", (c) => {
     return c.json({ 

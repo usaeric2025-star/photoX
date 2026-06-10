@@ -47,48 +47,23 @@ export const logError = async (error: Error | unknown, context: EventContext) =>
   handleError(enrichedError, context.action, false);
 
   // 3. Always report to backend for persistence (system_logs)
+  // [2026-06-03] Frontend logs to /api/log-error are disabled to prevent performance/noise issues
+  /*
   try {
-    await fetch('/api/log-error', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        error_message: errorMsg,
-        stack_trace: stackTrace,
-        url: typeof window !== 'undefined' ? window.location.href : '',
-        metadata: {
-          ...context.metadata,
-          kind: context.kind,
-          action: context.action,
-          component: context.component,
-          context: context.component || 'global',
-          level: 'error'
-        }
-      })
-    });
+    await fetch('/api/log-error', { ... });
   } catch (e) {
     console.error('[ErrorLogger] Failed to send log to API:', e);
   }
+  */
 };
 
 export const logResult = async (context: EventContext, type: LogLevel, data?: any) => {
+    // [2026-06-03] Frontend logs to /api/log-error are disabled to prevent performance/noise issues
+    /*
     try {
-      await fetch('/api/log-error', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          error_message: `Success: ${context.action}`,
-          url: typeof window !== 'undefined' ? window.location.href : '',
-          metadata: {
-            ...context.metadata,
-            data,
-            action: context.action,
-            component: context.component,
-            context: context.component || 'global',
-            level: type === 'success' ? 'info' : 'error'
-          }
-        })
-      });
+      await fetch('/api/log-error', { ... });
     } catch (e) {
       console.error('[ErrorLogger] Failed to send log result to API:', e);
     }
+    */
 };

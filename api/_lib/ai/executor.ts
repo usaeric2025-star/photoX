@@ -51,7 +51,7 @@ export async function executeAITask(options: AITaskOptions) {
         status: result.success ? 'success' : 'error',
         error_message: result.error,
         request_metadata: metadata
-      }).catch(err => console.warn(`[AuditLog-Silent-Fail] ${err.message}`));
+      }).catch((err: any) => console.warn(`[AuditLog-Silent-Fail] ${err.message}`));
 
       if (!result.success) {
         throw new Error(result.error || 'AI 調用失敗');

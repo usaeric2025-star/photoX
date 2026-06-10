@@ -2,7 +2,7 @@ import "dotenv/config";
 import path from "path";
 import fs from "fs";
 import { serve } from "@hono/node-server";
-import { app } from "./api/app.js";
+import { app } from "./api/_app.js";
 import { getServerEnv } from "./api/_shared/envSchema.js";
 
 // 启动校验

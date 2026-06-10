@@ -69,54 +69,63 @@ export const LightboxCore = ({
         // Custom interactive controls overlaid on lightbox
         controls: () => (
           <>
-            <div className="absolute top-2 left-2 z-50 text-white font-medium bg-black/50 px-3 py-1 rounded-full text-sm">
+            <div className="absolute top-4 left-4 z-50 text-white font-medium bg-black/50 px-3 py-1 rounded-full text-[10px] sm:text-sm backdrop-blur-sm shadow-lg pointer-events-none">
                  {index + 1} / {totalCount || slides.length}
             </div>
+            
+            {/* Top Right Tool Area - Shifted left to avoid Close button */}
+            <div className="absolute top-2 right-12 z-50 flex items-center gap-1 sm:gap-2 p-2 pointer-events-auto">
+              {showSetCover && (
+                <button
+                  onClick={() => {
+                    const photo = photos[index];
+                    if (photo) onSetCover?.(photo);
+                  }}
+                  className="w-10 h-10 flex items-center justify-center rounded-full bg-black/30 hover:bg-black/50 text-amber-400 transition-all border border-white/10"
+                  aria-label="设为封面"
+                  title="设为封面"
+                >
+                  <Crown size={20} className="fill-current" />
+                </button>
+              )}
+              {showEdit && (
+                <button
+                  onClick={() => {
+                    const photo = photos[index];
+                    if (photo) onEdit?.(photo);
+                  }}
+                  className="w-10 h-10 flex items-center justify-center rounded-full bg-black/30 hover:bg-black/50 text-white transition-all border border-white/10"
+                  aria-label="编辑"
+                  title="编辑"
+                >
+                  <Pencil size={20} />
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  const photo = photos[index];
+                  if (photo) downloadPhotoAsJpeg(photo.image_url);
+                }}
+                className="w-10 h-10 flex items-center justify-center rounded-full bg-black/30 hover:bg-black/50 text-white transition-all border border-white/10"
+                aria-label="下载"
+                title="下载"
+              >
+                <Download size={20} />
+              </button>
+              <button
+                onClick={() => setShowDetails(!showDetails)}
+                className={`w-10 h-10 flex items-center justify-center rounded-full transition-all border border-white/10 ${showDetails ? 'bg-brand-gold text-white shadow-[0_0_15px_rgba(251,191,36,0.3)]' : 'bg-black/30 text-white hover:bg-black/50'}`}
+                aria-label="详情"
+                title="详情"
+              >
+                <Info size={20} />
+              </button>
+            </div>
+
             {showDetails && renderSidebar?.()}
             {renderFloatingButton?.()}
           </>
         ),
-        buttonDownload: () => (
-          <div className="flex items-center gap-0.5 mr-2">
-            {showSetCover && (
-              <button
-                onClick={() => {
-                  const photo = photos[index];
-                  if (photo) onSetCover?.(photo);
-                }}
-                className="yarl__button !p-2 rounded-full hover:bg-slate-100/10 transition-all text-amber-400"
-                aria-label="设为封面"
-                title="设为封面"
-              >
-                <Crown size={18} className="fill-current" />
-              </button>
-            )}
-            {showEdit && (
-              <button
-                onClick={() => {
-                  const photo = photos[index];
-                  if (photo) onEdit?.(photo);
-                }}
-                className="yarl__button !p-2 rounded-full hover:bg-slate-100/10 transition-all"
-                aria-label="编辑"
-                title="编辑"
-              >
-                <Pencil size={18} />
-              </button>
-            )}
-            <button
-              onClick={() => {
-                const photo = photos[index];
-                if (photo) downloadPhotoAsJpeg(photo.image_url);
-              }}
-              className="yarl__button !p-2 rounded-full hover:bg-slate-100/10 transition-all"
-              aria-label="下载"
-              title="下载"
-            >
-              <Download size={18} />
-            </button>
-          </div>
-        )
       }}
       {...LIGHTBOX_OPTIONS}
     />
