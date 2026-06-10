@@ -1,16 +1,16 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { getServerEnv } from "./shared/envSchema.js";
-import { logTraffic } from "./lib/trafficCapture.js";
-import { requireRealUser } from "./lib/auth.js";
-import { getSupabaseAdmin } from "./lib/supabase.js";
-import adminApp from "./admin.js";
-import { ai } from "./handlers/ai.js";
-import { tags } from "./handlers/tags.js";
-import { storage } from "./handlers/storage.js";
-import { getTraceId } from "./lib/error/traceId.js";
-import { logger } from "./lib/logger.js";
-import { AppError, errorFactory } from "./lib/error/AppError.js";
+import { getServerEnv } from "./_shared/envSchema.js";
+import { logTraffic } from "./_lib/trafficCapture.js";
+import { requireRealUser } from "./_lib/auth.js";
+import { getSupabaseAdmin } from "./_lib/supabase.js";
+import adminApp from "./_admin.js";
+import { ai } from "./_handlers/ai.js";
+import { tags } from "./_handlers/tags.js";
+import { storage } from "./_handlers/storage.js";
+import { getTraceId } from "./_lib/error/traceId.js";
+import { logger } from "./_lib/logger.js";
+import { AppError, errorFactory } from "./_lib/error/AppError.js";
 
 // Validate env at module level
 const serverEnv = getServerEnv(process.env);
