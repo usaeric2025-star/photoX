@@ -228,17 +228,13 @@ export const analyzeProductPhoto = async (
     dataToProcess.tag_ids = normalizeTagIds(dataToProcess.tag_ids || dataToProcess.tagIds, tags || []);
     dataToProcess.description = dataToProcess.description || '';
     
-    // 1.5 [V2.50] If AI suggests a manual code, keep it instead of clearing it
     if (dataToProcess.manual_code === undefined || dataToProcess.manual_code === '') {
         dataToProcess.manual_code = null;
     }
 
-    // Translation and further dimension refinement are now handled by Agnes in the orchestration layer (aiService.ts)
-
     let resolvedCategoryId: string | null = null;
     const catIdToCheck = String(dataToProcess.category_id || '').trim();
     if (catIdToCheck) {
-      // 1. Exact or case-insensitive match (Check English en/zh/name/code)
       let match = (categories || []).find(c => 
         String(c.id) === catIdToCheck || 
         String(c.name || '').toLowerCase() === catIdToCheck.toLowerCase() ||
@@ -246,7 +242,6 @@ export const analyzeProductPhoto = async (
         String(c.zh || '').toLowerCase() === catIdToCheck.toLowerCase()
       );
       
-      // 2. Fuzzy match checks
       if (!match) {
         match = (categories || []).find(c => {
           const name = String(c.name || '').toLowerCase().trim();
@@ -274,70 +269,18 @@ export const analyzeProductPhoto = async (
     }
     dataToProcess.category_id = resolvedCategoryId;
 
-    // Get active category for checking redundancies
-    const activeCat = (categories || []).find(c => String(c.id) === String(resolvedCategoryId));
-    const catWords = new Set<string>();
-    if (activeCat) {
-      [activeCat.name, activeCat.code]
-        .filter(Boolean)
-        .forEach(val => {
-          catWords.add(String(val).toLowerCase().trim());
-        });
-    }
-
-    // Check if the category is or includes "chair"
-    const isChairCategory = Array.from(catWords).some(word => 
-      word.includes('chair') || word.includes('椅') || word.includes('椅子')
-    );
-    if (isChairCategory) {
-      catWords.add('chair');
-      catWords.add('chairs');
-      catWords.add('椅子');
-      catWords.add('椅');
-    }
-
-    const containsChinese = (str: string) => /[\u4e00-\u9fa5]/.test(str);
-
-    const isRedundantTag = (tagName: string) => {
-      const cleanTagName = tagName.toLowerCase().trim();
-      if (containsChinese(cleanTagName)) return true;
-      if (catWords.has(cleanTagName)) return true;
-      if (isChairCategory && (cleanTagName === 'chair' || cleanTagName === 'chairs' || cleanTagName === '椅子' || cleanTagName === '椅')) {
-        return true;
-      }
-      return false;
-    };
-
+    let currentTagIds = dataToProcess.tag_ids;
     let newTagList: string[] = [];
     if (Array.isArray(dataToProcess.new_tags)) {
-      newTagList = dataToProcess.new_tags
-        .map((s: unknown) => String(s).trim())
-        .filter((s: string) => s && !containsChinese(s));
+      newTagList = dataToProcess.new_tags.map((s: unknown) => String(s).trim()).filter((s: string) => s);
     }
 
-    // Filter redundant tagIds (existing tags) and new tags
-    let currentTagIds = (dataToProcess.tag_ids || dataToProcess.tagIds || []).filter((tid: string) => {
-      const tObj = (tags || []).find(t => String(t.id) === String(tid));
-      if (!tObj) return true;
-      if (isRedundantTag(tObj.name)) return false;
-      if (Array.isArray(tObj.aliases)) {
-        if (tObj.aliases.some(alias => isRedundantTag(alias))) {
-          return false;
-        }
-      }
-      return true;
-    });
-
-    newTagList = newTagList.filter((newTagName: string) => {
-      return !isRedundantTag(newTagName);
-    });
-
-    if (currentTagIds.length + newTagList.length > 3) {
-      if (currentTagIds.length >= 3) {
-        currentTagIds = currentTagIds.slice(0, 3);
+    if (currentTagIds.length + newTagList.length > 5) {
+      if (currentTagIds.length >= 5) {
+        currentTagIds = currentTagIds.slice(0, 5);
         newTagList = [];
       } else {
-        const needed = 3 - currentTagIds.length;
+        const needed = 5 - currentTagIds.length;
         newTagList = newTagList.slice(0, needed);
       }
     }

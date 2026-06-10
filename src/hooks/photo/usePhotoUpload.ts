@@ -63,6 +63,9 @@ export function usePhotoUpload() {
             is_pinned: false,
             is_hidden: false,
             created_at: new Date().toISOString(),
+            _fileName: file.name,
+            _fileSize: file.size,
+            _lastModified: file.lastModified
           } as any;
 
           const uploadResult = await savePhotoToCloud(user?.id || 'staff', tempPhoto);
@@ -75,6 +78,11 @@ export function usePhotoUpload() {
           }
         } catch (err: unknown) {
           console.error(`[Upload] Failed for ${file.name}:`, err);
+          // remove from lock
+          const { removeFromDuplicateCache } = await import('@/lib/data/duplicateCheck');
+          // Note: we can't easily get the hash here if processImageFile failed, but we can pass file
+          removeFromDuplicateCache(file);
+          
           // 在批量任务中保持静默，由任务中心最后統一呈現狀態
           ErrorFactory.handle(err, `照片上传失败: ${file.name}`, true);
           failureCount++;

@@ -171,7 +171,11 @@ export function PhotoInfoPanel({
             <section className="relative">
               <div className="flex justify-between items-start mb-2">
                 <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">{l.basicInfo}</h4>
-                <CopyableId className="bg-transparent border-none text-slate-400 p-0" id={data.id} label="GROUP ID" />
+                <CopyableId 
+                  className="bg-transparent border-none text-brand-navy/60 font-semibold p-0" 
+                  id={isAdmin ? data.id : data.id.slice(-6).toUpperCase()} 
+                  label={isAdmin ? "GROUP ID" : "GROUP CODE"} 
+                />
               </div>
               <h2 className="text-xl font-bold text-slate-900 mb-2">{displayName}</h2>
               <div className="flex flex-wrap gap-2 mb-4">

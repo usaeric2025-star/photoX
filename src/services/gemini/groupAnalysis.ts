@@ -55,7 +55,17 @@ export async function analyzeGroup(photos: Photo[]): Promise<GroupAnalysisResult
     throw ErrorFactory.wrap(new Error(error.error || 'AI 智能合组分析失败'), 'analyzeGroup');
   }
 
-  return await response.json();
+  const resData = await response.json() as any;
+  let parsed = resData.data;
+  if (typeof parsed === 'string') {
+    try {
+      parsed = JSON.parse(parsed.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim());
+    } catch (e) {
+      console.warn("Failed to parse group analysis JSON:", parsed);
+      throw new Error("Invalid format returned by AI for group.");
+    }
+  }
+  return parsed as GroupAnalysisResult;
 }
 
 export async function analyzeSinglePhoto(photo: Photo): Promise<PhotoAnalysisResult> {
@@ -73,5 +83,15 @@ export async function analyzeSinglePhoto(photo: Photo): Promise<PhotoAnalysisRes
     throw ErrorFactory.wrap(new Error(error.error || 'AI 单张识别分析失败'), 'analyzeSinglePhoto', photo.id);
   }
 
-  return await response.json();
+  const resData = await response.json() as any;
+  let parsed = resData.data;
+  if (typeof parsed === 'string') {
+    try {
+      parsed = JSON.parse(parsed.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim());
+    } catch (e) {
+      console.warn("Failed to parse single photo analysis JSON:", parsed);
+      throw new Error("Invalid format returned by AI for photo.");
+    }
+  }
+  return parsed as PhotoAnalysisResult;
 }

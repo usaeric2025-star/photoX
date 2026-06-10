@@ -27,7 +27,7 @@ export const analyzeAndSavePhoto = async (
       photo.image_url, 
       existingCategories || [], 
       existingTags || [], 
-      settingsData?.custom_model || 'gemini-1.5-flash', 
+      settingsData?.custom_model || '', 
       settingsData?.gemini_api_key || ''
   );
   if (!analysis.ok) return analysis;
@@ -48,44 +48,35 @@ export const analyzeAndSavePhoto = async (
       en: translation.data.description.en,
       ms: translation.data.description.ms
     },
-    category_id: analysis.data.category_id
+    category_id: analysis.data.category_id ? String(analysis.data.category_id) : null
   });
   if (!updateResult.ok) {
     return fail(updateResult.message);
   }
 
   // 4. 標籤處理 (解決名稱到 ID 的轉換)
-  const tagNames = analysis.data.tagNames;
-  if (tagNames && tagNames.length > 0) {
+  const tagNames = analysis.data.tagNames || [];
+  const tagIds = analysis.data.tagIds || [];
+  
+  if (tagNames.length > 0 || tagIds.length > 0) {
     const { resolveTagNamesToIds } = await import('../tag/completion');
     const { syncPhotoTags } = await import('../tag/commands');
     
-    const resolveResult = await resolveTagNamesToIds(tagNames, existingTags);
-    if (resolveResult.ok && resolveResult.data.length > 0) {
-        await syncPhotoTags(photo.id, resolveResult.data);
+    // Resolve any new tag names
+    let finalTagIds = [...tagIds];
+    if (tagNames.length > 0) {
+       const resolveResult = await resolveTagNamesToIds(tagNames, existingTags);
+       if (resolveResult.ok && resolveResult.data.length > 0) {
+           finalTagIds = [...finalTagIds, ...resolveResult.data];
+       }
     }
-  }
-
-  // 5. 保存原始識別源代碼到 photo_ai_results 數據表中 (非阻塞)
-  if (photo.id && analysis.data) {
-    const rawResultText = (analysis.data as any).raw_result || JSON.stringify(analysis.data);
-    (async () => {
-        try {
-            const { error } = await supabase.from('photo_ai_results').upsert({
-                photo_id: photo.id,
-                raw_result: rawResultText,
-                parsed_data: analysis.data,
-                created_at: new Date().toISOString()
-            }, { onConflict: 'photo_id' });
-            if (error) {
-                console.warn(`[photo_ai_results-save-failed]`, error.message);
-            } else {
-                console.log(`[photo_ai_results-save-success] Saved client-side raw output for photo ID: ${photo.id}`);
-            }
-        } catch (e: any) {
-            console.warn(`[photo_ai_results-save-critical]`, e);
-        }
-    })();
+    
+    // Unique list of tags
+    finalTagIds = Array.from(new Set(finalTagIds.map(String)));
+    
+    if (finalTagIds.length > 0) {
+        await syncPhotoTags(photo.id, finalTagIds);
+    }
   }
 
   return ok(updateResult.data);

@@ -3,6 +3,7 @@ export interface AIAnalysisResult {
   description: string; // Chinese Description
   category_id: string | null;
   tagNames: string[];
+  tagIds?: string[];
 }
 
 export interface TranslationResult {
@@ -15,4 +16,5 @@ export interface ProcessedPhotoData {
   description: { zh: string; en: string; ms: string };
   category_id: string | null;
   tagNames: string[];
+  tagIds?: string[];
 }

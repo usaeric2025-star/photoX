@@ -18,14 +18,52 @@ export const analyzePhoto = async (
     // Assuming imageUrl is passed as base64 as per previous implementation expectation
     const response = await callGeminiAPI(prompt, imageUrl, model, apiKey);
     
-    const parsed = extractJsonObject(response.content);
+    let parsed: any = null;
+    let rawResult = '';
+    
+    if (response?.data && typeof response.data === 'object') {
+        parsed = response.data;
+        rawResult = JSON.stringify(response.data);
+    } else if (response?.content) {
+        parsed = extractJsonObject(response.content);
+        rawResult = response.content;
+    } else if (typeof response === 'object') {
+        parsed = response.name ? response : response;
+        rawResult = JSON.stringify(response);
+    }
+
+    if (!parsed) {
+        throw new Error('Could not parse AI response');
+    }
+    
+    if (parsed._fallback) {
+        console.warn('[analyzePhoto] Using AI fallback response');
+        return ok({
+            name: '',
+            description: '',
+            category_id: null,
+            tagNames: [],
+            tagIds: [],
+            raw_result: rawResult
+        } as any);
+    }
+
+    let resolvedCategoryId = parsed.category_id || null;
+    if (resolvedCategoryId) {
+       const exists = categories.find(c => String(c.id) === String(resolvedCategoryId));
+       if (!exists) {
+           resolvedCategoryId = null; // invalid ID, strip it out
+       }
+    }
+
     return ok({
-        name: parsed.name,
-        description: parsed.description,
-        category_id: parsed.category_id,
-        tagNames: parsed.new_tags || [],
-        raw_result: response.content
-    });
+        name: parsed.name || '',
+        description: parsed.description || '',
+        category_id: resolvedCategoryId,
+        tagNames: (parsed.new_tags || parsed.tags || []),
+        tagIds: Array.isArray(parsed.tag_ids) ? parsed.tag_ids.map(String) : [],
+        raw_result: rawResult
+    } as any);
   } catch (err: any) {
     console.error('Analysis failed', err);
     return fail(err.message || 'Analysis failed');

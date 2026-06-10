@@ -126,6 +126,9 @@ export async function getAIProvider(providerName: string, supabase: any, modelOv
     if (!apiKey) throw new Error(`未配置 ${providerName} 的 API 密鑰`);
 
     let model = modelOverride;
+    if (model && providerName === 'openrouter' && !model.includes('/')) {
+        model = 'google/' + model;
+    }
     if (!model) {
         if (providerName === 'openrouter') {
             model = await getModel(supabase);

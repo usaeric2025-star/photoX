@@ -30,6 +30,11 @@ CREATE INDEX IF NOT EXISTS idx_ai_audit_created ON public.ai_audit_logs(created_
 -- RLS (Row Level Security) - Only accessible to authenticated admins via service role
 ALTER TABLE public.ai_audit_logs ENABLE ROW LEVEL SECURITY;
 
+-- P0-2: Photo AI Results Table (DEPRECATED)
+-- Purpose: Store raw AI output for debugging and potential re-parsing/re-processing.
+DROP TABLE IF EXISTS public.photo_ai_results;
+
+
 -- P0-6: Referential Integrity (Hardening)
 -- Ensure that deleting a group, category, or manufacturer doesn't delete the furniture items.
 ALTER TABLE public.furniture_items 

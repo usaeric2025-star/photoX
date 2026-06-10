@@ -72,6 +72,20 @@ export function usePhotoEditAI(form: PhotoEditFormReturn) {
             updates.price = String(result.price);
           }
 
+          // [AI-RAW-DATA-SAVE] Ensure we always save the raw source code
+          try {
+            const { supabase } = await import('@/lib/supabase');
+            const rawResultText = (resp as any).raw_result || JSON.stringify(result);
+            await supabase.from('photo_ai_results').upsert({
+              photo_id: editPhotoId,
+              raw_result: rawResultText,
+              parsed_data: result,
+              created_at: new Date().toISOString()
+            }, { onConflict: 'photo_id' });
+          } catch (e) {
+            console.warn('[AI Raw Save Failed]', e);
+          }
+
           form.setValues({ ...form.values, ...updates });
 
           try {

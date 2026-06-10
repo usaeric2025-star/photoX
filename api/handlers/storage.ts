@@ -114,11 +114,11 @@ storage.post("/uploadDirect", async (c) => {
 storage.post("/upload-presign", async (c) => {
     try {
       await requireRealUser(c);
-      const { photoId, fileKey, contentType, imageHash } = await c.req.json();
+      const { photoId, fileKey, contentType, imageHash, force } = await c.req.json();
       if (!photoId && !fileKey) return c.json({ error: "photoId or fileKey required" }, 400);
 
       // 排重检查
-      if (imageHash) {
+      if (imageHash && !force) {
         const supabase = await getSupabaseAdmin();
         const { data: existing } = await supabase
           .from("furniture_items")

@@ -39,7 +39,8 @@ export function PhotoTagSelector({
 
   const [initialSelectedIds] = React.useState(() => cleanSelectedIds);
 
-  const sortedTags = [...tags].sort((a, b) => {
+  const sortedTags = React.useMemo(() => {
+    return [...tags].sort((a, b) => {
       const isASelected = initialSelectedIds.includes(String(a.id));
       const isBSelected = initialSelectedIds.includes(String(b.id));
 
@@ -48,12 +49,13 @@ export function PhotoTagSelector({
 
       return a.name.localeCompare(b.name, undefined, { numeric: true });
     });
+  }, [tags, initialSelectedIds]);
 
   const handleToggleTag = (tag: Tag) => {
     const strId = String(tag.id);
     if (cleanSelectedIds.includes(strId)) {
       onChange(cleanSelectedIds.filter((id) => id !== strId));
-    } else if (cleanSelectedIds.length < 3) {
+    } else {
       onChange([...cleanSelectedIds, strId]);
     }
   };
@@ -89,20 +91,16 @@ export function PhotoTagSelector({
             (t) => t.name.toUpperCase() === trimmed.toUpperCase(),
           );
           if (existing) {
-            if (cleanSelectedIds.length < 3) {
               onChange([
                 ...new Set([...cleanSelectedIds, String(existing.id)]),
               ]);
-            }
             return;
           }
 
           try {
             const saved = await addTag(trimmed);
             if (saved) {
-              if (cleanSelectedIds.length < 3) {
-                onChange([...new Set([...cleanSelectedIds, String(saved)])]);
-              }
+              onChange([...new Set([...cleanSelectedIds, String(saved)])]);
             }
           } catch (err: unknown) {
             ErrorFactory.handle(err, "新增标签失败");

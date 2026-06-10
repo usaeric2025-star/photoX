@@ -170,14 +170,10 @@ export function GroupDetailPage({}: GroupDetailPageProps) {
                           <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none flex items-center gap-2 flex-wrap mt-0.5">
                             <span>{(totalGroupPhotosCount ?? activeGroupPhotos.length) || groupData?.member_count || 0} 張照片 / Photos</span>
                             {activeGroupId && (
-                              <>
-                                <span className="text-slate-300">•</span>
-                                <span className="text-blue-500/80 bg-blue-50 px-1.5 py-0.5 rounded-md border border-blue-100/50">
-                                  CODE: {activeGroupId.slice(-6).toUpperCase()}
-                                </span>
-                                <span className="text-slate-300">•</span>
-                                <CopyableId className="opacity-80" id={activeGroupId} label="ID" />
-                              </>
+                                <>
+                                  <span className="text-slate-300">•</span>
+                                  <CopyableId className="opacity-80 border-none bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-md" id={activeGroupId.slice(-6).toUpperCase()} label="CODE" />
+                                </>
                             )}
                           </div>
                         )}
@@ -196,7 +192,20 @@ export function GroupDetailPage({}: GroupDetailPageProps) {
                 </div>
                 
                 {/* [GROUP-STALE-SIGNAL] */}
-                <div className={`flex-1 min-h-0 flex flex-col transition-opacity duration-300 ${isStale ? "opacity-60" : "opacity-100"}`}>
+                <div className={`flex-1 min-h-0 flex flex-col transition-opacity duration-300 overflow-y-auto ${isStale ? "opacity-60" : "opacity-100"}`}>
+                  
+                  {/* Public Description Rendering */}
+                  {groupData?.description && (
+                    <div className="px-4 sm:px-6 py-4 border-b border-slate-50 bg-slate-50/30">
+                      <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
+                         {lang === 'zh' ? '系列故事与介绍' : lang === 'ms' ? 'Kisah & Pengenalan Siri' : 'Series Story & Description'}
+                      </h3>
+                      <div className="text-[13px] sm:text-sm text-slate-600 leading-relaxed font-normal whitespace-pre-wrap font-sans">
+                         {getSafeText(groupData.description, lang as any) || getSafeText(groupData.description, 'zh')}
+                      </div>
+                    </div>
+                  )}
+
                   <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="animate-spin text-slate-400" /></div>}>
                     <GroupGridView 
                         key={activeGroupId}

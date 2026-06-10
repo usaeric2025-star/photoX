@@ -967,3 +967,49 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 - ✅ **唯一出口**：所有照片網格容器必須通過 `useProcessedPhotos` 獲取處理後的數據。
 - ✅ **異步感知**：當 Worker 正在處理時，`isLoading` 應反映此狀態以顯示骨架屏（Skeleton）。
 - ❌ **禁止項**：禁止在主線程直接調用 `processPhotos`（除非是降級路徑或數據量極小的情況）。
+
+## AI 識別系統規範（鎖定）
+
+### 模型配置
+- ✅ 模型名稱從資料庫讀取，作為純變數傳遞
+- ❌ 禁止硬編碼模型名稱
+
+### 審計日誌
+- ✅ AI 原始響應統一寫入 `system_logs.metadata`
+- ❌ 禁止使用 `photo_ai_results` 表
+
+### 標籤處理
+- ✅ 標籤數量限制（最多 3 個）只在 `syncPhotoTags` 執行
+- ✅ 限制方式：取前 3 個（slice(0, 3)）
+- ✅ 無論來源（AI / 手動）都走同一條邏輯
+- ❌ 禁止在其他地方做限制
+
+### 翻譯
+- ✅ 只翻譯 `name` 和 `description`
+- ❌ 禁止翻譯 `tags`
+
+### 前端 UI
+- ✅ 只負責顯示和發送請求
+- ❌ 禁止做數量限制、過濾判斷
+
+## AI 識別兜底規範（鎖定）
+
+- ✅ 強化 JSON 解析：支援 Markdown 移除、片段提取
+- ✅ 自動重試：最多 3 次，指數退避（1s, 2s, 4s）
+- ✅ 降級輸出：失敗時返回預設值，不中斷流程
+- ✅ 審計記錄：所有失敗寫入 `system_logs`
+- ❌ 不新增額外表單或管理頁面（使用現有功能重試）
+
+## 翻譯分工作業與規範（鎖定）
+
+- ✅ 只翻譯 `name` 和 `description` 欄位
+- ❌ 禁止翻譯 `tags`（標籤）
+- ❌ 禁止翻譯 `category_id`（分類 ID）
+- ✅ AI Prompt 要求返回 `category_id`（ID），而非分類名稱
+- ✅ 中文（zh）由 Gemini 直接產出
+- ✅ 英文（en）由 Agnes 翻譯補全
+- ✅ 馬來文（ms）由 Agnes 翻譯補全
+- ✅ AI 分析後，檢查 en/ms 是否缺失，缺失則調用 Agnes
+- ❌ 禁止 Gemini 處理英文/馬來文翻譯
+- ❌ 禁止 Agnes 處理中文識別
+

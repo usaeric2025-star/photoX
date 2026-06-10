@@ -56,6 +56,16 @@ adminPhotos.post("/delete-photos", async (c) => {
 
       if (fetchError) throw fetchError;
 
+      // Clean up associated photo_ai_results to avoid orphan rows and storage leaks
+      try {
+        await supabase
+          .from("photo_ai_results")
+          .delete()
+          .in("photo_id", ids);
+      } catch (err) {
+        console.warn("[delete-photos] Clean up photo_ai_results failed:", err);
+      }
+
       const { error: deleteError } = await supabase
         .from("furniture_items")
         .delete()

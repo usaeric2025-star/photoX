@@ -60,27 +60,42 @@ export function TagEditor({
   const { hotIds: hotTagsSet, pinnedIds } = usePhotoFilter(tags, settings);
 
   const filteredTags = useMemo(() => {
-    const list = (
-      Array.from(new Map(tags.map((t) => [t.id, t])).values()) as Tag[]
-    ).filter((tag: Tag) =>
-      (tag.name || "").toLowerCase().includes((searchTerm || "").toLowerCase()),
-    );
+    // 1. Optimize lookups with Sets
+    const selectedSet = new Set(selectedTagIds.map(String));
+    const pinnedSet = new Set(pinnedIds.map(String));
+    const hotSet = hotTagsSet;
 
+    // 2. Pre-filter by search query
+    const searchLower = searchTerm.trim().toLowerCase();
+    
+    // Use an array of unique tags to prevent Set -> Array over and over
+    // If 'tags' inherently has unique IDs, we can just use tags directly or do it once.
+    const uniqueTags = new Map<string | number, Tag>();
+    for (let i = 0; i < tags.length; i++) {
+        uniqueTags.set(tags[i].id, tags[i]);
+    }
+    
+    let list = Array.from(uniqueTags.values());
+    if (searchLower) {
+      list = list.filter((tag) => (tag.name || "").toLowerCase().includes(searchLower));
+    }
+
+    // 3. Fast sort with pre-calculated rank or flags
     return list.sort((a, b) => {
-      const aSelected = selectedTagIds.map(String).includes(String(a.id));
-      const bSelected = selectedTagIds.map(String).includes(String(b.id));
-      if (aSelected && !bSelected) return -1;
-      if (!aSelected && bSelected) return 1;
+      const aId = String(a.id);
+      const bId = String(b.id);
+      
+      const aSelected = selectedSet.has(aId);
+      const bSelected = selectedSet.has(bId);
+      if (aSelected !== bSelected) return aSelected ? -1 : 1;
 
-      const aPinned = pinnedIds.includes(String(a.id));
-      const bPinned = pinnedIds.includes(String(b.id));
-      if (aPinned && !bPinned) return -1;
-      if (!aPinned && bPinned) return 1;
+      const aPinned = pinnedSet.has(aId);
+      const bPinned = pinnedSet.has(bId);
+      if (aPinned !== bPinned) return aPinned ? -1 : 1;
 
-      const aHot = hotTagsSet.has(String(a.id));
-      const bHot = hotTagsSet.has(String(b.id));
-      if (aHot && !bHot) return -1;
-      if (!aHot && bHot) return 1;
+      const aHot = hotSet.has(aId);
+      const bHot = hotSet.has(bId);
+      if (aHot !== bHot) return aHot ? -1 : 1;
 
       return a.name.localeCompare(b.name, undefined, { numeric: true });
     });
@@ -110,12 +125,10 @@ export function TagEditor({
       </div>
       <div className="flex flex-wrap gap-2 pb-1 max-h-48 overflow-y-auto content-start">
         {filteredTags.map((tag: Tag) => {
-          const isSelected = selectedTagIds
-            .map(String)
-            .includes(String(tag.id));
+          const isSelected = selectedTagIds.map(String).includes(String(tag.id));
           const isHot = hotTagsSet.has(String(tag.id));
           const isPinned = pinnedIds.includes(String(tag.id));
-          const isDisabled = !isSelected && selectedTagIds.length >= 3;
+          const isDisabled = false; // Removed the artificial 3-tag limit
 
           return (
             <TagButton
@@ -250,7 +263,7 @@ function TagButton({ tag, isSelected, isHot, isPinned, isDisabled, onToggle, onL
           WebkitTouchCallout: "none",
           WebkitUserSelect: "none",
           userSelect: "none",
-          touchAction: "none",
+          touchAction: "pan-y",
           pointerEvents: "auto",
         }}
         onClick={(e) => {

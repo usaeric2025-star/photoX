@@ -20,14 +20,13 @@ export const translateText = async (text: string, signal?: AbortSignal): Promise
     if (!text || text.trim() === '') return { zh: '', en: '', ms: '' };
 
     const prompt = `You are Agnes, a professional translator for home furniture. 
-The input text below is a product description, which might be in Chinese or English.
-Please translate it into three versions: Simplified Chinese (ZH), English (EN), and Bahasa Melayu (MS).
+The input text below is a product name or description in Chinese.
+Please translate it into two versions: English (EN) and Bahasa Melayu (MS).
 
 Input: "${text}"
 
 Output strictly in JSON format:
 {
-  "zh": "...",
   "en": "...",
   "ms": "..."
 }`;
@@ -47,7 +46,7 @@ Output strictly in JSON format:
       const parsed = extractJsonObject(content);
       
       return {
-        zh: parsed?.zh || text,
+        zh: text,
         en: parsed?.en || text,
         ms: parsed?.ms || text
       };

@@ -132,8 +132,10 @@ export const syncPhotoTags = async (photoId: string, tagIds: string[]): Promise<
     const { error: deleteError } = await supabase.from('photo_tags').delete().eq('photo_id', photoId);
     if (deleteError) return errorFactory(deleteError.message, 'DB_ERROR', 'syncPhotoTags/delete', deleteError);
 
-    if (tagIds.length > 0) {
-        const associations = tagIds.map(tagId => ({
+    // 唯一限制點：強制限制最多 3 個標籤
+    const limitedTagIds = tagIds.slice(0, 3);
+    if (limitedTagIds.length > 0) {
+        const associations = limitedTagIds.map(tagId => ({
             photo_id: photoId,
             tag_id: tagId
         }));
