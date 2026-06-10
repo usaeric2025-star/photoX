@@ -3,7 +3,7 @@ import { ConfirmProvider } from './context/ConfirmContext';
 import { RouterProvider } from '@tanstack/react-router';
 import { router } from './router';
 import { Analytics } from '@vercel/analytics/react';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '@/hooks/core/auth/useAuth';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { migrateStorage } from '@/lib/storage';
@@ -25,14 +25,22 @@ export default function AppRoutes() {
   });
 
   const { user, isLoading } = useAuth();
+  const prevUserRef = useRef<any>(undefined);
 
   useEffect(() => {
     if (!isLoading) {
-      logger.info('🔑 Auth status changed, invalidating router...', { hasUser: !!user });
-      router.invalidate();
-      if (user) {
-        startAutoDiagnose();
+      const prevUser = prevUserRef.current;
+      const prevUserId = prevUser ? prevUser.id : null;
+      const currentUserId = user ? user.id : null;
+
+      if (prevUserId !== currentUserId) {
+        logger.info('🔑 Auth status changed, invalidating router...', { hasUser: !!user });
+        router.invalidate();
+        if (user) {
+          startAutoDiagnose();
+        }
       }
+      prevUserRef.current = user;
     }
   }, [user, isLoading]);
 

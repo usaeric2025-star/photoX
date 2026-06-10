@@ -5,6 +5,7 @@ import { api } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
 import { useAdminMode } from '../core/auth/useAdminMode';
 import { logger } from '@/lib/logger';
+import { useUIStore } from '@/store/useUIStore';
 
 /**
  * Adapter hook to aggregate frontend local tasks and backend maintenance jobs.
@@ -13,6 +14,7 @@ export function useGlobalTasks() {
   const isAdminPath = useAdminMode();
   const { user } = useAuth();
   const isAdmin = isAdminPath && !!user;
+  const activeScreen = useUIStore((s) => s.activeScreen);
   
   // 1. Frontend Tasks (Real-time, transient)
   const { tasks: localTasks = [] } = useTasks();
@@ -37,7 +39,17 @@ export function useGlobalTasks() {
       }
     },
     enabled: isAdmin,
-    refetchInterval: isAdmin ? 5000 : false, // Poll every 5 seconds if active
+    refetchOnWindowFocus: false, // Prevent focus changes from hammering the server
+    refetchOnReconnect: false,   // Prevent network state changes from refetching
+    // Poll only if there is an active job or the user is on a tasks/logs/diagnostics screen
+    refetchInterval: (query) => {
+      if (!isAdmin) return false;
+      if (typeof document !== 'undefined' && document.hidden) return false;
+      const rJobs = query.state.data as any[];
+      const hasRunning = Array.isArray(rJobs) && rJobs.some(job => job && job.status === 'processing');
+      const isStatusScreen = ['tasks', 'diagnostics', 'diagnose', 'history_maintenance'].includes(activeScreen);
+      return (hasRunning || isStatusScreen) ? 5000 : false;
+    },
     staleTime: 4000, // Reuse caches up to 4 seconds to deduplicate simultaneous hooks
   });
 

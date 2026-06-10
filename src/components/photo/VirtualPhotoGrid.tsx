@@ -146,11 +146,12 @@ export const VirtualPhotoGrid = React.memo(({
   }
 
   if (photos.length === 0) {
+    const tAny = t as any;
     return (
       <div className="h-full w-full flex items-center justify-center p-8 bg-brand-bg">
         <EmptyState 
-          title={filters?.searchQuery ? t.noResultsFound || 'No results found' : t.noPhotos || 'No photos'} 
-          description={filters?.searchQuery ? t.tryDifferentKeywords || 'Try searching with different keywords.' : undefined}
+          title={filters?.searchQuery ? tAny.noResultsFound || 'No results found' : tAny.noPhotos || 'No photos'} 
+          description={filters?.searchQuery ? tAny.tryDifferentKeywords || 'Try searching with different keywords.' : undefined}
           icon={<PackageOpen className="w-16 h-16 text-slate-300" />}
         />
       </div>

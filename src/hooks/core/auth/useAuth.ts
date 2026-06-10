@@ -48,8 +48,12 @@ async function getUserWithTimeout(): Promise<User | null> {
   } as User;
 }
 
+let globalListenerInitialized = false;
+let activeQueryClient: any = null;
+
 export function useAuth() {
   const queryClient = useQueryClient();
+  activeQueryClient = queryClient;
   
   const [, , removePasscode] = useLocalStorage({
     key: 'ais_mock_auth_passcode',
@@ -67,36 +71,36 @@ export function useAuth() {
   });
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
-        if (session?.user) {
-          const u = session.user;
-          const mapped: User = {
-            id: u.id,
-            email: u.email || null,
-            display_name: u.user_metadata?.full_name || u.user_metadata?.name || u.email || null,
-            photo_url: u.user_metadata?.avatar_url || null,
-            avatar_url: u.user_metadata?.avatar_url || null,
-            email_verified: !!u.email_confirmed_at,
-          };
-          
-          // Only set the query data if the cached user has actually changed/is missing
-          const currentUser = queryClient.getQueryData<User>(['auth', 'user']);
-          if (!currentUser || currentUser.id !== mapped.id || currentUser.email !== mapped.email) {
-            queryClient.setQueryData(['auth', 'user'], mapped);
+    if (!globalListenerInitialized) {
+      globalListenerInitialized = true;
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (!activeQueryClient) return;
+        if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+          if (session?.user) {
+            const u = session.user;
+            const mapped: User = {
+              id: u.id,
+              email: u.email || null,
+              display_name: u.user_metadata?.full_name || u.user_metadata?.name || u.email || null,
+              photo_url: u.user_metadata?.avatar_url || null,
+              avatar_url: u.user_metadata?.avatar_url || null,
+              email_verified: !!u.email_confirmed_at,
+            };
+            
+            // Only set the query data if the cached user has actually changed/is missing
+            const currentUser = activeQueryClient.getQueryData(['auth', 'user']);
+            if (!currentUser || currentUser.id !== mapped.id || currentUser.email !== mapped.email) {
+              activeQueryClient.setQueryData(['auth', 'user'], mapped);
+            }
+          } else {
+            activeQueryClient.setQueryData(['auth', 'user'], null);
           }
-        } else {
-          queryClient.setQueryData(['auth', 'user'], null);
+        } else if (event === 'SIGNED_OUT') {
+          activeQueryClient.setQueryData(['auth', 'user'], null);
         }
-      } else if (event === 'SIGNED_OUT') {
-        queryClient.setQueryData(['auth', 'user'], null);
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [queryClient]);
+      });
+    }
+  }, []);
 
   return {
     user: user ?? null,

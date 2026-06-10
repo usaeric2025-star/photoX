@@ -19,6 +19,7 @@ export * from './useTags';
 export * from './useManufacturers';
 export * from './useAIAutoGrouping';
 export * from './useAIBatchAnalysis';
+export * from './usePhotoAIResult';
 export * from './useSyncEngine';
 export * from './useUrlFilters';
 export * from './usePhotoCount';

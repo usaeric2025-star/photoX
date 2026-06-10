@@ -67,6 +67,8 @@ export function useDiagnostics() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.json() as unknown as DiagnosticsReport;
     },
+    refetchOnWindowFocus: false, // Prevent background refetches on focus
+    refetchOnReconnect: false,   // Prevent background refetches on reconnect
     retry: false,
   });
 

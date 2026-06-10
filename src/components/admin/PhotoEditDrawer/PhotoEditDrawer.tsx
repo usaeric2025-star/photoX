@@ -10,6 +10,7 @@ import { useUIStore } from "../../../store";
 import { BasicInfoTab } from "./BasicInfoTab";
 import { OrgTab } from "./OrgTab";
 import { DetailsTab } from "./DetailsTab";
+import { AISourceTab } from "./AISourceTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs";
 import { translations } from "../../../lib/translations";
 
@@ -160,6 +161,12 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
                             >
                               {appLang === 'zh' ? '细节' : 'DETAIL'}
                             </TabsTrigger>
+                            <TabsTrigger
+                              value="ai-source"
+                              className="flex-1 rounded-xl text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 transition-all h-full"
+                            >
+                              {appLang === 'zh' ? 'AI原始数据' : 'AI RAW'}
+                            </TabsTrigger>
                           </TabsList>
                         </div>
                       </div>
@@ -180,6 +187,12 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
                         <TabsContent value="details">
                           <DetailsTab
                             form={form}
+                          />
+                        </TabsContent>
+
+                        <TabsContent value="ai-source">
+                          <AISourceTab
+                            photoId={editPhotoId || ''}
                           />
                         </TabsContent>
                       </div>

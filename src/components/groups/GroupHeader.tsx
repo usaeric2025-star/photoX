@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   ChevronLeft,
   Pencil,
   X,
   Edit2,
-  Copy
+  Copy,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { Photo, ProductGroup } from "../../types";
 import { Skeleton } from "../ui/Skeleton";
@@ -49,6 +51,10 @@ export function GroupHeader({
     );
 
   const clipboard = useClipboard();
+  const [isDescOpen, setIsDescOpen] = useState(false);
+  const [descLang, setDescLang] = useState<'zh' | 'en' | 'ms'>(
+    ['zh', 'en', 'ms'].includes(appLang) ? (appLang as 'zh' | 'en' | 'ms') : 'zh'
+  );
   const onBatchEdit = (ids: string[]) => update?.({ batchEditingIds: ids });
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
@@ -121,20 +127,80 @@ export function GroupHeader({
         </button>
       </div>
 
-      {(displayDesc || isAdminMode) && (
+      {/* Multi-lingual Collapsible Description Component */}
+      {(() => {
+        const getDescObj = () => {
+          const desc = groupData?.description;
+          if (!desc) return { zh: '', en: '', ms: '' };
+          if (typeof desc === 'string') {
+            try {
+              return JSON.parse(desc);
+            } catch {
+              return { zh: desc, en: desc, ms: desc };
+            }
+          }
+          return desc as any;
+        };
+        const descObj = getDescObj();
+        const descriptionText = (descObj[descLang] || '').trim();
+        const hasDescription = !!descriptionText || Object.values(descObj).some(v => !!String(v).trim());
+
+        if (!hasDescription) return null;
+
+        return (
+          <div className="px-4 sm:px-6 pb-4">
+            <div className="border border-slate-100 rounded-2xl bg-white shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-300">
+              <button
+                onClick={() => setIsDescOpen(!isDescOpen)}
+                className="w-full flex items-center justify-between px-4 py-3 text-left focus:outline-none hover:bg-slate-50/50 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold tracking-wider text-slate-500 uppercase">
+                    {appLang === 'zh' ? '系列故事与介绍' : appLang === 'ms' ? 'Kisah & Pengenalan Siri' : 'Series Story & Description'}
+                  </span>
+                </div>
+                <div className="text-slate-400 transition-transform duration-200">
+                  {isDescOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </div>
+              </button>
+
+              {isDescOpen && (
+                <div className="px-4 pb-4 pt-3 border-t border-slate-50 animate-in fade-in duration-200">
+                  <div className="flex gap-1.5 mb-3.5">
+                    {(['zh', 'en', 'ms'] as const).map(l => (
+                      <button
+                        key={l}
+                        type="button"
+                        onClick={() => setDescLang(l)}
+                        className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                          descLang === l 
+                            ? 'bg-slate-800 text-white shadow-sm scale-105' 
+                            : 'bg-slate-100/80 text-slate-500 hover:text-slate-700 hover:bg-slate-200/60'
+                        }`}
+                      >
+                        {l === 'zh' ? '中文' : l === 'en' ? 'EN' : 'MS'}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-[13px] sm:text-sm text-slate-600 leading-relaxed font-normal whitespace-pre-wrap font-sans">
+                    {descriptionText || (appLang === 'zh' ? '暂无该语言描述' : appLang === 'ms' ? 'Tiada deskripsi dalam bahasa ini' : 'No description in this language')}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
+      {isAdminMode && (
         <div className="px-4 sm:px-6 pb-4">
-          {displayDesc && (
-            <p className="text-sm text-slate-600 mb-3">{displayDesc}</p>
-          )}
-          {isAdminMode && (
-            <button
-              onClick={() => onBatchEdit(activeGroupPhotos.map(p => p.id))}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium transition-colors"
-            >
-              <Edit2 size={14} />
-              {l.batchEdit}
-            </button>
-          )}
+          <button
+            onClick={() => onBatchEdit(activeGroupPhotos.map(p => p.id))}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium transition-colors"
+          >
+            <Edit2 size={14} />
+            {l.batchEdit}
+          </button>
         </div>
       )}
     </div>

@@ -63,5 +63,30 @@ export async function executeAITask(options: AITaskOptions) {
     if (data.description) data.description = normalizeI18n(data.description);
   }
 
+  // 4. 保存原始識別源代碼與解析數據到 photo_ai_results 數據表中 (非阻塞)
+  if (metadata?.photoId) {
+    const photoId = metadata.photoId;
+    const rawResultStr = result.text || auditedResponse;
+    const parsedDataObj = data;
+    import("../supabase.js").then(async ({ getSupabaseAdmin }) => {
+        try {
+            const supabase = await getSupabaseAdmin();
+            const { error } = await supabase.from('photo_ai_results').upsert({
+                photo_id: photoId,
+                raw_result: rawResultStr,
+                parsed_data: parsedDataObj,
+                created_at: new Date().toISOString()
+            }, { onConflict: 'photo_id' });
+            if (error) {
+                console.warn(`[photo_ai_results-save-failed] ${error.message}`);
+            } else {
+                console.log(`[photo_ai_results-save-success] Saved raw output for photo ID: ${photoId}`);
+            }
+        } catch (err: any) {
+            console.warn(`[photo_ai_results-save-exception] ${err.message}`);
+        }
+    }).catch(err => console.warn(`[photo_ai_results-import-failed]`, err.message));
+  }
+
   return data;
 }

@@ -3,6 +3,29 @@ import { getSupabaseAdmin } from "../../lib/supabase.js";
 
 export const adminPhotos = new Hono();
 
+adminPhotos.get("/photo-ai-result/:photoId", async (c) => {
+    try {
+        const { photoId } = c.req.param();
+        if (!photoId) return c.json({ success: false, error: "photoId is required" }, 400);
+
+        const supabase = await getSupabaseAdmin();
+        const { data, error } = await supabase
+            .from("photo_ai_results")
+            .select("*")
+            .eq("photo_id", photoId)
+            .maybeSingle();
+
+        if (error) {
+            console.warn(`[get-photo-ai-result-failed]`, error.message);
+            return c.json({ success: true, data: null });
+        }
+
+        return c.json({ success: true, data });
+    } catch (e: unknown) {
+        return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown error' }, 500);
+    }
+});
+
 adminPhotos.post("/photo/update", async (c) => {
     try {
         const { id, updates } = await c.req.json();

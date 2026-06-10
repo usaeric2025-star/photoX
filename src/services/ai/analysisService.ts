@@ -23,7 +23,8 @@ export const analyzePhoto = async (
         name: parsed.name,
         description: parsed.description,
         category_id: parsed.category_id,
-        tagNames: parsed.new_tags || []
+        tagNames: parsed.new_tags || [],
+        raw_result: response.content
     });
   } catch (err: any) {
     console.error('Analysis failed', err);

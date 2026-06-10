@@ -66,6 +66,28 @@ export const analyzeAndSavePhoto = async (
     }
   }
 
+  // 5. 保存原始識別源代碼到 photo_ai_results 數據表中 (非阻塞)
+  if (photo.id && analysis.data) {
+    const rawResultText = (analysis.data as any).raw_result || JSON.stringify(analysis.data);
+    (async () => {
+        try {
+            const { error } = await supabase.from('photo_ai_results').upsert({
+                photo_id: photo.id,
+                raw_result: rawResultText,
+                parsed_data: analysis.data,
+                created_at: new Date().toISOString()
+            }, { onConflict: 'photo_id' });
+            if (error) {
+                console.warn(`[photo_ai_results-save-failed]`, error.message);
+            } else {
+                console.log(`[photo_ai_results-save-success] Saved client-side raw output for photo ID: ${photo.id}`);
+            }
+        } catch (e: any) {
+            console.warn(`[photo_ai_results-save-critical]`, e);
+        }
+    })();
+  }
+
   return ok(updateResult.data);
 };
 
@@ -78,17 +100,45 @@ export const autoGroupPhotos = async (
   settingsData: any
 ): Promise<AppResult<any>> => {
   try {
-    // 1. Load photo data
+    // 1. Prefetch metadata for single photo analysis
+    let dbCategories: any[] = [];
+    let dbTags: any[] = [];
+    try {
+      const [{ data: catsRes }, { data: tagsRes }] = await Promise.all([
+        supabase.from('categories').select('*'),
+        supabase.from('tags').select('*'),
+      ]);
+      if (catsRes) dbCategories = catsRes;
+      if (tagsRes) dbTags = tagsRes;
+    } catch (e) {
+      console.warn("[autoGroupPhotos] Prefetch metadata failed", e);
+    }
+
+    // 2. Load and analyze each photo first to guarantee database has filled records
     const { loadPhotosByIds } = await import('../photo/read');
     const photoRes = await loadPhotosByIds(photoIds);
     if (!photoRes.ok) return fail(photoRes.message);
     const photos = photoRes.data || [];
     
-    // 2. AI Analysis for the group
-    const analysis = await analyzeGroup(photos);
+    for (let i = 0; i < photos.length; i++) {
+      try {
+        console.log(`[autoGroupPhotos] Analyzing and saving single photo ${i+1}/${photos.length}: ${photos[i].id}`);
+        await analyzeAndSavePhoto(photos[i], settingsData, dbTags, dbCategories);
+      } catch (err) {
+        console.error(`[autoGroupPhotos] Single photo analysis failed for ${photos[i].id}:`, err);
+      }
+    }
+
+    // 3. Reload fully updated photo data with single details for high-fidelity group analysis
+    const updatedPhotoRes = await loadPhotosByIds(photoIds);
+    if (!updatedPhotoRes.ok) return fail(updatedPhotoRes.message);
+    const updatedPhotos = updatedPhotoRes.data || [];
+
+    // 4. AI Analysis for the group
+    const analysis = await analyzeGroup(updatedPhotos);
     const { name, description, colors, materials } = analysis;
     
-    // 3. Translations
+    // 5. Translations
     const translatedName = { ...name };
     const translatedDesc = { zh: description, en: description, ms: description };
 
@@ -108,7 +158,7 @@ export const autoGroupPhotos = async (
       console.warn('[autoGroupPhotos] Translations failed:', e);
     }
 
-    // 4. Create the group
+    // 6. Create the group
     const { groupPhotos } = await import('../group/commands');
     const result = await groupPhotos(photoIds, undefined, {
       name: translatedName,
@@ -210,13 +260,10 @@ export async function runBatchAnalysis({
     const p = targetPhotos[i];
     const currentProgress = ((i) / totalPhotosToProcess) * (groupId ? 70 : 100);
 
-    if (hasExistingInfo(p)) {
-      onProgress(currentProgress + (1/totalPhotosToProcess * (groupId ? 70 : 100)), `保留已有信息: ${i + 1}/${totalPhotosToProcess}`);
-      continue;
-    }
-
     try {
       onProgress(currentProgress, `正在分析照片 ${i + 1}/${totalPhotosToProcess}`);
+      // Pass a flag to force analysis if needed, or simply let it do its job. 
+      // User says: "Even if it has info, re-analyze it" since they clicked the batch trigger.
       const result = await analyzeAndSavePhoto(p, settings, dbTags, dbCategories);
       if (result.ok) successCount++;
     } catch (err: any) {

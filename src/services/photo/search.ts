@@ -13,7 +13,7 @@ export async function findPhotoIdsBySearch(q: string): Promise<string[]> {
         const res = await supabase.from('tags').select('id').ilike('name', `%${escapedQ}%`);
         if (res.error) {
           const jsonRes = await supabase.from('tags').select('id').or(`name->>zh.ilike.%${escapedQ}%`);
-          if (jsonRes.error) return { data: [] };
+          if (jsonRes.error) return { data: [], error: null };
           return jsonRes;
         }
         return res;
@@ -26,7 +26,7 @@ export async function findPhotoIdsBySearch(q: string): Promise<string[]> {
         const res = await supabase.from('categories').select('id').ilike('name', `%${escapedQ}%`);
         if (res.error) {
           const jsonRes = await supabase.from('categories').select('id').or(`name->>zh.ilike.%${escapedQ}%`);
-          if (jsonRes.error) return { data: [] };
+          if (jsonRes.error) return { data: [], error: null };
           return jsonRes;
         }
         return res;
