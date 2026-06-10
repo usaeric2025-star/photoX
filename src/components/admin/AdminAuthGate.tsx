@@ -14,6 +14,7 @@ export function AdminAuthGate({ children, isSyncing }: AdminAuthGateProps) {
   const [passcode] = useLocalStorage({
     key: 'ais_mock_auth_passcode',
     defaultValue: '',
+    getInitialValueInEffect: false,
   });
 
   const { user, isLoading: isAuthLoading, loginWithGoogle } = useAuth();

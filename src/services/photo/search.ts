@@ -23,17 +23,11 @@ export async function findPhotoIdsBySearch(q: string): Promise<string[]> {
     })(),
     (async () => {
       try {
-        // Assume name is JSONB
-        const res = await supabase.from('categories').select('id').or(`name->>zh.ilike.%${escapedQ}%,name->>en.ilike.%${escapedQ}%,name->>ms.ilike.%${escapedQ}%`);
+        const res = await supabase.from('categories').select('id').ilike('name', `%${escapedQ}%`);
         if (res.error) {
-          // Fallback if name is string or standard text columns exist
-          const fallback = await supabase.from('categories').select('id').or(`name.ilike.%${escapedQ}%,zh.ilike.%${escapedQ}%,en.ilike.%${escapedQ}%,ms.ilike.%${escapedQ}%`);
-          if (fallback.error) {
-            const basicFallback = await supabase.from('categories').select('id').ilike('name', `%${escapedQ}%`);
-            if (basicFallback.error) return { data: [] }; // Don't crash search if categories table fails
-            return basicFallback;
-          }
-          return fallback;
+          const jsonRes = await supabase.from('categories').select('id').or(`name->>zh.ilike.%${escapedQ}%`);
+          if (jsonRes.error) return { data: [] };
+          return jsonRes;
         }
         return res;
       } catch {
@@ -65,14 +59,10 @@ export async function findPhotoIdsBySearch(q: string): Promise<string[]> {
 
 export function buildSearchFilter(catIds: number[], photoIdsFromTags: string[], q: string) {
   let orSegments = [
-    `name->>zh.ilike.%${q}%`,
-    `name->>en.ilike.%${q}%`,
-    `name->>ms.ilike.%${q}%`,
+    `name.ilike.%${q}%`,
     `manual_code.ilike.%${q}%`,
     `model_number.ilike.%${q}%`,
-    `description->>zh.ilike.%${q}%`,
-    `description->>en.ilike.%${q}%`,
-    `description->>ms.ilike.%${q}%`,
+    `description.ilike.%${q}%`,
     `item_code.ilike.%${q}%`
   ];
 

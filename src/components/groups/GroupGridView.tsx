@@ -89,44 +89,42 @@ export function GroupGridView({
   const hasColors = groupData?.colors && groupData.colors.length > 0;
   const hasMaterials = groupData?.materials && groupData.materials.length > 0;
 
-  let header = null;
+  let groupDetailsCard = null;
   if (groupData && (hasDescription || hasColors || hasMaterials)) {
-    header = (
-      <div className="p-3 sm:p-6 pb-0">
-        <div className={`mb-8 p-6 rounded-[2rem] border-2 shadow-sm relative overflow-hidden group ${groupData.is_hidden ? 'bg-slate-50 border-slate-200' : 'bg-white border-indigo-50'}`}>
-          <div className={`absolute top-0 right-0 p-8 opacity-5 ${groupData.is_hidden ? 'text-slate-400' : 'text-indigo-600'}`}>
-            <Quote size={80} />
-          </div>
-          
+    groupDetailsCard = (
+      <div className="p-4 sm:p-6 mt-8">
+        <div className={`p-6 rounded-[2rem] border relative overflow-hidden group ${groupData.is_hidden ? 'bg-slate-50 border-slate-200' : 'bg-slate-50/50 border-slate-100'}`}>
           <div className="relative z-10 flex flex-col md:flex-row gap-8">
             <div className="flex-1 space-y-4">
-              <div>
-                  <h3 className={`text-[10px] font-black uppercase tracking-[0.2em] mb-1 ${groupData.is_hidden ? 'text-slate-400' : 'text-indigo-400'}`}>系列故事 / Series Story</h3>
-                  <p className="text-sm font-bold text-slate-600 leading-relaxed max-w-2xl whitespace-pre-wrap">
-                    {groupDisplayDescription || '无描述 / No description'}
-                  </p>
-              </div>
+              {hasDescription && (
+                <div>
+                    <h3 className={`text-[10px] font-black uppercase tracking-[0.2em] mb-2 ${groupData.is_hidden ? 'text-slate-400' : 'text-slate-500'}`}>系列故事 / Series Story</h3>
+                    <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
+                      {groupDisplayDescription}
+                    </p>
+                </div>
+              )}
               
-              <div className="flex flex-wrap gap-4 pt-2">
-                {groupData.materials && groupData.materials.length > 0 && (
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100">
-                      <Layers size={14} className={groupData.is_hidden ? 'text-slate-400' : 'text-indigo-400'} />
-                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
-                        {groupData.materials.join(' • ')}
+              {hasMaterials && (
+                <div className="flex flex-wrap gap-4 pt-2">
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-xl border border-slate-100 shadow-sm">
+                      <Layers size={14} className={groupData.is_hidden ? 'text-slate-400' : 'text-slate-400'} />
+                      <span className="text-[10px] font-black text-slate-600 uppercase tracking-wider">
+                        {groupData.materials?.join(' • ')}
                       </span>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
 
-            {groupData.colors && groupData.colors.length > 0 && (
+            {hasColors && (
               <div className="md:w-48 space-y-3">
-                <h3 className={`text-[10px] font-black uppercase tracking-[0.2em] ${groupData.is_hidden ? 'text-slate-400' : 'text-indigo-400'}`}>系列配比 / DNA Colors</h3>
+                <h3 className={`text-[10px] font-black uppercase tracking-[0.2em] ${groupData.is_hidden ? 'text-slate-400' : 'text-slate-500'}`}>系列配色 / Colors</h3>
                 <div className="flex flex-wrap gap-2">
-                    {groupData.colors.map((c, i) => (
+                    {groupData.colors?.map((c, i) => (
                       <div 
                         key={i} 
-                        className="w-8 h-8 rounded-lg border-2 border-white shadow-sm transition-transform hover:scale-125"
+                        className="w-8 h-8 rounded-lg border border-slate-200 shadow-sm"
                         style={{ backgroundColor: c }}
                         title={c}
                       />
@@ -181,15 +179,18 @@ export function GroupGridView({
         count={isLoading ? 12 : (groupData?.member_count && groupData.member_count > photos.length ? groupData.member_count : photos.length)}
         lanes={denseColumns}
         onEndReached={onEndReached}
-        header={header}
+        header={null}
         footer={
-          <GroupGridFooter 
-            isFetchingNextPage={!!isFetchingNextPage}
-            hasNextPage={!!hasNextPage}
-            hasPhotos={photos.length > 0}
-            textLoading={t.loading || '正在载入更多...'}
-            textEndOfList={t.endOfList || '已经到底啦'}
-          />
+          <div className="flex flex-col">
+            {groupDetailsCard}
+            <GroupGridFooter 
+              isFetchingNextPage={!!isFetchingNextPage}
+              hasNextPage={!!hasNextPage}
+              hasPhotos={photos.length > 0}
+              textLoading={t.loading || '正在载入更多...'}
+              textEndOfList={t.endOfList || '已经到底啦'}
+            />
+          </div>
         }
         renderItem={renderItem}
       />

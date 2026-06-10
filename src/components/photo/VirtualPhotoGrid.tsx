@@ -2,10 +2,12 @@ import React, { useEffect, useRef } from 'react';
 import { VirtualGrid, VirtualGridHandle } from '@/components/virtualizer/VirtualGrid';
 import { Photo, TranslationType, Category, Tag } from '../../types';
 import { useUIStore, useShallow, UIStoreState } from '@/store/useUIStore';
-import { useImagePreloader, useTranslation, useUrlFilters } from '@/hooks';
+import { useImagePreloader, useUrlFilters } from '@/hooks';
 import { translations } from '../../lib/translations';
 import { PhotoGridSkeleton } from './PhotoGridSkeleton';
 import { LoadMoreIndicator } from './LoadMoreIndicator';
+import { EmptyState } from '../ui/EmptyState';
+import { PackageOpen } from 'lucide-react';
 
 interface VirtualPhotoGridProps {
   photos: Photo[];
@@ -120,10 +122,6 @@ export const VirtualPhotoGrid = React.memo(({
   }, []);
 
   const estimatedRowHeight = React.useMemo(() => {
-    // Exact mathematical row height calculation to avoid virtua re-measure lag.
-    // Container horizontal padding is px-2 (16px total). Each lane has equal percentage width.
-    // Each nested photo item has p-1.5 (on mobile) or sm:p-2. PhotoCard is beautifully aspect-square,
-    // making row height exactly equal to one column segment width. Price, category labels are inside.
     const padding = 16;
     const cardWidth = (containerWidth - padding) / Math.max(1, columns);
     return Math.max(80, cardWidth); 
@@ -143,6 +141,18 @@ export const VirtualPhotoGrid = React.memo(({
     return (
       <div className="absolute inset-0 z-10 bg-brand-bg overflow-y-auto">
         <PhotoGridSkeleton columns={columns} />
+      </div>
+    );
+  }
+
+  if (photos.length === 0) {
+    return (
+      <div className="h-full w-full flex items-center justify-center p-8 bg-brand-bg">
+        <EmptyState 
+          title={filters?.searchQuery ? t.noResultsFound || 'No results found' : t.noPhotos || 'No photos'} 
+          description={filters?.searchQuery ? t.tryDifferentKeywords || 'Try searching with different keywords.' : undefined}
+          icon={<PackageOpen className="w-16 h-16 text-slate-300" />}
+        />
       </div>
     );
   }

@@ -119,7 +119,7 @@ export const PhotoCard = React.memo(({
     
   const handleGroupNavigate = (gid: string) => {
     const targetPath = isManagement ? `/admin/group/${gid}` : `/group/${gid}`;
-    navigate({ to: targetPath });
+    navigate({ to: targetPath, search: (prev: any) => prev });
   };
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {

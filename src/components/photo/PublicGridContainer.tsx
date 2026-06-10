@@ -72,15 +72,6 @@ export function PublicGridContainer({
 
   const gridPhotos = result?.gridPhotos || EMPTY_ARRAY;
 
-  const handleGroupClick = (gid: string, photoId?: string) => {
-    setPhotoId(null);
-    setGroupId(gid);                
-    // Only set activePhotoId (anchor) if search query is active
-    if (urlFilters.searchQuery && urlFilters.searchQuery.trim()) {
-        setPhotoId(photoId || null);
-    }
-  };
-
   useEffect(() => {
     const handleResize = () => {
       const isMobile = window.innerWidth <= 768;
