@@ -20,14 +20,14 @@ export async function runStorageAudit() {
         .select("id, image_url, name")
         .not("image_url", "is", null);
 
-    const dbRecords = (dbPhotos || []).map(p => ({
+    const dbRecords = (dbPhotos || []).map((p: any) => ({
         id: p.id,
         name: p.name,
         url: p.image_url,
         normalized: normalizeUrl(p.image_url)
     }));
 
-    const dbNormalizedSet = new Set(dbRecords.map(r => r.normalized));
+    const dbNormalizedSet = new Set(dbRecords.map((r: any) => r.normalized));
 
     const r2KeysSet = new Set<string>();
     let isTruncated = true;
@@ -79,7 +79,7 @@ export async function runStorageAudit() {
         }
     });
 
-    dbRecords.forEach(record => {
+    dbRecords.forEach((record: any) => {
         const urlObj = new URL(record.url);
         const key = urlObj.pathname.replace(/^\//, '');
         

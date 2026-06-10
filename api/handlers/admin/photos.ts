@@ -79,7 +79,7 @@ adminPhotos.post("/delete-photos", async (c) => {
         const bucketName = process.env.R2_BUCKET_NAME;
         if (bucketName) {
           const fileKeys = photosData
-            .map(p => {
+            .map((p: any) => {
               if (!p.image_url) return null;
               try {
                 const url = new URL(p.image_url);

@@ -83,9 +83,9 @@ ai.post("/analyze", async (c) => {
         const provider = new OpenRouterProvider({ apiKey, model });
         
         const context = {
-            categories: (catRef.data || []).map(c => ({ id: c.id, name: c.name, zh: c.zh })).slice(0, 50),
-            tags: (tagRef.data || []).map(t => ({ id: t.id, name: t.name, aliases: t.aliases })).slice(0, 100),
-            groups: (groupRef.data || []).map(g => ({ id: g.id, name: typeof g.name === 'object' ? g.name.zh : g.name })),
+            categories: (catRef.data || []).map((c: any) => ({ id: c.id, name: c.name, zh: c.zh })).slice(0, 50),
+            tags: (tagRef.data || []).map((t: any) => ({ id: t.id, name: t.name, aliases: t.aliases })).slice(0, 100),
+            groups: (groupRef.data || []).map((g: any) => ({ id: g.id, name: typeof g.name === 'object' ? g.name.zh : g.name })),
         };
         
         const prompt = AI_PROMPTS.ANALYZE_PHOTO(context);

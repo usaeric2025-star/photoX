@@ -4,7 +4,7 @@ import { getServerEnv } from "./shared/envSchema.js";
 import { logTraffic } from "./lib/trafficCapture.js";
 import { requireRealUser } from "./lib/auth.js";
 import { getSupabaseAdmin } from "./lib/supabase.js";
-import { admin } from "./handlers/admin/index.js";
+import adminApp from "./admin.js";
 import { ai } from "./handlers/ai.js";
 import { tags } from "./handlers/tags.js";
 import { storage } from "./handlers/storage.js";
@@ -72,7 +72,7 @@ app.use("/admin/*", async (c, next) => {
 });
 
 // --- API Routes (Distributed) ---
-app.route("/admin", admin);
+app.route("/admin", adminApp);
 app.route("/ai", ai);
 app.route("/tags", tags);
 app.route("/", storage);
@@ -80,7 +80,7 @@ app.route("/", storage);
 // --- Global Error Logging ---
 app.post("/log-error", async (c) => {
     try {
-        const body = await c.req.json();
+        const body = (await c.req.json()) as any;
         const supabase = await getSupabaseAdmin();
         const { error } = await supabase.from('system_logs').insert({
             level: body.metadata?.level || 'error',

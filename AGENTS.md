@@ -1035,4 +1035,11 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 - ✅ 數量限制（最多 3 個）只在 `syncPhotoTags` 和 `syncBatchPhotoTags` 執行。
 - ❌ 禁止在前端做限制。
 
+## Vercel Serverless 約束（鎖定，2026-06-10）
+
+- ✅ 使用 Hono `.route()` 合併多個 handler 到單一入口（如 `api/admin.ts`）
+- ✅ 入口檔案僅做路由掛載，禁止包含業務邏輯
+- ❌ 禁止為減少 Function 數量而合併業務代碼
+- ✅ 適配 Vercel Hobby 12 Functions 限制
+
 

@@ -8,12 +8,12 @@ adminSettings.get("/get-keys", async (c) => {
     try {
         const supabase = await getSupabaseAdmin();
         const { data: secrets } = await supabase.from('secrets').select('key, value');
-        const configuredProviders = secrets?.map(s => s.key) || [];
+        const configuredProviders = secrets?.map((s: any) => s.key) || [];
         
         const { data: settings } = await supabase.from('settings').select('api_key').eq('id', 1).maybeSingle();
         const hasOpenrouter = configuredProviders.includes('openrouter') || !!settings?.api_key;
         
-        const primarySecret = secrets?.find(s => s.key === 'PRIMARY_AI_PROVIDER');
+        const primarySecret = secrets?.find((s: any) => s.key === 'PRIMARY_AI_PROVIDER');
         
         return c.json({
             success: true,

@@ -29,12 +29,12 @@ storageMaintenance.get("/storage/audit", async (c) => {
             missing: ghosts.length,
             orphans: orphans.length,
             formatDistribution: { avif: 0, webp: 0, jpg: 0, other: 0 },
-            orphanedFiles: orphans.slice(0, 20).map(o => ({
+            orphanedFiles: orphans.slice(0, 20).map((o: any) => ({
                 key: o.key,
                 size: 0,
                 lastModified: new Date().toISOString()
             })),
-            missingReferences: ghosts.slice(0, 20).map(g => ({
+            missingReferences: ghosts.slice(0, 20).map((g: any) => ({
                 dbId: g.id,
                 expectedKey: g.url.split('/').pop() || ""
             }))
@@ -62,7 +62,7 @@ storageMaintenance.post("/storage/clean-orphans", async (c) => {
         return c.json({ success: true, count: 0 });
       }
 
-      const ids = orphans.map(o => o.id);
+      const ids = orphans.map((o: any) => o.id);
       const { error: delError } = await supabase
         .from("furniture_items")
         .delete()
@@ -87,7 +87,7 @@ storageMaintenance.post("/storage/clean", async (c) => {
       if (error) throw error;
 
       const dbFiles: Set<string> = new Set();
-      photos.forEach(p => {
+      photos.forEach((p: any) => {
         if (p.image_url?.includes("r2")) dbFiles.add(p.image_url.split("/").pop()!);
       });
 
@@ -98,7 +98,7 @@ storageMaintenance.post("/storage/clean", async (c) => {
           new ListObjectsV2Command({ Bucket: bucket, Prefix: "photox/public/", ContinuationToken: continuationToken }),
           { abortSignal: AbortSignal.timeout(6000) }
         );
-        list.Contents?.forEach(c => {
+        list.Contents?.forEach((c: any) => {
           if (c.Key) {
             const filename = c.Key.split("/").pop();
             if (filename && !dbFiles.has(filename)) r2FilesToClean.push(c.Key);
@@ -175,7 +175,7 @@ storageMaintenance.post("/storage/import-orphans", async (c) => {
         try {
           const { data: authUsers } = await supabase.auth.admin.listUsers();
           if (authUsers?.users && authUsers.users.length > 0) {
-            const firstUser = authUsers.users.find(u => u.id && u.id !== '00000000-0000-0000-0000-000000000000');
+            const firstUser = authUsers.users.find((u: any) => u.id && u.id !== '00000000-0000-0000-0000-000000000000');
             if (firstUser) userId = firstUser.id;
           }
         } catch (err) {}
@@ -215,7 +215,7 @@ storageMaintenance.post("/storage/import-orphans", async (c) => {
         if (!batch || batch.length === 0) {
           hasMore = false;
         } else {
-          batch.forEach(p => {
+          batch.forEach((p: any) => {
             if (p.image_url) dbUrls.add(normalizeUrl(p.image_url));
           });
           from += step;
