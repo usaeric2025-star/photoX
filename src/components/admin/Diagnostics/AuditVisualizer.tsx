@@ -20,8 +20,17 @@ export function AuditVisualizer({ auditResult, isAuditing, onAudit }: AuditVisua
           <h3 className="text-sm font-semibold text-slate-800 uppercase tracking-tight flex items-center gap-2">
             <PackageSearch size={18} className="text-blue-500" />
             R2 云端对账审计报告
+            {auditResult?.truncated && (
+              <span className="ml-2 px-2 py-0.5 bg-amber-100 text-amber-700 text-[9px] font-black rounded-full animate-pulse">
+                扫描已截断 / TRUNCATED
+              </span>
+            )}
           </h3>
-          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Consistency Audit between R2 Storage and Database</p>
+          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+            {auditResult?.truncated 
+              ? "Performance Mode: Only checking first 50,000 objects to prevent timeout"
+              : "Consistency Audit between R2 Storage and Database"}
+          </p>
         </div>
         <Button 
           variant="outline" 

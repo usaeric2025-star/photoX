@@ -2,9 +2,10 @@ import { handle } from "hono/vercel";
 
 /**
  * [VERCEL-ENTRY-SAFE]
- * Wraps the Hono app handle with an async try-catch to debug startup failures (e.g., missing modules).
+ * Wraps the Hono app handle with a named fetch export for Vercel.
+ * Avoids legacy Node signature issues and provides startup debugging.
  */
-export const fetch = async (req: Request, event: any) => {
+export const fetch = async (req: Request) => {
   try {
     const { app } = await import("./app.js");
     const handler = handle(app);
@@ -24,6 +25,4 @@ export const fetch = async (req: Request, event: any) => {
     });
   }
 };
-
-export default fetch;
 

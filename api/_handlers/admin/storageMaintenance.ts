@@ -22,23 +22,31 @@ const jobStore = new Map<string, MaintenanceJob>();
 
 storageMaintenance.get("/storage/audit", async (c) => {
     try {
-        const { healthy, ghosts, orphans } = await runStorageAudit();
+        const { healthy, ghosts, orphans, truncated } = await runStorageAudit();
 
         const auditData = { 
-            healthy: healthy.length,
-            missing: ghosts.length,
-            orphans: orphans.length,
-            formatDistribution: { avif: 0, webp: 0, jpg: 0, other: 0 },
-            orphanedFiles: orphans.slice(0, 20).map((o: any) => ({
-                key: o.key,
-                size: 0,
-                lastModified: new Date().toISOString()
-            })),
-            missingReferences: ghosts.slice(0, 20).map((g: any) => ({
-                dbId: g.id,
-                expectedKey: g.url.split('/').pop() || ""
-            }))
+            healthyCount: healthy.length,
+            ghosts: { 
+                count: ghosts.length, 
+                samples: ghosts.slice(0, 20).map((g: any) => ({
+                    id: g.id,
+                    name: g.name,
+                    expectedKey: g.url.split('/').pop() || ""
+                }))
+            },
+            orphans: { 
+                count: orphans.length, 
+                samples: orphans.slice(0, 20).map((o: any) => ({
+                    key: o.key,
+                    url: o.url
+                }))
+            },
+            truncated: truncated || false,
+            formatDistribution: { avif: 0, webp: 0, jpg: 0, other: 0 }
         };
+
+        // Strict schema check if needed
+        StorageAuditResSchema(auditData);
 
         return c.json({ success: true, data: auditData } as ApiResponse);
     } catch (e: any) {

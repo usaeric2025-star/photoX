@@ -8,15 +8,20 @@ import { storageMaintenance } from './_handlers/admin/storageMaintenance.js';
 import { adminBackfill } from './_handlers/admin/backfill.js';
 import { adminErrorEvents } from './_handlers/admin/error-events.js';
 
+import { handle } from "hono/vercel";
+
 const app = new Hono();
 
-app.route('/photos', adminPhotos);
+app.route('/', adminPhotos);
 app.route('/settings', adminSettings);
 app.route('/diagnose', adminDiagnose);
 app.route('/repair', adminRepair);
 app.route('/maintenance', adminMaintenance);
 app.route('/storage', storageMaintenance);
 app.route('/backfill', adminBackfill);
-app.route('/', adminErrorEvents);
+app.route('/events', adminErrorEvents);
+
+// ✅ Named fetch export for Vercel
+export const fetch = handle(app);
 
 export default app;

@@ -43,10 +43,22 @@ export const AIAnalyzePhotoV2ReqSchema = type({
 });
 
 export const StorageAuditResSchema = type({
-    orphans: "string[]",
-    redundant: "string[]",
-    total_db: "number",
-    total_r2: "number"
+    healthyCount: "number",
+    ghosts: {
+        count: "number",
+        samples: "object[]"
+    },
+    orphans: {
+        count: "number",
+        samples: "object[]"
+    },
+    "truncated?": "boolean",
+    "formatDistribution?": {
+        avif: "number",
+        webp: "number",
+        jpg: "number",
+        other: "number"
+    }
 });
 
 export const ImportOrphansReqSchema = type({

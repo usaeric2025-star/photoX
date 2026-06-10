@@ -13,7 +13,12 @@ export async function runStorageAudit() {
     const supabase = await getSupabaseAdmin();
     const r2 = await getR2Client();
     const bucket = serverEnv.R2_BUCKET_NAME!;
-    const publicUrlPrefix = (serverEnv.R2_PUBLIC_URL_PREFIX || "").replace(/\/$/, '');
+    const publicUrlPrefixRaw = serverEnv.R2_PUBLIC_URL_PREFIX || "";
+    const publicUrlPrefix = publicUrlPrefixRaw.replace(/\/$/, '');
+    const isPrefixSsl = publicUrlPrefix.startsWith('http');
+
+    const startTime = Date.now();
+    const MAX_RUN_TIME = 7500; // 7.5 seconds limit
 
     const { data: dbPhotos } = await supabase
         .from("furniture_items")
@@ -33,24 +38,30 @@ export async function runStorageAudit() {
     let isTruncated = true;
     let continuationToken: string | undefined;
 
-    while (isTruncated) {
+    while (isTruncated && (Date.now() - startTime < MAX_RUN_TIME)) {
         const listCommand = new ListObjectsV2Command({
             Bucket: bucket,
             Prefix: "photox/public/",
-            ContinuationToken: continuationToken
+            ContinuationToken: continuationToken,
+            MaxKeys: 1000
         });
-        const response = await r2.send(listCommand);
         
-        (response.Contents || []).forEach(obj => {
-            const key = obj.Key!;
-            const isThumb = /thumb|temp|thumbnail|_t\.webp/i.test(key);
-            if (!isThumb) {
-                r2KeysSet.add(key);
+        // Add abort signal to prevent hanging
+        const response = await r2.send(listCommand, { abortSignal: AbortSignal.timeout(3000) });
+        
+        if (response.Contents) {
+            for (const obj of response.Contents) {
+                const key = obj.Key!;
+                // Fast regex check
+                if (!/thumb|temp|thumbnail|_t\.webp/i.test(key)) {
+                    r2KeysSet.add(key);
+                }
             }
-        });
+        }
         
         isTruncated = response.IsTruncated || false;
         continuationToken = response.NextContinuationToken;
+        pagesProcessed++;
     }
 
     interface OrphanFile {
@@ -69,8 +80,9 @@ export async function runStorageAudit() {
     const ghosts: DbRecord[] = [];  
     const healthy: DbRecord[] = []; 
 
+    // Use pre-constructed string template for performance
     r2KeysSet.forEach(key => {
-        const publicUrl = publicUrlPrefix.startsWith('http') 
+        const publicUrl = isPrefixSsl 
           ? `${publicUrlPrefix}/${key}`
           : `https://${publicUrlPrefix}/${key}`;
         
@@ -80,15 +92,21 @@ export async function runStorageAudit() {
     });
 
     dbRecords.forEach((record: any) => {
-        const urlObj = new URL(record.url);
-        const key = urlObj.pathname.replace(/^\//, '');
-        
-        if (r2KeysSet.has(key)) {
-            healthy.push(record);
-        } else {
+        try {
+            const urlObj = new URL(record.url);
+            // Normalize path for lookup
+            const key = urlObj.pathname.replace(/^\//, '');
+            // Some keys might include the photox/public/ prefix or not depending on URL structure
+            // We check both for robustness
+            if (r2KeysSet.has(key) || r2KeysSet.has(`photox/public/${key}`)) {
+                healthy.push(record);
+            } else {
+                ghosts.push(record);
+            }
+        } catch (e) {
             ghosts.push(record);
         }
     });
 
-    return { healthy, ghosts, orphans };
+    return { healthy, ghosts, orphans, truncated: isTruncated };
 }
