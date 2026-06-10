@@ -125,7 +125,19 @@ export function AISecuritySection({
       } else {
         toast.error('保存失败');
       }
-    } catch { toast.error('网络请求异常'); }
+    } catch (e: any) { 
+      const errorMsg = e.error?.message || e.message || '网络请求异常';
+      toast.error(errorMsg); 
+      if (errorMsg.includes('secrets')) {
+        toast.info('检测到表缺失，请点击：[前往系统故障排查]', {
+          action: {
+            label: '立即处理',
+            onClick: () => (window.location.href = '/admin?tab=diagnostics')
+          },
+          duration: 10000
+        });
+      }
+    }
     finally {
       setIsSaving(null);
     }
@@ -139,12 +151,14 @@ export function AISecuritySection({
       }) as any;
       const data = await res.json();
       if (res.ok && data.success) {
-        toast.success(`首选引擎已切换为: ${provider}`);
+        toast.success(`首选引擎已切换为: ${provider === 'openrouter' ? 'Omni (OpenRouter)' : 'Agnes (Native Gemini)'}`);
         await fetchKeysStatus();
       } else {
         toast.error('切换失败: ' + (data.error || 'Unknown'));
       }
-    } catch { toast.error('切换失败'); }
+    } catch (e: any) {
+      toast.error('切换失败: ' + (e.message || '网络错误'));
+    }
     finally { setIsSavingProvider(null); }
   };
 
@@ -163,7 +177,7 @@ export function AISecuritySection({
               <span className="text-[8px] font-bold text-brand-navy/60 ml-2 uppercase">首选 / Primary</span>
               <div className="flex bg-slate-100 rounded-full p-0.5">
                 {['openrouter', 'gemini'].map(p => (
-                  <button
+                   <button
                     key={p}
                     onClick={() => saveProvider(p)}
                     disabled={isSavingProvider === true}
@@ -176,12 +190,12 @@ export function AISecuritySection({
            </div>
         </div>
 
-        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* OpenRouter Config */}
-          <div className="space-y-4 p-4 rounded-3xl bg-slate-50/50 border border-slate-100">
+          <div className="space-y-4 p-5 rounded-3xl bg-slate-50/50 border border-slate-100">
              <div className="flex items-center justify-between mb-4">
                 <div className="space-y-0.5">
-                   <h5 className="text-[10px] font-black text-brand-navy uppercase tracking-tight">OpenRouter (Primary)</h5>
+                   <h5 className="text-[10px] font-black text-brand-navy uppercase tracking-tight">Omni (OpenRouter)</h5>
                    <p className="text-[8px] text-brand-navy/40 font-bold uppercase tracking-widest">萬能引擎 / Multi-Model</p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -193,7 +207,7 @@ export function AISecuritySection({
                     }}
                     className={`text-[8px] font-black px-2 py-0.5 rounded-full transition-colors ${isEditingOpenRouter ? 'bg-slate-200 text-slate-600' : 'bg-brand-navy text-white'}`}
                   >
-                    {isEditingOpenRouter ? '取消' : '編輯'}
+                    {isEditingOpenRouter ? translations[appLang as keyof typeof translations]?.cancel || '取消' : translations[appLang as keyof typeof translations]?.edit || '編輯'}
                   </button>
                 </div>
              </div>
@@ -203,7 +217,7 @@ export function AISecuritySection({
                     <input
                         type={isEditingOpenRouter ? "text" : "password"}
                         placeholder="OpenRouter API Key..."
-                        className={`${inputClass} h-9 font-mono w-full ${isEditingOpenRouter ? 'bg-white border-brand-navy/20' : 'bg-slate-50'} pr-16`}
+                        className={`${inputClass} h-10 font-mono w-full ${isEditingOpenRouter ? 'bg-white border-brand-navy/20' : 'bg-slate-50'} pr-16`}
                         value={localOpenRouterKey}
                         onChange={(e) => setLocalOpenRouterKey(e.target.value)}
                         disabled={!isEditingOpenRouter}
@@ -213,34 +227,38 @@ export function AISecuritySection({
                       <button 
                            onClick={() => saveKey('openrouter', localOpenRouterKey)} 
                            disabled={isSaving === 'openrouter'}
-                           className="absolute right-1 top-1 py-1 px-4 bg-brand-gold text-brand-navy text-[10px] font-black rounded-lg shadow-sm hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                           className="absolute right-1 top-1 py-1 px-4 bg-brand-gold text-brand-navy text-[10px] font-black rounded-lg shadow-sm hover:translate-y-[-1px] active:translate-y-[1px] transition-all disabled:opacity-50"
                        >
                            {isSaving === 'openrouter' ? '..' : '保存'}
                        </button>
                     )}
                  </div>
 
-                 <div className="space-y-1">
-                    <label className="text-[8px] font-bold text-brand-navy/60 uppercase tracking-widest block">自定義模型 / Custom Model ID</label>
-                    <input
-                        type="text"
-                        placeholder="google/gemini-2.5-flash-lite..."
-                        className={`${inputClass} !h-8 text-[11px] w-full bg-white border-brand-navy/10 py-1.5`}
-                        value={customModel || ''}
-                        onChange={(e) => setSettingField('custom_model', e.target.value)}
-                    />
+                 <div className="grid grid-cols-2 gap-2">
+                    <div className="col-span-2 space-y-1">
+                      <label className="text-[8px] font-bold text-brand-navy/60 uppercase tracking-widest block">自定義模型 / Custom Model ID</label>
+                      <input
+                          type="text"
+                          placeholder="google/gemini-2.5-flash-lite..."
+                          className={`${inputClass} !h-8 text-[11px] w-full bg-white border-brand-navy/10 py-1.5`}
+                          value={customModel || ''}
+                          onChange={(e) => setSettingField('custom_model', e.target.value)}
+                      />
+                    </div>
+                    
+                    <button 
+                      onClick={() => handleTest('openrouter')} 
+                      disabled={isTesting !== null} 
+                      className={`w-full col-span-2 text-[9px] font-black p-2.5 rounded-xl border border-slate-200 flex items-center justify-center gap-2 transition-all ${isTesting === 'openrouter' ? 'bg-slate-100 text-slate-400' : 'bg-white hover:bg-slate-100 text-brand-navy hover:border-brand-navy/20 shadow-sm'}`}
+                    >
+                      {isTesting === 'openrouter' ? '測試連通性中...' : '测试連通性 / Test Connection'}
+                    </button>
                  </div>
-
-                 {!isEditingOpenRouter && (
-                   <button onClick={() => handleTest('openrouter')} disabled={isTesting !== null} className="w-full text-[10px] font-black p-2 bg-white hover:bg-slate-100 transition-colors rounded-xl border border-slate-200 flex items-center justify-center gap-2">
-                     {isTesting === 'openrouter' ? 'Testing...' : 'Test Connection'}
-                   </button>
-                 )}
              </div>
           </div>
 
           {/* Gemini Config (Agnes) */}
-          <div className="space-y-4 p-4 rounded-3xl bg-blue-50/30 border border-blue-100">
+          <div className="space-y-4 p-5 rounded-3xl bg-blue-50/30 border border-blue-100">
              <div className="flex items-center justify-between mb-4">
                 <div className="space-y-0.5">
                    <h5 className="text-[10px] font-black text-blue-900 uppercase tracking-tight">Agnes AI (Gemini)</h5>
@@ -255,17 +273,17 @@ export function AISecuritySection({
                     }}
                     className={`text-[8px] font-black px-2 py-0.5 rounded-full transition-colors ${isEditingGemini ? 'bg-slate-200 text-slate-600' : 'bg-blue-600 text-white'}`}
                   >
-                    {isEditingGemini ? '取消' : '編輯'}
+                    {isEditingGemini ? translations[appLang as keyof typeof translations]?.cancel || '取消' : translations[appLang as keyof typeof translations]?.edit || '編輯'}
                   </button>
                 </div>
              </div>
              
-             <div className="space-y-2">
+             <div className="space-y-3">
                  <div className="relative">
                     <input
                         type={isEditingGemini ? "text" : "password"}
                         placeholder="Gemini API Key..."
-                        className={`${inputClass} h-9 font-mono w-full ${isEditingGemini ? 'bg-white border-blue-200' : 'bg-blue-50/50'} pr-16`}
+                        className={`${inputClass} h-10 font-mono w-full ${isEditingGemini ? 'bg-white border-blue-300 ring-2 ring-blue-100' : 'bg-blue-50/50'} pr-16`}
                         value={localGeminiKey}
                         onChange={(e) => setLocalGeminiKey(e.target.value)}
                         disabled={!isEditingGemini}
@@ -274,22 +292,27 @@ export function AISecuritySection({
                       <button 
                            onClick={() => saveKey('gemini', localGeminiKey)} 
                            disabled={isSaving === 'gemini'}
-                           className="absolute right-1 top-1 py-1 px-4 bg-blue-600 text-white text-[10px] font-black rounded-lg shadow-sm hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                           className="absolute right-1 top-1 py-1 px-4 bg-blue-600 text-white text-[10px] font-black rounded-lg shadow-sm hover:translate-y-[-1px] active:translate-y-[1px] transition-all disabled:opacity-50"
                        >
                            {isSaving === 'gemini' ? '..' : '保存'}
                        </button>
                     )}
                  </div>
-                 {!isEditingGemini && (
-                   <button onClick={() => handleTest('gemini')} disabled={isTesting !== null} className="w-full text-[10px] font-black p-2 bg-white hover:bg-blue-50 transition-colors rounded-xl border border-blue-100 flex items-center justify-center gap-2 text-blue-700">
-                     {isTesting === 'gemini' ? 'Testing...' : 'Test Connection'}
-                   </button>
-                 )}
-                 <p className="text-[7px] text-blue-900/60 leading-tight"> 用于驱动 Agnes 智能助手及高性能视觉分析任务。</p>
+                 
+                 <button 
+                    onClick={() => handleTest('gemini')} 
+                    disabled={isTesting !== null} 
+                    className={`w-full text-[9px] font-black p-2.5 transition-all rounded-xl border flex items-center justify-center gap-2 ${isTesting === 'gemini' ? 'bg-blue-50 text-blue-300 border-blue-100' : 'bg-white hover:bg-blue-50 border-blue-200 text-blue-700 shadow-sm active:scale-95'}`}
+                 >
+                   {isTesting === 'gemini' ? '測試連通性中...' : '测试连通性 / Test Connection'}
+                 </button>
+                 
+                 <p className="text-[7px] text-blue-900/60 leading-tight"> 用于驱动 Agnes 智能助手及高性能视觉分析任务。原生接口具有更低的延迟与极高的请求上限。</p>
              </div>
           </div>
         </div>
       </div>
     </div>
+
   );
 }

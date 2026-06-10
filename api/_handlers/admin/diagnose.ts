@@ -35,7 +35,7 @@ adminDiagnose.get("/diagnose", async (c) => {
             severity: 'P0', 
             title: '缺失 secrets 数据表', 
             description: '系统需要 secrets 表来安全存储 API 密钥。当前该表似乎不存在，会导致 API 密钥无法保存或读取。', 
-            autoFixable: false 
+            autoFixable: true 
         });
       }
       

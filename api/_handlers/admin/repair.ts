@@ -12,6 +12,13 @@ adminRepair.post("/repair", async (c) => {
       const { issueId } = await c.req.json();
       const supabase = await getSupabaseAdmin();
       
+      if (issueId === 'missing_secrets_table') {
+          return c.json({ 
+              success: false, 
+              error: "Schema 限制：自動修復無法直接創建物理表。請前往 Supabase 儀表盤 -> SQL Editor，運行以下代碼：\n\nCREATE TABLE secrets (key TEXT PRIMARY KEY, value TEXT, updated_at TIMESTAMPTZ DEFAULT NOW());\nALTER TABLE secrets ENABLE ROW LEVEL SECURITY;\nCREATE POLICY \"Allow read for all\" ON secrets FOR SELECT USING (true);\nCREATE POLICY \"Allow write for admin\" ON secrets FOR ALL USING (true);" 
+          }, 400);
+      }
+
       if (issueId === 'member_count_mismatch') {
          const { data: photos } = await supabase.from("furniture_items").select("group_id");
          const counts = new Map<string, number>();

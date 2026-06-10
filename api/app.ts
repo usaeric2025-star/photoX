@@ -57,7 +57,8 @@ app.onError((err, c) => {
 // Auth Middleware for Administrative Routes
 app.use("/admin/*", async (c, next) => {
     // Whitelist public-accessible admin routes
-    if (c.req.path.endsWith('/admin/settings/get-keys')) {
+    const path = c.req.path;
+    if (path.includes('/admin/settings/get-keys')) {
         await next();
         return;
     }

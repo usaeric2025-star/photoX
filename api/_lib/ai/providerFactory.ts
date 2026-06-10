@@ -153,14 +153,18 @@ export async function getAIProvider(providerName: string, supabase: any, modelOv
 
     // Fallback logic for legacy settings table
     if (!apiKey) {
-        const { data: settings } = await supabase.from('settings').select('gemini_api_key').single();
-        if (settings?.gemini_api_key) {
-           // Basic heuristic to decide if the legacy key belongs to this provider
-           if (actualProvider === 'openrouter' && settings.gemini_api_key.startsWith('sk-or-')) {
-               apiKey = decrypt(settings.gemini_api_key);
-           } else if (actualProvider === 'gemini' && !settings.gemini_api_key.startsWith('sk-or-')) {
-               apiKey = decrypt(settings.gemini_api_key);
-           }
+        try {
+            const { data: settings, error: settingsErr } = await supabase.from('settings').select('gemini_api_key').maybeSingle();
+            if (!settingsErr && settings?.gemini_api_key) {
+               // Basic heuristic to decide if the legacy key belongs to this provider
+               if (actualProvider === 'openrouter' && settings.gemini_api_key.startsWith('sk-or-')) {
+                   apiKey = decrypt(settings.gemini_api_key);
+               } else if (actualProvider === 'gemini' && !settings.gemini_api_key.startsWith('sk-or-')) {
+                   apiKey = decrypt(settings.gemini_api_key);
+               }
+            }
+        } catch (e) {
+            console.warn("Legacy settings lookup failed:", e);
         }
     }
 

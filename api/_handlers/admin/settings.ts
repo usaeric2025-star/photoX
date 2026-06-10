@@ -21,15 +21,21 @@ adminSettings.get("/get-keys", async (c) => {
         
         // 2. Fallback to settings table (Legacy system) if not found in secrets
         if (!hasGemini || !hasOpenrouter) {
-            const { data: settings } = await supabase.from('settings').select('gemini_api_key').single();
-            if (settings?.gemini_api_key) {
-                // If it's the only one we have, we might treat it as gemini or openrouter depending on format
-                // In PhotoX, gemini_api_key was used for both via different logic
-                if (settings.gemini_api_key.startsWith('sk-or-')) {
-                   if (!hasOpenrouter) hasOpenrouter = true;
-                } else {
-                   if (!hasGemini) hasGemini = true;
+            try {
+                const { data: settings, error: settingsErr } = await supabase.from('settings').select('gemini_api_key').maybeSingle();
+                if (settingsErr) {
+                    console.warn("Settings table query warning:", settingsErr.message);
+                } else if (settings?.gemini_api_key) {
+                    // If it's the only one we have, we might treat it as gemini or openrouter depending on format
+                    // In PhotoX, gemini_api_key was used for both via different logic
+                    if (settings.gemini_api_key.startsWith('sk-or-')) {
+                       if (!hasOpenrouter) hasOpenrouter = true;
+                    } else {
+                       if (!hasGemini) hasGemini = true;
+                    }
                 }
+            } catch (innerErr: any) {
+                console.warn("Failed to query settings table fallback:", innerErr.message);
             }
         }
         
@@ -56,13 +62,23 @@ adminSettings.post("/save-key", async (c) => {
         const supabase = await getSupabaseAdmin();
         const encryptedKey = encrypt(apiKey);
         
+        // Ensure we handle the case where 'secrets' table might not exist yet
         const { error } = await supabase.from('secrets').upsert({ 
             key: provider, 
             value: encryptedKey,
             updated_at: new Date().toISOString()
         });
 
-        if (error) throw error;
+        if (error) {
+            console.error(`Database error saving secret (${provider}):`, error);
+            if (error.code === 'PGRST116' || error.message?.includes('does not exist')) {
+                return c.json({ 
+                    success: false, 
+                    error: "數據庫缺失 'secrets' 表。請前往「系統診斷」運行自動修復。" 
+                }, 500);
+            }
+            throw error;
+        }
         
         return c.json({ 
             success: true, 
@@ -70,7 +86,7 @@ adminSettings.post("/save-key", async (c) => {
         });
     } catch (e: any) {
         console.error("Save key failed:", e);
-        return c.json({ success: false, error: e.message }, 500);
+        return c.json({ success: false, error: e.message || "保存失敗，請重試" }, 500);
     }
 });
 
@@ -87,7 +103,17 @@ adminSettings.post("/save-provider", async (c) => {
             value: provider,
             updated_at: new Date().toISOString()
         });
-        if (error) throw error;
+        
+        if (error) {
+            console.error(`Database error saving provider preference:`, error);
+            if (error.code === 'PGRST116' || error.message?.includes('does not exist')) {
+                return c.json({ 
+                    success: false, 
+                    error: "數據庫缺失 'secrets' 表。請前往「系統診斷」運行自動修復。" 
+                }, 500);
+            }
+            throw error;
+        }
         
         return c.json({ success: true });
     } catch (e: any) {
