@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { AppSettings, Tag, Manufacturer, Category, User, Photo } from "@/types";
 import { DEFAULT_AI_MODEL } from '@/config/ai';
 import { useUIStore, useShallow } from "@/store/useUIStore";
-import { testAiConnection } from "@/services/gemini";
+import { testAiConnection } from "@/services/ai/commands";
 import { runHealthCheck } from "@/services/photo/healthFlow";
 import {
   normalizeTagName,

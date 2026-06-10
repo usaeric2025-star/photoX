@@ -81,7 +81,7 @@ export const runDiagnose = async () => {
       if (response.ok) {
         const res = await response.json();
         if (res?.success) {
-          hasAiKey = res.keysStatus?.agnes || res.keysStatus?.openrouter;
+          hasAiKey = res.keysStatus?.openrouter;
         }
       }
     } catch (e) {

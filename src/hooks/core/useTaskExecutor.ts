@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useTasks } from './useTasks';
-import { reportError } from '@/lib/errorReporter';
+import { logError } from '@/lib/error/errorLogger';
 import { toast } from 'sonner';
 import { extractErrorMessage } from '@/lib/error/errorHandler';
 import { hapticFeedback } from '@/lib/ui/haptics';
@@ -66,7 +66,7 @@ export function useTaskExecutor() {
       if (taskId) {
         updateTask(taskId, { status: 'error', progress: 100, message: `${name} 失败: ${errMsg}` });
       }
-      reportError(errMsg, name);
+      logError(error, { action: name, component: 'useTaskExecutor', kind: 'UNKNOWN' });
       
       if (options?.showErrorToast !== false) { // Always show errors
         toast.error(`${name} 失败: ${errMsg}`);

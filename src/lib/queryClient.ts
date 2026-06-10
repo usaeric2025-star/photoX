@@ -1,17 +1,17 @@
 import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query';
-import { reportError } from './errorTracker';
+import { logError } from './error/errorLogger';
 import { createIDBPersister } from './persister';
 
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => {
-      reportError(error, 'Query');
+      logError(error, { action: 'Query Failed', component: 'QueryClient', kind: 'NETWORK' });
     },
   }),
   mutationCache: new MutationCache({
     onError: (error) => {
       if (error instanceof Error && !error.message.includes('401')) {
-        reportError(error, 'Mutation');
+        logError(error, { action: 'Mutation Failed', component: 'QueryClient', kind: 'NETWORK' });
       }
     },
   }),

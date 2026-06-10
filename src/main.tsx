@@ -6,10 +6,8 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { Analytics } from '@vercel/analytics/react';
 import App from './App';
 import { TaskProvider } from '@/hooks';
-import { setupGlobalErrorHandling } from './lib/errorHandling';
-import { reportError } from './lib/errorTracker';
+import { logError } from './lib/error/errorLogger';
 import { queryClient, persister } from './lib/queryClient';
-import { setupDevErrorHelper } from './lib/devErrorHelper';
 import './index.css';
 import { clientEnv } from './shared/envSchema';
 
@@ -17,45 +15,44 @@ if (clientEnv.DEV) {
   import('./lib/resizeObserverPolyfill');
 }
 
-setupGlobalErrorHandling();
-setupDevErrorHelper();
+window.addEventListener('unhandledrejection', (event) => {
+  event.preventDefault();
+  const reason = event.reason;
+  const message = reason?.message || String(reason || '');
+  const isCancellation = 
+    reason?.name === 'AbortError' || 
+    /cancel|abort|precondition|offline|websocket|websocket|hmr/i.test(message) ||
+    message.includes('DOMException') ||
+    message.includes('user_cancel') ||
+    message.includes('Failed to fetch') ||
+    message.includes('NetworkError');
+    
+  if (isCancellation) {
+    if (clientEnv.DEV) console.warn('[Global] 捕获良性后台任务取消:', message);
+    return;
+  }
+  logError(reason || new Error(message || 'Unhandled Promise Rejection'), { action: 'Unhandled Rejection', component: 'Global', kind: 'UNKNOWN' });
+});
+
+window.addEventListener('error', (event) => {
+  logError(event.error || new Error(event.message || '全局运行时错误'), { action: 'Runtime Error', component: 'Global', kind: 'UNKNOWN' });
+});
 
 // 啟動每日維護 (P0: Robustness)
 import { dailyWorker } from './services/maintenance/DailyWorker';
 dailyWorker.checkAndRun();
 
-// 挂载全局错误捕获
-if (!clientEnv.DEV) {
-  window.addEventListener('error', (event) => {
-    (window as any).__LAST_ERROR__ = {
-      message: event.message,
-      filename: event.filename,
-      lineno: event.lineno,
-      colno: event.colno,
-      timestamp: new Date().toISOString(),
-    };
-  });
-  
-  window.addEventListener('unhandledrejection', (event) => {
-    (window as any).__LAST_ERROR__ = {
-      message: event.reason?.message || String(event.reason),
-      stack: event.reason?.stack,
-      timestamp: new Date().toISOString(),
-    };
-  });
-}
-
 const container = document.getElementById("root");
 if (container) {
   const root = createRoot(container, {
     onCaughtError: (error, errorInfo) => {
-      reportError(error, `Component: ${errorInfo.componentStack?.slice(0, 200)}`);
+      logError(error, { action: 'React Caught Error', component: errorInfo.componentStack?.slice(0, 200) || 'Unknown', kind: 'UNKNOWN' });
     },
     onUncaughtError: (error) => {
-      reportError(error, 'Uncaught');
+      logError(error, { action: 'React Uncaught Error', component: 'Root', kind: 'UNKNOWN' });
     },
     onRecoverableError: (error) => {
-      reportError(error, 'Recoverable');
+      logError(error, { action: 'React Recoverable Error', component: 'Root', kind: 'UNKNOWN' });
     },
   });
   

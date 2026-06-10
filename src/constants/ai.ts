@@ -16,12 +16,11 @@ Task: Inspect the furniture image/tables to extract comprehensive structured det
 
 【CONSTRAINTS】
 - Output raw JSON only.
-- NO Chinese characters EXCEPT in "description".
 - Use empty string "" or 0 or [] for missing data.
 
 Target Response Schema:
 {
-  "name": "Short English Name (e.g., 'Dining Set')",
+  "name": "简短的中文名称 (例如: '意式极简布艺沙发')",
   "category_id": "category-id-example",
   "dimensions": [
     { "label": "Model A Table", "value": 140, "unit": "cm" }

@@ -128,7 +128,7 @@ export function TagEditor({
           const isSelected = selectedTagIds.map(String).includes(String(tag.id));
           const isHot = hotTagsSet.has(String(tag.id));
           const isPinned = pinnedIds.includes(String(tag.id));
-          const isDisabled = false; // Removed the artificial 3-tag limit
+          const isDisabled = !isSelected && selectedTagIds.length >= 3;
 
           return (
             <TagButton
@@ -269,6 +269,7 @@ function TagButton({ tag, isSelected, isHot, isPinned, isDisabled, onToggle, onL
         onClick={(e) => {
           e.stopPropagation();
           e.preventDefault();
+          if (isDisabled) return;
           onToggle(tag);
         }}
         className={cn(

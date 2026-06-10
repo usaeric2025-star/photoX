@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import type { Photo } from '@/types';
-import { useTaskExecutor, useInvalidatePhotos, useSettings } from '@/hooks';
+import { useTaskExecutor, useInvalidatePhotos } from '@/hooks';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { groupKeys } from '@/lib/queryKeys';
@@ -10,7 +10,6 @@ export function useAIBatchAnalysis() {
   const { runTask } = useTaskExecutor();
   const invalidatePhotos = useInvalidatePhotos();
   const queryClient = useQueryClient();
-  const { settings } = useSettings();
 
   const handleBatchAiAnalyze = useCallback(async (targetPhotos: Photo[], groupId?: string) => {
     if (!targetPhotos || targetPhotos.length === 0) {
@@ -24,7 +23,6 @@ export function useAIBatchAnalysis() {
         const { successCount, groupSuccess } = await runBatchAnalysis({
             targetPhotos,
             groupId,
-            settings,
             onProgress: (progress, message) => updateProgress(progress, message)
         });
 
@@ -53,7 +51,7 @@ export function useAIBatchAnalysis() {
         if (taskId) updateProgress(100, finalMessage);
         return successCount;
     }, { showProgress: true, showSuccessToast: false });
-  }, [runTask, invalidatePhotos, queryClient, settings]);
+  }, [runTask, invalidatePhotos, queryClient]);
 
   return { handleBatchAiAnalyze };
 }

@@ -33,6 +33,16 @@ export interface AppSuccess<T> {
   data: T;
 }
 
+export interface StandardError {
+  code: string;
+  message: string;
+  context: string;
+  traceId?: string;
+  timestamp: number;
+  stack?: string;
+  details?: unknown;
+}
+
 export type AppResult<T> = AppSuccess<T> | AppError;
 export type Result<T, E = any> = AppResult<T>;
 

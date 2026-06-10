@@ -4,8 +4,8 @@ import { toast } from 'sonner';
 import { useUIStore } from '@/store/useUIStore';
 import { photoKeys, groupKeys } from '@/lib/queryKeys';
 import { autoGroupPhotos } from '@/services/ai/orchestration';
-import { analyzeSinglePhoto } from '@/services/gemini/groupAnalysis';
-import { useSettings } from '../settings';
+import { analyzeSinglePhotoDetail as analyzeSinglePhoto } from '@/services/ai/commands';
+
 
 export function useAIAutoGrouping() {
   const queryClient = useQueryClient();
@@ -13,12 +13,11 @@ export function useAIAutoGrouping() {
   const resetUI = useUIStore((s) => s.resetUI);
   const addProcessingIds = useUIStore((s) => s.addProcessingIds);
   const removeProcessingIds = useUIStore((s) => s.removeProcessingIds);
-  const { settings } = useSettings();
 
   const createAIGroup = async (photoIds: string[]) => {
     addProcessingIds(photoIds);
     try {
-        const result = await autoGroupPhotos(photoIds, settings);
+        const result = await autoGroupPhotos(photoIds);
         
         if (!result.ok) throw new Error(result.message);
         return result.data;

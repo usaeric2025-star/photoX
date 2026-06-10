@@ -12,14 +12,12 @@ adminSettings.get("/get-keys", async (c) => {
         
         const { data: settings } = await supabase.from('settings').select('api_key').eq('id', 1).maybeSingle();
         const hasOpenrouter = configuredProviders.includes('openrouter') || !!settings?.api_key;
-        const hasAgnes = configuredProviders.includes('agnes');
         
         const primarySecret = secrets?.find(s => s.key === 'PRIMARY_AI_PROVIDER');
         
         return c.json({
             success: true,
             keysStatus: { 
-                agnes: hasAgnes, 
                 openrouter: hasOpenrouter, 
                 primaryProvider: primarySecret?.value || 'openrouter' 
             }

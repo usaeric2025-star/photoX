@@ -1,5 +1,6 @@
-import { reportError } from '@/lib/errorReporter';
 import { supabase } from '@/lib/supabase';
+import { handleError } from '@/lib/error/errorHandler';
+import { clientEnv } from '@/shared/envSchema';
 
 export const ERROR_KINDS = {
   AUTH: 'AUTH',
@@ -32,9 +33,20 @@ interface EventContext {
 
 export const logError = async (error: Error | unknown, context: EventContext) => {
   const errorMsg = error instanceof Error ? error.message : String(error);
-  const stackTrace = error instanceof Error ? error.stack : null;
+  const stackTrace = error instanceof Error ? error.stack : undefined;
   
-  // Always report to backend for persistence
+  // 1. App Console dev logs
+  if (clientEnv.DEV) {
+    console.group(`%c🔴 [ERROR] ${context.action}`, `color: #ef4444; font-weight: bold;`);
+    console.error(error);
+    console.groupEnd();
+  }
+
+  // 2. Global UI Error Handler (Toast, etc)
+  const enrichedError = error instanceof Error ? error : new Error(errorMsg);
+  handleError(enrichedError, context.action, false);
+
+  // 3. Always report to backend for persistence (system_logs)
   try {
     await fetch('/api/log-error', {
       method: 'POST',
@@ -56,9 +68,6 @@ export const logError = async (error: Error | unknown, context: EventContext) =>
   } catch (e) {
     console.error('[ErrorLogger] Failed to send log to API:', e);
   }
-
-  // Also log locally and to secondary reporter
-  reportError(error as Error, context.action);
 };
 
 export const logResult = async (context: EventContext, type: LogLevel, data?: any) => {

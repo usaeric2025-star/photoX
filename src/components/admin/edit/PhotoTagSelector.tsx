@@ -56,6 +56,7 @@ export function PhotoTagSelector({
     if (cleanSelectedIds.includes(strId)) {
       onChange(cleanSelectedIds.filter((id) => id !== strId));
     } else {
+      if (cleanSelectedIds.length >= 3) return; // 遵循 3 个标签限制
       onChange([...cleanSelectedIds, strId]);
     }
   };

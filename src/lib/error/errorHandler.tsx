@@ -1,5 +1,5 @@
 import { toast } from 'sonner';
-import type { StandardError } from '@/lib/types/error';
+import type { StandardError } from '@/types/api';
 
 /**
  * Safely extracts a clean string message from any error object

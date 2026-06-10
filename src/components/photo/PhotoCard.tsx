@@ -3,7 +3,6 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLongPress } from '@/hooks/core/useLongPress';
 import { supabase } from '@/lib/supabase';
-import { reportError } from '@/lib/errorTracker';
 import { photoKeys } from '@/lib/queryKeys';
 import { getTranslatedCategoryName } from '@/lib/ui-helpers';
 import { useSearch, useNavigate } from '@tanstack/react-router';

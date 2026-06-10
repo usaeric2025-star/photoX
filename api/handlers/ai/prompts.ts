@@ -10,7 +10,7 @@ export const AI_PROMPTS = {
   ANALYZE_PHOTO: (context: { categories: any[]; tags: any[]; groups: any[] }) => `Role: Elite Furniture Data Analyst.
 Task: Inspect furniture image to extract comprehensive structured details.
 【CORE DATA EXTRACTION】
-- "name": {"zh": "...", "en": "...", "ms": "..."}
+- "name": "..." (Chinese name only)
 - "category_id": ${JSON.stringify(context.categories)}
 - "tag_ids": ${JSON.stringify(context.tags)}
 - "group_id": ${JSON.stringify(context.groups)}
@@ -19,7 +19,7 @@ Task: Inspect furniture image to extract comprehensive structured details.
 - "dimensions": [{ "label": string, "length": number, "width": number, "height": number, "unit": string }]
 
 【TRANSLATIONS】
-- "description": {"zh": "...", "en": "...", "ms": "..."}
+- "description": "..." (Chinese description only)
 
 Ensure raw JSON output.`,
 
@@ -34,18 +34,14 @@ ${photoDetails}
 
 【任务要求】:
 1. 分析单品之前的共同特征、设计风格（如北欧简约、现代轻奢、意式极简、美式复古等）、颜色搭配和材质关联。
-2. 为这个家具组合（合组）起一个高雅、得体、契合其设计风格的系列名称（包含中文、英文和马来文）。
-3. 编写一段家具系列/合组的整体设计描述（总结其设计灵感、核心卖点、搭配建议、适用场景等，长度150-300字）。
+2. 为这个家具组合（合组）起一个高雅、得体、契合其设计风格的中文系列名称。
+3. 编写一段家具系列/合组的整体设计中文描述（总结其设计灵感、核心卖点、搭配建议、适用场景等，长度150-300字）。
 4. 归档出这个系列的主要颜色（Colors）和材质（Materials）列表。
 
 【JSON输出结构】:
 必须只输出 RAW JSON，且符合以下格式（不要包裹任何 markdown 格式）：
 {
-  "name": {
-    "zh": "中文系列名称",
-    "en": "English Series Name",
-    "ms": "Malay Series Name"
-  },
+  "name": "中文系列名称",
   "description": "系列整体描述",
   "colors": ["颜色1", "颜色2"],
   "materials": ["材质1", "材质2"]

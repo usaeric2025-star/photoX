@@ -39,43 +39,9 @@ export abstract class BaseAIProvider {
     abstract chat(messages: any[]): Promise<AIResponse>;
 }
 
-export class AgnesProvider extends BaseAIProvider {
-    name = "agnes";
-    defaultModel = "agnes-2.0-flash";
-    baseUrl = "https://apihub.agnes-ai.com/v1";
-
-    async chat(messages: any[]): Promise<AIResponse> {
-        try {
-            const res = await this.fetchWithTimeout(`${this.baseUrl}/chat/completions`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.config.apiKey}`
-                },
-                body: JSON.stringify({
-                    model: this.config.model || this.defaultModel,
-                    messages,
-                    max_tokens: 1000
-                })
-            });
-
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error?.message || res.statusText);
-            
-            return {
-                success: true,
-                text: data.choices?.[0]?.message?.content,
-                usage: data.usage
-            };
-        } catch (e: any) {
-            return { success: false, error: e.message };
-        }
-    }
-}
-
 export class OpenRouterProvider extends BaseAIProvider {
     name = "openrouter";
-    defaultModel = "google/gemini-2.0-flash-exp:free";
+    defaultModel = "google/gemini-2.5-flash-lite";
     baseUrl = "https://openrouter.ai/api/v1";
 
     async chat(messages: any[]): Promise<AIResponse> {
@@ -118,28 +84,23 @@ export async function getAIProvider(providerName: string, supabase: any, modelOv
     } else {
         // 兼容舊版本
         const { data: settings } = await supabase.from('settings').select('api_key').eq('id', 1).maybeSingle();
-        if (providerName === 'openrouter' && settings?.api_key) {
+        if (settings?.api_key) {
             apiKey = settings.api_key;
         }
     }
 
-    if (!apiKey) throw new Error(`未配置 ${providerName} 的 API 密鑰`);
+    if (!apiKey) throw new Error(`未配置 API 密鑰`);
 
     let model = modelOverride;
     if (model && providerName === 'openrouter' && !model.includes('/')) {
         model = 'google/' + model;
     }
     if (!model) {
-        if (providerName === 'openrouter') {
-            model = await getModel(supabase);
-        } else {
-            model = 'agnes-2.0-flash';
-        }
+        model = await getModel(supabase);
     }
     
-    console.log(`[getAIProvider] Using provider: ${providerName}, model: ${model}`);  
+    console.log(`[getAIProvider] Using model: ${model}`);  
     const config = { apiKey, model };
 
-    if (providerName === 'agnes') return new AgnesProvider(config);
     return new OpenRouterProvider(config);
 }

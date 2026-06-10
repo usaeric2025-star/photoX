@@ -1,42 +1,26 @@
-import { analyzePhoto } from './analysisService';
+import { analyzePhoto } from './commands';
 import { translateFields } from './translationService';
 import { updatePhoto } from '../photo/commands';
 import { syncPhotoTags, loadTagsFromCloud, batchCreateTags } from '../tag';
 import { ok, fail } from '@/lib/utils/result';
 import { AppResult } from '@/types/api';
-import { analyzeGroup, analyzeSinglePhoto } from '../gemini/groupAnalysis';
-import { translateProductFields } from '../gemini/translationCore';
+import { analyzeGroup, analyzeSinglePhotoDetail as analyzeSinglePhoto } from './commands';
 import { updateGroup } from '../group/commands';
 import { withTimeout } from '@/lib/utils';
 
-// Newly added utility imports
 export * from './utils';
 import { hasExistingInfo } from './utils';
 import { supabase } from '@/lib/supabase';
 
-/**
- * Single Photo Orchestration: AI Analysis + Translation + Persistence
- */
 export const analyzeAndSavePhoto = async (
-  photo: any, 
-  settingsData: any, 
-  existingTags?: any[], 
-  existingCategories?: any[]
+  photo: any
 ): Promise<AppResult<any>> => {
-  const analysis = await analyzePhoto(
-      photo.image_url, 
-      existingCategories || [], 
-      existingTags || [], 
-      settingsData?.custom_model || '', 
-      settingsData?.gemini_api_key || ''
-  );
+  const analysis = await analyzePhoto(photo.id);
   if (!analysis.ok) return analysis;
 
-  // 2. 補全翻譯 (Model B: Agnes)
   const translation = await translateFields(analysis.data.name, analysis.data.description);
   if (!translation.ok) return translation;
 
-  // 3. 保存照片基礎信息
   const updateResult = await updatePhoto(photo.id, {
     name: {
       zh: analysis.data.name,
@@ -54,7 +38,6 @@ export const analyzeAndSavePhoto = async (
     return fail(updateResult.message);
   }
 
-  // 4. 標籤處理 (解決名稱到 ID 的轉換)
   const tagNames = analysis.data.tagNames || [];
   const tagIds = analysis.data.tagIds || [];
   
@@ -62,16 +45,14 @@ export const analyzeAndSavePhoto = async (
     const { resolveTagNamesToIds } = await import('../tag/completion');
     const { syncPhotoTags } = await import('../tag/commands');
     
-    // Resolve any new tag names
     let finalTagIds = [...tagIds];
     if (tagNames.length > 0) {
-       const resolveResult = await resolveTagNamesToIds(tagNames, existingTags);
+       const resolveResult = await resolveTagNamesToIds(tagNames, []);
        if (resolveResult.ok && resolveResult.data.length > 0) {
            finalTagIds = [...finalTagIds, ...resolveResult.data];
        }
     }
     
-    // Unique list of tags
     finalTagIds = Array.from(new Set(finalTagIds.map(String)));
     
     if (finalTagIds.length > 0) {
@@ -82,30 +63,10 @@ export const analyzeAndSavePhoto = async (
   return ok(updateResult.data);
 };
 
-/**
- * High-level orchestration for AI-powered auto grouping.
- * Combines photo analysis, group creation, and translations.
- */
 export const autoGroupPhotos = async (
-  photoIds: string[],
-  settingsData: any
+  photoIds: string[]
 ): Promise<AppResult<any>> => {
   try {
-    // 1. Prefetch metadata for single photo analysis
-    let dbCategories: any[] = [];
-    let dbTags: any[] = [];
-    try {
-      const [{ data: catsRes }, { data: tagsRes }] = await Promise.all([
-        supabase.from('categories').select('*'),
-        supabase.from('tags').select('*'),
-      ]);
-      if (catsRes) dbCategories = catsRes;
-      if (tagsRes) dbTags = tagsRes;
-    } catch (e) {
-      console.warn("[autoGroupPhotos] Prefetch metadata failed", e);
-    }
-
-    // 2. Load and analyze each photo first to guarantee database has filled records
     const { loadPhotosByIds } = await import('../photo/read');
     const photoRes = await loadPhotosByIds(photoIds);
     if (!photoRes.ok) return fail(photoRes.message);
@@ -114,42 +75,34 @@ export const autoGroupPhotos = async (
     for (let i = 0; i < photos.length; i++) {
       try {
         console.log(`[autoGroupPhotos] Analyzing and saving single photo ${i+1}/${photos.length}: ${photos[i].id}`);
-        await analyzeAndSavePhoto(photos[i], settingsData, dbTags, dbCategories);
+        await analyzeAndSavePhoto(photos[i]);
       } catch (err) {
         console.error(`[autoGroupPhotos] Single photo analysis failed for ${photos[i].id}:`, err);
       }
     }
 
-    // 3. Reload fully updated photo data with single details for high-fidelity group analysis
     const updatedPhotoRes = await loadPhotosByIds(photoIds);
     if (!updatedPhotoRes.ok) return fail(updatedPhotoRes.message);
     const updatedPhotos = updatedPhotoRes.data || [];
 
-    // 4. AI Analysis for the group
     const analysis = await analyzeGroup(updatedPhotos);
     const { name, description, colors, materials } = analysis;
     
-    // 5. Translations
-    const translatedName = { ...name };
-    const translatedDesc = { zh: description, en: description, ms: description };
+    const translatedName = { zh: name, en: '', ms: '' };
+    const translatedDesc = { zh: description, en: '', ms: '' };
 
     try {
-      const pTranslations = await translateProductFields({
-        name: name.zh,
-        description,
-        colors,
-        materials
-      }, settingsData?.gemini_api_key || '', settingsData?.custom_model || '');
-
-      translatedName.en = pTranslations.name_en || name.en || name.zh;
-      translatedName.ms = pTranslations.name_ms || name.ms || name.zh;
-      translatedDesc.en = pTranslations.description_en || description;
-      translatedDesc.ms = pTranslations.description_ms || description;
+      const pTranslations = await translateFields(name, description);
+      if (pTranslations.ok) {
+        translatedName.en = pTranslations.data.name.en;
+        translatedName.ms = pTranslations.data.name.ms;
+        translatedDesc.en = pTranslations.data.description.en;
+        translatedDesc.ms = pTranslations.data.description.ms;
+      }
     } catch (e) {
       console.warn('[autoGroupPhotos] Translations failed:', e);
     }
 
-    // 6. Create the group
     const { groupPhotos } = await import('../group/commands');
     const result = await groupPhotos(photoIds, undefined, {
       name: translatedName,
@@ -163,43 +116,29 @@ export const autoGroupPhotos = async (
   }
 };
 
-/**
- * Group Orchestration: Analysis + Translation + Persistence
- */
 export const analyzeAndSaveGroup = async (
   groupId: string,
-  photos: any[],
-  settingsData: any
+  photos: any[]
 ): Promise<AppResult<any>> => {
-  // 1. Group Summary Analysis
   try {
     const analysis = await withTimeout(analyzeGroup(photos), 120000); // 120s
     const { name, description, colors, materials } = analysis;
 
-    const finalName = typeof name === 'object' ? name : { zh: name, en: '', ms: '' };
-    const finalDescription = typeof description === 'object' ? description : { zh: description, en: '', ms: '' };
-
-    // 2. Translation
-    let translatedName = { ...finalName };
-    let translatedDesc = { ...finalDescription };
+    let translatedName = { zh: name, en: '', ms: '' };
+    let translatedDesc = { zh: description, en: '', ms: '' };
     
     try {
-      const pTranslations = await translateProductFields({
-        name: String(finalName.zh || finalName || ''),
-        description: String(finalDescription.zh || finalDescription || ''),
-        colors,
-        materials
-      }, settingsData?.gemini_api_key || '', settingsData?.custom_model || '');
-
-      translatedName.en = pTranslations.name_en || translatedName.en || translatedName.zh;
-      translatedName.ms = pTranslations.name_ms || translatedName.ms || translatedName.zh;
-      translatedDesc.en = pTranslations.description_en || translatedDesc.en || translatedDesc.zh;
-      translatedDesc.ms = pTranslations.description_ms || translatedDesc.ms || translatedDesc.zh;
+      const pTranslations = await translateFields(name, description);
+      if (pTranslations.ok) {
+        translatedName.en = pTranslations.data.name.en;
+        translatedName.ms = pTranslations.data.name.ms;
+        translatedDesc.en = pTranslations.data.description.en;
+        translatedDesc.ms = pTranslations.data.description.ms;
+      }
     } catch (transErr) {
       console.warn('[AI Group] 翻譯跳過:', transErr);
     }
 
-    // 3. Persist
     const res = await updateGroup(groupId, {
       name: translatedName as any,
       description: translatedDesc as any,
@@ -214,64 +153,40 @@ export const analyzeAndSaveGroup = async (
   }
 };
 
-/**
- * Batch Analysis Orchestration
- * Moves logic out of hooks for better testability and cleaner components.
- */
 export async function runBatchAnalysis({
   targetPhotos,
   groupId,
-  settings,
   onProgress
 }: {
   targetPhotos: any[];
   groupId?: string;
-  settings: any;
   onProgress: (progress: number, message?: string) => void;
 }) {
   const totalPhotosToProcess = targetPhotos.length;
   let successCount = 0;
 
-  // 1. Prefetch metadata once
-  let dbCategories: any[] = [];
-  let dbTags: any[] = [];
-  try {
-    const [{ data: catsRes }, { data: tagsRes }] = await Promise.all([
-      supabase.from('categories').select('*'),
-      supabase.from('tags').select('*'),
-    ]);
-    if (catsRes) dbCategories = catsRes;
-    if (tagsRes) dbTags = tagsRes;
-  } catch (e) {
-    console.warn("[AI Batch] Prefetch metadata failed", e);
-  }
-
-  // 2. Process photos
   for (let i = 0; i < targetPhotos.length; i++) {
     const p = targetPhotos[i];
     const currentProgress = ((i) / totalPhotosToProcess) * (groupId ? 70 : 100);
 
     try {
       onProgress(currentProgress, `正在分析照片 ${i + 1}/${totalPhotosToProcess}`);
-      // Pass a flag to force analysis if needed, or simply let it do its job. 
-      // User says: "Even if it has info, re-analyze it" since they clicked the batch trigger.
-      const result = await analyzeAndSavePhoto(p, settings, dbTags, dbCategories);
+      const result = await analyzeAndSavePhoto(p);
       if (result.ok) successCount++;
     } catch (err: any) {
       console.error(`[AI Batch] Photo ${p.id} error:`, err);
     }
   }
 
-  // 3. Optional Group Analysis
   let groupSuccess = false;
   if (groupId) {
-    onProgress(75, '正在總結整個合組...');
+    onProgress(75, '正在總結整个合组...');
     try {
       const { loadPhotosByIds } = await import('../photo/read');
       const res = await loadPhotosByIds(targetPhotos.map(p => p.id));
       if (res.ok && res.data) {
-        onProgress(85, '生成合組名稱與描述...');
-        const groupRes = await analyzeAndSaveGroup(groupId, res.data, settings);
+        onProgress(85, '生成合组名称与描述...');
+        const groupRes = await analyzeAndSaveGroup(groupId, res.data);
         if (groupRes.ok) groupSuccess = true;
       }
     } catch (e) {

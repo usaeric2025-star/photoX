@@ -3,7 +3,7 @@ import { type } from 'arktype';
 import { getServerEnv } from '../shared/envSchema.js';
 import { getSupabaseAdmin } from '../lib/supabase.js';
 import { getModel } from '../lib/ai/modelHelper.js';
-import { getAIProvider, AgnesProvider, OpenRouterProvider } from '../lib/ai/providerFactory.js';
+import { getAIProvider, OpenRouterProvider } from '../lib/ai/providerFactory.js';
 import { getTaskConfig, AITask } from '../lib/ai/taskRouter.js';
 import { decrypt } from '../lib/encryption.js';
 import { executeAITask } from '../lib/ai/executor.js';
@@ -140,7 +140,7 @@ ai.post("/translate", async (c) => {
 
       const { customModel, promptText } = check;
       const supabase = await getSupabaseAdmin();
-      const model = customModel || await getModel(supabase);
+      const model = customModel || await getModel(supabase) || "gemini-2.5-flash-lite";
       const provider = await getAIProvider('openrouter', supabase, model);
 
       const data = await executeAITask({

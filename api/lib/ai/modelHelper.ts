@@ -1,6 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 
-export const DEFAULT_OPENROUTER_MODEL = 'google/gemini-2.5-flash-pro'; // Just as a literal fallback constant if absolute needed, but we rely on settings mostly.
+export const DEFAULT_OPENROUTER_MODEL = 'google/gemini-2.5-flash-lite'; // Just as a literal fallback constant if absolute needed, but we rely on settings mostly.
 
 /**
  * Gets the configured AI model from database settings, fallback to default if not found
