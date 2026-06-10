@@ -110,6 +110,8 @@ export function AdminHeader({}: AdminHeaderProps) {
   
         {/* 右侧：管理/登录入口 */}
         <div className="flex items-center gap-0.5 sm:gap-2 flex-nowrap shrink-0">
+          <LanguageSwitcher mode="dropdown" />
+          
           {/* 选择模式/多选 按钮 */}
           <button
             onClick={() => update({ isMultiSelect: !isMultiSelect })}

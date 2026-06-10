@@ -8,6 +8,7 @@ import { translations } from '../lib/translations';
 import { getPhotoDisplayName } from '../lib/ui-helpers';
 import { GroupDetailSkeleton } from './groups/GroupDetailSkeleton';
 import { Skeleton } from './ui/Skeleton';
+import { CollapsibleDescription } from './groups/CollapsibleDescription';
 import { GroupGridView } from './groups/GroupGridView';
 import { GroupAdminShell } from './groups/GroupAdminShell';
 import { useAdminActions } from '@/hooks/admin/useAdminActions';
@@ -196,14 +197,10 @@ export function GroupDetailPage({}: GroupDetailPageProps) {
                   
                   {/* Public Description Rendering */}
                   {groupData?.description && (
-                    <div className="px-4 sm:px-6 py-4 border-b border-slate-50 bg-slate-50/30">
-                      <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
-                         {lang === 'zh' ? '系列故事与介绍' : lang === 'ms' ? 'Kisah & Pengenalan Siri' : 'Series Story & Description'}
-                      </h3>
-                      <div className="text-[13px] sm:text-sm text-slate-600 leading-relaxed font-normal whitespace-pre-wrap font-sans">
-                         {getSafeText(groupData.description, lang as any) || getSafeText(groupData.description, 'zh')}
-                      </div>
-                    </div>
+                    <CollapsibleDescription 
+                      title={lang === 'zh' ? '系列故事与介绍' : lang === 'ms' ? 'Kisah & Pengenalan Siri' : 'Series Story & Description'}
+                      description={getSafeText(groupData.description, lang as any) || getSafeText(groupData.description, 'zh')}
+                    />
                   )}
 
                   <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="animate-spin text-slate-400" /></div>}>

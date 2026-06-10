@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Lightbox from "yet-another-react-lightbox";
+import Lightbox, { IconButton } from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/thumbnails.css";
 import "yet-another-react-lightbox/plugins/captions.css";
@@ -64,79 +64,59 @@ export const LightboxCore = ({
       }}
       slides={slides}
       plugins={LIGHTBOX_PLUGINS.filter(p => p.name !== 'captions')}
+      toolbar={{
+        buttons: [
+          showAi && (
+            <IconButton
+              key="ai"
+              label="AI 分析"
+              icon={Sparkles}
+              onClick={() => { const p = photos[index]; if (p) onAiAnalyze?.(p); }}
+              className="text-indigo-400 hover:text-indigo-300"
+            />
+          ),
+          showSetCover && (
+            <IconButton
+              key="cover"
+              label="设为封面"
+              icon={Crown}
+              onClick={() => { const p = photos[index]; if (p) onSetCover?.(p); }}
+              className="text-amber-400 hover:text-amber-300"
+            />
+          ),
+          showEdit && (
+            <IconButton
+              key="edit"
+              label="编辑"
+              icon={Pencil}
+              onClick={() => { const p = photos[index]; if (p) onEdit?.(p); }}
+            />
+          ),
+          showDelete && (
+            <IconButton
+              key="delete"
+              label="删除"
+              icon={Trash2}
+              onClick={() => { const p = photos[index]; if (p) onDelete?.(p); }}
+              className="text-red-400 hover:text-red-300"
+            />
+          ),
+          <IconButton
+            key="download"
+            label="下载"
+            icon={Download}
+            onClick={() => { const p = photos[index]; if (p) downloadPhotoAsJpeg(p.image_url); }}
+          />,
+          "zoom",
+          "close",
+        ].filter(Boolean) as any[]
+      }}
       render={{
         // Custom interactive controls overlaid on lightbox
         controls: () => (
           <>
             <div className="absolute top-4 left-4 z-50 text-white font-medium bg-black/50 px-3 py-1 rounded-full text-[10px] sm:text-sm backdrop-blur-sm shadow-lg pointer-events-none">
                  {index + 1} / {totalCount || slides.length}
-            </div>
-            
-            {/* Top Right Tool Area - Shifted left to avoid Close button */}
-            <div className="absolute top-2 right-12 sm:right-16 z-50 flex items-center gap-1 sm:gap-2 p-2 pointer-events-auto">
-              {showAi && (
-                <button
-                  onClick={() => {
-                    const photo = photos[index];
-                    if (photo) onAiAnalyze?.(photo);
-                  }}
-                  className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-indigo-500/80 hover:bg-indigo-600 shadow-[0_0_15px_rgba(99,102,241,0.5)] text-white transition-all border border-indigo-300"
-                  aria-label="AI 分析"
-                  title="AI 分析"
-                >
-                  <Sparkles size={16} />
-                </button>
-              )}
-              {showSetCover && (
-                <button
-                  onClick={() => {
-                    const photo = photos[index];
-                    if (photo) onSetCover?.(photo);
-                  }}
-                  className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-black/40 hover:bg-black/60 text-amber-400 transition-all border border-white/10"
-                  aria-label="设为封面"
-                  title="设为封面"
-                >
-                  <Crown size={16} className="fill-current" />
-                </button>
-              )}
-              {showEdit && (
-                <button
-                  onClick={() => {
-                    const photo = photos[index];
-                    if (photo) onEdit?.(photo);
-                  }}
-                  className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-black/40 hover:bg-black/60 text-white transition-all border border-white/10"
-                  aria-label="编辑"
-                  title="编辑"
-                >
-                  <Pencil size={16} />
-                </button>
-              )}
-              {showDelete && (
-                <button
-                  onClick={() => {
-                    const photo = photos[index];
-                    if (photo) onDelete?.(photo);
-                  }}
-                  className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-black/40 hover:bg-black/60 text-red-400 transition-all border border-white/10"
-                  aria-label="删除"
-                  title="删除"
-                >
-                  <Trash2 size={16} />
-                </button>
-              )}
-              <button
-                onClick={() => {
-                  const photo = photos[index];
-                  if (photo) downloadPhotoAsJpeg(photo.image_url);
-                }}
-                className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-black/40 hover:bg-black/60 text-white transition-all border border-white/10"
-                aria-label="下载"
-                title="下载"
-              >
-                <Download size={16} />
-              </button>
             </div>
 
             {renderSidebar?.()}

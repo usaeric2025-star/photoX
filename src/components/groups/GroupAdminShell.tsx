@@ -15,6 +15,8 @@ import { useAdminActions } from "@/hooks/admin/useAdminActions";
 import { useUIStore, useShallow } from "@/store/useUIStore";
 import { translations } from "../../lib/translations";
 import { Plus, Settings2, MoreVertical, Pencil, Sparkles, FolderMinus } from "lucide-react";
+import { CollapsibleDescription } from "./CollapsibleDescription";
+import { getSafeText } from "@/lib/ai/safeText";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -164,6 +166,13 @@ export function GroupAdminShell() {
                   isGroupDataLoading={isGroupDataLoading}
                   activeGroupPhotos={activeGroupPhotos}
                 />
+
+                {groupData?.description && (
+                  <CollapsibleDescription 
+                    title={appLang === 'zh' ? '系列故事与介绍' : appLang === 'ms' ? 'Kisah & Pengenalan Siri' : 'Series Story & Description'}
+                    description={getSafeText(groupData.description, appLang as any) || getSafeText(groupData.description, 'zh')}
+                  />
+                )}
 
                 <GroupGridView
                   virtualGridRef={virtualGridRef}
