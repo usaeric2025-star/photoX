@@ -21,8 +21,8 @@ export const serverEnvSchema = type({
   "R2_BUCKET_NAME?": "string",
   "R2_PUBLIC_URL_PREFIX?": "string",
 
-  // Gemini AI
-  "GEMINI_API_KEY?": "string",
+  // Agnes AI
+  "AGNES_API_KEY?": "string",
   "ENCRYPTION_KEY?": "string",
   
   // Other flags
@@ -34,7 +34,7 @@ export const serverEnvSchema = type({
 export type ServerEnv = typeof serverEnvSchema.infer;
 
 const aiDebugHints: Record<string, string> = {
-  "GEMINI_API_KEY": "Google AI Studio API Key for photo analysis.",
+  "AGNES_API_KEY": "Agnes AI API Key for photo analysis.",
   "R2_ACCESS_KEY_ID": "Cloudflare R2 Access Key ID",
   "R2_SECRET_ACCESS_KEY": "Cloudflare R2 Secret Access Key",
 };

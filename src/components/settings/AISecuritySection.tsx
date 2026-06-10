@@ -30,19 +30,19 @@ export function AISecuritySection({
   const appLang = useUIStore(s => s.appLang);
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
-  const [keysStatus, setKeysStatus] = React.useState({ openrouter: false, gemini: false, primaryProvider: 'openrouter' });
+  const [keysStatus, setKeysStatus] = React.useState({ openrouter: false, agnes: false, primaryProvider: 'openrouter' });
   
   // Local draft states to prevent rapid re-renders from parent/query invalidation
   const [localOpenRouterKey, setLocalOpenRouterKey] = React.useState(initialGeminiKey || '');
-  const [localGeminiKey, setLocalGeminiKey] = React.useState('');
+  const [localAgnesKey, setLocalAgnesKey] = React.useState('');
 
-  const [isTesting, setIsTesting] = React.useState<'openrouter' | 'gemini' | null>(null);
+  const [isTesting, setIsTesting] = React.useState<'openrouter' | 'agnes' | null>(null);
   const [isEditingOpenRouter, setIsEditingOpenRouter] = React.useState(false);
-  const [isEditingGemini, setIsEditingGemini] = React.useState(false);
+  const [isEditingAgnes, setIsEditingAgnes] = React.useState(false);
   const [isSavingProvider, setIsSavingProvider] = React.useState<boolean | null>(null);
 
   const [openrouterModel, setOpenrouterModel] = React.useState('');
-  const [geminiModel, setGeminiModel] = React.useState('');
+  const [agnesModel, setAgnesModel] = React.useState('');
   const [currentModel, setCurrentModel] = React.useState('gemini-2.0-flash-exp');
 
   const fetchKeysStatus = React.useCallback(async () => {
@@ -54,7 +54,7 @@ export function AISecuritySection({
           setKeysStatus(data.keysStatus);
           setCurrentModel(data.currentModel || 'gemini-2.0-flash-exp');
           setOpenrouterModel(data.keysStatus.openrouter_model || '');
-          setGeminiModel(data.keysStatus.gemini_model || '');
+          setAgnesModel(data.keysStatus.agnes_model || '');
           
           // Initial populate only!
           setLocalOpenRouterKey(prev => {
@@ -64,8 +64,8 @@ export function AISecuritySection({
             return prev;
           });
           
-          setLocalGeminiKey(prev => {
-            if (data.keysStatus.gemini && !prev) {
+          setLocalAgnesKey(prev => {
+            if (data.keysStatus.agnes && !prev) {
                 return '••••••••••••••••';
             }
             return prev;
@@ -81,10 +81,10 @@ export function AISecuritySection({
     fetchKeysStatus();
   }, [fetchKeysStatus]);
 
-  const handleTest = async (provider: 'openrouter' | 'gemini') => {
+  const handleTest = async (provider: 'openrouter' | 'agnes') => {
     setIsTesting(provider);
     try {
-      const targetKey = provider === 'openrouter' ? localOpenRouterKey : localGeminiKey;
+      const targetKey = provider === 'openrouter' ? localOpenRouterKey : localAgnesKey;
       const res = await api.ai.test.$post({
         json: { 
           provider,
@@ -104,9 +104,9 @@ export function AISecuritySection({
     }
   };
 
-  const [isSaving, setIsSaving] = React.useState<'openrouter' | 'gemini' | null>(null);
+  const [isSaving, setIsSaving] = React.useState<'openrouter' | 'agnes' | null>(null);
 
-  const saveKey = async (provider: 'openrouter' | 'gemini', apiKey: string) => {
+  const saveKey = async (provider: 'openrouter' | 'agnes', apiKey: string) => {
     if (apiKey === "••••••••••••••••" || !apiKey.trim()) {
       toast.success('密钥未更改');
       return;
@@ -128,9 +128,9 @@ export function AISecuritySection({
           setIsEditingOpenRouter(false);
           setKeysStatus(prev => ({ ...prev, openrouter: true }));
         } else {
-          setLocalGeminiKey('••••••••••••••••');
-          setIsEditingGemini(false);
-          setKeysStatus(prev => ({ ...prev, gemini: true }));
+          setLocalAgnesKey('••••••••••••••••');
+          setIsEditingAgnes(false);
+          setKeysStatus(prev => ({ ...prev, agnes: true }));
         }
         
         // Finalize state in background
@@ -298,15 +298,15 @@ export function AISecuritySection({
                    <p className="text-[8px] text-blue-900/40 font-bold uppercase tracking-widest">集成原生引擎 / Native Engine</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  {keysStatus.gemini && <div className="px-2 py-0.5 bg-blue-100 text-blue-600 rounded-full text-[8px] font-black uppercase">已激活</div>}
+                  {keysStatus.agnes && <div className="px-2 py-0.5 bg-blue-100 text-blue-600 rounded-full text-[8px] font-black uppercase">已激活</div>}
                   <button 
                     onClick={() => {
-                      setIsEditingGemini(!isEditingGemini);
-                      if (!isEditingGemini && localGeminiKey === "••••••••••••••••") setLocalGeminiKey("");
+                      setIsEditingAgnes(!isEditingAgnes);
+                      if (!isEditingAgnes && localAgnesKey === "••••••••••••••••") setLocalAgnesKey("");
                     }}
-                    className={`text-[8px] font-black px-2 py-0.5 rounded-full transition-colors ${isEditingGemini ? 'bg-slate-200 text-slate-600' : 'bg-blue-600 text-white'}`}
+                    className={`text-[8px] font-black px-2 py-0.5 rounded-full transition-colors ${isEditingAgnes ? 'bg-slate-200 text-slate-600' : 'bg-blue-600 text-white'}`}
                   >
-                    {isEditingGemini ? translations[appLang as keyof typeof translations]?.cancel || '取消' : translations[appLang as keyof typeof translations]?.edit || '編輯'}
+                    {isEditingAgnes ? translations[appLang as keyof typeof translations]?.cancel || '取消' : translations[appLang as keyof typeof translations]?.edit || '編輯'}
                   </button>
                 </div>
              </div>
@@ -314,20 +314,20 @@ export function AISecuritySection({
              <div className="space-y-3">
                  <div className="relative">
                     <input
-                        type={isEditingGemini ? "text" : "password"}
+                        type={isEditingAgnes ? "text" : "password"}
                         placeholder="Agnes API Key (sk-...)"
-                        className={`${inputClass} h-10 font-mono w-full ${isEditingGemini ? 'bg-white border-blue-300 ring-2 ring-blue-100' : 'bg-blue-50/50'} pr-16`}
-                        value={localGeminiKey}
-                        onChange={(e) => setLocalGeminiKey(e.target.value)}
-                        disabled={!isEditingGemini}
+                        className={`${inputClass} h-10 font-mono w-full ${isEditingAgnes ? 'bg-white border-blue-300 ring-2 ring-blue-100' : 'bg-blue-50/50'} pr-16`}
+                        value={localAgnesKey}
+                        onChange={(e) => setLocalAgnesKey(e.target.value)}
+                        disabled={!isEditingAgnes}
                     />
-                    {isEditingGemini && (
+                    {isEditingAgnes && (
                       <button 
-                           onClick={() => saveKey('gemini', localGeminiKey)} 
-                           disabled={isSaving === 'gemini'}
+                           onClick={() => saveKey('agnes', localAgnesKey)} 
+                           disabled={isSaving === 'agnes'}
                            className="absolute right-1 top-1 py-1 px-4 bg-blue-600 text-white text-[10px] font-black rounded-lg shadow-sm hover:translate-y-[-1px] active:translate-y-[1px] transition-all disabled:opacity-50"
                        >
-                           {isSaving === 'gemini' ? '..' : '保存'}
+                           {isSaving === 'agnes' ? '..' : '保存'}
                        </button>
                     )}
                  </div>
@@ -338,18 +338,18 @@ export function AISecuritySection({
                         type="text"
                         placeholder="例如: gemini-2.0-flash-exp"
                         className={`${inputClass} !h-8 text-[11px] w-full bg-white border-blue-900/10 py-1.5`}
-                        value={geminiModel}
-                        onChange={(e) => setGeminiModel(e.target.value)}
-                        onBlur={() => handleSaveModel('gemini', geminiModel)}
+                        value={agnesModel}
+                        onChange={(e) => setAgnesModel(e.target.value)}
+                        onBlur={() => handleSaveModel('agnes', agnesModel)}
                     />
                  </div>
                  
                  <button 
-                    onClick={() => handleTest('gemini')} 
+                    onClick={() => handleTest('agnes')} 
                     disabled={isTesting !== null} 
-                    className={`w-full text-[9px] font-black p-2.5 transition-all rounded-xl border flex items-center justify-center gap-2 ${isTesting === 'gemini' ? 'bg-blue-50 text-blue-300 border-blue-100' : 'bg-white hover:bg-blue-50 border-blue-200 text-blue-700 shadow-sm active:scale-95'}`}
+                    className={`w-full text-[9px] font-black p-2.5 transition-all rounded-xl border flex items-center justify-center gap-2 ${isTesting === 'agnes' ? 'bg-blue-50 text-blue-300 border-blue-100' : 'bg-white hover:bg-blue-50 border-blue-200 text-blue-700 shadow-sm active:scale-95'}`}
                  >
-                   {isTesting === 'gemini' ? '測試連通性中...' : '测试连通性 / Test Connection'}
+                   {isTesting === 'agnes' ? '測試連通性中...' : '测试连通性 / Test Connection'}
                  </button>
                  
                  <p className="text-[7px] text-blue-900/60 leading-tight"> 用于驱动 Agnes 智能助手。由于采用兼容 OpenAI 的格式，确保填入是以 `sk-` 开头的有效 API 密钥，享受更稳定的高频请求支持。</p>

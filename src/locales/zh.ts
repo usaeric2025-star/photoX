@@ -226,7 +226,7 @@ export const zh = {
     saveSuccessAll: '保存成功',
     resetCacheSuccess: '本地缓存已重置',
     loadingLogo: '正在上传 Logo...',
-    aiConfigRequired: '请先在系统设置中配置 Gemini API 密钥',
+    aiConfigRequired: '请先在系统设置中配置 AI API 密钥',
     testConnectionSuccess: '连接成功！',
     testConnectionFailed: '连接失败',
     taskCompleted: (name: string) => `${name} 完成`,

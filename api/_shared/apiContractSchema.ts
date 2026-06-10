@@ -13,7 +13,7 @@ export const AIAnalyzeV1ReqSchema = type({
     "imageUrl?": "string",
     "image_url?": "string",
     "prompt?": "string",
-    "provider?": "'gemini' | 'openrouter'",
+    "provider?": "'agnes' | 'openrouter'",
     "model?": "string"
 });
 

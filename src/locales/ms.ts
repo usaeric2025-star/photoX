@@ -226,7 +226,7 @@ export const ms = {
     saveSuccessAll: 'Berjaya disimpan',
     resetCacheSuccess: 'Cache tempatan berjaya set semula',
     loadingLogo: 'Memuat naik logo...',
-    aiConfigRequired: 'Sila konfigurasikan kunci API Gemini dalam tetapan terlebih dahulu',
+    aiConfigRequired: 'Sila konfigurasikan kunci API AI dalam tetapan terlebih dahulu',
     testConnectionSuccess: 'Sambungan berjaya!',
     testConnectionFailed: 'Sambungan gagal',
     taskCompleted: (name: string) => `${name} selesai`,

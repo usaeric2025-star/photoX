@@ -3,8 +3,8 @@ import { AISecuritySection } from './AISecuritySection';
 import { AppSettings } from '@/types';
 
 interface AISettingsProps {
-  geminiApiKey: string | undefined;
-  setGeminiApiKey: (key: string) => void;
+  agnesApiKey: string | undefined;
+  setAgnesApiKey: (key: string) => void;
   customModel: string;
   testConnection: () => Promise<void>;
   testResult: { success?: boolean; error?: string; loading?: boolean } | null;
@@ -16,6 +16,6 @@ interface AISettingsProps {
 }
 
 export function AISettings(props: AISettingsProps) {
-  const { geminiApiKey, customModel, ...rest } = props;
-  return <AISecuritySection {...rest} geminiApiKey={geminiApiKey || ''} customModel={customModel || ''} />;
+  const { agnesApiKey, customModel, ...rest } = props;
+  return <AISecuritySection {...rest} agnesApiKey={agnesApiKey || ''} customModel={customModel || ''} />;
 };

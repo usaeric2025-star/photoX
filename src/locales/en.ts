@@ -226,7 +226,7 @@ export const en = {
     saveSuccessAll: 'Saved successfully',
     resetCacheSuccess: 'Local cache reset successfully',
     loadingLogo: 'Uploading logo...',
-    aiConfigRequired: 'Please configure Gemini API key in settings first',
+    aiConfigRequired: 'Please configure AI API key in settings first',
     testConnectionSuccess: 'Connection successful!',
     testConnectionFailed: 'Connection failed',
     taskCompleted: (name: string) => `${name} completed`,

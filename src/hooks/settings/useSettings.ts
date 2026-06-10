@@ -60,7 +60,7 @@ export const useSettings = () => {
     settings,
     isLoading,
     updateSettings: updateMutation.mutateAsync,
-    geminiApiKey: settings?.gemini_api_key,
+    agnesApiKey: settings?.agnes_api_key,
     customModel: settings?.custom_model,
     accessPasscode: settings?.access_passcode,
     updateSettingsSync: updateMutation.mutate,

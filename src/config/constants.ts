@@ -21,7 +21,7 @@ export const ROUTES = {
   ADMIN_GROUP: (id: string) => `/admin/group/${id}`,
 } as const;
 
-export const DEFAULT_MODEL = 'Gemini 2.5 Flash Lite Preview 09-2025';
+export const DEFAULT_MODEL = 'agnes-flash';
 
 export const STORAGE_BUCKET = '';
 export const STORAGE_PATH = 'photox/public';

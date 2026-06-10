@@ -11,23 +11,23 @@ adminSettings.get("/get-keys", async (c) => {
         // Parallelize DB queries to reduce latency
         const { data: secretsRes, error: secretsErr } = await supabase.from('secrets')
             .select('key, value')
-            .in('key', ['openrouter', 'gemini', 'PRIMARY_AI_PROVIDER', 'openrouter_model', 'gemini_model']);
+            .in('key', ['openrouter', 'agnes', 'PRIMARY_AI_PROVIDER', 'openrouter_model', 'agnes_model']);
 
         const secrets = secretsRes || [];
         const config: Record<string, string> = {};
         secrets.forEach((s: any) => { config[s.key] = s.value; });
         
         let hasOpenrouter = !!config.openrouter;
-        let hasGemini = !!config.gemini;
+        let hasAgnes = !!config.agnes;
         const primarySecret = config.PRIMARY_AI_PROVIDER || 'openrouter';
 
         // Fallback for UI indicators
-        if (!hasGemini || !hasOpenrouter) {
+        if (!hasAgnes || !hasOpenrouter) {
             const { data: settingsRes } = await supabase.from('settings').select('gemini_api_key, custom_model').eq('id', 1).maybeSingle();
             const legacyKey = settingsRes?.gemini_api_key;
             if (legacyKey) {
                 if (legacyKey.startsWith('sk-or-')) hasOpenrouter = true;
-                else hasGemini = true;
+                else hasAgnes = true;
             }
         }
         
@@ -38,10 +38,10 @@ adminSettings.get("/get-keys", async (c) => {
             currentModel: 'gemini-2.0-flash-exp', // Deprecated
             keysStatus: { 
                 openrouter: hasOpenrouter, 
-                gemini: hasGemini,
+                agnes: hasAgnes,
                 primaryProvider: primarySecret,
                 openrouter_model: config.openrouter_model || '',
-                gemini_model: config.gemini_model || ''
+                agnes_model: config.agnes_model || ''
             }
         });
     } catch (e: any) {

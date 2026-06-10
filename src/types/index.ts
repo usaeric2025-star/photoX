@@ -36,7 +36,7 @@ export interface AppSettings {
   pinned_tags?: string[];
   hot_tags_count?: number;
   hot_tag_threshold?: number;
-  gemini_api_key?: string;
+  agnes_api_key?: string;
   custom_model?: string;
   provider?: string;
   whatsapp_1_name?: string;

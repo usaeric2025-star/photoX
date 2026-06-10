@@ -22,7 +22,7 @@ export const saveSettings = async (settings: Partial<AppSettings> & Record<strin
         const payload: Record<string, any> = { id: 1 };
         
         // 1. 字段映射與預處理
-        if (rawPayload.gemini_api_key === "••••••••••••••••") delete rawPayload.gemini_api_key;
+        if (rawPayload.agnes_api_key === "••••••••••••••••") delete rawPayload.agnes_api_key;
         if (rawPayload.api_key) delete rawPayload.api_key;
         
         const mapping: Record<string, string> = {

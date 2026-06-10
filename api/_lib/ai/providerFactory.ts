@@ -101,8 +101,8 @@ export class OpenRouterProvider extends BaseAIProvider {
     }
 }
 
-export class GeminiProvider extends BaseAIProvider {
-    name = "gemini";
+export class AgnesProvider extends BaseAIProvider {
+    name = "agnes";
     defaultModel = "gemini-2.0-flash-exp";
     baseUrl = "https://apihub.agnes-ai.com/v1";
 
@@ -157,7 +157,7 @@ export async function getAIProvider(providerName: string, supabase: any, modelOv
                // Basic heuristic to decide if the legacy key belongs to this provider
                if (actualProvider === 'openrouter' && settings.gemini_api_key.startsWith('sk-or-')) {
                    apiKey = decrypt(settings.gemini_api_key);
-               } else if (actualProvider === 'gemini' && !settings.gemini_api_key.startsWith('sk-or-')) {
+               } else if (actualProvider === 'agnes' && !settings.gemini_api_key.startsWith('sk-or-')) {
                    apiKey = decrypt(settings.gemini_api_key);
                }
             }
@@ -179,8 +179,8 @@ export async function getAIProvider(providerName: string, supabase: any, modelOv
     console.log(`[getAIProvider] Using ${actualProvider} with model: ${model}`);  
     const config = { apiKey, model };
 
-    if (actualProvider === 'gemini' || actualProvider === 'agnes') {
-        return new GeminiProvider(config);
+    if (actualProvider === 'agnes') {
+        return new AgnesProvider(config);
     }
     return new OpenRouterProvider(config);
 }

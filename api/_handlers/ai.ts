@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { type } from 'arktype';
 import { getServerEnv } from '../_shared/envSchema.js';
 import { getSupabaseAdmin } from '../_lib/supabase.js';
-import { getAIProvider, OpenRouterProvider, GeminiProvider } from '../_lib/ai/providerFactory.js';
+import { getAIProvider, OpenRouterProvider, AgnesProvider } from '../_lib/ai/providerFactory.js';
 import { decrypt } from '../_lib/encryption.js';
 import { executeAITask } from '../_lib/ai/executor.js';
 import { 
@@ -28,8 +28,8 @@ ai.post("/test", async (c) => {
 
         let provider;
         if (apiKey) {
-            if (providerName === 'gemini') {
-                provider = new GeminiProvider({ apiKey, model: model || 'gemini-2.0-flash-exp' });
+            if (providerName === 'agnes') {
+                provider = new AgnesProvider({ apiKey, model: model || 'gemini-2.0-flash-exp' });
             } else {
                 provider = new OpenRouterProvider({ apiKey, model: model || 'google/gemini-2.5-flash-lite' });
             }

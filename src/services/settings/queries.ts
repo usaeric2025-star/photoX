@@ -17,7 +17,7 @@ export const fetchSettings = async () => {
     
     // Map custom columns back to app expectations
     if (data) {
-        data.gemini_api_key = data.api_key;
+        data.agnes_api_key = data.api_key;
         data.custom_model = data.openrouter_model;
         data.provider = 'openrouter'; // Default
         
@@ -30,11 +30,11 @@ export const fetchSettings = async () => {
                     const status = keysData.keysStatus;
                     data.provider = status.primaryProvider || 'openrouter';
                     
-                    // Only populate gemini_api_key placeholder if any AI provider has a key
-                    if (status.openrouter || status.gemini || data.api_key) {
-                        data.gemini_api_key = data.api_key || "••••••••••••••••";
+                    // Only populate agnes_api_key placeholder if any AI provider has a key
+                    if (status.openrouter || status.agnes || data.api_key) {
+                        data.agnes_api_key = data.api_key || "••••••••••••••••";
                     } else {
-                        data.gemini_api_key = "";
+                        data.agnes_api_key = "";
                     }
                 }
             }

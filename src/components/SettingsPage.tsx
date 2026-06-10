@@ -71,8 +71,8 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
 
   
   const { user, loginWithGoogle, logout } = useAuth();
-  const { settings, geminiApiKey, customModel, accessPasscode, updateSettings } = useSettings();
-  const setGeminiApiKey = (key: string) => updateSettings({ ...settings, gemini_api_key: key });
+  const { settings, agnesApiKey, customModel, accessPasscode, updateSettings } = useSettings();
+  const setAgnesApiKey = (key: string) => updateSettings({ ...settings, agnes_api_key: key });
   const setAccessPasscode = (code: string) => updateSettings({ ...settings, access_passcode: code });
   const setSettings = (s: AppSettings) => { updateSettings(s as any); };
   const saveSettings = async (s: Partial<AppSettings>) => { await updateSettings(s); };
@@ -123,7 +123,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   } = useSettingsLogic({
     user: user || null,
     settings,
-    geminiApiKey: geminiApiKey || "",
+    agnesApiKey: agnesApiKey || "",
     saveSettings,
     performPullSync,
     setSettings: (s: AppSettings) => { void updateSettings(s as Partial<AppSettings>); }
@@ -217,8 +217,8 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
           {activeTab === 'ai' && (
             <>
               <AISettings 
-                geminiApiKey={geminiApiKey || ""}
-                setGeminiApiKey={setGeminiApiKey}
+                agnesApiKey={agnesApiKey || ""}
+                setAgnesApiKey={setAgnesApiKey}
                 customModel={customModel || ""}
                 testConnection={async () => { await testConnection(); }}
                 testResult={testResult}
