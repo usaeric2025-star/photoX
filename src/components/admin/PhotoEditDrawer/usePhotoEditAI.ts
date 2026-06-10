@@ -90,18 +90,10 @@ export function usePhotoEditAI(form: PhotoEditFormReturn) {
 
           try {
             await updatePhoto({ id: editPhotoId, updates });
-            toast.success(
-              appLang === 'zh' 
-                ? 'AI 识别完成，已自动保存修改！' 
-                : 'AI analysis completed and changes auto-saved!'
-            );
+            toast.success('已识别并自动保存');
           } catch (saveError: unknown) {
             console.error("Auto-save failed:", saveError);
-            toast.warning(
-              appLang === 'zh' 
-                ? 'AI 识别成功，但自动保存失败（已临时更新至表单）' 
-                : 'AI analysis completed but auto-save failed (form values populated).'
-            );
+            toast.warning('识别成功，保存失败');
           }
         } else {
           throw new Error('AI 返回的格式异常');

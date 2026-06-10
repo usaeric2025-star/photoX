@@ -67,7 +67,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
       }
 
       if (!updates.name?.zh && !updates.description?.zh) {
-        toast.error("照片信息不完整 / Incomplete information");
+        toast.error("照片信息不完整");
         return;
       }
 

@@ -168,7 +168,7 @@ export function DrawerHeader({
             onClick={() => {
               const newState = !formState.is_group_cover;
               form.setFieldValue('is_group_cover', newState);
-              toast.success(newState ? (appLang === 'zh' ? '已设为封面' : 'Set as cover') : (appLang === 'zh' ? '已取消封面' : 'Removed from cover'));
+              toast.success(newState ? '已设为封面' : '已取消封面');
             }}
             title={l.cover}
             className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border shadow-sm transition-all ${formState.is_group_cover ? "bg-amber-500 text-white border-amber-500 hover:bg-amber-600" : "bg-white text-amber-500 border-amber-200 hover:bg-amber-50 active:scale-95"}`}

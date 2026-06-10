@@ -70,7 +70,7 @@ export function usePhotoEdit(initialPhoto: Photo | null): PhotoEditFormReturn {
       return result;
     },
     onSuccess: () => {
-      toast.success('保存成功 / Saved successfully');
+      toast.success('保存成功');
       invalidatePhotos();
     },
     onError: (err) => {

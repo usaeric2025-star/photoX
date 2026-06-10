@@ -120,14 +120,14 @@ export function SyncSection({
       <ConfirmDialog
         open={isResetOpen}
         onOpenChange={resetDialog.toggle}
-        title="确认清空 / Reset Cache"
-        description="确定要清空本地数据缓存并从云端完整拉取吗？ / Reset local cache and re-sync from cloud?"
-        confirmText="Reset"
+        title="确认清空"
+        description="确定要清空本地数据缓存并从云端完整拉取吗？"
+        confirmText="确认重置"
         variant="destructive"
         onConfirm={async () => {
           localStorage.removeItem('uuid_v2_cleanup_done');
           await refreshCloudData(user, true);
-          toast.success('本地缓存已重置 / Cache reset');
+          toast.success('本地缓存已重置');
         }}
       />
     </div>

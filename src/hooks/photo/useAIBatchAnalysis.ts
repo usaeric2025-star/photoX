@@ -13,7 +13,7 @@ export function useAIBatchAnalysis() {
 
   const handleBatchAiAnalyze = useCallback(async (targetPhotos: Photo[], groupId?: string) => {
     if (!targetPhotos || targetPhotos.length === 0) {
-      toast.error('请先选择照片 / Please select photos first');
+      toast.error('请先选择照片');
       return;
     }
 
@@ -35,17 +35,17 @@ export function useAIBatchAnalysis() {
           ]);
         }
         
-        let finalMessage = "分析完成 (无更新)";
+        let finalMessage = "暂无数据更新";
         if (groupId && groupSuccess) {
           finalMessage = successCount > 0 
-            ? `成功分析並更新合組信息，且更新了 ${successCount} 張照片 / Succeeded in updating group details and analyzing ${successCount} photos!`
-            : "成功分析並更新合組信息 / Succeeded in analyzing and updating group details!";
+            ? `已更新合组，并识别出 ${successCount} 张照片`
+            : "已更新合组信息";
           toast.success(finalMessage);
         } else if (successCount > 0) {
-          finalMessage = `成功分析 ${successCount} 張照片 / Successfully analyzed ${successCount} photos!`;
+          finalMessage = `已识别 ${successCount} 张照片`;
           toast.success(finalMessage);
         } else {
-          toast.info("分析完成，沒有發現需要更新的數據 / Analysis complete, no fields required updating.");
+          toast.info("已是最新，无需更新");
         }
 
         if (taskId) updateProgress(100, finalMessage);

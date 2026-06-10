@@ -166,7 +166,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
                try {
                  await saveSettings({ ...settings });
                  setHasChanges(false);
-                 toast.success(appLang === 'zh' ? '系统设置已保存' : 'Settings saved successfully');
+                 toast.success('设置已保存');
                } catch (err) {
                  console.error("Save settings failed:", err);
                }

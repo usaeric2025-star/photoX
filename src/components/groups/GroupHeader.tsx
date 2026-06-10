@@ -104,7 +104,7 @@ export function GroupHeader({
                       onClick={(e) => {
                         e.stopPropagation();
                         clipboard.copy(activeGroupId);
-                        toast.success("Group ID copied to clipboard");
+                        toast.success("合组ID已复制");
                       }}
                       className="text-xs text-slate-400 font-mono hover:text-indigo-600 flex items-center gap-1 transition-colors"
                       title={appLang === 'zh' ? '点击复制 ID' : 'Click to copy ID'}

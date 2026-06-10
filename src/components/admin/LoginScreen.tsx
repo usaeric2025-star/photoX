@@ -107,7 +107,7 @@ export function LoginScreen({ loginWithGoogle, isLoading }: LoginScreenProps) {
                 try {
                   await loginWithGoogle();
                 } catch(e) {
-                  toast.error(`${appLang === 'zh' ? '登录失败' : 'Login failed'}: ${e instanceof Error ? e.message : 'Unknown error'}`);
+                  toast.error('登录失败: ' + (e instanceof Error ? e.message : '未知错误'));
                 }
               }}
               disabled={isLoading}

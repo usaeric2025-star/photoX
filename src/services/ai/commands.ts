@@ -99,14 +99,17 @@ export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promi
      const resp = await api.ai.analyze.$post({ json: { photoId } }) as any;
      const data = await resp.json();
      if (data.success) {
-       const parsed = data.data;
+       let parsed = data.data;
+       if (Array.isArray(parsed)) {
+         parsed = parsed[0] || {};
+       }
        return ok({
           name: parsed.name || '',
           description: parsed.description || '',
           category_id: parsed.category_id || null,
           tagNames: (parsed.new_tags || parsed.tags || []),
           tagIds: Array.isArray(parsed.tag_ids) ? parsed.tag_ids.map(String) : [],
-          raw_result: JSON.stringify(parsed)
+          raw_result: JSON.stringify(data.data)
        });
      } else {
        let errorMsg = data.error || 'AI 分析失败';

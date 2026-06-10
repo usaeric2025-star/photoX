@@ -99,7 +99,7 @@ export function CategoryTagsSection({ categoryName, tags, isAdmin, appLang, text
                 type="button"
                 className="w-full flex items-center justify-center gap-3 text-blue-600 bg-blue-50/50 backdrop-blur-sm border border-blue-100/50 font-bold py-4 rounded-2xl hover:bg-blue-100 transition-all cursor-pointer shadow-sm shadow-blue-500/5"
                 onClick={() => {
-                  toast.info(appLang === 'zh' ? '請在設置頁面管理標籤詳情' : 'Please manage tag details in Settings');
+                  toast.info('请在设置页面管理标签');
                   setActiveActionTag(null);
                 }}
               >
@@ -109,7 +109,7 @@ export function CategoryTagsSection({ categoryName, tags, isAdmin, appLang, text
                 type="button"
                 className="w-full flex items-center justify-center gap-3 text-red-600 bg-red-50/50 backdrop-blur-sm border border-red-100/50 font-bold py-4 rounded-2xl hover:bg-red-100 transition-all cursor-pointer shadow-sm shadow-red-500/5"
                 onClick={() => {
-                  toast.error(appLang === 'zh' ? '請在設置頁面刪除' : 'Delete in Settings');
+                  toast.error('请在设置页面删除');
                   setActiveActionTag(null);
                 }}
               >

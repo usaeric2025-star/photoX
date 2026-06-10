@@ -57,7 +57,7 @@ export function DiagnosticsDashboard() {
   const internalRunRepair = async (issueId: string) => {
     if (issueId.startsWith('perf_')) {
       clearAudits();
-      toast.success('性能统计已重置 / Performance audit cleared');
+      toast.success('性能统计已重置');
       refreshReport();
       return;
     }
