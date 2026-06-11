@@ -48,7 +48,7 @@ export function GroupDetailPage({}: GroupDetailPageProps) {
     isFetchingNextPage,
     isLoading: isGroupPhotosLoading,
     isPlaceholderData: isGroupPhotosPlaceholder
-  } = useGroupPhotos(activeGroupId, isAdminMode, 20);
+  } = useGroupPhotos(activeGroupId, isAdminMode);
 
   const isStale = isGroupDataPlaceholder || isGroupPhotosPlaceholder;
   const isLoading = isGroupPhotosLoading || isGroupDataLoading;

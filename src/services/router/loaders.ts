@@ -46,12 +46,34 @@ export async function prefetchMainGallery(queryClient: QueryClient) {
   });
 }
 
-export async function prefetchGroupDetail(queryClient: QueryClient, groupId: string) {
+export async function prefetchGroupDetail(queryClient: QueryClient, groupId: string, isAdminMode: boolean = false) {
   if (!groupId) return;
   const queryKey = groupKeys.detail(groupId, 'STABLE');
-  return queryClient.prefetchQuery({
+  queryClient.prefetchQuery({
     queryKey,
     queryFn: () => getGroupById(groupId),
+    staleTime: createStaleTime('STABLE'),
+  });
+  
+  const photosKey = photoKeys.infinite({
+    groupId,
+    isAdminMode,
+    pageSize: 60
+  });
+  
+  queryClient.prefetchInfiniteQuery({
+    queryKey: photosKey,
+    queryFn: async ({ pageParam = 1 }) => {
+      const { loadPhotosByGroupIdPaginated } = await import('@/services/photo/read');
+      const res = await loadPhotosByGroupIdPaginated(
+        groupId, pageParam as number, 60, isAdminMode
+      );
+      if (!res.ok && res.message) throw new Error(res.message);
+      const data = res.data || { photos: [], total: 0 };
+      const hasMore = Array.isArray(data.photos) ? data.photos.length >= 60 : false;
+      return { photos: data.photos, total: data.total, hasMore, nextPage: hasMore ? (pageParam as number) + 1 : undefined };
+    },
+    initialPageParam: 1,
     staleTime: createStaleTime('STABLE'),
   });
 }

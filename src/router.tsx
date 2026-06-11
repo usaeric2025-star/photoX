@@ -219,7 +219,7 @@ const adminGroupRoute = createRoute({
   },
   loader: ({ params: { groupId }, context }) => {
     if (context.queryClient && groupId) {
-      prefetchGroupDetail(context.queryClient, groupId);
+      prefetchGroupDetail(context.queryClient, groupId, true);
     }
   },
   component: AdminPage, // AdminPage handles the layout

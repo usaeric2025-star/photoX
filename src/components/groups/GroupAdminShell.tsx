@@ -13,6 +13,7 @@ import { GroupPhotoPicker } from "./GroupPhotoPicker";
 import { useAdminMode, useGroupMutations, useUrlFilters, useAIBatchAnalysis } from "@/hooks";
 import { useAdminActions } from "@/hooks/admin/useAdminActions";
 import { useUIStore, useShallow } from "@/store/useUIStore";
+import { useNavigate } from "@tanstack/react-router";
 import { translations } from "../../lib/translations";
 import { Plus, Settings2, MoreVertical, Pencil, Sparkles, FolderMinus } from "lucide-react";
 import { CollapsibleDescription } from "./CollapsibleDescription";
@@ -28,6 +29,7 @@ import { toast } from "sonner";
 
 export function GroupAdminShell() {
   const isAdminMode = useAdminMode();
+  const navigate = useNavigate();
   const { filters, setGroupId, setPhotoId } = useUrlFilters();
   const appLang = useUIStore((s) => s.appLang);
   const isPhotoPickerOpen = useUIStore((s) => s.isPhotoPickerOpen);
@@ -164,7 +166,9 @@ export function GroupAdminShell() {
                   activeGroupId={filters.groupId}
                   isAdminMode={isAdminMode}
                   isGroupDataLoading={isGroupDataLoading}
-                  onClose={() => {}}
+                  onClose={() => {
+                    navigate({ to: '/admin', search: (prev: any) => ({ ...prev, photoId: undefined }), resetScroll: false });
+                  }}
                   onSettingsClick={() => update({ groupSettingsOpen: true })}
                   onCopyId={(id) => {
                       navigator.clipboard.writeText(id);

@@ -34,14 +34,8 @@ export function GroupHeader({
 
   return (
     <div className="flex flex-col border-b border-slate-100 bg-white">
-      <div className="flex flex-shrink-0 sticky top-0 px-4 sm:px-6 py-4 flex items-center justify-between">
+      <div className="flex flex-shrink-0 sticky top-0 px-4 sm:px-6 py-4 items-center justify-between">
         <div className="flex items-center gap-3 min-w-0 flex-1">
-          <button
-            onClick={onClose}
-            className="w-10 h-10 flex-shrink-0 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors"
-          >
-            <ChevronLeft size={24} />
-          </button>
           <div
             className={`flex flex-col group min-w-0 flex-1 ${onSettingsClick ? 'cursor-pointer' : ''}`}
             onClick={onSettingsClick}
