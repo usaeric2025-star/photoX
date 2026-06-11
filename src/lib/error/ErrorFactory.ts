@@ -29,6 +29,9 @@ export class ErrorFactory {
     (wrapped as any).operation = operation;
     (wrapped as any).resource = resource;
     (wrapped as any).severity = severity;
+    if (typeof error === 'object' && error !== null && 'traceId' in error) {
+      (wrapped as any).traceId = (error as any).traceId;
+    }
     return wrapped;
   }
 
@@ -38,6 +41,10 @@ export class ErrorFactory {
     context?: string,
     cause?: unknown
   ): AppError {
+    let traceId: string | undefined;
+    if (typeof cause === 'object' && cause !== null && 'traceId' in cause) {
+      traceId = (cause as any).traceId;
+    }
     return {
       ok: false,
       error: true,
@@ -45,6 +52,7 @@ export class ErrorFactory {
       code,
       context,
       timestamp: Date.now(),
+      traceId,
       cause,
     };
   }

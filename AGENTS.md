@@ -994,6 +994,18 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 - ✅ Trace ID 由後端生成，前端僅提取與傳遞
 - ✅ 複製錯誤內容必須包含 Trace ID
 - ✅ 後端日誌必須記錄同一 Trace ID
+
+## TypeScript 7.0 規範（鎖定）
+
+### 配置要求
+- ✅ `types` 必須包含 `["node", "vite/client"]`
+- ✅ `rootDir` 必須顯式設定
+- ✅ 使用 `paths` 替代 `baseUrl`
+- ✅ 使用 `tsgo` 替代 `tsc`
+
+### 禁止事項
+- ❌ 禁止使用已棄用的 `baseUrl`
+- ❌ 禁止假設 `@types/node` 會自動載入
 - ✅ 去重 ID 基於 `context + errorCode`
 - ❌ 禁止使用動態 message 作為去重 key
 - ❌ 禁止前端自行生成 Trace ID

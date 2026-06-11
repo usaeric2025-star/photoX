@@ -16,6 +16,10 @@ export const client = hc<AppType>(
       if (token && !headers.has('Authorization')) {
         headers.set('Authorization', `Bearer ${token}`);
       }
+      if (!headers.has('X-Trace-Id')) {
+        // Generate a simple frontend trace ID (e.g., "frontend-8f2a...")
+        headers.set('X-Trace-Id', `fe-${Math.random().toString(36).substring(2, 12)}`);
+      }
       
       let resp: Response;
       let retries = 3;
@@ -56,6 +60,11 @@ export const client = hc<AppType>(
         }
 
         // Add explicit platform diagnostic tips
+        const reqTraceId = headers.get("X-Trace-Id");
+        const resTraceId = resp.headers.get("X-Trace-Id");
+        const vercelId = resp.headers.get("x-vercel-id");
+        const traceId = resTraceId || vercelId || reqTraceId || "unknown";
+        
         let platformTip = "";
         if (text.includes("FUNCTION_INVOCATION_FAILED")) {
           platformTip = " [诊断提示: Vercel Serverless 服务崩溃。通常是云端环境变量(R2/Supabase)配置缺失、交换错误，或服务启动代码出错]";
@@ -71,12 +80,14 @@ export const client = hc<AppType>(
         const errorInstance = new Error(message);
         (errorInstance as any).success = false;
         (errorInstance as any).status = resp.status;
+        (errorInstance as any).traceId = traceId;
         (errorInstance as any).details = text;
         (errorInstance as any).platformTip = platformTip;
         (errorInstance as any).error = {
           message,
           code: 'INTERNAL_SERVER_ERROR',
-          details: text
+          details: text,
+          traceId
         };
         throw errorInstance;
       }

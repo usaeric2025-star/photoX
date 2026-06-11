@@ -21,12 +21,14 @@ export class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('ErrorBoundary caught:', error, errorInfo);
   }
 
   handleCopyError = () => {
-    const errorText = `${this.state.error?.message || 'Unknown error'}\n\n${this.state.error?.stack || ''}`;
+    const error = this.state.error;
+    const traceId = error && 'traceId' in error ? `\nTrace ID: ${(error as any).traceId}` : '';
+    const errorText = `${error?.message || 'Unknown error'}${traceId}\n\n${error?.stack || ''}`;
     navigator.clipboard.writeText(errorText).then(() => {
       toast.success('错误信息已复制到剪贴板');
     }).catch(() => {
@@ -34,7 +36,7 @@ export class ErrorBoundary extends Component<Props, State> {
     });
   };
 
-  render() {
+  override render() {
     if (this.state.hasError) {
       return (
         this.props.fallback || (
@@ -46,6 +48,11 @@ export class ErrorBoundary extends Component<Props, State> {
               <h2 className="text-2xl font-bold text-slate-900 tracking-tight">出错了</h2>
               <p className="text-slate-500 text-sm leading-relaxed">
                 {this.state.error?.message || '组件渲染过程中发生了意外错误，请尝试重新加载页面'}
+                {this.state.error && 'traceId' in this.state.error && (
+                  <span className="block mt-2 font-mono text-[10px] text-slate-400">
+                    Trace ID: {(this.state.error as any).traceId}
+                  </span>
+                )}
               </p>
               <div className="flex gap-3 justify-center pt-4">
                 <button

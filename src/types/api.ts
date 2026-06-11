@@ -25,6 +25,7 @@ export interface AppError {
   code: ErrorCode;
   context?: string;
   timestamp: number;
+  traceId?: string;
   cause?: unknown;
 }
 

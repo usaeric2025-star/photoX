@@ -25,6 +25,8 @@ export const app = new Hono().basePath("/api");
 // --- Middleware ---
 app.use("*", cors());
 app.use("*", async (c, next) => {
+    const traceId = getTraceId(c);
+    c.header('X-Trace-Id', traceId);
     // 1% sample rate for production, 100% for dev
     if (serverEnv.NODE_ENV === 'production') {
         if (Math.random() < 0.01) logTraffic(c.req, null);
