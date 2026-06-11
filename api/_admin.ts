@@ -5,7 +5,6 @@ import { adminDiagnose } from './_handlers/admin/diagnose.js';
 import { adminRepair } from './_handlers/admin/repair.js';
 import { adminMaintenance } from './_handlers/admin/maintenance.js';
 import { adminBackfill } from './_handlers/admin/backfill.js';
-import { adminErrorEvents } from './_handlers/admin/error-events.js';
 
 const app = new Hono();
 
@@ -15,6 +14,5 @@ app.route('/diagnose', adminDiagnose);
 app.route('/repair', adminRepair);
 app.route('/backfill-photo-metadata', adminBackfill);
 app.route('/', adminPhotos);
-app.route('/', adminErrorEvents);
 
 export default app;

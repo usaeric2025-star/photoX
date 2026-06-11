@@ -90,44 +90,51 @@ export function usePhotoEditAI(form: PhotoEditFormReturn) {
             if (targetId) updates.category_id = targetId;
           }
 
-          // --- Strict Tag Matching (Full format-compatible) ---
+          // --- Strict Tag Matching (Full format-compatible) with auto-creation ---
           const sourceTags = result.tagNames || result.tag_names || result.tagIds || result.tag_ids || [];
-          if (Array.isArray(sourceTags)) {
-            const matchedTagIds: string[] = [];
-            
-            sourceTags.slice(0, 10).forEach((rawTag: any) => {
-                let tagStr = '';
+          if (Array.isArray(sourceTags) && sourceTags.length > 0) {
+            const rawNamesOrIds = sourceTags.map((rawTag: any) => {
                 if (rawTag && typeof rawTag === 'object') {
-                    tagStr = String(rawTag.id ?? rawTag.tag_id ?? rawTag.name ?? '');
-                } else {
-                    tagStr = String(rawTag);
+                    return String(rawTag.name ?? rawTag.id ?? rawTag.tag_id ?? '');
                 }
+                return String(rawTag);
+            }).filter(Boolean).slice(0, 10);
 
-                if (!tagStr || tagStr === 'undefined' || tagStr === 'null' || tagStr === '[object Object]' || tagStr === '[对象 对象]') return;
+            try {
+              const { resolveTagNamesToIds } = await import('@/services/tag/completion');
+              const resolveResult = await resolveTagNamesToIds(rawNamesOrIds, allTags);
 
-                // Match by ID
-                const exactMatch = allTags.find(t => String(t.id) === tagStr);
-                if (exactMatch) {
-                    matchedTagIds.push(String(exactMatch.id));
-                } else {
-                    // Match by Name (Case-insensitive)
-                    const nameMatch = allTags.find(t => t.name.toLowerCase() === tagStr.toLowerCase());
-                    if (nameMatch) {
-                        matchedTagIds.push(String(nameMatch.id));
+              if (resolveResult.ok && resolveResult.data.length > 0) {
+                  const uniqueIds = Array.from(new Set(resolveResult.data)).slice(0, 5);
+                  
+                  // Refetch/Invalidate tags so the tag select options are in sync
+                  queryClient.invalidateQueries({ queryKey: ['tags'] });
+                  
+                  const { loadTagsFromCloud } = await import('@/services/tag/queries');
+                  const latestTags = await loadTagsFromCloud().catch(() => allTags);
+
+                  updates.tags = uniqueIds.map(id => {
+                    const found = latestTags.find((t: any) => String(t.id) === id) || allTags.find((t: any) => String(t.id) === id);
+                    if (found) {
+                      return { id: found.id, name: found.name || '' };
                     }
-                }
-            });
-
-            if (matchedTagIds.length > 0) {
-                const uniqueIds = Array.from(new Set(matchedTagIds)).slice(0, 5);
-                // Map to tag objects { id, name } expected by form State & TagEditor
-                updates.tags = uniqueIds.map(id => {
-                  const found = allTags.find(t => String(t.id) === id);
-                  return found ? { id: found.id, name: found.name || '' } : { id: String(id), name: '' };
-                });
-            } else {
-                updates.tags = [];
+                    // Fallback
+                    const matchingRaw = sourceTags.find((raw: any) => {
+                      const rStr = typeof raw === 'object' ? String(raw.id ?? raw.tag_id ?? raw.name ?? '') : String(raw);
+                      return rStr.toLowerCase() === id.toLowerCase();
+                    });
+                    const nameVal = typeof matchingRaw === 'object' ? (matchingRaw.name || id) : (matchingRaw || id);
+                    return { id, name: String(nameVal) };
+                  });
+              } else {
+                  updates.tags = [];
+              }
+            } catch (err: any) {
+              logger.error('Tags auto-creation failed:', err);
+              updates.tags = [];
             }
+          } else {
+            updates.tags = [];
           }
 
           if (result.description) {
