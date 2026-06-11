@@ -54,11 +54,9 @@ export function AdminPageContent() {
       store.update({ activeScreen: 'tasks' });
     } else if (path === '/admin/error-logs') {
       store.update({ activeScreen: 'error-logs' });
-    } else if (path === '/admin/history/maintenance') {
-      store.update({ activeScreen: 'history_maintenance' });
     } else if (path === '/admin/diagnose') {
       store.update({ activeScreen: 'diagnose' });
-    } else if (path === '/admin' && (['error-logs', 'tasks', 'history_maintenance', 'diagnose'].includes(store.activeScreen))) {
+    } else if (path === '/admin' && (['error-logs', 'tasks', 'diagnose'].includes(store.activeScreen))) {
       store.update({ activeScreen: 'gallery' });
     }
   }, [location.pathname, store.update]);
@@ -74,7 +72,6 @@ export function AdminPageContent() {
     if (urlFilters.groupId) return appLang === 'zh' ? '合组详情' : appLang === 'ms' ? 'Butiran Kumpulan' : 'Group Details';
     if (currentScreen === 'dashboard') return appLang === 'zh' ? '数据看板' : appLang === 'ms' ? 'Papan Pemuka' : 'Dashboard';
     if (currentScreen === 'tasks') return appLang === 'zh' ? '任务中心' : appLang === 'ms' ? 'Pusat Tugasan' : 'Task Center';
-    if (currentScreen === 'history_maintenance') return appLang === 'zh' ? '维护历史' : appLang === 'ms' ? 'Sejarah Penyelenggaraan' : 'Maintenance';
     if (currentScreen === 'error-logs') return appLang === 'zh' ? '系统日志' : appLang === 'ms' ? 'Log Sistem' : 'Logs';
     if (currentCategoryName) return currentCategoryName;
     return appLang === 'zh' ? '全部照片' : appLang === 'ms' ? 'Semua Foto' : 'All Photos';
@@ -114,7 +111,7 @@ export function AdminPageContent() {
               <ScreenWrapper key="admin-dashboard" onClose={() => store.update({ activeScreen: 'gallery' })}>
                 <StatisticsScreen />
               </ScreenWrapper>
-            ) : ['manage', 'settings', 'structure', 'logs', 'tasks', 'history_maintenance', 'error-logs', 'diagnose'].includes(currentScreen) ? (
+            ) : ['manage', 'settings', 'structure', 'logs', 'tasks', 'error-logs', 'diagnose'].includes(currentScreen) ? (
               <motion.div 
                 key="admin-settings-container"
                 initial={{ opacity: 0, scale: 0.98 }} 

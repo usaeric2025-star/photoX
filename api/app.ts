@@ -72,8 +72,15 @@ app.use("/admin/*", async (c, next) => {
         await requireRealUser(c);
         await next();
     } catch (e: any) {
-        logger.warn(`[Auth Error] ${c.req.path}: ${e.message}`);
-        return c.json({ success: false, error: e.message }, 401);
+        const traceId = getTraceId(c);
+        logger.warn(`[Auth Error] ${c.req.path}: ${e.message}`, { traceId });
+        const appErr = errorFactory.create({
+            code: 'UNAUTHORIZED',
+            message: e.message || 'Unauthorized',
+            operation: `api.auth.${c.req.path}`
+        });
+        appErr.traceId = traceId;
+        return c.json(errorFactory.fail(appErr), 401);
     }
 });
 
@@ -107,8 +114,15 @@ app.use("*", async (c, next) => {
         try {
             await requireRealUser(c);
         } catch(e: any) {
-             logger.warn(`[Auth Error - Mutation] ${c.req.path}: ${e.message}`);
-             return c.json({ success: false, error: e.message }, 401);
+             const traceId = getTraceId(c);
+             logger.warn(`[Auth Error - Mutation] ${c.req.path}: ${e.message}`, { traceId });
+             const appErr = errorFactory.create({
+                 code: 'UNAUTHORIZED',
+                 message: e.message || 'Unauthorized (Mutation)',
+                 operation: `api.auth_mutation.${c.req.path}`
+             });
+             appErr.traceId = traceId;
+             return c.json(errorFactory.fail(appErr), 401);
         }
     }
     

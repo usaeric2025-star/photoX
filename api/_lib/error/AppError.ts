@@ -19,6 +19,11 @@ export const errorFactory = {
     return newErr;
   },
   
+  create({ message, code, status, operation }: { message: string, code?: string, status?: number, operation?: string }): AppError {
+    const fullMessage = operation ? `[${operation}] ${message}` : message;
+    return new AppError(fullMessage, code, status);
+  },
+  
   fail(err: AppError) {
     return {
       success: false,

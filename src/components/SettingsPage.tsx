@@ -138,7 +138,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
     if (activeScreen === 'manage') setActiveTab('sync');
     if (activeScreen === 'structure' || activeScreen === 'tags') setActiveTab('assets');
     if (activeScreen === 'settings') setActiveTab('sync');
-    if (['tasks', 'history_maintenance', 'error-logs', 'logs', 'diagnostics'].includes(activeScreen)) setActiveTab('status');
+    if (['tasks', 'error-logs', 'logs', 'diagnostics'].includes(activeScreen)) setActiveTab('status');
   }, [activeScreen]);
 
   return (

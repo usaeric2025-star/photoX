@@ -12,9 +12,13 @@ export async function requireRealUser(c: any) {
   if (!authHeader) throw new Error("Unauthorized: No credentials provided");
   
   if (!authSessionClientInstance) {
-    const supabaseUrl = serverEnv.VITE_SUPABASE_URL || serverEnv.SUPABASE_URL;
-    const supabaseKey = serverEnv.VITE_SUPABASE_ANON_KEY || ''; // Use anon key for session check
-    authSessionClientInstance = createClient(supabaseUrl!, supabaseKey);
+    const supabaseUrl = serverEnv.VITE_SUPABASE_URL || serverEnv.SUPABASE_URL || '';
+    const supabaseKey = serverEnv.VITE_SUPABASE_ANON_KEY || (serverEnv as any).SUPABASE_ANON_KEY || serverEnv.SUPABASE_SERVICE_KEY || ''; // Use any available key for session check
+    if (!supabaseUrl) {
+      logger.error("[Auth] SUPABASE_URL is missing from environment");
+      throw new Error("Server Configuration Error: Missing Supabase URL");
+    }
+    authSessionClientInstance = createClient(supabaseUrl, supabaseKey);
   }
   
   const { data: { user }, error } = await authSessionClientInstance.auth.getUser(authHeader.replace('Bearer ', ''));

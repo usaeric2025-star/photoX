@@ -190,12 +190,6 @@ const adminDiagnoseRoute = createRoute({
   component: AdminPage,
 });
 
-const adminHistoryRoute = createRoute({
-  getParentRoute: () => adminRoute,
-  path: '/history/maintenance',
-  component: AdminPage,
-});
-
 const adminTasksRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: '/tasks',
@@ -234,7 +228,6 @@ export const routeTree = rootRoute.addChildren([
   gRoute,
   adminRoute.addChildren([
     adminDiagnoseRoute, 
-    adminHistoryRoute, 
     adminTasksRoute, 
     adminErrorLogsRoute, 
     adminGroupRoute
