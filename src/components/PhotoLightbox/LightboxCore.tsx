@@ -66,15 +66,6 @@ export const LightboxCore = ({
       plugins={LIGHTBOX_PLUGINS.filter(p => p.name !== 'captions')}
        toolbar={{
         buttons: [
-          showAi && (
-            <IconButton
-              key="ai"
-              label={"AI 分析" as any}
-              icon={Sparkles}
-              onClick={() => { const p = photos[index]; if (p) onAiAnalyze?.(p); }}
-              className="text-indigo-400 hover:text-indigo-300"
-            />
-          ),
           showSetCover && (
             <IconButton
               key="cover"

@@ -27,6 +27,9 @@
   --z-index-toast: 300;
   --z-index-max: 999;
 
+  /* yarl overrides */
+  --yarl__toolbar_padding: max(8px, env(safe-area-inset-top));
+
   /* 自定义呼吸动画 */
   @keyframes breathing {
     0%, 100% { transform: scale(1); opacity: 0.95; box-shadow: 0 0 0px rgba(212, 168, 83, 0); }
@@ -117,6 +120,11 @@ body {
 .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.yarl__toolbar {
+  padding-right: max(8px, env(safe-area-inset-right)) !important;
+  z-index: 1000 !important;
+}
 
 @theme inline {
   --font-heading: var(--font-sans);
