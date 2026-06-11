@@ -154,7 +154,7 @@ export function usePhotoEditAI(form: PhotoEditFormReturn) {
         throw new Error((resp as any).message || 'AI 属性智能识别失败');
       }
     }, { silent: true });
-  }, [editPhotoId, appLang, settings?.gemini_api_key, runTask, updatePhoto, form, queryClient, categories, allTags]);
+  }, [editPhotoId, appLang, settings?.agnes_api_key, runTask, updatePhoto, form, queryClient, categories, allTags]);
 
   return { handleAiAnalyze };
 }

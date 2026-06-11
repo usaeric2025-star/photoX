@@ -18,7 +18,7 @@ import { translations } from "@/lib/translations";
 interface UseSettingsLogicProps {
   user: User | null;
   settings: AppSettings;
-  geminiApiKey: string;
+  agnesApiKey: string;
   saveSettings: (s: AppSettings) => Promise<any>;
   performPullSync: () => Promise<any>;
   setSettings: (s: AppSettings) => void;
@@ -29,7 +29,7 @@ import { useDebouncedCallback } from '@mantine/hooks';
 export const useSettingsLogic = ({
   user,
   settings,
-  geminiApiKey,
+  agnesApiKey,
   saveSettings,
   performPullSync,
   setSettings,
@@ -106,7 +106,7 @@ export const useSettingsLogic = ({
   };
 
   const testConnection = async () => {
-    if (!settings?.gemini_api_key) return;
+    if (!settings?.agnes_api_key) return;
     
     return runTask(
       appLang === 'zh' ? '测试 AI 服务连接' : 'Test AI Connection',
@@ -116,7 +116,7 @@ export const useSettingsLogic = ({
           const provider = (settings as any).ai_provider || "google";
           const model = settings.custom_model || DEFAULT_AI_MODEL;
           const ok = await testAiConnection(
-            settings.gemini_api_key || "",
+            settings.agnes_api_key || "",
             provider,
             model,
           );

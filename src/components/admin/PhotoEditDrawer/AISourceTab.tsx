@@ -104,7 +104,7 @@ export function AISourceTab({ photoId }: AISourceTabProps) {
           </div>
           <div className="flex items-center gap-1 text-[10px] font-mono text-slate-500">
             <FileJson className="w-3 h-3" />
-            <span>gemini-response.json</span>
+            <span>agnes-response.json</span>
           </div>
         </div>
 
@@ -120,8 +120,8 @@ export function AISourceTab({ photoId }: AISourceTabProps) {
         <Info className="w-4 h-4 text-slate-400 flex-shrink-0" />
         <p>
           {appLang === 'zh'
-            ? '本区域安全只读展示大语言模型（Gemini Prompt Pipeline）响应的未经结构化处理的源内容，包含特定尺寸计算规则及翻译建议，供管理员审核审计。'
-            : 'This workspace displays the safe, read-only unstructured LLM payload received from the Gemini Prompt Pipeline, including native dimension values and translations.'}
+            ? '本区域安全只读展示大语言模型（Agnes AI Pipeline）响应的未经结构化处理的源内容，包含特定尺寸计算规则及翻译建议，供管理员审核审计。'
+            : 'This workspace displays the safe, read-only unstructured LLM payload received from the Agnes AI Pipeline, including native dimension values and translations.'}
         </p>
       </div>
     </div>
