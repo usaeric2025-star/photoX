@@ -166,13 +166,13 @@ export function createMutation<TData, TVariables, TContext = unknown>(config: Mu
 
           if (keysToInvalidate.length > 0) {
             keysToInvalidate.forEach(key => {
-              queryClient.invalidateQueries({ queryKey: key, refetchType: 'all' });
+              queryClient.invalidateQueries({ queryKey: key });
             });
           } else {
             // Fallback to tracking key if no explicit invalidation keys
             const queryKey = getQueryKey(variables);
             if (queryKey[0] !== 'unknown') {
-              queryClient.invalidateQueries({ queryKey, refetchType: 'all' });
+              queryClient.invalidateQueries({ queryKey });
             }
           }
 

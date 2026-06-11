@@ -42,7 +42,13 @@ export function usePhotoEditAI(form: PhotoEditFormReturn) {
           const updates: any = {};
           
           if (result.name) {
-            updates.name = typeof result.name === 'object' ? result.name : { zh: String(result.name), en: '', ms: '' };
+            updates.name = typeof result.name === 'object'
+              ? {
+                  zh: result.name.zh || '',
+                  en: result.name.en || '',
+                  ms: result.name.ms || ''
+                }
+              : { zh: String(result.name), en: '', ms: '' };
           }
 
           // --- Strict Category Matching ---
@@ -79,11 +85,12 @@ export function usePhotoEditAI(form: PhotoEditFormReturn) {
             if (targetId) updates.category_id = targetId;
           }
 
-          // --- Strict Tag Matching ---
-          if (Array.isArray(result.tag_ids)) {
+          // --- Strict Tag Matching (Full format-compatible) ---
+          const sourceTags = result.tagNames || result.tag_names || result.tagIds || result.tag_ids || [];
+          if (Array.isArray(sourceTags)) {
             const matchedTagIds: string[] = [];
             
-            result.tag_ids.slice(0, 10).forEach((rawTag: any) => {
+            sourceTags.slice(0, 10).forEach((rawTag: any) => {
                 let tagStr = '';
                 if (rawTag && typeof rawTag === 'object') {
                     tagStr = String(rawTag.id ?? rawTag.tag_id ?? rawTag.name ?? '');
@@ -98,20 +105,34 @@ export function usePhotoEditAI(form: PhotoEditFormReturn) {
                 if (exactMatch) {
                     matchedTagIds.push(String(exactMatch.id));
                 } else {
-                    // Match by Name
+                    // Match by Name (Case-insensitive)
                     const nameMatch = allTags.find(t => t.name.toLowerCase() === tagStr.toLowerCase());
-                    if (nameMatch) matchedTagIds.push(String(nameMatch.id));
+                    if (nameMatch) {
+                        matchedTagIds.push(String(nameMatch.id));
+                    }
                 }
             });
 
             if (matchedTagIds.length > 0) {
-                // Keep unique and limit to 5
-                updates.tag_ids = Array.from(new Set(matchedTagIds)).slice(0, 5);
+                const uniqueIds = Array.from(new Set(matchedTagIds)).slice(0, 5);
+                // Map to tag objects { id, name } expected by form State & TagEditor
+                updates.tags = uniqueIds.map(id => {
+                  const found = allTags.find(t => String(t.id) === id);
+                  return found ? { id: found.id, name: found.name || '' } : { id: String(id), name: '' };
+                });
+            } else {
+                updates.tags = [];
             }
           }
 
           if (result.description) {
-            updates.description = typeof result.description === 'object' ? result.description : { zh: String(result.description), en: '', ms: '' };
+            updates.description = typeof result.description === 'object'
+              ? {
+                  zh: result.description.zh || '',
+                  en: result.description.en || '',
+                  ms: result.description.ms || ''
+                }
+              : { zh: String(result.description), en: '', ms: '' };
           }
           if (Array.isArray(result.dimensions)) {
             updates.dimensions = result.dimensions.map((d: any) => ({ ...d, is_ai: true }));
@@ -122,14 +143,15 @@ export function usePhotoEditAI(form: PhotoEditFormReturn) {
 
           // [AI-RAW-DATA-SAVE] Ensure we always save the raw source code
           try {
-            const rawResultText = (resp as any).raw_result || JSON.stringify(result);
+            const rawResultText = (resp as any).data?.raw_result || (resp as any).raw_result || JSON.stringify(result);
+            const parsedDataObj = (resp as any).data || result;
             const { api } = await import('@/lib/api');
             await (api as any).photos['ai-result'].$post({
               json: {
                 payload: {
                   photo_id: editPhotoId,
                   raw_result: rawResultText,
-                  parsed_data: result,
+                  parsed_data: parsedDataObj,
                   created_at: new Date().toISOString()
                 }
               }

@@ -82,7 +82,7 @@ export function useDiagnostics() {
   const { data: r2Result, isLoading: isDiagnosingR2, refetch: runR2DiagnosticsQuery } = useQuery({
     queryKey: ['diagnostics', 'r2'],
     queryFn: async () => {
-      const res = await api.admin['diagnose-r2'].$get();
+      const res = await api.admin.diagnose.r2.$get();
       if (!res.ok) throw new Error('R2 存储测试未通过');
       const data = await res.json() as any;
       if (!data.success) throw new Error(data.error || 'R2 存储测试未通过');

@@ -36,14 +36,14 @@ export const queryKeys = {
     list: (filters?: PhotoFilters) => [...PHOTO_ALL, 'list', sortObject(filters)] as const,
     details: () => [...PHOTO_ALL, 'detail'] as const,
     detail: (id: string) => [...PHOTO_ALL, 'detail', id] as const,
-    infinite: (filters?: PhotoFilters, freshness?: string) => [...PHOTO_ALL, 'infinite', sortObject(filters), freshness],
+    infinite: (filters?: PhotoFilters, freshness?: string) => freshness ? [...PHOTO_ALL, 'infinite', sortObject(filters), freshness] : [...PHOTO_ALL, 'infinite', sortObject(filters)],
     count: (filters?: PhotoFilters) => [...PHOTO_ALL, 'count', sortObject(filters)],
   },
   groups: {
     all: GROUP_ALL,
     lists: () => [...GROUP_ALL, 'list'] as const,
     list: (filters?: any) => [...GROUP_ALL, 'list', sortObject(filters)] as const,
-    detail: (id: string, freshness?: string) => [...GROUP_ALL, 'detail', id, freshness],
+    detail: (id: string, freshness?: string) => freshness ? [...GROUP_ALL, 'detail', id, freshness] : [...GROUP_ALL, 'detail', id],
   },
   tags: {
     all: ['tags'] as const,
