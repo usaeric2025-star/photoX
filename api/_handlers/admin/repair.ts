@@ -29,6 +29,58 @@ adminRepair.post("/", async (c) => {
          return c.json({ success: true, message: '成员数同步完成' });
       }
 
+      if (issueId === 'group_cover_mismatch') {
+         const { data: groups } = await supabase.from("groups").select("id, name, cover_photo_id");
+         const { data: photos } = await supabase.from("furniture_items").select("id, name, group_id, is_group_cover, created_at");
+
+         const photosByGroup = new Map<string, any[]>();
+         photos?.forEach((p: any) => {
+           if (p.group_id) {
+             const gid = String(p.group_id);
+             if (!photosByGroup.has(gid)) photosByGroup.set(gid, []);
+             photosByGroup.get(gid)!.push(p);
+           }
+         });
+
+         let count = 0;
+         for (const g of groups || []) {
+           const gPhotos = photosByGroup.get(String(g.id)) || [];
+           if (gPhotos.length === 0) {
+             if (g.cover_photo_id) {
+               await supabase.from("groups").update({ cover_photo_id: null }).eq("id", g.id);
+               count++;
+             }
+             continue;
+           }
+
+           const validCover = gPhotos.some((p: any) => p.id === g.cover_photo_id);
+           const markedCover = gPhotos.some((p: any) => p.is_group_cover === true);
+
+           if (!g.cover_photo_id || !validCover || !markedCover) {
+             let targetCoverId = g.cover_photo_id;
+             const photoMarkedAsCover = gPhotos.find((p: any) => p.is_group_cover === true);
+             
+             if (photoMarkedAsCover && validCover) {
+               targetCoverId = photoMarkedAsCover.id;
+             } else {
+               const sorted = [...gPhotos].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+               targetCoverId = sorted[0].id;
+             }
+
+             await supabase.from("groups").update({ cover_photo_id: targetCoverId }).eq("id", g.id);
+             
+             for (const p of gPhotos) {
+               const shouldBeCover = p.id === targetCoverId;
+               if (p.is_group_cover !== shouldBeCover) {
+                 await supabase.from("furniture_items").update({ is_group_cover: shouldBeCover }).eq("id", p.id);
+               }
+             }
+             count++;
+           }
+         }
+         return c.json({ success: true, count, message: `已成功修复 ${count} 个合组的封面配置` });
+      }
+
       if (issueId === 'backfill_thumbhashes') {
          return c.json({ success: true, message: '缩略图缓存已就绪' });
       }

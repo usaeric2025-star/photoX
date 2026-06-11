@@ -56,6 +56,12 @@ export function PhotoTagSelector({
     if (cleanSelectedIds.includes(strId)) {
       onChange(cleanSelectedIds.filter((id) => id !== strId));
     } else {
+      if (cleanSelectedIds.length >= 3) {
+        import('sonner').then(({ toast }) => {
+          toast.warning("最多只能选择 3 个标签 / Maximum of 3 tags allowed");
+        });
+        return;
+      }
       onChange([...cleanSelectedIds, strId]);
     }
   }, [cleanSelectedIds, onChange]);

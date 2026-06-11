@@ -95,16 +95,37 @@ export const groups = new Hono()
         if (error) return c.json({ success: false, error: error.message }, 500);
       }
 
+      // Reconcile and synchronize
+      const affectedGroupIds = [targetGroupId];
+      if (sourceGroupIds) {
+        sourceGroupIds.forEach((id: string) => affectedGroupIds.push(id));
+      }
+      const { syncGroupCoversAndCount } = await import('../_lib/groups.js');
+      await syncGroupCoversAndCount(supabase, affectedGroupIds);
+
       return c.json({ success: true });
   })
   .post('/move-photos', async (c) => {
     const { photoIds, targetGroupId } = await c.req.json();
     const supabase = await getSupabaseAdmin();
+
+    // Fetch snapshots before move
+    const { data: sourcePhotos } = await supabase.from('furniture_items').select('group_id').in('id', photoIds);
+    const affectedGroupIds = (sourcePhotos || []).map((p: any) => p.group_id).filter(Boolean);
+    if (targetGroupId) {
+      affectedGroupIds.push(targetGroupId);
+    }
+
     const { error } = await supabase.rpc('move_photos_to_group', {
       photo_ids: photoIds,
       target_group_id: targetGroupId
     });
     if (error) return c.json({ success: false, error: error.message }, 500);
+
+    // Reconcile groups
+    const { syncGroupCoversAndCount } = await import('../_lib/groups.js');
+    await syncGroupCoversAndCount(supabase, affectedGroupIds);
+
     return c.json({ success: true });
   })
   .post('/set-cover', async (c) => {
@@ -116,6 +137,11 @@ export const groups = new Hono()
     }
     const { error } = await supabase.from('groups').update({ cover_photo_id: photoId || null }).eq('id', groupId);
     if (error) return c.json({ success: false, error: error.message }, 500);
+
+    // Keep strict integrity
+    const { syncGroupCoversAndCount } = await import('../_lib/groups.js');
+    await syncGroupCoversAndCount(supabase, [groupId]);
+
     return c.json({ success: true });
   })
   .post('/ungroup', async (c) => {
@@ -130,9 +156,10 @@ export const groups = new Hono()
     const { groupId } = await c.req.json();
     if (!groupId) return c.json({ success: true });
     const supabase = await getSupabaseAdmin();
-    const { count } = await supabase.from('furniture_items').select('id', { count: 'exact', head: true }).eq('group_id', groupId);
-    const { error } = await supabase.from('groups').update({ member_count: count || 0 }).eq('id', groupId);
-    if (error) return c.json({ success: false, error: error.message }, 500);
+    
+    const { syncGroupCoversAndCount } = await import('../_lib/groups.js');
+    await syncGroupCoversAndCount(supabase, [groupId]);
+    
     return c.json({ success: true });
   })
   .post('/repair-integrity', async (c) => {

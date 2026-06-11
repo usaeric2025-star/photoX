@@ -116,15 +116,32 @@ export const photos = new Hono()
   .post('/update', async (c) => {
     const { id, updates } = await c.req.json();
     const supabase = await getSupabaseAdmin();
-    // Special handling for group cover
+    
+    // Fetch snapshot before update to track if group is changing
+    const { data: beforeUpdate } = await supabase.from(TABLE_NAME).select('group_id').eq('id', id).maybeSingle();
+
+    // Special handling for group cover (optimistic quick update)
     if (updates.is_group_cover === true) {
       const { data } = await supabase.from(TABLE_NAME).select('group_id').eq('id', id).maybeSingle();
       if (data?.group_id) {
         await supabase.from(TABLE_NAME).update({ is_group_cover: false }).eq('group_id', data.group_id);
+        // Also update groups cover_photo_id
+        await supabase.from('groups').update({ cover_photo_id: id }).eq('id', data.group_id);
       }
     }
     const { error } = await supabase.from(TABLE_NAME).update(updates).eq('id', id);
     if (error) return c.json({ success: false, error: error.message }, 500);
+
+    // POST-MUTATION: Reconcile covers & counts since things changed
+    const affectedGroupIds: string[] = [];
+    if (beforeUpdate?.group_id) affectedGroupIds.push(beforeUpdate.group_id);
+    if (updates.group_id) affectedGroupIds.push(updates.group_id);
+
+    if (affectedGroupIds.length > 0) {
+      const { syncGroupCoversAndCount } = await import('../_lib/groups.js');
+      await syncGroupCoversAndCount(supabase, affectedGroupIds);
+    }
+
     return c.json({ success: true });
   })
   .post('/upsert', async (c) => {
@@ -132,6 +149,13 @@ export const photos = new Hono()
     const supabase = await getSupabaseAdmin();
     const { data, error } = await supabase.from(TABLE_NAME).upsert(payload, { onConflict: 'id' }).select('id').maybeSingle();
     if (error) return c.json({ success: false, error: error.message }, 500);
+
+    // If upsert introduced a group_id, reconcile
+    if (payload.group_id) {
+      const { syncGroupCoversAndCount } = await import('../_lib/groups.js');
+      await syncGroupCoversAndCount(supabase, [payload.group_id]);
+    }
+
     return c.json({ success: true, data });
   })
   .post('/delete', async (c) => {
@@ -141,6 +165,12 @@ export const photos = new Hono()
     
     const { error } = await supabase.from(TABLE_NAME).delete().match({ id, user_id: userId });
     if (error) return c.json({ success: false, error: error.message }, 500);
+
+    // POST-DELETE: Reconcile and count since member is deleted
+    if (photoData?.group_id) {
+      const { syncGroupCoversAndCount } = await import('../_lib/groups.js');
+      await syncGroupCoversAndCount(supabase, [photoData.group_id]);
+    }
     
     let dissolvedGroupId: string | undefined;
     if (photoData) {

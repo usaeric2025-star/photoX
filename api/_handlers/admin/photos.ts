@@ -10,17 +10,33 @@ adminPhotos.get("/photo-ai-result/:photoId", async (c) => {
         if (!photoId) return c.json({ success: false, error: "photoId is required" }, 400);
 
         const supabase = await getSupabaseAdmin();
-        const { data: rawLogs, error } = await supabase
+        // Optimize: Query using the indexed error_message field first (super fast) and fallback if none found
+        let { data: rawLogs, error } = await supabase
             .from("system_logs")
             .select("*")
             .eq("context", "AI_Executor")
-            .filter("metadata->>photo_id", "eq", photoId)
+            .eq("error_message", `AI analysis completed for photo ${photoId}`)
             .order("created_at", { ascending: false })
             .limit(1);
 
         if (error) {
             logger.warn(`[get-photo-ai-result-failed]`, error.message);
             return c.json({ success: true, data: null });
+        }
+
+        if (!rawLogs || rawLogs.length === 0) {
+            // Slower fallback query using JSONB unpacking for older or legacy logs
+            const fallbackRes = await supabase
+                .from("system_logs")
+                .select("*")
+                .eq("context", "AI_Executor")
+                .filter("metadata->>photo_id", "eq", photoId)
+                .order("created_at", { ascending: false })
+                .limit(1);
+            
+            if (!fallbackRes.error && fallbackRes.data && fallbackRes.data.length > 0) {
+                rawLogs = fallbackRes.data;
+            }
         }
 
         const logRecord = rawLogs?.[0];

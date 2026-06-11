@@ -53,11 +53,9 @@ export function usePhotoEdit(initialPhoto: Photo | null): PhotoEditFormReturn {
 
   const { draft, updateDraft, resetDraft } = useFormDraft<ProductFormData>(initialValues as ProductFormData);
 
-  // 當外部照片變化時同步
+  // 當外部照片變化時同步 (包含切換到 null/undefined)
   useEffect(() => {
-    if (initialPhoto) {
-      resetDraft();
-    }
+    resetDraft();
   }, [initialPhoto?.id, resetDraft]);
 
   const mutation = useMutation({
