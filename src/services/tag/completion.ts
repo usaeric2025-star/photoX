@@ -19,7 +19,15 @@ export async function resolveTagNamesToIds(
     const tagIds: string[] = [];
     const missingNames: string[] = [];
 
-    const normalizedTagNames = tagNames.map(n => n.toUpperCase().trim()).filter(Boolean);
+    const normalizedTagNames = tagNames
+      .map(n => {
+        if (!n) return '';
+        if (typeof n === 'object') {
+          return String((n as any).name || (n as any).zh || (n as any).en || '').toUpperCase().trim();
+        }
+        return String(n).toUpperCase().trim();
+      })
+      .filter(Boolean);
     const uniqueNames = Array.from(new Set(normalizedTagNames));
 
     uniqueNames.forEach(name => {

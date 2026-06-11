@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trash2, Download, AlertCircle, AlertTriangle, Info, ShieldAlert, ChevronDown, ChevronUp } from 'lucide-react';
+import { Trash2, Download, AlertCircle, AlertTriangle, Info, ShieldAlert, ChevronDown, ChevronUp, Copy } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
@@ -34,12 +34,26 @@ const LevelIcon = ({ level }: { level: ErrorLevel }) => {
 const LogItem = ({ log }: { log: LogEntry }) => {
   const [expanded, { toggle }] = useDisclosure(false);
   const dateTimeStr = formatters.dateTime(log.created_at);
+  const level = log.level || log.metadata?.level || 'info';
+
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const stack = log.stack || log.stack_trace;
+    const metadataStr = log.metadata ? `\nMetadata: ${JSON.stringify(log.metadata, null, 2)}` : '';
+    const textToCopy = `[Log Context: ${log.context || 'global'}]
+Level: ${level}
+Time: ${formatters.dateTime(log.created_at)}
+Message: ${log.message || log.error_message || ''}${metadataStr}${stack ? `\nStack: ${stack}` : ''}`;
+    
+    navigator.clipboard.writeText(textToCopy);
+    toast.success('日志详情已复制');
+  };
 
   return (
-    <div className={`border-b border-slate-100 last:border-0 py-3 ${log.level === 'critical' ? 'bg-red-50/30' : ''}`}>
+    <div className={`border-b border-slate-100 last:border-0 py-3 ${level === 'critical' ? 'bg-red-50/30' : ''}`}>
       <div className="flex items-start gap-3 cursor-pointer group" onClick={toggle}>
         <div className="mt-0.5">
-          <LevelIcon level={log.level} />
+          <LevelIcon level={level} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
@@ -52,16 +66,37 @@ const LogItem = ({ log }: { log: LogEntry }) => {
             {log.message || log.error_message}
           </p>
         </div>
-        <div className="text-slate-300">
+        <div className="text-slate-300 flex items-center gap-2">
+          <button 
+            type="button"
+            onClick={handleCopy}
+            className="p-1 rounded hover:bg-slate-150 hover:text-slate-600 transition-colors"
+            title="复制日志详情 / Copy details"
+          >
+            <Copy size={12} className="text-slate-400 hover:text-slate-600" />
+          </button>
           {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </div>
       </div>
       
-      {expanded && (log.stack || log.stack_trace) && (
-        <div className="mt-3 p-3 bg-slate-50 rounded-xl overflow-x-auto">
-          <pre className="text-[9px] font-mono text-slate-500 whitespace-pre leading-relaxed">
-            {log.stack || log.stack_trace}
-          </pre>
+      {expanded && (
+        <div className="mt-3 space-y-2">
+          {(log.stack || log.stack_trace) && (
+            <div className="p-3 bg-slate-50 rounded-xl overflow-x-auto">
+              <span className="text-[9px] font-bold text-slate-400 block mb-1">STACK TRACE</span>
+              <pre className="text-[9px] font-mono text-slate-500 whitespace-pre leading-relaxed">
+                {log.stack || log.stack_trace}
+              </pre>
+            </div>
+          )}
+          {log.metadata && (
+            <div className="p-3 bg-slate-50 rounded-xl overflow-x-auto">
+              <span className="text-[9px] font-bold text-slate-400 block mb-1">METADATA / CONTEXT</span>
+              <pre className="text-[9px] font-mono text-slate-500 whitespace-pre-wrap leading-relaxed">
+                {JSON.stringify(log.metadata, null, 2)}
+              </pre>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -86,10 +121,16 @@ export const ErrorLogViewer = () => {
           const res = await api.admin['error-events-clear'].$post();
           const json = await res.json();
           if (!json.success) throw new Error(json.error || '清除日志失败');
+          return json as { success: boolean; count?: number };
       },
-      onSuccess: () => {
+      onSuccess: (data) => {
           queryClient.invalidateQueries({ queryKey: ['error_logs'] });
-          toast.success('日志已清除');
+          const count = data?.count ?? 0;
+          if (count > 0) {
+            toast.success(`日志清理成功：已从物理数据表清除 ${count} 条历史日志记录`);
+          } else {
+            toast.success('日志清理成功：当前无历史日志记录');
+          }
       },
       onError: (err: any) => {
           console.error('[ErrorLogViewer] Clear failed:', err);

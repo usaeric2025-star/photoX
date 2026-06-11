@@ -104,11 +104,22 @@ export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promi
        if (Array.isArray(parsed)) {
          parsed = parsed[0] || {};
        }
+       
+       const rawTags = (parsed.tag_names || parsed.new_tags || parsed.tags || []);
+       const sanitizedTagNames = Array.isArray(rawTags)
+         ? rawTags.map((t: any) => {
+             if (!t) return '';
+             if (typeof t === 'object') return String(t.name || t.zh || t.en || '');
+             return String(t);
+           }).filter(Boolean)
+         : [];
+
        return ok({
           name: parsed.name || '',
           description: parsed.description || '',
           category_id: parsed.category_id || null,
-          tagNames: (parsed.new_tags || parsed.tags || []),
+          group_id: parsed.group_id || null,
+          tagNames: sanitizedTagNames,
           tagIds: Array.isArray(parsed.tag_ids) ? parsed.tag_ids.map(String) : [],
           raw_result: JSON.stringify(data.data)
        });

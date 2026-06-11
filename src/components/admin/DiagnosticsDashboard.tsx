@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from '@tanstack/react-router';
 import { 
-  RefreshCw, History, ShieldCheck
+  RefreshCw, ShieldCheck
 } from 'lucide-react';
 import { useDiagnostics } from '@/hooks/admin/useDiagnostics';
 import { diagnosticRegistry } from './Diagnostics/registry';
@@ -27,15 +27,13 @@ export function DiagnosticsDashboard() {
     const path = location.pathname;
     if (path.includes('/tasks')) return 'tasks';
     if (path.includes('/error-logs')) return 'logs';
-    if (path.includes('/history/maintenance')) return 'history';
     return 'diagnosis';
   })();
 
-  const setActiveTab = (tab: 'diagnosis' | 'tasks' | 'logs' | 'history') => {
+  const setActiveTab = (tab: 'diagnosis' | 'tasks' | 'logs') => {
     switch (tab) {
       case 'tasks': navigate({ to: '/admin/tasks' }); break;
       case 'logs': navigate({ to: '/admin/error-logs' }); break;
-      case 'history': navigate({ to: '/admin/history/maintenance' }); break;
       default: navigate({ to: '/admin/diagnose' }); break;
     }
   };
@@ -116,8 +114,7 @@ export function DiagnosticsDashboard() {
              {[
                { id: 'diagnosis', label: '诊断 / Diagnosis' },
                { id: 'tasks', label: '任务 / Tasks' },
-               { id: 'logs', label: '日志 / Logs' },
-               { id: 'history', label: '历史 / History' }
+               { id: 'logs', label: '日志 / Logs' }
              ].map(tab => (
                <button
                  key={tab.id}
@@ -205,19 +202,6 @@ export function DiagnosticsDashboard() {
       {activeTab === 'logs' && (
         <div className="animate-in fade-in slide-in-from-bottom-2">
            <ErrorLogViewer />
-        </div>
-      )}
-
-      {activeTab === 'history' && (
-        <div className="animate-in fade-in slide-in-from-bottom-2">
-           <div className="bg-white border border-slate-100 rounded-[32px] p-8 text-center space-y-4">
-              <History className="w-12 h-12 text-slate-300 mx-auto" />
-              <div className="space-y-1">
-                <h3 className="text-base font-bold text-slate-800">维护历史已合并</h3>
-                <p className="text-sm text-slate-500">所有的维护操作记录现在统一在「任务」选项卡中查看。</p>
-              </div>
-              <Button onClick={() => setActiveTab('tasks')} variant="outline" className="rounded-full">查看任务记录</Button>
-           </div>
         </div>
       )}
     </div>

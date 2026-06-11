@@ -154,7 +154,20 @@ export const photos = new Hono()
   .post('/ai-result', async (c) => {
     const { payload } = await c.req.json();
     const supabase = await getSupabaseAdmin();
-    const { data, error } = await supabase.from('photo_ai_results').upsert(payload, { onConflict: 'photo_id' }).select().maybeSingle();
+    // Save raw response and parsed data to system_logs.metadata per architecture rules
+    const { data, error } = await supabase.from('system_logs').insert({
+        error_message: `AI analysis completed for photo ${payload.photo_id}`,
+        context: 'AI_Executor',
+        metadata: {
+            action: 'analyze_photo',
+            level: 'info',
+            photo_id: payload.photo_id,
+            raw_result: payload.raw_result,
+            parsed_data: payload.parsed_data
+        },
+        created_at: payload.created_at || new Date().toISOString()
+    }).select().maybeSingle();
+    
     if (error) return c.json({ success: false, error: error.message }, 500);
     return c.json({ success: true, data });
   });

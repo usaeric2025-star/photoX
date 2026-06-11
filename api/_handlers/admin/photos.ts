@@ -10,18 +10,32 @@ adminPhotos.get("/photo-ai-result/:photoId", async (c) => {
         if (!photoId) return c.json({ success: false, error: "photoId is required" }, 400);
 
         const supabase = await getSupabaseAdmin();
-        const { data, error } = await supabase
-            .from("photo_ai_results")
+        const { data: rawLogs, error } = await supabase
+            .from("system_logs")
             .select("*")
-            .eq("photo_id", photoId)
-            .maybeSingle();
+            .eq("context", "AI_Executor")
+            .filter("metadata->>photo_id", "eq", photoId)
+            .order("created_at", { ascending: false })
+            .limit(1);
 
         if (error) {
             logger.warn(`[get-photo-ai-result-failed]`, error.message);
             return c.json({ success: true, data: null });
         }
 
-        return c.json({ success: true, data });
+        const logRecord = rawLogs?.[0];
+        if (!logRecord || !logRecord.metadata) {
+            return c.json({ success: true, data: null });
+        }
+
+        const resultObj = {
+            photo_id: photoId,
+            raw_result: logRecord.metadata.raw_result || '',
+            parsed_data: logRecord.metadata.parsed_data || null,
+            created_at: logRecord.created_at
+        };
+
+        return c.json({ success: true, data: resultObj });
     } catch (e: unknown) {
         return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown error' }, 500);
     }
@@ -57,14 +71,15 @@ adminPhotos.post("/delete-photos", async (c) => {
 
       if (fetchError) throw fetchError;
 
-      // Clean up associated photo_ai_results to avoid orphan rows and storage leaks
+      // Clean up associated system_logs to avoid orphan rows and storage leaks
       try {
         await supabase
-          .from("photo_ai_results")
+          .from("system_logs")
           .delete()
-          .in("photo_id", ids);
+          .eq("context", "AI_Executor")
+          .filter("metadata->>photo_id", "in", `(${ids.map(id => `"${id}"`).join(',')})`);
       } catch (err) {
-        logger.warn("[delete-photos] Clean up photo_ai_results failed:", err);
+        logger.warn("[delete-photos] Clean up associated system_logs failed:", err);
       }
 
       const { error: deleteError } = await supabase
@@ -136,12 +151,13 @@ adminPhotos.get("/error-events", async (c) => {
 adminPhotos.post("/error-events-clear", async (c) => {
     try {
         const supabase = await getSupabaseAdmin();
-        const { error } = await supabase
+        const { data, error } = await supabase
             .from('system_logs')
             .delete()
-            .neq('id', -1);
+            .not('id', 'is', null)
+            .select('id');
         if (error) throw error;
-        return c.json({ success: true });
+        return c.json({ success: true, count: data?.length || 0 });
     } catch (e: any) {
         logger.error('[Admin] Clear logs failed:', e);
         return c.json({ success: false, error: e.message }, 500);

@@ -24,20 +24,43 @@ export const analyzeAndSavePhoto = async (
       return fail('AI 分析未返回有效结果');
   }
 
-  const translation = await translateFields((analysis.data as any).name, (analysis.data as any).description);
-  if (!translation.ok) return translation;
+  const rawName = (analysis.data as any).name;
+  const rawDesc = (analysis.data as any).description;
+
+  let nameObj = { zh: '', en: '', ms: '' };
+  let descObj = { zh: '', en: '', ms: '' };
+
+  const isNameObj = rawName && typeof rawName === 'object';
+  const isDescObj = rawDesc && typeof rawDesc === 'object';
+
+  if (isNameObj && isDescObj) {
+    nameObj = {
+      zh: rawName.zh || '',
+      en: rawName.en || rawName.zh || '',
+      ms: rawName.ms || rawName.zh || ''
+    };
+    descObj = {
+      zh: rawDesc.zh || '',
+      en: rawDesc.en || rawDesc.zh || '',
+      ms: rawDesc.ms || rawDesc.zh || ''
+    };
+  } else {
+    const nameStr = isNameObj ? (rawName.zh || '') : String(rawName || '');
+    const descStr = isDescObj ? (rawDesc.zh || '') : String(rawDesc || '');
+    
+    const translation = await translateFields(nameStr, descStr);
+    if (translation.ok) {
+      nameObj = translation.data.name;
+      descObj = translation.data.description;
+    } else {
+      nameObj = { zh: nameStr, en: nameStr, ms: nameStr };
+      descObj = { zh: descStr, en: descStr, ms: descStr };
+    }
+  }
 
   const updateResult = await updatePhoto(photo.id, {
-    name: {
-      zh: (analysis.data as any).name,
-      en: translation.data.name.en,
-      ms: translation.data.name.ms
-    },
-    description: {
-      zh: (analysis.data as any).description || '',
-      en: translation.data.description.en,
-      ms: translation.data.description.ms
-    },
+    name: nameObj,
+    description: descObj,
     category_id: (analysis.data as any).category_id ? String((analysis.data as any).category_id) : null,
     dimensions: (analysis.data as any).dimensions || [],
     metadata: {

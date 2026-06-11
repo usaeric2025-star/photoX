@@ -17,12 +17,28 @@ export const client = hc<AppType>(
         headers.set('Authorization', `Bearer ${token}`);
       }
       
-      const resp = await fetch(input, { ...init, headers });
+      let resp: Response;
+      let retries = 3;
+      while (true) {
+        try {
+          resp = await fetch(input, { ...init, headers });
+          break;
+        } catch (err) {
+          if (retries > 0) {
+            retries--;
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            continue;
+          }
+          throw err;
+        }
+      }
       
       // If it's not JSON, it might be the server crashing or returning HTML
       const contentType = resp.headers.get("Content-Type");
       if (!contentType || !contentType.includes("application/json")) {
         let text = await resp.text();
+        const requestUrl = input instanceof Request ? input.url : String(input);
+        const requestMethod = init?.method || (input instanceof Request ? input.method : 'GET');
         
         // Clean up common HTML clutter if present
         if (text.includes("<!DOCTYPE html>") || text.includes("<html") || text.includes("<body")) {
@@ -48,10 +64,10 @@ export const client = hc<AppType>(
         } else if (resp.status === 502 || resp.status === 504) {
           platformTip = " [诊断提示: 网关超时/错误，后端子域名或中间件运行异常]";
         } else if (resp.status === 404) {
-          platformTip = " [诊断提示: 路径不存在，请检查后台路由重写 vercel.json 映射配置]";
+          platformTip = " [诊断提示: 路径不存在，请检查后台路由重写 vercel.json 映射配置和 API 挂载路径]";
         }
 
-        const message = `服务器响应异常 (HTTP ${resp.status}): ${text.substring(0, 400)}${platformTip}`;
+        const message = `服务器响应异常 [${requestMethod} ${requestUrl}] (HTTP ${resp.status}): ${text.substring(0, 400)}${platformTip}`;
         const errorInstance = new Error(message);
         (errorInstance as any).success = false;
         (errorInstance as any).status = resp.status;
