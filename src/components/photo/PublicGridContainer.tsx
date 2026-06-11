@@ -145,9 +145,10 @@ export function PublicGridContainer({
       showGroupsCollapsed={showGroupsCollapsed}
       hasSearchQuery={hasSearchQuery}
       sharedCategories={sharedCategories}
+      sharedTags={tags}
       canPin={false}
     />
-  ), [showGroupsCollapsed, hasSearchQuery]);
+  ), [showGroupsCollapsed, hasSearchQuery, tags]);
 
   return (
     <div className="flex flex-col h-full bg-brand-bg w-full overflow-hidden text-text">

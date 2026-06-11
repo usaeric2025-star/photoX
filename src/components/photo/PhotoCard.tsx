@@ -97,11 +97,21 @@ export const PhotoCard = ({
   
   const displayCatName = propDisplayCatName ?? getTranslatedCategoryName(categoryId, categories, lang, t);
                  
+  const tagsList = sharedTags || [];
+
   const photoTags = (() => {
     if (propPhotoTags) return propPhotoTags;
     return (photo.tags || [])                
-      .map(t => getSafeText(t.name, lang))                
-      .filter(Boolean);                
+      .map(t => {
+        const foundTag = tagsList.find(st => String(st.id) === String(t.id));
+        const nameObj = foundTag ? foundTag.name : t.name;
+        const text = getSafeText(nameObj, lang);
+        if (text && /^[0-9a-f]{8}-[0-9a-f]{4}/i.test(text)) {
+           return null;
+        }
+        return text;
+      })                
+      .filter(Boolean) as string[];                
   })();
 
   const displayName = getPhotoDisplayName(photo, categories, lang, t as any);
@@ -241,11 +251,6 @@ export const PhotoCard = ({
         </div>
       )}
 
-      {isManagement && is_hidden && !isMultiSelect && (
-        <div className="absolute inset-0 bg-black/40 flex items-center justify-center pointer-events-none z-10 animate-fade-in">
-          <EyeOff size={24} className="text-white/80 drop-shadow" />
-        </div>
-      )}
       
       <PhotoStatusBadges 
         photo={photo} 
@@ -267,12 +272,6 @@ export const PhotoCard = ({
               <span className="text-[9px] bg-white text-black px-2 py-0.5 rounded-full font-black tracking-tighter uppercase shadow-lg inline-block">
                 {displayCatName}
               </span>
-              
-              {isManagement && photo.is_hidden && (
-                <span className="ml-1.5 text-[8px] bg-red-600 text-white px-1.5 py-0.5 rounded-full font-black tracking-tighter uppercase shadow-sm border border-red-500/50 inline-block">
-                  HIDDEN
-                </span>
-              )}
             </div>
           )}
 

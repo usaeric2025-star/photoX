@@ -83,10 +83,8 @@ export function groupPhotos(
     if (a.is_pinned && !b.is_pinned) return -1;
     if (!a.is_pinned && b.is_pinned) return 1;
 
-    if (!isAdminMode) {
-      if (a.is_hidden && !b.is_hidden) return 1;
-      if (!a.is_hidden && b.is_hidden) return -1;
-    }
+    if (a.is_hidden && !b.is_hidden) return 1;
+    if (!a.is_hidden && b.is_hidden) return -1;
 
     // 1. Are they exactly in the same group?
     if (a.group_id && b.group_id && a.group_id === b.group_id) {

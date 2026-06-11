@@ -9,6 +9,7 @@ import {
   useUrlFilters, 
   useColumns,
   useCategories,
+  useTags,
   useAdminBatchActions,
   usePermission
 } from '@/hooks';
@@ -35,6 +36,7 @@ export function AdminGridContainer() {
   const isMultiSelect = useUIStore(s => s.isMultiSelect);
 
   const { data: categories = [] } = useCategories();
+  const { data: tags = [] } = useTags();
 
   // 1. Data Layer
   const { 
@@ -66,9 +68,10 @@ export function AdminGridContainer() {
       showGroupsCollapsed={showGroupsCollapsed}
       hasSearchQuery={hasSearchQuery}
       sharedCategories={categories}
+      sharedTags={tags}
       canPin={canPin}
     />
-  ), [showGroupsCollapsed, hasSearchQuery, canPin]);
+  ), [showGroupsCollapsed, hasSearchQuery, canPin, tags]);
 
   const disableMultiSelect = () => {
     update({ isMultiSelect: false, selectedIds: [] });

@@ -15,7 +15,7 @@ export const photos = new Hono()
     
     const supabase = await getSupabaseAdmin();
     
-    let query = supabase.from(TABLE_NAME).select('*');
+    let query = supabase.from(TABLE_NAME).select('*, photo_tags(tag_id)');
     
     // Filters
     if (onlyUngrouped) query = query.is('group_id', null);
@@ -51,7 +51,7 @@ export const photos = new Hono()
   .post('/list-by-group', async (c) => {
     const { groupId, isAdminMode = false } = await c.req.json();
     const supabase = await getSupabaseAdmin();
-    let query = supabase.from(TABLE_NAME).select('*').eq('group_id', groupId);
+    let query = supabase.from(TABLE_NAME).select('*, photo_tags(tag_id)').eq('group_id', groupId);
     if (!isAdminMode) query = query.or('is_hidden.is.false,is_hidden.is.null');
     query = query.order('is_group_cover', { ascending: false }).order('is_hidden', { ascending: true, nullsFirst: true }).order('created_at', { ascending: false }).order('id', { ascending: true });
     const { data, error } = await query;
@@ -64,7 +64,7 @@ export const photos = new Hono()
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
     let countQuery = supabase.from(TABLE_NAME).select('id', { count: 'exact', head: true }).eq('group_id', groupId);
-    let query = supabase.from(TABLE_NAME).select('*').eq('group_id', groupId);
+    let query = supabase.from(TABLE_NAME).select('*, photo_tags(tag_id)').eq('group_id', groupId);
     if (!isAdminMode) {
       countQuery = countQuery.or('is_hidden.is.false,is_hidden.is.null');
       query = query.or('is_hidden.is.false,is_hidden.is.null');
@@ -96,7 +96,7 @@ export const photos = new Hono()
   .post('/by-ids', async (c) => {
     const { ids } = await c.req.json();
     const supabase = await getSupabaseAdmin();
-    const { data, error } = await supabase.from(TABLE_NAME).select('*').in('id', ids);
+    const { data, error } = await supabase.from(TABLE_NAME).select('*, photo_tags(tag_id)').in('id', ids);
     if (error) return c.json({ success: false, error: error.message }, 500);
     return c.json({ success: true, data: data || [] });
   })
