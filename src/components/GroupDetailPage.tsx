@@ -142,10 +142,6 @@ export function GroupDetailPage({}: GroupDetailPageProps) {
           className="fixed inset-0 z-overlay bg-white overflow-hidden flex flex-col"
           onClick={(e) => { if (e.target === e.currentTarget) { handleClose(); } }}
         >
-          {isLoading && !infinitePhotosData ? (
-                <GroupDetailSkeleton />
-              ) : (
-                <>
                    {/* Top Header */}
                    <GroupHeader 
                       displayName={groupDisplayName || (activeGroupPhotos[0] ? getPhotoDisplayName(activeGroupPhotos[0], categories, lang, t) : '') || `GROUP ${activeGroupId.slice(-4)}`}
@@ -180,8 +176,6 @@ export function GroupDetailPage({}: GroupDetailPageProps) {
                     />
                   </Suspense>
                 </div>
-            </>
-          )}
         </motion.div>
       )}
     </AnimatePresence>

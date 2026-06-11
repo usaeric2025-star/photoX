@@ -68,7 +68,7 @@ export async function prefetchGroupDetail(queryClient: QueryClient, groupId: str
       const res = await loadPhotosByGroupIdPaginated(
         groupId, pageParam as number, 60, isAdminMode
       );
-      if (!res.ok && res.message) throw new Error(res.message);
+      if (!res.ok) throw new Error(res.message || 'Error loading group photos');
       const data = res.data || { photos: [], total: 0 };
       const hasMore = Array.isArray(data.photos) ? data.photos.length >= 60 : false;
       return { photos: data.photos, total: data.total, hasMore, nextPage: hasMore ? (pageParam as number) + 1 : undefined };

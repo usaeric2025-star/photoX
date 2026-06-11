@@ -70,7 +70,7 @@ export function DrawerHeader({
   
   const { data: detailPhoto } = usePhotoDetail(editPhotoId || '');
   const { tasks } = useTasks();
-  const isAnalyzing = React.useMemo(() => tasks.some((t: any) => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析'))), [tasks]);
+  const isAnalyzing = React.useMemo(() => tasks.some((t: any) => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析') || t.name.toLowerCase().includes('analyze') || t.name.toLowerCase().includes('identif'))), [tasks]);
   const isSyncing = React.useMemo(() => tasks.some((t: any) => t.status === 'running' && (t.name.includes('同步') || t.name.includes('导入'))), [tasks]);
   const isRunning = React.useMemo(() => tasks.some((t: any) => t.status === 'running'), [tasks]);
 
@@ -151,12 +151,6 @@ export function DrawerHeader({
 
       <div className="flex-1 flex items-center justify-end gap-2">
         <div className="flex items-center gap-1.5">
-          <button
-            onClick={() => toast.info('点此一键智能提取照片各项参数')}
-            className="text-slate-300 hover:text-slate-500 transition-colors"
-          >
-            <Info size={14} />
-          </button>
           <button
             onClick={onAiAnalyze}
             disabled={isAnalyzing || isRunning}

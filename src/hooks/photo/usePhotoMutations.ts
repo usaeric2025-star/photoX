@@ -23,6 +23,18 @@ export const usePhotoEditMutation = createMutationHook({
     return res.data;
   },
   invalidateKeys: (vars: { id: string; updates: Partial<Photo>; silent?: boolean }) => [photoKeys.all, ['photo', vars.id]],
+  optimisticUpdate: (old: any, { id, updates }: { id: string; updates: Partial<Photo> }) => {
+    if (!old) return old;
+    // Infinite list query data structure
+    if (old.pages) {
+      return optimistic.infinite.update<Photo>()(old, { id, updates: updates as any });
+    }
+    // Single details query cache structure
+    if (old.id === id) {
+      return { ...old, ...updates };
+    }
+    return old;
+  },
   onSuccessMessage: (data: any, vars: any) => {
     if (vars?.silent) return null;
     return '已更新';

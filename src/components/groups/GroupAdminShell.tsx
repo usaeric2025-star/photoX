@@ -156,43 +156,37 @@ export function GroupAdminShell() {
             transition={{ duration: 0.1 }}
             className="fixed inset-0 z-overlay bg-white overflow-hidden flex flex-col"
           >
-            {isLoading && activeGroupPhotos.length === 0 ? (
-              <GroupDetailSkeleton />
-            ) : (
-              <>
-                {/* Top Header */}
-                <GroupHeader 
-                  displayName={(typeof groupData?.name === 'object' ? (groupData?.name?.[appLang as keyof typeof groupData.name] || groupData?.name?.zh || groupData?.name?.en || groupData?.name?.ms) : groupData?.name) || `GROUP ${filters.groupId?.slice(-4)}`}
-                  activeGroupId={filters.groupId}
-                  isAdminMode={isAdminMode}
-                  isGroupDataLoading={isGroupDataLoading}
-                  onClose={() => {
-                    navigate({ to: '/admin', search: (prev: any) => ({ ...prev, photoId: undefined }), resetScroll: false });
-                  }}
-                  onSettingsClick={() => update({ groupSettingsOpen: true })}
-                  onCopyId={(id) => {
-                      navigator.clipboard.writeText(id);
-                      toast.success("合组ID已复制");
-                  }}
-                  onBatchEdit={(ids) => update({ batchEditingIds: ids })}
-                  activeGroupPhotos={activeGroupPhotos}
-                  appLang={appLang}
-                />
+            {/* Always render Header and Content so they can handle internal loading states smoothly */}
+            <GroupHeader 
+              displayName={(typeof groupData?.name === 'object' ? (groupData?.name?.[appLang as keyof typeof groupData.name] || groupData?.name?.zh || groupData?.name?.en || groupData?.name?.ms) : groupData?.name) || `GROUP ${filters.groupId?.slice(-4)}`}
+              activeGroupId={filters.groupId}
+              isAdminMode={isAdminMode}
+              isGroupDataLoading={isGroupDataLoading}
+              onClose={() => {
+                navigate({ to: '/admin', search: (prev: any) => ({ ...prev, groupId: undefined, photoId: undefined }), resetScroll: false });
+              }}
+              onSettingsClick={() => update({ groupSettingsOpen: true })}
+              onCopyId={(id) => {
+                  navigator.clipboard.writeText(id);
+                  toast.success("合组ID已复制");
+              }}
+              onBatchEdit={(ids) => update({ batchEditingIds: ids })}
+              activeGroupPhotos={activeGroupPhotos}
+              appLang={appLang}
+            />
 
-                <GroupInfoPanel groupData={groupData || undefined} lang={appLang} />
+            <GroupInfoPanel groupData={groupData || undefined} lang={appLang} />
 
-                <GroupGridView
-                  virtualGridRef={virtualGridRef}
-                  photos={activeGroupPhotos}
-                  isLoading={isGroupPhotosLoading}
-                  groupData={groupData}
-                  highlightId={currentHighlightId}
-                  onPhotoClick={handlePhotoClick}
-                  onPhotoContextMenu={handlePhotoContextMenu}
-                  getPhotoProps={stableGetPhotoProps}
-                />
-              </>
-            )}
+            <GroupGridView
+              virtualGridRef={virtualGridRef}
+              photos={activeGroupPhotos}
+              isLoading={isGroupPhotosLoading}
+              groupData={groupData}
+              highlightId={currentHighlightId}
+              onPhotoClick={handlePhotoClick}
+              onPhotoContextMenu={handlePhotoContextMenu}
+              getPhotoProps={stableGetPhotoProps}
+            />
 
             {/* Unified Multi-Select Floating Bar */}
             <SelectionToolbar

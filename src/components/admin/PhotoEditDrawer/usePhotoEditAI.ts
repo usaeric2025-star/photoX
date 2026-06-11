@@ -30,8 +30,13 @@ export function usePhotoEditAI(form: PhotoEditFormReturn) {
 
     const toastId = toast.loading(appLang === 'zh' ? '正在智能识别...' : 'AI Analyzing...', { id: 'ai-analyze' });
 
-    await runTask(appLang === 'zh' ? "AI 识别" : "AI Identification", async () => {
+    await runTask(appLang === 'zh' ? "AI 识别" : "AI Identification", async ({ updateProgress }) => {
+      updateProgress(15, appLang === 'zh' ? '正在准备分析照片...' : 'Preparing photo files...');
+      
+      updateProgress(40, appLang === 'zh' ? '正在由 Agnes AI 智能识别各项属性 (约需 2-3 秒)...' : 'Analyzing attributes with Agnes AI (approx 2-3s)...');
       const resp = await analyzePhoto(editPhotoId);
+      
+      updateProgress(80, appLang === 'zh' ? '正在解析模型识别结果并写入草稿表单...' : 'Parsing AI attributes and injecting...');
       if (resp.ok && resp.data) {
         let result = resp.data as any;
         if (Array.isArray(result) && result.length > 0) {
@@ -180,7 +185,7 @@ export function usePhotoEditAI(form: PhotoEditFormReturn) {
         toast.error(appLang === 'zh' ? '识别过程中断' : 'Analysis interrupted', { id: toastId });
         throw new Error((resp as any).message || 'AI 属性智能识别失败');
       }
-    }, { silent: true });
+    }, { showSuccessToast: false, showProgress: true });
   }, [editPhotoId, appLang, settings?.agnes_api_key, runTask, updatePhoto, form, queryClient, categories, allTags]);
 
   return { handleAiAnalyze };
