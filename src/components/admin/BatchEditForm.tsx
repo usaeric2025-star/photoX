@@ -31,7 +31,7 @@ export function BatchEditForm({
   const { data: categories = [] } = useCategories();
   const { data: manufacturers = [] } = useManufacturers();
   const { data: tags = [] } = useTags();
-  const appLang = useUIStore((s: any) => s.appLang);
+  const appLang = useUIStore((s) => s.appLang);
 
   return (
     <div className="space-y-6">

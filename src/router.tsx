@@ -88,7 +88,7 @@ import { PHOTO_QUERY_CONFIG } from '@/lib/photoQueryConfig';
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: ROUTES.HOME,
-  validateSearch: (search: Record<string, any>): GallerySearchParams => {
+  validateSearch: (search: Record<string, unknown>): GallerySearchParams => {
     return {
       q: (search.q as string) || undefined,
       category: (search.category as string) || undefined,
@@ -117,7 +117,7 @@ const indexRoute = createRoute({
 const previewRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/preview', // Explicitly set to /preview
-  validateSearch: (search: Record<string, any>): GallerySearchParams => {
+  validateSearch: (search: Record<string, unknown>): GallerySearchParams => {
     return {
       q: (search.q as string) || undefined,
       category: (search.category as string) || undefined,
@@ -151,7 +151,7 @@ const groupRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/group/$groupId',
   beforeLoad: authGuard,
-  validateSearch: (search: Record<string, any>): GallerySearchParams => {
+  validateSearch: (search: Record<string, unknown>): GallerySearchParams => {
     return {
       q: (search.q as string) || undefined,
       category: (search.category as string) || undefined,
@@ -211,7 +211,7 @@ const adminErrorLogsRoute = createRoute({
 const adminGroupRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: '/group/$groupId',
-  validateSearch: (search: Record<string, any>): GallerySearchParams => {
+  validateSearch: (search: Record<string, unknown>): GallerySearchParams => {
     return {
       photoId: (search.photoId as string) || undefined,
       columns: (search.columns as string) || undefined,
@@ -271,7 +271,7 @@ export const router = createRouter({
   defaultPreload: 'intent',
   parseSearch: (searchStr) => {
     const params = new URLSearchParams(searchStr);
-    const result: Record<string, any> = {};
+    const result: Record<string, unknown> = {};
     params.forEach((value, key) => {
       if (!value) return;
       try {

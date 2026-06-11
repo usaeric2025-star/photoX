@@ -62,7 +62,7 @@ export const useLightbox = () => {
     const allPhotosList = (sourceData?.pages as any[])?.flatMap(page => page.photos) ?? [];
     
     if (singlePhoto) {
-      list = allPhotosList.map((p: any) => p.id === singlePhoto.id ? { ...p, ...singlePhoto } : p);
+      list = allPhotosList.map((p) => p.id === singlePhoto.id ? { ...p, ...singlePhoto } : p);
       if (!list.find(p => p.id === singlePhoto.id)) {
         list = [singlePhoto, ...list];
       }

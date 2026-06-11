@@ -44,11 +44,11 @@ export function normalizeDimensionsBeforeSave(dimensions: import('../../types').
   });
 }
 
-export const mapToDb = (updates: Partial<Photo> & Record<string, any>, isCreate = false): Record<string, any> => {
-    const dbUpdates: Record<string, any> = {};
+export const mapToDb = (updates: Partial<Photo> & Record<string, unknown>, isCreate = false): Record<string, unknown> => {
+    const dbUpdates: Record<string, unknown> = {};
     
     // Filter updates based on whitelist
-    const filteredUpdates: Record<string, any> = {};
+    const filteredUpdates: Record<string, unknown> = {};
     for (const key of ALLOWED_FIELDS) {
         if (key in updates) {
             filteredUpdates[key] = updates[key];
@@ -71,7 +71,7 @@ export const mapToDb = (updates: Partial<Photo> & Record<string, any>, isCreate 
             if (typeof value === 'string') {
                 valueToSave = { zh: cleanTranslationPrefixes(value).trim(), en: '', ms: '' };
             } else if (value && typeof value === 'object') {
-                let nameObj = value as Record<string, any>;
+                let nameObj = value as Record<string, unknown>;
                 // Defensive unwrapping: if the child 'zh' property is itself a translation object, unwrap it
                 if (nameObj.zh && typeof nameObj.zh === 'object' && ('zh' in nameObj.zh || 'en' in nameObj.zh || 'ms' in nameObj.zh)) {
                     nameObj = nameObj.zh;
@@ -88,7 +88,7 @@ export const mapToDb = (updates: Partial<Photo> & Record<string, any>, isCreate 
             if (typeof value === 'string') {
                 valueToSave = { zh: cleanTranslationPrefixes(value).trim(), en: '', ms: '' };
             } else if (value && typeof value === 'object') {
-                let descObj = value as Record<string, any>;
+                let descObj = value as Record<string, unknown>;
                 // Defensive unwrapping: if the child 'zh' property is itself a translation object, unwrap it
                 if (descObj.zh && typeof descObj.zh === 'object' && ('zh' in descObj.zh || 'en' in descObj.zh || 'ms' in descObj.zh)) {
                     descObj = descObj.zh;

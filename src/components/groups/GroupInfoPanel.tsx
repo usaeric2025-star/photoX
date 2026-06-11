@@ -17,14 +17,14 @@ export function GroupInfoPanel({ groupData, lang: globalLang }: GroupInfoPanelPr
   if (!groupData) return null;
 
   // Description and Content Logic
-  const content = React.useMemo(() => {
+  const content = (() => {
     const desc = getSafeText(groupData.description, activeLang as any) || getSafeText(groupData.description, 'zh');
     return {
        description: desc,
        materials: groupData.materials || [],
        colors: groupData.colors || []
     };
-  }, [groupData, activeLang]);
+  })();
 
   if (!content.description && content.materials.length === 0 && content.colors.length === 0) {
     return null;
@@ -77,7 +77,7 @@ export function GroupInfoPanel({ groupData, lang: globalLang }: GroupInfoPanelPr
                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mr-1">
                                   {labels.materials}
                                 </span>
-                                {content.materials.map(m => (
+                                {content.materials.map((m: any) => (
                                 <div key={m} className="px-3 py-1 bg-slate-50 rounded-full border border-slate-100 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]">
                                     <span className="text-[11px] font-semibold text-slate-600">{m}</span>
                                 </div>
@@ -91,7 +91,7 @@ export function GroupInfoPanel({ groupData, lang: globalLang }: GroupInfoPanelPr
                                     {labels.colors}
                                 </span>
                                 <div className="flex flex-wrap gap-2.5 bg-slate-50/50 p-3 rounded-2xl border border-slate-100/50">
-                                    {content.colors.map((c, i) => (
+                                    {content.colors.map((c: any, i: any) => (
                                         <div 
                                         key={i} 
                                         className="w-10 h-10 rounded-xl border border-white shadow-sm ring-1 ring-slate-200/50 transition-all hover:scale-105 hover:shadow-md"

@@ -41,14 +41,14 @@ export function ResponsivePhoto({
     setHasError(false);
   }, [src]);
 
-  const placeholderDataUrl = useMemo(() => {
+  const placeholderDataUrl = (() => {
     if (!photo.thumb_hash) return null;
     try {
       return thumbHashToDataURL(photo.thumb_hash);
     } catch (e) {
       return null;
     }
-  }, [photo.thumb_hash]);
+  })();
 
   const pb = `${(1 / aspectRatio) * 100}%`;
 

@@ -23,9 +23,9 @@ export function SelectionToolbar({
   onDelete,
   onHide,
 }: SelectionToolbarProps) {
-  const selectedIds = useUIStore((s: any) => s.selectedIds);
-  const isMultiSelect = useUIStore((s: any) => s.isMultiSelect);
-  const update = useUIStore((s: any) => s.update);
+  const selectedIds = useUIStore((s) => s.selectedIds);
+  const isMultiSelect = useUIStore((s) => s.isMultiSelect);
+  const update = useUIStore((s) => s.update);
   
   const [isMinimized, setIsMinimized] = useState(false);
 

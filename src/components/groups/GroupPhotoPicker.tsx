@@ -112,29 +112,14 @@ export function GroupPhotoPicker({
   const { tasks } = useTasks();
   const isRunning = tasks.some((t) => t.status === "running");
 
-  const queryParams = useMemo(
-    () => ({
-      searchQuery: search,
-      isAdminMode: true,
-      onlyUngrouped: true,
-    }),
-    [search],
-  );
+  const queryParams = { searchQuery: search, isAdminMode: true, onlyUngrouped: true };
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     usePhotos({ ...queryParams, limit: PAGINATION.ADMIN_BATCH_SIZE });
 
-  const photos = useMemo(() => {
-    return data?.pages.flatMap((p: any) => p.photos) || [];
-  }, [data]);
+  const photos = data?.pages.flatMap((p: any) => p.photos) || [];
 
-  const handleToggleSelect = useCallback((photo: Photo) => {
-    setSelectedIds((prev) => 
-      prev.includes(photo.id)
-        ? prev.filter((id) => id !== photo.id)
-        : [...prev, photo.id]
-    );
-  }, []);
+  const handleToggleSelect = (photo: Photo) => { setSelectedIds((prev) => prev.includes(photo.id) ? prev.filter((id) => id !== photo.id) : [...prev, photo.id]); };
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();

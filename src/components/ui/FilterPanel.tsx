@@ -61,13 +61,13 @@ export function FilterPanel() {
 
     const t = (translations as any)[appLang] || translations.en;
 
-    const categoryList = useMemo(() => [
+    const categoryList = [
         { id: null, name: t.all },
         ...categories.map(c => ({
             ...c,
             name: getSafeText(c, appLang)
         }))
-    ], [categories, appLang, t.all]);
+    ];
 
     logger.debug('[FilterPanel] Rendering. Current categoryId in URL:', urlFilters.categoryId, 'Categories count:', categoryList.length);
 

@@ -33,7 +33,7 @@ export interface Photo {
   thumbnail_md_url?: string; // w=800
   thumb_hash?: string; // ThumbHash placeholder
   dimensions?: Dimension[] | null;
-  exif_data?: Record<string, any> | null;
+  exif_data?: Record<string, unknown> | null;
   created_at: string;
   updated_at?: string;
   group_id?: string | null;
@@ -55,7 +55,7 @@ export interface Photo {
   _time?: number; 
   created_at_timestamp?: number; 
   ai_failed?: boolean;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   group?: {
       id: string;
       name: {
@@ -161,6 +161,6 @@ export interface PhotoAIResult {
   id: string;
   photo_id: string;
   raw_result?: string;
-  parsed_data?: Record<string, any>;
+  parsed_data?: Record<string, unknown>;
   created_at?: string;
 }

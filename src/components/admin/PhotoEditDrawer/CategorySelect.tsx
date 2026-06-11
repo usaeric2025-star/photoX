@@ -14,7 +14,7 @@ interface CategorySelectorProps {
  * Encapsulated Category Selector for Photo Edit Drawer
  */
 export function CategorySelect({ form }: CategorySelectorProps) {
-  const appLang = useUIStore((s: any) => s.appLang);
+  const appLang = useUIStore((s) => s.appLang);
   const { data: categories = [] } = useCategories();
   
   const formState = form.values;

@@ -17,10 +17,10 @@ const SETTINGS_COLUMNS = [
     'whatsapp_2', 'whatsapp_2_name', 'tags_json', 'updated_at'
 ];
 
-export const saveSettings = async (settings: Partial<AppSettings> & Record<string, any>) => {
+export const saveSettings = async (settings: Partial<AppSettings> & Record<string, unknown>) => {
     try {
         const rawPayload = { ...settings };
-        const payload: Record<string, any> = { id: 1 };
+        const payload: Record<string, unknown> = { id: 1 };
         
         // 1. 字段映射與預處理
         if (rawPayload.agnes_api_key === "••••••••••••••••") delete rawPayload.agnes_api_key;

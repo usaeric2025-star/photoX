@@ -43,7 +43,7 @@ export function PublicGridContainer({
   const { data: tags = EMPTY_ARRAY as any[] } = useTags();
   
   // Memoize search maps for processPhotos optimization
-  const tagMap = React.useMemo(() => {
+  const tagMap = (() => {
     const map = new Map<string, string[]>();
     tags.forEach((t: any) => {
       const terms = [t.name.toLowerCase()];
@@ -53,9 +53,9 @@ export function PublicGridContainer({
       map.set(String(t.id), terms);
     });
     return map;
-  }, [tags]);
+  })();
 
-  const catMap = React.useMemo(() => {
+  const catMap = (() => {
     const map = new Map<string, string[]>();
     categories.forEach((c: any) => {
       const terms = [(c.name || '').toLowerCase()];
@@ -65,7 +65,7 @@ export function PublicGridContainer({
       map.set(String(c.id), terms);
     });
     return map;
-  }, [categories]);
+  })();
 
   const infiniteQuery = usePhotos({
     category_id: urlFilters.categoryId,
@@ -79,7 +79,7 @@ export function PublicGridContainer({
 
   const rawPhotos = (infiniteQuery.data as any)?.photos ?? EMPTY_ARRAY;
 
-  const processedResult = React.useMemo(() => {
+  const processedResult = (() => {
     return processPhotosSync(
       rawPhotos,
       categories,
@@ -93,7 +93,7 @@ export function PublicGridContainer({
         catMap
       }
     );
-  }, [rawPhotos, categories, tags, urlFilters, tagMap, catMap]);
+  })();
 
   const gridPhotos = processedResult?.gridPhotos || EMPTY_ARRAY;
 

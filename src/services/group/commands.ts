@@ -12,8 +12,8 @@ import { ungroupPhotos, syncGroupMemberCount } from '@/services/photo/groupUtils
 
 const TABLE_NAME = 'groups';
 
-const mapToDb = (updates: Partial<ProductGroup> & Record<string, any>, userId?: string): Record<string, any> => {
-    const dbUpdates: Record<string, any> = { ...updates };
+const mapToDb = (updates: Partial<ProductGroup> & Record<string, unknown>, userId?: string): Record<string, unknown> => {
+    const dbUpdates: Record<string, unknown> = { ...updates };
     dbUpdates.updated_at = new Date().toISOString();
     if (userId && !dbUpdates.user_id) {
         dbUpdates.user_id = userId;
@@ -24,7 +24,7 @@ const mapToDb = (updates: Partial<ProductGroup> & Record<string, any>, userId?: 
         if (typeof val === 'string') {
             dbUpdates.name = { zh: cleanTranslationPrefixes(val).trim(), en: '', ms: '' };
         } else if (val && typeof val === 'object') {
-            let nameObj = val as Record<string, any>;
+            let nameObj = val as Record<string, unknown>;
             if (nameObj.zh && typeof nameObj.zh === 'object' && ('zh' in nameObj.zh || 'en' in nameObj.zh || 'ms' in nameObj.zh)) {
                 nameObj = nameObj.zh;
             }
@@ -41,7 +41,7 @@ const mapToDb = (updates: Partial<ProductGroup> & Record<string, any>, userId?: 
         if (typeof val === 'string') {
             dbUpdates.description = { zh: cleanTranslationPrefixes(val).trim(), en: '', ms: '' };
         } else if (val && typeof val === 'object') {
-            let descObj = val as Record<string, any>;
+            let descObj = val as Record<string, unknown>;
             if (descObj.zh && typeof descObj.zh === 'object' && ('zh' in descObj.zh || 'en' in descObj.zh || 'ms' in descObj.zh)) {
                 descObj = descObj.zh;
             }

@@ -4,7 +4,7 @@ import { safeArray } from '../../lib/utils';
 
 const NEVER_ALLOWED = ['isAnalyzing', 'exif_data', 'is_hidden', 'tempId', 'isSelected', 'isDragging', 'rawResponse'];
 
-export const cleanObject = <T extends Record<string, any>>(obj: T): T => {
+export const cleanObject = <T extends Record<string, unknown>>(obj: T): T => {
     const cleaned = { ...obj };
     for (const key of NEVER_ALLOWED) {
         delete cleaned[key];
