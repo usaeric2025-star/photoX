@@ -106,9 +106,9 @@ const indexRoute = createRoute({
     };
   },
   beforeLoad: authGuard,
-  loader: async ({ context }) => {
+  loader: ({ context }) => {
     if (context.queryClient) {
-      await prefetchMainGallery(context.queryClient);
+      prefetchMainGallery(context.queryClient);
     }
   },
   component: PublicPage,
@@ -133,9 +133,9 @@ const previewRoute = createRoute({
       hidden: (search.hidden as GallerySearchParams['hidden']) || undefined,
     };
   },
-  loader: async ({ context }) => {
+  loader: ({ context }) => {
     if (context.queryClient) {
-      await prefetchMainGallery(context.queryClient);
+      prefetchMainGallery(context.queryClient);
     }
   },
   component: PublicPage,
@@ -162,9 +162,9 @@ const groupRoute = createRoute({
       showGroupsCollapsed: (search.showGroupsCollapsed as GallerySearchParams['showGroupsCollapsed']) || undefined,
     };
   },
-  loader: async ({ params: { groupId }, context }) => {
+  loader: ({ params: { groupId }, context }) => {
     if (context.queryClient && groupId) {
-      await prefetchGroupDetail(context.queryClient, groupId);
+      prefetchGroupDetail(context.queryClient, groupId);
     }
   },
   component: PublicPage,
@@ -217,9 +217,9 @@ const adminGroupRoute = createRoute({
       columns: (search.columns as string) || undefined,
     };
   },
-  loader: async ({ params: { groupId }, context }) => {
+  loader: ({ params: { groupId }, context }) => {
     if (context.queryClient && groupId) {
-      await prefetchGroupDetail(context.queryClient, groupId);
+      prefetchGroupDetail(context.queryClient, groupId);
     }
   },
   component: AdminPage, // AdminPage handles the layout
