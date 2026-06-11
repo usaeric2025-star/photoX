@@ -10,7 +10,7 @@ interface GalleryDialogsProps {
   setPassInput: (val: string) => void;
   passError: boolean;
   setPassError: (err: boolean) => void;
-  t: TranslationType;
+  labels: TranslationType;
   loginWithGoogle?: () => Promise<void>;
   settings?: AppSettings;
   setIsStaffMode: (is: boolean) => void;
@@ -31,7 +31,7 @@ export function GalleryDialogs(props: GalleryDialogsProps) {
             passInput={props.passInput}
             setPassInput={props.setPassInput}
             passError={props.passError}
-            t={props.t}
+            labels={props.labels}
             loginWithGoogle={props.loginWithGoogle}
             onSubmit={(e) => {
               e.preventDefault();
@@ -52,7 +52,7 @@ export function GalleryDialogs(props: GalleryDialogsProps) {
         isOpen={props.showWhatsAppChoice}
         onClose={() => update({ showWhatsAppChoice: false })}
         settings={props.settings || null}
-        t={props.t}
+        labels={props.labels}
         onSelect={(num) => props.openWhatsApp(num)}
       />
     </>

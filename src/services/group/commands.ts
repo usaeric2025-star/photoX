@@ -1,3 +1,4 @@
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { success } from '@/lib/error/ErrorFactory';
 import { withSupabase } from '@/lib/error/supabaseWrapper';
 import { withErrorHandling } from '@/lib/error/wrapper';
@@ -11,8 +12,8 @@ import { ungroupPhotos, syncGroupMemberCount } from '@/services/photo/groupUtils
 
 const TABLE_NAME = 'groups';
 
-const mapToDb = (updates: Partial<ProductGroup> & Record<string, unknown>, userId?: string): Record<string, unknown> => {
-    const dbUpdates: Record<string, unknown> = { ...updates };
+const mapToDb = (updates: Partial<ProductGroup> & Record<string, any>, userId?: string): Record<string, any> => {
+    const dbUpdates: Record<string, any> = { ...updates };
     dbUpdates.updated_at = new Date().toISOString();
     if (userId && !dbUpdates.user_id) {
         dbUpdates.user_id = userId;
@@ -69,15 +70,13 @@ export async function createGroup(data: ProductGroup): Promise<AppResult<Product
     const userId = await getCurrentUserId();
     const dbData = mapToDb(data as any, userId);
     
-    const query = supabase
-        .from(TABLE_NAME)
-        .insert(dbData)
-        .select()
-        .single();
-
-    const res = await withSupabase(query, 'createGroup');
-    if (!res.ok) return res;
-    return success(res.data);
+    const { api } = await import('@/lib/api');
+    const res = await api.groups.$post({
+        json: { groupData: dbData }
+    });
+    if (!res.ok) throw ErrorFactory.wrap(new Error('Create group failed'), 'commands');
+    const { data: resData } = await res.json();
+    return success(resData);
   }, 'createGroup');
 }
 
@@ -90,16 +89,14 @@ export async function updateGroup(id: string, updates: Partial<ProductGroup>): P
     const userId = await getCurrentUserId();
     const dbUpdates = mapToDb(updates, userId);
     
-    const query = supabase
-        .from(TABLE_NAME)
-        .update(dbUpdates)
-        .eq('id', id)
-        .select()
-        .single();
-
-    const res = await withSupabase(query, 'updateGroup');
-    if (!res.ok) return res;
-    return success(res.data);
+    const { api } = await import('@/lib/api');
+    const res = await api.groups[':id'].$put({
+        param: { id },
+        json: { updates: dbUpdates }
+    });
+    if (!res.ok) throw ErrorFactory.wrap(new Error('Update group failed'), 'commands');
+    const { data: resData } = await res.json();
+    return success(resData);
   }, 'updateGroup');
 }
 
@@ -107,12 +104,11 @@ export async function upsertGroup(group: Partial<ProductGroup> & { id: string })
   return withErrorHandling(async () => {
     const userId = await getCurrentUserId();
     const dbUpdates = mapToDb(group, userId);
-    const query = supabase
-        .from(TABLE_NAME)
-        .upsert(dbUpdates, { onConflict: 'id' });
-
-    const res = await withSupabase(query, 'upsertGroup', 'high', { allowNull: true });
-    if (!res.ok) return res;
+    const { api } = await import('@/lib/api');
+    const res = await api.groups.upsert.$post({
+        json: dbUpdates
+    });
+    if (!res.ok) throw ErrorFactory.wrap(new Error('Upsert group failed'), 'commands');
     return success(undefined);
   }, 'upsertGroup');
 }
@@ -122,12 +118,11 @@ export async function deleteGroup(id: string): Promise<AppResult<void>> {
     const ungroupRes = await ungroupPhotos(id);
     if (!ungroupRes.ok) return ungroupRes;
 
-    const userId = await getCurrentUserId();
-    let query = supabase.from(TABLE_NAME).delete().eq('id', id);
-    if (userId) query = query.eq('user_id', userId);
-    
-    const res = await withSupabase(query, 'deleteGroup', 'high', { allowNull: true });
-    if (!res.ok) return res;
+    const { api } = await import('@/lib/api');
+    const res = await api.groups[':id'].$delete({
+        param: { id }
+    });
+    if (!res.ok) throw ErrorFactory.wrap(new Error('Delete group failed'), 'commands');
     return success(undefined);
   }, 'deleteGroup');
 }
@@ -150,19 +145,17 @@ export const groupPhotos = async (
 ): Promise<AppResult<{ newGroupId: string }>> => {
   return withErrorHandling(async () => {
     if (photoIds.length <= 1) {
-      throw new Error('至少需要選擇兩張照片才能成組');
+      throw ErrorFactory.wrap(new Error('至少需要選擇兩張照片才能成組'), 'commands');
     }
     
     const targetGroupId = predefinedGroupId || crypto.randomUUID();
+    const { supabase } = await import('@/lib/supabase');
     const { data: { session } } = await supabase.auth.getSession();
     const userId = session?.user?.id;
 
-    const querySelected = supabase
-      .from(DB_CONFIG.TABLE_NAME)
-      .select('id, group_id')
-      .in('id', photoIds);
-
-    const selectedRes = await withSupabase(querySelected, 'groupPhotos/select');
+    // Use photos by-ids instead of supabase.from
+    const { loadPhotosByIds } = await import('@/services/photo/read');
+    const selectedRes = await loadPhotosByIds(photoIds);
     if (!selectedRes.ok) return selectedRes;
 
     const sourceGroupIds = Array.from(new Set(
@@ -183,44 +176,19 @@ export const groupPhotos = async (
       updated_at: new Date().toISOString()
     };
 
-    const checkQuery = supabase.from('groups').select('id').eq('id', targetGroupId).maybeSingle();
-    const checkRes = await withSupabase(checkQuery, 'groupPhotos/check', 'high', { allowNull: true });
-    if (!checkRes.ok) return checkRes;
+    const { api } = await import('@/lib/api');
+    const groupPhotosRes = await api.groups['group-photos'].$post({
+      json: {
+        targetGroupId,
+        userId,
+        photoIds,
+        groupData,
+        sourceGroupIds,
+        ungroupedValidIds
+      }
+    });
 
-    if (!checkRes.data) {
-      const insertQuery = supabase.from('groups').insert({
-        id: targetGroupId,
-        user_id: userId,
-        is_hidden: false,
-        created_at: new Date().toISOString(),
-        ...groupData
-      });
-      const insertRes = await withSupabase(insertQuery, 'groupPhotos/insert', 'high', { allowNull: true });
-      if (!insertRes.ok) return insertRes;
-    } else {
-      const updateQuery = supabase.from('groups').update(groupData).eq('id', targetGroupId);
-      const updateRes = await withSupabase(updateQuery, 'groupPhotos/update', 'high', { allowNull: true });
-      if (!updateRes.ok) return updateRes;
-    }
-
-    // Merge
-    if (sourceGroupIds.length > 0) {
-      const mergeQuery = supabase.rpc('merge_groups', {
-        source_group_ids: sourceGroupIds,
-        target_group_id: targetGroupId
-      });
-      const mergeRes = await withSupabase(mergeQuery, 'groupPhotos/merge', 'high', { allowNull: true });
-      if (!mergeRes.ok) return mergeRes;
-    }
-
-    if (ungroupedValidIds.length > 0) {
-      const updatePhotoQuery = supabase
-        .from(DB_CONFIG.TABLE_NAME)
-        .update({ group_id: targetGroupId, is_group_cover: false })
-        .in('id', ungroupedValidIds);
-      const updatePhotoRes = await withSupabase(updatePhotoQuery, 'groupPhotos/updatePhotos', 'high', { allowNull: true });
-      if (!updatePhotoRes.ok) return updatePhotoRes;
-    }
+    if (!groupPhotosRes.ok) throw ErrorFactory.wrap(new Error('Group photos failed'), 'commands');
 
     const syncRes = await syncGroupMemberCount(targetGroupId);
     if (!syncRes.ok) return syncRes;
@@ -231,44 +199,23 @@ export const groupPhotos = async (
 
 export const movePhotosToGroup = async (photoIds: string[], targetGroupId: string | null): Promise<AppResult<void>> => {
   return withErrorHandling(async () => {
-    const query = supabase.rpc('move_photos_to_group', {
-      photo_ids: photoIds,
-      target_group_id: targetGroupId
+    const { api } = await import('@/lib/api');
+    const res = await api.groups['move-photos'].$post({
+        json: { photoIds, targetGroupId }
     });
-    const res = await withSupabase(query, 'movePhotosToGroup', 'high', { allowNull: true });
-    if (!res.ok) return res;
+    if (!res.ok) throw ErrorFactory.wrap(new Error('Move photos failed'), 'commands');
     return success(undefined);
   }, 'movePhotosToGroup');
 };
 
 export const setPhotoAsGroupCover = async (photoId: string | null, groupId: string): Promise<AppResult<void>> => {
   return withErrorHandling(async () => {
-    if (!groupId) throw new Error('GroupId is required');
-
-    const resetQuery = supabase
-      .from(DB_CONFIG.TABLE_NAME)
-      .update({ is_group_cover: false })
-      .eq('group_id', groupId);
-
-    const resetRes = await withSupabase(resetQuery, 'setPhotoAsGroupCover/reset', 'high', { allowNull: true });
-    if (!resetRes.ok) return resetRes;
-
-    if (photoId) {
-      const setQuery = supabase
-        .from(DB_CONFIG.TABLE_NAME)
-        .update({ is_group_cover: true })
-        .eq('id', photoId);
-      const setRes = await withSupabase(setQuery, 'setPhotoAsGroupCover/set', 'high', { allowNull: true });
-      if (!setRes.ok) return setRes;
-    }
-
-    const updateGroupQuery = supabase
-      .from('groups')
-      .update({ cover_photo_id: photoId || null })
-      .eq('id', groupId);
-    const updateGroupRes = await withSupabase(updateGroupQuery, 'setPhotoAsGroupCover/updateGroup', 'high', { allowNull: true });
-    if (!updateGroupRes.ok) return updateGroupRes;
-
+    if (!groupId) throw ErrorFactory.wrap(new Error('GroupId is required'), 'commands');
+    const { api } = await import('@/lib/api');
+    const res = await api.groups['set-cover'].$post({
+        json: { photoId, groupId }
+    });
+    if (!res.ok) throw ErrorFactory.wrap(new Error('Set photo cover failed'), 'commands');
     return success(undefined);
   }, 'setPhotoAsGroupCover');
 };

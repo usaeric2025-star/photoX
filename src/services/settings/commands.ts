@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { supabase } from '../../lib/supabase';
 import { DB_CONFIG } from '../../constants/config';
 import { ErrorFactory } from '../../lib/error/ErrorFactory';
@@ -16,7 +17,7 @@ const SETTINGS_COLUMNS = [
     'whatsapp_2', 'whatsapp_2_name', 'tags_json', 'updated_at'
 ];
 
-export const saveSettings = async (settings: Partial<AppSettings> & Record<string, unknown>) => {
+export const saveSettings = async (settings: Partial<AppSettings> & Record<string, any>) => {
     try {
         const rawPayload = { ...settings };
         const payload: Record<string, any> = { id: 1 };
@@ -56,17 +57,18 @@ export const saveSettings = async (settings: Partial<AppSettings> & Record<strin
 
         payload.updated_at = new Date().toISOString();
 
-        const { error: upsertError } = await supabase
-            .from('settings')
-            .upsert(payload, { onConflict: 'id' });
-            
-        if (upsertError) {
-            throw new Error(`DB_ERROR: ${upsertError.message || 'Unknown database error'}`);
+        const res = await api.admin.settings['save-settings'].$post({
+            json: { settingsPayload: payload }
+        });
+        
+        if (!res.ok) {
+            const respBody = await res.json().catch(() => ({ error: 'Unknown server error' }));
+            throw ErrorFactory.wrap(new Error(`DB_ERROR: ${respBody.error || 'Unknown database error'}`), 'commands');
         }
         
         return true;
-    } catch (err: any) {
-        console.error("Save settings fatal error:", err);
+    } catch (err) {
+        logger.error("Save settings fatal error:", err);
         throw ErrorFactory.wrap(err, 'saveSettings');
     }
 };
@@ -82,7 +84,7 @@ export const uploadLogo = async (file: File) => {
             .upload(fileName, file, { upsert: true });
 
         if (uploadError) {
-            console.error("Supabase Logo Upload Error:", uploadError);
+            logger.error("Supabase Logo Upload Error:", uploadError);
             throw ErrorFactory.wrap(uploadError, 'uploadLogo', fileName);
         }
 
@@ -91,17 +93,17 @@ export const uploadLogo = async (file: File) => {
             .getPublicUrl(fileName);
 
         // Upsert settings table with new logo_url
-        const { error: updateError } = await supabase
-            .from('settings')
-            .upsert({ id: 1, logo_url: publicUrl }, { onConflict: 'id' });
+        const res = await api.admin.settings['upsert-logo'].$post({
+            json: { url: publicUrl }
+        });
 
-        if (updateError) {
-            console.error("Failed to upsert logo url in settings:", updateError);
+        if (!res.ok) {
+            logger.error("Failed to upsert logo url in settings:", await res.text());
         }
 
         return publicUrl;
     } catch (err: unknown) {
-        console.error("Logo upload process error:", err);
+        logger.error("Logo upload process error:", err);
         throw ErrorFactory.wrap(err instanceof Error ? err : new Error(String(err)), 'uploadLogo');
     }
 };

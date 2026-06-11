@@ -26,7 +26,7 @@ const multiSelectSelector = (s: UIStoreState) => ({
   update: s.update
 });
 
-export const VirtualPhotoGrid = React.memo(({
+export const VirtualPhotoGrid = ({
   photos,
   isFetching,
   isFetchingNextPage,
@@ -121,13 +121,13 @@ export const VirtualPhotoGrid = React.memo(({
     return () => observer.disconnect();
   }, []);
 
-  const estimatedRowHeight = React.useMemo(() => {
+  const estimatedRowHeight = (() => {
     const padding = 16;
     const cardWidth = (containerWidth - padding) / Math.max(1, columns);
     return Math.max(80, cardWidth); 
-  }, [containerWidth, columns]);
+  })();
 
-  const internalRenderItem = React.useCallback((index: number) => {
+  const internalRenderItem = (index: number) => {
     const photo = photos[index];
     if (!photo) return null;
     return (
@@ -135,7 +135,7 @@ export const VirtualPhotoGrid = React.memo(({
         {renderCard(photo, index, categories)}
       </div>
     );
-  }, [photos, renderCard, categories]);
+  };
 
   if (isLoading) {
     return (
@@ -188,6 +188,6 @@ export const VirtualPhotoGrid = React.memo(({
       </div>
     </div>
   );
-});
+};
 
-VirtualPhotoGrid.displayName = 'VirtualPhotoGrid';
+

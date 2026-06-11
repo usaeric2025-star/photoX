@@ -1,3 +1,4 @@
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { supabase } from '../../lib/supabase';
 import { Category } from '../../types';
 import { success } from '@/lib/error/ErrorFactory';
@@ -13,13 +14,13 @@ const TABLE_NAME = 'categories';
  */
 export const clearCategoryFromPhotos = async (categoryId: string): Promise<AppResult<string[]>> => {
   return withErrorHandling(async () => {
-    const { data, error } = await supabase
-      .from(DB_CONFIG.TABLE_NAME)
-      .update({ category_id: null })
-      .eq('category_id', categoryId)
-      .select('id');
-    if (error) throw error;
-    return data?.map(i => i.id) || [];
+    const { api } = await import('@/lib/api');
+    const res = await api.categories['clear-photos'].$post({
+      json: { categoryId }
+    });
+    if (!res.ok) throw ErrorFactory.wrap(new Error('Clear photos request failed'), 'commands');
+    const { data } = await res.json();
+    return data || [];
   }, 'clearCategoryFromPhotos');
 };
 
@@ -43,51 +44,38 @@ const mapToDb = (updates: Partial<Category> & Record<string, unknown>): Record<s
     return dbUpdates;
 };
 
-/**
- * Updates a category.
- * @precondition Category exists.
- * @postcondition Category record updated.
- */
 export const updateCategory = async (categoryId: string, updates: Partial<Category>): Promise<AppResult<void>> => {
     return withErrorHandling(async () => {
         const dbUpdates = mapToDb(updates);
-        const { error } = await supabase
-            .from(TABLE_NAME)
-            .update(dbUpdates)
-            .eq('id', categoryId);
-        if (error) throw error;
+        const { api } = await import('@/lib/api');
+        const res = await api.categories[':id'].$put({
+          param: { id: categoryId },
+          json: { updates: dbUpdates }
+        });
+        if (!res.ok) throw ErrorFactory.wrap(new Error('Update category failed'), 'commands');
     }, 'updateCategory');
 };
 
-/**
- * Creates a new category.
- * @postcondition Category record created.
- */
 export const createCategory = async (categoryData: Omit<Category, 'id'>): Promise<AppResult<Category>> => {
     return withErrorHandling(async () => {
         const dbUpdates = mapToDb(categoryData as any);
-        const { error, data } = await supabase
-            .from(TABLE_NAME)
-            .insert(dbUpdates)
-            .select()
-            .single();
-        if (error) throw error;
+        const { api } = await import('@/lib/api');
+        const res = await api.categories.$post({
+          json: { categoryData: dbUpdates }
+        });
+        if (!res.ok) throw ErrorFactory.wrap(new Error('Create category failed'), 'commands');
+        const { data } = await res.json();
         return data as Category;
     }, 'createCategory');
 };
 
-/**
- * Deletes a category.
- * @precondition Category exists.
- * @postcondition Category record deleted.
- */
 export const deleteCategory = async (categoryId: string): Promise<AppResult<void>> => {
     return withErrorHandling(async () => {
-        const { error } = await supabase
-            .from(TABLE_NAME)
-            .delete()
-            .eq('id', categoryId);
-        if (error) throw error;
+        const { api } = await import('@/lib/api');
+        const res = await api.categories[':id'].$delete({
+          param: { id: categoryId }
+        });
+        if (!res.ok) throw ErrorFactory.wrap(new Error('Delete category failed'), 'commands');
     }, 'deleteCategory');
 };
 

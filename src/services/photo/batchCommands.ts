@@ -1,3 +1,4 @@
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { supabase } from '../../lib/supabase';
 import { DB_CONFIG } from '../../constants/config';
 import { Photo } from '../../types';
@@ -19,50 +20,34 @@ export async function batchUpdate(ids: string[], initialUpdates: Partial<Photo>)
   return withErrorHandling(async () => {
     if (!ids || ids.length === 0) return success({ successCount: 0, failureCount: 0, failedItems: [] });
 
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error('Session required');
-
-    // sanitize updates to remove explicit undefined fields (which causes ArkType validation to fail)
+    // sanitize updates to remove explicit undefined fields
     const updates = Object.keys(initialUpdates).reduce((acc: any, key) => {
       const val = initialUpdates[key as keyof typeof initialUpdates];
-      if (val !== undefined) {
-        acc[key] = val;
-      }
+      if (val !== undefined) acc[key] = val;
       return acc;
     }, {} as Partial<Photo>);
 
+    const { createPhotoValidator } = await import('../../lib/validators/factory');
     const validator = createPhotoValidator();
     const validationRes = validator.validate(updates);
     if (!validationRes.ok) return validationRes as AppResult<BatchActionResult>;
 
+    const { mapToDb } = await import('./toDb');
     const dbUpdates = mapToDb(updates);
     
-    const query = supabase
-      .from(DB_CONFIG.TABLE_NAME)
-      .update(dbUpdates)
-      .in('id', ids)
-      .select('id');
-
-    const res = await withSupabase(query, 'batchUpdate');
+    const { api } = await import('@/lib/api');
+    const res = await api.photos['batch-update'].$post({
+      json: { ids, updates: dbUpdates }
+    });
     
-    if (!res.ok) {
-      // Fallback
-      const failedItems: { id: string; reason: string }[] = [];
-      let successCount = 0;
-
-      for (const id of ids) {
-        const { error } = await supabase.from(DB_CONFIG.TABLE_NAME).update(dbUpdates).eq('id', id);
-        if (error) failedItems.push({ id, reason: error.message });
-        else successCount++;
-      }
-      return success({ successCount, failureCount: failedItems.length, failedItems });
-    }
-
-    const updatedIds = new Set(res.data?.map(d => d.id) || []);
-    const failedOnes = ids.filter(id => !updatedIds.has(id)).map(id => ({ id, reason: 'Not found or unchanged' }));
+    if (!res.ok) throw ErrorFactory.wrap(new Error('Batch update failed'), 'batchCommands');
+    const { data: updatedIds } = await res.json();
+    
+    const updatedIdSet = new Set(updatedIds || []);
+    const failedOnes = ids.filter(id => !updatedIdSet.has(id)).map(id => ({ id, reason: 'Not found or unchanged' }));
 
     return success({
-      successCount: updatedIds.size,
+      successCount: updatedIdSet.size,
       failureCount: failedOnes.length,
       failedItems: failedOnes
     });
@@ -74,21 +59,10 @@ export async function deleteMany(ids: string[]): Promise<AppResult<BatchActionRe
     if (!ids || ids.length === 0) return success({ successCount: 0, failureCount: 0, failedItems: [] });
 
     const { api } = await import('@/lib/api');
-    try {
-      const response = await api.admin['delete-photos'].$post({ json: { ids } });
-      const result = await response.json();
-      if (!response.ok || !result.success) throw new Error(result.error || 'Admin delete failed');
-      
-      return success({ successCount: ids.length, failureCount: 0, failedItems: [] });
-    } catch(err: any) {
-      const query = supabase.from(DB_CONFIG.TABLE_NAME).delete().in('id', ids).select('id');
-      const res = await withSupabase(query, 'deleteMany/fallback');
-      if (!res.ok) return res as any;
-
-      const deletedIds = new Set(res.data?.map(d => d.id) || []);
-      const failed = ids.filter(id => !deletedIds.has(id)).map(id => ({ id, reason: 'Permission Denied or Not Found' }));
-
-      return success({ successCount: deletedIds.size, failureCount: failed.length, failedItems: failed });
-    }
+    const response = await api.admin['delete-photos'].$post({ json: { ids } });
+    const result = await response.json();
+    if (!response.ok || !result.success) throw ErrorFactory.wrap(new Error(result.error || 'Admin delete failed'), 'batchCommands');
+    
+    return success({ successCount: ids.length, failureCount: 0, failedItems: [] });
   }, 'deleteMany');
 }

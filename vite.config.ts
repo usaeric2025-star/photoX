@@ -4,13 +4,23 @@ import { visualizer } from 'rollup-plugin-visualizer';
 import { fileURLToPath } from 'url';
 import { defineConfig, loadEnv } from 'vite';
 
+const ReactCompilerConfig = {
+  target: '19'
+};
+
 // https://vite.dev/config/
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
   return {
     base: '/',
     plugins: [
-      react(), 
+      react({
+        babel: {
+          plugins: [
+            ["babel-plugin-react-compiler", ReactCompilerConfig],
+          ],
+        },
+      }), 
       tailwindcss(),
       visualizer({
         filename: 'dist/stats.html',

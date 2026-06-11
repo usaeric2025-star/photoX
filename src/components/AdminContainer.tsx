@@ -15,13 +15,13 @@ export function AdminContainer() {
   const { tasks } = useTasks();
   
   const lang = useUIStore((s) => s.appLang);
-  const t = translations[lang as keyof typeof translations] || translations.en;
+  const labels = translations[lang as keyof typeof translations] || translations.en;
   
   return (
     <div className="flex flex-col h-full bg-slate-50 overflow-hidden relative" id="main-admin-screen">
        <div className="flex-1 min-h-0 relative">
           {photos.length === 0 && !isLoadingPhotos ? (
-           <AdminEmptyState t={t} />
+           <AdminEmptyState labels={labels} />
          ) : (
            <AdminGridContainer />
          )}

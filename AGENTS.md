@@ -139,11 +139,14 @@ export const PhotoSchema = type({
 2. **RPC 优先**：优先使用 `hono/client` (hc) 进行调用，确保前端参数与后端定义严格对齐。
 3. **禁止 Manual URL**：除非是静态资源或第三方链接，禁止在前端手动拼接 `/api/xxx` 字符串。
 
-## React Compiler 决策（锁定）
-- ❌ 生产环境禁用 React Compiler（等待 Stable + Vite 官方支持）
-- ✅ 依赖 React 19 原生性能 + Virtua + Query select + Zustand selector
-- ❌ 禁止预防性添加 useMemo/useCallback
-- ✅ 仅在 Profiler 证实瓶颈或第三方库要求时手动 memo，并附注释
+## React Compiler 决策（锁定，2026-06-11 更新）
+- ✅ **重新引入 React Compiler**：对于渲染极重且 Hook 极多的组件（如 `PhotoCard` 与虚拟列表内的各项），手动维护的过度 Props Drilling 和 `React.memo` 成本过高，因此启用 React Compiler 负责细粒度的自动 Memo 化。
+- ✅ **规范用法**：
+  - 代码不再需要手动编写大量的 `useMemo` 或 `useCallback`。
+  - 父子组件无需为了“避免重渲染”而进行极端的 Props Drilling。
+  - 直接依赖 Vite 的 `babel-plugin-react-compiler` 实现编译期的优化。
+- ❌ 禁止使用极端的 Props Drilling 传递海量数据（例如将顶层大对象逐层传递下去只为绕过 Context/Hook），可以更自然地在组件内部使用 Zustand selector。
+- ❌ 禁止盲目添加没必要的 `React.memo` 作为预防；由 Compiler 自行判断。
 
 ## 禁止项
 - ❌ `forwardRef`（React 19 不需要）
@@ -1003,7 +1006,18 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 - ✅ 使用 `errorFactory.success()` 返回成功結果
 - ✅ 使用 `errorFactory.fail()` 返回失敗響應
 
-## ON DELETE SET NULL 约束补充（锁定，2026-06-09）
+## 合組模組規範（鎖定）
+
+### 決策標準
+- ✅ 權限敏感的邏輯 → 物理拆分（查詢 Hook、Mutation）
+- ✅ 權限無關的邏輯 → 安全合併（照片網格、Header）
+- ✅ Service 層可合併，但需用 `mode` 參數區分
+
+### 共享組件原則
+- ✅ 共享組件必須是純展示，不包含數據獲取
+- ✅ 共享組件透過 props 接收所有數據
+- ❌ 禁止在共享組件內部進行權限檢查
+
 
 ## L3 Web Worker 規範（鎖定，2026-06-09）
 

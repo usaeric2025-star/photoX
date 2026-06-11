@@ -1,5 +1,6 @@
 import { decrypt } from "../encryption.js";
 import { getServerEnv } from "../../_shared/envSchema.js";
+import { logger } from "../logger.js";
 
 export const getModel = async (supabase?: any, customModel?: string, providerName?: string): Promise<string> => {
     if (customModel) return customModel;
@@ -16,7 +17,7 @@ export const getModel = async (supabase?: any, customModel?: string, providerNam
             const { data } = await supabase.from('settings').select('custom_model').eq('id', 1).maybeSingle();
             if (data?.custom_model) return data.custom_model;
         } catch (e) {
-            console.warn("[getModel] could not fetch custom model:", e);
+            logger.warn("[getModel] could not fetch custom model:", e);
         }
     }
 
@@ -162,7 +163,7 @@ export async function getAIProvider(providerName: string, supabase: any, modelOv
                }
             }
         } catch (e) {
-            console.warn("Legacy settings lookup failed:", e);
+            logger.warn("Legacy settings lookup failed:", e);
         }
     }
 
@@ -176,7 +177,7 @@ export async function getAIProvider(providerName: string, supabase: any, modelOv
         model = await getModel(supabase, undefined, actualProvider);
     }
     
-    console.log(`[getAIProvider] Using ${actualProvider} with model: ${model}`);  
+    logger.info(`[getAIProvider] Using ${actualProvider} with model: ${model}`);  
     const config = { apiKey, model };
 
     if (actualProvider === 'agnes') {

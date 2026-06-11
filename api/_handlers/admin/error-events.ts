@@ -1,3 +1,4 @@
+import { logger } from '../../_lib/logger.js';
 import { Hono } from 'hono';
 import { getSupabaseAdmin } from "../../_lib/supabase.js";
 
@@ -29,7 +30,7 @@ adminErrorEvents.post("/error-events-clear", async (c) => {
         if (error) throw error;
         return c.json({ success: true });
     } catch (e: any) {
-        console.error('[Admin] Clear logs failed:', e);
+        logger.error('[Admin] Clear logs failed:', e);
         return c.json({ success: false, error: e.message }, 500);
     }
 });

@@ -10,7 +10,7 @@ let wasAuthenticated = false;
 supabase.auth.getSession().then(({ data: { session } }) => {
   wasAuthenticated = !!session;
 }).catch((error) => {
-  console.error("Auth initialization check failed:", error);
+  logger.error("Auth initialization check failed:", error);
 });
 
 export const loginWithGoogle = async () => {
@@ -53,7 +53,7 @@ export const onAuthChange = (callback: (user: User | null) => void) => {
   const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_OUT') {
       if (wasAuthenticated) {
-        console.warn('Authentication token expired or user signed out.');
+        logger.warn('Authentication token expired or user signed out.');
       }
       wasAuthenticated = false;
     } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {

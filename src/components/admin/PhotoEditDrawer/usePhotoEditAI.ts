@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
@@ -32,7 +33,7 @@ export function usePhotoEditAI(form: PhotoEditFormReturn) {
     await runTask(appLang === 'zh' ? "AI 识别" : "AI Identification", async () => {
       const resp = await analyzePhoto(editPhotoId);
       if (resp.ok && resp.data) {
-        let result = resp.data;
+        let result = resp.data as any;
         if (Array.isArray(result) && result.length > 0) {
           result = result[0];
         }
@@ -121,19 +122,23 @@ export function usePhotoEditAI(form: PhotoEditFormReturn) {
 
           // [AI-RAW-DATA-SAVE] Ensure we always save the raw source code
           try {
-            const { supabase } = await import('@/lib/supabase');
             const rawResultText = (resp as any).raw_result || JSON.stringify(result);
-            await supabase.from('photo_ai_results').upsert({
-              photo_id: editPhotoId,
-              raw_result: rawResultText,
-              parsed_data: result,
-              created_at: new Date().toISOString()
-            }, { onConflict: 'photo_id' });
+            const { api } = await import('@/lib/api');
+            await (api as any).photos['ai-result'].$post({
+              json: {
+                payload: {
+                  photo_id: editPhotoId,
+                  raw_result: rawResultText,
+                  parsed_data: result,
+                  created_at: new Date().toISOString()
+                }
+              }
+            });
             
             // Invalidate the cache to instantly reveal JSON output in AI tab
             queryClient.invalidateQueries({ queryKey: ['photos', 'ai-result', editPhotoId] });
           } catch (e) {
-            console.warn('[AI Raw Save Failed]', e);
+            logger.warn('[AI Raw Save Failed]', e);
           }
 
           form.setValues({ ...form.values, ...updates });
@@ -142,7 +147,7 @@ export function usePhotoEditAI(form: PhotoEditFormReturn) {
             await updatePhoto({ id: editPhotoId, updates, silent: true });
             toast.success(appLang === 'zh' ? '已识别并保存' : 'Identified & Saved', { id: toastId });
           } catch (saveError: unknown) {
-            console.error("Auto-save failed:", saveError);
+            logger.error("Auto-save failed:", saveError);
             toast.warning(appLang === 'zh' ? '识别成功，自动保存失败' : 'Analysis ok, save failed', { id: toastId });
           }
         } else {

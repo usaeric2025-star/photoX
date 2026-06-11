@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { supabase } from '../../lib/supabase';
 import { api } from '@/lib/api';
 
@@ -9,7 +10,7 @@ export const fetchSettings = async () => {
         .maybeSingle();
     
     if (error) {
-        console.error("Failed to fetch settings:", error);
+        logger.error("Failed to fetch settings:", error);
         return null;
     }
     
@@ -39,7 +40,7 @@ export const fetchSettings = async () => {
                 }
             }
         } catch (e) {
-            console.error("Failed to fetch keys status from backend in fetchSettings:", e);
+            logger.error("Failed to fetch keys status from backend in fetchSettings:", e);
         }
         
         if (data.tags_json) {

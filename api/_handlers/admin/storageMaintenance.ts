@@ -1,3 +1,4 @@
+import { logger } from '../../_lib/logger.js';
 import { Hono } from "hono";
 import { type } from "arktype";
 import { requireRealUser } from "../../_lib/auth.js";
@@ -50,7 +51,7 @@ storageMaintenance.get("/storage/audit", async (c) => {
 
         return c.json({ success: true, data: auditData } as ApiResponse);
     } catch (e: any) {
-        console.error("Audit failed:", e);
+        logger.error("Audit failed:", e);
         return c.json({ success: false, error: e.message } as ApiResponse, 500);
     }
 });
@@ -309,7 +310,7 @@ storageMaintenance.post("/storage/import-orphans", async (c) => {
             MaintenanceJobSchema(jobData);
             jobStore.set(jobId, jobData);
           } catch (err) {
-            console.error(`Failed to process orphan ${key}:`, err);
+            logger.error(`Failed to process orphan ${key}:`, err);
           }
         }
 
@@ -384,7 +385,7 @@ storageMaintenance.post("/storage/repair-hashes", async (c) => {
         
         repairedCount++;
       } catch (err) {
-        console.error(`Failed to repair hash for ${target.id}:`, err);
+        logger.error(`Failed to repair hash for ${target.id}:`, err);
       }
     }
 

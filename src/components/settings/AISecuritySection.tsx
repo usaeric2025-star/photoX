@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Sparkles, Lock } from 'lucide-react';
 import { toast } from 'sonner';
@@ -9,8 +10,8 @@ import { handleError } from '@/lib/error/errorHandler';
 import { api } from '@/lib/api';
 
 interface AISecuritySectionProps {
-  geminiApiKey: string;
-  setGeminiApiKey: (key: string) => void;
+  agnesApiKey: string;
+  setAgnesApiKey: (key: string) => void;
   customModel: string;
   accessPasscode: string;
   setAccessPasscode: (code: string) => void;
@@ -20,8 +21,8 @@ interface AISecuritySectionProps {
 }
 
 export function AISecuritySection({
-  geminiApiKey: initialGeminiKey,
-  setGeminiApiKey,
+  agnesApiKey: initialAgnesKey,
+  setAgnesApiKey,
   customModel,
   setSettingField,
   cardClass,
@@ -33,8 +34,8 @@ export function AISecuritySection({
   const [keysStatus, setKeysStatus] = React.useState({ openrouter: false, agnes: false, primaryProvider: 'openrouter' });
   
   // Local draft states to prevent rapid re-renders from parent/query invalidation
-  const [localOpenRouterKey, setLocalOpenRouterKey] = React.useState(initialGeminiKey || '');
-  const [localAgnesKey, setLocalAgnesKey] = React.useState('');
+  const [localOpenRouterKey, setLocalOpenRouterKey] = React.useState('');
+  const [localAgnesKey, setLocalAgnesKey] = React.useState(initialAgnesKey || '');
 
   const [isTesting, setIsTesting] = React.useState<'openrouter' | 'agnes' | null>(null);
   const [isEditingOpenRouter, setIsEditingOpenRouter] = React.useState(false);
@@ -58,7 +59,7 @@ export function AISecuritySection({
           
           // Initial populate only!
           setLocalOpenRouterKey(prev => {
-            if (data.keysStatus.openrouter && (!prev || prev === initialGeminiKey)) {
+            if (data.keysStatus.openrouter && (!prev)) {
                 return '••••••••••••••••';
             }
             return prev;
@@ -75,7 +76,7 @@ export function AISecuritySection({
     } catch (e) {
       console.error("Failed to fetch keys status:", e);
     }
-  }, [initialGeminiKey]);
+  }, []);
 
   React.useEffect(() => {
     fetchKeysStatus();
@@ -97,7 +98,7 @@ export function AISecuritySection({
       } else {
         handleError(data, `[System AI] ${provider} 连接异常`);
       }
-    } catch (e: any) {
+    } catch (e) {
       handleError(e, '请求超时或网络异常');
     } finally {
       setIsTesting(null);
@@ -124,11 +125,11 @@ export function AISecuritySection({
         // Immediate UI update
         if (provider === 'openrouter') {
           setLocalOpenRouterKey('••••••••••••••••');
-          setGeminiApiKey('••••••••••••••••');
           setIsEditingOpenRouter(false);
           setKeysStatus(prev => ({ ...prev, openrouter: true }));
         } else {
           setLocalAgnesKey('••••••••••••••••');
+          setAgnesApiKey('••••••••••••••••');
           setIsEditingAgnes(false);
           setKeysStatus(prev => ({ ...prev, agnes: true }));
         }
@@ -138,10 +139,10 @@ export function AISecuritySection({
       } else {
         handleError(data, '保存失败');
       }
-    } catch (e: any) { 
+    } catch (e) { 
       handleError(e, '保存密钥失败');
       
-      const errorMsg = e.error?.message || e.message || '';
+      const errorMsg = (e as any).error?.message || (e as Error).message || '';
       if (errorMsg.includes('secrets')) {
         toast.info('检测到表缺失，请点击：[前往系统故障排查]', {
           action: {
@@ -171,13 +172,13 @@ export function AISecuritySection({
       } else {
         handleError(data, '切换失败');
       }
-    } catch (e: any) {
+    } catch (e) {
       handleError(e, '切换失败: 网络错误');
     }
     finally { setIsSavingProvider(null); }
   };
 
-  const handleSaveModel = async (provider: 'openrouter' | 'gemini', modelVal: string) => {
+  const handleSaveModel = async (provider: 'openrouter' | 'agnes', modelVal: string) => {
     try {
       const res = await api.admin.settings['save-model'].$post({
         json: { provider, model: modelVal }
@@ -189,7 +190,7 @@ export function AISecuritySection({
       } else {
         handleError(data, '模型保存失败');
       }
-    } catch (e: any) {
+    } catch (e) {
       handleError(e, '模型保存失败: 网络异常');
     }
   };
@@ -208,7 +209,7 @@ export function AISecuritySection({
            <div className="flex items-center gap-2 bg-white/50 p-1 rounded-full border border-slate-200">
               <span className="text-[8px] font-bold text-brand-navy/60 ml-2 uppercase">首选 / Primary</span>
               <div className="flex bg-slate-100 rounded-full p-0.5">
-                {['openrouter', 'gemini'].map(p => (
+                {['openrouter', 'agnes'].map(p => (
                    <button
                     key={p}
                     onClick={() => saveProvider(p)}
@@ -351,13 +352,10 @@ export function AISecuritySection({
                  >
                    {isTesting === 'agnes' ? '測試連通性中...' : '测试连通性 / Test Connection'}
                  </button>
-                 
-                 <p className="text-[7px] text-blue-900/60 leading-tight"> 用于驱动 Agnes 智能助手。由于采用兼容 OpenAI 的格式，确保填入是以 `sk-` 开头的有效 API 密钥，享受更稳定的高频请求支持。</p>
              </div>
           </div>
         </div>
       </div>
     </div>
-
   );
 }

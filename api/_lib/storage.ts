@@ -1,3 +1,4 @@
+import { logger } from './logger.js';
 import { S3Client } from "@aws-sdk/client-s3";
 import { getServerEnv } from "../_shared/envSchema.js";
 
@@ -19,7 +20,7 @@ export async function getR2Client() {
   }
 
   if (!r2AccessKeyId || !r2SecretAccessKey || !r2Endpoint) {
-    console.error("[getR2Client] R2 Credentials missing!", { endpoint: !!r2Endpoint, key: !!r2AccessKeyId, secret: !!r2SecretAccessKey });
+    logger.error("[getR2Client] R2 Credentials missing!", { endpoint: !!r2Endpoint, key: !!r2AccessKeyId, secret: !!r2SecretAccessKey });
     throw new Error("R2 storage credentials missing. Please check R2_ENDPOINT, R2_ACCESS_KEY_ID, and R2_SECRET_ACCESS_KEY env variables.");
   }
 

@@ -1,3 +1,4 @@
+import { logger } from '../../_lib/logger.js';
 import { Hono } from 'hono';
 import { getSupabaseAdmin } from "../../_lib/supabase.js";
 
@@ -16,7 +17,7 @@ adminPhotos.get("/photo-ai-result/:photoId", async (c) => {
             .maybeSingle();
 
         if (error) {
-            console.warn(`[get-photo-ai-result-failed]`, error.message);
+            logger.warn(`[get-photo-ai-result-failed]`, error.message);
             return c.json({ success: true, data: null });
         }
 
@@ -63,7 +64,7 @@ adminPhotos.post("/delete-photos", async (c) => {
           .delete()
           .in("photo_id", ids);
       } catch (err) {
-        console.warn("[delete-photos] Clean up photo_ai_results failed:", err);
+        logger.warn("[delete-photos] Clean up photo_ai_results failed:", err);
       }
 
       const { error: deleteError } = await supabase
@@ -103,7 +104,7 @@ adminPhotos.post("/delete-photos", async (c) => {
                 });
                 await s3Client.send(command, { abortSignal: AbortSignal.timeout(5000) });
               } catch (r2Err) {
-                console.error(`Failed to delete key ${key} from R2 during database delete:`, r2Err);
+                logger.error(`Failed to delete key ${key} from R2 during database delete:`, r2Err);
               }
             }));
           }
@@ -112,7 +113,7 @@ adminPhotos.post("/delete-photos", async (c) => {
 
       return c.json({ success: true, count: ids.length });
     } catch(e: unknown) {
-      console.error("[delete-photos] failed:", e);
+      logger.error("[delete-photos] failed:", e);
       return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown error' }, 500);
     }
 });

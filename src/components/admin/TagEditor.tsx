@@ -253,7 +253,7 @@ export function TagEditor({
   );
 }
 
-const TagButton = React.memo(({ tag, isSelected, isHot, isPinned, isDisabled, onToggle, onLongPress: onLongPressProp }: any) => {
+const TagButton = ({ tag, isSelected, isHot, isPinned, isDisabled, onToggle, onLongPress: onLongPressProp }: any) => {
   const btnRef = useRef<HTMLButtonElement>(null);
   useLongPress(btnRef, {
     delay: 400,
@@ -316,7 +316,5 @@ const TagButton = React.memo(({ tag, isSelected, isHot, isPinned, isDisabled, on
       </button>
     </div>
   );
-});
-
-TagButton.displayName = "TagButton";
+};
 

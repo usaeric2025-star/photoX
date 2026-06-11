@@ -1,3 +1,4 @@
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { supabase } from '@/lib/supabase';
 import { DB_CONFIG } from '@/constants/config';
 import { withErrorHandling } from '@/lib/error/wrapper';
@@ -7,17 +8,11 @@ import { withSupabase } from '@/lib/error/supabaseWrapper';
 
 export const ungroupPhotos = async (groupId: string): Promise<AppResult<void>> => {
   return withErrorHandling(async () => {
-    // Manually ensure group_id is null before dissolution to prevent FK errors
-    const manualUpdate = supabase
-      .from(DB_CONFIG.TABLE_NAME)
-      .update({ group_id: null, is_group_cover: false })
-      .eq('group_id', groupId);
-    
-    await withSupabase(manualUpdate, 'ungroupPhotos/manual_nulling', 'high', { allowNull: true });
-
-    const query = supabase.rpc('dissolve_group', { group_id: groupId });
-    const res = await withSupabase(query, 'ungroupPhotos', 'high', { allowNull: true });
-    if (!res.ok) return res;
+    const { api } = await import('@/lib/api');
+    const res = await api.groups.ungroup.$post({
+      json: { groupId }
+    });
+    if (!res.ok) throw ErrorFactory.wrap(new Error('Ungroup failed'), 'groupUtils');
     return success(undefined);
   }, 'ungroupPhotos');
 };
@@ -25,20 +20,11 @@ export const ungroupPhotos = async (groupId: string): Promise<AppResult<void>> =
 export const syncGroupMemberCount = async (groupId: string): Promise<AppResult<void>> => {
   return withErrorHandling(async () => {
     if (!groupId) return success(undefined);
-    const countQuery = supabase
-      .from(DB_CONFIG.TABLE_NAME)
-      .select('id', { count: 'exact', head: true })
-      .eq('group_id', groupId);
-
-    const countRes = await withSupabase(countQuery, 'syncGroupMemberCount/count', 'high', { allowNull: true }) as any;
-    if (!countRes.ok) return countRes;
-
-    const updateQuery = supabase
-      .from('groups')
-      .update({ member_count: countRes.data?.count || 0 })
-      .eq('id', groupId);
-
-    const updateRes = await withSupabase(updateQuery, 'syncGroupMemberCount/update', 'high', { allowNull: true });
-    return updateRes;
+    const { api } = await import('@/lib/api');
+    const res = await api.groups['sync-count'].$post({
+      json: { groupId }
+    });
+    if (!res.ok) throw ErrorFactory.wrap(new Error('Sync count failed'), 'groupUtils');
+    return success(undefined);
   }, 'syncGroupMemberCount');
 };

@@ -95,7 +95,7 @@ export function AdminGridContainer() {
         
         <div className="flex-1 overflow-hidden bg-brand-bg relative">
            <VirtualPhotoGrid 
-             key={`photo-grid-${urlFilters.showGroupsCollapsed ? 'collapsed' : 'expanded'}-${urlFilters.searchQuery || ''}`}
+             key={`photo-grid-${urlFilters.showGroupsCollapsed ? 'c' : 'e'}-${urlFilters.searchQuery || ''}`}
              restoreKey="admin_view_scroll_vlist"
              photos={gridPhotos}
              isFetching={isLoading}

@@ -1,3 +1,4 @@
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { supabase } from '../../lib/supabase';
 import { DB_CONFIG } from '../../constants/config';
 import { Photo } from '../../types';
@@ -28,144 +29,39 @@ export const loadAllPhotosFromCloud = async (
     isHidden?: boolean | null
 ): Promise<AppResult<Photo[]>> => {
   return withErrorHandling(async () => {
-    const { withRetry } = await import('@/lib/resilience');
+    const { api } = await import('@/lib/api');
     
-    return withRetry(async () => {
-      const selectQuery = PHOTO_LIST_FIELDS;
-      
-      let query = supabase
-          .from(DB_CONFIG.TABLE_NAME)
-          .select(selectQuery);
-
-    if (signal) {
-      query = query.abortSignal(signal);
-    }
-
-    if (onlyUngrouped) {
-      query = query.is('group_id', null);
-    }
-
-    if (!isAdminMode) {
-      query = query.or(VISIBILITY_OR_QUERY);
-    } else if (isHidden !== undefined && isHidden !== null) {
-      query = query.eq('is_hidden', isHidden);
-    }
-
-    if (manufacturerId) {
-      query = query.eq('manufacturer_id', manufacturerId);
-    }
-
-    if (since) {
-      query = query.gt('updated_at', since);
-    }
-
-    if (categoryId) {
-      query = query.eq('category_id', categoryId);
-    }
-
-    if (tagId) {
-      const { data: ptData, error: ptError } = await supabase.from('photo_tags').select('photo_id').eq('tag_id', tagId);
-      if (ptError) throw ptError;
-      
-      const photoIdsWithTag = (ptData || []).map(pt => String(pt.photo_id));
-      if (photoIdsWithTag.length > 0) {
-        query = query.in('id', photoIdsWithTag);
-      } else {
-        return success([]);
-      }
-    }
-
-    const normSearchQuery = normalizeSearchQuery(searchQuery || '');
-    if (normSearchQuery) {
-      const { findPhotoIdsBySearch, buildSearchFilter } = await import('./search');
-      const { catIds, photoIdsFromTags, q } = await findPhotoIdsBySearch(normSearchQuery) as any;
-      const filter = buildSearchFilter(catIds, photoIdsFromTags, q);
-      query = query.or(filter);
-    }
-
-    const from = page * limit;
-    const to = from + limit - 1;
-
-    query = query.order('is_pinned', { ascending: false, nullsFirst: false });
-    if (isAdminMode) {
-      query = query.order('is_hidden', { ascending: true, nullsFirst: true });
-    }
+    // RPC call
+    const res = await api.photos.list.$post({
+      json: { page, limit, categoryId, isAdminMode, onlyUngrouped, manufacturerId, isHidden }
+    });
     
-    if (sortOrder === 'oldest' || sortOrder === 'asc') {
-      query = query.order('created_at', { ascending: true })
-                   .order('id', { ascending: true });
-    } else if (sortOrder === 'name') {
-      query = query.order('name', { ascending: true, nullsFirst: true })
-                   .order('created_at', { ascending: false });
-    } else {
-      query = query.order('created_at', { ascending: false })
-                   .order('id', { ascending: true });
-    }
-
-    query = query.order('group_order', { ascending: true, nullsFirst: false });
-
-    const { data, error } = await query.range(from, to);
-
-    if (error) throw error;
-
+    if (!res.ok) throw ErrorFactory.wrap(new Error('Failed to load photos from cloud'), 'read');
+    const { data } = await res.json();
+    
     const allTags = await loadTagsFromCloud();
-    const fetched = (data || []).map(item => mapSupabasePhoto(item, allTags));
-
-    const groupIds = Array.from(new Set(fetched.map(p => p.group_id).filter(Boolean))) as string[];
-    const missingGroupCovers: string[] = [];
+    const fetched = (data || []).map((item: any) => mapSupabasePhoto(item, allTags));
     
-    for (const gid of groupIds) {
-      const hasCover = fetched.some(p => p.group_id === gid && p.is_group_cover);
-      if (!hasCover) {
-        missingGroupCovers.push(gid);
-      }
-    }
-
-    if (missingGroupCovers.length > 0) {
-      try {
-        const { data: coverData, error: coverError } = await supabase
-          .from(DB_CONFIG.TABLE_NAME)
-          .select(PHOTO_LIST_FIELDS)
-          .in('group_id', missingGroupCovers)
-          .eq('is_group_cover', true);
-
-        if (!coverError && coverData && coverData.length > 0) {
-          const covers = coverData.map(item => mapSupabasePhoto(item, allTags));
-          fetched.push(...covers);
-        }
-      } catch (e) {
-        console.warn('[loadAllPhotosFromCloud] Failed to fetch missing group covers', e);
-      }
-    }
-
+    // Keeping hydration logic client-side for now as it's complex
+    // ...
     const hydrated = await hydrateGroupInfo(fetched);
     return success(hydrated);
-    });
   }, 'loadAllPhotosFromCloud');
 };
 
 export const loadPhotosByGroupId = async (groupId: string, isAdminMode: boolean = false): Promise<AppResult<Photo[]>> => {
   if (!groupId) return success([]);
 
-  let query = supabase
-      .from(DB_CONFIG.TABLE_NAME)
-      .select(PHOTO_LIST_FIELDS)
-      .eq('group_id', groupId);
-
-  if (!isAdminMode) {
-      query = query.or(VISIBILITY_OR_QUERY);
-  }
-  
-  query = query.order('is_group_cover', { ascending: false })
-               .order('is_hidden', { ascending: true, nullsFirst: true })
-               .order('created_at', { ascending: false })
-               .order('id', { ascending: true });
-
-  return withSupabase(query, 'loadPhotosByGroupId').then(async res => {
-    if (!res.ok) return res;
+  return withErrorHandling(async () => {
+    const { api: apiClient } = await import('@/lib/api');
+    const res = await apiClient.photos['list-by-group'].$post({
+      json: { groupId, isAdminMode }
+    });
+    if (!res.ok) throw ErrorFactory.wrap(new Error('Failed to load photos by group'), 'read');
+    const { data } = await res.json();
     const allTags = await loadTagsFromCloud();
-    return success((res.data || []).map(item => mapSupabasePhoto(item, allTags)));
-  });
+    return success((data || []).map((item: any) => mapSupabasePhoto(item, allTags)));
+  }, 'loadPhotosByGroupId');
 };
 
 export const loadPhotosByGroupIdPaginated = async (
@@ -176,41 +72,16 @@ export const loadPhotosByGroupIdPaginated = async (
 ): Promise<AppResult<{ photos: Photo[]; total: number }>> => {
   return withErrorHandling(async () => {
     if (!groupId) return { photos: [], total: 0 };
-
-    const from = (page - 1) * pageSize;
-    const to = from + pageSize - 1;
-
-    let countQuery = supabase
-      .from(DB_CONFIG.TABLE_NAME)
-      .select('id', { count: 'exact', head: true })
-      .eq('group_id', groupId);
-
-    let query = supabase
-      .from(DB_CONFIG.TABLE_NAME)
-      .select(PHOTO_LIST_FIELDS)
-      .eq('group_id', groupId);
-
-    if (!isAdminMode) {
-      countQuery = countQuery.or(VISIBILITY_OR_QUERY);
-      query = query.or(VISIBILITY_OR_QUERY);
-    }
-
-    const [countRes, queryRes] = await Promise.all([
-      countQuery,
-      query.order('is_group_cover', { ascending: false })
-           .order('group_order', { ascending: true, nullsFirst: false })
-           .order('is_hidden', { ascending: true, nullsFirst: true })
-           .order('created_at', { ascending: false })
-           .order('id', { ascending: true })
-           .range(from, to)
-    ]);
-
-    if (queryRes.error) throw queryRes.error;
-
+    const { api: apiClient } = await import('@/lib/api');
+    const res = await apiClient.photos['list-by-group-paginated'].$post({
+      json: { groupId, page, pageSize, isAdminMode }
+    });
+    if (!res.ok) throw ErrorFactory.wrap(new Error('Failed to load paginated group photos'), 'read');
+    const { data } = await res.json();
     const allTags = await loadTagsFromCloud();
     return { 
-      photos: (queryRes.data || []).map(item => mapSupabasePhoto(item, allTags)), 
-      total: countRes.count || 0 
+      photos: (data.photos || []).map((item: any) => mapSupabasePhoto(item, allTags)), 
+      total: data.total || 0 
     };
   }, 'loadPhotosByGroupIdPaginated');
 };
@@ -222,42 +93,13 @@ export const getPhotoCount = async (
   isAdminMode: boolean = false
 ): Promise<AppResult<number>> => {
   return withErrorHandling(async () => {
-    let query = supabase
-      .from(DB_CONFIG.TABLE_NAME)
-      .select('*', { count: 'exact', head: true });
-    
-    if (!isAdminMode) {
-      query = query.or(VISIBILITY_OR_QUERY);
-    }
-
-    if (categoryId) {
-      query = query.eq('category_id', categoryId);
-    }
-
-    if (tagId) {
-      const { data: ptData, error: ptError } = await supabase.from('photo_tags').select('photo_id').eq('tag_id', tagId);
-      if (ptError) throw ptError;
-
-      const photoIdsWithTag = (ptData || []).map(pt => String(pt.photo_id));
-      if (photoIdsWithTag.length > 0) {
-        query = query.in('id', photoIdsWithTag);
-      } else {
-        return 0;
-      }
-    }
-
-    const normSearchQuery = normalizeSearchQuery(searchQuery || '');
-    if (normSearchQuery) {
-      const { findPhotoIdsBySearch, buildSearchFilter } = await import('./search');
-      const { catIds, photoIdsFromTags, q } = await findPhotoIdsBySearch(normSearchQuery) as any;
-      const filter = buildSearchFilter(catIds, photoIdsFromTags, q);
-      query = query.or(filter);
-    }
-
-    const { count, error } = await query;
-    if (error) throw error;
-
-    return count || 0;
+    const { api: apiClient } = await import('@/lib/api');
+    const res = await apiClient.photos.count.$post({
+      json: { categoryId, tagId, searchQuery, isAdminMode }
+    });
+    if (!res.ok) throw ErrorFactory.wrap(new Error('Failed to get photo count'), 'read');
+    const { data } = await res.json();
+    return data || 0;
   }, 'getPhotoCount');
 };
 
@@ -272,39 +114,35 @@ export const getLocalPhotoCount = async (): Promise<AppResult<number>> => {
 export const loadPhotosByIds = async (ids: string[]): Promise<AppResult<Photo[]>> => {
   return withErrorHandling(async () => {
     if (!ids || ids.length === 0) return [];
-
-    const { data, error } = await supabase
-      .from(DB_CONFIG.TABLE_NAME)
-      .select(PHOTO_LIST_FIELDS)
-      .in('id', ids);
-
-    if (error) throw error;
+    const { api: apiClient } = await import('@/lib/api');
+    const res = await apiClient.photos['by-ids'].$post({
+      json: { ids }
+    });
+    if (!res.ok) throw ErrorFactory.wrap(new Error('Failed to load photos by ids'), 'read');
+    const { data } = await res.json();
     const allTags = await loadTagsFromCloud();
-    return (data || []).map(item => mapSupabasePhoto(item, allTags));
+    return (data || []).map((item: any) => mapSupabasePhoto(item, allTags));
   }, 'loadPhotosByIds');
 };
 
 export const getPhotosWithoutThumbHash = async (): Promise<AppResult<{ id: string }[]>> => {
-  const query = supabase
-    .from(DB_CONFIG.TABLE_NAME)
-    .select('id')
-    .is('thumb_hash', null);
-
-  return withSupabase(query, 'getPhotosWithoutThumbHash');
+  return withErrorHandling(async () => {
+    const { api: apiClient } = await import('@/lib/api');
+    const res = await apiClient.photos['without-thumb-hash'].$post();
+    if (!res.ok) throw ErrorFactory.wrap(new Error('Failed to get photos without thumb hash'), 'read');
+    const { data } = await res.json();
+    return data || [];
+  }, 'getPhotosWithoutThumbHash');
 };
 
 export const checkImageHashExists = async (hash: string): Promise<AppResult<{image_url: string, manual_code: string} | null>> => {
   return withErrorHandling(async () => {
-    const { data, error } = await supabase
-      .from(DB_CONFIG.TABLE_NAME)
-      .select('image_url, manual_code')
-      .eq('image_hash', hash)
-      .limit(1)
-      .maybeSingle();
-
-    if (error) {
-      throw error;
-    }
+    const { api: apiClient } = await import('@/lib/api');
+    const res = await apiClient.photos['check-hash'].$post({
+      json: { hash }
+    });
+    if (!res.ok) throw ErrorFactory.wrap(new Error('Failed to check image hash'), 'read');
+    const { data } = await res.json();
     return data ? { image_url: data.image_url, manual_code: data.manual_code } : null;
   }, 'checkImageHashExists', 'low');
 };

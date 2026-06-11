@@ -31,140 +31,77 @@ const mapToDb = (updates: Partial<Tag> & Record<string, unknown>): Record<string
  */
 export const updateTag = async (tagId: string, updates: Partial<Tag>): Promise<AppResult<void>> => {
     const dbUpdates = mapToDb(updates);
-    const { error } = await supabase
-        .from(TABLE_NAME)
-        .update(dbUpdates)
-        .eq('id', tagId);
-
-    if (error) {
-        return errorFactory(error.message, 'DB_ERROR', '[updateTag] error', error);
-    }
+    const { api } = await import('@/lib/api');
+    const res = await api.tags[':id'].$put({
+        param: { id: tagId },
+        json: { updates: dbUpdates }
+    });
+    if (!res.ok) return errorFactory('Update tag failed', 'DB_ERROR', '[updateTag] error');
     return success(undefined);
 };
 
-/**
- * Creates a new tag.
- * @precondition Unique tag name.
- * @postcondition Tag record created.
- */
 export const createTag = async (tagData: Omit<Tag, 'id'>): Promise<AppResult<Tag>> => {
     const dbUpdates = mapToDb(tagData as any);
-    const { error, data } = await supabase
-        .from(TABLE_NAME)
-        .insert(dbUpdates)
-        .select()
-        .single();
-
-    if (error) {
-        return errorFactory(error.message, 'DB_ERROR', '[createTag] error', error);
-    }
+    const { api } = await import('@/lib/api');
+    const res = await api.tags.$post({
+        json: { tagData: dbUpdates }
+    });
+    if (!res.ok) return errorFactory('Create tag failed', 'DB_ERROR', '[createTag] error');
+    const { data } = await res.json();
     return success(data as Tag);
 };
 
-/**
- * Bulk creates tags.
- * @postcondition Tag records created.
- */
 export const batchCreateTagsInCloud = async (tags: Partial<Tag>[]): Promise<AppResult<Tag[]>> => {
     const dbUpdates = tags.map(tag => mapToDb(tag as any));
-    const { error, data } = await supabase
-        .from(TABLE_NAME)
-        .insert(dbUpdates)
-        .select('id, name');
-
-    if (error) {
-        return errorFactory(error.message, 'DB_ERROR', '[batchCreateTagsInCloud] error', error);
-    }
+    const { api } = await import('@/lib/api');
+    const res = await api.tags.batch.$post({
+        json: { tags: dbUpdates }
+    });
+    if (!res.ok) return errorFactory('Batch create tags failed', 'DB_ERROR', '[batchCreateTagsInCloud] error');
+    const { data } = await res.json();
     return success(data as Tag[]);
 };
 
-/**
- * Deletes a tag.
- * @precondition Tag exists.
- * @postcondition Tag record deleted.
- */
 export const deleteTag = async (tagId: string): Promise<AppResult<void>> => {
-    const { error } = await supabase
-        .from(TABLE_NAME)
-        .delete()
-        .eq('id', tagId);
-    if (error) {
-        return errorFactory(error.message, 'DB_ERROR', '[deleteTag] error', error);
-    }
+    const { api } = await import('@/lib/api');
+    const res = await api.tags[':id'].$delete({
+        param: { id: tagId }
+    });
+    if (!res.ok) return errorFactory('Delete tag failed', 'DB_ERROR', '[deleteTag] error');
     return success(undefined);
 };
 
-/**
- * Refreshes hot scores via RPC.
- * @postcondition Hot scores recalculated.
- */
 export const triggerRefreshTagHotScores = async (): Promise<AppResult<void>> => {
-    const { error } = await supabase.rpc('refresh_tag_hot_scores');
-    if (error) {
-        return errorFactory(error.message, 'DB_ERROR', '[triggerRefreshTagHotScores] error', error);
-    }
+    const { api } = await import('@/lib/api');
+    const res = await api.tags['refresh-hot-scores'].$post();
+    if (!res.ok) return errorFactory('Refresh tag hot scores failed', 'DB_ERROR', '[triggerRefreshTagHotScores] error');
     return success(undefined);
 };
 
-/**
- * Removes tag association from a photo.
- * @precondition Link exists.
- * @postcondition Association removed.
- */
 export const removeTagFromPhoto = async (photoId: string, tagId: string): Promise<AppResult<void>> => {
-    const { error } = await supabase
-        .from('photo_tags')
-        .delete()
-        .eq('photo_id', photoId)
-        .eq('tag_id', tagId);
-    if (error) {
-        return errorFactory(error.message, 'DB_ERROR', '[removeTagFromPhoto] error', error);
-    }
+    const { api } = await import('@/lib/api');
+    const res = await api.tags['remove-from-photo'].$post({
+        json: { photoId, tagId }
+    });
+    if (!res.ok) return errorFactory('Remove tag from photo failed', 'DB_ERROR', '[removeTagFromPhoto] error');
     return success(undefined);
 };
 
-/**
- * Syncs a set of tags for a single photo.
- * @precondition Photo exists.
- * @postcondition Tag associations updated.
- */
 export const syncPhotoTags = async (photoId: string, tagIds: string[]): Promise<AppResult<void>> => {
-    const { error: deleteError } = await supabase.from('photo_tags').delete().eq('photo_id', photoId);
-    if (deleteError) return errorFactory(deleteError.message, 'DB_ERROR', 'syncPhotoTags/delete', deleteError);
-
-    // 唯一限制點：強制限制最多 3 個標籤
-    const limitedTagIds = tagIds.slice(0, 3);
-    if (limitedTagIds.length > 0) {
-        const associations = limitedTagIds.map(tagId => ({
-            photo_id: photoId,
-            tag_id: tagId
-        }));
-        const { error: insertError } = await supabase.from('photo_tags').insert(associations);
-        if (insertError) return errorFactory(insertError.message, 'DB_ERROR', 'syncPhotoTags/insert', insertError);
-    }
+    const { api } = await import('@/lib/api');
+    const res = await api.tags['sync-photo-tags'].$post({
+        json: { photoId, tagIds }
+    });
+    if (!res.ok) return errorFactory('Sync photo tags failed', 'DB_ERROR', 'syncPhotoTags/error');
     return success(undefined);
 };
 
-/**
- * Syncs a set of photos with a new set of tags.
- * @precondition Photos exist.
- * @postcondition Tag associations updated.
- */
 export const syncBatchPhotoTags = async (photoIds: string[], tagIds: string[]): Promise<AppResult<void>> => {
-    const { error: deleteError } = await supabase.from('photo_tags').delete().in('photo_id', photoIds);
-    if (deleteError) return errorFactory(deleteError.message, 'DB_ERROR', 'syncBatchPhotoTags/delete', deleteError);
-
-    const limitedTagIds = tagIds.slice(0, 3);
-    if (limitedTagIds.length > 0) {
-        const associations = photoIds.flatMap(photoId => 
-            limitedTagIds.map(tagId => ({
-                photo_id: photoId,
-                tag_id: tagId
-            }))
-        );
-        const { error: insertError } = await supabase.from('photo_tags').insert(associations);
-        if (insertError) return errorFactory(insertError.message, 'DB_ERROR', 'syncBatchPhotoTags/insert', insertError);
-    }
+    const { api } = await import('@/lib/api');
+    const res = await api.tags['sync-batch-photo-tags'].$post({
+        json: { photoIds, tagIds }
+    });
+    if (!res.ok) return errorFactory('Sync batch photo tags failed', 'DB_ERROR', 'syncBatchPhotoTags/error');
     return success(undefined);
 };
 

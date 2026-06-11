@@ -1,3 +1,4 @@
+import { logger } from '../../_lib/logger.js';
 import { Hono } from 'hono';
 import { getSupabaseAdmin } from "../../_lib/supabase.js";
 import { getServerEnv } from "../../_shared/envSchema.js";
@@ -224,7 +225,7 @@ adminRepair.post("/", async (c) => {
 
       return c.json({ success: false, error: "未知的维护操作 ID" }, 400);
     } catch (e: unknown) {
-        console.error('[Admin Repair] Critical Exception:', e);
+        logger.error('[Admin Repair] Critical Exception:', e);
         return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown error' }, 500);
     }
 });

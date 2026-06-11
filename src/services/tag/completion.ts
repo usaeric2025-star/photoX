@@ -43,7 +43,7 @@ export async function resolveTagNamesToIds(
     }
 
     return ok(tagIds);
-  } catch (err: any) {
-    return fail(err.message || '標籤解析失敗');
+  } catch (err) {
+    return fail((err as Error).message || '標籤解析失敗');
   }
 }

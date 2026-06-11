@@ -1,6 +1,7 @@
 import { api } from '@/lib/api';
 import { STORAGE_KEYS, safeGetItem, safeSetItem } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 
 /**
  * 每日維護 Worker
@@ -27,7 +28,7 @@ class DailyWorker {
 
     this.isProcessing = true;
     try {
-      console.log('[DailyWorker] Starting maintenance sync...');
+      logger.info('[DailyWorker] Starting maintenance sync...');
       
       // 1. 触发后端清理
       await api.admin.maintenance['daily-cleanup'].$post();
@@ -35,9 +36,9 @@ class DailyWorker {
       // 2. 本地 IDB 冗余键清理 (未来扩展)
       
       safeSetItem((STORAGE_KEYS as any).LAST_MAINTENANCE_RUN || 'photo_last_maintenance_day', today);
-      console.log('[DailyWorker] Maintenance completed successfully.');
+      logger.info('[DailyWorker] Maintenance completed successfully.');
     } catch (err) {
-      console.warn('[DailyWorker] Maintenance failed silently', err);
+      logger.warn('[DailyWorker] Maintenance failed silently', err);
     } finally {
       this.isProcessing = false;
     }

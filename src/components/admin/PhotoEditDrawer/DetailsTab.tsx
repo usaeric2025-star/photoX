@@ -12,7 +12,7 @@ interface Props {
   form: PhotoEditFormReturn;
 }
 
-export const DetailsTab = React.memo(function DetailsTab({ form }: Props) {
+export function DetailsTab({ form }: Props) {
   const editPhotoId = useUIStore((s) => s.editPhotoId);
   const appLang = useUIStore((s) => s.appLang);
   const { tasks } = useTasks();
@@ -94,4 +94,4 @@ export const DetailsTab = React.memo(function DetailsTab({ form }: Props) {
       </div>
     </div>
   );
-});
+}

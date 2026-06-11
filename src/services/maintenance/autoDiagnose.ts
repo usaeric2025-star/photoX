@@ -116,7 +116,7 @@ export const runDiagnose = async () => {
 
     logger.info(`[AutoDiagnose] Run completed in ${duration.toFixed(0)}ms. Issues: ${issues.length}`);
     return issues;
-  } catch (err: any) {
+  } catch (err) {
     logger.error('[AutoDiagnose] Failed to run diagnosis:', err);
     return [];
   }

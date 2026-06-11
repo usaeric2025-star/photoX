@@ -11,7 +11,7 @@ interface Props {
   form: PhotoEditFormReturn;
 }
 
-export const BasicInfoTab = React.memo(function BasicInfoTab({ form }: Props) {
+export function BasicInfoTab({ form }: Props) {
   const editPhotoId = useUIStore((s) => s.editPhotoId);
   const newPhotoData = useUIStore((s) => s.newPhotoData);
   const update = useUIStore((s) => s.update);
@@ -233,4 +233,4 @@ export const BasicInfoTab = React.memo(function BasicInfoTab({ form }: Props) {
       )}
     </div>
   );
-});
+}

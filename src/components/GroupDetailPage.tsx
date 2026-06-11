@@ -8,9 +8,11 @@ import { translations } from '../lib/translations';
 import { getPhotoDisplayName } from '../lib/ui-helpers';
 import { GroupDetailSkeleton } from './groups/GroupDetailSkeleton';
 import { Skeleton } from './ui/Skeleton';
+import { GroupHeader } from './groups/GroupHeader';
 import { CollapsibleDescription } from './groups/CollapsibleDescription';
 import { GroupGridView } from './groups/GroupGridView';
 import { GroupAdminShell } from './groups/GroupAdminShell';
+import { GroupInfoPanel } from './groups/GroupInfoPanel';
 import { useAdminActions } from '@/hooks/admin/useAdminActions';
 import { useNavigate } from '@tanstack/react-router';
 import { useUIStore, useShallow } from '@/store/useUIStore';
@@ -145,63 +147,19 @@ export function GroupDetailPage({}: GroupDetailPageProps) {
               ) : (
                 <>
                    {/* Top Header */}
-                   <div className="flex-shrink-0 sticky top-0 bg-white z-sticky px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-100">
-                  <div className="flex items-center gap-3">
-                    <button 
-                      type="button"
-                      onClick={handleClose}
-                      className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors"
-                    >
-                      <ChevronLeft size={24} />
-                    </button>
-                    <div className="flex flex-col min-h-[3rem] justify-center">
-                      <div className="flex items-center gap-2 min-h-[1.75rem]">
-                         {isGroupDataLoading ? (
-                           <Skeleton className="h-6 w-32 bg-slate-200" />
-                         ) : (
-                           <h2 className="text-lg font-black text-slate-800 tracking-tight">
-                             {groupDisplayName || (activeGroupPhotos[0] ? getPhotoDisplayName(activeGroupPhotos[0], categories, lang, t) : '') || `GROUP ${activeGroupId.slice(-4)}`}
-                           </h2>
-                         )}
-                      </div>
-                      <div className="min-h-[1rem]">
-                        {isGroupPhotosLoading ? (
-                          <Skeleton className="h-3 w-24 mt-1 bg-slate-100" />
-                        ) : (
-                          <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none flex items-center gap-2 flex-wrap mt-0.5">
-                            <span>{(totalGroupPhotosCount ?? activeGroupPhotos.length) || groupData?.member_count || 0} 張照片 / Photos</span>
-                            {activeGroupId && (
-                                <>
-                                  <span className="text-slate-300">•</span>
-                                  <CopyableId className="opacity-80 border-none bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-md" id={activeGroupId.slice(-6).toUpperCase()} label="CODE" />
-                                </>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button 
-                        type="button"
-                        onClick={handleClose}
-                        className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors"
-                    >
-                        <X size={24} />
-                    </button>
-                  </div>
-                </div>
+                   <GroupHeader 
+                      displayName={groupDisplayName || (activeGroupPhotos[0] ? getPhotoDisplayName(activeGroupPhotos[0], categories, lang, t) : '') || `GROUP ${activeGroupId.slice(-4)}`}
+                      activeGroupId={activeGroupId}
+                      isGroupDataLoading={isGroupDataLoading}
+                      onClose={handleClose}
+                      appLang={lang}
+                   />
                 
                 {/* [GROUP-STALE-SIGNAL] */}
                 <div className={`flex-1 min-h-0 flex flex-col transition-opacity duration-300 overflow-y-auto ${isStale ? "opacity-60" : "opacity-100"}`}>
                   
                   {/* Public Description Rendering */}
-                  {groupData?.description && (
-                    <CollapsibleDescription 
-                      title={lang === 'zh' ? '系列故事与介绍' : lang === 'ms' ? 'Kisah & Pengenalan Siri' : 'Series Story & Description'}
-                      description={getSafeText(groupData.description, lang as any) || getSafeText(groupData.description, 'zh')}
-                    />
-                  )}
+                  <GroupInfoPanel groupData={groupData || undefined} lang={lang} />
 
                   <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="animate-spin text-slate-400" /></div>}>
                     <GroupGridView 

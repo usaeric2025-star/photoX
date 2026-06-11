@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { api } from '@/lib/api';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import {
@@ -18,7 +19,7 @@ export const runHealthCheck = async (
 // 1. Data consistency (IDs)
 // const broken = await scanAndRepairPhotoIds(allPhotos);
 // if (broken.length > 0) {
-//   console.warn(`[HealthCheck] Found ${broken.length} broken IDs`);
+//   logger.warn(`[HealthCheck] Found ${broken.length} broken IDs`);
 // }
 
   // 2. Group Integrity

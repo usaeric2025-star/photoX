@@ -9,11 +9,11 @@ interface WhatsAppChoiceDialogProps {
   onClose: () => void;
   settings: AppSettings | null;
   onSelect: (num: string) => void;
-  t: Record<string, any>;
+  labels: Record<string, any>;
 }
 
 export function WhatsAppChoiceDialog({
-  isOpen, onClose, settings, onSelect, t
+  isOpen, onClose, settings, onSelect, labels
 }: WhatsAppChoiceDialogProps) {
   if (!isOpen) return null;
 
@@ -36,7 +36,7 @@ export function WhatsAppChoiceDialog({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-2">
-          <h3 className="font-bold text-slate-800">{t.selectContact}</h3>
+          <h3 className="font-bold text-slate-800">{labels.selectContact}</h3>
           <button onClick={onClose} className="p-1 hover:bg-slate-100 rounded-full">
             <X size={20} className="text-slate-400" />
           </button>
@@ -49,7 +49,7 @@ export function WhatsAppChoiceDialog({
             >
               <span className="text-xl">👵</span>
               <div className="flex-1 flex flex-col items-start px-2">
-                <span className="text-[10px] opacity-70 uppercase tracking-widest">{t.contactNo} 1</span>
+                <span className="text-[10px] opacity-70 uppercase tracking-widest">{labels.contactNo} 1</span>
                 <span className="leading-tight truncate w-full text-left">{settings.whatsapp_1_name || 'Contact 1'}</span>
               </div>
               <MessageCircle size={20} className="shrink-0" />
@@ -62,7 +62,7 @@ export function WhatsAppChoiceDialog({
             >
               <span className="text-xl">🏢</span>
               <div className="flex-1 flex flex-col items-start px-2">
-                <span className="text-[10px] opacity-70 uppercase tracking-widest">{t.contactNo} 2</span>
+                <span className="text-[10px] opacity-70 uppercase tracking-widest">{labels.contactNo} 2</span>
                 <span className="leading-tight truncate w-full text-left">{settings.whatsapp_2_name || 'Contact 2'}</span>
               </div>
               <MessageCircle size={20} className="shrink-0" />
@@ -74,7 +74,7 @@ export function WhatsAppChoiceDialog({
               className="w-full py-4 px-6 bg-[#25D366] text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] transition-all"
             >
               <MessageCircle size={20} />
-              <span>{t.whatsAppInquiry}</span>
+              <span>{labels.whatsAppInquiry}</span>
             </button>
           )}
         </div>

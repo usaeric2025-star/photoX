@@ -1,87 +1,50 @@
-import React, { useState } from "react";
-import {
-  ChevronLeft,
-  Pencil,
-  X,
-  Edit2,
-  Copy,
-  ChevronDown,
-  ChevronUp
-} from "lucide-react";
-import { Photo, ProductGroup } from "../../types";
+import React from "react";
+import { ChevronLeft, X, Pencil, Copy, Edit2 } from "lucide-react";
+import { Photo } from "../../types";
 import { Skeleton } from "../ui/Skeleton";
-import { useUIStore, useShallow } from "@/store/useUIStore";
-import { useUrlFilters, useGroupMutations } from "@/hooks";
-import { useNavigate } from "@tanstack/react-router";
-import { useClipboard } from "@mantine/hooks";
-import { toast } from "sonner";
-import { translations } from "@/lib/translations";
 
 interface GroupHeaderProps {
+  displayName: string;
   activeGroupId: string | null;
-  update: (updates: any) => void;
-  isAdminMode: boolean;
-  groupData: ProductGroup | null;
+  isAdminMode?: boolean;
   isGroupDataLoading: boolean;
-  activeGroupPhotos: Photo[];
+  onClose: () => void;
+  onSettingsClick?: () => void;
+  onCopyId?: (id: string) => void;
+  onBatchEdit?: (photoIds: string[]) => void;
+  activeGroupPhotos?: Photo[];
+  appLang: string;
 }
 
 export function GroupHeader({
+  displayName,
   activeGroupId,
-  isAdminMode,
-  groupData,
+  isAdminMode = false,
   isGroupDataLoading,
-  activeGroupPhotos,
+  onClose,
+  onSettingsClick,
+  onCopyId,
+  onBatchEdit,
+  activeGroupPhotos = [],
+  appLang
 }: GroupHeaderProps) {
-  const { setGroupId } = useUrlFilters();
-  const navigate = useNavigate();
-  const isAdmin = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
-
-  const handleClose = () => {
-    navigate({ to: isAdmin ? '/admin' : '/', search: (prev: any) => ({ ...prev, groupId: undefined, photoId: undefined }) });
-  };
-  const { update, isMultiSelect, selectedIds, appLang } =
-    useUIStore(
-      useShallow((s) => ({
-        update: s.update,
-        isMultiSelect: s.isMultiSelect,
-        selectedIds: s.selectedIds,
-        appLang: s.appLang
-      })),
-    );
-
-  const clipboard = useClipboard();
-  const [isDescOpen, setIsDescOpen] = useState(false);
-  const [descLang, setDescLang] = useState<'zh' | 'en' | 'ms'>(
-    ['zh', 'en', 'ms'].includes(appLang) ? (appLang as 'zh' | 'en' | 'ms') : 'zh'
-  );
-  const onBatchEdit = (ids: string[]) => update?.({ batchEditingIds: ids });
-  const t = translations[appLang as keyof typeof translations] || translations.en;
-
   const l = {
     batchEdit: appLang === 'zh' ? '批量编辑' : appLang === 'ms' ? 'Edit Pukal' : 'Batch Edit',
   };
-
-  const displayName = (typeof groupData?.name === 'object' ? (groupData?.name?.[appLang as keyof typeof groupData.name] || groupData?.name?.zh || groupData?.name?.en || groupData?.name?.ms) : groupData?.name) || `GROUP ${activeGroupId?.slice(-4)}`;
-  const displayDesc = (typeof groupData?.description === 'object' ? (groupData?.description?.[appLang as keyof typeof groupData.description] || groupData?.description?.zh || groupData?.description?.en || groupData?.description?.ms) : groupData?.description) || '';
 
   return (
     <div className="flex flex-col border-b border-slate-100 bg-white">
       <div className="flex flex-shrink-0 sticky top-0 px-4 sm:px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <button
-            onClick={handleClose}
+            onClick={onClose}
             className="w-10 h-10 flex-shrink-0 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors"
           >
             <ChevronLeft size={24} />
           </button>
           <div
-            className="flex flex-col cursor-pointer group min-w-0 flex-1"
-            onClick={() => {
-              if (isAdminMode) {
-                update?.({ groupSettingsOpen: true } as any);
-              }
-            }}
+            className={`flex flex-col group min-w-0 flex-1 ${onSettingsClick ? 'cursor-pointer' : ''}`}
+            onClick={onSettingsClick}
           >
             <div className="flex flex-col gap-0.5 min-h-[1.75rem] overflow-hidden">
               {isGroupDataLoading ? (
@@ -99,15 +62,13 @@ export function GroupHeader({
                       />
                     )}
                   </div>
-                  {activeGroupId && (
+                  {activeGroupId && onCopyId && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        clipboard.copy(activeGroupId);
-                        toast.success("合组ID已复制");
+                        onCopyId(activeGroupId);
                       }}
                       className="text-xs text-slate-400 font-mono hover:text-indigo-600 flex items-center gap-1 transition-colors"
-                      title={appLang === 'zh' ? '点击复制 ID' : 'Click to copy ID'}
                     >
                       ID: {activeGroupId.slice(-8)}
                       <Copy size={10} />
@@ -120,14 +81,14 @@ export function GroupHeader({
         </div>
 
         <button
-          onClick={handleClose}
+          onClick={onClose}
           className="w-10 h-10 flex-shrink-0 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors border border-slate-200 bg-white"
         >
           <X size={20} />
         </button>
       </div>
 
-      {isAdminMode && (
+      {isAdminMode && onBatchEdit && (
         <div className="px-4 sm:px-6 pb-4">
           <button
             onClick={() => onBatchEdit(activeGroupPhotos.map(p => p.id))}

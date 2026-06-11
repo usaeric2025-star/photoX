@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { supabase } from '../../lib/supabase';
 import { STORAGE } from './storageConfig';
 import { api } from '@/lib/api';
@@ -32,7 +33,7 @@ export const uploadWithRetry = async (
         if (i < maxRetries - 1) {
           const delay = Math.pow(2, i) * 1000;
           await new Promise(resolve => setTimeout(resolve, delay));
-          console.warn(`[Upload] Attempt ${i + 1} failed, retrying in ${delay}ms...`, err);
+          logger.warn(`[Upload] Attempt ${i + 1} failed, retrying in ${delay}ms...`, err);
         }
       }
     }
@@ -64,8 +65,8 @@ export const uploadImages = async (
     try {
       const parsed = dataURLToArrayBuffer(base64);
       buffer = parsed.buffer;
-    } catch (err: any) {
-      console.warn('[uploadService] dataURLToArrayBuffer failed, falling back to fetch', err);
+    } catch (err) {
+      logger.warn('[uploadService] dataURLToArrayBuffer failed, falling back to fetch', err);
       const res = await fetch(base64);
       const blob = await res.blob();
       buffer = await blob.arrayBuffer();
@@ -108,12 +109,12 @@ export const uploadImages = async (
         body: new Uint8Array(buffer)
       });
       if (!uploadRes.ok) {
-         throw new Error(`R2 Upload failed with HTTP ${uploadRes.status}: ${await uploadRes.text().catch(() => '')}`);
+         throw ErrorFactory.wrap(new Error(`R2 Upload failed with HTTP ${uploadRes.status}: ${await uploadRes.text().catch(() => '')}`), 'uploadService');
       }
       if (isMain && onProgress) onProgress(100);
       return publicUrl;
-    } catch (browserUploadErr: any) {
-      console.warn('[Upload] Browser direct upload via presigned URL failed, evaluating fallback...', browserUploadErr);
+    } catch (browserUploadErr) {
+      logger.warn('[Upload] Browser direct upload via presigned URL failed, evaluating fallback...', browserUploadErr);
       
       const strategy = resolveUploadStrategy(buffer.byteLength, browserUploadErr);
       
@@ -122,7 +123,7 @@ export const uploadImages = async (
       }
       
       // status === 'relay'
-      console.warn('[Upload] Falling back to server relay...', strategy.status === 'relay' ? strategy.endpoint : '/api/upload-direct');
+      logger.warn('[Upload] Falling back to server relay...', strategy.status === 'relay' ? strategy.endpoint : '/api/upload-direct');
       const fallbackRes = await api['upload-direct'].$post({
         json: { base64Data: base64, fileKey: safeFileName, contentType: 'image/webp' }
       });

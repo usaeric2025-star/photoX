@@ -2,7 +2,8 @@ import React, { useEffect } from 'react';
 import { VirtualPhotoGrid } from '@/components/photo/VirtualPhotoGrid';
 import { PublicFilters } from '@/components/ui/PublicFilters';
 import { useUIStore, useShallow, useAppLang, useColumns } from '@/store/useUIStore';
-import { usePhotos, useSettings, useCategories, useTags, useUrlFilters, useProcessedPhotos } from '@/hooks';
+import { usePhotos, useSettings, useCategories, useTags, useUrlFilters } from '@/hooks';
+import { processPhotos as processPhotosSync } from '@/lib/filters';
 import { cleanPhotos } from '@/lib/filters';
 import { PAGINATION, EMPTY_ARRAY } from '@/constants/config';
 import { GroupDetailPage } from '../GroupDetailPage';
@@ -34,15 +35,37 @@ export function PublicGridContainer({
   } = useUIStore(useShallow(s => ({ update: s.update, showWhatsAppChoice: s.showWhatsAppChoice })));
   
   const [appLang] = useAppLang();
+  const activeLabels = (translations as any)[appLang] || translations.en;
   const [columns, setColumns] = useColumns();
 
   const publicSettings = settings;
   const { data: categories = EMPTY_ARRAY as any[] } = useCategories();
   const { data: tags = EMPTY_ARRAY as any[] } = useTags();
   
-  const { process, result, isProcessing: isWorkerProcessing } = useProcessedPhotos();
-  
-  const t = translations[appLang as keyof typeof translations] || translations.en;
+  // Memoize search maps for processPhotos optimization
+  const tagMap = React.useMemo(() => {
+    const map = new Map<string, string[]>();
+    tags.forEach((t: any) => {
+      const terms = [t.name.toLowerCase()];
+      if (Array.isArray(t.aliases)) {
+        t.aliases.forEach((a: string) => terms.push(a.toLowerCase()));
+      }
+      map.set(String(t.id), terms);
+    });
+    return map;
+  }, [tags]);
+
+  const catMap = React.useMemo(() => {
+    const map = new Map<string, string[]>();
+    categories.forEach((c: any) => {
+      const terms = [(c.name || '').toLowerCase()];
+      if (Array.isArray(c.aliases)) {
+        c.aliases.forEach((a: string) => terms.push(a.toLowerCase()));
+      }
+      map.set(String(c.id), terms);
+    });
+    return map;
+  }, [categories]);
 
   const infiniteQuery = usePhotos({
     category_id: urlFilters.categoryId,
@@ -56,8 +79,8 @@ export function PublicGridContainer({
 
   const rawPhotos = (infiniteQuery.data as any)?.photos ?? EMPTY_ARRAY;
 
-  useEffect(() => {
-    process(
+  const processedResult = React.useMemo(() => {
+    return processPhotosSync(
       rawPhotos,
       categories,
       tags,
@@ -65,12 +88,14 @@ export function PublicGridContainer({
       urlFilters,
       {
         showGroupsCollapsed: urlFilters.showGroupsCollapsed,
-        isAdminModeOverride: false
+        isAdminModeOverride: false,
+        tagMap,
+        catMap
       }
     );
-  }, [rawPhotos, categories, tags, urlFilters, process]);
+  }, [rawPhotos, categories, tags, urlFilters, tagMap, catMap]);
 
-  const gridPhotos = result?.gridPhotos || EMPTY_ARRAY;
+  const gridPhotos = processedResult?.gridPhotos || EMPTY_ARRAY;
 
   useEffect(() => {
     const handleResize = () => {
@@ -110,14 +135,19 @@ export function PublicGridContainer({
     update({ showWhatsAppChoice: true });
   };
 
+  const showGroupsCollapsed = urlFilters.showGroupsCollapsed !== false;
+  const hasSearchQuery = !!urlFilters.searchQuery;
+
   const renderCard = React.useCallback((photo: Photo, index: number, sharedCategories: any[]) => (
     <PhotoCard 
       photo={photo} 
       index={index}
+      showGroupsCollapsed={showGroupsCollapsed}
+      hasSearchQuery={hasSearchQuery}
       sharedCategories={sharedCategories}
       canPin={false}
     />
-  ), []);
+  ), [showGroupsCollapsed, hasSearchQuery]);
 
   return (
     <div className="flex flex-col h-full bg-brand-bg w-full overflow-hidden text-text">
@@ -138,10 +168,10 @@ export function PublicGridContainer({
         />
         <div className="flex-1 overflow-hidden bg-brand-bg relative">
             <VirtualPhotoGrid 
-              key={`photo-grid-${urlFilters.showGroupsCollapsed ? 'collapsed' : 'expanded'}-${urlFilters.searchQuery || ''}`}
+              key={`photo-grid-${urlFilters.showGroupsCollapsed ? 'c' : 'e'}-${urlFilters.searchQuery || ''}`}
               restoreKey="public_view_scroll_vlist"
               photos={gridPhotos}
-              isFetching={infiniteQuery.isLoading || (isWorkerProcessing && gridPhotos.length === 0)}
+              isFetching={infiniteQuery.isLoading}
               isFetchingNextPage={infiniteQuery.isFetchingNextPage}
               hasNextPage={!!infiniteQuery.hasNextPage}
               onLoadMore={infiniteQuery.fetchNextPage}
@@ -166,7 +196,7 @@ export function PublicGridContainer({
           isOpen={showWhatsAppChoice}
           onClose={() => update({ showWhatsAppChoice: false })}
           settings={publicSettings}
-          t={t}
+          labels={activeLabels}
           onSelect={openWhatsApp}
         />
     </div>

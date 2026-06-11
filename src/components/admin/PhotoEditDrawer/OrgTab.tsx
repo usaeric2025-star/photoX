@@ -13,7 +13,7 @@ interface Props {
   form: PhotoEditFormReturn;
 }
 
-export const OrgTab = React.memo(function OrgTab({ form }: Props) {
+export function OrgTab({ form }: Props) {
   const appLang = useUIStore((s) => s.appLang);
   const { data: manufacturers = [] } = useManufacturers();
   
@@ -81,4 +81,4 @@ export const OrgTab = React.memo(function OrgTab({ form }: Props) {
       />
     </div>
   );
-});
+}

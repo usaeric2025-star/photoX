@@ -16,6 +16,7 @@ import { useUIStore, useShallow } from "@/store/useUIStore";
 import { translations } from "../../lib/translations";
 import { Plus, Settings2, MoreVertical, Pencil, Sparkles, FolderMinus } from "lucide-react";
 import { CollapsibleDescription } from "./CollapsibleDescription";
+import { GroupInfoPanel } from "./GroupInfoPanel";
 import { getSafeText } from "@/lib/ai/safeText";
 import {
   DropdownMenu,
@@ -158,21 +159,23 @@ export function GroupAdminShell() {
             ) : (
               <>
                 {/* Top Header */}
-                <GroupHeader update={update} 
+                <GroupHeader 
+                  displayName={(typeof groupData?.name === 'object' ? (groupData?.name?.[appLang as keyof typeof groupData.name] || groupData?.name?.zh || groupData?.name?.en || groupData?.name?.ms) : groupData?.name) || `GROUP ${filters.groupId?.slice(-4)}`}
                   activeGroupId={filters.groupId}
-                  
                   isAdminMode={isAdminMode}
-                  groupData={groupData}
                   isGroupDataLoading={isGroupDataLoading}
+                  onClose={() => {}}
+                  onSettingsClick={() => update({ groupSettingsOpen: true })}
+                  onCopyId={(id) => {
+                      navigator.clipboard.writeText(id);
+                      toast.success("合组ID已复制");
+                  }}
+                  onBatchEdit={(ids) => update({ batchEditingIds: ids })}
                   activeGroupPhotos={activeGroupPhotos}
+                  appLang={appLang}
                 />
 
-                {groupData?.description && (
-                  <CollapsibleDescription 
-                    title={appLang === 'zh' ? '系列故事与介绍' : appLang === 'ms' ? 'Kisah & Pengenalan Siri' : 'Series Story & Description'}
-                    description={getSafeText(groupData.description, appLang as any) || getSafeText(groupData.description, 'zh')}
-                  />
-                )}
+                <GroupInfoPanel groupData={groupData || undefined} lang={appLang} />
 
                 <GroupGridView
                   virtualGridRef={virtualGridRef}

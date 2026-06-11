@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
 import { generateThumbHash } from '@/lib/image/thumbHash';
 import { updatePhoto as updatePhotoInCloud } from '../commands';
@@ -50,7 +51,7 @@ export async function backfillThumbHashes(onProgress: (stats: BackfillStats) => 
         stats.failed++;
       }
     } catch (err) {
-      console.error(`[Backfill] Failed for ${photo.id}:`, err);
+      logger.error(`[Backfill] Failed for ${photo.id}:`, err);
       stats.failed++;
     } finally {
       stats.processed++;

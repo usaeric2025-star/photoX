@@ -2,13 +2,13 @@ import React from 'react';
 import { ImageOff } from 'lucide-react';
 
 interface AdminEmptyStateProps {
-  t: {
+  labels: {
     empty: string;
     [key: string]: any;
   };
 }
 
-export function AdminEmptyState({ t }: AdminEmptyStateProps) {
+export function AdminEmptyState({ labels }: AdminEmptyStateProps) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center min-h-[400px]">
       <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
@@ -17,7 +17,7 @@ export function AdminEmptyState({ t }: AdminEmptyStateProps) {
             <ImageOff size={32} className="opacity-20 text-brand-navy/20" />
           </div>
         </div>
-        <h3 className="text-lg font-semibold text-slate-700">{t.empty || "No photos found"}</h3>
+        <h3 className="text-lg font-semibold text-slate-700">{labels.empty || "No photos found"}</h3>
       </div>
     </div>
   );

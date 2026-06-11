@@ -1,3 +1,4 @@
+import { logger } from './logger.js';
 import crypto from 'crypto';
 
 const ALGORITHM = 'aes-256-gcm';
@@ -28,7 +29,7 @@ export function encrypt(text: string): string {
     const authTag = cipher.getAuthTag().toString('hex');
     return `${iv.toString('hex')}:${authTag}:${encrypted}`;
   } catch (e) {
-    console.error("Encryption failed:", e);
+    logger.error("Encryption failed:", e);
     return text;
   }
 }
@@ -63,7 +64,7 @@ export function decrypt(text: string): string {
       decrypted = Buffer.concat([decrypted, decipher.final()]);
       return decrypted.toString('utf8');
     } catch (cbcErr: any) {
-      console.warn("CBC decryption failed:", cbcErr.message);
+      logger.warn("CBC decryption failed:", cbcErr.message);
       return text;
     }
   }
@@ -84,7 +85,7 @@ export function decrypt(text: string): string {
     decrypted += decipher.final('utf8');
     return decrypted;
   } catch (e: any) {
-    console.warn("[Encryption] Decryption failed:", e.message);
+    logger.warn("[Encryption] Decryption failed:", e.message);
     throw new Error("API密鑰解密失敗，可能由于加密秘鑰(ENCRYPTION_KEY)已更改。請重新保存您的API密鑰。");
   }
 }

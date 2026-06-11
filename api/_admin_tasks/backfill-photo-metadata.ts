@@ -1,3 +1,4 @@
+import { logger } from '../_lib/logger.js';
 import sizeOf from "image-size";
 import { getAIProvider } from "../_lib/ai/providerFactory.js";
 
@@ -88,10 +89,10 @@ export async function processBackfillBatch(
               sizeExtracted = true;
             }
           } catch (e: any) {
-            console.error(`[Backfill] Failed to parse image-size for ${photo.id}:`, e.message);
+            logger.error(`[Backfill] Failed to parse image-size for ${photo.id}:`, e.message);
           }
         } else {
-          console.error(`[Backfill] Failed to fetch image binary for ${photo.id}: status ${res.status}`);
+          logger.error(`[Backfill] Failed to fetch image binary for ${photo.id}: status ${res.status}`);
         }
       } else {
         // Dimensions already exist, extract width & height
@@ -172,7 +173,7 @@ Your response MUST match this exact JSON schema:
             }
           }
         } catch (err: any) {
-          console.error(`[Backfill] Translation failed for ${photo.id}:`, err.message);
+          logger.error(`[Backfill] Translation failed for ${photo.id}:`, err.message);
         }
       }
 
@@ -207,7 +208,7 @@ Your response MUST match this exact JSON schema:
         });
       }
     } catch (err: any) {
-      console.error(`[Backfill] Error processing photo ${photo.id}:`, err);
+      logger.error(`[Backfill] Error processing photo ${photo.id}:`, err);
       results.push({
         id: photo.id,
         name: photo.name,

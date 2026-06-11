@@ -1,37 +1,26 @@
-import { supabase } from '../../../lib/supabase';
-import { DB_CONFIG } from '../../../constants/config';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { withErrorHandling } from '@/lib/error/wrapper';
 import { AppResult, success } from '@/lib/error/ErrorFactory';
 import { Photo } from '../../../types';
 
-export const upsertPhotoRecord = async (payload: any): Promise<AppResult<any>> => {
+export const upsertPhotoRecord = async (payload: any): Promise<AppResult<unknown>> => {
     return withErrorHandling(async () => {
-        const { data, error } = await supabase
-            .from(DB_CONFIG.TABLE_NAME)
-            .upsert(payload, { onConflict: 'id' })
-            .select('id')
-            .maybeSingle();
-        
-        if (error) throw error;
+        const { api } = await import('@/lib/api');
+        const res = await api.photos.upsert.$post({
+            json: { payload }
+        });
+        if (!res.ok) throw ErrorFactory.wrap(new Error('Upsert photo failed'), 'dbCommands');
+        const { data } = await res.json();
         return data;
     }, 'upsertPhotoRecord');
 };
 
 export const syncPhotoTagsInDB = async (photoId: string, tagIds: string[]): Promise<AppResult<void>> => {
     return withErrorHandling(async () => {
-      await supabase.from('photo_tags').delete().eq('photo_id', photoId);
-      if (tagIds.length > 0) {
-        const associations = tagIds
-            .filter(tid => !!tid)
-            .map(tagId => ({
-              photo_id: photoId,
-              tag_id: tagId
-            }));
-        
-        if (associations.length > 0) {
-          const { error } = await supabase.from('photo_tags').insert(associations);
-          if (error) throw error;
-        }
-      }
+      const { api } = await import('@/lib/api');
+      const res = await api.tags['sync-photo-tags'].$post({
+          json: { photoId, tagIds }
+      });
+      if (!res.ok) throw ErrorFactory.wrap(new Error('Sync photo tags failed'), 'dbCommands');
     }, 'syncPhotoTagsInDB');
 };

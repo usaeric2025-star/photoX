@@ -50,17 +50,21 @@ export const loadGroupsFromCloud = async (userId: string): Promise<AppResult<Pro
   }, 'loadGroupsFromCloud');
 };
 
-export const getGroupById = async (id: string): Promise<AppResult<ProductGroup | null>> => {
+export const getGroupById = async (id: string, mode: 'public' | 'admin' = 'public'): Promise<AppResult<ProductGroup | null>> => {
   return withErrorHandling(async () => {
-    const query = supabase
+    let query = supabase
       .from(TABLE_NAME)
       .select('*')
-      .eq('id', id)
-      .maybeSingle();
+      .eq('id', id);
 
-    const res = await withSupabase(query, 'getGroupById');
-    if (!res.ok) return res;
+    if (mode === 'public') {
+      query = query.or('is_hidden.eq.false,is_hidden.is.null');
+    }
+
+    const { data, error } = await query.maybeSingle();
+
+    if (error) throw error;
     
-    return success(res.data ? mapGroup(res.data) : null);
+    return success(data ? mapGroup(data) : null);
   }, 'getGroupById');
 };

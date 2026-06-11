@@ -19,33 +19,39 @@ export function processPhotos(
     showGroupsCollapsed?: boolean;
     isAdminModeOverride?: boolean;
     bypassFilter?: boolean;
+    tagMap?: Map<string, string[]>;
+    catMap?: Map<string, string[]>;
   } = {}
 ) {
   const showGroups = options.showGroupsCollapsed ?? userFilters.showGroupsCollapsed;
   const isAdminMode = options.isAdminModeOverride ?? false;
-  const bypassFilter = options.bypassFilter ?? false; // Default to false to ensure filtering works
+  const bypassFilter = options.bypassFilter ?? false;
 
   let displayPhotos = (photos || []).filter(isValidPhoto);
     
   if (!bypassFilter && (userFilters.searchQuery || userFilters.categoryId || userFilters.tagId)) {
-    // Create maps only if needed for refinement
-    const tagMap = new Map<string, string[]>();
-    tags.forEach(t => {
-      const terms = [t.name.toLowerCase()];
-      if (Array.isArray(t.aliases)) {
-        t.aliases.forEach(a => terms.push(a.toLowerCase()));
-      }
-      tagMap.set(String(t.id), terms);
-    });
+    // Optimization: Reuse provided maps or create if missing
+    const tagMap = options.tagMap || new Map<string, string[]>();
+    if (!options.tagMap) {
+      tags.forEach(t => {
+        const terms = [t.name.toLowerCase()];
+        if (Array.isArray(t.aliases)) {
+          t.aliases.forEach(a => terms.push(a.toLowerCase()));
+        }
+        tagMap.set(String(t.id), terms);
+      });
+    }
       
-    const catMap = new Map<string, string[]>();
-    categories.forEach(c => {
-      const terms = [(c.name || '').toLowerCase()];
-      if (Array.isArray(c.aliases)) {
-        c.aliases.forEach(a => terms.push(a.toLowerCase()));
-      }
-      catMap.set(String(c.id), terms);
-    });
+    const catMap = options.catMap || new Map<string, string[]>();
+    if (!options.catMap) {
+      categories.forEach(c => {
+        const terms = [(c.name || '').toLowerCase()];
+        if (Array.isArray(c.aliases)) {
+          c.aliases.forEach(a => terms.push(a.toLowerCase()));
+        }
+        catMap.set(String(c.id), terms);
+      });
+    }
 
     displayPhotos = filterPhotos(displayPhotos, {
       searchQuery: userFilters.searchQuery,

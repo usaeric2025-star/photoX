@@ -1,3 +1,4 @@
+import { logger } from '../../_lib/logger.js';
 import { Hono } from 'hono';
 import { getSupabaseAdmin } from "../../_lib/supabase.js";
 import { encrypt } from '../../_lib/encryption.js';
@@ -45,7 +46,7 @@ adminSettings.get("/get-keys", async (c) => {
             }
         });
     } catch (e: any) {
-        console.error("get-keys handler failed:", e);
+        logger.error("get-keys handler failed:", e);
         return c.json({ success: false, error: e.message }, 500);
     }
 });
@@ -67,7 +68,7 @@ adminSettings.post("/save-key", async (c) => {
         }, { onConflict: 'key' });
 
         if (error) {
-            console.error(`Database error saving secret (${provider}):`, error);
+            logger.error(`Database error saving secret (${provider}):`, error);
             if (error.code === 'PGRST116' || error.message?.includes('does not exist')) {
                 return c.json({ 
                     success: false, 
@@ -82,7 +83,7 @@ adminSettings.post("/save-key", async (c) => {
             message: `密鑰已加密保存！` 
         });
     } catch (e: any) {
-        console.error("Save key failed:", e);
+        logger.error("Save key failed:", e);
         return c.json({ success: false, error: e.message || "保存失敗，請重試" }, 500);
     }
 });
@@ -102,7 +103,7 @@ adminSettings.post("/save-model", async (c) => {
         
         return c.json({ success: true });
     } catch (e: any) {
-        console.error("Save model failed:", e);
+        logger.error("Save model failed:", e);
         return c.json({ success: false, error: e.message }, 500);
     }
 });
@@ -122,7 +123,7 @@ adminSettings.post("/save-provider", async (c) => {
         }, { onConflict: 'key' });
         
         if (error) {
-            console.error(`Database error saving provider preference:`, error);
+            logger.error(`Database error saving provider preference:`, error);
             if (error.code === 'PGRST116' || error.message?.includes('does not exist')) {
                 return c.json({ 
                     success: false, 
@@ -134,7 +135,31 @@ adminSettings.post("/save-provider", async (c) => {
         
         return c.json({ success: true });
     } catch (e: any) {
-        console.error("Save provider failed:", e);
+        logger.error("Save provider failed:", e);
+        return c.json({ success: false, error: e.message }, 500);
+    }
+});
+
+adminSettings.post("/save-settings", async (c) => {
+    try {
+        const { settingsPayload } = await c.req.json();
+        const supabase = await getSupabaseAdmin();
+        const { error } = await supabase.from('settings').upsert(settingsPayload, { onConflict: 'id' });
+        if (error) return c.json({ success: false, error: error.message }, 500);
+        return c.json({ success: true });
+    } catch (e: any) {
+        return c.json({ success: false, error: e.message }, 500);
+    }
+});
+
+adminSettings.post("/upsert-logo", async (c) => {
+    try {
+        const { url } = await c.req.json();
+        const supabase = await getSupabaseAdmin();
+        const { error } = await supabase.from('settings').upsert({ id: 1, logo_url: url }, { onConflict: 'id' });
+        if (error) return c.json({ success: false, error: error.message }, 500);
+        return c.json({ success: true });
+    } catch (e: any) {
         return c.json({ success: false, error: e.message }, 500);
     }
 });

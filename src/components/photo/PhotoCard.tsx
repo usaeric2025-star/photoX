@@ -41,6 +41,8 @@ export interface PhotoCardProps extends React.HTMLAttributes<HTMLDivElement> {
   sharedTags?: Tag[];
   /** Permission restriction for pin click */
   canPin?: boolean;
+  /** External selection management */
+  selected?: boolean;
 }
 
 const toTitleCase = (str: string) => {
@@ -54,7 +56,7 @@ const toTitleCase = (str: string) => {
  * Any animation requiring React state or refs that triggers setStates inside
  * the virtualizer loop will cause infinite update depth loop.
  */
-export const PhotoCard = React.memo(({ 
+export const PhotoCard = ({ 
   photo, index,
   className = '', onClick,
   hideDetails = false,
@@ -68,9 +70,11 @@ export const PhotoCard = React.memo(({
   sharedCategories,
   sharedTags,
   canPin,
+  selected,
   ...props
 }: PhotoCardProps) => {
-  const isSelected = useUIStore((s) => s.selectedIds.includes(photo.id));
+  const internalIsSelected = useUIStore((s) => s.selectedIds.includes(photo.id));
+  const isSelected = selected !== undefined ? selected : internalIsSelected;
   const isMultiSelect = useUIStore((s) => s.isMultiSelect);
   const toggleSelected = useUIStore((s) => s.toggleSelected);
   const update = useUIStore((s) => s.update);
@@ -91,22 +95,16 @@ export const PhotoCard = React.memo(({
 
   const categoryId = photo.category_id ? String(photo.category_id) : '';
   
-  const displayCatName = React.useMemo(() => 
-    propDisplayCatName ?? getTranslatedCategoryName(categoryId, categories, lang, t),
-    [propDisplayCatName, categoryId, categories, lang, t]
-  );
+  const displayCatName = propDisplayCatName ?? getTranslatedCategoryName(categoryId, categories, lang, t);
                  
-  const photoTags = React.useMemo(() => {
+  const photoTags = (() => {
     if (propPhotoTags) return propPhotoTags;
     return (photo.tags || [])                
       .map(t => getSafeText(t.name, lang))                
       .filter(Boolean);                
-  }, [propPhotoTags, photo.tags, lang]);
+  })();
 
-  const displayName = React.useMemo(() => 
-    getPhotoDisplayName(photo, categories, lang, t as any),
-    [photo, categories, lang, t]
-  );
+  const displayName = getPhotoDisplayName(photo, categories, lang, t as any);
 
   // Optimization: Bypass invoking usePermission local hooks for every item when pre-passed
   const { can: permissionCan } = usePermission();
@@ -295,7 +293,6 @@ export const PhotoCard = React.memo(({
       )}
     </div>
   );
-});
+};
 
-// Explicit display name for debugging
-PhotoCard.displayName = 'PhotoCard';
+

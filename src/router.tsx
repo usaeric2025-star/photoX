@@ -88,7 +88,7 @@ import { PHOTO_QUERY_CONFIG } from '@/lib/photoQueryConfig';
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: ROUTES.HOME,
-  validateSearch: (search: Record<string, unknown>): GallerySearchParams => {
+  validateSearch: (search: Record<string, any>): GallerySearchParams => {
     return {
       q: (search.q as string) || undefined,
       category: (search.category as string) || undefined,
@@ -117,7 +117,7 @@ const indexRoute = createRoute({
 const previewRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/preview', // Explicitly set to /preview
-  validateSearch: (search: Record<string, unknown>): GallerySearchParams => {
+  validateSearch: (search: Record<string, any>): GallerySearchParams => {
     return {
       q: (search.q as string) || undefined,
       category: (search.category as string) || undefined,
@@ -151,7 +151,7 @@ const groupRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/group/$groupId',
   beforeLoad: authGuard,
-  validateSearch: (search: Record<string, unknown>): GallerySearchParams => {
+  validateSearch: (search: Record<string, any>): GallerySearchParams => {
     return {
       q: (search.q as string) || undefined,
       category: (search.category as string) || undefined,
@@ -211,7 +211,7 @@ const adminErrorLogsRoute = createRoute({
 const adminGroupRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: '/group/$groupId',
-  validateSearch: (search: Record<string, unknown>): GallerySearchParams => {
+  validateSearch: (search: Record<string, any>): GallerySearchParams => {
     return {
       photoId: (search.photoId as string) || undefined,
       columns: (search.columns as string) || undefined,

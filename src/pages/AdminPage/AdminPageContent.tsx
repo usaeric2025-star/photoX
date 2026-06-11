@@ -83,7 +83,7 @@ export function AdminPageContent() {
   const onRefresh = async () => {
     try {
       await syncMut('pull');
-    } catch (e: any) {
+    } catch (e) {
       // Error handled by mutationFactory
     }
   };

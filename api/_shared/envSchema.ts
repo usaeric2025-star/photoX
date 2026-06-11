@@ -1,3 +1,4 @@
+import { logger } from '../_lib/logger.js';
 import { type } from "arktype";
 
 /**
@@ -47,12 +48,12 @@ export function getServerEnv(envObj: NodeJS.ProcessEnv): ServerEnv {
     const rawEnv = { ...envObj };
     const result = serverEnvSchema(rawEnv);
     if (result instanceof type.errors) {
-      console.warn("⚠️ [ENV-VALIDATION-INTEGRATED] Invalid Server Environment Variables (Falling back gracefully):");
+      logger.warn("⚠️ [ENV-VALIDATION-INTEGRATED] Invalid Server Environment Variables (Falling back gracefully):");
       return rawEnv as ServerEnv;
     }
     return result as ServerEnv;
   } catch (e) {
-    console.error("[EnvSchema] Critical error during validation:", e);
+    logger.error("[EnvSchema] Critical error during validation:", e);
     return envObj as any as ServerEnv;
   }
 }

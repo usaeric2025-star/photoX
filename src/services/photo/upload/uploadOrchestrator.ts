@@ -1,3 +1,5 @@
+import { logger } from '@/lib/logger';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { withErrorHandling } from '@/lib/error/wrapper';
 import { AppResult, errorFactory, success } from '@/lib/error/ErrorFactory';
 import { Photo } from '../../../types';
@@ -19,7 +21,7 @@ export const uploadSinglePhoto = async (
     const isLocalStorageStaff = typeof window !== 'undefined' && !!window.localStorage.getItem('ais_mock_auth_passcode');
 
     if (!session?.user && !isLocalStorageStaff) {
-        throw new Error('鉴权失敗: 無活躍會話');
+        throw ErrorFactory.wrap(new Error('鉴权失敗: 無活躍會話'), 'uploadOrchestrator');
     }
 
     const actUserId = session?.user?.id || userId || 'staff';
@@ -36,7 +38,7 @@ export const uploadSinglePhoto = async (
             photo.id
         );
         if (dbCheck.isDuplicate) {
-             console.log(`[Upload] Skipping duplicate photo: ${photo.id || (photo as any)._fileName}. Existing ID: ${dbCheck.existingId}`);
+             logger.info(`[Upload] Skipping duplicate photo: ${photo.id || (photo as any)._fileName}. Existing ID: ${dbCheck.existingId}`);
              return { id: dbCheck.existingId || photo.id || 'duplicate', is_duplicate: true };
         }
         
@@ -50,14 +52,14 @@ export const uploadSinglePhoto = async (
         const filename = photo.storage_id || photo.id;
         const { imageUrl, isDuplicate: r2Duplicate } = await uploadToR2(userId, filename, photo.uri, photo.image_hash, onStatus);
         if (r2Duplicate) {
-            console.log(`[Upload] R2 confirmed duplicate file for ${photo.id}. Reusing URL: ${imageUrl}`);
+            logger.info(`[Upload] R2 confirmed duplicate file for ${photo.id}. Reusing URL: ${imageUrl}`);
             is_duplicate = true;
         }
         photo.image_url = imageUrl;
     }
 
     if (!photo.image_url) {
-        throw new Error('Upload failed: No image URL generated');
+        throw ErrorFactory.wrap(new Error('Upload failed: No image URL generated'), 'uploadOrchestrator');
     }
 
     normalizeDimensionsBeforeSave(photo.dimensions);
@@ -75,11 +77,11 @@ export const uploadSinglePhoto = async (
 
     // 3. Final DB Upsert (ONLY AFTER R2 IS SUCCESSFUL)
     const saveResult = await upsertPhotoRecord(payload);
-    if (!saveResult.ok) throw new Error(saveResult.message);
+    if (!saveResult.ok) throw ErrorFactory.wrap(new Error(saveResult.message), 'uploadOrchestrator');
     
     // 4. Tag Sync
     const tagSync = await syncPhotoTagsInDB(photo.id, (photo.tags || []).map(t => String(t.id)));
-    if (!tagSync.ok) console.warn("Failed to sync photo tags:", tagSync.message);
+    if (!tagSync.ok) logger.warn("Failed to sync photo tags:", tagSync.message);
 
     return { id: photo.id, is_duplicate };
   }, 'uploadSinglePhoto');

@@ -1,3 +1,4 @@
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { QueryClient } from '@tanstack/react-query';
 import { photoKeys, groupKeys } from '@/lib/queryKeys';
 import { PHOTO_QUERY_CONFIG } from '@/lib/photoQueryConfig';
@@ -33,7 +34,7 @@ export async function prefetchMainGallery(queryClient: QueryClient) {
         undefined,
         false
       );
-      if (!res.ok) throw new Error(res.message);
+      if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'loaders');
       const photos = res.data || [];
       return {
         photos: photos,

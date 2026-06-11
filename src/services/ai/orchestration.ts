@@ -7,6 +7,7 @@ import { AppResult } from '@/types/api';
 import { analyzeGroup, analyzeSinglePhotoDetail as analyzeSinglePhoto } from './commands';
 import { updateGroup } from '../group/commands';
 import { withTimeout } from '@/lib/utils';
+import { logger } from '@/lib/logger';
 
 export * from './utils';
 import { hasExistingInfo } from './utils';
@@ -14,31 +15,31 @@ import { supabase } from '@/lib/supabase';
 
 export const analyzeAndSavePhoto = async (
   photo: any
-): Promise<AppResult<any>> => {
+): Promise<AppResult<unknown>> => {
   const analysis = await analyzePhoto(photo.id);
   if (!analysis.ok) return analysis;
   
   // Validate that we have something to update
-  if (!analysis.data.name && !analysis.data.description && (!analysis.data.tagNames || analysis.data.tagNames.length === 0)) {
+  if (!(analysis.data as any).name && !(analysis.data as any).description && (!(analysis.data as any).tagNames || (analysis.data as any).tagNames.length === 0)) {
       return fail('AI 分析未返回有效结果');
   }
 
-  const translation = await translateFields(analysis.data.name, analysis.data.description);
+  const translation = await translateFields((analysis.data as any).name, (analysis.data as any).description);
   if (!translation.ok) return translation;
 
   const updateResult = await updatePhoto(photo.id, {
     name: {
-      zh: analysis.data.name,
+      zh: (analysis.data as any).name,
       en: translation.data.name.en,
       ms: translation.data.name.ms
     },
     description: {
-      zh: analysis.data.description || '',
+      zh: (analysis.data as any).description || '',
       en: translation.data.description.en,
       ms: translation.data.description.ms
     },
-    category_id: analysis.data.category_id ? String(analysis.data.category_id) : null,
-    dimensions: analysis.data.dimensions || [],
+    category_id: (analysis.data as any).category_id ? String((analysis.data as any).category_id) : null,
+    dimensions: (analysis.data as any).dimensions || [],
     metadata: {
       ...(photo.metadata || {}),
       ai_updated_at: new Date().toISOString()
@@ -48,8 +49,8 @@ export const analyzeAndSavePhoto = async (
     return fail(updateResult.message);
   }
 
-  const tagNames = analysis.data.tagNames || [];
-  const tagIds = analysis.data.tagIds || [];
+  const tagNames = (analysis.data as any).tagNames || [];
+  const tagIds = (analysis.data as any).tagIds || [];
   
   if (tagNames.length > 0 || tagIds.length > 0) {
     const { resolveTagNamesToIds } = await import('../tag/completion');
@@ -75,7 +76,7 @@ export const analyzeAndSavePhoto = async (
 
 export const autoGroupPhotos = async (
   photoIds: string[]
-): Promise<AppResult<any>> => {
+): Promise<AppResult<unknown>> => {
   try {
     const { loadPhotosByIds } = await import('../photo/read');
     const photoRes = await loadPhotosByIds(photoIds);
@@ -84,10 +85,10 @@ export const autoGroupPhotos = async (
     
     for (let i = 0; i < photos.length; i++) {
       try {
-        console.log(`[autoGroupPhotos] Analyzing and saving single photo ${i+1}/${photos.length}: ${photos[i].id}`);
+        logger.info(`[autoGroupPhotos] Analyzing and saving single photo ${i+1}/${photos.length}: ${photos[i].id}`);
         await analyzeAndSavePhoto(photos[i]);
       } catch (err) {
-        console.error(`[autoGroupPhotos] Single photo analysis failed for ${photos[i].id}:`, err);
+        logger.error(`[autoGroupPhotos] Single photo analysis failed for ${photos[i].id}:`, err);
       }
     }
 
@@ -110,7 +111,7 @@ export const autoGroupPhotos = async (
         translatedDesc.ms = pTranslations.data.description.ms;
       }
     } catch (e) {
-      console.warn('[autoGroupPhotos] Translations failed:', e);
+      logger.warn('[autoGroupPhotos] Translations failed:', e);
     }
 
     const { groupPhotos } = await import('../group/commands');
@@ -121,15 +122,15 @@ export const autoGroupPhotos = async (
     
     if (!result.ok) return fail(result.message);
     return ok(result.data);
-  } catch (err: any) {
-    return fail(err.message || '自动合组失败');
+  } catch (err) {
+    return fail((err as Error).message || '自动合组失败');
   }
 };
 
 export const analyzeAndSaveGroup = async (
   groupId: string,
   photos: any[]
-): Promise<AppResult<any>> => {
+): Promise<AppResult<unknown>> => {
   try {
     const analysis = await withTimeout(analyzeGroup(photos), 120000); // 120s
     const { name, description, colors, materials } = analysis;
@@ -146,7 +147,7 @@ export const analyzeAndSaveGroup = async (
         translatedDesc.ms = pTranslations.data.description.ms;
       }
     } catch (transErr) {
-      console.warn('[AI Group] 翻譯跳過:', transErr);
+      logger.warn('[AI Group] 翻譯跳過:', transErr);
     }
 
     const res = await updateGroup(groupId, {
@@ -158,8 +159,8 @@ export const analyzeAndSaveGroup = async (
 
     if (!res.ok) return fail(res.message);
     return ok(res.data);
-  } catch (err: any) {
-    return fail(err.message || '合组分析失败');
+  } catch (err) {
+    return fail((err as Error).message || '合组分析失败');
   }
 };
 
@@ -183,8 +184,8 @@ export async function runBatchAnalysis({
       onProgress(currentProgress, `正在分析照片 ${i + 1}/${totalPhotosToProcess}`);
       const result = await analyzeAndSavePhoto(p);
       if (result.ok) successCount++;
-    } catch (err: any) {
-      console.error(`[AI Batch] Photo ${p.id} error:`, err);
+    } catch (err) {
+      logger.error(`[AI Batch] Photo ${p.id} error:`, err);
     }
   }
 
@@ -200,7 +201,7 @@ export async function runBatchAnalysis({
         if (groupRes.ok) groupSuccess = true;
       }
     } catch (e) {
-      console.warn('[AI Group] Batch summary failed', e);
+      logger.warn('[AI Group] Batch summary failed', e);
     }
   }
 

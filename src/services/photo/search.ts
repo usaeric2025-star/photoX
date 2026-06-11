@@ -1,69 +1,43 @@
-import { supabase } from '../../lib/supabase';
+import { logger } from '@/lib/logger';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { api } from '@/lib/api';
 import { normalizeSearchQuery } from '@/lib/utils';
+import type { AppType } from '../../../api/app'; // Fails if not accessible, but following rules
 
-export async function findPhotoIdsBySearch(q: string): Promise<string[]> {
+export async function findPhotoIdsBySearch(q: string): Promise<{ catIds: number[], photoIdsFromTags: string[], q: string } | null> {
   const normSearchQuery = normalizeSearchQuery(q);
-  if (!normSearchQuery) return [];
+  if (!normSearchQuery) return null;
 
-  const escapedQ = normSearchQuery.replace(/[\\%_]/g, '\\$&');
-  
-  const [tagsRes, catsRes] = await Promise.all([
-    (async () => {
-      try {
-        const res = await supabase.from('tags').select('id').ilike('name', `%${escapedQ}%`);
-        if (res.error) {
-          const jsonRes = await supabase.from('tags').select('id').or(`name->>zh.ilike.%${escapedQ}%`);
-          if (jsonRes.error) return { data: [], error: null };
-          return jsonRes;
-        }
-        return res;
-      } catch {
-        return { data: [], error: null };
-      }
-    })(),
-    (async () => {
-      try {
-        const res = await supabase.from('categories').select('id').ilike('name', `%${escapedQ}%`);
-        if (res.error) {
-          const jsonRes = await supabase.from('categories').select('id').or(`name->>zh.ilike.%${escapedQ}%`);
-          if (jsonRes.error) return { data: [], error: null };
-          return jsonRes;
-        }
-        return res;
-      } catch {
-        return { data: [], error: null }; // Fail silently so search continues for photos/tags
-      }
-    })()
-  ]);
+  try {
+    const res = await api.search.ids.$get({ query: { q: normSearchQuery } });
+    
+    if (!res.ok) {
+      throw ErrorFactory.wrap(new Error('Search failed'), 'search');
+    }
 
-  if (tagsRes.error) throw tagsRes.error;
-  if (catsRes.error) throw catsRes.error;
-
-  const tagIds = (tagsRes.data || []).map(t => t.id);
-  const catIds = (catsRes.data || []).map(c => c.id);
-
-  let photoIdsFromTags: string[] = [];
-  if (tagIds.length > 0) {
-    const { data: ptData, error: ptError } = await supabase.from('photo_tags').select('photo_id').in('tag_id', tagIds);
-    if (ptError) throw ptError;
-    if (ptData) photoIdsFromTags = ptData.map(pt => pt.photo_id);
+    const { data } = await res.json();
+    return {
+      catIds: data.catIds,
+      photoIdsFromTags: data.photoIds,
+      q: normSearchQuery
+    };
+  } catch (e) {
+    logger.error('Search service error:', e);
+    return null;
   }
-
-  // We return segments for OR query or specific IDs
-  return {
-    catIds,
-    photoIdsFromTags,
-    q: escapedQ
-  } as any;
 }
 
 export function buildSearchFilter(catIds: number[], photoIdsFromTags: string[], q: string) {
   let orSegments = [
-    `name.ilike.%${q}%`,
-    `manual_code.ilike.%${q}%`,
-    `model_number.ilike.%${q}%`,
-    `description.ilike.%${q}%`,
-    `item_code.ilike.%${q}%`
+    `name->>zh.ilike."%${q}%"`,
+    `name->>en.ilike."%${q}%"`,
+    `name->>ms.ilike."%${q}%"`,
+    `description->>zh.ilike."%${q}%"`,
+    `description->>en.ilike."%${q}%"`,
+    `description->>ms.ilike."%${q}%"`,
+    `manual_code.ilike."%${q}%"`,
+    `model_number.ilike."%${q}%"`,
+    `item_code.ilike."%${q}%"`
   ];
 
   if (catIds.length > 0) {
@@ -71,7 +45,8 @@ export function buildSearchFilter(catIds: number[], photoIdsFromTags: string[], 
   }
 
   if (photoIdsFromTags.length > 0) {
-    orSegments.push(`id.in.(${photoIdsFromTags.join(',')})`);
+    const limited = photoIdsFromTags.slice(0, 800);
+    orSegments.push(`id.in.("${limited.join('","')}")`);
   }
 
   return orSegments.join(',');

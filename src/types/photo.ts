@@ -33,7 +33,7 @@ export interface Photo {
   thumbnail_md_url?: string; // w=800
   thumb_hash?: string; // ThumbHash placeholder
   dimensions?: Dimension[] | null;
-  exif_data?: Record<string, unknown> | null;
+  exif_data?: Record<string, any> | null;
   created_at: string;
   updated_at?: string;
   group_id?: string | null;

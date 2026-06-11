@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { api } from '@/lib/api';
 import { Photo } from '../../types';
 
@@ -59,8 +60,8 @@ export async function analyzeGroup(photos: Photo[]): Promise<any> {
     try {
       parsed = JSON.parse(parsed.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim());
     } catch (e) {
-      console.warn("Failed to parse group analysis JSON:", parsed);
-      throw new Error("Invalid format returned by AI for group.");
+      logger.warn("Failed to parse group analysis JSON:", parsed);
+      throw ErrorFactory.wrap(e, 'analyzeGroup', 'json-parse');
     }
   }
   return parsed as any;
@@ -87,14 +88,14 @@ export async function analyzeSinglePhotoDetail(photo: Photo): Promise<any> {
     try {
       parsed = JSON.parse(parsed.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim());
     } catch (e) {
-      console.warn("Failed to parse single photo analysis JSON:", parsed);
-      throw new Error("Invalid format returned by AI for photo.");
+      logger.warn("Failed to parse single photo analysis JSON:", parsed);
+      throw ErrorFactory.wrap(e, 'analyzeSinglePhoto', photo.id);
     }
   }
   return parsed as any;
 }
 
-export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promise<AppResult<any>> => {
+export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promise<AppResult<unknown>> => {
   try {
      const resp = await api.ai.analyze.$post({ json: { photoId } }) as any;
      const data = await resp.json();
@@ -127,8 +128,8 @@ export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promi
        }
        return err(errorMsg);
      }
-  } catch (e: any) {
-    if (e.name === 'AbortError') return err('请求已取消');
-    return err(e.message || 'AI 分析异常', 'UNKNOWN');
+  } catch (e) {
+    if ((e as Error).name === 'AbortError') return err('请求已取消');
+    return err((e as Error).message || 'AI 分析异常', 'UNKNOWN');
   }
 };

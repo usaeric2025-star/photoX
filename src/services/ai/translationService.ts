@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { api } from '@/lib/api';
 import { ok, fail } from '@/lib/utils/result';
 import { AppResult } from '@/types/api';
@@ -37,8 +38,8 @@ export const translateFields = async (
       name: { zh: name, en: nt.en, ms: nt.ms },
       description: { zh: description, en: dt.en, ms: dt.ms }
     });
-  } catch (err: any) {
-    console.error('Translation failed', err);
-    return fail(err.message || 'Translation failed');
+  } catch (err) {
+    logger.error('Translation failed', err);
+    return fail((err as Error).message || 'Translation failed');
   }
 };

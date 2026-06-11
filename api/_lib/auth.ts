@@ -1,3 +1,4 @@
+import { logger } from './logger.js';
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { getServerEnv } from "../_shared/envSchema.js";
 
@@ -5,6 +6,8 @@ const serverEnv = getServerEnv(process.env);
 let authSessionClientInstance: SupabaseClient | null = null;
 
 export async function requireRealUser(c: any) {
+  if (c.get('user')) return c.get('user');
+
   const authHeader = c.req.header('Authorization');
   if (!authHeader) throw new Error("Unauthorized: No credentials provided");
   
@@ -17,6 +20,7 @@ export async function requireRealUser(c: any) {
   const { data: { user }, error } = await authSessionClientInstance.auth.getUser(authHeader.replace('Bearer ', ''));
   if (error || !user) throw new Error("Unauthorized: Invalid/Expired Session");
   
+  c.set('user', user);
   return user;
 }
 
@@ -31,7 +35,7 @@ export async function adminAuthMiddleware(c: any, next: any) {
         await requireRealUser(c);
         await next();
     } catch (e: any) {
-        console.error(`[Auth Error] ${c.req.path}: ${e.message}`);
+        logger.error(`[Auth Error] ${c.req.path}: ${e.message}`);
         return c.json({ success: false, error: e.message }, 401);
     }
 }

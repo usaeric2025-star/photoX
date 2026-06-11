@@ -44,11 +44,11 @@ export function normalizeDimensionsBeforeSave(dimensions: import('../../types').
   });
 }
 
-export const mapToDb = (updates: Partial<Photo> & Record<string, unknown>, isCreate = false): Record<string, unknown> => {
-    const dbUpdates: Record<string, unknown> = {};
+export const mapToDb = (updates: Partial<Photo> & Record<string, any>, isCreate = false): Record<string, any> => {
+    const dbUpdates: Record<string, any> = {};
     
     // Filter updates based on whitelist
-    const filteredUpdates: Record<string, unknown> = {};
+    const filteredUpdates: Record<string, any> = {};
     for (const key of ALLOWED_FIELDS) {
         if (key in updates) {
             filteredUpdates[key] = updates[key];

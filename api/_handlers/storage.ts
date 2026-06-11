@@ -1,3 +1,4 @@
+import { logger } from '../_lib/logger.js';
 import { Hono } from "hono";
 import { S3Client, PutObjectCommand, ListObjectsV2Command, DeleteObjectCommand, CopyObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -29,12 +30,12 @@ storage.post("/log-error", async (c) => {
             .from('system_logs')
             .insert([payload]);
         if (error) {
-            console.error("Failed to insert system_log:", error);
+            logger.error("Failed to insert system_log:", error);
             return c.json({ success: false, error: error.message }, 500);
         }
         return c.json({ success: true });
     } catch (e: unknown) {
-        console.error("Error logging via /log-error", e);
+        logger.error("Error logging via /log-error", e);
         return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown error' }, 500);
     }
 });
@@ -75,42 +76,6 @@ storage.post("/upload-direct", async (c) => {
     }
 });
 
-storage.post("/uploadDirect", async (c) => {
-    try {
-      await requireRealUser(c);
-      const { base64Data, fileKey, contentType } = await c.req.json();
-      if (!base64Data || !fileKey) return c.json({ error: "base64Data and fileKey required" }, 400);
-
-      let uint8Array: Uint8Array;
-      try {
-        const buf = Buffer.from(base64Data.replace(/^data:image\/\w+;base64,/, ''), 'base64');
-        uint8Array = new Uint8Array(buf.buffer, buf.byteOffset, buf.length);
-      } catch (err: unknown) {
-        throw new Error('Invalid base64 data');
-      }
-
-      const fileName = `photox/public/${fileKey}`;
-      const s3Client = await getR2Client();
-      const bucketName = serverEnv.R2_BUCKET_NAME;
-      if (!bucketName) throw new Error("R2_BUCKET_NAME missing");
-
-      const command = new PutObjectCommand({
-        Bucket: bucketName,
-        Key: fileName,
-        ContentType: contentType || 'image/webp',
-        Body: uint8Array,
-      });
-      
-      await s3Client.send(command);
-      
-      if (!serverEnv.R2_PUBLIC_URL_PREFIX) throw new Error("R2_PUBLIC_URL_PREFIX missing");
-      const publicUrl = `${serverEnv.R2_PUBLIC_URL_PREFIX}/${fileName}`;
-      
-      return c.json({ success: true, data: { publicUrl } });
-    } catch(e: any) {
-      return c.json({ success: false, error: e.message }, 500);
-    }
-});
 
 storage.post("/upload-presign", async (c) => {
     try {
@@ -199,7 +164,7 @@ storage.post("/r2-delete", async (c) => {
             Key: `photox/public/${key}`,
           });
           return s3Client.send(command).catch(err => {
-              console.error(`Failed to delete key ${key}:`, err);
+              logger.error(`Failed to delete key ${key}:`, err);
           });
       }));
 

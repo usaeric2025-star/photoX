@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { Photo } from '../../types';
 import { supabase } from '../../lib/supabase';
 import { parseTranslation } from './fromDb';
@@ -13,7 +14,7 @@ export async function hydrateGroupInfo(photos: Photo[]): Promise<Photo[]> {
       .in('id', groupIds);
 
     if (groupsError) {
-      console.warn('[hydrateGroupInfo] Failed to fetch groups:', groupsError);
+      logger.warn('[hydrateGroupInfo] Failed to fetch groups:', groupsError);
       return photos;
     }
 
@@ -46,7 +47,7 @@ export async function hydrateGroupInfo(photos: Photo[]): Promise<Photo[]> {
       return p;
     });
   } catch (e) {
-    console.error('[hydrateGroupInfo] Error during client-side hydration:', e);
+    logger.error('[hydrateGroupInfo] Error during client-side hydration:', e);
     return photos;
   }
 }

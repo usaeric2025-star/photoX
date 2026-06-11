@@ -13,7 +13,7 @@ interface TagSelectorProps {
 /**
  * Encapsulated Tag Selector for Photo Edit Drawer
  */
-export const TagEditor = React.memo(function TagEditor({ form }: TagSelectorProps) {
+export function TagEditor({ form }: TagSelectorProps) {
   const { data: tags = [] } = useTags();
   
   const { mutateAsync: addTagMut } = useTagCreate();
@@ -50,4 +50,4 @@ export const TagEditor = React.memo(function TagEditor({ form }: TagSelectorProp
       />
     </section>
   );
-});
+}

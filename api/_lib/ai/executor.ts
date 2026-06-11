@@ -97,14 +97,14 @@ export async function executeAITask(options: AITaskOptions) {
                     created_at: new Date().toISOString()
                 });
                 if (error) {
-                    console.warn(`[system_logs-save-failed] ${error.message}`);
+                    logger.warn(`[system_logs-save-failed] ${error.message}`);
                 } else {
-                    console.log(`[system_logs-save-success] Saved raw output for photo ID: ${photoId}`);
+                    logger.info(`[system_logs-save-success] Saved raw output for photo ID: ${photoId}`);
                 }
             } catch (err: any) {
-                console.warn(`[system_logs-save-exception] ${err.message}`);
+                logger.warn(`[system_logs-save-exception] ${err.message}`);
             }
-        }).catch(err => console.warn(`[system_logs-import-failed]`, err.message));
+        }).catch(err => logger.warn(`[system_logs-import-failed]`, err.message));
       }
 
       return data;
@@ -115,14 +115,14 @@ export async function executeAITask(options: AITaskOptions) {
       if (i < maxRetries) {
         // 等待後重試 (指數退避 1s, 2s, 4s)
         const backoffMs = Math.pow(2, i) * 1000;
-        console.warn(`[executeAITask] Failed, retrying in ${backoffMs}ms... (Attempt ${i + 1}/${maxRetries}):`, error.message);
+        logger.warn(`[executeAITask] Failed, retrying in ${backoffMs}ms... (Attempt ${i + 1}/${maxRetries}):`, error.message);
         await new Promise(res => setTimeout(res, backoffMs));
       }
     }
   }
 
   // 5. 最後一次失敗：記錄日誌 + 返回降級值 (不中斷流程)
-  console.error(`[executeAITask] Max retries reached for task ${task}. Last error:`, lastError);
+  logger.error(`[executeAITask] Max retries reached for task ${task}. Last error:`, lastError);
   
   // Return fallback data matching expected schema
   return {

@@ -1,3 +1,4 @@
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { supabase } from '../../lib/supabase';
 import { DB_CONFIG } from '../../constants/config';
 import { api } from '@/lib/api';
@@ -42,7 +43,7 @@ export const cleanupPhysicalStorage = async (fileKeys: string[], urls: string[])
           json: { fileKeys: r2Files }
         }).then(async (res: Response) => {
           const result = await res.json();
-          if (!res.ok || !result.success) throw new Error(result.error || 'R2 delete failed');
+          if (!res.ok || !result.success) throw ErrorFactory.wrap(new Error(result.error || 'R2 delete failed'), 'deleteService');
         })
       );
     }

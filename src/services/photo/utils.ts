@@ -34,11 +34,9 @@ export const getDisplayGroupCode = (groupId?: string | null): string => {
 };
 
 /**
- * Get a fresh UUID from the database
+ * Get a fresh UUID
  */
 export const getDatabaseUUID = async (): Promise<string> => {
-  const { data, error } = await supabase.rpc('get_uuid_v4');
-  if (!error && data) return data;
   return crypto.randomUUID(); 
 };
 

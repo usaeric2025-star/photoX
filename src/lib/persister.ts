@@ -1,6 +1,7 @@
 import { get, set, del } from 'idb-keyval';
 import { PersistedClient, Persister } from '@tanstack/react-query-persist-client';
 import { supabase } from './supabase';
+import { logger } from './logger';
 
 const PERSIST_VERSION = 2; // [CACHE-VERSIONING]
 const PERSIST_KEYS = ['photos', 'groups', 'categories', 'tags', 'manufacturers'];
@@ -52,7 +53,7 @@ export function createIDBPersister({
 
       // 2. 检查过期
       if (cached.timestamp && Date.now() - cached.timestamp > maxAge) {
-        console.info('[Persistence] Cache expired. Clearing.');
+        logger.info('[Persistence] Cache expired. Clearing.');
         await del(key);
         return undefined;
       }

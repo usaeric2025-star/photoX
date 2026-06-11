@@ -1,3 +1,4 @@
+import { logger } from '../../_lib/logger.js';
 import { Hono } from 'hono';
 import { getSupabaseAdmin } from "../../_lib/supabase.js";
 
@@ -26,7 +27,7 @@ adminMaintenance.post("/daily-cleanup", async (c) => {
             .lt('created_at', ninetyDaysAgo.toISOString());
 
         if (logError || auditError) {
-            console.error('[Maintenance] Cleanup partially failed', { logError, auditError });
+            logger.error('[Maintenance] Cleanup partially failed', { logError, auditError });
         }
 
         return c.json({ 
