@@ -205,7 +205,7 @@ export function PhotoInfoPanel({
                 />
               </div>
               <h2 className="text-xl font-bold text-slate-900 mb-1">{displayName || l.unknown}</h2>
-              {displayNameMainEn && (
+              {displayNameMainEn && displayNameMainEn !== displayName && (
                 <h3 className="text-sm font-medium text-slate-500 mb-3">{displayNameMainEn}</h3>
               )}
             </section>

@@ -110,7 +110,6 @@ export const LightboxCore = ({
       }}
       render={{
         buttonZoom: () => null,
-        buttonClose: () => null,
         // Custom interactive controls overlaid on lightbox
         controls: () => (
           <>

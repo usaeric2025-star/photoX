@@ -122,6 +122,7 @@ export const PhotoLightboxPage = () => {
                   onEdit={handleEdit}
                   onDelete={handleDelete}
                   onAiAnalyze={handleAiAnalyze}
+                  onClose={() => setShowInfo(false)}
                   className="pointer-events-auto w-full h-full shadow-2xl shadow-black/20 border-l border-white/20 bg-background/95 backdrop-blur-2xl animate-in slide-in-from-right duration-300 ease-out overflow-y-auto"
                   headerClassName="md:pl-4 pl-20"
                 />

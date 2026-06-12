@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React from 'react';
 import { Layers, Heart, ShieldAlert, Crown } from 'lucide-react';
 import { Photo } from '@/types';
 import { getDisplayGroupCode } from '@/services/photo/utils';
@@ -15,7 +15,7 @@ interface PhotoStatusBadgesProps {
  * [ATOMIC-COMPONENT] PhotoStatusBadges
  * Standardized status indicators for photos (Groups, Selection, Admin tags)
  */
-export const PhotoStatusBadges = memo(({ 
+export const PhotoStatusBadges = ({ 
   photo, 
   isPinned, 
   hideGroupBadge,
@@ -70,6 +70,6 @@ export const PhotoStatusBadges = memo(({
       )}
     </div>
   );
-});
+};
 
 PhotoStatusBadges.displayName = 'PhotoStatusBadges';
