@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { Photo, ProductGroup } from '../../types';
 import { Layers, Quote, ChevronDown, ChevronUp } from 'lucide-react';
 import { useUIStore, useShallow, useColumns } from '@/store/useUIStore';
-import { translations } from '../../lib/translations';
+import { translations } from '@/locales';
 import { PhotoCard } from '../photo/PhotoCard';
 import { VirtualGrid } from '@/components/virtualizer/VirtualGrid';
 import { GROUP_LIST_CONFIG } from '@/config/virtuoso.config';

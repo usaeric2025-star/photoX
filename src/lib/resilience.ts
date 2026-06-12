@@ -1,5 +1,5 @@
 import { AppResult } from '@/types/api';
-import { ok, fail } from './utils/result';
+import { ok, fail } from './error/ErrorFactory';
 
 interface RetryOptions {
   maxRetries?: number;

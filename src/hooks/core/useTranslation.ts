@@ -1,5 +1,5 @@
 import { useAppLang } from '@/store/useUIStore';
-import { translations as allTranslations } from '@/lib/translations';
+import { translations as allTranslations } from '@/locales';
 
 type Translations = Record<string, string> | null | undefined;
 

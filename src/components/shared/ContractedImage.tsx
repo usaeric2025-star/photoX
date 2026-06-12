@@ -1,5 +1,5 @@
 import React from 'react';
-import { resolveImageUrl } from '../../lib/image-url';
+import { resolveImageUrl } from '@/services/photo/utils';
 
 interface Props {
   src: string;

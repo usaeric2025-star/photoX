@@ -1,6 +1,7 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import React from 'react';
+import * as React from 'react';
 import { Lock, LogIn } from 'lucide-react';
+import { Modal } from '@/components/ui/Modal';
 
 
 interface StaffUnlockDialogProps {
@@ -18,18 +19,9 @@ interface StaffUnlockDialogProps {
 export function StaffUnlockDialog({
   isOpen, onClose, passInput, setPassInput, passError, onSubmit, onLogin, loginWithGoogle, labels
 }: StaffUnlockDialogProps) {
-  if (!isOpen) return null;
-  
-
   return (
-    <div 
-      className="fixed inset-0 z-[var(--z-index-modal)] bg-black/60 backdrop-blur-md flex items-center justify-center p-6 animate-fade-in"
-      onClick={onClose}
-    >
-      <div 
-        className="w-full max-w-[320px] bg-white rounded-3xl p-8 shadow-2xl relative text-center animate-scale-in"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Modal open={isOpen} onClose={onClose} size="sm">
+      <div className="w-full text-center">
         <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner ring-4 ring-white">
           <Lock size={32} />
         </div>
@@ -41,7 +33,7 @@ export function StaffUnlockDialog({
             type="password" 
             autoFocus
             placeholder={labels.keyPlaceholder}
-            className={`w-full bg-slate-50 border p-4 rounded-2xl text-center text-lg font-bold outline-none transition-all ${passError ? 'border-red-500 bg-red-50' : 'border-slate-100 focus:bg-white focus:border-blue-500 shadow-sm'}`}
+            className={`w-full bg-slate-50 border p-4 rounded-2xl text-center text-lg font-bold outline-none transition-all ${passError ? 'border-red-500 bg-red-50 text-red-900' : 'border-slate-100 focus:bg-white focus:border-blue-500 shadow-sm text-slate-900'}`}
             value={passInput}
             onChange={(e) => setPassInput(e.target.value)}
           />
@@ -93,6 +85,6 @@ export function StaffUnlockDialog({
           )}
         </form>
       </div>
-    </div>
+    </Modal>
   );
-};
+}

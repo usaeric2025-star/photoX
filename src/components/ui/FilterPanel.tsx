@@ -6,13 +6,13 @@ import { useAppLang } from '@/store/useUIStore';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { cn } from '@/lib/utils';
 import { Category } from '@/types';
-import { translations } from '@/lib/translations';
-import { getSafeText } from '@/lib/ai/safeText';
+import { translations } from '@/locales';
+import { getSafeText } from '@/services/ai/safeText';
 import { categoryKeys, tagKeys, photoKeys } from '@/lib/queryKeys';
 import { loadCategoriesFromCloud } from '@/services/category/queries';
 import { loadTagsFromCloud } from '@/services/tag/queries';
 import { getPhotos as loadAllPhotosFromCloud } from '@/services/photo/queries/list';
-import { PHOTO_QUERY_CONFIG } from '@/lib/photoQueryConfig';
+import { PHOTO_QUERY_CONFIG } from '@/constants/config';
 import { logger } from '@/lib/logger';
 
 export function FilterPanel() {
@@ -39,7 +39,7 @@ export function FilterPanel() {
               limit: PHOTO_QUERY_CONFIG.limit
             }),
             queryFn: async ({ pageParam = 1 }: any) => {
-              const res = await loadAllPhotosFromCloud(
+              const photos = await loadAllPhotosFromCloud(
                 undefined,
                 (pageParam as number) - 1,
                 PHOTO_QUERY_CONFIG.limit,
@@ -50,8 +50,6 @@ export function FilterPanel() {
                 undefined,
                 urlFilters.sortOrder
               );
-              if (!res.ok) throw new Error(res.message);
-              const photos = res.data || [];
               return { photos, nextPage: photos.length >= PHOTO_QUERY_CONFIG.limit ? (pageParam as number) + 1 : undefined };
             },
             initialPageParam: 1,

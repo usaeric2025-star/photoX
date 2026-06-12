@@ -1,4 +1,4 @@
-import { processPhotos } from '../lib/filters';
+import { processPhotos } from '../services/photo/processing';
 import type { Photo, Category, Tag } from '../types';
 
 /**

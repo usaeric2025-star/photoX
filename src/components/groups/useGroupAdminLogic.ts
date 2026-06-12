@@ -1,7 +1,7 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Photo } from "../../types";
-import { filterPhotosByMode } from "@/lib/filters/photoVisibility";
+import { filterPhotosByMode } from "@/services/photo/processing";
 import { useAdminMaintenance } from "@/hooks/admin/useAdminMaintenance";
 import {
   useAdminMode,

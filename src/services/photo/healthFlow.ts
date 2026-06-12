@@ -36,8 +36,8 @@ export const runHealthCheck = async (
   }
 
   // 4. Missing hashes
-  const res = await getPhotosWithoutThumbHash();
-  if (!res.ok || res.data.length === 0) {
+  const photos = await getPhotosWithoutThumbHash();
+  if (photos.length === 0) {
     if (repairCount > 0) {
       showToast.success(`自检完成：修复 ${repairCount} 项`, { id: 'health-check' });
     } else {

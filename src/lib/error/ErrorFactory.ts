@@ -1,5 +1,22 @@
 import { AppResult, AppError, AppSuccess, ErrorCode } from '@/types/api';
 import { handleError as baseHandleError } from './errorHandler';
+import { ProblemDetails } from '@/types/problemDetails';
+import * as Sentry from '@sentry/react';
+import { logError, ERROR_KINDS } from '@/services/system/logService';
+
+// Initialize Sentry/GlitchTip
+if (import.meta.env.VITE_SENTRY_DSN) {
+  Sentry.init({
+    dsn: import.meta.env.VITE_SENTRY_DSN,
+    integrations: [
+      Sentry.browserTracingIntegration(),
+      Sentry.replayIntegration(),
+    ],
+    tracesSampleRate: 1.0,
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+  });
+}
 
 export type { AppResult, AppError, AppSuccess, ErrorCode };
 
@@ -63,14 +80,36 @@ export class ErrorFactory {
 
   static handle(error: unknown, context: string = '未知操作', silent: boolean = false) {
     baseHandleError(error, context, silent);
+    Sentry.captureException(error, {
+      extra: { context },
+    });
+    
+    // Unified logging
+    logError(error, {
+      action: context,
+      component: 'App', // Or try to infer from context
+      kind: ERROR_KINDS.UNKNOWN,
+    });
+  }
+
+  static toProblemDetails(error: AppError, status: number = 500): ProblemDetails {
+    return {
+      type: `https://api.photox.app/errors/${error.code}`,
+      title: error.message,
+      status: status,
+      detail: error.context,
+      instance: undefined, // Could map to specific internal path if needed
+      traceId: error.traceId,
+      timestamp: error.timestamp,
+    };
   }
 }
 
-// Global utility exports for convenience
 export const errorFactory = ErrorFactory.createError;
 export const success = ErrorFactory.success;
 export const ok = success;
 export const err = errorFactory;
+export const fail = err;
 export const handleError = ErrorFactory.handle;
 
 export function isErr<T>(result: AppResult<T>): result is AppError {

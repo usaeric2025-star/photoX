@@ -1,5 +1,5 @@
 import { api } from '@/lib/api';
-import { STORAGE_KEYS, safeGetItem, safeSetItem } from '@/lib/storage';
+import { STORAGE_KEYS, safeGetItem, safeSetItem } from '@/services/system/storageService';
 import { supabase } from '@/lib/supabase';
 import { logger } from '@/lib/logger';
 

@@ -6,7 +6,7 @@ import {
 } from '@/hooks';
 import { usePhotoGallery } from '@/hooks/photo/usePhotoGallery';
 import { useUIStore } from '@/store/useUIStore';
-import { translations } from '@/lib/translations';
+import { translations } from '@/locales';
 import { AdminEmptyState } from '@/pages/AdminPage/AdminEmptyState';
 
 export function AdminContainer() {

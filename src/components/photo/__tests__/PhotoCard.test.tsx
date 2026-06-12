@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Mock dependencies
 
-vi.mock('../../lib/translations', () => ({
+vi.mock('@/locales', () => ({
   translations: { en: { loading: '...' } },
 }));
 

@@ -73,11 +73,7 @@ export const useGroupDraft = (
       setDraftGroup(nextGroupData);
 
       try {
-        const result = await saveGroupToCloud(nextGroupData);
-        if (isErr(result)) {
-          ErrorFactory.handle(result.error, "更新群組資料失敗");
-          return;
-        }
+        await saveGroupToCloud(nextGroupData);
         queryClient.invalidateQueries({
           queryKey: groupKeys.detail(activeGroupId),
         });

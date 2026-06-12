@@ -12,9 +12,7 @@ export const usePhoto = (photoId: string) => {
   return useQuery({
     queryKey: photoKeys.detail(photoId),
     queryFn: async () => {
-      const res = await loadPhotoById(photoId);
-      if (!res.ok) throw new Error(res.message);
-      return res.data;
+      return await loadPhotoById(photoId);
     },
     enabled: !!photoId,
     initialData: () => {

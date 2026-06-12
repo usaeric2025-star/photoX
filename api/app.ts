@@ -10,7 +10,7 @@ import { tags } from "./_handlers/tags.js";
 import { search } from "./_handlers/search.js";
 import { categories } from "./_handlers/categories.js";
 import { groups } from "./_handlers/groups.js";
-import { photos } from "./_handlers/photos.js";
+import { photos } from "./_handlers/photos/index.js";
 import { storage } from "./_handlers/storage.js";
 import { storageMaintenance } from "./_handlers/admin/storageMaintenance.js";
 import { getTraceId } from "./_lib/error/traceId.js";
@@ -168,6 +168,39 @@ app.route("/photos", photos);
 app.route("/search", search);
 app.route("/", storage);
 app.route("/", storageMaintenance);
+
+// --- Persistent Logging Route ---
+app.post("/log-error", async (c) => {
+    try {
+        const body = await c.req.json();
+        const traceId = c.req.header('X-Trace-Id') || getTraceId(c);
+        const supabase = await getSupabaseAdmin();
+        
+        const { error } = await supabase.from('system_logs').insert([{
+            error_message: body.error_message || 'Unknown Frontend Error',
+            stack_trace: body.stack_trace || null,
+            url: body.url || null,
+            context: body.context || 'Frontend_Client',
+            metadata: {
+                ...(body.metadata || {}),
+                traceId,
+                userAgent: c.req.header('User-Agent'),
+                timestamp: new Date().toISOString()
+            },
+            created_at: new Date().toISOString()
+        }]);
+
+        if (error) {
+            logger.error('[log-error] Database insert failed:', error);
+            return c.json({ success: false, error: 'Failed to persist log' }, 500);
+        }
+
+        return c.json({ success: true });
+    } catch (err: any) {
+        logger.error('[log-error] Request parsing failed:', err);
+        return c.json({ success: false, error: err.message }, 400);
+    }
+});
 
 // --- Core Utility Routes ---
 app.get("/health", (c) => {

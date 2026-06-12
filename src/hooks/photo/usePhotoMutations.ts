@@ -11,17 +11,17 @@ import { useAppMutation } from '@/lib/mutations/useAppMutation';
  * 照片编辑 Mutation
  */
 const photoEditConfig = defineMutation<Photo, { id: string; updates: Partial<Photo>; silent?: boolean }>({
+  name: 'photoEdit',
   service: async ({ id, updates }) => {
     const { tags, ...coreUpdates } = updates;
     const res = await update(id, coreUpdates as any);
-    if (!res.ok) throw new Error(res.message);
     
     if (tags && Array.isArray(tags)) {
       const { syncBatchPhotoTags } = await import('@/services/tag/commands');
       await syncBatchPhotoTags([id], tags.filter(t => t && t.id).map(t => String(t.id)));
     }
     
-    return res.data;
+    return res;
   },
   invalidate: (data, vars) => [photoKeys.all as any, ['photo', vars.id] as any],
   optimistic: (old: any, { id, updates }: { id: string; updates: Partial<Photo> }) => {
@@ -36,10 +36,10 @@ const photoEditConfig = defineMutation<Photo, { id: string; updates: Partial<Pho
 export const usePhotoEditMutation = () => useAppMutation(photoEditConfig);
 
 const photoDeleteConfig = defineMutation<any, string | string[]>({
+  name: 'photoDelete',
   service: async (ids) => {
     const res = await deleteMany(Array.isArray(ids) ? ids : [ids]);
-    if (!res.ok) throw new Error(res.message);
-    return res.data;
+    return res;
   },
   invalidate: (data, vars) => [
     photoKeys.all as any,
@@ -51,17 +51,17 @@ const photoDeleteConfig = defineMutation<any, string | string[]>({
 export const usePhotoDelete = () => useAppMutation(photoDeleteConfig);
 
 const photoBatchEditConfig = defineMutation<any, { ids: string[]; updates: Partial<Photo> }>({
+  name: 'photoBatchEdit',
   service: async ({ ids, updates }) => {
     const { tags, ...coreUpdates } = updates;
     const res = await batchUpdate(ids, coreUpdates as any);
-    if (!res.ok) throw new Error(res.message);
     
     if (tags && Array.isArray(tags)) {
       const { syncBatchPhotoTags } = await import('@/services/tag/commands');
       await syncBatchPhotoTags(ids, tags.map(t => String(t.id)));
     }
     
-    return res.data;
+    return res;
   },
   invalidate: (data, vars) => [
     photoKeys.all as any,
@@ -73,10 +73,10 @@ const photoBatchEditConfig = defineMutation<any, { ids: string[]; updates: Parti
 export const usePhotoBatchEdit = () => useAppMutation(photoBatchEditConfig);
 
 const togglePinConfig = defineMutation<any, { id: string; isPinned: boolean }>({
+  name: 'togglePin',
   service: async ({ id, isPinned }) => {
     const res = await update(id, { is_pinned: isPinned });
-    if (!res.ok) throw new Error(res.message);
-    return res.data;
+    return res;
   },
   invalidate: (data, vars) => [photoKeys.all as any, ['photo', vars.id] as any],
   optimistic: (old: any, { id, isPinned }: { id: string; isPinned: boolean }) => 

@@ -5,6 +5,7 @@ import { defineMutation } from '@/lib/mutations/defineMutation';
 import { useAppMutation } from '@/lib/mutations/useAppMutation';
 
 const manufacturerCreateConfig = defineMutation<Manufacturer, string | Partial<Manufacturer>>({
+  name: 'manufacturerCreate',
   service: async (variables) => {
     const name = typeof variables === 'string' ? variables : (variables.name || '');
     const res = await addManufacturerToDB(name);
@@ -17,6 +18,7 @@ const manufacturerCreateConfig = defineMutation<Manufacturer, string | Partial<M
 export const useManufacturerCreate = () => useAppMutation(manufacturerCreateConfig);
 
 const manufacturerEditConfig = defineMutation<boolean, { id: string; updates: Partial<Manufacturer> }>({
+  name: 'manufacturerEdit',
   service: async ({ id, updates }) => {
     const res = await updateManufacturerInDB(id, updates);
     if (!res) throw new Error('厂商更新失败');
@@ -28,6 +30,7 @@ const manufacturerEditConfig = defineMutation<boolean, { id: string; updates: Pa
 export const useManufacturerEdit = () => useAppMutation(manufacturerEditConfig);
 
 const manufacturerDeleteConfig = defineMutation<boolean, string>({
+  name: 'manufacturerDelete',
   service: async (id: string) => {
     const res = await deleteManufacturerFromDB(id);
     if (!res) throw new Error('厂商删除失败');

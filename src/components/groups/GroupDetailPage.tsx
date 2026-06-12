@@ -3,10 +3,10 @@ import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { ChevronLeft, X, Share2, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Photo } from '@/types';
-import { TranslationType } from '@/lib/translations';
+import { TranslationType } from '@/locales';
 import { useAdminMode, useGroupDetail, useGroupPhotos, useCategories, useUrlFilters } from '@/hooks';
-import { translations } from '@/lib/translations';
-import { getPhotoDisplayName } from '@/lib/ui-helpers';
+import { translations } from '@/locales';
+import { getPhotoDisplayName } from '@/services/photo/utils';
 import { GroupDetailSkeleton } from './GroupDetailSkeleton';
 import { Skeleton } from '../ui/Skeleton';
 import { GroupHeader } from './GroupHeader';
@@ -16,10 +16,10 @@ import { GroupAdminShell } from './GroupAdminShell';
 import { GroupInfoPanel } from './GroupInfoPanel';
 
 import { useUIStore, useShallow } from '@/store/useUIStore';
-import { createTranslate } from '@/lib/i18n';
-import { LanguageCode } from '@/lib/translations';
+import { createTranslate } from '@/locales';
+import { LanguageCode } from '@/locales';
 import { CopyableId } from '@/components/ui/CopyableId';
-import { getSafeText } from '@/lib/ai/safeText';
+import { getSafeText } from '@/services/ai/safeText';
 
 // Add displayPhotos and update for compatibility with PublicGridContainer
 export interface GroupDetailPageProps {}

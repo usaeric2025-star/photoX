@@ -5,6 +5,7 @@ import { defineMutation } from '@/lib/mutations/defineMutation';
 import { useAppMutation } from '@/lib/mutations/useAppMutation';
 
 const repairConfig = defineMutation<any, string>({
+  name: 'repair',
   service: async (issueId: string) => {
     const res = await api.admin.repair.$post({ json: { issueId } });
     if (!res.ok) {
@@ -19,6 +20,7 @@ const repairConfig = defineMutation<any, string>({
 export const useRepairMutation = () => useAppMutation(repairConfig);
 
 const syncConfig = defineMutation<void, 'push' | 'pull'>({
+  name: 'sync',
   service: async (type: 'push' | 'pull') => {
     if (type === 'pull') {
       const { queryClient } = await import('@/lib/queryClient');

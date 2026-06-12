@@ -4,6 +4,7 @@ import { defineMutation } from '@/lib/mutations/defineMutation';
 import { useAppMutation } from '@/lib/mutations/useAppMutation';
 
 const settingsUpdateConfig = defineMutation<AppSettings, Partial<AppSettings>>({
+  name: 'settingsUpdate',
   service: async (updates) => {
     return await saveSettings(updates);
   },

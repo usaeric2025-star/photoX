@@ -40,8 +40,8 @@ export const PhotoStatusBadges = ({
     <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1.5 z-10 pointer-events-none select-none">
       {/* Group Badge */}
       {shouldShowGroup && (
-        <div className="backdrop-blur-md px-2 py-0.5 rounded-full text-[10px] text-slate-700 font-bold flex items-center gap-1.5 bg-white/90 border border-black/5 shadow-sm">
-          <Layers size={10} strokeWidth={2.5} className="opacity-70" />
+        <div className="bg-slate-900/95 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] text-brand-gold font-black flex items-center gap-1.5 border border-brand-gold/30 shadow-md">
+          <Layers size={10} strokeWidth={2.5} className="text-brand-gold opacity-90" />
           <span>{memberCount}</span>
         </div>
       )}

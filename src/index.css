@@ -17,15 +17,19 @@
   /* Semantic z-index */
   --z-dropdown: 50;
   --z-sticky: 100;
+  --z-header: 100;
   --z-loading: 150;
-  --z-drawer: 200;
-  --z-dialog: 300;
-  --z-popover: 400;
+  
+  /* [DEPRECATED] These will be removed in next version as we migrate to Modal/Dialog standards */
+  /* --z-drawer: 200; */
+  /* --z-dialog: 300; */
+  /* --z-popover: 400; */
   --z-toast: 500;
   --z-tooltip: 600;
   --z-lightbox-backdrop: 1000;
   --z-lightbox-container: 1001;
   --z-lightbox-content: 1002;
+  --z-lightbox: 1000;
 
   /* yarl overrides */
   --yarl__color_backdrop: rgba(0, 0, 0, 0.95);
@@ -72,6 +76,10 @@
   }
 }
 
+/* .z-lightbox, .yarl__portal {
+  z-index: var(--z-lightbox, 1000) !important;
+} */
+
 @layer utilities {
   .animate-fade-in { animation: fade-in 0.2s ease-out; }
   .animate-fade-up { animation: fade-up 0.3s ease-out; }
@@ -107,6 +115,11 @@
 }
 
 :root {
+  --z-index-max: 9999;
+  --z-index-modal: 5000;
+  --z-index-overlay: 4000;
+  --z-index-dropdown: 50;
+  --z-index-sticky: 100;
   --brand-bg: #FDFAF6;
   --brand-navy: #1D3557;
   --brand-gold: #D4A853;
@@ -279,4 +292,17 @@ li[data-sonner-toast] [data-close-button] {
 
 li[data-sonner-toast] {
   touch-action: none !important;
+}
+
+@layer utilities {
+  .anchor-trigger {
+    anchor-name: --menu-anchor;
+  }
+  .anchor-content {
+    position: absolute;
+    position-anchor: --menu-anchor;
+    top: anchor(bottom);
+    left: anchor(left);
+    width: max-content;
+  }
 }

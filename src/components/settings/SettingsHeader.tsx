@@ -1,5 +1,5 @@
 import { Settings2, Save, X } from 'lucide-react';
-import { translations } from '@/lib/translations';
+import { translations } from '@/locales';
 
 interface SettingsHeaderProps {
   appLang: string;

@@ -7,9 +7,9 @@ interface InfoPanelSkeletonProps {
 
 export function InfoPanelSkeleton({ className }: InfoPanelSkeletonProps) {
   return (
-    <div className={cn("flex flex-col h-full bg-white/95 backdrop-blur-md border-l border-slate-200 overflow-y-auto no-scrollbar", className)}>
+    <div className={cn("flex flex-col h-full bg-white/95 backdrop-blur-md border-l border-slate-200", className)}>
       {/* Header Skeleton */}
-      <div className="p-4 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white/90 z-[var(--z-sticky)]">
+      <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-white/90 shrink-0">
         <div className="flex items-center gap-2">
           <div className="w-5 h-5 bg-slate-100 rounded-md animate-pulse" />
           <div className="w-16 h-4 bg-slate-100 rounded-md animate-pulse" />
@@ -20,7 +20,7 @@ export function InfoPanelSkeleton({ className }: InfoPanelSkeletonProps) {
         </div>
       </div>
       {/* Content Skeleton */}
-      <div className="p-6 flex flex-col gap-8 pb-32">
+      <div className="flex-1 overflow-y-auto no-scrollbar p-6 flex flex-col gap-8 pb-32">
         <section className="space-y-3">
           <div className="h-2 w-20 bg-slate-50 rounded-full animate-pulse" />
           <div className="h-8 w-full bg-slate-100 rounded-xl animate-pulse" />

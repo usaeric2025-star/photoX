@@ -4,7 +4,7 @@ import { useUIStore } from '@/store/useUIStore';
 import { usePhotoGallery } from '@/hooks/photo/usePhotoGallery';
 import { Photo } from '@/types';
 import { EMPTY_ARRAY } from '@/constants/config';
-import { processPhotos } from '@/lib/filters';
+import { processPhotos } from '@/services/photo/processing';
 
 /**
  * Encapsulated hook for admin photo data processing.

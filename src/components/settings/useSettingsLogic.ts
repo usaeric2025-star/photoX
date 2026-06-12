@@ -12,7 +12,7 @@ import { api } from "@/lib/api";
 import { useTaskExecutor, useInvalidatePhotos } from "@/hooks";
 import { fromThrowableAsync, ErrorFactory } from '@/lib/error/ErrorFactory';
 
-import { translations } from "@/lib/translations";
+import { translations } from "@/locales";
 
 interface UseSettingsLogicProps {
   user: User | null;
@@ -113,11 +113,9 @@ export const useSettingsLogic = ({
         setTestResult({ loading: true });
         try {
           const provider = (settings as any).ai_provider || "google";
-          const model = settings.custom_model || DEFAULT_AI_MODEL;
           const ok = await testAiConnection(
             settings.agnes_api_key || "",
             provider,
-            model,
           );
           
           if (ok) {

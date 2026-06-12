@@ -1,6 +1,7 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useInvalidatePhotos } from '@/hooks';
 import { useMemo, useEffect } from 'react';
+import { isEqual } from 'lodash-es';
 import { Photo, ProductFormData } from '@/types';
 import { useFormDraft } from '@/hooks';
 import { useMutation } from '@tanstack/react-query';
@@ -51,11 +52,7 @@ export function usePhotoEdit(initialPhoto: Photo | null): PhotoEditFormReturn {
   const mutation = useMutation({
     mutationFn: async (formData: ProductFormData) => {
       if (!initialPhoto?.id) throw new Error('No photo ID provided');
-      const result = await updatePhoto(initialPhoto.id, formData);
-      if (!result.ok) {
-        throw ErrorFactory.wrap(new Error(result.message), 'updatePhoto', initialPhoto.id);
-      }
-      return result;
+      return await updatePhoto(initialPhoto.id, formData);
     },
     onSuccess: () => {
       showToast.success('保存成功');
@@ -74,7 +71,7 @@ export function usePhotoEdit(initialPhoto: Photo | null): PhotoEditFormReturn {
     // 狀態
     values: draft,
     isPending: mutation.isPending,
-    isDirty: JSON.stringify(draft) !== JSON.stringify(initialValues),
+    isDirty: !isEqual(draft, initialValues),
     
     // 操作
     setValues: updateDraft,

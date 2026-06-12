@@ -5,7 +5,7 @@ import { fetchSettings } from '@/services/settings/queries';
 import { getPhotoCount } from '@/services/photo/queries/list';
 import { useQueryClient } from '@tanstack/react-query';
 import { useInvalidatePhotos, useAuth, useTaskExecutor, useSyncMutation, useSettings } from '@/hooks';
-import { setupOfflineSyncListener } from '@/lib/sync/offlineSync';
+import { setupOfflineSyncListener } from '@/services/system/syncService';
 import { logger } from '@/lib/logger';
 
 export const useSyncEngine = () => {
@@ -53,18 +53,14 @@ export const useSyncEngine = () => {
     if (!userAccount) return;
     
     await runTask('同步云端数据', async () => {
-        const [newSettings, photoCountRes] = await Promise.all([
+        const [newSettings, photoCount] = await Promise.all([
           fetchSettings(),
           getPhotoCount()
         ]);
         
         if (newSettings) await updateSettings(newSettings);
         
-        if (photoCountRes.ok) {
-          setCloudCount(photoCountRes.data);
-        } else {
-           logger.error('[SyncEngine] Failed to fetch photo count:', photoCountRes.message);
-        }
+        setCloudCount(photoCount);
         
         invalidatePhotos();
         await Promise.all([

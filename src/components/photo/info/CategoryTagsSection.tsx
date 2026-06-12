@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tag } from '@/types/photo';
 import { cn } from '@/lib/utils';
 import { useLongPress } from '@/hooks/core/useLongPress';
-import { getSafeText } from '@/lib/ai/safeText';
+import { getSafeText } from '@/services/ai/safeText';
 
 interface TagBadgeProps {
   tag: Tag;
@@ -28,8 +28,8 @@ function TagBadge({ tag, isAdmin, appLang, onLongPress }: TagBadgeProps) {
     <span 
       ref={btnRef}
       className={cn(
-        "text-[10.5px] font-semibold text-brand-navy/70 px-2.5 py-1 bg-brand-navy/5 rounded-full border border-brand-navy/10 shadow-sm transition-all active:scale-95 touch-none select-none",
-        isAdmin && "cursor-pointer hover:bg-brand-navy/10"
+        "text-[10.5px] font-semibold text-brand-navy px-2.5 py-1 bg-slate-100 rounded-full border border-brand-navy/20 shadow-sm transition-all active:scale-95 touch-none select-none",
+        isAdmin && "cursor-pointer hover:bg-slate-200"
       )}
     >
       #{getSafeText(tag.name, appLang)}
@@ -59,7 +59,7 @@ export function CategoryTagsSection({ categoryName, tags, isAdmin, appLang, text
       </h4>
       <div className="flex flex-col gap-2">
         {categoryName && (
-          <Badge variant="outline" className="bg-brand-navy/5 text-brand-navy border-brand-navy/10 px-2.5 py-1 shadow-sm w-fit">
+          <Badge variant="outline" className="bg-slate-100 text-brand-navy border-brand-navy/20 px-2.5 py-1 shadow-sm w-fit">
             <Grid size={12} className="mr-1.5 opacity-60" />
             {categoryName}
           </Badge>

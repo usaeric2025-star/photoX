@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Lightbox, { IconButton } from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/thumbnails.css";
 import "yet-another-react-lightbox/plugins/captions.css";
 import "yet-another-react-lightbox/plugins/counter.css";
-import { Download, Pencil, Trash2, Crown, Sparkles } from "lucide-react";
+import { Download, Pencil, Trash2, Crown, Sparkles, X } from "lucide-react";
 import { Photo, ProductGroup } from "@/types";
 import { useUIStore } from "@/store/useUIStore";
 import { LIGHTBOX_PLUGINS, LIGHTBOX_OPTIONS } from "./lightboxConfig";
-import { toLightboxSlides } from "./lightboxSlides";
-import { downloadPhotoAsJpeg } from "@/lib/download";
+import { downloadPhotoAsJpeg } from "@/services/photo/downloadService";
 import { PhotoInfoPanel } from "../photo/PhotoInfoPanel";
 import { useSettings } from "@/hooks";
-import { lockScroll, unlockScroll } from "@/lib/scrollLock";
+import { lockScroll, unlockScroll } from "@/lib/ui/scrollLock";
+import { OptimizedImage } from "../shared/OptimizedImage";
+import { getSafeText } from "@/services/ai/safeText";
 
 export interface LightboxActions {
   onEdit?: (photo: Photo) => void;
@@ -48,8 +50,21 @@ export const LightboxCore = ({
 }: LightboxCoreProps) => {
   const [index, setIndex] = useState(currentIndex);
   const lang = useUIStore(s => s.appLang);
-  const slides = toLightboxSlides(photos, lang);
-  
+  // Responsive preload
+  const preloadCount = typeof window !== 'undefined' && window.innerWidth < 768 ? 1 : 2;
+
+  const slides = photos.map(photo => ({
+    src: photo.image_url,
+    alt: getSafeText(photo.name, lang) || "",
+    srcSet: [
+      { src: photo.image_url.replace(/\/([^/]+)$/, '/_t_$1'), width: 320, height: 320 },
+      { src: photo.image_url, width: 1920, height: 1920 },
+    ],
+    sizes: "100vw",
+    key: photo.image_url,
+    photo
+  }));
+
   // Keep index synchronized with currentIndex prop
   React.useEffect(() => {
     setIndex(currentIndex);
@@ -62,9 +77,11 @@ export const LightboxCore = ({
     }
   }, [open]);
   
-  if (slides.length === 0) return null;
+  if (slides.length === 0 || !open) return null;
 
-  return (
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <Lightbox
       open={open}
       close={onClose}
@@ -76,6 +93,7 @@ export const LightboxCore = ({
         } 
       }}
       slides={slides}
+      carousel={{ preload: preloadCount }}
       plugins={LIGHTBOX_PLUGINS.filter(p => p.name !== 'captions')}
        toolbar={{
         buttons: [
@@ -115,12 +133,38 @@ export const LightboxCore = ({
       }}
       render={{
         buttonZoom: () => null,
+        slide: ({ slide }) => {
+          const s = slide as any;
+          const photo = s.photo as Photo;
+          return (
+            <div 
+              className="w-full h-full flex items-center justify-center p-4 sm:p-8"
+              style={{ viewTransitionName: photo ? `photo-${photo.id}` : undefined } as any}
+            >
+              <OptimizedImage 
+                src={s.src} 
+                alt={s.alt}
+                srcSet={s.srcSet?.map((i: any) => `${i.src} ${i.width}w`).join(', ')}
+                sizes={s.sizes}
+                eager
+                className="max-w-full max-h-full object-contain shadow-2xl rounded-sm" 
+              />
+            </div>
+          );
+        },
         // Custom interactive controls overlaid on lightbox
         controls: () => (
           <>
-            <div className="absolute top-4 left-4 z-[var(--z-lightbox-content,1002)] text-white font-medium bg-black/50 px-3 py-1 rounded-full text-[10px] sm:text-sm backdrop-blur-sm shadow-lg pointer-events-none">
+            <div className="absolute top-4 left-4 text-white font-medium bg-black/50 px-3 py-1 rounded-full text-[10px] sm:text-sm backdrop-blur-sm shadow-lg pointer-events-none">
                  {index + 1} / {totalCount || slides.length}
             </div>
+
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-sm transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
 
             {renderSidebar?.()}
             {renderFloatingButton?.()}
@@ -128,6 +172,7 @@ export const LightboxCore = ({
         ),
       }}
       {...LIGHTBOX_OPTIONS}
-    />
+    />,
+    document.body
   );
 };

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { useShallow } from 'zustand/shallow';
-import { STORAGE_KEYS, safeGetItem, safeSetItem } from '@/lib/storage';
+import { STORAGE_KEYS, safeGetItem, safeSetItem } from '@/services/system/storageService';
 import { ProductFormData } from '../types';
 import { useLocalStorage } from '@/hooks/core/useLocalStorage';
 

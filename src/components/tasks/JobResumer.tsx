@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useTasks, useAuth, type BackgroundTask } from '@/hooks';
-import { ISSUE_ACTIONS } from "@/lib/maintenance";
+import { ISSUE_ACTIONS } from "@/services/maintenance/issueActions";
 import { logger } from '@/lib/logger';
 
 /**

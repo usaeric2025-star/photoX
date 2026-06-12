@@ -1,6 +1,6 @@
 import { logger } from '@/lib/logger';
 import { api } from '@/lib/api';
-import { ok, fail } from '@/lib/utils/result';
+import { ok, fail } from '@/lib/error/ErrorFactory';
 import { AppResult } from '@/types/api';
 import type { TranslationResult } from './types';
 

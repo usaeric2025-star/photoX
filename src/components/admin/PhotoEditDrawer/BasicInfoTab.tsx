@@ -1,20 +1,16 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
+import { usePhotoEditSessionContext } from '@/hooks/photo/usePhotoEditSessionContext';
 import { Lock, Loader2, Maximize2, X } from 'lucide-react';
-import { ProductFormData } from '../../../types';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useUIStore } from '../../../store';
-import { usePhoto, useTaskExecutor, useTasks } from '../../../hooks';
+import { usePhoto, useTaskExecutor, useTasks, useTranslation } from '../../../hooks';
+import { OptimizedImage } from '@/components/shared/OptimizedImage';
 
-import { PhotoEditFormReturn } from '@/hooks/photo/types';
-
-interface Props {
-  form: PhotoEditFormReturn;
-}
-
-export function BasicInfoTab({ form }: Props) {
-  const { watch, setValue } = form;
+export function BasicInfoTab() {
+  const { register, watch, setValue } = usePhotoEditSessionContext();
   const formState = watch();
+  const { uiTranslations: t } = useTranslation();
   
   const editPhotoId = useUIStore((s) => s.editPhotoId);
   const newPhotoData = useUIStore((s) => s.newPhotoData);
@@ -74,7 +70,7 @@ export function BasicInfoTab({ form }: Props) {
                     <Loader2 size={24} className="text-white animate-spin" />
                   </div>
                 )}
-                <img src={previewSrc} className="w-full h-full object-contain" alt="Preview" />
+                <OptimizedImage src={previewSrc} className="w-full h-full object-contain" alt="Preview" />
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <Maximize2 className="text-white drop-shadow-md" size={20} />
                 </div>
@@ -102,8 +98,8 @@ export function BasicInfoTab({ form }: Props) {
                 <div className="text-[9px] font-bold bg-slate-200 text-slate-700 px-1.5 py-1 rounded-md uppercase tracking-wider text-center w-10">ZH</div>
                 <input 
                   type="text" 
-                  placeholder="中文名称..." 
-                  {...form.register('name.zh', {
+                  placeholder={t.productNamePlaceholderZh} 
+                  {...register('name.zh', {
                     setValueAs: (value) => value?.toUpperCase()
                   })}
                   className="w-full bg-white border border-slate-200 px-2.5 py-1.5 rounded-lg font-bold outline-none focus:border-blue-500 shadow-sm min-w-0" 
@@ -113,8 +109,8 @@ export function BasicInfoTab({ form }: Props) {
                 <div className="text-[9px] font-bold bg-blue-50 text-blue-600 px-1.5 py-1 rounded-md uppercase tracking-wider text-center w-10 border border-blue-100/50">EN</div>
                 <input 
                   type="text" 
-                  placeholder="English name..." 
-                  {...form.register('name.en', {
+                  placeholder={t.productNamePlaceholderEn} 
+                  {...register('name.en', {
                     setValueAs: (value) => value?.toUpperCase()
                   })}
                   className="w-full bg-white border border-slate-200 px-2.5 py-1.5 rounded-lg font-bold outline-none focus:border-blue-500 shadow-sm min-w-0" 
@@ -124,8 +120,8 @@ export function BasicInfoTab({ form }: Props) {
                 <div className="text-[9px] font-bold bg-emerald-50 text-emerald-600 px-1.5 py-1 rounded-md uppercase tracking-wider text-center w-10 border border-emerald-100/50">MS</div>
                 <input 
                   type="text" 
-                  placeholder="Nama produk..." 
-                  {...form.register('name.ms', {
+                  placeholder={t.productNamePlaceholderMs} 
+                  {...register('name.ms', {
                     setValueAs: (value) => value?.toUpperCase()
                   })}
                   className="w-full bg-white border border-slate-200 px-2.5 py-1.5 rounded-lg font-bold outline-none focus:border-blue-500 shadow-sm min-w-0" 
@@ -143,15 +139,15 @@ export function BasicInfoTab({ form }: Props) {
             系统内部编号 / SYSTEM CODE
           </h3>
           <div className="w-full bg-slate-50 border border-slate-100 p-2.5 rounded-xl text-[10px] font-mono font-medium text-slate-400 shadow-sm cursor-not-allowed">
-            {formState.item_code || '自动生成中...'}
+            {formState.item_code || t.systemCodeAuto}
           </div>
         </div>
         <div className="space-y-1.5">
           <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">价格编号 / CODE</h3>
           <input 
             type="text" 
-            placeholder="編號..." 
-            {...form.register('manual_code')}
+            placeholder={t.itemCodePlaceholder} 
+            {...register('item_code')}
             className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-sm font-bold outline-none focus:border-blue-500 shadow-sm" 
           />
         </div>
@@ -160,8 +156,8 @@ export function BasicInfoTab({ form }: Props) {
           <input 
             type="text" 
             inputMode="numeric"
-            placeholder="仅限数字..." 
-            {...form.register('model_number', {
+            placeholder={t.modelNumberPlaceholder} 
+            {...register('model_number', {
               setValueAs: (value) => value?.replace(/\D/g, '')
             })}
             className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-sm font-bold outline-none focus:border-blue-500 shadow-sm" 
@@ -172,8 +168,8 @@ export function BasicInfoTab({ form }: Props) {
           <input 
             type="text" 
             inputMode="numeric"
-            placeholder="0" 
-            {...form.register('price', {
+            placeholder={t.pricePlaceholder} 
+            {...register('price', {
               setValueAs: (value) => value?.replace(/\D/g, '')
             })}
             className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-sm font-bold text-blue-600 outline-none focus:border-blue-500 shadow-sm" 
@@ -190,8 +186,9 @@ export function BasicInfoTab({ form }: Props) {
             <X size={24} />
           </button>
           <div className="relative w-full h-full flex items-center justify-center p-4 lg:p-12">
-            <img 
+            <OptimizedImage 
               src={previewSrc} 
+              eager
               className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-300" 
               alt="Zoomed" 
             />

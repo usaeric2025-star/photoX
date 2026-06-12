@@ -4,7 +4,7 @@ import { OrgTab } from "./OrgTab";
 import { DetailsTab } from "./DetailsTab";
 import { AISourceTab } from "./AISourceTab";
 
-export function PhotoEditTabs({ form, editPhotoId, appLang }: any) {
+export function PhotoEditTabs({ editPhotoId, appLang }: any) {
   return (
     <Tabs
         defaultValue="basic"
@@ -31,15 +31,15 @@ export function PhotoEditTabs({ form, editPhotoId, appLang }: any) {
 
         <div className="flex-1 overflow-y-auto no-scrollbar pt-2 container mx-auto max-w-4xl px-4 pb-12">
             <TabsContent value="basic">
-            <BasicInfoTab form={form} />
+            <BasicInfoTab />
             </TabsContent>
 
             <TabsContent value="org">
-            <OrgTab form={form} />
+            <OrgTab />
             </TabsContent>
 
             <TabsContent value="details">
-            <DetailsTab form={form} />
+            <DetailsTab />
             </TabsContent>
 
             <TabsContent value="ai-source">

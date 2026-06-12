@@ -2,12 +2,13 @@ import { analyzePhoto } from './commands';
 import { translateFields } from './translationService';
 import { updatePhoto } from '../photo';
 import { syncPhotoTags, loadTagsFromCloud, batchCreateTags } from '../tag';
-import { ok, fail } from '@/lib/utils/result';
+import { ok, fail } from '@/lib/error/ErrorFactory';
 import { AppResult } from '@/types/api';
 import { analyzeGroup, analyzeSinglePhotoDetail as analyzeSinglePhoto } from './commands';
 import { updateGroup } from '../group/commands';
 import { withTimeout } from '@/lib/utils';
 import { logger } from '@/lib/logger';
+import { mapAiToMultilingual } from './mapping';
 
 export * from './utils';
 import { hasExistingInfo } from './utils';
@@ -16,85 +17,59 @@ import { supabase } from '@/lib/supabase';
 export const analyzeAndSavePhoto = async (
   photo: any
 ): Promise<AppResult<unknown>> => {
-  const analysis = await analyzePhoto(photo.id);
-  if (!analysis.ok) return analysis;
-  
-  // Validate that we have something to update
-  if (!(analysis.data as any).name && !(analysis.data as any).description && (!(analysis.data as any).tagNames || (analysis.data as any).tagNames.length === 0)) {
-      return fail('AI 分析未返回有效结果');
-  }
-
-  const rawName = (analysis.data as any).name;
-  const rawDesc = (analysis.data as any).description;
-
-  let nameObj = { zh: '', en: '', ms: '' };
-  let descObj = { zh: '', en: '', ms: '' };
-
-  const isNameObj = rawName && typeof rawName === 'object';
-  const isDescObj = rawDesc && typeof rawDesc === 'object';
-
-  if (isNameObj && isDescObj) {
-    nameObj = {
-      zh: rawName.zh || '',
-      en: rawName.en || rawName.zh || '',
-      ms: rawName.ms || rawName.zh || ''
-    };
-    descObj = {
-      zh: rawDesc.zh || '',
-      en: rawDesc.en || rawDesc.zh || '',
-      ms: rawDesc.ms || rawDesc.zh || ''
-    };
-  } else {
-    const nameStr = isNameObj ? (rawName.zh || '') : String(rawName || '');
-    const descStr = isDescObj ? (rawDesc.zh || '') : String(rawDesc || '');
+  try {
+    const analysis = await analyzePhoto(photo.id);
+    if (!analysis.ok) return analysis;
     
-    const translation = await translateFields(nameStr, descStr);
-    if (translation.ok) {
-      nameObj = translation.data.name;
-      descObj = translation.data.description;
-    } else {
-      nameObj = { zh: nameStr, en: nameStr, ms: nameStr };
-      descObj = { zh: descStr, en: descStr, ms: descStr };
+    // Validate that we have something to update
+    const analysisData = analysis.data as any;
+    if (!analysisData.name && !analysisData.description && (!analysisData.tagNames || analysisData.tagNames.length === 0)) {
+        return fail('AI 分析未返回有效結果');
     }
-  }
 
-  const updateResult = await updatePhoto(photo.id, {
-    name: nameObj,
-    description: descObj,
-    category_id: (analysis.data as any).category_id ? String((analysis.data as any).category_id) : null,
-    dimensions: (analysis.data as any).dimensions || [],
-    metadata: {
-      ...(photo.metadata || {}),
-      ai_updated_at: new Date().toISOString()
-    }
-  });
-  if (!updateResult.ok) {
-    return fail(updateResult.message);
-  }
+    const { name: nameObj, description: descObj } = await mapAiToMultilingual(
+      analysisData.name,
+      analysisData.description
+    );
 
-  const tagNames = (analysis.data as any).tagNames || [];
-  const tagIds = (analysis.data as any).tagIds || [];
-  
-  if (tagNames.length > 0 || tagIds.length > 0) {
-    const { resolveTagNamesToIds } = await import('../tag/completion');
-    const { syncPhotoTags } = await import('../tag/commands');
-    
-    let finalTagIds = [...tagIds];
-    if (tagNames.length > 0) {
-       const resolveResult = await resolveTagNamesToIds(tagNames, []);
-       if (resolveResult.ok && resolveResult.data.length > 0) {
-           finalTagIds = [...finalTagIds, ...resolveResult.data];
-       }
-    }
-    
-    finalTagIds = Array.from(new Set(finalTagIds.map(String)));
-    
-    if (finalTagIds.length > 0) {
-        await syncPhotoTags(photo.id, finalTagIds);
-    }
-  }
+    const updateResult = await updatePhoto(photo.id, {
+      name: nameObj,
+      description: descObj,
+      category_id: analysisData.category_id ? String(analysisData.category_id) : null,
+      dimensions: analysisData.dimensions || [],
+      metadata: {
+        ...(photo.metadata || {}),
+        ai_updated_at: new Date().toISOString()
+      }
+    });
 
-  return ok(updateResult.data);
+    const tagNames = analysisData.tagNames || [];
+    const tagIds = analysisData.tagIds || [];
+    
+    if (tagNames.length > 0 || tagIds.length > 0) {
+      const { resolveTagNamesToIds } = await import('../tag/completion');
+      const { syncPhotoTags } = await import('../tag/commands');
+      
+      let finalTagIds = [...tagIds];
+      if (tagNames.length > 0) {
+         const resolveResult = await resolveTagNamesToIds(tagNames, []);
+         if (resolveResult.ok && resolveResult.data.length > 0) {
+             finalTagIds = [...finalTagIds, ...resolveResult.data];
+         }
+      }
+      
+      finalTagIds = Array.from(new Set(finalTagIds.map(String)));
+      
+      if (finalTagIds.length > 0) {
+          await syncPhotoTags(photo.id, finalTagIds);
+      }
+    }
+
+    return ok(updateResult);
+  } catch (err) {
+    logger.error(`[AI Orchestration] analyzeAndSavePhoto failed for ${photo.id}:`, err);
+    return fail((err as Error).message || '分析照片失敗');
+  }
 };
 
 export const autoGroupPhotos = async (
@@ -102,9 +77,7 @@ export const autoGroupPhotos = async (
 ): Promise<AppResult<unknown>> => {
   try {
     const { loadPhotosByIds } = await import('../photo');
-    const photoRes = await loadPhotosByIds(photoIds);
-    if (!photoRes.ok) return fail(photoRes.message);
-    const photos = photoRes.data || [];
+    const photos = await loadPhotosByIds(photoIds);
     
     for (let i = 0; i < photos.length; i++) {
       try {
@@ -115,36 +88,21 @@ export const autoGroupPhotos = async (
       }
     }
 
-    const updatedPhotoRes = await loadPhotosByIds(photoIds);
-    if (!updatedPhotoRes.ok) return fail(updatedPhotoRes.message);
-    const updatedPhotos = updatedPhotoRes.data || [];
+    const updatedPhotos = await loadPhotosByIds(photoIds);
 
     const analysis = await analyzeGroup(updatedPhotos);
-    const { name, description, colors, materials } = analysis;
-    
-    const translatedName = { zh: name, en: '', ms: '' };
-    const translatedDesc = { zh: description, en: '', ms: '' };
-
-    try {
-      const pTranslations = await translateFields(name, description);
-      if (pTranslations.ok) {
-        translatedName.en = pTranslations.data.name.en;
-        translatedName.ms = pTranslations.data.name.ms;
-        translatedDesc.en = pTranslations.data.description.en;
-        translatedDesc.ms = pTranslations.data.description.ms;
-      }
-    } catch (e) {
-      logger.warn('[autoGroupPhotos] Translations failed:', e);
-    }
+    const { name: nameObj, description: descObj } = await mapAiToMultilingual(
+      analysis.name,
+      analysis.description
+    );
 
     const { groupPhotos } = await import('../group/commands');
     const result = await groupPhotos(photoIds, undefined, {
-      name: translatedName,
-      description: translatedDesc
+      name: nameObj,
+      description: descObj
     });
     
-    if (!result.ok) return fail(result.message);
-    return ok(result.data);
+    return ok(result);
   } catch (err) {
     return fail((err as Error).message || '自动合组失败');
   }
@@ -156,32 +114,21 @@ export const analyzeAndSaveGroup = async (
 ): Promise<AppResult<unknown>> => {
   try {
     const analysis = await withTimeout(analyzeGroup(photos), 120000); // 120s
-    const { name, description, colors, materials } = analysis;
+    const { colors, materials } = analysis;
 
-    let translatedName = { zh: name, en: '', ms: '' };
-    let translatedDesc = { zh: description, en: '', ms: '' };
-    
-    try {
-      const pTranslations = await translateFields(name, description);
-      if (pTranslations.ok) {
-        translatedName.en = pTranslations.data.name.en;
-        translatedName.ms = pTranslations.data.name.ms;
-        translatedDesc.en = pTranslations.data.description.en;
-        translatedDesc.ms = pTranslations.data.description.ms;
-      }
-    } catch (transErr) {
-      logger.warn('[AI Group] 翻譯跳過:', transErr);
-    }
+    const { name: nameObj, description: descObj } = await mapAiToMultilingual(
+      analysis.name,
+      analysis.description
+    );
 
     const res = await updateGroup(groupId, {
-      name: translatedName as any,
-      description: translatedDesc as any,
+      name: nameObj as any,
+      description: descObj as any,
       colors,
       materials
     });
 
-    if (!res.ok) return fail(res.message);
-    return ok(res.data);
+    return ok(res);
   } catch (err) {
     return fail((err as Error).message || '合组分析失败');
   }
@@ -217,10 +164,10 @@ export async function runBatchAnalysis({
     onProgress(75, '正在總結整个合组...');
     try {
       const { loadPhotosByIds } = await import('../photo');
-      const res = await loadPhotosByIds(targetPhotos.map(p => p.id));
-      if (res.ok && res.data) {
+      const photos = await loadPhotosByIds(targetPhotos.map(p => p.id));
+      if (photos) {
         onProgress(85, '生成合组名称与描述...');
-        const groupRes = await analyzeAndSaveGroup(groupId, res.data);
+        const groupRes = await analyzeAndSaveGroup(groupId, photos);
         if (groupRes.ok) groupSuccess = true;
       }
     } catch (e) {

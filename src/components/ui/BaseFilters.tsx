@@ -2,7 +2,7 @@ import React from 'react';
 import { ArrowUpDown, Layers, Grid2x2, Grid3x3, LayoutGrid, ShieldAlert } from 'lucide-react';
 import { SearchInput } from './SearchInput';
 import { useUIStore, useAppLang } from '@/store/useUIStore';
-import { translations } from '@/lib/translations';
+import { translations } from '@/locales';
 
 interface BaseFiltersProps {
   onSearch: (query: string) => void;

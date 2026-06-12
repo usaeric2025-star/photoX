@@ -1,16 +1,17 @@
 import { logger } from '@/lib/logger';
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
+import { useFormContext } from 'react-hook-form';
 import { showToast } from '@/lib/ui/toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTaskExecutor, useAdminMaintenance, useSettings, useCategories, useTags } from '@/hooks';
-import { PhotoEditFormReturn } from '@/hooks/photo/types';
 import { analyzePhoto } from '@/services/ai/commands';
 import { useUIStore } from '@/store';
 
 /**
  * Hook to handle AI Analysis and backfilling for Photo Editing
  */
-export function usePhotoEditAI(form: PhotoEditFormReturn) {
+export function usePhotoEditAI() {
+  const { setValue } = useFormContext();
   const editPhotoId = useUIStore((s) => s.editPhotoId);
   const appLang = useUIStore((s) => s.appLang);
   const { runTask } = useTaskExecutor();
@@ -200,7 +201,7 @@ export function usePhotoEditAI(form: PhotoEditFormReturn) {
             queryClient.invalidateQueries({ queryKey: ['photos', 'ai-result', editPhotoId] });
 
             Object.entries(updates).forEach(([key, value]) => {
-              form.setValue(key as any, value);
+              setValue(key as any, value, { shouldDirty: true });
             });
 
             try {
@@ -227,7 +228,7 @@ export function usePhotoEditAI(form: PhotoEditFormReturn) {
       // runTask rethrows by default, we catch here to avoid unhandled promise rejections on task failure
       logger.warn('[AI Analyze Failed]', e);
     }
-  }, [editPhotoId, appLang, runTask, updatePhoto, form, queryClient, categories, allTags]);
+  }, [editPhotoId, appLang, runTask, updatePhoto, setValue, queryClient, categories, allTags]);
 
   return { handleAiAnalyze };
 }

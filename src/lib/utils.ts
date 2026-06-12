@@ -1,34 +1,18 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { showToast } from '@/lib/ui/toast';
-import { copyToClipboard } from '@/utils/clipboard';
+import { formatters } from "@/utils/formatters"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
 /**
- * [UI-FEEDBACK] toastWithError
- * Centralized error toast with 'Copy Details' action for better developer experience
+ * Converts a string to Title Case.
  */
-export function toastWithError(err: any, title?: string) {
-  const message = err?.error?.message || err?.message || '操作失败';
-  const detail = JSON.stringify(err, (key, value) => {
-    // Avoid circular or too large data if necessary
-    if (key === 'stack') return value?.substring(0, 500); 
-    return value;
-  }, 2);
-
-  showToast.error(title || '出错了', {
-    description: message.length > 50 ? message.substring(0, 47) + '...' : message,
-    action: {
-      label: '复制详情',
-      onClick: () => {
-        copyToClipboard(detail, { successMessage: '错误详情已复制到剪贴板' });
-      }
-    },
-    duration: 8000
-  });
+export function toTitleCase(str: string): string {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 
 export function safeArray<T>(arr: unknown): T[] {
@@ -64,6 +48,26 @@ export function getPathFromUrl(url: string): string {
     return url.startsWith('/') ? url : `/${url}`;
   }
 }
+
+/**
+ * Standard date formatting for the application: YYYY-MM-DD HH:mm
+ */
+export function formatDate(date: Date | string | number): string {
+  try {
+    return formatters.dateTime(date);
+  } catch (e) {
+    return '-';
+  }
+}
+
+/**
+ * [SELECTOR] flattenPagination
+ * 統一處理 TanStack Query InfiniteData 的鋪平邏輯
+ */
+export const flattenPagination = <T>(data: { pages: { photos: T[] }[] } | undefined): T[] => {
+  if (!data?.pages) return [];
+  return data.pages.flatMap(page => page.photos);
+};
 
 export function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   const timeout = new Promise<never>((_, reject) =>

@@ -1,7 +1,7 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { QueryClient } from '@tanstack/react-query';
 import { photoKeys, groupKeys } from '@/lib/queryKeys';
-import { PHOTO_QUERY_CONFIG } from '@/lib/photoQueryConfig';
+import { PHOTO_QUERY_CONFIG } from '@/constants/config';
 import { createStaleTime } from '@/shared/freshnessSchema';
 import { getGroupById } from '@/services/group/queries';
 
@@ -25,7 +25,7 @@ export async function prefetchMainGallery(queryClient: QueryClient) {
     queryKey,
     queryFn: async () => {
       const { getPhotos } = await import('@/services/photo/queries/list');
-      const res = await getPhotos(
+      const photos = await getPhotos(
         undefined,
         0,
         PHOTO_QUERY_CONFIG.limit,
@@ -34,8 +34,6 @@ export async function prefetchMainGallery(queryClient: QueryClient) {
         undefined,
         false
       );
-      if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'loaders');
-      const photos = res.data || [];
       return {
         photos: photos,
         nextPage: photos.length >= PHOTO_QUERY_CONFIG.limit ? 2 : undefined
@@ -65,11 +63,9 @@ export async function prefetchGroupDetail(queryClient: QueryClient, groupId: str
     queryKey: photosKey,
     queryFn: async ({ pageParam = 1 }) => {
       const { getPhotosByGroupPaginated } = await import('@/services/photo/queries/byGroup');
-      const res = await getPhotosByGroupPaginated(
+      const data = await getPhotosByGroupPaginated(
         groupId, pageParam as number, 60, isAdminMode
       );
-      if (!res.ok) throw new Error(res.message || 'Error loading group photos');
-      const data = res.data || { photos: [], total: 0 };
       const hasMore = Array.isArray(data.photos) ? data.photos.length >= 60 : false;
       return { photos: data.photos, total: data.total, hasMore, nextPage: hasMore ? (pageParam as number) + 1 : undefined };
     },

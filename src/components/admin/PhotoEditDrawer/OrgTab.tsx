@@ -1,18 +1,15 @@
 import React from 'react';
+import { usePhotoEditSessionContext } from '@/hooks/photo/usePhotoEditSessionContext';
 import { FormSectionHeader, ManufacturerList } from '../FormShared';
-import { PhotoEditFormReturn } from '@/hooks/photo/types';
 import { useManufacturers, useManufacturerCreate, useManufacturerEdit, useManufacturerDelete } from '../../../hooks';
 import { useUIStore } from '../../../store';
 import { PromptDialog } from '../../ui/PromptDialog';
-import { translations } from '../../../lib/translations';
+import { translations } from '@/locales';
 import { CategorySelect } from './CategorySelect';
 import { TagEditor } from './TagEditor';
 
-interface Props {
-  form: PhotoEditFormReturn;
-}
-
-export function OrgTab({ form }: Props) {
+export function OrgTab() {
+  const { watch, setValue } = usePhotoEditSessionContext();
   const appLang = useUIStore((s) => s.appLang);
   const { data: manufacturers = [] } = useManufacturers();
   
@@ -26,20 +23,20 @@ export function OrgTab({ form }: Props) {
 
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
-  const formState = form.watch();
+  const formState = watch();
   const manufacturerId = formState?.manufacturer_id;
 
   const updateForm = React.useCallback((updates: any) => {
     Object.entries(updates).forEach(([key, value]) => {
-      form.setValue(key as any, value);
+      (setValue as any)(key as any, value, { shouldDirty: true });
     });
-  }, [form]);
+  }, [setValue]);
 
   return (
     <div className="m-0 p-4 space-y-6 animate-in fade-in slide-in-from-right-2 duration-300">
-      <CategorySelect form={form} />
+      <CategorySelect />
       
-      <TagEditor form={form} />
+      <TagEditor />
 
       <section className="space-y-4">
         <FormSectionHeader 
@@ -49,7 +46,7 @@ export function OrgTab({ form }: Props) {
         />
         <ManufacturerList 
           manufacturers={manufacturers}
-          selectedId={manufacturerId}
+          selectedId={manufacturerId ?? null}
           onSelect={(id) => updateForm({ manufacturer_id: id })}
           onEdit={(mfr) => {
             setEditingMfr(mfr);

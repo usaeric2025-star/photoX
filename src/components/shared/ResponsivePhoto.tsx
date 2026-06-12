@@ -1,9 +1,9 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Photo } from '@/types';
-import { thumbHashToDataURL } from '@/lib/image/thumbHash';
+import { thumbHashToDataURL } from '@/services/storage/thumbHash';
 import { ContractedImage } from './ContractedImage';
 import { ImageOff } from 'lucide-react';
-import { getSafeText } from '@/lib/ai/safeText';
+import { getSafeText } from '@/services/ai/safeText';
 
 const loadedSrcCache = new Set<string>();
 

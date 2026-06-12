@@ -1,13 +1,5 @@
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import * as React from 'react';
+import { Modal } from '@/components/ui/Modal';
 import { useUIStore } from '@/store/useUIStore';
 
 interface ConfirmDialogProps {
@@ -33,45 +25,51 @@ export const ConfirmDialog = ({
   cancelText = '取消',
   variant = 'default',
 }: ConfirmDialogProps) => {
-  const handleOpenChange = (isOpen: boolean) => {
-    if (isOpen) useUIStore.getState().incrementDialogCount();
-    else useUIStore.getState().decrementDialogCount();
-    onOpenChange(isOpen);
-  };
-  
   const handleConfirm = async () => {
-    onOpenChange(false);
-    useUIStore.getState().decrementDialogCount();
     try {
       await onConfirm();
     } catch (e) {
       console.error("[ConfirmDialog] execution failed:", e);
+    } finally {
+      onOpenChange(false);
     }
   };
 
   const handleCancel = () => {
     onCancel?.();
     onOpenChange(false);
-    useUIStore.getState().decrementDialogCount();
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={handleOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel onClick={handleCancel}>{cancelText}</AlertDialogCancel>
-          <AlertDialogAction
+    <Modal 
+      open={open} 
+      onClose={handleCancel} 
+      title={title} 
+      description={description}
+      size="sm"
+    >
+      <div className="flex flex-col gap-4">
+        <div className="flex justify-end gap-3 mt-2">
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="flex-1 sm:flex-none px-6 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-colors active:scale-95"
+          >
+            {cancelText}
+          </button>
+          <button
+            type="button"
             onClick={handleConfirm}
-            className={variant === 'destructive' ? 'bg-red-600 hover:bg-red-700' : ''}
+            className={`flex-1 sm:flex-none px-6 py-2.5 rounded-xl text-white font-bold transition-all active:scale-95 shadow-md ${
+              variant === 'destructive' 
+                ? 'bg-red-600 hover:bg-red-700 shadow-red-500/20' 
+                : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/20'
+            }`}
           >
             {confirmText}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          </button>
+        </div>
+      </div>
+    </Modal>
   );
 };

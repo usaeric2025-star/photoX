@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { getSafeText } from "@/lib/ai/safeText";
+import { getSafeText } from "@/services/ai/safeText";
 import { CollapsibleDescription } from "./CollapsibleDescription";
 import { ProductGroup } from "@/types";
 import { Quote } from "lucide-react";
 import { useUIStore } from "@/store/useUIStore";
-import { translations } from "@/lib/translations";
+import { translations } from "@/locales";
 
 interface GroupInfoPanelProps {
   groupData?: ProductGroup | null;

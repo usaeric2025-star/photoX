@@ -16,8 +16,8 @@ import { GroupGridView } from "./GroupGridView";
 import { cn } from "@/lib/utils";
 import { savePhotosToCloudBatch } from "@/services/photo/upload";
 import { useAuth } from "@/hooks/core/auth/useAuth";
-import { processImageFiles } from '@/lib/image/imageProcess';
-import { checkDuplicateBatch, removeFromDuplicateCache } from '@/lib/data/duplicateCheck';
+import { processImageFiles } from '@/services/storage/imageProcessor';
+import { checkDuplicateBatch, removeFromDuplicateCache } from '@/services/photo/duplicateCheck';
 
 interface GroupPhotoPickerProps {
   isOpen: boolean;
@@ -100,7 +100,7 @@ export function GroupPhotoPicker({
         showErrorToast: true
       });
     } catch (e) {
-      const { removeFromDuplicateCache } = await import('@/lib/data/duplicateCheck');
+      const { removeFromDuplicateCache } = await import('@/services/photo/duplicateCheck');
       uniqueFiles.forEach(file => removeFromDuplicateCache(file));
       throw e;
     }

@@ -10,8 +10,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { logoutPublic } from "@/lib/publicAuth";
-import { translations } from "@/lib/translations";
+import { translations } from "@/locales";
 
 interface PublicHeaderProps {
   totalCount?: number;
@@ -20,7 +19,7 @@ interface PublicHeaderProps {
 }
 
 export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHeaderProps) {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, logout } = useAuth();
   const { settings } = useSettings();
   const { role } = usePermission();
   const update = useUIStore((s) => s.update);
@@ -58,7 +57,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
   const headerBgClass = "bg-white border-slate-200 text-slate-800";
 
   return (
-    <header className={`h-14 sm:h-16 shrink-0 border-b px-2.5 sm:px-4 flex items-center justify-between z-header font-sans overflow-hidden transition-colors duration-300 ${headerBgClass}`}>
+    <header className={`h-14 sm:h-16 shrink-0 border-b px-2.5 sm:px-4 flex items-center justify-between font-sans overflow-hidden transition-colors duration-300 ${headerBgClass}`}>
       {/* 左侧：Logo & 计数 */}
       <div className="flex items-center gap-1 sm:gap-3 shrink-0 flex-nowrap">
         {logoUrl ? (
@@ -129,7 +128,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="end"
-            className="w-64 mt-2 rounded-2xl p-2 bg-white shadow-2xl border border-slate-200 z-dropdown text-slate-700"
+            className="w-64 mt-2 rounded-2xl p-2 bg-white shadow-2xl border border-slate-200 text-slate-700"
           >
              {user ? (
                 <>
@@ -191,7 +190,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
             {user && (
               <>
                 <DropdownMenuItem
-                  onClick={() => logoutPublic()}
+                  onClick={() => logout()}
                   className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-red-600 hover:bg-red-50 focus:bg-red-50 cursor-pointer transition-colors mt-1 border-none"
                 >
                   <LogOut size={16} />

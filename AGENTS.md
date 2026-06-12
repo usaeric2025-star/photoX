@@ -1,3 +1,20 @@
+## 彈窗與 z-index 規範（鎖定）
+
+### 彈窗元件
+- ✅ 所有彈窗統一使用 `src/components/ui/Modal.tsx`
+- ✅ Modal 使用原生 `<dialog>` 元素
+- ❌ 禁止使用 `createPortal` 手動渲染彈窗
+- ❌ 禁止為彈窗設置 z-index
+
+### 佈局
+- ✅ 使用 `flex` 隔離固定區域（`shrink-0` + `flex-1 overflow-y-auto`）
+- ❌ 禁止使用 `sticky + z-index` 處理頭部
+
+### 清理規範
+- ✅ 清理必須遵循「先建後破」原則
+- ✅ 舊組件先標記 `@deprecated`，確認無引用後刪除
+- ✅ 廢棄 CSS 變數先註釋保留一個版本週期
+
 ## 表单管理规范（锁定）
 
 - ✅ 使用 `react-hook-form` + `@hookform/resolvers/arktype`
@@ -991,6 +1008,33 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 - ✅ **唯一出口**：所有 AI 写入管道必须集成 `saveAIAuditLog()`。
 - ✅ **核心字段**：必须记录 `task`, `model`, `latency_ms`, `token_usage`, `status`。
 - ✅ **存储策略**：
+
+## OptimizedImage + Lightbox 規範（P4 鎖定）
+
+### OptimizedImage
+- ✅ decoding="async" 永遠啟用
+- ✅ eager 僅用於 LCP / 首屏可見圖片
+- ❌ 禁止在 Virtua 內使用 loading="lazy"
+
+### Lightbox（YARL）
+- ✅ srcSet 必須配合 sizes="100vw"
+- ✅ 縮略圖設置 key={src} 防止殘影
+- ✅ 僅引入 Captions/Zoom 等必要插件
+- ✅ carousel.preload 移動端 ≤1，桌面端 ≤2
+- ❌ 禁止移動端 preload > 1
+
+## 圖片組件規範（鎖定）
+
+- ✅ OptimizedImage 用於單一 src 場景
+- ✅ ContractedImage 保留用於需要 srcSet/picture 的響應式場景
+- ❌ 禁止在 OptimizedImage 未支援 srcSet 前強行合併
+- 📝 圖片組件收斂條件：OptimizedImage 支援 srcSet + ContractedImage 引用數 ≤3
+
+## 技術債清理規範
+
+- ✅ 刪除零引用模組前必須 grep 確認
+- ✅ 替換核心邏輯前必須行為等價驗證
+- ❌ 禁止跳過驗證直接批量替換
   - Hot Storage: `ai_audit_logs` 表（保留 30 天）。
   - Cold Storage: R2 JSON 归档（长期保留，用于成本审计）。
 - ❌ **禁止项**：禁止在 AI 失败时静默重试而不留日志。

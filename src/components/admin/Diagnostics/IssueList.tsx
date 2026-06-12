@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ShieldAlert, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { MaintenanceTool } from './MaintenanceTool';
-import { ISSUE_ACTIONS } from '@/lib/maintenance';
+import { ISSUE_ACTIONS } from '@/services/maintenance/issueActions';
 
 const severityColors = {
   P0: 'bg-red-50 text-red-600 border-red-100',

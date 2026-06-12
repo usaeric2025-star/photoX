@@ -1,4 +1,5 @@
 export interface MutationConfig<TData, TVars, TQueryKey = any[]> {
+  name: string
   service: (vars: TVars) => Promise<any>
   invalidate?: TQueryKey[] | ((data: TData, vars: TVars) => TQueryKey[])
   optimistic?: ((old: any, vars: TVars) => any) | {

@@ -23,11 +23,10 @@ export function useAIAutoGrouping() {
           appLang === 'zh' ? "AI 智能合组" : "AI Auto Grouping",
           async ({ updateProgress }) => {
             updateProgress(20, appLang === 'zh' ? '正在分析选中的照片关系...' : 'Analyzing relationships of selected photos...');
-            const res = await autoGroupPhotos(photoIds);
+            const result = await autoGroupPhotos(photoIds);
             
-            if (!res.ok) throw new Error(res.message);
             updateProgress(80, appLang === 'zh' ? '正在创建合组并刷新列表...' : 'Creating group & refreshing...');
-            return res.data;
+            return result;
           },
           {
             showSuccessToast: true,
@@ -49,9 +48,8 @@ export function useAIAutoGrouping() {
           async ({ updateProgress }) => {
             updateProgress(10, appLang === 'zh' ? '正在加载照片信息...' : 'Loading photo data...');
             const { loadPhotosByIds } = await import('@/services/photo');
-            const res = await loadPhotosByIds([photoId]);
-            if (!res.ok) throw new Error(res.message || '加载照片信息失败');
-            const photo = res.data?.[0];
+            const photos = await loadPhotosByIds([photoId]);
+            const photo = photos?.[0];
             if (!photo) throw new Error(appLang === 'zh' ? '未找到照片信息' : 'Photo not found');
         
             updateProgress(40, appLang === 'zh' ? '正在进行 AI 智能识别 (约需 2-3 秒)...' : 'Analyzing attributes with AI (approx 2-3s)...');

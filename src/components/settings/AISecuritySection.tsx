@@ -4,7 +4,7 @@ import { Sparkles, Lock } from 'lucide-react';
 import { showToast } from '@/lib/ui/toast';
 import { AppSettings } from '../../types';
 import { useUIStore } from '@/store/useUIStore';
-import { translations } from '@/lib/translations';
+import { translations } from '@/locales';
 import { handleError } from '@/lib/error/errorHandler';
 
 import { api } from '@/lib/api';

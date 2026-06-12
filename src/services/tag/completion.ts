@@ -1,7 +1,7 @@
 import { Tag } from '@/types';
 import { loadTagsFromCloud } from './queries';
 import { batchCreateTags } from './commands';
-import { ok, fail } from '@/lib/utils/result';
+import { ok, fail } from '@/lib/error/ErrorFactory';
 import { AppResult } from '@/types/api';
 
 /**

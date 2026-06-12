@@ -1,38 +1,18 @@
 import React from 'react';
+import { usePhotoEditSessionContext } from '@/hooks/photo/usePhotoEditSessionContext';
 import { PhotoTagSelector } from '../edit/PhotoTagSelector';
 import { useTags, useTagCreate, useTagEdit, useTagDelete } from '../../../hooks';
-import { getTagIds, getTagsFromIds } from '../../../services/photo/utils';
-import { PhotoEditFormReturn } from '@/hooks/photo/types';
-
-import { ProductFormData } from '@/types';
-
-interface TagSelectorProps {
-  form: PhotoEditFormReturn;
-}
 
 /**
  * Encapsulated Tag Selector for Photo Edit Drawer
  */
-export function TagEditor({ form }: TagSelectorProps) {
+export function TagEditor() {
+  const { control } = usePhotoEditSessionContext();
   const { data: tags = [] } = useTags();
   
   const { mutateAsync: addTagMut } = useTagCreate();
   const { mutateAsync: updateTagMut } = useTagEdit();
   const { mutateAsync: deleteTagMut } = useTagDelete();
-
-  const formState = form.watch();
-  const currentTags = formState.tags;
-
-  const updateForm = React.useCallback((updates: Partial<ProductFormData>) => {
-    Object.entries(updates).forEach(([key, value]) => {
-      form.setValue(key as any, value);
-    });
-  }, [form]);
-
-  const handleChange = React.useCallback((newIds: string[]) => {
-    const newTags = getTagsFromIds(newIds, tags);
-    updateForm({ tags: newTags });
-  }, [tags, updateForm]);
 
   const handleAdd = React.useCallback(async (name: string) => {
     const res = await addTagMut(name);
@@ -50,7 +30,7 @@ export function TagEditor({ form }: TagSelectorProps) {
         addTag={handleAdd}
         updateTag={handleUpdate}
         deleteTag={handleDelete}
-        control={form.control}
+        control={control}
       />
     </section>
   );

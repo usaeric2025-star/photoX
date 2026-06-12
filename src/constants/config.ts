@@ -6,7 +6,15 @@ export const PAGINATION = {
   CHUNK_SIZE: 100,
   SYNC_PAGE_SIZE: 1000,
   VIRTUAL_SCROLL_OVERSCAN: 800,
+  DEFAULT_LIMIT: 100,
 };
+
+export const PHOTO_QUERY_CONFIG = {
+  limit: PAGINATION.DEFAULT_LIMIT,
+  sortBy: 'created_at',
+  sortOrder: 'desc',
+  secondarySort: 'id',
+} as const;
 
 export const EMPTY_ARRAY: any[] = [];
 

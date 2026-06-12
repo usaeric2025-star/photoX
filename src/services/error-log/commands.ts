@@ -1,4 +1,4 @@
-import { logError } from '@/lib/error/errorLogger';
+import { logError } from '@/services/system/logService';
 
 export async function logErrorToSupabase(error: Error, errorInfo: { componentStack?: string } | null, extras: Record<string, unknown> = {}) {
   await logError(error, {

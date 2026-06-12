@@ -7,24 +7,20 @@ import { defineMutation } from '@/lib/mutations/defineMutation';
 import { useAppMutation } from '@/lib/mutations/useAppMutation';
 
 const groupCreateConfig = defineMutation<ProductGroup, ProductGroup>({
+  name: 'groupCreate',
   service: async (variables: ProductGroup) => {
-    const res = await createGroup(variables);
-    if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Create Group');
-    return res.data;
+    return await createGroup(variables);
   },
   invalidate: () => [groupKeys.all as unknown as any[]],
-  // Note: Optimistic update with infinite lists can be complex. 
-  // Punting on optimistic update refactor within the mutation factory for now.
   successMessage: '已创建合组',
 });
 
 export const useGroupCreate = () => useAppMutation(groupCreateConfig);
 
 const groupUpdateConfig = defineMutation<ProductGroup, { id: string; updates: Partial<ProductGroup> }>({
+  name: 'groupUpdate',
   service: async ({ id, updates }) => {
-    const res = await updateGroup(id, updates);
-    if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Update Group', id);
-    return res.data;
+    return await updateGroup(id, updates);
   },
   invalidate: () => [groupKeys.all as unknown as any[]],
   successMessage: '已修改',
@@ -33,10 +29,9 @@ const groupUpdateConfig = defineMutation<ProductGroup, { id: string; updates: Pa
 export const useGroupUpdate = () => useAppMutation(groupUpdateConfig);
 
 const groupDeleteConfig = defineMutation<any, string>({
+  name: 'groupDelete',
   service: async (id: string) => {
-    const res = await deleteGroupFromCloud(id);
-    if (!res.ok) throw new Error(res.message);
-    return res.data;
+    return await deleteGroupFromCloud(id);
   },
   invalidate: () => [groupKeys.all as unknown as any[], photoKeys.all as unknown as any[]],
   successMessage: '已删除',
@@ -45,10 +40,9 @@ const groupDeleteConfig = defineMutation<any, string>({
 export const useGroupDelete = () => useAppMutation(groupDeleteConfig);
 
 const groupCoverConfig = defineMutation<any, { groupId: string | undefined; photoId: string | null }>({
+  name: 'groupCover',
   service: async ({ groupId, photoId }) => {
-    const res = await setPhotoAsGroupCover(photoId, groupId || '');
-    if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Set Group Cover');
-    return res.data;
+    return await setPhotoAsGroupCover(photoId, groupId || '');
   },
   invalidate: () => [groupKeys.all as unknown as any[], photoKeys.all as unknown as any[]],
   successMessage: '已设为封面',
@@ -57,10 +51,9 @@ const groupCoverConfig = defineMutation<any, { groupId: string | undefined; phot
 export const useGroupCoverMutation = () => useAppMutation(groupCoverConfig);
 
 const groupPhotosConfig = defineMutation<any, { photoIds: string[], targetGroupId?: string }>({
+  name: 'groupPhotos',
   service: async ({ photoIds, targetGroupId }) => {
-    const res = await groupPhotos(photoIds, targetGroupId);
-    if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Group Photos');
-    return res.data;
+    return await groupPhotos(photoIds, targetGroupId);
   },
   invalidate: () => [photoKeys.all as unknown as any[], groupKeys.all as unknown as any[]],
   successMessage: '已合组',
@@ -69,10 +62,9 @@ const groupPhotosConfig = defineMutation<any, { photoIds: string[], targetGroupI
 export const useGroupPhotosMutation = () => useAppMutation(groupPhotosConfig);
 
 const removePhotosConfig = defineMutation<any, { photoIds: string[]; groupId: string }>({
+  name: 'removePhotosFromGroup',
   service: async ({ photoIds }) => {
-    const res = await movePhotosToGroup(photoIds, null);
-    if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Remove From Group');
-    return res.data;
+    return await movePhotosToGroup(photoIds, null);
   },
   invalidate: () => [photoKeys.all as unknown as any[], groupKeys.all as unknown as any[]],
   successMessage: '已移出',
@@ -81,10 +73,9 @@ const removePhotosConfig = defineMutation<any, { photoIds: string[]; groupId: st
 export const useRemoveFromGroupMutation = () => useAppMutation(removePhotosConfig);
 
 const ungroupConfig = defineMutation<any, string>({
+  name: 'ungroup',
   service: async (groupId: string) => {
-    const res = await ungroupPhotos(groupId);
-    if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Ungroup Photos');
-    return res.data;
+    return await ungroupPhotos(groupId);
   },
   invalidate: () => [photoKeys.all as unknown as any[], groupKeys.all as unknown as any[]],
   successMessage: '已解散',

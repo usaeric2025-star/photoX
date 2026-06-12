@@ -6,7 +6,7 @@ import { Photo } from '../../../types';
 import { uploadToR2 } from './r2Client';
 import { upsertPhotoRecord, syncPhotoTagsInDB } from './dbCommands';
 import { mapToDb, normalizeDimensionsBeforeSave } from '../mappers';
-import { checkDuplicate, DuplicatePhotoError } from '@/lib/data/duplicateCheck';
+import { checkDuplicate, DuplicatePhotoError } from '@/services/photo/duplicateCheck';
 import { supabase } from '../../../lib/supabase';
 import { DB_CONFIG } from '../../../constants/config';
 import { generateItemCode } from '../utils';

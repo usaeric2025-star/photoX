@@ -1,9 +1,8 @@
 import { getPathFromUrl } from '@/lib/utils';
 import { SupabasePhotoRaw } from '@/types/supabase';
 import { Photo, Tag, Dimension } from '@/types';
-import { cleanTranslationPrefixes } from '@/lib/ai/safeText';
-import { validateDimension } from '@/lib/validators/dimensionValidator';
-import { generateItemCode } from './utils';
+import { cleanTranslationPrefixes } from '@/services/ai/safeText';
+import { generateItemCode, validateDimension } from './utils';
 
 // --- From DB (Supabase -> Frontend) ---
 

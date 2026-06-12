@@ -9,12 +9,15 @@ import { useUIStore } from "@/store/useUIStore";
 import { useAdminMaintenance } from "@/hooks/admin/useAdminMaintenance";
 import { useTags, useCategories } from "@/hooks";
 import { useGroupCoverMutation } from "@/hooks";
-import { getTranslatedCategoryName } from "@/lib/ui-helpers";
-import { translations } from "@/lib/translations";
+import { getTranslatedCategoryName } from "@/services/category/utils";
+import { translations } from "@/locales";
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { showToast } from '@/lib/ui/toast';
-import { getSafeText } from "@/lib/ai/safeText";
+import { getSafeText } from "@/services/ai/safeText";
+
+import { LightboxFloatingInfo } from "@/components/PhotoLightbox/LightboxFloatingInfo";
+import { LightboxFloatingActions } from "@/components/PhotoLightbox/LightboxFloatingActions";
 
 /**
  * [PAGE] PhotoLightboxPage
@@ -85,7 +88,7 @@ export const PhotoLightboxPage = () => {
   const currentPhotoDisplayName = currentPhoto ? (typeof currentPhoto.name === 'object' ? (currentPhoto.name[appLang as keyof typeof currentPhoto.name] || currentPhoto.name.zh) : currentPhoto.name) : '';
 
   return (
-    <div className="contents">
+    <>
       <LightboxCore
         open={isOpen}
         onClose={close}
@@ -123,7 +126,7 @@ export const PhotoLightboxPage = () => {
                   onDelete={handleDelete}
                   onAiAnalyze={handleAiAnalyze}
                   onClose={() => setShowInfo(false)}
-                  className="pointer-events-auto w-full h-full shadow-2xl shadow-black/20 border-l border-white/20 bg-background/95 backdrop-blur-2xl animate-in slide-in-from-right duration-300 ease-out overflow-y-auto"
+                  className="pointer-events-auto w-full h-full shadow-2xl shadow-black/20 border-l border-white/20 bg-background/95 backdrop-blur-2xl animate-in slide-in-from-right duration-300 ease-out"
                   headerClassName="md:pl-4 pl-20"
                 />
               </div>
@@ -145,57 +148,21 @@ export const PhotoLightboxPage = () => {
 
           return (
             <>
-              {/* Photo Simplified Info Overlay */}
               {!showInfo && (
-                <div className="absolute bottom-[10px] left-4 md:bottom-[12px] md:left-6 z-[var(--z-dropdown)] pointer-events-none flex flex-col items-start justify-end max-w-[70%] md:max-w-[60%] select-none">
-                  {currentPhotoDisplayName && (
-                    <h2 className="text-white text-lg md:text-xl font-bold tracking-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)] mb-1.5 line-clamp-2">
-                      {currentPhotoDisplayName}
-                    </h2>
-                  )}
-                  
-                  {(displayCategoryName || displayTagNames.length > 0) && (
-                    <div className="flex flex-wrap gap-1.5 drop-shadow-md">
-                       {displayCategoryName && (
-                         <span className="flex items-center gap-1.5 text-[10px] md:text-xs font-semibold text-white/90 bg-white/20 backdrop-blur-md px-2 py-1 rounded border border-white/20 shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
-                           <Grid size={10} /> {displayCategoryName}
-                         </span>
-                       )}
-                       {displayTagNames.slice(0, 3).map((tag, i) => (
-                         <span key={i} className="flex items-center gap-0.5 text-[10px] md:text-xs font-semibold text-white/90 bg-black/50 backdrop-blur-md px-2 py-1 rounded border border-white/10 shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
-                           #{tag}
-                         </span>
-                       ))}
-                       {displayTagNames.length > 3 && (
-                         <span className="text-[10px] md:text-xs font-semibold text-white/70 bg-black/50 backdrop-blur-md px-2 py-1 rounded border border-white/10 shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
-                           +{displayTagNames.length - 3}
-                         </span>
-                       )}
-                    </div>
-                  )}
-                </div>
+                <LightboxFloatingInfo 
+                  displayName={currentPhotoDisplayName}
+                  categoryName={displayCategoryName}
+                  tags={displayTagNames}
+                  isGroup={mode === 'group'}
+                  appLang={appLang}
+                />
               )}
 
-              {/* Floating Action Button for Info Panel Toggle */}
-              <button
-                onClick={() => setShowInfo(!showInfo)}
-                // onPointerDown blocks yarl from catching the click as a backdrop swipe
-                onPointerDown={(e) => e.stopPropagation()}
-                className="absolute bottom-[10px] right-4 md:bottom-[12px] md:right-6 z-[var(--z-dropdown)] flex items-center justify-center gap-2 w-10 h-10 md:w-auto md:px-4 md:py-2 rounded-full bg-black/70 backdrop-blur-xl text-white border border-white/20 shadow-2xl hover:bg-black/90 active:scale-[0.96] transition-all group pointer-events-auto"
-                title={showInfo ? (appLang === 'zh' ? '关闭信息' : appLang === 'ms' ? 'Tutup Maklumat' : 'Close Info') : (appLang === 'zh' ? '展开详细信息' : appLang === 'ms' ? 'Tunjuk Butiran' : 'Show Details')}
-              >
-                <div className="md:hidden flex items-center justify-center">
-                  {showInfo ? <span className="font-bold text-lg leading-none">✕</span> : <Info size={18} />}
-                </div>
-                <div className="hidden md:flex items-center gap-2">
-                  <Info size={16} className={showInfo ? "opacity-50" : "group-hover:scale-110 transition-transform"} />
-                  <span className="text-xs font-bold tracking-wide">
-                    {showInfo 
-                      ? (appLang === 'zh' ? '关闭详情' : appLang === 'ms' ? 'Tutup Butiran' : 'Close Details')
-                      : (appLang === 'zh' ? '属性信息' : appLang === 'ms' ? 'Maklumat Atribut' : 'Attributes')}
-                  </span>
-                </div>
-              </button>
+              <LightboxFloatingActions 
+                showInfo={showInfo}
+                setShowInfo={setShowInfo}
+                appLang={appLang}
+              />
             </>
           );
         }}
@@ -218,7 +185,7 @@ export const PhotoLightboxPage = () => {
           }
         }}
       />
-    </div>
+    </>
   );
 };
 

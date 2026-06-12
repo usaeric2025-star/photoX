@@ -1,5 +1,5 @@
 import { ConfirmDialog } from "../../ui/ConfirmDialog";
-import { translations } from "../../../lib/translations";
+import { translations } from "@/locales";
 
 interface DeletePhotoDialogProps {
   open: boolean;

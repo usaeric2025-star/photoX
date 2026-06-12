@@ -3,7 +3,6 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'motion/react';
 import { useSearch } from '@tanstack/react-router';
 import { Skeleton } from '../components/ui/Skeleton';
-import { cleanPhotos, filterPhotos, groupPhotos } from '../lib/filters';
 import { 
   useCategories, usePhotos, usePhotoCount, 
   useScrollRestoration,

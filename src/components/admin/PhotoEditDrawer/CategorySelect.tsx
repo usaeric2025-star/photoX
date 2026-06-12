@@ -1,26 +1,22 @@
-import React from 'react';
+import { usePhotoEditSessionContext } from '@/hooks/photo/usePhotoEditSessionContext';
 import { FormSectionHeader, CategoryGrid } from '../FormShared';
 import { useCategories } from '../../../hooks';
 import { useUIStore } from '../../../store';
-import { PhotoEditFormReturn } from '@/hooks/photo/types';
 
 import { ProductFormData } from '@/types';
-
-interface CategorySelectorProps {
-  form: PhotoEditFormReturn;
-}
 
 /**
  * Encapsulated Category Selector for Photo Edit Drawer
  */
-export function CategorySelect({ form }: CategorySelectorProps) {
+export function CategorySelect() {
+  const { watch, setValue } = usePhotoEditSessionContext();
   const appLang = useUIStore((s) => s.appLang);
   const { data: categories = [] } = useCategories();
   
-  const formState = form.watch();
+  const formState = watch();
   const updateForm = (updates: Partial<ProductFormData>) => {
     Object.entries(updates).forEach(([key, value]) => {
-      form.setValue(key as any, value);
+      (setValue as any)(key as any, value, { shouldDirty: true });
     });
   };
 
@@ -29,7 +25,7 @@ export function CategorySelect({ form }: CategorySelectorProps) {
       <FormSectionHeader title="产品目录" subtitle="CATEGORY *" />
       <CategoryGrid 
         categories={categories}
-        selectedId={formState.category_id}
+        selectedId={formState.category_id ?? null}
         onSelect={(id) => updateForm({ category_id: id })}
         appLang={appLang}
       />

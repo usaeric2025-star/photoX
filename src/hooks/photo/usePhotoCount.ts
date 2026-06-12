@@ -25,11 +25,8 @@ export const usePhotoCount = createQuery<number, PhotoCountFilters | undefined>(
   },
   queryFn: async (filters) => {
     const f = filters || {};
-    const res = await (f.source === 'local' 
+    return await (f.source === 'local' 
       ? getLocalPhotoCount() 
       : getPhotoCount(f.category_id, f.tag_id, f.searchQuery, f.isAdminMode || false));
-    
-    if (!res.ok) throw new Error(res.message);
-    return res.data;
   }
 });

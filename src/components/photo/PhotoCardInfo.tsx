@@ -13,7 +13,8 @@ export const PhotoCardInfo = ({ hideDetails, displayCatName, photoTags }: PhotoC
     <div className="absolute bottom-0 left-0 w-full z-20 pointer-events-auto p-1.5 pt-6 flex flex-col gap-1.5 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
       {displayCatName && (
         <div className="px-0.5">
-          <span className="text-[9px] bg-white text-black px-2 py-0.5 rounded-full font-black tracking-tighter uppercase shadow-lg inline-block">
+          <span className="text-[8.5px] bg-black/65 backdrop-blur-[2px] text-white/95 px-2 py-0.5 rounded-md font-bold tracking-wider uppercase shadow-sm inline-flex items-center gap-1 border border-white/10">
+            <span className="w-1 h-1 rounded-full bg-brand-gold shrink-0 animate-pulse" />
             {displayCatName}
           </span>
         </div>

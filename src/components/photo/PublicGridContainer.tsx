@@ -4,14 +4,13 @@ import { VirtualPhotoGrid } from '@/components/photo/VirtualPhotoGrid';
 import { PublicFilters } from '@/components/ui/PublicFilters';
 import { useUIStore, useShallow, useAppLang, useColumns } from '@/store/useUIStore';
 import { usePhotos, useSettings, useCategories, useTags, useUrlFilters } from '@/hooks';
-import { processPhotos as processPhotosSync } from '@/lib/filters';
-import { cleanPhotos } from '@/lib/filters';
+import { processPhotos as processPhotosSync, cleanPhotos } from '@/services/photo/processing';
 import { PAGINATION, EMPTY_ARRAY } from '@/constants/config';
 import { GroupDetailPage } from '@/components/groups/GroupDetailPage';
 import { PhotoCard } from './PhotoCard';
 import { PublicFloatingActions } from './PublicFloatingActions';
 import { WhatsAppChoiceDialog } from '@/components/shared/WhatsAppChoiceDialog';
-import { translations } from '@/lib/translations';
+import { translations } from '@/locales';
 import { Photo } from '@/types';
 
 interface PublicGridContainerProps {

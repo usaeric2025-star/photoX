@@ -1,7 +1,7 @@
-import { getTranslatedCategoryName } from "../../lib/ui-helpers";
-import { createTranslate } from "@/lib/i18n";
-import { translations, LanguageCode } from "../../lib/translations";
-import { Category, Manufacturer } from "../../types";
+import { getTranslatedCategoryName } from "@/services/category/utils";
+import { createTranslate } from "@/locales";
+import { translations, LanguageCode } from "@/locales";
+import { Category, Manufacturer } from "@/types";
 import { useLongPress } from "@/hooks/core/useLongPress";
 import { Pencil, Trash2 } from "lucide-react";
 import { useUIStore, useShallow } from "@/store/useUIStore";

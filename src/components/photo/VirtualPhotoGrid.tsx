@@ -1,13 +1,15 @@
 import React, { useEffect, useRef } from 'react';
 import { VirtualGrid, VirtualGridHandle } from '@/components/virtualizer/VirtualGrid';
 import { Photo, TranslationType, Category, Tag } from '../../types';
-import { useUIStore, useShallow, UIStoreState } from '@/store/useUIStore';
-import { useImagePreloader, useUrlFilters } from '@/hooks';
-import { translations } from '../../lib/translations';
+import { useUIStore, useShallow } from '@/store/useUIStore';
+import { useUrlFilters } from '@/hooks';
+import { translations } from '@/locales';
 import { PhotoGridSkeleton } from './PhotoGridSkeleton';
 import { LoadMoreIndicator } from './LoadMoreIndicator';
 import { EmptyState } from '../ui/EmptyState';
 import { PackageOpen } from 'lucide-react';
+import { useScrollRestoration } from '@/hooks/core/useScrollRestoration';
+import { useContainerWidth } from '@/hooks/core/useContainerWidth';
 
 interface VirtualPhotoGridProps {
   photos: Photo[];
@@ -21,10 +23,6 @@ interface VirtualPhotoGridProps {
   restoreKey?: string;
   categories?: Category[];
 }
-
-const multiSelectSelector = (s: UIStoreState) => ({
-  update: s.update
-});
 
 export const VirtualPhotoGrid = ({
   photos,
@@ -43,83 +41,21 @@ export const VirtualPhotoGrid = ({
   const t = (translations[appLang as keyof typeof translations] || translations.en) as TranslationType;
 
   const internalGridRef = useRef<VirtualGridHandle | null>(null);
+  
   // Merge refs
   const gridRef = (node: VirtualGridHandle | null) => {
     internalGridRef.current = node;
-    if (typeof ref === 'function') {
-      ref(node);
-    } else if (ref) {
-      (ref as React.MutableRefObject<VirtualGridHandle | null>).current = node;
-    }
+    if (typeof ref === 'function') ref(node);
+    else if (ref) (ref as React.MutableRefObject<VirtualGridHandle | null>).current = node;
   };
 
-  const isScrollRestoredRef = useRef(false);
+  const { recordScroll } = useScrollRestoration(
+    restoreKey,
+    photos.length,
+    (offset) => internalGridRef.current?.scrollTo(offset)
+  );
 
-  // Offset restoration
-  useEffect(() => {
-    if (restoreKey && photos.length > 0 && !isScrollRestoredRef.current && internalGridRef.current) {
-      const saved = sessionStorage.getItem(restoreKey);
-      if (saved) {
-        try {
-          const offset = parseFloat(saved);
-          if (!isNaN(offset) && offset > 0) {
-            isScrollRestoredRef.current = true;
-            // timeout allows vlist to measure container
-            setTimeout(() => {
-              internalGridRef.current?.scrollTo(offset);
-            }, 10);
-            return; // Don't do index anchor if we have offset
-          }
-        } catch (e) {}
-      }
-    }
-  }, [restoreKey, photos]);
-
-  const scrollTimeoutRef = useRef<number | null>(null);
-
-  const handleScroll = (offset: number) => {
-    if (restoreKey) {
-      if (scrollTimeoutRef.current) {
-        window.clearTimeout(scrollTimeoutRef.current);
-      }
-      scrollTimeoutRef.current = window.setTimeout(() => {
-        try {
-          sessionStorage.setItem(restoreKey, offset.toString());
-        } catch (e) {
-          // ignore sessionStorage full/quota
-        }
-      }, 100);
-    }
-  };
-
-  useEffect(() => {
-    return () => {
-      if (scrollTimeoutRef.current) {
-        window.clearTimeout(scrollTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  const { preloadBatch } = useImagePreloader();
-
-
-
-  const isLoading = isFetching && photos.length === 0;
-
-  // Dynamic row height estimation based on columns and container width
-  const [containerWidth, setContainerWidth] = React.useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const observer = new ResizeObserver((entries) => {
-      if (entries[0]) {
-        setContainerWidth(entries[0].contentRect.width);
-      }
-    });
-    observer.observe(containerRef.current);
-    return () => observer.disconnect();
-  }, []);
+  const { containerRef, width: containerWidth } = useContainerWidth<HTMLDivElement>();
 
   const estimatedRowHeight = (() => {
     const padding = 16;
@@ -137,7 +73,7 @@ export const VirtualPhotoGrid = ({
     );
   };
 
-  if (isLoading) {
+  if (isFetching && photos.length === 0) {
     return (
       <div className="absolute inset-0 z-10 bg-brand-bg overflow-y-auto">
         <PhotoGridSkeleton columns={columns} />
@@ -167,7 +103,7 @@ export const VirtualPhotoGrid = ({
           lanes={columns}
           itemSize={estimatedRowHeight}
           shift={true}
-          onScroll={handleScroll}
+          onScroll={recordScroll}
           onEndReached={() => {
             if (hasNextPage && !isFetchingNextPage && onLoadMore) {
               onLoadMore();

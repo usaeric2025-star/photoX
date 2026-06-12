@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { logger } from '@/lib/logger';
-import { logResult } from '@/lib/error/errorLogger';
+import { logResult } from '@/services/system/logService';
 import { api } from '@/lib/api';
 
 export type DiagnoseIssue = {

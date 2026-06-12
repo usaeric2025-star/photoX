@@ -10,13 +10,13 @@ import { type AppResult } from '@/types/api';
 /**
  * [V2.0-SERVICE-SINGLETON] AI Photo Analysis Service
  */
-export const testAiConnection = async (apiKey: string, provider: string, customModel?: string) => {
+export const testAiConnection = async (apiKey: string, provider: string) => {
   try {
     const res = await api.ai['analyze-base64'].$post({
         json: {
             promptText: "TEST",
             base64Image: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVR4nGNiAAAAAgAB35oT2AAAAABJRU5ErkJggg==",
-            customModel: customModel || 'gemini-2.5-flash-lite'
+            provider
         }
     }) as any;
     const body = await res.json();

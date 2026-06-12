@@ -6,7 +6,7 @@ import { useSettings } from '../../hooks';
 import { useUIStore } from '@/store/useUIStore';
 import { Link } from '@tanstack/react-router';
 import { ROUTES } from '@/config/constants';
-import { translations } from '@/lib/translations';
+import { translations } from '@/locales';
 
 import { useLocalStorage } from '@/hooks/core/useLocalStorage';
 

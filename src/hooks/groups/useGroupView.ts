@@ -1,7 +1,7 @@
 import { queryClient } from '@/lib/queryClient';
 import { groupKeys } from '@/lib/queryKeys';
 import { useGroupPhotos } from '@/hooks';
-import { cleanPhotos } from '@/lib/filters';
+import { cleanPhotos } from '@/services/photo/processing';
 import { useMemo } from 'react';
 
 /**

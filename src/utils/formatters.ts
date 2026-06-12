@@ -1,28 +1,51 @@
 export const formatters = {
   // Date/Time
-  date: (date: Date | string | number) => {
-    return new Intl.DateTimeFormat('zh-TW', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    }).format(new Date(date));
+  date: (date: Date | string | number, locale: string = 'zh-TW') => {
+    try {
+      const d = new Date(date);
+      if (isNaN(d.getTime())) return '-';
+      return new Intl.DateTimeFormat(locale, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        timeZone: 'Asia/Kuala_Lumpur'
+      }).format(d);
+    } catch {
+      return '-';
+    }
   },
   
-  dateTime: (date: Date | string | number) => {
-    return new Intl.DateTimeFormat('zh-TW', {
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(new Date(date));
+  dateTime: (date: Date | string | number, locale: string = 'zh-TW') => {
+    try {
+      const d = new Date(date);
+      if (isNaN(d.getTime())) return '-';
+      return new Intl.DateTimeFormat(locale, {
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        timeZone: 'Asia/Kuala_Lumpur'
+      }).format(d);
+    } catch {
+      return '-';
+    }
   },
 
-  time: (date: Date | string | number) => {
-    return new Intl.DateTimeFormat('zh-TW', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    }).format(new Date(date));
+  time: (date: Date | string | number, locale: string = 'zh-TW') => {
+    try {
+      const d = new Date(date);
+      if (isNaN(d.getTime())) return '-';
+      return new Intl.DateTimeFormat(locale, {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+        timeZone: 'Asia/Kuala_Lumpur'
+      }).format(d);
+    } catch {
+      return '-';
+    }
   },
 
   // File size

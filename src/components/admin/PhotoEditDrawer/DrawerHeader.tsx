@@ -1,18 +1,14 @@
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { useShallow } from "@/store/useUIStore";
+import { usePhotoEditSessionContext } from "@/hooks/photo/usePhotoEditSessionContext";
 import React from "react";
-import { useDisclosure } from '@/hooks/core/useDisclosure';
 import {
   X as CloseIcon,
   EyeOff,
   Eye,
-  RefreshCcw,
   Sparkles,
   Save,
   Trash2,
   Loader2,
   Star,
-  LogOut,
   LogOut as RemoveFromGroupIcon,
 } from "lucide-react";
 import {
@@ -21,28 +17,21 @@ import {
   useRemoveFromGroupMutation,
   useAdminMaintenance,
   usePhotoDelete,
-  useTaskExecutor,
-  useSettings,
-} from "../../../hooks";
+} from "@/hooks";
 import { showToast } from "@/lib/ui/toast";
-import { useUIStore } from "../../../store";
-import { analyzePhoto } from "@/services/ai/commands";
+import { useUIStore } from "@/store";
 import { usePhotoEditAI } from "./usePhotoEditAI";
-
-import { PhotoEditFormReturn } from '@/hooks/photo/types';
 
 interface DrawerHeaderProps {
   onClose: () => void;
-  previewSrc?: string;
-  form: PhotoEditFormReturn;
+  onDeleteClick: () => void;
 }
 
 export function DrawerHeader({
   onClose,
-  previewSrc,
-  form,
+  onDeleteClick,
 }: DrawerHeaderProps) {
-  const { save, watch, setValue } = form;
+  const { watch, setValue, commit, isPending } = usePhotoEditSessionContext();
   const formState = watch();
   
   const editPhotoId = useUIStore((s) => s.editPhotoId);
@@ -55,13 +44,10 @@ export function DrawerHeader({
   const isRunning = React.useMemo(() => tasks.some((t: any) => t.status === 'running'), [tasks]);
 
   const { mutateAsync: removeFromGroup } = useRemoveFromGroupMutation();
-  const { updatePhoto: { mutateAsync: updatePhoto } } = useAdminMaintenance();
+  const { updatePhoto: { mutateAsync: updateAdminPhoto } } = useAdminMaintenance();
   const { mutateAsync: deletePhoto } = usePhotoDelete();
-  const { runTask } = useTaskExecutor();
-  const { settings } = useSettings();
-  const [isDeleteOpen, deleteDialog] = useDisclosure(false);
-
-  const { handleAiAnalyze } = usePhotoEditAI(form);
+  
+  const { handleAiAnalyze } = usePhotoEditAI();
 
   const isPartOfGroup = !!detailPhoto?.group_id;
 
@@ -74,9 +60,9 @@ export function DrawerHeader({
 
   const onToggleHidden = async () => {
     const nextValue = !formState.is_hidden;
-    setValue('is_hidden', nextValue);
+    setValue('is_hidden', nextValue, { shouldDirty: true });
     if (editPhotoId) {
-      await updatePhoto({ id: editPhotoId, updates: { is_hidden: nextValue } });
+      await updateAdminPhoto({ id: editPhotoId, updates: { is_hidden: nextValue } });
     }
   };
 
@@ -143,7 +129,7 @@ export function DrawerHeader({
           <button
             onClick={() => {
               const newState = !formState.is_group_cover;
-              setValue('is_group_cover', newState);
+              setValue('is_group_cover', newState, { shouldDirty: true });
               showToast.success(newState ? '已设为封面' : '已取消封面');
             }}
             title={l.cover}
@@ -165,7 +151,7 @@ export function DrawerHeader({
 
         {editPhotoId && (
           <button
-            onClick={onDelete}
+            onClick={onDeleteClick}
             disabled={isRunning}
             className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-red-50 text-red-500 border border-red-100 shadow-sm active:bg-red-100 transition-all font-bold disabled:opacity-50"
           >
@@ -174,11 +160,11 @@ export function DrawerHeader({
         )}
 
         <button
-          onClick={save}
-          disabled={isSyncing || isRunning}
-          className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-blue-600 shadow-sm transition-all disabled:opacity-50 ${isSyncing || isRunning ? "bg-blue-400 text-white border-blue-400 cursor-wait" : "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20 active:bg-blue-700"}`}
+          onClick={commit}
+          disabled={isSyncing || isRunning || isPending}
+          className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-blue-600 shadow-sm transition-all disabled:opacity-50 ${isSyncing || isRunning || isPending ? "bg-blue-400 text-white border-blue-400 cursor-wait" : "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20 active:bg-blue-700"}`}
         >
-          {isSyncing || isRunning ? (
+          {isSyncing || isRunning || isPending ? (
             <Loader2 size={16} className="text-current animate-spin" />
           ) : (
             <Save size={18} />

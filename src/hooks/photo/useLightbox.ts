@@ -6,8 +6,7 @@ import { useGroupDetail } from "../groups/useGroupDetail";
 import { useQuery } from '@tanstack/react-query';
 import { getPhotoCount } from "@/services/photo";
 import { Photo } from "@/types";
-import { PAGINATION } from "@/constants/config";
-import { PHOTO_QUERY_CONFIG } from "@/lib/photoQueryConfig";
+import { PAGINATION, PHOTO_QUERY_CONFIG } from "@/constants/config";
 import { useEffect } from "react";
 
 /**
@@ -43,9 +42,7 @@ export const useLightbox = () => {
   const { data: countResult } = useQuery({
     queryKey: ['photos', 'totalCount', filters],
     queryFn: async () => {
-      const res = await getPhotoCount(filters.categoryId, filters.tagId, filters.searchQuery, isAdmin);
-      if (!res.ok) throw new Error(res.message);
-      return res.data;
+      return await getPhotoCount(filters.categoryId, filters.tagId, filters.searchQuery, isAdmin);
     },
     enabled: !groupId });
   

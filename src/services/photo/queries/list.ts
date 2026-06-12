@@ -1,8 +1,5 @@
 import { api } from '@/lib/api';
-import { ErrorFactory, success } from '@/lib/error/ErrorFactory';
-import { withErrorHandling } from '@/lib/error/wrapper';
 import { Photo } from '@/types';
-import { AppResult } from '@/types/api';
 import { loadTagsFromCloud } from '../../tag';
 import { mapSupabasePhoto } from '../mappers';
 import { hydrateGroupInfo } from '../with';
@@ -25,21 +22,19 @@ export const getPhotos = async (
     onlyUngrouped: boolean = false,
     manufacturerId?: string | null,
     isHidden?: boolean | null
-): Promise<AppResult<Photo[]>> => {
-  return withErrorHandling(async () => {
+): Promise<Photo[]> => {
     const res = await api.photos.list.$post({
       json: { page, limit, categoryId, isAdminMode, onlyUngrouped, manufacturerId, isHidden }
     });
     
-    if (!res.ok) throw ErrorFactory.wrap(new Error('Failed to load photos from cloud'), 'queries');
+    if (!res.ok) throw new Error('Failed to load photos from cloud');
     const { data } = await res.json();
     
     const allTags = await loadTagsFromCloud();
     const fetched = (data || []).map((item: any) => mapSupabasePhoto(item, allTags));
     
     const hydrated = await hydrateGroupInfo(fetched);
-    return success(hydrated);
-  }, 'loadAllPhotosFromCloud');
+    return hydrated;
 };
 
 /**
@@ -50,56 +45,46 @@ export const getPhotoCount = async (
   tagId?: string | null,
   searchQuery?: string | null,
   isAdminMode: boolean = false
-): Promise<AppResult<number>> => {
-  return withErrorHandling(async () => {
+): Promise<number> => {
     const res = await api.photos.count.$post({
       json: { categoryId, tagId, searchQuery, isAdminMode }
     });
-    if (!res.ok) throw ErrorFactory.wrap(new Error('Failed to get photo count'), 'queries');
+    if (!res.ok) throw new Error('Failed to get photo count');
     const { data } = await res.json();
     return data || 0;
-  }, 'getPhotoCount');
 };
 
-export const getLocalPhotoCount = async (): Promise<AppResult<number>> => {
-  return withErrorHandling(async () => {
+export const getLocalPhotoCount = async (): Promise<number> => {
     const { syncCache } = await import('@/lib/db/indexedDB');
     const photos = await syncCache.getPhotos();
     return Array.isArray(photos) ? photos.length : 0;
-  }, 'getLocalPhotoCount');
 };
 
-export const loadPhotosByIds = async (ids: string[]): Promise<AppResult<Photo[]>> => {
-  return withErrorHandling(async () => {
+export const loadPhotosByIds = async (ids: string[]): Promise<Photo[]> => {
     if (!ids || ids.length === 0) return [];
     const res = await api.photos['by-ids'].$post({
       json: { ids }
     });
-    if (!res.ok) throw ErrorFactory.wrap(new Error('Failed to load photos by ids'), 'queries');
+    if (!res.ok) throw new Error('Failed to load photos by ids');
     const { data } = await res.json();
     const allTags = await loadTagsFromCloud();
     return (data || []).map((item: any) => mapSupabasePhoto(item, allTags));
-  }, 'loadPhotosByIds');
 };
 
-export const getPhotosWithoutThumbHash = async (): Promise<AppResult<{ id: string }[]>> => {
-  return withErrorHandling(async () => {
+export const getPhotosWithoutThumbHash = async (): Promise<{ id: string }[]> => {
     const res = await api.photos['without-thumb-hash'].$post();
-    if (!res.ok) throw ErrorFactory.wrap(new Error('Failed to get photos without thumb hash'), 'queries');
+    if (!res.ok) throw new Error('Failed to get photos without thumb hash');
     const { data } = await res.json();
     return data || [];
-  }, 'getPhotosWithoutThumbHash');
 };
 
-export const checkImageHashExists = async (hash: string): Promise<AppResult<{image_url: string, manual_code: string} | null>> => {
-  return withErrorHandling(async () => {
+export const checkImageHashExists = async (hash: string): Promise<{image_url: string, manual_code: string} | null> => {
     const res = await api.photos['check-hash'].$post({
       json: { hash }
     });
-    if (!res.ok) throw ErrorFactory.wrap(new Error('Failed to check image hash'), 'queries');
+    if (!res.ok) throw new Error('Failed to check image hash');
     const { data } = await res.json();
     return data ? { image_url: data.image_url, manual_code: data.manual_code } : null;
-  }, 'checkImageHashExists', 'low');
 };
 
 export async function findPhotoIdsBySearch(q: string): Promise<{ catIds: number[], photoIdsFromTags: string[], q: string } | null> {
@@ -108,7 +93,7 @@ export async function findPhotoIdsBySearch(q: string): Promise<{ catIds: number[
 
   try {
     const res = await api.search.ids.$get({ query: { q: normSearchQuery } });
-    if (!res.ok) throw ErrorFactory.wrap(new Error('Search failed'), 'queries');
+    if (!res.ok) throw new Error('Search failed');
 
     const { data } = await res.json();
     return {

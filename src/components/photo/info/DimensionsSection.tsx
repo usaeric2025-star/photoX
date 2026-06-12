@@ -1,7 +1,7 @@
 import React from 'react';
 import { Maximize2, Sparkles } from 'lucide-react';
 import { Dimension } from '@/types/photo';
-import { getSafeText } from '@/lib/ai/safeText';
+import { getSafeText } from '@/services/ai/safeText';
 
 interface DimensionsSectionProps {
   dimensions?: Dimension[];

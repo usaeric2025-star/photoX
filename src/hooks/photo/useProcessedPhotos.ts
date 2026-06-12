@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { processPhotos as processPhotosSync } from '@/lib/filters';
+import { processPhotos as processPhotosSync } from '@/services/photo/processing';
 import type { Photo, Category, Tag } from '@/types/photo';
 import { logger } from '@/lib/logger';
 

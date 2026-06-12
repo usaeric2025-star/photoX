@@ -1,7 +1,7 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useCallback } from 'react';
 
-import { checkDuplicateBatch } from '@/lib/data/duplicateCheck';
+import { checkDuplicateBatch } from '@/services/photo/duplicateCheck';
 import { useInvalidatePhotos, useAuth } from '@/hooks';
 import { showToast } from '@/lib/ui/toast';
 import { Photo } from '@/types';
@@ -34,7 +34,7 @@ export function usePhotoUpload() {
 
     try {
       // Lazy load processing and upload services
-      const { processImageFile } = await import('@/lib/image/imageProcess');
+      const { processImageFile } = await import('@/services/storage/imageProcessor');
       const { savePhotoToCloud } = await import("@/services/photo/upload");
 
       let successCount = 0;
@@ -79,7 +79,7 @@ export function usePhotoUpload() {
         } catch (err: unknown) {
           console.error(`[Upload] Failed for ${file.name}:`, err);
           // remove from lock
-          const { removeFromDuplicateCache } = await import('@/lib/data/duplicateCheck');
+          const { removeFromDuplicateCache } = await import('@/services/photo/duplicateCheck');
           // Note: we can't easily get the hash here if processImageFile failed, but we can pass file
           removeFromDuplicateCache(file);
           

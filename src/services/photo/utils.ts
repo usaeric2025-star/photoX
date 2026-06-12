@@ -1,8 +1,8 @@
 import { supabase } from '../../lib/supabase';
 import { Tag, Photo } from '../../types';
 import { safeArray } from '../../lib/utils';
-import { translations, TranslationType } from '@/lib/translations';
-import { getSafeText } from '@/lib/ai/safeText';
+import { translations, TranslationType } from '@/locales';
+import { getSafeText } from '@/services/ai/safeText';
 import { getTranslatedCategoryName } from '../category/utils';
 import { Category } from '@/types';
 
@@ -37,8 +37,31 @@ export const getDisplayGroupCode = (groupId?: string | null): string => {
   return `G-${short}`;
 };
 
+export function normalizeUnit(unit: string | null | undefined): string {
+  const u = unit?.toLowerCase().trim();
+  if (u === 'in' || u === 'inches' || u === 'inch') return 'inch';
+  if (u === 'cm' || u === 'centimeter' || u === 'centimetres') return 'cm';
+  if (u === 'mm' || u === 'millimeter' || u === 'millimetres') return 'mm';
+  if (u === 'm' || u === 'meter' || u === 'metres') return 'm';
+  return u || 'cm';
+}
+
+export function validateDimension(dim: any): any {
+  if (!dim) return null;
+  const value = dim.value ?? dim.height ?? dim.width ?? dim.length ?? 0;
+  const unit = normalizeUnit(dim.unit);
+  
+  return {
+    ...dim,
+    unit,
+    height: Number(dim.height || (dim.label?.includes('H') ? value : 0)) || 0,
+    width: Number(dim.width || (dim.label?.includes('W') ? value : 0)) || 0,
+    length: Number(dim.length || (dim.label?.includes('D') || dim.label?.includes('L') ? value : 0)) || 0
+  };
+}
+
 /**
- * Get a fresh UUID
+ * Gets a fresh UUID
  */
 export const getDatabaseUUID = async (): Promise<string> => {
   return crypto.randomUUID(); 
@@ -75,6 +98,64 @@ export const getPhotoDisplayName = (
 
   return t.furniture;
 };
+
+export interface ResizeOptions {
+  width?: number;
+  format?: 'auto' | 'webp' | 'avif';
+}
+
+/**
+ * Resolves an image URL, optionally using the thumbnail worker.
+ */
+export function resolveImageUrl(url: string, options: ResizeOptions = {}): string {
+  if (!url || url.startsWith('data:')) return url;
+  
+  const workerUrl = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_THUMBNAIL_WORKER_URL : undefined;
+  
+  if (workerUrl) {
+    const width = options.width || 400; // Default
+    try {
+      const urlObj = new URL(url);
+      const path = urlObj.pathname;
+      return `${workerUrl.replace(/\/$/, '')}${path}?w=${width}&h=${width}`;
+    } catch (e) {
+      // Fallback if URL parsing fails
+      const cleanUrl = url.split('?')[0];
+      return `${workerUrl.replace(/\/$/, '')}/${cleanUrl.split('/').pop()}?w=${width}&h=${width}`;
+    }
+  }
+
+  // Fallback for direct R2 resizing (if for some reason worker is not configured)
+  const isResizingSupported = url.includes('r2.dev') || 
+                              url.includes('cloudflarestorage.com');
+  
+  if (!isResizingSupported) {
+    return url;
+  }
+  
+  const { width, format = 'auto' } = options;
+  const params = new URLSearchParams();
+  if (width) params.append('width', width.toString());
+  params.append('format', format);
+
+  return `${url}${url.includes('?') ? '&' : '?'}${params.toString()}`;
+}
+
+/**
+ * Gets a thumbnail URL for a given original URL.
+ */
+export function getThumbnailUrl(originalUrl: string, width: number, updatedAt?: string) {
+  const workerUrl = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_THUMBNAIL_WORKER_URL : undefined;
+  if (!workerUrl || !originalUrl) return originalUrl;
+  
+  try {
+    const url = new URL(originalUrl);
+    const cacheBuster = updatedAt ? `&t=${new Date(updatedAt).getTime()}` : '';
+    return `${workerUrl.replace(/\/$/, '')}${url.pathname}?w=${width}${cacheBuster}`;
+  } catch (e) {
+    return originalUrl;
+  }
+}
 
 /**
  * Gets a cache-busted image URL.

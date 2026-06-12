@@ -67,6 +67,16 @@ export const syncCache = {
   saveSettings: (settings: any) => saveData('cached_settings', settings),
   getTasks: () => loadData('cached_tasks'),
   saveTasks: (tasks: any[]) => saveData('cached_tasks', tasks),
+  clearPersistence: async () => {
+    const db = await initDB();
+    return new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readwrite');
+      const store = transaction.objectStore(STORE_NAME);
+      store.clear();
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+    });
+  },
 };
 
 /**

@@ -3,7 +3,7 @@ import { getPhotos as loadAllPhotosFromCloud } from '@/services/photo/queries/li
 import { getPhotosByGroupPaginated as loadPhotosByGroupIdPaginated } from '@/services/photo/queries/byGroup';
 import { photoKeys } from '@/lib/queryKeys';
 import { syncCache } from '@/lib/db/indexedDB';
-import { PHOTO_QUERY_CONFIG } from '@/lib/photoQueryConfig';
+import { PHOTO_QUERY_CONFIG } from '@/constants/config';
 import { useQueryClient, InfiniteData } from '@tanstack/react-query';
 import { Photo } from '@/types';
 import { useMemo } from 'react';
@@ -63,8 +63,7 @@ export const usePhotos = createInfiniteQuery<{photos: Photo[], nextPage?: number
       filters.is_hidden
     );
 
-    if (!res.ok) throw new Error(res.message);
-    const photos = (res.data || []).map(p => {
+    const photos = (res || []).map(p => {
       // Inject _time here so it's calculated ONLY ONCE per fetch
       // and won't be repeated in the select selector for thousands of items
       if (!(p as any)._time) {
@@ -93,9 +92,7 @@ export const usePhotos = createInfiniteQuery<{photos: Photo[], nextPage?: number
 export const useGroupPhotosResult = createInfiniteQuery<{photos: Photo[], total: number, hasMore: boolean}, { groupId: string | null; isAdminMode: boolean; pageSize: number }, any>({
   queryKey: (vars) => photoKeys.infinite(vars),
   queryFn: async ({ groupId, isAdminMode, pageSize }, pageParam) => {
-    const res = await loadPhotosByGroupIdPaginated(groupId!, pageParam, pageSize, isAdminMode);
-    if (!res.ok) throw new Error(res.message);
-    const data = res.data;
+    const data = await loadPhotosByGroupIdPaginated(groupId!, pageParam, pageSize, isAdminMode);
     return {
       photos: data.photos,
       total: data.total,

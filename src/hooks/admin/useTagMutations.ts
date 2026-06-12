@@ -5,6 +5,7 @@ import { defineMutation } from '@/lib/mutations/defineMutation';
 import { useAppMutation } from '@/lib/mutations/useAppMutation';
 
 const tagCreateConfig = defineMutation<Tag, string | Partial<Tag>>({
+  name: 'tagCreate',
   service: async (variables) => {
     const name = typeof variables === 'string' ? variables : (variables.name || '');
     const res = await addTagToDB(name);
@@ -17,6 +18,7 @@ const tagCreateConfig = defineMutation<Tag, string | Partial<Tag>>({
 export const useTagCreate = () => useAppMutation(tagCreateConfig);
 
 const tagEditConfig = defineMutation<boolean, { id: string; updates: Partial<Tag> }>({
+  name: 'tagEdit',
   service: async ({ id, updates }) => {
     const res = await updateTagInDB(id, updates);
     if (!res) throw new Error('标签更新失败');
@@ -28,6 +30,7 @@ const tagEditConfig = defineMutation<boolean, { id: string; updates: Partial<Tag
 export const useTagEdit = () => useAppMutation(tagEditConfig);
 
 const tagDeleteConfig = defineMutation<boolean, string>({
+  name: 'tagDelete',
   service: async (id: string) => {
     const res = await deleteTagFromDB(id);
     if (!res) throw new Error('标签删除失败');

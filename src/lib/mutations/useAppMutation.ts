@@ -1,12 +1,34 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { MutationConfig } from './types';
+import { logger } from '@/lib/logger';
+import { handleError } from '@/lib/error/ErrorFactory';
+
+// Client-side idempotency cache
+const ongoingRequests = new Map<string, Promise<any>>();
 
 export const useAppMutation = <TData, TVars, TQueryKey = any[]>(config: MutationConfig<TData, TVars, TQueryKey>) => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: config.service,
+    mutationFn: async (vars: TVars) => {
+      // Idempotency Key logic
+      const varsString = JSON.stringify(vars);
+      const idempotencyKey = `${config.name}:${varsString}`;
+      
+      if (ongoingRequests.has(idempotencyKey)) {
+        return ongoingRequests.get(idempotencyKey);
+      }
+      
+      const promise = config.service(vars);
+      ongoingRequests.set(idempotencyKey, promise);
+      
+      try {
+        return await promise;
+      } finally {
+        ongoingRequests.delete(idempotencyKey);
+      }
+    },
     onMutate: async (vars) => {
       if (!config.optimistic) return;
       
@@ -23,7 +45,13 @@ export const useAppMutation = <TData, TVars, TQueryKey = any[]>(config: Mutation
         : config.optimistic.update;
 
       queryKeys.forEach(key => {
-        previousData.set(key, queryClient.getQueryData(key as any));
+        // Optimistic Rollback Contract: use getQueryState(key)?.data
+        const state = queryClient.getQueryState(key as any);
+        if (!state) {
+          throw new Error(`Rollback anchor missing: query state for ${JSON.stringify(key)} is undefined`);
+        }
+        
+        previousData.set(key, state.data);
         queryClient.setQueryData(key as any, (old: any) => updateFn(old, vars));
       });
       
@@ -35,7 +63,10 @@ export const useAppMutation = <TData, TVars, TQueryKey = any[]>(config: Mutation
           queryClient.setQueryData(key, data);
         });
       }
-      if (config.errorMessage) toast.error(config.errorMessage);
+      
+      // Global error logging and UI feedback
+      logger.error(`[Mutation Failed] ${config.name}:`, err);
+      handleError(err, config.name);
     },
     onSettled: (data, err, vars) => {
       const keys = typeof config.invalidate === 'function' 

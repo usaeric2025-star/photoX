@@ -27,7 +27,7 @@ import { SyncSettings } from './SyncSettings';
 import { TagsManager } from './TagsManager';
 import { CategoriesManager } from './CategoriesManager';
 import { DiagnosticsDashboard } from '../admin/DiagnosticsDashboard';
-import { translations } from '@/lib/translations';
+import { translations } from '@/locales';
 
 import { usePhotoGallery } from '@/hooks/photo/usePhotoGallery';
 import { useSyncMutation, useTasks } from '@/hooks';

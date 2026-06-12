@@ -1,13 +1,13 @@
 import React from 'react';
 import { Photo, ProductGroup } from '@/types/photo';
 import { Tag } from '@/types/photo';
-import { getTranslatedCategoryName } from '@/lib/ui-helpers';
-import { translations } from '@/lib/translations';
+import { getTranslatedCategoryName } from '@/services/category/utils';
+import { translations, type LanguageCode } from '@/locales';
 import { useCategories, useManufacturers } from '@/hooks';
 import { useUIStore } from '@/store/useUIStore';
 import { Info, Layers } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getSafeText } from '@/lib/ai/safeText';
+import { getSafeText } from '@/services/ai/safeText';
 
 import { InfoPanelSkeleton } from './InfoPanelSkeleton';
 import { splitProductName } from '@/services/ai/utils';
@@ -82,22 +82,13 @@ export function PhotoInfoPanel({
     }
   }
 
-  const l = {
-    groupDetails: appLang === 'zh' ? '合组详情' : appLang === 'ms' ? 'Butiran Kumpulan' : 'Group Details',
-    photoDetails: appLang === 'zh' ? '照片资料' : appLang === 'ms' ? 'Butiran Foto' : 'Photo Details',
-    basicInfo: appLang === 'zh' ? '基本信息' : appLang === 'ms' ? 'Maklumat Asas' : 'Basic Info',
-    hidden: appLang === 'zh' ? '已隐藏' : appLang === 'ms' ? 'Sembunyi' : 'Hidden',
-    public: appLang === 'zh' ? '公开展示' : appLang === 'ms' ? 'Umum' : 'Public',
-    metadata: appLang === 'zh' ? '元数据' : appLang === 'ms' ? 'Metadata' : 'Metadata',
-    members: appLang === 'zh' ? ' 个成员' : appLang === 'ms' ? ' ahli' : ' members',
-    unknown: appLang === 'zh' ? '未知' : appLang === 'ms' ? 'Tidak diketahui' : 'Unknown',
-  };
+  const l = translations[appLang as LanguageCode || 'zh'];
   
   const actionTexts = {
-    aiAnalyze: appLang === 'zh' ? 'AI 分析' : appLang === 'ms' ? 'Analisis AI' : 'AI Analyze',
-    edit: appLang === 'zh' ? '编辑' : appLang === 'ms' ? 'Edit' : 'Edit',
-    delete: appLang === 'zh' ? '删除' : appLang === 'ms' ? 'Padam' : 'Delete',
-    close: appLang === 'zh' ? '关闭' : appLang === 'ms' ? 'Tutup' : 'Close',
+    aiAnalyze: l.aiAnalyze,
+    edit: l.edit,
+    delete: l.delete,
+    close: l.close,
   };
 
   // Description and Name splitting
@@ -114,9 +105,9 @@ export function PhotoInfoPanel({
   const hasMs = !!(data as Photo).description?.ms;
 
   return (
-    <div className={cn("flex flex-col h-full bg-white/95 backdrop-blur-md border-l border-slate-200 overflow-y-auto no-scrollbar select-text", className)}>
+    <div className={cn("flex flex-col h-full bg-white/95 backdrop-blur-md border-l border-slate-200 select-text", className)}>
       {/* Header with Actions */}
-      <div className={cn("p-4 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white/90 z-[var(--z-sticky)]", headerClassName)}>
+      <div className={cn("p-4 border-b border-slate-100 flex items-center justify-between bg-white/90", headerClassName)}>
         <h3 className="font-bold text-slate-900 flex items-center gap-2">
           {isGroup ? <Layers size={18} className="text-brand-navy" /> : <Info size={18} className="text-brand-navy" />}
           {isGroup ? l.groupDetails : l.photoDetails}
@@ -135,13 +126,14 @@ export function PhotoInfoPanel({
       </div>
 
       {/* Content */}
-      <div className="p-6 flex flex-col gap-8 pb-[100px] md:pb-6">
+      <div className="flex-1 overflow-y-auto no-scrollbar p-6 flex flex-col gap-8 pb-[100px] md:pb-12">
         {isGroup ? (
           <GroupInfoSection 
             data={data as ProductGroup}
             displayName={displayName}
             l={l}
             isAdmin={isAdmin}
+            appLang={appLang}
             displayDesc={displayDesc}
             rawDisplayName={rawDisplayName}
           />

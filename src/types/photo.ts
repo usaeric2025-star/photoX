@@ -157,10 +157,18 @@ export interface ProductFormData {
   uri?: string;
 }
 
+
 export interface PhotoAIResult {
   id: string;
   photo_id: string;
   raw_result?: string;
   parsed_data?: Record<string, unknown>;
   created_at?: string;
+}
+
+export function isValidPhoto(photo: unknown): photo is Photo {
+  const p = photo as any;
+  return (
+    !!p && typeof p.id === 'string'
+  );
 }
