@@ -1,11 +1,12 @@
+import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React from 'react';
-import { useSearch, useNavigate, useParams } from '@tanstack/react-router';
+import { useSearch } from '@tanstack/react-router';
 import { GallerySearchParams } from '@/types/router';
 
 export function useUrlFilters() {
   const search = useSearch({ from: '__root__' }) as GallerySearchParams;
-  const params = useParams({ strict: false }) as any;
-  const navigate = useNavigate();
+  const params = useRouterSafe().params;
+  const navigate = useRouterSafe().navigate;
 
   const filters = React.useMemo(() => ({
     categoryId: search.category ?? null,
@@ -18,8 +19,7 @@ export function useUrlFilters() {
     showGroupsCollapsed: search.showGroupsCollapsed !== 'false',
     is_hidden: search.hidden === 'true',
     onlyUngrouped: search.onlyUngrouped === 'true',
-    view: search.view || 'grid',
-  }), [
+    view: search.view || 'grid' }), [
     search.category, search.tag, search.manufacturer, search.q, search.sort, search.groupId,
     search.photoId, search.showGroupsCollapsed, search.hidden, search.onlyUngrouped, search.view,
     params.groupId

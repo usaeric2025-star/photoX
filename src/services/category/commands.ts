@@ -1,3 +1,4 @@
+import { api } from '@/lib/api';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { supabase } from '../../lib/supabase';
 import { Category } from '../../types';
@@ -14,7 +15,6 @@ const TABLE_NAME = 'categories';
  */
 export const clearCategoryFromPhotos = async (categoryId: string): Promise<AppResult<string[]>> => {
   return withErrorHandling(async () => {
-    const { api } = await import('@/lib/api');
     const res = await api.categories['clear-photos'].$post({
       json: { categoryId }
     });
@@ -47,7 +47,6 @@ const mapToDb = (updates: Partial<Category> & Record<string, unknown>): Record<s
 export const updateCategory = async (categoryId: string, updates: Partial<Category>): Promise<AppResult<void>> => {
     return withErrorHandling(async () => {
         const dbUpdates = mapToDb(updates);
-        const { api } = await import('@/lib/api');
         const res = await api.categories[':id'].$put({
           param: { id: categoryId },
           json: { updates: dbUpdates }
@@ -59,7 +58,6 @@ export const updateCategory = async (categoryId: string, updates: Partial<Catego
 export const createCategory = async (categoryData: Omit<Category, 'id'>): Promise<AppResult<Category>> => {
     return withErrorHandling(async () => {
         const dbUpdates = mapToDb(categoryData as any);
-        const { api } = await import('@/lib/api');
         const res = await api.categories.$post({
           json: { categoryData: dbUpdates }
         });
@@ -71,7 +69,6 @@ export const createCategory = async (categoryData: Omit<Category, 'id'>): Promis
 
 export const deleteCategory = async (categoryId: string): Promise<AppResult<void>> => {
     return withErrorHandling(async () => {
-        const { api } = await import('@/lib/api');
         const res = await api.categories[':id'].$delete({
           param: { id: categoryId }
         });

@@ -1,7 +1,7 @@
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ConfirmProvider } from './context/ConfirmContext';
 import { RouterProvider } from '@tanstack/react-router';
-import { router } from './router';
+import { router } from './router/index';
 import { Analytics } from '@vercel/analytics/react';
 import { useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '@/hooks/core/auth/useAuth';

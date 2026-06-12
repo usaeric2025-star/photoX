@@ -1,40 +1,21 @@
 import React from 'react';
 import { Photo, ProductGroup } from '@/types/photo';
-import { Category, Tag } from '@/types/photo';
+import { Tag } from '@/types/photo';
 import { getTranslatedCategoryName } from '@/lib/ui-helpers';
 import { translations } from '@/lib/translations';
 import { useCategories, useManufacturers } from '@/hooks';
 import { useUIStore } from '@/store/useUIStore';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Info, 
-  Tag as TagIcon, 
-  Grid, 
-  Maximize2, 
-  Briefcase,
-  Layers,
-  Sparkles,
-  Pencil,
-  Trash2,
-  X,
-  Heart
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Info, Layers } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useLongPress } from '@/hooks/core/useLongPress';
-import { createPortal } from "react-dom";
 import { getSafeText } from '@/lib/ai/safeText';
 
 import { InfoPanelSkeleton } from './InfoPanelSkeleton';
 import { splitProductName } from '@/services/ai/utils';
-import { DimensionsSection } from './info/DimensionsSection';
-import { MetadataSection } from './info/MetadataSection';
-import { CategoryTagsSection } from './info/CategoryTagsSection';
-import { CopyableId } from '@/components/ui/CopyableId';
-
+import { SupportedLanguage } from './info/LanguageTabs';
 import { DescriptionSection } from './info/DescriptionSection';
 import { ActionButtons } from './info/ActionButtons';
-import { SupportedLanguage } from './info/LanguageTabs';
+import { GroupInfoSection } from './GroupInfoSection';
+import { SinglePhotoInfoSection } from './SinglePhotoInfoSection';
 
 interface PhotoInfoPanelProps {
   mode: 'single' | 'group';
@@ -78,7 +59,6 @@ export function PhotoInfoPanel({
 
   const { data: fetchedCategories = [] } = useCategories();
   const { data: fetchedManufacturers = [] } = useManufacturers();
-  const update = useUIStore((s) => s.update);
   const isAdmin = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
 
   const isGroup = mode === 'group' && 'member_count' in data;
@@ -109,24 +89,8 @@ export function PhotoInfoPanel({
     hidden: appLang === 'zh' ? '已隐藏' : appLang === 'ms' ? 'Sembunyi' : 'Hidden',
     public: appLang === 'zh' ? '公开展示' : appLang === 'ms' ? 'Umum' : 'Public',
     metadata: appLang === 'zh' ? '元数据' : appLang === 'ms' ? 'Metadata' : 'Metadata',
-    systemId: appLang === 'zh' ? '系统ID' : appLang === 'ms' ? 'ID Sistem' : 'System ID',
-    itemCode: appLang === 'zh' ? '货品编号' : appLang === 'ms' ? 'Kod Item' : 'Item Code',
-    modelNumber: appLang === 'zh' ? '型号' : appLang === 'ms' ? 'Nombor Model' : 'Model Number',
-    priceOrCode: appLang === 'zh' ? '价格 / 手动编号' : appLang === 'ms' ? 'Harga / Kod Manual' : 'Price / Manual Code',
-    imgSize: appLang === 'zh' ? '图片尺寸' : appLang === 'ms' ? 'Saiz Imej' : 'Img Size',
-    manufacturer: appLang === 'zh' ? '制造商' : appLang === 'ms' ? 'Pengeluar' : 'Manufacturer',
-    dimensions: appLang === 'zh' ? '尺寸' : appLang === 'ms' ? 'Dimensi' : 'Dimensions',
-    standard: appLang === 'zh' ? '标准' : appLang === 'ms' ? 'Standard' : 'Standard',
-    classification: appLang === 'zh' ? '分类信息' : appLang === 'ms' ? 'Klasifikasi' : 'Classification',
-    description: appLang === 'zh' ? '描述' : appLang === 'ms' ? 'Penerangan' : 'Description',
-    aiEstimated: appLang === 'zh' ? 'AI 预估' : appLang === 'ms' ? 'Anggaran AI' : 'AI Estimated',
-    aiGenerated: appLang === 'zh' ? 'AI 生成' : appLang === 'ms' ? 'Janaan AI' : 'AI Generated',
-    unknown: appLang === 'zh' ? '未知' : appLang === 'ms' ? 'Tidak diketahui' : 'Unknown',
     members: appLang === 'zh' ? ' 个成员' : appLang === 'ms' ? ' ahli' : ' members',
-    close: appLang === 'zh' ? '关闭' : appLang === 'ms' ? 'Tutup' : 'Close',
-    edit: appLang === 'zh' ? '编辑' : appLang === 'ms' ? 'Edit' : 'Edit',
-    delete: appLang === 'zh' ? '删除' : appLang === 'ms' ? 'Padam' : 'Delete',
-    aiAnalyze: appLang === 'zh' ? 'AI 分析' : appLang === 'ms' ? 'Analisis AI' : 'AI Analyze',
+    unknown: appLang === 'zh' ? '未知' : appLang === 'ms' ? 'Tidak diketahui' : 'Unknown',
   };
 
   // Description and Name splitting
@@ -141,7 +105,6 @@ export function PhotoInfoPanel({
   const hasZh = !!(data as Photo).description?.zh;
   const hasEn = !!(data as Photo).description?.en;
   const hasMs = !!(data as Photo).description?.ms;
-  const showLanguageToggle = [hasZh, hasEn, hasMs].filter(Boolean).length > 1;
 
   return (
     <div className={cn("flex flex-col h-full bg-white/95 backdrop-blur-md border-l border-slate-200 overflow-y-auto no-scrollbar select-text", className)}>
@@ -167,86 +130,34 @@ export function PhotoInfoPanel({
       {/* Content */}
       <div className="p-6 flex flex-col gap-8 pb-[100px] md:pb-6">
         {isGroup ? (
-          /* Group Mode View */
-          <>
-            <section className="relative">
-              <div className="flex justify-between items-start mb-2">
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">{l.basicInfo}</h4>
-                <CopyableId 
-                  className="bg-transparent border-none text-brand-navy/60 font-semibold p-0" 
-                  id={isAdmin ? data.id : data.id.slice(-6).toUpperCase()} 
-                  label={isAdmin ? "GROUP ID" : "GROUP CODE"} 
-                />
-              </div>
-              <h2 className="text-xl font-bold text-slate-900 mb-2">{displayName}</h2>
-              <div className="flex flex-wrap gap-2 mb-4">
-                <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 px-2.5 py-1">
-                  <Grid size={12} className="mr-1.5 opacity-60" />
-                  {data.member_count}{l.members}
-                </Badge>
-              </div>
-              {displayDesc && (
-                <p className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100 italic">
-                  "{displayDesc}"
-                </p>
-              )}
-            </section>
-          </>
+          <GroupInfoSection 
+            data={data as ProductGroup}
+            displayName={displayName}
+            l={l}
+            isAdmin={isAdmin}
+            displayDesc={displayDesc}
+            rawDisplayName={rawDisplayName}
+          />
         ) : (
-          /* Single Photo Mode View */
-          <>
-            <section className="relative">
-              <div className="flex justify-between items-start mb-2">
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">{l.basicInfo}</h4>
-                {/* Status dot */}
-                <div 
-                  title={(data as Photo).is_hidden ? l.hidden : l.public} 
-                  className={cn("w-2.5 h-2.5 rounded-full shadow-sm ring-2 ring-white", (data as Photo).is_hidden ? "bg-red-500" : "bg-green-500")} 
-                />
-              </div>
-              <h2 className="text-xl font-bold text-slate-900 mb-1">{displayName || l.unknown}</h2>
-              {displayNameMainEn && displayNameMainEn !== displayName && (
-                <h3 className="text-sm font-medium text-slate-500 mb-3">{displayNameMainEn}</h3>
-              )}
-            </section>
-
-            {/* Product Metadata */}
-            <MetadataSection 
-              photo={data as Photo} 
-              manufacturerName={displayManufacturerName} 
-              texts={l as any} 
-            />
-
-            {/* Furniture Dimensions */}
-            <DimensionsSection 
-              dimensions={(data as Photo).dimensions || undefined} 
-              appLang={appLang}
-              texts={l as any}
-              otherItems={otherNameItems}
-            />
-
-
-            {/* Description (multilingual) */}
-            <DescriptionSection 
-              photo={data as Photo}
-              hasZh={hasZh}
-              hasEn={hasEn}
-              hasMs={hasMs}
-              descLang={descLang}
-              setDescLang={setDescLang}
-              displayDesc={displayDesc}
-              texts={l as any}
-            />
-
-             {/* Classification */}
-            <CategoryTagsSection 
-              categoryName={displayCategoryName} 
-              tags={displayTags} 
-              isAdmin={isAdmin} 
-              appLang={appLang} 
-              texts={l as any} 
-            />
-          </>
+          <SinglePhotoInfoSection 
+            data={data as Photo}
+            appLang={appLang}
+            descLang={descLang}
+            setDescLang={setDescLang}
+            l={l}
+            displayDesc={displayDesc}
+            rawDisplayName={rawDisplayName}
+            displayName={displayName}
+            displayNameMainEn={displayNameMainEn}
+            otherNameItems={otherNameItems}
+            displayManufacturerName={displayManufacturerName}
+            displayCategoryName={displayCategoryName}
+            displayTags={displayTags}
+            isAdmin={isAdmin}
+            hasZh={hasZh}
+            hasEn={hasEn}
+            hasMs={hasMs}
+          />
         )}
       </div>
     </div>

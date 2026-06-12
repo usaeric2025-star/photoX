@@ -103,8 +103,9 @@ export function BasicInfoTab({ form }: Props) {
                 <input 
                   type="text" 
                   placeholder="中文名称..." 
-                  value={formState.name?.zh || ""} 
-                  onChange={e => setValue('name', { ...formState.name, zh: e.target.value.toUpperCase() })} 
+                  {...form.register('name.zh', {
+                    setValueAs: (value) => value?.toUpperCase()
+                  })}
                   className="w-full bg-white border border-slate-200 px-2.5 py-1.5 rounded-lg font-bold outline-none focus:border-blue-500 shadow-sm min-w-0" 
                 />
 
@@ -113,8 +114,9 @@ export function BasicInfoTab({ form }: Props) {
                 <input 
                   type="text" 
                   placeholder="English name..." 
-                  value={formState.name?.en || ""} 
-                  onChange={e => setValue('name', { ...formState.name, en: e.target.value.toUpperCase() })} 
+                  {...form.register('name.en', {
+                    setValueAs: (value) => value?.toUpperCase()
+                  })}
                   className="w-full bg-white border border-slate-200 px-2.5 py-1.5 rounded-lg font-bold outline-none focus:border-blue-500 shadow-sm min-w-0" 
                 />
 
@@ -123,8 +125,9 @@ export function BasicInfoTab({ form }: Props) {
                 <input 
                   type="text" 
                   placeholder="Nama produk..." 
-                  value={formState.name?.ms || ""} 
-                  onChange={e => setValue('name', { ...formState.name, ms: e.target.value.toUpperCase() })} 
+                  {...form.register('name.ms', {
+                    setValueAs: (value) => value?.toUpperCase()
+                  })}
                   className="w-full bg-white border border-slate-200 px-2.5 py-1.5 rounded-lg font-bold outline-none focus:border-blue-500 shadow-sm min-w-0" 
                 />
               </div>
@@ -148,8 +151,7 @@ export function BasicInfoTab({ form }: Props) {
           <input 
             type="text" 
             placeholder="編號..." 
-            value={formState.manual_code || ''} 
-            onChange={e => setValue('manual_code', e.target.value)} 
+            {...form.register('manual_code')}
             className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-sm font-bold outline-none focus:border-blue-500 shadow-sm" 
           />
         </div>
@@ -159,8 +161,9 @@ export function BasicInfoTab({ form }: Props) {
             type="text" 
             inputMode="numeric"
             placeholder="仅限数字..." 
-            value={formState.model_number || ''} 
-            onChange={e => setValue('model_number', e.target.value.replace(/\D/g, ''))} 
+            {...form.register('model_number', {
+              setValueAs: (value) => value?.replace(/\D/g, '')
+            })}
             className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-sm font-bold outline-none focus:border-blue-500 shadow-sm" 
           />
         </div>
@@ -170,8 +173,9 @@ export function BasicInfoTab({ form }: Props) {
             type="text" 
             inputMode="numeric"
             placeholder="0" 
-            value={formState.price || ''} 
-            onChange={e => setValue('price', e.target.value.replace(/\D/g, ''))} 
+            {...form.register('price', {
+              setValueAs: (value) => value?.replace(/\D/g, '')
+            })}
             className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-sm font-bold text-blue-600 outline-none focus:border-blue-500 shadow-sm" 
           />
         </div>

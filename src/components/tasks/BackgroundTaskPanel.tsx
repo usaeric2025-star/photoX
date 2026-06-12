@@ -1,17 +1,17 @@
+import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Loader2, X, ChevronUp, ChevronDown, CheckCircle2, AlertCircle, Terminal, HardDrive } from 'lucide-react';
 import { useTasks } from '@/hooks/core/useTasks';
 import { useGlobalTasks } from '@/hooks/admin/useGlobalTasks';
-import { useLocation, useNavigate } from '@tanstack/react-router';
 import { useUIStore } from '@/store/useUIStore';
 
 export function BackgroundTaskPanel() {
   const { removeTask, clearCompleted, isAvoidingSelection, cancelTask } = useTasks();
   const { tasks: allTasks } = useGlobalTasks();
   const [isExpanded, setIsExpanded] = useState(false);
-  const location = useLocation();
-  const navigate = useNavigate();
+  const location = useRouterSafe().location;
+  const navigate = useRouterSafe().navigate;
   const updateStore = useUIStore(s => s.update);
   
   const activeTasks = allTasks.filter(t => t.status === 'processing' || t.status === 'running' as any);

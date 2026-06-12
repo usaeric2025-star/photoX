@@ -1,3 +1,4 @@
+import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import React, { useRef, useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -5,7 +6,7 @@ import { useLongPress } from '@/hooks/core/useLongPress';
 import { supabase } from '@/lib/supabase';
 import { photoKeys } from '@/lib/queryKeys';
 import { getTranslatedCategoryName } from '@/lib/ui-helpers';
-import { useSearch, useNavigate } from '@tanstack/react-router';
+import { useSearch } from '@tanstack/react-router';
 
 import { useTranslation, useIsManagement, usePermission, useCategories } from '@/hooks';
 import { PinButton } from './PinButton';
@@ -78,7 +79,7 @@ export const PhotoCard = ({
   const toggleSelected = useUIStore((s) => s.toggleSelected);
   const update = useUIStore((s) => s.update);
   const [columns] = useColumns();
-  const navigate = useNavigate();
+  const navigate = useRouterSafe().navigate;
   
   const resolvedImgVariant = imgVariant || (columns <= 3 ? 'md' : 'sm');
   

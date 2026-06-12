@@ -49,7 +49,12 @@ export function MetadataSection({ photo, manufacturerName, texts }: MetadataSect
             <div>
               <span className="text-[9px] uppercase font-bold text-slate-400 block mb-1 tracking-wider">{texts.priceOrCode}</span>
               <span className="text-base font-semibold tracking-wide">
-                {[photo.price ? `RM ${photo.price}` : '', photo.manual_code].filter(Boolean).join(' • ') || '-'}
+                {[
+                  photo.price 
+                    ? (String(photo.price).toUpperCase().includes('RM') || String(photo.price).includes('$') ? photo.price : `RM ${photo.price}`) 
+                    : '', 
+                  photo.manual_code
+                ].filter(Boolean).join(' • ') || '-'}
               </span>
             </div>
             {photo.width ? (

@@ -1,7 +1,7 @@
+import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React from 'react';
 import { LayoutDashboard, Camera, Menu, User as UserIcon, LogOut, Settings, LayoutGrid, MonitorPlay, CheckSquare, Sparkles } from 'lucide-react';
 import { useAuth, useUIStore, useSettings, usePhotoCount, useAdminBatchActions, usePermission } from '@/hooks';
-import { useNavigate } from '@tanstack/react-router';
 import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
 import {
   DropdownMenu,
@@ -9,8 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { logoutPublic } from "@/lib/publicAuth";
 import { translations } from "@/lib/translations";
 
@@ -22,7 +21,7 @@ export function AdminHeader({}: AdminHeaderProps) {
   const { user } = useAuth();
   const { settings } = useSettings();
   const { role } = usePermission();
-  const navigate = useNavigate();
+  const navigate = useRouterSafe().navigate;
 
   const lang = useUIStore(s => s.appLang);
   const isMultiSelect = useUIStore(s => s.isMultiSelect);

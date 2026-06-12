@@ -7,6 +7,7 @@ import { tagKeys, categoryKeys, manufacturerKeys, photoKeys, groupKeys } from '@
 import { useQueryClient } from '@tanstack/react-query';
 import { useInvalidatePhotos } from '@/hooks/photo';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { api } from '@/lib/api';
 
 export const useTagCreate = createMutationHook({
   entity: 'Tag', 
@@ -147,7 +148,6 @@ export const useRepairMutation = createMutationHook({
   entity: 'Admin',
   action: 'Repair',
   mutationFn: async (issueId: string) => {
-    const { api } = await import('@/lib/api');
     const res = await api.admin.repair.$post({ json: { issueId } });
     if (!res.ok) {
         const errorData = await res.json() as any;

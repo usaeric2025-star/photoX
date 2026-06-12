@@ -1,3 +1,4 @@
+import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Photo } from "../../types";
@@ -13,7 +14,6 @@ import { GroupPhotoPicker } from "./GroupPhotoPicker";
 import { useAdminMode, useGroupMutations, useUrlFilters, useAIBatchAnalysis, useCopyToClipboard } from "@/hooks";
 import { useAdminActions } from "@/hooks/admin/useAdminActions";
 import { useUIStore, useShallow } from "@/store/useUIStore";
-import { useNavigate } from "@tanstack/react-router";
 import { translations } from "../../lib/translations";
 import { Plus, Settings2, MoreVertical, Pencil, Sparkles, FolderMinus } from "lucide-react";
 import { CollapsibleDescription } from "./CollapsibleDescription";
@@ -23,12 +23,11 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+  DropdownMenuTrigger } from "../ui/dropdown-menu";
 
 export function GroupAdminShell() {
   const isAdminMode = useAdminMode();
-  const navigate = useNavigate();
+  const navigate = useRouterSafe().navigate;
   const { copy } = useCopyToClipboard({ successMessage: "合组ID已复制" });
   const { filters, setGroupId, setPhotoId } = useUrlFilters();
   const appLang = useUIStore((s) => s.appLang);
@@ -50,8 +49,7 @@ export function GroupAdminShell() {
   const handleAddToGroup = async (ids: string[], groupId: string) => {
     await (adminActions.batchUpdate.mutateAsync as any)({
       ids,
-      updates: { group_id: groupId },
-    });
+      updates: { group_id: groupId } });
   };
 
   const [isBulkRemoveOpen, bulkRemoveDialog] = useDisclosure(false);
@@ -93,8 +91,7 @@ export function GroupAdminShell() {
     draggedPhotoId: useUIStore.getState().draggedPhotoId,
     handleReorder,
     isAdminMode,
-    isMultiSelect,
-  });
+    isMultiSelect });
   
   const draggedPhotoId = useUIStore(s => s.draggedPhotoId);
   
@@ -103,8 +100,7 @@ export function GroupAdminShell() {
       draggedPhotoId,
       handleReorder,
       isAdminMode,
-      isMultiSelect,
-    };
+      isMultiSelect };
   }, [draggedPhotoId, handleReorder, isAdminMode, isMultiSelect]);
 
   const stableGetPhotoProps = (photo: Photo) => ({
@@ -119,8 +115,7 @@ export function GroupAdminShell() {
         dragState.current.handleReorder(currentDraggedId, photo.id);
         update({ draggedPhotoId: null });
       }
-    },
-  });
+    } });
 
   const handlePhotoClick = (photo: Photo) => {
     if (isMultiSelect) {
@@ -128,8 +123,7 @@ export function GroupAdminShell() {
       update({
         selectedIds: selectedIds.includes(photo.id)
           ? selectedIds.filter((id) => id !== photo.id)
-          : [...selectedIds, photo.id],
-      });
+          : [...selectedIds, photo.id] });
     } else {
       setPhotoId(photo.id);
     }

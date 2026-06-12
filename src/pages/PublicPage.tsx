@@ -1,6 +1,7 @@
+import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useNavigate, useSearch } from '@tanstack/react-router';
+import { useSearch } from '@tanstack/react-router';
 import { Skeleton } from '../components/ui/Skeleton';
 import { cleanPhotos, filterPhotos, groupPhotos } from '../lib/filters';
 import { 
@@ -47,7 +48,7 @@ const AuthErrorDisplay = ({ message }: { message: string }) => (
 );
 
 export default function PublicPage() {
-  const navigate = useNavigate();
+  const navigate = useRouterSafe().navigate;
   const search = useSearch({ strict: false });
   const authError = (search as any).authError;
   const { filters } = useUrlFilters();
@@ -58,8 +59,7 @@ export default function PublicPage() {
     tag_id: filters.tagId,
     searchQuery: filters.searchQuery,
     isAdminMode: false,
-    source: 'server',
-  });
+    source: 'server' });
 
   const { tasks } = useTasks();
   const { mutateAsync: syncMut } = useSyncMutation();

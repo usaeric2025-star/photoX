@@ -21,7 +21,7 @@ export { useCopyToClipboard } from './core/useCopyToClipboard';
 export * from './admin';
 export * from './photo';
 export * from './groups';
-export { useProcessedPhotos } from './useProcessedPhotos';
+export { useProcessedPhotos } from './photo/useProcessedPhotos';
 
 // Utils
 export { useUIStore, useStore, useShallow, useColumns } from '../store/useUIStore';

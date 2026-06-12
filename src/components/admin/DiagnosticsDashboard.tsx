@@ -1,5 +1,5 @@
+import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React, { useState } from 'react';
-import { useLocation, useNavigate } from '@tanstack/react-router';
 import { 
   RefreshCw, ShieldCheck
 } from 'lucide-react';
@@ -20,8 +20,8 @@ import { IssueList } from './Diagnostics/IssueList';
 import { MaintenanceCenter } from './Diagnostics/MaintenanceCenter';
 
 export function DiagnosticsDashboard() {
-  const location = useLocation();
-  const navigate = useNavigate();
+  const location = useRouterSafe().location;
+  const navigate = useRouterSafe().navigate;
   
   const activeTab = (() => {
     const path = location.pathname;

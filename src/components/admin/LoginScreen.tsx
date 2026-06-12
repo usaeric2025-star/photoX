@@ -1,9 +1,10 @@
+import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React, { useState } from 'react';
 import { LogIn, Image as ImageIcon, Sparkles, Cloud, Layers, RefreshCcw, Lock, X } from 'lucide-react';
 import { showToast } from '@/lib/ui/toast';
 import { useSettings } from '../../hooks';
 import { useUIStore } from '@/store/useUIStore';
-import { Link, useNavigate } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 import { ROUTES } from '@/config/constants';
 import { translations } from '@/lib/translations';
 
@@ -15,7 +16,7 @@ interface LoginScreenProps {
 }
 
 export function LoginScreen({ loginWithGoogle, isLoading }: LoginScreenProps) {
-  const navigate = useNavigate();
+  const navigate = useRouterSafe().navigate;
   const { settings } = useSettings();
   const appLang = useUIStore(s => s.appLang);
   const t = translations[appLang as keyof typeof translations] || translations.en;
@@ -25,8 +26,7 @@ export function LoginScreen({ loginWithGoogle, isLoading }: LoginScreenProps) {
   const [passError, setPassError] = useState(false);
   const [, setPasscode] = useLocalStorage({
     key: 'ais_mock_auth_passcode',
-    defaultValue: '',
-  });
+    defaultValue: '' });
 
   const handlePasscodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();

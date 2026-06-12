@@ -1,3 +1,4 @@
+import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React, { useRef } from 'react';
 import { motion, LayoutGroup } from 'motion/react';
 import { Photo } from '@/types';
@@ -16,7 +17,6 @@ import {
 import { useUIStore } from '@/store/useUIStore';
 import { UploadButton } from '@/components/shared/UploadButton';
 import { SelectionToolbar } from '@/components/shared/SelectionToolbar';
-import { useNavigate } from '@tanstack/react-router';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useAdminPhotos } from '@/hooks/admin/useAdminPhotos';
 import { useAdminSelectionActions } from '@/hooks/admin/useAdminSelectionActions';
@@ -26,7 +26,7 @@ export function AdminGridContainer() {
   const isManagement = window.location.pathname.startsWith('/admin');
   useScrollRestoration('admin_gallery_scroll');
   
-  const navigate = useNavigate();
+  const navigate = useRouterSafe().navigate;
   const { filters: urlFilters, setShowGroupsCollapsed, setSearchQuery, setSortOrder } = useUrlFilters();
   const showGroupsCollapsed = urlFilters.showGroupsCollapsed !== false;
   const hasSearchQuery = !!urlFilters.searchQuery?.trim();

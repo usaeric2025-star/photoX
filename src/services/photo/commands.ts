@@ -73,7 +73,6 @@ export async function updatePhoto(id: string, initialUpdates: Partial<Photo>): P
     const dbUpdates = mapToDb(updates);
 
     // 3. Update Database via explicit photos route
-    const { api } = await import('@/lib/api');
     const res = await api.photos.update.$post({
       json: { id, updates: dbUpdates }
     });
@@ -98,7 +97,6 @@ export const deletePhoto = async (photo: Photo): Promise<AppResult<{ dissolvedGr
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw ErrorFactory.wrap(new Error('Session required'), 'commands');
 
-    const { api } = await import('@/lib/api');
     const res = await api.photos.delete.$post({
       json: { id: photo.id, userId: session.user.id }
     });

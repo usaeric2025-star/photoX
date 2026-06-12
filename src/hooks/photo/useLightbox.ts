@@ -1,10 +1,10 @@
+import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import { useUrlFilters } from "./useUrlFilters";
 import { usePhotoDetail } from "./usePhotoDetail";
 import { useGroupPhotos, usePhotos } from "./usePhotos";
 import { useGroupDetail } from "../groups/useGroupDetail";
 import { useQuery } from '@tanstack/react-query';
 import { getPhotoCount } from "@/services/photo";
-import { useNavigate, useLocation } from "@tanstack/react-router";
 import { Photo } from "@/types";
 import { PAGINATION } from "@/constants/config";
 import { PHOTO_QUERY_CONFIG } from "@/lib/photoQueryConfig";
@@ -16,8 +16,8 @@ import { useEffect } from "react";
  * Redesigned in v2.15 to follow URL-only truth and unified mode logic.
  */
 export const useLightbox = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate = useRouterSafe().navigate;
+  const location = useRouterSafe().location;
   
   const { filters, setPhotoId, setGroupId } = useUrlFilters();
   const { photoId, groupId } = filters;
@@ -47,8 +47,7 @@ export const useLightbox = () => {
       if (!res.ok) throw new Error(res.message);
       return res.data;
     },
-    enabled: !groupId,
-  });
+    enabled: !groupId });
   
   const totalCount = countResult ?? 0;
   

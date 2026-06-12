@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
-import { processPhotos as processPhotosSync } from '../lib/filters';
-import type { Photo, Category, Tag } from '../types';
-import { logger } from '../lib/logger';
+import { processPhotos as processPhotosSync } from '@/lib/filters';
+import type { Photo, Category, Tag } from '@/types/photo';
+import { logger } from '@/lib/logger';
 
 export interface PhotoProcessResult {
   displayPhotos: Photo[];

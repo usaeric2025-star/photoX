@@ -1,3 +1,4 @@
+import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React, { useEffect } from 'react';
 import { VirtualPhotoGrid } from '@/components/photo/VirtualPhotoGrid';
 import { PublicFilters } from '@/components/ui/PublicFilters';
@@ -12,7 +13,6 @@ import { PublicFloatingActions } from './PublicFloatingActions';
 import { WhatsAppChoiceDialog } from '../WhatsAppChoiceDialog';
 import { translations } from '@/lib/translations';
 import { Photo } from '@/types';
-import { useNavigate } from '@tanstack/react-router';
 
 interface PublicGridContainerProps {
   onScrollToTop: () => void;
@@ -27,7 +27,7 @@ export function PublicGridContainer({
 }: PublicGridContainerProps) {
   const { settings } = useSettings(); 
   
-  const navigate = useNavigate();
+  const navigate = useRouterSafe().navigate;
   const { filters: urlFilters, setGroupId, setPhotoId, setSortOrder, setShowGroupsCollapsed, setSearchQuery } = useUrlFilters();
 
   const { 

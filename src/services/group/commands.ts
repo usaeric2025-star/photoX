@@ -9,6 +9,7 @@ import { ProductGroup } from '../../types';
 import { createGroupValidator } from '../../lib/validators/factory';
 import { cleanTranslationPrefixes } from '@/lib/ai/safeText';
 import { ungroupPhotos, syncGroupMemberCount } from '@/services/photo/groupUtils';
+import { api } from '@/lib/api';
 
 const TABLE_NAME = 'groups';
 
@@ -70,7 +71,6 @@ export async function createGroup(data: ProductGroup): Promise<AppResult<Product
     const userId = await getCurrentUserId();
     const dbData = mapToDb(data as any, userId);
     
-    const { api } = await import('@/lib/api');
     const res = await api.groups.$post({
         json: { groupData: dbData }
     });
@@ -89,7 +89,6 @@ export async function updateGroup(id: string, updates: Partial<ProductGroup>): P
     const userId = await getCurrentUserId();
     const dbUpdates = mapToDb(updates, userId);
     
-    const { api } = await import('@/lib/api');
     const res = await api.groups[':id'].$put({
         param: { id },
         json: { updates: dbUpdates }
@@ -104,7 +103,6 @@ export async function upsertGroup(group: Partial<ProductGroup> & { id: string })
   return withErrorHandling(async () => {
     const userId = await getCurrentUserId();
     const dbUpdates = mapToDb(group, userId);
-    const { api } = await import('@/lib/api');
     const res = await api.groups.upsert.$post({
         json: dbUpdates
     });
@@ -118,7 +116,6 @@ export async function deleteGroup(id: string): Promise<AppResult<void>> {
     const ungroupRes = await ungroupPhotos(id);
     if (!ungroupRes.ok) return ungroupRes;
 
-    const { api } = await import('@/lib/api');
     const res = await api.groups[':id'].$delete({
         param: { id }
     });
@@ -187,7 +184,6 @@ export const groupPhotos = async (
       updated_at: new Date().toISOString()
     };
 
-    const { api } = await import('@/lib/api');
     const groupPhotosRes = await api.groups['group-photos'].$post({
       json: {
         targetGroupId,
@@ -210,7 +206,6 @@ export const groupPhotos = async (
 
 export const movePhotosToGroup = async (photoIds: string[], targetGroupId: string | null): Promise<AppResult<void>> => {
   return withErrorHandling(async () => {
-    const { api } = await import('@/lib/api');
     const res = await api.groups['move-photos'].$post({
         json: { photoIds, targetGroupId }
     });
@@ -222,7 +217,6 @@ export const movePhotosToGroup = async (photoIds: string[], targetGroupId: strin
 export const setPhotoAsGroupCover = async (photoId: string | null, groupId: string): Promise<AppResult<void>> => {
   return withErrorHandling(async () => {
     if (!groupId) throw ErrorFactory.wrap(new Error('GroupId is required'), 'commands');
-    const { api } = await import('@/lib/api');
     const res = await api.groups['set-cover'].$post({
         json: { photoId, groupId }
     });

@@ -8,50 +8,39 @@ import { safeArray } from "../../../lib/utils";
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { showToast } from '@/lib/ui/toast';
 
-interface PhotoTagSelectorProps {
-  name: string;
+interface BasePhotoTagSelectorProps {
+  selectedTagIds: string[];
+  onChange: (ids: string[]) => void;
   addTag: (name: string) => Promise<any>;
   updateTag: (id: string, name: string) => Promise<any>;
   deleteTag: (id: string) => Promise<any>;
   tags: Tag[];
-  control?: any;
 }
 
-export function PhotoTagSelector({
-  name,
+function BasePhotoTagSelector({
+  selectedTagIds,
+  onChange,
   addTag,
   updateTag,
   deleteTag,
   tags,
-  control: propControl,
-}: PhotoTagSelectorProps) {
-  const context = useFormContext();
-  const control = propControl || context?.control;
-
-  const { field } = useController({
-    name,
-    control,
-    defaultValue: []
-  });
-
-  const selectedTagIds = field.value || [];
-  
+}: BasePhotoTagSelectorProps) {
   const [isAddOpen, addDialog] = useDisclosure(false);
   const [isEditOpen, editDialog] = useDisclosure(false);
   const [editingTag, setEditingTag] = useState<Tag | null>(null);
 
   const cleanSelectedIds = Array.from(
-      new Set(
-        safeArray(selectedTagIds)
-          .map((item) => {
-            if (typeof item === 'object' && item !== null) {
-              return String((item as any).id || '').trim();
-            }
-            return String(item || '').trim();
-          })
-          .filter(Boolean),
-      ),
-    );
+    new Set(
+      safeArray(selectedTagIds)
+        .map((item) => {
+          if (typeof item === 'object' && item !== null) {
+            return String((item as any).id || '').trim();
+          }
+          return String(item || '').trim();
+        })
+        .filter(Boolean),
+    ),
+  );
 
   const sortedTags = React.useMemo(() => {
     return [...tags].sort((a, b) => {
@@ -68,15 +57,15 @@ export function PhotoTagSelector({
   const handleToggleTag = React.useCallback((tag: Tag) => {
     const strId = String(tag.id);
     if (cleanSelectedIds.includes(strId)) {
-      field.onChange(cleanSelectedIds.filter((id) => id !== strId));
+      onChange(cleanSelectedIds.filter((id) => id !== strId));
     } else {
       if (cleanSelectedIds.length >= 3) {
         showToast.warning("最多只能选择 3 个标签 / Maximum of 3 tags allowed");
         return;
       }
-      field.onChange([...cleanSelectedIds, strId]);
+      onChange([...cleanSelectedIds, strId]);
     }
-  }, [cleanSelectedIds, field]);
+  }, [cleanSelectedIds, onChange]);
 
   const onQuickAdd = React.useCallback(() => addDialog.open(), [addDialog]);
   const onRenameTagRequest = React.useCallback((tag: Tag) => {
@@ -109,16 +98,14 @@ export function PhotoTagSelector({
             (t) => t.name.toUpperCase() === trimmed.toUpperCase(),
           );
           if (existing) {
-              field.onChange([
-                ...new Set([...cleanSelectedIds, String(existing.id)]),
-              ]);
+            onChange([...new Set([...cleanSelectedIds, String(existing.id)])]);
             return;
           }
 
           try {
             const saved = await addTag(trimmed);
             if (saved) {
-              field.onChange([...new Set([...cleanSelectedIds, String(saved)])]);
+              onChange([...new Set([...cleanSelectedIds, String(saved)])]);
             }
           } catch (err: unknown) {
             ErrorFactory.handle(err, "新增标签失败");
@@ -144,5 +131,62 @@ export function PhotoTagSelector({
         />
       )}
     </>
+  );
+}
+
+interface PhotoTagSelectorProps {
+  name: string;
+  addTag: (name: string) => Promise<any>;
+  updateTag: (id: string, name: string) => Promise<any>;
+  deleteTag: (id: string) => Promise<any>;
+  tags: Tag[];
+  control?: any;
+  value?: any[];
+  onChange?: (val: any[]) => void;
+}
+
+export function PhotoTagSelector(props: PhotoTagSelectorProps) {
+  const context = useFormContext();
+  const control = props.control || context?.control;
+
+  if (props.name && control) {
+    return <ControlledPhotoTagSelector {...props} control={control} />;
+  }
+
+  return (
+    <BasePhotoTagSelector
+      selectedTagIds={props.value || []}
+      onChange={props.onChange || (() => {})}
+      addTag={props.addTag}
+      updateTag={props.updateTag}
+      deleteTag={props.deleteTag}
+      tags={props.tags}
+    />
+  );
+}
+
+function ControlledPhotoTagSelector({
+  name,
+  addTag,
+  updateTag,
+  deleteTag,
+  tags,
+  control,
+}: PhotoTagSelectorProps) {
+  const { field } = useController({
+    name,
+    control,
+    defaultValue: []
+  });
+
+  return (
+    <BasePhotoTagSelector
+      selectedTagIds={field.value || []}
+      onChange={field.onChange}
+      addTag={addTag}
+      updateTag={updateTag}
+      deleteTag={deleteTag}
+      tags={tags}
+    />
   );
 }

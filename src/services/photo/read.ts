@@ -29,7 +29,6 @@ export const loadAllPhotosFromCloud = async (
     isHidden?: boolean | null
 ): Promise<AppResult<Photo[]>> => {
   return withErrorHandling(async () => {
-    const { api } = await import('@/lib/api');
     
     // RPC call
     const res = await api.photos.list.$post({
@@ -53,8 +52,7 @@ export const loadPhotosByGroupId = async (groupId: string, isAdminMode: boolean 
   if (!groupId) return success([]);
 
   return withErrorHandling(async () => {
-    const { api: apiClient } = await import('@/lib/api');
-    const res = await apiClient.photos['list-by-group'].$post({
+    const res = await api.photos['list-by-group'].$post({
       json: { groupId, isAdminMode }
     });
     if (!res.ok) throw ErrorFactory.wrap(new Error('Failed to load photos by group'), 'read');
@@ -72,8 +70,7 @@ export const loadPhotosByGroupIdPaginated = async (
 ): Promise<AppResult<{ photos: Photo[]; total: number }>> => {
   return withErrorHandling(async () => {
     if (!groupId) return { photos: [], total: 0 };
-    const { api: apiClient } = await import('@/lib/api');
-    const res = await apiClient.photos['list-by-group-paginated'].$post({
+    const res = await api.photos['list-by-group-paginated'].$post({
       json: { groupId, page, pageSize, isAdminMode }
     });
     if (!res.ok) throw ErrorFactory.wrap(new Error('Failed to load paginated group photos'), 'read');
@@ -93,8 +90,7 @@ export const getPhotoCount = async (
   isAdminMode: boolean = false
 ): Promise<AppResult<number>> => {
   return withErrorHandling(async () => {
-    const { api: apiClient } = await import('@/lib/api');
-    const res = await apiClient.photos.count.$post({
+    const res = await api.photos.count.$post({
       json: { categoryId, tagId, searchQuery, isAdminMode }
     });
     if (!res.ok) throw ErrorFactory.wrap(new Error('Failed to get photo count'), 'read');
@@ -114,8 +110,7 @@ export const getLocalPhotoCount = async (): Promise<AppResult<number>> => {
 export const loadPhotosByIds = async (ids: string[]): Promise<AppResult<Photo[]>> => {
   return withErrorHandling(async () => {
     if (!ids || ids.length === 0) return [];
-    const { api: apiClient } = await import('@/lib/api');
-    const res = await apiClient.photos['by-ids'].$post({
+    const res = await api.photos['by-ids'].$post({
       json: { ids }
     });
     if (!res.ok) throw ErrorFactory.wrap(new Error('Failed to load photos by ids'), 'read');
@@ -127,8 +122,7 @@ export const loadPhotosByIds = async (ids: string[]): Promise<AppResult<Photo[]>
 
 export const getPhotosWithoutThumbHash = async (): Promise<AppResult<{ id: string }[]>> => {
   return withErrorHandling(async () => {
-    const { api: apiClient } = await import('@/lib/api');
-    const res = await apiClient.photos['without-thumb-hash'].$post();
+    const res = await api.photos['without-thumb-hash'].$post();
     if (!res.ok) throw ErrorFactory.wrap(new Error('Failed to get photos without thumb hash'), 'read');
     const { data } = await res.json();
     return data || [];
@@ -137,8 +131,7 @@ export const getPhotosWithoutThumbHash = async (): Promise<AppResult<{ id: strin
 
 export const checkImageHashExists = async (hash: string): Promise<AppResult<{image_url: string, manual_code: string} | null>> => {
   return withErrorHandling(async () => {
-    const { api: apiClient } = await import('@/lib/api');
-    const res = await apiClient.photos['check-hash'].$post({
+    const res = await api.photos['check-hash'].$post({
       json: { hash }
     });
     if (!res.ok) throw ErrorFactory.wrap(new Error('Failed to check image hash'), 'read');

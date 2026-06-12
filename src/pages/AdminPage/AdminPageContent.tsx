@@ -1,7 +1,7 @@
+import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { X } from 'lucide-react';
-import { useLocation, useNavigate } from '@tanstack/react-router';
 import { 
   useAuth, 
   useTasks, 
@@ -35,16 +35,15 @@ export function AdminPageContent() {
   const { mutateAsync: syncMut } = useSyncMutation();
   const { tasks } = useTasks();
   const appLang = useUIStore(s => s.appLang);
-  const location = useLocation();
-  const navigate = useNavigate();
+  const location = useRouterSafe().location;
+  const navigate = useRouterSafe().navigate;
   
   const store = useUIStore(useShallow(s => ({
     update: s.update,
     activeScreen: s.activeScreen,
     editPhotoId: s.editPhotoId,
     newPhotoData: s.newPhotoData,
-    batchEditingIds: s.batchEditingIds,
-  })));
+    batchEditingIds: s.batchEditingIds })));
 
   // Sync URL to store 
   useEffect(() => {

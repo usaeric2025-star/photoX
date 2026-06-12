@@ -1,3 +1,4 @@
+import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { ChevronLeft, X, Share2, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -14,7 +15,6 @@ import { GroupGridView } from './groups/GroupGridView';
 import { GroupAdminShell } from './groups/GroupAdminShell';
 import { GroupInfoPanel } from './groups/GroupInfoPanel';
 import { useAdminActions } from '@/hooks/admin/useAdminActions';
-import { useNavigate } from '@tanstack/react-router';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { createTranslate } from '../lib/i18n';
 import { LanguageCode } from '../lib/translations';
@@ -25,7 +25,7 @@ import { getSafeText } from '@/lib/ai/safeText';
 export interface GroupDetailPageProps {}
 
 export function GroupDetailPage({}: GroupDetailPageProps) {
-  const navigate = useNavigate();
+  const navigate = useRouterSafe().navigate;
   const { filters, setPhotoId } = useUrlFilters();
   const activeGroupId = filters.groupId;
   const initialPhotoId = filters.photoId;

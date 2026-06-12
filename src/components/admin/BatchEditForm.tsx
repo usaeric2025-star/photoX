@@ -70,6 +70,8 @@ export function BatchEditForm({
         <PhotoTagSelector
           name="tags"
           tags={tags}
+          value={formState.tags?.map(t => typeof t === 'object' ? t.id : t) || []}
+          onChange={(newTagIds) => handleUpdateForm({ tags: newTagIds as any })}
           addTag={addTag}
           updateTag={updateTag}
           deleteTag={deleteTag}

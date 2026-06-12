@@ -6,9 +6,10 @@ import { AppResult } from '@/types/api';
 import { success } from '@/lib/error/ErrorFactory';
 import { withSupabase } from '@/lib/error/supabaseWrapper';
 
+import { api } from '@/lib/api';
+
 export const ungroupPhotos = async (groupId: string): Promise<AppResult<void>> => {
   return withErrorHandling(async () => {
-    const { api } = await import('@/lib/api');
     const res = await api.groups.ungroup.$post({
       json: { groupId }
     });
@@ -20,7 +21,6 @@ export const ungroupPhotos = async (groupId: string): Promise<AppResult<void>> =
 export const syncGroupMemberCount = async (groupId: string): Promise<AppResult<void>> => {
   return withErrorHandling(async () => {
     if (!groupId) return success(undefined);
-    const { api } = await import('@/lib/api');
     const res = await api.groups['sync-count'].$post({
       json: { groupId }
     });

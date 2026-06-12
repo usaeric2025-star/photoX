@@ -1,6 +1,7 @@
+import { api } from '@/lib/api';
 import { supabase } from '../../lib/supabase';
 import { Tag } from '../../types';
-import { errorFactory, success, ErrorFactory } from '@/lib/error/ErrorFactory';
+import { errorFactory, success } from '@/lib/error/ErrorFactory';
 import type { AppResult } from '@/types/api';
 
 const TABLE_NAME = 'tags';
@@ -31,7 +32,6 @@ const mapToDb = (updates: Partial<Tag> & Record<string, unknown>): Record<string
  */
 export const updateTag = async (tagId: string, updates: Partial<Tag>): Promise<AppResult<void>> => {
     const dbUpdates = mapToDb(updates);
-    const { api } = await import('@/lib/api');
     const res = await api.tags[':id'].$put({
         param: { id: tagId },
         json: { updates: dbUpdates }
@@ -42,7 +42,6 @@ export const updateTag = async (tagId: string, updates: Partial<Tag>): Promise<A
 
 export const createTag = async (tagData: Omit<Tag, 'id'>): Promise<AppResult<Tag>> => {
     const dbUpdates = mapToDb(tagData as any);
-    const { api } = await import('@/lib/api');
     const res = await api.tags.$post({
         json: { tagData: dbUpdates }
     });
@@ -53,7 +52,6 @@ export const createTag = async (tagData: Omit<Tag, 'id'>): Promise<AppResult<Tag
 
 export const batchCreateTagsInCloud = async (tags: Partial<Tag>[]): Promise<AppResult<Tag[]>> => {
     const dbUpdates = tags.map(tag => mapToDb(tag as any));
-    const { api } = await import('@/lib/api');
     const res = await api.tags.batch.$post({
         json: { tags: dbUpdates }
     });
@@ -63,7 +61,6 @@ export const batchCreateTagsInCloud = async (tags: Partial<Tag>[]): Promise<AppR
 };
 
 export const deleteTag = async (tagId: string): Promise<AppResult<void>> => {
-    const { api } = await import('@/lib/api');
     const res = await api.tags[':id'].$delete({
         param: { id: tagId }
     });
@@ -72,14 +69,12 @@ export const deleteTag = async (tagId: string): Promise<AppResult<void>> => {
 };
 
 export const triggerRefreshTagHotScores = async (): Promise<AppResult<void>> => {
-    const { api } = await import('@/lib/api');
     const res = await api.tags['refresh-hot-scores'].$post();
     if (!res.ok) return errorFactory('Refresh tag hot scores failed', 'DB_ERROR', '[triggerRefreshTagHotScores] error');
     return success(undefined);
 };
 
 export const removeTagFromPhoto = async (photoId: string, tagId: string): Promise<AppResult<void>> => {
-    const { api } = await import('@/lib/api');
     const res = await api.tags['remove-from-photo'].$post({
         json: { photoId, tagId }
     });
@@ -88,7 +83,6 @@ export const removeTagFromPhoto = async (photoId: string, tagId: string): Promis
 };
 
 export const syncPhotoTags = async (photoId: string, tagIds: string[]): Promise<AppResult<void>> => {
-    const { api } = await import('@/lib/api');
     const res = await api.tags['sync-photo-tags'].$post({
         json: { photoId, tagIds }
     });
@@ -97,7 +91,6 @@ export const syncPhotoTags = async (photoId: string, tagIds: string[]): Promise<
 };
 
 export const syncBatchPhotoTags = async (photoIds: string[], tagIds: string[]): Promise<AppResult<void>> => {
-    const { api } = await import('@/lib/api');
     const res = await api.tags['sync-batch-photo-tags'].$post({
         json: { photoIds, tagIds }
     });

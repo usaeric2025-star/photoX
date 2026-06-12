@@ -1,7 +1,7 @@
+import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React from 'react';
 import { LogIn, LayoutDashboard, RefreshCw, Camera, Menu, User as UserIcon, LogOut, Settings, LayoutGrid, MonitorPlay } from 'lucide-react';
 import { useAuth, useUIStore, useShallow, useSettings, usePermission } from '@/hooks';
-import { useNavigate, useLocation } from '@tanstack/react-router';
 import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
 import {
   DropdownMenu,
@@ -9,8 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { logoutPublic } from "@/lib/publicAuth";
 import { translations } from "@/lib/translations";
 
@@ -25,8 +24,8 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
   const { settings } = useSettings();
   const { role } = usePermission();
   const update = useUIStore((s) => s.update);
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate = useRouterSafe().navigate;
+  const location = useRouterSafe().location;
   const isAdmin = location.pathname.startsWith('/admin');
 
   const lang = useUIStore(s => s.appLang);

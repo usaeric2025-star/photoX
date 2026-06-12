@@ -7,8 +7,8 @@ import { withSupabase } from '@/lib/error/supabaseWrapper';
 import { success } from '@/lib/error/ErrorFactory';
 import { AppResult } from '@/types/api';
 import { createPhotoValidator } from '../../lib/validators/factory';
+import { api } from '@/lib/api';
 import { mapToDb } from './toDb';
-import { syncBatchPhotoTags } from '@/services/tag/commands';
 
 export interface BatchActionResult {
   successCount: number;
@@ -35,7 +35,6 @@ export async function batchUpdate(ids: string[], initialUpdates: Partial<Photo>)
     const { mapToDb } = await import('./toDb');
     const dbUpdates = mapToDb(updates);
     
-    const { api } = await import('@/lib/api');
     const res = await api.photos['batch-update'].$post({
       json: { ids, updates: dbUpdates }
     });
