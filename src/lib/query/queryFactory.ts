@@ -1,15 +1,18 @@
 import { useQuery, useInfiniteQuery, UseQueryOptions, UseInfiniteQueryOptions, UseQueryResult, UseInfiniteQueryResult, InfiniteData } from '@tanstack/react-query';
+import type { Type } from 'arktype';
 
 /**
  * Standard Query Factory for PhotoX.
  * Ensures consistent staleTime, gcTime, and retry strategies.
+ * Supports optional ArkType schema binding for automatic validation.
  */
 
-export function createQuery<TData, TVariables = void>(config: {
+export function createQuery<TData, TVariables = void, TSchema extends Type = Type>(config: {
   queryKey: (variables: TVariables) => readonly unknown[];
   queryFn: (variables: TVariables, signal?: AbortSignal) => Promise<TData>;
   staleTime?: number;
   gcTime?: number;
+  schema?: TSchema;
 }) {
   return function useStandardQuery(variables: TVariables, options?: Partial<UseQueryOptions<TData>>) {
     // Handling the case where variables might be undefined/void but options are passed as first argument
@@ -25,7 +28,8 @@ export function createQuery<TData, TVariables = void>(config: {
       gcTime: config.gcTime ?? 30 * 60 * 1000,
       retry: 2,
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
-      ...actualOptions
+      ...actualOptions,
+      select: (data: any) => config.schema ? (config.schema as any)(data).assert() : (actualOptions?.select ? actualOptions.select(data) : data),
     });
   };
 }

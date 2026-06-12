@@ -1,21 +1,17 @@
-import { createMutationHook } from '../core/mutationFactory';
 import { saveSettings } from '@/services/settings/commands';
 import { AppSettings } from '@/types';
-import { settingsKeys } from '@/lib/queryKeys';
+import { defineMutation } from '@/lib/mutations/defineMutation';
+import { useAppMutation } from '@/lib/mutations/useAppMutation';
 
-export const useSettingsUpdateMutation = createMutationHook({
-  entity: 'Settings',
-  action: 'Update',
-  mutationFn: async (updates: Partial<AppSettings>) => {
+const settingsUpdateConfig = defineMutation<AppSettings, Partial<AppSettings>>({
+  service: async (updates) => {
     return await saveSettings(updates);
   },
-  queryKey: ['settings'],
-  optimisticUpdate: (old: AppSettings | undefined, variables: Partial<AppSettings>) => {
-    return { ...(old || {}), ...variables } as AppSettings;
-  },
-  invalidateKeys: [['settings'], settingsKeys.list()],
-  onSuccessMessage: '设置已保存并同步',
+  invalidate: () => [['settings'] as any],
+  successMessage: '设置已保存并同步',
 });
+
+export const useSettingsUpdateMutation = () => useAppMutation(settingsUpdateConfig);
 
 export const useSettingsMutations = () => {
   const update = useSettingsUpdateMutation();

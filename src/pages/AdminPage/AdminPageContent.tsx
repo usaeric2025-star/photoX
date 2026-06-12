@@ -14,17 +14,17 @@ import { logger } from '@/lib/logger';
 import { DataLoadingContainer } from '@/components/ui/DataLoadingContainer';
 import { BatchEditScreen } from '@/components/admin/BatchEditScreen';
 import { StatisticsScreen } from '@/components/admin/StatisticsScreen';
-import { SettingsPage } from '@/components/SettingsPage';
+import { SettingsPage } from '@/components/settings/SettingsPage';
 import { PhotoEditDrawer } from '@/components/admin/PhotoEditDrawer';
-import { GroupDetailPage } from '@/components/GroupDetailPage';
+import { GroupDetailPage } from '@/components/groups/GroupDetailPage';
 import { useAIBatchAnalysis } from '@/hooks';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { usePhotoGallery } from '@/hooks/photo/usePhotoGallery';
 import { Category } from '@/types';
 import { AdminHeader } from '@/components/layouts/headers/AdminHeader';
 import { AdminAuthGate } from '@/components/admin/AdminAuthGate';
-import { AdminContainer } from '@/components/AdminContainer';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { AdminContainer } from '@/components/admin/AdminContainer';
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 export function AdminPageContent() {
   const { user } = useAuth();

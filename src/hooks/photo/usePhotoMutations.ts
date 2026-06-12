@@ -1,16 +1,17 @@
-import { createMutationHook, optimistic } from '../core/mutationFactory';
+import { optimistic } from '@/lib/query/mutationFactory';
 import { Photo } from '@/types';
-import { update, deleteMany, batchUpdate } from '@/services/photo/commands';
+import { updatePhoto as update } from '@/services/photo/commands/update';
+import { deleteMany, batchUpdate } from '@/services/photo/commands/batch';
 import { photoKeys } from '@/lib/queryKeys';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { defineMutation } from '@/lib/mutations/defineMutation';
+import { useAppMutation } from '@/lib/mutations/useAppMutation';
 
 /**
  * 照片编辑 Mutation
  */
-export const usePhotoEditMutation = createMutationHook({
-  entity: 'Photo',
-  action: 'Update',
-  mutationFn: async ({ id, updates }: { id: string; updates: Partial<Photo>; silent?: boolean }) => {
+const photoEditConfig = defineMutation<Photo, { id: string; updates: Partial<Photo>; silent?: boolean }>({
+  service: async ({ id, updates }) => {
     const { tags, ...coreUpdates } = updates;
     const res = await update(id, coreUpdates as any);
     if (!res.ok) throw new Error(res.message);
@@ -22,58 +23,35 @@ export const usePhotoEditMutation = createMutationHook({
     
     return res.data;
   },
-  invalidateKeys: (vars: { id: string; updates: Partial<Photo>; silent?: boolean }) => [photoKeys.all, ['photo', vars.id]],
-  optimisticUpdate: (old: any, { id, updates }: { id: string; updates: Partial<Photo> }) => {
+  invalidate: (data, vars) => [photoKeys.all as any, ['photo', vars.id] as any],
+  optimistic: (old: any, { id, updates }: { id: string; updates: Partial<Photo> }) => {
     if (!old) return old;
-    // Infinite list query data structure
-    if (old.pages) {
-      return optimistic.infinite.update<Photo>()(old, { id, updates: updates as any });
-    }
-    // Single details query cache structure
-    if (old.id === id) {
-      return { ...old, ...updates };
-    }
+    if (old.pages) return optimistic.infinite.update<Photo>()(old, { id, updates: updates as any });
+    if (old.id === id) return { ...old, ...updates };
     return old;
   },
-  onSuccessMessage: (data: any, vars: any) => {
-    if (vars?.silent) return null;
-    return '已更新';
-  },
+  successMessage: '已更新',
 });
 
-/**
- * 照片删除 Mutation
- */
-export const usePhotoDelete = createMutationHook({
-  entity: 'Photo',
-  action: 'Delete',
-  mutationFn: async (ids: string | string[]) => {
+export const usePhotoEditMutation = () => useAppMutation(photoEditConfig);
+
+const photoDeleteConfig = defineMutation<any, string | string[]>({
+  service: async (ids) => {
     const res = await deleteMany(Array.isArray(ids) ? ids : [ids]);
     if (!res.ok) throw new Error(res.message);
     return res.data;
   },
-  invalidateKeys: (vars: string | string[]) => [
-    photoKeys.all,
-    ...((Array.isArray(vars) ? vars : [vars]).map((id: string) => ['photo', id]))
+  invalidate: (data, vars) => [
+    photoKeys.all as any,
+    ...((Array.isArray(vars) ? vars : [vars]).map((id: string) => ['photo', id] as any))
   ],
-  onSuccessMessage: (data: any) => {
-    if (data && typeof data === 'object' && 'successCount' in data) {
-      if (data.failureCount > 0) {
-        return `批量删除：成功 ${data.successCount}, 失败 ${data.failureCount}`;
-      }
-      return `已下架 ${data.successCount} 张照片`;
-    }
-    return '照片已删除';
-  },
+  successMessage: '照片已删除',
 });
 
-/**
- * 照片批量编辑 Mutation
- */
-export const usePhotoBatchEdit = createMutationHook({
-  entity: 'Photo',
-  action: 'BatchUpdate',
-  mutationFn: async ({ ids, updates }: { ids: string[]; updates: Partial<Photo> }) => {
+export const usePhotoDelete = () => useAppMutation(photoDeleteConfig);
+
+const photoBatchEditConfig = defineMutation<any, { ids: string[]; updates: Partial<Photo> }>({
+  service: async ({ ids, updates }) => {
     const { tags, ...coreUpdates } = updates;
     const res = await batchUpdate(ids, coreUpdates as any);
     if (!res.ok) throw new Error(res.message);
@@ -85,35 +63,25 @@ export const usePhotoBatchEdit = createMutationHook({
     
     return res.data;
   },
-  invalidateKeys: (vars: { ids: string[]; updates: Partial<Photo> }) => [
-    photoKeys.all,
-    ...((Array.isArray(vars.ids) ? vars.ids : [vars.ids]).map((id: string) => ['photo', id]))
+  invalidate: (data, vars) => [
+    photoKeys.all as any,
+    ...((Array.isArray(vars.ids) ? vars.ids : [vars.ids]).map((id: string) => ['photo', id] as any))
   ],
-  onSuccessMessage: (data: any, vars: any) => {
-    if (vars?.silent) return null;
-    if (data && typeof data === 'object' && 'successCount' in data) {
-      if (data.failureCount > 0) {
-        return `批量操作：成功 ${data.successCount}, 失败 ${data.failureCount}`;
-      }
-      return `批量操作完成 (${data.successCount})`;
-    }
-    return '已更新';
-  },
+  successMessage: '批量操作完成',
 });
 
-/**
- * 照片置顶状态切换 Mutation
- */
-export const useTogglePin = createMutationHook({
-  entity: 'Photo',
-  action: 'TogglePin',
-  mutationFn: async ({ id, isPinned }: { id: string; isPinned: boolean }) => {
+export const usePhotoBatchEdit = () => useAppMutation(photoBatchEditConfig);
+
+const togglePinConfig = defineMutation<any, { id: string; isPinned: boolean }>({
+  service: async ({ id, isPinned }) => {
     const res = await update(id, { is_pinned: isPinned });
     if (!res.ok) throw new Error(res.message);
     return res.data;
   },
-  invalidateKeys: (vars: { id: string; isPinned: boolean }) => [photoKeys.all, ['photo', vars.id]],
-  optimisticUpdate: (old: any, { id, isPinned }: { id: string; isPinned: boolean }) => 
+  invalidate: (data, vars) => [photoKeys.all as any, ['photo', vars.id] as any],
+  optimistic: (old: any, { id, isPinned }: { id: string; isPinned: boolean }) => 
     optimistic.infinite.update<Photo>()(old, { id, updates: { is_pinned: isPinned } as any }),
-  onSuccessMessage: (data: any, { isPinned }: { isPinned: boolean }) => isPinned ? '已置顶' : '已入库',
+  successMessage: '状态已更新',
 });
+
+export const useTogglePin = () => useAppMutation(togglePinConfig);

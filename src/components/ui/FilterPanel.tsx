@@ -11,7 +11,7 @@ import { getSafeText } from '@/lib/ai/safeText';
 import { categoryKeys, tagKeys, photoKeys } from '@/lib/queryKeys';
 import { loadCategoriesFromCloud } from '@/services/category/queries';
 import { loadTagsFromCloud } from '@/services/tag/queries';
-import { loadAllPhotosFromCloud } from '@/services/photo';
+import { getPhotos as loadAllPhotosFromCloud } from '@/services/photo/queries/list';
 import { PHOTO_QUERY_CONFIG } from '@/lib/photoQueryConfig';
 import { logger } from '@/lib/logger';
 

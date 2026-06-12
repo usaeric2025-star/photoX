@@ -14,25 +14,30 @@ import { PhotoInfoPanel } from "../photo/PhotoInfoPanel";
 import { useSettings } from "@/hooks";
 import { lockScroll, unlockScroll } from "@/lib/scrollLock";
 
-interface LightboxCoreProps {
-  open: boolean;
-  onClose: () => void;
-  photos: Photo[];
-  currentIndex?: number;
-  onIndexChange?: (index: number) => void;
-  // Business logic props
+export interface LightboxActions {
+  onEdit?: (photo: Photo) => void;
+  onDelete?: (photo: Photo) => void;
+  onAiAnalyze?: (photo: Photo) => void;
+  onSetCover?: (photo: Photo) => void;
+}
+
+export interface LightboxOptions {
   mode?: 'single' | 'group';
   showEdit?: boolean;
   showDelete?: boolean;
   showAi?: boolean;
   showSetCover?: boolean;
-  onEdit?: (photo: Photo) => void;
-  onDelete?: (photo: Photo) => void;
-  onAiAnalyze?: (photo: Photo) => void;
-  onSetCover?: (photo: Photo) => void;
-  totalCount?: number;
   renderSidebar?: () => React.ReactNode;
   renderFloatingButton?: () => React.ReactNode;
+}
+
+interface LightboxCoreProps extends LightboxActions, LightboxOptions {
+  open: boolean;
+  onClose: () => void;
+  photos: Photo[];
+  currentIndex?: number;
+  onIndexChange?: (index: number) => void;
+  totalCount?: number;
 }
 
 export const LightboxCore = ({ 

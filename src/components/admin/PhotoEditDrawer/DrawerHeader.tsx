@@ -16,10 +16,10 @@ import {
   LogOut as RemoveFromGroupIcon,
 } from "lucide-react";
 import {
-  usePhotoDetail,
+  usePhoto,
   useTasks,
   useRemoveFromGroupMutation,
-  useAdminActions,
+  useAdminMaintenance,
   usePhotoDelete,
   useTaskExecutor,
   useSettings,
@@ -48,14 +48,14 @@ export function DrawerHeader({
   const editPhotoId = useUIStore((s) => s.editPhotoId);
   const appLang = useUIStore((s) => s.appLang);
   
-  const { data: detailPhoto } = usePhotoDetail(editPhotoId || '');
+  const { data: detailPhoto } = usePhoto(editPhotoId || '');
   const { tasks } = useTasks();
   const isAnalyzing = React.useMemo(() => tasks.some((t: any) => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析') || t.name.toLowerCase().includes('analyze') || t.name.toLowerCase().includes('identif'))), [tasks]);
   const isSyncing = React.useMemo(() => tasks.some((t: any) => t.status === 'running' && (t.name.includes('同步') || t.name.includes('导入'))), [tasks]);
   const isRunning = React.useMemo(() => tasks.some((t: any) => t.status === 'running'), [tasks]);
 
   const { mutateAsync: removeFromGroup } = useRemoveFromGroupMutation();
-  const { updatePhoto: { mutateAsync: updatePhoto } } = useAdminActions();
+  const { updatePhoto: { mutateAsync: updatePhoto } } = useAdminMaintenance();
   const { mutateAsync: deletePhoto } = usePhotoDelete();
   const { runTask } = useTaskExecutor();
   const { settings } = useSettings();

@@ -4,7 +4,7 @@ import { ProductFormData, Dimension } from '../../../types';
 import { PhotoEditFormReturn } from '@/hooks/photo/types';
 import { safeArray } from '../../../lib/utils';
 import { useUIStore } from '../../../store';
-import { useTasks, usePhotoDetail } from '../../../hooks';
+import { useTasks, usePhoto, useAdminMaintenance } from '../../../hooks';
 import { translations } from '../../../lib/translations';
 import { usePhotoEditAI } from './usePhotoEditAI';
 
@@ -16,7 +16,7 @@ export function DetailsTab({ form }: Props) {
   const editPhotoId = useUIStore((s) => s.editPhotoId);
   const appLang = useUIStore((s) => s.appLang);
   const { tasks } = useTasks();
-  const { data: detailPhoto } = usePhotoDetail(editPhotoId || '');
+  const { data: detailPhoto } = usePhoto(editPhotoId || '');
   const { handleAiAnalyze } = usePhotoEditAI(form);
 
   const isAnalyzing = tasks.some(t => t.status === 'running' && (t.name === 'AI 属性智能识别' || t.name === 'AI 识别'));

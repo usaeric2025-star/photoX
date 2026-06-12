@@ -1,20 +1,18 @@
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { supabase } from '../../lib/supabase';
-import { DB_CONFIG } from '../../constants/config';
-import { Photo } from '../../types';
+import { api } from '@/lib/api';
+import { ErrorFactory, success } from '@/lib/error/ErrorFactory';
 import { withErrorHandling } from '@/lib/error/wrapper';
-import { withSupabase } from '@/lib/error/supabaseWrapper';
-import { success, errorFactory } from '@/lib/error/ErrorFactory';
+import { Photo } from '@/types';
 import { AppResult } from '@/types/api';
-import { PAGINATION } from '../../config/constants';
-import { PHOTO_LIST_FIELDS } from '../../constants/photoFields';
-import { mapSupabasePhoto } from './fromDb';
-import { hydrateGroupInfo } from './with';
+import { loadTagsFromCloud } from '../../tag';
+import { mapSupabasePhoto } from '../mappers';
+import { hydrateGroupInfo } from '../with';
 import { normalizeSearchQuery } from '@/lib/utils';
-import { VISIBILITY_OR_QUERY } from '../../constants/photoConstants';
-import { loadTagsFromCloud } from '../tag';
+import { logger } from '@/lib/logger';
 
-export const loadAllPhotosFromCloud = async (
+/**
+ * Loads all photos from cloud with filters
+ */
+export const getPhotos = async (
     since?: string,
     page: number = 0,
     limit: number = 1000,
@@ -29,60 +27,24 @@ export const loadAllPhotosFromCloud = async (
     isHidden?: boolean | null
 ): Promise<AppResult<Photo[]>> => {
   return withErrorHandling(async () => {
-    
-    // RPC call
     const res = await api.photos.list.$post({
       json: { page, limit, categoryId, isAdminMode, onlyUngrouped, manufacturerId, isHidden }
     });
     
-    if (!res.ok) throw ErrorFactory.wrap(new Error('Failed to load photos from cloud'), 'read');
+    if (!res.ok) throw ErrorFactory.wrap(new Error('Failed to load photos from cloud'), 'queries');
     const { data } = await res.json();
     
     const allTags = await loadTagsFromCloud();
     const fetched = (data || []).map((item: any) => mapSupabasePhoto(item, allTags));
     
-    // Keeping hydration logic client-side for now as it's complex
-    // ...
     const hydrated = await hydrateGroupInfo(fetched);
     return success(hydrated);
   }, 'loadAllPhotosFromCloud');
 };
 
-export const loadPhotosByGroupId = async (groupId: string, isAdminMode: boolean = false): Promise<AppResult<Photo[]>> => {
-  if (!groupId) return success([]);
-
-  return withErrorHandling(async () => {
-    const res = await api.photos['list-by-group'].$post({
-      json: { groupId, isAdminMode }
-    });
-    if (!res.ok) throw ErrorFactory.wrap(new Error('Failed to load photos by group'), 'read');
-    const { data } = await res.json();
-    const allTags = await loadTagsFromCloud();
-    return success((data || []).map((item: any) => mapSupabasePhoto(item, allTags)));
-  }, 'loadPhotosByGroupId');
-};
-
-export const loadPhotosByGroupIdPaginated = async (
-  groupId: string,
-  page: number = 1,
-  pageSize: number = PAGINATION.GROUP_PAGE_SIZE,
-  isAdminMode: boolean = false
-): Promise<AppResult<{ photos: Photo[]; total: number }>> => {
-  return withErrorHandling(async () => {
-    if (!groupId) return { photos: [], total: 0 };
-    const res = await api.photos['list-by-group-paginated'].$post({
-      json: { groupId, page, pageSize, isAdminMode }
-    });
-    if (!res.ok) throw ErrorFactory.wrap(new Error('Failed to load paginated group photos'), 'read');
-    const { data } = await res.json();
-    const allTags = await loadTagsFromCloud();
-    return { 
-      photos: (data.photos || []).map((item: any) => mapSupabasePhoto(item, allTags)), 
-      total: data.total || 0 
-    };
-  }, 'loadPhotosByGroupIdPaginated');
-};
-
+/**
+ * Gets total photo count with filters
+ */
 export const getPhotoCount = async (
   categoryId?: string | null,
   tagId?: string | null,
@@ -93,7 +55,7 @@ export const getPhotoCount = async (
     const res = await api.photos.count.$post({
       json: { categoryId, tagId, searchQuery, isAdminMode }
     });
-    if (!res.ok) throw ErrorFactory.wrap(new Error('Failed to get photo count'), 'read');
+    if (!res.ok) throw ErrorFactory.wrap(new Error('Failed to get photo count'), 'queries');
     const { data } = await res.json();
     return data || 0;
   }, 'getPhotoCount');
@@ -113,7 +75,7 @@ export const loadPhotosByIds = async (ids: string[]): Promise<AppResult<Photo[]>
     const res = await api.photos['by-ids'].$post({
       json: { ids }
     });
-    if (!res.ok) throw ErrorFactory.wrap(new Error('Failed to load photos by ids'), 'read');
+    if (!res.ok) throw ErrorFactory.wrap(new Error('Failed to load photos by ids'), 'queries');
     const { data } = await res.json();
     const allTags = await loadTagsFromCloud();
     return (data || []).map((item: any) => mapSupabasePhoto(item, allTags));
@@ -123,7 +85,7 @@ export const loadPhotosByIds = async (ids: string[]): Promise<AppResult<Photo[]>
 export const getPhotosWithoutThumbHash = async (): Promise<AppResult<{ id: string }[]>> => {
   return withErrorHandling(async () => {
     const res = await api.photos['without-thumb-hash'].$post();
-    if (!res.ok) throw ErrorFactory.wrap(new Error('Failed to get photos without thumb hash'), 'read');
+    if (!res.ok) throw ErrorFactory.wrap(new Error('Failed to get photos without thumb hash'), 'queries');
     const { data } = await res.json();
     return data || [];
   }, 'getPhotosWithoutThumbHash');
@@ -134,8 +96,28 @@ export const checkImageHashExists = async (hash: string): Promise<AppResult<{ima
     const res = await api.photos['check-hash'].$post({
       json: { hash }
     });
-    if (!res.ok) throw ErrorFactory.wrap(new Error('Failed to check image hash'), 'read');
+    if (!res.ok) throw ErrorFactory.wrap(new Error('Failed to check image hash'), 'queries');
     const { data } = await res.json();
     return data ? { image_url: data.image_url, manual_code: data.manual_code } : null;
   }, 'checkImageHashExists', 'low');
 };
+
+export async function findPhotoIdsBySearch(q: string): Promise<{ catIds: number[], photoIdsFromTags: string[], q: string } | null> {
+  const normSearchQuery = normalizeSearchQuery(q);
+  if (!normSearchQuery) return null;
+
+  try {
+    const res = await api.search.ids.$get({ query: { q: normSearchQuery } });
+    if (!res.ok) throw ErrorFactory.wrap(new Error('Search failed'), 'queries');
+
+    const { data } = await res.json();
+    return {
+      catIds: data.catIds,
+      photoIdsFromTags: data.photoIds,
+      q: normSearchQuery
+    };
+  } catch (e) {
+    logger.error('Search service error:', e);
+    return null;
+  }
+}

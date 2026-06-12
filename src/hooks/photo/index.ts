@@ -9,7 +9,7 @@ export * from './usePhotoGallery';
 
 // Modularized business hooks
 export * from './usePhotos';
-export * from './usePhotoDetail';
+export * from './usePhoto';
 export * from './usePhotoMutations';
 export * from './usePhotoUpload';
 export * from './useLightbox';

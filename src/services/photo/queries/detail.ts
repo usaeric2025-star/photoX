@@ -1,16 +1,18 @@
+import { ErrorFactory, success } from '@/lib/error/ErrorFactory';
+import { withSupabase } from '@/lib/error/supabaseWrapper';
+import { Photo } from '@/types';
 import { supabase } from '@/lib/supabase';
 import { DB_CONFIG } from '@/constants/config';
-import { Photo } from '@/types';
-import { mapSupabasePhoto } from './fromDb';
 import { PHOTO_DETAIL_FIELDS } from '@/constants/photoFields';
-import { withSupabase } from '@/lib/error/supabaseWrapper';
-import { success } from '@/lib/error/ErrorFactory';
+import { loadTagsFromCloud } from '../../tag';
+import { mapSupabasePhoto } from '../mappers';
 import { AppResult } from '@/types/api';
-import { loadTagsFromCloud } from '../tag/queries';
 
-export const loadPhotoById = async (photoId: string): Promise<AppResult<Photo | null>> => {
+/**
+ * Loads simple photo details by ID
+ */
+export const getPhotoById = async (photoId: string): Promise<AppResult<Photo | null>> => {
     if (!photoId) return success(null);
-
     const query = supabase
         .from(DB_CONFIG.TABLE_NAME)
         .select(PHOTO_DETAIL_FIELDS)

@@ -10,13 +10,14 @@ import { useSearch } from '@tanstack/react-router';
 
 import { useTranslation, useIsManagement, usePermission, useCategories } from '@/hooks';
 import { PinButton } from './PinButton';
+import { PhotoCardInfo } from './PhotoCardInfo';
 import { Photo, Category, Tag } from '../../types';
 import { Layers, Heart, Check, EyeOff } from 'lucide-react';
 import { getCacheBustedImageUrl, getPhotoDisplayName } from '../../lib/ui-helpers';
 import { getSafeText } from '@/lib/ai/safeText';
 import { ResponsivePhoto } from '../shared/ResponsivePhoto';
 
-import { useAdminActions } from '@/hooks/admin/useAdminActions';
+import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
 import { getDisplayGroupCode } from '@/services/photo/utils';
 
 import { cn } from '@/lib/utils';
@@ -264,32 +265,11 @@ export const PhotoCard = ({
       )}
 
       {/* Info Overlay Panel */}
-      {!hideDetails && (
-        <div className="absolute bottom-0 left-0 w-full z-20 pointer-events-auto p-1.5 pt-6 flex flex-col gap-1.5 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
-          {/* Main Category Badge */}
-          {displayCatName && (
-            <div className="px-0.5">
-              <span className="text-[9px] bg-white text-black px-2 py-0.5 rounded-full font-black tracking-tighter uppercase shadow-lg inline-block">
-                {displayCatName}
-              </span>
-            </div>
-          )}
-
-          {/* Tags Row - Forced Single Line with Scroll */}
-          {!hideDetails && photoTags && photoTags.length > 0 && (
-            <div className="flex flex-nowrap items-center gap-1 overflow-x-auto no-scrollbar scroll-smooth pb-0.5 px-0.5">
-              {photoTags.map(tag => (
-                <span 
-                  key={tag} 
-                  className="shrink-0 text-[8px] bg-black/75 text-slate-200 px-1.5 py-0.5 rounded-full font-bold tracking-tighter uppercase border border-white/10 whitespace-nowrap"
-                >
-                  #{tag}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      <PhotoCardInfo 
+        hideDetails={hideDetails}
+        displayCatName={displayCatName}
+        photoTags={photoTags}
+      />
     </div>
   );
 };

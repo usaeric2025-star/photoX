@@ -93,7 +93,7 @@ export const useGroupActions = (
           await onUpdatePhoto(photoId, updates);
         } else {
           const { updatePhoto: serviceUpdatePhoto } =
-            await import("@/services/photo/commands");
+            await import("@/services/photo");
           await serviceUpdatePhoto(photoId, updates);
         }
       } catch (err: unknown) {
@@ -127,7 +127,7 @@ export const useGroupActions = (
           );
         } else {
           const { updatePhoto: serviceUpdatePhoto } =
-            await import("@/services/photo/commands");
+            await import("@/services/photo");
           await Promise.all(
             activeGroupPhotos.map((p) =>
               serviceUpdatePhoto(p.id, { dimensions: newDims }),
@@ -159,7 +159,7 @@ export const useGroupActions = (
 
       try {
         const { updatePhoto: serviceUpdatePhoto } =
-          await import("@/services/photo/commands");
+          await import("@/services/photo");
         await Promise.all(
           updatedPhotosWithOrder.map((p) =>
             serviceUpdatePhoto(p.id, { group_order: p.group_order }),

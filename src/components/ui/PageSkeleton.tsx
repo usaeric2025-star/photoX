@@ -1,5 +1,5 @@
 import React from 'react';
-import { PhotoGridSkeleton } from './photo/PhotoGridSkeleton';
+import { PhotoGridSkeleton } from '../photo/PhotoGridSkeleton';
 import { useColumns } from '@/hooks';
 
 export function PageSkeleton() {

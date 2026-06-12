@@ -1,4 +1,4 @@
-import { createQuery } from '../core/queryFactory';
+import { createQuery } from '@/lib/query/queryFactory';
 import { loadCategoriesFromCloud } from '@/services/category/queries';
 import { categoryKeys } from '@/lib/queryKeys';
 import { syncCache } from '@/lib/db/indexedDB';

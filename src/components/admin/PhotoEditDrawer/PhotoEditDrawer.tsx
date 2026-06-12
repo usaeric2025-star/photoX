@@ -4,20 +4,16 @@ import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { FormProvider } from "react-hook-form";
 import { useFormWithMutation } from '@/hooks/core/useFormWithMutation';
 import { usePhotoEditMutation } from '@/hooks/photo/usePhotoMutations';
-import { ConfirmDialog } from "../../ui/ConfirmDialog";
 import { Photo } from "../../../types";
 import { HeadlessSlot } from "../../../lib/component-contract";
 import { DrawerHeader } from "./DrawerHeader";
+import { DeletePhotoDialog } from "./DeletePhotoDialog";
+import { PhotoEditTabs } from "./PhotoEditTabs";
 import { useUIStore } from "../../../store";
-import { BasicInfoTab } from "./BasicInfoTab";
-import { OrgTab } from "./OrgTab";
-import { DetailsTab } from "./DetailsTab";
-import { AISourceTab } from "./AISourceTab";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs";
 import { translations } from "../../../lib/translations";
 import { PhotoSchema } from "../../../../api/_shared/apiContractSchema";
 import { 
-  usePhotoDetail,
+  usePhoto,
   usePhotoDelete,
 } from "../../../hooks";
 import { useTasks } from "@/hooks";
@@ -38,7 +34,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
   const update = useUIStore((s) => s.update);
   const appLang = useUIStore((s) => s.appLang);
 
-  const { data: detailPhoto } = usePhotoDetail(editPhotoId || '');
+  const { data: detailPhoto } = usePhoto(editPhotoId || '');
   const updateMutation = usePhotoEditMutation();
   const { mutateAsync: deletePhoto } = usePhotoDelete();
 
@@ -101,14 +97,11 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
                       }}
                     />
 
-                    <ConfirmDialog
+                    <DeletePhotoDialog
                       open={isDeleteOpen}
                       onOpenChange={deleteDialog.toggle}
-                      title={t.confirmDeleteTitle}
-                      description={t.confirmDeleteDesc}
-                      confirmText={t.deleteBtn}
-                      variant="destructive"
-                      onConfirm={async () => {
+                      lang={appLang}
+                      onDelete={async () => {
                         if (editPhotoId) {
                           try {
                             await deletePhoto([editPhotoId]);
@@ -120,61 +113,11 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
                     />
 
                     <div className="flex-1 overflow-hidden flex flex-col pt-2">
-                      <Tabs
-                        defaultValue="basic"
-                        className="flex-1 flex flex-col overflow-hidden"
-                      >
-                        <div className="container mx-auto max-w-4xl px-4">
-                          <div className="pb-2 border-b border-slate-100 bg-white">
-                            <TabsList className="w-full bg-slate-100/50 p-1 rounded-2xl h-12 flex items-center gap-1 border border-slate-200">
-                              <TabsTrigger
-                                value="basic"
-                                className="flex-1 rounded-xl text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 transition-all h-full"
-                              >
-                                {appLang === 'zh' ? '基础' : 'BASIC'}
-                              </TabsTrigger>
-                              <TabsTrigger
-                                value="org"
-                                className="flex-1 rounded-xl text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 transition-all h-full"
-                              >
-                                {appLang === 'zh' ? '组织' : 'ORG'}
-                              </TabsTrigger>
-                              <TabsTrigger
-                                value="details"
-                                className="flex-1 rounded-xl text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 transition-all h-full"
-                              >
-                                {appLang === 'zh' ? '细节' : 'DETAIL'}
-                              </TabsTrigger>
-                              <TabsTrigger
-                                value="ai-source"
-                                className="flex-1 rounded-xl text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 transition-all h-full"
-                              >
-                                {appLang === 'zh' ? 'AI原始数据' : 'AI RAW'}
-                              </TabsTrigger>
-                            </TabsList>
-                          </div>
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto no-scrollbar pt-2 container mx-auto max-w-4xl px-4 pb-12">
-                          <TabsContent value="basic">
-                            <BasicInfoTab form={form} />
-                          </TabsContent>
-
-                          <TabsContent value="org">
-                            <OrgTab form={form} />
-                          </TabsContent>
-
-                          <TabsContent value="details">
-                            <DetailsTab form={form} />
-                          </TabsContent>
-
-                          <TabsContent value="ai-source">
-                            <AISourceTab
-                              photoId={editPhotoId || ''}
-                            />
-                          </TabsContent>
-                        </div>
-                      </Tabs>
+			<PhotoEditTabs 
+			  form={form}
+			  editPhotoId={editPhotoId || ''}
+			  appLang={appLang}
+			/>
                     </div>
                   </div>
                 }

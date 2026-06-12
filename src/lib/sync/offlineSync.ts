@@ -1,5 +1,5 @@
 import { opsCache, PendingOp } from '@/lib/db/indexedDB';
-import { updatePhoto } from '@/services/photo/commands';
+import { updatePhoto } from '@/services/photo';
 import { logger } from '@/lib/logger';
 
 /**

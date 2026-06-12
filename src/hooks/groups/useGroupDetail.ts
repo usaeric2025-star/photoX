@@ -1,4 +1,4 @@
-import { createQuery } from '../core/queryFactory';
+import { createQuery } from '@/lib/query/queryFactory';
 import { getGroupById } from '@/services/group/queries';
 import { groupKeys } from '@/lib/queryKeys';
 import { Group } from '@/types';

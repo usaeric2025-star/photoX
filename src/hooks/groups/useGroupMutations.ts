@@ -1,144 +1,96 @@
-import { createMutationHook, optimistic } from '../core/mutationFactory';
+import { optimistic } from '@/lib/query/mutationFactory';
 import { groupKeys, photoKeys } from '@/lib/queryKeys';
 import { createGroup, updateGroup, deleteGroupFromCloud, groupPhotos, movePhotosToGroup, setPhotoAsGroupCover, ungroupPhotos } from '@/services/group/commands';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { Photo, ProductGroup } from '@/types';
+import { defineMutation } from '@/lib/mutations/defineMutation';
+import { useAppMutation } from '@/lib/mutations/useAppMutation';
 
-export const useGroupCreate = createMutationHook({
-  entity: 'Group',
-  action: 'Create',
-  mutationFn: async (variables: ProductGroup) => {
+const groupCreateConfig = defineMutation<ProductGroup, ProductGroup>({
+  service: async (variables: ProductGroup) => {
     const res = await createGroup(variables);
     if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Create Group');
     return res.data;
   },
-  queryKey: groupKeys.all,
-  optimisticUpdate: optimistic.infinite.add<ProductGroup>(),
-  invalidateKeys: [groupKeys.all],
-  onSuccessMessage: '已创建合组',
+  invalidate: () => [groupKeys.all as unknown as any[]],
+  // Note: Optimistic update with infinite lists can be complex. 
+  // Punting on optimistic update refactor within the mutation factory for now.
+  successMessage: '已创建合组',
 });
 
-export const useGroupUpdate = createMutationHook({
-  entity: 'Group',
-  action: 'Update',
-  mutationFn: async ({ id, updates }: { id: string; updates: Partial<ProductGroup> }) => {
+export const useGroupCreate = () => useAppMutation(groupCreateConfig);
+
+const groupUpdateConfig = defineMutation<ProductGroup, { id: string; updates: Partial<ProductGroup> }>({
+  service: async ({ id, updates }) => {
     const res = await updateGroup(id, updates);
     if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Update Group', id);
     return res.data;
   },
-  queryKey: groupKeys.all,
-  optimisticUpdate: optimistic.infinite.update<ProductGroup>(),
-  invalidateKeys: [groupKeys.all],
-  onSuccessMessage: '已修改',
+  invalidate: () => [groupKeys.all as unknown as any[]],
+  successMessage: '已修改',
 });
 
-export const useGroupDelete = createMutationHook({
-  entity: 'Group',
-  action: 'Delete',
-  mutationFn: async (id: string) => {
+export const useGroupUpdate = () => useAppMutation(groupUpdateConfig);
+
+const groupDeleteConfig = defineMutation<any, string>({
+  service: async (id: string) => {
     const res = await deleteGroupFromCloud(id);
     if (!res.ok) throw new Error(res.message);
     return res.data;
   },
-  invalidateKeys: [groupKeys.all, photoKeys.all],
-  onSuccessMessage: '已删除',
+  invalidate: () => [groupKeys.all as unknown as any[], photoKeys.all as unknown as any[]],
+  successMessage: '已删除',
 });
 
-export const useGroupCoverMutation = createMutationHook({
-  entity: 'Group',
-  action: 'SetCover',
-  mutationFn: async ({ groupId, photoId }: { groupId: string | undefined; photoId: string | null }) => {
+export const useGroupDelete = () => useAppMutation(groupDeleteConfig);
+
+const groupCoverConfig = defineMutation<any, { groupId: string | undefined; photoId: string | null }>({
+  service: async ({ groupId, photoId }) => {
     const res = await setPhotoAsGroupCover(photoId, groupId || '');
     if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Set Group Cover');
     return res.data;
   },
-  queryKey: photoKeys.all,
-  optimisticUpdate: (oldData: any, variables: { groupId: string | undefined; photoId: string | null }) => {
-    if (!oldData || !oldData.pages) return oldData;
-    return {
-      ...oldData,
-      pages: oldData.pages.map((page: any) => ({
-        ...page,
-        photos: page.photos?.map((p: any) => {
-          if (p.group_id === variables.groupId) {
-            return { ...p, is_group_cover: p.id === variables.photoId };
-          }
-          return p;
-        }) || page.items?.map((p: any) => {
-          if (p.group_id === variables.groupId) {
-            return { ...p, is_group_cover: p.id === variables.photoId };
-          }
-          return p;
-        }),
-      })),
-    };
-  },
-  invalidateKeys: [groupKeys.all, photoKeys.all],
-  onSuccessMessage: '已设为封面',
+  invalidate: () => [groupKeys.all as unknown as any[], photoKeys.all as unknown as any[]],
+  successMessage: '已设为封面',
 });
 
-export const useGroupPhotosMutation = createMutationHook({
-  entity: 'Group',
-  action: 'GroupPhotos',
-  mutationFn: async ({ photoIds, targetGroupId }: { photoIds: string[], targetGroupId?: string }) => {
+export const useGroupCoverMutation = () => useAppMutation(groupCoverConfig);
+
+const groupPhotosConfig = defineMutation<any, { photoIds: string[], targetGroupId?: string }>({
+  service: async ({ photoIds, targetGroupId }) => {
     const res = await groupPhotos(photoIds, targetGroupId);
     if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Group Photos');
     return res.data;
   },
-  queryKey: photoKeys.all,
-  optimisticUpdate: (oldData: any, variables: { photoIds: string[], targetGroupId?: string }) => {
-    const gid = variables.targetGroupId || 'temp-group-id';
-    return optimistic.infinite.batchUpdate<Photo>()(oldData, {
-      ids: variables.photoIds,
-      updates: { group_id: gid } as any
-    });
-  },
-  invalidateKeys: [photoKeys.all, groupKeys.all],
-  onSuccessMessage: '已合组',
+  invalidate: () => [photoKeys.all as unknown as any[], groupKeys.all as unknown as any[]],
+  successMessage: '已合组',
 });
 
-export const useRemoveFromGroupMutation = createMutationHook({
-  entity: 'Group',
-  action: 'RemovePhotos',
-  mutationFn: async ({ photoIds }: { photoIds: string[]; groupId: string }) => {
+export const useGroupPhotosMutation = () => useAppMutation(groupPhotosConfig);
+
+const removePhotosConfig = defineMutation<any, { photoIds: string[]; groupId: string }>({
+  service: async ({ photoIds }) => {
     const res = await movePhotosToGroup(photoIds, null);
     if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Remove From Group');
     return res.data;
   },
-  queryKey: photoKeys.all,
-  optimisticUpdate: (oldData: any, variables: { photoIds: string[]; groupId: string }) => {
-    return optimistic.infinite.batchUpdate<Photo>()(oldData, {
-      ids: variables.photoIds,
-      updates: { group_id: null } as any
-    });
-  },
-  invalidateKeys: [photoKeys.all, groupKeys.all],
-  onSuccessMessage: '已移出',
+  invalidate: () => [photoKeys.all as unknown as any[], groupKeys.all as unknown as any[]],
+  successMessage: '已移出',
 });
 
-export const useUngroupMutation = createMutationHook({
-  entity: 'Group',
-  action: 'Ungroup',
-  mutationFn: async (groupId: string) => {
+export const useRemoveFromGroupMutation = () => useAppMutation(removePhotosConfig);
+
+const ungroupConfig = defineMutation<any, string>({
+  service: async (groupId: string) => {
     const res = await ungroupPhotos(groupId);
     if (!res.ok) throw ErrorFactory.wrap(new Error(res.message), 'Ungroup Photos');
     return res.data;
   },
-  queryKey: photoKeys.all,
-  optimisticUpdate: (oldData: any, groupId: string) => {
-    if (!oldData || !oldData.pages) return oldData;
-    return {
-      ...oldData,
-      pages: oldData.pages.map((page: any) => ({
-        ...page,
-        photos: page.photos?.map((p: any) => p.group_id === groupId ? { ...p, group_id: null, is_group_cover: false } : p)
-             || page.items?.map((p: any) => p.group_id === groupId ? { ...p, group_id: null, is_group_cover: false } : p),
-      })),
-    };
-  },
-  invalidateKeys: [photoKeys.all, groupKeys.all],
-  onSuccessMessage: '已解散',
+  invalidate: () => [photoKeys.all as unknown as any[], groupKeys.all as unknown as any[]],
+  successMessage: '已解散',
 });
+
+export const useUngroupMutation = () => useAppMutation(ungroupConfig);
 
 export const useGroupMutations = () => {
   const create = useGroupCreate();

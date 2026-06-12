@@ -3,7 +3,7 @@ import {
   useCategoryCreate, useCategoryEdit,
   useTagCreate, useTagEdit,
   useManufacturerCreate, useManufacturerEdit
-} from './useAdminMutations';
+} from '.';
 
 export function useAdminCategory({ update }: { update?: any }) {
   const { mutateAsync: deleteCategory } = useCategoryDelete();

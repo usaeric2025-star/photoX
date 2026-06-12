@@ -19,7 +19,7 @@ import { UploadButton } from '@/components/shared/UploadButton';
 import { SelectionToolbar } from '@/components/shared/SelectionToolbar';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useAdminPhotos } from '@/hooks/admin/useAdminPhotos';
-import { useAdminSelectionActions } from '@/hooks/admin/useAdminSelectionActions';
+import { useAdminSelection } from '@/hooks/admin/useAdminSelection';
 
 export function AdminGridContainer() {
   const { handleBatchAiIdentifyTrigger } = useAdminBatchActions();
@@ -52,7 +52,7 @@ export function AdminGridContainer() {
       confirmDelete,
       initiateHide,
       initiateBatchEdit
-  } = useAdminSelectionActions();
+  } = useAdminSelection();
 
   const { can } = usePermission();
   const canPin = can('photo:toggle-pinned');

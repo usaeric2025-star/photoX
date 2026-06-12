@@ -1,4 +1,4 @@
-import { createQuery } from '../core/queryFactory';
+import { createQuery } from '@/lib/query/queryFactory';
 import { loadTagsFromCloud } from '@/services/tag/queries';
 import { tagKeys } from '@/lib/queryKeys';
 import { syncCache } from '@/lib/db/indexedDB';

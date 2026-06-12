@@ -2,7 +2,7 @@ import { logger } from '@/lib/logger';
 import { useState, useCallback } from 'react';
 import { showToast } from '@/lib/ui/toast';
 import { useQueryClient } from '@tanstack/react-query';
-import { useTaskExecutor, useAdminActions, useSettings, useCategories, useTags } from '@/hooks';
+import { useTaskExecutor, useAdminMaintenance, useSettings, useCategories, useTags } from '@/hooks';
 import { PhotoEditFormReturn } from '@/hooks/photo/types';
 import { analyzePhoto } from '@/services/ai/commands';
 import { useUIStore } from '@/store';
@@ -14,7 +14,7 @@ export function usePhotoEditAI(form: PhotoEditFormReturn) {
   const editPhotoId = useUIStore((s) => s.editPhotoId);
   const appLang = useUIStore((s) => s.appLang);
   const { runTask } = useTaskExecutor();
-  const { updatePhoto: { mutateAsync: updatePhoto } } = useAdminActions();
+  const { updatePhoto: { mutateAsync: updatePhoto } } = useAdminMaintenance();
   const { settings } = useSettings();
   const queryClient = useQueryClient();
 

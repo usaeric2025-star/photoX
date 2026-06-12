@@ -6,7 +6,7 @@ import { useLightbox } from "@/hooks";
 import { PhotoInfoPanel } from "@/components/photo/PhotoInfoPanel";
 import { LightboxFallback } from "@/components/PhotoLightbox/LightboxFallback";
 import { useUIStore } from "@/store/useUIStore";
-import { useAdminActions } from "@/hooks/admin/useAdminActions";
+import { useAdminMaintenance } from "@/hooks/admin/useAdminMaintenance";
 import { useTags, useCategories } from "@/hooks";
 import { useGroupCoverMutation } from "@/hooks";
 import { getTranslatedCategoryName } from "@/lib/ui-helpers";
@@ -29,7 +29,7 @@ export const PhotoLightboxPage = () => {
   
   const updateUIStore = useUIStore((s) => s.update);
   const appLang = useUIStore((s) => s.appLang);
-  const adminActions = useAdminActions();
+  const adminActions = useAdminMaintenance();
   const { mutateAsync: setCoverMut } = useGroupCoverMutation();
   const currentPhoto = currentIndex >= 0 ? photos[currentIndex] : null;
 

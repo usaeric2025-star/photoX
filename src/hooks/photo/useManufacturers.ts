@@ -1,4 +1,4 @@
-import { createQuery } from '../core/queryFactory';
+import { createQuery } from '@/lib/query/queryFactory';
 import { loadManufacturersFromCloud } from '@/services/manufacturer/queries';
 import { manufacturerKeys } from '@/lib/queryKeys';
 import { syncCache } from '@/lib/db/indexedDB';

@@ -1,7 +1,7 @@
 import { logger } from '@/lib/logger';
 import { Photo } from '../../types';
 import { supabase } from '../../lib/supabase';
-import { parseTranslation } from './fromDb';
+import { parseTranslation } from './mappers';
 
 export async function hydrateGroupInfo(photos: Photo[]): Promise<Photo[]> {
   const groupIds = Array.from(new Set(photos.map(p => p.group_id).filter(Boolean))) as string[];

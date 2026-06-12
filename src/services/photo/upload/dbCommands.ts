@@ -2,10 +2,10 @@ import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { withErrorHandling } from '@/lib/error/wrapper';
 import { AppResult, success } from '@/lib/error/ErrorFactory';
 import { Photo } from '../../../types';
+import { api } from '@/lib/api';
 
 export const upsertPhotoRecord = async (payload: any): Promise<AppResult<unknown>> => {
     return withErrorHandling(async () => {
-        const { api } = await import('@/lib/api');
         const res = await api.photos.upsert.$post({
             json: { payload }
         });
@@ -17,7 +17,6 @@ export const upsertPhotoRecord = async (payload: any): Promise<AppResult<unknown
 
 export const syncPhotoTagsInDB = async (photoId: string, tagIds: string[]): Promise<AppResult<void>> => {
     return withErrorHandling(async () => {
-      const { api } = await import('@/lib/api');
       const res = await api.tags['sync-photo-tags'].$post({
           json: { photoId, tagIds }
       });

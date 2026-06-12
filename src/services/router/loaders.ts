@@ -24,8 +24,8 @@ export async function prefetchMainGallery(queryClient: QueryClient) {
   return queryClient.prefetchInfiniteQuery({
     queryKey,
     queryFn: async () => {
-      const { loadAllPhotosFromCloud } = await import('@/services/photo');
-      const res = await loadAllPhotosFromCloud(
+      const { getPhotos } = await import('@/services/photo/queries/list');
+      const res = await getPhotos(
         undefined,
         0,
         PHOTO_QUERY_CONFIG.limit,
@@ -64,8 +64,8 @@ export async function prefetchGroupDetail(queryClient: QueryClient, groupId: str
   queryClient.prefetchInfiniteQuery({
     queryKey: photosKey,
     queryFn: async ({ pageParam = 1 }) => {
-      const { loadPhotosByGroupIdPaginated } = await import('@/services/photo/read');
-      const res = await loadPhotosByGroupIdPaginated(
+      const { getPhotosByGroupPaginated } = await import('@/services/photo/queries/byGroup');
+      const res = await getPhotosByGroupPaginated(
         groupId, pageParam as number, 60, isAdminMode
       );
       if (!res.ok) throw new Error(res.message || 'Error loading group photos');

@@ -1,7 +1,7 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useUIStore } from '@/store/useUIStore';
 import { useCallback, useState } from 'react';
-import { useAdminActions } from '@/hooks/admin/useAdminActions';
+import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
 
 
 /**
@@ -18,7 +18,7 @@ export const usePhotoSelection = () => {
   const updateForm = useUIStore(s => s.updateForm);
   const resetForm = useUIStore(s => s.resetForm);
 
-  const { deletePhoto, batchUpdate } = useAdminActions();
+  const { deletePhoto, batchUpdate } = useAdminMaintenance();
   
 
   const [batchIsHiddenApplied, setBatchIsHiddenApplied] = useState(false);

@@ -2,7 +2,7 @@ import { test, expect } from 'vitest';
 
 const registerDiagnostic = (_arg: any) => {};
 import GroupHeaderRaw from '@/components/groups/GroupHeader.tsx?raw';
-import GroupDetailPageRaw from '@/components/GroupDetailPage.tsx?raw';
+import GroupDetailPageRaw from '@/components/groups/GroupDetailPage.tsx?raw';
 import GroupDetailSkeletonRaw from '@/components/groups/GroupDetailSkeleton.tsx?raw';
 
 const run = async () => {

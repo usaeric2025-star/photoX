@@ -2,7 +2,7 @@ import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Photo } from "../../types";
 import { filterPhotosByMode } from "@/lib/filters/photoVisibility";
-import { useAdminActions } from "@/hooks/admin/useAdminActions";
+import { useAdminMaintenance } from "@/hooks/admin/useAdminMaintenance";
 import {
   useAdminMode,
   useGroupPhotos,
@@ -33,7 +33,7 @@ export const useGroupAdminLogic = () => {
     })),
   );
 
-  const adminActions = useAdminActions();
+  const adminActions = useAdminMaintenance();
   const onUpdatePhoto = async (id: string, data: any) =>
     adminActions.updatePhoto.mutateAsync({ id, updates: data });
   const onUpdatePhotosBulk = async (ids: string[], data: any) =>

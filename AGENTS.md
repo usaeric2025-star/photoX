@@ -60,6 +60,18 @@
 5. ❌ Props drilling 超过 2 层
 6. ❌ 预计算层
 
+## 架構進化規範 (2026-06-12)
+- ✅ defineMutation 仅返回纯配置对象，禁止返回 Hook 工厂
+- ✅ isDirty 判断禁止使用 JSON.stringify，使用 lodash-es/isEqual 或 RHF formState
+- ✅ ArkType Schema 是数据契约唯一真相源
+- ✅ Edit Session 封装完整编辑语义
+
+## 四大工廠規範（鎖定）
+
+- ✅ Mutation Factory 接收配置对象，禁止直接接收函数
+- ✅ Query Factory 必须绑定 ArkType Schema
+- ✅ Form Factory 必须使用集中化 Schema
+- ❌ Error Factory 禁止改动
 ## 命名规范（强制，锁定）
 
 ### 组件

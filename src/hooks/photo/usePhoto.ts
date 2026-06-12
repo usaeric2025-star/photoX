@@ -1,12 +1,12 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { loadPhotoById } from '@/services/photo/detail';
+import { getPhotoById as loadPhotoById } from '@/services/photo/queries/detail';
 import { photoKeys } from '@/lib/queryKeys';
 import { Photo } from '@/types';
 
 /**
  * Hook to get detailed photo information.
  */
-export const usePhotoDetail = (photoId: string) => {
+export const usePhoto = (photoId: string) => {
   const queryClient = useQueryClient();
 
   return useQuery({

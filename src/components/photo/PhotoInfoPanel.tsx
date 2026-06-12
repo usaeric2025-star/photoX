@@ -92,6 +92,13 @@ export function PhotoInfoPanel({
     members: appLang === 'zh' ? ' 个成员' : appLang === 'ms' ? ' ahli' : ' members',
     unknown: appLang === 'zh' ? '未知' : appLang === 'ms' ? 'Tidak diketahui' : 'Unknown',
   };
+  
+  const actionTexts = {
+    aiAnalyze: appLang === 'zh' ? 'AI 分析' : appLang === 'ms' ? 'Analisis AI' : 'AI Analyze',
+    edit: appLang === 'zh' ? '编辑' : appLang === 'ms' ? 'Edit' : 'Edit',
+    delete: appLang === 'zh' ? '删除' : appLang === 'ms' ? 'Padam' : 'Delete',
+    close: appLang === 'zh' ? '关闭' : appLang === 'ms' ? 'Tutup' : 'Close',
+  };
 
   // Description and Name splitting
   const displayDesc = getSafeText(data.description, descLang);
@@ -123,7 +130,7 @@ export function PhotoInfoPanel({
           onEdit={onEdit} 
           onDelete={onDelete} 
           onClose={onClose} 
-          texts={l} 
+          texts={actionTexts}
         />
       </div>
 

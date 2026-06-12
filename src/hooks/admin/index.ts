@@ -6,12 +6,12 @@ export * from './useAdminPhotos';
 /**
  * 管理員勾選操作與批量狀態
  */
-export * from './useAdminSelectionActions';
+export * from './useAdminSelection';
 
 /**
  * 管理員具體操作集合（單張、批量、AI）
  */
-export * from './useAdminActions';
+export * from './useAdminMaintenance';
 
 /**
  * 診斷報表與檢查邏輯
@@ -40,4 +40,7 @@ export * from './useAdminCategory';
 
 // Modularized business hooks
 export * from './useAdminMutations';
-export * from './useAdminBatchActions';
+export * from './useAdminBatch';
+export * from './useTagMutations';
+export * from './useCategoryMutations';
+export * from './useManufacturerMutations';

@@ -1,0 +1,25 @@
+import { ConfirmDialog } from "../../ui/ConfirmDialog";
+import { translations } from "../../../lib/translations";
+
+interface DeletePhotoDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  lang: string;
+  onDelete: () => Promise<void>;
+}
+
+export function DeletePhotoDialog({ open, onOpenChange, lang, onDelete }: DeletePhotoDialogProps) {
+  const t = translations[lang as keyof typeof translations] || translations.en;
+
+  return (
+    <ConfirmDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={t.confirmDeleteTitle}
+      description={t.confirmDeleteDesc}
+      confirmText={t.deleteBtn}
+      variant="destructive"
+      onConfirm={onDelete}
+    />
+  );
+}

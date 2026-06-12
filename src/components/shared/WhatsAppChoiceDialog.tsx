@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { X, MessageCircle } from 'lucide-react';
 
-import { AppSettings } from '../types';
+import { AppSettings } from '@/types';
 
 interface WhatsAppChoiceDialogProps {
   isOpen: boolean;

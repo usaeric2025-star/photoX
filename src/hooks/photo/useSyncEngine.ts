@@ -2,7 +2,7 @@ import { useCallback, useEffect } from 'react';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { User } from '@/types';
 import { fetchSettings } from '@/services/settings/queries';
-import { getPhotoCount } from '@/services/photo';
+import { getPhotoCount } from '@/services/photo/queries/list';
 import { useQueryClient } from '@tanstack/react-query';
 import { useInvalidatePhotos, useAuth, useTaskExecutor, useSyncMutation, useSettings } from '@/hooks';
 import { setupOfflineSyncListener } from '@/lib/sync/offlineSync';

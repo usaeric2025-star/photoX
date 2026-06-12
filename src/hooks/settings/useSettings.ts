@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useLocalStorage } from '@/hooks/core/useLocalStorage';
-import { createQuery } from '../core/queryFactory';
+import { createQuery } from '@/lib/query/queryFactory';
 import { fetchSettings } from '@/services/settings/queries';
 import { syncCache } from '@/lib/db/indexedDB';
 import { useSettingsUpdateMutation } from './useSettingsMutations';

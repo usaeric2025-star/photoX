@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { LoadingScreen } from '../LoadingScreen';
+import { LoadingScreen } from './LoadingScreen';
 
 interface DataLoadingContainerProps {
   isLoading: boolean;

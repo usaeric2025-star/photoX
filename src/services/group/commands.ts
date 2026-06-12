@@ -151,7 +151,7 @@ export const groupPhotos = async (
     const userId = session?.user?.id;
 
     // Use photos by-ids instead of supabase.from
-    const { loadPhotosByIds } = await import('@/services/photo/read');
+    const { loadPhotosByIds } = await import('@/services/photo');
     const selectedRes = await loadPhotosByIds(photoIds);
     if (!selectedRes.ok) return selectedRes;
 

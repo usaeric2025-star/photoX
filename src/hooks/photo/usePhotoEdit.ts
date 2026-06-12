@@ -4,7 +4,7 @@ import { useMemo, useEffect } from 'react';
 import { Photo, ProductFormData } from '@/types';
 import { useFormDraft } from '@/hooks';
 import { useMutation } from '@tanstack/react-query';
-import { updatePhoto } from '@/services/photo/commands';
+import { updatePhoto } from '@/services/photo/commands/update';
 import { showToast } from '@/lib/ui/toast';
 import { PhotoEditFormReturn } from './types';
 

@@ -12,7 +12,7 @@ import { useGroupAdminLogic } from "./useGroupAdminLogic";
 import { GroupGridView } from "./GroupGridView";
 import { GroupPhotoPicker } from "./GroupPhotoPicker";
 import { useAdminMode, useGroupMutations, useUrlFilters, useAIBatchAnalysis, useCopyToClipboard } from "@/hooks";
-import { useAdminActions } from "@/hooks/admin/useAdminActions";
+import { useAdminMaintenance } from "@/hooks/admin/useAdminMaintenance";
 import { useUIStore, useShallow } from "@/store/useUIStore";
 import { translations } from "../../lib/translations";
 import { Plus, Settings2, MoreVertical, Pencil, Sparkles, FolderMinus } from "lucide-react";
@@ -35,12 +35,12 @@ export function GroupAdminShell() {
   const update = useUIStore((s) => s.update);
 
   const [isDissolveOpen, dissolveDialog] = useDisclosure(false);
-  const adminActions = useAdminActions();
+  const adminActions = useAdminMaintenance();
   const { dissolve } = useGroupMutations();
   const { handleBatchAiAnalyze } = useAIBatchAnalysis();
   
   const onUngroup = async (groupId: string) => {
-    await (dissolve.execute as any)(groupId);
+    await dissolve.mutateAsync(groupId);
   };
   
   const storeEditPhoto = (p: Photo | string) =>

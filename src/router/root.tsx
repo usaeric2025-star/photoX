@@ -1,6 +1,6 @@
 import { createRootRouteWithContext, Outlet } from '@tanstack/react-router';
 import { Suspense } from 'react';
-import { PageSkeleton } from '@/components/PageSkeleton';
+import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { JobResumer } from '@/components/tasks/JobResumer';
 import { BackgroundTaskPanel } from '@/components/tasks/BackgroundTaskPanel';
 import { Capability } from '@/config/permissions';

@@ -1,11 +1,11 @@
-import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { ConfirmProvider } from './context/ConfirmContext';
 import { RouterProvider } from '@tanstack/react-router';
 import { router } from './router/index';
 import { Analytics } from '@vercel/analytics/react';
 import { useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '@/hooks/core/auth/useAuth';
-import { LoadingScreen } from '@/components/LoadingScreen';
+import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { migrateStorage } from '@/lib/storage';
 import { clearExpiredCaches } from './lib/db/indexedDB';
 import { handleError } from './lib/error/errorHandler';

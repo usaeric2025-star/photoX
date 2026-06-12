@@ -4,7 +4,7 @@ import { Lock, Loader2, Maximize2, X } from 'lucide-react';
 import { ProductFormData } from '../../../types';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useUIStore } from '../../../store';
-import { usePhotoDetail, useTaskExecutor, useTasks } from '../../../hooks';
+import { usePhoto, useTaskExecutor, useTasks } from '../../../hooks';
 
 import { PhotoEditFormReturn } from '@/hooks/photo/types';
 
@@ -19,7 +19,7 @@ export function BasicInfoTab({ form }: Props) {
   const editPhotoId = useUIStore((s) => s.editPhotoId);
   const newPhotoData = useUIStore((s) => s.newPhotoData);
   const update = useUIStore((s) => s.update);
-  const { data: detailPhoto } = usePhotoDetail(editPhotoId || '');
+  const { data: detailPhoto } = usePhoto(editPhotoId || '');
   const { runTask } = useTaskExecutor();
   const { tasks } = useTasks();
   

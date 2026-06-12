@@ -1,5 +1,6 @@
-import { createInfiniteQuery } from '../core/queryFactory';
-import { loadAllPhotosFromCloud, loadPhotosByGroupIdPaginated } from '@/services/photo';
+import { createInfiniteQuery } from '@/lib/query/queryFactory';
+import { getPhotos as loadAllPhotosFromCloud } from '@/services/photo/queries/list';
+import { getPhotosByGroupPaginated as loadPhotosByGroupIdPaginated } from '@/services/photo/queries/byGroup';
 import { photoKeys } from '@/lib/queryKeys';
 import { syncCache } from '@/lib/db/indexedDB';
 import { PHOTO_QUERY_CONFIG } from '@/lib/photoQueryConfig';

@@ -1,12 +1,12 @@
-import { usePhotoEditMutation, usePhotoDelete, usePhotoBatchEdit, useTogglePin } from '../photo';
+import { usePhotoEditMutation, usePhotoDelete, usePhotoBatchEdit, useTogglePin } from '../photo/usePhotoMutations';
 import { useAIBatchAnalysis } from '../photo';
 
 /**
- * useAdminActions
+ * useAdminMaintenance
  * 管理員操作的聚合 Hook，提供刪除、更新、批量操作等功能。
  * 替換原有的 features/admin/useAdminActions.ts。
  */
-export function useAdminActions() {
+export function useAdminMaintenance() {
   const photoEdit = usePhotoEditMutation();
   const photoDelete = usePhotoDelete();
   const photoBatchUpdate = usePhotoBatchEdit();
@@ -15,7 +15,7 @@ export function useAdminActions() {
 
   return {
     updatePhoto: photoEdit,
-    deletePhoto: photoDelete.mutate, // Legacy support for direct mutate call
+    deletePhoto: photoDelete.mutateAsync, // Update to support await
     deletePhotoMutation: photoDelete,
     batchUpdate: photoBatchUpdate,
     togglePin: photoTogglePin,

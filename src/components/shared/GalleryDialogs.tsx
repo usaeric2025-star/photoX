@@ -1,8 +1,8 @@
 import { useUIStore } from '../../store/useUIStore';
 import React from 'react';
 import { AnimatePresence } from 'motion/react';
-import { StaffUnlockDialog } from '../StaffUnlockDialog';
-import { WhatsAppChoiceDialog } from '../WhatsAppChoiceDialog';
+import { StaffUnlockDialog } from '@/components/admin/StaffUnlockDialog';
+import { WhatsAppChoiceDialog } from '@/components/shared/WhatsAppChoiceDialog';
 import { AppSettings, TranslationType } from '../../types';
 
 interface GalleryDialogsProps {

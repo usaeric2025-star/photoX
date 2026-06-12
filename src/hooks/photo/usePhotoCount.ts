@@ -1,5 +1,5 @@
-import { createQuery } from '../core/queryFactory';
-import { getPhotoCount, getLocalPhotoCount } from '@/services/photo';
+import { createQuery } from '@/lib/query/queryFactory';
+import { getPhotoCount, getLocalPhotoCount } from '@/services/photo/queries/list';
 import { photoKeys } from '@/lib/queryKeys';
 
 interface PhotoCountFilters {

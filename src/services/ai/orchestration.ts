@@ -1,6 +1,6 @@
 import { analyzePhoto } from './commands';
 import { translateFields } from './translationService';
-import { updatePhoto } from '../photo/commands';
+import { updatePhoto } from '../photo';
 import { syncPhotoTags, loadTagsFromCloud, batchCreateTags } from '../tag';
 import { ok, fail } from '@/lib/utils/result';
 import { AppResult } from '@/types/api';
@@ -101,7 +101,7 @@ export const autoGroupPhotos = async (
   photoIds: string[]
 ): Promise<AppResult<unknown>> => {
   try {
-    const { loadPhotosByIds } = await import('../photo/read');
+    const { loadPhotosByIds } = await import('../photo');
     const photoRes = await loadPhotosByIds(photoIds);
     if (!photoRes.ok) return fail(photoRes.message);
     const photos = photoRes.data || [];
@@ -216,7 +216,7 @@ export async function runBatchAnalysis({
   if (groupId) {
     onProgress(75, '正在總結整个合组...');
     try {
-      const { loadPhotosByIds } = await import('../photo/read');
+      const { loadPhotosByIds } = await import('../photo');
       const res = await loadPhotosByIds(targetPhotos.map(p => p.id));
       if (res.ok && res.data) {
         onProgress(85, '生成合组名称与描述...');

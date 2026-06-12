@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
-import { useAdminActions } from './useAdminActions';
+import { useAdminMaintenance } from './useAdminMaintenance';
 import { useUIStore } from '@/store/useUIStore';
 
 /**
  * Handle administrative selection actions (批量删除, 批量隐藏, etc.)
  */
-export const useAdminSelectionActions = () => {
+export const useAdminSelection = () => {
     const [isDeleteOpen, { open, close, toggle }] = useDisclosure(false);
     const [idsToDelete, setIdsToDelete] = useState<string[]>([]);
-    const adminActions = useAdminActions();
+    const adminActions = useAdminMaintenance();
     const update = useUIStore(s => s.update);
 
     const initiateDelete = (ids: string[]) => {
@@ -23,7 +23,7 @@ export const useAdminSelectionActions = () => {
     };
 
     const initiateHide = (ids: string[]) => {
-        adminActions.batchUpdate.execute({ ids, updates: { is_hidden: true } });
+        adminActions.batchUpdate.mutateAsync({ ids, updates: { is_hidden: true } });
     };
 
     const initiateBatchEdit = (ids: string[]) => {

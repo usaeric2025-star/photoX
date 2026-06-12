@@ -1,7 +1,7 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { GroupDetailPage } from '../../GroupDetailPage';
+import { GroupDetailPage } from '../GroupDetailPage';
 
 // Mock necessary hooks and dependencies
 vi.mock('@/hooks', () => ({

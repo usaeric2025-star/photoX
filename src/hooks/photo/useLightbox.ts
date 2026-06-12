@@ -1,6 +1,6 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import { useUrlFilters } from "./useUrlFilters";
-import { usePhotoDetail } from "./usePhotoDetail";
+import { usePhoto } from "./usePhoto";
 import { useGroupPhotos, usePhotos } from "./usePhotos";
 import { useGroupDetail } from "../groups/useGroupDetail";
 import { useQuery } from '@tanstack/react-query';
@@ -25,7 +25,7 @@ export const useLightbox = () => {
   const isAdmin = location.pathname.startsWith('/admin');
   
   // Use enabled condition to avoid unnecessary requests
-  const { data: singlePhoto, isLoading: isSingleLoading } = usePhotoDetail(photoId || '');
+  const { data: singlePhoto, isLoading: isSingleLoading } = usePhoto(photoId || '');
   const { data: groupDetail, isLoading: isGroupLoading } = useGroupDetail(groupId || '');
   const { data: groupPhotos, isLoading: isPhotosLoading } = useGroupPhotos(groupId, isAdmin, 60);
   const { data: allGalleryPhotos, isLoading: isGalleryLoading } = usePhotos({

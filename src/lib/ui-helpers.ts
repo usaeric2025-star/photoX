@@ -1,10 +1,9 @@
 import { Category, Manufacturer } from '../types';
+import { getSafeText } from './ai/safeText';
 import { getTranslatedCategoryName, isUncategorizedName } from '../services/category/utils';
 import { getPhotoDisplayName, getCacheBustedImageUrl } from '../services/photo/utils';
 
 export { getTranslatedCategoryName, isUncategorizedName, getPhotoDisplayName, getCacheBustedImageUrl };
-
-// ... existing code ...
 
 /**
  * Gets the manufacturer name from the ID.

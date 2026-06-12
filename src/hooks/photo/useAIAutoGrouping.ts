@@ -48,7 +48,7 @@ export function useAIAutoGrouping() {
           appLang === 'zh' ? "AI 智能识别" : "AI Identification",
           async ({ updateProgress }) => {
             updateProgress(10, appLang === 'zh' ? '正在加载照片信息...' : 'Loading photo data...');
-            const { loadPhotosByIds } = await import('@/services/photo/read');
+            const { loadPhotosByIds } = await import('@/services/photo');
             const res = await loadPhotosByIds([photoId]);
             if (!res.ok) throw new Error(res.message || '加载照片信息失败');
             const photo = res.data?.[0];

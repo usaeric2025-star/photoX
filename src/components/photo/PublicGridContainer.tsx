@@ -7,10 +7,10 @@ import { usePhotos, useSettings, useCategories, useTags, useUrlFilters } from '@
 import { processPhotos as processPhotosSync } from '@/lib/filters';
 import { cleanPhotos } from '@/lib/filters';
 import { PAGINATION, EMPTY_ARRAY } from '@/constants/config';
-import { GroupDetailPage } from '../GroupDetailPage';
+import { GroupDetailPage } from '@/components/groups/GroupDetailPage';
 import { PhotoCard } from './PhotoCard';
 import { PublicFloatingActions } from './PublicFloatingActions';
-import { WhatsAppChoiceDialog } from '../WhatsAppChoiceDialog';
+import { WhatsAppChoiceDialog } from '@/components/shared/WhatsAppChoiceDialog';
 import { translations } from '@/lib/translations';
 import { Photo } from '@/types';
 

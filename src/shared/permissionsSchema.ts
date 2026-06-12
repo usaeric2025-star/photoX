@@ -1,7 +1,7 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { type } from "arktype";
 import { redirect } from "@tanstack/react-router";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 
 /**
  * [PERMISSIONS-SCHEMA-DEFINED]
