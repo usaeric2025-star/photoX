@@ -128,16 +128,11 @@ export function GroupPhotoPicker({
   const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
 
-    // Use the global handler but pre-assign groupId
-    if (handlePhotoImport) {
-      await runTask(
-        "上传照片",
-        async () => {
-          await handlePhotoImport(e, true, groupId);
-          onClose();
-        },
-        { showSuccessToast: true },
-      );
+    try {
+      await handlePhotoImport(e, true, groupId);
+      onClose();
+    } catch (e) {
+      // Error handled inside handlePhotoImport or by TaskExecutor
     }
   };
 

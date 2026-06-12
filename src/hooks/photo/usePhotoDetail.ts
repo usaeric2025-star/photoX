@@ -37,8 +37,26 @@ export const usePhotoDetail = (photoId: string) => {
       return undefined;
     },
     initialDataUpdatedAt: () => {
-        return queryClient.getQueryState(photoKeys.detail(photoId))?.dataUpdatedAt;
-    }
+        // Find if we have a detailed cache state
+        const detailState = queryClient.getQueryState(photoKeys.detail(photoId));
+        if (detailState?.dataUpdatedAt) {
+            return detailState.dataUpdatedAt;
+        }
+        
+        // Find the newest updated time from the photos list
+        const cachedPhotos = queryClient.getQueriesData<any>({ queryKey: photoKeys.all });
+        let latestUpdates = 0;
+        for (const [key, data] of cachedPhotos) {
+            const state = queryClient.getQueryState(key);
+            if (state?.dataUpdatedAt && state.dataUpdatedAt > latestUpdates) {
+                latestUpdates = state.dataUpdatedAt;
+            }
+        }
+        return latestUpdates > 0 ? latestUpdates : undefined;
+    },
+    staleTime: 0, // Always ensure we fetch the latest when opening
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 };
 

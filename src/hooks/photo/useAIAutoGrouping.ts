@@ -87,6 +87,11 @@ export function useAIAutoGrouping() {
 
     if (photoIds.length === 1) {
         await recognizeSinglePhoto(photoIds[0]);
+        // 刷新列表 (保留 editPhotoId 等 UI 狀態)
+        await Promise.all([
+            queryClient.invalidateQueries({ queryKey: photoKeys.all }),
+            queryClient.invalidateQueries({ queryKey: groupKeys.all })
+        ]);
     } else {
         await createAIGroup(photoIds);
         

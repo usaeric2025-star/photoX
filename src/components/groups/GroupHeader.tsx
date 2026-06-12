@@ -74,25 +74,24 @@ export function GroupHeader({
           </div>
         </div>
 
-        <button
-          onClick={onClose}
-          className="w-10 h-10 flex-shrink-0 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors border border-slate-200 bg-white"
-        >
-          <X size={20} />
-        </button>
-      </div>
-
-      {isAdminMode && onBatchEdit && (
-        <div className="px-4 sm:px-6 pb-4">
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {isAdminMode && onBatchEdit && (
+            <button
+              onClick={() => onBatchEdit(activeGroupPhotos.map(p => p.id))}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium transition-colors"
+            >
+              <Edit2 size={14} />
+              <span className="hidden sm:inline">{l.batchEdit}</span>
+            </button>
+          )}
           <button
-            onClick={() => onBatchEdit(activeGroupPhotos.map(p => p.id))}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium transition-colors"
+            onClick={onClose}
+            className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors border border-slate-200 bg-white"
           >
-            <Edit2 size={14} />
-            {l.batchEdit}
+            <X size={20} />
           </button>
         </div>
-      )}
+      </div>
     </div>
   );
 }

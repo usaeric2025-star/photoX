@@ -14,7 +14,6 @@ import { QueryClient } from '@tanstack/react-query';
 import { photoKeys, groupKeys } from '@/lib/queryKeys';
 import { createStaleTime } from '@/shared/freshnessSchema';
 import { prefetchMainGallery, prefetchGroupDetail } from '@/services/router/loaders';
-import { GlobalStatus } from './components/shared/GlobalStatus';
 import { authGuard } from './lib/router/routeGuards';
 import { GallerySearchParams } from './types/router';
 
@@ -61,6 +60,9 @@ const PublicPage = lazyWithRetry(() => import('./pages/PublicPage'), 'PublicPage
 const AdminPage = lazyWithRetry(() => import('./pages/AdminPage/index'), 'AdminPage');
 const PhotoLightboxPage = lazy(() => import('./pages/PhotoLightboxPage'));
 
+import { JobResumer } from '@/components/tasks/JobResumer';
+import { BackgroundTaskPanel } from '@/components/tasks/BackgroundTaskPanel';
+
 // 1. Root Route
 export const rootRoute = createRootRouteWithContext<RouterContext>()({
   beforeLoad: ({ context }) => {
@@ -75,7 +77,8 @@ export const rootRoute = createRootRouteWithContext<RouterContext>()({
     <Suspense fallback={<PageSkeleton />}>
       <Outlet />
       <PhotoLightboxPage />
-      <GlobalStatus />
+      <JobResumer />
+      <BackgroundTaskPanel />
     </Suspense>
   ),
 });

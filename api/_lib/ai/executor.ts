@@ -35,26 +35,42 @@ export const saveAIAuditLog = async (data: AIAuditData): Promise<void> => {
   try {
     const supabase = await getSupabaseAdmin();
     
-    // 1. 上傳原始輸出到 R2
-    const timestamp = Date.now();
-    const rawKey = `ai_logs/${data.photoId || 'global'}/${timestamp}_${uuidv4().slice(0, 8)}.json`;
-    const uploadResult = await uploadToR2(rawKey, data.rawResponse);
-    
-    if (!uploadResult.success) {
-      logger.error('[AIAudit] Failed to upload AI raw result to R2:', uploadResult.error);
-      return;
+    let rawKey: string | null = null;
+    let actualRawResponse = data.rawResponse;
+    const maxRawLengthForDb = 5000; // if R2 fails, we store truncated data in DB directly, but we won't crash
+
+    // 1. 尝试上传原始输出到 R2
+    try {
+      const timestamp = Date.now();
+      rawKey = `ai_logs/${data.photoId || 'global'}/${timestamp}_${uuidv4().slice(0, 8)}.json`;
+      const uploadResult = await uploadToR2(rawKey, actualRawResponse);
+      
+      if (!uploadResult.success) {
+        logger.error('[AIAudit] Failed to upload AI raw result to R2:', uploadResult.error);
+        rawKey = null; // Mark as failed
+      }
+    } catch (e) {
+      logger.error('[AIAudit] R2 Exception:', e);
+      rawKey = null;
     }
     
-    // 2. 寫入資料庫
+    // 如果 R2 上传失败，我们依然将其写入数据库，否则 AI 分析就没有记录了
+    if (!rawKey && typeof actualRawResponse === 'string' && actualRawResponse.length > maxRawLengthForDb) {
+         // Truncate to avoid DB bloat if R2 fails
+         actualRawResponse = actualRawResponse.substring(0, maxRawLengthForDb) + '\n...[TRUNCATED DUE TO R2 FAILURE]';
+    }
+
+    // 2. 写入数据库
     const { error } = await supabase.from('ai_audit_logs').insert({
       photo_id: data.photoId,
       model: data.model,
       prompt_version: data.promptVersion,
       cleaned_output: data.cleanedOutput,
       raw_storage_path: rawKey,
+      error_message: rawKey ? data.errorMessage : (data.errorMessage ? `${data.errorMessage}\n\nRAW_DATA:\n${actualRawResponse}` : actualRawResponse),
+      // Fallback for raw data if R2 wasn't used/failed (though schema must support it if you query it later, or just put it in a metadata json if schema supports it, but since schema has error_message we can use it to know it failed)
       duration: data.duration,
       status: data.status,
-      error_message: data.errorMessage,
       trace_id: data.traceId,
       user_id: data.userId || null,
       created_at: new Date().toISOString()
@@ -63,7 +79,9 @@ export const saveAIAuditLog = async (data: AIAuditData): Promise<void> => {
     if (error) {
       logger.error('[AIAudit] Failed to save AI audit log into DB:', error);
       // 資料庫失敗，刪除已上傳的 R2 檔案 (回滾)
-      await deleteFromR2(rawKey);
+      if (rawKey) {
+        await deleteFromR2(rawKey);
+      }
     } else {
       logger.info(`[AIAudit] Successfully saved AI audit log for ${data.photoId || 'global'}`);
     }

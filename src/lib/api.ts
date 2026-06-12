@@ -1,5 +1,5 @@
 import { hc } from 'hono/client';
-import type { AppType } from '../../api/app.js';
+import type { AppType } from '../../api/app';
 import { supabase } from '@/lib/supabase';
 
 /**

@@ -1,5 +1,11 @@
 import { createStaleTime } from '@/shared/freshnessSchema';
 import React, { StrictMode } from 'react';
+
+// Polyfill process for libraries that expect it (like ArkType)
+if (typeof window !== 'undefined' && (typeof (window as any).process === 'undefined' || (window as any).process === null)) {
+  (window as any).process = { env: { NODE_ENV: 'development' } };
+}
+
 import { createRoot } from 'react-dom/client';
 import { Toaster } from 'sonner';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';

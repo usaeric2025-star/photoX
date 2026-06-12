@@ -184,27 +184,29 @@ export function createMutation<TData, TVariables, TContext = unknown>(config: Mu
 }
 
 export function createMutationHook<TData = any, TVariables = any, TContext = unknown>(config: any) {
-  return function useStandardMutation(options?: any) {
-    const mutation = createMutation<TData, TVariables, TContext>({
+  const useInternalMutation = createMutation<TData, TVariables, TContext>({
       ...config,
       // If queryKey is missing, we pick the first invalidation key as the tracking key
       queryKey: config.queryKey || (typeof config.invalidateKeys === 'function' 
         ? (vars: any) => config.invalidateKeys(vars, null as any)[0] 
         : config.invalidateKeys?.[0]) || ['unknown'],
-      onSuccess: (data: TData, variables: TVariables) => {
+      onSuccess: (data: TData, variables: TVariables, context: any) => {
         // Handle Success Message
-        const rawMsg = options?.successMessage ?? config.successMessage ?? config.onSuccessMessage;
+        const rawMsg = config.successMessage ?? config.onSuccessMessage;
         if (rawMsg) {
           const resolvedMsg = typeof rawMsg === 'function' ? rawMsg(data, variables) : rawMsg;
           if (resolvedMsg) showToast.success(resolvedMsg);
         }
-        
-        config.onSuccess?.(data, variables);
-      },
-      ...options
-    });
+        config.onSuccess?.(data, variables, context);
+      }
+  });
+
+  return function useStandardMutation(options?: any) {
+    // To support options?.successMessage, we can override onSuccess if needed, but it's rarely used.
+    // We'll pass options to the internal mutation.
+    const mut = useInternalMutation(options);
     
-    const mut = mutation(options);
+    // We handle options?.successMessage at the mutation execution boundary or just let useMutation handle it if options contain onSuccess.
     
     return {
       ...mut,

@@ -79,12 +79,14 @@ export function SelectionToolbar({
     const prevSelection = [...ids]; 
     const targetGroupId = crypto.randomUUID();
     
+    // Hide immediately to prevent UI blocking during async task
+    handleClear();
+    
     try {
       await groupMutation.mutateAsync({ 
         photoIds: currentIds, 
         targetGroupId
       });
-      handleClear(); 
       setShowGroupsCollapsed(true);
     } catch (err) {
       console.error(err);
@@ -93,14 +95,23 @@ export function SelectionToolbar({
   };
 
   const handleAI = async () => {
-    if (onAIIdentify) {
-      onAIIdentify(ids);
-      handleClear();
-      setShowGroupsCollapsed(true);
-    } else {
-      await handleAIAction(ids);
-      handleClear();
-      setShowGroupsCollapsed(true);
+    const currentIds = [...ids];
+    const prevSelection = [...ids];
+    
+    // Hide immediately to prevent UI blocking during async task
+    handleClear();
+    
+    try {
+      if (onAIIdentify) {
+        onAIIdentify(currentIds);
+        setShowGroupsCollapsed(true);
+      } else {
+        await handleAIAction(currentIds);
+        setShowGroupsCollapsed(true);
+      }
+    } catch (err) {
+      console.error(err);
+      update({ isMultiSelect: true, selectedIds: prevSelection });
     }
   };
 

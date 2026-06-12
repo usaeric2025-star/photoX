@@ -159,25 +159,21 @@ export const useRepairMutation = createMutationHook({
   onSuccessMessage: '修复成功',
 });
 
-export const useSyncMutation = () => {
-  const queryClient = useQueryClient();
-  const invalidatePhotos = useInvalidatePhotos();
-
-  return createMutationHook({
-    entity: 'Sync',
-    action: 'Run',
-    mutationFn: async (type: 'push' | 'pull') => {
-      if (type === 'pull') {
-        invalidatePhotos();
-        await queryClient.invalidateQueries({ queryKey: [tagKeys.tags()] });
-        await queryClient.invalidateQueries({ queryKey: [categoryKeys.categories()] });
-        await queryClient.invalidateQueries({ queryKey: [manufacturerKeys.manufacturers()] });
-        await queryClient.invalidateQueries({ queryKey: [groupKeys.all] });
-      }
-    },
-    onSuccessMessage: '同步完成',
-  })();
-};
+export const useSyncMutation = createMutationHook({
+  entity: 'Sync',
+  action: 'Run',
+  mutationFn: async (type: 'push' | 'pull') => {
+    if (type === 'pull') {
+      const { queryClient } = await import('@/lib/queryClient');
+      await queryClient.invalidateQueries({ queryKey: [tagKeys.tags()] });
+      await queryClient.invalidateQueries({ queryKey: [categoryKeys.categories()] });
+      await queryClient.invalidateQueries({ queryKey: [manufacturerKeys.manufacturers()] });
+      await queryClient.invalidateQueries({ queryKey: [groupKeys.all] });
+      await queryClient.invalidateQueries({ queryKey: photoKeys.all });
+    }
+  },
+  onSuccessMessage: '同步完成',
+});
 
 export const useAdminMutations = () => {
   const repair = useRepairMutation();

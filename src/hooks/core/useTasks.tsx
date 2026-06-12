@@ -153,8 +153,6 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   return (
     <TaskContext.Provider value={value}>
       {children}
-      <JobResumer />
-      <BackgroundTaskPanel />
     </TaskContext.Provider>
   );
 };

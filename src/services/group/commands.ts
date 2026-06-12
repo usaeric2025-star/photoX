@@ -169,9 +169,20 @@ export const groupPhotos = async (
       return !p?.group_id;
     });
 
+    // Derive a name if missing
+    let finalName = metadata?.name;
+    if (!finalName) {
+      const p = selectedRes.data?.[0];
+      if (p?.name) {
+         finalName = typeof p.name === 'string' ? { zh: p.name, en: p.name, ms: p.name } : p.name;
+      } else {
+         finalName = { zh: 'New Collection', en: 'New Collection', ms: 'New Collection' };
+      }
+    }
+
     // Prepare Group Record
     const groupData = {
-      name: metadata?.name || { zh: '新合組', en: 'New Combined Group', ms: 'Kumpulan Baru' },
+      name: finalName,
       description: metadata?.description || { zh: '', en: '', ms: '' },
       updated_at: new Date().toISOString()
     };

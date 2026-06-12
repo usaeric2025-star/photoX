@@ -106,11 +106,11 @@ export const LightboxCore = ({
             icon={Download}
             onClick={() => { const p = photos[index]; if (p) downloadPhotoAsJpeg(p.image_url); }}
           />,
-          "close",
         ].filter(Boolean) as any[]
       }}
       render={{
         buttonZoom: () => null,
+        buttonClose: () => null,
         // Custom interactive controls overlaid on lightbox
         controls: () => (
           <>

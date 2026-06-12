@@ -42,10 +42,12 @@ export function BatchEditForm({
         </p>
       </div>
 
-      <ProductInputSection label="产品名称 / PRODUCT NAME" placeholder="输入统一产品名称..." value={typeof formState.name === 'object' ? (formState.name.zh || '') : (formState.name || '')} onChange={(v) => handleUpdateForm({ name: { zh: v, en: v, ms: v } })} />
-      <ProductInputSection label="产品编号 / ITEM CODE" placeholder="输入统一编号 (如: SK-2024)..." value={formState.manual_code} onChange={(v) => handleUpdateForm({ manual_code: v })} />
-      <ProductInputSection label="型號 / MODEL NUMBER" placeholder="输入统一型号编号 (如: MOD-123)..." value={formState.model_number} onChange={(v) => handleUpdateForm({ model_number: v })} />
-      <ProductInputSection label="價格 / PRICE" placeholder="输入统一价格..." value={formState.price} onChange={(v) => handleUpdateForm({ price: v })} className="text-blue-600" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <ProductInputSection label="产品名称 / PRODUCT NAME" placeholder="输入统一产品名称..." value={typeof formState.name === 'object' ? (formState.name.zh || '') : (formState.name || '')} onChange={(v) => handleUpdateForm({ name: { zh: v, en: v, ms: v } })} />
+        <ProductInputSection label="产品编号 / ITEM CODE" placeholder="输入统一编号 (如: SK-2024)..." value={formState.manual_code} onChange={(v) => handleUpdateForm({ manual_code: v })} />
+        <ProductInputSection label="型號 / MODEL NUMBER" placeholder="输入统一型号编号 (如: MOD-123)..." value={formState.model_number} onChange={(v) => handleUpdateForm({ model_number: v })} />
+        <ProductInputSection label="價格 / PRICE" placeholder="输入统一价格..." value={formState.price} onChange={(v) => handleUpdateForm({ price: v })} className="text-blue-600" />
+      </div>
 
       <VisibilitySection 
         batchIsHiddenApplied={batchIsHiddenApplied} 

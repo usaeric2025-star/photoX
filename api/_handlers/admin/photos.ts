@@ -30,6 +30,10 @@ adminPhotos.get("/photo-ai-result/:photoId", async (c) => {
                     rawResult = r2Content;
                 }
             }
+            if (!rawResult && auditLog.error_message && auditLog.error_message.includes('{')) {
+                // If R2 upload failed in the past, executor might save the raw JSON in error_message
+                rawResult = auditLog.error_message;
+            }
             if (!rawResult) {
                 rawResult = typeof auditLog.cleaned_output === 'object' 
                     ? JSON.stringify(auditLog.cleaned_output, null, 2)
