@@ -1,22 +1,12 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useInvalidatePhotos } from '@/hooks';
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo, useEffect } from 'react';
 import { Photo, ProductFormData } from '@/types';
 import { useFormDraft } from '@/hooks';
 import { useMutation } from '@tanstack/react-query';
 import { updatePhoto } from '@/services/photo/commands';
 import { toast } from 'sonner';
-
-
-export interface PhotoEditFormReturn {
-  values: ProductFormData;
-  isPending: boolean;
-  isDirty: boolean;
-  setValues: (updates: Partial<ProductFormData>) => void;
-  setFieldValue: (field: keyof ProductFormData, value: any) => void;
-  reset: () => void;
-  save: () => Promise<any>;
-}
+import { PhotoEditFormReturn } from './types';
 
 /**
  * usePhotoEdit
@@ -91,5 +81,5 @@ export function usePhotoEdit(initialPhoto: Photo | null): PhotoEditFormReturn {
     setFieldValue: (field: keyof ProductFormData, value: any) => updateDraft({ [field]: value }),
     reset: resetDraft,
     save
-  };
+  } as any;
 }

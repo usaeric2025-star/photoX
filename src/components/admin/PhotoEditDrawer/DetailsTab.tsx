@@ -1,7 +1,7 @@
 import React from 'react';
 import { DimensionEditor } from '../edit/DimensionEditor';
 import { ProductFormData, Dimension } from '../../../types';
-import { PhotoEditFormReturn } from '@/hooks/photo/usePhotoEdit';
+import { PhotoEditFormReturn } from '@/hooks/photo/types';
 import { safeArray } from '../../../lib/utils';
 import { useUIStore } from '../../../store';
 import { useTasks, usePhotoDetail } from '../../../hooks';
@@ -26,8 +26,12 @@ export function DetailsTab({ form }: Props) {
     await handleAiAnalyze(detailPhoto?.image_url, detailPhoto?.image_url);
   }, [handleAiAnalyze, detailPhoto?.image_url]);
 
-  const formState = form.values;
-  const updateForm = React.useCallback((updates: Partial<ProductFormData>) => form.setValues(updates), [form]);
+  const formState = form.watch();
+  const updateForm = React.useCallback((updates: Partial<ProductFormData>) => {
+    Object.entries(updates).forEach(([key, value]) => {
+      form.setValue(key as any, value);
+    });
+  }, [form]);
   return (
     <div className="m-0 p-4 space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
       <DimensionEditor 

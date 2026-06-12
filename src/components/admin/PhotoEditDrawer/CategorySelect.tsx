@@ -2,7 +2,7 @@ import React from 'react';
 import { FormSectionHeader, CategoryGrid } from '../FormShared';
 import { useCategories } from '../../../hooks';
 import { useUIStore } from '../../../store';
-import { PhotoEditFormReturn } from '@/hooks/photo/usePhotoEdit';
+import { PhotoEditFormReturn } from '@/hooks/photo/types';
 
 import { ProductFormData } from '@/types';
 
@@ -17,8 +17,12 @@ export function CategorySelect({ form }: CategorySelectorProps) {
   const appLang = useUIStore((s) => s.appLang);
   const { data: categories = [] } = useCategories();
   
-  const formState = form.values;
-  const updateForm = (updates: Partial<ProductFormData>) => form.setValues(updates);
+  const formState = form.watch();
+  const updateForm = (updates: Partial<ProductFormData>) => {
+    Object.entries(updates).forEach(([key, value]) => {
+      form.setValue(key as any, value);
+    });
+  };
 
   return (
     <section className="space-y-4">

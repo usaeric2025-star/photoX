@@ -5,6 +5,7 @@ import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { useDisclosure } from '@mantine/hooks';
 import { formatters } from '@/utils/formatters';
+import { useCopyToClipboard } from '@/hooks';
 
 type ErrorLevel = 'critical' | 'error' | 'warn' | 'medium' | 'low' | 'info';
 
@@ -33,6 +34,7 @@ const LevelIcon = ({ level }: { level: ErrorLevel }) => {
 
 const LogItem = ({ log }: { log: LogEntry }) => {
   const [expanded, { toggle }] = useDisclosure(false);
+  const { copy } = useCopyToClipboard({ successMessage: '日志详情已复制' });
   const dateTimeStr = formatters.dateTime(log.created_at);
   const level = log.level || log.metadata?.level || 'info';
 
@@ -45,8 +47,7 @@ Level: ${level}
 Time: ${formatters.dateTime(log.created_at)}
 Message: ${log.message || log.error_message || ''}${metadataStr}${stack ? `\nStack: ${stack}` : ''}`;
     
-    navigator.clipboard.writeText(textToCopy);
-    toast.success('日志详情已复制');
+    copy(textToCopy);
   };
 
   return (

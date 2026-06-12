@@ -1,29 +1,35 @@
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import React, { useState } from "react";
 import { useDisclosure } from "@mantine/hooks";
+import { useController, useFormContext } from "react-hook-form";
 import { PromptDialog } from "@/components/ui/PromptDialog";
 import { TagEditor } from "../TagEditor";
 import { Tag } from "../../../types";
 import { safeArray } from "../../../lib/utils";
-
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 interface PhotoTagSelectorProps {
-  tags: Tag[];
-  selectedTagIds: string[];
-  onChange: (newIds: string[]) => void;
+  name: string;
   addTag: (name: string) => Promise<any>;
   updateTag: (id: string, name: string) => Promise<any>;
   deleteTag: (id: string) => Promise<any>;
+  tags: Tag[];
 }
 
 export function PhotoTagSelector({
-  tags,
-  selectedTagIds,
-  onChange,
+  name,
   addTag,
   updateTag,
   deleteTag,
+  tags,
 }: PhotoTagSelectorProps) {
+  const { control } = useFormContext();
+  const { field } = useController({
+    name,
+    control,
+    defaultValue: []
+  });
+
+  const selectedTagIds = field.value || [];
   
   const [isAddOpen, addDialog] = useDisclosure(false);
   const [isEditOpen, editDialog] = useDisclosure(false);
@@ -37,34 +43,32 @@ export function PhotoTagSelector({
       ),
     );
 
-  const [initialSelectedIds] = React.useState(() => cleanSelectedIds);
-
   const sortedTags = React.useMemo(() => {
     return [...tags].sort((a, b) => {
-      const isASelected = initialSelectedIds.includes(String(a.id));
-      const isBSelected = initialSelectedIds.includes(String(b.id));
+      const isASelected = cleanSelectedIds.includes(String(a.id));
+      const isBSelected = cleanSelectedIds.includes(String(b.id));
 
       if (isASelected && !isBSelected) return -1;
       if (!isASelected && isBSelected) return 1;
 
       return a.name.localeCompare(b.name, undefined, { numeric: true });
     });
-  }, [tags, initialSelectedIds]);
+  }, [tags, cleanSelectedIds]);
 
   const handleToggleTag = React.useCallback((tag: Tag) => {
     const strId = String(tag.id);
     if (cleanSelectedIds.includes(strId)) {
-      onChange(cleanSelectedIds.filter((id) => id !== strId));
+      field.onChange(cleanSelectedIds.filter((id) => id !== strId));
     } else {
-      if (cleanSelectedIds.length >= 3) {
+      if (cleanSelectedIds.length >= 10) {
         import('sonner').then(({ toast }) => {
-          toast.warning("最多只能选择 3 个标签 / Maximum of 3 tags allowed");
+          toast.warning("最多只能选择 10 个标签 / Maximum of 10 tags allowed");
         });
         return;
       }
-      onChange([...cleanSelectedIds, strId]);
+      field.onChange([...cleanSelectedIds, strId]);
     }
-  }, [cleanSelectedIds, onChange]);
+  }, [cleanSelectedIds, field]);
 
   const onQuickAdd = React.useCallback(() => addDialog.open(), [addDialog]);
   const onRenameTagRequest = React.useCallback((tag: Tag) => {
@@ -97,7 +101,7 @@ export function PhotoTagSelector({
             (t) => t.name.toUpperCase() === trimmed.toUpperCase(),
           );
           if (existing) {
-              onChange([
+              field.onChange([
                 ...new Set([...cleanSelectedIds, String(existing.id)]),
               ]);
             return;
@@ -106,7 +110,7 @@ export function PhotoTagSelector({
           try {
             const saved = await addTag(trimmed);
             if (saved) {
-              onChange([...new Set([...cleanSelectedIds, String(saved)])]);
+              field.onChange([...new Set([...cleanSelectedIds, String(saved)])]);
             }
           } catch (err: unknown) {
             ErrorFactory.handle(err, "新增标签失败");

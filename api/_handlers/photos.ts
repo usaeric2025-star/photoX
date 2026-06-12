@@ -1,17 +1,31 @@
 import { Hono } from 'hono';
+import { type } from 'arktype';
 import { getSupabaseAdmin } from '../_lib/supabase.js';
+import { 
+    PhotoListReqSchema, 
+    PhotoBatchUpdateReqSchema, 
+    ListByGroupReqSchema,
+    PhotoIdsReqSchema,
+    PhotoCheckHashReqSchema,
+    PhotoUpdateReqSchema,
+    PhotoIdReqSchema
+} from '../_shared/apiContractSchema.js';
 
 const TABLE_NAME = 'furniture_items';
 
 export const photos = new Hono()
   .post('/list', async (c) => {
+    const body = await c.req.json();
+    const check = PhotoListReqSchema(body);
+    if (check instanceof type.errors) throw new Error(check.summary);
+
     const { 
       page = 0, limit = 1000, 
-      categoryId, tagId, searchQuery, 
-      isAdminMode = false, sortOrder, 
+      categoryId, tagId, 
+      isAdminMode = false, 
       onlyUngrouped = false, manufacturerId, 
       isHidden 
-    } = await c.req.json();
+    } = check;
     
     const supabase = await getSupabaseAdmin();
     
@@ -35,7 +49,11 @@ export const photos = new Hono()
     return c.json({ success: true, data: data || [] });
   })
   .post('/batch-update', async (c) => {
-    const { ids, updates } = await c.req.json();
+    const body = await c.req.json();
+    const check = PhotoBatchUpdateReqSchema(body);
+    if (check instanceof type.errors) throw new Error(check.summary);
+    
+    const { ids, updates } = check;
     const supabase = await getSupabaseAdmin();
     
     const { data, error } = await supabase
@@ -49,7 +67,11 @@ export const photos = new Hono()
     return c.json({ success: true, data: data?.map((d: any) => d.id) || [] });
   })
   .post('/list-by-group', async (c) => {
-    const { groupId, isAdminMode = false } = await c.req.json();
+    const body = await c.req.json();
+    const check = ListByGroupReqSchema(body);
+    if (check instanceof type.errors) throw new Error(check.summary);
+    
+    const { groupId, isAdminMode = false } = check;
     const supabase = await getSupabaseAdmin();
     let query = supabase.from(TABLE_NAME).select('*, photo_tags(tag_id)').eq('group_id', groupId);
     if (!isAdminMode) query = query.or('is_hidden.is.false,is_hidden.is.null');
@@ -59,7 +81,11 @@ export const photos = new Hono()
     return c.json({ success: true, data: data || [] });
   })
   .post('/list-by-group-paginated', async (c) => {
-    const { groupId, page = 1, pageSize = 30, isAdminMode = false } = await c.req.json();
+    const body = await c.req.json();
+    const check = ListByGroupReqSchema(body);
+    if (check instanceof type.errors) throw new Error(check.summary);
+
+    const { groupId, page = 1, pageSize = 30, isAdminMode = false } = check;
     const supabase = await getSupabaseAdmin();
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
@@ -77,7 +103,11 @@ export const photos = new Hono()
     return c.json({ success: true, data: { photos: queryRes.data || [], total: countRes.count || 0 } });
   })
   .post('/count', async (c) => {
-    const { categoryId, tagId, searchQuery, isAdminMode = false } = await c.req.json();
+    const body = await c.req.json();
+    const check = PhotoListReqSchema(body);
+    if (check instanceof type.errors) throw new Error(check.summary);
+
+    const { categoryId, tagId, isAdminMode = false } = check;
     const supabase = await getSupabaseAdmin();
     let query = supabase.from(TABLE_NAME).select('*', { count: 'exact', head: true });
     if (!isAdminMode) query = query.or('is_hidden.is.false,is_hidden.is.null');
@@ -94,7 +124,11 @@ export const photos = new Hono()
     return c.json({ success: true, data: count || 0 });
   })
   .post('/by-ids', async (c) => {
-    const { ids } = await c.req.json();
+    const body = await c.req.json();
+    const check = PhotoIdsReqSchema(body);
+    if (check instanceof type.errors) throw new Error(check.summary);
+
+    const { ids } = check;
     const supabase = await getSupabaseAdmin();
     const { data, error } = await supabase.from(TABLE_NAME).select('*, photo_tags(tag_id)').in('id', ids);
     if (error) return c.json({ success: false, error: error.message }, 500);
@@ -107,21 +141,30 @@ export const photos = new Hono()
     return c.json({ success: true, data: data || [] });
   })
   .post('/check-hash', async (c) => {
-    const { hash } = await c.req.json();
+    const body = await c.req.json();
+    const check = PhotoCheckHashReqSchema(body);
+    if (check instanceof type.errors) throw new Error(check.summary);
+
+    const { hash } = check;
     const supabase = await getSupabaseAdmin();
     const { data, error } = await supabase.from(TABLE_NAME).select('image_url, manual_code').eq('image_hash', hash).limit(1).maybeSingle();
     if (error) return c.json({ success: false, error: error.message }, 500);
     return c.json({ success: true, data });
   })
   .post('/update', async (c) => {
-    const { id, updates } = await c.req.json();
+    const body = await c.req.json();
+    const check = PhotoUpdateReqSchema(body);
+    if (check instanceof type.errors) throw new Error(check.summary);
+
+    const { id, updates } = check;
     const supabase = await getSupabaseAdmin();
     
     // Fetch snapshot before update to track if group is changing
     const { data: beforeUpdate } = await supabase.from(TABLE_NAME).select('group_id').eq('id', id).maybeSingle();
 
     // Special handling for group cover (optimistic quick update)
-    if (updates.is_group_cover === true) {
+    const updateObj = updates as any;
+    if (updateObj.is_group_cover === true) {
       const { data } = await supabase.from(TABLE_NAME).select('group_id').eq('id', id).maybeSingle();
       if (data?.group_id) {
         await supabase.from(TABLE_NAME).update({ is_group_cover: false }).eq('group_id', data.group_id);
@@ -135,7 +178,7 @@ export const photos = new Hono()
     // POST-MUTATION: Reconcile covers & counts since things changed
     const affectedGroupIds: string[] = [];
     if (beforeUpdate?.group_id) affectedGroupIds.push(beforeUpdate.group_id);
-    if (updates.group_id) affectedGroupIds.push(updates.group_id);
+    if (updateObj.group_id) affectedGroupIds.push(updateObj.group_id);
 
     if (affectedGroupIds.length > 0) {
       const { syncGroupCoversAndCount } = await import('../_lib/groups.js');
@@ -159,7 +202,11 @@ export const photos = new Hono()
     return c.json({ success: true, data });
   })
   .post('/delete', async (c) => {
-    const { id, userId } = await c.req.json();
+    const body = await c.req.json();
+    const check = PhotoIdReqSchema(body);
+    if (check instanceof type.errors) throw new Error(check.summary);
+
+    const { id, userId } = check;
     const supabase = await getSupabaseAdmin();
     const { data: photoData } = await supabase.from(TABLE_NAME).select('image_url, storage_id, group_id').eq('id', id).maybeSingle();
     

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Skeleton, Box, Center, Text } from '@mantine/core';
 import { ImageOff, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -45,20 +44,18 @@ export function ResilientImage({
   };
 
   return (
-    <Box className={cn("relative overflow-hidden bg-slate-50", containerClassName)}>
+    <div className={cn("relative overflow-hidden bg-slate-50", containerClassName)}>
       {status === 'loading' && (
-        <Skeleton 
-          className="absolute inset-0 z-10" 
-          animate 
-          radius={0}
+        <div 
+          className="absolute inset-0 z-10 bg-slate-200 animate-pulse" 
         />
       )}
 
       {status === 'error' ? (
-        <Center className="absolute inset-0 z-20 flex-col gap-2 bg-slate-100 p-4 text-center">
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-slate-100 p-4 text-center">
           <ImageOff size={24} className="text-slate-300" />
           <div className="space-y-1">
-            <Text size="xs" color="dimmed" className="font-bold uppercase tracking-tighter">加載失敗 / Load Failed</Text>
+            <span className="block text-xs text-slate-500 font-bold uppercase tracking-tighter">加載失敗 / Load Failed</span>
             <button 
               onClick={() => {
                 setRetryCount(0);
@@ -70,7 +67,7 @@ export function ResilientImage({
               <RefreshCw size={10} /> 立即重試
             </button>
           </div>
-        </Center>
+        </div>
       ) : (
         <img
           {...props}
@@ -86,6 +83,7 @@ export function ResilientImage({
           referrerPolicy="no-referrer"
         />
       )}
-    </Box>
+    </div>
   );
 }
+

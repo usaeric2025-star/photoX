@@ -2,7 +2,8 @@ import { logger } from '@/lib/logger';
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
-import { useTaskExecutor, useAdminActions, useSettings, PhotoEditFormReturn, useCategories, useTags } from '@/hooks';
+import { useTaskExecutor, useAdminActions, useSettings, useCategories, useTags } from '@/hooks';
+import { PhotoEditFormReturn } from '@/hooks/photo/types';
 import { analyzePhoto } from '@/services/ai/commands';
 import { useUIStore } from '@/store';
 
@@ -187,29 +188,12 @@ export function usePhotoEditAI(form: PhotoEditFormReturn) {
               updates.price = String(result.price);
             }
 
-            // [AI-RAW-DATA-SAVE] Ensure we always save the raw source code
-            try {
-              const rawResultText = (resp as any).data?.raw_result || (resp as any).raw_result || JSON.stringify(result);
-              const parsedDataObj = (resp as any).data || result;
-              const { api } = await import('@/lib/api');
-              await (api as any).photos['ai-result'].$post({
-                json: {
-                  payload: {
-                    photo_id: editPhotoId,
-                    raw_result: rawResultText,
-                    parsed_data: parsedDataObj,
-                    created_at: new Date().toISOString()
-                  }
-                }
-              });
-              
-              // Invalidate the cache to instantly reveal JSON output in AI tab
-              queryClient.invalidateQueries({ queryKey: ['photos', 'ai-result', editPhotoId] });
-            } catch (e) {
-              logger.warn('[AI Raw Save Failed]', e);
-            }
+            // Invalidate the cache to instantly reveal JSON output in AI tab
+            queryClient.invalidateQueries({ queryKey: ['photos', 'ai-result', editPhotoId] });
 
-            form.setValues({ ...form.values, ...updates });
+            Object.entries(updates).forEach(([key, value]) => {
+              form.setValue(key as any, value);
+            });
 
             try {
               await updatePhoto({ id: editPhotoId, updates, silent: true });

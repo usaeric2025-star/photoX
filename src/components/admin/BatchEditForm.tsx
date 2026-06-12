@@ -66,12 +66,8 @@ export function BatchEditForm({
 
       <section className="space-y-4">
         <PhotoTagSelector
+          name="tags"
           tags={tags}
-          selectedTagIds={getTagIds(formState.tags)}
-          onChange={(newIds: string[]) => {
-            const newTags = getTagsFromIds(newIds, tags);
-            handleUpdateForm({ tags: newTags });
-          }}
           addTag={addTag}
           updateTag={updateTag}
           deleteTag={deleteTag}

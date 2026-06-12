@@ -2,8 +2,11 @@ import React from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Dialog } from "@base-ui/react/dialog";
 import { useDisclosure } from "@mantine/hooks";
+import { FormProvider } from "react-hook-form";
+import { useFormWithMutation } from '@/hooks/core/useFormWithMutation';
+import { usePhotoEditMutation } from '@/hooks/photo/usePhotoMutations';
 import { ConfirmDialog } from "../../ui/ConfirmDialog";
-import { ProductFormData, Photo } from "../../../types";
+import { Photo } from "../../../types";
 import { HeadlessSlot } from "../../../lib/component-contract";
 import { DrawerHeader } from "./DrawerHeader";
 import { useUIStore } from "../../../store";
@@ -13,16 +16,12 @@ import { DetailsTab } from "./DetailsTab";
 import { AISourceTab } from "./AISourceTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs";
 import { translations } from "../../../lib/translations";
-
+import { PhotoSchema } from "../../../../api/_shared/apiContractSchema";
 import { 
   usePhotoDetail,
-  usePhotoEdit,
   usePhotoDelete,
-  usePhotoEditMutation
 } from "../../../hooks";
-import { toast } from 'sonner';
 import { useTasks } from "@/hooks";
-import { UseFormReturnType } from "@mantine/form";
 
 /**
  * [V2.14-SLOT-CONTRACT] PhotoEditDrawer Props
@@ -41,43 +40,37 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
   const appLang = useUIStore((s) => s.appLang);
 
   const { data: detailPhoto } = usePhotoDetail(editPhotoId || '');
-  const form = usePhotoEdit(detailPhoto || null);
-
-  const { mutateAsync: updatePhotoMutation } = usePhotoEditMutation();
+  
+  const updateMutation = usePhotoEditMutation();
   const { mutateAsync: deletePhoto } = usePhotoDelete();
 
-  const [isDeleteOpen, deleteDialog] = useDisclosure(false);
+  const form = useFormWithMutation(
+    PhotoSchema,
+    {
+      name: detailPhoto?.name || { zh: '', en: '', ms: '' },
+      description: detailPhoto?.description || { zh: '', en: '', ms: '' },
+      category_id: detailPhoto?.category_id || null,
+      manufacturer_id: detailPhoto?.manufacturer_id || null,
+      tags: detailPhoto?.tags || [],
+      item_code: detailPhoto?.item_code || '',
+      manual_code: detailPhoto?.manual_code || '',
+      model_number: detailPhoto?.model_number || '',
+      dimensions: detailPhoto?.dimensions || [],
+      is_hidden: detailPhoto?.is_hidden || false,
+      price: detailPhoto?.price || '',
+      is_group_cover: detailPhoto?.is_group_cover || false,
+      group_id: detailPhoto?.group_id || null,
+      uri: newPhotoData || detailPhoto?.image_url || '',
+      id: editPhotoId
+    },
+    updateMutation
+  );
 
+  const [isDeleteOpen, deleteDialog] = useDisclosure(false);
   const { tasks } = useTasks();
 
-  const editPhotoPreview = form.values.uri || detailPhoto?.image_url || '';
   const resetAddState = () => update({ newPhotoData: null });
-
-  const isRunning = React.useMemo(() => tasks.some((t: any) => t.status === 'running'), [tasks]);
-
   const t = translations[appLang as keyof typeof translations] || translations.en;
-
-  const handleSave = async () => {
-    if (!editPhotoId) return;
-    
-    try {
-      const updates: Partial<Photo> & { uri?: string } = { ...form.values };
-      if (newPhotoData) {
-        updates.uri = newPhotoData;
-      }
-
-      if (!updates.name?.zh && !updates.description?.zh) {
-        toast.error("照片信息不完整");
-        return;
-      }
-
-      await updatePhotoMutation({ id: editPhotoId, updates: updates as Partial<Photo> });
-      update({ newPhotoData: null });
-      update({ editPhotoId: null });
-    } catch (err) {
-      // Error toasted by mutation factory
-    }
-  };
 
   const isOpen = !!(editPhotoId || newPhotoData);
 
@@ -86,124 +79,119 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
       open={isOpen}
       onOpenChange={(open) => !open && update({ editPhotoId: null })}
     >
-      <AnimatePresence>
-        {isOpen && (
-          <Dialog.Portal keepMounted>
-            <Dialog.Backdrop
-              render={
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-[var(--z-index-max)] bg-black/20 backdrop-blur-sm"
-                />
-              }
-            />
-            <Dialog.Popup
-              render={
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 20 }}
-                  transition={{ duration: 0.2, ease: "easeOut" }}
-                  className="fixed inset-0 z-[var(--z-index-max)] bg-slate-50 flex flex-col pt-safe pb-safe shadow-2xl focus:outline-none"
-                >
-                  <DrawerHeader
-                    form={form}
-                    onSave={handleSave}
-                    onClose={() => {
-                      resetAddState();
-                      update({ editPhotoId: null });
-                    }}
-                    previewSrc={newPhotoData || editPhotoPreview}
+      <FormProvider {...(form as any)}>
+        <AnimatePresence>
+          {isOpen && (
+            <Dialog.Portal keepMounted>
+              <Dialog.Backdrop
+                render={
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-[var(--z-index-max)] bg-black/20 backdrop-blur-sm"
                   />
+                }
+              />
+              <Dialog.Popup
+                render={
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    className="fixed inset-0 z-[var(--z-index-max)] bg-slate-50 flex flex-col pt-safe pb-safe shadow-2xl focus:outline-none"
+                  >
+                    <DrawerHeader
+                      form={form}
+                      onClose={() => {
+                        resetAddState();
+                        update({ editPhotoId: null });
+                      }}
+                    />
 
-                  <ConfirmDialog
-                    open={isDeleteOpen}
-                    onOpenChange={deleteDialog.toggle}
-                    title={t.confirmDeleteTitle}
-                    description={t.confirmDeleteDesc}
-                    confirmText={t.deleteBtn}
-                    variant="destructive"
-                    onConfirm={async () => {
-                      if (editPhotoId) {
-                        try {
-                          await deletePhoto([editPhotoId]);
-                          update({ editPhotoId: null });
-                        } catch (err) {}
-                      }
-                    }}
-                  />
+                    <ConfirmDialog
+                      open={isDeleteOpen}
+                      onOpenChange={deleteDialog.toggle}
+                      title={t.confirmDeleteTitle}
+                      description={t.confirmDeleteDesc}
+                      confirmText={t.deleteBtn}
+                      variant="destructive"
+                      onConfirm={async () => {
+                        if (editPhotoId) {
+                          try {
+                            await deletePhoto([editPhotoId]);
+                            update({ editPhotoId: null });
+                            resetAddState();
+                          } catch (err) {}
+                        }
+                      }}
+                    />
 
-                  <div className="flex-1 overflow-hidden flex flex-col pt-2">
-                    <Tabs
-                      defaultValue="basic"
-                      className="flex-1 flex flex-col overflow-hidden"
-                    >
-                      <div className="container mx-auto max-w-4xl px-4">
-                        <div className="pb-2 border-b border-slate-100 bg-white">
-                          <TabsList className="w-full bg-slate-100/50 p-1 rounded-2xl h-12 flex items-center gap-1 border border-slate-200">
-                            <TabsTrigger
-                              value="basic"
-                              className="flex-1 rounded-xl text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 transition-all h-full"
-                            >
-                              {appLang === 'zh' ? '基础' : 'BASIC'}
-                            </TabsTrigger>
-                            <TabsTrigger
-                              value="org"
-                              className="flex-1 rounded-xl text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 transition-all h-full"
-                            >
-                              {appLang === 'zh' ? '组织' : 'ORG'}
-                            </TabsTrigger>
-                            <TabsTrigger
-                              value="details"
-                              className="flex-1 rounded-xl text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 transition-all h-full"
-                            >
-                              {appLang === 'zh' ? '细节' : 'DETAIL'}
-                            </TabsTrigger>
-                            <TabsTrigger
-                              value="ai-source"
-                              className="flex-1 rounded-xl text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 transition-all h-full"
-                            >
-                              {appLang === 'zh' ? 'AI原始数据' : 'AI RAW'}
-                            </TabsTrigger>
-                          </TabsList>
+                    <div className="flex-1 overflow-hidden flex flex-col pt-2">
+                      <Tabs
+                        defaultValue="basic"
+                        className="flex-1 flex flex-col overflow-hidden"
+                      >
+                        <div className="container mx-auto max-w-4xl px-4">
+                          <div className="pb-2 border-b border-slate-100 bg-white">
+                            <TabsList className="w-full bg-slate-100/50 p-1 rounded-2xl h-12 flex items-center gap-1 border border-slate-200">
+                              <TabsTrigger
+                                value="basic"
+                                className="flex-1 rounded-xl text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 transition-all h-full"
+                              >
+                                {appLang === 'zh' ? '基础' : 'BASIC'}
+                              </TabsTrigger>
+                              <TabsTrigger
+                                value="org"
+                                className="flex-1 rounded-xl text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 transition-all h-full"
+                              >
+                                {appLang === 'zh' ? '组织' : 'ORG'}
+                              </TabsTrigger>
+                              <TabsTrigger
+                                value="details"
+                                className="flex-1 rounded-xl text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 transition-all h-full"
+                              >
+                                {appLang === 'zh' ? '细节' : 'DETAIL'}
+                              </TabsTrigger>
+                              <TabsTrigger
+                                value="ai-source"
+                                className="flex-1 rounded-xl text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 transition-all h-full"
+                              >
+                                {appLang === 'zh' ? 'AI原始数据' : 'AI RAW'}
+                              </TabsTrigger>
+                            </TabsList>
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="flex-1 overflow-y-auto no-scrollbar pt-2 container mx-auto max-w-4xl px-4 pb-12">
-                        <TabsContent value="basic">
-                          <BasicInfoTab
-                            form={form}
-                          />
-                        </TabsContent>
+                        <div className="flex-1 overflow-y-auto no-scrollbar pt-2 container mx-auto max-w-4xl px-4 pb-12">
+                          <TabsContent value="basic">
+                            <BasicInfoTab form={form} />
+                          </TabsContent>
 
-                        <TabsContent value="org">
-                          <OrgTab
-                            form={form}
-                          />
-                        </TabsContent>
+                          <TabsContent value="org">
+                            <OrgTab form={form} />
+                          </TabsContent>
 
-                        <TabsContent value="details">
-                          <DetailsTab
-                            form={form}
-                          />
-                        </TabsContent>
+                          <TabsContent value="details">
+                            <DetailsTab form={form} />
+                          </TabsContent>
 
-                        <TabsContent value="ai-source">
-                          <AISourceTab
-                            photoId={editPhotoId || ''}
-                          />
-                        </TabsContent>
-                      </div>
-                    </Tabs>
-                  </div>
-                </motion.div>
-              }
-            />
-          </Dialog.Portal>
-        )}
-      </AnimatePresence>
+                          <TabsContent value="ai-source">
+                            <AISourceTab
+                              photoId={editPhotoId || ''}
+                            />
+                          </TabsContent>
+                        </div>
+                      </Tabs>
+                    </div>
+                  </motion.div>
+                }
+              />
+            </Dialog.Portal>
+          )}
+        </AnimatePresence>
+      </FormProvider>
     </Dialog.Root>
   );
 }

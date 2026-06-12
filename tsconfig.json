@@ -7,7 +7,8 @@
     "types": ["node", "vite/client"],
     "strict": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@api/*": ["./api/*"]
     },
     "rootDir": "./",
     "jsx": "react-jsx",

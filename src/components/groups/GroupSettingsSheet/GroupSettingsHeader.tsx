@@ -3,11 +3,11 @@ import React from "react";
 import { Settings2, Trash2, X, Copy } from "lucide-react";
 import { SheetHeader, SheetTitle } from "../../ui/sheet";
 import { ProductGroup } from "../../../types";
-import { useDisclosure, useClipboard } from "@mantine/hooks";
+import { useDisclosure } from "@mantine/hooks";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { saveGroup as saveGroupToCloud } from "@/services/group/commands";
 
-import { useTaskExecutor, useTasks, useUrlFilters } from "@/hooks";
+import { useTaskExecutor, useTasks, useUrlFilters, useCopyToClipboard } from "@/hooks";
 import { toast } from "sonner";
 
 export function GroupSettingsHeader({
@@ -27,7 +27,7 @@ export function GroupSettingsHeader({
   const { tasks } = useTasks();
   const isRunning = tasks.some((t) => t.status === "running");
   const [isDissolveOpen, dissolveDialog] = useDisclosure(false);
-  const clipboard = useClipboard();
+  const { copy } = useCopyToClipboard({ successMessage: "Group ID copied" });
 
   return (
     <SheetHeader className="p-4 border-b border-slate-50 bg-indigo-600 text-white space-y-0 flex-row items-center justify-between">
@@ -38,10 +38,7 @@ export function GroupSettingsHeader({
         </SheetTitle>
         {activeGroupId && (
           <button
-            onClick={() => {
-              clipboard.copy(activeGroupId);
-              toast.success("Group ID copied");
-            }}
+            onClick={() => copy(activeGroupId)}
             className="flex items-center gap-1 text-[10px] bg-indigo-500/50 px-1.5 py-0.5 rounded hover:bg-indigo-400/50 transition-colors"
             title="点击复制 ID"
           >

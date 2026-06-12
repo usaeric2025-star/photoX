@@ -72,7 +72,7 @@ ai.post("/run", async (c) => {
             ? [{ role: 'user', content: [{ type: 'image_url', image_url: { url: imageUrl } }, { type: 'text', text: prompt || 'Analyze this image' }]}]
             : [{ role: 'user', content: prompt || "" }];
 
-        const data = await executeAITask({
+        const { data, rawText } = await executeAITask({
             task: (task || 'run') as string,
             provider,
             model,
@@ -82,7 +82,7 @@ ai.post("/run", async (c) => {
             shouldNormalize: false
         });
 
-        return c.json({ success: true, text: data, usage: {} } as ApiResponse);
+        return c.json({ success: true, text: data as string, raw_result: rawText, usage: {} } as ApiResponse);
     } catch (e: unknown) {
         return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown error' } as ApiResponse, 500);
     }
@@ -123,7 +123,7 @@ ai.post("/analyze", async (c) => {
         const prompt = AI_PROMPTS.ANALYZE_PHOTO(context);
         const messages = [{ role: 'user', content: [{ type: 'image_url', image_url: { url: finalImageUrl } }, { type: 'text', text: prompt }]}];
 
-        const data = await executeAITask({
+        const { data, rawText } = await executeAITask({
             task: 'analyze',
             provider,
             model,
@@ -136,7 +136,7 @@ ai.post("/analyze", async (c) => {
             throw new Error((data as any)._error || 'AI analysis failed');
         }
 
-        return c.json({ success: true, data } as ApiResponse);
+        return c.json({ success: true, data, raw_result: rawText } as ApiResponse);
     } catch (e: unknown) {
         return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown error' } as ApiResponse, 500);
     }
@@ -153,7 +153,7 @@ ai.post("/analyze-base64", async (c) => {
       const provider = await getAIProvider('', supabase, check.customModel);
       const model = (provider as any).config.model;
 
-      const data = await executeAITask({
+      const { data, rawText } = await executeAITask({
           task: 'analyze-base64',
           provider,
           model,
@@ -166,7 +166,7 @@ ai.post("/analyze-base64", async (c) => {
           throw new Error((data as any)._error || 'AI base64 analysis failed');
       }
 
-      return c.json({ success: true, data } as ApiResponse);
+      return c.json({ success: true, data, raw_result: rawText } as ApiResponse);
     } catch (error: any) { 
         return c.json({ success: false, error: error.message } as ApiResponse, 500); 
     }
@@ -183,7 +183,7 @@ ai.post("/translate", async (c) => {
       const provider = await getAIProvider('', supabase, check.customModel);
       const model = (provider as any).config.model;
 
-      const data = await executeAITask({
+      const { data, rawText } = await executeAITask({
           task: 'translate',
           provider,
           model,
@@ -196,7 +196,7 @@ ai.post("/translate", async (c) => {
           throw new Error((data as any)._error || 'AI translation failed');
       }
 
-      return c.json({ success: true, data } as ApiResponse);
+      return c.json({ success: true, data, raw_result: rawText } as ApiResponse);
     } catch (error: any) { 
         return c.json({ success: false, error: error.message } as ApiResponse, 500); 
     }
@@ -213,7 +213,7 @@ ai.post("/analyze-group", async (c) => {
       const provider = await getAIProvider('', supabase);
       const model = (provider as any).config.model;
 
-      const data = await executeAITask({
+      const { data, rawText } = await executeAITask({
           task: 'analyze-group',
           provider,
           model,
@@ -225,7 +225,7 @@ ai.post("/analyze-group", async (c) => {
           throw new Error((data as any)._error || 'AI group analysis failed');
       }
 
-      return c.json({ success: true, data } as ApiResponse);
+      return c.json({ success: true, data, raw_result: rawText } as ApiResponse);
     } catch (error: any) { 
         return c.json({ success: false, error: error.message } as ApiResponse, 500); 
     }
@@ -242,7 +242,7 @@ ai.post("/analyze-photo-v2", async (c) => {
       const provider = await getAIProvider('', supabase);
       const model = (provider as any).config.model;
 
-      const data = await executeAITask({
+      const { data, rawText } = await executeAITask({
           task: 'analyze-photo-v2',
             provider,
             model,
@@ -254,7 +254,7 @@ ai.post("/analyze-photo-v2", async (c) => {
           throw new Error((data as any)._error || 'AI refine photo failed');
       }
 
-        return c.json({ success: true, data } as ApiResponse);
+        return c.json({ success: true, data, raw_result: rawText } as ApiResponse);
     } catch (error: any) { 
         return c.json({ success: false, error: error.message } as ApiResponse, 500); 
     }

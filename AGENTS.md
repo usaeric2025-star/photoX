@@ -1,6 +1,13 @@
-# PhotoX 架构规则（永久锁定）
+## 表单管理规范（锁定）
 
-## AI 模塊規範（鎖定）
+- ✅ 使用 `react-hook-form` + `@hookform/resolvers/arktype`
+- ✅ 多语言栏位使用 `<MultilingualInput>`
+- ✅ 动态数组使用 `<DynamicArrayField>`
+- ✅ 表单提交使用 `useFormWithMutation`
+- ✅ 非标准控件使用 `Controller`
+- ❌ 禁止使用 `@mantine/form`
+- ❌ 禁止手动 `watch + setValue` 同步表单值
+
 
 ### 目錄結構
 - ✅ `api/_lib/ai/providerFactory.ts`：唯一 AI 工廠（含模型獲取）
@@ -533,10 +540,33 @@ toast.error('发现数据完整性问题', {
 - ✅ 防抖/节流：`useDebouncedValue` / `useThrottledValue` / `useDebouncedCallback`
 - ✅ 媒体查询：`useMediaQuery`
 - ✅ 悬停/焦点：`useHover` / `useFocus`
-- ✅ 剪贴板：`useClipboard`
+- ✅ 剪贴板：`useCopyToClipboard`
 - ✅ 窗口滚动：`useWindowScroll`
 
-### 业务 Hook（保持现状，不迁移）
+### 彈窗開關規範（鎖定，2026-06-11 更新）
+
+- ✅ 新元件優先使用 `useState` 管理開關（`[open, setOpen] = useState(false)`）。
+- ✅ shadcn/ui 元件必須使用 `open` + `onOpenChange` 受控模式。
+- ✅ 核心通用元件（如 `ConfirmDialog`）可繼續使用 `useDisclosure` 封裝。
+- ❌ 禁止在新開發的業務組件中引入 `useDisclosure`（除非是為了維持與舊代碼的一致性）。
+- ❌ 禁止使用 Mantine 的 `useDisclosure` 來管理複雜的業務流程，優先考慮 URL State。
+
+### 交互與顯示規範（鎖定，2026-06-11 更新）
+
+- ✅ **CSS :hover 僅用於視覺增強**（陰影、背景色、非關鍵 Tooltip）。
+- ✅ **關鍵功能必須點擊觸發**：編輯、刪除、提交、導航等功能按鈕必須始終可見（或點擊顯示選單），禁止「僅在 hover 時顯示」。
+- ✅ **移動端優先**：所有功能點必須在觸控環境下可操作。
+- ❌ 禁止使用 JS 管理僅用於視覺效果的 hover 狀態（除非需要進行複雜的座標計算）。
+
+### 剪貼板使用規範（鎖定，2026-06-11 更新）
+
+- ✅ **唯一出口**：組件內必須使用 `useCopyToClipboard` Hook。
+- ✅ **唯一出口（非 Hook）**：底層工具函數必須使用 `src/utils/clipboard.ts` 中的 `copyToClipboard`。
+- ✅ **一致性提示**：複製行為必須伴隨 `toast` 反饋（預設已在工具/Hook 中集成）。
+- ❌ **絕對禁令**：禁止在各處直接調用 `navigator.clipboard.writeText`。
+- ❌ **絕對禁令**：禁止使用 Mantine 的 `useClipboard`（功能過於簡陋）。
+
+### 業務 Hook（保持现状，不迁移）
 - 数据获取：`usePhotos`, `useGroups` 等
 - 状态管理：`useLightbox`, `useTaskExecutor` 等
 - 路由/URL：`useUrlFilters`
@@ -1112,5 +1142,22 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 - ✅ 入口檔案僅做路由掛載，禁止包含業務邏輯
 - ❌ 禁止為減少 Function 數量而合併業務代碼
 - ✅ 適配 Vercel Hobby 12 Functions 限制
+
+## AI 審計日誌規範（鎖定）
+
+- ✅ AI 原始輸出儲存到 R2（冷儲存）
+- ✅ 資料庫 `ai_audit_logs` 只存 `raw_storage_path`
+- ✅ 先上傳 R2，成功後再寫資料庫
+- ✅ 資料庫寫入失敗時刪除 R2 檔案（防止孤本）
+- ❌ 禁止將 AI 原始輸出存入 `system_logs`
+- ❌ 禁止 AI 日誌寫入失敗時留下孤本
+
+## 剪貼板使用規範（鎖定，2026-06-11）
+
+- ✅ **唯一出口**：組件內必須使用 `useCopyToClipboard` Hook。
+- ✅ **唯一出口（非 Hook）**：底層工具函數必須使用 `src/utils/clipboard.ts` 中的 `copyToClipboard`。
+- ✅ **一致性提示**：複製行為必須伴隨 `toast` 反饋（預設已在工具/Hook 中集成）。
+- ❌ **絕對禁令**：禁止在各處直接調用 `navigator.clipboard.writeText`。
+- ❌ **絕對禁令**：禁止使用 Mantine 的 `useClipboard`（功能過於簡陋）。
 
 

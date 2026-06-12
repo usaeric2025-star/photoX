@@ -1,5 +1,6 @@
 import { toast } from 'sonner';
 import type { StandardError } from '@/types/api';
+import { copyToClipboard } from '@/utils/clipboard';
 
 /**
  * Safely extracts a clean string message from any error object
@@ -138,8 +139,7 @@ export const handleError = (error: unknown, context: string, silent: boolean = f
     action: {
       label: '📋 複製',
       onClick: () => {
-        navigator.clipboard.writeText(copyContent)
-        toast.success('已複製錯誤詳情')
+        copyToClipboard(copyContent, { successMessage: '已複製錯誤詳情' });
       },
     },
   })

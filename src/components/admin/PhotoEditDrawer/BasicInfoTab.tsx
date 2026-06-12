@@ -5,13 +5,18 @@ import { ProductFormData } from '../../../types';
 import { useDisclosure } from '@mantine/hooks';
 import { useUIStore } from '../../../store';
 import { usePhotoDetail, useTaskExecutor, useTasks } from '../../../hooks';
-import { PhotoEditFormReturn } from '@/hooks/photo/usePhotoEdit';
+import { useFormContext } from 'react-hook-form';
+
+import { PhotoEditFormReturn } from '@/hooks/photo/types';
 
 interface Props {
   form: PhotoEditFormReturn;
 }
 
 export function BasicInfoTab({ form }: Props) {
+  const { watch, setValue } = form;
+  const formState = watch();
+  
   const editPhotoId = useUIStore((s) => s.editPhotoId);
   const newPhotoData = useUIStore((s) => s.newPhotoData);
   const update = useUIStore((s) => s.update);
@@ -54,8 +59,6 @@ export function BasicInfoTab({ form }: Props) {
     }, { silent: true });
   }, [previewSrc, runTask, update]);
 
-  const formState = form.values;
-  const updateForm = React.useCallback((updates: Partial<ProductFormData>) => form.setValues(updates), [form]);
   const [zoomed, { open: openZoom, close: closeZoom }] = useDisclosure(false);
 
   return (
@@ -89,7 +92,6 @@ export function BasicInfoTab({ form }: Props) {
           </div>
         )}
         <div className="flex-1 space-y-3">
-          {/* ... existing multi-language inputs ... */}
           <div className="space-y-3">
             <div className="space-y-2 bg-slate-50/50 p-3 rounded-xl border border-slate-100">
               <div className="flex items-center px-0.5 border-b border-slate-200/60 pb-1">
@@ -100,60 +102,30 @@ export function BasicInfoTab({ form }: Props) {
                 {/* Chinese */}
                 <div className="text-[9px] font-bold bg-slate-200 text-slate-700 px-1.5 py-1 rounded-md uppercase tracking-wider text-center w-10">ZH</div>
                 <input 
-                  key={`${editPhotoId || 'new'}-zh`}
                   type="text" 
                   placeholder="中文名称..." 
                   value={formState.name?.zh || ""} 
-                  onChange={e => {
-                    const val = e.target.value.toUpperCase();
-                    updateForm({ 
-                      name: { 
-                        zh: val,
-                        en: formState.name?.en || "",
-                        ms: formState.name?.ms || ""
-                      } 
-                    });
-                  }} 
+                  onChange={e => setValue('name', { ...formState.name, zh: e.target.value.toUpperCase() })} 
                   className="w-full bg-white border border-slate-200 px-2.5 py-1.5 rounded-lg font-bold outline-none focus:border-blue-500 shadow-sm min-w-0" 
                 />
 
                 {/* English */}
                 <div className="text-[9px] font-bold bg-blue-50 text-blue-600 px-1.5 py-1 rounded-md uppercase tracking-wider text-center w-10 border border-blue-100/50">EN</div>
                 <input 
-                  key={`${editPhotoId || 'new'}-en`}
                   type="text" 
                   placeholder="English name..." 
                   value={formState.name?.en || ""} 
-                  onChange={e => {
-                    const val = e.target.value.toUpperCase();
-                    updateForm({ 
-                      name: { 
-                        zh: formState.name?.zh || "",
-                        en: val,
-                        ms: formState.name?.ms || ""
-                      } 
-                    });
-                  }} 
+                  onChange={e => setValue('name', { ...formState.name, en: e.target.value.toUpperCase() })} 
                   className="w-full bg-white border border-slate-200 px-2.5 py-1.5 rounded-lg font-bold outline-none focus:border-blue-500 shadow-sm min-w-0" 
                 />
 
                 {/* Malay */}
                 <div className="text-[9px] font-bold bg-emerald-50 text-emerald-600 px-1.5 py-1 rounded-md uppercase tracking-wider text-center w-10 border border-emerald-100/50">MS</div>
                 <input 
-                  key={`${editPhotoId || 'new'}-ms`}
                   type="text" 
                   placeholder="Nama produk..." 
                   value={formState.name?.ms || ""} 
-                  onChange={e => {
-                    const val = e.target.value.toUpperCase();
-                    updateForm({ 
-                      name: { 
-                        zh: formState.name?.zh || "",
-                        en: formState.name?.en || "",
-                        ms: val
-                      } 
-                    });
-                  }} 
+                  onChange={e => setValue('name', { ...formState.name, ms: e.target.value.toUpperCase() })} 
                   className="w-full bg-white border border-slate-200 px-2.5 py-1.5 rounded-lg font-bold outline-none focus:border-blue-500 shadow-sm min-w-0" 
                 />
               </div>
@@ -178,7 +150,7 @@ export function BasicInfoTab({ form }: Props) {
             type="text" 
             placeholder="編號..." 
             value={formState.manual_code || ''} 
-            onChange={e => updateForm({ manual_code: e.target.value })} 
+            onChange={e => setValue('manual_code', e.target.value)} 
             className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-sm font-bold outline-none focus:border-blue-500 shadow-sm" 
           />
         </div>
@@ -189,10 +161,7 @@ export function BasicInfoTab({ form }: Props) {
             inputMode="numeric"
             placeholder="仅限数字..." 
             value={formState.model_number || ''} 
-            onChange={e => {
-              const val = e.target.value.replace(/\D/g, '');
-              updateForm({ model_number: val });
-            }} 
+            onChange={e => setValue('model_number', e.target.value.replace(/\D/g, ''))} 
             className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-sm font-bold outline-none focus:border-blue-500 shadow-sm" 
           />
         </div>
@@ -203,16 +172,12 @@ export function BasicInfoTab({ form }: Props) {
             inputMode="numeric"
             placeholder="0" 
             value={formState.price || ''} 
-            onChange={e => {
-              const val = e.target.value.replace(/\D/g, '');
-              updateForm({ price: val });
-            }} 
+            onChange={e => setValue('price', e.target.value.replace(/\D/g, ''))} 
             className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-sm font-bold text-blue-600 outline-none focus:border-blue-500 shadow-sm" 
           />
         </div>
       </div>
 
-      {/* Zoom Modal */}
       {zoomed && previewSrc && createPortal(
         <div className="fixed inset-0 z-[var(--z-index-max)] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
           <button 

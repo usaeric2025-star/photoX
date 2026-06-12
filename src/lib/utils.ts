@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { toast } from 'sonner'
+import { copyToClipboard } from '@/utils/clipboard';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -23,8 +24,7 @@ export function toastWithError(err: any, title?: string) {
     action: {
       label: '复制详情',
       onClick: () => {
-        navigator.clipboard.writeText(detail);
-        toast.success('错误详情已复制到剪贴板');
+        copyToClipboard(detail, { successMessage: '错误详情已复制到剪贴板' });
       }
     },
     duration: 8000

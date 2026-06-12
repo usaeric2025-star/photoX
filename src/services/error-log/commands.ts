@@ -1,10 +1,14 @@
-import { logger } from '@/lib/logger';
-import { api } from '@/lib/api';
+import { logError } from '@/lib/error/errorLogger';
 
 export async function logErrorToSupabase(error: Error, errorInfo: { componentStack?: string } | null, extras: Record<string, unknown> = {}) {
-  // [2026-06-03] Frontend logs to /api/log-error are disabled to prevent performance/noise issues
-  /*
-  logger.error("UI Error caught:", error, errorInfo);
-  */
+  await logError(error, {
+    action: 'React Boundary Error',
+    component: errorInfo?.componentStack?.slice(0, 200) || 'Unknown',
+    kind: 'UNKNOWN',
+    metadata: {
+      ...extras,
+      componentStack: errorInfo?.componentStack
+    }
+  });
 }
 

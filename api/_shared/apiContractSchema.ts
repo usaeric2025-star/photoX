@@ -6,6 +6,7 @@ export type ApiResponse<T = any> = {
     error?: string | any;
     text?: string;
     usage?: any;
+    raw_result?: string;
 };
 
 export const AIAnalyzeV1ReqSchema = type({
@@ -65,6 +66,117 @@ export const ImportOrphansReqSchema = type({
     urls: "string[]",
     "groupId?": "string",
     "userId?": "string"
+});
+
+export const PhotoListReqSchema = type({
+    "page?": "number",
+    "limit?": "number",
+    "categoryId?": "string|null",
+    "tagId?": "string|null",
+    "searchQuery?": "string|null",
+    "isAdminMode?": "boolean",
+    "sortOrder?": "string|null",
+    "onlyUngrouped?": "boolean",
+    "manufacturerId?": "string|null",
+    "isHidden?": "boolean|null"
+});
+
+export const PhotoBatchUpdateReqSchema = type({
+    ids: "string[]",
+    updates: "object"
+});
+
+export const PhotoUpdateReqSchema = type({
+    id: "string",
+    updates: "object"
+});
+
+export const PhotoIdReqSchema = type({
+    id: "string",
+    "userId?": "string"
+});
+
+export const PhotoIdsReqSchema = type({
+    ids: "string[]"
+});
+
+export const PhotoCheckHashReqSchema = type({
+    hash: "string"
+});
+
+export const ListByGroupReqSchema = type({
+    groupId: "string",
+    "isAdminMode?": "boolean",
+    "page?": "number",
+    "pageSize?": "number"
+});
+
+export const CategoryReqSchema = type({
+    id: "string",
+    "name?": "string",
+    "zh?": "string",
+    "order?": "number"
+});
+
+export const TagReqSchema = type({
+    id: "string",
+    "name?": "string",
+    "aliases?": "string[]"
+});
+
+export const GroupReqSchema = type({
+    id: "string",
+    "name?": "string",
+    "cover_photo_id?": "string"
+});
+
+export const PhotoSchema = type({
+    "id?": "string",
+    name: {
+        zh: "string",
+        "en?": "string",
+        "ms?": "string"
+    },
+    "category_id?": "string|null",
+    "manufacturer_id?": "string|null",
+    tags: type({
+        id: "string",
+        name: "string",
+        "aliases?": "string[]",
+        "user_id?": "string",
+        "is_pinned?": "boolean",
+        "hot_score?": "number",
+        "is_global?": "boolean"
+    }).array(),
+    description: {
+        "zh?": "string",
+        "en?": "string",
+        "ms?": "string"
+    },
+    item_code: "string",
+    manual_code: "string",
+    model_number: "string",
+    dimensions: type({
+        label: "string",
+        unit: "'cm' | 'inch' | 'mm'",
+        length: "number",
+        width: "number",
+        height: "number",
+        "part?": "string",
+        "is_ai?": "boolean",
+        "is_ai_estimated?": "boolean"
+    }).array(),
+    is_hidden: "boolean",
+    price: "string",
+    is_group_cover: "boolean",
+    "group_id?": "string|null",
+    "uri?": "string"
+});
+
+export const SearchReqSchema = type({
+    query: "string",
+    "limit?": "number",
+    "offset?": "number"
 });
 
 export interface MaintenanceJob {

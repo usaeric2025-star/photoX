@@ -121,7 +121,7 @@ export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promi
           group_id: parsed.group_id || null,
           tagNames: sanitizedTagNames,
           tagIds: Array.isArray(parsed.tag_ids) ? parsed.tag_ids.map(String) : [],
-          raw_result: JSON.stringify(data.data)
+          raw_result: data.raw_result || JSON.stringify(data.data)
        });
      } else {
        let errorMsg = data.error || 'AI 分析失败';

@@ -10,7 +10,7 @@ import { SelectionToolbar } from "../shared/SelectionToolbar";
 import { useGroupAdminLogic } from "./useGroupAdminLogic";
 import { GroupGridView } from "./GroupGridView";
 import { GroupPhotoPicker } from "./GroupPhotoPicker";
-import { useAdminMode, useGroupMutations, useUrlFilters, useAIBatchAnalysis } from "@/hooks";
+import { useAdminMode, useGroupMutations, useUrlFilters, useAIBatchAnalysis, useCopyToClipboard } from "@/hooks";
 import { useAdminActions } from "@/hooks/admin/useAdminActions";
 import { useUIStore, useShallow } from "@/store/useUIStore";
 import { useNavigate } from "@tanstack/react-router";
@@ -30,6 +30,7 @@ import { toast } from "sonner";
 export function GroupAdminShell() {
   const isAdminMode = useAdminMode();
   const navigate = useNavigate();
+  const { copy } = useCopyToClipboard({ successMessage: "合组ID已复制" });
   const { filters, setGroupId, setPhotoId } = useUrlFilters();
   const appLang = useUIStore((s) => s.appLang);
   const isPhotoPickerOpen = useUIStore((s) => s.isPhotoPickerOpen);
@@ -166,10 +167,7 @@ export function GroupAdminShell() {
                 navigate({ to: '/admin', search: (prev: any) => ({ ...prev, groupId: undefined, photoId: undefined }), resetScroll: false });
               }}
               onSettingsClick={() => update({ groupSettingsOpen: true })}
-              onCopyId={(id) => {
-                  navigator.clipboard.writeText(id);
-                  toast.success("合组ID已复制");
-              }}
+              onCopyId={(id) => copy(id)}
               onBatchEdit={(ids) => update({ batchEditingIds: ids })}
               activeGroupPhotos={activeGroupPhotos}
               appLang={appLang}

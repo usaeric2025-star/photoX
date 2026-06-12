@@ -1,5 +1,5 @@
 import React, { Component, ReactNode } from 'react';
-import { toast } from 'sonner';
+import { useCopyToClipboard } from '@/hooks';
 
 interface Props {
   children: ReactNode;
@@ -10,6 +10,39 @@ interface State {
   hasError: boolean;
   error?: Error;
 }
+
+const ErrorActions = ({ error }: { error?: Error }) => {
+  const { copy } = useCopyToClipboard({ successMessage: '错误信息已复制到剪贴板' });
+
+  const handleCopy = () => {
+    const traceId = error && 'traceId' in error ? `\nTrace ID: ${(error as any).traceId}` : '';
+    const errorText = `${error?.message || 'Unknown error'}${traceId}\n\n${error?.stack || ''}`;
+    copy(errorText);
+  };
+
+  return (
+    <div className="flex gap-3 justify-center pt-4">
+      <button
+        onClick={() => window.location.reload()}
+        className="px-6 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all active:scale-95"
+      >
+        刷新页面
+      </button>
+      <button
+        onClick={handleCopy}
+        className="px-6 py-2.5 border border-slate-200 bg-white text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all active:scale-95"
+      >
+        复制错误信息
+      </button>
+      <button
+        onClick={() => (window.location.href = '/')}
+        className="px-6 py-2.5 border border-slate-200 bg-white text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all active:scale-95"
+      >
+        返回首页
+      </button>
+    </div>
+  );
+};
 
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
@@ -24,17 +57,6 @@ export class ErrorBoundary extends Component<Props, State> {
   override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('ErrorBoundary caught:', error, errorInfo);
   }
-
-  handleCopyError = () => {
-    const error = this.state.error;
-    const traceId = error && 'traceId' in error ? `\nTrace ID: ${(error as any).traceId}` : '';
-    const errorText = `${error?.message || 'Unknown error'}${traceId}\n\n${error?.stack || ''}`;
-    navigator.clipboard.writeText(errorText).then(() => {
-      toast.success('错误信息已复制到剪贴板');
-    }).catch(() => {
-      toast.error('复制失败');
-    });
-  };
 
   override render() {
     if (this.state.hasError) {
@@ -54,26 +76,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   </span>
                 )}
               </p>
-              <div className="flex gap-3 justify-center pt-4">
-                <button
-                  onClick={() => window.location.reload()}
-                  className="px-6 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all active:scale-95"
-                >
-                  刷新页面
-                </button>
-                <button
-                  onClick={this.handleCopyError}
-                  className="px-6 py-2.5 border border-slate-200 bg-white text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all active:scale-95"
-                >
-                  复制错误信息
-                </button>
-                <button
-                  onClick={() => (window.location.href = '/')}
-                  className="px-6 py-2.5 border border-slate-200 bg-white text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all active:scale-95"
-                >
-                  返回首页
-                </button>
-              </div>
+              <ErrorActions error={this.state.error} />
             </div>
           </div>
         )

@@ -1,9 +1,8 @@
 import React from 'react';
 import { FormSectionHeader, ManufacturerList } from '../FormShared';
-import { PhotoEditFormReturn } from '@/hooks/photo/usePhotoEdit';
+import { PhotoEditFormReturn } from '@/hooks/photo/types';
 import { useManufacturers, useManufacturerCreate, useManufacturerEdit, useManufacturerDelete } from '../../../hooks';
 import { useUIStore } from '../../../store';
-import { useDisclosure } from '@mantine/hooks';
 import { PromptDialog } from '../../ui/PromptDialog';
 import { translations } from '../../../lib/translations';
 import { CategorySelect } from './CategorySelect';
@@ -21,17 +20,20 @@ export function OrgTab({ form }: Props) {
   const { mutateAsync: updateManMut } = useManufacturerEdit();
   const { mutateAsync: deleteManMut } = useManufacturerDelete();
 
-  const [isAddMfrOpen, addMfrDialog] = useDisclosure(false);
-  const [isEditMfrOpen, editMfrDialog] = useDisclosure(false);
+  const [isAddMfrOpen, setAddMfrOpen] = React.useState(false);
+  const [isEditMfrOpen, setEditMfrOpen] = React.useState(false);
   const [editingMfr, setEditingMfr] = React.useState<{ id: string; name: string } | null>(null);
 
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
-  const formState = form.values;
+  const formState = form.watch();
   const manufacturerId = formState?.manufacturer_id;
-  const tags = formState?.tags;
 
-  const updateForm = React.useCallback((updates: any) => form.setValues(updates), [form]);
+  const updateForm = React.useCallback((updates: any) => {
+    Object.entries(updates).forEach(([key, value]) => {
+      form.setValue(key as any, value);
+    });
+  }, [form]);
 
   return (
     <div className="m-0 p-4 space-y-6 animate-in fade-in slide-in-from-right-2 duration-300">
@@ -43,7 +45,7 @@ export function OrgTab({ form }: Props) {
         <FormSectionHeader 
           title="厂商名称" 
           subtitle="MANUFACTURER" 
-          onAction={addMfrDialog.open} 
+          onAction={() => setAddMfrOpen(true)} 
         />
         <ManufacturerList 
           manufacturers={manufacturers}
@@ -51,7 +53,7 @@ export function OrgTab({ form }: Props) {
           onSelect={(id) => updateForm({ manufacturer_id: id })}
           onEdit={(mfr) => {
             setEditingMfr(mfr);
-            editMfrDialog.open();
+            setEditMfrOpen(true);
           }}
           onDelete={(mfr) => deleteManMut(mfr.id)}
         />
@@ -59,7 +61,7 @@ export function OrgTab({ form }: Props) {
 
       <PromptDialog
         open={isAddMfrOpen}
-        onOpenChange={addMfrDialog.toggle}
+        onOpenChange={setAddMfrOpen}
         title={t.newMfrTitle}
         placeholder={t.mfrNamePlaceholder}
         onConfirm={async (name: string) => {
@@ -69,7 +71,7 @@ export function OrgTab({ form }: Props) {
 
       <PromptDialog
         open={isEditMfrOpen}
-        onOpenChange={editMfrDialog.toggle}
+        onOpenChange={setEditMfrOpen}
         title={t.editMfrTitle}
         placeholder={editingMfr?.name || t.mfrNamePlaceholder}
         onConfirm={async (name: string) => {

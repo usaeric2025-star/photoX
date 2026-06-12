@@ -1,7 +1,6 @@
 import React from 'react';
-import { usePhotoAIResult } from '../../../hooks';
+import { usePhotoAIResult, useCopyToClipboard } from '../../../hooks';
 import { useUIStore } from '../../../store';
-import { useClipboard } from '@mantine/hooks';
 import { Copy, Check, Terminal, FileJson, Info } from 'lucide-react';
 
 interface AISourceTabProps {
@@ -10,7 +9,9 @@ interface AISourceTabProps {
 
 export function AISourceTab({ photoId }: AISourceTabProps) {
   const appLang = useUIStore((s) => s.appLang);
-  const clipboard = useClipboard({ timeout: 2000 });
+  const { copy, copied } = useCopyToClipboard({
+    successMessage: appLang === 'zh' ? '已复制' : 'Copied'
+  });
   const { data: aiResult, isLoading, error } = usePhotoAIResult(photoId);
 
   if (isLoading) {
@@ -73,14 +74,14 @@ export function AISourceTab({ photoId }: AISourceTabProps) {
           </span>
         </div>
         <button
-          onClick={() => clipboard.copy(formattedResult)}
+          onClick={() => copy(formattedResult)}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-sans font-medium transition-all ${
-            clipboard.copied
+            copied
               ? 'bg-emerald-50 border-emerald-200 text-emerald-600'
               : 'bg-white border-slate-200 hover:border-slate-300 text-slate-600 active:scale-95'
           }`}
         >
-          {clipboard.copied ? (
+          {copied ? (
             <>
               <Check className="w-3.5 h-3.5" />
               <span>{appLang === 'zh' ? '已复制' : 'Copied'}</span>

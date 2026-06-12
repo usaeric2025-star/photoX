@@ -2,7 +2,7 @@ import React from 'react';
 import { PhotoTagSelector } from '../edit/PhotoTagSelector';
 import { useTags, useTagCreate, useTagEdit, useTagDelete } from '../../../hooks';
 import { getTagIds, getTagsFromIds } from '../../../services/photo/utils';
-import { PhotoEditFormReturn } from '@/hooks/photo/usePhotoEdit';
+import { PhotoEditFormReturn } from '@/hooks/photo/types';
 
 import { ProductFormData } from '@/types';
 
@@ -20,10 +20,14 @@ export function TagEditor({ form }: TagSelectorProps) {
   const { mutateAsync: updateTagMut } = useTagEdit();
   const { mutateAsync: deleteTagMut } = useTagDelete();
 
-  const formState = form.values;
+  const formState = form.watch();
   const currentTags = formState.tags;
 
-  const updateForm = React.useCallback((updates: Partial<ProductFormData>) => form.setValues(updates), [form]);
+  const updateForm = React.useCallback((updates: Partial<ProductFormData>) => {
+    Object.entries(updates).forEach(([key, value]) => {
+      form.setValue(key as any, value);
+    });
+  }, [form]);
 
   const handleChange = React.useCallback((newIds: string[]) => {
     const newTags = getTagsFromIds(newIds, tags);
@@ -41,9 +45,8 @@ export function TagEditor({ form }: TagSelectorProps) {
   return (
     <section className="space-y-2">
       <PhotoTagSelector 
+        name="tags"
         tags={tags}
-        selectedTagIds={getTagIds(currentTags)}
-        onChange={handleChange}
         addTag={handleAdd}
         updateTag={handleUpdate}
         deleteTag={handleDelete}

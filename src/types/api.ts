@@ -1,12 +1,18 @@
 import { Photo } from './photo';
+import type { 
+  ApiResponse as BaseApiResponse,
+  PhotoListReqSchema,
+  PhotoBatchUpdateReqSchema,
+  PhotoUpdateReqSchema,
+  SearchReqSchema
+} from '../../api/_shared/apiContractSchema';
 
-export interface ApiResponse<T = unknown> {
-  success: boolean;
-  data: T | null;
-  error?: string | Error | null;
-  count?: number;
-  status?: number;
-}
+export type ApiResponse<T = unknown> = BaseApiResponse<T>;
+
+export type PhotoListReq = typeof PhotoListReqSchema.infer;
+export type PhotoBatchUpdateReq = typeof PhotoBatchUpdateReqSchema.infer;
+export type PhotoUpdateReq = typeof PhotoUpdateReqSchema.infer;
+export type SearchReq = typeof SearchReqSchema.infer;
 
 export type ErrorCode = 
   | 'NETWORK_ERROR'

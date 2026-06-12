@@ -1,5 +1,7 @@
 import { Hono } from 'hono';
+import { type } from 'arktype';
 import { getSupabaseAdmin } from '../_lib/supabase.js';
+import { CategoryReqSchema } from '../_shared/apiContractSchema.js';
 
 const TABLE_NAME = 'categories';
 
@@ -15,7 +17,11 @@ export const categories = new Hono()
     return c.json({ success: true, data: data || [] });
   })
   .post('/clear-photos', async (c) => {
-    const { categoryId } = await c.req.json();
+    const body = await c.req.json();
+    const check = type({ categoryId: "string" })(body);
+    if (check instanceof type.errors) throw new Error(check.summary);
+
+    const { categoryId } = check;
     const supabase = await getSupabaseAdmin();
     const { data, error } = await supabase
         .from('furniture_items')
@@ -27,7 +33,11 @@ export const categories = new Hono()
     return c.json({ success: true, data: data?.map((i: any) => i.id) || [] });
   })
   .post('/', async (c) => {
-    const { categoryData } = await c.req.json();
+    const body = await c.req.json();
+    const check = type({ categoryData: CategoryReqSchema })(body);
+    if (check instanceof type.errors) throw new Error(check.summary);
+
+    const { categoryData } = check;
     const supabase = await getSupabaseAdmin();
     const { error, data } = await supabase
         .from(TABLE_NAME)
@@ -39,7 +49,11 @@ export const categories = new Hono()
   })
   .put('/:id', async (c) => {
     const id = c.req.param('id');
-    const { updates } = await c.req.json();
+    const body = await c.req.json();
+    const check = type({ updates: CategoryReqSchema.omit("id") })(body);
+    if (check instanceof type.errors) throw new Error(check.summary);
+
+    const { updates } = check;
     const supabase = await getSupabaseAdmin();
     const { error } = await supabase
         .from(TABLE_NAME)

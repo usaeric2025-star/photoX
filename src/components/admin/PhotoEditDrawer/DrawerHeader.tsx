@@ -1,6 +1,7 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useShallow } from "@/store/useUIStore";
 import React from "react";
+import { useDisclosure } from "@mantine/hooks";
 import {
   X as CloseIcon,
   EyeOff,
@@ -12,14 +13,12 @@ import {
   Loader2,
   Star,
   LogOut,
-  Info,
+  LogOut as RemoveFromGroupIcon,
 } from "lucide-react";
-import { Skeleton } from "../../ui/Skeleton";
-import { useUIStore } from "../../../store";
-import { UseFormReturnType } from "@mantine/form";
-import { ProductFormData, Photo } from "../../../types";
+import { useFormContext } from "react-hook-form";
+import { ProductFormData } from "../../../types";
 import { toast } from "sonner";
-import { useDisclosure } from "@mantine/hooks";
+import { useUIStore } from "../../../store";
 import {
   usePhotoDetail,
   useTasks,
@@ -28,42 +27,25 @@ import {
   usePhotoDelete,
   useTaskExecutor,
   useSettings,
-  PhotoEditFormReturn,
 } from "../../../hooks";
 import { analyzePhoto } from "@/services/ai/commands";
 import { usePhotoEditAI } from "./usePhotoEditAI";
 
-interface HeaderProps {
-  editPhotoId: string | null;
-  form: PhotoEditFormReturn;
-  isAnalyzing: boolean;
-  aiDebugInfo: any;
-  isPartOfGroup: boolean;
-  isSyncing: boolean;
-  onAbort: (() => void) | undefined;
-  onAiAnalyze: () => void;
-  onDelete: (() => void) | undefined;
-  onSave: () => void;
-  onToggleHidden: () => void;
+import { PhotoEditFormReturn } from '@/hooks/photo/types';
+
+interface DrawerHeaderProps {
   onClose: () => void;
-  onErrorClick: (err: string) => void;
-  onRemoveFromGroup?: () => void;
-  isRunning?: boolean;
-  totalPhotosCount?: number;
+  previewSrc?: string;
+  form: PhotoEditFormReturn;
 }
 
 export function DrawerHeader({
-  form,
-  onSave,
   onClose,
   previewSrc,
-}: {
-  form: PhotoEditFormReturn;
-  onSave: () => void;
-  onClose: () => void;
-  previewSrc?: string;
-}) {
-  const formState = form.values;
+  form,
+}: DrawerHeaderProps) {
+  const { save, watch, setValue } = form;
+  const formState = watch();
   
   const editPhotoId = useUIStore((s) => s.editPhotoId);
   const appLang = useUIStore((s) => s.appLang);
@@ -94,7 +76,7 @@ export function DrawerHeader({
 
   const onToggleHidden = async () => {
     const nextValue = !formState.is_hidden;
-    form.setFieldValue('is_hidden', nextValue);
+    setValue('is_hidden', nextValue);
     if (editPhotoId) {
       await updatePhoto({ id: editPhotoId, updates: { is_hidden: nextValue } });
     }
@@ -111,8 +93,8 @@ export function DrawerHeader({
   };
 
   const onAiAnalyze = async () => {
-    await handleAiAnalyze(previewSrc, detailPhoto?.image_url);
-  };
+    toast.info("功能稍后迁移！");
+  }
 
   const l = {
     hidden: appLang === 'zh' ? '屏蔽' : appLang === 'ms' ? 'Sembunyi' : 'Hide',
@@ -120,11 +102,6 @@ export function DrawerHeader({
     editTitle: appLang === 'zh' ? '产品编辑' : appLang === 'ms' ? 'Edit Maklumat' : 'Edit Product',
     analyzeTitle: appLang === 'zh' ? '产品分析' : appLang === 'ms' ? 'Analisis Produk' : 'Analyze Product',
     cover: appLang === 'zh' ? '封面' : appLang === 'ms' ? 'Muka' : 'Cover',
-    deleteConfirm: appLang === 'zh' ? '确认删除' : appLang === 'ms' ? 'Sahkan Padam' : 'Confirm Delete',
-    deleteMessage: appLang === 'zh' ? '确认删除此照片？此操作不可逆。' : appLang === 'ms' ? 'Adakah anda pasti mahu memadamkan foto ini? Tindakan ini tidak dapat diubah.' : 'Are you sure you want to delete this photo? This action cannot be undone.',
-    deleteLabel: appLang === 'zh' ? '删除' : appLang === 'ms' ? 'Padam' : 'Delete',
-    cancelLabel: appLang === 'zh' ? '取消' : appLang === 'ms' ? 'Batal' : 'Cancel',
-    analyzeError: appLang === 'zh' ? '识别异常' : appLang === 'ms' ? 'Gagal Kenal Pasti' : 'Identify Failed',
   };
 
   return (
@@ -145,8 +122,6 @@ export function DrawerHeader({
         <h2 className="font-black text-sm text-slate-800 tracking-tight leading-tight uppercase truncate w-full text-center">
           {editPhotoId ? l.editTitle : l.analyzeTitle}
         </h2>
-        <p className="text-[8px] font-bold text-slate-400 tracking-widest uppercase">
-        </p>
       </div>
 
       <div className="flex-1 flex items-center justify-end gap-2">
@@ -154,7 +129,7 @@ export function DrawerHeader({
           <button
             onClick={onAiAnalyze}
             disabled={isAnalyzing || isRunning}
-            className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border shadow-sm transition-all disabled:opacity-50 ${isAnalyzing ? "bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed" : "bg-purple-50 text-purple-600 border-purple-100 active:bg-purple-200"}`}
+            className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-slate-100 shadow-sm transition-all disabled:opacity-50 ${isAnalyzing ? "bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed" : "bg-purple-50 text-purple-600 border-purple-100 active:bg-purple-200"}`}
           >
             {isAnalyzing ? (
               <Loader2 size={16} className="text-current animate-spin" />
@@ -168,11 +143,11 @@ export function DrawerHeader({
           <button
             onClick={() => {
               const newState = !formState.is_group_cover;
-              form.setFieldValue('is_group_cover', newState);
+              setValue('is_group_cover', newState);
               toast.success(newState ? '已设为封面' : '已取消封面');
             }}
             title={l.cover}
-            className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border shadow-sm transition-all ${formState.is_group_cover ? "bg-amber-500 text-white border-amber-500 hover:bg-amber-600" : "bg-white text-amber-500 border-amber-200 hover:bg-amber-50 active:scale-95"}`}
+            className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-amber-200 shadow-sm transition-all ${formState.is_group_cover ? "bg-amber-500 text-white border-amber-500 hover:bg-amber-600" : "bg-white text-amber-500 border-amber-200 hover:bg-amber-50 active:scale-95"}`}
           >
             <Star size={20} className={formState.is_group_cover ? "fill-white" : "fill-transparent"} />
           </button>
@@ -184,7 +159,7 @@ export function DrawerHeader({
             title="移出合组"
             className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600 border border-slate-200 shadow-sm hover:bg-slate-200 active:scale-95 transition-all"
           >
-            <LogOut size={18} />
+            <RemoveFromGroupIcon size={18} />
           </button>
         )}
 
@@ -199,9 +174,9 @@ export function DrawerHeader({
         )}
 
         <button
-          onClick={onSave}
+          onClick={save}
           disabled={isSyncing || isRunning}
-          className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border shadow-sm transition-all disabled:opacity-50 ${isSyncing || isRunning ? "bg-blue-400 text-white border-blue-400 cursor-wait" : "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20 active:bg-blue-700"}`}
+          className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-blue-600 shadow-sm transition-all disabled:opacity-50 ${isSyncing || isRunning ? "bg-blue-400 text-white border-blue-400 cursor-wait" : "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20 active:bg-blue-700"}`}
         >
           {isSyncing || isRunning ? (
             <Loader2 size={16} className="text-current animate-spin" />

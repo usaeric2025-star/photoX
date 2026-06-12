@@ -56,6 +56,32 @@ app.onError((err, c) => {
     stack: appError.stack,
   })
 
+  // [2026-06-11] 增加持久化日誌到 DB，方便管理後台查看
+  try {
+    getSupabaseAdmin().then(supabase => {
+       supabase.from('system_logs').insert([{
+          error_message: `[API ERROR] ${appError.message}`,
+          stack_trace: appError.stack,
+          url: c.req.path,
+          context: 'Backend_API',
+          metadata: {
+            traceId,
+            method: c.req.method,
+            code: appError.code,
+            level: 'error',
+            timestamp: new Date().toISOString()
+          },
+          created_at: new Date().toISOString()
+       }]).then(({ error: insertError }: any) => {
+          if (insertError) console.error('[Fatal] Logging to system_logs failed:', insertError);
+       });
+    }).catch(e => {
+       console.error('[Fatal] Failed to get supabase for logging:', e);
+    });
+  } catch (logErr) {
+    console.error('[Fatal] Async logging logic failed:', logErr);
+  }
+
   // 返回標準 AppResult（body 不含 traceId）
   const status = (err as any).status || 500
   return c.json(errorFactory.fail(appError), status)

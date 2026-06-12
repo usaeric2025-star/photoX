@@ -1,5 +1,5 @@
 import { logger } from './logger.js';
-import { S3Client } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getServerEnv } from "../_shared/envSchema.js";
 
 const serverEnv = getServerEnv(process.env);
@@ -32,6 +32,39 @@ export async function getR2Client() {
       secretAccessKey: r2SecretAccessKey,
     },
     forcePathStyle: true,
-    maxAttempts: 1,
+    maxAttempts: 3,
   });
 }
+
+export const uploadToR2 = async (key: string, content: string): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const client = await getR2Client();
+    const bucket = serverEnv.R2_BUCKET_NAME;
+    if (!bucket) throw new Error('R2_BUCKET_NAME not set');
+
+    await client.send(new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: content,
+      ContentType: 'application/json'
+    }));
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
+  }
+};
+
+export const deleteFromR2 = async (key: string): Promise<void> => {
+  try {
+    const client = await getR2Client();
+    const bucket = serverEnv.R2_BUCKET_NAME;
+    if (!bucket) return;
+
+    await client.send(new DeleteObjectCommand({
+      Bucket: bucket,
+      Key: key
+    }));
+  } catch (error) {
+    console.error(`Failed to delete ${key} from R2:`, error);
+  }
+};

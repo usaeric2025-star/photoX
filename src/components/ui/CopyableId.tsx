@@ -1,7 +1,7 @@
 import React from 'react';
 import { Copy, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useClipboard } from '@mantine/hooks';
+import { useCopyToClipboard } from '@/hooks';
 
 interface CopyableIdProps {
   id: string;
@@ -10,7 +10,7 @@ interface CopyableIdProps {
 }
 
 export function CopyableId({ id, label, className }: CopyableIdProps) {
-  const clipboard = useClipboard({ timeout: 2000 });
+  const { copy, copied } = useCopyToClipboard({ showToast: false });
 
   if (!id) return null;
 
@@ -29,11 +29,11 @@ export function CopyableId({ id, label, className }: CopyableIdProps) {
         onClick={(e) => {
           e.stopPropagation();
           e.preventDefault();
-          clipboard.copy(id);
+          copy(id);
         }}
         className="text-slate-400 hover:text-brand-navy p-1 transition-colors rounded-md hover:bg-slate-100 touch-manipulation cursor-pointer"
       >
-        {clipboard.copied ? <Check size={12} className="text-green-600" /> : <Copy size={12} />}
+        {copied ? <Check size={12} className="text-green-600" /> : <Copy size={12} />}
       </button>
     </div>
   );

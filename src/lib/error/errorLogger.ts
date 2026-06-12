@@ -47,23 +47,56 @@ export const logError = async (error: Error | unknown, context: EventContext) =>
   handleError(enrichedError, context.action, false);
 
   // 3. Always report to backend for persistence (system_logs)
-  // [2026-06-03] Frontend logs to /api/log-error are disabled to prevent performance/noise issues
-  /*
   try {
-    await fetch('/api/log-error', { ... });
+    const traceId = (error as any)?.traceId || 'fe-' + Math.random().toString(36).substring(2, 12);
+    
+    await fetch('/api/log-error', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Trace-Id': traceId
+      },
+      body: JSON.stringify({
+        error_message: errorMsg,
+        stack_trace: stackTrace || (error as any)?.details || null,
+        url: window.location.href,
+        context: context.component || 'global',
+        metadata: {
+          ...context.metadata,
+          action: context.action,
+          kind: context.kind,
+          traceId,
+          timestamp: new Date().toISOString()
+        }
+      })
+    });
   } catch (e) {
     console.error('[ErrorLogger] Failed to send log to API:', e);
   }
-  */
 };
 
 export const logResult = async (context: EventContext, type: LogLevel, data?: any) => {
-    // [2026-06-03] Frontend logs to /api/log-error are disabled to prevent performance/noise issues
-    /*
-    try {
-      await fetch('/api/log-error', { ... });
-    } catch (e) {
-      console.error('[ErrorLogger] Failed to send log result to API:', e);
-    }
-    */
+  try {
+    await fetch('/api/log-error', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        error_message: `[${type.toUpperCase()}] ${context.action}`,
+        url: window.location.href,
+        context: context.component || 'global',
+        metadata: {
+          ...context.metadata,
+          action: context.action,
+          kind: context.kind,
+          level: type,
+          data,
+          timestamp: new Date().toISOString()
+        }
+      })
+    });
+  } catch (e) {
+    console.error('[ErrorLogger] Failed to send log result to API:', e);
+  }
 };

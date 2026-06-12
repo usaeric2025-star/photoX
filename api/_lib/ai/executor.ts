@@ -1,6 +1,9 @@
 import { normalizeI18n } from "../../_shared/i18n.js";
 import { logger } from "../logger.js";
 import { extractJSON } from "./utils.js";
+import { v4 as uuidv4 } from "uuid";
+import { getSupabaseAdmin } from "../supabase.js";
+import { uploadToR2, deleteFromR2 } from "../storage.js";
 
 interface AITaskOptions {
   task: string;
@@ -12,6 +15,63 @@ interface AITaskOptions {
   shouldNormalize?: boolean;
 }
 
+export interface AIAuditData {
+  photoId?: string;
+  model: string;
+  promptVersion: string;
+  cleanedOutput: any;
+  rawResponse: string;
+  duration: number;
+  status: 'success' | 'failed';
+  errorMessage?: string;
+  traceId?: string;
+  userId?: string;
+}
+
+/**
+ * AI 審計日誌保存：R2 (冷儲存) + ai_audit_logs (索引)
+ */
+export const saveAIAuditLog = async (data: AIAuditData): Promise<void> => {
+  try {
+    const supabase = await getSupabaseAdmin();
+    
+    // 1. 上傳原始輸出到 R2
+    const timestamp = Date.now();
+    const rawKey = `ai_logs/${data.photoId || 'global'}/${timestamp}_${uuidv4().slice(0, 8)}.json`;
+    const uploadResult = await uploadToR2(rawKey, data.rawResponse);
+    
+    if (!uploadResult.success) {
+      logger.error('[AIAudit] Failed to upload AI raw result to R2:', uploadResult.error);
+      return;
+    }
+    
+    // 2. 寫入資料庫
+    const { error } = await supabase.from('ai_audit_logs').insert({
+      photo_id: data.photoId,
+      model: data.model,
+      prompt_version: data.promptVersion,
+      cleaned_output: data.cleanedOutput,
+      raw_storage_path: rawKey,
+      duration: data.duration,
+      status: data.status,
+      error_message: data.errorMessage,
+      trace_id: data.traceId,
+      user_id: data.userId || null,
+      created_at: new Date().toISOString()
+    });
+    
+    if (error) {
+      logger.error('[AIAudit] Failed to save AI audit log into DB:', error);
+      // 資料庫失敗，刪除已上傳的 R2 檔案 (回滾)
+      await deleteFromR2(rawKey);
+    } else {
+      logger.info(`[AIAudit] Successfully saved AI audit log for ${data.photoId || 'global'}`);
+    }
+  } catch (err: any) {
+    logger.error('[AIAudit] Save task exception:', err.message);
+  }
+};
+
 /**
  * 核心 AI 執行管道
  * 封裝：測速 + 審計日誌 + JSON 解析 + I18n 歸一化
@@ -20,14 +80,15 @@ export async function executeAITask(options: AITaskOptions) {
   const { task, provider, model, messages, prompt, metadata, shouldNormalize = true } = options;
   const maxRetries = 3;
   let lastError: any = null;
+  const startTime = Date.now();
 
   for (let i = 0; i <= maxRetries; i++) {
     try {
-      const startTime = Date.now();
+      const iterStartTime = Date.now();
       const result = await provider.chat(messages);
-      const endTime = Date.now();
+      const iterEndTime = Date.now();
 
-      // 1. 自動審計日誌 (不阻塞主流程)
+      // 1. 自動審計日誌 (用於 logger 輸出和後端控制台)
       let auditedResponse = result.text || result.error;
       if (result.success && auditedResponse?.startsWith('{')) {
         try {
@@ -45,7 +106,7 @@ export async function executeAITask(options: AITaskOptions) {
         provider: provider.name,
         prompt,
         response: auditedResponse,
-        latency_ms: endTime - startTime,
+        latency_ms: iterEndTime - iterStartTime,
         token_usage: result.usage,
         status: result.success ? 'success' : 'error',
         error_message: result.error,
@@ -61,7 +122,6 @@ export async function executeAITask(options: AITaskOptions) {
       try {
         data = extractJSON(result.text || '{}');
       } catch (parseError: any) {
-         // Enhance: Try repair JSON? extractJSON already does some, but if still failed we can throw to trigger retry
          throw new Error('Parse failed: ' + parseError.message);
       }
 
@@ -75,39 +135,23 @@ export async function executeAITask(options: AITaskOptions) {
         if (data.description) data.description = normalizeI18n(data.description);
       }
 
-      // 4. 保存原始識別源代碼與解析數據到 system_logs 數據表中 (非阻塞)
-      if (metadata?.photoId) {
-        const photoId = metadata.photoId;
-        const rawResultStr = result.text || auditedResponse;
-        const parsedDataObj = data;
-        import("../supabase.js").then(async ({ getSupabaseAdmin }) => {
-            try {
-                const supabase = await getSupabaseAdmin();
-                const { error } = await supabase.from('system_logs').insert({
-                    error_message: `AI analysis completed for photo ${photoId}`,
-                    context: 'AI_Executor',
-                    user_id: metadata?.userId || null,
-                    metadata: {
-                        action: 'analyze_photo',
-                        level: 'info',
-                        photo_id: photoId,
-                        raw_result: rawResultStr,
-                        parsed_data: parsedDataObj
-                    },
-                    created_at: new Date().toISOString()
-                });
-                if (error) {
-                    logger.warn(`[system_logs-save-failed] ${error.message}`);
-                } else {
-                    logger.info(`[system_logs-save-success] Saved raw output for photo ID: ${photoId}`);
-                }
-            } catch (err: any) {
-                logger.warn(`[system_logs-save-exception] ${err.message}`);
-            }
-        }).catch(err => logger.warn(`[system_logs-import-failed]`, err.message));
-      }
+      // 4. 保存審計日誌到 ai_audit_logs (阻塞式)
+      await saveAIAuditLog({
+        photoId: metadata?.photoId,
+        model: model,
+        promptVersion: 'v1',
+        cleanedOutput: data,
+        rawResponse: result.text || auditedResponse,
+        duration: Date.now() - startTime,
+        status: 'success',
+        traceId: metadata?.traceId,
+        userId: metadata?.userId
+      });
 
-      return data;
+      return {
+        data,
+        rawText: result.text || auditedResponse
+      };
       
     } catch (error: any) {
       lastError = error;
@@ -124,6 +168,20 @@ export async function executeAITask(options: AITaskOptions) {
   // 5. 最後一次失敗：記錄日誌 + 返回降級值 (不中斷流程)
   logger.error(`[executeAITask] Max retries reached for task ${task}. Last error:`, lastError);
   
+  // 記錄失敗的審計日誌
+  await saveAIAuditLog({
+    photoId: metadata?.photoId,
+    model: model,
+    promptVersion: 'v1',
+    cleanedOutput: null,
+    rawResponse: lastError?.message || 'Max retries reached',
+    duration: Date.now() - startTime,
+    status: 'failed',
+    errorMessage: lastError?.message,
+    traceId: metadata?.traceId,
+    userId: metadata?.userId
+  });
+
   // Return fallback data matching expected schema
   return {
      _fallback: true,

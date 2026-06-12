@@ -1,11 +1,17 @@
 import { Hono } from 'hono';
+import { type } from 'arktype';
 import { getSupabaseAdmin } from '../_lib/supabase.js';
+import { GroupReqSchema } from '../_shared/apiContractSchema.js';
 
 const TABLE_NAME = 'groups';
 
 export const groups = new Hono()
   .post('/', async (c) => {
-    const { groupData } = await c.req.json();
+    const body = await c.req.json();
+    const check = type({ groupData: GroupReqSchema })(body);
+    if (check instanceof type.errors) throw new Error(check.summary);
+
+    const { groupData } = check;
     const supabase = await getSupabaseAdmin();
     // Simplified: Assuming validation and mapToDb logic handled or simplified here
     const { error, data } = await supabase
@@ -18,7 +24,11 @@ export const groups = new Hono()
   })
   .put('/:id', async (c) => {
     const id = c.req.param('id');
-    const { updates } = await c.req.json();
+    const body = await c.req.json();
+    const check = type({ updates: GroupReqSchema.omit("id") })(body);
+    if (check instanceof type.errors) throw new Error(check.summary);
+
+    const { updates } = check;
     const supabase = await getSupabaseAdmin();
     const { data, error } = await supabase
         .from(TABLE_NAME)
@@ -48,14 +58,24 @@ export const groups = new Hono()
     return c.json({ success: true });
   })
   .post('/group-photos', async (c) => {
+      const body = await c.req.json();
+      const check = type({
+          targetGroupId: "string",
+          userId: "string",
+          "photoIds?": "string[]",
+          groupData: "object",
+          "sourceGroupIds?": "string[]",
+          "ungroupedValidIds?": "string[]"
+      })(body);
+      if (check instanceof type.errors) throw new Error(check.summary);
+
       const { 
           targetGroupId, 
           userId, 
-          photoIds, 
           groupData, 
           sourceGroupIds, 
           ungroupedValidIds 
-      } = await c.req.json();
+      } = check;
       
       const supabase = await getSupabaseAdmin();
 
@@ -106,7 +126,11 @@ export const groups = new Hono()
       return c.json({ success: true });
   })
   .post('/move-photos', async (c) => {
-    const { photoIds, targetGroupId } = await c.req.json();
+    const body = await c.req.json();
+    const check = type({ photoIds: "string[]", targetGroupId: "string|null" })(body);
+    if (check instanceof type.errors) throw new Error(check.summary);
+
+    const { photoIds, targetGroupId } = check;
     const supabase = await getSupabaseAdmin();
 
     // Fetch snapshots before move
@@ -129,7 +153,11 @@ export const groups = new Hono()
     return c.json({ success: true });
   })
   .post('/set-cover', async (c) => {
-    const { photoId, groupId } = await c.req.json();
+    const body = await c.req.json();
+    const check = type({ photoId: "string|null", groupId: "string" })(body);
+    if (check instanceof type.errors) throw new Error(check.summary);
+
+    const { photoId, groupId } = check;
     const supabase = await getSupabaseAdmin();
     await supabase.from('furniture_items').update({ is_group_cover: false }).eq('group_id', groupId);
     if (photoId) {
@@ -145,7 +173,11 @@ export const groups = new Hono()
     return c.json({ success: true });
   })
   .post('/ungroup', async (c) => {
-    const { groupId } = await c.req.json();
+    const body = await c.req.json();
+    const check = type({ groupId: "string" })(body);
+    if (check instanceof type.errors) throw new Error(check.summary);
+
+    const { groupId } = check;
     const supabase = await getSupabaseAdmin();
     await supabase.from('furniture_items').update({ group_id: null, is_group_cover: false }).eq('group_id', groupId);
     const { error } = await supabase.rpc('dissolve_group', { group_id: groupId });
@@ -153,7 +185,11 @@ export const groups = new Hono()
     return c.json({ success: true });
   })
   .post('/sync-count', async (c) => {
-    const { groupId } = await c.req.json();
+    const body = await c.req.json();
+    const check = type({ groupId: "string" })(body);
+    if (check instanceof type.errors) throw new Error(check.summary);
+
+    const { groupId } = check;
     if (!groupId) return c.json({ success: true });
     const supabase = await getSupabaseAdmin();
     
