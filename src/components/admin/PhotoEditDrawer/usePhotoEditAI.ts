@@ -197,6 +197,7 @@ export function usePhotoEditAI(form: PhotoEditFormReturn) {
 
             try {
               await updatePhoto({ id: editPhotoId, updates, silent: true });
+              queryClient.invalidateQueries({ queryKey: ['photo', editPhotoId] });
               toast.success(appLang === 'zh' ? '已识别并保存' : 'Identified & Saved');
             } catch (saveError: unknown) {
               logger.error("Auto-save failed:", saveError);

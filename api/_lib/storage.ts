@@ -54,6 +54,26 @@ export const uploadToR2 = async (key: string, content: string): Promise<{ succes
   }
 };
 
+export const getFromR2 = async (key: string): Promise<string | null> => {
+  try {
+    const client = await getR2Client();
+    const bucket = serverEnv.R2_BUCKET_NAME;
+    if (!bucket) throw new Error('R2_BUCKET_NAME not set');
+
+    const { GetObjectCommand } = await import("@aws-sdk/client-s3");
+    const result = await client.send(new GetObjectCommand({
+      Bucket: bucket,
+      Key: key
+    }));
+    
+    if (!result.Body) return null;
+    return await result.Body.transformToString();
+  } catch (error) {
+    console.error(`Failed to get ${key} from R2:`, error);
+    return null;
+  }
+};
+
 export const deleteFromR2 = async (key: string): Promise<void> => {
   try {
     const client = await getR2Client();

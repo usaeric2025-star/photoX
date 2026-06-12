@@ -6,6 +6,18 @@ import { TagReqSchema } from '../_shared/apiContractSchema.js';
 const TABLE_NAME = 'tags';
 
 export const tags = new Hono()
+  .get('/search', async (c) => {
+    const keyword = c.req.query('keyword') || '';
+    const supabase = await getSupabaseAdmin();
+    
+    let query = supabase.from(TABLE_NAME).select('*').order('name');
+    if (keyword) {
+        query = query.ilike('name', `%${keyword}%`);
+    }
+    const { data, error } = await query.limit(20);
+    if (error) return c.json({ success: false, error: error.message }, 500);
+    return c.json({ success: true, data });
+  })
   .put('/:id', async (c) => {
     const id = c.req.param('id');
     const body = await c.req.json();

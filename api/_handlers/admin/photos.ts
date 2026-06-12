@@ -10,7 +10,42 @@ adminPhotos.get("/photo-ai-result/:photoId", async (c) => {
         if (!photoId) return c.json({ success: false, error: "photoId is required" }, 400);
 
         const supabase = await getSupabaseAdmin();
-        // Optimize: Query using the indexed error_message field first (super fast) and fallback if none found
+        
+        // 1. Try querying ai_audit_logs first (as it's the modern way)
+        let { data: auditLog, error: auditError } = await supabase
+            .from("ai_audit_logs")
+            .select("*")
+            .eq("photo_id", photoId)
+            .eq("status", "success")
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (!auditError && auditLog) {
+            let rawResult = '';
+            if (auditLog.raw_storage_path) {
+                const { getFromR2 } = await import("../../_lib/storage.js");
+                const r2Content = await getFromR2(auditLog.raw_storage_path);
+                if (r2Content) {
+                    rawResult = r2Content;
+                }
+            }
+            if (!rawResult) {
+                rawResult = typeof auditLog.cleaned_output === 'object' 
+                    ? JSON.stringify(auditLog.cleaned_output, null, 2)
+                    : String(auditLog.cleaned_output || '');
+            }
+
+            const resultObj = {
+                photo_id: photoId,
+                raw_result: rawResult,
+                parsed_data: auditLog.cleaned_output || null,
+                created_at: auditLog.created_at
+            };
+            return c.json({ success: true, data: resultObj });
+        }
+
+        // 2. Fallback to older system_logs
         let { data: rawLogs, error } = await supabase
             .from("system_logs")
             .select("*")

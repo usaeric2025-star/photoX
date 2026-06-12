@@ -17,7 +17,7 @@ export const usePhotoEditMutation = createMutationHook({
     
     if (tags && Array.isArray(tags)) {
       const { syncBatchPhotoTags } = await import('@/services/tag/commands');
-      await syncBatchPhotoTags([id], tags.map(t => String(t.id)));
+      await syncBatchPhotoTags([id], tags.filter(t => t && t.id).map(t => String(t.id)));
     }
     
     return res.data;

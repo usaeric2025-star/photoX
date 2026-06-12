@@ -39,30 +39,34 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
   const appLang = useUIStore((s) => s.appLang);
 
   const { data: detailPhoto } = usePhotoDetail(editPhotoId || '');
-  
   const updateMutation = usePhotoEditMutation();
   const { mutateAsync: deletePhoto } = usePhotoDelete();
 
+  const defaultValues = React.useMemo(() => ({
+    name: detailPhoto?.name || { zh: '', en: '', ms: '' },
+    description: detailPhoto?.description || { zh: '', en: '', ms: '' },
+    category_id: detailPhoto?.category_id || null,
+    manufacturer_id: detailPhoto?.manufacturer_id || null,
+    tags: detailPhoto?.tags || [],
+    item_code: detailPhoto?.item_code || '',
+    manual_code: detailPhoto?.manual_code || '',
+    model_number: detailPhoto?.model_number || '',
+    dimensions: detailPhoto?.dimensions || [],
+    is_hidden: detailPhoto?.is_hidden || false,
+    price: detailPhoto?.price || '',
+    is_group_cover: detailPhoto?.is_group_cover || false,
+    group_id: detailPhoto?.group_id || null,
+    uri: newPhotoData || detailPhoto?.image_url || '',
+    id: editPhotoId || ''
+  }), [detailPhoto, editPhotoId, newPhotoData]);
+
   const form = useFormWithMutation(
     PhotoSchema,
+    defaultValues,
+    updateMutation,
     {
-      name: detailPhoto?.name || { zh: '', en: '', ms: '' },
-      description: detailPhoto?.description || { zh: '', en: '', ms: '' },
-      category_id: detailPhoto?.category_id || null,
-      manufacturer_id: detailPhoto?.manufacturer_id || null,
-      tags: detailPhoto?.tags || [],
-      item_code: detailPhoto?.item_code || '',
-      manual_code: detailPhoto?.manual_code || '',
-      model_number: detailPhoto?.model_number || '',
-      dimensions: detailPhoto?.dimensions || [],
-      is_hidden: detailPhoto?.is_hidden || false,
-      price: detailPhoto?.price || '',
-      is_group_cover: detailPhoto?.is_group_cover || false,
-      group_id: detailPhoto?.group_id || null,
-      uri: newPhotoData || detailPhoto?.image_url || '',
-      id: editPhotoId
-    },
-    updateMutation
+      values: defaultValues,
+    }
   );
 
   const [isDeleteOpen, deleteDialog] = useDisclosure(false);
