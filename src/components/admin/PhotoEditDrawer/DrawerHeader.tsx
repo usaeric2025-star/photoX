@@ -91,7 +91,9 @@ export function DrawerHeader({
   };
 
   const onAiAnalyze = async () => {
-    toast.info("功能稍后迁移！");
+    if (editPhotoId && detailPhoto?.image_url) {
+      await handleAiAnalyze(detailPhoto.image_url);
+    }
   }
 
   const l = {

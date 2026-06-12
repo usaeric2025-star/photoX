@@ -115,9 +115,7 @@ export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promi
          : [];
 
        const tagCount = sanitizedTagNames.length;
-       if (tagCount === 0) {
-         sanitizedTagNames = ['未分類'];
-       } else if (tagCount > 3) {
+       if (tagCount > 3) {
          sanitizedTagNames = sanitizedTagNames.slice(0, 3);
        }
 

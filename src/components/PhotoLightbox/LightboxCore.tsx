@@ -102,6 +102,7 @@ export const LightboxCore = ({
         ].filter(Boolean) as any[]
       }}
       render={{
+        buttonZoom: () => null,
         // Custom interactive controls overlaid on lightbox
         controls: () => (
           <>
