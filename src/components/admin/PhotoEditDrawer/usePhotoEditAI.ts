@@ -131,7 +131,7 @@ export function usePhotoEditAI(form: PhotoEditFormReturn) {
                 }
 
                 if (finalTagIds.length > 0) {
-                    const uniqueIds = Array.from(new Set(finalTagIds)).slice(0, 5);
+                    const uniqueIds = Array.from(new Set(finalTagIds)).slice(0, 3);
                     
                     // Refetch/Invalidate tags so the tag select options are in sync
                     queryClient.invalidateQueries({ queryKey: ['tags'] });
@@ -182,7 +182,15 @@ export function usePhotoEditAI(form: PhotoEditFormReturn) {
                 : { zh: String(result.description), en: '', ms: '' };
             }
             if (Array.isArray(result.dimensions)) {
-              updates.dimensions = result.dimensions.map((d: any) => ({ ...d, is_ai: true }));
+              updates.dimensions = result.dimensions.map((d: any) => ({
+                label: String(d.label || 'Dimension'),
+                unit: (d.unit === 'inch' || d.unit === 'mm') ? d.unit : 'cm',
+                length: Number(d.length) || 0,
+                width: Number(d.width) || 0,
+                height: Number(d.height) || 0,
+                is_ai_estimated: !!d.is_ai_estimated,
+                is_ai: true
+              }));
             }
             if (result.price !== undefined && result.price !== null) {
               updates.price = String(result.price);
@@ -197,7 +205,12 @@ export function usePhotoEditAI(form: PhotoEditFormReturn) {
 
             try {
               await updatePhoto({ id: editPhotoId, updates, silent: true });
-              queryClient.invalidateQueries({ queryKey: ['photo', editPhotoId] });
+              
+              // [V2.2] Standard invalidation per architecture rules
+              const { photoKeys, groupKeys } = await import('@/lib/queryKeys');
+              queryClient.invalidateQueries({ queryKey: photoKeys.all });
+              queryClient.invalidateQueries({ queryKey: groupKeys.all });
+              
               toast.success(appLang === 'zh' ? '已识别并保存' : 'Identified & Saved');
             } catch (saveError: unknown) {
               logger.error("Auto-save failed:", saveError);

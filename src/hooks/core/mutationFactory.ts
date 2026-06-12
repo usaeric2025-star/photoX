@@ -127,9 +127,9 @@ export function createMutation<TData, TVariables, TContext = unknown>(config: Mu
           };
           if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
               const blob = new Blob([JSON.stringify(errorPayload)], { type: 'application/json' });
-              navigator.sendBeacon('/api/log/event', blob);
+              navigator.sendBeacon('/api/log-error', blob);
           } else {
-              api.log.event.$post({ json: errorPayload as any }).catch(console.error);
+              api['log-error'].$post({ json: errorPayload as any }).catch(console.error);
           }
 
           // ✅ 自动绑定错误处理 [ERROR-BINDING]

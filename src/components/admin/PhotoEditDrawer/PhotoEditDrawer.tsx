@@ -67,7 +67,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
     {
       values: defaultValues,
     }
-  );
+  ) as any;
 
   const [isDeleteOpen, deleteDialog] = useDisclosure(false);
   const { tasks } = useTasks();

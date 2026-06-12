@@ -42,7 +42,12 @@ export function PhotoTagSelector({
   const cleanSelectedIds = Array.from(
       new Set(
         safeArray(selectedTagIds)
-          .map((id) => String(id).trim())
+          .map((item) => {
+            if (typeof item === 'object' && item !== null) {
+              return String((item as any).id || '').trim();
+            }
+            return String(item || '').trim();
+          })
           .filter(Boolean),
       ),
     );
@@ -64,9 +69,9 @@ export function PhotoTagSelector({
     if (cleanSelectedIds.includes(strId)) {
       field.onChange(cleanSelectedIds.filter((id) => id !== strId));
     } else {
-      if (cleanSelectedIds.length >= 10) {
+      if (cleanSelectedIds.length >= 3) {
         import('sonner').then(({ toast }) => {
-          toast.warning("最多只能选择 10 个标签 / Maximum of 10 tags allowed");
+          toast.warning("最多只能选择 3 个标签 / Maximum of 3 tags allowed");
         });
         return;
       }

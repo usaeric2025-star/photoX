@@ -106,13 +106,20 @@ export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promi
        }
        
        const rawTags = (parsed.tag_names || parsed.new_tags || parsed.tags || []);
-       const sanitizedTagNames = Array.isArray(rawTags)
+       let sanitizedTagNames = Array.isArray(rawTags)
          ? rawTags.map((t: any) => {
              if (!t) return '';
              if (typeof t === 'object') return String(t.name || t.zh || t.en || '');
              return String(t);
            }).filter(Boolean)
          : [];
+
+       const tagCount = sanitizedTagNames.length;
+       if (tagCount === 0) {
+         sanitizedTagNames = ['未分類'];
+       } else if (tagCount > 3) {
+         sanitizedTagNames = sanitizedTagNames.slice(0, 3);
+       }
 
        return ok({
           name: parsed.name || '',

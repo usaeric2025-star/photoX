@@ -147,7 +147,7 @@ export const PhotoSchema = type({
         "is_pinned?": "boolean",
         "hot_score?": "number",
         "is_global?": "boolean"
-    }).array(),
+    }).array().narrow((data) => data.length >= 1 && data.length <= 3),
     description: {
         "zh?": "string",
         "en?": "string",
