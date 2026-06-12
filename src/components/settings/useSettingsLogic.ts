@@ -11,7 +11,6 @@ import {
 import { api } from "@/lib/api";
 import { useTaskExecutor, useInvalidatePhotos } from "@/hooks";
 import { fromThrowableAsync, ErrorFactory } from '@/lib/error/ErrorFactory';
-import { toast } from 'sonner';
 
 import { translations } from "@/lib/translations";
 

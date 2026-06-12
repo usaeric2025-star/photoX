@@ -5,7 +5,7 @@ import { Photo, ProductFormData } from '@/types';
 import { useFormDraft } from '@/hooks';
 import { useMutation } from '@tanstack/react-query';
 import { updatePhoto } from '@/services/photo/commands';
-import { toast } from 'sonner';
+import { showToast } from '@/lib/ui/toast';
 import { PhotoEditFormReturn } from './types';
 
 /**
@@ -58,7 +58,7 @@ export function usePhotoEdit(initialPhoto: Photo | null): PhotoEditFormReturn {
       return result;
     },
     onSuccess: () => {
-      toast.success('保存成功');
+      showToast.success('保存成功');
       invalidatePhotos();
     },
     onError: (err) => {

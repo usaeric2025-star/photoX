@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 
 import { checkDuplicateBatch } from '@/lib/data/duplicateCheck';
 import { useInvalidatePhotos, useAuth } from '@/hooks';
-import { toast } from 'sonner';
+import { showToast } from '@/lib/ui/toast';
 import { Photo } from '@/types';
 import { hapticFeedback } from '@/lib/ui/haptics';
 import { useUIStore } from '@/store/useUIStore';
@@ -23,7 +23,7 @@ export function usePhotoUpload() {
     const { newFiles: uniqueFiles, duplicateHashes } = checkDuplicateBatch(fileArray);
 
     if (duplicateHashes.length > 0) {
-      toast.warning(`已跳过 ${duplicateHashes.length} 张本地重复照片`);
+      showToast.warning(`已跳过 ${duplicateHashes.length} 张本地重复照片`);
     }
 
     if (uniqueFiles.length === 0) return;

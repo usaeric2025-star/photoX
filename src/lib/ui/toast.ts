@@ -29,6 +29,14 @@ export const showToast = {
       className: 'z-toast',
       ...options
     }),
+
+  warning: (message: string, options?: ExternalToast) => 
+    toast.warning(message, { 
+      duration: 4000,
+      position: 'bottom-center',
+      className: 'z-toast',
+      ...options
+    }),
     
   loading: (message: string, options?: ExternalToast) => 
     toast.loading(message, { 

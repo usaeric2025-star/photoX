@@ -1,4 +1,4 @@
-import { toast } from 'sonner';
+import { showToast } from '@/lib/ui/toast';
 import { useUIStore } from '@/store/useUIStore';
 import React, { useState, useMemo, useCallback, useRef } from "react";
 import { X, Check, Search, Plus, Upload, Sparkles } from "lucide-react";
@@ -50,7 +50,7 @@ export function GroupPhotoPicker({
     const { newFiles: uniqueFiles, duplicateHashes: duplicateFiles } = checkDuplicateBatch(files);
 
     if (duplicateFiles.length > 0) {
-      toast.warning(`已重新检查并跳过 ${duplicateFiles.length} 张重复照片`);
+      showToast.warning(`已重新检查并跳过 ${duplicateFiles.length} 张重复照片`);
     }
 
     if (uniqueFiles.length === 0) {
@@ -90,9 +90,9 @@ export function GroupPhotoPicker({
         
         const skippedCloud = photoData.length - savedPhotos.length;
         if (skippedCloud > 0) {
-          toast.success(`成功上传 ${savedPhotos.length} 张，云端排重跳过 ${skippedCloud} 张`);
+          showToast.success(`成功上传 ${savedPhotos.length} 张，云端排重跳过 ${skippedCloud} 张`);
         } else {
-          toast.success(`上传成功 (${savedPhotos.length} 张)`);
+          showToast.success(`上传成功 (${savedPhotos.length} 张)`);
         }
         return savedPhotos;
       }, {

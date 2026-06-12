@@ -2,7 +2,7 @@ import { useTaskExecutor, useTasks } from '@/hooks';
 import React, { useRef } from 'react';
 import { Grid, Pencil, Trash2 } from 'lucide-react';
 import { createPortal } from "react-dom";
-import { toast } from 'sonner';
+import { showToast } from '@/lib/ui/toast';
 import { Badge } from '@/components/ui/badge';
 import { Tag } from '@/types/photo';
 import { cn } from '@/lib/utils';
@@ -99,7 +99,7 @@ export function CategoryTagsSection({ categoryName, tags, isAdmin, appLang, text
                 type="button"
                 className="w-full flex items-center justify-center gap-3 text-blue-600 bg-blue-50/50 backdrop-blur-sm border border-blue-100/50 font-bold py-4 rounded-2xl hover:bg-blue-100 transition-all cursor-pointer shadow-sm shadow-blue-500/5"
                 onClick={() => {
-                  toast.info('请在设置页面管理标签');
+                  showToast.info('请在设置页面管理标签');
                   setActiveActionTag(null);
                 }}
               >
@@ -109,7 +109,7 @@ export function CategoryTagsSection({ categoryName, tags, isAdmin, appLang, text
                 type="button"
                 className="w-full flex items-center justify-center gap-3 text-red-600 bg-red-50/50 backdrop-blur-sm border border-red-100/50 font-bold py-4 rounded-2xl hover:bg-red-100 transition-all cursor-pointer shadow-sm shadow-red-500/5"
                 onClick={() => {
-                  toast.error('请在设置页面删除');
+                  showToast.error('请在设置页面删除');
                   setActiveActionTag(null);
                 }}
               >

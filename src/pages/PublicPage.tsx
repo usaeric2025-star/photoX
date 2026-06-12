@@ -18,7 +18,7 @@ import { saveData, syncCache } from '@/lib/db/indexedDB';
 import { PublicGridContainer } from '@/components/photo/PublicGridContainer';
 import { PublicHeader } from '@/components/layouts/headers/PublicHeader';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { toast } from 'sonner';
+import { showToast } from '@/lib/ui/toast';
 import { GroupDetailPage } from '@/components/GroupDetailPage';
 import { useUrlFilters } from '@/hooks';
 
@@ -67,7 +67,7 @@ export default function PublicPage() {
 
   const handleRefresh = async () => {
     if (isSyncing) {
-       toast.warning('同步正在进行中...');
+       showToast.warning('同步正在进行中...');
        return;
     }
     

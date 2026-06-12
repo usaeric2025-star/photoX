@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { api } from '@/lib/api';
 
-import { toast } from 'sonner';
+import { showToast } from '@/lib/ui/toast';
 import { ErrorLogViewer } from './admin/ErrorLogViewer';
 import { AppSettings, User, ApiResponse } from '@/types';
 import { 
@@ -164,7 +164,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
                try {
                  await saveSettings({ ...settings });
                  setHasChanges(false);
-                 toast.success('设置已保存');
+                 showToast.success('设置已保存');
                } catch (err) {
                  console.error("Save settings failed:", err);
                }

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { api } from '@/lib/api';
-import { toast } from 'sonner';
+import { showToast } from '@/lib/ui/toast';
 import { useAuth } from '@/hooks';
 import { useUIStore } from '@/store/useUIStore';
 import { deduplicatePhotos, bulkFixPhotoUrls } from "@/services/photo/maintenance";
@@ -27,7 +27,7 @@ export function useMaintenanceActions(onSuccess?: () => void) {
     try {
       const res = await api.storage.audit.$get();
       const data = await res.json() as any;
-      if (data.success) toast.success("存储对账完成");
+      if (data.success) showToast.success("存储对账完成");
     } catch (e: unknown) {
       handleError(e, '存储对账');
     } finally { setIsAuditing(false); }
@@ -50,7 +50,7 @@ export function useMaintenanceActions(onSuccess?: () => void) {
       const res = await api.storage['import-orphans'].$post(query ? { query } : undefined);
       const data = await res.json() as any;
       if (data.success) {
-        toast.success(data.message || "恢复完成");
+        showToast.success(data.message || "恢复完成");
         onSuccess?.();
       }
     } catch (e: unknown) {
@@ -62,7 +62,7 @@ export function useMaintenanceActions(onSuccess?: () => void) {
     setIsAuditing(true);
     try {
       const result = await bulkFixPhotoUrls();
-      toast.success(`修复完成：${result.updated || 0} 更新`);
+      showToast.success(`修复完成：${result.updated || 0} 更新`);
       onSuccess?.();
     } catch (e: unknown) {
       handleError(e, '批量修复 URL');
@@ -74,7 +74,7 @@ export function useMaintenanceActions(onSuccess?: () => void) {
     try {
       const result = await deduplicatePhotos(userId);
       if (result.ok) {
-        toast.success(`排重完成！共清理了 ${result.data.removed} 张重复记录。`);
+        showToast.success(`排重完成！共清理了 ${result.data.removed} 张重复记录。`);
         onSuccess?.();
       }
     } catch (e: unknown) {
@@ -88,7 +88,7 @@ export function useMaintenanceActions(onSuccess?: () => void) {
       const response = await api.admin['backfill-photo-metadata'].$post({ json: { limit: 20 } });
       const data = await response.json() as any;
       if (data.success) {
-        toast.success(`成功补全 ${data.processed} 条记录`);
+        showToast.success(`成功补全 ${data.processed} 条记录`);
         onSuccess?.();
       }
     } catch (e: unknown) {
@@ -102,7 +102,7 @@ export function useMaintenanceActions(onSuccess?: () => void) {
       const res = await api.admin.repair.$post({ json: { issueId: 'non_standard_item_codes' } });
       const data = await res.json() as any;
       if (data.success) {
-        toast.success(data.message || "修复成功");
+        showToast.success(data.message || "修复成功");
         onSuccess?.();
       }
     } catch (e: unknown) {
@@ -116,7 +116,7 @@ export function useMaintenanceActions(onSuccess?: () => void) {
       const res = await api.admin.repair.$post({ json: { issueId: 'cleanup_temp_urls' } });
       const data = await res.json() as any;
       if (data.success) {
-        toast.success(data.message || "修复成功");
+        showToast.success(data.message || "修复成功");
         onSuccess?.();
       }
     } catch (e: unknown) {
@@ -130,7 +130,7 @@ export function useMaintenanceActions(onSuccess?: () => void) {
       const res = await api.admin.repair.$post({ json: { issueId: 'cleanup_redundant' } });
       const data = await res.json() as any;
       if (data.success) {
-        toast.success(data.message || "修复成功");
+        showToast.success(data.message || "修复成功");
         onSuccess?.();
       }
     } catch (e: unknown) {
@@ -144,7 +144,7 @@ export function useMaintenanceActions(onSuccess?: () => void) {
       const res = await api.storage.clean.$post();
       const data = await res.json() as any;
       if (data.success) {
-        toast.success(`清理完成，共移除 ${data.count} 个文件`);
+        showToast.success(`清理完成，共移除 ${data.count} 个文件`);
       }
     } catch (e: unknown) {
       handleError(e, '存储深度清理');

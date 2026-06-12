@@ -23,7 +23,6 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useLongPress } from '@/hooks/core/useLongPress';
 import { createPortal } from "react-dom";
-import { toast } from 'sonner';
 import { getSafeText } from '@/lib/ai/safeText';
 
 import { InfoPanelSkeleton } from './InfoPanelSkeleton';

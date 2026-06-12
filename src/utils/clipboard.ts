@@ -1,4 +1,4 @@
-import { toast } from 'sonner';
+import { showToast } from '@/lib/ui/toast';
 
 export interface CopyOptions {
   /** 成功時顯示的提示訊息（預設：已複製） */
@@ -15,7 +15,7 @@ export interface CopyOptions {
  */
 export async function copyToClipboard(text: string, options?: CopyOptions): Promise<boolean> {
   if (!text) {
-    toast.error('無內容可複製');
+    showToast.error('無內容可複製');
     return false;
   }
 
@@ -23,12 +23,12 @@ export async function copyToClipboard(text: string, options?: CopyOptions): Prom
     await navigator.clipboard.writeText(text);
     
     if (options?.showToast !== false) {
-      toast.success(options?.successMessage || '已複製');
+      showToast.success(options?.successMessage || '已複製');
     }
     return true;
   } catch (err) {
     console.error('Copy failed:', err);
-    toast.error(options?.errorMessage || '複製失敗，請手動複製');
+    showToast.error(options?.errorMessage || '複製失敗，請手動複製');
     return false;
   }
 }

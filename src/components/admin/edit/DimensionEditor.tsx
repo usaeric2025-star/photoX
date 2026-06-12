@@ -1,7 +1,7 @@
 import { Sparkles, X as CloseIcon, Info } from 'lucide-react';
 import { Dimension, TranslationType } from '../../../types';
 import { safeArray } from '../../../lib/utils';
-import { toast } from 'sonner';
+import { showToast } from '@/lib/ui/toast';
 
 interface DimensionEditorProps {
   dimensions: Dimension[];
@@ -63,7 +63,7 @@ export function DimensionEditor({
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1 leading-none">{t.dimensionsTitle}</span>
           <button 
             type="button"
-            onClick={() => toast.info('AI 识别可自动提取照片中的尺寸规格信息')}
+            onClick={() => showToast.info('AI 识别可自动提取照片中的尺寸规格信息')}
             className="text-slate-300 hover:text-slate-500 transition-colors"
           >
             <Info size={12} />

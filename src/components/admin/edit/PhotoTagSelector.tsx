@@ -6,6 +6,7 @@ import { TagEditor } from "../TagEditor";
 import { Tag } from "../../../types";
 import { safeArray } from "../../../lib/utils";
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { showToast } from '@/lib/ui/toast';
 
 interface PhotoTagSelectorProps {
   name: string;
@@ -70,9 +71,7 @@ export function PhotoTagSelector({
       field.onChange(cleanSelectedIds.filter((id) => id !== strId));
     } else {
       if (cleanSelectedIds.length >= 3) {
-        import('sonner').then(({ toast }) => {
-          toast.warning("最多只能选择 3 个标签 / Maximum of 3 tags allowed");
-        });
+        showToast.warning("最多只能选择 3 个标签 / Maximum of 3 tags allowed");
         return;
       }
       field.onChange([...cleanSelectedIds, strId]);

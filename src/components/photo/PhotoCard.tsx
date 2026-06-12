@@ -18,7 +18,6 @@ import { ResponsivePhoto } from '../shared/ResponsivePhoto';
 import { useAdminActions } from '@/hooks/admin/useAdminActions';
 import { getDisplayGroupCode } from '@/services/photo/utils';
 
-import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { translations } from '@/lib/translations';
 import { useUIStore, useColumns } from '@/store/useUIStore';

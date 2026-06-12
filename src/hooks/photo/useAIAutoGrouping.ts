@@ -1,7 +1,7 @@
 import { analyzeAndSavePhoto, autoGroupPhotos } from '@/services/ai/orchestration';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
+import { showToast } from '@/lib/ui/toast';
 import { useUIStore } from '@/store/useUIStore';
 import { photoKeys, groupKeys } from '@/lib/queryKeys';
 import { useTaskExecutor } from '../core/useTaskExecutor';
@@ -81,7 +81,7 @@ export function useAIAutoGrouping() {
 
   const handleAIAction = async (photoIds: string[]) => {
     if (photoIds.length === 0) {
-      toast.error(appLang === 'zh' ? '请先选择照片' : 'Please select photos first');
+      showToast.error(appLang === 'zh' ? '请先选择照片' : 'Please select photos first');
       return;
     }
 

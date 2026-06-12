@@ -8,7 +8,6 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { saveGroup as saveGroupToCloud } from "@/services/group/commands";
 
 import { useTaskExecutor, useTasks, useUrlFilters, useCopyToClipboard } from "@/hooks";
-import { toast } from "sonner";
 
 export function GroupSettingsHeader({
   groupData,

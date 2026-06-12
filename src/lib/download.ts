@@ -1,4 +1,4 @@
-import { toast } from "sonner";
+import { showToast } from '@/lib/ui/toast';
 import { ErrorFactory } from './error/ErrorFactory';
 
 /**
@@ -6,7 +6,7 @@ import { ErrorFactory } from './error/ErrorFactory';
  * 解决移动端社交软件对 WebP 兼容性差的问题
  */
 export async function downloadPhotoAsJpeg(url: string, filename?: string) {
-  const toastId = toast.loading('准备下载中...');
+  const toastId = showToast.loading('准备下载中...');
   const finalFilename = filename || `photo_${Date.now()}.jpg`;
   
   try {
@@ -24,7 +24,7 @@ export async function downloadPhotoAsJpeg(url: string, filename?: string) {
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(link.href);
-        toast.success('已开始下载', { id: toastId });
+        showToast.success('已开始下载', { id: toastId });
         return;
     }
     
@@ -63,10 +63,10 @@ export async function downloadPhotoAsJpeg(url: string, filename?: string) {
     
     // 资源清理
     URL.revokeObjectURL(objectUrl);
-    toast.success('已开始下载', { id: toastId });
+    showToast.success('已开始下载', { id: toastId });
   } catch (error: unknown) {
     console.error('Download failed:', error);
     const msg = error instanceof Error ? error.message : String(error);
-    toast.error(`下载失败: ${msg || '请尝试长按图片保存'}`, { id: toastId });
+    showToast.error(`下载失败: ${msg || '请尝试长按图片保存'}`, { id: toastId });
   }
 }

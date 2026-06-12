@@ -9,7 +9,7 @@ import { DiagnosticCard } from './Diagnostics/DiagnosticCard';
 import { TasksContent } from './Diagnostics/TasksList';
 import { Button } from '@/components/ui/button';
 import { useUIStore } from '@/store/useUIStore';
-import { toast } from 'sonner';
+import { showToast } from '@/lib/ui/toast';
 import { handleError } from '@/lib/error/errorHandler';
 
 import { usePerformanceAudit } from '@/hooks/admin/usePerformanceAudit';
@@ -56,7 +56,7 @@ export function DiagnosticsDashboard() {
   const internalRunRepair = async (issueId: string) => {
     if (issueId.startsWith('perf_')) {
       clearAudits();
-      toast.success('性能统计已重置');
+      showToast.success('性能统计已重置');
       refreshReport();
       return;
     }
@@ -73,7 +73,7 @@ export function DiagnosticsDashboard() {
       if (!res.success) {
         handleError(res, `[${plugin.title}] 检查未通过`);
       } else {
-        toast.success(res.message);
+        showToast.success(res.message);
       }
     } catch (e: unknown) {
       setPluginResults(prev => ({ ...prev, [plugin.title]: { result: { success: false, message: '执行出错', error: String(e) }, loading: false } }));

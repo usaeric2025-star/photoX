@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { LogIn, Image as ImageIcon, Sparkles, Cloud, Layers, RefreshCcw, Lock, X } from 'lucide-react';
-import { toast } from 'sonner';
+import { showToast } from '@/lib/ui/toast';
 import { useSettings } from '../../hooks';
 import { useUIStore } from '@/store/useUIStore';
 import { Link, useNavigate } from '@tanstack/react-router';
@@ -31,11 +31,11 @@ export function LoginScreen({ loginWithGoogle, isLoading }: LoginScreenProps) {
   const handlePasscodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!settings || !settings.access_passcode) {
-      toast.error('管理员尚未配置员工访问密码');
+      showToast.error('管理员尚未配置员工访问密码');
       return;
     }
     if (passInput === settings.access_passcode) {
-      toast.success('员工登录成功');
+      showToast.success('员工登录成功');
       setPasscode(String(passInput));
       window.location.reload();
     } else {
@@ -107,7 +107,7 @@ export function LoginScreen({ loginWithGoogle, isLoading }: LoginScreenProps) {
                 try {
                   await loginWithGoogle();
                 } catch(e) {
-                  toast.error('登录失败: ' + (e instanceof Error ? e.message : '未知错误'));
+                  showToast.error('登录失败: ' + (e instanceof Error ? e.message : '未知错误'));
                 }
               }}
               disabled={isLoading}

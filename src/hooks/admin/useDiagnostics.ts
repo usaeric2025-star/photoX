@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { toast } from 'sonner';
 import { DiagnosticsReport } from '@/types/diagnostics';
 import { photoKeys, groupKeys } from '@/lib/queryKeys';
 import { useTaskExecutor } from '../core/useTaskExecutor';

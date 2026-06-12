@@ -4,7 +4,7 @@ import {
 } from 'lucide-react';
 import { User, ApiResponse } from '@/types';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { toast } from 'sonner';
+import { showToast } from '@/lib/ui/toast';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
@@ -127,7 +127,7 @@ export function SyncSection({
         onConfirm={async () => {
           localStorage.removeItem('uuid_v2_cleanup_done');
           await refreshCloudData(user, true);
-          toast.success('本地缓存已重置');
+          showToast.success('本地缓存已重置');
         }}
       />
     </div>

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Sparkles, Lock } from 'lucide-react';
-import { toast } from 'sonner';
+import { showToast } from '@/lib/ui/toast';
 import { AppSettings } from '../../types';
 import { useUIStore } from '@/store/useUIStore';
 import { translations } from '@/lib/translations';
@@ -94,7 +94,7 @@ export function AISecuritySection({
       }) as any;
       const data = await res.json();
       if (data.success) {
-        toast.success(`[System AI] ${provider} 测试连通性成功`);
+        showToast.success(`[System AI] ${provider} 测试连通性成功`);
       } else {
         handleError(data, `[System AI] ${provider} 连接异常`);
       }
@@ -109,7 +109,7 @@ export function AISecuritySection({
 
   const saveKey = async (provider: 'openrouter' | 'agnes', apiKey: string) => {
     if (apiKey === "••••••••••••••••" || !apiKey.trim()) {
-      toast.success('密钥未更改');
+      showToast.success('密钥未更改');
       return;
     }
     setIsSaving(provider);
@@ -120,7 +120,7 @@ export function AISecuritySection({
       const data = await res.json();
       
       if (res.ok && data.success) {
-        toast.success(`[System AI] ${provider} 密钥保存成功`);
+        showToast.success(`[System AI] ${provider} 密钥保存成功`);
         
         // Immediate UI update
         if (provider === 'openrouter') {
@@ -144,7 +144,7 @@ export function AISecuritySection({
       
       const errorMsg = (e as any).error?.message || (e as Error).message || '';
       if (errorMsg.includes('secrets')) {
-        toast.info('检测到表缺失，请点击：[前往系统故障排查]', {
+        showToast.info('检测到表缺失，请点击：[前往系统故障排查]', {
           action: {
             label: '立即处理',
             onClick: () => (window.location.href = '/admin?tab=diagnostics')
@@ -166,7 +166,7 @@ export function AISecuritySection({
       }) as any;
       const data = await res.json();
       if (res.ok && data.success) {
-        toast.success(`首选引擎已切换为: ${provider === 'openrouter' ? 'OpenRouter' : 'Agnes'}`);
+        showToast.success(`首选引擎已切换为: ${provider === 'openrouter' ? 'OpenRouter' : 'Agnes'}`);
         setKeysStatus(prev => ({ ...prev, primaryProvider: provider }));
         fetchKeysStatus();
       } else {
@@ -185,7 +185,7 @@ export function AISecuritySection({
       }) as any;
       const data = await res.json();
       if (res.ok && data.success) {
-        toast.success(`[System AI] ${provider === 'openrouter' ? 'OpenRouter' : 'Agnes'} 自定义模型已保存`);
+        showToast.success(`[System AI] ${provider === 'openrouter' ? 'OpenRouter' : 'Agnes'} 自定义模型已保存`);
         fetchKeysStatus();
       } else {
         handleError(data, '模型保存失败');

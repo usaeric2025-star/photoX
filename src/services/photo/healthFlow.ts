@@ -6,7 +6,7 @@ import {
 } from "@/services/photo/maintenance";
 import { backfillThumbHashes } from "@/services/photo/maintenance/backfill";
 import { getPhotosWithoutThumbHash } from "@/services/photo";
-import { toast } from 'sonner';
+import { showToast } from '@/lib/ui/toast';
 
 export const runHealthCheck = async (
   allPhotos: any[], 
@@ -14,7 +14,7 @@ export const runHealthCheck = async (
   invalidatePhotos: () => void
 ) => {
 
-  toast.success("系统自检中...");
+  showToast.success("系统自检中...");
 
 // 1. Data consistency (IDs)
 // const broken = await scanAndRepairPhotoIds(allPhotos);
@@ -39,9 +39,9 @@ export const runHealthCheck = async (
   const res = await getPhotosWithoutThumbHash();
   if (!res.ok || res.data.length === 0) {
     if (repairCount > 0) {
-      toast.success(`自检完成：修复 ${repairCount} 项`, { id: 'health-check' });
+      showToast.success(`自检完成：修复 ${repairCount} 项`, { id: 'health-check' });
     } else {
-      toast.success("系统状态正常", { id: 'health-check' });
+      showToast.success("系统状态正常", { id: 'health-check' });
     }
     return;
   }
@@ -56,8 +56,8 @@ export const runHealthCheck = async (
     const msgs = [];
     if (repairCount > 0) msgs.push(`修复合组 ${repairCount}`);
     if (backfilledCount > 0) msgs.push(`回填占位图 ${backfilledCount}`);
-    toast.success(`自检完成：${msgs.join(', ')}`, { id: 'health-check' });
+    showToast.success(`自检完成：${msgs.join(', ')}`, { id: 'health-check' });
   } else {
-    toast.success("系统状态正常", { id: 'health-check' });
+    showToast.success("系统状态正常", { id: 'health-check' });
   }
 };

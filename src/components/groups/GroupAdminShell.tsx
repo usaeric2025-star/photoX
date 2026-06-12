@@ -25,7 +25,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { toast } from "sonner";
 
 export function GroupAdminShell() {
   const isAdminMode = useAdminMode();

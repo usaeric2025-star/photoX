@@ -2,7 +2,7 @@ import React from 'react';
 import { Trash2, Download, AlertCircle, AlertTriangle, Info, ShieldAlert, ChevronDown, ChevronUp, Copy } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { toast } from 'sonner';
+import { showToast } from '@/lib/ui/toast';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { formatters } from '@/utils/formatters';
 import { useCopyToClipboard } from '@/hooks';
@@ -128,14 +128,14 @@ export const ErrorLogViewer = () => {
           queryClient.invalidateQueries({ queryKey: ['error_logs'] });
           const count = data?.count ?? 0;
           if (count > 0) {
-            toast.success(`日志清理成功：已从物理数据表清除 ${count} 条历史日志记录`);
+            showToast.success(`日志清理成功：已从物理数据表清除 ${count} 条历史日志记录`);
           } else {
-            toast.success('日志清理成功：当前无历史日志记录');
+            showToast.success('日志清理成功：当前无历史日志记录');
           }
       },
       onError: (err: any) => {
           console.error('[ErrorLogViewer] Clear failed:', err);
-          toast.error(`清除失败: ${err.message}`);
+          showToast.error(`清除失败: ${err.message}`);
       }
   });
 

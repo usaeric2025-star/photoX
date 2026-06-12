@@ -1,5 +1,5 @@
 import { UseQueryResult } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { showToast } from '@/lib/ui/toast';
 import { useEffect } from 'react';
 
 interface QueryFallbackOptions {
@@ -19,8 +19,8 @@ export function useQueryWithFallback<T>(
 
   useEffect(() => {
     if (queryResult.isError && showErrorToast) {
-      toast.error(`${resourceName} 加载失败`, {
-        description: '请检查网络或刷新重试'
+      showToast.error(`${resourceName} 加载失败`, {
+        description: '请检查网络或刷新重試'
       });
     }
   }, [queryResult.isError, showErrorToast, resourceName]);

@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useTasks } from './useTasks';
 import { logError } from '@/lib/error/errorLogger';
-import { toast } from 'sonner';
+import { showToast } from '@/lib/ui/toast';
 import { extractErrorMessage, handleError } from '@/lib/error/errorHandler';
 import { hapticFeedback } from '@/lib/ui/haptics';
 
@@ -54,7 +54,7 @@ export function useTaskExecutor() {
       const shouldShowSuccess = options?.showSuccessToast ?? (taskId ? false : !isSilent);
       
       if (shouldShowSuccess) {
-        toast.success(`${name} 完成`);
+        showToast.success(`${name} 完成`);
       }
       options?.onSuccess?.(result);
       return result;

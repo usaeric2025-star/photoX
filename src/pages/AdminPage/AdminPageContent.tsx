@@ -21,7 +21,6 @@ import { useAIBatchAnalysis } from '@/hooks';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { usePhotoGallery } from '@/hooks/photo/usePhotoGallery';
 import { Category } from '@/types';
-import { toast } from 'sonner';
 import { AdminHeader } from '@/components/layouts/headers/AdminHeader';
 import { AdminAuthGate } from '@/components/admin/AdminAuthGate';
 import { AdminContainer } from '@/components/AdminContainer';

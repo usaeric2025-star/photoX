@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { toast } from 'sonner'
+import { showToast } from '@/lib/ui/toast';
 import { copyToClipboard } from '@/utils/clipboard';
 
 export function cn(...inputs: ClassValue[]) {
@@ -19,7 +19,7 @@ export function toastWithError(err: any, title?: string) {
     return value;
   }, 2);
 
-  toast.error(title || '出错了', {
+  showToast.error(title || '出错了', {
     description: message.length > 50 ? message.substring(0, 47) + '...' : message,
     action: {
       label: '复制详情',

@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import type { Photo } from '@/types';
 import { useTaskExecutor, useInvalidatePhotos } from '@/hooks';
-import { toast } from 'sonner';
+import { showToast } from '@/lib/ui/toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { groupKeys } from '@/lib/queryKeys';
 import { runBatchAnalysis } from '@/services/ai/orchestration';
@@ -13,7 +13,7 @@ export function useAIBatchAnalysis() {
 
   const handleBatchAiAnalyze = useCallback(async (targetPhotos: Photo[], groupId?: string) => {
     if (!targetPhotos || targetPhotos.length === 0) {
-      toast.error('请先选择照片');
+      showToast.error('请先选择照片');
       return;
     }
 
@@ -40,12 +40,12 @@ export function useAIBatchAnalysis() {
           finalMessage = successCount > 0 
             ? `已更新合组，并识别出 ${successCount} 张照片`
             : "已更新合组信息";
-          toast.success(finalMessage);
+          showToast.success(finalMessage);
         } else if (successCount > 0) {
           finalMessage = `已识别 ${successCount} 张照片`;
-          toast.success(finalMessage);
+          showToast.success(finalMessage);
         } else {
-          toast.info("已是最新，无需更新");
+          showToast.info("已是最新，无需更新");
         }
 
         if (taskId) updateProgress(100, finalMessage);

@@ -1,6 +1,7 @@
 import { ErrorFactory } from "@/lib/error/ErrorFactory";
 import { Photo, Dimension } from "@/types";
 import { useGroupCoverMutation, useRemoveFromGroupMutation } from "@/hooks";
+import { showToast } from '@/lib/ui/toast';
 
 export const useGroupActions = (
   activeGroupId: string | null,
@@ -24,16 +25,15 @@ export const useGroupActions = (
       const isAlreadyCover = groupData?.cover_photo_id === photoId;
       const targetPhotoId = isAlreadyCover ? null : photoId;
       
-      const { toast } = await import('sonner');
       mutateSetCover({
         photoId: targetPhotoId,
         groupId: activeGroupId || undefined,
       });
 
       if (!isAlreadyCover) {
-        toast.success(groupData?.name?.zh ? `已将照片设为 "${groupData.name.zh}" 的封面` : '已成功设置合组封面');
+        showToast.success(groupData?.name?.zh ? `已将照片设为 "${groupData.name.zh}" 的封面` : '已成功设置合组封面');
       } else {
-        toast.info('已取消合组封面');
+        showToast.info('已取消合组封面');
       }
 
       setGroupData((prev: any) =>

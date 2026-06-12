@@ -6,7 +6,6 @@ import { Manufacturer } from "../../types";
 import { ManufacturerItem } from "../admin/ManufacturerItem";
 import { PromptDialog } from "@/components/ui/PromptDialog";
 
-import { toast } from 'sonner';
 import { normalizeManufacturerName } from "@/lib/utils";
 import { useUIStore } from "@/store/useUIStore";
 import { translations } from "@/lib/translations";

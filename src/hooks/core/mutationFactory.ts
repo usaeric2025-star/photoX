@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient, QueryKey, QueryClient, UseMutationOptions } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { showToast } from '@/lib/ui/toast';
 import { api } from '@/lib/api';
 import { hapticFeedback } from '@/lib/ui/haptics';
 
@@ -137,7 +137,7 @@ export function createMutation<TData, TVariables, TContext = unknown>(config: Mu
           ErrorFactory.handle(error, actionName);
 
           if (isRollbackFailure) {
-              toast.error('数据可能不一致，请重新整理页面', { duration: 10000 });
+              showToast.error('数据可能不一致，请重新整理页面', { duration: 10000 });
           }
           
           config.onErrorSideEffect?.(error, variables);
@@ -196,7 +196,7 @@ export function createMutationHook<TData = any, TVariables = any, TContext = unk
         const rawMsg = options?.successMessage ?? config.successMessage ?? config.onSuccessMessage;
         if (rawMsg) {
           const resolvedMsg = typeof rawMsg === 'function' ? rawMsg(data, variables) : rawMsg;
-          if (resolvedMsg) toast.success(resolvedMsg);
+          if (resolvedMsg) showToast.success(resolvedMsg);
         }
         
         config.onSuccess?.(data, variables);
