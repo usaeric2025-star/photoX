@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { useDisclosure } from "@mantine/hooks";
-import { useController, useFormContext } from "react-hook-form";
+import { useDisclosure } from '@/hooks/core/useDisclosure';
+import { Control, useController, useFormContext } from "react-hook-form";
 import { PromptDialog } from "@/components/ui/PromptDialog";
 import { TagEditor } from "../TagEditor";
 import { Tag } from "../../../types";
@@ -13,6 +13,7 @@ interface PhotoTagSelectorProps {
   updateTag: (id: string, name: string) => Promise<any>;
   deleteTag: (id: string) => Promise<any>;
   tags: Tag[];
+  control?: any;
 }
 
 export function PhotoTagSelector({
@@ -21,8 +22,11 @@ export function PhotoTagSelector({
   updateTag,
   deleteTag,
   tags,
+  control: propControl,
 }: PhotoTagSelectorProps) {
-  const { control } = useFormContext();
+  const context = useFormContext();
+  const control = propControl || context?.control;
+
   const { field } = useController({
     name,
     control,

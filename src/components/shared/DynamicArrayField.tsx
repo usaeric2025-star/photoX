@@ -1,5 +1,5 @@
 import React from 'react';
-import { useFieldArray, useFormContext, UseFormRegister } from 'react-hook-form';
+import { useFieldArray, useFormContext, UseFormRegister, Control } from 'react-hook-form';
 import { cn } from '@/lib/utils';
 
 interface DynamicArrayFieldProps<T> {
@@ -7,15 +7,20 @@ interface DynamicArrayFieldProps<T> {
   label: string
   defaultValue: T
   renderItem: (index: number, field: T, register: UseFormRegister<any>) => React.ReactNode
+  control?: any
 }
 
 export const DynamicArrayField = <T extends Record<string, any>,>({ 
   name, 
   label, 
   defaultValue, 
-  renderItem 
+  renderItem,
+  control: propControl
 }: DynamicArrayFieldProps<T>) => {
-  const { control, register } = useFormContext();
+  const context = useFormContext();
+  const control = propControl || context?.control;
+  const register = context?.register;
+  
   const { fields, append, remove } = useFieldArray({ control, name });
   
   return (

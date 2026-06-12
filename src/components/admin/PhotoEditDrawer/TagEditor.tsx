@@ -50,6 +50,7 @@ export function TagEditor({ form }: TagSelectorProps) {
         addTag={handleAdd}
         updateTag={handleUpdate}
         deleteTag={handleDelete}
+        control={form.control}
       />
     </section>
   );

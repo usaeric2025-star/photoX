@@ -6,7 +6,7 @@ import { useLongPress } from "@/hooks/core/useLongPress";
 import { Pencil, Trash2 } from "lucide-react";
 import { useUIStore, useShallow } from "@/store/useUIStore";
 import { useRef } from "react";
-import { useDisclosure } from "@mantine/hooks";
+import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { MenuDialog } from "@/components/ui/MenuDialog";
 
 interface SectionHeaderProps {

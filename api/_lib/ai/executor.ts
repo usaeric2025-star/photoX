@@ -104,13 +104,16 @@ export async function executeAITask(options: AITaskOptions) {
       logger.info(`AI Task: ${task}`, {
         model,
         provider: provider.name,
-        prompt,
-        response: auditedResponse,
+        // Removed prompt and large response from general logs to prevent system_logs bloat
+        // Raw data is now exclusively handled by ai_audit_logs + R2
+        response_summary: auditedResponse?.substring(0, 500) + (auditedResponse?.length > 500 ? '...' : ''),
         latency_ms: iterEndTime - iterStartTime,
         token_usage: result.usage,
         status: result.success ? 'success' : 'error',
         error_message: result.error,
-        request_metadata: metadata
+        trace_id: metadata?.traceId,
+        user_id: metadata?.userId,
+        photo_id: metadata?.photoId
       });
 
       if (!result.success) {

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircle2, ChevronDown, ShieldAlert, Zap } from 'lucide-react';
 import { MaintenanceTool } from './MaintenanceTool';
 
@@ -52,55 +51,50 @@ export function MaintenanceCenter({ onSuccess }: MaintenanceCenterProps) {
           高级清理与 AI 实验工具 (Advanced / Experimental)
         </button>
         
-        <AnimatePresence>
-          {showAdvanced && (
-            <motion.div 
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden space-y-8 pt-2"
-            >
-              {/* 第二组：极端情况与系统深度清理 (Advanced Cleanup) */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 px-1 text-xs font-bold text-slate-700">
-                  <ShieldAlert size={14} className="text-amber-500" />
-                  极端恢复与废弃清理
-                </div>
-                <div className="grid grid-cols-1 gap-4">
-                  <MaintenanceTool 
-                    issueId="ghost_records"
-                    title="清理幽灵数据记录" 
-                    description="【危险操作】兜底清理数据库中完全损坏（无头无哈希无URL）的无效记录。通常为一次性操作。"
-                    danger
-                    onSuccess={onSuccess}
-                  />
-                </div>
+        {showAdvanced && (
+          <div 
+            className="overflow-hidden space-y-8 pt-2 animate-fade-in"
+          >
+            {/* 第二组：极端情况与系统深度清理 (Advanced Cleanup) */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 px-1 text-xs font-bold text-slate-700">
+                <ShieldAlert size={14} className="text-amber-500" />
+                极端恢复与废弃清理
               </div>
+              <div className="grid grid-cols-1 gap-4">
+                <MaintenanceTool 
+                  issueId="ghost_records"
+                  title="清理幽灵数据记录" 
+                  description="【危险操作】兜底清理数据库中完全损坏（无头无哈希无URL）的无效记录。通常为一次性操作。"
+                  danger
+                  onSuccess={onSuccess}
+                />
+              </div>
+            </div>
 
-              {/* 第三组：AI 大规模重构与未来演进 (AI Orchestration) */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 px-1 text-xs font-bold text-slate-700">
-                  <Zap size={14} className="text-purple-500" />
-                  AI 批处理 (按需执行)
-                </div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <MaintenanceTool 
-                    issueId="ai_retranslate"
-                    title="AI 全量语种校对" 
-                    description="利用 AI 引擎对存量照片进行底层语种机翻校对。批量调用消耗大，非必要不执行。"
-                    onSuccess={onSuccess}
-                  />
-                  <MaintenanceTool 
-                    issueId="ai_redimension"
-                    title="AI 深度尺寸重提" 
-                    description="利用 AI 模型更正旧数据库中的遗漏尺寸属性。仅在引入新解析策略时一次性执行。"
-                    onSuccess={onSuccess}
-                  />
-                </div>
+            {/* 第三组：AI 大规模重构与未来演进 (AI Orchestration) */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 px-1 text-xs font-bold text-slate-700">
+                <Zap size={14} className="text-purple-500" />
+                AI 批处理 (按需执行)
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <MaintenanceTool 
+                  issueId="ai_retranslate"
+                  title="AI 全量语种校对" 
+                  description="利用 AI 引擎对存量照片进行底层语种机翻校对。批量调用消耗大，非必要不执行。"
+                  onSuccess={onSuccess}
+                />
+                <MaintenanceTool 
+                  issueId="ai_redimension"
+                  title="AI 深度尺寸重提" 
+                  description="利用 AI 模型更正旧数据库中的遗漏尺寸属性。仅在引入新解析策略时一次性执行。"
+                  onSuccess={onSuccess}
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

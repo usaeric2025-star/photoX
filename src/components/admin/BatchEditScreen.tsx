@@ -1,6 +1,6 @@
 import React from 'react';
 import { X as CloseIcon, RefreshCcw, Save, Trash2 } from 'lucide-react';
-import { useDisclosure } from '@mantine/hooks';
+import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { usePhotoDelete } from '@/hooks';
 import { BatchEditForm } from './BatchEditForm';

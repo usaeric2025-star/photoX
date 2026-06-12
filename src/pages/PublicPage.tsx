@@ -47,9 +47,6 @@ const AuthErrorDisplay = ({ message }: { message: string }) => (
 );
 
 export default function PublicPage() {
-  // 滚动恢复
-  useScrollRestoration('public_view_scroll');
-  
   const navigate = useNavigate();
   const search = useSearch({ strict: false });
   const authError = (search as any).authError;

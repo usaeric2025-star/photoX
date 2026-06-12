@@ -1,6 +1,6 @@
 import React from "react";
 import { Sparkles, X, Plus } from "lucide-react";
-import { useDisclosure } from "@mantine/hooks";
+import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { PromptDialog } from "@/components/ui/PromptDialog";
 import { ProductGroup } from "../../../../types";
 

@@ -15,7 +15,7 @@ import {
 import { ISSUE_ACTIONS, PreviewResult } from "@/lib/maintenance";
 import { toast } from "sonner";
 import { Loader2, ShieldAlert } from "lucide-react";
-import { useDisclosure } from '@mantine/hooks';
+import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useUIStore } from '@/store/useUIStore';
 import { useTaskExecutor, useTasks, useTranslation } from '@/hooks';
 import { handleError } from '@/lib/error/errorHandler';

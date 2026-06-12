@@ -24,7 +24,7 @@ interface UseSettingsLogicProps {
   setSettings: (s: AppSettings) => void;
 }
 
-import { useDebouncedCallback } from '@mantine/hooks';
+import { useDebouncedCallback } from '@/hooks/core/useDebouncedCallback';
 
 export const useSettingsLogic = ({
   user,

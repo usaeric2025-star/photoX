@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useDisclosure } from '@mantine/hooks';
+import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { Sparkles, FolderPlus, Edit, EyeOff, Trash2, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useGroupPhotosMutation, useUrlFilters, useAIAutoGrouping } from '@/hooks';
@@ -108,24 +107,13 @@ export function SelectionToolbar({
 
   return createPortal(
     <div className="fixed bottom-6 inset-x-0 z-header flex justify-center pointer-events-none px-4">
-      <motion.div 
-        layout
+      <div 
         className={cn(
-          "pointer-events-auto bg-slate-900/95 border border-slate-800 backdrop-blur rounded-full shadow-2xl flex items-center gap-3 transition-shadow duration-300",
+          "pointer-events-auto bg-slate-900/95 border border-slate-800 backdrop-blur rounded-full shadow-2xl flex items-center gap-3 transition-all duration-300 animate-fade-in",
           isMinimized ? "px-2 py-2" : "px-5 py-2.5"
         )}
-        initial={{ y: 50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 50, opacity: 0 }}
-        transition={{ 
-          type: "spring", 
-          stiffness: 400, 
-          damping: 30,
-          layout: { duration: 0.2 }
-        }}
       >
-      <motion.div 
-        layout
+      <div 
         onClick={() => setIsMinimized(!isMinimized)}
         className={cn(
           "flex items-center justify-center rounded-full bg-blue-600 text-white font-bold transition-all cursor-pointer hover:bg-blue-500 active:scale-95 select-none",
@@ -134,14 +122,11 @@ export function SelectionToolbar({
         title={isMinimized ? "点击展开工具栏" : `已选择 ${count} 张照片 (点击收起)`}
       >
         {count}
-      </motion.div>
+      </div>
 
       {!isMinimized && (
-        <motion.div 
-          layout
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="flex items-center gap-3"
+        <div 
+          className="flex items-center gap-3 animate-fade-in"
         >
           <div className="w-[1px] h-6 bg-slate-800" />
           <div className="flex items-center gap-1">
@@ -192,7 +177,7 @@ export function SelectionToolbar({
                 </button>
               )}
             </div>
-          </motion.div>
+          </div>
         )}
 
       <div className="w-[1px] h-6 bg-slate-800" />
@@ -212,7 +197,7 @@ export function SelectionToolbar({
         description="请至少选择两张照片才能进行合组。"
         onConfirm={() => {}}
       />
-      </motion.div>
+      </div>
     </div>,
     document.body
   );

@@ -7,7 +7,7 @@ import { Link, useNavigate } from '@tanstack/react-router';
 import { ROUTES } from '@/config/constants';
 import { translations } from '@/lib/translations';
 
-import { useLocalStorage } from '@mantine/hooks';
+import { useLocalStorage } from '@/hooks/core/useLocalStorage';
 
 interface LoginScreenProps {
   loginWithGoogle: () => Promise<void>;

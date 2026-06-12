@@ -5,7 +5,7 @@ import {
 import { User, ApiResponse } from '@/types';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { toast } from 'sonner';
-import { useDisclosure } from '@mantine/hooks';
+import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 interface SyncSectionProps {

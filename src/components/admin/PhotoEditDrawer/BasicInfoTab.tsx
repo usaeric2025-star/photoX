@@ -2,10 +2,9 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import { Lock, Loader2, Maximize2, X } from 'lucide-react';
 import { ProductFormData } from '../../../types';
-import { useDisclosure } from '@mantine/hooks';
+import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useUIStore } from '../../../store';
 import { usePhotoDetail, useTaskExecutor, useTasks } from '../../../hooks';
-import { useFormContext } from 'react-hook-form';
 
 import { PhotoEditFormReturn } from '@/hooks/photo/types';
 

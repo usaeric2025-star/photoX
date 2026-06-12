@@ -1,6 +1,5 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import React from 'react';
-import { motion } from 'motion/react';
 import { Lock, LogIn } from 'lucide-react';
 
 
@@ -23,18 +22,12 @@ export function StaffUnlockDialog({
   
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }} 
-      animate={{ opacity: 1 }} 
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[var(--z-index-modal)] bg-black/60 backdrop-blur-md flex items-center justify-center p-6"
+    <div 
+      className="fixed inset-0 z-[var(--z-index-modal)] bg-black/60 backdrop-blur-md flex items-center justify-center p-6 animate-fade-in"
       onClick={onClose}
     >
-      <motion.div 
-        initial={{ scale: 0.9, opacity: 0, y: 20 }} 
-        animate={{ scale: 1, opacity: 1, y: 0 }} 
-        exit={{ scale: 0.9, opacity: 0, y: 20 }}
-        className="w-full max-w-[320px] bg-white rounded-3xl p-8 shadow-2xl relative text-center"
+      <div 
+        className="w-full max-w-[320px] bg-white rounded-3xl p-8 shadow-2xl relative text-center animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner ring-4 ring-white">
@@ -99,7 +92,7 @@ export function StaffUnlockDialog({
             </div>
           )}
         </form>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 };

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { LoadingScreen } from '../LoadingScreen';
-import { motion, AnimatePresence } from 'motion/react';
 
 interface DataLoadingContainerProps {
   isLoading: boolean;
@@ -34,37 +33,19 @@ export function DataLoadingContainer({
   return (
     <div className="relative w-full h-full">
       {/* Non-intrusive thin gradient loader strip on the top when loading incrementally/silently */}
-      <AnimatePresence>
-        {showBackgroundIndicator && (
-          <motion.div
-            initial={{ opacity: 0, width: '0%' }}
-            animate={{ 
-              opacity: 1, 
-              width: ['0%', '80%', '100%'],
-            }}
-            exit={{ opacity: 0 }}
-            transition={{ 
-              width: { duration: 2, ease: 'easeOut', repeat: Infinity, repeatDelay: 0.5 },
-              opacity: { duration: 0.2 }
-            }}
-            className="fixed top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-blue-500 via-amber-500 to-blue-500 z-[var(--z-index-max)] pointer-events-none"
-          />
-        )}
-      </AnimatePresence>
+      {showBackgroundIndicator && (
+        <div className="fixed top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-blue-500 via-amber-500 to-blue-500 z-[var(--z-index-max)] pointer-events-none animate-shimmer" />
+      )}
 
-      <AnimatePresence>
-        {showLoader && (
-          <LoadingScreen key="global-loader" />
-        )}
-        <motion.div
-            key="content-frame"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="w-full h-full"
-          >
-            {children}
-          </motion.div>
-      </AnimatePresence>
+      {showLoader && (
+        <LoadingScreen key="global-loader" />
+      )}
+      <div
+        key="content-frame"
+        className="w-full h-full animate-fade-in"
+      >
+        {children}
+      </div>
     </div>
   );
 };

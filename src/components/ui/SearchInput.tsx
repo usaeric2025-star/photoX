@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search, X } from 'lucide-react';
-import { useDebouncedCallback } from '@mantine/hooks';
+import { useDebouncedCallback } from '@/hooks/core/useDebouncedCallback';
 import { Input } from './input';
 import { cn } from '@/lib/utils';
 

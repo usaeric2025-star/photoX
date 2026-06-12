@@ -1,14 +1,20 @@
-import { useFormContext } from 'react-hook-form';
+import { useFormContext, UseFormReturn } from 'react-hook-form';
 import { cn } from '@/lib/utils';
 
 interface MultilingualInputProps {
   name: string
   label?: string
   required?: boolean
+  form?: any
 }
 
-export const MultilingualInput = ({ name, label, required }: MultilingualInputProps) => {
-  const { register, formState: { errors } } = useFormContext();
+export const MultilingualInput = ({ name, label, required, form: propForm }: MultilingualInputProps) => {
+  const context = useFormContext();
+  const form = propForm || context;
+  
+  if (!form) return null;
+
+  const { register, formState: { errors } } = form;
   
   // Helper to get nested error
   const getError = (path: string) => {

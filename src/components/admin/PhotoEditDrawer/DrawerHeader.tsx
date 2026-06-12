@@ -1,7 +1,7 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useShallow } from "@/store/useUIStore";
 import React from "react";
-import { useDisclosure } from "@mantine/hooks";
+import { useDisclosure } from '@/hooks/core/useDisclosure';
 import {
   X as CloseIcon,
   EyeOff,
@@ -15,10 +15,6 @@ import {
   LogOut,
   LogOut as RemoveFromGroupIcon,
 } from "lucide-react";
-import { useFormContext } from "react-hook-form";
-import { ProductFormData } from "../../../types";
-import { toast } from "sonner";
-import { useUIStore } from "../../../store";
 import {
   usePhotoDetail,
   useTasks,
@@ -28,6 +24,8 @@ import {
   useTaskExecutor,
   useSettings,
 } from "../../../hooks";
+import { toast } from "sonner";
+import { useUIStore } from "../../../store";
 import { analyzePhoto } from "@/services/ai/commands";
 import { usePhotoEditAI } from "./usePhotoEditAI";
 

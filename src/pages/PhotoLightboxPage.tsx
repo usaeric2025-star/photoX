@@ -11,7 +11,7 @@ import { useTags, useCategories } from "@/hooks";
 import { useGroupCoverMutation } from "@/hooks";
 import { getTranslatedCategoryName } from "@/lib/ui-helpers";
 import { translations } from "@/lib/translations";
-import { useDisclosure } from "@mantine/hooks";
+import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { toast } from 'sonner';
 import { getSafeText } from "@/lib/ai/safeText";

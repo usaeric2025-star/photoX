@@ -3,7 +3,7 @@ import React from "react";
 import { Settings2, Trash2, X, Copy } from "lucide-react";
 import { SheetHeader, SheetTitle } from "../../ui/sheet";
 import { ProductGroup } from "../../../types";
-import { useDisclosure } from "@mantine/hooks";
+import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { saveGroup as saveGroupToCloud } from "@/services/group/commands";
 

@@ -1,7 +1,7 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import React from "react";
 import { Plus } from "lucide-react";
-import { useDisclosure } from "@mantine/hooks";
+import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { Manufacturer } from "../../types";
 import { ManufacturerItem } from "../admin/ManufacturerItem";
 import { PromptDialog } from "@/components/ui/PromptDialog";

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { useShallow } from 'zustand/shallow';
 import { STORAGE_KEYS, safeGetItem, safeSetItem } from '@/lib/storage';
 import { ProductFormData } from '../types';
-import { useLocalStorage } from '@mantine/hooks';
+import { useLocalStorage } from '@/hooks/core/useLocalStorage';
 
 export function useAppLang(): [string, (val: 'zh' | 'en' | 'ms') => void] {
   const lang = useUIStore(s => s.appLang);

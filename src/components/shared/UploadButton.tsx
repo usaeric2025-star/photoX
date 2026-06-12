@@ -17,17 +17,13 @@ export function UploadButton({
   if (!isManagement || !can('photo:edit') || !onAdd) return null;
 
   return (
-    <motion.button
-      initial={{ opacity: 0, scale: 0.5 }}
-      animate={{ opacity: 1, scale: 1 }}
-      whileTap={{ scale: 0.97 }}
-      transition={{ duration: 0.1 }}
+    <button
       onClick={onAdd}
       type="button"
-      className={`${buttonStyles.button} bg-blue-600 fixed bottom-6 right-6 z-[40] rounded-full shadow-lg hover:shadow-xl transition-shadow disabled:opacity-50`}
+      className={`${buttonStyles.button} bg-blue-600 fixed bottom-6 right-6 z-[40] rounded-full shadow-lg hover:shadow-xl transition-all duration-100 active:scale-95 animate-scale-in disabled:opacity-50`}
       title="Add Photo"
     >
       <Plus size={28} />
-    </motion.button>
+    </button>
   );
 }

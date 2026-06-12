@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { User } from '@/types';
-import { useLocalStorage } from '@mantine/hooks';
+import { useLocalStorage } from '@/hooks/core/useLocalStorage';
 
 // 带超时的 getUser（15秒）
 async function getUserWithTimeout(): Promise<User | null> {

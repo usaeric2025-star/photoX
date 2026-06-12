@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useDisclosure } from '@mantine/hooks';
+import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useAdminActions } from './useAdminActions';
 import { useUIStore } from '@/store/useUIStore';
 

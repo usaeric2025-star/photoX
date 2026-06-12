@@ -3,7 +3,7 @@ import { RefreshCw, MoreHorizontal, ChevronDown, ChevronUp } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query';
 import { useCategories, useTags, usePhotoFilter, useSettings, useUrlFilters, useAdminMode } from '@/hooks';
 import { useAppLang } from '@/store/useUIStore';
-import { useDisclosure } from '@mantine/hooks';
+import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { cn } from '@/lib/utils';
 import { Category } from '@/types';
 import { translations } from '@/lib/translations';
@@ -21,7 +21,7 @@ export function FilterPanel() {
     const { data: tags = [] } = useTags();
     const { settings } = useSettings();
     const [appLang] = useAppLang();
-    const [isExpanded, { toggle: toggleExpanded }] = useDisclosure(false);
+  const [isExpanded, { toggle: toggleExpanded }] = useDisclosure(false);
     const queryClient = useQueryClient();
     const isAdminMode = useAdminMode();
 

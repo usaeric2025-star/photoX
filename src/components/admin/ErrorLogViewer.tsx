@@ -3,7 +3,7 @@ import { Trash2, Download, AlertCircle, AlertTriangle, Info, ShieldAlert, Chevro
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
-import { useDisclosure } from '@mantine/hooks';
+import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { formatters } from '@/utils/formatters';
 import { useCopyToClipboard } from '@/hooks';
 

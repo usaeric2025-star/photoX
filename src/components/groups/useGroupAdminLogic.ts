@@ -9,7 +9,8 @@ import {
   useUrlFilters
 } from "@/hooks";
 import { useUIStore, useShallow } from "@/store/useUIStore";
-import { useDisclosure, useSessionStorage } from "@mantine/hooks";
+import { useDisclosure } from '@/hooks/core/useDisclosure';
+import { useSessionStorage } from '@/hooks/core/useSessionStorage';
 import { useGroupDraft } from "./useGroupDraft";
 import { useGroupActions } from "./useGroupActions";
 

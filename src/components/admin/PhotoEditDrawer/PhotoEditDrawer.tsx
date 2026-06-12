@@ -1,7 +1,6 @@
 import React from "react";
-import { motion, AnimatePresence } from "motion/react";
 import { Dialog } from "@base-ui/react/dialog";
-import { useDisclosure } from "@mantine/hooks";
+import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { FormProvider } from "react-hook-form";
 import { useFormWithMutation } from '@/hooks/core/useFormWithMutation';
 import { usePhotoEditMutation } from '@/hooks/photo/usePhotoMutations';
@@ -79,29 +78,17 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
       open={isOpen}
       onOpenChange={(open) => !open && update({ editPhotoId: null })}
     >
-      <FormProvider {...(form as any)}>
-        <AnimatePresence>
-          {isOpen && (
-            <Dialog.Portal keepMounted>
+        {isOpen && (
+          <Dialog.Portal keepMounted>
+            <FormProvider {...(form as any)}>
               <Dialog.Backdrop
                 render={
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-[var(--z-index-max)] bg-black/20 backdrop-blur-sm"
-                  />
+                  <div className="fixed inset-0 z-[var(--z-index-max)] bg-black/20 backdrop-blur-sm animate-fade-in" />
                 }
               />
               <Dialog.Popup
                 render={
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 20 }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
-                    className="fixed inset-0 z-[var(--z-index-max)] bg-slate-50 flex flex-col pt-safe pb-safe shadow-2xl focus:outline-none"
-                  >
+                  <div className="fixed inset-0 z-[var(--z-index-max)] bg-slate-50 flex flex-col pt-safe pb-safe shadow-2xl focus:outline-none animate-scale-in">
                     <DrawerHeader
                       form={form}
                       onClose={() => {
@@ -185,13 +172,12 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
                         </div>
                       </Tabs>
                     </div>
-                  </motion.div>
+                  </div>
                 }
               />
-            </Dialog.Portal>
-          )}
-        </AnimatePresence>
-      </FormProvider>
+            </FormProvider>
+          </Dialog.Portal>
+        )}
     </Dialog.Root>
   );
 }

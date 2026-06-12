@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useLocalStorage } from '@mantine/hooks';
+import { useLocalStorage } from '@/hooks/core/useLocalStorage';
 import { createQuery } from '../core/queryFactory';
 import { fetchSettings } from '@/services/settings/queries';
 import { syncCache } from '@/lib/db/indexedDB';

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Photo } from "../../types";
-import { useDisclosure } from "@mantine/hooks";
+import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { GroupSettingsSheet } from "./GroupSettingsSheet";
 import { GroupDetailSkeleton } from "./GroupDetailSkeleton";

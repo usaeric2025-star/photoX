@@ -62,14 +62,14 @@ export function filterPhotos(
 
     result = result.filter(p => {
       // Basic text fields (item_code, name, manual_code, etc)
-      const nameZh = typeof p.name === 'object' ? (p.name.zh || '') : (p.name || '');
-      const nameEn = typeof p.name === 'object' ? (p.name.en || '') : '';
-      const nameMs = typeof p.name === 'object' ? (p.name.ms || '') : '';
+      const nameZh = typeof p.name === 'object' ? String(p.name.zh || '') : String(p.name || '');
+      const nameEn = typeof p.name === 'object' ? String(p.name.en || '') : '';
+      const nameMs = typeof p.name === 'object' ? String(p.name.ms || '') : '';
       
       const descObj = (p.description as any) || {};
-      const descZh = typeof p.description === 'object' ? (descObj.zh || '') : (p.description || '');
-      const descEn = typeof p.description === 'object' ? (descObj.en || '') : '';
-      const descMs = typeof p.description === 'object' ? (descObj.ms || '') : '';
+      const descZh = typeof p.description === 'object' ? String(descObj.zh || '') : String(p.description || '');
+      const descEn = typeof p.description === 'object' ? String(descObj.en || '') : '';
+      const descMs = typeof p.description === 'object' ? String(descObj.ms || '') : '';
 
       const hasBasicMatch = 
         nameZh.toLowerCase().includes(q) || 

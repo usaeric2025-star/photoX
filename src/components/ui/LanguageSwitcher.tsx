@@ -1,7 +1,8 @@
 import React, { useRef } from 'react';
 import { Globe, ChevronDown } from 'lucide-react';
 import { useUIStore } from '@/store/useUIStore';
-import { useDisclosure, useClickOutside } from '@mantine/hooks';
+import { useDisclosure } from '@/hooks/core/useDisclosure';
+import { useClickOutside } from '@/hooks/core/useClickOutside';
 
 export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dropdown' | 'segmented' }) {
   const appLang = useUIStore((s) => s.appLang);

@@ -1,7 +1,8 @@
 import React, { useState, useRef } from "react";
 import { Trash2, Pencil } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { useDisclosure, useClickOutside } from "@mantine/hooks";
+import { useDisclosure } from '@/hooks/core/useDisclosure';
+import { useClickOutside } from '@/hooks/core/useClickOutside';
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { PromptDialog } from "@/components/ui/PromptDialog";
 import { useLongPress } from "@/hooks/core/useLongPress";

@@ -3,7 +3,7 @@ import React, { useState, useRef, useMemo, useDeferredValue } from "react";
 import { createPortal } from "react-dom";
 import { Pencil, Trash2, Heart, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useDisclosure } from "@mantine/hooks";
+import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   usePhotoFilter,

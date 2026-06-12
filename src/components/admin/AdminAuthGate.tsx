@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { LoginScreen } from '@/components/admin/LoginScreen';
 import { useAuth, useSettings } from '@/hooks';
-import { useLocalStorage } from '@mantine/hooks';
+import { useLocalStorage } from '@/hooks/core/useLocalStorage';
 import { logger } from '@/lib/logger';
 
 interface AdminAuthGateProps {

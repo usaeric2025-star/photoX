@@ -12,7 +12,7 @@ import { AppSettings, User, ApiResponse } from '@/types';
 import { 
   useUIStore, useShallow
 } from '@/store/useUIStore';
-import { useDisclosure } from '@mantine/hooks';
+import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { 
   useCategories, useTags, useManufacturers, usePhotos,
