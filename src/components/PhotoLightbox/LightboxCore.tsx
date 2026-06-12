@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Lightbox, { IconButton } from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/thumbnails.css";
@@ -12,6 +12,7 @@ import { toLightboxSlides } from "./lightboxSlides";
 import { downloadPhotoAsJpeg } from "@/lib/download";
 import { PhotoInfoPanel } from "../photo/PhotoInfoPanel";
 import { useSettings } from "@/hooks";
+import { lockScroll, unlockScroll } from "@/lib/scrollLock";
 
 interface LightboxCoreProps {
   open: boolean;
@@ -48,6 +49,13 @@ export const LightboxCore = ({
   React.useEffect(() => {
     setIndex(currentIndex);
   }, [currentIndex]);
+  
+  useEffect(() => {
+    if (open) {
+      lockScroll();
+      return () => unlockScroll();
+    }
+  }, [open]);
   
   if (slides.length === 0) return null;
 
@@ -106,7 +114,7 @@ export const LightboxCore = ({
         // Custom interactive controls overlaid on lightbox
         controls: () => (
           <>
-            <div className="absolute top-4 left-4 z-50 text-white font-medium bg-black/50 px-3 py-1 rounded-full text-[10px] sm:text-sm backdrop-blur-sm shadow-lg pointer-events-none">
+            <div className="absolute top-4 left-4 z-[var(--z-lightbox-content,1002)] text-white font-medium bg-black/50 px-3 py-1 rounded-full text-[10px] sm:text-sm backdrop-blur-sm shadow-lg pointer-events-none">
                  {index + 1} / {totalCount || slides.length}
             </div>
 

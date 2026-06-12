@@ -19,7 +19,7 @@ export function GroupDetailSkeleton() {
   return (
     <>
       {/* Header Skeleton */}
-      <div className="flex-shrink-0 sticky top-0 z-sticky px-4 sm:px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-white">
+      <div className="flex-shrink-0 sticky top-0 z-[var(--z-sticky)] px-4 sm:px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-white">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-slate-100 animate-pulse" />
           <div className="flex flex-col gap-2">

@@ -11,7 +11,7 @@ export function PublicFloatingActions({
   onWhatsAppClick 
 }: PublicFloatingActionsProps) {
   return (
-    <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-40">
+    <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-[var(--z-sticky)]">
       {onScrollToTop && (
         <button
           onClick={onScrollToTop}

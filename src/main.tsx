@@ -59,7 +59,7 @@ if (container) {
   root.render(
     <StrictMode>
       <PersistQueryClientProvider client={queryClient} persistOptions={{ persister }}>
-        <Toaster position="bottom-center" richColors closeButton expand={false} visibleToasts={2} swipeDirections={['left', 'right']} />
+        <Toaster style={{ zIndex: 'var(--z-toast, 500)' } as any} position="bottom-center" richColors closeButton expand={false} visibleToasts={2} swipeDirections={['left', 'right']} />
         <TaskProvider>
           <App />
           <Analytics />

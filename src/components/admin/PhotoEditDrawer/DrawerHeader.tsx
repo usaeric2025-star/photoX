@@ -24,7 +24,7 @@ import {
   useTaskExecutor,
   useSettings,
 } from "../../../hooks";
-import { toast } from "sonner";
+import { showToast } from "@/lib/ui/toast";
 import { useUIStore } from "../../../store";
 import { analyzePhoto } from "@/services/ai/commands";
 import { usePhotoEditAI } from "./usePhotoEditAI";
@@ -144,7 +144,7 @@ export function DrawerHeader({
             onClick={() => {
               const newState = !formState.is_group_cover;
               setValue('is_group_cover', newState);
-              toast.success(newState ? '已设为封面' : '已取消封面');
+              showToast.success(newState ? '已设为封面' : '已取消封面');
             }}
             title={l.cover}
             className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-amber-200 shadow-sm transition-all ${formState.is_group_cover ? "bg-amber-500 text-white border-amber-500 hover:bg-amber-600" : "bg-white text-amber-500 border-amber-200 hover:bg-amber-50 active:scale-95"}`}

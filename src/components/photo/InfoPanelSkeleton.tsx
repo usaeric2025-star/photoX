@@ -9,7 +9,7 @@ export function InfoPanelSkeleton({ className }: InfoPanelSkeletonProps) {
   return (
     <div className={cn("flex flex-col h-full bg-white/95 backdrop-blur-md border-l border-slate-200 overflow-y-auto no-scrollbar", className)}>
       {/* Header Skeleton */}
-      <div className="p-4 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white/90 z-10">
+      <div className="p-4 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white/90 z-[var(--z-sticky)]">
         <div className="flex items-center gap-2">
           <div className="w-5 h-5 bg-slate-100 rounded-md animate-pulse" />
           <div className="w-16 h-4 bg-slate-100 rounded-md animate-pulse" />

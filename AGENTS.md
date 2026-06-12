@@ -1160,4 +1160,37 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 - ❌ **絕對禁令**：禁止在各處直接調用 `navigator.clipboard.writeText`。
 - ❌ **絕對禁令**：禁止使用 Mantine 的 `useClipboard`（功能過於簡陋）。
 
+## z-index 與燈箱規範（鎖定）
+
+- ✅ z-index 統一使用 CSS 變數管理，禁止硬編碼
+- ✅ 層級順序：Lightbox > Tooltip > Toast > Dialog > Drawer > Loading > Sticky > Dropdown
+- ✅ 燈箱開啟時必須鎖定 body 滾動（使用鎖計數器）
+- ✅ Lightbox 配置中的 z-index 必須引用 CSS 變數
+- ❌ 禁止 Toast z-index 高於 Lightbox
+- ❌ 禁止在燈箱狀態中使用 useUIStore
+
+### 層級對照表
+| 元件 | 變數 | 數值 |
+|------|------|------|
+| 燈箱內容 | `--z-lightbox-content` | 1002 |
+| 燈箱主體 | `--z-lightbox-container` | 1001 |
+| 燈箱背景 | `--z-lightbox-backdrop` | 1000 |
+| Tooltip | `--z-tooltip` | 600 |
+| Toast | `--z-toast` | 500 |
+| Popover | `--z-popover` | 400 |
+| Dialog | `--z-dialog` | 300 |
+| Drawer | `--z-drawer` | 200 |
+| Loading | `--z-loading` | 150 |
+| Sticky | `--z-sticky` | 100 |
+| Dropdown | `--z-dropdown` | 50 |
+
+## 通知與載入規範（鎖定）
+
+- ✅ **唯一出口**：所有通知必須使用 `src/lib/ui/toast.ts` 中的 `showToast`
+- ✅ **全屏載入**：全屏載入狀態必須使用 `LoadingOverlay` 元件
+- ✅ **層級一致**：`LoadingOverlay` 必須使用 `--z-loading` 層級
+- ❌ 禁止直接調用 `sonner` 的 `toast` (除非是在 `showToast` 內部)
+- ❌ 禁止在 AI 分析等耗時操作中不顯示 `LoadingOverlay`
+
+
 

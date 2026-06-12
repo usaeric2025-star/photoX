@@ -78,7 +78,7 @@ export function FilterPanel() {
     const hiddenCount = tagsToRender.length - 15;
 
     return (
-        <div className="flex flex-col border-t border-slate-100 bg-white relative z-20">
+        <div className="flex flex-col border-t border-slate-100 bg-white relative z-[var(--z-sticky)]">
             {/* Minimalist Premium categories section: 2 rows of 4 items structured grid */}
             <div className="border-b border-slate-50/50 bg-white">
                 <div className="grid grid-cols-4 gap-2 overflow-x-auto md:overflow-visible [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-4 py-3 whitespace-nowrap scroll-smooth">

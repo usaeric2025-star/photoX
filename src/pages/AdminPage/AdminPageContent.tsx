@@ -150,7 +150,7 @@ export function AdminPageContent() {
 function ScreenWrapper({ children, onClose }: { children: React.ReactNode, onClose: () => void }) {
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="absolute inset-0 z-20 bg-slate-50 flex flex-col">
-      <div className="flex justify-end p-4 shrink-0 bg-slate-50/80 backdrop-blur-md sticky top-0 z-30 border-b border-slate-100">
+      <div className="flex justify-end p-4 shrink-0 bg-slate-50/80 backdrop-blur-md sticky top-0 z-[var(--z-sticky)] border-b border-slate-100">
         <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-500 hover:text-slate-900"><X size={24} /></button>
       </div>
       <div className="flex-1 overflow-y-auto w-full no-scrollbar px-8 pb-8">{children}</div>

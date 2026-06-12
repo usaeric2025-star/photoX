@@ -145,7 +145,7 @@ export function PhotoInfoPanel({
   return (
     <div className={cn("flex flex-col h-full bg-white/95 backdrop-blur-md border-l border-slate-200 overflow-y-auto no-scrollbar select-text", className)}>
       {/* Header with Actions */}
-      <div className="p-4 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white/90 z-10">
+      <div className="p-4 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white/90 z-[var(--z-sticky)]">
         <h3 className="font-bold text-slate-900 flex items-center gap-2">
           {isGroup ? <Layers size={18} className="text-brand-navy" /> : <Info size={18} className="text-brand-navy" />}
           {isGroup ? l.groupDetails : l.photoDetails}

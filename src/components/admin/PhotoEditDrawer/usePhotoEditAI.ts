@@ -1,6 +1,6 @@
 import { logger } from '@/lib/logger';
 import { useState, useCallback } from 'react';
-import { toast } from 'sonner';
+import { showToast } from '@/lib/ui/toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTaskExecutor, useAdminActions, useSettings, useCategories, useTags } from '@/hooks';
 import { PhotoEditFormReturn } from '@/hooks/photo/types';
@@ -25,7 +25,7 @@ export function usePhotoEditAI(form: PhotoEditFormReturn) {
   const handleAiAnalyze = useCallback(async (previewSrc?: string, imageUrl?: string) => {
     const finalImageUrl = previewSrc || imageUrl;
     if (!finalImageUrl || !editPhotoId) {
-      toast.error(appLang === 'zh' ? '照片信息缺失，无法分析' : 'Photo data missing');
+      showToast.error(appLang === 'zh' ? '照片信息缺失，无法分析' : 'Photo data missing');
       return;
     }
 
@@ -211,10 +211,10 @@ export function usePhotoEditAI(form: PhotoEditFormReturn) {
               queryClient.invalidateQueries({ queryKey: photoKeys.all });
               queryClient.invalidateQueries({ queryKey: groupKeys.all });
               
-              toast.success(appLang === 'zh' ? '已识别并保存' : 'Identified & Saved');
+              showToast.success(appLang === 'zh' ? '已识别并保存' : 'Identified & Saved');
             } catch (saveError: unknown) {
               logger.error("Auto-save failed:", saveError);
-              toast.warning(appLang === 'zh' ? '识别成功，自动保存失败' : 'Analysis ok, save failed');
+              showToast.error(appLang === 'zh' ? '识别成功，自动保存失敗' : 'Analysis ok, save failed');
             }
           } else {
             throw new Error(appLang === 'zh' ? 'AI 返回格式异常' : 'Invalid AI format');

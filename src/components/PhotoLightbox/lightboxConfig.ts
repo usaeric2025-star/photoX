@@ -11,4 +11,8 @@ export const LIGHTBOX_OPTIONS = {
     scrollToZoom: true
   },
   thumbnails: { position: "bottom" as const, width: 80, height: 48 },
+  styles: {
+    container: { zIndex: 'var(--z-lightbox-container, 1001)' as any },
+    backdrop: { zIndex: 'var(--z-lightbox-backdrop, 1000)' as any },
+  },
 };

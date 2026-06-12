@@ -34,7 +34,7 @@ export function GroupHeader({
 
   return (
     <div className="flex flex-col border-b border-slate-100 bg-white">
-      <div className="flex flex-shrink-0 sticky top-0 px-4 sm:px-6 py-4 items-center justify-between">
+      <div className="flex flex-shrink-0 sticky top-0 z-[var(--z-sticky)] px-4 sm:px-6 py-4 items-center justify-between bg-white/80 backdrop-blur-sm border-b border-slate-100">
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <div
             className={`flex flex-col group min-w-0 flex-1 ${onSettingsClick ? 'cursor-pointer' : ''}`}

@@ -20,7 +20,7 @@ function DialogOverlay({ className, ...props }: DialogPrimitive.Backdrop.Props) 
     <DialogPrimitive.Backdrop
       data-slot="dialog-overlay"
       className={cn(
-        "fixed inset-0 z-[var(--z-index-overlay)] bg-black/40 transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0 supports-backdrop-filter:backdrop-blur-sm",
+        "fixed inset-0 z-[var(--z-dialog)] bg-black/40 transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0 supports-backdrop-filter:backdrop-blur-sm",
         className
       )}
       {...props}
@@ -39,7 +39,7 @@ function DialogContent({
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         className={cn(
-          "fixed z-[var(--z-index-overlay)] w-full bg-white shadow-lg transition duration-200 outline-none",
+          "fixed z-[var(--z-dialog)] w-full bg-white shadow-lg transition duration-200 outline-none",
           // Mobile Default (Bottom Sheet)
           "inset-x-0 bottom-0 rounded-t-3xl p-6 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]",
           "data-ending-style:opacity-0 data-starting-style:opacity-0 data-ending-style:scale-100 data-starting-style:scale-100",

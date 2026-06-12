@@ -1,4 +1,4 @@
-import { toast } from 'sonner';
+import { showToast } from '@/lib/ui/toast';
 import type { StandardError } from '@/types/api';
 import { copyToClipboard } from '@/utils/clipboard';
 
@@ -134,7 +134,7 @@ export const handleError = (error: unknown, context: string, silent: boolean = f
   const errorId = getErrorId(standardError)
   const copyContent = buildCopyContent(standardError)
 
-  toast.error(standardError.message, {
+  showToast.error(standardError.message, {
     id: errorId,
     action: {
       label: '📋 複製',
