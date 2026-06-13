@@ -1,5 +1,5 @@
 import { ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/shared/Button';
 import { Link } from '@tanstack/react-router';
 
 interface PageHeaderProps {

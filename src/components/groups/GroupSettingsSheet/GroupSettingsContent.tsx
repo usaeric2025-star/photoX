@@ -17,7 +17,7 @@ export function GroupSettingsContent({
   update: (updates: Partial<UIStoreState> | ((state: UIStoreState) => Partial<UIStoreState>)) => void;
 }) {
   return (
-    <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar h-[calc(100vh-80px)] pb-20">
+    <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar">
       <SeriesIdentitySection 
         groupData={groupData}
         setGroupData={setGroupData}

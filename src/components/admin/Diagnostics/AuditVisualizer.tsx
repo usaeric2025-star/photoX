@@ -1,6 +1,6 @@
 import React from 'react';
 import { PackageSearch, CheckCircle2, CloudDownload, Trash2, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/shared/Button';
 
 interface AuditVisualizerProps {
   auditResult: any;

@@ -113,7 +113,7 @@ export function DimensionEditor({
               {dimensions.length > 1 && (
                 <button 
                   onClick={() => onRemoveDimension(idx)}
-                  className="absolute -top-2 -right-2 sm:top-2 sm:right-2 p-1.5 bg-white sm:bg-transparent text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all shadow-sm sm:shadow-none border border-slate-100 sm:border-0 z-10"
+                  className="absolute -top-2 -right-2 sm:top-2 sm:right-2 p-1.5 bg-white sm:bg-transparent text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all shadow-sm sm:shadow-none border border-slate-100 sm:border-0"
                   title={t.deleteSpec}
                 >
                   <CloseIcon size={16} />

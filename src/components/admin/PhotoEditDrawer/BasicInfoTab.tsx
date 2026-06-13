@@ -1,5 +1,5 @@
 import React from 'react';
-import { createPortal } from 'react-dom';
+import { Modal } from '@/components/ui/Modal';
 import { usePhotoEditSessionContext } from '@/hooks/photo/usePhotoEditSessionContext';
 import { Lock, Loader2, Maximize2, X } from 'lucide-react';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
@@ -66,7 +66,7 @@ export function BasicInfoTab() {
                onClick={openZoom}
              >
                 {isProcessingImage && (
-                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40">
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40">
                     <Loader2 size={24} className="text-white animate-spin" />
                   </div>
                 )}
@@ -177,25 +177,22 @@ export function BasicInfoTab() {
         </div>
       </div>
 
-      {zoomed && previewSrc && createPortal(
-        <div className="fixed inset-0 z-[var(--z-index-max)] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
-          <button 
-            onClick={closeZoom}
-            className="absolute top-4 right-4 z-10 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
-          >
-            <X size={24} />
-          </button>
-          <div className="relative w-full h-full flex items-center justify-center p-4 lg:p-12">
+      <Modal open={zoomed && !!previewSrc} onClose={closeZoom} size="screen" hidePadding={true}>
+          <div className="relative w-full h-full flex items-center justify-center p-4 lg:p-12 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
+            <button 
+              onClick={closeZoom}
+              className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
+            >
+              <X size={24} />
+            </button>
             <OptimizedImage 
-              src={previewSrc} 
+              src={previewSrc || ''} 
               eager
               className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-300" 
               alt="Zoomed" 
             />
           </div>
-        </div>,
-        document.body
-      )}
+      </Modal>
     </div>
   );
 }

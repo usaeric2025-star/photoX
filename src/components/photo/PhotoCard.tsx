@@ -134,9 +134,9 @@ export const PhotoCard = ({
       onClick={internalHandleClick}
       className={cn(
         "aspect-square overflow-hidden cursor-pointer relative transition-all duration-300 group bg-white rounded-2xl shadow-sm ring-1 ring-slate-100",
-        "before:absolute before:inset-0 before:z-30 before:pointer-events-none before:transition-all before:duration-300",
+        "before:absolute before:inset-0 before:pointer-events-none before:transition-all before:duration-300",
         "md:hover:shadow-xl md:hover:scale-[1.01] active:scale-[0.98]",
-        "data-[selected=true]:ring-4 data-[selected=true]:ring-blue-500 data-[selected=true]:scale-[0.96] data-[selected=true]:z-10 data-[selected=true]:shadow-lg",
+        "data-[selected=true]:ring-4 data-[selected=true]:ring-blue-500 data-[selected=true]:scale-[0.96] data-[selected=true]:shadow-lg",
         is_hidden && "ring-2 ring-slate-400 shadow-slate-300/50 shadow-sm grayscale-[0.3]",
         isCover && showCoverBadge && "ring-2 ring-amber-400 shadow-amber-100/50 shadow-sm",
         className

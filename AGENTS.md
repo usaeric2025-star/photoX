@@ -1,3 +1,16 @@
+## 全屏遮罩規範（永久鎖定）
+
+- ✅ 全屏加載/阻斷遮罩統一使用原生 `<dialog>`
+- ❌ 禁止 fixed inset-0 + z-index 模擬全屏遮罩
+- ❌ 禁止為全屏遮罩使用 createPortal
+
+## 頁面層級規範（永久鎖定）
+
+- ✅ 所有全屏視圖必須是獨立路由或原生 `<dialog>`
+- ❌ 禁止 absolute/fixed inset-0 + z-index 模擬頁面
+- ❌ 禁止用彈窗技術承載獨立頁面語義
+- ✅ z-index 僅允許用於 Tooltip/Popover 等附著型浮層
+
 ## 彈窗與 z-index 規範（鎖定）
 
 ### 彈窗元件
@@ -1248,5 +1261,30 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 - ❌ 禁止直接調用 `sonner` 的 `toast` (除非是在 `showToast` 內部)
 - ❌ 禁止在 AI 分析等耗時操作中不顯示 `LoadingOverlay`
 
+## 合組詳情頁規範（終局鎖定）
 
+- ✅ GroupDetailPage / GroupAdminShell 是獨立路由頁面，非彈窗
+- ✅ 使用 flex 佈局隔離，禁止 fixed/z-index/Modal/dialog
+- ✅ 頁面切換使用 View Transitions API 保持視覺連續
+- ✅ 列表頁必須支援滾動位置恢復
+- ❌ 禁止用彈窗技術承載獨立頁面語義
+
+## 自研 UI 組件規範（2026-06-13 最終鎖定）
+
+### 核心原則
+- ✅ **零 shadcn/ui 依賴**：完全移除解決方案中對外部組件庫的依賴。
+- ✅ **現代 CSS 優先**：浮層（Dropdown/Popover）必須優先使用 **CSS Anchor Positioning**。
+- ✅ **原生語義**：所有彈窗/遮罩統一使用原生 `<dialog>` 元素。
+- ✅ **ARIA 完整性**：所有交互組件必須具備完整的語義標籤與鍵盤導航支援（Home/End/Arrows）。
+
+### 技術方案
+- **Dropdown**：CSS Anchor Positioning + `@supports` fallback + `motion` 動畫。
+- **Tabs**：`AnimatePresence` + `LayoutId` 運動導向 + 完整 ARIA 鍵盤劫持（focusTab）。
+- **Table**：`@tanstack/react-table` 作為唯一邏輯引擎，手動編寫原生 `<table>` 樣式。
+
+### 禁止事項
+- ❌ **禁止 z-index 濫用**：在現代瀏覽器（支援 Anchor）的路徑下，禁止為下拉選單設置 z-index。
+- ❌ **禁止 z-index 污染**：在 fallback 路徑中使用 z-index 時，必須添加 `FALLBACK ONLY` 註釋。
+- ❌ **禁止混合模式**：禁止在同一專案中同時使用 shadcn/ui 元件與對應功能的自研元件。
+- ❌ **禁止配置殘留**：刪除 `components.json` 及所有 `@/components/ui` 下的舊套件代碼。
 

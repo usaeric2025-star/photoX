@@ -18,8 +18,10 @@ export async function prefetchMainGallery(queryClient: QueryClient) {
     sortOrder: null,
     isAdminMode: false,
     onlyUngrouped: false,
+    manufacturer_id: null,
+    is_hidden: false,
     limit: PHOTO_QUERY_CONFIG.limit
-  }, 'REALTIME');
+  });
 
   return queryClient.prefetchInfiniteQuery({
     queryKey,
@@ -46,10 +48,14 @@ export async function prefetchMainGallery(queryClient: QueryClient) {
 
 export async function prefetchGroupDetail(queryClient: QueryClient, groupId: string, isAdminMode: boolean = false) {
   if (!groupId) return;
-  const queryKey = groupKeys.detail(groupId, 'STABLE');
+  const queryKey = groupKeys.detail(groupId);
   queryClient.prefetchQuery({
     queryKey,
-    queryFn: () => getGroupById(groupId),
+    queryFn: async () => {
+      const result = await getGroupById(groupId);
+      if (!result.ok) throw result;
+      return result.data || null;
+    },
     staleTime: createStaleTime('STABLE'),
   });
   

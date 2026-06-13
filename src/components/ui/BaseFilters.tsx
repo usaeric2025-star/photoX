@@ -55,20 +55,20 @@ export function BaseFilters({
 
       <button
         onClick={toggleColumns}
-        className="h-10 sm:h-[34px] w-10 sm:w-[34px] flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors border border-slate-200/80"
+        className="h-10 sm:h-[34px] w-10 sm:w-[34px] flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors border border-slate-200/80 bg-white"
         title={`列数切换: 当前 ${currentColumns} 列`}
       >
         {currentColumns === 2 && <Grid2x2 size={15} className="text-slate-600" />}
         {currentColumns === 3 && <Grid3x3 size={15} className="text-slate-600" />}
-        {currentColumns === 5 && <LayoutGrid size={15} className="text-blue-600" />}
+        {currentColumns === 5 && <LayoutGrid size={15} className="text-brand-navy stroke-[2.5]" />}
       </button>
 
       <button
         onClick={onToggleGroups}
-        className={`h-10 sm:h-[34px] w-10 sm:w-[34px] flex items-center justify-center rounded-full transition-colors border border-slate-200/80 ${showGroupsCollapsed ? 'bg-blue-500 text-white border-blue-500' : 'hover:bg-slate-100 text-slate-600'}`}
+        className={`h-10 sm:h-[34px] w-10 sm:w-[34px] flex items-center justify-center rounded-full transition-all duration-200 border border-slate-200/80 ${showGroupsCollapsed ? 'bg-brand-navy text-white border-brand-navy shadow-md shadow-brand-navy/15' : 'hover:bg-slate-100 text-slate-600 bg-white'}`}
         title={showGroupsCollapsed ? '展开合组' : '折叠合组'}
       >
-        <Layers size={15} />
+        <Layers size={15} className={showGroupsCollapsed ? 'stroke-[2.5]' : ''} />
       </button>
     </>
   );

@@ -1,17 +1,8 @@
 import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle 
-} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/shared/Button";
+import { Progress } from "@/components/shared/Progress";
+import { Alert, AlertDescription } from "@/components/shared/Alert";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ISSUE_ACTIONS, PreviewResult } from "@/services/maintenance/issueActions";
 import { Loader2, ShieldAlert } from "lucide-react";
 import { useDisclosure } from '@/hooks/core/useDisclosure';
@@ -140,7 +131,7 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
               {preview ? "已预检" : "预览"}
             </Button>
             <Button 
-              variant={danger ? "destructive" : "default"} 
+              variant={danger ? "danger" : "primary"} 
               size="sm"
               onClick={onExecuteClick} 
               disabled={isExecuting || isPreviewing}
@@ -151,32 +142,22 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
             </Button>
         </div>
 
-        <AlertDialog open={showConfirm} onOpenChange={(isOpened) => {
-          if (isOpened) useUIStore.getState().incrementDialogCount();
-          else useUIStore.getState().decrementDialogCount();
-          isOpened ? openConfirm() : closeConfirm();
-        }}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>确认执行操作？</AlertDialogTitle>
-              <AlertDialogDescription>
-                你正在尝试执行「{finalTitle}」。此操作可能不可逆。
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>取消</AlertDialogCancel>
-              <AlertDialogAction 
-                variant="destructive" 
-                onClick={() => {
-                  closeConfirm();
-                  handleExecute();
-                }}
-              >
-                确定执行
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <ConfirmDialog
+          open={showConfirm}
+          onOpenChange={(isOpened) => {
+            if (isOpened) useUIStore.getState().incrementDialogCount();
+            else useUIStore.getState().decrementDialogCount();
+            isOpened ? openConfirm() : closeConfirm();
+          }}
+          title="确认执行操作？"
+          description={`你正在尝试执行「${finalTitle}」。此操作可能不可逆。`}
+          onConfirm={() => {
+            closeConfirm();
+            handleExecute();
+          }}
+          variant="destructive"
+          confirmText="确定执行"
+        />
       </>
     );
   }
@@ -205,7 +186,7 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
               预览范围
             </Button>
             <Button 
-              variant={danger ? "destructive" : "default"} 
+              variant={danger ? "danger" : "primary"} 
               size="sm"
               onClick={onExecuteClick} 
               disabled={isExecuting || isPreviewing}
@@ -242,32 +223,22 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
         )}
       </div>
 
-      <AlertDialog open={showConfirm} onOpenChange={(isOpened) => {
-        if (isOpened) useUIStore.getState().incrementDialogCount();
-        else useUIStore.getState().decrementDialogCount();
-        isOpened ? openConfirm() : closeConfirm();
-      }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>确认执行操作？</AlertDialogTitle>
-            <AlertDialogDescription>
-              你正在尝试执行「{finalTitle}」。这是一个危险操作，可能导致数据不可逆的更改，请确保你已经通过预览确认了影响范围。
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
-            <AlertDialogAction 
-              variant="destructive" 
-              onClick={() => {
-                closeConfirm();
-                handleExecute();
-              }}
-            >
-              确定执行
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={showConfirm}
+        onOpenChange={(isOpened) => {
+          if (isOpened) useUIStore.getState().incrementDialogCount();
+          else useUIStore.getState().decrementDialogCount();
+          isOpened ? openConfirm() : closeConfirm();
+        }}
+        title="确认执行操作？"
+        description={`你正在尝试执行「${finalTitle}」。这是一个危险操作，可能导致数据不可逆的更改，请确保你已经通过预览确认了影响范围。`}
+        onConfirm={() => {
+          closeConfirm();
+          handleExecute();
+        }}
+        variant="destructive"
+        confirmText="确定执行"
+      />
     </>
   );
 };

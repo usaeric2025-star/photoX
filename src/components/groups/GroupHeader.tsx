@@ -2,6 +2,7 @@ import React from "react";
 import { ChevronLeft, X, Pencil, Copy, Edit2 } from "lucide-react";
 import { Photo } from "../../types";
 import { Skeleton } from "../ui/Skeleton";
+import { CopyableId } from "../ui/CopyableId";
 
 interface GroupHeaderProps {
   displayName: string;
@@ -56,17 +57,8 @@ export function GroupHeader({
                       />
                     )}
                   </div>
-                  {activeGroupId && onCopyId && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onCopyId(activeGroupId);
-                      }}
-                      className="text-xs text-slate-400 font-mono hover:text-indigo-600 flex items-center gap-1 transition-colors"
-                    >
-                      ID: {activeGroupId.slice(-8)}
-                      <Copy size={10} />
-                    </button>
+                  {activeGroupId && (
+                    <CopyableId id={activeGroupId} className="text-xs" />
                   )}
                 </>
               )}

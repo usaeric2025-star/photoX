@@ -64,7 +64,7 @@ export function ResponsivePhoto({
     >
       {placeholderDataUrl && !hasError && (
         <div 
-          className="absolute inset-0 z-0 bg-cover bg-center pointer-events-none filter blur-lg scale-105 transition-opacity duration-300 ease-in-out"
+          className="absolute inset-0 bg-cover bg-center pointer-events-none filter blur-lg scale-105 transition-opacity duration-300 ease-in-out"
           style={{ 
             backgroundImage: `url(${placeholderDataUrl})`,
             opacity: isLoaded ? 0 : 1,
@@ -74,7 +74,7 @@ export function ResponsivePhoto({
       )}
 
       {hasError ? (
-        <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-50">
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-50">
           <ImageOff size={24} className="text-slate-300" />
         </div>
       ) : (
@@ -99,7 +99,7 @@ export function ResponsivePhoto({
                  setHasError(true);
                }
             }}
-            className={`${imgClassName} absolute inset-0 z-10 w-full h-full transition-opacity duration-200 ease-out`}
+            className={`${imgClassName} absolute inset-0 w-full h-full transition-opacity duration-200 ease-out`}
             style={{ 
                opacity: isLoaded ? 1 : 0,
                willChange: 'opacity' 

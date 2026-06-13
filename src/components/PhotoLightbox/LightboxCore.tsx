@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { createPortal } from "react-dom";
 import Lightbox, { IconButton } from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/thumbnails.css";
@@ -15,6 +14,7 @@ import { useSettings } from "@/hooks";
 import { lockScroll, unlockScroll } from "@/lib/ui/scrollLock";
 import { OptimizedImage } from "../shared/OptimizedImage";
 import { getSafeText } from "@/services/ai/safeText";
+import { getThumbnailUrl } from "@/services/photo/utils";
 
 export interface LightboxActions {
   onEdit?: (photo: Photo) => void;
@@ -53,17 +53,23 @@ export const LightboxCore = ({
   // Responsive preload
   const preloadCount = typeof window !== 'undefined' && window.innerWidth < 768 ? 1 : 2;
 
-  const slides = photos.map(photo => ({
-    src: photo.image_url,
-    alt: getSafeText(photo.name, lang) || "",
-    srcSet: [
-      { src: photo.image_url.replace(/\/([^/]+)$/, '/_t_$1'), width: 320, height: 320 },
-      { src: photo.image_url, width: 1920, height: 1920 },
-    ],
-    sizes: "100vw",
-    key: photo.image_url,
-    photo
-  }));
+  const slides = React.useMemo(() => {
+    return photos.map(photo => {
+      const thumbUrl = getThumbnailUrl(photo.image_url, 320, photo.updated_at);
+      return {
+        src: photo.image_url,
+        alt: getSafeText(photo.name, lang) || "",
+        thumbnail: thumbUrl,
+        srcSet: [
+          { src: thumbUrl, width: 320, height: 320 },
+          { src: photo.image_url, width: 1920, height: 1920 },
+        ],
+        sizes: "100vw",
+        key: photo.image_url,
+        photo
+      };
+    });
+  }, [photos, lang]);
 
   // Keep index synchronized with currentIndex prop
   React.useEffect(() => {
@@ -81,7 +87,7 @@ export const LightboxCore = ({
 
   if (typeof document === 'undefined') return null;
 
-  return createPortal(
+  return (
     <Lightbox
       open={open}
       close={onClose}
@@ -172,7 +178,6 @@ export const LightboxCore = ({
         ),
       }}
       {...LIGHTBOX_OPTIONS}
-    />,
-    document.body
+    />
   );
 };

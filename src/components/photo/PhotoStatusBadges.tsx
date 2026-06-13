@@ -37,35 +37,36 @@ export const PhotoStatusBadges = ({
   const isCover = photo.is_group_cover;
 
   return (
-    <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1.5 z-10 pointer-events-none select-none">
+    <div className="absolute top-2 left-2 flex flex-wrap gap-1 pointer-events-none select-none">
       {/* Group Badge */}
       {shouldShowGroup && (
-        <div className="bg-slate-900/95 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] text-brand-gold font-black flex items-center gap-1.5 border border-brand-gold/30 shadow-md">
-          <Layers size={10} strokeWidth={2.5} className="text-brand-gold opacity-90" />
-          <span>{memberCount}</span>
+        <div className="bg-slate-900/90 backdrop-blur-md px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[8px] sm:text-[9.5px] text-brand-gold font-bold flex items-center gap-1 border border-brand-gold/35 shadow-md shadow-black/15 transition-all">
+          <Layers size={10} strokeWidth={2.5} className="text-brand-gold opacity-95 shrink-0" />
+          <span className="tracking-wider">{memberCount}</span>
         </div>
       )}
 
       {/* Cover Badge */}
       {isCover && showCoverBadge && (
-        <div className="bg-amber-400 text-amber-950 px-1.5 py-0.5 rounded-full flex items-center justify-center shadow-sm border border-black/5">
-          <Crown size={10} fill="currentColor" />
+        <div className="bg-gradient-to-r from-amber-500 to-amber-400 text-amber-950 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full flex items-center justify-center gap-1 shadow-md border border-amber-300/30 text-[8px] sm:text-[9.5px] font-black tracking-wider uppercase">
+          <Crown size={9} fill="currentColor" className="stroke-[2.5] shrink-0" />
+          <span>{coverLabel}</span>
         </div>
       )}
 
       {/* Pinned Status */}
       {isManagement && isPinned && (
-        <div className="bg-brand-gold px-1.5 py-0.5 rounded-full text-[9px] text-white font-black flex items-center gap-1.5 shadow-sm">
-          <Heart size={9} fill="currentColor" />
-          <span className="tracking-widest pr-0.5">TOP</span>
+        <div className="bg-red-500 text-white px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[8px] sm:text-[9.5px] font-black flex items-center gap-1 shadow-md border border-red-400/20">
+          <Heart size={9} fill="currentColor" className="stroke-none shrink-0" />
+          <span className="tracking-wider">TOP</span>
         </div>
       )}
       
       {/* Hidden Status */}
       {isManagement && photo.is_hidden && (
-        <div className="bg-rose-500/90 backdrop-blur-md px-1.5 py-0.5 rounded-full text-[9px] text-white font-black flex items-center gap-1.5 shadow-sm border border-white/20">
-          <ShieldAlert size={9} />
-          <span className="tracking-widest pr-0.5">{hiddenLabel}</span>
+        <div className="bg-rose-600/90 backdrop-blur-md px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[8px] sm:text-[9.5px] text-white font-black flex items-center gap-1 shadow-md border border-white/10">
+          <ShieldAlert size={9} className="stroke-[2.5] shrink-0" />
+          <span className="tracking-wider">{hiddenLabel}</span>
         </div>
       )}
     </div>
@@ -73,3 +74,4 @@ export const PhotoStatusBadges = ({
 };
 
 PhotoStatusBadges.displayName = 'PhotoStatusBadges';
+

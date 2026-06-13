@@ -18,7 +18,6 @@ import { PublicGridContainer } from '@/components/photo/PublicGridContainer';
 import { PublicHeader } from '@/components/layouts/headers/PublicHeader';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { showToast } from '@/lib/ui/toast';
-import { GroupDetailPage } from '@/components/groups/GroupDetailPage';
 import { useUrlFilters } from '@/hooks';
 
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
@@ -110,9 +109,6 @@ export default function PublicPage() {
           </DataLoadingContainer>
         </div>
       )}
-      <ErrorBoundary>
-        <GroupDetailPage />
-      </ErrorBoundary>
     </div>
   );
 }

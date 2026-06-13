@@ -135,7 +135,7 @@ export function StatisticsScreen() {
         </div>
 
         <div className="bg-brand-navy p-8 rounded-[32px] shadow-xl space-y-6 text-white overflow-hidden relative">
-          <div className="relative z-10 space-y-4">
+          <div className="relative space-y-4">
             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50 italic">System Status</h3>
             <div className="space-y-2">
               <h4 className="text-3xl font-black tracking-tighter leading-tight italic">

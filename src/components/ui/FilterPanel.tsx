@@ -72,8 +72,8 @@ export function FilterPanel() {
     // Unified Tags Logic using usePhotoFilter
     const { tagsToRender, pinnedIds, hotIds } = usePhotoFilter(tags, settings);
 
-    const visibleTags = isExpanded ? tagsToRender : tagsToRender.slice(0, 15);
-    const hiddenCount = tagsToRender.length - 15;
+    const visibleTags = isExpanded ? tagsToRender : tagsToRender.slice(0, 10);
+    const hiddenCount = tagsToRender.length - (isExpanded ? 0 : 10);
 
     return (
         <div className="flex flex-col border-t border-slate-100 bg-white relative z-[var(--z-sticky)]">
@@ -89,10 +89,10 @@ export function FilterPanel() {
                             }}
                             onMouseEnter={() => prefetchCategoryPhotos(cat.id)}
                             className={cn(
-                                "text-[11px] font-black h-8 px-4 rounded-full transition-all duration-150 flex items-center justify-center cursor-pointer pointer-events-auto active:scale-95 shrink-0 select-none shadow-sm capitalize",
+                                "text-[11px] font-black h-8 px-4 rounded-full transition-all duration-150 flex items-center justify-center cursor-pointer pointer-events-auto active:scale-95 shrink-0 select-none shadow-sm capitalize border",
                                 urlFilters.categoryId === cat.id || (urlFilters.categoryId !== null && cat.id !== null && String(urlFilters.categoryId) === String(cat.id))
-                                    ? 'bg-[#2563EB] text-white shadow-md shadow-blue-500/25 border-transparent' 
-                                    : 'bg-[#F3F4F6] text-[#374151] border border-slate-100 hover:bg-[#E5E7EB]'
+                                    ? 'bg-brand-navy border-brand-navy text-white shadow-md shadow-brand-navy/20' 
+                                    : 'bg-slate-50 border-slate-100 text-[#374151] hover:bg-slate-100 hover:border-slate-200'
                             )}
                             title={cat.name || t.all}
                         >
@@ -103,25 +103,27 @@ export function FilterPanel() {
             </div>
 
             {/* Integrated Tags Section matching strict PhotoX specifications */}
-            <div className="mt-1 mb-1.5 px-4">
+            <div className="py-0.5 px-4 border-b border-slate-100/30 bg-white shadow-inner shadow-slate-50">
                 <div className="flex items-center justify-between mb-1 px-0.5">
-                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.05em]">
+                    <span className="text-[8px] text-slate-400 font-bold uppercase tracking-[0.05em]">
                         {t.hotTags}
                     </span>
-                    {tagsToRender.length > 15 && (
+                    {tagsToRender.length > 10 && (
                          <button 
                              onClick={() => toggleExpanded()}
-                             className="text-[10px] p-1.5 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-all cursor-pointer pointer-events-auto"
+                             className="text-[9px] p-0.5 rounded-full bg-slate-50 text-slate-500 hover:bg-slate-200 transition-all cursor-pointer pointer-events-auto"
                              title={isExpanded ? t.collapse : t.more(hiddenCount)}
-                         >
-                             {isExpanded ? <ChevronUp size={14} /> : <MoreHorizontal size={14} />}
+                          >
+                             {isExpanded ? <ChevronUp size={10} /> : <MoreHorizontal size={10} />}
                          </button>
                     )}
                 </div>
                 
                 <div className={cn(
-                    "flex flex-wrap gap-x-1 gap-y-1 items-center",
-                    !isExpanded && "max-h-[52px] overflow-hidden content-start"
+                    "transition-all duration-300",
+                    isExpanded 
+                        ? "flex flex-wrap gap-1.5 items-center pb-2" 
+                        : "flex flex-wrap gap-1.5 items-center pb-1.5 max-h-[52px] overflow-hidden"
                 )}>
                     {visibleTags.map((tag) => {
                         const isPinned = pinnedIds.includes(String(tag.id));
@@ -135,14 +137,14 @@ export function FilterPanel() {
                                    setTagId(isSelected ? null : tag.id);
                                }}
                                className={cn(
-                                   "h-6 text-[10.5px] px-3 rounded-full transition-all duration-200 flex items-center justify-center cursor-pointer pointer-events-auto border",
+                                   "h-5 text-[9.5px] px-2 rounded-full transition-all duration-200 flex items-center justify-center cursor-pointer pointer-events-auto border shrink-0",
                                    // Selected state
                                    isSelected 
-                                       ? 'bg-[#2563EB] text-white font-semibold border-transparent' 
-                                       : 'bg-[#F3F4F6] text-[#374151] border-[#E5E7EB] hover:border-slate-300',
+                                       ? 'bg-brand-navy border-brand-navy text-white font-bold shadow-sm' 
+                                       : 'bg-slate-50 text-[#374151] border-slate-200/60 hover:border-slate-300 hover:bg-slate-100',
                                    // Accent for pinned/hot tags when not selected
                                    !isSelected && (isPinned || isHot) 
-                                       ? 'bg-slate-800 text-white border-transparent' 
+                                        ? 'bg-amber-50 text-brand-gold border-brand-gold/30 font-semibold'
                                        : ''
                                )}
                            >

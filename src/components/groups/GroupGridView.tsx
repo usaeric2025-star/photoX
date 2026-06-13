@@ -113,7 +113,6 @@ export function GroupGridView({
         header={null}
         footer={
           <div className="flex flex-col">
-            {groupData && <GroupInfoPanel groupData={groupData} lang={lang} />}
             <GroupGridFooter 
               isFetchingNextPage={!!isFetchingNextPage}
               hasNextPage={!!hasNextPage}

@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Spinner } from './Spinner';
 import { cn } from '@/lib/utils';
 
 /**
  * [COMPONENT] LoadingOverlay
- * Full-screen loading overlay that uses the --z-dialog layer.
+ * Full-screen loading overlay.
  */
 interface LoadingOverlayProps {
   isLoading: boolean;
@@ -13,12 +13,21 @@ interface LoadingOverlayProps {
 }
 
 export const LoadingOverlay = ({ isLoading, message, className }: LoadingOverlayProps) => {
-  if (!isLoading) return null;
+  const ref = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    if (isLoading && ref.current && !ref.current.open) {
+      ref.current.showModal();
+    } else if (!isLoading && ref.current && ref.current.open) {
+      ref.current.close();
+    }
+  }, [isLoading]);
 
   return (
-    <div 
+    <dialog 
+      ref={ref}
       className={cn(
-        "fixed inset-0 z-[var(--z-loading)] flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity animate-in fade-in-0",
+        "m-0 p-0 border-0 bg-transparent flex h-full max-h-none w-full max-w-none flex-col items-center justify-center outline-none backdrop:bg-black/40 backdrop:backdrop-blur-sm transition-opacity animate-in fade-in-0",
         className
       )}
     >
@@ -30,6 +39,6 @@ export const LoadingOverlay = ({ isLoading, message, className }: LoadingOverlay
           </p>
         )}
       </div>
-    </div>
+    </dialog>
   );
 };

@@ -1,13 +1,5 @@
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { Modal } from '@/components/ui/Modal';
+import { cn } from '@/lib/utils';
 
 interface MenuDialogProps {
   open: boolean;
@@ -32,29 +24,50 @@ export const MenuDialog = ({
   secondaryActionLabel,
   onSecondaryAction,
 }: MenuDialogProps) => {
+  const handleClose = () => onOpenChange(false);
+
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          {description && <AlertDialogDescription>{description}</AlertDialogDescription>}
-        </AlertDialogHeader>
-        <AlertDialogFooter className="flex flex-col gap-2">
-            <AlertDialogAction 
-                onClick={onSecondaryAction}
-                className="bg-slate-100 text-slate-900 hover:bg-slate-200"
-            >
-                {secondaryActionLabel}
-            </AlertDialogAction>
-            <AlertDialogAction 
-                onClick={onPrimaryAction}
-                className={primaryActionVariant === 'destructive' ? 'bg-red-600 hover:bg-red-700' : ''}
-            >
-                {primaryActionLabel}
-            </AlertDialogAction>
-            <AlertDialogCancel>取消</AlertDialogCancel>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <Modal open={open} onClose={handleClose} hidePadding>
+      <div className="p-6">
+        <h2 className="text-lg font-semibold">{title}</h2>
+        {description && (
+          <p className="text-sm text-slate-500 mt-2">{description}</p>
+        )}
+        <div className="mt-6 flex flex-col gap-2">
+          <button
+            type="button"
+            className="w-full px-4 py-2 bg-slate-100 text-slate-900 rounded-md hover:bg-slate-200 transition-colors font-medium"
+            onClick={() => {
+              onSecondaryAction();
+              handleClose();
+            }}
+          >
+            {secondaryActionLabel}
+          </button>
+          <button
+            type="button"
+            className={cn(
+              "w-full px-4 py-2 rounded-md transition-colors font-medium text-white",
+              primaryActionVariant === 'destructive' 
+                ? 'bg-red-600 hover:bg-red-700' 
+                : 'bg-slate-900 hover:bg-slate-800'
+            )}
+            onClick={() => {
+              onPrimaryAction();
+              handleClose();
+            }}
+          >
+            {primaryActionLabel}
+          </button>
+          <button
+            type="button"
+            className="w-full px-4 py-2 text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded-md transition-colors mt-2"
+            onClick={handleClose}
+          >
+            取消
+          </button>
+        </div>
+      </div>
+    </Modal>
   );
 };

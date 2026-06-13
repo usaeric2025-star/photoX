@@ -1,7 +1,7 @@
 import { createRouter } from '@tanstack/react-router';
 import { rootRoute } from './root';
 import { indexRoute, previewRoute, hashRoute, groupRoute, gRoute } from './public';
-import { adminRoute, adminDiagnoseRoute, adminTasksRoute, adminErrorLogsRoute, adminGroupRoute } from './admin';
+import { adminRoute, adminDiagnoseRoute, adminDiagnosticsRoute, adminTasksRoute, adminErrorLogsRoute, adminGroupRoute, adminSettingsRoute, adminBatchEditRoute, adminStatisticsRoute } from './admin';
 import { parseSearch, stringifySearch } from './utils';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 
@@ -11,11 +11,15 @@ export const routeTree = rootRoute.addChildren([
   hashRoute,
   groupRoute,
   gRoute,
+  adminGroupRoute,
   adminRoute.addChildren([
     adminDiagnoseRoute,
+    adminDiagnosticsRoute,
     adminTasksRoute,
     adminErrorLogsRoute,
-    adminGroupRoute,
+    adminSettingsRoute,
+    adminBatchEditRoute,
+    adminStatisticsRoute,
   ]),
 ]);
 

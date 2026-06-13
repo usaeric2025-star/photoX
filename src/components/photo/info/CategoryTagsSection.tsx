@@ -1,9 +1,9 @@
 import { useTaskExecutor, useTasks } from '@/hooks';
 import React, { useRef } from 'react';
 import { Grid, Pencil, Trash2 } from 'lucide-react';
-import { createPortal } from "react-dom";
+import { Modal } from "@/components/ui/Modal";
 import { showToast } from '@/lib/ui/toast';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/shared/Badge';
 import { Tag } from '@/types/photo';
 import { cn } from '@/lib/utils';
 import { useLongPress } from '@/hooks/core/useLongPress';
@@ -77,13 +77,9 @@ export function CategoryTagsSection({ categoryName, tags, isAdmin, appLang, text
         </div>
       </div>
 
-      {activeActionTag && createPortal(
-        <div
-          className="fixed inset-0 z-[var(--z-index-max)] bg-slate-950/40 flex items-center justify-center p-6 backdrop-blur-sm animate-in fade-in duration-200"
-          onClick={() => setActiveActionTag(null)}
-        >
+      <Modal open={!!activeActionTag} onClose={() => setActiveActionTag(null)} hidePadding={false}>
           <div
-            className="glass-morphism rounded-3xl p-8 w-full max-w-[280px] shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-200 cursor-default bg-white border border-slate-200"
+            className="w-full max-w-[280px] space-y-6 cursor-default"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center space-y-1">
@@ -91,7 +87,7 @@ export function CategoryTagsSection({ categoryName, tags, isAdmin, appLang, text
                 标签管理 / TAG
               </span>
               <div className="text-lg font-black text-slate-900">
-                #{getSafeText(activeActionTag.name, appLang)}
+                #{activeActionTag && getSafeText(activeActionTag.name, appLang)}
               </div>
             </div>
             <div className="space-y-3">
@@ -124,9 +120,7 @@ export function CategoryTagsSection({ categoryName, tags, isAdmin, appLang, text
               取消操作 / CANCEL
             </button>
           </div>
-        </div>,
-        document.body
-      )}
+      </Modal>
     </section>
   );
 }

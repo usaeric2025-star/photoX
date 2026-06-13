@@ -15,8 +15,7 @@ import { DataLoadingContainer } from '@/components/ui/DataLoadingContainer';
 import { BatchEditScreen } from '@/components/admin/BatchEditScreen';
 import { StatisticsScreen } from '@/components/admin/StatisticsScreen';
 import { SettingsPage } from '@/components/settings/SettingsPage';
-import { PhotoEditDrawer } from '@/components/admin/PhotoEditDrawer';
-import { GroupDetailPage } from '@/components/groups/GroupDetailPage';
+import { PhotoEditModal } from '@/components/admin/PhotoEditModal';
 import { useAIBatchAnalysis } from '@/hooks';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { usePhotoGallery } from '@/hooks/photo/usePhotoGallery';
@@ -52,9 +51,15 @@ export function AdminPageContent() {
       store.update({ activeScreen: 'tasks' });
     } else if (path === '/admin/error-logs') {
       store.update({ activeScreen: 'error-logs' });
-    } else if (path === '/admin/diagnose') {
+    } else if (path === '/admin/diagnose' || path === '/admin/diagnostics') {
       store.update({ activeScreen: 'diagnose' });
-    } else if (path === '/admin' && (['error-logs', 'tasks', 'diagnose'].includes(store.activeScreen))) {
+    } else if (path === '/admin/settings') {
+      store.update({ activeScreen: 'settings' });
+    } else if (path === '/admin/batch-edit') {
+      store.update({ activeScreen: 'batch' });
+    } else if (path === '/admin/statistics') {
+      store.update({ activeScreen: 'dashboard' });
+    } else if (path === '/admin' && (['error-logs', 'tasks', 'diagnose', 'settings', 'batch', 'dashboard'].includes(store.activeScreen))) {
       store.update({ activeScreen: 'gallery' });
     }
   }, [location.pathname, store.update]);
@@ -106,8 +111,12 @@ export function AdminPageContent() {
                 <AdminContainer />
               </motion.div>
             ) : currentScreen === 'dashboard' ? (
-              <ScreenWrapper key="admin-dashboard" onClose={() => store.update({ activeScreen: 'gallery' })}>
+              <ScreenWrapper key="admin-dashboard" onClose={() => navigate({ to: '/admin' })}>
                 <StatisticsScreen />
+              </ScreenWrapper>
+            ) : currentScreen === 'batch' ? (
+              <ScreenWrapper key="admin-batch" onClose={() => navigate({ to: '/admin' })}>
+                <BatchEditScreen />
               </ScreenWrapper>
             ) : ['manage', 'settings', 'structure', 'logs', 'tasks', 'error-logs', 'diagnose'].includes(currentScreen) ? (
               <motion.div 
@@ -116,9 +125,9 @@ export function AdminPageContent() {
                 animate={{ opacity: 1, scale: 1 }} 
                 exit={{ opacity: 0, scale: 0.98 }}
                 transition={{ duration: 0.2 }}
-                className="absolute inset-0 z-20 bg-slate-50"
+                className="h-full bg-slate-50"
               >
-                <SettingsPage onClose={() => store.update({ activeScreen: 'gallery' })} />
+                <SettingsPage onClose={() => navigate({ to: '/admin' })} />
               </motion.div>
             ) : null}
           </AnimatePresence>
@@ -131,21 +140,17 @@ export function AdminPageContent() {
             }}
           />
           
-            {(store.editPhotoId || store.newPhotoData) && <PhotoEditDrawer />}
+            {(store.editPhotoId || store.newPhotoData) && <PhotoEditModal />}
           </main>
         </div>
       </DataLoadingContainer>
-
-      <ErrorBoundary>
-        <GroupDetailPage />
-      </ErrorBoundary>
     </AdminAuthGate>
   );
 }
 
 function ScreenWrapper({ children, onClose }: { children: React.ReactNode, onClose: () => void }) {
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="absolute inset-0 z-10 bg-slate-50 flex flex-col">
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="h-full bg-slate-50 flex flex-col">
       <div className="flex justify-end p-4 shrink-0 bg-slate-50 border-b border-slate-100">
         <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-500 hover:text-slate-900"><X size={24} /></button>
       </div>

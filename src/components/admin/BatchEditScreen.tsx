@@ -66,7 +66,7 @@ export const BatchEditScreen = () => {
   } = useBatchEditSelection();
 
   return (
-    <div className="fixed inset-0 z-[var(--z-index-max)] bg-slate-50 flex flex-col pt-safe">
+    <div className="flex flex-col h-full w-full bg-slate-50 pt-safe">
       {/* Header */}
       <div className="px-4 py-3 border-b border-slate-200 
         bg-white flex items-center justify-between gap-3 shadow-sm">

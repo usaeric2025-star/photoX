@@ -4,7 +4,7 @@ import { ChevronLeft, X, Share2, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Photo } from '@/types';
 import { TranslationType } from '@/locales';
-import { useAdminMode, useGroupDetail, useGroupPhotos, useCategories, useUrlFilters } from '@/hooks';
+import { useAdminMode, useGroupDetail, useGroupPhotos, useCategories, useUrlFilters, useCopyToClipboard } from '@/hooks';
 import { translations } from '@/locales';
 import { getPhotoDisplayName } from '@/services/photo/utils';
 import { GroupDetailSkeleton } from './GroupDetailSkeleton';
@@ -14,6 +14,7 @@ import { CollapsibleDescription } from './CollapsibleDescription';
 import { GroupGridView } from './GroupGridView';
 import { GroupAdminShell } from './GroupAdminShell';
 import { GroupInfoPanel } from './GroupInfoPanel';
+import { Modal } from '../ui/Modal';
 
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { createTranslate } from '@/locales';
@@ -27,6 +28,7 @@ export interface GroupDetailPageProps {}
 export function GroupDetailPage({}: GroupDetailPageProps) {
   const navigate = useRouterSafe().navigate;
   const { filters, setPhotoId } = useUrlFilters();
+  const { copy } = useCopyToClipboard({ successMessage: "合组ID已复制" });
   const activeGroupId = filters.groupId;
   const initialPhotoId = filters.photoId;
   
@@ -43,6 +45,7 @@ export function GroupDetailPage({}: GroupDetailPageProps) {
 
   const {
     data: infinitePhotosData,
+    photos: activeGroupPhotos,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -66,11 +69,6 @@ export function GroupDetailPage({}: GroupDetailPageProps) {
   const totalGroupPhotosCount = (() => {
     if (!infinitePhotosData?.pages || infinitePhotosData.pages.length === 0) return undefined;
     return (infinitePhotosData.pages[0] as { total: number }).total;
-  })();
-
-  const activeGroupPhotos = (() => {
-    if (!activeGroupId) return [];
-    return infinitePhotosData?.pages.flatMap((page: any) => page.photos) || [];
   })();
 
   const initializedRef = useRef(false);
@@ -125,60 +123,63 @@ export function GroupDetailPage({}: GroupDetailPageProps) {
     return <GroupAdminShell />;
   }
 
-  const isOpen = activeGroupId !== null;
-
   const handleClose = () => {
-    navigate({ to: isManagement ? '/admin' : '/', search: (prev: any) => ({ ...prev, groupId: undefined, photoId: undefined }), resetScroll: false });
+    if (!document.startViewTransition) {
+      if (isManagement) {
+        navigate({ to: '/admin', search: {}, resetScroll: false });
+      } else {
+        navigate({ to: '/', search: {}, resetScroll: false });
+      }
+      return;
+    }
+    document.startViewTransition(() => {
+      if (isManagement) {
+        navigate({ to: '/admin', search: {}, resetScroll: false });
+      } else {
+        navigate({ to: '/', search: {}, resetScroll: false });
+      }
+    });
   };
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.98 }}
-          transition={{ duration: 0.1, ease: "easeOut" }}
-          className="fixed inset-0 z-overlay bg-white overflow-hidden flex flex-col"
-          onClick={(e) => { if (e.target === e.currentTarget) { handleClose(); } }}
-        >
-                   {/* Top Header */}
-                   <GroupHeader 
-                      displayName={groupDisplayName || (activeGroupPhotos[0] ? getPhotoDisplayName(activeGroupPhotos[0], categories, lang, t) : '') || `GROUP ${activeGroupId.slice(-4)}`}
-                      activeGroupId={activeGroupId}
-                      isGroupDataLoading={isGroupDataLoading}
-                      onClose={handleClose}
-                      appLang={lang}
-                   />
-                
-                {/* [GROUP-STALE-SIGNAL] */}
-                <div className={`flex-1 min-h-0 flex flex-col transition-opacity duration-300 overflow-y-auto ${isStale ? "opacity-60" : "opacity-100"}`}>
-                  
-                  {/* Public Description Rendering */}
-                  <GroupInfoPanel groupData={groupData || undefined} lang={lang} />
+    <div className="flex flex-col h-[100dvh] bg-white overflow-hidden w-full relative">
+       {/* Top Header */}
+       <GroupHeader 
+          displayName={groupDisplayName || (activeGroupPhotos[0] ? getPhotoDisplayName(activeGroupPhotos[0], categories, lang, t) : '') || `GROUP ${activeGroupId.slice(-4)}`}
+          activeGroupId={activeGroupId}
+          isGroupDataLoading={isGroupDataLoading}
+          onClose={handleClose}
+          onCopyId={(id) => copy(id)}
+          appLang={lang}
+       />
+    
+    {/* [GROUP-STALE-SIGNAL] */}
+    <div className={`flex-1 min-h-0 flex flex-col transition-opacity duration-300 overflow-y-auto ${isStale ? "opacity-60" : "opacity-100"}`}>
+      
+      {/* Public Description Rendering */}
+      <GroupInfoPanel groupData={groupData || undefined} lang={lang} />
 
-                  <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="animate-spin text-slate-400" /></div>}>
-                    <GroupGridView 
-                        key={activeGroupId}
-                        onEndReached={() => {
-                        if (hasNextPage && !isFetchingNextPage) {
-                            fetchNextPage();
-                        }
-                        }}
-                        virtualGridRef={virtualGridRef}
-                        photos={activeGroupPhotos} 
-                        isLoading={isLoading}
-                        isFetchingNextPage={isFetchingNextPage}
-                        hasNextPage={hasNextPage}
-                        highlightId={currentHighlightId}
-                        onPhotoClick={(photo) => setPhotoId(photo.id)} 
-                        getPhotoProps={(photo) => ({ showCoverBadge: true })}
-                    />
-                  </Suspense>
-                </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+      <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="animate-spin text-slate-400" /></div>}>
+        <GroupGridView 
+            key={activeGroupId}
+            onEndReached={() => {
+            if (hasNextPage && !isFetchingNextPage) {
+                fetchNextPage();
+            }
+            }}
+            virtualGridRef={virtualGridRef}
+            photos={activeGroupPhotos} 
+            groupData={groupData}
+            isLoading={isLoading}
+            isFetchingNextPage={isFetchingNextPage}
+            hasNextPage={hasNextPage}
+            highlightId={currentHighlightId}
+            onPhotoClick={(photo) => setPhotoId(photo.id)} 
+            getPhotoProps={(photo) => ({ showCoverBadge: true })}
+        />
+      </Suspense>
+    </div>
+    </div>
   );
 };
 

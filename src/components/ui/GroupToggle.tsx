@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/shared/Button';
 import { Layers, Grid } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

@@ -1,13 +1,11 @@
-import React, { useState } from 'react';
-import { Sheet, SheetContent } from "../ui/sheet";
+import React from 'react';
+import { Modal } from "../ui/Modal";
 import { ProductGroup, Dimension } from '../../types';
-import { AlertDialogProps, PromptDialogProps } from '@/store/useUIStore';
 import { GroupSettingsHeader } from './GroupSettingsSheet/GroupSettingsHeader';
 import { GroupSettingsContent } from './GroupSettingsSheet/GroupSettingsContent';
-
 import { useAdminMode } from '../../hooks';
 
-interface GroupSettingsSheetProps {
+interface GroupSettingsModalProps {
   showGroupSettings: boolean;
   setShowGroupSettings: (show: boolean) => void;
   activeGroupId: string | null;
@@ -17,12 +15,10 @@ interface GroupSettingsSheetProps {
   update: (updates: any) => void;
   handleUpdateGroupData: (updates: Partial<ProductGroup>) => Promise<void>;
   handleBatchUpdateDimensions: (newDims: Dimension[]) => Promise<void>;
-  
-  
   t: any;
 }
 
-export function GroupSettingsSheet(props: GroupSettingsSheetProps) {
+export function GroupSettingsModal(props: GroupSettingsModalProps) {
   const isAdminMode = useAdminMode();
 
   const childProps = {
@@ -38,11 +34,11 @@ export function GroupSettingsSheet(props: GroupSettingsSheetProps) {
   };
 
   return (
-    <Sheet open={props.showGroupSettings} onOpenChange={props.setShowGroupSettings}>
-      <SheetContent side="right" showCloseButton={false} className="w-full sm:max-w-[400px] p-0 border-l border-slate-100 bg-white">
+    <Modal open={props.showGroupSettings} onClose={() => props.setShowGroupSettings(false)} size="lg" hidePadding>
+      <div className="flex flex-col bg-white overflow-hidden max-h-[85vh] w-full max-w-[500px] h-full sm:h-[800px]">
         <GroupSettingsHeader {...headerProps} />
         <GroupSettingsContent {...childProps} />
-      </SheetContent>
-    </Sheet>
+      </div>
+    </Modal>
   );
 };

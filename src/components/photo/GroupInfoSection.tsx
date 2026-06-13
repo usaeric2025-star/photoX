@@ -1,7 +1,7 @@
 import React from 'react';
 import { ProductGroup } from '@/types/photo';
 import { CopyableId } from '@/components/ui/CopyableId';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/shared/Badge';
 import { Grid, Layers, Palette, Package } from 'lucide-react';
 import { DimensionsSection } from './info/DimensionsSection';
 

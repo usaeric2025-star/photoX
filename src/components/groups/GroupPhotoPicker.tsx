@@ -2,13 +2,7 @@ import { showToast } from '@/lib/ui/toast';
 import { useUIStore } from '@/store/useUIStore';
 import React, { useState, useCallback, useRef } from "react";
 import { X, Check, Search, Plus, Upload, Sparkles } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "../ui/dialog";
+import { Modal } from '@/components/ui/Modal';
 import { Photo } from "../../types";
 import { usePhotos, useTaskExecutor, useTasks, useInvalidatePhotos } from "@/hooks";
 import { PAGINATION } from "../../constants/config";
@@ -151,19 +145,19 @@ export function GroupPhotoPicker({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0 overflow-hidden bg-white rounded-2xl border-none shadow-2xl">
-        <DialogHeader className="px-6 py-4 border-b border-slate-100 flex flex-row items-center justify-between space-y-0">
-          <DialogTitle className="text-xl font-black text-slate-800 tracking-tight">
+    <Modal open={isOpen} onClose={onClose} size="screen" hidePadding>
+      <div className="flex flex-col h-full w-full bg-slate-50 relative overflow-hidden text-slate-900 border border-slate-200 shadow-2xl">
+        <div className="px-6 py-4 border-b border-slate-200 bg-white flex flex-row items-center justify-between">
+          <h2 className="text-xl font-black text-slate-800 tracking-tight">
             添加照片到群组 / ADD PHOTOS
-          </DialogTitle>
+          </h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-slate-100 rounded-full transition-colors"
           >
             <X size={20} className="text-slate-400" />
           </button>
-        </DialogHeader>
+        </div>
 
         <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center gap-4">
           <div className="relative flex-1">
@@ -247,7 +241,7 @@ export function GroupPhotoPicker({
           )}
         </div>
 
-        <DialogFooter className="px-6 py-4 border-t border-slate-100 bg-white flex items-center justify-between sm:justify-between">
+        <div className="px-6 py-4 border-t border-slate-100 bg-white flex items-center justify-between sm:justify-between">
           <div className="text-sm font-bold text-slate-500">
             {selectedIds.length > 0
               ? `已选择 ${selectedIds.length} 张现有照片`
@@ -274,8 +268,8 @@ export function GroupPhotoPicker({
               确认添加库中照片 / CONFIRM SELECTION
             </button>
           </div>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </div>
+    </Modal>
   );
 }

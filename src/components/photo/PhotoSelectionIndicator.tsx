@@ -8,7 +8,7 @@ interface PhotoSelectionIndicatorProps {
 
 export function PhotoSelectionIndicator({ isSelected }: PhotoSelectionIndicatorProps) {
   return (
-    <div className="absolute inset-0 w-full h-full transition-all duration-300 flex items-center justify-center p-3 sm:p-4 pointer-events-none z-10 bg-blue-500/10">
+    <div className="absolute inset-0 w-full h-full transition-all duration-300 flex items-center justify-center p-3 sm:p-4 pointer-events-none bg-blue-500/10">
       <div className={cn(
         "w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 transition-all flex items-center justify-center pointer-events-none shadow-sm",
         isSelected 

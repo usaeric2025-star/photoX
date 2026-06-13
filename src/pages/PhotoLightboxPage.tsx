@@ -1,6 +1,5 @@
 import React from "react";
 import { Info, Tag as TagIcon, Grid } from "lucide-react";
-import { createPortal } from "react-dom";
 import { LightboxCore } from "@/components/PhotoLightbox/LightboxCore";
 import { useLightbox } from "@/hooks";
 import { PhotoInfoPanel } from "@/components/photo/PhotoInfoPanel";
@@ -29,6 +28,38 @@ export const PhotoLightboxPage = () => {
     isOpen, close, photos, currentIndex, setPhotoId,
     mode, data, showEdit, showDelete, showAi, isLoading, groupId, totalCount
   } = useLightbox();
+
+  const pendingPhotoIdRef = React.useRef<string | null>(null);
+  const debounceTimerRef = React.useRef<any>(null);
+
+  const setPhotoIdDebounced = React.useCallback((id: string) => {
+    pendingPhotoIdRef.current = id;
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      if (pendingPhotoIdRef.current) {
+        setPhotoId(pendingPhotoIdRef.current);
+        pendingPhotoIdRef.current = null;
+      }
+    }, 200);
+  }, [setPhotoId]);
+
+  const closeWithCleanup = React.useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    pendingPhotoIdRef.current = null;
+    close();
+  }, [close]);
+
+  React.useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
   
   const updateUIStore = useUIStore((s) => s.update);
   const appLang = useUIStore((s) => s.appLang);
@@ -57,11 +88,7 @@ export const PhotoLightboxPage = () => {
   // [OPTIMIZATION] Directly show the frame if we have photos from list cache
   // This allows the lightbox to show the cached thumbnail while the detail loads
   if (photos.length === 0 && isLoading) {
-    return (
-      <div className="fixed inset-0 bg-black/95 z-[var(--z-loading)] flex flex-col items-center justify-center animate-in fade-in duration-300">
-        <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin mb-4" />
-      </div>
-    );
+    return <LightboxLoadingFallback />;
   }
   
   // If we have a photoId but no photos (e.g. invalid ID or deleted)
@@ -91,13 +118,13 @@ export const PhotoLightboxPage = () => {
     <>
       <LightboxCore
         open={isOpen}
-        onClose={close}
+        onClose={closeWithCleanup}
         photos={photos}
         totalCount={totalCount}
         currentIndex={currentIndex}
         onIndexChange={(idx) => {
           const photo = photos[idx];
-          if (photo) setPhotoId(photo.id);
+          if (photo) setPhotoIdDebounced(photo.id);
         }}
         mode={mode as 'single' | 'group'}
         showEdit={showEdit}
@@ -190,3 +217,29 @@ export const PhotoLightboxPage = () => {
 };
 
 export default PhotoLightboxPage;
+
+const LightboxLoadingFallback = () => {
+  const ref = React.useRef<HTMLDialogElement>(null);
+
+  React.useEffect(() => {
+    if (ref.current && !ref.current.open) {
+      ref.current.showModal();
+    }
+    return () => {
+      if (ref.current && ref.current.open) {
+        ref.current.close();
+      }
+    };
+  }, []);
+
+  return (
+    <dialog
+      ref={ref}
+      className="m-0 p-0 border-0 bg-transparent flex h-full max-h-none w-full max-w-none items-center justify-center outline-none backdrop:bg-black/95 backdrop:backdrop-blur-sm"
+    >
+      <div className="flex flex-col items-center justify-center animate-in fade-in duration-300">
+        <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin mb-4" />
+      </div>
+    </dialog>
+  );
+};

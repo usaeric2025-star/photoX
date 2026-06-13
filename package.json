@@ -33,6 +33,7 @@
     "@tanstack/react-query": "^5.101.0",
     "@tanstack/react-query-persist-client": "^5.101.0",
     "@tanstack/react-router": "^1.170.15",
+    "@tanstack/react-table": "^8.21.3",
     "@vercel/analytics": "^2.0.1",
     "arktype": "^2.2.0",
     "class-variance-authority": "^0.7.1",

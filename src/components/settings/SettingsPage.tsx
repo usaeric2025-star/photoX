@@ -129,7 +129,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   }, [activeScreen]);
 
   return (
-    <div className="fixed inset-0 z-[var(--z-index-max)] bg-brand-bg flex flex-col pt-safe">
+    <div className="flex flex-col h-full w-full bg-brand-bg pt-safe relative">
         <SettingsHeader 
           appLang={appLang}
           hasChanges={hasChanges}

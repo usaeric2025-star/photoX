@@ -1,6 +1,6 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import React, { useState, useRef, useDeferredValue } from "react";
-import { createPortal } from "react-dom";
+import { Modal } from "@/components/ui/Modal";
 import { Pencil, Trash2, Heart, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDisclosure } from '@/hooks/core/useDisclosure';
@@ -122,7 +122,7 @@ export function TagEditor({
           </button>
         </div>
       </div>
-      <div className="flex flex-wrap gap-2 pb-1 max-h-48 overflow-y-auto content-start">
+      <div className="flex flex-wrap gap-2 pb-1 max-h-[96px] overflow-y-auto content-start">
         {filteredTags.slice(0, 150).map((tag: Tag) => {
           const isSelected = selectedTagIds.map(String).includes(String(tag.id));
           const isHot = hotTagsSet.has(String(tag.id));
@@ -152,17 +152,9 @@ export function TagEditor({
         )}
       </div>
 
-      {activeActionTag && createPortal(
-        <div
-          className="fixed inset-0 z-[var(--z-index-max)] bg-slate-950/40 flex items-center justify-center p-6 backdrop-blur-sm animate-in fade-in duration-200"
-          onPointerDown={(e) => {
-            // Prevent closure on the same click/touch that opened it
-            if (Date.now() - portalOpenedAt.current < 400) return;
-            if (e.target === e.currentTarget) setActiveActionTag(null);
-          }}
-        >
+      <Modal open={!!activeActionTag} onClose={() => setActiveActionTag(null)} hidePadding={false}>
           <div
-            className="glass-morphism rounded-3xl p-8 w-full max-w-[280px] shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-200 bg-white border border-slate-200"
+            className="w-full max-w-[280px] space-y-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center space-y-1">
@@ -170,7 +162,7 @@ export function TagEditor({
                 标签管理 / TAG
               </span>
               <div className="text-lg font-black text-slate-900">
-                #{activeActionTag.name}
+                #{activeActionTag?.name}
               </div>
             </div>
             <div className="space-y-3">
@@ -178,7 +170,7 @@ export function TagEditor({
                 type="button"
                 className="w-full flex items-center justify-center gap-3 text-amber-600 bg-amber-50/50 backdrop-blur-sm border border-amber-100/50 font-bold py-4 rounded-2xl hover:bg-amber-100 transition-all cursor-pointer shadow-sm shadow-amber-500/5"
                 onClick={() => {
-                  togglePin(String(activeActionTag.id));
+                  if (activeActionTag) togglePin(String(activeActionTag.id));
                   setActiveActionTag(null);
                 }}
               >
@@ -186,12 +178,12 @@ export function TagEditor({
                   size={18}
                   strokeWidth={2.5}
                   className={
-                    pinnedIds.includes(String(activeActionTag.id))
+                    activeActionTag && pinnedIds.includes(String(activeActionTag.id))
                       ? "fill-amber-600"
                       : ""
                   }
                 />
-                {pinnedIds.includes(String(activeActionTag.id))
+                {activeActionTag && pinnedIds.includes(String(activeActionTag.id))
                   ? "取消置顶 / Unpin"
                   : "设为置顶 / Pin as Hot"}
               </button>
@@ -199,7 +191,7 @@ export function TagEditor({
                 type="button"
                 className="w-full flex items-center justify-center gap-3 text-blue-600 bg-blue-50/50 backdrop-blur-sm border border-blue-100/50 font-bold py-4 rounded-2xl hover:bg-blue-100 transition-all cursor-pointer shadow-sm shadow-blue-500/5"
                 onClick={() => {
-                  if (onRenameTagRequest) {
+                  if (onRenameTagRequest && activeActionTag) {
                     onRenameTagRequest(activeActionTag);
                   }
                   setActiveActionTag(null);
@@ -226,9 +218,7 @@ export function TagEditor({
               取消操作 / CANCEL
             </button>
           </div>
-        </div>,
-        document.body
-      )}
+      </Modal>
 
       {activeActionTag && (
         <ConfirmDialog
@@ -279,7 +269,7 @@ const TagButton = ({ tag, isSelected, isHot, isPinned, isDisabled, onToggle, onL
         className={cn(
           "px-3 py-2 rounded-lg text-[11px] font-bold transition-all border select-none flex items-center gap-1.5 w-auto shadow-sm min-h-[44px] active:scale-95",
           isSelected
-            ? "bg-blue-600 text-white border-blue-600 z-10"
+            ? "bg-blue-600 text-white border-blue-600"
             : "bg-white text-slate-700 border-slate-200 hover:border-blue-300 active:bg-slate-50",
           isHot &&
             !isSelected &&

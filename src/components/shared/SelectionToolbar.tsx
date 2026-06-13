@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { createPortal } from 'react-dom';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { Sparkles, FolderPlus, Edit, EyeOff, Trash2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -115,31 +114,29 @@ export function SelectionToolbar({
     }
   };
 
-  return createPortal(
-    <div className="fixed bottom-6 inset-x-0 z-header flex justify-center pointer-events-none px-4">
+  return (
+    <div className="fixed bottom-6 inset-x-0 z-[var(--z-sticky)] flex justify-center pointer-events-none px-4">
       <div 
         className={cn(
-          "pointer-events-auto bg-slate-900/95 border border-slate-800 backdrop-blur rounded-full shadow-2xl flex items-center gap-3 transition-all duration-300 animate-fade-in",
+          "pointer-events-auto bg-slate-900/95 border border-slate-800 backdrop-blur rounded-full shadow-2xl flex items-center gap-3 transition-all duration-300 animate-in fade-in slide-in-from-bottom-5",
           isMinimized ? "px-2 py-2" : "px-5 py-2.5"
         )}
       >
-      <div 
-        onClick={() => setIsMinimized(!isMinimized)}
-        className={cn(
-          "flex items-center justify-center rounded-full bg-blue-600 text-white font-bold transition-all cursor-pointer hover:bg-blue-500 active:scale-95 select-none",
-          isMinimized ? "w-10 h-10 text-sm" : "w-7 h-7 text-xs ring-4 ring-blue-600/15"
-        )}
-        title={isMinimized ? "点击展开工具栏" : `已选择 ${count} 张照片 (点击收起)`}
-      >
-        {count}
-      </div>
-
-      {!isMinimized && (
         <div 
-          className="flex items-center gap-3 animate-fade-in"
+          onClick={() => setIsMinimized(!isMinimized)}
+          className={cn(
+            "flex items-center justify-center rounded-full bg-blue-600 text-white font-bold transition-all cursor-pointer hover:bg-blue-500 active:scale-95 select-none",
+            isMinimized ? "w-10 h-10 text-sm" : "w-7 h-7 text-xs ring-4 ring-blue-600/15"
+          )}
+          title={isMinimized ? "点击展开工具栏" : `已选择 ${count} 张照片 (点击收起)`}
         >
-          <div className="w-[1px] h-6 bg-slate-800" />
-          <div className="flex items-center gap-1">
+          {count}
+        </div>
+
+        {!isMinimized && (
+          <div className="flex items-center gap-3 animate-in fade-in slide-in-from-left-2">
+            <div className="w-[1px] h-6 bg-slate-800" />
+            <div className="flex items-center gap-1">
               <button
                 onClick={handleAI}
                 className="w-11 h-11 sm:w-9 sm:h-9 flex items-center justify-center rounded-full text-purple-400 hover:text-white hover:bg-purple-600/20 active:scale-95 transition-all outline-none"
@@ -190,25 +187,24 @@ export function SelectionToolbar({
           </div>
         )}
 
-      <div className="w-[1px] h-6 bg-slate-800" />
+        <div className="w-[1px] h-6 bg-slate-800" />
 
-      <button
-        onClick={handleClear}
-        className="w-8 h-8 sm:w-6 sm:h-6 flex items-center justify-center rounded-full text-slate-400 hover:text-white hover:bg-slate-800 active:scale-90 transition-all outline-none"
-        title="关闭多选"
-      >
-        <X size={15} />
-      </button>
+        <button
+          onClick={handleClear}
+          className="w-8 h-8 sm:w-6 sm:h-6 flex items-center justify-center rounded-full text-slate-400 hover:text-white hover:bg-slate-800 active:scale-90 transition-all outline-none"
+          title="关闭多选"
+        >
+          <X size={15} />
+        </button>
 
-      <ConfirmDialog
-        open={isGroupAlertOpen}
-        onOpenChange={groupAlert.toggle}
-        title="无法合组"
-        description="请至少选择两张照片才能进行合组。"
-        onConfirm={() => {}}
-      />
+        <ConfirmDialog
+          open={isGroupAlertOpen}
+          onOpenChange={groupAlert.toggle}
+          title="无法合组"
+          description="请至少选择两张照片才能进行合组。"
+          onConfirm={() => {}}
+        />
       </div>
-    </div>,
-    document.body
+    </div>
   );
 }

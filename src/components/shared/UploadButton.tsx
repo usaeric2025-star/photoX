@@ -20,7 +20,7 @@ export function UploadButton({
     <button
       onClick={onAdd}
       type="button"
-      className={`${buttonStyles.button} bg-blue-600 fixed bottom-6 right-6 z-[40] rounded-full shadow-lg hover:shadow-xl transition-all duration-100 active:scale-95 animate-scale-in disabled:opacity-50`}
+      className={`${buttonStyles.button} bg-blue-600 fixed bottom-6 right-6 z-[var(--z-sticky)] rounded-full shadow-lg hover:shadow-xl transition-all duration-100 active:scale-95 animate-scale-in disabled:opacity-50`}
       title="Add Photo"
     >
       <Plus size={28} />

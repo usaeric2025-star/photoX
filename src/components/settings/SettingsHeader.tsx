@@ -10,7 +10,7 @@ interface SettingsHeaderProps {
 
 export function SettingsHeader({ appLang, hasChanges, onSave, onClose }: SettingsHeaderProps) {
   return (
-    <div className="px-6 py-4 flex items-center justify-between bg-white border-b border-slate-200 sticky top-0 z-[var(--z-sticky)] shrink-0 shadow-sm">
+    <div className="px-6 py-4 flex items-center justify-between bg-white border-b border-slate-200 shrink-0 shadow-sm">
       <div className="flex items-center gap-3">
         <div className="w-8 h-8 rounded-xl bg-slate-800 flex items-center justify-center shadow-sm text-white shrink-0">
           <Settings2 size={18} className="stroke-[2.5]" />

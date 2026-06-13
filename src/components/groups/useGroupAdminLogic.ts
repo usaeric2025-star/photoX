@@ -54,10 +54,8 @@ export const useGroupAdminLogic = () => {
   const virtualGridRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { data: dbGroupPhotosPages, isLoading: isGroupPhotosLoading } =
+  const { data: dbGroupPhotosPages, isLoading: isGroupPhotosLoading, photos: dbGroupPhotos } =
     useGroupPhotos(activeGroupId, isAdminMode);
-  
-  const dbGroupPhotos = dbGroupPhotosPages?.pages.flatMap((p: any) => p.photos) ?? [];
 
   const {
     groupData,

@@ -21,6 +21,12 @@ export const adminDiagnoseRoute = createRoute({
   component: AdminPage,
 });
 
+export const adminDiagnosticsRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/diagnostics',
+  component: AdminPage,
+});
+
 export const adminTasksRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: '/tasks',
@@ -33,9 +39,27 @@ export const adminErrorLogsRoute = createRoute({
   component: AdminPage,
 });
 
-export const adminGroupRoute = createRoute({
+export const adminSettingsRoute = createRoute({
   getParentRoute: () => adminRoute,
-  path: '/group/$groupId',
+  path: '/settings',
+  component: AdminPage,
+});
+
+export const adminBatchEditRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/batch-edit',
+  component: AdminPage,
+});
+
+export const adminStatisticsRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/statistics',
+  component: AdminPage,
+});
+
+export const adminGroupRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin/group/$groupId',
   validateSearch: (search: Record<string, unknown>): GallerySearchParams => {
     return {
       photoId: (search.photoId as string) || undefined,
@@ -47,5 +71,5 @@ export const adminGroupRoute = createRoute({
       prefetchGroupDetail(context.queryClient, groupId, true);
     }
   },
-  component: AdminPage,
+  component: lazy(() => import('@/components/groups/GroupDetailPage').then(m => ({ default: m.GroupDetailPage }))),
 });

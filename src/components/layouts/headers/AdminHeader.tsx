@@ -2,14 +2,8 @@ import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React from 'react';
 import { LayoutDashboard, Camera, Menu, User as UserIcon, LogOut, Settings, LayoutGrid, MonitorPlay, CheckSquare, Sparkles } from 'lucide-react';
 import { useAuth, useUIStore, useSettings, usePhotoCount, useAdminBatchActions, usePermission } from '@/hooks';
+import { Dropdown, DropdownItem, DropdownSeparator } from '../../shared/Dropdown';
 import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { translations } from "@/locales";
 
 
@@ -141,74 +135,69 @@ export function AdminHeader({}: AdminHeaderProps) {
           </button>
   
           {/* 4. 菜单 (语言、登录、退出) */}
-          <DropdownMenu>
-            <DropdownMenuTrigger className="h-9 w-9 sm:h-10 sm:w-10 flex items-center justify-center text-slate-600 hover:bg-slate-200 rounded-full transition-all cursor-pointer shrink-0 outline-none border border-slate-200 bg-white">
-              <Menu size={18} className="sm:size-5" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-            align="end"
-            className="w-64 mt-2 rounded-2xl p-2 bg-white shadow-2xl border border-slate-200 text-slate-700"
+          <Dropdown
+            align="right"
+            trigger={
+              <div className="h-9 w-9 sm:h-10 sm:w-10 flex items-center justify-center text-slate-600 hover:bg-slate-200 rounded-full transition-all cursor-pointer shrink-0 border border-slate-200 bg-white">
+                <Menu size={18} className="sm:size-5" />
+              </div>
+            }
           >
              {user ? (
-                <>
-                  <DropdownMenuLabel className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-white overflow-hidden text-[8px]">
-                      {user.photo_url ? (
-                        <img src={user.photo_url} referrerPolicy="no-referrer" />
-                      ) : (
-                        <UserIcon size={10} />
-                      )}
-                    </div>
-                    {user.email?.split("@")[0]}
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator className="mx-2 my-1 bg-slate-100" />
-                </>
+                <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 select-none">
+                  <div className="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-white overflow-hidden text-[8px]">
+                    {user.photo_url ? (
+                      <img src={user.photo_url} referrerPolicy="no-referrer" alt="" />
+                    ) : (
+                      <UserIcon size={10} />
+                    )}
+                  </div>
+                  {user.email?.split("@")[0]}
+                </div>
              ) : (
-                <DropdownMenuLabel className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest select-none">
                   {t.guestLabel}
-                </DropdownMenuLabel>
+                </div>
              )}
+             
+             <DropdownSeparator />
 
-            <div className="px-2 py-1.5 flex flex-col gap-1.5">
-              <span className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.systemLabel}</span>
+            <div className="px-2 py-1.5 flex flex-col gap-1">
+              <span className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 select-none">{t.systemLabel}</span>
               {user && (
                 <>
-                  <DropdownMenuItem
-                    onClick={() => {
-                        useUIStore.getState().update({ activeScreen: 'settings' });
-                    }}
-                    className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-slate-50 focus:bg-slate-50 cursor-pointer transition-colors border-none"
+                  <DropdownItem
+                    icon={<Settings size={16} />}
+                    onClick={() => useUIStore.getState().update({ activeScreen: 'settings' })}
                   >
-                    <Settings size={16} />
-                    <span className="text-sm font-semibold">{t.systemSettings}</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
+                    {t.systemSettings}
+                  </DropdownItem>
+                  <DropdownItem
+                    icon={<LayoutGrid size={16} />}
                     onClick={() => useUIStore.getState().update({ activeScreen: 'tasks' })}
-                    className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-slate-50 focus:bg-slate-50 cursor-pointer transition-colors border-none"
                   >
-                    <LayoutGrid size={16} />
-                    <span className="text-sm font-semibold">{t.taskCenter}</span>
-                  </DropdownMenuItem>
+                    {t.taskCenter}
+                  </DropdownItem>
                 </>
               )}
-              <LanguageSwitcher mode="segmented" />
+              <div className="mt-1">
+                <LanguageSwitcher mode="segmented" />
+              </div>
             </div>
-
-            <DropdownMenuSeparator className="mx-2 my-1 bg-slate-100" />
 
             {user && (
               <>
-                <DropdownMenuItem
+                <DropdownSeparator />
+                <DropdownItem
+                  icon={<LogOut size={16} />}
+                  danger
                   onClick={() => logout()}
-                  className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-red-600 hover:bg-red-50 focus:bg-red-50 cursor-pointer transition-colors mt-1 border-none"
                 >
-                  <LogOut size={16} />
-                  <span className="text-sm font-semibold">{t.logoutAccount}</span>
-                </DropdownMenuItem>
+                  {t.logoutAccount}
+                </DropdownItem>
               </>
             )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+          </Dropdown>
       </div>
     </header>
   );

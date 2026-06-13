@@ -16,9 +16,10 @@ export function PinButton({ photoId, isPinned }: { photoId: string; isPinned: bo
     <button 
       onClick={handleClick}
       disabled={isPending}
-      className={`absolute top-2 right-2 bg-black/50 p-1.5 rounded-full text-white z-20 hover:scale-110 active:scale-95 transition-transform disabled:opacity-50 ${isPinned ? 'text-red-500' : ''}`}
+      className={`absolute top-3 right-3 bg-slate-950/40 backdrop-blur-md border border-white/10 p-1.5 sm:p-2 rounded-full text-white hover:scale-110 md:hover:bg-slate-950/65 active:scale-95 transition-all duration-250 disabled:opacity-50 ${isPinned ? 'text-red-500 hover:text-red-400' : ''}`}
     >
-      <Heart size={14} className={isPinned ? 'fill-current' : ''} />
+      <Heart size={14} className={isPinned ? 'fill-current stroke-none' : 'stroke-[2.5]'} />
     </button>
   );
 }
+

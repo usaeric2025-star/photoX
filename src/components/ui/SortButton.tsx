@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/shared/Button';
 import { ArrowUpDown } from 'lucide-react';
 
 interface SortButtonProps {
@@ -9,7 +9,7 @@ interface SortButtonProps {
 
 export const SortButton = ({ onClick, label = "排序", selected }: SortButtonProps) => (
   <Button 
-    variant={selected ? "default" : "outline"} 
+    variant={selected ? "primary" : "outline"} 
     size="sm" 
     onClick={onClick} 
     className="h-8 gap-1.5 active:scale-95 transition-transform duration-75"

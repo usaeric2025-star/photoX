@@ -75,7 +75,7 @@ export const VirtualPhotoGrid = ({
 
   if (isFetching && photos.length === 0) {
     return (
-      <div className="absolute inset-0 z-10 bg-brand-bg overflow-y-auto">
+      <div className="h-full w-full bg-brand-bg overflow-y-auto">
         <PhotoGridSkeleton columns={columns} />
       </div>
     );

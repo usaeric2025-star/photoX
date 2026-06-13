@@ -3,9 +3,9 @@ import { RefreshCw, CheckCircle2, AlertTriangle, History, Zap, Clock, PackageSea
 import { motion, AnimatePresence } from 'motion/react';
 import { useGlobalTasks } from '@/hooks/admin/useGlobalTasks';
 import { UnifiedTask } from '@/types';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/shared/Button';
+import { Badge } from '@/components/shared/Badge';
+import { Progress } from '@/components/shared/Progress';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { formatters } from '@/utils/formatters';
 import { BarChart3 } from 'lucide-react';

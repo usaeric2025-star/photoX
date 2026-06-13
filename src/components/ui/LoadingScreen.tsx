@@ -1,9 +1,10 @@
-import React from 'react';
-import { createPortal } from 'react-dom';
+import React, { useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 
 export const LoadingScreen = () => {
-  React.useEffect(() => {
+  const ref = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
     const skeleton = document.getElementById('app-startup-skeleton');
     if (skeleton) {
       skeleton.style.opacity = '0';
@@ -13,13 +14,22 @@ export const LoadingScreen = () => {
     }
   }, []);
 
-  const content = (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 flex items-center justify-center bg-white/90 backdrop-blur-sm z-[var(--z-index-max)]"
+  useEffect(() => {
+    if (ref.current && !ref.current.open) {
+      ref.current.showModal();
+    }
+    return () => {
+      if (ref.current && ref.current.open) {
+        ref.current.close();
+      }
+    };
+  }, []);
+
+  return (
+    <dialog
+      ref={ref}
       id="full-page-loading"
+      className="m-0 p-0 border-0 bg-transparent flex h-full max-h-none w-full max-w-none items-center justify-center outline-none backdrop:bg-white/90 backdrop:backdrop-blur-sm"
     >
       <motion.div
         animate={{ 
@@ -33,12 +43,6 @@ export const LoadingScreen = () => {
         <span className="text-amber-500">O</span>
         X
       </motion.div>
-    </motion.div>
+    </dialog>
   );
-
-  if (typeof document !== 'undefined' && document.body) {
-    return createPortal(content, document.body);
-  }
-
-  return content;
 };

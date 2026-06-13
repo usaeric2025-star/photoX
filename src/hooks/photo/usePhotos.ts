@@ -34,17 +34,20 @@ const flattenPhotos = (data: InfiniteData<any>) => {
  * Hook for infinite photo lists (main grid).
  */
 export const usePhotos = createInfiniteQuery<{photos: Photo[], nextPage?: number}, PhotoFilters, any>({
-  queryKey: (filters) => photoKeys.infinite({
-    category_id: filters.category_id ?? null,
-    tag_id: filters.tag_id ?? null,
-    searchQuery: filters.searchQuery ?? null,
-    sortOrder: filters.sortOrder ?? null,
-    isAdminMode: filters.isAdminMode ?? false,
-    onlyUngrouped: filters.onlyUngrouped ?? false,
-    manufacturer_id: filters.manufacturer_id ?? null,
-    is_hidden: filters.is_hidden ?? undefined,
-    limit: filters.limit ?? PHOTO_QUERY_CONFIG.limit
-  }),
+  queryKey: (filters) => {
+    const q = (filters.searchQuery && filters.searchQuery.trim()) ? filters.searchQuery.trim() : null;
+    return photoKeys.infinite({
+      category_id: filters.category_id ?? null,
+      tag_id: filters.tag_id ?? null,
+      searchQuery: q,
+      sortOrder: filters.sortOrder ?? null,
+      isAdminMode: filters.isAdminMode ?? false,
+      onlyUngrouped: filters.onlyUngrouped ?? false,
+      manufacturer_id: filters.manufacturer_id ?? null,
+      is_hidden: filters.is_hidden ?? undefined,
+      limit: filters.limit ?? PHOTO_QUERY_CONFIG.limit
+    });
+  },
   queryFn: async (filters, pageParam, signal) => {
     const limit = filters.limit ?? PHOTO_QUERY_CONFIG.limit;
     const res = await loadAllPhotosFromCloud(
@@ -95,8 +98,8 @@ export const usePhotos = createInfiniteQuery<{photos: Photo[], nextPage?: number
  * Hook for infinite group photo lists.
  */
 export const useGroupPhotosResult = createInfiniteQuery<{photos: Photo[], total: number, hasMore: boolean}, { groupId: string | null; isAdminMode: boolean; pageSize: number }, any>({
-  queryKey: (vars) => photoKeys.infinite(vars),
-  queryFn: async ({ groupId, isAdminMode, pageSize }, pageParam) => {
+  queryKey: (vars: { groupId: string | null; isAdminMode: boolean; pageSize: number }) => photoKeys.infinite(vars),
+  queryFn: async ({ groupId, isAdminMode, pageSize }: { groupId: string | null; isAdminMode: boolean; pageSize: number }, pageParam: any) => {
     const data = await loadPhotosByGroupIdPaginated(groupId!, pageParam, pageSize, isAdminMode);
     return {
       photos: data.photos,
@@ -104,46 +107,24 @@ export const useGroupPhotosResult = createInfiniteQuery<{photos: Photo[], total:
       hasMore: data.photos.length >= pageSize
     };
   },
-  getNextPageParam: (lastPage, allPages) => {
-    const loaded = allPages.reduce((sum, p) => sum + p.photos.length, 0);
+  getNextPageParam: (lastPage: any, allPages: any[]) => {
+    const loaded = allPages.reduce((sum: number, p: any) => sum + p.photos.length, 0);
     return (loaded < lastPage.total && lastPage.photos.length > 0) ? allPages.length + 1 : undefined;
+  },
+  placeholderData: (previousData: any, options: any) => {
+    if (previousData) return previousData;
+    // We need access to queryClient, but options only has queryKey
+    // Assuming for now just default placeholder behavior is enough or cache access via other means if needed.
+    return undefined;
   },
   select: flattenPhotos,
   staleTime: 30 * 1000,
-});
+} as any);
 
 export const useGroupPhotos = (groupId: string | null, isAdminMode: boolean = false, pageSize: number = 60) => {
   const queryClient = useQueryClient();
   const query = useGroupPhotosResult({ groupId, isAdminMode, pageSize }, {
-    enabled: !!groupId,
-    placeholderData: (prev: any) => {
-        if (prev) return prev;
-        if (!groupId) return undefined;
-        const allQueries = queryClient.getQueriesData<any>({ queryKey: photoKeys.all });
-        const dict = new Map();
-        allQueries.forEach(([_k, data]) => {
-          if (data?.pages) {
-            data.pages.forEach((p: any) => {
-              if (p.photos) {
-                p.photos.forEach((photo: any) => {
-                  if (photo.group_id === groupId) {
-                    dict.set(photo.id, photo);
-                  }
-                });
-               }
-            });
-          }
-        });
-        const cached = Array.from(dict.values());
-        if (cached.length > 0) {
-          return {
-            pages: [{ photos: cached, total: cached.length, hasMore: false }],
-            pageParams: [1],
-            photos: cached
-          };
-        }
-        return undefined;
-      }
+    enabled: !!groupId
   });
 
   return {

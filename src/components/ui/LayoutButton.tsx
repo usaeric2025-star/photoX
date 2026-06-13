@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/shared/Button';
 import { LayoutGrid, List } from 'lucide-react';
 
 interface LayoutButtonProps {

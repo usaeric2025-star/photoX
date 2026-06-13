@@ -34,7 +34,7 @@ export function DataLoadingContainer({
     <div className="relative w-full h-full">
       {/* Non-intrusive thin gradient loader strip on the top when loading incrementally/silently */}
       {showBackgroundIndicator && (
-        <div className="fixed top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-blue-500 via-amber-500 to-blue-500 z-[var(--z-index-max)] pointer-events-none animate-shimmer" />
+        <div className="fixed top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-blue-500 via-amber-500 to-blue-500 z-[var(--z-loading)] pointer-events-none animate-shimmer" />
       )}
 
       {showLoader && (

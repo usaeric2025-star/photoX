@@ -19,17 +19,18 @@
   --z-sticky: 100;
   --z-header: 100;
   --z-loading: 150;
-  
-  /* [DEPRECATED] These will be removed in next version as we migrate to Modal/Dialog standards */
-  /* --z-drawer: 200; */
-  /* --z-dialog: 300; */
-  /* --z-popover: 400; */
+  --z-overlay: 200;
   --z-toast: 500;
   --z-tooltip: 600;
-  --z-lightbox-backdrop: 1000;
-  --z-lightbox-container: 1001;
-  --z-lightbox-content: 1002;
   --z-lightbox: 1000;
+  
+  /* [DEPRECATED] To be removed after migration version
+  --z-index-max: 9999;
+  --z-index-modal: 5000;
+  --z-index-overlay: 4000;
+  --z-index-dropdown: 50;
+  --z-index-sticky: 100;
+  */
 
   /* yarl overrides */
   --yarl__color_backdrop: rgba(0, 0, 0, 0.95);
@@ -115,11 +116,6 @@
 }
 
 :root {
-  --z-index-max: 9999;
-  --z-index-modal: 5000;
-  --z-index-overlay: 4000;
-  --z-index-dropdown: 50;
-  --z-index-sticky: 100;
   --brand-bg: #FDFAF6;
   --brand-navy: #1D3557;
   --brand-gold: #D4A853;
@@ -304,5 +300,15 @@ li[data-sonner-toast] {
     top: anchor(bottom);
     left: anchor(left);
     width: max-content;
+  }
+
+  /* ⚠️ FALLBACK ONLY: Used for older browsers that don't support Anchor Positioning.
+     In modern browsers, this path is effectively unreachable or ignored in favor of anchor logic. */
+  @supports not (position-anchor: --menu-anchor) {
+    .anchor-content {
+      top: 100%;
+      left: 0;
+      z-index: var(--z-dropdown);
+    }
   }
 }

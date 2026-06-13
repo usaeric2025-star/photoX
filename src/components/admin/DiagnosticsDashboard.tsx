@@ -7,7 +7,7 @@ import { useDiagnostics } from '@/hooks/admin/useDiagnostics';
 import { diagnosticRegistry } from './Diagnostics/registry';
 import { DiagnosticCard } from './Diagnostics/DiagnosticCard';
 import { TasksContent } from './Diagnostics/TasksList';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/shared/Button';
 import { useUIStore } from '@/store/useUIStore';
 import { showToast } from '@/lib/ui/toast';
 import { handleError } from '@/lib/error/errorHandler';
