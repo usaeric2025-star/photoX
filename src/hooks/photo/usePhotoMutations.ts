@@ -18,7 +18,12 @@ const photoEditConfig = defineMutation<Photo, { id: string; updates: Partial<Pho
     
     if (tags && Array.isArray(tags)) {
       const { syncBatchPhotoTags } = await import('@/services/tag/commands');
-      await syncBatchPhotoTags([id], tags.filter(t => t && t.id).map(t => String(t.id)));
+      const tagIds = tags.filter(t => t && t.id).map(t => String(t.id));
+      const tagSources: Record<string, "user"> = {};
+      tagIds.forEach(tId => {
+        tagSources[tId] = "user";
+      });
+      await syncBatchPhotoTags([id], tagIds, undefined, tagSources);
     }
     
     return res;
@@ -58,7 +63,12 @@ const photoBatchEditConfig = defineMutation<any, { ids: string[]; updates: Parti
     
     if (tags && Array.isArray(tags)) {
       const { syncBatchPhotoTags } = await import('@/services/tag/commands');
-      await syncBatchPhotoTags(ids, tags.map(t => String(t.id)));
+      const tagIds = tags.filter(t => t && t.id).map(t => String(t.id));
+      const tagSources: Record<string, "user"> = {};
+      tagIds.forEach(tId => {
+        tagSources[tId] = "user";
+      });
+      await syncBatchPhotoTags(ids, tagIds, undefined, tagSources);
     }
     
     return res;

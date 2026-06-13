@@ -28,22 +28,57 @@ adminDiagnose.get("/", async (c) => {
           { data: cData, error: cErr },
           { data: mData, error: mErr },
           { error: secretErr },
+          { data: ptData, error: ptErr },
         ] = await Promise.all([
           supabase.from("furniture_items").select("id, group_id, category_id, manufacturer_id, image_hash, image_url, thumb_hash, name, item_code").abortSignal(controller.signal),
           supabase.from("groups").select("id, name, member_count").abortSignal(controller.signal),
           supabase.from("categories").select("id").abortSignal(controller.signal),
           supabase.from("manufacturers").select("id").abortSignal(controller.signal),
           supabase.from("secrets").select("key").limit(1).abortSignal(controller.signal),
+          supabase.from("photo_tags").select("photo_id, tag_id").abortSignal(controller.signal),
         ]);
 
         clearTimeout(timeoutId);
 
         if (pErr) throw pErr;
         if (gErr) throw gErr;
+        if (ptErr) throw ptErr;
         
         photos = pData || [];
         groups = gData || [];
         sErr = secretErr;
+
+        // Excess Tags (More than 3 tags per photo)
+        const photoTagCounts = new Map<string, string[]>();
+        ptData?.forEach((pt: any) => {
+          if (pt.photo_id) {
+            const pid = String(pt.photo_id);
+            if (!photoTagCounts.has(pid)) {
+              photoTagCounts.set(pid, []);
+            }
+            photoTagCounts.get(pid)!.push(String(pt.tag_id));
+          }
+        });
+
+        const excessTagPhotoIds: string[] = [];
+        photoTagCounts.forEach((tagIds, pid) => {
+          if (tagIds.length > 3) {
+            excessTagPhotoIds.push(pid);
+          }
+        });
+
+        if (excessTagPhotoIds.length > 0) {
+          issues.push({
+            id: 'excessive_tags',
+            category: 'integrity',
+            severity: 'P1',
+            title: '照片标签超出限制（多于 3 个）',
+            description: `检测到有 ${excessTagPhotoIds.length} 张照片关联了多于 3 个标签。点击修复将自动只保留前 3 个标签，其余多出的标签将被移除。`,
+            affectedCount: excessTagPhotoIds.length,
+            sampleIds: excessTagPhotoIds.slice(0, 5),
+            autoFixable: true
+          });
+        }
       } catch (innerErr: any) {
         clearTimeout(timeoutId);
         if (innerErr.name === 'AbortError') {

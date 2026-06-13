@@ -82,17 +82,17 @@ export const removeTagFromPhoto = async (photoId: string, tagId: string): Promis
     return success(undefined);
 };
 
-export const syncPhotoTags = async (photoId: string, tagIds: string[]): Promise<AppResult<void>> => {
+export const syncPhotoTags = async (photoId: string, tagIds: string[], tagWeights?: Record<string, number>, tagSources?: Record<string, 'ai' | 'user' | 'system'>): Promise<AppResult<void>> => {
     const res = await api.tags['sync-photo-tags'].$post({
-        json: { photoId, tagIds }
+        json: { photoId, tagIds, tagWeights, tagSources }
     });
     if (!res.ok) return errorFactory('Sync photo tags failed', 'DB_ERROR', 'syncPhotoTags/error');
     return success(undefined);
 };
 
-export const syncBatchPhotoTags = async (photoIds: string[], tagIds: string[]): Promise<AppResult<void>> => {
+export const syncBatchPhotoTags = async (photoIds: string[], tagIds: string[], tagWeights?: Record<string, number>, tagSources?: Record<string, 'ai' | 'user' | 'system'>): Promise<AppResult<void>> => {
     const res = await api.tags['sync-batch-photo-tags'].$post({
-        json: { photoIds, tagIds }
+        json: { photoIds, tagIds, tagWeights, tagSources }
     });
     if (!res.ok) return errorFactory('Sync batch photo tags failed', 'DB_ERROR', 'syncBatchPhotoTags/error');
     return success(undefined);

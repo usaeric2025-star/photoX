@@ -78,15 +78,60 @@ export const tags = new Hono()
   })
   .post('/sync-photo-tags', async (c) => {
     const body = await c.req.json();
-    const check = type({ photoId: "string", tagIds: "string[]" })(body);
+    const check = type({ 
+      photoId: "string", 
+      tagIds: "string[]",
+      "tagWeights?": "Record<string, number>",
+      "tagSources?": "Record<string, 'ai' | 'user' | 'system'>"
+    })(body);
     if (check instanceof type.errors) throw new Error(check.summary);
 
-    const { photoId, tagIds } = check;
+    const { photoId, tagIds, tagWeights, tagSources } = check;
     const supabase = await getSupabaseAdmin();
+
+    // 1. Fetch current associations to determine chronological age (tie-breaker)
+    const { data: currentAssociations } = await supabase.from('photo_tags').select('tag_id').eq('photo_id', photoId);
+    const existingTagIds = new Set((currentAssociations || []).map((pt: any) => String(pt.tag_id)));
+
+    // 2. Query target tags to resolve is_global property for default weights
+    const { data: tagDetails } = await supabase.from('tags').select('id, is_global').in('id', tagIds);
+    const tagDetailsMap = new Map<string, any>((tagDetails || []).map((t: any) => [String(t.id), t]));
+
+    const getWeight = (tagId: string, tagDetail?: any) => {
+      if (tagWeights && tagWeights[tagId] !== undefined) {
+        return tagWeights[tagId];
+      }
+      if (tagSources && tagSources[tagId]) {
+        const src = tagSources[tagId];
+        if (src === 'ai') return 100;
+        if (src === 'user') return 90;
+        if (src === 'system') return 50;
+      }
+      if (tagDetail) {
+        if (tagDetail.is_global) return 50;
+      }
+      return 90; // Default fallback to user manual tag
+    };
+
+    // 3. Sort by computed weight, and on ties, preserve oldest
+    const sortedTagIds = [...tagIds].sort((a, b) => {
+      const weightA = getWeight(a, tagDetailsMap.get(a));
+      const weightB = getWeight(b, tagDetailsMap.get(b));
+      if (weightB !== weightA) {
+        return weightB - weightA;
+      }
+      const isAExisting = existingTagIds.has(a);
+      const isBExisting = existingTagIds.has(b);
+      if (isAExisting && !isBExisting) return -1;
+      if (!isAExisting && isBExisting) return 1;
+      return tagIds.indexOf(a) - tagIds.indexOf(b);
+    });
+
+    const limitedTagIds = sortedTagIds.slice(0, 3);
+
     const { error: deleteError } = await supabase.from('photo_tags').delete().eq('photo_id', photoId);
     if (deleteError) return c.json({ success: false, error: deleteError.message }, 500);
 
-    const limitedTagIds = tagIds.slice(0, 10);
     if (limitedTagIds.length > 0) {
         const associations = limitedTagIds.map((tagId: string) => ({ photo_id: photoId, tag_id: tagId }));
         const { error: insertError } = await supabase.from('photo_tags').insert(associations);
@@ -96,15 +141,52 @@ export const tags = new Hono()
   })
   .post('/sync-batch-photo-tags', async (c) => {
     const body = await c.req.json();
-    const check = type({ photoIds: "string[]", tagIds: "string[]" })(body);
+    const check = type({ 
+      photoIds: "string[]", 
+      tagIds: "string[]",
+      "tagWeights?": "Record<string, number>",
+      "tagSources?": "Record<string, 'ai' | 'user' | 'system'>"
+    })(body);
     if (check instanceof type.errors) throw new Error(check.summary);
 
-    const { photoIds, tagIds } = check;
+    const { photoIds, tagIds, tagWeights, tagSources } = check;
     const supabase = await getSupabaseAdmin();
+
+    // Query target tags to resolve is_global property for default weights
+    const { data: tagDetails } = await supabase.from('tags').select('id, is_global').in('id', tagIds);
+    const tagDetailsMap = new Map<string, any>((tagDetails || []).map((t: any) => [String(t.id), t]));
+
+    const getWeight = (tagId: string, tagDetail?: any) => {
+      if (tagWeights && tagWeights[tagId] !== undefined) {
+        return tagWeights[tagId];
+      }
+      if (tagSources && tagSources[tagId]) {
+        const src = tagSources[tagId];
+        if (src === 'ai') return 100;
+        if (src === 'user') return 90;
+        if (src === 'system') return 50;
+      }
+      if (tagDetail) {
+        if (tagDetail.is_global) return 50;
+      }
+      return 90;
+    };
+
+    // Sort by computed weight
+    const sortedTagIds = [...tagIds].sort((a, b) => {
+      const weightA = getWeight(a, tagDetailsMap.get(a));
+      const weightB = getWeight(b, tagDetailsMap.get(b));
+      if (weightB !== weightA) {
+        return weightB - weightA;
+      }
+      return tagIds.indexOf(a) - tagIds.indexOf(b);
+    });
+
+    const limitedTagIds = sortedTagIds.slice(0, 3);
+
     const { error: deleteError } = await supabase.from('photo_tags').delete().in('photo_id', photoIds);
     if (deleteError) return c.json({ success: false, error: deleteError.message }, 500);
 
-    const limitedTagIds = tagIds.slice(0, 10);
     if (limitedTagIds.length > 0) {
         const associations = photoIds.flatMap((photoId: string) => 
             limitedTagIds.map((tagId: string) => ({ photo_id: photoId, tag_id: tagId }))

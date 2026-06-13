@@ -14,6 +14,19 @@ export type IssueAction = {
 };
 
 export const ISSUE_ACTIONS: Record<string, IssueAction> = {
+  excessive_tags: {
+    name: "清理照片多余标签",
+    preview: async () => {
+      const res = await api.admin.repair.preview.$post({ json: { issueId: 'excessive_tags' } });
+      const data = await res.json() as any;
+      return data;
+    },
+    execute: async () => {
+      const res = await api.admin.repair.$post({ json: { issueId: 'excessive_tags' } });
+      const data = await res.json() as any;
+      return { message: data.message || "修复成功", ...data };
+    }
+  },
   sync: {
     name: "应用重传补全",
     execute: async () => ({ jobId: "sync", message: "同步任务已派发" })

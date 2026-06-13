@@ -61,7 +61,11 @@ export const analyzeAndSavePhoto = async (
       finalTagIds = Array.from(new Set(finalTagIds.map(String)));
       
       if (finalTagIds.length > 0) {
-          await syncPhotoTags(photo.id, finalTagIds);
+          const tagSources: Record<string, "ai"> = {};
+          finalTagIds.forEach(id => {
+              tagSources[id] = "ai";
+          });
+          await syncPhotoTags(photo.id, finalTagIds, undefined, tagSources);
       }
     }
 

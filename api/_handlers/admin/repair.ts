@@ -8,6 +8,78 @@ import { normalizeI18n } from "../../_shared/i18n.js";
 const serverEnv = getServerEnv(process.env);
 export const adminRepair = new Hono();
 
+adminRepair.post("/preview", async (c) => {
+    try {
+      const { issueId } = await c.req.json();
+      const supabase = await getSupabaseAdmin();
+
+      if (issueId === 'excessive_tags') {
+        const { data: ptData, error: fetchErr } = await supabase.from('photo_tags').select('photo_id, tag_id');
+        if (fetchErr) throw fetchErr;
+
+        const { data: pData, error: pErr } = await supabase.from('furniture_items').select('id, name');
+        if (pErr) throw pErr;
+        const photoMap = new Map<string, any>((pData || []).map((p: any) => [String(p.id), p]));
+
+        const { data: tagData, error: tagErr } = await supabase.from('tags').select('id, name, is_global');
+        if (tagErr) throw tagErr;
+        const tagMap = new Map<string, any>((tagData || []).map((t: any) => [String(t.id), t]));
+
+        const photoTagMap = new Map<string, string[]>();
+        ptData?.forEach((pt: any) => {
+          if (pt.photo_id) {
+            const pid = String(pt.photo_id);
+            if (!photoTagMap.has(pid)) {
+              photoTagMap.set(pid, []);
+            }
+            photoTagMap.get(pid)!.push(String(pt.tag_id));
+          }
+        });
+
+        const affectedPhotos: any[] = [];
+        const getWeight = (tagId: string, tagDetail?: any) => {
+          if (tagDetail && tagDetail.is_global) return 50;
+          return 90;
+        };
+
+        photoTagMap.forEach((tagIds, photoId) => {
+          if (tagIds.length > 3) {
+            const photoItem: any = photoMap.get(photoId);
+            const photoName = photoItem ? (normalizeI18n(photoItem.name) || "未命名产品") : "未知照片";
+
+            const sorted = [...tagIds].sort((a, b) => {
+              const weightA = getWeight(a, tagMap.get(a));
+              const weightB = getWeight(b, tagMap.get(b));
+              if (weightB !== weightA) return weightB - weightA;
+              return tagIds.indexOf(a) - tagIds.indexOf(b);
+            });
+
+            const kept = sorted.slice(0, 3).map(id => tagMap.get(id)?.name || id);
+            const removed = sorted.slice(3).map(id => tagMap.get(id)?.name || id);
+
+            affectedPhotos.push({
+              photoId,
+              photoName,
+              keptTags: kept,
+              removedTags: removed
+            });
+          }
+        });
+
+        return c.json({
+          success: true,
+          affectedCount: affectedPhotos.length,
+          affectedPhotos
+        });
+      }
+
+      return c.json({ success: true, affectedCount: 0, affectedPhotos: [] });
+    } catch (e: any) {
+      logger.error("[Repair Preview] failed:", e);
+      return c.json({ success: false, error: e.message }, 500);
+    }
+});
+
 adminRepair.post("/", async (c) => {
     try {
       const { issueId } = await c.req.json();
@@ -167,6 +239,64 @@ adminRepair.post("/", async (c) => {
         ));
 
         return c.json({ success: true, count: updates.length, message: `已规范 ${updates.length} 条编号格式` });
+      }
+
+      if (issueId === 'excessive_tags') {
+        const { data: ptData, error: fetchErr } = await supabase.from('photo_tags').select('photo_id, tag_id');
+        if (fetchErr) throw fetchErr;
+
+        const { data: tagData, error: tagErr } = await supabase.from('tags').select('id, name, is_global');
+        if (tagErr) throw tagErr;
+        const tagMap = new Map<string, any>((tagData || []).map((t: any) => [String(t.id), t]));
+
+        const photoTagMap = new Map<string, string[]>();
+        ptData?.forEach((pt: any) => {
+          if (pt.photo_id) {
+            const pid = String(pt.photo_id);
+            if (!photoTagMap.has(pid)) {
+              photoTagMap.set(pid, []);
+            }
+            photoTagMap.get(pid)!.push(String(pt.tag_id));
+          }
+        });
+
+        const excessivePhotos: { photoId: string, tagIds: string[] }[] = [];
+        photoTagMap.forEach((tagIds, photoId) => {
+          if (tagIds.length > 3) {
+            excessivePhotos.push({ photoId, tagIds });
+          }
+        });
+
+        if (excessivePhotos.length === 0) {
+          return c.json({ success: true, count: 0, message: "没有超出限制的照片标签" });
+        }
+
+        const getWeight = (tagId: string, tagDetail?: any) => {
+          if (tagDetail && tagDetail.is_global) return 50;
+          return 90;
+        };
+
+        let updatedCount = 0;
+        for (const item of excessivePhotos) {
+          const sorted = [...item.tagIds].sort((a, b) => {
+            const weightA = getWeight(a, tagMap.get(a));
+            const weightB = getWeight(b, tagMap.get(b));
+            if (weightB !== weightA) return weightB - weightA;
+            return item.tagIds.indexOf(a) - item.tagIds.indexOf(b);
+          });
+
+          const keepTagIds = sorted.slice(0, 3);
+          const { error: delErr } = await supabase.from('photo_tags').delete().eq('photo_id', item.photoId);
+          if (delErr) throw delErr;
+          
+          const associations = keepTagIds.map((tagId) => ({ photo_id: item.photoId, tag_id: tagId }));
+          const { error: insErr } = await supabase.from('photo_tags').insert(associations);
+          if (insErr) throw insErr;
+          
+          updatedCount++;
+        }
+
+        return c.json({ success: true, count: updatedCount, message: `已成功清理 ${updatedCount} 张照片的多余标签，均按权重与先后顺序保留前 3 个标签` });
       }
 
       if (issueId === 'diagnose_worker') {
