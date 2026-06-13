@@ -88,7 +88,7 @@ export const useLightbox = () => {
   const currentPhoto = currentIndex >= 0 ? photos[currentIndex] : null;
   
   const close = () => {
-    navigate({
+    return navigate({
       to: '.',
       search: (prev: any) => ({ ...prev, photoId: undefined } as any),
       replace: true,

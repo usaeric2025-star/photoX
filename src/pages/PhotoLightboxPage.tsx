@@ -83,7 +83,10 @@ export const PhotoLightboxPage = () => {
   const { data: tags = [] } = useTags();
   const { data: categories = [] } = useCategories();
   
-  if (!isOpen) return null;
+  const editPhotoId = useUIStore((s) => s.editPhotoId);
+  const newPhotoData = useUIStore((s) => s.newPhotoData);
+
+  if (!isOpen || editPhotoId || newPhotoData) return null;
 
   // [OPTIMIZATION] Directly show the frame if we have photos from list cache
   // This allows the lightbox to show the cached thumbnail while the detail loads
@@ -96,25 +99,25 @@ export const PhotoLightboxPage = () => {
     return <LightboxFallback onClose={close} message="照片不存在或已删除" />;
   }
 
-  const handleEdit = () => {
+  const handleEdit = async () => {
     if (currentPhoto) {
       const id = currentPhoto.id;
-      close(); 
+      await close(); 
       setTimeout(() => {
         updateUIStore({ editPhotoId: id });
-      }, 150);
+      }, 300);
     }
   };
 
   const handleDelete = () => deleteDialog.open();
 
-  const handleAiAnalyze = () => {
+  const handleAiAnalyze = async () => {
     if (currentPhoto) {
       const id = currentPhoto.id;
-      close();
+      await close();
       setTimeout(() => {
         updateUIStore({ editPhotoId: id });
-      }, 150);
+      }, 300);
     }
   };
   
