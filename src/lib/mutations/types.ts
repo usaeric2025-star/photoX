@@ -8,4 +8,6 @@ export interface MutationConfig<TData, TVars, TQueryKey = any[]> {
   }
   successMessage?: string
   errorMessage?: string
+  cleanupKey?: (vars: TVars) => string
+  onSettled?: (data: TData | undefined, error: Error | null, vars: TVars) => void
 }

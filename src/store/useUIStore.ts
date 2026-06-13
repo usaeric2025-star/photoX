@@ -73,6 +73,7 @@ export interface UIStoreState {
   toggleSelected: (id: string) => void;
   addProcessingIds: (ids: string[]) => void;
   removeProcessingIds: (ids: string[]) => void;
+  clearProcessing: (id: string) => void;
   setDraggedPhoto: (id: string | null) => void;
   updateSelectedIds: (ids: string[]) => void;
   incrementDialogCount: () => void;
@@ -146,6 +147,9 @@ export const useUIStore = create<UIStoreState>()((set) => ({
   })),
   removeProcessingIds: (ids) => set((state) => ({ 
     processingIds: state.processingIds.filter(id => !ids.includes(id)) 
+  })),
+  clearProcessing: (id) => set((state) => ({
+    processingIds: state.processingIds.filter(pid => pid !== id)
   })),
   setDraggedPhoto: (id) => set({ draggedPhotoId: id }),
   updateSelectedIds: (ids) => set({ selectedIds: ids }),

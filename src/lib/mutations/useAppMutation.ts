@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { MutationConfig } from './types';
 import { logger } from '@/lib/logger';
 import { handleError } from '@/lib/error/ErrorFactory';
+import { useUIStore } from '@/store/useUIStore';
 
 // Client-side idempotency cache
 const ongoingRequests = new Map<string, Promise<any>>();
@@ -73,6 +74,14 @@ export const useAppMutation = <TData, TVars, TQueryKey = any[]>(config: Mutation
         ? config.invalidate(data!, vars) 
         : config.invalidate ?? [];
       keys.forEach(key => queryClient.invalidateQueries({ queryKey: key as any }));
+      
+      if (config.cleanupKey) {
+        const key = typeof config.cleanupKey === 'function' 
+          ? config.cleanupKey(vars) 
+          : config.cleanupKey;
+        useUIStore.getState().clearProcessing(key);
+      }
+      config.onSettled?.(data, err, vars);
     },
     onSuccess: (data, vars) => {
       if (config.successMessage) toast.success(config.successMessage);
