@@ -19,7 +19,7 @@ export const useGroupDraft = (
 
   const [groupData, setGroupData] = useState<ProductGroup | null>(null);
   const { data: queriedGroupData, isLoading: isGroupDataLoading } =
-    useGroupDetail(activeGroupId);
+    useGroupDetail({ groupId: activeGroupId, isAdmin: true });
 
   const [draftGroup, setDraftGroup, removeDraftGroup] = useSessionStorage<ProductGroup | null>({
     key: `draft_group_${activeGroupId || 'default'}`,

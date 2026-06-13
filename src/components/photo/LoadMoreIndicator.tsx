@@ -1,5 +1,5 @@
-import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/shared/Button';
+import { PhotoGridSkeleton } from './PhotoGridSkeleton';
 
 interface LoadMoreIndicatorProps {
   isFetchingNextPage: boolean;
@@ -15,7 +15,7 @@ export const LoadMoreIndicator = ({
   // 无更多数据
   if (!hasNextPage) {
     return (
-      <div className="text-center py-8 text-muted-foreground text-sm">
+      <div className="text-center py-8 text-muted-foreground text-sm font-medium tracking-tight opacity-50">
         已加载全部照片
       </div>
     );
@@ -24,11 +24,8 @@ export const LoadMoreIndicator = ({
   // 正在加载
   if (isFetchingNextPage) {
     return (
-      <div className="flex justify-center py-8">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          <span className="text-sm">加载更多...</span>
-        </div>
+      <div className="flex justify-center py-4 w-full opacity-60 pointer-events-none">
+        <PhotoGridSkeleton columns={3} count={3} />
       </div>
     );
   }

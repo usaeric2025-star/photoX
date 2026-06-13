@@ -269,9 +269,56 @@ ai.post("/cluster-photos", async (c) => {
         const check = AIClusterPhotosReqSchema(body);
         if (check instanceof type.errors) throw new Error(check.summary);
 
-        const parsed = await processGroupAnalysis(check.photoIds);
+        const supabase = await getSupabaseAdmin();
+        const user = (c as any).get('user');
+        const userId = user?.id; // 從 requireRealUser 中獲獲的用戶 ID
 
-        return c.json({ success: true, data: parsed.groups } as ApiResponse);
+        // 1. AI 識別
+        const parsed = await processGroupAnalysis(check.photoIds);
+        const createdGroups: any[] = [];
+
+        // 2. 事務性寫入 (手動類比)
+        for (const g of parsed.groups) {
+            const groupId = crypto.randomUUID();
+            
+            // 寫入 groups 表為 draft
+            const { data: groupData, error: groupError } = await supabase
+                .from('groups')
+                .insert({
+                    id: groupId,
+                    user_id: userId,
+                    name: { zh: g.name, en: g.name_en, ms: g.name_ms },
+                    description: { zh: g.description },
+                    status: 'confirmed',
+                    member_count: g.photoIds.length,
+                    created_at: new Date().toISOString()
+                })
+                .select()
+                .single();
+
+            if (groupError) throw groupError;
+
+            // 關聯照片
+            const { error: photoError } = await supabase
+                .from('furniture_items')
+                .update({ group_id: groupId })
+                .in('id', g.photoIds);
+
+            if (photoError) throw photoError;
+
+            createdGroups.push(groupData);
+        }
+
+        // 3. 記錄操作日誌 (可在大併發後異步，這裡同步保險)
+        await supabase.from('group_correction_logs' as any).insert({
+            operation: 'ai_cluster',
+            input_photo_ids: check.photoIds,
+            created_groups: createdGroups.map(g => g.id),
+            user_id: userId,
+            created_at: new Date().toISOString()
+        });
+
+        return c.json({ success: true, data: createdGroups } as ApiResponse);
     } catch (error: any) { 
         return c.json({ success: false, error: error.message } as ApiResponse, 500); 
     }

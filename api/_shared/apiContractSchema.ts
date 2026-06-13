@@ -132,7 +132,8 @@ export const TagReqSchema = type({
 export const GroupReqSchema = type({
     id: "string",
     "name?": "string",
-    "cover_photo_id?": "string"
+    "cover_photo_id?": "string",
+    "status?": "'draft' | 'confirmed'"
 });
 
 export const PhotoSchema = type({

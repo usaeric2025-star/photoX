@@ -491,17 +491,17 @@ toast.error('发现数据完整性问题', {
 - ✅ 必須校驗 photoIds 完整性（返回總數 = 輸入總數）
 - ❌ 禁止寫入未經 schema 校驗的 AI 輸出
 
+### 代碼與流程規範
+- ✅ AI 生成合組直接 confirmed，用戶可編輯修正
+- ✅ 修正操作記錄至 group_correction_logs（僅 before/after/type）
+- ❌ 禁止評分/反饋 UI，待分析資源就緒後再評估
+- ❌ 禁止在 correction_logs 中存儲評分字段
+
 ### 前後端對齊
 - ✅ 所有 groups 查詢必須包含 status 字段
 - ✅ 公開頁面必須過濾 eq('status', 'confirmed')
-- ✅ 管理後台顯示全部，draft 有視覺標記
+- ✅ 樂觀發布：AI 結果直接以 confirmed 狀態寫入，無需二次確認
 - ❌ 禁止顯式 select 列舉時遺漏 status
-
-### 用戶修正流程
-- ✅ AI 結果以 draft 狀態寫入 groups 表
-- ✅ 用戶在合組詳情頁直接編輯確認
-- ✅ 所有編輯操作記錄至 group_correction_logs
-- ❌ 禁止新增審核隊列表或獨立審核流程
 
 ## Snippet 架构路径规范（锁定，2026-06-07）
 

@@ -65,7 +65,7 @@ export const getGroupById = async (id: string, mode: 'public' | 'admin' = 'publi
       .eq('id', id);
 
     if (mode === 'public') {
-      query = query.or('is_hidden.eq.false,is_hidden.is.null');
+      query = query.eq('status', 'confirmed').or('is_hidden.eq.false,is_hidden.is.null');
     }
 
     const { data, error } = await query.maybeSingle();

@@ -66,6 +66,7 @@ export interface Photo {
       color: string | null;
       cover_photo_id: string | null;
       member_count: number;
+      status?: 'draft' | 'confirmed' | 'rejected';
   } | null;
   categoryName: string;
   manufacturerName: string;

@@ -40,7 +40,10 @@ export function GroupDetailPage({}: GroupDetailPageProps) {
   const virtualGridRef = useRef<{ scrollToIndex: (args: { index: number; align?: string; behavior?: string }) => void } | null>(null);
   const [currentHighlightId, setCurrentHighlightId] = useState<string | null>(null);
 
-  const { data: groupData, isLoading: isGroupDataLoading, isPlaceholderData: isGroupDataPlaceholder } = useGroupDetail(activeGroupId);
+  const { data: groupData, isLoading: isGroupDataLoading, isPlaceholderData: isGroupDataPlaceholder } = useGroupDetail({
+    groupId: activeGroupId,
+    isAdmin: isAdminMode
+  });
 
   const {
     data: infinitePhotosData,

@@ -25,7 +25,7 @@ export const useLightbox = () => {
   
   // Use enabled condition to avoid unnecessary requests
   const { data: singlePhoto, isLoading: isSingleLoading } = usePhoto(photoId || '');
-  const { data: groupDetail, isLoading: isGroupLoading } = useGroupDetail(groupId || '');
+  const { data: groupDetail, isLoading: isGroupLoading } = useGroupDetail({ groupId: groupId || '', isAdmin });
   const { data: groupPhotos, isLoading: isPhotosLoading } = useGroupPhotos(groupId, isAdmin, 60);
   const { data: allGalleryPhotos, isLoading: isGalleryLoading } = usePhotos({
     category_id: dataFilters.categoryId,

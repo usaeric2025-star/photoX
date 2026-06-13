@@ -60,18 +60,17 @@ function SortablePhotoItem({ photo, index, getPhotoProps, onClick, onContextMenu
   );
 }
 
+import { PhotoGridSkeleton } from '../photo/PhotoGridSkeleton';
+
 function GroupGridFooter({ 
-  isFetchingNextPage, hasNextPage, hasPhotos, textLoading, textEndOfList 
+  isFetchingNextPage, hasNextPage, hasPhotos, textLoading, denseColumns, textEndOfList
 }: { 
-  isFetchingNextPage: boolean, hasNextPage: boolean, hasPhotos: boolean, textLoading: string, textEndOfList: string 
+  isFetchingNextPage: boolean, hasNextPage: boolean, hasPhotos: boolean, textLoading: string, textEndOfList: string, denseColumns: number
 }) {
   if (isFetchingNextPage) {
     return (
-      <div className="py-8 flex flex-col items-center justify-center gap-2 pb-16">
-        <div className="w-5 h-5 border-[2px] border-slate-300 border-t-slate-800 rounded-full animate-spin" />
-        <span className="text-[10px] text-slate-500 font-medium tracking-tight animate-pulse">
-          {textLoading}
-        </span>
+      <div className="py-4 w-full opacity-60 pointer-events-none">
+        <PhotoGridSkeleton columns={denseColumns} count={denseColumns} />
       </div>
     );
   }
@@ -152,6 +151,7 @@ export function GroupGridView({
               hasPhotos={photos.length > 0}
               textLoading={t.loading || '正在载入更多...'}
               textEndOfList={t.endOfList || '已经到底啦'}
+              denseColumns={denseColumns}
             />
           </div>
         }

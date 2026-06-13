@@ -106,11 +106,19 @@
 
 /* Base Dialog Transitions using @starting-style where supported */
 dialog {
-  transition: opacity 0.2s ease-out, transform 0.2s ease-out, overlay 0.2s ease-out, display 0.2s ease-out allow-discrete;
+  transition: 
+    opacity 0.25s cubic-bezier(0.32, 0.72, 0, 1), 
+    transform 0.4s cubic-bezier(0.32, 0.72, 0, 1), 
+    overlay 0.4s cubic-bezier(0.32, 0.72, 0, 1), 
+    display 0.4s cubic-bezier(0.32, 0.72, 0, 1) allow-discrete;
 }
 
 dialog::backdrop {
-  transition: opacity 0.2s ease-out, background-color 0.2s ease-out, overlay 0.2s ease-out, display 0.2s ease-out allow-discrete;
+  transition: 
+    opacity 0.3s ease-out, 
+    background-color 0.3s ease-out, 
+    overlay 0.3s ease-out, 
+    display 0.3s ease-out allow-discrete;
 }
 
 dialog[open] {
@@ -128,10 +136,19 @@ dialog[open]::backdrop {
     opacity: 0;
     transform: scale(0.95);
   }
+  /* Screen size modals slide from bottom or side for better UX */
+  dialog[open].max-w-\[100vw\] {
+    transform: translateY(100%);
+  }
   dialog[open]::backdrop {
     opacity: 0;
     background-color: rgba(0, 0, 0, 0);
   }
+}
+
+/* Base open state */
+dialog[open].max-w-\[100vw\] {
+  transform: translateY(0);
 }
 
 /* 热门效果 */

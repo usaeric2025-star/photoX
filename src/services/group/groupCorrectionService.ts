@@ -14,11 +14,15 @@ export async function logAndApplyCorrection(params: {
 
   // 再記錄日誌（失敗不阻塞主流程）
   try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+
     await supabase.from('group_correction_logs').insert({
       group_id: params.groupId,
       before_snapshot: params.before,
       after_snapshot: params.after,
-      correction_type: params.type
+      correction_type: params.type,
+      user_id: userId
     });
   } catch (e) {
     console.error('[CorrectionLog] 記錄失敗', e);
