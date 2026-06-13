@@ -1,4 +1,5 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
+import { useEffect } from "react";
 import { useUrlFilters } from "./useUrlFilters";
 import { usePhoto } from "./usePhoto";
 import { useGroupPhotos, usePhotos } from "./usePhotos";
@@ -7,7 +8,6 @@ import { useQuery } from '@tanstack/react-query';
 import { getPhotoCount } from "@/services/photo";
 import { Photo } from "@/types";
 import { PAGINATION, PHOTO_QUERY_CONFIG } from "@/constants/config";
-import { useEffect } from "react";
 
 /**
  * [ATOMIC-HOOK] useLightbox
@@ -18,8 +18,8 @@ export const useLightbox = () => {
   const navigate = useRouterSafe().navigate;
   const location = useRouterSafe().location;
   
-  const { filters, setPhotoId, setGroupId } = useUrlFilters();
-  const { photoId, groupId } = filters;
+  const { dataFilters, uiState, setPhotoId, setGroupId } = useUrlFilters();
+  const { photoId, groupId } = uiState;
   
   const isAdmin = location.pathname.startsWith('/admin');
   
@@ -28,21 +28,21 @@ export const useLightbox = () => {
   const { data: groupDetail, isLoading: isGroupLoading } = useGroupDetail(groupId || '');
   const { data: groupPhotos, isLoading: isPhotosLoading } = useGroupPhotos(groupId, isAdmin, 60);
   const { data: allGalleryPhotos, isLoading: isGalleryLoading } = usePhotos({
-    category_id: filters.categoryId,
-    tag_id: filters.tagId,
-    manufacturer_id: filters.manufacturerId,
-    searchQuery: filters.searchQuery,
-    sortOrder: filters.sortOrder,
+    category_id: dataFilters.categoryId,
+    tag_id: dataFilters.tagId,
+    manufacturer_id: dataFilters.manufacturerId,
+    searchQuery: dataFilters.searchQuery,
+    sortOrder: dataFilters.sortOrder,
     isAdminMode: isAdmin,
     onlyUngrouped: false,
-    is_hidden: filters.is_hidden,
+    is_hidden: dataFilters.is_hidden,
     limit: PHOTO_QUERY_CONFIG.limit
   }, { enabled: !groupId });
   
   const { data: countResult } = useQuery({
-    queryKey: ['photos', 'totalCount', filters],
+    queryKey: ['photos', 'totalCount', dataFilters],
     queryFn: async () => {
-      return await getPhotoCount(filters.categoryId, filters.tagId, filters.searchQuery, isAdmin);
+      return await getPhotoCount(dataFilters.categoryId, dataFilters.tagId, dataFilters.searchQuery, isAdmin);
     },
     enabled: !groupId });
   

@@ -8,16 +8,17 @@ import { usePhotos, useUrlFilters, useAdminMode } from '@/hooks';
 export function usePhotoGallery() {
   const isManagement = window.location.pathname.startsWith('/admin');
   const isAdminMode = useAdminMode() && isManagement;
-  const { filters: urlFilters } = useUrlFilters();
+  const { dataFilters, uiState } = useUrlFilters();
+  const groupId = uiState.groupId;
 
   const infinitePhotosQuery = usePhotos({
-    category_id: urlFilters.categoryId,
-    tag_id: urlFilters.tagId,
-    searchQuery: urlFilters.searchQuery,
-    sortOrder: urlFilters.sortOrder,
+    category_id: dataFilters.categoryId,
+    tag_id: dataFilters.tagId,
+    searchQuery: dataFilters.searchQuery,
+    sortOrder: dataFilters.sortOrder,
     isAdminMode: isAdminMode,
-    onlyUngrouped: urlFilters.onlyUngrouped,
-    manufacturer_id: urlFilters.manufacturerId,
+    onlyUngrouped: dataFilters.onlyUngrouped,
+    manufacturer_id: dataFilters.manufacturerId,
     is_hidden: isAdminMode ? undefined : false
   });
 

@@ -23,7 +23,6 @@ export function LightboxFloatingInfo({
     <div className="absolute bottom-[10px] left-4 md:bottom-[12px] md:left-6 z-[var(--z-dropdown)] pointer-events-none flex flex-col items-start justify-end max-w-[70%] md:max-w-[60%] select-none">
       {displayName && (
         <h2 className="text-white text-lg md:text-xl font-bold tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)] mb-2 line-clamp-2">
-          {isGroup && <span className="opacity-70 mr-2 text-[0.8em]">[{l.groupDetails}]</span>}
           {displayName}
         </h2>
       )}

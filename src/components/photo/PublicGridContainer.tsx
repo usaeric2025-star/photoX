@@ -25,7 +25,14 @@ export function PublicGridContainer({
   const { settings } = useSettings(); 
   
   const navigate = useRouterSafe().navigate;
-  const { filters: urlFilters, setGroupId, setPhotoId, setSortOrder, setShowGroupsCollapsed, setSearchQuery } = useUrlFilters();
+  const { 
+    dataFilters, 
+    setGroupId, 
+    setPhotoId, 
+    setSortOrder, 
+    setShowGroupsCollapsed, 
+    setSearchQuery 
+  } = useUrlFilters();
 
   const { 
     update, showWhatsAppChoice
@@ -85,10 +92,10 @@ export function PublicGridContainer({
     update({ showWhatsAppChoice: true });
   };
 
-  const showGroupsCollapsed = urlFilters.showGroupsCollapsed !== false;
-  const hasSearchQuery = !!urlFilters.searchQuery;
+  const showGroupsCollapsed = dataFilters.showGroupsCollapsed !== false;
+  const hasSearchQuery = !!dataFilters.searchQuery;
 
-  const filterKeyHash = `${urlFilters.categoryId || 'all'}-${urlFilters.tagId || 'all'}-${encodeURIComponent(urlFilters.searchQuery || '')}-${urlFilters.sortOrder || 'newest'}`;
+  const filterKeyHash = `${dataFilters.categoryId || 'all'}-${dataFilters.tagId || 'all'}-${encodeURIComponent(dataFilters.searchQuery || '')}-${dataFilters.sortOrder || 'newest'}`;
 
   const renderCard = (photo: Photo, index: number, sharedCategories: any[]) => (
     <PhotoCard 
@@ -106,9 +113,9 @@ export function PublicGridContainer({
     <div className="flex flex-col h-full bg-brand-bg w-full overflow-hidden text-text">
         <PublicFilters 
           onSearch={setSearchQuery}
-          searchQuery={urlFilters.searchQuery || ''}
-          onSortChange={() => setSortOrder(urlFilters.sortOrder === 'newest' ? 'oldest' : 'newest')}
-          currentSort={urlFilters.sortOrder as 'newest' | 'oldest' | 'name'}
+          searchQuery={dataFilters.searchQuery || ''}
+          onSortChange={() => setSortOrder(dataFilters.sortOrder === 'newest' ? 'oldest' : 'newest')}
+          currentSort={dataFilters.sortOrder as 'newest' | 'oldest' | 'name'}
           onColumnsChange={(cols) => {
               setColumns(cols as 2 | 3 | 5);
               navigate({ 
@@ -116,8 +123,8 @@ export function PublicGridContainer({
               });
           }}
           currentColumns={columns}
-          onToggleGroups={() => setShowGroupsCollapsed(!urlFilters.showGroupsCollapsed)}
-          showGroupsCollapsed={urlFilters.showGroupsCollapsed}
+          onToggleGroups={() => setShowGroupsCollapsed(!dataFilters.showGroupsCollapsed)}
+          showGroupsCollapsed={dataFilters.showGroupsCollapsed}
         />
         <div className="flex-1 overflow-hidden bg-brand-bg relative">
             <VirtualPhotoGrid 

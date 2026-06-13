@@ -148,7 +148,6 @@ export const PhotoCard = ({
           "relative aspect-square w-full h-full pointer-events-none transition-all duration-500",
           "group-data-[selected=true]:opacity-60 group-data-[selected=true]:scale-90 group-data-[selected=true]:rounded-xl overflow-hidden"
         )}
-        style={{ viewTransitionName: `photo-${photo.id}` } as any}
       >
         <ResponsivePhoto
           photo={photo}

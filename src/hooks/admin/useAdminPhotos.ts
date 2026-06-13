@@ -13,48 +13,54 @@ import { processPhotos } from '@/services/photo/processing';
 export const useAdminPhotos = () => {
     const isManagement = window.location.pathname.startsWith('/admin');
     const isAdminMode = useAdminMode() && isManagement;
-    const { filters: urlFilters } = useUrlFilters();
+    const { dataFilters } = useUrlFilters();
     const processingIds = useUIStore(s => s.processingIds);
     
     const { data: categories = EMPTY_ARRAY as any[] } = useCategories();
     const { data: tags = EMPTY_ARRAY as any[] } = useTags();
     const { photos: rawPhotos, infinitePhotosQuery } = usePhotoGallery();
 
-    const tagMap = new Map<string, string[]>();
-    tags.forEach((t: any) => {
-        const terms = [t.name.toLowerCase()];
-        if (Array.isArray(t.aliases)) {
-            t.aliases.forEach((a: string) => terms.push(a.toLowerCase()));
-        }
-        tagMap.set(String(t.id), terms);
-    });
+    const tagMap = (() => {
+        const map = new Map<string, string[]>();
+        tags.forEach((t: any) => {
+            const terms = [t.name.toLowerCase()];
+            if (Array.isArray(t.aliases)) {
+                t.aliases.forEach((a: string) => terms.push(a.toLowerCase()));
+            }
+            map.set(String(t.id), terms);
+        });
+        return map;
+    })();
 
-    const catMap = new Map<string, string[]>();
-    categories.forEach((c: any) => {
-        const terms = [(c.name || '').toLowerCase()];
-        if (Array.isArray(c.aliases)) {
-            c.aliases.forEach((a: string) => terms.push(a.toLowerCase()));
-        }
-        catMap.set(String(c.id), terms);
-    });
+    const catMap = (() => {
+        const map = new Map<string, string[]>();
+        categories.forEach((c: any) => {
+            const terms = [(c.name || '').toLowerCase()];
+            if (Array.isArray(c.aliases)) {
+                c.aliases.forEach((a: string) => terms.push(a.toLowerCase()));
+            }
+            map.set(String(c.id), terms);
+        });
+        return map;
+    })();
 
     const photos = (!processingIds || processingIds.length === 0) 
         ? rawPhotos 
         : rawPhotos.filter((p: any) => !processingIds.includes(p.id));
 
-    const result = processPhotos(
-        photos,
+    const result = (processPhotos(
+        photos as any,
         categories,
         tags,
-        urlFilters as any,
-        urlFilters,
+        dataFilters as any,
+        dataFilters,
         {
-            showGroupsCollapsed: urlFilters.showGroupsCollapsed,
+            showGroupsCollapsed: dataFilters.showGroupsCollapsed,
             isAdminModeOverride: isAdminMode,
             tagMap,
             catMap
         }
-    );
+    ));
 
     const displayPhotos = result?.displayPhotos || [];
     const gridPhotos = result?.gridPhotos || [];
@@ -68,7 +74,7 @@ export const useAdminPhotos = () => {
         hasNextPage: !!infinitePhotosQuery.hasNextPage,
         fetchNextPage: infinitePhotosQuery.fetchNextPage,
         infiniteQuery: infinitePhotosQuery,
-        urlFilters,
+        dataFilters,
         isAdminMode
     };
 };

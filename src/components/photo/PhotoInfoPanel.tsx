@@ -108,9 +108,9 @@ export function PhotoInfoPanel({
     <div className={cn("flex flex-col h-full bg-white border-l border-slate-200 select-text", className)}>
       {/* Header with Actions */}
       <div className={cn("p-4 border-b border-slate-100 flex items-center justify-between bg-white/90", headerClassName)}>
-        <h3 className="font-bold text-slate-900 flex items-center gap-2">
-          {isGroup ? <Layers size={18} className="text-brand-navy" /> : <Info size={18} className="text-brand-navy" />}
-          {isGroup ? l.groupDetails : l.photoDetails}
+        <h3 className="font-bold text-slate-900 flex items-center gap-2 truncate max-w-[200px] md:max-w-[280px]">
+          {isGroup ? <Layers size={18} className="text-brand-navy shrink-0" /> : <Info size={18} className="text-brand-navy shrink-0" />}
+          <span className="truncate">{isGroup ? (rawDisplayName || l.groupDetails) : l.photoDetails}</span>
         </h3>
         <ActionButtons 
           isGroup={isGroup} 

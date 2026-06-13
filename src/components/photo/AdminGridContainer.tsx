@@ -26,9 +26,9 @@ export function AdminGridContainer() {
   const isManagement = window.location.pathname.startsWith('/admin');
   
   const navigate = useRouterSafe().navigate;
-  const { filters: urlFilters, setShowGroupsCollapsed, setSearchQuery, setSortOrder } = useUrlFilters();
-  const showGroupsCollapsed = urlFilters.showGroupsCollapsed !== false;
-  const hasSearchQuery = !!urlFilters.searchQuery?.trim();
+  const { dataFilters, setShowGroupsCollapsed, setSearchQuery, setSortOrder } = useUrlFilters();
+  const showGroupsCollapsed = dataFilters.showGroupsCollapsed !== false;
+  const hasSearchQuery = !!dataFilters.searchQuery?.trim();
   
   const update = useUIStore(s => s.update);
   const [columns, setColumns] = useColumns();
@@ -52,7 +52,7 @@ export function AdminGridContainer() {
   const { data: categories = [] } = useCategories();
   const { data: tags = [] } = useTags();
 
-  const filterKeyHash = `${urlFilters.categoryId || 'all'}-${urlFilters.tagId || 'all'}-${encodeURIComponent(urlFilters.searchQuery || '')}-${urlFilters.sortOrder || 'newest'}`;
+  const filterKeyHash = `${dataFilters.categoryId || 'all'}-${dataFilters.tagId || 'all'}-${encodeURIComponent(dataFilters.searchQuery || '')}-${dataFilters.sortOrder || 'newest'}`;
 
   // 1. Data Layer
   const { 
@@ -98,9 +98,9 @@ export function AdminGridContainer() {
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col h-full bg-brand-bg w-full overflow-hidden text-text">
         <AdminFilters 
           onSearch={setSearchQuery}
-          searchQuery={urlFilters.searchQuery || ''}
-          onSortChange={() => setSortOrder(urlFilters.sortOrder === 'newest' ? 'oldest' : 'newest')}
-          currentSort={urlFilters.sortOrder as 'newest' | 'oldest' | 'name'}
+          searchQuery={dataFilters.searchQuery || ''}
+          onSortChange={() => setSortOrder(dataFilters.sortOrder === 'newest' ? 'oldest' : 'newest')}
+          currentSort={dataFilters.sortOrder as 'newest' | 'oldest' | 'name'}
           onColumnsChange={(cols) => {
               setColumns(cols as 2 | 3 | 5);
               navigate({ 
@@ -108,8 +108,8 @@ export function AdminGridContainer() {
               });
           }}
           currentColumns={columns}
-          onToggleGroups={() => setShowGroupsCollapsed(!urlFilters.showGroupsCollapsed)}
-          showGroupsCollapsed={urlFilters.showGroupsCollapsed}
+          onToggleGroups={() => setShowGroupsCollapsed(!dataFilters.showGroupsCollapsed)}
+          showGroupsCollapsed={dataFilters.showGroupsCollapsed}
         />
         
         <div className="flex-1 overflow-hidden bg-brand-bg relative">

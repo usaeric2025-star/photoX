@@ -11,6 +11,18 @@ Output JSON with:
   [{ "label": string, "length": number, "width": number, "height": number, "unit": "cm", "is_ai_estimated": boolean }]
   Note: Ensure length, width, and height are numbers.
 `,
-    ANALYZE_GROUP: (details: string) => `Analyze this group of photos: ${details}`,
+    ANALYZE_GROUP: (details: string) => `
+Analyze this group of furniture/decor photos representing a single product group or series:
+${details}
+
+Based on the individual photo details, provide a cohesive summary for the entire group.
+Output JSON with:
+- name: { en, zh, ms } (Cohesive name for the product series)
+- description: { en, zh, ms } (Brief but professional description for the group)
+- colors: Array of primary colors (e.g., ["Oak", "White"])
+- materials: Array of primary materials (e.g., ["Solid Wood", "MDF"])
+
+Ensure the translations for name and description are accurate for English, Chinese, and Malay.
+`,
     REFINE_PHOTO: (detail: string) => `Refine this photo data: ${detail}`
 };

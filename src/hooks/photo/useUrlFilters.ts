@@ -1,5 +1,4 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
-import React from 'react';
 import { useSearch } from '@tanstack/react-router';
 import { GallerySearchParams } from '@/types/router';
 
@@ -8,18 +7,26 @@ export function useUrlFilters() {
   const params = useRouterSafe().params;
   const navigate = useRouterSafe().navigate;
 
-  const filters = {
+  const dataFilters = {
     categoryId: search.category ?? null,
     tagId: search.tag ?? null,
     manufacturerId: search.manufacturer ?? null,
     searchQuery: search.q ?? '',
     sortOrder: search.sort ?? 'newest',
-    groupId: params.groupId || search.groupId || null,
-    photoId: search.photoId ?? null,
     showGroupsCollapsed: search.showGroupsCollapsed !== 'false',
     is_hidden: search.hidden === 'true',
     onlyUngrouped: search.onlyUngrouped === 'true',
+  };
+
+  const uiState = {
+    photoId: search.photoId ?? null,
+    groupId: params.groupId || search.groupId || null,
     view: search.view || 'grid' 
+  };
+
+  const filters = {
+    ...dataFilters,
+    ...uiState
   };
 
   const setView = (view: 'grid' | 'list') => {
@@ -54,5 +61,17 @@ export function useUrlFilters() {
     navigate({ search: { ...search, showGroupsCollapsed: collapsed ? undefined : 'false' } as any });
   };
 
-  return { filters, setCategory, setTagId, setSearchQuery, setSortOrder, setGroupId, setPhotoId, setShowGroupsCollapsed, setView };
+  return { 
+    filters, 
+    dataFilters,
+    uiState,
+    setCategory, 
+    setTagId, 
+    setSearchQuery, 
+    setSortOrder, 
+    setGroupId, 
+    setPhotoId, 
+    setShowGroupsCollapsed, 
+    setView 
+  };
 }

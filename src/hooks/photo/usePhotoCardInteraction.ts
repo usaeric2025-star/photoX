@@ -38,16 +38,12 @@ export function usePhotoCardInteraction({
   };
 
   const handleOpenLightbox = () => {
-    startTransition(() => {
-      navigate({ to: '.', search: (prev: any) => ({ ...prev, photoId: photo.id } as any) });
-    });
+    navigate({ to: '.', search: (prev: any) => ({ ...prev, photoId: photo.id } as any) });
   };
     
   const handleGroupNavigate = (gid: string) => {
-    startTransition(() => {
-      const targetPath = isManagement ? `/admin/group/${gid}` : `/group/${gid}`;
-      navigate({ to: targetPath, search: (prev: any) => prev });
-    });
+    const targetPath = isManagement ? `/admin/group/${gid}` : `/group/${gid}`;
+    navigate({ to: targetPath, search: (prev: any) => prev });
   };
 
   const handleClick = (e: React.MouseEvent) => {

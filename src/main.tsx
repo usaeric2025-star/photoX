@@ -17,10 +17,14 @@ import { queryClient, persister } from './lib/queryClient';
 import './index.css';
 import { clientEnv } from './shared/envSchema';
 import { migrateStorage } from './services/system/storageService';
+import { router } from './router/index';
+import { initChunkHandler } from '@/lib/chunkErrorHandler';
 
 async function init() {
   // 一次性清理髒數據 (P0: Hygiene)
   await migrateStorage();
+
+  initChunkHandler(router);
 
   if (typeof window !== 'undefined') {
     window.addEventListener('unhandledrejection', (event) => {

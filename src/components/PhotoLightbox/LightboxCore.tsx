@@ -53,23 +53,21 @@ export const LightboxCore = ({
   // Responsive preload
   const preloadCount = typeof window !== 'undefined' && window.innerWidth < 768 ? 1 : 2;
 
-  const slides = React.useMemo(() => {
-    return photos.map(photo => {
-      const thumbUrl = getThumbnailUrl(photo.image_url, 320, photo.updated_at);
-      return {
-        src: photo.image_url,
-        alt: getSafeText(photo.name, lang) || "",
-        thumbnail: thumbUrl,
-        srcSet: [
-          { src: thumbUrl, width: 320, height: 320 },
-          { src: photo.image_url, width: 1920, height: 1920 },
-        ],
-        sizes: "100vw",
-        key: photo.image_url,
-        photo
-      };
-    });
-  }, [photos, lang]);
+  const slides = photos.map(photo => {
+    const thumbUrl = getThumbnailUrl(photo.image_url, 320, photo.updated_at);
+    return {
+      src: photo.image_url,
+      alt: getSafeText(photo.name, lang) || "",
+      thumbnail: thumbUrl,
+      srcSet: [
+        { src: thumbUrl, width: 320, height: 320 },
+        { src: photo.image_url, width: 1920, height: 1920 },
+      ],
+      sizes: "100vw",
+      key: photo.image_url,
+      photo
+    };
+  });
 
   // Keep index synchronized with currentIndex prop
   React.useEffect(() => {
@@ -145,7 +143,6 @@ export const LightboxCore = ({
           return (
             <div 
               className="w-full h-full flex items-center justify-center p-4 sm:p-8"
-              style={{ viewTransitionName: photo ? `photo-${photo.id}` : undefined } as any}
             >
               <OptimizedImage 
                 src={s.src} 

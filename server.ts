@@ -51,11 +51,16 @@ async function bootstrap() {
     });
 
     server.listen(PORT, "0.0.0.0", () => {
-      console.log(`>>> Hono + Vite (Dev) listening on 0.0.0.0:${PORT}`);
+      console.log(`>>> [STARTUP] Hono + Vite (Dev) listening on 0.0.0.0:${PORT}`);
       // [DEV-BRIDGE-PREWARMED] v2.11.1
       fetch(`http://127.0.0.1:${PORT}/api/health`)
-        .then(() => console.log('>>> [PREWARM] Dev Bridge Ready'))
-        .catch(() => {});
+        .then(async (r) => {
+          const data = await r.json();
+          console.log('>>> [PREWARM] Dev Bridge Ready:', data);
+        })
+        .catch((err) => {
+          console.error('>>> [PREWARM] Dev Bridge Failed:', err.message);
+        });
     });
   } else {
     // Production Mode (Standard Node)
