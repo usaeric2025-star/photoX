@@ -39,9 +39,9 @@ export function DrawerHeader({
   
   const { data: detailPhoto } = usePhoto(editPhotoId || '');
   const { tasks } = useTasks();
-  const isAnalyzing = React.useMemo(() => tasks.some((t: any) => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析') || t.name.toLowerCase().includes('analyze') || t.name.toLowerCase().includes('identif'))), [tasks]);
-  const isSyncing = React.useMemo(() => tasks.some((t: any) => t.status === 'running' && (t.name.includes('同步') || t.name.includes('导入'))), [tasks]);
-  const isRunning = React.useMemo(() => tasks.some((t: any) => t.status === 'running'), [tasks]);
+  const isAnalyzing = tasks.some((t: any) => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析') || t.name.toLowerCase().includes('analyze') || t.name.toLowerCase().includes('identif')));
+  const isSyncing = tasks.some((t: any) => t.status === 'running' && (t.name.includes('同步') || t.name.includes('导入')));
+  const isRunning = tasks.some((t: any) => t.status === 'running');
 
   const { mutateAsync: removeFromGroup } = useRemoveFromGroupMutation();
   const { updatePhoto: { mutateAsync: updateAdminPhoto } } = useAdminMaintenance();

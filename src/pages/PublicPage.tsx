@@ -1,11 +1,10 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useSearch } from '@tanstack/react-router';
 import { Skeleton } from '../components/ui/Skeleton';
 import { 
   useCategories, usePhotos, usePhotoCount, 
-  useScrollRestoration,
   usePhotoSelection, useSyncMutation, useTasks
 } from '@/hooks';
 import { useUIStore, useShallow } from '@/store/useUIStore';

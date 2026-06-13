@@ -42,19 +42,17 @@ function BasePhotoTagSelector({
     ),
   );
 
-  const sortedTags = React.useMemo(() => {
-    return [...tags].sort((a, b) => {
-      const isASelected = cleanSelectedIds.includes(String(a.id));
-      const isBSelected = cleanSelectedIds.includes(String(b.id));
+  const sortedTags = [...tags].sort((a, b) => {
+    const isASelected = cleanSelectedIds.includes(String(a.id));
+    const isBSelected = cleanSelectedIds.includes(String(b.id));
 
-      if (isASelected && !isBSelected) return -1;
-      if (!isASelected && isBSelected) return 1;
+    if (isASelected && !isBSelected) return -1;
+    if (!isASelected && isBSelected) return 1;
 
-      return a.name.localeCompare(b.name, undefined, { numeric: true });
-    });
-  }, [tags, cleanSelectedIds]);
+    return a.name.localeCompare(b.name, undefined, { numeric: true });
+  });
 
-  const handleToggleTag = React.useCallback((tag: Tag) => {
+  const handleToggleTag = (tag: Tag) => {
     const strId = String(tag.id);
     if (cleanSelectedIds.includes(strId)) {
       onChange(cleanSelectedIds.filter((id) => id !== strId));
@@ -65,13 +63,13 @@ function BasePhotoTagSelector({
       }
       onChange([...cleanSelectedIds, strId]);
     }
-  }, [cleanSelectedIds, onChange]);
+  };
 
-  const onQuickAdd = React.useCallback(() => addDialog.open(), [addDialog]);
-  const onRenameTagRequest = React.useCallback((tag: Tag) => {
+  const onQuickAdd = () => addDialog.open();
+  const onRenameTagRequest = (tag: Tag) => {
     setEditingTag(tag);
     editDialog.open();
-  }, [editDialog]);
+  };
 
   return (
     <>

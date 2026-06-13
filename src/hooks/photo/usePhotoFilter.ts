@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { Tag, AppSettings } from '@/types';
 
 /**
@@ -32,23 +31,21 @@ export function usePhotoFilter(tags: Tag[], settings?: AppSettings) {
     return new Set(hot.map(t => String(t.id)));
   })();
 
-  const tagsToRender = useMemo(() => {
-    return [...tags].sort((a, b) => {
-      const aPinned = !!a.is_pinned || pinnedIds.includes(String(a.id));
-      const bPinned = !!b.is_pinned || pinnedIds.includes(String(b.id));
-      if (aPinned && !bPinned) return -1;
-      if (!aPinned && bPinned) return 1;
-      
-      const aHot = hotIds.has(String(a.id));
-      const bHot = hotIds.has(String(b.id));
-      if (aHot && !bHot) return -1;
-      if (!aHot && bHot) return 1;
-      
-      const countA = a.hot_score || 0;
-      const countB = b.hot_score || 0;
-      return countB - countA || (a.name || '').localeCompare(b.name || '', 'zh-CN');
-    });
-  }, [tags, pinnedIds, hotIds]);
+  const tagsToRender = [...tags].sort((a, b) => {
+    const aPinned = !!a.is_pinned || pinnedIds.includes(String(a.id));
+    const bPinned = !!b.is_pinned || pinnedIds.includes(String(b.id));
+    if (aPinned && !bPinned) return -1;
+    if (!aPinned && bPinned) return 1;
+    
+    const aHot = hotIds.has(String(a.id));
+    const bHot = hotIds.has(String(b.id));
+    if (aHot && !bHot) return -1;
+    if (!aHot && bHot) return 1;
+    
+    const countA = a.hot_score || 0;
+    const countB = b.hot_score || 0;
+    return countB - countA || (a.name || '').localeCompare(b.name || '', 'zh-CN');
+  });
 
   return { tagsToRender, pinnedIds, hotIds };
 }

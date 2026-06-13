@@ -6,7 +6,6 @@ import { syncCache } from '@/lib/db/indexedDB';
 import { PHOTO_QUERY_CONFIG } from '@/constants/config';
 import { useQueryClient, InfiniteData } from '@tanstack/react-query';
 import { Photo } from '@/types';
-import { useMemo } from 'react';
 
 interface PhotoFilters {
   category_id?: string | null;
@@ -73,7 +72,13 @@ export const usePhotos = createInfiniteQuery<{photos: Photo[], nextPage?: number
     });
 
     if (pageParam === 1 && !filters.searchQuery && !filters.category_id && !filters.tag_id) {
-      syncCache.savePhotos(photos).catch(() => {});
+      syncCache.savePhotos(photos)
+        .then(() => {
+          import('@/lib/queryClient').then(({ queryClient }) => {
+            queryClient.invalidateQueries({ queryKey: ['photos', 'count'] });
+          }).catch(() => {});
+        })
+        .catch(() => {});
     }
 
     return {

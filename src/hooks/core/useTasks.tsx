@@ -146,9 +146,9 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(timer);
   }, []);
 
-  const value = React.useMemo(() => ({
+  const value = {
     tasks, addTask, updateTask, removeTask, clearCompleted, isAvoidingSelection, setAvoidingSelection, cancelTask, isTaskRunning
-  }), [tasks, addTask, updateTask, removeTask, clearCompleted, isAvoidingSelection, setAvoidingSelection, cancelTask, isTaskRunning]);
+  };
 
   return (
     <TaskContext.Provider value={value}>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTasks, useAuth } from '../';
 import { UnifiedTask, TaskStatus } from '@/types';
 import { api } from '@/lib/api';
@@ -54,58 +54,56 @@ export function useGlobalTasks() {
   });
 
   // 3. Adapter Logic: Transform to UnifiedTask
-  const aggregatedTasks = useMemo(() => {
-    const unified: UnifiedTask[] = [];
+  const aggregatedTasks: UnifiedTask[] = [];
 
-    // Map Local Tasks
-    const safeLocalTasks = Array.isArray(localTasks) ? localTasks : [];
-    safeLocalTasks.forEach(lt => {
-      let status: TaskStatus = 'processing';
-      if (lt.status === 'completed') status = 'completed';
-      if (lt.status === 'error' || lt.status === 'cancelled') status = 'failed';
+  // Map Local Tasks
+  const safeLocalTasks = Array.isArray(localTasks) ? localTasks : [];
+  safeLocalTasks.forEach(lt => {
+    let status: TaskStatus = 'processing';
+    if (lt.status === 'completed') status = 'completed';
+    if (lt.status === 'error' || lt.status === 'cancelled') status = 'failed';
 
-      unified.push({
-        id: lt.id,
-        source: 'session', 
-        title: lt.name,
-        status,
-        progress: lt.progress || 0,
-        message: lt.message,
-        createdAt: Date.now(),
-      });
+    aggregatedTasks.push({
+      id: lt.id,
+      source: 'session', 
+      title: lt.name,
+      status,
+      progress: lt.progress || 0,
+      message: lt.message,
+      createdAt: Date.now(),
     });
+  });
 
-    // Map Remote Jobs
-    const safeRemoteJobs = Array.isArray(remoteJobs) ? remoteJobs : [];
-    safeRemoteJobs.forEach(rj => {
-      if (!rj?.id) return;
-      let status: TaskStatus = 'processing';
-      if (rj.status === 'completed') status = 'completed';
-      if (rj.status === 'failed') status = 'failed';
+  // Map Remote Jobs
+  const safeRemoteJobs = Array.isArray(remoteJobs) ? remoteJobs : [];
+  safeRemoteJobs.forEach(rj => {
+    if (!rj?.id) return;
+    let status: TaskStatus = 'processing';
+    if (rj.status === 'completed') status = 'completed';
+    if (rj.status === 'failed') status = 'failed';
 
-      // Fix parse int for Date.now 
-      const timestampPart = rj.id.split('_').pop();
-      const parsedTime = parseInt(timestampPart || Date.now().toString());
+    // Fix parse int for Date.now 
+    const timestampPart = rj.id.split('_').pop();
+    const parsedTime = parseInt(timestampPart || Date.now().toString());
 
-      unified.push({
-        id: rj.id,
-        source: 'maintenance',
-        title: rj.id.startsWith('sync') ? '计数值同步' :
-               rj.id.startsWith('backfill') ? '哈希补全' :
-               rj.id.startsWith('restore') ? '孤兒照片導出' : '系统维护',
-        status,
-        progress: rj.progress || 0,
-        processed: rj.processed,
-        total: rj.total,
-        message: rj.message || rj.error,
-        createdAt: Number.isNaN(parsedTime) ? Date.now() : parsedTime,
-        jobId: rj.id
-      });
+    aggregatedTasks.push({
+      id: rj.id,
+      source: 'maintenance',
+      title: rj.id.startsWith('sync') ? '计数值同步' :
+             rj.id.startsWith('backfill') ? '哈希补全' :
+             rj.id.startsWith('restore') ? '孤兒照片導出' : '系统维护',
+      status,
+      progress: rj.progress || 0,
+      processed: rj.processed,
+      total: rj.total,
+      message: rj.message || rj.error,
+      createdAt: Number.isNaN(parsedTime) ? Date.now() : parsedTime,
+      jobId: rj.id
     });
+  });
 
-    // Sort by updated time (newest first)
-    return unified.sort((a, b) => b.createdAt - a.createdAt);
-  }, [localTasks, remoteJobs]);
+  // Sort by updated time (newest first)
+  aggregatedTasks.sort((a, b) => b.createdAt - a.createdAt);
 
   return {
     tasks: aggregatedTasks,

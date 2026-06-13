@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useRef } from 'react';
 import { useParams, useLocation, useNavigate } from '@tanstack/react-router';
 
 export const useRouterSafe = () => {
@@ -9,9 +9,9 @@ export const useRouterSafe = () => {
   const latestRef = useRef({ params, location, navigate });
   latestRef.current = { params, location, navigate };
 
-  return useMemo(() => ({
+  return {
     get params() { return latestRef.current.params },
     get location() { return latestRef.current.location },
     get navigate() { return latestRef.current.navigate },
-  }), []);
+  };
 };

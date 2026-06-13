@@ -6,7 +6,9 @@ interface ModalProps {
   children: React.ReactNode;
   title?: string;
   description?: string;
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full' | 'screen';
+  className?: string;
+  hidePadding?: boolean;
 }
 
 const sizeClasses = {
@@ -15,6 +17,7 @@ const sizeClasses = {
   lg: 'max-w-2xl',
   xl: 'max-w-4xl',
   full: 'max-w-[90vw]',
+  screen: 'max-w-[100vw] w-[100vw] h-[100dvh] max-h-[100dvh] rounded-none m-0',
 };
 
 export function Modal({ 
@@ -23,7 +26,9 @@ export function Modal({
   children, 
   title, 
   description,
-  size = 'md' 
+  size = 'md',
+  className = '',
+  hidePadding = false
 }: ModalProps) {
   const ref = React.useRef<HTMLDialogElement>(null);
 
@@ -65,16 +70,17 @@ export function Modal({
       ref={ref}
       onClick={handleBackdropClick}
       className={`
-        fixed inset-0 m-auto
+        fixed m-auto
         ${sizeClasses[size]}
-        w-full rounded-2xl shadow-2xl bg-white border border-slate-100
+        ${size === 'screen' ? '' : 'inset-0 rounded-2xl border border-slate-100'}
+        w-full shadow-2xl bg-white
         backdrop:bg-black/60 backdrop:backdrop-blur-sm
         open:animate-in open:fade-in open:zoom-in-95 duration-200
-        p-0 overflow-hidden outline-none
+        p-0 overflow-hidden outline-none ${className}
       `}
       id="unified-app-modal"
     >
-      <div className="flex flex-col max-h-[85vh] w-full">
+      <div className={`flex flex-col w-full ${size === 'screen' ? 'h-full max-h-none' : 'max-h-[85vh]'}`}>
         {/* Title area */}
         {(title || description) && (
           <div className="border-b border-slate-100 px-6 py-4 flex flex-col gap-1 shrink-0 bg-slate-50/50">
@@ -92,7 +98,7 @@ export function Modal({
         )}
 
         {/* Content area */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 min-h-0">
+        <div className={`flex-1 overflow-y-auto min-h-0 ${hidePadding ? '' : 'px-6 py-5'}`}>
           {children}
         </div>
       </div>

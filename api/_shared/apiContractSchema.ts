@@ -71,13 +71,13 @@ export const ImportOrphansReqSchema = type({
 export const PhotoListReqSchema = type({
     "page?": "number",
     "limit?": "number",
-    "categoryId?": "string|null",
-    "tagId?": "string|null",
+    "categoryId?": "string|number|null",
+    "tagId?": "string|number|null",
     "searchQuery?": "string|null",
     "isAdminMode?": "boolean",
     "sortOrder?": "string|null",
     "onlyUngrouped?": "boolean",
-    "manufacturerId?": "string|null",
+    "manufacturerId?": "string|number|null",
     "isHidden?": "boolean|null"
 });
 

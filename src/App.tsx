@@ -3,7 +3,7 @@ import { ConfirmProvider } from './context/ConfirmContext';
 import { RouterProvider } from '@tanstack/react-router';
 import { router } from './router/index';
 import { Analytics } from '@vercel/analytics/react';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/core/auth/useAuth';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { migrateStorage } from '@/services/system/storageService';
@@ -47,12 +47,12 @@ export default function AppRoutes() {
     }
   }, [user, isLoading]);
 
-  const routerContext = useMemo(() => ({
+  const routerContext = {
     user: user ?? null,
     role: user ? ('admin' as const) : ('guest' as const),
     can: () => !!user,
     availableActions: [],
-  }), [user]);
+  };
 
   if (isLoading) {
     return <LoadingScreen />;

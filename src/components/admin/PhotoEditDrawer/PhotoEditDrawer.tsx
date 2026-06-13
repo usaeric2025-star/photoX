@@ -44,8 +44,8 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
 
   return (
     <PhotoEditSessionProvider key={editPhotoId} photoId={editPhotoId} onSuccess={handleClose}>
-      <Modal open={isOpen} onClose={handleClose} size="full">
-        <div className="flex flex-col h-full bg-slate-50 focus:outline-none">
+      <Modal open={isOpen} onClose={handleClose} size="screen" hidePadding>
+        <div className="flex flex-col h-full w-full bg-slate-50 focus:outline-none">
           <DrawerHeader onClose={handleClose} onDeleteClick={deleteDialog.toggle} />
 
           <DeletePhotoDialog
@@ -62,7 +62,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
             }}
           />
 
-          <div className="flex-1 overflow-hidden flex flex-col pt-2 min-h-0">
+          <div className="flex-1 overflow-hidden flex flex-col pt-2 min-h-0 w-full">
             <PhotoEditTabs 
               editPhotoId={editPhotoId}
               appLang={appLang}

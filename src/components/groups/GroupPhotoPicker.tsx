@@ -1,6 +1,6 @@
 import { showToast } from '@/lib/ui/toast';
 import { useUIStore } from '@/store/useUIStore';
-import React, { useState, useMemo, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { X, Check, Search, Plus, Upload, Sparkles } from "lucide-react";
 import {
   Dialog,

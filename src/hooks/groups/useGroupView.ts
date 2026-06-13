@@ -2,7 +2,6 @@ import { queryClient } from '@/lib/queryClient';
 import { groupKeys } from '@/lib/queryKeys';
 import { useGroupPhotos } from '@/hooks';
 import { cleanPhotos } from '@/services/photo/processing';
-import { useMemo } from 'react';
 
 /**
  * useGroupView
@@ -11,10 +10,7 @@ import { useMemo } from 'react';
 export function useGroupView(activeGroupId: string | null) {
   const groupPhotosQuery = useGroupPhotos(activeGroupId, true);
   
-  const groupPhotos = useMemo(
-    () => cleanPhotos(groupPhotosQuery.data?.pages.flatMap((p: any) => p.photos) || []),
-    [groupPhotosQuery.data]
-  );
+  const groupPhotos = cleanPhotos(groupPhotosQuery.data?.pages.flatMap((p: any) => p.photos) || []);
 
   return {
     groupPhotos,

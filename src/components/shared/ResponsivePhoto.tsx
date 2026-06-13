@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Photo } from '@/types';
 import { thumbHashToDataURL } from '@/services/storage/thumbHash';
 import { ContractedImage } from './ContractedImage';

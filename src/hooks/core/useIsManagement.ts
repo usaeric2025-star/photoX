@@ -1,5 +1,4 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
-import { useMemo } from 'react';
 
 /**
  * useIsManagement
@@ -8,7 +7,7 @@ import { useMemo } from 'react';
  */
 export function useIsManagement() {
   const location = useRouterSafe().location;
-  const isManagement = useMemo(() => location.pathname.startsWith('/admin'), [location.pathname]);
+  const isManagement = location.pathname.startsWith('/admin');
   
   return isManagement;
 }

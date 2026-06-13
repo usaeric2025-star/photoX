@@ -132,7 +132,7 @@ export function BasicInfoTab() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 xl:gap-4">
         <div className="space-y-1.5 opacity-50 select-none">
           <h3 className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter px-1 flex items-center gap-1">
             <Lock size={8} className="text-slate-300" />

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { RefreshCw, MoreHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCategories, useTags, usePhotoFilter, useSettings, useUrlFilters, useAdminMode } from '@/hooks';

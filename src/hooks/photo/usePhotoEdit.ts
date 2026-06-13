@@ -1,6 +1,6 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useInvalidatePhotos } from '@/hooks';
-import { useMemo, useEffect } from 'react';
+import { useEffect } from 'react';
 import { isEqual } from 'lodash-es';
 import { Photo, ProductFormData } from '@/types';
 import { useFormDraft } from '@/hooks';
@@ -33,14 +33,12 @@ export function usePhotoEdit(initialPhoto: Photo | null): PhotoEditFormReturn {
     is_group_cover: false,
   };
 
-  const initialValues = useMemo(() => {
-    return initialPhoto ? {
-      ...emptyPhoto,
-      ...initialPhoto,
-      name: (initialPhoto.name && typeof initialPhoto.name === 'object') ? initialPhoto.name : { zh: (initialPhoto.name as unknown as string) || '', en: '', ms: '' },
-      description: (initialPhoto.description && typeof initialPhoto.description === 'object') ? initialPhoto.description : { zh: (initialPhoto.description as unknown as string) || '', en: '', ms: '' },
-    } : emptyPhoto;
-  }, [initialPhoto]);
+  const initialValues = initialPhoto ? {
+    ...emptyPhoto,
+    ...initialPhoto,
+    name: (initialPhoto.name && typeof initialPhoto.name === 'object') ? initialPhoto.name : { zh: (initialPhoto.name as unknown as string) || '', en: '', ms: '' },
+    description: (initialPhoto.description && typeof initialPhoto.description === 'object') ? initialPhoto.description : { zh: (initialPhoto.description as unknown as string) || '', en: '', ms: '' },
+  } : emptyPhoto;
 
   const { draft, updateDraft, resetDraft } = useFormDraft<ProductFormData>(initialValues as ProductFormData);
 

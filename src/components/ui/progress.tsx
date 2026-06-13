@@ -1,10 +1,7 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
-const Progress = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & { value?: number }
->(({ className, value, ...props }, ref) => (
+const Progress = ({ className, value, ref, ...props }: React.HTMLAttributes<HTMLDivElement> & { value?: number, ref?: React.Ref<HTMLDivElement> }) => (
   <div
     ref={ref}
     className={cn(
@@ -18,7 +15,6 @@ const Progress = React.forwardRef<
       style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
     />
   </div>
-))
-Progress.displayName = "Progress"
+);
 
 export { Progress }

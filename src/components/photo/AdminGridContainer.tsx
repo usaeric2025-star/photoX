@@ -1,5 +1,5 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { motion, LayoutGroup } from 'motion/react';
 import { Photo } from '@/types';
 import { VirtualPhotoGrid } from '@/components/photo/VirtualPhotoGrid';
@@ -24,7 +24,6 @@ import { useAdminSelection } from '@/hooks/admin/useAdminSelection';
 export function AdminGridContainer() {
   const { handleBatchAiIdentifyTrigger } = useAdminBatchActions();
   const isManagement = window.location.pathname.startsWith('/admin');
-  useScrollRestoration('admin_gallery_scroll');
   
   const navigate = useRouterSafe().navigate;
   const { filters: urlFilters, setShowGroupsCollapsed, setSearchQuery, setSortOrder } = useUrlFilters();
@@ -34,9 +33,26 @@ export function AdminGridContainer() {
   const update = useUIStore(s => s.update);
   const [columns, setColumns] = useColumns();
   const isMultiSelect = useUIStore(s => s.isMultiSelect);
+  
+  useEffect(() => {
+    const handleResize = () => {
+      const isMobile = window.innerWidth <= 768;
+      if (isMobile) {
+        setColumns(3);
+      } else {
+        setColumns(5); // Default desktop to 5
+      }
+    };
+    handleResize(); 
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [setColumns]);
 
   const { data: categories = [] } = useCategories();
   const { data: tags = [] } = useTags();
+
+  const filterKeyHash = `${urlFilters.categoryId || 'all'}-${urlFilters.tagId || 'all'}-${encodeURIComponent(urlFilters.searchQuery || '')}-${urlFilters.sortOrder || 'newest'}`;
 
   // 1. Data Layer
   const { 
@@ -60,7 +76,7 @@ export function AdminGridContainer() {
   const virtualGridRef = useRef<any>(null);
   const scrollToTop = () => virtualGridRef.current?.scrollToIndex(0);
 
-  const renderCard = React.useCallback((photo: Photo, index: number, categories: any[]) => (
+  const renderCard = (photo: Photo, index: number, categories: any[]) => (
     <PhotoCard 
       key={photo.id}
       photo={photo}
@@ -71,7 +87,7 @@ export function AdminGridContainer() {
       sharedTags={tags}
       canPin={canPin}
     />
-  ), [showGroupsCollapsed, hasSearchQuery, canPin, tags]);
+  );
 
   const disableMultiSelect = () => {
     update({ isMultiSelect: false, selectedIds: [] });
@@ -97,18 +113,18 @@ export function AdminGridContainer() {
         />
         
         <div className="flex-1 overflow-hidden bg-brand-bg relative">
-           <VirtualPhotoGrid 
-             key={`photo-grid-${urlFilters.showGroupsCollapsed ? 'c' : 'e'}-${urlFilters.searchQuery || ''}`}
-             restoreKey="admin_view_scroll_vlist"
-             photos={gridPhotos}
-             isFetching={isLoading}
-             isFetchingNextPage={isFetchingNextPage}
-             hasNextPage={hasNextPage}
-             onLoadMore={fetchNextPage}
-             renderCard={renderCard}
-             columns={columns}
-             categories={categories}
-           />
+            <VirtualPhotoGrid 
+              key={`admin-photo-grid-${filterKeyHash}-${columns}`}
+              restoreKey={`admin_view_scroll_vlist-${filterKeyHash}`}
+              photos={gridPhotos}
+              isFetching={isLoading}
+              isFetchingNextPage={isFetchingNextPage}
+              hasNextPage={hasNextPage}
+              onLoadMore={fetchNextPage}
+              renderCard={renderCard}
+              columns={columns}
+              categories={categories}
+            />
         </div>
 
         <UploadButton 

@@ -42,27 +42,29 @@ export function AISourceTab({ photoId }: AISourceTabProps) {
   }
 
   // Prettify the JSON if it's stringified JSON, otherwise show raw text
-  const formattedResult = React.useMemo(() => {
-    if (!aiResult?.raw_result) return '';
+  let formattedResult = '';
+  if (aiResult?.raw_result) {
     try {
       const raw = aiResult.raw_result.trim();
       // If it looks like JSON or contains JSON wrapping, try to parse and format it
       if (raw.startsWith('{') || raw.startsWith('[')) {
         const parsed = JSON.parse(raw);
-        return JSON.stringify(parsed, null, 2);
+        formattedResult = JSON.stringify(parsed, null, 2);
       } else {
         // Check if it has markdown block ```json ... ```
         const match = raw.match(/```json\s+([\s\S]*?)```/);
         if (match) {
           const parsed = JSON.parse(match[1]);
-          return JSON.stringify(parsed, null, 2);
+          formattedResult = JSON.stringify(parsed, null, 2);
+        } else {
+            formattedResult = aiResult.raw_result;
         }
       }
     } catch (e) {
       // Keep original string if parsing fails
+      formattedResult = aiResult.raw_result;
     }
-    return aiResult.raw_result;
-  }, [aiResult?.raw_result]);
+  }
 
   return (
     <div className="space-y-4 pt-4">

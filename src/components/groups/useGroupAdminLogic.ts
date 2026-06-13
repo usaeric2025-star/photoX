@@ -1,5 +1,5 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Photo } from "../../types";
 import { filterPhotosByMode } from "@/services/photo/processing";
 import { useAdminMaintenance } from "@/hooks/admin/useAdminMaintenance";
@@ -57,10 +57,7 @@ export const useGroupAdminLogic = () => {
   const { data: dbGroupPhotosPages, isLoading: isGroupPhotosLoading } =
     useGroupPhotos(activeGroupId, isAdminMode);
   
-  const dbGroupPhotos = useMemo(() => 
-    dbGroupPhotosPages?.pages.flatMap((p: any) => p.photos) ?? [],
-    [dbGroupPhotosPages]
-  );
+  const dbGroupPhotos = dbGroupPhotosPages?.pages.flatMap((p: any) => p.photos) ?? [];
 
   const {
     groupData,
@@ -70,15 +67,15 @@ export const useGroupAdminLogic = () => {
     removeDraftGroup
   } = useGroupDraft(activeGroupId, dbGroupPhotos, onUpdatePhoto);
 
-  const activeGroupPhotos = useMemo(() => {
-    if (!activeGroupId) return [];
+  let activeGroupPhotos: Photo[] = [];
+  if (activeGroupId) {
     let groupPhotos = dbGroupPhotos;
     
     if (processingIds && processingIds.length > 0) {
         groupPhotos = groupPhotos.filter((p: any) => !processingIds.includes(p.id));
     }
 
-    return filterPhotosByMode(groupPhotos, isAdminMode)
+    activeGroupPhotos = filterPhotosByMode(groupPhotos, isAdminMode)
       .map(p => ({
         ...p,
         is_group_cover: groupData?.cover_photo_id === p.id || !!p.is_group_cover
@@ -95,7 +92,7 @@ export const useGroupAdminLogic = () => {
       if (b.group_order !== undefined) return 1;
       return (a.item_code || "").localeCompare(b.item_code || "");
     });
-  }, [activeGroupId, dbGroupPhotos, processingIds, isAdminMode, groupData?.cover_photo_id]);
+  }
 
   const {
     setCover,

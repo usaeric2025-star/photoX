@@ -28,8 +28,12 @@ export const listHandler = (app: Hono) => {
     if (!isAdminMode) query = query.or('is_hidden.is.false,is_hidden.is.null'); // Simplified visibility
     else if (isHidden !== undefined && isHidden !== null) query = query.eq('is_hidden', isHidden);
     
-    if (manufacturerId) query = query.eq('manufacturer_id', manufacturerId);
-    if (categoryId) query = query.eq('category_id', categoryId);
+    if (manufacturerId !== undefined && manufacturerId !== null) {
+      query = query.eq('manufacturer_id', String(manufacturerId));
+    }
+    if (categoryId !== undefined && categoryId !== null) {
+      query = query.eq('category_id', String(categoryId));
+    }
     
     const from = page * limit;
     const to = from + limit - 1;
@@ -88,9 +92,12 @@ export const listHandler = (app: Hono) => {
     const supabase = await getSupabaseAdmin();
     let query = supabase.from(TABLE_NAME).select('*', { count: 'exact', head: true });
     if (!isAdminMode) query = query.or('is_hidden.is.false,is_hidden.is.null');
-    if (categoryId) query = query.eq('category_id', categoryId);
-    if (tagId) {
-      const { data: ptData } = await supabase.from('photo_tags').select('photo_id').eq('tag_id', tagId);
+    
+    if (categoryId !== undefined && categoryId !== null) {
+      query = query.eq('category_id', String(categoryId));
+    }
+    if (tagId !== undefined && tagId !== null) {
+      const { data: ptData } = await supabase.from('photo_tags').select('photo_id').eq('tag_id', String(tagId));
       const ids = (ptData || []).map((pt: any) => String(pt.photo_id));
       if (ids.length > 0) query = query.in('id', ids);
       else return c.json({ success: true, data: 0 });

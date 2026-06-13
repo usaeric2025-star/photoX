@@ -1,5 +1,4 @@
 import { usePhotos, useUrlFilters, useAdminMode } from '@/hooks';
-import { useMemo } from 'react';
 
 /**
  * usePhotoGallery
@@ -22,9 +21,7 @@ export function usePhotoGallery() {
     is_hidden: isAdminMode ? undefined : false
   });
 
-  const photos = useMemo(() => {
-    return infinitePhotosQuery.data?.photos ?? [];
-  }, [infinitePhotosQuery.data?.photos]);
+  const photos = infinitePhotosQuery.data?.photos ?? [];
 
   return {
     photos,

@@ -1,5 +1,5 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import React, { useState, useRef, useMemo, useDeferredValue } from "react";
+import React, { useState, useRef, useDeferredValue } from "react";
 import { createPortal } from "react-dom";
 import { Pencil, Trash2, Heart, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -64,43 +64,41 @@ export function TagEditor({
 
   const { hotIds: hotTagsSet, pinnedIds } = usePhotoFilter(allTags, settings);
 
-  const filteredTags = useMemo(() => {
-    const selectedSet = new Set(selectedTagIds.map(String));
-    const pinnedSet = new Set(pinnedIds.map(String));
-    const hotSet = hotTagsSet;
+  const selectedSet = new Set(selectedTagIds.map(String));
+  const pinnedSet = new Set(pinnedIds.map(String));
+  const hotSet = hotTagsSet;
 
-    // 1. Data Source
-    let displayList: Tag[] = [];
+  // 1. Data Source
+  let displayList: Tag[] = [];
+  
+  if (!deferredSearchTerm.trim()) {
+    // If no search, show hot/pinned and basic set from allTags (or just a subset)
+    displayList = allTags;
+  } else {
+    // Start with search results
+    displayList = searchResults;
+
+    // Add selected tags if they are missing from search results
+    const searchIds = new Set(searchResults.map(t => String(t.id)));
+    const missingSelected = allTags.filter(t => selectedSet.has(String(t.id)) && !searchIds.has(String(t.id)));
+    displayList = [...displayList, ...missingSelected];
+  }
+
+  // 2. Sort Logic
+  const filteredTags = [...displayList].sort((a, b) => {
+    const aId = String(a.id);
+    const bId = String(b.id);
     
-    if (!deferredSearchTerm.trim()) {
-      // If no search, show hot/pinned and basic set from allTags (or just a subset)
-      displayList = allTags;
-    } else {
-      // Start with search results
-      displayList = searchResults;
+    const aSelected = selectedSet.has(aId);
+    const bSelected = selectedSet.has(bId);
+    if (aSelected !== bSelected) return aSelected ? -1 : 1;
 
-      // Add selected tags if they are missing from search results
-      const searchIds = new Set(searchResults.map(t => String(t.id)));
-      const missingSelected = allTags.filter(t => selectedSet.has(String(t.id)) && !searchIds.has(String(t.id)));
-      displayList = [...displayList, ...missingSelected];
-    }
+    const aPinned = pinnedSet.has(aId);
+    const bPinned = pinnedSet.has(bId);
+    if (aPinned !== bPinned) return aPinned ? -1 : 1;
 
-    // 2. Sort Logic
-    return [...displayList].sort((a, b) => {
-      const aId = String(a.id);
-      const bId = String(b.id);
-      
-      const aSelected = selectedSet.has(aId);
-      const bSelected = selectedSet.has(bId);
-      if (aSelected !== bSelected) return aSelected ? -1 : 1;
-
-      const aPinned = pinnedSet.has(aId);
-      const bPinned = pinnedSet.has(bId);
-      if (aPinned !== bPinned) return aPinned ? -1 : 1;
-
-      return a.name.localeCompare(b.name, undefined, { numeric: true });
-    });
-  }, [allTags, searchResults, deferredSearchTerm, pinnedIds, hotTagsSet, selectedTagIds]);
+    return a.name.localeCompare(b.name, undefined, { numeric: true });
+  });
 
   return (
     <div className="space-y-2">

@@ -8,7 +8,7 @@ export function useUrlFilters() {
   const params = useRouterSafe().params;
   const navigate = useRouterSafe().navigate;
 
-  const filters = React.useMemo(() => ({
+  const filters = {
     categoryId: search.category ?? null,
     tagId: search.tag ?? null,
     manufacturerId: search.manufacturer ?? null,
@@ -19,11 +19,8 @@ export function useUrlFilters() {
     showGroupsCollapsed: search.showGroupsCollapsed !== 'false',
     is_hidden: search.hidden === 'true',
     onlyUngrouped: search.onlyUngrouped === 'true',
-    view: search.view || 'grid' }), [
-    search.category, search.tag, search.manufacturer, search.q, search.sort, search.groupId,
-    search.photoId, search.showGroupsCollapsed, search.hidden, search.onlyUngrouped, search.view,
-    params.groupId
-  ]);
+    view: search.view || 'grid' 
+  };
 
   const setView = (view: 'grid' | 'list') => {
     navigate({ search: { ...search, view: view === 'grid' ? undefined : 'list' } as any });
