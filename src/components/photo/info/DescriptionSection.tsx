@@ -48,7 +48,7 @@ export function DescriptionSection({
         />
       </div>
       
-      <div className="text-sm text-slate-700 leading-relaxed bg-slate-50/50 p-3 rounded-lg border border-slate-100 whitespace-pre-wrap">
+      <div className="text-xs md:text-[13px] text-slate-600 leading-relaxed bg-slate-50/50 p-3 rounded-lg border border-slate-100 whitespace-pre-wrap font-normal">
         {displayDesc}
       </div>
     </section>

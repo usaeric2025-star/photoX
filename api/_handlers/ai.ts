@@ -247,7 +247,8 @@ ai.post("/analyze-photo-v2", async (c) => {
             provider,
             model,
             messages: [{ role: "user", content: prompt }],
-            prompt
+            prompt,
+            metadata: { photoId: check.photoId }
         });
 
       if (data && (data as any)._fallback) {

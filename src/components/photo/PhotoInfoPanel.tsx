@@ -105,7 +105,7 @@ export function PhotoInfoPanel({
   const hasMs = !!(data as Photo).description?.ms;
 
   return (
-    <div className={cn("flex flex-col h-full bg-white/95 backdrop-blur-md border-l border-slate-200 select-text", className)}>
+    <div className={cn("flex flex-col h-full bg-white border-l border-slate-200 select-text", className)}>
       {/* Header with Actions */}
       <div className={cn("p-4 border-b border-slate-100 flex items-center justify-between bg-white/90", headerClassName)}>
         <h3 className="font-bold text-slate-900 flex items-center gap-2">

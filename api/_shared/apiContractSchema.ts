@@ -40,7 +40,8 @@ export const AIAnalyzeGroupReqSchema = type({
 });
 
 export const AIAnalyzePhotoV2ReqSchema = type({
-    photoDetail: "string"
+    photoDetail: "string",
+    "photoId?": "string"
 });
 
 export const StorageAuditResSchema = type({

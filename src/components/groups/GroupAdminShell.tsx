@@ -183,6 +183,10 @@ export function GroupAdminShell() {
            onDelete={handleBulkRemoveRequest}
            onHide={(ids) => (adminActions.batchUpdate.mutateAsync as any)({ ids, updates: { is_hidden: true } })}
            onCopy={(ids) => hookHandleBulkAction('batch')}
+           onBatchEdit={(ids) => {
+             update({ batchEditingIds: ids });
+             navigate({ to: '/admin/batch-edit' });
+           }}
          />
 
          {/* Bottom Toolbar (when not in multi-select mode) */}

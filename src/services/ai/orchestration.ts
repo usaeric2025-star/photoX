@@ -36,6 +36,7 @@ export const analyzeAndSavePhoto = async (
       name: nameObj,
       description: descObj,
       category_id: analysisData.category_id ? String(analysisData.category_id) : null,
+      group_id: analysisData.group_id ? String(analysisData.group_id) : null,
       dimensions: analysisData.dimensions || [],
       metadata: {
         ...(photo.metadata || {}),

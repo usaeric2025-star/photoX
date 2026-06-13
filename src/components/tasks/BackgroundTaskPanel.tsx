@@ -7,12 +7,18 @@ import { useGlobalTasks } from '@/hooks/admin/useGlobalTasks';
 import { useUIStore } from '@/store/useUIStore';
 
 export function BackgroundTaskPanel() {
-  const { removeTask, clearCompleted, isAvoidingSelection, cancelTask } = useTasks();
+  const { removeTask, clearCompleted, isAvoidingSelection, cancelTask, setAvoidingSelection } = useTasks();
   const { tasks: allTasks } = useGlobalTasks();
   const [isExpanded, setIsExpanded] = useState(false);
   const location = useRouterSafe().location;
   const navigate = useRouterSafe().navigate;
   const updateStore = useUIStore(s => s.update);
+  const isSelecting = useUIStore(s => s.isMultiSelect && s.selectedIds.length > 0);
+  
+  // Set avoidance when multi-select is active to prevent blocking the selection toolbar
+  useEffect(() => {
+    setAvoidingSelection(isSelecting);
+  }, [isSelecting, setAvoidingSelection]);
   
   const activeTasks = allTasks.filter(t => t.status === 'processing' || t.status === 'running' as any);
   const hasTasks = allTasks.length > 0;

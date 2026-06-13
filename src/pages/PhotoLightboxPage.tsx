@@ -98,8 +98,11 @@ export const PhotoLightboxPage = () => {
 
   const handleEdit = () => {
     if (currentPhoto) {
-      updateUIStore({ editPhotoId: currentPhoto.id });
+      const id = currentPhoto.id;
       close(); 
+      setTimeout(() => {
+        updateUIStore({ editPhotoId: id });
+      }, 150);
     }
   };
 
@@ -107,8 +110,11 @@ export const PhotoLightboxPage = () => {
 
   const handleAiAnalyze = () => {
     if (currentPhoto) {
-      updateUIStore({ editPhotoId: currentPhoto.id });
+      const id = currentPhoto.id;
       close();
+      setTimeout(() => {
+        updateUIStore({ editPhotoId: id });
+      }, 150);
     }
   };
   
@@ -153,7 +159,7 @@ export const PhotoLightboxPage = () => {
                   onDelete={handleDelete}
                   onAiAnalyze={handleAiAnalyze}
                   onClose={() => setShowInfo(false)}
-                  className="pointer-events-auto w-full h-full shadow-2xl shadow-black/20 border-l border-white/20 bg-background/95 backdrop-blur-2xl animate-in slide-in-from-right duration-300 ease-out"
+                  className="pointer-events-auto w-full h-full shadow-2xl shadow-black/20 border-l border-slate-200 bg-white animate-in slide-in-from-right duration-300 ease-out"
                   headerClassName="md:pl-4 pl-20"
                 />
               </div>

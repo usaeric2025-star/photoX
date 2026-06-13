@@ -2,6 +2,7 @@ import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useUIStore } from '@/store/useUIStore';
 import { useCallback, useState } from 'react';
 import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
+import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 
 
 /**
@@ -19,6 +20,7 @@ export const usePhotoSelection = () => {
   const resetForm = useUIStore(s => s.resetForm);
 
   const { deletePhoto, batchUpdate } = useAdminMaintenance();
+  const navigate = useRouterSafe().navigate;
   
 
   const [batchIsHiddenApplied, setBatchIsHiddenApplied] = useState(false);
@@ -95,8 +97,11 @@ export const usePhotoSelection = () => {
       });
 
       await batchUpdate.mutateAsync({ ids, updates: cleanUpdates });
-      update({ batchEditingIds: null });
+      update({ batchEditingIds: null, isMultiSelect: false, selectedIds: [] });
       resetForm();
+      if (window.location.pathname === '/admin/batch-edit') {
+        navigate({ to: '/admin' });
+      }
     } catch (e: unknown) {
       ErrorFactory.handle(e, '批量保存失敗');
     } finally {
@@ -107,15 +112,21 @@ export const usePhotoSelection = () => {
   const handleDelete = async () => {
     const ids = batchEditingIds || selectedIds;
     if (!ids || ids.length === 0) return;
-    deletePhoto(ids);
-    update({ batchEditingIds: null });
+    await deletePhoto(ids);
+    update({ batchEditingIds: null, isMultiSelect: false, selectedIds: [] });
     resetForm();
+    if (window.location.pathname === '/admin/batch-edit') {
+      navigate({ to: '/admin' });
+    }
   };
 
   const handleClose = useCallback(() => {
     update({ batchEditingIds: null });
     resetForm();
-  }, [update, resetForm]);
+    if (window.location.pathname === '/admin/batch-edit') {
+      navigate({ to: '/admin' });
+    }
+  }, [update, resetForm, navigate]);
 
   return {
     // 狀態

@@ -74,7 +74,7 @@ export async function analyzeSinglePhotoDetail(photo: Photo): Promise<any> {
   const photoDetail = `- 名称: ${nameStr}\n- 现有分类: ${photo.categoryName}\n- 现有标签: ${tagNames || '无'}\n- 描述: ${descStr || '无'}`;
   
   const response = await api.ai['analyze-photo-v2'].$post({
-    json: { photoDetail }
+    json: { photoDetail, photoId: photo.id }
   });
 
   if (!response.ok) {

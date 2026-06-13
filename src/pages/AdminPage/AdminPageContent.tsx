@@ -96,7 +96,6 @@ export function AdminPageContent() {
         <div className="flex flex-col h-screen bg-slate-50 overflow-hidden w-full relative">
           {(currentScreen === 'gallery' || currentScreen === 'home') && <AdminHeader />}
           <main className="flex-1 relative overflow-hidden pb-16 sm:pb-0">
-          {(currentScreen === 'home' || currentScreen === 'gallery') && store.batchEditingIds && store.batchEditingIds.length > 0 && <BatchEditScreen />}
           
           <AnimatePresence mode="wait">
             {(currentScreen === 'home' || currentScreen === 'gallery') && !urlFilters.groupId ? (

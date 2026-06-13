@@ -57,9 +57,9 @@ export const SinglePhotoInfoSection = ({
             className={cn("w-2.5 h-2.5 rounded-full shadow-sm ring-2 ring-white", data.is_hidden ? "bg-red-500" : "bg-green-500")} 
           />
         </div>
-        <h2 className="text-xl font-bold text-slate-900 mb-1">{displayName || l.unknown}</h2>
+        <h2 className="text-lg font-bold text-slate-800 tracking-tight mb-1">{displayName || l.unknown}</h2>
         {displayNameMainEn && displayNameMainEn !== displayName && (
-          <h3 className="text-sm font-medium text-slate-500 mb-3">{displayNameMainEn}</h3>
+          <h3 className="text-xs font-semibold text-slate-400 mb-2.5">{displayNameMainEn}</h3>
         )}
       </section>
 

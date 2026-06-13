@@ -91,6 +91,20 @@ export function usePhotoEditAI() {
               if (targetId) updates.category_id = targetId;
             }
 
+            // --- Strict Group Matching and Assignment Support ---
+            if (result.group_id !== undefined && result.group_id !== null) {
+              const rawGroup = result.group_id;
+              let targetGroupId: string | null = null;
+              if (typeof rawGroup === 'string' && rawGroup.trim().length > 0 && rawGroup !== 'null' && rawGroup !== 'undefined') {
+                targetGroupId = rawGroup.trim();
+              } else if (typeof rawGroup === 'object' && rawGroup !== null) {
+                targetGroupId = String(rawGroup.id || rawGroup.group_id || '');
+              }
+              if (targetGroupId && targetGroupId !== 'undefined' && targetGroupId !== 'null') {
+                updates.group_id = targetGroupId;
+              }
+            }
+
             // --- Strict Tag Matching (Full format-compatible) with auto-creation ---
             const sourceTags = Array.isArray(result.tagNames) ? result.tagNames : (Array.isArray(result.tag_names) ? result.tag_names : []);
             const sourceTagIds = Array.isArray(result.tagIds) ? result.tagIds : (Array.isArray(result.tag_ids) ? result.tag_ids : []);
@@ -193,10 +207,6 @@ export function usePhotoEditAI() {
                 is_ai: true
               }));
             }
-            if (result.price !== undefined && result.price !== null) {
-              updates.price = String(result.price);
-            }
-
             // Invalidate the cache to instantly reveal JSON output in AI tab
             queryClient.invalidateQueries({ queryKey: ['photos', 'ai-result', editPhotoId] });
 

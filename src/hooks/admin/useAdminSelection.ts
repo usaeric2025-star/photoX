@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useAdminMaintenance } from './useAdminMaintenance';
 import { useUIStore } from '@/store/useUIStore';
+import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 
 /**
  * Handle administrative selection actions (批量删除, 批量隐藏, etc.)
@@ -11,6 +12,7 @@ export const useAdminSelection = () => {
     const [idsToDelete, setIdsToDelete] = useState<string[]>([]);
     const adminActions = useAdminMaintenance();
     const update = useUIStore(s => s.update);
+    const navigate = useRouterSafe().navigate;
 
     const initiateDelete = (ids: string[]) => {
         setIdsToDelete(ids);
@@ -28,6 +30,7 @@ export const useAdminSelection = () => {
 
     const initiateBatchEdit = (ids: string[]) => {
         update({ batchEditingIds: ids });
+        navigate({ to: '/admin/batch-edit' });
     };
 
     return {

@@ -6,7 +6,7 @@ Output JSON with:
 - description: { en, zh, ms } (Translate description to English, Chinese, and Malay/Bahasa Melayu)
 - category_id: Choose from available: ${JSON.stringify(context.categories)}
 - tag_names: Array of up to 3 strings from: ${JSON.stringify(context.tags)}
-- group_id: One of ${JSON.stringify(context.groups)} if similar exists.
+- group_id: Match this item against the existing groups: ${JSON.stringify(context.groups)}. If similar exists, return ONLY the exact 'id' string (UUID) of that group. If no similar group matches, return null. DO NOT return the full group object, only the string ID or null.
 - dimensions: Array of objects if visible or estimable:
   [{ "label": string, "length": number, "width": number, "height": number, "unit": "cm", "is_ai_estimated": boolean }]
   Note: Ensure length, width, and height are numbers.

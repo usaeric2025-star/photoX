@@ -111,18 +111,18 @@ export function TagEditor({
             placeholder="搜索标签..."
             onSearch={setSearchTerm}
             delay={0}
-            className="flex-1"
+            className="flex-1 text-xs"
           />
           <button
             type="button"
             onClick={onQuickAdd}
-            className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1.5 rounded-lg border border-blue-100 active:bg-blue-100 transition-colors"
+            className="h-8 text-[11px] font-bold text-blue-600 bg-blue-50/70 hover:bg-blue-100 hover:text-blue-700 px-3 rounded-lg border border-blue-100 active:bg-blue-200 transition-colors cursor-pointer shrink-0"
           >
             + 新增
           </button>
         </div>
       </div>
-      <div className="flex flex-wrap gap-2 pb-1 max-h-[96px] overflow-y-auto content-start">
+      <div className="flex flex-wrap gap-1.5 pb-1 max-h-[220px] overflow-y-auto content-start">
         {filteredTags.slice(0, 150).map((tag: Tag) => {
           const isSelected = selectedTagIds.map(String).includes(String(tag.id));
           const isHot = hotTagsSet.has(String(tag.id));
@@ -267,15 +267,15 @@ const TagButton = ({ tag, isSelected, isHot, isPinned, isDisabled, onToggle, onL
           onToggle(tag);
         }}
         className={cn(
-          "px-3 py-2 rounded-lg text-[11px] font-bold transition-all border select-none flex items-center gap-1.5 w-auto shadow-sm min-h-[44px] active:scale-95",
+          "px-2.5 py-1 rounded-md text-[11px] font-medium transition-all border select-none flex items-center gap-1 w-auto shadow-sm min-h-[32px] cursor-pointer",
           isSelected
-            ? "bg-blue-600 text-white border-blue-600"
-            : "bg-white text-slate-700 border-slate-200 hover:border-blue-300 active:bg-slate-50",
+            ? "bg-blue-600 text-white border-blue-600 font-semibold"
+            : "bg-slate-50 text-slate-700 border-slate-100 hover:border-slate-300 hover:bg-slate-100/80 active:bg-slate-200/50",
           isHot &&
             !isSelected &&
-            "border-amber-300 bg-amber-50 text-amber-800",
+            "border-amber-200 bg-amber-50/50 text-amber-800",
           isHot && isSelected && "ring-2 ring-amber-400",
-          isDisabled && "opacity-30 grayscale saturate-50",
+          isDisabled && "opacity-30 grayscale saturate-50 cursor-not-allowed",
         )}
       >
         <span
