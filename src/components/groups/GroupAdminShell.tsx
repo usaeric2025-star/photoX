@@ -21,6 +21,7 @@ import { GroupInfoPanel } from "./GroupInfoPanel";
 import { getSafeText } from "@/services/ai/safeText";
 import { GroupAdminBottomBar } from "./GroupAdminBottomBar";
 import { Modal } from "../ui/Modal";
+import { PhotoEditModal } from "@/components/admin/PhotoEditModal";
 
 export function GroupAdminShell() {
   const isAdminMode = useAdminMode();
@@ -30,6 +31,8 @@ export function GroupAdminShell() {
   const appLang = useUIStore((s) => s.appLang);
   const isPhotoPickerOpen = useUIStore((s) => s.isPhotoPickerOpen);
   const update = useUIStore((s) => s.update);
+  const editPhotoId = useUIStore((s) => s.editPhotoId);
+  const newPhotoData = useUIStore((s) => s.newPhotoData);
 
   const [isDissolveOpen, dissolveDialog] = useDisclosure(false);
   const adminActions = useAdminMaintenance();
@@ -262,6 +265,8 @@ export function GroupAdminShell() {
            handleBatchUpdateDimensions={handleBatchUpdateDimensions}
            t={translate}
          />
+
+         {(editPhotoId || newPhotoData) && <PhotoEditModal />}
        </div>
     </div>
   );
