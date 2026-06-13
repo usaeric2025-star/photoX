@@ -1,3 +1,4 @@
+import { generateId } from '@/lib/id';
 import { logger } from '@/lib/logger';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { withErrorHandling } from '@/lib/error/wrapper';
@@ -65,7 +66,7 @@ export const uploadSinglePhoto = async (
     normalizeDimensionsBeforeSave(photo.dimensions);
 
     if (!photo.id || photo.id.startsWith('temp-')) {
-        photo.id = crypto.randomUUID();
+        photo.id = generateId();
     }
     
     const payload: any = mapToDb({

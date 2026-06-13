@@ -8,7 +8,7 @@ import { useUIStore } from '@/store/useUIStore';
 // Client-side idempotency cache
 const ongoingRequests = new Map<string, Promise<any>>();
 
-export const useAppMutation = <TData, TVars, TQueryKey = any[]>(config: MutationConfig<TData, TVars, TQueryKey>) => {
+export const defineMutation = <TData, TVars, TQueryKey = any[]>(config: MutationConfig<TData, TVars, TQueryKey>) => {
   const queryClient = useQueryClient();
   
   return useMutation({
@@ -88,3 +88,5 @@ export const useAppMutation = <TData, TVars, TQueryKey = any[]>(config: Mutation
     },
   });
 };
+
+export const useAppMutation = defineMutation;

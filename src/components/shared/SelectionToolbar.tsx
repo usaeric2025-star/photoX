@@ -1,3 +1,4 @@
+import { generateId } from '@/lib/id';
 import React, { useState } from 'react';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { Sparkles, FolderPlus, Edit, EyeOff, Trash2, X } from 'lucide-react';
@@ -76,7 +77,7 @@ export function SelectionToolbar({
 
     const currentIds = [...ids];
     const prevSelection = [...ids]; 
-    const targetGroupId = crypto.randomUUID();
+    const targetGroupId = generateId();
     
     // Hide immediately to prevent UI blocking during async task
     handleClear();

@@ -1,6 +1,5 @@
 import React from 'react';
-import { RefreshCw, CheckCircle2, AlertTriangle, History, Zap, Clock, PackageSearch as PackageSearchIcon } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { RefreshCw, CheckCircle2, AlertTriangle, History, Zap, Clock, PackageSearch as PackageSearchIcon, BarChart3 } from 'lucide-react';
 import { useGlobalTasks } from '@/hooks/admin/useGlobalTasks';
 import { UnifiedTask } from '@/types';
 import { Button } from '@/components/shared/Button';
@@ -8,7 +7,6 @@ import { Badge } from '@/components/shared/Badge';
 import { Progress } from '@/components/shared/Progress';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { formatters } from '@/utils/formatters';
-import { BarChart3 } from 'lucide-react';
 
 export function TasksContent() {
   const { tasks = [], isLoading, refetch } = useGlobalTasks();
@@ -65,11 +63,9 @@ export function TasksContent() {
               />
             ) : (
               <div className="grid gap-4">
-                <AnimatePresence mode="popLayout">
                   {safeTasks.map((task) => (
                     <TaskItem key={task.id} task={task} />
                   ))}
-                </AnimatePresence>
               </div>
             )}
           </div>
@@ -83,12 +79,8 @@ function TaskItem({ task }: { task: UnifiedTask }) {
   const isMaintenance = task.source === 'maintenance';
   
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      className="group bg-slate-50/50 border border-slate-100 rounded-2xl p-4 flex flex-col md:flex-row md:items-center gap-4 hover:bg-white hover:shadow-md transition-all duration-300"
+    <div
+      className="group bg-slate-50/50 border border-slate-100 rounded-2xl p-4 flex flex-col md:flex-row md:items-center gap-4 hover:bg-white hover:shadow-md transition-all duration-300 animate-fade-right"
     >
       <div className="shrink-0 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-100 shadow-sm relative">
         {task.status === 'processing' ? (
@@ -141,6 +133,6 @@ function TaskItem({ task }: { task: UnifiedTask }) {
         </div>
         <Progress value={task.progress} className="h-1.5" />
       </div>
-    </motion.div>
+    </div>
   );
 }

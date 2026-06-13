@@ -1,7 +1,6 @@
 import React from 'react';
 import { VirtualGrid } from '@/components/virtualizer/VirtualGrid';
 import { useUIStore } from '@/store/useUIStore';
-import { motion, LayoutGroup } from 'motion/react';
 
 // Isolated benchmark page
 export default function VirtualizerBenchmark() {
@@ -18,9 +17,8 @@ export default function VirtualizerBenchmark() {
     <div className="p-8 space-y-12">
       <section>
         <h2 className="text-2xl font-bold mb-4 text-slate-800">1. Grouped Scenario (80 items)</h2>
-        <LayoutGroup>
-          <motion.div layout>
-             <VirtualGrid
+        <div>
+          <VirtualGrid
             count={groupedItems.length}
             renderItem={(index) => (
                <div className="p-4 border border-slate-200 rounded-lg bg-white shadow-sm">
@@ -29,14 +27,12 @@ export default function VirtualizerBenchmark() {
             )}
             containerClassName="grid grid-cols-4 gap-4"
           />
-          </motion.div>
-        </LayoutGroup>
+        </div>
       </section>
 
       <section>
         <h2 className="text-2xl font-bold mb-4 text-slate-800">2. Massive Grid Scenario (10,000 items)</h2>
-        <LayoutGroup>
-          <motion.div layout>
+        <div>
           <VirtualGrid
             count={gridItems.length}
             renderItem={(index) => (
@@ -50,8 +46,7 @@ export default function VirtualizerBenchmark() {
             )}
             containerClassName="grid grid-cols-10 gap-2"
           />
-          </motion.div>
-        </LayoutGroup>
+        </div>
       </section>
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { VirtualGrid, VirtualGridHandle } from '@/components/virtualizer/VirtualGrid';
 import { Photo, TranslationType, Category, Tag } from '../../types';
 import { useUIStore, useShallow } from '@/store/useUIStore';
@@ -10,6 +10,7 @@ import { EmptyState } from '../ui/EmptyState';
 import { PackageOpen } from 'lucide-react';
 import { useScrollRestoration } from '@/hooks/core/useScrollRestoration';
 import { useContainerWidth } from '@/hooks/core/useContainerWidth';
+import { useSkeletonCount } from '@/hooks/useSkeletonCount';
 
 interface VirtualPhotoGridProps {
   photos: Photo[];
@@ -37,17 +38,42 @@ export const VirtualPhotoGrid = ({
   categories = []
 }: VirtualPhotoGridProps) => {
   const { filters } = useUrlFilters();
+  const skeletonCount = useSkeletonCount(columns);
   const appLang = useUIStore((s) => s.appLang);
   const t = (translations[appLang as keyof typeof translations] || translations.en) as TranslationType;
 
   const internalGridRef = useRef<VirtualGridHandle | null>(null);
   
+  const isFetchingRef = useRef(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleLoadMore = useCallback(() => {
+    if (!hasNextPage || isFetchingNextPage || isFetchingRef.current) return
+
+    isFetchingRef.current = true;
+    timeoutRef.current = setTimeout(() => {
+      isFetchingRef.current = false;
+      console.warn('[VirtualGrid] 加載超時，已解鎖');
+    }, 10000);
+
+    onLoadMore?.();
+  }, [hasNextPage, isFetchingNextPage, onLoadMore]);
+
+  useEffect(() => {
+    if (!isFetchingNextPage) isFetchingRef.current = false;
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      isFetchingRef.current = false;
+    };
+  }, [isFetchingNextPage]);
+
   // Merge refs
   const gridRef = (node: VirtualGridHandle | null) => {
     internalGridRef.current = node;
     if (typeof ref === 'function') ref(node);
     else if (ref) (ref as React.MutableRefObject<VirtualGridHandle | null>).current = node;
   };
+
 
   const { recordScroll } = useScrollRestoration(
     restoreKey,
@@ -67,7 +93,7 @@ export const VirtualPhotoGrid = ({
     const photo = photos[index];
     if (!photo) return null;
     return (
-      <div className="p-1.5 sm:p-2 w-full">
+      <div key={photo.id} className="p-1.5 sm:p-2 w-full">
         {renderCard(photo, index, categories)}
       </div>
     );
@@ -76,7 +102,7 @@ export const VirtualPhotoGrid = ({
   if (isFetching && photos.length === 0) {
     return (
       <div className="h-full w-full bg-brand-bg overflow-y-auto">
-        <PhotoGridSkeleton columns={columns} />
+        <PhotoGridSkeleton columns={columns} count={skeletonCount} />
       </div>
     );
   }
@@ -104,11 +130,7 @@ export const VirtualPhotoGrid = ({
           itemSize={estimatedRowHeight}
           shift={true}
           onScroll={recordScroll}
-          onEndReached={() => {
-            if (hasNextPage && !isFetchingNextPage && onLoadMore) {
-              onLoadMore();
-            }
-          }}
+          onEndReached={handleLoadMore}
           containerClassName="px-2 pt-2 pb-4"
           renderItem={internalRenderItem}
           footer={

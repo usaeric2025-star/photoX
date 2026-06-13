@@ -483,6 +483,26 @@ toast.error('发现数据完整性问题', {
 - ✅ **全局入口**：在 `/admin/tasks` 提供所有（前端+后端）任务的统一视图。
 - ✅ **自动刷新**：任务页面应具备自动轮询后端 Job 状态的能力。
 
+## AI 合組識別規範（永久鎖定）
+
+### 輸出保障
+- ✅ 提示詞必須配合 ArkType/Zod schema 校驗
+- ✅ 校驗失敗必須帶錯誤反饋重試至少一次
+- ✅ 必須校驗 photoIds 完整性（返回總數 = 輸入總數）
+- ❌ 禁止寫入未經 schema 校驗的 AI 輸出
+
+### 前後端對齊
+- ✅ 所有 groups 查詢必須包含 status 字段
+- ✅ 公開頁面必須過濾 eq('status', 'confirmed')
+- ✅ 管理後台顯示全部，draft 有視覺標記
+- ❌ 禁止顯式 select 列舉時遺漏 status
+
+### 用戶修正流程
+- ✅ AI 結果以 draft 狀態寫入 groups 表
+- ✅ 用戶在合組詳情頁直接編輯確認
+- ✅ 所有編輯操作記錄至 group_correction_logs
+- ❌ 禁止新增審核隊列表或獨立審核流程
+
 ## Snippet 架构路径规范（锁定，2026-06-07）
 
 ### 核心原则
@@ -1288,3 +1308,19 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 - ❌ **禁止混合模式**：禁止在同一專案中同時使用 shadcn/ui 元件與對應功能的自研元件。
 - ❌ **禁止配置殘留**：刪除 `components.json` 及所有 `@/components/ui` 下的舊套件代碼。
 
+## 動畫技術棧終局規範（永久鎖定）
+
+### 動畫分層
+- ✅ L1: CSS 原生（Tailwind transition/animation、View Transitions、@starting-style）
+- ✅ L2: @dnd-kit/core（僅拖拽排序）
+- ✅ L3: Framer Motion（僅 Lightbox 手勢、複雜物理彈簧、CSS 無法實現的狀態機）
+
+### 使用限制
+- ❌ 禁止對 fade/slide/hover/tap 使用 Motion
+- ❌ 禁止對滾動驅動動畫使用 Motion
+- ❌ 禁止使用其他動畫庫（react-spring、gsap 等）
+- ✅ 新增 Motion 使用點必須在 PR 中說明「CSS/dnd-kit 為何無法實現」
+
+### 驗證標準
+- 📝 每季度執行 `npm why framer-motion` 檢查體積
+- 📝 Lighthouse 動畫相關評分 ≥ 95

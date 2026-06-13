@@ -10,14 +10,11 @@ import {
 } from 'lucide-react';
 import { usePhotoGallery } from '@/hooks/photo/usePhotoGallery';
 import { useCategories, useTags } from '@/hooks';
-import { motion } from 'motion/react';
 
 const StatCard = ({ title, value, subValue, icon: Icon, colorClass, delay = 0 }: any) => (
-  <motion.div 
-    initial={{ opacity: 0, y: 10 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay }}
-    className="bg-white p-5 rounded-[28px] border border-brand-navy/5 shadow-sm space-y-3 relative overflow-hidden group"
+  <div 
+    className="bg-white p-5 rounded-[28px] border border-brand-navy/5 shadow-sm space-y-3 relative overflow-hidden group animate-fade-in"
+    style={{ animationDelay: `${delay}s`, animationFillMode: 'both' }}
   >
     <div className={`w-10 h-10 rounded-xl ${colorClass} flex items-center justify-center mb-1`}>
       <Icon size={20} />
@@ -32,7 +29,7 @@ const StatCard = ({ title, value, subValue, icon: Icon, colorClass, delay = 0 }:
     <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
       <ArrowUpRight size={14} className="text-brand-navy/20" />
     </div>
-  </motion.div>
+  </div>
 );
 
 export function StatisticsScreen() {

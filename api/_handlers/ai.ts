@@ -5,6 +5,7 @@ import { getSupabaseAdmin } from '../_lib/supabase.js';
 import { getAIProvider, OpenRouterProvider, AgnesProvider } from '../_lib/ai/providerFactory.js';
 import { decrypt } from '../_lib/encryption.js';
 import { executeAITask } from '../_lib/ai/executor.js';
+import { processGroupAnalysis } from './ai/groupAnalysis.js';
 import { 
     AIAnalyzeV1ReqSchema, 
     AIRunReqSchema, 
@@ -12,6 +13,7 @@ import {
     AITranslateReqSchema,
     AIAnalyzeGroupReqSchema,
     AIAnalyzePhotoV2ReqSchema,
+    AIClusterPhotosReqSchema,
     ApiResponse
 } from '../_shared/apiContractSchema.js';
 import { AI_PROMPTS } from './ai/prompts.js';
@@ -108,7 +110,7 @@ ai.post("/analyze", async (c) => {
         const [catRef, tagRef, groupRef] = await Promise.all([
             supabase.from('categories').select('*'),
             supabase.from('tags').select('*'),
-            supabase.from('groups').select('id, name').order('created_at', { ascending: false }).limit(40),
+            supabase.from('groups').select('id, name, status').eq('status', 'confirmed').order('created_at', { ascending: false }).limit(40),
         ]);
 
         const provider = await getAIProvider('', supabase);
@@ -256,6 +258,20 @@ ai.post("/analyze-photo-v2", async (c) => {
       }
 
         return c.json({ success: true, data, raw_result: rawText } as ApiResponse);
+    } catch (error: any) { 
+        return c.json({ success: false, error: error.message } as ApiResponse, 500); 
+    }
+});
+
+ai.post("/cluster-photos", async (c) => {
+    try {
+        const body = await c.req.json();
+        const check = AIClusterPhotosReqSchema(body);
+        if (check instanceof type.errors) throw new Error(check.summary);
+
+        const parsed = await processGroupAnalysis(check.photoIds);
+
+        return c.json({ success: true, data: parsed.groups } as ApiResponse);
     } catch (error: any) { 
         return c.json({ success: false, error: error.message } as ApiResponse, 500); 
     }

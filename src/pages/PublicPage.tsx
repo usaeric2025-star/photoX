@@ -1,6 +1,5 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import { useSearch } from '@tanstack/react-router';
 import { Skeleton } from '../components/ui/Skeleton';
 import { 
@@ -26,7 +25,7 @@ import { AlertCircle } from 'lucide-react';
 // Error display component
 const AuthErrorDisplay = ({ message }: { message: string }) => (
   <div className="flex-1 flex items-center justify-center p-8 bg-slate-50 text-center">
-    <div className="max-w-md space-y-6 animate-in fade-in zoom-in duration-500">
+    <div className="max-w-md space-y-6 animate-scale-in transition-all">
       <div className="w-16 h-16 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto shadow-sm">
         <AlertCircle size={32} />
       </div>

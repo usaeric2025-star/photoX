@@ -1,5 +1,4 @@
-import { ReactNode, useRef, useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { ReactNode, useRef } from 'react';
 import { cn } from '../../lib/utils';
 
 interface Tab {
@@ -103,34 +102,23 @@ export function Tabs({
               <span>{tab.label}</span>
               
               {isActive && (
-                <motion.div
-                  layoutId="activeTab"
-                  className="absolute bottom-0 left-2 right-2 h-0.5 bg-brand-navy rounded-full"
-                  transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
-                />
+                <div className="absolute bottom-0 left-2 right-2 h-0.5 bg-brand-navy rounded-full animate-in fade-in zoom-in-y-0 duration-200" />
               )}
             </button>
           );
         })}
       </div>
 
-      <div className={cn("flex-1 overflow-y-auto relative", contentClassName)}>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            role="tabpanel"
-            id={`panel-${activeTab}`}
-            aria-labelledby={`tab-${activeTab}`}
-            initial={{ opacity: 0, x: 5 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -5 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="w-full h-full focus:outline-none"
-            tabIndex={0}
-          >
-            {children}
-          </motion.div>
-        </AnimatePresence>
+      <div className={cn("flex-1 overflow-y-auto relative animate-fade-in", contentClassName)} key={activeTab}>
+        <div
+          role="tabpanel"
+          id={`panel-${activeTab}`}
+          aria-labelledby={`tab-${activeTab}`}
+          className="w-full h-full focus:outline-none"
+          tabIndex={0}
+        >
+          {children}
+        </div>
       </div>
     </div>
   );

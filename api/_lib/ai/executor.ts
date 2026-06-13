@@ -1,7 +1,6 @@
 import { normalizeI18n } from "../../_shared/i18n.js";
 import { logger } from "../logger.js";
 import { extractJSON } from "./utils.js";
-import { v4 as uuidv4 } from "uuid";
 import { getSupabaseAdmin } from "../supabase.js";
 import { uploadToR2, deleteFromR2 } from "../storage.js";
 
@@ -42,7 +41,7 @@ export const saveAIAuditLog = async (data: AIAuditData): Promise<void> => {
     // 1. 尝试上传原始输出到 R2
     try {
       const timestamp = Date.now();
-      rawKey = `ai_logs/${data.photoId || 'global'}/${timestamp}_${uuidv4().slice(0, 8)}.json`;
+      rawKey = `ai_logs/${data.photoId || 'global'}/${timestamp}_${crypto.randomUUID().slice(0, 8)}.json`;
       const uploadResult = await uploadToR2(rawKey, actualRawResponse);
       
       if (!uploadResult.success) {

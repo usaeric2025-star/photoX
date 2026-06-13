@@ -5,6 +5,7 @@ import { translations, TranslationType } from '@/locales';
 import { getSafeText } from '@/services/ai/safeText';
 import { getTranslatedCategoryName } from '../category/utils';
 import { Category } from '@/types';
+import { generateId } from '@/lib/id';
 
 const NEVER_ALLOWED = ['isAnalyzing', 'exif_data', 'is_hidden', 'tempId', 'isSelected', 'isDragging', 'rawResponse'];
 
@@ -64,7 +65,7 @@ export function validateDimension(dim: any): any {
  * Gets a fresh UUID
  */
 export const getDatabaseUUID = async (): Promise<string> => {
-  return crypto.randomUUID(); 
+  return generateId(); 
 };
 
 // Tag management utils to unify conversion

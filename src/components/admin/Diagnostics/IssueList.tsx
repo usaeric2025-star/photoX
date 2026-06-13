@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import { ShieldAlert, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { MaintenanceTool } from './MaintenanceTool';
 import { ISSUE_ACTIONS } from '@/services/maintenance/issueActions';
@@ -20,14 +19,11 @@ interface IssueListProps {
 export function IssueList({ issues, isLoading, onRepair, onSuccess }: IssueListProps) {
   return (
     <div className="space-y-3">
-      <AnimatePresence mode="popLayout">
+      <div className="space-y-3">
         {issues.map((issue) => (
-          <motion.div
-            layout
+          <div
             key={issue.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white border border-brand-navy/5 rounded-2xl overflow-hidden shadow-sm hover:border-brand-navy/10 transition-colors"
+            className="bg-white border border-brand-navy/5 rounded-2xl overflow-hidden shadow-sm hover:border-brand-navy/10 transition-colors animate-fade-in"
           >
             <div className="p-4 flex items-start gap-4">
               <div className={`p-2.5 rounded-xl ${severityColors[issue.severity as keyof typeof severityColors]}`}>
@@ -68,9 +64,9 @@ export function IssueList({ issues, isLoading, onRepair, onSuccess }: IssueListP
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
         ))}
-      </AnimatePresence>
+      </div>
 
       {issues.length === 0 && !isLoading && (
         <div className="py-12 flex flex-col items-center justify-center text-center space-y-4 bg-white rounded-3xl border border-dashed border-slate-200">

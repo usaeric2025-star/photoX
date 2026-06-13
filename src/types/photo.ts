@@ -127,6 +127,8 @@ export interface ProductGroup {
   created_at: string;
   updated_at: string;
   member_count?: number;
+  status?: 'draft' | 'confirmed' | 'rejected';
+  metadata?: Record<string, unknown>;
 }
 
 export type Group = ProductGroup;

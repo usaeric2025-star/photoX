@@ -1,6 +1,5 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
 import { Photo } from "../../types";
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { ConfirmDialog } from "../ui/ConfirmDialog";
@@ -19,6 +18,8 @@ import { Plus, Settings2, MoreVertical, Pencil, Sparkles, FolderMinus } from "lu
 import { CollapsibleDescription } from "./CollapsibleDescription";
 import { GroupInfoPanel } from "./GroupInfoPanel";
 import { getSafeText } from "@/services/ai/safeText";
+import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
 import { GroupAdminBottomBar } from "./GroupAdminBottomBar";
 import { Modal } from "../ui/Modal";
 import { PhotoEditModal } from "@/components/admin/PhotoEditModal";
@@ -105,17 +106,14 @@ export function GroupAdminShell() {
 
   const stableGetPhotoProps = (photo: Photo) => ({
     showCoverBadge: true,
-    draggable: dragState.current.isAdminMode && !dragState.current.isMultiSelect,
-    onDragStart: () => update({ draggedPhotoId: photo.id }),
-    onDragOver: (e: React.DragEvent) => e.preventDefault(),
-    onDrop: (e: React.DragEvent) => {
-      if (e && typeof e.preventDefault === "function") e.preventDefault();
-      const currentDraggedId = dragState.current.draggedPhotoId;
-      if (currentDraggedId) {
-        dragState.current.handleReorder(currentDraggedId, photo.id);
-        update({ draggedPhotoId: null });
-      }
-    } });
+  });
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+       handleReorder(active.id as string, over.id as string);
+    }
+  };
 
   const handlePhotoClick = (photo: Photo) => {
     if (isMultiSelect) {
@@ -170,16 +168,21 @@ export function GroupAdminShell() {
 
          <GroupInfoPanel groupData={groupData || undefined} lang={appLang} />
 
-         <GroupGridView
-           virtualGridRef={virtualGridRef}
-           photos={activeGroupPhotos}
-           isLoading={isGroupPhotosLoading}
-           groupData={groupData}
-           highlightId={currentHighlightId}
-           onPhotoClick={handlePhotoClick}
-           onPhotoContextMenu={handlePhotoContextMenu}
-           getPhotoProps={stableGetPhotoProps}
-         />
+         <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+           <SortableContext items={activeGroupPhotos.map(p => p.id)} strategy={rectSortingStrategy}>
+             <GroupGridView
+               virtualGridRef={virtualGridRef}
+               photos={activeGroupPhotos}
+               isLoading={isGroupPhotosLoading}
+               groupData={groupData}
+               highlightId={currentHighlightId}
+               onPhotoClick={handlePhotoClick}
+               onPhotoContextMenu={handlePhotoContextMenu}
+               getPhotoProps={stableGetPhotoProps}
+               isSortable={isAdminMode && !isMultiSelect}
+             />
+           </SortableContext>
+         </DndContext>
 
          {/* Unified Multi-Select Floating Bar */}
          <SelectionToolbar
@@ -192,20 +195,50 @@ export function GroupAdminShell() {
            }}
          />
 
-         {/* Bottom Toolbar (when not in multi-select mode) */}
-         <GroupAdminBottomBar
-           appLang={appLang}
-           isMultiSelect={isMultiSelect}
-           onAddPhotos={() => {
-             if (filters.groupId) {
-               update?.({ photoPickerGroupId: filters.groupId });
-               update?.({ isPhotoPickerOpen: true });
-             }
-           }}
-           onSettingsClick={() => update?.({ groupSettingsOpen: true })}
-           onAiAnalyze={() => handleBatchAiAnalyze(activeGroupPhotos, filters.groupId || undefined)}
-           onDissolve={dissolveDialog.open}
-         />
+         {/* Conditional Bottom Toolbar: draft vs confirmed */}
+         {groupData?.status === 'draft' ? (
+           <div className="sticky bottom-0 bg-white border-t p-4 flex justify-end gap-3 safe-bottom z-50 shadow-[0_-4px_24px_-8px_rgba(0,0,0,0.1)]">
+             <button 
+               onClick={async () => {
+                 if (!confirm(appLang === 'zh' ? '确定丢弃此草稿合组？' : 'Discard draft?')) return;
+                 const draftSvc = await import('@/services/group/groupDraftService');
+                 if (filters.groupId) {
+                   await draftSvc.deleteDraft(filters.groupId);
+                   handleClose();
+                 }
+               }}
+               className="px-6 py-2 rounded-xl font-medium border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+             >
+               {appLang === 'zh' ? '丢弃' : 'Discard'}
+             </button>
+             <button 
+               onClick={async () => {
+                 const draftSvc = await import('@/services/group/groupDraftService');
+                 if (filters.groupId) {
+                   await draftSvc.confirmGroup(filters.groupId);
+                   window.location.reload();
+                 }
+               }}
+               className="px-6 py-2 rounded-xl font-medium bg-slate-900 text-white hover:bg-slate-800 transition-colors"
+             >
+               {appLang === 'zh' ? '确认合组' : 'Confirm Group'}
+             </button>
+           </div>
+         ) : (
+           <GroupAdminBottomBar
+             appLang={appLang}
+             isMultiSelect={isMultiSelect}
+             onAddPhotos={() => {
+               if (filters.groupId) {
+                 update?.({ photoPickerGroupId: filters.groupId });
+                 update?.({ isPhotoPickerOpen: true });
+               }
+             }}
+             onSettingsClick={() => update?.({ groupSettingsOpen: true })}
+             onAiAnalyze={() => handleBatchAiAnalyze(activeGroupPhotos, filters.groupId || undefined)}
+             onDissolve={dissolveDialog.open}
+           />
+         )}
          
          <ConfirmDialog
            open={isDissolveOpen}

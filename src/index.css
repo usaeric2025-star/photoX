@@ -75,6 +75,13 @@
       transform: scale(1);
     }
   }
+
+  @keyframes pulse-gentle {
+    0%, 100% { opacity: 0.8; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.05); }
+  }
+
+  --animate-pulse-gentle: pulse-gentle 2s ease-in-out infinite;
 }
 
 /* .z-lightbox, .yarl__portal {
@@ -94,6 +101,36 @@
       opacity: 1;
       transform: none;
     }
+  }
+}
+
+/* Base Dialog Transitions using @starting-style where supported */
+dialog {
+  transition: opacity 0.2s ease-out, transform 0.2s ease-out, overlay 0.2s ease-out, display 0.2s ease-out allow-discrete;
+}
+
+dialog::backdrop {
+  transition: opacity 0.2s ease-out, background-color 0.2s ease-out, overlay 0.2s ease-out, display 0.2s ease-out allow-discrete;
+}
+
+dialog[open] {
+  opacity: 1;
+  transform: scale(1);
+}
+
+dialog[open]::backdrop {
+  opacity: 1;
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+@starting-style {
+  dialog[open] {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  dialog[open]::backdrop {
+    opacity: 0;
+    background-color: rgba(0, 0, 0, 0);
   }
 }
 

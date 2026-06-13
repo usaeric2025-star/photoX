@@ -1,3 +1,4 @@
+import { generateId } from '@/lib/id';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useCallback } from 'react';
 
@@ -52,7 +53,7 @@ export function usePhotoUpload() {
           
           // 2. Upload to Cloud
           const tempPhoto: Photo = {
-            id: `temp-${crypto.randomUUID()}`,
+            id: `temp-${generateId()}`,
             name: processed.file.name.split('.')[0],
             uri: processed.dataUrl,
             image_hash: processed.hash,

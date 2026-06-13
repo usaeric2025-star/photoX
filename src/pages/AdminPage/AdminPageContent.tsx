@@ -1,6 +1,5 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
-import React, { useEffect, useState } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
+import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
 import { 
   useAuth, 
@@ -95,20 +94,11 @@ export function AdminPageContent() {
       <DataLoadingContainer isLoading={isPhotosLoading} hasData={true}>
         <div className="flex flex-col h-screen bg-slate-50 overflow-hidden w-full relative">
           {(currentScreen === 'gallery' || currentScreen === 'home') && <AdminHeader />}
-          <main className="flex-1 relative overflow-hidden pb-16 sm:pb-0">
-          
-          <AnimatePresence mode="wait">
+          <div className="flex-1 relative overflow-hidden pb-16 sm:pb-0">
             {(currentScreen === 'home' || currentScreen === 'gallery') && !urlFilters.groupId ? (
-              <motion.div 
-                key="admin-gallery"
-                initial={{ opacity: 0 }} 
-                animate={{ opacity: 1 }} 
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="absolute inset-0"
-              >
+              <div key="admin-gallery" className="absolute inset-0 animate-fade-in">
                 <AdminContainer />
-              </motion.div>
+              </div>
             ) : currentScreen === 'dashboard' ? (
               <ScreenWrapper key="admin-dashboard" onClose={() => navigate({ to: '/admin' })}>
                 <StatisticsScreen />
@@ -118,18 +108,10 @@ export function AdminPageContent() {
                 <BatchEditScreen />
               </ScreenWrapper>
             ) : ['manage', 'settings', 'structure', 'logs', 'tasks', 'error-logs', 'diagnose'].includes(currentScreen) ? (
-              <motion.div 
-                key="admin-settings-container"
-                initial={{ opacity: 0, scale: 0.98 }} 
-                animate={{ opacity: 1, scale: 1 }} 
-                exit={{ opacity: 0, scale: 0.98 }}
-                transition={{ duration: 0.2 }}
-                className="h-full bg-slate-50"
-              >
+              <div key="admin-settings-container" className="h-full bg-slate-50 animate-scale-in">
                 <SettingsPage onClose={() => navigate({ to: '/admin' })} />
-              </motion.div>
+              </div>
             ) : null}
-          </AnimatePresence>
 
           <input 
             type="file" id="admin-quick-add-input" multiple accept="image/*" className="hidden" 
@@ -140,7 +122,7 @@ export function AdminPageContent() {
           />
           
             {(store.editPhotoId || store.newPhotoData) && <PhotoEditModal />}
-          </main>
+          </div>
         </div>
       </DataLoadingContainer>
     </AdminAuthGate>
@@ -149,11 +131,11 @@ export function AdminPageContent() {
 
 function ScreenWrapper({ children, onClose }: { children: React.ReactNode, onClose: () => void }) {
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="h-full bg-slate-50 flex flex-col">
+    <div className="h-full bg-slate-50 flex flex-col animate-fade-up">
       <div className="flex justify-end p-4 shrink-0 bg-slate-50 border-b border-slate-100">
         <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-500 hover:text-slate-900"><X size={24} /></button>
       </div>
       <div className="flex-1 overflow-y-auto w-full no-scrollbar px-8 pb-8">{children}</div>
-    </motion.div>
+    </div>
   );
 }

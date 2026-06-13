@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect, ReactNode, useCallback } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../../lib/utils';
 import { useDisclosure } from '../../hooks/core/useDisclosure';
 
@@ -75,26 +74,20 @@ export function Dropdown({
         {trigger}
       </div>
 
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            ref={menuRef}
-            initial={{ opacity: 0, y: 4, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 4, scale: 0.95 }}
-            transition={{ duration: 0.1, ease: 'easeOut' }}
-            className={cn(
-              "anchor-content mt-2 min-w-[200px] bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden",
-              align === 'right' && "left-auto right-0",
-              className
-            )}
-          >
-            <div className="p-1 focus:outline-none" role="menu">
-              {children}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {isOpen && (
+        <div
+          ref={menuRef}
+          className={cn(
+            "anchor-content mt-2 min-w-[200px] bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden animate-scale-in",
+            align === 'right' && "left-auto right-0",
+            className
+          )}
+        >
+          <div className="p-1 focus:outline-none" role="menu">
+            {children}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

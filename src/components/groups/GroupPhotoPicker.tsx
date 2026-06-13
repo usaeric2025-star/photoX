@@ -1,3 +1,4 @@
+import { generateId } from '@/lib/id';
 import { showToast } from '@/lib/ui/toast';
 import { useUIStore } from '@/store/useUIStore';
 import React, { useState, useCallback, useRef } from "react";
@@ -61,7 +62,7 @@ export function GroupPhotoPicker({
         });
 
         const photoData: Photo[] = processedImages.map((result) => ({
-           id: `temp-${crypto.randomUUID()}`,
+           id: `temp-${generateId()}`,
            uri: result.dataUrl,
            image_hash: result.hash,
            thumb_hash: result.thumbHash,

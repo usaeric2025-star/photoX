@@ -7,6 +7,8 @@ import { PhotoCard } from '../photo/PhotoCard';
 import { VirtualGrid } from '@/components/virtualizer/VirtualGrid';
 import { GROUP_LIST_CONFIG } from '@/config/virtuoso.config';
 import { GroupInfoPanel } from './GroupInfoPanel';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface GroupGridViewProps {
   photos: Photo[];
@@ -20,8 +22,43 @@ interface GroupGridViewProps {
   onEndReached?: () => void;
   isFetchingNextPage?: boolean;
   hasNextPage?: boolean;
+  isSortable?: boolean;
 }
 
+function SortablePhotoItem({ photo, index, getPhotoProps, onClick, onContextMenu, isSortable }: any) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: photo.id, disabled: !isSortable });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 2 : 1,
+    opacity: isDragging ? 0.7 : 1,
+  };
+
+  const extraProps = getPhotoProps ? getPhotoProps(photo) : {};
+
+  return (
+    <div ref={setNodeRef} style={style} {...(isSortable ? attributes : {})} {...(isSortable ? listeners : {})} className="p-1 w-full touch-manipulation">
+      <PhotoCard
+        photo={photo}
+        index={index}
+        hideDetails={false}
+        imgVariant="md"
+        hideGroupBadge={true}
+        onClick={onClick}
+        canPin={false}
+        {...extraProps}
+      />
+    </div>
+  );
+}
 
 function GroupGridFooter({ 
   isFetchingNextPage, hasNextPage, hasPhotos, textLoading, textEndOfList 
@@ -62,6 +99,7 @@ export function GroupGridView({
   isLoading = false,
   isFetchingNextPage,
   hasNextPage,
+  isSortable,
 }: GroupGridViewProps & { virtualGridRef?: React.Ref<any>, isLoading?: boolean }) {
   const lang = useUIStore((s) => s.appLang);
   const t = translations[lang as keyof typeof translations as keyof typeof translations] || translations.en;
@@ -85,21 +123,16 @@ export function GroupGridView({
       );
     }
     const isHighlighted = highlightId === photo.id;
-    const extraProps = getPhotoProps ? getPhotoProps(photo) : {};
-    
     return (
-      <div className="p-1 w-full">
-        <PhotoCard
-          photo={photo}
-          index={index}
-          hideDetails={false}
-          imgVariant="md"
-          hideGroupBadge={true}
-          onClick={() => onPhotoClick(photo)}
-          canPin={false}
-          {...extraProps}
-        />
-      </div>
+      <SortablePhotoItem
+        key={photo.id}
+        photo={photo}
+        index={index}
+        getPhotoProps={getPhotoProps}
+        onClick={() => onPhotoClick(photo)}
+        onContextMenu={onPhotoContextMenu}
+        isSortable={isSortable}
+      />
     );
   };
 

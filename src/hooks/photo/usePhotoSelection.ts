@@ -24,7 +24,6 @@ export const usePhotoSelection = () => {
   
 
   const [batchIsHiddenApplied, setBatchIsHiddenApplied] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
 
   // --- 狀態切換邏輯 (來自 useMultiSelect) ---
 
@@ -81,7 +80,6 @@ export const usePhotoSelection = () => {
     const ids = batchEditingIds || selectedIds;
     if (!ids || ids.length === 0) return;
     
-    setIsSyncing(true);
     try {
       const updates: any = { ...formState };
       if (!batchIsHiddenApplied) {
@@ -104,8 +102,6 @@ export const usePhotoSelection = () => {
       }
     } catch (e: unknown) {
       ErrorFactory.handle(e, '批量保存失敗');
-    } finally {
-      setIsSyncing(false);
     }
   };
 
@@ -134,7 +130,7 @@ export const usePhotoSelection = () => {
     selectedIds,
     batchEditIds: batchEditingIds || [],
     formState,
-    isSyncing,
+    isSyncing: batchUpdate.isPending,
     batchIsHiddenApplied,
     
     // 操作

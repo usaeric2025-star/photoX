@@ -1,5 +1,4 @@
 import React, { useState, useRef } from "react";
-import { motion, AnimatePresence } from "motion/react";
 import { X, Heart, Pencil, Trash2 } from "lucide-react";
 import { Tag } from "../../types";
 import { useClickOutside } from '@/hooks/core/useClickOutside';
@@ -84,13 +83,9 @@ export function TagItem({
         <X size={14} />
       </button>
 
-      <AnimatePresence>
-        {activeTagMenuId === tag.id && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-brand-navy rounded-xl shadow-xl p-1 flex flex-col gap-0.5 z-[var(--z-dropdown)] min-w-[120px]"
+      {activeTagMenuId === tag.id && (
+          <div
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-brand-navy rounded-xl shadow-xl p-1 flex flex-col gap-0.5 z-[var(--z-dropdown)] min-w-[120px] animate-scale-in"
           >
             <button
               onClick={handleTogglePin}
@@ -112,9 +107,8 @@ export function TagItem({
               <Trash2 size={12} /> 删除
             </button>
             <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-brand-navy rotate-45 -mt-1" />
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
     </div>
   );
 }

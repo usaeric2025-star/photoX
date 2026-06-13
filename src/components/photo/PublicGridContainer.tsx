@@ -128,7 +128,7 @@ export function PublicGridContainer({
         />
         <div className="flex-1 overflow-hidden bg-brand-bg relative">
             <VirtualPhotoGrid 
-              key={`public-photo-grid-${filterKeyHash}-${columns}`}
+              key={`public-photo-grid-${filterKeyHash}`}
               restoreKey={`public_view_scroll_vlist-${filterKeyHash}`}
               photos={gridPhotos}
               isFetching={isLoading}

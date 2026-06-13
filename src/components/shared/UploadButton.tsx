@@ -1,6 +1,5 @@
 import React from 'react';
 import { Plus } from 'lucide-react';
-import { motion } from 'motion/react';
 import { buttonStyles } from '../../styles/buttonStyles';
 import { usePermission } from '../../hooks';
 

@@ -91,15 +91,36 @@ export const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.
   const onEndReachedRef = useRef(props.onEndReached);
   useEffect(() => { onEndReachedRef.current = props.onEndReached; }, [props.onEndReached]);
 
+  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isTriggeringRef = useRef(false);
+
   const handleScroll = (offset: number) => {
     props.onScroll?.(offset);
     if (vlistRef.current) {
       const { scrollSize, viewportSize } = vlistRef.current;
-      if (scrollSize && viewportSize && offset + viewportSize >= scrollSize - 200) {
+      if (
+        scrollSize && 
+        viewportSize && 
+        offset + viewportSize >= scrollSize - 300 &&
+        !isTriggeringRef.current
+      ) {
+        isTriggeringRef.current = true;
         onEndReachedRef.current?.();
+
+        // Timeout protection: reset trigger state after 10 seconds
+        if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
+        loadingTimeoutRef.current = setTimeout(() => {
+          isTriggeringRef.current = false;
+        }, 10000);
       }
     }
   };
+
+  // Reset trigger state when data changes or component unmounts
+  useEffect(() => {
+    isTriggeringRef.current = false;
+    if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
+  }, [props.count]);
 
   if (isTestEnv) {
     return (

@@ -29,6 +29,7 @@ const photoEditConfig = defineMutation<Photo, { id: string; updates: Partial<Pho
     return res;
   },
   invalidate: (data, vars) => [photoKeys.all as any, ['photo', vars.id] as any],
+  cleanupKey: (vars) => vars.id,
   optimistic: (old: any, { id, updates }: { id: string; updates: Partial<Photo> }) => {
     if (!old) return old;
     if (old.pages) return optimistic.infinite.update<Photo>()(old, { id, updates: updates as any });
@@ -88,6 +89,7 @@ const togglePinConfig = defineMutation<any, { id: string; isPinned: boolean }>({
     const res = await update(id, { is_pinned: isPinned });
     return res;
   },
+  cleanupKey: (vars) => vars.id,
   invalidate: (data, vars) => [photoKeys.all as any, ['photo', vars.id] as any],
   optimistic: (old: any, { id, isPinned }: { id: string; isPinned: boolean }) => 
     optimistic.infinite.update<Photo>()(old, { id, updates: { is_pinned: isPinned } as any }),

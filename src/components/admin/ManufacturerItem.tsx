@@ -1,6 +1,5 @@
 import React, { useState, useRef } from "react";
 import { Trash2, Pencil } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useClickOutside } from '@/hooks/core/useClickOutside';
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -49,13 +48,9 @@ export const ManufacturerItem = ({
         </span>
       </div>
 
-      <AnimatePresence>
-        {activeMenuId === manufacturer.id && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-brand-navy rounded-xl shadow-xl p-1 flex flex-col gap-0.5 z-[var(--z-dropdown)] min-w-[120px]"
+      {activeMenuId === manufacturer.id && (
+          <div
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-brand-navy rounded-xl shadow-xl p-1 flex flex-col gap-0.5 z-[var(--z-dropdown)] min-w-[120px] animate-scale-in"
           >
             <button
               onClick={(e) => {
@@ -78,9 +73,8 @@ export const ManufacturerItem = ({
               <Trash2 size={12} /> 删除
             </button>
             <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-brand-navy rotate-45 -mt-1" />
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
 
       <PromptDialog
         open={isEditOpen}

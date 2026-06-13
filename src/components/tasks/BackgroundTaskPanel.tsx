@@ -1,6 +1,5 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import { Loader2, X, ChevronUp, ChevronDown, CheckCircle2, AlertCircle, Terminal, HardDrive } from 'lucide-react';
 import { useTasks } from '@/hooks/core/useTasks';
 import { useGlobalTasks } from '@/hooks/admin/useGlobalTasks';
@@ -41,14 +40,8 @@ export function BackgroundTaskPanel() {
 
   return (
     <div className={`fixed ${isAvoidingSelection ? 'bottom-32' : 'bottom-16'} left-6 z-toast flex flex-col items-start gap-3 transition-all duration-300`}>
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="w-80 bg-white/95 backdrop-blur-xl border border-slate-200 rounded-3xl shadow-2xl overflow-hidden mb-2"
-          >
+      {isExpanded && (
+          <div className="w-80 bg-white/95 backdrop-blur-xl border border-slate-200 rounded-3xl shadow-2xl overflow-hidden mb-2 animate-fade-up">
             <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
               <div className="flex flex-col">
                 <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500">任务管理器 / HUB</h4>
@@ -66,12 +59,9 @@ export function BackgroundTaskPanel() {
                 <div className="py-8 text-center text-slate-400 text-[10px]">没有进行中的任务</div>
               ) : (
                 allTasks.map((task, index) => (
-                  <motion.div 
+                  <div 
                     key={task.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className={`p-3 rounded-2xl border transition-all group relative overflow-hidden ${
+                    className={`p-3 rounded-2xl border transition-all group relative overflow-hidden animate-fade-right ${
                       task.source === 'maintenance' ? 'bg-slate-50/50 border-slate-100 hover:border-slate-200' : 'bg-white border-slate-50 hover:border-slate-100'
                     }`}
                   >
@@ -159,24 +149,20 @@ export function BackgroundTaskPanel() {
                         {typeof task.message === 'string' ? task.message : JSON.stringify(task.message)}
                       </p>
                     )}
-                  </motion.div>
+                  </div>
                 ))
               )}
             </div>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
 
-      <motion.button
-        layout
+      <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className={`h-12 flex items-center gap-3 px-5 rounded-full shadow-xl border transition-all ${
+        className={`h-12 flex items-center gap-3 px-5 rounded-full shadow-xl border transition-all hover:scale-105 active:scale-95 ${
           activeTasks.length > 0 
             ? 'bg-slate-900 border-slate-800 text-white' 
             : 'bg-white border-slate-200 text-slate-600'
         }`}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
       >
         <div className="relative">
           {activeTasks.length > 0 ? (
@@ -201,7 +187,7 @@ export function BackgroundTaskPanel() {
         </div>
         
         {isExpanded ? <ChevronDown size={14} className="opacity-50" /> : <ChevronUp size={14} className="opacity-50" />}
-      </motion.button>
+</button>
     </div>
   );
 }

@@ -75,7 +75,6 @@ export function Modal({
         ${size === 'screen' ? '' : 'inset-0 rounded-2xl border border-slate-100'}
         w-full shadow-2xl bg-white
         backdrop:bg-black/60 backdrop:backdrop-blur-sm
-        open:animate-in open:fade-in open:zoom-in-95 duration-200
         p-0 overflow-hidden outline-none ${className}
       `}
       id="unified-app-modal"

@@ -35,6 +35,10 @@ export const AITranslateReqSchema = type({
     "customModel?": "string"
 });
 
+export const AIClusterPhotosReqSchema = type({
+    photoIds: "string[]"
+});
+
 export const AIAnalyzeGroupReqSchema = type({
     photoDetails: "string"
 });

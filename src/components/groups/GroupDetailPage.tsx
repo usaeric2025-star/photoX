@@ -1,7 +1,6 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { ChevronLeft, X, Share2, Loader2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
 import { Photo } from '@/types';
 import { TranslationType } from '@/locales';
 import { useAdminMode, useGroupDetail, useGroupPhotos, useCategories, useUrlFilters, useCopyToClipboard } from '@/hooks';

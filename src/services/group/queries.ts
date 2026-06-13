@@ -33,15 +33,22 @@ const mapGroup = (item: any): ProductGroup => ({
   created_at: item.created_at,
   updated_at: item.updated_at,
   user_id: item.user_id,
-  member_count: item.member_count ?? 1
+  member_count: item.member_count ?? 1,
+  status: item.status,
+  metadata: item.metadata,
 });
 
-export const loadGroupsFromCloud = async (userId: string): Promise<AppResult<ProductGroup[]>> => {
+export const loadGroupsFromCloud = async (userId: string, isAdmin: boolean = false): Promise<AppResult<ProductGroup[]>> => {
   return withErrorHandling(async () => {
-    const query = supabase
+    // PUBLIC VIEW - 只有 confirmed 才能被看到
+    // 若為管理員列表，可以在別的地方擴展。這目前為全局 load (可以加上參數來指定 admin mode)
+    let query = supabase
       .from(TABLE_NAME)
-      .select('*')
-      .or('is_hidden.eq.false,is_hidden.is.null');
+      .select('*');
+
+    if (!isAdmin) {
+      query = query.eq('status', 'confirmed').or('is_hidden.eq.false,is_hidden.is.null');
+    }
 
     const res = await withSupabase(query, 'loadGroupsFromCloud');
     if (!res.ok) return res;

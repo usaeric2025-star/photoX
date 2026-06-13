@@ -1,6 +1,6 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLongPress } from '@/hooks/core/useLongPress';
 import { supabase } from '@/lib/supabase';

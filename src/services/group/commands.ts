@@ -1,3 +1,4 @@
+import { generateId } from '@/lib/id';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { success } from '@/lib/error/ErrorFactory';
 import { withSupabase } from '@/lib/error/supabaseWrapper';
@@ -133,7 +134,7 @@ export const groupPhotos = async (
     throw new Error('至少需要選擇兩張照片才能成組');
   }
   
-  const targetGroupId = predefinedGroupId || crypto.randomUUID();
+  const targetGroupId = predefinedGroupId || generateId();
   const { supabase } = await import('@/lib/supabase');
   const { data: { session } } = await supabase.auth.getSession();
   const userId = session?.user?.id;

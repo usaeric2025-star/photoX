@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
 
 export function CollapsibleDescription({ description, title }: { description: React.ReactNode, title: string }) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -21,21 +20,15 @@ export function CollapsibleDescription({ description, title }: { description: Re
         </div>
       </button>
       
-      <AnimatePresence initial={false}>
-        {isExpanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
-            className="overflow-hidden"
-          >
-            <div className="px-5 pb-5 pt-0">
-               {description}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <div 
+        className={`grid transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${isExpanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
+      >
+        <div className="overflow-hidden">
+          <div className="px-5 pb-5 pt-0">
+             {description}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

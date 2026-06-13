@@ -1,6 +1,5 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React, { useRef, useEffect } from 'react';
-import { motion, LayoutGroup } from 'motion/react';
 import { Photo } from '@/types';
 import { VirtualPhotoGrid } from '@/components/photo/VirtualPhotoGrid';
 import { PhotoCard } from '@/components/photo/PhotoCard';
@@ -94,11 +93,10 @@ export function AdminGridContainer() {
   };
 
   return (
-    <LayoutGroup id="admin-gallery">
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col h-full bg-brand-bg w-full overflow-hidden text-text">
-        <AdminFilters 
-          onSearch={setSearchQuery}
-          searchQuery={dataFilters.searchQuery || ''}
+    <div className="flex flex-col h-full bg-brand-bg w-full overflow-hidden text-text animate-fade-in">
+      <AdminFilters 
+        onSearch={setSearchQuery}
+        searchQuery={dataFilters.searchQuery || ''}
           onSortChange={() => setSortOrder(dataFilters.sortOrder === 'newest' ? 'oldest' : 'newest')}
           currentSort={dataFilters.sortOrder as 'newest' | 'oldest' | 'name'}
           onColumnsChange={(cols) => {
@@ -114,7 +112,7 @@ export function AdminGridContainer() {
         
         <div className="flex-1 overflow-hidden bg-brand-bg relative">
             <VirtualPhotoGrid 
-              key={`admin-photo-grid-${filterKeyHash}-${columns}`}
+              key={`admin-photo-grid-${filterKeyHash}`}
               restoreKey={`admin_view_scroll_vlist-${filterKeyHash}`}
               photos={gridPhotos}
               isFetching={isLoading}
@@ -147,8 +145,7 @@ export function AdminGridContainer() {
           variant="destructive"
           onConfirm={confirmDelete}
         />
-      </motion.div>
-    </LayoutGroup>
+      </div>
   );
 };
 

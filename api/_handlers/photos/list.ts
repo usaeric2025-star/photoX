@@ -16,7 +16,8 @@ export const listHandler = (app: Hono) => {
       categoryId, tagId, 
       isAdminMode = false, 
       onlyUngrouped = false, manufacturerId, 
-      isHidden 
+      isHidden,
+      sortOrder
     } = check;
     
     const supabase = await getSupabaseAdmin();
@@ -34,6 +35,12 @@ export const listHandler = (app: Hono) => {
     if (categoryId !== undefined && categoryId !== null) {
       query = query.eq('category_id', String(categoryId));
     }
+    
+    // Sort
+    if (sortOrder === 'newest') query = query.order('created_at', { ascending: false });
+    else if (sortOrder === 'oldest') query = query.order('created_at', { ascending: true });
+    else if (sortOrder === 'name') query = query.order('name', { ascending: true });
+    else query = query.order('created_at', { ascending: false }); // Default
     
     const from = page * limit;
     const to = from + limit - 1;
