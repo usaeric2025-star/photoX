@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, Pencil, Trash2, X } from 'lucide-react';
+import { Sparkles, Pencil, Trash2, Info } from 'lucide-react';
 import { Button } from '@/components/shared/Button';
 
 interface ActionButtonsProps {
@@ -48,8 +48,8 @@ export function ActionButtons({
         </Button>
       )}
       {onClose && (
-        <Button variant="ghost" size="icon" onClick={onClose} title={texts.close} className="h-8 w-8 text-slate-400 hover:text-slate-600 hover:bg-slate-100 ml-1">
-          <X size={18} />
+        <Button variant="ghost" size="icon" onClick={onClose} title={texts.close} className="h-8 w-8 text-brand-navy hover:text-brand-navy/80 hover:bg-slate-100 ml-1">
+          <Info size={18} />
         </Button>
       )}
     </div>

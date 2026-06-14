@@ -22,9 +22,7 @@ export function LightboxFloatingInfo({
   const l = translations[appLang as keyof typeof translations] || translations.zh;
 
   return (
-    <div className={`fixed left-6 md:left-10 z-40 pointer-events-none flex flex-col items-start max-w-[85%] md:max-w-[40%] select-none animate-in fade-in slide-in-from-bottom-2 duration-700 ${
-      hasActions ? 'bottom-20 sm:bottom-6 md:bottom-10' : 'bottom-6 md:bottom-10'
-    }`}>
+    <div className={`fixed top-6 left-6 z-40 pointer-events-none flex flex-col items-start max-w-[85%] md:max-w-[40%] select-none animate-in fade-in slide-in-from-top-2 duration-700`}>
       <div className="bg-black/20 backdrop-blur-md p-3 sm:p-4 rounded-xl border border-white/10 shadow-2xl max-w-[300px]">
         {displayName && (
           <h2 className="text-white text-sm font-bold tracking-tight mb-2 line-clamp-1 font-sans drop-shadow-xl opacity-95">

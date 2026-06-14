@@ -26,7 +26,7 @@ export const ThumbnailsStrip = ({ items, currentIndex, onSelect }: ThumbnailsStr
   return (
     <div
       ref={scrollRef}
-      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[110] pointer-events-auto max-w-[90vw] sm:max-w-2xl px-3 py-2 bg-black/45 backdrop-blur-xl rounded-2xl border border-white/10 flex items-center gap-2 overflow-x-auto shadow-2xl transition-all duration-300 snap-x snap-mandatory"
+      className="fixed bottom-24 sm:bottom-8 left-1/2 -translate-x-1/2 z-[110] pointer-events-auto max-w-[90vw] sm:max-w-2xl px-3 py-2 bg-black/45 backdrop-blur-xl rounded-2xl border border-white/10 flex items-center gap-2 overflow-x-auto shadow-2xl transition-all duration-300 snap-x snap-mandatory"
       style={{ scrollbarWidth: 'none' }}
     >
       {items.map((item, idx) => {
