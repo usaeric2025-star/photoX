@@ -75,6 +75,7 @@ export function Modal({
       onClick={handleBackdropClick}
       className={`
         fixed m-auto
+        animate-in fade-in zoom-in-95 duration-200
         ${sizeClasses[size]}
         ${size === 'screen' ? '' : 'inset-0 rounded-2xl border border-slate-100'}
         w-full shadow-2xl bg-white

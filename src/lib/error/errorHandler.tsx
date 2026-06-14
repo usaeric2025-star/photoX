@@ -1,6 +1,7 @@
 import { showToast } from '@/lib/ui/toast';
 import type { StandardError } from '@/types/api';
 import { copyToClipboard } from '@/utils/clipboard';
+import { logError } from '@/services/system/logService';
 
 /**
  * Safely extracts a clean string message from any error object
@@ -115,26 +116,25 @@ const getErrorId = (standardError: StandardError): string => {
 }
 
 const buildCopyContent = (error: StandardError): string => {
-  const lines = [
-    `[${error.context}]`,
-    `Code: ${error.code}`,
-    `Trace ID: ${error.traceId || 'N/A'}`,
-    `Message: ${error.message}`,
-    `Time: ${new Date(error.timestamp).toISOString()}`,
-  ]
-  if (error.stack) {
-    lines.push(`Stack: ${error.stack}`)
-  }
-  return lines.join('\n')
+  return `[${error.context}] ${error.message} (Trace: ${error.traceId || 'N/A'})`;
 }
 
 export const handleError = (error: unknown, context: string, silent: boolean = false): void => {
   if (silent) return;
   const standardError = normalizeError(error, context)
+  
+  // Log to backend
+  logError(error, { 
+    action: context, 
+    component: 'ErrorHandler', 
+    kind: 'UNKNOWN', 
+    metadata: { traceId: standardError.traceId } 
+  });
+
   const errorId = getErrorId(standardError)
   const copyContent = buildCopyContent(standardError)
 
-  showToast.error(standardError.message, {
+  showToast.error(`${standardError.message} (ID: ${standardError.traceId || 'N/A'})`, {
     id: errorId,
     action: {
       label: '📋 複製',

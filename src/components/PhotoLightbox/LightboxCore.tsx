@@ -159,7 +159,7 @@ export const LightboxCore = ({
         controls: () => (
           <>
             <div className="absolute top-4 left-4 text-white font-medium bg-black/50 px-3 py-1 rounded-full text-[10px] sm:text-sm backdrop-blur-sm shadow-lg pointer-events-none">
-                 {index + 1} / {totalCount || slides.length}
+                 {index + 1} / {photos.length}
             </div>
 
             <button

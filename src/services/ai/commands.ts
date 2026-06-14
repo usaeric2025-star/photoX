@@ -120,8 +120,8 @@ export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promi
        }
 
        return ok({
-          name: parsed.name || '',
-          description: parsed.description || '',
+          name: (parsed.name || '').trim(),
+          description: (parsed.description || '').trim(),
           category_id: parsed.category_id || null,
           group_id: parsed.group_id || null,
           tagNames: sanitizedTagNames,

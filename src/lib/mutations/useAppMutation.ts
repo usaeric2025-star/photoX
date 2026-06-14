@@ -48,12 +48,12 @@ export const defineMutation = <TData, TVars, TQueryKey = any[]>(config: Mutation
       queryKeys.forEach(key => {
         // Optimistic Rollback Contract: use getQueryState(key)?.data
         const state = queryClient.getQueryState(key as any);
-        if (!state) {
-          throw new Error(`Rollback anchor missing: query state for ${JSON.stringify(key)} is undefined`);
+        if (state) {
+          previousData.set(key, state.data);
+          queryClient.setQueryData(key as any, (old: any) => updateFn(old, vars));
+        } else {
+          logger.warn(`Rollback anchor missing: query state for ${JSON.stringify(key)} is undefined, skipping optimistic update for this key.`);
         }
-        
-        previousData.set(key, state.data);
-        queryClient.setQueryData(key as any, (old: any) => updateFn(old, vars));
       });
       
       return { previousData };
