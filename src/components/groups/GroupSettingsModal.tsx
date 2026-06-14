@@ -34,7 +34,7 @@ export function GroupSettingsModal(props: GroupSettingsModalProps) {
   };
 
   return (
-    <Modal open={props.showGroupSettings} onClose={() => props.setShowGroupSettings(false)} size="lg" hidePadding>
+    <Modal open={props.showGroupSettings} onClose={() => props.setShowGroupSettings(false)} size="lg" hidePadding showCloseButton={false}>
       <div className="flex flex-col bg-white overflow-hidden max-h-[85vh] w-full max-w-[500px] h-full sm:h-[800px]">
         <GroupSettingsHeader {...headerProps} />
         <GroupSettingsContent {...childProps} />

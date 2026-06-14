@@ -1,11 +1,11 @@
 import { getTranslatedCategoryName } from "@/services/category/utils";
 import { createTranslate } from "@/locales";
+import React, { useRef } from "react";
 import { translations, LanguageCode } from "@/locales";
 import { Category, Manufacturer } from "@/types";
 import { useLongPress } from "@/hooks/core/useLongPress";
 import { Pencil, Trash2 } from "lucide-react";
 import { useUIStore, useShallow } from "@/store/useUIStore";
-import { useRef } from "react";
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { MenuDialog } from "@/components/ui/MenuDialog";
 
@@ -124,7 +124,7 @@ export function ManufacturerList({
   );
 }
 
-function ManufacturerButton({ mfr, isSelected, onSelect, onEdit, onDelete }: any) {
+const ManufacturerButton = React.memo(({ mfr, isSelected, onSelect, onEdit, onDelete }: any) => {
   const btnRef = useRef<HTMLButtonElement>(null);
   const [isMenuOpen, menuDialog] = useDisclosure(false);
 
@@ -160,4 +160,6 @@ function ManufacturerButton({ mfr, isSelected, onSelect, onEdit, onDelete }: any
       />
     </>
   );
-}
+});
+
+ManufacturerButton.displayName = 'ManufacturerButton';

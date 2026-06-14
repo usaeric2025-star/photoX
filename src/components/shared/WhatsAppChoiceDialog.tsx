@@ -21,9 +21,6 @@ export function WhatsAppChoiceDialog({
       <div className="w-full space-y-4">
         <div className="flex justify-between items-center pb-2 border-b border-slate-100">
           <h3 className="font-bold text-slate-800 text-lg">{labels.selectContact}</h3>
-          <button onClick={onClose} className="p-1 hover:bg-slate-100 rounded-full transition-colors">
-            <X size={20} className="text-slate-400 hover:text-slate-600" />
-          </button>
         </div>
         <div className="space-y-3 pt-2">
           {settings?.whatsapp_1 && (

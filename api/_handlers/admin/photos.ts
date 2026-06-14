@@ -16,7 +16,7 @@ adminPhotos.get("/photo-ai-result/:photoId", async (c) => {
             .from("ai_audit_logs")
             .select("*")
             .eq("photo_id", photoId)
-            .eq("status", "success")
+            // Remove success check to show failed logs too
             .order("created_at", { ascending: false })
             .limit(1)
             .maybeSingle();

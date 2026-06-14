@@ -18,10 +18,12 @@ export const PhotoSchema = type({
     'type?': 'string | null',
     'is_hidden?': 'boolean',
     'item_code?': 'string | null',
+    'manual_code?': 'string | null',
     'model_number?': 'string | null',
     'dimensions?': 'object | null',
     'updated_at?': 'string',
     'created_at?': 'string',
+    'group_order?': 'number | null',
 });
 
 export type PhotoFormValues = typeof PhotoSchema.infer;

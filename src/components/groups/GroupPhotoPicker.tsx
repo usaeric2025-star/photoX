@@ -146,7 +146,7 @@ export function GroupPhotoPicker({
   };
 
   return (
-    <Modal open={isOpen} onClose={onClose} size="screen" hidePadding>
+    <Modal open={isOpen} onClose={onClose} size="screen" hidePadding showCloseButton={false}>
       <div className="flex flex-col h-full w-full bg-slate-50 relative overflow-hidden text-slate-900 border border-slate-200 shadow-2xl">
         <div className="px-6 py-4 border-b border-slate-200 bg-white flex flex-row items-center justify-between">
           <h2 className="text-xl font-black text-slate-800 tracking-tight">

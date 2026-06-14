@@ -4,6 +4,7 @@ import { arktypeResolver } from '@hookform/resolvers/arktype';
 import { usePhoto } from './usePhoto';
 import { usePhotoEditMutation } from './usePhotoMutations';
 import { PhotoSchema, type PhotoFormValues } from '@/schemas/photo';
+import { showToast } from '@/lib/ui/toast';
 
 interface PhotoEditSessionContextValue {
   isDirty: boolean;
@@ -37,13 +38,24 @@ export const PhotoEditSessionProvider = ({
   
   const commit = useCallback(async () => {
     const valid = await form.trigger();
-    if (!valid) return;
+    if (!valid) {
+      const errors = form.formState.errors;
+      console.warn('[PhotoEdit] Form Validation Failed:', errors);
+      const firstError = Object.values(errors)[0];
+      const message = (firstError as any)?.message || '表单验证失败，请检查必填项 / Validation Failed';
+      showToast.error(message);
+      return;
+    }
     
-    await updateMutation.mutateAsync({
-      id: photoId,
-      updates: form.getValues() as any
-    });
-    onSuccess?.();
+    try {
+      await updateMutation.mutateAsync({
+        id: photoId,
+        updates: form.getValues() as any
+      });
+      onSuccess?.();
+    } catch (err: any) {
+      // Error handled by mutation factory usually
+    }
   }, [photoId, form, updateMutation, onSuccess]);
   
   const discard = useCallback(() => {

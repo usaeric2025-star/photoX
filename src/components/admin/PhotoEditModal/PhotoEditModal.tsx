@@ -44,7 +44,7 @@ export function PhotoEditModal({ slots }: PhotoEditModalProps) {
 
   return (
     <PhotoEditSessionProvider key={editPhotoId} photoId={editPhotoId} onSuccess={handleClose}>
-      <Modal open={isOpen} onClose={handleClose} size="screen" hidePadding>
+      <Modal open={isOpen} onClose={handleClose} size="screen" hidePadding showCloseButton={false}>
         <div className="flex flex-col h-full w-full bg-slate-50 focus:outline-none">
           <ModalHeader onClose={handleClose} onDeleteClick={deleteDialog.toggle} />
 

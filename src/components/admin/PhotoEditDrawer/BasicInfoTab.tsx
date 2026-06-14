@@ -147,7 +147,7 @@ export function BasicInfoTab() {
           <input 
             type="text" 
             placeholder={t.itemCodePlaceholder} 
-            {...register('item_code')}
+            {...register('manual_code')}
             className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-sm font-bold outline-none focus:border-blue-500 shadow-sm" 
           />
         </div>
@@ -177,7 +177,7 @@ export function BasicInfoTab() {
         </div>
       </div>
 
-      <Modal open={zoomed && !!previewSrc} onClose={closeZoom} size="screen" hidePadding={true}>
+      <Modal open={zoomed && !!previewSrc} onClose={closeZoom} size="screen" hidePadding={true} showCloseButton={false}>
           <div className="relative w-full h-full flex items-center justify-center p-4 lg:p-12 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
             <button 
               onClick={closeZoom}

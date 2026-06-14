@@ -69,36 +69,36 @@ export function TagEditor({
   const hotSet = hotTagsSet;
 
   // 1. Data Source
-  let displayList: Tag[] = [];
-  
-  if (!deferredSearchTerm.trim()) {
-    // If no search, show hot/pinned and basic set from allTags (or just a subset)
-    displayList = allTags;
-  } else {
-    // Start with search results
-    displayList = searchResults;
-
-    // Add selected tags if they are missing from search results
-    const searchIds = new Set(searchResults.map(t => String(t.id)));
-    const missingSelected = allTags.filter(t => selectedSet.has(String(t.id)) && !searchIds.has(String(t.id)));
-    displayList = [...displayList, ...missingSelected];
-  }
+  const displayList = React.useMemo(() => {
+    let list: Tag[] = [];
+    if (!deferredSearchTerm.trim()) {
+      list = allTags;
+    } else {
+      list = searchResults;
+      const searchIds = new Set(searchResults.map(t => String(t.id)));
+      const missingSelected = allTags.filter(t => selectedSet.has(String(t.id)) && !searchIds.has(String(t.id)));
+      list = [...list, ...missingSelected];
+    }
+    return list;
+  }, [deferredSearchTerm, allTags, searchResults, selectedSet]);
 
   // 2. Sort Logic
-  const filteredTags = [...displayList].sort((a, b) => {
-    const aId = String(a.id);
-    const bId = String(b.id);
-    
-    const aSelected = selectedSet.has(aId);
-    const bSelected = selectedSet.has(bId);
-    if (aSelected !== bSelected) return aSelected ? -1 : 1;
+  const filteredTags = React.useMemo(() => {
+    return [...displayList].sort((a, b) => {
+      const aId = String(a.id);
+      const bId = String(b.id);
+      
+      const aSelected = selectedSet.has(aId);
+      const bSelected = selectedSet.has(bId);
+      if (aSelected !== bSelected) return aSelected ? -1 : 1;
 
-    const aPinned = pinnedSet.has(aId);
-    const bPinned = pinnedSet.has(bId);
-    if (aPinned !== bPinned) return aPinned ? -1 : 1;
+      const aPinned = pinnedSet.has(aId);
+      const bPinned = pinnedSet.has(bId);
+      if (aPinned !== bPinned) return aPinned ? -1 : 1;
 
-    return a.name.localeCompare(b.name, undefined, { numeric: true });
-  });
+      return a.name.localeCompare(b.name, undefined, { numeric: true });
+    });
+  }, [displayList, selectedSet, pinnedSet]);
 
   return (
     <div className="space-y-2">
@@ -241,7 +241,7 @@ export function TagEditor({
   );
 }
 
-const TagButton = ({ tag, isSelected, isHot, isPinned, isDisabled, onToggle, onLongPress: onLongPressProp }: any) => {
+const TagButton = React.memo(({ tag, isSelected, isHot, isPinned, isDisabled, onToggle, onLongPress: onLongPressProp }: any) => {
   const btnRef = useRef<HTMLButtonElement>(null);
   useLongPress(btnRef, {
     delay: 400,
@@ -304,5 +304,7 @@ const TagButton = ({ tag, isSelected, isHot, isPinned, isDisabled, onToggle, onL
       </button>
     </div>
   );
-};
+});
+
+TagButton.displayName = 'TagButton';
 
