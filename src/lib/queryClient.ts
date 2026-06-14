@@ -1,5 +1,5 @@
 import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query';
-import { logError } from '@/services/system/logService';
+import { logError } from '@/lib/error/errorReporter';
 import { handleError } from './error/errorHandler';
 import { createIDBPersister } from './persister';
 

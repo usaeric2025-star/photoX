@@ -1,8 +1,6 @@
 import { generateId } from '@/lib/id';
 import { logger } from '@/lib/logger';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { withErrorHandling } from '@/lib/error/wrapper';
-import { AppResult, errorFactory, success } from '@/lib/error/ErrorFactory';
 import { Photo } from '../../../types';
 import { uploadToR2 } from './r2Client';
 import { upsertPhotoRecord, syncPhotoTagsInDB } from './dbCommands';
@@ -16,13 +14,12 @@ export const uploadSinglePhoto = async (
   userId: string, 
   photo: Photo, 
   onStatus?: (s: string) => void
-): Promise<AppResult<{ id: string; is_duplicate?: boolean }>> => {
-  return withErrorHandling(async () => {
+): Promise<{ id: string; is_duplicate?: boolean }> => {
     const { data: { session } } = await supabase.auth.getSession();
     const isLocalStorageStaff = typeof window !== 'undefined' && !!window.localStorage.getItem('ais_mock_auth_passcode');
 
     if (!session?.user && !isLocalStorageStaff) {
-        throw ErrorFactory.wrap(new Error('鉴权失敗: 無活躍會話'), 'uploadOrchestrator');
+        throw ErrorFactory.permission('鑒權失敗：無活躍會話');
     }
 
     const actUserId = session?.user?.id || userId || 'staff';
@@ -60,7 +57,7 @@ export const uploadSinglePhoto = async (
     }
 
     if (!photo.image_url) {
-        throw ErrorFactory.wrap(new Error('Upload failed: No image URL generated'), 'uploadOrchestrator');
+        throw ErrorFactory.fatal('Upload failed: No image URL generated', { context: 'uploadOrchestrator' });
     }
 
     normalizeDimensionsBeforeSave(photo.dimensions);
@@ -77,13 +74,14 @@ export const uploadSinglePhoto = async (
     if (!payload.id) payload.id = photo.id;
 
     // 3. Final DB Upsert (ONLY AFTER R2 IS SUCCESSFUL)
-    const saveResult = await upsertPhotoRecord(payload);
-    if (!saveResult.ok) throw ErrorFactory.wrap(new Error(saveResult.message), 'uploadOrchestrator');
+    await upsertPhotoRecord(payload);
     
     // 4. Tag Sync
-    const tagSync = await syncPhotoTagsInDB(photo.id, (photo.tags || []).map(t => String(t.id)));
-    if (!tagSync.ok) logger.warn("Failed to sync photo tags:", tagSync.message);
+    try {
+        await syncPhotoTagsInDB(photo.id, (photo.tags || []).map(t => String(t.id)));
+    } catch (e) {
+        logger.warn("Failed to sync photo tags:", e instanceof Error ? e.message : String(e));
+    }
 
     return { id: photo.id, is_duplicate };
-  }, 'uploadSinglePhoto');
 };

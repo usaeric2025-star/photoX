@@ -24,7 +24,7 @@ export const getPhotos = async (
     isHidden?: boolean | null
 ): Promise<Photo[]> => {
     const res = await api.photos.list.$post({
-      json: { page, limit, categoryId, isAdminMode, onlyUngrouped, manufacturerId, isHidden, sortOrder }
+      json: { page, limit, categoryId, tagId, searchQuery, isAdminMode, onlyUngrouped, manufacturerId, isHidden, sortOrder }
     });
     
     if (!res.ok) throw new Error('Failed to load photos from cloud');

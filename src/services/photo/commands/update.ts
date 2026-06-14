@@ -19,8 +19,7 @@ export async function updatePhoto(id: string, initialUpdates: Partial<Photo>): P
     return acc;
   }, {} as Partial<Photo>);
 
-  const validationRes = createPhotoValidator().validate(updates);
-  if (!validationRes.ok) throw new Error(validationRes.message);
+  createPhotoValidator().validate(updates);
 
   if (updates.uri && updates.uri.startsWith('data:image')) {
     const { data: { session } } = await supabase.auth.getSession();
@@ -28,9 +27,8 @@ export async function updatePhoto(id: string, initialUpdates: Partial<Photo>): P
 
     const { uploadWithRetry } = await import('@/services/storage');
     const uploadRes = await uploadWithRetry(session.user.id, id, updates.uri, undefined, undefined, undefined, 3, true);
-    if (!uploadRes.ok) throw new Error(uploadRes.message);
     
-    updates.image_url = uploadRes.data.imageUrl;
+    updates.image_url = uploadRes.imageUrl;
     updates.updated_at = new Date().toISOString();
     delete updates.uri;
   }

@@ -1,9 +1,4 @@
 import { generateId } from '@/lib/id';
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { success } from '@/lib/error/ErrorFactory';
-import { withSupabase } from '@/lib/error/supabaseWrapper';
-import { withErrorHandling } from '@/lib/error/wrapper';
-import type { AppResult } from '@/types/api';
 import { supabase } from '../../lib/supabase';
 import { DB_CONFIG } from '../../constants/config';
 import { ProductGroup } from '../../types';
@@ -65,8 +60,7 @@ const getCurrentUserId = async (): Promise<string | undefined> => {
 
 export async function createGroup(data: ProductGroup): Promise<ProductGroup> {
   const validator = createGroupValidator();
-  const validationRes = validator.validate(data);
-  if (!validationRes.ok) throw new Error(validationRes.message);
+  validator.validate(data);
 
   const userId = await getCurrentUserId();
   const dbData = mapToDb(data as any, userId);
@@ -81,8 +75,7 @@ export async function createGroup(data: ProductGroup): Promise<ProductGroup> {
 
 export async function updateGroup(id: string, updates: Partial<ProductGroup>): Promise<ProductGroup> {
   const validator = createGroupValidator();
-  const validationRes = validator.validate({ ...updates, id } as any);
-  if (!validationRes.ok) throw new Error(validationRes.message);
+  validator.validate({ ...updates, id } as any);
 
   const userId = await getCurrentUserId();
   const dbUpdates = mapToDb(updates, userId);
@@ -139,20 +132,6 @@ export const groupPhotos = async (
   const { data: { session } } = await supabase.auth.getSession();
   const userId = session?.user?.id;
 
-  const { loadPhotosByIds } = await import('@/services/photo');
-  const selectedPhotos = await loadPhotosByIds(photoIds);
-
-  const sourceGroupIds = Array.from(new Set(
-    selectedPhotos
-      .map(p => p.group_id)
-      .filter((gid): gid is string => !!gid && gid !== targetGroupId)
-  ));
-
-  const ungroupedValidIds = photoIds.filter(id => {
-    const p = selectedPhotos.find(x => x.id === id);
-    return !p?.group_id;
-  });
-
   // Derive a name if missing: "全面强制 合组新合并就叫GROUP，除非改名。"
   let finalName = metadata?.name || { zh: 'GROUP', en: 'GROUP', ms: 'GROUP' };
 
@@ -166,17 +145,13 @@ export const groupPhotos = async (
   const groupPhotosRes = await api.groups['group-photos'].$post({
     json: {
       targetGroupId,
-      userId,
+      userId: userId as string,
       photoIds,
-      groupData,
-      sourceGroupIds,
-      ungroupedValidIds
+      groupData
     }
   });
 
   if (!groupPhotosRes.ok) throw new Error('Group photos failed');
-
-  await syncGroupMemberCount(targetGroupId);
 
   return { newGroupId: targetGroupId };
 };

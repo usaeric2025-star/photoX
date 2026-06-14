@@ -1,13 +1,12 @@
 import { logger } from '@/lib/logger';
 import { api } from '@/lib/api';
-import { ok, fail } from '@/lib/error/ErrorFactory';
-import { AppResult } from '@/types/api';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import type { TranslationResult } from './types';
 
 export const translateFields = async (
   name: string,
   description: string
-): Promise<AppResult<TranslationResult>> => {
+): Promise<TranslationResult> => {
   try {
     const p1 = api.ai['translate'].$post({ json: { promptText: `Translate this to EN and MS, return JSON format { "en": "...", "ms": "..." }. Input: "${name}"` } });
     const p2 = api.ai['translate'].$post({ json: { promptText: `Translate this to EN and MS, return JSON format { "en": "...", "ms": "..." }. Input: "${description}"` } });
@@ -34,12 +33,12 @@ export const translateFields = async (
     const nt = translateRes(name, nameData);
     const dt = translateRes(description, descData);
     
-    return ok({
+    return {
       name: { zh: name, en: nt.en, ms: nt.ms },
       description: { zh: description, en: dt.en, ms: dt.ms }
-    });
+    };
   } catch (err) {
     logger.error('Translation failed', err);
-    return fail((err as Error).message || 'Translation failed');
+    throw ErrorFactory.fatal((err as Error).message || 'Translation failed', { context: 'translateFields' });
   }
 };

@@ -1,8 +1,7 @@
 import { Tag } from '@/types';
 import { loadTagsFromCloud } from './queries';
 import { batchCreateTags } from './commands';
-import { ok, fail } from '@/lib/error/ErrorFactory';
-import { AppResult } from '@/types/api';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 /**
  * 標籤自動補全與映射服務
@@ -11,8 +10,8 @@ import { AppResult } from '@/types/api';
 export async function resolveTagNamesToIds(
   tagNames: string[], 
   existingTags?: Tag[]
-): Promise<AppResult<string[]>> {
-  if (!tagNames || tagNames.length === 0) return ok([]);
+): Promise<string[]> {
+  if (!tagNames || tagNames.length === 0) return [];
 
   try {
     const dbTags = existingTags && existingTags.length > 0 ? existingTags : (await loadTagsFromCloud());
@@ -44,14 +43,16 @@ export async function resolveTagNamesToIds(
     });
 
     if (missingNames.length > 0) {
-      const createResult = await batchCreateTags(missingNames);
-      if (createResult.ok && createResult.data) {
-        createResult.data.forEach((id: string) => tagIds.push(id));
-      }
+      try {
+        const createResult = await batchCreateTags(missingNames);
+        if (createResult) {
+          createResult.forEach((id: string) => tagIds.push(id));
+        }
+      } catch (e) {}
     }
 
-    return ok(tagIds);
+    return tagIds;
   } catch (err) {
-    return fail((err as Error).message || '標籤解析失敗');
+    throw ErrorFactory.fatal((err as Error).message || '標籤解析失敗', { context: 'resolveTagNamesToIds' });
   }
 }

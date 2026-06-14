@@ -1,5 +1,4 @@
-import { AppResult } from '@/types/api';
-import { ok, fail } from './error/ErrorFactory';
+import { ErrorFactory } from './error/ErrorFactory';
 
 interface RetryOptions {
   maxRetries?: number;
@@ -12,33 +11,29 @@ interface RetryOptions {
  * 用於處理網絡抖動或瞬時失敗
  */
 export async function withRetry<T>(
-  task: () => Promise<AppResult<T>>,
+  task: () => Promise<T>,
   options: RetryOptions = {}
-): Promise<AppResult<T>> {
+): Promise<T> {
   const { 
     maxRetries = 3, 
     baseDelay = 1000, 
     onRetry 
   } = options;
 
-  let lastError: string = 'Unknown error';
+  let lastError: any = new Error('Unknown error');
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      const result = await task();
-      if (result.ok) {
-        return result;
-      }
-      
-      lastError = result.message;
-      
-      // 如果是明確的「不應重試」錯誤（如 401, 403, 400），則直接返回
-      if (lastError.includes('401') || lastError.includes('403') || lastError.includes('400')) {
-        return result;
-      }
-
+      return await task();
     } catch (err: unknown) {
-      lastError = err instanceof Error ? err.message : String(err);
+      lastError = err;
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      
+      // 如果是明確的「不應重試」錯誤（如 401, 403, 400），則直接抛出
+      if (errorMessage.includes('401') || errorMessage.includes('403') || errorMessage.includes('400')) {
+        if (err instanceof Error && err.name === 'AppError') throw err;
+        throw ErrorFactory.fatal(errorMessage);
+      }
     }
 
     if (attempt < maxRetries) {
@@ -48,7 +43,8 @@ export async function withRetry<T>(
     }
   }
 
-  return fail(`重試 ${maxRetries} 次後失敗: ${lastError}`);
+  const msg = lastError instanceof Error ? lastError.message : String(lastError);
+  throw ErrorFactory.fatal(`重試 ${maxRetries} 次後失敗: ${msg}`);
 }
 
 

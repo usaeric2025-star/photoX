@@ -13,7 +13,7 @@ export const listHandler = (app: Hono) => {
 
     const { 
       page = 0, limit = 1000, 
-      categoryId, tagId, 
+      categoryId, tagId, searchQuery,
       isAdminMode = false, 
       onlyUngrouped = false, manufacturerId, 
       isHidden,
@@ -22,9 +22,18 @@ export const listHandler = (app: Hono) => {
     
     const supabase = await getSupabaseAdmin();
     
-    let query = supabase.from(TABLE_NAME).select('*, photo_tags(tag_id)');
+    let query = supabase.from(TABLE_NAME).select(`*, photo_tags${tagId ? '!inner' : ''}(tag_id)`);
     
     // Filters
+    if (tagId !== undefined && tagId !== null) {
+      query = query.eq('photo_tags.tag_id', String(tagId));
+    }
+
+    if (searchQuery && searchQuery.trim().length > 0) {
+      const dbSearchQuery = decodeURIComponent(searchQuery).replace(/[%_]/g, '\\$&').trim();
+      query = query.or(`name.ilike.%${dbSearchQuery}%,ai_description.ilike.%${dbSearchQuery}%`);
+    }
+
     if (onlyUngrouped) query = query.is('group_id', null);
     if (!isAdminMode) query = query.or('is_hidden.is.false,is_hidden.is.null'); // Simplified visibility
     else if (isHidden !== undefined && isHidden !== null) query = query.eq('is_hidden', isHidden);
@@ -37,10 +46,12 @@ export const listHandler = (app: Hono) => {
     }
     
     // Sort
-    if (sortOrder === 'newest') query = query.order('created_at', { ascending: false });
-    else if (sortOrder === 'oldest') query = query.order('created_at', { ascending: true });
-    else if (sortOrder === 'name') query = query.order('name', { ascending: true });
-    else query = query.order('created_at', { ascending: false }); // Default
+    query = query.order('is_pinned', { ascending: false });
+
+    if (sortOrder === 'newest') query = query.order('created_at', { ascending: false }).order('id', { ascending: false });
+    else if (sortOrder === 'oldest') query = query.order('created_at', { ascending: true }).order('id', { ascending: true });
+    else if (sortOrder === 'name') query = query.order('name', { ascending: true }).order('id', { ascending: true });
+    else query = query.order('created_at', { ascending: false }).order('id', { ascending: false }); // Default
     
     const from = page * limit;
     const to = from + limit - 1;
@@ -95,20 +106,26 @@ export const listHandler = (app: Hono) => {
     const check = PhotoListReqSchema(body);
     if (check instanceof type.errors) throw new Error(check.summary);
 
-    const { categoryId, tagId, isAdminMode = false } = check;
+    const { categoryId, tagId, searchQuery, isAdminMode = false, isHidden } = check;
     const supabase = await getSupabaseAdmin();
-    let query = supabase.from(TABLE_NAME).select('*', { count: 'exact', head: true });
+    let query = supabase.from(TABLE_NAME).select(tagId ? 'id, photo_tags!inner(tag_id)' : 'id', { count: 'exact', head: true });
+
+    if (tagId !== undefined && tagId !== null) {
+      query = query.eq('photo_tags.tag_id', String(tagId));
+    }
+
+    if (searchQuery && searchQuery.trim().length > 0) {
+      const dbSearchQuery = decodeURIComponent(searchQuery).replace(/[%_]/g, '\\$&').trim();
+      query = query.or(`name.ilike.%${dbSearchQuery}%,ai_description.ilike.%${dbSearchQuery}%`);
+    }
+
     if (!isAdminMode) query = query.or('is_hidden.is.false,is_hidden.is.null');
+    else if (isHidden !== undefined && isHidden !== null) query = query.eq('is_hidden', isHidden);
     
     if (categoryId !== undefined && categoryId !== null) {
       query = query.eq('category_id', String(categoryId));
     }
-    if (tagId !== undefined && tagId !== null) {
-      const { data: ptData } = await supabase.from('photo_tags').select('photo_id').eq('tag_id', String(tagId));
-      const ids = (ptData || []).map((pt: any) => String(pt.photo_id));
-      if (ids.length > 0) query = query.in('id', ids);
-      else return c.json({ success: true, data: 0 });
-    }
+    
     const { count, error } = await query;
     if (error) return c.json({ success: false, error: error.message }, 500);
     return c.json({ success: true, data: count || 0 });

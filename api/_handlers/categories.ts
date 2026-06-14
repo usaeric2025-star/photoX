@@ -11,7 +11,7 @@ export const categories = new Hono()
     const { data, error } = await supabase
         .from(TABLE_NAME)
         .select('*')
-        .order('sort_order', { ascending: true });
+        .order('sort_order', { ascending: true }).order('id');
     
     if (error) return c.json({ success: false, error: error.message }, 500);
     return c.json({ success: true, data: data || [] });

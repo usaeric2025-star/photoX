@@ -12,7 +12,7 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { Analytics } from '@vercel/analytics/react';
 import App from './App';
 import { TaskProvider } from '@/hooks';
-import { logError } from './services/system/logService';
+import { logError } from './lib/error/errorReporter';
 import { queryClient, persister } from './lib/queryClient';
 import './index.css';
 import { clientEnv } from './shared/envSchema';

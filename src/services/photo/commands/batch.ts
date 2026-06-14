@@ -18,8 +18,7 @@ export async function batchUpdate(ids: string[], initialUpdates: Partial<Photo>)
     return acc;
   }, {} as Partial<Photo>);
 
-  const validationRes = createPhotoValidator().validate(updates);
-  if (!validationRes.ok) throw new Error(validationRes.message);
+  createPhotoValidator().validate(updates);
 
   const dbUpdates = mapToDb(updates);
   const res = await api.photos['batch-update'].$post({

@@ -2,9 +2,7 @@ import { logger } from '@/lib/logger';
 import { supabase } from '../../lib/supabase';
 import { STORAGE } from './storageConfig';
 import { api } from '@/lib/api';
-import { ErrorFactory, success } from '@/lib/error/ErrorFactory';
-import { withErrorHandling } from '@/lib/error/wrapper';
-import { AppResult } from '@/types/api';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { compressImage, dataURLToArrayBuffer } from './uploadUtils';
 import { resolveUploadStrategy } from './uploadStateMachine';
 
@@ -22,8 +20,7 @@ export const uploadWithRetry = async (
   onProgress?: (percent: number) => void,
   maxRetries = 3,
   force = false
-): Promise<AppResult<UploadResult>> => {
-  return withErrorHandling(async () => {
+): Promise<UploadResult> => {
     let lastError: any;
     for (let i = 0; i < maxRetries; i++) {
       try {
@@ -37,8 +34,8 @@ export const uploadWithRetry = async (
         }
       }
     }
-    throw lastError;
-  }, 'uploadWithRetry');
+    if (lastError instanceof Error && lastError.name === 'AppError') throw lastError;
+    throw ErrorFactory.fatal(lastError instanceof Error ? lastError.message : String(lastError), { context: 'uploadWithRetry' });
 };
 
 export const uploadImages = async (
@@ -53,7 +50,7 @@ export const uploadImages = async (
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!session?.user) {
-    throw ErrorFactory.wrap(new Error('No active session for storage'), 'uploadImages', userId);
+    throw ErrorFactory.permission('No active session for storage');
   }
 
   onStatus?.('compressing');
@@ -90,17 +87,17 @@ export const uploadImages = async (
     
     if (presignRes.status === 409) {
         const result = await presignRes.json();
-        return `DUPLICATE:${result.existingUrl}`;
+        return `DUPLICATE:${(result as any).existingUrl}`;
     }
 
     if (!presignRes.ok) {
-      throw ErrorFactory.wrap(new Error(`获取预签名上传地址失败 (HTTP ${presignRes.status})`), 'uploadFile', photoId);
+      throw ErrorFactory.fatal(`获取预签名上传地址失败 (HTTP ${presignRes.status})`, { context: 'uploadFile' });
     }
 
     const result = await presignRes.json();
-    if (!result.success) throw ErrorFactory.wrap(new Error(String(result.error)), 'uploadFile', photoId);
+    if (!result.success) throw ErrorFactory.fatal(String((result as any).error), { context: 'uploadFile' });
     
-    const { uploadUrl, publicUrl } = result.data;
+    const { uploadUrl, publicUrl } = result.data as any;
 
     try {
       const uploadRes = await fetch(uploadUrl, {
@@ -109,7 +106,7 @@ export const uploadImages = async (
         body: new Uint8Array(buffer)
       });
       if (!uploadRes.ok) {
-         throw ErrorFactory.wrap(new Error(`R2 Upload failed with HTTP ${uploadRes.status}: ${await uploadRes.text().catch(() => '')}`), 'uploadService');
+         throw ErrorFactory.fatal(`R2 Upload failed with HTTP ${uploadRes.status}: ${await uploadRes.text().catch(() => '')}`, { context: 'uploadFile' });
       }
       if (isMain && onProgress) onProgress(100);
       return publicUrl;
@@ -119,7 +116,7 @@ export const uploadImages = async (
       const strategy = resolveUploadStrategy(buffer.byteLength, browserUploadErr);
       
       if (strategy.status === 'failed') {
-          throw ErrorFactory.wrap(new Error(strategy.userMessage || strategy.reason), 'uploadFile', photoId);
+          throw ErrorFactory.fatal(strategy.userMessage || strategy.reason, { context: 'uploadFile' });
       }
       
       // status === 'relay'
@@ -128,11 +125,11 @@ export const uploadImages = async (
         json: { base64Data: base64, fileKey: safeFileName, contentType: 'image/webp' }
       });
       if (!fallbackRes.ok) {
-         throw ErrorFactory.wrap(new Error(`服务器中转上传失败 (HTTP ${fallbackRes.status}): ${await fallbackRes.text().catch(()=>'')}`), 'uploadFile', photoId);
+         throw ErrorFactory.fatal(`服务器中转上传失败 (HTTP ${fallbackRes.status}): ${await fallbackRes.text().catch(()=>'')}`, { context: 'uploadFile' });
       }
       const fallbackResult = await fallbackRes.json();
       if (isMain && onProgress) onProgress(100);
-      return fallbackResult.data.publicUrl;
+      return (fallbackResult as any).data.publicUrl;
     }
   };
 

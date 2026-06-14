@@ -206,6 +206,7 @@ adminPhotos.get("/error-events", async (c) => {
             .from('system_logs')
             .select('*')
             .order('created_at', { ascending: false })
+            .order('id', { ascending: false })
             .limit(300);
         if (error) throw error;
         return c.json({ success: true, data });

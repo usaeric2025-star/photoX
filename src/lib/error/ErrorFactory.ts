@@ -1,4 +1,3 @@
-import { AppResult, AppSuccess, OldAppError as LegacyAppError } from '@/types/api';
 import { ProblemDetails } from '@/types/problemDetails';
 import { handleError as legacyHandleError } from './errorHandler';
 import * as Sentry from '@sentry/react';
@@ -171,37 +170,16 @@ export const ErrorFactory = {
     });
   },
 
-  createError(message: string, code: string = 'UNKNOWN', context?: string, cause?: unknown): LegacyAppError {
-    let traceId: string | undefined;
-    if (typeof cause === 'object' && cause !== null && 'traceId' in cause) {
-      traceId = (cause as any).traceId;
-    }
-    return {
-      ok: false,
-      error: true,
-      message,
-      code,
-      context,
-      timestamp: Date.now(),
-      traceId,
-      cause,
-    };
-  },
-
-  success<T>(data: T): AppSuccess<T> {
-    return { ok: true, data };
-  },
-
   handle(error: unknown, context: string = '未知操作', silent: boolean = false) {
     legacyHandleError(error, context, silent);
   },
 
-  toProblemDetails(error: LegacyAppError | AppError, status: number = 500): ProblemDetails {
+  toProblemDetails(error: AppError, status: number = 500): ProblemDetails {
     return {
       type: `https://api.photox.app/errors/${error.code}`,
       title: error.message,
       status: status,
-      detail: (error as any).context,
+      detail: error.context ? JSON.stringify(error.context) : undefined,
       instance: undefined,
       traceId: error.traceId,
       timestamp: typeof error.timestamp === 'string' ? Date.parse(error.timestamp) : error.timestamp,
@@ -227,38 +205,4 @@ export function isAppError(error: unknown): error is AppError {
   return error instanceof AppError
 }
 
-// === BACKWARD COMPATIBILITY EXPORTS ===
-export const errorFactory = ErrorFactory.createError;
-export const success = ErrorFactory.success;
-export const ok = success;
-export const err = errorFactory;
-export const fail = err;
 export const handleError = ErrorFactory.handle;
-
-export function isErr<T>(result: AppResult<T>): result is LegacyAppError {
-  return !result.ok;
-}
-
-export function isOk<T>(result: AppResult<T>): result is AppSuccess<T> {
-  return result.ok;
-}
-
-export function fromThrowable<T>(fn: () => T, context?: string): AppResult<T> {
-  try {
-    return success(fn());
-  } catch (error) {
-    const norm = ErrorFactory.normalizeError(error);
-    return ErrorFactory.createError(norm.message, 'UNKNOWN', context, error);
-  }
-}
-
-export async function fromThrowableAsync<T>(fn: () => Promise<T>, context?: string): Promise<AppResult<T>> {
-  try {
-    return success(await fn());
-  } catch (error) {
-    const norm = ErrorFactory.normalizeError(error);
-    return ErrorFactory.createError(norm.message, 'UNKNOWN', context, error);
-  }
-}
-
-export type { AppResult, AppSuccess };

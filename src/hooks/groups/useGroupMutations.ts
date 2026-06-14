@@ -56,9 +56,16 @@ const groupPhotosConfig = defineMutation<any, { photoIds: string[], targetGroupI
     return await groupPhotos(photoIds, targetGroupId);
   },
   invalidate: () => [photoKeys.all as unknown as any[], groupKeys.all as unknown as any[]],
-  optimistic: (old: any, { photoIds, targetGroupId }: { photoIds: string[], targetGroupId?: string }) => {
+  optimistic: (old: any, { photoIds, targetGroupId }: { photoIds: string[], targetGroupId?: string }, queryKey?: readonly unknown[]) => {
     if (!old) return old;
     if (old.pages) {
+      const queryVars: any = queryKey && queryKey.length > 2 ? queryKey[2] : {};
+      const currentViewGroupId = queryVars?.groupId;
+      
+      if (currentViewGroupId && currentViewGroupId !== targetGroupId) {
+          return optimistic.infinite.remove<Photo>()(old, photoIds);
+      }
+      
       return optimistic.infinite.batchUpdate<Photo>()(old, {
         ids: photoIds,
         updates: { group_id: targetGroupId ?? null }
@@ -77,9 +84,16 @@ const removePhotosConfig = defineMutation<any, { photoIds: string[]; groupId: st
     return await movePhotosToGroup(photoIds, null);
   },
   invalidate: () => [photoKeys.all as unknown as any[], groupKeys.all as unknown as any[]],
-  optimistic: (old: any, { photoIds }: { photoIds: string[] }) => {
+  optimistic: (old: any, { photoIds }: { photoIds: string[] }, queryKey?: readonly unknown[]) => {
     if (!old) return old;
     if (old.pages) {
+      const queryVars: any = queryKey && queryKey.length > 2 ? queryKey[2] : {};
+      const currentViewGroupId = queryVars?.groupId;
+      
+      if (currentViewGroupId) {
+          return optimistic.infinite.remove<Photo>()(old, photoIds);
+      }
+
       return optimistic.infinite.batchUpdate<Photo>()(old, {
         ids: photoIds,
         updates: { group_id: null }
@@ -98,6 +112,20 @@ const ungroupConfig = defineMutation<any, string>({
     return await ungroupPhotos(groupId);
   },
   invalidate: () => [photoKeys.all as unknown as any[], groupKeys.all as unknown as any[]],
+  optimistic: (old: any, groupId: string, queryKey?: readonly unknown[]) => {
+    if (!old) return old;
+    if (old.pages) {
+      // Find all photos in this group and nullify their group_id
+      return {
+        ...old,
+        pages: old.pages.map((page: any) => ({
+          ...page,
+          photos: page.photos?.map((p: any) => p.group_id === groupId ? { ...p, group_id: null, is_group_cover: false } : p) || []
+        }))
+      };
+    }
+    return old;
+  },
   successMessage: '已解散',
 });
 

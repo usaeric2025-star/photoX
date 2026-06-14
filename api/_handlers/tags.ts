@@ -10,7 +10,7 @@ export const tags = new Hono()
     const keyword = c.req.query('keyword') || '';
     const supabase = await getSupabaseAdmin();
     
-    let query = supabase.from(TABLE_NAME).select('*').order('name');
+    let query = supabase.from(TABLE_NAME).select('*').order('name').order('id');
     if (keyword) {
         query = query.ilike('name', `%${keyword}%`);
     }

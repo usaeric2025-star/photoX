@@ -1,5 +1,5 @@
-import { AppResult } from "@/types/api";
 import { translateFields } from "./translationService";
+import { logger } from "@/lib/logger";
 
 export interface TranslatedField {
   zh: string;
@@ -40,11 +40,12 @@ export async function mapAiToMultilingual(
         return { name: nameObj, description: descObj };
     }
 
-    const translation = await translateFields(nameStr, descStr);
-    if (translation.ok) {
-      nameObj = translation.data.name;
-      descObj = translation.data.description;
-    } else {
+    try {
+      const translation = await translateFields(nameStr, descStr);
+      nameObj = translation.name;
+      descObj = translation.description;
+    } catch(err) {
+      logger.error('Mapping fallback: translation failed', err);
       nameObj = { zh: nameStr, en: nameStr, ms: nameStr };
       descObj = { zh: descStr, en: descStr, ms: descStr };
     }

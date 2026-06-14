@@ -1,4 +1,4 @@
-import { AppError, ErrorSeverity, isAppError } from './ErrorFactory'
+import { AppError, ErrorSeverity, isAppError, ErrorFactory } from './ErrorFactory'
 
 // WeakSet for tracking reported errors to avoid duplicates
 const reportedErrors = new WeakSet<Error>()
@@ -56,4 +56,74 @@ export async function reportError(error: Error | AppError): Promise<void> {
 
 export async function reportErrors(errors: Error[]): Promise<void> {
   await Promise.all(errors.map(reportError))
+}
+
+export interface EventContext {
+  action: string;
+  component: string;
+  kind?: string;
+  metadata?: any;
+}
+
+export const logError = async (error: Error | unknown, context: EventContext) => {
+  const normError = isAppError(error) ? error : (error instanceof Error ? error : new Error(String(error)));
+  
+  if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
+    console.group(`%c🔴 [ERROR] ${context.action}`, `color: #ef4444; font-weight: bold;`);
+    console.error(normError);
+    console.groupEnd();
+  }
+  
+  try {
+    const traceId = (normError as any)?.traceId || 'fe-' + Math.random().toString(36).substring(2, 12);
+    
+    await fetch('/api/log-error', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Trace-Id': traceId
+      },
+      body: JSON.stringify({
+        error_message: normError.message,
+        stack_trace: normError.stack || (normError as any)?.details || null,
+        url: typeof window !== 'undefined' ? window.location.href : '',
+        context: context.component || 'global',
+        metadata: {
+          ...context.metadata,
+          action: context.action,
+          kind: context.kind || 'UNKNOWN',
+          traceId,
+          timestamp: new Date().toISOString()
+        }
+      })
+    });
+  } catch (e) {
+    console.error('[logService] Failed to send log to API:', e);
+  }
+}
+
+export const logResult = async (context: EventContext, type: 'error' | 'success', data?: any) => {
+  try {
+    await fetch('/api/log-error', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        error_message: `[${type.toUpperCase()}] ${context.action}`,
+        url: typeof window !== 'undefined' ? window.location.href : '',
+        context: context.component || 'global',
+        metadata: {
+          ...context.metadata,
+          action: context.action,
+          kind: context.kind || 'UNKNOWN',
+          level: type,
+          data,
+          timestamp: new Date().toISOString()
+        }
+      })
+    });
+  } catch (e) {
+    console.error('[logService] Failed to send log result to API:', e);
+  }
 }

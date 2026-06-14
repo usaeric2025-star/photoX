@@ -1,5 +1,3 @@
-import type { AppResult } from '@/types/api';
-
 /**
  * @validator-contract StandardError
  * Standardized error structure for all validator engines.
@@ -37,9 +35,9 @@ export interface ValidatorMeta {
  */
 export interface Validator<T> {
     /**
-     * Explicit validation returning a AppResult.
+     * Explicit validation throwing an error on failure, returning T on success.
      */
-    validate(input: unknown): AppResult<T>;
+    validate(input: unknown): T;
     /**
      * Serialized metadata for AI assistance and runtime parity checks.
      */

@@ -53,8 +53,7 @@ export async function prefetchGroupDetail(queryClient: QueryClient, groupId: str
     queryKey,
     queryFn: async () => {
       const result = await getGroupById(groupId);
-      if (!result.ok) throw result;
-      return result.data || null;
+      return result || null;
     },
     staleTime: createStaleTime('STABLE'),
   });

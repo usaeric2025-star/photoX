@@ -1,7 +1,4 @@
-import { success } from '@/lib/error/ErrorFactory';
-import { withSupabase } from '@/lib/error/supabaseWrapper';
-import { withErrorHandling } from '@/lib/error/wrapper';
-import type { AppResult } from '@/types/api';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { supabase } from '../../lib/supabase';
 import { ProductGroup } from '../../types';
 
@@ -38,40 +35,40 @@ const mapGroup = (item: any): ProductGroup => ({
   metadata: item.metadata,
 });
 
-export const loadGroupsFromCloud = async (userId: string, isAdmin: boolean = false): Promise<AppResult<ProductGroup[]>> => {
-  return withErrorHandling(async () => {
-    // PUBLIC VIEW - 只有 confirmed 才能被看到
-    // 若為管理員列表，可以在別的地方擴展。這目前為全局 load (可以加上參數來指定 admin mode)
-    let query = supabase
-      .from(TABLE_NAME)
-      .select('*');
+export const loadGroupsFromCloud = async (userId: string, isAdmin: boolean = false): Promise<ProductGroup[]> => {
+  let query = supabase
+    .from(TABLE_NAME)
+    .select('*')
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: false });
 
-    if (!isAdmin) {
-      query = query.eq('status', 'confirmed').or('is_hidden.eq.false,is_hidden.is.null');
-    }
+  if (!isAdmin) {
+    query = query.eq('status', 'confirmed').or('is_hidden.eq.false,is_hidden.is.null');
+  }
 
-    const res = await withSupabase(query, 'loadGroupsFromCloud');
-    if (!res.ok) return res;
-    
-    return success((res.data || []).map(mapGroup));
-  }, 'loadGroupsFromCloud');
+  const { data, error } = await query;
+  if (error) {
+    throw ErrorFactory.fatal(error.message, { context: 'loadGroupsFromCloud' });
+  }
+  
+  return (data || []).map(mapGroup);
 };
 
-export const getGroupById = async (id: string, mode: 'public' | 'admin' = 'public'): Promise<AppResult<ProductGroup | null>> => {
-  return withErrorHandling(async () => {
-    let query = supabase
-      .from(TABLE_NAME)
-      .select('*')
-      .eq('id', id);
+export const getGroupById = async (id: string, mode: 'public' | 'admin' = 'public'): Promise<ProductGroup | null> => {
+  let query = supabase
+    .from(TABLE_NAME)
+    .select('*')
+    .eq('id', id);
 
-    if (mode === 'public') {
-      query = query.eq('status', 'confirmed').or('is_hidden.eq.false,is_hidden.is.null');
-    }
+  if (mode === 'public') {
+    query = query.eq('status', 'confirmed').or('is_hidden.eq.false,is_hidden.is.null');
+  }
 
-    const { data, error } = await query.maybeSingle();
+  const { data, error } = await query.maybeSingle();
 
-    if (error) throw error;
-    
-    return success(data ? mapGroup(data) : null);
-  }, 'getGroupById');
+  if (error) {
+    throw ErrorFactory.fatal(error.message, { context: 'getGroupById' });
+  }
+  
+  return data ? mapGroup(data) : null;
 };

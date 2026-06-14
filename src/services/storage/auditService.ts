@@ -1,26 +1,20 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { api } from '@/lib/api';
-import { withErrorHandling } from '@/lib/error/wrapper';
-import { AppResult } from '@/types/api';
 
-export const checkStorageHealth = async (): Promise<AppResult<{ healthy: number, missing: number, orphans: number }>> => {
-  return withErrorHandling(async () => {
-    const res = await api.storage.audit.$get();
-    const result = await res.json();
-    if (!res.ok || !result.success) {
-      throw ErrorFactory.wrap(new Error((result as any).error || 'Failed to audit storage'), 'auditService');
-    }
-    return result.data;
-  }, 'checkStorageHealth', 'error');
+export const checkStorageHealth = async (): Promise<{ healthy: number, missing: number, orphans: number }> => {
+  const res = await api.storage.audit.$get();
+  const result = await res.json();
+  if (!res.ok || !result.success) {
+    throw ErrorFactory.fatal((result as any).error || 'Failed to audit storage', { context: 'checkStorageHealth' });
+  }
+  return result.data as any;
 };
 
-export const cleanOrphanedFiles = async (): Promise<AppResult<{ success: boolean, cleanedCount: number }>> => {
-  return withErrorHandling(async () => {
-    const res = await api.storage.clean.$post();
-    const result = await res.json();
-    if (!res.ok || !result.success) {
-      throw ErrorFactory.wrap(new Error((result as any).error || 'Failed to clean storage'), 'auditService');
-    }
-    return { success: result.success, cleanedCount: result.data?.cleanedCount || (result as any).cleanedCount };
-  }, 'cleanOrphanedFiles', 'error');
+export const cleanOrphanedFiles = async (): Promise<{ success: boolean, cleanedCount: number }> => {
+  const res = await api.storage.clean.$post();
+  const result = await res.json();
+  if (!res.ok || !result.success) {
+    throw ErrorFactory.fatal((result as any).error || 'Failed to clean storage', { context: 'cleanOrphanedFiles' });
+  }
+  return { success: result.success as boolean, cleanedCount: result.data?.cleanedCount || (result as any).cleanedCount };
 };

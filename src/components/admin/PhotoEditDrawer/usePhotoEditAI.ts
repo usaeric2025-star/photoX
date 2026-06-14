@@ -38,8 +38,8 @@ export function usePhotoEditAI() {
         const resp = await analyzePhoto(editPhotoId);
         
         updateProgress(80, appLang === 'zh' ? '正在解析模型识别结果并写入草稿表单...' : 'Parsing AI attributes and injecting...');
-        if (resp.ok && resp.data) {
-          let result = resp.data as any;
+        if (resp) {
+          let result = resp as any;
           if (Array.isArray(result) && result.length > 0) {
             result = result[0];
           }
@@ -133,16 +133,41 @@ export function usePhotoEditAI() {
                 }
             });
 
-            const uniqueRawNames = Array.from(new Set(rawNames)).slice(0, 10);
+            let uniqueRawNames = Array.from(new Set(rawNames));
+            let finalResolvedIds = [...resolvedIds];
 
-            if (uniqueRawNames.length > 0 || resolvedIds.length > 0) {
+            // Prevent tags that perfectly match the chosen category name
+            if (updates.category_id) {
+                const chosenCategory = categories.find(c => String(c.id) === updates.category_id);
+                if (chosenCategory) {
+                    const catNames = [
+                        chosenCategory.name.toLowerCase(),
+                        chosenCategory.zh?.toLowerCase(),
+                        chosenCategory.en?.toLowerCase(),
+                        chosenCategory.ms?.toLowerCase()
+                    ].filter(Boolean);
+                    
+                    uniqueRawNames = uniqueRawNames.filter(n => !catNames.includes(n.toLowerCase()));
+                    
+                    // Also filter out resolved tags that have the same name
+                    finalResolvedIds = finalResolvedIds.filter(id => {
+                      const tag = allTags.find(t => String(t.id) === id);
+                      if (!tag) return true;
+                      return !catNames.includes(tag.name.toLowerCase());
+                    });
+                }
+            }
+
+            uniqueRawNames = uniqueRawNames.slice(0, 10);
+
+            if (uniqueRawNames.length > 0 || finalResolvedIds.length > 0) {
               try {
                 const { resolveTagNamesToIds } = await import('@/services/tag/completion');
                 const resolveResult = await resolveTagNamesToIds(uniqueRawNames, allTags);
 
-                let finalTagIds = [...resolvedIds];
-                if (resolveResult.ok && resolveResult.data.length > 0) {
-                    finalTagIds = [...finalTagIds, ...resolveResult.data];
+                let finalTagIds = [...finalResolvedIds];
+                if (resolveResult && resolveResult.length > 0) {
+                    finalTagIds = [...finalTagIds, ...resolveResult];
                 }
 
                 if (finalTagIds.length > 0) {
@@ -231,7 +256,7 @@ export function usePhotoEditAI() {
             throw new Error(appLang === 'zh' ? 'AI 返回格式异常' : 'Invalid AI format');
           }
         } else {
-          throw new Error((resp as any).message || (appLang === 'zh' ? 'AI 属性智能识别失败' : 'AI analysis failed'));
+          throw new Error(appLang === 'zh' ? 'AI 属性智能识别失败' : 'AI analysis failed');
         }
       }, { showSuccessToast: false, showProgress: true });
     } catch (e) {

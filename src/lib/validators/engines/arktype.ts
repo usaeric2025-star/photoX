@@ -1,6 +1,5 @@
 import { type Type, type } from 'arktype';
-import { success, errorFactory, ErrorFactory } from '@/lib/error/ErrorFactory';
-import { type AppResult } from '@/types/api';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { Validator, ValidatorMeta } from '../protocol';
 
 /**
@@ -18,26 +17,24 @@ export class ArkTypeValidator<T> implements Validator<T> {
         return this.arkSchema;
     }
 
-    validate(input: unknown): AppResult<T> {
+    validate(input: unknown): T {
         const out = this.arkSchema(input);
         if (out instanceof type.errors) {
             // [ARKTYPE-ENGINE-COMPAT] Standardizing ArkType errors
             const errorList = Array.from(out as any);
             const firstError = errorList[0] as any;
             
-            return errorFactory(
-                out.summary || 'Validation failed',
-                'VALIDATION_ERROR',
+            throw ErrorFactory.validation(
                 `Validation failed at ${firstError?.path?.join('.') || 'root'}. Expected ${firstError?.expected || 'valid data'}. ${this.meta.aiHints.join(' ')}`
             );
         }
-        return success(out as T);
+        return out as T;
     }
 
     serialize(): ValidatorMeta {
         try {
             if (!this.meta) {
-                throw ErrorFactory.wrap(new Error('Meta information is corrupted or missing'), 'serializeMetadata');
+                throw ErrorFactory.fatal('Meta information is corrupted or missing', { context: 'serializeMetadata' });
             }
             return this.meta;
         } catch (e) {

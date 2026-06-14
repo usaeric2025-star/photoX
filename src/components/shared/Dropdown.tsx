@@ -78,7 +78,7 @@ export function Dropdown({
         <div
           ref={menuRef}
           className={cn(
-            "anchor-content mt-2 min-w-[200px] bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden animate-scale-in",
+            "anchor-content mt-2 min-w-[200px] bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden animate-scale-in z-[100]",
             align === 'right' && "left-auto right-0",
             className
           )}

@@ -11,7 +11,6 @@ export const useGroupDetail = createQuery<Group | null, { groupId: string | null
   queryFn: async ({ groupId, isAdmin }) => {
     if (!groupId) return null;
     const result = await getGroupById(groupId, isAdmin ? 'admin' : 'public');
-    if (!result.ok) throw result;
-    return result.data || null;
+    return result || null;
   }
 });

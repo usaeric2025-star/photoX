@@ -46,14 +46,19 @@ export const defineMutation = <TData, TVars, TQueryKey = any[]>(config: Mutation
         : config.optimistic.update;
 
       queryKeys.forEach(key => {
-        // Optimistic Rollback Contract: use getQueryState(key)?.data
-        const state = queryClient.getQueryState(key as any);
-        if (state) {
-          previousData.set(key, state.data);
-          queryClient.setQueryData(key as any, (old: any) => updateFn(old, vars));
-        } else {
-          logger.warn(`Rollback anchor missing: query state for ${JSON.stringify(key)} is undefined, skipping optimistic update for this key.`);
+        // Get ALL matching queries by this query filter
+        const matchingQueries = queryClient.getQueriesData({ queryKey: key as any });
+        
+        if (matchingQueries.length === 0) {
+          logger.warn(`Rollback anchor missing: no matching query for ${JSON.stringify(key)} found, skipping optimistic update.`);
         }
+
+        matchingQueries.forEach(([queryKey, data]) => {
+          if (data) {
+            previousData.set(queryKey, data);
+            queryClient.setQueryData(queryKey, (old: any) => updateFn(old, vars, queryKey));
+          }
+        });
       });
       
       return { previousData };

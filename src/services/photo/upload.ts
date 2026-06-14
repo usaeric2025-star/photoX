@@ -5,10 +5,7 @@ import { extractErrorMessage } from '@/lib/error/errorHandler';
 
 export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: (s: string) => void): Promise<{ id: string; is_duplicate?: boolean }> => {
   const result = await uploadSinglePhoto(userId, photo, onStatus);
-  if (!result.ok) {
-    throw new StandardError(result.message, { originalError: result.error });
-  }
-  return result.data;
+  return result;
 };
 
 export const savePhotosToCloudBatch = async (

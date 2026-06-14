@@ -2,10 +2,7 @@ import { api } from '@/lib/api';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { supabase } from '../../lib/supabase';
 import { Category } from '../../types';
-import { success } from '@/lib/error/ErrorFactory';
-import { withErrorHandling } from '@/lib/error/wrapper';
 import { DB_CONFIG } from '../../constants/config';
-import type { AppResult } from '@/types/api';
 
 const TABLE_NAME = 'categories';
 
@@ -13,15 +10,13 @@ const TABLE_NAME = 'categories';
  * Clears category reference from photos.
  * @postcondition Photo category_id cleared.
  */
-export const clearCategoryFromPhotos = async (categoryId: string): Promise<AppResult<string[]>> => {
-  return withErrorHandling(async () => {
-    const res = await api.categories['clear-photos'].$post({
-      json: { categoryId }
-    });
-    if (!res.ok) throw ErrorFactory.wrap(new Error('Clear photos request failed'), 'commands');
-    const { data } = await res.json();
-    return data || [];
-  }, 'clearCategoryFromPhotos');
+export const clearCategoryFromPhotos = async (categoryId: string): Promise<string[]> => {
+  const res = await api.categories['clear-photos'].$post({
+    json: { categoryId }
+  });
+  if (!res.ok) throw ErrorFactory.fatal('Clear photos request failed', { context: 'clearCategoryFromPhotos' });
+  const { data } = await res.json();
+  return data || [];
 };
 
 const ALLOWED_FIELDS = ['id', 'name', 'zh', 'en', 'ms', 'aliases', 'subcategories', 'userId', 'code'];
@@ -44,49 +39,54 @@ const mapToDb = (updates: Partial<Category> & Record<string, unknown>): Record<s
     return dbUpdates;
 };
 
-export const updateCategory = async (categoryId: string, updates: Partial<Category>): Promise<AppResult<void>> => {
-    return withErrorHandling(async () => {
-        const dbUpdates = mapToDb(updates);
-        const res = await api.categories[':id'].$put({
-          param: { id: categoryId },
-          json: { updates: dbUpdates }
-        });
-        if (!res.ok) throw ErrorFactory.wrap(new Error('Update category failed'), 'commands');
-    }, 'updateCategory');
+export const updateCategory = async (categoryId: string, updates: Partial<Category>): Promise<void> => {
+  const dbUpdates = mapToDb(updates);
+  const res = await api.categories[':id'].$put({
+    param: { id: categoryId },
+    json: { updates: dbUpdates }
+  });
+  if (!res.ok) throw ErrorFactory.fatal('Update category failed', { context: 'updateCategory' });
 };
 
-export const createCategory = async (categoryData: Omit<Category, 'id'>): Promise<AppResult<Category>> => {
-    return withErrorHandling(async () => {
-        const dbUpdates = mapToDb(categoryData as any);
-        const res = await api.categories.$post({
-          json: { categoryData: dbUpdates }
-        });
-        if (!res.ok) throw ErrorFactory.wrap(new Error('Create category failed'), 'commands');
-        const { data } = await res.json();
-        return data as Category;
-    }, 'createCategory');
+export const createCategory = async (categoryData: Omit<Category, 'id'>): Promise<Category> => {
+  const dbUpdates = mapToDb(categoryData as any);
+  const res = await api.categories.$post({
+    json: { categoryData: dbUpdates }
+  });
+  if (!res.ok) throw ErrorFactory.fatal('Create category failed', { context: 'createCategory' });
+  const { data } = await res.json();
+  return data as Category;
 };
 
-export const deleteCategory = async (categoryId: string): Promise<AppResult<void>> => {
-    return withErrorHandling(async () => {
-        const res = await api.categories[':id'].$delete({
-          param: { id: categoryId }
-        });
-        if (!res.ok) throw ErrorFactory.wrap(new Error('Delete category failed'), 'commands');
-    }, 'deleteCategory');
+export const deleteCategory = async (categoryId: string): Promise<void> => {
+  const res = await api.categories[':id'].$delete({
+    param: { id: categoryId }
+  });
+  if (!res.ok) throw ErrorFactory.fatal('Delete category failed', { context: 'deleteCategory' });
 };
 
 export const addCategoryToDB = async (name: string): Promise<Category | null> => {
-    const result = await createCategory({ name, aliases: [], subcategories: [] } as any);
-    return result.ok ? result.data : null;
+  try {
+    return await createCategory({ name, aliases: [], subcategories: [] } as any);
+  } catch(e) {
+    return null;
+  }
 };
 
 export const updateCategoryInDB = async (categoryId: string, updates: Partial<Category>): Promise<boolean> => {
-    const result = await updateCategory(categoryId, updates);
-    return result.ok;
+  try {
+    await updateCategory(categoryId, updates);
+    return true;
+  } catch(e) {
+    return false;
+  }
 };
 
 export const deleteCategoryFromDB = async (categoryId: string): Promise<boolean> => {
-    const result = await deleteCategory(categoryId);
-    return result.ok;
+  try {
+    await deleteCategory(categoryId);
+    return true;
+  } catch(e) {
+    return false;
+  }
 };

@@ -10,7 +10,7 @@ import {
 } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { useTaskExecutor, useInvalidatePhotos } from "@/hooks";
-import { fromThrowableAsync, ErrorFactory } from '@/lib/error/ErrorFactory';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 import { translations } from "@/locales";
 

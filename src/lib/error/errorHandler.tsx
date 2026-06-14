@@ -1,7 +1,7 @@
 import { showToast } from '@/lib/ui/toast';
 import type { StandardError } from '@/types/api';
 import { copyToClipboard } from '@/utils/clipboard';
-import { logError } from '@/services/system/logService';
+import { logError } from '@/lib/error/errorReporter';
 
 /**
  * Safely extracts a clean string message from any error object
@@ -14,7 +14,7 @@ export function extractErrorMessage(error: any): string {
     // If the error property is a direct string message (e.g. { success: false, error: "缺少必要參數" })
     if (error.error && typeof error.error === 'string') return error.error;
 
-    // PostgrestError or AppResult.error
+    // PostgrestError or AppError
     if (error.message && typeof error.message === 'string') return error.message;
     if (error.error?.message) return String(error.error.message);
     
@@ -61,7 +61,7 @@ const normalizeError = (error: unknown, fallbackContext: string): StandardError 
     };
   }
 
-  // AppResult.error structure or wrapped StandardError
+  // AppError structure or wrapped StandardError
   if (target && typeof target === 'object' && 'code' in target && 'message' in target) {
     const err = target as { code: string; message: string; timestamp?: number };
     return {

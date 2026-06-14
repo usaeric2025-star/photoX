@@ -4,9 +4,9 @@ import { Photo } from '@/types';
 import { safeArray } from '@/lib/utils';
 import { deletePhoto } from '../commands';
 import { logger } from '@/lib/logger';
-import { AppResult, success } from '@/lib/error/ErrorFactory';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
-export const deduplicatePhotos = async (userId?: string): Promise<AppResult<{removed: number}>> => {
+export const deduplicatePhotos = async (userId?: string): Promise<{removed: number}> => {
   try {
     let query = supabase
       .from(DB_CONFIG.TABLE_NAME)
@@ -18,7 +18,10 @@ export const deduplicatePhotos = async (userId?: string): Promise<AppResult<{rem
     }
 
     const { data, error } = await query;
-    if (error || !data) return success({ removed: 0 });
+    if (error) {
+       throw ErrorFactory.fatal(error.message, { context: 'deduplicatePhotos' });
+    }
+    if (!data) return { removed: 0 };
 
     const groups: Record<string, Photo[]> = {};
     safeArray<Photo>(data as any).forEach(item => {
@@ -45,9 +48,9 @@ export const deduplicatePhotos = async (userId?: string): Promise<AppResult<{rem
         }
       }
     }
-    return success({ removed: removedCount });
+    return { removed: removedCount };
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error)
-    return success({ removed: 0 }); // Simplified error fallback for now, originally was errorFactory
+    if (error instanceof Error && error.name === 'AppError') throw error;
+    throw ErrorFactory.fatal(error instanceof Error ? error.message : String(error));
   }
 };

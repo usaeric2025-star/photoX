@@ -5,7 +5,6 @@ import { ProductGroup, Photo } from "@/types";
 import { useGroupDetail } from "@/hooks";
 import { useAuth } from "@/hooks/core/auth/useAuth";
 import { saveGroup as saveGroupToCloud } from "@/services/group/commands";
-import { isErr } from "@/lib/error/ErrorFactory";
 import { useSessionStorage } from '@/hooks/core/useSessionStorage';
 import { groupKeys } from "@/lib/queryKeys";
 

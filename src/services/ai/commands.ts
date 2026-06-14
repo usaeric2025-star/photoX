@@ -4,8 +4,7 @@ import { Photo } from '../../types';
 
 import { supabase } from '@/lib/supabase';
 import { DB_CONFIG } from '@/constants/config';
-import { ok, err, ErrorFactory } from '@/lib/error/ErrorFactory';
-import { type AppResult } from '@/types/api';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 /**
  * [V2.0-SERVICE-SINGLETON] AI Photo Analysis Service
@@ -51,7 +50,7 @@ export async function analyzeGroup(photos: Photo[]): Promise<any> {
 
   if (!response.ok) {
     const error = await response.json() as any;
-    throw ErrorFactory.wrap(new Error(error.error || 'AI 智能合组分析失败'), 'analyzeGroup');
+    throw ErrorFactory.fatal(error.error || 'AI 智能合组分析失败', { context: 'analyzeGroup' });
   }
 
   const resData = await response.json() as any;
@@ -61,7 +60,7 @@ export async function analyzeGroup(photos: Photo[]): Promise<any> {
       parsed = JSON.parse(parsed.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim());
     } catch (e) {
       logger.warn("Failed to parse group analysis JSON:", parsed);
-      throw ErrorFactory.wrap(e, 'analyzeGroup', 'json-parse');
+      throw ErrorFactory.fatal('Json Parse error', { context: 'analyzeGroup' });
     }
   }
   return parsed as any;
@@ -79,7 +78,7 @@ export async function analyzeSinglePhotoDetail(photo: Photo): Promise<any> {
 
   if (!response.ok) {
     const error = await response.json() as any;
-    throw ErrorFactory.wrap(new Error(error.error || 'AI 单张识别分析失败'), 'analyzeSinglePhoto', photo.id);
+    throw ErrorFactory.fatal(error.error || 'AI 单张识别分析失败', { context: 'analyzeSinglePhoto' });
   }
 
   const resData = await response.json() as any;
@@ -89,13 +88,13 @@ export async function analyzeSinglePhotoDetail(photo: Photo): Promise<any> {
       parsed = JSON.parse(parsed.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim());
     } catch (e) {
       logger.warn("Failed to parse single photo analysis JSON:", parsed);
-      throw ErrorFactory.wrap(e, 'analyzeSinglePhoto', photo.id);
+      throw ErrorFactory.fatal('Json Parse error', { context: 'analyzeSinglePhoto' });
     }
   }
   return parsed as any;
 }
 
-export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promise<AppResult<unknown>> => {
+export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promise<unknown> => {
   try {
      const resp = await api.ai.analyze.$post({ json: { photoId } }) as any;
      const data = await resp.json();
@@ -134,7 +133,7 @@ export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promi
           return String(val).trim();
         };
 
-        return ok({
+        return {
            name: safeTrim(parsed.name),
            description: safeTrim(parsed.description),
           category_id: parsed.category_id || null,
@@ -142,7 +141,7 @@ export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promi
           tagNames: sanitizedTagNames,
           tagIds: Array.isArray(parsed.tag_ids) ? parsed.tag_ids.map(String) : [],
           raw_result: data.raw_result || JSON.stringify(data.data)
-       });
+       };
      } else {
        let errorMsg = data.error || 'AI 分析失败';
        if (typeof errorMsg === 'string' && errorMsg.startsWith('{')) {
@@ -157,10 +156,10 @@ export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promi
              // ignore
           }
        }
-       return err(errorMsg);
+       throw ErrorFactory.fatal(errorMsg, { context: 'analyzePhoto' });
      }
   } catch (e) {
-    if ((e as Error).name === 'AbortError') return err('请求已取消');
-    return err((e as Error).message || 'AI 分析异常', 'UNKNOWN');
+    if ((e as Error).name === 'AbortError') throw ErrorFactory.fatal('请求已取消', { context: 'analyzePhoto' });
+    throw ErrorFactory.fatal((e as Error).message || 'AI 分析异常', { context: 'analyzePhoto' });
   }
 };

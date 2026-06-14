@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useTasks } from './useTasks';
-import { logError } from '@/services/system/logService';
+import { logError } from '@/lib/error/errorReporter';
 import { showToast } from '@/lib/ui/toast';
 import { extractErrorMessage, handleError } from '@/lib/error/errorHandler';
 import { hapticFeedback } from '@/lib/ui/haptics';

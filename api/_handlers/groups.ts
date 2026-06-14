@@ -73,11 +73,25 @@ export const groups = new Hono()
           targetGroupId, 
           userId, 
           groupData, 
-          sourceGroupIds, 
-          ungroupedValidIds 
+          photoIds
       } = check;
       
       const supabase = await getSupabaseAdmin();
+
+      // Optimize: Compute sourceGroupIds and ungroupedValidIds directly on the server to save client roundtrip
+      let sourceGroupIds: string[] = [];
+      let ungroupedValidIds: string[] = [];
+      if (photoIds && photoIds.length > 0) {
+        const { data: sourcePhotos } = await supabase.from('furniture_items').select('id, group_id').in('id', photoIds);
+        const photosArr = sourcePhotos || [];
+        sourceGroupIds = Array.from(new Set(
+          photosArr.map((p: any) => p.group_id).filter((gid: any) => !!gid && gid !== targetGroupId)
+        )) as string[];
+        ungroupedValidIds = photoIds.filter(id => {
+          const p = photosArr.find((x: any) => x.id === id);
+          return !p?.group_id;
+        });
+      }
 
       const { data: checkData } = await supabase.from('groups').select('id').eq('id', targetGroupId).maybeSingle();
 
