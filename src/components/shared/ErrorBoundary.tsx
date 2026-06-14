@@ -73,7 +73,13 @@ export class ErrorBoundary extends Component<Props, State> {
           <div className="flex items-center justify-center min-h-screen p-8">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
-              <p className="text-gray-500">为了为您提供最新功能，系统正在自动更新，请稍候... / Checking for updates...</p>
+              <p className="text-gray-500 mb-4">为了为您提供最新功能，系统需要更新。 / System update required.</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-6 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all active:scale-95"
+              >
+                立即更新并重试 / Update & Retry
+              </button>
             </div>
           </div>
         );

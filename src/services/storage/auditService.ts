@@ -11,7 +11,7 @@ export const checkStorageHealth = async (): Promise<AppResult<{ healthy: number,
       throw ErrorFactory.wrap(new Error((result as any).error || 'Failed to audit storage'), 'auditService');
     }
     return result.data;
-  }, 'checkStorageHealth', 'high');
+  }, 'checkStorageHealth', 'error');
 };
 
 export const cleanOrphanedFiles = async (): Promise<AppResult<{ success: boolean, cleanedCount: number }>> => {
@@ -22,5 +22,5 @@ export const cleanOrphanedFiles = async (): Promise<AppResult<{ success: boolean
       throw ErrorFactory.wrap(new Error((result as any).error || 'Failed to clean storage'), 'auditService');
     }
     return { success: result.success, cleanedCount: result.data?.cleanedCount || (result as any).cleanedCount };
-  }, 'cleanOrphanedFiles', 'high');
+  }, 'cleanOrphanedFiles', 'error');
 };

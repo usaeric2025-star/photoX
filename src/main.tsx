@@ -33,7 +33,7 @@ async function init() {
       const message = reason?.message || String(reason || '');
       const isCancellation = 
         reason?.name === 'AbortError' || 
-        /cancel|abort|precondition|offline|websocket|websocket|hmr/i.test(message) ||
+        /cancel|abort|precondition|offline|websocket|websocket|hmr|chunk|module script|dynamically imported/i.test(message) ||
         message.includes('DOMException') ||
         message.includes('user_cancel') ||
         message.includes('Failed to fetch') ||
@@ -60,12 +60,15 @@ async function init() {
   if (container) {
     const root = createRoot(container, {
       onCaughtError: (error, errorInfo) => {
+        if (/chunk|dynamically imported|module script/i.test((error as Error)?.message || '')) return;
         logError(error, { action: 'React Caught Error', component: errorInfo.componentStack?.slice(0, 200) || 'Unknown', kind: 'UNKNOWN' });
       },
       onUncaughtError: (error) => {
+        if (/chunk|dynamically imported|module script/i.test((error as Error)?.message || '')) return;
         logError(error, { action: 'React Uncaught Error', component: 'Root', kind: 'UNKNOWN' });
       },
       onRecoverableError: (error) => {
+        if (/chunk|dynamically imported|module script/i.test((error as Error)?.message || '')) return;
         logError(error, { action: 'React Recoverable Error', component: 'Root', kind: 'UNKNOWN' });
       },
     });

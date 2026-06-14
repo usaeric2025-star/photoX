@@ -1370,3 +1370,23 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 
 ### Combobox + RHF
 - ✅ 必須使用 `useController` 綁定，禁止手動 `register`
+
+## ErrorFactory 使用規範（永久鎖定）
+
+### 錯誤創建
+- ✅ 必須使用 `ErrorCode` 枚舉，禁止魔法字串
+- ✅ 優先使用語義化快捷方法（validation/notFound/network/fatal）
+- ✅ 捕獲底層錯誤時必須通過 `cause` 參數傳遞
+
+### 錯誤上報
+- ✅ 使用 `reportError()` 統一上報
+- ✅ INFO 級別不上報遠程，僅本地調試
+- ❌ 禁止在 `reportError` 的 catch 中再次調用 `reportError`
+
+### 序列化安全
+- ✅ 使用 `toJSON()` 方法輸出日誌
+- ❌ 禁止在 `context` 中放入 DOM 節點、函數
+- ❌ 禁止手動拼接錯誤日誌字串
+
+### 測試要求
+- 📝 新增錯誤類型必須補充單元測試

@@ -51,7 +51,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
   const headerBgClass = "bg-white border-slate-200 text-slate-800";
 
   return (
-    <header className={`h-14 sm:h-16 shrink-0 border-b px-2.5 sm:px-4 flex items-center justify-between font-sans overflow-hidden transition-colors duration-300 ${headerBgClass}`}>
+    <header className={`h-14 sm:h-16 shrink-0 border-b px-2.5 sm:px-4 flex items-center justify-between font-sans transition-colors duration-300 relative z-[50] ${headerBgClass}`}>
       {/* 左侧：Logo & 计数 */}
       <div className="flex items-center gap-1 sm:gap-3 shrink-0 flex-nowrap">
         {logoUrl ? (

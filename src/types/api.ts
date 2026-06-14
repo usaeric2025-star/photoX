@@ -14,7 +14,7 @@ export type PhotoBatchUpdateReq = typeof PhotoBatchUpdateReqSchema.infer;
 export type PhotoUpdateReq = typeof PhotoUpdateReqSchema.infer;
 export type SearchReq = typeof SearchReqSchema.infer;
 
-export type ErrorCode = 
+export type OldErrorCode = 
   | 'NETWORK_ERROR'
   | 'AUTH_ERROR'
   | 'NOT_FOUND'
@@ -24,11 +24,11 @@ export type ErrorCode =
   | 'PERMISSION_DENIED'
   | 'UNKNOWN';
 
-export interface AppError {
+export interface OldAppError {
   ok: false;
   error: true;
   message: string;
-  code: ErrorCode;
+  code: OldErrorCode | string;
   context?: string;
   timestamp: number;
   traceId?: string;
@@ -50,7 +50,7 @@ export interface StandardError {
   details?: unknown;
 }
 
-export type AppResult<T> = AppSuccess<T> | AppError;
+export type AppResult<T> = AppSuccess<T> | OldAppError;
 export type Result<T, E = any> = AppResult<T>;
 
 export interface BatchEditPayload {

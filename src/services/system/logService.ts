@@ -32,11 +32,7 @@ export const logError = async (error: Error | unknown, context: EventContext) =>
     console.groupEnd();
   }
 
-  // 2. Global UI Error Handler (Toast, etc)
-  const enrichedError = error instanceof Error ? error : new Error(errorMsg);
-  handleError(enrichedError, context.action, false);
-
-  // 3. Always report to backend for persistence (system_logs)
+  // 2. Always report to backend for persistence (system_logs)
   try {
     const traceId = (error as any)?.traceId || 'fe-' + Math.random().toString(36).substring(2, 12);
     

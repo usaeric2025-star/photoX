@@ -4,7 +4,7 @@ import type { AppResult } from '@/types/api';
 export const withErrorHandling = async <T>(
   fn: () => Promise<T | AppResult<T>>,
   context: string,
-  severity: ErrorSeverity = 'high'
+  severity: ErrorSeverity | string = ErrorSeverity.ERROR
 ): Promise<AppResult<T>> => {
   try {
     const result = await fn();

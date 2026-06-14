@@ -173,31 +173,36 @@ app.route("/", storageMaintenance);
 app.post("/log-error", async (c) => {
     try {
         const body = await c.req.json();
-        const traceId = c.req.header('X-Trace-Id') || getTraceId(c);
+        const traceId = c.req.header('X-Trace-Id') || 'backend-' + Math.random().toString(36).substring(2, 12);
+        
+        // Dynamic import to prevent circular dependency issues if any
+        const { getSupabaseAdmin } = await import("./_lib/supabase.js");
+        const { logger } = await import("./_lib/logger.js");
+        
         const supabase = await getSupabaseAdmin();
         
         const { error } = await supabase.from('system_logs').insert([{
-            error_message: body.error_message || 'Unknown Frontend Error',
-            stack_trace: body.stack_trace || null,
-            url: body.url || null,
-            context: body.context || 'Frontend_Client',
+            error_message: body.message || body.error_message || 'Unknown Frontend Error',
+            stack_trace: body.stack || body.stack_trace || null,
+            url: body.url || c.req.header('Referer') || null,
+            context: body.name || body.context || 'Frontend_Client',
             metadata: {
-                ...(body.metadata || {}),
-                traceId,
+                ...(body.context || body.metadata || {}),
+                traceId: body.traceId || traceId,
                 userAgent: c.req.header('User-Agent'),
                 timestamp: new Date().toISOString()
             },
-            created_at: new Date().toISOString()
+            created_at: body.timestamp || new Date().toISOString()
         }]);
 
         if (error) {
-            logger.error('[log-error] Database insert failed:', error);
+            console.error('[log-error] Database insert failed:', error);
             return c.json({ success: false, error: 'Failed to persist log' }, 500);
         }
 
         return c.json({ success: true });
     } catch (err: any) {
-        logger.error('[log-error] Request parsing failed:', err);
+        console.error('[log-error] Request parsing failed:', err);
         return c.json({ success: false, error: err.message }, 400);
     }
 });

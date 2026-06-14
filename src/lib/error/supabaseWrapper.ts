@@ -6,7 +6,7 @@ import { ErrorSeverity } from './ErrorFactory';
 export const withSupabase = async <T>(
   query: PromiseLike<{ data: T | null; error: PostgrestError | null; count?: number | null }>,
   context: string,
-  severity: ErrorSeverity = 'high',
+  severity: ErrorSeverity | string = ErrorSeverity.ERROR,
   options?: { allowNull?: boolean }
 ): Promise<AppResult<T & { count?: number | null }>> => {
   return withErrorHandling(async () => {
