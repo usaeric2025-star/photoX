@@ -55,9 +55,8 @@ export function GroupSettingsHeader({
           <button
             onClick={() => {
               setShowGroupSettings(false);
-              setGroupId(null);
             }}
-            className="p-2 -mr-2 rounded-full text-slate-400 hover:bg-slate-100 transition-colors hidden sm:flex"
+            className="p-2 -mr-2 rounded-full text-slate-400 hover:bg-slate-100 transition-colors flex"
             title="关闭设置"
           >
             <X size={18} />

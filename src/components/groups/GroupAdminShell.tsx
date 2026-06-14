@@ -291,7 +291,10 @@ export function GroupAdminShell() {
           onClose={handleClose}
           onSettingsClick={() => update({ groupSettingsOpen: true })}
           onCopyId={(id) => copy(id)}
-          onBatchEdit={(ids) => update({ batchEditingIds: ids })}
+          onBatchEdit={(ids) => {
+            update({ batchEditingIds: ids });
+            navigate({ to: "/admin/batch-edit" });
+          }}
           activeGroupPhotos={activeGroupPhotos}
           appLang={appLang}
         />
