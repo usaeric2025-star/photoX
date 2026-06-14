@@ -26,7 +26,7 @@ export const GroupPhotoGrid = ({
   };
 
   return (
-    <VList data={photos} itemSize={200}>
+    <VList data={photos} itemSize={200} shift={true}>
       {(photo, index) => (
         <PhotoCard
           key={photo.id}

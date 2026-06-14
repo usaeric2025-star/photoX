@@ -86,7 +86,8 @@ export const VirtualPhotoGrid = ({
   const estimatedRowHeight = (() => {
     const padding = 16;
     const cardWidth = (containerWidth - padding) / Math.max(1, columns);
-    return Math.max(80, cardWidth); 
+    // card width + fixed metadata area (approx 68px for title/stats)
+    return cardWidth + 68; 
   })();
 
   const internalRenderItem = (index: number) => {

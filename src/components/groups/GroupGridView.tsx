@@ -112,6 +112,9 @@ export function GroupGridView({
   const isMobile = window.innerWidth < 640;
   const isTablet = window.innerWidth >= 640 && window.innerWidth < 1024;
   const denseColumns = isMobile ? 3 : (isTablet ? 4 : 5);
+  
+  // Estimate height: aspect square + approx metadata space
+  const estimatedItemSize = (window.innerWidth / denseColumns) + 60;
 
   const renderItem = (index: number) => {
     const photo = photos[index];
@@ -146,6 +149,8 @@ export function GroupGridView({
   return (
     <div className={`w-full h-full relative ${groupData?.is_hidden ? 'grayscale opacity-70' : ''}`}>
       <VirtualGrid
+        shift={true}
+        itemSize={estimatedItemSize}
         ref={virtualGridRef}
         count={isLoading ? 12 : (groupData?.member_count && groupData.member_count > photos.length ? groupData.member_count : photos.length)}
         lanes={denseColumns}

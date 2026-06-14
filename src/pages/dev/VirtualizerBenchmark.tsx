@@ -19,6 +19,7 @@ export default function VirtualizerBenchmark() {
         <h2 className="text-2xl font-bold mb-4 text-slate-800">1. Grouped Scenario (80 items)</h2>
         <div>
           <VirtualGrid
+            shift={true}
             count={groupedItems.length}
             renderItem={(index) => (
                <div className="p-4 border border-slate-200 rounded-lg bg-white shadow-sm">
@@ -34,6 +35,7 @@ export default function VirtualizerBenchmark() {
         <h2 className="text-2xl font-bold mb-4 text-slate-800">2. Massive Grid Scenario (10,000 items)</h2>
         <div>
           <VirtualGrid
+            shift={true}
             count={gridItems.length}
             renderItem={(index) => (
                <div 

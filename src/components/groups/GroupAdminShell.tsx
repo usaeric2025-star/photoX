@@ -110,6 +110,7 @@ export function GroupAdminShell() {
     performBulkRemove,
     persistPhotoChange,
     handleUpdateGroupData,
+    handleToggleTag,
     handleBatchUpdateDimensions,
     handleReorder,
     isMultiSelect,
@@ -117,6 +118,54 @@ export function GroupAdminShell() {
     isGroupPhotosLoading,
     handleBulkAction: hookHandleBulkAction,
   } = useGroupAdminLogic();
+
+  const [optimisticPhotos, addOptimisticAction] = React.useOptimistic(
+    activeGroupPhotos,
+    (state: Photo[], action: { type: 'reorder', payload: { draggedId: string, targetId: string } } | { type: 'update', payload: { id: string, data: any } }) => {
+      if (action.type === 'reorder') {
+        const { draggedId, targetId } = action.payload;
+        const dragIdx = state.findIndex(p => p.id === draggedId);
+        const hoverIdx = state.findIndex(p => p.id === targetId);
+        if (dragIdx === -1 || hoverIdx === -1) return state;
+        const next = [...state];
+        const [moved] = next.splice(dragIdx, 1);
+        next.splice(hoverIdx, 0, moved);
+        return next.map((p, i) => ({ ...p, group_order: i }));
+      }
+      if (action.type === 'update') {
+        const { id, data } = action.payload;
+        return state.map(p => {
+          if (p.id === id) {
+            // For tags, handle specially if it's a tag toggle action
+            if (data.tags && typeof data.tags === 'function') {
+              return { ...p, tags: data.tags(p.tags) };
+            }
+            return { ...p, ...data };
+          }
+          return p;
+        });
+      }
+      return state;
+    }
+  );
+
+  const handleToggleTagOptimistic = (photo: Photo, tagId: string) => {
+    const currentTags = Array.isArray(photo.tags) ? photo.tags : [];
+    const isRemoving = currentTags.some(t => String(t.id) === tagId);
+    
+    const nextTags = isRemoving
+      ? currentTags.filter((t) => String(t.id) !== tagId)
+      : [...currentTags, { id: tagId, name: '', aliases: [] }];
+
+    React.startTransition(() => {
+      addOptimisticAction({
+        type: 'update',
+        payload: { id: photo.id, data: { tags: nextTags } }
+      });
+    });
+
+    handleToggleTag(photo, tagId);
+  };
 
   const handleBulkRemoveRequest = (ids: string[]) => {
     const info = confirmBulkRemove(ids);
@@ -154,7 +203,18 @@ export function GroupAdminShell() {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
-      handleReorder(active.id as string, over.id as string);
+      const draggedId = active.id as string;
+      const targetId = over.id as string;
+      
+      // Optimistic update
+      React.startTransition(() => {
+        addOptimisticAction({ 
+          type: 'reorder', 
+          payload: { draggedId, targetId } 
+        });
+      });
+      
+      handleReorder(draggedId, targetId);
     }
   };
 
@@ -244,12 +304,12 @@ export function GroupAdminShell() {
           onDragEnd={handleDragEnd}
         >
           <SortableContext
-            items={activeGroupPhotos.map((p) => p.id)}
+            items={optimisticPhotos.map((p) => p.id)}
             strategy={rectSortingStrategy}
           >
             <GroupGridView
               virtualGridRef={virtualGridRef}
-              photos={activeGroupPhotos}
+              photos={optimisticPhotos}
               isLoading={isGroupPhotosLoading}
               groupData={groupData}
               highlightId={currentHighlightId}
@@ -264,12 +324,22 @@ export function GroupAdminShell() {
         {/* Unified Multi-Select Floating Bar */}
         <SelectionToolbar
           onDelete={handleBulkRemoveRequest}
-          onHide={(ids) =>
-            (adminActions.batchUpdate.mutateAsync as any)({
+          onHide={(ids) => {
+            // Optimistic update
+            React.startTransition(() => {
+              ids.forEach(id => {
+                addOptimisticAction({
+                  type: 'update',
+                  payload: { id, data: { is_hidden: true } }
+                });
+              });
+            });
+
+            return (adminActions.batchUpdate.mutateAsync as any)({
               ids,
               updates: { is_hidden: true },
-            })
-          }
+            });
+          }}
           onCopy={(ids) => hookHandleBulkAction("batch")}
           onBatchEdit={(ids) => {
             update({ batchEditingIds: ids });
