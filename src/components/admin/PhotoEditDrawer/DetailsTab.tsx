@@ -1,4 +1,5 @@
 import React from 'react';
+import { useWatch } from 'react-hook-form';
 import { usePhotoEditSessionContext } from '@/hooks/photo/usePhotoEditSessionContext';
 import { DimensionEditor } from '../edit/DimensionEditor';
 import { ProductFormData, Dimension } from '../../../types';
@@ -9,7 +10,7 @@ import { translations } from '@/locales';
 import { usePhotoEditAI } from './usePhotoEditAI';
 
 export function DetailsTab() {
-  const { register, watch, setValue } = usePhotoEditSessionContext();
+  const { register, control, setValue } = usePhotoEditSessionContext();
   const editPhotoId = useUIStore((s) => s.editPhotoId);
   const appLang = useUIStore((s) => s.appLang);
   const { tasks } = useTasks();
@@ -23,7 +24,7 @@ export function DetailsTab() {
     await handleAiAnalyze(detailPhoto?.image_url, detailPhoto?.image_url);
   }, [handleAiAnalyze, detailPhoto?.image_url]);
 
-  const formState = watch();
+  const dimensions = useWatch({ control, name: 'dimensions' });
   const updateForm = React.useCallback((updates: Partial<ProductFormData>) => {
     Object.entries(updates).forEach(([key, value]) => {
       setValue(key as any, value, { shouldDirty: true });
@@ -32,7 +33,7 @@ export function DetailsTab() {
   return (
     <div className="m-0 p-4 space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
       <DimensionEditor 
-        dimensions={safeArray<Dimension>(formState.dimensions)}
+        dimensions={safeArray<Dimension>(dimensions)}
         onChange={(newDims) => updateForm({ dimensions: newDims })}
         showAiButton={true}
         isAnalyzing={isAnalyzing}

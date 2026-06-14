@@ -122,7 +122,16 @@ export function TagEditor({
           </button>
         </div>
       </div>
-      <div className="flex flex-wrap gap-1.5 pb-1 max-h-[220px] overflow-y-auto content-start [content-visibility:auto]">
+      <div 
+        className="pb-1 max-h-[220px] overflow-y-auto content-start"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
+          gap: '6px',
+          contentVisibility: 'auto',
+          containIntrinsicSize: '200px',
+        }}
+      >
         {filteredTags.slice(0, 150).map((tag: Tag) => {
           const isSelected = selectedTagIds.map(String).includes(String(tag.id));
           const isHot = hotTagsSet.has(String(tag.id));
