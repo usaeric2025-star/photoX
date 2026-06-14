@@ -16,8 +16,8 @@ export const OptimizedImage = ({
 }: OptimizedImageProps) => {
   return (
     <picture>
-      <source srcSet={`${src}?format=avif`} type="image/avif" />
-      <source srcSet={`${src}?format=webp`} type="image/webp" />
+      <source srcSet={src.includes('?') ? `${src}&format=avif` : `${src}?format=avif`} type="image/avif" />
+      <source srcSet={src.includes('?') ? `${src}&format=webp` : `${src}?format=webp`} type="image/webp" />
       <img 
         src={src} 
         alt={alt} 

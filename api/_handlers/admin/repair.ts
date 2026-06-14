@@ -114,12 +114,16 @@ adminRepair.post("/", async (c) => {
            }
          });
 
+         const groupUpdates: { id: any; cover_photo_id: string | null }[] = [];
+         const photosToCover: string[] = [];
+         const photosToUncover: string[] = [];
+
          let count = 0;
          for (const g of groups || []) {
            const gPhotos = photosByGroup.get(String(g.id)) || [];
            if (gPhotos.length === 0) {
              if (g.cover_photo_id) {
-               await supabase.from("groups").update({ cover_photo_id: null }).eq("id", g.id);
+               groupUpdates.push({ id: g.id, cover_photo_id: null });
                count++;
              }
              continue;
@@ -132,24 +136,54 @@ adminRepair.post("/", async (c) => {
              let targetCoverId = g.cover_photo_id;
              const photoMarkedAsCover = gPhotos.find((p: any) => p.is_group_cover === true);
              
-             if (photoMarkedAsCover && validCover) {
+             if (photoMarkedAsCover) {
                targetCoverId = photoMarkedAsCover.id;
              } else {
                const sorted = [...gPhotos].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
                targetCoverId = sorted[0].id;
              }
 
-             await supabase.from("groups").update({ cover_photo_id: targetCoverId }).eq("id", g.id);
-             
+             if (g.cover_photo_id !== targetCoverId) {
+               groupUpdates.push({ id: g.id, cover_photo_id: targetCoverId });
+             }
+
              for (const p of gPhotos) {
                const shouldBeCover = p.id === targetCoverId;
                if (p.is_group_cover !== shouldBeCover) {
-                 await supabase.from("furniture_items").update({ is_group_cover: shouldBeCover }).eq("id", p.id);
+                 if (shouldBeCover) {
+                   photosToCover.push(p.id);
+                 } else {
+                   photosToUncover.push(p.id);
+                 }
                }
              }
              count++;
            }
          }
+
+         const dbPromises: Promise<any>[] = [];
+
+         if (photosToCover.length > 0) {
+           dbPromises.push(
+             supabase.from("furniture_items").update({ is_group_cover: true }).in("id", photosToCover).then(({ error }: { error: any }) => { if (error) throw error; })
+           );
+         }
+         if (photosToUncover.length > 0) {
+           dbPromises.push(
+             supabase.from("furniture_items").update({ is_group_cover: false }).in("id", photosToUncover).then(({ error }: { error: any }) => { if (error) throw error; })
+           );
+         }
+
+         for (const update of groupUpdates) {
+           dbPromises.push(
+             supabase.from("groups").update({ cover_photo_id: update.cover_photo_id }).eq("id", update.id).then(({ error }: { error: any }) => { if (error) throw error; })
+           );
+         }
+
+         if (dbPromises.length > 0) {
+           await Promise.all(dbPromises);
+         }
+
          return c.json({ success: true, count, message: `已成功修复 ${count} 个合组的封面配置` });
       }
 

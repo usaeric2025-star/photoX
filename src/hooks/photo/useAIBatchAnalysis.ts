@@ -3,7 +3,7 @@ import type { Photo } from '@/types';
 import { useTaskExecutor, useInvalidatePhotos } from '@/hooks';
 import { showToast } from '@/lib/ui/toast';
 import { useQueryClient } from '@tanstack/react-query';
-import { groupKeys } from '@/lib/queryKeys';
+import { queryKeys } from '@/lib/query/keys';
 import { runBatchAnalysis } from '@/services/ai/orchestration';
 
 export function useAIBatchAnalysis() {
@@ -30,8 +30,8 @@ export function useAIBatchAnalysis() {
         await invalidatePhotos();
         if (groupId) {
           await Promise.all([
-            queryClient.invalidateQueries({ queryKey: groupKeys.detail(groupId, true) }),
-            queryClient.invalidateQueries({ queryKey: groupKeys.all })
+            queryClient.invalidateQueries({ queryKey: queryKeys.groups.detail(groupId, true) }),
+            queryClient.invalidateQueries({ queryKey: queryKeys.groups.all })
           ]);
         }
         

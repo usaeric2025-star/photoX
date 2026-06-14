@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { showToast } from '@/lib/ui/toast';
 import { useUIStore } from '@/store/useUIStore';
-import { photoKeys, groupKeys } from '@/lib/queryKeys';
+import { queryKeys } from '@/lib/query/keys';
 import { useTaskExecutor } from '../core/useTaskExecutor';
 
 
@@ -87,8 +87,8 @@ export function useAIAutoGrouping() {
         await recognizeSinglePhoto(photoIds[0]);
         // 刷新列表 (保留 editPhotoId 等 UI 狀態)
         await Promise.all([
-            queryClient.invalidateQueries({ queryKey: photoKeys.all }),
-            queryClient.invalidateQueries({ queryKey: groupKeys.all })
+            queryClient.invalidateQueries({ queryKey: queryKeys.photos.all }),
+            queryClient.invalidateQueries({ queryKey: queryKeys.groups.all })
         ]);
     } else {
         await createAIGroup(photoIds);
@@ -98,8 +98,8 @@ export function useAIAutoGrouping() {
         
         // 刷新列表
         await Promise.all([
-            queryClient.invalidateQueries({ queryKey: photoKeys.all }),
-            queryClient.invalidateQueries({ queryKey: groupKeys.all })
+            queryClient.invalidateQueries({ queryKey: queryKeys.photos.all }),
+            queryClient.invalidateQueries({ queryKey: queryKeys.groups.all })
         ]);
     }
   };

@@ -32,7 +32,7 @@ export function FilterPanel() {
 
         queryClient.prefetchInfiniteQuery({
             queryKey: queryKeys.photos.infinite({ 
-              category: filters.category || undefined,
+              category: categoryId ?? undefined,
               tags: selectedTags && selectedTags.length > 0 ? selectedTags : undefined,
               q: filters.search || undefined,
               sort: filters.sort || undefined,

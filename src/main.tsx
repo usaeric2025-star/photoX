@@ -22,6 +22,17 @@ import { router } from './router/index';
 import { initChunkHandler } from '@/lib/chunkErrorHandler';
 
 async function init() {
+  // Gracefully filter out the React 19 warning for empty string passed to the boolean attribute 'inert' (usually from 3rd party UI libraries)
+  if (typeof window !== 'undefined') {
+    const originalConsoleError = console.error;
+    console.error = function (...args: any[]) {
+      if (typeof args[0] === 'string' && args[0].includes("Received an empty string for a boolean attribute") && args[0].includes("inert")) {
+        return;
+      }
+      originalConsoleError.apply(console, args);
+    };
+  }
+
   // 一次性清理髒數據 (P0: Hygiene)
   await migrateStorage();
 

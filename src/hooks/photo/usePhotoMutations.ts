@@ -2,7 +2,7 @@ import { optimistic } from '@/lib/query/mutationFactory';
 import { Photo } from '@/types';
 import { updatePhoto as update } from '@/services/photo/commands/update';
 import { deleteMany, batchUpdate } from '@/services/photo/commands/batch';
-import { photoKeys } from '@/lib/queryKeys';
+import { queryKeys } from '@/lib/query/keys';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { defineMutation } from '@/lib/mutations/defineMutation';
 import { useAppMutation } from '@/lib/mutations/useAppMutation';
@@ -28,7 +28,7 @@ const photoEditConfig = defineMutation<Photo, { id: string; updates: Partial<Pho
     
     return res;
   },
-  invalidate: (data, vars) => [photoKeys.all as any, ['photo', vars.id] as any],
+  invalidate: (data, vars) => [queryKeys.photos.all as any, queryKeys.photos.detail(vars.id) as any],
   cleanupKey: (vars) => vars.id,
   optimistic: (old: any, { id, updates }: { id: string; updates: Partial<Photo> }) => {
     if (!old) return old;
@@ -48,8 +48,8 @@ const photoDeleteConfig = defineMutation<any, string | string[]>({
     return res;
   },
   invalidate: (data, vars) => [
-    photoKeys.all as any,
-    ...((Array.isArray(vars) ? vars : [vars]).map((id: string) => ['photo', id] as any))
+    queryKeys.photos.all as any,
+    ...((Array.isArray(vars) ? vars : [vars]).map((id: string) => queryKeys.photos.detail(id) as any))
   ],
   successMessage: '照片已删除',
 });
@@ -75,8 +75,8 @@ const photoBatchEditConfig = defineMutation<any, { ids: string[]; updates: Parti
     return res;
   },
   invalidate: (data, vars) => [
-    photoKeys.all as any,
-    ...((Array.isArray(vars.ids) ? vars.ids : [vars.ids]).map((id: string) => ['photo', id] as any))
+    queryKeys.photos.all as any,
+    ...((Array.isArray(vars.ids) ? vars.ids : [vars.ids]).map((id: string) => queryKeys.photos.detail(id) as any))
   ],
   successMessage: '批量操作完成',
 });
@@ -90,7 +90,7 @@ const togglePinConfig = defineMutation<any, { id: string; isPinned: boolean }>({
     return res;
   },
   cleanupKey: (vars) => vars.id,
-  invalidate: (data, vars) => [photoKeys.all as any, ['photo', vars.id] as any],
+  invalidate: (data, vars) => [queryKeys.photos.all as any, queryKeys.photos.detail(vars.id) as any],
   optimistic: (old: any, { id, isPinned }: { id: string; isPinned: boolean }) => 
     optimistic.infinite.update<Photo>()(old, { id, updates: { is_pinned: isPinned } as any }),
   successMessage: '状态已更新',

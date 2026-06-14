@@ -1,6 +1,6 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { QueryClient } from '@tanstack/react-query';
-import { photoKeys, groupKeys } from '@/lib/queryKeys';
+import { queryKeys } from '@/lib/query/keys';
 import { PHOTO_QUERY_CONFIG } from '@/constants/config';
 import { createStaleTime } from '@/shared/freshnessSchema';
 import { getGroupById } from '@/services/group/queries';
@@ -11,7 +11,7 @@ import { getGroupById } from '@/services/group/queries';
  */
 
 export async function prefetchMainGallery(queryClient: QueryClient) {
-  const queryKey = photoKeys.infinite({ 
+  const queryKey = queryKeys.photos.infinite({ 
     category: undefined,
     tags: undefined,
     q: undefined,
@@ -44,7 +44,7 @@ export async function prefetchMainGallery(queryClient: QueryClient) {
 export async function prefetchGroupDetail(queryClient: QueryClient, groupId: string, isAdminMode: boolean = false) {
   if (!groupId) return;
   const isQueryAdmin = !!isAdminMode;
-  const queryKey = [...groupKeys.detail(groupId, isQueryAdmin)];
+  const queryKey = [...queryKeys.groups.detail(groupId, isQueryAdmin)];
   queryClient.prefetchQuery({
     queryKey,
     queryFn: async () => {
@@ -54,7 +54,7 @@ export async function prefetchGroupDetail(queryClient: QueryClient, groupId: str
     staleTime: createStaleTime('STABLE'),
   });
   
-  const photosKey = photoKeys.infinite({}, isAdminMode ? 'admin' : 'public');
+  const photosKey = queryKeys.photos.infinite({ groupId } as any, isAdminMode ? 'admin' : 'public');
   
   queryClient.prefetchInfiniteQuery({
     queryKey: photosKey,

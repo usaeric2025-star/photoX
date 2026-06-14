@@ -13,9 +13,9 @@ async function getUserWithTimeout(): Promise<User | null> {
 
   const timeoutPromise = new Promise<null>((resolve) => {
     setTimeout(() => {
-      console.warn('[useAuth] getUser timeout after 8s, returning fallback session user');
+      console.warn('[useAuth] getUser timeout after 3s, returning fallback session user');
       resolve(null);
-    }, 8000);
+    }, 3000);
   });
 
   const getUserPromise = supabase.auth.getUser().catch(() => ({ data: { user: null }, error: null }));

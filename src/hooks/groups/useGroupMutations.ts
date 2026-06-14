@@ -1,5 +1,5 @@
 import { optimistic } from '@/lib/query/mutationFactory';
-import { groupKeys, photoKeys } from '@/lib/queryKeys';
+import { queryKeys } from '@/lib/query/keys';
 import { createGroup, updateGroup, deleteGroupFromCloud, groupPhotos, movePhotosToGroup, setPhotoAsGroupCover, ungroupPhotos } from '@/services/group/commands';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { Photo, ProductGroup } from '@/types';
@@ -11,7 +11,7 @@ const groupCreateConfig = defineMutation<ProductGroup, ProductGroup>({
   service: async (variables: ProductGroup) => {
     return await createGroup(variables);
   },
-  invalidate: () => [groupKeys.all as unknown as any[]],
+  invalidate: () => [queryKeys.groups.all as unknown as any[]],
   successMessage: '已创建合组',
 });
 
@@ -22,7 +22,7 @@ const groupUpdateConfig = defineMutation<ProductGroup, { id: string; updates: Pa
   service: async ({ id, updates }) => {
     return await updateGroup(id, updates);
   },
-  invalidate: () => [groupKeys.all as unknown as any[]],
+  invalidate: () => [queryKeys.groups.all as unknown as any[]],
   successMessage: '已修改',
 });
 
@@ -33,7 +33,7 @@ const groupDeleteConfig = defineMutation<any, string>({
   service: async (id: string) => {
     return await deleteGroupFromCloud(id);
   },
-  invalidate: () => [groupKeys.all as unknown as any[], photoKeys.all as unknown as any[]],
+  invalidate: () => [queryKeys.groups.all as unknown as any[], queryKeys.photos.all as unknown as any[]],
   successMessage: '已删除',
 });
 
@@ -44,7 +44,7 @@ const groupCoverConfig = defineMutation<any, { groupId: string | undefined; phot
   service: async ({ groupId, photoId }) => {
     return await setPhotoAsGroupCover(photoId, groupId || '');
   },
-  invalidate: () => [groupKeys.all as unknown as any[], photoKeys.all as unknown as any[]],
+  invalidate: () => [queryKeys.groups.all as unknown as any[], queryKeys.photos.all as unknown as any[]],
   successMessage: '已设为封面',
 });
 
@@ -55,7 +55,7 @@ const groupPhotosConfig = defineMutation<any, { photoIds: string[], targetGroupI
   service: async ({ photoIds, targetGroupId }) => {
     return await groupPhotos(photoIds, targetGroupId);
   },
-  invalidate: () => [photoKeys.all as unknown as any[], groupKeys.all as unknown as any[]],
+  invalidate: () => [queryKeys.photos.all as unknown as any[], queryKeys.groups.all as unknown as any[]],
   optimistic: (old: any, { photoIds, targetGroupId }: { photoIds: string[], targetGroupId?: string }, queryKey?: readonly unknown[]) => {
     if (!old) return old;
     if (old.pages) {
@@ -83,7 +83,7 @@ const removePhotosConfig = defineMutation<any, { photoIds: string[]; groupId: st
   service: async ({ photoIds }) => {
     return await movePhotosToGroup(photoIds, null);
   },
-  invalidate: () => [photoKeys.all as unknown as any[], groupKeys.all as unknown as any[]],
+  invalidate: () => [queryKeys.photos.all as unknown as any[], queryKeys.groups.all as unknown as any[]],
   optimistic: (old: any, { photoIds }: { photoIds: string[] }, queryKey?: readonly unknown[]) => {
     if (!old) return old;
     if (old.pages) {
@@ -111,7 +111,7 @@ const ungroupConfig = defineMutation<any, string>({
   service: async (groupId: string) => {
     return await ungroupPhotos(groupId);
   },
-  invalidate: () => [photoKeys.all as unknown as any[], groupKeys.all as unknown as any[]],
+  invalidate: () => [queryKeys.photos.all as unknown as any[], queryKeys.groups.all as unknown as any[]],
   optimistic: (old: any, groupId: string, queryKey?: readonly unknown[]) => {
     if (!old) return old;
     if (old.pages) {

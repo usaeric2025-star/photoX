@@ -1,13 +1,13 @@
 import { Dialog } from '@base-ui/react/dialog';
 import { LightboxOverlay, type LightboxItem, type ControlsRenderProps, type SlideRenderProps } from '@reelkit/react-lightbox';
 import '@reelkit/react-lightbox/styles.css';
-import { X, ChevronLeft, ChevronRight, Info } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Info, Pencil } from 'lucide-react';
 import { OptimizedImage } from '@/components/shared/OptimizedImage';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface ReelkitAdapterProps {
   open: boolean;
-  items: LightboxItem[];
+  items: Array<LightboxItem & { thumbnail?: string }>;
   currentIndex: number;
   onClose: () => void;
   onIndexChange: (index: number) => void;
@@ -45,6 +45,19 @@ export const ReelkitAdapter = ({
   onToggleInfo
 }: ReelkitAdapterProps) => {
   const activeShowInfo = showInfo ?? false;
+
+  useEffect(() => {
+    if (open && currentIndex >= 0) {
+      const activeThumb = document.getElementById(`lightbox-thumb-${currentIndex}`);
+      if (activeThumb) {
+        activeThumb.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+          inline: 'center'
+        });
+      }
+    }
+  }, [currentIndex, open]);
 
   return (
     <Dialog.Root open={open} onOpenChange={(open) => !open && onClose()}>
@@ -93,70 +106,104 @@ export const ReelkitAdapter = ({
                   </div>
                 </div>
 
-                {/* 2. THE CLOSE BUTTON: Final Isolated Anchor (Top Right) */}
-                {!hideClose && (
-                  <div className="fixed top-6 right-6 z-[120] pointer-events-auto">
+                 {/* 2. THE TOP-RIGHT ACTION PANEL: Closer, Editor and Inquirer grouped together */}
+                <div className="fixed top-6 right-6 z-[120] pointer-events-auto flex items-center gap-3">
+                  {onEdit && (
+                    <button 
+                      type="button"
+                      onClick={() => onEdit(activeIndex)} 
+                      className="w-12 h-12 bg-black/40 hover:bg-black/60 active:scale-90 rounded-full text-white transition-all flex items-center justify-center backdrop-blur-md shadow-2xl border border-white/10"
+                      aria-label="Edit"
+                      title="編輯"
+                    >
+                      <Pencil size={20} />
+                    </button>
+                  )}
+
+                  {!hideClose && (
                     <button 
                       type="button"
                       onClick={() => onClose ? onClose() : internalOnClose()} 
                       className="w-12 h-12 bg-black/40 hover:bg-black/60 active:scale-90 rounded-full text-white transition-all flex items-center justify-center backdrop-blur-md shadow-2xl border border-white/10"
                       aria-label="Close"
+                      title="關閉"
                     >
                       <X size={24} />
+                    </button>
+                  )}
+                </div>
+
+                {/* 3. BOTTOM FLOATING CENTER DOCK: Elegant pill container */}
+                {(onSetCover && showSetCover || onDelete) && (
+                  <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[110] pointer-events-auto max-w-[95vw] sm:max-w-xl transition-all duration-300">
+                    <div className="flex items-center gap-1.5 bg-black/60 backdrop-blur-xl p-1.5 rounded-full border border-white/10 shadow-2xl">
+                      {onSetCover && showSetCover && (
+                        <button 
+                          type="button"
+                          onClick={() => onSetCover(activeIndex)} 
+                          className="h-9 px-4 sm:px-5 bg-amber-500/90 hover:bg-amber-500 rounded-full text-white transition-all text-[11px] font-bold uppercase tracking-widest whitespace-nowrap active:scale-95 shadow-md shrink-0"
+                        >
+                          設為封面
+                        </button>
+                      )}
+
+                      {onDelete && (
+                        <button 
+                          type="button"
+                          onClick={() => onDelete(activeIndex)} 
+                          className="h-9 w-9 flex items-center justify-center hover:bg-red-500/80 hover:text-white rounded-full text-white/70 transition-all active:scale-95 shrink-0"
+                          title="Delete"
+                        >
+                          <X size={18} className="rotate-45" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* 3.5. FLOATING INFO OPT-IN BUTON: Placed at bottom-right of viewport */}
+                {!activeShowInfo && onToggleInfo && (
+                  <div className="fixed bottom-6 right-6 z-[120] pointer-events-auto">
+                    <button 
+                      type="button"
+                      onClick={() => onToggleInfo(true)} 
+                      className="w-12 h-12 active:scale-90 rounded-full transition-all flex items-center justify-center backdrop-blur-md bg-black/40 hover:bg-black/60 text-white border border-white/10 shadow-2xl"
+                      aria-label="Toggle Attributes"
+                      title="資訊 & 屬性"
+                    >
+                      <Info size={22} />
                     </button>
                   </div>
                 )}
 
-                {/* 3. BOTTOM FLOATING CENTER DOCK: Elegant pill container */}
-                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[110] pointer-events-auto max-w-[95vw] sm:max-w-xl transition-all duration-300">
-                  <div className="flex items-center gap-1.5 bg-black/60 backdrop-blur-xl p-1.5 rounded-full border border-white/10 shadow-2xl">
-                    {onSetCover && showSetCover && (
-                      <button 
-                        type="button"
-                        onClick={() => onSetCover(activeIndex)} 
-                        className="h-9 px-4 sm:px-5 bg-amber-500/90 hover:bg-amber-500 rounded-full text-white transition-all text-[11px] font-bold uppercase tracking-widest whitespace-nowrap active:scale-95 shadow-md shrink-0"
-                      >
-                        設為封面
-                      </button>
-                    )}
-                    {onEdit && (
-                      <button 
-                        type="button"
-                        onClick={() => onEdit(activeIndex)} 
-                        className="h-9 px-4 sm:px-5 hover:bg-white/10 rounded-full text-white/90 hover:text-white transition-all text-[11px] font-bold uppercase tracking-widest whitespace-nowrap active:scale-95 shrink-0"
-                      >
-                        編輯
-                      </button>
-                    )}
-                    
-                    {onToggleInfo && (
-                      <button 
-                        type="button"
-                        onClick={() => onToggleInfo(!activeShowInfo)} 
-                        className={`h-9 px-4 sm:px-5 flex items-center gap-1.5 rounded-full transition-all active:scale-95 shrink-0 ${
-                          activeShowInfo 
-                            ? 'bg-white text-black font-semibold' 
-                            : 'hover:bg-white/10 text-white/90 hover:text-white'
-                        }`}
-                        title="Toggle Attributes"
-                      >
-                        <Info size={16} />
-                        <span className="text-[11px] font-bold uppercase tracking-wider">資訊 & 屬性</span>
-                      </button>
-                    )}
-
-                    {onDelete && (
-                      <button 
-                        type="button"
-                        onClick={() => onDelete(activeIndex)} 
-                        className="h-9 w-9 flex items-center justify-center hover:bg-red-500/80 hover:text-white rounded-full text-white/70 transition-all active:scale-95 shrink-0"
-                        title="Delete"
-                      >
-                        <X size={18} className="rotate-45" />
-                      </button>
-                    )}
+                {/* 3.6. BOTTOM THUMBNAIL TRACK (IMAGE REEL) */}
+                {items && items.length > 1 && (
+                  <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[110] pointer-events-auto max-w-[90vw] sm:max-w-2xl px-3 py-2 bg-black/45 backdrop-blur-xl rounded-2xl border border-white/10 flex items-center gap-2 overflow-x-auto scrollbar-none shadow-2xl transition-all duration-300">
+                    {items.map((item, idx) => {
+                      const isActive = idx === activeIndex;
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          id={`lightbox-thumb-${idx}`}
+                          onClick={() => onIndexChange(idx)}
+                          className={`relative w-12 h-12 rounded-lg overflow-hidden shrink-0 transition-all duration-300 ring-2 ${
+                            isActive 
+                              ? 'ring-white scale-110 shadow-lg opacity-100 z-10' 
+                              : 'ring-transparent hover:ring-white/40 opacity-40 hover:opacity-80'
+                          }`}
+                        >
+                          <img 
+                            src={item.thumbnail || item.src} 
+                            alt={(item as any).alt || ''} 
+                            className="w-full h-full object-cover pointer-events-none select-none"
+                            loading="lazy"
+                          />
+                        </button>
+                      );
+                    })}
                   </div>
-                </div>
+                )}
 
                 {/* 4. SIDEBAR PANEL AND BACKDROP OVERLAY */}
                 {renderSidebar && (

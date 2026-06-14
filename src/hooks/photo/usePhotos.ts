@@ -97,7 +97,7 @@ export const usePhotos = createInfiniteQuery<{photos: Photo[], nextPage?: number
  * Hook for infinite group photo lists.
  */
 export const useGroupPhotosResult = createInfiniteQuery<{photos: Photo[], total: number, hasMore: boolean}, { groupId: string | null; isAdminMode: boolean; pageSize: number }, any>({
-  queryKey: (vars: { groupId: string | null; isAdminMode: boolean; pageSize: number }) => queryKeys.photos.infinite({}, vars.isAdminMode ? 'admin' : 'public'),
+  queryKey: (vars: { groupId: string | null; isAdminMode: boolean; pageSize: number }) => queryKeys.photos.infinite({ groupId: vars.groupId ?? undefined } as any, vars.isAdminMode ? 'admin' : 'public'),
   queryFn: async ({ groupId, isAdminMode, pageSize }: { groupId: string | null; isAdminMode: boolean; pageSize: number }, pageParam: any) => {
     const data = await loadPhotosByGroupIdPaginated(groupId!, pageParam, pageSize, isAdminMode);
     return {

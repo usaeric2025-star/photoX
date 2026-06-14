@@ -319,3 +319,8 @@ li[data-sonner-toast] [data-close-button] {
 li[data-sonner-toast] {
   touch-action: none !important;
 }
+
+/* Hide the default lightbox loading spinner which stays active due to custom slide rendering */
+.rk-lightbox-spinner {
+  display: none !important;
+}

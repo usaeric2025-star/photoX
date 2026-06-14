@@ -8,6 +8,7 @@ interface LightboxFloatingInfoProps {
   tags: string[];
   isGroup: boolean;
   appLang: string;
+  hasActions?: boolean;
 }
 
 export function LightboxFloatingInfo({
@@ -15,31 +16,38 @@ export function LightboxFloatingInfo({
   categoryName,
   tags,
   isGroup,
-  appLang
+  appLang,
+  hasActions
 }: LightboxFloatingInfoProps) {
   const l = translations[appLang as keyof typeof translations] || translations.zh;
 
   return (
-    <div className="fixed bottom-6 left-6 md:bottom-10 md:left-10 z-40 pointer-events-none flex flex-col items-start max-w-[85%] md:max-w-[40%] select-none animate-in fade-in slide-in-from-bottom-2 duration-700">
-      <div className="bg-black/20 backdrop-blur-md p-3 sm:p-4 rounded-xl border border-white/10 shadow-2xl">
+    <div className={`fixed left-6 md:left-10 z-40 pointer-events-none flex flex-col items-start max-w-[85%] md:max-w-[40%] select-none animate-in fade-in slide-in-from-bottom-2 duration-700 ${
+      hasActions ? 'bottom-20 sm:bottom-6 md:bottom-10' : 'bottom-6 md:bottom-10'
+    }`}>
+      <div className="bg-black/20 backdrop-blur-md p-3 sm:p-4 rounded-xl border border-white/10 shadow-2xl max-w-[300px]">
         {displayName && (
-          <h2 className="text-white text-base md:text-xl font-bold tracking-tight mb-2 line-clamp-1 font-sans drop-shadow-xl opacity-95">
+          <h2 className="text-white text-sm font-bold tracking-tight mb-2 line-clamp-1 font-sans drop-shadow-xl opacity-95">
             {displayName}
           </h2>
         )}
 
         {(categoryName || tags.length > 0) && (
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-col gap-1.5">
             {categoryName && (
-              <span className="px-2 py-0.5 bg-white/10 rounded-md text-white/90 text-[9px] font-bold uppercase tracking-wider border border-white/5 backdrop-blur-xl">
+              <span className="w-fit px-2 py-0.5 bg-white/10 rounded-md text-white/90 text-[10px] font-bold uppercase tracking-wider border border-white/5 backdrop-blur-xl">
                 {categoryName}
               </span>
             )}
-            {tags.slice(0, 3).map((tag, i) => (
-              <span key={i} className="px-2 py-0.5 bg-white/5 rounded-md text-white/40 text-[9px] font-medium uppercase tracking-wider border border-white/5">
-                {tag}
-              </span>
-            ))}
+            {tags.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {tags.slice(0, 3).map((tag, i) => (
+                  <span key={i} className="px-2 py-0.5 bg-white/5 rounded-md text-white/60 text-[9px] font-medium uppercase tracking-wider border border-white/5">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

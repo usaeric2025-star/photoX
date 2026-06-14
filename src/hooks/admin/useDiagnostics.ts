@@ -3,7 +3,6 @@ import { api } from '@/lib/api';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { DiagnosticsReport } from '@/types/diagnostics';
 import { queryKeys } from '@/lib/query/keys';
-import { photoKeys, groupKeys } from '@/lib/queryKeys';
 import { useTaskExecutor } from '../core/useTaskExecutor';
 import { useUIStore } from '@/store/useUIStore';
 
@@ -54,8 +53,8 @@ export function useDiagnostics() {
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: photoKeys.all });
-      queryClient.invalidateQueries({ queryKey: groupKeys.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.diagnostics.all });
     }
   });
@@ -75,8 +74,8 @@ export function useDiagnostics() {
 
   const refreshReport = () => {
     scan();
-    queryClient.invalidateQueries({ queryKey: photoKeys.all });
-    queryClient.invalidateQueries({ queryKey: groupKeys.all });
+    queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
+    queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
   };
 
   const { data: r2Result, isLoading: isDiagnosingR2, refetch: runR2DiagnosticsQuery } = useQuery({

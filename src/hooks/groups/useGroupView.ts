@@ -1,5 +1,5 @@
 import { queryClient } from '@/lib/queryClient';
-import { groupKeys } from '@/lib/queryKeys';
+import { queryKeys } from '@/lib/query/keys';
 import { useGroupPhotos } from '@/hooks';
 import { cleanPhotos } from '@/services/photo/processing';
 
@@ -15,6 +15,6 @@ export function useGroupView(activeGroupId: string | null) {
   return {
     groupPhotos,
     isLoading: groupPhotosQuery.isLoading,
-    refetch: () => queryClient.invalidateQueries({ queryKey: groupKeys.all }),
+    refetch: () => queryClient.invalidateQueries({ queryKey: queryKeys.groups.all }),
   };
 }

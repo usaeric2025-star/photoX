@@ -172,6 +172,8 @@ export const PhotoLightboxPage = () => {
       displayTagNames = currentPhoto.tags.map(tag => tag.name).filter(Boolean);
     }
 
+    const hasActions = (!!groupId && showEdit) || showDelete;
+
     return (
       <LightboxFloatingInfo 
         displayName={currentPhotoDisplayName}
@@ -179,6 +181,7 @@ export const PhotoLightboxPage = () => {
         tags={displayTagNames}
         isGroup={mode === 'group'}
         appLang={appLang}
+        hasActions={hasActions}
       />
     );
   };
@@ -188,7 +191,8 @@ export const PhotoLightboxPage = () => {
       <ReelkitAdapter
         open={isOpen}
         items={photos.map(p => ({
-          src: p.image_url || '',
+          src: p.thumbnail_md_url || p.image_url || '',
+          thumbnail: p.thumbnail_sm_url || p.image_url || '',
           alt: (p.name as any)?.zh || String(p.name || ''),
         }))}
         currentIndex={currentIndex}
