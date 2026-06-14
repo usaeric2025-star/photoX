@@ -10,6 +10,7 @@ import { useUIStore } from "@/store";
 import { 
   usePhotoDelete,
 } from "@/hooks";
+import { RenderCount } from "@/hooks/useRenderCount";
 
 /**
  * [V2.14-SLOT-CONTRACT] PhotoEditDrawer Props
@@ -44,6 +45,7 @@ export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
 
   return (
     <PhotoEditSessionProvider key={editPhotoId} photoId={editPhotoId} onSuccess={handleClose}>
+      <RenderCount label="PhotoEditDrawer" />
       <Modal open={isOpen} onClose={handleClose} size="screen" hidePadding showCloseButton={false}>
         <div className="flex flex-col h-full w-full bg-slate-50 focus:outline-none">
           <DrawerHeader onClose={handleClose} onDeleteClick={deleteDialog.toggle} />

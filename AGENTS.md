@@ -1332,3 +1332,22 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 ### 驗證標準
 - 📝 每季度執行 `npm why framer-motion` 檢查體積
 - 📝 Lighthouse 動畫相關評分 ≥ 95
+
+## React Hook Form 效能規範（鎖定）
+
+### 禁止（會導致全表單重渲染）
+- ❌ `watch()` 無參數 → 改用 `useWatch({ name: 'field' })`
+- ❌ 頂層讀取 `formState.errors` → 改用 `<ErrorMessage />`
+- ❌ 頂層讀取 `formState.isDirty/isValid` → 僅在提交按鈕處讀取
+
+### 必須（結構優化）
+- ✅ Tab 內容必須條件渲染 `{active === 'x' && <Component />}`
+- ✅ 昂貴計算使用 `useMemo`
+- ✅ 選項列表 >50 使用 Combobox（Headless UI / CmdK）
+
+### 診斷
+- ✅ 優化前必須使用 `useRenderCount` 定位瓶頸
+- 📝 StrictMode 下計數會翻倍，使用防護版本
+
+### Combobox + RHF
+- ✅ 必須使用 `useController` 綁定，禁止手動 `register`

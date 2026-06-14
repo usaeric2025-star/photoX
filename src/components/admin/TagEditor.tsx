@@ -122,7 +122,7 @@ export function TagEditor({
           </button>
         </div>
       </div>
-      <div className="flex flex-wrap gap-1.5 pb-1 max-h-[220px] overflow-y-auto content-start">
+      <div className="flex flex-wrap gap-1.5 pb-1 max-h-[220px] overflow-y-auto content-start [content-visibility:auto]">
         {filteredTags.slice(0, 150).map((tag: Tag) => {
           const isSelected = selectedTagIds.map(String).includes(String(tag.id));
           const isHot = hotTagsSet.has(String(tag.id));

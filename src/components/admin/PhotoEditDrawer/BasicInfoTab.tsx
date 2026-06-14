@@ -1,4 +1,5 @@
 import React from 'react';
+import { useWatch } from 'react-hook-form';
 import { Modal } from '@/components/ui/Modal';
 import { usePhotoEditSessionContext } from '@/hooks/photo/usePhotoEditSessionContext';
 import { Lock, Loader2, Maximize2, X } from 'lucide-react';
@@ -8,8 +9,8 @@ import { usePhoto, useTaskExecutor, useTasks, useTranslation } from '../../../ho
 import { OptimizedImage } from '@/components/shared/OptimizedImage';
 
 export function BasicInfoTab() {
-  const { register, watch, setValue } = usePhotoEditSessionContext();
-  const formState = watch();
+  const { register, control } = usePhotoEditSessionContext();
+  const itemCode = useWatch({ control, name: 'item_code' });
   const { uiTranslations: t } = useTranslation();
   
   const editPhotoId = useUIStore((s) => s.editPhotoId);
@@ -139,7 +140,7 @@ export function BasicInfoTab() {
             系统内部编号 / SYSTEM CODE
           </h3>
           <div className="w-full bg-slate-50 border border-slate-100 p-2.5 rounded-xl text-[10px] font-mono font-medium text-slate-400 shadow-sm cursor-not-allowed">
-            {formState.item_code || t.systemCodeAuto}
+            {itemCode || t.systemCodeAuto}
           </div>
         </div>
         <div className="space-y-1.5">
