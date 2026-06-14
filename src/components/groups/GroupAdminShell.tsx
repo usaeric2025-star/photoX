@@ -31,13 +31,35 @@ import {
 import { CollapsibleDescription } from "./CollapsibleDescription";
 import { GroupInfoPanel } from "./GroupInfoPanel";
 import { getSafeText } from "@/services/ai/safeText";
-import { DndContext, closestCenter, DragEndEvent } from "@dnd-kit/core";
+import {
+  DndContext,
+  closestCenter,
+  DragEndEvent,
+  useSensor,
+  useSensors,
+  PointerSensor,
+  TouchSensor,
+} from "@dnd-kit/core";
 import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
 import { GroupAdminBottomBar } from "./GroupAdminBottomBar";
 import { Modal } from "../ui/Modal";
 import { PhotoEditModal } from "@/components/admin/PhotoEditModal";
 
 export function GroupAdminShell() {
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200,
+        tolerance: 6,
+      },
+    })
+  );
+
   const isAdminMode = useAdminMode();
   const navigate = useRouterSafe().navigate;
   const { copy } = useCopyToClipboard({ successMessage: "合组ID已复制" });
@@ -217,6 +239,7 @@ export function GroupAdminShell() {
         <GroupInfoPanel groupData={groupData || undefined} lang={appLang} />
 
         <DndContext
+          sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
         >

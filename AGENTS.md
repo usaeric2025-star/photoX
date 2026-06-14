@@ -640,6 +640,14 @@ toast.error('发现数据完整性问题', {
 - ✅ **渲染面优化**：确保虚拟滚动的 itemSize 与实际高度误差 < 10%，减少闪烁与重复测量。
 - ❌ **非必要不优化**：除非遇到真实性能瓶颈，否则禁止进行盲目的 bundle 拆分或过度工程。
 
+## useEffect 優化規範（鎖定）
+
+- ✅ 聲明式狀態優先：data-* + CSS 替代命令式 classList
+- ✅ DOM 同步副作用使用 useLayoutEffect
+- ✅ 滾動鎖定使用 position:fixed + scrollY 記憶
+- ❌ 禁止對 body 直接使用 overflow:hidden
+- ❌ 禁止在未驗證第三方庫能力前重複實現鎖定
+
 ## 错误处理与 Mutation 规范（锁定）
 - ❌ 禁止直接 `throw new Error()`，必须用 `ErrorFactory.wrap()`。
 - ❌ 禁止在组件中直接使用 `useMutation`，必须用 `mutations/*` 下的工厂生成。

@@ -25,7 +25,7 @@ interface GroupGridViewProps {
   isSortable?: boolean;
 }
 
-function SortablePhotoItem({ photo, index, getPhotoProps, onClick, onContextMenu, isSortable }: any) {
+function SortablePhotoItem({ photo, index, getPhotoProps, onClick, onContextMenu, isSortable, isHighlighted }: any) {
   const {
     attributes,
     listeners,
@@ -45,7 +45,14 @@ function SortablePhotoItem({ photo, index, getPhotoProps, onClick, onContextMenu
   const extraProps = getPhotoProps ? getPhotoProps(photo) : {};
 
   return (
-    <div ref={setNodeRef} style={style} {...(isSortable ? attributes : {})} {...(isSortable ? listeners : {})} className="p-1 w-full touch-manipulation">
+    <div 
+      ref={setNodeRef} 
+      style={style} 
+      {...(isSortable ? attributes : {})} 
+      {...(isSortable ? listeners : {})} 
+      data-highlight={isHighlighted}
+      className="p-1 w-full touch-manipulation data-[highlight=true]:ring-4 data-[highlight=true]:ring-blue-500 transition-all duration-300"
+    >
       <PhotoCard
         photo={photo}
         index={index}
@@ -131,6 +138,7 @@ export function GroupGridView({
         onClick={() => onPhotoClick(photo)}
         onContextMenu={onPhotoContextMenu}
         isSortable={isSortable}
+        isHighlighted={isHighlighted}
       />
     );
   };

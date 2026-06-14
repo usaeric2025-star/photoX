@@ -1,6 +1,7 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
-import React, { useState, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, Suspense } from 'react';
 import { ChevronLeft, X, Share2, Loader2 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 import { Photo } from '@/types';
 import { TranslationType } from '@/locales';
 import { useAdminMode, useGroupDetail, useGroupPhotos, useCategories, useUrlFilters, useCopyToClipboard } from '@/hooks';
@@ -74,24 +75,17 @@ export function GroupDetailPage({}: GroupDetailPageProps) {
   })();
 
   const initializedRef = useRef(false);
-  useEffect(() => {
-     initializedRef.current = false;
-  }, [activeGroupId]);
-
-  useEffect(() => {
-    if (activeGroupId) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [activeGroupId]);
+  const prevGroupIdRef = useRef<string | null>(null);
+  
+  // Synchronously reset on activeGroupId change to avoid extra state ticks or effect delays
+  if (prevGroupIdRef.current !== activeGroupId) {
+    prevGroupIdRef.current = activeGroupId;
+    initializedRef.current = false;
+  }
 
   const hasScrolledRef = useRef<{ id: string | null; groupId: string | null }>({ id: null, groupId: null });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (activeGroupId && activeGroupPhotos.length > 0 && !initializedRef.current) {
         initializedRef.current = true;
     }
@@ -110,7 +104,7 @@ export function GroupDetailPage({}: GroupDetailPageProps) {
                     align: 'start',
                     behavior: 'smooth'
                 });
-            }, 300);
+            }, 50);
         }
     } else {
         hasScrolledRef.current = { id: null, groupId: null };
