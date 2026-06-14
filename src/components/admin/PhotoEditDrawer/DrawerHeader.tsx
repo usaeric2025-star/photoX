@@ -33,7 +33,6 @@ export function DrawerHeader({
   onDeleteClick,
 }: DrawerHeaderProps) {
   const { control, setValue, commit, isPending } = usePhotoEditSessionContext();
-  const isHidden = useWatch({ control, name: 'is_hidden' });
   const isGroupCover = useWatch({ control, name: 'is_group_cover' });
   
   const editPhotoId = useUIStore((s) => s.editPhotoId);
@@ -57,14 +56,6 @@ export function DrawerHeader({
     if (editPhotoId && detailPhoto?.group_id) {
       await removeFromGroup({ photoIds: [editPhotoId], groupId: detailPhoto.group_id });
       useUIStore.getState().update({ editPhotoId: null });
-    }
-  };
-
-  const onToggleHidden = async () => {
-    const nextValue = !isHidden;
-    setValue('is_hidden', nextValue, { shouldDirty: true });
-    if (editPhotoId) {
-      await updateAdminPhoto({ id: editPhotoId, updates: { is_hidden: nextValue } });
     }
   };
 
@@ -94,20 +85,8 @@ export function DrawerHeader({
 
   return (
     <div className="px-4 py-3 border-b border-slate-200 bg-white shadow-sm flex items-center justify-between gap-3 min-h-[72px]">
-      <div className="flex-none flex items-center gap-2">
-        <div
-          onClick={onToggleHidden}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border cursor-pointer whitespace-nowrap ${isHidden ? "bg-orange-50 border-orange-200 text-orange-600" : "bg-green-50 border-green-200 text-green-600"}`}
-        >
-          {isHidden ? <EyeOff size={10} /> : <Eye size={10} />}
-          <span className="text-[9px] font-bold uppercase tracking-widest leading-none">
-            {isHidden ? l.hidden : l.visible}
-          </span>
-        </div>
-      </div>
-
-      <div className="flex-1 flex flex-col items-center justify-center min-w-0 px-2">
-        <h2 className="font-black text-sm text-slate-800 tracking-tight leading-tight uppercase truncate w-full text-center">
+      <div className="flex-1 flex flex-col items-start justify-center min-w-0 px-2">
+        <h2 className="font-black text-sm text-slate-800 tracking-tight leading-tight uppercase truncate w-full text-left">
           {editPhotoId ? l.editTitle : l.analyzeTitle}
         </h2>
       </div>

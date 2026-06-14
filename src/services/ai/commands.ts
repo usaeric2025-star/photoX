@@ -119,9 +119,24 @@ export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promi
          sanitizedTagNames = sanitizedTagNames.slice(0, 3);
        }
 
-       return ok({
-          name: (parsed.name || '').trim(),
-          description: (parsed.description || '').trim(),
+       const safeTrim = (val: any): any => {
+          if (!val) return '';
+          if (typeof val === 'string') return val.trim();
+          if (typeof val === 'object') {
+            const res: any = {};
+            for (const k in val) {
+              if (Object.prototype.hasOwnProperty.call(val, k)) {
+                res[k] = typeof val[k] === 'string' ? val[k].trim() : val[k];
+              }
+            }
+            return res;
+          }
+          return String(val).trim();
+        };
+
+        return ok({
+           name: safeTrim(parsed.name),
+           description: safeTrim(parsed.description),
           category_id: parsed.category_id || null,
           group_id: parsed.group_id || null,
           tagNames: sanitizedTagNames,

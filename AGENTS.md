@@ -447,6 +447,25 @@ catch (e) {
 - ✅ 维护逻辑与 API 映射收敛于 `@/features/maintenance/issueActions`
 - ✅ 后端业务逻辑保持在 `/api/app.ts` 中封装，由前端 MaintenanceTool 统一调用
 
+## AI Raw 数据架构规范 (永久锁定，2026-06-14)
+
+### 存储策略
+- ✅ 单一数据源：所有 AI 审计数据存储于 Supabase `ai_audit_logs` 表
+- ✅ 完整 Raw JSON → `raw_output` (JSONB)
+- ✅ 结构化摘要 → `cleaned_output` (JSONB)
+- ✅ 性能指标 → 独立字段 (latency_ms, cost_est, token_usage, status)
+- ❌ 禁止使用 R2 存储 AI 审计日志
+- ❌ 禁止双写架构
+
+### R2 历史数据
+- ✅ 仅透过 Lifecycle Rule 自动过期清理
+- ❌ 禁止在代码中执行 R2 AI 日志删除
+- ✅ 照片路径与 AI 日志路径必须物理隔离
+
+### 变更纪律
+- ✅ 新增审计字段时，必须同时更新 Migration + 代码 + 本规范
+- ❌ 禁止代码先行、Migration 滞后
+
 ## 通知与反馈规范（锁定，2026-06-03）
 
 ### 核心原则

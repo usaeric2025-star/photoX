@@ -153,16 +153,8 @@ export const groupPhotos = async (
     return !p?.group_id;
   });
 
-  // Derive a name if missing
-  let finalName = metadata?.name;
-  if (!finalName) {
-    const p = selectedPhotos[0];
-    if (p?.name) {
-       finalName = typeof p.name === 'string' ? { zh: p.name, en: p.name, ms: p.name } : p.name;
-    } else {
-       finalName = { zh: 'New Collection', en: 'New Collection', ms: 'New Collection' };
-    }
-  }
+  // Derive a name if missing: "全面强制 合组新合并就叫GROUP，除非改名。"
+  let finalName = metadata?.name || { zh: 'GROUP', en: 'GROUP', ms: 'GROUP' };
 
   // Prepare Group Record
   const groupData = {

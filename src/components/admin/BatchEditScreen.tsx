@@ -101,7 +101,7 @@ export const BatchEditScreen = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar pb-32">
+      <div className="flex-1 overflow-hidden bg-slate-50 relative">
         <BatchEditForm 
           formState={formState}
           handleUpdateForm={handleUpdateForm}

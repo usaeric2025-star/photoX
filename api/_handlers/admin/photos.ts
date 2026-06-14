@@ -23,15 +23,15 @@ adminPhotos.get("/photo-ai-result/:photoId", async (c) => {
 
         if (!auditError && auditLog) {
             let rawResult = '';
-            if (auditLog.raw_storage_path) {
-                const { getFromR2 } = await import("../../_lib/storage.js");
-                const r2Content = await getFromR2(auditLog.raw_storage_path);
-                if (r2Content) {
-                    rawResult = r2Content;
-                }
+            
+            // New struct: uses raw_output
+            if (auditLog.raw_output) {
+                rawResult = typeof auditLog.raw_output === 'object' 
+                    ? JSON.stringify(auditLog.raw_output, null, 2)
+                    : String(auditLog.raw_output);
             }
             if (!rawResult && auditLog.error_message) {
-                // If R2 upload failed in the past, executor might save the raw JSON/content in error_message
+                // If AI execution failed, error is often recorded in error_message or fallback
                 rawResult = auditLog.error_message;
             }
             if (!rawResult && auditLog.cleaned_output) {
@@ -42,12 +42,11 @@ adminPhotos.get("/photo-ai-result/:photoId", async (c) => {
             if (!rawResult) {
                 // Return a reconstructed JSON object as ultimate fallback so it's never blank
                 rawResult = JSON.stringify({
-                    status: "success",
+                    status: auditLog.status || "success",
                     model: auditLog.model || "Gemini-2.0",
-                    trace_id: auditLog.trace_id,
                     prompt_version: auditLog.prompt_version || "v1",
                     analysis_timestamp: auditLog.created_at,
-                    warning: "Raw stream in R2 was unreachable, reconstructed from structured database values.",
+                    warning: "Raw stream was unreachable, reconstructed from structured database values.",
                     structured_data: auditLog.cleaned_output || {}
                 }, null, 2);
             }

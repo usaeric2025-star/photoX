@@ -56,6 +56,16 @@ const groupPhotosConfig = defineMutation<any, { photoIds: string[], targetGroupI
     return await groupPhotos(photoIds, targetGroupId);
   },
   invalidate: () => [photoKeys.all as unknown as any[], groupKeys.all as unknown as any[]],
+  optimistic: (old: any, { photoIds, targetGroupId }: { photoIds: string[], targetGroupId?: string }) => {
+    if (!old) return old;
+    if (old.pages) {
+      return optimistic.infinite.batchUpdate<Photo>()(old, {
+        ids: photoIds,
+        updates: { group_id: targetGroupId ?? null }
+      });
+    }
+    return old;
+  },
   successMessage: '已合组',
 });
 
@@ -67,6 +77,16 @@ const removePhotosConfig = defineMutation<any, { photoIds: string[]; groupId: st
     return await movePhotosToGroup(photoIds, null);
   },
   invalidate: () => [photoKeys.all as unknown as any[], groupKeys.all as unknown as any[]],
+  optimistic: (old: any, { photoIds }: { photoIds: string[] }) => {
+    if (!old) return old;
+    if (old.pages) {
+      return optimistic.infinite.batchUpdate<Photo>()(old, {
+        ids: photoIds,
+        updates: { group_id: null }
+      });
+    }
+    return old;
+  },
   successMessage: '已移出',
 });
 

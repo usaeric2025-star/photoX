@@ -15,6 +15,7 @@ interface BasePhotoTagSelectorProps {
   updateTag: (id: string, name: string) => Promise<any>;
   deleteTag: (id: string) => Promise<any>;
   tags: Tag[];
+  hideHotLabel?: boolean;
 }
 
 function BasePhotoTagSelector({
@@ -24,6 +25,7 @@ function BasePhotoTagSelector({
   updateTag,
   deleteTag,
   tags,
+  hideHotLabel,
 }: BasePhotoTagSelectorProps) {
   const [isAddOpen, addDialog] = useDisclosure(false);
   const [isEditOpen, editDialog] = useDisclosure(false);
@@ -82,6 +84,7 @@ function BasePhotoTagSelector({
         onQuickAdd={onQuickAdd}
         onRenameTagRequest={onRenameTagRequest}
         showHotEffects={false}
+        hideHotLabel={hideHotLabel}
       />
       <PromptDialog
         open={isAddOpen}
@@ -141,6 +144,7 @@ interface PhotoTagSelectorProps {
   control?: any;
   value?: any[];
   onChange?: (val: any[]) => void;
+  hideHotLabel?: boolean;
 }
 
 export function PhotoTagSelector(props: PhotoTagSelectorProps) {
@@ -159,6 +163,7 @@ export function PhotoTagSelector(props: PhotoTagSelectorProps) {
       updateTag={props.updateTag}
       deleteTag={props.deleteTag}
       tags={props.tags}
+      hideHotLabel={props.hideHotLabel}
     />
   );
 }
@@ -170,6 +175,7 @@ function ControlledPhotoTagSelector({
   deleteTag,
   tags,
   control,
+  hideHotLabel,
 }: PhotoTagSelectorProps) {
   const { field } = useController({
     name,
@@ -185,6 +191,7 @@ function ControlledPhotoTagSelector({
       updateTag={updateTag}
       deleteTag={deleteTag}
       tags={tags}
+      hideHotLabel={hideHotLabel}
     />
   );
 }

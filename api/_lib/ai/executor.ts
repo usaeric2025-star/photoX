@@ -2,7 +2,6 @@ import { normalizeI18n } from "../../_shared/i18n.js";
 import { logger } from "../logger.js";
 import { extractJSON } from "./utils.js";
 import { getSupabaseAdmin } from "../supabase.js";
-import { uploadToR2, deleteFromR2 } from "../storage.js";
 
 interface AITaskOptions {
   task: string;
@@ -25,6 +24,11 @@ export interface AIAuditData {
   errorMessage?: string;
   traceId?: string;
   userId?: string;
+  task?: string;
+  provider?: string;
+  promptText?: string;
+  token_usage?: any;
+  cost_est?: number;
 }
 
 /**
@@ -34,53 +38,37 @@ export const saveAIAuditLog = async (data: AIAuditData): Promise<void> => {
   try {
     const supabase = await getSupabaseAdmin();
     
-    let rawKey: string | null = null;
-    let actualRawResponse = data.rawResponse;
-    const maxRawLengthForDb = 5000; // if R2 fails, we store truncated data in DB directly, but we won't crash
-
-    // 1. 尝试上传原始输出到 R2
+    let parsedRawOutput = null;
     try {
-      const timestamp = Date.now();
-      rawKey = `ai_logs/${data.photoId || 'global'}/${timestamp}_${crypto.randomUUID().slice(0, 8)}.json`;
-      const uploadResult = await uploadToR2(rawKey, actualRawResponse);
-      
-      if (!uploadResult.success) {
-        logger.error('[AIAudit] Failed to upload AI raw result to R2:', uploadResult.error);
-        rawKey = null; // Mark as failed
+      if (typeof data.rawResponse === 'string' && data.rawResponse.startsWith('{')) {
+        parsedRawOutput = JSON.parse(data.rawResponse);
+      } else {
+        parsedRawOutput = { raw_text: data.rawResponse };
       }
     } catch (e) {
-      logger.error('[AIAudit] R2 Exception:', e);
-      rawKey = null;
-    }
-    
-    // 如果 R2 上传失败，我们依然将其写入数据库，否则 AI 分析就没有记录了
-    if (!rawKey && typeof actualRawResponse === 'string' && actualRawResponse.length > maxRawLengthForDb) {
-         // Truncate to avoid DB bloat if R2 fails
-         actualRawResponse = actualRawResponse.substring(0, maxRawLengthForDb) + '\n...[TRUNCATED DUE TO R2 FAILURE]';
+      parsedRawOutput = { raw_text: data.rawResponse };
     }
 
-    // 2. 写入数据库
+    const jsonOutput = data.status === 'success' 
+      ? data.cleanedOutput 
+      : { error: data.errorMessage };
+
+    // 写入数据库 (符合最新的 schema)
     const { error } = await supabase.from('ai_audit_logs').insert({
-      photo_id: data.photoId,
+      photo_id: data.photoId || null,
       model: data.model,
-      prompt_version: data.promptVersion,
-      cleaned_output: data.cleanedOutput,
-      raw_storage_path: rawKey,
-      error_message: rawKey ? data.errorMessage : (data.errorMessage ? `${data.errorMessage}\n\nRAW_DATA:\n${actualRawResponse}` : actualRawResponse),
-      // Fallback for raw data if R2 wasn't used/failed (though schema must support it if you query it later, or just put it in a metadata json if schema supports it, but since schema has error_message we can use it to know it failed)
-      duration: data.duration,
+      prompt_version: data.promptVersion || 'v1',
+      cleaned_output: jsonOutput,
+      raw_output: parsedRawOutput,
+      latency_ms: data.duration,
+      cost_est: data.cost_est || 0,
+      token_usage: data.token_usage || null,
       status: data.status,
-      trace_id: data.traceId,
-      user_id: data.userId || null,
       created_at: new Date().toISOString()
     });
     
     if (error) {
       logger.error('[AIAudit] Failed to save AI audit log into DB:', error);
-      // 資料庫失敗，刪除已上傳的 R2 檔案 (回滾)
-      if (rawKey) {
-        await deleteFromR2(rawKey);
-      }
     } else {
       logger.info(`[AIAudit] Successfully saved AI audit log for ${data.photoId || 'global'}`);
     }
@@ -165,7 +153,12 @@ export async function executeAITask(options: AITaskOptions) {
         duration: Date.now() - startTime,
         status: 'success',
         traceId: metadata?.traceId,
-        userId: metadata?.userId
+        userId: metadata?.userId,
+        task,
+        provider: provider.name || 'unknown',
+        promptText: prompt,
+        token_usage: result.usage,
+        cost_est: result.usage?.cost || 0
       });
 
       return {
@@ -199,7 +192,10 @@ export async function executeAITask(options: AITaskOptions) {
     status: 'failed',
     errorMessage: lastError?.message,
     traceId: metadata?.traceId,
-    userId: metadata?.userId
+    userId: metadata?.userId,
+    task,
+    provider: provider.name || 'unknown',
+    promptText: prompt
   });
 
   // Return fallback data matching expected schema

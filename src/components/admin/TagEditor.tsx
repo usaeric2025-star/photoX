@@ -25,6 +25,7 @@ interface TagEditorProps {
   onQuickAdd: () => void;
   onRenameTagRequest?: (tag: Tag) => void;
   showHotEffects?: boolean;
+  hideHotLabel?: boolean;
 }
 
 export function TagEditor({
@@ -36,6 +37,7 @@ export function TagEditor({
   onQuickAdd,
   onRenameTagRequest,
   showHotEffects = false,
+  hideHotLabel = false,
 }: TagEditorProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const deferredSearchTerm = useDeferredValue(searchTerm);
@@ -146,6 +148,7 @@ export function TagEditor({
               isHot={isHot}
               isPinned={isPinned}
               isDisabled={isDisabled}
+              hideHotLabel={hideHotLabel}
               onToggle={onToggleTag}
               onLongPress={() => {
                 portalOpenedAt.current = Date.now();
@@ -250,7 +253,7 @@ export function TagEditor({
   );
 }
 
-const TagButton = React.memo(({ tag, isSelected, isHot, isPinned, isDisabled, onToggle, onLongPress: onLongPressProp }: any) => {
+const TagButton = React.memo(({ tag, isSelected, isHot, isPinned, isDisabled, hideHotLabel, onToggle, onLongPress: onLongPressProp }: any) => {
   const btnRef = useRef<HTMLButtonElement>(null);
   useLongPress(btnRef, {
     delay: 400,
@@ -305,7 +308,7 @@ const TagButton = React.memo(({ tag, isSelected, isHot, isPinned, isDisabled, on
             <Heart size={8} className="fill-white" /> 置顶
           </span>
         )}
-        {isHot && !isPinned && !isSelected && (
+        {!hideHotLabel && isHot && !isPinned && !isSelected && (
           <span className="text-[9px] bg-amber-400 text-white px-1.5 py-0.5 rounded-full scale-90 origin-left font-black tracking-tighter">
             HOT
           </span>

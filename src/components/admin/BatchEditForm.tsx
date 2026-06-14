@@ -1,11 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import { EyeOff, Eye, RefreshCcw } from "lucide-react";
 import { ProductFormData } from "@/types";
-import { FormSectionHeader, CategoryGrid, ManufacturerList } from "./FormShared";
+import { FormSectionHeader, CategoryGrid } from "./FormShared";
+import { ManufacturerTagSelect } from "./ManufacturerTagSelect";
 import { PhotoTagSelector } from "./edit/PhotoTagSelector";
-import { getTagIds, getTagsFromIds } from "@/services/photo/utils";
 import { useCategories, useTags, useManufacturers } from "@/hooks";
 import { useUIStore } from "@/store/useUIStore";
+import { Tabs } from "../shared/Tabs";
 
 interface BatchEditFormProps {
   formState: Partial<ProductFormData>;
@@ -33,66 +34,144 @@ export function BatchEditForm({
   const { data: tags = [] } = useTags();
   const appLang = useUIStore((s) => s.appLang);
 
+  const [activeTab, setActiveTab ] = useState('basic');
+
+  const tabs = [
+    { id: 'basic', label: appLang === 'zh' ? '基础' : 'BASIC' },
+    { id: 'org', label: appLang === 'zh' ? '组织' : 'ORG' },
+  ];
+
   return (
-    <div className="space-y-6">
-      <div className="bg-blue-50 border border-blue-100 p-4 rounded-3xl">
+    <Tabs
+      tabs={tabs}
+      activeTab={activeTab}
+      onChange={setActiveTab}
+      className="flex-1 flex flex-col overflow-hidden bg-transparent"
+      contentClassName="pt-2 no-scrollbar"
+    >
+      <div className="mx-8 xl:mx-12 mt-4 bg-blue-50 border border-blue-100 p-4 rounded-3xl">
         <p className="text-[11px] text-blue-700 font-medium leading-relaxed flex items-start gap-2">
           <span className="shrink-0 w-1.5 h-1.5 bg-blue-500 rounded-full mt-1"></span>
-          注意：這會更新所有選中照片。僅手動修改的欄位會被套用至所有選取項目。
+          注意：僅手動修改的欄位會被套用至所有選取項目。(Only edited fields will be updated).
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <ProductInputSection label="产品名称 / PRODUCT NAME" placeholder="输入统一产品名称..." value={typeof formState.name === 'object' ? (formState.name.zh || '') : (formState.name || '')} onChange={(v) => handleUpdateForm({ name: { zh: v, en: v, ms: v } })} />
-        <ProductInputSection label="产品编号 / ITEM CODE" placeholder="输入统一编号 (如: SK-2024)..." value={formState.manual_code} onChange={(v) => handleUpdateForm({ manual_code: v })} />
-        <ProductInputSection label="型號 / MODEL NUMBER" placeholder="输入统一型号编号 (如: MOD-123)..." value={formState.model_number} onChange={(v) => handleUpdateForm({ model_number: v })} />
-        <ProductInputSection label="價格 / PRICE" placeholder="输入统一价格..." value={formState.price} onChange={(v) => handleUpdateForm({ price: v })} className="text-blue-600" />
-      </div>
+      {activeTab === 'basic' && (
+        <div className="px-8 xl:px-12 py-6 space-y-6 pb-24">
+          <div className="space-y-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+            <div className="flex items-center px-0.5 border-b border-slate-200/60 pb-1">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">产品名称翻译 / TRANSLATIONS</span>
+            </div>
+            
+            <div className="grid grid-cols-[auto_1fr] gap-3 items-center text-xs">
+              <div className="text-[9px] font-bold bg-slate-200 text-slate-700 px-1.5 py-1.5 rounded-md uppercase tracking-wider text-center w-10">ZH</div>
+              <input 
+                type="text" 
+                placeholder="统一输入中文名称..." 
+                value={typeof formState.name === 'object' ? (formState.name.zh || '') : (formState.name || '')}
+                onChange={(e) => {
+                   const curr = typeof formState.name === 'object' ? formState.name : { zh: formState.name || '', en: '', ms: '' };
+                   handleUpdateForm({ name: { ...curr, zh: e.target.value } });
+                }}
+                className="w-full bg-white border border-slate-200 px-3 py-2 rounded-xl font-bold outline-none focus:border-blue-500 shadow-sm min-w-0" 
+              />
 
-      <VisibilitySection 
-        batchIsHiddenApplied={batchIsHiddenApplied} 
-        setBatchIsHiddenApplied={setBatchIsHiddenApplied} 
-        is_hidden={formState.is_hidden} 
-        handleUpdateForm={handleUpdateForm} 
-      />
+              <div className="text-[9px] font-bold bg-blue-50 text-blue-600 px-1.5 py-1.5 rounded-md uppercase tracking-wider text-center w-10 border border-blue-100/50">EN</div>
+              <input 
+                type="text" 
+                placeholder="Uniform English Name..." 
+                value={typeof formState.name === 'object' ? (formState.name.en || '') : ''}
+                onChange={(e) => {
+                   const curr = typeof formState.name === 'object' ? formState.name : { zh: formState.name || '', en: '', ms: '' };
+                   handleUpdateForm({ name: { ...curr, en: e.target.value } });
+                }}
+                className="w-full bg-white border border-slate-200 px-3 py-2 rounded-xl font-bold outline-none focus:border-blue-500 shadow-sm min-w-0" 
+              />
 
-      <section className="space-y-4">
-        <FormSectionHeader title="产品目录" subtitle="CATEGORY *" />
-        <CategoryGrid categories={categories} selectedId={formState.category_id || null} onSelect={(id) => handleUpdateForm({ category_id: id ? String(id) : null })} appLang={appLang} />
-      </section>
+              <div className="text-[9px] font-bold bg-emerald-50 text-emerald-600 px-1.5 py-1.5 rounded-md uppercase tracking-wider text-center w-10 border border-emerald-100/50">MS</div>
+              <input 
+                type="text" 
+                placeholder="Nama Bahasa Melayu Seragam..." 
+                value={typeof formState.name === 'object' ? (formState.name.ms || '') : ''}
+                onChange={(e) => {
+                   const curr = typeof formState.name === 'object' ? formState.name : { zh: formState.name || '', en: '', ms: '' };
+                   handleUpdateForm({ name: { ...curr, ms: e.target.value } });
+                }}
+                className="w-full bg-white border border-slate-200 px-3 py-2 rounded-xl font-bold outline-none focus:border-blue-500 shadow-sm min-w-0" 
+              />
+            </div>
+          </div>
 
-      <section className="space-y-4">
-        <FormSectionHeader title="厂商名称" subtitle="MANUFACTURER" onAction={quickAddMfr} />
-        <ManufacturerList manufacturers={manufacturers} selectedId={formState?.manufacturer_id || null} onSelect={(id) => handleUpdateForm({ manufacturer_id: id ? String(id) : null })} />
-      </section>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="space-y-1.5">
+              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">统一价格编号 / CODE</h3>
+              <input 
+                type="text" 
+                placeholder="输入统一编号 (如: SK-2024)..." 
+                value={formState.manual_code || ''}
+                onChange={(e) => handleUpdateForm({ manual_code: e.target.value })}
+                className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-sm font-bold outline-none focus:border-blue-500 shadow-sm" 
+              />
+            </div>
+            <div className="space-y-1.5">
+              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">统一型號 / MODEL</h3>
+              <input 
+                type="text" 
+                inputMode="numeric"
+                placeholder="统一型号编号 (如: MOD-123)" 
+                value={formState.model_number || ''}
+                onChange={(e) => handleUpdateForm({ model_number: e.target.value })}
+                className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-sm font-bold outline-none focus:border-blue-500 shadow-sm" 
+              />
+            </div>
+            <div className="space-y-1.5">
+              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">统一價格 / PRICE</h3>
+              <input 
+                type="text" 
+                inputMode="numeric"
+                placeholder="输入统一价格..." 
+                value={formState.price || ''}
+                onChange={(e) => handleUpdateForm({ price: e.target.value })}
+                className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-sm font-bold text-blue-600 outline-none focus:border-blue-500 shadow-sm" 
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
-      <section className="space-y-4">
-        <PhotoTagSelector
-          name="tags"
-          tags={tags}
-          value={formState.tags?.map(t => typeof t === 'object' ? t.id : t) || []}
-          onChange={(newTagIds) => handleUpdateForm({ tags: newTagIds as any })}
-          addTag={addTag}
-          updateTag={updateTag}
-          deleteTag={deleteTag}
-        />
-      </section>
-    </div>
-  );
-}
+      {activeTab === 'org' && (
+        <div className="px-8 xl:px-12 py-6 space-y-6 pb-24">
+          <VisibilitySection 
+            batchIsHiddenApplied={batchIsHiddenApplied} 
+            setBatchIsHiddenApplied={setBatchIsHiddenApplied} 
+            is_hidden={formState.is_hidden} 
+            handleUpdateForm={handleUpdateForm} 
+          />
 
-function ProductInputSection({ label, placeholder, value, onChange, className = "" }: { label: string, placeholder: string, value: any, onChange: (v: string) => void, className?: string }) {
-  return (
-    <section className="space-y-4">
-      <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">{label}</h3>
-      <input
-        type="text"
-        placeholder={placeholder}
-        className={`w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 shadow-sm font-bold placeholder:text-slate-300 ${className}`}
-        value={value || ''}
-        onChange={(e) => onChange(e.target.value)}
-      />
-    </section>
+          <section className="space-y-4">
+            <FormSectionHeader title="产品目录" subtitle="CATEGORY" />
+            <CategoryGrid categories={categories} selectedId={formState.category_id || null} onSelect={(id) => handleUpdateForm({ category_id: id ? String(id) : null })} appLang={appLang} />
+          </section>
+
+          <section className="space-y-4">
+            <PhotoTagSelector
+              name="tags"
+              tags={tags}
+              value={formState.tags?.map(t => typeof t === 'object' ? t.id : t) || []}
+              onChange={(newTagIds) => handleUpdateForm({ tags: newTagIds as any })}
+              addTag={addTag}
+              updateTag={updateTag}
+              deleteTag={deleteTag}
+            />
+          </section>
+
+          <section className="space-y-4">
+            <FormSectionHeader title="厂商名称" subtitle="MANUFACTURER" onAction={quickAddMfr} />
+            <ManufacturerTagSelect manufacturers={manufacturers} selectedId={formState?.manufacturer_id || null} onSelect={(id) => handleUpdateForm({ manufacturer_id: id })} />
+          </section>
+        </div>
+      )}
+    </Tabs>
   );
 }
 

@@ -141,7 +141,7 @@ export function GroupDetailPage({}: GroupDetailPageProps) {
     <div className="flex flex-col h-[100dvh] bg-white overflow-hidden w-full relative">
        {/* Top Header */}
        <GroupHeader 
-          displayName={groupDisplayName || (activeGroupPhotos[0] ? getPhotoDisplayName(activeGroupPhotos[0], categories, lang, t) : '') || `GROUP ${activeGroupId.slice(-4)}`}
+          displayName={groupDisplayName || `GROUP ${activeGroupId.slice(-4)}`}
           activeGroupId={activeGroupId}
           isGroupDataLoading={isGroupDataLoading}
           onClose={handleClose}
