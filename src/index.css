@@ -14,24 +14,6 @@
   --color-brand-purple-bg: #F3E8FF;
   --font-sans: "Geist Variable", "Inter", "Noto Sans SC", ui-sans-serif, system-ui, sans-serif;
   
-  /* Semantic z-index */
-  --z-dropdown: 50;
-  --z-sticky: 100;
-  --z-header: 100;
-  --z-loading: 150;
-  --z-overlay: 200;
-  --z-toast: 500;
-  --z-tooltip: 600;
-  --z-lightbox: 1000;
-  
-  /* [DEPRECATED] To be removed after migration version
-  --z-index-max: 9999;
-  --z-index-modal: 5000;
-  --z-index-overlay: 4000;
-  --z-index-dropdown: 50;
-  --z-index-sticky: 100;
-  */
-
   /* yarl overrides */
   --yarl__color_backdrop: rgba(0, 0, 0, 0.95);
 
@@ -362,7 +344,6 @@ li[data-sonner-toast] {
     .anchor-content {
       top: 100%;
       left: 0;
-      z-index: var(--z-dropdown);
     }
   }
 }
