@@ -324,6 +324,12 @@ export function GroupAdminShell() {
           </SortableContext>
         </DndContext>
 
+        {!isGroupPhotosLoading && optimisticPhotos.length === 0 && (
+          <div className="flex flex-col items-center justify-center p-10 text-slate-400">
+            <p>No photos found in this group.</p>
+          </div>
+        )}
+
         {/* Unified Multi-Select Floating Bar */}
         <SelectionToolbar
           onDelete={handleBulkRemoveRequest}

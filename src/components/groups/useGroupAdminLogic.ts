@@ -57,6 +57,10 @@ export const useGroupAdminLogic = () => {
   const { data: dbGroupPhotosPages, isLoading: isGroupPhotosLoading, photos: dbGroupPhotos } =
     useGroupPhotos(activeGroupId, isAdminMode);
 
+  useEffect(() => {
+    logger.debug('[useGroupAdminLogic] dbGroupPhotos:', { activeGroupId, isAdminMode, count: dbGroupPhotos?.length });
+  }, [activeGroupId, isAdminMode, dbGroupPhotos]);
+
   const {
     groupData,
     setGroupData,
