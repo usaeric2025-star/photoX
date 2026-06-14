@@ -91,7 +91,7 @@ export const VirtualPhotoGrid = ({
     return cardWidth + 68; 
   })();
 
-  const internalRenderItem = (index: number) => {
+  const internalRenderItem = useCallback((index: number) => {
     const photo = photos[index];
     if (!photo) return null;
     return (
@@ -99,7 +99,7 @@ export const VirtualPhotoGrid = ({
         {renderCard(photo, index, categories)}
       </div>
     );
-  };
+  }, [photos, renderCard, categories]);
 
   if (isFetching && photos.length === 0) {
     return (

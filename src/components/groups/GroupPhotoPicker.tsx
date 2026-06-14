@@ -6,8 +6,7 @@ import { X, Check, Search, Plus, Upload, Sparkles } from "lucide-react";
 import { Modal } from '@/components/ui/Modal';
 import { Photo } from "../../types";
 import { usePhotos, useTaskExecutor, useTasks, useInvalidatePhotos } from "@/hooks";
-import { createStableParams } from '@/lib/query/stableParams';
-import { globalActionQueue } from '@/lib/queue/ActionQueue';
+import { useDebouncedCallback } from "@/hooks/core/useDebouncedCallback";
 import { PAGINATION } from "../../constants/config";
 import { GroupGridView } from "./GroupGridView";
 import { cn } from "@/lib/utils";
@@ -30,6 +29,7 @@ export function GroupPhotoPicker({
   onAdd,
 }: GroupPhotoPickerProps) {
   const [search, setSearch] = useState("");
+  const debouncedSetSearch = useDebouncedCallback((val: string) => setSearch(val), 300);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const { user } = useAuth();
   const invalidatePhotos = useInvalidatePhotos();
@@ -109,12 +109,12 @@ export function GroupPhotoPicker({
   const { tasks } = useTasks();
   const isRunning = tasks.some((t) => t.status === "running");
 
-  const photoFilters = createStableParams('group-picker-search', {
+  const photoFilters = useMemo(() => ({
     searchQuery: search,
     isAdminMode: true,
     onlyUngrouped: true,
     limit: PAGINATION.ADMIN_BATCH_SIZE
-  });
+  }), [search]);
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     usePhotos(photoFilters);
@@ -141,18 +141,15 @@ export function GroupPhotoPicker({
   const handleConfirm = async () => {
     if (selectedIds.length === 0) return;
 
-    // Use globalActionQueue for non-blocking batch execution
-    globalActionQueue.add(async () => {
-      await runTask(
-        "添加照片到群组",
-        async () => {
-          await onAdd(selectedIds);
-          onClose();
-          setSelectedIds([]);
-        },
-        { showSuccessToast: true, silent: true },
-      );
-    });
+    await runTask(
+      "添加照片到群组",
+      async () => {
+        await onAdd(selectedIds);
+        onClose();
+        setSelectedIds([]);
+      },
+      { showSuccessToast: true, silent: true },
+    );
   };
 
   return (
@@ -178,8 +175,8 @@ export function GroupPhotoPicker({
             />
             <input
               type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              defaultValue={search}
+              onChange={(e) => debouncedSetSearch(e.target.value)}
               placeholder="从现有库中搜索照片... / Search existing..."
               className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-sm"
             />

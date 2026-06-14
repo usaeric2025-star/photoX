@@ -1,5 +1,5 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Photo } from "../../types";
 import { filterPhotosByMode } from "@/services/photo/processing";
 import { useAdminMaintenance } from "@/hooks/admin/useAdminMaintenance";
@@ -65,33 +65,32 @@ export const useGroupAdminLogic = () => {
     removeDraftGroup
   } = useGroupDraft(activeGroupId, dbGroupPhotos, onUpdatePhoto);
 
-  const activeGroupPhotos = useMemo(() => {
-    if (!activeGroupId) return [];
-    
+  let activeGroupPhotos: Photo[] = [];
+  if (activeGroupId) {
     let groupPhotos = dbGroupPhotos;
     
     if (processingIds && processingIds.length > 0) {
         groupPhotos = groupPhotos.filter((p: any) => !processingIds.includes(p.id));
     }
 
-    return filterPhotosByMode(groupPhotos, isAdminMode)
+    activeGroupPhotos = filterPhotosByMode(groupPhotos, isAdminMode)
       .map(p => ({
         ...p,
         is_group_cover: groupData?.cover_photo_id === p.id || !!p.is_group_cover
       }))
       .sort((a, b) => {
-        const isACover = a.is_group_cover;
-        const isBCover = b.is_group_cover;
-        if (isACover && !isBCover) return -1;
-        if (!isACover && isBCover) return 1;
-        if (a.group_order !== undefined && b.group_order !== undefined) {
-          return a.group_order - b.group_order;
-        }
-        if (a.group_order !== undefined) return -1;
-        if (b.group_order !== undefined) return 1;
-        return (a.item_code || "").localeCompare(b.item_code || "");
-      });
-  }, [activeGroupId, dbGroupPhotos, processingIds, isAdminMode, groupData?.cover_photo_id]);
+      const isACover = a.is_group_cover;
+      const isBCover = b.is_group_cover;
+      if (isACover && !isBCover) return -1;
+      if (!isACover && isBCover) return 1;
+      if (a.group_order !== undefined && b.group_order !== undefined) {
+        return a.group_order - b.group_order;
+      }
+      if (a.group_order !== undefined) return -1;
+      if (b.group_order !== undefined) return 1;
+      return (a.item_code || "").localeCompare(b.item_code || "");
+    });
+  }
 
   const {
     setCover,

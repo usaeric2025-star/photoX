@@ -66,11 +66,11 @@ export const PhotoLightboxPage = () => {
   const { mutateAsync: setCoverMut } = useGroupCoverMutation();
   const currentPhoto = currentIndex >= 0 ? photos[currentIndex] : null;
 
-  const handleSetCover = async (photo: any) => {
-    if (!groupId) return;
+  const handleSetCover = async () => {
+    if (!groupId || !currentPhoto) return;
     try {
-      await setCoverMut({ groupId, photoId: photo.id });
-      const displayName = getSafeText(photo.name, appLang);
+      await setCoverMut({ groupId, photoId: currentPhoto.id });
+      const displayName = getSafeText(currentPhoto.name, appLang);
       showToast.success(displayName ? `已将 "${displayName}" 设为封面` : '封面设置成功');
     } catch (e) {
       showToast.error('设置封面失败');
@@ -186,17 +186,16 @@ export const PhotoLightboxPage = () => {
     );
   };
 
-  const items = React.useMemo(() => photos.map(p => ({
-    src: p.thumbnail_md_url || p.image_url || '',
-    thumbnail: p.thumbnail_sm_url || p.image_url || '',
-    alt: (p.name as any)?.zh || String(p.name || ''),
-  })), [photos, appLang]);
-
   return (
     <>
       <ReelkitAdapter
         open={isOpen}
-        items={items}
+        items={photos.map(p => ({
+          id: p.id,
+          src: p.thumbnail_md_url || p.image_url || '',
+          thumbnail: p.thumbnail_sm_url || p.image_url || '',
+          alt: (p.name as any)?.zh || String(p.name || ''),
+        }))}
         initialIndex={currentIndex}
         onClose={closeWithCleanup}
         onIndexChange={(idx: number) => {
@@ -241,20 +240,21 @@ const LightboxLoadingFallback = () => {
   const ref = React.useRef<HTMLDialogElement>(null);
 
   React.useEffect(() => {
-    if (ref.current && !ref.current.open) {
+    const dialogNode = ref.current;
+    if (dialogNode && !dialogNode.open) {
       try {
-        ref.current.showModal();
+        dialogNode.showModal();
       } catch (e) {
         console.warn('[LightboxLoadingFallback] Failed to execute showModal, falling back to open attribute:', e);
-        ref.current.setAttribute('open', '');
+        dialogNode.setAttribute('open', '');
       }
     }
     return () => {
-      if (ref.current && ref.current.open) {
+      if (dialogNode && dialogNode.open) {
         try {
-          ref.current.close();
+          dialogNode.close();
         } catch (e) {
-          ref.current.removeAttribute('open');
+          dialogNode.removeAttribute('open');
         }
       }
     };

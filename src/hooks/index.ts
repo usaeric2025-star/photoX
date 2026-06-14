@@ -25,6 +25,8 @@ export * from './groups';
 // Utils
 export { useFilters } from './useFilters';
 export { useUIStore, useStore, useShallow, useColumns } from '../store/useUIStore';
+export { useSearchTransition } from './ui/useSearchTransition';
+export { useOptimisticReorder } from './ui/useOptimisticReorder';
 
 
 

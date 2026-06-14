@@ -23,10 +23,10 @@ export const useLightbox = () => {
   
   const isAdmin = location.pathname.startsWith('/admin');
   
-  // Use enabled condition to avoid unnecessary requests in global route context
-  const { data: singlePhoto, isLoading: isSingleLoading } = usePhoto(photoId || '', { enabled: !!photoId });
-  const { data: groupDetail, isLoading: isGroupLoading } = useGroupDetail({ groupId: groupId || '', isAdmin }, { enabled: !!photoId && !!groupId });
-  const { data: groupPhotos, isLoading: isPhotosLoading } = useGroupPhotos(groupId, isAdmin, 60, { enabled: !!photoId && !!groupId });
+  // Use enabled condition to avoid unnecessary requests
+  const { data: singlePhoto, isLoading: isSingleLoading } = usePhoto(photoId || '');
+  const { data: groupDetail, isLoading: isGroupLoading } = useGroupDetail({ groupId: groupId || '', isAdmin });
+  const { data: groupPhotos, isLoading: isPhotosLoading } = useGroupPhotos(groupId, isAdmin, 60);
 
   const photoFilters = useMemo(() => ({
     category_id: dataFilters.categoryId,
@@ -40,11 +40,11 @@ export const useLightbox = () => {
     limit: PHOTO_QUERY_CONFIG.limit
   }), [dataFilters.categoryId, dataFilters.tagId, dataFilters.manufacturerId, dataFilters.searchQuery, dataFilters.sortOrder, isAdmin, dataFilters.is_hidden]);
 
-  const { data: allGalleryPhotos, isLoading: isGalleryLoading } = usePhotos(photoFilters, { enabled: !!photoId && !groupId });
+  const { data: allGalleryPhotos, isLoading: isGalleryLoading } = usePhotos(photoFilters, { enabled: !groupId });
   
   const isGroupMode = !!groupId; // Within a group's context
   
-  const photos = (() => {
+  const photos = useMemo(() => {
     let list: Photo[] = [];
     const sourceData = isGroupMode ? groupPhotos : allGalleryPhotos;
     const allPhotosList = (sourceData?.pages as any[])?.flatMap(page => page.photos) ?? [];
@@ -66,7 +66,7 @@ export const useLightbox = () => {
       seen.add(p.id);
       return true;
     });
-  })();
+  }, [isGroupMode, groupPhotos, allGalleryPhotos, singlePhoto]);
 
   const { data: countResult } = useQuery({
     queryKey: ['photos', 'totalCount', dataFilters, groupId, isAdmin],

@@ -21,6 +21,8 @@ export const useAdminPhotos = () => {
     const { data: categories = EMPTY_ARRAY as any[] } = useCategories();
     const { data: tags = EMPTY_ARRAY as any[] } = useTags();
 
+    const tagsString = Array.isArray(filters.tags) ? filters.tags.join(',') : '';
+
     const photoFilters = React.useMemo(() => ({
       category_id: filters.category || undefined,
       tag_id: filters.tags && filters.tags.length > 0 ? filters.tags[0] : undefined,
@@ -28,7 +30,7 @@ export const useAdminPhotos = () => {
       sortOrder: filters.sort || 'newest',
       isAdminMode: isAdminMode,
       status: filters.status || 'all'
-    }), [filters.category, filters.tags, filters.search, filters.sort, isAdminMode, filters.status]);
+    }), [filters.category, tagsString, filters.search, filters.sort, isAdminMode, filters.status]);
 
     const infinitePhotosQuery = usePhotos(photoFilters as any);
 
@@ -75,7 +77,7 @@ export const useAdminPhotos = () => {
             tagMap,
             catMap
         }
-    )), [photos, categories, tags, filters, isAdminMode, tagMap, catMap]);
+    )), [photos, categories, tags, filters.search, filters.category, tagsString, filters.sort, filters.showGroupsCollapsed, isAdminMode, tagMap, catMap]);
 
     const displayPhotos = result?.displayPhotos || [];
     const gridPhotos = result?.gridPhotos || [];

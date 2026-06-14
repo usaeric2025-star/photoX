@@ -16,20 +16,31 @@ export const LoadingOverlay = ({ isLoading, message, className }: LoadingOverlay
   const ref = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
-    if (isLoading && ref.current && !ref.current.open) {
+    const dialogNode = ref.current;
+    if (isLoading && dialogNode && !dialogNode.open) {
       try {
-        ref.current.showModal();
+        dialogNode.showModal();
       } catch (e) {
         console.warn('[LoadingOverlay] Failed to execute showModal, falling back to open attribute:', e);
-        ref.current.setAttribute('open', '');
+        dialogNode.setAttribute('open', '');
       }
-    } else if (!isLoading && ref.current && ref.current.open) {
+    } else if (!isLoading && dialogNode && dialogNode.open) {
       try {
-        ref.current.close();
+        dialogNode.close();
       } catch (e) {
-        ref.current.removeAttribute('open');
+        dialogNode.removeAttribute('open');
       }
     }
+    
+    return () => {
+      if (dialogNode && dialogNode.open) {
+        try {
+          dialogNode.close();
+        } catch (e) {
+          dialogNode.removeAttribute('open');
+        }
+      }
+    };
   }, [isLoading]);
 
   return (

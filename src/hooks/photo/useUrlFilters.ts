@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
 import { useFilters } from '../useFilters';
+import { useMemo } from 'react';
 
 /**
  * @deprecated Use useFilters directly.
@@ -7,6 +7,8 @@ import { useFilters } from '../useFilters';
  */
 export function useUrlFilters() {
   const f = useFilters();
+
+  const tagsString = Array.isArray(f.tags) ? f.tags.join(',') : '';
 
   const dataFilters = useMemo(() => ({
     categoryId: f.category || null,
@@ -17,7 +19,7 @@ export function useUrlFilters() {
     showGroupsCollapsed: f.showGroupsCollapsed !== false,
     is_hidden: f.status === 'hidden',
     onlyUngrouped: false,
-  }), [f.category, f.tags?.[0], f.search, f.sort, f.showGroupsCollapsed, f.status]);
+  }), [f.category, tagsString, f.search, f.sort, f.showGroupsCollapsed, f.status]);
 
   const uiState = useMemo(() => ({
     photoId: f.photoId || null,

@@ -30,7 +30,7 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
     updateSearch({ cat: val || undefined, category: undefined });
   }, [updateSearch]);
 
-  const tags = search.tag || [];
+  const tags = Array.isArray(search.tag) ? search.tag : (search.tag ? [search.tag] : []);
   const setTags = useCallback((vals: string[]) => {
     updateSearch({ tag: vals.length === 0 ? undefined : vals });
   }, [updateSearch]);

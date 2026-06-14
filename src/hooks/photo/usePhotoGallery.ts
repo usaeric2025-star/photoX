@@ -11,6 +11,8 @@ export function usePhotoGallery() {
   const isAdminMode = useAdminMode() && isManagement;
   const filters = useFilters({ enableStatus: true });
 
+  const tagsString = Array.isArray(filters.tags) ? filters.tags.join(',') : '';
+
   const photosFilters = React.useMemo(() => ({
     category_id: filters.category || undefined,
     tag_id: filters.tags && filters.tags.length > 0 ? filters.tags[0] : undefined,
@@ -18,7 +20,7 @@ export function usePhotoGallery() {
     sortOrder: filters.sort || 'newest',
     isAdminMode: isAdminMode,
     is_hidden: isAdminMode ? undefined : false
-  }), [filters.category, filters.tags, filters.search, filters.sort, isAdminMode]);
+  }), [filters.category, tagsString, filters.search, filters.sort, isAdminMode]);
 
   const infinitePhotosQuery = usePhotos(photosFilters);
 

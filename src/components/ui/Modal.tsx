@@ -57,6 +57,16 @@ export function Modal({
         }
       }
     }
+    
+    return () => {
+      if (el && el.open) {
+        try {
+          el.close();
+        } catch (e) {
+          el.removeAttribute('open');
+        }
+      }
+    };
   }, [open]);
 
   // Handle ESC close natively

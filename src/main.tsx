@@ -7,7 +7,11 @@ if (typeof window !== 'undefined' && (typeof (window as any).process === 'undefi
 if (typeof window !== 'undefined') {
   const originalConsoleError = console.error;
   console.error = function (...args: any[]) {
-    if (typeof args[0] === 'string' && args[0].includes("Received an empty string for a boolean attribute") && args[0].includes("inert")) {
+    if (
+      typeof args[0] === 'string' && 
+      args[0].includes("Received an empty string for a boolean attribute") && 
+      args.some(arg => typeof arg === 'string' && arg.includes("inert"))
+    ) {
       return;
     }
     originalConsoleError.apply(console, args);
@@ -25,15 +29,19 @@ import { logError } from './lib/error/errorReporter';
 import { queryClient, persister } from './lib/queryClient';
 import './index.css';
 import { clientEnv } from './shared/envSchema';
+import { migrateStorage } from './services/system/storageService';
 import { router } from './router/index';
 import { initChunkHandler } from '@/lib/chunkErrorHandler';
 import { dailyWorker } from './services/maintenance/DailyWorker';
 
-function bootstrap() {
+async function init() {
+  await migrateStorage();
+
   initChunkHandler(router);
 
   if (typeof window !== 'undefined') {
     window.addEventListener('unhandledrejection', (event) => {
+      event.preventDefault();
       const reason = event.reason;
       const message = reason?.message || String(reason || '');
       const isCancellation = 
@@ -53,8 +61,11 @@ function bootstrap() {
     });
   }
 
-  // Heavy initialization that doesn't strictly need to block the first paint
-  // of the LoadingScreen can run in parallel or inside App hooks.
+  if (clientEnv.DEV) {
+    await import('@/lib/resizeObserverPolyfill');
+  }
+
+  // 啟動每日維護 (P0: Robustness)
   dailyWorker.checkAndRun();
 
   const container = document.getElementById("root");
@@ -85,8 +96,9 @@ function bootstrap() {
         </PersistQueryClientProvider>
       </StrictMode>
     );
+
+    // 移除启动骨架屏逻辑，改由 LoadingScreen 控制
   }
 }
 
-bootstrap();
-
+init();

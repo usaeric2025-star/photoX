@@ -4,28 +4,48 @@ import { supabase } from '@/lib/supabase';
 import { User } from '@/types';
 import { useLocalStorage } from '@/hooks/core/useLocalStorage';
 
-// Optimized getUser: resolve immediately if session is locally available
+// 带超时的 getUser（15秒）
 async function getUserWithTimeout(): Promise<User | null> {
   const { data: { session } } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
-  
   if (!session?.user) {
     return null;
   }
 
-  const u = session.user;
-  const mappedUser: User = {
+  const timeoutPromise = new Promise<null>((resolve) => {
+    setTimeout(() => {
+      console.warn('[useAuth] getUser timeout after 3s, returning fallback session user');
+      resolve(null);
+    }, 3000);
+  });
+
+  const getUserPromise = supabase.auth.getUser().catch(() => ({ data: { user: null }, error: null }));
+
+  const result = await Promise.race([getUserPromise, timeoutPromise]);
+
+  if (result === null) {
+    const u = session.user;
+    return {
+      id: u.id,
+      email: u.email || null,
+      display_name: u.user_metadata?.full_name || u.user_metadata?.name || u.email || null,
+      photo_url: u.user_metadata?.avatar_url || null,
+      avatar_url: u.user_metadata?.avatar_url || null,
+      email_verified: !!u.email_confirmed_at,
+    } as User;
+  }
+
+  const { data, error } = result as any;
+  if (error || !data?.user) return null;
+
+  const u = data.user;
+  return {
     id: u.id,
     email: u.email || null,
     display_name: u.user_metadata?.full_name || u.user_metadata?.name || u.email || null,
     photo_url: u.user_metadata?.avatar_url || null,
     avatar_url: u.user_metadata?.avatar_url || null,
     email_verified: !!u.email_confirmed_at,
-  };
-
-  // Skip the heavyweight getUser() network call on initial boot if session exists.
-  // We already have a valid local user object from the JWT in session.
-  // The onAuthStateChange listener will handle any subsequent updates.
-  return mappedUser;
+  } as User;
 }
 
 let globalListenerInitialized = false;

@@ -31,8 +31,11 @@ export const GroupLightbox = ({ groupId, initialPhotoId, onClose, onEdit }: Grou
   if (isLoading || !photos?.length) return null;
 
   const items = useMemo(() => photos.map((p: Photo) => ({
+    id: p.id,
     src: p.image_url || '',
+    thumbnail: p.thumbnail_sm_url || p.image_url,
     alt: (p.name as any)?.zh || String(p.name || ''),
+    title: (p.name as any)?.zh || String(p.name || ''),
   })), [photos]);
 
   return (
@@ -45,7 +48,7 @@ export const GroupLightbox = ({ groupId, initialPhotoId, onClose, onEdit }: Grou
         onClose();
       }}
       onIndexChange={setCurrentIndex}
-      onEdit={(idx) => onEdit?.(photos[idx].id)}
+      onEdit={onEdit}
     />
   );
 };

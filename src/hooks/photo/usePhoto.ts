@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient, UseQueryOptions } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getPhotoById as loadPhotoById } from '@/services/photo/queries/detail';
 import { queryKeys } from '@/lib/query/keys';
 import { Photo } from '@/types';
@@ -6,7 +6,7 @@ import { Photo } from '@/types';
 /**
  * Hook to get detailed photo information.
  */
-export const usePhoto = (photoId: string, options?: Partial<UseQueryOptions<Photo | null>>) => {
+export const usePhoto = (photoId: string) => {
   const queryClient = useQueryClient();
 
   return useQuery({
@@ -55,7 +55,6 @@ export const usePhoto = (photoId: string, options?: Partial<UseQueryOptions<Phot
     staleTime: 0, // Always ensure we fetch the latest when opening
     refetchOnMount: true,
     refetchOnWindowFocus: true,
-    ...options
   });
 };
 

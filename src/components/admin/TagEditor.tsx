@@ -108,7 +108,6 @@ export function TagEditor({
           <SearchInput
             placeholder="搜索标签..."
             onSearch={setSearchTerm}
-            delay={0}
             className="flex-1 text-xs"
           />
           <button

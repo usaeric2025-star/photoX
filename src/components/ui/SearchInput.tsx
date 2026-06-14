@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Search, X } from 'lucide-react';
-import { useDebouncedCallback } from '@/hooks/core/useDebouncedCallback';
+import { useSearchTransition } from '@/hooks';
 import { Input } from '@/components/shared/Input';
 import { cn } from '@/lib/utils';
+import { Spinner } from './Spinner';
 
 interface SearchInputProps {
   onSearch: (value: string) => void;
   value?: string;
   placeholder?: string;
   clearLabel?: string;
-  delay?: number;
   className?: string;
   autoFocus?: boolean;
 }
@@ -19,31 +19,26 @@ export const SearchInput = ({
   value: controlledValue = '',
   placeholder = 'Search...',
   clearLabel = 'Clear',
-  delay = 300,
   className,
   autoFocus = false,
 }: SearchInputProps) => {
   const [value, setValue] = useState(controlledValue);
+  const { isPending, updateSearch } = useSearchTransition(onSearch);
 
   // Sync if controlledValue changes from outside (e.g. clear filters)
   useEffect(() => {
     setValue(controlledValue);
   }, [controlledValue]);
 
-  const debouncedSearch = useDebouncedCallback((val: string) => {
-    onSearch(val);
-  }, delay);
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setValue(val);
-    debouncedSearch(val);
+    updateSearch(val);
   };
 
   const handleClear = () => {
     setValue('');
-    debouncedSearch.cancel(); // Cancel any pending debounced search
-    onSearch('');
+    updateSearch('');
   };
 
   return (
@@ -57,7 +52,10 @@ export const SearchInput = ({
         autoFocus={autoFocus}
         className="pl-9 pr-8"
       />
-      {value && (
+      {isPending && (
+         <Spinner size="sm" className="absolute right-3 top-1/2 -translate-y-1/2" />
+      )}
+      {!isPending && value && (
         <button
           onClick={handleClear}
           className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"

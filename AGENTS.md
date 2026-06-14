@@ -1448,3 +1448,12 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 - ✅ Base UI 為零樣式 Headless，所有視覺通過 className + Tailwind 控制
 - ✅ 使用 data-[highlighted] / data-[disabled] 等屬性選擇器驅動狀態樣式
 - ❌ 禁止覆蓋 Base UI 內部 DOM 結構的默認行為
+
+## 燈箱受控模式規範（鎖定）
+
+- ✅ 使用 `apiRef` 獲取 `ReelApi` 實例
+- ✅ 點擊縮圖時調用 `apiRef.current.goTo(idx)`
+- ✅ 同時更新父層 `currentIndex` 狀態
+- ✅ 縮圖軌道使用 CSS Scroll Snap 實現自動滾動
+- ❌ 禁止不使用 `apiRef` 而依賴 `currentIndex` prop
+- ❌ 禁止在組件中直接操作 DOM 滾動

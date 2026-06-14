@@ -31,15 +31,7 @@ export const queryClient = new QueryClient({
     queries: {
       staleTime: 30 * 1000,
       gcTime: 7 * 24 * 60 * 60 * 1000,
-      retry: (failureCount, error: any) => {
-        // Special case for 429: Always retry with exponential backoff
-        const status = error?.status || error?.response?.status;
-        if (status === 429) {
-          return failureCount < 5; // Allow up to 5 retries for 429s
-        }
-        return failureCount < 1; // Default to 1 retry for other errors
-      },
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000), // Exponential backoff
+      retry: 1,
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
       refetchOnMount: true,

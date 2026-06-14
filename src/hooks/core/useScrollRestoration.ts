@@ -7,6 +7,11 @@ export function useScrollRestoration(
 ) {
   const isScrollRestoredRef = useRef(false);
   const scrollTimeoutRef = useRef<number | null>(null);
+  const onRestoreRef = useRef(onRestore);
+
+  useEffect(() => {
+    onRestoreRef.current = onRestore;
+  }, [onRestore]);
 
   // Reset when key changes
   useEffect(() => {
@@ -23,16 +28,16 @@ export function useScrollRestoration(
           if (!isNaN(offset) && offset > 0) {
             isScrollRestoredRef.current = true;
             // timeout allows virtualizer to measure container
-            setTimeout(() => onRestore(offset), 10);
+            setTimeout(() => onRestoreRef.current(offset), 10);
             return;
           }
         } catch (e) {}
       }
       // If no saved offset, default to top (0)
       isScrollRestoredRef.current = true;
-      onRestore(0);
+      onRestoreRef.current(0);
     }
-  }, [restoreKey, dataLength, onRestore]);
+  }, [restoreKey, dataLength]);
 
   const recordScroll = (offset: number) => {
     if (!restoreKey) return;
