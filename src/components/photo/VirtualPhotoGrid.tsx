@@ -23,10 +23,11 @@ interface VirtualPhotoGridProps {
   ref?: React.Ref<VirtualGridHandle>;
   restoreKey?: string;
   categories?: Category[];
+  filters?: any;
 }
 
 export const VirtualPhotoGrid = ({
-  photos,
+  photos = [],
   isFetching,
   isFetchingNextPage,
   hasNextPage,
@@ -35,9 +36,9 @@ export const VirtualPhotoGrid = ({
   columns,
   ref,
   restoreKey,
-  categories = []
+  categories = [],
+  filters
 }: VirtualPhotoGridProps) => {
-  const { filters } = useUrlFilters();
   const skeletonCount = useSkeletonCount(columns);
   const appLang = useUIStore((s) => s.appLang);
   const t = (translations[appLang as keyof typeof translations] || translations.en) as TranslationType;
@@ -110,11 +111,12 @@ export const VirtualPhotoGrid = ({
 
   if (photos.length === 0) {
     const tAny = t as any;
+    const hasSearch = !!filters?.search;
     return (
       <div className="h-full w-full flex items-center justify-center p-8 bg-brand-bg">
         <EmptyState 
-          title={filters?.searchQuery ? tAny.noResultsFound || 'No results found' : tAny.noPhotos || 'No photos'} 
-          description={filters?.searchQuery ? tAny.tryDifferentKeywords || 'Try searching with different keywords.' : undefined}
+          title={hasSearch ? tAny.noResultsFound || 'No results found' : tAny.noPhotos || 'No photos'} 
+          description={hasSearch ? tAny.tryDifferentKeywords || 'Try searching with different keywords.' : undefined}
           icon={<PackageOpen className="w-16 h-16 text-slate-300" />}
         />
       </div>

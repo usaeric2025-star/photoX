@@ -18,6 +18,5 @@ export const getPhotoById = async (photoId: string): Promise<Photo | null> => {
 
     if (error) throw error;
     
-    const allTags = await loadTagsFromCloud().catch(() => []);
-    return data ? mapSupabasePhoto(data, allTags) : null;
+    return data ? mapSupabasePhoto(data) : null;
 };

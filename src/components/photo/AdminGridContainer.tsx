@@ -3,10 +3,9 @@ import React, { useRef, useEffect } from 'react';
 import { Photo } from '@/types';
 import { VirtualPhotoGrid } from '@/components/photo/VirtualPhotoGrid';
 import { PhotoCard } from '@/components/photo/PhotoCard';
-import { AdminFilters } from '@/components/ui/AdminFilters';
 import { 
   useScrollRestoration, 
-  useUrlFilters, 
+  useFilters, 
   useColumns,
   useCategories,
   useTags,
@@ -25,9 +24,9 @@ export function AdminGridContainer() {
   const isManagement = window.location.pathname.startsWith('/admin');
   
   const navigate = useRouterSafe().navigate;
-  const { dataFilters, setShowGroupsCollapsed, setSearchQuery, setSortOrder } = useUrlFilters();
-  const showGroupsCollapsed = dataFilters.showGroupsCollapsed !== false;
-  const hasSearchQuery = !!dataFilters.searchQuery?.trim();
+  const filters = useFilters({ enableStatus: true, enableBatch: true });
+  const { search, setSearch, sort, setSort, showGroupsCollapsed, setShowGroupsCollapsed } = filters;
+  const hasSearchQuery = !!search?.trim();
   
   const update = useUIStore(s => s.update);
   const [columns, setColumns] = useColumns();
@@ -51,7 +50,7 @@ export function AdminGridContainer() {
   const { data: categories = [] } = useCategories();
   const { data: tags = [] } = useTags();
 
-  const filterKeyHash = `${dataFilters.categoryId || 'all'}-${dataFilters.tagId || 'all'}-${encodeURIComponent(dataFilters.searchQuery || '')}-${dataFilters.sortOrder || 'newest'}`;
+  const filterKeyHash = `${filters.category || 'all'}-${filters.tags?.[0] || 'all'}-${encodeURIComponent(search || '')}-${sort || 'newest'}`;
 
   // 1. Data Layer
   const { 
@@ -94,22 +93,6 @@ export function AdminGridContainer() {
 
   return (
     <div className="flex flex-col h-full bg-brand-bg w-full overflow-hidden text-text animate-fade-in">
-      <AdminFilters 
-        onSearch={setSearchQuery}
-        searchQuery={dataFilters.searchQuery || ''}
-          onSortChange={() => setSortOrder(dataFilters.sortOrder === 'newest' ? 'oldest' : 'newest')}
-          currentSort={dataFilters.sortOrder as 'newest' | 'oldest' | 'name'}
-          onColumnsChange={(cols) => {
-              setColumns(cols as 2 | 3 | 5);
-              navigate({ 
-                to: '.', search: (prev: any) => ({ ...prev, view: cols === 2 ? 'list' : 'grid' } as any) 
-              });
-          }}
-          currentColumns={columns}
-          onToggleGroups={() => setShowGroupsCollapsed(!dataFilters.showGroupsCollapsed)}
-          showGroupsCollapsed={dataFilters.showGroupsCollapsed}
-        />
-        
         <div className="flex-1 overflow-hidden bg-brand-bg relative">
             <VirtualPhotoGrid 
               key={`admin-photo-grid-${filterKeyHash}`}

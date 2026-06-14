@@ -29,7 +29,8 @@ export function GroupDetailPage({}: GroupDetailPageProps) {
   const navigate = useRouterSafe().navigate;
   const { filters, setPhotoId } = useUrlFilters();
   const { copy } = useCopyToClipboard({ successMessage: "合组ID已复制" });
-  const activeGroupId = filters.groupId;
+  const routerSafe = useRouterSafe();
+  const activeGroupId = (routerSafe.params as any)?.groupId || filters.groupId;
   const initialPhotoId = filters.photoId;
   
   const isManagement = window.location.pathname.startsWith('/admin');
@@ -56,8 +57,20 @@ export function GroupDetailPage({}: GroupDetailPageProps) {
     isPlaceholderData: isGroupPhotosPlaceholder
   } = useGroupPhotos(activeGroupId, isAdminMode);
 
+  const mountTimeRef = useRef(performance.now());
   const isStale = isGroupDataPlaceholder || isGroupPhotosPlaceholder;
   const isLoading = isGroupPhotosLoading || isGroupDataLoading;
+
+  // Track page performance
+  useEffect(() => {
+    if (!isLoading && activeGroupPhotos.length > 0) {
+      const duration = performance.now() - mountTimeRef.current;
+      logger.info(`[GroupDetailPage] Content rendered in ${duration.toFixed(0)}ms`, {
+        groupId: activeGroupId,
+        photoCount: activeGroupPhotos.length
+      });
+    }
+  }, [isLoading, activeGroupPhotos.length, activeGroupId]);
 
   useEffect(() => {
     if (activeGroupId && initialPhotoId) {
@@ -69,7 +82,7 @@ export function GroupDetailPage({}: GroupDetailPageProps) {
     }
   }, [activeGroupId, initialPhotoId]);
 
-  const totalGroupPhotosCount = (() => {
+  const totalGroupPhotosCount = groupData?.member_count || (() => {
     if (!infinitePhotosData?.pages || infinitePhotosData.pages.length === 0) return undefined;
     return (infinitePhotosData.pages[0] as { total: number }).total;
   })();

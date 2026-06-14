@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { DiagnosticsReport } from '@/types/diagnostics';
+import { queryKeys } from '@/lib/query/keys';
 import { photoKeys, groupKeys } from '@/lib/queryKeys';
 import { useTaskExecutor } from '../core/useTaskExecutor';
 import { useUIStore } from '@/store/useUIStore';
@@ -16,7 +17,7 @@ export function useDiagnostics() {
   const appLang = useUIStore(s => s.appLang);
 
   const { data: auditResult, isLoading: isAuditing, refetch: runAuditQuery } = useQuery({
-    queryKey: ['diagnostics', 'audit'],
+    queryKey: queryKeys.diagnostics.audit(),
     queryFn: async () => {
       const res = await api.storage.audit.$get();
       const data = await res.json() as any;
@@ -55,12 +56,12 @@ export function useDiagnostics() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: photoKeys.all });
       queryClient.invalidateQueries({ queryKey: groupKeys.all });
-      queryClient.invalidateQueries({ queryKey: ['diagnostics'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.diagnostics.all });
     }
   });
 
   const { data: report, isLoading: isScanning, refetch: scan } = useQuery({
-    queryKey: ['diagnostics', 'report'],
+    queryKey: queryKeys.diagnostics.report(),
     queryFn: async () => {
       const res = await api.admin.diagnose.$get();
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -79,7 +80,7 @@ export function useDiagnostics() {
   };
 
   const { data: r2Result, isLoading: isDiagnosingR2, refetch: runR2DiagnosticsQuery } = useQuery({
-    queryKey: ['diagnostics', 'r2'],
+    queryKey: queryKeys.diagnostics.r2(),
     queryFn: async () => {
       const res = await api.admin.diagnose.r2.$get();
       if (!res.ok) throw new Error('R2 存储测试未通过');

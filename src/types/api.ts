@@ -14,6 +14,22 @@ export type PhotoBatchUpdateReq = typeof PhotoBatchUpdateReqSchema.infer;
 export type PhotoUpdateReq = typeof PhotoUpdateReqSchema.infer;
 export type SearchReq = typeof SearchReqSchema.infer;
 
+export interface FilterOptions {
+  q?: string;
+  category?: string;
+  tags?: string[];
+  sort?: string;
+  status?: 'active' | 'hidden' | 'deleted' | 'all';
+  batch?: string;
+}
+
+export interface GroupFilterOptions {
+  q?: string;
+  sort?: string;
+  userId?: string;
+  isAdmin?: boolean;
+}
+
 export interface StandardError {
   code: string;
   message: string;

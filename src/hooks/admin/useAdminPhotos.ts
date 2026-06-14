@@ -1,26 +1,38 @@
-import { useUrlFilters, useCategories, useTags, useAdminMode } from '@/hooks';
+import React from 'react';
+import { useCategories } from '../photo/useCategories';
+import { useTags } from '../photo/useTags';
+import { usePhotos } from '../photo/usePhotos';
+import { useAdminMode } from '../core/auth/useAdminMode';
 import { useUIStore } from '@/store/useUIStore';
-import { usePhotoGallery } from '@/hooks/photo/usePhotoGallery';
+import { useFilters } from '@/hooks/useFilters';
 import { Photo } from '@/types';
 import { EMPTY_ARRAY } from '@/constants/config';
 import { processPhotos } from '@/services/photo/processing';
 
 /**
  * Encapsulated hook for admin photo data processing.
- * Handles fetching, normalization, processing IDs (hidden while processing), and filters.
- * React Compiler handles auto-memoization of this hook/component.
  */
 export const useAdminPhotos = () => {
     const isManagement = window.location.pathname.startsWith('/admin');
     const isAdminMode = useAdminMode() && isManagement;
-    const { dataFilters } = useUrlFilters();
+    const filters = useFilters({ enableStatus: true });
     const processingIds = useUIStore(s => s.processingIds);
     
     const { data: categories = EMPTY_ARRAY as any[] } = useCategories();
     const { data: tags = EMPTY_ARRAY as any[] } = useTags();
-    const { photos: rawPhotos, infinitePhotosQuery } = usePhotoGallery();
 
-    const tagMap = (() => {
+    const infinitePhotosQuery = usePhotos({
+      category_id: filters.category || undefined,
+      tag_id: filters.tags && filters.tags.length > 0 ? filters.tags[0] : undefined,
+      searchQuery: filters.search || undefined,
+      sortOrder: filters.sort || 'newest',
+      isAdminMode: isAdminMode,
+      status: filters.status || 'all'
+    } as any);
+
+    const rawPhotos = (infinitePhotosQuery.data as any)?.photos || [];
+
+    const tagMap = React.useMemo(() => {
         const map = new Map<string, string[]>();
         tags.forEach((t: any) => {
             const terms = [t.name.toLowerCase()];
@@ -30,9 +42,9 @@ export const useAdminPhotos = () => {
             map.set(String(t.id), terms);
         });
         return map;
-    })();
+    }, [tags]);
 
-    const catMap = (() => {
+    const catMap = React.useMemo(() => {
         const map = new Map<string, string[]>();
         categories.forEach((c: any) => {
             const terms = [(c.name || '').toLowerCase()];
@@ -42,25 +54,25 @@ export const useAdminPhotos = () => {
             map.set(String(c.id), terms);
         });
         return map;
-    })();
+    }, [categories]);
 
     const photos = (!processingIds || processingIds.length === 0) 
         ? rawPhotos 
         : rawPhotos.filter((p: any) => !processingIds.includes(p.id));
 
-    const result = (processPhotos(
+    const result = React.useMemo(() => (processPhotos(
         photos as any,
         categories,
         tags,
-        dataFilters as any,
-        dataFilters,
+        filters as any,
+        filters as any,
         {
-            showGroupsCollapsed: dataFilters.showGroupsCollapsed,
+            showGroupsCollapsed: filters.showGroupsCollapsed,
             isAdminModeOverride: isAdminMode,
             tagMap,
             catMap
         }
-    ));
+    )), [photos, categories, tags, filters, isAdminMode, tagMap, catMap]);
 
     const displayPhotos = result?.displayPhotos || [];
     const gridPhotos = result?.gridPhotos || [];
@@ -69,12 +81,12 @@ export const useAdminPhotos = () => {
         photos,
         displayPhotos,
         gridPhotos,
-        isLoading: infinitePhotosQuery.isLoading,
+        isLoading: infinitePhotosQuery.isLoading || (infinitePhotosQuery.isFetching && !rawPhotos.length),
         isFetchingNextPage: infinitePhotosQuery.isFetchingNextPage,
         hasNextPage: !!infinitePhotosQuery.hasNextPage,
         fetchNextPage: infinitePhotosQuery.fetchNextPage,
         infiniteQuery: infinitePhotosQuery,
-        dataFilters,
+        filters,
         isAdminMode
     };
 };

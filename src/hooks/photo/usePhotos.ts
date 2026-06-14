@@ -1,11 +1,13 @@
 import { createInfiniteQuery } from '@/lib/query/queryFactory';
 import { getPhotos as loadAllPhotosFromCloud } from '@/services/photo/queries/list';
 import { getPhotosByGroupPaginated as loadPhotosByGroupIdPaginated } from '@/services/photo/queries/byGroup';
-import { photoKeys } from '@/lib/queryKeys';
+import { queryKeys } from '@/lib/query/keys';
+
 import { syncCache } from '@/lib/db/indexedDB';
 import { PHOTO_QUERY_CONFIG } from '@/constants/config';
-import { useQueryClient, InfiniteData } from '@tanstack/react-query';
+import { useQueryClient, InfiniteData, keepPreviousData } from '@tanstack/react-query';
 import { Photo } from '@/types';
+import { logger } from '@/lib/logger';
 
 interface PhotoFilters {
   category_id?: string | null;
@@ -36,19 +38,15 @@ const flattenPhotos = (data: InfiniteData<any>) => {
 export const usePhotos = createInfiniteQuery<{photos: Photo[], nextPage?: number}, PhotoFilters, any>({
   queryKey: (filters) => {
     const q = (filters.searchQuery && filters.searchQuery.trim()) ? filters.searchQuery.trim() : null;
-    return photoKeys.infinite({
-      category_id: filters.category_id ?? null,
-      tag_id: filters.tag_id ?? null,
-      searchQuery: q,
-      sortOrder: filters.sortOrder ?? null,
-      isAdminMode: filters.isAdminMode ?? false,
-      onlyUngrouped: filters.onlyUngrouped ?? false,
-      manufacturer_id: filters.manufacturer_id ?? null,
-      is_hidden: filters.is_hidden ?? undefined,
-      limit: filters.limit ?? PHOTO_QUERY_CONFIG.limit
-    });
+    return queryKeys.photos.infinite({
+      category: filters.category_id ?? undefined,
+      tags: filters.tag_id ? [filters.tag_id] : undefined,
+      q: q ?? undefined,
+      sort: filters.sortOrder ?? undefined,
+    }, filters.isAdminMode ? 'admin' : 'public');
   },
   queryFn: async (filters, pageParam, signal) => {
+    logger.debug('usePhotos queryFn called with filters:', filters);
     const limit = filters.limit ?? PHOTO_QUERY_CONFIG.limit;
     const res = await loadAllPhotosFromCloud(
       undefined,
@@ -78,7 +76,7 @@ export const usePhotos = createInfiniteQuery<{photos: Photo[], nextPage?: number
       syncCache.savePhotos(photos)
         .then(() => {
           import('@/lib/queryClient').then(({ queryClient }) => {
-            queryClient.invalidateQueries({ queryKey: ['photos', 'count'] });
+            queryClient.invalidateQueries({ queryKey: queryKeys.photos.count({}) });
           }).catch(() => {});
         })
         .catch(() => {});
@@ -92,13 +90,14 @@ export const usePhotos = createInfiniteQuery<{photos: Photo[], nextPage?: number
   getNextPageParam: (lastPage) => lastPage.nextPage,
   select: flattenPhotos,
   staleTime: 5 * 60 * 1000,
+  placeholderData: keepPreviousData
 });
 
 /**
  * Hook for infinite group photo lists.
  */
 export const useGroupPhotosResult = createInfiniteQuery<{photos: Photo[], total: number, hasMore: boolean}, { groupId: string | null; isAdminMode: boolean; pageSize: number }, any>({
-  queryKey: (vars: { groupId: string | null; isAdminMode: boolean; pageSize: number }) => photoKeys.infinite(vars),
+  queryKey: (vars: { groupId: string | null; isAdminMode: boolean; pageSize: number }) => queryKeys.photos.infinite({}, vars.isAdminMode ? 'admin' : 'public'),
   queryFn: async ({ groupId, isAdminMode, pageSize }: { groupId: string | null; isAdminMode: boolean; pageSize: number }, pageParam: any) => {
     const data = await loadPhotosByGroupIdPaginated(groupId!, pageParam, pageSize, isAdminMode);
     return {
@@ -111,14 +110,9 @@ export const useGroupPhotosResult = createInfiniteQuery<{photos: Photo[], total:
     const loaded = allPages.reduce((sum: number, p: any) => sum + p.photos.length, 0);
     return (loaded < lastPage.total && lastPage.photos.length > 0) ? allPages.length + 1 : undefined;
   },
-  placeholderData: (previousData: any, options: any) => {
-    if (previousData) return previousData;
-    // We need access to queryClient, but options only has queryKey
-    // Assuming for now just default placeholder behavior is enough or cache access via other means if needed.
-    return undefined;
-  },
   select: flattenPhotos,
   staleTime: 30 * 1000,
+  placeholderData: keepPreviousData
 } as any);
 
 export const useGroupPhotos = (groupId: string | null, isAdminMode: boolean = false, pageSize: number = 60) => {

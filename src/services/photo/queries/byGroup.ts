@@ -14,8 +14,7 @@ export const getPhotosByGroup = async (groupId: string, isAdminMode: boolean = f
   });
   if (!res.ok) throw new Error('Failed to load photos by group');
   const { data } = await res.json();
-  const allTags = await loadTagsFromCloud();
-  return (data || []).map((item: any) => mapSupabasePhoto(item, allTags));
+  return (data || []).map((item: any) => mapSupabasePhoto(item));
 };
 
 /**
@@ -33,9 +32,8 @@ export const getPhotosByGroupPaginated = async (
   });
   if (!res.ok) throw new Error('Failed to load paginated group photos');
   const { data } = await res.json();
-  const allTags = await loadTagsFromCloud();
   return { 
-    photos: (data.photos || []).map((item: any) => mapSupabasePhoto(item, allTags)), 
+    photos: (data.photos || []).map((item: any) => mapSupabasePhoto(item)), 
     total: data.total || 0 
   };
 };

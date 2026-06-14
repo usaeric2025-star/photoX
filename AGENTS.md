@@ -1,4 +1,11 @@
-## 全屏遮罩規範（永久鎖定）
+## Dropdown 組件規範（鎖定）
+
+- ✅ 使用 `useId()` 生成唯一錨點名稱
+- ✅ 通過 `style={{ anchorName }}` 和 `style={{ positionAnchor }}` 綁定
+- ✅ 父容器使用 `relative` 作為定位參考
+- ✅ 浮層使用 `absolute top-full mt-1 z-50`
+- ❌ 禁止使用全局錨點名稱
+- ❌ 禁止在 CSS 中硬編碼 anchor-name
 
 - ✅ 全屏加載/阻斷遮罩統一使用原生 `<dialog>`
 - ❌ 禁止 fixed inset-0 + z-index 模擬全屏遮罩
@@ -89,6 +96,28 @@
 4. ❌ Context 传递业务数据
 5. ❌ Props drilling 超过 2 层
 6. ❌ 预计算层
+
+## 狀態管理邊界規範（鎖定）
+
+### TanStack Query（服務端狀態）
+- ✅ 所有 useQuery/useMutation/prefetchQuery 必須使用 `queryKeys` 工廠
+- ✅ 預加載與實際查詢共用同一 Key 生成函數
+- ✅ staleTime 必須使用 `STALE_TIMES` 常量
+- ❌ 禁止手動拼接 Query Key 字串
+- ❌ 禁止在 Zustand Store 中快取服務端數據
+
+### Zustand（客戶端狀態）
+- ✅ 僅管理 UI 狀態、表單草稿、批量選擇等純客戶端數據
+- ❌ 禁止充當服務端數據的二級快取
+
+### 樂觀更新
+- ✅ 優先使用 `useOptimistic` 或 Query 的 `onMutate`
+- ❌ 禁止手動 `setQueryData` + Store 雙寫同步
+
+### 預加載規範
+- ✅ 使用 `usePrefetch` 通用 Hook
+- ✅ 必須加 80ms 防抖
+- ✅ 懸浮 + 觸控雙通道
 
 ## 架構進化規範 (2026-06-12)
 - ✅ defineMutation 仅返回纯配置对象，禁止返回 Hook 工厂
@@ -1389,4 +1418,25 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 - ❌ 禁止手動拼接錯誤日誌字串
 
 ### 測試要求
+
 - 📝 新增錯誤類型必須補充單元測試
+
+## 彈出式組件技術棧規範（永久鎖定）
+
+### 技術選型
+- ✅ 統一使用 @base-ui/react 作為唯一彈出層基礎庫
+- ✅ 所有 Dropdown/Popover/Modal/Tooltip 必须通過 Base UI 實現
+- ❌ 禁止自研彈出層組件（含 Portal/FocusTrap/碰撞檢測/鍵盤導航）
+- ❌ 禁止新增 Radix UI / Headless UI / Floating UI 依賴
+- 📝 現有舊庫組件在重構時逐步遷移至 Base UI
+
+### 層級管理
+- ✅ Base UI 內建 Portal + <dialog> Top Layer，無需手動處理
+- ✅ 固定定位輸入欄位容器必須設定 pointer-events: none
+- ❌ 禁止使用 z-index 解決彈出組件遮擋問題
+- ❌ 禁止在 Header/Sticky 容器內使用 CSS absolute 實現下拉菜單
+
+### 樣式規範
+- ✅ Base UI 為零樣式 Headless，所有視覺通過 className + Tailwind 控制
+- ✅ 使用 data-[highlighted] / data-[disabled] 等屬性選擇器驅動狀態樣式
+- ❌ 禁止覆蓋 Base UI 內部 DOM 結構的默認行為

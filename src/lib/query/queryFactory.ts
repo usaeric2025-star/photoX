@@ -41,6 +41,7 @@ export function createInfiniteQuery<TData, TVariables = any, TResult = InfiniteD
   select?: (data: InfiniteData<TData>) => TResult;
   staleTime?: number;
   gcTime?: number;
+  placeholderData?: any;
 }) {
   return function useStandardInfiniteQuery(variables: TVariables, options?: any) {
     return useInfiniteQuery<TData, Error, TResult, any, number>({
@@ -51,6 +52,7 @@ export function createInfiniteQuery<TData, TVariables = any, TResult = InfiniteD
       staleTime: config.staleTime ?? 5 * 60 * 1000,
       gcTime: config.gcTime ?? 30 * 60 * 1000,
       select: config.select as any,
+      placeholderData: config.placeholderData,
       ...options
     });
   };

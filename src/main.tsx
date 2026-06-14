@@ -1,3 +1,4 @@
+import { dailyWorker } from './services/maintenance/DailyWorker';
 import { createStaleTime } from '@/shared/freshnessSchema';
 import React, { StrictMode } from 'react';
 
@@ -53,7 +54,6 @@ async function init() {
   }
 
   // 啟動每日維護 (P0: Robustness)
-  const { dailyWorker } = await import('./services/maintenance/DailyWorker');
   dailyWorker.checkAndRun();
 
   const container = document.getElementById("root");

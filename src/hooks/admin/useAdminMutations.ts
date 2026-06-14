@@ -1,4 +1,4 @@
-import { photoKeys, groupKeys, tagKeys, categoryKeys, manufacturerKeys } from '@/lib/queryKeys';
+import { queryKeys } from '@/lib/query/keys';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { api } from '@/lib/api';
 import { defineMutation } from '@/lib/mutations/defineMutation';
@@ -14,7 +14,7 @@ const repairConfig = defineMutation<any, string>({
     }
     return res.json() as any;
   },
-  invalidate: () => [photoKeys.all as any, groupKeys.all as any],
+  invalidate: () => [queryKeys.photos.all as any, queryKeys.groups.all as any],
   successMessage: '修复成功',
 });
 export const useRepairMutation = () => useAppMutation(repairConfig);
@@ -24,11 +24,11 @@ const syncConfig = defineMutation<void, 'push' | 'pull'>({
   service: async (type: 'push' | 'pull') => {
     if (type === 'pull') {
       const { queryClient } = await import('@/lib/queryClient');
-      await queryClient.invalidateQueries({ queryKey: [tagKeys.tags()] });
-      await queryClient.invalidateQueries({ queryKey: [categoryKeys.categories()] });
-      await queryClient.invalidateQueries({ queryKey: [manufacturerKeys.manufacturers()] });
-      await queryClient.invalidateQueries({ queryKey: [groupKeys.all] });
-      await queryClient.invalidateQueries({ queryKey: photoKeys.all as any });
+      await queryClient.invalidateQueries({ queryKey: [queryKeys.tags.tags()] });
+      await queryClient.invalidateQueries({ queryKey: [queryKeys.categories.categories()] });
+      await queryClient.invalidateQueries({ queryKey: [queryKeys.manufacturers.manufacturers()] });
+      await queryClient.invalidateQueries({ queryKey: [queryKeys.groups.all] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.photos.all as any });
     }
   },
   successMessage: '同步完成',

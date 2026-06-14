@@ -68,7 +68,8 @@ export const adminGroupRoute = createRoute({
   },
   loader: ({ params: { groupId }, context }) => {
     if (context.queryClient && groupId) {
-      prefetchGroupDetail(context.queryClient, groupId, true);
+      // Start prefetching in background, don't await to avoid blocking transition
+      void prefetchGroupDetail(context.queryClient, groupId, true);
     }
   },
   component: lazy(() => import('@/components/groups/GroupDetailPage').then(m => ({ default: m.GroupDetailPage }))),

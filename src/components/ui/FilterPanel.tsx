@@ -1,14 +1,14 @@
 import React from 'react';
 import { RefreshCw, MoreHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useCategories, useTags, usePhotoFilter, useSettings, useUrlFilters, useAdminMode } from '@/hooks';
+import { useCategories, useTags, usePhotoFilter, useSettings, useAdminMode, useFilters } from '@/hooks';
 import { useAppLang } from '@/store/useUIStore';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { cn } from '@/lib/utils';
 import { Category } from '@/types';
 import { translations } from '@/locales';
 import { getSafeText } from '@/services/ai/safeText';
-import { categoryKeys, tagKeys, photoKeys } from '@/lib/queryKeys';
+import { queryKeys } from '@/lib/query/keys';
 import { loadCategoriesFromCloud } from '@/services/category/queries';
 import { loadTagsFromCloud } from '@/services/tag/queries';
 import { getPhotos as loadAllPhotosFromCloud } from '@/services/photo/queries/list';
@@ -16,39 +16,39 @@ import { PHOTO_QUERY_CONFIG } from '@/constants/config';
 import { logger } from '@/lib/logger';
 
 export function FilterPanel() {
-    const { filters: urlFilters, setCategory, setTagId } = useUrlFilters();
+    const filters = useFilters({ enableStatus: true });
+    const { category, setCategory, tags: selectedTags, setTags } = filters;
     const { data: categories = [] } = useCategories();
     const { data: tags = [] } = useTags();
     const { settings } = useSettings();
     const [appLang] = useAppLang();
-  const [isExpanded, { toggle: toggleExpanded }] = useDisclosure(false);
+    const [isExpanded, { toggle: toggleExpanded }] = useDisclosure(false);
     const queryClient = useQueryClient();
-    const isAdminMode = useAdminMode();
+    const isAdminMode = filters.isAdminMode;
 
     const prefetchCategoryPhotos = (categoryId: string | null) => {
         // Only prefetch if we aren't already looking at it
-        if (urlFilters.categoryId === categoryId) return;
+        if (category === (categoryId || '')) return;
 
         queryClient.prefetchInfiniteQuery({
-            queryKey: photoKeys.infinite({ 
-              category_id: categoryId || null,
-              tag_id: urlFilters.tagId,
-              searchQuery: urlFilters.searchQuery,
-              sortOrder: urlFilters.sortOrder,
-              isAdminMode: isAdminMode,
-              limit: PHOTO_QUERY_CONFIG.limit
-            }),
+            queryKey: queryKeys.photos.infinite({ 
+              category: filters.category || undefined,
+              tags: selectedTags && selectedTags.length > 0 ? selectedTags : undefined,
+              q: filters.search || undefined,
+              sort: filters.sort || undefined,
+            }, isAdminMode ? 'admin' : 'public'),
             queryFn: async ({ pageParam = 1 }: any) => {
-              const photos = await loadAllPhotosFromCloud(
+              const { getPhotos } = await import('@/services/photo/queries/list');
+              const photos = await getPhotos(
                 undefined,
                 (pageParam as number) - 1,
                 PHOTO_QUERY_CONFIG.limit,
                 categoryId,
-                urlFilters.tagId,
-                urlFilters.searchQuery,
+                selectedTags && selectedTags.length > 0 ? selectedTags[0] : null,
+                filters.search,
                 isAdminMode,
                 undefined,
-                urlFilters.sortOrder
+                filters.sort
               );
               return { photos, nextPage: photos.length >= PHOTO_QUERY_CONFIG.limit ? (pageParam as number) + 1 : undefined };
             },
@@ -67,8 +67,6 @@ export function FilterPanel() {
         }))
     ];
 
-    logger.debug('[FilterPanel] Rendering. Current categoryId in URL:', urlFilters.categoryId, 'Categories count:', categoryList.length);
-
     // Unified Tags Logic using usePhotoFilter
     const { tagsToRender, pinnedIds, hotIds } = usePhotoFilter(tags, settings);
 
@@ -84,13 +82,12 @@ export function FilterPanel() {
                         <button
                             key={cat.id || 'all'}
                             onClick={() => {                
-                                logger.debug('[FilterPanel] Category clicked:', cat.id);
-                                setCategory(cat.id);
+                                setCategory(cat.id || '');
                             }}
                             onMouseEnter={() => prefetchCategoryPhotos(cat.id)}
                             className={cn(
                                 "text-[11px] font-black h-8 px-4 rounded-full transition-all duration-150 flex items-center justify-center cursor-pointer pointer-events-auto active:scale-95 shrink-0 select-none shadow-sm capitalize border",
-                                urlFilters.categoryId === cat.id || (urlFilters.categoryId !== null && cat.id !== null && String(urlFilters.categoryId) === String(cat.id))
+                                category === (cat.id || '')
                                     ? 'bg-brand-navy border-brand-navy text-white shadow-md shadow-brand-navy/20' 
                                     : 'bg-slate-50 border-slate-100 text-[#374151] hover:bg-slate-100 hover:border-slate-200'
                             )}
@@ -109,13 +106,13 @@ export function FilterPanel() {
                         {t.hotTags}
                     </span>
                     {tagsToRender.length > 10 && (
-                         <button 
-                             onClick={() => toggleExpanded()}
-                             className="text-[9px] p-0.5 rounded-full bg-slate-50 text-slate-500 hover:bg-slate-200 transition-all cursor-pointer pointer-events-auto"
-                             title={isExpanded ? t.collapse : t.more(hiddenCount)}
-                          >
-                             {isExpanded ? <ChevronUp size={10} /> : <MoreHorizontal size={10} />}
-                         </button>
+                        <button 
+                            onClick={() => toggleExpanded()}
+                            className="text-[9px] p-0.5 rounded-full bg-slate-50 text-slate-500 hover:bg-slate-200 transition-all cursor-pointer pointer-events-auto"
+                            title={isExpanded ? t.collapse : t.more(hiddenCount)}
+                        >
+                            {isExpanded ? <ChevronUp size={10} /> : <MoreHorizontal size={10} />}
+                        </button>
                     )}
                 </div>
                 
@@ -128,13 +125,17 @@ export function FilterPanel() {
                     {visibleTags.map((tag) => {
                         const isPinned = pinnedIds.includes(String(tag.id));
                         const isHot = hotIds.has(String(tag.id));
-                        const isSelected = urlFilters.tagId === tag.id || (urlFilters.tagId !== null && tag.id !== null && String(urlFilters.tagId) === String(tag.id));
+                        const isSelected = selectedTags.includes(String(tag.id));
 
                         return (
                            <button
                                key={tag.id}
                                onClick={() => {
-                                   setTagId(isSelected ? null : tag.id);
+                                   if (isSelected) {
+                                       setTags(selectedTags.filter((id: string) => id !== String(tag.id)));
+                                   } else {
+                                       setTags([String(tag.id)]);
+                                   }
                                }}
                                className={cn(
                                    "h-5 text-[9.5px] px-2 rounded-full transition-all duration-200 flex items-center justify-center cursor-pointer pointer-events-auto border shrink-0",

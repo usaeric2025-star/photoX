@@ -74,7 +74,8 @@ export const groupRoute = createRoute({
   },
   loader: ({ params: { groupId }, context }) => {
     if (context.queryClient && groupId) {
-      prefetchGroupDetail(context.queryClient, groupId);
+      // Background prefetch
+      void prefetchGroupDetail(context.queryClient, groupId);
     }
   },
   component: lazy(() => import('@/components/groups/GroupDetailPage').then(m => ({ default: m.GroupDetailPage }))),

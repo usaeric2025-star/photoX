@@ -66,14 +66,15 @@ export function TagEditor({
 
   const { hotIds: hotTagsSet, pinnedIds } = usePhotoFilter(allTags, settings);
 
-  const selectedSet = new Set(selectedTagIds.map(String));
-  const pinnedSet = new Set(pinnedIds.map(String));
+  const selectedSet = React.useMemo(() => new Set(selectedTagIds.map(String)), [selectedTagIds]);
+  const pinnedSet = React.useMemo(() => new Set(pinnedIds.map(String)), [pinnedIds]);
   const hotSet = hotTagsSet;
 
   // 1. Data Source
   const displayList = React.useMemo(() => {
     let list: Tag[] = [];
-    if (!deferredSearchTerm.trim()) {
+    const term = deferredSearchTerm.trim();
+    if (!term) {
       list = allTags;
     } else {
       list = searchResults;

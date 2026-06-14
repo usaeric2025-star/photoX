@@ -23,6 +23,7 @@ export * from './photo';
 export * from './groups';
 
 // Utils
+export { useFilters } from './useFilters';
 export { useUIStore, useStore, useShallow, useColumns } from '../store/useUIStore';
 
 

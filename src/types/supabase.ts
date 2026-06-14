@@ -43,4 +43,6 @@ export interface SupabasePhotoRaw {
     member_count: number;
   } | null;
   manufacturers?: { name: string } | null;
+  category?: { id: any; name: any } | null;
+  manufacturer?: { id: any; name: any } | null;
 }

@@ -39,19 +39,8 @@ export const useLightbox = () => {
     limit: PHOTO_QUERY_CONFIG.limit
   }, { enabled: !groupId });
   
-  const { data: countResult } = useQuery({
-    queryKey: ['photos', 'totalCount', dataFilters],
-    queryFn: async () => {
-      return await getPhotoCount(dataFilters.categoryId, dataFilters.tagId, dataFilters.searchQuery, isAdmin);
-    },
-    enabled: !groupId });
-  
-  const totalCount = countResult ?? 0;
-  
   const isGroupMode = !!groupId; // Within a group's context
   
-  const isLoading = isSingleLoading || (isGroupMode ? (isGroupLoading || isPhotosLoading) : isGalleryLoading);
-
   const photos = (() => {
     let list: Photo[] = [];
     const sourceData = isGroupMode ? groupPhotos : allGalleryPhotos;
@@ -75,6 +64,21 @@ export const useLightbox = () => {
       return true;
     });
   })();
+
+  const { data: countResult } = useQuery({
+    queryKey: ['photos', 'totalCount', dataFilters, groupId, isAdmin],
+    queryFn: async () => {
+      if (groupId) {
+        return groupDetail?.member_count ?? photos.length;
+      }
+      return await getPhotoCount(dataFilters.categoryId, dataFilters.tagId, dataFilters.searchQuery, isAdmin);
+    },
+    enabled: !!(photoId || groupId)
+  });
+  
+  const totalCount = countResult ?? (groupId ? (groupDetail?.member_count ?? photos.length) : 0);
+  
+  const isLoading = isSingleLoading || (isGroupMode ? (isGroupLoading || isPhotosLoading) : isGalleryLoading);
 
   const currentIndex = (() => {
     if (!photoId || photos.length === 0) return 0;

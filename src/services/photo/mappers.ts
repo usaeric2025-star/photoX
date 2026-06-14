@@ -58,6 +58,13 @@ export const parseTranslation = (val: any) => {
 export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo {
     if (!item) return {} as Photo;
     
+    // Optimization: Create a tag map for O(1) lookup if it was passed
+    const tagCache = (allTags && (allTags as any)._map) || 
+                   (allTags ? new Map(allTags.map(t => [String(t.id), t])) : null);
+    if (allTags && tagCache && !(allTags as any)._map) {
+        (allTags as any)._map = tagCache; // Attach for reuse in the same map loop
+    }
+
     let storageId = item.id;
     if (item.image_url) {
       try {
@@ -80,18 +87,18 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo
             if (pt.tags) {
                 const rawTag = Array.isArray(pt.tags) ? pt.tags[0] : pt.tags;
                 if (rawTag) {
-                    tagId = rawTag.id ?? tagId;
+                    tagId = rawTag.id || tagId;
                     tagName = parseTranslation(rawTag.name).zh;
                 }
-            } else if (allTags) {
-                const matchedTag = allTags.find(t => String(t.id) === String(pt.tag_id));
+            } else if (tagCache) {
+                const matchedTag = tagCache.get(String(pt.tag_id));
                 if (matchedTag) {
                     tagName = matchedTag.name;
                 }
             }
             
             tags.push({
-                id: String(tagId ?? ''),
+                id: String(tagId || ''),
                 name: tagName,
                 aliases: [],
             });
@@ -111,6 +118,9 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo
 
     const imageUrl = normalizeStoredUrl(item.image_url || '');
     
+    const manufacturerName = ''; // Handled by caller/hooks
+    const categoryName = ''; // Handled by caller/hooks
+
     return {
       id: String(item.id),
       storage_id: storageId,
@@ -148,8 +158,8 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo
       tags: tags,
       dimensions: Array.isArray(item.dimensions) ? (item.dimensions as Photo['dimensions']) : [],
       created_at_timestamp: item.created_at_timestamp,
-      categoryName: '',
-      manufacturerName: ''
+      categoryName,
+      manufacturerName
     };
 }
 

@@ -2,7 +2,12 @@ import React, { useRef } from 'react';
 import { useLongPress } from '@/hooks/core/useLongPress';
 import { useUIStore } from '@/store/useUIStore';
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
+import { useRouter } from '@tanstack/react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { Photo } from '@/types';
+import { queryKeys } from '@/lib/query/keys';
+import { getGroupById } from '@/services/group/queries';
+import { STALE_TIMES } from '@/lib/query/config';
 
 interface UsePhotoCardInteractionProps {
   photo: Photo;
@@ -26,6 +31,8 @@ export function usePhotoCardInteraction({
   const toggleSelected = useUIStore((s) => s.toggleSelected);
   const update = useUIStore((s) => s.update);
   const navigate = useRouterSafe().navigate;
+  const router = useRouter();
+  const queryClient = useQueryClient();
 
   const startTransition = (callback: () => void) => {
     // @ts-ignore
@@ -44,6 +51,23 @@ export function usePhotoCardInteraction({
   const handleGroupNavigate = (gid: string) => {
     const targetPath = isManagement ? `/admin/group/${gid}` : `/group/${gid}`;
     navigate({ to: targetPath, search: (prev: any) => prev });
+  };
+
+  const handleMouseEnter = () => {
+    if (photo.group_id && showGroupsCollapsed && !hasSearchQuery) {
+      const gid = photo.group_id;
+      const isAdmin = isManagement;
+      // Preload route
+      const targetPath = isAdmin ? `/admin/group/${gid}` : `/group/${gid}`;
+      router.preloadRoute({ to: targetPath, search: (prev: any) => prev }).catch(() => {});
+      
+      // Prefetch data
+      queryClient.prefetchQuery({
+        queryKey: queryKeys.groups.detail(gid, isAdmin),
+        queryFn: () => getGroupById(gid, isAdmin ? 'admin' : 'public'),
+        staleTime: STALE_TIMES.GROUP_DETAIL,
+      }).catch(() => {});
+    }
   };
 
   const handleClick = (e: React.MouseEvent) => {
@@ -101,6 +125,7 @@ export function usePhotoCardInteraction({
 
   return {
     cardRef,
-    handleClick
+    handleClick,
+    handleMouseEnter
   };
 }

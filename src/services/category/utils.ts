@@ -9,12 +9,15 @@ export const getTranslatedCategoryName = (
   catId: string | number | undefined,
   categories: Category[],
   lang: string,
-  t: TranslationType
+  t: TranslationType,
+  categoryMap?: Map<string, Category>
 ): string => {
   if (!catId) return "";
   
   const catIdStr = String(catId);
-  const activeCat = categories.find(c => String(c.id) === catIdStr || (c as any).code === catIdStr);
+  const activeCat = categoryMap 
+    ? categoryMap.get(catIdStr) 
+    : categories.find(c => String(c.id) === catIdStr || (c as any).code === catIdStr);
   
   if (!activeCat) return "";
 

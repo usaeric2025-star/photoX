@@ -1,6 +1,6 @@
 import { createQuery } from '@/lib/query/queryFactory';
 import { loadManufacturersFromCloud } from '@/services/manufacturer/queries';
-import { manufacturerKeys } from '@/lib/queryKeys';
+import { queryKeys } from '@/lib/query/keys';
 import { syncCache } from '@/lib/db/indexedDB';
 import { Manufacturer } from '@/types';
 
@@ -8,7 +8,7 @@ import { Manufacturer } from '@/types';
  * Hook to get the list of manufacturers using standard query factory.
  */
 export const useManufacturers = createQuery<Manufacturer[]>({
-  queryKey: () => manufacturerKeys.manufacturers(),
+  queryKey: () => queryKeys.manufacturers.manufacturers(),
   queryFn: async () => {
     const mfrs = await loadManufacturersFromCloud();
     syncCache.saveManufacturers(mfrs).catch(() => {});

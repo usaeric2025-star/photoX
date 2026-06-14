@@ -1,12 +1,11 @@
 import React from "react";
 import { Info, Tag as TagIcon, Grid } from "lucide-react";
-import { LightboxCore } from "@/components/PhotoLightbox/LightboxCore";
+import { ReelkitAdapter } from "@/components/lightbox/ReelkitAdapter";
 import { useLightbox } from "@/hooks";
 import { PhotoInfoPanel } from "@/components/photo/PhotoInfoPanel";
-import { LightboxFallback } from "@/components/PhotoLightbox/LightboxFallback";
 import { useUIStore } from "@/store/useUIStore";
 import { useAdminMaintenance } from "@/hooks/admin/useAdminMaintenance";
-import { useTags, useCategories } from "@/hooks";
+import { useTags, useCategories, useTranslation } from "@/hooks";
 import { useGroupCoverMutation } from "@/hooks";
 import { getTranslatedCategoryName } from "@/services/category/utils";
 import { translations } from "@/locales";
@@ -15,8 +14,8 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { showToast } from '@/lib/ui/toast';
 import { getSafeText } from "@/services/ai/safeText";
 
-import { LightboxFloatingInfo } from "@/components/PhotoLightbox/LightboxFloatingInfo";
-import { LightboxFloatingActions } from "@/components/PhotoLightbox/LightboxFloatingActions";
+import { LightboxFloatingInfo } from "@/components/lightbox/LightboxFloatingInfo";
+import { LightboxFloatingActions } from "@/components/lightbox/LightboxFloatingActions";
 
 /**
  * [PAGE] PhotoLightboxPage
@@ -96,7 +95,19 @@ export const PhotoLightboxPage = () => {
   
   // If we have a photoId but no photos (e.g. invalid ID or deleted)
   if (photos.length === 0 && !isLoading) {
-    return <LightboxFallback onClose={close} message="照片不存在或已删除" />;
+    return (
+      <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-6">
+        <div className="text-center space-y-4">
+          <p className="text-white font-medium">照片不存在或已删除 / Photo not found</p>
+          <button 
+            onClick={close}
+            className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors"
+          >
+            返回 / Close
+          </button>
+        </div>
+      </div>
+    );
   }
 
   const handleEdit = async () => {
@@ -123,85 +134,78 @@ export const PhotoLightboxPage = () => {
   
   const currentPhotoDisplayName = currentPhoto ? (typeof currentPhoto.name === 'object' ? (currentPhoto.name[appLang as keyof typeof currentPhoto.name] || currentPhoto.name.zh) : currentPhoto.name) : '';
 
+  const renderSidebar = () => 
+    showInfo && currentPhoto ? (
+      <>
+        <div 
+          className="absolute inset-0 z-50 bg-black/40 backdrop-blur-[2px] transition-all animate-in fade-in duration-300"
+          onClick={() => setShowInfo(false)}
+        />
+        <div className="absolute right-0 top-0 h-full w-full md:w-[420px] pointer-events-none flex items-center z-50 p-0 sm:p-4">
+          <PhotoInfoPanel 
+            data={data}
+            mode={mode as 'single' | 'group'}
+            showEdit={showEdit}
+            showDelete={showDelete}
+            showAi={showAi}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onAiAnalyze={handleAiAnalyze}
+            onClose={() => setShowInfo(false)}
+            className="pointer-events-auto w-full h-full shadow-2xl rounded-none sm:rounded-2xl border-l border-white/10 bg-white animate-in slide-in-from-right duration-500 ease-out"
+            headerClassName="md:pl-4 pl-4"
+          />
+        </div>
+      </>
+    ) : null;
+
+  const renderFloatingButton = () => {
+    if (!currentPhoto) return null;
+    
+    let displayCategoryName = '';
+    if (currentPhoto.category_id) {
+      displayCategoryName = getTranslatedCategoryName(currentPhoto.category_id, categories, appLang, translations[appLang]);
+    }
+    
+    let displayTagNames: string[] = [];
+    if (Array.isArray(currentPhoto.tags)) {
+      displayTagNames = currentPhoto.tags.map(tag => tag.name).filter(Boolean);
+    }
+
+    return (
+      <LightboxFloatingInfo 
+        displayName={currentPhotoDisplayName}
+        categoryName={displayCategoryName}
+        tags={displayTagNames}
+        isGroup={mode === 'group'}
+        appLang={appLang}
+      />
+    );
+  };
+
   return (
     <>
-      <LightboxCore
+      <ReelkitAdapter
         open={isOpen}
-        onClose={closeWithCleanup}
-        photos={photos}
-        totalCount={totalCount}
+        items={photos.map(p => ({
+          src: p.image_url || '',
+          alt: (p.name as any)?.zh || String(p.name || ''),
+        }))}
         currentIndex={currentIndex}
-        onIndexChange={(idx) => {
+        onClose={closeWithCleanup}
+        onIndexChange={(idx: number) => {
           const photo = photos[idx];
           if (photo) setPhotoIdDebounced(photo.id);
         }}
-        mode={mode as 'single' | 'group'}
-        showEdit={showEdit}
-        showDelete={showDelete}
-        showAi={showAi}
-        showSetCover={!!groupId && showEdit}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onAiAnalyze={handleAiAnalyze}
+        onEdit={showEdit ? handleEdit : undefined}
+        onDelete={showDelete ? handleDelete : undefined}
         onSetCover={handleSetCover}
-        renderSidebar={() => 
-          showInfo && currentPhoto ? (
-            <>
-              <div 
-                className="absolute inset-0 z-[var(--z-dialog)] bg-black/20 backdrop-blur-sm/50 transition-opacity"
-                onClick={() => setShowInfo(false)}
-              />
-              <div className="absolute right-0 top-0 h-full w-full md:w-[380px] pointer-events-none flex items-center z-[var(--z-dialog)] p-0">
-                <PhotoInfoPanel 
-                  data={data}
-                  mode={mode as 'single' | 'group'}
-                  showEdit={showEdit}
-                  showDelete={showDelete}
-                  showAi={showAi}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  onAiAnalyze={handleAiAnalyze}
-                  onClose={() => setShowInfo(false)}
-                  className="pointer-events-auto w-full h-full shadow-2xl shadow-black/20 border-l border-slate-200 bg-white animate-in slide-in-from-right duration-300 ease-out"
-                  headerClassName="md:pl-4 pl-20"
-                />
-              </div>
-            </>
-          ) : null
-        }
-        renderFloatingButton={() => {
-          if (!currentPhoto) return null;
-          
-          let displayCategoryName = '';
-          if (currentPhoto.category_id) {
-            displayCategoryName = getTranslatedCategoryName(currentPhoto.category_id, categories, appLang, translations[appLang]);
-          }
-          
-          let displayTagNames: string[] = [];
-          if (Array.isArray(currentPhoto.tags)) {
-            displayTagNames = currentPhoto.tags.map(tag => tag.name).filter(Boolean);
-          }
-
-          return (
-            <>
-              {!showInfo && (
-                <LightboxFloatingInfo 
-                  displayName={currentPhotoDisplayName}
-                  categoryName={displayCategoryName}
-                  tags={displayTagNames}
-                  isGroup={mode === 'group'}
-                  appLang={appLang}
-                />
-              )}
-
-              <LightboxFloatingActions 
-                showInfo={showInfo}
-                setShowInfo={setShowInfo}
-                appLang={appLang}
-              />
-            </>
-          );
-        }}
+        showSetCover={!!groupId && showEdit}
+        renderSidebar={renderSidebar}
+        renderFloatingButton={renderFloatingButton}
+        totalCount={totalCount}
+        showInfo={showInfo}
+        onToggleInfo={setShowInfo}
       />
       <ConfirmDialog
         open={isDeleteOpen}

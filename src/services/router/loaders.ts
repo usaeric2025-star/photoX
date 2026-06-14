@@ -12,16 +12,11 @@ import { getGroupById } from '@/services/group/queries';
 
 export async function prefetchMainGallery(queryClient: QueryClient) {
   const queryKey = photoKeys.infinite({ 
-    category_id: null,
-    tag_id: null,
-    searchQuery: null,
-    sortOrder: null,
-    isAdminMode: false,
-    onlyUngrouped: false,
-    manufacturer_id: null,
-    is_hidden: false,
-    limit: PHOTO_QUERY_CONFIG.limit
-  });
+    category: undefined,
+    tags: undefined,
+    q: undefined,
+    sort: undefined
+  }, 'public');
 
   return queryClient.prefetchInfiniteQuery({
     queryKey,
@@ -48,21 +43,18 @@ export async function prefetchMainGallery(queryClient: QueryClient) {
 
 export async function prefetchGroupDetail(queryClient: QueryClient, groupId: string, isAdminMode: boolean = false) {
   if (!groupId) return;
-  const queryKey = groupKeys.detail(groupId);
+  const isQueryAdmin = !!isAdminMode;
+  const queryKey = [...groupKeys.detail(groupId, isQueryAdmin)];
   queryClient.prefetchQuery({
     queryKey,
     queryFn: async () => {
-      const result = await getGroupById(groupId);
+      const result = await getGroupById(groupId, isQueryAdmin ? 'admin' : 'public');
       return result || null;
     },
     staleTime: createStaleTime('STABLE'),
   });
   
-  const photosKey = photoKeys.infinite({
-    groupId,
-    isAdminMode,
-    pageSize: 60
-  });
+  const photosKey = photoKeys.infinite({}, isAdminMode ? 'admin' : 'public');
   
   queryClient.prefetchInfiniteQuery({
     queryKey: photosKey,

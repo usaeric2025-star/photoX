@@ -30,7 +30,7 @@ export function useAIBatchAnalysis() {
         await invalidatePhotos();
         if (groupId) {
           await Promise.all([
-            queryClient.invalidateQueries({ queryKey: groupKeys.detail(groupId) }),
+            queryClient.invalidateQueries({ queryKey: groupKeys.detail(groupId, true) }),
             queryClient.invalidateQueries({ queryKey: groupKeys.all })
           ]);
         }

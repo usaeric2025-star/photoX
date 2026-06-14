@@ -285,7 +285,8 @@ export function processPhotos(
   if (!bypassFilter && (userFilters.searchQuery || userFilters.categoryId || userFilters.tagId)) {
     displayPhotos = filterPhotos(displayPhotos, {
       searchQuery: userFilters.searchQuery,
-      filterCatId: null,
+      filterCatId: userFilters.categoryId,
+      filterTagIds: userFilters.tagId ? [userFilters.tagId] : [],
       isAdminMode: isAdminMode,
     }, tags, categories, options.tagMap, options.catMap);
   }

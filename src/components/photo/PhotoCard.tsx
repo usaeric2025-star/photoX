@@ -4,7 +4,6 @@ import React, { useRef, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLongPress } from '@/hooks/core/useLongPress';
 import { supabase } from '@/lib/supabase';
-import { photoKeys } from '@/lib/queryKeys';
 import { getTranslatedCategoryName } from '@/services/category/utils';
 import { useSearch } from '@tanstack/react-router';
 
@@ -77,7 +76,7 @@ export const PhotoCard = ({
   const isManagement = useIsManagement();
   const { lang, uiTranslations: t } = useTranslation();
   
-  const { cardRef, handleClick } = usePhotoCardInteraction({
+  const { cardRef, handleClick, handleMouseEnter } = usePhotoCardInteraction({
     photo,
     isManagement,
     isMultiSelect,
@@ -132,6 +131,7 @@ export const PhotoCard = ({
         ...props.style
       }}
       onClick={internalHandleClick}
+      onMouseEnter={handleMouseEnter}
       className={cn(
         "aspect-square overflow-hidden cursor-pointer relative transition-all duration-300 group bg-white rounded-2xl shadow-sm ring-1 ring-slate-100",
         "before:absolute before:inset-0 before:pointer-events-none before:transition-all before:duration-300",

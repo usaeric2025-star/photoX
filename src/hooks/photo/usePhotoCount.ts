@@ -1,6 +1,6 @@
 import { createQuery } from '@/lib/query/queryFactory';
 import { getPhotoCount, getLocalPhotoCount } from '@/services/photo/queries/list';
-import { photoKeys } from '@/lib/queryKeys';
+import { queryKeys } from '@/lib/query/keys';
 
 interface PhotoCountFilters {
   category_id?: string | null;
@@ -14,13 +14,14 @@ interface PhotoCountFilters {
  * Hook to get the total count of photos using standard query factory.
  */
 export const usePhotoCount = createQuery<number, PhotoCountFilters | undefined>({
+  staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  gcTime: 1000 * 60 * 10,  // Keep in cache for 10 minutes
   queryKey: (filters) => {
     const f = filters || {};
-    return [...photoKeys.count({ 
-      category_id: f.category_id ?? null,
-      tag_id: f.tag_id ?? null,
-      searchQuery: f.searchQuery ?? null,
-      isAdminMode: f.isAdminMode ?? false
+    return [...queryKeys.photos.count({ 
+      category: f.category_id ?? undefined,
+      tags: f.tag_id ? [f.tag_id] : undefined,
+      q: f.searchQuery ?? undefined,
     }), f.source || 'server'];
   },
   queryFn: async (filters) => {

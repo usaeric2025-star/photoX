@@ -1,6 +1,6 @@
 import { createQuery } from '@/lib/query/queryFactory';
 import { loadCategoriesFromCloud } from '@/services/category/queries';
-import { categoryKeys } from '@/lib/queryKeys';
+import { queryKeys } from '@/lib/query/keys';
 import { syncCache } from '@/lib/db/indexedDB';
 import { Category } from '@/types';
 
@@ -8,7 +8,7 @@ import { Category } from '@/types';
  * Hook to get the list of categories using standard query factory.
  */
 export const useCategories = createQuery<Category[]>({
-  queryKey: () => categoryKeys.categories(),
+  queryKey: () => queryKeys.categories.public(),
   staleTime: 1000 * 60 * 60 * 24, // 24 hours (very stable)
   gcTime: 1000 * 60 * 60 * 24,
   queryFn: async () => {

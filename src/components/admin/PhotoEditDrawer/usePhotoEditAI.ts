@@ -180,8 +180,8 @@ export function usePhotoEditAI() {
                     const latestTags = await loadTagsFromCloud().catch(() => allTags);
 
                     // Optimistically set the React Query cache for tags so they display IMMEDIATELY
-                    const { tagKeys } = await import('@/lib/queryKeys');
-                    queryClient.setQueryData(tagKeys.tags(), (old: any) => {
+                    const { queryKeys } = await import('@/lib/query/keys');
+                    queryClient.setQueryData(queryKeys.tags.tags(), (old: any) => {
                       const oldTags = Array.isArray(old) ? old : [];
                       const existingMap = new Map(oldTags.map((t: any) => [String(t.id), t]));
                       latestTags.forEach((t: any) => existingMap.set(String(t.id), t));
@@ -243,9 +243,9 @@ export function usePhotoEditAI() {
               await updatePhoto({ id: editPhotoId, updates, silent: true });
               
               // [V2.2] Standard invalidation per architecture rules
-              const { photoKeys, groupKeys } = await import('@/lib/queryKeys');
-              queryClient.invalidateQueries({ queryKey: photoKeys.all });
-              queryClient.invalidateQueries({ queryKey: groupKeys.all });
+              const { queryKeys } = await import('@/lib/query/keys');
+              queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
+              queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
               
               showToast.success(appLang === 'zh' ? '已识别并保存' : 'Identified & Saved');
             } catch (saveError: unknown) {

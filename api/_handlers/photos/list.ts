@@ -59,6 +59,24 @@ export const listHandler = (app: Hono) => {
     
     const { data, error } = await query;
     if (error) return c.json({ success: false, error: error.message }, 500);
+
+    // In-memory join for tags details to prevent database configuration issues
+    if (data && data.length > 0) {
+      const { data: tagRows } = await supabase.from('tags').select('id, name');
+      if (tagRows) {
+        const tagMap = new Map(tagRows.map((t: any) => [String(t.id), t.name]));
+        for (const item of data) {
+          if (Array.isArray(item.photo_tags)) {
+            for (const pt of item.photo_tags) {
+              if (pt && pt.tag_id) {
+                const nameVal = tagMap.get(String(pt.tag_id)) || '';
+                pt.tags = { id: pt.tag_id, name: nameVal };
+              }
+            }
+          }
+        }
+      }
+    }
     
     return c.json({ success: true, data: data || [] });
   });
@@ -75,6 +93,24 @@ export const listHandler = (app: Hono) => {
     query = query.order('is_group_cover', { ascending: false }).order('is_hidden', { ascending: true, nullsFirst: true }).order('created_at', { ascending: false }).order('id', { ascending: true });
     const { data, error } = await query;
     if (error) return c.json({ success: false, error: error.message }, 500);
+
+    if (data && data.length > 0) {
+      const { data: tagRows } = await supabase.from('tags').select('id, name');
+      if (tagRows) {
+        const tagMap = new Map(tagRows.map((t: any) => [String(t.id), t.name]));
+        for (const item of data) {
+          if (Array.isArray(item.photo_tags)) {
+            for (const pt of item.photo_tags) {
+              if (pt && pt.tag_id) {
+                const nameVal = tagMap.get(String(pt.tag_id)) || '';
+                pt.tags = { id: pt.tag_id, name: nameVal };
+              }
+            }
+          }
+        }
+      }
+    }
+
     return c.json({ success: true, data: data || [] });
   });
 
@@ -98,7 +134,26 @@ export const listHandler = (app: Hono) => {
       query.order('is_group_cover', { ascending: false }).order('group_order', { ascending: true, nullsFirst: false }).order('is_hidden', { ascending: true, nullsFirst: true }).order('created_at', { ascending: false }).order('id', { ascending: true }).range(from, to)
     ]);
     if (queryRes.error) return c.json({ success: false, error: queryRes.error.message }, 500);
-    return c.json({ success: true, data: { photos: queryRes.data || [], total: countRes.count || 0 } });
+
+    const photos = queryRes.data || [];
+    if (photos.length > 0) {
+      const { data: tagRows } = await supabase.from('tags').select('id, name');
+      if (tagRows) {
+        const tagMap = new Map(tagRows.map((t: any) => [String(t.id), t.name]));
+        for (const item of photos) {
+          if (Array.isArray(item.photo_tags)) {
+            for (const pt of item.photo_tags) {
+              if (pt && pt.tag_id) {
+                const nameVal = tagMap.get(String(pt.tag_id)) || '';
+                pt.tags = { id: pt.tag_id, name: nameVal };
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return c.json({ success: true, data: { photos, total: countRes.count || 0 } });
   });
 
   app.post('/count', async (c) => {

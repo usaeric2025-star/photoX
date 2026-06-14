@@ -30,8 +30,7 @@ export const getPhotos = async (
     if (!res.ok) throw new Error('Failed to load photos from cloud');
     const { data } = await res.json();
     
-    const allTags = await loadTagsFromCloud();
-    const fetched = (data || []).map((item: any) => mapSupabasePhoto(item, allTags));
+    const fetched = (data || []).map((item: any) => mapSupabasePhoto(item));
     
     const hydrated = await hydrateGroupInfo(fetched);
     return hydrated;
@@ -67,8 +66,7 @@ export const loadPhotosByIds = async (ids: string[]): Promise<Photo[]> => {
     });
     if (!res.ok) throw new Error('Failed to load photos by ids');
     const { data } = await res.json();
-    const allTags = await loadTagsFromCloud();
-    return (data || []).map((item: any) => mapSupabasePhoto(item, allTags));
+    return (data || []).map((item: any) => mapSupabasePhoto(item));
 };
 
 export const getPhotosWithoutThumbHash = async (): Promise<{ id: string }[]> => {

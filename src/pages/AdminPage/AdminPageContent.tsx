@@ -5,7 +5,6 @@ import {
   useAuth, 
   useTasks, 
   useSyncMutation, 
-  useUrlFilters, 
   useCategories, 
   usePhotoUpload 
 } from '@/hooks';
@@ -15,19 +14,20 @@ import { BatchEditScreen } from '@/components/admin/BatchEditScreen';
 import { StatisticsScreen } from '@/components/admin/StatisticsScreen';
 import { SettingsPage } from '@/components/settings/SettingsPage';
 import { PhotoEditModal } from '@/components/admin/PhotoEditModal';
-import { useAIBatchAnalysis } from '@/hooks';
+import { useAIBatchAnalysis, useAdminPhotos } from '@/hooks';
 import { useUIStore, useShallow } from '@/store/useUIStore';
-import { usePhotoGallery } from '@/hooks/photo/usePhotoGallery';
 import { Category } from '@/types';
 import { AdminHeader } from '@/components/layouts/headers/AdminHeader';
 import { AdminAuthGate } from '@/components/admin/AdminAuthGate';
 import { AdminContainer } from '@/components/admin/AdminContainer';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
+import { useFilters } from '@/hooks/useFilters';
+import { FiltersBar } from '@/components/filters/FiltersBar';
 
 export function AdminPageContent() {
+  const filters = useFilters({ enableStatus: true, enableBatch: true });
   const { user } = useAuth();
-  const { photos, isLoading: isPhotosLoading } = usePhotoGallery();
-  const { filters: urlFilters } = useUrlFilters();
+  const { photos, isLoading: isPhotosLoading } = useAdminPhotos();
   const { uploadFiles } = usePhotoUpload();
   const { handleBatchAiAnalyze } = useAIBatchAnalysis();
   const { mutateAsync: syncMut } = useSyncMutation();
@@ -65,53 +65,39 @@ export function AdminPageContent() {
 
   const currentScreen = store.activeScreen;
 
-  const { data: categories = [] } = useCategories();
-  const currentCategoryName = urlFilters.categoryId 
-    ? categories.find(c => c.id === urlFilters.categoryId)?.[appLang as keyof Category] as string
-    : null;
-
-  const pageTitle = (() => {
-    if (urlFilters.groupId) return appLang === 'zh' ? '合组详情' : appLang === 'ms' ? 'Butiran Kumpulan' : 'Group Details';
-    if (currentScreen === 'dashboard') return appLang === 'zh' ? '数据看板' : appLang === 'ms' ? 'Papan Pemuka' : 'Dashboard';
-    if (currentScreen === 'tasks') return appLang === 'zh' ? '任务中心' : appLang === 'ms' ? 'Pusat Tugasan' : 'Task Center';
-    if (currentScreen === 'error-logs') return appLang === 'zh' ? '系统日志' : appLang === 'ms' ? 'Log Sistem' : 'Logs';
-    if (currentCategoryName) return currentCategoryName;
-    return appLang === 'zh' ? '全部照片' : appLang === 'ms' ? 'Semua Foto' : 'All Photos';
-  })();
-
-  const onRefresh = async () => {
-    try {
-      await syncMut('pull');
-    } catch (e) {
-      // Error handled by mutationFactory
-    }
-  };
-
   const isSyncing = tasks.some(t => t.status === 'running' && t.name.includes('Sync'));
 
   return (
     <AdminAuthGate isSyncing={isSyncing}>
       <DataLoadingContainer isLoading={isPhotosLoading} hasData={true}>
         <div className="flex flex-col h-screen bg-slate-50 overflow-hidden w-full relative">
-          {(currentScreen === 'gallery' || currentScreen === 'home') && <AdminHeader />}
-          <div className="flex-1 relative overflow-hidden pb-16 sm:pb-0">
-            {(currentScreen === 'home' || currentScreen === 'gallery') && !urlFilters.groupId ? (
-              <div key="admin-gallery" className="absolute inset-0 animate-fade-in">
-                <AdminContainer />
+          {(currentScreen === 'gallery' || currentScreen === 'home') ? (
+            <>
+              <AdminHeader />
+              <FiltersBar filters={filters} showStatus showBatch />
+              <div className="flex-1 relative overflow-hidden pb-16 sm:pb-0">
+                <div key="admin-gallery" className="absolute inset-0 animate-fade-in">
+                  <AdminContainer />
+                </div>
               </div>
-            ) : currentScreen === 'dashboard' ? (
-              <ScreenWrapper key="admin-dashboard" onClose={() => navigate({ to: '/admin' })}>
-                <StatisticsScreen />
-              </ScreenWrapper>
-            ) : currentScreen === 'batch' ? (
-              <ScreenWrapper key="admin-batch" onClose={() => navigate({ to: '/admin' })}>
-                <BatchEditScreen />
-              </ScreenWrapper>
-            ) : ['manage', 'settings', 'structure', 'logs', 'tasks', 'error-logs', 'diagnose'].includes(currentScreen) ? (
-              <div key="admin-settings-container" className="h-full bg-slate-50 animate-scale-in">
-                <SettingsPage onClose={() => navigate({ to: '/admin' })} />
-              </div>
-            ) : null}
+            </>
+          ) : (
+            <div className="flex-1 relative overflow-hidden pb-16 sm:pb-0">
+              {currentScreen === 'dashboard' ? (
+                <ScreenWrapper key="admin-dashboard" onClose={() => navigate({ to: '/admin' })}>
+                  <StatisticsScreen />
+                </ScreenWrapper>
+              ) : currentScreen === 'batch' ? (
+                <ScreenWrapper key="admin-batch" onClose={() => navigate({ to: '/admin' })}>
+                  <BatchEditScreen />
+                </ScreenWrapper>
+              ) : ['manage', 'settings', 'structure', 'logs', 'tasks', 'error-logs', 'diagnose'].includes(currentScreen) ? (
+                <div key="admin-settings-container" className="h-full bg-slate-50 animate-scale-in">
+                  <SettingsPage onClose={() => navigate({ to: '/admin' })} />
+                </div>
+              ) : null}
+            </div>
+          )}
 
           <input 
             type="file" id="admin-quick-add-input" multiple accept="image/*" className="hidden" 
@@ -121,8 +107,7 @@ export function AdminPageContent() {
             }}
           />
           
-            {(store.editPhotoId || store.newPhotoData) && <PhotoEditModal />}
-          </div>
+          {(store.editPhotoId || store.newPhotoData) && <PhotoEditModal />}
         </div>
       </DataLoadingContainer>
     </AdminAuthGate>

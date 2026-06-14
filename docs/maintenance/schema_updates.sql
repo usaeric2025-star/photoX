@@ -42,6 +42,12 @@ DROP CONSTRAINT IF EXISTS furniture_items_group_id_fkey,
 ADD CONSTRAINT furniture_items_group_id_fkey 
 FOREIGN KEY (group_id) REFERENCES public.groups(id) ON DELETE SET NULL;
 
+-- P1-1: Performance Indexes
+-- Critical for high-latency group detail page filtering and count operations.
+CREATE INDEX IF NOT EXISTS idx_furniture_items_group_id ON public.furniture_items(group_id);
+CREATE INDEX IF NOT EXISTS idx_furniture_items_is_hidden ON public.furniture_items(is_hidden) WHERE is_hidden = false;
+CREATE INDEX IF NOT EXISTS idx_furniture_items_category_id ON public.furniture_items(category_id);
+
 ALTER TABLE public.furniture_items 
 DROP CONSTRAINT IF EXISTS furniture_items_category_id_fkey,
 ADD CONSTRAINT furniture_items_category_id_fkey 

@@ -13,9 +13,6 @@
   --color-brand-purple: #7A00E6;
   --color-brand-purple-bg: #F3E8FF;
   --font-sans: "Geist Variable", "Inter", "Noto Sans SC", ui-sans-serif, system-ui, sans-serif;
-  
-  /* yarl overrides */
-  --yarl__color_backdrop: rgba(0, 0, 0, 0.95);
 
   /* 自定义呼吸动画 */
   @keyframes breathing {
@@ -66,9 +63,6 @@
   --animate-pulse-gentle: pulse-gentle 2s ease-in-out infinite;
 }
 
-/* .z-lightbox, .yarl__portal {
-  z-index: var(--z-lightbox, 1000) !important;
-} */
 
 @layer utilities {
   .animate-fade-in { animation: fade-in 0.2s ease-out; }
@@ -324,26 +318,4 @@ li[data-sonner-toast] [data-close-button] {
 
 li[data-sonner-toast] {
   touch-action: none !important;
-}
-
-@layer utilities {
-  .anchor-trigger {
-    anchor-name: --menu-anchor;
-  }
-  .anchor-content {
-    position: absolute;
-    position-anchor: --menu-anchor;
-    top: anchor(bottom);
-    left: anchor(left);
-    width: max-content;
-  }
-
-  /* ⚠️ FALLBACK ONLY: Used for older browsers that don't support Anchor Positioning.
-     In modern browsers, this path is effectively unreachable or ignored in favor of anchor logic. */
-  @supports not (position-anchor: --menu-anchor) {
-    .anchor-content {
-      top: 100%;
-      left: 0;
-    }
-  }
 }

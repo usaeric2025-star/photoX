@@ -1,6 +1,6 @@
 import { createQuery } from '@/lib/query/queryFactory';
 import { loadTagsFromCloud } from '@/services/tag/queries';
-import { tagKeys } from '@/lib/queryKeys';
+import { queryKeys } from '@/lib/query/keys';
 import { syncCache } from '@/lib/db/indexedDB';
 import { Tag } from '@/types';
 
@@ -8,7 +8,7 @@ import { Tag } from '@/types';
  * Hook to get the list of tags using standard query factory.
  */
 export const useTags = createQuery<Tag[]>({
-  queryKey: () => tagKeys.tags(),
+  queryKey: () => queryKeys.tags.tags(),
   staleTime: 1000 * 60 * 60 * 24, // 24 hours (very stable)
   gcTime: 1000 * 60 * 60 * 24,
   queryFn: async () => {

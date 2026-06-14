@@ -6,7 +6,7 @@ import { useGroupDetail } from "@/hooks";
 import { useAuth } from "@/hooks/core/auth/useAuth";
 import { saveGroup as saveGroupToCloud } from "@/services/group/commands";
 import { useSessionStorage } from '@/hooks/core/useSessionStorage';
-import { groupKeys } from "@/lib/queryKeys";
+import { queryKeys } from '@/lib/query/keys';
 
 export const useGroupDraft = (
   activeGroupId: string | null,
@@ -74,7 +74,7 @@ export const useGroupDraft = (
       try {
         await saveGroupToCloud(nextGroupData);
         queryClient.invalidateQueries({
-          queryKey: groupKeys.detail(activeGroupId),
+          queryKey: queryKeys.groups.detail(activeGroupId, true),
         });
         removeDraftGroup();
 

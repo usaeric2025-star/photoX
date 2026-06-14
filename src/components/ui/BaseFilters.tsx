@@ -47,10 +47,14 @@ export function BaseFilters({
 
       <button
         onClick={onSortChange}
-        className="h-10 sm:h-[34px] w-10 sm:w-[34px] flex items-center justify-center rounded-full hover:bg-slate-100 border border-slate-200/80 transition-colors"
-        title={`排序: ${currentSort === 'newest' ? '最新优先' : '最早优先'}`}
+        className={`h-10 sm:h-[34px] w-10 sm:w-[34px] flex items-center justify-center rounded-full transition-all border border-slate-200/80 ${
+          currentSort === 'oldest' 
+            ? 'bg-amber-50 text-amber-700 border-amber-200 shadow-sm' 
+            : 'hover:bg-slate-100 text-slate-600 bg-white'
+        }`}
+        title={currentSort === 'newest' ? '最新优先' : '最早优先'}
       >
-        <ArrowUpDown size={15} className="text-slate-600" />
+        <ArrowUpDown size={15} className={`transition-transform duration-200 ${currentSort === 'oldest' ? 'rotate-180 text-amber-600 font-bold' : 'text-slate-600'}`} />
       </button>
 
       <button

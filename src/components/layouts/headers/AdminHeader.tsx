@@ -2,7 +2,7 @@ import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React from 'react';
 import { LayoutDashboard, Camera, Menu, User as UserIcon, LogOut, Settings, LayoutGrid, MonitorPlay, CheckSquare, Sparkles } from 'lucide-react';
 import { useAuth, useUIStore, useSettings, usePhotoCount, useAdminBatchActions, usePermission } from '@/hooks';
-import { Dropdown, DropdownItem, DropdownSeparator } from '../../shared/Dropdown';
+import { Dropdown, DropdownTrigger, DropdownPortal, DropdownPositioner, DropdownPopup, DropdownItem, DropdownSeparator } from '../../shared/Dropdown';
 import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
 import { translations } from "@/locales";
 
@@ -135,68 +135,74 @@ export function AdminHeader({}: AdminHeaderProps) {
           </button>
   
           {/* 4. 菜单 (语言、登录、退出) */}
-          <Dropdown
-            align="right"
-            trigger={
+          <Dropdown>
+            <DropdownTrigger>
               <div className="h-9 w-9 sm:h-10 sm:w-10 flex items-center justify-center text-slate-600 hover:bg-slate-200 rounded-full transition-all cursor-pointer shrink-0 border border-slate-200 bg-white">
                 <Menu size={18} className="sm:size-5" />
               </div>
-            }
-          >
-             {user ? (
-                <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 select-none">
-                  <div className="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-white overflow-hidden text-[8px]">
-                    {user.photo_url ? (
-                      <img src={user.photo_url} referrerPolicy="no-referrer" alt="" />
-                    ) : (
-                      <UserIcon size={10} />
+            </DropdownTrigger>
+            <DropdownPortal>
+              <DropdownPositioner sideOffset={8} align="end">
+                <DropdownPopup className="min-w-[200px] bg-white rounded-xl shadow-2xl border border-slate-100 p-1 z-50">
+                  {user ? (
+                    <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 select-none">
+                      <div className="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-white overflow-hidden text-[8px]">
+                        {user.photo_url ? (
+                          <img src={user.photo_url} referrerPolicy="no-referrer" alt="" />
+                        ) : (
+                          <UserIcon size={10} />
+                        )}
+                      </div>
+                      {user.email?.split("@")[0]}
+                    </div>
+                  ) : (
+                    <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest select-none">
+                      {t.guestLabel}
+                    </div>
+                  )}
+                  
+                  <DropdownSeparator />
+
+                  <div className="px-2 py-1.5 flex flex-col gap-1">
+                    <span className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 select-none">{t.systemLabel}</span>
+                    {user && (
+                      <>
+                        <DropdownItem
+                          onClick={() => useUIStore.getState().update({ activeScreen: 'settings' })}
+                          className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-default outline-none data-[highlighted]:bg-blue-50 text-gray-700"
+                        >
+                          <Settings size={16} />
+                          {t.systemSettings}
+                        </DropdownItem>
+                        <DropdownItem
+                          onClick={() => useUIStore.getState().update({ activeScreen: 'tasks' })}
+                          className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-default outline-none data-[highlighted]:bg-blue-50 text-gray-700"
+                        >
+                          <LayoutGrid size={16} />
+                          {t.taskCenter}
+                        </DropdownItem>
+                      </>
                     )}
+                    <div className="mt-1">
+                      <LanguageSwitcher mode="segmented" />
+                    </div>
                   </div>
-                  {user.email?.split("@")[0]}
-                </div>
-             ) : (
-                <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest select-none">
-                  {t.guestLabel}
-                </div>
-             )}
-             
-             <DropdownSeparator />
 
-            <div className="px-2 py-1.5 flex flex-col gap-1">
-              <span className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 select-none">{t.systemLabel}</span>
-              {user && (
-                <>
-                  <DropdownItem
-                    icon={<Settings size={16} />}
-                    onClick={() => useUIStore.getState().update({ activeScreen: 'settings' })}
-                  >
-                    {t.systemSettings}
-                  </DropdownItem>
-                  <DropdownItem
-                    icon={<LayoutGrid size={16} />}
-                    onClick={() => useUIStore.getState().update({ activeScreen: 'tasks' })}
-                  >
-                    {t.taskCenter}
-                  </DropdownItem>
-                </>
-              )}
-              <div className="mt-1">
-                <LanguageSwitcher mode="segmented" />
-              </div>
-            </div>
-
-            {user && (
-              <>
-                <DropdownSeparator />
-                <DropdownItem
-                  icon={<LogOut size={16} />}
-                  danger
-                  onClick={() => logout()}
-                >
-                  {t.logoutAccount}
-                </DropdownItem>
-              </>
-            )}
+                  {user && (
+                    <>
+                      <DropdownSeparator />
+                      <DropdownItem
+                        onClick={() => logout()}
+                        className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-default outline-none data-[highlighted]:bg-blue-50 text-red-600 data-[highlighted]:bg-red-50"
+                      >
+                        <LogOut size={16} />
+                        {t.logoutAccount}
+                      </DropdownItem>
+                    </>
+                  )}
+                </DropdownPopup>
+              </DropdownPositioner>
+            </DropdownPortal>
           </Dropdown>
       </div>
     </header>

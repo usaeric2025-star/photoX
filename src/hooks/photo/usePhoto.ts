@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getPhotoById as loadPhotoById } from '@/services/photo/queries/detail';
-import { photoKeys } from '@/lib/queryKeys';
+import { queryKeys } from '@/lib/query/keys';
 import { Photo } from '@/types';
 
 /**
@@ -10,18 +10,18 @@ export const usePhoto = (photoId: string) => {
   const queryClient = useQueryClient();
 
   return useQuery({
-    queryKey: photoKeys.detail(photoId),
+    queryKey: queryKeys.photos.detail(photoId),
     queryFn: async () => {
       return await loadPhotoById(photoId);
     },
     enabled: !!photoId,
     initialData: () => {
       // 1. Try to find in detail cache
-      const detailed = queryClient.getQueryData<Photo>(photoKeys.detail(photoId));
+      const detailed = queryClient.getQueryData<Photo>(queryKeys.photos.detail(photoId));
       if (detailed) return detailed;
 
       // 2. Try to find in any infinite list query cache
-      const cachedPhotos = queryClient.getQueriesData<any>({ queryKey: photoKeys.all });
+      const cachedPhotos = queryClient.getQueriesData<any>({ queryKey: queryKeys.photos.all });
       for (const [key, data] of cachedPhotos) {
         if (data && data.pages) {
           for (const page of data.pages) {
@@ -36,13 +36,13 @@ export const usePhoto = (photoId: string) => {
     },
     initialDataUpdatedAt: () => {
         // Find if we have a detailed cache state
-        const detailState = queryClient.getQueryState(photoKeys.detail(photoId));
+        const detailState = queryClient.getQueryState(queryKeys.photos.detail(photoId));
         if (detailState?.dataUpdatedAt) {
             return detailState.dataUpdatedAt;
         }
         
         // Find the newest updated time from the photos list
-        const cachedPhotos = queryClient.getQueriesData<any>({ queryKey: photoKeys.all });
+        const cachedPhotos = queryClient.getQueriesData<any>({ queryKey: queryKeys.photos.all });
         let latestUpdates = 0;
         for (const [key, data] of cachedPhotos) {
             const state = queryClient.getQueryState(key);
