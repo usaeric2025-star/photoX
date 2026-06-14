@@ -15,11 +15,11 @@ export const GroupLightbox = ({ groupId, initialPhotoId, onClose, onEdit }: Grou
   const [currentIndex, setCurrentIndex] = useState(0);
   const [open, setOpen] = useState(false);
 
-  const initialIndex = useMemo(() => {
+  const initialIndex = (() => {
     if (!photos || photos.length === 0 || !initialPhotoId) return 0;
     const index = photos.findIndex((p: Photo) => p.id === initialPhotoId);
     return index === -1 ? 0 : index;
-  }, [photos, initialPhotoId]);
+  })();
 
   useEffect(() => {
     if (photos.length > 0 && initialPhotoId && !open) {
@@ -30,16 +30,16 @@ export const GroupLightbox = ({ groupId, initialPhotoId, onClose, onEdit }: Grou
 
   if (isLoading || !photos?.length) return null;
 
-  const items = photos.map((p: Photo) => ({
+  const items = useMemo(() => photos.map((p: Photo) => ({
     src: p.image_url || '',
     alt: (p.name as any)?.zh || String(p.name || ''),
-  }));
+  })), [photos]);
 
   return (
     <ReelkitAdapter
       open={open}
       items={items}
-      currentIndex={currentIndex}
+      initialIndex={currentIndex}
       onClose={() => {
         setOpen(false);
         onClose();

@@ -21,14 +21,17 @@ export const useAdminPhotos = () => {
     const { data: categories = EMPTY_ARRAY as any[] } = useCategories();
     const { data: tags = EMPTY_ARRAY as any[] } = useTags();
 
-    const infinitePhotosQuery = usePhotos({
+    const photoFilters = React.useMemo(() => ({
       category_id: filters.category || undefined,
       tag_id: filters.tags && filters.tags.length > 0 ? filters.tags[0] : undefined,
       searchQuery: filters.search || undefined,
       sortOrder: filters.sort || 'newest',
       isAdminMode: isAdminMode,
       status: filters.status || 'all'
-    } as any);
+    }), [filters.category, filters.tags, filters.search, filters.sort, isAdminMode, filters.status]);
+
+    const infinitePhotosQuery = usePhotos(photoFilters as any);
+
 
     const rawPhotos = (infinitePhotosQuery.data as any)?.photos || [];
 

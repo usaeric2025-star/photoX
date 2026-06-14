@@ -1,5 +1,5 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
-import React, { useState, useEffect, useLayoutEffect, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, Suspense, lazy } from 'react';
 import { ChevronLeft, X, Share2, Loader2 } from 'lucide-react';
 import { logger } from '@/lib/logger';
 import { Photo } from '@/types';
@@ -12,7 +12,7 @@ import { Skeleton } from '../ui/Skeleton';
 import { GroupHeader } from './GroupHeader';
 import { CollapsibleDescription } from './CollapsibleDescription';
 import { GroupGridView } from './GroupGridView';
-import { GroupAdminShell } from './GroupAdminShell';
+const GroupAdminShell = lazy(() => import('./GroupAdminShell').then(m => ({ default: m.GroupAdminShell })));
 import { GroupInfoPanel } from './GroupInfoPanel';
 import { Modal } from '../ui/Modal';
 
@@ -129,7 +129,11 @@ export function GroupDetailPage({}: GroupDetailPageProps) {
   if (!activeGroupId) return null;
 
   if (isAdminMode) {
-    return <GroupAdminShell />;
+    return (
+      <Suspense fallback={<GroupDetailSkeleton />}>
+        <GroupAdminShell />
+      </Suspense>
+    );
   }
 
   const handleClose = () => {

@@ -66,42 +66,37 @@ export function TagEditor({
 
   const { hotIds: hotTagsSet, pinnedIds } = usePhotoFilter(allTags, settings);
 
-  const selectedSet = React.useMemo(() => new Set(selectedTagIds.map(String)), [selectedTagIds]);
-  const pinnedSet = React.useMemo(() => new Set(pinnedIds.map(String)), [pinnedIds]);
+  const selectedSet = new Set(selectedTagIds.map(String));
+  const pinnedSet = new Set(pinnedIds.map(String));
   const hotSet = hotTagsSet;
 
   // 1. Data Source
-  const displayList = React.useMemo(() => {
-    let list: Tag[] = [];
-    const term = deferredSearchTerm.trim();
-    if (!term) {
-      list = allTags;
-    } else {
-      list = searchResults;
-      const searchIds = new Set(searchResults.map(t => String(t.id)));
-      const missingSelected = allTags.filter(t => selectedSet.has(String(t.id)) && !searchIds.has(String(t.id)));
-      list = [...list, ...missingSelected];
-    }
-    return list;
-  }, [deferredSearchTerm, allTags, searchResults, selectedSet]);
+  let displayList: Tag[] = [];
+  const term = deferredSearchTerm.trim();
+  if (!term) {
+    displayList = allTags;
+  } else {
+    displayList = searchResults;
+    const searchIds = new Set(searchResults.map(t => String(t.id)));
+    const missingSelected = allTags.filter(t => selectedSet.has(String(t.id)) && !searchIds.has(String(t.id)));
+    displayList = [...displayList, ...missingSelected];
+  }
 
   // 2. Sort Logic
-  const filteredTags = React.useMemo(() => {
-    return [...displayList].sort((a, b) => {
-      const aId = String(a.id);
-      const bId = String(b.id);
-      
-      const aSelected = selectedSet.has(aId);
-      const bSelected = selectedSet.has(bId);
-      if (aSelected !== bSelected) return aSelected ? -1 : 1;
+  const filteredTags = [...displayList].sort((a, b) => {
+    const aId = String(a.id);
+    const bId = String(b.id);
+    
+    const aSelected = selectedSet.has(aId);
+    const bSelected = selectedSet.has(bId);
+    if (aSelected !== bSelected) return aSelected ? -1 : 1;
 
-      const aPinned = pinnedSet.has(aId);
-      const bPinned = pinnedSet.has(bId);
-      if (aPinned !== bPinned) return aPinned ? -1 : 1;
+    const aPinned = pinnedSet.has(aId);
+    const bPinned = pinnedSet.has(bId);
+    if (aPinned !== bPinned) return aPinned ? -1 : 1;
 
-      return a.name.localeCompare(b.name, undefined, { numeric: true });
-    });
-  }, [displayList, selectedSet, pinnedSet]);
+    return a.name.localeCompare(b.name, undefined, { numeric: true });
+  });
 
   return (
     <div className="space-y-2">

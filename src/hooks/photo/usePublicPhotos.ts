@@ -19,13 +19,15 @@ export const usePublicPhotos = () => {
 
     const { data: manufacturers = EMPTY_ARRAY as any[] } = useManufacturers();
 
-    const infinitePhotosQuery = usePhotos({
+    const photoFilters = React.useMemo(() => ({
       category_id: filters.category || undefined,
       tag_id: filters.tags && filters.tags.length > 0 ? filters.tags[0] : undefined,
       searchQuery: filters.search || undefined,
       sortOrder: filters.sort || 'newest',
       isAdminMode: false
-    });
+    }), [filters.category, filters.tags, filters.search, filters.sort]);
+
+    const infinitePhotosQuery = usePhotos(photoFilters);
 
     const rawPhotosBase = (infinitePhotosQuery.data as any)?.photos || [];
     

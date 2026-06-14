@@ -1,11 +1,13 @@
 import { generateId } from '@/lib/id';
 import { showToast } from '@/lib/ui/toast';
 import { useUIStore } from '@/store/useUIStore';
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useMemo } from "react";
 import { X, Check, Search, Plus, Upload, Sparkles } from "lucide-react";
 import { Modal } from '@/components/ui/Modal';
 import { Photo } from "../../types";
 import { usePhotos, useTaskExecutor, useTasks, useInvalidatePhotos } from "@/hooks";
+import { createStableParams } from '@/lib/query/stableParams';
+import { globalActionQueue } from '@/lib/queue/ActionQueue';
 import { PAGINATION } from "../../constants/config";
 import { GroupGridView } from "./GroupGridView";
 import { cn } from "@/lib/utils";
@@ -107,10 +109,15 @@ export function GroupPhotoPicker({
   const { tasks } = useTasks();
   const isRunning = tasks.some((t) => t.status === "running");
 
-  const queryParams = { searchQuery: search, isAdminMode: true, onlyUngrouped: true };
+  const photoFilters = createStableParams('group-picker-search', {
+    searchQuery: search,
+    isAdminMode: true,
+    onlyUngrouped: true,
+    limit: PAGINATION.ADMIN_BATCH_SIZE
+  });
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
-    usePhotos({ ...queryParams, limit: PAGINATION.ADMIN_BATCH_SIZE });
+    usePhotos(photoFilters);
 
   const photos = data?.pages.flatMap((p: any) => p.photos) || [];
 
@@ -134,15 +141,18 @@ export function GroupPhotoPicker({
   const handleConfirm = async () => {
     if (selectedIds.length === 0) return;
 
-    await runTask(
-      "添加照片到群组",
-      async () => {
-        await onAdd(selectedIds);
-        onClose();
-        setSelectedIds([]);
-      },
-      { showSuccessToast: true, silent: true },
-    );
+    // Use globalActionQueue for non-blocking batch execution
+    globalActionQueue.add(async () => {
+      await runTask(
+        "添加照片到群组",
+        async () => {
+          await onAdd(selectedIds);
+          onClose();
+          setSelectedIds([]);
+        },
+        { showSuccessToast: true, silent: true },
+      );
+    });
   };
 
   return (

@@ -186,16 +186,18 @@ export const PhotoLightboxPage = () => {
     );
   };
 
+  const items = React.useMemo(() => photos.map(p => ({
+    src: p.thumbnail_md_url || p.image_url || '',
+    thumbnail: p.thumbnail_sm_url || p.image_url || '',
+    alt: (p.name as any)?.zh || String(p.name || ''),
+  })), [photos, appLang]);
+
   return (
     <>
       <ReelkitAdapter
         open={isOpen}
-        items={photos.map(p => ({
-          src: p.thumbnail_md_url || p.image_url || '',
-          thumbnail: p.thumbnail_sm_url || p.image_url || '',
-          alt: (p.name as any)?.zh || String(p.name || ''),
-        }))}
-        currentIndex={currentIndex}
+        items={items}
+        initialIndex={currentIndex}
         onClose={closeWithCleanup}
         onIndexChange={(idx: number) => {
           const photo = photos[idx];
@@ -240,11 +242,20 @@ const LightboxLoadingFallback = () => {
 
   React.useEffect(() => {
     if (ref.current && !ref.current.open) {
-      ref.current.showModal();
+      try {
+        ref.current.showModal();
+      } catch (e) {
+        console.warn('[LightboxLoadingFallback] Failed to execute showModal, falling back to open attribute:', e);
+        ref.current.setAttribute('open', '');
+      }
     }
     return () => {
       if (ref.current && ref.current.open) {
-        ref.current.close();
+        try {
+          ref.current.close();
+        } catch (e) {
+          ref.current.removeAttribute('open');
+        }
       }
     };
   }, []);

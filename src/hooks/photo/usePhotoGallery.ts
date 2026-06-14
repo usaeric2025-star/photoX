@@ -1,3 +1,4 @@
+import React from 'react';
 import { usePhotos, useAdminMode } from '@/hooks';
 import { useFilters } from '@/hooks/useFilters';
 
@@ -10,14 +11,16 @@ export function usePhotoGallery() {
   const isAdminMode = useAdminMode() && isManagement;
   const filters = useFilters({ enableStatus: true });
 
-  const infinitePhotosQuery = usePhotos({
+  const photosFilters = React.useMemo(() => ({
     category_id: filters.category || undefined,
     tag_id: filters.tags && filters.tags.length > 0 ? filters.tags[0] : undefined,
     searchQuery: filters.search || undefined,
     sortOrder: filters.sort || 'newest',
     isAdminMode: isAdminMode,
     is_hidden: isAdminMode ? undefined : false
-  });
+  }), [filters.category, filters.tags, filters.search, filters.sort, isAdminMode]);
+
+  const infinitePhotosQuery = usePhotos(photosFilters);
 
   const photos = infinitePhotosQuery.data?.photos ?? [];
 

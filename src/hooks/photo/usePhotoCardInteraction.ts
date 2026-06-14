@@ -6,8 +6,7 @@ import { useRouter } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { Photo } from '@/types';
 import { queryKeys } from '@/lib/query/keys';
-import { getGroupById } from '@/services/group/queries';
-import { STALE_TIMES } from '@/lib/query/config';
+import { prefetchGroupDetail } from '@/services/router/loaders';
 
 interface UsePhotoCardInteractionProps {
   photo: Photo;
@@ -61,12 +60,8 @@ export function usePhotoCardInteraction({
       const targetPath = isAdmin ? `/admin/group/${gid}` : `/group/${gid}`;
       router.preloadRoute({ to: targetPath, search: (prev: any) => prev }).catch(() => {});
       
-      // Prefetch data
-      queryClient.prefetchQuery({
-        queryKey: queryKeys.groups.detail(gid, isAdmin),
-        queryFn: () => getGroupById(gid, isAdmin ? 'admin' : 'public'),
-        staleTime: STALE_TIMES.GROUP_DETAIL,
-      }).catch(() => {});
+      // Prefetch data (including photos)
+      void prefetchGroupDetail(queryClient, gid, isAdmin);
     }
   };
 

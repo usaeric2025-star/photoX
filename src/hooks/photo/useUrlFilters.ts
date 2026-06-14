@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useFilters } from '../useFilters';
 
 /**
@@ -7,7 +8,7 @@ import { useFilters } from '../useFilters';
 export function useUrlFilters() {
   const f = useFilters();
 
-  const dataFilters = {
+  const dataFilters = useMemo(() => ({
     categoryId: f.category || null,
     tagId: f.tags?.[0] || null,
     manufacturerId: null,
@@ -16,20 +17,20 @@ export function useUrlFilters() {
     showGroupsCollapsed: f.showGroupsCollapsed !== false,
     is_hidden: f.status === 'hidden',
     onlyUngrouped: false,
-  };
+  }), [f.category, f.tags?.[0], f.search, f.sort, f.showGroupsCollapsed, f.status]);
 
-  const uiState = {
+  const uiState = useMemo(() => ({
     photoId: f.photoId || null,
     groupId: f.groupId || null,
     view: 'grid' 
-  };
+  }), [f.photoId, f.groupId]);
 
-  const filters = {
+  const filters = useMemo(() => ({
     ...dataFilters,
     ...uiState
-  };
+  }), [dataFilters, uiState]);
 
-  return { 
+  return useMemo(() => ({ 
     filters, 
     dataFilters,
     uiState,
@@ -41,5 +42,5 @@ export function useUrlFilters() {
     setPhotoId: f.setPhotoId, 
     setShowGroupsCollapsed: f.setShowGroupsCollapsed, 
     setView: () => {} // No-op
-  };
+  }), [filters, dataFilters, uiState, f.setCategory, f.setTags, f.setSearch, f.setSort, f.setGroupId, f.setPhotoId, f.setShowGroupsCollapsed]);
 }

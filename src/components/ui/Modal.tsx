@@ -41,11 +41,20 @@ export function Modal({
     if (!el) return;
     if (open) {
       if (!el.open) {
-        el.showModal();
+        try {
+          el.showModal();
+        } catch (e) {
+          console.warn('[Modal] Failed to execute showModal, falling back to open attribute:', e);
+          el.setAttribute('open', '');
+        }
       }
     } else {
       if (el.open) {
-        el.close();
+        try {
+          el.close();
+        } catch (e) {
+          el.removeAttribute('open');
+        }
       }
     }
   }, [open]);

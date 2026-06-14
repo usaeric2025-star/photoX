@@ -947,13 +947,21 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 
 ---
 
-## 新功能开发检查清单
-- [ ] Mutation 是否使用 createMutation 工厂？
-- [ ] 表单是否用 structuredClone 创建本地草稿？
-- [ ] 乐观更新是否在 onMutate 完成，onSuccess 仅做副作用？
-- [ ] 弹窗是否上报 activeDialogCount？
-- [ ] API 是否使用 Hono RPC？
-- [ ] 翻译字段是否通过 mapToDb 归一化？
+## React Compiler 使用規範（鎖定）
+
+### 必須刪除
+- ✅ 組件內部的 `useMemo`（如 `const filtered = useMemo(() => data.filter(...), [data])`）
+- ✅ 組件內部的 `useCallback`（如 `const handleClick = useCallback(() => {...}, [dep])`）
+- ✅ 簡單的派生狀態
+
+### 必須保留
+- ✅ 傳遞給子組件的物件 props（`options={useMemo(() => ({...}), [deps])}`）
+- ✅ Query Key 參數物件（避免無限請求）
+- ✅ `useEffect` 依賴的函數（使用 `useCallback`）
+- ✅ `React.memo`（Compiler 不處理組件級 memo）
+
+### 可選刪除
+- 📝 穩定不變的函數（Compiler 會處理，但保留也無害）
 
 ---
 

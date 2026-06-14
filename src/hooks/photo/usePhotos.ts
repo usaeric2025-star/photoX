@@ -2,6 +2,7 @@ import { createInfiniteQuery } from '@/lib/query/queryFactory';
 import { getPhotos as loadAllPhotosFromCloud } from '@/services/photo/queries/list';
 import { getPhotosByGroupPaginated as loadPhotosByGroupIdPaginated } from '@/services/photo/queries/byGroup';
 import { queryKeys } from '@/lib/query/keys';
+import { createStableParams } from '@/lib/query/stableParams';
 
 import { syncCache } from '@/lib/db/indexedDB';
 import { PHOTO_QUERY_CONFIG } from '@/constants/config';
@@ -47,20 +48,21 @@ export const usePhotos = createInfiniteQuery<{photos: Photo[], nextPage?: number
   },
   queryFn: async (filters, pageParam, signal) => {
     logger.debug('usePhotos queryFn called with filters:', filters);
-    const limit = filters.limit ?? PHOTO_QUERY_CONFIG.limit;
+    const stableFilters = createStableParams('photos-search', filters);
+    const limit = stableFilters.limit ?? PHOTO_QUERY_CONFIG.limit;
     const res = await loadAllPhotosFromCloud(
       undefined,
       pageParam - 1,
       limit,
-      filters.category_id,
-      filters.tag_id,
-      filters.searchQuery,
-      filters.isAdminMode || false,
+      stableFilters.category_id,
+      stableFilters.tag_id,
+      stableFilters.searchQuery,
+      stableFilters.isAdminMode || false,
       signal,
-      filters.sortOrder,
-      filters.onlyUngrouped || false,
-      filters.manufacturer_id,
-      filters.is_hidden
+      stableFilters.sortOrder,
+      stableFilters.onlyUngrouped || false,
+      stableFilters.manufacturer_id,
+      stableFilters.is_hidden
     );
 
     const photos = (res || []).map(p => {
@@ -115,10 +117,11 @@ export const useGroupPhotosResult = createInfiniteQuery<{photos: Photo[], total:
   placeholderData: keepPreviousData
 } as any);
 
-export const useGroupPhotos = (groupId: string | null, isAdminMode: boolean = false, pageSize: number = 60) => {
+export const useGroupPhotos = (groupId: string | null, isAdminMode: boolean = false, pageSize: number = 60, options?: any) => {
   const queryClient = useQueryClient();
   const query = useGroupPhotosResult({ groupId, isAdminMode, pageSize }, {
-    enabled: !!groupId
+    enabled: !!groupId,
+    ...options
   });
 
   return {

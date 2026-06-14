@@ -14,15 +14,9 @@ export const ManufacturerSelect = ({ name, manufacturers }: ManufacturerSelectPr
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const filtered = useMemo(() => 
-    manufacturers.filter(m => m.name.toLowerCase().includes(query.toLowerCase())),
-    [manufacturers, query]
-  );
+  const filtered = manufacturers.filter(m => m.name.toLowerCase().includes(query.toLowerCase()));
 
-  const selectedName = useMemo(() => 
-    manufacturers.find(m => m.id === field.value)?.name || '',
-    [manufacturers, field.value]
-  );
+  const selectedName = manufacturers.find(m => m.id === field.value)?.name || '';
 
   return (
     <div className="relative w-full" ref={containerRef}>

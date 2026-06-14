@@ -3,14 +3,15 @@ import { LightboxOverlay, type LightboxItem, type ControlsRenderProps, type Slid
 import '@reelkit/react-lightbox/styles.css';
 import { X, ChevronLeft, ChevronRight, Info, Pencil } from 'lucide-react';
 import { OptimizedImage } from '@/components/shared/OptimizedImage';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { ThumbnailsStrip } from './ThumbnailsStrip';
 
 interface ReelkitAdapterProps {
   open: boolean;
   items: Array<LightboxItem & { thumbnail?: string }>;
-  currentIndex: number;
+  initialIndex?: number;
   onClose: () => void;
-  onIndexChange: (index: number) => void;
+  onIndexChange?: (index: number) => void;
   onEdit?: (index: number) => void;
   onDelete?: (index: number) => void;
   onDownload?: (index: number) => void;
@@ -29,7 +30,7 @@ interface ReelkitAdapterProps {
 export const ReelkitAdapter = ({
   open,
   items,
-  currentIndex,
+  initialIndex = 0,
   onClose,
   onIndexChange,
   onEdit,
@@ -45,19 +46,30 @@ export const ReelkitAdapter = ({
   onToggleInfo
 }: ReelkitAdapterProps) => {
   const activeShowInfo = showInfo ?? false;
+  const apiRef = useRef<any>(null);
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const wasOpenRef = useRef(false);
 
+  // Sync internal state to parent
+  const handleIndexChange = (index: number) => {
+    setCurrentIndex(index);
+    onIndexChange?.(index);
+  };
+
+  // Reset lightbox position when opening
   useEffect(() => {
-    if (open && currentIndex >= 0) {
-      const activeThumb = document.getElementById(`lightbox-thumb-${currentIndex}`);
-      if (activeThumb) {
-        activeThumb.scrollIntoView({
-          behavior: 'smooth',
-          block: 'nearest',
-          inline: 'center'
-        });
+    if (open) {
+      if (!wasOpenRef.current) {
+        wasOpenRef.current = true;
+        if (apiRef.current) {
+          apiRef.current.goTo(initialIndex);
+          setCurrentIndex(initialIndex);
+        }
       }
+    } else {
+      wasOpenRef.current = false;
     }
-  }, [currentIndex, open]);
+  }, [open, initialIndex]);
 
   return (
     <Dialog.Root open={open} onOpenChange={(open) => !open && onClose()}>
@@ -67,9 +79,10 @@ export const ReelkitAdapter = ({
           <LightboxOverlay
             isOpen={true} // Controlled by Dialog.Root
             images={items}
-            initialIndex={currentIndex}
+            initialIndex={initialIndex}
+            apiRef={apiRef}
             onClose={onClose}
-            onSlideChange={onIndexChange}
+            onSlideChange={handleIndexChange}
             renderNavigation={({ onPrev, onNext }) => (
               <>
                 {/* Desktop Navigation Arrows */}
@@ -101,7 +114,7 @@ export const ReelkitAdapter = ({
                 <div className="fixed top-6 left-6 z-[110] pointer-events-none">
                   <div className="px-4 py-2 bg-black/40 backdrop-blur-md rounded-full border border-white/10 shadow-xl pointer-events-auto">
                     <span className="text-white text-xs font-bold tracking-[0.18em] tabular-nums uppercase opacity-90">
-                      {activeIndex + 1} <span className="opacity-30 px-1">/</span> {totalCount || count}
+                      {currentIndex + 1} <span className="opacity-30 px-1">/</span> {totalCount || count}
                     </span>
                   </div>
                 </div>
@@ -111,7 +124,7 @@ export const ReelkitAdapter = ({
                   {onEdit && (
                     <button 
                       type="button"
-                      onClick={() => onEdit(activeIndex)} 
+                      onClick={() => onEdit(currentIndex)} 
                       className="w-12 h-12 bg-black/40 hover:bg-black/60 active:scale-90 rounded-full text-white transition-all flex items-center justify-center backdrop-blur-md shadow-2xl border border-white/10"
                       aria-label="Edit"
                       title="編輯"
@@ -140,7 +153,7 @@ export const ReelkitAdapter = ({
                       {onSetCover && showSetCover && (
                         <button 
                           type="button"
-                          onClick={() => onSetCover(activeIndex)} 
+                          onClick={() => onSetCover(currentIndex)} 
                           className="h-9 px-4 sm:px-5 bg-amber-500/90 hover:bg-amber-500 rounded-full text-white transition-all text-[11px] font-bold uppercase tracking-widest whitespace-nowrap active:scale-95 shadow-md shrink-0"
                         >
                           設為封面
@@ -150,7 +163,7 @@ export const ReelkitAdapter = ({
                       {onDelete && (
                         <button 
                           type="button"
-                          onClick={() => onDelete(activeIndex)} 
+                          onClick={() => onDelete(currentIndex)} 
                           className="h-9 w-9 flex items-center justify-center hover:bg-red-500/80 hover:text-white rounded-full text-white/70 transition-all active:scale-95 shrink-0"
                           title="Delete"
                         >
@@ -177,33 +190,14 @@ export const ReelkitAdapter = ({
                 )}
 
                 {/* 3.6. BOTTOM THUMBNAIL TRACK (IMAGE REEL) */}
-                {items && items.length > 1 && (
-                  <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[110] pointer-events-auto max-w-[90vw] sm:max-w-2xl px-3 py-2 bg-black/45 backdrop-blur-xl rounded-2xl border border-white/10 flex items-center gap-2 overflow-x-auto scrollbar-none shadow-2xl transition-all duration-300">
-                    {items.map((item, idx) => {
-                      const isActive = idx === activeIndex;
-                      return (
-                        <button
-                          key={idx}
-                          type="button"
-                          id={`lightbox-thumb-${idx}`}
-                          onClick={() => onIndexChange(idx)}
-                          className={`relative w-12 h-12 rounded-lg overflow-hidden shrink-0 transition-all duration-300 ring-2 ${
-                            isActive 
-                              ? 'ring-white scale-110 shadow-lg opacity-100 z-10' 
-                              : 'ring-transparent hover:ring-white/40 opacity-40 hover:opacity-80'
-                          }`}
-                        >
-                          <img 
-                            src={item.thumbnail || item.src} 
-                            alt={(item as any).alt || ''} 
-                            className="w-full h-full object-cover pointer-events-none select-none"
-                            loading="lazy"
-                          />
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
+                <ThumbnailsStrip
+                  items={items}
+                  currentIndex={currentIndex}
+                  onSelect={(idx) => {
+                    apiRef.current?.goTo(idx);
+                    handleIndexChange(idx);
+                  }}
+                />
 
                 {/* 4. SIDEBAR PANEL AND BACKDROP OVERLAY */}
                 {renderSidebar && (

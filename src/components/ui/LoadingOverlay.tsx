@@ -17,9 +17,18 @@ export const LoadingOverlay = ({ isLoading, message, className }: LoadingOverlay
 
   useEffect(() => {
     if (isLoading && ref.current && !ref.current.open) {
-      ref.current.showModal();
+      try {
+        ref.current.showModal();
+      } catch (e) {
+        console.warn('[LoadingOverlay] Failed to execute showModal, falling back to open attribute:', e);
+        ref.current.setAttribute('open', '');
+      }
     } else if (!isLoading && ref.current && ref.current.open) {
-      ref.current.close();
+      try {
+        ref.current.close();
+      } catch (e) {
+        ref.current.removeAttribute('open');
+      }
     }
   }, [isLoading]);
 

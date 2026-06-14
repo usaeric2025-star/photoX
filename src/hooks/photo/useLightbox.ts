@@ -1,5 +1,5 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useUrlFilters } from "./useUrlFilters";
 import { usePhoto } from "./usePhoto";
 import { useGroupPhotos, usePhotos } from "./usePhotos";
@@ -23,11 +23,12 @@ export const useLightbox = () => {
   
   const isAdmin = location.pathname.startsWith('/admin');
   
-  // Use enabled condition to avoid unnecessary requests
-  const { data: singlePhoto, isLoading: isSingleLoading } = usePhoto(photoId || '');
-  const { data: groupDetail, isLoading: isGroupLoading } = useGroupDetail({ groupId: groupId || '', isAdmin });
-  const { data: groupPhotos, isLoading: isPhotosLoading } = useGroupPhotos(groupId, isAdmin, 60);
-  const { data: allGalleryPhotos, isLoading: isGalleryLoading } = usePhotos({
+  // Use enabled condition to avoid unnecessary requests in global route context
+  const { data: singlePhoto, isLoading: isSingleLoading } = usePhoto(photoId || '', { enabled: !!photoId });
+  const { data: groupDetail, isLoading: isGroupLoading } = useGroupDetail({ groupId: groupId || '', isAdmin }, { enabled: !!photoId && !!groupId });
+  const { data: groupPhotos, isLoading: isPhotosLoading } = useGroupPhotos(groupId, isAdmin, 60, { enabled: !!photoId && !!groupId });
+
+  const photoFilters = useMemo(() => ({
     category_id: dataFilters.categoryId,
     tag_id: dataFilters.tagId,
     manufacturer_id: dataFilters.manufacturerId,
@@ -37,7 +38,9 @@ export const useLightbox = () => {
     onlyUngrouped: false,
     is_hidden: dataFilters.is_hidden,
     limit: PHOTO_QUERY_CONFIG.limit
-  }, { enabled: !groupId });
+  }), [dataFilters.categoryId, dataFilters.tagId, dataFilters.manufacturerId, dataFilters.searchQuery, dataFilters.sortOrder, isAdmin, dataFilters.is_hidden]);
+
+  const { data: allGalleryPhotos, isLoading: isGalleryLoading } = usePhotos(photoFilters, { enabled: !!photoId && !groupId });
   
   const isGroupMode = !!groupId; // Within a group's context
   
