@@ -1,7 +1,7 @@
 import { useMemo, useEffect } from 'react';
 import { useLightboxState } from './hooks/useLightboxState';
 import { LightboxHeader } from './LightboxHeader';
-import { LightboxThumbnails } from './LightboxThumbnails';
+import { ThumbRail } from './ThumbRail';
 import { LightboxInfo } from './LightboxInfo';
 import { LightboxImage } from './LightboxImage';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -72,11 +72,12 @@ export function Lightbox({
       />
 
       {/* 主照片區域 */}
-      <div className="flex-1 flex items-center justify-center relative touch-none">
+      <div className="flex-1 flex items-center justify-center relative touch-none overflow-hidden">
         <LightboxImage 
           src={currentItem.src} 
           alt={currentItem.title} 
-          className="max-h-[calc(100vh-120px)] max-w-[100vw] sm:max-w-[90vw] object-contain transition-transform duration-300" 
+          loading="eager"
+          className="max-h-[calc(100vh-250px)] max-w-[100vw] sm:max-w-[90vw] object-contain transition-transform duration-300" 
         />
 
         {/* 導航區域（點擊左右側切換） */}
@@ -98,8 +99,14 @@ export function Lightbox({
         )}
       </div>
 
+      {/* 隱藏的預載相鄰圖片 (用 opacity-0 而非 hidden，避免部分瀏覽器不載入 display: none 圖片) */}
+      <div className="absolute opacity-0 pointer-events-none w-0 h-0 overflow-hidden z-[-1]">
+        {currentIndex > 0 && <img src={items[currentIndex - 1].src} alt="preload prev" />}
+        {currentIndex < stableItems.length - 1 && <img src={items[currentIndex + 1].src} alt="preload next" />}
+      </div>
+
       {/* 縮圖軌道 */}
-      <LightboxThumbnails items={stableItems} currentIndex={currentIndex} onSelect={goTo} />
+      <ThumbRail items={stableItems} currentIndex={currentIndex} onSelect={goTo} />
 
       {/* 資訊卡 */}
       <LightboxInfo

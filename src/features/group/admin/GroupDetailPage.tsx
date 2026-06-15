@@ -46,11 +46,10 @@ function AdminPhotoGrid({ photos, onPhotoClick }: { photos: any[]; onPhotoClick:
 
 export function AdminGroupDetailPage() {
   const routerSafe = useRouterSafe();
-  const { groupId: fGroupId } = useFilters();
+  const { groupId: fGroupId, setPhotoId } = useFilters();
   const groupId = (routerSafe.params as any).groupId || fGroupId;
   
   const { group, photos, totalCount, loading, error } = useGroupData({ groupId, isAdmin: true });
-  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const [showAdminTools, setShowAdminTools] = useState(false);
   const isMultiSelect = useUIStore((s) => s.isMultiSelect);
   const lang = useUIStore(s => s.appLang);
@@ -100,19 +99,7 @@ export function AdminGroupDetailPage() {
         />
       </div>
       <div className="flex-1 overflow-y-auto relative overscroll-y-auto overscroll-x-none bg-slate-50">
-        <AdminPhotoGrid photos={photos} onPhotoClick={setSelectedPhoto} />
-        <Lightbox
-          mode="admin"
-          open={!!selectedPhoto}
-          items={photos.map((p: any) => ({
-            id: p.id,
-            src: p.image_url || '',
-            thumbnail: p.thumbnail_sm_url || p.image_url,
-            title: (p.name as any)?.zh || String(p.name || ''),
-          }))}
-          initialIndex={Math.max(0, photos.findIndex((p: any) => p.id === selectedPhoto))}
-          onClose={() => setSelectedPhoto(null)}
-        />
+        <AdminPhotoGrid photos={photos} onPhotoClick={setPhotoId} />
       </div>
 
       {isMultiSelect && (

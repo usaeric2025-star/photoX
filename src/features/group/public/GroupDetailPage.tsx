@@ -25,11 +25,10 @@ function PublicPhotoGrid({ photos, onPhotoClick }: { photos: any[]; onPhotoClick
 
 export function PublicGroupDetailPage() {
   const routerSafe = useRouterSafe();
-  const { groupId: fGroupId } = useFilters();
+  const { groupId: fGroupId, setPhotoId } = useFilters();
   const groupId = (routerSafe.params as any).groupId || fGroupId;
   
   const { group, photos, totalCount, loading, error } = useGroupData({ groupId, isAdmin: false });
-  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   
   if (loading) return <div className="p-8 text-center text-slate-500">載入中...</div>;
   if (error) return <div className="p-4 text-red-500">錯誤：{error}</div>;
@@ -45,19 +44,7 @@ export function PublicGroupDetailPage() {
         />
       </div>
       <div className="flex-1 overflow-y-auto relative overscroll-y-auto overscroll-x-none bg-slate-50">
-        <PublicPhotoGrid photos={photos} onPhotoClick={setSelectedPhoto} />
-        <Lightbox
-          mode="public"
-          open={!!selectedPhoto}
-          items={photos.map((p: any) => ({
-            id: p.id,
-            src: p.image_url || '',
-            thumbnail: p.thumbnail_sm_url || p.image_url,
-            title: (p.name as any)?.zh || String(p.name || ''),
-          }))}
-          initialIndex={Math.max(0, photos.findIndex((p: any) => p.id === selectedPhoto))}
-          onClose={() => setSelectedPhoto(null)}
-        />
+        <PublicPhotoGrid photos={photos} onPhotoClick={setPhotoId} />
       </div>
     </div>
   );
