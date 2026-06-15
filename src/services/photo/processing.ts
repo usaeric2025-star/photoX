@@ -98,15 +98,15 @@ export function filterPhotos(
     }
 
     result = result.filter(p => {
-      const nameObj = p.name || {};
-      const descObj = p.description || {};
+      const nameObj = (p.name || {}) as any;
+      const descObj = (p.description || {}) as any;
       
       const searchableName = typeof nameObj === 'string' 
-        ? nameObj.toLowerCase() 
+        ? (nameObj as string).toLowerCase() 
         : `${nameObj.zh || ''} ${nameObj.en || ''} ${nameObj.ms || ''}`.toLowerCase();
         
       const searchableDesc = typeof descObj === 'string'
-        ? descObj.toLowerCase()
+        ? (descObj as string).toLowerCase()
         : `${descObj.zh || ''} ${descObj.en || ''} ${descObj.ms || ''}`.toLowerCase();
 
       const hasBasicMatch = 

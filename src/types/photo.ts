@@ -121,11 +121,19 @@ export type Group = ProductGroup;
 
 export interface ProductFormData {
   id?: string;
-  name: string;
+  name: {
+    zh: string;
+    en?: string;
+    ms?: string;
+  };
   category_id: string | null;
   manufacturer_id: string | null;
   tags: Tag[];
-  description: string;
+  description: {
+    zh: string;
+    en?: string;
+    ms?: string;
+  };
   item_code: string;
   manual_code: string;
   model_number: string;

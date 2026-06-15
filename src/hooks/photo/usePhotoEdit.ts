@@ -19,8 +19,8 @@ export function usePhotoEdit(initialPhoto: Photo | null): PhotoEditFormReturn {
   const invalidatePhotos = useInvalidatePhotos();
   
   const emptyPhoto: ProductFormData = {
-    name: '',
-    description: '',
+    name: { zh: '', en: '', ms: '' },
+    description: { zh: '', en: '', ms: '' },
     category_id: null,
     manufacturer_id: null,
     tags: [],
@@ -36,8 +36,12 @@ export function usePhotoEdit(initialPhoto: Photo | null): PhotoEditFormReturn {
   const initialValues = initialPhoto ? {
     ...emptyPhoto,
     ...initialPhoto,
-    name: String(initialPhoto.name || ''),
-    description: String(initialPhoto.description || ''),
+    name: typeof initialPhoto.name === 'object' 
+      ? { zh: '', en: '', ms: '', ...initialPhoto.name as any }
+      : { zh: String(initialPhoto.name || ''), en: '', ms: '' },
+    description: typeof initialPhoto.description === 'object'
+      ? { zh: '', en: '', ms: '', ...initialPhoto.description as any }
+      : { zh: String(initialPhoto.description || ''), en: '', ms: '' },
   } : emptyPhoto;
 
   const { draft, updateDraft, resetDraft } = useFormDraft<ProductFormData>(initialValues as ProductFormData);

@@ -1,6 +1,6 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import { useEffect, useMemo } from "react";
-import { useFilters } from '@/hooks';
+import { useFilters, useUIStore } from '@/hooks';
 import { usePhoto } from "./usePhoto";
 import { useGroupPhotos, usePhotos } from "./usePhotos";
 import { useGroupDetail } from "../groups/useGroupDetail";
@@ -138,8 +138,7 @@ export const useLightbox = () => {
     }
   }, [photoId, photos, currentIndex]);
   
-  const { data: langData } = useQuery({ queryKey: ['current-lang'], enabled: false });
-  const currentLang = (langData as any)?.lang || 'zh';
+  const currentLang = useUIStore(s => s.appLang);
 
   const items = useMemo(() => {
     return photos.map(p => ({

@@ -68,8 +68,8 @@ export function BatchEditForm({
               <input 
                 type="text" 
                 placeholder="统一名称..." 
-                value={formState.name || ''}
-                onChange={(e) => handleUpdateForm({ name: e.target.value })}
+                value={typeof formState.name === 'object' ? formState.name.zh : ''}
+                onChange={(e) => handleUpdateForm({ name: { zh: e.target.value, en: '', ms: '' } })}
                 className="w-full bg-white border border-slate-200 px-3 py-2 rounded-xl font-bold outline-none focus:border-blue-500 shadow-sm min-w-0" 
               />
             </div>

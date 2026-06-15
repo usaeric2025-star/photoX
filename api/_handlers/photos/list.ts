@@ -55,8 +55,16 @@ export const listHandler = (app: Hono) => {
 
     if (searchQuery && searchQuery.trim().length > 0) {
       const dbSearchQuery = decodeURIComponent(searchQuery).replace(/[%_]/g, '\\$&').trim();
-      // Correctly search across JSONB name fields (zh, en, ms)
-      query = query.or(`name->>zh.ilike.%${dbSearchQuery}%,name->>en.ilike.%${dbSearchQuery}%,name->>ms.ilike.%${dbSearchQuery}%`);
+      // Expanded search: multilingual names + codes + models
+      const fields = [
+        `name->>zh.ilike."%${dbSearchQuery}%"`,
+        `name->>en.ilike."%${dbSearchQuery}%"`,
+        `name->>ms.ilike."%${dbSearchQuery}%"`,
+        `manual_code.ilike."%${dbSearchQuery}%"`,
+        `model_number.ilike."%${dbSearchQuery}%"`,
+        `item_code.ilike."%${dbSearchQuery}%"`
+      ];
+      query = query.or(fields.join(','));
     }
 
     if (onlyUngrouped) query = query.is('group_id', null);
@@ -200,8 +208,16 @@ export const listHandler = (app: Hono) => {
 
     if (searchQuery && searchQuery.trim().length > 0) {
       const dbSearchQuery = decodeURIComponent(searchQuery).replace(/[%_]/g, '\\$&').trim();
-      // Correctly search across JSONB name fields (zh, en, ms)
-      query = query.or(`name->>zh.ilike.%${dbSearchQuery}%,name->>en.ilike.%${dbSearchQuery}%,name->>ms.ilike.%${dbSearchQuery}%`);
+      // Expanded search: multilingual names + codes + models
+      const fields = [
+        `name->>zh.ilike."%${dbSearchQuery}%"`,
+        `name->>en.ilike."%${dbSearchQuery}%"`,
+        `name->>ms.ilike."%${dbSearchQuery}%"`,
+        `manual_code.ilike."%${dbSearchQuery}%"`,
+        `model_number.ilike."%${dbSearchQuery}%"`,
+        `item_code.ilike."%${dbSearchQuery}%"`
+      ];
+      query = query.or(fields.join(','));
     }
 
     if (!isAdminMode) query = query.or('is_hidden.is.false,is_hidden.is.null');
