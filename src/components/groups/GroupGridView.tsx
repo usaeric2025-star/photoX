@@ -21,6 +21,7 @@ interface GroupGridViewProps {
   hasNextPage?: boolean;
   header?: React.ReactNode;
   onScroll?: (e: any) => void;
+  isSortable?: boolean;
 }
 
 function PhotoItem({ photo, index, getPhotoProps, onClick, onContextMenu, isHighlighted }: any) {
@@ -131,7 +132,7 @@ export function GroupGridView({
         shift={true}
         itemSize={estimatedItemSize}
         ref={virtualGridRef}
-        count={isLoading ? 12 : (groupData?.member_count && groupData.member_count > photos.length ? groupData.member_count : photos.length)}
+        count={isLoading ? 12 : photos.length}
         lanes={denseColumns}
         onEndReached={onEndReached}
         onScroll={onScroll}

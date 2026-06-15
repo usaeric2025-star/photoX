@@ -17,6 +17,8 @@ import { GroupInfoPanel } from './GroupInfoPanel';
 import { Modal } from '../ui/Modal';
 
 import { useUIStore, useShallow } from '@/store/useUIStore';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query/keys';
 import { createTranslate } from '@/locales';
 import { LanguageCode } from '@/locales';
 import { CopyableId } from '@/components/ui/CopyableId';
@@ -38,6 +40,15 @@ export function GroupDetailPage({}: GroupDetailPageProps) {
   const lang = useUIStore((s) => s.appLang);
   const t = translations[lang as keyof typeof translations] || translations.en;
   const { data: categories = [] } = useCategories();
+  
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    if (activeGroupId) {
+       queryClient.prefetchInfiniteQuery({
+         queryKey: queryKeys.photos.infinite({ groupId: activeGroupId }),
+       });
+    }
+  }, [activeGroupId, queryClient]);
   
   const virtualGridRef = useRef<{ scrollToIndex: (args: { index: number; align?: string; behavior?: string }) => void } | null>(null);
   const [currentHighlightId, setCurrentHighlightId] = useState<string | null>(null);
@@ -83,9 +94,9 @@ export function GroupDetailPage({}: GroupDetailPageProps) {
     }
   }, [activeGroupId, initialPhotoId]);
 
-  const totalGroupPhotosCount = groupData?.member_count || (() => {
-    if (!infinitePhotosData?.pages || infinitePhotosData.pages.length === 0) return undefined;
-    return (infinitePhotosData.pages[0] as { total: number }).total;
+  const totalGroupPhotosCount = (() => {
+    if (infinitePhotosData?.pages && infinitePhotosData.pages.length > 0) return (infinitePhotosData.pages[0] as { total: number }).total;
+    return groupData?.member_count;
   })();
 
   const initializedRef = useRef(false);
