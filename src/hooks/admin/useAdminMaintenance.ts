@@ -15,10 +15,14 @@ export function useAdminMaintenance() {
 
   return {
     updatePhoto: photoEdit,
-    deletePhoto: photoDelete.mutateAsync, // Update to support await
-    deletePhotoMutation: photoDelete,
+    deletePhoto: photoDelete,
     batchUpdate: photoBatchUpdate,
     togglePin: photoTogglePin,
-    handleBatchAiAnalyze: aiBatch.handleBatchAiAnalyze
+    handleBatchAiAnalyze: aiBatch.handleBatchAiAnalyze,
+    // Add full objects for destructuring compatibility
+    photoEdit,
+    photoDelete,
+    photoBatchUpdate,
+    photoTogglePin,
   };
 }

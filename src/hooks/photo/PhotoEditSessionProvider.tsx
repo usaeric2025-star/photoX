@@ -26,6 +26,7 @@ export const PhotoEditSessionProvider = ({
   children, 
   onSuccess 
 }: PhotoEditSessionProps) => {
+  const isNew = !photoId;
   const { data: photo, isLoading } = usePhoto(photoId);
   const updateMutation = usePhotoEditMutation();
   
@@ -74,10 +75,10 @@ export const PhotoEditSessionProvider = ({
       // Construct a copyable error summary
       const errorData = {
         message: err.message,
-        traceId: err.traceId, // Include traceId if available from ErrorFactory
+        traceId: (err as any).traceId,
         photoId,
         formValues: form.getValues(),
-        stack: err.stack,
+        stack: (err as any).stack,
       };
       
       const errorString = JSON.stringify(errorData, null, 2);
@@ -100,13 +101,19 @@ export const PhotoEditSessionProvider = ({
     form.reset(photo as any);
   };
   
-  if (isLoading || !photo) return null;
+  // Do not return null to avoid blocking parent modal rendering
+  // but provide a loading state indicator if necessary (handled by children)
   
   return (
     <FormProvider {...form}>
-      <PhotoEditSessionContext.Provider value={{ isDirty, isPending: updateMutation.isPending, commit, discard }}>
+      <PhotoEditSessionContext.Provider value={{ 
+        isDirty, 
+        isPending: updateMutation.isPending || isLoading, // Also include loading in isPending
+        commit, 
+        discard 
+      }}>
         {children}
       </PhotoEditSessionContext.Provider>
     </FormProvider>
   );
-};
+}

@@ -15,8 +15,20 @@ export function useFilterState() {
 
   const updateFilters = (updates: Partial<FilterState>) => {
     if (updates.search !== undefined) f.setSearch(updates.search);
-    if (updates.categoryId !== undefined) f.setCategory(updates.categoryId || '');
-    if (updates.tagIds !== undefined) f.setTags(updates.tagIds);
+    if (updates.categoryId !== undefined) {
+      f.setCategory(updates.categoryId || '');
+      // When a specific category is selected, clear tags to avoid aggregation
+      if (updates.categoryId) {
+        f.setTags([]);
+      }
+    }
+    if (updates.tagIds !== undefined) {
+      f.setTags(updates.tagIds);
+      // When tags are selected, clear category to avoid aggregation
+      if (updates.tagIds && updates.tagIds.length > 0) {
+        f.setCategory('');
+      }
+    }
     if (updates.sort !== undefined) f.setSort(updates.sort);
     if (updates.status !== undefined) f.setStatus(updates.status);
   };

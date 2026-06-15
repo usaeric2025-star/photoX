@@ -9,8 +9,8 @@ import { Tag } from '@/types';
  */
 export const useTags = createQuery<Tag[]>({
   queryKey: () => queryKeys.tags.tags(),
-  staleTime: 1000 * 60 * 60 * 24, // 24 hours (very stable)
-  gcTime: 1000 * 60 * 60 * 24,
+  staleTime: 1000 * 60 * 5, // 5 minutes (more responsive)
+  gcTime: 1000 * 60 * 30, // 30 minutes
   queryFn: async () => {
     const tags = await loadTagsFromCloud();
     syncCache.saveTags(tags).catch(() => {});

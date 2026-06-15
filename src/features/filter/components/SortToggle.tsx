@@ -7,7 +7,6 @@ export function SortToggle() {
 
   const handleClick = () => {
     updateFilters({ sort: isNewest ? 'oldest' : 'newest' });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (

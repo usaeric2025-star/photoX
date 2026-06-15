@@ -15,14 +15,18 @@ interface UsePhotoCardInteractionProps {
   isMultiSelect: boolean;
   showGroupsCollapsed: boolean;
   hasSearchQuery: boolean;
+  onClick?: (e: React.MouseEvent) => void;
 }
+
+import { useFilters } from '@/hooks/useFilters';
 
 export function usePhotoCardInteraction({
   photo,
   isManagement,
   isMultiSelect,
   showGroupsCollapsed,
-  hasSearchQuery
+  hasSearchQuery,
+  onClick
 }: UsePhotoCardInteractionProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const longPressTriggered = useRef(false);
@@ -30,22 +34,14 @@ export function usePhotoCardInteraction({
   
   const toggleSelected = useUIStore((s) => s.toggleSelected);
   const update = useUIStore((s) => s.update);
-  const navigate = useRouterSafe().navigate;
+  const { navigate, location } = useRouterSafe();
   const router = useRouter();
   const queryClient = useQueryClient();
-
-  const startTransition = (callback: () => void) => {
-    // @ts-ignore
-    if (document.startViewTransition) {
-      // @ts-ignore
-      document.startViewTransition(callback);
-    } else {
-      callback();
-    }
-  };
+  const { setPhotoId } = useFilters();
 
   const handleOpenLightbox = () => {
-    navigate({ to: '.', search: (prev: any) => ({ ...prev, photoId: photo.id } as any) });
+    console.log('[usePhotoCardInteraction] handleOpenLightbox for photo:', photo.id);
+    setPhotoId(photo.id);
   };
     
   const handleGroupNavigate = (gid: string) => {
@@ -54,7 +50,8 @@ export function usePhotoCardInteraction({
   };
 
   const handleMouseEnter = () => {
-    if (photo.group_id && showGroupsCollapsed && !hasSearchQuery) {
+    const isAlreadyOnGroupPage = location?.pathname?.includes('/group/');
+    if (photo.group_id && showGroupsCollapsed && !hasSearchQuery && !isAlreadyOnGroupPage) {
       const gid = photo.group_id;
       const isAdmin = isManagement;
       // Preload route
@@ -71,32 +68,37 @@ export function usePhotoCardInteraction({
   };
 
   const handleClick = (e: React.MouseEvent) => {
+    console.log('[usePhotoCardInteraction] CLICKED photo:', photo.id, { isManagement, isMultiSelect, hasSearchQuery });
     if (longPressTriggered.current) {
+      console.log('[usePhotoCardInteraction] BLOCKED by long press');
       e.stopPropagation();
       e.preventDefault();
       return;
     }
 
-    if (isManagement) {
-      if (isMultiSelect) {
-        e.stopPropagation();
-        e.preventDefault();
-        toggleSelected(photo.id);
-      } else if (photo.group_id && showGroupsCollapsed && !hasSearchQuery) {
-        e.stopPropagation();
-        e.preventDefault();
-        handleGroupNavigate(photo.group_id!);
-      } else {
-        handleOpenLightbox();
-      }
-    } else {
-      if (photo.group_id && showGroupsCollapsed && !hasSearchQuery) {
-        e.stopPropagation();
-        e.preventDefault();
-        handleGroupNavigate(photo.group_id!);
-      } else {
-        handleOpenLightbox();
-      }
+    if (isMultiSelect) {
+      console.log('[usePhotoCardInteraction] SELECTING photo:', photo.id);
+      e.stopPropagation();
+      e.preventDefault();
+      toggleSelected(photo.id);
+      return;
+    }
+
+    const isAlreadyOnGroupPage = location?.pathname?.includes('/group/');
+
+    if (photo.group_id && showGroupsCollapsed && !hasSearchQuery && !isAlreadyOnGroupPage) {
+      console.log('[usePhotoCardInteraction] NAVIGATING to group:', photo.group_id);
+      e.stopPropagation();
+      e.preventDefault();
+      handleGroupNavigate(photo.group_id!);
+      return;
+    }
+
+    console.log('[usePhotoCardInteraction] OPENING Lightbox');
+    handleOpenLightbox();
+
+    if (onClick) {
+      onClick(e);
     }
   };
 

@@ -275,5 +275,6 @@ export const en = {
     systemCodeAuto: 'Auto-generating...',
     itemCodePlaceholder: 'Item code...',
     modelNumberPlaceholder: 'Numbers only...',
-    pricePlaceholder: '0'
+    pricePlaceholder: '0',
+    none: 'None'
 };

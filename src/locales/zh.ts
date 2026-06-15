@@ -275,5 +275,6 @@ export const zh = {
     systemCodeAuto: '自动生成中...',
     itemCodePlaceholder: '編號...',
     modelNumberPlaceholder: '仅限数字...',
-    pricePlaceholder: '0'
+    pricePlaceholder: '0',
+    none: '无'
 };

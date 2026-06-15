@@ -25,7 +25,7 @@ interface VirtualPhotoGridProps {
   filters?: any;
 }
 
-export const VirtualPhotoGrid = ({
+export const VirtualPhotoGrid = React.memo(({
   photos = [],
   isFetching,
   isFetchingNextPage,
@@ -94,7 +94,7 @@ export const VirtualPhotoGrid = ({
     const photo = photos[index];
     if (!photo) return null;
     return (
-      <div key={photo.id} className="p-1.5 sm:p-2 w-full">
+      <div key={photo.id} className="p-0.5 sm:p-1 w-full">
         {renderCard(photo, index, categories)}
       </div>
     );
@@ -148,6 +148,6 @@ export const VirtualPhotoGrid = ({
       </div>
     </div>
   );
-};
+});
 
 

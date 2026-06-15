@@ -137,16 +137,29 @@ export function filterPhotos(
   // 3. Category / Manufacturer / Tag Filter
   if (filterCatId || filterSubId || filterTagIds.length > 0) {
     result = result.filter(p => {
-      if (filterCatId && String(p.category_id) !== String(filterCatId)) return false;
-      if (filterSubId && p.manufacturer_id !== filterSubId) return false;
-      if (filterTagIds.length > 0) {
+      const hasCat = !!filterCatId;
+      const hasTag = filterTagIds.length > 0;
+      
+      const matchesCat = hasCat && String(p.category_id) === String(filterCatId);
+      const matchesSub = !filterSubId || p.manufacturer_id === filterSubId;
+      
+      let matchesTag = false;
+      if (hasTag) {
         const pTags = p.tags || [];
-        const matchesAll = filterTagIds.every(tid => 
+        matchesTag = filterTagIds.every(tid => 
           pTags.some(t => String(t.id) === String(tid))
         );
-        if (!matchesAll) return false;
       }
-      return true;
+      
+      if (hasCat && hasTag) {
+        return (matchesCat || matchesTag) && matchesSub;
+      } else if (hasCat) {
+        return matchesCat && matchesSub;
+      } else if (hasTag) {
+        return matchesTag && matchesSub;
+      }
+      
+      return matchesSub;
     });
   }
 

@@ -117,10 +117,13 @@ export const ListByGroupReqSchema = type({
 });
 
 export const CategoryReqSchema = type({
-    id: "string",
-    "name?": "string",
-    "zh?": "string",
-    "order?": "number"
+    "id?": "string|number",
+    code: "string",
+    name_zh: "string",
+    "name_en?": "string",
+    "name_ms?": "string",
+    "sort_order?": "number",
+    "is_active?": "boolean"
 });
 
 export const TagReqSchema = type({

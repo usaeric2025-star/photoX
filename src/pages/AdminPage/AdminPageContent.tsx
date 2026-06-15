@@ -106,8 +106,6 @@ export function AdminPageContent() {
               e.target.value = '';
             }}
           />
-          
-          {(store.editPhotoId || store.newPhotoData) && <PhotoEditModal />}
         </div>
       </DataLoadingContainer>
     </AdminAuthGate>

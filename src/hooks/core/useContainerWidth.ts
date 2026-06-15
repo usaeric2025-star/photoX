@@ -7,23 +7,15 @@ export function useContainerWidth<T extends HTMLElement>() {
   useEffect(() => {
     if (!containerRef.current) return;
     
-    let timeoutId: number | null = null;
-    
     const observer = new ResizeObserver((entries) => {
       if (entries[0]) {
-        const newWidth = entries[0].contentRect.width;
-        if (timeoutId !== null) window.clearTimeout(timeoutId);
-        
-        timeoutId = window.setTimeout(() => {
-          setWidth(newWidth);
-        }, 100);
+        setWidth(entries[0].contentRect.width);
       }
     });
     
     observer.observe(containerRef.current);
     return () => {
       observer.disconnect();
-      if (timeoutId !== null) window.clearTimeout(timeoutId);
     };
   }, []);
 

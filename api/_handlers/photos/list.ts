@@ -46,11 +46,22 @@ export const listHandler = (app: Hono) => {
     
     const supabase = await getSupabaseAdmin();
     
-    let query = supabase.from(TABLE_NAME).select(`*, photo_tags${tagId ? '!inner' : ''}(tag_id), group:groups(id, name, cover_photo_id, member_count)`);
+    const hasTag = tagId !== undefined && tagId !== null;
+    const hasCat = categoryId !== undefined && categoryId !== null;
+
+    let query = supabase.from(TABLE_NAME).select(`*, photo_tags${hasTag ? '!inner' : ''}(tag_id), group:groups(id, name, cover_photo_id, member_count)`);
     
     // Filters
-    if (tagId !== undefined && tagId !== null) {
-      query = query.eq('photo_tags.tag_id', String(tagId));
+    if (hasTag && hasCat) {
+      query = supabase.from(TABLE_NAME).select('*, photo_tags!inner(tag_id), group:groups(id, name, cover_photo_id, member_count)');
+      query = query.or(`category_id.eq.${categoryId},photo_tags.tag_id.eq.${tagId}`);
+    } else {
+      if (hasTag) {
+        query = query.eq('photo_tags.tag_id', String(tagId));
+      }
+      if (hasCat) {
+        query = query.eq('category_id', String(categoryId));
+      }
     }
 
     if (searchQuery && searchQuery.trim().length > 0) {
@@ -73,9 +84,6 @@ export const listHandler = (app: Hono) => {
     
     if (manufacturerId !== undefined && manufacturerId !== null) {
       query = query.eq('manufacturer_id', String(manufacturerId));
-    }
-    if (categoryId !== undefined && categoryId !== null) {
-      query = query.eq('category_id', String(categoryId));
     }
     
     // Sort
@@ -200,15 +208,25 @@ export const listHandler = (app: Hono) => {
 
     const { categoryId, tagId, searchQuery, isAdminMode = false, isHidden } = check;
     const supabase = await getSupabaseAdmin();
-    let query = supabase.from(TABLE_NAME).select(tagId ? 'id, photo_tags!inner(tag_id)' : 'id', { count: 'exact', head: true });
+    const hasTag = tagId !== undefined && tagId !== null;
+    const hasCat = categoryId !== undefined && categoryId !== null;
 
-    if (tagId !== undefined && tagId !== null) {
-      query = query.eq('photo_tags.tag_id', String(tagId));
+    let query = supabase.from(TABLE_NAME).select(hasTag ? 'id, photo_tags!inner(tag_id)' : 'id', { count: 'exact', head: true });
+
+    if (hasTag && hasCat) {
+      query = supabase.from(TABLE_NAME).select('id, photo_tags!inner(tag_id)', { count: 'exact', head: true });
+      query = query.or(`category_id.eq.${categoryId},photo_tags.tag_id.eq.${tagId}`);
+    } else {
+      if (hasTag) {
+        query = query.eq('photo_tags.tag_id', String(tagId));
+      }
+      if (hasCat) {
+        query = query.eq('category_id', String(categoryId));
+      }
     }
 
     if (searchQuery && searchQuery.trim().length > 0) {
       const dbSearchQuery = decodeURIComponent(searchQuery).replace(/[%_]/g, '\\$&').trim();
-      // Expanded search: multilingual names + codes + models
       const fields = [
         `name->>zh.ilike."%${dbSearchQuery}%"`,
         `name->>en.ilike."%${dbSearchQuery}%"`,
@@ -222,10 +240,6 @@ export const listHandler = (app: Hono) => {
 
     if (!isAdminMode) query = query.or('is_hidden.is.false,is_hidden.is.null');
     else if (isHidden !== undefined && isHidden !== null) query = query.eq('is_hidden', isHidden);
-    
-    if (categoryId !== undefined && categoryId !== null) {
-      query = query.eq('category_id', String(categoryId));
-    }
     
     const { count, error } = await query;
     if (error) return c.json({ success: false, error: error.message }, 500);

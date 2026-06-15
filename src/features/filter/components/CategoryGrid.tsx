@@ -6,6 +6,7 @@ import { getTranslatedCategoryName } from '@/services/category/utils';
 export function CategoryGrid() {
   const { filters, updateFilters } = useFilterState();
   const { data: categories, isLoading } = useCategories();
+  console.log('[CategoryGrid] categories:', categories);
   const { appLang, uiTranslations } = useTranslation();
 
   if (isLoading) {
@@ -18,32 +19,31 @@ export function CategoryGrid() {
     );
   }
 
-  // 分類 = [全部] + 前 7 個分類 = 8 個
+  // ✅ 固定 8 個：全部 + 前 7 個分類
   const displayCategories = [
-    { id: null, zh: '全部', en: 'All', ms: 'Semua', name: '全部' },
+    { id: null, name: '全部', code: 'all' },
     ...(categories?.slice(0, 7) || [])
   ];
 
   return (
-    <div className="grid grid-cols-4 gap-1.5 p-4 pt-0 select-none">
+    <div className="grid grid-cols-4 gap-2 px-4 pb-4 select-none">
       {displayCategories.map(cat => {
-        const catName = cat.id === null 
-          ? (appLang === 'zh' ? '全部' : appLang === 'en' ? 'ALL' : 'SEMUA') 
-          : getTranslatedCategoryName(cat.id, categories || [], appLang, uiTranslations);
-        
-        const isSelected = filters.categoryId === cat.id || (!filters.categoryId && cat.id === null);
+        const isSelected = (!filters.categoryId && cat.id === null) || 
+                          (filters.categoryId && cat.id !== null && String(filters.categoryId) === String(cat.id));
 
         return (
           <button
             key={cat.id ?? 'all'}
             onClick={() => updateFilters({ categoryId: cat.id })}
-            className={`px-3 py-1.5 rounded-md text-[10px] font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer border ${
-              isSelected
-                ? 'bg-slate-950 text-white border-slate-950 shadow-sm shadow-slate-950/10'
-                : 'bg-white text-slate-500 border-slate-200 hover:border-slate-350 hover:text-slate-950'
-            }`}
+            className={`
+              px-3 py-2.5 rounded-xl text-[13px] font-medium truncate transition-all duration-200
+              ${isSelected
+                ? 'bg-brand-gold text-slate-950 shadow-md transform scale-[1.02]'
+                : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-100 hover:border-brand-gold/30'
+              }
+            `}
           >
-            {catName}
+            {cat.name}
           </button>
         );
       })}

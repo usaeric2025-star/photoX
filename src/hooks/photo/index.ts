@@ -13,7 +13,6 @@ export * from './usePublicPhotos';
 export * from './usePhoto';
 export * from './usePhotoMutations';
 export * from './usePhotoUpload';
-export * from './useLightbox';
 export * from './useInvalidatePhotos';
 export * from './useCategories';
 export * from './useTags';

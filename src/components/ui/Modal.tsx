@@ -18,7 +18,7 @@ const sizeClasses = {
   sm: 'max-w-md',
   md: 'max-w-lg',
   lg: 'max-w-2xl',
-  xl: 'max-w-4xl',
+  xl: 'max-w-6xl',
   full: 'max-w-[90vw]',
   screen: 'max-w-[100vw] w-[100vw] h-[100dvh] max-h-[100dvh] rounded-none m-0',
 };
@@ -93,17 +93,17 @@ export function Modal({
       ref={ref}
       onClick={handleBackdropClick}
       className={`
-        fixed m-auto
+        m-auto
         animate-in fade-in zoom-in-95 duration-200
         ${sizeClasses[size]}
-        ${size === 'screen' ? '' : 'inset-0 rounded-2xl border border-slate-100'}
+        ${size === 'screen' ? '' : 'rounded-2xl border border-slate-100'}
         w-full shadow-2xl bg-white
         backdrop:bg-black/60 backdrop:backdrop-blur-sm
         p-0 overflow-hidden outline-none ${className}
       `}
       id="unified-app-modal"
     >
-      <div className={`flex flex-col w-full relative ${size === 'screen' ? 'h-full max-h-none' : 'max-h-[85vh]'}`}>
+      <div className={`flex flex-col w-full relative ${size === 'screen' ? 'h-full max-h-none' : 'max-h-[90vh]'}`}>
         {/* Close Button */}
         {showCloseButton && (
           <button

@@ -4,17 +4,20 @@ import { Category } from '../../types';
 
 export const TABLE_NAME = 'categories';
 
-export const loadCategoriesFromCloud = async (): Promise<Category[]> => {
-  const { data, error } = await supabase
-    .from(TABLE_NAME)
-    .select('*')
-    .order('sort_order', { ascending: true });
-
-  if (error) {
-    logger.error("Failed to load categories from TABLE_NAME", TABLE_NAME, ":", JSON.stringify(error, null, 2));
+export const loadCategoriesFromCloud = async (): Promise<any[]> => {
+  try {
+    const res = await fetch('/api/categories');
+    const json = await res.json();
+    
+    if (!json.success) {
+      logger.error("Failed to load categories from API", json.error);
+      return [];
+    }
+    
+    logger.info("Categories loaded successfully from API", json.data.length);
+    return json.data || [];
+  } catch (error) {
+    logger.error("Error fetching categories:", error);
     return [];
   }
-  
-  logger.info("Categories loaded successfully from", TABLE_NAME, ":", data);
-  return data || [];
 };

@@ -275,5 +275,6 @@ export const ms = {
     systemCodeAuto: 'Menjana secara automatik...',
     itemCodePlaceholder: 'Nombor barang...',
     modelNumberPlaceholder: 'Hanya nombor...',
-    pricePlaceholder: '0'
+    pricePlaceholder: '0',
+    none: 'Tiada'
 };

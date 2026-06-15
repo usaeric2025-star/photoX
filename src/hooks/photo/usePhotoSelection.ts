@@ -108,7 +108,7 @@ export const usePhotoSelection = () => {
   const handleDelete = async () => {
     const ids = batchEditingIds || selectedIds;
     if (!ids || ids.length === 0) return;
-    await deletePhoto(ids);
+    await deletePhoto.mutateAsync(ids);
     update({ batchEditingIds: null, isMultiSelect: false, selectedIds: [] });
     resetForm();
     if (window.location.pathname === '/admin/batch-edit') {

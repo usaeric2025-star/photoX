@@ -1,7 +1,9 @@
 import React from "react";
 import { VList } from "virtua";
-import { PhotoCard } from "@/components/photo/PhotoCard";
-import { Photo } from "@/types";
+import { PublicPhotoCard } from "@/components/photo/PublicPhotoCard";
+import { AdminPhotoCard } from "@/components/photo/AdminPhotoCard";
+import { useIsManagement } from "@/hooks";
+import { Photo, Category } from "@/types";
 
 interface GroupPhotoGridProps {
   photos: Photo[];
@@ -9,6 +11,7 @@ interface GroupPhotoGridProps {
   selectedIds?: Set<string>;
   onPhotoClick?: (photo: Photo) => void;
   onSelectionChange?: (ids: Set<string>) => void;
+  sharedCategories?: Category[];
 }
 
 export const GroupPhotoGrid = ({
@@ -17,7 +20,9 @@ export const GroupPhotoGrid = ({
   selectedIds = new Set(),
   onPhotoClick,
   onSelectionChange,
+  sharedCategories,
 }: GroupPhotoGridProps) => {
+  const isManagement = useIsManagement();
   const toggle = (set: Set<string>, id: string) => {
     const next = new Set(set);
     if (next.has(id)) next.delete(id);
@@ -27,20 +32,27 @@ export const GroupPhotoGrid = ({
 
   return (
     <VList data={photos} itemSize={200} shift={true}>
-      {(photo, index) => (
-        <PhotoCard
-          key={photo.id}
-          index={index}
-          photo={photo}
-          selected={selectable && selectedIds.has(photo.id)}
-          onSelect={
-            selectable && onSelectionChange
-              ? () => onSelectionChange(toggle(selectedIds, photo.id))
-              : undefined
-          }
-          onClick={() => onPhotoClick?.(photo)}
-        />
-      )}
+      {(photo) => {
+        if (isManagement) {
+           return (
+            <AdminPhotoCard
+              key={photo.id}
+              photo={photo}
+              sharedCategories={sharedCategories}
+              selected={selectable && selectedIds.has(photo.id)}
+              onClick={() => onPhotoClick?.(photo)}
+            />
+           )
+        }
+        return (
+          <PublicPhotoCard
+            key={photo.id}
+            photo={photo}
+            sharedCategories={sharedCategories}
+            onClick={() => onPhotoClick?.(photo)}
+          />
+        )
+      }}
     </VList>
   );
 };

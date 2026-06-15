@@ -20,7 +20,7 @@ export const useAdminSelection = () => {
     };
 
     const confirmDelete = async () => {
-        await adminActions.deletePhoto(idsToDelete);
+        await adminActions.deletePhoto.mutateAsync(idsToDelete);
         close();
     };
 

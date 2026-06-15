@@ -2,7 +2,7 @@ import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React, { useRef, useEffect } from 'react';
 import { Photo } from '@/types';
 import { VirtualPhotoGrid } from '@/components/photo/VirtualPhotoGrid';
-import { PhotoCard } from '@/components/photo/PhotoCard';
+import { AdminPhotoCard } from '@/components/photo/AdminPhotoCard';
 import { 
   useScrollRestoration, 
   useFilters, 
@@ -18,6 +18,7 @@ import { SelectionToolbar } from '@/components/shared/SelectionToolbar';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useAdminPhotos } from '@/hooks/admin/useAdminPhotos';
 import { useAdminSelection } from '@/hooks/admin/useAdminSelection';
+// Removed PhotoDetailDialog as it is replaced by YarlLightbox
 
 export function AdminGridContainer() {
   const { handleBatchAiIdentifyTrigger } = useAdminBatchActions();
@@ -75,10 +76,9 @@ export function AdminGridContainer() {
   const scrollToTop = () => virtualGridRef.current?.scrollToIndex(0);
 
   const renderCard = (photo: Photo, index: number, categories: any[]) => (
-    <PhotoCard 
-      key={photo.id}
+    <AdminPhotoCard 
+      key={`${photo.id}-${showGroupsCollapsed}`}
       photo={photo}
-      index={index}
       showGroupsCollapsed={showGroupsCollapsed}
       hasSearchQuery={hasSearchQuery}
       sharedCategories={categories}
@@ -95,8 +95,8 @@ export function AdminGridContainer() {
     <div className="flex flex-col h-full bg-brand-bg w-full overflow-hidden text-text animate-fade-in">
         <div className="flex-1 overflow-hidden bg-brand-bg relative">
             <VirtualPhotoGrid 
-              key={`admin-photo-grid-${filterKeyHash}`}
-              restoreKey={`admin_view_scroll_vlist-${filterKeyHash}`}
+              key="admin-photo-grid"
+              restoreKey="admin_view_scroll_vlist"
               photos={gridPhotos}
               isFetching={isLoading}
               isFetchingNextPage={isFetchingNextPage}

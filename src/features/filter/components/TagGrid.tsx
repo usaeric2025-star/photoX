@@ -25,7 +25,7 @@ export function TagGrid() {
     updateFilters({ tagIds: [] });
   };
 
-  const displayTags = showAll ? tagsToRender : tagsToRender.slice(0, 15);
+  const displayTags = showAll ? tagsToRender : tagsToRender.slice(0, 30);
 
   if (isLoading) {
     return (
@@ -40,10 +40,12 @@ export function TagGrid() {
   const hasSelectedTags = filters.tagIds.length > 0;
 
   return (
-    <div className="p-4 pt-0 flex gap-4 items-start select-none">
-      {/* Left side: Tag container with scroll when expanded */}
-      <div className={`flex flex-wrap gap-1.5 flex-1 min-w-0 ${showAll ? 'max-h-64 overflow-y-auto pr-1' : ''}`}>
-        {displayTags.map(tag => {
+    <div className="p-4 pt-0 flex gap-3 items-start select-none">
+      {/* Left side: Tag container with height restriction for 2 rows initially */}
+      <div className={`flex flex-wrap gap-1.5 flex-1 min-w-0 transition-all duration-300 ${
+        showAll ? 'max-h-64 overflow-y-auto pr-1' : 'max-h-[52px] overflow-hidden'
+      }`}>
+        {tagsToRender.map(tag => {
           const isSelected = filters.tagIds.includes(tag.id);
           const isPinned = pinnedIds.includes(String(tag.id)) || tag.is_pinned;
           const isHot = hotIds.has(String(tag.id));
@@ -52,40 +54,40 @@ export function TagGrid() {
             <button
               key={tag.id}
               onClick={() => toggleTag(tag.id)}
-              className={`px-2 py-0.5 rounded-full text-[10px] font-medium transition-all duration-150 cursor-pointer flex items-center gap-0.5 border ${
+              className={`px-2.5 py-1 rounded-sm text-[10px] font-black transition-all duration-200 cursor-pointer flex items-center gap-1 border shadow-xs leading-none uppercase ${
                 isSelected
-                  ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                  ? 'bg-slate-950 text-white border-slate-950 scale-105 z-10'
                   : isPinned
-                  ? 'bg-amber-100 text-amber-900 border-amber-200 hover:bg-amber-200'
+                  ? 'bg-brand-gold/15 text-brand-gold border-brand-gold/30 hover:bg-brand-gold/25'
                   : isHot
-                  ? 'bg-orange-100 text-orange-900 border-orange-200 hover:bg-orange-200'
-                  : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+                  ? 'bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100'
+                  : 'bg-slate-50 text-slate-500 border-slate-100/80 hover:border-slate-200 hover:bg-slate-100'
               }`}
             >
               {isPinned && <span className="text-[9px]">📌</span>}
-              {!isPinned && isHot && <span className="text-[9px]">🔥</span>}
-              <span>{tag.name}</span>
+              {!isPinned && isHot && <span className="text-[9px] animate-pulse">🔥</span>}
+              <span className="tracking-tighter">{tag.name}</span>
             </button>
           );
         })}
       </div>
 
-      {/* Right side: Fixed actions container */}
-      <div className="flex items-center gap-1.5 shrink-0 self-start">
+      {/* Right side: Actions container */}
+      <div className="flex flex-col gap-1.5 shrink-0 self-start">
+        <button
+          onClick={() => setShowAll(!showAll)}
+          className="px-2 py-1.5 rounded-lg text-[9px] font-black tracking-tighter uppercase bg-white text-slate-950 hover:bg-slate-50 active:scale-95 transition-all cursor-pointer shrink-0 border border-slate-100 shadow-sm flex items-center justify-center min-w-[56px]"
+        >
+          {showAll ? '收起' : '更多'}
+        </button>
         {hasSelectedTags && (
           <button
             onClick={clearTags}
-            className="px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer border border-slate-200"
+            className="px-2 py-1.5 rounded-lg text-[9px] font-black tracking-tighter uppercase bg-rose-500 text-white hover:bg-rose-600 active:scale-95 transition-all cursor-pointer border border-rose-400 shadow-sm flex items-center justify-center"
           >
-            RESET
+            重置
           </button>
         )}
-        <button
-          onClick={() => setShowAll(!showAll)}
-          className="px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase bg-slate-50 text-slate-500 hover:bg-slate-100 cursor-pointer shrink-0 border border-slate-200"
-        >
-          {showAll ? '收起 ▲' : '更多...'}
-        </button>
       </div>
     </div>
   );

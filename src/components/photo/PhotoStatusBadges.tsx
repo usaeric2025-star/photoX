@@ -39,41 +39,42 @@ export const PhotoStatusBadges = ({
   const isDraft = photo.group?.status === 'draft';
 
   return (
-    <div className="absolute top-2 left-2 flex flex-wrap gap-1 pointer-events-none select-none">
-      {/* Group Badge */}
+    <div className="absolute top-1.5 left-1.5 flex flex-col items-start gap-1 pointer-events-none select-none z-30">
+      {/* Group Badge - More Prominent Style */}
       {shouldShowGroup && (
         <div className={cn(
-          "px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[8px] sm:text-[9.5px] font-bold flex items-center gap-1 border shadow-md transition-all backdrop-blur-md",
+          "px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-sm text-[8px] sm:text-[10px] font-black flex items-center gap-1.5 border shadow-xl transition-all backdrop-blur-xl",
+          "relative border-l-4",
           isDraft 
-            ? "bg-slate-700/80 text-white border-white/20" 
-            : "bg-slate-900/90 text-brand-gold border-brand-gold/35 shadow-black/15"
+            ? "bg-slate-800/95 text-white border-white/20 border-l-slate-400" 
+            : "bg-black/90 text-brand-gold border-brand-gold/50 border-l-brand-gold shadow-black/40"
         )}>
-          <Layers size={10} strokeWidth={2.5} className={cn("shrink-0", isDraft ? "text-white/70" : "text-brand-gold opacity-95")} />
-          <span className="tracking-wider">{memberCount}{isDraft ? ' (DRAFT)' : ''}</span>
+          <Layers size={10} strokeWidth={3} className={cn("shrink-0", isDraft ? "text-white/70" : "text-brand-gold")} />
+          <span className="tracking-tighter uppercase">{memberCount}{isDraft ? ' (DRAFT)' : ''}</span>
+        </div>
+      )}
+
+      {/* Hidden Status - Special mark for hidden photos */}
+      {isManagement && photo.is_hidden && (
+        <div className="bg-rose-600 text-white px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-sm text-[8px] sm:text-[9.5px] font-black flex items-center gap-1.5 shadow-lg border border-rose-500/50 uppercase tracking-tighter">
+          <ShieldAlert size={10} strokeWidth={3} className="shrink-0" />
+          <span>{hiddenLabel}</span>
         </div>
       )}
 
       {/* Cover Badge */}
       {isCover && showCoverBadge && (
-        <div className="bg-gradient-to-r from-amber-500 to-amber-400 text-amber-950 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full flex items-center justify-center gap-1 shadow-md border border-amber-300/30 text-[8px] sm:text-[9.5px] font-black tracking-wider uppercase">
-          <Crown size={9} fill="currentColor" className="stroke-[2.5] shrink-0" />
+        <div className="bg-brand-gold text-slate-950 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-sm flex items-center justify-center gap-1 shadow-md border border-brand-gold/50 text-[8px] sm:text-[9.5px] font-black tracking-tighter uppercase">
+          <Crown size={10} fill="currentColor" strokeWidth={3} className="shrink-0" />
           <span>{coverLabel}</span>
         </div>
       )}
 
       {/* Pinned Status */}
       {isManagement && isPinned && (
-        <div className="bg-red-500 text-white px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[8px] sm:text-[9.5px] font-black flex items-center gap-1 shadow-md border border-red-400/20">
-          <Heart size={9} fill="currentColor" className="stroke-none shrink-0" />
-          <span className="tracking-wider">TOP</span>
-        </div>
-      )}
-      
-      {/* Hidden Status */}
-      {isManagement && photo.is_hidden && (
-        <div className="bg-rose-600/90 backdrop-blur-md px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[8px] sm:text-[9.5px] text-white font-black flex items-center gap-1 shadow-md border border-white/10">
-          <ShieldAlert size={9} className="stroke-[2.5] shrink-0" />
-          <span className="tracking-wider">{hiddenLabel}</span>
+        <div className="bg-sky-500 text-white px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-sm text-[8px] sm:text-[9.5px] font-black flex items-center gap-1 shadow-md border border-sky-400/30 uppercase tracking-tighter">
+          <Heart size={10} fill="currentColor" strokeWidth={3} className="shrink-0" />
+          <span>TOP</span>
         </div>
       )}
     </div>

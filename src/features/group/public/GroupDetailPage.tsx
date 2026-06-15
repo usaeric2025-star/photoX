@@ -2,19 +2,19 @@ import React, { useState } from 'react';
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import { useGroupData } from '../shared/hooks/useGroupData';
 import { Group } from '@/types';
-import { PhotoCard } from '@/components/photo/PhotoCard';
-import { Lightbox } from '@/components/lightbox/Lightbox';
-import { useFilters } from '@/hooks';
+import { PublicPhotoCard } from '@/components/photo/PublicPhotoCard';
+import { YarlLightbox } from '@/components/lightbox/YarlLightbox';
+import { useFilters, useTranslation, useCategories } from '@/hooks';
+import { getTranslatedCategoryName } from '@/services/category/utils';
 import { GroupHeader } from '../shared/components/GroupHeader';
 
 function PublicPhotoGrid({ photos, onPhotoClick }: { photos: any[]; onPhotoClick: (id: string) => void }) {
   return (
     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1 sm:gap-2 p-1 sm:p-2 lg:p-4">
-      {photos.map((photo, index) => (
-        <PhotoCard
+      {photos.map((photo) => (
+        <PublicPhotoCard
           key={photo.id}
           photo={photo}
-          index={index}
           onClick={() => onPhotoClick(photo.id)}
           hideGroupBadge={true}
         />
@@ -28,8 +28,27 @@ export function PublicGroupDetailPage() {
   const { groupId: fGroupId, setPhotoId } = useFilters();
   const groupId = (routerSafe.params as any).groupId || fGroupId;
   
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+
   const { group, photos, totalCount, loading, error } = useGroupData({ groupId, isAdmin: false });
   
+  const { lang, uiTranslations: t } = useTranslation();
+  const { data: categories = [] } = useCategories();
+  
+  const lightboxItems = photos.map((p: any) => {
+    const catName = p.category_id ? getTranslatedCategoryName(String(p.category_id), categories, lang, t) : '';
+    return {
+      id: p.id,
+      src: p.image_url,
+      thumbnail: p.thumbnail_sm_url || p.image_url,
+      title: p.name?.[lang as 'zh'] || p.item_code || '',
+      description: p.description?.[lang as 'zh'] || '',
+      category: catName,
+      tags: p.tags?.map((tag: any) => tag.name) || []
+    };
+  });
+
   if (loading) return <div className="p-8 text-center text-slate-500">載入中...</div>;
   if (error) return <div className="p-4 text-red-500">錯誤：{error}</div>;
   if (!group) return <div className="p-4">合組不存在</div>;
@@ -44,8 +63,21 @@ export function PublicGroupDetailPage() {
         />
       </div>
       <div className="flex-1 overflow-y-auto relative overscroll-y-auto overscroll-x-none bg-slate-50">
-        <PublicPhotoGrid photos={photos} onPhotoClick={setPhotoId} />
+        <PublicPhotoGrid photos={photos} onPhotoClick={(id: string) => {
+             const index = photos.findIndex((p: any) => p.id === id);
+             if (index !== -1) {
+               setLightboxIndex(index);
+               setLightboxOpen(true);
+             }
+        }} />
       </div>
+      <YarlLightbox
+        open={lightboxOpen}
+        items={lightboxItems}
+        currentIndex={lightboxIndex}
+        onClose={() => setLightboxOpen(false)}
+        onIndexChange={setLightboxIndex}
+      />
     </div>
   );
 }
