@@ -5,12 +5,14 @@ import { rootRoute } from './root';
 import { authGuard } from './guards';
 import { GallerySearchParams } from './types';
 import { prefetchGroupDetail } from '@/services/router/loaders';
+import { gallerySearchValidator } from './public';
 
 const AdminPage = lazy(() => import('@/pages/AdminPage/index'));
 
 export const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: ROUTES.ADMIN,
+  validateSearch: gallerySearchValidator,
   beforeLoad: authGuard,
   component: AdminPage,
 });

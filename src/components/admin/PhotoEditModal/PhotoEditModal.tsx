@@ -6,7 +6,6 @@ import { Modal } from "@/components/ui/Modal";
 import { ModalHeader } from "./ModalHeader";
 import { DeletePhotoDialog } from "../PhotoEditDrawer/DeletePhotoDialog";
 import { PhotoEditTabs } from "./PhotoEditTabs";
-import { LoadingPulse } from "@/components/ui/LoadingPulse";
 import { useUIStore } from "@/store";
 import { 
   usePhotoDelete,

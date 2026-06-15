@@ -7,6 +7,8 @@ import { useFilters } from '../useFilters';
 import { processPhotos } from '@/services/photo/processing';
 import { EMPTY_ARRAY } from '@/constants/config';
 import { logger } from '@/lib/logger';
+import { useTranslation } from '../core/useTranslation';
+import { getTranslatedCategoryName } from '@/services/category/utils';
 
 /**
  * usePublicPhotos
@@ -19,6 +21,7 @@ export const usePublicPhotos = () => {
     const { data: tags = EMPTY_ARRAY as any[] } = useTags();
 
     const { data: manufacturers = EMPTY_ARRAY as any[] } = useManufacturers();
+    const { lang, uiTranslations: t } = useTranslation();
 
     const tagsString = Array.isArray(filters.tags) ? filters.tags.join(',') : '';
 
@@ -40,7 +43,7 @@ export const usePublicPhotos = () => {
             const man = manufacturers.find((m: any) => String(m.id) === String(p.manufacturer_id));
             return {
                 ...p,
-                categoryName: cat ? (typeof cat.name === 'object' ? (cat.name.zh || cat.name.en || '') : cat.name) : '',
+                categoryName: cat ? getTranslatedCategoryName(p.category_id, categories, lang, t) : '',
                 manufacturerName: man ? (typeof man.name === 'object' ? (man.name.zh || man.name.en || '') : man.name) : ''
             };
         });

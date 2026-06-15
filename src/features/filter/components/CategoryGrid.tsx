@@ -31,6 +31,10 @@ export function CategoryGrid() {
         const isSelected = (!filters.categoryId && cat.id === null) || 
                           (filters.categoryId && cat.id !== null && String(filters.categoryId) === String(cat.id));
 
+        const categoryName = cat.id === null 
+          ? (uiTranslations.all || '全部')
+          : getTranslatedCategoryName(cat.id, categories || [], appLang, uiTranslations);
+
         return (
           <button
             key={cat.id ?? 'all'}
@@ -43,7 +47,7 @@ export function CategoryGrid() {
               }
             `}
           >
-            {cat.name}
+            {categoryName}
           </button>
         );
       })}

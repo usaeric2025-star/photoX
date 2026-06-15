@@ -46,8 +46,8 @@ export const listHandler = (app: Hono) => {
     
     const supabase = await getSupabaseAdmin();
     
-    const hasTag = tagId !== undefined && tagId !== null;
-    const hasCat = categoryId !== undefined && categoryId !== null;
+    const hasTag = tagId !== undefined && tagId !== null && tagId !== '';
+    const hasCat = categoryId !== undefined && categoryId !== null && categoryId !== '';
 
     let query = supabase.from(TABLE_NAME).select(`*, photo_tags${hasTag ? '!inner' : ''}(tag_id), group:groups(id, name, cover_photo_id, member_count)`);
     
@@ -79,8 +79,11 @@ export const listHandler = (app: Hono) => {
     }
 
     if (onlyUngrouped) query = query.is('group_id', null);
-    if (!isAdminMode) query = query.or('is_hidden.is.false,is_hidden.is.null'); // Simplified visibility
-    else if (isHidden !== undefined && isHidden !== null) query = query.eq('is_hidden', isHidden);
+    if (!isAdminMode) {
+      query = query.not('is_hidden', 'eq', true);
+    } else if (isHidden !== undefined && isHidden !== null) {
+      query = query.eq('is_hidden', isHidden);
+    }
     
     if (manufacturerId !== undefined && manufacturerId !== null) {
       query = query.eq('manufacturer_id', String(manufacturerId));
@@ -131,7 +134,7 @@ export const listHandler = (app: Hono) => {
     const { groupId, isAdminMode = false } = check;
     const supabase = await getSupabaseAdmin();
     let query = supabase.from(TABLE_NAME).select('*, photo_tags(tag_id)').eq('group_id', groupId);
-    if (!isAdminMode) query = query.or('is_hidden.is.false,is_hidden.is.null');
+    if (!isAdminMode) query = query.not('is_hidden', 'eq', true);
     query = query.order('is_group_cover', { ascending: false }).order('is_hidden', { ascending: true, nullsFirst: true }).order('created_at', { ascending: false }).order('id', { ascending: true });
     const [queryRes, tagRows] = await Promise.all([
       query,
@@ -169,8 +172,8 @@ export const listHandler = (app: Hono) => {
     let countQuery = supabase.from(TABLE_NAME).select('*', { count: 'exact', head: true }).eq('group_id', groupId);
     let query = supabase.from(TABLE_NAME).select('*, photo_tags(tag_id)').eq('group_id', groupId);
     if (!isAdminMode) {
-      countQuery = countQuery.or('is_hidden.is.false,is_hidden.is.null'); 
-      query = query.or('is_hidden.is.false,is_hidden.is.null');
+      countQuery = countQuery.not('is_hidden', 'eq', true); 
+      query = query.not('is_hidden', 'eq', true);
     }
     const [countRes, queryRes, tagRows] = await Promise.all([
       countQuery,
@@ -208,8 +211,8 @@ export const listHandler = (app: Hono) => {
 
     const { categoryId, tagId, searchQuery, isAdminMode = false, isHidden } = check;
     const supabase = await getSupabaseAdmin();
-    const hasTag = tagId !== undefined && tagId !== null;
-    const hasCat = categoryId !== undefined && categoryId !== null;
+    const hasTag = tagId !== undefined && tagId !== null && tagId !== '';
+    const hasCat = categoryId !== undefined && categoryId !== null && categoryId !== '';
 
     let query = supabase.from(TABLE_NAME).select(hasTag ? 'id, photo_tags!inner(tag_id)' : 'id', { count: 'exact', head: true });
 
@@ -238,8 +241,11 @@ export const listHandler = (app: Hono) => {
       query = query.or(fields.join(','));
     }
 
-    if (!isAdminMode) query = query.or('is_hidden.is.false,is_hidden.is.null');
-    else if (isHidden !== undefined && isHidden !== null) query = query.eq('is_hidden', isHidden);
+    if (!isAdminMode) {
+      query = query.not('is_hidden', 'eq', true);
+    } else if (isHidden !== undefined && isHidden !== null) {
+      query = query.eq('is_hidden', isHidden);
+    }
     
     const { count, error } = await query;
     if (error) return c.json({ success: false, error: error.message }, 500);

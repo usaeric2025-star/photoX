@@ -11,17 +11,21 @@ export const categories = new Hono()
     
     const { data, error } = await supabase
         .from(TABLE_NAME)
-        .select('id, code, name_zh')
+        .select('id, code, name_zh, name_en, name_ms, sort_order')
         .eq('is_active', true)
         .order('sort_order', { ascending: true });
 
     if (error) return c.json({ success: false, error: error.message }, 500);
 
-    // Transform to frontend format: { id, name, code }
-    const formatted = data.map(item => ({
+    // Transform to frontend format: { id, name, code, zh, en, ms, sort_order }
+    const formatted = data.map((item: any) => ({
         id: item.id,
         name: item.name_zh,
+        zh: item.name_zh,
+        en: item.name_en,
+        ms: item.name_ms,
         code: item.code,
+        sort_order: item.sort_order,
     }));
 
     return c.json({ success: true, data: formatted });

@@ -74,6 +74,17 @@ export const VirtualPhotoGrid = React.memo(({
     else if (ref) (ref as React.MutableRefObject<VirtualGridHandle | null>).current = node;
   };
 
+  // Scroll to top when filters change
+  const category_id = filters?.category || '';
+  const tagsString = Array.isArray(filters?.tags) ? filters.tags.join(',') : '';
+  const searchVal = filters?.search || '';
+  const filterKey = `${category_id}-${tagsString}-${searchVal}`;
+
+  useEffect(() => {
+    if (internalGridRef.current && filterKey) {
+      internalGridRef.current.scrollTo(0);
+    }
+  }, [filterKey]);
 
   const { recordScroll } = useScrollRestoration(
     restoreKey,

@@ -53,7 +53,8 @@ export default function PublicPage() {
       title: p.name?.[lang as 'zh'] || p.item_code || '',
       description: p.description?.[lang as 'zh'] || '',
       category: catName,
-      tags: p.tags?.map((t: any) => t.name) || []
+      tags: p.tags?.map((t: any) => t.name) || [],
+      photo: p,
     };
   }), [photos, categories, lang, t]);
 
@@ -117,7 +118,6 @@ export default function PublicPage() {
             columns={columns}
             categories={categories}
             filters={filters}
-            restoreKey="public_view_vlist_restored"
           />
         </ErrorBoundary>
       </div>

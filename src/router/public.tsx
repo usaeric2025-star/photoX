@@ -8,7 +8,7 @@ import { prefetchMainGallery, prefetchGroupDetail } from '@/services/router/load
 
 const PublicPage = lazy(() => import('@/pages/PublicPage'));
 
-const gallerySearchValidator = (search: Record<string, unknown>): GallerySearchParams => {
+export const gallerySearchValidator = (search: Record<string, unknown>): GallerySearchParams => {
   return {
     q: (search.q as string) || undefined,
     category: (search.category as string) || undefined,
@@ -54,6 +54,7 @@ export const previewRoute = createRoute({
 export const hashRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/h/$hash',
+  validateSearch: gallerySearchValidator,
   component: PublicPage,
 });
 
@@ -84,5 +85,6 @@ export const groupRoute = createRoute({
 export const gRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/g/$groupId',
+  validateSearch: gallerySearchValidator,
   component: lazy(() => import('@/pages/PublicGroupPage')),
 });

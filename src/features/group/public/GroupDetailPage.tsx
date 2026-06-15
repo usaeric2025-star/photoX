@@ -45,7 +45,8 @@ export function PublicGroupDetailPage() {
       title: p.name?.[lang as 'zh'] || p.item_code || '',
       description: p.description?.[lang as 'zh'] || '',
       category: catName,
-      tags: p.tags?.map((tag: any) => tag.name) || []
+      tags: p.tags?.map((tag: any) => tag.name) || [],
+      photo: p,
     };
   });
 
