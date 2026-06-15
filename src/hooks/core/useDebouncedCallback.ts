@@ -16,27 +16,21 @@ export function useDebouncedCallback<T extends (...args: any[]) => void>(
     callbackRef.current = callback;
   }, [callback]);
 
-  const debouncedFn = useCallback(
-    (...args: any[]) => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-
-      timeoutRef.current = setTimeout(() => {
-        callbackRef.current(...args);
-      }, delay);
-    },
-    [delay]
-  ) as T & { cancel: () => void };
-
-  debouncedFn.cancel = useCallback(() => {
+  const debouncedFn = (...args: any[]) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => {
+      callbackRef.current(...args);
+    }, delay);
+  };
+  (debouncedFn as any).cancel = () => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
-  }, []);
+  };
 
-  // Clean up on unmount
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {
@@ -45,5 +39,5 @@ export function useDebouncedCallback<T extends (...args: any[]) => void>(
     };
   }, []);
 
-  return debouncedFn;
+  return debouncedFn as T & { cancel: () => void };
 }

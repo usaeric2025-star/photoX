@@ -1,8 +1,7 @@
 import React from "react";
 import { Info, Tag as TagIcon, Grid } from "lucide-react";
-import { ReelkitAdapter } from "@/components/lightbox/ReelkitAdapter";
+import { Lightbox } from "@/components/lightbox/Lightbox";
 import { useLightbox } from "@/hooks";
-import { PhotoInfoPanel } from "@/components/photo/PhotoInfoPanel";
 import { useUIStore } from "@/store/useUIStore";
 import { useAdminMaintenance } from "@/hooks/admin/useAdminMaintenance";
 import { useTags, useCategories, useTranslation } from "@/hooks";
@@ -14,8 +13,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { showToast } from '@/lib/ui/toast';
 import { getSafeText } from "@/services/ai/safeText";
 
-import { LightboxFloatingInfo } from "@/components/lightbox/LightboxFloatingInfo";
-import { LightboxFloatingActions } from "@/components/lightbox/LightboxFloatingActions";
+
 
 /**
  * [PAGE] PhotoLightboxPage
@@ -76,11 +74,7 @@ export const PhotoLightboxPage = () => {
       showToast.error('设置封面失败');
     }
   };
-  const [showInfo, setShowInfo] = React.useState(false);
   const [isDeleteOpen, deleteDialog] = useDisclosure(false);
-  
-  const { data: tags = [] } = useTags();
-  const { data: categories = [] } = useCategories();
   
   const editPhotoId = useUIStore((s) => s.editPhotoId);
   const newPhotoData = useUIStore((s) => s.newPhotoData);
@@ -132,69 +126,22 @@ export const PhotoLightboxPage = () => {
     }
   };
   
-  const currentPhotoDisplayName = currentPhoto ? (typeof currentPhoto.name === 'object' ? (currentPhoto.name[appLang as keyof typeof currentPhoto.name] || currentPhoto.name.zh) : currentPhoto.name) : '';
-
-  const renderSidebar = () => 
-    showInfo && currentPhoto ? (
-      <>
-        <div 
-          className="absolute inset-0 z-50 bg-black/40 backdrop-blur-[2px] transition-all animate-in fade-in duration-300"
-          onClick={() => setShowInfo(false)}
-        />
-        <div className="absolute right-0 top-0 h-full w-full md:w-[420px] pointer-events-none flex items-center z-50 p-0 sm:p-4">
-          <PhotoInfoPanel 
-            data={data}
-            mode={mode as 'single' | 'group'}
-            showEdit={showEdit}
-            showDelete={showDelete}
-            showAi={showAi}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onAiAnalyze={handleAiAnalyze}
-            onClose={() => setShowInfo(false)}
-            className="pointer-events-auto w-full h-full shadow-2xl rounded-none sm:rounded-2xl border-l border-white/10 bg-white animate-in slide-in-from-right duration-500 ease-out"
-            headerClassName="md:pl-4 pl-4"
-          />
-        </div>
-      </>
-    ) : null;
-
-  const renderFloatingButton = () => {
-    if (!currentPhoto) return null;
-    
-    let displayCategoryName = '';
-    if (currentPhoto.category_id) {
-      displayCategoryName = getTranslatedCategoryName(currentPhoto.category_id, categories, appLang, translations[appLang]);
-    }
-    
-    let displayTagNames: string[] = [];
-    if (Array.isArray(currentPhoto.tags)) {
-      displayTagNames = currentPhoto.tags.map(tag => tag.name).filter(Boolean);
-    }
-
-    const hasActions = (!!groupId && showEdit) || showDelete;
-
-    return (
-      <LightboxFloatingInfo 
-        displayName={currentPhotoDisplayName}
-        categoryName={displayCategoryName}
-        tags={displayTagNames}
-        isGroup={mode === 'group'}
-        appLang={appLang}
-        hasActions={hasActions}
-      />
-    );
-  };
+  const currentPhotoDisplayName = currentPhoto 
+    ? (typeof currentPhoto.name === 'object' && currentPhoto.name !== null 
+        ? ((currentPhoto.name as any)[appLang] || (currentPhoto.name as any).zh || '') 
+        : String(currentPhoto.name || '')) 
+    : '';
 
   return (
     <>
-      <ReelkitAdapter
+      <Lightbox
+        mode={showEdit || showDelete ? 'admin' : 'public'}
         open={isOpen}
-        items={photos.map(p => ({
+        items={photos.map((p: any) => ({
           id: p.id,
-          src: p.thumbnail_md_url || p.image_url || '',
-          thumbnail: p.thumbnail_sm_url || p.image_url || '',
-          alt: (p.name as any)?.zh || String(p.name || ''),
+          src: p.image_url || '',
+          thumbnail: p.thumbnail_sm_url || p.thumbnail_md_url || p.image_url || '',
+          title: (p.name as any)?.zh || String(p.name || ''),
         }))}
         initialIndex={currentIndex}
         onClose={closeWithCleanup}
@@ -204,13 +151,7 @@ export const PhotoLightboxPage = () => {
         }}
         onEdit={showEdit ? handleEdit : undefined}
         onDelete={showDelete ? handleDelete : undefined}
-        onSetCover={handleSetCover}
-        showSetCover={!!groupId && showEdit}
-        renderSidebar={renderSidebar}
-        renderFloatingButton={renderFloatingButton}
-        totalCount={totalCount}
-        showInfo={showInfo}
-        onToggleInfo={setShowInfo}
+        onSetCover={!!groupId && showEdit ? handleSetCover : undefined}
       />
       <ConfirmDialog
         open={isDeleteOpen}

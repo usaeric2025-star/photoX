@@ -6,6 +6,7 @@ import { FiltersBar } from '@/components/filters/FiltersBar';
 import { VirtualPhotoGrid } from '@/components/photo/VirtualPhotoGrid';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { useColumns } from '@/store/useUIStore';
+import { logger } from '@/lib/logger';
 import { PhotoCard } from '@/components/photo/PhotoCard';
 import { Photo } from '@/types';
 
@@ -24,7 +25,7 @@ export default function PublicPage() {
     filters
   } = usePublicPhotos();
 
-  console.log('[PublicPage] Rendering:', {
+  logger.debug('[PublicPage] Rendering:', {
     photosCount: photos.length,
     isLoading,
     hasNextPage,

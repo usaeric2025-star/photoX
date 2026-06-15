@@ -34,12 +34,12 @@ export const usePhotoSelection = () => {
     });
   }, [update]);
 
-  const disable = useCallback(() => {
+  const disable = () => {
     update({ 
       isMultiSelect: false, 
       selectedIds: [] 
     });
-  }, [update]);
+  };
 
   const toggle = useCallback((id: string) => {
     const current = (useUIStore.getState().selectedIds) ?? [];
@@ -49,16 +49,16 @@ export const usePhotoSelection = () => {
     update({ selectedIds: next });
   }, [update]);
 
-  const clear = useCallback(() => {
+  const clear = () => {
     update({ selectedIds: [] });
-  }, [update]);
+  };
 
-  const reset = useCallback(() => {
+  const reset = () => {
     update({ 
       isMultiSelect: false, 
       selectedIds: [] 
     });
-  }, [update]);
+  };
 
   const selectAll = useCallback((ids: string[]) => {
     const current = (useUIStore.getState().selectedIds) ?? [];
@@ -116,13 +116,13 @@ export const usePhotoSelection = () => {
     }
   };
 
-  const handleClose = useCallback(() => {
+  const handleClose = () => {
     update({ batchEditingIds: null });
     resetForm();
     if (window.location.pathname === '/admin/batch-edit') {
       navigate({ to: '/admin' });
     }
-  }, [update, resetForm, navigate]);
+  };
 
   return {
     // 狀態

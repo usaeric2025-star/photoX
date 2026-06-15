@@ -46,7 +46,7 @@ export const listHandler = (app: Hono) => {
     
     const supabase = await getSupabaseAdmin();
     
-    let query = supabase.from(TABLE_NAME).select(`*, photo_tags${tagId ? '!inner' : ''}(tag_id)`);
+    let query = supabase.from(TABLE_NAME).select(`*, photo_tags${tagId ? '!inner' : ''}(tag_id), group:groups(id, name, cover_photo_id, member_count)`);
     
     // Filters
     if (tagId !== undefined && tagId !== null) {
@@ -55,7 +55,8 @@ export const listHandler = (app: Hono) => {
 
     if (searchQuery && searchQuery.trim().length > 0) {
       const dbSearchQuery = decodeURIComponent(searchQuery).replace(/[%_]/g, '\\$&').trim();
-      query = query.or(`name.ilike.%${dbSearchQuery}%,ai_description.ilike.%${dbSearchQuery}%`);
+      // Correctly search across JSONB name fields (zh, en, ms)
+      query = query.or(`name->>zh.ilike.%${dbSearchQuery}%,name->>en.ilike.%${dbSearchQuery}%,name->>ms.ilike.%${dbSearchQuery}%`);
     }
 
     if (onlyUngrouped) query = query.is('group_id', null);
@@ -199,7 +200,8 @@ export const listHandler = (app: Hono) => {
 
     if (searchQuery && searchQuery.trim().length > 0) {
       const dbSearchQuery = decodeURIComponent(searchQuery).replace(/[%_]/g, '\\$&').trim();
-      query = query.or(`name.ilike.%${dbSearchQuery}%,ai_description.ilike.%${dbSearchQuery}%`);
+      // Correctly search across JSONB name fields (zh, en, ms)
+      query = query.or(`name->>zh.ilike.%${dbSearchQuery}%,name->>en.ilike.%${dbSearchQuery}%,name->>ms.ilike.%${dbSearchQuery}%`);
     }
 
     if (!isAdminMode) query = query.or('is_hidden.is.false,is_hidden.is.null');

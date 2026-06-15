@@ -46,7 +46,7 @@ export function AISecuritySection({
   const [agnesModel, setAgnesModel] = React.useState('');
   const [currentModel, setCurrentModel] = React.useState('gemini-2.0-flash-exp');
 
-  const fetchKeysStatus = React.useCallback(async () => {
+  const fetchKeysStatus = async () => {
     try {
       const res = await api.admin.settings['get-keys'].$get();
       if (res.ok) {
@@ -76,7 +76,7 @@ export function AISecuritySection({
     } catch (e) {
       console.error("Failed to fetch keys status:", e);
     }
-  }, []);
+  };
 
   React.useEffect(() => {
     fetchKeysStatus();

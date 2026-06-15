@@ -21,7 +21,8 @@ import { getDisplayGroupCode } from '@/services/photo/utils';
 
 import { cn } from '@/lib/utils';
 import { translations } from '@/locales';
-import { useUIStore, useColumns } from '@/store/useUIStore';
+import { useUIStore } from '@/store/useUIStore';
+import { useColumns } from '@/features/layout/hooks/useColumns';
 import { PhotoStatusBadges } from './PhotoStatusBadges';
 import { usePhotoCardInteraction } from '@/hooks/photo/usePhotoCardInteraction';
 import { PhotoSelectionIndicator } from './PhotoSelectionIndicator';
@@ -71,7 +72,7 @@ export const PhotoCard = ({
   const internalIsSelected = useUIStore((s) => s.selectedIds.includes(photo.id));
   const isSelected = selected !== undefined ? selected : internalIsSelected;
   const isMultiSelect = useUIStore((s) => s.isMultiSelect);
-  const [columns] = useColumns();
+  const { columns } = useColumns();
   
   const isManagement = useIsManagement();
   const { lang, uiTranslations: t } = useTranslation();

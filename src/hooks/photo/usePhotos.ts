@@ -115,7 +115,7 @@ export const useGroupPhotosResult = createInfiniteQuery<{photos: Photo[], total:
   placeholderData: keepPreviousData
 } as any);
 
-export const useGroupPhotos = (groupId: string | null, isAdminMode: boolean = false, pageSize: number = 100) => {
+export const useGroupPhotos = (groupId: string | null, isAdminMode: boolean = false, pageSize: number = 40) => {
   const queryClient = useQueryClient();
   const query = useGroupPhotosResult({ groupId, isAdminMode, pageSize }, {
     enabled: !!groupId
@@ -123,6 +123,7 @@ export const useGroupPhotos = (groupId: string | null, isAdminMode: boolean = fa
 
   return {
     ...query,
-    photos: query.data?.photos ?? []
+    photos: query.data?.pages?.flatMap((p: any) => p.photos) ?? [],
+    total: query.data?.pages?.[0]?.total || 0
   };
 };

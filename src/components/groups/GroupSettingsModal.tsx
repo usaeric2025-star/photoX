@@ -1,9 +1,13 @@
 import React from 'react';
 import { Modal } from "../ui/Modal";
 import { ProductGroup, Dimension } from '../../types';
-import { GroupSettingsHeader } from './GroupSettingsSheet/GroupSettingsHeader';
-import { GroupSettingsContent } from './GroupSettingsSheet/GroupSettingsContent';
 import { useAdminMode } from '../../hooks';
+import { MultilingualInput } from "../shared/MultilingualInput";
+import { Input } from "../shared/Input";
+import { ConfirmDialog } from "../ui/ConfirmDialog";
+import { Button } from "../shared/Button";
+import { Trash2, X } from "lucide-react";
+import { useDisclosure } from "../../hooks/core/useDisclosure";
 
 interface GroupSettingsModalProps {
   showGroupSettings: boolean;
@@ -12,10 +16,72 @@ interface GroupSettingsModalProps {
   groupData: ProductGroup | null;
   setGroupData: React.Dispatch<React.SetStateAction<ProductGroup | null>>;
   onUngroup?: (groupId: string) => Promise<void> | void;
-  update: (updates: any) => void;
+  update?: any;
   handleUpdateGroupData: (updates: Partial<ProductGroup>) => Promise<void>;
-  handleBatchUpdateDimensions: (newDims: Dimension[]) => Promise<void>;
   t: any;
+}
+
+function GroupSettingsHeader({ groupData, activeGroupId, onUngroup, setShowGroupSettings }: any) {
+  const [isOpen, { open, close }] = useDisclosure();
+  return (
+    <div className="flex items-center justify-between p-4 border-b">
+      <h3 className="text-lg font-bold">合組設定</h3>
+      <div className="flex gap-2 items-center">
+        {onUngroup && activeGroupId && (
+          <Button variant="outline" className="text-red-500 hover:text-red-600 hover:bg-red-50" size="sm" onClick={open}>
+            <Trash2 className="w-4 h-4 mr-1" />
+            解散合組
+          </Button>
+        )}
+        <button onClick={() => setShowGroupSettings(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+          <X className="w-5 h-5 text-slate-500" />
+        </button>
+      </div>
+      <ConfirmDialog
+        open={isOpen}
+        onOpenChange={(val) => !val && close()}
+        title="確認解散合組？"
+        description="解散後，其中的照片將成為獨立照片。此操作無法復原。"
+        onConfirm={async () => {
+          if (onUngroup && activeGroupId) {
+            await onUngroup(activeGroupId);
+            setShowGroupSettings(false);
+          }
+        }}
+        confirmText="解散"
+        variant="destructive"
+      />
+    </div>
+  );
+}
+
+function GroupSettingsContent({ groupData, handleUpdateGroupData, t }: any) {
+  if (!groupData) return <div className="p-4 text-slate-500 text-center">無法載入合組資料</div>;
+  
+  return (
+    <div className="p-4 space-y-6 overflow-y-auto">
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">合組名稱</label>
+        <input
+          type="text"
+          value={groupData.name || ''}
+          onChange={(e) => handleUpdateGroupData({ name: e.target.value })}
+          className="w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 border"
+          placeholder="合組名稱..."
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">合組描述</label>
+        <textarea
+          value={groupData.description || ''}
+          onChange={(e) => handleUpdateGroupData({ description: e.target.value })}
+          rows={4}
+          className="w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 border"
+          placeholder="描述..."
+        />
+      </div>
+    </div>
+  );
 }
 
 export function GroupSettingsModal(props: GroupSettingsModalProps) {
@@ -42,3 +108,4 @@ export function GroupSettingsModal(props: GroupSettingsModalProps) {
     </Modal>
   );
 };
+

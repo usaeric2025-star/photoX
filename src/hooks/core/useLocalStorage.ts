@@ -19,7 +19,7 @@ export function useLocalStorage<T = string>({
   deserialize = JSON.parse,
   getInitialValueInEffect = true,
 }: UseLocalStorageOptions<T>): [T, (val: T | ((prev: T) => T)) => void, () => void] {
-  const readValue = useCallback((): T => {
+  const readValue = (): T => {
     if (typeof window === 'undefined') return defaultValue;
     try {
       const item = window.localStorage.getItem(key);
@@ -28,7 +28,7 @@ export function useLocalStorage<T = string>({
       console.warn(`Error reading localStorage key "${key}":`, error);
       return defaultValue;
     }
-  }, [key, defaultValue, deserialize]);
+  };
 
   const [value, setValue] = useState<T>(() => {
     if (getInitialValueInEffect) return defaultValue;
@@ -39,10 +39,9 @@ export function useLocalStorage<T = string>({
     if (getInitialValueInEffect) {
       setValue(readValue());
     }
-  }, [getInitialValueInEffect, readValue]);
+  }, [getInitialValueInEffect]);
 
-  const setLocalStorageValue = useCallback(
-    (val: T | ((prev: T) => T)) => {
+  const setLocalStorageValue = (val: T | ((prev: T) => T)) => {
       try {
         const valueToStore = val instanceof Function ? val(value) : val;
         setValue(valueToStore);
@@ -52,11 +51,9 @@ export function useLocalStorage<T = string>({
       } catch (error) {
         console.warn(`Error setting localStorage key "${key}":`, error);
       }
-    },
-    [key, serialize, value]
-  );
+  };
 
-  const removeLocalStorageValue = useCallback(() => {
+  const removeLocalStorageValue = () => {
     try {
       if (typeof window !== 'undefined') {
         window.localStorage.removeItem(key);
@@ -65,7 +62,7 @@ export function useLocalStorage<T = string>({
     } catch (error) {
       console.warn(`Error removing localStorage key "${key}":`, error);
     }
-  }, [key, defaultValue]);
+  };
 
   // Support for cross-tab synchronization
   useEffect(() => {

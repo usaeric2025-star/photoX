@@ -78,11 +78,11 @@ export const groupRoute = createRoute({
       void prefetchGroupDetail(context.queryClient, groupId);
     }
   },
-  component: lazy(() => import('@/components/groups/GroupDetailPage').then(m => ({ default: m.GroupDetailPage }))),
+  component: lazy(() => import('@/pages/PublicGroupPage')),
 });
 
 export const gRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/g/$groupId',
-  component: lazy(() => import('@/components/groups/GroupDetailPage').then(m => ({ default: m.GroupDetailPage }))),
+  component: lazy(() => import('@/pages/PublicGroupPage')),
 });

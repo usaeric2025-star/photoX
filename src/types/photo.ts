@@ -16,8 +16,16 @@ export interface Photo {
   manual_code?: string; // Hidden price code
   model_number?: string; // Manufacturer model number
   image_hash: string; // MD5 fingerprint
-  name: string; 
-  description: string | null;
+  name: {
+    zh: string;
+    en?: string;
+    ms?: string;
+  };
+  description: {
+    zh: string;
+    en?: string;
+    ms?: string;
+  } | null;
   image_url: string; // Public URL in Storage
   width?: number; // Pixel width
   height?: number; // Pixel height
@@ -98,6 +106,7 @@ export interface Manufacturer {
 export interface ProductGroup {
   id: string;
   name: string;
+  description?: string | null;
   cover_photo_id?: string | null;
   is_hidden?: boolean;
   user_id: string;

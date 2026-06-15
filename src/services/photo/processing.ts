@@ -98,15 +98,23 @@ export function filterPhotos(
     }
 
     result = result.filter(p => {
-      const name = String(p.name || '');
-      const desc = String(p.description || '');
+      const nameObj = p.name || {};
+      const descObj = p.description || {};
+      
+      const searchableName = typeof nameObj === 'string' 
+        ? nameObj.toLowerCase() 
+        : `${nameObj.zh || ''} ${nameObj.en || ''} ${nameObj.ms || ''}`.toLowerCase();
+        
+      const searchableDesc = typeof descObj === 'string'
+        ? descObj.toLowerCase()
+        : `${descObj.zh || ''} ${descObj.en || ''} ${descObj.ms || ''}`.toLowerCase();
 
       const hasBasicMatch = 
-        name.toLowerCase().includes(q) ||
+        searchableName.includes(q) ||
         (p.manual_code || '').toLowerCase().includes(q) ||
         (p.model_number || '').toLowerCase().includes(q) ||
         (p.item_code || '').toLowerCase().includes(q) ||
-        desc.toLowerCase().includes(q);
+        searchableDesc.includes(q);
       
       if (hasBasicMatch) return true;
 

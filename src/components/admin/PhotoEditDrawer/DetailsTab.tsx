@@ -20,16 +20,16 @@ export function DetailsTab() {
   const isAnalyzing = tasks.some(t => t.status === 'running' && (t.name === 'AI 属性智能识别' || t.name === 'AI 识别'));
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
-  const onAiAnalyze = React.useCallback(async () => {
+  const onAiAnalyze = async () => {
     await handleAiAnalyze(detailPhoto?.image_url, detailPhoto?.image_url);
-  }, [handleAiAnalyze, detailPhoto?.image_url]);
+  };
 
   const dimensions = useWatch({ control, name: 'dimensions' });
-  const updateForm = React.useCallback((updates: Partial<ProductFormData>) => {
+  const updateForm = (updates: Partial<ProductFormData>) => {
     Object.entries(updates).forEach(([key, value]) => {
       setValue(key as any, value, { shouldDirty: true });
     });
-  }, [setValue]);
+  };
   return (
     <div className="m-0 p-4 space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
       <DimensionEditor 

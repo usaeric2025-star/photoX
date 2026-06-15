@@ -22,9 +22,9 @@ export const usePhotoEditSession = (photoId: string) => {
     await updateMutation.mutateAsync({ id: photoId, updates: draft });
   }, [draft, photoId, updateMutation]);
 
-  const discard = useCallback(() => {
+  const discard = () => {
     if (photo) setDraft(photo);
-  }, [photo]);
+  };
 
   const isDirty = !isEqual(photo, draft);
 

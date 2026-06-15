@@ -4,6 +4,8 @@ import { queryKeys } from '@/lib/query/keys';
 import { PHOTO_QUERY_CONFIG } from '@/constants/config';
 import { createStaleTime } from '@/shared/freshnessSchema';
 import { getGroupById } from '@/services/group/queries';
+import { getPhotos } from '@/services/photo/queries/list';
+import { getPhotosByGroupPaginated } from '@/services/photo/queries/byGroup';
 
 /**
  * 路由層預加載邏輯
@@ -21,7 +23,6 @@ export async function prefetchMainGallery(queryClient: QueryClient) {
   return queryClient.prefetchInfiniteQuery({
     queryKey,
     queryFn: async () => {
-      const { getPhotos } = await import('@/services/photo/queries/list');
       const photos = await getPhotos(
         undefined,
         0,
@@ -59,11 +60,10 @@ export async function prefetchGroupDetail(queryClient: QueryClient, groupId: str
   queryClient.prefetchInfiniteQuery({
     queryKey: photosKey,
     queryFn: async ({ pageParam = 1 }) => {
-      const { getPhotosByGroupPaginated } = await import('@/services/photo/queries/byGroup');
       const data = await getPhotosByGroupPaginated(
-        groupId, pageParam as number, 60, isAdminMode
+        groupId, pageParam as number, 40, isAdminMode
       );
-      const hasMore = Array.isArray(data.photos) ? data.photos.length >= 60 : false;
+      const hasMore = Array.isArray(data.photos) ? data.photos.length >= 40 : false;
       return { photos: data.photos, total: data.total, hasMore, nextPage: hasMore ? (pageParam as number) + 1 : undefined };
     },
     initialPageParam: 1,

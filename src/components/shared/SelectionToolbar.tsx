@@ -4,7 +4,7 @@ import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { Sparkles, FolderPlus, Edit, EyeOff, Trash2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { useGroupPhotosMutation, useUrlFilters, useAIAutoGrouping } from '@/hooks';
+import { useGroupPhotosMutation, useFilters, useAIAutoGrouping } from '@/hooks';
 import { useUIStore, useIsAnyDialogOpen } from '@/store/useUIStore';
 
 interface SelectionToolbarProps {
@@ -56,7 +56,7 @@ export function SelectionToolbar({
 
   const groupMutation = useGroupPhotosMutation();
   const { handleAIAction } = useAIAutoGrouping();
-  const { filters: urlFilters, setShowGroupsCollapsed } = useUrlFilters();
+  const { setShowGroupsCollapsed } = useFilters();
 
   if (isAnyDialogOpen || !isMultiSelect || count === 0) return null;
 

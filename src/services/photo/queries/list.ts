@@ -2,7 +2,6 @@ import { api } from '@/lib/api';
 import { Photo } from '@/types';
 import { loadTagsFromCloud } from '../../tag';
 import { mapSupabasePhoto } from '../mappers';
-import { hydrateGroupInfo } from '../with';
 import { normalizeSearchQuery } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 
@@ -27,13 +26,15 @@ export const getPhotos = async (
       json: { page, limit, categoryId, tagId, searchQuery, isAdminMode, onlyUngrouped, manufacturerId, isHidden, sortOrder }
     });
     
-    if (!res.ok) throw new Error('Failed to load photos from cloud');
+    if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`Failed to load photos from cloud: ${errText}`);
+    }
     const { data } = await res.json();
     
     const fetched = (data || []).map((item: any) => mapSupabasePhoto(item));
     
-    const hydrated = await hydrateGroupInfo(fetched);
-    return hydrated;
+    return fetched;
 };
 
 /**

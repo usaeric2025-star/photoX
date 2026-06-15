@@ -1,7 +1,7 @@
 import { getPathFromUrl } from '@/lib/utils';
 import { SupabasePhotoRaw } from '@/types/supabase';
 import { Photo, Tag, Dimension } from '@/types';
-import { getSafeText } from '@/services/ai/safeText';
+import { getSafeText, cleanTranslationPrefixes } from '@/services/ai/safeText';
 import { generateItemCode, validateDimension } from './utils';
 
 // --- From DB (Supabase -> Frontend) ---
@@ -114,10 +114,10 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo
       manual_code: item.manual_code || '',
       model_number: item.model_number || '',
       image_hash: item.image_hash || '',
-      name: getSafeText(item.name),
+      name: item.name as any,
       category_id: item.category_id ? String(item.category_id) : null,
       manufacturer_id: item.manufacturer_id ? String(item.manufacturer_id) : null,
-      description: getSafeText(item.description),
+      description: item.description as any,
       image_url: imageUrl,
       thumbnail_sm_url: getThumbnailUrl(imageUrl, 200, 200, item.image_hash || ''),
       thumbnail_md_url: getThumbnailUrl(imageUrl, 800, 800, item.image_hash || ''),
@@ -129,7 +129,7 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo
       group: item.group ? {
           id: item.group.id,
           name: getSafeText(item.group.name),
-          color: item.group.color,
+          color: '#3b82f6',
           cover_photo_id: item.group.cover_photo_id,
           member_count: item.group.member_count ?? 1,
       } : null,

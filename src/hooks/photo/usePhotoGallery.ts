@@ -13,14 +13,14 @@ export function usePhotoGallery() {
 
   const tagsString = Array.isArray(filters.tags) ? filters.tags.join(',') : '';
 
-  const photosFilters = React.useMemo(() => ({
+  const photosFilters = ({
     category_id: filters.category || undefined,
     tag_id: filters.tags && filters.tags.length > 0 ? filters.tags[0] : undefined,
     searchQuery: filters.search || undefined,
     sortOrder: filters.sort || 'newest',
     isAdminMode: isAdminMode,
     is_hidden: isAdminMode ? undefined : false
-  }), [filters.category, tagsString, filters.search, filters.sort, isAdminMode]);
+  });
 
   const infinitePhotosQuery = usePhotos(photosFilters);
 

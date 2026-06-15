@@ -96,9 +96,9 @@ export const PhotoEditSessionProvider = ({
     }
   }, [photoId, form, updateMutation, onSuccess]);
   
-  const discard = useCallback(() => {
+  const discard = () => {
     form.reset(photo as any);
-  }, [form, photo]);
+  };
   
   if (isLoading || !photo) return null;
   

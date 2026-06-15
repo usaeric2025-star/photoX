@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useCallback } from 'react';
 import { VirtualGrid, VirtualGridHandle } from '@/components/virtualizer/VirtualGrid';
 import { Photo, TranslationType, Category, Tag } from '../../types';
 import { useUIStore, useShallow } from '@/store/useUIStore';
-import { useUrlFilters } from '@/hooks';
 import { translations } from '@/locales';
 import { PhotoGridSkeleton } from './PhotoGridSkeleton';
 import { LoadMoreIndicator } from './LoadMoreIndicator';
@@ -48,7 +47,7 @@ export const VirtualPhotoGrid = ({
   const isFetchingRef = useRef(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleLoadMore = useCallback(() => {
+  const handleLoadMore = () => {
     if (!hasNextPage || isFetchingNextPage || isFetchingRef.current) return
 
     isFetchingRef.current = true;
@@ -58,7 +57,7 @@ export const VirtualPhotoGrid = ({
     }, 10000);
 
     onLoadMore?.();
-  }, [hasNextPage, isFetchingNextPage, onLoadMore]);
+  };
 
   useEffect(() => {
     if (!isFetchingNextPage) isFetchingRef.current = false;
@@ -91,7 +90,7 @@ export const VirtualPhotoGrid = ({
     return cardWidth + 68; 
   })();
 
-  const internalRenderItem = useCallback((index: number) => {
+  const internalRenderItem = (index: number) => {
     const photo = photos[index];
     if (!photo) return null;
     return (
@@ -99,7 +98,7 @@ export const VirtualPhotoGrid = ({
         {renderCard(photo, index, categories)}
       </div>
     );
-  }, [photos, renderCard, categories]);
+  };
 
   if (isFetching && photos.length === 0) {
     return (

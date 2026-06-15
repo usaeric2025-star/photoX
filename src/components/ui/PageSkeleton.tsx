@@ -3,7 +3,7 @@ import { PhotoGridSkeleton } from '../photo/PhotoGridSkeleton';
 import { useColumns } from '@/hooks';
 
 export function PageSkeleton() {
-  const [columns] = useColumns();
+  const { columns } = useColumns();
 
   return (
     <div className="flex flex-col h-full bg-slate-50 w-full min-h-screen">

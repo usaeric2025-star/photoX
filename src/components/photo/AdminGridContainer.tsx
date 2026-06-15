@@ -6,12 +6,12 @@ import { PhotoCard } from '@/components/photo/PhotoCard';
 import { 
   useScrollRestoration, 
   useFilters, 
-  useColumns,
   useCategories,
   useTags,
   useAdminBatchActions,
   usePermission
 } from '@/hooks';
+import { useColumns } from '@/features/layout/hooks/useColumns';
 import { useUIStore } from '@/store/useUIStore';
 import { UploadButton } from '@/components/shared/UploadButton';
 import { SelectionToolbar } from '@/components/shared/SelectionToolbar';
@@ -29,7 +29,7 @@ export function AdminGridContainer() {
   const hasSearchQuery = !!search?.trim();
   
   const update = useUIStore(s => s.update);
-  const [columns, setColumns] = useColumns();
+  const { columns, setColumns } = useColumns();
   const isMultiSelect = useUIStore(s => s.isMultiSelect);
   
   useEffect(() => {

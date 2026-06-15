@@ -105,9 +105,9 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     setTasks(prev => prev.filter(t => t.id !== id));
   }, [setTasks]);
 
-  const clearCompleted = useCallback(() => {
+  const clearCompleted = () => {
     setTasks(prev => prev.filter(t => t.status === 'running'));
-  }, [setTasks]);
+  };
 
   const cancelTask = useCallback((id: string) => {
     const cb = cancelCallbacks.current.get(id);

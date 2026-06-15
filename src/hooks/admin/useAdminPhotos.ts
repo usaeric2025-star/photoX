@@ -23,21 +23,21 @@ export const useAdminPhotos = () => {
 
     const tagsString = Array.isArray(filters.tags) ? filters.tags.join(',') : '';
 
-    const photoFilters = React.useMemo(() => ({
+    const photoFilters = ({
       category_id: filters.category || undefined,
       tag_id: filters.tags && filters.tags.length > 0 ? filters.tags[0] : undefined,
       searchQuery: filters.search || undefined,
       sortOrder: filters.sort || 'newest',
       isAdminMode: isAdminMode,
       status: filters.status || 'all'
-    }), [filters.category, tagsString, filters.search, filters.sort, isAdminMode, filters.status]);
+    });
 
     const infinitePhotosQuery = usePhotos(photoFilters as any);
 
 
     const rawPhotos = (infinitePhotosQuery.data as any)?.photos || [];
 
-    const tagMap = React.useMemo(() => {
+    const tagMap = (() => {
         const map = new Map<string, string[]>();
         tags.forEach((t: any) => {
             const terms = [t.name.toLowerCase()];
@@ -47,9 +47,9 @@ export const useAdminPhotos = () => {
             map.set(String(t.id), terms);
         });
         return map;
-    }, [tags]);
+    })();
 
-    const catMap = React.useMemo(() => {
+    const catMap = (() => {
         const map = new Map<string, string[]>();
         categories.forEach((c: any) => {
             const terms = [(c.name || '').toLowerCase()];
@@ -59,13 +59,13 @@ export const useAdminPhotos = () => {
             map.set(String(c.id), terms);
         });
         return map;
-    }, [categories]);
+    })();
 
     const photos = (!processingIds || processingIds.length === 0) 
         ? rawPhotos 
         : rawPhotos.filter((p: any) => !processingIds.includes(p.id));
 
-    const result = React.useMemo(() => (processPhotos(
+    const result = processPhotos(
         photos as any,
         categories,
         tags,
@@ -77,7 +77,7 @@ export const useAdminPhotos = () => {
             tagMap,
             catMap
         }
-    )), [photos, categories, tags, filters.search, filters.category, tagsString, filters.sort, filters.showGroupsCollapsed, isAdminMode, tagMap, catMap]);
+    );
 
     const displayPhotos = result?.displayPhotos || [];
     const gridPhotos = result?.gridPhotos || [];

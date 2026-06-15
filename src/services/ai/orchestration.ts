@@ -30,8 +30,8 @@ export const analyzeAndSavePhoto = async (
     );
 
     const updateResult = await updatePhoto(photo.id, {
-      name: nameObj,
-      description: descObj,
+      name: nameObj as any,
+      description: descObj as any,
       category_id: analysisData.category_id ? String(analysisData.category_id) : null,
       group_id: analysisData.group_id ? String(analysisData.group_id) : null,
       dimensions: analysisData.dimensions || [],
@@ -130,7 +130,7 @@ export const analyzeAndSaveGroup = async (
       description: descObj as any,
       colors,
       materials
-    });
+    } as any);
 
     return res;
   } catch (err) {

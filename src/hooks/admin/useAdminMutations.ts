@@ -37,7 +37,9 @@ export const useSyncMutation = () => useAppMutation(syncConfig);
 
 export const useAdminMutations = () => {
   const repair = useRepairMutation();
+  const sync = useSyncMutation();
   return {
-    useRepairMutation: () => repair,
+    repair,
+    sync,
   };
 };

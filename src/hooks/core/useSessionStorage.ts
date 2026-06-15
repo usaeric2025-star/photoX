@@ -11,7 +11,7 @@ export function useSessionStorage<T = string>(options: {
 }): [T, (val: T | ((prev: T) => T)) => void, () => void] {
   const { key, defaultValue, getInitialValueInEffect = true } = options;
 
-  const readValue = useCallback((): T => {
+  const readValue = (): T => {
     if (typeof window === 'undefined') {
       return defaultValue;
     }
@@ -23,7 +23,7 @@ export function useSessionStorage<T = string>(options: {
       console.warn(`Error reading sessionStorage key "${key}":`, error);
       return defaultValue;
     }
-  }, [key, defaultValue]);
+  };
 
   const [state, setState] = useState<T>(() => {
     if (getInitialValueInEffect) {
@@ -36,10 +36,9 @@ export function useSessionStorage<T = string>(options: {
     if (getInitialValueInEffect) {
       setState(readValue());
     }
-  }, [getInitialValueInEffect, readValue]);
+  }, [getInitialValueInEffect]);
 
-  const setValue = useCallback(
-    (value: T | ((prev: T) => T)) => {
+  const setValue = (value: T | ((prev: T) => T)) => {
       try {
         const valueToStore = value instanceof Function ? value(state) : value;
         setState(valueToStore);
@@ -49,11 +48,9 @@ export function useSessionStorage<T = string>(options: {
       } catch (error) {
         console.warn(`Error setting sessionStorage key "${key}":`, error);
       }
-    },
-    [key, state]
-  );
+  };
 
-  const removeValue = useCallback(() => {
+  const removeValue = () => {
     try {
       if (typeof window !== 'undefined') {
         window.sessionStorage.removeItem(key);
@@ -62,7 +59,7 @@ export function useSessionStorage<T = string>(options: {
     } catch (error) {
       console.warn(`Error removing sessionStorage key "${key}":`, error);
     }
-  }, [key, defaultValue]);
+  };
 
   return [state, setValue, removeValue];
 }

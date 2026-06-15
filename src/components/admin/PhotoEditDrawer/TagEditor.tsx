@@ -14,13 +14,13 @@ export function TagEditor() {
   const { mutateAsync: updateTagMut } = useTagEdit();
   const { mutateAsync: deleteTagMut } = useTagDelete();
 
-  const handleAdd = React.useCallback(async (name: string) => {
+  const handleAdd = async (name: string) => {
     const res = await addTagMut(name);
     return res.id;
-  }, [addTagMut]);
+  };
 
-  const handleUpdate = React.useCallback((id: string, name: string) => updateTagMut({ id, updates: { name } }), [updateTagMut]);
-  const handleDelete = React.useCallback((id: string) => deleteTagMut(id), [deleteTagMut]);
+  const handleUpdate = (id: string, name: string) => updateTagMut({ id, updates: { name } });
+  const handleDelete = (id: string) => deleteTagMut(id);
 
   return (
     <section className="space-y-2">

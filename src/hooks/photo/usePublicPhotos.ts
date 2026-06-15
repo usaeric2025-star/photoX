@@ -6,6 +6,7 @@ import { usePhotos } from './usePhotos';
 import { useFilters } from '../useFilters';
 import { processPhotos } from '@/services/photo/processing';
 import { EMPTY_ARRAY } from '@/constants/config';
+import { logger } from '@/lib/logger';
 
 /**
  * usePublicPhotos
@@ -21,19 +22,19 @@ export const usePublicPhotos = () => {
 
     const tagsString = Array.isArray(filters.tags) ? filters.tags.join(',') : '';
 
-    const photoFilters = React.useMemo(() => ({
+    const photoFilters = ({
       category_id: filters.category || undefined,
       tag_id: filters.tags && filters.tags.length > 0 ? filters.tags[0] : undefined,
       searchQuery: filters.search || undefined,
       sortOrder: filters.sort || 'newest',
       isAdminMode: false
-    }), [filters.category, tagsString, filters.search, filters.sort]);
+    });
 
     const infinitePhotosQuery = usePhotos(photoFilters);
 
     const rawPhotosBase = (infinitePhotosQuery.data as any)?.photos || [];
     
-    const rawPhotos = React.useMemo(() => {
+    const rawPhotos = (() => {
         return rawPhotosBase.map((p: any) => {
             const cat = categories.find((c: any) => String(c.id) === String(p.category_id));
             const man = manufacturers.find((m: any) => String(m.id) === String(p.manufacturer_id));
@@ -43,9 +44,9 @@ export const usePublicPhotos = () => {
                 manufacturerName: man ? (typeof man.name === 'object' ? (man.name.zh || man.name.en || '') : man.name) : ''
             };
         });
-    }, [rawPhotosBase, categories, manufacturers]);
+    })();
 
-    console.log("[usePublicPhotos] Debug:", {
+    logger.debug("[usePublicPhotos] Debug:", {
         status: infinitePhotosQuery.status,
         isFetching: infinitePhotosQuery.isFetching,
         isPending: infinitePhotosQuery.isPending,
@@ -54,7 +55,7 @@ export const usePublicPhotos = () => {
         rawPhotosCount: rawPhotos.length
     });
 
-    const tagMap = React.useMemo(() => {
+    const tagMap = (() => {
         const map = new Map<string, string[]>();
         tags.forEach((t: any) => {
             const terms = [t.name.toLowerCase()];
@@ -64,9 +65,9 @@ export const usePublicPhotos = () => {
             map.set(String(t.id), terms);
         });
         return map;
-    }, [tags]);
+    })();
 
-    const catMap = React.useMemo(() => {
+    const catMap = (() => {
         const map = new Map<string, string[]>();
         categories.forEach((c: any) => {
             const terms = [(c.name || '').toLowerCase()];
@@ -76,9 +77,9 @@ export const usePublicPhotos = () => {
             map.set(String(c.id), terms);
         });
         return map;
-    }, [categories]);
+    })();
 
-    const processedResult = React.useMemo(() => {
+    const processedResult = (() => {
         if (!rawPhotos.length) return null;
         return processPhotos(
             rawPhotos,
@@ -101,7 +102,7 @@ export const usePublicPhotos = () => {
                 catMap
             }
         );
-    }, [rawPhotos, categories, tags, filters.search, filters.category, tagsString, filters.sort, filters.showGroupsCollapsed, tagMap, catMap]);
+    })();
 
     return {
         gridPhotos: processedResult?.gridPhotos || EMPTY_ARRAY,

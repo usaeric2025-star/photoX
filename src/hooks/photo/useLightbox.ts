@@ -1,6 +1,6 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import { useEffect, useMemo } from "react";
-import { useUrlFilters } from "./useUrlFilters";
+import { useFilters } from '@/hooks';
 import { usePhoto } from "./usePhoto";
 import { useGroupPhotos, usePhotos } from "./usePhotos";
 import { useGroupDetail } from "../groups/useGroupDetail";
@@ -17,18 +17,33 @@ import { PAGINATION, PHOTO_QUERY_CONFIG } from "@/constants/config";
 export const useLightbox = () => {
   const navigate = useRouterSafe().navigate;
   const location = useRouterSafe().location;
+  const params = useRouterSafe().params as any;
   
-  const { dataFilters, uiState, setPhotoId, setGroupId } = useUrlFilters();
-  const { photoId, groupId } = uiState;
+  const { photoId, groupId: uiGroupId, setGroupId, setPhotoId, category, tags, search, sort, showGroupsCollapsed, status } = useFilters();
+  
+  const dataFilters = useMemo(() => ({
+    categoryId: category || null,
+    tagId: tags?.[0] || null,
+    searchQuery: search || '',
+    sortOrder: sort || 'newest',
+    showGroupsCollapsed: showGroupsCollapsed !== false,
+    is_hidden: status === 'hidden',
+    onlyUngrouped: false,
+    manufacturerId: null,
+  }), [category, tags, search, sort, showGroupsCollapsed, status]);
+
+  const parsedGroupId = location.pathname.match(/\/group\/([^\/]+)/)?.[1] || location.pathname.match(/\/admin\/group\/([^\/]+)/)?.[1];
+  const groupId = uiGroupId || params.groupId || parsedGroupId;
   
   const isAdmin = location.pathname.startsWith('/admin');
   
   // Use enabled condition to avoid unnecessary requests
   const { data: singlePhoto, isLoading: isSingleLoading } = usePhoto(photoId || '');
+  const groupPhotosQuery = useGroupPhotos(groupId, isAdmin, 40);
   const { data: groupDetail, isLoading: isGroupLoading } = useGroupDetail({ groupId: groupId || '', isAdmin });
-  const { data: groupPhotos, isLoading: isPhotosLoading } = useGroupPhotos(groupId, isAdmin, 500);
+  const isPhotosLoading = groupPhotosQuery.isLoading;
 
-  const photoFilters = useMemo(() => ({
+  const photoFilters = ({
     category_id: dataFilters.categoryId,
     tag_id: dataFilters.tagId,
     manufacturer_id: dataFilters.manufacturerId,
@@ -38,21 +53,22 @@ export const useLightbox = () => {
     onlyUngrouped: false,
     is_hidden: dataFilters.is_hidden,
     limit: PHOTO_QUERY_CONFIG.limit
-  }), [dataFilters.categoryId, dataFilters.tagId, dataFilters.manufacturerId, dataFilters.searchQuery, dataFilters.sortOrder, isAdmin, dataFilters.is_hidden]);
+  });
 
   const { data: allGalleryPhotos, isLoading: isGalleryLoading } = usePhotos(photoFilters, { enabled: !groupId });
   
   const isGroupMode = !!groupId; // Within a group's context
   
-  const photos = useMemo(() => {
+  const photos = (() => {
     let list: Photo[] = [];
-    const sourceData = isGroupMode ? groupPhotos : allGalleryPhotos;
-    const allPhotosList = (sourceData?.pages as any[])?.flatMap(page => page.photos) ?? [];
+    const allPhotosList = isGroupMode 
+        ? (groupPhotosQuery.photos || [])
+        : (allGalleryPhotos?.photos || (allGalleryPhotos?.pages as any[])?.flatMap(page => page.photos) || []);
     
     if (singlePhoto) {
-      list = allPhotosList.map((p) => p.id === singlePhoto.id ? { ...p, ...singlePhoto } : p);
-      if (!list.find(p => p.id === singlePhoto.id)) {
-        list = [singlePhoto, ...list];
+      list = allPhotosList.map((p: any) => p.id === singlePhoto.id ? { ...p, ...singlePhoto } : p);
+      if (!list.find((p: any) => p.id === singlePhoto.id)) {
+        list = [...list, singlePhoto]; // ensure we append to avoid messing up start of list if we couldn't find it
       }
     } else {
       list = allPhotosList;
@@ -66,7 +82,7 @@ export const useLightbox = () => {
       seen.add(p.id);
       return true;
     });
-  }, [isGroupMode, groupPhotos, allGalleryPhotos, singlePhoto]);
+  })();
 
   const { data: countResult } = useQuery({
     queryKey: ['photos', 'totalCount', dataFilters, groupId, isAdmin],
@@ -122,6 +138,20 @@ export const useLightbox = () => {
     }
   }, [photoId, photos, currentIndex]);
   
+  const { data: langData } = useQuery({ queryKey: ['current-lang'], enabled: false });
+  const currentLang = (langData as any)?.lang || 'zh';
+
+  const items = useMemo(() => {
+    return photos.map(p => ({
+      id: p.id,
+      src: p.image_url,
+      thumbnail: p.thumbnail_sm_url || p.image_url,
+      title: typeof p.name === 'object' ? (p.name[currentLang] || p.name.zh || p.name.en || '') : p.name,
+      description: typeof p.description === 'object' ? (p.description?.[currentLang] || p.description?.zh || p.description?.en || '') : p.description,
+      exif: p.exif_data as any
+    }));
+  }, [photos, currentLang]);
+
   return { 
     isOpen, 
     close, 
@@ -139,7 +169,7 @@ export const useLightbox = () => {
     // However, if photoId is NOT present but we are in a group-detail page... 
     // wait, isOpen is only true if photoId is present.
     data: mode === 'group' ? (currentPhoto || groupDetail) : currentPhoto,
-    items: photos,
+    items,
     totalCount,
     showEdit: isAdmin,
     showDelete: isAdmin,

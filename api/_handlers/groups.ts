@@ -223,7 +223,7 @@ export const groups = new Hono()
 
     for (const group of (groups || [])) {
       const { count, error: countError } = await supabase
-        .from(TABLE_NAME)
+        .from('furniture_items')
         .select('id', { count: 'exact', head: true })
         .eq('group_id', group.id);
 

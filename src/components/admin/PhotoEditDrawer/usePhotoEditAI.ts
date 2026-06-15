@@ -23,7 +23,7 @@ export function usePhotoEditAI() {
   const { data: categories = [] } = useCategories();
   const { data: allTags = [] } = useTags();
 
-  const handleAiAnalyze = useCallback(async (previewSrc?: string, imageUrl?: string) => {
+  const handleAiAnalyze = async (previewSrc?: string, imageUrl?: string) => {
     const finalImageUrl = previewSrc || imageUrl;
     if (!finalImageUrl || !editPhotoId) {
       showToast.error(appLang === 'zh' ? '照片信息缺失，无法分析' : 'Photo data missing');
@@ -263,7 +263,7 @@ export function usePhotoEditAI() {
       // runTask rethrows by default, we catch here to avoid unhandled promise rejections on task failure
       logger.warn('[AI Analyze Failed]', e);
     }
-  }, [editPhotoId, appLang, runTask, updatePhoto, setValue, queryClient, categories, allTags]);
+  };
 
   return { handleAiAnalyze };
 }

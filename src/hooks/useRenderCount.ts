@@ -1,4 +1,5 @@
 import { useRef, useEffect } from 'react'
+import { logger } from '@/lib/logger'
 
 export const useRenderCount = (label: string, enabled = true) => {
   const count = useRef(0)
@@ -12,7 +13,7 @@ export const useRenderCount = (label: string, enabled = true) => {
   }
   
   count.current++
-  console.log(`[Render] ${label}: ${count.current}`)
+  logger.debug(`[Render] ${label}: ${count.current}`)
 }
 
 // 組件中使用

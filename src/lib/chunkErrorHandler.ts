@@ -1,4 +1,5 @@
 import type { Router } from '@tanstack/react-router'
+import { logger } from '@/lib/logger'
 
 const RELOAD_COUNT_KEY = '__chunk_reload_count__'
 const MAX_RELOADS = 2
@@ -39,7 +40,7 @@ export function setupChunkErrorHandler(router: Router<any>) {
       } else {
         await router.navigate({ to: window.location.pathname, replace: true })
       }
-      console.log('[Chunk] 軟導航成功，狀態已完整保留')
+      logger.debug('[Chunk] 軟導航成功，狀態已完整保留')
       clearChunkReloadCount()
     } catch (softError) {
       console.warn('[Chunk] 軟導航失敗，嘗試硬刷新', softError)

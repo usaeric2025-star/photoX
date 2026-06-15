@@ -11,8 +11,15 @@ import { clearExpiredCaches } from './lib/db/indexedDB';
 import { handleError } from './lib/error/errorHandler';
 import { logger } from '@/lib/logger';
 import { startAutoDiagnose } from '@/services/maintenance/autoDiagnose';
+import { useUIStore } from '@/store/useUIStore';
 
 export default function AppRoutes() {
+  const appLang = useUIStore((s) => s.appLang);
+
+  useEffect(() => {
+    document.documentElement.dataset.lang = appLang;
+  }, [appLang]);
+
   useEffect(() => {
     document.title = 'PhotoX';
     // Background cache cleanup and migrations

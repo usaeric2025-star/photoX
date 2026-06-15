@@ -8,7 +8,7 @@ export function useAdminBatchActions() {
   const { photos } = usePhotoGallery();
   const { handleBatchAiAnalyze } = useAIBatchAnalysis();
   
-  const handleBatchAiIdentifyTrigger = useCallback(async (ids?: string[]) => {
+  const handleBatchAiIdentifyTrigger = async (ids?: string[]) => {
     const selectedIds = ids || useUIStore.getState().selectedIds;
     
     if (selectedIds.length > 0) {
@@ -27,7 +27,7 @@ export function useAdminBatchActions() {
     } else {
       handleBatchAiAnalyze(photos);
     }
-  }, [photos, handleBatchAiAnalyze]);
+  };
 
   return {
     handleBatchAiIdentifyTrigger

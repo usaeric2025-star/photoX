@@ -23,7 +23,7 @@ export function BasicInfoTab() {
   const previewSrc = newPhotoData || detailPhoto?.image_url;
   const isProcessingImage = tasks.some(t => t.status === 'running' && t.name === '旋转图片');
 
-  const onRotate = React.useCallback(async () => {
+  const onRotate = async () => {
     if (!previewSrc) return;
 
     await runTask('旋转图片', async () => {
@@ -53,7 +53,7 @@ export function BasicInfoTab() {
       const newData = canvas.toDataURL('image/jpeg', 0.95);
       update({ newPhotoData: newData });
     }, { silent: true });
-  }, [previewSrc, runTask, update]);
+  };
 
   const [zoomed, { open: openZoom, close: closeZoom }] = useDisclosure(false);
 

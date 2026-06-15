@@ -72,5 +72,5 @@ export const adminGroupRoute = createRoute({
       void prefetchGroupDetail(context.queryClient, groupId, true);
     }
   },
-  component: lazy(() => import('@/components/groups/GroupDetailPage').then(m => ({ default: m.GroupDetailPage }))),
+  component: lazy(() => import('@/pages/AdminGroupPage')),
 });

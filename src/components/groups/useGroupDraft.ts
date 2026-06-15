@@ -42,15 +42,15 @@ export const useGroupDraft = (
     } else if (activeGroupId && !isGroupDataLoading) {
       setGroupData({
         id: activeGroupId,
-        name: { zh: "" },
-        description: { zh: "" },
+        name: "",
+        description: "",
         colors: [],
         materials: [],
         cover_photo_id: null,
         user_id: user?.id || "",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      });
+      } as any);
     } else {
       setGroupData(null);
     }
