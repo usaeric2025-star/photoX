@@ -1,59 +1,61 @@
-import { useRef, useEffect } from 'react';
+import { Reel } from '@reelkit/react';
+import { OptimizedImage } from '@/components/shared/OptimizedImage';
 
 interface ThumbnailsStripProps {
   items: Array<{ src: string; thumbnail?: string; alt?: string; id?: string }>;
   currentIndex: number;
   onSelect: (index: number) => void;
+  apiRef?: React.MutableRefObject<any>;
 }
 
-export const ThumbnailsStrip = ({ items, currentIndex, onSelect }: ThumbnailsStripProps) => {
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  // CSS Scroll Snap + 自動滾動到當前縮圖
-  useEffect(() => {
-    const activeBtn = document.getElementById(`lightbox-thumb-${currentIndex}`);
-    if (activeBtn) {
-      activeBtn.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'center',
-      });
-    }
-  }, [currentIndex]);
-
-  if (!items || items.length <= 1) return null;
-
+export const ThumbnailsStrip = ({ items, currentIndex, onSelect, apiRef }: ThumbnailsStripProps) => {
   return (
-    <div
-      ref={scrollRef}
-      className="fixed bottom-24 sm:bottom-8 left-1/2 -translate-x-1/2 z-[110] pointer-events-auto max-w-[90vw] sm:max-w-2xl px-3 py-2 bg-black/45 backdrop-blur-xl rounded-2xl border border-white/10 flex items-center gap-2 overflow-x-auto shadow-2xl transition-all duration-300 snap-x snap-mandatory"
-      style={{ scrollbarWidth: 'none' }}
-    >
-      {items.map((item, idx) => {
-        const isActive = idx === currentIndex;
-        return (
-          <button
-            key={item.id ?? idx}
-            id={`lightbox-thumb-${idx}`}
-            onClick={() => onSelect(idx)}
-            className={`
-              relative flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden transition-all duration-300
-              snap-center ring-2
-              ${isActive 
-                ? 'ring-white scale-110 shadow-lg opacity-100 z-10' 
-                : 'ring-transparent hover:ring-white/40 opacity-40 hover:opacity-80'
-              }
-            `}
-          >
-            <img
-              src={item.thumbnail || item.src}
-              alt={item.alt || ''}
-              className="w-full h-full object-cover pointer-events-none select-none"
-              loading="lazy"
-            />
-          </button>
-        );
-      })}
+    <div className="absolute bottom-6 left-0 right-0 z-50 px-4 flex justify-center pointer-events-none">
+      <div className="bg-black/45 backdrop-blur-xl rounded-2xl border border-white/10 p-2 shadow-2xl pointer-events-auto h-20 w-full sm:max-w-md">
+        <Reel
+          count={items.length}
+          initialIndex={currentIndex}
+          direction="horizontal"
+          transitionDuration={200}
+          loop={false}
+          swipeDistanceFactor={0.12}
+          apiRef={apiRef}
+          style={{ width: '100%', height: '100%' }}
+          itemBuilder={(index) => {
+            const item = items[index];
+            const isActive = index === currentIndex;
+            return (
+              <div key={item.id ?? index} className="flex items-center justify-center w-full h-full">
+                <button
+                  type="button"
+                  onClick={() => onSelect(index)}
+                  className={`
+                    w-16 h-12 mx-1 rounded-md overflow-hidden transition-all duration-200
+                    flex-shrink-0
+                    ${isActive 
+                      ? 'ring-2 ring-white scale-110 shadow-lg' 
+                      : 'opacity-60 hover:opacity-100'
+                    }
+                  `}
+                >
+                  <OptimizedImage
+                    src={item.thumbnail || item.src}
+                    alt={item.alt || ''}
+                    className="w-full h-full object-cover"
+                    eager={isActive}
+                  />
+                </button>
+              </div>
+            );
+          }}
+          afterChange={(newIndex) => {
+            if (newIndex !== currentIndex) {
+              onSelect(newIndex);
+            }
+          }}
+        />
+      </div>
     </div>
   );
 };
+

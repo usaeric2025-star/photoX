@@ -64,39 +64,12 @@ export function BatchEditForm({
             </div>
             
             <div className="grid grid-cols-[auto_1fr] gap-3 items-center text-xs">
-              <div className="text-[9px] font-bold bg-slate-200 text-slate-700 px-1.5 py-1.5 rounded-md uppercase tracking-wider text-center w-10">ZH</div>
+              <div className="text-[9px] font-bold bg-slate-200 text-slate-700 px-1.5 py-1.5 rounded-md uppercase tracking-wider text-center w-10">NAME</div>
               <input 
                 type="text" 
-                placeholder="统一输入中文名称..." 
-                value={typeof formState.name === 'object' ? (formState.name.zh || '') : (formState.name || '')}
-                onChange={(e) => {
-                   const curr = typeof formState.name === 'object' ? formState.name : { zh: formState.name || '', en: '', ms: '' };
-                   handleUpdateForm({ name: { ...curr, zh: e.target.value } });
-                }}
-                className="w-full bg-white border border-slate-200 px-3 py-2 rounded-xl font-bold outline-none focus:border-blue-500 shadow-sm min-w-0" 
-              />
-
-              <div className="text-[9px] font-bold bg-blue-50 text-blue-600 px-1.5 py-1.5 rounded-md uppercase tracking-wider text-center w-10 border border-blue-100/50">EN</div>
-              <input 
-                type="text" 
-                placeholder="Uniform English Name..." 
-                value={typeof formState.name === 'object' ? (formState.name.en || '') : ''}
-                onChange={(e) => {
-                   const curr = typeof formState.name === 'object' ? formState.name : { zh: formState.name || '', en: '', ms: '' };
-                   handleUpdateForm({ name: { ...curr, en: e.target.value } });
-                }}
-                className="w-full bg-white border border-slate-200 px-3 py-2 rounded-xl font-bold outline-none focus:border-blue-500 shadow-sm min-w-0" 
-              />
-
-              <div className="text-[9px] font-bold bg-emerald-50 text-emerald-600 px-1.5 py-1.5 rounded-md uppercase tracking-wider text-center w-10 border border-emerald-100/50">MS</div>
-              <input 
-                type="text" 
-                placeholder="Nama Bahasa Melayu Seragam..." 
-                value={typeof formState.name === 'object' ? (formState.name.ms || '') : ''}
-                onChange={(e) => {
-                   const curr = typeof formState.name === 'object' ? formState.name : { zh: formState.name || '', en: '', ms: '' };
-                   handleUpdateForm({ name: { ...curr, ms: e.target.value } });
-                }}
+                placeholder="统一名称..." 
+                value={formState.name || ''}
+                onChange={(e) => handleUpdateForm({ name: e.target.value })}
                 className="w-full bg-white border border-slate-200 px-3 py-2 rounded-xl font-bold outline-none focus:border-blue-500 shadow-sm min-w-0" 
               />
             </div>

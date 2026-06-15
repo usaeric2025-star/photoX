@@ -145,19 +145,23 @@ export const listHandler = (app: Hono) => {
     const check = ListByGroupReqSchema(body);
     if (check instanceof type.errors) throw new Error(check.summary);
 
-    const { groupId, page = 1, pageSize = 30, isAdminMode = false } = check;
+    const { groupId, page = 1, pageSize = 100, isAdminMode = false } = check;
     const supabase = await getSupabaseAdmin();
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
-    let countQuery = supabase.from(TABLE_NAME).select('id', { count: 'exact', head: true }).eq('group_id', groupId);
+    let countQuery = supabase.from(TABLE_NAME).select('*', { count: 'exact', head: true }).eq('group_id', groupId);
     let query = supabase.from(TABLE_NAME).select('*, photo_tags(tag_id)').eq('group_id', groupId);
     if (!isAdminMode) {
-      countQuery = countQuery.or('is_hidden.is.false,is_hidden.is.null');
+      countQuery = countQuery.or('is_hidden.is.false,is_hidden.is.null'); 
       query = query.or('is_hidden.is.false,is_hidden.is.null');
     }
     const [countRes, queryRes, tagRows] = await Promise.all([
       countQuery,
-      query.order('is_group_cover', { ascending: false }).order('group_order', { ascending: true, nullsFirst: false }).order('is_hidden', { ascending: true, nullsFirst: true }).order('created_at', { ascending: false }).order('id', { ascending: true }).range(from, to),
+      query.order('is_group_cover', { ascending: false })
+           .order('group_order', { ascending: true, nullsFirst: true }) // Changed to true to show un-ordered items
+           .order('created_at', { ascending: false })
+           .order('id', { ascending: true })
+           .range(from, to),
       getCachedTags(supabase)
     ]);
     if (queryRes.error) return c.json({ success: false, error: queryRes.error.message }, 500);

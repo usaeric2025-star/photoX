@@ -1,30 +1,14 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { supabase } from '../../lib/supabase';
 import { ProductGroup } from '../../types';
+import { getSafeText } from '@/services/ai/safeText';
 
 export const TABLE_NAME = 'groups';
 
-const parseTranslation = (val: any) => {
-  if (!val) return { zh: '' };
-  if (typeof val === 'object') return val;
-  if (typeof val === 'string') {
-    try {
-      const parsed = JSON.parse(val);
-      if (parsed && typeof parsed === 'object') return parsed;
-    } catch (e) {
-      // Not JSON
-    }
-    return { zh: val };
-  }
-  return { zh: String(val) };
-};
-
 const mapGroup = (item: any): ProductGroup => ({
   id: item.id,
-  name: parseTranslation(item.name),
-  description: parseTranslation(item.description),
-  colors: item.colors || [],
-  materials: item.materials || [],
+  name: getSafeText(item.name),
+  description: getSafeText(item.description),
   cover_photo_id: item.cover_photo_id,
   is_hidden: (item.is_hidden ?? false) as boolean,
   created_at: item.created_at,

@@ -1,7 +1,7 @@
 import { logger } from '@/lib/logger';
 import { Photo } from '../../types';
 import { supabase } from '../../lib/supabase';
-import { parseTranslation } from './mappers';
+import { getSafeText } from '@/services/ai/safeText';
 
 export async function hydrateGroupInfo(photos: Photo[]): Promise<Photo[]> {
   const groupIds = Array.from(new Set(photos.map(p => p.group_id).filter(Boolean))) as string[];
@@ -30,7 +30,7 @@ export async function hydrateGroupInfo(photos: Photo[]): Promise<Photo[]> {
       
       groupMap.set(String(g.id), {
         id: String(g.id),
-        name: parseTranslation(g.name),
+        name: getSafeText(g.name),
         color: colorValue || '#3b82f6',
         cover_photo_id: g.cover_photo_id || null,
         member_count: g.member_count ?? 1

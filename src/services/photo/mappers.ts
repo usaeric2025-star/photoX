@@ -1,7 +1,7 @@
 import { getPathFromUrl } from '@/lib/utils';
 import { SupabasePhotoRaw } from '@/types/supabase';
 import { Photo, Tag, Dimension } from '@/types';
-import { cleanTranslationPrefixes } from '@/services/ai/safeText';
+import { getSafeText } from '@/services/ai/safeText';
 import { generateItemCode, validateDimension } from './utils';
 
 // --- From DB (Supabase -> Frontend) ---
@@ -41,20 +41,6 @@ export function normalizeStoredUrl(url: string | undefined | null): string {
     return processedUrl;
 }
 
-export const parseTranslation = (val: any) => {
-    if (!val) return { zh: '' };
-    if (typeof val === 'object') return val as { zh: string; en?: string; ms?: string };
-    if (typeof val === 'string') {
-      try {
-        const parsed = JSON.parse(val);
-        if (parsed && typeof parsed === 'object') return parsed;
-      } catch (e) {
-      }
-      return { zh: val };
-    }
-    return { zh: String(val) };
-};
-
 export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo {
     if (!item) return {} as Photo;
     
@@ -88,7 +74,7 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo
                 const rawTag = Array.isArray(pt.tags) ? pt.tags[0] : pt.tags;
                 if (rawTag) {
                     tagId = rawTag.id || tagId;
-                    tagName = parseTranslation(rawTag.name).zh;
+                    tagName = getSafeText(rawTag.name);
                 }
             } else if (tagCache) {
                 const matchedTag = tagCache.get(String(pt.tag_id));
@@ -109,7 +95,7 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo
         if (t) {
             tags.push({
                 id: String(t.id),
-                name: parseTranslation(t.name).zh,
+                name: getSafeText(t.name),
                 aliases: [],
             });
         }
@@ -128,10 +114,10 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo
       manual_code: item.manual_code || '',
       model_number: item.model_number || '',
       image_hash: item.image_hash || '',
-      name: parseTranslation(item.name),
+      name: getSafeText(item.name),
       category_id: item.category_id ? String(item.category_id) : null,
       manufacturer_id: item.manufacturer_id ? String(item.manufacturer_id) : null,
-      description: parseTranslation(item.description),
+      description: getSafeText(item.description),
       image_url: imageUrl,
       thumbnail_sm_url: getThumbnailUrl(imageUrl, 200, 200, item.image_hash || ''),
       thumbnail_md_url: getThumbnailUrl(imageUrl, 800, 800, item.image_hash || ''),
@@ -142,7 +128,7 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo
       group_id: item.group_id ? String(item.group_id) : undefined,
       group: item.group ? {
           id: item.group.id,
-          name: parseTranslation(item.group.name),
+          name: getSafeText(item.group.name),
           color: item.group.color,
           cover_photo_id: item.group.cover_photo_id,
           member_count: item.group.member_count ?? 1,

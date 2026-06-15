@@ -58,8 +58,9 @@ export function GroupDetailPage({}: GroupDetailPageProps) {
   } = useGroupPhotos(activeGroupId, isAdminMode);
 
   const mountTimeRef = useRef(performance.now());
-  const isStale = isGroupDataPlaceholder || isGroupPhotosPlaceholder;
-  const isLoading = isGroupPhotosLoading || isGroupDataLoading;
+  const isStale = (isGroupDataPlaceholder && isGroupDataLoading) || (isGroupPhotosPlaceholder && isGroupPhotosLoading);
+  const isLoading = isGroupPhotosLoading && !activeGroupPhotos.length; // Decouple from group data loading for better visual speed
+  const isDataUpdating = (isGroupPhotosLoading || isGroupDataLoading) && (activeGroupPhotos.length > 0 || groupData);
 
   // Track page performance
   useEffect(() => {
@@ -124,7 +125,7 @@ export function GroupDetailPage({}: GroupDetailPageProps) {
     }
   }, [activeGroupId, initialPhotoId, activeGroupPhotos.length]);
 
-  const groupDisplayName = groupData ? getSafeText(groupData.name, lang) : '';
+  const groupDisplayName = groupData ? groupData.name : '';
 
   if (!activeGroupId) return null;
 
@@ -162,13 +163,10 @@ export function GroupDetailPage({}: GroupDetailPageProps) {
           appLang={lang}
        />
     
-    {/* [GROUP-STALE-SIGNAL] */}
-    <div className={`flex-1 min-h-0 flex flex-col transition-opacity duration-300 overflow-y-auto ${isStale ? "opacity-60" : "opacity-100"}`}>
+    {/* Content Container - Fixed height to support internal Grid virtualization */}
+    <div className={`flex-1 min-h-0 flex flex-col transition-opacity duration-300 overflow-hidden ${isDataUpdating ? "opacity-90" : "opacity-100"}`}>
       
-      {/* Public Description Rendering */}
-      <GroupInfoPanel groupData={groupData || undefined} lang={lang} />
-
-      <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="animate-spin text-slate-400" /></div>}>
+      <Suspense fallback={<div className="h-full flex items-center justify-center py-20"><Loader2 className="animate-spin text-slate-400" /></div>}>
         <GroupGridView 
             key={activeGroupId}
             onEndReached={() => {

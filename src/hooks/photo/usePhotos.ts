@@ -111,11 +111,11 @@ export const useGroupPhotosResult = createInfiniteQuery<{photos: Photo[], total:
     return (loaded < lastPage.total && lastPage.photos.length > 0) ? allPages.length + 1 : undefined;
   },
   select: flattenPhotos,
-  staleTime: 30 * 1000,
+  staleTime: 2 * 60 * 1000, // Increased to 2 minutes for better snappy feel
   placeholderData: keepPreviousData
 } as any);
 
-export const useGroupPhotos = (groupId: string | null, isAdminMode: boolean = false, pageSize: number = 60) => {
+export const useGroupPhotos = (groupId: string | null, isAdminMode: boolean = false, pageSize: number = 100) => {
   const queryClient = useQueryClient();
   const query = useGroupPhotosResult({ groupId, isAdminMode, pageSize }, {
     enabled: !!groupId

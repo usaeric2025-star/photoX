@@ -41,7 +41,7 @@ export const PhotoLightboxPage = () => {
         setPhotoId(pendingPhotoIdRef.current);
         pendingPhotoIdRef.current = null;
       }
-    }, 200);
+    }, 80);
   }, [setPhotoId]);
 
   const closeWithCleanup = React.useCallback(() => {

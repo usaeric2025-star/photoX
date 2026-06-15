@@ -11,9 +11,16 @@ interface GroupLightboxProps {
 }
 
 export const GroupLightbox = ({ groupId, initialPhotoId, onClose, onEdit }: GroupLightboxProps) => {
-  const { photos, isLoading } = useGroupPhotos(groupId);
+  const { photos, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useGroupPhotos(groupId);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [open, setOpen] = useState(false);
+
+  // Pre-fetch next page when close to end
+  useEffect(() => {
+    if (hasNextPage && !isFetchingNextPage && currentIndex > photos.length - 30) {
+      fetchNextPage();
+    }
+  }, [currentIndex, photos.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const initialIndex = (() => {
     if (!photos || photos.length === 0 || !initialPhotoId) return 0;

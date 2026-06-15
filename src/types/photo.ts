@@ -16,16 +16,8 @@ export interface Photo {
   manual_code?: string; // Hidden price code
   model_number?: string; // Manufacturer model number
   image_hash: string; // MD5 fingerprint
-  name: {
-    zh: string;
-    en?: string;
-    ms?: string;
-  }; 
-  description: {
-    zh?: string;
-    en?: string;
-    ms?: string;
-  } | null;
+  name: string; 
+  description: string | null;
   image_url: string; // Public URL in Storage
   width?: number; // Pixel width
   height?: number; // Pixel height
@@ -58,11 +50,7 @@ export interface Photo {
   metadata?: Record<string, unknown>;
   group?: {
       id: string;
-      name: {
-        zh: string;
-        en?: string;
-        ms?: string;
-      };
+      name: string;
       color: string | null;
       cover_photo_id: string | null;
       member_count: number;
@@ -109,19 +97,7 @@ export interface Manufacturer {
 
 export interface ProductGroup {
   id: string;
-  name: {
-    zh: string;
-    en?: string;
-    ms?: string;
-  };
-  description: {
-    zh?: string;
-    en?: string;
-    ms?: string;
-  } | null;
-  colors: string[];
-  materials: string[];
-  dimensions?: Dimension[] | null;
+  name: string;
   cover_photo_id?: string | null;
   is_hidden?: boolean;
   user_id: string;
@@ -136,19 +112,11 @@ export type Group = ProductGroup;
 
 export interface ProductFormData {
   id?: string;
-  name: {
-    zh: string;
-    en?: string;
-    ms?: string;
-  };
+  name: string;
   category_id: string | null;
   manufacturer_id: string | null;
   tags: Tag[];
-  description: {
-    zh?: string;
-    en?: string;
-    ms?: string;
-  };
+  description: string;
   item_code: string;
   manual_code: string;
   model_number: string;

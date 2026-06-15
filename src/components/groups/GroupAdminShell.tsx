@@ -30,36 +30,11 @@ import {
 } from "lucide-react";
 import { CollapsibleDescription } from "./CollapsibleDescription";
 import { GroupInfoPanel } from "./GroupInfoPanel";
-import { getSafeText } from "@/services/ai/safeText";
-import {
-  DndContext,
-  closestCenter,
-  DragEndEvent,
-  useSensor,
-  useSensors,
-  PointerSensor,
-  TouchSensor,
-} from "@dnd-kit/core";
-import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
 import { GroupAdminBottomBar } from "./GroupAdminBottomBar";
 import { Modal } from "../ui/Modal";
 import { PhotoEditModal } from "@/components/admin/PhotoEditModal";
 
 export function GroupAdminShell() {
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 200,
-        tolerance: 6,
-      },
-    })
-  );
-
   const isAdminMode = useAdminMode();
   const navigate = useRouterSafe().navigate;
   const { copy } = useCopyToClipboard({ successMessage: "合组ID已复制" });
@@ -97,12 +72,12 @@ export function GroupAdminShell() {
   } | null>(null);
 
   const {
+    activeGroupId,
     activeGroupPhotos,
     groupSettingsOpen,
     groupData,
     setGroupData,
     isGroupDataLoading,
-    containerRef,
     virtualGridRef,
     currentHighlightId,
     handleScroll,
@@ -200,24 +175,6 @@ export function GroupAdminShell() {
     showCoverBadge: true,
   });
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      const draggedId = active.id as string;
-      const targetId = over.id as string;
-      
-      // Optimistic update
-      React.startTransition(() => {
-        addOptimisticAction({ 
-          type: 'reorder', 
-          payload: { draggedId, targetId } 
-        });
-      });
-      
-      handleReorder(draggedId, targetId);
-    }
-  };
-
   const handlePhotoClick = (photo: Photo) => {
     if (isMultiSelect) {
       const selectedIds = useUIStore.getState().selectedIds;
@@ -270,22 +227,14 @@ export function GroupAdminShell() {
 
   return (
     <div className="flex flex-col h-[100dvh] bg-white overflow-hidden w-full relative">
-      <div
-        ref={containerRef}
-        onScroll={handleScroll}
-        className="w-full h-full flex flex-col overflow-hidden bg-white"
-      >
-        {/* Always render Header and Content so they can handle internal loading states smoothly */}
+      {/* Scrollable Container Wrapper - Ensure flex-1 and overflow-hidden to let internal Grid handle scrolling */}
+      <div className="w-full flex-1 min-h-0 flex flex-col bg-white overflow-hidden">
+        
         <GroupHeader
           displayName={
-            (typeof groupData?.name === "object"
-              ? groupData?.name?.[appLang as keyof typeof groupData.name] ||
-                groupData?.name?.zh ||
-                groupData?.name?.en ||
-                groupData?.name?.ms
-              : groupData?.name) || `GROUP ${filters.groupId?.slice(-4)}`
+            groupData?.name || `GROUP ${activeGroupId?.slice(-4)}`
           }
-          activeGroupId={filters.groupId}
+          activeGroupId={activeGroupId}
           isAdminMode={isAdminMode}
           isGroupDataLoading={isGroupDataLoading}
           onClose={handleClose}
@@ -299,17 +248,6 @@ export function GroupAdminShell() {
           appLang={appLang}
         />
 
-        <GroupInfoPanel groupData={groupData || undefined} lang={appLang} />
-
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext
-            items={optimisticPhotos.map((p) => p.id)}
-            strategy={rectSortingStrategy}
-          >
             <GroupGridView
               virtualGridRef={virtualGridRef}
               photos={optimisticPhotos}
@@ -319,16 +257,8 @@ export function GroupAdminShell() {
               onPhotoClick={handlePhotoClick}
               onPhotoContextMenu={handlePhotoContextMenu}
               getPhotoProps={stableGetPhotoProps}
-              isSortable={isAdminMode && !isMultiSelect}
+              onScroll={handleScroll}
             />
-          </SortableContext>
-        </DndContext>
-
-        {!isGroupPhotosLoading && optimisticPhotos.length === 0 && (
-          <div className="flex flex-col items-center justify-center p-10 text-slate-400">
-            <p>No photos found in this group.</p>
-          </div>
-        )}
 
         {/* Unified Multi-Select Floating Bar */}
         <SelectionToolbar
@@ -361,14 +291,14 @@ export function GroupAdminShell() {
           appLang={appLang}
           isMultiSelect={isMultiSelect}
           onAddPhotos={() => {
-            if (filters.groupId) {
-              update?.({ photoPickerGroupId: filters.groupId });
+            if (activeGroupId) {
+              update?.({ photoPickerGroupId: activeGroupId });
               update?.({ isPhotoPickerOpen: true });
             }
           }}
           onSettingsClick={() => update?.({ groupSettingsOpen: true })}
           onAiAnalyze={() =>
-            handleBatchAiAnalyze(activeGroupPhotos, filters.groupId || undefined)
+            handleBatchAiAnalyze(activeGroupPhotos, activeGroupId || undefined)
           }
           onDissolve={dissolveDialog.open}
         />
@@ -385,9 +315,9 @@ export function GroupAdminShell() {
           confirmText={appLang === "zh" ? "确定" : "Confirm"}
           variant="destructive"
           onConfirm={async () => {
-            if (!filters.groupId) return;
+            if (!activeGroupId) return;
             try {
-              await (dissolve.mutateAsync as any)(filters.groupId);
+              await (dissolve.mutateAsync as any)(activeGroupId);
               setGroupId(null);
             } catch (err) {
               // Handled by mutation
@@ -414,10 +344,10 @@ export function GroupAdminShell() {
         <GroupPhotoPicker
           isOpen={!!isPhotoPickerOpen}
           onClose={() => update({ isPhotoPickerOpen: false })}
-          groupId={filters.groupId || ""}
+          groupId={activeGroupId || ""}
           onAdd={async (ids) => {
-            if (filters.groupId) {
-              await handleAddToGroup(ids, filters.groupId);
+            if (activeGroupId) {
+              await handleAddToGroup(ids, activeGroupId);
             }
           }}
         />
@@ -426,7 +356,7 @@ export function GroupAdminShell() {
         <GroupSettingsModal
           showGroupSettings={groupSettingsOpen}
           setShowGroupSettings={(show) => update({ groupSettingsOpen: show })}
-          activeGroupId={filters.groupId}
+          activeGroupId={activeGroupId}
           groupData={groupData}
           setGroupData={setGroupData}
           onUngroup={onUngroup}

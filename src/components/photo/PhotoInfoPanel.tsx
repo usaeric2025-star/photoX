@@ -100,9 +100,10 @@ export function PhotoInfoPanel({
   const { main: displayName, others: otherNameItems } = splitProductName(rawDisplayName || '');
   const { main: displayNameMainEn } = splitProductName(displayNameEn || '');
 
-  const hasZh = !!(data as Photo).description?.zh;
-  const hasEn = !!(data as Photo).description?.en;
-  const hasMs = !!(data as Photo).description?.ms;
+  const hasDescription = !!(data as Photo).description;
+  const hasZh = false; // Legacy requirement from object structure
+  const hasEn = false;
+  const hasMs = false;
 
   return (
     <div className={cn("flex flex-col h-full bg-white border-l border-slate-200 select-text", className)}>

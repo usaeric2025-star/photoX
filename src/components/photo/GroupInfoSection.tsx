@@ -49,53 +49,6 @@ export const GroupInfoSection = ({
             </p>
           )}
         </section>
-
-        {/* Materials & Colors */}
-        {(data.materials?.length > 0 || data.colors?.length > 0) && (
-          <section className="grid grid-cols-1 gap-4">
-            {data.materials?.length > 0 && (
-              <div>
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-1.5">
-                  <Package size={12} /> {l.materials || 'MATERIALS'}
-                </h4>
-                <div className="flex flex-wrap gap-1.5">
-                  {data.materials.map((m, i) => (
-                    <span key={i} className="text-xs bg-brand-navy text-white px-2.5 py-1 rounded-lg font-medium">
-                      {m}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            {data.colors?.length > 0 && (
-              <div>
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-1.5">
-                  <Palette size={12} /> {l.colors || 'COLORS'}
-                </h4>
-                <div className="flex flex-wrap gap-1.5">
-                  {data.colors.map((c, i) => (
-                    <span key={i} className="text-xs bg-slate-800 text-slate-100 px-2.5 py-1 rounded-lg font-medium">
-                      {c}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </section>
-        )}
-
-        {/* Dimensions */}
-        {data.dimensions && (
-          <DimensionsSection 
-            dimensions={data.dimensions}
-            appLang={appLang}
-            texts={{
-              dimensions: l.metadata || 'Dimensions',
-              standard: l.unknown || 'Standard',
-              aiEstimated: 'AI'
-            }}
-          />
-        )}
     </div>
   );
 };

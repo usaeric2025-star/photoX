@@ -1,4 +1,6 @@
+import { useRouterSafe } from "@/hooks/core/useRouterSafe";
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { logger } from '@/lib/logger';
 import { useState, useRef, useEffect } from "react";
 import { Photo } from "../../types";
 import { filterPhotosByMode } from "@/services/photo/processing";
@@ -15,9 +17,10 @@ import { useGroupDraft } from "./useGroupDraft";
 import { useGroupActions } from "./useGroupActions";
 
 export const useGroupAdminLogic = () => {
+  const routerSafe = useRouterSafe();
   const isAdminMode = useAdminMode();
   const { filters, setGroupId } = useUrlFilters();
-  const activeGroupId = filters.groupId;
+  const activeGroupId = (routerSafe.params as any)?.groupId || filters.groupId;
   const initialPhotoId = filters.photoId;
   
   const { isMultiSelect, selectedIds, groupSettingsOpen, batchEditingIds, focusedGroupPhotoId, draggedPhotoId, processingIds, update } = useUIStore(
@@ -52,7 +55,6 @@ export const useGroupAdminLogic = () => {
   const setShowGroupSettings = (show: boolean) => show ? open() : close();
   const [currentHighlightId, setCurrentHighlightId] = useState<string | null>(null);
   const virtualGridRef = useRef<any>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   const { data: dbGroupPhotosPages, isLoading: isGroupPhotosLoading, photos: dbGroupPhotos } =
     useGroupPhotos(activeGroupId, isAdminMode);
@@ -154,28 +156,28 @@ export const useGroupAdminLogic = () => {
   const isScrollRestoredRef = useRef(false);
 
   useEffect(() => {
-    if (activeGroupId && containerRef.current && !isScrollRestoredRef.current) {
+    if (activeGroupId && virtualGridRef.current && !isScrollRestoredRef.current) {
       if (groupScrollStr !== '0' && !initialPhotoId) {
         setTimeout(() => {
-          if (containerRef.current) {
-            containerRef.current.scrollTop = parseInt(groupScrollStr, 10);
+          if (virtualGridRef.current) {
+            virtualGridRef.current.scrollTo(parseInt(groupScrollStr, 10));
             isScrollRestoredRef.current = true;
           }
-        }, 50);
+        }, 300); // Increased timeout for virtualizer to be ready
       } else {
         isScrollRestoredRef.current = true;
       }
     }
-  }, [activeGroupId, initialPhotoId]);
+  }, [activeGroupId, initialPhotoId, isGroupPhotosLoading]);
 
   useEffect(() => {
     // Reset scroll restored flag when group changes
     isScrollRestoredRef.current = false;
   }, [activeGroupId]);
 
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+  const handleScroll = (offset: number) => {
     if (activeGroupId) {
-      setGroupScrollStr(e.currentTarget.scrollTop.toString());
+      setGroupScrollStr(offset.toString());
     }
   };
 
@@ -186,12 +188,12 @@ export const useGroupAdminLogic = () => {
   }, [selectedIds.length, isMultiSelect, update]);
 
   return {
+    activeGroupId,
     focusedGroupPhotoId, isMultiSelect, selectedIds, draggedPhotoId, showGroupSettings, setShowGroupSettings, groupSettingsOpen, batchEditingIds,
     groupData,
     setGroupData,
     isGroupDataLoading,
     activeGroupPhotos,
-    containerRef,
     virtualGridRef,
     currentHighlightId,
     handleScroll,

@@ -98,25 +98,15 @@ export function filterPhotos(
     }
 
     result = result.filter(p => {
-      const nameZh = typeof p.name === 'object' ? String(p.name.zh || '') : String(p.name || '');
-      const nameEn = typeof p.name === 'object' ? String(p.name.en || '') : '';
-      const nameMs = typeof p.name === 'object' ? String(p.name.ms || '') : '';
-      
-      const descObj = (p.description as any) || {};
-      const descZh = typeof p.description === 'object' ? String(descObj.zh || '') : String(p.description || '');
-      const descEn = typeof p.description === 'object' ? String(descObj.en || '') : '';
-      const descMs = typeof p.description === 'object' ? String(descObj.ms || '') : '';
+      const name = String(p.name || '');
+      const desc = String(p.description || '');
 
       const hasBasicMatch = 
-        nameZh.toLowerCase().includes(q) || 
-        nameEn.toLowerCase().includes(q) ||
-        nameMs.toLowerCase().includes(q) ||
+        name.toLowerCase().includes(q) ||
         (p.manual_code || '').toLowerCase().includes(q) ||
         (p.model_number || '').toLowerCase().includes(q) ||
         (p.item_code || '').toLowerCase().includes(q) ||
-        descZh.toLowerCase().includes(q) ||
-        descEn.toLowerCase().includes(q) ||
-        descMs.toLowerCase().includes(q);
+        desc.toLowerCase().includes(q);
       
       if (hasBasicMatch) return true;
 
@@ -192,7 +182,7 @@ export function groupPhotos(
       const groupList = groups.get(p.group_id) || [];
       const sorted = sortGroupPhotos(groupList);
       
-      const coverName = typeof sorted[0].name === 'object' ? (sorted[0].name.zh || '') : (sorted[0].name || '');
+      const coverName = String(sorted[0].name || '');
       const maxTime = groupMaxTime.get(p.group_id) ?? 0;
 
       if (showGroupsCollapsed) {
@@ -232,8 +222,8 @@ export function groupPhotos(
 
     let cmp = 0;
     if (sortOrder === 'name') {
-      const nameA = a._groupCoverName ?? (typeof a.name === 'object' ? (a.name.zh || '') : (a.name || ''));
-      const nameB = b._groupCoverName ?? (typeof b.name === 'object' ? (b.name.zh || '') : (b.name || ''));
+      const nameA = a._groupCoverName ?? String(a.name || '');
+      const nameB = b._groupCoverName ?? String(b.name || '');
       cmp = smartCompare(nameA, nameB);
     } else {
       const tA = a._time ?? (a.created_at ? new Date(a.created_at).getTime() : 0);

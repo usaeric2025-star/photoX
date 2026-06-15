@@ -13,15 +13,9 @@ export function SeriesIdentitySection({
   setGroupData,
   handleUpdateGroupData,
 }: SeriesIdentitySectionProps) {
-  const handleNameChange = (lang: 'zh' | 'en' | 'ms', val: string) => {
+  const handleNameChange = (val: string) => {
     setGroupData((prev) =>
-      prev ? { ...prev, name: { ...prev.name, [lang]: val } } : null
-    );
-  };
-
-  const handleDescriptionChange = (lang: 'zh' | 'en' | 'ms', val: string) => {
-    setGroupData((prev) =>
-      prev ? { ...prev, description: { ...prev.description, [lang]: val } } : null
+      prev ? { ...prev, name: val } : null
     );
   };
 
@@ -49,42 +43,18 @@ export function SeriesIdentitySection({
       </div>
 
       <div className="space-y-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Names */}
-          {(['zh', 'en', 'ms'] as const).map((lang) => (
-            <div key={`name-${lang}`} className="space-y-2">
-              <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">
-                {lang === 'zh' ? '系列正式名称 (中文 / ZH)' : lang === 'en' ? 'Series Name (English / EN)' : 'Nama Siri (Malay / MS)'}
-              </label>
-              <input
-                value={groupData?.name?.[lang] || ""}
-                onChange={(e) => handleNameChange(lang, e.target.value)}
-                onBlur={(e) => {
-                  if (groupData) handleUpdateGroupData({ name: { ...groupData.name, [lang]: e.target.value } });
-                }}
-                className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-base sm:text-sm font-black text-slate-800 outline-none focus:border-indigo-500 transition-all shadow-sm"
-              />
-            </div>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Descriptions */}
-          {(['zh', 'en', 'ms'] as const).map((lang) => (
-            <div key={`desc-${lang}`} className="space-y-2">
-              <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">
-                {lang === 'zh' ? '系列故事 (中文 / ZH)' : lang === 'en' ? 'Series Story (English / EN)' : 'Kisah Siri (Malay / MS)'}
-              </label>
-              <textarea
-                value={groupData?.description?.[lang] || ""}
-                onChange={(e) => handleDescriptionChange(lang, e.target.value)}
-                onBlur={(e) => {
-                  if (groupData) handleUpdateGroupData({ description: { ...groupData.description, [lang]: e.target.value } });
-                }}
-                className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-base sm:text-sm font-bold text-slate-600 outline-none focus:border-indigo-500 transition-all shadow-sm h-20 resize-none"
-              />
-            </div>
-          ))}
+        <div className="space-y-2">
+            <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">
+              Series Name
+            </label>
+            <input
+              value={groupData?.name || ""}
+              onChange={(e) => handleNameChange(e.target.value)}
+              onBlur={(e) => {
+                if (groupData) handleUpdateGroupData({ name: e.target.value });
+              }}
+              className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-base sm:text-sm font-black text-slate-800 outline-none focus:border-indigo-500 transition-all shadow-sm"
+            />
         </div>
       </div>
     </section>

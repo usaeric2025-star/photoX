@@ -2,7 +2,6 @@ import React from "react";
 import { ProductGroup, Dimension } from "../../../types";
 import { UIStoreState } from "@/store/useUIStore";
 import { SeriesIdentitySection } from "./sections/SeriesIdentitySection";
-import { SeriesDNASection } from "./sections/SeriesDNASection";
 
 export function GroupSettingsContent({
   groupData,
@@ -21,11 +20,6 @@ export function GroupSettingsContent({
       <SeriesIdentitySection 
         groupData={groupData}
         setGroupData={setGroupData}
-        handleUpdateGroupData={handleUpdateGroupData}
-      />
-      
-      <SeriesDNASection 
-        groupData={groupData}
         handleUpdateGroupData={handleUpdateGroupData}
       />
     </div>

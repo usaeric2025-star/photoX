@@ -19,10 +19,9 @@ export const PhotoCardInfo = ({ hideDetails, displayCatName, photoTags }: PhotoC
           </span>
         </div>
       )}
-
       {photoTags && photoTags.length > 0 && (
-        <div className="flex flex-nowrap items-center gap-0.5 sm:gap-1 overflow-x-auto no-scrollbar scroll-smooth pb-0.2 px-0.5">
-          {photoTags.map(tag => (
+        <div className="flex flex-nowrap items-center gap-0.5 sm:gap-1 overflow-x-hidden pb-0.2 px-0.5">
+          {photoTags.slice(0, 3).map(tag => (
             <span 
               key={tag} 
               className="shrink-0 text-[7px] sm:text-[7.5px] bg-white/5 backdrop-blur-sm text-slate-200 px-1 py-0.2 sm:px-1.5 sm:py-0.5 rounded-full font-bold tracking-wider uppercase border border-white/5 whitespace-nowrap shadow-sm transition-colors duration-200 hover:bg-white/20"

@@ -48,6 +48,7 @@ export const ReelkitAdapter = ({
 }: ReelkitAdapterProps) => {
   const activeShowInfo = showInfo ?? false;
   const apiRef = useRef<ReelApi>(null);
+  const thumbnailApiRef = useRef<ReelApi>(null);
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const lastSyncIndexRef = useRef(initialIndex);
 
@@ -71,6 +72,13 @@ export const ReelkitAdapter = ({
       lastSyncIndexRef.current = initialIndex;
     }
   }, [open, initialIndex]);
+
+  // 當主圖切換時同步縮圖軌道
+  useEffect(() => {
+    if (thumbnailApiRef.current) {
+      thumbnailApiRef.current.goTo(currentIndex);
+    }
+  }, [currentIndex]);
 
   if (!open) return null;
 
@@ -190,6 +198,7 @@ export const ReelkitAdapter = ({
                       }, 10);
                     }
                   }}
+                  apiRef={thumbnailApiRef}
                 />
 
                 {!activeShowInfo && onToggleInfo && (

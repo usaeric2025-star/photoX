@@ -5,10 +5,7 @@ import { useUIStore, useShallow, useColumns } from '@/store/useUIStore';
 import { translations } from '@/locales';
 import { PhotoCard } from '../photo/PhotoCard';
 import { VirtualGrid } from '@/components/virtualizer/VirtualGrid';
-import { GROUP_LIST_CONFIG } from '@/config/virtuoso.config';
 import { GroupInfoPanel } from './GroupInfoPanel';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 
 interface GroupGridViewProps {
   photos: Photo[];
@@ -22,34 +19,15 @@ interface GroupGridViewProps {
   onEndReached?: () => void;
   isFetchingNextPage?: boolean;
   hasNextPage?: boolean;
-  isSortable?: boolean;
+  header?: React.ReactNode;
+  onScroll?: (e: any) => void;
 }
 
-function SortablePhotoItem({ photo, index, getPhotoProps, onClick, onContextMenu, isSortable, isHighlighted }: any) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: photo.id, disabled: !isSortable });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    zIndex: isDragging ? 2 : 1,
-    opacity: isDragging ? 0.7 : 1,
-  };
-
+function PhotoItem({ photo, index, getPhotoProps, onClick, onContextMenu, isHighlighted }: any) {
   const extraProps = getPhotoProps ? getPhotoProps(photo) : {};
 
   return (
     <div 
-      ref={setNodeRef} 
-      style={style} 
-      {...(isSortable ? attributes : {})} 
-      {...(isSortable ? listeners : {})} 
       data-highlight={isHighlighted}
       className="p-1 w-full touch-manipulation data-[highlight=true]:ring-4 data-[highlight=true]:ring-blue-500 transition-all duration-300"
     >
@@ -106,6 +84,8 @@ export function GroupGridView({
   isFetchingNextPage,
   hasNextPage,
   isSortable,
+  header,
+  onScroll,
 }: GroupGridViewProps & { virtualGridRef?: React.Ref<any>, isLoading?: boolean }) {
   const lang = useUIStore((s) => s.appLang);
   const t = translations[lang as keyof typeof translations as keyof typeof translations] || translations.en;
@@ -133,21 +113,20 @@ export function GroupGridView({
     }
     const isHighlighted = highlightId === photo.id;
     return (
-      <SortablePhotoItem
+      <PhotoItem
         key={photo.id}
         photo={photo}
         index={index}
         getPhotoProps={getPhotoProps}
         onClick={() => onPhotoClick(photo)}
         onContextMenu={onPhotoContextMenu}
-        isSortable={isSortable}
         isHighlighted={isHighlighted}
       />
     );
   };
 
   return (
-    <div className={`w-full h-full relative ${groupData?.is_hidden ? 'grayscale opacity-70' : ''}`}>
+    <div className={`w-full h-full relative overflow-hidden ${groupData?.is_hidden ? 'grayscale opacity-70' : ''}`}>
       <VirtualGrid
         shift={true}
         itemSize={estimatedItemSize}
@@ -155,7 +134,13 @@ export function GroupGridView({
         count={isLoading ? 12 : (groupData?.member_count && groupData.member_count > photos.length ? groupData.member_count : photos.length)}
         lanes={denseColumns}
         onEndReached={onEndReached}
-        header={null}
+        onScroll={onScroll}
+        header={
+          <div className="flex flex-col w-full">
+            {header}
+            {groupData && <GroupInfoPanel groupData={groupData} lang={lang} />}
+          </div>
+        }
         footer={
           <div className="flex flex-col">
             <GroupGridFooter 

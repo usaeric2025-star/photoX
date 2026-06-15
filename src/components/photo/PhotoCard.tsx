@@ -178,7 +178,6 @@ export const PhotoCard = ({
       <PhotoCardInfo 
         hideDetails={hideDetails}
         displayCatName={displayCatName}
-        photoTags={photoTags}
       />
     </div>
   );
