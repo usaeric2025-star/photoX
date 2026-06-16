@@ -79,7 +79,7 @@ export const usePhotos = createInfiniteQuery<{photos: Photo[], nextPage?: number
   getNextPageParam: (lastPage) => lastPage.nextPage,
   select: flattenPhotos,
   staleTime: 5 * 60 * 1000,
-  placeholderData: keepPreviousData
+  placeholderData: keepPreviousData as any
 });
 
 /**
@@ -103,7 +103,7 @@ export const useGroupPhotosResult = createInfiniteQuery<
     return (loaded < lastPage.total && lastPage.photos.length > 0) ? allPages.length + 1 : undefined;
   },
   staleTime: 2 * 60 * 1000,
-  placeholderData: keepPreviousData
+  placeholderData: keepPreviousData as any
 });
 
 export const useGroupPhotos = (groupId: string | null, isAdminMode: boolean = false, pageSize: number = 40) => {
@@ -114,7 +114,7 @@ export const useGroupPhotos = (groupId: string | null, isAdminMode: boolean = fa
 
   return {
     ...query,
-    photos: query.data?.pages?.flatMap((p: { photos: Photo[] }) => p.photos) ?? [],
-    total: query.data?.pages?.[0]?.total || 0
+    photos: (query.data as any)?.pages?.flatMap((p: any) => p.photos) ?? [],
+    total: (query.data as any)?.pages?.[0]?.total || 0
   };
 };

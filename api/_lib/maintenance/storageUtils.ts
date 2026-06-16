@@ -5,6 +5,18 @@ import { getServerEnv } from "../../_shared/envSchema.js";
 
 const serverEnv = getServerEnv(process.env);
 
+interface DbRecord {
+    id: string;
+    name: string;
+    url: string;
+    normalized: string;
+}
+
+interface OrphanFile {
+    key: string;
+    url: string;
+}
+
 export function normalizeUrl(u: string) { 
     return u.toLowerCase().trim().split('?')[0].replace(/\/$/, ''); 
 }
@@ -25,14 +37,14 @@ export async function runStorageAudit() {
         .select("id, image_url, name")
         .not("image_url", "is", null);
 
-    const dbRecords = (dbPhotos || []).map((p: any) => ({
-        id: p.id,
-        name: p.name,
-        url: p.image_url,
-        normalized: normalizeUrl(p.image_url)
+    const dbRecords: DbRecord[] = (dbPhotos as Record<string, unknown>[] || []).map((p) => ({
+        id: String(p.id),
+        name: String(p.name || ''),
+        url: String(p.image_url || ''),
+        normalized: normalizeUrl(String(p.image_url || ''))
     }));
 
-    const dbNormalizedSet = new Set(dbRecords.map((r: any) => r.normalized));
+    const dbNormalizedSet = new Set(dbRecords.map((r) => r.normalized));
 
     const r2KeysSet = new Set<string>();
     let isTruncated = true;
@@ -63,18 +75,6 @@ export async function runStorageAudit() {
         continuationToken = response.NextContinuationToken;
     }
 
-    interface OrphanFile {
-        key: string;
-        url: string;
-    }
-
-    interface DbRecord {
-        id: string;
-        name: string;
-        url: string;
-        normalized: string;
-    }
-
     const orphans: OrphanFile[] = []; 
     const ghosts: DbRecord[] = [];  
     const healthy: DbRecord[] = []; 
@@ -90,7 +90,7 @@ export async function runStorageAudit() {
         }
     });
 
-    dbRecords.forEach((record: any) => {
+    dbRecords.forEach((record: DbRecord) => {
         try {
             const urlObj = new URL(record.url);
             // Normalize path for lookup

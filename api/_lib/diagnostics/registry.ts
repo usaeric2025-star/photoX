@@ -7,6 +7,7 @@ import { ghostRecordsTask } from "./tasks/ghostRecords.js";
 import { missingHashesTask } from "./tasks/missingHashes.js";
 import { missingUrlsTask } from "./tasks/missingUrls.js";
 import { nonStandardCodesTask } from "./tasks/nonStandardCodes.js";
+import { missingSecretsTableTask } from "./tasks/missingSecretsTable.js";
 
 export const diagnosticRegistry: DiagnosticTask[] = [
   excessTagsTask,
@@ -17,4 +18,5 @@ export const diagnosticRegistry: DiagnosticTask[] = [
   missingHashesTask,
   missingUrlsTask,
   nonStandardCodesTask,
+  missingSecretsTableTask,
 ];

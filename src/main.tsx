@@ -50,7 +50,7 @@ if (clientEnv.VITE_SENTRY_DSN) {
     replaysOnErrorSampleRate: 1.0,
 
     // 處理深層物件與循環引用
-    normalizeDepth: 10,
+    normalizeDepth: 3,
 
     // 初始標籤
     initialScope: {
@@ -63,11 +63,30 @@ if (clientEnv.VITE_SENTRY_DSN) {
     // 可以在這裡過濾或處理麵包屑，防止循環引用導致的錯誤
     beforeBreadcrumb(breadcrumb) {
       // 確保 breadcrumb 中的資料不會導致序列化問題
+      if (breadcrumb.data && typeof breadcrumb.data === 'object') {
+        const data = breadcrumb.data as Record<string, unknown>;
+        // 移除可能導致循環引用的已知大物件
+        if (data.window || data.document || data.event || (data.statusText && data.url)) {
+          return {
+            ...breadcrumb,
+            data: { _info: 'Large/Circular data stripped' }
+          };
+        }
+      }
       return breadcrumb;
     },
 
-    // 開發環境開啟除錯模式 (注意：debug 模式下的 logger 可能會因為循環引用報錯)
-    debug: clientEnv.DEV,
+    // 忽略特定的網路雜訊
+    ignoreErrors: [
+      'ResizeObserver loop',
+      'Non-Error promise rejection captured',
+      'NetworkError',
+      'Failed to fetch',
+      'Load failed',
+    ],
+
+    // 關閉除錯模式以避免內部日誌引發循環引用報錯
+    debug: false,
   });
 }
 

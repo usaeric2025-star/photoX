@@ -12,10 +12,11 @@ export class AppError extends Error {
 }
 
 export const errorFactory = {
-  wrap(err: any, operation: string, code: string = 'WRAP_ERROR'): AppError {
-    const message = err.message || String(err);
+  wrap(err: unknown, operation: string, code: string = 'WRAP_ERROR'): AppError {
+    const error = err as Error;
+    const message = error.message || String(err);
     const newErr = new AppError(`[${operation}] ${message}`, code);
-    newErr.stack = err.stack;
+    if (error.stack) newErr.stack = error.stack;
     return newErr;
   },
   

@@ -3,23 +3,10 @@ import { getSupabaseAdmin } from "../../_lib/supabase.js";
 import { getR2Client } from "../../_lib/storage.js";
 import { getServerEnv } from "../../_shared/envSchema.js";
 import { diagnosticRegistry } from "../../_lib/diagnostics/registry.js";
-import { DiagnosticIssue } from '@/types/diagnostics';
+import { DiagnosticIssue, PhotoRecord, GroupRecord, CategoryRecord, ManufacturerRecord, PhotoTagRecord } from "../../_lib/diagnostics/types.js";
 
 const serverEnv = getServerEnv(process.env);
 export const adminDiagnose = new Hono();
-
-interface DiagnosticItem {
-  id: string;
-  group_id?: string | null;
-  image_hash?: string | null;
-  image_url?: string | null;
-  name?: unknown; // name 目前结构复杂，暂时保留
-}
-
-interface DiagnosticGroup {
-  id: string;
-  name: string;
-}
 
 adminDiagnose.get("/", async (c) => {
     try {
@@ -29,10 +16,6 @@ adminDiagnose.get("/", async (c) => {
       const queryTimeout = 25000; 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), queryTimeout);
-
-      let photos: DiagnosticItem[] = [];
-      let groups: DiagnosticGroup[] = [];
-      let sErr: { code?: string; message?: string } | null = null;
 
       try {
         const [
@@ -57,49 +40,45 @@ adminDiagnose.get("/", async (c) => {
         if (gErr) throw gErr;
         if (ptErr) throw ptErr;
         
-        photos = pData || [];
-        groups = gData || [];
-        sErr = secretErr;
+        const photos = (pData || []) as PhotoRecord[];
+        const groups = (gData || []) as GroupRecord[];
+        const categories = (cData || []) as CategoryRecord[];
+        const manufacturers = (mData || []) as ManufacturerRecord[];
+        const photoTags = (ptData || []) as PhotoTagRecord[];
 
         // Run modular diagnostics
         const diagnosticResults = await Promise.all(
           diagnosticRegistry.map(task => 
             task.run({
               supabase,
-              photos: photos as unknown as Record<string, unknown>[],
-              groups: groups as unknown as Record<string, unknown>[],
-              categories: (cData || []) as unknown as Record<string, unknown>[],
-              manufacturers: (mData || []) as unknown as Record<string, unknown>[],
-              photoTags: (ptData || []) as unknown as Record<string, unknown>[]
+              photos,
+              groups,
+              categories,
+              manufacturers,
+              photoTags
             })
           )
         );
-        diagnosticResults.forEach(res => { if (res) issues.push(res as any); });
+        diagnosticResults.forEach(res => { if (res) issues.push(res); });
       } catch (innerErr: unknown) {
         clearTimeout(timeoutId);
-        if (innerErr instanceof Error && (innerErr as any).name === 'AbortError') {
+        if (innerErr instanceof Error && innerErr.name === 'AbortError') {
           return c.json({ success: false, error: "數據庫查詢超時，請稍後重試 (Timeout)" }, 504);
         }
         throw innerErr;
       }
 
-      if (sErr && (sErr.code === 'PGRST116' || sErr.message?.includes('does not exist'))) {
-        issues.push({ 
-            id: 'missing_secrets_table', 
-            category: 'integrity' as any, 
-            severity: 'P0', 
-            title: '缺失 secrets 数据表', 
-            description: '系统需要 secrets 表来安全存储 API 密钥。当前该表似乎不存在，会导致 API 密钥无法保存或读取。', 
-            autoFixable: true,
-            affectedCount: 1,
-            sampleIds: []
-        });
-      }
-      
-      const groupIds = new Set(groups?.map((g: DiagnosticGroup) => String(g.id)) || []);
-      
-
-      return c.json({ timestamp: Date.now(), totalIssues: issues.length, issuesBySeverity: { P0: issues.filter(i => i.severity === 'P0').length, P1: issues.filter(i => i.severity === 'P1').length, P2: issues.filter(i => i.severity === 'P2').length, P3: 0 }, issues });
+      return c.json({ 
+        timestamp: Date.now(), 
+        totalIssues: issues.length, 
+        issuesBySeverity: { 
+          P0: issues.filter(i => i.severity === 'P0').length, 
+          P1: issues.filter(i => i.severity === 'P1').length, 
+          P2: issues.filter(i => i.severity === 'P2').length, 
+          P3: 0 
+        }, 
+        issues 
+      });
       } catch (e: unknown) {
         return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown diagnostic error' }, 500);
       }

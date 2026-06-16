@@ -14,6 +14,7 @@ export interface SelectionContextValue {
   toggle: (id: string) => void;
   selectAll: (ids: string[]) => void;
   clear: () => void;
+  toggleMode: () => void;
   isSelected: (id: string) => boolean;
   count: number;
 }
@@ -58,6 +59,10 @@ export function SelectionProvider({ children }: { children: ReactNode }) {
     update({ isMultiSelect: false, selectedIds: [] });
   }, [update]);
 
+  const toggleMode = useCallback(() => {
+    update((s) => ({ isMultiSelect: !s.isMultiSelect }));
+  }, [update]);
+
   const isSelected = useCallback((id: string) => {
     return selectedIds.includes(id);
   }, [selectedIds]);
@@ -69,6 +74,7 @@ export function SelectionProvider({ children }: { children: ReactNode }) {
     toggle,
     selectAll,
     clear,
+    toggleMode,
     isSelected,
     get count() { return selectedIds.length; }
   };

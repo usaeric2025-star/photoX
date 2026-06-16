@@ -6,7 +6,7 @@ import { handleError } from '@/lib/error/ErrorFactory';
 import { useUIStore } from '@/store/useUIStore';
 
 // Client-side idempotency cache
-const ongoingRequests = new Map<string, Promise<any>>();
+const ongoingRequests = new Map<string, Promise<unknown>>();
 
 export const useAppMutation = <
   TData = unknown, 
@@ -15,27 +15,28 @@ export const useAppMutation = <
 >(config: MutationConfig<TData, TVariables, TQueryKey>) => {
   const queryClient = useQueryClient();
   
-  return useMutation({
+  return useMutation<TData, Error, TVariables, { previousData: Map<readonly unknown[], unknown> }>({
     mutationFn: async (vars: TVariables) => {
       // Idempotency Key logic
       const varsString = JSON.stringify(vars);
       const idempotencyKey = `${config.name}:${varsString}`;
       
       if (ongoingRequests.has(idempotencyKey)) {
-        return ongoingRequests.get(idempotencyKey);
+        return ongoingRequests.get(idempotencyKey) as Promise<TData>;
       }
       
       const promise = config.service(vars);
       ongoingRequests.set(idempotencyKey, promise);
       
       try {
-        return await promise;
+        return await promise as TData;
       } finally {
         ongoingRequests.delete(idempotencyKey);
       }
     },
     onMutate: async (vars: TVariables) => {
-      if (!config.optimistic) return;
+      const previousData = new Map<readonly unknown[], unknown>();
+      if (!config.optimistic) return { previousData };
 
       const rawInvalidate = typeof config.invalidate === 'function'                
         ? config.invalidate({} as TData, vars)
@@ -46,8 +47,6 @@ export const useAppMutation = <
         : [rawInvalidate as readonly unknown[]];
         
       await Promise.all(queryKeys.map(key => queryClient.cancelQueries({ queryKey: key as readonly unknown[] })));
-      
-      const previousData = new Map();
       
       const updateFn = config.optimistic;
 
@@ -69,9 +68,9 @@ export const useAppMutation = <
       
       return { previousData };
     },
-    onError: (err, vars, context: any) => {
+    onError: (err, vars, context) => {
       if (context?.previousData) {
-        context.previousData.forEach((data: any, key: any) => {
+        context.previousData.forEach((data: unknown, key: readonly unknown[]) => {
           queryClient.setQueryData(key, data);
         });
       }

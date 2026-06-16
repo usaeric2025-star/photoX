@@ -153,7 +153,7 @@ export interface PhotoAIResult {
 }
 
 export function isValidPhoto(photo: unknown): photo is Photo {
-  const p = photo as any;
+  const p = photo as Record<string, unknown>;
   return (
     !!p && typeof p.id === 'string'
   );

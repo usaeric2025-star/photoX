@@ -10,8 +10,18 @@ import {
 } from 'lucide-react';
 import { usePhotoGallery } from '@/hooks/photo/usePhotoGallery';
 import { useCategories, useTags } from '@/hooks';
+import { Photo } from '@/types/photo';
 
-const StatCard = ({ title, value, subValue, icon: Icon, colorClass, delay = 0 }: any) => (
+interface StatCardProps {
+  title: string;
+  value: string | number;
+  subValue?: string;
+  icon: React.ElementType;
+  colorClass: string;
+  delay?: number;
+}
+
+const StatCard = ({ title, value, subValue, icon: Icon, colorClass, delay = 0 }: StatCardProps) => (
   <div 
     className="bg-white p-5 rounded-[28px] border border-brand-navy/5 shadow-sm space-y-3 relative overflow-hidden group animate-fade-in"
     style={{ animationDelay: `${delay}s`, animationFillMode: 'both' }}
@@ -38,12 +48,12 @@ export function StatisticsScreen() {
   const { data: tags = [] } = useTags();
 
   const totalPhotos = photos?.length || 0;
-  const groupsCount = photos?.filter((p: any) => !!p.group_id).reduce((acc: any, p: any) => {
+  const groupsCount = (photos as Photo[] | undefined)?.filter((p) => !!p.group_id).reduce((acc, p) => {
     if (p.group_id) acc.add(p.group_id);
     return acc;
   }, new Set<string>()).size || 0;
 
-  const hiddenCount = photos?.filter((p: any) => p.is_hidden).length || 0;
+  const hiddenCount = (photos as Photo[] | undefined)?.filter((p) => p.is_hidden).length || 0;
   
   // Fake storage calculation for now (average 200KB per photo)
   const estStorage = (totalPhotos * 0.2).toFixed(1);

@@ -6,23 +6,27 @@ import { logError } from '@/lib/error/errorReporter';
 /**
  * Safely extracts a clean string message from any error object
  */
-export function extractErrorMessage(error: any): string {
+export function extractErrorMessage(error: unknown): string {
   if (!error) return '未知错误';
   if (typeof error === 'string') return error;
 
   if (error && typeof error === 'object') {
+    const errObj = error as Record<string, unknown>;
     // If the error property is a direct string message (e.g. { success: false, error: "缺少必要參數" })
-    if (error.error && typeof error.error === 'string') return error.error;
+    if (errObj.error && typeof errObj.error === 'string') return errObj.error;
 
     // PostgrestError or AppError
-    if (error.message && typeof error.message === 'string') return error.message;
-    if (error.error?.message) return String(error.error.message);
+    if (errObj.message && typeof errObj.message === 'string') return errObj.message;
+    
+    const nestedError = errObj.error as Record<string, unknown> | undefined;
+    if (nestedError?.message) return String(nestedError.message);
     
     // Handle nested response data
-    const respData = error.response?.data;
+    const respData = (errObj.response as Record<string, unknown> | undefined)?.data as Record<string, unknown> | undefined;
     if (respData) {
       if (respData.message) return String(respData.message);
-      if (respData.error?.message) return String(respData.error.message);
+      const respNestedError = respData.error as Record<string, unknown> | undefined;
+      if (respNestedError?.message) return String(respNestedError.message);
     }
   }
 
@@ -36,7 +40,7 @@ const normalizeError = (error: unknown, fallbackContext: string): StandardError 
   
   // If we passed an object representing a standard backend response containing an 'error' key
   if (error && typeof error === 'object' && 'error' in error) {
-    const nestedError = (error as any).error;
+    const nestedError = (error as Record<string, unknown>).error;
     if (nestedError) {
       target = nestedError;
     }
@@ -45,9 +49,9 @@ const normalizeError = (error: unknown, fallbackContext: string): StandardError 
   // Extract traceId if available
   let traceId: string | undefined;
   if (target && typeof target === 'object' && 'traceId' in target) {
-    traceId = String((target as any).traceId);
+    traceId = String((target as Record<string, unknown>).traceId);
   } else if (error && typeof error === 'object' && 'traceId' in error) {
-    traceId = String((error as any).traceId);
+    traceId = String((error as Record<string, unknown>).traceId);
   }
 
   // If the extracted target (or nested target) is a string, use it as the message
@@ -87,9 +91,10 @@ const normalizeError = (error: unknown, fallbackContext: string): StandardError 
 
   // Fallback for object with a 'message' field
   if (target && typeof target === 'object' && 'message' in target) {
+    const targetObj = target as Record<string, unknown>;
     return {
-      code: (target as any).code || 'UNKNOWN_ERROR',
-      message: String((target as any).message),
+      code: (targetObj.code as string) || 'UNKNOWN_ERROR',
+      message: String(targetObj.message),
       context: fallbackContext,
       traceId,
       timestamp: Date.now(),

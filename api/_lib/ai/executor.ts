@@ -5,7 +5,7 @@ import { getSupabaseAdmin } from "../supabase.js";
 
 interface AIProvider {
   name: string;
-  chat: (messages: any[]) => Promise<{ text?: string; error?: string; success: boolean; usage?: Record<string, unknown> }>;
+  chat: (messages: { role: string; content: unknown }[]) => Promise<{ text?: string; error?: string; success: boolean; usage?: Record<string, unknown> }>;
 }
 
 interface AITaskOptions {
@@ -13,7 +13,7 @@ interface AITaskOptions {
   provider: AIProvider;
   model: string;
   prompt: string;
-  messages: unknown[];
+  messages: { role: string; content: unknown }[];
   metadata?: Record<string, unknown>;
   shouldNormalize?: boolean;
 }
@@ -146,8 +146,9 @@ export async function executeAITask(options: AITaskOptions) {
 
       // 3. 多語言格式強制歸一化
       if (shouldNormalize && data) {
-        if (data.name) data.name = normalizeI18n(data.name);
-        if (data.description) data.description = normalizeI18n(data.description);
+        const d = data as any;
+        if (d.name) d.name = normalizeI18n(d.name);
+        if (d.description) d.description = normalizeI18n(d.description);
       }
 
         // 4. 保存審計日誌到 ai_audit_logs (阻塞式)

@@ -3,6 +3,8 @@ import { type } from 'arktype';
 import { getSupabaseAdmin } from '../../_lib/supabase.js';
 import { PhotoListReqSchema, ListByGroupReqSchema } from '../../_shared/apiContractSchema.js';
 
+import { SupabaseClient } from '@supabase/supabase-js';
+
 const TABLE_NAME = 'furniture_items';
 
 interface TagRow {
@@ -17,7 +19,7 @@ interface CachedTags {
 let tagsCache: CachedTags | null = null;
 const CACHE_TTL = 30000; // 30 seconds
 
-async function getCachedTags(supabase: any) {
+async function getCachedTags(supabase: SupabaseClient) {
   const now = Date.now();
   if (tagsCache && now - tagsCache.timestamp < CACHE_TTL) {
     return tagsCache.data;
@@ -49,7 +51,7 @@ export const listHandler = (app: Hono) => {
       sortOrder
     } = check;
     
-    const supabase = await getSupabaseAdmin() as { from: (table: string) => { select: (cols: string) => any } };
+    const supabase = await getSupabaseAdmin();
     
     const hasTag = tagId !== undefined && tagId !== null && tagId !== '';
     const hasCat = categoryId !== undefined && categoryId !== null && categoryId !== '';

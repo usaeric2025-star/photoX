@@ -15,7 +15,7 @@ function handleReportFailure(error: unknown): void {
   console.error('[ErrorReporter] 日誌上報 API 失敗:', error)
 }
 
-function safeJsonStringify(obj: any): string {
+function safeJsonStringify(obj: unknown): string {
   try {
     return JSON.stringify(obj);
   } catch (e) {
@@ -81,7 +81,7 @@ export interface EventContext {
   action: string;
   component: string;
   kind?: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 export const logError = async (error: Error | unknown, context: EventContext) => {
@@ -94,7 +94,8 @@ export const logError = async (error: Error | unknown, context: EventContext) =>
   }
   
   try {
-    const traceId = (normError as any)?.traceId || 'fe-' + Math.random().toString(36).substring(2, 12);
+    const errorWithMeta = normError as unknown as Record<string, unknown>;
+    const traceId = (errorWithMeta.traceId as string) || 'fe-' + Math.random().toString(36).substring(2, 12);
     
     await fetch('/api/log-error', {
       method: 'POST',
@@ -104,7 +105,7 @@ export const logError = async (error: Error | unknown, context: EventContext) =>
       },
       body: safeJsonStringify({
         error_message: normError.message,
-        stack_trace: normError.stack || (normError as any)?.details || null,
+        stack_trace: normError.stack || (errorWithMeta.details as string) || null,
         url: typeof window !== 'undefined' ? window.location.href : '',
         context: context.component || 'global',
         metadata: {
@@ -121,7 +122,7 @@ export const logError = async (error: Error | unknown, context: EventContext) =>
   }
 }
 
-export const logResult = async (context: EventContext, type: 'error' | 'success', data?: any) => {
+export const logResult = async (context: EventContext, type: 'error' | 'success', data?: unknown) => {
   try {
     await fetch('/api/log-error', {
       method: 'POST',

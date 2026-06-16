@@ -1,6 +1,7 @@
 import React, { memo, useState } from 'react';
 import { useSelection } from './SelectionContext';
 import { useBatchActions } from './useBatchActions';
+import { useClickOutside } from '@/hooks/core/useClickOutside';
 import { 
   CheckSquare, 
   Square, 
@@ -26,20 +27,20 @@ function SelectionCounter({ count, total }: { count: number; total?: number }) {
 }
 
 function SelectionModeToggle() {
-  const { state, clear } = useSelection();
+  const { state, toggleMode } = useSelection();
   const isBatchMode = state.mode === 'batch';
 
   return (
     <button
-      onClick={clear}
+      onClick={toggleMode}
       className={`p-1.5 rounded-md transition-colors ${
         isBatchMode 
-          ? 'bg-blue-100 text-blue-600' 
-          : 'hover:bg-gray-100 text-gray-500'
+          ? 'bg-blue-600 text-white shadow-sm' 
+          : 'hover:bg-gray-100 text-gray-500 border border-transparent'
       }`}
-      title={isBatchMode ? "退出批次模式" : "批次選取模式"}
+      title={isBatchMode ? "退出選取模式" : "進入選取模式"}
     >
-      {isBatchMode ? <Layers size={18} /> : <MousePointer2 size={18} />}
+      {isBatchMode ? <CheckSquare size={18} /> : <MousePointer2 size={18} />}
     </button>
   );
 }
@@ -53,9 +54,10 @@ interface ActionItem {
   disabled?: boolean;
 }
 
-function BatchActionMenu({ disabled = false }: { disabled?: boolean }) {
+function BatchActionMenu({ disabled = false, selectedCount = 0 }: { disabled?: boolean; selectedCount?: number }) {
   const [isOpen, setIsOpen] = useState(false);
   const { batchDelete } = useBatchActions();
+  const menuRef = useClickOutside<HTMLDivElement>(() => setIsOpen(false));
 
   const actions: ActionItem[] = [
     {
@@ -91,11 +93,13 @@ function BatchActionMenu({ disabled = false }: { disabled?: boolean }) {
     },
   ];
 
+  const isDisabled = disabled || selectedCount === 0;
+
   return (
-    <div className="relative">
+    <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        disabled={disabled}
+        disabled={isDisabled}
         className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 text-white rounded-md text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-all shadow-sm"
       >
         <span>批次操作</span>
@@ -103,15 +107,15 @@ function BatchActionMenu({ disabled = false }: { disabled?: boolean }) {
       </button>
 
       {isOpen && (
-        <div className="absolute bottom-full right-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-xl z-[100] min-w-[160px] overflow-hidden animate-in fade-in slide-in-from-bottom-1 duration-200">
+        <div className="absolute bottom-full right-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-xl z-50 min-w-[160px] overflow-hidden animate-in fade-in slide-in-from-bottom-1 duration-200">
           <div className="py-1">
             {actions.map((action) => (
               <button
                 key={action.id}
                 onClick={action.action}
-                disabled={action.disabled || disabled}
+                disabled={action.disabled || isDisabled}
                 className={`w-full px-4 py-2.5 text-left text-sm flex items-center gap-3 transition-colors ${
-                  action.disabled ? 'opacity-40 cursor-not-allowed' : action.color || 'text-gray-700 hover:bg-gray-50'
+                  (action.disabled || isDisabled) ? 'opacity-40 cursor-not-allowed' : action.color || 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
                 {action.icon}
@@ -121,8 +125,6 @@ function BatchActionMenu({ disabled = false }: { disabled?: boolean }) {
           </div>
         </div>
       )}
-      
-      {isOpen && <div className="fixed inset-0 z-[90]" onClick={() => setIsOpen(false)} />}
     </div>
   );
 }
@@ -140,12 +142,13 @@ export const SelectionToolbar = memo(function SelectionToolbar({
   allIds = [],
   className = '',
 }: SelectionToolbarProps) {
-  const { state, selectAll, clear } = useSelection();
+  const { state, selectAll, clear, toggleMode } = useSelection();
   const { isPending, selectedCount } = useBatchActions();
+  const isBatchMode = state.mode === 'batch';
 
   const isAllSelected = allIds.length > 0 && selectedCount === allIds.length;
 
-  if (selectedCount === 0) {
+  if (!isBatchMode && selectedCount === 0) {
     return (
       <div className={`flex items-center gap-3 ${className}`}>
         <SelectionModeToggle />
@@ -157,8 +160,9 @@ export const SelectionToolbar = memo(function SelectionToolbar({
   }
 
   return (
-    <div className={`flex items-center gap-4 py-1 animate-in fade-in slide-in-from-top-1 duration-200 ${className}`}>
-      <div className="flex items-center gap-2">
+    <div className={`flex items-center gap-4 py-1.5 px-4 bg-white border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] animate-in fade-in slide-in-from-bottom-2 duration-300 ${className}`}>
+      <div className="flex items-center gap-3">
+        <SelectionModeToggle />
         <SelectionCounter count={selectedCount} total={totalItems} />
       </div>
       
@@ -192,7 +196,7 @@ export const SelectionToolbar = memo(function SelectionToolbar({
             處理中
           </span>
         )}
-        <BatchActionMenu disabled={isPending} />
+        <BatchActionMenu disabled={isPending} selectedCount={selectedCount} />
       </div>
     </div>
   );

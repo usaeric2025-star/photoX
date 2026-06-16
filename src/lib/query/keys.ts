@@ -4,12 +4,13 @@ import type { FilterOptions, GroupFilterOptions } from '@/types/api';
  * 稳定化排序对象，确保 Query Key 顺通一致
  */
 
-function sortObject(obj: any): any {
+function sortObject(obj: unknown): unknown {
   if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return obj;
-  return Object.keys(obj)
+  const source = obj as Record<string, unknown>;
+  return Object.keys(source)
     .sort()
-    .reduce((acc: any, key: string) => {
-      acc[key] = obj[key];
+    .reduce((acc: Record<string, unknown>, key: string) => {
+      acc[key] = source[key];
       return acc;
     }, {});
 }
