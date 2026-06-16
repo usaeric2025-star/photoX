@@ -72,7 +72,7 @@ app.onError((err, c) => {
             timestamp: new Date().toISOString()
           },
           created_at: new Date().toISOString()
-       }]).then(({ error: insertError }) => {
+       }]).then(({ error: insertError }: { error: unknown }) => {
           if (insertError) console.error('[Fatal] Logging to system_logs failed:', insertError);
        });
     }).catch(e => {

@@ -44,7 +44,7 @@ adminRepair.post("/preview", async (c) => {
 
         photoTagMap.forEach((tagIds, photoId) => {
           if (tagIds.length > 3) {
-            const photoItem: any = photoMap.get(photoId);
+            const photoItem = photoMap.get(photoId);
             const photoName = photoItem ? (normalizeI18n(photoItem.name) || "未命名产品") : "未知照片";
 
             const sorted = [...tagIds].sort((a, b) => {
@@ -184,9 +184,9 @@ adminRepair.post("/", async (c) => {
 
       if (issueId === 'empty_groups') {
          const { data: photos } = await supabase.from("furniture_items").select("group_id");
-         const photoGroupIds = new Set(photos?.map((p: any) => String(p.group_id)).filter(Boolean));
+         const photoGroupIds = new Set(photos?.map((p: Record<string, unknown>) => String(p.group_id)).filter(Boolean));
          const { data: groups } = await supabase.from("groups").select("id");
-         const emptyGroupIds = groups?.filter((g: any) => !photoGroupIds.has(String(g.id))).map((g: any) => g.id) || [];
+         const emptyGroupIds = groups?.filter((g: Record<string, unknown>) => !photoGroupIds.has(String(g.id))).map((g: Record<string, unknown>) => g.id) || [];
          if (emptyGroupIds.length > 0) await supabase.from("groups").delete().in("id", emptyGroupIds);
          return c.json({ success: true, message: `清理了 ${emptyGroupIds.length} 个空合组` });
       }
@@ -198,7 +198,7 @@ adminRepair.post("/", async (c) => {
           .is("image_url", null)
           .is("image_hash", null);
         
-        const ids = ghosts?.map((g: any) => g.id) || [];
+        const ids = ghosts?.map((g: Record<string, unknown>) => g.id) || [];
         if (ids.length > 0) {
           const { error } = await supabase.from("furniture_items").delete().in("id", ids);
           if (error) throw error;
@@ -212,7 +212,7 @@ adminRepair.post("/", async (c) => {
           .select("id")
           .is("image_url", null);
 
-        const ids = records?.map((r: any) => r.id) || [];
+        const ids = records?.map((r: Record<string, unknown>) => r.id) || [];
         if (ids.length > 0) {
           const { error } = await supabase.from("furniture_items").delete().in("id", ids);
           if (error) throw error;
@@ -226,7 +226,7 @@ adminRepair.post("/", async (c) => {
           .select("id")
           .or('image_hash.is.null,image_hash.eq.""');
         
-        const ids = targets?.map((t: any) => t.id) || [];
+        const ids = targets?.map((t: Record<string, unknown>) => t.id) || [];
         if (ids.length > 0) {
           const { error } = await supabase.from("furniture_items").delete().in("id", ids);
           if (error) throw error;
@@ -407,7 +407,7 @@ adminRepair.post("/", async (c) => {
       if (issueId === 'repair_i18n_names') {
         // Fix furniture_items
         const { data: items } = await supabase.from("furniture_items").select("id, name, description");
-        const itemsToFix = items?.filter((i: any) => typeof i.name === 'string' || (i.name && !i.name.zh)) || [];
+        const itemsToFix = items?.filter((i: Record<string, unknown>) => typeof i.name === 'string' || (i.name && !(i.name as Record<string, unknown>).zh)) || [];
         
         for (const item of itemsToFix) {
           await supabase.from("furniture_items").update({
@@ -418,7 +418,7 @@ adminRepair.post("/", async (c) => {
 
         // Fix groups
         const { data: groups } = await supabase.from("groups").select("id, name");
-        const groupsToFix = groups?.filter((g: any) => typeof g.name === 'string' || (g.name && !g.name.zh)) || [];
+        const groupsToFix = groups?.filter((g: Record<string, unknown>) => typeof g.name === 'string' || (g.name && !(g.name as Record<string, unknown>).zh)) || [];
 
         for (const group of groupsToFix) {
           await supabase.from("groups").update({

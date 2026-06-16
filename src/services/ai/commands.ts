@@ -18,7 +18,7 @@ export const testAiConnection = async (apiKey: string, provider: string) => {
             base64Image: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVR4nGNiAAAAAgAB35oT2AAAAABJRU5ErkJggg==",
             provider
         }
-    }) as any;
+    }) as Promise<Response>;
     const body = await res.json();
     if (body.success) {
         return { success: true };
@@ -29,7 +29,7 @@ export const testAiConnection = async (apiKey: string, provider: string) => {
   }
 };
 
-function formatField(field: any): string {
+function formatField(field: Record<string, unknown> | string | number | null | undefined): string {
   if (!field) return '';
   if (typeof field === 'object') {
     return field.zh || field.en || field.ms || '';
@@ -37,7 +37,7 @@ function formatField(field: any): string {
   return String(field);
 }
 
-export async function analyzeGroup(photos: Photo[]): Promise<any> {
+export async function analyzeGroup(photos: Photo[]): Promise<Record<string, unknown>> {
   const photoDetails = photos.map(p => {
     const nameStr = formatField(p.name);
     const descStr = formatField(p.description);
@@ -50,11 +50,11 @@ export async function analyzeGroup(photos: Photo[]): Promise<any> {
   });
 
   if (!response.ok) {
-    const error = await response.json() as any;
+    const error = await response.json() as { error?: string };
     throw ErrorFactory.fatal(error.error || 'AI 智能合组分析失败', { context: 'analyzeGroup' });
   }
 
-  const resData = await response.json() as any;
+  const resData = await response.json() as { data: Record<string, unknown> };
   let parsed = resData.data;
   if (typeof parsed === 'string') {
     try {
@@ -67,7 +67,7 @@ export async function analyzeGroup(photos: Photo[]): Promise<any> {
   return parsed as any;
 }
 
-export async function analyzeSinglePhotoDetail(photo: Photo): Promise<any> {
+export async function analyzeSinglePhotoDetail(photo: Photo): Promise<Record<string, unknown>> {
   const nameStr = formatField(photo.name);
   const descStr = formatField(photo.description);
   const tagNames = (photo.tags || []).map(t => t.name).join(',');
@@ -78,11 +78,11 @@ export async function analyzeSinglePhotoDetail(photo: Photo): Promise<any> {
   });
 
   if (!response.ok) {
-    const error = await response.json() as any;
+    const error = await response.json() as { error?: string };
     throw ErrorFactory.fatal(error.error || 'AI 单张识别分析失败', { context: 'analyzeSinglePhoto' });
   }
 
-  const resData = await response.json() as any;
+  const resData = await response.json() as { data: Record<string, unknown> };
   let parsed = resData.data;
   if (typeof parsed === 'string') {
     try {
@@ -97,7 +97,7 @@ export async function analyzeSinglePhotoDetail(photo: Photo): Promise<any> {
 
 export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promise<unknown> => {
   try {
-     const resp = await api.ai.analyze.$post({ json: { photoId } }) as any;
+     const resp = await api.ai.analyze.$post({ json: { photoId } }) as Response;
      const data = await resp.json();
      if (data.success) {
        let parsed = data.data;

@@ -114,12 +114,12 @@ ai.post("/analyze", async (c) => {
         ]);
 
         const provider = await getAIProvider('', supabase);
-        const model = (provider as any).config.model;
+        const model = (provider as { config: { model: string } }).config.model;
         
         const context = {
-            categories: (catRef.data || []).map((c: any) => ({ id: c.id, name: c.name, zh: c.zh })).slice(0, 50),
-            tags: (tagRef.data || []).map((t: any) => ({ id: t.id, name: t.name, aliases: t.aliases })).slice(0, 100),
-            groups: (groupRef.data || []).map((g: any) => ({ id: g.id, name: typeof g.name === 'object' ? g.name.zh : g.name })),
+            categories: (catRef.data || []).map((c: { id: string; name: string; zh: string }) => ({ id: c.id, name: c.name, zh: c.zh })).slice(0, 50),
+            tags: (tagRef.data || []).map((t: { id: string; name: string; aliases: string[] }) => ({ id: t.id, name: t.name, aliases: t.aliases })).slice(0, 100),
+            groups: (groupRef.data || []).map((g: { id: string; name: string | { zh: string } }) => ({ id: g.id, name: typeof g.name === 'object' ? g.name.zh : g.name })),
         };
         
         const prompt = AI_PROMPTS.ANALYZE_PHOTO(context);
@@ -134,8 +134,8 @@ ai.post("/analyze", async (c) => {
             metadata: { photoId, imageUrl: finalImageUrl }
         });
 
-        if (data && (data as any)._fallback) {
-            throw new Error((data as any)._error || 'AI analysis failed');
+        if (data && (data as { _fallback?: boolean })._fallback) {
+            throw new Error((data as { _error?: string })._error || 'AI analysis failed');
         }
 
         return c.json({ success: true, data, raw_result: rawText } as ApiResponse);
@@ -152,8 +152,8 @@ ai.post("/analyze-base64", async (c) => {
 
       const { base64Image, customModel, promptText } = check;
       const supabase = await getSupabaseAdmin();
-      const provider = await getAIProvider('', supabase, check.customModel);
-      const model = (provider as any).config.model;
+      const provider = await getAIProvider('', supabase, customModel);
+      const model = (provider as { config: { model: string } }).config.model;
 
       const { data, rawText } = await executeAITask({
           task: 'analyze-base64',
@@ -164,13 +164,13 @@ ai.post("/analyze-base64", async (c) => {
           metadata: { type: 'base64' }
       });
 
-      if (data && (data as any)._fallback) {
-          throw new Error((data as any)._error || 'AI base64 analysis failed');
+      if (data && (data as { _fallback?: boolean })._fallback) {
+          throw new Error((data as { _error?: string })._error || 'AI base64 analysis failed');
       }
 
       return c.json({ success: true, data, raw_result: rawText } as ApiResponse);
-    } catch (error: any) { 
-        return c.json({ success: false, error: error.message } as ApiResponse, 500); 
+    } catch (error: unknown) { 
+        return c.json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' } as ApiResponse, 500); 
     }
 });
 

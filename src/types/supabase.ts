@@ -21,9 +21,9 @@ export interface SupabasePhotoRaw {
   tag_ids?: string[];
   price?: string;
   sub_category?: string | null;
-  dimensions?: any;
-  description_translations?: any;
-  exif_data?: any;
+  dimensions?: Record<string, unknown> | null;
+  description_translations?: Record<string, unknown> | null;
+  exif_data?: Record<string, unknown> | null;
   thumbnail_sm_url?: string;
   thumbnail_md_url?: string;
   group_id?: string | null;
@@ -32,7 +32,7 @@ export interface SupabasePhotoRaw {
   categories?: { name: string } | null;
   photo_tags?: Array<{ 
     tag_id?: string | number;
-    tags?: { id?: string | number; name: any } | Array<{ id?: string | number; name: any }> | null;
+    tags?: { id?: string | number; name: string } | Array<{ id?: string | number; name: string }> | null;
   }> | null;
   group?: {
     id: string;
@@ -41,6 +41,6 @@ export interface SupabasePhotoRaw {
     cover_photo_id: string | null;
   } | null;
   manufacturers?: { name: string } | null;
-  category?: { id: any; name: any } | null;
-  manufacturer?: { id: any; name: any } | null;
+  category?: { id: string | number; name: string } | null;
+  manufacturer?: { id: string | number; name: string } | null;
 }

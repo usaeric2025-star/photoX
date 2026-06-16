@@ -28,7 +28,7 @@ const groupUpdateConfig = defineMutation<ProductGroup, { id: string; updates: Pa
 
 export const useGroupUpdate = () => useAppMutation(groupUpdateConfig);
 
-const groupDeleteConfig = defineMutation<any, string>({
+const groupDeleteConfig = defineMutation<void, string>({
   name: 'groupDelete',
   service: async (id: string) => {
     return await deleteGroupFromCloud(id);
@@ -39,34 +39,34 @@ const groupDeleteConfig = defineMutation<any, string>({
 
 export const useGroupDelete = () => useAppMutation(groupDeleteConfig);
 
-const groupCoverConfig = defineMutation<any, { groupId: string | undefined; photoId: string | null }>({
+const groupCoverConfig = defineMutation<void, { groupId: string | undefined; photoId: string | null }>({
   name: 'groupCover',
   service: async ({ groupId, photoId }) => {
     return await setPhotoAsGroupCover(photoId, groupId || '');
   },
-  invalidate: () => [queryKeys.groups.all as unknown as any[], queryKeys.photos.all as unknown as any[]],
+  invalidate: () => [queryKeys.groups.all as unknown as unknown[], queryKeys.photos.all as unknown as unknown[]],
   successMessage: '已设为封面',
 });
 
 export const useGroupCoverMutation = () => useAppMutation(groupCoverConfig);
 
-const groupPhotosConfig = defineMutation<any, { photoIds: string[], targetGroupId?: string }>({
+const groupPhotosConfig = defineMutation<{ newGroupId: string }, { photoIds: string[], targetGroupId?: string }>({
   name: 'groupPhotos',
   service: async ({ photoIds, targetGroupId }) => {
     return await groupPhotos(photoIds, targetGroupId);
   },
-  invalidate: () => [queryKeys.photos.all as unknown as any[], queryKeys.groups.all as unknown as any[]],
-  optimistic: (old: any, { photoIds, targetGroupId }: { photoIds: string[], targetGroupId?: string }, queryKey?: readonly unknown[]) => {
+  invalidate: () => [queryKeys.photos.all as unknown as unknown[], queryKeys.groups.all as unknown as unknown[]],
+  optimistic: (old: Record<string, unknown>, { photoIds, targetGroupId }: { photoIds: string[], targetGroupId?: string }, queryKey?: readonly unknown[]) => {
     if (!old) return old;
-    if (old.pages) {
-      const queryVars: any = queryKey && queryKey.length > 2 ? queryKey[2] : {};
+    if ((old as { pages: unknown[] }).pages) {
+      const queryVars = (queryKey && queryKey.length > 2 ? queryKey[2] : {}) as Record<string, unknown>;
       const currentViewGroupId = queryVars?.groupId;
       
       if (currentViewGroupId && currentViewGroupId !== targetGroupId) {
-          return optimistic.infinite.remove<Photo>()(old, photoIds);
+          return optimistic.infinite.remove<Photo>()(old as any, photoIds);
       }
       
-      return optimistic.infinite.batchUpdate<Photo>()(old, {
+      return optimistic.infinite.batchUpdate<Photo>()(old as any, {
         ids: photoIds,
         updates: { group_id: targetGroupId ?? null }
       });
@@ -88,23 +88,23 @@ const groupPhotosConfig = defineMutation<any, { photoIds: string[], targetGroupI
 
 export const useGroupPhotosMutation = () => useAppMutation(groupPhotosConfig);
 
-const removePhotosConfig = defineMutation<any, { photoIds: string[]; groupId: string }>({
+const removePhotosConfig = defineMutation<Record<string, unknown>, { photoIds: string[]; groupId: string }>({
   name: 'removePhotosFromGroup',
   service: async ({ photoIds }) => {
     return await movePhotosToGroup(photoIds, null);
   },
-  invalidate: () => [queryKeys.photos.all as unknown as any[], queryKeys.groups.all as unknown as any[]],
-  optimistic: (old: any, { photoIds }: { photoIds: string[] }, queryKey?: readonly unknown[]) => {
+  invalidate: () => [queryKeys.photos.all, queryKeys.groups.all],
+  optimistic: (old: Record<string, unknown>, { photoIds }: { photoIds: string[] }, queryKey?: readonly unknown[]) => {
     if (!old) return old;
-    if (old.pages) {
-      const queryVars: any = queryKey && queryKey.length > 2 ? queryKey[2] : {};
+    if ((old as { pages: unknown[] }).pages) {
+      const queryVars = (queryKey && queryKey.length > 2 ? queryKey[2] : {}) as Record<string, unknown>;
       const currentViewGroupId = queryVars?.groupId;
       
       if (currentViewGroupId) {
-          return optimistic.infinite.remove<Photo>()(old, photoIds);
+          return optimistic.infinite.remove<Photo>()(old as any, photoIds);
       }
 
-      return optimistic.infinite.batchUpdate<Photo>()(old, {
+      return optimistic.infinite.batchUpdate<Photo>()(old as any, {
         ids: photoIds,
         updates: { group_id: null }
       });

@@ -71,7 +71,7 @@ storageMaintenance.post("/storage/clean-orphans", async (c) => {
         return c.json({ success: true, count: 0 });
       }
 
-      const ids = orphans.map((o: any) => o.id);
+      const ids = orphans.map((o: { id: string }) => o.id);
       const { error: delError } = await supabase
         .from("furniture_items")
         .delete()
@@ -96,7 +96,7 @@ storageMaintenance.post("/storage/clean", async (c) => {
       if (error) throw error;
 
       const dbFiles: Set<string> = new Set();
-      photos.forEach((p: any) => {
+      photos.forEach((p: { image_url?: string }) => {
         if (p.image_url?.includes("r2")) dbFiles.add(p.image_url.split("/").pop()!);
       });
 
@@ -107,7 +107,7 @@ storageMaintenance.post("/storage/clean", async (c) => {
           new ListObjectsV2Command({ Bucket: bucket, Prefix: "photox/public/", ContinuationToken: continuationToken }),
           { abortSignal: AbortSignal.timeout(6000) }
         );
-        list.Contents?.forEach((c: any) => {
+        list.Contents?.forEach((c: { Key?: string }) => {
           if (c.Key) {
             const filename = c.Key.split("/").pop();
             if (filename && !dbFiles.has(filename)) r2FilesToClean.push(c.Key);
@@ -184,7 +184,7 @@ storageMaintenance.post("/storage/import-orphans", async (c) => {
         try {
           const { data: authUsers } = await supabase.auth.admin.listUsers();
           if (authUsers?.users && authUsers.users.length > 0) {
-            const firstUser = authUsers.users.find((u: any) => u.id && u.id !== '00000000-0000-0000-0000-000000000000');
+            const firstUser = authUsers.users.find((u: { id?: string }) => u.id && u.id !== '00000000-0000-0000-0000-000000000000');
             if (firstUser) userId = firstUser.id;
           }
         } catch (err) {}
@@ -224,7 +224,7 @@ storageMaintenance.post("/storage/import-orphans", async (c) => {
         if (!batch || batch.length === 0) {
           hasMore = false;
         } else {
-          batch.forEach((p: any) => {
+          batch.forEach((p: { image_url?: string }) => {
             if (p.image_url) dbUrls.add(normalizeUrl(p.image_url));
           });
           from += step;
@@ -344,8 +344,8 @@ storageMaintenance.post("/storage/import-orphans", async (c) => {
           message: `已启动恢复任务，正在处理 ${Math.min(50, orphans.length)} 条记录...` 
         }
       } as ApiResponse);
-    } catch (e: any) {
-      return c.json({ success: false, error: e.message }, 500);
+    } catch (e: unknown) {
+      return c.json({ success: false, error: (e as Error).message }, 500);
     }
 });
 
@@ -394,7 +394,7 @@ storageMaintenance.post("/storage/repair-hashes", async (c) => {
       count: repairedCount,
       message: `成功修复了 ${repairedCount} 条记录的哈希值`
     });
-  } catch (e: any) {
-    return c.json({ success: false, error: e.message }, 500);
+  } catch (e: unknown) {
+    return c.json({ success: false, error: (e as Error).message }, 500);
   }
 });

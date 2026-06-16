@@ -24,7 +24,7 @@ interface PhotoFilters {
 /**
  * Standard flattening selector for photos
  */
-const flattenPhotos = (data: InfiniteData<any>) => {
+const flattenPhotos = (data: InfiniteData<{ photos: Photo[] }>) => {
   const photos = data.pages.flatMap((page) => page.photos || []) as Photo[];
   return {
     ...data,
@@ -35,7 +35,7 @@ const flattenPhotos = (data: InfiniteData<any>) => {
 /**
  * Hook for infinite photo lists (main grid).
  */
-export const usePhotos = createInfiniteQuery<{photos: Photo[], nextPage?: number}, PhotoFilters, any>({
+export const usePhotos = createInfiniteQuery<{photos: Photo[], nextPage?: number}, PhotoFilters, { photos: Photo[] }>({
   queryKey: (filters) => {
     const q = (filters.searchQuery && filters.searchQuery.trim()) ? filters.searchQuery.trim() : null;
     return queryKeys.photos.infinite({
@@ -66,8 +66,8 @@ export const usePhotos = createInfiniteQuery<{photos: Photo[], nextPage?: number
     const photos = (res || []).map(p => {
       // Inject _time here so it's calculated ONLY ONCE per fetch
       // and won't be repeated in the select selector for thousands of items
-      if (!(p as any)._time) {
-        (p as any)._time = new Date(p.created_at || (p as any).created_at || 0).getTime();
+      if (!(p as Record<string, unknown>)._time) {
+        (p as Record<string, unknown>)._time = new Date(p.created_at || (p as Record<string, unknown>).created_at || 0).getTime();
       }
       return p;
     });
@@ -96,9 +96,9 @@ export const usePhotos = createInfiniteQuery<{photos: Photo[], nextPage?: number
 /**
  * Hook for infinite group photo lists.
  */
-export const useGroupPhotosResult = createInfiniteQuery<{photos: Photo[], total: number, hasMore: boolean}, { groupId: string | null; isAdminMode: boolean; pageSize: number }, any>({
-  queryKey: (vars: { groupId: string | null; isAdminMode: boolean; pageSize: number }) => queryKeys.photos.infinite({ groupId: vars.groupId ?? undefined } as any, vars.isAdminMode ? 'admin' : 'public'),
-  queryFn: async ({ groupId, isAdminMode, pageSize }: { groupId: string | null; isAdminMode: boolean; pageSize: number }, pageParam: any) => {
+export const useGroupPhotosResult = createInfiniteQuery<{photos: Photo[], total: number, hasMore: boolean}, { groupId: string | null; isAdminMode: boolean; pageSize: number }, { photos: Photo[] }>({
+  queryKey: (vars: { groupId: string | null; isAdminMode: boolean; pageSize: number }) => queryKeys.photos.infinite({ groupId: vars.groupId ?? undefined }, vars.isAdminMode ? 'admin' : 'public'),
+  queryFn: async ({ groupId, isAdminMode, pageSize }: { groupId: string | null; isAdminMode: boolean; pageSize: number }, pageParam: number) => {
     const data = await loadPhotosByGroupIdPaginated(groupId!, pageParam, pageSize, isAdminMode);
     return {
       photos: data.photos,
@@ -106,14 +106,14 @@ export const useGroupPhotosResult = createInfiniteQuery<{photos: Photo[], total:
       hasMore: data.photos.length >= pageSize
     };
   },
-  getNextPageParam: (lastPage: any, allPages: any[]) => {
-    const loaded = allPages.reduce((sum: number, p: any) => sum + p.photos.length, 0);
+  getNextPageParam: (lastPage: { total: number; photos: Photo[] }, allPages: { total: number; photos: Photo[] }[]) => {
+    const loaded = allPages.reduce((sum: number, p: { photos: Photo[] }) => sum + p.photos.length, 0);
     return (loaded < lastPage.total && lastPage.photos.length > 0) ? allPages.length + 1 : undefined;
   },
   select: flattenPhotos,
   staleTime: 2 * 60 * 1000, // Increased to 2 minutes for better snappy feel
   placeholderData: keepPreviousData
-} as any);
+} as { photos: Photo[] });
 
 export const useGroupPhotos = (groupId: string | null, isAdminMode: boolean = false, pageSize: number = 40) => {
   const queryClient = useQueryClient();
@@ -123,7 +123,7 @@ export const useGroupPhotos = (groupId: string | null, isAdminMode: boolean = fa
 
   return {
     ...query,
-    photos: query.data?.pages?.flatMap((p: any) => p.photos) ?? [],
+    photos: query.data?.pages?.flatMap((p: { photos: Photo[] }) => p.photos) ?? [],
     total: query.data?.pages?.[0]?.total || 0
   };
 };
