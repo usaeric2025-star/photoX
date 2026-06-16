@@ -82,16 +82,16 @@ export function AdminPageContent() {
           ) : (
             <div className="flex-1 relative overflow-hidden pb-16 sm:pb-0">
               {currentScreen === 'dashboard' ? (
-                <ScreenWrapper key="admin-dashboard" onClose={() => navigate({ to: '/admin' })}>
+                <ScreenWrapper key="admin-dashboard" onClose={() => { navigate({ to: '/admin' }); store.update({ activeScreen: 'gallery' }); }}>
                   <StatisticsScreen />
                 </ScreenWrapper>
               ) : currentScreen === 'batch' ? (
-                <ScreenWrapper key="admin-batch" onClose={() => navigate({ to: '/admin' })}>
+                <ScreenWrapper key="admin-batch" onClose={() => { navigate({ to: '/admin' }); store.update({ activeScreen: 'gallery' }); }}>
                   <BatchEditScreen />
                 </ScreenWrapper>
               ) : ['manage', 'settings', 'structure', 'logs', 'tasks', 'error-logs', 'diagnose'].includes(currentScreen) ? (
                 <div key="admin-settings-container" className="h-full bg-slate-50 animate-scale-in">
-                  <SettingsPage onClose={() => navigate({ to: '/admin' })} />
+                  <SettingsPage onClose={() => { navigate({ to: '/admin' }); store.update({ activeScreen: 'gallery' }); }} />
                 </div>
               ) : null}
             </div>

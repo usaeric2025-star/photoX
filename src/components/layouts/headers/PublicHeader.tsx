@@ -163,8 +163,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
                         )}
                         <DropdownItem
                           onClick={() => {
-                             navigate({ to: '/admin' });
-                             useUIStore.getState().update({ activeScreen: 'settings' });
+                             navigate({ to: '/admin/settings' });
                           }}
                           className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-default outline-none data-[highlighted]:bg-blue-50 text-gray-700"
                         >

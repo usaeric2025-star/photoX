@@ -171,14 +171,14 @@ export function AdminHeader({}: AdminHeaderProps) {
                     {user && (
                       <>
                         <DropdownItem
-                          onClick={() => useUIStore.getState().update({ activeScreen: 'settings' })}
+                          onClick={() => navigate({ to: '/admin/settings' })}
                           className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-default outline-none data-[highlighted]:bg-blue-50 text-gray-700"
                         >
                           <Settings size={16} />
                           {t.systemSettings}
                         </DropdownItem>
                         <DropdownItem
-                          onClick={() => useUIStore.getState().update({ activeScreen: 'tasks' })}
+                          onClick={() => navigate({ to: '/admin/tasks' })}
                           className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-default outline-none data-[highlighted]:bg-blue-50 text-gray-700"
                         >
                           <LayoutGrid size={16} />

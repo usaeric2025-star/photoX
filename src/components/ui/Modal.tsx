@@ -108,7 +108,7 @@ export function Modal({
         {showCloseButton && (
           <button
             onClick={onClose}
-            className="absolute right-4 top-4 z-50 p-2 rounded-full text-slate-400 hover:bg-slate-100 transition-colors bg-white/80 backdrop-blur-sm shadow-sm border border-slate-100"
+            className="absolute right-4 top-4 p-2 rounded-full text-slate-400 hover:bg-slate-100 transition-colors bg-white/80 backdrop-blur-sm shadow-sm border border-slate-100"
             aria-label="关闭"
           >
             <X size={18} />
