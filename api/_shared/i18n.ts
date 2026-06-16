@@ -15,12 +15,13 @@ export const translations = {
 
 export type Language = keyof typeof translations;
 
-export function normalizeI18n(val: any): { zh: string; en: string; ms: string } {
+export function normalizeI18n(val: unknown): { zh: string; en: string; ms: string } {
     if (!val) return { zh: '', en: '', ms: '' };
     if (typeof val === 'string') return { zh: val, en: val, ms: val };
+    const v = val as Record<string, string>;
     return {
-        zh: val.zh || val.en || '',
-        en: val.en || val.zh || '',
-        ms: val.ms || val.en || val.zh || ''
+        zh: v.zh || v.en || '',
+        en: v.en || v.zh || '',
+        ms: v.ms || v.en || v.zh || ''
     };
 }

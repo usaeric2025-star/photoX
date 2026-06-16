@@ -1,0 +1,107 @@
+src/components/admin/Diagnostics/MaintenanceTool.tsx:              const status: any = await action.getStatus?.(jobId);
+src/components/admin/edit/PhotoTagSelector.tsx:  control?: any;
+src/components/admin/edit/PhotoTagSelector.tsx:      selectedTagIds={(field.value || []).map((v: any) => typeof v === 'object' ? String(v.id) : v)}
+src/components/admin/ErrorLogViewer.tsx:  metadata?: any;
+src/components/admin/ErrorLogViewer.tsx:      onError: (err: any) => {
+src/components/admin/StatisticsScreen.tsx:const StatCard = ({ title, value, subValue, icon: Icon, colorClass, delay = 0 }: any) => (
+src/components/admin/StatisticsScreen.tsx:  const groupsCount = photos?.filter((p: any) => !!p.group_id).reduce((acc: any, p: any) => {
+src/components/admin/StatisticsScreen.tsx:  const hiddenCount = photos?.filter((p: any) => p.is_hidden).length || 0;
+src/components/photo/AdminGridContainer.tsx:  const renderCard = (photo: Photo, index: number, categories: any[]) => (
+src/components/photo/VirtualPhotoGrid.tsx:  filters?: any;
+src/components/lightbox/YarlLightbox.tsx:    photo?: any; // Raw database photo object
+src/components/lightbox/YarlLightbox.tsx:  const toolbarButtons: any[] = [];
+src/components/lightbox/YarlLightbox.tsx:                {currentItem.photo.dimensions.map((dim: any, idx: number) => {
+src/components/groups/useGroupDraft.ts:  onUpdatePhoto: (id: string, data: any) => Promise<any>
+src/components/__tests__/LoginScreen.test.tsx:  useUIStore: (cb: any) => cb({ appLang: 'en' }),
+src/lib/mutations/useAppMutation.ts:    onError: (err, vars, context: any) => {
+src/lib/mutations/useAppMutation.ts:        context.previousData.forEach((data: any, key: any) => {
+src/lib/error/errorReporter.ts:  metadata?: any;
+src/lib/error/errorReporter.ts:export const logResult = async (context: EventContext, type: 'error' | 'success', data?: any) => {
+src/lib/error/errorHandler.tsx:export function extractErrorMessage(error: any): string {
+src/lib/query/queryFactory.ts:      select: (data: any) => config.schema ? (config.schema as any)(data).assert() : (actualOptions?.select ? actualOptions.select(data) : data),
+src/lib/query/queryFactory.ts:  placeholderData?: any;
+src/lib/query/queryFactory.ts:  return function useStandardInfiniteQuery(variables: TVariables, options?: any) {
+src/lib/query/keys.ts:function sortObject(obj: any): any {
+src/lib/query/keys.ts:    .reduce((acc: any, key: string) => {
+src/lib/validators/protocol.ts:    originalError?: any;
+src/lib/validators/protocol.ts:    constructor(message: string, options?: { originalError?: any, aiDebugHint?: string, path?: string[] }) {
+src/lib/validators/protocol.ts:    readonly schema: any;
+src/lib/router/routeGuards.ts:  context: { user: any }; 
+src/lib/router/routeGuards.ts:  location: { pathname: string; search: any } 
+src/hooks/photo/usePhotoSelection.ts:      const updates: any = { ...formState };
+src/hooks/photo/usePhotoSelection.ts:      const cleanUpdates: any = {};
+src/hooks/photo/usePhotoCardInteraction.ts:    navigate({ to: targetPath, search: (prev: any) => prev });
+src/hooks/photo/usePhotoCardInteraction.ts:      router.preloadRoute({ to: targetPath, search: (prev: any) => prev }).catch(() => {});
+src/hooks/photo/PhotoEditSessionProvider.tsx:    } catch (err: any) {
+src/hooks/admin/useAdminCategory.ts:export function useAdminCategory({ update }: { update?: any }) {
+src/hooks/admin/usePerformanceAudit.ts:  const issues: any[] = [];
+src/hooks/core/useLongPress.ts:  onLongPress: (e?: any) => void;
+src/hooks/core/useFormWithMutation.ts:  options?: any
+src/hooks/core/useDebouncedCallback.ts:export function useDebouncedCallback<T extends (...args: any[]) => void>(
+src/hooks/core/useDebouncedCallback.ts:  const debouncedFn = (...args: any[]) => {
+src/hooks/core/useClickOutside.ts:    const listener = (event: any) => {
+src/hooks/useFilters.ts:      search: ((prev: any) => ({
+src/hooks/useFilters.ts:      search: ((prev: any) => ({
+src/hooks/__tests__/hookContracts.test.ts:  useUIStore: (fn: any) => fn({
+src/hooks/__tests__/hookContracts.test.ts:  useShallow: (fn: any) => fn,
+src/features/layout/hooks/useColumns.ts:      search: ((prev: any) => ({
+src/services/photo/upload/dbCommands.ts:export const upsertPhotoRecord = async (payload: any): Promise<unknown> => {
+src/services/photo/upload/uploadOrchestrator.ts:    const payload: any = mapToDb({
+src/services/photo/healthFlow.ts:  allPhotos: any[], 
+src/services/photo/processing.ts:  reps.sort((a: any, b: any) => {
+src/services/photo/processing.ts:  userFilters: any,
+src/services/photo/processing.ts:  urlFilters: any,
+src/services/storage/uploadService.ts:    let lastError: any;
+src/services/ai/translationService.ts:    const translateRes = (text: string, data: any) => {
+src/services/ai/safeText.ts:export function getSafeText(field: any, locale: string = 'zh'): string {
+src/services/ai/mapping.ts:  rawName: any,
+src/services/ai/mapping.ts:  rawDesc: any
+src/services/ai/commands.ts:         ? rawTags.map((t: any) => {
+src/services/ai/commands.ts:       const safeTrim = (val: any): any => {
+src/services/ai/commands.ts:            const res: any = {};
+src/services/ai/orchestration.ts:  photo: any
+src/services/ai/orchestration.ts:  photos: any[]
+src/services/ai/orchestration.ts:  targetPhotos: any[];
+src/services/ai/utils.ts:export const hasExistingInfo = (p: any): boolean => {
+src/services/ai/utils.ts:export const getDisplayName = (nameObj: any, lang: string = 'zh'): string => {
+src/services/group/commands.ts:const mapToDb = (updates: any, userId?: string): Record<string, unknown> => {
+src/services/maintenance/issueActions.ts:  [key: string]: any;
+src/services/maintenance/issueActions.ts:  execute: () => Promise<{ jobId?: string; message?: string; [key: string]: any }>;
+src/services/maintenance/autoDiagnose.ts:  let intervalId: any = null;
+src/services/mappers/utils.ts:export const mapTranslationField = (value: any) => {
+src/services/mappers/photo.ts:      item.photo_tags.forEach((pt: any) => {
+src/services/mappers/photo.ts:      item.tags.forEach((t: any) => {
+src/constants/config.ts:export const EMPTY_ARRAY: any[] = [];
+src/pages/AdminPage/AdminEmptyState.tsx:    [key: string]: any;
+api/_lib/error/AppError.ts:  wrap(err: any, operation: string, code: string = 'WRAP_ERROR'): AppError {
+api/_lib/ai/executor.ts:  chat: (messages: any[]) => Promise<{ text?: string; error?: string; success: boolean; usage?: Record<string, unknown> }>;
+api/_lib/ai/utils.ts:    } catch (e: any) {
+api/_lib/supabase.ts:let supabaseAdminInstance: any = null;
+api/_lib/trafficCapture.ts:export function logTraffic(req: HonoRequest, body: any) {
+api/_lib/maintenance/storageUtils.ts:    const dbRecords = (dbPhotos || []).map((p: any) => ({
+api/_lib/maintenance/storageUtils.ts:    const dbNormalizedSet = new Set(dbRecords.map((r: any) => r.normalized));
+api/_lib/maintenance/storageUtils.ts:    dbRecords.forEach((record: any) => {
+api/_lib/diagnostics/tasks/excessTags.ts:    ctx.photoTags?.forEach((pt: any) => {
+api/_lib/diagnostics/tasks/orphanedPhotos.ts:    const groupIds = new Set(ctx.groups?.map((g: any) => String(g.id)) || []);
+api/_lib/diagnostics/tasks/orphanedPhotos.ts:    const orphanedPhotos = ctx.photos.filter((p: any) => p.group_id && !groupIds.has(String(p.group_id)));
+api/_lib/diagnostics/tasks/orphanedPhotos.ts:      sampleIds: orphanedPhotos.slice(0, 5).map((p: any) => p.id), 
+api/_lib/diagnostics/tasks/ghostRecords.ts:    const completeGhosts = ctx.photos.filter((p: any) => (!p.image_url || p.image_url === '') && (!p.image_hash || p.image_hash === ''));
+api/_lib/diagnostics/tasks/ghostRecords.ts:      sampleIds: completeGhosts.slice(0, 5).map((p: any) => p.id), 
+api/_lib/diagnostics/tasks/missingHashes.ts:    const missingHashes = ctx.photos.filter((p: any) => p.image_url && (!p.image_hash || p.image_hash.trim() === ''));
+api/_lib/diagnostics/tasks/missingHashes.ts:      sampleIds: missingHashes.slice(0, 5).map((p: any) => p.id), 
+api/_lib/diagnostics/tasks/missingUrls.ts:    const missingUrls = ctx.photos.filter((p: any) => p.image_hash && (!p.image_url || p.image_url === ''));
+api/_lib/diagnostics/tasks/missingUrls.ts:      sampleIds: missingUrls.slice(0, 5).map((p: any) => p.id), 
+api/_lib/diagnostics/tasks/nonStandardCodes.ts:    const nonStandardCodes = ctx.photos.filter((p: any) => p.item_code && !compliantRegex.test(p.item_code));
+api/_lib/diagnostics/tasks/nonStandardCodes.ts:      sampleIds: nonStandardCodes.slice(0, 5).map((p: any) => p.id),
+api/_handlers/ai/prompts.ts:    ANALYZE_PHOTO: (context: any) => `
+api/_handlers/admin/maintenance.ts:    } catch (e: any) {
+api/_handlers/admin/maintenance.ts:    } catch (e: any) {
+api/_handlers/admin/maintenance.ts:    } catch (e: any) {
+api/_handlers/admin/backfill.ts:    } catch (e: any) {
+api/_handlers/admin/photos.ts:            .map((p: any) => {
+api/_handlers/admin/photos.ts:    } catch (e: any) {
+api/_handlers/admin/photos.ts:    } catch (e: any) {
+api/_handlers/photos/list.ts:async function getCachedTags(supabase: any) {
+api/_admin_tasks/backfill-photo-metadata.ts:      update: (data: Record<string, unknown>) => { eq: (col: string, val: unknown) => Promise<{ error: any }> }
+api/_admin_tasks/backfill-photo-metadata.ts:            const resData: any = await response.json();
+api/_shared/i18n.ts:export function normalizeI18n(val: any): { zh: string; en: string; ms: string } {

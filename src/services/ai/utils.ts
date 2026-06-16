@@ -50,16 +50,17 @@ export const isPlaceholderName = (nameStr: string): boolean => {
 /**
  * Determines if a record (photo or group) has "meaningful" info that shouldn't be overwritten blindly
  */
-export const hasExistingInfo = (p: any): boolean => {
+export const hasExistingInfo = (p: Record<string, unknown>): boolean => {
   if (!p) return false;
   
   let hasRealName = false;
   const nameVal = p.name;
   
   if (nameVal) {
-    if (typeof nameVal === 'object') {
+    if (typeof nameVal === 'object' && nameVal !== null) {
       // For multi-lang names, check if any field has real content
-      const parts = [nameVal.zh, nameVal.en, nameVal.ms].map(s => String(s || '').trim());
+      const n = nameVal as Record<string, unknown>;
+      const parts = [n.zh, n.en, n.ms].map(s => String(s || '').trim());
       hasRealName = parts.some(s => s !== '' && !isPlaceholderName(s) && s.length > 2);
     } else {
       const s = String(nameVal).trim();
@@ -84,10 +85,11 @@ export const hasExistingInfo = (p: any): boolean => {
 /**
  * Safe name splitting/fallback utility
  */
-export const getDisplayName = (nameObj: any, lang: string = 'zh'): string => {
+export const getDisplayName = (nameObj: unknown, lang: string = 'zh'): string => {
   if (!nameObj) return '未命名';
   if (typeof nameObj === 'string') return nameObj;
-  return nameObj[lang] || nameObj.zh || nameObj.en || nameObj.ms || '未命名';
+  const n = nameObj as Record<string, string>;
+  return n[lang] || n.zh || n.en || n.ms || '未命名';
 };
 
 /**

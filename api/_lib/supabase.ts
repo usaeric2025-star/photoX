@@ -2,7 +2,7 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { getServerEnv } from "../_shared/envSchema.js";
 
 const serverEnv = getServerEnv(process.env);
-let supabaseAdminInstance: any = null;
+let supabaseAdminInstance: SupabaseClient | null = null;
 
 export async function getSupabaseAdmin() {
   if (supabaseAdminInstance) {

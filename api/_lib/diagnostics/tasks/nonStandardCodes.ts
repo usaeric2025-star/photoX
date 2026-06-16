@@ -5,7 +5,7 @@ export const nonStandardCodesTask: DiagnosticTask = {
   deps: ['photos'],
   run: async (ctx: DiagnosticContext): Promise<DiagnosticIssue | null> => {
     const compliantRegex = /^X-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/;
-    const nonStandardCodes = ctx.photos.filter((p: any) => p.item_code && !compliantRegex.test(p.item_code));
+    const nonStandardCodes = ctx.photos.filter((p) => p.item_code && !compliantRegex.test(String(p.item_code)));
     if (nonStandardCodes.length === 0) return null;
     
     return {
@@ -15,7 +15,7 @@ export const nonStandardCodesTask: DiagnosticTask = {
       title: '系统编号格式不规范',
       description: `检测到有 ${nonStandardCodes.length} 条记录使用了旧格式（如 FUR-xxx）或非标准格式的系统编号。点击修复将统一收敛为 X-XXXXXXXX 格式。`,
       affectedCount: nonStandardCodes.length,
-      sampleIds: nonStandardCodes.slice(0, 5).map((p: any) => p.id),
+      sampleIds: nonStandardCodes.slice(0, 5).map((p) => p.id),
       autoFixable: true
     };
   }

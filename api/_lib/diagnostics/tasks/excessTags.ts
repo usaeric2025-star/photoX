@@ -5,7 +5,7 @@ export const excessTagsTask: DiagnosticTask = {
   deps: ['photoTags'],
   run: async (ctx: DiagnosticContext) => {
     const photoTagCounts = new Map<string, string[]>();
-    ctx.photoTags?.forEach((pt: any) => {
+    ctx.photoTags?.forEach((pt: Record<string, unknown>) => {
       if (pt.photo_id) {
         const pid = String(pt.photo_id);
         if (!photoTagCounts.has(pid)) {

@@ -13,13 +13,20 @@ export interface DiagnosticIssue {
   autoFixable: boolean;
 }
 
+export interface DBRecord extends Record<string, unknown> {
+  id: string;
+  user_id?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface DiagnosticContext {
    supabase: SupabaseClient;
-   photos: Record<string, unknown>[];
-   groups: Record<string, unknown>[];
-   categories: Record<string, unknown>[];
-   manufacturers: Record<string, unknown>[];
-   photoTags: Record<string, unknown>[];
+   photos: any[];
+   groups: any[];
+   categories: any[];
+   manufacturers: any[];
+   photoTags: any[];
 }
 
 export type DiagnosticDependency = 'photos' | 'groups' | 'categories' | 'manufacturers' | 'photoTags';

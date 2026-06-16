@@ -1,7 +1,7 @@
 import { HonoRequest } from "hono";
 import { logger } from "./logger.js";
 
-export function logTraffic(req: HonoRequest, body: any) {
+export function logTraffic(req: HonoRequest, body: unknown) {
     if (process.env.DISABLE_TRAFFIC_LOG === 'true') return;
     
     // Only log in development or if explicitly enabled

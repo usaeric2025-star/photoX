@@ -27,9 +27,9 @@ export function cleanTranslationPrefixes(str: string): string {
 /**
  * Safe text accessor for multi-language fields that might be strings or JSON.
  */
-export function getSafeText(field: any, locale: string = 'zh'): string {
+export function getSafeText(field: unknown, locale: string = 'zh'): string {
   if (!field) return '';
-  let data = field;
+  let data: any = field; // Internal state can be any for complex parsing logic, but param is unknown
 
   // Keep parsing if it's a string representing JSON (handle nested stringified JSON too!)
   let parsedCount = 0;

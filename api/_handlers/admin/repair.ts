@@ -152,7 +152,7 @@ adminRepair.post("/", async (c) => {
            }
          }
 
-         const dbPromises: Promise<unknown>[] = [];
+         const dbPromises: PromiseLike<any>[] = [];
 
          if (photosToCover.length > 0) {
            dbPromises.push(
@@ -417,7 +417,7 @@ adminRepair.post("/", async (c) => {
         }
 
         // Fix groups
-        const { data: groups } = await supabase.from("groups").select("id, name");
+        const { data: groups } = await supabase.from("groups").select("id, name, description");
         const groupsToFix = groups?.filter((g: Record<string, unknown>) => typeof g.name === 'string' || (g.name && !(g.name as Record<string, unknown>).zh)) || [];
 
         for (const group of groupsToFix) {
