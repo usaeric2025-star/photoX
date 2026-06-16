@@ -135,7 +135,7 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
                   ) : (
                     <>
                       <LogIn size={18} className="transition-transform group-hover:translate-x-1" /> 
-                      {t.loginWithGoogle}
+                      {t.login}
                     </>
                   )}
                 </button>
