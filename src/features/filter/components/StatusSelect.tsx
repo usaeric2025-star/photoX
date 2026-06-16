@@ -13,7 +13,7 @@ export function StatusSelect() {
   const current = STATUS_OPTIONS.find(s => s.value === filters.status) || STATUS_OPTIONS[0];
 
   return (
-    <Popover.Root>
+    <Popover.Root modal={false}>
       <Popover.Trigger className="flex items-center gap-1 p-2 border rounded-lg bg-white hover:bg-gray-50 transition cursor-pointer text-sm whitespace-nowrap" title={current.label}>
         <Filter size={18} />
         <ChevronDown size={14} />

@@ -62,11 +62,22 @@ export function safeGetItem<T>(key: string, defaultValue: T, validator?: Validat
 export function safeSetItem<T>(key: string, value: T, isSession: boolean = false): void {
   const store = isSession ? sessionStorage : localStorage;
   if (value === null || value === undefined) {
-    store.removeItem(key);
+    try {
+      store.removeItem(key);
+    } catch {}
   } else {
-    const serialized = (typeof value === 'object') ? JSON.stringify(value) : String(value);
-    store.setItem(key, serialized);
+    try {
+      const serialized = (typeof value === 'object') ? JSON.stringify(value) : String(value);
+      store.setItem(key, serialized);
+    } catch {}
   }
+}
+
+export function safeRemoveItem(key: string, isSession: boolean = false): void {
+  const store = isSession ? sessionStorage : localStorage;
+  try {
+    store.removeItem(key);
+  } catch {}
 }
 
 export async function migrateStorage() {
@@ -74,7 +85,11 @@ export async function migrateStorage() {
   const savedVer = localStorage.getItem(STORAGE_KEYS.CACHE_VERSION);
 
   if (savedVer !== CURRENT_VER) {
-    console.warn(`[Storage] Version mismatch (Old: ${savedVer}, New: ${CURRENT_VER}). Performing hard reset...`);
+    if (savedVer !== null) {
+      console.warn(`[Storage] Version mismatch (Old: ${savedVer}, New: ${CURRENT_VER}). Performing hard reset...`);
+    } else {
+      console.info(`[Storage] Initializing client storage (Version: ${CURRENT_VER})`);
+    }
     
     // 1. Clear IndexedDB (syncCache and query persistence)
     try {
@@ -89,10 +104,10 @@ export async function migrateStorage() {
 
     // 2. Clear critical localStorage keys
     const keysToRemove = Object.values(STORAGE_KEYS) as string[];
-    keysToRemove.forEach(k => localStorage.removeItem(k));
+    keysToRemove.forEach(k => safeRemoveItem(k));
     
     // 3. Mark version as updated
-    localStorage.setItem(STORAGE_KEYS.CACHE_VERSION, CURRENT_VER);
+    safeSetItem(STORAGE_KEYS.CACHE_VERSION, CURRENT_VER);
     return;
   }
 
@@ -111,18 +126,18 @@ export async function migrateStorage() {
     Object.keys(store).forEach(key => {
       // 1. Physical removal of known legacy keys
       if (legacyKeys.includes(key)) {
-        store.removeItem(key);
+        try { store.removeItem(key); } catch {}
         return;
       }
 
       // 2. Clear old photo_ prefixed keys not in current manifest
       if (key.startsWith('photo_') && !validKeys.includes(key)) {
-        store.removeItem(key);
+        try { store.removeItem(key); } catch {}
       }
 
       // 3. Clear old query-cache-like keys that don't match the new naming
       if (key.startsWith('react-query-') || key.startsWith('QueryCache_')) {
-        store.removeItem(key);
+        try { store.removeItem(key); } catch {}
       }
     });
   });

@@ -3,7 +3,7 @@ import { Info } from 'lucide-react';
 
 export function InfoButton() {
   return (
-    <Popover.Root>
+    <Popover.Root modal={false}>
       <Popover.Trigger className="px-3 py-2 border rounded-lg bg-white hover:bg-gray-50 transition cursor-pointer">
         <Info size={16} />
       </Popover.Trigger>

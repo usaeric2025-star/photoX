@@ -20,7 +20,8 @@ export default function AppRoutes() {
     document.documentElement.dataset.lang = appLang;
   }, [appLang]);
 
-  const { isLoading, init } = useAuthStore();
+  const isLoading = useAuthStore((s) => s.isLoading);
+  const init = useAuthStore((s) => s.init);
 
   useEffect(() => {
     document.title = 'PhotoX';
@@ -36,7 +37,7 @@ export default function AppRoutes() {
     pathname: window.location.pathname 
   });
 
-  const { user } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
   const prevUserRef = useRef<any>(undefined);
 
   useEffect(() => {

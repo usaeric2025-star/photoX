@@ -1,6 +1,9 @@
+import * as React from 'react';
 import { Menu } from '@base-ui/react/menu';
 
-export const Dropdown = Menu.Root;
+export const Dropdown = ({ modal = false, ...props }: React.ComponentProps<typeof Menu.Root>) => (
+  <Menu.Root modal={modal} {...props} />
+);
 export const DropdownTrigger = Menu.Trigger;
 export const DropdownPortal = Menu.Portal;
 export const DropdownPositioner = Menu.Positioner;

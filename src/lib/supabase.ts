@@ -5,17 +5,25 @@ import { ErrorFactory } from './error/ErrorFactory';
  * 安全获取环境变量
  * 兼容 Vite (import.meta.env) 和 Node.js (process.env)
  */
-const getEnv = (key: string): string => {
+const getEnv = (key: string, required: boolean = true): string => {
   // 优先使用 Vite 的 import.meta.env（构建时注入）
-  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
-    return import.meta.env[key];
+  if (typeof import.meta !== 'undefined' && import.meta.env) {
+    if (import.meta.env[key]) {
+      return import.meta.env[key];
+    }
+    // 兼容 NODE_ENV -> MODE
+    if (key === 'NODE_ENV' && import.meta.env.MODE) {
+      return import.meta.env.MODE;
+    }
   }
   // 降级使用 process.env（运行时）
   if (typeof process !== 'undefined' && process.env && process.env[key]) {
     return process.env[key];
   }
   // 既没有 import.meta.env 也没有 process.env
-  console.error(`❌ 环境变量 ${key} 未找到`);
+  if (required) {
+    console.error(`❌ 环境变量 ${key} 未找到`);
+  }
   return '';
 };
 
@@ -48,7 +56,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 });
 
 // 开发环境挂载到 window，方便调试（可选）
-if (typeof window !== 'undefined' && getEnv('NODE_ENV') === 'development') {
+if (typeof window !== 'undefined' && getEnv('NODE_ENV', false) === 'development') {
   (window as any).supabase = supabase;
 }
 

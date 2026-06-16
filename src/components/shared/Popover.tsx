@@ -7,7 +7,7 @@ export const Popover = ({
   trigger: React.ReactNode;
   children: React.ReactNode;
 }) => (
-  <BasePopover.Root>
+  <BasePopover.Root modal={false}>
     <BasePopover.Trigger className="outline-none">{trigger}</BasePopover.Trigger>
     <BasePopover.Portal>
       <BasePopover.Positioner sideOffset={8}>
