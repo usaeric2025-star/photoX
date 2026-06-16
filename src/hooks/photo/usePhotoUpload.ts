@@ -107,6 +107,11 @@ export function usePhotoUpload() {
              const { groupPhotos } = await import('@/services/group/commands');
              await groupPhotos(uploadedIds, undefined);
              showToast.success('合组成功');
+             
+             // Then batch edit them
+             uiStore.update({ batchEditingIds: uploadedIds });
+             const { router } = await import('@/router');
+             router.navigate({ to: '/admin/batch-edit' });
            } catch(e) {
              ErrorFactory.handle(e, '合组失败');
            }

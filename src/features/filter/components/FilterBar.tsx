@@ -17,7 +17,7 @@ interface FilterBarProps {
 export function FilterBar({ mode }: FilterBarProps) {
   const isAdmin = mode === 'admin';
   const { showGroupsCollapsed, setShowGroupsCollapsed } = useFilters();
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <div className={cn("sticky top-0 border-b", isAdmin ? "bg-amber-50" : "bg-white")}>

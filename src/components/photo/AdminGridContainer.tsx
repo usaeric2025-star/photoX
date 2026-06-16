@@ -1,5 +1,5 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import { Photo } from '@/types';
 import { VirtualPhotoGrid } from '@/components/photo/VirtualPhotoGrid';
 import { AdminPhotoCard } from '@/components/photo/AdminPhotoCard';
@@ -18,6 +18,7 @@ import { SelectionToolbar } from '@/components/shared/SelectionToolbar';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useAdminPhotos } from '@/hooks/admin/useAdminPhotos';
 import { useAdminSelection } from '@/hooks/admin/useAdminSelection';
+import { UploadModeDialog } from '@/components/admin/UploadModeDialog';
 // Removed PhotoDetailDialog as it is replaced by YarlLightbox
 
 export function AdminGridContainer() {
@@ -32,6 +33,7 @@ export function AdminGridContainer() {
   const update = useUIStore(s => s.update);
   const { columns, setColumns } = useColumns();
   const isMultiSelect = useUIStore(s => s.isMultiSelect);
+  const [isUploadModeOpen, setIsUploadModeOpen] = useState(false);
   
   const { data: categories = [] } = useCategories();
   const { data: tags = [] } = useTags();
@@ -94,7 +96,7 @@ export function AdminGridContainer() {
         </div>
 
         <UploadButton 
-          onAdd={() => document.getElementById('admin-quick-add-input')?.click()}
+          onAdd={() => setIsUploadModeOpen(true)}
         />
 
         <SelectionToolbar
@@ -112,6 +114,16 @@ export function AdminGridContainer() {
           confirmText="删除"
           variant="destructive"
           onConfirm={confirmDelete}
+        />
+        
+        <UploadModeDialog
+          open={isUploadModeOpen}
+          onOpenChange={setIsUploadModeOpen}
+          onSelectMode={(mode) => {
+            update({ uploadAsGroup: mode === 'group' });
+            setIsUploadModeOpen(false);
+            setTimeout(() => document.getElementById('admin-quick-add-input')?.click(), 150);
+          }}
         />
       </div>
   );
