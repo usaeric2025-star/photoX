@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { showToast } from '@/lib/ui/toast';
 import { useQueryClient } from '@tanstack/react-query';
-import { useTaskExecutor, useAdminMaintenance, useSettings, useCategories, useTags } from '@/hooks';
+import { useTaskExecutor, useAdminMaintenance, useSettings, useCategories, useTags, useFilters } from '@/hooks';
 import { analyzePhoto } from '@/services/ai/commands';
 import { useUIStore } from '@/store';
 
@@ -12,7 +12,8 @@ import { useUIStore } from '@/store';
  */
 export function usePhotoEditAI() {
   const { setValue } = useFormContext();
-  const editPhotoId = useUIStore((s) => s.editPhotoId);
+  const { modal, photoId } = useFilters();
+  const editPhotoId = modal === 'edit' ? photoId : null;
   const appLang = useUIStore((s) => s.appLang);
   const { runTask } = useTaskExecutor();
   const { updatePhoto: { mutateAsync: updatePhoto } } = useAdminMaintenance();

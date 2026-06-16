@@ -4,11 +4,12 @@ import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { HeadlessSlot } from "@/lib/component-contract";
 import { Modal } from "@/components/ui/Modal";
 import { ModalHeader } from "./ModalHeader";
-import { DeletePhotoDialog } from "../PhotoEditDrawer/DeletePhotoDialog";
+import { DeletePhotoDialog } from "./DeletePhotoDialog";
 import { PhotoEditTabs } from "./PhotoEditTabs";
 import { useUIStore } from "@/store";
 import { 
   usePhotoDelete,
+  useFilters,
 } from "@/hooks";
 
 /**
@@ -57,7 +58,8 @@ interface PhotoEditModalProps {
 }
 
 export function PhotoEditModal({ slots, isOpen: propIsOpen, onClose: propOnClose, editPhotoId: propEditPhotoId }: PhotoEditModalProps) {
-  const storeEditPhotoId = useUIStore((s) => s.editPhotoId);
+  const { modal, photoId, setModal, setPhotoId } = useFilters();
+  const urlEditPhotoId = modal === 'edit' ? photoId : null;
   const newPhotoData = useUIStore((s) => s.newPhotoData);
   const update = useUIStore((s) => s.update);
   const appLang = useUIStore((s) => s.appLang);
@@ -68,8 +70,8 @@ export function PhotoEditModal({ slots, isOpen: propIsOpen, onClose: propOnClose
 
   const resetAddState = () => update({ newPhotoData: null });
 
-  // Fallback to store if props not provided
-  const editPhotoId = propEditPhotoId !== undefined ? propEditPhotoId : storeEditPhotoId;
+  // Fallback to store if props not provided, preferring URL
+  const editPhotoId = propEditPhotoId !== undefined ? propEditPhotoId : urlEditPhotoId;
   const isOpen = propIsOpen !== undefined ? propIsOpen : !!(editPhotoId || newPhotoData);
 
   const handleClose = () => {
@@ -77,7 +79,10 @@ export function PhotoEditModal({ slots, isOpen: propIsOpen, onClose: propOnClose
       propOnClose();
     } else {
       resetAddState();
-      update({ editPhotoId: null });
+      if (modal === 'edit') {
+        setModal(null);
+        setPhotoId(null);
+      }
     }
   };
 

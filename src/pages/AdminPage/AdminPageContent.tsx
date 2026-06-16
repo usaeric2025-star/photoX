@@ -1,3 +1,4 @@
+import { useParams, useLocation, useNavigate } from '@tanstack/react-router';
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
@@ -31,37 +32,26 @@ export function AdminPageContent() {
   const { mutateAsync: syncMut } = useSyncMutation();
   const { tasks } = useTasks();
   const appLang = useUIStore(s => s.appLang);
-  const location = useRouterSafe().location;
-  const navigate = useRouterSafe().navigate;
+  const location = useLocation();
+  const navigate = useNavigate();
   
   const store = useUIStore(useShallow(s => ({
     update: s.update,
-    activeScreen: s.activeScreen,
-    editPhotoId: s.editPhotoId,
     newPhotoData: s.newPhotoData,
     batchEditingIds: s.batchEditingIds })));
 
-  // Sync URL to store 
-  useEffect(() => {
-    const path = location.pathname;
-    if (path === '/admin' || path === '/admin/') {
-      store.update({ activeScreen: 'gallery' });
-    } else if (path === '/admin/tasks') {
-      store.update({ activeScreen: 'tasks' });
-    } else if (path === '/admin/error-logs') {
-      store.update({ activeScreen: 'error-logs' });
-    } else if (path === '/admin/diagnose' || path === '/admin/diagnostics') {
-      store.update({ activeScreen: 'diagnose' });
-    } else if (path === '/admin/settings') {
-      store.update({ activeScreen: 'settings' });
-    } else if (path === '/admin/batch-edit') {
-      store.update({ activeScreen: 'batch' });
-    } else if (path === '/admin/statistics') {
-      store.update({ activeScreen: 'dashboard' });
-    }
-  }, [location.pathname, store.update]);
-
-  const currentScreen = store.activeScreen;
+  const path = location.pathname;
+  
+  const currentScreen = (() => {
+    if (path === '/admin' || path === '/admin/') return 'gallery';
+    if (path === '/admin/tasks') return 'tasks';
+    if (path === '/admin/error-logs') return 'error-logs';
+    if (path === '/admin/diagnose' || path === '/admin/diagnostics') return 'diagnose';
+    if (path === '/admin/settings') return 'settings';
+    if (path === '/admin/batch-edit') return 'batch';
+    if (path === '/admin/statistics') return 'dashboard';
+    return 'gallery';
+  })();
 
   const isSyncing = tasks.some(t => t.status === 'running' && t.name.includes('Sync'));
 
@@ -69,7 +59,7 @@ export function AdminPageContent() {
     <AdminAuthGate>
       <DataLoadingContainer isPending={isPhotosPending} hasData={true}>
         <div className="flex flex-col h-screen bg-slate-50 overflow-hidden w-full relative">
-          {(currentScreen === 'gallery' || currentScreen === 'home') ? (
+          {(currentScreen === 'gallery') ? (
             <>
               <AdminHeader />
               <FiltersBar filters={filters} showStatus showBatch />
@@ -82,16 +72,16 @@ export function AdminPageContent() {
           ) : (
             <div className="flex-1 relative overflow-hidden pb-16 sm:pb-0">
               {currentScreen === 'dashboard' ? (
-                <ScreenWrapper key="admin-dashboard" onClose={() => { navigate({ to: '/admin' }); store.update({ activeScreen: 'gallery' }); }}>
+                <ScreenWrapper key="admin-dashboard" onClose={() => navigate({ to: '/admin' })}>
                   <StatisticsScreen />
                 </ScreenWrapper>
               ) : currentScreen === 'batch' ? (
-                <ScreenWrapper key="admin-batch" onClose={() => { navigate({ to: '/admin' }); store.update({ activeScreen: 'gallery' }); }}>
+                <ScreenWrapper key="admin-batch" onClose={() => navigate({ to: '/admin' })}>
                   <BatchEditScreen />
                 </ScreenWrapper>
               ) : ['manage', 'settings', 'structure', 'logs', 'tasks', 'error-logs', 'diagnose'].includes(currentScreen) ? (
                 <div key="admin-settings-container" className="h-full bg-slate-50 animate-scale-in">
-                  <SettingsPage onClose={() => { navigate({ to: '/admin' }); store.update({ activeScreen: 'gallery' }); }} />
+                  <SettingsPage onClose={() => navigate({ to: '/admin' })} />
                 </div>
               ) : null}
             </div>

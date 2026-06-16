@@ -1,3 +1,5 @@
+import { useRouterSafe } from '@/hooks/core/useRouterSafe';
+import { useLocation } from '@tanstack/react-router';
 import { useAuthStore } from '@/store/useAuthStore';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import React, { useState } from 'react';
@@ -45,7 +47,9 @@ interface SettingsPageProps {
 
 export function SettingsPage({ onClose }: SettingsPageProps) {
   const update = useUIStore((s) => s.update);
-  const activeScreen = useUIStore((s) => s.activeScreen);
+  const location = useLocation();
+  const path = location.pathname;
+  const navigate = useRouterSafe().navigate;
   
   const { photos } = usePhotoGallery();
   const { data: categories = [] } = useCategories();
@@ -122,12 +126,12 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   const [activeTab, setActiveTab] = React.useState('sync');
 
   React.useEffect(() => {
-    if (activeScreen === 'ai_settings') setActiveTab('ai');
-    if (activeScreen === 'manage') setActiveTab('sync');
-    if (activeScreen === 'structure' || activeScreen === 'tags') setActiveTab('assets');
-    if (activeScreen === 'settings') setActiveTab('sync');
-    if (['tasks', 'error-logs', 'logs', 'diagnostics'].includes(activeScreen)) setActiveTab('status');
-  }, [activeScreen]);
+    if (path === '/admin/ai_settings') setActiveTab('ai');
+    if (path === '/admin/manage') setActiveTab('sync');
+    if (path === '/admin/structure' || path === '/admin/tags') setActiveTab('assets');
+    if (path === '/admin/settings') setActiveTab('sync');
+    if (['/admin/tasks', '/admin/error-logs', '/admin/logs', '/admin/diagnostics', '/admin/diagnose'].includes(path)) setActiveTab('status');
+  }, [path]);
 
   return (
     <div className="flex flex-col h-full w-full bg-brand-bg pt-safe relative">
@@ -145,7 +149,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
           }}
           onClose={() => {
             if (onClose) onClose();
-            else update({ activeScreen: 'gallery' });
+            else navigate({ to: '/admin' });
           }}
         />
 

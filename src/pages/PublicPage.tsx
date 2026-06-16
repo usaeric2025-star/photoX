@@ -27,20 +27,14 @@ export default function PublicPage() {
     filters
   } = usePublicPhotos();
 
-  const [lightboxOpen, setLightboxOpen] = React.useState(false);
-  const [lightboxIndex, setLightboxIndex] = React.useState(0);
   const { photoId, setPhotoId } = useFilters();
 
-  // Sync URL photoId to lightbox state
-  React.useEffect(() => {
-    if (photoId && photos.length > 0 && !lightboxOpen) {
-      const index = photos.findIndex(p => p.id === photoId);
-      if (index !== -1) {
-        setLightboxIndex(index);
-        setLightboxOpen(true);
-      }
-    }
+  const lightboxIndex = React.useMemo(() => {
+    if (!photoId) return -1;
+    return photos.findIndex(p => p.id === photoId);
   }, [photoId, photos]);
+
+  const lightboxOpen = lightboxIndex !== -1;
 
   const { lang, uiTranslations: t } = useTranslation();
 
@@ -59,16 +53,10 @@ export default function PublicPage() {
   }), [photos, categories, lang, t]);
 
   const handlePhotoClick = (id: string) => {
-    const index = photos.findIndex((p: any) => p.id === id);
-    if (index !== -1) {
-      setLightboxIndex(index);
-      setLightboxOpen(true);
-      setPhotoId(id);
-    }
+    setPhotoId(id);
   };
 
   const handleIndexChange = (index: number) => {
-    setLightboxIndex(index);
     const photo = photos[index];
     if (photo && photo.id !== photoId) {
       setPhotoId(photo.id);
@@ -125,11 +113,8 @@ export default function PublicPage() {
       <YarlLightbox
         open={lightboxOpen}
         items={lightboxItems}
-        currentIndex={lightboxIndex}
-        onClose={() => {
-          setLightboxOpen(false);
-          setPhotoId(null);
-        }}
+        currentIndex={Math.max(0, lightboxIndex)}
+        onClose={() => setPhotoId(null)}
         onIndexChange={handleIndexChange}
       />
     </div>

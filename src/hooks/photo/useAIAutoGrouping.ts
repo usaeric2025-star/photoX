@@ -56,7 +56,8 @@ export function useAIAutoGrouping() {
             const result = await analyzeAndSavePhoto(photo);
             
             updateProgress(80, appLang === 'zh' ? '正在解析模型识别结果并写入表单...' : 'Parsing AI attributes and injecting...');
-            update({ editPhotoId: photoId });
+            // Need to open edit modal, we will use an event or return result 
+            // Caller handles navigation since hooks shouldn't blindly navigate if they don't know the route.
             
             // Pass results via event
             setTimeout(() => {

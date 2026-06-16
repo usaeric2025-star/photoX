@@ -5,7 +5,7 @@ import { usePhotoEditSessionContext } from '@/hooks/photo/usePhotoEditSessionCon
 import { Lock, Loader2, Maximize2, X } from 'lucide-react';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useUIStore } from '../../../store';
-import { usePhoto, useTaskExecutor, useTasks, useTranslation } from '../../../hooks';
+import { usePhoto, useTaskExecutor, useTasks, useTranslation, useFilters } from '../../../hooks';
 import { OptimizedImage } from '@/components/shared/OptimizedImage';
 
 export function BasicInfoTab() {
@@ -13,7 +13,8 @@ export function BasicInfoTab() {
   const itemCode = useWatch({ control, name: 'item_code' });
   const { uiTranslations: t } = useTranslation();
   
-  const editPhotoId = useUIStore((s) => s.editPhotoId);
+  const { modal, photoId } = useFilters();
+  const editPhotoId = modal === 'edit' ? photoId : null;
   const newPhotoData = useUIStore((s) => s.newPhotoData);
   const update = useUIStore((s) => s.update);
   const { data: detailPhoto } = usePhoto(editPhotoId || '');

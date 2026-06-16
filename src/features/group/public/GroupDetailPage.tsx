@@ -26,13 +26,17 @@ function PublicPhotoGrid({ photos, onPhotoClick }: { photos: any[]; onPhotoClick
 
 export function PublicGroupDetailPage() {
   const routerSafe = useRouterSafe();
-  const { groupId: fGroupId, setPhotoId } = useFilters();
+  const { groupId: fGroupId, photoId, setPhotoId } = useFilters();
   const groupId = (routerSafe.params as any).groupId || fGroupId;
   
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [lightboxIndex, setLightboxIndex] = useState(0);
-
   const { group, photos, totalCount, loading, error } = useGroupData({ groupId, isAdmin: false });
+
+  const lightboxIndex = React.useMemo(() => {
+    if (!photoId) return -1;
+    return photos.findIndex((p: any) => p.id === photoId);
+  }, [photoId, photos]);
+
+  const lightboxOpen = lightboxIndex !== -1;
   
   const { lang, uiTranslations: t } = useTranslation();
   const { data: categories = [] } = useCategories();
@@ -66,19 +70,18 @@ export function PublicGroupDetailPage() {
       </div>
       <div className="flex-1 overflow-y-auto relative overscroll-y-auto overscroll-x-none bg-slate-50">
         <PublicPhotoGrid photos={photos} onPhotoClick={(id: string) => {
-             const index = photos.findIndex((p: any) => p.id === id);
-             if (index !== -1) {
-               setLightboxIndex(index);
-               setLightboxOpen(true);
-             }
+             setPhotoId(id);
         }} />
       </div>
       <YarlLightbox
         open={lightboxOpen}
         items={lightboxItems}
-        currentIndex={lightboxIndex}
-        onClose={() => setLightboxOpen(false)}
-        onIndexChange={setLightboxIndex}
+        currentIndex={Math.max(0, lightboxIndex)}
+        onClose={() => setPhotoId(null)}
+        onIndexChange={(idx: number) => {
+           const photo = photos[idx];
+           if (photo) setPhotoId(photo.id);
+        }}
       />
     </div>
   );

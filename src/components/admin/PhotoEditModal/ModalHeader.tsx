@@ -17,10 +17,11 @@ import {
   useRemoveFromGroupMutation,
   useAdminMaintenance,
   usePhotoDelete,
+  useFilters,
 } from "@/hooks";
 import { showToast } from "@/lib/ui/toast";
 import { useUIStore } from "@/store";
-import { usePhotoEditAI } from "../PhotoEditDrawer/usePhotoEditAI";
+import { usePhotoEditAI } from "./usePhotoEditAI";
 
 interface ModalHeaderProps {
   onClose: () => void;
@@ -34,7 +35,8 @@ export function ModalHeader({
   const { watch, setValue, commit, isPending } = usePhotoEditSessionContext();
   const formState = watch();
   
-  const editPhotoId = useUIStore((s) => s.editPhotoId);
+  const { modal, photoId, setModal, setPhotoId } = useFilters();
+  const editPhotoId = modal === 'edit' ? photoId : null;
   const appLang = useUIStore((s) => s.appLang);
   
   const { data: detailPhoto } = usePhoto(editPhotoId || '');
@@ -54,7 +56,8 @@ export function ModalHeader({
   const onRemoveFromGroup = async () => {
     if (editPhotoId && detailPhoto?.group_id) {
       await removeFromGroup({ photoIds: [editPhotoId], groupId: detailPhoto.group_id });
-      useUIStore.getState().update({ editPhotoId: null });
+      setModal(null);
+      setPhotoId(null);
     }
   };
 
@@ -70,7 +73,8 @@ export function ModalHeader({
     if (confirm(appLang === 'zh' ? '确定要删除此照片吗？' : 'Are you sure you want to delete this photo?')) {
        if (editPhotoId) {
           deletePhoto([editPhotoId]).then(() => {
-            useUIStore.getState().update({ editPhotoId: null });
+            setModal(null);
+            setPhotoId(null);
           });
        }
     }

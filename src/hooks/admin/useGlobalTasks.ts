@@ -6,7 +6,7 @@ import { api } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
 import { useAdminMode } from '../core/auth/useAdminMode';
 import { logger } from '@/lib/logger';
-import { useUIStore } from '@/store/useUIStore';
+import { useLocation } from '@tanstack/react-router';
 
 /**
  * Adapter hook to aggregate frontend local tasks and backend maintenance jobs.
@@ -15,7 +15,8 @@ export function useGlobalTasks() {
   const isAdminPath = useAdminMode();
   const { user } = useAuthStore();
   const isAdmin = isAdminPath && !!user;
-  const activeScreen = useUIStore((s) => s.activeScreen);
+  const location = useLocation();
+  const path = location.pathname;
   
   // 1. Frontend Tasks (Real-time, transient)
   const { tasks: localTasks = [] } = useTasks();
@@ -48,7 +49,7 @@ export function useGlobalTasks() {
       if (typeof document !== 'undefined' && document.hidden) return false;
       const rJobs = query.state.data as any[];
       const hasRunning = Array.isArray(rJobs) && rJobs.some(job => job && job.status === 'processing');
-      const isStatusScreen = ['tasks', 'diagnostics', 'diagnose', 'history_maintenance'].includes(activeScreen);
+      const isStatusScreen = ['/admin/tasks', '/admin/diagnostics', '/admin/diagnose', '/admin/history_maintenance'].includes(path);
       return (hasRunning || isStatusScreen) ? 5000 : false;
     },
     staleTime: 4000, // Reuse caches up to 4 seconds to deduplicate simultaneous hooks

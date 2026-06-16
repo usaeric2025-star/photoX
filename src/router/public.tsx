@@ -12,7 +12,8 @@ export const gallerySearchValidator = (search: Record<string, unknown>): Gallery
   return {
     q: (search.q as string) || undefined,
     category: (search.category as string) || undefined,
-    tag: (search.tag as string) || undefined,
+    cat: (search.cat as string) || undefined,
+    tag: (search.tag as string | string[]) || undefined,
     manufacturer: (search.manufacturer as string) || undefined,
     sort: (search.sort as GallerySearchParams['sort']) || undefined,
     view: (search.view as GallerySearchParams['view']) || undefined,
@@ -23,6 +24,9 @@ export const gallerySearchValidator = (search: Record<string, unknown>): Gallery
     showGroupsCollapsed: (search.showGroupsCollapsed as GallerySearchParams['showGroupsCollapsed']) || undefined,
     onlyUngrouped: (search.onlyUngrouped as GallerySearchParams['onlyUngrouped']) || undefined,
     hidden: (search.hidden as GallerySearchParams['hidden']) || undefined,
+    status: (search.status as string) || undefined,
+    batch: (search.batch as string) || undefined,
+    modal: (search.modal as string) || undefined,
   };
 };
 

@@ -12,7 +12,8 @@ export interface RouterContext {
 export interface GallerySearchParams {
   q?: string;
   category?: string;
-  tag?: string;
+  cat?: string;
+  tag?: string | string[];
   manufacturer?: string;
   sort?: 'newest' | 'oldest' | 'name';
   view?: 'grid' | 'list';
@@ -23,4 +24,7 @@ export interface GallerySearchParams {
   showGroupsCollapsed?: boolean;
   onlyUngrouped?: boolean;
   hidden?: boolean;
+  status?: string;
+  batch?: string;
+  modal?: string;
 }

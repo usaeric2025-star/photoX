@@ -112,8 +112,7 @@ export function BackgroundTaskPanel() {
                            <button 
                             onClick={() => {
                               if (isAdminPath) {
-                                navigate({ to: '/admin/diagnose' });
-                                updateStore({ activeScreen: 'diagnose' });
+                                navigate({ to: '/admin/diagnostics' });
                               } else {
                                 navigate({ to: '/admin' });
                               }

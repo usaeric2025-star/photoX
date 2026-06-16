@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Tabs } from "../../shared/Tabs";
-import { BasicInfoTab } from "../PhotoEditDrawer/BasicInfoTab";
-import { OrgTab } from "../PhotoEditDrawer/OrgTab";
-import { DetailsTab } from "../PhotoEditDrawer/DetailsTab";
-import { AISourceTab } from "../PhotoEditDrawer/AISourceTab";
+import { BasicInfoTab } from "./BasicInfoTab";
+import { OrgTab } from "./OrgTab";
+import { DetailsTab } from "./DetailsTab";
+import { AISourceTab } from "./AISourceTab";
 
 export function PhotoEditTabs({ editPhotoId, appLang }: any) {
   const [activeTab, setActiveTab] = useState('basic');

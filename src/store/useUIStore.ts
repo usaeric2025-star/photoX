@@ -41,10 +41,8 @@ export interface PromptDialogProps {
 export interface UIStoreState {
   appLang: 'zh' | 'en' | 'ms';
   lightboxIndex: number | null;
-  editPhotoId: string | null;
   batchEditingIds: string[] | null;
   groupSettingsOpen: boolean;
-  activeScreen: string;
   formState: ProductFormData;
   updateForm: (updates: Partial<ProductFormData> | ((prev: ProductFormData) => Partial<ProductFormData>)) => void;
   resetForm: () => void;
@@ -105,10 +103,8 @@ export const useUIStore = create<UIStoreState>()((set) => ({
     return 'en';
   })() as 'zh' | 'en' | 'ms',
   lightboxIndex: null,
-  editPhotoId: storage.get(STORAGE_KEYS.EDIT_PHOTO, null),
   batchEditingIds: storage.get(STORAGE_KEYS.BATCH_EDITING, null),
   groupSettingsOpen: storage.get<string>(STORAGE_KEYS.GROUP_SETTINGS_OPEN, 'false') === 'true',
-  activeScreen: storage.get(STORAGE_KEYS.ACTIVE_SCREEN, 'gallery'),
   formState: storage.get(STORAGE_KEYS.EDIT_FORM_DRAFT, defaultForm),
   updateForm: (updates) => set((state) => {
     const nextFormState = typeof updates === 'function' ? updates(state.formState) : { ...state.formState, ...updates };
@@ -153,7 +149,6 @@ export const useUIStore = create<UIStoreState>()((set) => ({
       selectedIds: [],
       processingIds: [],
       isMultiSelect: false,
-      editPhotoId: null,
       batchEditingIds: null,
       formState: defaultForm,
       activeDialogCount: 0
@@ -172,20 +167,11 @@ export const useUIStore = create<UIStoreState>()((set) => ({
     if ('appLang' in nextState && nextState.appLang !== undefined) {
       storage.set(STORAGE_KEYS.LANG, nextState.appLang);
     }
-    if ('editPhotoId' in nextState) {
-      storage.set(STORAGE_KEYS.EDIT_PHOTO, nextState.editPhotoId);
-      if (!nextState.editPhotoId) {
-        storage.remove(STORAGE_KEYS.EDIT_FORM_DRAFT);
-      }
-    }
     if ('batchEditingIds' in nextState) {
       storage.set(STORAGE_KEYS.BATCH_EDITING, nextState.batchEditingIds);
     }
     if ('groupSettingsOpen' in nextState && nextState.groupSettingsOpen !== undefined) {
       storage.set(STORAGE_KEYS.GROUP_SETTINGS_OPEN, String(nextState.groupSettingsOpen));
-    }
-    if ('activeScreen' in nextState && nextState.activeScreen !== undefined) {
-      storage.set(STORAGE_KEYS.ACTIVE_SCREEN, nextState.activeScreen);
     }
     
     return nextState as any;

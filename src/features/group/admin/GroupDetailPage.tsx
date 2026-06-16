@@ -45,13 +45,17 @@ function AdminPhotoGrid({ photos, onPhotoClick }: { photos: any[]; onPhotoClick:
 
 export function AdminGroupDetailPage() {
   const routerSafe = useRouterSafe();
-  const { groupId: fGroupId, setPhotoId } = useFilters();
+  const { groupId: fGroupId, photoId, setPhotoId, setModal } = useFilters();
   const groupId = (routerSafe.params as any).groupId || fGroupId;
   
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [lightboxIndex, setLightboxIndex] = useState(0);
-  
   const { group, photos, totalCount, loading, error } = useGroupData({ groupId, isAdmin: true });
+
+  const lightboxIndex = React.useMemo(() => {
+    if (!photoId) return -1;
+    return photos.findIndex((p: any) => p.id === photoId);
+  }, [photoId, photos]);
+
+  const lightboxOpen = lightboxIndex !== -1;
   const [showAdminTools, setShowAdminTools] = useState(false);
   const isMultiSelect = useUIStore((s) => s.isMultiSelect);
   
@@ -102,7 +106,7 @@ export function AdminGroupDetailPage() {
     await update.mutateAsync({ id: groupId, updates: { name: newName } });
   };
   
-  const openEditDrawer = (id: string) => storeUpdate({ editPhotoId: id });
+  const openEditDrawer = (id: string) => { setPhotoId(id); setModal('edit'); };
 
   if (loading) return <div className="p-8 text-center text-slate-500">載入中...</div>;
   if (error) return <div className="p-4 text-red-500">錯誤：{error}</div>;
@@ -121,20 +125,19 @@ export function AdminGroupDetailPage() {
       </div>
       <div className="flex-1 overflow-y-auto relative overscroll-y-auto overscroll-x-none bg-slate-50">
         <AdminPhotoGrid photos={photos} onPhotoClick={(id: string) => {
-             const index = photos.findIndex((p: any) => p.id === id);
-             if (index !== -1) {
-               setLightboxIndex(index);
-               setLightboxOpen(true);
-             }
+             setPhotoId(id);
         }} />
       </div>
       
       <YarlLightbox
         open={lightboxOpen}
         items={lightboxItems}
-        currentIndex={lightboxIndex}
-        onClose={() => setLightboxOpen(false)}
-        onIndexChange={setLightboxIndex}
+        currentIndex={Math.max(0, lightboxIndex)}
+        onClose={() => setPhotoId(null)}
+        onIndexChange={(idx: number) => {
+           const photo = photos[idx];
+           if (photo) setPhotoId(photo.id);
+        }}
         onEdit={openEditDrawer}
         onDelete={(id) => deletePhoto.mutate(id)}
         onSetCover={(id) => updatePhoto.mutate({ id, updates: { is_group_cover: true } })}

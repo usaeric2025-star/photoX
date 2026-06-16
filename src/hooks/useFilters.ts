@@ -60,6 +60,11 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
     updateSearch({ groupId: val || undefined });
   }, [updateSearch]);
 
+  const modal = search.modal || null;
+  const setModal = useCallback((val: string | null) => {
+    updateSearch({ modal: val || undefined });
+  }, [updateSearch]);
+
   const showGroupsCollapsed = search.showGroupsCollapsed !== 'false';
   const setShowGroupsCollapsed = useCallback((val: boolean) => {
     updateSearch({ showGroupsCollapsed: val ? undefined : 'false' });
@@ -88,6 +93,7 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
     batchFilter: options.enableBatch ? batchFilter : '', setBatchFilter,
     photoId, setPhotoId,
     groupId, setGroupId,
+    modal, setModal,
     showGroupsCollapsed, setShowGroupsCollapsed,
     view, setView,
     reset,

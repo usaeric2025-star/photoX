@@ -5,13 +5,14 @@ import { DimensionEditor } from '../edit/DimensionEditor';
 import { ProductFormData, Dimension } from '../../../types';
 import { safeArray } from '../../../lib/utils';
 import { useUIStore } from '../../../store';
-import { useTasks, usePhoto } from '../../../hooks';
+import { useTasks, usePhoto, useFilters } from '../../../hooks';
 import { translations } from '@/locales';
 import { usePhotoEditAI } from './usePhotoEditAI';
 
 export function DetailsTab() {
   const { register, control, setValue } = usePhotoEditSessionContext();
-  const editPhotoId = useUIStore((s) => s.editPhotoId);
+  const { modal, photoId } = useFilters();
+  const editPhotoId = modal === 'edit' ? photoId : null;
   const appLang = useUIStore((s) => s.appLang);
   const { tasks } = useTasks();
   const { data: detailPhoto } = usePhoto(editPhotoId || '');
