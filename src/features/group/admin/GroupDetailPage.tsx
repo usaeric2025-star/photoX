@@ -119,7 +119,7 @@ export function AdminGroupDetailPage() {
       <div className="flex-shrink-0 z-10 sticky top-0 bg-white/80 backdrop-blur-md border-b border-slate-100 shadow-sm">
         <GroupHeader 
           group={group} 
-          photoCount={totalCount || group.member_count} 
+          photoCount={totalCount} 
           isAdmin={true} 
           onEditSettings={() => setShowAdminTools(true)}
           onUpdateTitle={handleUpdateTitle}

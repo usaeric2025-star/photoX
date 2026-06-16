@@ -28,6 +28,11 @@ export const IMAGE_COMPRESS = {
   QUALITY: 0.7,
 };
 
+export const CACHE_CONFIG = {
+  STALE_TIME_5M: 1000 * 60 * 5,
+  GC_TIME_30M: 1000 * 60 * 30,
+};
+
 export const AI_CONFIG = {
   CONCURRENCY: 3,
   TIMEOUT: 45000,

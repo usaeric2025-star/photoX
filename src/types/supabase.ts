@@ -26,7 +26,6 @@ export interface SupabasePhotoRaw {
   exif_data?: any;
   thumbnail_sm_url?: string;
   thumbnail_md_url?: string;
-  created_at_timestamp?: number;
   group_id?: string | null;
   tags?: Array<{ id: string | number }> | null;
   // 关联字段
@@ -40,7 +39,6 @@ export interface SupabasePhotoRaw {
     name: string;
     color: string | null;
     cover_photo_id: string | null;
-    member_count: number;
   } | null;
   manufacturers?: { name: string } | null;
   category?: { id: any; name: any } | null;

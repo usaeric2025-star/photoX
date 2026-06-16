@@ -10,10 +10,10 @@ interface GeneralSettingsProps {
   tags: Tag[];
   manufacturers: Manufacturer[];
   photos: Photo[];
-  setSettingField: (field: keyof AppSettings, value: any) => void;
+  setSettingField: <K extends keyof AppSettings>(field: K, value: AppSettings[K]) => void;
   cardClass: string;
   inputClass: string;
-  buttonStyles: any;
+  buttonStyles: { [key in 'primary' | 'secondary' | 'accent']: string };
 }
 
 export function GeneralSettings({

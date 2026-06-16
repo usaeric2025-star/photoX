@@ -1,16 +1,16 @@
 import React from 'react';
-import { useFieldArray, useFormContext, UseFormRegister, Control } from 'react-hook-form';
+import { useFieldArray, useFormContext, UseFormRegister, Control, FieldValues } from 'react-hook-form';
 import { cn } from '@/lib/utils';
 
-interface DynamicArrayFieldProps<T> {
+interface DynamicArrayFieldProps<T extends FieldValues> {
   name: string
   label: string
   defaultValue: T
-  renderItem: (index: number, field: T, register: UseFormRegister<any>) => React.ReactNode
-  control?: any
+  renderItem: (index: number, field: T, register: UseFormRegister<FieldValues>) => React.ReactNode
+  control?: Control<FieldValues>
 }
 
-export const DynamicArrayField = <T extends Record<string, any>,>({ 
+export const DynamicArrayField = <T extends FieldValues>({ 
   name, 
   label, 
   defaultValue, 

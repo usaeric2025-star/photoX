@@ -10,8 +10,8 @@ describe('Security Guard: computeLaneIndex export constraint', () => {
 });
 
 describe('VirtualGrid', () => {
-  let originalClientHeight: any;
-  let originalOffsetHeight: any;
+  let originalClientHeight: PropertyDescriptor | undefined;
+  let originalOffsetHeight: PropertyDescriptor | undefined;
   let originalResizeObserver: any;
 
   beforeAll(() => {
@@ -29,19 +29,19 @@ describe('VirtualGrid', () => {
 
     originalResizeObserver = (global as any).ResizeObserver;
     class MockResizeObserver {
-      callback: any;
-      constructor(callback: any) {
+      callback: (entries: ResizeObserverEntry[]) => void;
+      constructor(callback: (entries: ResizeObserverEntry[]) => void) {
         this.callback = callback;
       }
-      observe(element: any) {
+      observe(element: Element) {
         // Trigger callback with simulated rect properties
         if (this.callback) {
           this.callback([
             {
               target: element,
-              contentRect: { width: 1000, height: 1000, top: 0, left: 0, right: 1000, bottom: 1000 },
-              borderBoxSize: [{ inlineSize: 1000, blockSize: 1000 }]
-            }
+              contentRect: { width: 1000, height: 1000, top: 0, left: 0, right: 1000, bottom: 1000 } as DOMRectReadOnly,
+              borderBoxSize: [{ inlineSize: 1000, blockSize: 1000 }] as ResizeObserverSize[]
+            } as ResizeObserverEntry
           ]);
         }
       }

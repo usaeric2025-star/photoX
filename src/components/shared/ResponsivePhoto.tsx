@@ -85,7 +85,7 @@ export function ResponsivePhoto({
             priority={isLoaded}
             width={variant === 'md' ? [320, 640, 800] : [320, 640]}
             aspectRatio={String(aspectRatio)}
-            onLoad={async (e: any) => {
+            onLoad={async (e: React.SyntheticEvent<HTMLImageElement>) => {
                if (e.target instanceof HTMLImageElement) {
                   await e.target.decode().catch(() => {});
                }

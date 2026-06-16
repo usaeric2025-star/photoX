@@ -122,7 +122,6 @@ export async function syncGroupCoversAndCount(supabase: any, groupIds: string[])
         .from('groups')
         .update({
           cover_photo_id: targetCoverPhotoId || null,
-          member_count: actualCount,
           updated_at: new Date().toISOString()
         })
         .eq('id', groupId);
@@ -130,7 +129,7 @@ export async function syncGroupCoversAndCount(supabase: any, groupIds: string[])
       if (updateGroupError) {
         logger.error(`[GroupSync] Failed to update group params for ${groupId}:`, updateGroupError.message);
       } else {
-        logger.info(`[GroupSync] Reconciled group ${groupId}. Cover: ${targetCoverPhotoId}, Count: ${actualCount}`);
+        logger.info(`[GroupSync] Reconciled group ${groupId}. Cover: ${targetCoverPhotoId}`);
       }
 
     } catch (err: any) {

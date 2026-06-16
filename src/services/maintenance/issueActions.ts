@@ -106,14 +106,6 @@ export const ISSUE_ACTIONS: Record<string, IssueAction> = {
       return { message: "该模块目前未激活，请等待系统升级" };
     }
   },
-  member_count_mismatch: {
-    name: "校对合组成员数",
-    execute: async () => {
-      const res = await api.admin.repair.$post({ json: { issueId: 'member_count_mismatch' } });
-      const data = await res.json() as any;
-      return { message: data.message || "成员数同步完成", ...data };
-    }
-  },
   orphaned_r2_files: {
     name: "深度清理无效的云端文件",
     execute: async () => {

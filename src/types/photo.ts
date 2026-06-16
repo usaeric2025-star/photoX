@@ -53,7 +53,6 @@ export interface Photo {
   note?: string;
   sub_category?: string | null;
   _time?: number; 
-  created_at_timestamp?: number; 
   ai_failed?: boolean;
   metadata?: Record<string, unknown>;
   group?: {
@@ -61,7 +60,6 @@ export interface Photo {
       name: string;
       color: string | null;
       cover_photo_id: string | null;
-      member_count: number;
       status?: 'draft' | 'confirmed' | 'rejected';
   } | null;
   categoryName: string;
@@ -112,7 +110,6 @@ export interface ProductGroup {
   user_id: string;
   created_at: string;
   updated_at: string;
-  member_count?: number;
   status?: 'draft' | 'confirmed' | 'rejected';
   metadata?: Record<string, unknown>;
 }

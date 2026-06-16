@@ -49,11 +49,11 @@ export const listHandler = (app: Hono) => {
     const hasTag = tagId !== undefined && tagId !== null && tagId !== '';
     const hasCat = categoryId !== undefined && categoryId !== null && categoryId !== '';
 
-    let query = supabase.from(TABLE_NAME).select(`*, photo_tags${hasTag ? '!inner' : ''}(tag_id), group:groups(id, name, cover_photo_id, member_count)`);
+    let query = supabase.from(TABLE_NAME).select(`*, photo_tags${hasTag ? '!inner' : ''}(tag_id), group:groups(id, name, cover_photo_id)`);
     
     // Filters
     if (hasTag && hasCat) {
-      query = supabase.from(TABLE_NAME).select('*, photo_tags!inner(tag_id), group:groups(id, name, cover_photo_id, member_count)');
+      query = supabase.from(TABLE_NAME).select('*, photo_tags!inner(tag_id), group:groups(id, name, cover_photo_id)');
       query = query.or(`category_id.eq.${categoryId},photo_tags.tag_id.eq.${tagId}`);
     } else {
       if (hasTag) {

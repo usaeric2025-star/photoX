@@ -70,9 +70,12 @@ export const defineMutation = <TData, TVars, TQueryKey = any[]>(config: Mutation
         });
       }
       
-      // Global error logging and UI feedback
-      logger.error(`[Mutation Failed] ${config.name}:`, err);
-      handleError(err, config.name);
+      const handled = config.onError?.(err, vars);
+      if (!handled) {
+        // Global error logging and UI feedback
+        logger.error(`[Mutation Failed] ${config.name}:`, err);
+        handleError(err, config.name);
+      }
     },
     onSettled: (data, err, vars) => {
       const keys = typeof config.invalidate === 'function' 

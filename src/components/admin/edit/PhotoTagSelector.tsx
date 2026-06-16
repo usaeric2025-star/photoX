@@ -3,6 +3,7 @@ import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { Control, useController, useFormContext } from "react-hook-form";
 import { PromptDialog } from "@/components/ui/PromptDialog";
 import { TagEditor } from "../TagEditor";
+import { MAX_TAGS_PER_PHOTO } from "@/constants/limits";
 import { Tag } from "../../../types";
 import { safeArray } from "../../../lib/utils";
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
@@ -59,8 +60,8 @@ function BasePhotoTagSelector({
     if (cleanSelectedIds.includes(strId)) {
       onChange(cleanSelectedIds.filter((id) => id !== strId));
     } else {
-      if (cleanSelectedIds.length >= 3) {
-        showToast.warning("最多只能选择 3 个标签 / Maximum of 3 tags allowed");
+      if (cleanSelectedIds.length >= MAX_TAGS_PER_PHOTO) {
+        showToast.warning(`最多只能选择 ${MAX_TAGS_PER_PHOTO} 个标签 / Maximum of ${MAX_TAGS_PER_PHOTO} tags allowed`);
         return;
       }
       onChange([...cleanSelectedIds, strId]);

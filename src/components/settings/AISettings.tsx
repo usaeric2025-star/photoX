@@ -10,7 +10,7 @@ interface AISettingsProps {
   testResult: { success?: boolean; error?: string; loading?: boolean } | null;
   accessPasscode: string;
   setAccessPasscode: (code: string) => void;
-  setSettingField: (field: keyof AppSettings, value: any) => void;
+  setSettingField: <K extends keyof AppSettings>(field: K, value: AppSettings[K]) => void;
   cardClass: string;
   inputClass: string;
 }

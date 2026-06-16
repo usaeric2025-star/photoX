@@ -67,7 +67,7 @@ export const usePhotos = createInfiniteQuery<{photos: Photo[], nextPage?: number
       // Inject _time here so it's calculated ONLY ONCE per fetch
       // and won't be repeated in the select selector for thousands of items
       if (!(p as any)._time) {
-        (p as any)._time = p.created_at_timestamp || new Date(p.created_at || (p as any).created_at || 0).getTime();
+        (p as any)._time = new Date(p.created_at || (p as any).created_at || 0).getTime();
       }
       return p;
     });

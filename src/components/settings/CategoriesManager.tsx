@@ -13,7 +13,7 @@ interface CategoriesManagerProps {
   updateManufacturer: (id: string, data: Partial<Manufacturer>) => Promise<boolean>;
   deleteManufacturer: (id: string) => void;
   cardClass: string;
-  buttonStyles: any;
+  buttonStyles: { [key in 'primary' | 'secondary' | 'accent']: string };
 }
 
 export function CategoriesManager(props: CategoriesManagerProps) {

@@ -12,6 +12,7 @@ import {
   useShallow,
   useTagSearch,
 } from "@/hooks";
+import { MAX_TAGS_PER_PHOTO } from "@/constants/limits";
 import { Tag } from "@/types";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { useLongPress } from "@/hooks/core/useLongPress";
@@ -133,7 +134,7 @@ export function TagEditor({
           const isSelected = selectedTagIds.map(String).includes(String(tag.id));
           const isHot = hotTagsSet.has(String(tag.id));
           const isPinned = pinnedIds.includes(String(tag.id));
-          const isDisabled = !isSelected && selectedTagIds.length >= 3;
+          const isDisabled = !isSelected && selectedTagIds.length >= MAX_TAGS_PER_PHOTO;
 
           return (
             <TagButton

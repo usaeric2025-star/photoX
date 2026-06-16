@@ -18,7 +18,7 @@ interface SyncSettingsProps {
   tags: Tag[];
   manufacturers: Manufacturer[];
   cardClass: string;
-  buttonStyles: any;
+  buttonStyles: { [key in 'primary' | 'secondary' | 'accent']: string };
 }
 
 export function SyncSettings(props: SyncSettingsProps) {

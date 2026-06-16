@@ -74,6 +74,16 @@ const groupPhotosConfig = defineMutation<any, { photoIds: string[], targetGroupI
     return old;
   },
   successMessage: '已合组',
+  onError: (error) => {
+    const errorStr = (typeof error === 'string' ? error : error?.message || '').toLowerCase();
+    if (errorStr.includes('foreign key constraint') || errorStr.includes('23503') || errorStr.includes('fk_photo_group')) {
+      import('sonner').then(({ toast }) => {
+        toast.error('操作違反資料完整性，請確保所有照片已正確歸屬');
+      });
+      return true; // handled
+    }
+    return false; // let default handler process it
+  }
 });
 
 export const useGroupPhotosMutation = () => useAppMutation(groupPhotosConfig);

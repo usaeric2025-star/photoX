@@ -14,7 +14,6 @@ const mapGroup = (item: any): ProductGroup => ({
   created_at: item.created_at,
   updated_at: item.updated_at,
   user_id: item.user_id,
-  member_count: item.member_count ?? 1,
   status: item.status,
   metadata: item.metadata,
 });

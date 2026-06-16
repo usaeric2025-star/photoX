@@ -29,7 +29,6 @@ export const PhotoStatusBadges = ({
   // Display group info logic
   const shouldShowGroup = !hideGroupBadge && photo.group_id;
   const groupCode = getDisplayGroupCode(photo.group_id);
-  const memberCount = photo.group?.member_count ?? 1;
 
   // Hidden Status label
   const hiddenLabel = appLang === 'zh' ? '已隐藏' : appLang === 'ms' ? 'Sembunyi' : 'Hidden';
@@ -50,7 +49,7 @@ export const PhotoStatusBadges = ({
             : "bg-black/90 text-brand-gold border-brand-gold/50 border-l-brand-gold shadow-black/40"
         )}>
           <Layers size={10} strokeWidth={3} className={cn("shrink-0", isDraft ? "text-white/70" : "text-brand-gold")} />
-          <span className="tracking-tighter uppercase">{memberCount}{isDraft ? ' (DRAFT)' : ''}</span>
+          <span className="tracking-tighter uppercase">{isDraft ? ' (DRAFT)' : ''}</span>
         </div>
       )}
 

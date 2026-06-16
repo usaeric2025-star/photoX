@@ -38,6 +38,8 @@ export type VirtualGridProps = {
   shift?: boolean;
 };
 
+type RowItem = { type: 'header' | 'row' | 'footer'; content?: React.ReactNode; rowIndex?: number };
+
 export const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.Ref<VirtualGridHandle> }) => {
   const vlistRef = useRef<VListHandle>(null);
   const lanes = Math.max(1, props.lanes || 1);
@@ -50,7 +52,7 @@ export const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.
     (window as any).process?.env?.NODE_ENV === 'test'
   );
 
-  const listItemsCacheRef = useRef<{ count: number; rowCount: number; hasHeader: boolean; hasFooter: boolean; items: any[] } | null>(null);
+  const listItemsCacheRef = useRef<{ count: number; rowCount: number; hasHeader: boolean; hasFooter: boolean; items: RowItem[] } | null>(null);
 
   const hasHeader = !!props.header;
   const hasFooter = !!props.footer;
@@ -63,7 +65,7 @@ export const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.
     listItemsCacheRef.current?.hasHeader !== hasHeader || 
     listItemsCacheRef.current?.hasFooter !== hasFooter
   ) {
-    const items: Array<{ type: 'header' | 'row' | 'footer'; content?: React.ReactNode; rowIndex?: number }> = [];
+    const items: RowItem[] = [];
     if (props.header) {
       items.push({ type: 'header', content: props.header });
     }
@@ -161,7 +163,7 @@ export const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.
 
   return (
     <div className={cn("w-full h-full min-h-0", props.containerClassName)}>
-      <VList<any>
+      <VList<RowItem>
         ref={vlistRef}
         data={listItems}
         onScroll={handleScroll}

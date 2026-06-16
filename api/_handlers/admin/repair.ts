@@ -92,15 +92,6 @@ adminRepair.post("/", async (c) => {
           }, 400);
       }
 
-      if (issueId === 'member_count_mismatch') {
-         const { data: photos } = await supabase.from("furniture_items").select("group_id");
-         const counts = new Map<string, number>();
-         photos?.forEach((p: any) => { if (p.group_id) { const gid = String(p.group_id); counts.set(gid, (counts.get(gid) || 0) + 1); } });
-         const { data: groups } = await supabase.from("groups").select("id");
-         if (groups) await Promise.all(groups.map((g: any) => supabase.from("groups").update({ member_count: counts.get(String(g.id)) || 0 }).eq("id", g.id)));
-         return c.json({ success: true, message: '成员数同步完成' });
-      }
-
       if (issueId === 'group_cover_mismatch') {
          const { data: groups } = await supabase.from("groups").select("id, name, cover_photo_id");
          const { data: photos } = await supabase.from("furniture_items").select("id, name, group_id, is_group_cover, created_at");

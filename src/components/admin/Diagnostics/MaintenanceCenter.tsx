@@ -21,12 +21,6 @@ export function MaintenanceCenter({ onSuccess }: MaintenanceCenterProps) {
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <MaintenanceTool 
-            issueId="member_count_mismatch"
-            title="校对合组成员数" 
-            description="合组记录的成员数量与实际照片数量不符时执行此同步，修正计数显示不准的问题。"
-            onSuccess={onSuccess}
-          />
-          <MaintenanceTool 
             issueId="orphan_files"
             title="找回云端孤儿照片" 
             description="扫描 R2 云端存储，如果在云端发现有照片但在数据库中丢失了记录，会尝试补全并恢复。"

@@ -261,10 +261,6 @@ export const groups = new Hono()
         await supabase.from('groups').delete().eq('id', group.id);
         deleted++;
       } else {
-        await supabase
-          .from('groups')
-          .update({ member_count: actualCount })
-          .eq('id', group.id);
         synced++;
       }
     }

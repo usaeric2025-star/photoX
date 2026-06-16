@@ -5,6 +5,7 @@ import { Photo } from '../../types';
 import { supabase } from '@/lib/supabase';
 import { DB_CONFIG } from '@/constants/config';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { MAX_TAGS_PER_PHOTO } from '@/constants/limits';
 
 /**
  * [V2.0-SERVICE-SINGLETON] AI Photo Analysis Service

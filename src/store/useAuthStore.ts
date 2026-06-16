@@ -19,17 +19,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   setLoading: (loading) => set({ isLoading: loading }),
   
   init: async () => {
-    // 設置一個 8 秒超時，防止 Auth 掛死導致頁面空白
-    const timeout = setTimeout(() => {
-      if (get().isLoading) {
-        console.warn('⚠️ [Auth] Initialization timeout, proceeding as guest');
-        set({ user: null, isLoading: false });
-      }
-    }, 8000);
-
     try {
       const { data } = await supabase.auth.getSession();
-      clearTimeout(timeout);
       
       if (data.session?.user) {
         const u = data.session.user;
@@ -46,7 +37,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ user: null, isLoading: false });
       }
     } catch (e) {
-      clearTimeout(timeout);
       console.error('❌ [Auth] Initialization failed:', e);
       set({ user: null, isLoading: false });
     }

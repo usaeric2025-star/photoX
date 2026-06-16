@@ -294,7 +294,6 @@ ai.post("/cluster-photos", async (c) => {
                 id: groupId,
                 name: { zh: g.name, en: g.name_en, ms: g.name_ms },
                 status: 'confirmed',
-                member_count: g.photoIds.length,
                 created_at: new Date().toISOString()
             };
             
