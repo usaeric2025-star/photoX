@@ -19,14 +19,14 @@ adminRepair.post("/preview", async (c) => {
 
         const { data: pData, error: pErr } = await supabase.from('furniture_items').select('id, name');
         if (pErr) throw pErr;
-        const photoMap = new Map<string, any>((pData || []).map((p: any) => [String(p.id), p]));
+        const photoMap = new Map<string, Record<string, unknown>>((pData || []).map((p: Record<string, unknown>) => [String(p.id), p]));
 
         const { data: tagData, error: tagErr } = await supabase.from('tags').select('id, name, is_global');
         if (tagErr) throw tagErr;
-        const tagMap = new Map<string, any>((tagData || []).map((t: any) => [String(t.id), t]));
+        const tagMap = new Map<string, Record<string, unknown>>((tagData || []).map((t: Record<string, unknown>) => [String(t.id), t]));
 
         const photoTagMap = new Map<string, string[]>();
-        ptData?.forEach((pt: any) => {
+        ptData?.forEach((pt: Record<string, unknown>) => {
           if (pt.photo_id) {
             const pid = String(pt.photo_id);
             if (!photoTagMap.has(pid)) {
@@ -36,8 +36,8 @@ adminRepair.post("/preview", async (c) => {
           }
         });
 
-        const affectedPhotos: any[] = [];
-        const getWeight = (tagId: string, tagDetail?: any) => {
+        const affectedPhotos: Array<{ photoId: string, photoName: string, keptTags: (string | number)[], removedTags: (string | number)[] }> = [];
+        const getWeight = (tagId: string, tagDetail?: Record<string, unknown>) => {
           if (tagDetail && tagDetail.is_global) return 50;
           return 90;
         };
@@ -74,9 +74,9 @@ adminRepair.post("/preview", async (c) => {
       }
 
       return c.json({ success: true, affectedCount: 0, affectedPhotos: [] });
-    } catch (e: any) {
+    } catch (e: unknown) {
       logger.error("[Repair Preview] failed:", e);
-      return c.json({ success: false, error: e.message }, 500);
+      return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown error' }, 500);
     }
 });
 

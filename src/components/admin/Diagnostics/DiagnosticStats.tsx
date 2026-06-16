@@ -2,8 +2,10 @@ import React from 'react';
 import { RefreshCw } from 'lucide-react';
 import { formatters } from '@/utils/formatters';
 
+import { DiagnosticsReport } from '@/types/diagnostics';
+
 interface DiagnosticStatsProps {
-  report: any;
+  report: DiagnosticsReport | null;
   isPending: boolean;
   onRefresh: () => void;
 }

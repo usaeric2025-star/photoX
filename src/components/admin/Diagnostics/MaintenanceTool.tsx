@@ -76,7 +76,7 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
           // Even though we're polling here, we store metadata so if we reload, JobResumer can take over
           const interval = setInterval(async () => {
             try {
-              const status: any = await action.getStatus?.(jobId);
+              const status: { progress?: number; message?: string; status?: string; error?: string } = await action.getStatus?.(jobId);
               if (!status) return;
 
               setProgress(status.progress || 0);
@@ -104,7 +104,7 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
           if (onSuccess) onSuccess();
           setTimeout(() => setProgress(0), 1000);
         },
-        onError: (e: any) => {
+        onError: (e: Error) => {
           setIsExecuting(false);
           setProgress(0);
         },
@@ -160,7 +160,7 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
             </div>
 
             <div className="space-y-2.5 max-h-[45vh] overflow-y-auto pr-1">
-              {preview?.affectedPhotos?.map((photo: any) => (
+              {preview?.affectedPhotos?.map((photo: { photoId: string; photoName: string; keptTags?: string[]; removedTags?: string[] }) => (
                 <div key={photo.photoId} className="bg-slate-50/70 hover:bg-slate-50 border border-slate-100 rounded-xl p-3.5 transition-all flex flex-col gap-2">
                   <span className="text-xs font-black text-slate-800 tracking-tight uppercase block">{photo.photoName}</span>
                   <div className="flex flex-wrap gap-2.5 items-center">
@@ -297,7 +297,7 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
           </div>
 
           <div className="space-y-2.5 max-h-[45vh] overflow-y-auto pr-1">
-            {preview?.affectedPhotos?.map((photo: any) => (
+            {preview?.affectedPhotos?.map((photo: { photoId: string; photoName: string; keptTags?: string[]; removedTags?: string[] }) => (
               <div key={photo.photoId} className="bg-slate-50/70 hover:bg-slate-50 border border-slate-100 rounded-xl p-3.5 transition-all flex flex-col gap-2">
                 <span className="text-xs font-black text-slate-800 tracking-tight uppercase block">{photo.photoName}</span>
                 <div className="flex flex-wrap gap-2.5 items-center">

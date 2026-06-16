@@ -9,8 +9,10 @@ const severityColors = {
   P2: 'bg-blue-50 text-blue-600 border-blue-100'
 };
 
+import { DiagnosticIssue } from '@/types/diagnostics';
+
 interface IssueListProps {
-  issues: any[];
+  issues: DiagnosticIssue[];
   isPending: boolean;
   onRepair: (id: string) => void;
   onSuccess: () => void;

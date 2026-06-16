@@ -1,0 +1,329 @@
+src/components/admin/edit/PhotoTagSelector.tsx:145:  control?: any; // kept as any for react-hook-form Control, as it's complex
+src/components/admin/DiagnosticsDashboard.tsx:66:  const [pluginResults, setPluginResults] = useState<Record<string, { result: any, loading: boolean }>>({});
+src/components/admin/DiagnosticsDashboard.tsx:68:  const runPlugin = async (plugin: any) => {
+src/components/admin/FormShared.tsx:127:const ManufacturerButton = React.memo(({ mfr, isSelected, onSelect, onEdit, onDelete }: any) => {
+src/components/admin/ErrorLogViewer.tsx:21:  metadata?: any;
+src/components/admin/ErrorLogViewer.tsx:136:      onError: (err: any) => {
+src/components/admin/StatisticsScreen.tsx:14:const StatCard = ({ title, value, subValue, icon: Icon, colorClass, delay = 0 }: any) => (
+src/components/admin/StatisticsScreen.tsx:41:  const groupsCount = photos?.filter((p: any) => !!p.group_id).reduce((acc: any, p: any) => {
+src/components/admin/StatisticsScreen.tsx:46:  const hiddenCount = photos?.filter((p: any) => p.is_hidden).length || 0;
+src/components/photo/AdminGridContainer.tsx:65:  const renderCard = (photo: Photo, index: number, categories: any[]) => (
+src/components/photo/VirtualPhotoGrid.tsx:25:  filters?: any;
+src/components/lightbox/YarlLightbox.tsx:22:    photo?: any; // Raw database photo object
+src/components/lightbox/YarlLightbox.tsx:63:  const toolbarButtons: any[] = [];
+src/components/lightbox/YarlLightbox.tsx:228:                {currentItem.photo.dimensions.map((dim: any, idx: number) => {
+src/components/groups/GroupSettingsModal.tsx:19:  update?: any;
+src/components/groups/GroupSettingsModal.tsx:21:  t: any;
+src/components/groups/GroupSettingsModal.tsx:24:function GroupSettingsHeader({ groupData, activeGroupId, onUngroup, setShowGroupSettings }: any) {
+src/components/groups/GroupSettingsModal.tsx:58:function GroupSettingsContent({ groupData, handleUpdateGroupData, t }: any) {
+src/components/groups/useGroupDraft.ts:14:  onUpdatePhoto: (id: string, data: any) => Promise<any>
+src/lib/mutations/types.ts:5:  optimistic?: ((old: any, vars: TVars, queryKey?: readonly unknown[]) => any) | {
+src/lib/mutations/types.ts:7:    update: (old: any, vars: TVars, queryKey?: readonly unknown[]) => any
+src/lib/mutations/types.ts:11:  onError?: (error: any, vars: TVars) => boolean | void
+src/lib/mutations/useAppMutation.ts:59:            queryClient.setQueryData(queryKey, (old: any) => updateFn(old, vars, queryKey));
+src/lib/mutations/useAppMutation.ts:68:        context.previousData.forEach((data: any, key: any) => {
+src/lib/error/errorReporter.ts:65:  metadata?: any;
+src/lib/error/errorReporter.ts:105:export const logResult = async (context: EventContext, type: 'error' | 'success', data?: any) => {
+src/lib/error/errorHandler.tsx:9:export function extractErrorMessage(error: any): string {
+src/lib/query/queryFactory.ts:32:      select: (data: any) => config.schema ? (config.schema as any)(data).assert() : (actualOptions?.select ? actualOptions.select(data) : data),
+src/lib/query/queryFactory.ts:44:  placeholderData?: any;
+src/lib/query/queryFactory.ts:46:  return function useStandardInfiniteQuery(variables: TVariables, options?: any) {
+src/lib/query/mutationFactory.ts:15:    remove: <T>(idField: keyof T = 'id' as any) => (old: T[] | undefined, id: any) => {
+src/lib/query/mutationFactory.ts:16:      return (old || []).filter((item: any) => item[idField] !== id);
+src/lib/query/mutationFactory.ts:18:    update: <T>(idField: keyof T = 'id' as any) => (old: T[] | undefined, { id, updates }: { id: any; updates: Partial<T> }) => {
+src/lib/query/mutationFactory.ts:19:      return (old || []).map((item: any) => item[idField] === id ? { ...item, ...updates } : item);
+src/lib/query/mutationFactory.ts:27:    remove: <T>(idField: keyof T = 'id' as any) => (old: any, ids: any | any[]) => {
+src/lib/query/mutationFactory.ts:32:        pages: old.pages.map((page: any) => ({
+src/lib/query/mutationFactory.ts:34:          photos: page.photos?.filter((p: any) => !idSet.has(p[idField])) || page.items?.filter((p: any) => !idSet.has(p[idField])),
+src/lib/query/mutationFactory.ts:38:    update: <T>(idField: keyof T = 'id' as any) => (old: any, { id, updates }: { id: any; updates: Partial<T> }) => {
+src/lib/query/mutationFactory.ts:42:        pages: old.pages.map((page: any) => ({
+src/lib/query/mutationFactory.ts:44:          photos: page.photos?.map((p: any) => p[idField] === id ? { ...p, ...updates } : p) || page.items?.map((p: any) => p[idField] === id ? { ...p, ...updates } : p),
+src/lib/query/mutationFactory.ts:48:    add: <T>() => (old: any, item: T) => {
+src/lib/query/mutationFactory.ts:52:        pages: old.pages.map((page: any, index: number) => 
+src/lib/query/mutationFactory.ts:57:    batchUpdate: <T>(idField: keyof T = 'id' as any) => (old: any, { ids, updates }: { ids: any[]; updates: Partial<T> }) => {
+src/lib/query/mutationFactory.ts:62:        pages: old.pages.map((page: any) => ({
+src/lib/query/mutationFactory.ts:64:          photos: page.photos?.map((p: any) => idSet.has(p[idField]) ? { ...p, ...updates } : p) || page.items?.map((p: any) => idSet.has(p[idField]) ? { ...p, ...updates } : p),
+src/lib/query/keys.ts:7:function sortObject(obj: any): any {
+src/lib/query/keys.ts:11:    .reduce((acc: any, key: string) => {
+src/lib/validators/protocol.ts:9:    originalError?: any;
+src/lib/validators/protocol.ts:11:    constructor(message: string, options?: { originalError?: any, aiDebugHint?: string, path?: string[] }) {
+src/lib/validators/protocol.ts:48:    readonly schema: any;
+src/lib/db/indexedDB.ts:21:export const saveData = async (key: string, data: any) => {
+src/lib/db/indexedDB.ts:61:  saveCategories: (categories: any[]) => saveData('cached_categories', categories),
+src/lib/db/indexedDB.ts:63:  saveManufacturers: (manufacturers: any[]) => saveData('cached_manufacturers', manufacturers),
+src/lib/db/indexedDB.ts:65:  saveTags: (tags: any[]) => saveData('cached_tags', tags),
+src/lib/db/indexedDB.ts:67:  saveSettings: (settings: any) => saveData('cached_settings', settings),
+src/lib/db/indexedDB.ts:69:  saveTasks: (tasks: any[]) => saveData('cached_tasks', tasks),
+src/lib/db/indexedDB.ts:89:  payload?: any;
+src/lib/db/indexedDB.ts:121:    request.onsuccess = (event: any) => {
+src/lib/router/routeGuards.ts:8:  context: { user: any }; 
+src/lib/router/routeGuards.ts:9:  location: { pathname: string; search: any } 
+src/lib/logger.ts:13:  debug(...args: any[]) {
+src/lib/logger.ts:17:  info(...args: any[]) {
+src/lib/logger.ts:21:  warn(...args: any[]) {
+src/lib/logger.ts:25:  error(...args: any[]) {
+src/hooks/photo/usePhotoSelection.ts:84:      const updates: any = { ...formState };
+src/hooks/photo/usePhotoSelection.ts:89:      const cleanUpdates: any = {};
+src/hooks/photo/usePhotos.ts:101:  queryFn: async ({ groupId, isAdminMode, pageSize }: { groupId: string | null; isAdminMode: boolean; pageSize: number }, pageParam: any) => {
+src/hooks/photo/usePhotos.ts:109:  getNextPageParam: (lastPage: any, allPages: any[]) => {
+src/hooks/photo/usePhotos.ts:110:    const loaded = allPages.reduce((sum: number, p: any) => sum + p.photos.length, 0);
+src/hooks/photo/usePhotos.ts:126:    photos: query.data?.pages?.flatMap((p: any) => p.photos) ?? [],
+src/hooks/photo/usePhotoCardInteraction.ts:49:    navigate({ to: targetPath, search: (prev: any) => prev });
+src/hooks/photo/usePhotoCardInteraction.ts:59:      router.preloadRoute({ to: targetPath, search: (prev: any) => prev }).catch(() => {});
+src/hooks/photo/usePhotoMutations.ts:33:  optimistic: (old: any, { id, updates }: { id: string; updates: Partial<Photo> }) => {
+src/hooks/photo/usePhotoMutations.ts:96:  optimistic: (old: any, { id, isPinned }: { id: string; isPinned: boolean }) => 
+src/hooks/photo/usePublicPhotos.ts:41:        return rawPhotosBase.map((p: any) => {
+src/hooks/photo/usePublicPhotos.ts:42:            const cat = categories.find((c: any) => String(c.id) === String(p.category_id));
+src/hooks/photo/usePublicPhotos.ts:43:            const man = manufacturers.find((m: any) => String(m.id) === String(p.manufacturer_id));
+src/hooks/photo/usePublicPhotos.ts:63:        tags.forEach((t: any) => {
+src/hooks/photo/usePublicPhotos.ts:75:        categories.forEach((c: any) => {
+src/hooks/photo/PhotoEditSessionProvider.tsx:73:    } catch (err: any) {
+src/hooks/groups/useGroupMutations.ts:59:  optimistic: (old: any, { photoIds, targetGroupId }: { photoIds: string[], targetGroupId?: string }, queryKey?: readonly unknown[]) => {
+src/hooks/groups/useGroupMutations.ts:62:      const queryVars: any = queryKey && queryKey.length > 2 ? queryKey[2] : {};
+src/hooks/groups/useGroupMutations.ts:97:  optimistic: (old: any, { photoIds }: { photoIds: string[] }, queryKey?: readonly unknown[]) => {
+src/hooks/groups/useGroupMutations.ts:100:      const queryVars: any = queryKey && queryKey.length > 2 ? queryKey[2] : {};
+src/hooks/groups/useGroupMutations.ts:125:  optimistic: (old: any, groupId: string, queryKey?: readonly unknown[]) => {
+src/hooks/groups/useGroupMutations.ts:131:        pages: old.pages.map((page: any) => ({
+src/hooks/groups/useGroupMutations.ts:133:          photos: page.photos?.map((p: any) => p.group_id === groupId ? { ...p, group_id: null, is_group_cover: false } : p) || []
+src/hooks/admin/useAdminCategory.ts:8:export function useAdminCategory({ update }: { update?: any }) {
+src/hooks/admin/useAdminPhotos.ts:42:        tags.forEach((t: any) => {
+src/hooks/admin/useAdminPhotos.ts:55:        categories.forEach((c: any) => {
+src/hooks/admin/useAdminPhotos.ts:67:        : rawPhotos.filter((p: any) => !processingIds.includes(p.id));
+src/hooks/admin/usePerformanceAudit.ts:14:  const issues: any[] = [];
+src/hooks/admin/useAdminBatch.ts:16:      photos.forEach((p: any) => {
+src/hooks/admin/useAdminBatch.ts:23:      const targetPhotos = photos.filter((p: any) => 
+src/hooks/core/useLongPress.ts:6:  onLongPress: (e?: any) => void;
+src/hooks/core/useFormWithMutation.ts:10:  options?: any
+src/hooks/core/useDebouncedCallback.ts:7:export function useDebouncedCallback<T extends (...args: any[]) => void>(
+src/hooks/core/useDebouncedCallback.ts:19:  const debouncedFn = (...args: any[]) => {
+src/hooks/core/useClickOutside.ts:15:    const listener = (event: any) => {
+src/hooks/useFilters.ts:16:      search: ((prev: any) => ({
+src/hooks/useFilters.ts:80:      search: ((prev: any) => ({
+src/hooks/__tests__/hookContracts.test.ts:9:  useUIStore: (fn: any) => fn({
+src/hooks/__tests__/hookContracts.test.ts:13:  useShallow: (fn: any) => fn,
+src/features/layout/hooks/useColumns.ts:25:      search: ((prev: any) => ({
+src/features/group/admin/GroupDetailPage.tsx:24:function AdminPhotoGrid({ photos, onPhotoClick }: { photos: any[]; onPhotoClick: (id: string) => void }) {
+src/features/group/admin/GroupDetailPage.tsx:57:    return photos.findIndex((p: any) => p.id === photoId);
+src/features/group/admin/GroupDetailPage.tsx:70:  const lightboxItems = photos.map((p: any) => {
+src/features/group/admin/GroupDetailPage.tsx:79:      tags: p.tags?.map((tag: any) => tag.name) || [],
+src/features/group/public/GroupDetailPage.tsx:13:function PublicPhotoGrid({ photos, onPhotoClick }: { photos: any[]; onPhotoClick: (id: string) => void }) {
+src/features/group/public/GroupDetailPage.tsx:37:    return photos.findIndex((p: any) => p.id === photoId);
+src/features/group/public/GroupDetailPage.tsx:45:  const lightboxItems = photos.map((p: any) => {
+src/features/group/public/GroupDetailPage.tsx:54:      tags: p.tags?.map((tag: any) => tag.name) || [],
+src/services/photo/queries/list.ts:35:    const fetched = (data || []).map((item: any) => mapSupabasePhoto(item));
+src/services/photo/queries/list.ts:70:    return (data || []).map((item: any) => mapSupabasePhoto(item));
+src/services/photo/queries/byGroup.ts:17:  return (data || []).map((item: any) => mapSupabasePhoto(item));
+src/services/photo/queries/byGroup.ts:36:    photos: (data.photos || []).map((item: any) => mapSupabasePhoto(item)), 
+src/services/photo/commands/update.ts:16:  const updates = Object.keys(initialUpdates).reduce((acc: any, key) => {
+src/services/photo/commands/batch.ts:15:  const updates = Object.keys(initialUpdates).reduce((acc: any, key) => {
+src/services/photo/upload/dbCommands.ts:5:export const upsertPhotoRecord = async (payload: any): Promise<unknown> => {
+src/services/photo/upload/uploadOrchestrator.ts:71:    const payload: any = mapToDb({
+src/services/photo/utils.ts:50:export function validateDimension(dim: any): any {
+src/services/photo/healthFlow.ts:12:  allPhotos: any[], 
+src/services/photo/processing.ts:229:  reps.sort((a: any, b: any) => {
+src/services/photo/processing.ts:271:  userFilters: any,
+src/services/photo/processing.ts:272:  urlFilters: any,
+src/services/storage/uploadService.ts:24:    let lastError: any;
+src/services/ai/translationService.ts:19:    const translateRes = (text: string, data: any) => {
+src/services/ai/safeText.ts:30:export function getSafeText(field: any, locale: string = 'zh'): string {
+src/services/ai/mapping.ts:15:  rawName: any,
+src/services/ai/mapping.ts:16:  rawDesc: any
+src/services/ai/commands.ts:32:function formatField(field: any): string {
+src/services/ai/commands.ts:110:         ? rawTags.map((t: any) => {
+src/services/ai/commands.ts:122:       const safeTrim = (val: any): any => {
+src/services/ai/commands.ts:126:            const res: any = {};
+src/services/ai/orchestration.ts:17:  photo: any
+src/services/ai/orchestration.ts:117:  photos: any[]
+src/services/ai/orchestration.ts:146:  targetPhotos: any[];
+src/services/ai/utils.ts:53:export const hasExistingInfo = (p: any): boolean => {
+src/services/ai/utils.ts:87:export const getDisplayName = (nameObj: any, lang: string = 'zh'): string => {
+src/services/group/queries.ts:8:const mapGroup = (item: any): ProductGroup => ({
+src/services/group/commands.ts:108:    name?: any;
+src/services/group/commands.ts:109:    description?: any;
+src/services/maintenance/issueActions.ts:6:  [key: string]: any;
+src/services/maintenance/issueActions.ts:11:  execute: () => Promise<{ jobId?: string; message?: string; [key: string]: any }>;
+src/services/maintenance/autoDiagnose.ts:135:  let intervalId: any = null;
+src/services/mappers/utils.ts:39:export const mapTranslationField = (value: any) => {
+src/services/mappers/photo.ts:38:      item.photo_tags.forEach((pt: any) => {
+src/services/mappers/photo.ts:64:      item.tags.forEach((t: any) => {
+src/constants/config.ts:19:export const EMPTY_ARRAY: any[] = [];
+src/pages/PublicPage.tsx:41:  const lightboxItems = React.useMemo(() => photos.map((p: any) => {
+src/pages/PublicPage.tsx:50:      tags: p.tags?.map((t: any) => t.name) || [],
+src/pages/PublicPage.tsx:78:  const renderCard = (photo: Photo, index: number, sharedCategories: any[]) => (
+src/pages/AdminPage/AdminEmptyState.tsx:7:    [key: string]: any;
+src/types/supabase.ts:24:  dimensions?: any;
+src/types/supabase.ts:25:  description_translations?: any;
+src/types/supabase.ts:26:  exif_data?: any;
+src/types/supabase.ts:35:    tags?: { id?: string | number; name: any } | Array<{ id?: string | number; name: any }> | null;
+src/types/supabase.ts:44:  category?: { id: any; name: any } | null;
+src/types/supabase.ts:45:  manufacturer?: { id: any; name: any } | null;
+src/router/types.ts:5:  user: any;
+src/main.tsx:9:  console.error = function (...args: any[]) {
+api/_lib/error/AppError.ts:15:  wrap(err: any, operation: string, code: string = 'WRAP_ERROR'): AppError {
+api/_lib/auth.ts:8:export async function requireRealUser(c: any) {
+api/_lib/auth.ts:31:export async function adminAuthMiddleware(c: any, next: any) {
+api/_lib/auth.ts:41:    } catch (e: any) {
+api/_lib/logger.ts:4:  info: (msg: string, meta?: any) => log('info', msg, meta),
+api/_lib/logger.ts:5:  warn: (msg: string, meta?: any) => log('warn', msg, meta),
+api/_lib/logger.ts:6:  error: (msg: string, meta?: any) => log('error', msg, meta),
+api/_lib/logger.ts:7:  debug: (msg: string, meta?: any) => log('debug', msg, meta),
+api/_lib/logger.ts:10:function log(level: LogLevel, msg: string, meta?: any) {
+api/_lib/encryption.ts:66:    } catch (cbcErr: any) {
+api/_lib/encryption.ts:87:  } catch (e: any) {
+api/_lib/ai/executor.ts:8:  provider: any;
+api/_lib/ai/executor.ts:11:  messages: any[];
+api/_lib/ai/executor.ts:12:  metadata?: any;
+api/_lib/ai/executor.ts:20:  cleanedOutput: any;
+api/_lib/ai/executor.ts:30:  token_usage?: any;
+api/_lib/ai/executor.ts:75:  } catch (err: any) {
+api/_lib/ai/executor.ts:87:  let lastError: any = null;
+api/_lib/ai/executor.ts:132:      } catch (parseError: any) {
+api/_lib/ai/executor.ts:169:    } catch (error: any) {
+api/_lib/ai/providerFactory.ts:5:export const getModel = async (supabase?: any, customModel?: string, providerName?: string): Promise<string> => {
+api/_lib/ai/providerFactory.ts:36:    usage?: any;
+api/_lib/ai/providerFactory.ts:67:    abstract chat(messages: any[]): Promise<AIResponse>;
+api/_lib/ai/providerFactory.ts:75:    async chat(messages: any[]): Promise<AIResponse> {
+api/_lib/ai/providerFactory.ts:99:        } catch (e: any) {
+api/_lib/ai/providerFactory.ts:110:    async chat(messages: any[]): Promise<AIResponse> {
+api/_lib/ai/providerFactory.ts:133:        } catch (e: any) {
+api/_lib/ai/providerFactory.ts:139:export async function getAIProvider(providerName: string, supabase: any, modelOverride?: string) {
+api/_lib/ai/utils.ts:12:    } catch (e: any) {
+api/_lib/supabase.ts:5:let supabaseAdminInstance: any = null;
+api/_lib/groups.ts:11:export async function syncGroupCoversAndCount(supabase: any, groupIds: string[]): Promise<void> {
+api/_lib/groups.ts:57:      let currentCover = items.find((p: any) => p.is_group_cover === true);
+api/_lib/groups.ts:84:        const matchedMemberObj = items.find((p: any) => p.id === dbCoverPhotoId);
+api/_lib/groups.ts:135:    } catch (err: any) {
+api/_lib/trafficCapture.ts:4:export function logTraffic(req: HonoRequest, body: any) {
+api/_lib/maintenance/storageUtils.ts:28:    const dbRecords = (dbPhotos || []).map((p: any) => ({
+api/_lib/maintenance/storageUtils.ts:35:    const dbNormalizedSet = new Set(dbRecords.map((r: any) => r.normalized));
+api/_lib/maintenance/storageUtils.ts:93:    dbRecords.forEach((record: any) => {
+api/_lib/diagnostics/types.ts:18:   photos: any[];
+api/_lib/diagnostics/types.ts:19:   groups: any[];
+api/_lib/diagnostics/types.ts:20:   categories: any[];
+api/_lib/diagnostics/types.ts:21:   manufacturers: any[];
+api/_lib/diagnostics/types.ts:22:   photoTags: any[];
+api/_lib/diagnostics/tasks/excessTags.ts:8:    ctx.photoTags?.forEach((pt: any) => {
+api/_lib/diagnostics/tasks/orphanedPhotos.ts:7:    const groupIds = new Set(ctx.groups?.map((g: any) => String(g.id)) || []);
+api/_lib/diagnostics/tasks/orphanedPhotos.ts:8:    const orphanedPhotos = ctx.photos.filter((p: any) => p.group_id && !groupIds.has(String(p.group_id)));
+api/_lib/diagnostics/tasks/orphanedPhotos.ts:19:      sampleIds: orphanedPhotos.slice(0, 5).map((p: any) => p.id), 
+api/_lib/diagnostics/tasks/emptyGroups.ts:8:    ctx.photos.forEach((p: any) => { if (p.group_id) { const gid = String(p.group_id); photosByGroup.set(gid, (photosByGroup.get(gid) || 0) + 1); } });
+api/_lib/diagnostics/tasks/emptyGroups.ts:9:    const emptyGroups = ctx.groups?.filter((g: any) => !photosByGroup.has(String(g.id))) || [];
+api/_lib/diagnostics/tasks/emptyGroups.ts:20:      sampleIds: emptyGroups.slice(0, 5).map((g: any) => String(g.id)), 
+api/_lib/diagnostics/tasks/groupCoverMismatch.ts:7:    const inconsistentCovers = ctx.groups?.filter((g: any) => {
+api/_lib/diagnostics/tasks/groupCoverMismatch.ts:8:      const gPhotos = ctx.photos.filter((p: any) => String(p.group_id) === String(g.id));
+api/_lib/diagnostics/tasks/groupCoverMismatch.ts:10:      const validCover = gPhotos.some((p: any) => p.id === g.cover_photo_id);
+api/_lib/diagnostics/tasks/groupCoverMismatch.ts:11:      const markedCover = gPhotos.some((p: any) => p.is_group_cover === true);
+api/_lib/diagnostics/tasks/groupCoverMismatch.ts:24:      sampleIds: inconsistentCovers.slice(0, 5).map((g: any) => String(g.id)),
+api/_lib/diagnostics/tasks/ghostRecords.ts:7:    const completeGhosts = ctx.photos.filter((p: any) => (!p.image_url || p.image_url === '') && (!p.image_hash || p.image_hash === ''));
+api/_lib/diagnostics/tasks/ghostRecords.ts:18:      sampleIds: completeGhosts.slice(0, 5).map((p: any) => p.id), 
+api/_lib/diagnostics/tasks/missingHashes.ts:7:    const missingHashes = ctx.photos.filter((p: any) => p.image_url && (!p.image_hash || p.image_hash.trim() === ''));
+api/_lib/diagnostics/tasks/missingHashes.ts:17:      sampleIds: missingHashes.slice(0, 5).map((p: any) => p.id), 
+api/_lib/diagnostics/tasks/missingUrls.ts:7:    const missingUrls = ctx.photos.filter((p: any) => p.image_hash && (!p.image_url || p.image_url === ''));
+api/_lib/diagnostics/tasks/missingUrls.ts:17:      sampleIds: missingUrls.slice(0, 5).map((p: any) => p.id), 
+api/_lib/diagnostics/tasks/nonStandardCodes.ts:8:    const nonStandardCodes = ctx.photos.filter((p: any) => p.item_code && !compliantRegex.test(p.item_code));
+api/_lib/diagnostics/tasks/nonStandardCodes.ts:18:      sampleIds: nonStandardCodes.slice(0, 5).map((p: any) => p.id),
+api/_handlers/ai/prompts.ts:2:    ANALYZE_PHOTO: (context: any) => `
+api/_handlers/admin/storageMaintenance.ts:32:                samples: ghosts.slice(0, 20).map((g: any) => ({
+api/_handlers/admin/storageMaintenance.ts:40:                samples: orphans.slice(0, 20).map((o: any) => ({
+api/_handlers/admin/storageMaintenance.ts:53:    } catch (e: any) {
+api/_handlers/admin/storageMaintenance.ts:74:      const ids = orphans.map((o: any) => o.id);
+api/_handlers/admin/storageMaintenance.ts:82:    } catch (e: any) {
+api/_handlers/admin/storageMaintenance.ts:99:      photos.forEach((p: any) => {
+api/_handlers/admin/storageMaintenance.ts:110:        list.Contents?.forEach((c: any) => {
+api/_handlers/admin/storageMaintenance.ts:126:    } catch (e: any) {
+api/_handlers/admin/storageMaintenance.ts:187:            const firstUser = authUsers.users.find((u: any) => u.id && u.id !== '00000000-0000-0000-0000-000000000000');
+api/_handlers/admin/storageMaintenance.ts:227:          batch.forEach((p: any) => {
+api/_handlers/admin/storageMaintenance.ts:347:    } catch (e: any) {
+api/_handlers/admin/storageMaintenance.ts:397:  } catch (e: any) {
+api/_handlers/admin/maintenance.ts:38:    } catch (e: any) {
+api/_handlers/admin/maintenance.ts:49:    } catch (e: any) {
+api/_handlers/admin/maintenance.ts:61:    } catch (e: any) {
+api/_handlers/admin/backfill.ts:11:    } catch (e: any) {
+api/_handlers/admin/repair.ts:47:            const photoItem: any = photoMap.get(photoId);
+api/_handlers/admin/repair.ts:100:         photos?.forEach((p: any) => {
+api/_handlers/admin/repair.ts:108:         const groupUpdates: { id: any; cover_photo_id: string | null }[] = [];
+api/_handlers/admin/repair.ts:123:           const validCover = gPhotos.some((p: any) => p.id === g.cover_photo_id);
+api/_handlers/admin/repair.ts:124:           const markedCover = gPhotos.some((p: any) => p.is_group_cover === true);
+api/_handlers/admin/repair.ts:128:             const photoMarkedAsCover = gPhotos.find((p: any) => p.is_group_cover === true);
+api/_handlers/admin/repair.ts:159:             supabase.from("furniture_items").update({ is_group_cover: true }).in("id", photosToCover).then(({ error }: { error: any }) => { if (error) throw error; })
+api/_handlers/admin/repair.ts:164:             supabase.from("furniture_items").update({ is_group_cover: false }).in("id", photosToUncover).then(({ error }: { error: any }) => { if (error) throw error; })
+api/_handlers/admin/repair.ts:170:             supabase.from("groups").update({ cover_photo_id: update.cover_photo_id }).eq("id", update.id).then(({ error }: { error: any }) => { if (error) throw error; })
+api/_handlers/admin/repair.ts:187:         const photoGroupIds = new Set(photos?.map((p: any) => String(p.group_id)).filter(Boolean));
+api/_handlers/admin/repair.ts:189:         const emptyGroupIds = groups?.filter((g: any) => !photoGroupIds.has(String(g.id))).map((g: any) => g.id) || [];
+api/_handlers/admin/repair.ts:201:        const ids = ghosts?.map((g: any) => g.id) || [];
+api/_handlers/admin/repair.ts:215:        const ids = records?.map((r: any) => r.id) || [];
+api/_handlers/admin/repair.ts:229:        const ids = targets?.map((t: any) => t.id) || [];
+api/_handlers/admin/repair.ts:246:        const legacyPhotos = targets?.filter((p: any) => p.item_code && !compliantRegex.test(p.item_code)) || [];
+api/_handlers/admin/repair.ts:254:        const updates = batch.map((p: any) => {
+api/_handlers/admin/repair.ts:262:        await Promise.all(updates.map((u: any) => 
+api/_handlers/admin/repair.ts:275:        const tagMap = new Map<string, any>((tagData || []).map((t: any) => [String(t.id), t]));
+api/_handlers/admin/repair.ts:278:        ptData?.forEach((pt: any) => {
+api/_handlers/admin/repair.ts:299:        const getWeight = (tagId: string, tagDetail?: any) => {
+api/_handlers/admin/repair.ts:410:        const itemsToFix = items?.filter((i: any) => typeof i.name === 'string' || (i.name && !i.name.zh)) || [];
+api/_handlers/admin/repair.ts:421:        const groupsToFix = groups?.filter((g: any) => typeof g.name === 'string' || (g.name && !g.name.zh)) || [];
+api/_handlers/admin/diagnose.ts:78:      } catch (innerErr: any) {
+api/_handlers/admin/diagnose.ts:97:      const groupIds = new Set(groups?.map((g: any) => String(g.id)) || []);
+api/_handlers/admin/diagnose.ts:124:      } catch (clientErr: any) {
+api/_handlers/admin/diagnose.ts:133:      } catch (s3Err: any) {
+api/_handlers/admin/diagnose.ts:138:    } catch (globalErr: any) {
+api/_handlers/admin/photos.ts:164:            .map((p: any) => {
+api/_handlers/admin/photos.ts:213:    } catch (e: any) {
+api/_handlers/admin/photos.ts:228:    } catch (e: any) {
+api/_handlers/admin/settings.ts:19:        secrets.forEach((s: any) => { config[s.key] = s.value; });
+api/_handlers/admin/settings.ts:48:    } catch (e: any) {
+api/_handlers/admin/settings.ts:85:    } catch (e: any) {
+api/_handlers/admin/settings.ts:105:    } catch (e: any) {
+api/_handlers/admin/settings.ts:137:    } catch (e: any) {
+api/_handlers/admin/settings.ts:150:    } catch (e: any) {
+api/_handlers/admin/settings.ts:162:    } catch (e: any) {
+api/_handlers/categories.ts:21:    const formatted = data.map((item: any) => ({
+api/_handlers/categories.ts:68:    return c.json({ success: true, data: data?.map((i: any) => i.id) || [] });
+api/_handlers/storage.ts:74:    } catch(e: any) {
+api/_handlers/tags.ts:94:    const existingTagIds = new Set((currentAssociations || []).map((pt: any) => String(pt.tag_id)));
+api/_handlers/tags.ts:98:    const tagDetailsMap = new Map<string, any>((tagDetails || []).map((t: any) => [String(t.id), t]));
+api/_handlers/tags.ts:100:    const getWeight = (tagId: string, tagDetail?: any) => {
+api/_handlers/tags.ts:157:    const tagDetailsMap = new Map<string, any>((tagDetails || []).map((t: any) => [String(t.id), t]));
+api/_handlers/tags.ts:159:    const getWeight = (tagId: string, tagDetail?: any) => {
+api/_handlers/photos/list.ts:9:  data: any[];
+api/_handlers/photos/list.ts:15:async function getCachedTags(supabase: any) {
+api/_handlers/photos/list.ts:113:      const tagMap = new Map(tagRows.map((t: any) => [String(t.id), t.name]));
+api/_handlers/photos/list.ts:147:      const tagMap = new Map(tagRows.map((t: any) => [String(t.id), t.name]));
+api/_handlers/photos/list.ts:191:        const tagMap = new Map(tagRows.map((t: any) => [String(t.id), t.name]));
+api/_handlers/photos/update.ts:25:    return c.json({ success: true, data: data?.map((d: any) => d.id) || [] });
+api/_handlers/search.ts:21:    const tagIds = (tagsRes.data || []).map((t: any) => t.id);
+api/_handlers/search.ts:22:    const catIds = (catsRes.data || []).map((c: any) => c.id);
+api/_handlers/search.ts:28:        photoIds = ptData.map((pt: any) => pt.photo_id);
+api/_handlers/groups.ts:92:          photosArr.map((p: any) => p.group_id).filter((gid: any) => !!gid && gid !== targetGroupId)
+api/_handlers/groups.ts:95:          const p = photosArr.find((x: any) => x.id === id);
+api/_handlers/groups.ts:104:        const insertData: any = {
+api/_handlers/groups.ts:171:    const affectedGroupIds = (sourcePhotos || []).map((p: any) => p.group_id).filter(Boolean);
+api/_handlers/ai.ts:120:            categories: (catRef.data || []).map((c: any) => ({ id: c.id, name: c.name, zh: c.zh })).slice(0, 50),
+api/_handlers/ai.ts:121:            tags: (tagRef.data || []).map((t: any) => ({ id: t.id, name: t.name, aliases: t.aliases })).slice(0, 100),
+api/_handlers/ai.ts:122:            groups: (groupRef.data || []).map((g: any) => ({ id: g.id, name: typeof g.name === 'object' ? g.name.zh : g.name })),
+api/_handlers/ai.ts:172:    } catch (error: any) { 
+api/_handlers/ai.ts:202:    } catch (error: any) { 
+api/_handlers/ai.ts:231:    } catch (error: any) { 
+api/_handlers/ai.ts:261:    } catch (error: any) { 
+api/_handlers/ai.ts:278:        const createdGroups: any[] = [];
+api/_handlers/ai.ts:293:            const insertGroupData: any = {
+api/_handlers/ai.ts:337:    } catch (error: any) { 
+api/_admin_tasks/backfill-photo-metadata.ts:10:  dimensions?: any;
+api/_admin_tasks/backfill-photo-metadata.ts:12:  description_translations?: any;
+api/_admin_tasks/backfill-photo-metadata.ts:18:  supabase: any,
+api/_admin_tasks/backfill-photo-metadata.ts:25:  results: any[];
+api/_admin_tasks/backfill-photo-metadata.ts:47:  const eligible = (allPhotos || []).filter((photo: any) => {
+api/_admin_tasks/backfill-photo-metadata.ts:68:  const results: any[] = [];
+api/_admin_tasks/backfill-photo-metadata.ts:72:      const updates: any = {};
+api/_admin_tasks/backfill-photo-metadata.ts:91:          } catch (e: any) {
+api/_admin_tasks/backfill-photo-metadata.ts:156:            let parsedRes: any = null;
+api/_admin_tasks/backfill-photo-metadata.ts:170:              if (parsedRes.category_id && categories?.some((c: any) => c.id === parsedRes.category_id)) {
+api/_admin_tasks/backfill-photo-metadata.ts:175:        } catch (err: any) {
+api/_admin_tasks/backfill-photo-metadata.ts:182:      const sanitizedUpdates: any = {};
+api/_admin_tasks/backfill-photo-metadata.ts:210:    } catch (err: any) {
+api/app.ts:75:       }]).then(({ error: insertError }: any) => {
+api/app.ts:102:    } catch (e: any) {
+api/app.ts:144:        } catch(e: any) {
+api/app.ts:204:    } catch (err: any) {
+api/app.ts:236:    } catch (err: any) {
+api/_shared/apiContractSchema.ts:8:    usage?: any;
+api/_shared/i18n.ts:18:export function normalizeI18n(val: any): { zh: string; en: string; ms: string } {

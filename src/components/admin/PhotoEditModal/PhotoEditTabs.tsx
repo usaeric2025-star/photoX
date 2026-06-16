@@ -5,7 +5,13 @@ import { OrgTab } from "./OrgTab";
 import { DetailsTab } from "./DetailsTab";
 import { AISourceTab } from "./AISourceTab";
 
-export function PhotoEditTabs({ editPhotoId, appLang }: any) {
+interface PhotoEditTabsProps {
+  editPhotoId: string;
+  appLang: string;
+}
+
+export function PhotoEditTabs({ editPhotoId, appLang }: PhotoEditTabsProps) {
+
   const [activeTab, setActiveTab] = useState('basic');
 
   const tabs = [

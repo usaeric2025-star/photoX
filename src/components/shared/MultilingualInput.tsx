@@ -1,4 +1,4 @@
-import { useFormContext, UseFormReturn, FieldValues, FieldError, Merge } from 'react-hook-form';
+import { useFormContext, UseFormReturn, FieldValues, FieldError, Merge, FieldErrors } from 'react-hook-form';
 import { cn } from '@/lib/utils';
 
 interface MultilingualInputProps {
@@ -17,16 +17,13 @@ export const MultilingualInput = ({ name, label, required, form: propForm }: Mul
   const { register, formState: { errors } } = form;
   
   // Helper to get nested error
-  const getError = (path: string) => {
-    const error = (errors as Record<string, unknown>)[name] as Merge<FieldError, Record<string, FieldError>> | undefined;
+  const getError = (path: string): FieldError | undefined => {
+    const error = (errors as FieldErrors<FieldValues>)[name] as Merge<FieldError, Record<string, FieldError>> | undefined;
     if (!error) return undefined;
-    const parts = path.split('.');
-    let current: any = error;
-    for (const part of parts) {
-      if (!current) return undefined;
-      current = current[part];
-    }
-    return current as FieldError | undefined;
+    
+    // Access nested error directly via path: lang (e.g., 'zh', 'en', 'ms')
+    const langError = (error as unknown as Record<string, FieldError>)[path];
+    return langError;
   };
   
   return (
@@ -37,7 +34,7 @@ export const MultilingualInput = ({ name, label, required, form: propForm }: Mul
           <div key={lang}>
             <span className="text-xs text-slate-500 uppercase">{lang === 'zh' ? '中文' : lang === 'en' ? '英文' : '馬來文'}</span>
             <input 
-              {...register(`${name}.${lang}` as any, { required: required && lang === 'zh' })} 
+              {...register(`${name}.${lang}`, { required: required && lang === 'zh' })} 
               className={cn(
                 "w-full input border rounded-md p-2",
                 getError(lang) ? "border-red-500" : "border-slate-300"

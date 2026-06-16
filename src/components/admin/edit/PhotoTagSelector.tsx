@@ -12,9 +12,9 @@ import { showToast } from '@/lib/ui/toast';
 interface BasePhotoTagSelectorProps {
   selectedTagIds: string[];
   onChange: (ids: string[]) => void;
-  addTag: (name: string) => Promise<any>;
-  updateTag: (id: string, name: string) => Promise<any>;
-  deleteTag: (id: string) => Promise<any>;
+  addTag: (name: string) => Promise<string | null>;
+  updateTag: (id: string, name: string) => Promise<void>;
+  deleteTag: (id: string) => Promise<void>;
   tags: Tag[];
   hideHotLabel?: boolean;
 }
@@ -37,7 +37,7 @@ function BasePhotoTagSelector({
       safeArray(selectedTagIds)
         .map((item) => {
           if (typeof item === 'object' && item !== null) {
-            return String((item as any).id || '').trim();
+            return String((item as { id?: string | number }).id || '').trim();
           }
           return String(item || '').trim();
         })
@@ -138,13 +138,13 @@ function BasePhotoTagSelector({
 
 interface PhotoTagSelectorProps {
   name: string;
-  addTag: (name: string) => Promise<any>;
-  updateTag: (id: string, name: string) => Promise<any>;
-  deleteTag: (id: string) => Promise<any>;
+  addTag: (name: string) => Promise<string | null>;
+  updateTag: (id: string, name: string) => Promise<void>;
+  deleteTag: (id: string) => Promise<void>;
   tags: Tag[];
-  control?: any;
-  value?: any[];
-  onChange?: (val: any[]) => void;
+  control?: any; // kept as any for react-hook-form Control, as it's complex
+  value?: (string | { id: string | number })[];
+  onChange?: (val: (string | { id: string | number })[]) => void;
   hideHotLabel?: boolean;
 }
 

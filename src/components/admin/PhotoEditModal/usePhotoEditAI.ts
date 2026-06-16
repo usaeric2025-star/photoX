@@ -4,6 +4,7 @@ import { useFormContext } from 'react-hook-form';
 import { showToast } from '@/lib/ui/toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTaskExecutor, useAdminMaintenance, useSettings, useCategories, useTags, useFilters } from '@/hooks';
+import { Tag } from '@/types';
 import { analyzePhoto } from '@/services/ai/commands';
 import { useUIStore } from '@/store';
 
@@ -46,7 +47,7 @@ export function usePhotoEditAI() {
           }
           
           if (result && typeof result === 'object') {
-            const updates: any = {};
+            const updates: Record<string, unknown> = {};
             
             if (result.name) {
               updates.name = typeof result.name === 'object'
@@ -107,26 +108,26 @@ export function usePhotoEditAI() {
             }
 
             // --- Strict Tag Matching (Full format-compatible) with auto-creation ---
-            const sourceTags = Array.isArray(result.tagNames) ? result.tagNames : (Array.isArray(result.tag_names) ? result.tag_names : []);
-            const sourceTagIds = Array.isArray(result.tagIds) ? result.tagIds : (Array.isArray(result.tag_ids) ? result.tag_ids : []);
+            const sourceTags: (string | { id?: string; tag_id?: string; name?: string })[] = Array.isArray(result.tagNames) ? result.tagNames : (Array.isArray(result.tag_names) ? result.tag_names : []);
+            const sourceTagIds: (string | { id?: string; tag_id?: string; name?: string })[] = Array.isArray(result.tagIds) ? result.tagIds : (Array.isArray(result.tag_ids) ? result.tag_ids : []);
 
-            const rawNames: string[] = sourceTags.map((rawTag: any) => {
+            const rawNames: string[] = sourceTags.map((rawTag) => {
                 if (rawTag && typeof rawTag === 'object') {
                     return String(rawTag.name ?? rawTag.id ?? rawTag.tag_id ?? '');
                 }
                 return String(rawTag);
             }).filter(Boolean);
 
-            const parsedTagIds = sourceTagIds.map((t: any) => {
+            const parsedTagIds: string[] = sourceTagIds.map((t) => {
                 if (t && typeof t === 'object') {
                     return String(t.id ?? t.tag_id ?? t.name ?? '');
                 }
                 return String(t);
             }).filter(Boolean);
-
+            
             const resolvedIds: string[] = [];
             parsedTagIds.forEach((idOrName: string) => {
-                const found = allTags.find((t: any) => String(t.id) === idOrName || t.name.toLowerCase() === idOrName.toLowerCase());
+                const found = allTags.find(t => String(t.id) === idOrName || t.name.toLowerCase() === idOrName.toLowerCase());
                 if (found) {
                     resolvedIds.push(String(found.id));
                 } else {
@@ -182,21 +183,21 @@ export function usePhotoEditAI() {
 
                     // Optimistically set the React Query cache for tags so they display IMMEDIATELY
                     const { queryKeys } = await import('@/lib/query/keys');
-                    queryClient.setQueryData(queryKeys.tags.tags(), (old: any) => {
+                    queryClient.setQueryData(queryKeys.tags.tags(), (old: Tag[] | undefined) => {
                       const oldTags = Array.isArray(old) ? old : [];
-                      const existingMap = new Map(oldTags.map((t: any) => [String(t.id), t]));
-                      latestTags.forEach((t: any) => existingMap.set(String(t.id), t));
+                      const existingMap = new Map(oldTags.map((t: Tag) => [String(t.id), t]));
+                      latestTags.forEach((t: Tag) => existingMap.set(String(t.id), t));
                       return Array.from(existingMap.values());
                     });
 
                     updates.tags = uniqueIds.map(id => {
-                      const found = latestTags.find((t: any) => String(t.id) === id) || allTags.find((t: any) => String(t.id) === id);
+                      const found = latestTags.find((t: Tag) => String(t.id) === id) || allTags.find((t: Tag) => String(t.id) === id);
                       if (found) {
                         return { id: found.id, name: found.name || '' };
                       }
                       // Fallback
-                      const matchingRaw = [...sourceTags, ...sourceTagIds].find((raw: any) => {
-                        const rStr = typeof raw === 'object' ? String(raw.id ?? raw.tag_id ?? raw.name ?? '') : String(raw);
+                      const matchingRaw = [...sourceTags, ...sourceTagIds].find((raw) => {
+                        const rStr = typeof raw === 'object' && raw ? String(raw.id ?? raw.tag_id ?? raw.name ?? '') : String(raw);
                         return rStr.toLowerCase() === id.toLowerCase();
                       });
                       const nameVal = typeof matchingRaw === 'object' ? (matchingRaw.name || id) : (matchingRaw || id);
@@ -205,7 +206,7 @@ export function usePhotoEditAI() {
                 } else {
                     updates.tags = [];
                 }
-              } catch (err: any) {
+              } catch (err: unknown) {
                 logger.error('Tags auto-creation failed:', err);
                 updates.tags = [];
               }
@@ -223,7 +224,7 @@ export function usePhotoEditAI() {
                 : { zh: String(result.description), en: '', ms: '' };
             }
             if (Array.isArray(result.dimensions)) {
-              updates.dimensions = result.dimensions.map((d: any) => ({
+              updates.dimensions = result.dimensions.map((d: Record<string, unknown>) => ({
                 label: String(d.label || 'Dimension'),
                 unit: (d.unit === 'inch' || d.unit === 'mm') ? d.unit : 'cm',
                 length: Number(d.length) || 0,

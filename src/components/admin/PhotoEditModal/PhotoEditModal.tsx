@@ -15,7 +15,16 @@ import {
 /**
  * [V2.14-SLOT-CONTRACT] PhotoEditModal Sub-component to handle loading state
  */
-function PhotoEditModalContent({ editPhotoId, appLang, handleClose, isDeleteOpen, deleteDialog, deletePhoto }: any) {
+interface PhotoEditModalContentProps {
+  editPhotoId?: string | null;
+  appLang: string;
+  handleClose: () => void;
+  isDeleteOpen: boolean;
+  deleteDialog: { toggle: () => void; close: () => void; open: () => void };
+  deletePhoto: (ids: string[]) => Promise<void>;
+}
+
+function PhotoEditModalContent({ editPhotoId, appLang, handleClose, isDeleteOpen, deleteDialog, deletePhoto }: PhotoEditModalContentProps) {
   // We need to consume context if we want to show loading from provider, but 
   // PhotoEditModal is the parent of the provider? No, it's a sibling of children.
   // Actually children of provider can see the context.

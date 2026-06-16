@@ -12,7 +12,7 @@ describe('Security Guard: computeLaneIndex export constraint', () => {
 describe('VirtualGrid', () => {
   let originalClientHeight: PropertyDescriptor | undefined;
   let originalOffsetHeight: PropertyDescriptor | undefined;
-  let originalResizeObserver: any;
+  let originalResizeObserver: typeof ResizeObserver | undefined;
 
   beforeAll(() => {
     originalClientHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');
@@ -41,7 +41,7 @@ describe('VirtualGrid', () => {
               target: element,
               contentRect: { width: 1000, height: 1000, top: 0, left: 0, right: 1000, bottom: 1000 } as DOMRectReadOnly,
               borderBoxSize: [{ inlineSize: 1000, blockSize: 1000 }] as ResizeObserverSize[]
-            } as ResizeObserverEntry
+            } as unknown as ResizeObserverEntry
           ]);
         }
       }

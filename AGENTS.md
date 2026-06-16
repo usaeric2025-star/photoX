@@ -359,56 +359,34 @@ export const fetch = handle(app);
 - ❌ 禁止使用 `scrollTo(0)` 作为通用的「回到顶部」写法（应使用 `scrollToIndex`）
 ```typescript
 listRef.current?.scrollToIndex(0); // ✅ 正确（回到顶部）
-listRef.current?.scrollTo(savedPixels); // ✅ 正确（恢复精确位置）
-listRef.current?.scrollTo(0); // ❌ 错误（取代了 scrollToIndex(0)）
-```
+listRef.curren
+## 類型安全規範（永久鎖定）
 
-## 权限判断规范（锁定）
+### 核心原則
 
-```typescript
-// ✅ 正确：严格判断
-const showAdmin = useAdminMode() && isManagement;
+**`any` 是禁止的。** 沒有例外。
 
-// ❌ 错误：宽松判断
-const showAdmin = useAdminMode() || isManagement;
-```
+### 替代方案
 
-## 页面类型与权限判断规范（锁定，2026-06-03）
+| 情境 | 禁止 | 替代 |
+|------|------|------|
+| 未知物件 | `any` | `JsonObject` / `Record<string, unknown>` |
+| 未知函數 | `any` | `AnyFunction` / `(...args: unknown[]) => unknown` |
+| 泛型預設 | `any` | `extends Record<string, unknown>` |
+| 第三方類型 | `any` | 使用 `@types/*` 或自行定義 |
 
-### 核心原则
-- ✅ 页面类型（管理模式/公开模式）**只由 URL 决定**
-- ❌ 禁止使用 Zustand 存储 `viewMode` 状态
-- ❌ 禁止使用 localStorage 持久化页面类型
+### CI 檢查
 
-### 权限判断
-```typescript
-// ✅ 正确：基于 URL
-const location = useLocation();
-const isAdmin = location.pathname.startsWith('/admin');
+- ✅ PR 必須通過 `any` 數量檢查
+- ✅ `any` 數量只能減少，不能增加
+- ❌ `any` 增加的 PR 不得合併
 
-// ❌ 错误：基于 Zustand 状态
-const { viewMode } = useUIStore();
-const isAdmin = viewMode === 'private';
-```
+### Snippet 標準
 
-### 模式切换
-```typescript
-// ✅ 正确：导航到对应路由
-navigate({ to: '/admin' });  // 管理模式
-navigate({ to: '/' });       // 公开模式
-
-// ❌ 错误：只改 Zustand 状态
-setViewMode('private');
-```
-
-### 路由结构
-- `/` → 公开页面（PublicPage）
-- `/admin` → 管理后台（AdminPage）
-- 其他路由按需扩展
-
-## Props 传递规范（锁定，2026-06-03）
-
-- ✅ **性能优先**：在虚拟列表（Virtual List）渲染项中，**严禁** 在子组件内部调用 `useQuery` 或数据量较大的 Hook（如 `useCategories`, `useTags`）。
+- ✅ 所有 Snippet 禁止使用 `any`
+- ✅ 新 Snippet 必須包含 ArKType Schema
+- ✅ 所有 `useMutation` / `useQuery` 必須有明確泛型
+ual List）渲染项中，**严禁** 在子组件内部调用 `useQuery` 或数据量较大的 Hook（如 `useCategories`, `useTags`）。
 - ✅ **共享注入**：必须在父容器中获取数据，并通过 `sharedCategories` / `sharedTags` 等 Props 批量注入子项，以避免数千次重复的数据查找开销。
 - ❌ **禁止 Drilling**：Props 路径严禁超过 2 层。如果需要深层传递，考虑使用细粒度的 Zustand Selector。
 

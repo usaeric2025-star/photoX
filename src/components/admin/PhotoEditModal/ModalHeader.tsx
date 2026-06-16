@@ -14,6 +14,7 @@ import {
 import {
   usePhoto,
   useTasks,
+  type BackgroundTask,
   useRemoveFromGroupMutation,
   useAdminMaintenance,
   usePhotoDelete,
@@ -41,9 +42,9 @@ export function ModalHeader({
   
   const { data: detailPhoto } = usePhoto(editPhotoId || '');
   const { tasks } = useTasks();
-  const isAnalyzing = tasks.some((t: any) => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析') || t.name.toLowerCase().includes('analyze') || t.name.toLowerCase().includes('identif')));
-  const isSyncing = tasks.some((t: any) => t.status === 'running' && (t.name.includes('同步') || t.name.includes('导入')));
-  const isRunning = tasks.some((t: any) => t.status === 'running');
+  const isAnalyzing = tasks.some((t: BackgroundTask) => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析') || t.name.toLowerCase().includes('analyze') || t.name.toLowerCase().includes('identif')));
+  const isSyncing = tasks.some((t: BackgroundTask) => t.status === 'running' && (t.name.includes('同步') || t.name.includes('导入')));
+  const isRunning = tasks.some((t: BackgroundTask) => t.status === 'running');
 
   const { mutateAsync: removeFromGroup } = useRemoveFromGroupMutation();
   const { updatePhoto: { mutateAsync: updateAdminPhoto } } = useAdminMaintenance();

@@ -3,23 +3,36 @@ import { getSupabaseAdmin } from "../../_lib/supabase.js";
 import { getR2Client } from "../../_lib/storage.js";
 import { getServerEnv } from "../../_shared/envSchema.js";
 import { diagnosticRegistry } from "../../_lib/diagnostics/registry";
+import { DiagnosticIssue } from '@/types/diagnostics';
 
 const serverEnv = getServerEnv(process.env);
 export const adminDiagnose = new Hono();
 
+interface DiagnosticItem {
+  id: string;
+  group_id?: string | null;
+  image_hash?: string | null;
+  image_url?: string | null;
+  name?: unknown; // name 目前结构复杂，暂时保留
+}
+
+interface DiagnosticGroup {
+  id: string;
+  name: string;
+}
+
 adminDiagnose.get("/", async (c) => {
     try {
       const supabase = await getSupabaseAdmin();
-      const issues: any[] = [];
+      const issues: DiagnosticIssue[] = [];
       
-      // Use a shorter timeout for diagnostic queries to prevent Vercel 300s timeout
       const queryTimeout = 25000; 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), queryTimeout);
 
-      let photos: any[] = [];
-      let groups: any[] = [];
-      let sErr: any = null;
+      let photos: DiagnosticItem[] = [];
+      let groups: DiagnosticGroup[] = [];
+      let sErr: { code?: string; message?: string } | null = null;
 
       try {
         const [
@@ -85,9 +98,9 @@ adminDiagnose.get("/", async (c) => {
       
 
       return c.json({ timestamp: Date.now(), totalIssues: issues.length, issuesBySeverity: { P0: issues.filter(i => i.severity === 'P0').length, P1: issues.filter(i => i.severity === 'P1').length, P2: issues.filter(i => i.severity === 'P2').length, P3: 0 }, issues });
-    } catch (e: any) {
-      return c.json({ success: false, error: e.message }, 500);
-    }
+      } catch (e: unknown) {
+        return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown diagnostic error' }, 500);
+      }
 });
 
 adminDiagnose.get("/r2", async (c) => {

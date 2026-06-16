@@ -3,6 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+// --- Utility Types ---
+export type JsonObject = Record<string, unknown>;
+export type JsonValue = string | number | boolean | null | JsonObject | JsonValue[];
+export type AnyFunction = (...args: unknown[]) => unknown;
+export type AnyArray = unknown[];
+
 export * from './photo';
 export * from './api';
 export * from './tasks';

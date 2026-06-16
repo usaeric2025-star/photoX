@@ -148,7 +148,15 @@ export function BatchEditForm({
   );
 }
 
-function VisibilitySection({ batchIsHiddenApplied, setBatchIsHiddenApplied, is_hidden, handleUpdateForm }: any) {
+interface VisibilitySectionProps {
+  batchIsHiddenApplied: boolean;
+  setBatchIsHiddenApplied: (v: boolean) => void;
+  is_hidden?: boolean;
+  handleUpdateForm: (updates: Partial<ProductFormData>) => void;
+}
+
+function VisibilitySection({ batchIsHiddenApplied, setBatchIsHiddenApplied, is_hidden, handleUpdateForm }: VisibilitySectionProps) {
+
   return (
     <section className="space-y-4">
       <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">显示状态 / VISIBILITY</h3>

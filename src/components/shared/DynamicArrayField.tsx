@@ -1,5 +1,5 @@
 import React from 'react';
-import { useFieldArray, useFormContext, UseFormRegister, Control, FieldValues } from 'react-hook-form';
+import { useFieldArray, useFormContext, UseFormRegister, Control, FieldValues, FieldArrayWithId } from 'react-hook-form';
 import { cn } from '@/lib/utils';
 
 interface DynamicArrayFieldProps<T extends FieldValues> {
@@ -30,7 +30,7 @@ export const DynamicArrayField = <T extends FieldValues>({
         {fields.map((field, index) => (
           <div key={field.id} className="flex gap-2 items-start bg-slate-50 p-2 rounded-md">
             <div className="flex-1">
-              {renderItem(index, field as T, register)}
+              {renderItem(index, field as unknown as T, register)}
             </div>
             <button 
               type="button" 
