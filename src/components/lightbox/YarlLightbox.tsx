@@ -68,11 +68,13 @@ export function YarlLightbox({
       <button
         key="edit-btn"
         type="button"
-        onClick={() => onEdit(currentItem.id)}
-        className="yarl__button mr-3 flex items-center justify-center cursor-pointer transition-transform duration-150 hover:scale-105"
+        onClick={() => {
+          onEdit(currentItem.id);
+        }}
+        className="mr-3 text-[13px] font-medium tracking-wide bg-brand-gold hover:bg-yellow-500 text-slate-900 px-3.5 py-1.5 rounded-lg font-sans cursor-pointer h-9 shadow-md flex items-center gap-1.5 transition-all duration-200"
         title="編輯"
       >
-        <Edit className="w-5 h-5 text-current" />
+        <span>✏️</span> <span>編輯</span>
       </button>
     );
   }
@@ -114,6 +116,7 @@ export function YarlLightbox({
   return (
     <>
       <Lightbox
+        controller={{ focus: false }}
         open={open}
         close={onClose}
         index={currentIndex}

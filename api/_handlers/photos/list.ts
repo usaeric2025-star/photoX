@@ -65,7 +65,7 @@ export const listHandler = (app: Hono) => {
     }
 
     if (searchQuery && searchQuery.trim().length > 0) {
-      const dbSearchQuery = decodeURIComponent(searchQuery).replace(/[%_]/g, '\\$&').trim();
+      const dbSearchQuery = searchQuery.replace(/[%_]/g, '\\$&').trim();
       // Expanded search: multilingual names + codes + models
       const fields = [
         `name->>zh.ilike."%${dbSearchQuery}%"`,
@@ -229,7 +229,7 @@ export const listHandler = (app: Hono) => {
     }
 
     if (searchQuery && searchQuery.trim().length > 0) {
-      const dbSearchQuery = decodeURIComponent(searchQuery).replace(/[%_]/g, '\\$&').trim();
+      const dbSearchQuery = searchQuery.replace(/[%_]/g, '\\$&').trim();
       const fields = [
         `name->>zh.ilike."%${dbSearchQuery}%"`,
         `name->>en.ilike."%${dbSearchQuery}%"`,

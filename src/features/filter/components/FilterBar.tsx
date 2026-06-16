@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MoreHorizontal } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { SearchInput } from './SearchInput';
 import { SortToggle } from './SortToggle';
 import { CategoryGrid } from './CategoryGrid';
@@ -28,10 +28,9 @@ export function FilterBar({ mode }: FilterBarProps) {
         <div className="flex gap-1 shrink-0">
           <button 
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-2 rounded-lg hover:bg-slate-100 text-gray-500"
-            aria-label={isExpanded ? "收起筛选" : "展开筛选"}
+            className="p-2 rounded-lg hover:bg-slate-100"
           >
-            <MoreHorizontal className="w-5 h-5" />
+            {isExpanded ? <ChevronUp className="w-5 h-5 text-gray-500" /> : <ChevronDown className="w-5 h-5 text-gray-500" />}
           </button>
           <SortToggle />
           <ColumnsToggle />

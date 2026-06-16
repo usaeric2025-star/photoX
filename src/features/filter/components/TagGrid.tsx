@@ -44,7 +44,7 @@ export function TagGrid() {
     <div className="p-4 pt-0 flex gap-3 items-start select-none">
       {/* Left side: Tag container with height restriction for 2 rows initially */}
       <div className={`flex flex-wrap gap-2 flex-1 min-w-0 transition-all duration-300 ${
-        showAll ? 'max-h-64' : 'max-h-[56px]'
+        showAll ? 'max-h-96' : 'max-h-[56px]'
       } overflow-y-auto pr-1`}>
         {displayTags.map(tag => {
           const isSelected = filters.tagIds.includes(tag.id);

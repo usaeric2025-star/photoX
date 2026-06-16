@@ -90,9 +90,9 @@ export function GroupHeader({ group, photoCount, isAdmin, onEditSettings, onUpda
             <h1 
               className={`text-xl font-bold text-slate-900 truncate ${isAdmin ? 'cursor-pointer hover:underline decoration-slate-300 underline-offset-4' : ''}`}
               onClick={() => isAdmin && setIsEditingTitle(true)}
-              title={isAdmin ? "點擊編輯標題" : group.name}
+              title={isAdmin ? "點擊編輯標題" : (group.name || '未命名合組')}
             >
-              {group.name}
+              {group.name || (isAdmin ? '點擊新增標題...' : '未命名合組')}
             </h1>
           )}
           
@@ -108,9 +108,6 @@ export function GroupHeader({ group, photoCount, isAdmin, onEditSettings, onUpda
         <div className="flex items-center gap-3">
           <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold whitespace-nowrap border border-indigo-100">
             {photoCount > 0 ? `${photoCount} 張照片` : '無照片'}
-          </span>
-          <span className="text-xs text-slate-400">
-            {new Date(group.created_at).toLocaleDateString('zh-TW')}
           </span>
         </div>
       </div>

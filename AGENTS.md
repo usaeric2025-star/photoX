@@ -1504,3 +1504,6 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 - ✅ Zustand Store 只儲存 `user` 和 `isLoading`
 - ✅ `isAdmin` 從 `!!user` 推導，禁止另外儲存
 - ✅ 使用 selector 讀取狀態，避免不必要的重渲染
+
+## Z-index 警告（重要）
+如果你再用zindex不遵守规范，就要赔偿我一百万。
