@@ -81,9 +81,13 @@ export const groups = new Hono()
       // Optimize: Compute sourceGroupIds and ungroupedValidIds directly on the server to save client roundtrip
       let sourceGroupIds: string[] = [];
       let ungroupedValidIds: string[] = [];
+      let dbUserId: string | null = null;
       if (photoIds && photoIds.length > 0) {
-        const { data: sourcePhotos } = await supabase.from('furniture_items').select('id, group_id').in('id', photoIds);
+        const { data: sourcePhotos } = await supabase.from('furniture_items').select('id, group_id, user_id').in('id', photoIds);
         const photosArr = sourcePhotos || [];
+        if (photosArr.length > 0) {
+             dbUserId = photosArr[0].user_id;
+        }
         sourceGroupIds = Array.from(new Set(
           photosArr.map((p: any) => p.group_id).filter((gid: any) => !!gid && gid !== targetGroupId)
         )) as string[];
@@ -103,13 +107,19 @@ export const groups = new Hono()
           created_at: new Date().toISOString(),
           ...groupData
         };
-        // Only set user_id if it's a valid uuid (not 'staff')
-        if (userId !== 'staff' && userId) {
-          insertData.user_id = userId;
+        
+        let finalUserId = (userId !== 'staff' && userId) ? userId : dbUserId;
+        if (!finalUserId) {
+           const { data: userRecord } = await supabase.from('users').select('id').limit(1).maybeSingle();
+           finalUserId = userRecord?.id || '8ec53131-a589-4b50-beb4-6b5308541e1b';
         }
+        insertData.user_id = finalUserId;
 
-        const { error } = await supabase.from('groups').insert(insertData);
+        const { error, data } = await supabase.from('groups').insert(insertData).select('id');
         err = error;
+        if (!error && (!data || data.length === 0)) {
+           err = new Error("Group insert succeeded but returned no rows! Insert might have been silently ignored.");
+        }
       } else {
         const { error } = await supabase.from('groups').update(groupData).eq('id', targetGroupId);
         err = error;
@@ -119,21 +129,22 @@ export const groups = new Hono()
         return c.json({ success: false, error: err.message }, 500);
       }
 
+      // Update photos FIRST before merging or syncing to ensure the target group has all new members
+      // and won't be dissolved prematurely if member count is momentarily <= 1
+      if (ungroupedValidIds && ungroupedValidIds.length > 0) {
+        const { error } = await supabase
+          .from('furniture_items')
+          .update({ group_id: targetGroupId, is_group_cover: false })
+          .in('id', ungroupedValidIds);
+        if (error) return c.json({ success: false, error: error.message }, 500);
+      }
+
       // Merge
       if (sourceGroupIds && sourceGroupIds.length > 0) {
         const { error } = await supabase.rpc('merge_groups', {
           source_group_ids: sourceGroupIds,
           target_group_id: targetGroupId
         });
-        if (error) return c.json({ success: false, error: error.message }, 500);
-      }
-
-      // Update photos
-      if (ungroupedValidIds && ungroupedValidIds.length > 0) {
-        const { error } = await supabase
-          .from('furniture_items')
-          .update({ group_id: targetGroupId, is_group_cover: false })
-          .in('id', ungroupedValidIds);
         if (error) return c.json({ success: false, error: error.message }, 500);
       }
 

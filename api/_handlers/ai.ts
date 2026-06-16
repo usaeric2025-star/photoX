@@ -277,6 +277,15 @@ ai.post("/cluster-photos", async (c) => {
         const parsed = await processGroupAnalysis(check.photoIds);
         const createdGroups: any[] = [];
 
+        // Optimize: Fetch a valid user_id from the source photos
+        let dbUserId: string | null = null;
+        if (check.photoIds && check.photoIds.length > 0) {
+            const { data: sourcePhotos } = await supabase.from('furniture_items').select('user_id').in('id', check.photoIds).limit(1).maybeSingle();
+            if (sourcePhotos?.user_id) {
+                dbUserId = sourcePhotos.user_id;
+            }
+        }
+
         // 2. 事務性寫入 (手動類比)
         for (const g of parsed.groups) {
             const groupId = crypto.randomUUID();
@@ -288,9 +297,13 @@ ai.post("/cluster-photos", async (c) => {
                 member_count: g.photoIds.length,
                 created_at: new Date().toISOString()
             };
-            if (userId && userId !== 'staff') {
-                insertGroupData.user_id = userId;
+            
+            let finalUserId = (userId && userId !== 'staff') ? userId : dbUserId;
+            if (!finalUserId) {
+               const { data: userRecord } = await supabase.from('users').select('id').limit(1).maybeSingle();
+               finalUserId = userRecord?.id || '8ec53131-a589-4b50-beb4-6b5308541e1b';
             }
+            insertGroupData.user_id = finalUserId;
 
             // 寫入 groups 表為 draft
             const { data: groupData, error: groupError } = await supabase

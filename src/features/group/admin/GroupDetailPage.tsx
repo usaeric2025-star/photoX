@@ -18,6 +18,8 @@ import { useGroupDraft } from '@/components/groups/useGroupDraft';
 import { useGroupMutations } from '@/hooks/groups/useGroupMutations';
 import { GroupHeader } from '../shared/components/GroupHeader';
 import { PhotoEditModal } from '@/components/admin/PhotoEditModal';
+import { PageSkeleton } from '@/components/ui/PageSkeleton';
+import { Button } from '@/components/shared/Button';
 
 function AdminPhotoGrid({ photos, onPhotoClick }: { photos: any[]; onPhotoClick: (id: string) => void }) {
   const isMultiSelect = useUIStore(s => s.isMultiSelect);
@@ -108,9 +110,9 @@ export function AdminGroupDetailPage() {
   
   const openEditDrawer = (id: string) => { setPhotoId(id); setModal('edit'); };
 
-  if (loading) return <div className="p-8 text-center text-slate-500">載入中...</div>;
+  if (loading) return <PageSkeleton />;
   if (error) return <div className="p-4 text-red-500">錯誤：{error}</div>;
-  if (!group) return <div className="p-4">合組不存在</div>;
+  if (!group) return <div className="p-4 flex flex-col justify-center items-center h-full"><div className="text-xl text-slate-500 mb-4">合組不存在或已被刪除</div><Button onClick={() => window.history.back()}>返回</Button></div>;
   
   return (
     <div className="min-h-screen bg-slate-50 group-detail-admin flex flex-col relative w-full h-[100dvh] overflow-hidden overscroll-none">

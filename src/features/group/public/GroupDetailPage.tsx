@@ -8,6 +8,7 @@ import { useFilters, useTranslation, useCategories } from '@/hooks';
 import { getTranslatedCategoryName } from '@/services/category/utils';
 import { GroupHeader } from '../shared/components/GroupHeader';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
+import { Button } from '@/components/shared/Button';
 
 function PublicPhotoGrid({ photos, onPhotoClick }: { photos: any[]; onPhotoClick: (id: string) => void }) {
   return (
@@ -57,7 +58,7 @@ export function PublicGroupDetailPage() {
 
   if (loading) return <PageSkeleton />;
   if (error) return <div className="p-4 text-red-500">錯誤：{error}</div>;
-  if (!group) return <div className="p-4">合組不存在</div>;
+  if (!group) return <div className="p-4 flex flex-col justify-center items-center h-full"><div className="text-xl text-slate-500 mb-4">合組不存在或已被刪除</div><Button onClick={() => window.history.back()}>返回</Button></div>;
   
   return (
     <div className="min-h-screen bg-slate-50 group-detail-public flex flex-col relative w-full h-[100dvh] overflow-hidden overscroll-none">

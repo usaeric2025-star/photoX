@@ -426,7 +426,7 @@ adminRepair.post("/", async (c) => {
         }
 
         // Fix groups
-        const { data: groups } = await supabase.from("groups").select("id, name, description");
+        const { data: groups } = await supabase.from("groups").select("id, name");
         const groupsToFix = groups?.filter((g: any) => typeof g.name === 'string' || (g.name && !g.name.zh)) || [];
 
         for (const group of groupsToFix) {
