@@ -1,6 +1,6 @@
 import { useAuthStore } from '@/store/useAuthStore';
 import { useEffect, useState } from 'react';
-import { useTasks } from '../';
+import { useTasks } from '../core/useTasks';
 import { UnifiedTask, TaskStatus } from '@/types';
 import { api } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';

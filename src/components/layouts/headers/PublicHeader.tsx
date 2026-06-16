@@ -1,6 +1,7 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React from 'react';
-import { LogIn, LayoutDashboard, RefreshCw, Camera, Menu, User as UserIcon, LogOut, Settings, LayoutGrid, MonitorPlay } from 'lucide-react';
+import { DynamicIcon } from '../../shared/DynamicIcon';
+import { Camera } from 'lucide-react'; // Keep one or two critical ones as standard imports for P0 performance
 import { useAuthStore } from '@/store/useAuthStore';
 import { useUIStore, useShallow, useSettings, usePermission } from '@/hooks';
 import { Dropdown, DropdownTrigger, DropdownPortal, DropdownPositioner, DropdownPopup, DropdownItem, DropdownSeparator } from '../../shared/Dropdown';
@@ -105,7 +106,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
             className="w-9 h-9 sm:w-9 sm:h-9 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50/50 rounded-full transition-all active:scale-90 shrink-0"
             title={t.refresh}
           >
-            <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
+            <DynamicIcon name="refresh-cw" size={16} className={isRefreshing ? 'animate-spin' : ''} />
           </button>
         )}
 
@@ -115,14 +116,14 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
           className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 border bg-white text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-900 shadow-sm"
           title={isAdmin ? t.viewModePublic : t.viewModeAdmin}
         >
-          <LayoutDashboard className="size-4.5 sm:size-5" />
+          <DynamicIcon name="layout-dashboard" className="size-4.5 sm:size-5" />
         </button>
 
         {/* 4. 菜单 (语言、登录、退出) */}
         <Dropdown>
           <DropdownTrigger>
             <div className="h-9 w-9 sm:h-10 sm:w-10 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded-full transition-all cursor-pointer shrink-0 border border-slate-100 bg-white">
-              <Menu size={22} />
+              <DynamicIcon name="menu" size={22} />
             </div>
           </DropdownTrigger>
           <DropdownPortal>
@@ -135,7 +136,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
                           {user.photo_url ? (
                             <img src={user.photo_url} referrerPolicy="no-referrer" alt="" />
                           ) : (
-                            <UserIcon size={10} />
+                            <DynamicIcon name="user" size={10} />
                           )}
                         </div>
                         {user.email?.split("@")[0]}
@@ -157,7 +158,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
                             onClick={() => navigate({ to: '/admin' })}
                             className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-default outline-none data-[highlighted]:bg-blue-50 text-gray-700"
                           >
-                            <LayoutDashboard size={16} />
+                            <DynamicIcon name="layout-dashboard" size={16} />
                             {t.adminPanel}
                           </DropdownItem>
                         )}
@@ -167,14 +168,14 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
                           }}
                           className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-default outline-none data-[highlighted]:bg-blue-50 text-gray-700"
                         >
-                          <Settings size={16} />
+                          <DynamicIcon name="settings" size={16} />
                           {t.systemSettings}
                         </DropdownItem>
                         <DropdownItem
                           onClick={() => navigate({ to: '/admin/tasks' })}
                           className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-default outline-none data-[highlighted]:bg-blue-50 text-gray-700"
                         >
-                          <LayoutGrid size={16} />
+                          <DynamicIcon name="layout-grid" size={16} />
                           {t.taskCenter}
                         </DropdownItem>
                       </>
@@ -191,7 +192,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
                         onClick={() => signOut()}
                         className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-default outline-none data-[highlighted]:bg-blue-50 text-red-600 data-[highlighted]:bg-red-50"
                       >
-                        <LogOut size={16} />
+                        <DynamicIcon name="log-out" size={16} />
                         {t.signOutAccount}
                       </DropdownItem>
                     </>

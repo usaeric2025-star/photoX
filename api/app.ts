@@ -38,54 +38,65 @@ app.use("*", async (c, next) => {
 
 // Global Exception Handler
 app.onError((err, c) => {
-  const traceId = getTraceId(c)
+  const traceId = getTraceId(c);
+  const path = c.req.path;
+  const method = c.req.method;
 
-  // 轉換為標準 AppError
+  // Transform to standard AppError
   const appError = err instanceof AppError 
     ? err 
-    : errorFactory.wrap(err, `api.${c.req.path}`, 'HANDLER_ERROR')
-  appError.traceId = traceId
+    : errorFactory.wrap(err, `api.${path}`, 'HANDLER_ERROR');
+  appError.traceId = traceId;
 
-  // 後端日誌記錄
+  // Backend Console Logging
   logger.error('api.error', {
     traceId,
-    path: c.req.path,
-    method: c.req.method,
+    path,
+    method,
     code: appError.code,
     message: appError.message,
     stack: appError.stack,
-  })
+  });
 
-  // [2026-06-11] 增加持久化日誌到 DB，方便管理後台查看
-  try {
-    getSupabaseAdmin().then(supabase => {
-       supabase.from('system_logs').insert([{
-          error_message: `[API ERROR] ${appError.message}`,
-          stack_trace: appError.stack,
-          url: c.req.path,
-          context: 'Backend_API',
-          metadata: {
-            traceId,
-            method: c.req.method,
-            code: appError.code,
-            level: 'error',
-            timestamp: new Date().toISOString()
-          },
-          created_at: new Date().toISOString()
-       }]).then(({ error: insertError }: { error: unknown }) => {
-          if (insertError) console.error('[Fatal] Logging to system_logs failed:', insertError);
-       });
-    }).catch(e => {
-       console.error('[Fatal] Failed to get supabase for logging:', e);
-    });
-  } catch (logErr) {
-    console.error('[Fatal] Async logging logic failed:', logErr);
-  }
+  // Persistent Logging to DB
+  // [2026-06-11] Safely attempt to log to system_logs table
+  // We use a fire-and-forget approach but with careful error suppression to avoid 500 crashes in the logger itself
+  (async () => {
+    try {
+      const supabase = await getSupabaseAdmin().catch(() => null);
+      if (!supabase) {
+        console.warn('[log-error] Skip DB log: Supabase not ready during onError');
+        return;
+      }
 
-  // 返回標準 AppResult（body 不含 traceId）
-  const status = (err as { status?: number }).status || 500
-  return c.json(errorFactory.fail(appError), status as any)
-})
+      const { error: insertError } = await supabase.from('system_logs').insert([{
+        error_message: `[API ERROR] ${appError.message}`,
+        stack_trace: appError.stack,
+        url: path,
+        context: 'Backend_API',
+        metadata: {
+          traceId,
+          method,
+          code: appError.code,
+          level: 'error',
+          timestamp: new Date().toISOString()
+        },
+        created_at: new Date().toISOString()
+      }]);
+
+      if (insertError) {
+        console.error('[log-error] DB insert failed:', insertError);
+      }
+    } catch (logErr) {
+      // Never crash the primary request because log failed
+      console.error('[log-error] Fatal exception in logger:', logErr);
+    }
+  })();
+
+  // Return standard AppResult
+  const status = (err as { status?: number }).status || 500;
+  return c.json(errorFactory.fail(appError), status as any);
+});
 
 // Auth Middleware for Administrative Routes
 app.use("/admin/*", async (c, next) => {

@@ -210,7 +210,12 @@ export const listHandler = (app: Hono) => {
   });
 
   app.post('/count', async (c) => {
-    const body = await c.req.json();
+    let body;
+    try {
+      body = await c.req.json();
+    } catch (e) {
+      body = {};
+    }
     const check = PhotoListReqSchema(body);
     if (check instanceof type.errors) throw new Error(check.summary);
 

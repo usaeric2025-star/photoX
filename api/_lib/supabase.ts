@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { getServerEnv } from "../_shared/envSchema.js";
+import { logger } from './logger.js';
 
 const serverEnv = getServerEnv(process.env);
 let supabaseAdminInstance: SupabaseClient | null = null;
@@ -13,10 +14,20 @@ export async function getSupabaseAdmin() {
   const supabaseKey = serverEnv.SUPABASE_SERVICE_KEY || serverEnv.VITE_SUPABASE_ANON_KEY; 
   
   if (!supabaseUrl || !supabaseKey) {
-    throw new Error("Supabase credentials missing");
+    const missing = [];
+    if (!supabaseUrl) missing.push("SUPABASE_URL");
+    if (!supabaseKey) missing.push("SUPABASE_KEY");
+    logger.error(`[Supabase] Configuration missing: ${missing.join(", ")}`);
+    throw new Error(`Supabase credentials missing: ${missing.join(", ")}`);
   }
-  supabaseAdminInstance = createClient(supabaseUrl, supabaseKey, {
-    auth: { persistSession: false }
-  });
-  return supabaseAdminInstance;
+  
+  try {
+    supabaseAdminInstance = createClient(supabaseUrl, supabaseKey, {
+      auth: { persistSession: false }
+    });
+    return supabaseAdminInstance;
+  } catch (err) {
+    logger.error("[Supabase] Failed to create client", { error: (err as any).message });
+    throw err;
+  }
 }

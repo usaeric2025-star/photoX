@@ -25,6 +25,7 @@ import { Toaster } from 'sonner';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Analytics } from '@vercel/analytics/react';
 import App from './App';
+import * as Sentry from "@sentry/react";
 import { TaskProvider } from '@/hooks';
 import { logError } from './lib/error/errorReporter';
 import { queryClient } from './lib/queryClient';
@@ -34,6 +35,38 @@ import { clientEnv } from './shared/envSchema';
 import { router } from './router/index';
 import { initChunkHandler } from '@/lib/chunkErrorHandler';
 import { dailyWorker } from './services/maintenance/DailyWorker';
+
+if (clientEnv.VITE_SENTRY_DSN) {
+  Sentry.init({
+    dsn: clientEnv.VITE_SENTRY_DSN,
+    environment: clientEnv.MODE,
+    integrations: [
+      Sentry.browserTracingIntegration(),
+      Sentry.replayIntegration(),
+    ],
+    // 正式環境降低採樣率以優化效能，開發環境保持 1.0 以利除錯
+    tracesSampleRate: clientEnv.PROD ? 0.1 : 1.0,
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+
+    // 保護用戶隱私：禁止傳送 HTTP Body
+    dataCollection: {
+      userInfo: true,
+      httpBodies: [],
+    },
+
+    // 初始標籤
+    initialScope: {
+      tags: {
+        app: "photox",
+        platform: "web",
+      },
+    },
+
+    // 開發環境開啟除錯模式
+    debug: clientEnv.DEV,
+  });
+}
 
 async function init() {
   if (typeof window !== 'undefined' && clientEnv.DEV) {

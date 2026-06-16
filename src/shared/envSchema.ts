@@ -7,6 +7,7 @@ import { type } from "arktype";
 export const clientEnvSchema = type({
   "VITE_SUPABASE_URL?": "string",
   "VITE_SUPABASE_ANON_KEY?": "string",
+  "VITE_SENTRY_DSN?": "string",
   "MODE?": "string",
   "DEV?": "boolean",
   "PROD?": "boolean"
@@ -63,7 +64,7 @@ export function getClientEnv(): ClientEnv {
   
   const rawEnv: Record<string, unknown> = typeof import.meta !== 'undefined' && import.meta.env ? { ...import.meta.env } : {};
   const filteredEnv: Partial<ClientEnv> = {};
-  const allowedKeys = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY', 'MODE', 'DEV', 'PROD'] as const;
+  const allowedKeys = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY', 'VITE_SENTRY_DSN', 'MODE', 'DEV', 'PROD'] as const;
   allowedKeys.forEach(key => {
     if (rawEnv[key] !== undefined) {
       filteredEnv[key as keyof ClientEnv] = rawEnv[key] as any;

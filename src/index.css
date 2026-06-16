@@ -1,6 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap');
 @import "tailwindcss";
-@import "@fontsource-variable/geist";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -12,7 +11,7 @@
   --color-whatsapp-dark: #128C7E;
   --color-brand-purple: #7A00E6;
   --color-brand-purple-bg: #F3E8FF;
-  --font-sans: "Geist Variable", "Inter", "Noto Sans SC", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", "Noto Sans SC", ui-sans-serif, system-ui, sans-serif;
 
   /* 自定义呼吸动画 */
   @keyframes breathing {

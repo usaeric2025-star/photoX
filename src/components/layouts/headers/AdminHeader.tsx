@@ -1,6 +1,7 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React from 'react';
-import { LayoutDashboard, Camera, Menu, User as UserIcon, LogOut, Settings, LayoutGrid, MonitorPlay, CheckSquare, Sparkles } from 'lucide-react';
+import { Camera } from 'lucide-react';
+import { DynamicIcon } from '../../shared/DynamicIcon';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useUIStore, useSettings, usePhotoCount, useAdminBatchActions, usePermission } from '@/hooks';
 import { Dropdown, DropdownTrigger, DropdownPortal, DropdownPositioner, DropdownPopup, DropdownItem, DropdownSeparator } from '../../shared/Dropdown';
@@ -113,7 +114,7 @@ export function AdminHeader({}: AdminHeaderProps) {
             }`}
             title={isMultiSelect ? t.exitSelectMode : t.selectModeToggle}
           >
-            <CheckSquare className="size-4.5 sm:size-5" />
+            <DynamicIcon name="check-square" className="size-4.5 sm:size-5" />
           </button>
   
           {/* AI 智能识别 按钮 next to check screen */}
@@ -122,7 +123,7 @@ export function AdminHeader({}: AdminHeaderProps) {
             className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 border bg-white text-purple-600 border-purple-200 hover:bg-purple-50 hover:text-purple-700 shadow-sm"
             title={t.aiSmartIdentify}
           >
-            <Sparkles className="size-4.5 sm:size-5 animate-pulse" />
+            <DynamicIcon name="sparkles" className="size-4.5 sm:size-5 animate-pulse" />
           </button>
   
           {/* 3. 切换至前台体验按钮 (标准 LayoutDashboard 样式) */}
@@ -131,14 +132,14 @@ export function AdminHeader({}: AdminHeaderProps) {
             className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 border bg-white text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-900 shadow-sm"
             title={t.viewModePublic}
           >
-            <LayoutDashboard className="size-4.5 sm:size-5" />
+            <DynamicIcon name="layout-dashboard" className="size-4.5 sm:size-5" />
           </button>
   
           {/* 4. 菜单 (语言、登录、退出) */}
           <Dropdown>
             <DropdownTrigger>
               <div className="h-9 w-9 sm:h-10 sm:w-10 flex items-center justify-center text-slate-600 hover:bg-slate-200 rounded-full transition-all cursor-pointer shrink-0 border border-slate-200 bg-white">
-                <Menu size={18} className="sm:size-5" />
+                <DynamicIcon name="menu" size={18} className="sm:size-5" />
               </div>
             </DropdownTrigger>
             <DropdownPortal>
@@ -150,7 +151,7 @@ export function AdminHeader({}: AdminHeaderProps) {
                         {user.photo_url ? (
                           <img src={user.photo_url} referrerPolicy="no-referrer" alt="" />
                         ) : (
-                          <UserIcon size={10} />
+                          <DynamicIcon name="user" size={10} />
                         )}
                       </div>
                       {user.email?.split("@")[0]}
@@ -171,14 +172,14 @@ export function AdminHeader({}: AdminHeaderProps) {
                           onClick={() => navigate({ to: '/admin/settings' })}
                           className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-default outline-none data-[highlighted]:bg-blue-50 text-gray-700"
                         >
-                          <Settings size={16} />
+                          <DynamicIcon name="settings" size={16} />
                           {t.systemSettings}
                         </DropdownItem>
                         <DropdownItem
                           onClick={() => navigate({ to: '/admin/tasks' })}
                           className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-default outline-none data-[highlighted]:bg-blue-50 text-gray-700"
                         >
-                          <LayoutGrid size={16} />
+                          <DynamicIcon name="layout-grid" size={16} />
                           {t.taskCenter}
                         </DropdownItem>
                       </>
@@ -195,7 +196,7 @@ export function AdminHeader({}: AdminHeaderProps) {
                         onClick={() => signOut()}
                         className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-default outline-none data-[highlighted]:bg-blue-50 text-red-600 data-[highlighted]:bg-red-50"
                       >
-                        <LogOut size={16} />
+                        <DynamicIcon name="log-out" size={16} />
                         {t.signOutAccount}
                       </DropdownItem>
                     </>

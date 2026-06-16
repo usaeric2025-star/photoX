@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Cloud, Cog, LayoutGrid, Activity } from 'lucide-react';
+import React from 'react';
+import { DynamicIcon } from '../shared/DynamicIcon';
 
 interface SettingsTabsProps {
   activeTab: string;
@@ -8,16 +8,15 @@ interface SettingsTabsProps {
 
 export function SettingsTabs({ activeTab, onTabChange }: SettingsTabsProps) {
   const tabs = [
-    { id: 'sync', label: '同步引擎', icon: Cloud, subLabel: 'Sync Engine' },
-    { id: 'ai', label: '智能核心', icon: Cog, subLabel: 'AI Engine' },
-    { id: 'assets', label: '資產管理', icon: LayoutGrid, subLabel: 'Assets' },
-    { id: 'status', label: '系統服務', icon: Activity, subLabel: 'Health' },
-  ];
+    { id: 'sync', label: '同步引擎', icon: 'cloud', subLabel: 'Sync Engine' },
+    { id: 'ai', label: '智能核心', icon: 'cog', subLabel: 'AI Engine' },
+    { id: 'assets', label: '資產管理', icon: 'layout-grid', subLabel: 'Assets' },
+    { id: 'status', label: '系統服務', icon: 'activity', subLabel: 'Health' },
+  ] as const;
 
   return (
     <div className="flex gap-2 mb-6 overflow-x-auto no-scrollbar pb-2 px-1">
       {tabs.map((tab) => {
-        const Icon = tab.icon;
         const isActive = activeTab === tab.id;
         
         return (
@@ -30,7 +29,7 @@ export function SettingsTabs({ activeTab, onTabChange }: SettingsTabsProps) {
                 : 'bg-white border-brand-navy/5 text-brand-navy/60 hover:border-brand-navy/10 active:scale-95'
             }`}
           >
-            <Icon size={20} className={isActive ? 'text-brand-gold' : 'text-brand-navy/40'} />
+            <DynamicIcon name={tab.icon} size={20} className={isActive ? 'text-brand-gold' : 'text-brand-navy/40'} />
             <span className="text-[10px] font-black uppercase tracking-tighter mt-1">{tab.label}</span>
             <span className="text-[8px] opacity-40 font-bold uppercase tracking-widest">{tab.subLabel}</span>
           </button>
