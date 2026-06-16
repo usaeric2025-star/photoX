@@ -13,11 +13,11 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
 
   const updateSearch = useCallback((updates: Record<string, any>) => {
     navigate({
-      search: (prev: any) => ({
+      search: ((prev: any) => ({
         ...prev,
         ...updates
-      })
-    });
+      })) as any
+    } as any);
   }, [navigate]);
 
   const searchVal = search.q || '';
@@ -77,11 +77,11 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
 
   const reset = useCallback(() => {
     navigate({
-      search: (prev: any) => ({
+      search: ((prev: any) => ({
         photoId: prev.photoId, 
         groupId: prev.groupId,
-      })
-    });
+      })) as any
+    } as any);
   }, [navigate]);
 
   return {

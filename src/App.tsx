@@ -64,7 +64,7 @@ export default function AppRoutes() {
     user: user ?? null,
     role: user ? ('admin' as const) : ('guest' as const),
     can: () => !!user,
-    availableActions: [],
+    availableActions: [] as string[],
   };
 
   if (isLoading) {

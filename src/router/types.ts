@@ -1,6 +1,6 @@
 import { Capability } from '@/config/permissions';
 import { QueryClient } from '@tanstack/react-query';
-import { User } from '@supabase/supabase-js';
+import { User } from '@/types';
 
 export interface RouterContext {
   user: User | null;
