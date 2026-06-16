@@ -14,7 +14,7 @@ import {
 import { useColumns } from '@/features/layout/hooks/useColumns';
 import { useUIStore } from '@/store/useUIStore';
 import { UploadButton } from '@/components/shared/UploadButton';
-import { SelectionToolbar } from '@/components/shared/SelectionToolbar';
+import { SelectionProvider, SelectionToolbar } from '@/features/selection';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useAdminPhotos } from '@/hooks/admin/useAdminPhotos';
 import { useAdminSelection } from '@/hooks/admin/useAdminSelection';
@@ -79,53 +79,54 @@ export function AdminGridContainer() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-brand-bg w-full overflow-hidden text-text animate-fade-in">
-        <div className="flex-1 overflow-hidden bg-brand-bg relative">
-            <VirtualPhotoGrid 
-              key="admin-photo-grid"
-              restoreKey="admin_view_scroll_vlist"
-              photos={gridPhotos}
-              isFetching={isPending}
-              isFetchingNextPage={isFetchingNextPage}
-              hasNextPage={hasNextPage}
-              onLoadMore={fetchNextPage}
-              renderCard={renderCard}
-              columns={columns}
-              categories={categories}
-            />
+    <SelectionProvider>
+      <div className="flex flex-col h-full bg-brand-bg w-full overflow-hidden text-text animate-fade-in relative">
+          <div className="flex-1 overflow-hidden bg-brand-bg relative">
+              <VirtualPhotoGrid 
+                key="admin-photo-grid"
+                restoreKey="admin_view_scroll_vlist"
+                photos={gridPhotos}
+                isFetching={isPending}
+                isFetchingNextPage={isFetchingNextPage}
+                hasNextPage={hasNextPage}
+                onLoadMore={fetchNextPage}
+                renderCard={renderCard}
+                columns={columns}
+                categories={categories}
+              />
+          </div>
+
+          <UploadButton 
+            onAdd={() => setIsUploadModeOpen(true)}
+          />
+
+          <SelectionToolbar
+            totalItems={photos?.length}
+            allIds={photos?.map((p: Photo) => p.id)}
+            className="px-6 py-2 bg-white border-t border-gray-100 shadow-lg z-50"
+          />
+
+          <ConfirmDialog
+            open={isDeleteOpen}
+            onOpenChange={deleteDialogControl.toggle}
+            title="确认删除"
+            description={`确认删除这 ${idsToDelete.length} 张照片吗？`}
+            confirmText="删除"
+            variant="destructive"
+            onConfirm={confirmDelete}
+          />
+          
+          <UploadModeDialog
+            open={isUploadModeOpen}
+            onOpenChange={setIsUploadModeOpen}
+            onSelectMode={(mode) => {
+              update({ uploadAsGroup: mode === 'group' });
+              setIsUploadModeOpen(false);
+              setTimeout(() => document.getElementById('admin-quick-add-input')?.click(), 150);
+            }}
+          />
         </div>
-
-        <UploadButton 
-          onAdd={() => setIsUploadModeOpen(true)}
-        />
-
-        <SelectionToolbar
-          onDelete={initiateDelete}
-          onBatchEdit={initiateBatchEdit}
-          onHide={initiateHide}
-          onAIIdentify={(ids) => handleBatchAiIdentifyTrigger(ids)}
-        />
-
-        <ConfirmDialog
-          open={isDeleteOpen}
-          onOpenChange={deleteDialogControl.toggle}
-          title="确认删除"
-          description={`确认删除这 ${idsToDelete.length} 张照片吗？`}
-          confirmText="删除"
-          variant="destructive"
-          onConfirm={confirmDelete}
-        />
-        
-        <UploadModeDialog
-          open={isUploadModeOpen}
-          onOpenChange={setIsUploadModeOpen}
-          onSelectMode={(mode) => {
-            update({ uploadAsGroup: mode === 'group' });
-            setIsUploadModeOpen(false);
-            setTimeout(() => document.getElementById('admin-quick-add-input')?.click(), 150);
-          }}
-        />
-      </div>
+    </SelectionProvider>
   );
 };
 

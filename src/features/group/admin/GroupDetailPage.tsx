@@ -9,7 +9,7 @@ import { getTranslatedCategoryName } from '@/services/category/utils';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useUIStore } from '@/store/useUIStore';
 import { usePhotoSelection } from '@/hooks/photo/usePhotoSelection';
-import { SelectionToolbar } from '@/components/shared/SelectionToolbar';
+import { SelectionProvider, SelectionToolbar } from '@/features/selection';
 import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
 import { useAdminBatchActions } from '@/hooks/admin/useAdminBatch';
 import { translations } from '@/locales';
@@ -114,59 +114,59 @@ export function AdminGroupDetailPage() {
   if (!group) return <div className="p-4 flex flex-col justify-center items-center h-full"><div className="text-xl text-slate-500 mb-4">合組不存在或已被刪除</div><Button onClick={() => window.history.back()}>返回</Button></div>;
   
   return (
-    <div className="min-h-screen bg-slate-50 group-detail-admin flex flex-col relative w-full h-[100dvh] overflow-hidden overscroll-none">
-      <div className="flex-shrink-0 z-10 sticky top-0 bg-white/80 backdrop-blur-md border-b border-slate-100 shadow-sm">
-        <GroupHeader 
-          group={group} 
-          photoCount={totalCount} 
-          isAdmin={true} 
-          onEditSettings={() => setShowAdminTools(true)}
-          onUpdateTitle={handleUpdateTitle}
+    <SelectionProvider>
+      <div className="min-h-screen bg-slate-50 group-detail-admin flex flex-col relative w-full h-[100dvh] overflow-hidden overscroll-none text-base">
+        <div className="flex-shrink-0 z-10 sticky top-0 bg-white/80 backdrop-blur-md border-b border-slate-100 shadow-sm">
+          <GroupHeader 
+            group={group} 
+            photoCount={totalCount} 
+            isAdmin={true} 
+            onEditSettings={() => setShowAdminTools(true)}
+            onUpdateTitle={handleUpdateTitle}
+          />
+        </div>
+        <div className="flex-1 overflow-y-auto relative overscroll-y-auto overscroll-x-none bg-slate-50">
+          <AdminPhotoGrid photos={photos} onPhotoClick={(id: string) => {
+               setPhotoId(id);
+          }} />
+        </div>
+        
+        <YarlLightbox
+          open={lightboxOpen}
+          items={lightboxItems}
+          currentIndex={Math.max(0, lightboxIndex)}
+          onClose={() => setPhotoId(null)}
+          onIndexChange={(idx: number) => {
+             const photo = photos[idx];
+             if (photo) setPhotoId(photo.id);
+          }}
+          onEdit={openEditDrawer}
+          onDelete={(id) => deletePhoto.mutate(id)}
+          onSetCover={(id) => updatePhoto.mutate({ id, updates: { is_group_cover: true } })}
         />
-      </div>
-      <div className="flex-1 overflow-y-auto relative overscroll-y-auto overscroll-x-none bg-slate-50">
-        <AdminPhotoGrid photos={photos} onPhotoClick={(id: string) => {
-             setPhotoId(id);
-        }} />
-      </div>
-      
-      <YarlLightbox
-        open={lightboxOpen}
-        items={lightboxItems}
-        currentIndex={Math.max(0, lightboxIndex)}
-        onClose={() => setPhotoId(null)}
-        onIndexChange={(idx: number) => {
-           const photo = photos[idx];
-           if (photo) setPhotoId(photo.id);
-        }}
-        onEdit={openEditDrawer}
-        onDelete={(id) => deletePhoto.mutate(id)}
-        onSetCover={(id) => updatePhoto.mutate({ id, updates: { is_group_cover: true } })}
-      />
 
-      {isMultiSelect && (
         <SelectionToolbar
-         onDelete={handleBatchDelete}
-         onHide={handleBatchHide}
-         onAIIdentify={handleBatchAiIdentifyTrigger}
+          totalItems={photos?.length}
+          allIds={photos?.map((p: Photo) => p.id)}
+          className="px-6 py-2 bg-white border-t border-gray-100 shadow-lg z-50 fixed bottom-0 inset-x-0"
         />
-      )}
 
-      {showAdminTools && (
-        <GroupSettingsModal
-          showGroupSettings={showAdminTools}
-          setShowGroupSettings={setShowAdminTools}
-          activeGroupId={groupId}
-          groupData={groupData}
-          setGroupData={setGroupData}
-          handleUpdateGroupData={handleUpdateGroupData}
-          onUngroup={async (id) => await dissolve.mutateAsync(id)}
-          update={async (updates) => { await update.mutateAsync({ id: groupId, updates }); }}
-          t={(key: string) => (t as any)[key] || key}
-        />
-      )}
+        {showAdminTools && (
+          <GroupSettingsModal
+            showGroupSettings={showAdminTools}
+            setShowGroupSettings={setShowAdminTools}
+            activeGroupId={groupId}
+            groupData={groupData}
+            setGroupData={setGroupData}
+            handleUpdateGroupData={handleUpdateGroupData}
+            onUngroup={async (id) => await dissolve.mutateAsync(id)}
+            update={async (updates) => { await update.mutateAsync({ id: groupId, updates }); }}
+            t={(key: string) => (t as any)[key] || key}
+          />
+        )}
 
-      <PhotoEditModal />
-    </div>
+        <PhotoEditModal />
+      </div>
+    </SelectionProvider>
   );
 }
