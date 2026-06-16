@@ -281,18 +281,21 @@ ai.post("/cluster-photos", async (c) => {
         for (const g of parsed.groups) {
             const groupId = crypto.randomUUID();
             
+            const insertGroupData: any = {
+                id: groupId,
+                name: { zh: g.name, en: g.name_en, ms: g.name_ms },
+                status: 'confirmed',
+                member_count: g.photoIds.length,
+                created_at: new Date().toISOString()
+            };
+            if (userId && userId !== 'staff') {
+                insertGroupData.user_id = userId;
+            }
+
             // 寫入 groups 表為 draft
             const { data: groupData, error: groupError } = await supabase
                 .from('groups')
-                .insert({
-                    id: groupId,
-                    user_id: userId,
-                    name: { zh: g.name, en: g.name_en, ms: g.name_ms },
-                    description: { zh: g.description },
-                    status: 'confirmed',
-                    member_count: g.photoIds.length,
-                    created_at: new Date().toISOString()
-                })
+                .insert(insertGroupData)
                 .select()
                 .single();
 

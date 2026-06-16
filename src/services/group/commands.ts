@@ -33,22 +33,8 @@ const mapToDb = (updates: Partial<ProductGroup> & Record<string, unknown>, userI
         }
     }
 
-    if ('description' in dbUpdates) {
-        const val = dbUpdates.description;
-        if (typeof val === 'string') {
-            dbUpdates.description = { zh: cleanTranslationPrefixes(val).trim(), en: '', ms: '' };
-        } else if (val && typeof val === 'object') {
-            let descObj = val as Record<string, unknown>;
-            if (descObj.zh && typeof descObj.zh === 'object' && ('zh' in descObj.zh || 'en' in descObj.zh || 'ms' in descObj.zh)) {
-                descObj = descObj.zh;
-            }
-            dbUpdates.description = {
-                zh: cleanTranslationPrefixes(String(descObj.zh || '')).trim(),
-                en: cleanTranslationPrefixes(String(descObj.en || '')).trim(),
-                ms: cleanTranslationPrefixes(String(descObj.ms || '')).trim(),
-            };
-        }
-    }
+    // description removed intentionally
+    delete (dbUpdates as any).description;
 
     return dbUpdates;
 };
@@ -130,7 +116,7 @@ export const groupPhotos = async (
   const targetGroupId = predefinedGroupId || generateId();
   const { supabase } = await import('@/lib/supabase');
   const { data: { session } } = await supabase.auth.getSession();
-  const userId = session?.user?.id;
+  const userId = session?.user?.id || 'staff';
 
   // Derive a name if missing: "全面强制 合组新合并就叫GROUP，除非改名。"
   let finalName = metadata?.name || { zh: 'GROUP', en: 'GROUP', ms: 'GROUP' };
@@ -138,20 +124,23 @@ export const groupPhotos = async (
   // Prepare Group Record
   const groupData = {
     name: finalName,
-    description: metadata?.description || { zh: '', en: '', ms: '' },
+    status: 'confirmed' as any,
     updated_at: new Date().toISOString()
   };
 
   const groupPhotosRes = await api.groups['group-photos'].$post({
     json: {
       targetGroupId,
-      userId: userId as string,
+      userId: userId,
       photoIds,
       groupData
     }
   });
 
-  if (!groupPhotosRes.ok) throw new Error('Group photos failed');
+  if (!groupPhotosRes.ok) {
+    const errorText = await groupPhotosRes.text();
+    throw new Error('Group photos failed: ' + errorText);
+  }
 
   return { newGroupId: targetGroupId };
 };

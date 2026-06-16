@@ -97,19 +97,27 @@ export const groups = new Hono()
 
       let err;
       if (!checkData) {
-        const { error } = await supabase.from('groups').insert({
+        const insertData: any = {
           id: targetGroupId,
-          user_id: userId,
           is_hidden: false,
           created_at: new Date().toISOString(),
           ...groupData
-        });
+        };
+        // Only set user_id if it's a valid uuid (not 'staff')
+        if (userId !== 'staff' && userId) {
+          insertData.user_id = userId;
+        }
+
+        const { error } = await supabase.from('groups').insert(insertData);
         err = error;
       } else {
         const { error } = await supabase.from('groups').update(groupData).eq('id', targetGroupId);
         err = error;
       }
-      if (err) return c.json({ success: false, error: err.message }, 500);
+      if (err) {
+        console.error("Group insert error:", err);
+        return c.json({ success: false, error: err.message }, 500);
+      }
 
       // Merge
       if (sourceGroupIds && sourceGroupIds.length > 0) {
