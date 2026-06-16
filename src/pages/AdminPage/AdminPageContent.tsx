@@ -21,7 +21,7 @@ import { AdminAuthGate } from '@/components/admin/AdminAuthGate';
 import { AdminContainer } from '@/components/admin/AdminContainer';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { useFilters } from '@/hooks/useFilters';
-import { FiltersBar } from '@/components/filters/FiltersBar';
+import { FilterBar } from '@/features/filter/components/FilterBar';
 
 export function AdminPageContent() {
   const filters = useFilters({ enableStatus: true, enableBatch: true });
@@ -62,7 +62,7 @@ export function AdminPageContent() {
           {(currentScreen === 'gallery') ? (
             <>
               <AdminHeader />
-              <FiltersBar filters={filters} showStatus showBatch />
+              <FilterBar mode="admin" />
               <div className="flex-1 relative overflow-hidden pb-16 sm:pb-0">
                 <div key="admin-gallery" className="absolute inset-0 animate-fade-in">
                   <AdminContainer />

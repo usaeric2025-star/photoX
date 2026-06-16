@@ -33,21 +33,6 @@ export function AdminGridContainer() {
   const { columns, setColumns } = useColumns();
   const isMultiSelect = useUIStore(s => s.isMultiSelect);
   
-  useEffect(() => {
-    const handleResize = () => {
-      const isMobile = window.innerWidth <= 768;
-      if (isMobile) {
-        setColumns(3);
-      } else {
-        setColumns(5); // Default desktop to 5
-      }
-    };
-    handleResize(); 
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [setColumns]);
-
   const { data: categories = [] } = useCategories();
   const { data: tags = [] } = useTags();
 

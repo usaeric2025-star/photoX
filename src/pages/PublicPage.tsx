@@ -4,7 +4,7 @@ import { usePublicPhotos, usePhotoCount, useTranslation } from '@/hooks';
 import { getTranslatedCategoryName } from '@/services/category/utils';
 import { Photo } from '@/types';
 import { PublicHeader } from '@/components/layouts/headers/PublicHeader';
-import { FiltersBar } from '@/components/filters/FiltersBar';
+import { FilterBar } from '@/features/filter/components/FilterBar';
 import { VirtualPhotoGrid } from '@/components/photo/VirtualPhotoGrid';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { useColumns } from '@/features/layout/hooks/useColumns';
@@ -93,7 +93,7 @@ export default function PublicPage() {
         onRefresh={handleRefresh}
         isRefreshing={isRefreshing || isPending}
       />
-      <FiltersBar filters={filters} />
+      <FilterBar mode="public" />
       <div className="flex-1 overflow-hidden relative">
         <ErrorBoundary>
           <VirtualPhotoGrid
