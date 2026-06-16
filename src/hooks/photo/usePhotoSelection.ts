@@ -9,6 +9,13 @@ import { useRouterSafe } from '@/hooks/core/useRouterSafe';
  * usePhotoSelection
  * 合併了多選狀態管理與批量操作邏輯。
  * 替換了原有的 useMultiSelect 與 useBatchEdit。
+ * 
+ * @hook-contract
+ * inputs: none
+ * outputs: { isMultiSelect: boolean, selectedIds: string[], ... }
+ * invariants: stateless (delegates to UIStore)
+ * 
+ * @deps-contract: static=[useUIStore, useAdminMaintenance, useRouterSafe, useCallback, useState] dynamic=[]
  */
 export const usePhotoSelection = () => {
   const isMultiSelect = useUIStore((state) => state.isMultiSelect);

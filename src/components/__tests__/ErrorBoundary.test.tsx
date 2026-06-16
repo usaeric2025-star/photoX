@@ -27,7 +27,8 @@ describe('ErrorBoundary', () => {
       </ErrorBoundary>
     );
     
-    expect(getByText('重試 / Retry')).toBeInTheDocument();
+    expect(getByText(/出错了 \/ Something went wrong/)).toBeInTheDocument();
+    expect(getByText(/刷新页面 \/ Refresh/)).toBeInTheDocument();
     
     // Verify componentDidCatch only logs and doesn't trigger side effects
     expect(consoleSpy).toHaveBeenCalled();
