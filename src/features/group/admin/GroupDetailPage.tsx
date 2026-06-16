@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import { useGroupData } from '../shared/hooks/useGroupData';
-import { Group, ProductGroup, Dimension } from '@/types';
+import { Photo, Group, ProductGroup, Dimension } from '@/types';
 import { AdminPhotoCard } from '@/components/photo/AdminPhotoCard';
 import { YarlLightbox } from '@/components/lightbox/YarlLightbox';
 import { useFilters, useTranslation, useCategories } from '@/hooks';
@@ -21,7 +21,7 @@ import { PhotoEditModal } from '@/components/admin/PhotoEditModal';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { Button } from '@/components/shared/Button';
 
-function AdminPhotoGrid({ photos, onPhotoClick }: { photos: any[]; onPhotoClick: (id: string) => void }) {
+function AdminPhotoGrid({ photos, onPhotoClick }: { photos: Photo[]; onPhotoClick: (id: string) => void }) {
   const isMultiSelect = useUIStore(s => s.isMultiSelect);
   const { toggle } = usePhotoSelection();
 
@@ -48,13 +48,13 @@ function AdminPhotoGrid({ photos, onPhotoClick }: { photos: any[]; onPhotoClick:
 export function AdminGroupDetailPage() {
   const routerSafe = useRouterSafe();
   const { groupId: fGroupId, photoId, setPhotoId, setModal } = useFilters();
-  const groupId = (routerSafe.params as any).groupId || fGroupId;
+  const groupId = (routerSafe.params as { groupId?: string }).groupId || fGroupId;
   
   const { group, photos, totalCount, loading, error } = useGroupData({ groupId, isAdmin: true });
 
   const lightboxIndex = React.useMemo(() => {
     if (!photoId) return -1;
-    return photos.findIndex((p: any) => p.id === photoId);
+    return photos.findIndex((p: Photo) => p.id === photoId);
   }, [photoId, photos]);
 
   const lightboxOpen = lightboxIndex !== -1;
@@ -67,7 +67,7 @@ export function AdminGroupDetailPage() {
   const adminActions = useAdminMaintenance();
   const { handleBatchAiIdentifyTrigger } = useAdminBatchActions();
 
-  const lightboxItems = photos.map((p: any) => {
+  const lightboxItems = photos.map((p: Photo) => {
     const catName = p.category_id ? getTranslatedCategoryName(String(p.category_id), categories, lang, t) : '';
     return {
       id: p.id,
@@ -76,7 +76,7 @@ export function AdminGroupDetailPage() {
       title: p.name?.[lang as 'zh'] || p.item_code || '',
       description: p.description?.[lang as 'zh'] || '',
       category: catName,
-      tags: p.tags?.map((tag: any) => tag.name) || [],
+      tags: p.tags?.map((tag) => tag.name) || [],
       photo: p,
     };
   });
@@ -97,12 +97,11 @@ export function AdminGroupDetailPage() {
 
   const { groupData, setGroupData, handleUpdateGroupData } = useGroupDraft(
     groupId,
-    photos as any[],
-    async (id, data) => {}
+    photos,
+    async (_id, _data) => {}
   );
   const { update, dissolve } = useGroupMutations();
   const { deletePhoto, updatePhoto } = adminActions;
-  const storeUpdate = useUIStore((s) => s.update);
   
   const handleUpdateTitle = async (newName: string) => {
     await update.mutateAsync({ id: groupId, updates: { name: newName } });
@@ -162,8 +161,8 @@ export function AdminGroupDetailPage() {
           setGroupData={setGroupData}
           handleUpdateGroupData={handleUpdateGroupData}
           onUngroup={async (id) => await dissolve.mutateAsync(id)}
-          update={update}
-          t={t}
+          update={async (updates) => { await update.mutateAsync({ id: groupId, updates }); }}
+          t={(key: string) => (t as any)[key] || key}
         />
       )}
 

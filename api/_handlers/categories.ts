@@ -18,7 +18,7 @@ export const categories = new Hono()
     if (error) return c.json({ success: false, error: error.message }, 500);
 
     // Transform to frontend format: { id, name, code, zh, en, ms, sort_order }
-    const formatted = data.map((item: any) => ({
+    const formatted = data.map((item: Record<string, unknown>) => ({
         id: item.id,
         name: item.name_zh,
         zh: item.name_zh,
@@ -65,7 +65,7 @@ export const categories = new Hono()
         .select('id');
     
     if (error) return c.json({ success: false, error: error.message }, 500);
-    return c.json({ success: true, data: data?.map((i: any) => i.id) || [] });
+    return c.json({ success: true, data: data?.map((i: { id: string }) => i.id) || [] });
   })
   .post('/', async (c) => {
     const body = await c.req.json();

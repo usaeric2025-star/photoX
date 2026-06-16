@@ -13,8 +13,8 @@ interface BasePhotoTagSelectorProps {
   selectedTagIds: string[];
   onChange: (ids: string[]) => void;
   addTag: (name: string) => Promise<string | null>;
-  updateTag: (id: string, name: string) => Promise<void>;
-  deleteTag: (id: string) => Promise<void>;
+  updateTag: (id: string, name: string) => Promise<any>;
+  deleteTag: (id: string) => Promise<any>;
   tags: Tag[];
   hideHotLabel?: boolean;
 }
@@ -139,12 +139,12 @@ function BasePhotoTagSelector({
 interface PhotoTagSelectorProps {
   name: string;
   addTag: (name: string) => Promise<string | null>;
-  updateTag: (id: string, name: string) => Promise<void>;
-  deleteTag: (id: string) => Promise<void>;
+  updateTag: (id: string, name: string) => Promise<any>;
+  deleteTag: (id: string) => Promise<any>;
   tags: Tag[];
-  control: Record<string, unknown>;
-  value: (string | { id: string | number })[];
-  onChange: (val: (string | { id: string | number })[]) => void;
+  control?: any;
+  value?: (string | { id: string | number })[];
+  onChange?: (val: (string | { id: string | number })[]) => void;
   hideHotLabel?: boolean;
 }
 
@@ -158,7 +158,7 @@ export function PhotoTagSelector(props: PhotoTagSelectorProps) {
 
   return (
     <BasePhotoTagSelector
-      selectedTagIds={props.value || []}
+      selectedTagIds={(props.value || []).map(v => typeof v === 'object' ? String(v.id) : v)}
       onChange={props.onChange || (() => {})}
       addTag={props.addTag}
       updateTag={props.updateTag}
@@ -186,7 +186,7 @@ function ControlledPhotoTagSelector({
 
   return (
     <BasePhotoTagSelector
-      selectedTagIds={field.value || []}
+      selectedTagIds={(field.value || []).map((v: any) => typeof v === 'object' ? String(v.id) : v)}
       onChange={field.onChange}
       addTag={addTag}
       updateTag={updateTag}

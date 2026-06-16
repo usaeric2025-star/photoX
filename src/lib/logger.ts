@@ -10,19 +10,19 @@ type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 class Logger {
   private enabled: boolean = isDev && !isTest;
 
-  debug(...args: any[]) {
+  debug(...args: unknown[]) {
     if (this.enabled) console.debug('[DEBUG]', ...args);
   }
 
-  info(...args: any[]) {
+  info(...args: unknown[]) {
     if (this.enabled) console.info('[INFO]', ...args);
   }
 
-  warn(...args: any[]) {
+  warn(...args: unknown[]) {
     console.warn('[WARN]', ...args);
   }
 
-  error(...args: any[]) {
+  error(...args: unknown[]) {
     console.error('[ERROR]', ...args);
   }
 
@@ -66,5 +66,5 @@ export const logger = new Logger();
 
 // 挂载到 window 方便调试
 if (isDev && typeof window !== 'undefined') {
-  (window as any).logger = logger;
+  (window as Window & { logger?: Logger }).logger = logger;
 }

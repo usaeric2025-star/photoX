@@ -1,11 +1,14 @@
 import { type } from "arktype";
 
-export type ApiResponse<T = any> = {
+export type JsonValue = string | number | boolean | null | { [key: string]: JsonValue } | JsonValue[];
+export type JsonObject = { [key: string]: JsonValue };
+
+export type ApiResponse<T = unknown> = {
     success: boolean;
     data?: T;
-    error?: string | any;
+    error?: string;
     text?: string;
-    usage?: any;
+    usage?: JsonObject;
     raw_result?: string;
 };
 

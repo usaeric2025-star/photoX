@@ -4,39 +4,45 @@ import { queryKeys } from '@/lib/query/keys';
 import { defineMutation } from '@/lib/mutations/defineMutation';
 import { useAppMutation } from '@/lib/mutations/useAppMutation';
 
-const tagCreateConfig = defineMutation<Tag, string | Partial<Tag>>({
+// 1. 创建标签
+const tagCreateConfig = defineMutation<Tag, string | Partial<Tag>, readonly unknown[]>({
   name: 'tagCreate',
   service: async (variables) => {
     const name = typeof variables === 'string' ? variables : (variables.name || '');
     const res = await addTagToDB(name);
-    if (!res) throw new Error('标签创建失败');
-    return res;
+    if (!res || (typeof res === 'object' && 'ok' in res && !res.ok)) {
+      throw new Error('标签创建失败');
+    }
+    return res as Tag;
   },
-  invalidate: () => [queryKeys.tags.tags() as any, queryKeys.photos.all as any],
+  invalidate: () => [queryKeys.tags.all, queryKeys.photos.all],
   successMessage: '标签添加成功',
 });
 export const useTagCreate = () => useAppMutation(tagCreateConfig);
 
-const tagEditConfig = defineMutation<boolean, { id: string; updates: Partial<Tag> }>({
+// 2. 编辑标签
+const tagEditConfig = defineMutation<boolean, { id: string; updates: Partial<Tag> }, readonly unknown[]>({
   name: 'tagEdit',
   service: async ({ id, updates }) => {
     const res = await updateTagInDB(id, updates);
     if (!res) throw new Error('标签更新失败');
     return true;
   },
-  invalidate: () => [queryKeys.tags.tags() as any, queryKeys.photos.all as any],
+  invalidate: () => [queryKeys.tags.all, queryKeys.photos.all],
   successMessage: '标签更新成功',
 });
 export const useTagEdit = () => useAppMutation(tagEditConfig);
 
-const tagDeleteConfig = defineMutation<boolean, string>({
+// 3. 删除标签
+const tagDeleteConfig = defineMutation<boolean, string, readonly unknown[]>({
   name: 'tagDelete',
-  service: async (id: string) => {
+  service: async (id) => {
     const res = await deleteTagFromDB(id);
     if (!res) throw new Error('标签删除失败');
     return true;
   },
-  invalidate: () => [queryKeys.tags.tags() as any, queryKeys.photos.all as any],
+  invalidate: () => [queryKeys.tags.all, queryKeys.photos.all],
   successMessage: '标签删除成功',
 });
 export const useTagDelete = () => useAppMutation(tagDeleteConfig);
+

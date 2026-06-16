@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { type } from 'arktype';
 import { getServerEnv } from '../_shared/envSchema.js';
 import { getSupabaseAdmin } from '../_lib/supabase.js';
-import { getAIProvider, OpenRouterProvider, AgnesProvider } from '../_lib/ai/providerFactory.js';
+import { getAIProvider, OpenRouterProvider, AgnesProvider, BaseAIProvider } from '../_lib/ai/providerFactory.js';
 import { decrypt } from '../_lib/encryption.js';
 import { executeAITask } from '../_lib/ai/executor.js';
 import { processGroupAnalysis } from './ai/groupAnalysis.js';
@@ -14,9 +14,30 @@ import {
     AIAnalyzeGroupReqSchema,
     AIAnalyzePhotoV2ReqSchema,
     AIClusterPhotosReqSchema,
-    ApiResponse
+    ApiResponse,
+    JsonObject
 } from '../_shared/apiContractSchema.js';
 import { AI_PROMPTS } from './ai/prompts.js';
+
+interface HonoContextUser {
+    id: string;
+    email?: string;
+}
+
+interface GroupInsertData {
+    id: string;
+    name: { zh: string; en: string; ms: string };
+    status: string;
+    created_at: string;
+    user_id?: string;
+}
+
+interface DBGroup {
+    id: string;
+    name: string | JsonObject;
+    status: string;
+    created_at: string;
+}
 
 const serverEnv = getServerEnv(process.env);
 export const ai = new Hono();
@@ -68,7 +89,8 @@ ai.post("/run", async (c) => {
         const { task, imageUrl, prompt } = check;
         const supabase = await getSupabaseAdmin();
         const provider = await getAIProvider('', supabase);
-        const model = (provider as { config: { model: string } }).config.model; // Since we need it for logging
+        const modelConfig = (provider as BaseAIProvider).getConfig().model;
+        const model = modelConfig || 'google/gemini-2.5-flash-lite'; // Ensure non-nullable
         
         const messages = imageUrl 
             ? [{ role: 'user', content: [{ type: 'image_url', image_url: { url: imageUrl } }, { type: 'text', text: prompt || 'Analyze this image' }]}]
@@ -114,7 +136,8 @@ ai.post("/analyze", async (c) => {
         ]);
 
         const provider = await getAIProvider('', supabase);
-        const model = (provider as { config: { model: string } }).config.model;
+        const modelConfig = (provider as BaseAIProvider).getConfig().model;
+        const model = modelConfig || 'google/gemini-2.5-flash-lite';
         
         const context = {
             categories: (catRef.data || []).map((c: { id: string; name: string; zh: string }) => ({ id: c.id, name: c.name, zh: c.zh })).slice(0, 50),
@@ -153,7 +176,8 @@ ai.post("/analyze-base64", async (c) => {
       const { base64Image, customModel, promptText } = check;
       const supabase = await getSupabaseAdmin();
       const provider = await getAIProvider('', supabase, customModel);
-      const model = (provider as { config: { model: string } }).config.model;
+      const modelConfig = (provider as BaseAIProvider).getConfig().model;
+      const model = modelConfig || 'google/gemini-2.5-flash-lite';
 
       const { data, rawText } = await executeAITask({
           task: 'analyze-base64',
@@ -183,7 +207,8 @@ ai.post("/translate", async (c) => {
       const { customModel, promptText } = check;
       const supabase = await getSupabaseAdmin();
       const provider = await getAIProvider('', supabase, check.customModel);
-      const model = (provider as any).config.model;
+      const modelConfig = (provider as BaseAIProvider).getConfig().model;
+      const model = modelConfig || 'google/gemini-2.5-flash-lite';
 
       const { data, rawText } = await executeAITask({
           task: 'translate',
@@ -194,13 +219,13 @@ ai.post("/translate", async (c) => {
           shouldNormalize: false
       });
 
-      if (data && (data as any)._fallback) {
-          throw new Error((data as any)._error || 'AI translation failed');
+      if (data && (data as { _fallback?: boolean })._fallback) {
+          throw new Error((data as { _error?: string })._error || 'AI translation failed');
       }
 
       return c.json({ success: true, data, raw_result: rawText } as ApiResponse);
-    } catch (error: any) { 
-        return c.json({ success: false, error: error.message } as ApiResponse, 500); 
+    } catch (error: unknown) { 
+        return c.json({ success: false, error: error instanceof Error ? error.message : 'Unknown AI error' } as ApiResponse, 500); 
     }
 });
 
@@ -213,7 +238,8 @@ ai.post("/analyze-group", async (c) => {
       const supabase = await getSupabaseAdmin();
       const prompt = AI_PROMPTS.ANALYZE_GROUP(check.photoDetails);
       const provider = await getAIProvider('', supabase);
-      const model = (provider as any).config.model;
+      const modelConfig = (provider as BaseAIProvider).getConfig().model;
+      const model = modelConfig || 'google/gemini-2.5-flash-lite';
 
       const { data, rawText } = await executeAITask({
           task: 'analyze-group',
@@ -223,13 +249,13 @@ ai.post("/analyze-group", async (c) => {
           prompt
       });
 
-      if (data && (data as any)._fallback) {
-          throw new Error((data as any)._error || 'AI group analysis failed');
+      if (data && (data as { _fallback?: boolean })._fallback) {
+          throw new Error((data as { _error?: string })._error || 'AI group analysis failed');
       }
 
       return c.json({ success: true, data, raw_result: rawText } as ApiResponse);
-    } catch (error: any) { 
-        return c.json({ success: false, error: error.message } as ApiResponse, 500); 
+    } catch (error: unknown) { 
+        return c.json({ success: false, error: error instanceof Error ? error.message : 'Unknown AI error' } as ApiResponse, 500); 
     }
 });
 
@@ -242,7 +268,8 @@ ai.post("/analyze-photo-v2", async (c) => {
       const supabase = await getSupabaseAdmin();
       const prompt = AI_PROMPTS.REFINE_PHOTO(check.photoDetail);
       const provider = await getAIProvider('', supabase);
-      const model = (provider as any).config.model;
+      const modelConfig = (provider as BaseAIProvider).getConfig().model;
+      const model = modelConfig || 'google/gemini-2.5-flash-lite';
 
       const { data, rawText } = await executeAITask({
           task: 'analyze-photo-v2',
@@ -253,13 +280,13 @@ ai.post("/analyze-photo-v2", async (c) => {
             metadata: { photoId: check.photoId }
         });
 
-      if (data && (data as any)._fallback) {
-          throw new Error((data as any)._error || 'AI refine photo failed');
+      if (data && (data as { _fallback?: boolean })._fallback) {
+          throw new Error((data as { _error?: string })._error || 'AI refine photo failed');
       }
 
         return c.json({ success: true, data, raw_result: rawText } as ApiResponse);
-    } catch (error: any) { 
-        return c.json({ success: false, error: error.message } as ApiResponse, 500); 
+    } catch (error: unknown) { 
+        return c.json({ success: false, error: error instanceof Error ? error.message : 'Unknown AI error' } as ApiResponse, 500); 
     }
 });
 
@@ -270,19 +297,19 @@ ai.post("/cluster-photos", async (c) => {
         if (check instanceof type.errors) throw new Error(check.summary);
 
         const supabase = await getSupabaseAdmin();
-        const user = (c as any).get('user');
+        const user = (c as { get: (key: string) => HonoContextUser | undefined }).get('user');
         const userId = user?.id; // 從 requireRealUser 中獲獲的用戶 ID
 
         // 1. AI 識別
         const parsed = await processGroupAnalysis(check.photoIds);
-        const createdGroups: any[] = [];
+        const createdGroups: DBGroup[] = [];
 
         // Optimize: Fetch a valid user_id from the source photos
-        let dbUserId: string | null = null;
+        let dbUserId: string | undefined = undefined;
         if (check.photoIds && check.photoIds.length > 0) {
             const { data: sourcePhotos } = await supabase.from('furniture_items').select('user_id').in('id', check.photoIds).limit(1).maybeSingle();
             if (sourcePhotos?.user_id) {
-                dbUserId = sourcePhotos.user_id;
+                dbUserId = sourcePhotos.user_id as string;
             }
         }
 
@@ -290,7 +317,7 @@ ai.post("/cluster-photos", async (c) => {
         for (const g of parsed.groups) {
             const groupId = crypto.randomUUID();
             
-            const insertGroupData: any = {
+            const insertGroupData: GroupInsertData = {
                 id: groupId,
                 name: { zh: g.name, en: g.name_en, ms: g.name_ms },
                 status: 'confirmed',
@@ -325,16 +352,16 @@ ai.post("/cluster-photos", async (c) => {
         }
 
         // 3. 記錄操作日誌 (可在大併發後異步，這裡同步保險)
-        await supabase.from('group_correction_logs' as any).insert({
+        await supabase.from('group_correction_logs').insert({
             operation: 'ai_cluster',
             input_photo_ids: check.photoIds,
             created_groups: createdGroups.map(g => g.id),
             user_id: userId,
             created_at: new Date().toISOString()
-        });
+        } as any);
 
         return c.json({ success: true, data: createdGroups } as ApiResponse);
-    } catch (error: any) { 
-        return c.json({ success: false, error: error.message } as ApiResponse, 500); 
+    } catch (error: unknown) { 
+        return c.json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' } as ApiResponse, 500); 
     }
 });

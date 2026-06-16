@@ -1,4 +1,5 @@
 import { logger } from './logger.js';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * Robust Group Integrity and Cover Photos Synchronization (長期維護機制)
@@ -8,7 +9,7 @@ import { logger } from './logger.js';
  * 3. groups.member_count matches the actual count of photos in the group
  * 4. Automatic dissolution of groups with <= 1 member
  */
-export async function syncGroupCoversAndCount(supabase: any, groupIds: string[]): Promise<void> {
+export async function syncGroupCoversAndCount(supabase: SupabaseClient, groupIds: string[]): Promise<void> {
   const uniqueGroupIds = Array.from(new Set(groupIds.filter(Boolean)));
   if (uniqueGroupIds.length === 0) return;
 
@@ -54,7 +55,7 @@ export async function syncGroupCoversAndCount(supabase: any, groupIds: string[])
       }
 
       // Find if there is a cover among group members
-      let currentCover = items.find((p: any) => p.is_group_cover === true);
+      let currentCover = items.find((p: Record<string, unknown>) => p.is_group_cover === true);
       
       // Get the group's current cover_photo_id in db
       const { data: groupData, error: groupFetchError } = await supabase
@@ -81,7 +82,7 @@ export async function syncGroupCoversAndCount(supabase: any, groupIds: string[])
 
       if (!isCoverValid) {
         // Reconcile cover
-        const matchedMemberObj = items.find((p: any) => p.id === dbCoverPhotoId);
+        const matchedMemberObj = items.find((p: Record<string, unknown>) => p.id === dbCoverPhotoId);
         if (matchedMemberObj) {
           targetCoverPhotoId = dbCoverPhotoId;
         } else {
@@ -132,8 +133,8 @@ export async function syncGroupCoversAndCount(supabase: any, groupIds: string[])
         logger.info(`[GroupSync] Reconciled group ${groupId}. Cover: ${targetCoverPhotoId}`);
       }
 
-    } catch (err: any) {
-      logger.error(`[GroupSync] Unexpected exception syncing group ${groupId}:`, err.message);
+    } catch (err: unknown) {
+      logger.error(`[GroupSync] Unexpected exception syncing group ${groupId}:`, (err as Error).message);
     }
   }
 }

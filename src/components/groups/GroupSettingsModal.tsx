@@ -16,12 +16,19 @@ interface GroupSettingsModalProps {
   groupData: ProductGroup | null;
   setGroupData: React.Dispatch<React.SetStateAction<ProductGroup | null>>;
   onUngroup?: (groupId: string) => Promise<void> | void;
-  update?: any;
+  update?: (updates: Partial<ProductGroup>) => Promise<void>;
   handleUpdateGroupData: (updates: Partial<ProductGroup>) => Promise<void>;
-  t: any;
+  t: (key: string) => string;
 }
 
-function GroupSettingsHeader({ groupData, activeGroupId, onUngroup, setShowGroupSettings }: any) {
+interface GroupSettingsHeaderProps {
+  groupData: ProductGroup | null;
+  activeGroupId: string | null;
+  onUngroup?: (groupId: string) => Promise<void> | void;
+  setShowGroupSettings: (show: boolean) => void;
+}
+
+function GroupSettingsHeader({ groupData, activeGroupId, onUngroup, setShowGroupSettings }: GroupSettingsHeaderProps) {
   const [isOpen, { open, close }] = useDisclosure();
   return (
     <div className="flex items-center justify-between p-4 border-b">
@@ -55,7 +62,13 @@ function GroupSettingsHeader({ groupData, activeGroupId, onUngroup, setShowGroup
   );
 }
 
-function GroupSettingsContent({ groupData, handleUpdateGroupData, t }: any) {
+interface GroupSettingsContentProps {
+  groupData: ProductGroup | null;
+  handleUpdateGroupData: (updates: Partial<ProductGroup>) => Promise<void>;
+  t: (key: string) => string;
+}
+
+function GroupSettingsContent({ groupData, handleUpdateGroupData, t }: GroupSettingsContentProps) {
   if (!groupData) return <div className="p-4 text-slate-500 text-center">無法載入合組資料</div>;
   
   return (

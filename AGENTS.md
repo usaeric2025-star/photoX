@@ -1485,3 +1485,18 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 
 ## Z-index 警告（重要）
 如果你再用zindex不遵守规范，就要赔偿我一百万。
+
+## 客戶端快取規範（永久鎖定）
+
+### 核心原則
+- ✅ 服務端狀態統一由 TanStack Query 記憶體快取管理
+- ✅ 使用者偏好統一由 storage.ts (localStorage) 管理
+- ❌ 禁止引入 IndexedDB 相關依賴（idb, dexie, query-persist-client-core）
+- ❌ 禁止自建 CacheService 或 IndexedDB Adapter
+
+### 重新評估觸發條件（必須同時滿足）
+1. 實測證明：Chrome DevTools Performance 顯示記憶體快取導致 OOM 或嚴重卡頓
+2. 規模達標：單頁持久化數據量 > 1MB（約 2000+ 張照片元數據）
+
+### 理由
+PhotoX 當前單頁數據 < 100KB，IndexedDB 收益為零且增加 Bundle Size 與調試複雜度。

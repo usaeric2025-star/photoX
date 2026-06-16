@@ -51,8 +51,8 @@ export const updateHandler = (app: Hono) => {
 
     // POST-MUTATION: Reconcile covers & counts since things changed
     const affectedGroupIds: string[] = [];
-    if (beforeUpdate?.group_id) affectedGroupIds.push(beforeUpdate.group_id);
-    if (updateObj.group_id) affectedGroupIds.push(updateObj.group_id);
+    if (beforeUpdate?.group_id) affectedGroupIds.push(beforeUpdate.group_id as string);
+    if (updateObj.group_id) affectedGroupIds.push(updateObj.group_id as string);
 
     if (affectedGroupIds.length > 0) {
       const { syncGroupCoversAndCount } = await import('../../_lib/groups.js');

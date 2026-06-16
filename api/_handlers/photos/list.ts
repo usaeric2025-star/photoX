@@ -17,7 +17,7 @@ interface CachedTags {
 let tagsCache: CachedTags | null = null;
 const CACHE_TTL = 30000; // 30 seconds
 
-async function getCachedTags(supabase: Record<string, unknown>) {
+async function getCachedTags(supabase: any) {
   const now = Date.now();
   if (tagsCache && now - tagsCache.timestamp < CACHE_TTL) {
     return tagsCache.data;
@@ -253,7 +253,7 @@ export const listHandler = (app: Hono) => {
     }
     
     const { count, error } = await query;
-    if (error) return c.json({ success: false, error: error.message }, 500);
+    if (error) return c.json({ success: false, error: (error as any).message }, 500 as any);
     return c.json({ success: true, data: count || 0 });
   });
 };

@@ -5,7 +5,7 @@ import { getSupabaseAdmin } from "../supabase.js";
 
 interface AIProvider {
   name: string;
-  chat: (messages: unknown[]) => Promise<{ text?: string; error?: string; success: boolean; usage?: Record<string, unknown> }>;
+  chat: (messages: any[]) => Promise<{ text?: string; error?: string; success: boolean; usage?: Record<string, unknown> }>;
 }
 
 interface AITaskOptions {

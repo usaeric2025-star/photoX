@@ -2,7 +2,7 @@ import React from 'react';
 import { useFilters } from '@/hooks/useFilters';
 import { usePublicPhotos, usePhotoCount, useTranslation } from '@/hooks';
 import { getTranslatedCategoryName } from '@/services/category/utils';
-import { Photo } from '@/types';
+import { Photo, Category } from '@/types';
 import { PublicHeader } from '@/components/layouts/headers/PublicHeader';
 import { FilterBar } from '@/features/filter/components/FilterBar';
 import { VirtualPhotoGrid } from '@/components/photo/VirtualPhotoGrid';
@@ -38,7 +38,7 @@ export default function PublicPage() {
 
   const { lang, uiTranslations: t } = useTranslation();
 
-  const lightboxItems = React.useMemo(() => photos.map((p: any) => {
+  const lightboxItems = React.useMemo(() => photos.map((p: Photo) => {
     const catName = p.category_id ? getTranslatedCategoryName(String(p.category_id), categories, lang, t) : '';
     return {
       id: p.id,
@@ -47,7 +47,7 @@ export default function PublicPage() {
       title: p.name?.[lang as 'zh'] || p.item_code || '',
       description: p.description?.[lang as 'zh'] || '',
       category: catName,
-      tags: p.tags?.map((t: any) => t.name) || [],
+      tags: p.tags?.map((t) => t.name) || [],
       photo: p,
     };
   }), [photos, categories, lang, t]);
@@ -75,7 +75,7 @@ export default function PublicPage() {
     refetchCount();
   };
 
-  const renderCard = (photo: Photo, index: number, sharedCategories: any[]) => (
+  const renderCard = (photo: Photo, index: number, sharedCategories: Category[]) => (
     <PublicPhotoCard 
       photo={photo} 
       showGroupsCollapsed={filters.showGroupsCollapsed}

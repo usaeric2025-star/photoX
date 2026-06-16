@@ -102,8 +102,8 @@ export const autoGroupPhotos = async (
 
     const { groupPhotos } = await import('../group/commands');
     const result = await groupPhotos(photoIds, undefined, {
-      name: nameObj,
-      description: descObj
+      name: nameObj as unknown as Record<string, string>,
+      description: descObj as unknown as Record<string, string>
     });
     
     return result;

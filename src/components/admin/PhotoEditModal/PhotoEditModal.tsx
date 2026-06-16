@@ -109,7 +109,7 @@ export function PhotoEditModal({ slots, isOpen: propIsOpen, onClose: propOnClose
           handleClose={handleClose}
           isDeleteOpen={isDeleteOpen}
           deleteDialog={deleteDialog}
-          deletePhoto={deletePhoto}
+          deletePhoto={deletePhoto as any}
         />
       </Modal>
     </PhotoEditSessionProvider>

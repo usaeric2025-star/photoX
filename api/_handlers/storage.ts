@@ -71,8 +71,8 @@ storage.post("/upload-direct", async (c) => {
       const publicUrl = `${serverEnv.R2_PUBLIC_URL_PREFIX}/${fileName}`;
       
       return c.json({ success: true, data: { publicUrl } });
-    } catch(e: any) {
-      return c.json({ success: false, error: e.message }, 500);
+    } catch(e: unknown) {
+      return c.json({ success: false, error: (e as Error).message }, 500);
     }
 });
 

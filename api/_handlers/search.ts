@@ -18,14 +18,14 @@ export const search = new Hono()
       return c.json({ success: false, error: 'Search failed' }, 500);
     }
 
-    const tagIds = (tagsRes.data || []).map((t: any) => t.id);
-    const catIds = (catsRes.data || []).map((c: any) => c.id);
+    const tagIds = (tagsRes.data || []).map((t: { id: string }) => t.id);
+    const catIds = (catsRes.data || []).map((c: { id: string }) => c.id);
 
     let photoIds: string[] = [];
     if (tagIds.length > 0) {
       const { data: ptData, error: ptError } = await supabase.from('photo_tags').select('photo_id').in('tag_id', tagIds);
       if (!ptError && ptData) {
-        photoIds = ptData.map((pt: any) => pt.photo_id);
+        photoIds = ptData.map((pt: { photo_id: string }) => pt.photo_id);
       }
     }
 

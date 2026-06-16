@@ -1,7 +1,6 @@
 import { createQuery } from '@/lib/query/queryFactory';
 import { loadCategoriesFromCloud } from '@/services/category/queries';
 import { queryKeys } from '@/lib/query/keys';
-import { syncCache } from '@/lib/db/indexedDB';
 import { Category } from '@/types';
 
 /**
@@ -19,7 +18,6 @@ export const useCategories = createQuery<Category[]>({
       const orderB = b.sort_order !== undefined ? b.sort_order : Number(b.id);
       return orderA - orderB;
     });
-    syncCache.saveCategories(sortedCats).catch(() => {});
     return sortedCats;
   }
 });

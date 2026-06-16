@@ -13,14 +13,14 @@ export function useAdminBatchActions() {
     
     if (selectedIds.length > 0) {
       const selectedGroupIds = new Set<string>();
-      photos.forEach((p: any) => {
+      photos.forEach((p: Photo) => {
         if (selectedIds.includes(p.id) && p.group_id) {
           selectedGroupIds.add(p.group_id);
         }
       });
       const groupIdsArray = Array.from(selectedGroupIds);
 
-      const targetPhotos = photos.filter((p: any) => 
+      const targetPhotos = photos.filter((p: Photo) => 
         selectedIds.includes(p.id) || (p.group_id && groupIdsArray.includes(p.group_id))
       );
       handleBatchAiAnalyze(targetPhotos);

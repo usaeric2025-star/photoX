@@ -1,0 +1,87 @@
+import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { LoginScreen } from '../admin/LoginScreen';
+import React from 'react';
+
+// Mock useRouterSafe and Link since we are in a testing environment without router
+vi.mock('@/hooks/core/useRouterSafe', () => ({
+  useRouterSafe: () => ({
+    navigate: vi.fn(),
+  }),
+}));
+
+vi.mock('@tanstack/react-router', () => ({
+  Link: ({ children, to }: { children: React.ReactNode; to: string }) => <a href={to}>{children}</a>,
+}));
+
+// Mock locales
+vi.mock('@/locales', () => ({
+  translations: {
+    en: {
+      loginTitleAdmin: 'Admin',
+      loginTitleStaff: 'Staff',
+      login: 'Login',
+      enterPasscode: 'Enter Passcode',
+      unlockAndAccess: 'Unlock',
+      invalidCode: 'Invalid code',
+      loginFailed: 'Login failed',
+      agreeByConnecting: 'By connecting, you agree to our',
+      termsOfService: 'Terms',
+      privacyPolicy: 'Privacy',
+      backToShowcase: 'Back to Showcase'
+    },
+    zh: {
+      loginTitleAdmin: '管理员',
+      loginTitleStaff: '员工',
+      login: '登录',
+      enterPasscode: '输入访问码',
+      unlockAndAccess: '解锁并进入',
+      invalidCode: '无效代码',
+      loginFailed: '登录失败'
+    }
+  }
+}));
+
+// Mock ui store
+vi.mock('@/store/useUIStore', () => ({
+  useUIStore: (cb: any) => cb({ appLang: 'en' }),
+}));
+
+// Mock settings
+vi.mock('../../hooks', () => ({
+  useSettings: () => ({
+    settings: {
+      access_passcode: '123456'
+    }
+  })
+}));
+
+describe('LoginScreen', () => {
+  it('renders correctly and allows mode switching', () => {
+    const signIn = vi.fn();
+    render(<LoginScreen signIn={signIn} />);
+    
+    // Check initial state (admin mode)
+    expect(screen.getByText(/PHO/)).toBeInTheDocument();
+    expect(screen.getByText('Admin')).toBeInTheDocument();
+    expect(screen.getByText('Login')).toBeInTheDocument();
+    
+    // Switch to staff mode
+    const staffBtn = screen.getByText('Staff');
+    fireEvent.click(staffBtn);
+    
+    // Check staff mode elements
+    expect(screen.getByPlaceholderText('Enter Passcode')).toBeInTheDocument();
+    expect(screen.getByText('Unlock')).toBeInTheDocument();
+  });
+
+  it('calls signIn when login button is clicked in admin mode', () => {
+    const signIn = vi.fn().mockResolvedValue(undefined);
+    render(<LoginScreen signIn={signIn} />);
+    
+    const loginBtn = screen.getByText('Login');
+    fireEvent.click(loginBtn);
+    
+    expect(signIn).toHaveBeenCalled();
+  });
+});

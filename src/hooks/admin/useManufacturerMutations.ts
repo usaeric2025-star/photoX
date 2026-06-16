@@ -4,7 +4,8 @@ import { queryKeys } from '@/lib/query/keys';
 import { defineMutation } from '@/lib/mutations/defineMutation';
 import { useAppMutation } from '@/lib/mutations/useAppMutation';
 
-const manufacturerCreateConfig = defineMutation<Manufacturer, string | Partial<Manufacturer>>({
+// 1. 创建厂商
+const manufacturerCreateConfig = defineMutation<Manufacturer, string | Partial<Manufacturer>, readonly unknown[]>({
   name: 'manufacturerCreate',
   service: async (variables) => {
     const name = typeof variables === 'string' ? variables : (variables.name || '');
@@ -12,31 +13,34 @@ const manufacturerCreateConfig = defineMutation<Manufacturer, string | Partial<M
     if (!res) throw new Error('厂商创建失败');
     return res;
   },
-  invalidate: () => [queryKeys.manufacturers.manufacturers() as any, queryKeys.photos.all as any],
+  invalidate: () => [queryKeys.manufacturers.all, queryKeys.photos.all],
   successMessage: '厂商添加成功',
 });
 export const useManufacturerCreate = () => useAppMutation(manufacturerCreateConfig);
 
-const manufacturerEditConfig = defineMutation<boolean, { id: string; updates: Partial<Manufacturer> }>({
+// 2. 编辑厂商
+const manufacturerEditConfig = defineMutation<boolean, { id: string; updates: Partial<Manufacturer> }, readonly unknown[]>({
   name: 'manufacturerEdit',
   service: async ({ id, updates }) => {
     const res = await updateManufacturerInDB(id, updates);
     if (!res) throw new Error('厂商更新失败');
     return true;
   },
-  invalidate: () => [queryKeys.manufacturers.manufacturers() as any, queryKeys.photos.all as any],
+  invalidate: () => [queryKeys.manufacturers.all, queryKeys.photos.all],
   successMessage: '厂商更新成功',
 });
 export const useManufacturerEdit = () => useAppMutation(manufacturerEditConfig);
 
-const manufacturerDeleteConfig = defineMutation<boolean, string>({
+// 3. 删除厂商
+const manufacturerDeleteConfig = defineMutation<boolean, string, readonly unknown[]>({
   name: 'manufacturerDelete',
-  service: async (id: string) => {
+  service: async (id) => {
     const res = await deleteManufacturerFromDB(id);
     if (!res) throw new Error('厂商删除失败');
     return true;
   },
-  invalidate: () => [queryKeys.manufacturers.manufacturers() as any, queryKeys.photos.all as any],
+  invalidate: () => [queryKeys.manufacturers.all, queryKeys.photos.all],
   successMessage: '厂商删除成功',
 });
 export const useManufacturerDelete = () => useAppMutation(manufacturerDeleteConfig);
+

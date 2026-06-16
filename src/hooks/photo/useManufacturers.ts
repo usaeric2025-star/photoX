@@ -1,7 +1,6 @@
 import { createQuery } from '@/lib/query/queryFactory';
 import { loadManufacturersFromCloud } from '@/services/manufacturer/queries';
 import { queryKeys } from '@/lib/query/keys';
-import { syncCache } from '@/lib/db/indexedDB';
 import { Manufacturer } from '@/types';
 
 /**
@@ -10,9 +9,7 @@ import { Manufacturer } from '@/types';
 export const useManufacturers = createQuery<Manufacturer[]>({
   queryKey: () => queryKeys.manufacturers.manufacturers(),
   queryFn: async () => {
-    const mfrs = await loadManufacturersFromCloud();
-    syncCache.saveManufacturers(mfrs).catch(() => {});
-    return mfrs;
+    return await loadManufacturersFromCloud();
   },
   staleTime: 24 * 60 * 60 * 1000, // Infinity-like for mfrs
 });

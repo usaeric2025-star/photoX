@@ -1,6 +1,5 @@
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
-import 'fake-indexeddb/auto';
 
 window.ResizeObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),

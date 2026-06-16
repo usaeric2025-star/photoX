@@ -1,6 +1,7 @@
 import { api } from '@/lib/api';
 import { Photo } from '@/types';
 import { loadTagsFromCloud } from '../../tag';
+import { SupabasePhotoRaw } from '@/types/supabase';
 import { mapSupabasePhoto } from '../mappers';
 import { normalizeSearchQuery } from '@/lib/utils';
 import { logger } from '@/lib/logger';
@@ -30,9 +31,9 @@ export const getPhotos = async (
         const errText = await res.text();
         throw new Error(`Failed to load photos from cloud: ${errText}`);
     }
-    const { data } = await res.json();
+    const { data } = (await res.json()) as { data: SupabasePhotoRaw[] };
     
-    const fetched = (data || []).map((item: any) => mapSupabasePhoto(item));
+    const fetched = (data || []).map((item: SupabasePhotoRaw) => mapSupabasePhoto(item));
     
     return fetched;
 };
@@ -50,14 +51,8 @@ export const getPhotoCount = async (
       json: { categoryId, tagId, searchQuery, isAdminMode }
     });
     if (!res.ok) throw new Error('Failed to get photo count');
-    const { data } = await res.json();
+    const { data } = (await res.json()) as { data?: number };
     return data || 0;
-};
-
-export const getLocalPhotoCount = async (): Promise<number> => {
-    const { syncCache } = await import('@/lib/db/indexedDB');
-    const photos = await syncCache.getPhotos();
-    return Array.isArray(photos) ? photos.length : 0;
 };
 
 export const loadPhotosByIds = async (ids: string[]): Promise<Photo[]> => {
@@ -66,8 +61,8 @@ export const loadPhotosByIds = async (ids: string[]): Promise<Photo[]> => {
       json: { ids }
     });
     if (!res.ok) throw new Error('Failed to load photos by ids');
-    const { data } = await res.json();
-    return (data || []).map((item: any) => mapSupabasePhoto(item));
+    const { data } = (await res.json()) as { data: SupabasePhotoRaw[] };
+    return (data || []).map((item: SupabasePhotoRaw) => mapSupabasePhoto(item));
 };
 
 export const getPhotosWithoutThumbHash = async (): Promise<{ id: string }[]> => {

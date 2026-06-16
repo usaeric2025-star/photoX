@@ -45,7 +45,7 @@ adminRepair.post("/preview", async (c) => {
         photoTagMap.forEach((tagIds, photoId) => {
           if (tagIds.length > 3) {
             const photoItem = photoMap.get(photoId);
-            const photoName = photoItem ? (normalizeI18n(photoItem.name) || "未命名产品") : "未知照片";
+            const photoName = photoItem ? (normalizeI18n(photoItem.name).zh || "未命名产品") : "未知照片";
 
             const sorted = [...tagIds].sort((a, b) => {
               const weightA = getWeight(a, tagMap.get(a));
@@ -54,8 +54,8 @@ adminRepair.post("/preview", async (c) => {
               return tagIds.indexOf(a) - tagIds.indexOf(b);
             });
 
-            const kept = sorted.slice(0, 3).map(id => tagMap.get(id)?.name || id);
-            const removed = sorted.slice(3).map(id => tagMap.get(id)?.name || id);
+            const kept = sorted.slice(0, 3).map(id => (tagMap.get(id)?.name as any) || id);
+            const removed = sorted.slice(3).map(id => (tagMap.get(id)?.name as any) || id);
 
             affectedPhotos.push({
               photoId,

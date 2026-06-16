@@ -20,7 +20,7 @@ export const createHandler = (app: Hono) => {
     // If upsert introduced a group_id, reconcile
     if (payload.group_id) {
       const { syncGroupCoversAndCount } = await import('../../_lib/groups.js');
-      await syncGroupCoversAndCount(supabase, [payload.group_id]);
+      await syncGroupCoversAndCount(supabase, [String(payload.group_id)]);
     }
 
     return c.json({ success: true, data });

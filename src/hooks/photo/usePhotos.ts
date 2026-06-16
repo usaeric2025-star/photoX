@@ -3,7 +3,6 @@ import { getPhotos as loadAllPhotosFromCloud } from '@/services/photo/queries/li
 import { getPhotosByGroupPaginated as loadPhotosByGroupIdPaginated } from '@/services/photo/queries/byGroup';
 import { queryKeys } from '@/lib/query/keys';
 
-import { syncCache } from '@/lib/db/indexedDB';
 import { PHOTO_QUERY_CONFIG } from '@/constants/config';
 import { useQueryClient, InfiniteData, keepPreviousData } from '@tanstack/react-query';
 import { Photo } from '@/types';
@@ -66,21 +65,11 @@ export const usePhotos = createInfiniteQuery<{photos: Photo[], nextPage?: number
     const photos = (res || []).map(p => {
       // Inject _time here so it's calculated ONLY ONCE per fetch
       // and won't be repeated in the select selector for thousands of items
-      if (!(p as Record<string, unknown>)._time) {
-        (p as Record<string, unknown>)._time = new Date(p.created_at || (p as Record<string, unknown>).created_at || 0).getTime();
+      if (!p._time) {
+        p._time = new Date(p.created_at || 0).getTime();
       }
       return p;
     });
-
-    if (pageParam === 1 && !filters.searchQuery && !filters.category_id && !filters.tag_id) {
-      syncCache.savePhotos(photos)
-        .then(() => {
-          import('@/lib/queryClient').then(({ queryClient }) => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.photos.count({}) });
-          }).catch(() => {});
-        })
-        .catch(() => {});
-    }
 
     return {
       photos,
@@ -96,9 +85,12 @@ export const usePhotos = createInfiniteQuery<{photos: Photo[], nextPage?: number
 /**
  * Hook for infinite group photo lists.
  */
-export const useGroupPhotosResult = createInfiniteQuery<{photos: Photo[], total: number, hasMore: boolean}, { groupId: string | null; isAdminMode: boolean; pageSize: number }, { photos: Photo[] }>({
-  queryKey: (vars: { groupId: string | null; isAdminMode: boolean; pageSize: number }) => queryKeys.photos.infinite({ groupId: vars.groupId ?? undefined }, vars.isAdminMode ? 'admin' : 'public'),
-  queryFn: async ({ groupId, isAdminMode, pageSize }: { groupId: string | null; isAdminMode: boolean; pageSize: number }, pageParam: number) => {
+export const useGroupPhotosResult = createInfiniteQuery<
+  { photos: Photo[], total: number, hasMore: boolean },
+  { groupId: string | null; isAdminMode: boolean; pageSize: number }
+>({
+  queryKey: (vars) => queryKeys.photos.infinite({ groupId: vars.groupId ?? undefined }, vars.isAdminMode ? 'admin' : 'public'),
+  queryFn: async ({ groupId, isAdminMode, pageSize }, pageParam) => {
     const data = await loadPhotosByGroupIdPaginated(groupId!, pageParam, pageSize, isAdminMode);
     return {
       photos: data.photos,
@@ -106,14 +98,13 @@ export const useGroupPhotosResult = createInfiniteQuery<{photos: Photo[], total:
       hasMore: data.photos.length >= pageSize
     };
   },
-  getNextPageParam: (lastPage: { total: number; photos: Photo[] }, allPages: { total: number; photos: Photo[] }[]) => {
-    const loaded = allPages.reduce((sum: number, p: { photos: Photo[] }) => sum + p.photos.length, 0);
+  getNextPageParam: (lastPage, allPages) => {
+    const loaded = allPages.reduce((sum, p) => sum + p.photos.length, 0);
     return (loaded < lastPage.total && lastPage.photos.length > 0) ? allPages.length + 1 : undefined;
   },
-  select: flattenPhotos,
-  staleTime: 2 * 60 * 1000, // Increased to 2 minutes for better snappy feel
+  staleTime: 2 * 60 * 1000,
   placeholderData: keepPreviousData
-} as { photos: Photo[] });
+});
 
 export const useGroupPhotos = (groupId: string | null, isAdminMode: boolean = false, pageSize: number = 40) => {
   const queryClient = useQueryClient();

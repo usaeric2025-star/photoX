@@ -1,0 +1,350 @@
+src/components/shared/ErrorBoundary.tsx:    const traceId = error && 'traceId' in error ? `\nTrace ID: ${(error as any).traceId}` : '';
+src/components/shared/ErrorBoundary.tsx:                    Trace ID: {(this.state.error as any).traceId}
+src/components/shared/WhatsAppChoiceDialog.tsx:  labels: Record<string, any>;
+src/components/shared/SelectionToolbar.tsx:  onHide?: (ids: string[]) => void | Promise<any>;
+src/components/shared/SelectionToolbar.tsx:  onCopy?: (ids: string[]) => void | Promise<any>;
+src/components/settings/useSettingsLogic.ts:  saveSettings: (s: AppSettings) => Promise<any>;
+src/components/settings/useSettingsLogic.ts:  performPullSync: () => Promise<any>;
+src/components/settings/useSettingsLogic.ts:        const res = await resp.json() as any;
+src/components/settings/useSettingsLogic.ts:          const provider = (settings as any).ai_provider || "google";
+src/components/settings/TagItem.tsx:  useLongPress(itemRef as any, {
+src/components/settings/SettingsPage.tsx:  const setSettings = (s: AppSettings) => { updateSettings(s as any); };
+src/components/settings/WhatsAppSection.tsx:                value={(settings as any)?.[`whatsapp_${i}_name`] || ''} 
+src/components/settings/WhatsAppSection.tsx:                onChange={(e) => setSettingField(`whatsapp_${i}_name` as any, e.target.value)} 
+src/components/settings/WhatsAppSection.tsx:                value={(settings as any)?.[`whatsapp_${i}`] || ''} 
+src/components/settings/WhatsAppSection.tsx:                onChange={(e) => setSettingField(`whatsapp_${i}` as any, e.target.value)} 
+src/components/settings/AISecuritySection.tsx:        const data = await res.json() as any;
+src/components/settings/AISecuritySection.tsx:      }) as any;
+src/components/settings/AISecuritySection.tsx:      }) as any;
+src/components/settings/AISecuritySection.tsx:      const errorMsg = (e as any).error?.message || (e as Error).message || '';
+src/components/settings/AISecuritySection.tsx:      }) as any;
+src/components/settings/AISecuritySection.tsx:      }) as any;
+src/components/virtualizer/VirtualGrid.tsx:(window as any).ResizeObserver = class extends OriginalResizeObserver {
+src/components/virtualizer/VirtualGrid.tsx:    !!(window as any).__vitest_worker__ || 
+src/components/virtualizer/VirtualGrid.tsx:    (window as any).process?.env?.NODE_ENV === 'test'
+src/components/virtualizer/__tests__/VirtualGrid.test.tsx:    expect((VirtualGridModule as any).computeLaneIndex).toBeUndefined();
+src/components/virtualizer/__tests__/VirtualGrid.test.tsx:    originalResizeObserver = (global as any).ResizeObserver;
+src/components/virtualizer/__tests__/VirtualGrid.test.tsx:    (global as any).ResizeObserver = MockResizeObserver;
+src/components/virtualizer/__tests__/VirtualGrid.test.tsx:      (window as any).ResizeObserver = MockResizeObserver;
+src/components/virtualizer/__tests__/VirtualGrid.test.tsx:      (global as any).ResizeObserver = originalResizeObserver;
+src/components/virtualizer/__tests__/VirtualGrid.test.tsx:        (window as any).ResizeObserver = originalResizeObserver;
+src/components/virtualizer/__tests__/VirtualGrid.test.tsx:      delete (global as any).ResizeObserver;
+src/components/virtualizer/__tests__/VirtualGrid.test.tsx:        delete (window as any).ResizeObserver;
+src/components/ui/LanguageSwitcher.tsx:                  update({ appLang: l.code as any });
+src/components/ui/LanguageSwitcher.tsx:              update({ appLang: l.code as any });
+src/components/ui/LanguageSwitcher.tsx:          onClick={() => update({ appLang: l.code as any })} 
+src/components/ui/PageHeader.tsx:            to={backUrl as any}
+src/components/admin/Diagnostics/registry.ts:       const data = await res.json() as any;
+src/components/admin/StaffUnlockDialog.tsx:  signIn?: () => Promise<any>;
+src/components/admin/StaffUnlockDialog.tsx:  labels: Record<string, any>;
+src/components/admin/StaffUnlockDialog.tsx:                      ErrorFactory.handle(e as any, labels.loginFailed);
+src/components/admin/PhotoEditModal/PhotoEditModal.tsx:    modalHeader?: HeadlessSlot<any>;
+src/components/admin/PhotoEditModal/PhotoEditModal.tsx:    tabs?: HeadlessSlot<any>;
+src/components/admin/PhotoEditModal/CategorySelect.tsx:      (setValue as any)(key as any, value, { shouldDirty: true });
+src/components/admin/PhotoEditModal/DetailsTab.tsx:      setValue(key as any, value, { shouldDirty: true });
+src/components/admin/PhotoEditModal/usePhotoEditAI.ts:          let result = resp as any;
+src/components/admin/PhotoEditModal/usePhotoEditAI.ts:              setValue(key as any, value, { shouldDirty: true });
+src/components/admin/edit/DimensionEditor.tsx:    newDims[idx].unit = u as any;
+src/components/admin/ErrorLogViewer.tsx:  metadata?: any;
+src/components/admin/ErrorLogViewer.tsx:              {log.context || (log as any).metadata?.context || 'global'}
+src/components/admin/ErrorLogViewer.tsx:      onError: (err: any) => {
+src/components/admin/StatisticsScreen.tsx:const StatCard = ({ title, value, subValue, icon: Icon, colorClass, delay = 0 }: any) => (
+src/components/admin/StatisticsScreen.tsx:  const groupsCount = photos?.filter((p: any) => !!p.group_id).reduce((acc: any, p: any) => {
+src/components/admin/StatisticsScreen.tsx:  const hiddenCount = photos?.filter((p: any) => p.is_hidden).length || 0;
+src/components/admin/ManufacturerItem.tsx:  useLongPress(menuRef as any, {
+src/components/admin/BatchEditScreen.tsx:          {(logic.handleDeletePhotos as any) && (
+src/components/photo/AdminGridContainer.tsx:  const virtualGridRef = useRef<any>(null);
+src/components/photo/AdminGridContainer.tsx:  const renderCard = (photo: Photo, index: number, categories: any[]) => (
+src/components/photo/VirtualPhotoGrid.tsx:  filters?: any;
+src/components/photo/VirtualPhotoGrid.tsx:    const tAny = t as any;
+src/components/lightbox/YarlLightbox.tsx:    photo?: any; // Raw database photo object
+src/components/lightbox/YarlLightbox.tsx:  const toolbarButtons: any[] = [];
+src/components/lightbox/YarlLightbox.tsx:            const slideAny = slide as any;
+src/components/lightbox/YarlLightbox.tsx:          } as any),
+src/components/lightbox/YarlLightbox.tsx:                {currentItem.photo.dimensions.map((dim: any, idx: number) => {
+src/components/tasks/BackgroundTaskPanel.tsx:  const activeTasks = allTasks.filter(t => t.status === 'processing' || t.status === 'running' as any);
+src/components/tasks/BackgroundTaskPanel.tsx:                           <span className="text-[10px] font-black text-slate-800 truncate leading-tight">{task.title || (task as any).name}</span>
+src/components/tasks/BackgroundTaskPanel.tsx:                           task.status === 'processing' || (task as any).status === 'running' ? (
+src/components/tasks/JobResumer.tsx:        clearInterval(intervalId as any);
+src/components/tasks/JobResumer.tsx:              clearInterval(currentInt as any);
+src/components/tasks/JobResumer.tsx:              clearInterval(currentInt as any);
+src/components/tasks/JobResumer.tsx:            updateTask(id, { status: 'error', message: (status as any).error || status.message || '任务执行失败' });
+src/components/tasks/JobResumer.tsx:        clearInterval(intervalId as any);
+src/components/tasks/JobResumer.tsx:        clearInterval(intervalId as any);
+src/components/groups/useGroupDraft.ts:  onUpdatePhoto: (id: string, data: any) => Promise<any>
+src/components/groups/useGroupDraft.ts:      } as any);
+src/lib/mutations/useAppMutation.ts:const ongoingRequests = new Map<string, Promise<any>>();
+src/lib/mutations/useAppMutation.ts:        const matchingQueries = queryClient.getQueriesData({ queryKey: key as any });
+src/lib/mutations/useAppMutation.ts:    onError: (err, vars, context: any) => {
+src/lib/mutations/useAppMutation.ts:        context.previousData.forEach((data: any, key: any) => {
+src/lib/error/ErrorFactory.ts:      const anyErr = err as any;
+src/lib/error/errorReporter.ts:  metadata?: any;
+src/lib/error/errorReporter.ts:    const traceId = (normError as any)?.traceId || 'fe-' + Math.random().toString(36).substring(2, 12);
+src/lib/error/errorReporter.ts:        stack_trace: normError.stack || (normError as any)?.details || null,
+src/lib/error/errorReporter.ts:export const logResult = async (context: EventContext, type: 'error' | 'success', data?: any) => {
+src/lib/error/errorHandler.tsx: * Safely extracts a clean string message from any error object
+src/lib/error/errorHandler.tsx:export function extractErrorMessage(error: any): string {
+src/lib/error/errorHandler.tsx:    const nestedError = (error as any).error;
+src/lib/error/errorHandler.tsx:    traceId = String((target as any).traceId);
+src/lib/error/errorHandler.tsx:    traceId = String((error as any).traceId);
+src/lib/error/errorHandler.tsx:      code: (target as any).code || 'UNKNOWN_ERROR',
+src/lib/error/errorHandler.tsx:      message: String((target as any).message),
+src/lib/query/queryFactory.ts:    const actualOptions = actualVariables === undefined ? (variables as any) : options;
+src/lib/query/queryFactory.ts:    return useQuery<TData, Error, TData, any>({
+src/lib/query/queryFactory.ts:      select: (data: any) => config.schema ? (config.schema as any)(data).assert() : (actualOptions?.select ? actualOptions.select(data) : data),
+src/lib/query/queryFactory.ts:export function createInfiniteQuery<TData, TVariables = any, TResult = InfiniteData<TData>>(config: {
+src/lib/query/queryFactory.ts:  getNextPageParam: (lastPage: TData, allPages: TData[]) => any;
+src/lib/query/queryFactory.ts:  placeholderData?: any;
+src/lib/query/queryFactory.ts:  return function useStandardInfiniteQuery(variables: TVariables, options?: any) {
+src/lib/query/queryFactory.ts:    return useInfiniteQuery<TData, Error, TResult, any, number>({
+src/lib/query/queryFactory.ts:      select: config.select as any,
+src/lib/query/keys.ts:function sortObject(obj: any): any {
+src/lib/query/keys.ts:    .reduce((acc: any, key: string) => {
+src/lib/validators/engines/arktype.ts:        private arkSchema: Type<any>,
+src/lib/validators/engines/arktype.ts:            const errorList = Array.from(out as any);
+src/lib/validators/engines/arktype.ts:            const firstError = errorList[0] as any;
+src/lib/validators/protocol.ts:    originalError?: any;
+src/lib/validators/protocol.ts:    constructor(message: string, options?: { originalError?: any, aiDebugHint?: string, path?: string[] }) {
+src/lib/validators/protocol.ts: * Decoupled from any specific validation engine (ArkType, Zod, etc.).
+src/lib/validators/protocol.ts:    readonly schema: any;
+src/lib/validators/factory.ts:export const createPhotoValidator = (): Validator<any> => {
+src/lib/validators/factory.ts:export const createGroupValidator = (): Validator<any> => {
+src/lib/supabase.ts:  (window as any).supabase = supabase;
+src/lib/router/routeGuards.ts:  context: { user: any }; 
+src/lib/router/routeGuards.ts:  location: { pathname: string; search: any } 
+src/lib/logger.ts:  debug(...args: any[]) {
+src/lib/logger.ts:  info(...args: any[]) {
+src/lib/logger.ts:  warn(...args: any[]) {
+src/lib/logger.ts:  error(...args: any[]) {
+src/lib/logger.ts:  (window as any).logger = logger;
+src/lib/api.ts:        (errorInstance as any).success = false;
+src/lib/api.ts:        (errorInstance as any).status = resp.status;
+src/lib/api.ts:        (errorInstance as any).traceId = traceId;
+src/lib/api.ts:        (errorInstance as any).details = text;
+src/lib/api.ts:        (errorInstance as any).platformTip = platformTip;
+src/lib/api.ts:        (errorInstance as any).error = {
+src/lib/api.ts:export const api = (client as any).api;
+src/lib/chunkErrorHandler.ts:export function setupChunkErrorHandler(router: Router<any>) {
+src/lib/chunkErrorHandler.ts:      if (typeof (router as any).load === 'function') {
+src/lib/chunkErrorHandler.ts:        await (router as any).load()
+src/lib/chunkErrorHandler.ts:export function initChunkHandler(router: Router<any>) {
+src/lib/storage.ts:const memoryCache = new Map<string, any>();
+src/hooks/photo/usePhotoSelection.ts:      const updates: any = { ...formState };
+src/hooks/photo/usePhotoSelection.ts:      const cleanUpdates: any = {};
+src/hooks/photo/usePhotoUpload.ts:          } as any;
+src/hooks/photo/usePhoto.ts:      // 2. Try to find in any infinite list query cache
+src/hooks/photo/usePhoto.ts:      const cachedPhotos = queryClient.getQueriesData<any>({ queryKey: queryKeys.photos.all });
+src/hooks/photo/usePhoto.ts:        const cachedPhotos = queryClient.getQueriesData<any>({ queryKey: queryKeys.photos.all });
+src/hooks/photo/usePhotoCardInteraction.ts:    navigate({ to: targetPath, search: (prev: any) => prev });
+src/hooks/photo/usePhotoCardInteraction.ts:      router.preloadRoute({ to: targetPath, search: (prev: any) => prev }).catch(() => {});
+src/hooks/photo/usePhotoCardInteraction.ts:          update({ isMultiSelect: true, selectedIds: [photo.id] } as any);
+src/hooks/photo/usePhotoCardInteraction.ts:        (window as any)._pendingPhoto = photo;
+src/hooks/photo/usePublicPhotos.ts:              sortOrder: filters.sort as any,
+src/hooks/photo/usePublicPhotos.ts:              sortOrder: filters.sort as any,
+src/hooks/photo/types.ts:export type PhotoEditFormReturn = UseFormReturn<ProductFormData, any> & {
+src/hooks/photo/PhotoEditSessionProvider.tsx:    resolver: arktypeResolver(PhotoSchema as any), 
+src/hooks/photo/PhotoEditSessionProvider.tsx:    } as any,
+src/hooks/photo/PhotoEditSessionProvider.tsx:    } as any,
+src/hooks/photo/PhotoEditSessionProvider.tsx:      const message = (firstError as any)?.message || '表单验证失败，请检查必填项 / Validation Failed';
+src/hooks/photo/PhotoEditSessionProvider.tsx:        updates: sanitizedUpdates as any
+src/hooks/photo/PhotoEditSessionProvider.tsx:    } catch (err: any) {
+src/hooks/photo/PhotoEditSessionProvider.tsx:        traceId: (err as any).traceId,
+src/hooks/photo/PhotoEditSessionProvider.tsx:        stack: (err as any).stack,
+src/hooks/photo/PhotoEditSessionProvider.tsx:    form.reset(photo as any);
+src/hooks/photo/usePhotoAIResult.ts:      const data = await resp.json() as any;
+src/hooks/admin/useAdminCategory.ts:export function useAdminCategory({ update }: { update?: any }) {
+src/hooks/admin/useAdminPhotos.ts:    const infinitePhotosQuery = usePhotos(photoFilters as any);
+src/hooks/admin/useAdminPhotos.ts:    const rawPhotos = (infinitePhotosQuery.data as any)?.photos || [];
+src/hooks/admin/useAdminPhotos.ts:        photos as any,
+src/hooks/admin/useAdminPhotos.ts:        filters as any,
+src/hooks/admin/useAdminPhotos.ts:        filters as any,
+src/hooks/admin/useGlobalTasks.ts:        const result = await res.json() as any;
+src/hooks/admin/useGlobalTasks.ts:      const rJobs = query.state.data as any[];
+src/hooks/admin/usePerformanceAudit.ts:  const issues: any[] = [];
+src/hooks/admin/useDiagnostics.ts:      const data = await res.json() as any;
+src/hooks/admin/useDiagnostics.ts:            const errorData = await res.json() as any;
+src/hooks/admin/useDiagnostics.ts:          return res.json() as any;
+src/hooks/admin/useDiagnostics.ts:      const data = await res.json() as any;
+src/hooks/admin/useDiagnostics.ts:        const result = await res.json() as any;
+src/hooks/admin/useDiagnostics.ts:          const data = await res.json() as any;
+src/hooks/admin/useAdminBatch.ts:      photos.forEach((p: any) => {
+src/hooks/admin/useAdminBatch.ts:      const targetPhotos = photos.filter((p: any) => 
+src/hooks/core/useLongPress.ts:  onLongPress: (e?: any) => void;
+src/hooks/core/useLongPress.ts:    el.addEventListener('pointerdown', handleStart as any);
+src/hooks/core/useLongPress.ts:    el.addEventListener('pointermove', handleMove as any);
+src/hooks/core/useLongPress.ts:    el.addEventListener('pointerup', handleEnd as any);
+src/hooks/core/useLongPress.ts:    el.addEventListener('pointercancel', handleEnd as any);
+src/hooks/core/useLongPress.ts:      el.removeEventListener('pointerdown', handleStart as any);
+src/hooks/core/useLongPress.ts:      el.removeEventListener('pointermove', handleMove as any);
+src/hooks/core/useLongPress.ts:      el.removeEventListener('pointerup', handleEnd as any);
+src/hooks/core/useLongPress.ts:      el.removeEventListener('pointercancel', handleEnd as any);
+src/hooks/core/useFormWithMutation.ts:export const useFormWithMutation = <T extends Record<string, any>>(
+src/hooks/core/useFormWithMutation.ts:  mutation: UseMutationResult<any, Error, any>,
+src/hooks/core/useFormWithMutation.ts:  options?: any
+src/hooks/core/useFormWithMutation.ts:        await mutation.mutateAsync(data as any);
+src/hooks/core/useFormWithArkType.ts:export const useFormWithArkType = <T extends Record<string, any>>(
+src/hooks/core/useFormWithArkType.ts:    resolver: arktypeResolver(schema as any),
+src/hooks/core/useFormWithArkType.ts:    defaultValues: defaultValues as any,
+src/hooks/core/useTasks.tsx:  // Sync to IndexedDB on any change
+src/hooks/core/useDebouncedCallback.ts:export function useDebouncedCallback<T extends (...args: any[]) => void>(
+src/hooks/core/useDebouncedCallback.ts:  const debouncedFn = (...args: any[]) => {
+src/hooks/core/useDebouncedCallback.ts:  (debouncedFn as any).cancel = () => {
+src/hooks/core/useClickOutside.ts:export function useClickOutside<T extends HTMLElement = any>(
+src/hooks/core/useClickOutside.ts:    const listener = (event: any) => {
+src/hooks/core/useClickOutside.ts:      // Check if target is inside any of the additional nodes
+src/hooks/useFilters.ts:  const search = useSearch({ strict: false }) as any;
+src/hooks/useFilters.ts:  const updateSearch = useCallback((updates: Record<string, any>) => {
+src/hooks/useFilters.ts:      search: ((prev: any) => ({
+src/hooks/useFilters.ts:      })) as any
+src/hooks/useFilters.ts:      search: ((prev: any) => ({
+src/hooks/useFilters.ts:      })) as any
+src/hooks/__tests__/hookContracts.test.ts:  useUIStore: (fn: any) => fn({
+src/hooks/__tests__/hookContracts.test.ts:  useShallow: (fn: any) => fn,
+src/features/layout/hooks/useColumns.ts:  const search = useSearch({ strict: false }) as any;
+src/features/layout/hooks/useColumns.ts:      search: ((prev: any) => ({
+src/features/layout/hooks/useColumns.ts:      })) as any
+src/features/group/admin/GroupDetailPage.tsx:function AdminPhotoGrid({ photos, onPhotoClick }: { photos: any[]; onPhotoClick: (id: string) => void }) {
+src/features/group/admin/GroupDetailPage.tsx:  const groupId = (routerSafe.params as any).groupId || fGroupId;
+src/features/group/admin/GroupDetailPage.tsx:    return photos.findIndex((p: any) => p.id === photoId);
+src/features/group/admin/GroupDetailPage.tsx:  const lightboxItems = photos.map((p: any) => {
+src/features/group/admin/GroupDetailPage.tsx:      tags: p.tags?.map((tag: any) => tag.name) || [],
+src/features/group/admin/GroupDetailPage.tsx:    photos as any[],
+src/features/group/public/GroupDetailPage.tsx:function PublicPhotoGrid({ photos, onPhotoClick }: { photos: any[]; onPhotoClick: (id: string) => void }) {
+src/features/group/public/GroupDetailPage.tsx:  const groupId = (routerSafe.params as any).groupId || fGroupId;
+src/features/group/public/GroupDetailPage.tsx:    return photos.findIndex((p: any) => p.id === photoId);
+src/features/group/public/GroupDetailPage.tsx:  const lightboxItems = photos.map((p: any) => {
+src/features/group/public/GroupDetailPage.tsx:      tags: p.tags?.map((tag: any) => tag.name) || [],
+src/features/filter/components/StatusSelect.tsx:                onClick={() => updateFilters({ status: opt.value as any })}
+src/services/photo/queries/list.ts:    const fetched = (data || []).map((item: any) => mapSupabasePhoto(item));
+src/services/photo/queries/list.ts:    return (data || []).map((item: any) => mapSupabasePhoto(item));
+src/services/photo/queries/byGroup.ts:  return (data || []).map((item: any) => mapSupabasePhoto(item));
+src/services/photo/queries/byGroup.ts:    photos: (data.photos || []).map((item: any) => mapSupabasePhoto(item)), 
+src/services/photo/maintenance/deduplication.ts:    safeArray<Photo>(data as any).forEach(item => {
+src/services/photo/commands/update.ts:  const updates = Object.keys(initialUpdates).reduce((acc: any, key) => {
+src/services/photo/commands/batch.ts:  const updates = Object.keys(initialUpdates).reduce((acc: any, key) => {
+src/services/photo/commands/batch.ts:  if (!response.ok || !result.success) throw new Error((result as any).error || 'Admin delete failed');
+src/services/photo/upload/r2Client.ts:    return await uploadWithRetry(userId, filename, uri, imageHash, onStatus as any);
+src/services/photo/upload/dbCommands.ts:export const upsertPhotoRecord = async (payload: any): Promise<unknown> => {
+src/services/photo/upload/uploadOrchestrator.ts:            (photo as any)._fileSize, 
+src/services/photo/upload/uploadOrchestrator.ts:            (photo as any)._fileName, 
+src/services/photo/upload/uploadOrchestrator.ts:            (photo as any)._lastModified,
+src/services/photo/upload/uploadOrchestrator.ts:             logger.info(`[Upload] Skipping duplicate photo: ${photo.id || (photo as any)._fileName}. Existing ID: ${dbCheck.existingId}`);
+src/services/photo/upload/uploadOrchestrator.ts:    const payload: any = mapToDb({
+src/services/photo/utils.ts:  const value = (dim as any).value ?? dim.height ?? dim.width ?? (dim as any).length ?? 0;
+src/services/photo/utils.ts:  const unit = normalizeUnit((dim as any).unit);
+src/services/photo/utils.ts:    height: Number(dim.height || ((dim as any).label?.includes('H') ? value : 0)) || 0,
+src/services/photo/utils.ts:    width: Number(dim.width || ((dim as any).label?.includes('W') ? value : 0)) || 0,
+src/services/photo/utils.ts:    length: Number((dim as any).length || ((dim as any).label?.includes('D') || (dim as any).label?.includes('L') ? value : 0)) || 0
+src/services/photo/utils.ts:    photoNameStr === (translations as Record<string, any>)['zh']?.furnitureRecord ||
+src/services/photo/utils.ts:    photoNameStr === (translations as Record<string, any>)['en']?.furnitureRecord;
+src/services/photo/healthFlow.ts:  allPhotos: any[], 
+src/services/photo/processing.ts:      const nameObj = (p.name || {}) as any;
+src/services/photo/processing.ts:      const descObj = (p.description || {}) as any;
+src/services/photo/processing.ts:      const time = (p as any)._time || (p.created_at ? new Date(p.created_at).getTime() : 0);
+src/services/photo/processing.ts:        reps.push(cover as any);
+src/services/photo/processing.ts:          } as any);
+src/services/photo/processing.ts:  reps.sort((a: any, b: any) => {
+src/services/photo/processing.ts:  userFilters: any,
+src/services/photo/processing.ts:  urlFilters: any,
+src/services/photo/processing.ts:    if ((p as any)._time) return p;
+src/services/photo/processing.ts:  const gridPhotos = groupPhotos(displayPhotos, showGroups, urlFilters.sortOrder as any, undefined, isAdminMode);
+src/services/storage/deleteService.ts:  const tasks: Promise<any>[] = [];
+src/services/storage/auditService.ts:    throw ErrorFactory.fatal((result as any).error || 'Failed to audit storage', { context: 'checkStorageHealth' });
+src/services/storage/auditService.ts:  return result.data as any;
+src/services/storage/auditService.ts:    throw ErrorFactory.fatal((result as any).error || 'Failed to clean storage', { context: 'cleanOrphanedFiles' });
+src/services/storage/auditService.ts:  return { success: result.success as boolean, cleanedCount: result.data?.cleanedCount || (result as any).cleanedCount };
+src/services/storage/uploadService.ts:    let lastError: any;
+src/services/storage/uploadService.ts:        return `DUPLICATE:${(result as any).existingUrl}`;
+src/services/storage/uploadService.ts:    if (!result.success) throw ErrorFactory.fatal(String((result as any).error), { context: 'uploadFile' });
+src/services/storage/uploadService.ts:    const { uploadUrl, publicUrl } = result.data as any;
+src/services/storage/uploadService.ts:      return (fallbackResult as any).data.publicUrl;
+src/services/storage/autoFallback.ts:const memoryCache = new Map<string, any>();
+src/services/ai/translationService.ts:    const nameData = await nameRes.json() as any;
+src/services/ai/translationService.ts:    const descData = await descRes.json() as any;
+src/services/ai/translationService.ts:    const translateRes = (text: string, data: any) => {
+src/services/ai/safeText.ts:  // Strip outer quotes if any
+src/services/ai/safeText.ts:export function getSafeText(field: any, locale: string = 'zh'): string {
+src/services/ai/mapping.ts:  rawName: any,
+src/services/ai/mapping.ts:  rawDesc: any
+src/services/ai/commands.ts:         ? rawTags.map((t: any) => {
+src/services/ai/commands.ts:       const safeTrim = (val: any): any => {
+src/services/ai/commands.ts:            const res: any = {};
+src/services/ai/orchestration.ts:  photo: any
+src/services/ai/orchestration.ts:    const analysisData = await analyzePhoto(photo.id) as any;
+src/services/ai/orchestration.ts:      name: nameObj as any,
+src/services/ai/orchestration.ts:      description: descObj as any,
+src/services/ai/orchestration.ts:  photos: any[]
+src/services/ai/orchestration.ts:      name: nameObj as any,
+src/services/ai/orchestration.ts:      description: descObj as any,
+src/services/ai/orchestration.ts:    } as any);
+src/services/ai/orchestration.ts:  targetPhotos: any[];
+src/services/ai/utils.ts:export const hasExistingInfo = (p: any): boolean => {
+src/services/ai/utils.ts:      // For multi-lang names, check if any field has real content
+src/services/ai/utils.ts:export const getDisplayName = (nameObj: any, lang: string = 'zh'): string => {
+src/services/settings/queries.ts:            const keysRes = await api.admin.settings['get-keys'].$get() as any;
+src/services/settings/queries.ts:                    // Only populate agnes_api_key placeholder if any AI provider has a key
+src/services/manufacturer/commands.ts:  const dbUpdates = mapToDb(data as any);
+src/services/manufacturer/commands.ts:    return await createManufacturer({ name, aliases: [] } as any);
+src/services/group/queries.ts:const mapGroup = (item: any): ProductGroup => ({
+src/services/group/commands.ts:    delete (dbUpdates as any).description;
+src/services/group/commands.ts:  const dbData = mapToDb(data as any, userId);
+src/services/group/commands.ts:  validator.validate({ ...updates, id } as any);
+src/services/group/commands.ts:    name?: any;
+src/services/group/commands.ts:    description?: any;
+src/services/group/commands.ts:    status: 'confirmed' as any,
+src/services/tag/queries.ts:        hot_score: (t as any).hot_score || 0,
+src/services/tag/queries.ts:        is_pinned: !!(t as any).is_pinned
+src/services/tag/commands.ts:    const dbUpdates = mapToDb(tagData as any);
+src/services/tag/commands.ts:    const dbUpdates = tags.map(tag => mapToDb(tag as any));
+src/services/tag/completion.ts:          return String((n as any).name || (n as any).zh || (n as any).en || '').toUpperCase().trim();
+src/services/category/queries.ts:export const loadCategoriesFromCloud = async (): Promise<any[]> => {
+src/services/category/utils.ts:    : categories.find(c => String(c.id) === catIdStr || (c as any).code === catIdStr);
+src/services/category/utils.ts:  if (lang && (activeCat as any)[lang]) {
+src/services/category/utils.ts:    return String((activeCat as any)[lang]);
+src/services/category/utils.ts:  if ((activeCat as any).name_translations && typeof (activeCat as any).name_translations === 'object') {
+src/services/category/utils.ts:    const trans = (activeCat as any).name_translations;
+src/services/category/utils.ts:  const legacyFallback = (activeCat as any).zh || (activeCat as any).en || (activeCat as any).ms || (activeCat as any).code || "";
+src/services/category/commands.ts:  const dbUpdates = mapToDb(categoryData as any);
+src/services/category/commands.ts:    return await createCategory({ name, aliases: [], subcategories: [] } as any);
+src/services/maintenance/issueActions.ts:  [key: string]: any;
+src/services/maintenance/issueActions.ts:  execute: () => Promise<{ jobId?: string; message?: string; [key: string]: any }>;
+src/services/maintenance/issueActions.ts:      const data = await res.json() as any;
+src/services/maintenance/issueActions.ts:      const data = await res.json() as any;
+src/services/maintenance/issueActions.ts:      const data = await res.json() as any;
+src/services/maintenance/issueActions.ts:      const data = await res.json() as any;
+src/services/maintenance/issueActions.ts:      const data = await res.json() as any;
+src/services/maintenance/issueActions.ts:      const data = await res.json() as any;
+src/services/maintenance/issueActions.ts:      const data = await res.json() as any;
+src/services/maintenance/issueActions.ts:      const data = await res.json() as any;
+src/services/maintenance/issueActions.ts:      const data = await res.json() as any;
+src/services/maintenance/issueActions.ts:      const data = await res.json() as any;
+src/services/maintenance/issueActions.ts:      const data = await res.json() as any;
+src/services/maintenance/autoDiagnose.ts:  let intervalId: any = null;
+src/services/router/loaders.ts:  const photosKey = queryKeys.photos.infinite({ groupId } as any, isAdminMode ? 'admin' : 'public');
+src/services/mappers/utils.ts:export const mapTranslationField = (value: any) => {
+src/services/mappers/utils.ts:    let obj = value as Record<string, any>;
+src/services/mappers/photo.ts:    const tagCache = (allTags && (allTags as any)._map) || 
+src/services/mappers/photo.ts:    if (allTags && tagCache && !(allTags as any)._map) {
+src/services/mappers/photo.ts:        (allTags as any)._map = tagCache; // Attach for reuse in the same map loop
+src/services/mappers/photo.ts:      item.photo_tags.forEach((pt: any) => {
+src/services/mappers/photo.ts:      item.tags.forEach((t: any) => {
+src/services/mappers/photo.ts:      name: item.name as any,
+src/services/mappers/photo.ts:      description: item.description as any,
+src/services/mappers/photo.ts:          dim.unit = validated.unit as any;
+src/services/mappers/photo.ts:        normalizeDimensionsBeforeSave(dbUpdates.dimensions as any);
+src/locales/index.ts:    const value = (dict as any)[key];
+src/constants/ai.ts:   - STRICT RULE: Do not use Agnes or any intermediate service for dimension parsing. Extract and structure them directly from the image.
+src/constants/config.ts:export const EMPTY_ARRAY: any[] = [];
+src/pages/PublicPage.tsx:  const lightboxItems = React.useMemo(() => photos.map((p: any) => {
+src/pages/PublicPage.tsx:      tags: p.tags?.map((t: any) => t.name) || [],
+src/pages/PublicPage.tsx:  const renderCard = (photo: Photo, index: number, sharedCategories: any[]) => (
+src/pages/AdminPage/AdminEmptyState.tsx:    [key: string]: any;
+src/types/photo.ts:  const p = photo as any;
+src/shared/envSchema.ts:      filteredEnv[key as keyof ClientEnv] = rawEnv[key] as any;
+src/router/types.ts:  user: any;
+src/store/useUIStore.ts:    return nextState as any;
+src/App.tsx:  const prevUserRef = useRef<any>(undefined);
+src/main.tsx:if (typeof window !== 'undefined' && (typeof (window as any).process === 'undefined' || (window as any).process === null)) {
+src/main.tsx:  (window as any).process = { env: { NODE_ENV: 'development' } };
+src/main.tsx:  console.error = function (...args: any[]) {
+src/main.tsx:          <Toaster style={{ zIndex: 'var(--z-toast, 500)' } as any} position="bottom-center" richColors closeButton expand={false} visibleToasts={2} swipeDirections={['left', 'right']} />

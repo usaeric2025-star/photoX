@@ -18,8 +18,12 @@ export const testAiConnection = async (apiKey: string, provider: string) => {
             base64Image: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVR4nGNiAAAAAgAB35oT2AAAAABJRU5ErkJggg==",
             provider
         }
-    }) as Promise<Response>;
-    const body = await res.json();
+    });
+
+    if (!res.ok) {
+        return { success: false, error: 'Connection failed' };
+    }
+    const body: { success: boolean; error?: string } = await (res as unknown as Response).json();
     if (body.success) {
         return { success: true };
     }
@@ -32,7 +36,8 @@ export const testAiConnection = async (apiKey: string, provider: string) => {
 function formatField(field: Record<string, unknown> | string | number | null | undefined): string {
   if (!field) return '';
   if (typeof field === 'object') {
-    return field.zh || field.en || field.ms || '';
+    const obj = field as Record<string, unknown>;
+    return String(obj.zh || obj.en || obj.ms || '');
   }
   return String(field);
 }
@@ -54,7 +59,7 @@ export async function analyzeGroup(photos: Photo[]): Promise<Record<string, unkn
     throw ErrorFactory.fatal(error.error || 'AI 智能合组分析失败', { context: 'analyzeGroup' });
   }
 
-  const resData = await response.json() as { data: Record<string, unknown> };
+  const resData = await response.json() as { data: Record<string, unknown> | string };
   let parsed = resData.data;
   if (typeof parsed === 'string') {
     try {
@@ -64,14 +69,14 @@ export async function analyzeGroup(photos: Photo[]): Promise<Record<string, unkn
       throw ErrorFactory.fatal('Json Parse error', { context: 'analyzeGroup' });
     }
   }
-  return parsed as any;
+  return parsed as Record<string, unknown>;
 }
 
 export async function analyzeSinglePhotoDetail(photo: Photo): Promise<Record<string, unknown>> {
   const nameStr = formatField(photo.name);
   const descStr = formatField(photo.description);
   const tagNames = (photo.tags || []).map(t => t.name).join(',');
-  const photoDetail = `- 名称: ${nameStr}\n- 现有分类: ${photo.categoryName}\n- 现有标签: ${tagNames || '无'}\n- 描述: ${descStr || '无'}`;
+  const photoDetail = `- 名称: ${nameStr}\n- 现有分类: ${photo.category}\n- 现有标签: ${tagNames || '无'}\n- 描述: ${descStr || '无'}`;
   
   const response = await api.ai['analyze-photo-v2'].$post({
     json: { photoDetail, photoId: photo.id }
@@ -82,7 +87,7 @@ export async function analyzeSinglePhotoDetail(photo: Photo): Promise<Record<str
     throw ErrorFactory.fatal(error.error || 'AI 单张识别分析失败', { context: 'analyzeSinglePhoto' });
   }
 
-  const resData = await response.json() as { data: Record<string, unknown> };
+  const resData = await response.json() as { data: Record<string, unknown> | string };
   let parsed = resData.data;
   if (typeof parsed === 'string') {
     try {
@@ -92,7 +97,7 @@ export async function analyzeSinglePhotoDetail(photo: Photo): Promise<Record<str
       throw ErrorFactory.fatal('Json Parse error', { context: 'analyzeSinglePhoto' });
     }
   }
-  return parsed as any;
+  return parsed as Record<string, unknown>;
 }
 
 export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promise<unknown> => {

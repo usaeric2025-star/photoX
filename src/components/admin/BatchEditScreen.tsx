@@ -108,9 +108,9 @@ export const BatchEditScreen = () => {
           batchIsHiddenApplied={batchIsHiddenApplied}
           setBatchIsHiddenApplied={setBatchIsHiddenApplied}
           quickAddMfr={logic.quickAddManufacturer}
-          addTag={logic.addTag}
-          updateTag={logic.updateTag}
-          deleteTag={logic.deleteTag}
+          addTag={logic.addTag as any}
+          updateTag={logic.updateTag as any}
+          deleteTag={logic.deleteTag as any}
         />
       </div>
     </div>

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { EyeOff, Eye, RefreshCcw } from "lucide-react";
-import { ProductFormData } from "@/types";
+import { ProductFormData, Tag } from "@/types";
 import { FormSectionHeader, CategoryGrid } from "./FormShared";
 import { ManufacturerTagSelect } from "./ManufacturerTagSelect";
 import { PhotoTagSelector } from "./edit/PhotoTagSelector";
@@ -131,7 +131,13 @@ export function BatchEditForm({
               name="tags"
               tags={tags}
               value={formState.tags?.map(t => typeof t === 'object' ? t.id : t) || []}
-              onChange={(newTagIds) => handleUpdateForm({ tags: newTagIds.map(t => typeof t === 'object' ? String(t.id) : t) })}
+              onChange={(newTagIds) => {
+                const selectedTags = newTagIds.map(id => {
+                  const strId = typeof id === 'object' ? String(id.id) : id;
+                  return tags.find(t => String(t.id) === strId) || { id: strId, name: '' };
+                });
+                handleUpdateForm({ tags: selectedTags as Tag[] });
+              }}
               addTag={addTag}
               updateTag={updateTag}
               deleteTag={deleteTag}

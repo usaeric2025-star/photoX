@@ -1,5 +1,9 @@
 import { MutationConfig } from './types';
 
-export const defineMutation = <TData, TVars>(config: MutationConfig<TData, TVars>) => {
+export function defineMutation<
+  TData = unknown,
+  TVariables = unknown,
+  TQueryKey extends readonly unknown[] = readonly unknown[]
+>(config: MutationConfig<TData, TVariables, TQueryKey>): MutationConfig<TData, TVariables, TQueryKey> {
   return config;
-};
+}

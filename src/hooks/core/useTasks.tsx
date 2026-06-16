@@ -39,37 +39,12 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   const tasksRef = useRef<BackgroundTask[]>([]);
   tasksRef.current = tasks;
 
-  // Load from IndexedDB on mount
+  // Tasks are transient, no IDB needed
   useEffect(() => {
-    const initTasks = async () => {
-      const { syncCache } = await import('@/lib/db/indexedDB');
-      const savedTasks = await syncCache.getTasks();
-      if (savedTasks && Array.isArray(savedTasks)) {
-        // Filter out completed tasks that are too old already
-        const now = Date.now();
-        const validTasks = savedTasks.filter(t => {
-          if (t.status === 'running') return true;
-          if (t.finished_at && now - t.finished_at < 3000) return true;
-          return false;
-        }).map(t => ({
-          ...t,
-          onCancel: undefined // Functions can't be persisted
-        }));
-        setTasks(validTasks);
-      }
-    };
-    initTasks();
   }, []);
 
-  // Sync to IndexedDB on any change
+  // Sync to backend if needed, but no IDB
   useEffect(() => {
-    const persistTasks = async () => {
-      const { syncCache } = await import('@/lib/db/indexedDB');
-      // Strip onCancel before saving
-      const serializableTasks = tasks.map(({ onCancel, ...rest }) => rest);
-      await syncCache.saveTasks(serializableTasks);
-    };
-    persistTasks();
   }, [tasks]);
 
   const addTask = useCallback((taskData: Omit<BackgroundTask, 'id' | 'status' | 'progress'>) => {

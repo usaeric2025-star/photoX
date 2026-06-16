@@ -15,11 +15,11 @@ export interface DiagnosticIssue {
 
 export interface DiagnosticContext {
    supabase: SupabaseClient;
-   photos: any[];
-   groups: any[];
-   categories: any[];
-   manufacturers: any[];
-   photoTags: any[];
+   photos: Record<string, unknown>[];
+   groups: Record<string, unknown>[];
+   categories: Record<string, unknown>[];
+   manufacturers: Record<string, unknown>[];
+   photoTags: Record<string, unknown>[];
 }
 
 export type DiagnosticDependency = 'photos' | 'groups' | 'categories' | 'manufacturers' | 'photoTags';

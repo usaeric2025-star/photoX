@@ -22,9 +22,10 @@ export default defineConfig(({mode}) => {
         },
       }), 
       tailwindcss(),
-      visualizer({
+      mode === 'analyze' && visualizer({
         filename: 'dist/stats.html',
         gzipSize: true,
+        open: true,
       }) as any,
     ],
     build: {

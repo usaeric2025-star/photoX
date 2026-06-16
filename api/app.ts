@@ -84,7 +84,7 @@ app.onError((err, c) => {
 
   // 返回標準 AppResult（body 不含 traceId）
   const status = (err as { status?: number }).status || 500
-  return c.json(errorFactory.fail(appError), status)
+  return c.json(errorFactory.fail(appError), status as any)
 })
 
 // Auth Middleware for Administrative Routes
@@ -109,7 +109,7 @@ app.use("/admin/*", async (c, next) => {
             operation: `api.auth.${c.req.path}`
         });
         appErr.traceId = traceId;
-        return c.json(errorFactory.fail(appErr), 401);
+        return c.json(errorFactory.fail(appErr), 401 as any);
     }
 });
 
@@ -152,7 +152,7 @@ app.use("*", async (c, next) => {
                  operation: `api.auth_mutation.${c.req.path}`
              });
              appErr.traceId = traceId;
-             return c.json(errorFactory.fail(appErr), 401);
+             return c.json(errorFactory.fail(appErr), 401 as any);
         }
     }
     
@@ -199,7 +199,7 @@ app.post("/log-error", async (c) => {
 
         if (error) {
             console.error('[log-error] Database insert failed:', error);
-            return c.json({ success: false, error: 'Failed to persist log' }, 500);
+            return c.json({ success: false, error: 'Failed to persist log' }, 500 as any);
         }
 
         return c.json({ success: true });
@@ -222,7 +222,7 @@ app.get("/download", async (c) => {
     try {
         const response = await fetch(url);
         if (!response.ok) {
-            return c.text(`Failed to fetch file: ${response.statusText}`, response.status);
+            return c.text(`Failed to fetch file: ${response.statusText}`, response.status as any);
         }
         
         const contentType = response.headers.get("content-type") || "image/jpeg";

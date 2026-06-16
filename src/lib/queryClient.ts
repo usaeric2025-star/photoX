@@ -1,7 +1,6 @@
 import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query';
 import { logError } from '@/lib/error/errorReporter';
 import { handleError } from './error/errorHandler';
-import { createIDBPersister } from './persister';
 
 const querySyncChannel = new BroadcastChannel('photo-x-query-sync');
 
@@ -45,17 +44,9 @@ querySyncChannel.onmessage = (event) => {
   }
 };
 
-// 创建持久化实例
-export const persister = createIDBPersister({
-  maxAge: 7 * 24 * 60 * 60 * 1000,
-});
-
 /**
- * 清除持久化缓存（通常用于登出）
+ * 清除缓存（通常用于登出）
  */
 export const clearPersistence = async () => {
-  if (persister.removeClient) {
-    await persister.removeClient();
-  }
   queryClient.clear();
 };

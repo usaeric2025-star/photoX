@@ -9,7 +9,7 @@ import { api } from '@/lib/api';
 
 const TABLE_NAME = 'groups';
 
-const mapToDb = (updates: Partial<ProductGroup> & Record<string, unknown>, userId?: string): Record<string, unknown> => {
+const mapToDb = (updates: any, userId?: string): Record<string, unknown> => {
     const dbUpdates: Record<string, unknown> = { ...updates };
     dbUpdates.updated_at = new Date().toISOString();
     if (userId && !dbUpdates.user_id) {
@@ -34,7 +34,7 @@ const mapToDb = (updates: Partial<ProductGroup> & Record<string, unknown>, userI
     }
 
     // description removed intentionally
-    delete (dbUpdates as any).description;
+    delete (dbUpdates as Record<string, unknown>).description;
 
     return dbUpdates;
 };
@@ -49,19 +49,19 @@ export async function createGroup(data: ProductGroup): Promise<ProductGroup> {
   validator.validate(data);
 
   const userId = await getCurrentUserId();
-  const dbData = mapToDb(data as any, userId);
+  const dbData = mapToDb(data, userId);
   
   const res = await api.groups.$post({
       json: { groupData: dbData }
   });
   if (!res.ok) throw new Error('Create group failed');
-  const { data: resData } = await res.json();
+  const { data: resData } = (await res.json()) as { data: ProductGroup };
   return resData;
 }
 
 export async function updateGroup(id: string, updates: Partial<ProductGroup>): Promise<ProductGroup> {
   const validator = createGroupValidator();
-  validator.validate({ ...updates, id } as any);
+  validator.validate({ ...updates, id } as Partial<ProductGroup>);
 
   const userId = await getCurrentUserId();
   const dbUpdates = mapToDb(updates, userId);
@@ -71,7 +71,7 @@ export async function updateGroup(id: string, updates: Partial<ProductGroup>): P
       json: { updates: dbUpdates }
   });
   if (!res.ok) throw new Error('Update group failed');
-  const { data: resData } = await res.json();
+  const { data: resData } = (await res.json()) as { data: ProductGroup };
   return resData;
 }
 
@@ -105,8 +105,8 @@ export const groupPhotos = async (
   photoIds: string[], 
   predefinedGroupId?: string, 
   metadata?: {
-    name?: any;
-    description?: any;
+    name?: string | Record<string, string>;
+    description?: string | Record<string, string>;
   }
 ): Promise<{ newGroupId: string }> => {
   if (photoIds.length === 0) {
@@ -124,7 +124,7 @@ export const groupPhotos = async (
   // Prepare Group Record
   const groupData = {
     name: finalName,
-    status: 'confirmed' as any,
+    status: 'confirmed' as 'confirmed' | 'draft',
     updated_at: new Date().toISOString()
   };
 

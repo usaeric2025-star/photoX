@@ -1,16 +1,7 @@
 import { decrypt } from "../encryption.js";
 import { getServerEnv } from "../../_shared/envSchema.js";
 import { logger } from "../logger.js";
-
-interface SupabaseClient {
-    from: (table: string) => {
-        select: (cols: string) => {
-            eq: (key: string, val: string | number) => {
-                maybeSingle: () => Promise<{ data: Record<string, unknown> | null; error: unknown }>;
-            };
-        };
-    };
-}
+import { SupabaseClient } from "@supabase/supabase-js";
 
 export const getModel = async (supabase?: SupabaseClient, customModel?: string, providerName?: string): Promise<string> => {
     if (customModel) return customModel;
@@ -57,6 +48,10 @@ export abstract class BaseAIProvider {
     abstract baseUrl: string;
 
     constructor(protected config: AIProviderConfig) {}
+
+    public getConfig(): AIProviderConfig {
+        return this.config;
+    }
 
     protected async fetchWithTimeout(url: string, options: RequestInit, timeout = 15000) {
         const controller = new AbortController();

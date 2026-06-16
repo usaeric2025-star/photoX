@@ -3,20 +3,20 @@ import { mapToDb } from '../mappers';
 import { createPhotoValidator } from '@/lib/validators/factory';
 import { api } from '@/lib/api';
 
-export interface BatchActionResult {
+export type BatchActionResult = {
   successCount: number;
   failureCount: number;
   failedItems: { id: string; reason: string }[];
-}
+} & Record<string, unknown>;
 
 export async function batchUpdate(ids: string[], initialUpdates: Partial<Photo>): Promise<BatchActionResult> {
   if (!ids || ids.length === 0) return { successCount: 0, failureCount: 0, failedItems: [] };
 
-  const updates = Object.keys(initialUpdates).reduce((acc: any, key) => {
+  const updates = Object.keys(initialUpdates).reduce((acc: Record<string, unknown>, key) => {
     const val = initialUpdates[key as keyof typeof initialUpdates];
     if (val !== undefined) acc[key] = val;
     return acc;
-  }, {} as Partial<Photo>);
+  }, {} as Record<string, unknown>) as Partial<Photo>;
 
   createPhotoValidator().validate(updates);
 

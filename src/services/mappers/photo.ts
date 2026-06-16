@@ -137,7 +137,7 @@ export function normalizeDimensionsBeforeSave(dimensions: Dimension[] | null | u
   validDims.forEach((dim) => {
     if (dim && typeof dim === 'object') {
         const maxVal = Math.max(Number(dim.length) || 0, Number(dim.width) || 0, Number(dim.height) || 0);
-        const validated = validateDimension({ ...dim, value: maxVal });
+        const validated = validateDimension({ ...dim, value: maxVal } as any);
         if (validated?.unit) {
           dim.unit = validated.unit as any;
         }

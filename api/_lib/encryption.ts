@@ -63,8 +63,8 @@ export function decrypt(text: string): string {
       let decrypted = decipher.update(encryptedText);
       decrypted = Buffer.concat([decrypted, decipher.final()]);
       return decrypted.toString('utf8');
-    } catch (cbcErr: any) {
-      logger.warn("CBC decryption failed:", cbcErr.message);
+    } catch (cbcErr: unknown) {
+      logger.warn("CBC decryption failed:", (cbcErr as Error).message);
       return text;
     }
   }
@@ -84,8 +84,9 @@ export function decrypt(text: string): string {
     let decrypted = decipher.update(encrypted, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
     return decrypted;
-  } catch (e: any) {
-    logger.warn("[Encryption] Decryption failed:", e.message);
+  } catch (e: unknown) {
+    const error = e as Error;
+    logger.warn("[Encryption] Decryption failed:", error.message);
     throw new Error("API密鑰解密失敗，可能由于加密秘鑰(ENCRYPTION_KEY)已更改。請重新保存您的API密鑰。");
   }
 }

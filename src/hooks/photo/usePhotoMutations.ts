@@ -1,24 +1,30 @@
 import { optimistic } from '@/lib/query/mutationFactory';
 import { Photo } from '@/types';
 import { updatePhoto as update } from '@/services/photo/commands/update';
-import { deleteMany, batchUpdate } from '@/services/photo/commands/batch';
+import { BatchActionResult, deleteMany, batchUpdate } from '@/services/photo/commands/batch';
 import { queryKeys } from '@/lib/query/keys';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { defineMutation } from '@/lib/mutations/defineMutation';
 import { useAppMutation } from '@/lib/mutations/useAppMutation';
+import { QueryKey } from '@tanstack/react-query';
 
 /**
  * 照片编辑 Mutation
  */
-const photoEditConfig = defineMutation<Photo, { id: string; updates: Partial<Photo>; silent?: boolean }>({
+// 1. 照片编辑
+const photoEditConfig = defineMutation<
+  Photo,
+  { id: string; updates: Partial<Photo>; silent?: boolean },
+  readonly unknown[]
+>({
   name: 'photoEdit',
   service: async ({ id, updates }) => {
     const { tags, ...coreUpdates } = updates;
-    const res = await update(id, coreUpdates as any);
+    const res = await update(id, coreUpdates as Partial<Photo>);
     
     if (tags && Array.isArray(tags)) {
       const { syncBatchPhotoTags } = await import('@/services/tag/commands');
-      const tagIds = tags.filter(t => t && t.id).map(t => String(t.id));
+      const tagIds = (tags as { id: string | number }[]).filter(t => t && t.id).map(t => String(t.id));
       const tagSources: Record<string, "user"> = {};
       tagIds.forEach(tId => {
         tagSources[tId] = "user";
@@ -26,46 +32,56 @@ const photoEditConfig = defineMutation<Photo, { id: string; updates: Partial<Pho
       await syncBatchPhotoTags([id], tagIds, undefined, tagSources);
     }
     
-    return res;
+    return res as Photo;
   },
-  invalidate: (data, vars) => [queryKeys.photos.all as any, queryKeys.groups.all as any, queryKeys.photos.detail(vars.id) as any],
+  invalidate: (data, vars) => [queryKeys.photos.all, queryKeys.groups.all, queryKeys.photos.detail(vars.id)],
   cleanupKey: (vars) => vars.id,
-  optimistic: (old: any, { id, updates }: { id: string; updates: Partial<Photo> }) => {
-    if (!old) return old;
-    if (old.pages) return optimistic.infinite.update<Photo>()(old, { id, updates: updates as any });
-    if (old.id === id) return { ...old, ...updates };
-    return old;
+  optimistic: (old, { id, updates }) => {
+    const castOld = old as { pages: { photos?: Photo[]; items?: Photo[] }[] } | Photo | undefined;
+    if (!castOld) return castOld;
+    if ('pages' in castOld) return optimistic.infinite.update<Photo>()(castOld as { pages: { photos?: Photo[]; items?: Photo[] }[] }, { id, updates });
+    if ((castOld as Photo).id === id) return { ...(castOld as Photo), ...updates };
+    return castOld;
   },
   successMessage: '已更新',
 });
 
 export const usePhotoEditMutation = () => useAppMutation(photoEditConfig);
 
-const photoDeleteConfig = defineMutation<any, string | string[]>({
+// 2. 照片删除
+const photoDeleteConfig = defineMutation<
+  BatchActionResult,
+  string | string[],
+  readonly unknown[]
+>({
   name: 'photoDelete',
   service: async (ids) => {
-    const res = await deleteMany(Array.isArray(ids) ? ids : [ids]);
-    return res;
+    return await deleteMany(Array.isArray(ids) ? ids : [ids]);
   },
   invalidate: (data, vars) => [
-    queryKeys.photos.all as any,
-    queryKeys.groups.all as any,
-    ...((Array.isArray(vars) ? vars : [vars]).map((id: string) => queryKeys.photos.detail(id) as any))
+    queryKeys.photos.all,
+    queryKeys.groups.all,
+    ...(Array.isArray(vars) ? vars : [vars]).map((id) => queryKeys.photos.detail(id))
   ],
   successMessage: '照片已删除',
 });
 
 export const usePhotoDelete = () => useAppMutation(photoDeleteConfig);
 
-const photoBatchEditConfig = defineMutation<any, { ids: string[]; updates: Partial<Photo> }>({
+// 3. 批量编辑
+const photoBatchEditConfig = defineMutation<
+  BatchActionResult,
+  { ids: string[]; updates: Partial<Photo> },
+  readonly unknown[]
+>({
   name: 'photoBatchEdit',
   service: async ({ ids, updates }) => {
     const { tags, ...coreUpdates } = updates;
-    const res = await batchUpdate(ids, coreUpdates as any);
+    const res = await batchUpdate(ids, coreUpdates as Partial<Photo>);
     
     if (tags && Array.isArray(tags)) {
       const { syncBatchPhotoTags } = await import('@/services/tag/commands');
-      const tagIds = tags.filter(t => t && t.id).map(t => String(t.id));
+      const tagIds = (tags as { id: string | number }[]).filter(t => t && t.id).map(t => String(t.id));
       const tagSources: Record<string, "user"> = {};
       tagIds.forEach(tId => {
         tagSources[tId] = "user";
@@ -76,26 +92,38 @@ const photoBatchEditConfig = defineMutation<any, { ids: string[]; updates: Parti
     return res;
   },
   invalidate: (data, vars) => [
-    queryKeys.photos.all as any,
-    queryKeys.groups.all as any,
-    ...((Array.isArray(vars.ids) ? vars.ids : [vars.ids]).map((id: string) => queryKeys.photos.detail(id) as any))
+    queryKeys.photos.all,
+    queryKeys.groups.all,
+    ...vars.ids.map((id) => queryKeys.photos.detail(id))
   ],
   successMessage: '批量操作完成',
 });
 
 export const usePhotoBatchEdit = () => useAppMutation(photoBatchEditConfig);
 
-const togglePinConfig = defineMutation<any, { id: string; isPinned: boolean }>({
+// 4. 钉选/取消钉选
+const togglePinConfig = defineMutation<
+  Photo,
+  { id: string; isPinned: boolean },
+  readonly unknown[]
+>({
   name: 'togglePin',
   service: async ({ id, isPinned }) => {
     const res = await update(id, { is_pinned: isPinned });
+    if (!res) throw new Error('Failed to update photo');
     return res;
   },
   cleanupKey: (vars) => vars.id,
-  invalidate: (data, vars) => [queryKeys.photos.all as any, queryKeys.groups.all as any, queryKeys.photos.detail(vars.id) as any],
-  optimistic: (old: any, { id, isPinned }: { id: string; isPinned: boolean }) => 
-    optimistic.infinite.update<Photo>()(old, { id, updates: { is_pinned: isPinned } as any }),
+  invalidate: (data, vars) => [queryKeys.photos.all, queryKeys.groups.all, queryKeys.photos.detail(vars.id)],
+  optimistic: (old, { id, isPinned }) => {
+    const castOld = old as { pages: { photos?: Photo[]; items?: Photo[] }[] } | Photo | undefined;
+    if (!castOld) return castOld;
+    return 'pages' in castOld 
+      ? optimistic.infinite.update<Photo>()(castOld as { pages: { photos?: Photo[]; items?: Photo[] }[] }, { id, updates: { is_pinned: isPinned } }) 
+      : castOld;
+  },
   successMessage: '状态已更新',
 });
 
 export const useTogglePin = () => useAppMutation(togglePinConfig);
+

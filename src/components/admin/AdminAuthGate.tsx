@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
-import { LoginScreen } from '@/components/admin/LoginScreen';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useSettings } from '@/hooks';
 import { useLocalStorage } from '@/hooks/core/useLocalStorage';
 import { logger } from '@/lib/logger';
+
+const LoginScreen = lazy(() => import('@/components/admin/LoginScreen').then(m => ({ default: m.LoginScreen })));
 
 interface AdminAuthGateProps {
   children: React.ReactNode;
@@ -49,8 +50,14 @@ export function AdminAuthGate({ children }: AdminAuthGateProps) {
   // Not authenticated
   if (!user && !isStaffMode) {
     return (
-      <div className="h-screen w-full">
-        <LoginScreen signIn={signIn} />
+      <div className="h-screen w-full bg-slate-50">
+        <Suspense fallback={
+          <div className="flex h-screen w-full items-center justify-center">
+            <Loader2 className="animate-spin text-blue-500" size={32} />
+          </div>
+        }>
+          <LoginScreen signIn={signIn} />
+        </Suspense>
       </div>
     );
   }

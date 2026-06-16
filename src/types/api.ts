@@ -17,6 +17,7 @@ export type SearchReq = typeof SearchReqSchema.infer;
 export interface FilterOptions {
   q?: string;
   category?: string;
+  groupId?: string;
   tags?: string[];
   sort?: string;
   status?: 'active' | 'hidden' | 'deleted' | 'all';

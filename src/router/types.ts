@@ -1,8 +1,9 @@
 import { Capability } from '@/config/permissions';
 import { QueryClient } from '@tanstack/react-query';
+import { User } from '@supabase/supabase-js';
 
 export interface RouterContext {
-  user: any;
+  user: User | null;
   role: string;
   can: (cap: Capability) => boolean;
   queryClient?: QueryClient;

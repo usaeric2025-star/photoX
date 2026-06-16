@@ -5,17 +5,17 @@ import { getSafeText } from '@/services/ai/safeText';
 
 export const TABLE_NAME = 'groups';
 
-const mapGroup = (item: any): ProductGroup => ({
-  id: item.id,
+const mapGroup = (item: Record<string, unknown>): ProductGroup => ({
+  id: item.id as string,
   name: getSafeText(item.name),
   description: getSafeText(item.description),
-  cover_photo_id: item.cover_photo_id,
+  cover_photo_id: item.cover_photo_id as string,
   is_hidden: (item.is_hidden ?? false) as boolean,
-  created_at: item.created_at,
-  updated_at: item.updated_at,
-  user_id: item.user_id,
-  status: item.status,
-  metadata: item.metadata,
+  created_at: item.created_at as string,
+  updated_at: item.updated_at as string,
+  user_id: item.user_id as string,
+  status: item.status as 'draft' | 'confirmed',
+  metadata: item.metadata as Record<string, unknown>,
 });
 
 export const loadGroupsFromCloud = async (userId: string, isAdmin: boolean = false): Promise<ProductGroup[]> => {

@@ -1,4 +1,5 @@
 import { Photo } from '@/types';
+import { SupabasePhotoRaw } from '@/types/supabase';
 import { PAGINATION } from '@/config/constants';
 import { api } from '@/lib/api';
 import { loadTagsFromCloud } from '../../tag';
@@ -13,8 +14,8 @@ export const getPhotosByGroup = async (groupId: string, isAdminMode: boolean = f
     json: { groupId, isAdminMode }
   });
   if (!res.ok) throw new Error('Failed to load photos by group');
-  const { data } = await res.json();
-  return (data || []).map((item: any) => mapSupabasePhoto(item));
+  const { data } = (await res.json()) as { data: SupabasePhotoRaw[] };
+  return (data || []).map((item: SupabasePhotoRaw) => mapSupabasePhoto(item));
 };
 
 /**
@@ -31,9 +32,9 @@ export const getPhotosByGroupPaginated = async (
     json: { groupId, page, pageSize, isAdminMode }
   });
   if (!res.ok) throw new Error('Failed to load paginated group photos');
-  const { data } = await res.json();
+  const { data } = (await res.json()) as { data: { photos: SupabasePhotoRaw[]; total: number } };
   return { 
-    photos: (data.photos || []).map((item: any) => mapSupabasePhoto(item)), 
+    photos: (data.photos || []).map((item: SupabasePhotoRaw) => mapSupabasePhoto(item)), 
     total: data.total || 0 
   };
 };

@@ -6,7 +6,6 @@ import { fetchSettings } from '@/services/settings/queries';
 import { getPhotoCount } from '@/services/photo/queries/list';
 import { useQueryClient } from '@tanstack/react-query';
 import { useInvalidatePhotos, useTaskExecutor, useSyncMutation, useSettings } from '@/hooks';
-import { setupOfflineSyncListener } from '@/services/system/syncService';
 import { logger } from '@/lib/logger';
 
 export const useSyncEngine = () => {
@@ -20,10 +19,7 @@ export const useSyncEngine = () => {
   const { mutateAsync: syncMut } = useSyncMutation();
 
   useEffect(() => {
-    if (user?.id) {
-      const cleanup = setupOfflineSyncListener(user.id);
-      return cleanup;
-    }
+    // Offline sync listener removed
   }, [user?.id]);
 
   useEffect(() => {

@@ -8,11 +8,15 @@ import { useUIStore } from '@/store/useUIStore';
 // Client-side idempotency cache
 const ongoingRequests = new Map<string, Promise<any>>();
 
-export const defineMutation = <TData, TVars, TQueryKey = any[]>(config: MutationConfig<TData, TVars, TQueryKey>) => {
+export const useAppMutation = <
+  TData = unknown, 
+  TVariables = unknown, 
+  TQueryKey extends readonly unknown[] = readonly unknown[]
+>(config: MutationConfig<TData, TVariables, TQueryKey>) => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (vars: TVars) => {
+    mutationFn: async (vars: TVariables) => {
       // Idempotency Key logic
       const varsString = JSON.stringify(vars);
       const idempotencyKey = `${config.name}:${varsString}`;
@@ -30,24 +34,26 @@ export const defineMutation = <TData, TVars, TQueryKey = any[]>(config: Mutation
         ongoingRequests.delete(idempotencyKey);
       }
     },
-    onMutate: async (vars) => {
+    onMutate: async (vars: TVariables) => {
       if (!config.optimistic) return;
-      
-      const queryKeys = typeof config.invalidate === 'function' 
-        ? config.invalidate({} as TData, vars) 
+
+      const rawInvalidate = typeof config.invalidate === 'function'                
+        ? config.invalidate({} as TData, vars)
         : config.invalidate ?? [];
+      
+      const queryKeys: (readonly unknown[])[] = Array.isArray(rawInvalidate) && rawInvalidate.length > 0 && Array.isArray(rawInvalidate[0]) 
+        ? rawInvalidate as (readonly unknown[])[] 
+        : [rawInvalidate as readonly unknown[]];
         
-      await Promise.all(queryKeys.map(key => queryClient.cancelQueries({ queryKey: key as any })));
+      await Promise.all(queryKeys.map(key => queryClient.cancelQueries({ queryKey: key as readonly unknown[] })));
       
       const previousData = new Map();
       
-      const updateFn = typeof config.optimistic === 'function'
-        ? config.optimistic
-        : config.optimistic.update;
+      const updateFn = config.optimistic;
 
       queryKeys.forEach(key => {
         // Get ALL matching queries by this query filter
-        const matchingQueries = queryClient.getQueriesData({ queryKey: key as any });
+        const matchingQueries = queryClient.getQueriesData({ queryKey: key as readonly unknown[] });
         
         if (matchingQueries.length === 0) {
           logger.warn(`Rollback anchor missing: no matching query for ${JSON.stringify(key)} found, skipping optimistic update.`);
@@ -56,14 +62,14 @@ export const defineMutation = <TData, TVars, TQueryKey = any[]>(config: Mutation
         matchingQueries.forEach(([queryKey, data]) => {
           if (data) {
             previousData.set(queryKey, data);
-            queryClient.setQueryData(queryKey, (old: any) => updateFn(old, vars, queryKey));
+            queryClient.setQueryData(queryKey, (old: unknown) => updateFn(old, vars, queryKey));
           }
         });
       });
       
       return { previousData };
     },
-    onError: (err, vars, context) => {
+    onError: (err, vars, context: any) => {
       if (context?.previousData) {
         context.previousData.forEach((data: any, key: any) => {
           queryClient.setQueryData(key, data);
@@ -77,24 +83,25 @@ export const defineMutation = <TData, TVars, TQueryKey = any[]>(config: Mutation
         handleError(err, config.name);
       }
     },
-    onSettled: (data, err, vars) => {
-      const keys = typeof config.invalidate === 'function' 
-        ? config.invalidate(data!, vars) 
+    onSettled: (data: TData | undefined, err: Error | null, vars: TVariables) => {
+      const rawInvalidate = typeof config.invalidate === 'function'
+        ? config.invalidate(data!, vars)
         : config.invalidate ?? [];
-      keys.forEach(key => queryClient.invalidateQueries({ queryKey: key as any }));
+
+      const keys: (readonly unknown[])[] = Array.isArray(rawInvalidate) && rawInvalidate.length > 0 && Array.isArray(rawInvalidate[0])
+        ? rawInvalidate as (readonly unknown[])[]
+        : [rawInvalidate as readonly unknown[]];
+
+      keys.forEach(key => queryClient.invalidateQueries({ queryKey: key as readonly unknown[] }));
       
       if (config.cleanupKey) {
-        const key = typeof config.cleanupKey === 'function' 
-          ? config.cleanupKey(vars) 
-          : config.cleanupKey;
+        const key = typeof config.cleanupKey === 'function' ? config.cleanupKey(vars) : config.cleanupKey;
         useUIStore.getState().clearProcessing(key);
       }
       config.onSettled?.(data, err, vars);
     },
-    onSuccess: (data, vars) => {
+    onSuccess: (data: TData, vars: TVariables) => {
       if (config.successMessage) toast.success(config.successMessage);
     },
   });
 };
-
-export const useAppMutation = defineMutation;

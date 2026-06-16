@@ -23,8 +23,7 @@ export function AdminHeader({}: AdminHeaderProps) {
   const update = useUIStore(s => s.update);
   const t = translations[lang as keyof typeof translations] || translations.en;
 
-  const { data: cloudCount } = usePhotoCount({ source: 'server' });
-  const { data: localCount } = usePhotoCount({ source: 'local' });
+  const { data: totalCount } = usePhotoCount({});
 
   const [cachedLogoUrl, setCachedLogoUrl] = React.useState<string | null>(() => {
     try {
@@ -95,11 +94,9 @@ export function AdminHeader({}: AdminHeaderProps) {
             </div>
           )}
   
-          {/* 本地与云端组合数字展示 */}
-          <div className="flex items-center gap-1 sm:gap-2 text-[9px] sm:text-xs font-black bg-white/60 backdrop-blur-sm border border-slate-200/30 rounded-full px-2 py-0.5 sm:px-2.5 sm:py-1 select-none shrink-0 cursor-default min-w-[70px] justify-center">
-            <span className="text-blue-600 block min-w-[12px] text-center" title={lang === 'zh' ? '本地 (待同步) 照片数' : 'Local photos waiting for cloud sync'}>{localCount ?? 0}</span>
-            <span className="text-slate-300 font-normal">/</span>
-            <span className="text-emerald-600 block min-w-[12px] text-center" title={lang === 'zh' ? '云端已同步照片数' : 'Synced cloud photos'}>{cloudCount ?? 0}</span>
+          {/* 照片总数展示 */}
+          <div className="flex items-center gap-1 sm:gap-2 text-[9px] sm:text-xs font-black bg-white/60 backdrop-blur-sm border border-slate-200/30 rounded-full px-2 py-0.5 sm:px-2.5 sm:py-1 select-none shrink-0 cursor-default min-w-[40px] justify-center">
+            <span className="text-emerald-600 block text-center" title={lang === 'zh' ? '照片总数' : 'Total photo count'}>{totalCount ?? 0}</span>
           </div>
         </div>
   

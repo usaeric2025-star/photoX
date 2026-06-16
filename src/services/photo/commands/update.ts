@@ -13,11 +13,11 @@ export async function updatePhoto(id: string, initialUpdates: Partial<Photo>): P
     throw new Error('无效的照片ID');
   }
 
-  const updates = Object.keys(initialUpdates).reduce((acc: any, key) => {
+  const updates = Object.keys(initialUpdates).reduce((acc: Record<string, unknown>, key) => {
     const val = initialUpdates[key as keyof typeof initialUpdates];
     if (val !== undefined) acc[key] = val;
     return acc;
-  }, {} as Partial<Photo>);
+  }, {} as Record<string, unknown>) as Partial<Photo>;
 
   createPhotoValidator().validate(updates);
 

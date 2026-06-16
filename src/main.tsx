@@ -1,12 +1,12 @@
 // Polyfill process for libraries that expect it (like ArkType)
-if (typeof window !== 'undefined' && (typeof (window as any).process === 'undefined' || (window as any).process === null)) {
-  (window as any).process = { env: { NODE_ENV: 'development' } };
+if (typeof window !== 'undefined' && (typeof (window as unknown as { process: unknown }).process === 'undefined' || (window as unknown as { process: unknown }).process === null)) {
+  (window as unknown as { process: unknown }).process = { env: { NODE_ENV: 'development' } };
 }
 
 // Gracefully filter out the React 19 warning for empty string passed to the boolean attribute 'inert'
 if (typeof window !== 'undefined') {
   const originalConsoleError = console.error;
-  console.error = function (...args: any[]) {
+  console.error = function (...args: unknown[]) {
     if (
       typeof args[0] === 'string' && 
       args[0].includes("Received an empty string for a boolean attribute") && 
@@ -14,7 +14,7 @@ if (typeof window !== 'undefined') {
     ) {
       return;
     }
-    originalConsoleError.apply(console, args);
+    originalConsoleError.apply(console, args as any);
   };
 }
 
@@ -22,12 +22,12 @@ if (typeof window !== 'undefined') {
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Toaster } from 'sonner';
-import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { Analytics } from '@vercel/analytics/react';
 import App from './App';
 import { TaskProvider } from '@/hooks';
 import { logError } from './lib/error/errorReporter';
-import { queryClient, persister } from './lib/queryClient';
+import { queryClient } from './lib/queryClient';
 import './index.css';
 import { clientEnv } from './shared/envSchema';
 // Removed migration
@@ -95,13 +95,13 @@ async function init() {
     
     root.render(
       <StrictMode>
-        <PersistQueryClientProvider client={queryClient} persistOptions={{ persister }}>
-          <Toaster style={{ zIndex: 'var(--z-toast, 500)' } as any} position="bottom-center" richColors closeButton expand={false} visibleToasts={2} swipeDirections={['left', 'right']} />
+        <QueryClientProvider client={queryClient}>
+          <Toaster style={{ '--z-toast': '500' } as React.CSSProperties} position="bottom-center" richColors closeButton expand={false} visibleToasts={2} swipeDirections={['left', 'right']} />
           <TaskProvider>
             <App />
             <Analytics />
           </TaskProvider>
-        </PersistQueryClientProvider>
+        </QueryClientProvider>
       </StrictMode>
     );
 

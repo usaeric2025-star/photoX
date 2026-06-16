@@ -6,67 +6,86 @@ import { Photo, ProductGroup } from '@/types';
 import { defineMutation } from '@/lib/mutations/defineMutation';
 import { useAppMutation } from '@/lib/mutations/useAppMutation';
 
-const groupCreateConfig = defineMutation<ProductGroup, ProductGroup>({
+// 1. 创建合组
+const groupCreateConfig = defineMutation<ProductGroup, ProductGroup, readonly unknown[]>({
   name: 'groupCreate',
-  service: async (variables: ProductGroup) => {
+  service: async (variables) => {
     return await createGroup(variables);
   },
-  invalidate: () => [queryKeys.groups.all as unknown as unknown[]],
+  invalidate: () => [queryKeys.groups.all],
   successMessage: '已创建合组',
 });
 
 export const useGroupCreate = () => useAppMutation(groupCreateConfig);
 
-const groupUpdateConfig = defineMutation<ProductGroup, { id: string; updates: Partial<ProductGroup> }>({
+// 2. 更新合组
+const groupUpdateConfig = defineMutation<
+  ProductGroup,
+  { id: string; updates: Partial<ProductGroup> },
+  readonly unknown[]
+>({
   name: 'groupUpdate',
   service: async ({ id, updates }) => {
     return await updateGroup(id, updates);
   },
-  invalidate: () => [queryKeys.groups.all as unknown as unknown[]],
+  invalidate: () => [queryKeys.groups.all],
   successMessage: '已修改',
 });
 
 export const useGroupUpdate = () => useAppMutation(groupUpdateConfig);
 
-const groupDeleteConfig = defineMutation<void, string>({
+// 3. 删除合组
+const groupDeleteConfig = defineMutation<void, string, readonly unknown[]>({
   name: 'groupDelete',
-  service: async (id: string) => {
+  service: async (id) => {
     return await deleteGroupFromCloud(id);
   },
-  invalidate: () => [queryKeys.groups.all as unknown as unknown[], queryKeys.photos.all as unknown as unknown[]],
+  invalidate: () => [queryKeys.groups.all, queryKeys.photos.all],
   successMessage: '已删除',
 });
 
 export const useGroupDelete = () => useAppMutation(groupDeleteConfig);
 
-const groupCoverConfig = defineMutation<void, { groupId: string | undefined; photoId: string | null }>({
+// 4. 设置封面
+const groupCoverConfig = defineMutation<
+  void,
+  { groupId: string | undefined; photoId: string | null },
+  readonly unknown[]
+>({
   name: 'groupCover',
   service: async ({ groupId, photoId }) => {
     return await setPhotoAsGroupCover(photoId, groupId || '');
   },
-  invalidate: () => [queryKeys.groups.all as unknown as unknown[], queryKeys.photos.all as unknown as unknown[]],
+  invalidate: () => [queryKeys.groups.all, queryKeys.photos.all],
   successMessage: '已设为封面',
 });
 
 export const useGroupCoverMutation = () => useAppMutation(groupCoverConfig);
 
-const groupPhotosConfig = defineMutation<{ newGroupId: string }, { photoIds: string[], targetGroupId?: string }>({
+// 5. 照片合组
+const groupPhotosConfig = defineMutation<
+  { newGroupId: string },
+  { photoIds: string[], targetGroupId?: string },
+  readonly unknown[]
+>({
   name: 'groupPhotos',
   service: async ({ photoIds, targetGroupId }) => {
     return await groupPhotos(photoIds, targetGroupId);
   },
-  invalidate: () => [queryKeys.photos.all as unknown as unknown[], queryKeys.groups.all as unknown as unknown[]],
-  optimistic: (old: Record<string, unknown>, { photoIds, targetGroupId }: { photoIds: string[], targetGroupId?: string }, queryKey?: readonly unknown[]) => {
+  invalidate: () => [queryKeys.photos.all, queryKeys.groups.all],
+  optimistic: (old, { photoIds, targetGroupId }, queryKey) => {
     if (!old) return old;
-    if ((old as { pages: unknown[] }).pages) {
-      const queryVars = (queryKey && queryKey.length > 2 ? queryKey[2] : {}) as Record<string, unknown>;
+    type PhotoInfiniteData = { pages: { photos?: Photo[]; items?: Photo[] }[] };
+    const oldData = old as PhotoInfiniteData;
+    if (oldData.pages) {
+      const queryVars = (queryKey && queryKey.length > 2 ? queryKey[2] : {}) as { groupId?: string };
       const currentViewGroupId = queryVars?.groupId;
       
       if (currentViewGroupId && currentViewGroupId !== targetGroupId) {
-          return optimistic.infinite.remove<Photo>()(old as any, photoIds);
+          return optimistic.infinite.remove<Photo>()(oldData, photoIds);
       }
       
-      return optimistic.infinite.batchUpdate<Photo>()(old as any, {
+      return optimistic.infinite.batchUpdate<Photo>()(oldData, {
         ids: photoIds,
         updates: { group_id: targetGroupId ?? null }
       });
@@ -75,36 +94,43 @@ const groupPhotosConfig = defineMutation<{ newGroupId: string }, { photoIds: str
   },
   successMessage: '已合组',
   onError: (error) => {
-    const errorStr = (typeof error === 'string' ? error : error?.message || '').toLowerCase();
+    const errorStr = (typeof error === 'string' ? error : (error as Error)?.message || '').toLowerCase();
     if (errorStr.includes('foreign key constraint') || errorStr.includes('23503') || errorStr.includes('fk_photo_group')) {
       import('sonner').then(({ toast }) => {
         toast.error('操作違反資料完整性，請確保所有照片已正確歸屬');
       });
-      return true; // handled
+      return true;
     }
-    return false; // let default handler process it
+    return false;
   }
 });
 
 export const useGroupPhotosMutation = () => useAppMutation(groupPhotosConfig);
 
-const removePhotosConfig = defineMutation<Record<string, unknown>, { photoIds: string[]; groupId: string }>({
+// 6. 从合组移出
+const removePhotosConfig = defineMutation<
+  void,
+  { photoIds: string[]; groupId: string },
+  readonly unknown[]
+>({
   name: 'removePhotosFromGroup',
   service: async ({ photoIds }) => {
-    return await movePhotosToGroup(photoIds, null);
+    await movePhotosToGroup(photoIds, null);
   },
   invalidate: () => [queryKeys.photos.all, queryKeys.groups.all],
-  optimistic: (old: Record<string, unknown>, { photoIds }: { photoIds: string[] }, queryKey?: readonly unknown[]) => {
+  optimistic: (old, { photoIds }, queryKey) => {
     if (!old) return old;
-    if ((old as { pages: unknown[] }).pages) {
-      const queryVars = (queryKey && queryKey.length > 2 ? queryKey[2] : {}) as Record<string, unknown>;
+    type PhotoInfiniteData = { pages: { photos?: Photo[]; items?: Photo[] }[] };
+    const oldData = old as PhotoInfiniteData;
+    if (oldData.pages) {
+      const queryVars = (queryKey && queryKey.length > 2 ? queryKey[2] : {}) as { groupId?: string };
       const currentViewGroupId = queryVars?.groupId;
       
       if (currentViewGroupId) {
-          return optimistic.infinite.remove<Photo>()(old as any, photoIds);
+          return optimistic.infinite.remove<Photo>()(oldData, photoIds);
       }
 
-      return optimistic.infinite.batchUpdate<Photo>()(old as any, {
+      return optimistic.infinite.batchUpdate<Photo>()(oldData, {
         ids: photoIds,
         updates: { group_id: null }
       });
@@ -116,21 +142,23 @@ const removePhotosConfig = defineMutation<Record<string, unknown>, { photoIds: s
 
 export const useRemoveFromGroupMutation = () => useAppMutation(removePhotosConfig);
 
-const ungroupConfig = defineMutation<any, string>({
+// 7. 解散合组
+const ungroupConfig = defineMutation<void, string, readonly unknown[]>({
   name: 'ungroup',
-  service: async (groupId: string) => {
+  service: async (groupId) => {
     return await ungroupPhotos(groupId);
   },
-  invalidate: () => [queryKeys.photos.all as unknown as any[], queryKeys.groups.all as unknown as any[]],
-  optimistic: (old: any, groupId: string, queryKey?: readonly unknown[]) => {
+  invalidate: () => [queryKeys.photos.all, queryKeys.groups.all],
+  optimistic: (old, groupId) => {
     if (!old) return old;
-    if (old.pages) {
-      // Find all photos in this group and nullify their group_id
+    type PhotoInfiniteData = { pages: { photos: Photo[] }[] };
+    const oldData = old as PhotoInfiniteData;
+    if (oldData.pages) {
       return {
-        ...old,
-        pages: old.pages.map((page: any) => ({
+        ...oldData,
+        pages: oldData.pages.map((page) => ({
           ...page,
-          photos: page.photos?.map((p: any) => p.group_id === groupId ? { ...p, group_id: null, is_group_cover: false } : p) || []
+          photos: page.photos?.map((p) => p.group_id === groupId ? { ...p, group_id: null, is_group_cover: false } : p) || []
         }))
       };
     }

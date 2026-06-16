@@ -9,6 +9,7 @@ import { EMPTY_ARRAY } from '@/constants/config';
 import { logger } from '@/lib/logger';
 import { useTranslation } from '../core/useTranslation';
 import { getTranslatedCategoryName } from '@/services/category/utils';
+import { Photo, Category, Tag, Manufacturer } from '@/types/photo';
 
 /**
  * usePublicPhotos
@@ -17,9 +18,9 @@ import { getTranslatedCategoryName } from '@/services/category/utils';
  */
 export const usePublicPhotos = () => {
     const filters = useFilters();
-    const { data: categories = EMPTY_ARRAY as unknown[] } = useCategories();
-    const { data: tags = EMPTY_ARRAY as unknown[] } = useTags();
-    const { data: manufacturers = EMPTY_ARRAY as unknown[] } = useManufacturers();
+    const { data: categories = EMPTY_ARRAY as unknown as Category[] } = useCategories();
+    const { data: tags = EMPTY_ARRAY as unknown as Tag[] } = useTags();
+    const { data: manufacturers = EMPTY_ARRAY as unknown as Manufacturer[] } = useManufacturers();
     const { lang, uiTranslations: t } = useTranslation();
 
     const tagsString = Array.isArray(filters.tags) ? filters.tags.join(',') : '';
@@ -37,15 +38,20 @@ export const usePublicPhotos = () => {
     const rawPhotosBase = (infinitePhotosQuery.data as { photos: Record<string, unknown>[] })?.photos || [];
     
     const rawPhotos = (() => {
-        return rawPhotosBase.map((p: Record<string, unknown>) => {
-            const cat = categories.find((c: Record<string, unknown>) => String(c.id) === String(p.category_id));
-            const man = manufacturers.find((m: Record<string, unknown>) => String(m.id) === String(p.manufacturer_id));
-            return {
-                ...p,
-                categoryName: cat ? getTranslatedCategoryName(p.category_id, categories, lang, t) : '',
-                manufacturerName: man ? (typeof man.name === 'object' ? (man.name.zh || man.name.en || '') : man.name) : ''
-            };
-        });
+        return rawPhotosBase.map((p) => {
+        const photo = p as Record<string, unknown>;
+        const categoryId = String(photo.category_id);
+        const manufacturerId = String(photo.manufacturer_id);
+        
+        const cat = categories.find((c) => String((c as Category).id) === categoryId) as unknown as Category | undefined;
+        const man = manufacturers.find((m) => String((m as Manufacturer).id) === manufacturerId) as unknown as Manufacturer | undefined;
+        
+        return {
+            ...photo,
+            categoryName: cat ? getTranslatedCategoryName(categoryId, categories as Category[], lang, t) : '',
+            manufacturerName: man ? String(man.name) : ''
+        } as Photo;
+    });
     })();
 
     logger.debug("[usePublicPhotos] Debug:", {
@@ -59,10 +65,10 @@ export const usePublicPhotos = () => {
 
     const tagMap = (() => {
         const map = new Map<string, string[]>();
-        tags.forEach((t: Record<string, unknown>) => {
-            const terms = [(t.name as string).toLowerCase()];
-            if (Array.isArray((t as Record<string, unknown>).aliases)) {
-                ((t as Record<string, unknown>).aliases as string[]).forEach((a: string) => terms.push(a.toLowerCase()));
+        tags.forEach((t) => {
+            const terms = [(String(t.name)).toLowerCase()];
+            if (Array.isArray(t.aliases)) {
+                (t.aliases as string[]).forEach((a: string) => terms.push(a.toLowerCase()));
             }
             map.set(String(t.id), terms);
         });
@@ -71,10 +77,10 @@ export const usePublicPhotos = () => {
 
     const catMap = (() => {
         const map = new Map<string, string[]>();
-        categories.forEach((c: Record<string, unknown>) => {
-            const terms = [((c.name as string) || '').toLowerCase()];
-            if (Array.isArray((c as Record<string, unknown>).aliases)) {
-                ((c as Record<string, unknown>).aliases as string[]).forEach((a: string) => terms.push(a.toLowerCase()));
+        categories.forEach((c) => {
+            const terms = [(String(c.name) || '').toLowerCase()];
+            if (Array.isArray(c.aliases)) {
+                (c.aliases as string[]).forEach((a: string) => terms.push(a.toLowerCase()));
             }
             map.set(String(c.id), terms);
         });

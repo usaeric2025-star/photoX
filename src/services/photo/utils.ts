@@ -1,5 +1,5 @@
 import { supabase } from '../../lib/supabase';
-import { Tag, Photo } from '../../types';
+import { Tag, Photo, Dimension } from '../../types';
 import { safeArray } from '../../lib/utils';
 import { translations, TranslationType } from '@/locales';
 import { getSafeText } from '@/services/ai/safeText';
@@ -38,26 +38,26 @@ export const getDisplayGroupCode = (groupId?: string | null): string => {
   return `G-${short}`;
 };
 
-export function normalizeUnit(unit: string | null | undefined): string {
+export function normalizeUnit(unit: string | null | undefined): 'cm' | 'inch' | 'mm' {
   const u = unit?.toLowerCase().trim();
   if (u === 'in' || u === 'inches' || u === 'inch') return 'inch';
   if (u === 'cm' || u === 'centimeter' || u === 'centimetres') return 'cm';
   if (u === 'mm' || u === 'millimeter' || u === 'millimetres') return 'mm';
-  if (u === 'm' || u === 'meter' || u === 'metres') return 'm';
-  return u || 'cm';
+  // Default to cm if m or other
+  return 'cm';
 }
 
-export function validateDimension(dim: any): any {
+export function validateDimension(dim: Dimension | null | undefined): Dimension | null {
   if (!dim) return null;
-  const value = dim.value ?? dim.height ?? dim.width ?? dim.length ?? 0;
-  const unit = normalizeUnit(dim.unit);
+  const value = (dim as any).value ?? dim.height ?? dim.width ?? (dim as any).length ?? 0;
+  const unit = normalizeUnit((dim as any).unit);
   
   return {
     ...dim,
     unit,
-    height: Number(dim.height || (dim.label?.includes('H') ? value : 0)) || 0,
-    width: Number(dim.width || (dim.label?.includes('W') ? value : 0)) || 0,
-    length: Number(dim.length || (dim.label?.includes('D') || dim.label?.includes('L') ? value : 0)) || 0
+    height: Number(dim.height || ((dim as any).label?.includes('H') ? value : 0)) || 0,
+    width: Number(dim.width || ((dim as any).label?.includes('W') ? value : 0)) || 0,
+    length: Number((dim as any).length || ((dim as any).label?.includes('D') || (dim as any).label?.includes('L') ? value : 0)) || 0
   };
 }
 
@@ -89,8 +89,8 @@ export const getPhotoDisplayName = (
     photoNameStr === t.furnitureRecord || 
     photoNameStr === 'Furniture Record' || 
     photoNameStr === '未命名产品' || 
-    photoNameStr === (translations as any)['zh']?.furnitureRecord ||
-    photoNameStr === (translations as any)['en']?.furnitureRecord;
+    photoNameStr === (translations as Record<string, any>)['zh']?.furnitureRecord ||
+    photoNameStr === (translations as Record<string, any>)['en']?.furnitureRecord;
 
   if (!isPlaceholder) return photoNameStr || "";
   

@@ -79,7 +79,7 @@ export interface Category {
   zh?: string;
   en?: string;
   ms?: string;
-  aliases: string[];
+  aliases?: string[];
   subcategories: SubCategory[];
   user_id?: string;
   code?: string;
@@ -89,7 +89,7 @@ export interface Category {
 export interface Tag {
   id: string;
   name: string;
-  aliases: string[];
+  aliases?: string[];
   user_id?: string;
   is_pinned?: boolean;
   hot_score?: number;
@@ -99,7 +99,7 @@ export interface Tag {
 export interface Manufacturer {
   id: string;
   name: string;
-  aliases: string[];
+  aliases?: string[];
 }
 
 export interface ProductGroup {
