@@ -123,8 +123,8 @@ export const groupPhotos = async (
     description?: any;
   }
 ): Promise<{ newGroupId: string }> => {
-  if (photoIds.length <= 1) {
-    throw new Error('至少需要選擇兩張照片才能成組');
+  if (photoIds.length === 0) {
+    throw new Error('至少需要一張照片才能成組');
   }
   
   const targetGroupId = predefinedGroupId || generateId();

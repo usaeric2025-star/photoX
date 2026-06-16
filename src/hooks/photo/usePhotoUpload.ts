@@ -42,6 +42,7 @@ export function usePhotoUpload() {
       let successCount = 0;
       let failureCount = 0;
       let skippedCount = duplicateHashes.length;
+      const uploadedIds: string[] = [];
 
       for (let i = 0; i < uniqueFiles.length; i++) {
         const file = uniqueFiles[i];
@@ -71,6 +72,9 @@ export function usePhotoUpload() {
           } as any;
 
           const uploadResult = await savePhotoToCloud(user?.id || 'staff', tempPhoto);
+          if (uploadResult?.id) {
+            uploadedIds.push(uploadResult.id);
+          }
           
           // Check if it was a server-side duplicate reuse
           if (uploadResult?.is_duplicate) {
@@ -94,6 +98,20 @@ export function usePhotoUpload() {
 
       if (successCount > 0 || skippedCount > 0) {
         hapticFeedback.success();
+        
+        // Group uploaded photos if setting is enabled
+        const uiStore = useUIStore.getState();
+        if (uiStore.uploadAsGroup && uploadedIds.length > 0) {
+           try {
+             // Let's create a new group or use group mutation
+             const { groupPhotos } = await import('@/services/group/commands');
+             await groupPhotos(uploadedIds, undefined);
+             showToast.success('合组成功');
+           } catch(e) {
+             ErrorFactory.handle(e, '合组失败');
+           }
+        }
+        
         // 移除冗余的 toast.success，任务中心会显示结果
         invalidatePhotos();
       }

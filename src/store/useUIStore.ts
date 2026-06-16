@@ -43,6 +43,7 @@ export interface UIStoreState {
   lightboxIndex: number | null;
   batchEditingIds: string[] | null;
   groupSettingsOpen: boolean;
+  uploadAsGroup: boolean;
   formState: ProductFormData;
   updateForm: (updates: Partial<ProductFormData> | ((prev: ProductFormData) => Partial<ProductFormData>)) => void;
   resetForm: () => void;
@@ -105,6 +106,7 @@ export const useUIStore = create<UIStoreState>()((set) => ({
   lightboxIndex: null,
   batchEditingIds: storage.get(STORAGE_KEYS.BATCH_EDITING, null),
   groupSettingsOpen: storage.get<string>(STORAGE_KEYS.GROUP_SETTINGS_OPEN, 'false') === 'true',
+  uploadAsGroup: storage.get<string>('uploadAsGroup', 'false') === 'true',
   formState: storage.get(STORAGE_KEYS.EDIT_FORM_DRAFT, defaultForm),
   updateForm: (updates) => set((state) => {
     const nextFormState = typeof updates === 'function' ? updates(state.formState) : { ...state.formState, ...updates };
@@ -172,6 +174,9 @@ export const useUIStore = create<UIStoreState>()((set) => ({
     }
     if ('groupSettingsOpen' in nextState && nextState.groupSettingsOpen !== undefined) {
       storage.set(STORAGE_KEYS.GROUP_SETTINGS_OPEN, String(nextState.groupSettingsOpen));
+    }
+    if ('uploadAsGroup' in nextState && nextState.uploadAsGroup !== undefined) {
+      storage.set('uploadAsGroup', String(nextState.uploadAsGroup));
     }
     
     return nextState as any;
