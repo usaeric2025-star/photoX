@@ -45,11 +45,15 @@ export const fetchSettings = async () => {
         
         if (data.tags_json) {
             try {
-                const parsed = JSON.parse(data.tags_json);
-                if (parsed.pinned_tags) data.pinned_tags = parsed.pinned_tags;
-                if (parsed.hot_tags_count !== undefined) data.hot_tags_count = parsed.hot_tags_count;
-                if (parsed.hot_tag_threshold !== undefined) data.hot_tag_threshold = parsed.hot_tag_threshold;
-            } catch (e) {}
+                const parsed = typeof data.tags_json === 'string' ? JSON.parse(data.tags_json) : data.tags_json;
+                if (parsed) {
+                    if (parsed.pinned_tags) data.pinned_tags = parsed.pinned_tags;
+                    if (parsed.hot_tags_count !== undefined) data.hot_tags_count = parsed.hot_tags_count;
+                    if (parsed.hot_tag_threshold !== undefined) data.hot_tag_threshold = parsed.hot_tag_threshold;
+                }
+            } catch (e) {
+                logger.error("Failed to parse tags_json:", e);
+            }
         }
     }
     

@@ -40,9 +40,10 @@ export const useAdminPhotos = () => {
     const tagMap = (() => {
         const map = new Map<string, string[]>();
         tags.forEach((t: any) => {
-            const terms = [t.name.toLowerCase()];
+            const nameStr = t.name || '';
+            const terms = [nameStr.toLowerCase()];
             if (Array.isArray(t.aliases)) {
-                t.aliases.forEach((a: string) => terms.push(a.toLowerCase()));
+                t.aliases.forEach((a: string) => terms.push((a || '').toLowerCase()));
             }
             map.set(String(t.id), terms);
         });
@@ -54,7 +55,7 @@ export const useAdminPhotos = () => {
         categories.forEach((c: any) => {
             const terms = [(c.name || '').toLowerCase()];
             if (Array.isArray(c.aliases)) {
-                c.aliases.forEach((a: string) => terms.push(a.toLowerCase()));
+                c.aliases.forEach((a: string) => terms.push((a || '').toLowerCase()));
             }
             map.set(String(c.id), terms);
         });
@@ -86,7 +87,7 @@ export const useAdminPhotos = () => {
         photos,
         displayPhotos,
         gridPhotos,
-        isLoading: infinitePhotosQuery.isLoading || (infinitePhotosQuery.isFetching && !rawPhotos.length),
+        isPending: infinitePhotosQuery.isPending || (infinitePhotosQuery.isFetching && !rawPhotos.length),
         isFetchingNextPage: infinitePhotosQuery.isFetchingNextPage,
         hasNextPage: !!infinitePhotosQuery.hasNextPage,
         fetchNextPage: infinitePhotosQuery.fetchNextPage,

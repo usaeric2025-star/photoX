@@ -4,11 +4,11 @@ import { formatters } from '@/utils/formatters';
 
 interface DiagnosticStatsProps {
   report: any;
-  isLoading: boolean;
+  isPending: boolean;
   onRefresh: () => void;
 }
 
-export function DiagnosticStats({ report, isLoading, onRefresh }: DiagnosticStatsProps) {
+export function DiagnosticStats({ report, isPending, onRefresh }: DiagnosticStatsProps) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       {[
@@ -23,10 +23,10 @@ export function DiagnosticStats({ report, isLoading, onRefresh }: DiagnosticStat
       ))}
       <button 
         onClick={onRefresh}
-        disabled={isLoading}
+        disabled={isPending}
         className="bg-slate-900 text-white hover:bg-slate-800 rounded-2xl p-4 shadow-sm flex flex-col items-center justify-center gap-1 group active:scale-95 transition-all disabled:opacity-50 h-24"
       >
-        <RefreshCw className={`w-4 h-4 text-white ${isLoading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
+        <RefreshCw className={`w-4 h-4 text-white ${isPending ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
         <span className="text-xs font-semibold mt-1">全域扫描</span>
       </button>
     </div>

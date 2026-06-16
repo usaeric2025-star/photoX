@@ -42,7 +42,7 @@ export const useSettings = () => {
     defaultValue: getInitialSettings(),
   });
 
-  const { data: qSettings, isLoading } = useGetSettings(undefined);
+  const { data: qSettings, isPending } = useGetSettings(undefined);
   const updateMutation = useSettingsUpdateMutation();
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export const useSettings = () => {
 
   return {
     settings,
-    isLoading,
+    isPending,
     updateSettings: updateMutation.mutateAsync,
     agnesApiKey: settings?.agnes_api_key,
     customModel: settings?.custom_model,

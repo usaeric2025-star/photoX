@@ -1,3 +1,4 @@
+import { useAuthStore } from '@/store/useAuthStore';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import React, { useState } from 'react';
 import { 
@@ -16,7 +17,7 @@ import { useSettingsManagement } from '@/hooks/settings/useSettingsManagement';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { 
   useCategories, useTags, useManufacturers, usePhotos,
-  useAdminCategory, useAuth, useSettings, usePhotoCount
+  useAdminCategory, useSettings, usePhotoCount
 } from '@/hooks';
 import { useSettingsLogic } from './useSettingsLogic';
 import { SettingsTabs } from './SettingsTabs';
@@ -71,7 +72,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
   
-  const { user, loginWithGoogle, logout } = useAuth();
+  const { user, signIn, signOut } = useAuthStore();
   const { settings, agnesApiKey, customModel, accessPasscode, updateSettings } = useSettings();
   const setAgnesApiKey = (key: string) => updateSettings({ ...settings, agnes_api_key: key });
   const setAccessPasscode = (code: string) => updateSettings({ ...settings, access_passcode: code });
@@ -156,8 +157,8 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
             <>
               <SyncSettings 
                 user={user || null}
-                loginWithGoogle={loginWithGoogle}
-                logout={logout}
+                signIn={signIn}
+                signOut={signOut}
                 performPushSync={async () => { await performPushSync(); return { success: true, data: null } as ApiResponse<null>; }}
                 performPullSync={async () => { await performPullSync(); return { success: true, data: null } as ApiResponse<null>; }}
                 refreshCloudData={refreshCloudData}

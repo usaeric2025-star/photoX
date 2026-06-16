@@ -4,7 +4,7 @@ import { RouterProvider } from '@tanstack/react-router';
 import { router } from './router/index';
 import { Analytics } from '@vercel/analytics/react';
 import { useEffect, useRef } from 'react';
-import { useAuth } from '@/hooks/core/auth/useAuth';
+import { useAuthStore, initAuthListener } from '@/store/useAuthStore';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { migrateStorage } from '@/services/system/storageService';
 import { clearExpiredCaches } from './lib/db/indexedDB';
@@ -20,18 +20,23 @@ export default function AppRoutes() {
     document.documentElement.dataset.lang = appLang;
   }, [appLang]);
 
+  const { isLoading, init } = useAuthStore();
+
   useEffect(() => {
     document.title = 'PhotoX';
     // Background cache cleanup and migrations
+    init();
+    const cleanup = initAuthListener();
     migrateStorage();
     clearExpiredCaches(7).catch(err => handleError(err, '本地缓存自动清理失败', true));
-  }, []);
+    return cleanup;
+  }, [init]);
 
   logger.debug('🔍 AppRoutes 渲染:', { 
     pathname: window.location.pathname 
   });
 
-  const { user, isLoading } = useAuth();
+  const { user } = useAuthStore();
   const prevUserRef = useRef<any>(undefined);
 
   useEffect(() => {
@@ -48,8 +53,11 @@ export default function AppRoutes() {
     }
   }, [user, isLoading]);
 
+  const isDiagnosedRef = useRef(false);
+
   useEffect(() => {
-    if (user && !isLoading) {
+    if (user && !isLoading && !isDiagnosedRef.current) {
+      isDiagnosedRef.current = true;
       startAutoDiagnose();
     }
   }, [user, isLoading]);

@@ -12,12 +12,12 @@ interface StaffUnlockDialogProps {
   passError: boolean;
   onSubmit: (e: React.FormEvent) => void;
   onLogin?: () => void;
-  loginWithGoogle?: () => Promise<any>;
+  signIn?: () => Promise<any>;
   labels: Record<string, any>;
 }
 
 export function StaffUnlockDialog({
-  isOpen, onClose, passInput, setPassInput, passError, onSubmit, onLogin, loginWithGoogle, labels
+  isOpen, onClose, passInput, setPassInput, passError, onSubmit, onLogin, signIn, labels
 }: StaffUnlockDialogProps) {
   return (
     <Modal open={isOpen} onClose={onClose} size="sm">
@@ -54,7 +54,7 @@ export function StaffUnlockDialog({
               {labels.unlock}
             </button>
           </div>
-          {(onLogin || loginWithGoogle) && (
+          {(onLogin || signIn) && (
             <div className="pt-4 border-t border-slate-100 mt-4 flex flex-col gap-2">
               {onLogin && (
                 <button
@@ -65,13 +65,13 @@ export function StaffUnlockDialog({
                    <LogIn size={16} /> {labels.login}
                 </button>
               )}
-              {loginWithGoogle && (
+              {signIn && (
                 <button
                   type="button"
                   onClick={async () => {
                     try {
                       // Don't close modal immediately to show intent
-                      await loginWithGoogle?.();
+                      await signIn?.();
                     } catch (e: unknown) { 
                       ErrorFactory.handle(e as any, labels.loginFailed);
                     }

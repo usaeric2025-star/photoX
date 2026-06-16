@@ -1,6 +1,6 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useInvalidatePhotos } from '@/hooks';
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { isEqual } from 'lodash-es';
 import { Photo, ProductFormData } from '@/types';
 import { useFormDraft } from '@/hooks';
@@ -8,6 +8,21 @@ import { useMutation } from '@tanstack/react-query';
 import { updatePhoto } from '@/services/photo/commands/update';
 import { showToast } from '@/lib/ui/toast';
 import { PhotoEditFormReturn } from './types';
+
+const emptyPhoto: ProductFormData = {
+  name: { zh: '', en: '', ms: '' },
+  description: { zh: '', en: '', ms: '' },
+  category_id: null,
+  manufacturer_id: null,
+  tags: [],
+  item_code: '',
+  manual_code: '',
+  model_number: '',
+  dimensions: [],
+  is_hidden: false,
+  price: '',
+  is_group_cover: false,
+};
 
 /**
  * usePhotoEdit
@@ -18,31 +33,18 @@ export function usePhotoEdit(initialPhoto: Photo | null): PhotoEditFormReturn {
   
   const invalidatePhotos = useInvalidatePhotos();
   
-  const emptyPhoto: ProductFormData = {
-    name: { zh: '', en: '', ms: '' },
-    description: { zh: '', en: '', ms: '' },
-    category_id: null,
-    manufacturer_id: null,
-    tags: [],
-    item_code: '',
-    manual_code: '',
-    model_number: '',
-    dimensions: [],
-    is_hidden: false,
-    price: '',
-    is_group_cover: false,
-  };
-
-  const initialValues = initialPhoto ? {
-    ...emptyPhoto,
-    ...initialPhoto,
-    name: typeof initialPhoto.name === 'object' 
-      ? { zh: '', en: '', ms: '', ...initialPhoto.name as any }
-      : { zh: String(initialPhoto.name || ''), en: '', ms: '' },
-    description: typeof initialPhoto.description === 'object'
-      ? { zh: '', en: '', ms: '', ...initialPhoto.description as any }
-      : { zh: String(initialPhoto.description || ''), en: '', ms: '' },
-  } : emptyPhoto;
+  const initialValues = React.useMemo(() => {
+    return initialPhoto ? {
+      ...emptyPhoto,
+      ...initialPhoto,
+      name: typeof initialPhoto.name === 'object' 
+        ? { zh: '', en: '', ms: '', ...initialPhoto.name as any }
+        : { zh: String(initialPhoto.name || ''), en: '', ms: '' },
+      description: typeof initialPhoto.description === 'object'
+        ? { zh: '', en: '', ms: '', ...initialPhoto.description as any }
+        : { zh: String(initialPhoto.description || ''), en: '', ms: '' },
+    } : emptyPhoto;
+  }, [initialPhoto]);
 
   const { draft, updateDraft, resetDraft } = useFormDraft<ProductFormData>(initialValues as ProductFormData);
 

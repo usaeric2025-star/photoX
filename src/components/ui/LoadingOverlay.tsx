@@ -7,24 +7,24 @@ import { cn } from '@/lib/utils';
  * Full-screen loading overlay.
  */
 interface LoadingOverlayProps {
-  isLoading: boolean;
+  isPending: boolean;
   message?: string;
   className?: string;
 }
 
-export const LoadingOverlay = ({ isLoading, message, className }: LoadingOverlayProps) => {
+export const LoadingOverlay = ({ isPending, message, className }: LoadingOverlayProps) => {
   const ref = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
     const dialogNode = ref.current;
-    if (isLoading && dialogNode && !dialogNode.open) {
+    if (isPending && dialogNode && !dialogNode.open) {
       try {
         dialogNode.showModal();
       } catch (e) {
         console.warn('[LoadingOverlay] Failed to execute showModal, falling back to open attribute:', e);
         dialogNode.setAttribute('open', '');
       }
-    } else if (!isLoading && dialogNode && dialogNode.open) {
+    } else if (!isPending && dialogNode && dialogNode.open) {
       try {
         dialogNode.close();
       } catch (e) {
@@ -41,7 +41,7 @@ export const LoadingOverlay = ({ isLoading, message, className }: LoadingOverlay
         }
       }
     };
-  }, [isLoading]);
+  }, [isPending]);
 
   return (
     <dialog 

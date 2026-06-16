@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ProductGroup, Photo } from "@/types";
 import { useGroupDetail } from "@/hooks";
-import { useAuth } from "@/hooks/core/auth/useAuth";
+import { useAuthStore } from '@/store/useAuthStore';
 import { saveGroup as saveGroupToCloud } from "@/services/group/commands";
 import { useSessionStorage } from '@/hooks/core/useSessionStorage';
 import { queryKeys } from '@/lib/query/keys';
@@ -13,11 +13,11 @@ export const useGroupDraft = (
   dbGroupPhotos: Photo[] | undefined,
   onUpdatePhoto: (id: string, data: any) => Promise<any>
 ) => {
-  const { user } = useAuth();
+  const { user } = useAuthStore();
   const queryClient = useQueryClient();
 
   const [groupData, setGroupData] = useState<ProductGroup | null>(null);
-  const { data: queriedGroupData, isLoading: isGroupDataLoading } =
+  const { data: queriedGroupData, isPending: isGroupDataPending } =
     useGroupDetail({ groupId: activeGroupId, isAdmin: true });
 
   const [draftGroup, setDraftGroup, removeDraftGroup] = useSessionStorage<ProductGroup | null>({
@@ -39,7 +39,7 @@ export const useGroupDraft = (
 
     if (queriedGroupData) {
       setGroupData(queriedGroupData);
-    } else if (activeGroupId && !isGroupDataLoading) {
+    } else if (activeGroupId && !isGroupDataPending) {
       setGroupData({
         id: activeGroupId,
         name: "",
@@ -55,7 +55,7 @@ export const useGroupDraft = (
       setGroupData(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queriedGroupData, activeGroupId, isGroupDataLoading, user]);
+  }, [queriedGroupData, activeGroupId, isGroupDataPending, user]);
 
   useEffect(() => {
     if (activeGroupId && groupData) {
@@ -105,7 +105,7 @@ export const useGroupDraft = (
   return {
     groupData,
     setGroupData,
-    isGroupDataLoading,
+    isGroupDataPending,
     handleUpdateGroupData,
     setDraftGroup,
     removeDraftGroup

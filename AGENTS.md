@@ -233,6 +233,25 @@ export const PhotoSchema = type({
 - ❌ 禁止使用极端的 Props Drilling 传递海量数据（例如将顶层大对象逐层传递下去只为绕过 Context/Hook），可以更自然地在组件内部使用 Zustand selector。
 - ❌ 禁止盲目添加没必要的 `React.memo` 作为预防；由 Compiler 自行判断。
 
+## 依賴版本規範（鎖定，2026-06-15）
+
+### TanStack Query
+- ✅ 最低版本：v5.150+
+- ✅ 使用物件參數 `useQuery({ queryKey, queryFn })`
+- ✅ 使用 `isPending` 替代 `isLoading`
+
+### TanStack Router
+- ✅ 最低版本：v1.100+
+- ✅ 滾動恢復使用 `scrollRestoration: true`
+
+### Hono
+- ✅ 最低版本：v4.30+
+- ✅ 匯出 `AppType` 供前端使用
+
+### TypeScript
+- ✅ 使用 `tsgo` 作为主要編譯器
+- ❌ 禁止保留 `typescript` 套件
+
 ## 禁止项
 - ❌ `forwardRef`（React 19 不需要）
 - ❌ `React.FC`
@@ -1464,3 +1483,24 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 - ✅ 縮圖軌道使用 CSS Scroll Snap 實現自動滾動
 - ❌ 禁止不使用 `apiRef` 而依賴 `currentIndex` prop
 - ❌ 禁止在組件中直接操作 DOM 滾動
+
+## 認證狀態管理規範（鎖定）
+
+- ✅ 使用 Zustand + 原生 Supabase 管理認證狀態
+- ❌ 禁止使用 TanStack Query 管理認證狀態
+- ✅ 全域監聽僅初始化一次
+- ✅ 登入按鈕必須有本地原子鎖
+
+## 動畫技術棧規範（鎖定）
+
+- ✅ 優先使用 CSS 動畫（`animate-fade-in`、`transition`）
+- ✅ 僅共享佈局動畫（`layoutId`）或拖拽場景可使用 Motion
+- ❌ 禁止對 fade-in / slide-up / hover / tap 使用 Motion
+- ❌ 禁止新組件引入 Motion
+- 📝 現有 Motion 使用逐步替換為 CSS
+
+## 認證狀態規範（鎖定）
+
+- ✅ Zustand Store 只儲存 `user` 和 `isLoading`
+- ✅ `isAdmin` 從 `!!user` 推導，禁止另外儲存
+- ✅ 使用 selector 讀取狀態，避免不必要的重渲染

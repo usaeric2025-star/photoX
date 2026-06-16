@@ -10,7 +10,9 @@ export async function downloadPhotoAsJpeg(url: string, filename?: string) {
   const finalFilename = filename || `photo_${Date.now()}.jpg`;
   
   try {
-    const response = await fetch(url, { mode: 'cors' });
+    // Use same-origin proxy to bypass CORS restrictions
+    const proxyUrl = `/api/download?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(finalFilename)}`;
+    const response = await fetch(proxyUrl);
     if (!response.ok) throw ErrorFactory.wrap(new Error('网络响应异常'), 'downloadPhotoAsJpeg - fetch');
     
     const blob = await response.blob();

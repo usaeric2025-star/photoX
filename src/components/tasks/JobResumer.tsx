@@ -1,5 +1,6 @@
+import { useAuthStore } from '@/store/useAuthStore';
 import React, { useEffect, useRef } from 'react';
-import { useTasks, useAuth, type BackgroundTask } from '@/hooks';
+import { useTasks, type BackgroundTask } from '@/hooks';
 import { ISSUE_ACTIONS } from "@/services/maintenance/issueActions";
 import { logger } from '@/lib/logger';
 
@@ -8,7 +9,7 @@ import { logger } from '@/lib/logger';
  * Automatically resumes polling for server-side jobs that were interrupted by a page refresh.
  */
 export function JobResumer() {
-  const { user } = useAuth();
+  const { user } = useAuthStore();
   const { tasks, updateTask } = useTasks();
   // Keep track of active intervals by task id to prevent leaks
   const activeIntervals = useRef<Map<string, NodeJS.Timeout | number>>(new Map());

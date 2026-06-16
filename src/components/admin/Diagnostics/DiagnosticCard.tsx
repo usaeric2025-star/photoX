@@ -6,7 +6,7 @@ interface DiagnosticCardProps {
   desc: string;
   icon: React.ReactNode;
   onTest: () => void;
-  isLoading: boolean;
+  isPending: boolean;
   result: {
     success: boolean;
     message: string;
@@ -22,7 +22,7 @@ interface DiagnosticCardProps {
  * For infrastructure health checks (R2, Workers, etc.)
  */
 export function DiagnosticCard({ 
-  title, desc, icon, onTest, isLoading, result, successColor = 'text-green-500' 
+  title, desc, icon, onTest, isPending, result, successColor = 'text-green-500' 
 }: DiagnosticCardProps) {
   return (
     <div className="bg-white border border-brand-navy/5 rounded-2xl p-6 shadow-sm space-y-4">
@@ -33,11 +33,11 @@ export function DiagnosticCard({
         </div>
         <button
           onClick={onTest}
-          disabled={isLoading}
+          disabled={isPending}
           className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-navy text-white rounded-xl text-xs font-bold disabled:opacity-50 active:scale-95 transition-all"
         >
-          <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
-          {isLoading ? '测试中' : '测试'}
+          <RefreshCw className={`w-3 h-3 ${isPending ? 'animate-spin' : ''}`} />
+          {isPending ? '测试中' : '测试'}
         </button>
       </div>
 

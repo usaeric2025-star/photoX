@@ -27,7 +27,7 @@ export const PhotoEditSessionProvider = ({
   onSuccess 
 }: PhotoEditSessionProps) => {
   const isNew = !photoId;
-  const { data: photo, isLoading } = usePhoto(photoId);
+  const { data: photo, isPending } = usePhoto(photoId);
   const updateMutation = usePhotoEditMutation();
   
   const form = useForm<PhotoFormValues>({
@@ -108,7 +108,7 @@ export const PhotoEditSessionProvider = ({
     <FormProvider {...form}>
       <PhotoEditSessionContext.Provider value={{ 
         isDirty, 
-        isPending: updateMutation.isPending || isLoading, // Also include loading in isPending
+        isPending: updateMutation.isPending || isPending, // Also include loading in isPending
         commit, 
         discard 
       }}>

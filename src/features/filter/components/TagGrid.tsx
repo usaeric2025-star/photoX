@@ -7,7 +7,7 @@ import { usePhotoFilter } from '@/hooks/photo/usePhotoFilter';
 export function TagGrid() {
   const [showAll, setShowAll] = useState(false);
   const { filters, updateFilters } = useFilterState();
-  const { data: tags, isLoading } = useTags();
+  const { data: tags, isPending } = useTags();
   const { settings } = useSettings();
 
   // Use the standard hook to resolve sorted, pinned, and hot tags according to database parameters
@@ -27,7 +27,7 @@ export function TagGrid() {
 
   const displayTags = showAll ? tagsToRender : tagsToRender.slice(0, 30);
 
-  if (isLoading) {
+  if (isPending) {
     return (
       <div className="flex flex-wrap gap-1.5 p-4 pt-0">
         {[...Array(6)].map((_, i) => (
@@ -45,7 +45,7 @@ export function TagGrid() {
       <div className={`flex flex-wrap gap-1.5 flex-1 min-w-0 transition-all duration-300 ${
         showAll ? 'max-h-64 overflow-y-auto pr-1' : 'max-h-[52px] overflow-hidden'
       }`}>
-        {tagsToRender.map(tag => {
+        {displayTags.map(tag => {
           const isSelected = filters.tagIds.includes(tag.id);
           const isPinned = pinnedIds.includes(String(tag.id)) || tag.is_pinned;
           const isHot = hotIds.has(String(tag.id));

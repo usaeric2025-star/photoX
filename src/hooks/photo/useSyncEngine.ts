@@ -1,20 +1,21 @@
+import { useAuthStore } from '@/store/useAuthStore';
 import { useCallback, useEffect } from 'react';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { User } from '@/types';
 import { fetchSettings } from '@/services/settings/queries';
 import { getPhotoCount } from '@/services/photo/queries/list';
 import { useQueryClient } from '@tanstack/react-query';
-import { useInvalidatePhotos, useAuth, useTaskExecutor, useSyncMutation, useSettings } from '@/hooks';
+import { useInvalidatePhotos, useTaskExecutor, useSyncMutation, useSettings } from '@/hooks';
 import { setupOfflineSyncListener } from '@/services/system/syncService';
 import { logger } from '@/lib/logger';
 
 export const useSyncEngine = () => {
-  const { user } = useAuth();
+  const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const invalidatePhotos = useInvalidatePhotos();
   const { runTask } = useTaskExecutor();
   
-  const { settings, updateSettings, isLoading: isSettingsLoading } = useSettings();
+  const { settings, updateSettings, isPending: isSettingsPending } = useSettings();
 
   const { mutateAsync: syncMut } = useSyncMutation();
 

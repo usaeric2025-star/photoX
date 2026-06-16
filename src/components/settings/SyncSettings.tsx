@@ -6,8 +6,8 @@ import { useUIStore } from '@/store/useUIStore';
 
 interface SyncSettingsProps {
   user: User | null;
-  loginWithGoogle: () => Promise<void>;
-  logout: () => void;
+  signIn: () => Promise<void>;
+  signOut: () => void;
   performPushSync: () => Promise<ApiResponse>;
   performPullSync: () => Promise<ApiResponse>;
   refreshCloudData: (user: User | null, force?: boolean) => Promise<void>;
@@ -27,8 +27,8 @@ export function SyncSettings(props: SyncSettingsProps) {
     <>
       <SyncSection 
         user={props.user}
-        loginWithGoogle={props.loginWithGoogle}
-        logout={props.logout}
+        signIn={props.signIn}
+        signOut={props.signOut}
         performPushSync={props.performPushSync}
         performPullSync={props.performPullSync}
         refreshCloudData={props.refreshCloudData}

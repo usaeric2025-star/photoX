@@ -15,7 +15,7 @@ export function useDiagnostics() {
   const { runTask } = useTaskExecutor();
   const appLang = useUIStore(s => s.appLang);
 
-  const { data: auditResult, isLoading: isAuditing, refetch: runAuditQuery } = useQuery({
+  const { data: auditResult, isPending: isAuditing, refetch: runAuditQuery } = useQuery({
     queryKey: queryKeys.diagnostics.audit(),
     queryFn: async () => {
       const res = await api.storage.audit.$get();
@@ -59,7 +59,7 @@ export function useDiagnostics() {
     }
   });
 
-  const { data: report, isLoading: isScanning, refetch: scan } = useQuery({
+  const { data: report, isPending: isScanning, refetch: scan } = useQuery({
     queryKey: queryKeys.diagnostics.report(),
     queryFn: async () => {
       const res = await api.admin.diagnose.$get();
@@ -78,7 +78,7 @@ export function useDiagnostics() {
     queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
   };
 
-  const { data: r2Result, isLoading: isDiagnosingR2, refetch: runR2DiagnosticsQuery } = useQuery({
+  const { data: r2Result, isPending: isDiagnosingR2, refetch: runR2DiagnosticsQuery } = useQuery({
     queryKey: queryKeys.diagnostics.r2(),
     queryFn: async () => {
       const res = await api.admin.diagnose.r2.$get();
@@ -116,7 +116,7 @@ export function useDiagnostics() {
 
   return {
     report: report || null,
-    isLoading: isScanning || isRepairing || isAuditing,
+    isPending: isScanning || isRepairing || isAuditing,
     refreshReport,
     runRepair: (id: string) => repair(id),
     runR2Diagnostics,

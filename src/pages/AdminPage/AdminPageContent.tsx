@@ -1,13 +1,11 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
-import { 
-  useAuth, 
-  useTasks, 
+import { useAuthStore } from '@/store/useAuthStore';
+import { useTasks, 
   useSyncMutation, 
   useCategories, 
-  usePhotoUpload 
-} from '@/hooks';
+  usePhotoUpload } from '@/hooks';
 import { logger } from '@/lib/logger';
 import { DataLoadingContainer } from '@/components/ui/DataLoadingContainer';
 import { BatchEditScreen } from '@/components/admin/BatchEditScreen';
@@ -26,8 +24,8 @@ import { FiltersBar } from '@/components/filters/FiltersBar';
 
 export function AdminPageContent() {
   const filters = useFilters({ enableStatus: true, enableBatch: true });
-  const { user } = useAuth();
-  const { photos, isLoading: isPhotosLoading } = useAdminPhotos();
+  const { user } = useAuthStore();
+  const { photos, isPending: isPhotosPending } = useAdminPhotos();
   const { uploadFiles } = usePhotoUpload();
   const { handleBatchAiAnalyze } = useAIBatchAnalysis();
   const { mutateAsync: syncMut } = useSyncMutation();
@@ -46,7 +44,9 @@ export function AdminPageContent() {
   // Sync URL to store 
   useEffect(() => {
     const path = location.pathname;
-    if (path === '/admin/tasks') {
+    if (path === '/admin' || path === '/admin/') {
+      store.update({ activeScreen: 'gallery' });
+    } else if (path === '/admin/tasks') {
       store.update({ activeScreen: 'tasks' });
     } else if (path === '/admin/error-logs') {
       store.update({ activeScreen: 'error-logs' });
@@ -58,8 +58,6 @@ export function AdminPageContent() {
       store.update({ activeScreen: 'batch' });
     } else if (path === '/admin/statistics') {
       store.update({ activeScreen: 'dashboard' });
-    } else if (path === '/admin' && (['error-logs', 'tasks', 'diagnose', 'settings', 'batch', 'dashboard'].includes(store.activeScreen))) {
-      store.update({ activeScreen: 'gallery' });
     }
   }, [location.pathname, store.update]);
 
@@ -68,8 +66,8 @@ export function AdminPageContent() {
   const isSyncing = tasks.some(t => t.status === 'running' && t.name.includes('Sync'));
 
   return (
-    <AdminAuthGate isSyncing={isSyncing}>
-      <DataLoadingContainer isLoading={isPhotosLoading} hasData={true}>
+    <AdminAuthGate>
+      <DataLoadingContainer isPending={isPhotosPending} hasData={true}>
         <div className="flex flex-col h-screen bg-slate-50 overflow-hidden w-full relative">
           {(currentScreen === 'gallery' || currentScreen === 'home') ? (
             <>

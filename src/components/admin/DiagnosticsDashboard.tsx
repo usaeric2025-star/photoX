@@ -39,7 +39,7 @@ export function DiagnosticsDashboard() {
   };
 
   const { 
-    report, isLoading, refreshReport, runRepair,
+    report, isPending, refreshReport, runRepair,
     runR2Diagnostics, isDiagnosingR2, r2Result,
     handleTestWorker, isTestingWorker: _unusedIsTesting, workerResult: _unusedResult,
     runAudit, isAuditing, auditResult
@@ -139,10 +139,10 @@ export function DiagnosticsDashboard() {
                 runAudit();
               }
             }}
-            disabled={isLoading}
+            disabled={isPending}
             className="rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors h-9 w-9 flex items-center justify-center shrink-0"
           >
-            <RefreshCw size={16} className={isLoading ? "animate-spin text-slate-500" : "text-slate-500"} />
+            <RefreshCw size={16} className={isPending ? "animate-spin text-slate-500" : "text-slate-500"} />
           </Button>
         </div>
       </div>
@@ -152,7 +152,7 @@ export function DiagnosticsDashboard() {
           {/* 核心指标统计 */}
           <DiagnosticStats 
             report={report} 
-            isLoading={isLoading} 
+            isPending={isPending} 
             onRefresh={() => { refreshReport(); runAudit(); }} 
           />
 
@@ -171,7 +171,7 @@ export function DiagnosticsDashboard() {
                 title={plugin.title}
                 desc={plugin.desc}
                 icon={plugin.icon}
-                isLoading={pluginResults[plugin.title]?.loading ?? false}
+                isPending={pluginResults[plugin.title]?.loading ?? false}
                 result={pluginResults[plugin.title]?.result ?? null}
                 onTest={() => runPlugin(plugin)}
               />
@@ -181,7 +181,7 @@ export function DiagnosticsDashboard() {
           {/* 智能故障修复列表 */}
           <IssueList 
             issues={combinedIssues} 
-            isLoading={isLoading} 
+            isPending={isPending} 
             onRepair={internalRunRepair} 
             onSuccess={() => { refreshReport(); runAudit(); }} 
           />

@@ -5,11 +5,11 @@ import { getTranslatedCategoryName } from '@/services/category/utils';
 
 export function CategoryGrid() {
   const { filters, updateFilters } = useFilterState();
-  const { data: categories, isLoading } = useCategories();
+  const { data: categories, isPending } = useCategories();
   console.log('[CategoryGrid] categories:', categories);
   const { appLang, uiTranslations } = useTranslation();
 
-  if (isLoading) {
+  if (isPending) {
     return (
       <div className="flex flex-wrap gap-2 p-4 pt-0">
         {[...Array(6)].map((_, i) => (

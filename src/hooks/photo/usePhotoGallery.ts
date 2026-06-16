@@ -29,7 +29,7 @@ export function usePhotoGallery() {
   return {
     photos,
     infinitePhotosQuery,
-    isLoading: infinitePhotosQuery.isLoading,
+    isPending: infinitePhotosQuery.isPending,
     isFetchingNextPage: infinitePhotosQuery.isFetchingNextPage,
     hasNextPage: !!infinitePhotosQuery.hasNextPage,
     fetchNextPage: infinitePhotosQuery.fetchNextPage

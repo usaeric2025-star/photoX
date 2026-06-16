@@ -5,7 +5,7 @@ import { usePhoto } from './usePhoto';
 import { usePhotoEditMutation } from '@/hooks/photo/usePhotoMutations';
 
 export const usePhotoEditSession = (photoId: string) => {
-  const { data: photo, isLoading } = usePhoto(photoId);
+  const { data: photo, isPending } = usePhoto(photoId);
   const [draft, setDraft] = useState<Photo | null>(null);
   
   // Refactor to use new Mutation infra soon
@@ -32,7 +32,7 @@ export const usePhotoEditSession = (photoId: string) => {
     session: draft,
     setSession: setDraft,
     isDirty,
-    isLoading,
+    isPending,
     commit,
     discard,
   };

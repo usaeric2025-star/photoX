@@ -10,8 +10,8 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 interface SyncSectionProps {
   user: User | null;
-  loginWithGoogle: () => Promise<void>;
-  logout: () => void;
+  signIn: () => Promise<void>;
+  signOut: () => void;
   performPushSync: () => Promise<ApiResponse>;
   performPullSync: () => Promise<ApiResponse>;
   refreshCloudData: (user: User | null, force?: boolean) => Promise<void>;
@@ -21,8 +21,8 @@ interface SyncSectionProps {
 
 export function SyncSection({
   user,
-  loginWithGoogle,
-  logout,
+  signIn,
+  signOut,
   performPushSync,
   performPullSync,
   refreshCloudData,
@@ -50,7 +50,7 @@ export function SyncSection({
 
       {!user ? (
         <button 
-          onClick={loginWithGoogle}
+          onClick={signIn}
           className="w-full py-4 bg-white hover:bg-brand-bg text-brand-navy rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] transition-all"
         >
           <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="Google" />
@@ -71,7 +71,7 @@ export function SyncSection({
               <p className="text-[9px] text-white/40 truncate font-bold tracking-tighter">{user?.email}</p>
             </div>
             <button 
-              onClick={logout}
+              onClick={signOut}
               className="p-2 text-white/30 hover:text-brand-gold transition-colors"
               title="Logout"
             >

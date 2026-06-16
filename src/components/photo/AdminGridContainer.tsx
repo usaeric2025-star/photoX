@@ -55,7 +55,7 @@ export function AdminGridContainer() {
 
   // 1. Data Layer
   const { 
-    gridPhotos, photos, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage 
+    gridPhotos, photos, isPending, isFetchingNextPage, hasNextPage, fetchNextPage 
   } = useAdminPhotos();
 
   // 2. Action Layer
@@ -98,7 +98,7 @@ export function AdminGridContainer() {
               key="admin-photo-grid"
               restoreKey="admin_view_scroll_vlist"
               photos={gridPhotos}
-              isFetching={isLoading}
+              isFetching={isPending}
               isFetchingNextPage={isFetchingNextPage}
               hasNextPage={hasNextPage}
               onLoadMore={fetchNextPage}

@@ -9,7 +9,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { formatters } from '@/utils/formatters';
 
 export function TasksContent() {
-  const { tasks = [], isLoading, refetch } = useGlobalTasks();
+  const { tasks = [], isPending, refetch } = useGlobalTasks();
   const safeTasks = Array.isArray(tasks) ? tasks : [];
   
   const stats = {
@@ -50,7 +50,7 @@ export function TasksContent() {
               后台任务队列
             </h3>
             <Button variant="ghost" size="sm" onClick={() => refetch()} className="h-8 px-3 rounded-full text-[10px] font-black uppercase tracking-widest">
-              <RefreshCw size={12} className={`mr-1.5 ${isLoading ? 'animate-spin' : ''}`} />
+              <RefreshCw size={12} className={`mr-1.5 ${isPending ? 'animate-spin' : ''}`} />
               刷新
             </Button>
           </div>

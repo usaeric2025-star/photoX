@@ -11,9 +11,9 @@ export function useFormDraft<T>(initialData: T) {
     setDraft(prev => ({ ...prev, ...updates }));
   }, []);
 
-  const resetDraft = () => {
+  const resetDraft = useCallback(() => {
     setDraft(initialData);
-  };
+  }, [initialData]);
 
   return { draft, updateDraft, resetDraft };
 }

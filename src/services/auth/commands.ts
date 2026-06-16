@@ -13,7 +13,7 @@ supabase.auth.getSession().then(({ data: { session } }) => {
   logger.error("Auth initialization check failed:", error);
 });
 
-export const loginWithGoogle = async () => {
+export const signIn = async () => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
@@ -35,7 +35,7 @@ export const loginWithGoogle = async () => {
   }
 };
 
-export const logout = async () => {
+export const signOut = async () => {
   wasAuthenticated = false;
   try {
     // 1. 清除本地持久化緩存 [CAUSAL-CONSISTENCY]

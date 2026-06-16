@@ -19,7 +19,7 @@ export function usePhotoFilter(tags: Tag[], settings?: AppSettings) {
         ...tag,
         hot_score: tag.hot_score || 0
       }))
-      .filter(tag => (tag.hot_score || 0) >= hotTagThreshold);
+      .filter(tag => (tag.hot_score || 0) >= hotTagThreshold && (tag.hot_score || 0) > 0);
 
     const sorted = [...candidates].sort((a, b) => {
       const diff = (b.hot_score || 0) - (a.hot_score || 0);

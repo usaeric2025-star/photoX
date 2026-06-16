@@ -208,6 +208,37 @@ app.post("/log-error", async (c) => {
 });
 
 // --- Core Utility Routes ---
+app.get("/download", async (c) => {
+    const url = c.req.query("url");
+    let filename = c.req.query("filename") || "photo";
+    
+    if (!url) {
+        return c.text("Missing url parameter", 400);
+    }
+    
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            return c.text(`Failed to fetch file: ${response.statusText}`, response.status as any);
+        }
+        
+        const contentType = response.headers.get("content-type") || "image/jpeg";
+        if (!filename.includes(".")) {
+            const ext = contentType.split("/")[1] || "jpeg";
+            filename = `${filename}.${ext}`;
+        }
+        
+        const arrayBuffer = await response.arrayBuffer();
+        
+        c.header("Content-Type", contentType);
+        c.header("Content-Disposition", `attachment; filename="${encodeURIComponent(filename)}"`);
+        return c.body(arrayBuffer);
+    } catch (err: any) {
+        logger.error("api.download.error", { url, filename, error: err.message });
+        return c.text(`Download proxy error: ${err.message}`, 500);
+    }
+});
+
 app.get("/health", (c) => {
     return c.json({ 
         success: true, 

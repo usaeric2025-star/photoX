@@ -2,14 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { LoadingScreen } from './LoadingScreen';
 
 interface DataLoadingContainerProps {
-  isLoading: boolean;
+  isPending: boolean;
   hasData: boolean;
   showImmediateLoading?: boolean;
   children: React.ReactNode;
 }
 
 export function DataLoadingContainer({
-  isLoading,
+  isPending,
   hasData,
   showImmediateLoading = false,
   children
@@ -26,9 +26,9 @@ export function DataLoadingContainer({
   }, [showImmediateLoading]);
 
   // If we are currently loading, or the optional delay/intro is active AND we have no data, show full page overlay
-  const showLoader = (isLoading || delayLoading) && !hasData;
+  const showLoader = (isPending || delayLoading) && !hasData;
   // If we are refreshing but we already have data, show a subtle non-blocking top progress bar
-  const showBackgroundIndicator = (isLoading || delayLoading) && hasData;
+  const showBackgroundIndicator = (isPending || delayLoading) && hasData;
 
   return (
     <div className="relative w-full h-full">

@@ -1,23 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { LoginScreen } from '@/components/admin/LoginScreen';
-import { useAuth, useSettings } from '@/hooks';
+import { useAuthStore } from '@/store/useAuthStore';
+import { useSettings } from '@/hooks';
 import { useLocalStorage } from '@/hooks/core/useLocalStorage';
 import { logger } from '@/lib/logger';
 
 interface AdminAuthGateProps {
   children: React.ReactNode;
-  isSyncing?: boolean;
 }
 
-export function AdminAuthGate({ children, isSyncing }: AdminAuthGateProps) {
+export function AdminAuthGate({ children }: AdminAuthGateProps) {
   const [passcode] = useLocalStorage({
     key: 'ais_mock_auth_passcode',
     defaultValue: '',
     getInitialValueInEffect: false,
   });
 
-  const { user, isLoading: isAuthLoading, loginWithGoogle } = useAuth();
+  const { user, isLoading: isAuthLoading, signIn } = useAuthStore();
   const { settings } = useSettings();
   
   const isStaffMode = passcode === settings?.access_passcode && !!settings?.access_passcode;
@@ -50,7 +50,7 @@ export function AdminAuthGate({ children, isSyncing }: AdminAuthGateProps) {
   if (!user && !isStaffMode) {
     return (
       <div className="h-screen w-full">
-        <LoginScreen loginWithGoogle={loginWithGoogle} isLoading={isSyncing} />
+        <LoginScreen signIn={signIn} />
       </div>
     );
   }

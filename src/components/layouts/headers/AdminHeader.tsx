@@ -1,7 +1,8 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React from 'react';
 import { LayoutDashboard, Camera, Menu, User as UserIcon, LogOut, Settings, LayoutGrid, MonitorPlay, CheckSquare, Sparkles } from 'lucide-react';
-import { useAuth, useUIStore, useSettings, usePhotoCount, useAdminBatchActions, usePermission } from '@/hooks';
+import { useAuthStore } from '@/store/useAuthStore';
+import { useUIStore, useSettings, usePhotoCount, useAdminBatchActions, usePermission } from '@/hooks';
 import { Dropdown, DropdownTrigger, DropdownPortal, DropdownPositioner, DropdownPopup, DropdownItem, DropdownSeparator } from '../../shared/Dropdown';
 import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
 import { translations } from "@/locales";
@@ -11,7 +12,7 @@ interface AdminHeaderProps {}
 
 export function AdminHeader({}: AdminHeaderProps) {
   const { handleBatchAiIdentifyTrigger } = useAdminBatchActions();
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuthStore();
   const { settings } = useSettings();
   const { role } = usePermission();
   const navigate = useRouterSafe().navigate;
@@ -192,11 +193,11 @@ export function AdminHeader({}: AdminHeaderProps) {
                     <>
                       <DropdownSeparator />
                       <DropdownItem
-                        onClick={() => logout()}
+                        onClick={() => signOut()}
                         className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-default outline-none data-[highlighted]:bg-blue-50 text-red-600 data-[highlighted]:bg-red-50"
                       >
                         <LogOut size={16} />
-                        {t.logoutAccount}
+                        {t.signOutAccount}
                       </DropdownItem>
                     </>
                   )}

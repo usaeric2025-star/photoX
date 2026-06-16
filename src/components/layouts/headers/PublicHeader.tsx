@@ -1,7 +1,8 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React from 'react';
 import { LogIn, LayoutDashboard, RefreshCw, Camera, Menu, User as UserIcon, LogOut, Settings, LayoutGrid, MonitorPlay } from 'lucide-react';
-import { useAuth, useUIStore, useShallow, useSettings, usePermission } from '@/hooks';
+import { useAuthStore } from '@/store/useAuthStore';
+import { useUIStore, useShallow, useSettings, usePermission } from '@/hooks';
 import { Dropdown, DropdownTrigger, DropdownPortal, DropdownPositioner, DropdownPopup, DropdownItem, DropdownSeparator } from '../../shared/Dropdown';
 import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
 import { translations } from "@/locales";
@@ -13,7 +14,7 @@ interface PublicHeaderProps {
 }
 
 export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHeaderProps) {
-  const { user, isLoading, logout } = useAuth();
+  const { user, isLoading, signOut } = useAuthStore();
   const { settings } = useSettings();
   const { role } = usePermission();
   const update = useUIStore((s) => s.update);
@@ -186,11 +187,11 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
                     <>
                       <DropdownSeparator />
                       <DropdownItem
-                        onClick={() => logout()}
+                        onClick={() => signOut()}
                         className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-default outline-none data-[highlighted]:bg-blue-50 text-red-600 data-[highlighted]:bg-red-50"
                       >
                         <LogOut size={16} />
-                        {t.logoutAccount}
+                        {t.signOutAccount}
                       </DropdownItem>
                     </>
                   )}

@@ -1,6 +1,5 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 // Core Hooks
-export { useAuth } from './core/auth/useAuth';
 export * from './settings';
 export { useTaskExecutor } from './core/useTaskExecutor';
 export { TaskProvider, useTasks, type BackgroundTask } from './core/useTasks';

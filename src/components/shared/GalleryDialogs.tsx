@@ -10,7 +10,7 @@ interface GalleryDialogsProps {
   passError: boolean;
   setPassError: (err: boolean) => void;
   labels: TranslationType;
-  loginWithGoogle?: () => Promise<void>;
+  signIn?: () => Promise<void>;
   settings?: AppSettings;
   setIsStaffMode: (is: boolean) => void;
   navigate: (options: { to: string }) => void;
@@ -30,7 +30,7 @@ export function GalleryDialogs(props: GalleryDialogsProps) {
           setPassInput={props.setPassInput}
           passError={props.passError}
           labels={props.labels}
-          loginWithGoogle={props.loginWithGoogle}
+          signIn={props.signIn}
           onSubmit={(e) => {
             e.preventDefault();
             if (props.passInput === props.settings?.access_passcode) {

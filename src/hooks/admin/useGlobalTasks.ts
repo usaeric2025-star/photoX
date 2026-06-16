@@ -1,5 +1,6 @@
+import { useAuthStore } from '@/store/useAuthStore';
 import { useEffect, useState } from 'react';
-import { useTasks, useAuth } from '../';
+import { useTasks } from '../';
 import { UnifiedTask, TaskStatus } from '@/types';
 import { api } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
@@ -12,7 +13,7 @@ import { useUIStore } from '@/store/useUIStore';
  */
 export function useGlobalTasks() {
   const isAdminPath = useAdminMode();
-  const { user } = useAuth();
+  const { user } = useAuthStore();
   const isAdmin = isAdminPath && !!user;
   const activeScreen = useUIStore((s) => s.activeScreen);
   
@@ -20,7 +21,7 @@ export function useGlobalTasks() {
   const { tasks: localTasks = [] } = useTasks();
 
   // 2. Backend Jobs (Durable, polled)
-  const { data: remoteJobs = [], refetch: refetchJobs, isLoading: isLoadingJobs } = useQuery({
+  const { data: remoteJobs = [], refetch: refetchJobs, isPending: isPendingJobs } = useQuery({
     queryKey: ['maintenance-jobs'],
     queryFn: async () => {
       if (!isAdmin) return [];
@@ -107,7 +108,7 @@ export function useGlobalTasks() {
 
   return {
     tasks: aggregatedTasks,
-    isLoading: isLoadingJobs,
+    isPending: isPendingJobs,
     refetch: refetchJobs
   };
 }

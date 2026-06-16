@@ -16,7 +16,7 @@ export default function PublicPage() {
   const { columns } = useColumns();
   const { 
     gridPhotos: photos,
-    isLoading,
+    isPending,
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
@@ -103,14 +103,14 @@ export default function PublicPage() {
       <PublicHeader 
         totalCount={totalCount ?? 0}
         onRefresh={handleRefresh}
-        isRefreshing={isRefreshing || isLoading}
+        isRefreshing={isRefreshing || isPending}
       />
       <FiltersBar filters={filters} />
       <div className="flex-1 overflow-hidden relative">
         <ErrorBoundary>
           <VirtualPhotoGrid
             photos={photos}
-            isFetching={isLoading}
+            isFetching={isPending}
             isFetchingNextPage={isFetchingNextPage}
             hasNextPage={hasNextPage}
             onLoadMore={fetchNextPage}

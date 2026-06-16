@@ -12,9 +12,9 @@ export function AISourceTab({ photoId }: AISourceTabProps) {
   const { copy, copied } = useCopyToClipboard({
     successMessage: appLang === 'zh' ? '已复制' : 'Copied'
   });
-  const { data: aiResult, isLoading, error } = usePhotoAIResult(photoId);
+  const { data: aiResult, isPending, error } = usePhotoAIResult(photoId);
 
-  if (isLoading) {
+  if (isPending) {
     return (
       <div className="space-y-4 animate-pulse pt-4">
         <div className="h-8 bg-slate-200 rounded-xl w-1/4"></div>

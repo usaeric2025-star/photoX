@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import Lightbox from 'yet-another-react-lightbox';
 import Thumbnails from 'yet-another-react-lightbox/plugins/thumbnails';
-import Captions from 'yet-another-react-lightbox/plugins/captions';
 import Download from 'yet-another-react-lightbox/plugins/download';
 import { useTranslation } from '@/hooks';
 import { Modal } from '@/components/ui/Modal';
+import { downloadPhotoAsJpeg } from '@/services/photo/downloadService';
 import 'yet-another-react-lightbox/styles.css';
 import 'yet-another-react-lightbox/plugins/thumbnails.css';
-import 'yet-another-react-lightbox/plugins/captions.css';
 
 interface YarlLightboxProps {
   open: boolean;
@@ -41,7 +40,6 @@ export function YarlLightbox({
   onSetCover,
 }: YarlLightboxProps) {
   console.log('[YarlLightbox] items:', items);
-  const [showCaption, setShowCaption] = useState(true);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const { lang, uiTranslations: t } = useTranslation();
 
@@ -60,7 +58,7 @@ export function YarlLightbox({
   const isAdmin = !!(onEdit || onDelete || onSetCover);
   const currentItem = items[currentIndex];
 
-  // 自定義工具欄按鈕：只留下下載跟關閉跟資訊卡切換
+  // 自定義工具欄按鈕
   const toolbarButtons: any[] = [];
 
   // 如果是管理模式，且有編輯/onEdit 回調，就在頭部添加【編輯】按鈕
@@ -78,18 +76,35 @@ export function YarlLightbox({
     );
   }
 
-  // 資訊卡開關按鈕
-  toolbarButtons.push(
-    <button
-      key="info-toggle-btn"
-      type="button"
-      onClick={() => setShowCaption(!showCaption)}
-      className="mr-2 text-[12px] font-medium bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-lg font-sans cursor-pointer h-9 shadow-sm flex items-center gap-1 transition-all duration-200 hover:scale-105 active:scale-95 shrink-0"
-      title="資訊卡開關"
-    >
-      <span>ℹ️</span> <span>{showCaption ? '隱藏資訊' : '顯示資訊'}</span>
-    </button>
-  );
+  // 產品資訊（i 按鈕）
+  if (currentItem) {
+    toolbarButtons.push(
+      <button
+        key="info-btn"
+        type="button"
+        onClick={() => setIsDetailModalOpen(true)}
+        className="yarl__button mr-2 flex items-center justify-center cursor-pointer transition-transform duration-150 hover:scale-105"
+        title="產品資訊"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="yarl__icon"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 16v-4" />
+          <path d="M12 8h.01" />
+        </svg>
+      </button>
+    );
+  }
 
   // 下載跟關閉
   toolbarButtons.push('download');
@@ -105,7 +120,7 @@ export function YarlLightbox({
           view: ({ index }) => onIndexChange(index),
         }}
         slides={slides}
-        plugins={[Thumbnails, Captions, Download]}
+        plugins={[Thumbnails, Download]}
         thumbnails={{
           position: 'bottom',
           width: 80,
@@ -114,37 +129,14 @@ export function YarlLightbox({
           imageFit: 'cover',
           showToggle: false,
         }}
-        captions={{
-          showToggle: false,
-          descriptionMaxLines: 1,
-        }}
         download={{
           download: ({ slide }) => {
-            const src = slide.src;
-            const filename = typeof slide.title === 'string' ? slide.title : 'photo';
+            const slideAny = slide as any;
+            const src = slideAny.src;
+            const filename = typeof slideAny.title === 'string' ? slideAny.title : 'photo';
             
-            fetch(src, { mode: 'cors' })
-              .then(res => res.blob())
-              .then(blob => {
-                const blobUrl = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = blobUrl;
-                link.download = filename;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(blobUrl);
-              })
-              .catch(err => {
-                console.warn('CORS download failed, falling back:', err);
-                const link = document.createElement('a');
-                link.href = src;
-                link.target = '_blank';
-                link.download = filename;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-              });
+            // Route seamlessly through the JPEG converter process with secure proxy
+            void downloadPhotoAsJpeg(src, filename);
           }
         }}
         render={{
@@ -155,36 +147,7 @@ export function YarlLightbox({
             slideTitle: () => null, // 禁用預設的置中 title 顯示
             slideDescription: () => null, // 禁用預設的置中 description 顯示
           } as any),
-          controls: () => {
-            if (!showCaption || !currentItem) return null;
-            return (
-              <div 
-                onClick={() => setIsDetailModalOpen(true)}
-                className="absolute right-4 bottom-[90px] md:bottom-[96px] z-[99999] max-w-[260px] bg-slate-950/85 hover:bg-slate-950/95 border border-slate-800 backdrop-blur-md text-white rounded-2xl shadow-2xl p-4 select-none flex flex-col gap-1.5 cursor-pointer transition-all hover:scale-[1.03] active:scale-[0.98] duration-200 text-left pointer-events-auto border-brand-gold/15"
-              >
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {currentItem.category && (
-                    <span className="bg-brand-gold text-slate-950 px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider">
-                      {currentItem.category}
-                    </span>
-                  )}
-                  {currentItem.photo?.item_code && (
-                    <span className="text-[10px] text-slate-400 font-mono">
-                      {currentItem.photo.item_code}
-                    </span>
-                  )}
-                </div>
-                
-                <div className="text-[13px] font-bold text-slate-100 truncate line-clamp-1 block leading-tight">
-                  {currentItem.title}
-                </div>
-
-                <div className="text-[10px] text-brand-gold font-medium mt-1 select-none flex items-center gap-1 opacity-90">
-                  <span>ℹ️</span> 點擊查看完整資料
-                </div>
-              </div>
-            );
-          }
+          controls: () => null
         }}
         toolbar={{
           buttons: toolbarButtons,

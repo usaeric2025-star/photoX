@@ -11,12 +11,12 @@ const severityColors = {
 
 interface IssueListProps {
   issues: any[];
-  isLoading: boolean;
+  isPending: boolean;
   onRepair: (id: string) => void;
   onSuccess: () => void;
 }
 
-export function IssueList({ issues, isLoading, onRepair, onSuccess }: IssueListProps) {
+export function IssueList({ issues, isPending, onRepair, onSuccess }: IssueListProps) {
   return (
     <div className="space-y-3">
       <div className="space-y-3">
@@ -54,7 +54,7 @@ export function IssueList({ issues, isLoading, onRepair, onSuccess }: IssueListP
                       ) : (
                         <button 
                           onClick={() => onRepair(issue.id)}
-                          disabled={isLoading}
+                          disabled={isPending}
                           className="text-[11px] font-black text-brand-gold px-4 py-1.5 bg-brand-gold/5 rounded-xl border border-brand-gold/10 hover:bg-brand-gold/10 transition-colors disabled:opacity-50 active:scale-95"
                         >
                           {issue.id.startsWith('perf_') ? '了解并忽略' : '立即自动修复'}
@@ -68,7 +68,7 @@ export function IssueList({ issues, isLoading, onRepair, onSuccess }: IssueListP
         ))}
       </div>
 
-      {issues.length === 0 && !isLoading && (
+      {issues.length === 0 && !isPending && (
         <div className="py-12 flex flex-col items-center justify-center text-center space-y-4 bg-white rounded-3xl border border-dashed border-slate-200">
            <div className="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center text-green-500">
              <CheckCircle2 size={24} />

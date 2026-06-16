@@ -1,9 +1,10 @@
+import { useAuthStore } from '@/store/useAuthStore';
 import { generateId } from '@/lib/id';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useCallback } from 'react';
 
 import { checkDuplicateBatch } from '@/services/photo/duplicateCheck';
-import { useInvalidatePhotos, useAuth } from '@/hooks';
+import { useInvalidatePhotos } from '@/hooks';
 import { showToast } from '@/lib/ui/toast';
 import { Photo } from '@/types';
 import { hapticFeedback } from '@/lib/ui/haptics';
@@ -14,7 +15,7 @@ export function usePhotoUpload() {
   const { startUploadBatch, updateUploadProgress, completeUploadBatch, errorUploadBatch } = useUploadProgress();
   
   const invalidatePhotos = useInvalidatePhotos();
-  const { user } = useAuth();
+  const { user } = useAuthStore();
   const appLang = useUIStore(s => s.appLang);
 
   const uploadFiles = useCallback(async (files: FileList | File[]) => {

@@ -18,6 +18,7 @@ if (typeof window !== 'undefined') {
   };
 }
 
+import { scan } from 'react-scan';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Toaster } from 'sonner';
@@ -35,6 +36,13 @@ import { initChunkHandler } from '@/lib/chunkErrorHandler';
 import { dailyWorker } from './services/maintenance/DailyWorker';
 
 async function init() {
+  if (typeof window !== 'undefined') {
+    scan({
+      enabled: true,
+      log: true, // logs renders to the console
+    });
+  }
+
   await migrateStorage();
 
   initChunkHandler(router);
