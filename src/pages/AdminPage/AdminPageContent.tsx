@@ -106,6 +106,9 @@ export function AdminPageContent() {
           />
         </div>
       </DataLoadingContainer>
+
+      {/* Put Modals outside the layout container */}
+      <PhotoEditModal />
     </AdminAuthGate>
   );
 }

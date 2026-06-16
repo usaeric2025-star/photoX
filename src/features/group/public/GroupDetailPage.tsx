@@ -7,6 +7,7 @@ import { YarlLightbox } from '@/components/lightbox/YarlLightbox';
 import { useFilters, useTranslation, useCategories } from '@/hooks';
 import { getTranslatedCategoryName } from '@/services/category/utils';
 import { GroupHeader } from '../shared/components/GroupHeader';
+import { PageSkeleton } from '@/components/ui/PageSkeleton';
 
 function PublicPhotoGrid({ photos, onPhotoClick }: { photos: any[]; onPhotoClick: (id: string) => void }) {
   return (
@@ -50,7 +51,7 @@ export function PublicGroupDetailPage() {
     };
   });
 
-  if (loading) return <div className="p-8 text-center text-slate-500">載入中...</div>;
+  if (loading) return <PageSkeleton />;
   if (error) return <div className="p-4 text-red-500">錯誤：{error}</div>;
   if (!group) return <div className="p-4">合組不存在</div>;
   

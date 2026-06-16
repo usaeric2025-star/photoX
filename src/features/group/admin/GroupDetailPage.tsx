@@ -17,6 +17,7 @@ import { GroupSettingsModal } from '@/components/groups/GroupSettingsModal';
 import { useGroupDraft } from '@/components/groups/useGroupDraft';
 import { useGroupMutations } from '@/hooks/groups/useGroupMutations';
 import { GroupHeader } from '../shared/components/GroupHeader';
+import { PhotoEditModal } from '@/components/admin/PhotoEditModal';
 
 function AdminPhotoGrid({ photos, onPhotoClick }: { photos: any[]; onPhotoClick: (id: string) => void }) {
   const isMultiSelect = useUIStore(s => s.isMultiSelect);
@@ -95,15 +96,13 @@ export function AdminGroupDetailPage() {
   );
   const { update, dissolve } = useGroupMutations();
   const { deletePhoto, updatePhoto } = adminActions;
+  const storeUpdate = useUIStore((s) => s.update);
   
   const handleUpdateTitle = async (newName: string) => {
     await update.mutateAsync({ id: groupId, updates: { name: newName } });
   };
   
-  // Note: Assuming useEditDrawer is available or need to be defined
-  // For now I will mock/assume the edit drawer is handled by adminActions or a existing modal
-  // I will just use console.log as it was not explicitly in the file imports
-  const openEditDrawer = (id: string) => alert('Edit drawer for ' + id);
+  const openEditDrawer = (id: string) => storeUpdate({ editPhotoId: id });
 
   if (loading) return <div className="p-8 text-center text-slate-500">載入中...</div>;
   if (error) return <div className="p-4 text-red-500">錯誤：{error}</div>;
@@ -162,6 +161,8 @@ export function AdminGroupDetailPage() {
           t={t}
         />
       )}
+
+      <PhotoEditModal />
     </div>
   );
 }
