@@ -1,4 +1,4 @@
-import { DiagnosticTask, DiagnosticIssue, DiagnosticContext } from "../types";
+import { DiagnosticTask, DiagnosticIssue, DiagnosticContext } from "../types.js";
 
 export const nonStandardCodesTask: DiagnosticTask = {
   id: 'non_standard_item_codes',

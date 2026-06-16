@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { getSupabaseAdmin } from "../../_lib/supabase.js";
 import { getR2Client } from "../../_lib/storage.js";
 import { getServerEnv } from "../../_shared/envSchema.js";
-import { diagnosticRegistry } from "../../_lib/diagnostics/registry";
+import { diagnosticRegistry } from "../../_lib/diagnostics/registry.js";
 import { DiagnosticIssue } from '@/types/diagnostics';
 
 const serverEnv = getServerEnv(process.env);

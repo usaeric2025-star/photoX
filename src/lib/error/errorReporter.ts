@@ -15,6 +15,25 @@ function handleReportFailure(error: unknown): void {
   console.error('[ErrorReporter] 日誌上報 API 失敗:', error)
 }
 
+function safeJsonStringify(obj: any): string {
+  try {
+    return JSON.stringify(obj);
+  } catch (e) {
+    // If circular reference or other error, try a simpler approach or return fallback
+    console.warn('[ErrorReporter] 序列化日誌數據失敗，正在使用降級方案:', e);
+    
+    // Simple depth-limited or circular-safe stringifier (basic version)
+    const cache = new Set();
+    return JSON.stringify(obj, (key, value) => {
+      if (typeof value === 'object' && value !== null) {
+        if (cache.has(value)) return '[Circular]';
+        cache.add(value);
+      }
+      return value;
+    });
+  }
+}
+
 export async function reportError(error: Error | AppError): Promise<void> {
   if (reportedErrors.has(error)) return
   reportedErrors.add(error)
@@ -46,7 +65,7 @@ export async function reportError(error: Error | AppError): Promise<void> {
       await fetch('/api/log-error', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: safeJsonStringify(payload),
       })
     } catch (err) {
       handleReportFailure(err)
@@ -83,7 +102,7 @@ export const logError = async (error: Error | unknown, context: EventContext) =>
         'Content-Type': 'application/json',
         'X-Trace-Id': traceId
       },
-      body: JSON.stringify({
+      body: safeJsonStringify({
         error_message: normError.message,
         stack_trace: normError.stack || (normError as any)?.details || null,
         url: typeof window !== 'undefined' ? window.location.href : '',
@@ -109,7 +128,7 @@ export const logResult = async (context: EventContext, type: 'error' | 'success'
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
+      body: safeJsonStringify({
         error_message: `[${type.toUpperCase()}] ${context.action}`,
         url: typeof window !== 'undefined' ? window.location.href : '',
         context: context.component || 'global',

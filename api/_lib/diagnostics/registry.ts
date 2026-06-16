@@ -1,12 +1,12 @@
-import { DiagnosticTask } from "./types";
-import { excessTagsTask } from "./tasks/excessTags";
-import { orphanedPhotosTask } from "./tasks/orphanedPhotos";
-import { emptyGroupsTask } from "./tasks/emptyGroups";
-import { groupCoverMismatchTask } from "./tasks/groupCoverMismatch";
-import { ghostRecordsTask } from "./tasks/ghostRecords";
-import { missingHashesTask } from "./tasks/missingHashes";
-import { missingUrlsTask } from "./tasks/missingUrls";
-import { nonStandardCodesTask } from "./tasks/nonStandardCodes";
+import { DiagnosticTask } from "./types.js";
+import { excessTagsTask } from "./tasks/excessTags.js";
+import { orphanedPhotosTask } from "./tasks/orphanedPhotos.js";
+import { emptyGroupsTask } from "./tasks/emptyGroups.js";
+import { groupCoverMismatchTask } from "./tasks/groupCoverMismatch.js";
+import { ghostRecordsTask } from "./tasks/ghostRecords.js";
+import { missingHashesTask } from "./tasks/missingHashes.js";
+import { missingUrlsTask } from "./tasks/missingUrls.js";
+import { nonStandardCodesTask } from "./tasks/nonStandardCodes.js";
 
 export const diagnosticRegistry: DiagnosticTask[] = [
   excessTagsTask,

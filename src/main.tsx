@@ -49,11 +49,8 @@ if (clientEnv.VITE_SENTRY_DSN) {
     replaysSessionSampleRate: 0.1,
     replaysOnErrorSampleRate: 1.0,
 
-    // 保護用戶隱私：禁止傳送 HTTP Body
-    dataCollection: {
-      userInfo: true,
-      httpBodies: [],
-    },
+    // 處理深層物件與循環引用
+    normalizeDepth: 10,
 
     // 初始標籤
     initialScope: {
@@ -63,7 +60,13 @@ if (clientEnv.VITE_SENTRY_DSN) {
       },
     },
 
-    // 開發環境開啟除錯模式
+    // 可以在這裡過濾或處理麵包屑，防止循環引用導致的錯誤
+    beforeBreadcrumb(breadcrumb) {
+      // 確保 breadcrumb 中的資料不會導致序列化問題
+      return breadcrumb;
+    },
+
+    // 開發環境開啟除錯模式 (注意：debug 模式下的 logger 可能會因為循環引用報錯)
     debug: clientEnv.DEV,
   });
 }

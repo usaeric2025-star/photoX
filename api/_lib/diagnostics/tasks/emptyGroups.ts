@@ -1,4 +1,4 @@
-import { DiagnosticIssue, DiagnosticTask, DiagnosticContext } from "../types";
+import { DiagnosticIssue, DiagnosticTask, DiagnosticContext } from "../types.js";
 
 export const emptyGroupsTask: DiagnosticTask = {
   id: 'empty_groups',

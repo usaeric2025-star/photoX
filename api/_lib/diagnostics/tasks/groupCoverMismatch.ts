@@ -1,4 +1,4 @@
-import { DiagnosticIssue, DiagnosticTask, DiagnosticContext } from "../types";
+import { DiagnosticIssue, DiagnosticTask, DiagnosticContext } from "../types.js";
 
 export const groupCoverMismatchTask: DiagnosticTask = {
   id: 'group_cover_mismatch',

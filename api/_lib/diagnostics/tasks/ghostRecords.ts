@@ -1,4 +1,4 @@
-import { DiagnosticIssue, DiagnosticTask, DiagnosticContext } from "../types";
+import { DiagnosticIssue, DiagnosticTask, DiagnosticContext } from "../types.js";
 
 export const ghostRecordsTask: DiagnosticTask = {
   id: 'ghost_records',
