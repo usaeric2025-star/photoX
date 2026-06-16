@@ -16,7 +16,7 @@ adminSettings.get("/get-keys", async (c) => {
 
         const secrets = secretsRes || [];
         const config: Record<string, string> = {};
-        secrets.forEach((s: any) => { config[s.key] = s.value; });
+        secrets.forEach((s: { key: string; value: string }) => { config[s.key] = s.value; });
         
         let hasOpenrouter = !!config.openrouter;
         let hasAgnes = !!config.agnes;
@@ -45,9 +45,9 @@ adminSettings.get("/get-keys", async (c) => {
                 agnes_model: config.agnes_model || ''
             }
         });
-    } catch (e: any) {
+    } catch (e: unknown) {
         logger.error("get-keys handler failed:", e);
-        return c.json({ success: false, error: e.message }, 500);
+        return c.json({ success: false, error: (e as Error).message }, 500);
     }
 });
 
@@ -82,9 +82,9 @@ adminSettings.post("/save-key", async (c) => {
             success: true, 
             message: `密鑰已加密保存！` 
         });
-    } catch (e: any) {
+    } catch (e: unknown) {
         logger.error("Save key failed:", e);
-        return c.json({ success: false, error: e.message || "保存失敗，請重試" }, 500);
+        return c.json({ success: false, error: (e as Error).message || "保存失敗，請重試" }, 500);
     }
 });
 
@@ -102,9 +102,9 @@ adminSettings.post("/save-model", async (c) => {
         if (error) throw error;
         
         return c.json({ success: true });
-    } catch (e: any) {
+    } catch (e: unknown) {
         logger.error("Save model failed:", e);
-        return c.json({ success: false, error: e.message }, 500);
+        return c.json({ success: false, error: (e as Error).message }, 500);
     }
 });
 
@@ -134,9 +134,9 @@ adminSettings.post("/save-provider", async (c) => {
         }
         
         return c.json({ success: true });
-    } catch (e: any) {
+    } catch (e: unknown) {
         logger.error("Save provider failed:", e);
-        return c.json({ success: false, error: e.message }, 500);
+        return c.json({ success: false, error: (e as Error).message }, 500);
     }
 });
 
@@ -147,8 +147,8 @@ adminSettings.post("/save-settings", async (c) => {
         const { error } = await supabase.from('settings').upsert(settingsPayload, { onConflict: 'id' });
         if (error) return c.json({ success: false, error: error.message }, 500);
         return c.json({ success: true });
-    } catch (e: any) {
-        return c.json({ success: false, error: e.message }, 500);
+    } catch (e: unknown) {
+        return c.json({ success: false, error: (e as Error).message }, 500);
     }
 });
 
@@ -159,8 +159,8 @@ adminSettings.post("/upsert-logo", async (c) => {
         const { error } = await supabase.from('settings').upsert({ id: 1, logo_url: url }, { onConflict: 'id' });
         if (error) return c.json({ success: false, error: error.message }, 500);
         return c.json({ success: true });
-    } catch (e: any) {
-        return c.json({ success: false, error: e.message }, 500);
+    } catch (e: unknown) {
+        return c.json({ success: false, error: (e as Error).message }, 500);
     }
 });
 

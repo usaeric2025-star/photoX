@@ -29,7 +29,7 @@ storageMaintenance.get("/storage/audit", async (c) => {
             healthyCount: healthy.length,
             ghosts: { 
                 count: ghosts.length, 
-                samples: ghosts.slice(0, 20).map((g: any) => ({
+                samples: ghosts.slice(0, 20).map((g: { id: string; name: string; url: string }) => ({
                     id: g.id,
                     name: g.name,
                     expectedKey: g.url.split('/').pop() || ""
@@ -37,7 +37,7 @@ storageMaintenance.get("/storage/audit", async (c) => {
             },
             orphans: { 
                 count: orphans.length, 
-                samples: orphans.slice(0, 20).map((o: any) => ({
+                samples: orphans.slice(0, 20).map((o: { key: string; url: string }) => ({
                     key: o.key,
                     url: o.url
                 }))
@@ -50,9 +50,9 @@ storageMaintenance.get("/storage/audit", async (c) => {
         StorageAuditResSchema(auditData);
 
         return c.json({ success: true, data: auditData } as ApiResponse);
-    } catch (e: any) {
+    } catch (e: unknown) {
         logger.error("Audit failed:", e);
-        return c.json({ success: false, error: e.message } as ApiResponse, 500);
+        return c.json({ success: false, error: (e as Error).message } as ApiResponse, 500);
     }
 });
 
@@ -79,8 +79,8 @@ storageMaintenance.post("/storage/clean-orphans", async (c) => {
 
       if (delError) throw delError;
       return c.json({ success: true, count: ids.length, ids });
-    } catch (e: any) {
-      return c.json({ success: false, error: e.message }, 500);
+    } catch (e: unknown) {
+      return c.json({ success: false, error: (e as Error).message }, 500);
     }
 });
 
@@ -123,8 +123,8 @@ storageMaintenance.post("/storage/clean", async (c) => {
       }
 
       return c.json({ success: true, count: r2FilesToClean.length, files: r2FilesToClean });
-    } catch (e: any) {
-      return c.json({ success: false, error: e.message }, 500);
+    } catch (e: unknown) {
+      return c.json({ success: false, error: (e as Error).message }, 500);
     }
 });
 

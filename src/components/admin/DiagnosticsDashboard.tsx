@@ -19,6 +19,18 @@ import { AuditVisualizer } from './Diagnostics/AuditVisualizer';
 import { IssueList } from './Diagnostics/IssueList';
 import { MaintenanceCenter } from './Diagnostics/MaintenanceCenter';
 
+interface DiagnosticPlugin {
+  title: string;
+  desc: string;
+  icon: React.ReactNode;
+  run: () => Promise<{ success: boolean; message: string; stage?: string; error?: string; latency?: number }>;
+}
+
+interface PluginResult {
+  result: { success: boolean; message: string; stage?: string; error?: string; latency?: number } | null;
+  loading: boolean;
+}
+
 export function DiagnosticsDashboard() {
   const location = useRouterSafe().location;
   const navigate = useRouterSafe().navigate;
@@ -46,7 +58,7 @@ export function DiagnosticsDashboard() {
   } = useDiagnostics();
   const { performanceIssues, clearAudits } = usePerformanceAudit();
 
-  const [localWorkerResult, setLocalWorkerResult] = useState<any>(null);
+  const [localWorkerResult, setLocalWorkerResult] = useState<unknown>(null);
 
   const onTestWorker = async () => {
     const res = await handleTestWorker();
@@ -63,9 +75,9 @@ export function DiagnosticsDashboard() {
     await runRepair(issueId);
   };
 
-  const [pluginResults, setPluginResults] = useState<Record<string, { result: any, loading: boolean }>>({});
+  const [pluginResults, setPluginResults] = useState<Record<string, PluginResult>>({});
 
-  const runPlugin = async (plugin: any) => {
+  const runPlugin = async (plugin: DiagnosticPlugin) => {
     setPluginResults(prev => ({ ...prev, [plugin.title]: { ...prev[plugin.title], loading: true } }));
     try {
       const res = await plugin.run();
@@ -118,7 +130,7 @@ export function DiagnosticsDashboard() {
              ].map(tab => (
                <button
                  key={tab.id}
-                 onClick={() => setActiveTab(tab.id as any)}
+                 onClick={() => setActiveTab(tab.id as 'diagnosis' | 'tasks' | 'logs')}
                  className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-tight transition-all ${
                    activeTab === tab.id 
                     ? 'bg-white text-brand-navy shadow-sm' 

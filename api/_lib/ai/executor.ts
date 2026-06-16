@@ -3,13 +3,18 @@ import { logger } from "../logger.js";
 import { extractJSON } from "./utils.js";
 import { getSupabaseAdmin } from "../supabase.js";
 
+interface AIProvider {
+  name: string;
+  chat: (messages: unknown[]) => Promise<{ text?: string; error?: string; success: boolean; usage?: Record<string, unknown> }>;
+}
+
 interface AITaskOptions {
   task: string;
-  provider: any;
+  provider: AIProvider;
   model: string;
   prompt: string;
-  messages: any[];
-  metadata?: any;
+  messages: unknown[];
+  metadata?: Record<string, unknown>;
   shouldNormalize?: boolean;
 }
 
@@ -17,7 +22,7 @@ export interface AIAuditData {
   photoId?: string;
   model: string;
   promptVersion: string;
-  cleanedOutput: any;
+  cleanedOutput: Record<string, unknown> | null;
   rawResponse: string;
   duration: number;
   status: 'success' | 'failed';
@@ -27,7 +32,7 @@ export interface AIAuditData {
   task?: string;
   provider?: string;
   promptText?: string;
-  token_usage?: any;
+  token_usage?: Record<string, unknown>;
   cost_est?: number;
 }
 
@@ -72,8 +77,8 @@ export const saveAIAuditLog = async (data: AIAuditData): Promise<void> => {
     } else {
       logger.info(`[AIAudit] Successfully saved AI audit log for ${data.photoId || 'global'}`);
     }
-  } catch (err: any) {
-    logger.error('[AIAudit] Save task exception:', err.message);
+  } catch (err: unknown) {
+    logger.error('[AIAudit] Save task exception:', (err as Error).message);
   }
 };
 
@@ -84,7 +89,7 @@ export const saveAIAuditLog = async (data: AIAuditData): Promise<void> => {
 export async function executeAITask(options: AITaskOptions) {
   const { task, provider, model, messages, prompt, metadata, shouldNormalize = true } = options;
   const maxRetries = 3;
-  let lastError: any = null;
+  let lastError: unknown = null;
   const startTime = Date.now();
 
   for (let i = 0; i <= maxRetries; i++) {
@@ -111,7 +116,9 @@ export async function executeAITask(options: AITaskOptions) {
         provider: provider.name,
         // Removed prompt and large response from general logs to prevent system_logs bloat
         // Raw data is now exclusively handled by ai_audit_logs + R2
-        response_summary: auditedResponse?.substring(0, 500) + (auditedResponse?.length > 500 ? '...' : ''),
+        response_summary: auditedResponse && typeof auditedResponse === 'string' 
+            ? (auditedResponse.substring(0, 500) + (auditedResponse.length > 500 ? '...' : '')) 
+            : '',
         latency_ms: iterEndTime - iterStartTime,
         token_usage: result.usage,
         status: result.success ? 'success' : 'error',
@@ -129,8 +136,8 @@ export async function executeAITask(options: AITaskOptions) {
       let data;
       try {
         data = extractJSON(result.text || '{}');
-      } catch (parseError: any) {
-         throw new Error('Parse failed: ' + parseError.message);
+      } catch (parseError: unknown) {
+         throw new Error('Parse failed: ' + (parseError as Error).message);
       }
 
       if (!data) {
@@ -143,56 +150,58 @@ export async function executeAITask(options: AITaskOptions) {
         if (data.description) data.description = normalizeI18n(data.description);
       }
 
-      // 4. 保存審計日誌到 ai_audit_logs (阻塞式)
+        // 4. 保存審計日誌到 ai_audit_logs (阻塞式)
       await saveAIAuditLog({
-        photoId: metadata?.photoId,
+        photoId: metadata?.photoId as string | undefined,
         model: model,
         promptVersion: 'v1',
-        cleanedOutput: data,
-        rawResponse: result.text || auditedResponse,
+        cleanedOutput: data as Record<string, unknown>,
+        rawResponse: result.text || auditedResponse || '',
         duration: Date.now() - startTime,
         status: 'success',
-        traceId: metadata?.traceId,
-        userId: metadata?.userId,
+        traceId: metadata?.traceId as string | undefined,
+        userId: metadata?.userId as string | undefined,
         task,
         provider: provider.name || 'unknown',
         promptText: prompt,
         token_usage: result.usage,
-        cost_est: result.usage?.cost || 0
+        cost_est: (result.usage?.cost as number) || 0
       });
 
       return {
         data,
-        rawText: result.text || auditedResponse
+        rawText: result.text || auditedResponse || ''
       };
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       lastError = error;
       
       if (i < maxRetries) {
         // 等待後重試 (指數退避 1s, 2s, 4s)
         const backoffMs = Math.pow(2, i) * 1000;
-        logger.warn(`[executeAITask] Failed, retrying in ${backoffMs}ms... (Attempt ${i + 1}/${maxRetries}):`, error.message);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown AI Error';
+        logger.warn(`[executeAITask] Failed, retrying in ${backoffMs}ms... (Attempt ${i + 1}/${maxRetries}):`, errorMessage);
         await new Promise(res => setTimeout(res, backoffMs));
       }
     }
   }
 
   // 5. 最後一次失敗：記錄日誌 + 返回降級值 (不中斷流程)
+  const lastErrorMessage = lastError instanceof Error ? lastError.message : 'Max retries reached';
   logger.error(`[executeAITask] Max retries reached for task ${task}. Last error:`, lastError);
   
   // 記錄失敗的審計日誌
   await saveAIAuditLog({
-    photoId: metadata?.photoId,
+    photoId: metadata?.photoId as string | undefined,
     model: model,
     promptVersion: 'v1',
     cleanedOutput: null,
-    rawResponse: lastError?.message || 'Max retries reached',
+    rawResponse: lastErrorMessage,
     duration: Date.now() - startTime,
     status: 'failed',
-    errorMessage: lastError?.message,
-    traceId: metadata?.traceId,
-    userId: metadata?.userId,
+    errorMessage: lastErrorMessage,
+    traceId: metadata?.traceId as string | undefined,
+    userId: metadata?.userId as string | undefined,
     task,
     provider: provider.name || 'unknown',
     promptText: prompt
@@ -201,6 +210,6 @@ export async function executeAITask(options: AITaskOptions) {
   // Return fallback data matching expected schema
   return {
      _fallback: true,
-     _error: lastError?.message || 'Unknown error'
+     _error: lastErrorMessage
   };
 }

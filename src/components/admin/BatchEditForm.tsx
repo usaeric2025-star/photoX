@@ -14,9 +14,9 @@ interface BatchEditFormProps {
   batchIsHiddenApplied: boolean;
   setBatchIsHiddenApplied: (v: boolean) => void;
   quickAddMfr: () => void;
-  addTag: (name: string) => Promise<void | string | number | { id: string }>;
-  updateTag: (id: string, name: string) => Promise<boolean | void>;
-  deleteTag: (id: string) => Promise<boolean | void>;
+  addTag: (name: string) => Promise<string | null>;
+  updateTag: (id: string, name: string) => Promise<void>;
+  deleteTag: (id: string) => Promise<void>;
 }
 
 export function BatchEditForm({
@@ -131,7 +131,7 @@ export function BatchEditForm({
               name="tags"
               tags={tags}
               value={formState.tags?.map(t => typeof t === 'object' ? t.id : t) || []}
-              onChange={(newTagIds) => handleUpdateForm({ tags: newTagIds as any })}
+              onChange={(newTagIds) => handleUpdateForm({ tags: newTagIds.map(t => typeof t === 'object' ? String(t.id) : t) })}
               addTag={addTag}
               updateTag={updateTag}
               deleteTag={deleteTag}

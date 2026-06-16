@@ -12,11 +12,11 @@ import { ErrorFactory } from '@/lib/error/ErrorFactory';
 export const optimistic = {
   /** 单列表操作 (Array) */
   list: {
-    remove: <T>(idField: keyof T = 'id' as any) => (old: T[] | undefined, id: any) => {
-      return (old || []).filter((item: any) => item[idField] !== id);
+    remove: <T extends Record<string, unknown>>(idField: keyof T = 'id' as keyof T) => (old: T[] | undefined, id: T[keyof T]) => {
+      return (old || []).filter((item: T) => item[idField] !== id);
     },
-    update: <T>(idField: keyof T = 'id' as any) => (old: T[] | undefined, { id, updates }: { id: any; updates: Partial<T> }) => {
-      return (old || []).map((item: any) => item[idField] === id ? { ...item, ...updates } : item);
+    update: <T extends Record<string, unknown>>(idField: keyof T = 'id' as keyof T) => (old: T[] | undefined, { id, updates }: { id: T[keyof T]; updates: Partial<T> }) => {
+      return (old || []).map((item: T) => item[idField] === id ? { ...item, ...updates } : item);
     },
     add: <T>() => (old: T[] | undefined, newItem: T) => {
       return [...(old || []), newItem];
@@ -24,44 +24,44 @@ export const optimistic = {
   },
   /** 无限滚动分页结构 (InfiniteData) */
   infinite: {
-    remove: <T>(idField: keyof T = 'id' as any) => (old: any, ids: any | any[]) => {
+    remove: <T extends Record<string, unknown>>(idField: keyof T = 'id' as keyof T) => (old: { pages: { photos?: T[], items?: T[] }[] } | undefined, ids: T[keyof T] | T[keyof T][]) => {
       if (!old || !old.pages) return old;
       const idSet = new Set(Array.isArray(ids) ? ids : [ids]);
       return {
         ...old,
-        pages: old.pages.map((page: any) => ({
+        pages: old.pages.map((page) => ({
           ...page,
-          photos: page.photos?.filter((p: any) => !idSet.has(p[idField])) || page.items?.filter((p: any) => !idSet.has(p[idField])),
+          photos: page.photos?.filter((p) => !idSet.has(p[idField] as T[keyof T])) || page.items?.filter((p) => !idSet.has(p[idField] as T[keyof T])),
         })),
       };
     },
-    update: <T>(idField: keyof T = 'id' as any) => (old: any, { id, updates }: { id: any; updates: Partial<T> }) => {
+    update: <T extends Record<string, unknown>>(idField: keyof T = 'id' as keyof T) => (old: { pages: { photos?: T[], items?: T[] }[] } | undefined, { id, updates }: { id: T[keyof T]; updates: Partial<T> }) => {
       if (!old || !old.pages) return old;
       return {
         ...old,
-        pages: old.pages.map((page: any) => ({
+        pages: old.pages.map((page) => ({
           ...page,
-          photos: page.photos?.map((p: any) => p[idField] === id ? { ...p, ...updates } : p) || page.items?.map((p: any) => p[idField] === id ? { ...p, ...updates } : p),
+          photos: page.photos?.map((p) => p[idField] === id ? { ...p, ...updates } : p) || page.items?.map((p) => p[idField] === id ? { ...p, ...updates } : p),
         })),
       };
     },
-    add: <T>() => (old: any, item: T) => {
+    add: <T extends Record<string, unknown>>() => (old: { pages: { photos?: T[], items?: T[] }[] } | undefined, item: T) => {
       if (!old || !old.pages) return old;
       return {
         ...old,
-        pages: old.pages.map((page: any, index: number) => 
+        pages: old.pages.map((page, index: number) => 
           index === 0 ? { ...page, photos: [item, ...(page.photos || [])], items: [item, ...(page.items || [])] } : page
         ),
       };
     },
-    batchUpdate: <T>(idField: keyof T = 'id' as any) => (old: any, { ids, updates }: { ids: any[]; updates: Partial<T> }) => {
+    batchUpdate: <T extends Record<string, unknown>>(idField: keyof T = 'id' as keyof T) => (old: { pages: { photos?: T[], items?: T[] }[] } | undefined, { ids, updates }: { ids: T[keyof T][]; updates: Partial<T> }) => {
       if (!old || !old.pages) return old;
       const idSet = new Set(ids);
       return {
         ...old,
-        pages: old.pages.map((page: any) => ({
+        pages: old.pages.map((page) => ({
           ...page,
-          photos: page.photos?.map((p: any) => idSet.has(p[idField]) ? { ...p, ...updates } : p) || page.items?.map((p: any) => idSet.has(p[idField]) ? { ...p, ...updates } : p),
+          photos: page.photos?.map((p) => idSet.has(p[idField] as T[keyof T]) ? { ...p, ...updates } : p) || page.items?.map((p) => idSet.has(p[idField] as T[keyof T]) ? { ...p, ...updates } : p),
         })),
       };
     }

@@ -5,7 +5,7 @@ const TABLE_NAME = 'furniture_items';
 
 export const createHandler = (app: Hono) => {
   app.post('/upsert', async (c) => {
-    const { payload } = await c.req.json();
+    const { payload } = await c.req.json() as { payload: Record<string, unknown> };
     const supabase = await getSupabaseAdmin();
 
     // Fix user_id if it is 'staff' or missing (avoids invalid input syntax for type uuid)
@@ -27,7 +27,7 @@ export const createHandler = (app: Hono) => {
   });
 
   app.post('/ai-result', async (c) => {
-    const { payload } = await c.req.json();
+    const { payload } = await c.req.json() as { payload: Record<string, unknown> };
     const supabase = await getSupabaseAdmin();
     // Save raw response and parsed data to system_logs.metadata per architecture rules
     const { data, error } = await supabase.from('system_logs').insert({

@@ -47,7 +47,7 @@ ai.post("/test", async (c) => {
             setTimeout(() => reject(new Error('AI 連線測試超時 (15s)')), 15000)
         );
 
-        const data = await Promise.race([chatPromise, timeoutPromise]) as any;
+        const data = await Promise.race([chatPromise, timeoutPromise]) as { success: boolean; error?: unknown; text?: string };
         if (!data.success) {
             const errorMsg = typeof data.error === 'object' ? JSON.stringify(data.error) : String(data.error || 'Unknown AI error');
             throw new Error(errorMsg);
@@ -68,7 +68,7 @@ ai.post("/run", async (c) => {
         const { task, imageUrl, prompt } = check;
         const supabase = await getSupabaseAdmin();
         const provider = await getAIProvider('', supabase);
-        const model = (provider as any).config.model; // Since we need it for logging
+        const model = (provider as { config: { model: string } }).config.model; // Since we need it for logging
         
         const messages = imageUrl 
             ? [{ role: 'user', content: [{ type: 'image_url', image_url: { url: imageUrl } }, { type: 'text', text: prompt || 'Analyze this image' }]}]

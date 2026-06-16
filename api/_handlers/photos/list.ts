@@ -5,14 +5,19 @@ import { PhotoListReqSchema, ListByGroupReqSchema } from '../../_shared/apiContr
 
 const TABLE_NAME = 'furniture_items';
 
+interface TagRow {
+  id: string | number;
+  name: string;
+}
+
 interface CachedTags {
-  data: any[];
+  data: TagRow[];
   timestamp: number;
 }
 let tagsCache: CachedTags | null = null;
 const CACHE_TTL = 30000; // 30 seconds
 
-async function getCachedTags(supabase: any) {
+async function getCachedTags(supabase: Record<string, unknown>) {
   const now = Date.now();
   if (tagsCache && now - tagsCache.timestamp < CACHE_TTL) {
     return tagsCache.data;
@@ -23,7 +28,7 @@ async function getCachedTags(supabase: any) {
     return tagsCache ? tagsCache.data : [];
   }
   tagsCache = {
-    data: tagRows || [],
+    data: (tagRows as TagRow[]) || [],
     timestamp: now
   };
   return tagsCache.data;
@@ -44,7 +49,7 @@ export const listHandler = (app: Hono) => {
       sortOrder
     } = check;
     
-    const supabase = await getSupabaseAdmin();
+    const supabase = await getSupabaseAdmin() as { from: (table: string) => { select: (cols: string) => any } };
     
     const hasTag = tagId !== undefined && tagId !== null && tagId !== '';
     const hasCat = categoryId !== undefined && categoryId !== null && categoryId !== '';
@@ -110,13 +115,13 @@ export const listHandler = (app: Hono) => {
 
     // In-memory join for tags details to prevent database configuration issues
     if (data && data.length > 0 && tagRows && tagRows.length > 0) {
-      const tagMap = new Map(tagRows.map((t: any) => [String(t.id), t.name]));
-      for (const item of data) {
+      const tagMap = new Map((tagRows as TagRow[]).map((t: TagRow) => [String(t.id), t.name]));
+      for (const item of data as Record<string, unknown>[]) {
         if (Array.isArray(item.photo_tags)) {
-          for (const pt of item.photo_tags) {
+          for (const pt of item.photo_tags as Record<string, unknown>[]) {
             if (pt && pt.tag_id) {
               const nameVal = tagMap.get(String(pt.tag_id)) || '';
-              pt.tags = { id: pt.tag_id, name: nameVal };
+              (pt as Record<string, unknown>).tags = { id: pt.tag_id, name: nameVal };
             }
           }
         }
@@ -142,15 +147,15 @@ export const listHandler = (app: Hono) => {
     ]);
     if (queryRes.error) return c.json({ success: false, error: queryRes.error.message }, 500);
 
-    const data = queryRes.data || [];
+    const data = queryRes.data as Record<string, unknown>[] || [];
     if (data.length > 0 && tagRows && tagRows.length > 0) {
-      const tagMap = new Map(tagRows.map((t: any) => [String(t.id), t.name]));
+      const tagMap = new Map((tagRows as TagRow[]).map((t: TagRow) => [String(t.id), t.name]));
       for (const item of data) {
         if (Array.isArray(item.photo_tags)) {
-          for (const pt of item.photo_tags) {
+          for (const pt of item.photo_tags as Record<string, unknown>[]) {
             if (pt && pt.tag_id) {
               const nameVal = tagMap.get(String(pt.tag_id)) || '';
-              pt.tags = { id: pt.tag_id, name: nameVal };
+              (pt as Record<string, unknown>).tags = { id: pt.tag_id, name: nameVal };
             }
           }
         }
@@ -186,15 +191,15 @@ export const listHandler = (app: Hono) => {
     ]);
     if (queryRes.error) return c.json({ success: false, error: queryRes.error.message }, 500);
 
-    const photos = queryRes.data || [];
+    const photos = queryRes.data as Record<string, unknown>[] || [];
     if (photos.length > 0 && tagRows && tagRows.length > 0) {
-        const tagMap = new Map(tagRows.map((t: any) => [String(t.id), t.name]));
+        const tagMap = new Map((tagRows as TagRow[]).map((t: TagRow) => [String(t.id), t.name]));
         for (const item of photos) {
           if (Array.isArray(item.photo_tags)) {
-            for (const pt of item.photo_tags) {
+            for (const pt of item.photo_tags as Record<string, unknown>[]) {
               if (pt && pt.tag_id) {
                 const nameVal = tagMap.get(String(pt.tag_id)) || '';
-                pt.tags = { id: pt.tag_id, name: nameVal };
+                (pt as Record<string, unknown>).tags = { id: pt.tag_id, name: nameVal };
               }
             }
           }

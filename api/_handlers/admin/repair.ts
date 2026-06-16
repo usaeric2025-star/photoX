@@ -96,8 +96,8 @@ adminRepair.post("/", async (c) => {
          const { data: groups } = await supabase.from("groups").select("id, name, cover_photo_id");
          const { data: photos } = await supabase.from("furniture_items").select("id, name, group_id, is_group_cover, created_at");
 
-         const photosByGroup = new Map<string, any[]>();
-         photos?.forEach((p: any) => {
+         const photosByGroup = new Map<string, Record<string, unknown>[]>();
+         photos?.forEach((p: Record<string, unknown>) => {
            if (p.group_id) {
              const gid = String(p.group_id);
              if (!photosByGroup.has(gid)) photosByGroup.set(gid, []);
@@ -105,7 +105,7 @@ adminRepair.post("/", async (c) => {
            }
          });
 
-         const groupUpdates: { id: any; cover_photo_id: string | null }[] = [];
+         const groupUpdates: { id: string; cover_photo_id: string | null }[] = [];
          const photosToCover: string[] = [];
          const photosToUncover: string[] = [];
 
@@ -114,37 +114,37 @@ adminRepair.post("/", async (c) => {
            const gPhotos = photosByGroup.get(String(g.id)) || [];
            if (gPhotos.length === 0) {
              if (g.cover_photo_id) {
-               groupUpdates.push({ id: g.id, cover_photo_id: null });
+               groupUpdates.push({ id: String(g.id), cover_photo_id: null });
                count++;
              }
              continue;
            }
 
-           const validCover = gPhotos.some((p: any) => p.id === g.cover_photo_id);
-           const markedCover = gPhotos.some((p: any) => p.is_group_cover === true);
+           const validCover = gPhotos.some((p) => String(p.id) === String(g.cover_photo_id));
+           const markedCover = gPhotos.some((p) => p.is_group_cover === true);
 
            if (!g.cover_photo_id || !validCover || !markedCover) {
              let targetCoverId = g.cover_photo_id;
-             const photoMarkedAsCover = gPhotos.find((p: any) => p.is_group_cover === true);
+             const photoMarkedAsCover = gPhotos.find((p) => p.is_group_cover === true);
              
              if (photoMarkedAsCover) {
-               targetCoverId = photoMarkedAsCover.id;
+               targetCoverId = String(photoMarkedAsCover.id);
              } else {
-               const sorted = [...gPhotos].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-               targetCoverId = sorted[0].id;
+               const sorted = [...gPhotos].sort((a, b) => new Date(String(a.created_at)).getTime() - new Date(String(b.created_at)).getTime());
+               targetCoverId = String(sorted[0].id);
              }
 
-             if (g.cover_photo_id !== targetCoverId) {
-               groupUpdates.push({ id: g.id, cover_photo_id: targetCoverId });
+             if (String(g.cover_photo_id) !== targetCoverId) {
+               groupUpdates.push({ id: String(g.id), cover_photo_id: targetCoverId });
              }
 
              for (const p of gPhotos) {
-               const shouldBeCover = p.id === targetCoverId;
+               const shouldBeCover = String(p.id) === targetCoverId;
                if (p.is_group_cover !== shouldBeCover) {
                  if (shouldBeCover) {
-                   photosToCover.push(p.id);
+                   photosToCover.push(String(p.id));
                  } else {
-                   photosToUncover.push(p.id);
+                   photosToUncover.push(String(p.id));
                  }
                }
              }
@@ -152,22 +152,22 @@ adminRepair.post("/", async (c) => {
            }
          }
 
-         const dbPromises: Promise<any>[] = [];
+         const dbPromises: Promise<unknown>[] = [];
 
          if (photosToCover.length > 0) {
            dbPromises.push(
-             supabase.from("furniture_items").update({ is_group_cover: true }).in("id", photosToCover).then(({ error }: { error: any }) => { if (error) throw error; })
+             supabase.from("furniture_items").update({ is_group_cover: true }).in("id", photosToCover).then(({ error }: { error: unknown }) => { if (error) throw error; })
            );
          }
          if (photosToUncover.length > 0) {
            dbPromises.push(
-             supabase.from("furniture_items").update({ is_group_cover: false }).in("id", photosToUncover).then(({ error }: { error: any }) => { if (error) throw error; })
+             supabase.from("furniture_items").update({ is_group_cover: false }).in("id", photosToUncover).then(({ error }: { error: unknown }) => { if (error) throw error; })
            );
          }
 
          for (const update of groupUpdates) {
            dbPromises.push(
-             supabase.from("groups").update({ cover_photo_id: update.cover_photo_id }).eq("id", update.id).then(({ error }: { error: any }) => { if (error) throw error; })
+             supabase.from("groups").update({ cover_photo_id: update.cover_photo_id }).eq("id", update.id).then(({ error }: { error: unknown }) => { if (error) throw error; })
            );
          }
 
@@ -243,7 +243,7 @@ adminRepair.post("/", async (c) => {
         if (fetchError) throw fetchError;
         
         const compliantRegex = /^X-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/;
-        const legacyPhotos = targets?.filter((p: any) => p.item_code && !compliantRegex.test(p.item_code)) || [];
+        const legacyPhotos = targets?.filter((p: { item_code?: string | null }) => p.item_code && !compliantRegex.test(p.item_code)) || [];
         
         if (legacyPhotos.length === 0) return c.json({ success: true, count: 0, message: "所有编号已规范" });
         
@@ -251,7 +251,7 @@ adminRepair.post("/", async (c) => {
         const batch = legacyPhotos.slice(0, 50);
         const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
         
-        const updates = batch.map((p: any) => {
+        const updates = batch.map((p: { id: string }) => {
           let random = '';
           for (let i = 0; i < 8; i++) {
             random += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -259,7 +259,7 @@ adminRepair.post("/", async (c) => {
           return { id: p.id, item_code: `X-${random}` };
         });
 
-        await Promise.all(updates.map((u: any) => 
+        await Promise.all(updates.map((u: { id: string, item_code: string }) => 
           supabase.from("furniture_items").update({ item_code: u.item_code }).eq("id", u.id)
         ));
 
@@ -270,12 +270,12 @@ adminRepair.post("/", async (c) => {
         const { data: ptData, error: fetchErr } = await supabase.from('photo_tags').select('photo_id, tag_id');
         if (fetchErr) throw fetchErr;
 
-        const { data: tagData, error: tagErr } = await supabase.from('tags').select('id, name, is_global');
+         const { data: tagData, error: tagErr } = await supabase.from('tags').select('id, name, is_global');
         if (tagErr) throw tagErr;
-        const tagMap = new Map<string, any>((tagData || []).map((t: any) => [String(t.id), t]));
+        const tagMap = new Map<string, Record<string, unknown>>((tagData || []).map((t: Record<string, unknown>) => [String(t.id), t]));
 
         const photoTagMap = new Map<string, string[]>();
-        ptData?.forEach((pt: any) => {
+        ptData?.forEach((pt: Record<string, unknown>) => {
           if (pt.photo_id) {
             const pid = String(pt.photo_id);
             if (!photoTagMap.has(pid)) {
@@ -296,7 +296,7 @@ adminRepair.post("/", async (c) => {
           return c.json({ success: true, count: 0, message: "没有超出限制的照片标签" });
         }
 
-        const getWeight = (tagId: string, tagDetail?: any) => {
+        const getWeight = (tagId: string, tagDetail?: Record<string, unknown>) => {
           if (tagDetail && tagDetail.is_global) return 50;
           return 90;
         };

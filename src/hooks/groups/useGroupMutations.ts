@@ -11,7 +11,7 @@ const groupCreateConfig = defineMutation<ProductGroup, ProductGroup>({
   service: async (variables: ProductGroup) => {
     return await createGroup(variables);
   },
-  invalidate: () => [queryKeys.groups.all as unknown as any[]],
+  invalidate: () => [queryKeys.groups.all as unknown as unknown[]],
   successMessage: '已创建合组',
 });
 
@@ -22,7 +22,7 @@ const groupUpdateConfig = defineMutation<ProductGroup, { id: string; updates: Pa
   service: async ({ id, updates }) => {
     return await updateGroup(id, updates);
   },
-  invalidate: () => [queryKeys.groups.all as unknown as any[]],
+  invalidate: () => [queryKeys.groups.all as unknown as unknown[]],
   successMessage: '已修改',
 });
 
@@ -33,7 +33,7 @@ const groupDeleteConfig = defineMutation<any, string>({
   service: async (id: string) => {
     return await deleteGroupFromCloud(id);
   },
-  invalidate: () => [queryKeys.groups.all as unknown as any[], queryKeys.photos.all as unknown as any[]],
+  invalidate: () => [queryKeys.groups.all as unknown as unknown[], queryKeys.photos.all as unknown as unknown[]],
   successMessage: '已删除',
 });
 

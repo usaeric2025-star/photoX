@@ -18,7 +18,7 @@ export const initDB = (): Promise<IDBDatabase> => {
   });
 };
 
-export const saveData = async (key: string, data: any) => {
+export const saveData = async (key: string, data: unknown) => {
   const db = await initDB();
   const wrapper = {
     _data: data,
@@ -33,16 +33,16 @@ export const saveData = async (key: string, data: any) => {
   });
 };
 
-export const loadData = async (key: string) => {
+export const loadData = async (key: string): Promise<unknown> => {
   const db = await initDB();
-  return new Promise<any>((resolve, reject) => {
+  return new Promise<unknown>((resolve, reject) => {
     const transaction = db.transaction(STORE_NAME, 'readonly');
     const store = transaction.objectStore(STORE_NAME);
     const request = store.get(key);
     request.onsuccess = () => {
       const res = request.result;
       if (res && typeof res === 'object' && 'savedAt' in res && '_data' in res) {
-        resolve(res._data);
+        resolve((res as Record<string, unknown>)._data);
       } else {
         resolve(res);
       }
@@ -58,15 +58,15 @@ export const syncCache = {
   getPhotos: () => loadData('cached_photos'),
   savePhotos: (photos: Photo[]) => saveData('cached_photos', photos),
   getCategories: () => loadData('cached_categories'),
-  saveCategories: (categories: any[]) => saveData('cached_categories', categories),
+  saveCategories: (categories: unknown[]) => saveData('cached_categories', categories),
   getManufacturers: () => loadData('cached_manufacturers'),
-  saveManufacturers: (manufacturers: any[]) => saveData('cached_manufacturers', manufacturers),
+  saveManufacturers: (manufacturers: unknown[]) => saveData('cached_manufacturers', manufacturers),
   getTags: () => loadData('cached_tags'),
-  saveTags: (tags: any[]) => saveData('cached_tags', tags),
+  saveTags: (tags: unknown[]) => saveData('cached_tags', tags),
   getSettings: () => loadData('cached_settings'),
-  saveSettings: (settings: any) => saveData('cached_settings', settings),
+  saveSettings: (settings: unknown) => saveData('cached_settings', settings),
   getTasks: () => loadData('cached_tasks'),
-  saveTasks: (tasks: any[]) => saveData('cached_tasks', tasks),
+  saveTasks: (tasks: unknown[]) => saveData('cached_tasks', tasks),
   clearPersistence: async () => {
     const db = await initDB();
     return new Promise<void>((resolve, reject) => {
@@ -86,7 +86,7 @@ export interface PendingOp {
   id: string;
   type: 'update' | 'delete' | 'hide' | 'unhide';
   photoId: string | string[];
-  payload?: any;
+  payload?: Record<string, unknown>;
   timestamp: number;
 }
 
@@ -118,12 +118,12 @@ export const clearExpiredCaches = async (expireDays = 7) => {
     const store = transaction.objectStore(STORE_NAME);
     const request = store.openCursor();
     
-    request.onsuccess = (event: any) => {
-      const cursor = event.target.result;
+    request.onsuccess = (event: Event) => {
+      const cursor = (event.target as IDBRequest).result as IDBCursorWithValue;
       if (cursor) {
         const key = cursor.key as string;
-        const data = cursor.value;
-        if (key.startsWith('product_') && data && data.savedAt && (now - data.savedAt > expireMs)) {
+        const data = cursor.value as Record<string, unknown>;
+        if (key.startsWith('product_') && data && data.savedAt && (typeof data.savedAt === 'number') && (now - data.savedAt > expireMs)) {
           console.debug(`[IndexedDB] Clearing expired cache: ${key}`);
           store.delete(key);
         }

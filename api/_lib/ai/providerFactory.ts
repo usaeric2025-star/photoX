@@ -2,7 +2,17 @@ import { decrypt } from "../encryption.js";
 import { getServerEnv } from "../../_shared/envSchema.js";
 import { logger } from "../logger.js";
 
-export const getModel = async (supabase?: any, customModel?: string, providerName?: string): Promise<string> => {
+interface SupabaseClient {
+    from: (table: string) => {
+        select: (cols: string) => {
+            eq: (key: string, val: string | number) => {
+                maybeSingle: () => Promise<{ data: Record<string, unknown> | null; error: unknown }>;
+            };
+        };
+    };
+}
+
+export const getModel = async (supabase?: SupabaseClient, customModel?: string, providerName?: string): Promise<string> => {
     if (customModel) return customModel;
 
     let targetProvider = providerName || 'openrouter';
@@ -11,19 +21,19 @@ export const getModel = async (supabase?: any, customModel?: string, providerNam
         try {
             // First check secrets table for provider specific model
             const { data: secretData } = await supabase.from('secrets').select('value').eq('key', `${targetProvider}_model`).maybeSingle();
-            if (secretData?.value) return secretData.value;
+            if (secretData?.value) return secretData.value as string;
             
             // Fallback to legacy custom_model setting
             const { data } = await supabase.from('settings').select('custom_model').eq('id', 1).maybeSingle();
-            if (data?.custom_model) return data.custom_model;
+            if (data?.custom_model) return data.custom_model as string;
         } catch (e) {
             logger.warn("[getModel] could not fetch custom model:", e);
         }
     }
 
     try {
-        const env = getServerEnv(process.env as any);
-        if ((env as any).DEFAULT_AI_MODEL) return (env as any).DEFAULT_AI_MODEL;
+        const env = getServerEnv(process.env as Record<string, string | undefined>);
+        if ((env as Record<string, string | undefined>).DEFAULT_AI_MODEL) return (env as Record<string, string | undefined>).DEFAULT_AI_MODEL!;
     } catch {}
 
     return targetProvider === 'openrouter' ? 'google/gemini-2.5-flash-lite' : 'gemini-2.0-flash-exp';
@@ -33,7 +43,7 @@ export interface AIResponse {
     success: boolean;
     text?: string;
     error?: string;
-    usage?: any;
+    usage?: Record<string, unknown>;
 }
 
 export interface AIProviderConfig {
@@ -64,7 +74,7 @@ export abstract class BaseAIProvider {
         }
     }
 
-    abstract chat(messages: any[]): Promise<AIResponse>;
+    abstract chat(messages: { role: string; content: unknown }[]): Promise<AIResponse>;
 }
 
 export class OpenRouterProvider extends BaseAIProvider {
@@ -72,7 +82,7 @@ export class OpenRouterProvider extends BaseAIProvider {
     defaultModel = "google/gemini-2.5-flash-lite";
     baseUrl = "https://openrouter.ai/api/v1";
 
-    async chat(messages: any[]): Promise<AIResponse> {
+    async chat(messages: { role: string; content: unknown }[]): Promise<AIResponse> {
         try {
             const res = await this.fetchWithTimeout(`${this.baseUrl}/chat/completions`, {
                 method: 'POST',
@@ -88,16 +98,16 @@ export class OpenRouterProvider extends BaseAIProvider {
                 })
             });
 
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error?.message || data.error || res.statusText);
+            const data = await res.json() as { choices?: { message: { content: string } }[]; error?: { message: string } | string; usage?: Record<string, unknown> };
+            if (!res.ok) throw new Error((typeof data.error === 'string' ? data.error : data.error?.message) || res.statusText);
 
             return {
                 success: true,
                 text: data.choices?.[0]?.message?.content,
                 usage: data.usage
             };
-        } catch (e: any) {
-            return { success: false, error: e.message };
+        } catch (e: unknown) {
+            return { success: false, error: (e as Error).message };
         }
     }
 }
@@ -107,7 +117,7 @@ export class AgnesProvider extends BaseAIProvider {
     defaultModel = "gemini-2.0-flash-exp";
     baseUrl = "https://apihub.agnes-ai.com/v1";
 
-    async chat(messages: any[]): Promise<AIResponse> {
+    async chat(messages: { role: string; content: unknown }[]): Promise<AIResponse> {
         try {
             // Agnes API uses OpenAI format, not Gemini's native format
             const res = await this.fetchWithTimeout(`${this.baseUrl}/chat/completions`, {
@@ -122,24 +132,24 @@ export class AgnesProvider extends BaseAIProvider {
                 })
             });
 
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error?.message || data.error || res.statusText);
+            const data = await res.json() as { choices?: { message: { content: string } }[]; error?: { message: string } | string; usage?: Record<string, unknown> };
+            if (!res.ok) throw new Error((typeof data.error === 'string' ? data.error : data.error?.message) || res.statusText);
 
             return {
                 success: true,
                 text: data.choices?.[0]?.message?.content,
                 usage: data.usage
             };
-        } catch (e: any) {
-            return { success: false, error: e.message };
+        } catch (e: unknown) {
+            return { success: false, error: (e as Error).message };
         }
     }
 }
 
-export async function getAIProvider(providerName: string, supabase: any, modelOverride?: string) {
+export async function getAIProvider(providerName: string, supabase: SupabaseClient, modelOverride?: string) {
     // 從 secrets 讀取首选供應商
     const { data: primary } = await supabase.from('secrets').select('value').eq('key', 'PRIMARY_AI_PROVIDER').maybeSingle();
-    let actualProvider = providerName || primary?.value || 'openrouter';
+    let actualProvider = providerName || primary?.value as string || 'openrouter';
 
     // 從 secrets 讀取統一格式的 API Key
     let { data: secret } = await supabase.from('secrets').select('value').eq('key', actualProvider).maybeSingle();
@@ -147,7 +157,7 @@ export async function getAIProvider(providerName: string, supabase: any, modelOv
     let apiKey = '';
     
     if (secret?.value) {
-        apiKey = decrypt(secret.value);
+        apiKey = decrypt(secret.value as string);
     }
 
     // Fallback logic for legacy settings table
@@ -156,10 +166,11 @@ export async function getAIProvider(providerName: string, supabase: any, modelOv
             const { data: settings, error: settingsErr } = await supabase.from('settings').select('gemini_api_key').maybeSingle();
             if (!settingsErr && settings?.gemini_api_key) {
                // Basic heuristic to decide if the legacy key belongs to this provider
-               if (actualProvider === 'openrouter' && settings.gemini_api_key.startsWith('sk-or-')) {
-                   apiKey = decrypt(settings.gemini_api_key);
-               } else if (actualProvider === 'agnes' && !settings.gemini_api_key.startsWith('sk-or-')) {
-                   apiKey = decrypt(settings.gemini_api_key);
+               const key = settings.gemini_api_key as string;
+               if (actualProvider === 'openrouter' && key.startsWith('sk-or-')) {
+                   apiKey = decrypt(key);
+               } else if (actualProvider === 'agnes' && !key.startsWith('sk-or-')) {
+                   apiKey = decrypt(key);
                }
             }
         } catch (e) {

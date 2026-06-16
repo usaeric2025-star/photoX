@@ -5,7 +5,7 @@ import { usePhotos } from '../photo/usePhotos';
 import { useAdminMode } from '../core/auth/useAdminMode';
 import { useUIStore } from '@/store/useUIStore';
 import { useFilters } from '@/hooks/useFilters';
-import { Photo } from '@/types';
+import { Photo, Category, Tag } from '@/types';
 import { EMPTY_ARRAY } from '@/constants/config';
 import { processPhotos } from '@/services/photo/processing';
 
@@ -18,8 +18,8 @@ export const useAdminPhotos = () => {
     const filters = useFilters({ enableStatus: true });
     const processingIds = useUIStore(s => s.processingIds);
     
-    const { data: categories = EMPTY_ARRAY as any[] } = useCategories();
-    const { data: tags = EMPTY_ARRAY as any[] } = useTags();
+    const { data: categories = EMPTY_ARRAY as Category[] } = useCategories();
+    const { data: tags = EMPTY_ARRAY as Tag[] } = useTags();
 
     const tagsString = Array.isArray(filters.tags) ? filters.tags.join(',') : '';
 
@@ -39,7 +39,7 @@ export const useAdminPhotos = () => {
 
     const tagMap = (() => {
         const map = new Map<string, string[]>();
-        tags.forEach((t: any) => {
+        tags.forEach((t: Tag) => {
             const nameStr = t.name || '';
             const terms = [nameStr.toLowerCase()];
             if (Array.isArray(t.aliases)) {
@@ -52,7 +52,7 @@ export const useAdminPhotos = () => {
 
     const catMap = (() => {
         const map = new Map<string, string[]>();
-        categories.forEach((c: any) => {
+        categories.forEach((c: Category) => {
             const terms = [(c.name || '').toLowerCase()];
             if (Array.isArray(c.aliases)) {
                 c.aliases.forEach((a: string) => terms.push((a || '').toLowerCase()));
@@ -64,7 +64,7 @@ export const useAdminPhotos = () => {
 
     const photos = (!processingIds || processingIds.length === 0) 
         ? rawPhotos 
-        : rawPhotos.filter((p: any) => !processingIds.includes(p.id));
+        : rawPhotos.filter((p: Photo) => !processingIds.includes(p.id));
 
     const result = processPhotos(
         photos as any,

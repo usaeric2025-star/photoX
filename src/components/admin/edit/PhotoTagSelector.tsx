@@ -142,9 +142,9 @@ interface PhotoTagSelectorProps {
   updateTag: (id: string, name: string) => Promise<void>;
   deleteTag: (id: string) => Promise<void>;
   tags: Tag[];
-  control?: any; // kept as any for react-hook-form Control, as it's complex
-  value?: (string | { id: string | number })[];
-  onChange?: (val: (string | { id: string | number })[]) => void;
+  control: Record<string, unknown>;
+  value: (string | { id: string | number })[];
+  onChange: (val: (string | { id: string | number })[]) => void;
   hideHotLabel?: boolean;
 }
 

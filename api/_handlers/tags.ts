@@ -91,13 +91,13 @@ export const tags = new Hono()
 
     // 1. Fetch current associations to determine chronological age (tie-breaker)
     const { data: currentAssociations } = await supabase.from('photo_tags').select('tag_id').eq('photo_id', photoId);
-    const existingTagIds = new Set((currentAssociations || []).map((pt: any) => String(pt.tag_id)));
+    const existingTagIds = new Set((currentAssociations || []).map((pt: { tag_id: string }) => String(pt.tag_id)));
 
     // 2. Query target tags to resolve is_global property for default weights
     const { data: tagDetails } = await supabase.from('tags').select('id, is_global').in('id', tagIds);
-    const tagDetailsMap = new Map<string, any>((tagDetails || []).map((t: any) => [String(t.id), t]));
+    const tagDetailsMap = new Map<string, { id: string; is_global: boolean }>((tagDetails || []).map((t: { id: string; is_global: boolean }) => [String(t.id), t]));
 
-    const getWeight = (tagId: string, tagDetail?: any) => {
+    const getWeight = (tagId: string, tagDetail?: { id: string; is_global: boolean }) => {
       if (tagWeights && tagWeights[tagId] !== undefined) {
         return tagWeights[tagId];
       }
@@ -154,9 +154,9 @@ export const tags = new Hono()
 
     // Query target tags to resolve is_global property for default weights
     const { data: tagDetails } = await supabase.from('tags').select('id, is_global').in('id', tagIds);
-    const tagDetailsMap = new Map<string, any>((tagDetails || []).map((t: any) => [String(t.id), t]));
+    const tagDetailsMap = new Map<string, { id: string; is_global: boolean }>((tagDetails || []).map((t: { id: string; is_global: boolean }) => [String(t.id), t]));
 
-    const getWeight = (tagId: string, tagDetail?: any) => {
+    const getWeight = (tagId: string, tagDetail?: { id: string; is_global: boolean }) => {
       if (tagWeights && tagWeights[tagId] !== undefined) {
         return tagWeights[tagId];
       }

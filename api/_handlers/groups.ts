@@ -89,10 +89,10 @@ export const groups = new Hono()
              dbUserId = photosArr[0].user_id;
         }
         sourceGroupIds = Array.from(new Set(
-          photosArr.map((p: any) => p.group_id).filter((gid: any) => !!gid && gid !== targetGroupId)
+          photosArr.map((p: { group_id: string | null }) => p.group_id).filter((gid: string | null | undefined): gid is string => !!gid && gid !== targetGroupId)
         )) as string[];
         ungroupedValidIds = photoIds.filter(id => {
-          const p = photosArr.find((x: any) => x.id === id);
+          const p = photosArr.find((x: { id: string }) => x.id === id);
           return !p?.group_id;
         });
       }
@@ -101,7 +101,7 @@ export const groups = new Hono()
 
       let err;
       if (!checkData) {
-        const insertData: any = {
+        const insertData: Record<string, unknown> = {
           id: targetGroupId,
           is_hidden: false,
           created_at: new Date().toISOString(),
@@ -168,7 +168,7 @@ export const groups = new Hono()
 
     // Fetch snapshots before move
     const { data: sourcePhotos } = await supabase.from('furniture_items').select('group_id').in('id', photoIds);
-    const affectedGroupIds = (sourcePhotos || []).map((p: any) => p.group_id).filter(Boolean);
+    const affectedGroupIds = (sourcePhotos || []).map((p: { group_id: string | null }) => p.group_id).filter((gid: string | null | undefined): gid is string => !!gid);
     if (targetGroupId) {
       affectedGroupIds.push(targetGroupId);
     }

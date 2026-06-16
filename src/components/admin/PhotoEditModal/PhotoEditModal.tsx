@@ -16,7 +16,7 @@ import {
  * [V2.14-SLOT-CONTRACT] PhotoEditModal Sub-component to handle loading state
  */
 interface PhotoEditModalContentProps {
-  editPhotoId?: string | null;
+  editPhotoId: string;
   appLang: string;
   handleClose: () => void;
   isDeleteOpen: boolean;

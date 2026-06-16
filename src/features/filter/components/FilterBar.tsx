@@ -36,7 +36,10 @@ export function FilterBar({ mode }: FilterBarProps) {
           <ColumnsToggle />
           <GroupToggle 
             showGroupsCollapsed={showGroupsCollapsed}
-            onClick={() => setShowGroupsCollapsed(!showGroupsCollapsed)}
+            onClick={() => {
+              console.debug('[FilterBar] GroupToggle clicked. Current value:', showGroupsCollapsed, 'New value:', !showGroupsCollapsed);
+              setShowGroupsCollapsed(!showGroupsCollapsed);
+            }}
           />
           {isAdmin ? <StatusSelect /> : null}
         </div>

@@ -22,7 +22,7 @@ export const updateHandler = (app: Hono) => {
     
     if (error) return c.json({ success: false, error: error.message }, 500);
     
-    return c.json({ success: true, data: data?.map((d: any) => d.id) || [] });
+    return c.json({ success: true, data: data?.map((d: { id: string }) => d.id) || [] });
   });
 
   app.post('/update', async (c) => {
@@ -37,7 +37,7 @@ export const updateHandler = (app: Hono) => {
     const { data: beforeUpdate } = await supabase.from(TABLE_NAME).select('group_id').eq('id', id).maybeSingle();
 
     // Special handling for group cover (optimistic quick update)
-    const updateObj = updates as any;
+    const updateObj = updates as Record<string, unknown>;
     if (updateObj.is_group_cover === true) {
       const { data } = await supabase.from(TABLE_NAME).select('group_id').eq('id', id).maybeSingle();
       if (data?.group_id) {

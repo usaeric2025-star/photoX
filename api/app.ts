@@ -72,7 +72,7 @@ app.onError((err, c) => {
             timestamp: new Date().toISOString()
           },
           created_at: new Date().toISOString()
-       }]).then(({ error: insertError }: any) => {
+       }]).then(({ error: insertError }) => {
           if (insertError) console.error('[Fatal] Logging to system_logs failed:', insertError);
        });
     }).catch(e => {
@@ -83,7 +83,7 @@ app.onError((err, c) => {
   }
 
   // 返回標準 AppResult（body 不含 traceId）
-  const status = (err as any).status || 500
+  const status = (err as { status?: number }).status || 500
   return c.json(errorFactory.fail(appError), status)
 })
 
@@ -99,12 +99,13 @@ app.use("/admin/*", async (c, next) => {
     try {
         await requireRealUser(c);
         await next();
-    } catch (e: any) {
+    } catch (e: unknown) {
         const traceId = getTraceId(c);
-        logger.warn(`[Auth Error] ${c.req.path}: ${e.message}`, { traceId });
+        const errorMessage = e instanceof Error ? e.message : 'Unauthorized';
+        logger.warn(`[Auth Error] ${c.req.path}: ${errorMessage}`, { traceId });
         const appErr = errorFactory.create({
             code: 'UNAUTHORIZED',
-            message: e.message || 'Unauthorized',
+            message: errorMessage,
             operation: `api.auth.${c.req.path}`
         });
         appErr.traceId = traceId;
@@ -141,12 +142,13 @@ app.use("*", async (c, next) => {
     if (isProtectedFeature) {
         try {
             await requireRealUser(c);
-        } catch(e: any) {
+        } catch(e: unknown) {
              const traceId = getTraceId(c);
-             logger.warn(`[Auth Error - Mutation] ${c.req.path}: ${e.message}`, { traceId });
+             const errorMessage = e instanceof Error ? e.message : 'Unauthorized (Mutation)';
+             logger.warn(`[Auth Error - Mutation] ${c.req.path}: ${errorMessage}`, { traceId });
              const appErr = errorFactory.create({
                  code: 'UNAUTHORIZED',
-                 message: e.message || 'Unauthorized (Mutation)',
+                 message: errorMessage,
                  operation: `api.auth_mutation.${c.req.path}`
              });
              appErr.traceId = traceId;
@@ -201,9 +203,10 @@ app.post("/log-error", async (c) => {
         }
 
         return c.json({ success: true });
-    } catch (err: any) {
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Unknown error';
         console.error('[log-error] Request parsing failed:', err);
-        return c.json({ success: false, error: err.message }, 400);
+        return c.json({ success: false, error: message }, 400);
     }
 });
 
@@ -219,7 +222,7 @@ app.get("/download", async (c) => {
     try {
         const response = await fetch(url);
         if (!response.ok) {
-            return c.text(`Failed to fetch file: ${response.statusText}`, response.status as any);
+            return c.text(`Failed to fetch file: ${response.statusText}`, response.status);
         }
         
         const contentType = response.headers.get("content-type") || "image/jpeg";
@@ -233,9 +236,10 @@ app.get("/download", async (c) => {
         c.header("Content-Type", contentType);
         c.header("Content-Disposition", `attachment; filename="${encodeURIComponent(filename)}"`);
         return c.body(arrayBuffer);
-    } catch (err: any) {
-        logger.error("api.download.error", { url, filename, error: err.message });
-        return c.text(`Download proxy error: ${err.message}`, 500);
+    } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : 'Unknown download error';
+        logger.error("api.download.error", { url, filename, error: errorMessage });
+        return c.text(`Download proxy error: ${errorMessage}`, 500);
     }
 });
 

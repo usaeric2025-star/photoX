@@ -7,22 +7,22 @@ export interface PhotoBackfillCandidate {
   name: string;
   name_en?: string;
   name_ms?: string;
-  dimensions?: any;
+  dimensions?: Record<string, unknown>[];
   description?: string;
-  description_translations?: any;
+  description_translations?: Record<string, string>;
   image_url: string;
   image_hash: string;
 }
 
 export async function processBackfillBatch(
-  supabase: any,
+  supabase: Record<string, unknown>,
   apiKey: string | undefined,
   limit: number = 5
 ): Promise<{
   success: boolean;
   totalRemaining: number;
   processed: number;
-  results: any[];
+  results: Record<string, unknown>[];
 }> {
   // 1. Fetch all records with valid image_url and image_hash to see what remains to be backfilled.
   const { data: allPhotos, error: fetchError } = await supabase
@@ -41,11 +41,11 @@ export async function processBackfillBatch(
   if (catError) throw catError;
 
   const provider = await getAIProvider('', supabase);
-  const modelNameCombined = (provider as any).config.model;
+  const modelNameCombined = (provider as { config: { model: string } }).config.model;
 
   // 2. Filter in JS for accurate eligibility
-  const eligible = (allPhotos || []).filter((photo: any) => {
-    const needsDims = !photo.dimensions || !Array.isArray(photo.dimensions) || photo.dimensions.length === 0;
+  const eligible = (allPhotos || []).filter((photo: Record<string, unknown>) => {
+    const needsDims = !photo.dimensions || !Array.isArray(photo.dimensions) || (photo.dimensions as unknown[]).length === 0;
     
     // Check if category is missing (needs backfill)
     const needsCategory = !photo.category_id;
@@ -65,20 +65,20 @@ export async function processBackfillBatch(
 
   // Slice the current batch
   const batchToProcess = eligible.slice(0, limit);
-  const results: any[] = [];
+  const results: Record<string, unknown>[] = [];
 
   for (const photo of batchToProcess) {
     try {
-      const updates: any = {};
+      const updates: Record<string, unknown> = {};
       let width = 0;
       let height = 0;
       let sizeExtracted = false;
 
       // Check if we need to fetch dimensions (width/height)
-      const currentDims = Array.isArray(photo.dimensions) ? photo.dimensions : [];
+      const currentDims = Array.isArray(photo.dimensions) ? photo.dimensions as { width?: number; height?: number }[] : [];
       if (currentDims.length === 0) {
         // Download image binary from R2 / Worker url
-        const res = await fetch(photo.image_url);
+        const res = await fetch(photo.image_url as string);
         if (res.ok) {
           const buffer = Buffer.from(await res.arrayBuffer());
           try {
@@ -88,8 +88,8 @@ export async function processBackfillBatch(
               height = size.height;
               sizeExtracted = true;
             }
-          } catch (e: any) {
-            logger.error(`[Backfill] Failed to parse image-size for ${photo.id}:`, e.message);
+          } catch (e: unknown) {
+            logger.error(`[Backfill] Failed to parse image-size for ${photo.id}:`, (e as Error).message);
           }
         } else {
           logger.error(`[Backfill] Failed to fetch image binary for ${photo.id}: status ${res.status}`);

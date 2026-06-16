@@ -124,7 +124,15 @@ export function ManufacturerList({
   );
 }
 
-const ManufacturerButton = React.memo(({ mfr, isSelected, onSelect, onEdit, onDelete }: any) => {
+interface ManufacturerButtonProps {
+  mfr: Manufacturer;
+  isSelected: boolean;
+  onSelect: (id: string | null) => void;
+  onEdit?: (mfr: Manufacturer) => void;
+  onDelete?: (mfr: Manufacturer) => void;
+}
+
+const ManufacturerButton = React.memo(({ mfr, isSelected, onSelect, onEdit, onDelete }: ManufacturerButtonProps) => {
   const btnRef = useRef<HTMLButtonElement>(null);
   const [isMenuOpen, menuDialog] = useDisclosure(false);
 
