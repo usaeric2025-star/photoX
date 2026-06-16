@@ -30,7 +30,7 @@ import { logError } from './lib/error/errorReporter';
 import { queryClient, persister } from './lib/queryClient';
 import './index.css';
 import { clientEnv } from './shared/envSchema';
-import { migrateStorage } from './services/system/storageService';
+// Removed migration
 import { router } from './router/index';
 import { initChunkHandler } from '@/lib/chunkErrorHandler';
 import { dailyWorker } from './services/maintenance/DailyWorker';
@@ -44,8 +44,7 @@ async function init() {
     });
   }
 
-  await migrateStorage();
-
+  // No migration
   initChunkHandler(router);
 
   if (typeof window !== 'undefined') {

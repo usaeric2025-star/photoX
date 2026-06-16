@@ -9,6 +9,7 @@ import { checkDuplicate, DuplicatePhotoError } from '@/services/photo/duplicateC
 import { supabase } from '../../../lib/supabase';
 import { DB_CONFIG } from '../../../constants/config';
 import { generateItemCode } from '../utils';
+import { storage } from '@/services/storage';
 
 export const uploadSinglePhoto = async (
   userId: string, 
@@ -16,11 +17,12 @@ export const uploadSinglePhoto = async (
   onStatus?: (s: string) => void
 ): Promise<{ id: string; is_duplicate?: boolean }> => {
     const { data: { session } } = await supabase.auth.getSession();
-    const isLocalStorageStaff = typeof window !== 'undefined' && !!window.localStorage.getItem('ais_mock_auth_passcode');
+    const isLocalStorageStaff = !!storage.getItem('ais_mock_auth_passcode');
 
     if (!session?.user && !isLocalStorageStaff) {
         throw ErrorFactory.permission('鑒權失敗：無活躍會話');
     }
+
 
     const actUserId = session?.user?.id || userId || 'staff';
     let is_duplicate = false;

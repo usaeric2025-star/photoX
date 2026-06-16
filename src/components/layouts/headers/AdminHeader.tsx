@@ -6,6 +6,7 @@ import { useUIStore, useSettings, usePhotoCount, useAdminBatchActions, usePermis
 import { Dropdown, DropdownTrigger, DropdownPortal, DropdownPositioner, DropdownPopup, DropdownItem, DropdownSeparator } from '../../shared/Dropdown';
 import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
 import { translations } from "@/locales";
+import { storage } from '@/services/storage';
 
 
 interface AdminHeaderProps {}
@@ -27,7 +28,7 @@ export function AdminHeader({}: AdminHeaderProps) {
 
   const [cachedLogoUrl, setCachedLogoUrl] = React.useState<string | null>(() => {
     try {
-      const item = typeof window !== 'undefined' ? window.localStorage.getItem('photox_cached_settings') : null;
+      const item = storage.getItem('photox_cached_settings');
       if (item) {
         const parsed = JSON.parse(item);
         return parsed.logo_url || null;
@@ -37,6 +38,7 @@ export function AdminHeader({}: AdminHeaderProps) {
     }
     return null;
   });
+
 
   const logoUrl = settings?.logo_url || cachedLogoUrl;
 

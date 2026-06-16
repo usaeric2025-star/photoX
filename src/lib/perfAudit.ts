@@ -1,5 +1,7 @@
 
 
+import { storage } from '@/services/storage';
+
 export interface PerfIncident {
   label: string;
   duration: number;
@@ -17,7 +19,7 @@ const MAX_INCIDENTS = 50;
 export const perfAudit = {
   record: (incident: Omit<PerfIncident, 'timestamp'>) => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = storage.getItem(STORAGE_KEY);
       let incidents: PerfIncident[] = stored ? JSON.parse(stored) : [];
       
       incidents.unshift({ ...incident, timestamp: Date.now() });
@@ -27,7 +29,7 @@ export const perfAudit = {
         incidents = incidents.slice(0, MAX_INCIDENTS);
       }
       
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(incidents));
+      storage.setItem(STORAGE_KEY, JSON.stringify(incidents));
     } catch (e) {
       console.warn('[PerfAudit] Failed to record incident:', e);
     }
@@ -35,7 +37,7 @@ export const perfAudit = {
 
   getIncidents: (): PerfIncident[] => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = storage.getItem(STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch (e) {
       return [];
@@ -43,6 +45,7 @@ export const perfAudit = {
   },
 
   clear: () => {
-    localStorage.removeItem(STORAGE_KEY);
+    storage.remove(STORAGE_KEY);
   }
 };
+

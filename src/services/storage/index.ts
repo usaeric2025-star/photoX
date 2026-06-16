@@ -1,4 +1,4 @@
-export * from './storageConfig';
+export * from './autoFallback';
 export * from './uploadService';
 export * from './deleteService';
 export * from './auditService';

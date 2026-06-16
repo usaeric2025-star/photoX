@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { useShallow } from 'zustand/shallow';
-import { STORAGE_KEYS, safeGetItem, safeSetItem } from '@/services/system/storageService';
+import { STORAGE_KEYS, storage } from '@/lib/storage';
 import { ProductFormData } from '../types';
 import { useLocalStorage } from '@/hooks/core/useLocalStorage';
 
@@ -12,10 +12,6 @@ export function useAppLang(): [string, (val: 'zh' | 'en' | 'ms') => void] {
 
 export function useSidebarCollapsed() {
   return useLocalStorage<boolean>({ key: STORAGE_KEYS.SIDEBAR_COLLAPSED, defaultValue: false });
-}
-
-export function useColumns() {
-  return useLocalStorage<2 | 3 | 5>({ key: STORAGE_KEYS.COLUMNS, defaultValue: 3 });
 }
 
 export interface AlertDialogProps {
@@ -101,7 +97,7 @@ export const useIsAnyDialogOpen = () => useUIStore((s) => s.activeDialogCount > 
 
 export const useUIStore = create<UIStoreState>()((set) => ({
   appLang: (() => {
-    const raw = safeGetItem(STORAGE_KEYS.LANG, 'en', undefined, false);
+    const raw = storage.get(STORAGE_KEYS.LANG, 'en');
     if (!raw) return 'en';
     const lower = String(raw).toLowerCase();
     if (lower.startsWith('zh')) return 'zh';
@@ -109,18 +105,18 @@ export const useUIStore = create<UIStoreState>()((set) => ({
     return 'en';
   })() as 'zh' | 'en' | 'ms',
   lightboxIndex: null,
-  editPhotoId: safeGetItem(STORAGE_KEYS.EDIT_PHOTO, null, undefined, true),
-  batchEditingIds: safeGetItem(STORAGE_KEYS.BATCH_EDITING, null, undefined, true),
-  groupSettingsOpen: safeGetItem(STORAGE_KEYS.GROUP_SETTINGS_OPEN, false, (v) => v === 'true', true),
-  activeScreen: safeGetItem(STORAGE_KEYS.ACTIVE_SCREEN, 'gallery', undefined, true),
-  formState: safeGetItem(STORAGE_KEYS.EDIT_FORM_DRAFT, defaultForm, undefined, true),
+  editPhotoId: storage.get(STORAGE_KEYS.EDIT_PHOTO, null),
+  batchEditingIds: storage.get(STORAGE_KEYS.BATCH_EDITING, null),
+  groupSettingsOpen: storage.get<string>(STORAGE_KEYS.GROUP_SETTINGS_OPEN, 'false') === 'true',
+  activeScreen: storage.get(STORAGE_KEYS.ACTIVE_SCREEN, 'gallery'),
+  formState: storage.get(STORAGE_KEYS.EDIT_FORM_DRAFT, defaultForm),
   updateForm: (updates) => set((state) => {
     const nextFormState = typeof updates === 'function' ? updates(state.formState) : { ...state.formState, ...updates };
-    safeSetItem(STORAGE_KEYS.EDIT_FORM_DRAFT, nextFormState, true);
+    storage.set(STORAGE_KEYS.EDIT_FORM_DRAFT, nextFormState);
     return { formState: nextFormState as ProductFormData };
   }),
   resetForm: () => {
-    sessionStorage.removeItem(STORAGE_KEYS.EDIT_FORM_DRAFT);
+    storage.remove(STORAGE_KEYS.EDIT_FORM_DRAFT);
     set({ formState: defaultForm });
   },
   showPassPrompt: false,
@@ -174,22 +170,22 @@ export const useUIStore = create<UIStoreState>()((set) => ({
     const nextState = typeof updates === 'function' ? updates(state) : updates;
     
     if ('appLang' in nextState && nextState.appLang !== undefined) {
-      safeSetItem(STORAGE_KEYS.LANG, nextState.appLang, false);
+      storage.set(STORAGE_KEYS.LANG, nextState.appLang);
     }
     if ('editPhotoId' in nextState) {
-      safeSetItem(STORAGE_KEYS.EDIT_PHOTO, nextState.editPhotoId, true);
+      storage.set(STORAGE_KEYS.EDIT_PHOTO, nextState.editPhotoId);
       if (!nextState.editPhotoId) {
-        sessionStorage.removeItem(STORAGE_KEYS.EDIT_FORM_DRAFT);
+        storage.remove(STORAGE_KEYS.EDIT_FORM_DRAFT);
       }
     }
     if ('batchEditingIds' in nextState) {
-      safeSetItem(STORAGE_KEYS.BATCH_EDITING, nextState.batchEditingIds, true);
+      storage.set(STORAGE_KEYS.BATCH_EDITING, nextState.batchEditingIds);
     }
     if ('groupSettingsOpen' in nextState && nextState.groupSettingsOpen !== undefined) {
-      safeSetItem(STORAGE_KEYS.GROUP_SETTINGS_OPEN, String(nextState.groupSettingsOpen), true);
+      storage.set(STORAGE_KEYS.GROUP_SETTINGS_OPEN, String(nextState.groupSettingsOpen));
     }
     if ('activeScreen' in nextState && nextState.activeScreen !== undefined) {
-      safeSetItem(STORAGE_KEYS.ACTIVE_SCREEN, nextState.activeScreen, true);
+      storage.set(STORAGE_KEYS.ACTIVE_SCREEN, nextState.activeScreen);
     }
     
     return nextState as any;

@@ -6,7 +6,7 @@ import { Analytics } from '@vercel/analytics/react';
 import { useEffect, useRef } from 'react';
 import { useAuthStore, initAuthListener } from '@/store/useAuthStore';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
-import { migrateStorage } from '@/services/system/storageService';
+// Removed migrateStorage
 import { clearExpiredCaches } from './lib/db/indexedDB';
 import { handleError } from './lib/error/errorHandler';
 import { logger } from '@/lib/logger';
@@ -28,7 +28,6 @@ export default function AppRoutes() {
     // Background cache cleanup and migrations
     init();
     const cleanup = initAuthListener();
-    migrateStorage();
     clearExpiredCaches(7).catch(err => handleError(err, '本地缓存自动清理失败', true));
     return cleanup;
   }, [init]);

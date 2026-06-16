@@ -1,62 +1,43 @@
-import { useEffect } from 'react';
-import { useLocalStorage } from '@/hooks/core/useLocalStorage';
-import { createQuery } from '@/lib/query/queryFactory';
-import { fetchSettings } from '@/services/settings/queries';
-import { syncCache } from '@/lib/db/indexedDB';
-import { useSettingsUpdateMutation } from './useSettingsMutations';
+import React, { useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { storage, STORAGE_KEYS } from '@/lib/storage';
 import { AppSettings } from '@/types';
+import { fetchSettings } from '@/services/settings/queries';
+import { useSettingsUpdateMutation } from './useSettingsMutations';
 
-/**
- * Hook to get app settings using standard query factory.
- */
-export const useGetSettings = createQuery<AppSettings, void>({
-  queryKey: () => ['settings'],
-  queryFn: async () => {
-    const data = await fetchSettings();
-    if (data) {
-      syncCache.saveSettings(data).catch(console.warn);
-    }
-    return data || {} as AppSettings;
-  },
-  staleTime: 60 * 1000, // 1 minute stale time for settings
-});
+const DEFAULT_SETTINGS: AppSettings = {} as AppSettings;
 
-let initialSettingsCache: AppSettings | null = null;
-const getInitialSettings = (): AppSettings => {
-  if (initialSettingsCache) return initialSettingsCache;
-  try {
-    const item = typeof window !== 'undefined' ? window.localStorage.getItem('photox_cached_settings') : null;
-    if (item) {
-      initialSettingsCache = JSON.parse(item);
-      return initialSettingsCache!;
-    }
-  } catch (e) {
-    // Silent
-  }
-  return {} as AppSettings;
-};
+export function useSettings() {
+  const queryClient = useQueryClient();
+  
+  useEffect(() => {
+    const handler = (e: StorageEvent) => {
+      if (e.key === `photox_${STORAGE_KEYS.SETTINGS}`) {
+        queryClient.invalidateQueries({ queryKey: ['settings'] });
+      }
+    };
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  }, [queryClient]);
 
-export const useSettings = () => {
-  const [cachedSettings, setCachedSettings] = useLocalStorage<AppSettings>({
-    key: 'photox_cached_settings',
-    defaultValue: getInitialSettings(),
+  const { data: qSettings, isPending } = useQuery({
+    queryKey: ['settings'],
+    queryFn: async () => {
+      const data = await fetchSettings();
+      if (data) {
+        storage.set(STORAGE_KEYS.SETTINGS, data);
+      }
+      return data || storage.get(STORAGE_KEYS.SETTINGS, DEFAULT_SETTINGS);
+    },
+    staleTime: Infinity,
+    initialData: () => storage.get(STORAGE_KEYS.SETTINGS, DEFAULT_SETTINGS),
   });
 
-  const { data: qSettings, isPending } = useGetSettings(undefined);
   const updateMutation = useSettingsUpdateMutation();
 
-  useEffect(() => {
-    if (qSettings && Object.keys(qSettings).length > 0) {
-      setCachedSettings(qSettings);
-    }
-  }, [qSettings, setCachedSettings]);
+  const settings = qSettings || DEFAULT_SETTINGS;
 
-  // Use cachedSettings immediately for a seamless mount/first-render, fallbacks nicely
-  const settings = (qSettings && Object.keys(qSettings).length > 0) 
-    ? qSettings 
-    : (Object.keys(cachedSettings).length > 0 ? cachedSettings : getInitialSettings());
-
-  return {
+  return React.useMemo(() => ({
     settings,
     isPending,
     updateSettings: updateMutation.mutateAsync,
@@ -64,5 +45,5 @@ export const useSettings = () => {
     customModel: settings?.custom_model,
     accessPasscode: settings?.access_passcode,
     updateSettingsSync: updateMutation.mutate,
-  };
-};
+  }), [settings, isPending, updateMutation.mutateAsync, updateMutation.mutate]);
+}

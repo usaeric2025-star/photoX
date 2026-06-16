@@ -1,5 +1,5 @@
 import { api } from '@/lib/api';
-import { STORAGE_KEYS, safeGetItem, safeSetItem } from '@/services/system/storageService';
+import { STORAGE_KEYS, storage } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
 import { logger } from '@/lib/logger';
 
@@ -19,7 +19,7 @@ class DailyWorker {
       return;
     }
 
-    const lastRunStr = safeGetItem((STORAGE_KEYS as any).LAST_MAINTENANCE_RUN || 'photo_last_maintenance_day', null);
+    const lastRunStr = storage.get(STORAGE_KEYS.LAST_MAINTENANCE_RUN, null);
     const today = new Date().toISOString().split('T')[0];
 
     if (lastRunStr === today) {
@@ -35,7 +35,7 @@ class DailyWorker {
 
       // 2. 本地 IDB 冗余键清理 (未来扩展)
       
-      safeSetItem((STORAGE_KEYS as any).LAST_MAINTENANCE_RUN || 'photo_last_maintenance_day', today);
+      storage.set(STORAGE_KEYS.LAST_MAINTENANCE_RUN, today);
       logger.info('[DailyWorker] Maintenance completed successfully.');
     } catch (err) {
       logger.warn('[DailyWorker] Maintenance failed silently', err);

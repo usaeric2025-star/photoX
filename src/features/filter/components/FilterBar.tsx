@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { MoreHorizontal } from 'lucide-react';
 import { SearchInput } from './SearchInput';
 import { SortToggle } from './SortToggle';
 import { CategoryGrid } from './CategoryGrid';
@@ -15,15 +17,22 @@ interface FilterBarProps {
 export function FilterBar({ mode }: FilterBarProps) {
   const isAdmin = mode === 'admin';
   const { showGroupsCollapsed, setShowGroupsCollapsed } = useFilters();
+  const [isExpanded, setIsExpanded] = useState(true);
 
   return (
     <div className={cn("sticky top-0 border-b", isAdmin ? "bg-amber-50" : "bg-white")}>
-      {/* 第一行：搜索 + 右側按鈕 */}
       <div className="flex gap-2 items-center p-4 pb-3">
         <div className="flex-1">
           <SearchInput />
         </div>
         <div className="flex gap-1 shrink-0">
+          <button 
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="p-2 rounded-lg hover:bg-slate-100 text-gray-500"
+            aria-label={isExpanded ? "收起筛选" : "展开筛选"}
+          >
+            <MoreHorizontal className="w-5 h-5" />
+          </button>
           <SortToggle />
           <ColumnsToggle />
           <GroupToggle 
@@ -34,11 +43,15 @@ export function FilterBar({ mode }: FilterBarProps) {
         </div>
       </div>
       
-      {/* 第二行：分類 */}
-      <CategoryGrid />
-      
-      {/* 第三行：標籤 */}
-      <TagGrid />
+      {isExpanded && (
+        <div className="px-4 pb-3 space-y-2">
+          {/* 分類 */}
+          <CategoryGrid />
+          
+          {/* 標籤 */}
+          <TagGrid />
+        </div>
+      )}
     </div>
   );
 }

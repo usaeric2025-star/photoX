@@ -20,6 +20,10 @@ const getEnv = (key: string, required: boolean = true): string => {
   if (typeof process !== 'undefined' && process.env && process.env[key]) {
     return process.env[key];
   }
+  // 3. Fallback for NODE_ENV
+  if (key === 'NODE_ENV') {
+    return 'production'; // Assume production if not found
+  }
   // 既没有 import.meta.env 也没有 process.env
   if (required) {
     console.error(`❌ 环境变量 ${key} 未找到`);

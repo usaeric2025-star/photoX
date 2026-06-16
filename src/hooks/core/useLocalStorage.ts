@@ -1,4 +1,5 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { storage } from '@/services/storage';
 
 interface UseLocalStorageOptions<T> {
   key: string;
@@ -20,9 +21,8 @@ export function useLocalStorage<T = string>({
   getInitialValueInEffect = true,
 }: UseLocalStorageOptions<T>): [T, (val: T | ((prev: T) => T)) => void, () => void] {
   const readValue = (): T => {
-    if (typeof window === 'undefined') return defaultValue;
     try {
-      const item = window.localStorage.getItem(key);
+      const item = storage.getItem(key);
       return item !== null ? deserialize(item) : defaultValue;
     } catch (error) {
       console.warn(`Error reading localStorage key "${key}":`, error);
@@ -41,28 +41,30 @@ export function useLocalStorage<T = string>({
     }
   }, [getInitialValueInEffect]);
 
-  const setLocalStorageValue = (val: T | ((prev: T) => T)) => {
-      try {
-        const valueToStore = val instanceof Function ? val(value) : val;
-        setValue(valueToStore);
-        if (typeof window !== 'undefined') {
-          window.localStorage.setItem(key, serialize(valueToStore));
-        }
-      } catch (error) {
-        console.warn(`Error setting localStorage key "${key}":`, error);
-      }
-  };
+  const valueRef = useRef<T>(value);
+  useEffect(() => {
+    valueRef.current = value;
+  }, [value]);
 
-  const removeLocalStorageValue = () => {
+  const setLocalStorageValue = useCallback((val: T | ((prev: T) => T)) => {
     try {
-      if (typeof window !== 'undefined') {
-        window.localStorage.removeItem(key);
-        setValue(defaultValue);
-      }
+      const valueToStore = val instanceof Function ? val(valueRef.current) : val;
+      setValue(valueToStore);
+      const serialized = serialize(valueToStore);
+      storage.setItem(key, serialized);
+    } catch (error) {
+      console.warn(`[useLocalStorage] Error setting key "${key}":`, error);
+    }
+  }, [key, serialize]);
+
+  const removeLocalStorageValue = useCallback(() => {
+    try {
+      storage.remove(key);
+      setValue(defaultValue);
     } catch (error) {
       console.warn(`Error removing localStorage key "${key}":`, error);
     }
-  };
+  }, [key, defaultValue]);
 
   // Support for cross-tab synchronization
   useEffect(() => {
@@ -78,9 +80,12 @@ export function useLocalStorage<T = string>({
       }
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', handleStorageChange);
+      return () => window.removeEventListener('storage', handleStorageChange);
+    }
   }, [key, deserialize, defaultValue]);
 
   return [value, setLocalStorageValue, removeLocalStorageValue];
 }
+

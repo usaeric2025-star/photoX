@@ -40,9 +40,9 @@ export function CategoryGrid() {
             key={cat.id ?? 'all'}
             onClick={() => updateFilters({ categoryId: cat.id })}
             className={`
-              px-3 py-2.5 rounded-xl text-[13px] font-medium truncate transition-all duration-200
+              px-2.5 py-1.5 rounded-lg text-[12px] font-medium truncate transition-all duration-200
               ${isSelected
-                ? 'bg-brand-gold text-slate-950 shadow-md transform scale-[1.02]'
+                ? 'bg-brand-gold text-slate-950 shadow-sm transform scale-[1.01]'
                 : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-100 hover:border-brand-gold/30'
               }
             `}
