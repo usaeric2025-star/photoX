@@ -182,6 +182,13 @@ export function AdminHeader({}: AdminHeaderProps) {
                           <DynamicIcon name="layout-grid" size={16} />
                           {t.taskCenter}
                         </DropdownItem>
+                        <DropdownItem
+                          onClick={() => navigate({ to: '/admin/diagnostics' })}
+                          className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-default outline-none data-[highlighted]:bg-blue-50 text-gray-700"
+                        >
+                          <DynamicIcon name="terminal" size={16} />
+                          {t.systemLogs}
+                        </DropdownItem>
                       </>
                     )}
                     <div className="mt-1">

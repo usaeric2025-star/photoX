@@ -75,7 +75,7 @@ export const AdminPhotoCard = ({
         isPinned={!!photo.is_pinned} 
         hideGroupBadge={hideGroupBadge || !showGroupsCollapsed} 
       />
-      {actualCanPin && (
+      {actualCanPin && !isMultiSelect && (
         <PinButton photoId={photo.id} isPinned={!!photo.is_pinned} />
       )}
       <PhotoCardInfo 

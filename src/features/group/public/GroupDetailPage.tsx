@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import { useGroupData } from '../shared/hooks/useGroupData';
 import { Photo, Group } from '@/types';
@@ -9,6 +9,10 @@ import { getTranslatedCategoryName } from '@/services/category/utils';
 import { GroupHeader } from '../shared/components/GroupHeader';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { Button } from '@/components/shared/Button';
+import { useUIStore } from '@/store/useUIStore';
+import { useSettings } from '@/hooks/settings/useSettings';
+import { WhatsAppChoiceDialog } from '@/components/shared/WhatsAppChoiceDialog';
+import { PublicFloatingActions } from '@/components/photo/PublicFloatingActions';
 
 function PublicPhotoGrid({ photos, onPhotoClick }: { photos: Photo[]; onPhotoClick: (id: string) => void }) {
   return (
@@ -31,6 +35,11 @@ export function PublicGroupDetailPage() {
   const groupId = (routerSafe.params as { groupId?: string }).groupId || fGroupId;
   
   const { group, photos, totalCount, loading, error } = useGroupData({ groupId, isAdmin: false });
+
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const showWhatsAppChoice = useUIStore((s) => s.showWhatsAppChoice);
+  const updateUI = useUIStore((s) => s.update);
+  const { settings } = useSettings();
 
   const lightboxIndex = React.useMemo(() => {
     if (!photoId) return -1;
@@ -56,6 +65,32 @@ export function PublicGroupDetailPage() {
     };
   });
 
+  const handleScrollToTop = () => {
+    scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const openWhatsApp = (num: string) => {
+    const pendingPhoto = (window as any)._pendingPhoto as Photo | undefined;
+    let message = '';
+    
+    if (pendingPhoto) {
+      const prompt = t.sharePrompt || "您好，我对这个家具感兴趣：";
+      const itemCode = pendingPhoto.item_code || "";
+      const name = pendingPhoto.name?.[lang as 'zh'] || pendingPhoto.name?.en || "";
+      const url = pendingPhoto.image_url || "";
+      message = `${prompt}\n*${name}* (${itemCode})\n${url}`;
+      (window as any)._pendingPhoto = undefined;
+    } else {
+      const groupName = group?.name || '';
+      message = `您好，我對合組 *${groupName}* 很感興趣，想了解更多信息！`;
+    }
+    
+    const encodedText = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${num}?text=${encodedText}`;
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+    updateUI({ showWhatsAppChoice: false });
+  };
+
   if (loading) return <PageSkeleton />;
   if (error) return <div className="p-4 text-red-500">錯誤：{error}</div>;
   if (!group) return <div className="p-4 flex flex-col justify-center items-center h-full"><div className="text-xl text-slate-500 mb-4">合組不存在或已被刪除</div><Button onClick={() => window.history.back()}>返回</Button></div>;
@@ -69,10 +104,15 @@ export function PublicGroupDetailPage() {
           isAdmin={false} 
         />
       </div>
-      <div className="flex-1 overflow-y-auto relative overscroll-y-auto overscroll-x-none bg-slate-50">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto relative overscroll-y-auto overscroll-x-none bg-slate-50">
         <PublicPhotoGrid photos={photos} onPhotoClick={(id: string) => {
              setPhotoId(id);
         }} />
+
+        <PublicFloatingActions 
+          onScrollToTop={handleScrollToTop}
+          onWhatsAppClick={() => updateUI({ showWhatsAppChoice: true })}
+        />
       </div>
       <YarlLightbox
         open={lightboxOpen}
@@ -83,6 +123,14 @@ export function PublicGroupDetailPage() {
            const photo = photos[idx];
            if (photo) setPhotoId(photo.id);
         }}
+      />
+
+      <WhatsAppChoiceDialog 
+        isOpen={showWhatsAppChoice}
+        onClose={() => updateUI({ showWhatsAppChoice: false })}
+        settings={settings}
+        onSelect={openWhatsApp}
+        labels={t}
       />
     </div>
   );

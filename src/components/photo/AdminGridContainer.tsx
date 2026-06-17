@@ -80,7 +80,7 @@ export function AdminGridContainer() {
 
   return (
     <SelectionProvider>
-      <div className="flex flex-col h-full bg-brand-bg w-full overflow-hidden text-text animate-fade-in relative">
+      <div className="flex-1 min-h-0 flex flex-col bg-brand-bg w-full overflow-hidden text-text animate-fade-in relative">
           <div className="flex-1 overflow-hidden bg-brand-bg relative">
               <VirtualPhotoGrid 
                 key="admin-photo-grid"

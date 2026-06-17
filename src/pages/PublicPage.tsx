@@ -11,6 +11,10 @@ import { useColumns } from '@/features/layout/hooks/useColumns';
 import { logger } from '@/lib/logger';
 import { PublicPhotoCard } from '@/components/photo/PublicPhotoCard';
 import { LazyYarlLightbox as YarlLightbox } from '@/components/lightbox/LazyYarlLightbox';
+import { useUIStore } from '@/store/useUIStore';
+import { useSettings } from '@/hooks/settings/useSettings';
+import { WhatsAppChoiceDialog } from '@/components/shared/WhatsAppChoiceDialog';
+import { PublicFloatingActions } from '@/components/photo/PublicFloatingActions';
 
 export default function PublicPage() {
   const { columns } = useColumns();
@@ -28,6 +32,10 @@ export default function PublicPage() {
   } = usePublicPhotos();
 
   const { photoId, setPhotoId } = useFilters();
+  const showWhatsAppChoice = useUIStore((s) => s.showWhatsAppChoice);
+  const updateUI = useUIStore((s) => s.update);
+  const { settings } = useSettings();
+  const gridRef = React.useRef<any>(null);
 
   const lightboxIndex = React.useMemo(() => {
     if (!photoId) return -1;
@@ -75,6 +83,31 @@ export default function PublicPage() {
     refetchCount();
   };
 
+  const handleScrollToTop = () => {
+    gridRef.current?.scrollTo(0);
+  };
+
+  const openWhatsApp = (num: string) => {
+    const pendingPhoto = (window as any)._pendingPhoto as Photo | undefined;
+    let message = '';
+    
+    if (pendingPhoto) {
+      const prompt = t.sharePrompt || "您好，我对这个家具感兴趣：";
+      const itemCode = pendingPhoto.item_code || "";
+      const name = pendingPhoto.name?.[lang as 'zh'] || pendingPhoto.name?.en || "";
+      const url = pendingPhoto.image_url || "";
+      message = `${prompt}\n*${name}* (${itemCode})\n${url}`;
+      (window as any)._pendingPhoto = undefined;
+    } else {
+      message = "您好，我正在浏览您的家具相册，想了解更多信息！";
+    }
+    
+    const encodedText = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${num}?text=${encodedText}`;
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+    updateUI({ showWhatsAppChoice: false });
+  };
+
   const renderCard = (photo: Photo, index: number, sharedCategories: Category[]) => (
     <PublicPhotoCard 
       photo={photo} 
@@ -97,6 +130,7 @@ export default function PublicPage() {
       <div className="flex-1 overflow-hidden relative">
         <ErrorBoundary>
           <VirtualPhotoGrid
+            ref={gridRef}
             photos={photos}
             isFetching={isPending}
             isFetchingNextPage={isFetchingNextPage}
@@ -108,6 +142,11 @@ export default function PublicPage() {
             filters={filters}
           />
         </ErrorBoundary>
+        
+        <PublicFloatingActions 
+          onScrollToTop={handleScrollToTop}
+          onWhatsAppClick={() => updateUI({ showWhatsAppChoice: true })}
+        />
       </div>
       
       <YarlLightbox
@@ -116,6 +155,14 @@ export default function PublicPage() {
         currentIndex={Math.max(0, lightboxIndex)}
         onClose={() => setPhotoId(null)}
         onIndexChange={handleIndexChange}
+      />
+
+      <WhatsAppChoiceDialog 
+        isOpen={showWhatsAppChoice}
+        onClose={() => updateUI({ showWhatsAppChoice: false })}
+        settings={settings}
+        onSelect={openWhatsApp}
+        labels={t}
       />
     </div>
   );

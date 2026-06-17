@@ -164,7 +164,12 @@ export const useUIStore = create<UIStoreState>()((set) => ({
   incrementDialogCount: () => set((state) => ({ activeDialogCount: state.activeDialogCount + 1 })),
   decrementDialogCount: () => set((state) => ({ activeDialogCount: Math.max(0, state.activeDialogCount - 1) })),
   update: (updates) => set((state) => {
-    const nextState = typeof updates === 'function' ? updates(state) : updates;
+    const rawNextState = typeof updates === 'function' ? updates(state) : updates;
+    const nextState = { ...rawNextState };
+
+    if ('isMultiSelect' in nextState && nextState.isMultiSelect === false) {
+      nextState.selectedIds = [];
+    }
     
     if ('appLang' in nextState && nextState.appLang !== undefined) {
       storage.set(STORAGE_KEYS.LANG, nextState.appLang);

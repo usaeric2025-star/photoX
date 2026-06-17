@@ -17,7 +17,7 @@ export function AdminContainer() {
   
   return (
     <div className="flex flex-col h-full bg-slate-50 overflow-hidden relative" id="main-admin-screen">
-       <div className="flex-1 min-h-0 relative">
+       <div className="flex-1 min-h-0 relative flex flex-col">
           {photos.length === 0 && !isPendingPhotos ? (
            <AdminEmptyState labels={labels} />
          ) : (
