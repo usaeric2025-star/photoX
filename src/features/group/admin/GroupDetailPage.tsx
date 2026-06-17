@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import { useGroupData } from '../shared/hooks/useGroupData';
-import { Photo, Group, ProductGroup, Dimension } from '@/types';
+import { Photo, Group, ProductGroup, Dimension, Category } from '@/types';
 import { AdminPhotoCard } from '@/components/photo/AdminPhotoCard';
 import { YarlLightbox } from '@/features/lightbox/YarlLightbox';
 import { useFilters, useTranslation, useCategories } from '@/hooks';

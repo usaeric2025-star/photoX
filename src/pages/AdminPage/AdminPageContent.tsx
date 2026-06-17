@@ -1,7 +1,7 @@
 import { useParams, useLocation, useNavigate } from '@tanstack/react-router';
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
-import React, { useEffect } from 'react';
-import { X } from 'lucide-react';
+import React, { useEffect, Suspense, lazy } from 'react';
+import { X, Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useTasks, 
   useSyncMutation, 
@@ -9,10 +9,6 @@ import { useTasks,
 import { usePhotoUpload } from '@/features/upload';
 import { logger } from '@/lib/logger';
 import { DataLoadingContainer } from '@/components/ui/DataLoadingContainer';
-import { BatchEditScreen } from '@/features/batch-edit/BatchEditScreen';
-import { StatisticsScreen } from '@/features/statistics/components/StatisticsScreen';
-import { SettingsPage } from '@/features/settings/SettingsPage';
-import { PhotoEditModal } from '@/features/photo-edit';
 import { useAIBatchAnalysis, useAdminPhotos } from '@/hooks';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { Category } from '@/types';
@@ -22,6 +18,11 @@ import { AdminContainer } from '@/components/admin/AdminContainer';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { useFilters } from '@/hooks/useFilters';
 import { FilterBar } from '@/features/filter/FilterBar';
+
+const BatchEditScreen = lazy(() => import('@/features/batch-edit/BatchEditScreen').then(m => ({ default: m.BatchEditScreen })));
+const StatisticsScreen = lazy(() => import('@/features/statistics/components/StatisticsScreen').then(m => ({ default: m.StatisticsScreen })));
+const SettingsPage = lazy(() => import('@/features/settings/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const PhotoEditModal = lazy(() => import('@/features/photo-edit').then(m => ({ default: m.PhotoEditModal })));
 
 export function AdminPageContent() {
   const filters = useFilters({ enableStatus: true, enableBatch: true });
@@ -71,19 +72,21 @@ export function AdminPageContent() {
             </>
           ) : (
             <div className="flex-1 relative overflow-hidden pb-16 sm:pb-0">
-              {currentScreen === 'dashboard' ? (
-                <ScreenWrapper key="admin-dashboard" onClose={() => navigate({ to: '/admin' })}>
-                  <StatisticsScreen />
-                </ScreenWrapper>
-              ) : currentScreen === 'batch' ? (
-                <ScreenWrapper key="admin-batch" onClose={() => navigate({ to: '/admin' })}>
-                  <BatchEditScreen />
-                </ScreenWrapper>
-              ) : ['manage', 'settings', 'structure', 'logs', 'tasks', 'error-logs', 'diagnose'].includes(currentScreen) ? (
-                <div key="admin-settings-container" className="h-full bg-slate-50 animate-scale-in">
-                  <SettingsPage onClose={() => navigate({ to: '/admin' })} />
-                </div>
-              ) : null}
+              <Suspense fallback={<div className="h-full flex items-center justify-center bg-slate-50"><Loader2 className="w-8 h-8 animate-spin text-slate-400" /></div>}>
+                {currentScreen === 'dashboard' ? (
+                  <ScreenWrapper key="admin-dashboard" onClose={() => navigate({ to: '/admin' })}>
+                    <StatisticsScreen />
+                  </ScreenWrapper>
+                ) : currentScreen === 'batch' ? (
+                  <ScreenWrapper key="admin-batch" onClose={() => navigate({ to: '/admin' })}>
+                    <BatchEditScreen />
+                  </ScreenWrapper>
+                ) : ['manage', 'settings', 'structure', 'logs', 'tasks', 'error-logs', 'diagnose'].includes(currentScreen) ? (
+                  <div key="admin-settings-container" className="h-full bg-slate-50 animate-scale-in">
+                    <SettingsPage onClose={() => navigate({ to: '/admin' })} />
+                  </div>
+                ) : null}
+              </Suspense>
             </div>
           )}
 
@@ -98,7 +101,9 @@ export function AdminPageContent() {
       </DataLoadingContainer>
 
       {/* Put Modals outside the layout container */}
-      <PhotoEditModal />
+      <Suspense fallback={null}>
+        <PhotoEditModal />
+      </Suspense>
     </AdminAuthGate>
   );
 }
