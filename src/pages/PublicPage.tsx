@@ -21,6 +21,7 @@ export default function PublicPage() {
   const { 
     gridPhotos: photos,
     isPending,
+    isFetching,
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
@@ -159,7 +160,7 @@ export default function PublicPage() {
           <VirtualPhotoGrid
             ref={gridRef}
             photos={photos}
-            isFetching={isPending}
+            isFetching={isFetching}
             isFetchingNextPage={isFetchingNextPage}
             hasNextPage={hasNextPage}
             onLoadMore={fetchNextPage}

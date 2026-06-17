@@ -21,7 +21,7 @@ import { PhotoEditModal } from '@/features/photo-edit';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { Button } from '@/components/shared/Button';
 
-function AdminPhotoGrid({ photos, onPhotoClick }: { photos: Photo[]; onPhotoClick: (id: string) => void }) {
+function AdminPhotoGrid({ photos, categories, onPhotoClick }: { photos: Photo[]; categories?: Category[]; onPhotoClick: (id: string) => void }) {
   const isMultiSelect = useUIStore(s => s.isMultiSelect);
   const { toggle } = usePhotoSelection();
 
@@ -39,6 +39,7 @@ function AdminPhotoGrid({ photos, onPhotoClick }: { photos: Photo[]; onPhotoClic
             }
           }}
           hideGroupBadge={true}
+          sharedCategories={categories}
         />
       ))}
     </div>
@@ -126,7 +127,7 @@ export function AdminGroupDetailPage() {
           />
         </div>
         <div className={`flex-1 overflow-y-auto relative overscroll-y-auto overscroll-x-none bg-slate-50 transition-all duration-300 ${isMultiSelect ? 'pb-16' : ''}`}>
-          <AdminPhotoGrid photos={photos} onPhotoClick={(id: string) => {
+          <AdminPhotoGrid photos={photos} categories={categories} onPhotoClick={(id: string) => {
                setPhotoId(id);
           }} />
         </div>

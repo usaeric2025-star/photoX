@@ -115,6 +115,7 @@ export const usePublicPhotos = () => {
         gridPhotos: processedResult?.gridPhotos || EMPTY_ARRAY,
         photos: rawPhotos,
         isPending: infinitePhotosQuery.isPending || (infinitePhotosQuery.isFetching && !rawPhotos.length),
+        isFetching: infinitePhotosQuery.isFetching,
         isFetchingNextPage: infinitePhotosQuery.isFetchingNextPage,
         hasNextPage: !!infinitePhotosQuery.hasNextPage,
         fetchNextPage: infinitePhotosQuery.fetchNextPage,

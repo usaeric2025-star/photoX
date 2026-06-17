@@ -41,11 +41,10 @@ export function YarlLightbox({
   onDelete,
   onSetCover,
 }: YarlLightboxProps) {
-  console.log('[YarlLightbox] items:', items);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const { lang, uiTranslations: t } = useTranslation();
 
-  const slides = items.map((item) => ({
+  const slides = React.useMemo(() => items.map((item) => ({
     src: item.src,
     title: item.title,
     description: item.description,
@@ -54,7 +53,7 @@ export function YarlLightbox({
       category: item.category,
       tags: item.tags,
     }
-  }));
+  })), [items]);
 
   // 判斷是否為管理模式（有傳入任何管理回調）
   const isAdmin = !!(onEdit || onDelete || onSetCover);

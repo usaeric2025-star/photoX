@@ -29,8 +29,14 @@ export function useSettings() {
       }
       return data || storage.get(STORAGE_KEYS.SETTINGS, DEFAULT_SETTINGS);
     },
-    staleTime: Infinity,
-    initialData: () => storage.get(STORAGE_KEYS.SETTINGS, DEFAULT_SETTINGS),
+    staleTime: 60 * 1000,
+    initialData: () => {
+      const cached = storage.get<AppSettings | null>(STORAGE_KEYS.SETTINGS, null);
+      if (cached && Object.keys(cached).length > 0) {
+        return cached;
+      }
+      return undefined;
+    },
   });
 
   const updateMutation = useSettingsUpdateMutation();

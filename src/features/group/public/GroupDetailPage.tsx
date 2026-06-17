@@ -14,7 +14,7 @@ import { useSettings } from '@/hooks/settings/useSettings';
 import { WhatsAppChoiceDialog } from '@/components/shared/WhatsAppChoiceDialog';
 import { PublicFloatingActions } from '@/components/photo/PublicFloatingActions';
 
-function PublicPhotoGrid({ photos, onPhotoClick }: { photos: Photo[]; onPhotoClick: (id: string) => void }) {
+function PublicPhotoGrid({ photos, categories, onPhotoClick }: { photos: Photo[]; categories?: Category[]; onPhotoClick: (id: string) => void }) {
   return (
     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1 sm:gap-2 p-1 sm:p-2 lg:p-4">
       {photos.map((photo) => (
@@ -23,6 +23,7 @@ function PublicPhotoGrid({ photos, onPhotoClick }: { photos: Photo[]; onPhotoCli
           photo={photo}
           onClick={() => onPhotoClick(photo.id)}
           hideGroupBadge={true}
+          sharedCategories={categories}
         />
       ))}
     </div>
@@ -105,7 +106,7 @@ export function PublicGroupDetailPage() {
         />
       </div>
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto relative overscroll-y-auto overscroll-x-none bg-slate-50">
-        <PublicPhotoGrid photos={photos} onPhotoClick={(id: string) => {
+        <PublicPhotoGrid photos={photos} categories={categories} onPhotoClick={(id: string) => {
              setPhotoId(id);
         }} />
 
