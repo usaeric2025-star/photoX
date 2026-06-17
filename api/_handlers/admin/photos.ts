@@ -1,6 +1,6 @@
 import { logger } from '../../_lib/logger.js';
 import { Hono } from 'hono';
-import { db, aiAuditLogs, systemLogs, furnitureItems } from '../../../src/db/index.js';
+import { db, aiAuditLogs, systemLogs, furnitureItems } from '../../_lib/db/index.js';
 import { eq, desc, inArray, sql, like } from "drizzle-orm";
 
 export const adminPhotos = new Hono();

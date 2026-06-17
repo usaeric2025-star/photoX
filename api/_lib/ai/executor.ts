@@ -1,7 +1,7 @@
 import { normalizeI18n } from "../../_shared/i18n.js";
 import { logger } from "../logger.js";
 import { extractJSON } from "./utils.js";
-import { db, aiAuditLogs } from '../../../src/db/index.js';
+import { db, aiAuditLogs } from '../../_lib/db/index.js';
 import { eq } from "drizzle-orm";
 
 interface AIProvider {

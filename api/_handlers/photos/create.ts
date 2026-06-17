@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { db, furnitureItems, systemLogs } from '../../../src/db/index.js';
+import { db, furnitureItems, systemLogs } from '../../_lib/db/index.js';
 import { syncGroupCoversAndCount } from '../../_lib/groups.js';
 
 export const createHandler = (app: Hono) => {

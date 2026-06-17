@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { type } from 'arktype';
-import { db, groups as groupsTable, furnitureItems } from '../../src/db/index.js';
+import { db, groups as groupsTable, furnitureItems } from '../_lib/db/index.js';
 import { eq, and, inArray, isNull, sql } from 'drizzle-orm';
 import { GroupReqSchema } from '../_shared/apiContractSchema.js';
 import { AppError } from '../_lib/error/AppError.js';

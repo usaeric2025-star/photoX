@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { type } from 'arktype';
-import { db, tags as tagsTable, photoTags } from '../../src/db/index.js';
+import { db, tags as tagsTable, photoTags } from '../_lib/db/index.js';
 import { eq, ilike, asc, inArray, sql, and, ne } from 'drizzle-orm';
 import { TagReqSchema } from '../_shared/apiContractSchema.js';
 

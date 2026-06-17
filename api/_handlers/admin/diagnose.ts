@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { sql } from 'drizzle-orm';
-import { db, furnitureItems, groups as groupsTable, categories as categoriesTable, manufacturers as manufacturersTable, photoTags as photoTagsTable, secrets as secretsTable } from '../../../src/db/index.js';
+import { db, furnitureItems, groups as groupsTable, categories as categoriesTable, manufacturers as manufacturersTable, photoTags as photoTagsTable, secrets as secretsTable } from '../../_lib/db/index.js';
 import { getR2Client } from "../../_lib/storage.js";
 import { getServerEnv } from "../../_shared/envSchema.js";
 import { diagnosticRegistry } from "../../_lib/diagnostics/registry.js";

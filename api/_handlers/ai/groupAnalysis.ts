@@ -1,5 +1,5 @@
 import { type } from 'arktype';
-import { db, furnitureItems } from '../../../src/db/index.js';
+import { db, furnitureItems } from '../../_lib/db/index.js';
 import { inArray } from 'drizzle-orm';
 import { getAIProvider } from '../../_lib/ai/providerFactory.js';
 import { extractJSON } from '../../_lib/ai/utils.js';

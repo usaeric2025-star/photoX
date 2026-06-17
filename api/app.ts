@@ -99,7 +99,7 @@ app.onError((err, c) => {
   // Persistent Logging to DB
   (async () => {
     try {
-      const { db, systemLogs } = await import("../src/db/index.js");
+      const { db, systemLogs } = await import('./_lib/db/index.js');
       await db.insert(systemLogs).values({
         message: `[API ERROR] ${appError.message}`,
         level: 'error',
@@ -214,7 +214,7 @@ app.post("/log-error", async (c) => {
         const body = await c.req.json();
         const traceId = c.req.header('X-Trace-Id') || 'backend-' + Math.random().toString(36).substring(2, 12);
         
-        const { db, systemLogs } = await import("../src/db/index.js");
+        const { db, systemLogs } = await import('./_lib/db/index.js');
         const { logger } = await import("./_lib/logger.js");
         
         const errorMessage = body.message || body.error_message || 'Unknown Frontend Error';

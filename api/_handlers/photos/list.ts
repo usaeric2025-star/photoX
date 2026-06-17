@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { type } from 'arktype';
-import { db, furnitureItems, groups as groupsTable, tags as tagsTable, photoTags } from '../../../src/db/index.js';
+import { db, furnitureItems, groups as groupsTable, tags as tagsTable, photoTags } from '../../_lib/db/index.js';
 import { eq, ne, and, or, ilike, sql, asc, desc, inArray, isNull, count, type SQL } from 'drizzle-orm';
 import { PhotoListReqSchema, ListByGroupReqSchema } from '../../_shared/apiContractSchema.js';
 import { errorFactory } from '../../_lib/error/AppError.js';

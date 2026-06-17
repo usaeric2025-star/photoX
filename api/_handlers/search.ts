@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { db, tags, categories, photoTags } from '../../src/db/index.js';
+import { db, tags, categories, photoTags } from '../_lib/db/index.js';
 import { ilike, inArray } from 'drizzle-orm';
 
 export const search = new Hono()

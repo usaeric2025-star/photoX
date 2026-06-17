@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { type } from 'arktype';
-import { db, categories as categoriesTable, furnitureItems } from '../../src/db/index.js';
+import { db, categories as categoriesTable, furnitureItems } from '../_lib/db/index.js';
 import { eq, asc, ne } from 'drizzle-orm';
 import { CategoryReqSchema } from '../_shared/apiContractSchema.js';
 
