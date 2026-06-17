@@ -35,11 +35,11 @@ export const PhotoEditSessionProvider = ({
     defaultValues: {
       ...photo,
       group_id: photo?.group_id ?? null,
-    } as any,
+    } as unknown as PhotoFormValues,
     values: {
       ...photo,
       group_id: photo?.group_id ?? null,
-    } as any,
+    } as unknown as PhotoFormValues,
   });
   
   const isDirty = form.formState.isDirty;
@@ -50,7 +50,7 @@ export const PhotoEditSessionProvider = ({
       const errors = form.formState.errors;
       console.warn('[PhotoEdit] Form Validation Failed:', errors);
       const firstError = Object.values(errors)[0];
-      const message = (firstError as any)?.message || '表单验证失败，请检查必填项 / Validation Failed';
+      const message = firstError?.message?.toString() || '表单验证失败，请检查必填项 / Validation Failed';
       showToast.error(message);
       return;
     }
@@ -70,15 +70,16 @@ export const PhotoEditSessionProvider = ({
         updates: sanitizedUpdates as any
       });
       onSuccess?.();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[PhotoEdit] Commit failed:', err);
+      const typedErr = err instanceof Error ? err : new Error(String(err));
       // Construct a copyable error summary
       const errorData = {
-        message: err.message,
-        traceId: (err as any).traceId,
+        message: typedErr.message,
+        traceId: (err as Record<string, unknown>).traceId,
         photoId,
         formValues: form.getValues(),
-        stack: (err as any).stack,
+        stack: typedErr.stack,
       };
       
       const errorString = JSON.stringify(errorData, null, 2);
@@ -98,7 +99,7 @@ export const PhotoEditSessionProvider = ({
   }, [photoId, form, updateMutation, onSuccess]);
   
   const discard = () => {
-    form.reset(photo as any);
+    form.reset((photo || {}) as unknown as PhotoFormValues);
   };
   
   // Do not return null to avoid blocking parent modal rendering

@@ -36,13 +36,13 @@ export function normalizeStoredUrl(url: string | undefined | null): string {
     return processedUrl;
 }
 
-export const mapTranslationField = (value: any) => {
+export const mapTranslationField = (value: unknown) => {
   if (typeof value === 'string') {
     return { zh: cleanTranslationPrefixes(value).trim(), en: '', ms: '' };
   } else if (value && typeof value === 'object') {
-    let obj = value as Record<string, any>;
-    if (obj.zh && typeof obj.zh === 'object' && ('zh' in obj.zh || 'en' in obj.zh || 'ms' in obj.zh)) {
-      obj = obj.zh;
+    let obj = value as Record<string, unknown>;
+    if (obj.zh && typeof obj.zh === 'object' && obj.zh !== null && ('zh' in obj.zh || 'en' in obj.zh || 'ms' in obj.zh)) {
+      obj = obj.zh as Record<string, unknown>;
     }
     return {
       zh: cleanTranslationPrefixes(String(obj.zh || '')).trim(),

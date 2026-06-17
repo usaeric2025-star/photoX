@@ -22,7 +22,7 @@ interface VirtualPhotoGridProps {
   ref?: React.Ref<VirtualGridHandle>;
   restoreKey?: string;
   categories?: Category[];
-  filters?: any;
+  filters?: Record<string, unknown> | null;
 }
 
 export const VirtualPhotoGrid = React.memo(({

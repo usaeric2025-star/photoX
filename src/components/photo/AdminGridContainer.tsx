@@ -1,6 +1,6 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React, { useRef, useState } from 'react';
-import { Photo } from '@/types';
+import { Photo, Category } from '@/types';
 import { VirtualPhotoGrid } from '@/components/photo/VirtualPhotoGrid';
 import { AdminPhotoCard } from '@/components/photo/AdminPhotoCard';
 import { 
@@ -59,10 +59,10 @@ export function AdminGridContainer() {
   const { can } = usePermission();
   const canPin = can('photo:toggle-pinned');
 
-  const virtualGridRef = useRef<any>(null);
+  const virtualGridRef = useRef<{ scrollToIndex: (index: number) => void } | null>(null);
   const scrollToTop = () => virtualGridRef.current?.scrollToIndex(0);
 
-  const renderCard = (photo: Photo, index: number, categories: any[]) => (
+  const renderCard = (photo: Photo, index: number, categories: Category[]) => (
     <AdminPhotoCard 
       key={`${photo.id}-${showGroupsCollapsed}`}
       photo={photo}

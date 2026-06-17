@@ -76,7 +76,7 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
           // Even though we're polling here, we store metadata so if we reload, JobResumer can take over
           const interval = setInterval(async () => {
             try {
-              const status: any = await action.getStatus?.(jobId);
+              const status = (await action.getStatus?.(jobId)) as { progress?: number; message?: string; status?: string; error?: string } | undefined | null;
               if (!status) return;
 
               setProgress(status.progress || 0);

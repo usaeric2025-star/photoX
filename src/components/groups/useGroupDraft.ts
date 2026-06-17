@@ -11,7 +11,7 @@ import { queryKeys } from '@/lib/query/keys';
 export const useGroupDraft = (
   activeGroupId: string | null,
   dbGroupPhotos: Photo[] | undefined,
-  onUpdatePhoto: (id: string, data: any) => Promise<any>
+  onUpdatePhoto: (id: string, data: Partial<Photo>) => Promise<unknown>
 ) => {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();

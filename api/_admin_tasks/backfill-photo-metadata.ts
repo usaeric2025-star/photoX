@@ -158,8 +158,8 @@ Your response MUST match this exact JSON schema:
           });
 
           if (response.ok) {
-            const resData: any = await response.json();
-            const content = resData.choices?.[0]?.message?.content || JSON.stringify(resData);
+            const resData = (await response.json()) as { choices?: { message?: { content?: string } }[] } | null | undefined;
+            const content = resData?.choices?.[0]?.message?.content || JSON.stringify(resData);
             
             let parsedRes: Record<string, unknown> | null = null;
             try {

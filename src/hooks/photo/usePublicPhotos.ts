@@ -94,14 +94,13 @@ export const usePublicPhotos = () => {
             categories,
             tags,
             {
+              showGroupsCollapsed: filters.showGroupsCollapsed,
               searchQuery: filters.search,
               categoryId: filters.category,
-              tagId: filters.tags?.[0],
-              sortOrder: filters.sort as any,
+              tagId: filters.tags?.[0] ?? null,
             },
             {
-              sortOrder: filters.sort as any,
-              showGroupsCollapsed: filters.showGroupsCollapsed,
+              sortOrder: filters.sort,
             },
             {
                 showGroupsCollapsed: filters.showGroupsCollapsed,

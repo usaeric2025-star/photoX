@@ -166,6 +166,11 @@ export function filterPhotos(
   return result;
 }
 
+interface PhotoWithSorting extends Photo {
+  _time?: number;
+  _groupCoverName?: string;
+}
+
 /**
  * Grouping and flattening logic
  */
@@ -186,18 +191,18 @@ export function groupPhotos(
       if (!groups.has(p.group_id)) groups.set(p.group_id, []);
       groups.get(p.group_id)?.push(p);
 
-      const time = (p as any)._time || (p.created_at ? new Date(p.created_at).getTime() : 0);
+      const time = (p as PhotoWithSorting)._time || (p.created_at ? new Date(p.created_at).getTime() : 0);
       const maxT = groupMaxTime.get(p.group_id) || 0;
       groupMaxTime.set(p.group_id, Math.max(maxT, time));
     }
   });
 
-  const reps: Photo[] = [];
+  const reps: PhotoWithSorting[] = [];
   const groupsSeen = new Set<string>();
 
   photos.forEach(p => {
     if (!p.group_id) {
-      reps.push(p);
+      reps.push(p as PhotoWithSorting);
     } else if (!groupsSeen.has(p.group_id)) {
       groupsSeen.add(p.group_id);
       const groupList = groups.get(p.group_id) || [];
@@ -207,26 +212,26 @@ export function groupPhotos(
       const maxTime = groupMaxTime.get(p.group_id) ?? 0;
 
       if (showGroupsCollapsed) {
-        const cover = {
+        const cover: PhotoWithSorting = {
           ...sorted[0],
           _time: maxTime,
           _groupCoverName: coverName
         };
-        reps.push(cover as any);
+        reps.push(cover);
       } else {
         sorted.forEach(member => {
           reps.push({
             ...member,
             _time: maxTime,
             _groupCoverName: coverName
-          } as any);
+          });
         });
       }
     }
   });
 
   // Final Sorting
-  reps.sort((a: any, b: any) => {
+  reps.sort((a: PhotoWithSorting, b: PhotoWithSorting) => {
     if (a.is_pinned && !b.is_pinned) return -1;
     if (!a.is_pinned && b.is_pinned) return 1;
     if (a.is_hidden && !b.is_hidden) return 1;
@@ -268,8 +273,15 @@ export function processPhotos(
   photos: Photo[],
   categories: Category[],
   tags: Tag[],
-  userFilters: any,
-  urlFilters: any,
+  userFilters: {
+    showGroupsCollapsed?: boolean;
+    searchQuery?: string;
+    categoryId?: string | null;
+    tagId?: string | null;
+  },
+  urlFilters: {
+    sortOrder?: 'newest' | 'oldest' | 'name';
+  },
   options: {
     showGroupsCollapsed?: boolean;
     isAdminModeOverride?: boolean;
@@ -278,7 +290,7 @@ export function processPhotos(
     catMap?: Map<string, string[]>;
   } = {}
 ) {
-  const showGroups = options.showGroupsCollapsed ?? userFilters.showGroupsCollapsed;
+  const showGroups = !!(options.showGroupsCollapsed ?? userFilters.showGroupsCollapsed);
   const isAdminMode = options.isAdminModeOverride ?? false;
   const bypassFilter = options.bypassFilter ?? false;
 
@@ -286,7 +298,7 @@ export function processPhotos(
   
   // Inject timestamps for sorting
   displayPhotos = displayPhotos.map(p => {
-    if ((p as any)._time) return p;
+    if ((p as PhotoWithSorting)._time) return p;
     return {
       ...p,
       _time: p.created_at ? new Date(p.created_at).getTime() : 0
@@ -302,7 +314,7 @@ export function processPhotos(
     }, tags, categories, options.tagMap, options.catMap);
   }
 
-  const gridPhotos = groupPhotos(displayPhotos, showGroups, urlFilters.sortOrder as any, undefined, isAdminMode);
+  const gridPhotos = groupPhotos(displayPhotos, showGroups, urlFilters.sortOrder || 'newest', undefined, isAdminMode);
 
   return { displayPhotos, gridPhotos };
 }

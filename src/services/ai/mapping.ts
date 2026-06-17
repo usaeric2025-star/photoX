@@ -12,8 +12,8 @@ export interface TranslatedField {
  * Handles both pre-translated objects and raw strings that need translation.
  */
 export async function mapAiToMultilingual(
-  rawName: any,
-  rawDesc: any
+  rawName: unknown,
+  rawDesc: unknown
 ): Promise<{ name: TranslatedField; description: TranslatedField }> {
   let nameObj: TranslatedField = { zh: '', en: '', ms: '' };
   let descObj: TranslatedField = { zh: '', en: '', ms: '' };
@@ -22,19 +22,21 @@ export async function mapAiToMultilingual(
   const isDescObj = rawDesc && typeof rawDesc === 'object';
 
   if (isNameObj && isDescObj) {
+    const nameData = rawName as Record<string, string>;
+    const descData = rawDesc as Record<string, string>;
     nameObj = {
-      zh: rawName.zh || '',
-      en: rawName.en || rawName.zh || '',
-      ms: rawName.ms || rawName.zh || ''
+      zh: nameData.zh || '',
+      en: nameData.en || nameData.zh || '',
+      ms: nameData.ms || nameData.zh || ''
     };
     descObj = {
-      zh: rawDesc.zh || '',
-      en: rawDesc.en || rawDesc.zh || '',
-      ms: rawDesc.ms || rawDesc.zh || ''
+      zh: descData.zh || '',
+      en: descData.en || descData.zh || '',
+      ms: descData.ms || descData.zh || ''
     };
   } else {
-    const nameStr = isNameObj ? (rawName.zh || '') : String(rawName || '');
-    const descStr = isDescObj ? (rawDesc.zh || '') : String(rawDesc || '');
+    const nameStr = isNameObj ? ((rawName as Record<string, string>).zh || '') : String(rawName || '');
+    const descStr = isDescObj ? ((rawDesc as Record<string, string>).zh || '') : String(rawDesc || '');
     
     if (!nameStr && !descStr) {
         return { name: nameObj, description: descObj };

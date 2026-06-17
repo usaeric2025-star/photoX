@@ -18,7 +18,7 @@ interface LogEntry {
   created_at: string;
   stack?: string;
   stack_trace?: string;
-  metadata?: any;
+  metadata?: Record<string, unknown> | null;
 }
 const LevelIcon = ({ level }: { level: ErrorLevel }) => {
   switch (level) {
@@ -133,7 +133,7 @@ export const ErrorLogViewer = () => {
             showToast.success('日志清理成功：当前无历史日志记录');
           }
       },
-      onError: (err: any) => {
+       onError: (err: Error) => {
           console.error('[ErrorLogViewer] Clear failed:', err);
           showToast.error(`清除失败: ${err.message}`);
       }

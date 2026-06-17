@@ -67,11 +67,18 @@ export const useAdminPhotos = () => {
         : rawPhotos.filter((p: Photo) => !processingIds.includes(p.id));
 
     const result = processPhotos(
-        photos as any,
+        photos,
         categories,
         tags,
-        filters as any,
-        filters as any,
+        {
+            showGroupsCollapsed: filters.showGroupsCollapsed,
+            searchQuery: filters.search,
+            categoryId: filters.category,
+            tagId: filters.tags && filters.tags.length > 0 ? filters.tags[0] : null,
+        },
+        {
+            sortOrder: filters.sort,
+        },
         {
             showGroupsCollapsed: filters.showGroupsCollapsed,
             isAdminModeOverride: isAdminMode,

@@ -1,5 +1,5 @@
 export const AI_PROMPTS = {
-    ANALYZE_PHOTO: (context: any) => `
+    ANALYZE_PHOTO: (context: { categories: unknown[]; tags: unknown[]; groups: unknown[] }) => `
 Analyze this furniture/home decor piece.
 Output JSON with:
 - name: { en, zh, ms } (Translate name to English, Chinese, and Malay/Bahasa Melayu)

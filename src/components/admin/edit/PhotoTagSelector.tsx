@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useDisclosure } from '@/hooks/core/useDisclosure';
-import { Control, useController, useFormContext } from "react-hook-form";
+import { Control, useController, useFormContext, FieldValues, Path, PathValue } from "react-hook-form";
 import { PromptDialog } from "@/components/ui/PromptDialog";
 import { TagEditor } from "../TagEditor";
 import { MAX_TAGS_PER_PHOTO } from "@/constants/limits";
@@ -13,8 +13,8 @@ interface BasePhotoTagSelectorProps {
   selectedTagIds: string[];
   onChange: (ids: string[]) => void;
   addTag: (name: string) => Promise<string | null>;
-  updateTag: (id: string, name: string) => Promise<any>;
-  deleteTag: (id: string) => Promise<any>;
+  updateTag: (id: string, name: string) => Promise<unknown>;
+  deleteTag: (id: string) => Promise<unknown>;
   tags: Tag[];
   hideHotLabel?: boolean;
 }
@@ -139,8 +139,8 @@ function BasePhotoTagSelector({
 interface PhotoTagSelectorProps {
   name: string;
   addTag: (name: string) => Promise<string | null>;
-  updateTag: (id: string, name: string) => Promise<any>;
-  deleteTag: (id: string) => Promise<any>;
+  updateTag: (id: string, name: string) => Promise<unknown>;
+  deleteTag: (id: string) => Promise<unknown>;
   tags: Tag[];
   control?: any;
   value?: (string | { id: string | number })[];
@@ -181,12 +181,17 @@ function ControlledPhotoTagSelector({
   const { field } = useController({
     name,
     control,
-    defaultValue: []
+    defaultValue: [] as any
   });
 
   return (
     <BasePhotoTagSelector
-      selectedTagIds={(field.value || []).map((v: any) => typeof v === 'object' ? String(v.id) : v)}
+      selectedTagIds={(field.value || []).map((v: unknown) => {
+        if (typeof v === 'object' && v !== null && 'id' in v) {
+          return String((v as { id: string | number }).id);
+        }
+        return String(v);
+      })}
       onChange={field.onChange}
       addTag={addTag}
       updateTag={updateTag}

@@ -6,6 +6,7 @@ import { useTranslation } from '@/hooks';
 import { Modal } from '@/components/ui/Modal';
 import { downloadPhotoAsJpeg } from '@/services/photo/downloadService';
 import { Edit } from 'lucide-react';
+import { Photo } from '@/types';
 import 'yet-another-react-lightbox/styles.css';
 import 'yet-another-react-lightbox/plugins/thumbnails.css';
 
@@ -19,7 +20,7 @@ interface YarlLightboxProps {
     description?: string;
     category?: string;
     tags?: string[];
-    photo?: any; // Raw database photo object
+    photo?: Photo; // Raw database photo object
   }>;
   currentIndex: number;
   onClose: () => void;
@@ -60,7 +61,7 @@ export function YarlLightbox({
   const currentItem = items[currentIndex];
 
   // 自定義工具欄按鈕
-  const toolbarButtons: any[] = [];
+  const toolbarButtons: React.ReactNode[] = [];
 
   // 如果是管理模式，且有編輯/onEdit 回調，就在頭部添加【編輯】按鈕
   if (isAdmin && onEdit && currentItem) {
@@ -225,7 +226,7 @@ export function YarlLightbox({
             <div className="flex flex-col gap-2">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1">{t.dimensionsTitle}</span>
               <div className="flex flex-col gap-2">
-                {currentItem.photo.dimensions.map((dim: any, idx: number) => {
+                {currentItem.photo.dimensions.map((dim: { length?: string | number | null; width?: string | number | null; height?: string | number | null; unit?: string | null; label?: string | null }, idx: number) => {
                   const parts = [
                     dim.length ? `${t.length}: ${dim.length}${dim.unit || 'cm'}` : null,
                     dim.width ? `${t.width}: ${dim.width}${dim.unit || 'cm'}` : null,

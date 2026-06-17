@@ -15,10 +15,11 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo
     if (!item) return {} as Photo;
     
     // Optimization: Create a tag map for O(1) lookup if it was passed
-    const tagCache = (allTags && (allTags as any)._map) || 
+    const tagMapContainer = allTags as (Tag[] & { _map?: Map<string, Tag> }) | undefined;
+    const tagCache = (tagMapContainer && tagMapContainer._map) || 
                    (allTags ? new Map(allTags.map(t => [String(t.id), t])) : null);
-    if (allTags && tagCache && !(allTags as any)._map) {
-        (allTags as any)._map = tagCache; // Attach for reuse in the same map loop
+    if (tagMapContainer && tagCache && !tagMapContainer._map) {
+        tagMapContainer._map = tagCache; // Attach for reuse in the same map loop
     }
 
     let storageId = item.id;
@@ -35,19 +36,20 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo
 
     const tags: Tag[] = [];
     if (Array.isArray(item.photo_tags)) {
-      item.photo_tags.forEach((pt: any) => {
-        if (pt) {
-            let tagId = pt.tag_id;
+      item.photo_tags.forEach((pt) => {
+        if (pt && typeof pt === 'object') {
+            const rawPt = pt as Record<string, unknown>;
+            let tagId = rawPt.tag_id;
             let tagName = '';
             
-            if (pt.tags) {
-                const rawTag = Array.isArray(pt.tags) ? pt.tags[0] : pt.tags;
+            if (rawPt.tags) {
+                const rawTag = (Array.isArray(rawPt.tags) ? rawPt.tags[0] : rawPt.tags) as Record<string, unknown> | null | undefined;
                 if (rawTag) {
                     tagId = rawTag.id || tagId;
                     tagName = getSafeText(rawTag.name);
                 }
             } else if (tagCache) {
-                const matchedTag = tagCache.get(String(pt.tag_id));
+                const matchedTag = tagCache.get(String(rawPt.tag_id));
                 if (matchedTag) {
                     tagName = matchedTag.name;
                 }
@@ -61,11 +63,12 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo
         }
       });
     } else if (Array.isArray(item.tags)) {
-      item.tags.forEach((t: any) => {
-        if (t) {
+      item.tags.forEach((t) => {
+        if (t && typeof t === 'object') {
+            const rawT = t as Record<string, unknown>;
             tags.push({
-                id: String(t.id),
-                name: getSafeText(t.name),
+                id: String(rawT.id),
+                name: getSafeText(rawT.name),
                 aliases: [],
             });
         }
@@ -84,10 +87,10 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo
       manual_code: item.manual_code || '',
       model_number: item.model_number || '',
       image_hash: item.image_hash || '',
-      name: item.name as any,
+      name: item.name as unknown as Photo['name'],
       category_id: item.category_id ? String(item.category_id) : null,
       manufacturer_id: item.manufacturer_id ? String(item.manufacturer_id) : null,
-      description: item.description as any,
+      description: item.description as unknown as Photo['description'],
       image_url: imageUrl,
       thumbnail_sm_url: getThumbnailUrl(imageUrl, 200, 200, item.image_hash || ''),
       thumbnail_md_url: getThumbnailUrl(imageUrl, 800, 800, item.image_hash || ''),
@@ -137,9 +140,9 @@ export function normalizeDimensionsBeforeSave(dimensions: Dimension[] | null | u
   validDims.forEach((dim) => {
     if (dim && typeof dim === 'object') {
         const maxVal = Math.max(Number(dim.length) || 0, Number(dim.width) || 0, Number(dim.height) || 0);
-        const validated = validateDimension({ ...dim, value: maxVal } as any);
+        const validated = validateDimension({ ...dim, value: maxVal } as unknown as Dimension);
         if (validated?.unit) {
-          dim.unit = validated.unit as any;
+          dim.unit = validated.unit;
         }
         dimensions.push(dim);
     }

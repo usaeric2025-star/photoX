@@ -161,7 +161,7 @@ adminPhotos.post("/delete-photos", async (c) => {
         const bucketName = process.env.R2_BUCKET_NAME;
         if (bucketName) {
           const fileKeys = photosData
-            .map((p: any) => {
+            .map((p: { image_url?: string | null }) => {
               if (!p.image_url) return null;
               try {
                 const url = new URL(p.image_url);
@@ -210,8 +210,9 @@ adminPhotos.get("/error-events", async (c) => {
             .limit(300);
         if (error) throw error;
         return c.json({ success: true, data });
-    } catch (e: any) {
-        return c.json({ success: false, error: e.message }, 500);
+    } catch (e: unknown) {
+        const err = e instanceof Error ? e : new Error(String(e));
+        return c.json({ success: false, error: err.message }, 500);
     }
 });
 
@@ -225,9 +226,10 @@ adminPhotos.post("/error-events-clear", async (c) => {
             .select('id');
         if (error) throw error;
         return c.json({ success: true, count: data?.length || 0 });
-    } catch (e: any) {
+    } catch (e: unknown) {
         logger.error('[Admin] Clear logs failed:', e);
-        return c.json({ success: false, error: e.message }, 500);
+        const err = e instanceof Error ? e : new Error(String(e));
+        return c.json({ success: false, error: err.message }, 500);
     }
 });
 
