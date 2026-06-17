@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { type } from 'arktype';
-import { db, furnitureItems, categories, tags, groups as groupsTable, groupCorrectionLogs, users } from '@/db/index';
+import { db, furnitureItems, categories, tags, groups as groupsTable, groupCorrectionLogs, users } from '../../src/db/index.js';
 import { eq, and, inArray, desc, sql } from 'drizzle-orm';
 import { getAIProvider, OpenRouterProvider, AgnesProvider, BaseAIProvider } from '../_lib/ai/providerFactory.js';
 import { executeAITask } from '../_lib/ai/executor.js';

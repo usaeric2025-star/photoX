@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { type } from 'arktype';
-import { db, furnitureItems } from '@/db/index';
+import { db, furnitureItems } from '../../../src/db/index.js';
 import { eq, and } from 'drizzle-orm';
 import { syncGroupCoversAndCount } from '../../_lib/groups.js';
 import { PhotoIdReqSchema } from '../../_shared/apiContractSchema.js';

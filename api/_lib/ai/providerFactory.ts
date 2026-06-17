@@ -1,7 +1,7 @@
 import { decrypt } from "../encryption.js";
 import { getServerEnv } from "../../_shared/envSchema.js";
 import { logger } from "../logger.js";
-import { db, secrets as secretsTable, settings as settingsTable } from "@/db/index";
+import { db, secrets as secretsTable, settings as settingsTable } from '../../../src/db/index.js';
 import { eq } from "drizzle-orm";
 
 export const getModel = async (customModel?: string, providerName?: string): Promise<string> => {

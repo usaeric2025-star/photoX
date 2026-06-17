@@ -2,7 +2,7 @@ import { logger } from '../_lib/logger.js';
 import { Hono } from "hono";
 import { S3Client, PutObjectCommand, ListObjectsV2Command, DeleteObjectCommand, CopyObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { db, systemLogs, furnitureItems } from "@/db/index";
+import { db, systemLogs, furnitureItems } from '../../src/db/index.js';
 import { eq } from "drizzle-orm";
 import { getServerEnv } from "../_shared/envSchema.js";
 import { getR2Client } from "../_lib/storage.js";

@@ -1,5 +1,5 @@
 import { logger } from './logger.js';
-import { db, furnitureItems, groups as groupsTable } from '@/db/index';
+import { db, furnitureItems, groups as groupsTable } from '../../src/db/index.js';
 import { eq, inArray, and, isNull } from 'drizzle-orm';
 
 /**

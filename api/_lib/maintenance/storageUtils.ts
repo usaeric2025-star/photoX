@@ -1,4 +1,4 @@
-import { db, furnitureItems } from "@/db/index";
+import { db, furnitureItems } from '../../../src/db/index.js';
 import { getR2Client } from "../storage.js";
 import { ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { getServerEnv } from "../../_shared/envSchema.js";

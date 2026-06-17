@@ -1,6 +1,6 @@
 import { logger } from '../../_lib/logger.js';
 import { Hono } from 'hono';
-import { db, secrets as secretsTable, settings as settingsTable } from "@/db/index";
+import { db, secrets as secretsTable, settings as settingsTable } from '../../../src/db/index.js';
 import { eq, inArray } from "drizzle-orm";
 import { encrypt } from '../../_lib/encryption.js';
 

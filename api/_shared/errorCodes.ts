@@ -1,1 +1,1 @@
-export * from '@/shared/errorCodes';
+export * from '../../src/shared/errorCodes.js';

@@ -1,6 +1,6 @@
 import { logger } from '../../_lib/logger.js';
 import { Hono } from 'hono';
-import { db, furnitureItems, groups as groupsTable, tags as tagsTable, photoTags as photoTagsTable, secrets as secretsTable } from "@/db/index";
+import { db, furnitureItems, groups as groupsTable, tags as tagsTable, photoTags as photoTagsTable, secrets as secretsTable } from '../../../src/db/index.js';
 import { eq, or, isNull, inArray, sql, not, and } from "drizzle-orm";
 import { getServerEnv } from "../../_shared/envSchema.js";
 import { getR2Client } from "../../_lib/storage.js";

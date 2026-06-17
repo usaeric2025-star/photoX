@@ -2,7 +2,7 @@ import { logger } from '../../_lib/logger.js';
 import { Hono } from "hono";
 import { type } from "arktype";
 import { requireRealUser } from "../../_lib/auth.js";
-import { db, furnitureItems } from "@/db/index";
+import { db, furnitureItems } from '../../../src/db/index.js';
 import { eq, or, isNull, inArray, sql } from "drizzle-orm";
 import { getServerEnv } from "../../_shared/envSchema.js";
 import { getR2Client } from "../../_lib/storage.js";

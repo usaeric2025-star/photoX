@@ -1,6 +1,6 @@
 import { logger } from '../../_lib/logger.js';
 import { Hono } from 'hono';
-import { db, systemLogs, aiAuditLogs, maintenanceJobs } from "@/db/index";
+import { db, systemLogs, aiAuditLogs, maintenanceJobs } from '../../../src/db/index.js';
 import { eq, lt } from "drizzle-orm";
 
 export const adminMaintenance = new Hono();
