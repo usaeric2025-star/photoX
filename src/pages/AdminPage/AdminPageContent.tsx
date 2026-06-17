@@ -45,12 +45,13 @@ export function AdminPageContent() {
   
   const currentScreen = (() => {
     if (path === '/admin' || path === '/admin/') return 'gallery';
-    if (path === '/admin/tasks') return 'tasks';
-    if (path === '/admin/error-logs') return 'error-logs';
-    if (path === '/admin/diagnose' || path === '/admin/diagnostics') return 'diagnose';
-    if (path === '/admin/settings') return 'settings';
-    if (path === '/admin/batch-edit') return 'batch';
-    if (path === '/admin/statistics') return 'dashboard';
+    if (path.startsWith('/admin/tasks')) return 'tasks';
+    if (path.startsWith('/admin/error-logs')) return 'error-logs';
+    if (path.startsWith('/admin/diagnose') || path.startsWith('/admin/diagnostics')) return 'diagnose';
+    if (path.startsWith('/admin/settings')) return 'settings';
+    if (path.startsWith('/admin/batch-edit')) return 'batch';
+    if (path.startsWith('/admin/statistics')) return 'dashboard';
+    if (path.startsWith('/admin/manage') || path.startsWith('/admin/structure') || path.startsWith('/admin/tags') || path.startsWith('/admin/ai_settings') || path.startsWith('/admin/ai')) return 'settings';
     return 'gallery';
   })();
 
@@ -58,7 +59,7 @@ export function AdminPageContent() {
 
   return (
     <AdminAuthGate>
-      <DataLoadingContainer isPending={isPhotosPending} hasData={true}>
+      <DataLoadingContainer isPending={isPhotosPending} hasData={photos && photos.length > 0}>
         <div className="flex flex-col h-screen bg-slate-50 overflow-hidden w-full relative">
           {(currentScreen === 'gallery') ? (
             <>

@@ -24,7 +24,12 @@ export function CategoriesSection({
 
       <div className="flex flex-wrap gap-2 p-3 bg-brand-navy/5 rounded-[28px] border border-brand-navy/10 shadow-inner min-h-[48px]">
         {categories.map(cat => {
-          const displayName = cat[appLang as keyof Pick<Category, 'zh' | 'en' | 'ms'>] || cat.name || '未命名分类';
+          let displayName = '未命名分类';
+          if (cat.name && typeof cat.name === 'object') {
+            displayName = (cat.name as any)[appLang] || (cat.name as any).zh || '未命名分类';
+          } else if (cat.name) {
+            displayName = String(cat.name);
+          }
           return (
             <div 
               key={cat.id} 

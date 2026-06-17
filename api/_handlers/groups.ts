@@ -133,9 +133,8 @@ export const groups = new Hono()
             await db.insert(groupsTable).values({
                 id: targetGroupId,
                 ...groupDataWithoutId,
-                userId: finalUserId,
                 createdAt: new Date()
-            });
+            } as any);
           } else {
             await db.update(groupsTable)
                 .set({ ...groupData, updatedAt: new Date() } as any)

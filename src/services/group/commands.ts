@@ -6,15 +6,13 @@ import { createGroupValidator } from '../../lib/validators/factory';
 import { cleanTranslationPrefixes } from '@/features/ai/safeText';
 import { ungroupPhotos, syncGroupMemberCount } from '@/services/photo/groupUtils';
 import { api } from '@/lib/api';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 const TABLE_NAME = 'groups';
 
 const mapToDb = (updates: any, userId?: string): Record<string, unknown> => {
     const dbUpdates: Record<string, unknown> = { ...updates };
     dbUpdates.updated_at = new Date().toISOString();
-    if (userId && !dbUpdates.user_id) {
-        dbUpdates.user_id = userId;
-    }
 
     if ('name' in dbUpdates) {
         const val = dbUpdates.name;
@@ -143,15 +141,13 @@ export const groupPhotos = async (
     let traceId: string | undefined;
     try {
       const parsed = JSON.parse(errorText);
-      if (parsed.error) msg = 'Group photos failed: ' + parsed.error;
+      if (parsed.error) {
+        msg = typeof parsed.error === 'object' ? JSON.stringify(parsed.error) : parsed.error;
+      }
       if (parsed.traceId) traceId = parsed.traceId;
     } catch (_) {}
     
-    const err = new Error(msg);
-    if (traceId) {
-      (err as any).traceId = traceId;
-    }
-    throw err;
+    throw ErrorFactory.wrap(new Error(msg), '分组照片', traceId);
   }
 
   return { newGroupId: targetGroupId };
