@@ -4,20 +4,20 @@ import {
   RefreshCw, ShieldCheck
 } from 'lucide-react';
 import { useDiagnostics } from '@/hooks/admin/useDiagnostics';
-import { diagnosticRegistry, type DiagnosticPlugin } from './registry';
-import { DiagnosticCard } from './DiagnosticCard';
-import { TasksContent } from './TasksList';
+import { diagnosticRegistry, type DiagnosticPlugin } from '@/features/diagnostics/registry';
+import { DiagnosticCard } from '@/features/diagnostics/DiagnosticCard';
+import { TasksContent } from '@/features/diagnostics/TasksList';
 import { Button } from '@/components/shared/Button';
 import { useUIStore } from '@/store/useUIStore';
 import { showToast } from '@/lib/ui/toast';
 import { handleError } from '@/lib/error/errorHandler';
 
 import { usePerformanceAudit } from '@/hooks/admin/usePerformanceAudit';
-import { ErrorLogViewer } from './ErrorLogViewer';
-import { DiagnosticStats } from './DiagnosticStats';
-import { AuditVisualizer } from './AuditVisualizer';
-import { IssueList } from './IssueList';
-import { MaintenanceCenter } from './MaintenanceCenter';
+import { ErrorLogViewer } from '@/features/diagnostics/ErrorLogViewer';
+import { DiagnosticStats } from '@/features/diagnostics/DiagnosticStats';
+import { AuditVisualizer } from '@/features/diagnostics/AuditVisualizer';
+import { IssueList } from '@/features/diagnostics/IssueList';
+import { MaintenanceCenter } from '@/features/diagnostics/MaintenanceCenter';
 
 /* Removed local DiagnosticPlugin interface declaration */
 

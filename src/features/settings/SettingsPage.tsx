@@ -21,14 +21,14 @@ import {
   useCategories, useTags, useManufacturers, usePhotos,
   useAdminCategory, useSettings, usePhotoCount
 } from '@/hooks';
-import { useSettingsLogic } from './useSettingsLogic';
+import { useSettingsLogic } from '@/features/settings/useSettingsLogic';
 import { SettingsTabs } from './SettingsTabs';
-import { SettingsHeader } from './SettingsHeader';
-import { GeneralSettings } from './GeneralSettings';
-import { AISettings } from './AISettings';
-import { SyncSettings } from './SyncSettings';
-import { TagsManager } from './TagsManager';
-import { CategoriesManager } from './CategoriesManager';
+import { SettingsHeader } from '@/features/settings/SettingsHeader';
+import { GeneralSettings } from '@/features/settings/GeneralSettings';
+import { AISettings } from '@/features/settings/AISettings';
+import { SyncSettings } from '@/features/settings/SyncSettings';
+import { TagsManager } from '@/features/settings/TagsManager';
+import { CategoriesManager } from '@/features/settings/CategoriesManager';
 import { DiagnosticsDashboard } from '@/features/diagnostics/DiagnosticsDashboard';
 import { translations } from '@/locales';
 

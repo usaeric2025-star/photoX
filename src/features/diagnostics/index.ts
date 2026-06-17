@@ -1,9 +1,9 @@
-export { DiagnosticsDashboard } from './DiagnosticsDashboard';
-export { MaintenanceCenter } from './MaintenanceCenter';
-export { IssueList } from './IssueList';
-export { AuditVisualizer } from './AuditVisualizer';
-export { DiagnosticCard } from './DiagnosticCard';
-export { TasksContent as TasksList } from './TasksList';
-export { ErrorLogViewer } from './ErrorLogViewer';
-export * from './registry';
-export * from './issueActions';
+export { DiagnosticsDashboard } from '@/features/diagnostics/DiagnosticsDashboard';
+export { MaintenanceCenter } from '@/features/diagnostics/MaintenanceCenter';
+export { IssueList } from '@/features/diagnostics/IssueList';
+export { AuditVisualizer } from '@/features/diagnostics/AuditVisualizer';
+export { DiagnosticCard } from '@/features/diagnostics/DiagnosticCard';
+export { TasksContent as TasksList } from '@/features/diagnostics/TasksList';
+export { ErrorLogViewer } from '@/features/diagnostics/ErrorLogViewer';
+export * from '@/features/diagnostics/registry';
+export * from '@/features/diagnostics/issueActions';
