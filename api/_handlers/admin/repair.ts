@@ -120,12 +120,14 @@ adminRepair.post("/", async (c) => {
              continue;
            }
 
-           const validCover = gPhotos.some((p) => String(p.id) === String(g.cover_photo_id));
-           const markedCover = gPhotos.some((p) => p.is_group_cover === true);
+           const coverPhotoInGroup = gPhotos.find((p) => String(p.id) === String(g.cover_photo_id));
+           const markedCovers = gPhotos.filter((p) => p.is_group_cover === true);
 
-           if (!g.cover_photo_id || !validCover || !markedCover) {
+           const isConsistent = coverPhotoInGroup && markedCovers.length === 1 && String(markedCovers[0].id) === String(g.cover_photo_id);
+
+           if (!isConsistent) {
              let targetCoverId = g.cover_photo_id;
-             const photoMarkedAsCover = gPhotos.find((p) => p.is_group_cover === true);
+             const photoMarkedAsCover = markedCovers[0] || coverPhotoInGroup;
              
              if (photoMarkedAsCover) {
                targetCoverId = String(photoMarkedAsCover.id);

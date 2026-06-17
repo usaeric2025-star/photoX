@@ -27,7 +27,7 @@ adminDiagnose.get("/", async (c) => {
           { data: ptData, error: ptErr },
         ] = await Promise.all([
           supabase.from("furniture_items").select("id, group_id, category_id, manufacturer_id, image_hash, image_url, thumb_hash, name, item_code, is_group_cover").abortSignal(controller.signal),
-          supabase.from("groups").select("id, name").abortSignal(controller.signal),
+          supabase.from("groups").select("id, name, cover_photo_id").abortSignal(controller.signal),
           supabase.from("categories").select("id").abortSignal(controller.signal),
           supabase.from("manufacturers").select("id").abortSignal(controller.signal),
           supabase.from("secrets").select("key").limit(1).abortSignal(controller.signal),

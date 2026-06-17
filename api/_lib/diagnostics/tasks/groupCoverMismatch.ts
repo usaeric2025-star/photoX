@@ -7,9 +7,12 @@ export const groupCoverMismatchTask: DiagnosticTask = {
     const inconsistentCovers = ctx.groups?.filter((g: Record<string, unknown>) => {
       const gPhotos = ctx.photos.filter((p: Record<string, unknown>) => String(p.group_id) === String(g.id));
       if (gPhotos.length === 0) return false;
-      const validCover = gPhotos.some((p: Record<string, unknown>) => p.id === g.cover_photo_id);
-      const markedCover = gPhotos.some((p: Record<string, unknown>) => p.is_group_cover === true);
-      return !g.cover_photo_id || !validCover || !markedCover;
+      const coverPhotoInGroup = gPhotos.find((p: Record<string, unknown>) => p.id === g.cover_photo_id);
+      if (!coverPhotoInGroup) return true;
+      const markedCovers = gPhotos.filter((p: Record<string, unknown>) => p.is_group_cover === true);
+      if (markedCovers.length !== 1) return true;
+      if (markedCovers[0].id !== g.cover_photo_id) return true;
+      return false;
     }) || [];
     
     if (inconsistentCovers.length === 0) return null;
