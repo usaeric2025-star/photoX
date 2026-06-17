@@ -9,7 +9,7 @@ import { LoadingScreen } from '@/components/ui/LoadingScreen';
 // Removed migrateStorage
 import { handleError } from './lib/error/errorHandler';
 import { logger } from '@/lib/logger';
-import { startAutoDiagnose } from '@/services/maintenance/autoDiagnose';
+import { startAutoDiagnose } from '@/features/diagnostics/autoDiagnose';
 import { useUIStore } from '@/store/useUIStore';
 
 export default function AppRoutes() {

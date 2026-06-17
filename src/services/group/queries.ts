@@ -1,7 +1,7 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { supabase } from '../../lib/supabase';
 import { ProductGroup } from '../../types';
-import { getSafeText } from '@/services/ai/safeText';
+import { getSafeText } from '@/features/ai/safeText';
 
 export const TABLE_NAME = 'groups';
 

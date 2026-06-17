@@ -1,6 +1,6 @@
 import { Category } from '@/types';
 import { TranslationType } from '@/locales';
-import { getSafeText } from '@/services/ai/safeText';
+import { getSafeText } from '@/features/ai/safeText';
 
 /**
  * Gets the translated name for a category with proper fallbacks.

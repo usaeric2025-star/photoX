@@ -2,7 +2,7 @@ import { supabase } from '../../lib/supabase';
 import { Tag, Photo, Dimension } from '../../types';
 import { safeArray } from '../../lib/utils';
 import { translations, TranslationType } from '@/locales';
-import { getSafeText } from '@/services/ai/safeText';
+import { getSafeText } from '@/features/ai/safeText';
 import { getTranslatedCategoryName } from '../category/utils';
 import { Category } from '@/types';
 import { generateId } from '@/lib/id';

@@ -3,7 +3,7 @@ import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import { useGroupData } from '../shared/hooks/useGroupData';
 import { Photo, Group } from '@/types';
 import { PublicPhotoCard } from '@/components/photo/PublicPhotoCard';
-import { YarlLightbox } from '@/components/lightbox/YarlLightbox';
+import { YarlLightbox } from '@/features/lightbox/YarlLightbox';
 import { useFilters, useTranslation, useCategories } from '@/hooks';
 import { getTranslatedCategoryName } from '@/services/category/utils';
 import { GroupHeader } from '../shared/components/GroupHeader';

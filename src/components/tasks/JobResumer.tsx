@@ -1,7 +1,7 @@
 import { useAuthStore } from '@/store/useAuthStore';
 import React, { useEffect, useRef } from 'react';
 import { useTasks, type BackgroundTask } from '@/hooks';
-import { ISSUE_ACTIONS } from "@/services/maintenance/issueActions";
+import { ISSUE_ACTIONS } from "@/features/diagnostics/issueActions";
 import { logger } from '@/lib/logger';
 
 /**

@@ -1,5 +1,5 @@
 import { getPathFromUrl } from '@/lib/utils';
-import { cleanTranslationPrefixes } from '@/services/ai/safeText';
+import { cleanTranslationPrefixes } from '@/features/ai/safeText';
 
 export const getThumbnailUrl = (imageUrl: string, width: number = 400, height: number = 400, imageHash?: string) => {
   const workerUrl = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_THUMBNAIL_WORKER_URL : undefined;

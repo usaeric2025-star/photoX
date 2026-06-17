@@ -1,4 +1,4 @@
-import { analyzeAndSavePhoto, autoGroupPhotos } from '@/services/ai/orchestration';
+import { analyzeAndSavePhoto, autoGroupPhotos } from '@/features/ai/orchestration';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { showToast } from '@/lib/ui/toast';

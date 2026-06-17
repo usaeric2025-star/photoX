@@ -4,7 +4,7 @@ import { useTaskExecutor, useInvalidatePhotos } from '@/hooks';
 import { showToast } from '@/lib/ui/toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query/keys';
-import { runBatchAnalysis } from '@/services/ai/orchestration';
+import { runBatchAnalysis } from '@/features/ai/orchestration';
 
 export function useAIBatchAnalysis() {
   const { runTask } = useTaskExecutor();

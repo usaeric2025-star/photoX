@@ -1,7 +1,7 @@
 import React from 'react';
 import { PackageSearch, CheckCircle2, CloudDownload, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/shared/Button';
-import { PreviewResult } from '@/services/maintenance/issueActions';
+import { PreviewResult } from '@/features/diagnostics/issueActions';
 
 interface AuditVisualizerProps {
   auditResult: PreviewResult | null;

@@ -5,7 +5,7 @@ import { showToast } from '@/lib/ui/toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTaskExecutor, useAdminMaintenance, useSettings, useCategories, useTags, useFilters } from '@/hooks';
 import { Tag } from '@/types';
-import { analyzePhoto } from '@/services/ai/commands';
+import { analyzePhoto } from '@/features/ai/commands';
 import { useUIStore } from '@/store';
 
 /**

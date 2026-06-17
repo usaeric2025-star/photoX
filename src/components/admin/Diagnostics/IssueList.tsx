@@ -1,7 +1,7 @@
 import React from 'react';
 import { ShieldAlert, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { MaintenanceTool } from './MaintenanceTool';
-import { ISSUE_ACTIONS } from '@/services/maintenance/issueActions';
+import { ISSUE_ACTIONS } from '@/features/diagnostics/issueActions';
 
 const severityColors = {
   P0: 'bg-red-50 text-red-600 border-red-100',

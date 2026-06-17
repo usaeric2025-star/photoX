@@ -3,7 +3,7 @@ import { Photo } from '@/types';
 import { thumbHashToDataURL } from '@/services/storage/thumbHash';
 import { ContractedImage } from './ContractedImage';
 import { ImageOff } from 'lucide-react';
-import { getSafeText } from '@/services/ai/safeText';
+import { getSafeText } from '@/features/ai/safeText';
 
 const loadedSrcCache = new Set<string>();
 

@@ -1,6 +1,6 @@
 import { SupabasePhotoRaw } from '@/types/supabase';
 import { Photo, Tag, Dimension } from '@/types';
-import { getSafeText } from '@/services/ai/safeText';
+import { getSafeText } from '@/features/ai/safeText';
 import { generateItemCode, validateDimension } from '../photo/utils';
 import { getThumbnailUrl, normalizeStoredUrl, mapTranslationField } from './utils';
 

@@ -1,5 +1,5 @@
 import { Manufacturer } from '@/types';
-import { getSafeText } from '@/services/ai/safeText';
+import { getSafeText } from '@/features/ai/safeText';
 
 /**
  * Gets the manufacturer name from the ID.
