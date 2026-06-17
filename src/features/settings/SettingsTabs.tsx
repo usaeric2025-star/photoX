@@ -1,5 +1,5 @@
 import React from 'react';
-import { DynamicIcon } from '../shared/DynamicIcon';
+import { DynamicIcon } from '@/components/shared/DynamicIcon';
 
 interface SettingsTabsProps {
   activeTab: string;

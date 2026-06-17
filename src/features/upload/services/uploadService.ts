@@ -1,6 +1,6 @@
 import { uploadSinglePhoto } from './upload/uploadOrchestrator';
 import { StandardError } from '@/lib/validators/protocol';
-import { Photo } from '../../types';
+import { Photo } from '@/types';
 import { extractErrorMessage } from '@/lib/error/errorHandler';
 
 export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: (s: string) => void): Promise<{ id: string; is_duplicate?: boolean }> => {

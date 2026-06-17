@@ -7,6 +7,29 @@ import { SupabaseClient } from '@supabase/supabase-js';
 
 const TABLE_NAME = 'furniture_items';
 
+async function getGroupCounts(supabase: SupabaseClient, groupIds: string[], includeHidden = false) {
+    let query = supabase
+        .from('furniture_items')
+        .select('group_id')
+        .in('group_id', groupIds);
+    
+    if (!includeHidden) {
+        query = query.eq('is_hidden', false);
+    }
+    
+    const { data, error } = await query;
+    if (error || !data) return new Map();
+
+    const counts = new Map<string, number>();
+    for (const item of data) {
+        if (item.group_id) {
+            const count = counts.get(item.group_id) || 0;
+            counts.set(item.group_id, count + 1);
+        }
+    }
+    return counts;
+}
+
 interface TagRow {
   id: string | number;
   name: string;
@@ -56,11 +79,11 @@ export const listHandler = (app: Hono) => {
     const hasTag = tagId !== undefined && tagId !== null && tagId !== '';
     const hasCat = categoryId !== undefined && categoryId !== null && categoryId !== '';
 
-    let query = supabase.from(TABLE_NAME).select(`*, photo_tags${hasTag ? '!inner' : ''}(tag_id), group:groups(id, name, cover_photo_id, member_count)`);
+    let query = supabase.from(TABLE_NAME).select(`*, photo_tags${hasTag ? '!inner' : ''}(tag_id), group:groups(id, name, cover_photo_id, status)`);
     
     // Filters
     if (hasTag && hasCat) {
-      query = supabase.from(TABLE_NAME).select('*, photo_tags!inner(tag_id), group:groups(id, name, cover_photo_id, member_count)');
+      query = supabase.from(TABLE_NAME).select('*, photo_tags!inner(tag_id), group:groups(id, name, cover_photo_id, status)');
       query = query.or(`category_id.eq.${categoryId},photo_tags.tag_id.eq.${tagId}`);
     } else {
       if (hasTag) {
@@ -116,6 +139,19 @@ export const listHandler = (app: Hono) => {
     if (error) return c.json({ success: false, error: error.message }, 500);
 
     // In-memory join for tags details to prevent database configuration issues
+    if (data && data.length > 0) {
+        const gIds = Array.from(new Set(data.filter((item: any) => item.group_id).map((item: any) => item.group_id))) as string[];
+        if (gIds.length > 0) {
+            const counts = await getGroupCounts(supabase, gIds, isAdminMode);
+            for (const item of data as Record<string, any>[]) {
+                if (Array.isArray(item.group)) item.group = item.group[0];
+                if (item.group && item.group.id) {
+                    item.group.member_count = counts.get(item.group.id) || 0;
+                }
+            }
+        }
+    }
+    
     if (data && data.length > 0 && tagRows && tagRows.length > 0) {
       const tagMap = new Map((tagRows as TagRow[]).map((t: TagRow) => [String(t.id), t.name]));
       for (const item of data as Record<string, unknown>[]) {
@@ -140,7 +176,7 @@ export const listHandler = (app: Hono) => {
     
     const { groupId, isAdminMode = false } = check;
     const supabase = await getSupabaseAdmin();
-    let query = supabase.from(TABLE_NAME).select('*, photo_tags(tag_id), group:groups(id, name, cover_photo_id, member_count)').eq('group_id', groupId);
+    let query = supabase.from(TABLE_NAME).select('*, photo_tags(tag_id), group:groups(id, name, cover_photo_id, status)').eq('group_id', groupId);
     if (!isAdminMode) query = query.not('is_hidden', 'eq', true);
     query = query.order('is_group_cover', { ascending: false }).order('is_hidden', { ascending: true, nullsFirst: true }).order('created_at', { ascending: false }).order('id', { ascending: true });
     const [queryRes, tagRows] = await Promise.all([
@@ -150,6 +186,19 @@ export const listHandler = (app: Hono) => {
     if (queryRes.error) return c.json({ success: false, error: queryRes.error.message }, 500);
 
     const data = queryRes.data as Record<string, unknown>[] || [];
+    if (data.length > 0) {
+        const gIds = Array.from(new Set(data.filter((item: any) => item.group_id).map((item: any) => item.group_id))) as string[];
+        if (gIds.length > 0) {
+            const counts = await getGroupCounts(supabase, gIds, isAdminMode);
+            for (const item of data as Record<string, any>[]) {
+                if (Array.isArray(item.group)) item.group = item.group[0];
+                if (item.group && item.group.id) {
+                    item.group.member_count = counts.get(item.group.id) || 0;
+                }
+            }
+        }
+    }
+    
     if (data.length > 0 && tagRows && tagRows.length > 0) {
       const tagMap = new Map((tagRows as TagRow[]).map((t: TagRow) => [String(t.id), t.name]));
       for (const item of data) {
@@ -177,7 +226,7 @@ export const listHandler = (app: Hono) => {
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
     let countQuery = supabase.from(TABLE_NAME).select('*', { count: 'exact', head: true }).eq('group_id', groupId);
-    let query = supabase.from(TABLE_NAME).select('*, photo_tags(tag_id), group:groups(id, name, cover_photo_id, member_count)').eq('group_id', groupId);
+    let query = supabase.from(TABLE_NAME).select('*, photo_tags(tag_id), group:groups(id, name, cover_photo_id, status)').eq('group_id', groupId);
     if (!isAdminMode) {
       countQuery = countQuery.not('is_hidden', 'eq', true); 
       query = query.not('is_hidden', 'eq', true);
@@ -194,6 +243,19 @@ export const listHandler = (app: Hono) => {
     if (queryRes.error) return c.json({ success: false, error: queryRes.error.message }, 500);
 
     const photos = queryRes.data as Record<string, unknown>[] || [];
+    if (photos.length > 0) {
+        const gIds = Array.from(new Set(photos.filter((item: any) => item.group_id).map((item: any) => item.group_id))) as string[];
+        if (gIds.length > 0) {
+            const counts = await getGroupCounts(supabase, gIds, isAdminMode);
+            for (const item of photos as Record<string, any>[]) {
+                if (Array.isArray(item.group)) item.group = item.group[0];
+                if (item.group && item.group.id) {
+                    item.group.member_count = counts.get(item.group.id) || 0;
+                }
+            }
+        }
+    }
+
     if (photos.length > 0 && tagRows && tagRows.length > 0) {
         const tagMap = new Map((tagRows as TagRow[]).map((t: TagRow) => [String(t.id), t.name]));
         for (const item of photos) {

@@ -11,7 +11,7 @@ import { logger } from '@/lib/logger';
 import { DataLoadingContainer } from '@/components/ui/DataLoadingContainer';
 import { BatchEditScreen } from '@/features/batch-edit/BatchEditScreen';
 import { StatisticsScreen } from '@/components/admin/StatisticsScreen';
-import { SettingsPage } from '@/components/settings/SettingsPage';
+import { SettingsPage } from '@/features/settings/SettingsPage';
 import { PhotoEditModal } from '@/components/admin/PhotoEditModal';
 import { useAIBatchAnalysis, useAdminPhotos } from '@/hooks';
 import { useUIStore, useShallow } from '@/store/useUIStore';

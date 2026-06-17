@@ -29,7 +29,7 @@ import { AISettings } from './AISettings';
 import { SyncSettings } from './SyncSettings';
 import { TagsManager } from './TagsManager';
 import { CategoriesManager } from './CategoriesManager';
-import { DiagnosticsDashboard } from '../admin/DiagnosticsDashboard';
+import { DiagnosticsDashboard } from '@/components/admin/DiagnosticsDashboard';
 import { translations } from '@/locales';
 
 import { usePhotoGallery } from '@/hooks/photo/usePhotoGallery';

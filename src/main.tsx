@@ -34,7 +34,7 @@ import { clientEnv } from './shared/envSchema';
 // Removed migration
 import { router } from './router/index';
 import { initChunkHandler } from '@/lib/chunkErrorHandler';
-import { dailyWorker } from './features/diagnostics/DailyWorker';
+import { dailyWorker } from '@/features/diagnostics/DailyWorker';
 
 console.log('[Sentry Initialization check] VITE_SENTRY_DSN:', import.meta.env.VITE_SENTRY_DSN, 'clientEnv:', clientEnv.VITE_SENTRY_DSN);
 

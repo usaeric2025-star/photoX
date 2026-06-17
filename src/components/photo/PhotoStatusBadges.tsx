@@ -50,7 +50,7 @@ export const PhotoStatusBadges = ({
         )}>
           <Layers size={10} strokeWidth={3} className={cn("shrink-0", isDraft ? "text-white/70" : "text-brand-gold")} />
           <span className="tracking-tighter uppercase">
-            {photo.group?.member_count && `${photo.group.member_count} `}
+            {typeof photo.group?.member_count === 'number' && `${photo.group.member_count} `}
             {isDraft ? ' (DRAFT)' : ''}
           </span>
         </div>

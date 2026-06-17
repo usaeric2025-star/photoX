@@ -3,7 +3,7 @@ import { logger } from '@/lib/logger';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { Photo } from '@/types';
 import { uploadToR2 } from './r2Client';
-import { upsertPhotoRecord, syncPhotoTagsInDB } from './dbCommands';
+import { upsertPhotoRecord, syncPhotoTagsInDB } from '@/services/photo/upload/dbCommands';
 import { mapToDb, normalizeDimensionsBeforeSave } from '@/services/photo/mappers';
 import { checkDuplicate, DuplicatePhotoError } from '@/services/photo/duplicateCheck';
 import { supabase } from '@/lib/supabase';

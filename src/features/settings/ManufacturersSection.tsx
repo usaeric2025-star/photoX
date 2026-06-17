@@ -3,7 +3,7 @@ import React from "react";
 import { Plus } from "lucide-react";
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { Manufacturer } from "../../types";
-import { ManufacturerItem } from "../admin/ManufacturerItem";
+import { ManufacturerItem } from '@/components/admin/ManufacturerItem';
 import { PromptDialog } from "@/components/ui/PromptDialog";
 
 import { normalizeManufacturerName } from "@/lib/utils";

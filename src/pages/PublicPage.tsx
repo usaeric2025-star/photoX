@@ -26,6 +26,8 @@ export default function PublicPage() {
     fetchNextPage,
     refetch,
     isRefreshing,
+    isError,
+    error,
     categories,
     tags,
     filters
@@ -118,6 +120,31 @@ export default function PublicPage() {
       onClick={() => handlePhotoClick(photo.id)}
     />
   );
+
+  if (isError) {
+    return (
+      <div className="flex flex-col h-full w-full bg-slate-50">
+        <PublicHeader totalCount={0} onRefresh={handleRefresh} isRefreshing={false} />
+        <div className="flex-1 flex items-center justify-center p-8">
+           <ErrorBoundary fallback={null}>
+              <div className="text-center space-y-4">
+                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 text-red-600 mb-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                 </div>
+                 <h2 className="text-xl font-bold text-slate-900">加载失败 / Load Failed</h2>
+                 <p className="text-slate-500 max-w-xs mx-auto">{(error as any)?.message || '无法加载照片，请检查网络连接或稍后再试。'}</p>
+                 <button 
+                   onClick={() => refetch()}
+                   className="px-6 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors"
+                 >
+                   重试 / Retry
+                 </button>
+              </div>
+           </ErrorBoundary>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full w-full bg-slate-50" id="public-view">

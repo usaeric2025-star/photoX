@@ -1,6 +1,6 @@
 import { logger } from '@/lib/logger';
 import { api } from '@/lib/api';
-import { Photo } from '../../types';
+import { Photo } from '@/types';
 
 import { supabase } from '@/lib/supabase';
 import { DB_CONFIG } from '@/constants/config';

@@ -64,7 +64,7 @@ export interface Photo {
       name: string;
       color: string | null;
       cover_photo_id: string | null;
-      member_count?: number;
+      member_count?: number; // Calculated, not persisted
       status?: 'draft' | 'confirmed' | 'rejected';
   } | null;
   categoryName: string;

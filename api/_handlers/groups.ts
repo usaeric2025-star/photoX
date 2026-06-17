@@ -21,7 +21,7 @@ export const groups = new Hono()
         .single();
     if (error) {
       const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-      import('./logger.js').then(({ logger }) => logger.error("[Groups] Insert group failed", { error: error.message, traceId }));
+      import('../_lib/logger.js').then(({ logger }) => logger.error("[Groups] Insert group failed", { error: error.message, traceId }));
       return c.json({ success: false, error: error.message, traceId }, 500);
     }
     return c.json({ success: true, data });
@@ -44,7 +44,7 @@ export const groups = new Hono()
         .single();
     if (error) {
       const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-      import('./logger.js').then(({ logger }) => logger.error("[Groups] Update group failed", { error: error.message, id, traceId }));
+      import('../_lib/logger.js').then(({ logger }) => logger.error("[Groups] Update group failed", { error: error.message, id, traceId }));
       return c.json({ success: false, error: error.message, traceId }, 500);
     }
     return c.json({ success: true, data });
@@ -55,7 +55,7 @@ export const groups = new Hono()
     const { error } = await supabase.from(TABLE_NAME).upsert(dbUpdates, { onConflict: 'id' });
     if (error) {
       const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-      import('./logger.js').then(({ logger }) => logger.error("[Groups] Upsert failed", { error: error.message, traceId }));
+      import('../_lib/logger.js').then(({ logger }) => logger.error("[Groups] Upsert failed", { error: error.message, traceId }));
       return c.json({ success: false, error: error.message, traceId }, 500);
     }
     return c.json({ success: true });
@@ -70,7 +70,7 @@ export const groups = new Hono()
         .eq('id', id);
     if (error) {
       const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-      import('./logger.js').then(({ logger }) => logger.error("[Groups] Delete failed", { error: error.message, id, traceId }));
+      import('../_lib/logger.js').then(({ logger }) => logger.error("[Groups] Delete failed", { error: error.message, id, traceId }));
       return c.json({ success: false, error: error.message, traceId }, 500);
     }
     return c.json({ success: true });
@@ -120,11 +120,12 @@ export const groups = new Hono()
 
       let err;
       if (!checkData) {
+        const { id: _, ...groupDataWithoutId } = groupData as any;
         const insertData: Record<string, unknown> = {
           id: targetGroupId,
           is_hidden: false,
           created_at: new Date().toISOString(),
-          ...groupData
+          ...groupDataWithoutId
         };
         
         let finalUserId = (userId !== 'staff' && userId) ? userId : dbUserId;
@@ -147,7 +148,7 @@ export const groups = new Hono()
       }
       if (err) {
         const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-        import('./logger.js').then(({ logger }) => logger.error("[groupPhotos] Group DB operation failed", { error: err.message, traceId }));
+        import('../_lib/logger.js').then(({ logger }) => logger.error("[groupPhotos] Group DB operation failed", { error: err.message, traceId }));
         return c.json({ success: false, error: err.message, traceId }, 500);
       }
 
@@ -161,7 +162,7 @@ export const groups = new Hono()
           .in('id', ungroupedValidIds);
         if (error) {
           const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-          import('./logger.js').then(({ logger }) => logger.error("[groupPhotos] Photo group_id update failed", { error: error.message, traceId, ungroupedValidIds }));
+          import('../_lib/logger.js').then(({ logger }) => logger.error("[groupPhotos] Photo group_id update failed", { error: error.message, traceId, ungroupedValidIds }));
           return c.json({ success: false, error: error.message, traceId }, 500);
         }
       }
@@ -178,7 +179,7 @@ export const groups = new Hono()
           
         if (moveError) {
           const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-          import('./logger.js').then(({ logger }) => logger.error("[groupPhotos] Explicit move of group members failed", { error: moveError.message, traceId, sourceGroupIds, targetGroupId }));
+          import('../_lib/logger.js').then(({ logger }) => logger.error("[groupPhotos] Explicit move of group members failed", { error: moveError.message, traceId, sourceGroupIds, targetGroupId }));
           // We continue to try the RPC as a fallback or extra measure
         }
 
@@ -189,7 +190,7 @@ export const groups = new Hono()
         });
         if (rpcError) {
           const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-          import('./logger.js').then(({ logger }) => logger.error("[groupPhotos] Merge RPC call failed", { error: rpcError.message, traceId, sourceGroupIds, targetGroupId }));
+          import('../_lib/logger.js').then(({ logger }) => logger.error("[groupPhotos] Merge RPC call failed", { error: rpcError.message, traceId, sourceGroupIds, targetGroupId }));
           // If the explicit move worked, we might not need to fail here, but let's be cautious
         }
       }
@@ -226,7 +227,7 @@ export const groups = new Hono()
     });
     if (error) {
       const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-      import('./logger.js').then(({ logger }) => logger.error("[movePhotos] RPC move_photos_to_group failed", { error: error.message, traceId, photoIds, targetGroupId }));
+      import('../_lib/logger.js').then(({ logger }) => logger.error("[movePhotos] RPC move_photos_to_group failed", { error: error.message, traceId, photoIds, targetGroupId }));
       return c.json({ success: false, error: error.message, traceId }, 500);
     }
 
@@ -250,7 +251,7 @@ export const groups = new Hono()
     const { error } = await supabase.from('groups').update({ cover_photo_id: photoId || null }).eq('id', groupId);
     if (error) {
       const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-      import('./logger.js').then(({ logger }) => logger.error("[setCover] Cover image update failed on groups table", { error: error.message, traceId, photoId, groupId }));
+      import('../_lib/logger.js').then(({ logger }) => logger.error("[setCover] Cover image update failed on groups table", { error: error.message, traceId, photoId, groupId }));
       return c.json({ success: false, error: error.message, traceId }, 500);
     }
 
@@ -271,7 +272,7 @@ export const groups = new Hono()
     const { error } = await supabase.rpc('dissolve_group', { group_id: groupId });
     if (error) {
       const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-      import('./logger.js').then(({ logger }) => logger.error("[ungroup] Dissolve group RPC failed", { error: error.message, traceId, groupId }));
+      import('../_lib/logger.js').then(({ logger }) => logger.error("[ungroup] Dissolve group RPC failed", { error: error.message, traceId, groupId }));
       return c.json({ success: false, error: error.message, traceId }, 500);
     }
     return c.json({ success: true });
@@ -295,7 +296,7 @@ export const groups = new Hono()
     const { data: groups, error: groupsError } = await supabase.from('groups').select('id');
     if (groupsError) {
       const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-      import('./logger.js').then(({ logger }) => logger.error("[repairIntegrity] Fetch groups failed", { error: groupsError.message, traceId }));
+      import('../_lib/logger.js').then(({ logger }) => logger.error("[repairIntegrity] Fetch groups failed", { error: groupsError.message, traceId }));
       return c.json({ success: false, error: groupsError.message, traceId }, 500);
     }
 

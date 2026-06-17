@@ -120,6 +120,8 @@ export const usePublicPhotos = () => {
         fetchNextPage: infinitePhotosQuery.fetchNextPage,
         refetch: () => infinitePhotosQuery.refetch(),
         isRefreshing: infinitePhotosQuery.isRefetching,
+        isError: infinitePhotosQuery.isError,
+        error: infinitePhotosQuery.error,
         categories,
         tags,
         filters
