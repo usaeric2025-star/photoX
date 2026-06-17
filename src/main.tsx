@@ -36,6 +36,8 @@ import { router } from './router/index';
 import { initChunkHandler } from '@/lib/chunkErrorHandler';
 import { dailyWorker } from './services/maintenance/DailyWorker';
 
+console.log('[Sentry Initialization check] VITE_SENTRY_DSN:', import.meta.env.VITE_SENTRY_DSN, 'clientEnv:', clientEnv.VITE_SENTRY_DSN);
+
 if (clientEnv.VITE_SENTRY_DSN) {
   Sentry.init({
     dsn: clientEnv.VITE_SENTRY_DSN,

@@ -13,6 +13,11 @@
   --color-brand-purple-bg: #F3E8FF;
   --font-sans: "Inter", "Noto Sans SC", ui-sans-serif, system-ui, sans-serif;
 
+  /* Z-index positions */
+  --z-sticky: 40;
+  --z-dropdown: 50;
+  --z-loading: 100;
+
   /* 自定义呼吸动画 */
   @keyframes breathing {
     0%, 100% { transform: scale(1); opacity: 0.95; box-shadow: 0 0 0px rgba(212, 168, 83, 0); }

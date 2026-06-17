@@ -160,7 +160,7 @@ export const SelectionToolbar = memo(function SelectionToolbar({
   }
 
   return (
-    <div className={`flex items-center gap-4 py-1.5 px-4 bg-white border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] animate-in fade-in slide-in-from-bottom-2 duration-300 ${className}`}>
+    <div className={`flex items-center gap-4 py-1.5 px-4 bg-white border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] animate-in fade-in slide-in-from-bottom-2 duration-300 pb-16 sm:pb-1.5 ${className}`}>
       <div className="flex items-center gap-3">
         <SelectionModeToggle />
         <SelectionCounter count={selectedCount} total={totalItems} />

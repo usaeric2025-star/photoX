@@ -106,7 +106,13 @@ export function AdminHeader({}: AdminHeaderProps) {
           
           {/* 选择模式/多选 按钮 */}
           <button
-            onClick={() => update({ isMultiSelect: !isMultiSelect })}
+            onClick={() => {
+              if (isMultiSelect) {
+                update({ isMultiSelect: false, selectedIds: [] });
+              } else {
+                update({ isMultiSelect: true });
+              }
+            }}
             className={`w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 border ${
               isMultiSelect 
                 ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700 shadow-sm' 

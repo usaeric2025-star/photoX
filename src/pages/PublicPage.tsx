@@ -10,7 +10,7 @@ import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { useColumns } from '@/features/layout/hooks/useColumns';
 import { logger } from '@/lib/logger';
 import { PublicPhotoCard } from '@/components/photo/PublicPhotoCard';
-import { LazyYarlLightbox as YarlLightbox } from '@/components/lightbox/LazyYarlLightbox';
+import { YarlLightbox } from '@/components/lightbox/YarlLightbox';
 import { useUIStore } from '@/store/useUIStore';
 import { useSettings } from '@/hooks/settings/useSettings';
 import { WhatsAppChoiceDialog } from '@/components/shared/WhatsAppChoiceDialog';

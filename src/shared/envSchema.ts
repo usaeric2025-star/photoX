@@ -37,6 +37,10 @@ export const serverEnvSchema = type({
   // Gemini AI
   "GEMINI_API_KEY?": "string",
   
+  // Sentry
+  "SENTRY_DSN?": "string",
+  "VITE_SENTRY_DSN?": "string",
+  
   // Other flags
   "VERCEL?": "string | undefined",
   "DISABLE_HMR?": "string | undefined"
