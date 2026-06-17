@@ -16,6 +16,7 @@ if (!connectionString) {
 
 const client = postgres(connectionString || '', {
   max: 1,
+  prepare: false,
   onnotice: () => {},
 });
 

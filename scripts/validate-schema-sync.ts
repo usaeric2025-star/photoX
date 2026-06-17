@@ -66,19 +66,37 @@ function main() {
     // Some mapping logic (e.g. userId vs user_id)
     const validMappings: Record<string, string> = {
         'userId': 'userId',
+        'user_id': 'userId',
         'categoryId': 'categoryId',
+        'category_id': 'categoryId',
         'manufacturerId': 'manufacturerId',
+        'manufacturer_id': 'manufacturerId',
         'groupId': 'groupId',
+        'group_id': 'groupId',
         'isGroupCover': 'isGroupCover',
+        'is_group_cover': 'isGroupCover',
         'isPinned': 'isPinned',
+        'is_pinned': 'isPinned',
         'imageUrl': 'imageUrl',
+        'image_url': 'imageUrl',
         'thumbHash': 'thumbHash',
+        'thumb_hash': 'thumbHash',
         'isHidden': 'isHidden',
+        'is_hidden': 'isHidden',
         'itemCode': 'itemCode',
+        'item_code': 'itemCode',
         'manualCode': 'manualCode',
+        'manual_code': 'manualCode',
         'modelNumber': 'modelNumber',
+        'model_number': 'modelNumber',
         'updatedAt': 'updatedAt',
-        'createdAt': 'createdAt'
+        'updated_at': 'updatedAt',
+        'createdAt': 'createdAt',
+        'created_at': 'createdAt',
+        'description_translations': 'descriptionTranslations',
+        'descriptionTranslations': 'descriptionTranslations',
+        'group_order': 'groupOrder',
+        'groupOrder': 'groupOrder'
     };
 
     const finalMissing = missingInDrizzle.filter(f => !validMappings[f] || !drizzleFields.has(validMappings[f]));

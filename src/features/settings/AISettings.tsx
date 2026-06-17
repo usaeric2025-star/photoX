@@ -1,0 +1,21 @@
+import React from 'react';
+import { AISecuritySection } from './AISecuritySection';
+import { AppSettings } from '@/types';
+
+interface AISettingsProps {
+  agnesApiKey: string | undefined;
+  setAgnesApiKey: (key: string) => void;
+  customModel: string;
+  testConnection: () => Promise<void>;
+  testResult: { success?: boolean; error?: string; loading?: boolean } | null;
+  accessPasscode: string;
+  setAccessPasscode: (code: string) => void;
+  setSettingField: <K extends keyof AppSettings>(field: K, value: AppSettings[K]) => void;
+  cardClass: string;
+  inputClass: string;
+}
+
+export function AISettings(props: AISettingsProps) {
+  const { agnesApiKey, customModel, ...rest } = props;
+  return <AISecuritySection {...rest} agnesApiKey={agnesApiKey || ''} customModel={customModel || ''} />;
+};

@@ -14,6 +14,7 @@ export const OptimizedImage = ({
   className = '', 
   ...props 
 }: OptimizedImageProps) => {
+  if (!src || src.trim() === '') return null;
   return (
     <picture>
       <source srcSet={src.includes('?') ? `${src}&format=avif` : `${src}?format=avif`} type="image/avif" />

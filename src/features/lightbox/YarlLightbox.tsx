@@ -174,12 +174,14 @@ export function YarlLightbox({
         <div className="flex flex-col gap-4">
           {/* 頂部縮圖預覽卡 */}
           <div className="flex items-center gap-4 bg-slate-50 p-3 rounded-2xl border border-slate-100">
-            <img 
-              src={currentItem?.thumbnail || currentItem?.src} 
-              alt={currentItem?.title}
-              className="w-16 h-16 rounded-xl object-cover border border-slate-200 shrink-0" 
-              referrerPolicy="no-referrer"
-            />
+            {(currentItem?.thumbnail || currentItem?.src) ? (
+              <img 
+                src={currentItem?.thumbnail || currentItem?.src} 
+                alt={currentItem?.title}
+                className="w-16 h-16 rounded-xl object-cover border border-slate-200 shrink-0" 
+                referrerPolicy="no-referrer"
+              />
+            ) : null}
             <div className="flex flex-col">
               <span className="text-xs text-slate-400 font-mono">{t.sysCode}: {currentItem?.photo?.item_code || '-'}</span>
               <h3 className="text-sm font-bold text-slate-900 leading-tight">{currentItem?.title}</h3>

@@ -14,6 +14,17 @@ export const ALLOWED_FIELDS = [
 export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo {
     if (!item) return {} as Photo;
     
+    // Helper to gracefully read either snake_case (direct PG/Supabase client) or camelCase (Hono/Drizzle mapping) keys
+    const getValue = <T>(snakeKey: string, camelKey: string, fallback?: T): T => {
+      if (item[snakeKey as keyof SupabasePhotoRaw] !== undefined) {
+        return item[snakeKey as keyof SupabasePhotoRaw] as unknown as T;
+      }
+      if ((item as any)[camelKey] !== undefined) {
+        return (item as any)[camelKey] as unknown as T;
+      }
+      return fallback as T;
+    };
+
     // Optimization: Create a tag map for O(1) lookup if it was passed
     const tagMapContainer = allTags as (Tag[] & { _map?: Map<string, Tag> }) | undefined;
     const tagCache = (tagMapContainer && tagMapContainer._map) || 
@@ -22,10 +33,11 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo
         tagMapContainer._map = tagCache; // Attach for reuse in the same map loop
     }
 
+    const rawImageUrl = getValue<string>('image_url', 'imageUrl', '');
     let storageId = item.id;
-    if (item.image_url) {
+    if (rawImageUrl) {
       try {
-        const parts = item.image_url.split('/');
+        const parts = rawImageUrl.split('/');
         const lastPart = parts[parts.length - 1];
         if (lastPart) {
           storageId = lastPart.split('.')[0];
@@ -35,11 +47,14 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo
     }
 
     const tags: Tag[] = [];
-    if (Array.isArray(item.photo_tags)) {
-      item.photo_tags.forEach((pt) => {
+    const rawPhotoTags = getValue<any>('photo_tags', 'photoTags');
+    const rawTags = getValue<any>('tags', 'tags');
+
+    if (Array.isArray(rawPhotoTags)) {
+      rawPhotoTags.forEach((pt) => {
         if (pt && typeof pt === 'object') {
             const rawPt = pt as Record<string, unknown>;
-            let tagId = rawPt.tag_id;
+            let tagId = rawPt.tag_id ?? rawPt.tagId;
             let tagName = '';
             
             if (rawPt.tags) {
@@ -49,7 +64,7 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo
                     tagName = getSafeText(rawTag.name);
                 }
             } else if (tagCache) {
-                const matchedTag = tagCache.get(String(rawPt.tag_id));
+                const matchedTag = tagCache.get(String(tagId));
                 if (matchedTag) {
                     tagName = matchedTag.name;
                 }
@@ -62,8 +77,8 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo
             });
         }
       });
-    } else if (Array.isArray(item.tags)) {
-      item.tags.forEach((t) => {
+    } else if (Array.isArray(rawTags)) {
+      rawTags.forEach((t) => {
         if (t && typeof t === 'object') {
             const rawT = t as Record<string, unknown>;
             tags.push({
@@ -75,30 +90,34 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo
       });
     }
 
-    const imageUrl = normalizeStoredUrl(item.image_url || '');
+    const imageUrl = normalizeStoredUrl(rawImageUrl);
     
     const manufacturerName = ''; // Handled by caller/hooks
     const categoryName = ''; // Handled by caller/hooks
 
+    const imageHash = getValue<string>('image_hash', 'imageHash', '');
+    const createdAtVal = getValue<string>('created_at', 'createdAt') || new Date().toISOString();
+    const updatedAtVal = getValue<string>('updated_at', 'updatedAt') || createdAtVal;
+
     return {
       id: String(item.id),
       storage_id: storageId,
-      item_code: item.item_code || '',
-      manual_code: item.manual_code || '',
-      model_number: item.model_number || '',
-      image_hash: item.image_hash || '',
+      item_code: getValue<string>('item_code', 'itemCode', ''),
+      manual_code: getValue<string>('manual_code', 'manualCode', ''),
+      model_number: getValue<string>('model_number', 'modelNumber', ''),
+      image_hash: imageHash,
       name: item.name as unknown as Photo['name'],
-      category_id: item.category_id ? String(item.category_id) : null,
-      manufacturer_id: item.manufacturer_id ? String(item.manufacturer_id) : null,
+      category_id: getValue<string | null>('category_id', 'categoryId', null),
+      manufacturer_id: getValue<string | null>('manufacturer_id', 'manufacturerId', null),
       description: item.description as unknown as Photo['description'],
       image_url: imageUrl,
-      thumbnail_sm_url: getThumbnailUrl(imageUrl, 200, 200, item.image_hash || ''),
-      thumbnail_md_url: getThumbnailUrl(imageUrl, 800, 800, item.image_hash || ''),
-      thumb_hash: item.thumb_hash || '',
-      exif_data: item.exif_data ?? null,
-      created_at: item.created_at || new Date().toISOString(),
-      updated_at: item.updated_at || item.created_at || new Date().toISOString(),
-      group_id: item.group_id ? String(item.group_id) : undefined,
+      thumbnail_sm_url: getThumbnailUrl(imageUrl, 200, 200, imageHash),
+      thumbnail_md_url: getThumbnailUrl(imageUrl, 800, 800, imageHash),
+      thumb_hash: getValue<string>('thumb_hash', 'thumbHash', ''),
+      exif_data: getValue<Record<string, unknown> | null>('exif_data', 'exifData', null),
+      created_at: createdAtVal,
+      updated_at: updatedAtVal,
+      group_id: getValue<string | null>('group_id', 'groupId', null) || undefined,
       group: item.group ? {
           id: item.group.id,
           name: getSafeText(item.group.name),
@@ -106,16 +125,16 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo
           cover_photo_id: item.group.cover_photo_id,
           member_count: (item.group as any).member_count,
       } : null,
-      is_group_cover: !!item.is_group_cover,
-      is_hidden: !!item.is_hidden,
-      is_pinned: !!item.is_pinned,
-      is_analyzing: !!item.is_analyzing,
-      group_order: item.group_order,
-      user_id: item.user_id ? String(item.user_id) : undefined,
+      is_group_cover: !!getValue<boolean>('is_group_cover', 'isGroupCover', false),
+      is_hidden: !!getValue<boolean>('is_hidden', 'isHidden', false),
+      is_pinned: !!getValue<boolean>('is_pinned', 'isPinned', false),
+      is_analyzing: !!getValue<boolean>('is_analyzing', 'isAnalyzing', false),
+      group_order: getValue<number | undefined>('group_order', 'groupOrder'),
+      user_id: getValue<string | undefined>('user_id', 'userId'),
       uri: imageUrl,
-      price: item.price ? String(item.price) : '',
+      price: getValue<string>('price', 'price', ''),
       tags: tags,
-      dimensions: Array.isArray(item.dimensions) ? (item.dimensions as Photo['dimensions']) : [],
+      dimensions: Array.isArray(getValue<any[]>('dimensions', 'dimensions', [])) ? (getValue<any[]>('dimensions', 'dimensions', []) as Photo['dimensions']) : [],
       categoryName,
       manufacturerName
     };

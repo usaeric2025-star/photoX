@@ -109,20 +109,6 @@ export const listHandler = (app: Hono) => {
 
       const finalWhere = whereClauses.length > 0 ? and(...whereClauses.filter((c): c is SQL => !!c)) : undefined;
       
-      // Pagination & Order
-      const results = await db.query.furnitureItems.findMany({
-        where: (fields, { and, or, eq, ilike, isNull }) => {
-            const clauses: any[] = [];
-            if (hasTag) {
-                // query.photoTags.some(pt => pt.tagId === tagId) - No 'some' in Drizzle yet.
-                // We'll stick to manual join for hasTag or use raw SQL.
-            }
-            // Passing complex where for findMany is harder if it involves joins.
-            // Let's use the builder style we started.
-            return undefined; // placeholder
-        }
-      });
-
       // BACK TO BUILDER STYLE
       const builder = db
         .select({

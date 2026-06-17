@@ -58,7 +58,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
     <header className={`h-14 sm:h-16 shrink-0 border-b px-2.5 sm:px-4 flex items-center justify-between font-sans transition-colors duration-300 ${headerBgClass}`}>
       {/* 左侧：Logo & 计数 */}
       <div className="flex items-center gap-1 sm:gap-3 shrink-0 flex-nowrap">
-        {logoUrl ? (
+        {logoUrl && logoUrl.trim() !== '' ? (
           <img 
             src={logoUrl} 
             className="h-7 sm:h-9 w-auto object-contain shrink-0" 
@@ -133,7 +133,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
                    {user ? (
                       <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 select-none">
                         <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center text-white overflow-hidden text-[8px]">
-                          {user.photo_url ? (
+                          {user.photo_url && user.photo_url.trim() !== '' ? (
                             <img src={user.photo_url} referrerPolicy="no-referrer" alt="" />
                           ) : (
                             <DynamicIcon name="user" size={10} />

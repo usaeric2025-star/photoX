@@ -7,6 +7,9 @@ export const TABLE_NAME = 'categories';
 export const loadCategoriesFromCloud = async (): Promise<any[]> => {
   try {
     const res = await fetch('/api/categories');
+    if (!res.ok) {
+      throw new Error(`Failed to fetch categories: ${res.statusText}`);
+    }
     const json = await res.json();
     
     if (!json.success) {
