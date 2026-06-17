@@ -18,7 +18,7 @@ import { SelectionProvider, SelectionToolbar } from '@/features/selection';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useAdminPhotos } from '@/hooks/admin/useAdminPhotos';
 import { useAdminSelection } from '@/hooks/admin/useAdminSelection';
-import { UploadModeDialog } from '@/components/admin/UploadModeDialog';
+import { UploadModeDialog } from '@/features/upload/components/UploadModeDialog';
 // Removed PhotoDetailDialog as it is replaced by YarlLightbox
 
 export function AdminGridContainer() {

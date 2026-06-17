@@ -1,7 +1,7 @@
 export * from './queries';
 export * from './commands';
 export * from './mappers';
-export * from './upload';
+export * from '@/features/upload/services/upload';
 export * from './maintenance';
 export * from './groupUtils';
 

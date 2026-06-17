@@ -118,9 +118,9 @@ export const groupPhotos = async (
   const { data: { session } } = await supabase.auth.getSession();
   const userId = session?.user?.id || 'staff';
 
-  // Derive a name if missing: "全面强制 合组新合并就叫GROUP，除非改名。"
-  let finalName = metadata?.name || { zh: 'GROUP', en: 'GROUP', ms: 'GROUP' };
-
+  // Strictly enforce 'GROUP' for all new groups as per user rule: "新的合组一律叫GROUP，不要乱改。"
+  let finalName = { zh: 'GROUP', en: 'GROUP', ms: 'GROUP' };
+  
   // Prepare Group Record
   const groupData = {
     name: finalName,

@@ -104,6 +104,7 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo
           name: getSafeText(item.group.name),
           color: '#3b82f6',
           cover_photo_id: item.group.cover_photo_id,
+          member_count: (item.group as any).member_count,
       } : null,
       is_group_cover: !!item.is_group_cover,
       is_hidden: !!item.is_hidden,

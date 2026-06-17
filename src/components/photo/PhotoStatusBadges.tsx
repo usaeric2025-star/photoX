@@ -49,7 +49,10 @@ export const PhotoStatusBadges = ({
             : "bg-black/90 text-brand-gold border-brand-gold/50 border-l-brand-gold shadow-black/40"
         )}>
           <Layers size={10} strokeWidth={3} className={cn("shrink-0", isDraft ? "text-white/70" : "text-brand-gold")} />
-          <span className="tracking-tighter uppercase">{isDraft ? ' (DRAFT)' : ''}</span>
+          <span className="tracking-tighter uppercase">
+            {photo.group?.member_count && `${photo.group.member_count} `}
+            {isDraft ? ' (DRAFT)' : ''}
+          </span>
         </div>
       )}
 

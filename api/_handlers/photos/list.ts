@@ -56,11 +56,11 @@ export const listHandler = (app: Hono) => {
     const hasTag = tagId !== undefined && tagId !== null && tagId !== '';
     const hasCat = categoryId !== undefined && categoryId !== null && categoryId !== '';
 
-    let query = supabase.from(TABLE_NAME).select(`*, photo_tags${hasTag ? '!inner' : ''}(tag_id), group:groups(id, name, cover_photo_id)`);
+    let query = supabase.from(TABLE_NAME).select(`*, photo_tags${hasTag ? '!inner' : ''}(tag_id), group:groups(id, name, cover_photo_id, member_count)`);
     
     // Filters
     if (hasTag && hasCat) {
-      query = supabase.from(TABLE_NAME).select('*, photo_tags!inner(tag_id), group:groups(id, name, cover_photo_id)');
+      query = supabase.from(TABLE_NAME).select('*, photo_tags!inner(tag_id), group:groups(id, name, cover_photo_id, member_count)');
       query = query.or(`category_id.eq.${categoryId},photo_tags.tag_id.eq.${tagId}`);
     } else {
       if (hasTag) {
@@ -140,7 +140,7 @@ export const listHandler = (app: Hono) => {
     
     const { groupId, isAdminMode = false } = check;
     const supabase = await getSupabaseAdmin();
-    let query = supabase.from(TABLE_NAME).select('*, photo_tags(tag_id)').eq('group_id', groupId);
+    let query = supabase.from(TABLE_NAME).select('*, photo_tags(tag_id), group:groups(id, name, cover_photo_id, member_count)').eq('group_id', groupId);
     if (!isAdminMode) query = query.not('is_hidden', 'eq', true);
     query = query.order('is_group_cover', { ascending: false }).order('is_hidden', { ascending: true, nullsFirst: true }).order('created_at', { ascending: false }).order('id', { ascending: true });
     const [queryRes, tagRows] = await Promise.all([
@@ -177,7 +177,7 @@ export const listHandler = (app: Hono) => {
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
     let countQuery = supabase.from(TABLE_NAME).select('*', { count: 'exact', head: true }).eq('group_id', groupId);
-    let query = supabase.from(TABLE_NAME).select('*, photo_tags(tag_id)').eq('group_id', groupId);
+    let query = supabase.from(TABLE_NAME).select('*, photo_tags(tag_id), group:groups(id, name, cover_photo_id, member_count)').eq('group_id', groupId);
     if (!isAdminMode) {
       countQuery = countQuery.not('is_hidden', 'eq', true); 
       query = query.not('is_hidden', 'eq', true);

@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { EyeOff, Eye, RefreshCcw } from "lucide-react";
 import { ProductFormData, Tag } from "@/types";
-import { FormSectionHeader, CategoryGrid } from "./FormShared";
-import { ManufacturerTagSelect } from "./ManufacturerTagSelect";
-import { PhotoTagSelector } from "./edit/PhotoTagSelector";
+import { FormSectionHeader, CategoryGrid } from "@/components/admin/FormShared";
+import { ManufacturerTagSelect } from "@/components/admin/ManufacturerTagSelect";
+import { PhotoTagSelector } from "@/components/admin/edit/PhotoTagSelector";
 import { useCategories, useTags, useManufacturers } from "@/hooks";
 import { useUIStore } from "@/store/useUIStore";
-import { Tabs } from "../shared/Tabs";
+import { Tabs } from "@/components/shared/Tabs";
 
 interface BatchEditFormProps {
   formState: Partial<ProductFormData>;

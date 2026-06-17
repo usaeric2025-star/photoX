@@ -122,6 +122,7 @@ export async function syncGroupCoversAndCount(supabase: SupabaseClient, groupIds
         .from('groups')
         .update({
           cover_photo_id: targetCoverPhotoId || null,
+          member_count: actualCount,
           updated_at: new Date().toISOString()
         })
         .eq('id', groupId);

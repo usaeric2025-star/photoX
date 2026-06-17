@@ -9,7 +9,7 @@ import { showToast } from '@/lib/ui/toast';
 import { Photo } from '@/types';
 import { hapticFeedback } from '@/lib/ui/haptics';
 import { useUIStore } from '@/store/useUIStore';
-import { useUploadProgress } from '../core/useUploadProgress';
+import { useUploadProgress } from '@/hooks/core/useUploadProgress';
 
 export function usePhotoUpload() {
   const { startUploadBatch, updateUploadProgress, completeUploadBatch, errorUploadBatch } = useUploadProgress();
@@ -37,7 +37,7 @@ export function usePhotoUpload() {
     try {
       // Lazy load processing and upload services
       const { processImageFile } = await import('@/services/storage/imageProcessor');
-      const { savePhotoToCloud } = await import("@/services/photo/upload");
+      const { savePhotoToCloud } = await import("@/features/upload/services/uploadService");
 
       let successCount = 0;
       let failureCount = 0;

@@ -5,11 +5,11 @@ import { X } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useTasks, 
   useSyncMutation, 
-  useCategories, 
-  usePhotoUpload } from '@/hooks';
+  useCategories } from '@/hooks';
+import { usePhotoUpload } from '@/features/upload';
 import { logger } from '@/lib/logger';
 import { DataLoadingContainer } from '@/components/ui/DataLoadingContainer';
-import { BatchEditScreen } from '@/components/admin/BatchEditScreen';
+import { BatchEditScreen } from '@/features/batch-edit/BatchEditScreen';
 import { StatisticsScreen } from '@/components/admin/StatisticsScreen';
 import { SettingsPage } from '@/components/settings/SettingsPage';
 import { PhotoEditModal } from '@/components/admin/PhotoEditModal';

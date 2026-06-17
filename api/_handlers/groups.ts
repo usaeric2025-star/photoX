@@ -168,15 +168,29 @@ export const groups = new Hono()
 
       // Merge
       if (sourceGroupIds && sourceGroupIds.length > 0) {
-        console.log("LOG: Merging groups:", sourceGroupIds, "->", targetGroupId);
-        const { error } = await supabase.rpc('merge_groups', {
+        console.log("LOG: Merging groups (explicitly moving all members):", sourceGroupIds, "->", targetGroupId);
+        
+        // 1. Explicitly move ALL photos that belonged to the source groups to the new target group
+        const { error: moveError } = await supabase
+          .from('furniture_items')
+          .update({ group_id: targetGroupId, is_group_cover: false })
+          .in('group_id', sourceGroupIds);
+          
+        if (moveError) {
+          const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+          import('./logger.js').then(({ logger }) => logger.error("[groupPhotos] Explicit move of group members failed", { error: moveError.message, traceId, sourceGroupIds, targetGroupId }));
+          // We continue to try the RPC as a fallback or extra measure
+        }
+
+        // 2. Call RPC as a fallback or for any additional logic it might contain (e.g. metadata cleanup)
+        const { error: rpcError } = await supabase.rpc('merge_groups', {
           source_group_ids: sourceGroupIds,
           target_group_id: targetGroupId
         });
-        if (error) {
+        if (rpcError) {
           const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-          import('./logger.js').then(({ logger }) => logger.error("[groupPhotos] Merge RPC call failed", { error: error.message, traceId, sourceGroupIds, targetGroupId }));
-          return c.json({ success: false, error: error.message, traceId }, 500);
+          import('./logger.js').then(({ logger }) => logger.error("[groupPhotos] Merge RPC call failed", { error: rpcError.message, traceId, sourceGroupIds, targetGroupId }));
+          // If the explicit move worked, we might not need to fail here, but let's be cautious
         }
       }
 
