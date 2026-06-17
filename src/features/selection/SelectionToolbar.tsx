@@ -25,7 +25,7 @@ import {
 function SelectionCounter({ count, total }: { count: number; total?: number }) {
   return (
     <div className="text-sm font-semibold text-slate-700 select-none shrink-0 transition-all flex items-center pr-1 bg-transparent">
-      已選取 {count} {total !== undefined && <span className="text-slate-400 font-normal ml-1">/ {total}</span>}
+      {count} {total !== undefined && <span className="text-slate-400 font-normal ml-1">/ {total}</span>}
     </div>
   );
 }
@@ -68,15 +68,15 @@ export const SelectionToolbar = memo(function SelectionToolbar({
   const selectedCount = state.selectedIds.length;
   const isAllSelected = allIds.length > 0 && selectedCount === allIds.length;
 
-  if (!isBatchMode && selectedCount === 0) {
-    return null;
-  }
-
   // Find actual Photo objects corresponding to selectedIds
   const selectedPhotos = React.useMemo(() => {
     if (!allPhotos || allPhotos.length === 0) return [];
     return allPhotos.filter((p) => state.selectedIds.includes(p.id));
   }, [allPhotos, state.selectedIds]);
+
+  if (!isBatchMode && selectedCount === 0) {
+    return null;
+  }
 
   const handleBatchEdit = () => {
     if (selectedCount === 0 || isAnyPending) return;
@@ -96,33 +96,14 @@ export const SelectionToolbar = memo(function SelectionToolbar({
 
   const handleManualGroup = async () => {
     if (selectedCount === 0 || isAnyPending) return;
-
-    const ok = await confirm({
-      title: '確定要手動建立合組嗎？',
-      description: `此操作將會把選取的 ${selectedCount} 張照片合併為一個全新合組。`,
-      confirmText: '建立合組',
-    });
-
-    if (ok) {
-      await combineMutation.mutateAsync({ photoIds: state.selectedIds });
-      clear();
-    }
+    await combineMutation.mutateAsync({ photoIds: state.selectedIds });
+    clear();
   };
 
   const handleRemoveFromGroup = async () => {
     if (selectedCount === 0 || isAnyPending || !groupId) return;
-
-    const ok = await confirm({
-      title: '確定要將照片移出此合組嗎？',
-      description: `此操作將會把選取的 ${selectedCount} 張照片移出當前合組。`,
-      confirmText: '移出',
-      variant: 'destructive',
-    });
-
-    if (ok) {
-      await removeMutation.mutateAsync({ photoIds: state.selectedIds, groupId });
-      clear();
-    }
+    await removeMutation.mutateAsync({ photoIds: state.selectedIds, groupId });
+    clear();
   };
 
   const handleBatchDeleteClick = async () => {

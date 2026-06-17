@@ -1,7 +1,9 @@
-import { supabase } from '../src/lib/supabase';
+import { getSupabaseAdmin } from '../api/_lib/supabase.js';
+import { syncGroupCoversAndCount } from '../api/_lib/groups.js';
 
 async function syncAllGroups() {
   console.log('Fetching all groups...');
+  const supabase = await getSupabaseAdmin();
   const { data: groups, error: groupsError } = await supabase.from('groups').select('id, name');
   
   if (groupsError) {
@@ -9,30 +11,10 @@ async function syncAllGroups() {
     return;
   }
 
-  console.log(`Found ${groups.length} groups. Starting sync...`);
+  const groupIds = (groups || []).map(g => g.id);
+  console.log(`Found ${groupIds.length} groups. Starting robust reconciliation sync...`);
 
-  for (const group of groups) {
-    const { count, error: countError } = await supabase
-      .from('furniture_items')
-      .select('id', { count: 'exact', head: true })
-      .eq('group_id', group.id);
-
-    if (countError) {
-      console.error(`Failed to count for group ${group.name} (${group.id}):`, countError);
-      continue;
-    }
-
-    const { error: updateError } = await supabase
-      .from('groups')
-      .update({ member_count: count || 0 })
-      .eq('id', group.id);
-
-    if (updateError) {
-      console.error(`Failed to update group ${group.name}:`, updateError);
-    } else {
-      console.log(`Synced group ${group.name}: ${count} photos`);
-    }
-  }
+  await syncGroupCoversAndCount(supabase, groupIds);
 
   console.log('Sync complete!');
 }

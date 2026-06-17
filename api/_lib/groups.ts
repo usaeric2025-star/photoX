@@ -6,8 +6,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
  * Ensures standard alignment of:
  * 1. groups.cover_photo_id matches a member photo with furniture_items.is_group_cover = true
  * 2. All other group photos have is_group_cover = false
- * 3. groups.member_count matches the actual count of photos in the group
- * 4. Automatic dissolution of groups with <= 1 member
+ * 3. Automatic dissolution of groups with <= 1 member
  */
 export async function syncGroupCoversAndCount(supabase: SupabaseClient, groupIds: string[]): Promise<void> {
   const uniqueGroupIds = Array.from(new Set(groupIds.filter(Boolean)));
