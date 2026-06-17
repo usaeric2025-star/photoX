@@ -12,6 +12,9 @@ export interface Dimension {
 export interface Photo {
   id: string; // Database UUID
   [key: string]: unknown;
+  _fileSize?: number;
+  _fileName?: string;
+  _lastModified?: number;
   storage_id?: string; // Filename for Supabase Storage
   item_code: string; // System auto-code (FUR-YYYYMMDD-RAND)
   manual_code?: string; // Hidden price code

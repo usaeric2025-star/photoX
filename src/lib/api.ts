@@ -2,6 +2,35 @@ import { hc } from 'hono/client';
 import type { AppType } from '../../api/app';
 import { supabase } from '@/lib/supabase';
 
+export class ApiResponseError extends Error {
+  public success = false;
+  public status: number;
+  public traceId: string;
+  public details: string;
+  public platformTip: string;
+  public error: {
+    message: string;
+    code: string;
+    details: string;
+    traceId: string;
+  };
+
+  constructor(message: string, status: number, traceId: string, details: string, platformTip: string) {
+    super(message);
+    this.name = 'ApiResponseError';
+    this.status = status;
+    this.traceId = traceId;
+    this.details = details;
+    this.platformTip = platformTip;
+    this.error = {
+      message,
+      code: 'INTERNAL_SERVER_ERROR',
+      details,
+      traceId
+    };
+  }
+}
+
 /**
  * [V2.9-RPC-CONTRACT] Type-safe RPC Client
  */
@@ -77,23 +106,12 @@ export const client = hc<AppType>(
         }
 
         const message = `服务器响应异常 [${requestMethod} ${requestUrl}] (HTTP ${resp.status}): ${text.substring(0, 400)}${platformTip}`;
-        const errorInstance = new Error(message);
-        (errorInstance as any).success = false;
-        (errorInstance as any).status = resp.status;
-        (errorInstance as any).traceId = traceId;
-        (errorInstance as any).details = text;
-        (errorInstance as any).platformTip = platformTip;
-        (errorInstance as any).error = {
-          message,
-          code: 'INTERNAL_SERVER_ERROR',
-          details: text,
-          traceId
-        };
-        throw errorInstance;
+        throw new ApiResponseError(message, resp.status, traceId, text, platformTip);
       }
       return resp;
     }
   }
 );
 
-export const api = (client as any).api;
+// @ts-expect-error Hono type recursion limit can cause client to resolve as unknown in current file scope
+export const api = client.api;

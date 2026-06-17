@@ -2,7 +2,7 @@ import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { Photo } from '../../../types';
 import { api } from '@/lib/api';
 
-export const upsertPhotoRecord = async (payload: any): Promise<unknown> => {
+export const upsertPhotoRecord = async (payload: Record<string, unknown>): Promise<unknown> => {
     const res = await api.photos.upsert.$post({
         json: { payload }
     });

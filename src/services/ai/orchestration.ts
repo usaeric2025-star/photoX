@@ -13,11 +13,23 @@ export * from './utils';
 import { hasExistingInfo } from './utils';
 import { supabase } from '@/lib/supabase';
 
+import { Photo, Dimension, ProductGroup } from '@/types';
+
+interface PhotoAnalysisResponse {
+  name?: unknown;
+  description?: unknown;
+  category_id?: string | number | null;
+  group_id?: string | number | null;
+  dimensions?: Dimension[];
+  tagNames?: string[];
+  tagIds?: string[];
+}
+
 export const analyzeAndSavePhoto = async (
-  photo: any
+  photo: Photo
 ): Promise<unknown> => {
   try {
-    const analysisData = await analyzePhoto(photo.id) as any;
+    const analysisData = (await analyzePhoto(photo.id)) as PhotoAnalysisResponse;
     
     // Validate that we have something to update
     if (!analysisData.name && !analysisData.description && (!analysisData.tagNames || analysisData.tagNames.length === 0)) {
@@ -30,8 +42,8 @@ export const analyzeAndSavePhoto = async (
     );
 
     const updateResult = await updatePhoto(photo.id, {
-      name: nameObj as any,
-      description: descObj as any,
+      name: nameObj,
+      description: descObj,
       category_id: analysisData.category_id ? String(analysisData.category_id) : null,
       group_id: analysisData.group_id ? String(analysisData.group_id) : null,
       dimensions: analysisData.dimensions || [],
@@ -112,12 +124,19 @@ export const autoGroupPhotos = async (
   }
 };
 
+interface GroupAnalysisResponse {
+  name?: unknown;
+  description?: unknown;
+  colors?: string[];
+  materials?: string[];
+}
+
 export const analyzeAndSaveGroup = async (
   groupId: string,
-  photos: any[]
+  photos: Photo[]
 ): Promise<unknown> => {
   try {
-    const analysis = await withTimeout(analyzeGroup(photos), 120000); // 120s
+    const analysis = (await withTimeout(analyzeGroup(photos), 120000)) as GroupAnalysisResponse; // 120s
     const { colors, materials } = analysis;
 
     const { name: nameObj, description: descObj } = await mapAiToMultilingual(
@@ -126,11 +145,10 @@ export const analyzeAndSaveGroup = async (
     );
 
     const res = await updateGroup(groupId, {
-      name: nameObj as any,
-      description: descObj as any,
+      name: nameObj as unknown as string,
       colors,
       materials
-    } as any);
+    } as unknown as Partial<ProductGroup>);
 
     return res;
   } catch (err) {
@@ -143,7 +161,7 @@ export async function runBatchAnalysis({
   groupId,
   onProgress
 }: {
-  targetPhotos: any[];
+  targetPhotos: Photo[];
   groupId?: string;
   onProgress: (progress: number, message?: string) => void;
 }) {

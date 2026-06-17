@@ -21,7 +21,7 @@ export const uploadWithRetry = async (
   maxRetries = 3,
   force = false
 ): Promise<UploadResult> => {
-    let lastError: any;
+    let lastError: unknown;
     for (let i = 0; i < maxRetries; i++) {
       try {
         return await uploadImages(userId, photoId, base64Data, imageHash, onStatus, onProgress, force);
@@ -86,18 +86,23 @@ export const uploadImages = async (
     });
     
     if (presignRes.status === 409) {
-        const result = await presignRes.json();
-        return `DUPLICATE:${(result as any).existingUrl}`;
+        const result = await presignRes.json() as { existingUrl?: string };
+        return `DUPLICATE:${result.existingUrl || ''}`;
     }
 
     if (!presignRes.ok) {
       throw ErrorFactory.fatal(`获取预签名上传地址失败 (HTTP ${presignRes.status})`, { context: 'uploadFile' });
     }
 
-    const result = await presignRes.json();
-    if (!result.success) throw ErrorFactory.fatal(String((result as any).error), { context: 'uploadFile' });
+    const result = await presignRes.json() as { 
+      success: boolean; 
+      error?: string; 
+      data?: { uploadUrl: string; publicUrl: string } 
+    };
+    if (!result.success) throw ErrorFactory.fatal(String(result.error), { context: 'uploadFile' });
+    if (!result.data) throw ErrorFactory.fatal('Upload failed: missing data from presign API', { context: 'uploadFile' });
     
-    const { uploadUrl, publicUrl } = result.data as any;
+    const { uploadUrl, publicUrl } = result.data;
 
     try {
       const uploadRes = await fetch(uploadUrl, {
@@ -127,9 +132,9 @@ export const uploadImages = async (
       if (!fallbackRes.ok) {
          throw ErrorFactory.fatal(`服务器中转上传失败 (HTTP ${fallbackRes.status}): ${await fallbackRes.text().catch(()=>'')}`, { context: 'uploadFile' });
       }
-      const fallbackResult = await fallbackRes.json();
+      const fallbackResult = await fallbackRes.json() as { data: { publicUrl: string } };
       if (isMain && onProgress) onProgress(100);
-      return (fallbackResult as any).data.publicUrl;
+      return fallbackResult.data.publicUrl;
     }
   };
 

@@ -42,7 +42,6 @@
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "react-hook-form": "^7.78.0",
-    "react-scan": "^0.5.7",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.6.0",
     "thumbhash": "^0.1.1",

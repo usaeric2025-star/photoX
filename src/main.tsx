@@ -91,14 +91,6 @@ if (clientEnv.VITE_SENTRY_DSN) {
 }
 
 async function init() {
-  if (typeof window !== 'undefined' && clientEnv.DEV) {
-    const { scan } = await import('react-scan');
-    scan({
-      enabled: true,
-      log: true, // logs renders to the console
-    });
-  }
-
   // No migration
   initChunkHandler(router);
 

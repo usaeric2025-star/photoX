@@ -53,7 +53,7 @@ export function createInfiniteQuery<TData, TVariables = unknown, TResult = Infin
 }) {
   return function useStandardInfiniteQuery(
     variables: TVariables,
-    options?: Omit<any, 'queryKey' | 'queryFn' | 'initialPageParam' | 'getNextPageParam'>
+    options?: Omit<Partial<UseInfiniteQueryOptions<TData, Error, TResult, readonly unknown[], number>>, 'queryKey' | 'queryFn' | 'initialPageParam' | 'getNextPageParam'>
   ) {
     return useInfiniteQuery<TData, Error, TResult, readonly unknown[], number>({
       queryKey: config.queryKey(variables),
@@ -65,9 +65,9 @@ export function createInfiniteQuery<TData, TVariables = unknown, TResult = Infin
       getNextPageParam: config.getNextPageParam,
       staleTime: config.staleTime ?? 5 * 60 * 1000,
       gcTime: config.gcTime ?? 30 * 60 * 1000,
-      select: config.select ? (config.select as unknown as (data: InfiniteData<TData, number>) => TResult) : ((d: unknown) => d as TResult),
-      placeholderData: config.placeholderData,
+      select: (config.select || ((d) => d as unknown as TResult)) as (data: InfiniteData<TData, number>) => TResult,
+      placeholderData: config.placeholderData as undefined,
       ...options
-    } as any);
+    });
   };
 }

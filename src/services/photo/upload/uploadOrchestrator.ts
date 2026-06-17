@@ -32,13 +32,13 @@ export const uploadSinglePhoto = async (
         const dbCheck = await checkDuplicate(
             actUserId, 
             photo.image_hash, 
-            (photo as any)._fileSize, 
-            (photo as any)._fileName, 
-            (photo as any)._lastModified,
+            photo._fileSize, 
+            photo._fileName, 
+            photo._lastModified,
             photo.id
         );
         if (dbCheck.isDuplicate) {
-             logger.info(`[Upload] Skipping duplicate photo: ${photo.id || (photo as any)._fileName}. Existing ID: ${dbCheck.existingId}`);
+             logger.info(`[Upload] Skipping duplicate photo: ${photo.id || photo._fileName}. Existing ID: ${dbCheck.existingId}`);
              return { id: dbCheck.existingId || photo.id || 'duplicate', is_duplicate: true };
         }
         
@@ -68,7 +68,7 @@ export const uploadSinglePhoto = async (
         photo.id = generateId();
     }
     
-    const payload: any = mapToDb({
+    const payload = mapToDb({
         ...photo,
         user_id: actUserId,
     }, true);

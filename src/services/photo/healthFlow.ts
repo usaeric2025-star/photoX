@@ -8,8 +8,10 @@ import { backfillThumbHashes } from "@/services/photo/maintenance/backfill";
 import { getPhotosWithoutThumbHash } from "@/services/photo";
 import { showToast } from '@/lib/ui/toast';
 
+import { Photo } from '@/types';
+
 export const runHealthCheck = async (
-  allPhotos: any[], 
+  allPhotos: Photo[], 
   onAuditFound: (orphans: number) => Promise<void>,
   invalidatePhotos: () => void
 ) => {
