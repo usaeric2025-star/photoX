@@ -1,6 +1,6 @@
 import { useFilters } from '@/hooks/useFilters';
 import { useMemo } from 'react';
-import type { FilterState, SortOrder, StatusFilter } from '../types';
+import type { FilterState, SortOrder, StatusFilter } from './types';
 
 export function useFilterState() {
   const f = useFilters({ enableStatus: true });

@@ -1,5 +1,5 @@
-import { useCategories } from '../hooks/useFilterData';
-import { useFilterState } from '../hooks/useFilterState';
+import { useCategories } from './useFilterData';
+import { useFilterState } from './useFilterState';
 import { useTranslation } from '@/hooks';
 import { getTranslatedCategoryName } from '@/services/category/utils';
 

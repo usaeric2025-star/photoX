@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronUp, MoreHorizontal } from 'lucide-react';
-import { useTags } from '../hooks/useFilterData';
-import { useFilterState } from '../hooks/useFilterState';
+import { useTags } from './useFilterData';
+import { useFilterState } from './useFilterState';
 import { useSettings } from '@/hooks/settings/useSettings';
 import { usePhotoFilter } from '@/hooks/photo/usePhotoFilter';
 
@@ -16,7 +16,7 @@ export function TagGrid() {
 
   const toggleTag = (tagId: string) => {
     if (filters.tagIds.includes(tagId)) {
-      updateFilters({ tagIds: filters.tagIds.filter(id => id !== tagId) });
+      updateFilters({ tagIds: filters.tagIds.filter((id: string) => id !== tagId) });
     } else {
       updateFilters({ tagIds: [...filters.tagIds, tagId] });
     }

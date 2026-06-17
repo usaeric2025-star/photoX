@@ -1,5 +1,5 @@
 import { useTransition, useState, useEffect } from 'react';
-import { useFilterState } from '../hooks/useFilterState';
+import { useFilterState } from './useFilterState';
 import { Search } from 'lucide-react';
 import { useTranslation } from '@/hooks';
 

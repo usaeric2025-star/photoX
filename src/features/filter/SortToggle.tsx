@@ -1,4 +1,4 @@
-import { useFilterState } from '../hooks/useFilterState';
+import { useFilterState } from './useFilterState';
 import { ArrowUpDown } from 'lucide-react';
 
 export function SortToggle() {

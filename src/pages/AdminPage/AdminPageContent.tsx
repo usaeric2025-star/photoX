@@ -21,7 +21,7 @@ import { AdminAuthGate } from '@/components/admin/AdminAuthGate';
 import { AdminContainer } from '@/components/admin/AdminContainer';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { useFilters } from '@/hooks/useFilters';
-import { FilterBar } from '@/features/filter/components/FilterBar';
+import { FilterBar } from '@/features/filter/FilterBar';
 
 export function AdminPageContent() {
   const filters = useFilters({ enableStatus: true, enableBatch: true });
