@@ -125,7 +125,7 @@ export function AdminGroupDetailPage() {
             onUpdateTitle={handleUpdateTitle}
           />
         </div>
-        <div className="flex-1 overflow-y-auto relative overscroll-y-auto overscroll-x-none bg-slate-50">
+        <div className={`flex-1 overflow-y-auto relative overscroll-y-auto overscroll-x-none bg-slate-50 transition-all duration-300 ${isMultiSelect ? 'pb-16' : ''}`}>
           <AdminPhotoGrid photos={photos} onPhotoClick={(id: string) => {
                setPhotoId(id);
           }} />

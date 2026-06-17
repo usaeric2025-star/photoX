@@ -6,6 +6,7 @@ import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import { useAIBatchAnalysis } from '@/hooks/photo/useAIBatchAnalysis';
 import { useConfirm } from '@/context/ConfirmContext';
 import { useMediaQuery } from '@/hooks';
+import { useGroupPhotosMutation, useRemoveFromGroupMutation } from '@/hooks/groups/useGroupMutations';
 import { Photo } from '@/types';
 import { 
   CheckSquare, 
@@ -14,16 +15,17 @@ import {
   Trash2, 
   Edit, 
   Sparkles,
-  Loader2
+  Loader2,
+  FolderPlus,
+  FolderMinus
 } from 'lucide-react';
 
 // --- Sub-components ---
 
 function SelectionCounter({ count, total }: { count: number; total?: number }) {
   return (
-    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-semibold border border-blue-100 select-none shrink-0 transition-all">
-      <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse shrink-0" />
-      已選 {count} {total !== undefined && <span className="opacity-60 text-[10px]">/ {total}</span>}
+    <div className="text-sm font-semibold text-slate-700 select-none shrink-0 transition-all flex items-center pr-1 bg-transparent">
+      已選取 {count} {total !== undefined && <span className="text-slate-400 font-normal ml-1">/ {total}</span>}
     </div>
   );
 }
@@ -52,6 +54,12 @@ export const SelectionToolbar = memo(function SelectionToolbar({
   const { handleBatchAiAnalyze } = useAIBatchAnalysis();
   const confirm = useConfirm();
 
+  const combineMutation = useGroupPhotosMutation();
+  const removeMutation = useRemoveFromGroupMutation();
+
+  const [isAiPending, setIsAiPending] = React.useState(false);
+  const isAnyPending = isPending || isAiPending || combineMutation.isPending || removeMutation.isPending;
+
   // Media Query Subscriptions
   const isSm = useMediaQuery('(min-width: 640px)');
   const isMd = useMediaQuery('(min-width: 768px)');
@@ -71,18 +79,54 @@ export const SelectionToolbar = memo(function SelectionToolbar({
   }, [allPhotos, state.selectedIds]);
 
   const handleBatchEdit = () => {
-    if (selectedCount === 0) return;
+    if (selectedCount === 0 || isAnyPending) return;
     update({ batchEditingIds: state.selectedIds });
     routerSafe.navigate({ to: '/admin/batch-edit' });
   };
 
   const handleBatchAiGroup = async () => {
-    if (selectedCount === 0) return;
-    await handleBatchAiAnalyze(selectedPhotos, groupId);
+    if (selectedCount === 0 || isAnyPending) return;
+    try {
+      setIsAiPending(true);
+      await handleBatchAiAnalyze(selectedPhotos, groupId);
+    } finally {
+      setIsAiPending(false);
+    }
+  };
+
+  const handleManualGroup = async () => {
+    if (selectedCount === 0 || isAnyPending) return;
+
+    const ok = await confirm({
+      title: '確定要手動建立合組嗎？',
+      description: `此操作將會把選取的 ${selectedCount} 張照片合併為一個全新合組。`,
+      confirmText: '建立合組',
+    });
+
+    if (ok) {
+      await combineMutation.mutateAsync({ photoIds: state.selectedIds });
+      clear();
+    }
+  };
+
+  const handleRemoveFromGroup = async () => {
+    if (selectedCount === 0 || isAnyPending || !groupId) return;
+
+    const ok = await confirm({
+      title: '確定要將照片移出此合組嗎？',
+      description: `此操作將會把選取的 ${selectedCount} 張照片移出當前合組。`,
+      confirmText: '移出',
+      variant: 'destructive',
+    });
+
+    if (ok) {
+      await removeMutation.mutateAsync({ photoIds: state.selectedIds, groupId });
+      clear();
+    }
   };
 
   const handleBatchDeleteClick = async () => {
-    if (selectedCount === 0) return;
+    if (selectedCount === 0 || isAnyPending) return;
 
     const ok = await confirm({
       title: '確定要刪除選取的照片嗎？',
@@ -127,30 +171,74 @@ export const SelectionToolbar = memo(function SelectionToolbar({
 
         {/* 行動按鈕組 */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {isPending && (
+          {isAnyPending && (
             <span className="text-xs font-semibold text-blue-500 animate-pulse flex items-center gap-1 mr-1 select-none shrink-0">
               <Loader2 size={12} className="animate-spin" />
               處理中
             </span>
           )}
 
-          {/* AI 智能合組 */}
-          <button
-            onClick={handleBatchAiGroup}
-            disabled={selectedCount === 0 || isPending}
-            className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm"
-            title="AI 智能分析合組"
-          >
-            <Sparkles size={14} className="text-purple-600 animate-pulse shrink-0" />
-            <span className="shrink-0">
-              {isMd ? 'AI 智能合組' : isSm ? 'AI 合組' : 'AI'}
-            </span>
-          </button>
+          {/* 移出合組 (僅在合組頁面時顯示) */}
+          {groupId && (
+            <button
+              onClick={handleRemoveFromGroup}
+              disabled={selectedCount === 0 || isAnyPending}
+              className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm"
+              title="將照片移出此合組"
+            >
+              {removeMutation.isPending ? (
+                <Loader2 size={14} className="animate-spin text-amber-600 shrink-0" />
+              ) : (
+                <FolderMinus size={14} className="text-amber-600 shrink-0" />
+              )}
+              <span className="shrink-0">
+                {isMd ? '移出合組' : isSm ? '移出' : '移出'}
+              </span>
+            </button>
+          )}
+
+          {/* 手動合組 (在合組頁面時不顯示此功能) */}
+          {!groupId && (
+            <button
+              onClick={handleManualGroup}
+              disabled={selectedCount === 0 || isAnyPending}
+              className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm"
+              title="手動將照片合併為一組"
+            >
+              {combineMutation.isPending ? (
+                <Loader2 size={14} className="animate-spin text-blue-600 shrink-0" />
+              ) : (
+                <FolderPlus size={14} className="text-blue-600 shrink-0" />
+              )}
+              <span className="shrink-0">
+                {isMd ? '手動合組' : isSm ? '手動合組' : '合組'}
+              </span>
+            </button>
+          )}
+
+          {/* AI 智能合組 (在合組頁面時不顯示此功能) */}
+          {!groupId && (
+            <button
+              onClick={handleBatchAiGroup}
+              disabled={selectedCount === 0 || isAnyPending}
+              className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm"
+              title="AI 智能分析合組"
+            >
+              {isAiPending ? (
+                <Loader2 size={14} className="animate-spin text-purple-600 shrink-0" />
+              ) : (
+                <Sparkles size={14} className="text-purple-600 animate-pulse shrink-0" />
+              )}
+              <span className="shrink-0">
+                {isMd ? 'AI 智能合組' : isSm ? 'AI 合組' : 'AI'}
+              </span>
+            </button>
+          )}
 
           {/* 批量編輯 */}
           <button
             onClick={handleBatchEdit}
-            disabled={selectedCount === 0 || isPending}
+            disabled={selectedCount === 0 || isAnyPending}
             className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm"
             title="批次編輯欄位"
           >
@@ -163,11 +251,15 @@ export const SelectionToolbar = memo(function SelectionToolbar({
           {/* 批量刪除 */}
           <button
             onClick={handleBatchDeleteClick}
-            disabled={selectedCount === 0 || isPending}
+            disabled={selectedCount === 0 || isAnyPending}
             className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm"
             title="批次刪除照片"
           >
-            <Trash2 size={14} className="text-red-500 shrink-0" />
+            {batchDelete.isPending ? (
+              <Loader2 size={14} className="animate-spin text-red-500 shrink-0" />
+            ) : (
+              <Trash2 size={14} className="text-red-500 shrink-0" />
+            )}
             <span className="shrink-0">
               {isMd ? '批次刪除' : isSm ? '刪除' : '刪除'}
             </span>
