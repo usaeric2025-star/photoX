@@ -1,7 +1,7 @@
 import React from 'react';
 import { Plus } from 'lucide-react';
 import { buttonStyles } from '../../styles/buttonStyles';
-import { usePermission } from '../../hooks';
+import { usePermission, useUIStore } from '../../hooks';
 
 interface UploadButtonProps {
   onAdd?: () => void;
@@ -12,8 +12,9 @@ export function UploadButton({
 }: UploadButtonProps) {
   const { can } = usePermission();
   const isManagement = window.location.pathname.startsWith('/admin');
+  const isMultiSelect = useUIStore(s => s.isMultiSelect);
 
-  if (!isManagement || !can('photo:edit') || !onAdd) return null;
+  if (!isManagement || !can('photo:edit') || !onAdd || isMultiSelect) return null;
 
   return (
     <button

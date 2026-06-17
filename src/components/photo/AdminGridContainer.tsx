@@ -81,7 +81,7 @@ export function AdminGridContainer() {
   return (
     <SelectionProvider>
       <div className="flex-1 min-h-0 flex flex-col bg-brand-bg w-full overflow-hidden text-text animate-fade-in relative">
-          <div className="flex-1 overflow-hidden bg-brand-bg relative">
+          <div className={`flex-1 overflow-hidden bg-brand-bg relative transition-all duration-300 ${isMultiSelect ? 'pb-16' : ''}`}>
               <VirtualPhotoGrid 
                 key="admin-photo-grid"
                 restoreKey="admin_view_scroll_vlist"
@@ -103,7 +103,7 @@ export function AdminGridContainer() {
           <SelectionToolbar
             totalItems={photos?.length}
             allIds={photos?.map((p: Photo) => p.id)}
-            className="flex-shrink-0 px-6 py-2 bg-white border-t border-gray-100 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]"
+            allPhotos={photos}
           />
 
           <ConfirmDialog
