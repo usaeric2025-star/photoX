@@ -29,7 +29,9 @@ export const serverEnvSchema = type({
   // Other flags
   "VERCEL?": "string | undefined",
   "DISABLE_HMR?": "string | undefined",
-  "VITE_THUMBNAIL_WORKER_URL?": "string"
+  "VITE_THUMBNAIL_WORKER_URL?": "string",
+  "VITE_SENTRY_DSN?": "string",
+  "SENTRY_DSN?": "string"
 });
 
 export type ServerEnv = typeof serverEnvSchema.infer;

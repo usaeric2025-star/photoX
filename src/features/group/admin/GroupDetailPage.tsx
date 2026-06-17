@@ -115,8 +115,8 @@ export function AdminGroupDetailPage() {
   
   return (
     <SelectionProvider>
-      <div className="min-h-screen bg-slate-50 group-detail-admin flex flex-col relative w-full h-[100dvh] overflow-hidden overscroll-none text-base">
-        <div className="flex-shrink-0 z-10 sticky top-0 bg-white/80 backdrop-blur-md border-b border-slate-100 shadow-sm">
+      <div className="bg-slate-50 group-detail-admin flex flex-col relative w-full h-[100dvh] overflow-hidden overscroll-none text-base">
+        <div className="flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-slate-100 shadow-sm">
           <GroupHeader 
             group={group} 
             photoCount={totalCount} 
@@ -148,7 +148,7 @@ export function AdminGroupDetailPage() {
         <SelectionToolbar
           totalItems={photos?.length}
           allIds={photos?.map((p: Photo) => p.id)}
-          className="px-6 py-2 bg-white border-t border-gray-100 shadow-lg z-50 fixed bottom-0 inset-x-0"
+          className="flex-shrink-0 px-6 py-2 bg-white border-t border-gray-100 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]"
         />
 
         {showAdminTools && (

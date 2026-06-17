@@ -1,4 +1,4 @@
-import React, { memo, useState } from 'react';
+import React, { memo, useState, useId } from 'react';
 import { useSelection } from './SelectionContext';
 import { useBatchActions } from './useBatchActions';
 import { useClickOutside } from '@/hooks/core/useClickOutside';
@@ -95,11 +95,15 @@ function BatchActionMenu({ disabled = false, selectedCount = 0 }: { disabled?: b
 
   const isDisabled = disabled || selectedCount === 0;
 
+  const anchorId = useId();
+  const anchorName = `--batch-action-${anchorId.replace(/:/g, '')}`;
+
   return (
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         disabled={isDisabled}
+        style={{ anchorName } as React.CSSProperties}
         className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 text-white rounded-md text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-all shadow-sm"
       >
         <span>批次操作</span>
@@ -107,7 +111,10 @@ function BatchActionMenu({ disabled = false, selectedCount = 0 }: { disabled?: b
       </button>
 
       {isOpen && (
-        <div className="absolute bottom-full right-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-xl z-50 min-w-[160px] overflow-hidden animate-in fade-in slide-in-from-bottom-1 duration-200">
+        <div 
+          style={{ positionAnchor: anchorName } as React.CSSProperties}
+          className="absolute bottom-full right-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-xl z-50 min-w-[160px] overflow-hidden animate-in fade-in slide-in-from-bottom-1 duration-200"
+        >
           <div className="py-1">
             {actions.map((action) => (
               <button
@@ -149,14 +156,7 @@ export const SelectionToolbar = memo(function SelectionToolbar({
   const isAllSelected = allIds.length > 0 && selectedCount === allIds.length;
 
   if (!isBatchMode && selectedCount === 0) {
-    return (
-      <div className={`flex items-center gap-3 ${className}`}>
-        <SelectionModeToggle />
-        <span className="text-sm font-medium text-gray-500 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
-          共 {totalItems ?? 0} 項
-        </span>
-      </div>
-    );
+    return null;
   }
 
   return (

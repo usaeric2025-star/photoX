@@ -16,9 +16,26 @@ import { storageMaintenance } from "./_handlers/admin/storageMaintenance.js";
 import { getTraceId } from "./_lib/error/traceId.js";
 import { logger } from "./_lib/logger.js";
 import { AppError, errorFactory } from "./_lib/error/AppError.js";
+import * as Sentry from "@sentry/node";
 
 // Validate env at module level
 const serverEnv = getServerEnv(process.env);
+
+// Initialize Sentry on backend if DSN present
+const sentryDsn = serverEnv.SENTRY_DSN || serverEnv.VITE_SENTRY_DSN;
+if (sentryDsn) {
+  Sentry.init({
+    dsn: sentryDsn,
+    environment: serverEnv.NODE_ENV || 'development',
+    tracesSampleRate: serverEnv.NODE_ENV === 'production' ? 0.1 : 1.0,
+    initialScope: {
+      tags: {
+        app: "photox-backend",
+        platform: "node",
+      }
+    }
+  });
+}
 
 export const app = new Hono().basePath("/api");
 
@@ -47,6 +64,27 @@ app.onError((err, c) => {
     ? err 
     : errorFactory.wrap(err, `api.${path}`, 'HANDLER_ERROR');
   appError.traceId = traceId;
+
+  // Report to Sentry if initialized
+  if (sentryDsn) {
+    Sentry.captureException(err, {
+      tags: {
+        traceId,
+        path,
+        method,
+        code: appError.code,
+      },
+      extra: {
+        appError: {
+          code: appError.code,
+          status: appError.status,
+          message: appError.message,
+          stack: appError.stack,
+          traceId: appError.traceId,
+        },
+      }
+    });
+  }
 
   // Backend Console Logging
   logger.error('api.error', {
@@ -193,10 +231,30 @@ app.post("/log-error", async (c) => {
         const { logger } = await import("./_lib/logger.js");
         
         const supabase = await getSupabaseAdmin();
+        const errorMessage = body.message || body.error_message || 'Unknown Frontend Error';
+        const stackTrace = body.stack || body.stack_trace || null;
+
+        // Proxy/Report to Sentry via server context to bypass any client-side browser DSN blocks/ad-blockers
+        if (sentryDsn) {
+            const fakeError = new Error(errorMessage);
+            fakeError.stack = stackTrace || undefined;
+            Sentry.captureException(fakeError, {
+                tags: {
+                    source: 'frontend_proxied',
+                    traceId: body.traceId || traceId,
+                    component: body.name || body.context || 'Frontend_Client',
+                    kind: body.metadata?.kind || 'UNKNOWN',
+                },
+                extra: {
+                    frontend_metadata: body.metadata || {},
+                    url: body.url || c.req.header('Referer') || null,
+                }
+            });
+        }
         
         const { error } = await supabase.from('system_logs').insert([{
-            error_message: body.message || body.error_message || 'Unknown Frontend Error',
-            stack_trace: body.stack || body.stack_trace || null,
+            error_message: errorMessage,
+            stack_trace: stackTrace,
             url: body.url || c.req.header('Referer') || null,
             context: body.name || body.context || 'Frontend_Client',
             metadata: {

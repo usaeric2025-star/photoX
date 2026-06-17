@@ -133,7 +133,7 @@ export const useUIStore = create<UIStoreState>()((set) => ({
     const selectedArray = Array.from(newSelected);
     return { 
       selectedIds: selectedArray,
-      isMultiSelect: selectedArray.length > 0 ? state.isMultiSelect : false
+      isMultiSelect: selectedArray.length > 0 ? true : state.isMultiSelect
     };
   }),
   addProcessingIds: (ids) => set((state) => ({ 

@@ -35,8 +35,9 @@ adminMaintenance.post("/daily-cleanup", async (c) => {
             message: 'Daily cleanup executed',
             timestamp: new Date().toISOString()
         });
-    } catch (e: any) {
-        return c.json({ success: false, error: e.message }, 500);
+    } catch (e: unknown) {
+        const err = e instanceof Error ? e : new Error(String(e));
+        return c.json({ success: false, error: err.message }, 500);
     }
 });
 
@@ -46,8 +47,9 @@ adminMaintenance.get("/jobs", async (c) => {
         const { data, error } = await supabase.from('maintenance_jobs').select('*');
         if (error) throw error;
         return c.json({ success: true, data });
-    } catch (e: any) {
-        return c.json({ success: false, error: e.message }, 500);
+    } catch (e: unknown) {
+        const err = e instanceof Error ? e : new Error(String(e));
+        return c.json({ success: false, error: err.message }, 500);
     }
 });
 
@@ -58,8 +60,9 @@ adminMaintenance.get("/job/:jobId", async (c) => {
         const { data, error } = await supabase.from('maintenance_jobs').select('*').eq('id', jobId).single();
         if (error) throw error;
         return c.json({ success: true, data });
-    } catch (e: any) {
-        return c.json({ success: false, error: e.message }, 500);
+    } catch (e: unknown) {
+        const err = e instanceof Error ? e : new Error(String(e));
+        return c.json({ success: false, error: err.message }, 500);
     }
 });
 

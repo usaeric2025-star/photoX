@@ -1,4 +1,6 @@
 import { AppError, ErrorSeverity, isAppError, ErrorFactory } from './ErrorFactory'
+import * as Sentry from '@sentry/react'
+import { clientEnv } from '@/shared/envSchema'
 
 // WeakSet for tracking reported errors to avoid duplicates
 const reportedErrors = new WeakSet<Error>()
@@ -46,8 +48,15 @@ export async function reportError(error: Error | AppError): Promise<void> {
   }
 
   // 1. GlitchTip / Sentry
-  if (typeof window !== 'undefined' && 'Sentry' in window) {
-    // Sentry capture exception is handled elsewhere or can be used here
+  if (clientEnv.VITE_SENTRY_DSN) {
+    Sentry.captureException(error, {
+      tags: {
+        app: 'photox',
+        type: isAppErrorObj ? 'AppError' : 'Error',
+        severity: isAppErrorObj ? String(error.severity) : 'error',
+      },
+      extra: isAppErrorObj ? error.toJSON() : undefined,
+    });
   }
 
   // 2. Backend logging via system_logs
@@ -87,6 +96,20 @@ export interface EventContext {
 export const logError = async (error: Error | unknown, context: EventContext) => {
   const normError = isAppError(error) ? error : (error instanceof Error ? error : new Error(String(error)));
   
+  // Send to Sentry
+  if (clientEnv.VITE_SENTRY_DSN) {
+    Sentry.captureException(normError, {
+      tags: {
+        action: context.action,
+        component: context.component,
+        kind: context.kind || 'UNKNOWN',
+      },
+      extra: {
+        metadata: context.metadata,
+      }
+    });
+  }
+
   if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
     console.group(`%c🔴 [ERROR] ${context.action}`, `color: #ef4444; font-weight: bold;`);
     console.error(normError);

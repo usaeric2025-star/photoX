@@ -51,16 +51,22 @@ export function createInfiniteQuery<TData, TVariables = unknown, TResult = Infin
   gcTime?: number;
   placeholderData?: TResult;
 }) {
-  return function useStandardInfiniteQuery(variables: TVariables, options?: any) {
+  return function useStandardInfiniteQuery(
+    variables: TVariables,
+    options?: Omit<any, 'queryKey' | 'queryFn' | 'initialPageParam' | 'getNextPageParam'>
+  ) {
     return useInfiniteQuery<TData, Error, TResult, readonly unknown[], number>({
       queryKey: config.queryKey(variables),
-      queryFn: ({ pageParam = 1, signal }: any) => config.queryFn(variables, pageParam as number, signal),
+      queryFn: (context: { pageParam?: unknown; signal: AbortSignal }) => {
+        const pageParam = typeof context.pageParam === 'number' ? context.pageParam : 1;
+        return config.queryFn(variables, pageParam, context.signal);
+      },
       initialPageParam: 1,
       getNextPageParam: config.getNextPageParam,
       staleTime: config.staleTime ?? 5 * 60 * 1000,
       gcTime: config.gcTime ?? 30 * 60 * 1000,
-      select: (config.select || ((d: any) => d)) as any,
-      placeholderData: config.placeholderData as any,
+      select: config.select ? (config.select as unknown as (data: InfiniteData<TData, number>) => TResult) : ((d: unknown) => d as TResult),
+      placeholderData: config.placeholderData,
       ...options
     } as any);
   };
