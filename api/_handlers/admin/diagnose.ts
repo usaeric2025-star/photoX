@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
-import { getSupabaseAdmin } from "../../_lib/supabase.js";
+import { sql } from 'drizzle-orm';
+import { db, furnitureItems, groups as groupsTable, categories as categoriesTable, manufacturers as manufacturersTable, photoTags as photoTagsTable, secrets as secretsTable } from "@/db/index";
 import { getR2Client } from "../../_lib/storage.js";
 import { getServerEnv } from "../../_shared/envSchema.js";
 import { diagnosticRegistry } from "../../_lib/diagnostics/registry.js";
@@ -10,63 +11,81 @@ export const adminDiagnose = new Hono();
 
 adminDiagnose.get("/", async (c) => {
     try {
-      const supabase = await getSupabaseAdmin();
       const issues: DiagnosticIssue[] = [];
       
-      const queryTimeout = 25000; 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), queryTimeout);
+      const [
+        pData,
+        gData,
+        cData,
+        mData,
+        secretData,
+        ptData,
+      ] = await Promise.all([
+        db.select().from(furnitureItems),
+        db.select().from(groupsTable),
+        db.select().from(categoriesTable),
+        db.select().from(manufacturersTable),
+        db.select({ key: secretsTable.key }).from(secretsTable).limit(1),
+        db.select().from(photoTagsTable),
+      ]);
 
-      try {
-        const [
-          { data: pData, error: pErr },
-          { data: gData, error: gErr },
-          { data: cData, error: cErr },
-          { data: mData, error: mErr },
-          { error: secretErr },
-          { data: ptData, error: ptErr },
-        ] = await Promise.all([
-          supabase.from("furniture_items").select("id, group_id, category_id, manufacturer_id, image_hash, image_url, thumb_hash, name, item_code, is_group_cover").abortSignal(controller.signal),
-          supabase.from("groups").select("id, name, cover_photo_id").abortSignal(controller.signal),
-          supabase.from("categories").select("id").abortSignal(controller.signal),
-          supabase.from("manufacturers").select("id").abortSignal(controller.signal),
-          supabase.from("secrets").select("key").limit(1).abortSignal(controller.signal),
-          supabase.from("photo_tags").select("photo_id, tag_id").abortSignal(controller.signal),
-        ]);
+      // Map Drizzle results to snake_case for task compatibility
+      const photos: PhotoRecord[] = pData.map(p => ({
+        id: p.id,
+        group_id: p.groupId || undefined,
+        category_id: p.categoryId || undefined,
+        manufacturer_id: p.manufacturerId || undefined,
+        image_hash: p.imageHash || undefined,
+        image_url: p.imageUrl || undefined,
+        thumb_hash: p.thumbHash || undefined,
+        name: p.name as any,
+        item_code: p.itemCode || undefined,
+        is_group_cover: p.isGroupCover || undefined,
+        created_at: p.createdAt?.toISOString(),
+        updated_at: p.updatedAt?.toISOString(),
+        user_id: p.userId || undefined
+      }));
 
-        clearTimeout(timeoutId);
+      const groups: GroupRecord[] = gData.map(g => ({
+        id: g.id,
+        name: g.name as any,
+        cover_photo_id: g.coverPhotoId || undefined,
+        created_at: g.createdAt?.toISOString(),
+        updated_at: g.updatedAt?.toISOString()
+      }));
 
-        if (pErr) throw pErr;
-        if (gErr) throw gErr;
-        if (ptErr) throw ptErr;
-        
-        const photos = (pData || []) as PhotoRecord[];
-        const groups = (gData || []) as GroupRecord[];
-        const categories = (cData || []) as CategoryRecord[];
-        const manufacturers = (mData || []) as ManufacturerRecord[];
-        const photoTags = (ptData || []) as PhotoTagRecord[];
+      const categories: CategoryRecord[] = cData.map(cat => ({
+        id: cat.id,
+        code: cat.code || '',
+        name_zh: cat.nameZh || ''
+      }));
 
-        // Run modular diagnostics
-        const diagnosticResults = await Promise.all(
-          diagnosticRegistry.map(task => 
-            task.run({
-              supabase,
-              photos,
-              groups,
-              categories,
-              manufacturers,
-              photoTags
-            })
-          )
-        );
-        diagnosticResults.forEach(res => { if (res) issues.push(res); });
-      } catch (innerErr: unknown) {
-        clearTimeout(timeoutId);
-        if (innerErr instanceof Error && innerErr.name === 'AbortError') {
-          return c.json({ success: false, error: "數據庫查詢超時，請稍後重試 (Timeout)" }, 504);
-        }
-        throw innerErr;
-      }
+      const manufacturers: ManufacturerRecord[] = mData.map(m => ({
+        id: m.id,
+        name: m.name || ''
+      }));
+
+      const photoTags: PhotoTagRecord[] = ptData.map(pt => ({
+        id: `${pt.photoId ?? ''}_${pt.tagId ?? ''}`,
+        photo_id: pt.photoId ?? '',
+        tag_id: pt.tagId ?? ''
+      }));
+
+      // Run modular diagnostics
+      // Note: passing null for supabase as it should be deprecated, tasks should use pre-fetched data
+      const diagnosticResults = await Promise.all(
+        diagnosticRegistry.map(task => 
+          task.run({
+            supabase: null as any, 
+            photos,
+            groups,
+            categories,
+            manufacturers,
+            photoTags
+          })
+        )
+      );
+      diagnosticResults.forEach(res => { if (res) issues.push(res); });
 
       return c.json({ 
         timestamp: Date.now(), 
@@ -79,9 +98,9 @@ adminDiagnose.get("/", async (c) => {
         }, 
         issues 
       });
-      } catch (e: unknown) {
-        return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown diagnostic error' }, 500);
-      }
+    } catch (e: unknown) {
+      return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown diagnostic error' }, 500);
+    }
 });
 
 adminDiagnose.get("/r2", async (c) => {
@@ -118,5 +137,20 @@ adminDiagnose.get("/r2", async (c) => {
       return c.json({ success: true, stage: "ready", message: "R2 连接成功！", details: { configState } });
     } catch (globalErr: unknown) {
       return c.json({ success: false, error: (globalErr as Error).message || "未知诊断错误" });
+    }
+});
+
+adminDiagnose.get("/db-schema", async (c) => {
+    try {
+        const table = c.req.query("table") || "furniture_items";
+        const columns = await db.execute(sql`
+            SELECT column_name, data_type, is_nullable 
+            FROM information_schema.columns 
+            WHERE table_name = ${table}
+            ORDER BY ordinal_position;
+        `);
+        return c.json({ success: true, table, columns });
+    } catch (e: any) {
+        return c.json({ success: false, error: e.message }, 500);
     }
 });

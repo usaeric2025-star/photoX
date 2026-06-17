@@ -3,7 +3,7 @@ import { EyeOff, Eye, RefreshCcw } from "lucide-react";
 import { ProductFormData, Tag } from "@/types";
 import { FormSectionHeader, CategoryGrid } from "@/components/admin/FormShared";
 import { ManufacturerTagSelect } from "@/components/admin/ManufacturerTagSelect";
-import { PhotoTagSelector } from "@/components/admin/edit/PhotoTagSelector";
+import { PhotoTagSelector } from '@/features/photo-edit';
 import { useCategories, useTags, useManufacturers } from "@/hooks";
 import { useUIStore } from "@/store/useUIStore";
 import { Tabs } from "@/components/shared/Tabs";

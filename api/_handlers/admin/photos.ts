@@ -1,6 +1,7 @@
 import { logger } from '../../_lib/logger.js';
 import { Hono } from 'hono';
-import { getSupabaseAdmin } from "../../_lib/supabase.js";
+import { db, aiAuditLogs, systemLogs, furnitureItems } from "@/db/index";
+import { eq, desc, inArray, sql, like } from "drizzle-orm";
 
 export const adminPhotos = new Hono();
 
@@ -9,84 +10,59 @@ adminPhotos.get("/photo-ai-result/:photoId", async (c) => {
         const { photoId } = c.req.param();
         if (!photoId) return c.json({ success: false, error: "photoId is required" }, 400);
 
-        const supabase = await getSupabaseAdmin();
-        
-        // 1. Try querying ai_audit_logs first (as it's the modern way)
-        let { data: auditLog, error: auditError } = await supabase
-            .from("ai_audit_logs")
-            .select("*")
-            .eq("photo_id", photoId)
-            // Remove success check to show failed logs too
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
+        // 1. Try querying ai_audit_logs first
+        const auditLog = await db.query.aiAuditLogs.findFirst({
+            where: eq(aiAuditLogs.photoId, photoId),
+            orderBy: [desc(aiAuditLogs.createdAt)]
+        });
 
-        if (!auditError && auditLog) {
+        if (auditLog) {
             let rawResult = '';
             
-            // New struct: uses raw_output
-            if (auditLog.raw_output) {
-                rawResult = typeof auditLog.raw_output === 'object' 
-                    ? JSON.stringify(auditLog.raw_output, null, 2)
-                    : String(auditLog.raw_output);
+            if (auditLog.rawOutput) {
+                rawResult = typeof auditLog.rawOutput === 'object' 
+                    ? JSON.stringify(auditLog.rawOutput, null, 2)
+                    : String(auditLog.rawOutput);
             }
-            if (!rawResult && auditLog.error_message) {
-                // If AI execution failed, error is often recorded in error_message or fallback
-                rawResult = auditLog.error_message;
-            }
-            if (!rawResult && auditLog.cleaned_output) {
-                rawResult = typeof auditLog.cleaned_output === 'object' 
-                    ? JSON.stringify(auditLog.cleaned_output, null, 2)
-                    : String(auditLog.cleaned_output);
+            if (!rawResult && auditLog.cleanedOutput) {
+                rawResult = typeof auditLog.cleanedOutput === 'object' 
+                    ? JSON.stringify(auditLog.cleanedOutput, null, 2)
+                    : String(auditLog.cleanedOutput);
             }
             if (!rawResult) {
-                // Return a reconstructed JSON object as ultimate fallback so it's never blank
                 rawResult = JSON.stringify({
                     status: auditLog.status || "success",
                     model: auditLog.model || "Gemini-2.0",
-                    prompt_version: auditLog.prompt_version || "v1",
-                    analysis_timestamp: auditLog.created_at,
+                    prompt_version: auditLog.promptVersion || "v1",
+                    analysis_timestamp: auditLog.createdAt,
                     warning: "Raw stream was unreachable, reconstructed from structured database values.",
-                    structured_data: auditLog.cleaned_output || {}
+                    structured_data: auditLog.cleanedOutput || {}
                 }, null, 2);
             }
 
             const resultObj = {
                 photo_id: photoId,
                 raw_result: rawResult,
-                parsed_data: auditLog.cleaned_output || null,
-                created_at: auditLog.created_at
+                parsed_data: auditLog.cleanedOutput || null,
+                created_at: auditLog.createdAt
             };
             return c.json({ success: true, data: resultObj });
         }
 
         // 2. Fallback to older system_logs
-        let { data: rawLogs, error } = await supabase
-            .from("system_logs")
-            .select("*")
-            .eq("context", "AI_Executor")
-            .eq("error_message", `AI analysis completed for photo ${photoId}`)
-            .order("created_at", { ascending: false })
+        let rawLogs = await db.select()
+            .from(systemLogs)
+            .where(sql`${systemLogs.operation} = 'AI_Executor' AND ${systemLogs.message} = ${`AI analysis completed for photo ${photoId}`}`)
+            .orderBy(desc(systemLogs.createdAt))
             .limit(1);
 
-        if (error) {
-            logger.warn(`[get-photo-ai-result-failed]`, error.message);
-            return c.json({ success: true, data: null });
-        }
-
         if (!rawLogs || rawLogs.length === 0) {
-            // Slower fallback query using JSONB unpacking for older or legacy logs
-            const fallbackRes = await supabase
-                .from("system_logs")
-                .select("*")
-                .eq("context", "AI_Executor")
-                .filter("metadata->>photo_id", "eq", photoId)
-                .order("created_at", { ascending: false })
+            // Slower fallback query using JSONB unpacking
+            rawLogs = await db.select()
+                .from(systemLogs)
+                .where(sql`${systemLogs.operation} = 'AI_Executor' AND (metadata->>'photo_id') = ${photoId}`)
+                .orderBy(desc(systemLogs.createdAt))
                 .limit(1);
-            
-            if (!fallbackRes.error && fallbackRes.data && fallbackRes.data.length > 0) {
-                rawLogs = fallbackRes.data;
-            }
         }
 
         const logRecord = rawLogs?.[0];
@@ -94,15 +70,17 @@ adminPhotos.get("/photo-ai-result/:photoId", async (c) => {
             return c.json({ success: true, data: null });
         }
 
+        const metadata = logRecord.metadata as Record<string, unknown> | null;
         const resultObj = {
             photo_id: photoId,
-            raw_result: logRecord.metadata.raw_result || '',
-            parsed_data: logRecord.metadata.parsed_data || null,
-            created_at: logRecord.created_at
+            raw_result: (metadata?.raw_result as string) || '',
+            parsed_data: (metadata?.parsed_data as unknown) || null,
+            created_at: logRecord.createdAt
         };
 
         return c.json({ success: true, data: resultObj });
     } catch (e: unknown) {
+        logger.error("get-photo-ai-result handler failed:", e);
         return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown error' }, 500);
     }
 });
@@ -112,9 +90,14 @@ adminPhotos.post("/photo/update", async (c) => {
         const { id, updates } = await c.req.json();
         if (!id) return c.json({ success: false, error: "id is required" }, 400);
 
-        const supabase = await getSupabaseAdmin();
-        const { error } = await supabase.from("furniture_items").update(updates).eq("id", id);
-        if (error) throw error;
+        // Map updates to camelCase
+        const mappedUpdates: Record<string, unknown> = {};
+        for (const [key, value] of Object.entries(updates as Record<string, unknown>)) {
+            const camelKey = key.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+            mappedUpdates[camelKey] = value;
+        }
+
+        await db.update(furnitureItems).set(mappedUpdates).where(eq(furnitureItems.id, id));
         return c.json({ success: true });
     } catch (e: unknown) {
         return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown error' }, 500);
@@ -128,32 +111,19 @@ adminPhotos.post("/delete-photos", async (c) => {
         return c.json({ success: false, error: "ids array required" }, 400);
       }
 
-      const supabase = await getSupabaseAdmin();
-      
-      const { data: photosData, error: fetchError } = await supabase
-        .from("furniture_items")
-        .select("id, image_url")
-        .in("id", ids);
+      const photosData = await db.select({ id: furnitureItems.id, imageUrl: furnitureItems.imageUrl })
+        .from(furnitureItems)
+        .where(inArray(furnitureItems.id, ids));
 
-      if (fetchError) throw fetchError;
-
-      // Clean up associated system_logs to avoid orphan rows and storage leaks
+      // Clean up associated system_logs
       try {
-        await supabase
-          .from("system_logs")
-          .delete()
-          .eq("context", "AI_Executor")
-          .filter("metadata->>photo_id", "in", `(${ids.map(id => `"${id}"`).join(',')})`);
+        await db.delete(systemLogs)
+            .where(sql`${systemLogs.operation} = 'AI_Executor' AND (metadata->>'photo_id') IN (${sql.join(ids.map(id => sql`${id}`), sql`, `)})`);
       } catch (err) {
         logger.warn("[delete-photos] Clean up associated system_logs failed:", err);
       }
 
-      const { error: deleteError } = await supabase
-        .from("furniture_items")
-        .delete()
-        .in("id", ids);
-
-      if (deleteError) throw deleteError;
+      await db.delete(furnitureItems).where(inArray(furnitureItems.id, ids));
 
       if (photosData && photosData.length > 0) {
         const { getR2Client } = await import("../../_lib/storage.js");
@@ -161,14 +131,14 @@ adminPhotos.post("/delete-photos", async (c) => {
         const bucketName = process.env.R2_BUCKET_NAME;
         if (bucketName) {
           const fileKeys = photosData
-            .map((p: { image_url?: string | null }) => {
-              if (!p.image_url) return null;
+            .map((p) => {
+              if (!p.imageUrl) return null;
               try {
-                const url = new URL(p.image_url);
+                const url = new URL(p.imageUrl);
                 return url.pathname.replace(/^\//, '');
               } catch {
-                if (p.image_url.includes("photox/public/")) {
-                  return "photox/public/" + p.image_url.split("photox/public/")[1];
+                if (p.imageUrl.includes("photox/public/")) {
+                  return "photox/public/" + p.imageUrl.split("photox/public/")[1];
                 }
                 return null;
               }
@@ -201,14 +171,10 @@ adminPhotos.post("/delete-photos", async (c) => {
 
 adminPhotos.get("/error-events", async (c) => {
     try {
-        const supabase = await getSupabaseAdmin();
-        const { data, error } = await supabase
-            .from('system_logs')
-            .select('*')
-            .order('created_at', { ascending: false })
-            .order('id', { ascending: false })
+        const data = await db.select()
+            .from(systemLogs)
+            .orderBy(desc(systemLogs.createdAt), desc(systemLogs.id))
             .limit(300);
-        if (error) throw error;
         return c.json({ success: true, data });
     } catch (e: unknown) {
         const err = e instanceof Error ? e : new Error(String(e));
@@ -218,14 +184,8 @@ adminPhotos.get("/error-events", async (c) => {
 
 adminPhotos.post("/error-events-clear", async (c) => {
     try {
-        const supabase = await getSupabaseAdmin();
-        const { data, error } = await supabase
-            .from('system_logs')
-            .delete()
-            .not('id', 'is', null)
-            .select('id');
-        if (error) throw error;
-        return c.json({ success: true, count: data?.length || 0 });
+        const result = await db.delete(systemLogs).returning({ id: systemLogs.id });
+        return c.json({ success: true, count: result.length });
     } catch (e: unknown) {
         logger.error('[Admin] Clear logs failed:', e);
         const err = e instanceof Error ? e : new Error(String(e));

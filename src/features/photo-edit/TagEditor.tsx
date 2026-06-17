@@ -1,7 +1,7 @@
 import React from 'react';
 import { usePhotoEditSessionContext } from '@/hooks/photo/usePhotoEditSessionContext';
-import { PhotoTagSelector } from '../edit/PhotoTagSelector';
-import { useTags, useTagCreate, useTagEdit, useTagDelete } from '../../../hooks';
+import { PhotoTagSelector } from './PhotoTagSelector';
+import { useTags, useTagCreate, useTagEdit, useTagDelete } from '@/hooks';
 
 /**
  * Encapsulated Tag Selector for Photo Edit Drawer

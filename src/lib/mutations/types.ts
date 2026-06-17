@@ -2,6 +2,10 @@ export interface MutationConfig<TData, TVars, TQueryKey extends readonly unknown
   name: string
   service: (vars: TVars) => Promise<TData>
   invalidate?: TQueryKey | TQueryKey[] | ((data: TData, vars: TVars) => TQueryKey | TQueryKey[])
+  /**
+   * Optimistic update function. 
+   * NOTE: According to Architecture Redlines, every optimistic mutation MUST have rollback testing.
+   */
   optimistic?: ((old: unknown, vars: TVars, queryKey?: readonly unknown[]) => unknown)
   successMessage?: string
   errorMessage?: string

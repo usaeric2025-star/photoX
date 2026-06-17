@@ -1,55 +1,64 @@
 import { Hono } from 'hono';
 import { type } from 'arktype';
-import { getSupabaseAdmin } from '../_lib/supabase.js';
+import { db, categories as categoriesTable, furnitureItems } from '@/db/index';
+import { eq, asc, ne } from 'drizzle-orm';
 import { CategoryReqSchema } from '../_shared/apiContractSchema.js';
-
-const TABLE_NAME = 'categories';
 
 export const categories = new Hono()
   .get('/', async (c) => {
-    const supabase = await getSupabaseAdmin();
-    
-    const { data, error } = await supabase
-        .from(TABLE_NAME)
-        .select('id, code, name_zh, name_en, name_ms, sort_order')
-        .eq('is_active', true)
-        .order('sort_order', { ascending: true });
+    try {
+      const data = await db
+          .select({
+              id: categoriesTable.id,
+              code: categoriesTable.code,
+              name_zh: categoriesTable.nameZh,
+              name_en: categoriesTable.nameEn,
+              name_ms: categoriesTable.nameMs,
+              sort_order: categoriesTable.sortOrder,
+          })
+          .from(categoriesTable)
+          .where(eq(categoriesTable.isActive, true))
+          .orderBy(asc(categoriesTable.sortOrder));
 
-    if (error) return c.json({ success: false, error: error.message }, 500);
+      // Transform to frontend format: { id, name, code, zh, en, ms, sort_order }
+      const formatted = data.map((item) => ({
+          id: item.id,
+          name: item.name_zh,
+          zh: item.name_zh,
+          en: item.name_en,
+          ms: item.name_ms,
+          code: item.code,
+          sort_order: item.sort_order,
+      }));
 
-    // Transform to frontend format: { id, name, code, zh, en, ms, sort_order }
-    const formatted = data.map((item: Record<string, unknown>) => ({
-        id: item.id,
-        name: item.name_zh,
-        zh: item.name_zh,
-        en: item.name_en,
-        ms: item.name_ms,
-        code: item.code,
-        sort_order: item.sort_order,
-    }));
-
-    return c.json({ success: true, data: formatted });
+      return c.json({ success: true, data: formatted });
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      return c.json({ success: false, error: err.message }, 500);
+    }
   })
   .post('/seed', async (c) => {
-    const supabase = await getSupabaseAdmin();
-    
-    // Clean up
-    await supabase.from(TABLE_NAME).delete().neq('id', -1);
-    
-    const seedData = [
-      { code: 'chair', name_zh: '椅子', name_en: 'Chair', name_ms: 'Kerusi', sort_order: 1 },
-      { code: 'table', name_zh: '桌子', name_en: 'Table', name_ms: 'Meja', sort_order: 2 },
-      { code: 'bed', name_zh: '床具', name_en: 'Bed', name_ms: 'Katil', sort_order: 3 },
-      { code: 'cabinet', name_zh: '柜子', name_en: 'Cabinet', name_ms: 'Almari', sort_order: 4 },
-      { code: 'office', name_zh: '办公', name_en: 'Office', name_ms: 'Pejabat', sort_order: 5 },
-      { code: 'sofa', name_zh: '沙发', name_en: 'Sofa', name_ms: 'Sofa', sort_order: 6 },
-      { code: 'others', name_zh: '其他', name_en: 'Others', name_ms: 'Lain-lain', sort_order: 7 }
-    ];
+    try {
+      // Clean up using Drizzle
+      await db.delete(categoriesTable).where(ne(categoriesTable.id, '00000000-0000-0000-0000-000000000000'));
+      
+      const seedData = [
+        { code: 'chair', nameZh: '椅子', nameEn: 'Chair', nameMs: 'Kerusi', sortOrder: 1 },
+        { code: 'table', nameZh: '桌子', nameEn: 'Table', nameMs: 'Meja', sortOrder: 2 },
+        { code: 'bed', nameZh: '床具', nameEn: 'Bed', nameMs: 'Katil', sortOrder: 3 },
+        { code: 'cabinet', nameZh: '柜子', nameEn: 'Cabinet', nameMs: 'Almari', sortOrder: 4 },
+        { code: 'office', nameZh: '办公', nameEn: 'Office', nameMs: 'Pejabat', sortOrder: 5 },
+        { code: 'sofa', nameZh: '沙发', nameEn: 'Sofa', nameMs: 'Sofa', sortOrder: 6 },
+        { code: 'others', nameZh: '其他', nameEn: 'Others', nameMs: 'Lain-lain', sortOrder: 7 }
+      ];
 
-    const { error } = await supabase.from(TABLE_NAME).insert(seedData);
-    if (error) return c.json({ success: false, error: error.message }, 500);
-    
-    return c.json({ success: true, message: 'Database seeded successfully' });
+      await db.insert(categoriesTable).values(seedData);
+      
+      return c.json({ success: true, message: 'Database seeded successfully' });
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      return c.json({ success: false, error: err.message }, 500);
+    }
   })
   .post('/clear-photos', async (c) => {
     const body = await c.req.json();
@@ -57,15 +66,18 @@ export const categories = new Hono()
     if (check instanceof type.errors) throw new Error(check.summary);
 
     const { categoryId } = check;
-    const supabase = await getSupabaseAdmin();
-    const { data, error } = await supabase
-        .from('furniture_items')
-        .update({ category_id: null })
-        .eq('category_id', categoryId)
-        .select('id');
-    
-    if (error) return c.json({ success: false, error: error.message }, 500);
-    return c.json({ success: true, data: data?.map((i: { id: string }) => i.id) || [] });
+    try {
+      const updated = await db
+          .update(furnitureItems)
+          .set({ categoryId: null })
+          .where(eq(furnitureItems.categoryId, categoryId))
+          .returning({ id: furnitureItems.id });
+      
+      return c.json({ success: true, data: updated.map(i => i.id) });
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      return c.json({ success: false, error: err.message }, 500);
+    }
   })
   .post('/', async (c) => {
     const body = await c.req.json();
@@ -73,14 +85,27 @@ export const categories = new Hono()
     if (check instanceof type.errors) throw new Error(check.summary);
 
     const { categoryData } = check;
-    const supabase = await getSupabaseAdmin();
-    const { error, data } = await supabase
-        .from(TABLE_NAME)
-        .insert(categoryData)
-        .select()
-        .single();
-    if (error) return c.json({ success: false, error: error.message }, 500);
-    return c.json({ success: true, data });
+    try {
+      // Map frontend fields (snake_case) to Drizzle fields (camelCase)
+      const mappedData = {
+        code: categoryData.code,
+        nameZh: categoryData.name_zh,
+        nameEn: categoryData.name_en,
+        nameMs: categoryData.name_ms,
+        sortOrder: categoryData.sort_order,
+        isActive: categoryData.is_active,
+      };
+
+      const [data] = await db
+          .insert(categoriesTable)
+          .values(mappedData)
+          .returning();
+      
+      return c.json({ success: true, data });
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      return c.json({ success: false, error: err.message }, 500);
+    }
   })
   .put('/:id', async (c) => {
     const id = c.req.param('id');
@@ -89,21 +114,36 @@ export const categories = new Hono()
     if (check instanceof type.errors) throw new Error(check.summary);
 
     const { updates } = check;
-    const supabase = await getSupabaseAdmin();
-    const { error } = await supabase
-        .from(TABLE_NAME)
-        .update(updates)
-        .eq('id', id);
-    if (error) return c.json({ success: false, error: error.message }, 500);
-    return c.json({ success: true });
+    try {
+      const mappedUpdates: Record<string, unknown> = {};
+      if (updates.code !== undefined) mappedUpdates.code = updates.code;
+      if (updates.name_zh !== undefined) mappedUpdates.nameZh = updates.name_zh;
+      if (updates.name_en !== undefined) mappedUpdates.nameEn = updates.name_en;
+      if (updates.name_ms !== undefined) mappedUpdates.nameMs = updates.name_ms;
+      if (updates.sort_order !== undefined) mappedUpdates.sortOrder = updates.sort_order;
+      if (updates.is_active !== undefined) mappedUpdates.isActive = updates.is_active;
+
+      await db
+          .update(categoriesTable)
+          .set(mappedUpdates)
+          .where(eq(categoriesTable.id, id));
+      
+      return c.json({ success: true });
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      return c.json({ success: false, error: err.message }, 500);
+    }
   })
   .delete('/:id', async (c) => {
     const id = c.req.param('id');
-    const supabase = await getSupabaseAdmin();
-    const { error } = await supabase
-        .from(TABLE_NAME)
-        .delete()
-        .eq('id', id);
-    if (error) return c.json({ success: false, error: error.message }, 500);
-    return c.json({ success: true });
+    try {
+      await db
+          .delete(categoriesTable)
+          .where(eq(categoriesTable.id, id));
+      
+      return c.json({ success: true });
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      return c.json({ success: false, error: err.message }, 500);
+    }
   });

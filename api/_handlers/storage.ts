@@ -2,7 +2,8 @@ import { logger } from '../_lib/logger.js';
 import { Hono } from "hono";
 import { S3Client, PutObjectCommand, ListObjectsV2Command, DeleteObjectCommand, CopyObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { getSupabaseAdmin } from "../_lib/supabase.js";
+import { db, systemLogs, furnitureItems } from "@/db/index";
+import { eq } from "drizzle-orm";
 import { getServerEnv } from "../_shared/envSchema.js";
 import { getR2Client } from "../_lib/storage.js";
 import { requireRealUser } from "../_lib/auth.js";
@@ -15,30 +16,25 @@ storage.post("/log-error", async (c) => {
         const body = await c.req.json();
         const metadata = body.metadata || {};
         const payload = {
-            error_message: String(body.error_message || body.message || 'Unknown error').substring(0, 5000),
-            stack_trace: (body.stack_trace || body.stack || body.component_stack || null) as string | null,
+            errorMessage: String(body.error_message || body.message || 'Unknown error').substring(0, 5000),
+            stackTrace: (body.stack_trace || body.stack || body.component_stack || null) as string | null,
             url: body.url || '',
             context: metadata.context || body.context || 'global',
             metadata: {
                 ...metadata,
                 level: metadata.level || body.level || 'error'
             },
-            created_at: new Date().toISOString()
+            createdAt: new Date()
         };
-        const supabase = await getSupabaseAdmin();
-        const { error } = await supabase
-            .from('system_logs')
-            .insert([payload]);
-        if (error) {
-            logger.error("Failed to insert system_log:", error);
-            return c.json({ success: false, error: error.message }, 500);
-        }
+        
+        await db.insert(systemLogs).values(payload as any);
         return c.json({ success: true });
     } catch (e: unknown) {
         logger.error("Error logging via /log-error", e);
         return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown error' }, 500);
     }
 });
+
 storage.post("/upload-direct", async (c) => {
     try {
       await requireRealUser(c);
@@ -76,7 +72,6 @@ storage.post("/upload-direct", async (c) => {
     }
 });
 
-
 storage.post("/upload-presign", async (c) => {
     try {
       await requireRealUser(c);
@@ -85,20 +80,18 @@ storage.post("/upload-presign", async (c) => {
 
       // 排重检查
       if (imageHash && !force) {
-        const supabase = await getSupabaseAdmin();
-        const { data: existing } = await supabase
-          .from("furniture_items")
-          .select("id, image_url, image_hash")
-          .eq("image_hash", imageHash)
-          .maybeSingle();
+        const existing = await db.query.furnitureItems.findFirst({
+            columns: { id: true, imageUrl: true, imageHash: true },
+            where: eq(furnitureItems.imageHash, imageHash)
+        });
         
         if (existing) {
-          if (existing.image_url && (existing.image_url.startsWith('http') || existing.image_url.startsWith('https'))) {
+          if (existing.imageUrl && (existing.imageUrl.startsWith('http') || existing.imageUrl.startsWith('https'))) {
             return c.json({ 
               success: false,
               error: "照片已存在",
               duplicateId: existing.id,
-              existingUrl: existing.image_url 
+              existingUrl: existing.imageUrl 
             }, 409);
           }
           
@@ -173,7 +166,3 @@ storage.post("/r2-delete", async (c) => {
       return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown error' }, 500);
     }
 });
-
-function normalizeUrl(u: string) { return u.toLowerCase().trim().split('?')[0].replace(/\/$/, ''); }
-
-// Audit and Maintenance Routes have been moved to admin/storageMaintenance.ts

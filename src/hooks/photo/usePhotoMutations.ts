@@ -5,7 +5,7 @@ import { BatchActionResult, deleteMany, batchUpdate } from '@/services/photo/com
 import { queryKeys } from '@/lib/query/keys';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { defineMutation } from '@/lib/mutations/defineMutation';
-import { useAppMutation } from '@/lib/mutations/useAppMutation';
+import { useOptimisticMutation } from '@/lib/mutations/useOptimisticMutation';
 import { QueryKey } from '@tanstack/react-query';
 
 /**
@@ -46,7 +46,7 @@ const photoEditConfig = defineMutation<
   successMessage: '已更新',
 });
 
-export const usePhotoEditMutation = () => useAppMutation(photoEditConfig);
+export const usePhotoEditMutation = () => useOptimisticMutation(photoEditConfig);
 
 // 2. 照片删除
 const photoDeleteConfig = defineMutation<
@@ -66,7 +66,7 @@ const photoDeleteConfig = defineMutation<
   successMessage: '照片已删除',
 });
 
-export const usePhotoDelete = () => useAppMutation(photoDeleteConfig);
+export const usePhotoDelete = () => useOptimisticMutation(photoDeleteConfig);
 
 // 3. 批量编辑
 const photoBatchEditConfig = defineMutation<
@@ -99,7 +99,7 @@ const photoBatchEditConfig = defineMutation<
   successMessage: '批量操作完成',
 });
 
-export const usePhotoBatchEdit = () => useAppMutation(photoBatchEditConfig);
+export const usePhotoBatchEdit = () => useOptimisticMutation(photoBatchEditConfig);
 
 // 4. 钉选/取消钉选
 const togglePinConfig = defineMutation<
@@ -125,5 +125,5 @@ const togglePinConfig = defineMutation<
   successMessage: '状态已更新',
 });
 
-export const useTogglePin = () => useAppMutation(togglePinConfig);
+export const useTogglePin = () => useOptimisticMutation(togglePinConfig);
 

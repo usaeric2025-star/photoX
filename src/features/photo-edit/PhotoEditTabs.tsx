@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Tabs } from "../../shared/Tabs";
+import { Tabs } from "@/components/shared/Tabs";
 import { BasicInfoTab } from "./BasicInfoTab";
 import { OrgTab } from "./OrgTab";
 import { DetailsTab } from "./DetailsTab";

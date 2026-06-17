@@ -1,7 +1,8 @@
 import { normalizeI18n } from "../../_shared/i18n.js";
 import { logger } from "../logger.js";
 import { extractJSON } from "./utils.js";
-import { getSupabaseAdmin } from "../supabase.js";
+import { db, aiAuditLogs } from "@/db/index";
+import { eq } from "drizzle-orm";
 
 interface AIProvider {
   name: string;
@@ -37,12 +38,10 @@ export interface AIAuditData {
 }
 
 /**
- * AI 審計日誌保存：R2 (冷儲存) + ai_audit_logs (索引)
+ * AI 審計日誌保存：ai_audit_logs (索引)
  */
 export const saveAIAuditLog = async (data: AIAuditData): Promise<void> => {
   try {
-    const supabase = await getSupabaseAdmin();
-    
     let parsedRawOutput = null;
     try {
       if (typeof data.rawResponse === 'string' && data.rawResponse.startsWith('{')) {
@@ -59,23 +58,22 @@ export const saveAIAuditLog = async (data: AIAuditData): Promise<void> => {
       : { error: data.errorMessage };
 
     // 写入数据库 (符合最新的 schema)
-    const { error } = await supabase.from('ai_audit_logs').insert({
-      photo_id: data.photoId || null,
-      model: data.model,
-      prompt_version: data.promptVersion || 'v1',
-      cleaned_output: jsonOutput,
-      raw_output: parsedRawOutput,
-      latency_ms: data.duration,
-      cost_est: data.cost_est || 0,
-      token_usage: data.token_usage || null,
-      status: data.status,
-      created_at: new Date().toISOString()
-    });
-    
-    if (error) {
-      logger.error('[AIAudit] Failed to save AI audit log into DB:', error);
-    } else {
+    try {
+      await db.insert(aiAuditLogs).values({
+        photoId: data.photoId || null,
+        model: data.model,
+        promptVersion: data.promptVersion || 'v1',
+        cleanedOutput: jsonOutput,
+        rawOutput: parsedRawOutput,
+        latencyMs: data.duration,
+        costEst: data.cost_est ? String(data.cost_est) : "0",
+        tokenUsage: data.token_usage || null,
+        status: data.status,
+        createdAt: new Date()
+      });
       logger.info(`[AIAudit] Successfully saved AI audit log for ${data.photoId || 'global'}`);
+    } catch (dbErr) {
+      logger.error('[AIAudit] Failed to save AI audit log into DB:', dbErr);
     }
   } catch (err: unknown) {
     logger.error('[AIAudit] Save task exception:', (err as Error).message);
@@ -208,9 +206,12 @@ export async function executeAITask(options: AITaskOptions) {
     promptText: prompt
   });
 
-  // Return fallback data matching expected schema
+  // Return fallback data matching expected structure
   return {
-     _fallback: true,
-     _error: lastErrorMessage
+     data: {
+        _fallback: true,
+        _error: lastErrorMessage
+     },
+     rawText: lastErrorMessage
   };
 }

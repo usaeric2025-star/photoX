@@ -1,9 +1,8 @@
 import { Hono } from 'hono';
 import { type } from 'arktype';
-import { getSupabaseAdmin } from '../../_lib/supabase.js';
+import { db, furnitureItems, photoTags } from '@/db/index';
+import { inArray, eq, isNull, and } from 'drizzle-orm';
 import { PhotoIdsReqSchema, PhotoCheckHashReqSchema } from '../../_shared/apiContractSchema.js';
-
-const TABLE_NAME = 'furniture_items';
 
 export const detailHandler = (app: Hono) => {
   app.post('/by-ids', async (c) => {
@@ -12,17 +11,43 @@ export const detailHandler = (app: Hono) => {
     if (check instanceof type.errors) throw new Error(check.summary);
 
     const { ids } = check;
-    const supabase = await getSupabaseAdmin();
-    const { data, error } = await supabase.from(TABLE_NAME).select('*, photo_tags(tag_id)').in('id', ids);
-    if (error) return c.json({ success: false, error: error.message }, 500);
-    return c.json({ success: true, data: data || [] });
+    try {
+        const results = await db.query.furnitureItems.findMany({
+            where: inArray(furnitureItems.id, ids),
+            with: {
+                tags: {
+                    columns: {
+                        tagId: true
+                    }
+                }
+            }
+        });
+
+        // Legacy format matching photo_tags: [{tag_id: '...'}]
+        const formatted = results.map(photo => {
+            const { tags, ...rest } = photo;
+            return {
+                ...rest,
+                photo_tags: tags.map(t => ({ tag_id: t.tagId }))
+            };
+        });
+
+        return c.json({ success: true, data: formatted });
+    } catch (error: any) {
+        return c.json({ success: false, error: error.message }, 500);
+    }
   });
 
   app.post('/without-thumb-hash', async (c) => {
-    const supabase = await getSupabaseAdmin();
-    const { data, error } = await supabase.from(TABLE_NAME).select('id').is('thumb_hash', null);
-    if (error) return c.json({ success: false, error: error.message }, 500);
-    return c.json({ success: true, data: data || [] });
+    try {
+        const data = await db
+            .select({ id: furnitureItems.id })
+            .from(furnitureItems)
+            .where(isNull(furnitureItems.thumbHash));
+        return c.json({ success: true, data: data || [] });
+    } catch (error: any) {
+        return c.json({ success: false, error: error.message }, 500);
+    }
   });
 
   app.post('/check-hash', async (c) => {
@@ -31,9 +56,17 @@ export const detailHandler = (app: Hono) => {
     if (check instanceof type.errors) throw new Error(check.summary);
 
     const { hash } = check;
-    const supabase = await getSupabaseAdmin();
-    const { data, error } = await supabase.from(TABLE_NAME).select('image_url, manual_code').eq('image_hash', hash).limit(1).maybeSingle();
-    if (error) return c.json({ success: false, error: error.message }, 500);
-    return c.json({ success: true, data });
+    try {
+        const data = await db.query.furnitureItems.findFirst({
+            columns: {
+                imageUrl: true,
+                manualCode: true
+            },
+            where: eq(furnitureItems.imageHash, hash)
+        });
+        return c.json({ success: true, data: data || null });
+    } catch (error: any) {
+        return c.json({ success: false, error: error.message }, 500);
+    }
   });
 };

@@ -1,25 +1,28 @@
 import { decrypt } from "../encryption.js";
 import { getServerEnv } from "../../_shared/envSchema.js";
 import { logger } from "../logger.js";
-import { SupabaseClient } from "@supabase/supabase-js";
+import { db, secrets as secretsTable, settings as settingsTable } from "@/db/index";
+import { eq } from "drizzle-orm";
 
-export const getModel = async (supabase?: SupabaseClient, customModel?: string, providerName?: string): Promise<string> => {
+export const getModel = async (customModel?: string, providerName?: string): Promise<string> => {
     if (customModel) return customModel;
 
     let targetProvider = providerName || 'openrouter';
 
-    if (supabase) {
-        try {
-            // First check secrets table for provider specific model
-            const { data: secretData } = await supabase.from('secrets').select('value').eq('key', `${targetProvider}_model`).maybeSingle();
-            if (secretData?.value) return secretData.value as string;
-            
-            // Fallback to legacy custom_model setting
-            const { data } = await supabase.from('settings').select('custom_model').eq('id', 1).maybeSingle();
-            if (data?.custom_model) return data.custom_model as string;
-        } catch (e) {
-            logger.warn("[getModel] could not fetch custom model:", e);
-        }
+    try {
+        // First check secrets table for provider specific model
+        const secretData = await db.query.secrets.findFirst({
+            where: eq(secretsTable.key, `${targetProvider}_model`)
+        });
+        if (secretData?.value) return secretData.value as string;
+        
+        // Fallback to legacy custom_model setting
+        const settingsRes = await db.query.settings.findFirst({
+            where: eq(settingsTable.id, 1)
+        });
+        if (settingsRes?.customModel) return settingsRes.customModel as string;
+    } catch (e) {
+        logger.warn("[getModel] could not fetch custom model:", e);
     }
 
     try {
@@ -141,13 +144,17 @@ export class AgnesProvider extends BaseAIProvider {
     }
 }
 
-export async function getAIProvider(providerName: string, supabase: SupabaseClient, modelOverride?: string) {
+export async function getAIProvider(providerName?: string, modelOverride?: string) {
     // 從 secrets 讀取首选供應商
-    const { data: primary } = await supabase.from('secrets').select('value').eq('key', 'PRIMARY_AI_PROVIDER').maybeSingle();
+    const primary = await db.query.secrets.findFirst({
+        where: eq(secretsTable.key, 'PRIMARY_AI_PROVIDER')
+    });
     let actualProvider = providerName || primary?.value as string || 'openrouter';
 
     // 從 secrets 讀取統一格式的 API Key
-    let { data: secret } = await supabase.from('secrets').select('value').eq('key', actualProvider).maybeSingle();
+    let secret = await db.query.secrets.findFirst({
+        where: eq(secretsTable.key, actualProvider)
+    });
 
     let apiKey = '';
     
@@ -158,10 +165,10 @@ export async function getAIProvider(providerName: string, supabase: SupabaseClie
     // Fallback logic for legacy settings table
     if (!apiKey) {
         try {
-            const { data: settings, error: settingsErr } = await supabase.from('settings').select('gemini_api_key').maybeSingle();
-            if (!settingsErr && settings?.gemini_api_key) {
+            const settings = await db.query.settings.findFirst();
+            if (settings?.geminiApiKey) {
                // Basic heuristic to decide if the legacy key belongs to this provider
-               const key = settings.gemini_api_key as string;
+               const key = settings.geminiApiKey as string;
                if (actualProvider === 'openrouter' && key.startsWith('sk-or-')) {
                    apiKey = decrypt(key);
                } else if (actualProvider === 'agnes' && !key.startsWith('sk-or-')) {
@@ -180,7 +187,7 @@ export async function getAIProvider(providerName: string, supabase: SupabaseClie
         model = 'google/' + model;
     }
     if (!model) {
-        model = await getModel(supabase, undefined, actualProvider);
+        model = await getModel(undefined, actualProvider);
     }
     
     logger.info(`[getAIProvider] Using ${actualProvider} with model: ${model}`);  

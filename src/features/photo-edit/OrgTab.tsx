@@ -1,14 +1,14 @@
 import React from 'react';
 import { useWatch } from 'react-hook-form';
 import { usePhotoEditSessionContext } from '@/hooks/photo/usePhotoEditSessionContext';
-import { FormSectionHeader } from '../FormShared';
-import { useManufacturers, useManufacturerCreate, useManufacturerEdit, useManufacturerDelete } from '../../../hooks';
-import { useUIStore } from '../../../store';
-import { PromptDialog } from '../../ui/PromptDialog';
+import { FormSectionHeader } from '@/components/admin/FormShared';
+import { useManufacturers, useManufacturerCreate, useManufacturerEdit, useManufacturerDelete } from '@/hooks';
+import { useUIStore } from '@/store/useUIStore';
+import { PromptDialog } from '@/components/ui/PromptDialog';
 import { translations } from '@/locales';
 import { CategorySelect } from './CategorySelect';
 import { TagEditor } from './TagEditor';
-import { ManufacturerSelect } from '../ManufacturerSelect';
+import { ManufacturerSelect } from '@/components/admin/ManufacturerSelect';
 import { Eye, EyeOff } from 'lucide-react';
 
 export function OrgTab() {

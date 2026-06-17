@@ -1,36 +1,36 @@
 import { Hono } from 'hono';
-import { getSupabaseAdmin } from '../_lib/supabase.js';
+import { db, tags, categories, photoTags } from '@/db/index';
+import { ilike, inArray } from 'drizzle-orm';
 
 export const search = new Hono()
   .get('/ids', async (c) => {
     const q = c.req.query('q') || '';
     if (!q) return c.json({ success: true, data: { catIds: [], photoIds: [] } });
 
-    const supabase = await getSupabaseAdmin();
-    const escapedQ = q.replace(/[\\%_]/g, '\\$&');
+    try {
+        const pattern = `%${q}%`;
 
-    const [tagsRes, catsRes] = await Promise.all([
-      supabase.from('tags').select('id').ilike('name', `%${escapedQ}%`),
-      supabase.from('categories').select('id').ilike('name', `%${escapedQ}%`)
-    ]);
+        const [tagsRes, catsRes] = await Promise.all([
+          db.select({ id: tags.id }).from(tags).where(ilike(tags.name, pattern)),
+          db.select({ id: categories.id }).from(categories).where(ilike(categories.nameZh, pattern)) // Simplified for ZH
+        ]);
 
-    if (tagsRes.error || catsRes.error) {
-      return c.json({ success: false, error: 'Search failed' }, 500);
+        const tagIds = tagsRes.map(t => t.id);
+        const catIds = catsRes.map(c => c.id);
+
+        let photoIds: string[] = [];
+        if (tagIds.length > 0) {
+          const ptData = await db.select({ photoId: photoTags.photoId })
+            .from(photoTags)
+            .where(inArray(photoTags.tagId, tagIds));
+          photoIds = ptData.map(pt => pt.photoId).filter((id): id is string => id !== null);
+        }
+
+        return c.json({ 
+          success: true, 
+          data: { catIds, photoIds } 
+        });
+    } catch (error: any) {
+        return c.json({ success: false, error: 'Search failed: ' + error.message }, 500);
     }
-
-    const tagIds = (tagsRes.data || []).map((t: { id: string }) => t.id);
-    const catIds = (catsRes.data || []).map((c: { id: string }) => c.id);
-
-    let photoIds: string[] = [];
-    if (tagIds.length > 0) {
-      const { data: ptData, error: ptError } = await supabase.from('photo_tags').select('photo_id').in('tag_id', tagIds);
-      if (!ptError && ptData) {
-        photoIds = ptData.map((pt: { photo_id: string }) => pt.photo_id);
-      }
-    }
-
-    return c.json({ 
-      success: true, 
-      data: { catIds, photoIds } 
-    });
   });

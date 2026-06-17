@@ -21,6 +21,12 @@ export function MaintenanceCenter({ onSuccess }: MaintenanceCenterProps) {
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <MaintenanceTool 
+            issueId="schema_sync"
+            title="同步資料庫架構" 
+            description="檢查並補全資料庫中缺失的 group_order、dimensions、status 等必要欄位。如果遇到查詢報錯，請優先執行此操作。"
+            onSuccess={onSuccess}
+          />
+          <MaintenanceTool 
             issueId="orphan_files"
             title="找回云端孤儿照片" 
             description="扫描 R2 云端存储，如果在云端发现有照片但在数据库中丢失了记录，会尝试补全并恢复。"

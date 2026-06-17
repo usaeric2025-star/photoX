@@ -1500,3 +1500,16 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 
 ### 理由
 PhotoX 當前單頁數據 < 100KB，IndexedDB 收益為零且增加 Bundle Size 與調試複雜度。
+
+## 架構紅線（永久鎖定）
+
+### 型別安全
+- ✅ 所有 API Schema 必須與 Drizzle Schema 同步（CI 自動檢查）
+- ✅ 所有路由必須有 `beforeLoad` 型別安全 Guard
+- ✅ 所有 `useOptimisticMutation` 必須有回滾測試
+
+### 禁止事項
+- ❌ 禁止重新引入 `member_count` 冗餘欄位
+- ❌ 禁止引入邊緣快取（除非 PV > 10K/天）
+- ❌ 禁止為低頻調試需求建立專用 UI
+- ❌ 禁止未經實測的假設性優化

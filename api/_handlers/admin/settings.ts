@@ -1,22 +1,20 @@
 import { logger } from '../../_lib/logger.js';
 import { Hono } from 'hono';
-import { getSupabaseAdmin } from "../../_lib/supabase.js";
+import { db, secrets as secretsTable, settings as settingsTable } from "@/db/index";
+import { eq, inArray } from "drizzle-orm";
 import { encrypt } from '../../_lib/encryption.js';
 
 export const adminSettings = new Hono();
 
 adminSettings.get("/get-keys", async (c) => {
     try {
-        const supabase = await getSupabaseAdmin();
-        
-        // Parallelize DB queries to reduce latency
-        const { data: secretsRes, error: secretsErr } = await supabase.from('secrets')
-            .select('key, value')
-            .in('key', ['openrouter', 'agnes', 'PRIMARY_AI_PROVIDER', 'openrouter_model', 'agnes_model']);
+        const keysToFetch = ['openrouter', 'agnes', 'PRIMARY_AI_PROVIDER', 'openrouter_model', 'agnes_model'];
+        const secretsRes = await db.select()
+            .from(secretsTable)
+            .where(inArray(secretsTable.key, keysToFetch));
 
-        const secrets = secretsRes || [];
         const config: Record<string, string> = {};
-        secrets.forEach((s: { key: string; value: string }) => { config[s.key] = s.value; });
+        secretsRes.forEach((s) => { config[s.key] = s.value || ''; });
         
         let hasOpenrouter = !!config.openrouter;
         let hasAgnes = !!config.agnes;
@@ -24,8 +22,11 @@ adminSettings.get("/get-keys", async (c) => {
 
         // Fallback for UI indicators
         if (!hasAgnes || !hasOpenrouter) {
-            const { data: settingsRes } = await supabase.from('settings').select('gemini_api_key, custom_model').eq('id', 1).maybeSingle();
-            const legacyKey = settingsRes?.gemini_api_key;
+            const settingsRes = await db.query.settings.findFirst({
+                columns: { geminiApiKey: true },
+                where: eq(settingsTable.id, 1)
+            });
+            const legacyKey = settingsRes?.geminiApiKey;
             if (legacyKey) {
                 if (legacyKey.startsWith('sk-or-')) hasOpenrouter = true;
                 else hasAgnes = true;
@@ -57,27 +58,20 @@ adminSettings.post("/save-key", async (c) => {
         if (!provider || !apiKey) return c.json({ success: false, error: "缺少必要參數" }, 400);
 
         apiKey = String(apiKey).trim();
-        const supabase = await getSupabaseAdmin();
         const encryptedKey = encrypt(apiKey);
         
-        // Ensure we handle the case where 'secrets' table might not exist yet
-        const { error } = await supabase.from('secrets').upsert({ 
+        await db.insert(secretsTable).values({ 
             key: provider, 
             value: encryptedKey,
-            updated_at: new Date().toISOString()
-        }, { onConflict: 'key' });
-
-        if (error) {
-            logger.error(`Database error saving secret (${provider}):`, error);
-            if (error.code === 'PGRST116' || error.message?.includes('does not exist')) {
-                return c.json({ 
-                    success: false, 
-                    error: "數據庫缺失 'secrets' 表。請前往「系統診斷」運行自動修復。" 
-                }, 500);
+            updatedAt: new Date()
+        }).onConflictDoUpdate({
+            target: secretsTable.key,
+            set: { 
+                value: encryptedKey,
+                updatedAt: new Date()
             }
-            throw error;
-        }
-        
+        });
+
         return c.json({ 
             success: true, 
             message: `密鑰已加密保存！` 
@@ -91,16 +85,20 @@ adminSettings.post("/save-key", async (c) => {
 adminSettings.post("/save-model", async (c) => {
     try {
         const { provider, model } = await c.req.json();
-        const supabase = await getSupabaseAdmin();
-        
         const key = `${provider}_model`;
         
-        const { error } = await supabase
-            .from('secrets')
-            .upsert({ key, value: model, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+        await db.insert(secretsTable).values({ 
+            key, 
+            value: model, 
+            updatedAt: new Date() 
+        }).onConflictDoUpdate({
+            target: secretsTable.key,
+            set: { 
+                value: model, 
+                updatedAt: new Date() 
+            }
+        });
             
-        if (error) throw error;
-        
         return c.json({ success: true });
     } catch (e: unknown) {
         logger.error("Save model failed:", e);
@@ -114,24 +112,18 @@ adminSettings.post("/save-provider", async (c) => {
         if (!provider) {
             return c.json({ success: false, error: "Missing provider" }, 400);
         }
-        const supabase = await getSupabaseAdmin();
-        // 將首選供應商存入 secrets 表而非 settings 表，以避免 schema cache 錯誤
-        const { error } = await supabase.from('secrets').upsert({ 
+
+        await db.insert(secretsTable).values({ 
             key: 'PRIMARY_AI_PROVIDER', 
             value: provider,
-            updated_at: new Date().toISOString()
-        }, { onConflict: 'key' });
-        
-        if (error) {
-            logger.error(`Database error saving provider preference:`, error);
-            if (error.code === 'PGRST116' || error.message?.includes('does not exist')) {
-                return c.json({ 
-                    success: false, 
-                    error: "數據庫缺失 'secrets' 表。請前往「系統診斷」運行自動修復。" 
-                }, 500);
+            updatedAt: new Date()
+        }).onConflictDoUpdate({
+            target: secretsTable.key,
+            set: { 
+                value: provider,
+                updatedAt: new Date()
             }
-            throw error;
-        }
+        });
         
         return c.json({ success: true });
     } catch (e: unknown) {
@@ -143,9 +135,19 @@ adminSettings.post("/save-provider", async (c) => {
 adminSettings.post("/save-settings", async (c) => {
     try {
         const { settingsPayload } = await c.req.json();
-        const supabase = await getSupabaseAdmin();
-        const { error } = await supabase.from('settings').upsert(settingsPayload, { onConflict: 'id' });
-        if (error) return c.json({ success: false, error: error.message }, 500);
+        
+        // Map frontend fields (snake_case) to Drizzle fields (camelCase)
+        const mappedPayload: any = {};
+        for (const [key, value] of Object.entries(settingsPayload)) {
+            const camelKey = key.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+            mappedPayload[camelKey] = value;
+        }
+
+        await db.insert(settingsTable).values(mappedPayload).onConflictDoUpdate({
+            target: settingsTable.id,
+            set: mappedPayload
+        });
+        
         return c.json({ success: true });
     } catch (e: unknown) {
         return c.json({ success: false, error: (e as Error).message }, 500);
@@ -155,9 +157,10 @@ adminSettings.post("/save-settings", async (c) => {
 adminSettings.post("/upsert-logo", async (c) => {
     try {
         const { url } = await c.req.json();
-        const supabase = await getSupabaseAdmin();
-        const { error } = await supabase.from('settings').upsert({ id: 1, logo_url: url }, { onConflict: 'id' });
-        if (error) return c.json({ success: false, error: error.message }, 500);
+        await db.insert(settingsTable).values({ id: 1, logoUrl: url }).onConflictDoUpdate({
+            target: settingsTable.id,
+            set: { logoUrl: url }
+        });
         return c.json({ success: true });
     } catch (e: unknown) {
         return c.json({ success: false, error: (e as Error).message }, 500);

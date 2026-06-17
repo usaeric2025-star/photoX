@@ -113,5 +113,13 @@ export const ISSUE_ACTIONS: Record<string, IssueAction> = {
       const data = await res.json() as any;
       return { message: '清理成功' };
     }
+  },
+  schema_sync: {
+    name: "同步数据库架構",
+    execute: async () => {
+      const res = await api.admin.repair.$post({ json: { issueId: 'schema_sync' } });
+      const data = await res.json() as any;
+      return { message: data.message || "Schema 同步成功", ...data };
+    }
   }
 };

@@ -1,49 +1,87 @@
 import { Hono } from 'hono';
-import { getSupabaseAdmin } from '../../_lib/supabase.js';
-
-const TABLE_NAME = 'furniture_items';
+import { db, furnitureItems, systemLogs } from '@/db/index';
+import { syncGroupCoversAndCount } from '../../_lib/groups.js';
 
 export const createHandler = (app: Hono) => {
   app.post('/upsert', async (c) => {
     const { payload } = await c.req.json() as { payload: Record<string, unknown> };
-    const supabase = await getSupabaseAdmin();
 
-    // Fix user_id if it is 'staff' or missing (avoids invalid input syntax for type uuid)
+    // Fix user_id if it is 'staff' or missing
     if (!payload.user_id || payload.user_id === 'staff') {
-        const { data: userRecord } = await supabase.from('users').select('id').limit(1).maybeSingle();
-        payload.user_id = userRecord?.id || '8ec53131-a589-4b50-beb4-6b5308541e1b';
+        // Fallback id
+        payload.user_id = '8ec53131-a589-4b50-beb4-6b5308541e1b';
     }
 
-    const { data, error } = await supabase.from(TABLE_NAME).upsert(payload, { onConflict: 'id' }).select('id').maybeSingle();
-    if (error) return c.json({ success: false, error: error.message }, 500);
+    try {
+        const mappedPayload: Record<string, unknown> = {};
+        const fieldMap: Record<string, string> = {
+            id: 'id',
+            user_id: 'userId',
+            name: 'name',
+            description: 'description',
+            category_id: 'categoryId',
+            manufacturer_id: 'manufacturerId',
+            group_id: 'groupId',
+            is_group_cover: 'isGroupCover',
+            is_pinned: 'isPinned',
+            image_url: 'imageUrl',
+            image_hash: 'imageHash', 
+            thumb_hash: 'thumbHash',
+            price: 'price',
+            note: 'note',
+            type: 'type',
+            is_hidden: 'isHidden',
+            item_code: 'itemCode',
+            manual_code: 'manualCode',
+            model_number: 'modelNumber',
+            dimensions: 'dimensions'
+        };
 
-    // If upsert introduced a group_id, reconcile
-    if (payload.group_id) {
-      const { syncGroupCoversAndCount } = await import('../../_lib/groups.js');
-      await syncGroupCoversAndCount(supabase, [String(payload.group_id)]);
+        for (const [key, val] of Object.entries(payload)) {
+            const mappedKey = fieldMap[key] || key;
+            mappedPayload[mappedKey] = val;
+        }
+
+        const results = await db.insert(furnitureItems)
+            .values(mappedPayload)
+            .onConflictDoUpdate({
+                target: furnitureItems.id,
+                set: mappedPayload
+            })
+            .returning({ id: furnitureItems.id });
+
+        const data = results[0] || null;
+
+        if (payload.group_id) {
+          await syncGroupCoversAndCount([String(payload.group_id)]);
+        }
+
+        return c.json({ success: true, data });
+    } catch (error: any) {
+        return c.json({ success: false, error: error.message }, 500);
     }
-
-    return c.json({ success: true, data });
   });
 
   app.post('/ai-result', async (c) => {
     const { payload } = await c.req.json() as { payload: Record<string, unknown> };
-    const supabase = await getSupabaseAdmin();
-    // Save raw response and parsed data to system_logs.metadata per architecture rules
-    const { data, error } = await supabase.from('system_logs').insert({
-        error_message: `AI analysis completed for photo ${payload.photo_id}`,
-        context: 'AI_Executor',
-        metadata: {
-            action: 'analyze_photo',
+    try {
+        const [data] = await db.insert(systemLogs).values({
+            message: `AI analysis completed for photo ${payload.photo_id}`,
+            operation: 'analyze_photo',
             level: 'info',
-            photo_id: payload.photo_id,
-            raw_result: payload.raw_result,
-            parsed_data: payload.parsed_data
-        },
-        created_at: payload.created_at || new Date().toISOString()
-    }).select().maybeSingle();
-    
-    if (error) return c.json({ success: false, error: error.message }, 500);
-    return c.json({ success: true, data });
+            resource: String(payload.photo_id),
+            metadata: {
+                action: 'analyze_photo',
+                photo_id: payload.photo_id,
+                raw_result: payload.raw_result,
+                parsed_data: payload.parsed_data
+            },
+            createdAt: payload.created_at ? new Date(payload.created_at as string) : new Date()
+        }).returning();
+        
+        return c.json({ success: true, data });
+    } catch (error: any) {
+        return c.json({ success: false, error: error.message }, 500);
+    }
   });
 };

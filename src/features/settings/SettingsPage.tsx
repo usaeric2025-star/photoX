@@ -10,7 +10,7 @@ import {
 import { api } from '@/lib/api';
 
 import { showToast } from '@/lib/ui/toast';
-import { ErrorLogViewer } from '../admin/ErrorLogViewer';
+import { ErrorLogViewer } from '@/features/diagnostics/components/ErrorLogViewer';
 import { AppSettings, User, ApiResponse } from '@/types';
 import { 
   useUIStore, useShallow
@@ -29,7 +29,7 @@ import { AISettings } from './AISettings';
 import { SyncSettings } from './SyncSettings';
 import { TagsManager } from './TagsManager';
 import { CategoriesManager } from './CategoriesManager';
-import { DiagnosticsDashboard } from '@/components/admin/DiagnosticsDashboard';
+import { DiagnosticsDashboard } from '@/features/diagnostics/components/DiagnosticsDashboard';
 import { translations } from '@/locales';
 
 import { usePhotoGallery } from '@/hooks/photo/usePhotoGallery';

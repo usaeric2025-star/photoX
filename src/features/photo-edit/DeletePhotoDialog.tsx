@@ -1,4 +1,4 @@
-import { ConfirmDialog } from "../../ui/ConfirmDialog";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { translations } from "@/locales";
 
 interface DeletePhotoDialogProps {

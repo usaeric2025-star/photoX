@@ -1,9 +1,11 @@
+import { ErrorCode } from '../../_shared/errorCodes.js';
+
 export class AppError extends Error {
-  public code: string;
+  public code: ErrorCode | string;
   public status: number;
   public traceId?: string;
 
-  constructor(message: string, code: string = 'INTERNAL_ERROR', status: number = 500) {
+  constructor(message: string, code: ErrorCode | string = ErrorCode.INTERNAL_ERROR, status: number = 500) {
     super(message);
     this.name = 'AppError';
     this.code = code;

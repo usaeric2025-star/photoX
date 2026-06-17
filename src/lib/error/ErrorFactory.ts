@@ -1,24 +1,12 @@
 import { ProblemDetails } from '@/types/problemDetails';
 import { handleError as legacyHandleError } from './errorHandler';
 import * as Sentry from '@sentry/react';
+import { ErrorCode } from '@/shared/errorCodes';
+
+export { ErrorCode };
 
 // ===== 1. 錯誤碼枚舉 =====
-export enum ErrorCode {
-  // 業務驗證類
-  VALIDATION_FAILED = 'VALIDATION_FAILED',
-  PERMISSION_DENIED = 'PERMISSION_DENIED',
-  
-  // 資料與狀態類
-  NOT_FOUND = 'NOT_FOUND',
-  CONFLICT = 'CONFLICT',
-  
-  // 外部服務類
-  NETWORK_ERROR = 'NETWORK_ERROR',
-  THIRD_PARTY_TIMEOUT = 'THIRD_PARTY_TIMEOUT',
-  
-  // 系統未知類
-  UNKNOWN_ERROR = 'UNKNOWN_ERROR',
-}
+// Using shared ErrorCode from api/_shared/errorCodes
 
 // ===== 2. 錯誤嚴重等級 =====
 export enum ErrorSeverity {

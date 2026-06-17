@@ -1,7 +1,8 @@
-import { getSupabaseAdmin } from "../supabase.js";
+import { db, furnitureItems } from "@/db/index";
 import { getR2Client } from "../storage.js";
 import { ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { getServerEnv } from "../../_shared/envSchema.js";
+import { sql, isNotNull } from "drizzle-orm";
 
 const serverEnv = getServerEnv(process.env);
 
@@ -22,7 +23,6 @@ export function normalizeUrl(u: string) {
 }
 
 export async function runStorageAudit() {
-    const supabase = await getSupabaseAdmin();
     const r2 = await getR2Client();
     const bucket = serverEnv.R2_BUCKET_NAME!;
     const publicUrlPrefixRaw = serverEnv.R2_PUBLIC_URL_PREFIX || "";
@@ -32,16 +32,19 @@ export async function runStorageAudit() {
     const startTime = Date.now();
     const MAX_RUN_TIME = 7500; // 7.5 seconds limit
 
-    const { data: dbPhotos } = await supabase
-        .from("furniture_items")
-        .select("id, image_url, name")
-        .not("image_url", "is", null);
+    const dbPhotos = await db.select({
+        id: furnitureItems.id,
+        imageUrl: furnitureItems.imageUrl,
+        name: furnitureItems.name
+    })
+    .from(furnitureItems)
+    .where(isNotNull(furnitureItems.imageUrl));
 
-    const dbRecords: DbRecord[] = (dbPhotos as Record<string, unknown>[] || []).map((p) => ({
+    const dbRecords: DbRecord[] = dbPhotos.map((p) => ({
         id: String(p.id),
-        name: String(p.name || ''),
-        url: String(p.image_url || ''),
-        normalized: normalizeUrl(String(p.image_url || ''))
+        name: typeof p.name === 'object' ? (p.name as any)?.zh || "" : String(p.name || ''),
+        url: String(p.imageUrl || ''),
+        normalized: normalizeUrl(String(p.imageUrl || ''))
     }));
 
     const dbNormalizedSet = new Set(dbRecords.map((r) => r.normalized));

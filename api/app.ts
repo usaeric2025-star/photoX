@@ -97,36 +97,24 @@ app.onError((err, c) => {
   });
 
   // Persistent Logging to DB
-  // [2026-06-11] Safely attempt to log to system_logs table
-  // We use a fire-and-forget approach but with careful error suppression to avoid 500 crashes in the logger itself
   (async () => {
     try {
-      const supabase = await getSupabaseAdmin().catch(() => null);
-      if (!supabase) {
-        console.warn('[log-error] Skip DB log: Supabase not ready during onError');
-        return;
-      }
-
-      const { error: insertError } = await supabase.from('system_logs').insert([{
-        error_message: `[API ERROR] ${appError.message}`,
-        stack_trace: appError.stack,
-        url: path,
-        context: 'Backend_API',
+      const { db, systemLogs } = await import("../src/db/index.js");
+      await db.insert(systemLogs).values({
+        message: `[API ERROR] ${appError.message}`,
+        level: 'error',
+        operation: `api.${path}`,
         metadata: {
           traceId,
           method,
           code: appError.code,
-          level: 'error',
+          stack: appError.stack,
           timestamp: new Date().toISOString()
         },
-        created_at: new Date().toISOString()
-      }]);
-
-      if (insertError) {
-        console.error('[log-error] DB insert failed:', insertError);
-      }
+        createdAt: new Date()
+      });
+      logger.info(`[API ERROR LOG] Successfully saved to system_logs`);
     } catch (logErr) {
-      // Never crash the primary request because log failed
       console.error('[log-error] Fatal exception in logger:', logErr);
     }
   })();
@@ -226,15 +214,13 @@ app.post("/log-error", async (c) => {
         const body = await c.req.json();
         const traceId = c.req.header('X-Trace-Id') || 'backend-' + Math.random().toString(36).substring(2, 12);
         
-        // Dynamic import to prevent circular dependency issues if any
-        const { getSupabaseAdmin } = await import("./_lib/supabase.js");
+        const { db, systemLogs } = await import("../src/db/index.js");
         const { logger } = await import("./_lib/logger.js");
         
-        const supabase = await getSupabaseAdmin();
         const errorMessage = body.message || body.error_message || 'Unknown Frontend Error';
         const stackTrace = body.stack || body.stack_trace || null;
 
-        // Proxy/Report to Sentry via server context to bypass any client-side browser DSN blocks/ad-blockers
+        // Proxy/Report to Sentry via server context
         if (sentryDsn) {
             const fakeError = new Error(errorMessage);
             fakeError.stack = stackTrace || undefined;
@@ -252,24 +238,20 @@ app.post("/log-error", async (c) => {
             });
         }
         
-        const { error } = await supabase.from('system_logs').insert([{
-            error_message: errorMessage,
-            stack_trace: stackTrace,
-            url: body.url || c.req.header('Referer') || null,
-            context: body.name || body.context || 'Frontend_Client',
+        await db.insert(systemLogs).values({
+            message: errorMessage,
+            level: 'error',
+            operation: body.context || 'Frontend_Client',
+            resource: body.url || c.req.header('Referer') || null,
             metadata: {
-                ...(body.context || body.metadata || {}),
+                ...(body.metadata || {}),
                 traceId: body.traceId || traceId,
                 userAgent: c.req.header('User-Agent'),
+                stack: stackTrace,
                 timestamp: new Date().toISOString()
             },
-            created_at: body.timestamp || new Date().toISOString()
-        }]);
-
-        if (error) {
-            console.error('[log-error] Database insert failed:', error);
-            return c.json({ success: false, error: 'Failed to persist log' }, 500 as any);
-        }
+            createdAt: body.timestamp ? new Date(body.timestamp) : new Date()
+        });
 
         return c.json({ success: true });
     } catch (err: unknown) {

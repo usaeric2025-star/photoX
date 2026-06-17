@@ -1,9 +1,8 @@
 import { Hono } from 'hono';
 import { type } from 'arktype';
-import { getServerEnv } from '../_shared/envSchema.js';
-import { getSupabaseAdmin } from '../_lib/supabase.js';
+import { db, furnitureItems, categories, tags, groups as groupsTable, groupCorrectionLogs, users } from '@/db/index';
+import { eq, and, inArray, desc, sql } from 'drizzle-orm';
 import { getAIProvider, OpenRouterProvider, AgnesProvider, BaseAIProvider } from '../_lib/ai/providerFactory.js';
-import { decrypt } from '../_lib/encryption.js';
 import { executeAITask } from '../_lib/ai/executor.js';
 import { processGroupAnalysis } from './ai/groupAnalysis.js';
 import { 
@@ -24,22 +23,6 @@ interface HonoContextUser {
     email?: string;
 }
 
-interface GroupInsertData {
-    id: string;
-    name: { zh: string; en: string; ms: string };
-    status: string;
-    created_at: string;
-    user_id?: string;
-}
-
-interface DBGroup {
-    id: string;
-    name: string | JsonObject;
-    status: string;
-    created_at: string;
-}
-
-const serverEnv = getServerEnv(process.env);
 export const ai = new Hono();
 
 ai.post("/test", async (c) => {
@@ -57,12 +40,9 @@ ai.post("/test", async (c) => {
                 provider = new OpenRouterProvider({ apiKey, model: model || 'google/gemini-2.5-flash-lite' });
             }
         } else {
-            const supabase = await getSupabaseAdmin();
-            // Pass providerName or undefined to use primary
-            provider = await getAIProvider(providerName, supabase, model);
+            provider = await getAIProvider(providerName, model);
         }
 
-        // Add a timeout for the test connection to avoid long hangs
         const chatPromise = provider.chat([{ role: 'user', content: 'test connection' }]);
         const timeoutPromise = new Promise<{ success: false; error: string }>((_, reject) => 
             setTimeout(() => reject(new Error('AI 連線測試超時 (15s)')), 15000)
@@ -87,10 +67,9 @@ ai.post("/run", async (c) => {
         if (check instanceof type.errors) throw new Error(check.summary);
         
         const { task, imageUrl, prompt } = check;
-        const supabase = await getSupabaseAdmin();
-        const provider = await getAIProvider('', supabase);
+        const provider = await getAIProvider('');
         const modelConfig = (provider as BaseAIProvider).getConfig().model;
-        const model = modelConfig || 'google/gemini-2.5-flash-lite'; // Ensure non-nullable
+        const model = modelConfig || 'google/gemini-2.5-flash-lite';
         
         const messages = imageUrl 
             ? [{ role: 'user', content: [{ type: 'image_url', image_url: { url: imageUrl } }, { type: 'text', text: prompt || 'Analyze this image' }]}]
@@ -119,30 +98,36 @@ ai.post("/analyze", async (c) => {
         if (check instanceof type.errors) throw new Error(check.summary);
 
         const { photoId, imageUrl } = check;
-        const supabase = await getSupabaseAdmin();
         let finalImageUrl = imageUrl;
 
         if (photoId) {
-            const { data: photo } = await supabase.from('furniture_items').select('image_url').eq('id', photoId).single();
-            if (photo) finalImageUrl = photo.image_url;
+            const photo = await db.query.furnitureItems.findFirst({
+                columns: { imageUrl: true },
+                where: eq(furnitureItems.id, photoId)
+            });
+            if (photo) finalImageUrl = photo.imageUrl ?? undefined;
         }
 
+        if (!finalImageUrl) finalImageUrl = undefined;
         if (!finalImageUrl) throw new Error("Image URL is required for analysis");
 
         const [catRef, tagRef, groupRef] = await Promise.all([
-            supabase.from('categories').select('*'),
-            supabase.from('tags').select('*'),
-            supabase.from('groups').select('id, name, status').eq('status', 'confirmed').order('created_at', { ascending: false }).limit(40),
+            db.select().from(categories),
+            db.select().from(tags),
+            db.select().from(groupsTable)
+                .where(eq(groupsTable.status, 'confirmed'))
+                .orderBy(desc(groupsTable.createdAt))
+                .limit(40),
         ]);
 
-        const provider = await getAIProvider('', supabase);
+        const provider = await getAIProvider();
         const modelConfig = (provider as BaseAIProvider).getConfig().model;
         const model = modelConfig || 'google/gemini-2.5-flash-lite';
         
         const context = {
-            categories: (catRef.data || []).map((c: { id: string; name: string; zh: string }) => ({ id: c.id, name: c.name, zh: c.zh })).slice(0, 50),
-            tags: (tagRef.data || []).map((t: { id: string; name: string; aliases: string[] }) => ({ id: t.id, name: t.name, aliases: t.aliases })).slice(0, 100),
-            groups: (groupRef.data || []).map((g: { id: string; name: string | { zh: string } }) => ({ id: g.id, name: typeof g.name === 'object' ? g.name.zh : g.name })),
+            categories: catRef.map(c => ({ id: c.id, name: c.nameZh, zh: c.nameZh })).slice(0, 50),
+            tags: tagRef.map(t => ({ id: t.id, name: t.name, aliases: t.aliases })).slice(0, 100),
+            groups: groupRef.map(g => ({ id: g.id, name: typeof g.name === 'object' ? (g.name as any)?.zh : g.name })),
         };
         
         const prompt = AI_PROMPTS.ANALYZE_PHOTO(context);
@@ -174,8 +159,7 @@ ai.post("/analyze-base64", async (c) => {
       if (check instanceof type.errors) throw new Error(check.summary);
 
       const { base64Image, customModel, promptText } = check;
-      const supabase = await getSupabaseAdmin();
-      const provider = await getAIProvider('', supabase, customModel);
+      const provider = await getAIProvider(undefined, customModel);
       const modelConfig = (provider as BaseAIProvider).getConfig().model;
       const model = modelConfig || 'google/gemini-2.5-flash-lite';
 
@@ -205,8 +189,7 @@ ai.post("/translate", async (c) => {
       if (check instanceof type.errors) throw new Error(check.summary);
 
       const { customModel, promptText } = check;
-      const supabase = await getSupabaseAdmin();
-      const provider = await getAIProvider('', supabase, check.customModel);
+      const provider = await getAIProvider(undefined, customModel);
       const modelConfig = (provider as BaseAIProvider).getConfig().model;
       const model = modelConfig || 'google/gemini-2.5-flash-lite';
 
@@ -235,9 +218,8 @@ ai.post("/analyze-group", async (c) => {
       const check = AIAnalyzeGroupReqSchema(body);
       if (check instanceof type.errors) throw new Error(check.summary);
 
-      const supabase = await getSupabaseAdmin();
       const prompt = AI_PROMPTS.ANALYZE_GROUP(check.photoDetails);
-      const provider = await getAIProvider('', supabase);
+      const provider = await getAIProvider();
       const modelConfig = (provider as BaseAIProvider).getConfig().model;
       const model = modelConfig || 'google/gemini-2.5-flash-lite';
 
@@ -265,9 +247,8 @@ ai.post("/analyze-photo-v2", async (c) => {
       const check = AIAnalyzePhotoV2ReqSchema(body);
       if (check instanceof type.errors) throw new Error(check.summary);
 
-      const supabase = await getSupabaseAdmin();
       const prompt = AI_PROMPTS.REFINE_PHOTO(check.photoDetail);
-      const provider = await getAIProvider('', supabase);
+      const provider = await getAIProvider();
       const modelConfig = (provider as BaseAIProvider).getConfig().model;
       const model = modelConfig || 'google/gemini-2.5-flash-lite';
 
@@ -296,20 +277,22 @@ ai.post("/cluster-photos", async (c) => {
         const check = AIClusterPhotosReqSchema(body);
         if (check instanceof type.errors) throw new Error(check.summary);
 
-        const supabase = await getSupabaseAdmin();
         const user = (c as { get: (key: string) => HonoContextUser | undefined }).get('user');
-        const userId = user?.id; // 從 requireRealUser 中獲獲的用戶 ID
+        const userId = user?.id;
 
         // 1. AI 識別
         const parsed = await processGroupAnalysis(check.photoIds);
-        const createdGroups: DBGroup[] = [];
+        const createdGroups: any[] = [];
 
-        // Optimize: Fetch a valid user_id from the source photos
+        // Optimize: Fetch a valid user_id
         let dbUserId: string | undefined = undefined;
         if (check.photoIds && check.photoIds.length > 0) {
-            const { data: sourcePhotos } = await supabase.from('furniture_items').select('user_id').in('id', check.photoIds).limit(1).maybeSingle();
-            if (sourcePhotos?.user_id) {
-                dbUserId = sourcePhotos.user_id as string;
+            const sourcePhoto = await db.query.furnitureItems.findFirst({
+                columns: { userId: true },
+                where: inArray(furnitureItems.id, check.photoIds)
+            });
+            if (sourcePhoto?.userId) {
+                dbUserId = sourcePhoto.userId;
             }
         }
 
@@ -317,47 +300,34 @@ ai.post("/cluster-photos", async (c) => {
         for (const g of parsed.groups) {
             const groupId = crypto.randomUUID();
             
-            const insertGroupData: GroupInsertData = {
+            let finalUserId = (userId && userId !== 'staff') ? userId : dbUserId;
+            if (!finalUserId) {
+               const userRecord = await db.query.users.findFirst({ columns: { id: true } });
+               finalUserId = userRecord?.id || '8ec53131-a589-4b50-beb4-6b5308541e1b';
+            }
+
+            const [groupData] = await db.insert(groupsTable).values({
                 id: groupId,
                 name: { zh: g.name, en: g.name_en, ms: g.name_ms },
                 status: 'confirmed',
-                created_at: new Date().toISOString()
-            };
-            
-            let finalUserId = (userId && userId !== 'staff') ? userId : dbUserId;
-            if (!finalUserId) {
-               const { data: userRecord } = await supabase.from('users').select('id').limit(1).maybeSingle();
-               finalUserId = userRecord?.id || '8ec53131-a589-4b50-beb4-6b5308541e1b';
-            }
-            insertGroupData.user_id = finalUserId;
+                userId: finalUserId,
+                createdAt: new Date()
+            } as any).returning();
 
-            // 寫入 groups 表為 draft
-            const { data: groupData, error: groupError } = await supabase
-                .from('groups')
-                .insert(insertGroupData)
-                .select()
-                .single();
-
-            if (groupError) throw groupError;
-
-            // 關聯照片
-            const { error: photoError } = await supabase
-                .from('furniture_items')
-                .update({ group_id: groupId })
-                .in('id', g.photoIds);
-
-            if (photoError) throw photoError;
+            await db.update(furnitureItems)
+                .set({ groupId: groupId })
+                .where(inArray(furnitureItems.id, g.photoIds));
 
             createdGroups.push(groupData);
         }
 
-        // 3. 記錄操作日誌 (可在大併發後異步，這裡同步保險)
-        await supabase.from('group_correction_logs').insert({
+        // 3. 記錄操作日誌
+        await db.insert(groupCorrectionLogs).values({
             operation: 'ai_cluster',
-            input_photo_ids: check.photoIds,
-            created_groups: createdGroups.map(g => g.id),
-            user_id: userId,
-            created_at: new Date().toISOString()
+            inputPhotoIds: check.photoIds,
+            createdGroups: createdGroups.map(g => g.id),
+            userId: userId,
+            createdAt: new Date()
         } as any);
 
         return c.json({ success: true, data: createdGroups } as ApiResponse);

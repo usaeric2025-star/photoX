@@ -1,11 +1,18 @@
 import { Capability } from '@/config/permissions';
 import { logger } from '@/lib/logger';
+import { User } from '@/types';
+
+export interface GuardContext {
+  user: User | null;
+  role: string;
+  can: (cap: Capability) => boolean;
+}
 
 export const authGuard = async ({ 
   context, 
   location 
 }: { 
-  context: { user: any }; 
+  context: GuardContext; 
   location: { pathname: string; search: any } 
 }) => {
   const { user } = context;
@@ -13,7 +20,10 @@ export const authGuard = async ({
     pathname: location.pathname, 
     hasUser: !!user 
   });
-  // Guard only checks permissions/logs, does not handle redirections here as per current logic
-  // Redirections can be added if needed
+  
+  if (location.pathname.startsWith('/admin') && !user) {
+    throw new Error('Unauthorized access to admin area');
+  }
+  
   return;
 };

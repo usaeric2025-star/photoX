@@ -2,7 +2,8 @@ import { logger } from '../../_lib/logger.js';
 import { Hono } from "hono";
 import { type } from "arktype";
 import { requireRealUser } from "../../_lib/auth.js";
-import { getSupabaseAdmin } from "../../_lib/supabase.js";
+import { db, furnitureItems } from "@/db/index";
+import { eq, or, isNull, inArray, sql } from "drizzle-orm";
 import { getServerEnv } from "../../_shared/envSchema.js";
 import { getR2Client } from "../../_lib/storage.js";
 import { ListObjectsV2Command, DeleteObjectCommand } from "@aws-sdk/client-s3";
@@ -60,24 +61,17 @@ storageMaintenance.get("/storage/audit", async (c) => {
 storageMaintenance.post("/storage/clean-orphans", async (c) => {
     try {
       await requireRealUser(c);
-      const supabase = await getSupabaseAdmin();
-      const { data: orphans, error } = await supabase
-        .from("furniture_items")
-        .select("id")
-        .or('image_url.is.null,image_url.eq.""');
+      const orphans = await db.select({ id: furnitureItems.id })
+        .from(furnitureItems)
+        .where(or(isNull(furnitureItems.imageUrl), eq(furnitureItems.imageUrl, "")));
 
-      if (error) throw error;
       if (!orphans || orphans.length === 0) {
         return c.json({ success: true, count: 0 });
       }
 
-      const ids = orphans.map((o: { id: string }) => o.id);
-      const { error: delError } = await supabase
-        .from("furniture_items")
-        .delete()
-        .in("id", ids);
+      const ids = orphans.map((o) => o.id);
+      await db.delete(furnitureItems).where(inArray(furnitureItems.id, ids));
 
-      if (delError) throw delError;
       return c.json({ success: true, count: ids.length, ids });
     } catch (e: unknown) {
       return c.json({ success: false, error: (e as Error).message }, 500);
@@ -87,17 +81,15 @@ storageMaintenance.post("/storage/clean-orphans", async (c) => {
 storageMaintenance.post("/storage/clean", async (c) => {
     try {
       await requireRealUser(c);
-      const supabase = await getSupabaseAdmin();
       const s3Client = await getR2Client();
       const bucket = serverEnv.R2_BUCKET_NAME;
       if (!bucket) throw new Error("R2_BUCKET_NAME missing");
 
-      const { data: photos, error } = await supabase.from("furniture_items").select("image_url");
-      if (error) throw error;
+      const photos = await db.select({ imageUrl: furnitureItems.imageUrl }).from(furnitureItems);
 
       const dbFiles: Set<string> = new Set();
-      photos.forEach((p: { image_url?: string }) => {
-        if (p.image_url?.includes("r2")) dbFiles.add(p.image_url.split("/").pop()!);
+      photos.forEach((p) => {
+        if (p.imageUrl?.includes("r2")) dbFiles.add(p.imageUrl.split("/").pop()!);
       });
 
       const r2FilesToClean: string[] = [];
@@ -131,7 +123,6 @@ storageMaintenance.post("/storage/clean", async (c) => {
 storageMaintenance.post("/storage/import-orphans", async (c) => {
     try {
       await requireRealUser(c);
-      const supabase = await getSupabaseAdmin();
       const s3Client = await getR2Client();
       const bucket = serverEnv.R2_BUCKET_NAME;
       const publicUrlPrefix = serverEnv.R2_PUBLIC_URL_PREFIX;
@@ -152,51 +143,20 @@ storageMaintenance.post("/storage/import-orphans", async (c) => {
         if (queryUserId) userId = queryUserId;
       }
 
-      // ... existing fallback logic for userId remains for robustness, but we've used ArkType for primary input
+      if (!userId || userId === '00000000-0000-0000-0000-000000000000') {
+        const existingItems = await db.query.furnitureItems.findMany({
+            columns: { userId: true },
+            where: sql`${furnitureItems.userId} IS NOT NULL AND ${furnitureItems.userId} != '00000000-0000-0000-0000-000000000000'`,
+            limit: 5
+        });
+        
+        if (existingItems && existingItems.length > 0) {
+            userId = existingItems[0].userId || undefined;
+        }
+      }
 
       if (!userId) {
-        try {
-          const { data: session } = await supabase.auth.getSession();
-          userId = session?.session?.user?.id;
-        } catch (err) {}
-      }
-
-      if (!userId || userId === '00000000-0000-0000-0000-000000000000') {
-        try {
-          const { data: existingItems } = await supabase
-            .from('furniture_items')
-            .select('user_id')
-            .not('user_id', 'is', null)
-            .limit(5);
-          
-          if (existingItems && existingItems.length > 0) {
-            for (const item of existingItems) {
-              if (item.user_id && item.user_id !== '00000000-0000-0000-0000-000000000000') {
-                userId = String(item.user_id);
-                break;
-              }
-            }
-          }
-        } catch (err) {}
-      }
-
-      if (!userId || userId === '00000000-0000-0000-0000-000000000000') {
-        try {
-          const { data: authUsers } = await supabase.auth.admin.listUsers();
-          if (authUsers?.users && authUsers.users.length > 0) {
-            const firstUser = authUsers.users.find((u: { id?: string }) => u.id && u.id !== '00000000-0000-0000-0000-000000000000');
-            if (firstUser) userId = firstUser.id;
-          }
-        } catch (err) {}
-      }
-
-      if (!userId || userId === '00000000-0000-0000-0000-000000000000') {
-        try {
-          const { data: users } = await supabase.from('users').select('id').limit(1);
-          userId = users?.[0]?.id || '00000000-0000-0000-0000-000000000000';
-        } catch (err) {
-          userId = '00000000-0000-0000-0000-000000000000';
-        }
+        userId = '00000000-0000-0000-0000-000000000000';
       }
 
       let continuationToken: string | undefined;
@@ -210,27 +170,10 @@ storageMaintenance.post("/storage/import-orphans", async (c) => {
       } while (continuationToken);
 
       const dbUrls = new Set<string>();
-      let from = 0;
-      const step = 1000;
-      let hasMore = true;
-
-      while (hasMore) {
-        const { data: batch, error: fetchError } = await supabase
-          .from("furniture_items")
-          .select("image_url")
-          .range(from, from + step - 1);
-        
-        if (fetchError) throw fetchError;
-        if (!batch || batch.length === 0) {
-          hasMore = false;
-        } else {
-          batch.forEach((p: { image_url?: string }) => {
-            if (p.image_url) dbUrls.add(normalizeUrl(p.image_url));
-          });
-          from += step;
-          if (batch.length < step) hasMore = false;
-        }
-      }
+      const allPhotos = await db.select({ imageUrl: furnitureItems.imageUrl }).from(furnitureItems);
+      allPhotos.forEach(p => {
+        if (p.imageUrl) dbUrls.add(normalizeUrl(p.imageUrl));
+      });
 
       const orphans = r2Keys.filter(key => {
         const lowers = key.toLowerCase();
@@ -287,12 +230,12 @@ storageMaintenance.post("/storage/import-orphans", async (c) => {
             }
 
             toCreate.push({
-              name: nameCandidate,
-              image_url: publicUrl,
-              description: `[自动恢复] 源文件: ${filename}`,
-              is_hidden: false, 
-              image_hash: hash,
-              user_id: userId
+              name: { zh: nameCandidate, en: nameCandidate, ms: nameCandidate },
+              imageUrl: publicUrl,
+              description: { zh: `[自动恢复] 源文件: ${filename}`, en: `[Auto-restore] Source: ${filename}`, ms: `[Pemulihan automatik] Sumber: ${filename}` },
+              isHidden: false, 
+              imageHash: hash,
+              userId: userId
             });
             
             dbUrls.add(normalizeUrl(publicUrl));
@@ -306,7 +249,6 @@ storageMaintenance.post("/storage/import-orphans", async (c) => {
               message: `正在处理: ${filename}`
             } as const;
             
-            // Validate with ArkType
             MaintenanceJobSchema(jobData);
             jobStore.set(jobId, jobData);
           } catch (err) {
@@ -315,12 +257,7 @@ storageMaintenance.post("/storage/import-orphans", async (c) => {
         }
 
         if (toCreate.length > 0) {
-          const { error } = await supabase.from("furniture_items").insert(toCreate);
-          if (error) {
-            const failData = { status: 'failed', progress: 100, processed: 0, total: orphans.length, message: "数据库写入失败", error: error.message } as const;
-            jobStore.set(jobId, failData);
-            return;
-          }
+          await db.insert(furnitureItems).values(toCreate);
         }
 
         const completedData = {
@@ -352,15 +289,11 @@ storageMaintenance.post("/storage/import-orphans", async (c) => {
 storageMaintenance.post("/storage/repair-hashes", async (c) => {
   try {
     await requireRealUser(c);
-    const supabase = await getSupabaseAdmin();
-    const { data: targets, error: fetchError } = await supabase
-      .from("furniture_items")
-      .select("id, image_url, image_hash")
-      .or('image_hash.is.null,image_hash.eq.""')
-      .not("image_url", "is", null)
+    const targets = await db.select({ id: furnitureItems.id, imageUrl: furnitureItems.imageUrl, imageHash: furnitureItems.imageHash })
+      .from(furnitureItems)
+      .where(sql`${or(isNull(furnitureItems.imageHash), eq(furnitureItems.imageHash, ""))} AND ${furnitureItems.imageUrl} IS NOT NULL`)
       .limit(20); 
 
-    if (fetchError) throw fetchError;
     if (!targets || targets.length === 0) {
       return c.json({ success: true, count: 0, message: "没有发现需要修复哈希的记录" });
     }
@@ -370,18 +303,17 @@ storageMaintenance.post("/storage/repair-hashes", async (c) => {
 
     for (const target of targets) {
       try {
-        if (!target.image_url) continue;
+        if (!target.imageUrl) continue;
 
-        const response = await fetch(target.image_url);
+        const response = await fetch(target.imageUrl);
         if (!response.ok) continue;
 
         const buffer = await response.arrayBuffer();
         const hash = crypto.createHash('md5').update(Buffer.from(buffer)).digest('hex');
 
-        await supabase
-          .from("furniture_items")
-          .update({ image_hash: hash })
-          .eq("id", target.id);
+        await db.update(furnitureItems)
+          .set({ imageHash: hash })
+          .where(eq(furnitureItems.id, target.id));
         
         repairedCount++;
       } catch (err) {

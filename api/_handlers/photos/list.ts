@@ -1,62 +1,34 @@
 import { Hono } from 'hono';
 import { type } from 'arktype';
-import { getSupabaseAdmin } from '../../_lib/supabase.js';
+import { db, furnitureItems, groups as groupsTable, tags as tagsTable, photoTags } from '@/db/index';
+import { eq, ne, and, or, ilike, sql, asc, desc, inArray, isNull, count, type SQL } from 'drizzle-orm';
 import { PhotoListReqSchema, ListByGroupReqSchema } from '../../_shared/apiContractSchema.js';
+import { errorFactory } from '../../_lib/error/AppError.js';
 
-import { SupabaseClient } from '@supabase/supabase-js';
+async function getGroupCounts(groupIds: string[], includeHidden = false) {
+    if (groupIds.length === 0) return new Map<string, number>();
 
-const TABLE_NAME = 'furniture_items';
-
-async function getGroupCounts(supabase: SupabaseClient, groupIds: string[], includeHidden = false) {
-    let query = supabase
-        .from('furniture_items')
-        .select('group_id')
-        .in('group_id', groupIds);
-    
+    let conditions: SQL | undefined = inArray(furnitureItems.groupId, groupIds);
     if (!includeHidden) {
-        query = query.eq('is_hidden', false);
+        conditions = and(conditions, eq(furnitureItems.isHidden, false));
     }
-    
-    const { data, error } = await query;
-    if (error || !data) return new Map();
+
+    const results = await db
+        .select({
+            groupId: furnitureItems.groupId,
+            count: count(furnitureItems.id),
+        })
+        .from(furnitureItems)
+        .where(conditions)
+        .groupBy(furnitureItems.groupId);
 
     const counts = new Map<string, number>();
-    for (const item of data) {
-        if (item.group_id) {
-            const count = counts.get(item.group_id) || 0;
-            counts.set(item.group_id, count + 1);
+    for (const res of results) {
+        if (res.groupId) {
+            counts.set(res.groupId, Number(res.count));
         }
     }
     return counts;
-}
-
-interface TagRow {
-  id: string | number;
-  name: string;
-}
-
-interface CachedTags {
-  data: TagRow[];
-  timestamp: number;
-}
-let tagsCache: CachedTags | null = null;
-const CACHE_TTL = 30000; // 30 seconds
-
-async function getCachedTags(supabase: SupabaseClient) {
-  const now = Date.now();
-  if (tagsCache && now - tagsCache.timestamp < CACHE_TTL) {
-    return tagsCache.data;
-  }
-  const { data: tagRows, error } = await supabase.from('tags').select('id, name');
-  if (error) {
-    // Fallback to stale cache if error occurs, to be robust
-    return tagsCache ? tagsCache.data : [];
-  }
-  tagsCache = {
-    data: (tagRows as TagRow[]) || [],
-    timestamp: now
-  };
-  return tagsCache.data;
 }
 
 export const listHandler = (app: Hono) => {
@@ -74,99 +46,151 @@ export const listHandler = (app: Hono) => {
       sortOrder
     } = check;
     
-    const supabase = await getSupabaseAdmin();
-    
-    const hasTag = tagId !== undefined && tagId !== null && tagId !== '';
-    const hasCat = categoryId !== undefined && categoryId !== null && categoryId !== '';
+    try {
+      const hasTag = tagId !== undefined && tagId !== null && tagId !== '';
+      const hasCat = categoryId !== undefined && categoryId !== null && categoryId !== '';
 
-    let query = supabase.from(TABLE_NAME).select(`*, photo_tags${hasTag ? '!inner' : ''}(tag_id), group:groups(id, name, cover_photo_id, status)`);
-    
-    // Filters
-    if (hasTag && hasCat) {
-      query = supabase.from(TABLE_NAME).select('*, photo_tags!inner(tag_id), group:groups(id, name, cover_photo_id, status)');
-      query = query.or(`category_id.eq.${categoryId},photo_tags.tag_id.eq.${tagId}`);
-    } else {
+      const baseQuery = db.select().from(furnitureItems);
+      
+      // We will build the where clause
+      const whereClauses: (SQL | undefined)[] = [];
+
+      if (hasTag && hasCat) {
+          // This is a bit complex for standard builder when we need to join tags.
+          // For now, let's use the query API for easier relations
+      }
+
+      // Actually, building manual joins in Drizzle is better for complex filtering.
+      const query = db
+        .select({
+            photo: furnitureItems,
+            group: {
+                id: groupsTable.id,
+                name: groupsTable.name,
+                coverPhotoId: groupsTable.coverPhotoId,
+                status: groupsTable.status,
+            }
+        })
+        .from(furnitureItems)
+        .leftJoin(groupsTable, eq(furnitureItems.groupId, groupsTable.id));
+
       if (hasTag) {
-        query = query.eq('photo_tags.tag_id', String(tagId));
+          query.innerJoin(photoTags, eq(furnitureItems.id, photoTags.photoId));
+          whereClauses.push(eq(photoTags.tagId as any, tagId as any));
       }
+
       if (hasCat) {
-        query = query.eq('category_id', String(categoryId));
+          whereClauses.push(eq(furnitureItems.categoryId as any, categoryId as any));
       }
-    }
 
-    if (searchQuery && searchQuery.trim().length > 0) {
-      const dbSearchQuery = searchQuery.replace(/[%_]/g, '\\$&').trim();
-      // Expanded search: multilingual names + codes + models
-      const fields = [
-        `name->>zh.ilike."%${dbSearchQuery}%"`,
-        `name->>en.ilike."%${dbSearchQuery}%"`,
-        `name->>ms.ilike."%${dbSearchQuery}%"`,
-        `manual_code.ilike."%${dbSearchQuery}%"`,
-        `model_number.ilike."%${dbSearchQuery}%"`,
-        `item_code.ilike."%${dbSearchQuery}%"`
-      ];
-      query = query.or(fields.join(','));
-    }
-
-    if (onlyUngrouped) query = query.is('group_id', null);
-    if (!isAdminMode) {
-      query = query.not('is_hidden', 'eq', true);
-    } else if (isHidden !== undefined && isHidden !== null) {
-      query = query.eq('is_hidden', isHidden);
-    }
-    
-    if (manufacturerId !== undefined && manufacturerId !== null) {
-      query = query.eq('manufacturer_id', String(manufacturerId));
-    }
-    
-    // Sort
-    query = query.order('is_pinned', { ascending: false });
-
-    if (sortOrder === 'newest') query = query.order('created_at', { ascending: false }).order('id', { ascending: false });
-    else if (sortOrder === 'oldest') query = query.order('created_at', { ascending: true }).order('id', { ascending: true });
-    else if (sortOrder === 'name') query = query.order('name', { ascending: true }).order('id', { ascending: true });
-    else query = query.order('created_at', { ascending: false }).order('id', { ascending: false }); // Default
-    
-    const from = page * limit;
-    const to = from + limit - 1;
-    query = query.range(from, to);
-    
-    const [queryRes, tagRows] = await Promise.all([
-      query,
-      getCachedTags(supabase)
-    ]);
-    const { data, error } = queryRes;
-    if (error) return c.json({ success: false, error: error.message }, 500);
-
-    // In-memory join for tags details to prevent database configuration issues
-    if (data && data.length > 0) {
-        const gIds = Array.from(new Set(data.filter((item: any) => item.group_id).map((item: any) => item.group_id))) as string[];
-        if (gIds.length > 0) {
-            const counts = await getGroupCounts(supabase, gIds, isAdminMode);
-            for (const item of data as Record<string, any>[]) {
-                if (Array.isArray(item.group)) item.group = item.group[0];
-                if (item.group && item.group.id) {
-                    item.group.member_count = counts.get(item.group.id) || 0;
-                }
-            }
-        }
-    }
-    
-    if (data && data.length > 0 && tagRows && tagRows.length > 0) {
-      const tagMap = new Map((tagRows as TagRow[]).map((t: TagRow) => [String(t.id), t.name]));
-      for (const item of data as Record<string, unknown>[]) {
-        if (Array.isArray(item.photo_tags)) {
-          for (const pt of item.photo_tags as Record<string, unknown>[]) {
-            if (pt && pt.tag_id) {
-              const nameVal = tagMap.get(String(pt.tag_id)) || '';
-              (pt as Record<string, unknown>).tags = { id: pt.tag_id, name: nameVal };
-            }
-          }
-        }
+      if (searchQuery && searchQuery.trim().length > 0) {
+        const pattern = `%${searchQuery.trim()}%`;
+        whereClauses.push(or(
+            ilike(sql`${furnitureItems.name}->>'zh'`, pattern),
+            ilike(sql`${furnitureItems.name}->>'en'`, pattern),
+            ilike(sql`${furnitureItems.name}->>'ms'`, pattern),
+            ilike(furnitureItems.manualCode, pattern),
+            ilike(furnitureItems.modelNumber, pattern),
+            ilike(furnitureItems.itemCode, pattern)
+        ));
       }
+
+      if (onlyUngrouped) whereClauses.push(isNull(furnitureItems.groupId));
+      
+      if (!isAdminMode) {
+        whereClauses.push(eq(furnitureItems.isHidden, false));
+      } else if (isHidden !== undefined && isHidden !== null) {
+        whereClauses.push(eq(furnitureItems.isHidden, isHidden));
+      }
+      
+      if (manufacturerId !== undefined && manufacturerId !== null) {
+        whereClauses.push(eq(furnitureItems.manufacturerId as any, manufacturerId as any));
+      }
+
+      const finalWhere = whereClauses.length > 0 ? and(...whereClauses.filter((c): c is SQL => !!c)) : undefined;
+      
+      // Pagination & Order
+      const results = await db.query.furnitureItems.findMany({
+        where: (fields, { and, or, eq, ilike, isNull }) => {
+            const clauses: any[] = [];
+            if (hasTag) {
+                // query.photoTags.some(pt => pt.tagId === tagId) - No 'some' in Drizzle yet.
+                // We'll stick to manual join for hasTag or use raw SQL.
+            }
+            // Passing complex where for findMany is harder if it involves joins.
+            // Let's use the builder style we started.
+            return undefined; // placeholder
+        }
+      });
+
+      // BACK TO BUILDER STYLE
+      const builder = db
+        .select({
+            items: furnitureItems,
+            group: groupsTable
+        })
+        .from(furnitureItems)
+        .leftJoin(groupsTable, eq(furnitureItems.groupId, groupsTable.id));
+
+      if (hasTag) {
+        builder.innerJoin(photoTags, eq(furnitureItems.id, photoTags.photoId));
+      }
+
+      if (finalWhere) builder.where(finalWhere);
+
+      // Ordering
+      const orderClauses: SQL[] = [desc(furnitureItems.isPinned)];
+      if (sortOrder === 'newest') orderClauses.push(desc(furnitureItems.createdAt), desc(furnitureItems.id));
+      else if (sortOrder === 'oldest') orderClauses.push(asc(furnitureItems.createdAt), asc(furnitureItems.id));
+      else if (sortOrder === 'name') orderClauses.push(asc(sql`${furnitureItems.name}->>'zh'`), asc(furnitureItems.id));
+      else orderClauses.push(desc(furnitureItems.createdAt), desc(furnitureItems.id));
+
+      builder.orderBy(...orderClauses);
+      
+      // Pagination
+      builder.limit(limit).offset(page * limit);
+
+      const data = await builder;
+
+      // Group counts and Tags
+      if (data.length > 0) {
+        const photoIds = data.map(d => d.items.id);
+        const gIds = Array.from(new Set(data.filter(d => d.items.groupId).map(d => d.items.groupId))) as string[];
+        
+        const [counts, tagsData] = await Promise.all([
+            getGroupCounts(gIds, isAdminMode),
+            db.select({
+                photoId: photoTags.photoId,
+                tagId: photoTags.tagId,
+                name: tagsTable.name
+            })
+            .from(photoTags)
+            .innerJoin(tagsTable, eq(photoTags.tagId, tagsTable.id))
+            .where(inArray(photoTags.photoId, photoIds))
+        ]);
+
+        const tagsByPhoto = new Map<string, unknown[]>();
+        for (const t of tagsData) {
+            const list = tagsByPhoto.get(t.photoId ?? '') || [];
+            list.push({ tag_id: t.tagId, tags: { id: t.tagId, name: t.name } });
+            tagsByPhoto.set(t.photoId ?? '', list);
+        }
+
+        const formatted = data.map(d => {
+            const item = { ...d.items } as Record<string, unknown>;
+            // Legacy format matching
+            item.group = d.group ? { ...d.group, member_count: counts.get(d.group.id) || 0 } : null;
+            item.photo_tags = tagsByPhoto.get(d.items.id) || [];
+            return item;
+        });
+
+        return c.json({ success: true, data: formatted });
+      }
+
+      return c.json({ success: true, data: [] });
+    } catch (error: unknown) {
+      throw errorFactory.wrap(error, 'photos.list', 'QUERY_FAILURE');
     }
-    
-    return c.json({ success: true, data: data || [] });
   });
 
   app.post('/list-by-group', async (c) => {
@@ -175,45 +199,57 @@ export const listHandler = (app: Hono) => {
     if (check instanceof type.errors) throw new Error(check.summary);
     
     const { groupId, isAdminMode = false } = check;
-    const supabase = await getSupabaseAdmin();
-    let query = supabase.from(TABLE_NAME).select('*, photo_tags(tag_id), group:groups(id, name, cover_photo_id, status)').eq('group_id', groupId);
-    if (!isAdminMode) query = query.not('is_hidden', 'eq', true);
-    query = query.order('is_group_cover', { ascending: false }).order('is_hidden', { ascending: true, nullsFirst: true }).order('created_at', { ascending: false }).order('id', { ascending: true });
-    const [queryRes, tagRows] = await Promise.all([
-      query,
-      getCachedTags(supabase)
-    ]);
-    if (queryRes.error) return c.json({ success: false, error: queryRes.error.message }, 500);
+    try {
+        const query = db
+            .select({
+                items: furnitureItems,
+                group: groupsTable
+            })
+            .from(furnitureItems)
+            .leftJoin(groupsTable, eq(furnitureItems.groupId, groupsTable.id))
+            .where(and(
+                eq(furnitureItems.groupId, groupId),
+                !isAdminMode ? eq(furnitureItems.isHidden, false) : undefined
+            ))
+            .orderBy(
+                desc(furnitureItems.isGroupCover),
+                asc(furnitureItems.isHidden),
+                desc(furnitureItems.createdAt),
+                asc(furnitureItems.id)
+            );
 
-    const data = queryRes.data as Record<string, unknown>[] || [];
-    if (data.length > 0) {
-        const gIds = Array.from(new Set(data.filter((item: any) => item.group_id).map((item: any) => item.group_id))) as string[];
-        if (gIds.length > 0) {
-            const counts = await getGroupCounts(supabase, gIds, isAdminMode);
-            for (const item of data as Record<string, any>[]) {
-                if (Array.isArray(item.group)) item.group = item.group[0];
-                if (item.group && item.group.id) {
-                    item.group.member_count = counts.get(item.group.id) || 0;
-                }
-            }
-        }
-    }
-    
-    if (data.length > 0 && tagRows && tagRows.length > 0) {
-      const tagMap = new Map((tagRows as TagRow[]).map((t: TagRow) => [String(t.id), t.name]));
-      for (const item of data) {
-        if (Array.isArray(item.photo_tags)) {
-          for (const pt of item.photo_tags as Record<string, unknown>[]) {
-            if (pt && pt.tag_id) {
-              const nameVal = tagMap.get(String(pt.tag_id)) || '';
-              (pt as Record<string, unknown>).tags = { id: pt.tag_id, name: nameVal };
-            }
-          }
-        }
-      }
-    }
+        const data = await query;
+        if (data.length > 0) {
+            const photoIds = data.map(d => d.items.id);
+            const counts = await getGroupCounts([groupId], isAdminMode);
+            const tagsData = await db.select({
+                photoId: photoTags.photoId,
+                tagId: photoTags.tagId,
+                name: tagsTable.name
+            })
+            .from(photoTags)
+            .innerJoin(tagsTable, eq(photoTags.tagId, tagsTable.id))
+            .where(inArray(photoTags.photoId, photoIds));
 
-    return c.json({ success: true, data: data || [] });
+            const tagsByPhoto = new Map<string, unknown[]>();
+            for (const t of tagsData) {
+                const list = tagsByPhoto.get(t.photoId ?? '') || [];
+                list.push({ tag_id: t.tagId, tags: { id: t.tagId, name: t.name } });
+                tagsByPhoto.set(t.photoId ?? '', list);
+            }
+
+            const formatted = data.map(d => {
+                const item = { ...d.items } as Record<string, unknown>;
+                item.group = d.group ? { ...d.group, member_count: counts.get(d.group.id) || 0 } : null;
+                item.photo_tags = tagsByPhoto.get(d.items.id) || [];
+                return item;
+            });
+            return c.json({ success: true, data: formatted });
+        }
+        return c.json({ success: true, data: [] });
+    } catch (error: unknown) {
+        throw errorFactory.wrap(error, 'photos.list-by-group', 'QUERY_FAILURE');
+    }
   });
 
   app.post('/list-by-group-paginated', async (c) => {
@@ -222,55 +258,65 @@ export const listHandler = (app: Hono) => {
     if (check instanceof type.errors) throw new Error(check.summary);
 
     const { groupId, page = 1, pageSize = 100, isAdminMode = false } = check;
-    const supabase = await getSupabaseAdmin();
-    const from = (page - 1) * pageSize;
-    const to = from + pageSize - 1;
-    let countQuery = supabase.from(TABLE_NAME).select('*', { count: 'exact', head: true }).eq('group_id', groupId);
-    let query = supabase.from(TABLE_NAME).select('*, photo_tags(tag_id), group:groups(id, name, cover_photo_id, status)').eq('group_id', groupId);
-    if (!isAdminMode) {
-      countQuery = countQuery.not('is_hidden', 'eq', true); 
-      query = query.not('is_hidden', 'eq', true);
-    }
-    const [countRes, queryRes, tagRows] = await Promise.all([
-      countQuery,
-      query.order('is_group_cover', { ascending: false })
-           .order('group_order', { ascending: true, nullsFirst: true }) // Changed to true to show un-ordered items
-           .order('created_at', { ascending: false })
-           .order('id', { ascending: true })
-           .range(from, to),
-      getCachedTags(supabase)
-    ]);
-    if (queryRes.error) return c.json({ success: false, error: queryRes.error.message }, 500);
+    try {
+        const offset = (page - 1) * pageSize;
+        const baseCondition = and(
+            eq(furnitureItems.groupId, groupId),
+            !isAdminMode ? eq(furnitureItems.isHidden, false) : undefined
+        );
 
-    const photos = queryRes.data as Record<string, unknown>[] || [];
-    if (photos.length > 0) {
-        const gIds = Array.from(new Set(photos.filter((item: any) => item.group_id).map((item: any) => item.group_id))) as string[];
-        if (gIds.length > 0) {
-            const counts = await getGroupCounts(supabase, gIds, isAdminMode);
-            for (const item of photos as Record<string, any>[]) {
-                if (Array.isArray(item.group)) item.group = item.group[0];
-                if (item.group && item.group.id) {
-                    item.group.member_count = counts.get(item.group.id) || 0;
-                }
+        const [countRes] = await db
+            .select({ count: count() })
+            .from(furnitureItems)
+            .where(baseCondition);
+
+        const data = await db
+            .select({
+                items: furnitureItems,
+                group: groupsTable
+            })
+            .from(furnitureItems)
+            .leftJoin(groupsTable, eq(furnitureItems.groupId, groupsTable.id))
+            .where(baseCondition)
+            .orderBy(
+                desc(furnitureItems.isGroupCover),
+                desc(furnitureItems.createdAt),
+                asc(furnitureItems.id)
+            )
+            .limit(pageSize)
+            .offset(offset);
+
+        if (data.length > 0) {
+            const photoIds = data.map(d => d.items.id);
+            const counts = await getGroupCounts([groupId], isAdminMode);
+            const tagsData = await db.select({
+                photoId: photoTags.photoId,
+                tagId: photoTags.tagId,
+                name: tagsTable.name
+            })
+            .from(photoTags)
+            .innerJoin(tagsTable, eq(photoTags.tagId, tagsTable.id))
+            .where(inArray(photoTags.photoId, photoIds));
+
+            const tagsByPhoto = new Map<string, unknown[]>();
+            for (const t of tagsData) {
+                const list = tagsByPhoto.get(t.photoId ?? '') || [];
+                list.push({ tag_id: t.tagId, tags: { id: t.tagId, name: t.name } });
+                tagsByPhoto.set(t.photoId ?? '', list);
             }
-        }
-    }
 
-    if (photos.length > 0 && tagRows && tagRows.length > 0) {
-        const tagMap = new Map((tagRows as TagRow[]).map((t: TagRow) => [String(t.id), t.name]));
-        for (const item of photos) {
-          if (Array.isArray(item.photo_tags)) {
-            for (const pt of item.photo_tags as Record<string, unknown>[]) {
-              if (pt && pt.tag_id) {
-                const nameVal = tagMap.get(String(pt.tag_id)) || '';
-                (pt as Record<string, unknown>).tags = { id: pt.tag_id, name: nameVal };
-              }
-            }
-          }
+            const photosFormatted = data.map(d => {
+                const item = { ...d.items } as Record<string, unknown>;
+                item.group = d.group ? { ...d.group, member_count: counts.get(d.group.id) || 0 } : null;
+                item.photo_tags = tagsByPhoto.get(d.items.id) || [];
+                return item;
+            });
+            return c.json({ success: true, data: { photos: photosFormatted, total: Number(countRes.count) } });
         }
+        return c.json({ success: true, data: { photos: [], total: 0 } });
+    } catch (error: unknown) {
+        throw errorFactory.wrap(error, 'photos.list-by-group-paginated', 'QUERY_FAILURE');
     }
-
-    return c.json({ success: true, data: { photos, total: countRes.count || 0 } });
   });
 
   app.post('/count', async (c) => {
@@ -284,45 +330,44 @@ export const listHandler = (app: Hono) => {
     if (check instanceof type.errors) throw new Error(check.summary);
 
     const { categoryId, tagId, searchQuery, isAdminMode = false, isHidden } = check;
-    const supabase = await getSupabaseAdmin();
-    const hasTag = tagId !== undefined && tagId !== null && tagId !== '';
-    const hasCat = categoryId !== undefined && categoryId !== null && categoryId !== '';
+    try {
+        const hasTag = tagId !== undefined && tagId !== null && tagId !== '';
+        const hasCat = categoryId !== undefined && categoryId !== null && categoryId !== '';
 
-    let query = supabase.from(TABLE_NAME).select(hasTag ? 'id, photo_tags!inner(tag_id)' : 'id', { count: 'exact', head: true });
+        const builder = db.select({ count: count() }).from(furnitureItems);
+        
+        if (hasTag) {
+            builder.innerJoin(photoTags, eq(furnitureItems.id, photoTags.photoId));
+        }
 
-    if (hasTag && hasCat) {
-      query = supabase.from(TABLE_NAME).select('id, photo_tags!inner(tag_id)', { count: 'exact', head: true });
-      query = query.or(`category_id.eq.${categoryId},photo_tags.tag_id.eq.${tagId}`);
-    } else {
-      if (hasTag) {
-        query = query.eq('photo_tags.tag_id', String(tagId));
-      }
-      if (hasCat) {
-        query = query.eq('category_id', String(categoryId));
-      }
+        const whereClauses: (SQL | undefined)[] = [];
+        if (hasTag) whereClauses.push(eq(photoTags.tagId as any, tagId as any));
+        if (hasCat) whereClauses.push(eq(furnitureItems.categoryId as any, categoryId as any));
+
+        if (searchQuery && searchQuery.trim().length > 0) {
+            const pattern = `%${searchQuery.trim()}%`;
+            whereClauses.push(or(
+                ilike(sql`${furnitureItems.name}->>'zh'`, pattern),
+                ilike(sql`${furnitureItems.name}->>'en'`, pattern),
+                ilike(sql`${furnitureItems.name}->>'ms'`, pattern),
+                ilike(furnitureItems.manualCode, pattern),
+                ilike(furnitureItems.modelNumber, pattern),
+                ilike(furnitureItems.itemCode, pattern)
+            ) as SQL);
+        }
+
+        if (!isAdminMode) {
+            whereClauses.push(eq(furnitureItems.isHidden, false));
+        } else if (isHidden !== undefined && isHidden !== null) {
+            whereClauses.push(eq(furnitureItems.isHidden, isHidden));
+        }
+
+        if (whereClauses.length > 0) builder.where(and(...whereClauses.filter((c): c is SQL => !!c)));
+
+        const [res] = await builder;
+        return c.json({ success: true, data: Number(res.count) });
+    } catch (error: unknown) {
+        throw errorFactory.wrap(error, 'photos.count', 'QUERY_FAILURE');
     }
-
-    if (searchQuery && searchQuery.trim().length > 0) {
-      const dbSearchQuery = searchQuery.replace(/[%_]/g, '\\$&').trim();
-      const fields = [
-        `name->>zh.ilike."%${dbSearchQuery}%"`,
-        `name->>en.ilike."%${dbSearchQuery}%"`,
-        `name->>ms.ilike."%${dbSearchQuery}%"`,
-        `manual_code.ilike."%${dbSearchQuery}%"`,
-        `model_number.ilike."%${dbSearchQuery}%"`,
-        `item_code.ilike."%${dbSearchQuery}%"`
-      ];
-      query = query.or(fields.join(','));
-    }
-
-    if (!isAdminMode) {
-      query = query.not('is_hidden', 'eq', true);
-    } else if (isHidden !== undefined && isHidden !== null) {
-      query = query.eq('is_hidden', isHidden);
-    }
-    
-    const { count, error } = await query;
-    if (error) return c.json({ success: false, error: (error as any).message }, 500 as any);
-    return c.json({ success: true, data: count || 0 });
   });
 };

@@ -26,6 +26,7 @@ export const serverEnvSchema = type({
   "VITE_SUPABASE_ANON_KEY?": "string",
   "SUPABASE_URL?": "string",
   "SUPABASE_SERVICE_KEY?": "string",
+  "DATABASE_URL?": "string",
 
   // R2 Storage
   "R2_ENDPOINT?": "string",

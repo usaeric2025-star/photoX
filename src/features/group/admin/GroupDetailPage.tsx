@@ -17,7 +17,7 @@ import { GroupSettingsModal } from '@/components/groups/GroupSettingsModal';
 import { useGroupDraft } from '@/components/groups/useGroupDraft';
 import { useGroupMutations } from '@/hooks/groups/useGroupMutations';
 import { GroupHeader } from '../shared/components/GroupHeader';
-import { PhotoEditModal } from '@/components/admin/PhotoEditModal';
+import { PhotoEditModal } from '@/features/photo-edit';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { Button } from '@/components/shared/Button';
 

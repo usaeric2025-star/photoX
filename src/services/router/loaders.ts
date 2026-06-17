@@ -6,6 +6,8 @@ import { createStaleTime } from '@/shared/freshnessSchema';
 import { getGroupById } from '@/services/group/queries';
 import { getPhotos } from '@/services/photo/queries/list';
 import { getPhotosByGroupPaginated } from '@/services/photo/queries/byGroup';
+import { loadCategoriesFromCloud } from '@/services/category/queries';
+import { loadTagsFromCloud } from '@/services/tag/queries';
 
 /**
  * 路由層預加載邏輯
@@ -20,53 +22,75 @@ export async function prefetchMainGallery(queryClient: QueryClient) {
     sort: undefined
   }, 'public');
 
-  return queryClient.prefetchInfiniteQuery({
-    queryKey,
-    queryFn: async () => {
-      const photos = await getPhotos(
-        undefined,
-        0,
-        PHOTO_QUERY_CONFIG.limit,
-        undefined,
-        undefined,
-        undefined,
-        false
-      );
-      return {
-        photos: photos,
-        nextPage: photos.length >= PHOTO_QUERY_CONFIG.limit ? 2 : undefined
-      };
-    },
-    initialPageParam: 1,
-    staleTime: createStaleTime('REALTIME'),
-  });
+  return Promise.all([
+    queryClient.prefetchInfiniteQuery({
+      queryKey,
+      queryFn: async () => {
+        const photos = await getPhotos(
+          undefined,
+          0,
+          PHOTO_QUERY_CONFIG.limit,
+          undefined,
+          undefined,
+          undefined,
+          false
+        );
+        return {
+          photos: photos,
+          nextPage: photos.length >= PHOTO_QUERY_CONFIG.limit ? 2 : undefined
+        };
+      },
+      initialPageParam: 1,
+      staleTime: createStaleTime('REALTIME'),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.categories.categories(),
+      queryFn: () => loadCategoriesFromCloud(),
+      staleTime: createStaleTime('STABLE'),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.tags.tags(),
+      queryFn: () => loadTagsFromCloud(),
+      staleTime: createStaleTime('STABLE'),
+    })
+  ]);
 }
 
 export async function prefetchGroupDetail(queryClient: QueryClient, groupId: string, isAdminMode: boolean = false) {
   if (!groupId) return;
   const isQueryAdmin = !!isAdminMode;
   const queryKey = [...queryKeys.groups.detail(groupId, isQueryAdmin)];
-  queryClient.prefetchQuery({
-    queryKey,
-    queryFn: async () => {
-      const result = await getGroupById(groupId, isQueryAdmin ? 'admin' : 'public');
-      return result || null;
-    },
-    staleTime: createStaleTime('STABLE'),
-  });
   
-  const photosKey = queryKeys.photos.infinite({ groupId } as any, isAdminMode ? 'admin' : 'public');
-  
-  queryClient.prefetchInfiniteQuery({
-    queryKey: photosKey,
-    queryFn: async ({ pageParam = 1 }) => {
-      const data = await getPhotosByGroupPaginated(
-        groupId, pageParam as number, 40, isAdminMode
-      );
-      const hasMore = Array.isArray(data.photos) ? data.photos.length >= 40 : false;
-      return { photos: data.photos, total: data.total, hasMore, nextPage: hasMore ? (pageParam as number) + 1 : undefined };
-    },
-    initialPageParam: 1,
-    staleTime: createStaleTime('STABLE'),
-  });
+  return Promise.all([
+    queryClient.prefetchQuery({
+      queryKey,
+      queryFn: async () => {
+        const result = await getGroupById(groupId, isQueryAdmin ? 'admin' : 'public');
+        return result || null;
+      },
+      staleTime: createStaleTime('STABLE'),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.categories.categories(),
+      queryFn: () => loadCategoriesFromCloud(),
+      staleTime: createStaleTime('STABLE'),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.tags.tags(),
+      queryFn: () => loadTagsFromCloud(),
+      staleTime: createStaleTime('STABLE'),
+    }),
+    queryClient.prefetchInfiniteQuery({
+      queryKey: queryKeys.photos.infinite({ groupId } as any, isAdminMode ? 'admin' : 'public'),
+      queryFn: async ({ pageParam = 1 }) => {
+        const data = await getPhotosByGroupPaginated(
+          groupId, pageParam as number, 40, isAdminMode
+        );
+        const hasMore = Array.isArray(data.photos) ? data.photos.length >= 40 : false;
+        return { photos: data.photos, total: data.total, hasMore, nextPage: hasMore ? (pageParam as number) + 1 : undefined };
+      },
+      initialPageParam: 1,
+      staleTime: createStaleTime('STABLE'),
+    })
+  ]);
 }

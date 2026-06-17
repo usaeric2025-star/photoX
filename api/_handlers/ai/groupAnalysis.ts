@@ -1,5 +1,6 @@
 import { type } from 'arktype';
-import { getSupabaseAdmin } from '../../_lib/supabase.js';
+import { db, furnitureItems } from '@/db/index';
+import { inArray } from 'drizzle-orm';
 import { getAIProvider } from '../../_lib/ai/providerFactory.js';
 import { extractJSON } from '../../_lib/ai/utils.js';
 import { executeAITask } from '../../_lib/ai/executor.js';
@@ -42,18 +43,19 @@ ${photoList}
 export async function processGroupAnalysis(photoIds: string[]) {
   if (photoIds.length === 0) throw new Error('Input photo IDs list is empty');
   
-  const supabase = await getSupabaseAdmin();
-  
-  const { data: photos } = await supabase
-    .from('furniture_items')
-    .select('id, name, description')
-    .in('id', photoIds);
+  const photos = await db.select({
+      id: furnitureItems.id,
+      name: furnitureItems.name,
+      description: furnitureItems.description
+  })
+  .from(furnitureItems)
+  .where(inArray(furnitureItems.id, photoIds));
     
   if (!photos || photos.length === 0) {
     throw new Error('未找到請求的照片詳情，無法分析');
   }
 
-  const photoListText = photos.map((p: Record<string, any>) => {
+  const photoListText = photos.map((p: any) => {
     const name = typeof p.name === 'object' ? (p.name as any)?.zh : p.name;
     const desc = typeof p.description === 'object' ? (p.description as any)?.zh : p.description;
     return `- ID: ${p.id} | Name: ${name || 'N/A'} | Desc: ${desc || 'N/A'}`;
@@ -61,7 +63,7 @@ export async function processGroupAnalysis(photoIds: string[]) {
 
   const prompt = buildPrompt(photoIds.length, photoListText);
 
-  const provider = await getAIProvider('', supabase);
+  const provider = await getAIProvider();
   const model = (provider as any).config.model;
 
 // 封裝重試邏輯

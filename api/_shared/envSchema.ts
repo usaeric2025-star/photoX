@@ -50,7 +50,13 @@ export function getServerEnv(envObj: NodeJS.ProcessEnv): ServerEnv {
     const rawEnv = { ...envObj };
     const result = serverEnvSchema(rawEnv);
     if (result instanceof type.errors) {
-      logger.warn("⚠️ [ENV-VALIDATION-INTEGRATED] Invalid Server Environment Variables (Falling back gracefully):");
+      if (envObj.NODE_ENV === 'production') {
+        logger.error("❌ [ENV-CRITICAL] Invalid production environment:", result.summary);
+        // In production, we might want to crash if critical things are missing
+        // but for now, we follow standard logic and log it clearly
+      } else {
+        logger.warn("⚠️ [ENV-VALIDATION] Environment mismatch:", result.summary);
+      }
       return rawEnv as ServerEnv;
     }
     return result as ServerEnv;

@@ -4,9 +4,9 @@ import {
   RefreshCw, ShieldCheck
 } from 'lucide-react';
 import { useDiagnostics } from '@/hooks/admin/useDiagnostics';
-import { diagnosticRegistry } from './Diagnostics/registry';
-import { DiagnosticCard } from './Diagnostics/DiagnosticCard';
-import { TasksContent } from './Diagnostics/TasksList';
+import { diagnosticRegistry } from './registry';
+import { DiagnosticCard } from './DiagnosticCard';
+import { TasksContent } from './TasksList';
 import { Button } from '@/components/shared/Button';
 import { useUIStore } from '@/store/useUIStore';
 import { showToast } from '@/lib/ui/toast';
@@ -14,10 +14,10 @@ import { handleError } from '@/lib/error/errorHandler';
 
 import { usePerformanceAudit } from '@/hooks/admin/usePerformanceAudit';
 import { ErrorLogViewer } from './ErrorLogViewer';
-import { DiagnosticStats } from './Diagnostics/DiagnosticStats';
-import { AuditVisualizer } from './Diagnostics/AuditVisualizer';
-import { IssueList } from './Diagnostics/IssueList';
-import { MaintenanceCenter } from './Diagnostics/MaintenanceCenter';
+import { DiagnosticStats } from './DiagnosticStats';
+import { AuditVisualizer } from './AuditVisualizer';
+import { IssueList } from './IssueList';
+import { MaintenanceCenter } from './MaintenanceCenter';
 
 interface DiagnosticPlugin {
   title: string;

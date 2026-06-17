@@ -1,8 +1,8 @@
 import { useWatch } from 'react-hook-form';
 import { usePhotoEditSessionContext } from '@/hooks/photo/usePhotoEditSessionContext';
-import { FormSectionHeader, CategoryGrid } from '../FormShared';
-import { useCategories } from '../../../hooks';
-import { useUIStore } from '../../../store';
+import { FormSectionHeader, CategoryGrid } from '@/components/admin/FormShared';
+import { useCategories } from '@/hooks';
+import { useUIStore } from '@/store/useUIStore';
 
 import { ProductFormData } from '@/types';
 

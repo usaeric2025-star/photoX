@@ -1,9 +1,11 @@
 import { Hono } from 'hono';
 import { type } from 'arktype';
-import { getSupabaseAdmin } from '../_lib/supabase.js';
+import { db, groups as groupsTable, furnitureItems } from '@/db/index';
+import { eq, and, inArray, isNull, sql } from 'drizzle-orm';
 import { GroupReqSchema } from '../_shared/apiContractSchema.js';
-
-const TABLE_NAME = 'groups';
+import { AppError } from '../_lib/error/AppError.js';
+import { logger } from '../_lib/logger.js';
+import { syncGroupCoversAndCount } from '../_lib/groups.js';
 
 export const groups = new Hono()
   .post('/', async (c) => {
@@ -12,19 +14,14 @@ export const groups = new Hono()
     if (check instanceof type.errors) throw new Error(check.summary);
 
     const { groupData } = check;
-    const supabase = await getSupabaseAdmin();
-    // Simplified: Assuming validation and mapToDb logic handled or simplified here
-    const { error, data } = await supabase
-        .from(TABLE_NAME)
-        .insert(groupData)
-        .select()
-        .single();
-    if (error) {
-      const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-      import('../_lib/logger.js').then(({ logger }) => logger.error("[Groups] Insert group failed", { error: error.message, traceId }));
-      return c.json({ success: false, error: error.message, traceId }, 500);
+    try {
+        const [data] = await db.insert(groupsTable).values(groupData as any).returning();
+        return c.json({ success: true, data });
+    } catch (error: any) {
+        const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+        logger.error("[Groups] Insert group failed", { error: error.message, traceId });
+        return c.json({ success: false, error: error.message, traceId }, 500);
     }
-    return c.json({ success: true, data });
   })
   .put('/:id', async (c) => {
     const id = c.req.param('id');
@@ -35,45 +32,44 @@ export const groups = new Hono()
     const { updates } = check;
     delete (updates as any).member_count;
 
-    const supabase = await getSupabaseAdmin();
-    const { data, error } = await supabase
-        .from(TABLE_NAME)
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-    if (error) {
-      const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-      import('../_lib/logger.js').then(({ logger }) => logger.error("[Groups] Update group failed", { error: error.message, id, traceId }));
-      return c.json({ success: false, error: error.message, traceId }, 500);
+    try {
+        const [data] = await db.update(groupsTable)
+            .set({ ...updates, updatedAt: new Date() } as any)
+            .where(eq(groupsTable.id, id))
+            .returning();
+        return c.json({ success: true, data });
+    } catch (error: any) {
+        const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+        logger.error("[Groups] Update group failed", { error: error.message, id, traceId });
+        return c.json({ success: false, error: error.message, traceId }, 500);
     }
-    return c.json({ success: true, data });
   })
   .post('/upsert', async (c) => {
     const dbUpdates = await c.req.json();
-    const supabase = await getSupabaseAdmin();
-    const { error } = await supabase.from(TABLE_NAME).upsert(dbUpdates, { onConflict: 'id' });
-    if (error) {
-      const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-      import('../_lib/logger.js').then(({ logger }) => logger.error("[Groups] Upsert failed", { error: error.message, traceId }));
-      return c.json({ success: false, error: error.message, traceId }, 500);
+    try {
+        await db.insert(groupsTable)
+            .values(dbUpdates)
+            .onConflictDoUpdate({
+                target: groupsTable.id,
+                set: dbUpdates
+            });
+        return c.json({ success: true });
+    } catch (error: any) {
+        const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+        logger.error("[Groups] Upsert failed", { error: error.message, traceId });
+        return c.json({ success: false, error: error.message, traceId }, 500);
     }
-    return c.json({ success: true });
   })
   .delete('/:id', async (c) => {
     const id = c.req.param('id');
-    // Ungroup photos handled by client/other API for now before deleting
-    const supabase = await getSupabaseAdmin();
-    const { error } = await supabase
-        .from(TABLE_NAME)
-        .delete()
-        .eq('id', id);
-    if (error) {
-      const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-      import('../_lib/logger.js').then(({ logger }) => logger.error("[Groups] Delete failed", { error: error.message, id, traceId }));
-      return c.json({ success: false, error: error.message, traceId }, 500);
+    try {
+        await db.delete(groupsTable).where(eq(groupsTable.id, id));
+        return c.json({ success: true });
+    } catch (error: any) {
+        const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+        logger.error("[Groups] Delete failed", { error: error.message, id, traceId });
+        return c.json({ success: false, error: error.message, traceId }, 500);
     }
-    return c.json({ success: true });
   })
   .post('/group-photos', async (c) => {
       const body = await c.req.json();
@@ -95,116 +91,89 @@ export const groups = new Hono()
       } = check;
       delete (groupData as any).member_count;
       
-      const supabase = await getSupabaseAdmin();
+      try {
+          // Optimize: Compute sourceGroupIds and ungroupedValidIds directly on the server
+          let sourceGroupIds: string[] = [];
+          let ungroupedValidIds: string[] = [];
+          let dbUserId: string | null = null;
 
-      // Optimize: Compute sourceGroupIds and ungroupedValidIds directly on the server to save client roundtrip
-      let sourceGroupIds: string[] = [];
-      let ungroupedValidIds: string[] = [];
-      let dbUserId: string | null = null;
-      if (photoIds && photoIds.length > 0) {
-        const { data: sourcePhotos } = await supabase.from('furniture_items').select('id, group_id, user_id').in('id', photoIds);
-        const photosArr = sourcePhotos || [];
-        if (photosArr.length > 0) {
-             dbUserId = photosArr[0].user_id;
-        }
-        sourceGroupIds = Array.from(new Set(
-          photosArr.map((p: { group_id: string | null }) => p.group_id).filter((gid: string | null | undefined): gid is string => !!gid && gid !== targetGroupId)
-        )) as string[];
-        ungroupedValidIds = photoIds.filter(id => {
-          const p = photosArr.find((x: { id: string }) => x.id === id);
-          return !p?.group_id;
-        });
-      }
+          if (photoIds && photoIds.length > 0) {
+            const sourcePhotos = await db.select({
+                id: furnitureItems.id,
+                groupId: furnitureItems.groupId,
+                userId: furnitureItems.userId
+            })
+            .from(furnitureItems)
+            .where(inArray(furnitureItems.id, photoIds));
 
-      const { data: checkData } = await supabase.from('groups').select('id').eq('id', targetGroupId).maybeSingle();
+            if (sourcePhotos.length > 0) {
+               dbUserId = sourcePhotos[0].userId;
+            }
+            sourceGroupIds = Array.from(new Set(
+              sourcePhotos.map(p => p.groupId).filter((gid): gid is string => !!gid && gid !== targetGroupId)
+            )) as string[];
+            ungroupedValidIds = photoIds.filter(pid => {
+              const p = sourcePhotos.find(x => x.id === pid);
+              return !p?.groupId;
+            });
+          }
 
-      let err;
-      if (!checkData) {
-        const { id: _, ...groupDataWithoutId } = groupData as any;
-        const insertData: Record<string, unknown> = {
-          id: targetGroupId,
-          is_hidden: false,
-          created_at: new Date().toISOString(),
-          ...groupDataWithoutId
-        };
-        
-        let finalUserId = (userId !== 'staff' && userId) ? userId : dbUserId;
-        if (!finalUserId) {
-           const { data: userRecord } = await supabase.from('users').select('id').limit(1).maybeSingle();
-           finalUserId = userRecord?.id || '8ec53131-a589-4b50-beb4-6b5308541e1b';
-         }
-        insertData.user_id = finalUserId;
+          const existingGroup = await db.query.groups.findFirst({
+              where: eq(groupsTable.id, targetGroupId)
+          });
 
-        console.log("LOG: Inserting into groups:", insertData);
-        const { error, data } = await supabase.from('groups').insert(insertData).select('id');
-        err = error;
-        if (!error && (!data || data.length === 0)) {
-           err = new Error("Group insert succeeded but returned no rows! Insert might have been silently ignored.");
-         }
-      } else {
-        console.log("LOG: Updating group:", targetGroupId, groupData);
-        const { error } = await supabase.from('groups').update(groupData).eq('id', targetGroupId);
-        err = error;
-      }
-      if (err) {
+          if (!existingGroup) {
+            const { id: _, ...groupDataWithoutId } = groupData as any;
+            let finalUserId = (userId !== 'staff' && userId) ? userId : dbUserId;
+            if (!finalUserId) {
+                // Fallback user id
+               finalUserId = '8ec53131-a589-4b50-beb4-6b5308541e1b';
+            }
+
+            await db.insert(groupsTable).values({
+                id: targetGroupId,
+                ...groupDataWithoutId,
+                userId: finalUserId,
+                createdAt: new Date()
+            });
+          } else {
+            await db.update(groupsTable)
+                .set({ ...groupData, updatedAt: new Date() } as any)
+                .where(eq(groupsTable.id, targetGroupId));
+          }
+
+          // Update photos FIRST
+          if (ungroupedValidIds && ungroupedValidIds.length > 0) {
+            await db.update(furnitureItems)
+              .set({ groupId: targetGroupId, isGroupCover: false })
+              .where(inArray(furnitureItems.id, ungroupedValidIds));
+          }
+
+          // Merge groups
+          if (sourceGroupIds && sourceGroupIds.length > 0) {
+            // 1. Move ALL photos from source groups to target group
+            await db.update(furnitureItems)
+              .set({ groupId: targetGroupId, isGroupCover: false })
+              .where(inArray(furnitureItems.groupId, sourceGroupIds));
+
+            // 2. Call RPC as a fallback or for metadata cleanup
+            try {
+                await db.execute(sql`SELECT merge_groups(${sourceGroupIds}, ${targetGroupId})`);
+            } catch (rpcErr) {
+                logger.warn("[groupPhotos] Merge RPC call failed, but photos already moved manually", { error: (rpcErr as any).message });
+            }
+          }
+
+          // Reconcile and synchronize
+          const affectedGroupIds = [targetGroupId, ...(sourceGroupIds || [])];
+          await syncGroupCoversAndCount(affectedGroupIds);
+
+          return c.json({ success: true });
+      } catch (err: any) {
         const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-        import('../_lib/logger.js').then(({ logger }) => logger.error("[groupPhotos] Group DB operation failed", { error: err.message, traceId }));
+        logger.error("[groupPhotos] Operation failed", { error: err.message, traceId });
         return c.json({ success: false, error: err.message, traceId }, 500);
       }
-
-      // Update photos FIRST before merging or syncing to ensure the target group has all new members
-      // and won't be dissolved prematurely if member count is momentarily <= 1
-      if (ungroupedValidIds && ungroupedValidIds.length > 0) {
-        console.log("LOG: Updating photo group_ids inside furniture_items:", ungroupedValidIds, "->", targetGroupId);
-        const { error } = await supabase
-          .from('furniture_items')
-          .update({ group_id: targetGroupId, is_group_cover: false })
-          .in('id', ungroupedValidIds);
-        if (error) {
-          const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-          import('../_lib/logger.js').then(({ logger }) => logger.error("[groupPhotos] Photo group_id update failed", { error: error.message, traceId, ungroupedValidIds }));
-          return c.json({ success: false, error: error.message, traceId }, 500);
-        }
-      }
-
-      // Merge
-      if (sourceGroupIds && sourceGroupIds.length > 0) {
-        console.log("LOG: Merging groups (explicitly moving all members):", sourceGroupIds, "->", targetGroupId);
-        
-        // 1. Explicitly move ALL photos that belonged to the source groups to the new target group
-        const { error: moveError } = await supabase
-          .from('furniture_items')
-          .update({ group_id: targetGroupId, is_group_cover: false })
-          .in('group_id', sourceGroupIds);
-          
-        if (moveError) {
-          const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-          import('../_lib/logger.js').then(({ logger }) => logger.error("[groupPhotos] Explicit move of group members failed", { error: moveError.message, traceId, sourceGroupIds, targetGroupId }));
-          // We continue to try the RPC as a fallback or extra measure
-        }
-
-        // 2. Call RPC as a fallback or for any additional logic it might contain (e.g. metadata cleanup)
-        const { error: rpcError } = await supabase.rpc('merge_groups', {
-          source_group_ids: sourceGroupIds,
-          target_group_id: targetGroupId
-        });
-        if (rpcError) {
-          const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-          import('../_lib/logger.js').then(({ logger }) => logger.error("[groupPhotos] Merge RPC call failed", { error: rpcError.message, traceId, sourceGroupIds, targetGroupId }));
-          // If the explicit move worked, we might not need to fail here, but let's be cautious
-        }
-      }
-
-      // Reconcile and synchronize
-      const affectedGroupIds = [targetGroupId];
-      if (sourceGroupIds) {
-        sourceGroupIds.forEach((id: string) => affectedGroupIds.push(id));
-      }
-      console.log("LOG: Reconciling groups:", affectedGroupIds);
-      const { syncGroupCoversAndCount } = await import('../_lib/groups.js');
-      await syncGroupCoversAndCount(supabase, affectedGroupIds);
-
-      return c.json({ success: true });
   })
   .post('/move-photos', async (c) => {
     const body = await c.req.json();
@@ -212,30 +181,35 @@ export const groups = new Hono()
     if (check instanceof type.errors) throw new Error(check.summary);
 
     const { photoIds, targetGroupId } = check;
-    const supabase = await getSupabaseAdmin();
+    try {
+        // Fetch snapshots before move
+        const sourcePhotos = await db.select({ groupId: furnitureItems.groupId })
+            .from(furnitureItems)
+            .where(inArray(furnitureItems.id, photoIds));
+        
+        const affectedGroupIds = sourcePhotos.map(p => p.groupId).filter((gid): gid is string => !!gid);
+        if (targetGroupId) {
+          affectedGroupIds.push(targetGroupId);
+        }
 
-    // Fetch snapshots before move
-    const { data: sourcePhotos } = await supabase.from('furniture_items').select('group_id').in('id', photoIds);
-    const affectedGroupIds = (sourcePhotos || []).map((p: { group_id: string | null }) => p.group_id).filter((gid: string | null | undefined): gid is string => !!gid);
-    if (targetGroupId) {
-      affectedGroupIds.push(targetGroupId);
+        try {
+            await db.execute(sql`SELECT move_photos_to_group(${photoIds}, ${targetGroupId})`);
+        } catch (rpcErr) {
+            // Fallback manual move
+            await db.update(furnitureItems)
+                .set({ groupId: targetGroupId, isGroupCover: false })
+                .where(inArray(furnitureItems.id, photoIds));
+        }
+
+        // Reconcile groups
+        await syncGroupCoversAndCount(affectedGroupIds);
+
+        return c.json({ success: true });
+    } catch (error: any) {
+        const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+        logger.error("[movePhotos] Operation failed", { error: error.message, traceId });
+        return c.json({ success: false, error: error.message, traceId }, 500);
     }
-
-    const { error } = await supabase.rpc('move_photos_to_group', {
-      photo_ids: photoIds,
-      target_group_id: targetGroupId
-    });
-    if (error) {
-      const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-      import('../_lib/logger.js').then(({ logger }) => logger.error("[movePhotos] RPC move_photos_to_group failed", { error: error.message, traceId, photoIds, targetGroupId }));
-      return c.json({ success: false, error: error.message, traceId }, 500);
-    }
-
-    // Reconcile groups
-    const { syncGroupCoversAndCount } = await import('../_lib/groups.js');
-    await syncGroupCoversAndCount(supabase, affectedGroupIds);
-
-    return c.json({ success: true });
   })
   .post('/set-cover', async (c) => {
     const body = await c.req.json();
@@ -243,23 +217,30 @@ export const groups = new Hono()
     if (check instanceof type.errors) throw new Error(check.summary);
 
     const { photoId, groupId } = check;
-    const supabase = await getSupabaseAdmin();
-    await supabase.from('furniture_items').update({ is_group_cover: false }).eq('group_id', groupId);
-    if (photoId) {
-        await supabase.from('furniture_items').update({ is_group_cover: true }).eq('id', photoId);
-    }
-    const { error } = await supabase.from('groups').update({ cover_photo_id: photoId || null }).eq('id', groupId);
-    if (error) {
-      const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-      import('../_lib/logger.js').then(({ logger }) => logger.error("[setCover] Cover image update failed on groups table", { error: error.message, traceId, photoId, groupId }));
-      return c.json({ success: false, error: error.message, traceId }, 500);
-    }
+    try {
+        await db.update(furnitureItems)
+            .set({ isGroupCover: false })
+            .where(eq(furnitureItems.groupId, groupId));
+        
+        if (photoId) {
+            await db.update(furnitureItems)
+                .set({ isGroupCover: true })
+                .where(eq(furnitureItems.id, photoId));
+        }
 
-    // Keep strict integrity
-    const { syncGroupCoversAndCount } = await import('../_lib/groups.js');
-    await syncGroupCoversAndCount(supabase, [groupId]);
+        await db.update(groupsTable)
+            .set({ coverPhotoId: photoId || null, updatedAt: new Date() })
+            .where(eq(groupsTable.id, groupId));
 
-    return c.json({ success: true });
+        // Keep strict integrity
+        await syncGroupCoversAndCount([groupId]);
+
+        return c.json({ success: true });
+    } catch (error: any) {
+        const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+        logger.error("[setCover] Cover update failed", { error: error.message, traceId });
+        return c.json({ success: false, error: error.message, traceId }, 500);
+    }
   })
   .post('/ungroup', async (c) => {
     const body = await c.req.json();
@@ -267,15 +248,22 @@ export const groups = new Hono()
     if (check instanceof type.errors) throw new Error(check.summary);
 
     const { groupId } = check;
-    const supabase = await getSupabaseAdmin();
-    await supabase.from('furniture_items').update({ group_id: null, is_group_cover: false }).eq('group_id', groupId);
-    const { error } = await supabase.rpc('dissolve_group', { group_id: groupId });
-    if (error) {
-      const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-      import('../_lib/logger.js').then(({ logger }) => logger.error("[ungroup] Dissolve group RPC failed", { error: error.message, traceId, groupId }));
-      return c.json({ success: false, error: error.message, traceId }, 500);
+    try {
+        await db.update(furnitureItems)
+            .set({ groupId: null, isGroupCover: false })
+            .where(eq(furnitureItems.groupId, groupId));
+        
+        try {
+            await db.execute(sql`SELECT dissolve_group(${groupId})`);
+        } catch (rpcErr) {
+            await db.delete(groupsTable).where(eq(groupsTable.id, groupId));
+        }
+        return c.json({ success: true });
+    } catch (error: any) {
+        const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+        logger.error("[ungroup] Dissolve failed", { error: error.message, traceId });
+        return c.json({ success: false, error: error.message, traceId }, 500);
     }
-    return c.json({ success: true });
   })
   .post('/sync-count', async (c) => {
     const body = await c.req.json();
@@ -284,50 +272,45 @@ export const groups = new Hono()
 
     const { groupId } = check;
     if (!groupId) return c.json({ success: true });
-    const supabase = await getSupabaseAdmin();
     
-    const { syncGroupCoversAndCount } = await import('../_lib/groups.js');
-    await syncGroupCoversAndCount(supabase, [groupId]);
-    
-    return c.json({ success: true });
+    try {
+        await syncGroupCoversAndCount([groupId]);
+        return c.json({ success: true });
+    } catch (error: any) {
+        return c.json({ success: false, error: error.message }, 500);
+    }
   })
   .post('/repair-integrity', async (c) => {
-    const supabase = await getSupabaseAdmin();
-    const { data: groups, error: groupsError } = await supabase.from('groups').select('id');
-    if (groupsError) {
-      const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-      import('../_lib/logger.js').then(({ logger }) => logger.error("[repairIntegrity] Fetch groups failed", { error: groupsError.message, traceId }));
-      return c.json({ success: false, error: groupsError.message, traceId }, 500);
-    }
+    try {
+        const groups = await db.select({ id: groupsTable.id }).from(groupsTable);
 
-    let dissolved = 0;
-    let synced = 0;
-    let deleted = 0;
+        let dissolved = 0;
+        let synced = 0;
+        let deleted = 0;
 
-    for (const group of (groups || [])) {
-      const { count, error: countError } = await supabase
-        .from('furniture_items')
-        .select('id', { count: 'exact', head: true })
-        .eq('group_id', group.id);
+        for (const group of groups) {
+          const [{ count: actualCount }] = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(furnitureItems)
+            .where(eq(furnitureItems.groupId, group.id));
 
-      if (countError) continue;
-
-      const actualCount = count || 0;
-
-      if (actualCount <= 1) {
-        if (actualCount === 1) {
-          await supabase
-            .from(TABLE_NAME)
-            .update({ group_id: null, is_group_cover: false, is_pinned: false })
-            .eq('group_id', group.id);
-          dissolved++;
+          if (Number(actualCount) <= 1) {
+            if (Number(actualCount) === 1) {
+              await db.update(furnitureItems)
+                .set({ groupId: null, isGroupCover: false, isPinned: false })
+                .where(eq(furnitureItems.groupId, group.id));
+              dissolved++;
+            }
+            await db.delete(groupsTable).where(eq(groupsTable.id, group.id));
+            deleted++;
+          } else {
+            synced++;
+          }
         }
-        await supabase.from('groups').delete().eq('id', group.id);
-        deleted++;
-      } else {
-        synced++;
-      }
-    }
 
-    return c.json({ success: true, data: { dissolved, synced, deleted } });
+        return c.json({ success: true, data: { dissolved, synced, deleted } });
+    } catch (error: any) {
+        const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+        return c.json({ success: false, error: error.message, traceId }, 500);
+    }
   });

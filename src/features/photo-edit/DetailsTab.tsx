@@ -1,11 +1,11 @@
 import React from 'react';
 import { useWatch } from 'react-hook-form';
 import { usePhotoEditSessionContext } from '@/hooks/photo/usePhotoEditSessionContext';
-import { DimensionEditor } from '../edit/DimensionEditor';
-import { ProductFormData, Dimension } from '../../../types';
-import { safeArray } from '../../../lib/utils';
-import { useUIStore } from '../../../store';
-import { useTasks, usePhoto, useFilters } from '../../../hooks';
+import { DimensionEditor } from './DimensionEditor';
+import { ProductFormData, Dimension } from '@/types';
+import { safeArray } from '@/lib/utils';
+import { useUIStore } from '@/store/useUIStore';
+import { useTasks, usePhoto, useFilters } from '@/hooks';
 import { translations } from '@/locales';
 import { usePhotoEditAI } from './usePhotoEditAI';
 
