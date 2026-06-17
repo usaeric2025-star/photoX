@@ -90,6 +90,15 @@ if (clientEnv.VITE_SENTRY_DSN) {
     // 關閉除錯模式以避免內部日誌引發循環引用報錯
     debug: false,
   });
+
+  // Expose Sentry to window for in-browser debugging
+  interface CustomWindow extends Window {
+    Sentry?: typeof Sentry;
+  }
+  (window as unknown as CustomWindow).Sentry = Sentry;
+  console.log('🚀 [Sentry Initialization] Sentry successfully initialized and bound to window.Sentry.');
+} else {
+  console.log('⚠️ [Sentry Initialization] Sentry skipped initialization because VITE_SENTRY_DSN is empty.');
 }
 
 async function init() {
