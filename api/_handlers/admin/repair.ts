@@ -378,17 +378,9 @@ adminRepair.post("/", async (c) => {
           }).where(eq(furnitureItems.id, item.id));
         }
 
-        const groups = await db.select({ id: groupsTable.id, name: groupsTable.name, description: groupsTable.description }).from(groupsTable);
-        const groupsToFix = groups.filter((g) => typeof g.name === 'string' || (g.name && !(g.name as Record<string, unknown>).zh));
-
-        for (const group of groupsToFix) {
-          await db.update(groupsTable).set({
-            name: normalizeI18n(group.name as any) as any,
-            description: normalizeI18n(group.description as any) as any
-          }).where(eq(groupsTable.id, group.id));
-        }
-
-        return c.json({ success: true, message: `已修复 ${itemsToFix.length} 个单品 and ${groupsToFix.length} 个合组的语种格式` });
+        // groupsTable name should not be i18n anymore
+        // It's handled by invalid_group_names issue
+        return c.json({ success: true, message: `已修复 ${itemsToFix.length} 个单品的语种格式` });
       }
 
       if (issueId === 'schema_sync') {

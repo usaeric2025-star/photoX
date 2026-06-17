@@ -1,3 +1,4 @@
+import { showToast } from '@/lib/ui/toast'
 import { toast } from 'sonner'
 
 export interface ToastAction {
@@ -6,8 +7,8 @@ export interface ToastAction {
 }
 
 export function showErrorToast(message: string, action?: ToastAction): void {
-  toast.error(message, {
-    duration: 5000,
+  showToast.error(message, {
+    duration: 60000,
     action: action
       ? {
           label: action.label,

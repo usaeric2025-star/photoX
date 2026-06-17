@@ -94,8 +94,8 @@ const groupPhotosConfig = defineMutation<
   },
   successMessage: '已合组',
   onError: (error) => {
-    import('sonner').then(({ toast }) => {
-      toast.error('合組失敗：' + ((error as Error)?.message || '未知錯誤'));
+    import('@/lib/error/errorHandler').then(({ handleError }) => {
+      handleError(error, '合組照片');
     });
     return false;
   }

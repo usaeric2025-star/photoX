@@ -8,7 +8,6 @@ import { useTasks,
   useCategories } from '@/hooks';
 import { usePhotoUpload } from '@/features/upload';
 import { logger } from '@/lib/logger';
-import { DataLoadingContainer } from '@/components/ui/DataLoadingContainer';
 import { useAIBatchAnalysis, useAdminPhotos } from '@/hooks';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { Category } from '@/types';
@@ -59,47 +58,45 @@ export function AdminPageContent() {
 
   return (
     <AdminAuthGate>
-      <DataLoadingContainer isPending={isPhotosPending} hasData={photos && photos.length > 0}>
-        <div className="flex flex-col h-screen bg-slate-50 overflow-hidden w-full relative">
-          {(currentScreen === 'gallery') ? (
-            <>
-              <AdminHeader />
-              <FilterBar mode="admin" />
-              <div className="flex-1 relative overflow-hidden pb-16 sm:pb-0">
-                <div key="admin-gallery" className="absolute inset-0 animate-fade-in">
-                  <AdminContainer />
-                </div>
-              </div>
-            </>
-          ) : (
+      <div className="flex flex-col h-screen bg-slate-50 overflow-hidden w-full relative">
+        {(currentScreen === 'gallery') ? (
+          <>
+            <AdminHeader />
+            <FilterBar mode="admin" />
             <div className="flex-1 relative overflow-hidden pb-16 sm:pb-0">
-              <Suspense fallback={<div className="h-full flex items-center justify-center bg-slate-50"><Loader2 className="w-8 h-8 animate-spin text-slate-400" /></div>}>
-                {currentScreen === 'dashboard' ? (
-                  <ScreenWrapper key="admin-dashboard" onClose={() => navigate({ to: '/admin' })}>
-                    <StatisticsScreen />
-                  </ScreenWrapper>
-                ) : currentScreen === 'batch' ? (
-                  <ScreenWrapper key="admin-batch" onClose={() => navigate({ to: '/admin' })}>
-                    <BatchEditScreen />
-                  </ScreenWrapper>
-                ) : ['manage', 'settings', 'structure', 'logs', 'tasks', 'error-logs', 'diagnose'].includes(currentScreen) ? (
-                  <div key="admin-settings-container" className="h-full bg-slate-50 animate-scale-in">
-                    <SettingsPage onClose={() => navigate({ to: '/admin' })} />
-                  </div>
-                ) : null}
-              </Suspense>
+              <div key="admin-gallery" className="absolute inset-0 animate-fade-in">
+                <AdminContainer />
+              </div>
             </div>
-          )}
+          </>
+        ) : (
+          <div className="flex-1 relative overflow-hidden pb-16 sm:pb-0">
+            <Suspense fallback={<div className="h-full flex items-center justify-center bg-slate-50"><Loader2 className="w-8 h-8 animate-spin text-slate-400" /></div>}>
+              {currentScreen === 'dashboard' ? (
+                <ScreenWrapper key="admin-dashboard" onClose={() => navigate({ to: '/admin' })}>
+                  <StatisticsScreen />
+                </ScreenWrapper>
+              ) : currentScreen === 'batch' ? (
+                <ScreenWrapper key="admin-batch" onClose={() => navigate({ to: '/admin' })}>
+                  <BatchEditScreen />
+                </ScreenWrapper>
+              ) : ['manage', 'settings', 'structure', 'logs', 'tasks', 'error-logs', 'diagnose'].includes(currentScreen) ? (
+                <div key="admin-settings-container" className="h-full bg-slate-50 animate-scale-in">
+                  <SettingsPage onClose={() => navigate({ to: '/admin' })} />
+                </div>
+              ) : null}
+            </Suspense>
+          </div>
+        )}
 
-          <input 
-            type="file" id="admin-quick-add-input" multiple accept="image/*" className="hidden" 
-            onChange={(e) => {
-              if (e.target.files) uploadFiles(e.target.files);
-              e.target.value = '';
-            }}
-          />
-        </div>
-      </DataLoadingContainer>
+        <input 
+          type="file" id="admin-quick-add-input" multiple accept="image/*" className="hidden" 
+          onChange={(e) => {
+            if (e.target.files) uploadFiles(e.target.files);
+            e.target.value = '';
+          }}
+        />
+      </div>
 
       {/* Put Modals outside the layout container */}
       <Suspense fallback={null}>

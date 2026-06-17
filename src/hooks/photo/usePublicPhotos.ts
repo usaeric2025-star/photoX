@@ -37,22 +37,22 @@ export const usePublicPhotos = () => {
 
     const rawPhotosBase = (infinitePhotosQuery.data as { photos: Record<string, unknown>[] })?.photos || [];
     
-    const rawPhotos = (() => {
+    const rawPhotos = React.useMemo(() => {
         return rawPhotosBase.map((p) => {
-        const photo = p as Record<string, unknown>;
-        const categoryId = String(photo.category_id);
-        const manufacturerId = String(photo.manufacturer_id);
-        
-        const cat = categories.find((c) => String((c as Category).id) === categoryId) as unknown as Category | undefined;
-        const man = manufacturers.find((m) => String((m as Manufacturer).id) === manufacturerId) as unknown as Manufacturer | undefined;
-        
-        return {
-            ...photo,
-            categoryName: cat ? getTranslatedCategoryName(categoryId, categories as Category[], lang, t) : '',
-            manufacturerName: man ? String(man.name) : ''
-        } as Photo;
-    });
-    })();
+            const photo = p as Record<string, unknown>;
+            const categoryId = photo.category_id ? String(photo.category_id) : null;
+            const manufacturerId = photo.manufacturer_id ? String(photo.manufacturer_id) : null;
+            
+            const cat = categoryId ? categories.find((c) => String((c as Category).id) === categoryId) as unknown as Category : undefined;
+            const man = manufacturerId ? manufacturers.find((m) => String((m as Manufacturer).id) === manufacturerId) as unknown as Manufacturer : undefined;
+            
+            return {
+                ...photo,
+                categoryName: cat && categoryId ? getTranslatedCategoryName(categoryId, categories as Category[], lang, t) : '',
+                manufacturerName: man ? String(man.name) : ''
+            } as Photo;
+        });
+    }, [rawPhotosBase, categories, manufacturers, lang, t]);
 
     logger.debug("[usePublicPhotos] Debug:", {
         status: infinitePhotosQuery.status,
@@ -63,7 +63,7 @@ export const usePublicPhotos = () => {
         rawPhotosCount: rawPhotos.length
     });
 
-    const tagMap = (() => {
+    const tagMap = React.useMemo(() => {
         const map = new Map<string, string[]>();
         tags.forEach((t) => {
             const terms = [(String(t.name)).toLowerCase()];
@@ -73,9 +73,9 @@ export const usePublicPhotos = () => {
             map.set(String(t.id), terms);
         });
         return map;
-    })();
+    }, [tags]);
 
-    const catMap = (() => {
+    const catMap = React.useMemo(() => {
         const map = new Map<string, string[]>();
         categories.forEach((c) => {
             const terms = [(String(c.name) || '').toLowerCase()];
@@ -85,9 +85,9 @@ export const usePublicPhotos = () => {
             map.set(String(c.id), terms);
         });
         return map;
-    })();
+    }, [categories]);
 
-    const processedResult = (() => {
+    const processedResult = React.useMemo(() => {
         if (!rawPhotos.length) return null;
         return processPhotos(
             rawPhotos,
@@ -109,7 +109,7 @@ export const usePublicPhotos = () => {
                 catMap
             }
         );
-    })();
+    }, [rawPhotos, categories, tags, filters.showGroupsCollapsed, filters.search, filters.category, filters.tags, filters.sort, tagMap, catMap]);
 
     return {
         gridPhotos: processedResult?.gridPhotos || EMPTY_ARRAY,

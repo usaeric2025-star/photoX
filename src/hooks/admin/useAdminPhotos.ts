@@ -37,7 +37,7 @@ export const useAdminPhotos = () => {
 
     const rawPhotos = (infinitePhotosQuery.data as any)?.photos || [];
 
-    const tagMap = (() => {
+    const tagMap = React.useMemo(() => {
         const map = new Map<string, string[]>();
         tags.forEach((t: Tag) => {
             const nameStr = t.name || '';
@@ -48,9 +48,9 @@ export const useAdminPhotos = () => {
             map.set(String(t.id), terms);
         });
         return map;
-    })();
+    }, [tags]);
 
-    const catMap = (() => {
+    const catMap = React.useMemo(() => {
         const map = new Map<string, string[]>();
         categories.forEach((c: Category) => {
             const terms = [(c.name || '').toLowerCase()];
@@ -60,32 +60,36 @@ export const useAdminPhotos = () => {
             map.set(String(c.id), terms);
         });
         return map;
-    })();
+    }, [categories]);
 
-    const photos = (!processingIds || processingIds.length === 0) 
-        ? rawPhotos 
-        : rawPhotos.filter((p: Photo) => !processingIds.includes(p.id));
+    const photos = React.useMemo(() => {
+        return (!processingIds || processingIds.length === 0) 
+            ? rawPhotos 
+            : rawPhotos.filter((p: Photo) => !processingIds.includes(p.id));
+    }, [rawPhotos, processingIds]);
 
-    const result = processPhotos(
-        photos,
-        categories,
-        tags,
-        {
-            showGroupsCollapsed: filters.showGroupsCollapsed,
-            searchQuery: filters.search,
-            categoryId: filters.category,
-            tagId: filters.tags && filters.tags.length > 0 ? filters.tags[0] : null,
-        },
-        {
-            sortOrder: filters.sort,
-        },
-        {
-            showGroupsCollapsed: filters.showGroupsCollapsed,
-            isAdminModeOverride: isAdminMode,
-            tagMap,
-            catMap
-        }
-    );
+    const result = React.useMemo(() => {
+        return processPhotos(
+            photos,
+            categories,
+            tags,
+            {
+                showGroupsCollapsed: filters.showGroupsCollapsed,
+                searchQuery: filters.search,
+                categoryId: filters.category,
+                tagId: filters.tags && filters.tags.length > 0 ? filters.tags[0] : null,
+            },
+            {
+                sortOrder: filters.sort,
+            },
+            {
+                showGroupsCollapsed: filters.showGroupsCollapsed,
+                isAdminModeOverride: isAdminMode,
+                tagMap,
+                catMap
+            }
+        );
+    }, [photos, categories, tags, filters.showGroupsCollapsed, filters.search, filters.category, filters.tags, filters.sort, isAdminMode, tagMap, catMap]);
 
     const displayPhotos = result?.displayPhotos || [];
     const gridPhotos = result?.gridPhotos || [];

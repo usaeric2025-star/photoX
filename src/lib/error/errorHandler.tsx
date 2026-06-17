@@ -139,8 +139,12 @@ export const handleError = (error: unknown, context: string, silent: boolean = f
   const errorId = getErrorId(standardError)
   const copyContent = buildCopyContent(standardError)
 
-  showToast.error(`${standardError.message} (ID: ${standardError.traceId || 'N/A'})`, {
+  const messageStr = standardError.message.replace(/\n/g, ' ');
+
+  showToast.error(`操作失敗 / Operation Failed`, {
     id: errorId,
+    duration: 60000,
+    description: `${messageStr} (Trace: ${standardError.traceId || 'N/A'})`,
     action: {
       label: '📋 複製',
       onClick: () => {

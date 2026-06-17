@@ -21,9 +21,14 @@ export function CategoriesManager(props: CategoriesManagerProps) {
     <>
       <CategoriesSection 
         categories={props.categories}
+        addCategory={props.addCategory}
+        updateCategory={props.updateCategory}
+        deleteCategory={props.deleteCategory}
         cardClass={props.cardClass}
+        buttonStyles={props.buttonStyles}
       />
       <ManufacturersSection 
+
         manufacturers={props.manufacturers}
         addManufacturer={props.addManufacturer}
         updateManufacturer={props.updateManufacturer}

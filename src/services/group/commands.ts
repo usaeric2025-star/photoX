@@ -117,7 +117,7 @@ export const groupPhotos = async (
   const userId = session?.user?.id || 'staff';
 
   // Strictly enforce 'GROUP' for all new groups as per user rule: "新的合组一律叫GROUP，不要乱改。"
-  let finalName = { zh: 'GROUP', en: 'GROUP', ms: 'GROUP' };
+  let finalName = 'GROUP';
   
   // Prepare Group Record
   const groupData = {
@@ -142,7 +142,11 @@ export const groupPhotos = async (
     try {
       const parsed = JSON.parse(errorText);
       if (parsed.error) {
-        msg = typeof parsed.error === 'object' ? JSON.stringify(parsed.error) : parsed.error;
+        if (typeof parsed.error === 'object') {
+          msg = parsed.error.message || parsed.error.summary || JSON.stringify(parsed.error);
+        } else {
+          msg = parsed.error;
+        }
       }
       if (parsed.traceId) traceId = parsed.traceId;
     } catch (_) {}

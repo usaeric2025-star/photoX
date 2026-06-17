@@ -21,10 +21,36 @@ adminDiagnose.get("/", async (c) => {
         secretData,
         ptData,
       ] = await Promise.all([
-        db.select().from(furnitureItems),
-        db.select().from(groupsTable),
-        db.select().from(categoriesTable),
-        db.select().from(manufacturersTable),
+        db.select({
+          id: furnitureItems.id,
+          groupId: furnitureItems.groupId,
+          categoryId: furnitureItems.categoryId,
+          manufacturerId: furnitureItems.manufacturerId,
+          imageHash: furnitureItems.imageHash,
+          imageUrl: furnitureItems.imageUrl,
+          itemCode: furnitureItems.itemCode,
+          isGroupCover: furnitureItems.isGroupCover,
+          createdAt: furnitureItems.createdAt,
+          updatedAt: furnitureItems.updatedAt,
+          userId: furnitureItems.userId,
+          name: furnitureItems.name
+        }).from(furnitureItems),
+        db.select({
+          id: groupsTable.id,
+          coverPhotoId: groupsTable.coverPhotoId,
+          createdAt: groupsTable.createdAt,
+          name: groupsTable.name,
+          updatedAt: groupsTable.updatedAt
+        }).from(groupsTable),
+        db.select({
+          id: categoriesTable.id,
+          code: categoriesTable.code,
+          nameZh: categoriesTable.nameZh
+        }).from(categoriesTable),
+        db.select({
+          id: manufacturersTable.id,
+          name: manufacturersTable.name
+        }).from(manufacturersTable),
         db.select({ key: secretsTable.key }).from(secretsTable).limit(1),
         db.select().from(photoTagsTable),
       ]);
@@ -37,7 +63,6 @@ adminDiagnose.get("/", async (c) => {
         manufacturer_id: p.manufacturerId || undefined,
         image_hash: p.imageHash || undefined,
         image_url: p.imageUrl || undefined,
-        thumb_hash: p.thumbHash || undefined,
         name: p.name as any,
         item_code: p.itemCode || undefined,
         is_group_cover: p.isGroupCover || undefined,
@@ -72,9 +97,15 @@ adminDiagnose.get("/", async (c) => {
       }));
 
       // Run modular diagnostics
-      // Note: passing null for supabase as it should be deprecated, tasks should use pre-fetched data
+      const taskIdsQuery = c.req.query("taskIds");
+      const requestedTaskIds = taskIdsQuery ? taskIdsQuery.split(",") : null;
+      
+      const tasksToRun = requestedTaskIds 
+        ? diagnosticRegistry.filter(t => requestedTaskIds.includes(t.id))
+        : diagnosticRegistry;
+
       const diagnosticResults = await Promise.all(
-        diagnosticRegistry.map(task => 
+        tasksToRun.map(task => 
           task.run({
             supabase: null as any, 
             photos,

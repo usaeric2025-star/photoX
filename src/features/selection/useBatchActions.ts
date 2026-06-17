@@ -3,6 +3,7 @@ import { batchService } from './batchService';
 import { useSelection } from './SelectionContext';
 import { toast } from 'sonner';
 import { Photo } from '@/types';
+import { handleError } from '@/lib/error/errorHandler';
 
 export function useBatchActions() {
   const { state, clear } = useSelection();
@@ -20,7 +21,7 @@ export function useBatchActions() {
       clear();
     },
     onError: (error: Error) => {
-      toast.error('批次刪除失敗', { description: error.message });
+      handleError(error, '批次刪除');
     },
   });
 
@@ -36,7 +37,7 @@ export function useBatchActions() {
       clear();
     },
     onError: (error: Error) => {
-      toast.error('批次更新失敗', { description: error.message });
+      handleError(error, '批次更新');
     },
   });
 
@@ -52,7 +53,7 @@ export function useBatchActions() {
       clear();
     },
     onError: (error: Error) => {
-      toast.error('批次新增標籤失敗', { description: error.message });
+      handleError(error, '批次新增標籤');
     },
   });
 
