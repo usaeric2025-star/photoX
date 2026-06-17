@@ -5,6 +5,7 @@ import { User } from '@/types';
 export interface RouterContext {
   user: User | null;
   role: string;
+  isStaffMode?: boolean;
   can: (cap: Capability) => boolean;
   queryClient?: QueryClient;
   availableActions: string[];

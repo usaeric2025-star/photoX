@@ -10,7 +10,7 @@ import {
 import { api } from '@/lib/api';
 
 import { showToast } from '@/lib/ui/toast';
-import { ErrorLogViewer } from '@/features/diagnostics/components/ErrorLogViewer';
+import { ErrorLogViewer } from '@/features/diagnostics/ErrorLogViewer';
 import { AppSettings, User, ApiResponse } from '@/types';
 import { 
   useUIStore, useShallow
@@ -29,7 +29,7 @@ import { AISettings } from './AISettings';
 import { SyncSettings } from './SyncSettings';
 import { TagsManager } from './TagsManager';
 import { CategoriesManager } from './CategoriesManager';
-import { DiagnosticsDashboard } from '@/features/diagnostics/components/DiagnosticsDashboard';
+import { DiagnosticsDashboard } from '@/features/diagnostics/DiagnosticsDashboard';
 import { translations } from '@/locales';
 
 import { usePhotoGallery } from '@/hooks/photo/usePhotoGallery';
@@ -212,11 +212,11 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
               <CategoriesManager 
                 categories={categories}
                 deleteCategory={deleteCategory}
-                updateCategory={async (id, data) => { const r = await updateCategory({ id, updates: data }); return !!r; }}
+                updateCategory={async (id: string, data: any) => { const r = await updateCategory({ id, updates: data }); return !!r; }}
                 addCategory={async (name: string) => { const r = await addCategory(name); if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addCategory', name); return r; }}
                 manufacturers={manufacturers}
-                addManufacturer={async (name) => { const r = await addManufacturer(name); if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addManufacturer', name); return r; }}
-                updateManufacturer={async (id, data) => { const r = await updateManufacturer({ id, updates: data }); return !!r; }}
+                addManufacturer={async (name: string) => { const r = await addManufacturer(name); if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addManufacturer', name); return r; }}
+                updateManufacturer={async (id: string, data: any) => { const r = await updateManufacturer({ id, updates: data }); return !!r; }}
                 deleteManufacturer={deleteManufacturer}
                 cardClass={cardClass}
                 buttonStyles={BUTTON_STYLES}
@@ -224,8 +224,8 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
               <TagsManager 
                 tags={tags}
                 settings={settings}
-                addTag={async (name) => { const r = await addTag(name); if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addTag', name); return r; }}
-                updateTag={async (id, data) => { const r = await updateTag({ id, updates: data }); return !!r; }}
+                addTag={async (name: string) => { const r = await addTag(name); if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addTag', name); return r; }}
+                updateTag={async (id: string, data: any) => { const r = await updateTag({ id, updates: data }); return !!r; }}
                 activeTagMenuId={activeTagMenuId}
                 setActiveTagMenuId={setActiveTagMenuId}
                 deleteTag={deleteTag}

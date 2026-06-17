@@ -4,7 +4,7 @@ import {
   RefreshCw, ShieldCheck
 } from 'lucide-react';
 import { useDiagnostics } from '@/hooks/admin/useDiagnostics';
-import { diagnosticRegistry } from './registry';
+import { diagnosticRegistry, type DiagnosticPlugin } from './registry';
 import { DiagnosticCard } from './DiagnosticCard';
 import { TasksContent } from './TasksList';
 import { Button } from '@/components/shared/Button';
@@ -19,12 +19,7 @@ import { AuditVisualizer } from './AuditVisualizer';
 import { IssueList } from './IssueList';
 import { MaintenanceCenter } from './MaintenanceCenter';
 
-interface DiagnosticPlugin {
-  title: string;
-  desc: string;
-  icon: React.ReactNode;
-  run: () => Promise<{ success: boolean; message: string; stage?: string; error?: string; latency?: number }>;
-}
+/* Removed local DiagnosticPlugin interface declaration */
 
 interface PluginResult {
   result: { success: boolean; message: string; stage?: string; error?: string; latency?: number } | null;
@@ -177,7 +172,7 @@ export function DiagnosticsDashboard() {
 
           {/* 基础设施诊断 */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {diagnosticRegistry.map(plugin => (
+            {diagnosticRegistry.map((plugin: DiagnosticPlugin) => (
               <DiagnosticCard 
                 key={plugin.title}
                 title={plugin.title}

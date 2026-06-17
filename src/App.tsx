@@ -4,6 +4,8 @@ import { RouterProvider } from '@tanstack/react-router';
 import { router } from './router/index';
 import { Analytics } from '@vercel/analytics/react';
 import { useEffect, useRef } from 'react';
+import { useSettings } from '@/hooks';
+import { useLocalStorage } from '@/hooks/core/useLocalStorage';
 import { useAuthStore, initAuthListener } from '@/store/useAuthStore';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 // Removed migrateStorage
@@ -21,6 +23,14 @@ export default function AppRoutes() {
 
   const isLoading = useAuthStore((s) => s.isLoading);
   const init = useAuthStore((s) => s.init);
+  const { settings, isPending: isSettingsPending } = useSettings();
+  const [passcode] = useLocalStorage({
+    key: 'ais_mock_auth_passcode',
+    defaultValue: '',
+    getInitialValueInEffect: false,
+  });
+
+  const isStaffMode = passcode === settings?.access_passcode && !!settings?.access_passcode;
 
   useEffect(() => {
     document.title = 'PhotoX';
@@ -31,14 +41,17 @@ export default function AppRoutes() {
   }, [init]);
 
   logger.debug('🔍 AppRoutes 渲染:', { 
-    pathname: window.location.pathname 
+    pathname: window.location.pathname,
+    isLoading,
+    isSettingsPending,
+    hasSettings: !!settings?.access_passcode
   });
 
   const user = useAuthStore((s) => s.user);
   const prevUserRef = useRef<any>(undefined);
 
   useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading && !isSettingsPending) {
       const prevUser = prevUserRef.current;
       const prevUserId = prevUser ? prevUser.id : null;
       const currentUserId = user ? user.id : null;
@@ -62,12 +75,13 @@ export default function AppRoutes() {
 
   const routerContext = {
     user: user ?? null,
-    role: user ? ('admin' as const) : ('guest' as const),
-    can: () => !!user,
+    role: user ? ('admin' as const) : isStaffMode ? ('staff' as const) : ('guest' as const),
+    isStaffMode,
+    can: () => !!user || isStaffMode,
     availableActions: [] as string[],
   };
 
-  if (isLoading) {
+  if (isLoading || isSettingsPending) {
     return <LoadingScreen />;
   }
 
