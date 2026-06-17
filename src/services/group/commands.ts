@@ -139,7 +139,19 @@ export const groupPhotos = async (
 
   if (!groupPhotosRes.ok) {
     const errorText = await groupPhotosRes.text();
-    throw new Error('Group photos failed: ' + errorText);
+    let msg = 'Group photos failed: ' + errorText;
+    let traceId: string | undefined;
+    try {
+      const parsed = JSON.parse(errorText);
+      if (parsed.error) msg = 'Group photos failed: ' + parsed.error;
+      if (parsed.traceId) traceId = parsed.traceId;
+    } catch (_) {}
+    
+    const err = new Error(msg);
+    if (traceId) {
+      (err as any).traceId = traceId;
+    }
+    throw err;
   }
 
   return { newGroupId: targetGroupId };
@@ -149,7 +161,22 @@ export const movePhotosToGroup = async (photoIds: string[], targetGroupId: strin
   const res = await api.groups['move-photos'].$post({
       json: { photoIds, targetGroupId }
   });
-  if (!res.ok) throw new Error('Move photos failed');
+  if (!res.ok) {
+    const errorText = await res.text();
+    let msg = 'Move photos failed: ' + errorText;
+    let traceId: string | undefined;
+    try {
+      const parsed = JSON.parse(errorText);
+      if (parsed.error) msg = 'Move photos failed: ' + parsed.error;
+      if (parsed.traceId) traceId = parsed.traceId;
+    } catch (_) {}
+    
+    const err = new Error(msg);
+    if (traceId) {
+      (err as any).traceId = traceId;
+    }
+    throw err;
+  }
 };
 
 export const setPhotoAsGroupCover = async (photoId: string | null, groupId: string): Promise<void> => {
