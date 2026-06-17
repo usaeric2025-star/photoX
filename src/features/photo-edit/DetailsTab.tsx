@@ -7,7 +7,7 @@ import { safeArray } from '@/lib/utils';
 import { useUIStore } from '@/store/useUIStore';
 import { useTasks, usePhoto, useFilters } from '@/hooks';
 import { translations } from '@/locales';
-import { usePhotoEditAI } from '@/features/photo-edit/usePhotoEditAI';
+import { usePhotoEditAI } from './usePhotoEditAI';
 
 export function DetailsTab() {
   const { register, control, setValue } = usePhotoEditSessionContext();
