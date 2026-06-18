@@ -6,7 +6,6 @@ import { CategoryGrid } from './CategoryGrid';
 import { TagGrid } from './TagGrid';
 import { ColumnsToggle } from '@/features/layout/components/ColumnsToggle';
 import { GroupToggle } from '@/components/ui/GroupToggle';
-import { StatusSelect } from './StatusSelect';
 import { useFilters } from '@/hooks/useFilters';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -42,7 +41,6 @@ export function FilterBar({ mode }: FilterBarProps) {
               setShowGroupsCollapsed(!showGroupsCollapsed);
             }}
           />
-          {isAdmin ? <StatusSelect /> : null}
         </div>
       </div>
       

@@ -87,7 +87,7 @@ export function usePhotoCardInteraction({
 
     const isAlreadyOnGroupPage = location?.pathname?.includes('/group/');
 
-    if (photo.groupId && showGroupsCollapsed && !hasSearchQuery && !isAlreadyOnGroupPage) {
+    if (!isManagement && photo.groupId && showGroupsCollapsed && !hasSearchQuery && !isAlreadyOnGroupPage) {
       logger.debug('[usePhotoCardInteraction] NAVIGATING to group:', photo.groupId);
       e.stopPropagation();
       e.preventDefault();

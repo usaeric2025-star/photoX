@@ -37,13 +37,6 @@ export function AdminPhotoGrid({
   return (
     <SelectionProvider>
       <div className="h-full w-full">
-        {isMultiSelect && (
-          <SelectionToolbar 
-            allIds={allIds} 
-            totalItems={photos.length} 
-            allPhotos={photos as any} 
-          />
-        )}
         <PhotoGridContent 
           photos={photos}
           dataVersion={dataVersion}
@@ -57,6 +50,13 @@ export function AdminPhotoGrid({
           filters={filters}
           onPhotoClick={onPhotoClick}
         />
+        {isMultiSelect && (
+          <SelectionToolbar 
+            allIds={allIds} 
+            totalItems={photos.length} 
+            allPhotos={photos as any} 
+          />
+        )}
       </div>
     </SelectionProvider>
   );

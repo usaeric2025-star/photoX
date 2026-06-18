@@ -6,5 +6,4 @@ export * from './CategoryGrid';
 export * from './TagGrid';
 export * from './SearchInput';
 export * from './SortToggle';
-export * from './StatusSelect';
 export * from './InfoButton';

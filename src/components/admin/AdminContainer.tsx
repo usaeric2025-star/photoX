@@ -73,6 +73,7 @@ export function AdminContainer() {
             {...photoGridData}
             columns={columns}
             filters={filters}
+            onPhotoClick={(id) => filters.setPhotoId(id)}
           />
        </div>
 

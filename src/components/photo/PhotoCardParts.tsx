@@ -12,12 +12,10 @@ export const PhotoStatusBadges = ({
   photo,
   isPinned,
   hideGroupBadge,
-  showCoverBadge,
 }: {
   photo: PhotoListItem;
   isPinned: boolean;
   hideGroupBadge?: boolean;
-  showCoverBadge?: boolean;
 }) => {
   const { lang } = useTranslation();
   const isManagement = useIsManagement();
@@ -25,7 +23,6 @@ export const PhotoStatusBadges = ({
   const shouldShowGroup = !hideGroupBadge && photo.groupId;
   const groupCode = getDisplayGroupCode(photo.groupId);
   const hiddenLabel = lang === 'zh' ? '已隐藏' : lang === 'ms' ? 'Sembunyi' : 'Hidden';
-  const isCover = !!photo.isCover;
 
   return (
     <div className="absolute top-1.5 left-1.5 flex flex-col items-start gap-1 pointer-events-none select-none">
@@ -47,13 +44,6 @@ export const PhotoStatusBadges = ({
         <div className="bg-rose-600 text-white px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-sm text-[8px] sm:text-[9.5px] font-black flex items-center gap-1.5 shadow-lg border border-rose-500/50 uppercase tracking-tighter">
           <ShieldAlert size={10} strokeWidth={3} className="shrink-0" />
           <span>{hiddenLabel}</span>
-        </div>
-      )}
-
-      {/* Cover Badge - Only show when explicitly requested */}
-      {isCover && showCoverBadge && (
-        <div className="bg-brand-gold text-white px-1.5 py-0.5 rounded-sm text-[8px] font-black uppercase tracking-tighter shadow-md">
-          Cover
         </div>
       )}
     </div>

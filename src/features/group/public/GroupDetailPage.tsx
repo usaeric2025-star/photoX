@@ -12,7 +12,7 @@ import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { Button } from '@/components/shared/Button';
 import { useUIStore } from '@/store/useUIStore';
 import { usePublicSettings } from '@/hooks/settings/useSettings';
-import { WhatsAppChoiceDialog } from '@/components/shared/WhatsAppChoiceDialog';
+import { WhatsAppDialog } from '@/components/shared/WhatsAppDialog';
 
 function PublicPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string) => void }) {
   return (
@@ -137,13 +137,7 @@ export function PublicGroupDetailPage() {
         }}
       />
 
-      <WhatsAppChoiceDialog 
-        isOpen={showWhatsAppChoice}
-        onClose={() => updateUI({ showWhatsAppChoice: false })}
-        options={getWhatsAppOptions()}
-        onSelect={openWhatsApp}
-        labels={t}
-      />
+      <WhatsAppDialog />
     </div>
   );
 }

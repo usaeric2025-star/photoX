@@ -5,6 +5,7 @@ import { rootRoute } from './root';
 import { authGuard } from './guards';
 import { GallerySearchParams } from './types';
 import { prefetchMainGallery, prefetchGroupDetail } from '@/services/router/loaders';
+import { PublicGroupDetailPage } from '@/features/group/public/GroupDetailPage';
 import { RouteErrorFallback } from '@/components/ui/RouteErrorFallback';
 
 const PublicPage = lazy(() => import('@/pages/PublicPage'));
@@ -88,7 +89,7 @@ export const groupRoute = createRoute({
     }
   },
   errorComponent: ({ error, reset }) => <RouteErrorFallback error={error} reset={reset} />,
-  component: lazy(() => import('@/pages/PublicGroupPage')),
+  component: PublicGroupDetailPage,
 });
 
 export const gRoute = createRoute({
@@ -96,5 +97,5 @@ export const gRoute = createRoute({
   path: '/g/$groupId',
   validateSearch: gallerySearchValidator,
   errorComponent: ({ error, reset }) => <RouteErrorFallback error={error} reset={reset} />,
-  component: lazy(() => import('@/pages/PublicGroupPage')),
+  component: PublicGroupDetailPage,
 });

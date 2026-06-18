@@ -9,7 +9,7 @@ import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { useColumns } from '@/features/layout/hooks/useColumns';
 import { LazyYarlLightbox } from '@/features/lightbox/LazyYarlLightbox';
 import { useUIStore } from '@/store/useUIStore';
-import { WhatsAppChoiceDialog } from '@/components/shared/WhatsAppChoiceDialog';
+import { WhatsAppDialog } from '@/components/shared/WhatsAppDialog';
 import { PhotoErrorDisplay } from '@/components/photo/PhotoErrorDisplay';
 import { ArrowUp, MessageCircle } from 'lucide-react';
 
@@ -47,15 +47,6 @@ export default function PublicPage() {
 
   const showWhatsAppChoice = useUIStore((s) => s.showWhatsAppChoice);
   const updateUI = useUIStore((s) => s.update);
-
-  React.useEffect(() => {
-    logger.debug('[PublicPage] showWhatsAppChoice:', showWhatsAppChoice);
-  }, [showWhatsAppChoice]);
-
-  const handleOpenWhatsApp = () => {
-    logger.debug('[PublicPage] WhatsApp button clicked');
-    updateUI({ showWhatsAppChoice: true });
-  };
   const { lang, uiTranslations: t } = useTranslation();
   const { data: settings } = usePublicSettings();
 
@@ -196,7 +187,7 @@ export default function PublicPage() {
       </div>
 
       {/* 懸浮按鈕組 (回到頂部 & WhatsApp 諮詢) */}
-      <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-45">
+      <div className="fixed bottom-6 right-6 flex flex-col gap-3">
         {showScrollTop && (
           <button
             onClick={() => gridRef.current?.scrollToIndex(0)}
@@ -208,7 +199,10 @@ export default function PublicPage() {
           </button>
         )}
         <button
-          onClick={handleOpenWhatsApp}
+          onClick={() => {
+            logger.debug('[PublicPage] WhatsApp button clicked');
+            updateUI({ showWhatsAppChoice: true });
+          }}
           type="button"
           className="w-12 h-12 flex items-center justify-center rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-xl transition-all active:scale-95 focus:outline-none"
           title="WhatsApp 諮詢"
@@ -225,16 +219,7 @@ export default function PublicPage() {
         onIndexChange={handleIndexChange}
       />
 
-      {showWhatsAppChoice && (
-        <WhatsAppChoiceDialog 
-          isOpen={showWhatsAppChoice}
-          onClose={() => updateUI({ showWhatsAppChoice: false })}
-          options={getWhatsAppOptions()}
-          onSelect={openWhatsApp}
-          labels={t}
-        />
-      )}
-      
+      <WhatsAppDialog />
     </div>
   );
 }

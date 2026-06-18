@@ -19,7 +19,6 @@ interface AdminPhotoCardProps {
   sharedTags?: Tag[];
   canPin?: boolean;
   selected?: boolean;
-  showCoverBadge?: boolean;
 }
 
 export const AdminPhotoCard = ({
@@ -33,7 +32,6 @@ export const AdminPhotoCard = ({
   sharedTags,
   canPin,
   selected,
-  showCoverBadge,
 }: AdminPhotoCardProps) => {
   const isSelected = selected !== undefined ? selected : useUIStore((s) => s.selectedIds.includes(photo.id));
   const isMultiSelect = useUIStore((s) => s.isMultiSelect);
@@ -68,7 +66,6 @@ export const AdminPhotoCard = ({
         photo={photo} 
         isPinned={!!photo.isPinned} 
         hideGroupBadge={hideGroupBadge || !showGroupsCollapsed} 
-        showCoverBadge={showCoverBadge}
       />
       {(actualCanPin && !isMultiSelect) && (
         <PinButton photoId={photo.id} isPinned={!!photo.isPinned} />

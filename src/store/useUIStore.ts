@@ -164,23 +164,23 @@ export const useUIStore = create<UIStoreState>()((set) => ({
   incrementDialogCount: () => set((state) => ({ activeDialogCount: state.activeDialogCount + 1 })),
   decrementDialogCount: () => set((state) => ({ activeDialogCount: Math.max(0, state.activeDialogCount - 1) })),
   update: (updates) => set((state) => {
-    const rawNextState = typeof updates === 'function' ? updates(state) : updates;
-    const nextState = { ...rawNextState };
+    const nextUpdates = typeof updates === 'function' ? updates(state) : updates;
+    const nextState = { ...state, ...nextUpdates };
 
-    if ('isMultiSelect' in nextState && nextState.isMultiSelect === false) {
+    if ('isMultiSelect' in nextUpdates && nextUpdates.isMultiSelect === false) {
       nextState.selectedIds = [];
     }
     
-    if ('appLang' in nextState && nextState.appLang !== undefined) {
+    if ('appLang' in nextUpdates && nextUpdates.appLang !== undefined) {
       storage.set(STORAGE_KEYS.LANG, nextState.appLang);
     }
-    if ('batchEditingIds' in nextState) {
+    if ('batchEditingIds' in nextUpdates) {
       storage.set(STORAGE_KEYS.BATCH_EDITING, nextState.batchEditingIds);
     }
-    if ('groupSettingsOpen' in nextState && nextState.groupSettingsOpen !== undefined) {
+    if ('groupSettingsOpen' in nextUpdates && nextUpdates.groupSettingsOpen !== undefined) {
       storage.set(STORAGE_KEYS.GROUP_SETTINGS_OPEN, String(nextState.groupSettingsOpen));
     }
-    if ('uploadAsGroup' in nextState && nextState.uploadAsGroup !== undefined) {
+    if ('uploadAsGroup' in nextUpdates && nextUpdates.uploadAsGroup !== undefined) {
       storage.set('uploadAsGroup', String(nextState.uploadAsGroup));
     }
     
