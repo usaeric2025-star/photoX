@@ -1,36 +1,48 @@
 import * as React from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { useUIStore } from '@/store/useUIStore';
+import { usePublicSettings } from '@/hooks/settings/useSettings';
 import { MessageCircle } from 'lucide-react';
 
 export const WhatsAppDialog = () => {
   const show = useUIStore((s) => s.showWhatsAppChoice);
   const update = useUIStore((s) => s.update);
+  const { data: settings } = usePublicSettings();
 
-  const options = [
-    { name: '客服 1', url: 'https://wa.me/1234567890' },
-    { name: '客服 2', url: 'https://wa.me/0987654321' },
-  ];
+  const options = React.useMemo(() => {
+    const opts = [];
+    if (settings?.whatsapp_1 && settings?.whatsapp_1_name) {
+      opts.push({ name: settings.whatsapp_1_name, url: `https://wa.me/${settings.whatsapp_1.replace(/\D/g, '')}` });
+    }
+    if (settings?.whatsapp_2 && settings?.whatsapp_2_name) {
+      opts.push({ name: settings.whatsapp_2_name, url: `https://wa.me/${settings.whatsapp_2.replace(/\D/g, '')}` });
+    }
+    return opts;
+  }, [settings]);
 
   return (
     <Modal open={!!show} onClose={() => update({ showWhatsAppChoice: false })}>
       <div className="w-full p-6">
         <h3 className="font-bold text-lg mb-4 text-slate-800">选择咨询方式</h3>
-        <div className="space-y-3">
-          {options.map((opt, i) => (
-            <a 
-              key={i}
-              href={opt.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => update({ showWhatsAppChoice: false })}
-              className="w-full py-3 px-4 bg-emerald-600 text-white rounded-lg font-bold flex items-center justify-between shadow-sm hover:bg-emerald-700 transition-all"
-            >
-              <span>{opt.name}</span>
-              <MessageCircle size={18} />
-            </a>
-          ))}
-        </div>
+        {options.length === 0 ? (
+          <p className="text-slate-500 text-sm">暂无设置咨询方式</p>
+        ) : (
+          <div className="space-y-3">
+            {options.map((opt, i) => (
+              <a 
+                key={i}
+                href={opt.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => update({ showWhatsAppChoice: false })}
+                className="w-full py-3 px-4 bg-emerald-600 text-white rounded-lg font-bold flex items-center justify-between shadow-sm hover:bg-emerald-700 transition-all"
+              >
+                <span>{opt.name}</span>
+                <MessageCircle size={18} />
+              </a>
+            ))}
+          </div>
+        )}
       </div>
     </Modal>
   );

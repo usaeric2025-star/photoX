@@ -1,7 +1,7 @@
 import { useUIStore } from '../../store/useUIStore';
 import React from 'react';
 import { StaffUnlockDialog } from '@/components/admin/StaffUnlockDialog';
-import { WhatsAppChoiceDialog } from '@/components/shared/WhatsAppChoiceDialog';
+import { WhatsAppDialog } from '@/components/shared/WhatsAppDialog';
 import { AppSettings, TranslationType } from '../../types';
 
 interface GalleryDialogsProps {
@@ -45,13 +45,7 @@ export function GalleryDialogs(props: GalleryDialogsProps) {
         />
       )}
 
-      <WhatsAppChoiceDialog 
-        isOpen={props.showWhatsAppChoice}
-        onClose={() => update({ showWhatsAppChoice: false })}
-        options={[]}
-        labels={props.labels}
-        onSelect={() => update({ showWhatsAppChoice: false })}
-      />
+      <WhatsAppDialog />
     </>
   );
 };
