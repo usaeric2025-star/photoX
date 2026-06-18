@@ -126,6 +126,18 @@
 - ✅ 必須加 80ms 防抖
 - ✅ 懸浮 + 觸控雙通道
 
+## 搜尋與視圖優化規範（永久鎖定，2026-06-18）
+
+### CQRS 與 Materialized Views
+- ✅ **讀寫分離（CQRS）**：對於高頻讀取且跨表關聯複雜的 API（如照片列表），必須使用 Materialized View (`v_photos_list`) 來收斂資料結構，從而避免執行階段的繁重 JOIN。
+- ✅ **非同步並發刷新 (Concurrent Refresh)**：寫入操作（增、刪、改、合組、改標籤）完成後，必須透過 `REFRESH MATERIALIZED VIEW CONCURRENTLY` 或類似的非同步背景任務更新視圖，不在主執行緒阻塞使用者。
+- ✅ **單一真相源**：Drizzle Schema 中定義實體表，同部使用 Drizzle 定義視圖映射（透過 `pgMaterializedView`），所有查詢端皆以視圖欄位為準。
+
+### 搜尋優化與 GIN 索引
+- ✅ 使用 GIN 索引優化 JSONB 欄位（例如 i18n 名字）的搜尋。
+- ✅ 針對跨表查詢（例如 Tags, Categories 名字陣列）應該預先拉平儲存在 Materialized View 中的 text array 欄位。
+- ✅ 在搜尋時，直接對 Array 使用 `UNNEST()` 和 `ILIKE` 或者對字串進行 `ILIKE` 搜尋，避免對主表進行深層的 EXISTS 或 JOIN 查詢。
+
 ## 架構進化規範 (2026-06-12)
 - ✅ defineMutation 仅返回纯配置对象，禁止返回 Hook 工厂
 - ✅ isDirty 判断禁止使用 JSON.stringify，使用 lodash-es/isEqual 或 RHF formState
@@ -1542,3 +1554,31 @@ PhotoX 當前單頁數據 < 100KB，IndexedDB 收益為零且增加 Bundle Size 
 - ❌ 禁止在元件中直接寫 `ref as MutableRef`
 - ❌ 禁止用 `@ts-ignore` 繞過 ref 型別
 - 📝 React 19 升級後若 RefObject 原生 mutable，則廢棄此工具
+
+## 物化視圖現狀（2026-06-18）
+
+### 手動建立的物件
+- `v_photos_list` 物化視圖（在 Supabase SQL Editor 手動建立）
+- `idx_v_photos_list_id` 唯一索引
+- `idx_v_photos_list_group_id` 索引
+- `idx_v_photos_list_category_id` 索引
+- `idx_v_photos_list_pinned` 索引
+
+### 後續行動
+- 當 Drizzle Kit 修復後，補上 Migration 檔案
+- 驗證 Migration 與資料庫一致
+
+## 物化視圖規範（永久鎖定）
+
+### 核心原則
+- ✅ 物化視圖定義必須在 `src/db/views.ts` (及 `api/_lib/db/views.ts`) 中聲明
+- ✅ Migration 檔案必須納入 `supabase/migrations/` 目錄
+- ✅ 所有視圖必須有唯一索引以支援 `REFRESH CONCURRENTLY` 或背景手動刷新
+- ✅ 寫入操作必須觸發視圖刷新 (CQRS 機制)
+- ❌ 禁止在 Supabase SQL Editor 中手動建立視圖（除非緊急情況）
+- ❌ 禁止繞過 Drizzle Migration 管理視圖
+
+### 緊急情況處理
+- 若 Drizzle Kit 無法執行，可在 SQL Editor 或 scripts 中手動建立
+- 手動建立後必須補上 Migration 檔案
+- 手動操作必須記錄在 AGENTS.md 的「物化視圖現狀」區塊

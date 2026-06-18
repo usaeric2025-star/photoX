@@ -8,7 +8,7 @@ import fs from 'fs';
  * Detects breaking changes in ArkType schemas between HEAD and HEAD~1.
  */
 
-const SCHEMA_PATH = 'src/shared/apiContractSchema.ts';
+const SCHEMA_PATH = 'api/_shared/apiContractSchema.ts';
 
 function getPreviousVersion(filePath: string): string | null {
   try {

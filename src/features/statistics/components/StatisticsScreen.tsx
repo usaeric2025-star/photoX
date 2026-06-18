@@ -11,7 +11,7 @@ import {
 import { useCategories, useTags } from '@/hooks';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { PhotoListItem } from '@/types/api/photos';
+import { PhotoListItem } from '@/types/api';
 
 interface StatCardProps {
   title: string;

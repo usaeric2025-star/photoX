@@ -1,5 +1,5 @@
 import React from 'react';
-import { PhotoListItem } from '@/types/api/photos';
+import { PhotoListItem } from '@/types/api';
 import { VirtualGrid } from '@/components/virtualizer/VirtualGrid';
 import { PhotoGridSkeleton } from './PhotoGridSkeleton';
 import { AdminPhotoCard } from './AdminPhotoCard';

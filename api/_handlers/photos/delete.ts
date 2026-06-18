@@ -26,7 +26,7 @@ export const deleteHandler = (app: Hono) => {
         if (photoData?.groupId) {
           await syncGroupCoversAndCount([photoData.groupId]);
         }
-        
+
         return c.json({ success: true, data: { photoData } });
     } catch (error: any) {
         return c.json({ success: false, error: error.message }, 500);

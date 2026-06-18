@@ -27,12 +27,13 @@ export const usePhoto = (photoId: string) => {
 
       // 2. Try to find in any infinite list query cache
       const cachedPhotos = queryClient.getQueriesData<any>({ queryKey: queryKeys.photos.all });
-      for (const [key, data] of cachedPhotos) {
+      for (const [, data] of cachedPhotos) {
         if (data && data.pages) {
           for (const page of data.pages) {
-            if (page.photos) {
-              const photo = page.photos.find((p: Photo) => p.id === photoId);
-              if (photo) return photo;
+            // Updated to search in 'items' as per unified PhotoListItem structure
+            if (page.items) {
+              const photo = page.items.find((p: any) => p.id === photoId);
+              if (photo) return photo as Photo;
             }
           }
         }

@@ -1,6 +1,7 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema.js';
+import * as views from './views.js';
 import { getServerEnv } from '../shared/envSchema.js';
 
 const env = getServerEnv(process.env);
@@ -20,5 +21,6 @@ const client = postgres(connectionString || '', {
   onnotice: () => {},
 });
 
-export const db = drizzle(client, { schema });
+export const db = drizzle(client, { schema: { ...schema, ...views } });
 export * from './schema';
+export * from './views';

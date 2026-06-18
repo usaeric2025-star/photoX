@@ -1,10 +1,35 @@
 import { logger } from '../../_lib/logger.js';
 import { Hono } from 'hono';
 import { db, secrets as secretsTable, settings as settingsTable } from '../../_lib/db/index.js';
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { encrypt } from '../../_lib/encryption.js';
 
 export const adminSettings = new Hono();
+
+adminSettings.get("/get", async (c) => {
+    try {
+        const [settingsRes] = await db.execute(sql`SELECT * FROM settings WHERE id = 1 LIMIT 1`);
+        
+        // Fetch secrets to merge legacy AI settings
+        const secretsRes = await db.select().from(secretsTable);
+        const secretsMap: Record<string, string> = {};
+        for (const s of secretsRes) {
+            secretsMap[s.key] = s.value || '';
+        }
+
+        const data = settingsRes ? {
+            access_passcode: settingsRes.access_passcode,
+            logo_url: settingsRes.logo_url,
+            gemini_api_key: secretsMap['gemini'] || '',
+            openrouter_api_key: secretsMap['openrouter'] || '',
+            custom_model: secretsMap['openrouter_model'] || secretsMap['gemini_model'] || ''
+        } : {};
+
+        return c.json({ success: true, data });
+    } catch (e: unknown) {
+        return c.json({ success: false, error: (e as Error).message }, 500);
+    }
+});
 
 adminSettings.get("/get-keys", async (c) => {
     try {

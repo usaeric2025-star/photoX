@@ -11,7 +11,7 @@ import { useUIStore } from '@/store/useUIStore';
 import { useSettings } from '@/hooks/settings/useSettings';
 import { WhatsAppChoiceDialog } from '@/components/shared/WhatsAppChoiceDialog';
 import { PublicFloatingActions } from '@/components/photo/PublicFloatingActions';
-import { PhotoListItem } from '@/types/api/photos';
+import { PhotoListItem } from '@/types/api';
 import { PhotoErrorDisplay } from '@/components/photo/PhotoErrorDisplay';
 
 export default function PublicPage() {
@@ -27,6 +27,7 @@ export default function PublicPage() {
 
   const { 
     photos, 
+    totalCount,
     isPending, 
     hasNextPage,
     fetchNextPage,
@@ -111,7 +112,7 @@ export default function PublicPage() {
   return (
     <div className="flex flex-col h-full w-full bg-slate-50" id="public-view">
       <PublicHeader 
-        totalCount={photos.length}
+        totalCount={totalCount}
         onRefresh={handleRefresh}
         isRefreshing={isFetching}
       />

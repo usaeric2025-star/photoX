@@ -4,10 +4,17 @@ import type {
   PhotoListReqSchema,
   PhotoBatchUpdateReqSchema,
   PhotoUpdateReqSchema,
-  SearchReqSchema
+  SearchReqSchema,
+  PhotoListItem as ApiPhotoListItem,
+} from '../../api/_shared/apiContractSchema';
+import {
+  PhotoListItemSchema as ApiPhotoListItemSchema
 } from '../../api/_shared/apiContractSchema';
 
 export type ApiResponse<T = unknown> = BaseApiResponse<T>;
+
+export type PhotoListItem = ApiPhotoListItem;
+export const PhotoListItemSchema = ApiPhotoListItemSchema;
 
 export type PhotoListReq = typeof PhotoListReqSchema.infer;
 export type PhotoBatchUpdateReq = typeof PhotoBatchUpdateReqSchema.infer;

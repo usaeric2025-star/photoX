@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import { useGroupData } from '../shared/hooks/useGroupData';
-import { PhotoListItem } from '@/types/api/photos';
+import { PhotoListItem } from '@/types/api';
 import { Photo, Group, Category } from '@/types';
 import { PublicPhotoCard } from '@/components/photo/PublicPhotoCard';
 import { YarlLightbox } from '@/features/lightbox/YarlLightbox';

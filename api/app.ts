@@ -4,10 +4,10 @@ import { getServerEnv } from "./_shared/envSchema.js";
 import { logTraffic } from "./_lib/trafficCapture.js";
 import { requireRealUser } from "./_lib/auth.js";
 import { getSupabaseAdmin } from "./_lib/supabase.js";
+import { refreshPhotosView } from "./_lib/db/index.js";
 import adminApp from "./_admin.js";
 import { ai } from "./_handlers/ai.js";
 import { tags } from "./_handlers/tags.js";
-import { search } from "./_handlers/search.js";
 import { categories } from "./_handlers/categories.js";
 import { manufacturers } from "./_handlers/manufacturers.js";
 import { groups } from "./_handlers/groups.js";
@@ -45,6 +45,7 @@ app.use("*", cors());
 app.use("*", async (c, next) => {
     const traceId = getTraceId(c);
     c.header('X-Trace-Id', traceId);
+    logger.info(`[HTTP] ${c.req.method} ${c.req.path}`, { traceId });
     // 1% sample rate for production, 100% for dev
     if (serverEnv.NODE_ENV === 'production') {
         if (Math.random() < 0.01) logTraffic(c.req, null);
@@ -129,7 +130,7 @@ app.onError((err, c) => {
 app.use("/admin/*", async (c, next) => {
     // Whitelist public-accessible admin routes
     const path = c.req.path;
-    if (path.includes('/admin/settings/get-keys')) {
+    if (path.includes('/admin/settings/get-keys') || path.includes('/admin/settings/get')) {
         await next();
         return;
     }
@@ -198,6 +199,34 @@ app.use("*", async (c, next) => {
 });
 
 
+// --- Materialized View Refresh Middleware (CQRS) ---
+app.use("*", async (c, next) => {
+    await next();
+    
+    // Only refresh on successful mutations to core data entities
+    const method = c.req.method;
+    const path = c.req.path;
+    const isMutation = ["POST", "PUT", "DELETE"].includes(method);
+    const isSuccess = c.res.status >= 200 && c.res.status < 300;
+    
+    if (isMutation && isSuccess) {
+        const affectedPrefixes = ['/api/photos', '/api/groups', '/api/categories', '/api/tags'];
+        const isAffectedPath = affectedPrefixes.some(prefix => path.startsWith(prefix));
+        
+        // Exclude RPC-style queries that use POST
+        const querySuffixes = ['/list', '/count', '/by-ids', '/check-hash', '/group-photos'];
+        const isQuery = querySuffixes.some(suffix => path.endsWith(suffix));
+        
+        if (isAffectedPath && !isQuery) {
+            // Background refresh (non-blocking)
+            refreshPhotosView().catch(err => {
+                logger.error('[Refresh Middleware] Failure', { path, method, error: err.message });
+            });
+        }
+    }
+});
+
+
 // --- API Routes (Distributed) ---
 app.route("/admin", adminApp);
 app.route("/ai", ai);
@@ -206,7 +235,6 @@ app.route("/categories", categories);
 app.route("/manufacturers", manufacturers);
 app.route("/groups", groups);
 app.route("/photos", photos);
-app.route("/search", search);
 app.route("/", storage);
 app.route("/", storageMaintenance);
 

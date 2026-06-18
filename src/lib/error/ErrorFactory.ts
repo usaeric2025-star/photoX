@@ -79,7 +79,7 @@ export const ErrorFactory = {
     }),
 
   // 權限錯誤 (403)
-  permission: (message: string = '權限不足') =>
+  permission: (message: string = '访问权限不足') =>
     new AppError({
       code: ErrorCode.PERMISSION_DENIED,
       message,
@@ -91,7 +91,7 @@ export const ErrorFactory = {
   notFound: (resource: string, id?: string) =>
     new AppError({
       code: ErrorCode.NOT_FOUND,
-      message: `${resource} not found`,
+      message: `找不到请求的${resource}`,
       statusCode: 404,
       context: { resource, id },
     }),
@@ -109,7 +109,7 @@ export const ErrorFactory = {
   network: (originalError?: Error) =>
     new AppError({
       code: ErrorCode.NETWORK_ERROR,
-      message: 'Network request failed',
+      message: '网络请求失败，请检查网络连接',
       severity: ErrorSeverity.WARNING,
       cause: originalError,
     }),
@@ -118,7 +118,7 @@ export const ErrorFactory = {
   timeout: (service: string, originalError?: Error) =>
     new AppError({
       code: ErrorCode.THIRD_PARTY_TIMEOUT,
-      message: `${service} timeout`,
+      message: `${service} 服务响应超时`,
       severity: ErrorSeverity.WARNING,
       statusCode: 504,
       context: { service },
@@ -144,7 +144,7 @@ export const ErrorFactory = {
       const rawMes = anyErr.message || anyErr.error || anyErr.msg || JSON.stringify(err);
       return { message: typeof rawMes === 'object' ? JSON.stringify(rawMes).slice(0,500) : String(rawMes).slice(0,500) };
     }
-    return { message: 'Unknown error' };
+    return { message: '发生未知错误' };
   },
 
   wrap(error: unknown, operation: string, resource?: string, severity: string = 'error'): AppError {

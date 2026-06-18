@@ -1,6 +1,6 @@
 import React from 'react';
 import { Layers, ShieldAlert, Check } from 'lucide-react';
-import { PhotoListItem } from '@/types/api/photos';
+import { PhotoListItem } from '@/types/api';
 import { cn } from '@/lib/utils';
 import { useTranslation, useIsManagement } from '@/hooks';
 import { getDisplayGroupCode } from '@/services/photo/utils';

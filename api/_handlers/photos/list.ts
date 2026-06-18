@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { type } from 'arktype';
-import { db, furnitureItems, groups as groupsTable, tags as tagsTable, photoTags } from '../../_lib/db/index.js';
-import { eq, ne, and, or, ilike, sql, asc, desc, inArray, isNull, count, type SQL } from 'drizzle-orm';
+import { db, furnitureItems, groups as groupsTable, tags as tagsTable, photoTags, categories, vPhotosList } from '../../_lib/db/index.js';
+import { eq, ne, and, or, ilike, sql, asc, desc, inArray, isNull, count, exists, type SQL } from 'drizzle-orm';
 import { PhotoListReqSchema, ListByGroupReqSchema, PhotoListItem, PhotoListItemSchema } from '../../_shared/apiContractSchema.js';
 import { errorFactory } from '../../_lib/error/AppError.js';
 import { normalizeI18n } from '../../_shared/i18n.js';
@@ -52,98 +52,89 @@ export const listHandler = (app: Hono) => {
       const hasTag = tagId !== undefined && tagId !== null && tagId !== '';
       const hasCat = categoryId !== undefined && categoryId !== null && categoryId !== '';
 
-      // Build where clauses
       const whereClauses: (SQL | undefined)[] = [];
 
       if (cursor) {
-        // Simple cursor parsing: assume it's createdAt timestamp (ISO)
         const cursorTime = new Date(cursor as string);
         if (!isNaN(cursorTime.getTime())) {
-          whereClauses.push(sql`${furnitureItems.createdAt} < ${cursorTime.toISOString()}`);
+          whereClauses.push(sql`${vPhotosList.createdAt} < ${cursorTime.toISOString()}`);
         }
       }
 
-      const query = db
-        .select({
-            photo: furnitureItems,
-            group: {
-                id: groupsTable.id,
-                name: groupsTable.name,
-                coverPhotoId: groupsTable.coverPhotoId,
-                status: groupsTable.status,
-            }
-        })
-        .from(furnitureItems)
-        .leftJoin(groupsTable, eq(furnitureItems.groupId, groupsTable.id));
-
-      if (hasTag) {
-          query.innerJoin(photoTags, eq(furnitureItems.id, photoTags.photoId));
-          whereClauses.push(eq(photoTags.tagId as any, tagId as any));
-      }
-
-      if (hasCat) {
-          whereClauses.push(eq(furnitureItems.categoryId as any, categoryId as any));
-      }
-
-      if (searchQuery && searchQuery.trim().length > 0) {
-        const pattern = `%${searchQuery.trim()}%`;
+      const pattern = searchQuery?.trim() ? `%${searchQuery.trim()}%` : null;
+      if (pattern) {
         whereClauses.push(or(
-            ilike(sql`${furnitureItems.name}->>'zh'`, pattern),
-            ilike(sql`${furnitureItems.name}->>'en'`, pattern),
-            ilike(sql`${furnitureItems.name}->>'ms'`, pattern),
-            ilike(furnitureItems.manualCode, pattern),
-            ilike(furnitureItems.modelNumber, pattern),
-            ilike(furnitureItems.itemCode, pattern)
+            ilike(sql`${vPhotosList.name}->>'zh'`, pattern),
+            ilike(sql`${vPhotosList.name}->>'en'`, pattern),
+            ilike(sql`${vPhotosList.name}->>'ms'`, pattern),
+            ilike(vPhotosList.manualCode, pattern),
+            ilike(vPhotosList.modelNumber, pattern),
+            ilike(vPhotosList.itemCode, pattern),
+            sql`EXISTS (
+                SELECT 1 FROM unnest(${vPhotosList.tags}) t
+                WHERE t ILIKE ${pattern}
+            )`,
+            ilike(vPhotosList.categoryNameZh, pattern),
+            ilike(vPhotosList.categoryNameEn, pattern),
+            ilike(vPhotosList.categoryNameMs, pattern)
         ));
       }
 
+      if (hasTag) {
+        whereClauses.push(sql`${tagId} = ANY(${vPhotosList.tagIds})`);
+      }
+
+      if (hasCat) {
+          whereClauses.push(eq(vPhotosList.categoryId, categoryId as any));
+      }
+
       if (groupId) {
-        whereClauses.push(eq(furnitureItems.groupId, groupId));
+        whereClauses.push(eq(vPhotosList.groupId, groupId));
       }
       
       if (onlyGroupsCover) {
         whereClauses.push(or(
-          isNull(furnitureItems.groupId),
-          eq(furnitureItems.isGroupCover, true)
+          isNull(vPhotosList.groupId),
+          eq(vPhotosList.isGroupCover, true)
         ));
       } else if (onlyUngrouped) {
-        whereClauses.push(isNull(furnitureItems.groupId));
+        whereClauses.push(isNull(vPhotosList.groupId));
       }
       
       if (!isAdminMode) {
-        whereClauses.push(eq(furnitureItems.isHidden, false));
+        whereClauses.push(eq(vPhotosList.isHidden, false));
       } else if (isHidden !== undefined && isHidden !== null) {
-        whereClauses.push(eq(furnitureItems.isHidden, isHidden));
+        whereClauses.push(eq(vPhotosList.isHidden, isHidden));
       }
       
       if (manufacturerId !== undefined && manufacturerId !== null) {
-        whereClauses.push(eq(furnitureItems.manufacturerId as any, manufacturerId as any));
+        whereClauses.push(eq(vPhotosList.manufacturerId, manufacturerId as any));
       }
 
-      const finalWhere = whereClauses.length > 0 ? and(...whereClauses.filter((c): c is SQL => !!c)) : undefined;
+      const finalWhere = and(...whereClauses.filter((c): c is SQL => !!c));
+
+      // 1. Get Total Count
+      const [countRes] = await db
+        .select({ count: count() })
+        .from(vPhotosList)
+        .where(finalWhere);
       
-      // BACK TO BUILDER STYLE
-      const builder = db
-        .select({
-            items: furnitureItems,
-            group: groupsTable
-        })
-        .from(furnitureItems)
-        .leftJoin(groupsTable, eq(furnitureItems.groupId, groupsTable.id));
+      const total = Number(countRes.count);
 
-      if (hasTag) {
-        builder.innerJoin(photoTags, eq(furnitureItems.id, photoTags.photoId));
-      }
+      // 2. Get Paginated Data
+      const builder = db
+        .select()
+        .from(vPhotosList);
 
       if (finalWhere) builder.where(finalWhere);
 
       // Ordering
-      const orderClauses: SQL[] = [desc(furnitureItems.isPinned)];
+      const orderClauses: SQL[] = [desc(vPhotosList.isPinned)];
       // Cursor pagination is most reliable with a single temporal order
-      if (sortOrder === 'newest' || !sortOrder) orderClauses.push(desc(furnitureItems.createdAt), desc(furnitureItems.id));
-      else if (sortOrder === 'oldest') orderClauses.push(asc(furnitureItems.createdAt), asc(furnitureItems.id));
-      else if (sortOrder === 'name') orderClauses.push(asc(sql`${furnitureItems.name}->>'zh'`), asc(furnitureItems.id));
-      else orderClauses.push(desc(furnitureItems.createdAt), desc(furnitureItems.id));
+      if (sortOrder === 'newest' || !sortOrder) orderClauses.push(desc(vPhotosList.createdAt), desc(vPhotosList.id));
+      else if (sortOrder === 'oldest') orderClauses.push(asc(vPhotosList.createdAt), asc(vPhotosList.id));
+      else if (sortOrder === 'name') orderClauses.push(asc(sql`${vPhotosList.name}->>'zh'`), asc(vPhotosList.id));
+      else orderClauses.push(desc(vPhotosList.createdAt), desc(vPhotosList.id));
 
       builder.orderBy(...orderClauses);
       
@@ -156,52 +147,32 @@ export const listHandler = (app: Hono) => {
 
       const data = await builder;
 
-      // Group counts and Tags
+      // Group counts and formatting
       if (data.length > 0) {
-        const photoIds = data.map(d => d.items.id);
-        const gIds = Array.from(new Set(data.filter(d => d.items.groupId).map(d => d.items.groupId))) as string[];
-        
-        const [counts, tagsData] = await Promise.all([
-            getGroupCounts(gIds, isAdminMode),
-            db.select({
-                photoId: photoTags.photoId,
-                tagId: photoTags.tagId,
-                name: tagsTable.name
-            })
-            .from(photoTags)
-            .innerJoin(tagsTable, eq(photoTags.tagId, tagsTable.id))
-            .where(inArray(photoTags.photoId, photoIds))
-        ]);
-
-        const tagsByPhoto = new Map<string, unknown[]>();
-        for (const t of tagsData) {
-            const list = tagsByPhoto.get(t.photoId ?? '') || [];
-            list.push({ tag_id: t.tagId, tags: { id: t.tagId, name: t.name } });
-            tagsByPhoto.set(t.photoId ?? '', list);
-        }
+        const gIds = Array.from(new Set(data.filter(d => d.groupId).map(d => d.groupId))) as string[];
+        const counts = await getGroupCounts(gIds, isAdminMode);
 
         const formatted = data.map(d => {
-            const itemTagList = (tagsByPhoto.get(d.items.id) || []) as any[];
-            const nameObj = normalizeI18n(d.items.name);
-            const descObj = normalizeI18n(d.items.description);
+            const nameObj = normalizeI18n(d.name);
+            const descObj = normalizeI18n(d.description);
             
             const displayName = nameObj.zh || nameObj.en || nameObj.ms || 'Unnamed';
             const displayDesc = descObj.zh || descObj.en || descObj.ms || '';
 
             return {
-                id: d.items.id,
-                name: d.items.manualCode || displayName,
+                id: d.id,
+                name: d.manualCode || displayName,
                 description: displayDesc,
-                imageUrl: d.items.imageUrl || '',
-                thumbnailUrl: d.items.imageUrl || '', // Fallback to原圖, managed by Worker
-                groupId: d.items.groupId || null,
-                groupName: d.group?.name || null,
-                memberCount: d.group ? (counts.get(d.group.id) || 0) : 0,
-                tags: itemTagList.map(t => (t as any).tags.name),
-                isPinned: !!d.items.isPinned,
-                isHidden: !!d.items.isHidden,
-                isCover: !!d.items.isGroupCover || (d.group?.coverPhotoId === d.items.id),
-                createdAt: d.items.createdAt ? d.items.createdAt.toISOString() : null,
+                imageUrl: d.imageUrl || '',
+                thumbnailUrl: d.imageUrl || '', // Fallback to original image, managed by resizer worker
+                groupId: d.groupId || null,
+                groupName: d.groupName || null,
+                memberCount: d.groupId ? (counts.get(d.groupId) || 0) : 0,
+                tags: d.tags || [],
+                isPinned: !!d.isPinned,
+                isHidden: !!d.isHidden,
+                isCover: !!d.isGroupCover || (d.groupCoverPhotoId === d.id),
+                createdAt: d.createdAt ? d.createdAt.toISOString() : null,
             } as any;
         });
 
@@ -210,11 +181,12 @@ export const listHandler = (app: Hono) => {
         return c.json({ 
           success: true, 
           data: PhotoListItemSchema.array().assert(formatted),
-          nextCursor 
+          nextCursor,
+          total
         });
       }
 
-      return c.json({ success: true, data: [], nextCursor: null });
+      return c.json({ success: true, data: [], nextCursor: null, total: 0 });
     } catch (error: unknown) {
       throw errorFactory.wrap(error, 'photos.list', 'QUERY_FAILURE');
     }
@@ -373,14 +345,30 @@ export const listHandler = (app: Hono) => {
 
         if (searchQuery && searchQuery.trim().length > 0) {
             const pattern = `%${searchQuery.trim()}%`;
-            whereClauses.push(or(
+            const searchSql = or(
                 ilike(sql`${furnitureItems.name}->>'zh'`, pattern),
                 ilike(sql`${furnitureItems.name}->>'en'`, pattern),
                 ilike(sql`${furnitureItems.name}->>'ms'`, pattern),
                 ilike(furnitureItems.manualCode, pattern),
                 ilike(furnitureItems.modelNumber, pattern),
-                ilike(furnitureItems.itemCode, pattern)
-            ) as SQL);
+                ilike(furnitureItems.itemCode, pattern),
+                // Tags Subquery
+                sql`EXISTS (
+                    SELECT 1 FROM ${photoTags} pt
+                    JOIN ${tagsTable} t ON pt.tag_id = t.id
+                    WHERE pt.photo_id = ${furnitureItems.id} AND t.name ILIKE ${pattern}
+                )`,
+                // Category Subquery
+                sql`EXISTS (
+                    SELECT 1 FROM ${categories} c
+                    WHERE c.id = ${furnitureItems.categoryId} AND (
+                        c.name_zh ILIKE ${pattern} OR 
+                        c.name_en ILIKE ${pattern} OR 
+                        c.name_ms ILIKE ${pattern}
+                    )
+                )`
+            );
+            whereClauses.push(searchSql as SQL);
         }
 
         if (!isAdminMode) {

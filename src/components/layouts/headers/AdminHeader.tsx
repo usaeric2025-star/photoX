@@ -104,7 +104,9 @@ export function AdminHeader({}: AdminHeaderProps) {
   
           {/* 照片总数展示 */}
           <div className="flex items-center gap-1 sm:gap-2 text-[9px] sm:text-xs font-black bg-white/60 backdrop-blur-sm border border-slate-200/30 rounded-full px-2 py-0.5 sm:px-2.5 sm:py-1 select-none shrink-0 cursor-default min-w-[40px] justify-center">
-            <span className="text-emerald-600 block text-center" title={lang === 'zh' ? '照片总数' : 'Total photo count'}>{totalCount ?? 0}</span>
+            <span className="text-emerald-600 block text-center" title={lang === 'zh' ? '照片总数' : 'Total photo count'}>
+              {t.photosCount(totalCount)}
+            </span>
           </div>
         </div>
   

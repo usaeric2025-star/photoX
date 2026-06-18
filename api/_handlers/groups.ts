@@ -85,6 +85,7 @@ export const groups = new Hono()
             .set({ ...mapped, updatedAt: new Date() } as any)
             .where(eq(groupsTable.id, id))
             .returning();
+        
         return c.json({ success: true, data });
     } catch (error: any) {
         const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
@@ -127,6 +128,7 @@ export const groups = new Hono()
                 target: groupsTable.id,
                 set: mapped as any
             });
+
         return c.json({ success: true });
     } catch (error: any) {
         const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
@@ -337,6 +339,7 @@ export const groups = new Hono()
         } catch (rpcErr) {
             await db.delete(groupsTable).where(eq(groupsTable.id, groupId));
         }
+
         return c.json({ success: true });
     } catch (error: any) {
         const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();

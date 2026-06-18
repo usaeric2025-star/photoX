@@ -1,10 +1,11 @@
 import { createInfiniteQuery } from '@/lib/query/queryFactory';
-import { PhotoListItem } from '@/types/api/photos';
+import { PhotoListItem, PhotoListItemSchema } from '@/types/api';
 import { api } from '@/lib/api';
 import { keepPreviousData } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query/keys';
 import { assertPhotoListItem } from '@/utils/schemaGuard';
 import { AppError, ErrorCode, ErrorFactory } from '@/lib/error';
+import { logger } from '@/lib/logger';
 
 export type PhotoListFilters = {
   categoryId?: string | null;
@@ -15,13 +16,14 @@ export type PhotoListFilters = {
   groupId?: string | null;
 };
 
-export const usePhotoList = createInfiniteQuery<
+export const usePhotos = createInfiniteQuery<
   { items: PhotoListItem[]; nextCursor: string | null; total: number },
   PhotoListFilters & { mode?: 'admin' | 'public' },
   string | null
 >({
   queryKey: (filters) => queryKeys.photos.infinite(filters, filters.mode ?? 'public'),
   queryFn: async (filters, cursor) => {
+    logger.info('[Query] usePhotos starting request...', { filters, cursor });
     try {
       const response = await api.photos.list.$post({
         json: {
@@ -36,6 +38,8 @@ export const usePhotoList = createInfiniteQuery<
           groupId: filters.groupId || undefined,
         },
       });
+      
+      logger.info('[Query] usePhotos response status:', response.status);
       
       if (!response.ok) {
         const status = response.status;
@@ -57,9 +61,11 @@ export const usePhotoList = createInfiniteQuery<
       }
       
       const result = await response.json();
+      logger.info('[Query] usePhotos success payload:', { success: result.success, hasData: !!result.data, total: result.total });
       
       // ✅ 統一契約驗證 + 雙重守衛
       const validatedData = assertPhotoListItem(result.data) as PhotoListItem[];
+      logger.info('[Query] usePhotos validation check count:', validatedData?.length);
       
       return {
         items: validatedData,
@@ -67,6 +73,7 @@ export const usePhotoList = createInfiniteQuery<
         total: (result as any).total || 0
       };
     } catch (error) {
+      logger.error('[Query] usePhotos failed deeply:', error);
       if (error instanceof AppError) {
         throw error;
       }

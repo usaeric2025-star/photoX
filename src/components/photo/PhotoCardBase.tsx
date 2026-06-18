@@ -1,6 +1,6 @@
 import React, { Ref } from 'react';
 import { cn } from '@/lib/utils';
-import { PhotoListItem } from '@/types/api/photos';
+import { PhotoListItem } from '@/types/api';
 
 export interface PhotoCardBaseProps extends React.HTMLAttributes<HTMLDivElement> {
   item: PhotoListItem;

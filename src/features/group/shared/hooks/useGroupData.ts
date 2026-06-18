@@ -1,5 +1,5 @@
 import { useGroupDetail } from '@/hooks/groups/useGroupDetail';
-import { usePhotoList } from '@/hooks/photo/usePhotoList';
+import { usePhotos } from '@/hooks/photo/usePhotos';
 
 interface UseGroupDataOptions {
   groupId: string | null;
@@ -20,7 +20,7 @@ export function useGroupData({ groupId, isAdmin }: UseGroupDataOptions) {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage
-  } = usePhotoList({
+  } = usePhotos({
     groupId: groupId || undefined,
     mode: isAdmin ? 'admin' : 'public',
   });

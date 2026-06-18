@@ -1,10 +1,11 @@
-import { PhotoListItemSchema } from '@/types/api/photos';
+import { PhotoListItemSchema } from '@/types/api';
 import { logger } from '@/lib/logger';
 
 const validatedIds = new Set<string>();
 
 export const assertPhotoListItem = (data: unknown) => {
-  if (typeof process !== 'undefined' && process.env.NODE_ENV === 'development') {
+  const isDev = typeof window !== 'undefined' && (import.meta.env?.DEV || false);
+  if (isDev) {
     // DEV: Full check
     const result = PhotoListItemSchema.array().assert(data);
     return result;

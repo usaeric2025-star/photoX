@@ -1,9 +1,9 @@
 import React from "react";
 import { VList } from "virtua";
-import { PublicPhotoCard } from "@/components/photo/PublicPhotoCard";
 import { AdminPhotoCard } from "@/components/photo/AdminPhotoCard";
+import { PublicPhotoCard } from "@/components/photo/PublicPhotoCard";
 import { useIsManagement } from "@/hooks";
-import { PhotoListItem } from '@/types/api/photos';
+import { PhotoListItem } from '@/types/api';
 import { Photo, Category } from "@/types";
 
 interface GroupPhotoGridProps {
@@ -35,7 +35,7 @@ export const GroupPhotoGrid = ({
     <VList data={photos} itemSize={200} shift={true}>
       {(photo) => {
         if (isManagement) {
-           return (
+          return (
             <AdminPhotoCard
               key={photo.id}
               photo={photo as any}
@@ -43,7 +43,7 @@ export const GroupPhotoGrid = ({
               selected={selectable && selectedIds.has(photo.id)}
               onClick={() => onPhotoClick?.(photo as any)}
             />
-           )
+          );
         }
         return (
           <PublicPhotoCard
@@ -52,7 +52,7 @@ export const GroupPhotoGrid = ({
             sharedCategories={sharedCategories}
             onClick={() => onPhotoClick?.(photo as any)}
           />
-        )
+        );
       }}
     </VList>
   );

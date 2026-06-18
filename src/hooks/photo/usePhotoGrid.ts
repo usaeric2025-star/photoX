@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { VListHandle } from 'virtua';
-import { PhotoListItem } from '@/types/api/photos';
-import { usePhotoList, PhotoListFilters } from './usePhotoList';
+import { PhotoListItem } from '@/types/api';
+import { usePhotos, PhotoListFilters } from './usePhotos';
 
 export function usePhotoGrid(filters: PhotoListFilters, mode: 'admin' | 'public') {
   const { 
@@ -14,7 +14,7 @@ export function usePhotoGrid(filters: PhotoListFilters, mode: 'admin' | 'public'
     hasNextPage, 
     isFetchingNextPage,
     refetch 
-  } = usePhotoList({ ...filters, mode });
+  } = usePhotos({ ...filters, mode });
   
   const dataVersion = JSON.stringify(filters);
   const ref = useRef<VListHandle>(null);
@@ -28,6 +28,7 @@ export function usePhotoGrid(filters: PhotoListFilters, mode: 'admin' | 'public'
 
   return {
     photos: data?.pages.flatMap(p => p.items) || [],
+    totalCount: data?.pages[0]?.total || 0,
     dataVersion,
     isPending,
     isFetching,

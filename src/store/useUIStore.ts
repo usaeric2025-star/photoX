@@ -117,7 +117,7 @@ export const useUIStore = create<UIStoreState>()((set) => ({
   showPassPrompt: false,
   isPhotoPickerOpen: false,
   photoPickerGroupId: null,
-  isInitialDataLoading: true,
+  isInitialDataLoading: false,
   setInitialDataLoading: (loading) => set({ isInitialDataLoading: loading }),
   isMultiSelect: false,
   selectedIds: [],

@@ -2,7 +2,7 @@ export * from './usePhotoSelection';
 export * from './usePhotoFilter';
 
 // Modularized business hooks
-export * from './usePhotoList';
+export * from './usePhotos';
 export * from './usePhotoGrid';
 export * from './usePhoto';
 export * from './usePhotoMutations';
