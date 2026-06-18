@@ -94,7 +94,8 @@ export const updateHandler = (app: Hono) => {
             }
         }
 
-        await db.update(furnitureItems).set(mappedUpdates).where(eq(furnitureItems.id, id));
+        const results = await db.update(furnitureItems).set(mappedUpdates).where(eq(furnitureItems.id, id)).returning();
+        const data = results[0] || null;
 
         // POST-MUTATION: Reconcile covers & counts
         const affectedGroupIds: string[] = [];
@@ -105,7 +106,7 @@ export const updateHandler = (app: Hono) => {
             await syncGroupCoversAndCount(affectedGroupIds);
         }
 
-        return c.json({ success: true });
+        return c.json({ success: true, data });
     } catch (error: unknown) {
         const err = error instanceof Error ? error : new Error(String(error));
         return c.json({ success: false, error: err.message }, 500);

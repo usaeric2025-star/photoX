@@ -147,15 +147,15 @@ export const ListByGroupReqSchema = type({
 });
 
 export const TagListItemSchema = type({
-    id: "string",
+    id: "number",
     name: "string",
     "aliases?": "string[]",
-    "is_pinned?": "boolean",
+    "is_global?": "boolean",
     "hot_score?": "number"
 });
 
 export const TagReqSchema = type({
-    id: "string",
+    id: "number",
     "name?": "string",
     "aliases?": "string[]"
 });
@@ -207,13 +207,12 @@ export const PhotoSchema = type({
     "category_id?": "string|null",
     "manufacturer_id?": "string|null",
     tags: type({
-        id: "string",
+        id: "number",
         name: "string",
         "aliases?": "string[]",
         "user_id?": "string",
-        "is_pinned?": "boolean",
-        "hot_score?": "number",
-        "is_global?": "boolean"
+        "is_global?": "boolean",
+        "hot_score?": "number"
     }).array().narrow((data) => data.length <= 3),
     description: {
         "zh?": "string",

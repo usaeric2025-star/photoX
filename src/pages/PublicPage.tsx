@@ -47,6 +47,33 @@ export default function PublicPage() {
   const { lang, uiTranslations: t } = useTranslation();
   const { data: settings } = usePublicSettings();
 
+  // 诊断日志：帮助排查骨头屏阻塞问题
+  const [debugInfo, setDebugInfo] = React.useState<any>({});
+  
+  React.useEffect(() => {
+    const info = {
+      timestamp: new Date().toISOString(),
+      photosCount: photos?.length || 0,
+      totalCount,
+      isFetching,
+      isPending: photoGridData.isPending,
+      isError,
+      hasError: !!error,
+      errorMessage: error?.message || String(error || ''),
+      hasSettings: !!settings,
+      category,
+      tagsCount: tags?.length || 0,
+      search,
+      tags
+    };
+    setDebugInfo(info);
+    console.log('[Diagnostic] PublicPage Check:', info);
+    
+    if (isError) {
+      console.error('[Diagnostic] PublicPage Error:', error);
+    }
+  }, [photos, totalCount, isFetching, photoGridData.isPending, isError, error, settings, category, tags, search]);
+
   const lightboxIndex = React.useMemo(() => {
     if (!photoId) return -1;
     return photos.findIndex((p: any) => p.id === photoId);
@@ -150,6 +177,14 @@ export default function PublicPage() {
         onSelect={openWhatsApp}
         labels={t}
       />
+      
+      {/* 诊断信息悬浮层 (仅限于调试 URL 时显示 或 常驻便于排查) */}
+      <div className="fixed bottom-4 left-4 z-[9999] bg-black/80 text-green-400 font-mono text-xs p-4 rounded-lg pointer-events-none max-w-sm overflow-hidden break-all shadow-xl">
+        <h3 className="text-white font-bold mb-2 border-b border-white/20 pb-1">Public Page Diagnostics</h3>
+        <pre className="whitespace-pre-wrap">
+          {JSON.stringify(debugInfo, null, 2)}
+        </pre>
+      </div>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { storage, STORAGE_KEYS } from '@/lib/storage';
 import { AppSettings } from '@/types';
 import { useSettingsUpdateMutation } from './useSettingsMutations';
 import { api } from '@/lib/api';
+import { logger } from '@/lib/logger';
 
 const DEFAULT_SETTINGS: AppSettings = {} as AppSettings;
 
@@ -61,11 +62,17 @@ export function usePublicSettings() {
   return useQuery({
     queryKey: ['settings', 'public'],
     queryFn: async () => {
-      const response = await api.public.settings.$get();
-      const result = await response.json();
-      if (!result.success) throw new Error(result.error);
-      return result.data as AppSettings;
+      try {
+        const response = await api.public.settings.$get();
+        const result = await response.json();
+        if (!result.success) return {} as AppSettings;
+        return result.data as AppSettings;
+      } catch (e) {
+        logger.error('Failed to fetch public settings, returning default', e);
+        return {} as AppSettings;
+      }
     },
     staleTime: 5 * 60 * 1000,
+    retry: 2,
   });
 }

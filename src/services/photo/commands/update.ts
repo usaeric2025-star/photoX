@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { DB_CONFIG } from '@/constants/config';
 import { Photo } from '@/types';
-import { mapToDb } from '../mappers';
+import { mapToDb, mapSupabasePhoto } from '../mappers';
 import { createPhotoValidator } from '@/lib/validators/factory';
 import { api } from '@/lib/api';
 
@@ -38,7 +38,8 @@ export async function updatePhoto(id: string, initialUpdates: Partial<Photo>): P
   
   if (!res.ok) throw new Error('Update failed');
   const body = await res.json();
-  return (body as any).data;
+  const rawData = (body as any).data;
+  return rawData ? mapSupabasePhoto(rawData) : null;
 }
 
 export const updatePhotoHidden = async (photoId: string, is_hidden: boolean): Promise<Photo | null> => {

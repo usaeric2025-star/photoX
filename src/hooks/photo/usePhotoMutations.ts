@@ -118,9 +118,14 @@ const togglePinConfig = defineMutation<
   optimistic: (old, { id, isPinned }) => {
     const castOld = old as { pages: { photos?: Photo[]; items?: Photo[] }[] } | Photo | undefined;
     if (!castOld) return castOld;
-    return 'pages' in castOld 
-      ? optimistic.infinite.update<Photo>()(castOld as { pages: { photos?: Photo[]; items?: Photo[] }[] }, { id, updates: { is_pinned: isPinned } }) 
-      : castOld;
+    if ('pages' in castOld) {
+        return optimistic.infinite.update<Photo>()(castOld as { pages: { photos?: Photo[]; items?: Photo[] }[] }, { id, updates: { is_pinned: isPinned } });
+    }
+    // If it's a detail query, castOld should be a Photo
+    if ((castOld as Photo).id === id) {
+        return { ...(castOld as Photo), is_pinned: isPinned };
+    }
+    return castOld;
   },
   successMessage: '状态已更新',
 });

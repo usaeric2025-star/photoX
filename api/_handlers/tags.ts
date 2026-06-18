@@ -87,7 +87,7 @@ export const tags = new Hono()
   })
   .post('/remove-from-photo', async (c) => {
     const body = await c.req.json();
-    const check = type({ photoId: "string", tagId: "string" })(body);
+    const check = type({ photoId: "string", tagId: "number" })(body);
     if (check instanceof type.errors) throw new Error(check.summary);
 
     const { photoId, tagId } = check;
@@ -102,7 +102,7 @@ export const tags = new Hono()
     const body = await c.req.json();
     const check = type({ 
       photoId: "string", 
-      tagIds: "string[]",
+      tagIds: "number[]",
       "tagWeights?": "Record<string, number>",
       "tagSources?": "Record<string, 'ai' | 'user' | 'system'>"
     })(body);
@@ -156,7 +156,7 @@ export const tags = new Hono()
     const body = await c.req.json();
     const check = type({ 
       photoIds: "string[]", 
-      tagIds: "string[]",
+      tagIds: "number[]",
       "tagWeights?": "Record<string, number>",
       "tagSources?": "Record<string, 'ai' | 'user' | 'system'>"
     })(body);

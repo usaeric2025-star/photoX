@@ -19,7 +19,7 @@ adminRepair.post("/preview", async (c) => {
         const photoMap = new Map<string, { id: string; name: unknown }>(pData.map(p => [p.id, p]));
 
         const tagData = await db.select({ id: tagsTable.id, name: tagsTable.name, isGlobal: tagsTable.isGlobal }).from(tagsTable);
-        const tagMap = new Map<string, { id: string; name: string | null; isGlobal: boolean | null }>(tagData.map(t => [t.id, t]) as any);
+        const tagMap = new Map<string, { id: string; name: string | null; isGlobal: boolean | null }>(tagData.map(t => [t.id, { id: t.id, name: t.name, isGlobal: t.isGlobal }]) as any);
 
         const photoTagGroupMap = new Map<string, string[]>();
         ptData.forEach((pt) => {
@@ -49,8 +49,8 @@ adminRepair.post("/preview", async (c) => {
               return tagIds.indexOf(a) - tagIds.indexOf(b);
             });
 
-            const kept = sorted.slice(0, 3).map(id => tagMap.get(id)?.name || id);
-            const removed = sorted.slice(3).map(id => tagMap.get(id)?.name || id);
+            const kept = sorted.slice(0, 3).map(id => tagMap.get(id)?.name || String(id));
+            const removed = sorted.slice(3).map(id => tagMap.get(id)?.name || String(id));
 
             affectedPhotos.push({
               photoId,
@@ -187,6 +187,47 @@ adminRepair.post("/", async (c) => {
         return c.json({ success: true, message: `完全幽灵记录清理完成: ${ids.length}条` });
       }
 
+      if (issueId === 'rebuild_views') {
+          try {
+            await db.execute(sql`DROP MATERIALIZED VIEW IF EXISTS v_photos_list CASCADE`);
+            await db.execute(sql`
+              CREATE MATERIALIZED VIEW v_photos_list AS
+              SELECT 
+                p.id, 
+                p.name, 
+                p.description,
+                p.image_url,
+                p.group_id, 
+                g.name AS group_name,
+                g.cover_photo_id AS group_cover_photo_id,
+                p.is_hidden,
+                p.is_pinned,
+                p.is_group_cover,
+                p.category_id,
+                p.manufacturer_id,
+                p.manual_code,
+                p.model_number,
+                p.item_code,
+                p.created_at,
+                COALESCE(ARRAY_AGG(t.name) FILTER (WHERE t.name IS NOT NULL), '{}') AS tags,
+                COALESCE(ARRAY_AGG(t.id) FILTER (WHERE t.id IS NOT NULL), '{}') AS tag_ids,
+                c.name_zh AS category_name_zh,
+                c.name_en AS category_name_en,
+                c.name_ms AS category_name_ms
+              FROM furniture_items p
+              LEFT JOIN groups g ON g.id = p.group_id
+              LEFT JOIN photo_tags pt ON pt.photo_id = p.id
+              LEFT JOIN tags t ON t.id = pt.tag_id
+              LEFT JOIN categories c ON c.id = p.category_id
+              GROUP BY p.id, g.id, c.id;
+            `);
+            await db.execute(sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_v_photos_list_id ON v_photos_list (id)`);
+            return c.json({ success: true, count: 1, message: "Materialized View v_photos_list 已成功重建並適配新的 UUID 架構" });
+          } catch (err: any) {
+             return c.json({ success: false, message: "Rebuild failed: " + err.message }, 500);
+          }
+      }
+
       if (issueId === 'missing_urls') {
         const records = await db.select({ id: furnitureItems.id })
           .from(furnitureItems)
@@ -254,7 +295,7 @@ adminRepair.post("/", async (c) => {
         const excessivePhotos: { photoId: string, tagIds: string[] }[] = [];
         photoTagGroupMap.forEach((tagIds, photoId) => {
           if (tagIds.length > 3) {
-            excessivePhotos.push({ photoId: photoId ?? "", tagIds });
+            excessivePhotos.push({ photoId, tagIds });
           }
         });
 
@@ -262,7 +303,7 @@ adminRepair.post("/", async (c) => {
           return c.json({ success: true, count: 0, message: "没有超出限制的照片标签" });
         }
 
-        const getWeight = (tagId: string, tagDetail?: any) => {
+        const getWeightForRepair = (tagId: string, tagDetail?: any) => {
           if (tagDetail && tagDetail.isGlobal) return 50;
           return 90;
         };
@@ -270,8 +311,8 @@ adminRepair.post("/", async (c) => {
         let updatedCount = 0;
         for (const item of excessivePhotos) {
           const sorted = [...item.tagIds].sort((a, b) => {
-            const weightA = getWeight(a, tagMap.get(a));
-            const weightB = getWeight(b, tagMap.get(b));
+            const weightA = getWeightForRepair(a, tagMap.get(a));
+            const weightB = getWeightForRepair(b, tagMap.get(b));
             if (weightB !== weightA) return weightB - weightA;
             return item.tagIds.indexOf(a) - item.tagIds.indexOf(b);
           });

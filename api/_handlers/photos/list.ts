@@ -81,7 +81,7 @@ export const listHandler = (app: Hono) => {
       }
 
       if (hasTag) {
-        whereClauses.push(sql`${tagId} = ANY(${vPhotosList.tagIds})`);
+        whereClauses.push(sql`${Number(tagId)} = ANY(${vPhotosList.tagIds})`);
       }
 
       if (hasCat) {
