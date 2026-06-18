@@ -11,6 +11,7 @@ import { LazyYarlLightbox } from '@/features/lightbox/LazyYarlLightbox';
 import { useUIStore } from '@/store/useUIStore';
 import { WhatsAppChoiceDialog } from '@/components/shared/WhatsAppChoiceDialog';
 import { PhotoErrorDisplay } from '@/components/photo/PhotoErrorDisplay';
+import { ArrowUp, MessageCircle } from 'lucide-react';
 
 export default function PublicPage() {
   const { 
@@ -24,6 +25,8 @@ export default function PublicPage() {
   } = useFilters();
   
   const { columns } = useColumns();
+  const [showScrollTop, setShowScrollTop] = React.useState(false);
+  const gridRef = React.useRef<any>(null);
   
   const photoGridData = usePhotoGrid({
     categoryId: category,
@@ -44,6 +47,15 @@ export default function PublicPage() {
 
   const showWhatsAppChoice = useUIStore((s) => s.showWhatsAppChoice);
   const updateUI = useUIStore((s) => s.update);
+
+  React.useEffect(() => {
+    logger.debug('[PublicPage] showWhatsAppChoice:', showWhatsAppChoice);
+  }, [showWhatsAppChoice]);
+
+  const handleOpenWhatsApp = () => {
+    logger.debug('[PublicPage] WhatsApp button clicked');
+    updateUI({ showWhatsAppChoice: true });
+  };
   const { lang, uiTranslations: t } = useTranslation();
   const { data: settings } = usePublicSettings();
 
@@ -76,10 +88,16 @@ export default function PublicPage() {
 
   const lightboxIndex = React.useMemo(() => {
     if (!photoId) return -1;
-    return photos.findIndex((p: any) => p.id === photoId);
+    const index = photos.findIndex((p: any) => p.id === photoId);
+    logger.debug('[Lightbox Debug] Find Index Result:', { photoId, index });
+    return index;
   }, [photoId, photos]);
 
   const lightboxOpen = lightboxIndex !== -1;
+
+  React.useEffect(() => {
+    logger.debug('[Lightbox Debug]', { photoId, lightboxIndex, lightboxOpen, photosCount: photos.length });
+  }, [photoId, lightboxIndex, lightboxOpen, photos]);
 
   const lightboxItems = React.useMemo(() => photos.map((p: any) => {
     return {
@@ -105,7 +123,13 @@ export default function PublicPage() {
     refetch();
   };
 
-  const openWhatsApp = (num: string) => {
+  const openWhatsApp = () => {
+    (window as any)._pendingPhoto = undefined;
+    updateUI({ showWhatsAppChoice: false });
+  };
+
+  const getWhatsAppOptions = () => {
+    const options: { name: string; url: string }[] = [];
     const pendingPhoto = (window as any)._pendingPhoto as any;
     let message = '';
     
@@ -115,15 +139,27 @@ export default function PublicPage() {
       const name = pendingPhoto.name?.zh || pendingPhoto.name?.en || "";
       const url = pendingPhoto.imageUrl || "";
       message = `${prompt}\n*${name}* (${itemCode})\n${url}`;
-      (window as any)._pendingPhoto = undefined;
     } else {
       message = "您好，我正在浏览您的家具相冊，想了解更多信息！";
     }
     
     const encodedText = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${num}?text=${encodedText}`;
-    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
-    updateUI({ showWhatsAppChoice: false });
+    
+    if (settings?.whatsapp_1) {
+      options.push({ name: settings.whatsapp_1_name || 'Contact 1', url: `https://wa.me/${settings.whatsapp_1}?text=${encodedText}` });
+    }
+    if (settings?.whatsapp_2) {
+      options.push({ name: settings.whatsapp_2_name || 'Contact 2', url: `https://wa.me/${settings.whatsapp_2}?text=${encodedText}` });
+    }
+    
+    if (options.length === 0) {
+      const fallback = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_WHATSAPP_NUMBER : '';
+      if (fallback) {
+        options.push({ name: t.whatsAppInquiry, url: `https://wa.me/${fallback}?text=${encodedText}` });
+      }
+    }
+    
+    return options;
   };
 
   if (isError) {
@@ -151,10 +187,34 @@ export default function PublicPage() {
         <ErrorBoundary>
           <PublicPhotoGrid 
             {...photoGridData}
+            gridRef={gridRef}
+            onScroll={(offset) => setShowScrollTop(offset > 300)}
             columns={columns}
             filters={{ category, tags, search, sort, showGroupsCollapsed }}
           />
         </ErrorBoundary>
+      </div>
+
+      {/* 懸浮按鈕組 (回到頂部 & WhatsApp 諮詢) */}
+      <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-45">
+        {showScrollTop && (
+          <button
+            onClick={() => gridRef.current?.scrollToIndex(0)}
+            type="button"
+            className="w-12 h-12 flex items-center justify-center rounded-full bg-white/95 backdrop-blur border border-slate-200 text-slate-700 shadow-lg hover:shadow-xl hover:bg-slate-50 transition-all active:scale-95 group focus:outline-none"
+            title="回到頂部"
+          >
+            <ArrowUp className="w-5 h-5 group-hover:-translate-y-0.5 transition-transform" />
+          </button>
+        )}
+        <button
+          onClick={handleOpenWhatsApp}
+          type="button"
+          className="w-12 h-12 flex items-center justify-center rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-xl transition-all active:scale-95 focus:outline-none"
+          title="WhatsApp 諮詢"
+        >
+          <MessageCircle className="w-6 h-6" />
+        </button>
       </div>
       
       <LazyYarlLightbox
@@ -165,13 +225,15 @@ export default function PublicPage() {
         onIndexChange={handleIndexChange}
       />
 
-      <WhatsAppChoiceDialog 
-        isOpen={showWhatsAppChoice}
-        onClose={() => updateUI({ showWhatsAppChoice: false })}
-        settings={settings || null}
-        onSelect={openWhatsApp}
-        labels={t}
-      />
+      {showWhatsAppChoice && (
+        <WhatsAppChoiceDialog 
+          isOpen={showWhatsAppChoice}
+          onClose={() => updateUI({ showWhatsAppChoice: false })}
+          options={getWhatsAppOptions()}
+          onSelect={openWhatsApp}
+          labels={t}
+        />
+      )}
       
     </div>
   );

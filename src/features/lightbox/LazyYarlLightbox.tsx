@@ -9,6 +9,10 @@ interface LazyYarlLightboxProps extends React.ComponentProps<typeof import('./Ya
  * Lazy-loaded version of YarlLightbox to improve initial bundle size and split heavy lightbox library.
  */
 export function LazyYarlLightbox(props: LazyYarlLightboxProps) {
+  React.useEffect(() => {
+    console.log('[LazyYarlLightbox] Rendering attempt, open:', props.open);
+  }, [props.open]);
+
   // If not open, we can avoid even loading the lazy component if we want, 
   // but usually lazy handles this fine. We also use Suspense fallback to null.
   if (!props.open) return null;

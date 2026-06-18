@@ -1,5 +1,5 @@
 import { useFormWithArkType } from './useFormWithArkType';
-import { handleError } from '@/lib/error/errorHandler';
+import { ErrorFactory, handleError } from '@/lib/error/ErrorFactory';
 import { UseMutationResult } from '@tanstack/react-query';
 import { type } from 'arktype';
 
@@ -21,7 +21,8 @@ export const useFormWithMutation = <T extends Record<string, any>>(
         await mutation.mutateAsync(data as any);
       }
     } catch (error) {
-      handleError(error, 'form.submit');
+      const wrapped = ErrorFactory.wrap(error, 'form.submit');
+      handleError(wrapped, 'form.submit', false);
     }
   });
   

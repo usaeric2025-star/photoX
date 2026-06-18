@@ -69,8 +69,14 @@ export function PublicGroupDetailPage() {
     scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const openWhatsApp = (num: string) => {
-    const pendingPhoto = (window as any)._pendingPhoto as Photo | undefined;
+  const openWhatsApp = () => {
+    (window as any)._pendingPhoto = undefined;
+    updateUI({ showWhatsAppChoice: false });
+  };
+
+  const getWhatsAppOptions = () => {
+    const options: { name: string; url: string }[] = [];
+    const pendingPhoto = (window as any)._pendingPhoto as any;
     let message = '';
     
     if (pendingPhoto) {
@@ -78,16 +84,28 @@ export function PublicGroupDetailPage() {
       const name = (pendingPhoto as any).name || "";
       const url = (pendingPhoto as any).imageUrl || "";
       message = `${prompt}\n*${name}*\n${url}`;
-      (window as any)._pendingPhoto = undefined;
     } else {
       const groupName = group?.name || '';
       message = `您好，我對合組 *${groupName}* 很感興趣，想了解更多信息！`;
     }
     
     const encodedText = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${num}?text=${encodedText}`;
-    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
-    updateUI({ showWhatsAppChoice: false });
+    
+    if (settings?.whatsapp_1) {
+      options.push({ name: settings.whatsapp_1_name || 'Contact 1', url: `https://wa.me/${settings.whatsapp_1}?text=${encodedText}` });
+    }
+    if (settings?.whatsapp_2) {
+      options.push({ name: settings.whatsapp_2_name || 'Contact 2', url: `https://wa.me/${settings.whatsapp_2}?text=${encodedText}` });
+    }
+    
+    if (options.length === 0) {
+      const fallback = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_WHATSAPP_NUMBER : '';
+      if (fallback) {
+        options.push({ name: t.whatsAppInquiry, url: `https://wa.me/${fallback}?text=${encodedText}` });
+      }
+    }
+    
+    return options;
   };
 
   if (loading) return <PageSkeleton />;
@@ -122,7 +140,7 @@ export function PublicGroupDetailPage() {
       <WhatsAppChoiceDialog 
         isOpen={showWhatsAppChoice}
         onClose={() => updateUI({ showWhatsAppChoice: false })}
-        settings={settings || null}
+        options={getWhatsAppOptions()}
         onSelect={openWhatsApp}
         labels={t}
       />

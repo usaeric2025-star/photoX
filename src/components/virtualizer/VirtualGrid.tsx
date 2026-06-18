@@ -150,14 +150,14 @@ export const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.
         {(item) => {
           if (item.type === 'header') {
             return (
-              <div key="grid-header" className="w-full shrink-0">
+              <div key={`grid-header-${props.dataVersion || 'default'}`} className="w-full shrink-0">
                 {item.content}
               </div>
             );
           }
           if (item.type === 'footer') {
             return (
-              <div key="grid-footer" className="w-full shrink-0">
+              <div key={`grid-footer-${props.dataVersion || 'default'}`} className="w-full shrink-0">
                 {item.content}
               </div>
             );
@@ -166,7 +166,7 @@ export const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.
           const rIndex = item.rowIndex ?? 0;
           return (
             <div 
-              key={`row-${rIndex}`}
+              key={`row-${rIndex}-${props.dataVersion || 'default'}`}
               data-contract="virtual-grid-row" 
               style={{ width: '100%', willChange: 'transform' }}
             >

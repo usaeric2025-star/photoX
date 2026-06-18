@@ -20,6 +20,8 @@ interface PhotoGridContentProps {
   mode: 'admin' | 'public';
   filters?: Record<string, unknown> | null;
   onPhotoClick?: (id: string, e?: React.MouseEvent) => void;
+  gridRef?: React.Ref<any>;
+  onScroll?: (offset: number) => void;
 }
 
 export function PhotoGridContent({ 
@@ -32,7 +34,9 @@ export function PhotoGridContent({
   hasNextPage,
   fetchNextPage,
   filters,
-  onPhotoClick
+  onPhotoClick,
+  gridRef,
+  onScroll
 }: PhotoGridContentProps) {
   
   if (isPending) {
@@ -54,6 +58,8 @@ export function PhotoGridContent({
 
   return (
     <VirtualGrid
+      ref={gridRef}
+      onScroll={onScroll}
       count={photos.length}
       dataVersion={dataVersion}
       lanes={columns}

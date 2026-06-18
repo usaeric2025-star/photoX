@@ -48,9 +48,9 @@ export function GalleryDialogs(props: GalleryDialogsProps) {
       <WhatsAppChoiceDialog 
         isOpen={props.showWhatsAppChoice}
         onClose={() => update({ showWhatsAppChoice: false })}
-        settings={props.settings || null}
+        options={[]}
         labels={props.labels}
-        onSelect={(num) => props.openWhatsApp(num)}
+        onSelect={() => update({ showWhatsAppChoice: false })}
       />
     </>
   );

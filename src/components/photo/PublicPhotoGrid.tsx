@@ -12,6 +12,8 @@ interface PublicPhotoGridProps {
   fetchNextPage: () => void;
   columns: number;
   filters: any;
+  gridRef?: React.Ref<any>;
+  onScroll?: (offset: number) => void;
 }
 
 export function PublicPhotoGrid({ 
@@ -23,7 +25,9 @@ export function PublicPhotoGrid({
   hasNextPage, 
   fetchNextPage, 
   columns,
-  filters
+  filters,
+  gridRef,
+  onScroll
 }: PublicPhotoGridProps) {
   return (
     <div className="h-full w-full">
@@ -38,6 +42,8 @@ export function PublicPhotoGrid({
         columns={columns}
         mode="public"
         filters={filters}
+        gridRef={gridRef}
+        onScroll={onScroll}
       />
     </div>
   );
