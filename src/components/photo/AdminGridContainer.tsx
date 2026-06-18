@@ -93,6 +93,7 @@ export function AdminGridContainer() {
                 renderCard={renderCard}
                 columns={columns}
                 categories={categories}
+                prefetchNextPage={true}
               />
           </div>
 

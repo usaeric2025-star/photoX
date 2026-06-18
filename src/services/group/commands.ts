@@ -121,9 +121,9 @@ export const groupPhotos = async (
   
   // Prepare Group Record
   const groupData = {
+    id: targetGroupId,
     name: finalName,
     status: 'confirmed' as 'confirmed' | 'draft',
-    updated_at: new Date().toISOString()
   };
 
   const groupPhotosRes = await api.groups['group-photos'].$post({

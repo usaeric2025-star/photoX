@@ -23,6 +23,7 @@ interface VirtualPhotoGridProps {
   restoreKey?: string;
   categories?: Category[];
   filters?: Record<string, unknown> | null;
+  prefetchNextPage?: boolean;
 }
 
 export const VirtualPhotoGrid = React.memo(({
@@ -36,7 +37,8 @@ export const VirtualPhotoGrid = React.memo(({
   ref,
   restoreKey,
   categories = [],
-  filters
+  filters,
+  prefetchNextPage = false
 }: VirtualPhotoGridProps) => {
   const skeletonCount = useSkeletonCount(columns);
   const appLang = useUIStore((s) => s.appLang);
@@ -146,6 +148,7 @@ export const VirtualPhotoGrid = React.memo(({
           onEndReached={handleLoadMore}
           containerClassName="px-2 pt-2 pb-4"
           renderItem={internalRenderItem}
+          prefetchNextPage={prefetchNextPage}
           footer={
             <div className="pt-4 pb-8">
                <LoadMoreIndicator 

@@ -168,6 +168,7 @@ export default function PublicPage() {
             columns={columns}
             categories={categories}
             filters={filters}
+            prefetchNextPage={true}
           />
         </ErrorBoundary>
         

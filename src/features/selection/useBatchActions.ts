@@ -1,13 +1,14 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { batchService } from './batchService';
 import { useSelection } from './SelectionContext';
 import { toast } from 'sonner';
 import { Photo } from '@/types';
 import { handleError } from '@/lib/error/errorHandler';
+import { useInvalidatePhotos } from '@/hooks';
 
 export function useBatchActions() {
   const { state, clear } = useSelection();
-  const queryClient = useQueryClient();
+  const invalidatePhotos = useInvalidatePhotos();
 
   const batchDelete = useMutation({
     mutationFn: async () => {
@@ -17,7 +18,7 @@ export function useBatchActions() {
     },
     onSuccess: () => {
       toast.success(`已刪除 ${state.selectedIds.length} 張照片`);
-      queryClient.invalidateQueries({ queryKey: ['photos'] });
+      invalidatePhotos();
       clear();
     },
     onError: (error: Error) => {
@@ -33,7 +34,7 @@ export function useBatchActions() {
     },
     onSuccess: () => {
       toast.success(`已更新 ${state.selectedIds.length} 張照片`);
-      queryClient.invalidateQueries({ queryKey: ['photos'] });
+      invalidatePhotos();
       clear();
     },
     onError: (error: Error) => {
@@ -49,7 +50,7 @@ export function useBatchActions() {
     },
     onSuccess: () => {
       toast.success(`已為 ${state.selectedIds.length} 張照片新增標籤`);
-      queryClient.invalidateQueries({ queryKey: ['photos'] });
+      invalidatePhotos();
       clear();
     },
     onError: (error: Error) => {

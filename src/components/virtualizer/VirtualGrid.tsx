@@ -36,6 +36,7 @@ export type VirtualGridProps = {
   onScroll?: (offset: number) => void;
   itemSize?: number;
   shift?: boolean;
+  prefetchNextPage?: boolean;
 };
 
 type RowItem = { type: 'header' | 'row' | 'footer'; content?: React.ReactNode; rowIndex?: number };
@@ -100,10 +101,16 @@ export const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.
     props.onScroll?.(offset);
     if (vlistRef.current) {
       const { scrollSize, viewportSize } = vlistRef.current;
+      // prefetchNextPage optimization: trigger fetching next page when remaining scrollable area is within threshold.
+      // If prefetchNextPage is enabled, we use a wide threshold (1.5x viewport) to fetching in advance, otherwise we use standard 300px.
+      const defaultThreshold = 300;
+      const prefetchThreshold = props.prefetchNextPage
+        ? (viewportSize ? Math.min(viewportSize * 1.5, 1200) : 800)
+        : defaultThreshold;
       if (
         scrollSize && 
         viewportSize && 
-        offset + viewportSize >= scrollSize - 300 &&
+        offset + viewportSize >= scrollSize - prefetchThreshold &&
         !isTriggeringRef.current
       ) {
         isTriggeringRef.current = true;

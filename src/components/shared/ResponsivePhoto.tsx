@@ -54,7 +54,7 @@ export function ResponsivePhoto({
 
   return (
     <div 
-      className={`relative w-full bg-slate-100 overflow-hidden select-none ${className}`}
+      className={`relative w-full bg-slate-200/30 overflow-hidden select-none ${!isLoaded && !hasError ? 'animate-pulse' : ''} ${className}`}
       style={{ 
         paddingBottom: pb, 
         height: 0, 
