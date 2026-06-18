@@ -141,14 +141,14 @@ export const handleError = (error: unknown, context: string, silent: boolean = f
 
   const messageStr = standardError.message.replace(/\n/g, ' ');
 
-  showToast.error(`操作失敗 / Operation Failed`, {
+  showToast.error(`操作失败`, {
     id: errorId,
     duration: 60000,
-    description: `${messageStr} (Trace: ${standardError.traceId || 'N/A'})`,
+    description: `${messageStr} (追踪 ID: ${standardError.traceId || '无'})`,
     action: {
-      label: '📋 複製',
+      label: '📋 复制内容',
       onClick: () => {
-        copyToClipboard(copyContent, { successMessage: '已複製錯誤詳情' });
+        copyToClipboard(copyContent, { successMessage: '已复制错误详情' });
       },
     },
   })

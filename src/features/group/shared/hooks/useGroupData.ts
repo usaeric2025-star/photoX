@@ -1,5 +1,5 @@
 import { useGroupDetail } from '@/hooks/groups/useGroupDetail';
-import { useGroupPhotos } from '@/hooks/photo/usePhotos';
+import { usePhotoList } from '@/hooks/photo/usePhotoList';
 
 interface UseGroupDataOptions {
   groupId: string | null;
@@ -14,14 +14,19 @@ export function useGroupData({ groupId, isAdmin }: UseGroupDataOptions) {
   } = useGroupDetail({ groupId, isAdmin });
 
   const {
-    photos,
-    total,
+    data,
     isPending: isPhotosPending,
     error: photosError,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage
-  } = useGroupPhotos(groupId, isAdmin, 100);
+  } = usePhotoList({
+    groupId: groupId || undefined,
+    mode: isAdmin ? 'admin' : 'public',
+  });
+
+  const photos = data?.pages.flatMap(p => p.items) || [];
+  const totalCount = data?.pages[0]?.total || 0;
 
   const loading = isGroupPending || isPhotosPending;
   const error = (groupError || photosError) ? ((groupError as Error)?.message || (photosError as Error)?.message || '載入失敗') : null;
@@ -29,7 +34,7 @@ export function useGroupData({ groupId, isAdmin }: UseGroupDataOptions) {
   return {
     group,
     photos,
-    totalCount: total,
+    totalCount,
     loading,
     error,
     fetchNextPage,

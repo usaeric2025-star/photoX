@@ -22,8 +22,21 @@ export default function AppRoutes() {
   }, [appLang]);
 
   const isLoading = useAuthStore((s) => s.isLoading);
+  const isInitialDataLoading = useUIStore((s) => s.isInitialDataLoading);
+  const setInitialDataLoading = useUIStore((s) => s.setInitialDataLoading);
   const init = useAuthStore((s) => s.init);
   const { settings, isPending: isSettingsPending } = useSettings();
+
+  useEffect(() => {
+    if (isInitialDataLoading) {
+      const timer = setTimeout(() => {
+        logger.warn('⚠️ [App] Initial data loading timeout, clearing...');
+        setInitialDataLoading(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [isInitialDataLoading, setInitialDataLoading]);
+
   const [passcode] = useLocalStorage({
     key: 'ais_mock_auth_passcode',
     defaultValue: '',
@@ -81,7 +94,7 @@ export default function AppRoutes() {
     availableActions: [] as string[],
   };
 
-  if (isLoading || isSettingsPending) {
+  if (isLoading || isSettingsPending || isInitialDataLoading) {
     return <LoadingScreen />;
   }
 

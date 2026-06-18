@@ -42,30 +42,31 @@ export function createQuery<TData, TVariables = void, TSchema extends Type = Typ
   };
 }
 
-export function createInfiniteQuery<TData, TVariables = unknown, TResult = InfiniteData<TData>>(config: {
+export function createInfiniteQuery<TData, TVariables = unknown, TPageParam = any, TResult = InfiniteData<TData, TPageParam>>(config: {
   queryKey: (variables: TVariables) => readonly unknown[];
-  queryFn: (variables: TVariables, pageParam: number, signal?: AbortSignal) => Promise<TData>;
-  getNextPageParam: (lastPage: TData, allPages: TData[]) => number | null | undefined;
-  select?: (data: InfiniteData<TData>) => TResult;
+  queryFn: (variables: TVariables, pageParam: TPageParam, signal?: AbortSignal) => Promise<TData>;
+  getNextPageParam: (lastPage: TData, allPages: TData[]) => TPageParam | null | undefined;
+  initialPageParam: TPageParam;
+  select?: (data: InfiniteData<TData, TPageParam>) => TResult;
   staleTime?: number;
   gcTime?: number;
   placeholderData?: TResult;
 }) {
   return function useStandardInfiniteQuery(
     variables: TVariables,
-    options?: Omit<Partial<UseInfiniteQueryOptions<TData, Error, TResult, readonly unknown[], number>>, 'queryKey' | 'queryFn' | 'initialPageParam' | 'getNextPageParam'>
+    options?: Partial<UseInfiniteQueryOptions<TData, Error, TResult, readonly unknown[], TPageParam>>
   ) {
-    return useInfiniteQuery<TData, Error, TResult, readonly unknown[], number>({
+    return useInfiniteQuery<TData, Error, TResult, readonly unknown[], TPageParam>({
       queryKey: config.queryKey(variables),
-      queryFn: (context: { pageParam?: unknown; signal: AbortSignal }) => {
-        const pageParam = typeof context.pageParam === 'number' ? context.pageParam : 1;
+      queryFn: (context) => {
+        const pageParam = (context.pageParam ?? config.initialPageParam) as TPageParam;
         return config.queryFn(variables, pageParam, context.signal);
       },
-      initialPageParam: 1,
+      initialPageParam: config.initialPageParam,
       getNextPageParam: config.getNextPageParam,
       staleTime: config.staleTime ?? 5 * 60 * 1000,
       gcTime: config.gcTime ?? 30 * 60 * 1000,
-      select: (config.select || ((d) => d as unknown as TResult)) as (data: InfiniteData<TData, number>) => TResult,
+      select: (config.select || ((d) => d as unknown as TResult)) as (data: InfiniteData<TData, TPageParam>) => TResult,
       placeholderData: config.placeholderData as undefined,
       ...options
     });

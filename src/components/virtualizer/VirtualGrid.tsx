@@ -103,42 +103,15 @@ export const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.
   const onEndReachedRef = useRef(props.onEndReached);
   useEffect(() => { onEndReachedRef.current = props.onEndReached; }, [props.onEndReached]);
 
-  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isTriggeringRef = useRef(false);
-
   const handleScroll = (offset: number) => {
     props.onScroll?.(offset);
     if (vlistRef.current) {
       const { scrollSize, viewportSize } = vlistRef.current;
-      // prefetchNextPage optimization: trigger fetching next page when remaining scrollable area is within threshold.
-      // If prefetchNextPage is enabled, we use a wide threshold (1.5x viewport) to fetching in advance, otherwise we use standard 300px.
-      const defaultThreshold = 300;
-      const prefetchThreshold = props.prefetchNextPage
-        ? (viewportSize ? Math.min(viewportSize * 1.5, 1200) : 800)
-        : defaultThreshold;
-      if (
-        scrollSize && 
-        viewportSize && 
-        offset + viewportSize >= scrollSize - prefetchThreshold &&
-        !isTriggeringRef.current
-      ) {
-        isTriggeringRef.current = true;
+      if (scrollSize && viewportSize && offset + viewportSize >= scrollSize - 300) {
         onEndReachedRef.current?.();
-
-        // Timeout protection: reset trigger state after 10 seconds
-        if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
-        loadingTimeoutRef.current = setTimeout(() => {
-          isTriggeringRef.current = false;
-        }, 10000);
       }
     }
   };
-
-  // Reset trigger state when data changes or component unmounts
-  useEffect(() => {
-    isTriggeringRef.current = false;
-    if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
-  }, [props.count]);
 
   if (isTestEnv) {
     return (

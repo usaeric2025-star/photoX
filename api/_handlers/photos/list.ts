@@ -2,8 +2,9 @@ import { Hono } from 'hono';
 import { type } from 'arktype';
 import { db, furnitureItems, groups as groupsTable, tags as tagsTable, photoTags } from '../../_lib/db/index.js';
 import { eq, ne, and, or, ilike, sql, asc, desc, inArray, isNull, count, type SQL } from 'drizzle-orm';
-import { PhotoListReqSchema, ListByGroupReqSchema } from '../../_shared/apiContractSchema.js';
+import { PhotoListReqSchema, ListByGroupReqSchema, PhotoListItem, PhotoListItemSchema } from '../../_shared/apiContractSchema.js';
 import { errorFactory } from '../../_lib/error/AppError.js';
+import { normalizeI18n } from '../../_shared/i18n.js';
 
 async function getGroupCounts(groupIds: string[], includeHidden = false) {
     if (groupIds.length === 0) return new Map<string, number>();
@@ -38,10 +39,11 @@ export const listHandler = (app: Hono) => {
     if (check instanceof type.errors) throw new Error(check.summary);
 
     const { 
-      page = 0, limit = 100, 
+      page = 0, limit = 100, cursor,
       categoryId, tagId, searchQuery,
       isAdminMode = false, 
-      onlyUngrouped = false, manufacturerId, 
+      onlyUngrouped = false, onlyGroupsCover = false,
+      groupId, manufacturerId, 
       isHidden,
       sortOrder
     } = check;
@@ -50,17 +52,17 @@ export const listHandler = (app: Hono) => {
       const hasTag = tagId !== undefined && tagId !== null && tagId !== '';
       const hasCat = categoryId !== undefined && categoryId !== null && categoryId !== '';
 
-      const baseQuery = db.select().from(furnitureItems);
-      
-      // We will build the where clause
+      // Build where clauses
       const whereClauses: (SQL | undefined)[] = [];
 
-      if (hasTag && hasCat) {
-          // This is a bit complex for standard builder when we need to join tags.
-          // For now, let's use the query API for easier relations
+      if (cursor) {
+        // Simple cursor parsing: assume it's createdAt timestamp (ISO)
+        const cursorTime = new Date(cursor as string);
+        if (!isNaN(cursorTime.getTime())) {
+          whereClauses.push(sql`${furnitureItems.createdAt} < ${cursorTime.toISOString()}`);
+        }
       }
 
-      // Actually, building manual joins in Drizzle is better for complex filtering.
       const query = db
         .select({
             photo: furnitureItems,
@@ -95,7 +97,18 @@ export const listHandler = (app: Hono) => {
         ));
       }
 
-      if (onlyUngrouped) whereClauses.push(isNull(furnitureItems.groupId));
+      if (groupId) {
+        whereClauses.push(eq(furnitureItems.groupId, groupId));
+      }
+      
+      if (onlyGroupsCover) {
+        whereClauses.push(or(
+          isNull(furnitureItems.groupId),
+          eq(furnitureItems.isGroupCover, true)
+        ));
+      } else if (onlyUngrouped) {
+        whereClauses.push(isNull(furnitureItems.groupId));
+      }
       
       if (!isAdminMode) {
         whereClauses.push(eq(furnitureItems.isHidden, false));
@@ -126,7 +139,8 @@ export const listHandler = (app: Hono) => {
 
       // Ordering
       const orderClauses: SQL[] = [desc(furnitureItems.isPinned)];
-      if (sortOrder === 'newest') orderClauses.push(desc(furnitureItems.createdAt), desc(furnitureItems.id));
+      // Cursor pagination is most reliable with a single temporal order
+      if (sortOrder === 'newest' || !sortOrder) orderClauses.push(desc(furnitureItems.createdAt), desc(furnitureItems.id));
       else if (sortOrder === 'oldest') orderClauses.push(asc(furnitureItems.createdAt), asc(furnitureItems.id));
       else if (sortOrder === 'name') orderClauses.push(asc(sql`${furnitureItems.name}->>'zh'`), asc(furnitureItems.id));
       else orderClauses.push(desc(furnitureItems.createdAt), desc(furnitureItems.id));
@@ -134,7 +148,11 @@ export const listHandler = (app: Hono) => {
       builder.orderBy(...orderClauses);
       
       // Pagination
-      builder.limit(limit).offset(page * limit);
+      if (cursor) {
+        builder.limit(limit);
+      } else {
+        builder.limit(limit).offset(page * limit);
+      }
 
       const data = await builder;
 
@@ -163,17 +181,40 @@ export const listHandler = (app: Hono) => {
         }
 
         const formatted = data.map(d => {
-            const item = { ...d.items } as Record<string, unknown>;
-            // Legacy format matching
-            item.group = d.group ? { ...d.group, member_count: counts.get(d.group.id) || 0 } : null;
-            item.photo_tags = tagsByPhoto.get(d.items.id) || [];
-            return item;
+            const itemTagList = (tagsByPhoto.get(d.items.id) || []) as any[];
+            const nameObj = normalizeI18n(d.items.name);
+            const descObj = normalizeI18n(d.items.description);
+            
+            const displayName = nameObj.zh || nameObj.en || nameObj.ms || 'Unnamed';
+            const displayDesc = descObj.zh || descObj.en || descObj.ms || '';
+
+            return {
+                id: d.items.id,
+                name: d.items.manualCode || displayName,
+                description: displayDesc,
+                imageUrl: d.items.imageUrl || '',
+                thumbnailUrl: d.items.imageUrl || '', // Fallback to原圖, managed by Worker
+                groupId: d.items.groupId || null,
+                groupName: d.group?.name || null,
+                memberCount: d.group ? (counts.get(d.group.id) || 0) : 0,
+                tags: itemTagList.map(t => (t as any).tags.name),
+                isPinned: !!d.items.isPinned,
+                isHidden: !!d.items.isHidden,
+                isCover: !!d.items.isGroupCover || (d.group?.coverPhotoId === d.items.id),
+                createdAt: d.items.createdAt ? d.items.createdAt.toISOString() : null,
+            } as any;
         });
 
-        return c.json({ success: true, data: formatted });
+        // ✅ 契約驗證
+        const nextCursor = formatted.length > 0 ? formatted[formatted.length - 1].createdAt : null;
+        return c.json({ 
+          success: true, 
+          data: PhotoListItemSchema.array().assert(formatted),
+          nextCursor 
+        });
       }
 
-      return c.json({ success: true, data: [] });
+      return c.json({ success: true, data: [], nextCursor: null });
     } catch (error: unknown) {
       throw errorFactory.wrap(error, 'photos.list', 'QUERY_FAILURE');
     }

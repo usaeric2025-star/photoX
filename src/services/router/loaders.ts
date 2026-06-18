@@ -4,10 +4,9 @@ import { queryKeys } from '@/lib/query/keys';
 import { PHOTO_QUERY_CONFIG } from '@/constants/config';
 import { createStaleTime } from '@/shared/freshnessSchema';
 import { getGroupById } from '@/services/group/queries';
-import { getPhotos } from '@/services/photo/queries/list';
-import { getPhotosByGroupPaginated } from '@/services/photo/queries/byGroup';
 import { loadCategoriesFromCloud } from '@/services/category/queries';
 import { loadTagsFromCloud } from '@/services/tag/queries';
+import { api } from '@/lib/api';
 
 /**
  * 路由層預加載邏輯
@@ -26,21 +25,20 @@ export async function prefetchMainGallery(queryClient: QueryClient) {
     queryClient.prefetchInfiniteQuery({
       queryKey,
       queryFn: async () => {
-        const photos = await getPhotos(
-          undefined,
-          0,
-          PHOTO_QUERY_CONFIG.limit,
-          undefined,
-          undefined,
-          undefined,
-          false
-        );
+        const response = await api.photos.list.$post({
+          json: {
+            limit: PHOTO_QUERY_CONFIG.limit,
+            isAdminMode: false
+          }
+        });
+        const result = await response.json();
+        if (!result.success) throw new Error(result.error);
         return {
-          photos: photos,
-          nextPage: photos.length >= PHOTO_QUERY_CONFIG.limit ? 2 : undefined
+          items: result.data.photos,
+          nextCursor: result.data.cursor
         };
       },
-      initialPageParam: 1,
+      initialPageParam: null,
       staleTime: createStaleTime('REALTIME'),
     }),
     queryClient.prefetchQuery({
@@ -82,14 +80,24 @@ export async function prefetchGroupDetail(queryClient: QueryClient, groupId: str
     }),
     queryClient.prefetchInfiniteQuery({
       queryKey: queryKeys.photos.infinite({ groupId } as any, isAdminMode ? 'admin' : 'public'),
-      queryFn: async ({ pageParam = 1 }) => {
-        const data = await getPhotosByGroupPaginated(
-          groupId, pageParam as number, 40, isAdminMode
-        );
-        const hasMore = Array.isArray(data.photos) ? data.photos.length >= 40 : false;
-        return { photos: data.photos, total: data.total, hasMore, nextPage: hasMore ? (pageParam as number) + 1 : undefined };
+      queryFn: async ({ pageParam = null }) => {
+        const response = await api.photos.list.$post({
+          json: {
+            cursor: pageParam as string | null,
+            limit: 40,
+            isAdminMode: !!isAdminMode,
+            groupId: groupId,
+            onlyGroupsCover: false, 
+          }
+        });
+        const result = await response.json();
+        if (!result.success) throw new Error(result.error);
+        return { 
+          items: result.data.photos, 
+          nextCursor: result.data.cursor 
+        };
       },
-      initialPageParam: 1,
+      initialPageParam: null,
       staleTime: createStaleTime('STABLE'),
     })
   ]);

@@ -8,10 +8,10 @@ interface SettingsTabsProps {
 
 export function SettingsTabs({ activeTab, onTabChange }: SettingsTabsProps) {
   const tabs = [
-    { id: 'sync', label: '同步引擎', icon: 'cloud', subLabel: 'Sync Engine' },
-    { id: 'ai', label: '智能核心', icon: 'cog', subLabel: 'AI Engine' },
+    { id: 'general', label: '核心配置', icon: 'settings', subLabel: 'General' },
+    { id: 'ai', label: '智能核心', icon: 'cpu', subLabel: 'AI Engine' },
     { id: 'assets', label: '資產管理', icon: 'layout-grid', subLabel: 'Assets' },
-    { id: 'status', label: '系統服務', icon: 'activity', subLabel: 'Health' },
+    { id: 'status', label: '系統監控', icon: 'activity', subLabel: 'Health' },
   ] as const;
 
   return (

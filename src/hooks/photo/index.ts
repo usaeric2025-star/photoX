@@ -1,10 +1,9 @@
 export * from './usePhotoSelection';
 export * from './usePhotoFilter';
-export * from './usePhotoGallery';
 
 // Modularized business hooks
-export * from './usePhotos';
-export * from './usePublicPhotos';
+export * from './usePhotoList';
+export * from './usePhotoGrid';
 export * from './usePhoto';
 export * from './usePhotoMutations';
 export * from './useInvalidatePhotos';
@@ -16,7 +15,4 @@ export * from './useAIAutoGrouping';
 export * from './useAIBatchAnalysis';
 export * from './usePhotoAIResult';
 export * from './useSyncEngine';
-// export removed
-
-export * from './usePhotoCount';
 

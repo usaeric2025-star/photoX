@@ -9,7 +9,7 @@ interface GeneralSettingsProps {
   categories: Category[];
   tags: Tag[];
   manufacturers: Manufacturer[];
-  photos: Photo[];
+  photos: any[];
   setSettingField: <K extends keyof AppSettings>(field: K, value: AppSettings[K]) => void;
   cardClass: string;
   inputClass: string;
@@ -22,14 +22,13 @@ export function GeneralSettings({
   categories, 
   tags, 
   manufacturers,
-  photos,
   setSettingField,
   cardClass,
   inputClass,
   buttonStyles
 }: GeneralSettingsProps) {
   return (
-    <>
+    <div className="space-y-6">
       <LogoSection 
         settings={settings}
         handleLogoUpload={handleLogoUpload}
@@ -45,6 +44,6 @@ export function GeneralSettings({
         cardClass={cardClass}
         inputClass={inputClass}
       />
-    </>
+    </div>
   );
 };

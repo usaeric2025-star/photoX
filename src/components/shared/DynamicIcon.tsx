@@ -13,7 +13,8 @@ import {
   User, 
   Terminal, 
   LogOut, 
-  RefreshCw 
+  RefreshCw,
+  Cpu
 } from 'lucide-react';
 
 const iconMap = {
@@ -29,7 +30,8 @@ const iconMap = {
   'user': User,
   'terminal': Terminal,
   'log-out': LogOut,
-  'refresh-cw': RefreshCw
+  'refresh-cw': RefreshCw,
+  'cpu': Cpu
 } as const;
 
 export type DynamicIconName = keyof typeof iconMap;

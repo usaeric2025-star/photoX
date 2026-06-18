@@ -4,11 +4,10 @@ import React, { useEffect, Suspense, lazy } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useTasks, 
-  useSyncMutation, 
-  useCategories } from '@/hooks';
+  useSyncMutation } from '@/hooks';
 import { usePhotoUpload } from '@/features/upload';
 import { logger } from '@/lib/logger';
-import { useAIBatchAnalysis, useAdminPhotos } from '@/hooks';
+import { useAIBatchAnalysis } from '@/hooks';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { Category } from '@/types';
 import { AdminHeader } from '@/components/layouts/headers/AdminHeader';
@@ -20,13 +19,13 @@ import { FilterBar } from '@/features/filter/FilterBar';
 
 const BatchEditScreen = lazy(() => import('@/features/batch-edit/BatchEditScreen').then(m => ({ default: m.BatchEditScreen })));
 const StatisticsScreen = lazy(() => import('@/features/statistics/components/StatisticsScreen').then(m => ({ default: m.StatisticsScreen })));
+const DiagnosticsDashboard = lazy(() => import('@/features/diagnostics/DiagnosticsDashboard').then(m => ({ default: m.DiagnosticsDashboard })));
 const SettingsPage = lazy(() => import('@/features/settings/SettingsPage').then(m => ({ default: m.SettingsPage })));
 const PhotoEditModal = lazy(() => import('@/features/photo-edit').then(m => ({ default: m.PhotoEditModal })));
 
 export function AdminPageContent() {
   const filters = useFilters({ enableStatus: true, enableBatch: true });
   const { user } = useAuthStore();
-  const { photos, isPending: isPhotosPending } = useAdminPhotos();
   const { uploadFiles } = usePhotoUpload();
   const { handleBatchAiAnalyze } = useAIBatchAnalysis();
   const { mutateAsync: syncMut } = useSyncMutation();
@@ -59,17 +58,22 @@ export function AdminPageContent() {
   return (
     <AdminAuthGate>
       <div className="flex flex-col h-screen bg-slate-50 overflow-hidden w-full relative">
-        {(currentScreen === 'gallery') ? (
+        {currentScreen === 'gallery' && (
           <>
             <AdminHeader />
             <FilterBar mode="admin" />
-            <div className="flex-1 relative overflow-hidden pb-16 sm:pb-0">
-              <div key="admin-gallery" className="absolute inset-0 animate-fade-in">
-                <AdminContainer />
-              </div>
-            </div>
           </>
-        ) : (
+        )}
+        
+        {/* Gallery is kept alive */}
+        <div className={currentScreen === 'gallery' ? 'flex-1 relative overflow-hidden pb-16 sm:pb-0' : 'hidden'}>
+          <div key="admin-gallery" className="absolute inset-0 animate-fade-in">
+            <AdminContainer />
+          </div>
+        </div>
+
+        {/* Other screens are lazy mounted */}
+        {currentScreen !== 'gallery' && (
           <div className="flex-1 relative overflow-hidden pb-16 sm:pb-0">
             <Suspense fallback={<div className="h-full flex items-center justify-center bg-slate-50"><Loader2 className="w-8 h-8 animate-spin text-slate-400" /></div>}>
               {currentScreen === 'dashboard' ? (
@@ -80,7 +84,11 @@ export function AdminPageContent() {
                 <ScreenWrapper key="admin-batch" onClose={() => navigate({ to: '/admin' })}>
                   <BatchEditScreen />
                 </ScreenWrapper>
-              ) : ['manage', 'settings', 'structure', 'logs', 'tasks', 'error-logs', 'diagnose'].includes(currentScreen) ? (
+              ) : currentScreen === 'diagnose' ? (
+                <ScreenWrapper key="admin-diagnose" onClose={() => navigate({ to: '/admin' })}>
+                  <DiagnosticsDashboard />
+                </ScreenWrapper>
+              ) : ['manage', 'settings', 'structure', 'logs', 'tasks', 'error-logs'].includes(currentScreen) ? (
                 <div key="admin-settings-container" className="h-full bg-slate-50 animate-scale-in">
                   <SettingsPage onClose={() => navigate({ to: '/admin' })} />
                 </div>

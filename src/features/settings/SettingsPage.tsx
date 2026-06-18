@@ -1,5 +1,6 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import { useLocation } from '@tanstack/react-router';
+import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/useAuthStore';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import React, { useState } from 'react';
@@ -18,21 +19,19 @@ import {
 import { useSettingsManagement } from '@/hooks/settings/useSettingsManagement';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { 
-  useCategories, useTags, useManufacturers, usePhotos,
-  useAdminCategory, useSettings, usePhotoCount
+  useCategories, useTags, useManufacturers,
+  useAdminCategory, useSettings
 } from '@/hooks';
 import { useSettingsLogic } from './useSettingsLogic';
 import { SettingsTabs } from './SettingsTabs';
 import { SettingsHeader } from './SettingsHeader';
 import { GeneralSettings } from './GeneralSettings';
 import { AISettings } from './AISettings';
-import { SyncSettings } from './SyncSettings';
 import { TagsManager } from './TagsManager';
 import { CategoriesManager } from './CategoriesManager';
 import { DiagnosticsDashboard } from '@/features/diagnostics/DiagnosticsDashboard';
 import { translations } from '@/locales';
 
-import { usePhotoGallery } from '@/hooks/photo/usePhotoGallery';
 import { useSyncMutation, useTasks } from '@/hooks';
 
 const BUTTON_STYLES = {
@@ -51,31 +50,21 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   const path = location.pathname;
   const navigate = useRouterSafe().navigate;
   
-  const { photos } = usePhotoGallery();
   const { data: categories = [] } = useCategories();
   const { data: tags = [] } = useTags();
   const { data: manufacturers = [] } = useManufacturers();
   const { tasks } = useTasks();
-  const { mutateAsync: syncMut } = useSyncMutation();
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) await uploadLogo(file);
   };
-
-  const performPushSync = async () => { await syncMut('push'); };
-  const performPullSync = async () => { await syncMut('pull'); };
-  const { data: totalPhotoCount = 0 } = usePhotoCount(undefined);
-  const cloudCount = totalPhotoCount;
-  const refreshCloudData = async () => { await syncMut('pull'); };
   
-  const isSyncing = tasks.some(t => t.name.includes('同步') && t.status === 'running');
   const isMaintenanceRunning = tasks.some(t => (t.name.includes('维护') || t.name.includes('诊断')) && t.status === 'running');
   
   const appLang = useUIStore(s => s.appLang);
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
-  
   const { user, signIn, signOut } = useAuthStore();
   const { settings, agnesApiKey, customModel, accessPasscode, updateSettings } = useSettings();
   const setAgnesApiKey = (key: string) => updateSettings({ ...settings, agnes_api_key: key });
@@ -117,19 +106,18 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
     settings,
     agnesApiKey: agnesApiKey || "",
     saveSettings,
-    performPullSync,
+    performPullSync: async () => ({ success: true, data: null }),
     setSettings: (s: AppSettings) => { void updateSettings(s as Partial<AppSettings>); }
   });
 
   const inputClass = "flex-1 min-w-0 bg-brand-navy/5 border border-brand-navy/10 p-3 rounded-2xl text-sm outline-none focus:border-brand-gold focus:bg-white shadow-inner font-normal tracking-tight placeholder:text-brand-navy/30 text-brand-navy";
   const cardClass = "bg-white rounded-[32px] p-6 shadow-sm border border-brand-navy/10 space-y-4";
-  const [activeTab, setActiveTab] = React.useState('sync');
+  const [activeTab, setActiveTab] = React.useState('general');
 
   React.useEffect(() => {
     if (path === '/admin/ai_settings') setActiveTab('ai');
-    if (path === '/admin/manage') setActiveTab('sync');
+    if (path === '/admin/manage' || path === '/admin/settings') setActiveTab('general');
     if (path === '/admin/structure' || path === '/admin/tags') setActiveTab('assets');
-    if (path === '/admin/settings') setActiveTab('sync');
     if (['/admin/tasks', '/admin/error-logs', '/admin/logs', '/admin/diagnostics', '/admin/diagnose'].includes(path)) setActiveTab('status');
   }, [path]);
 
@@ -157,54 +145,34 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
         <SettingsTabs activeTab={activeTab} onTabChange={setActiveTab} />
         
         <div className="space-y-6">
-          {activeTab === 'sync' && (
-            <>
-              <SyncSettings 
-                user={user || null}
-                signIn={signIn}
-                signOut={signOut}
-                performPushSync={async () => { await performPushSync(); return { success: true, data: null } as ApiResponse<null>; }}
-                performPullSync={async () => { await performPullSync(); return { success: true, data: null } as ApiResponse<null>; }}
-                refreshCloudData={refreshCloudData}
-                cloudCount={cloudCount}
-                isSyncing={isSyncing}
-                photos={photos}
-                categories={categories}
-                tags={tags}
-                manufacturers={manufacturers}
-                cardClass={cardClass}
-                buttonStyles={BUTTON_STYLES}
-              />
-            </>
+          {activeTab === 'general' && (
+            <GeneralSettings 
+              settings={settings}
+              handleLogoUpload={handleLogoUpload}
+              categories={categories}
+              tags={tags}
+              manufacturers={manufacturers}
+              photos={[]}
+              setSettingField={setSettingField}
+              cardClass={cardClass}
+              inputClass={inputClass}
+              buttonStyles={BUTTON_STYLES}
+            />
           )}
 
           {activeTab === 'ai' && (
-            <>
-              <AISettings 
-                agnesApiKey={agnesApiKey || ""}
-                setAgnesApiKey={setAgnesApiKey}
-                customModel={customModel || ""}
-                testConnection={async () => { await testConnection(); }}
-                testResult={testResult}
-                accessPasscode={accessPasscode || ""}
-                setAccessPasscode={setAccessPasscode}
-                setSettingField={setSettingField}
-                cardClass={cardClass}
-                inputClass={inputClass}
-              />
-              <GeneralSettings 
-                settings={settings}
-                handleLogoUpload={handleLogoUpload}
-                categories={categories}
-                tags={tags}
-                manufacturers={manufacturers}
-                photos={photos}
-                setSettingField={setSettingField}
-                cardClass={cardClass}
-                inputClass={inputClass}
-                buttonStyles={BUTTON_STYLES}
-              />
-            </>
+            <AISettings 
+              agnesApiKey={agnesApiKey || ""}
+              setAgnesApiKey={setAgnesApiKey}
+              customModel={customModel || ""}
+              testConnection={async () => { await testConnection(); }}
+              testResult={testResult}
+              accessPasscode={accessPasscode || ""}
+              setAccessPasscode={setAccessPasscode}
+              setSettingField={setSettingField}
+              cardClass={cardClass}
+              inputClass={inputClass}
+            />
           )}
 
           {activeTab === 'assets' && (

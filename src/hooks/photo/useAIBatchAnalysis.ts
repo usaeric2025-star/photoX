@@ -11,7 +11,7 @@ export function useAIBatchAnalysis() {
   const invalidatePhotos = useInvalidatePhotos();
   const queryClient = useQueryClient();
 
-  const handleBatchAiAnalyze = useCallback(async (targetPhotos: Photo[], groupId?: string) => {
+  const handleBatchAiAnalyze = useCallback(async (targetPhotos: any[], groupId?: string) => {
     if (!targetPhotos || targetPhotos.length === 0) {
       showToast.error('请先选择照片');
       return;

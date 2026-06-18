@@ -1,12 +1,11 @@
 import { logger } from '@/lib/logger';
-import { supabase } from '../../lib/supabase';
-import { Category } from '../../types';
+import { api } from '@/lib/api';
 
 export const TABLE_NAME = 'categories';
 
 export const loadCategoriesFromCloud = async (): Promise<any[]> => {
   try {
-    const res = await fetch('/api/categories');
+    const res = await api.categories.$get();
     if (!res.ok) {
       throw new Error(`Failed to fetch categories: ${res.statusText}`);
     }

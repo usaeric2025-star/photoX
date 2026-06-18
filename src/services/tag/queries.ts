@@ -1,5 +1,5 @@
-import { supabase } from '../../lib/supabase';
 import { Tag } from '../../types';
+import { api } from '@/lib/api';
 
 let allTagsPromise: Promise<Tag[]> | null = null;
 let allTagsFetchedAt = 0;
@@ -12,16 +12,16 @@ export const loadTagsFromCloud = async (): Promise<Tag[]> => {
     }
 
     allTagsPromise = (async () => {
-      const { data, error } = await supabase
-          .from('tags')
-          .select('*')
-          .order('name', { ascending: true });
+      const res = await api.tags.$get();
       
-      if (error) {
+      if (!res.ok) {
           return [];
       }
       
-      return (data || []).map((t) => ({
+      const json = await res.json();
+      if (!json.success) return [];
+
+      return (json.data || []).map((t: any) => ({
         ...(t as Tag),
         name: (t.name || '').toUpperCase(),
         id: String(t.id),

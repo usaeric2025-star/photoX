@@ -3,10 +3,11 @@ import { VList } from "virtua";
 import { PublicPhotoCard } from "@/components/photo/PublicPhotoCard";
 import { AdminPhotoCard } from "@/components/photo/AdminPhotoCard";
 import { useIsManagement } from "@/hooks";
+import { PhotoListItem } from '@/types/api/photos';
 import { Photo, Category } from "@/types";
 
 interface GroupPhotoGridProps {
-  photos: Photo[];
+  photos: PhotoListItem[];
   selectable?: boolean;
   selectedIds?: Set<string>;
   onPhotoClick?: (photo: Photo) => void;
@@ -37,19 +38,19 @@ export const GroupPhotoGrid = ({
            return (
             <AdminPhotoCard
               key={photo.id}
-              photo={photo}
+              photo={photo as any}
               sharedCategories={sharedCategories}
               selected={selectable && selectedIds.has(photo.id)}
-              onClick={() => onPhotoClick?.(photo)}
+              onClick={() => onPhotoClick?.(photo as any)}
             />
            )
         }
         return (
           <PublicPhotoCard
             key={photo.id}
-            photo={photo}
+            photo={photo as any}
             sharedCategories={sharedCategories}
-            onClick={() => onPhotoClick?.(photo)}
+            onClick={() => onPhotoClick?.(photo as any)}
           />
         )
       }}

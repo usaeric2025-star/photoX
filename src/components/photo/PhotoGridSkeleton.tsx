@@ -7,9 +7,9 @@ interface PhotoGridSkeletonProps {
 
 export const PhotoGridSkeleton = ({ columns, count = 6 }: PhotoGridSkeletonProps) => {
   return (
-    <div className={`grid gap-2 p-2`} style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
+    <div className={`grid gap-0.5 sm:gap-1 px-2 pt-2 pb-4`} style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="p-1 h-full w-full">
+        <div key={i} className="p-0.5 sm:p-1 h-full w-full">
             <div className="bg-white rounded-[1.25rem] border border-slate-100 p-1.5 flex flex-col h-full animate-pulse shadow-sm">
                 <div className="aspect-square rounded-xl bg-slate-100/80 relative overflow-hidden" />
                 <div className="mt-2.5 px-1 pb-1 space-y-1.5">

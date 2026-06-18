@@ -1,11 +1,10 @@
 import { analyzeAndSavePhoto, autoGroupPhotos } from '@/features/ai/orchestration';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
 import { showToast } from '@/lib/ui/toast';
 import { useUIStore } from '@/store/useUIStore';
 import { queryKeys } from '@/lib/query/keys';
 import { useTaskExecutor } from '../core/useTaskExecutor';
-
+import { api } from '@/lib/api';
 
 export function useAIAutoGrouping() {
   const queryClient = useQueryClient();
@@ -47,15 +46,16 @@ export function useAIAutoGrouping() {
           appLang === 'zh' ? "AI 智能识别" : "AI Identification",
           async ({ updateProgress }) => {
             updateProgress(10, appLang === 'zh' ? '正在加载照片信息...' : 'Loading photo data...');
-            const { loadPhotosByIds } = await import('@/services/photo');
-            const photos = await loadPhotosByIds([photoId]);
-            const photo = photos?.[0];
+            const response = await api.photos['by-ids'].$post({ json: { ids: [photoId] } });
+            const body = await response.json();
+            const photo = body.success ? body.data?.[0] : null;
+
             if (!photo) throw new Error(appLang === 'zh' ? '未找到照片信息' : 'Photo not found');
         
             updateProgress(40, appLang === 'zh' ? '正在进行 AI 智能识别 (约需 2-3 秒)...' : 'Analyzing attributes with AI (approx 2-3s)...');
-            const result = await analyzeAndSavePhoto(photo);
+            const result = await analyzeAndSavePhoto(photo as any);
             
-            updateProgress(80, appLang === 'zh' ? '正在解析模型识别结果并写入表单...' : 'Parsing AI attributes and injecting...');
+            updateProgress(80, appLang === 'zh' ? '正在解析模型识别结果并写入表單...' : 'Parsing AI attributes and injecting...');
             // Need to open edit modal, we will use an event or return result 
             // Caller handles navigation since hooks shouldn't blindly navigate if they don't know the route.
             

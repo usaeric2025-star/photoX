@@ -3,7 +3,9 @@ import React from 'react';
 import { Camera } from 'lucide-react';
 import { DynamicIcon } from '../../shared/DynamicIcon';
 import { useAuthStore } from '@/store/useAuthStore';
-import { useUIStore, useSettings, usePhotoCount, useAdminBatchActions, usePermission } from '@/hooks';
+import { useUIStore, useSettings, useAdminBatchActions, usePermission } from '@/hooks';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/lib/api';
 import { DropdownMenu } from '../../shared/Dropdown';
 import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
 import { translations } from "@/locales";
@@ -13,7 +15,8 @@ import { storage } from '@/services/storage';
 interface AdminHeaderProps {}
 
 export function AdminHeader({}: AdminHeaderProps) {
-  const { handleBatchAiIdentifyTrigger } = useAdminBatchActions();
+  const { handleBatchAiIdentifyTrigger: batchAiIdentifyRaw } = useAdminBatchActions();
+  const handleBatchAiIdentifyTrigger = () => batchAiIdentifyRaw([]); // Passing empty allPhotos or we need to fix the contract
   const { user, signOut } = useAuthStore();
   const { settings } = useSettings();
   const { role } = usePermission();
@@ -24,7 +27,17 @@ export function AdminHeader({}: AdminHeaderProps) {
   const update = useUIStore(s => s.update);
   const t = translations[lang as keyof typeof translations] || translations.en;
 
-  const { data: totalCount } = usePhotoCount({});
+  const { data: totalCountData } = useQuery({
+    queryKey: ['photos', 'count', 'total'],
+    queryFn: async () => {
+      const res = await api.photos.count.$post({ json: { isAdminMode: true } });
+      if (!res.ok) return 0;
+      const json = await res.json();
+      return json.data as number;
+    },
+    staleTime: 60 * 1000
+  });
+  const totalCount = totalCountData ?? 0;
 
   const [cachedLogoUrl, setCachedLogoUrl] = React.useState<string | null>(() => {
     try {
@@ -58,6 +71,7 @@ export function AdminHeader({}: AdminHeaderProps) {
               src={logoUrl} 
               className="h-7 sm:h-9 w-auto object-contain shrink-0" 
               alt="Logo" 
+              loading="lazy"
               onLoad={() => {
                 if (settings?.logo_url && settings.logo_url !== cachedLogoUrl) {
                   setCachedLogoUrl(settings.logo_url);
@@ -148,7 +162,7 @@ export function AdminHeader({}: AdminHeaderProps) {
                 <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 select-none">
                   <div className="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-white overflow-hidden text-[8px]">
                     {user.photo_url && user.photo_url.trim() !== '' ? (
-                      <img src={user.photo_url} referrerPolicy="no-referrer" alt="" />
+                      <img src={user.photo_url} referrerPolicy="no-referrer" alt="" loading="lazy" />
                     ) : (
                       <DynamicIcon name="user" size={10} />
                     )}

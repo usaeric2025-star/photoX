@@ -19,8 +19,6 @@ export async function updatePhoto(id: string, initialUpdates: Partial<Photo>): P
     return acc;
   }, {} as Record<string, unknown>) as Partial<Photo>;
 
-  createPhotoValidator().validate(updates);
-
   if (updates.uri && updates.uri.startsWith('data:image')) {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw new Error('NO_ACTIVE_SESSION');
@@ -33,29 +31,14 @@ export async function updatePhoto(id: string, initialUpdates: Partial<Photo>): P
     delete updates.uri;
   }
 
-  if (updates.is_group_cover === true) {
-    const { data } = await supabase
-      .from(DB_CONFIG.TABLE_NAME)
-      .select('group_id')
-      .eq('id', id)
-      .maybeSingle();
-    
-    if (data?.group_id) {
-      await supabase
-        .from(DB_CONFIG.TABLE_NAME)
-        .update({ is_group_cover: false })
-        .eq('group_id', data.group_id);
-    }
-  }
-
   const dbUpdates = mapToDb(updates);
   const res = await api.photos.update.$post({
     json: { id, updates: dbUpdates }
   });
   
   if (!res.ok) throw new Error('Update failed');
-  const { data } = await res.json();
-  return data;
+  const body = await res.json();
+  return (body as any).data;
 }
 
 export const updatePhotoHidden = async (photoId: string, is_hidden: boolean): Promise<Photo | null> => {

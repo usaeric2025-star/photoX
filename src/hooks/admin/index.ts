@@ -1,9 +1,4 @@
 /**
- * 管理員照片加載邏輯
- */
-export * from './useAdminPhotos';
-
-/**
  * 管理員勾選操作與批量狀態
  */
 export * from './useAdminSelection';

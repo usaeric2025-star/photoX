@@ -1,15 +1,15 @@
 import React from 'react';
-import { Photo, Category, Tag } from '@/types';
-import { PhotoCardCore } from './PhotoCardCore';
-import { PhotoStatusBadges } from './PhotoStatusBadges';
-import { PhotoCardInfo } from './PhotoCardInfo';
+import { Category, Tag } from '@/types';
+import { PhotoListItem } from '@/types/api/photos';
+import { PhotoCardBase } from './PhotoCardBase';
+import { PhotoStatusBadges, PhotoCardInfo } from './PhotoCardParts';
 import { useTranslation, useColumns } from '@/hooks';
 import { getTranslatedCategoryName } from '@/services/category/utils';
 import { useUIStore } from '@/store/useUIStore';
 import { usePhotoCardInteraction } from '@/hooks/photo/usePhotoCardInteraction';
 
 interface PublicPhotoCardProps {
-  photo: Photo;
+  photo: PhotoListItem;
   onClick?: (e: React.MouseEvent) => void;
   hideDetails?: boolean;
   hideGroupBadge?: boolean;
@@ -34,7 +34,7 @@ export const PublicPhotoCard = ({
   const { columns } = useColumns();
   
   const { cardRef, handleClick, handleMouseEnter } = usePhotoCardInteraction({
-    photo,
+    photo: photo as any,
     isManagement: false,
     isMultiSelect: false,
     showGroupsCollapsed,
@@ -43,12 +43,11 @@ export const PublicPhotoCard = ({
   });
 
   const categories = sharedCategories || [];
-  const categoryId = photo.category_id ? String(photo.category_id) : '';
-  const displayCatName = getTranslatedCategoryName(categoryId, categories, lang, t);
+  const displayCatName = ''; // Handled by tags for now or add to contract
 
   return (
-    <PhotoCardCore
-      photo={photo}
+    <PhotoCardBase
+      item={photo}
       isSelected={isSelected}
       imgVariant={columns <= 3 ? 'md' : 'sm'}
       onClick={handleClick}
@@ -56,15 +55,14 @@ export const PublicPhotoCard = ({
       ref={cardRef}
     >
       <PhotoStatusBadges 
-          photo={photo} 
-          isPinned={!!photo.is_pinned} 
+          photo={photo as any} 
+          isPinned={!!photo.isPinned} 
           hideGroupBadge={hideGroupBadge || !showGroupsCollapsed} 
         />
         <PhotoCardInfo 
           hideDetails={hideDetails}
-          displayCatName={displayCatName}
           photoTags={photo.tags}
         />
-    </PhotoCardCore>
+    </PhotoCardBase>
   );
 };

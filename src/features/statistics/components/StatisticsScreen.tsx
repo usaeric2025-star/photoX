@@ -8,9 +8,10 @@ import {
   ArrowUpRight,
   HardDrive
 } from 'lucide-react';
-import { usePhotoGallery } from '@/hooks/photo/usePhotoGallery';
 import { useCategories, useTags } from '@/hooks';
-import { Photo } from '@/types/photo';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/lib/api';
+import { PhotoListItem } from '@/types/api/photos';
 
 interface StatCardProps {
   title: string;
@@ -43,17 +44,29 @@ const StatCard = ({ title, value, subValue, icon: Icon, colorClass, delay = 0 }:
 );
 
 export function StatisticsScreen() {
-  const { photos } = usePhotoGallery();
+  const { data: totalPhotos = 0 } = useQuery({
+    queryKey: ['photos', 'count', 'all'],
+    queryFn: async () => {
+      const res = await api.photos.count.$post({ json: { isAdminMode: true } });
+      const json = await res.json();
+      return json.success ? (json.data as number) : 0;
+    }
+  });
+
+  const { data: hiddenCount = 0 } = useQuery({
+    queryKey: ['photos', 'count', 'hidden'],
+    queryFn: async () => {
+      const res = await api.photos.count.$post({ json: { isAdminMode: true, isHidden: true } });
+      const json = await res.json();
+      return json.success ? (json.data as number) : 0;
+    }
+  });
+
   const { data: categories = [] } = useCategories();
   const { data: tags = [] } = useTags();
 
-  const totalPhotos = photos?.length || 0;
-  const groupsCount = (photos as Photo[] | undefined)?.filter((p) => !!p.group_id).reduce((acc, p) => {
-    if (p.group_id) acc.add(p.group_id);
-    return acc;
-  }, new Set<string>()).size || 0;
-
-  const hiddenCount = (photos as Photo[] | undefined)?.filter((p) => p.is_hidden).length || 0;
+  // For now, groupsCount is mocked or we use a separate query if needed
+  const groupsCount = '---';
   
   // Fake storage calculation for now (average 200KB per photo)
   const estStorage = (totalPhotos * 0.2).toFixed(1);

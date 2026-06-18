@@ -6,7 +6,14 @@ import { clientEnv } from '@/shared/envSchema'
 const reportedErrors = new WeakSet<Error>()
 
 function shouldLogToBackend(error: Error): boolean {
-  return !error.message.includes('AbortError')
+  // Filter out noisy errors
+  const noisyErrors = ['AbortError', 'ResizeObserver loop limit exceeded', 'Loading chunk'];
+  return !noisyErrors.some(e => error.message.includes(e));
+}
+
+function shouldReportToSentry(error: Error): boolean {
+  const ignoredErrors = ['ResizeObserver loop limit exceeded', 'Loading chunk'];
+  return !ignoredErrors.some(e => error.message.includes(e));
 }
 
 function handleReportFailure(error: unknown): void {
@@ -48,7 +55,7 @@ export async function reportError(error: Error | AppError): Promise<void> {
   }
 
   // 1. GlitchTip / Sentry
-  if (clientEnv.VITE_SENTRY_DSN) {
+  if (clientEnv.VITE_SENTRY_DSN && shouldReportToSentry(error)) {
     Sentry.captureException(error, {
       tags: {
         app: 'photox',
@@ -97,7 +104,7 @@ export const logError = async (error: Error | unknown, context: EventContext) =>
   const normError = isAppError(error) ? error : (error instanceof Error ? error : new Error(String(error)));
   
   // Send to Sentry
-  if (clientEnv.VITE_SENTRY_DSN) {
+  if (clientEnv.VITE_SENTRY_DSN && shouldReportToSentry(normError)) {
     Sentry.captureException(normError, {
       tags: {
         action: context.action,

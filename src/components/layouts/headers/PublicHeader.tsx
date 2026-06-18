@@ -63,6 +63,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
             src={logoUrl} 
             className="h-7 sm:h-9 w-auto object-contain shrink-0" 
             alt="Logo" 
+            loading="lazy"
             onLoad={() => {
               if (settings?.logo_url && settings.logo_url !== cachedLogoUrl) {
                 setCachedLogoUrl(settings.logo_url);

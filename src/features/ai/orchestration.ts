@@ -12,6 +12,7 @@ import { mapAiToMultilingual } from './mapping';
 export * from './utils';
 import { hasExistingInfo } from './utils';
 import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 
 import { Photo, Dimension, ProductGroup } from '@/types';
 
@@ -48,7 +49,7 @@ export const analyzeAndSavePhoto = async (
       group_id: analysisData.group_id ? String(analysisData.group_id) : null,
       dimensions: analysisData.dimensions || [],
       metadata: {
-        ...(photo.metadata || {}),
+        ...(photo.metadata as any || {}),
         ai_updated_at: new Date().toISOString()
       }
     });
@@ -92,19 +93,23 @@ export const autoGroupPhotos = async (
   photoIds: string[]
 ): Promise<unknown> => {
   try {
-    const { loadPhotosByIds } = await import('../../services/photo');
-    const photos = await loadPhotosByIds(photoIds);
+    const response = await api.photos['by-ids'].$post({ json: { ids: photoIds } });
+    const body = await response.json();
+    const photos = body.success ? body.data || [] : [];
     
     for (let i = 0; i < photos.length; i++) {
       try {
-        logger.info(`[autoGroupPhotos] Analyzing and saving single photo ${i+1}/${photos.length}: ${photos[i].id}`);
-        await analyzeAndSavePhoto(photos[i]);
+        const p = photos[i] as any;
+        logger.info(`[autoGroupPhotos] Analyzing and saving single photo ${i+1}/${photos.length}: ${p.id}`);
+        await analyzeAndSavePhoto(p);
       } catch (err) {
-        logger.error(`[autoGroupPhotos] Single photo analysis failed for ${photos[i].id}:`, err);
+        logger.error(`[autoGroupPhotos] Single photo analysis failed:`, err);
       }
     }
 
-    const updatedPhotos = await loadPhotosByIds(photoIds);
+    const refreshResponse = await api.photos['by-ids'].$post({ json: { ids: photoIds } });
+    const refreshBody = await refreshResponse.json();
+    const updatedPhotos = (refreshBody.success ? refreshBody.data || [] : []) as any[];
 
     const analysis = await analyzeGroup(updatedPhotos);
     const { name: nameObj, description: descObj } = await mapAiToMultilingual(
@@ -185,11 +190,13 @@ export async function runBatchAnalysis({
   if (groupId) {
     onProgress(75, '正在總結整个合组...');
     try {
-      const { loadPhotosByIds } = await import('../../services/photo');
-      const photos = await loadPhotosByIds(targetPhotos.map(p => p.id));
-      if (photos) {
+      const response = await api.photos['by-ids'].$post({ json: { ids: targetPhotos.map(p => p.id) } });
+      const body = await response.json();
+      const photos = (body.success ? body.data || [] : []) as any[];
+      
+      if (photos.length > 0) {
         onProgress(85, '生成合组名称与描述...');
-        await analyzeAndSaveGroup(groupId, photos);
+        await analyzeAndSaveGroup(groupId, photos as any);
         groupSuccess = true;
       }
     } catch (e) {

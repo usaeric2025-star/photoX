@@ -5,6 +5,14 @@ import { eq, ilike, asc, inArray, sql, and, ne } from 'drizzle-orm';
 import { TagReqSchema } from '../_shared/apiContractSchema.js';
 
 export const tags = new Hono()
+  .get('/', async (c) => {
+    try {
+      const data = await db.select().from(tagsTable).orderBy(asc(tagsTable.name));
+      return c.json({ success: true, data });
+    } catch (error: any) {
+      return c.json({ success: false, error: error.message }, 500);
+    }
+  })
   .get('/search', async (c) => {
     const keyword = c.req.query('keyword') || '';
     try {

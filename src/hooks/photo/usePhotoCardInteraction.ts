@@ -4,13 +4,13 @@ import { useUIStore } from '@/store/useUIStore';
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import { useRouter } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { Photo } from '@/types';
+import { PhotoListItem } from '@/types/api/photos';
 import { queryKeys } from '@/lib/query/keys';
 import { getGroupById } from '@/services/group/queries';
 import { STALE_TIMES } from '@/lib/query/config';
 
 interface UsePhotoCardInteractionProps {
-  photo: Photo;
+  photo: PhotoListItem;
   isManagement: boolean;
   isMultiSelect: boolean;
   showGroupsCollapsed: boolean;
@@ -52,8 +52,8 @@ export function usePhotoCardInteraction({
 
   const handleMouseEnter = () => {
     const isAlreadyOnGroupPage = location?.pathname?.includes('/group/');
-    if (photo.group_id && showGroupsCollapsed && !hasSearchQuery && !isAlreadyOnGroupPage) {
-      const gid = photo.group_id;
+    if (photo.groupId && showGroupsCollapsed && !hasSearchQuery && !isAlreadyOnGroupPage) {
+      const gid = photo.groupId;
       const isAdmin = isManagement;
       // Preload route
       const targetPath = isAdmin ? `/admin/group/${gid}` : `/group/${gid}`;
@@ -87,11 +87,11 @@ export function usePhotoCardInteraction({
 
     const isAlreadyOnGroupPage = location?.pathname?.includes('/group/');
 
-    if (photo.group_id && showGroupsCollapsed && !hasSearchQuery && !isAlreadyOnGroupPage) {
-      logger.debug('[usePhotoCardInteraction] NAVIGATING to group:', photo.group_id);
+    if (photo.groupId && showGroupsCollapsed && !hasSearchQuery && !isAlreadyOnGroupPage) {
+      logger.debug('[usePhotoCardInteraction] NAVIGATING to group:', photo.groupId);
       e.stopPropagation();
       e.preventDefault();
-      handleGroupNavigate(photo.group_id!);
+      handleGroupNavigate(photo.groupId!);
       return;
     }
 

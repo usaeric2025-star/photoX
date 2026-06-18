@@ -79,14 +79,41 @@ export const ImportOrphansReqSchema = type({
 export const PhotoListReqSchema = type({
     "page?": "number",
     "limit?": "number",
+    "cursor?": "string|null",
     "categoryId?": "string|number|null",
     "tagId?": "string|number|null",
     "searchQuery?": "string|null",
     "isAdminMode?": "boolean",
     "sortOrder?": "string|null",
     "onlyUngrouped?": "boolean",
+    "onlyGroupsCover?": "boolean",
+    "groupId?": "string|null",
     "manufacturerId?": "string|number|null",
     "isHidden?": "boolean|null"
+});
+
+export const PhotoListItemSchema = type({
+    id: "string",
+    name: "string",
+    "description?": "string|null",
+    imageUrl: "string",
+    thumbnailUrl: "string",
+    "groupId?": "string|null",
+    "groupName?": "string|null",
+    memberCount: "number",
+    tags: "string[]",
+    "isPinned?": "boolean",
+    "isHidden?": "boolean",
+    "isCover?": "boolean",
+    "createdAt?": "string|null"
+});
+
+export type PhotoListItem = typeof PhotoListItemSchema.infer;
+
+export const PhotoListResSchema = type({
+    photos: PhotoListItemSchema.array(),
+    nextCursor: "string|null",
+    total: "number"
 });
 
 export const PhotoBatchUpdateReqSchema = type({
@@ -119,6 +146,30 @@ export const ListByGroupReqSchema = type({
     "pageSize?": "number"
 });
 
+export const TagListItemSchema = type({
+    id: "string",
+    name: "string",
+    "aliases?": "string[]",
+    "is_pinned?": "boolean",
+    "hot_score?": "number"
+});
+
+export const TagReqSchema = type({
+    id: "string",
+    "name?": "string",
+    "aliases?": "string[]"
+});
+
+export const CategoryListItemSchema = type({
+    id: "string|number",
+    code: "string",
+    name: "string",
+    "zh?": "string",
+    "en?": "string",
+    "ms?": "string",
+    "sort_order?": "number"
+});
+
 export const CategoryReqSchema = type({
     "id?": "string|number",
     code: "string",
@@ -129,10 +180,14 @@ export const CategoryReqSchema = type({
     "is_active?": "boolean"
 });
 
-export const TagReqSchema = type({
+export const ManufacturerListItemSchema = type({
     id: "string",
-    "name?": "string",
-    "aliases?": "string[]"
+    name: "string"
+});
+
+export const ManufacturerReqSchema = type({
+    "id?": "string",
+    name: "string"
 });
 
 export const GroupReqSchema = type({

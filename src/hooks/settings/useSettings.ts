@@ -2,8 +2,8 @@ import React, { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { storage, STORAGE_KEYS } from '@/lib/storage';
 import { AppSettings } from '@/types';
-import { fetchSettings } from '@/services/settings/queries';
 import { useSettingsUpdateMutation } from './useSettingsMutations';
+import { api } from '@/lib/api';
 
 const DEFAULT_SETTINGS: AppSettings = {} as AppSettings;
 
@@ -23,7 +23,10 @@ export function useSettings() {
   const { data: qSettings, isPending } = useQuery({
     queryKey: ['settings'],
     queryFn: async () => {
-      const data = await fetchSettings();
+      const response = await api.admin.settings.get.$get();
+      const result = await response.json();
+      if (!result.success) throw new Error(result.error);
+      const data = result.data;
       if (data) {
         storage.set(STORAGE_KEYS.SETTINGS, data);
       }

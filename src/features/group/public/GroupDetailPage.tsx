@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import { useGroupData } from '../shared/hooks/useGroupData';
+import { PhotoListItem } from '@/types/api/photos';
 import { Photo, Group, Category } from '@/types';
 import { PublicPhotoCard } from '@/components/photo/PublicPhotoCard';
 import { YarlLightbox } from '@/features/lightbox/YarlLightbox';
@@ -14,13 +15,13 @@ import { useSettings } from '@/hooks/settings/useSettings';
 import { WhatsAppChoiceDialog } from '@/components/shared/WhatsAppChoiceDialog';
 import { PublicFloatingActions } from '@/components/photo/PublicFloatingActions';
 
-function PublicPhotoGrid({ photos, categories, onPhotoClick }: { photos: Photo[]; categories?: Category[]; onPhotoClick: (id: string) => void }) {
+function PublicPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string) => void }) {
   return (
     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1 sm:gap-2 p-1 sm:p-2 lg:p-4">
       {photos.map((photo) => (
         <PublicPhotoCard
           key={photo.id}
-          photo={photo}
+          photo={photo as any}
           onClick={() => onPhotoClick(photo.id)}
           hideGroupBadge={true}
           sharedCategories={categories}
@@ -44,7 +45,7 @@ export function PublicGroupDetailPage() {
 
   const lightboxIndex = React.useMemo(() => {
     if (!photoId) return -1;
-    return photos.findIndex((p: Photo) => p.id === photoId);
+    return photos.findIndex((p) => p.id === photoId);
   }, [photoId, photos]);
 
   const lightboxOpen = lightboxIndex !== -1;
@@ -52,17 +53,16 @@ export function PublicGroupDetailPage() {
   const { lang, uiTranslations: t } = useTranslation();
   const { data: categories = [] } = useCategories();
   
-  const lightboxItems = photos.map((p: Photo) => {
-    const catName = p.category_id ? getTranslatedCategoryName(String(p.category_id), categories, lang, t) : '';
+  const lightboxItems = photos.map((p) => {
     return {
       id: p.id,
-      src: p.image_url,
-      thumbnail: p.thumbnail_sm_url || p.image_url,
-      title: p.name?.[lang as 'zh'] || p.item_code || '',
-      description: p.description?.[lang as 'zh'] || '',
-      category: catName,
-      tags: p.tags?.map((tag) => tag.name) || [],
-      photo: p,
+      src: p.imageUrl,
+      thumbnail: p.thumbnailUrl || p.imageUrl,
+      title: p.name || '',
+      description: p.description || '',
+      category: '',
+      tags: p.tags || [],
+      photo: p as any,
     };
   });
 
@@ -76,10 +76,9 @@ export function PublicGroupDetailPage() {
     
     if (pendingPhoto) {
       const prompt = t.sharePrompt || "您好，我对这个家具感兴趣：";
-      const itemCode = pendingPhoto.item_code || "";
-      const name = pendingPhoto.name?.[lang as 'zh'] || pendingPhoto.name?.en || "";
-      const url = pendingPhoto.image_url || "";
-      message = `${prompt}\n*${name}* (${itemCode})\n${url}`;
+      const name = (pendingPhoto as any).name || "";
+      const url = (pendingPhoto as any).imageUrl || "";
+      message = `${prompt}\n*${name}*\n${url}`;
       (window as any)._pendingPhoto = undefined;
     } else {
       const groupName = group?.name || '';

@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getPhotoById as loadPhotoById } from '@/services/photo/queries/detail';
 import { queryKeys } from '@/lib/query/keys';
 import { Photo } from '@/types';
+import { api } from '@/lib/api';
 
 /**
  * Hook to get detailed photo information.
@@ -12,7 +12,12 @@ export const usePhoto = (photoId: string) => {
   return useQuery({
     queryKey: queryKeys.photos.detail(photoId),
     queryFn: async () => {
-      return await loadPhotoById(photoId);
+      const response = await api.photos['by-ids'].$post({
+        json: { ids: [photoId] }
+      });
+      const result = await response.json();
+      if (!result.success) throw new Error(result.error);
+      return result.data[0] as Photo;
     },
     enabled: !!photoId,
     initialData: () => {

@@ -2,11 +2,10 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { useCallback, useEffect } from 'react';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { User } from '@/types';
-import { fetchSettings } from '@/services/settings/queries';
-import { getPhotoCount } from '@/services/photo/queries/list';
 import { useQueryClient } from '@tanstack/react-query';
-import { useInvalidatePhotos, useTaskExecutor, useSyncMutation, useSettings } from '@/hooks';
+import { useInvalidatePhotos, useTaskExecutor, useSettings } from '@/hooks';
 import { logger } from '@/lib/logger';
+import { api } from '@/lib/api';
 
 export const useSyncEngine = () => {
   const { user } = useAuthStore();
@@ -15,8 +14,6 @@ export const useSyncEngine = () => {
   const { runTask } = useTaskExecutor();
   
   const { settings, updateSettings, isPending: isSettingsPending } = useSettings();
-
-  const { mutateAsync: syncMut } = useSyncMutation();
 
   useEffect(() => {
     // Offline sync listener removed
@@ -30,7 +27,7 @@ export const useSyncEngine = () => {
         try {
           const { cleanUpOrphanRecords } = await import('@/services/photo/maintenance/cleanup');
           const result = await cleanUpOrphanRecords();
-          if (result.count > 0) {
+          if (result && result.count > 0) {
             logger.info(`[Self-Healing] Automatically removed ${result.count} orphan records.`);
             invalidatePhotos();
           }
@@ -49,15 +46,17 @@ export const useSyncEngine = () => {
   const refreshCloudData = useCallback(async (userAccount: User | null, setCloudCount: (c: number | null) => void) => {
     if (!userAccount) return;
     
-    await runTask('同步云端数据', async () => {
-        const [newSettings, photoCount] = await Promise.all([
-          fetchSettings(),
-          getPhotoCount()
+    await runTask('同步云端數據', async () => {
+        const [settingsRes, countRes] = await Promise.all([
+          api.admin.settings.get.$get(),
+          api.photos.count.$post({ json: {} })
         ]);
         
-        if (newSettings) await updateSettings(newSettings);
+        const settingsResult = await settingsRes.json();
+        const countResult = await countRes.json();
         
-        setCloudCount(photoCount);
+        if (settingsResult.success) await updateSettings(settingsResult.data);
+        if (countResult.success) setCloudCount(countResult.data);
         
         invalidatePhotos();
         await Promise.all([
@@ -72,7 +71,6 @@ export const useSyncEngine = () => {
   return {
     settings,
     setSettings: updateSettings,
-    refreshCloudData,
-    performPush: () => syncMut('push')
+    refreshCloudData
   };
 };

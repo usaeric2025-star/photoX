@@ -5,7 +5,6 @@ import {
   repairGroupIntegrity,
 } from "@/services/photo/maintenance";
 import { backfillThumbHashes } from "@/services/photo/maintenance/backfill";
-import { getPhotosWithoutThumbHash } from "@/services/photo";
 import { showToast } from '@/lib/ui/toast';
 
 import { Photo } from '@/types';
@@ -38,7 +37,10 @@ export const runHealthCheck = async (
   }
 
   // 4. Missing hashes
-  const photos = await getPhotosWithoutThumbHash();
+  const hashResp = await api.photos['without-thumb-hash'].$post({ json: {} });
+  const hashBody = await hashResp.json();
+  const photos = hashBody.success ? hashBody.data || [] : [];
+  
   if (photos.length === 0) {
     if (repairCount > 0) {
       showToast.success(`自检完成：修复 ${repairCount} 项`, { id: 'health-check' });

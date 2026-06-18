@@ -29,6 +29,7 @@ import * as Sentry from "@sentry/react";
 import { TaskProvider } from '@/hooks';
 import { logError } from './lib/error/errorReporter';
 import { queryClient } from './lib/queryClient';
+import { logger } from './lib/logger';
 import './index.css';
 import { clientEnv } from './shared/envSchema';
 // Removed migration
@@ -36,7 +37,7 @@ import { router } from './router/index';
 import { initChunkHandler } from '@/lib/chunkErrorHandler';
 import { dailyWorker } from '@/features/diagnostics/DailyWorker';
 
-console.log('[Sentry Initialization check] VITE_SENTRY_DSN:', import.meta.env.VITE_SENTRY_DSN, 'clientEnv:', clientEnv.VITE_SENTRY_DSN);
+logger.debug('[Sentry Initialization check] VITE_SENTRY_DSN:', import.meta.env.VITE_SENTRY_DSN, 'clientEnv:', clientEnv.VITE_SENTRY_DSN);
 
 if (clientEnv.VITE_SENTRY_DSN) {
   Sentry.init({
@@ -85,6 +86,7 @@ if (clientEnv.VITE_SENTRY_DSN) {
       'NetworkError',
       'Failed to fetch',
       'Load failed',
+      'Load failed',
     ],
 
     // 關閉除錯模式以避免內部日誌引發循環引用報錯
@@ -96,9 +98,9 @@ if (clientEnv.VITE_SENTRY_DSN) {
     Sentry?: typeof Sentry;
   }
   (window as unknown as CustomWindow).Sentry = Sentry;
-  console.log('🚀 [Sentry Initialization] Sentry successfully initialized and bound to window.Sentry.');
+  logger.info('🚀 [Sentry Initialization] Sentry successfully initialized and bound to window.Sentry.');
 } else {
-  console.log('⚠️ [Sentry Initialization] Sentry skipped initialization because VITE_SENTRY_DSN is empty.');
+  logger.info('⚠️ [Sentry Initialization] Sentry skipped initialization because VITE_SENTRY_DSN is empty.');
 }
 
 async function init() {

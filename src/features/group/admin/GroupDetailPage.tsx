@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import { useGroupData } from '../shared/hooks/useGroupData';
+import { PhotoListItem } from '@/types/api/photos';
 import { Photo, Group, ProductGroup, Dimension, Category } from '@/types';
 import { AdminPhotoCard } from '@/components/photo/AdminPhotoCard';
 import { YarlLightbox } from '@/features/lightbox/YarlLightbox';
@@ -21,7 +22,7 @@ import { PhotoEditModal } from '@/features/photo-edit';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { Button } from '@/components/shared/Button';
 
-function AdminPhotoGrid({ photos, categories, onPhotoClick }: { photos: Photo[]; categories?: Category[]; onPhotoClick: (id: string) => void }) {
+function AdminPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string) => void }) {
   const isMultiSelect = useUIStore(s => s.isMultiSelect);
   const { toggle } = usePhotoSelection();
 
@@ -30,7 +31,7 @@ function AdminPhotoGrid({ photos, categories, onPhotoClick }: { photos: Photo[];
       {photos.map((photo) => (
         <AdminPhotoCard
           key={photo.id}
-          photo={photo}
+          photo={photo as any}
           onClick={() => {
             if (isMultiSelect) {
               toggle(photo.id);
@@ -55,7 +56,7 @@ export function AdminGroupDetailPage() {
 
   const lightboxIndex = React.useMemo(() => {
     if (!photoId) return -1;
-    return photos.findIndex((p: Photo) => p.id === photoId);
+    return photos.findIndex((p) => p.id === photoId);
   }, [photoId, photos]);
 
   const lightboxOpen = lightboxIndex !== -1;
@@ -68,17 +69,16 @@ export function AdminGroupDetailPage() {
   const adminActions = useAdminMaintenance();
   const { handleBatchAiIdentifyTrigger } = useAdminBatchActions();
 
-  const lightboxItems = photos.map((p: Photo) => {
-    const catName = p.category_id ? getTranslatedCategoryName(String(p.category_id), categories, lang, t) : '';
+  const lightboxItems = photos.map((p) => {
     return {
       id: p.id,
-      src: p.image_url,
-      thumbnail: p.thumbnail_sm_url || p.image_url,
-      title: p.name?.[lang as 'zh'] || p.item_code || '',
-      description: p.description?.[lang as 'zh'] || '',
-      category: catName,
-      tags: p.tags?.map((tag) => tag.name) || [],
-      photo: p,
+      src: p.imageUrl,
+      thumbnail: p.thumbnailUrl || p.imageUrl,
+      title: p.name || '',
+      description: p.description || '',
+      category: '',
+      tags: p.tags || [],
+      photo: p as any,
     };
   });
 
@@ -98,7 +98,7 @@ export function AdminGroupDetailPage() {
 
   const { groupData, setGroupData, handleUpdateGroupData } = useGroupDraft(
     groupId,
-    photos,
+    photos as any,
     async (_id, _data) => {}
   );
   const { update, dissolve } = useGroupMutations();
@@ -148,8 +148,8 @@ export function AdminGroupDetailPage() {
 
         <SelectionToolbar
           totalItems={photos?.length}
-          allIds={photos?.map((p: Photo) => p.id)}
-          allPhotos={photos}
+          allIds={photos?.map((p) => p.id)}
+          allPhotos={photos as any}
           groupId={groupId}
         />
 

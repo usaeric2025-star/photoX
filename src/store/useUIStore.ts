@@ -49,6 +49,8 @@ export interface UIStoreState {
   showPassPrompt: boolean;
   isPhotoPickerOpen: boolean;
   photoPickerGroupId: string | null;
+  isInitialDataLoading: boolean;
+  setInitialDataLoading: (loading: boolean) => void;
   isMultiSelect: boolean;
   isMultiSelectMode: boolean;
   draggedPhotoId: string | null;
@@ -115,6 +117,8 @@ export const useUIStore = create<UIStoreState>()((set) => ({
   showPassPrompt: false,
   isPhotoPickerOpen: false,
   photoPickerGroupId: null,
+  isInitialDataLoading: true,
+  setInitialDataLoading: (loading) => set({ isInitialDataLoading: loading }),
   isMultiSelect: false,
   selectedIds: [],
   processingIds: [],
