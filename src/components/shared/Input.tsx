@@ -1,23 +1,25 @@
-import { InputHTMLAttributes, forwardRef, ReactNode } from 'react';
+import { InputHTMLAttributes, ReactNode, Ref } from 'react';
 import { cn } from '../../lib/utils';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   error?: string;
   icon?: ReactNode;
   containerClassName?: string;
+  ref?: Ref<HTMLInputElement>;
 }
 
 /**
  * Modern Input component following the new UI standard.
  * Zero shadcn dependencies.
  */
-export const Input = forwardRef<HTMLInputElement, InputProps>(({
+export const Input = ({
   className,
   error,
   icon,
   containerClassName,
+  ref,
   ...props
-}, ref) => {
+}: InputProps) => {
   return (
     <div className={cn("relative w-full group", containerClassName)}>
       {icon && (
@@ -44,6 +46,4 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
       )}
     </div>
   );
-});
-
-Input.displayName = 'Input';
+};

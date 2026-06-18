@@ -94,6 +94,12 @@ export function AdminGridContainer() {
                 columns={columns}
                 categories={categories}
                 prefetchNextPage={true}
+                filters={{
+                  category: filters.category,
+                  tags: filters.tags,
+                  search: filters.search,
+                  showGroupsCollapsed: filters.showGroupsCollapsed
+                }}
               />
           </div>
 

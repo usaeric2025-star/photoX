@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { Control, useController, useFormContext, FieldValues, Path, PathValue } from "react-hook-form";
 import { PromptDialog } from "@/components/ui/PromptDialog";
-import { TagEditor as TagEditorView } from "./TagEditorView";
+import { TagEditor as TagEditorContent } from "./TagEditorContent";
 import { MAX_TAGS_PER_PHOTO } from "@/constants/limits";
 import { Tag } from "@/types";
 import { safeArray } from "@/lib/utils";
@@ -76,7 +76,7 @@ function BasePhotoTagSelector({
 
   return (
     <>
-      <TagEditorView
+      <TagEditorContent
         tags={sortedTags}
         selectedTagIds={cleanSelectedIds}
         onToggleTag={handleToggleTag}

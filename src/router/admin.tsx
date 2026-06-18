@@ -6,6 +6,7 @@ import { authGuard } from './guards';
 import { GallerySearchParams } from './types';
 import { prefetchGroupDetail } from '@/services/router/loaders';
 import { gallerySearchValidator } from './public';
+import { RouteErrorFallback } from '@/components/ui/RouteErrorFallback';
 
 const AdminPage = lazy(() => import('@/pages/AdminPage/index'));
 
@@ -14,6 +15,7 @@ export const adminRoute = createRoute({
   path: ROUTES.ADMIN,
   validateSearch: gallerySearchValidator,
   beforeLoad: authGuard,
+  errorComponent: ({ error, reset }) => <RouteErrorFallback error={error} reset={reset} />,
   component: AdminPage,
 });
 
@@ -74,5 +76,6 @@ export const adminGroupRoute = createRoute({
       void prefetchGroupDetail(context.queryClient, groupId, true);
     }
   },
+  errorComponent: ({ error, reset }) => <RouteErrorFallback error={error} reset={reset} />,
   component: lazy(() => import('@/pages/AdminGroupPage')),
 });

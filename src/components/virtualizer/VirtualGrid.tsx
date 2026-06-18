@@ -37,6 +37,7 @@ export type VirtualGridProps = {
   itemSize?: number;
   shift?: boolean;
   prefetchNextPage?: boolean;
+  dataVersion?: string | number;
 };
 
 type RowItem = { type: 'header' | 'row' | 'footer'; content?: React.ReactNode; rowIndex?: number };
@@ -53,7 +54,7 @@ export const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.
     (window as any).process?.env?.NODE_ENV === 'test'
   );
 
-  const listItemsCacheRef = useRef<{ count: number; rowCount: number; hasHeader: boolean; hasFooter: boolean; items: RowItem[] } | null>(null);
+  const listItemsCacheRef = useRef<{ count: number; rowCount: number; hasHeader: boolean; hasFooter: boolean; dataVersion?: string | number; items: RowItem[] } | null>(null);
 
   const hasHeader = !!props.header;
   const hasFooter = !!props.footer;
@@ -64,7 +65,8 @@ export const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.
     listItemsCacheRef.current?.count !== props.count || 
     listItemsCacheRef.current?.rowCount !== rowCount || 
     listItemsCacheRef.current?.hasHeader !== hasHeader || 
-    listItemsCacheRef.current?.hasFooter !== hasFooter
+    listItemsCacheRef.current?.hasFooter !== hasFooter ||
+    listItemsCacheRef.current?.dataVersion !== props.dataVersion
   ) {
     const items: RowItem[] = [];
     if (props.header) {
@@ -77,7 +79,7 @@ export const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.
       items.push({ type: 'footer', content: props.footer });
     }
     listItems = items;
-    listItemsCacheRef.current = { count: props.count, rowCount, hasHeader, hasFooter, items };
+    listItemsCacheRef.current = { count: props.count, rowCount, hasHeader, hasFooter, dataVersion: props.dataVersion, items };
   }
 
   useImperativeHandle(ref, () => ({

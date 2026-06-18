@@ -26,7 +26,7 @@ interface VirtualPhotoGridProps {
   prefetchNextPage?: boolean;
 }
 
-export const VirtualPhotoGrid = React.memo(({
+export const VirtualPhotoGrid = ({
   photos = [],
   isFetching,
   isFetchingNextPage,
@@ -80,7 +80,7 @@ export const VirtualPhotoGrid = React.memo(({
   const category_id = filters?.category || '';
   const tagsString = Array.isArray(filters?.tags) ? filters.tags.join(',') : '';
   const searchVal = filters?.search || '';
-  const filterKey = `${category_id}-${tagsString}-${searchVal}`;
+  const filterKey = `${category_id}-${tagsString}-${searchVal}-${filters?.showGroupsCollapsed}`;
 
   useEffect(() => {
     if (internalGridRef.current && filterKey) {
@@ -141,6 +141,7 @@ export const VirtualPhotoGrid = React.memo(({
         <VirtualGrid
           ref={gridRef}
           count={photos.length}
+          dataVersion={filterKey}
           lanes={columns}
           itemSize={estimatedRowHeight}
           shift={true}
@@ -162,6 +163,6 @@ export const VirtualPhotoGrid = React.memo(({
       </div>
     </div>
   );
-});
+};
 
 

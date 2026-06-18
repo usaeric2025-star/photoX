@@ -132,7 +132,7 @@ interface ManufacturerButtonProps {
   onDelete?: (mfr: Manufacturer) => void;
 }
 
-const ManufacturerButton = React.memo(({ mfr, isSelected, onSelect, onEdit, onDelete }: ManufacturerButtonProps) => {
+const ManufacturerButton = ({ mfr, isSelected, onSelect, onEdit, onDelete }: ManufacturerButtonProps) => {
   const btnRef = useRef<HTMLButtonElement>(null);
   const [isMenuOpen, menuDialog] = useDisclosure(false);
 
@@ -168,6 +168,6 @@ const ManufacturerButton = React.memo(({ mfr, isSelected, onSelect, onEdit, onDe
       />
     </>
   );
-});
+};
 
-ManufacturerButton.displayName = 'ManufacturerButton';
+

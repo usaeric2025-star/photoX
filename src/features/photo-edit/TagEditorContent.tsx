@@ -260,7 +260,7 @@ interface TagButtonProps {
   onLongPress: () => void;
 }
 
-const TagButton = React.memo(({ tag, isSelected, isHot, isPinned, isDisabled, hideHotLabel, onToggle, onLongPress: onLongPressProp }: TagButtonProps) => {
+const TagButton = ({ tag, isSelected, isHot, isPinned, isDisabled, hideHotLabel, onToggle, onLongPress: onLongPressProp }: TagButtonProps) => {
 
   const btnRef = useRef<HTMLButtonElement>(null);
   useLongPress(btnRef, {
@@ -324,7 +324,7 @@ const TagButton = React.memo(({ tag, isSelected, isHot, isPinned, isDisabled, hi
       </button>
     </div>
   );
-});
+};
 
-TagButton.displayName = 'TagButton';
+
 

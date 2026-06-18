@@ -17,8 +17,8 @@ export function DiagnosticStats({ report, isPending, onRefresh }: DiagnosticStat
         { label: '异常记录 (P0)', value: report?.totalIssues || 0, color: 'text-red-600' },
         { label: '重要发现 (P1/P2)', value: (report?.issuesBySeverity?.P1 || 0) + (report?.issuesBySeverity?.P2 || 0), color: 'text-slate-900' },
         { label: '最后扫描', value: report?.timestamp ? formatters.dateTime(report.timestamp) : '-', color: 'text-slate-500 font-mono' },
-      ].map((stat, i) => (
-        <div key={i} className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex flex-col justify-between h-24">
+      ].map((stat) => (
+        <div key={stat.label} className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex flex-col justify-between h-24">
           <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{stat.label}</p>
           <p className={`text-2xl font-semibold mt-1 tracking-tight ${stat.color}`}>{stat.value}</p>
         </div>

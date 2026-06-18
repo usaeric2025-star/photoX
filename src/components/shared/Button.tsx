@@ -1,4 +1,4 @@
-import { ButtonHTMLAttributes, forwardRef, ReactNode } from 'react';
+import { ButtonHTMLAttributes, ReactNode, Ref } from 'react';
 import { cn } from '../../lib/utils';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -7,13 +7,14 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
+  ref?: Ref<HTMLButtonElement>;
 }
 
 /**
  * Modern Button component following the new UI standard.
  * Zero shadcn dependencies.
  */
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
+export const Button = ({
   className,
   variant = 'primary',
   size = 'md',
@@ -22,8 +23,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
   rightIcon,
   children,
   disabled,
+  ref,
   ...props
-}, ref) => {
+}: ButtonProps) => {
   const variants = {
     primary: "bg-brand-navy text-white hover:bg-slate-800 shadow-sm",
     secondary: "bg-slate-100 text-slate-700 hover:bg-slate-200",
@@ -62,6 +64,4 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
       )}
     </button>
   );
-});
-
-Button.displayName = 'Button';
+};

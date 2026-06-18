@@ -19,6 +19,7 @@ interface UsePhotoCardInteractionProps {
 }
 
 import { useFilters } from '@/hooks/useFilters';
+import { logger } from '@/lib/logger';
 
 export function usePhotoCardInteraction({
   photo,
@@ -40,7 +41,7 @@ export function usePhotoCardInteraction({
   const { setPhotoId } = useFilters();
 
   const handleOpenLightbox = () => {
-    console.log('[usePhotoCardInteraction] handleOpenLightbox for photo:', photo.id);
+    logger.debug('[usePhotoCardInteraction] handleOpenLightbox for photo:', photo.id);
     setPhotoId(photo.id);
   };
     
@@ -68,16 +69,16 @@ export function usePhotoCardInteraction({
   };
 
   const handleClick = (e: React.MouseEvent) => {
-    console.log('[usePhotoCardInteraction] CLICKED photo:', photo.id, { isManagement, isMultiSelect, hasSearchQuery });
+    logger.debug('[usePhotoCardInteraction] CLICKED photo:', photo.id, { isManagement, isMultiSelect, hasSearchQuery });
     if (longPressTriggered.current) {
-      console.log('[usePhotoCardInteraction] BLOCKED by long press');
+      logger.debug('[usePhotoCardInteraction] BLOCKED by long press');
       e.stopPropagation();
       e.preventDefault();
       return;
     }
 
     if (isMultiSelect) {
-      console.log('[usePhotoCardInteraction] SELECTING photo:', photo.id);
+      logger.debug('[usePhotoCardInteraction] SELECTING photo:', photo.id);
       e.stopPropagation();
       e.preventDefault();
       toggleSelected(photo.id);
@@ -87,14 +88,14 @@ export function usePhotoCardInteraction({
     const isAlreadyOnGroupPage = location?.pathname?.includes('/group/');
 
     if (photo.group_id && showGroupsCollapsed && !hasSearchQuery && !isAlreadyOnGroupPage) {
-      console.log('[usePhotoCardInteraction] NAVIGATING to group:', photo.group_id);
+      logger.debug('[usePhotoCardInteraction] NAVIGATING to group:', photo.group_id);
       e.stopPropagation();
       e.preventDefault();
       handleGroupNavigate(photo.group_id!);
       return;
     }
 
-    console.log('[usePhotoCardInteraction] OPENING Lightbox');
+    logger.debug('[usePhotoCardInteraction] OPENING Lightbox');
     handleOpenLightbox();
 
     if (onClick) {

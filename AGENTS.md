@@ -244,6 +244,14 @@ export const PhotoSchema = type({
 - ✅ 最低版本：v1.100+
 - ✅ 滾動恢復使用 `scrollRestoration: true`
 
+## TanStack Router 生產規範（鎖定）
+
+- ✅ 每個路由必須定義 errorComponent 處理 validateSearch 失敗
+- ✅ 根路由必須定義 errorComponent 捕獲 beforeLoad 穿透錯誤
+- ✅ 開發環境啟用 TanStackRouterDevtools
+- ❌ 禁止在元件中 try/catch validateSearch 錯誤（由 errorComponent 統一處理）
+- ❌ 禁止用 React Query DevTools 替代 Router DevTools
+
 ### Hono
 - ✅ 最低版本：v4.30+
 - ✅ 匯出 `AppType` 供前端使用

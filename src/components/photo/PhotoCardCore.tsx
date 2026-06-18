@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import React, { Ref } from 'react';
 import { cn } from '@/lib/utils';
 import { Photo } from '@/types';
 import { ResponsivePhoto } from '../shared/ResponsivePhoto';
@@ -12,9 +12,10 @@ export interface PhotoCardCoreProps extends React.HTMLAttributes<HTMLDivElement>
   onClick?: (e: React.MouseEvent<HTMLDivElement>) => void;
   onMouseEnter?: () => void;
   children?: React.ReactNode;
+  ref?: Ref<HTMLDivElement>;
 }
 
-export const PhotoCardCore = forwardRef<HTMLDivElement, PhotoCardCoreProps>(({
+export const PhotoCardCore = ({
   photo,
   isSelected,
   isMultiSelect,
@@ -23,8 +24,9 @@ export const PhotoCardCore = forwardRef<HTMLDivElement, PhotoCardCoreProps>(({
   onClick,
   onMouseEnter,
   children,
+  ref,
   ...props
-}, ref) => {
+}: PhotoCardCoreProps) => {
   const is_hidden = !!photo.is_hidden;
   const isCover = photo.is_group_cover || (photo.group_id && photo.group?.cover_photo_id === photo.id);
 
@@ -74,6 +76,4 @@ export const PhotoCardCore = forwardRef<HTMLDivElement, PhotoCardCoreProps>(({
       {children}
     </div>
   );
-});
-
-PhotoCardCore.displayName = 'PhotoCardCore';
+};

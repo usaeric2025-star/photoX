@@ -65,9 +65,9 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
     updateSearch({ modal: val || undefined });
   }, [updateSearch]);
 
-  const showGroupsCollapsed = search.showGroupsCollapsed !== 'false';
+  const showGroupsCollapsed = search.showGroupsCollapsed !== 'false' && search.showGroupsCollapsed !== false;
   const setShowGroupsCollapsed = useCallback((val: boolean) => {
-    updateSearch({ showGroupsCollapsed: val ? undefined : 'false' });
+    updateSearch({ showGroupsCollapsed: val ? undefined : false });
   }, [updateSearch]);
 
   const view = search.view || 'grid';

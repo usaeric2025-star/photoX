@@ -2,11 +2,12 @@ import { useCategories } from './useFilterData';
 import { useFilterState } from './useFilterState';
 import { useTranslation } from '@/hooks';
 import { getTranslatedCategoryName } from '@/services/category/utils';
+import { logger } from '@/lib/logger';
 
 export function CategoryGrid() {
   const { filters, updateFilters } = useFilterState();
   const { data: categories, isPending } = useCategories();
-  console.log('[CategoryGrid] categories:', categories);
+  logger.debug('[CategoryGrid] categories fetched');
   const { appLang, uiTranslations } = useTranslation();
 
   if (isPending) {
