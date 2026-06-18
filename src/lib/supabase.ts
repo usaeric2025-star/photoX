@@ -6,23 +6,24 @@ import { ErrorFactory } from './error/ErrorFactory';
  * 兼容 Vite (import.meta.env) 和 Node.js (process.env)
  */
 const getEnv = (key: string, required: boolean = true): string => {
-  // 优先使用 Vite 的 import.meta.env（构建时注入）
-  if (typeof import.meta !== 'undefined' && import.meta.env) {
-    if (import.meta.env[key]) {
-      return import.meta.env[key];
-    }
-    // 兼容 NODE_ENV -> MODE
-    if (key === 'NODE_ENV' && import.meta.env.MODE) {
-      return import.meta.env.MODE;
-    }
+  // Statically check keys for robust Vite production compilation
+  if (key === 'VITE_SUPABASE_URL') {
+    return import.meta.env.VITE_SUPABASE_URL || (typeof process !== 'undefined' && process.env ? process.env.VITE_SUPABASE_URL : '') || '';
+  }
+  if (key === 'VITE_SUPABASE_ANON_KEY') {
+    return import.meta.env.VITE_SUPABASE_ANON_KEY || (typeof process !== 'undefined' && process.env ? process.env.VITE_SUPABASE_ANON_KEY : '') || '';
+  }
+  if (key === 'NODE_ENV') {
+    return import.meta.env.MODE || (typeof process !== 'undefined' && process.env ? process.env.NODE_ENV : '') || 'production';
+  }
+
+  // Fallback to dynamic checking
+  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
+    return import.meta.env[key];
   }
   // 降级使用 process.env（运行时）
   if (typeof process !== 'undefined' && process.env && process.env[key]) {
     return process.env[key];
-  }
-  // 3. Fallback for NODE_ENV
-  if (key === 'NODE_ENV') {
-    return 'production'; // Assume production if not found
   }
   // 既没有 import.meta.env 也没有 process.env
   if (required) {

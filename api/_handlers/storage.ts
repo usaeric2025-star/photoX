@@ -11,30 +11,6 @@ import { requireRealUser } from "../_lib/auth.js";
 const serverEnv = getServerEnv(process.env);
 export const storage = new Hono();
 
-storage.post("/log-error", async (c) => {
-    try {
-        const body = await c.req.json();
-        const metadata = body.metadata || {};
-        const payload = {
-            errorMessage: String(body.error_message || body.message || 'Unknown error').substring(0, 5000),
-            stackTrace: (body.stack_trace || body.stack || body.component_stack || null) as string | null,
-            url: body.url || '',
-            context: metadata.context || body.context || 'global',
-            metadata: {
-                ...metadata,
-                level: metadata.level || body.level || 'error'
-            },
-            createdAt: new Date()
-        };
-        
-        await db.insert(systemLogs).values(payload as any);
-        return c.json({ success: true });
-    } catch (e: unknown) {
-        logger.error("Error logging via /log-error", e);
-        return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown error' }, 500);
-    }
-});
-
 storage.post("/upload-direct", async (c) => {
     try {
       await requireRealUser(c);

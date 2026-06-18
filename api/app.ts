@@ -273,6 +273,7 @@ app.post("/log-error", async (c) => {
             level: 'error',
             operation: body.context || 'Frontend_Client',
             resource: body.url || c.req.header('Referer') || null,
+            traceId: body.traceId || traceId,
             metadata: {
                 ...(body.metadata || {}),
                 traceId: body.traceId || traceId,

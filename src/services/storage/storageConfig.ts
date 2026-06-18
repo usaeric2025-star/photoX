@@ -1,5 +1,5 @@
 export const STORAGE = {
-  BUCKET: process.env.R2_BUCKET_NAME || '',
+  BUCKET: (typeof process !== 'undefined' && process.env ? process.env.R2_BUCKET_NAME : '') || '',
   PATHS: {
     ORIGINAL: 'photox/original',
     PUBLIC: 'photox/public',
