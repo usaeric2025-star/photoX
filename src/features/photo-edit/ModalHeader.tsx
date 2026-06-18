@@ -88,11 +88,11 @@ export function ModalHeader({
   }
 
   const l = {
-    hidden: appLang === 'zh' ? '屏蔽' : appLang === 'ms' ? 'Sembunyi' : 'Hide',
-    visible: appLang === 'zh' ? '显示' : appLang === 'ms' ? 'Tunjuk' : 'Show',
-    editTitle: appLang === 'zh' ? '产品编辑' : appLang === 'ms' ? 'Edit Maklumat' : 'Edit Product',
-    analyzeTitle: appLang === 'zh' ? '产品分析' : appLang === 'ms' ? 'Analisis Produk' : 'Analyze Product',
-    cover: appLang === 'zh' ? '封面' : appLang === 'ms' ? 'Muka' : 'Cover',
+    hidden: 'Hide',
+    visible: 'Show',
+    editTitle: 'Edit Product',
+    analyzeTitle: 'Analyze Product',
+    cover: 'Cover',
   };
 
   return (
