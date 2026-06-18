@@ -1,6 +1,6 @@
 import React from 'react';
 import { useFilters } from '@/hooks/useFilters';
-import { useTranslation, usePhotoGrid } from '@/hooks';
+import { useTranslation, usePhotoGrid, usePublicSettings } from '@/hooks';
 import { PublicHeader } from '@/components/layouts/headers/PublicHeader';
 import { FilterBar } from '@/features/filter/FilterBar';
 import { PublicPhotoGrid } from '@/components/photo/PublicPhotoGrid';
@@ -8,41 +8,44 @@ import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { useColumns } from '@/features/layout/hooks/useColumns';
 import { YarlLightbox } from '@/features/lightbox/YarlLightbox';
 import { useUIStore } from '@/store/useUIStore';
-import { useSettings } from '@/hooks/settings/useSettings';
 import { WhatsAppChoiceDialog } from '@/components/shared/WhatsAppChoiceDialog';
 import { PublicFloatingActions } from '@/components/photo/PublicFloatingActions';
-import { PhotoListItem } from '@/types/api';
 import { PhotoErrorDisplay } from '@/components/photo/PhotoErrorDisplay';
 
 export default function PublicPage() {
+  const { 
+    category, 
+    tags, 
+    search, 
+    sort, 
+    showGroupsCollapsed,
+    photoId, 
+    setPhotoId 
+  } = useFilters();
+  
   const { columns } = useColumns();
-  const filters = useFilters();
+  
   const photoGridData = usePhotoGrid({
-    categoryId: filters.category,
-    tagId: filters.tags?.[0],
-    searchQuery: filters.search,
-    sortOrder: filters.sort,
-    onlyGroupsCover: filters.showGroupsCollapsed
+    categoryId: category,
+    tagId: tags?.[0],
+    searchQuery: search,
+    sortOrder: sort,
+    onlyGroupsCover: showGroupsCollapsed
   }, 'public');
 
   const { 
     photos, 
     totalCount,
-    isPending, 
-    hasNextPage,
-    fetchNextPage,
     refetch,
     isError,
     error,
     isFetching,
-    ref
   } = photoGridData;
 
-  const { photoId, setPhotoId } = useFilters();
   const showWhatsAppChoice = useUIStore((s) => s.showWhatsAppChoice);
   const updateUI = useUIStore((s) => s.update);
   const { lang, uiTranslations: t } = useTranslation();
-  const { settings } = useSettings();
+  const { data: settings } = usePublicSettings();
 
   const lightboxIndex = React.useMemo(() => {
     if (!photoId) return -1;
@@ -87,7 +90,7 @@ export default function PublicPage() {
       message = `${prompt}\n*${name}* (${itemCode})\n${url}`;
       (window as any)._pendingPhoto = undefined;
     } else {
-      message = "您好，我正在浏览您的家具相册，想了解更多信息！";
+      message = "您好，我正在浏览您的家具相冊，想了解更多信息！";
     }
     
     const encodedText = encodeURIComponent(message);
@@ -122,12 +125,12 @@ export default function PublicPage() {
           <PublicPhotoGrid 
             {...photoGridData}
             columns={columns}
-            filters={filters}
+            filters={{ category, tags, search, sort, showGroupsCollapsed }}
           />
         </ErrorBoundary>
         
         <PublicFloatingActions 
-          onScrollToTop={() => {}} // Handled inside VirtualGrid now or need ref
+          onScrollToTop={() => {}} 
           onWhatsAppClick={() => updateUI({ showWhatsAppChoice: true })}
         />
       </div>
@@ -143,7 +146,7 @@ export default function PublicPage() {
       <WhatsAppChoiceDialog 
         isOpen={showWhatsAppChoice}
         onClose={() => updateUI({ showWhatsAppChoice: false })}
-        settings={settings}
+        settings={settings || null}
         onSelect={openWhatsApp}
         labels={t}
       />

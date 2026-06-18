@@ -3,7 +3,7 @@ import React from 'react';
 import { DynamicIcon } from '../../shared/DynamicIcon';
 import { Camera } from 'lucide-react'; // Keep one or two critical ones as standard imports for P0 performance
 import { useAuthStore } from '@/store/useAuthStore';
-import { useUIStore, useShallow, useSettings, usePermission } from '@/hooks';
+import { useUIStore, useShallow, usePublicSettings, usePermission } from '@/hooks';
 import { DropdownMenu } from '../../shared/Dropdown';
 import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
 import { translations } from "@/locales";
@@ -17,7 +17,7 @@ interface PublicHeaderProps {
 
 export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHeaderProps) {
   const { user, isLoading, signOut } = useAuthStore();
-  const { settings } = useSettings();
+  const { data: settings } = usePublicSettings();
   const { role } = usePermission();
   const update = useUIStore((s) => s.update);
   const navigate = useRouterSafe().navigate;

@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { ChevronUp, MoreHorizontal } from 'lucide-react';
 import { useTags } from './useFilterData';
 import { useFilterState } from './useFilterState';
-import { useSettings } from '@/hooks/settings/useSettings';
+import { usePublicSettings } from '@/hooks/settings/useSettings';
 import { usePhotoFilter } from '@/hooks/photo/usePhotoFilter';
 
 export function TagGrid() {
   const [showAll, setShowAll] = useState(false);
   const { filters, updateFilters } = useFilterState();
   const { data: tags, isPending } = useTags();
-  const { settings } = useSettings();
+  const { data: settings } = usePublicSettings();
 
   // Use the standard hook to resolve sorted, pinned, and hot tags according to database parameters
   const { tagsToRender, pinnedIds, hotIds } = usePhotoFilter(tags || [], settings);

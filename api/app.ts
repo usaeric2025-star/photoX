@@ -6,6 +6,7 @@ import { requireRealUser } from "./_lib/auth.js";
 import { getSupabaseAdmin } from "./_lib/supabase.js";
 import { refreshPhotosView } from "./_lib/db/index.js";
 import adminApp from "./_admin.js";
+import { publicSettings } from "./_handlers/public_settings.js";
 import { ai } from "./_handlers/ai.js";
 import { tags } from "./_handlers/tags.js";
 import { categories } from "./_handlers/categories.js";
@@ -229,6 +230,7 @@ app.use("*", async (c, next) => {
 
 // --- API Routes (Distributed) ---
 app.route("/admin", adminApp);
+app.route("/public/settings", publicSettings);
 app.route("/ai", ai);
 app.route("/tags", tags);
 app.route("/categories", categories);

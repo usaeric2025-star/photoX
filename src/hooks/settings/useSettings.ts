@@ -56,3 +56,16 @@ export function useSettings() {
     updateSettingsSync: updateMutation.mutate,
   }), [settings, isPending, updateMutation.mutateAsync, updateMutation.mutate]);
 }
+
+export function usePublicSettings() {
+  return useQuery({
+    queryKey: ['settings', 'public'],
+    queryFn: async () => {
+      const response = await api.public.settings.$get();
+      const result = await response.json();
+      if (!result.success) throw new Error(result.error);
+      return result.data as AppSettings;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}

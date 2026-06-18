@@ -11,7 +11,7 @@ import { GroupHeader } from '../shared/components/GroupHeader';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { Button } from '@/components/shared/Button';
 import { useUIStore } from '@/store/useUIStore';
-import { useSettings } from '@/hooks/settings/useSettings';
+import { usePublicSettings } from '@/hooks/settings/useSettings';
 import { WhatsAppChoiceDialog } from '@/components/shared/WhatsAppChoiceDialog';
 import { PublicFloatingActions } from '@/components/photo/PublicFloatingActions';
 
@@ -41,7 +41,7 @@ export function PublicGroupDetailPage() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const showWhatsAppChoice = useUIStore((s) => s.showWhatsAppChoice);
   const updateUI = useUIStore((s) => s.update);
-  const { settings } = useSettings();
+  const { data: settings } = usePublicSettings();
 
   const lightboxIndex = React.useMemo(() => {
     if (!photoId) return -1;
@@ -128,7 +128,7 @@ export function PublicGroupDetailPage() {
       <WhatsAppChoiceDialog 
         isOpen={showWhatsAppChoice}
         onClose={() => updateUI({ showWhatsAppChoice: false })}
-        settings={settings}
+        settings={settings || null}
         onSelect={openWhatsApp}
         labels={t}
       />

@@ -4,7 +4,7 @@ import { RouterProvider } from '@tanstack/react-router';
 import { router } from './router/index';
 import { Analytics } from '@vercel/analytics/react';
 import { useEffect, useRef } from 'react';
-import { useSettings } from '@/hooks';
+import { usePublicSettings } from '@/hooks';
 import { useLocalStorage } from '@/hooks/core/useLocalStorage';
 import { useAuthStore, initAuthListener } from '@/store/useAuthStore';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
@@ -25,7 +25,7 @@ export default function AppRoutes() {
   const isInitialDataLoading = useUIStore((s) => s.isInitialDataLoading);
   const setInitialDataLoading = useUIStore((s) => s.setInitialDataLoading);
   const init = useAuthStore((s) => s.init);
-  const { settings, isPending: isSettingsPending } = useSettings();
+  const { data: settings, isPending: isSettingsPending } = usePublicSettings();
 
   useEffect(() => {
     if (isInitialDataLoading) {
