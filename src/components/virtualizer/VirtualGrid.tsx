@@ -43,7 +43,7 @@ export type VirtualGridProps = {
 type RowItem = { type: 'header' | 'row' | 'footer'; content?: React.ReactNode; rowIndex?: number };
 
 export const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.Ref<VirtualGridHandle> }) => {
-  const vlistRef = useRef<VListHandle>(null);
+  const vlistRef = useRef<VListHandle>(null!);
   const lanes = Math.max(1, props.lanes || 1);
   const isGridLayout = lanes > 1;
   const rowCount = isGridLayout ? Math.ceil(props.count / lanes) : props.count;

@@ -73,6 +73,7 @@ export const useOptimisticMutation = <
       
       return { previousData };
     },
+    meta: { suppressGlobalError: true },
     onError: (err, vars, context) => {
       if (context?.previousData) {
         context.previousData.forEach((data: unknown, keyString: string) => {

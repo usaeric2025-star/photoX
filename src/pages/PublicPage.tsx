@@ -82,12 +82,13 @@ export default function PublicPage() {
   });
 
   const handleRefresh = () => {
+    gridRef.current?.scrollToIndex?.(0);
     refetch();
     refetchCount();
   };
 
   const handleScrollToTop = () => {
-    gridRef.current?.scrollTo(0);
+    gridRef.current?.scrollToIndex?.(0);
   };
 
   const openWhatsApp = (num: string) => {

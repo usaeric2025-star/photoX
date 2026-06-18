@@ -19,7 +19,8 @@ export const queryClient = new QueryClient({
           querySyncChannel.postMessage({ type: 'invalidate', queryKey });
       }
     },
-    onError: (error) => {
+    onError: (error, variables, context, mutation) => {
+      if (mutation.meta?.suppressGlobalError) return;
       if (error instanceof Error && !error.message.includes('401')) {
         logError(error, { action: 'Mutation Failed', component: 'QueryClient', kind: 'NETWORK' });
         handleError(error, 'Mutation Failure');
