@@ -6,13 +6,13 @@ import { useLongPress } from "@/hooks/core/useLongPress";
 
 interface TagItemProps {
   tag: Tag;
-  activeTagMenuId: string | null;
-  setActiveTagMenuId: (id: string | null) => void;
+  activeTagMenuId: number | null;
+  setActiveTagMenuId: (id: number | null) => void;
   handleUpdateTagName: (tag: Tag) => void;
-  updateTag: (id: string, data: Partial<Tag>) => Promise<boolean>;
-  deleteTag: (id: string) => void;
+  updateTag: (id: number, data: Partial<Tag>) => Promise<boolean>;
+  deleteTag: (id: number) => void;
   isPinned: boolean;
-  togglePin: (id: string) => void;
+  togglePin: (id: number) => void;
 }
 
 export function TagItem({

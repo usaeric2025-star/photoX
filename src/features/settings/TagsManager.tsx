@@ -6,11 +6,11 @@ interface TagsManagerProps {
   tags: Tag[];
   settings: AppSettings;
   addTag: (name: string) => Promise<Tag>;
-  updateTag: (id: string, data: Partial<Tag>) => Promise<boolean>;
-  activeTagMenuId: string | null;
-  setActiveTagMenuId: (id: string | null) => void;
-  deleteTag: (id: string) => void;
-  togglePin: (tagId: string) => void;
+  updateTag: (id: number, data: Partial<Tag>) => Promise<boolean>;
+  activeTagMenuId: number | null;
+  setActiveTagMenuId: (id: number | null) => void;
+  deleteTag: (id: number) => void;
+  togglePin: (tagId: number) => void;
   setSettings: (s: AppSettings) => void;
   setHasChanges: (v: boolean) => void;
   debouncedSave: (s: AppSettings) => void;

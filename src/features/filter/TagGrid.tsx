@@ -47,14 +47,14 @@ export function TagGrid() {
         showAll ? 'max-h-96' : 'max-h-[56px]'
       } overflow-y-auto pr-1`}>
         {displayTags.map(tag => {
-          const isSelected = filters.tagIds.includes(tag.id);
+          const isSelected = filters.tagIds.includes(String(tag.id));
           const isPinned = pinnedIds.includes(String(tag.id)) || tag.is_pinned;
           const isHot = hotIds.has(String(tag.id));
 
           return (
             <button
               key={tag.id}
-              onClick={() => toggleTag(tag.id)}
+              onClick={() => toggleTag(String(tag.id))}
               className={`px-2 py-1 rounded-sm text-[10px] font-black transition-all duration-200 cursor-pointer flex items-center gap-1 border shadow-xs leading-none uppercase ${
                 isSelected
                   ? 'bg-slate-950 text-white border-slate-950 scale-105 z-10'

@@ -71,7 +71,7 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo
             }
             
             tags.push({
-                id: String(tagId || ''),
+                id: Number(tagId || 0),
                 name: tagName,
                 aliases: [],
             });
@@ -82,7 +82,7 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo
         if (t && typeof t === 'object') {
             const rawT = t as Record<string, unknown>;
             tags.push({
-                id: String(rawT.id),
+                id: Number(rawT.id || 0),
                 name: getSafeText(rawT.name),
                 aliases: [],
             });

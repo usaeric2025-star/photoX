@@ -194,11 +194,11 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
                 tags={tags}
                 settings={settings}
                 addTag={async (name: string) => { const r = await addTag(name); if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addTag', name); return r; }}
-                updateTag={async (id: string, data: any) => { const r = await updateTag({ id, updates: data }); return !!r; }}
+                updateTag={async (id: number, data: any) => { const r = await updateTag({ id: String(id), updates: data }); return !!r; }}
                 activeTagMenuId={activeTagMenuId}
                 setActiveTagMenuId={setActiveTagMenuId}
-                deleteTag={deleteTag}
-                togglePin={togglePin}
+                deleteTag={(id: number) => deleteTag(String(id))}
+                togglePin={(id: number) => togglePin(id)}
                 setSettings={setSettings}
                 setHasChanges={setHasChanges}
                 debouncedSave={debouncedSave}

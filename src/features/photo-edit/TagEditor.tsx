@@ -16,7 +16,7 @@ export function TagEditor() {
 
   const handleAdd = async (name: string) => {
     const res = await addTagMut(name);
-    return res.id;
+    return String(res.id);
   };
 
   const handleUpdate = (id: string, name: string) => updateTagMut({ id, updates: { name } });

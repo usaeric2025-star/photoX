@@ -15,11 +15,11 @@ interface TagsSectionProps {
   tags: Tag[];
   settings: AppSettings | null;
   addTag: (name: string) => Promise<Tag>;
-  updateTag: (id: string, data: Partial<Tag>) => Promise<boolean>;
-  activeTagMenuId: string | null;
-  setActiveTagMenuId: (id: string | null) => void;
-  deleteTag: (id: string) => void;
-  togglePin: (tagId: string) => void;
+  updateTag: (id: number, data: Partial<Tag>) => Promise<boolean>;
+  activeTagMenuId: number | null;
+  setActiveTagMenuId: (id: number | null) => void;
+  deleteTag: (id: number) => void;
+  togglePin: (tagId: number) => void;
   setSettings: (s: AppSettings) => void;
   setHasChanges: (b: boolean) => void;
   debouncedSave: (s: AppSettings) => void;
@@ -42,6 +42,12 @@ export function TagsSection({
   cardClass,
   buttonStyles,
 }: TagsSectionProps) {
+    // ...
+    //   inside sort:
+    // (settings?.pinned_tags || []).includes(String(a.id)) ? 1 : 0;
+    // ...
+    //   inside map:
+    // isPinned={(settings?.pinned_tags || []).includes(String(tag.id))}
   
   const { runTask } = useTaskExecutor();
   const { tasks } = useTasks();
@@ -157,8 +163,8 @@ export function TagsSection({
       <div className="flex flex-wrap gap-2 p-3 bg-brand-navy/5 rounded-[28px] border border-brand-navy/10 shadow-inner min-h-[48px]">
         {(Array.from(tags || []) as Tag[])
           .sort((a, b) => {
-            const ap = (settings?.pinned_tags || []).includes(a.id) ? 1 : 0;
-            const bp = (settings?.pinned_tags || []).includes(b.id) ? 1 : 0;
+            const ap = (settings?.pinned_tags || []).includes(String(a.id)) ? 1 : 0;
+            const bp = (settings?.pinned_tags || []).includes(String(b.id)) ? 1 : 0;
             if (ap !== bp) return bp - ap;
             return String(a.name).localeCompare(String(b.name));
           })
@@ -174,7 +180,7 @@ export function TagsSection({
               }}
               updateTag={updateTag}
               deleteTag={deleteTag}
-              isPinned={(settings?.pinned_tags || []).includes(tag.id)}
+              isPinned={(settings?.pinned_tags || []).includes(String(tag.id))}
               togglePin={togglePin}
             />
           ))}

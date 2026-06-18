@@ -130,7 +130,7 @@ export function BatchEditForm({
             <PhotoTagSelector
               name="tags"
               tags={tags}
-              value={formState.tags?.map(t => typeof t === 'object' ? t.id : t) || []}
+              value={formState.tags?.map(t => (typeof t === 'object' ? String(t.id) : String(t))) || []}
               onChange={(newTagIds) => {
                 const selectedTags = newTagIds.map(id => {
                   const strId = typeof id === 'object' ? String(id.id) : id;

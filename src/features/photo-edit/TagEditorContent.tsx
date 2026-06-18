@@ -236,9 +236,9 @@ export function TagEditor({
           description="无法撤销且会从所有照片中移除 / This will be permanently removed from all photos."
           confirmText="删除"
           variant="destructive"
-          onConfirm={() => {
+              onConfirm={() => {
             try {
-              onDeleteTag(activeActionTag.id);
+              onDeleteTag(String(activeActionTag.id));
             } catch (e) {
               throw ErrorFactory.wrap(e, "彻底删除标签", activeActionTag.name);
             }

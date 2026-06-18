@@ -45,22 +45,22 @@ export const useSettingsLogic = ({
     loading?: boolean;
   } | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
-  const [activeTagMenuId, setActiveTagMenuId] = useState<string | null>(null);
+  const [activeTagMenuId, setActiveTagMenuId] = useState<number | null>(null);
 
   const debouncedSave = useDebouncedCallback((newSettings: AppSettings) => {
     saveSettings(newSettings).catch(console.error);
     setHasChanges(false);
   }, 1500);
 
-  const togglePin = (tagId: string) => {
-    const currentPinned = settings?.pinned_tags || [];
+  const togglePin = (tagId: number) => {
+    const currentPinned = (settings?.pinned_tags || []).map(Number);
     let nextPinned;
     if (currentPinned.includes(tagId)) {
-      nextPinned = currentPinned.filter((id: string) => id !== tagId);
+      nextPinned = currentPinned.filter((id) => id !== tagId);
     } else {
       nextPinned = [...currentPinned, tagId];
     }
-    const nextSettings = { ...settings, pinned_tags: nextPinned };
+    const nextSettings = { ...settings, pinned_tags: nextPinned.map(String) };
     setSettings(nextSettings);
     setHasChanges(true);
     debouncedSave(nextSettings);

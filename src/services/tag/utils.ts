@@ -1,6 +1,6 @@
 import { logger } from '@/lib/logger';
 import { Tag } from '@/types';
-import { batchCreateTags } from '@/services/tag/commands';
+import { batchCreateTagsInCloud as batchCreateTags } from '@/services/tag/commands';
 
 /**
  * 标签排序算法：
@@ -38,9 +38,9 @@ export const sortTagsByPopularity = (tags: Tag[]): Tag[] => {
 export const resolveTagIdsBatch = async (
   names: string[], 
   existingTags: Tag[], 
-  tagNameToIdMap: Map<string, string>
-): Promise<string[]> => {
-  const resultIds: string[] = [];
+  tagNameToIdMap: Map<string, number>
+): Promise<number[]> => {
+  const resultIds: number[] = [];
   const namesToCreate: string[] = [];
   
   const uniqueNames = Array.from(new Set(names.map(n => String(n || '').trim()).filter(Boolean)));
@@ -69,17 +69,17 @@ export const resolveTagIdsBatch = async (
     }
 
     // 3. Lookup via cache / map
-    let id = tagNameToIdMap.get(uppercaseName);
+    let id: number | undefined = tagNameToIdMap.get(uppercaseName);
     
     // 4. Lookup via existing list by Name
-    if (!id) {
+    if (id === undefined) {
       const found = existingTags.find(t => 
         (t.name || '').toUpperCase() === uppercaseName
       );
       if (found) id = found.id;
     }
     
-    if (id) {
+    if (id !== undefined) {
       resultIds.push(id);
     } else {
       // Avoid creating dummy or numeric tags like "0", "1", "2"
@@ -92,8 +92,8 @@ export const resolveTagIdsBatch = async (
   // 3. Batch create missing tags
   if (namesToCreate.length > 0) {
     try {
-      const result = await batchCreateTags(namesToCreate);
-      Array.from(result.values()).forEach(id => resultIds.push(id));
+      const newTags = await batchCreateTags(namesToCreate.map(name => ({ name })));
+      newTags.forEach(tag => resultIds.push(tag.id));
     } catch (error) {
       logger.error('Failed to resolve tags batch:', error);
     }
