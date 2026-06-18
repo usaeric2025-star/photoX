@@ -49,7 +49,7 @@ export function TasksContent() {
               <BarChart3 size={18} className="text-blue-500" />
               后台任务队列
             </h3>
-            <Button variant="ghost" size="sm" onClick={() => refetch()} className="h-8 px-3 rounded-full text-[10px] font-black uppercase tracking-widest">
+            <Button variant="outline" size="sm" onClick={() => refetch()} className="h-8 px-3 rounded-full text-[10px] font-black uppercase tracking-widest bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm">
               <RefreshCw size={12} className={`mr-1.5 ${isPending ? 'animate-spin' : ''}`} />
               刷新
             </Button>

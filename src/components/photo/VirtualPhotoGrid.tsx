@@ -84,7 +84,10 @@ export const VirtualPhotoGrid = ({
 
   useEffect(() => {
     if (internalGridRef.current && filterKey) {
-      internalGridRef.current.scrollTo(0);
+      // Use setTimeout to ensure virtua list has processed new data
+      setTimeout(() => {
+        internalGridRef.current?.scrollToIndex(0);
+      }, 0);
     }
   }, [filterKey]);
 
@@ -97,10 +100,12 @@ export const VirtualPhotoGrid = ({
   const { containerRef, width: containerWidth } = useContainerWidth<HTMLDivElement>();
 
   const estimatedRowHeight = (() => {
+    if (!containerWidth) return 350; // Default reasonable height for initial render to prevent white edges
     const padding = 16;
     const cardWidth = (containerWidth - padding) / Math.max(1, columns);
     // card width + fixed metadata area (approx 68px for title/stats)
-    return cardWidth + 68; 
+    // Plus bottom margin approx 4-8px
+    return cardWidth + 76; 
   })();
 
   const internalRenderItem = (index: number) => {

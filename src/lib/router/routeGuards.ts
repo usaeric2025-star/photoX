@@ -23,9 +23,8 @@ export const authGuard = async ({
     isStaffMode: !!isStaffMode
   });
   
-  if (location.pathname.startsWith('/admin') && !user && !isStaffMode) {
-    throw new Error('Unauthorized access to admin area');
-  }
+  // We do not throw an error here because authentication
+  // is handled at the component level by AdminAuthGate.
   
   return;
 };

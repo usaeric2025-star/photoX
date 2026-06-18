@@ -46,15 +46,8 @@ export function AdminHeader({}: AdminHeaderProps) {
     navigate({ to: '/' });
   };
 
-  // Roles background mappings:
-  // - Admin: bg-indigo-50/90 border-indigo-200/50
-  // - Staff: bg-amber-50/85 border-amber-200/50
-  // - Guest/Public: bg-white border-slate-200
-  const headerBgClass = role === 'admin'
-    ? "bg-indigo-50/90 border-indigo-200/50 text-indigo-950"
-    : role === 'staff'
-    ? "bg-amber-50/85 border-amber-200/50 text-amber-950"
-    : "bg-white border-slate-200 text-slate-850";
+  // Admin header matching to PublicHeader
+  const headerBgClass = "bg-white border-slate-200 text-slate-800";
 
   return (
     <header className={`h-14 sm:h-16 shrink-0 border-b px-2.5 sm:px-4 flex items-center justify-between font-sans transition-colors duration-300 relative ${headerBgClass}`}>

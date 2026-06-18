@@ -104,7 +104,7 @@ export function BasicInfoTab() {
                   {...register('name.zh', {
                     setValueAs: (value) => value?.toUpperCase()
                   })}
-                  className="w-full bg-white border border-slate-200 px-2.5 py-1.5 rounded-lg font-bold outline-none focus:border-blue-500 shadow-sm min-w-0" 
+                  className="w-full bg-white border border-slate-200 px-3 py-2 rounded-xl text-sm font-bold outline-none focus:border-blue-500 min-w-0 transition-colors" 
                 />
 
                 {/* English */}
@@ -115,7 +115,7 @@ export function BasicInfoTab() {
                   {...register('name.en', {
                     setValueAs: (value) => value?.toUpperCase()
                   })}
-                  className="w-full bg-white border border-slate-200 px-2.5 py-1.5 rounded-lg font-bold outline-none focus:border-blue-500 shadow-sm min-w-0" 
+                  className="w-full bg-white border border-slate-200 px-3 py-2 rounded-xl text-sm font-bold outline-none focus:border-blue-500 min-w-0 transition-colors" 
                 />
 
                 {/* Malay */}
@@ -126,7 +126,7 @@ export function BasicInfoTab() {
                   {...register('name.ms', {
                     setValueAs: (value) => value?.toUpperCase()
                   })}
-                  className="w-full bg-white border border-slate-200 px-2.5 py-1.5 rounded-lg font-bold outline-none focus:border-blue-500 shadow-sm min-w-0" 
+                  className="w-full bg-white border border-slate-200 px-3 py-2 rounded-xl text-sm font-bold outline-none focus:border-blue-500 min-w-0 transition-colors" 
                 />
               </div>
             </div>
@@ -140,7 +140,7 @@ export function BasicInfoTab() {
             <Lock size={8} className="text-slate-300" />
             系统内部编号 / SYSTEM CODE
           </h3>
-          <div className="w-full bg-slate-50 border border-slate-100 p-2.5 rounded-xl text-[10px] font-mono font-medium text-slate-400 shadow-sm cursor-not-allowed">
+          <div className="w-full bg-slate-50 border border-slate-100 px-3 py-2 rounded-xl text-sm font-mono font-medium text-slate-400 cursor-not-allowed">
             {itemCode || t.systemCodeAuto}
           </div>
         </div>
@@ -150,7 +150,7 @@ export function BasicInfoTab() {
             type="text" 
             placeholder={t.itemCodePlaceholder} 
             {...register('manual_code')}
-            className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-sm font-bold outline-none focus:border-blue-500 shadow-sm" 
+            className="w-full bg-white border border-slate-200 px-3 py-2 rounded-xl text-sm font-bold outline-none focus:border-blue-500 transition-colors" 
           />
         </div>
         <div className="space-y-1.5">
@@ -162,7 +162,7 @@ export function BasicInfoTab() {
             {...register('model_number', {
               setValueAs: (value) => value?.replace(/\D/g, '')
             })}
-            className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-sm font-bold outline-none focus:border-blue-500 shadow-sm" 
+            className="w-full bg-white border border-slate-200 px-3 py-2 rounded-xl text-sm font-bold outline-none focus:border-blue-500 transition-colors" 
           />
         </div>
         <div className="space-y-1.5">
@@ -174,7 +174,7 @@ export function BasicInfoTab() {
             {...register('price', {
               setValueAs: (value) => value?.replace(/\D/g, '')
             })}
-            className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-sm font-bold text-blue-600 outline-none focus:border-blue-500 shadow-sm" 
+            className="w-full bg-white border border-slate-200 px-3 py-2 rounded-xl text-sm font-bold text-blue-600 outline-none focus:border-blue-500 transition-colors" 
           />
         </div>
       </div>

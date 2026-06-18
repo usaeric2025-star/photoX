@@ -9,6 +9,7 @@ import { GroupToggle } from '@/components/ui/GroupToggle';
 import { StatusSelect } from './StatusSelect';
 import { useFilters } from '@/hooks/useFilters';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface FilterBarProps {
   mode: 'public' | 'admin';
@@ -20,7 +21,7 @@ export function FilterBar({ mode }: FilterBarProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className={cn("sticky top-0 border-b", isAdmin ? "bg-amber-50" : "bg-white")}>
+    <div className={cn("sticky top-0 z-10 border-b bg-white")}>
       <div className="flex gap-2 items-center p-4 pb-3">
         <div className="flex-1">
           <SearchInput />
@@ -28,7 +29,8 @@ export function FilterBar({ mode }: FilterBarProps) {
         <div className="flex gap-1 shrink-0">
           <button 
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-2 rounded-lg hover:bg-slate-100"
+            className="p-2 border rounded-lg bg-white hover:bg-gray-50 border-gray-200 transition"
+            title={isExpanded ? 'Collapse' : 'Expand'}
           >
             {isExpanded ? <ChevronUp className="w-5 h-5 text-gray-500" /> : <ChevronDown className="w-5 h-5 text-gray-500" />}
           </button>
@@ -39,6 +41,12 @@ export function FilterBar({ mode }: FilterBarProps) {
             onClick={() => {
               console.debug('[FilterBar] GroupToggle clicked. Current value:', showGroupsCollapsed, 'New value:', !showGroupsCollapsed);
               setShowGroupsCollapsed(!showGroupsCollapsed);
+              
+              if (!showGroupsCollapsed) {
+                toast.success(isAdmin ? '已切換為合組顯示' : 'Switched to grouped view');
+              } else {
+                toast.success(isAdmin ? '已切換為分開顯示' : 'Switched to separated view');
+              }
             }}
           />
           {isAdmin ? <StatusSelect /> : null}

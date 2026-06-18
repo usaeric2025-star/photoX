@@ -71,10 +71,10 @@ export function YarlLightbox({
         onClick={() => {
           onEdit(currentItem.id);
         }}
-        className="mr-3 text-[13px] font-medium tracking-wide bg-brand-gold hover:bg-yellow-500 text-slate-900 px-3.5 py-1.5 rounded-lg font-sans cursor-pointer h-9 shadow-md flex items-center gap-1.5 transition-all duration-200"
+        className="yarl__button flex items-center justify-center cursor-pointer transition-transform duration-150 hover:scale-105"
         title="編輯"
       >
-        <span>✏️</span> <span>編輯</span>
+        <Edit strokeWidth={2} className="yarl__icon" />
       </button>
     );
   }
@@ -86,17 +86,15 @@ export function YarlLightbox({
         key="info-btn"
         type="button"
         onClick={() => setIsDetailModalOpen(true)}
-        className="yarl__button mr-2 flex items-center justify-center cursor-pointer transition-transform duration-150 hover:scale-105"
+        className="yarl__button flex items-center justify-center cursor-pointer transition-transform duration-150 hover:scale-105"
         title="產品資訊"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          strokeWidth="2.5"
+          strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
           className="yarl__icon"

@@ -103,7 +103,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
           <button 
             onClick={onRefresh}
             disabled={isRefreshing}
-            className="w-9 h-9 sm:w-9 sm:h-9 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50/50 rounded-full transition-all active:scale-90 shrink-0"
+            className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 border bg-white text-slate-600 border-slate-200 hover:bg-slate-100 disabled:opacity-50 shadow-sm"
             title={t.refresh}
           >
             <DynamicIcon name="refresh-cw" size={16} className={isRefreshing ? 'animate-spin' : ''} />

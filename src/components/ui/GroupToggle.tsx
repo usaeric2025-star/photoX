@@ -1,4 +1,3 @@
-import { Button } from '@/components/shared/Button';
 import { Layers, Grid } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -8,16 +7,15 @@ interface GroupToggleProps {
 }
 
 export const GroupToggle = ({ showGroupsCollapsed, onClick }: GroupToggleProps) => (
-  <Button 
+  <button 
     id="group-toggle-btn"
-    variant="outline" 
-    size="icon" 
     onClick={onClick}
+    title={showGroupsCollapsed ? 'Switch to separated view' : 'Switch to grouped view'}
     className={cn(
-      "h-8 w-8 transition-transform duration-200 ease-in-out hover:scale-105 active:scale-95",
-      showGroupsCollapsed ? 'bg-slate-900 text-white hover:bg-slate-800 border-slate-900' : 'bg-white hover:bg-slate-50 border-slate-200'
+      "p-2 border rounded-lg transition-colors flex items-center justify-center",
+      showGroupsCollapsed ? 'bg-slate-900 text-white hover:bg-slate-800 border-slate-900' : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-700'
     )}
   >
-    {showGroupsCollapsed ? <Layers size={16} /> : <Grid size={16} />}
-  </Button>
+    {showGroupsCollapsed ? <Layers size={18} /> : <Grid size={18} />}
+  </button>
 );

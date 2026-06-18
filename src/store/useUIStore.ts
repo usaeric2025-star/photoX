@@ -40,7 +40,6 @@ export interface PromptDialogProps {
 
 export interface UIStoreState {
   appLang: 'zh' | 'en' | 'ms';
-  lightboxIndex: number | null;
   batchEditingIds: string[] | null;
   groupSettingsOpen: boolean;
   uploadAsGroup: boolean;
@@ -57,9 +56,6 @@ export interface UIStoreState {
   resetUI: () => void;
   showWhatsAppChoice: boolean;
   newPhotoData: string | null;
-  showOtherFields: boolean;
-  isInfiniteMode: boolean;
-  filterSubId: string | null;
   processingIds: string[];
   activeDialogCount: number;
   
@@ -103,7 +99,6 @@ export const useUIStore = create<UIStoreState>()((set) => ({
     if (lower.startsWith('ms')) return 'ms';
     return 'en';
   })() as 'zh' | 'en' | 'ms',
-  lightboxIndex: null,
   batchEditingIds: storage.get(STORAGE_KEYS.BATCH_EDITING, null),
   groupSettingsOpen: storage.get<string>(STORAGE_KEYS.GROUP_SETTINGS_OPEN, 'false') === 'true',
   uploadAsGroup: storage.get<string>('uploadAsGroup', 'false') === 'true',
@@ -157,9 +152,6 @@ export const useUIStore = create<UIStoreState>()((set) => ({
     }),
   showWhatsAppChoice: false,
   newPhotoData: null,
-  showOtherFields: false,
-  isInfiniteMode: false,
-  filterSubId: null,
   activeDialogCount: 0,
   incrementDialogCount: () => set((state) => ({ activeDialogCount: state.activeDialogCount + 1 })),
   decrementDialogCount: () => set((state) => ({ activeDialogCount: Math.max(0, state.activeDialogCount - 1) })),

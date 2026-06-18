@@ -29,7 +29,7 @@ function PhotoEditModalContent({ editPhotoId, appLang, handleClose, isDeleteOpen
   // PhotoEditModal is the parent of the provider? No, it's a sibling of children.
   // Actually children of provider can see the context.
   return (
-    <div className="flex flex-col h-full w-full bg-slate-50 focus:outline-none relative">
+    <div className="flex flex-col h-[85vh] w-full bg-slate-50 focus:outline-none relative">
       <ModalHeader onClose={handleClose} onDeleteClick={deleteDialog.toggle} />
 
       <DeletePhotoDialog
@@ -102,7 +102,7 @@ export function PhotoEditModal({ slots, isOpen: propIsOpen, onClose: propOnClose
 
   return (
     <PhotoEditSessionProvider key={targetId} photoId={editPhotoId || ''} onSuccess={handleClose}>
-      <Modal open={isOpen} onClose={handleClose} size="screen" hidePadding showCloseButton={false}>
+      <Modal open={isOpen} onClose={handleClose} size="4xl" hidePadding showCloseButton={false} className="max-h-[90vh] overflow-hidden flex flex-col rounded-2xl">
         <PhotoEditModalContent 
           editPhotoId={editPhotoId}
           appLang={appLang}

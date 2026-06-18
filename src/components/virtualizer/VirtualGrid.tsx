@@ -177,6 +177,7 @@ export const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.
         data={listItems}
         onScroll={handleScroll}
         itemSize={props.itemSize}
+        overscan={4}
         shift={props.shift}
         style={{ height: '100%', width: '100%' }}
       >

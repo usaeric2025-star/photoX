@@ -93,12 +93,6 @@ const groupPhotosConfig = defineMutation<
     return old;
   },
   successMessage: '已合组',
-  onError: (error) => {
-    import('@/lib/error/errorHandler').then(({ handleError }) => {
-      handleError(error, '合組照片');
-    });
-    return false;
-  }
 });
 
 export const useGroupPhotosMutation = () => useAppMutation(groupPhotosConfig);

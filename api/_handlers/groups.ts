@@ -73,11 +73,12 @@ export const groups = new Hono()
   })
   .post('/group-photos', async (c) => {
       const body = await c.req.json();
+      console.log('--- GROUP PHOTOS JSON BODY ---', JSON.stringify(body, null, 2));
       const check = type({
           targetGroupId: "string",
           userId: "string",
           "photoIds?": "string[]",
-          groupData: GroupReqSchema,
+          groupData: "object",
           "sourceGroupIds?": "string[]",
           "ungroupedValidIds?": "string[]"
       })(body);
@@ -89,7 +90,10 @@ export const groups = new Hono()
           groupData, 
           photoIds
       } = check;
-      delete (groupData as any).member_count;
+      
+      // Ensure groupData has the id aligned with targetGroupId to satisfy TS and db
+      const mergedGroupData = { ...groupData, id: targetGroupId };
+      delete (mergedGroupData as any).member_count;
       
       try {
           // Optimize: Compute sourceGroupIds and ungroupedValidIds directly on the server
@@ -123,7 +127,7 @@ export const groups = new Hono()
           });
 
           if (!existingGroup) {
-            const { id: _, ...groupDataWithoutId } = groupData as any;
+            const { id: _, ...groupDataWithoutId } = mergedGroupData as any;
             let finalUserId = (userId !== 'staff' && userId) ? userId : dbUserId;
             if (!finalUserId) {
                 // Fallback user id
@@ -136,8 +140,9 @@ export const groups = new Hono()
                 createdAt: new Date()
             } as any);
           } else {
+            const { id: _, ...groupDataWithoutId } = mergedGroupData as any;
             await db.update(groupsTable)
-                .set({ ...groupData, updatedAt: new Date() } as any)
+                .set({ ...groupDataWithoutId, updatedAt: new Date() } as any)
                 .where(eq(groupsTable.id, targetGroupId));
           }
 

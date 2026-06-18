@@ -8,7 +8,7 @@ interface ModalProps {
   children: React.ReactNode;
   title?: string;
   description?: string;
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full' | 'screen';
+  size?: 'sm' | 'md' | 'lg' | '4xl' | 'xl' | 'full' | 'screen';
   className?: string;
   hidePadding?: boolean;
   showCloseButton?: boolean;
@@ -18,6 +18,7 @@ const sizeClasses = {
   sm: 'max-w-md',
   md: 'max-w-lg',
   lg: 'max-w-2xl',
+  '4xl': 'max-w-4xl',
   xl: 'max-w-6xl',
   full: 'max-w-[90vw]',
   screen: 'max-w-[100vw] w-[100vw] h-[100dvh] max-h-[100dvh] rounded-none m-0',
@@ -33,7 +34,7 @@ export function Modal({
   className = '',
   hidePadding = false,
   showCloseButton = true
-}: ModalProps) {
+}: ModalProps & { size?: 'sm' | 'md' | 'lg' | '4xl' | 'xl' | 'full' | 'screen' }) {
   const ref = React.useRef<HTMLDialogElement>(null);
 
   React.useEffect(() => {
