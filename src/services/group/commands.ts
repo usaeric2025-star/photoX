@@ -13,6 +13,9 @@ const TABLE_NAME = 'groups';
 const mapToDb = (updates: any, userId?: string): Record<string, unknown> => {
     const dbUpdates: Record<string, unknown> = { ...updates };
     dbUpdates.updated_at = new Date().toISOString();
+    if (userId) {
+        dbUpdates.user_id = userId;
+    }
 
     if ('name' in dbUpdates) {
         const val = dbUpdates.name;

@@ -13,6 +13,7 @@ import { useSkeletonCount } from '@/hooks/useSkeletonCount';
 
 interface VirtualPhotoGridProps {
   photos: Photo[];
+  isPending?: boolean;
   isFetching?: boolean;
   isFetchingNextPage?: boolean;
   hasNextPage?: boolean;
@@ -28,6 +29,7 @@ interface VirtualPhotoGridProps {
 
 export const VirtualPhotoGrid = ({
   photos = [],
+  isPending,
   isFetching,
   isFetchingNextPage,
   hasNextPage,
@@ -118,7 +120,7 @@ export const VirtualPhotoGrid = ({
     );
   };
 
-  if (isFetching && photos.length === 0) {
+  if ((isFetching || isPending) && photos.length === 0) {
     return (
       <div className="h-full w-full bg-brand-bg overflow-y-auto">
         <PhotoGridSkeleton columns={columns} count={skeletonCount} />

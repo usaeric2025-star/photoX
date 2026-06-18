@@ -35,6 +35,7 @@ export const groups = pgTable('groups', {
     description: text('description'),
     coverPhotoId: uuid('cover_photo_id'),
     status: text('status').default('confirmed'),
+    userId: uuid('user_id').notNull(),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
 });

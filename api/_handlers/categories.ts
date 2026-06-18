@@ -4,8 +4,15 @@ import { db, categories as categoriesTable, furnitureItems } from '../_lib/db/in
 import { eq, asc, ne } from 'drizzle-orm';
 import { CategoryReqSchema } from '../_shared/apiContractSchema.js';
 
+let categoriesCache: any[] | null = null;
+let cacheTime = 0;
+
 export const categories = new Hono()
   .get('/', async (c) => {
+    const now = Date.now();
+    if (categoriesCache && now - cacheTime < 5 * 60 * 1000) {
+        return c.json({ success: true, data: categoriesCache });
+    }
     try {
       const data = await db
           .select({
@@ -31,6 +38,8 @@ export const categories = new Hono()
           sort_order: item.sort_order,
       }));
 
+      categoriesCache = formatted;
+      cacheTime = now;
       return c.json({ success: true, data: formatted });
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
@@ -53,6 +62,8 @@ export const categories = new Hono()
       ];
 
       await db.insert(categoriesTable).values(seedData);
+      
+      categoriesCache = null; // Clear cache
       
       return c.json({ success: true, message: 'Database seeded successfully' });
     } catch (error: unknown) {
@@ -101,6 +112,8 @@ export const categories = new Hono()
           .values(mappedData)
           .returning();
       
+      categoriesCache = null; // Clear cache
+      
       return c.json({ success: true, data });
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
@@ -128,6 +141,8 @@ export const categories = new Hono()
           .set(mappedUpdates)
           .where(eq(categoriesTable.id, id));
       
+      categoriesCache = null; // Clear cache
+      
       return c.json({ success: true });
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
@@ -140,6 +155,8 @@ export const categories = new Hono()
       await db
           .delete(categoriesTable)
           .where(eq(categoriesTable.id, id));
+      
+      categoriesCache = null; // Clear cache
       
       return c.json({ success: true });
     } catch (error: unknown) {

@@ -38,7 +38,7 @@ export const listHandler = (app: Hono) => {
     if (check instanceof type.errors) throw new Error(check.summary);
 
     const { 
-      page = 0, limit = 1000, 
+      page = 0, limit = 100, 
       categoryId, tagId, searchQuery,
       isAdminMode = false, 
       onlyUngrouped = false, manufacturerId, 

@@ -123,7 +123,7 @@ export const SelectionToolbar = memo(function SelectionToolbar({
 
   return (
     <div className={`fixed bottom-0 left-0 right-0 z-50 w-full bg-white border-t border-slate-200 shadow-[0_-8px_30px_rgb(0,0,0,0.12)] pb-safe animate-in fade-in slide-in-from-bottom-4 duration-300 ${className}`}>
-      <div className="max-w-[1920px] mx-auto flex items-center justify-between gap-1.5 sm:gap-4 py-3 px-3 sm:px-6">
+      <div className="max-w-[1920px] mx-auto relative flex items-center justify-between gap-1.5 sm:gap-4 py-3 px-3 sm:px-6">
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           {/* 關閉/清除選擇 */}
           <button
@@ -150,15 +150,17 @@ export const SelectionToolbar = memo(function SelectionToolbar({
           </button>
         </div>
 
+        {/* 絕對定位的中央處理中狀態，防止工具列按鈕變形 */}
+        {isAnyPending && (
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none flex items-center gap-1.5 text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100 shadow-sm animate-in fade-in zoom-in-95 duration-200">
+            <Loader2 size={12} className="animate-spin text-blue-500" />
+            <span className="hidden xs:inline">正在處理中...</span>
+            <span className="xs:hidden">處理中...</span>
+          </div>
+        )}
+
         {/* 行動按鈕組 */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {isAnyPending && (
-            <span className="text-xs font-semibold text-blue-500 animate-pulse flex items-center gap-1 mr-1 select-none shrink-0">
-              <Loader2 size={12} className="animate-spin" />
-              處理中
-            </span>
-          )}
-
           {/* 移出合組 (僅在合組頁面時顯示) */}
           {groupId && (
             <button

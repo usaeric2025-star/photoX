@@ -15,7 +15,11 @@ export const groups = new Hono()
 
     const { groupData } = check;
     try {
-        const [data] = await db.insert(groupsTable).values(groupData as any).returning();
+        const inputUserId = (body as any).userId || (body as any).user_id || (groupData as any).userId || (groupData as any).user_id || '8ec53131-a589-4b50-beb4-6b5308541e1b';
+        const [data] = await db.insert(groupsTable).values({
+            userId: inputUserId,
+            ...groupData
+        } as any).returning();
         return c.json({ success: true, data });
     } catch (error: any) {
         const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
@@ -33,8 +37,21 @@ export const groups = new Hono()
     delete (updates as any).member_count;
 
     try {
+        const mapped: Record<string, any> = {};
+        const fieldMap: Record<string, string> = {
+            name: 'name',
+            description: 'description',
+            cover_photo_id: 'coverPhotoId',
+            status: 'status',
+            user_id: 'userId'
+        };
+        for (const [key, val] of Object.entries(updates as Record<string, any>)) {
+            const mappedKey = fieldMap[key] || key;
+            mapped[mappedKey] = val;
+        }
+
         const [data] = await db.update(groupsTable)
-            .set({ ...updates, updatedAt: new Date() } as any)
+            .set({ ...mapped, updatedAt: new Date() } as any)
             .where(eq(groupsTable.id, id))
             .returning();
         return c.json({ success: true, data });
@@ -45,13 +62,39 @@ export const groups = new Hono()
     }
   })
   .post('/upsert', async (c) => {
-    const dbUpdates = await c.req.json();
+    const dbUpdates = await c.req.json() as Record<string, any>;
     try {
+        const mapped: Record<string, any> = {};
+        const fieldMap: Record<string, string> = {
+            id: 'id',
+            name: 'name',
+            description: 'description',
+            cover_photo_id: 'coverPhotoId',
+            status: 'status',
+            user_id: 'userId',
+            created_at: 'createdAt',
+            updated_at: 'updatedAt'
+        };
+        for (const [key, val] of Object.entries(dbUpdates)) {
+            const mappedKey = fieldMap[key] || key;
+            mapped[mappedKey] = val;
+        }
+
+        // Ensure status gets a fallback
+        if (!mapped.status) {
+            mapped.status = 'confirmed';
+        }
+
+        // Ensure userId gets a fallback
+        if (!mapped.userId) {
+            mapped.userId = '8ec53131-a589-4b50-beb4-6b5308541e1b';
+        }
+
         await db.insert(groupsTable)
-            .values(dbUpdates)
+            .values(mapped as any)
             .onConflictDoUpdate({
                 target: groupsTable.id,
-                set: dbUpdates
+                set: mapped as any
             });
         return c.json({ success: true });
     } catch (error: any) {
@@ -136,6 +179,7 @@ export const groups = new Hono()
 
             await db.insert(groupsTable).values({
                 id: targetGroupId,
+                userId: finalUserId,
                 ...groupDataWithoutId,
                 createdAt: new Date()
             } as any);

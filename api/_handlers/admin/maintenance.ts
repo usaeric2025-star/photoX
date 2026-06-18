@@ -36,8 +36,10 @@ adminMaintenance.get("/jobs", async (c) => {
         const data = await db.select().from(maintenanceJobs);
         return c.json({ success: true, data });
     } catch (e: unknown) {
+        logger.error('[Maintenance] Jobs fetch failed', e);
         const err = e instanceof Error ? e : new Error(String(e));
-        return c.json({ success: false, error: err.message }, 500);
+        // If table doesn't exist, this will now log and return clear error
+        return c.json({ success: false, error: 'Failed to fetch maintenance jobs. Verify if the table exists.' }, 500);
     }
 });
 

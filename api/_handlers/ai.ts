@@ -308,7 +308,7 @@ ai.post("/cluster-photos", async (c) => {
 
             const [groupData] = await db.insert(groupsTable).values({
                 id: groupId,
-                name: { zh: g.name, en: g.name_en, ms: g.name_ms },
+                name: g.name,
                 status: 'confirmed',
                 userId: finalUserId,
                 createdAt: new Date()
