@@ -86,10 +86,10 @@ export const VirtualPhotoGrid = ({
 
   useEffect(() => {
     if (internalGridRef.current && filterKey) {
-      // Use setTimeout to ensure virtua list has processed new data
-      setTimeout(() => {
+      // Use requestAnimationFrame to ensure virtua list has processed new data layout
+      requestAnimationFrame(() => {
         internalGridRef.current?.scrollToIndex(0);
-      }, 0);
+      });
     }
   }, [filterKey]);
 
