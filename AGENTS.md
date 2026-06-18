@@ -1524,3 +1524,12 @@ PhotoX 當前單頁數據 < 100KB，IndexedDB 收益為零且增加 Bundle Size 
 
 - ✅ 所有變更透過 Migration
 - ❌ 禁止手動修改資料庫
+
+## Ref 型別規範（永久鎖定）
+
+- ✅ 使用 `toMutableRef(ref)` 處理第三方元件的 mutable ref 需求
+- ✅ `toMutableRef` 必須用 overload 簽名實現，禁止內部使用 `as`
+- ✅ 自訂元件統一用 `React.forwardRef` 暴露 ref
+- ❌ 禁止在元件中直接寫 `ref as MutableRef`
+- ❌ 禁止用 `@ts-ignore` 繞過 ref 型別
+- 📝 React 19 升級後若 RefObject 原生 mutable，則廢棄此工具

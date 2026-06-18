@@ -1,6 +1,7 @@
 import React, { useImperativeHandle, useRef, useEffect } from 'react';
 import { VList, VListHandle } from 'virtua';
 import { cn } from '@/lib/utils';
+import { toMutableRef } from '@/lib/react/refs';
 
 // Virtua 建議針對 ResizeObserver Loop 錯誤的特殊處理
 // 這是官方建議的 patch，避免動畫或佈局改變觸發 ResizeObserver 的連續循環
@@ -173,7 +174,7 @@ export const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.
   return (
     <div className={cn("w-full h-full min-h-0", props.containerClassName)}>
       <VList<RowItem>
-        ref={vlistRef}
+        ref={toMutableRef(vlistRef)}
         data={listItems}
         onScroll={handleScroll}
         itemSize={props.itemSize}
