@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import React, { useEffect, useRef } from 'react';
 
 export const LoadingScreen = () => {
@@ -11,7 +12,7 @@ export const LoadingScreen = () => {
         el.showModal();
       }
     } catch (e) {
-      console.warn('[LoadingScreen] Failed to show modal, fallback to open attribute:', e);
+      logger.warn('[LoadingScreen] Failed to show modal, fallback to open attribute:', e);
       el.setAttribute('open', '');
     }
     return () => {
@@ -42,7 +43,7 @@ export const LoadingScreen = () => {
       className="m-auto w-screen h-screen max-w-none max-h-none border-none outline-none p-0 flex items-center justify-center bg-white/90 backdrop:bg-white/90 backdrop:backdrop-blur-sm shadow-none animate-in fade-in duration-200"
       id="full-page-loading"
     >
-      <div className="text-brand-primary font-black tracking-widest text-sm animate-pulse-gentle">
+      <div className="text-brand-navy font-black tracking-widest text-sm animate-pulse-gentle">
         PHOT
         <span className="text-amber-500">O</span>
         X

@@ -1,3 +1,6 @@
+import { OpenRouterConfigBlock } from './OpenRouterConfigBlock';
+import { AgnesConfigBlock } from './AgnesConfigBlock';
+import { logger } from '@/lib/logger';
 
 import React from 'react';
 import { Sparkles, Lock } from 'lucide-react';
@@ -74,7 +77,7 @@ export function AISecuritySection({
         }
       }
     } catch (e) {
-      console.error("Failed to fetch keys status:", e);
+      logger.error("Failed to fetch keys status:", e);
     }
   };
 
@@ -225,135 +228,43 @@ export function AISecuritySection({
 
         <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* OpenRouter Config */}
-          <div className="space-y-4 p-5 rounded-3xl bg-slate-50/50 border border-slate-100">
-             <div className="flex items-center justify-between mb-4">
-                <div className="space-y-0.5">
-                   <h5 className="text-[10px] font-black text-brand-navy uppercase tracking-tight">OpenRouter</h5>
-                   <p className="text-[8px] text-brand-navy/40 font-bold uppercase tracking-widest">萬能引擎 / Multi-Model</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {keysStatus.openrouter && <div className="px-2 py-0.5 bg-green-50 text-green-600 rounded-full text-[8px] font-black uppercase">已激活</div>}
-                  <button 
-                    onClick={() => {
-                      setIsEditingOpenRouter(!isEditingOpenRouter);
-                      if (!isEditingOpenRouter && localOpenRouterKey === "••••••••••••••••") setLocalOpenRouterKey("");
-                    }}
-                    className={`text-[8px] font-black px-2 py-0.5 rounded-full transition-colors ${isEditingOpenRouter ? 'bg-slate-200 text-slate-600' : 'bg-brand-navy text-white'}`}
-                  >
-                    {isEditingOpenRouter ? translations[appLang as keyof typeof translations]?.cancel || '取消' : translations[appLang as keyof typeof translations]?.edit || '編輯'}
-                  </button>
-                </div>
-             </div>
-             
-             <div className="space-y-3">
-                 <div className="relative">
-                    <input
-                        type={isEditingOpenRouter ? "text" : "password"}
-                        placeholder="OpenRouter API Key (sk-or-...)"
-                        className={`${inputClass} h-10 font-mono w-full ${isEditingOpenRouter ? 'bg-white border-brand-navy/20' : 'bg-slate-50'} pr-16`}
-                        value={localOpenRouterKey}
-                        onChange={(e) => setLocalOpenRouterKey(e.target.value)}
-                        disabled={!isEditingOpenRouter}
-                        autoFocus={isEditingOpenRouter}
-                    />
-                    {isEditingOpenRouter && (
-                      <button 
-                           onClick={() => saveKey('openrouter', localOpenRouterKey)} 
-                           disabled={isSaving === 'openrouter'}
-                           className="absolute right-1 top-1 py-1 px-4 bg-brand-gold text-brand-navy text-[10px] font-black rounded-lg shadow-sm hover:translate-y-[-1px] active:translate-y-[1px] transition-all disabled:opacity-50"
-                       >
-                           {isSaving === 'openrouter' ? '..' : '保存'}
-                       </button>
-                    )}
-                 </div>
-
-                 <div className="space-y-1 mt-2 mb-2">
-                    <label className="text-[10px] font-bold text-brand-navy/60 block">模型型号</label>
-                    <input
-                        type="text"
-                        placeholder="例如: google/gemini-2.5-flash-lite"
-                        className={`${inputClass} !h-8 text-[11px] w-full bg-white border-brand-navy/10 py-1.5`}
-                        value={openrouterModel}
-                        onChange={(e) => setOpenrouterModel(e.target.value)}
-                        onBlur={() => handleSaveModel('openrouter', openrouterModel)}
-                    />
-                 </div>
-                 
-                 <div className="grid grid-cols-2 gap-2">
-                    <button 
-                      onClick={() => handleTest('openrouter')} 
-                      disabled={isTesting !== null} 
-                      className={`w-full col-span-2 text-[9px] font-black p-2.5 rounded-xl border border-slate-200 flex items-center justify-center gap-2 transition-all ${isTesting === 'openrouter' ? 'bg-slate-100 text-slate-400' : 'bg-white hover:bg-slate-100 text-brand-navy hover:border-brand-navy/20 shadow-sm'}`}
-                    >
-                      {isTesting === 'openrouter' ? '測試連通性中...' : '测试連通性 / Test Connection'}
-                    </button>
-                 </div>
-             </div>
-          </div>
-
+          
+<OpenRouterConfigBlock 
+  keysStatus={keysStatus}
+  isEditingOpenRouter={isEditingOpenRouter}
+  setIsEditingOpenRouter={setIsEditingOpenRouter}
+  localOpenRouterKey={localOpenRouterKey}
+  setLocalOpenRouterKey={setLocalOpenRouterKey}
+  openrouterModel={openrouterModel}
+  setOpenrouterModel={setOpenrouterModel}
+  inputClass={inputClass}
+  saveKey={saveKey}
+  handleSaveModel={handleSaveModel}
+  handleTest={handleTest}
+  isSaving={isSaving}
+  isTesting={isTesting}
+  appLang={appLang}
+  t={t}
+/>
           {/* Gemini Config (Agnes) */}
-          <div className="space-y-4 p-5 rounded-3xl bg-blue-50/30 border border-blue-100">
-             <div className="flex items-center justify-between mb-4">
-                <div className="space-y-0.5">
-                   <h5 className="text-[10px] font-black text-blue-900 uppercase tracking-tight">Agnes AI</h5>
-                   <p className="text-[8px] text-blue-900/40 font-bold uppercase tracking-widest">集成原生引擎 / Native Engine</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {keysStatus.agnes && <div className="px-2 py-0.5 bg-blue-100 text-blue-600 rounded-full text-[8px] font-black uppercase">已激活</div>}
-                  <button 
-                    onClick={() => {
-                      setIsEditingAgnes(!isEditingAgnes);
-                      if (!isEditingAgnes && localAgnesKey === "••••••••••••••••") setLocalAgnesKey("");
-                    }}
-                    className={`text-[8px] font-black px-2 py-0.5 rounded-full transition-colors ${isEditingAgnes ? 'bg-slate-200 text-slate-600' : 'bg-blue-600 text-white'}`}
-                  >
-                    {isEditingAgnes ? translations[appLang as keyof typeof translations]?.cancel || '取消' : translations[appLang as keyof typeof translations]?.edit || '編輯'}
-                  </button>
-                </div>
-             </div>
-             
-             <div className="space-y-3">
-                 <div className="relative">
-                    <input
-                        type={isEditingAgnes ? "text" : "password"}
-                        placeholder="Agnes API Key (sk-...)"
-                        className={`${inputClass} h-10 font-mono w-full ${isEditingAgnes ? 'bg-white border-blue-300 ring-2 ring-blue-100' : 'bg-blue-50/50'} pr-16`}
-                        value={localAgnesKey}
-                        onChange={(e) => setLocalAgnesKey(e.target.value)}
-                        disabled={!isEditingAgnes}
-                    />
-                    {isEditingAgnes && (
-                      <button 
-                           onClick={() => saveKey('agnes', localAgnesKey)} 
-                           disabled={isSaving === 'agnes'}
-                           className="absolute right-1 top-1 py-1 px-4 bg-blue-600 text-white text-[10px] font-black rounded-lg shadow-sm hover:translate-y-[-1px] active:translate-y-[1px] transition-all disabled:opacity-50"
-                       >
-                           {isSaving === 'agnes' ? '..' : '保存'}
-                       </button>
-                    )}
-                 </div>
-                 
-                 <div className="space-y-1 mt-2 mb-2">
-                    <label className="text-[10px] font-bold text-blue-900/60 block">模型型号</label>
-                    <input
-                        type="text"
-                        placeholder="例如: gemini-2.0-flash-exp"
-                        className={`${inputClass} !h-8 text-[11px] w-full bg-white border-blue-900/10 py-1.5`}
-                        value={agnesModel}
-                        onChange={(e) => setAgnesModel(e.target.value)}
-                        onBlur={() => handleSaveModel('agnes', agnesModel)}
-                    />
-                 </div>
-                 
-                 <button 
-                    onClick={() => handleTest('agnes')} 
-                    disabled={isTesting !== null} 
-                    className={`w-full text-[9px] font-black p-2.5 transition-all rounded-xl border flex items-center justify-center gap-2 ${isTesting === 'agnes' ? 'bg-blue-50 text-blue-300 border-blue-100' : 'bg-white hover:bg-blue-50 border-blue-200 text-blue-700 shadow-sm active:scale-95'}`}
-                 >
-                   {isTesting === 'agnes' ? '測試連通性中...' : '测试连通性 / Test Connection'}
-                 </button>
-             </div>
-          </div>
+          
+<AgnesConfigBlock
+  keysStatus={keysStatus}
+  isEditingAgnes={isEditingAgnes}
+  setIsEditingAgnes={setIsEditingAgnes}
+  localAgnesKey={localAgnesKey}
+  setLocalAgnesKey={setLocalAgnesKey}
+  agnesModel={agnesModel}
+  setAgnesModel={setAgnesModel}
+  inputClass={inputClass}
+  saveKey={saveKey}
+  handleSaveModel={handleSaveModel}
+  handleTest={handleTest}
+  isSaving={isSaving}
+  isTesting={isTesting}
+  appLang={appLang}
+  t={t}
+/>
         </div>
       </div>
     </div>

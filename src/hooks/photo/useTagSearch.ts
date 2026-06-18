@@ -1,3 +1,4 @@
+import { STALE_TIMES } from '@/lib/query/config';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Tag } from '@/types';
@@ -17,6 +18,6 @@ export const useTagSearch = (keyword: string) => {
       return body.data as Tag[];
     },
     enabled: keyword.length >= 0, // Allow empty keyword for initial listing if needed, or set to > 0
-    staleTime: 1000 * 60, // 1 minute
+    staleTime: STALE_TIMES.SHORT
   });
 };

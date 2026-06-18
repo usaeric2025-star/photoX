@@ -1,3 +1,4 @@
+import { STALE_TIMES } from '@/lib/query/config';
 import React, { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { storage, STORAGE_KEYS } from '@/lib/storage';
@@ -33,7 +34,7 @@ export function useSettings() {
       }
       return data || storage.get(STORAGE_KEYS.SETTINGS, DEFAULT_SETTINGS);
     },
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIMES.SHORT,
     initialData: () => {
       const cached = storage.get<AppSettings | null>(STORAGE_KEYS.SETTINGS, null);
       if (cached && Object.keys(cached).length > 0) {
@@ -72,7 +73,7 @@ export function usePublicSettings() {
         return {} as AppSettings;
       }
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIMES.MEDIUM,
     retry: 2,
   });
 }

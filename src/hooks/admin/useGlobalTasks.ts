@@ -1,3 +1,4 @@
+import { STALE_TIMES } from '@/lib/query/config';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useEffect, useState } from 'react';
 import { useTasks } from '../core/useTasks';
@@ -36,7 +37,7 @@ export function useGlobalTasks() {
         const result = await res.json() as any;
         return (result && result.success && Array.isArray(result.data)) ? result.data : [];
       } catch (err) {
-        console.error('Failed to fetch maintenance jobs:', err);
+        logger.error('Failed to fetch maintenance jobs:', err);
         return [];
       }
     },
@@ -52,7 +53,7 @@ export function useGlobalTasks() {
       const isStatusScreen = ['/admin/tasks', '/admin/diagnostics', '/admin/diagnose', '/admin/history_maintenance'].includes(path);
       return (hasRunning || isStatusScreen) ? 5000 : false;
     },
-    staleTime: 4000, // Reuse caches up to 4 seconds to deduplicate simultaneous hooks
+    staleTime: STALE_TIMES.FAST
   });
 
   // 3. Adapter Logic: Transform to UnifiedTask

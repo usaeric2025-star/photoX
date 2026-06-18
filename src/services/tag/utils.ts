@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { Tag } from '@/types';
 import { batchCreateTags } from '@/services/tag/commands';
 
@@ -94,7 +95,7 @@ export const resolveTagIdsBatch = async (
       const result = await batchCreateTags(namesToCreate);
       Array.from(result.values()).forEach(id => resultIds.push(id));
     } catch (error) {
-      console.error('Failed to resolve tags batch:', error);
+      logger.error('Failed to resolve tags batch:', error);
     }
   }
   

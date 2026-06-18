@@ -13,7 +13,6 @@ import { Button } from '@/components/shared/Button';
 import { useUIStore } from '@/store/useUIStore';
 import { usePublicSettings } from '@/hooks/settings/useSettings';
 import { WhatsAppChoiceDialog } from '@/components/shared/WhatsAppChoiceDialog';
-import { PublicFloatingActions } from '@/components/photo/PublicFloatingActions';
 
 function PublicPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string) => void }) {
   return (
@@ -108,11 +107,6 @@ export function PublicGroupDetailPage() {
         <PublicPhotoGrid photos={photos} categories={categories} onPhotoClick={(id: string) => {
              setPhotoId(id);
         }} />
-
-        <PublicFloatingActions 
-          onScrollToTop={handleScrollToTop}
-          onWhatsAppClick={() => updateUI({ showWhatsAppChoice: true })}
-        />
       </div>
       <YarlLightbox
         open={lightboxOpen}

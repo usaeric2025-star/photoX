@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { createClient } from '@supabase/supabase-js';
 import { ErrorFactory } from './error/ErrorFactory';
 
@@ -27,7 +28,7 @@ const getEnv = (key: string, required: boolean = true): string => {
   }
   // 既没有 import.meta.env 也没有 process.env
   if (required) {
-    console.error(`❌ 环境变量 ${key} 未找到`);
+    logger.error(`❌ 环境变量 ${key} 未找到`);
   }
   return '';
 };

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import React from 'react';
 import { AdminPhotoGrid } from '@/components/photo/AdminPhotoGrid';
 import { useTranslation, useColumns, usePhotoGrid, useFilters } from '@/hooks';
@@ -28,7 +29,7 @@ export function AdminContainer() {
 
   const lightboxOpen = lightboxIndex !== -1;
   React.useEffect(() => {
-    console.log('[AdminContainer] lightboxOpen:', lightboxOpen, 'photoId:', filters.photoId, 'index:', lightboxIndex);
+    logger.debug('[AdminContainer] lightboxOpen:', lightboxOpen, 'photoId:', filters.photoId, 'index:', lightboxIndex);
   }, [lightboxOpen, filters.photoId, lightboxIndex]);
 
 

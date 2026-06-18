@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { storage } from '@/services/storage';
 
@@ -25,7 +26,7 @@ export function useLocalStorage<T = string>({
       const item = storage.getItem(key);
       return item !== null ? deserialize(item) : defaultValue;
     } catch (error) {
-      console.warn(`Error reading localStorage key "${key}":`, error);
+      logger.warn(`Error reading localStorage key "${key}":`, error);
       return defaultValue;
     }
   };
@@ -53,7 +54,7 @@ export function useLocalStorage<T = string>({
       const serialized = serialize(valueToStore);
       storage.setItem(key, serialized);
     } catch (error) {
-      console.warn(`[useLocalStorage] Error setting key "${key}":`, error);
+      logger.warn(`[useLocalStorage] Error setting key "${key}":`, error);
     }
   }, [key, serialize]);
 
@@ -62,7 +63,7 @@ export function useLocalStorage<T = string>({
       storage.remove(key);
       setValue(defaultValue);
     } catch (error) {
-      console.warn(`Error removing localStorage key "${key}":`, error);
+      logger.warn(`Error removing localStorage key "${key}":`, error);
     }
   }, [key, defaultValue]);
 
@@ -73,7 +74,7 @@ export function useLocalStorage<T = string>({
         try {
           setValue(deserialize(event.newValue));
         } catch (error) {
-          console.warn(`Error deserializing synced localStorage key "${key}":`, error);
+          logger.warn(`Error deserializing synced localStorage key "${key}":`, error);
         }
       } else if (event.key === key && event.newValue === null) {
         setValue(defaultValue);

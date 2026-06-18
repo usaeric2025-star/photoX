@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import * as thumbhash from 'thumbhash';
 
 /**
@@ -52,7 +53,7 @@ export async function generateThumbHash(source: File | string): Promise<string |
     // Convert to base64 for storage
     return btoa(String.fromCharCode(...binaryThumbHash));
   } catch (e) {
-    console.error('[ThumbHash] Generation failed:', e);
+    logger.error('[ThumbHash] Generation failed:', e);
     return null;
   }
 }

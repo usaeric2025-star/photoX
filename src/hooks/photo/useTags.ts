@@ -1,3 +1,4 @@
+import { STALE_TIMES } from '@/lib/query/config';
 import { createQuery } from '@/lib/query/queryFactory';
 import { loadTagsFromCloud } from '@/services/tag/queries';
 import { queryKeys } from '@/lib/query/keys';
@@ -9,7 +10,7 @@ import { CACHE_CONFIG } from '@/constants/config';
  */
 export const useTags = createQuery<Tag[]>({
   queryKey: () => queryKeys.tags.tags(),
-  staleTime: CACHE_CONFIG.STALE_TIME_5M,
+  staleTime: STALE_TIMES.MEDIUM,
   gcTime: CACHE_CONFIG.GC_TIME_30M,
   queryFn: async () => {
     return await loadTagsFromCloud();

@@ -2,8 +2,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { MutationConfig } from './types';
 import { logger } from '@/lib/logger';
-import { handleError } from '@/lib/error/ErrorFactory';
+import { ErrorFactory, handleError } from '@/lib/error/ErrorFactory';
 import { useUIStore } from '@/store/useUIStore';
+import { type } from 'arktype';
 
 // Client-side idempotency cache
 const ongoingRequests = new Map<string, Promise<unknown>>();
@@ -21,6 +22,14 @@ export const useOptimisticMutation = <
   
   return useMutation<TData, Error, TVariables, { previousData: Map<string, unknown> }>({
     mutationFn: async (vars: TVariables) => {
+      // Input verification with variablesSchema
+      if (config.variablesSchema) {
+        const check = config.variablesSchema(vars);
+        if (check instanceof type.errors) {
+          throw new Error(`[Mutation Inputs Contract Violated] ${config.name}: ${check.summary}`);
+        }
+      }
+
       // Idempotency Key logic
       const varsString = JSON.stringify(vars);
       const idempotencyKey = `${config.name}:${varsString}`;
@@ -64,9 +73,32 @@ export const useOptimisticMutation = <
 
         matchingQueries.forEach(([queryKey, data]) => {
           if (data) {
+            // P1: Validate existing data (for rollback) against schema if provided to prevent rolling back to or utilizing invalid data
+            if (config.schema) {
+              const checkPrev = config.schema(data);
+              if (checkPrev instanceof type.errors) {
+                logger.error(`[Optimistic Rollback Validation Failed] Current cache data for key ${JSON.stringify(queryKey)} violates contract schema:`, checkPrev.summary);
+                throw new Error(`[Optimistic Rollback Validation Failed] Cache data violates contract: ${checkPrev.summary}`);
+              }
+            }
+
             // Use stringified key to safely store in Map
             previousData.set(JSON.stringify(queryKey), data);
-            queryClient.setQueryData(queryKey, (old: unknown) => updateFn(old, vars, queryKey));
+            
+            queryClient.setQueryData(queryKey, (old: unknown) => {
+              const nextState = updateFn(old, vars, queryKey);
+              
+              // P1: Validate next state against schema if provided to head-off corrupting cache
+              if (config.schema) {
+                const checkNext = config.schema(nextState);
+                if (checkNext instanceof type.errors) {
+                  logger.error(`[Optimistic NextState Validation Failed] Next update state for key ${JSON.stringify(queryKey)} violates contract schema:`, checkNext.summary);
+                  throw new Error(`[Optimistic NextState Validation Failed] Next update state violates contract: ${checkNext.summary}`);
+                }
+              }
+              
+              return nextState;
+            });
           }
         });
       });
@@ -84,9 +116,10 @@ export const useOptimisticMutation = <
       
       const handled = config.onError?.(err, vars);
       if (!handled) {
-        // Global error logging and UI feedback
-        logger.error(`[Optimistic Mutation Failed] ${config.name}:`, err);
-        handleError(err, config.name);
+        // P0: Global error logging, automatic ErrorFactory wrapping, and diagnostics UI feedback
+        const wrappedError = ErrorFactory.wrap(err, config.name);
+        logger.error(`[Optimistic Mutation Failed] ${config.name}:`, wrappedError);
+        handleError(wrappedError, config.name, false);
       }
     },
     onSettled: (data: TData | undefined, err: Error | null, vars: TVariables) => {
@@ -111,3 +144,4 @@ export const useOptimisticMutation = <
     },
   });
 };
+

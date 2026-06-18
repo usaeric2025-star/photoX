@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import React from 'react';
 import { Trash2, Download, AlertCircle, AlertTriangle, Info, ShieldAlert, ChevronDown, ChevronUp, Copy } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -134,7 +135,7 @@ export const ErrorLogViewer = () => {
           }
       },
        onError: (err: Error) => {
-          console.error('[ErrorLogViewer] Clear failed:', err);
+          logger.error('[ErrorLogViewer] Clear failed:', err);
           showToast.error(`清除失败: ${err.message}`);
       }
   });

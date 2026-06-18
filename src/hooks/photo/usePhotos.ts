@@ -1,3 +1,4 @@
+import { STALE_TIMES } from '@/lib/query/config';
 import { createInfiniteQuery } from '@/lib/query/queryFactory';
 import { PhotoListItem, PhotoListItemSchema } from '@/types/api';
 import { api } from '@/lib/api';
@@ -83,6 +84,6 @@ export const usePhotos = createInfiniteQuery<
   },
   getNextPageParam: (lastPage) => lastPage.nextCursor || undefined,
   initialPageParam: null,
-  staleTime: 60 * 1000,
+  staleTime: STALE_TIMES.SHORT,
   placeholderData: keepPreviousData as never
 });

@@ -1,5 +1,5 @@
 import { useQuery, useInfiniteQuery, UseQueryOptions, UseInfiniteQueryOptions, UseQueryResult, UseInfiniteQueryResult, InfiniteData } from '@tanstack/react-query';
-import type { Type } from 'arktype';
+import { type, type Type } from 'arktype';
 
 /**
  * Standard Query Factory for PhotoX.
@@ -13,6 +13,7 @@ export function createQuery<TData, TVariables = void, TSchema extends Type = Typ
   staleTime?: number;
   gcTime?: number;
   schema?: TSchema;
+  variablesSchema?: Type; // Optional ArkType schema to constrain and validate query parameters/variables
 }) {
   return function useStandardQuery(variables: TVariables, options?: Partial<UseQueryOptions<TData>>) {
     // Handling the case where variables might be undefined/void but options are passed as first argument
@@ -20,6 +21,14 @@ export function createQuery<TData, TVariables = void, TSchema extends Type = Typ
       ? undefined as unknown as TVariables
       : variables;
     const actualOptions = actualVariables === undefined ? (variables as unknown as Partial<UseQueryOptions<TData>>) : options;
+
+    // Run-time query variables validation if variablesSchema is provided
+    if (config.variablesSchema && actualVariables !== undefined) {
+      const check = config.variablesSchema(actualVariables);
+      if (check instanceof type.errors) {
+        throw new Error(`[Query Variables Validation Failed]: ${check.summary}`);
+      }
+    }
 
     return useQuery<TData, Error, TData, readonly unknown[]>({
       queryKey: config.queryKey(actualVariables),
@@ -41,6 +50,7 @@ export function createQuery<TData, TVariables = void, TSchema extends Type = Typ
     });
   };
 }
+
 
 export function createInfiniteQuery<TData, TVariables = unknown, TPageParam = any, TResult = InfiniteData<TData, TPageParam>>(config: {
   queryKey: (variables: TVariables) => readonly unknown[];

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { showToast } from '@/lib/ui/toast';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
@@ -67,7 +68,7 @@ export async function downloadPhotoAsJpeg(url: string, filename?: string) {
     URL.revokeObjectURL(objectUrl);
     showToast.success('已开始下载', { id: toastId });
   } catch (error: unknown) {
-    console.error('Download failed:', error);
+    logger.error('Download failed:', error);
     const msg = error instanceof Error ? error.message : String(error);
     showToast.error(`下载失败: ${msg || '请尝试长按图片保存'}`, { id: toastId });
   }

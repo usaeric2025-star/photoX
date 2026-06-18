@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { showToast } from '@/lib/ui/toast';
 
 export interface CopyOptions {
@@ -27,7 +28,7 @@ export async function copyToClipboard(text: string, options?: CopyOptions): Prom
     }
     return true;
   } catch (err) {
-    console.error('Copy failed:', err);
+    logger.error('Copy failed:', err);
     showToast.error(options?.errorMessage || '複製失敗，請手動複製');
     return false;
   }

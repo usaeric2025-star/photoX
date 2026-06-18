@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useEffect } from 'react';
 
 /**
@@ -27,7 +28,7 @@ export const useScrollRestoration = (key: string = 'window_scroll_pos') => {
         }, 150); // slight delay to allow layout calculation
         return () => clearTimeout(timer);
       } catch (e) {
-        console.error('Error restoring scroll position:', e);
+        logger.error('Error restoring scroll position:', e);
       }
     }
     // @deps-contract: static=[key] dynamic=[]

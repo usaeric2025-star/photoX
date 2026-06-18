@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 
 
 import { storage } from '@/services/storage';
@@ -31,7 +32,7 @@ export const perfAudit = {
       
       storage.setItem(STORAGE_KEY, JSON.stringify(incidents));
     } catch (e) {
-      console.warn('[PerfAudit] Failed to record incident:', e);
+      logger.warn('[PerfAudit] Failed to record incident:', e);
     }
   },
 

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { create } from 'zustand';
 import { User } from '@/types';
 import { supabase } from '@/lib/supabase';
@@ -37,7 +38,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ user: null, isLoading: false });
       }
     } catch (e) {
-      console.error('❌ [Auth] Initialization failed:', e);
+      logger.error('❌ [Auth] Initialization failed:', e);
       set({ user: null, isLoading: false });
     }
   },

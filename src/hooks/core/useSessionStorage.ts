@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect, useCallback } from 'react';
 
 /**
@@ -20,7 +21,7 @@ export function useSessionStorage<T = string>(options: {
       const item = window.sessionStorage.getItem(key);
       return item ? (JSON.parse(item) as T) : defaultValue;
     } catch (error) {
-      console.warn(`Error reading sessionStorage key "${key}":`, error);
+      logger.warn(`Error reading sessionStorage key "${key}":`, error);
       return defaultValue;
     }
   };
@@ -46,7 +47,7 @@ export function useSessionStorage<T = string>(options: {
           window.sessionStorage.setItem(key, JSON.stringify(valueToStore));
         }
       } catch (error) {
-        console.warn(`Error setting sessionStorage key "${key}":`, error);
+        logger.warn(`Error setting sessionStorage key "${key}":`, error);
       }
   };
 
@@ -57,7 +58,7 @@ export function useSessionStorage<T = string>(options: {
       }
       setState(defaultValue);
     } catch (error) {
-      console.warn(`Error removing sessionStorage key "${key}":`, error);
+      logger.warn(`Error removing sessionStorage key "${key}":`, error);
     }
   };
 

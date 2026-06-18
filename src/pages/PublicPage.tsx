@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import React from 'react';
 import { useFilters } from '@/hooks/useFilters';
 import { useTranslation, usePhotoGrid, usePublicSettings } from '@/hooks';
@@ -9,7 +10,6 @@ import { useColumns } from '@/features/layout/hooks/useColumns';
 import { LazyYarlLightbox } from '@/features/lightbox/LazyYarlLightbox';
 import { useUIStore } from '@/store/useUIStore';
 import { WhatsAppChoiceDialog } from '@/components/shared/WhatsAppChoiceDialog';
-import { PublicFloatingActions } from '@/components/photo/PublicFloatingActions';
 import { PhotoErrorDisplay } from '@/components/photo/PhotoErrorDisplay';
 
 export default function PublicPage() {
@@ -67,10 +67,10 @@ export default function PublicPage() {
       tags
     };
     setDebugInfo(info);
-    console.log('[Diagnostic] PublicPage Check:', info);
+    logger.debug('[Diagnostic] PublicPage Check:', info);
     
     if (isError) {
-      console.error('[Diagnostic] PublicPage Error:', error);
+      logger.error('[Diagnostic] PublicPage Error:', error);
     }
   }, [photos, totalCount, isFetching, photoGridData.isPending, isError, error, settings, category, tags, search]);
 
@@ -140,7 +140,7 @@ export default function PublicPage() {
   }
 
   return (
-    <div className="flex flex-col h-full w-full bg-slate-50" id="public-view">
+    <div className="flex flex-col h-full min-h-screen w-full bg-slate-50 relative" id="public-view">
       <PublicHeader 
         totalCount={totalCount}
         onRefresh={handleRefresh}
@@ -155,11 +155,6 @@ export default function PublicPage() {
             filters={{ category, tags, search, sort, showGroupsCollapsed }}
           />
         </ErrorBoundary>
-        
-        <PublicFloatingActions 
-          onScrollToTop={() => {}} 
-          onWhatsAppClick={() => updateUI({ showWhatsAppChoice: true })}
-        />
       </div>
       
       <LazyYarlLightbox
@@ -178,13 +173,6 @@ export default function PublicPage() {
         labels={t}
       />
       
-      {/* 诊断信息悬浮层 (仅限于调试 URL 时显示 或 常驻便于排查) */}
-      <div className="fixed bottom-4 left-4 z-[9999] bg-black/80 text-green-400 font-mono text-xs p-4 rounded-lg pointer-events-none max-w-sm overflow-hidden break-all shadow-xl">
-        <h3 className="text-white font-bold mb-2 border-b border-white/20 pb-1">Public Page Diagnostics</h3>
-        <pre className="whitespace-pre-wrap">
-          {JSON.stringify(debugInfo, null, 2)}
-        </pre>
-      </div>
     </div>
   );
 }

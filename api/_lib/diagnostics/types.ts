@@ -44,7 +44,7 @@ export interface ManufacturerRecord extends DBRecord {
 
 export interface PhotoTagRecord extends DBRecord {
   photo_id: string;
-  tag_id: string;
+  tag_id: string | number;
 }
 
 export interface DiagnosticContext {

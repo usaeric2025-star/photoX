@@ -1,3 +1,4 @@
+import { STALE_TIMES } from '@/lib/query/config';
 import { createQuery } from '@/lib/query/queryFactory';
 import { loadManufacturersFromCloud } from '@/services/manufacturer/queries';
 import { queryKeys } from '@/lib/query/keys';
@@ -11,5 +12,5 @@ export const useManufacturers = createQuery<Manufacturer[]>({
   queryFn: async () => {
     return await loadManufacturersFromCloud();
   },
-  staleTime: 24 * 60 * 60 * 1000, // Infinity-like for mfrs
+  staleTime: STALE_TIMES.INFINITY
 });

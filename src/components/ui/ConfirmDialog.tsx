@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import * as React from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { useUIStore } from '@/store/useUIStore';
@@ -29,7 +30,7 @@ export const ConfirmDialog = ({
     try {
       await onConfirm();
     } catch (e) {
-      console.error("[ConfirmDialog] execution failed:", e);
+      logger.error("[ConfirmDialog] execution failed:", e);
     } finally {
       onOpenChange(false);
     }

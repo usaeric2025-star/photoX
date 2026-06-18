@@ -26,7 +26,8 @@ async function bootstrap() {
     const honoListener = getRequestListener(app.fetch);
 
     const server = createServer(async (req, res) => {
-      if (req.url?.startsWith("/api/")) {
+      const isApiRequest = req.url?.startsWith("/api/") && !req.url.startsWith("/api/_shared");
+      if (isApiRequest) {
         try {
           return honoListener(req, res);
         } catch (err) {

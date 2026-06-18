@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { AppError, ErrorSeverity, isAppError, ErrorFactory } from './ErrorFactory'
 import * as Sentry from '@sentry/react'
 import { clientEnv } from '@/shared/envSchema'
@@ -21,7 +22,7 @@ function handleReportFailure(error: unknown): void {
     console.debug('[ErrorReporter] 日誌上報網路失敗，已忽略')
     return
   }
-  console.error('[ErrorReporter] 日誌上報 API 失敗:', error)
+  logger.error('[ErrorReporter] 日誌上報 API 失敗:', error)
 }
 
 function safeJsonStringify(obj: unknown): string {
@@ -29,7 +30,7 @@ function safeJsonStringify(obj: unknown): string {
     return JSON.stringify(obj);
   } catch (e) {
     // If circular reference or other error, try a simpler approach or return fallback
-    console.warn('[ErrorReporter] 序列化日誌數據失敗，正在使用降級方案:', e);
+    logger.warn('[ErrorReporter] 序列化日誌數據失敗，正在使用降級方案:', e);
     
     // Simple depth-limited or circular-safe stringifier (basic version)
     const cache = new Set();
@@ -119,7 +120,7 @@ export const logError = async (error: Error | unknown, context: EventContext) =>
 
   if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
     console.group(`%c🔴 [ERROR] ${context.action}`, `color: #ef4444; font-weight: bold;`);
-    console.error(normError);
+    logger.error(normError);
     console.groupEnd();
   }
   
@@ -148,7 +149,7 @@ export const logError = async (error: Error | unknown, context: EventContext) =>
       })
     });
   } catch (e) {
-    console.error('[logService] Failed to send log to API:', e);
+    logger.error('[logService] Failed to send log to API:', e);
   }
 }
 
@@ -174,6 +175,6 @@ export const logResult = async (context: EventContext, type: 'error' | 'success'
       })
     });
   } catch (e) {
-    console.error('[logService] Failed to send log result to API:', e);
+    logger.error('[logService] Failed to send log result to API:', e);
   }
 }

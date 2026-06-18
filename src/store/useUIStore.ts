@@ -60,6 +60,8 @@ export interface UIStoreState {
   newPhotoData: string | null;
   processingIds: string[];
   activeDialogCount: number;
+  fatalError: Error | null;
+  setFatalError: (error: Error | null) => void;
   
   // Interaction state
   selectedIds: string[];
@@ -157,6 +159,8 @@ export const useUIStore = create<UIStoreState>()((set) => ({
   showWhatsAppChoice: false,
   newPhotoData: null,
   activeDialogCount: 0,
+  fatalError: null,
+  setFatalError: (error) => set({ fatalError: error }),
   incrementDialogCount: () => set((state) => ({ activeDialogCount: state.activeDialogCount + 1 })),
   decrementDialogCount: () => set((state) => ({ activeDialogCount: Math.max(0, state.activeDialogCount - 1) })),
   update: (updates) => set((state) => {

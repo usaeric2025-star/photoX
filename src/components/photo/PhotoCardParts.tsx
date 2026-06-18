@@ -28,7 +28,7 @@ export const PhotoStatusBadges = ({
   const isCover = !!photo.isCover;
 
   return (
-    <div className="absolute top-1.5 left-1.5 flex flex-col items-start gap-1 pointer-events-none select-none z-30">
+    <div className="absolute top-1.5 left-1.5 flex flex-col items-start gap-1 pointer-events-none select-none">
       {/* Group Badge - Optimized: only show count, remove UUID-like code as per user request */}
       {shouldShowGroup && (
         <div className={cn(
@@ -73,7 +73,7 @@ export const PhotoCardInfo = ({
   if (hideDetails) return null;
 
   return (
-    <div className="absolute inset-x-0 bottom-0 p-2 sm:p-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20">
+    <div className="absolute inset-x-0 bottom-0 p-2 sm:p-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
       {photoTags && photoTags.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {photoTags.map(tag => (
@@ -95,7 +95,7 @@ export const PhotoCardInfo = ({
  */
 export const PhotoSelectionIndicator = ({ isSelected }: { isSelected: boolean }) => (
   <div className={cn(
-    "absolute top-2 right-2 w-5 h-5 rounded-full border-2 transition-all duration-300 flex items-center justify-center z-40",
+    "absolute top-2 right-2 w-5 h-5 rounded-full border-2 transition-all duration-300 flex items-center justify-center",
     isSelected 
       ? "bg-blue-500 border-blue-500 scale-110 shadow-lg shadow-blue-500/50" 
       : "bg-black/20 border-white/50 opacity-0 group-hover:opacity-100"

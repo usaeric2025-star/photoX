@@ -21,7 +21,7 @@ export function FilterBar({ mode }: FilterBarProps) {
   const [isExpanded, setIsExpanded] = useState(!isAdmin); // Public always expanded by default
 
   return (
-    <div className={cn("sticky top-0 z-10 border-b bg-white")}>
+    <div className="flex-shrink-0 border-b bg-white">
       <div className="flex gap-2 items-center p-4 pb-3">
         <div className="flex-1">
           <SearchInput />

@@ -1,3 +1,4 @@
+import { STALE_TIMES } from '@/lib/query/config';
 import { createQuery } from '@/lib/query/queryFactory';
 import { loadCategoriesFromCloud } from '@/services/category/queries';
 import { queryKeys } from '@/lib/query/keys';
@@ -8,7 +9,7 @@ import { Category } from '@/types';
  */
 export const useCategories = createQuery<Category[]>({
   queryKey: () => queryKeys.categories.public(),
-  staleTime: 1000 * 60 * 5, // 5 minutes (more responsive)
+  staleTime: STALE_TIMES.SHORT* 5, // 5 minutes (more responsive)
   gcTime: 1000 * 60 * 30, // 30 minutes
   queryFn: async () => {
     const cats = await loadCategoriesFromCloud();

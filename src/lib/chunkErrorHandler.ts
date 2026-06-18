@@ -23,13 +23,13 @@ export function setupChunkErrorHandler(router: Router<any>) {
     const reloadCount = Number(sessionStorage.getItem(RELOAD_COUNT_KEY) || '0')
     
     if (reloadCount >= MAX_RELOADS) {
-      console.error('[Chunk] 多次刷新仍失敗，停止自動恢復')
+      logger.error('[Chunk] 多次刷新仍失敗，停止自動恢復')
       showFallbackErrorPage()
       return
     }
 
     sessionStorage.setItem(RELOAD_COUNT_KEY, String(reloadCount + 1))
-    console.warn(`[Chunk] 第 ${reloadCount + 1} 次自動恢復中...`)
+    logger.warn(`[Chunk] 第 ${reloadCount + 1} 次自動恢復中...`)
 
     await clearCaches()
 
@@ -43,7 +43,7 @@ export function setupChunkErrorHandler(router: Router<any>) {
       logger.debug('[Chunk] 軟導航成功，狀態已完整保留')
       clearChunkReloadCount()
     } catch (softError) {
-      console.warn('[Chunk] 軟導航失敗，嘗試硬刷新', softError)
+      logger.warn('[Chunk] 軟導航失敗，嘗試硬刷新', softError)
       setTimeout(() => window.location.reload(), 100)
     }
   })
@@ -55,7 +55,7 @@ async function clearCaches() {
       const registrations = await navigator.serviceWorker.getRegistrations()
       await Promise.all(registrations.map(reg => reg.unregister()))
     } catch (e) {
-      console.warn('[Chunk] Service Worker 清理失敗', e)
+      logger.warn('[Chunk] Service Worker 清理失敗', e)
     }
   }
   
@@ -64,7 +64,7 @@ async function clearCaches() {
       const keys = await caches.keys()
       await Promise.all(keys.map(key => caches.delete(key)))
     } catch (e) {
-      console.warn('[Chunk] Cache API 清理失敗', e)
+      logger.warn('[Chunk] Cache API 清理失敗', e)
     }
   }
 }

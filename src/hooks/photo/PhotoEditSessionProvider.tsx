@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { createContext, useCallback, useContext } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { arktypeResolver } from '@hookform/resolvers/arktype';
@@ -48,7 +49,7 @@ export const PhotoEditSessionProvider = ({
     const valid = await form.trigger();
     if (!valid) {
       const errors = form.formState.errors;
-      console.warn('[PhotoEdit] Form Validation Failed:', errors);
+      logger.warn('[PhotoEdit] Form Validation Failed:', errors);
       const firstError = Object.values(errors)[0];
       const message = firstError?.message?.toString() || '表单验证失败，请检查必填项 / Validation Failed';
       showToast.error(message);
@@ -71,7 +72,7 @@ export const PhotoEditSessionProvider = ({
       });
       onSuccess?.();
     } catch (err: unknown) {
-      console.error('[PhotoEdit] Commit failed:', err);
+      logger.error('[PhotoEdit] Commit failed:', err);
       const typedErr = err instanceof Error ? err : new Error(String(err));
       // Construct a copyable error summary
       const errorData = {

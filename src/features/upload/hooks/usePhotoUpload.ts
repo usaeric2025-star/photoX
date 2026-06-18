@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useAuthStore } from '@/store/useAuthStore';
 import { generateId } from '@/lib/id';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
@@ -83,7 +84,7 @@ export function usePhotoUpload() {
               successCount++;
           }
         } catch (err: unknown) {
-          console.error(`[Upload] Failed for ${file.name}:`, err);
+          logger.error(`[Upload] Failed for ${file.name}:`, err);
           // remove from lock
           const { removeFromDuplicateCache } = await import('@/services/photo/duplicateCheck');
           // Note: we can't easily get the hash here if processImageFile failed, but we can pass file

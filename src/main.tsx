@@ -31,6 +31,7 @@ import { TaskProvider } from '@/hooks';
 import { logError } from './lib/error/errorReporter';
 import { queryClient } from './lib/queryClient';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
+import { FatalErrorOverlay } from '@/components/shared/FatalErrorOverlay';
 import { logger } from './lib/logger';
 import './index.css';
 import { clientEnv } from './shared/envSchema';
@@ -38,6 +39,7 @@ import { clientEnv } from './shared/envSchema';
 import { router } from './router/index';
 import { initChunkHandler } from '@/lib/chunkErrorHandler';
 import { dailyWorker } from '@/features/diagnostics/DailyWorker';
+import { useUIStore } from '@/store/useUIStore';
 
 logger.debug('[Sentry Initialization check] VITE_SENTRY_DSN:', import.meta.env.VITE_SENTRY_DSN, 'clientEnv:', clientEnv.VITE_SENTRY_DSN);
 
@@ -143,15 +145,15 @@ async function init() {
     const root = createRoot(container, {
       onCaughtError: (error, errorInfo) => {
         if (/chunk|dynamically imported|module script/i.test((error as Error)?.message || '')) return;
-        logError(error, { action: 'React Caught Error', component: errorInfo.componentStack?.slice(0, 200) || 'Unknown', kind: 'UNKNOWN' });
+        useUIStore.getState().setFatalError(error instanceof Error ? error : new Error(String(error)));
       },
       onUncaughtError: (error) => {
         if (/chunk|dynamically imported|module script/i.test((error as Error)?.message || '')) return;
-        logError(error, { action: 'React Uncaught Error', component: 'Root', kind: 'UNKNOWN' });
+        useUIStore.getState().setFatalError(error instanceof Error ? error : new Error(String(error)));
       },
       onRecoverableError: (error) => {
         if (/chunk|dynamically imported|module script/i.test((error as Error)?.message || '')) return;
-        logError(error, { action: 'React Recoverable Error', component: 'Root', kind: 'UNKNOWN' });
+        // ignore recoverable
       },
     });
     
@@ -163,6 +165,7 @@ async function init() {
           <TaskProvider>
             <ErrorBoundary>
               <App />
+              <FatalErrorOverlay />
               <Analytics />
             </ErrorBoundary>
           </TaskProvider>

@@ -1,3 +1,4 @@
+import { STALE_TIMES } from '@/lib/query/config';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { PhotoAIResult } from '@/types';
@@ -19,6 +20,6 @@ export const usePhotoAIResult = (photoId: string) => {
       return data.data;
     },
     enabled: !!photoId,
-    staleTime: 5 * 1000, // Keep stale time low so it updates immediately when newly processed
+    staleTime: STALE_TIMES.PHOTO_LIST
   });
 };

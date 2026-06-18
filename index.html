@@ -11,24 +11,11 @@
     <title>photoX</title>
   </head>
   <body>
-    <div id="fatal-error" style="display:none; background:red; color:white; padding:20px; position:fixed; top:0; left:0; right:0; z-index:99999;">
-      發生嚴重錯誤：<span id="fatal-error-msg"></span>
-    </div>
-    <script>
-      window.onerror = function(msg, url, line) {
-        var el = document.getElementById('fatal-error');
-        if (el) {
-          el.style.display = 'block';
-          document.getElementById('fatal-error-msg').innerText = msg + ' (line ' + line + ')';
-        }
-      };
-    </script>
     <style>
       #app-startup-skeleton {
-        position: fixed;
-        inset: 0;
+        width: 100%;
+        height: 100vh;
         background-color: #ffffff;
-        z-index: 9999;
         display: flex;
         flex-direction: column;
         transition: opacity 0.3s ease-out;
@@ -67,26 +54,21 @@
         100% { opacity: 0.6; }
       }
     </style>
-    <div id="app-startup-skeleton">
-      <div class="skeleton-header">
-        <div class="skeleton-logo"></div>
-      </div>
-      <div class="skeleton-grid">
-        <div class="skeleton-item"></div>
-        <div class="skeleton-item"></div>
-        <div class="skeleton-item"></div>
-        <div class="skeleton-item"></div>
-        <div class="skeleton-item"></div>
-        <div class="skeleton-item"></div>
-        <div class="skeleton-item"></div>
-        <div class="skeleton-item"></div>
-        <div class="skeleton-item"></div>
-        <div class="skeleton-item"></div>
-        <div class="skeleton-item"></div>
-        <div class="skeleton-item"></div>
+    <div id="root">
+      <div id="app-startup-skeleton">
+        <div class="skeleton-header">
+          <div class="skeleton-logo"></div>
+        </div>
+        <div class="skeleton-grid">
+          <div class="skeleton-item"></div><div class="skeleton-item"></div>
+          <div class="skeleton-item"></div><div class="skeleton-item"></div>
+          <div class="skeleton-item"></div><div class="skeleton-item"></div>
+          <div class="skeleton-item"></div><div class="skeleton-item"></div>
+          <div class="skeleton-item"></div><div class="skeleton-item"></div>
+          <div class="skeleton-item"></div><div class="skeleton-item"></div>
+        </div>
       </div>
     </div>
-    <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

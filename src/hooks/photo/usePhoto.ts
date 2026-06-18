@@ -1,3 +1,4 @@
+import { STALE_TIMES } from '@/lib/query/config';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query/keys';
 import { Photo } from '@/types';
@@ -58,7 +59,7 @@ export const usePhoto = (photoId: string) => {
         }
         return latestUpdates > 0 ? latestUpdates : undefined;
     },
-    staleTime: 0, // Always ensure we fetch the latest when opening
+    staleTime: STALE_TIMES.REALTIME,
     refetchOnMount: true,
     refetchOnWindowFocus: true,
   });

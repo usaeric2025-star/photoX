@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
 import { DB_CONFIG } from '@/constants/config';
 import { Photo } from '@/types';
@@ -69,7 +70,7 @@ export const checkDuplicate = async (
       return { isDuplicate: true, existingId: data.id };
     }
   } catch (error) {
-    console.warn('DB check timeout or error, proceeding with caution', error);
+    logger.warn('DB check timeout or error, proceeding with caution', error);
   }
 
   // Mark as processing

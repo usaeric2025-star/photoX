@@ -324,6 +324,7 @@ export const PhotoSchema = type({
 ### 禁止事项
 - ❌ 禁止从 `api/` 导入 `src/` 下的文件
 - ❌ 禁止用 Vite 打包后端代码
+- ✅ **前端導入阻斷（編譯器級防護）**：必須在根 `tsconfig.json` 的 `paths` 中將 `../../api/*` 指向無效路徑（例如 `"./NON_EXISTENT_PATH/*"`），徹底從編譯期阻斷前端程式碼導入後端 API，避免 ESLint 註釋被繞過。但必須允許共享類型導入（如 `api/app` 與 `api/_shared/*`）。
 
 ## Vercel 函数导出规则（锁定，2026-06-02）
 
@@ -626,6 +627,8 @@ toast.error('发现数据完整性问题', {
 - ✅ **全量包裹**：所有主要页面和 App 根组件必须包裹 `ErrorBoundary`。
 - ✅ **数据韧性**：所有关键数据查询必须处理 `isLoading` / `isError` 状态，禁止在数据缺失时读取属性。
 - ✅ **友好反馈**：发生致命错误时必须提供「刷新」或「返回首页」的交互入口。
+- ✅ **致命錯誤全局狀態**：React root (`main.tsx`) 的 `onUncaughtError` 必須依賴 Zustand 全局狀態觸發 `<FatalErrorOverlay />`，保留 DOM 結構，以防 Sentry 上下文或追蹤被 innerHTML 覆寫破壞。
+- ❌ **禁止超時誤殺**：禁止使用 `setTimeout` 或前端啟動時間硬超時。真正的致命錯誤應由 ErrorBoundary 或 React root 捕獲事件觸發。
 
 ### 2. 场景化降级
 - ✅ **灯箱缺失**：若 `photoId` 指向的照片不存在或加载失败，必须显示 `LightboxFallback`。
@@ -729,35 +732,35 @@ toast.error('发现数据完整性问题', {
 
 ## 错误处理与 Mutation 规范（锁定）
 - ❌ 禁止直接 `throw new Error()`，必须用 `ErrorFactory.wrap()`。
-- ❌ 禁止在组件中直接使用 `useMutation`，必须用 `mutations/*` 下的工厂生成。
-- ✅ 所有 Mutation 必须通过 `createMutationHook` 工厂生成。
-- ✅ 声明式失效：必须通过 `invalidateKeys` 配置缓存失效，禁止在 `onSuccess` 中手动调用 `invalidateQueries`（除非有复杂的动态逻辑）。
+- ❌ 禁止在组件中直接使用 `useMutation`，必须用 `mutations/*` 下的工厂及 `useOptimisticMutation` 生成。
+- ✅ 所有 Mutation 配置文件必须通过 `defineMutation` 定义其配置，并使用 `useOptimisticMutation` 生成 Hook。
+- ✅ 声明式失效：必须通过 `invalidate` 配置缓存失效，禁止在 `onSuccess` 中手动调用 `invalidateQueries`（除非有复杂的动态逻辑）。
 - ✅ 降维打击：删除/移动操作必须同时失效所有相关实体的 key（例如 `deleteGroup` 必须失效 `groupKeys.all` 和 `photoKeys.all`）。
-- ✅ 服务器端错误统一通过工厂 onError 报告（Toast + 上报）。
+- ✅ 默认无需手写错误提示：Factory 在 `onError` 中自动执行 `ErrorFactory.wrap()` + `handleError()` 弹出带诊断信息的一键复制 Toast（P0 落地），只有当 `onError` 返回 `true` 时才会抑制全局错误弹出。
 - ✅ 组件层调用 mutateAsync 时必须包裹 try/catch，仅用于控制 UI 流程（如关闭弹窗），禁止在 catch 中执行任何错误提示操作。
 
 
 ## 异步任务架构规范（锁定）
 
 ### 职责分层
-- **createMutation 工厂**：原子写操作（API 调用 + 缓存失效 + 错误处理 + Toast）
+- **defineMutation 配置**：原子写操作（API 调用 + 缓存失效（invalidate） + 全局自动错误处理与 Toast（P0） + 声明式乐观更新 + 契约自校验（P1））
 - **useTaskExecutor**：流程编排（进度追蹤 + 并发控制 + 重试 + 任务队列 UI）
 
 ### 组合规则
 - ✅ TaskExecutor 内部调用的业务逻辑必须封装为标准 Mutation
 - ✅ TaskExecutor 使用 `mutateAsync` 调用 Mutation
 - ❌ 禁止在 TaskExecutor 中直接调用 service/API 函数
-- ❌ 禁止用 createMutation 替换 TaskExecutor（两者职责不同）
+- ❌ 禁止用 defineMutation/useOptimisticMutation 替换 TaskExecutor（两者职责不同）
 
 ### 错误处理
-- Mutation 负责 Toast + 日志
+- Mutation/Factory 负责自動 Toast + 日志 (P0)
 - TaskExecutor 负责更新任务状态 UI（不重复 Toast）
 
 ## React 19 Hooks 使用規範（鎖定）
 
 ### ❌ 禁止使用
 
-- `useOptimistic`：樂觀更新統一使用 `createMutation` 工廠的 `optimisticUpdate`
+- `useOptimistic`：樂觀更新統一使用 `useOptimisticMutation` 搭配 `defineMutation` 配置中的 `optimistic` 函數與可靠的 `schema` 契約校驗 (P1)
 - `useActionState`：表單狀態統一使用 `useMutation` + 本地狀態
 - `useFormStatus`：表單提交狀態統一使用 `useTaskExecutor` 或元件本地 `useState`
 
@@ -777,10 +780,10 @@ toast.error('发现数据完整性问题', {
 
 | 領域 | 鎖定方案 | 禁用/棄用方案 |
 |------|----------|----------------|
-| 樂觀更新 | ✅ `createMutation` 工廠 | ❌ `useOptimistic` |
+| 樂觀更新 | ✅ `defineMutation` + `useOptimisticMutation` | ❌ `useOptimistic` |
 | 表單狀態 | ✅ `useMutation` + 本地狀態 | ❌ `useActionState` |
 | 表單提交狀態 | ✅ `useState` 或 `useTaskExecutor` | ❌ `useFormStatus` |
-| 數據獲取 | ✅ TanStack `useQuery` | ❌ `useEffect` + `fetch` |
+| 數據獲取 | ✅ TanStack `useQuery` (配合 `createQuery`) | ❌ `useEffect` + `fetch` |
 | 跨元件儲存 | ✅ Mantine `useLocalStorage` | ❌ 手寫 `localStorage` (React 內) |
 | API 調用 | ✅ Hono RPC (`api.*.$post`) | ❌ 手寫 `fetch('/api/...')` |
 | 篩選狀態 | ✅ URL Filters (`useUrlFilters`) | ❌ Zustand filter store |
@@ -801,39 +804,80 @@ toast.error('发现数据完整性问题', {
 ### 故障排查
 - 报错 `Could not find 'name_en' column` → 检查代码是否错误写入了 `name_en`
 
-## 乐观更新规范（锁定）
+## 乐观更新与工厂安全校验规范（锁定）
 
-### ✅ 正确做法
+### ✅ 統一黃金範例 (Golden Examples)
 
-使用 `createMutation` 工厂的 `optimisticUpdate` 参数：
-
+#### 1. defineMutation 寫入配置 (包含自動錯誤、樂觀更新與雙重契約校驗 [P0] [P1]):
 ```typescript
-const deleteMutation = createMutation({
-  mutationFn: (id) => api.deletePhoto(id),
-  queryKey: ['photos'],  // 自动快取管理
-  optimisticUpdate: (oldData, id) => oldData?.filter(p => p.id !== id),
+import { type } from "arktype";
+import { defineMutation } from "@/lib/mutations/defineMutation";
+
+// 定義資料契約
+export const TodoSchema = type({
+  id: "string",
+  title: "string",
+  completed: "boolean"
+});
+
+export const editTodoConfig = defineMutation({
+  name: "editTodo",
+  // P2: 可選輸入契約校驗
+  variablesSchema: type({ id: "string", title: "string" }),
+  service: async ({ id, title }) => {
+    return await api.updateTodo(id, { title });
+  },
+  invalidate: (data, vars) => [todoKeys.all, todoKeys.detail(vars.id)],
+  // P1: 回滾與更新契約自校驗
+  schema: TodoSchema, 
+  optimistic: (oldData, vars) => {
+    // 執行樂觀更新
+    return { ...(oldData as any), title: vars.title };
+  },
+  successMessage: "更新成功",
+  // 不需要手寫 catch 或 onError 包羅萬象的捕捉，P0 自動在底層進行 ErrorFactory.wrap + handleError
 });
 ```
 
-工厂自动处理：
+#### 2. createQuery 讀取配置 (包含 TVariables compile-time & run-time type safety [P2]):
+```typescript
+import { type } from "arktype";
+import { createQuery } from "@/lib/query/queryFactory";
 
-· onMutate：保存快照、执行乐观更新
-· onError：还原快照、critical 上报、持久化横幅
-· onSettled：失效快取
+export const FilterSchema = type({
+  mode: "'public' | 'admin'",
+  "limit?": "number"
+});
 
-❌ 禁止项
+export const usePhotosQuery = createQuery({
+  queryKey: (filters) => queryKeys.photos.infinite(filters),
+  queryFn: (filters) => api.getPhotos(filters),
+  // P2: 綁定 ArkType Schema 進行輸入引數嚴格驗證和編譯攔截
+  variablesSchema: FilterSchema,
+  schema: type("Photo[]"), // 快取資料傳回契約校驗
+  staleTime: STALE_TIMES.FAST
+});
+```
 
-· 禁止手动编写 onMutate / onError 的快照管理逻辑
-· 禁止使用 React 19 useOptimistic（破坏 Query Cache 全局一致性）
-· 禁止两套乐观更新机制共存
+### 核心原則
 
-📌 特殊情况
+· onMutate：自動保存快照、執行 `config.schema` 二次驗證（上游與樂觀資料，P1），防止靜默故障與快取汙染。
+· onError：自動恢復快照、**P0 自動執行 ErrorFactory.wrap 並且上報 log 且彈跳帶診斷複製的 Toast**，除非 onError 回傳 true 進行手動抑制。
+· onSettled：自動失效快取與清理 lock / UI state。
 
-如果 queryKey 需要根据 variables 动态决定（如精确失效单笔资料）：
+❌ 禁止項
+
+· 禁止手動編寫 onMutate / onError 的快照備份還原與手動 ErrorFactory 捕捉。
+· 禁止使用 React 19 useOptimistic（破壞 Query Cache 全局一致性）。
+· 禁止兩套樂觀更新機制共存。
+
+📌 特殊情況
+
+如果 queryKey 需要根據 variables 動態決定（如精確失效單筆資料）：
 
 ```typescript
-queryKey: (id) => ['photos', id],  // 支持函数形式
-optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
+queryKey: (id) => ['photos', id],  // 支持函數形式
+optimistic: (oldData, vars, queryKey) => ({ ...(oldData as any), remains: false }),
 ```
 
 ## 例外情况说明（锁定，2026-06-05）
@@ -903,7 +947,7 @@ optimisticUpdate: (oldData, id) => ({ ...oldData, isDeleted: true }),
 ## 架构极致化规范（锁定）
 
 ### Mutation
-- ✅ 所有写操作必须使用 `createMutation` 工厂
+- ✅ 所有写操作配置文件必须使用 `defineMutation` 进行规范声明，并通过 `useOptimisticMutation` 生成 Hook 供组件消费。
 - ❌ 禁止直接使用 `useMutation`
 
 ### 快取更新（铁律）

@@ -8,7 +8,10 @@
     "strict": true,
     "paths": {
       "@/*": ["./src/*"],
-      "@api/*": ["./api/*"]
+      "../../api/*": ["./NON_EXISTENT_PATH_TO_BLOCK_FRONTEND_IMPORTS/*"],
+      "../../../api/*": ["./NON_EXISTENT_PATH_TO_BLOCK_FRONTEND_IMPORTS/*"],
+      "../../api/app": ["./api/app.ts"],
+      "../../../api/_shared/*": ["./api/_shared/*"]
     },
     "rootDir": "./",
     "jsx": "react-jsx",

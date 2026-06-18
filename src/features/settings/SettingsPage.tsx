@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import { useLocation } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
@@ -132,7 +133,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
                setHasChanges(false);
                showToast.success('设置已保存');
              } catch (err) {
-               console.error("Save settings failed:", err);
+               logger.error("Save settings failed:", err);
              }
           }}
           onClose={() => {

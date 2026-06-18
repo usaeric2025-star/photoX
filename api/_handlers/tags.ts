@@ -36,7 +36,7 @@ export const tags = new Hono()
 
     const { updates } = check;
     try {
-      await db.update(tagsTable).set(updates).where(eq(tagsTable.id, id));
+      await db.update(tagsTable).set(updates).where(eq(tagsTable.id, parseInt(id)));
       return c.json({ success: true });
     } catch (error: any) {
       return c.json({ success: false, error: error.message }, 500);
@@ -71,7 +71,7 @@ export const tags = new Hono()
   .delete('/:id', async (c) => {
     const id = c.req.param('id');
     try {
-      await db.delete(tagsTable).where(eq(tagsTable.id, id));
+      await db.delete(tagsTable).where(eq(tagsTable.id, parseInt(id)));
       return c.json({ success: true });
     } catch (error: any) {
       return c.json({ success: false, error: error.message }, 500);
@@ -118,10 +118,11 @@ export const tags = new Hono()
       const tagDetails = await db.select({ id: tagsTable.id, isGlobal: tagsTable.isGlobal }).from(tagsTable).where(inArray(tagsTable.id, tagIds));
       const tagDetailsMap = new Map(tagDetails.map(t => [t.id, t]));
 
-      const getWeight = (tagId: string, tagDetail?: any) => {
-        if (tagWeights && tagWeights[tagId] !== undefined) return tagWeights[tagId];
-        if (tagSources && tagSources[tagId]) {
-          const src = tagSources[tagId];
+      const getWeight = (tagId: number, tagDetail?: any) => {
+        const tagStr = String(tagId);
+        if (tagWeights && tagWeights[tagStr] !== undefined) return tagWeights[tagStr];
+        if (tagSources && tagSources[tagStr]) {
+          const src = tagSources[tagStr];
           if (src === 'ai') return 100;
           if (src === 'user') return 90;
           if (src === 'system') return 50;
@@ -167,10 +168,11 @@ export const tags = new Hono()
       const tagDetails = await db.select({ id: tagsTable.id, isGlobal: tagsTable.isGlobal }).from(tagsTable).where(inArray(tagsTable.id, tagIds));
       const tagDetailsMap = new Map(tagDetails.map(t => [t.id, t]));
 
-      const getWeight = (tagId: string, tagDetail?: any) => {
-        if (tagWeights && tagWeights[tagId] !== undefined) return tagWeights[tagId];
-        if (tagSources && tagSources[tagId]) {
-          const src = tagSources[tagId];
+      const getWeight = (tagId: number, tagDetail?: any) => {
+        const tagStr = String(tagId);
+        if (tagWeights && tagWeights[tagStr] !== undefined) return tagWeights[tagStr];
+        if (tagSources && tagSources[tagStr]) {
+          const src = tagSources[tagStr];
           if (src === 'ai') return 100;
           if (src === 'user') return 90;
           if (src === 'system') return 50;

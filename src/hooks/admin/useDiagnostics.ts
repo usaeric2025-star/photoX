@@ -1,3 +1,4 @@
+import { STALE_TIMES } from '@/lib/query/config';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
@@ -25,7 +26,7 @@ export function useDiagnostics() {
     },
     enabled: false,
     retry: false,
-    staleTime: 1000 * 60 * 5,
+    staleTime: STALE_TIMES.SHORT* 5,
   });
 
   const runAudit = async () => {
@@ -69,7 +70,7 @@ export function useDiagnostics() {
     refetchOnWindowFocus: false, // Prevent background refetches on focus
     refetchOnReconnect: false,   // Prevent background refetches on reconnect
     retry: false,
-    staleTime: 1000 * 30, // 30 seconds debounce
+    staleTime: STALE_TIMES.GROUP_DETAIL
   });
 
   const refreshReport = () => {
@@ -89,7 +90,7 @@ export function useDiagnostics() {
     },
     enabled: false,
     retry: false,
-    staleTime: 1000 * 60 * 5,
+    staleTime: STALE_TIMES.SHORT* 5,
   });
 
   const runR2Diagnostics = () => {

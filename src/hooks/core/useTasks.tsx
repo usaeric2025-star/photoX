@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { JobResumer } from '@/components/tasks/JobResumer';
@@ -90,7 +91,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       try {
         cb();
       } catch (e) {
-        console.error('onCancel callback execution error:', e);
+        logger.error('onCancel callback execution error:', e);
       }
     }
     cancelCallbacks.current.delete(id);

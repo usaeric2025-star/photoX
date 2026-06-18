@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { type } from "arktype";
 
 /**
@@ -78,10 +79,10 @@ export function getClientEnv(): ClientEnv {
 
   const result = clientEnvSchema(filteredEnv);
   if (result instanceof type.errors) {
-    console.warn("⚠️ [ENV-VALIDATION-INTEGRATED] Invalid Client Environment Variables (Falling back gracefully):");
+    logger.warn("⚠️ [ENV-VALIDATION-INTEGRATED] Invalid Client Environment Variables (Falling back gracefully):");
     result.forEach((err) => {
       const hint = aiDebugHints[err.path.join('.')] || "Check .env configuration";
-      console.warn(`- ${err.path}: ${err.message} (aiDebugHint: ${hint})`);
+      logger.warn(`- ${err.path}: ${err.message} (aiDebugHint: ${hint})`);
     });
     return filteredEnv as ClientEnv;
   }
@@ -95,10 +96,10 @@ export function getServerEnv(envObj: NodeJS.ProcessEnv): ServerEnv {
   const rawEnv = { ...envObj };
   const result = serverEnvSchema(rawEnv);
   if (result instanceof type.errors) {
-    console.warn("⚠️ [ENV-VALIDATION-INTEGRATED] Invalid Server Environment Variables (Falling back gracefully):");
+    logger.warn("⚠️ [ENV-VALIDATION-INTEGRATED] Invalid Server Environment Variables (Falling back gracefully):");
     result.forEach((err) => {
       const hint = aiDebugHints[err.path.join('.')] || "Check .env configuration or deployment env variables";
-      console.warn(`- ${err.path}: ${err.message} (aiDebugHint: ${hint})`);
+      logger.warn(`- ${err.path}: ${err.message} (aiDebugHint: ${hint})`);
     });
     return rawEnv as ServerEnv;
   }
