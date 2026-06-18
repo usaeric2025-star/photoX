@@ -1626,3 +1626,22 @@ PhotoX 當前單頁數據 < 100KB，IndexedDB 收益為零且增加 Bundle Size 
 - 若 Drizzle Kit 無法執行，可在 SQL Editor 或 scripts 中手動建立
 - 手動建立後必須補上 Migration 檔案
 - 手動操作必須記錄在 AGENTS.md 的「物化視圖現狀」區塊
+
+## tags / photo_tags 型別規範（永久鎖定）
+
+### 設計決策
+- ✅ `tags.id` 採用 `integer`（PostgreSQL 自增序列）
+- ✅ `photo_tags.tag_id` 採用 `integer`（對應 `tags.id`）
+- ✅ `photo_tags.photo_id` 採用 `uuid`（對應 `furniture_items.id`）
+- ✅ 所有相關 TypeScript 型別（`Tag`、`TagListItemSchema`）均使用 `number` 表示 ID
+
+### 原因
+- 歷史遺留：資料庫自建立以來即使用 `integer` 作為標籤主鍵
+- 關聯一致性：`tags` 與 `photo_tags` 的關聯欄位型別必須完全一致
+- 避免型別轉換錯誤：`uuid` ↔ `integer` 混用會導致 JOIN 查詢失敗
+
+### 變更門檻（永久鎖定）
+- ❌ 禁止將 `tags.id` 改為 `uuid`，除非同時變更 `photo_tags.tag_id` 並完成 Migration
+- ❌ 禁止在 TypeScript 中將 `Tag.id` 視為 `string`
+- ❌ 禁止在資料庫查詢中對 `tags.id` 使用 `uuid` 相關函數（如 `gen_random_uuid()`）
+- 📝 若未來確定要改為 `uuid`，須經由正式的 Migration 計畫並評估影響範圍

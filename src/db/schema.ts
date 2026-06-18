@@ -76,7 +76,7 @@ export const furnitureItems = pgTable('furniture_items', {
  * Tags Table
  */
 export const tags = pgTable('tags', {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
     name: text('name').unique(),
     aliases: jsonb('aliases'),
     isGlobal: boolean('is_global').default(false),
@@ -92,7 +92,7 @@ export const tags = pgTable('tags', {
  */
 export const photoTags = pgTable('photo_tags', {
     photoId: uuid('photo_id').references(() => furnitureItems.id, { onDelete: 'cascade' }),
-    tagId: uuid('tag_id').references(() => tags.id, { onDelete: 'cascade' }),
+    tagId: integer('tag_id').references(() => tags.id, { onDelete: 'cascade' }),
 }, (t) => ({
     pk: primaryKey({ columns: [t.photoId, t.tagId] }),
 }));

@@ -55,15 +55,18 @@ export const PhotoStatusBadges = ({
  */
 export const PhotoCardInfo = ({ 
   hideDetails, 
-  photoTags 
+  photoTags,
+  photoName
 }: { 
   hideDetails?: boolean; 
-  photoTags?: string[] 
+  photoTags?: string[];
+  photoName?: string;
 }) => {
   if (hideDetails) return null;
 
   return (
     <div className="absolute inset-x-0 bottom-0 p-2 sm:p-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+      <h4 className="text-white font-bold text-xs truncate mb-1">{photoName}</h4>
       {photoTags && photoTags.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {photoTags.map(tag => (

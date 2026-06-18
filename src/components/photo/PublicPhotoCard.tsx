@@ -56,6 +56,7 @@ export const PublicPhotoCard = ({
       <PhotoCardInfo 
         hideDetails={hideDetails}
         photoTags={photo.tags}
+        photoName={photo.name}
       />
     </PhotoCardBase>
   );

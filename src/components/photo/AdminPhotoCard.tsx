@@ -73,6 +73,7 @@ export const AdminPhotoCard = ({
       <PhotoCardInfo 
         hideDetails={hideDetails}
         photoTags={photo.tags}
+        photoName={photo.name}
       />
     </PhotoCardBase>
   );

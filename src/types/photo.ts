@@ -91,7 +91,7 @@ export interface Category {
 }
 
 export interface Tag {
-  id: string;
+  id: number;
   name: string;
   aliases?: string[];
   user_id?: string;
