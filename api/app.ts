@@ -215,7 +215,7 @@ app.use("*", async (c, next) => {
         const isAffectedPath = affectedPrefixes.some(prefix => path.startsWith(prefix));
         
         // Exclude RPC-style queries that use POST
-        const querySuffixes = ['/list', '/count', '/by-ids', '/check-hash', '/group-photos'];
+        const querySuffixes = ['/list', '/count', '/by-ids', '/check-hash'];
         const isQuery = querySuffixes.some(suffix => path.endsWith(suffix));
         
         if (isAffectedPath && !isQuery) {

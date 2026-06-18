@@ -19,6 +19,7 @@ interface PhotoGridContentProps {
   columns: number;
   mode: 'admin' | 'public';
   filters?: Record<string, unknown> | null;
+  onPhotoClick?: (id: string, e?: React.MouseEvent) => void;
 }
 
 export function PhotoGridContent({ 
@@ -30,7 +31,8 @@ export function PhotoGridContent({
   isFetchingNextPage,
   hasNextPage,
   fetchNextPage,
-  filters
+  filters,
+  onPhotoClick
 }: PhotoGridContentProps) {
   
   if (isPending) {
@@ -64,8 +66,8 @@ export function PhotoGridContent({
         return (
           <div key={photo.id} className="p-0.5 sm:p-1 w-full">
             {mode === 'admin' 
-              ? <AdminPhotoCard photo={photo} />
-              : <PublicPhotoCard photo={photo} />
+              ? <AdminPhotoCard photo={photo} onClick={(e) => onPhotoClick?.(photo.id, e)} />
+              : <PublicPhotoCard photo={photo} onClick={(e) => onPhotoClick?.(photo.id, e)} />
             }
           </div>
         );

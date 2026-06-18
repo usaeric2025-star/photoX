@@ -40,6 +40,7 @@ function AdminPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoLis
             }
           }}
           hideGroupBadge={true}
+          showCoverBadge={true}
           sharedCategories={categories}
         />
       ))}

@@ -14,6 +14,8 @@ interface AdminPhotoGridProps {
   fetchNextPage: () => void;
   columns: number;
   filters: any;
+  categories?: any[];
+  onPhotoClick?: (id: string, e?: React.MouseEvent) => void;
 }
 
 export function AdminPhotoGrid({ 
@@ -25,7 +27,8 @@ export function AdminPhotoGrid({
   hasNextPage, 
   fetchNextPage, 
   columns,
-  filters
+  filters,
+  onPhotoClick
 }: AdminPhotoGridProps) {
   const { isMultiSelect } = useUIStore();
   
@@ -52,6 +55,7 @@ export function AdminPhotoGrid({
           columns={columns}
           mode="admin"
           filters={filters}
+          onPhotoClick={onPhotoClick}
         />
       </div>
     </SelectionProvider>

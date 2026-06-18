@@ -74,15 +74,24 @@ export async function syncGroupCoversAndCount(groupIds: string[]): Promise<void>
           }
 
           // Batch update cover status for this group
-          const updatePromises = items.map(p => {
-            const shouldBeCover = p.id === targetCoverId;
-            if (p.isGroupCover !== shouldBeCover) {
-              return db.update(furnitureItems)
-                .set({ isGroupCover: shouldBeCover })
-                .where(eq(furnitureItems.id, p.id));
-            }
-            return null;
-          }).filter(Boolean);
+          const updatePromises = [];
+          const toSetFalse = items.filter(p => p.isGroupCover && p.id !== targetCoverId);
+          if (toSetFalse.length > 0) {
+              updatePromises.push(
+                  db.update(furnitureItems)
+                    .set({ isGroupCover: false })
+                    .where(inArray(furnitureItems.id, toSetFalse.map(p => p.id)))
+              );
+          }
+          
+          const toSetTrue = items.filter(p => !p.isGroupCover && p.id === targetCoverId);
+          if (toSetTrue.length > 0) {
+              updatePromises.push(
+                  db.update(furnitureItems)
+                    .set({ isGroupCover: true })
+                    .where(eq(furnitureItems.id, targetCoverId!))
+              );
+          }
           
           if (updatePromises.length > 0) {
             await Promise.all(updatePromises);

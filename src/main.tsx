@@ -24,6 +24,7 @@ import { createRoot } from 'react-dom/client';
 import { Toaster } from 'sonner';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Analytics } from '@vercel/analytics/react';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import App from './App';
 import * as Sentry from "@sentry/react";
 import { TaskProvider } from '@/hooks';
@@ -156,6 +157,7 @@ async function init() {
     root.render(
       <StrictMode>
         <QueryClientProvider client={queryClient}>
+          <ReactQueryDevtools initialIsOpen={false} />
           <Toaster style={{ '--z-toast': '500' } as React.CSSProperties} position="bottom-center" richColors closeButton expand={false} visibleToasts={2} swipeDirections={['left', 'right']} />
           <TaskProvider>
             <App />

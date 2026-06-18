@@ -6,7 +6,7 @@ import { FilterBar } from '@/features/filter/FilterBar';
 import { PublicPhotoGrid } from '@/components/photo/PublicPhotoGrid';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { useColumns } from '@/features/layout/hooks/useColumns';
-import { YarlLightbox } from '@/features/lightbox/YarlLightbox';
+import { LazyYarlLightbox } from '@/features/lightbox/LazyYarlLightbox';
 import { useUIStore } from '@/store/useUIStore';
 import { WhatsAppChoiceDialog } from '@/components/shared/WhatsAppChoiceDialog';
 import { PublicFloatingActions } from '@/components/photo/PublicFloatingActions';
@@ -162,7 +162,7 @@ export default function PublicPage() {
         />
       </div>
       
-      <YarlLightbox
+      <LazyYarlLightbox
         open={lightboxOpen}
         items={lightboxItems}
         currentIndex={Math.max(0, lightboxIndex)}

@@ -12,10 +12,12 @@ export const PhotoStatusBadges = ({
   photo,
   isPinned,
   hideGroupBadge,
+  showCoverBadge,
 }: {
   photo: PhotoListItem;
   isPinned: boolean;
   hideGroupBadge?: boolean;
+  showCoverBadge?: boolean;
 }) => {
   const { lang } = useTranslation();
   const isManagement = useIsManagement();
@@ -48,8 +50,8 @@ export const PhotoStatusBadges = ({
         </div>
       )}
 
-      {/* Cover Badge - Only show in management mode and avoid 'penetrating' public view */}
-      {isCover && isManagement && (
+      {/* Cover Badge - Only show when explicitly requested */}
+      {isCover && showCoverBadge && (
         <div className="bg-brand-gold text-white px-1.5 py-0.5 rounded-sm text-[8px] font-black uppercase tracking-tighter shadow-md">
           Cover
         </div>
