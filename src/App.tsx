@@ -80,6 +80,17 @@ export default function AppRoutes() {
   const isDiagnosedRef = useRef(false);
 
   useEffect(() => {
+    // 確保骨架屏被移除
+    const skeleton = document.getElementById('app-startup-skeleton');
+    if (skeleton && !isLoading && !isSettingsPending && !isInitialDataLoading) {
+      skeleton.style.opacity = '0';
+      setTimeout(() => {
+        skeleton.remove();
+      }, 300);
+    }
+  }, [isLoading, isSettingsPending, isInitialDataLoading]);
+
+  useEffect(() => {
     if (user && !isLoading && !isDiagnosedRef.current) {
       isDiagnosedRef.current = true;
       startAutoDiagnose();

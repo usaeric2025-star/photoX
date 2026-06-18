@@ -30,6 +30,7 @@ import * as Sentry from "@sentry/react";
 import { TaskProvider } from '@/hooks';
 import { logError } from './lib/error/errorReporter';
 import { queryClient } from './lib/queryClient';
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { logger } from './lib/logger';
 import './index.css';
 import { clientEnv } from './shared/envSchema';
@@ -160,8 +161,10 @@ async function init() {
           <ReactQueryDevtools initialIsOpen={false} />
           <Toaster style={{ '--z-toast': '500' } as React.CSSProperties} position="bottom-center" richColors closeButton expand={false} visibleToasts={2} swipeDirections={['left', 'right']} />
           <TaskProvider>
-            <App />
-            <Analytics />
+            <ErrorBoundary>
+              <App />
+              <Analytics />
+            </ErrorBoundary>
           </TaskProvider>
         </QueryClientProvider>
       </StrictMode>

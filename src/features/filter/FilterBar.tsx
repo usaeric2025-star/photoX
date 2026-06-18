@@ -18,7 +18,7 @@ interface FilterBarProps {
 export function FilterBar({ mode }: FilterBarProps) {
   const isAdmin = mode === 'admin';
   const { showGroupsCollapsed, setShowGroupsCollapsed } = useFilters();
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(!isAdmin); // Public always expanded by default
 
   return (
     <div className={cn("sticky top-0 z-10 border-b bg-white")}>
@@ -39,14 +39,7 @@ export function FilterBar({ mode }: FilterBarProps) {
           <GroupToggle 
             showGroupsCollapsed={showGroupsCollapsed}
             onClick={() => {
-              console.debug('[FilterBar] GroupToggle clicked. Current value:', showGroupsCollapsed, 'New value:', !showGroupsCollapsed);
               setShowGroupsCollapsed(!showGroupsCollapsed);
-              
-              if (!showGroupsCollapsed) {
-                toast.success(isAdmin ? '已切換為合組顯示' : 'Switched to grouped view');
-              } else {
-                toast.success(isAdmin ? '已切換為分開顯示' : 'Switched to separated view');
-              }
             }}
           />
           {isAdmin ? <StatusSelect /> : null}
@@ -55,11 +48,11 @@ export function FilterBar({ mode }: FilterBarProps) {
       
       {isExpanded && (
         <div className="px-4 pb-3 space-y-2">
-          {/* 分類 */}
-          <CategoryGrid />
+          {/* 分類 - 根據規範固定渲染 2 x 4 */}
+          <CategoryGrid mode={mode} />
           
           {/* 標籤 */}
-          <TagGrid />
+          {isAdmin && <TagGrid />}
         </div>
       )}
     </div>

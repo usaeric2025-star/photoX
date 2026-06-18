@@ -4,7 +4,7 @@ import { useTranslation } from '@/hooks';
 import { getTranslatedCategoryName } from '@/services/category/utils';
 import { logger } from '@/lib/logger';
 
-export function CategoryGrid() {
+export function CategoryGrid({ mode }: { mode?: 'public' | 'admin' }) {
   const { filters, updateFilters } = useFilterState();
   const { data: categories, isPending } = useCategories();
   logger.debug('[CategoryGrid] categories fetched');
