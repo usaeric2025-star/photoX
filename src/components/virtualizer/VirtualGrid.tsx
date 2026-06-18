@@ -43,6 +43,12 @@ export type VirtualGridProps = {
 
 type RowItem = { type: 'header' | 'row' | 'footer'; content?: React.ReactNode; rowIndex?: number };
 
+/**
+ * ROLE: Structural Adapter (Dumb Engine)
+ * - DO NOT add layout-triggering useEffects here.
+ * - DO NOT add photo-specific event logic.
+ * - ONLY handle mapping props to the underlying VList/Virtua layer.
+ */
 export const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.Ref<VirtualGridHandle> }) => {
   const vlistRef = useRef<VListHandle>(null!);
   const lanes = Math.max(1, props.lanes || 1);
