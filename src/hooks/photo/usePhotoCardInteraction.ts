@@ -43,9 +43,6 @@ export function usePhotoCardInteraction({
    const handleOpenLightbox = () => {
      logger.debug('[usePhotoCardInteraction] handleOpenLightbox for photo:', photo.id);
      setPhotoId(photo.id);
-     if (isManagement) {
-       setModal('edit');
-     }
    };
     
   const handleGroupNavigate = (gid: string) => {

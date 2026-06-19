@@ -16,11 +16,12 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo
     
     // Helper to gracefully read either snake_case (direct PG/Supabase client) or camelCase (Hono/Drizzle mapping) keys
     const getValue = <T>(snakeKey: string, camelKey: string, fallback?: T): T => {
-      if (item[snakeKey as keyof SupabasePhotoRaw] !== undefined) {
-        return item[snakeKey as keyof SupabasePhotoRaw] as unknown as T;
+      const itemRecord = item as unknown as Record<string, unknown>;
+      if (itemRecord[snakeKey] !== undefined) {
+        return itemRecord[snakeKey] as unknown as T;
       }
-      if ((item as any)[camelKey] !== undefined) {
-        return (item as any)[camelKey] as unknown as T;
+      if (itemRecord[camelKey] !== undefined) {
+        return itemRecord[camelKey] as unknown as T;
       }
       return fallback as T;
     };
@@ -47,11 +48,11 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo
     }
 
     const tags: Tag[] = [];
-    const rawPhotoTags = getValue<any>('photo_tags', 'photoTags');
-    const rawTags = getValue<any>('tags', 'tags');
+    const rawPhotoTags = getValue<unknown>('photo_tags', 'photoTags');
+    const rawTags = getValue<unknown>('tags', 'tags');
 
     if (Array.isArray(rawPhotoTags)) {
-      rawPhotoTags.forEach((pt) => {
+      (rawPhotoTags as Record<string, unknown>[]).forEach((pt) => {
         if (pt && typeof pt === 'object') {
             const rawPt = pt as Record<string, unknown>;
             let tagId = rawPt.tag_id ?? rawPt.tagId;
@@ -78,7 +79,7 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo
         }
       });
     } else if (Array.isArray(rawTags)) {
-      rawTags.forEach((t) => {
+      (rawTags as Record<string, unknown>[]).forEach((t) => {
         if (t && typeof t === 'object') {
             const rawT = t as Record<string, unknown>;
             tags.push({
@@ -123,7 +124,7 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo
           name: getSafeText(item.group.name),
           color: '#3b82f6',
           cover_photo_id: item.group.cover_photo_id,
-          member_count: (item.group as any).member_count,
+          member_count: (item.group as Record<string, unknown>).member_count as number || 0,
       } : null,
       is_group_cover: !!getValue<boolean>('is_group_cover', 'isGroupCover', false),
       is_hidden: !!getValue<boolean>('is_hidden', 'isHidden', false),
