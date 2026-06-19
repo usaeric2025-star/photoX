@@ -67,7 +67,7 @@ export const initAuthListener = () => {
   if (authListenerInitialized) return () => {};
   authListenerInitialized = true;
   
-  const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+  const { data } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
     if (session?.user) {
       const u = session.user;
       const mapped: User = {

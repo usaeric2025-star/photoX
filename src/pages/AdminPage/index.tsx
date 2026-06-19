@@ -7,7 +7,7 @@ import { queryKeys } from '@/lib/query/keys';
 import { AdminPageContent } from './AdminPageContent';
 import { useUIStore } from '@/store/useUIStore';
 
-export function AdminPage() {
+export default function AdminPage() {
   const queryClient = useQueryClient();
 
   const appLang = useUIStore((s) => s.appLang);
@@ -37,5 +37,3 @@ export function AdminPage() {
     <AdminPageContent />
   );
 };
-
-export default AdminPage;

@@ -10,7 +10,7 @@ describe('ErrorBoundary', () => {
         <div>All good</div>
       </ErrorBoundary>
     );
-    expect(getByText('All good')).toBeInTheDocument();
+    expect(getByText('All good')).toBeTruthy();
   });
 
   it('should render fallback if error occurs and not trigger infinite loops', () => {
@@ -27,8 +27,8 @@ describe('ErrorBoundary', () => {
       </ErrorBoundary>
     );
     
-    expect(getByText(/出错了 \/ Something went wrong/)).toBeInTheDocument();
-    expect(getByText(/刷新页面 \/ Refresh/)).toBeInTheDocument();
+    expect(getByText(/出错了 \/ Something went wrong/)).toBeTruthy();
+    expect(getByText(/刷新页面 \/ Refresh/)).toBeTruthy();
     
     // Verify componentDidCatch only logs and doesn't trigger side effects
     expect(consoleSpy).toHaveBeenCalled();

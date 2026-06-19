@@ -1,5 +1,5 @@
 import React from 'react';
-import { PackageSearch, Zap } from 'lucide-react';
+import { PackageSearch, Zap } from '@react-zero-ui/icon-sprite';
 import { api } from '@/lib/api';
 
 export interface DiagnosticPlugin {

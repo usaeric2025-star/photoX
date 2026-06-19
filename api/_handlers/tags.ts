@@ -9,8 +9,8 @@ export const tags = new Hono()
     try {
       const data = await db.select().from(tagsTable).orderBy(asc(tagsTable.name));
       return c.json({ success: true, data });
-    } catch (error: any) {
-      return c.json({ success: false, error: error.message }, 500);
+    } catch (error: unknown) {
+      return c.json({ success: false, error: (error instanceof Error ? error.message : String(error)) }, 500);
     }
   })
   .get('/search', async (c) => {
@@ -24,8 +24,8 @@ export const tags = new Hono()
 
       const data = await filteredQuery.limit(20);
       return c.json({ success: true, data });
-    } catch (error: any) {
-      return c.json({ success: false, error: error.message }, 500);
+    } catch (error: unknown) {
+      return c.json({ success: false, error: (error instanceof Error ? error.message : String(error)) }, 500);
     }
   })
   .put('/:id', async (c) => {
@@ -38,8 +38,8 @@ export const tags = new Hono()
     try {
       await db.update(tagsTable).set(updates).where(eq(tagsTable.id, parseInt(id)));
       return c.json({ success: true });
-    } catch (error: any) {
-      return c.json({ success: false, error: error.message }, 500);
+    } catch (error: unknown) {
+      return c.json({ success: false, error: (error instanceof Error ? error.message : String(error)) }, 500);
     }
   })
   .post('/', async (c) => {
@@ -51,8 +51,8 @@ export const tags = new Hono()
     try {
       const [data] = await db.insert(tagsTable).values(tagData).returning();
       return c.json({ success: true, data });
-    } catch (error: any) {
-      return c.json({ success: false, error: error.message }, 500);
+    } catch (error: unknown) {
+      return c.json({ success: false, error: (error instanceof Error ? error.message : String(error)) }, 500);
     }
   })
   .post('/batch', async (c) => {
@@ -64,8 +64,8 @@ export const tags = new Hono()
     try {
       const data = await db.insert(tagsTable).values(tagsData).returning({ id: tagsTable.id, name: tagsTable.name });
       return c.json({ success: true, data });
-    } catch (error: any) {
-      return c.json({ success: false, error: error.message }, 500);
+    } catch (error: unknown) {
+      return c.json({ success: false, error: (error instanceof Error ? error.message : String(error)) }, 500);
     }
   })
   .delete('/:id', async (c) => {
@@ -73,16 +73,16 @@ export const tags = new Hono()
     try {
       await db.delete(tagsTable).where(eq(tagsTable.id, parseInt(id)));
       return c.json({ success: true });
-    } catch (error: any) {
-      return c.json({ success: false, error: error.message }, 500);
+    } catch (error: unknown) {
+      return c.json({ success: false, error: (error instanceof Error ? error.message : String(error)) }, 500);
     }
   })
   .post('/refresh-hot-scores', async (c) => {
     try {
       await db.execute(sql`SELECT refresh_tag_hot_scores()`);
       return c.json({ success: true });
-    } catch (error: any) {
-      return c.json({ success: false, error: error.message }, 500);
+    } catch (error: unknown) {
+      return c.json({ success: false, error: (error instanceof Error ? error.message : String(error)) }, 500);
     }
   })
   .post('/remove-from-photo', async (c) => {
@@ -94,8 +94,8 @@ export const tags = new Hono()
     try {
       await db.delete(photoTags).where(and(eq(photoTags.photoId, photoId), eq(photoTags.tagId, tagId)));
       return c.json({ success: true });
-    } catch (error: any) {
-      return c.json({ success: false, error: error.message }, 500);
+    } catch (error: unknown) {
+      return c.json({ success: false, error: (error instanceof Error ? error.message : String(error)) }, 500);
     }
   })
   .post('/sync-photo-tags', async (c) => {
@@ -149,8 +149,8 @@ export const tags = new Hono()
         await db.insert(photoTags).values(limitedTagIds.map(tagId => ({ photoId, tagId })));
       }
       return c.json({ success: true });
-    } catch (error: any) {
-      return c.json({ success: false, error: error.message }, 500);
+    } catch (error: unknown) {
+      return c.json({ success: false, error: (error instanceof Error ? error.message : String(error)) }, 500);
     }
   })
   .post('/sync-batch-photo-tags', async (c) => {
@@ -196,7 +196,7 @@ export const tags = new Hono()
         await db.insert(photoTags).values(associations);
       }
       return c.json({ success: true });
-    } catch (error: any) {
-      return c.json({ success: false, error: error.message }, 500);
+    } catch (error: unknown) {
+      return c.json({ success: false, error: (error instanceof Error ? error.message : String(error)) }, 500);
     }
   });

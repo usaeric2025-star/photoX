@@ -10,11 +10,7 @@ export function useAppLang(): [string, (val: 'zh' | 'en' | 'ms') => void] {
   return [lang, setLang];
 }
 
-export function useSidebarCollapsed() {
-  return useLocalStorage<boolean>({ key: STORAGE_KEYS.SIDEBAR_COLLAPSED, defaultValue: false });
-}
-
-export interface AlertDialogProps {
+interface AlertDialogProps {
   title: string;
   message: React.ReactNode;
   onConfirm: () => void;
@@ -29,7 +25,7 @@ export interface AlertDialogProps {
   };
 }
 
-export interface PromptDialogProps {
+interface PromptDialogProps {
   title: string;
   message?: string;
   placeholder?: string;
@@ -91,8 +87,6 @@ const defaultForm: ProductFormData = {
   price: '',
   is_group_cover: false
 };
-
-export const useIsAnyDialogOpen = () => useUIStore((s) => s.activeDialogCount > 0);
 
 export const useUIStore = create<UIStoreState>()((set) => ({
   appLang: (() => {
@@ -184,9 +178,8 @@ export const useUIStore = create<UIStoreState>()((set) => ({
       storage.set('uploadAsGroup', String(nextState.uploadAsGroup));
     }
     
-    return nextState as any;
+    return nextState;
   }),
 }));
 
-export const useStore = useUIStore;
 export { useShallow };

@@ -50,7 +50,7 @@ export const serverEnvSchema = type({
 
 // Infer types
 export type ClientEnv = typeof clientEnvSchema.infer;
-export type ServerEnv = typeof serverEnvSchema.infer;
+type ServerEnv = typeof serverEnvSchema.infer;
 
 const aiDebugHints: Record<string, string> = {
   "VITE_SUPABASE_URL": "Supabase Project URL. Get it from Project Settings -> API.",
@@ -73,7 +73,7 @@ export function getClientEnv(): ClientEnv {
   const allowedKeys = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY', 'VITE_SENTRY_DSN', 'MODE', 'DEV', 'PROD'] as const;
   allowedKeys.forEach(key => {
     if (rawEnv[key] !== undefined) {
-      filteredEnv[key as keyof ClientEnv] = rawEnv[key] as any;
+      filteredEnv[key as unknown as keyof ClientEnv] = rawEnv[key] as never;
     }
   });
 

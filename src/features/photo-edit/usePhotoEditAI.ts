@@ -1,8 +1,8 @@
 import { logger } from '@/lib/logger';
 import { useCallback } from 'react';
-import { useFormContext } from 'react-hook-form';
+import { useFormContext } from "el-form-react-hooks";
 import { showToast } from '@/lib/ui/toast';
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { ErrorFactory, handleError } from '@/lib/error/ErrorFactory';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTaskExecutor, useAdminMaintenance, useSettings, useCategories, useTags, useFilters } from '@/hooks';
 import { Tag } from '@/types';
@@ -13,7 +13,7 @@ import { useUIStore } from '@/store';
  * Hook to handle AI Analysis and backfilling for Photo Editing
  */
 export function usePhotoEditAI() {
-  const { setValue } = useFormContext();
+  const { form } = useFormContext();
   const { modal, photoId } = useFilters();
   const editPhotoId = modal === 'edit' ? photoId : null;
   const appLang = useUIStore((s) => s.appLang);
@@ -245,7 +245,7 @@ export function usePhotoEditAI() {
           queryClient.invalidateQueries({ queryKey: ['photos', 'ai-result', editPhotoId] });
 
           Object.entries(updates).forEach(([key, value]) => {
-            setValue(key as any, value, { shouldDirty: true });
+            form.setValue(key as any, value);
           });
         
           if (editPhotoId) {
@@ -260,13 +260,9 @@ export function usePhotoEditAI() {
         const { queryKeys } = await import('@/lib/query/keys');
         queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
         queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
-      }, { showSuccessToast: false, showProgress: true });
+      }, { showSuccessToast: false, showProgress: true, rethrow: true });
     } catch (e: unknown) {
-
-      if (e instanceof Error) {
-        logger.error('[AI Analyze Failed]', e);
-        showToast.error(e.message);
-      }
+      handleError(e, 'AI 识别');
     }
 
   };

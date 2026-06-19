@@ -1,8 +1,7 @@
 import React from 'react';
-import { useWatch } from 'react-hook-form';
-import { usePhotoEditSessionContext } from '@/hooks/photo/usePhotoEditSessionContext';
+import { useField, useFormContext } from "el-form-react-hooks";
 import { DimensionEditor } from './DimensionEditor';
-import { ProductFormData, Dimension } from '@/types';
+import { Dimension } from '@/types';
 import { safeArray } from '@/lib/utils';
 import { useUIStore } from '@/store/useUIStore';
 import { useTasks, usePhoto, useFilters } from '@/hooks';
@@ -13,7 +12,7 @@ import { usePhotoEditAI } from './usePhotoEditAI';
 import { MultilingualInput } from '@/components/shared/MultilingualInput';
 
 export function DetailsTab() {
-  const { register, control, setValue } = usePhotoEditSessionContext();
+  const { form } = useFormContext();
   const { modal, photoId } = useFilters();
   const editPhotoId = modal === 'edit' ? photoId : null;
   const appLang = useUIStore((s) => s.appLang);
@@ -35,12 +34,8 @@ export function DetailsTab() {
     }
   };
 
-  const dimensions = useWatch({ control, name: 'dimensions' });
-  const updateForm = (updates: Partial<ProductFormData>) => {
-    Object.entries(updates).forEach(([key, value]) => {
-      setValue(key as any, value, { shouldDirty: true });
-    });
-  };
+  const { value: dimensions } = useField('dimensions');
+  
   return (
     <div className="m-0 p-4 space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
       <div className="flex items-center justify-between px-1">
@@ -57,8 +52,8 @@ export function DetailsTab() {
       </div>
 
       <DimensionEditor 
-        dimensions={safeArray<Dimension>(dimensions)}
-        onChange={(newDims) => updateForm({ dimensions: newDims })}
+        dimensions={safeArray<Dimension>(dimensions as any)}
+        onChange={(newDims) => form.setValue('dimensions', newDims)}
         showAiButton={true}
         isAnalyzing={isAnalyzing}
         onAiAnalyze={onAiAnalyze}

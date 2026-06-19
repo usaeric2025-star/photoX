@@ -2,6 +2,8 @@ import React from 'react';
 import { LogoSection } from './LogoSection';
 import { WhatsAppSection } from './WhatsAppSection';
 import { AppSettings, Category, Tag, Manufacturer, Photo } from '@/types';
+import { AutoForm } from '@/components/form/AutoForm';
+import { SettingsSchema } from '@/types/settings';
 
 interface GeneralSettingsProps {
   settings: AppSettings;
@@ -27,6 +29,14 @@ export function GeneralSettings({
   inputClass,
   buttonStyles
 }: GeneralSettingsProps) {
+
+  const handleSubmit = async (data: Record<string, unknown>) => {
+    // Sync with existing update flow
+    Object.keys(data).forEach(key => {
+      setSettingField(key as keyof AppSettings, data[key] as any);
+    });
+  };
+
   return (
     <div className="space-y-6">
       <LogoSection 
@@ -38,6 +48,16 @@ export function GeneralSettings({
         cardClass={cardClass}
         buttonStyles={buttonStyles}
       />
+      <div className={cardClass}>
+         <h4 className="font-black text-brand-navy text-[10px] uppercase tracking-widest mb-4">
+           設定自動表單 (AutoForm Pilot)
+         </h4>
+        <AutoForm
+          schema={SettingsSchema}
+          defaultValues={settings as any}
+          onSubmit={handleSubmit}
+        />
+      </div>
       <WhatsAppSection 
         settings={settings}
         setSettingField={setSettingField}

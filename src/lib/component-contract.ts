@@ -9,7 +9,7 @@ export const SlotContractSchema = type({
   "optionalSlots?": "string[]",
 });
 
-export type SlotContract = typeof SlotContractSchema.infer;
+type SlotContract = typeof SlotContractSchema.infer;
 
 /**
  * Helper to ensure a component satisfies a contract
@@ -24,7 +24,7 @@ export function defineComponentContract<P>(contract: SlotContract) {
 /**
  * Explicit Slot pattern for better AI guidance
  */
-export interface LayoutContract {
+interface LayoutContract {
   slots: {
     header?: React.ReactNode;
     content: React.ReactNode;

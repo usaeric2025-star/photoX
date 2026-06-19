@@ -16,10 +16,10 @@ export type ApiResponse<T = unknown> = BaseApiResponse<T>;
 export type PhotoListItem = ApiPhotoListItem;
 export const PhotoListItemSchema = ApiPhotoListItemSchema;
 
-export type PhotoListReq = typeof PhotoListReqSchema.infer;
-export type PhotoBatchUpdateReq = typeof PhotoBatchUpdateReqSchema.infer;
-export type PhotoUpdateReq = typeof PhotoUpdateReqSchema.infer;
-export type SearchReq = typeof SearchReqSchema.infer;
+type PhotoListReq = typeof PhotoListReqSchema.infer;
+type PhotoBatchUpdateReq = typeof PhotoBatchUpdateReqSchema.infer;
+type PhotoUpdateReq = typeof PhotoUpdateReqSchema.infer;
+type SearchReq = typeof SearchReqSchema.infer;
 
 export interface FilterOptions {
   q?: string;
@@ -48,12 +48,12 @@ export interface StandardError {
   details?: unknown;
 }
 
-export interface BatchEditPayload {
+interface BatchEditPayload {
   ids: string[];
   updates: Partial<Photo>;
 }
 
-export interface UpdatePhotoParams {
+interface UpdatePhotoParams {
   id: string;
   updates: Partial<Photo>;
 }

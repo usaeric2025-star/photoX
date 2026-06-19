@@ -49,15 +49,16 @@ export function normalizeUnit(unit: string | null | undefined): 'cm' | 'inch' | 
 
 export function validateDimension(dim: Dimension | null | undefined): Dimension | null {
   if (!dim) return null;
-  const value = (dim as any).value ?? dim.height ?? dim.width ?? (dim as any).length ?? 0;
-  const unit = normalizeUnit((dim as any).unit);
+  const rawDim = dim as unknown as Record<string, unknown>;
+  const value = rawDim.value ?? dim.height ?? dim.width ?? rawDim.length ?? 0;
+  const unit = normalizeUnit(rawDim.unit as string | undefined);
   
   return {
     ...dim,
     unit,
-    height: Number(dim.height || ((dim as any).label?.includes('H') ? value : 0)) || 0,
-    width: Number(dim.width || ((dim as any).label?.includes('W') ? value : 0)) || 0,
-    length: Number((dim as any).length || ((dim as any).label?.includes('D') || (dim as any).label?.includes('L') ? value : 0)) || 0
+    height: Number(dim.height || ((rawDim.label as string)?.includes('H') ? value : 0)) || 0,
+    width: Number(dim.width || ((rawDim.label as string)?.includes('W') ? value : 0)) || 0,
+    length: Number(rawDim.length || ((rawDim.label as string)?.includes('D') || (rawDim.label as string)?.includes('L') ? value : 0)) || 0
   };
 }
 
@@ -89,8 +90,8 @@ export const getPhotoDisplayName = (
     photoNameStr === t.furnitureRecord || 
     photoNameStr === 'Furniture Record' || 
     photoNameStr === '未命名产品' || 
-    photoNameStr === (translations as Record<string, any>)['zh']?.furnitureRecord ||
-    photoNameStr === (translations as Record<string, any>)['en']?.furnitureRecord;
+    photoNameStr === (translations as Record<string, { furnitureRecord?: string }>)['zh']?.furnitureRecord ||
+    photoNameStr === (translations as Record<string, { furnitureRecord?: string }>)['en']?.furnitureRecord;
 
   if (!isPlaceholder) return photoNameStr || "";
   
@@ -100,7 +101,7 @@ export const getPhotoDisplayName = (
   return t.furniture;
 };
 
-export interface ResizeOptions {
+interface ResizeOptions {
   width?: number;
   format?: 'auto' | 'webp' | 'avif';
 }

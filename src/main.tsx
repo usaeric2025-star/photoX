@@ -14,7 +14,7 @@ if (typeof window !== 'undefined') {
     ) {
       return;
     }
-    originalConsoleError.apply(console, args as any);
+    originalConsoleError.apply(console, args as unknown as Parameters<typeof originalConsoleError>);
   };
 }
 
@@ -175,4 +175,8 @@ async function init() {
   }
 }
 
-init();
+init().catch(err => {
+  console.error("Critical error in main init()", err);
+  const el = document.getElementById("root");
+  if (el) el.innerHTML = `<div style="padding: 20px; color: red;">Startup Error: ${err.message}</div>`;
+});

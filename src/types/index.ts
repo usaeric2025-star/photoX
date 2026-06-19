@@ -27,19 +27,19 @@ export const MergeGroupsRequestSchema = type({
   targetGroupId: IdSchema,
   sourceGroupIds: IdSchema.array(),
 });
-export type MergeGroupsRequest = typeof MergeGroupsRequestSchema.infer;
+type MergeGroupsRequest = typeof MergeGroupsRequestSchema.infer;
 
 export const MergeGroupsResponseSchema = type({
   success: 'boolean',
   targetGroupId: IdSchema,
   mergedCount: 'number',
 });
-export type MergeGroupsResponseType = typeof MergeGroupsResponseSchema.infer;
+type MergeGroupsResponseType = typeof MergeGroupsResponseSchema.infer;
 
 // --- Existing Utility Types ---
-export type JsonValue = string | number | boolean | null | Record<string, unknown> | JsonValue[];
-export type AnyFunction = (...args: unknown[]) => unknown;
-export type AnyArray = unknown[];
+type JsonValue = string | number | boolean | null | Record<string, unknown> | JsonValue[];
+type AnyFunction = (...args: unknown[]) => unknown;
+type AnyArray = unknown[];
 
 export * from './photo';
 export * from './api';
@@ -50,7 +50,7 @@ export type TranslationType = typeof translations['en'];
 
 // ... rest of the file
 
-export interface Task {
+interface Task {
   id: string;
   name: string;
   status: 'running' | 'completed' | 'error' | 'cancelled' | 'warning';
@@ -87,7 +87,7 @@ export interface AppSettings extends Record<string, unknown> {
   tags?: import('./photo').Tag[];
 }
 
-export interface DialogData {
+interface DialogData {
   title: string;
   message?: string | React.ReactNode;
   onConfirm?: () => void | Promise<void>;
@@ -105,7 +105,7 @@ export interface DialogData {
   };
 }
 
-export interface AppState {
+interface AppState {
   photos: import('./photo').Photo[];
   categories: import('./photo').Category[];
   tags: import('./photo').Tag[];

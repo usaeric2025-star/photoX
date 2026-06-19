@@ -16,7 +16,7 @@ export function useDebouncedCallback<T extends (...args: any[]) => void>(
     callbackRef.current = callback;
   }, [callback]);
 
-  const debouncedFn = (...args: any[]) => {
+  const debouncedFn = (...args: Parameters<T>) => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
@@ -24,7 +24,7 @@ export function useDebouncedCallback<T extends (...args: any[]) => void>(
       callbackRef.current(...args);
     }, delay);
   };
-  (debouncedFn as any).cancel = () => {
+  (debouncedFn as unknown as { cancel: () => void }).cancel = () => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;

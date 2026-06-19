@@ -1,8 +1,11 @@
 import { STALE_TIMES } from '@/lib/query/config';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, InfiniteData } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query/keys';
 import { Photo } from '@/types';
+import { SupabasePhotoRaw } from '@/types/supabase';
+import { PhotoListItem } from '@/types/api';
 import { api } from '@/lib/api';
+import { mapSupabasePhoto } from '@/services/mappers/photo';
 
 /**
  * Hook to get detailed photo information.
@@ -18,23 +21,23 @@ export const usePhoto = (photoId: string) => {
       });
       const result = await response.json();
       if (!result.success) throw new Error(result.error);
-      return result.data[0] as Photo;
+      const rawData = result.data[0] as SupabasePhotoRaw;
+      return rawData ? mapSupabasePhoto(rawData) : null;
     },
     enabled: !!photoId,
     initialData: () => {
       // 1. Try to find in detail cache
-      const detailed = queryClient.getQueryData<Photo>(queryKeys.photos.detail(photoId));
+      const detailed = queryClient.getQueryData<Photo | null>(queryKeys.photos.detail(photoId));
       if (detailed) return detailed;
 
       // 2. Try to find in any infinite list query cache
-      const cachedPhotos = queryClient.getQueriesData<any>({ queryKey: queryKeys.photos.all });
+      const cachedPhotos = queryClient.getQueriesData<InfiniteData<{ items: PhotoListItem[] }>>({ queryKey: queryKeys.photos.all });
       for (const [, data] of cachedPhotos) {
         if (data && data.pages) {
           for (const page of data.pages) {
-            // Updated to search in 'items' as per unified PhotoListItem structure
             if (page.items) {
-              const photo = page.items.find((p: any) => p.id === photoId);
-              if (photo) return photo as Photo;
+              const photo = page.items.find((p) => p.id === photoId);
+              if (photo) return mapSupabasePhoto(photo as unknown as SupabasePhotoRaw); 
             }
           }
         }
@@ -49,7 +52,7 @@ export const usePhoto = (photoId: string) => {
         }
         
         // Find the newest updated time from the photos list
-        const cachedPhotos = queryClient.getQueriesData<any>({ queryKey: queryKeys.photos.all });
+        const cachedPhotos = queryClient.getQueriesData<InfiniteData<{ items: PhotoListItem[] }>>({ queryKey: queryKeys.photos.all });
         let latestUpdates = 0;
         for (const [key, data] of cachedPhotos) {
             const state = queryClient.getQueryState(key);

@@ -3,7 +3,7 @@ import { logger } from '@/lib/logger';
 import { logResult } from '@/lib/error/errorReporter';
 import { api } from '@/lib/api';
 
-export type DiagnoseIssue = {
+type DiagnoseIssue = {
   type: 'orphan_photos' | 'orphan_references' | 'ai_service';
   severity: 'critical' | 'warning' | 'info';
   message: string;
@@ -54,14 +54,14 @@ export const runDiagnose = async () => {
       // In a real scenario, we might want to check if these group_ids actually exist.
       // For now, we'll rely on the DB foreign key constraints if they are ON DELETE SET NULL.
       // But if we want to find "logical" orphans:
-      const groupIds = Array.from(new Set(orphanRefs.map(p => p.group_id)));
+      const groupIds = Array.from(new Set(orphanRefs.map((p: any) => p.group_id)));
       const { data: existingGroups } = await supabase
         .from('groups')
         .select('id')
         .in('id', groupIds);
         
-      const existingGroupIds = new Set(existingGroups?.map(g => g.id));
-      const deadRefs = orphanRefs.filter(p => !existingGroupIds.has(p.group_id));
+      const existingGroupIds = new Set(existingGroups?.map((g: any) => g.id));
+      const deadRefs = orphanRefs.filter((p: any) => !existingGroupIds.has(p.group_id));
       
       if (deadRefs.length > 0) {
         issues.push({

@@ -23,8 +23,8 @@ export const groups = new Hono()
 
       const data = await query;
       return c.json({ success: true, data });
-    } catch (error: any) {
-      return c.json({ success: false, error: error.message }, 500);
+    } catch (error: unknown) {
+      return c.json({ success: false, error: (error instanceof Error ? (error instanceof Error ? error.message : String(error)) : String(error)) }, 500);
     }
   })
   .get('/:id', async (c) => {
@@ -35,8 +35,8 @@ export const groups = new Hono()
       });
       if (!data) return c.json({ success: false, error: 'Not found' }, 404);
       return c.json({ success: true, data });
-    } catch (error: any) {
-      return c.json({ success: false, error: error.message }, 500);
+    } catch (error: unknown) {
+      return c.json({ success: false, error: (error instanceof Error ? (error instanceof Error ? error.message : String(error)) : String(error)) }, 500);
     }
   })
   .post('/', async (c) => {
@@ -52,10 +52,10 @@ export const groups = new Hono()
             ...groupData
         } as any).returning();
         return c.json({ success: true, data });
-    } catch (error: any) {
+    } catch (error: unknown) {
         const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-        logger.error("[Groups] Insert group failed", { error: error.message, traceId });
-        return c.json({ success: false, error: error.message, traceId }, 500);
+        logger.error("[Groups] Insert group failed", { error: (error instanceof Error ? (error instanceof Error ? error.message : String(error)) : String(error)), traceId });
+        return c.json({ success: false, error: (error instanceof Error ? (error instanceof Error ? error.message : String(error)) : String(error)), traceId }, 500);
     }
   })
   .put('/:id', async (c) => {
@@ -87,10 +87,10 @@ export const groups = new Hono()
             .returning();
         
         return c.json({ success: true, data });
-    } catch (error: any) {
+    } catch (error: unknown) {
         const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-        logger.error("[Groups] Update group failed", { error: error.message, id, traceId });
-        return c.json({ success: false, error: error.message, traceId }, 500);
+        logger.error("[Groups] Update group failed", { error: (error instanceof Error ? (error instanceof Error ? error.message : String(error)) : String(error)), id, traceId });
+        return c.json({ success: false, error: (error instanceof Error ? (error instanceof Error ? error.message : String(error)) : String(error)), traceId }, 500);
     }
   })
   .post('/upsert', async (c) => {
@@ -130,10 +130,10 @@ export const groups = new Hono()
             });
 
         return c.json({ success: true });
-    } catch (error: any) {
+    } catch (error: unknown) {
         const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-        logger.error("[Groups] Upsert failed", { error: error.message, traceId });
-        return c.json({ success: false, error: error.message, traceId }, 500);
+        logger.error("[Groups] Upsert failed", { error: (error instanceof Error ? (error instanceof Error ? error.message : String(error)) : String(error)), traceId });
+        return c.json({ success: false, error: (error instanceof Error ? (error instanceof Error ? error.message : String(error)) : String(error)), traceId }, 500);
     }
   })
   .delete('/:id', async (c) => {
@@ -141,10 +141,10 @@ export const groups = new Hono()
     try {
         await db.delete(groupsTable).where(eq(groupsTable.id, id));
         return c.json({ success: true });
-    } catch (error: any) {
+    } catch (error: unknown) {
         const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-        logger.error("[Groups] Delete failed", { error: error.message, id, traceId });
-        return c.json({ success: false, error: error.message, traceId }, 500);
+        logger.error("[Groups] Delete failed", { error: (error instanceof Error ? (error instanceof Error ? error.message : String(error)) : String(error)), id, traceId });
+        return c.json({ success: false, error: (error instanceof Error ? (error instanceof Error ? error.message : String(error)) : String(error)), traceId }, 500);
     }
   })
   .post('/group-photos', async (c) => {
@@ -250,10 +250,10 @@ export const groups = new Hono()
           await syncGroupCoversAndCount(affectedGroupIds);
 
           return c.json({ success: true });
-      } catch (err: any) {
+      } catch (err: unknown) {
         const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-        logger.error("[groupPhotos] Operation failed", { error: err.message, traceId });
-        return c.json({ success: false, error: err.message, traceId }, 500);
+        logger.error("[groupPhotos] Operation failed", { error: (err instanceof Error ? err.message : String(err)), traceId });
+        return c.json({ success: false, error: (err instanceof Error ? err.message : String(err)), traceId }, 500);
       }
   })
   .post('/move-photos', async (c) => {
@@ -286,10 +286,10 @@ export const groups = new Hono()
         await syncGroupCoversAndCount(affectedGroupIds);
 
         return c.json({ success: true });
-    } catch (error: any) {
+    } catch (error: unknown) {
         const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-        logger.error("[movePhotos] Operation failed", { error: error.message, traceId });
-        return c.json({ success: false, error: error.message, traceId }, 500);
+        logger.error("[movePhotos] Operation failed", { error: (error instanceof Error ? (error instanceof Error ? error.message : String(error)) : String(error)), traceId });
+        return c.json({ success: false, error: (error instanceof Error ? (error instanceof Error ? error.message : String(error)) : String(error)), traceId }, 500);
     }
   })
   .post('/set-cover', async (c) => {
@@ -317,10 +317,10 @@ export const groups = new Hono()
         await syncGroupCoversAndCount([groupId]);
 
         return c.json({ success: true });
-    } catch (error: any) {
+    } catch (error: unknown) {
         const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-        logger.error("[setCover] Cover update failed", { error: error.message, traceId });
-        return c.json({ success: false, error: error.message, traceId }, 500);
+        logger.error("[setCover] Cover update failed", { error: (error instanceof Error ? (error instanceof Error ? error.message : String(error)) : String(error)), traceId });
+        return c.json({ success: false, error: (error instanceof Error ? (error instanceof Error ? error.message : String(error)) : String(error)), traceId }, 500);
     }
   })
   .post('/ungroup', async (c) => {
@@ -341,10 +341,10 @@ export const groups = new Hono()
         }
 
         return c.json({ success: true });
-    } catch (error: any) {
+    } catch (error: unknown) {
         const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-        logger.error("[ungroup] Dissolve failed", { error: error.message, traceId });
-        return c.json({ success: false, error: error.message, traceId }, 500);
+        logger.error("[ungroup] Dissolve failed", { error: (error instanceof Error ? (error instanceof Error ? error.message : String(error)) : String(error)), traceId });
+        return c.json({ success: false, error: (error instanceof Error ? (error instanceof Error ? error.message : String(error)) : String(error)), traceId }, 500);
     }
   })
   .post('/sync-count', async (c) => {
@@ -358,8 +358,8 @@ export const groups = new Hono()
     try {
         await syncGroupCoversAndCount([groupId]);
         return c.json({ success: true });
-    } catch (error: any) {
-        return c.json({ success: false, error: error.message }, 500);
+    } catch (error: unknown) {
+        return c.json({ success: false, error: (error instanceof Error ? (error instanceof Error ? error.message : String(error)) : String(error)) }, 500);
     }
   })
   .post('/repair-integrity', async (c) => {
@@ -391,8 +391,8 @@ export const groups = new Hono()
         }
 
         return c.json({ success: true, data: { dissolved, synced, deleted } });
-    } catch (error: any) {
+    } catch (error: unknown) {
         const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-        return c.json({ success: false, error: error.message, traceId }, 500);
+        return c.json({ success: false, error: (error instanceof Error ? (error instanceof Error ? error.message : String(error)) : String(error)), traceId }, 500);
     }
   });

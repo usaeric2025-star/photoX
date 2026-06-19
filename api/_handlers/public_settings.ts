@@ -30,19 +30,22 @@ publicSettings.get("/", async (c) => {
             logger.warn("Tags table fetch failed (likely schema mismatch):", e);
         }
         
-        if (!settingsRes) {
-            return c.json({ success: true, data: { manufacturers: manufacturersRes, tags: tagsRes } });
+        let passcodeRes: any = null;
+        try {
+            [passcodeRes] = await db.select().from(schema.secrets).where(eq(schema.secrets.key, 'access_passcode')).limit(1);
+        } catch (e) {
+            logger.warn("Secrets table fetch failed:", e);
         }
 
         // Return ONLY non-sensitive data
         const data = {
-            logo_url: settingsRes.logoUrl,
-            whatsapp_1: settingsRes.whatsapp1,
-            whatsapp_2: settingsRes.whatsapp2,
-            whatsapp_1_name: settingsRes.whatsapp1Name,
-            whatsapp_2_name: settingsRes.whatsapp2Name,
-            passcode_enabled: settingsRes.passcodeEnabled,
-            access_passcode: settingsRes.accessPasscode,
+            logo_url: settingsRes?.logoUrl || '',
+            whatsapp_1: settingsRes?.whatsapp1 || '',
+            whatsapp_2: settingsRes?.whatsapp2 || '',
+            whatsapp_1_name: settingsRes?.whatsapp1Name || '',
+            whatsapp_2_name: settingsRes?.whatsapp2Name || '',
+            passcode_enabled: settingsRes?.passcodeEnabled ?? false,
+            access_passcode: passcodeRes?.value || settingsRes?.accessPasscode || '',
             manufacturers: manufacturersRes,
             tags: tagsRes,
             // Do NOT return API keys here

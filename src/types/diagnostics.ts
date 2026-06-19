@@ -1,5 +1,5 @@
-export type DiagnosticSeverity = 'P0' | 'P1' | 'P2' | 'P3';
-export type DiagnosticCategory = 'integrity' | 'consistency' | 'file' | 'logic';
+type DiagnosticSeverity = 'P0' | 'P1' | 'P2' | 'P3';
+type DiagnosticCategory = 'integrity' | 'consistency' | 'file' | 'logic';
 
 export interface DiagnosticIssue {
   id: string;

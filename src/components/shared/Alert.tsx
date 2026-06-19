@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { AlertCircle, CheckCircle2, Info, XCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Info, XCircle } from '@react-zero-ui/icon-sprite';
 import { cn } from '../../lib/utils';
 
 interface AlertProps {

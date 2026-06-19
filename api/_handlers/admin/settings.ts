@@ -18,7 +18,7 @@ adminSettings.get("/get", async (c) => {
         }
 
         const data = settingsRes ? {
-            access_passcode: secretsMap['access_passcode'] || '',
+            access_passcode: secretsMap['access_passcode'] || settingsRes.accessPasscode || '',
             logo_url: settingsRes.logoUrl,
             gemini_api_key: secretsMap['gemini'] || '',
             agnes_api_key: secretsMap['agnes'] || '',

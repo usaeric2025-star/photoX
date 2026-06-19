@@ -21,23 +21,15 @@ export const loadTagsFromCloud = async (): Promise<Tag[]> => {
       const json = await res.json();
       if (!json.success) return [];
 
-      return (json.data || []).map((t: any) => ({
-        ...(t as Tag),
-        name: (t.name || '').toUpperCase(),
-        id: String(t.id),
-        hot_score: (t as any).hot_score || 0,
-        is_pinned: !!(t as any).is_pinned
-      }));
+      return ((json.data as Record<string, unknown>[]) || []).map((t) => ({
+        ...(t as unknown as Tag),
+        name: ((t.name as string) || '').toUpperCase(),
+        id: Number(t.id) || 0,
+        hot_score: (t.hot_score as number) || 0,
+        is_pinned: !!t.is_pinned
+      })) as unknown as Tag[];
     })();
 
     allTagsFetchedAt = now;
-    return allTagsPromise;
-};
-
-/**
- * Force clear the tag cache (useful after mutations)
- */
-export const clearTagCache = () => {
-    allTagsPromise = null;
-    allTagsFetchedAt = 0;
+    return allTagsPromise!;
 };

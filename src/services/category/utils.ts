@@ -17,18 +17,20 @@ export const getTranslatedCategoryName = (
   const catIdStr = String(catId);
   const activeCat = categoryMap 
     ? categoryMap.get(catIdStr) 
-    : categories.find(c => String(c.id) === catIdStr || (c as any).code === catIdStr);
+    : categories.find(c => String(c.id) === catIdStr || (c as unknown as Record<string, unknown>).code === catIdStr);
   
   if (!activeCat) return "";
 
+  const activeCatRecord = activeCat as unknown as Record<string, unknown>;
+
   // 1. Try direct locale properties on the category object (e.g. activeCat.zh, activeCat.en, activeCat.ms)
-  if (lang && (activeCat as any)[lang]) {
-    return String((activeCat as any)[lang]);
+  if (lang && activeCatRecord[lang]) {
+    return String(activeCatRecord[lang]);
   }
 
   // 2. Try nested translations under name_translations
-  if ((activeCat as any).name_translations && typeof (activeCat as any).name_translations === 'object') {
-    const trans = (activeCat as any).name_translations;
+  if (activeCatRecord.name_translations && typeof activeCatRecord.name_translations === 'object') {
+    const trans = activeCatRecord.name_translations as Record<string, unknown>;
     const val = trans[lang] || trans.zh || trans.en;
     if (val) return String(val);
   }
@@ -40,7 +42,7 @@ export const getTranslatedCategoryName = (
   }
 
   // 4. Fallback search looking up properties (Legacy support)
-  const legacyFallback = (activeCat as any).zh || (activeCat as any).en || (activeCat as any).ms || (activeCat as any).code || "";
+  const legacyFallback = activeCatRecord.zh || activeCatRecord.en || activeCatRecord.ms || activeCatRecord.code || "";
   return String(legacyFallback);
 };
 

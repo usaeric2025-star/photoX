@@ -49,13 +49,13 @@ export const updateCategory = async (categoryId: string, updates: Partial<Catego
 };
 
 export const createCategory = async (categoryData: Omit<Category, 'id'>): Promise<Category> => {
-  const dbUpdates = mapToDb(categoryData as any);
+  const dbUpdates = mapToDb(categoryData as unknown as Partial<Category> & Record<string, unknown>);
   const res = await api.categories.$post({
     json: { categoryData: dbUpdates }
   });
   if (!res.ok) throw ErrorFactory.fatal('Create category failed', { context: 'createCategory' });
-  const { data } = await res.json();
-  return data as Category;
+  const { data } = await res.json() as { data: Category };
+  return data;
 };
 
 export const deleteCategory = async (categoryId: string): Promise<void> => {
@@ -67,7 +67,7 @@ export const deleteCategory = async (categoryId: string): Promise<void> => {
 
 export const addCategoryToDB = async (name: string): Promise<Category | null> => {
   try {
-    return await createCategory({ name, aliases: [], subcategories: [] } as any);
+    return await createCategory({ name, code: '', aliases: [], subcategories: [] } as unknown as Omit<Category, 'id'>);
   } catch(e) {
     return null;
   }

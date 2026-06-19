@@ -1,4 +1,4 @@
-import { Layers, Grid } from 'lucide-react';
+import { Layers, Grid } from '@react-zero-ui/icon-sprite';
 import { cn } from '@/lib/utils';
 
 interface GroupToggleProps {

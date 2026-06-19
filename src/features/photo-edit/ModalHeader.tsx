@@ -1,5 +1,6 @@
 import { usePhotoEditSessionContext } from "@/hooks/photo/usePhotoEditSessionContext";
 import React from "react";
+import { useFormContext, useField } from "el-form-react-hooks";
 import {
   X as CloseIcon,
   EyeOff,
@@ -33,8 +34,10 @@ export function ModalHeader({
   onClose,
   onDeleteClick,
 }: ModalHeaderProps) {
-  const { watch, setValue, commit, isPending } = usePhotoEditSessionContext();
-  const formState = watch();
+  const { commit, isPending } = usePhotoEditSessionContext();
+  const { form } = useFormContext();
+  const { value: isHidden } = useField('is_hidden');
+  const { value: isGroupCover } = useField('is_group_cover');
   
   const { modal, photoId, setModal, setPhotoId } = useFilters();
   const editPhotoId = modal === 'edit' ? photoId : null;
@@ -63,8 +66,8 @@ export function ModalHeader({
   };
 
   const onToggleHidden = async () => {
-    const nextValue = !formState.is_hidden;
-    setValue('is_hidden', nextValue, { shouldDirty: true });
+    const nextValue = !isHidden;
+    form.setValue('is_hidden', nextValue);
     if (editPhotoId) {
       await updateAdminPhoto({ id: editPhotoId, updates: { is_hidden: nextValue } });
     }
@@ -105,11 +108,11 @@ export function ModalHeader({
       <div className="flex-none flex items-center gap-2">
         <div
           onClick={onToggleHidden}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border cursor-pointer whitespace-nowrap ${formState.is_hidden ? "bg-orange-50 border-orange-200 text-orange-600" : "bg-green-50 border-green-200 text-green-600"}`}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border cursor-pointer whitespace-nowrap ${isHidden ? "bg-orange-50 border-orange-200 text-orange-600" : "bg-green-50 border-green-200 text-green-600"}`}
         >
-          {formState.is_hidden ? <EyeOff size={10} /> : <Eye size={10} />}
+          {isHidden ? <EyeOff size={10} /> : <Eye size={10} />}
           <span className="text-[9px] font-bold uppercase tracking-widest leading-none">
-            {formState.is_hidden ? l.hidden : l.visible}
+            {isHidden ? l.hidden : l.visible}
           </span>
         </div>
       </div>
@@ -138,14 +141,14 @@ export function ModalHeader({
         {isPartOfGroup && (
           <button
             onClick={() => {
-              const newState = !formState.is_group_cover;
-              setValue('is_group_cover', newState, { shouldDirty: true });
+              const newState = !isGroupCover;
+              form.setValue('is_group_cover', newState);
               showToast.success(newState ? '已设为封面' : '已取消封面');
             }}
             title={l.cover}
-            className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-amber-200 shadow-sm transition-all ${formState.is_group_cover ? "bg-amber-500 text-white border-amber-500 hover:bg-amber-600" : "bg-white text-amber-500 border-amber-200 hover:bg-amber-50 active:scale-95"}`}
+            className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-amber-200 shadow-sm transition-all ${isGroupCover ? "bg-amber-500 text-white border-amber-500 hover:bg-amber-600" : "bg-white text-amber-500 border-amber-200 hover:bg-amber-50 active:scale-95"}`}
           >
-            <Star size={20} className={formState.is_group_cover ? "fill-white" : "fill-transparent"} />
+            <Star size={20} className={isGroupCover ? "fill-white" : "fill-transparent"} />
           </button>
         )}
 

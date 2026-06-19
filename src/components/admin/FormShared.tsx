@@ -4,10 +4,9 @@ import React, { useRef } from "react";
 import { translations, LanguageCode } from "@/locales";
 import { Category, Manufacturer } from "@/types";
 import { useLongPress } from "@/hooks/core/useLongPress";
-import { Pencil, Trash2 } from "lucide-react";
-import { useUIStore, useShallow } from "@/store/useUIStore";
-import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { MenuDialog } from "@/components/ui/MenuDialog";
+import { useDisclosure } from '@/hooks/core/useDisclosure';
+import { useUIStore, useShallow } from "@/store/useUIStore";
 
 interface SectionHeaderProps {
   title: string;
@@ -40,50 +39,6 @@ export function FormSectionHeader({
           {actionLabel || "+ 新增"}
         </button>
       )}
-    </div>
-  );
-}
-
-interface CategorySelectorProps {
-  categories: Category[];
-  selectedId: string | null;
-  onSelect: (id: string | null) => void;
-  appLang: string;
-}
-
-export function CategoryGrid({
-  categories,
-  selectedId,
-  onSelect,
-  appLang,
-}: CategorySelectorProps) {
-  return (
-    <div className="grid grid-cols-4 gap-1.5 px-0.5">
-      {categories
-        .filter((cat) => cat && cat.id)
-        .map((cat) => {
-          const isSelected = String(selectedId || "") === String(cat.id || "");
-          const dict = translations[appLang as LanguageCode] || translations.en;
-          const displayName = getTranslatedCategoryName(
-            cat.id || undefined,
-            categories,
-            appLang,
-            dict,
-          );
-          return (
-            <button
-              key={cat.id}
-              onClick={() => onSelect(isSelected ? null : String(cat.id))}
-              className={`flex flex-col items-center justify-center py-4 px-1 rounded-xl border-2 transition-all ${isSelected ? "bg-blue-600 border-blue-600 shadow-md shadow-blue-600/20" : "bg-white border-slate-100 active:bg-slate-50"}`}
-            >
-              <span
-                className={`font-black text-[10px] leading-tight text-center uppercase tracking-tighter ${isSelected ? "text-white" : "text-slate-700"}`}
-              >
-                {displayName}
-              </span>
-            </button>
-          );
-        })}
     </div>
   );
 }

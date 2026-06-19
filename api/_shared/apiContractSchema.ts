@@ -1,6 +1,6 @@
 import { type } from "arktype";
 
-export type JsonValue = string | number | boolean | null | { [key: string]: JsonValue } | JsonValue[];
+type JsonValue = string | number | boolean | null | { [key: string]: JsonValue } | JsonValue[];
 export type JsonObject = { [key: string]: JsonValue };
 
 export type ApiResponse<T = unknown> = {
@@ -110,7 +110,7 @@ export const PhotoListItemSchema = type({
 
 export type PhotoListItem = typeof PhotoListItemSchema.infer;
 
-export const PhotoListResSchema = type({
+const PhotoListResSchema = type({
     photos: PhotoListItemSchema.array(),
     nextCursor: "string|null",
     total: "number"
@@ -146,7 +146,7 @@ export const ListByGroupReqSchema = type({
     "pageSize?": "number"
 });
 
-export const TagListItemSchema = type({
+const TagListItemSchema = type({
     id: "number",
     name: "string",
     "aliases?": "string[]",
@@ -160,7 +160,7 @@ export const TagReqSchema = type({
     "aliases?": "string[]"
 });
 
-export const CategoryListItemSchema = type({
+const CategoryListItemSchema = type({
     id: "string|number",
     code: "string",
     name: "string",
@@ -180,7 +180,7 @@ export const CategoryReqSchema = type({
     "is_active?": "boolean"
 });
 
-export const ManufacturerListItemSchema = type({
+const ManufacturerListItemSchema = type({
     id: "string",
     name: "string"
 });

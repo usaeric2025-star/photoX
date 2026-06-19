@@ -1,5 +1,5 @@
 import React from 'react';
-import { Ghost } from 'lucide-react';
+import { Ghost } from '@react-zero-ui/icon-sprite';
 import { cn } from '@/lib/utils';
 
 interface EmptyStateProps {

@@ -35,6 +35,27 @@ export default defineConfig(({mode}) => {
         output: {
           manualChunks(id) {
             if (id.includes('node_modules')) {
+              if (id.includes('@radix-ui') || id.includes('lucide-react')) {
+                return 'vendor-ui';
+              }
+              if (id.includes('@tanstack') || id.includes('date-fns') || id.includes('zod') || id.includes('arktype')) {
+                return 'vendor-utils';
+              }
+              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+                return 'vendor-react';
+              }
+              if (id.includes('supabase') || id.includes('drizzle')) {
+                return 'vendor-db';
+              }
+              if (id.includes('@sentry')) {
+                if (id.includes('@sentry/node')) {
+                  return 'node-hidden';
+                }
+                return 'vendor-sentry';
+              }
+              if (id.includes('tsparticles') || id.includes('framer-motion')) {
+                return 'vendor-motion';
+              }
               return 'vendor';
             }
           }

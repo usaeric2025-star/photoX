@@ -1,5 +1,5 @@
 import React from 'react';
-import { RefreshCw, CheckCircle2, AlertTriangle, History, Zap, Clock, PackageSearch as PackageSearchIcon, BarChart3 } from 'lucide-react';
+import { RefreshCw, CheckCircle2, AlertTriangle, History, Zap, Clock, PackageSearch as PackageSearchIcon, BarChart3 } from '@react-zero-ui/icon-sprite';
 import { useGlobalTasks } from '@/hooks/admin/useGlobalTasks';
 import { UnifiedTask } from '@/types';
 import { Button } from '@/components/shared/Button';

@@ -7,9 +7,9 @@ export const clearManufacturerFromPhotos = async (mfrId: string): Promise<string
     json: { manufacturerId: mfrId }
   });
   if (!res.ok) throw ErrorFactory.fatal('Clear manufacturer photos failed', { context: 'clearManufacturerFromPhotos' });
-  const { data } = await res.json();
-  const d = data as { success: boolean, data: string[] };
-  return (d as any).data || [];
+  const { data } = await res.json() as Record<string, unknown>;
+  const d = data as { success: boolean, data?: string[] } | undefined;
+  return d?.data || [];
 };
 
 export const updateManufacturer = async (id: string, updates: Partial<Manufacturer>): Promise<void> => {
@@ -20,12 +20,12 @@ export const updateManufacturer = async (id: string, updates: Partial<Manufactur
   if (!res.ok) throw ErrorFactory.fatal('Update manufacturer failed', { context: 'updateManufacturer' });
 };
 
-export const createManufacturer = async (data: Omit<Manufacturer, 'id'>): Promise<Manufacturer> => {
+export const createManufacturer = async (data: Omit<Manufacturer, 'id' | 'created_at' | 'updated_at'>): Promise<Manufacturer> => {
   const res = await api.manufacturers.$post({
     json: { manufacturerData: { name: (data.name || '').toUpperCase() } }
   });
   if (!res.ok) throw ErrorFactory.fatal('Create manufacturer failed', { context: 'createManufacturer' });
-  const result = await res.json() as any;
+  const result = await res.json() as Record<string, unknown>;
   return result.data as Manufacturer;
 };
 
@@ -38,7 +38,7 @@ export const deleteManufacturer = async (id: string): Promise<void> => {
 
 export const addManufacturerToDB = async (name: string): Promise<Manufacturer | null> => {
   try {
-    return await createManufacturer({ name, aliases: [] } as any);
+    return await createManufacturer({ name, code: '', aliases: [] } as unknown as Omit<Manufacturer, 'id' | 'created_at' | 'updated_at'>);
   } catch(e) {
     return null;
   }

@@ -8,12 +8,12 @@ import { toMutableRef } from '@/lib/react/refs';
  * Strict VirtualGrid adaptation layer using official Virtua VList API.
  * 嚴禁注入任何業務邏輯, 嚴禁過渡工程。
  */
-export type VirtualGridHandle = {
+type VirtualGridHandle = {
   scrollToIndex: (index: number) => void;
   scrollTo: (offset: number) => void;
 };
 
-export type VirtualGridProps = {
+type VirtualGridProps = {
   count: number;
   renderItem: (index: number) => React.ReactNode;
   containerClassName?: string;
@@ -36,7 +36,7 @@ type RowItem = { type: 'header' | 'row' | 'footer'; content?: React.ReactNode; r
  * - DO NOT add photo-specific event logic.
  * - ONLY handle mapping props to the underlying VList/Virtua layer.
  */
-export const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.Ref<VirtualGridHandle> }) => {
+const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.Ref<VirtualGridHandle> }) => {
   const vlistRef = useRef<VListHandle>(null!);
   const lanes = Math.max(1, props.lanes || 1);
   const isGridLayout = lanes > 1;

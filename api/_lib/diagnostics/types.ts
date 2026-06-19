@@ -1,6 +1,6 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 
-export type Severity = 'P0' | 'P1' | 'P2';
+type Severity = 'P0' | 'P1' | 'P2';
 
 export interface DiagnosticIssue {
   id: string;
@@ -13,7 +13,7 @@ export interface DiagnosticIssue {
   autoFixable: boolean;
 }
 
-export interface DBRecord extends Record<string, unknown> {
+interface DBRecord extends Record<string, unknown> {
   id: string | number;
   user_id?: string;
   created_at?: string;
@@ -66,7 +66,7 @@ export interface DiagnosticContext {
   tags: TagRecord[];
 }
 
-export type DiagnosticDependency = 'photos' | 'groups' | 'categories' | 'manufacturers' | 'photoTags' | 'tags';
+type DiagnosticDependency = 'photos' | 'groups' | 'categories' | 'manufacturers' | 'photoTags' | 'tags';
 
 export interface DiagnosticTask {
   id: string;

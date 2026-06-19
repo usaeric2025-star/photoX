@@ -38,7 +38,7 @@ export const uploadWithRetry = async (
     throw ErrorFactory.fatal(lastError instanceof Error ? lastError.message : String(lastError), { context: 'uploadWithRetry' });
 };
 
-export const uploadImages = async (
+const uploadImages = async (
   userId: string, 
   photoId: string, 
   base64Data: string,

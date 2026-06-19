@@ -96,8 +96,8 @@ export async function schemaSync(c: Context) {
     await db.execute(sql`ALTER TABLE groups ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'confirmed';`);
     
     return c.json({ success: true, message: "資料庫 Schema 同步完成（已移除 group_order，補全 description_translations, is_analyzing, sub_category, status 欄位）" });
-  } catch (err: any) {
-    return c.json({ success: false, error: "Schema 同步失敗: " + err.message }, 500);
+  } catch (err: unknown) {
+    return c.json({ success: false, error: "Schema 同步失敗: " + (err instanceof Error ? err.message : String(err)) }, 500);
   }
 }
 
@@ -137,7 +137,7 @@ export async function rebuildViews(c: Context) {
     `);
     await db.execute(sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_v_photos_list_id ON v_photos_list (id)`);
     return c.json({ success: true, count: 1, message: "Materialized View v_photos_list 已成功重建並適配新的 UUID 架構" });
-  } catch (err: any) {
-      return c.json({ success: false, message: "Rebuild failed: " + err.message }, 500);
+  } catch (err: unknown) {
+      return c.json({ success: false, message: "Rebuild failed: " + (err instanceof Error ? err.message : String(err)) }, 500);
   }
 }

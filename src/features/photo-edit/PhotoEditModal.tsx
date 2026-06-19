@@ -1,57 +1,53 @@
 import React from "react";
-import { PhotoEditSessionProvider } from '@/hooks/photo/PhotoEditSessionProvider';
-import { useDisclosure } from '@/hooks/core/useDisclosure';
-import { HeadlessSlot } from "@/lib/component-contract";
 import { Modal } from "@/components/ui/Modal";
-import { ModalHeader } from "./ModalHeader";
-import { DeletePhotoDialog } from "./DeletePhotoDialog";
-import { PhotoEditTabs } from "./PhotoEditTabs";
 import { useUIStore } from "@/store";
 import { 
-  usePhotoDelete,
+  usePhoto,
+  usePhotoEditMutation,
   useFilters,
 } from "@/hooks";
+import { AutoForm } from '@/components/form/AutoForm';
+import { PhotoEditSchema } from '@/schemas/photo';
+import { Photo } from '@/types';
 
-/**
- * [V2.14-SLOT-CONTRACT] PhotoEditModal Sub-component to handle loading state
- */
-interface PhotoEditModalContentProps {
-  editPhotoId: string;
-  appLang: string;
-  handleClose: () => void;
-  isDeleteOpen: boolean;
-  deleteDialog: { toggle: () => void; close: () => void; open: () => void };
-  deletePhoto: (ids: string[]) => Promise<void>;
-}
+function PhotoEditModalContent({ editPhotoId, handleClose }: { editPhotoId: string; handleClose: () => void }) {
+  const { data: photo, isPending } = usePhoto(editPhotoId);
+  const updateMutation = usePhotoEditMutation();
 
-function PhotoEditModalContent({ editPhotoId, appLang, handleClose, isDeleteOpen, deleteDialog, deletePhoto }: PhotoEditModalContentProps) {
-  // We need to consume context if we want to show loading from provider, but 
-  // PhotoEditModal is the parent of the provider? No, it's a sibling of children.
-  // Actually children of provider can see the context.
+  if (isPending) {
+    return <div className="p-8 text-center text-slate-500">Loading...</div>;
+  }
+
+  const defaultValues = photo ? {
+    name: typeof photo.name === 'string' ? photo.name : (photo.name?.zh || ''),
+    description: typeof photo.description === 'string' ? photo.description : (photo.description?.zh || ''),
+    category_id: photo.category_id,
+    manufacturer_id: photo.manufacturer_id,
+    price: photo.price,
+    note: photo.note,
+    manual_code: photo.manual_code,
+    model_number: photo.model_number,
+    is_hidden: photo.is_hidden
+  } : {};
+
   return (
-    <div className="flex flex-col h-[85vh] w-full bg-slate-50 focus:outline-none relative">
-      <ModalHeader onClose={handleClose} onDeleteClick={deleteDialog.toggle} />
-
-      <DeletePhotoDialog
-        open={isDeleteOpen}
-        onOpenChange={deleteDialog.toggle}
-        lang={appLang}
-        onDelete={async () => {
+    <div className="flex flex-col h-[85vh] w-full bg-slate-50 focus:outline-none relative p-6 overflow-y-auto">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-lg font-bold text-slate-800">Edit Photo Details</h2>
+        <button onClick={handleClose} className="p-2 bg-slate-200 rounded-full hover:bg-slate-300">
+          ✕
+        </button>
+      </div>
+      <AutoForm
+        schema={PhotoEditSchema}
+        defaultValues={defaultValues}
+        onSubmit={async (data) => {
           if (editPhotoId) {
-            try {
-              await deletePhoto([editPhotoId]);
-              handleClose();
-            } catch (err) {}
+            await updateMutation.mutateAsync({ id: editPhotoId, updates: data as unknown as Partial<Photo> });
+            handleClose();
           }
         }}
       />
-
-      <div className="flex-1 overflow-hidden flex flex-col pt-2 min-h-0 w-full">
-        <PhotoEditTabs 
-          editPhotoId={editPhotoId}
-          appLang={appLang}
-        />
-      </div>
     </div>
   );
 }
@@ -60,22 +56,12 @@ interface PhotoEditModalProps {
   isOpen?: boolean;
   onClose?: () => void;
   editPhotoId?: string | null;
-  slots?: {
-    modalHeader?: HeadlessSlot<any>;
-    tabs?: HeadlessSlot<any>;
-  };
 }
 
-export function PhotoEditModal({ slots, isOpen: propIsOpen, onClose: propOnClose, editPhotoId: propEditPhotoId }: PhotoEditModalProps) {
+export function PhotoEditModal({ isOpen: propIsOpen, onClose: propOnClose, editPhotoId: propEditPhotoId }: PhotoEditModalProps) {
   const { modal, photoId, setModal } = useFilters();
   const urlEditPhotoId = modal === 'edit' ? photoId : null;
-  const appLang = useUIStore((s) => s.appLang);
 
-  const { mutateAsync: deletePhoto } = usePhotoDelete();
-
-  const [isDeleteOpen, deleteDialog] = useDisclosure(false);
-
-  // Fallback to store if props not provided, preferring URL
   const editPhotoId = propEditPhotoId !== undefined ? propEditPhotoId : urlEditPhotoId;
   const isOpen = propIsOpen !== undefined ? propIsOpen : !!editPhotoId;
 
@@ -91,21 +77,12 @@ export function PhotoEditModal({ slots, isOpen: propIsOpen, onClose: propOnClose
 
   if (!isOpen) return null;
 
-  // Render for either editing an existing photo or creating a new one
-  const targetId = editPhotoId || "new";
-
   return (
-    <PhotoEditSessionProvider key={targetId} photoId={editPhotoId || ''} onSuccess={handleClose}>
-      <Modal open={isOpen} onClose={handleClose} size="4xl" hidePadding showCloseButton={false} className="max-h-[90vh] overflow-hidden flex flex-col rounded-2xl">
-        <PhotoEditModalContent 
-          editPhotoId={editPhotoId}
-          appLang={appLang}
-          handleClose={handleClose}
-          isDeleteOpen={isDeleteOpen}
-          deleteDialog={deleteDialog}
-          deletePhoto={deletePhoto as any}
-        />
-      </Modal>
-    </PhotoEditSessionProvider>
+    <Modal open={isOpen} onClose={handleClose} size="lg" hidePadding showCloseButton={false} className="max-h-[90vh] overflow-hidden flex flex-col rounded-2xl">
+      <PhotoEditModalContent 
+        editPhotoId={editPhotoId || ''}
+        handleClose={handleClose}
+      />
+    </Modal>
   );
 }

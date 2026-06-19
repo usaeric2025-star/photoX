@@ -1,4 +1,4 @@
-export const translations = {
+const translations = {
     zh: {
         error: {
             unauthorized: "未授權訪問",
@@ -13,7 +13,7 @@ export const translations = {
     }
 };
 
-export type Language = keyof typeof translations;
+type Language = keyof typeof translations;
 
 function getStringValue(val: unknown): string {
     if (!val) return '';

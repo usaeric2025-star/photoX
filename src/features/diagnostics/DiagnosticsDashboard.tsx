@@ -1,23 +1,26 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { 
   RefreshCw, ShieldCheck
-} from 'lucide-react';
+} from '@react-zero-ui/icon-sprite';
 import { useDiagnostics } from '@/hooks/admin/useDiagnostics';
 import { diagnosticRegistry, type DiagnosticPlugin } from './registry';
 import { DiagnosticCard } from './DiagnosticCard';
-import { TasksContent } from './TasksList';
 import { Button } from '@/components/shared/Button';
 import { useUIStore } from '@/store/useUIStore';
 import { showToast } from '@/lib/ui/toast';
 import { handleError } from '@/lib/error/errorHandler';
+import { LoadingScreen } from '@/components/ui/LoadingScreen';
 
 import { usePerformanceAudit } from '@/hooks/admin/usePerformanceAudit';
-import { ErrorLogViewer } from './ErrorLogViewer';
-import { DiagnosticStats } from './DiagnosticStats';
-import { AuditVisualizer } from './AuditVisualizer';
-import { IssueList } from './IssueList';
-import { MaintenanceCenter } from './MaintenanceCenter';
+
+const ErrorLogViewer = React.lazy(() => import('./ErrorLogViewer').then(m => ({ default: m.ErrorLogViewer })));
+const DiagnosticStats = React.lazy(() => import('./DiagnosticStats').then(m => ({ default: m.DiagnosticStats })));
+const AuditVisualizer = React.lazy(() => import('./AuditVisualizer').then(m => ({ default: m.AuditVisualizer })));
+const IssueList = React.lazy(() => import('./IssueList').then(m => ({ default: m.IssueList })));
+const MaintenanceCenter = React.lazy(() => import('./MaintenanceCenter').then(m => ({ default: m.MaintenanceCenter })));
+const TasksContent = React.lazy(() => import('./TasksList').then(m => ({ default: m.TasksContent })));
+
 
 /* Removed local DiagnosticPlugin interface declaration */
 
@@ -156,19 +159,22 @@ export function DiagnosticsDashboard() {
 
       {activeTab === 'diagnosis' && (
         <div className="space-y-8 animate-in fade-in duration-500">
-          {/* 核心指标统计 */}
+          <Suspense fallback={<LoadingScreen />}>
           <DiagnosticStats 
             report={report} 
             isPending={isPending} 
             onRefresh={() => { refreshReport(); runAudit(); }} 
           />
+          </Suspense>
 
           {/* R2 对账可视化 (P0) */}
+          <Suspense fallback={<LoadingScreen />}>
           <AuditVisualizer 
             auditResult={auditResult} 
             isAuditing={isAuditing} 
             onAudit={runAudit} 
           />
+          </Suspense>
 
           {/* 基础设施诊断 */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -186,29 +192,37 @@ export function DiagnosticsDashboard() {
           </div>
 
           {/* 智能故障修复列表 */}
+          <Suspense fallback={<LoadingScreen />}>
           <IssueList 
             issues={combinedIssues} 
             isPending={isPending} 
             onRepair={internalRunRepair} 
             onSuccess={() => { refreshReport(); runAudit(); }} 
           />
+          </Suspense>
 
           {/* 高级维护工具栏 */}
+          <Suspense fallback={<LoadingScreen />}>
           <MaintenanceCenter 
             onSuccess={refreshReport} 
           />
+          </Suspense>
         </div>
       )}
 
       {activeTab === 'tasks' && (
         <div className="animate-in fade-in slide-in-from-bottom-2">
+           <Suspense fallback={<LoadingScreen />}>
            <TasksContent />
+           </Suspense>
         </div>
       )}
 
       {activeTab === 'logs' && (
         <div className="animate-in fade-in slide-in-from-bottom-2">
+           <Suspense fallback={<LoadingScreen />}>
            <ErrorLogViewer />
+           </Suspense>
         </div>
       )}
     </div>

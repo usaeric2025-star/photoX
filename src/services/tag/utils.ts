@@ -93,7 +93,7 @@ export const resolveTagIdsBatch = async (
   if (namesToCreate.length > 0) {
     try {
       const newTags = await batchCreateTags(namesToCreate.map(name => ({ name })));
-      newTags.forEach(tag => resultIds.push(tag.id));
+      newTags.forEach((tag: Tag) => resultIds.push(tag.id));
     } catch (error) {
       logger.error('Failed to resolve tags batch:', error);
     }

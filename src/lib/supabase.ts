@@ -37,15 +37,13 @@ const supabaseUrl = getEnv('VITE_SUPABASE_URL');
 const supabaseAnonKey = getEnv('VITE_SUPABASE_ANON_KEY');
 
 // 验证环境变量
+let isSupabaseConfigured = true;
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw ErrorFactory.wrap(new Error(
-    `Missing Supabase environment variables.\n` +
-    `VITE_SUPABASE_URL: ${!!supabaseUrl}\n` +
-    `VITE_SUPABASE_ANON_KEY: ${!!supabaseAnonKey}`
-  ), 'supabaseInitialization');
+  logger.error(`Missing Supabase environment variables.`);
+  isSupabaseConfigured = false;
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+export const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
@@ -59,7 +57,11 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       return fetch(url, { ...options, signal });
     }
   }
-});
+}) : (new Proxy({}, {
+  get: () => {
+    throw ErrorFactory.wrap(new Error("Supabase is not configured. Please add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your environment/secrets."), 'supabaseInitialization');
+  }
+}) as any);
 
 // 开发环境挂载到 window，方便调试（可选）
 if (typeof window !== 'undefined' && getEnv('NODE_ENV', false) === 'development') {

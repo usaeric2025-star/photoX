@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { X } from "lucide-react";
+import { Icon } from '@/components/ui/Icon';
 
 interface ModalProps {
   open: boolean;
@@ -112,7 +112,7 @@ export function Modal({
             className="absolute right-4 top-4 p-2 rounded-full text-slate-400 hover:bg-slate-100 transition-colors bg-white/80 backdrop-blur-sm shadow-sm border border-slate-100"
             aria-label="关闭"
           >
-            <X size={18} />
+            <Icon name="X" size={18} />
           </button>
         )}
 

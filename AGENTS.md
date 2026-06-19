@@ -789,20 +789,17 @@ toast.error('发现数据完整性问题', {
 | 篩選狀態 | ✅ URL Filters (`useUrlFilters`) | ❌ Zustand filter store |
 | 彈窗管理 | ✅ `ConfirmDialog` + `useDisclosure` | ❌ 全域 `alertDialog` |
 
-## 多语言架构规范（锁定）
 
-### 数据库设计
-- ✅ `groups` 表：`name` 字段存储 JSON，格式为 `{ zh: string, en: string, ms: string }`
-- ✅ `furniture_items` 表：`name` 字段存储 JSON，格式同上
-- ❌ 禁止使用 `name_en`、`name_ms` 等独立列
+## 圖標系統規範（永久鎖定）
 
-### 代码规范
-- ✅ 写入时：`{ name: { zh, en, ms } }`
-- ✅ 读取时：`const displayName = group.name[language] ?? group.name.zh`
-- ❌ 禁止直接访问 `group.name_en` 或 `group.name_ms`
+### 核心原則
+- ✅ 所有圖標必須透過 `@/components/ui/Icon` 元件存取
+- ✅ 圖標名稱型別由 `IconName` 定義，獨立於圖標庫
+- ✅ 更換圖標庫時，只修改 `Icon.tsx` 的實作
+- ❌ 禁止在業務程式碼中直接 import 圖標庫
+- ❌ 禁止使用 `DynamicIcon`（已由 `Icon` 取代）
+- ❌ 禁止在全域或元件內使用 `lucide-react`
 
-### 故障排查
-- 报错 `Could not find 'name_en' column` → 检查代码是否错误写入了 `name_en`
 
 ## 乐观更新与工厂安全校验规范（锁定）
 
@@ -1645,3 +1642,24 @@ PhotoX 當前單頁數據 < 100KB，IndexedDB 收益為零且增加 Bundle Size 
 - ❌ 禁止在 TypeScript 中將 `Tag.id` 視為 `string`
 - ❌ 禁止在資料庫查詢中對 `tags.id` 使用 `uuid` 相關函數（如 `gen_random_uuid()`）
 - 📝 若未來確定要改為 `uuid`，須經由正式的 Migration 計畫並評估影響範圍
+
+## 錯誤處理規範（鎖定）
+
+- ✅ 所有 `try/catch` 必須使用 `ErrorFactory.wrap()` 處理錯誤
+- ✅ 所有 API 錯誤必須透過 `handleError` 處理
+- ✅ 所有錯誤 Toast 必須透過 `src/lib/ui/toast.ts` 發出
+
+## 資料映射規範（鎖定）
+
+- ✅ 所有 Drizzle 回傳資料必須經過標準 Mapper（如 `mapSupabasePhoto`）
+- ✅ 所有 Hook（`usePhoto`, `usePhotos`, `usePhotoGrid`）必須使用 Mapper
+- ✅ 禁止直接使用 Drizzle 回傳的原始資料
+
+## 表單處理規範（鎖定）
+
+- ✅ 所有表單必須使用 El Form (`el-form-react-hooks`)
+- ✅ 所有表單必須從 ArkType Schema 推導
+- ✅ 使用 `AutoForm` 減少樣板程式碼
+- ✅ 動態表單使用 `useFieldArray`
+- ❌ 禁止手動建立表單 UI (除非必要)
+- ❌ 禁止使用 React Hook Form

@@ -1,12 +1,12 @@
 import React from 'react';
 import { PhotoListItem } from '@/types/api';
-import { VirtualGrid } from '@/components/virtualizer/VirtualGrid';
+import VirtualGrid from '@/components/virtualizer/VirtualGrid';
 import { PhotoGridSkeleton } from './PhotoGridSkeleton';
 import { AdminPhotoCard } from './AdminPhotoCard';
 import { PublicPhotoCard } from './PublicPhotoCard';
 import { LoadMoreIndicator } from './LoadMoreIndicator';
 import { EmptyState } from '../ui/EmptyState';
-import { PackageOpen } from 'lucide-react';
+import { PackageOpen } from '@react-zero-ui/icon-sprite';
 
 interface PhotoGridContentProps {
   photos: PhotoListItem[];

@@ -23,7 +23,7 @@ export * from './groups';
 
 // Utils
 export { useFilters } from './useFilters';
-export { useUIStore, useStore, useShallow } from '../store/useUIStore';
+export { useUIStore, useShallow } from '../store/useUIStore';
 export { useColumns } from '../features/layout/hooks/useColumns';
 export { useSearchTransition } from './ui/useSearchTransition';
 

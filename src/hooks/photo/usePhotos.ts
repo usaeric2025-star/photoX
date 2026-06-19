@@ -61,7 +61,7 @@ export const usePhotos = createInfiniteQuery<
         });
       }
       
-      const result = await response.json();
+      const result = await response.json() as { success: boolean; data?: unknown; nextCursor?: string; total?: number; error?: string };
       logger.info('[Query] usePhotos success payload:', { success: result.success, hasData: !!result.data, total: result.total });
       
       // ✅ 統一契約驗證 + 雙重守衛
@@ -70,8 +70,8 @@ export const usePhotos = createInfiniteQuery<
       
       return {
         items: validatedData,
-        nextCursor: (result as any).nextCursor || null,
-        total: (result as any).total || 0
+        nextCursor: result.nextCursor || null,
+        total: result.total || 0
       };
     } catch (error) {
       logger.error('[Query] usePhotos failed deeply:', error);

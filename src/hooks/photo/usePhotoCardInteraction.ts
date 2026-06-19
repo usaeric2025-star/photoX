@@ -8,6 +8,7 @@ import { PhotoListItem } from '@/types/api';
 import { queryKeys } from '@/lib/query/keys';
 import { getGroupById } from '@/services/group/queries';
 import { STALE_TIMES } from '@/lib/query/config';
+import { Photo } from '@/types';
 
 interface UsePhotoCardInteractionProps {
   photo: PhotoListItem;
@@ -114,13 +115,13 @@ export function usePhotoCardInteraction({
 
       if (isManagement) {
         if (!isMultiSelect) {
-          update({ isMultiSelect: true, selectedIds: [photo.id] } as any);
+          update({ isMultiSelect: true, selectedIds: [photo.id] });
         } else {
           toggleSelected(photo.id);
         }
         if ('vibrate' in navigator) navigator.vibrate(50);
       } else {
-        (window as any)._pendingPhoto = photo;
+        (window as unknown as { _pendingPhoto: PhotoListItem })._pendingPhoto = photo;
         update({ showWhatsAppChoice: true });
       }
     }

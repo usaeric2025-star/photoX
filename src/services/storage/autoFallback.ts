@@ -1,5 +1,5 @@
 const PREFIX = 'photox_';
-const memoryCache = new Map<string, any>();
+const memoryCache = new Map<string, unknown>();
 
 export const STORAGE_KEYS = {
   AUTH: 'auth',
@@ -72,7 +72,8 @@ export const storage = {
       if (typeof window === 'undefined') return null;
       return localStorage.getItem(`${PREFIX}${key.startsWith(PREFIX) ? key.slice(PREFIX.length) : key}`);
     } catch {
-      return memoryCache.get(key) || null;
+      const cached = memoryCache.get(key);
+      return typeof cached === 'string' ? cached : null;
     }
   },
 

@@ -117,20 +117,21 @@ export default function PublicPage() {
   };
 
   const openWhatsApp = () => {
-    (window as any)._pendingPhoto = undefined;
+    (window as unknown as { _pendingPhoto: undefined })._pendingPhoto = undefined;
     updateUI({ showWhatsAppChoice: false });
   };
 
   const getWhatsAppOptions = () => {
     const options: { name: string; url: string }[] = [];
-    const pendingPhoto = (window as any)._pendingPhoto as any;
+    const pendingPhoto = (window as unknown as { _pendingPhoto: Record<string, unknown> | undefined })._pendingPhoto;
     let message = '';
     
     if (pendingPhoto) {
       const prompt = t.sharePrompt || "您好，我对这个家具感兴趣：";
-      const itemCode = pendingPhoto.itemCode || "";
-      const name = pendingPhoto.name?.zh || pendingPhoto.name?.en || "";
-      const url = pendingPhoto.imageUrl || "";
+      const itemCode = (pendingPhoto.itemCode as string) || "";
+      const nameObj = pendingPhoto.name as Record<string, string> | undefined;
+      const name = nameObj?.zh || nameObj?.en || "";
+      const url = (pendingPhoto.imageUrl as string) || "";
       message = `${prompt}\n*${name}* (${itemCode})\n${url}`;
     } else {
       message = "您好，我正在浏览您的家具相冊，想了解更多信息！";

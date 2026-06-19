@@ -1,5 +1,4 @@
 import React from 'react';
-import { LucideProps } from 'lucide-react';
 import { 
   Cloud, 
   Cog, 
@@ -15,7 +14,7 @@ import {
   LogOut, 
   RefreshCw,
   Cpu
-} from 'lucide-react';
+} from '@react-zero-ui/icon-sprite';
 
 const iconMap = {
   'cloud': Cloud,
@@ -34,22 +33,15 @@ const iconMap = {
   'cpu': Cpu
 } as const;
 
-export type DynamicIconName = keyof typeof iconMap;
-
-interface DynamicIconProps extends LucideProps {
+export interface DynamicIconProps {
   name: keyof typeof iconMap;
+  className?: string;
+  size?: number | string;
 }
 
-/**
- * [OPTIMIZATION]
- * Replaced dynamicIconImports with static mapping.
- * In Vite, dynamicIconImports causes thousands of tiny chunks to be generated, 
- * completely breaking the bundle structure and causing severe layout shifts.
- * Tree-shaking is naturally supported with static named imports in Vite.
- */
-export const DynamicIcon = ({ name, ...props }: DynamicIconProps) => {
+export const DynamicIcon = ({ name, className, size, ...props }: DynamicIconProps) => {
   const Icon = iconMap[name];
   if (!Icon) return null;
 
-  return <Icon {...props} />;
+  return <Icon className={className} size={size} {...props} />;
 };

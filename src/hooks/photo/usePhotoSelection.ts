@@ -88,12 +88,12 @@ export const usePhotoSelection = () => {
     if (!ids || ids.length === 0) return;
     
     try {
-      const updates: any = { ...formState };
+      const updates = { ...formState } as Record<string, unknown>;
       if (!batchIsHiddenApplied) {
         delete updates.is_hidden;
       }
       
-      const cleanUpdates: any = {};
+      const cleanUpdates: Record<string, unknown> = {};
       Object.entries(updates).forEach(([key, value]) => {
         if (value !== '' && value !== undefined && value !== null) {
           if (Array.isArray(value) && value.length === 0) return;

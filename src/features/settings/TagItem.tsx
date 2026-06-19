@@ -61,7 +61,7 @@ export function TagItem({
 
   return (
     <div
-      ref={itemRef}
+      ref={itemRef as any}
       className={`bg-white border border-brand-navy/10 pl-4 pr-2 py-1.5 rounded-full flex items-center gap-2 shadow-sm transition-all active:scale-95 relative ${activeTagMenuId === tag.id ? "bg-brand-gold/10 border-brand-gold/30 scale-95" : ""}`}
     >
       <div className="flex flex-col">

@@ -1,5 +1,5 @@
 import { Button } from '@/components/shared/Button';
-import { LayoutGrid, List } from 'lucide-react';
+import { LayoutGrid, List } from '@react-zero-ui/icon-sprite';
 
 interface LayoutButtonProps {
   isGrid: boolean;

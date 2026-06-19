@@ -1,5 +1,5 @@
 import React from 'react';
-import { Copy, Check } from 'lucide-react';
+import { Copy, Check } from '@react-zero-ui/icon-sprite';
 import { cn } from '@/lib/utils';
 import { useCopyToClipboard } from '@/hooks';
 

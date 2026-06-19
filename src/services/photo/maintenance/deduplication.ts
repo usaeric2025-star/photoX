@@ -24,7 +24,7 @@ export const deduplicatePhotos = async (userId?: string): Promise<{removed: numb
     if (!data) return { removed: 0 };
 
     const groups: Record<string, Photo[]> = {};
-    safeArray<Photo>(data as any).forEach(item => {
+    safeArray<Photo>(data as unknown as Photo[]).forEach(item => {
       if (!item.image_hash) return;
       const key = `${item.user_id}_${item.image_hash}`;
       if (!groups[key]) groups[key] = [];

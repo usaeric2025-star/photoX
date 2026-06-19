@@ -139,7 +139,7 @@ adminDiagnose.get("/", async (c) => {
         issues 
       });
     } catch (e: unknown) {
-      return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown diagnostic error' }, 500);
+      return c.json({ success: false, error: e instanceof Error ? (e instanceof Error ? e.message : String(e)) : 'Unknown diagnostic error' }, 500);
     }
 });
 
@@ -190,7 +190,7 @@ adminDiagnose.get("/db-schema", async (c) => {
             ORDER BY ordinal_position;
         `);
         return c.json({ success: true, table, columns });
-    } catch (e: any) {
-        return c.json({ success: false, error: e.message }, 500);
+    } catch (e: unknown) {
+        return c.json({ success: false, error: (e instanceof Error ? e.message : String(e)) }, 500);
     }
 });

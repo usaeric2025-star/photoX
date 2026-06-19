@@ -57,7 +57,7 @@ ai.post("/test", async (c) => {
 
         return c.json({ success: true, message: 'Connection successful', data: data.text });
     } catch (e: unknown) {
-        return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown error' }, 500);
+        return c.json({ success: false, error: e instanceof Error ? (e instanceof Error ? e.message : String(e)) : 'Unknown error' }, 500);
     }
 });
 
@@ -88,7 +88,7 @@ ai.post("/run", async (c) => {
 
         return c.json({ success: true, text: data as string, raw_result: rawText, usage: {} } as ApiResponse);
     } catch (e: unknown) {
-        return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown error' } as ApiResponse, 500);
+        return c.json({ success: false, error: e instanceof Error ? (e instanceof Error ? e.message : String(e)) : 'Unknown error' } as ApiResponse, 500);
     }
 });
 
@@ -130,7 +130,7 @@ ai.post("/analyze", async (c) => {
             catRef = c;
             tagRef = t;
             groupRef = g;
-        } catch (err: any) {
+        } catch (err: unknown) {
             logger.warn("AI Analyze: Background context fetch failed partially:", err);
             // Continue with whatever we managed to fetch (empty arrays if everything failed)
         }
@@ -163,7 +163,7 @@ ai.post("/analyze", async (c) => {
 
         return c.json({ success: true, data, raw_result: rawText } as ApiResponse);
     } catch (e: unknown) {
-        return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown error' } as ApiResponse, 500);
+        return c.json({ success: false, error: e instanceof Error ? (e instanceof Error ? e.message : String(e)) : 'Unknown error' } as ApiResponse, 500);
     }
 });
 
@@ -193,7 +193,7 @@ ai.post("/translate", async (c) => {
 
       return c.json({ success: true, data, raw_result: rawText } as ApiResponse);
     } catch (error: unknown) { 
-        return c.json({ success: false, error: error instanceof Error ? error.message : 'Unknown AI error' } as ApiResponse, 500); 
+        return c.json({ success: false, error: error instanceof Error ? (error instanceof Error ? error.message : String(error)) : 'Unknown AI error' } as ApiResponse, 500); 
     }
 });
 
@@ -222,7 +222,7 @@ ai.post("/analyze-group", async (c) => {
 
       return c.json({ success: true, data, raw_result: rawText } as ApiResponse);
     } catch (error: unknown) { 
-        return c.json({ success: false, error: error instanceof Error ? error.message : 'Unknown AI error' } as ApiResponse, 500); 
+        return c.json({ success: false, error: error instanceof Error ? (error instanceof Error ? error.message : String(error)) : 'Unknown AI error' } as ApiResponse, 500); 
     }
 });
 
@@ -252,7 +252,7 @@ ai.post("/analyze-photo-v2", async (c) => {
 
         return c.json({ success: true, data, raw_result: rawText } as ApiResponse);
     } catch (error: unknown) { 
-        return c.json({ success: false, error: error instanceof Error ? error.message : 'Unknown AI error' } as ApiResponse, 500); 
+        return c.json({ success: false, error: error instanceof Error ? (error instanceof Error ? error.message : String(error)) : 'Unknown AI error' } as ApiResponse, 500); 
     }
 });
 
@@ -317,6 +317,6 @@ ai.post("/cluster-photos", async (c) => {
 
         return c.json({ success: true, data: createdGroups } as ApiResponse);
     } catch (error: unknown) { 
-        return c.json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' } as ApiResponse, 500); 
+        return c.json({ success: false, error: error instanceof Error ? (error instanceof Error ? error.message : String(error)) : 'Unknown error' } as ApiResponse, 500); 
     }
 });

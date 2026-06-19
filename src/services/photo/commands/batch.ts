@@ -42,8 +42,8 @@ export async function deleteMany(ids: string[]): Promise<BatchActionResult> {
   if (!ids || ids.length === 0) return { successCount: 0, failureCount: 0, failedItems: [] };
 
   const response = await api.admin['delete-photos'].$post({ json: { ids } });
-  const result = await response.json();
-  if (!response.ok || !result.success) throw new Error((result as any).error || 'Admin delete failed');
+  const result = await response.json() as { success: boolean, error?: string };
+  if (!response.ok || !result.success) throw new Error(result.error || 'Admin delete failed');
   
   return { successCount: ids.length, failureCount: 0, failedItems: [] };
 }

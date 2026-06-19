@@ -1,27 +1,21 @@
 import React from 'react';
-import { useFieldArray, useFormContext, UseFormRegister, Control, FieldValues, FieldArrayWithId } from 'react-hook-form';
+import { useFieldArray } from "el-form-react-hooks";
 import { cn } from '@/lib/utils';
 
-interface DynamicArrayFieldProps<T extends FieldValues> {
+interface DynamicArrayFieldProps<T> {
   name: string
   label: string
   defaultValue: T
-  renderItem: (index: number, field: T, register: UseFormRegister<FieldValues>) => React.ReactNode
-  control?: Control<FieldValues>
+  renderItem: (index: number, field: any) => React.ReactNode
 }
 
-export const DynamicArrayField = <T extends FieldValues>({ 
+export const DynamicArrayField = <T extends Record<string, any>>({ 
   name, 
   label, 
   defaultValue, 
   renderItem,
-  control: propControl
 }: DynamicArrayFieldProps<T>) => {
-  const context = useFormContext();
-  const control = propControl || context?.control;
-  const register = context?.register;
-  
-  const { fields, append, remove } = useFieldArray({ control, name });
+  const { fields, append, remove } = useFieldArray({ name });
   
   return (
     <div className="space-y-3">
@@ -30,7 +24,7 @@ export const DynamicArrayField = <T extends FieldValues>({
         {fields.map((field, index) => (
           <div key={field.id} className="flex gap-2 items-start bg-slate-50 p-2 rounded-md">
             <div className="flex-1">
-              {renderItem(index, field as unknown as T, register)}
+              {renderItem(index, field)}
             </div>
             <button 
               type="button" 

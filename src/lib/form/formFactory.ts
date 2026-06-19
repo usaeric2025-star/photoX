@@ -1,4 +1,4 @@
-import { useForm, UseFormProps, UseFormReturn } from 'react-hook-form';
+import { useForm, UseFormProps, UseFormReturn } from "react-hook-form";
 import { arktypeResolver } from '@hookform/resolvers/arktype';
 import { type, Type } from 'arktype';
 

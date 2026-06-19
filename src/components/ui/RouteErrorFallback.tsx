@@ -1,6 +1,6 @@
 import React from 'react';
 import { useRouter } from '@tanstack/react-router';
-import { AlertCircle, RefreshCw, Home, Copy, Terminal } from 'lucide-react';
+import { AlertCircle, RefreshCw, Home, Copy, Terminal } from '@react-zero-ui/icon-sprite';
 import { useTranslation, useCopyToClipboard } from '@/hooks';
 
 export function RouteErrorFallback({ error, reset }: { error: Error; reset: () => void }) {

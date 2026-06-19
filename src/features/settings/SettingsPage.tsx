@@ -4,7 +4,7 @@ import { useLocation } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/useAuthStore';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { 
   ChevronLeft,
   Settings2, Save, ChevronDown, X
@@ -12,7 +12,6 @@ import {
 import { api } from '@/lib/api';
 
 import { showToast } from '@/lib/ui/toast';
-import { ErrorLogViewer } from '@/features/diagnostics/ErrorLogViewer';
 import { AppSettings, User, ApiResponse } from '@/types';
 import { 
   useUIStore, useShallow
@@ -26,14 +25,17 @@ import {
 import { useSettingsLogic } from './useSettingsLogic';
 import { SettingsTabs } from './SettingsTabs';
 import { SettingsHeader } from './SettingsHeader';
-import { GeneralSettings } from './GeneralSettings';
-import { AISettings } from './AISettings';
-import { TagsManager } from './TagsManager';
-import { CategoriesManager } from './CategoriesManager';
-import { DiagnosticsDashboard } from '@/features/diagnostics/DiagnosticsDashboard';
 import { translations } from '@/locales';
+import { LoadingScreen } from '@/components/ui/LoadingScreen';
 
 import { useSyncMutation, useTasks } from '@/hooks';
+
+const GeneralSettings = React.lazy(() => import('./GeneralSettings').then(m => ({ default: m.GeneralSettings })));
+const AISettings = React.lazy(() => import('./AISettings').then(m => ({ default: m.AISettings })));
+const TagsManager = React.lazy(() => import('./TagsManager').then(m => ({ default: m.TagsManager })));
+const CategoriesManager = React.lazy(() => import('./CategoriesManager').then(m => ({ default: m.CategoriesManager })));
+const DiagnosticsDashboard = React.lazy(() => import('@/features/diagnostics/DiagnosticsDashboard').then(m => ({ default: m.DiagnosticsDashboard })));
+
 
 const BUTTON_STYLES = {
   primary: "px-5 py-2.5 bg-brand-navy hover:bg-brand-navy/90 text-brand-bg rounded-2xl text-[11px] font-bold uppercase tracking-tight shadow-md active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50",
@@ -147,6 +149,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
         
         <div className="space-y-6">
           {activeTab === 'general' && (
+            <Suspense fallback={<LoadingScreen />}>
             <GeneralSettings 
               settings={settings}
               handleLogoUpload={handleLogoUpload}
@@ -159,9 +162,11 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
               inputClass={inputClass}
               buttonStyles={BUTTON_STYLES}
             />
+            </Suspense>
           )}
 
           {activeTab === 'ai' && (
+            <Suspense fallback={<LoadingScreen />}>
             <AISettings 
               agnesApiKey={agnesApiKey || ""}
               setAgnesApiKey={setAgnesApiKey}
@@ -174,10 +179,11 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
               cardClass={cardClass}
               inputClass={inputClass}
             />
+            </Suspense>
           )}
 
           {activeTab === 'assets' && (
-            <>
+            <Suspense fallback={<LoadingScreen />}>
               <CategoriesManager 
                 categories={categories}
                 deleteCategory={deleteCategory}
@@ -205,11 +211,13 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
                 cardClass={cardClass}
                 buttonStyles={BUTTON_STYLES}
               />
-            </>
+            </Suspense>
           )}
 
           {activeTab === 'status' && (
+            <Suspense fallback={<LoadingScreen />}>
             <DiagnosticsDashboard />
+            </Suspense>
           )}
         </div>
       </div>

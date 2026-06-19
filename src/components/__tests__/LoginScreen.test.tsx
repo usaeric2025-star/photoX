@@ -62,17 +62,17 @@ describe('LoginScreen', () => {
     render(<LoginScreen signIn={signIn} />);
     
     // Check initial state (admin mode)
-    expect(screen.getByText(/PHO/)).toBeInTheDocument();
-    expect(screen.getByText('Admin')).toBeInTheDocument();
-    expect(screen.getByText('Login')).toBeInTheDocument();
+    expect(screen.getByText(/PHO/)).toBeTruthy();
+    expect(screen.getByText('Admin')).toBeTruthy();
+    expect(screen.getByText('Login')).toBeTruthy();
     
     // Switch to staff mode
     const staffBtn = screen.getByText('Staff');
     fireEvent.click(staffBtn);
     
     // Check staff mode elements
-    expect(screen.getByPlaceholderText('Enter Passcode')).toBeInTheDocument();
-    expect(screen.getByText('Unlock')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Enter Passcode')).toBeTruthy();
+    expect(screen.getByText('Unlock')).toBeTruthy();
   });
 
   it('calls signIn when login button is clicked in admin mode', () => {

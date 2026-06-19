@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { useUIStore } from '@/store/useUIStore';
 import { usePublicSettings } from '@/hooks/settings/useSettings';
-import { Heart, Sparkles } from 'lucide-react';
+import { Heart, Sparkles } from '@react-zero-ui/icon-sprite';
 
 export const WhatsAppDialog = () => {
   const show = useUIStore((s) => s.showWhatsAppChoice);

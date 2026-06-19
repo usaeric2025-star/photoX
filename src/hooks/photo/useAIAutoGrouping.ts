@@ -5,6 +5,8 @@ import { useUIStore } from '@/store/useUIStore';
 import { queryKeys } from '@/lib/query/keys';
 import { useTaskExecutor } from '../core/useTaskExecutor';
 import { api } from '@/lib/api';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { Photo } from '@/types';
 
 export function useAIAutoGrouping() {
   const queryClient = useQueryClient();
@@ -50,10 +52,13 @@ export function useAIAutoGrouping() {
             const body = await response.json();
             const photo = body.success ? body.data?.[0] : null;
 
-            if (!photo) throw new Error(appLang === 'zh' ? '未找到照片信息' : 'Photo not found');
+            if (!photo) {
+                const message = body.success === false && body.error ? String(body.error) : (appLang === 'zh' ? '未找到照片信息' : 'Photo not found');
+                throw ErrorFactory.fatal(message, { context: 'recognizeSinglePhoto', data: { photoId } });
+            }
         
             updateProgress(40, appLang === 'zh' ? '正在进行 AI 智能识别 (约需 2-3 秒)...' : 'Analyzing attributes with AI (approx 2-3s)...');
-            const result = await analyzeAndSavePhoto(photo as any);
+            const result = await analyzeAndSavePhoto(photo as unknown as Photo);
             
             updateProgress(80, appLang === 'zh' ? '正在解析模型识别结果并写入表單...' : 'Parsing AI attributes and injecting...');
             // Need to open edit modal, we will use an event or return result 

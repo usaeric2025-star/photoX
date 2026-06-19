@@ -5,8 +5,9 @@ import Download from 'yet-another-react-lightbox/plugins/download';
 import { useTranslation } from '@/hooks';
 import { Modal } from '@/components/ui/Modal';
 import { downloadPhotoAsJpeg } from '@/services/photo/downloadService';
-import { Edit } from 'lucide-react';
+import { Edit, Copy } from 'lucide-react';
 import { Photo } from '@/types';
+import { showToast } from '@/lib/ui/toast';
 import 'yet-another-react-lightbox/styles.css';
 import 'yet-another-react-lightbox/plugins/thumbnails.css';
 
@@ -180,7 +181,24 @@ export function YarlLightbox({
               />
             ) : null}
             <div className="flex flex-col">
-              <span className="text-xs text-slate-400 font-mono">{t.sysCode}: {currentItem?.photo?.item_code || '-'}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-400 font-mono">{t.sysCode}: {currentItem?.photo?.item_code || '-'}</span>
+                {currentItem?.photo?.id && (
+                  <button 
+                    onClick={() => {
+                      if (currentItem.photo?.id) {
+                        navigator.clipboard.writeText(currentItem.photo.id);
+                        showToast.success('UUID 已复制');
+                      }
+                    }}
+                    className="flex items-center gap-1 text-[10px] text-slate-500 font-mono px-1.5 py-0.5 bg-slate-100 hover:bg-slate-200 transition-colors rounded-md active:scale-95 cursor-pointer"
+                    title="按此复制完整 ID"
+                  >
+                    <span>UUID: {currentItem.photo.id.slice(0, 8)}...</span>
+                    <Copy className="w-2.5 h-2.5 opacity-60" />
+                  </button>
+                )}
+              </div>
               <h3 className="text-sm font-bold text-slate-900 leading-tight">{currentItem?.title}</h3>
               {currentItem?.category && (
                 <span className="text-xs text-slate-500 mt-0.5">{t.category}: {currentItem.category}</span>

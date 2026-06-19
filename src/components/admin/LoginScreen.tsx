@@ -2,30 +2,27 @@ import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React, { useState } from 'react';
 import { LogIn, Image as ImageIcon, RefreshCcw, X, Shield, Users } from 'lucide-react';
 import { showToast } from '@/lib/ui/toast';
-import { useSettings } from '../../hooks';
+import { usePublicSettings } from '../../hooks';
 import { useUIStore } from '@/store/useUIStore';
 import { Link } from '@tanstack/react-router';
 import { ROUTES } from '@/config/constants';
 import { translations } from '@/locales';
-import { useLocalStorage } from '@/hooks/core/useLocalStorage';
+import { storage } from '@/services/storage';
 
 interface LoginScreenProps {
   signIn: () => Promise<void>;
 }
 
 export function LoginScreen({ signIn }: LoginScreenProps) {
-  const { settings } = useSettings();
+  const { data: settings } = usePublicSettings();
   const appLang = useUIStore(s => s.appLang);
   const t = translations[appLang as keyof typeof translations] || translations.en;
+
 
   const [mode, setMode] = useState<'admin' | 'staff'>('admin');
   const [passInput, setPassInput] = useState('');
   const [passError, setPassError] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [, setPasscode] = useLocalStorage({
-    key: 'ais_mock_auth_passcode',
-    defaultValue: ''
-  });
 
   const handlePasscodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +32,7 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
     }
     if (passInput === settings.access_passcode) {
       showToast.success('员工登录成功');
-      setPasscode(String(passInput));
+      storage.setItem('ais_mock_auth_passcode', String(passInput));
       window.location.reload();
     } else {
       setPassError(true);
@@ -47,10 +44,10 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
     <div className="min-h-screen w-full flex flex-col items-center justify-center p-6 bg-[#FAFAFA] relative overflow-hidden">
       {/* Background Decorative Elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-[0.03]">
-        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-slate-900 rounded-full blur-[100px]" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600 rounded-full blur-[100px]" />
+        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-slate-900 rounded-full" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600 rounded-full" />
       </div>
-
+      
       {/* Absolute Close Button */}
       <div className="absolute top-8 right-8 z-10">
         <Link 

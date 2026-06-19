@@ -1,5 +1,5 @@
 import { Button } from '@/components/shared/Button';
-import { ArrowUpDown } from 'lucide-react';
+import { ArrowUpDown } from '@react-zero-ui/icon-sprite';
 
 interface SortButtonProps {
   onClick: () => void;

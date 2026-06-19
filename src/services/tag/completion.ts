@@ -22,7 +22,8 @@ export async function resolveTagNamesToIds(
       .map(n => {
         if (!n) return '';
         if (typeof n === 'object') {
-          return String((n as any).name || (n as any).zh || (n as any).en || '').toUpperCase().trim();
+          const raw = n as Record<string, unknown>;
+          return String(raw.name || raw.zh || raw.en || '').toUpperCase().trim();
         }
         return String(n).toUpperCase().trim();
       })

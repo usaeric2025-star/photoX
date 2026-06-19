@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { useFormContext, type UseFormRegister, type UseFormWatch, type UseFormSetValue, type Control } from 'react-hook-form';
+import { useFormContext } from "el-form-react-hooks";
 import { PhotoEditSessionContext } from './PhotoEditSessionProvider';
 import { type PhotoFormValues } from '@/schemas/photo';
 
@@ -13,9 +13,6 @@ export const usePhotoEditSessionContext = () => {
 
   return {
     ...context,
-    register: form.register as UseFormRegister<PhotoFormValues>,
-    watch: form.watch as UseFormWatch<PhotoFormValues>,
-    setValue: form.setValue as UseFormSetValue<PhotoFormValues>,
-    control: form.control as Control<PhotoFormValues>,
+    form,
   };
 };

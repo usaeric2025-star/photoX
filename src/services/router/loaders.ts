@@ -79,7 +79,7 @@ export async function prefetchGroupDetail(queryClient: QueryClient, groupId: str
       staleTime: createStaleTime('STABLE'),
     }),
     queryClient.prefetchInfiniteQuery({
-      queryKey: queryKeys.photos.infinite({ groupId } as any, isAdminMode ? 'admin' : 'public'),
+      queryKey: queryKeys.photos.infinite({ groupId } as unknown as Record<string, unknown>, isAdminMode ? 'admin' : 'public'),
       queryFn: async ({ pageParam = null }) => {
         const response = await api.photos.list.$post({
           json: {

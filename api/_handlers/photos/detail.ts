@@ -33,8 +33,8 @@ export const detailHandler = (app: Hono) => {
         });
 
         return c.json({ success: true, data: formatted });
-    } catch (error: any) {
-        return c.json({ success: false, error: error.message }, 500);
+    } catch (error: unknown) {
+        return c.json({ success: false, error: error instanceof Error ? error.message : String(error) }, 500);
     }
   });
 
@@ -45,8 +45,8 @@ export const detailHandler = (app: Hono) => {
             .from(furnitureItems)
             .where(isNull(furnitureItems.thumbHash));
         return c.json({ success: true, data: data || [] });
-    } catch (error: any) {
-        return c.json({ success: false, error: error.message }, 500);
+    } catch (error: unknown) {
+        return c.json({ success: false, error: error instanceof Error ? error.message : String(error) }, 500);
     }
   });
 
@@ -65,8 +65,8 @@ export const detailHandler = (app: Hono) => {
             where: eq(furnitureItems.imageHash, hash)
         });
         return c.json({ success: true, data: data || null });
-    } catch (error: any) {
-        return c.json({ success: false, error: error.message }, 500);
+    } catch (error: unknown) {
+        return c.json({ success: false, error: error instanceof Error ? error.message : String(error) }, 500);
     }
   });
 };

@@ -5,10 +5,10 @@ import { api } from '@/lib/api';
 
 export const TABLE_NAME = 'groups';
 
-const mapGroup = (item: any): ProductGroup => ({
+const mapGroup = (item: Record<string, unknown>): ProductGroup => ({
   id: item.id as string,
-  name: getSafeText(item.name || item.name_zh || item.name_en),
-  description: getSafeText(item.description),
+  name: getSafeText((item.name || item.name_zh || item.name_en) as unknown),
+  description: getSafeText(item.description as unknown),
   cover_photo_id: (item.coverPhotoId || item.cover_photo_id) as string,
   is_hidden: (item.isHidden ?? item.is_hidden ?? false) as boolean,
   created_at: (item.createdAt || item.created_at) as string,
@@ -27,8 +27,8 @@ export const loadGroupsFromCloud = async (_userId: string, isAdmin: boolean = fa
     const json = await res.json();
     if (!json.success) return [];
     return (json.data || []).map(mapGroup);
-  } catch (error: any) {
-    throw ErrorFactory.fatal(error.message, { context: 'loadGroupsFromCloud' });
+  } catch (error: unknown) {
+    throw ErrorFactory.fatal(error instanceof Error ? error.message : String(error), { context: 'loadGroupsFromCloud' });
   }
 };
 
@@ -39,7 +39,7 @@ export const getGroupById = async (id: string, _mode: 'public' | 'admin' = 'publ
     const json = await res.json();
     if (!json.success || !json.data) return null;
     return mapGroup(json.data);
-  } catch (error: any) {
-    throw ErrorFactory.fatal(error.message, { context: 'getGroupById' });
+  } catch (error: unknown) {
+    throw ErrorFactory.fatal(error instanceof Error ? error.message : String(error), { context: 'getGroupById' });
   }
 };

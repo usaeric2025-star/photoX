@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ProductGroup, Photo } from "@/types";
 import { useGroupDetail } from "@/hooks";
 import { useAuthStore } from '@/store/useAuthStore';
-import { saveGroup as saveGroupToCloud } from "@/services/group/commands";
+import { upsertGroup } from "@/services/group/commands";
 import { useSessionStorage } from '@/hooks/core/useSessionStorage';
 import { queryKeys } from '@/lib/query/keys';
 
@@ -72,7 +72,7 @@ export const useGroupDraft = (
       setDraftGroup(nextGroupData);
 
       try {
-        await saveGroupToCloud(nextGroupData);
+        await upsertGroup(nextGroupData);
         queryClient.invalidateQueries({
           queryKey: queryKeys.groups.detail(activeGroupId, true),
         });

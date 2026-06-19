@@ -1,13 +1,13 @@
 import React, { createContext, useContext, ReactNode, useCallback } from 'react';
 import { useUIStore } from '@/store/useUIStore';
 
-export interface SelectionState {
+interface SelectionState {
   selectedIds: string[];
   mode: 'single' | 'batch';
   isSelecting: boolean;
 }
 
-export interface SelectionContextValue {
+interface SelectionContextValue {
   state: SelectionState;
   select: (id: string) => void;
   unselect: (id: string) => void;

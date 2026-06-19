@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
  * Custom hook to detect clicks outside of an element
  * Replaces Mantine's useClickOutside
  */
-export function useClickOutside<T extends HTMLElement = any>(
+export function useClickOutside<T extends HTMLElement = HTMLElement>(
   handler: () => void,
   events: string[] = ['mousedown', 'touchstart'],
   nodes?: (HTMLElement | null)[]
@@ -12,7 +12,7 @@ export function useClickOutside<T extends HTMLElement = any>(
   const ref = useRef<T>(null);
 
   useEffect(() => {
-    const listener = (event: any) => {
+    const listener = (event: Event) => {
       const { target } = event;
       if (!target) return;
 

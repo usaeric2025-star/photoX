@@ -68,8 +68,8 @@ export const createHandler = (app: Hono) => {
         }
 
         return c.json({ success: true, data });
-    } catch (error: any) {
-        return c.json({ success: false, error: error.message }, 500);
+    } catch (error: unknown) {
+        return c.json({ success: false, error: (error instanceof Error ? error.message : String(error)) }, 500);
     }
   });
 
@@ -91,8 +91,8 @@ export const createHandler = (app: Hono) => {
         }).returning();
         
         return c.json({ success: true, data });
-    } catch (error: any) {
-        return c.json({ success: false, error: error.message }, 500);
+    } catch (error: unknown) {
+        return c.json({ success: false, error: (error instanceof Error ? error.message : String(error)) }, 500);
     }
   });
 };

@@ -27,3 +27,16 @@ export const PhotoSchema = type({
 });
 
 export type PhotoFormValues = typeof PhotoSchema.infer;
+
+export const PhotoEditSchema = type({
+    'name?': '(string | Record<string, string>) | null',
+    'description?': '(string | Record<string, string>) | null',
+    'category_id?': 'string | null',
+    'manufacturer_id?': 'string | null',
+    'price?': 'string | null',
+    'note?': 'string | null',
+    'manual_code?': 'string | null',
+    'model_number?': 'string | null',
+    'is_hidden?': 'boolean',
+});
+

@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Globe, ChevronDown } from 'lucide-react';
+import { Globe, ChevronDown } from '@react-zero-ui/icon-sprite';
 import { useUIStore } from '@/store/useUIStore';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useClickOutside } from '@/hooks/core/useClickOutside';
@@ -19,7 +19,7 @@ export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dro
   if (mode === 'dropdown') {
     const currentLabel = langs.find(l => l.code === appLang)?.label || 'EN';
     return (
-      <div className="relative" ref={ref}>
+      <div className="relative" ref={ref as any}>
         <button 
           onClick={(e) => {
             e.stopPropagation();

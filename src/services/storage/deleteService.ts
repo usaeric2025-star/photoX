@@ -25,7 +25,7 @@ export const cleanupPhysicalStorage = async (fileKeys: string[], urls: string[])
     }
   });
 
-  const tasks: Promise<any>[] = [];
+  const tasks: Promise<unknown>[] = [];
 
   // Cleanup Supabase
   if (supabaseFiles.length > 0) {

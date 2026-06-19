@@ -10,7 +10,7 @@ import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 const TABLE_NAME = 'groups';
 
-const mapToDb = (updates: any, userId?: string): Record<string, unknown> => {
+const mapToDb = (updates: Record<string, unknown>, userId?: string): Record<string, unknown> => {
     const dbUpdates: Record<string, unknown> = { ...updates };
     dbUpdates.updated_at = new Date().toISOString();
     if (userId) {
@@ -50,7 +50,7 @@ export async function createGroup(data: ProductGroup): Promise<ProductGroup> {
   validator.validate(data);
 
   const userId = await getCurrentUserId();
-  const dbData = mapToDb(data, userId);
+  const dbData = mapToDb(data as unknown as Record<string, unknown>, userId);
   
   const res = await api.groups.$post({
       json: { groupData: dbData }
@@ -65,7 +65,7 @@ export async function updateGroup(id: string, updates: Partial<ProductGroup>): P
   validator.validate({ ...updates, id } as Partial<ProductGroup>);
 
   const userId = await getCurrentUserId();
-  const dbUpdates = mapToDb(updates, userId);
+  const dbUpdates = mapToDb(updates as unknown as Record<string, unknown>, userId);
   
   const res = await api.groups[':id'].$put({
       param: { id },
@@ -78,7 +78,7 @@ export async function updateGroup(id: string, updates: Partial<ProductGroup>): P
 
 export async function upsertGroup(group: Partial<ProductGroup> & { id: string }): Promise<void> {
   const userId = await getCurrentUserId();
-  const dbUpdates = mapToDb(group, userId);
+  const dbUpdates = mapToDb(group as unknown as Record<string, unknown>, userId);
   const res = await api.groups.upsert.$post({
       json: dbUpdates
   });
@@ -95,10 +95,7 @@ export async function deleteGroup(id: string): Promise<void> {
 }
 
 // Action aliases for legacy or specific naming compliance
-export const createGroupAction = createGroup;
-export const updateGroupAction = updateGroup;
-export const saveGroup = upsertGroup;
-export const deleteGroupFromCloud = deleteGroup;
+// Removed aliases
 
 export { ungroupPhotos, syncGroupMemberCount } from '@/services/photo/groupUtils';
 
@@ -174,9 +171,9 @@ export const movePhotosToGroup = async (photoIds: string[], targetGroupId: strin
       if (parsed.traceId) traceId = parsed.traceId;
     } catch (_) {}
     
-    const err = new Error(msg);
+    const err = new Error(msg) as Error & { traceId?: string };
     if (traceId) {
-      (err as any).traceId = traceId;
+      err.traceId = traceId;
     }
     throw err;
   }

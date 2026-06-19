@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useRef } from 'react';
-import { useController } from 'react-hook-form';
+import React, { useState, useRef } from 'react';
+import { useField, useFormContext } from "el-form-react-hooks";
 import { Manufacturer } from '@/types';
 import { ChevronDown, Search } from 'lucide-react';
 
@@ -9,14 +9,15 @@ interface ManufacturerSelectProps {
 }
 
 export const ManufacturerSelect = ({ name, manufacturers }: ManufacturerSelectProps) => {
-  const { field, fieldState } = useController({ name });
+  const { form } = useFormContext();
+  const { value, error } = useField(name as any);
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const filtered = manufacturers.filter(m => m.name.toLowerCase().includes(query.toLowerCase()));
 
-  const selectedName = manufacturers.find(m => m.id === field.value)?.name || '';
+  const selectedName = manufacturers.find(m => m.id === value)?.name || '';
 
   return (
     <div className="relative w-full" ref={containerRef}>
@@ -47,9 +48,9 @@ export const ManufacturerSelect = ({ name, manufacturers }: ManufacturerSelectPr
               <button
                 key={m.id}
                 type="button"
-                className={`w-full text-left p-3 rounded-lg text-sm ${field.value === m.id ? 'bg-blue-50 text-blue-700' : 'hover:bg-slate-50'}`}
+                className={`w-full text-left p-3 rounded-lg text-sm ${value === m.id ? 'bg-blue-50 text-blue-700' : 'hover:bg-slate-50'}`}
                 onClick={() => {
-                  field.onChange(m.id);
+                  form.setValue(name as any, m.id);
                   setIsOpen(false);
                   setQuery('');
                 }}
@@ -61,8 +62,8 @@ export const ManufacturerSelect = ({ name, manufacturers }: ManufacturerSelectPr
         </div>
       )}
       
-      {fieldState.error && (
-        <span className="text-red-500 text-xs mt-1 block">{fieldState.error.message}</span>
+      {error && (
+        <span className="text-red-500 text-xs mt-1 block">{String(error)}</span>
       )}
     </div>
   );

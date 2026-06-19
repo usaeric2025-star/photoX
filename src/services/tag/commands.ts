@@ -38,27 +38,27 @@ export const updateTag = async (tagId: string, updates: Partial<Tag>): Promise<v
     if (!res.ok) throw ErrorFactory.fatal('Update tag failed', { context: 'updateTag' });
 };
 
-export const createTag = async (tagData: Omit<Tag, 'id'>): Promise<Tag> => {
-    const dbUpdates = mapToDb(tagData as any);
+const createTag = async (tagData: Omit<Tag, 'id'>): Promise<Tag> => {
+    const dbUpdates = mapToDb(tagData as unknown as Partial<Tag> & Record<string, unknown>);
     const res = await api.tags.$post({
         json: { tagData: dbUpdates }
     });
     if (!res.ok) throw ErrorFactory.fatal('Create tag failed', { context: 'createTag' });
-    const { data } = await res.json();
-    return data as Tag;
+    const { data } = await res.json() as { data: Tag };
+    return data;
 };
 
 export const batchCreateTagsInCloud = async (tags: Partial<Tag>[]): Promise<Tag[]> => {
-    const dbUpdates = tags.map(tag => mapToDb(tag as any));
+    const dbUpdates = tags.map(tag => mapToDb(tag as unknown as Partial<Tag> & Record<string, unknown>));
     const res = await api.tags.batch.$post({
         json: { tags: dbUpdates }
     });
     if (!res.ok) throw ErrorFactory.fatal('Batch create tags failed', { context: 'batchCreateTagsInCloud' });
-    const { data } = await res.json();
-    return data as Tag[];
+    const { data } = await res.json() as { data: Tag[] };
+    return data;
 };
 
-export const deleteTag = async (tagId: string): Promise<void> => {
+const deleteTag = async (tagId: string): Promise<void> => {
     const res = await api.tags[':id'].$delete({
         param: { id: tagId }
     });
@@ -70,7 +70,7 @@ export const triggerRefreshTagHotScores = async (): Promise<void> => {
     if (!res.ok) throw ErrorFactory.fatal('Refresh tag hot scores failed', { context: 'triggerRefreshTagHotScores' });
 };
 
-export const removeTagFromPhoto = async (photoId: string, tagId: string): Promise<void> => {
+const removeTagFromPhoto = async (photoId: string, tagId: string): Promise<void> => {
     const res = await api.tags['remove-from-photo'].$post({
         json: { photoId, tagId }
     });
@@ -94,7 +94,7 @@ export const syncBatchPhotoTags = async (photoIds: string[], tagIds: string[], t
 /**
  * Helper to add a tag.
  */
-export const addTag = async (name: string): Promise<Tag> => {
+const addTag = async (name: string): Promise<Tag> => {
     const normalizedName = name.toUpperCase().trim();
     return createTag({ name: normalizedName } as Tag);
 };
@@ -113,7 +113,7 @@ export const batchCreateTags = async (names: string[]): Promise<Map<string, stri
 /**
  * Helper to update a tag.
  */
-export const updateTagAtomic = async (tagId: string, updates: Partial<Tag>): Promise<void> => {
+const updateTagAtomic = async (tagId: string, updates: Partial<Tag>): Promise<void> => {
     const finalUpdates = { ...updates };
     if (finalUpdates.name) {
       finalUpdates.name = finalUpdates.name.toUpperCase().trim();
@@ -124,14 +124,14 @@ export const updateTagAtomic = async (tagId: string, updates: Partial<Tag>): Pro
 /**
  * Helper to delete a tag.
  */
-export const deleteTagAtomic = async (tagId: string | number): Promise<void> => {
+const deleteTagAtomic = async (tagId: string | number): Promise<void> => {
     return deleteTag(String(tagId));
 };
 
 /**
  * Helper to remove tag from photo.
  */
-export const removeTagFromPhotoAtomic = async (photoId: string, tagId: string): Promise<void> => {
+const removeTagFromPhotoAtomic = async (photoId: string, tagId: string): Promise<void> => {
     return removeTagFromPhoto(photoId, tagId);
 };
 

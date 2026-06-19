@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CheckCircle2, ChevronDown, ShieldAlert, Zap } from 'lucide-react';
+import { CheckCircle2, ChevronDown, ShieldAlert, Zap } from '@react-zero-ui/icon-sprite';
 import { MaintenanceTool } from './MaintenanceTool';
 
 interface MaintenanceCenterProps {

@@ -1,6 +1,6 @@
 import { optimistic } from '@/lib/query/mutationFactory';
 import { queryKeys } from '@/lib/query/keys';
-import { createGroup, updateGroup, deleteGroupFromCloud, groupPhotos, movePhotosToGroup, setPhotoAsGroupCover, ungroupPhotos } from '@/services/group/commands';
+import { createGroup, updateGroup, deleteGroup, groupPhotos, movePhotosToGroup, setPhotoAsGroupCover, ungroupPhotos } from '@/services/group/commands';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { Photo, ProductGroup } from '@/types';
 import { defineMutation } from '@/lib/mutations/defineMutation';
@@ -38,7 +38,7 @@ export const useGroupUpdate = () => useOptimisticMutation(groupUpdateConfig);
 const groupDeleteConfig = defineMutation<void, string, readonly unknown[]>({
   name: 'groupDelete',
   service: async (id) => {
-    return await deleteGroupFromCloud(id);
+    return await deleteGroup(id);
   },
   invalidate: () => [queryKeys.groups.all, queryKeys.photos.all],
   successMessage: '已删除',

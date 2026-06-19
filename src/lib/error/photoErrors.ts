@@ -69,7 +69,7 @@ export function classifyPhotoError(error: unknown): PhotoErrorType {
   return PhotoErrorType.UNKNOWN;
 }
 
-export interface FriendlyErrorInfo {
+interface FriendlyErrorInfo {
   title: { zh: string; en: string };
   message: { zh: string; en: string };
   action: { zh: string; en: string };

@@ -15,7 +15,7 @@ export const cleanUpOrphanRecords = async (): Promise<{ count: number }> => {
       return { count: 0 };
     }
 
-    const ids = orphans.map(o => o.id);
+    const ids = orphans.map((o: any) => o.id);
     const { error: delError } = await supabase
       .from(DB_CONFIG.TABLE_NAME)
       .delete()

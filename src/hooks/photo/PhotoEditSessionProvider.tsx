@@ -1,18 +1,20 @@
 import { logger } from '@/lib/logger';
 import { createContext, useCallback, useContext } from 'react';
-import { FormProvider, useForm } from 'react-hook-form';
-import { arktypeResolver } from '@hookform/resolvers/arktype';
+import { FormProvider, useForm } from "el-form-react-hooks";
 import { usePhoto } from './usePhoto';
 import { usePhotoEditMutation } from './usePhotoMutations';
 import { PhotoSchema, type PhotoFormValues } from '@/schemas/photo';
 import { showToast } from '@/lib/ui/toast';
 import { generateItemCode } from '@/services/photo/utils';
+import { Photo } from '@/types';
+import { ErrorFactory, handleError } from '@/lib/error/ErrorFactory';
 
 interface PhotoEditSessionContextValue {
   isDirty: boolean;
   isPending: boolean;
   commit: () => Promise<void>;
   discard: () => void;
+  form: any;
 }
 
 export const PhotoEditSessionContext = createContext<PhotoEditSessionContextValue | undefined>(undefined);
@@ -32,18 +34,25 @@ export const PhotoEditSessionProvider = ({
   const { data: photo, isPending } = usePhoto(photoId);
   const updateMutation = usePhotoEditMutation();
   
-  const toSingleString = (val: any) => {
-    if (typeof val === 'object' && val !== null) return val.zh || val.en || val.ms || '';
-    return val || '';
+  const toSingleString = (val: unknown) => {
+    if (typeof val === 'object' && val !== null) {
+      const v = val as Record<string, string>;
+      return v.zh || v.en || v.ms || '';
+    }
+    return typeof val === 'string' ? val : '';
   };
 
-  const toMultiObject = (val: any) => {
-    if (typeof val === 'object' && val !== null) return { zh: val.zh || '', en: val.en || '', ms: val.ms || '' };
-    return { zh: val || '', en: '', ms: '' };
+  const toMultiObject = (val: unknown) => {
+    if (typeof val === 'object' && val !== null) {
+      const v = val as Record<string, string>;
+      return { zh: v.zh || '', en: v.en || '', ms: v.ms || '' };
+    }
+    const s = typeof val === 'string' ? val : '';
+    return { zh: s, en: '', ms: '' };
   };
 
   const form = useForm<PhotoFormValues>({
-    resolver: arktypeResolver(PhotoSchema as any), 
+    schema: PhotoSchema, 
     defaultValues: {
       ...photo,
       name: toSingleString(photo?.name),
@@ -66,19 +75,19 @@ export const PhotoEditSessionProvider = ({
       const errors = form.formState.errors;
       logger.warn('[PhotoEdit] Form Validation Failed:', errors);
       const firstError = Object.values(errors)[0];
-      const message = firstError?.message?.toString() || '表单验证失败，请检查必填项 / Validation Failed';
+      const message = typeof firstError === 'string' ? firstError : '表单验证失败，请检查必填项 / Validation Failed';
       showToast.error(message);
       return;
     }
     
     try {
-      const values = form.getValues();
+      const values = form.watch();
 
       // Auto-generate itemCode if missing
       if (!values.item_code) {
         const newCode = generateItemCode();
-        (values as any).item_code = newCode;
-        form.setValue('item_code' as any, newCode);
+        values.item_code = newCode;
+        form.setValue('item_code' as Exclude<keyof PhotoFormValues, 'tags'>, newCode);
       }
 
       // Sanitize undefined/empty fields to null to comply with ArkType/Database constraints
@@ -91,51 +100,29 @@ export const PhotoEditSessionProvider = ({
 
       await updateMutation.mutateAsync({
         id: photoId,
-        updates: sanitizedUpdates as any
+        updates: sanitizedUpdates as unknown as Partial<Photo>
       });
       onSuccess?.();
     } catch (err: unknown) {
-      logger.error('[PhotoEdit] Commit failed:', err);
-      const typedErr = err instanceof Error ? err : new Error(String(err));
-      // Construct a copyable error summary
-      const errorData = {
-        message: typedErr.message,
-        traceId: (err as Record<string, unknown>).traceId,
-        photoId,
-        formValues: form.getValues(),
-        stack: typedErr.stack,
-      };
-      
-      const errorString = JSON.stringify(errorData, null, 2);
-      
-      showToast.error('保存失败，请检查数据完整性 (Save failed)', {
-        description: '错误信息已自动打印至控制台。',
-        action: {
-          label: '复制错误详情',
-          onClick: () => {
-             navigator.clipboard.writeText(errorString);
-             showToast.success('已复制到剪贴板');
-          }
-        },
-        duration: 8000,
-      });
+      handleError(err, '保存照片数据');
     }
   }, [photoId, form, updateMutation, onSuccess]);
   
   const discard = () => {
-    form.reset((photo || {}) as unknown as PhotoFormValues);
+    form.reset({ values: (photo || {}) as unknown as PhotoFormValues });
   };
   
   // Do not return null to avoid blocking parent modal rendering
   // but provide a loading state indicator if necessary (handled by children)
   
   return (
-    <FormProvider {...form}>
+    <FormProvider form={form as any}>
       <PhotoEditSessionContext.Provider value={{ 
         isDirty, 
-        isPending: updateMutation.isPending || isPending, // Also include loading in isPending
+        isPending: updateMutation.isPending || isPending, 
         commit, 
-        discard 
+        discard,
+        form
       }}>
         {children}
       </PhotoEditSessionContext.Provider>

@@ -1,4 +1,4 @@
-import { UseFormReturn } from 'react-hook-form';
+import { UseFormReturn } from "react-hook-form";
 import { ProductFormData } from '@/types';
 
 export type PhotoEditFormReturn = UseFormReturn<ProductFormData, any> & {

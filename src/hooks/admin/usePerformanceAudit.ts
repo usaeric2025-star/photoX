@@ -1,6 +1,6 @@
 import { perfAudit, PerfIncident } from '@/lib/perfAudit';
 
-export interface PerformanceIssue {
+interface PerformanceIssue {
   id: string;
   severity: 'P0' | 'P1' | 'P2';
   title: string;

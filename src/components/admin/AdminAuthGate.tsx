@@ -1,7 +1,7 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
-import { useSettings } from '@/hooks';
+import { usePublicSettings } from '@/hooks';
 import { useLocalStorage } from '@/hooks/core/useLocalStorage';
 import { logger } from '@/lib/logger';
 
@@ -19,9 +19,9 @@ export function AdminAuthGate({ children }: AdminAuthGateProps) {
   });
 
   const { user, isLoading: isAuthLoading, signIn } = useAuthStore();
-  const { settings } = useSettings();
+  const { data: settings } = usePublicSettings();
   
-  const isStaffMode = passcode === settings?.access_passcode && !!settings?.access_passcode;
+  const isStaffMode = !!settings?.access_passcode && passcode === settings.access_passcode;
   const [forceShow, setForceShow] = useState(false);
 
   useEffect(() => {

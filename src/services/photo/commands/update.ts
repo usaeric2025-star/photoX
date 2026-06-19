@@ -37,9 +37,9 @@ export async function updatePhoto(id: string, initialUpdates: Partial<Photo>): P
   });
   
   if (!res.ok) throw new Error('Update failed');
-  const body = await res.json();
-  const rawData = (body as any).data;
-  return rawData ? mapSupabasePhoto(rawData) : null;
+  const body = await res.json() as { data?: Record<string, unknown> };
+  const rawData = body.data;
+  return rawData ? mapSupabasePhoto(rawData as unknown as Record<string, unknown> & { id: string, name: string, image_url: string, created_at: string }) : null;
 }
 
 export const updatePhotoHidden = async (photoId: string, is_hidden: boolean): Promise<Photo | null> => {

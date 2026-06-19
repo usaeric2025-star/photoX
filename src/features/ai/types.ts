@@ -1,4 +1,4 @@
-export interface AIAnalysisResult {
+interface AIAnalysisResult {
   name: string; // Chinese Name
   description: string; // Chinese Description
   category_id: string | null;
@@ -11,7 +11,7 @@ export interface TranslationResult {
   description: { zh: string; en: string; ms: string };
 }
 
-export interface ProcessedPhotoData {
+interface ProcessedPhotoData {
   name: { zh: string; en: string; ms: string };
   description: { zh: string; en: string; ms: string };
   category_id: string | null;

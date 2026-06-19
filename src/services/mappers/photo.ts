@@ -135,7 +135,7 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo
       uri: imageUrl,
       price: getValue<string>('price', 'price', ''),
       tags: tags,
-      dimensions: Array.isArray(getValue<any[]>('dimensions', 'dimensions', [])) ? (getValue<any[]>('dimensions', 'dimensions', []) as Photo['dimensions']) : [],
+      dimensions: Array.isArray(getValue<Dimension[]>('dimensions', 'dimensions', [])) ? (getValue<Dimension[]>('dimensions', 'dimensions', []) as Photo['dimensions']) : [],
       categoryName,
       manufacturerName
     };
@@ -199,7 +199,7 @@ export const mapToDb = (updates: Partial<Photo> & Record<string, unknown>, isCre
     
     if ('dimensions' in updates) {
         dbUpdates.dimensions = Array.isArray(updates.dimensions) ? updates.dimensions : [];
-        normalizeDimensionsBeforeSave(dbUpdates.dimensions as any);
+        normalizeDimensionsBeforeSave(dbUpdates.dimensions as unknown as Dimension[]);
     }
     
     if (dbUpdates.price && typeof dbUpdates.price === 'string' && !dbUpdates.price.includes('RM')) {

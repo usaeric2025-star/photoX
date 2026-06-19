@@ -140,8 +140,8 @@ export const ErrorFactory = {
     if (err instanceof Error) return { message: err.message, stack: err.stack };
     if (typeof err === 'string') return { message: err };
     if (typeof err === 'object' && err !== null) {
-      const anyErr = err as any;
-      const rawMes = anyErr.message || anyErr.error || anyErr.msg || JSON.stringify(err);
+      const record = err as Record<string, unknown>;
+      const rawMes = record.message || record.error || record.msg || JSON.stringify(err);
       return { message: typeof rawMes === 'object' ? JSON.stringify(rawMes).slice(0,500) : String(rawMes).slice(0,500) };
     }
     return { message: '发生未知错误' };

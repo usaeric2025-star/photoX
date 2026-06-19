@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { requireRealUser } from './auth.js';
 import { logTraffic } from './trafficCapture.js';
-import { refreshPhotosView } from './db/index.js';
+import { refreshPhotosView } from './db/actions.js';
 import { getTraceId } from './error/traceId.js';
 import { logger } from './logger.js';
 import { AppError, errorFactory } from './error/AppError.js';

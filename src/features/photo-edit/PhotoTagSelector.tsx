@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useDisclosure } from '@/hooks/core/useDisclosure';
-import { Control, useController, useFormContext, FieldValues, Path, PathValue } from "react-hook-form";
+import { useFormContext, useField } from "el-form-react-hooks";
 import { PromptDialog } from "@/components/ui/PromptDialog";
 import { TagEditor as TagEditorContent } from "./TagEditorContent";
 import { MAX_TAGS_PER_PHOTO } from "@/constants/limits";
@@ -142,18 +142,22 @@ interface PhotoTagSelectorProps {
   updateTag: (id: string, name: string) => Promise<unknown>;
   deleteTag: (id: string) => Promise<unknown>;
   tags: Tag[];
-  control?: any;
+  control?: any; // kept for compatibility but ignored
   value?: (string | { id: string | number })[];
   onChange?: (val: (string | { id: string | number })[]) => void;
   hideHotLabel?: boolean;
 }
 
 export function PhotoTagSelector(props: PhotoTagSelectorProps) {
-  const context = useFormContext();
-  const control = props.control || context?.control;
+  let hasContext = false;
+  try {
+    hasContext = !!useFormContext();
+  } catch (e) {
+    hasContext = false;
+  }
 
-  if (props.name && control) {
-    return <ControlledPhotoTagSelector {...props} control={control} />;
+  if (props.name && hasContext) {
+    return <ControlledPhotoTagSelector {...props} />;
   }
 
   return (
@@ -175,24 +179,25 @@ function ControlledPhotoTagSelector({
   updateTag,
   deleteTag,
   tags,
-  control,
   hideHotLabel,
 }: PhotoTagSelectorProps) {
-  const { field } = useController({
-    name,
-    control,
-    defaultValue: [] as any
-  });
+  const { form } = useFormContext();
+  const { value } = useField(name as any);
+
+  let arrValue: any[] = [];
+  if (Array.isArray(value)) {
+    arrValue = value;
+  }
 
   return (
     <BasePhotoTagSelector
-      selectedTagIds={(field.value || []).map((v: unknown) => {
+      selectedTagIds={arrValue.map((v: unknown) => {
         if (typeof v === 'object' && v !== null && 'id' in v) {
           return String((v as { id: string | number }).id);
         }
         return String(v);
       })}
-      onChange={field.onChange}
+      onChange={(v) => form.setValue(name as any, v)}
       addTag={addTag}
       updateTag={updateTag}
       deleteTag={deleteTag}

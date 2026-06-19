@@ -54,7 +54,8 @@ export const client = hc<AppType>(
       let retries = 3;
       while (true) {
         try {
-          resp = await fetch(input, { ...init, headers });
+          const signal = AbortSignal.timeout(10000);
+          resp = await fetch(input, { ...init, headers, signal });
           break;
         } catch (err) {
           if (retries > 0) {

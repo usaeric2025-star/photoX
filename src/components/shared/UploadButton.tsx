@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus } from 'lucide-react';
+import { Plus } from '@react-zero-ui/icon-sprite';
 import { buttonStyles } from '../../styles/buttonStyles';
 import { usePermission, useUIStore } from '../../hooks';
 

@@ -3,7 +3,7 @@ import { hapticFeedback } from '@/lib/ui/haptics';
 
 interface UseLongPressOptions {
   delay?: number;
-  onLongPress: (e?: any) => void;
+  onLongPress: (e?: PointerEvent | TouchEvent) => void;
 }
 
 export function useLongPress(
@@ -86,18 +86,18 @@ export function useLongPress(
 
     // We use pointer events as the primary source for modern reliability
     // They handle both touch and mouse consistently
-    el.addEventListener('pointerdown', handleStart as any);
-    el.addEventListener('pointermove', handleMove as any);
-    el.addEventListener('pointerup', handleEnd as any);
-    el.addEventListener('pointercancel', handleEnd as any);
+    el.addEventListener('pointerdown', handleStart as EventListener);
+    el.addEventListener('pointermove', handleMove as EventListener);
+    el.addEventListener('pointerup', handleEnd as EventListener);
+    el.addEventListener('pointercancel', handleEnd as EventListener);
     el.addEventListener('contextmenu', handleContextMenu);
 
     return () => {
       clearTimer();
-      el.removeEventListener('pointerdown', handleStart as any);
-      el.removeEventListener('pointermove', handleMove as any);
-      el.removeEventListener('pointerup', handleEnd as any);
-      el.removeEventListener('pointercancel', handleEnd as any);
+      el.removeEventListener('pointerdown', handleStart as EventListener);
+      el.removeEventListener('pointermove', handleMove as EventListener);
+      el.removeEventListener('pointerup', handleEnd as EventListener);
+      el.removeEventListener('pointercancel', handleEnd as EventListener);
       el.removeEventListener('contextmenu', handleContextMenu);
     };
   }, [ref, delay]);

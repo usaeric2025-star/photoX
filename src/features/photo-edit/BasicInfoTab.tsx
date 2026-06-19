@@ -1,5 +1,5 @@
 import React from 'react';
-import { useWatch } from 'react-hook-form';
+import { useField, useFormContext } from "el-form-react-hooks";
 import { Modal } from '@/components/ui/Modal';
 import { usePhotoEditSessionContext } from '@/hooks/photo/usePhotoEditSessionContext';
 import { Lock, Loader2, Maximize2, X } from 'lucide-react';
@@ -12,8 +12,13 @@ import { showToast } from '@/lib/ui/toast';
 import { MultilingualInput } from '@/components/shared/MultilingualInput';
 
 export function BasicInfoTab() {
-  const { register, control, setValue } = usePhotoEditSessionContext();
-  const itemCode = useWatch({ control, name: 'item_code' });
+  const { form } = useFormContext();
+  const { value: itemCode } = useField('item_code');
+  const { value: nameValue = '' } = useField('name');
+  const { value: manualCode = '' } = useField('manual_code');
+  const { value: modelNumber = '' } = useField('model_number');
+  const { value: price = '' } = useField('price');
+
   const { uiTranslations: t } = useTranslation();
   
   const { modal, photoId } = useFilters();
@@ -54,9 +59,8 @@ export function BasicInfoTab() {
               <input 
                 type="text" 
                 placeholder="NAME..." 
-                {...register('name', {
-                  setValueAs: (value) => typeof value === 'string' ? value.toUpperCase() : value
-                })}
+                value={nameValue as string}
+                onChange={(e) => form.setValue('name', e.target.value.toUpperCase())}
                 className="w-full bg-white border border-slate-200 px-4 py-3 rounded-2xl text-base sm:text-sm font-bold outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 min-w-0 transition-all" 
               />
             </div>
@@ -70,8 +74,8 @@ export function BasicInfoTab() {
             <Lock size={8} className="text-slate-300" />
             SYSTEM CODE
           </h3>
-          <div className="w-full bg-slate-50 border border-slate-100 px-4 py-3 rounded-2xl text-xs font-mono font-medium text-slate-400 cursor-not-allowed truncate" title={itemCode || ''}>
-            {itemCode || t.systemCodeAuto}
+          <div className="w-full bg-slate-50 border border-slate-100 px-4 py-3 rounded-2xl text-xs font-mono font-medium text-slate-400 cursor-not-allowed truncate" title={(itemCode as string) || ''}>
+            {(itemCode as string) || t.systemCodeAuto}
           </div>
         </div>
         <div className="space-y-1.5 opacity-50 select-none">
@@ -97,7 +101,8 @@ export function BasicInfoTab() {
           <input 
             type="text" 
             placeholder="CODE..."
-            {...register('manual_code')}
+            value={manualCode as string}
+            onChange={(e) => form.setValue('manual_code', e.target.value)}
             className="w-full bg-white border border-slate-200 px-4 py-3 rounded-2xl text-sm font-bold outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all" 
           />
         </div>
@@ -107,9 +112,8 @@ export function BasicInfoTab() {
             type="text" 
             inputMode="numeric"
             placeholder="MODEL..." 
-            {...register('model_number', {
-              setValueAs: (value) => value?.replace(/\D/g, '')
-            })}
+            value={modelNumber as string}
+            onChange={(e) => form.setValue('model_number', e.target.value.replace(/\D/g, ''))}
             className="w-full bg-white border border-slate-200 px-4 py-3 rounded-2xl text-sm font-bold outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all" 
           />
         </div>
@@ -119,9 +123,8 @@ export function BasicInfoTab() {
             type="text" 
             inputMode="numeric"
             placeholder="PRICE..." 
-            {...register('price', {
-              setValueAs: (value) => value?.replace(/\D/g, '')
-            })}
+            value={price as string}
+            onChange={(e) => form.setValue('price', e.target.value.replace(/\D/g, ''))}
             className="w-full bg-white border border-slate-200 px-4 py-3 rounded-2xl text-sm font-bold text-blue-600 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all" 
           />
         </div>

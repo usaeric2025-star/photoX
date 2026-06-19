@@ -2,7 +2,7 @@ import { logger } from '@/lib/logger';
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
-export type TaskStatus = 'running' | 'completed' | 'error' | 'cancelled';
+type TaskStatus = 'running' | 'completed' | 'error' | 'cancelled';
 
 export interface BackgroundTask {
   id: string;
