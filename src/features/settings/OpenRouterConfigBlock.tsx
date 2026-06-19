@@ -1,6 +1,30 @@
 import React from 'react';
 import { translations } from '@/locales';
 
+interface KeysStatus {
+  openrouter: boolean;
+  agnes: boolean;
+  primaryProvider: string;
+}
+
+interface OpenRouterConfigBlockProps {
+  keysStatus: KeysStatus;
+  isEditingOpenRouter: boolean;
+  setIsEditingOpenRouter: (val: boolean) => void;
+  localOpenRouterKey: string;
+  setLocalOpenRouterKey: (val: string) => void;
+  openrouterModel: string;
+  setOpenrouterModel: (val: string) => void;
+  inputClass: string;
+  saveKey: (provider: 'openrouter' | 'agnes', key: string) => Promise<void>;
+  handleSaveModel: (provider: 'openrouter' | 'agnes', model: string) => Promise<void>;
+  handleTest: (provider: 'openrouter' | 'agnes') => Promise<void>;
+  isSaving: 'openrouter' | 'agnes' | null;
+  isTesting: 'openrouter' | 'agnes' | null;
+  appLang: string;
+  t: any;
+}
+
 export function OpenRouterConfigBlock({
   keysStatus,
   isEditingOpenRouter,
@@ -17,7 +41,7 @@ export function OpenRouterConfigBlock({
   isTesting,
   appLang,
   t
-}: any) {
+}: OpenRouterConfigBlockProps) {
   return (
     <div className="space-y-4 p-5 rounded-3xl bg-slate-50/50 border border-slate-100">
       <div className="flex items-center justify-between mb-4">

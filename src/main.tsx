@@ -118,6 +118,7 @@ async function init() {
       const isCancellation = 
         reason?.name === 'AbortError' || 
         /cancel|abort|precondition|offline|websocket|websocket|hmr|chunk|module script|dynamically imported/i.test(message) ||
+        /ResizeObserver/i.test(message) ||
         message.includes('DOMException') ||
         message.includes('user_cancel') ||
         message.includes('Failed to fetch') ||
@@ -128,6 +129,18 @@ async function init() {
     });
 
     window.addEventListener('error', (event) => {
+      const message = event.message || event.error?.message || '';
+      const isNoise = 
+        /ResizeObserver/i.test(message) || 
+        /chunk|dynamically imported|module script/i.test(message) ||
+        /AbortError/i.test(message) ||
+        /cancel|abort|precondition|offline|websocket|hmr/i.test(message) ||
+        message.includes('DOMException') ||
+        message.includes('user_cancel') ||
+        message.includes('Failed to fetch') ||
+        message.includes('NetworkError');
+
+      if (isNoise) return;
       logError(event.error || new Error(event.message || '全局运行时错误'), { action: 'Runtime Error', component: 'Global', kind: 'UNKNOWN' });
     });
   }
@@ -143,15 +156,31 @@ async function init() {
   if (container) {
     const root = createRoot(container, {
       onCaughtError: (error, errorInfo) => {
-        if (/chunk|dynamically imported|module script/i.test((error as Error)?.message || '')) return;
-        useUIStore.getState().setFatalError(error instanceof Error ? error : new Error(String(error)));
+        const message = (error as Error)?.message || String(error || '');
+        if (/chunk|dynamically imported|module script|ResizeObserver/i.test(message)) return;
+        // Caught errors are handled locally by error boundaries. Log but do not trigger global crash screen.
+        logError(error, { action: 'Caught Error', component: 'Global', kind: 'UNKNOWN', metadata: { errorInfo } });
       },
       onUncaughtError: (error) => {
-        if (/chunk|dynamically imported|module script/i.test((error as Error)?.message || '')) return;
+        const message = (error as Error)?.message || String(error || '');
+        const isNoise = 
+          /chunk|dynamically imported|module script|ResizeObserver/i.test(message) ||
+          /AbortError/i.test(message) ||
+          /cancel|abort|precondition|offline|websocket|hmr/i.test(message) ||
+          message.includes('DOMException') ||
+          message.includes('user_cancel') ||
+          message.includes('Failed to fetch') ||
+          message.includes('NetworkError');
+
+        if (isNoise) {
+          logError(error, { action: 'Uncaught Noise Error', component: 'Global', kind: 'UNKNOWN' });
+          return;
+        }
+        
         useUIStore.getState().setFatalError(error instanceof Error ? error : new Error(String(error)));
       },
       onRecoverableError: (error) => {
-        if (/chunk|dynamically imported|module script/i.test((error as Error)?.message || '')) return;
+        if (/chunk|dynamically imported|module script|ResizeObserver/i.test((error as Error)?.message || '')) return;
         // ignore recoverable
       },
     });

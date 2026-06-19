@@ -142,9 +142,9 @@ export const handleError = (error: unknown, context: string, silent: boolean = f
 
   const messageStr = standardError.message.replace(/\n/g, ' ');
 
-  // For serious context like AI analysis or when a traceId is present, we ALSO show the FatalErrorOverlay
+  // For serious context like AI analysis, we ALSO show the FatalErrorOverlay
   // This ensures the error is visible and interaction works even when blocked by a modal dialog
-  if (context === 'analyzePhoto' || standardError.traceId) {
+  if (context === 'analyzePhoto' || context === 'fatal') {
     useUIStore.getState().setFatalError(new Error(`${messageStr} (${context})`));
   }
 

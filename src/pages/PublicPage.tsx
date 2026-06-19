@@ -11,6 +11,7 @@ import { LazyYarlLightbox } from '@/features/lightbox/LazyYarlLightbox';
 import { useUIStore } from '@/store/useUIStore';
 import { WhatsAppDialog } from '@/components/shared/WhatsAppDialog';
 import { PhotoErrorDisplay } from '@/components/photo/PhotoErrorDisplay';
+import { Icon } from '@/components/ui/Icon';
 import { ArrowUp, MessageCircle } from 'lucide-react';
 
 export default function PublicPage() {

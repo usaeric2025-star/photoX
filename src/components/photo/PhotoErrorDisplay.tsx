@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from '@/hooks/core/useTranslation';
 import { classifyPhotoError, getLocalizedError, showErrorToast, showSuccessToast } from '@/lib/error';
-import { WifiOff, ShieldAlert, FolderOpen, ServerCrash, AlertCircle, RefreshCw, Copy, Check } from 'lucide-react';
+import { WifiOff, ShieldAlert, FolderOpen, ServerCrash, AlertCircle, RefreshCw, Copy, Check } from '@react-zero-ui/icon-sprite';
 import { cn } from '@/lib/utils';
 
 interface PhotoErrorDisplayProps {

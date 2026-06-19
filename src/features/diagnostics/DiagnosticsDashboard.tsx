@@ -1,17 +1,12 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React, { useState, Suspense } from 'react';
-import { 
-  RefreshCw, ShieldCheck
-} from '@react-zero-ui/icon-sprite';
+import { RefreshCw, ShieldCheck } from '@/components/ui/Icon';
 import { useDiagnostics } from '@/hooks/admin/useDiagnostics';
-import { diagnosticRegistry, type DiagnosticPlugin } from './registry';
+import { diagnosticRegistry, diagnosticCategories, type DiagnosticPlugin } from './registry';
 import { DiagnosticCard } from './DiagnosticCard';
 import { Button } from '@/components/shared/Button';
-import { useUIStore } from '@/store/useUIStore';
-import { showToast } from '@/lib/ui/toast';
 import { handleError } from '@/lib/error/errorHandler';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
-
 import { usePerformanceAudit } from '@/hooks/admin/usePerformanceAudit';
 
 const ErrorLogViewer = React.lazy(() => import('./ErrorLogViewer').then(m => ({ default: m.ErrorLogViewer })));
@@ -21,17 +16,14 @@ const IssueList = React.lazy(() => import('./IssueList').then(m => ({ default: m
 const MaintenanceCenter = React.lazy(() => import('./MaintenanceCenter').then(m => ({ default: m.MaintenanceCenter })));
 const TasksContent = React.lazy(() => import('./TasksList').then(m => ({ default: m.TasksContent })));
 
-
-/* Removed local DiagnosticPlugin interface declaration */
-
 interface PluginResult {
   result: { success: boolean; message: string; stage?: string; error?: string; latency?: number } | null;
   loading: boolean;
 }
 
 export function DiagnosticsDashboard() {
-  const location = useRouterSafe().location;
   const navigate = useRouterSafe().navigate;
+  const location = useRouterSafe().location;
   
   const activeTab = (() => {
     const path = location.pathname;
@@ -50,23 +42,13 @@ export function DiagnosticsDashboard() {
 
   const { 
     report, isPending, refreshReport, runRepair,
-    runR2Diagnostics, isDiagnosingR2, r2Result,
-    handleTestWorker, isTestingWorker: _unusedIsTesting, workerResult: _unusedResult,
     runAudit, isAuditing, auditResult
   } = useDiagnostics();
   const { performanceIssues, clearAudits } = usePerformanceAudit();
 
-  const [localWorkerResult, setLocalWorkerResult] = useState<unknown>(null);
-
-  const onTestWorker = async () => {
-    const res = await handleTestWorker();
-    if (res) setLocalWorkerResult(res);
-  };
-
   const internalRunRepair = async (issueId: string) => {
     if (issueId.startsWith('perf_')) {
       clearAudits();
-      showToast.success('性能统计已重置');
       refreshReport();
       return;
     }
@@ -82,8 +64,6 @@ export function DiagnosticsDashboard() {
       setPluginResults(prev => ({ ...prev, [plugin.title]: { result: res, loading: false } }));
       if (!res.success) {
         handleError(res, `[${plugin.title}] 检查未通过`);
-      } else {
-        showToast.success(res.message);
       }
     } catch (e: unknown) {
       setPluginResults(prev => ({ ...prev, [plugin.title]: { result: { success: false, message: '执行出错', error: String(e) }, loading: false } }));
@@ -100,7 +80,7 @@ export function DiagnosticsDashboard() {
         category: 'integrity',
         severity: 'P1',
         title: '云端存储包含孤儿物理文件 (Storage Orphans Found)',
-        description: `Cloudflare R2 存储中存在 ${orphansCount} 个无数据库归档对账的物理图片文件（例如: ${auditResult?.orphans?.samples?.[0]?.key || ''}）。点击立即处理将自动扫描、生成智能描述与多语言配置并重建数据库归档。`,
+        description: `Cloudflare R2 存储中存在 ${orphansCount} 个无数据库归档对账的物理图片文件。`,
         affectedCount: orphansCount,
         sampleIds: [],
         autoFixable: true
@@ -167,7 +147,6 @@ export function DiagnosticsDashboard() {
           />
           </Suspense>
 
-          {/* R2 对账可视化 (P0) */}
           <Suspense fallback={<LoadingScreen />}>
           <AuditVisualizer 
             auditResult={auditResult} 
@@ -176,22 +155,34 @@ export function DiagnosticsDashboard() {
           />
           </Suspense>
 
-          {/* 基础设施诊断 */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {diagnosticRegistry.map((plugin: DiagnosticPlugin) => (
-              <DiagnosticCard 
-                key={plugin.title}
-                title={plugin.title}
-                desc={plugin.desc}
-                icon={plugin.icon}
-                isPending={pluginResults[plugin.title]?.loading ?? false}
-                result={pluginResults[plugin.title]?.result ?? null}
-                onTest={() => runPlugin(plugin)}
-              />
-            ))}
-          </div>
+          {/* 基础设施诊断 - 按分类分组 */}
+          {diagnosticCategories.map(category => {
+            const plugins = diagnosticRegistry.filter(p => p.category === category.id);
+            if (plugins.length === 0) return null;
+            
+            return (
+              <div key={category.id} className="space-y-4">
+                <div className="flex items-center gap-2 text-brand-navy font-bold">
+                  {category.icon}
+                  <h3>{category.title} ({plugins.length})</h3>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {plugins.map(plugin => (
+                    <DiagnosticCard 
+                      key={plugin.title}
+                      title={plugin.title}
+                      desc={plugin.desc}
+                      icon={plugin.icon}
+                      isPending={pluginResults[plugin.title]?.loading ?? false}
+                      result={pluginResults[plugin.title]?.result ?? null}
+                      onTest={() => runPlugin(plugin)}
+                    />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
 
-          {/* 智能故障修复列表 */}
           <Suspense fallback={<LoadingScreen />}>
           <IssueList 
             issues={combinedIssues} 
@@ -201,7 +192,6 @@ export function DiagnosticsDashboard() {
           />
           </Suspense>
 
-          {/* 高级维护工具栏 */}
           <Suspense fallback={<LoadingScreen />}>
           <MaintenanceCenter 
             onSuccess={refreshReport} 

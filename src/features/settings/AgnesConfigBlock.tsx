@@ -1,6 +1,30 @@
 import React from 'react';
 import { translations } from '@/locales';
 
+interface KeysStatus {
+  openrouter: boolean;
+  agnes: boolean;
+  primaryProvider: string;
+}
+
+interface AgnesConfigBlockProps {
+  keysStatus: KeysStatus;
+  isEditingAgnes: boolean;
+  setIsEditingAgnes: (val: boolean) => void;
+  localAgnesKey: string;
+  setLocalAgnesKey: (val: string) => void;
+  agnesModel: string;
+  setAgnesModel: (val: string) => void;
+  inputClass: string;
+  saveKey: (provider: 'openrouter' | 'agnes', key: string) => Promise<void>;
+  handleSaveModel: (provider: 'openrouter' | 'agnes', model: string) => Promise<void>;
+  handleTest: (provider: 'openrouter' | 'agnes') => Promise<void>;
+  isSaving: 'openrouter' | 'agnes' | null;
+  isTesting: 'openrouter' | 'agnes' | null;
+  appLang: string;
+  t: any;
+}
+
 export function AgnesConfigBlock({
   keysStatus,
   isEditingAgnes,
@@ -17,7 +41,7 @@ export function AgnesConfigBlock({
   isTesting,
   appLang,
   t
-}: any) {
+}: AgnesConfigBlockProps) {
   return (
     <div className="space-y-4 p-5 rounded-3xl bg-blue-50/30 border border-blue-100">
       <div className="flex items-center justify-between mb-4">

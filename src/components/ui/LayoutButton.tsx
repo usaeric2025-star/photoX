@@ -1,5 +1,5 @@
 import { Button } from '@/components/shared/Button';
-import { LayoutGrid, List } from '@react-zero-ui/icon-sprite';
+import { Icon } from '@/components/ui/Icon';
 
 interface LayoutButtonProps {
   isGrid: boolean;
@@ -8,6 +8,6 @@ interface LayoutButtonProps {
 
 export const LayoutButton = ({ isGrid, onClick }: LayoutButtonProps) => (
   <Button variant="outline" size="icon" onClick={onClick} className="h-8 w-8">
-    {isGrid ? <LayoutGrid size={16} /> : <List size={16} />}
+    {isGrid ? <Icon name="LayoutGrid" size={16} /> : <Icon name="List" size={16} />}
   </Button>
 );

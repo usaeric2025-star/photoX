@@ -49,7 +49,7 @@ export function FilterBar({ mode }: FilterBarProps) {
           <CategoryGrid mode={mode} />
           
           {/* 標籤 */}
-          {isAdmin && <TagGrid />}
+          <TagGrid />
         </div>
       )}
     </div>
