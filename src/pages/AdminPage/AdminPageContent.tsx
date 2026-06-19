@@ -5,6 +5,7 @@ import { X, Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useTasks, 
   useSyncMutation } from '@/hooks';
+import { UploadModeDialog } from '@/features/upload/components/UploadModeDialog';
 import { usePhotoUpload } from '@/features/upload';
 import { UploadButton } from '@/components/shared/UploadButton';
 import { logger } from '@/lib/logger';
@@ -28,6 +29,8 @@ export function AdminPageContent() {
   const filters = useFilters({ enableStatus: true, enableBatch: true });
   const { user } = useAuthStore();
   const { uploadFiles } = usePhotoUpload();
+  const uploadModeDialogOpen = useUIStore(s => s.uploadModeDialogOpen);
+  const pendingFiles = useUIStore(s => s.pendingFiles);
   const { handleBatchAiAnalyze } = useAIBatchAnalysis();
   const { mutateAsync: syncMut } = useSyncMutation();
   const { tasks } = useTasks();
@@ -110,13 +113,32 @@ export function AdminPageContent() {
         <input 
           type="file" id="admin-quick-add-input" multiple accept="image/*" className="hidden" 
           onChange={(e) => {
-            if (e.target.files) uploadFiles(e.target.files);
+            if (e.target.files) {
+              const files = e.target.files;
+              if (files.length > 1) {
+                store.update({ uploadModeDialogOpen: true, pendingFiles: files });
+              } else {
+                store.update({ uploadAsGroup: false });
+                uploadFiles(files);
+              }
+            }
             e.target.value = '';
           }}
         />
       </div>
 
       {/* Put Modals outside the layout container */}
+      <UploadModeDialog 
+        open={uploadModeDialogOpen}
+        onOpenChange={(open) => store.update({ uploadModeDialogOpen: open })}
+        onSelectMode={(mode) => {
+          if (pendingFiles) {
+            store.update({ uploadAsGroup: mode === 'group' });
+            uploadFiles(pendingFiles);
+          }
+          store.update({ uploadModeDialogOpen: false, pendingFiles: null });
+        }}
+      />
       <Suspense fallback={null}>
         <PhotoEditModal />
       </Suspense>

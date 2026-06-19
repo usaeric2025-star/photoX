@@ -167,36 +167,6 @@ ai.post("/analyze", async (c) => {
     }
 });
 
-ai.post("/analyze-base64", async (c) => {
-    try {
-      const body = await c.req.json();
-      const check = AIAnalyzeBase64ReqSchema(body);
-      if (check instanceof type.errors) throw new Error(check.summary);
-
-      const { base64Image, customModel, promptText } = check;
-      const provider = await getAIProvider(undefined, customModel);
-      const modelConfig = (provider as BaseAIProvider).getConfig().model;
-      const model = modelConfig || 'google/gemini-2.5-flash-lite';
-
-      const { data, rawText } = await executeAITask({
-          task: 'analyze-base64',
-          provider,
-          model,
-          messages: [{ role: "user", content: [{ type: "text", text: promptText || "Analyze this image" }, { type: "image_url", image_url: { url: base64Image } }] }],
-          prompt: promptText || "Analyze this image",
-          metadata: { type: 'base64' }
-      });
-
-      if (data && (data as { _fallback?: boolean })._fallback) {
-          throw new Error((data as { _error?: string })._error || 'AI base64 analysis failed');
-      }
-
-      return c.json({ success: true, data, raw_result: rawText } as ApiResponse);
-    } catch (error: unknown) { 
-        return c.json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' } as ApiResponse, 500); 
-    }
-});
-
 ai.post("/translate", async (c) => {
     try {
       const body = await c.req.json();

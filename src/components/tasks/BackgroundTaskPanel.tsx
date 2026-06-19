@@ -4,27 +4,38 @@ import { Loader2, CheckCircle2, XCircle, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export function BackgroundTaskPanel() {
-  const { tasks, removeTask } = useTasks();
+  const { tasks, removeTask, cancelTask } = useTasks();
   
-  const activeTasks = tasks.filter(t => t.status === 'running' || t.status === 'error' || (t.status === 'completed' && !t.id.startsWith('temp-')));
+  const activeTasks = tasks.filter(t => 
+    t.status === 'running' || 
+    t.status === 'error' || 
+    t.status === 'cancelled' ||
+    (t.status === 'completed' && t.progress === 100)
+  );
 
   if (activeTasks.length === 0) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-[100] flex flex-col gap-3 w-80 pointer-events-none">
+    <div className="fixed bottom-6 left-6 z-[100] flex flex-col gap-3 w-80 pointer-events-none">
       <AnimatePresence mode="popLayout">
         {activeTasks.slice(-3).map((task) => (
-          <TaskItem key={task.id} task={task} onRemove={() => removeTask(task.id)} />
+          <TaskItem 
+            key={task.id} 
+            task={task} 
+            onRemove={() => removeTask(task.id)}
+            onCancel={() => cancelTask(task.id)}
+          />
         ))}
       </AnimatePresence>
     </div>
   );
 }
 
-function TaskItem({ task, onRemove }: { task: BackgroundTask; onRemove: () => void }) {
+function TaskItem({ task, onRemove, onCancel }: { task: BackgroundTask; onRemove: () => void; onCancel: () => void }) {
   const isError = task.status === 'error';
   const isCompleted = task.status === 'completed';
   const isRunning = task.status === 'running';
+  const isCancelled = task.status === 'cancelled';
 
   return (
     <motion.div
@@ -56,10 +67,19 @@ function TaskItem({ task, onRemove }: { task: BackgroundTask; onRemove: () => vo
             </p>
           </div>
         </div>
-        {(isCompleted || isError) && (
+        {(isCompleted || isError || isCancelled) ? (
           <button 
             onClick={onRemove}
-            className="p-1 hover:bg-slate-50 rounded-lg text-slate-400 transition-colors"
+            className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
+            title="关闭 / Close"
+          >
+            <X size={14} />
+          </button>
+        ) : (
+          <button 
+            onClick={onCancel}
+            className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-red-500 transition-colors"
+            title="取消 / Cancel"
           >
             <X size={14} />
           </button>

@@ -102,7 +102,7 @@ export function usePhotoUpload() {
         
         // Group uploaded photos if setting is enabled
         const uiStore = useUIStore.getState();
-        if (uiStore.uploadAsGroup && uploadedIds.length > 0) {
+        if (uiStore.uploadAsGroup && uploadedIds.length > 1) {
            try {
              // Let's create a new group or use group mutation
              const { groupPhotos } = await import('@/services/group/commands');
@@ -116,6 +116,11 @@ export function usePhotoUpload() {
            } catch(e) {
              ErrorFactory.handle(e, '合组失败');
            }
+        } else if (uploadedIds.length === 1) {
+          // If single photo, we might want to open edit modal immediately?
+          // The user mentioned "上传后跳出合组编辑，但我是单张上传"
+          // So we should make sure we don't go to batch-edit for single photos.
+          invalidatePhotos();
         }
         
         // 移除冗余的 toast.success，任务中心会显示结果

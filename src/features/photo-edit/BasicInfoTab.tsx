@@ -52,11 +52,11 @@ export function BasicInfoTab() {
               
               <input 
                 type="text" 
-                placeholder={t.productNamePlaceholderZh} 
+                placeholder="NAME..." 
                 {...register('name', {
                   setValueAs: (value) => typeof value === 'string' ? value.toUpperCase() : value
                 })}
-                className="w-full bg-white border border-slate-200 px-3 py-2 rounded-xl text-sm font-bold outline-none focus:border-blue-500 min-w-0 transition-colors" 
+                className="w-full bg-white border border-slate-200 px-4 py-3 rounded-2xl text-base sm:text-sm font-bold outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 min-w-0 transition-all" 
               />
             </div>
           </div>
@@ -67,43 +67,43 @@ export function BasicInfoTab() {
         <div className="space-y-1.5 opacity-50 select-none">
           <h3 className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter px-1 flex items-center gap-1">
             <Lock size={8} className="text-slate-300" />
-            系统内部编号 / SYSTEM CODE
+            SYSTEM CODE
           </h3>
-          <div className="w-full bg-slate-50 border border-slate-100 px-3 py-2 rounded-xl text-sm font-mono font-medium text-slate-400 cursor-not-allowed">
+          <div className="w-full bg-slate-50 border border-slate-100 px-4 py-3 rounded-2xl text-xs font-mono font-medium text-slate-400 cursor-not-allowed">
             {itemCode || t.systemCodeAuto}
           </div>
         </div>
         <div className="space-y-1.5">
-          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">价格编号 / CODE</h3>
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">CODE</h3>
           <input 
             type="text" 
-            placeholder={t.itemCodePlaceholder} 
+            placeholder="CODE..."
             {...register('manual_code')}
-            className="w-full bg-white border border-slate-200 px-3 py-2 rounded-xl text-sm font-bold outline-none focus:border-blue-500 transition-colors" 
+            className="w-full bg-white border border-slate-200 px-4 py-3 rounded-2xl text-sm font-bold outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all" 
           />
         </div>
         <div className="space-y-1.5">
-          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">型號 / MODEL</h3>
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">MODEL</h3>
           <input 
             type="text" 
             inputMode="numeric"
-            placeholder={t.modelNumberPlaceholder} 
+            placeholder="MODEL..." 
             {...register('model_number', {
               setValueAs: (value) => value?.replace(/\D/g, '')
             })}
-            className="w-full bg-white border border-slate-200 px-3 py-2 rounded-xl text-sm font-bold outline-none focus:border-blue-500 transition-colors" 
+            className="w-full bg-white border border-slate-200 px-4 py-3 rounded-2xl text-sm font-bold outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all" 
           />
         </div>
         <div className="space-y-1.5">
-          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">價格 / PRICE</h3>
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">PRICE</h3>
           <input 
             type="text" 
             inputMode="numeric"
-            placeholder={t.pricePlaceholder} 
+            placeholder="PRICE..." 
             {...register('price', {
               setValueAs: (value) => value?.replace(/\D/g, '')
             })}
-            className="w-full bg-white border border-slate-200 px-3 py-2 rounded-xl text-sm font-bold text-blue-600 outline-none focus:border-blue-500 transition-colors" 
+            className="w-full bg-white border border-slate-200 px-4 py-3 rounded-2xl text-sm font-bold text-blue-600 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all" 
           />
         </div>
       </div>
