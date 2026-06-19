@@ -1,6 +1,6 @@
 export const formatters = {
   // Date/Time
-  date: (date: Date | string | number, locale: string = 'zh-TW') => {
+  date: (date: Date | string | number, locale: string = 'zh-CN') => {
     try {
       const d = new Date(date);
       if (isNaN(d.getTime())) return '-';
@@ -15,7 +15,7 @@ export const formatters = {
     }
   },
   
-  dateTime: (date: Date | string | number, locale: string = 'zh-TW') => {
+  dateTime: (date: Date | string | number, locale: string = 'zh-CN') => {
     try {
       const d = new Date(date);
       if (isNaN(d.getTime())) return '-';
@@ -32,7 +32,7 @@ export const formatters = {
     }
   },
 
-  time: (date: Date | string | number, locale: string = 'zh-TW') => {
+  time: (date: Date | string | number, locale: string = 'zh-CN') => {
     try {
       const d = new Date(date);
       if (isNaN(d.getTime())) return '-';
