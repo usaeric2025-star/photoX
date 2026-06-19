@@ -16,7 +16,7 @@ interface FilterBarProps {
 export function FilterBar({ mode }: FilterBarProps) {
   const isAdmin = mode === 'admin';
   const { showGroupsCollapsed, setShowGroupsCollapsed } = useFilters();
-  const [isExpanded, setIsExpanded] = useState(!isAdmin); // Public always expanded by default
+  const [showTags, setShowTags] = useState(false);
 
   return (
     <div className="flex-shrink-0 border-b bg-white">
@@ -26,11 +26,17 @@ export function FilterBar({ mode }: FilterBarProps) {
         </div>
         <div className="flex gap-1 shrink-0">
           <button 
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="p-2 border rounded-lg bg-white hover:bg-gray-50 border-gray-200 transition"
-            title={isExpanded ? 'Collapse' : 'Expand'}
+            onClick={() => setShowTags(!showTags)}
+            className={cn(
+              "px-3 py-2 border rounded-lg transition flex items-center gap-1 cursor-pointer",
+              showTags 
+                ? "bg-slate-950 border-slate-950 text-white" 
+                : "bg-white hover:bg-gray-50 border-gray-200 text-gray-500"
+            )}
+            title={showTags ? '收起標籤' : '展開標籤'}
           >
-            {isExpanded ? <ChevronUp className="w-5 h-5 text-gray-500" /> : <ChevronDown className="w-5 h-5 text-gray-500" />}
+            <span className="text-[11px] font-black tracking-wider font-sans uppercase">TAGS</span>
+            {showTags ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
           <SortToggle />
           <ColumnsToggle />
@@ -43,15 +49,13 @@ export function FilterBar({ mode }: FilterBarProps) {
         </div>
       </div>
       
-      {isExpanded && (
-        <div className="px-4 pb-3 space-y-2">
-          {/* 分類 - 根據規範固定渲染 2 x 4 */}
-          <CategoryGrid mode={mode} />
-          
-          {/* 標籤 */}
-          <TagGrid />
-        </div>
-      )}
+      <div className="px-4 pb-3 space-y-2">
+        {/* 分類 - 根據規範固定渲染 2 x 4 */}
+        <CategoryGrid mode={mode} />
+        
+        {/* 標籤 - 默認折疊，由上方按鈕控制 */}
+        {showTags && <TagGrid />}
+      </div>
     </div>
   );
 }
