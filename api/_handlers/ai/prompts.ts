@@ -2,8 +2,8 @@ export const AI_PROMPTS = {
     ANALYZE_PHOTO: (context: { categories: unknown[]; tags: unknown[]; groups: unknown[] }) => `
 Analyze this furniture/home decor piece.
 Output JSON with:
-- name: { en, zh, ms } (Translate name to English, Chinese, and Malay/Bahasa Melayu)
-- description: { en, zh, ms } (Translate description to English, Chinese, and Malay/Bahasa Melayu)
+- name: (Single string) MUST be in English or extract the literal product name/model text from the image if visible. Use OCR to prioritize text on the product.
+- description: { en, zh, ms } (Professional description translated to English, Chinese, and Malay/Bahasa Melayu)
 - category_id: Choose from available: ${JSON.stringify(context.categories)}
 - tag_names: Array of up to 3 strings from: ${JSON.stringify(context.tags)}
 - group_id: Match this item against the existing groups: ${JSON.stringify(context.groups)}. If similar exists, return ONLY the exact 'id' string (UUID) of that group. If no similar group matches, return null. DO NOT return the full group object, only the string ID or null.

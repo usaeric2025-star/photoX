@@ -9,6 +9,8 @@ import { useTasks, usePhoto, useFilters } from '@/hooks';
 import { translations } from '@/locales';
 import { usePhotoEditAI } from './usePhotoEditAI';
 
+import { MultilingualInput } from '@/components/shared/MultilingualInput';
+
 export function DetailsTab() {
   const { register, control, setValue } = usePhotoEditSessionContext();
   const { modal, photoId } = useFilters();
@@ -43,38 +45,12 @@ export function DetailsTab() {
       />
 
       <div className="space-y-4">
-        <div className="flex items-center justify-between px-1 border-b border-slate-100 pb-2">
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">物品说明 / DESCRIPTIONS</span>
+        <div className="flex items-center px-1 border-b border-slate-100 pb-2">
+          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">物品说明 / DESCRIPTION</span>
         </div>
 
         <div className="space-y-4">
-          <div className="space-y-1.5">
-            <span className="text-[9px] font-black text-slate-400 uppercase px-1">中文 / CHINESE</span>
-            <textarea 
-              placeholder="输入中文说明..." 
-              {...register('description.zh')}
-              className="w-full p-4 rounded-2xl border border-slate-200 bg-white h-32 text-base sm:text-sm font-medium outline-none focus:border-blue-500 shadow-sm" 
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <span className="text-[9px] font-black text-slate-400 uppercase px-1">ENGLISH</span>
-            <textarea 
-              placeholder="English description..." 
-              {...register('description.en')}
-              className="w-full p-4 rounded-2xl border border-slate-200 bg-white h-32 text-base sm:text-sm font-medium outline-none focus:border-blue-500 shadow-sm" 
-            />
-          </div>
-
-
-          <div className="space-y-1.5">
-            <span className="text-[9px] font-black text-slate-400 uppercase px-1">MALAY</span>
-            <textarea 
-              placeholder="Penerangan Bahasa Melayu..." 
-              {...register('description.ms')}
-              className="w-full p-4 rounded-2xl border border-slate-200 bg-white h-32 text-base sm:text-sm font-medium outline-none focus:border-blue-500 shadow-sm" 
-            />
-          </div>
+          <MultilingualInput name="description" type="textarea" />
         </div>
       </div>
     </div>

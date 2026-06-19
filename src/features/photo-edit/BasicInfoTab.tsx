@@ -8,55 +8,24 @@ import { useUIStore } from '@/store/useUIStore';
 import { usePhoto, useTaskExecutor, useTasks, useTranslation, useFilters } from '@/hooks';
 import { OptimizedImage } from '@/components/shared/OptimizedImage';
 
+import { MultilingualInput } from '@/components/shared/MultilingualInput';
+
 export function BasicInfoTab() {
-  const { register, control } = usePhotoEditSessionContext();
+  const { register, control, setValue } = usePhotoEditSessionContext();
   const itemCode = useWatch({ control, name: 'item_code' });
   const { uiTranslations: t } = useTranslation();
   
   const { modal, photoId } = useFilters();
   const editPhotoId = modal === 'edit' ? photoId : null;
-  const newPhotoData = useUIStore((s) => s.newPhotoData);
-  const update = useUIStore((s) => s.update);
   const { data: detailPhoto } = usePhoto(editPhotoId || '');
-  const { runTask } = useTaskExecutor();
-  const { tasks } = useTasks();
   
-  const previewSrc = newPhotoData || detailPhoto?.image_url;
-  const isProcessingImage = tasks.some(t => t.status === 'running' && t.name === '旋转图片');
-
-  const onRotate = async () => {
-    if (!previewSrc) return;
-
-    await runTask('旋转图片', async () => {
-      const img = new Image();
-      let finalSrc = previewSrc;
-      if (previewSrc.startsWith('http')) {
-        img.crossOrigin = 'anonymous';
-        finalSrc = previewSrc + (previewSrc.indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now();
-      }
-      img.src = finalSrc;
-      
-      await new Promise<void>((resolve, reject) => {
-        img.onload = () => resolve();
-        img.onerror = () => reject(new Error('图片加载失败'));
-      });
-
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      canvas.width = img.height;
-      canvas.height = img.width;
-      ctx.translate(canvas.width / 2, canvas.height / 2);
-      ctx.rotate((90 * Math.PI) / 180);
-      ctx.drawImage(img, -img.width / 2, -img.height / 2);
-
-      const newData = canvas.toDataURL('image/jpeg', 0.95);
-      update({ newPhotoData: newData });
-    }, { silent: true });
-  };
-
+  const previewSrc = detailPhoto?.image_url;
+  
   const [zoomed, { open: openZoom, close: closeZoom }] = useDisclosure(false);
+
+  // Rotation logic removed as it depended on client-side newPhotoData.
+  // Future implementation should use server-side rotation or handle existing photo.
+  const onRotate = undefined; 
 
   return (
     <div className="m-0 p-4 space-y-5 animate-in fade-in slide-in-from-left-2 duration-300">
@@ -66,47 +35,29 @@ export function BasicInfoTab() {
              <div 
                className="aspect-square rounded-2xl overflow-hidden bg-slate-900 shadow-lg border-2 border-white relative group cursor-zoom-in"
                onClick={openZoom}
-             >
-                {isProcessingImage && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                    <Loader2 size={24} className="text-white animate-spin" />
-                  </div>
-                )}
+              >
                 <OptimizedImage src={previewSrc} className="w-full h-full object-contain" alt="Preview" />
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <Maximize2 className="text-white drop-shadow-md" size={20} />
                 </div>
-             </div>
-             <div className="flex gap-2">
-               <button 
-                 onClick={onRotate}
-                 disabled={isProcessingImage}
-                 className="flex-1 text-[10px] font-bold bg-white text-slate-600 p-1.5 rounded-xl border border-slate-200 active:bg-slate-50 disabled:opacity-50"
-               >
-                 旋转 90°
-               </button>
              </div>
           </div>
         )}
         <div className="flex-1 space-y-3">
           <div className="space-y-3">
             <div className="space-y-2 bg-slate-50/50 p-3 rounded-xl border border-slate-100">
-              <div className="flex items-center px-0.5 border-b border-slate-200/60 pb-1">
-                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">产品名称翻译 / TRANSLATIONS</span>
+              <div className="flex items-center px-0.5 border-b border-slate-200/60 pb-1 mb-2">
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">产品名称 / NAME</span>
               </div>
               
-              <div className="grid grid-cols-[auto_1fr] gap-2 items-center text-xs">
-                {/* Product Name */}
-                <div className="text-[9px] font-bold bg-slate-200 text-slate-700 px-1.5 py-1 rounded-md uppercase tracking-wider text-center w-10">NAME</div>
-                <input 
-                  type="text" 
-                  placeholder={t.productNamePlaceholderZh} 
-                  {...register('name.zh', {
-                    setValueAs: (value) => value?.toUpperCase()
-                  })}
-                  className="w-full bg-white border border-slate-200 px-3 py-2 rounded-xl text-sm font-bold outline-none focus:border-blue-500 min-w-0 transition-colors" 
-                />
-              </div>
+              <input 
+                type="text" 
+                placeholder={t.productNamePlaceholderZh} 
+                {...register('name', {
+                  setValueAs: (value) => typeof value === 'string' ? value.toUpperCase() : value
+                })}
+                className="w-full bg-white border border-slate-200 px-3 py-2 rounded-xl text-sm font-bold outline-none focus:border-blue-500 min-w-0 transition-colors" 
+              />
             </div>
           </div>
         </div>

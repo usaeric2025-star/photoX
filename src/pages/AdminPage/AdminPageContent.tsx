@@ -37,7 +37,6 @@ export function AdminPageContent() {
   
   const store = useUIStore(useShallow(s => ({
     update: s.update,
-    newPhotoData: s.newPhotoData,
     batchEditingIds: s.batchEditingIds })));
 
   const path = location.pathname;

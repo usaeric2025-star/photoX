@@ -6,6 +6,7 @@ import { usePhoto } from './usePhoto';
 import { usePhotoEditMutation } from './usePhotoMutations';
 import { PhotoSchema, type PhotoFormValues } from '@/schemas/photo';
 import { showToast } from '@/lib/ui/toast';
+import { generateItemCode } from '@/services/photo/utils';
 
 interface PhotoEditSessionContextValue {
   isDirty: boolean;
@@ -31,14 +32,28 @@ export const PhotoEditSessionProvider = ({
   const { data: photo, isPending } = usePhoto(photoId);
   const updateMutation = usePhotoEditMutation();
   
+  const toSingleString = (val: any) => {
+    if (typeof val === 'object' && val !== null) return val.zh || val.en || val.ms || '';
+    return val || '';
+  };
+
+  const toMultiObject = (val: any) => {
+    if (typeof val === 'object' && val !== null) return { zh: val.zh || '', en: val.en || '', ms: val.ms || '' };
+    return { zh: val || '', en: '', ms: '' };
+  };
+
   const form = useForm<PhotoFormValues>({
     resolver: arktypeResolver(PhotoSchema as any), 
     defaultValues: {
       ...photo,
+      name: toSingleString(photo?.name),
+      description: toMultiObject(photo?.description),
       group_id: photo?.group_id ?? null,
     } as unknown as PhotoFormValues,
     values: {
       ...photo,
+      name: toSingleString(photo?.name),
+      description: toMultiObject(photo?.description),
       group_id: photo?.group_id ?? null,
     } as unknown as PhotoFormValues,
   });
@@ -58,6 +73,14 @@ export const PhotoEditSessionProvider = ({
     
     try {
       const values = form.getValues();
+
+      // Auto-generate itemCode if missing
+      if (!values.item_code) {
+        const newCode = generateItemCode();
+        (values as any).item_code = newCode;
+        form.setValue('item_code' as any, newCode);
+      }
+
       // Sanitize undefined/empty fields to null to comply with ArkType/Database constraints
       const sanitizedUpdates = {
         ...values,

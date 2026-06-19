@@ -56,7 +56,6 @@ export interface UIStoreState {
   focusedGroupPhotoId: string | null;
   resetUI: () => void;
   showWhatsAppChoice: boolean;
-  newPhotoData: string | null;
   processingIds: string[];
   activeDialogCount: number;
   fatalError: Error | null;
@@ -155,7 +154,6 @@ export const useUIStore = create<UIStoreState>()((set) => ({
       activeDialogCount: 0
     }),
   showWhatsAppChoice: false,
-  newPhotoData: null,
   activeDialogCount: 0,
   fatalError: null,
   setFatalError: (error) => set({ fatalError: error }),

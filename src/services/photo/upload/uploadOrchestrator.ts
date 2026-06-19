@@ -62,6 +62,10 @@ export const uploadSinglePhoto = async (
         throw ErrorFactory.fatal('Upload failed: No image URL generated', { context: 'uploadOrchestrator' });
     }
 
+    if (!photo.item_code) {
+        photo.item_code = generateItemCode();
+    }
+
     normalizeDimensionsBeforeSave(photo.dimensions);
 
     if (!photo.id || photo.id.startsWith('temp-')) {

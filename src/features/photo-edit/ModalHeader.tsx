@@ -82,11 +82,13 @@ export function ModalHeader({
   };
 
   const onAiAnalyze = async () => {
-    console.log("AI Analyze clicked", { editPhotoId, detailPhotoUrl: detailPhoto?.image_url });
-    if (editPhotoId && detailPhoto?.image_url) {
-      await handleAiAnalyze(detailPhoto.image_url);
+    const finalImageUrl = detailPhoto?.image_url;
+    console.log("AI Analyze clicked", { editPhotoId, finalImageUrl: !!finalImageUrl });
+    if (finalImageUrl) {
+      await handleAiAnalyze(finalImageUrl);
     } else {
-      console.log("AI Analyze: missing data", { editPhotoId, detailPhoto });
+      console.log("AI Analyze: missing image data", { editPhotoId, detailPhoto });
+      showToast.error(appLang === 'zh' ? '照片信息缺失，无法识别' : 'Photo data missing');
     }
   }
 

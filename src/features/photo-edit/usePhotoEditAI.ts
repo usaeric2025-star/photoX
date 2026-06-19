@@ -28,23 +28,25 @@ export function usePhotoEditAI() {
 
   const handleAiAnalyze = async (previewSrc?: string, imageUrl?: string) => {
     const finalImageUrl = previewSrc || imageUrl;
+    
     console.log("handleAiAnalyze started", { finalImageUrl, editPhotoId });
+    
     if (!finalImageUrl || !editPhotoId) {
-      logger.warn('handleAiAnalyze: missing data', { finalImageUrl, editPhotoId });
+      logger.warn('handleAiAnalyze: missing photo info', { finalImageUrl, editPhotoId });
       showToast.error(appLang === 'zh' ? '照片信息缺失，无法分析' : 'Photo data missing');
       return;
     }
 
     try {
       await runTask(appLang === 'zh' ? "AI 识别" : "AI Identification", async ({ updateProgress }) => {
-        updateProgress(15, appLang === 'zh' ? '正在准备分析照片...' : 'Preparing photo files...');
+        updateProgress(0, appLang === 'zh' ? '正在启动 AI 识别模块...' : 'Starting AI module...');
+        updateProgress(10, appLang === 'zh' ? '正在准备分析照片...' : 'Preparing photo files...');
         
-        updateProgress(40, appLang === 'zh' ? '正在由 Agnes AI 智能识别各项属性 (约需 2-3 秒)...' : 'Analyzing attributes with Agnes AI (approx 2-3s)...');
-        console.log("Calling analyzePhoto with:", editPhotoId);
-        const resp = await analyzePhoto(editPhotoId);
+        updateProgress(30, appLang === 'zh' ? '正在由 AI 智能识别各项属性 (约需 2-5 秒)...' : 'Analyzing attributes with AI (approx 2-5s)...');
+        const resp = await analyzePhoto(editPhotoId!);
         
-        console.log("analyzePhoto result:", resp);
-        updateProgress(80, appLang === 'zh' ? '正在解析模型识别结果并写入草稿表单...' : 'Parsing AI attributes and injecting...');
+        console.log("AI analysis result:", resp);
+        updateProgress(70, appLang === 'zh' ? '正在解析模型识别结果并写入草稿表单...' : 'Parsing AI attributes and injecting...');
         
         if (!resp) {
           throw ErrorFactory.wrap(new Error('AI analysis failed (no result)'), 'AI智能识别', String(editPhotoId));
@@ -59,15 +61,10 @@ export function usePhotoEditAI() {
         const updates: Record<string, unknown> = {};
         
         if (result.name) {
-          updates.name = typeof result.name === 'object'
-            ? {
-                zh: result.name.zh || '',
-                en: result.name.en || '',
-                ms: result.name.ms || ''
-              }
-            : { zh: String(result.name), en: '', ms: '' };
+          updates.name = typeof result.name === 'object' && result.name !== null
+            ? (result.name.en || result.name.zh || result.name.ms || '')
+            : String(result.name);
         }
-
 
           // --- Strict Category Matching ---
           if (result.category_id !== undefined && result.category_id !== null) {
@@ -225,13 +222,15 @@ export function usePhotoEditAI() {
           }
 
           if (result.description) {
-            updates.description = typeof result.description === 'object'
-              ? {
-                  zh: result.description.zh || '',
-                  en: result.description.en || '',
-                  ms: result.description.ms || ''
-                }
-              : { zh: String(result.description), en: '', ms: '' };
+            if (typeof result.description === 'object' && result.description !== null) {
+              updates.description = {
+                zh: result.description.zh || '',
+                en: result.description.en || '',
+                ms: result.description.ms || ''
+              };
+            } else {
+              updates.description = { zh: String(result.description), en: '', ms: '' };
+            }
           }
           if (Array.isArray(result.dimensions)) {
             updates.dimensions = result.dimensions.map((d: Record<string, unknown>) => ({
@@ -251,18 +250,18 @@ export function usePhotoEditAI() {
             setValue(key as any, value, { shouldDirty: true });
           });
         
-        try {
-          await updatePhoto({ id: editPhotoId, updates, silent: true });
-        } catch (saveError: unknown) {
-          throw ErrorFactory.wrap(saveError, 'AI识别自动保存', String(editPhotoId));
-        }
+          if (editPhotoId) {
+            try {
+              await updatePhoto({ id: editPhotoId, updates, silent: true });
+            } catch (saveError: unknown) {
+              logger.warn('AI识别结果自动保存失败(但不影响回填):', saveError);
+            }
+          }
         
         // [V2.2] Standard invalidation per architecture rules
         const { queryKeys } = await import('@/lib/query/keys');
         queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
         queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
-        
-        showToast.success(appLang === 'zh' ? '已识别并保存' : 'Identified & Saved');
       }, { showSuccessToast: false, showProgress: true });
     } catch (e: unknown) {
 

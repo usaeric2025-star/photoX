@@ -67,30 +67,24 @@ interface PhotoEditModalProps {
 }
 
 export function PhotoEditModal({ slots, isOpen: propIsOpen, onClose: propOnClose, editPhotoId: propEditPhotoId }: PhotoEditModalProps) {
-  const { modal, photoId, setModal, setPhotoId } = useFilters();
+  const { modal, photoId, setModal } = useFilters();
   const urlEditPhotoId = modal === 'edit' ? photoId : null;
-  const newPhotoData = useUIStore((s) => s.newPhotoData);
-  const update = useUIStore((s) => s.update);
   const appLang = useUIStore((s) => s.appLang);
 
   const { mutateAsync: deletePhoto } = usePhotoDelete();
 
   const [isDeleteOpen, deleteDialog] = useDisclosure(false);
 
-  const resetAddState = () => update({ newPhotoData: null });
-
   // Fallback to store if props not provided, preferring URL
   const editPhotoId = propEditPhotoId !== undefined ? propEditPhotoId : urlEditPhotoId;
-  const isOpen = propIsOpen !== undefined ? propIsOpen : !!(editPhotoId || newPhotoData);
+  const isOpen = propIsOpen !== undefined ? propIsOpen : !!editPhotoId;
 
   const handleClose = () => {
     if (propOnClose) {
       propOnClose();
     } else {
-      resetAddState();
       if (modal === 'edit') {
         setModal(null);
-        // setPhotoId(null); // Keep photoId to return to lightbox
       }
     }
   };
