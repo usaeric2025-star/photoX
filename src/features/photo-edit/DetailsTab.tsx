@@ -6,6 +6,7 @@ import { ProductFormData, Dimension } from '@/types';
 import { safeArray } from '@/lib/utils';
 import { useUIStore } from '@/store/useUIStore';
 import { useTasks, usePhoto, useFilters } from '@/hooks';
+import { showToast } from '@/lib/ui/toast';
 import { translations } from '@/locales';
 import { usePhotoEditAI } from './usePhotoEditAI';
 
@@ -27,6 +28,13 @@ export function DetailsTab() {
     await handleAiAnalyze(detailPhoto?.image_url, detailPhoto?.image_url);
   };
 
+  const copyId = () => {
+    if (detailPhoto?.id) {
+      navigator.clipboard.writeText(detailPhoto.id);
+      showToast.success(appLang === 'zh' ? 'ID 已复制' : 'ID Copied');
+    }
+  };
+
   const dimensions = useWatch({ control, name: 'dimensions' });
   const updateForm = (updates: Partial<ProductFormData>) => {
     Object.entries(updates).forEach(([key, value]) => {
@@ -35,6 +43,19 @@ export function DetailsTab() {
   };
   return (
     <div className="m-0 p-4 space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <div className="flex items-center justify-between px-1">
+        <div 
+          className="flex items-center gap-1.5 cursor-help group" 
+          title={detailPhoto?.id || ''}
+          onClick={copyId}
+        >
+          <span className="text-[10px] font-bold text-slate-300 uppercase tracking-tighter">UUID</span>
+          <span className="text-[10px] font-mono text-slate-400 group-hover:text-slate-600 transition-colors">
+            {detailPhoto?.id?.slice(0, 8)}...
+          </span>
+        </div>
+      </div>
+
       <DimensionEditor 
         dimensions={safeArray<Dimension>(dimensions)}
         onChange={(newDims) => updateForm({ dimensions: newDims })}

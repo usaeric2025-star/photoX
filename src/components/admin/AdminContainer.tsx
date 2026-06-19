@@ -10,12 +10,14 @@ import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
 
 export function AdminContainer() {
   const filters = useFilters({ enableStatus: true });
+  const isAggregated = filters.showGroupsCollapsed && !filters.search && !filters.category && !filters.tags.length;
+  
   const photoGridData = usePhotoGrid({
     categoryId: filters.category,
     tagId: filters.tags?.[0],
     searchQuery: filters.search,
     sortOrder: filters.sort,
-    onlyGroupsCover: filters.showGroupsCollapsed
+    onlyGroupsCover: isAggregated
   }, 'admin');
   
   const { uiTranslations: labels } = useTranslation();

@@ -28,12 +28,14 @@ export default function PublicPage() {
   const [showScrollTop, setShowScrollTop] = React.useState(false);
   const gridRef = React.useRef<any>(null);
   
+  const isAggregated = showGroupsCollapsed && !search && !category && !tags.length;
+
   const photoGridData = usePhotoGrid({
     categoryId: category,
     tagId: tags?.[0],
     searchQuery: search,
     sortOrder: sort,
-    onlyGroupsCover: showGroupsCollapsed
+    onlyGroupsCover: isAggregated
   }, 'public');
 
   const { 

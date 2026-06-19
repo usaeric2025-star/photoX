@@ -18,7 +18,7 @@ interface PhotoGridContentProps {
   fetchNextPage: () => void;
   columns: number;
   mode: 'admin' | 'public';
-  filters?: Record<string, unknown> | null;
+  filters?: any;
   onPhotoClick?: (id: string, e?: React.MouseEvent) => void;
   gridRef?: React.Ref<any>;
   onScroll?: (offset: number) => void;
@@ -38,7 +38,9 @@ export function PhotoGridContent({
   gridRef,
   onScroll
 }: PhotoGridContentProps) {
-  
+  const showGroupsCollapsed = filters?.showGroupsCollapsed !== false;
+  const hasSearchQuery = !!filters?.search;
+
   if (isPending) {
     return <PhotoGridSkeleton columns={columns} count={20} />;
   }
@@ -72,8 +74,18 @@ export function PhotoGridContent({
         return (
           <div key={photo.id} className="p-0.5 sm:p-1 w-full">
             {mode === 'admin' 
-              ? <AdminPhotoCard photo={photo} onClick={(e) => onPhotoClick?.(photo.id, e)} />
-              : <PublicPhotoCard photo={photo} onClick={(e) => onPhotoClick?.(photo.id, e)} />
+              ? <AdminPhotoCard 
+                  photo={photo} 
+                  onClick={(e) => onPhotoClick?.(photo.id, e)} 
+                  showGroupsCollapsed={showGroupsCollapsed}
+                  hasSearchQuery={hasSearchQuery}
+                />
+              : <PublicPhotoCard 
+                  photo={photo} 
+                  onClick={(e) => onPhotoClick?.(photo.id, e)} 
+                  showGroupsCollapsed={showGroupsCollapsed}
+                  hasSearchQuery={hasSearchQuery}
+                />
             }
           </div>
         );
