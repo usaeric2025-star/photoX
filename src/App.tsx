@@ -115,8 +115,6 @@ export default function AppRoutes() {
     <ErrorBoundary>
       <ConfirmProvider>
         <RouterProvider router={router} context={routerContext} />
-        <BackgroundTaskPanel />
-        <JobResumer />
       </ConfirmProvider>
       <Analytics />
     </ErrorBoundary>

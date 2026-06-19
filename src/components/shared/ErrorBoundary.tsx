@@ -12,35 +12,54 @@ interface State {
 }
 
 const ErrorActions = ({ error, isChunkFailure }: { error?: Error, isChunkFailure: boolean }) => {
-  const { copy } = useCopyToClipboard({ successMessage: '错误信息已复制到剪贴板' });
+  const { copy } = useCopyToClipboard({ successMessage: '诊断信息已复制到剪贴板' });
 
   const handleCopy = () => {
-    const traceId = error && 'traceId' in error ? `\nTrace ID: ${(error as any).traceId}` : '';
-    const errorText = `${error?.message || 'Unknown error'}${traceId}\n\n${error?.stack || ''}`;
-    copy(errorText);
+    const timestamp = new Date().toISOString();
+    const errorType = error?.name || 'Error';
+    const errorCode = (error as any)?.code || (error as any)?.status || 'N/A';
+    const traceId = error && 'traceId' in error ? (error as any).traceId : 'N/A';
+    const message = error?.message || '未知错误';
+    
+    const diagnosticInfo = [
+      `--- 诊断信息 ---`,
+      `时间戳: ${timestamp}`,
+      `错误类型: ${errorType}`,
+      `代码: ${errorCode}`,
+      `Trace ID: ${traceId}`,
+      `原始信息: ${message}`,
+      `----------------`,
+      `堆栈信息:`,
+      error?.stack || '无堆栈信息'
+    ].join('\n');
+    
+    copy(diagnosticInfo);
   };
 
   return (
-    <div className="flex gap-3 justify-center pt-4">
+    <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
       <button
         onClick={() => window.location.reload()}
-        className="px-6 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all active:scale-95"
+        className="px-6 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-2"
       >
-        {isChunkFailure ? '立即更新 / Update Now' : '刷新页面 / Refresh'}
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+        {isChunkFailure ? '立即更新系统' : '刷新页面重试'}
       </button>
       {!isChunkFailure && (
         <>
           <button
             onClick={handleCopy}
-            className="px-6 py-2.5 border border-slate-200 bg-white text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all active:scale-95"
+            className="px-6 py-2.5 border border-slate-200 bg-white text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-2"
           >
-            复制错误信息 / Copy Error
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+            复制诊断信息
           </button>
           <button
             onClick={() => (window.location.href = '/')}
-            className="px-6 py-2.5 border border-slate-200 bg-white text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all active:scale-95"
+            className="px-6 py-2.5 border border-slate-200 bg-white text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-2"
           >
-            返回首页 / Home
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            回到底部首页
           </button>
         </>
       )}
@@ -70,15 +89,16 @@ export class ErrorBoundary extends Component<Props, State> {
 
       if (isChunkFailure) {
         return (
-          <div className="flex items-center justify-center min-h-screen p-8">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
-              <p className="text-gray-500 mb-4">为了为您提供最新功能，系统需要更新。 / System update required.</p>
+          <div className="flex items-center justify-center min-h-screen p-8 bg-slate-50">
+            <div className="text-center max-w-sm">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-slate-900 mx-auto mb-6" />
+              <h2 className="text-xl font-bold text-slate-900 mb-2">系统需要更新</h2>
+              <p className="text-slate-500 mb-8 text-sm">为了为您提供最新功能与修复，我们需要重新加载应用资源。</p>
               <button
                 onClick={() => window.location.reload()}
-                className="px-6 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all active:scale-95"
+                className="w-full px-6 py-3 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all active:scale-95"
               >
-                立即更新并重试 / Update & Retry
+                立即更新
               </button>
             </div>
           </div>
@@ -87,23 +107,36 @@ export class ErrorBoundary extends Component<Props, State> {
 
       return (
         this.props.fallback || (
-          <div className="min-h-[400px] w-full flex items-center justify-center p-8 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
-            <div className="text-center space-y-4 max-w-md">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 text-red-600 mb-2">
-                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div className="min-h-[500px] w-full flex items-center justify-center p-6 bg-slate-50/30">
+            <div className="w-full max-w-lg bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+              <div className="p-8 text-center space-y-6">
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-red-50 text-red-500 mb-2 animate-bounce-subtle">
+                   <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                </div>
+                
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-bold text-slate-900 tracking-tight">应用发生意外错误</h2>
+                  <p className="text-slate-500 text-sm leading-relaxed px-4">
+                    程序在运行过程中遇到了无法自动处理的问题。您可以尝试刷新页面，或将诊断信息发送给管理员。
+                  </p>
+                </div>
+
+                <div className="bg-slate-50 rounded-2xl p-4 text-left border border-slate-100 group">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">错误摘要</span>
+                    <span className="text-[10px] p-1 bg-white rounded border border-slate-200 text-slate-400">Trace ID: {(this.state.error as any)?.traceId || 'N/A'}</span>
+                  </div>
+                  <p className="text-xs font-mono text-slate-600 break-all line-clamp-3">
+                    {this.state.error?.message || '未知内部错误'}
+                  </p>
+                </div>
+
+                <ErrorActions error={this.state.error} isChunkFailure={false} />
               </div>
-              <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
-                {'出错了 / Something went wrong'}
-              </h2>
-              <p className="text-slate-500 text-sm leading-relaxed">
-                {(this.state.error?.message || '组件渲染过程中发生了意外错误，请尝试重新加载页面')}
-                {this.state.error && 'traceId' in this.state.error && (
-                  <span className="block mt-2 font-mono text-[10px] text-slate-400">
-                    Trace ID: {(this.state.error as any).traceId}
-                  </span>
-                )}
-              </p>
-              <ErrorActions error={this.state.error} isChunkFailure={false} />
+              
+              <div className="bg-slate-50/50 px-8 py-4 border-t border-slate-100 flex justify-center">
+                <p className="text-[10px] text-slate-400">如果您多次遇到此问题，请联系系统维护人员</p>
+              </div>
             </div>
           </div>
         )

@@ -9,7 +9,7 @@ export const publicSettings = new Hono();
 publicSettings.get("/", async (c) => {
     try {
         // Use safer query approach - if it fails, fallback to empty
-        let settingsRes = null;
+        let settingsRes: any = null;
         try {
             [settingsRes] = await db.select().from(schema.settings).where(eq(schema.settings.id, 1)).limit(1);
         } catch (e) {

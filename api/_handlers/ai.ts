@@ -130,8 +130,8 @@ ai.post("/analyze", async (c) => {
             catRef = c;
             tagRef = t;
             groupRef = g;
-        } catch (e) {
-            logger.warn("AI Analyze: Background context fetch failed partially:", e);
+        } catch (err: any) {
+            logger.warn("AI Analyze: Background context fetch failed partially:", err);
             // Continue with whatever we managed to fetch (empty arrays if everything failed)
         }
 
