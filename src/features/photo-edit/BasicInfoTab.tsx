@@ -96,34 +96,12 @@ export function BasicInfoTab() {
               </div>
               
               <div className="grid grid-cols-[auto_1fr] gap-2 items-center text-xs">
-                {/* Chinese */}
-                <div className="text-[9px] font-bold bg-slate-200 text-slate-700 px-1.5 py-1 rounded-md uppercase tracking-wider text-center w-10">ZH</div>
+                {/* Product Name */}
+                <div className="text-[9px] font-bold bg-slate-200 text-slate-700 px-1.5 py-1 rounded-md uppercase tracking-wider text-center w-10">NAME</div>
                 <input 
                   type="text" 
                   placeholder={t.productNamePlaceholderZh} 
                   {...register('name.zh', {
-                    setValueAs: (value) => value?.toUpperCase()
-                  })}
-                  className="w-full bg-white border border-slate-200 px-3 py-2 rounded-xl text-sm font-bold outline-none focus:border-blue-500 min-w-0 transition-colors" 
-                />
-
-                {/* English */}
-                <div className="text-[9px] font-bold bg-blue-50 text-blue-600 px-1.5 py-1 rounded-md uppercase tracking-wider text-center w-10 border border-blue-100/50">EN</div>
-                <input 
-                  type="text" 
-                  placeholder={t.productNamePlaceholderEn} 
-                  {...register('name.en', {
-                    setValueAs: (value) => value?.toUpperCase()
-                  })}
-                  className="w-full bg-white border border-slate-200 px-3 py-2 rounded-xl text-sm font-bold outline-none focus:border-blue-500 min-w-0 transition-colors" 
-                />
-
-                {/* Malay */}
-                <div className="text-[9px] font-bold bg-emerald-50 text-emerald-600 px-1.5 py-1 rounded-md uppercase tracking-wider text-center w-10 border border-emerald-100/50">MS</div>
-                <input 
-                  type="text" 
-                  placeholder={t.productNamePlaceholderMs} 
-                  {...register('name.ms', {
                     setValueAs: (value) => value?.toUpperCase()
                   })}
                   className="w-full bg-white border border-slate-200 px-3 py-2 rounded-xl text-sm font-bold outline-none focus:border-blue-500 min-w-0 transition-colors" 

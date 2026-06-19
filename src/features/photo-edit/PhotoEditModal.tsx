@@ -90,7 +90,7 @@ export function PhotoEditModal({ slots, isOpen: propIsOpen, onClose: propOnClose
       resetAddState();
       if (modal === 'edit') {
         setModal(null);
-        setPhotoId(null);
+        // setPhotoId(null); // Keep photoId to return to lightbox
       }
     }
   };

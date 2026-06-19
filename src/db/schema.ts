@@ -76,7 +76,7 @@ export const furnitureItems = pgTable('furniture_items', {
  * Tags Table
  */
 export const tags = pgTable('tags', {
-    id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
+    id: integer('id').primaryKey(),
     name: text('name').unique(),
     aliases: jsonb('aliases'),
     isGlobal: boolean('is_global').default(false),

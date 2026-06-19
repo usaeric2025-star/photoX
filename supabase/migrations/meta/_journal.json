@@ -29,6 +29,13 @@
       "when": 1781803119589,
       "tag": "0003_fantastic_champions",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1781803973553,
+      "tag": "0004_gigantic_naoko",
+      "breakpoints": true
     }
   ]
 }

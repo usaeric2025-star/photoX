@@ -82,8 +82,11 @@ export function ModalHeader({
   };
 
   const onAiAnalyze = async () => {
+    console.log("AI Analyze clicked", { editPhotoId, detailPhotoUrl: detailPhoto?.image_url });
     if (editPhotoId && detailPhoto?.image_url) {
       await handleAiAnalyze(detailPhoto.image_url);
+    } else {
+      console.log("AI Analyze: missing data", { editPhotoId, detailPhoto });
     }
   }
 
