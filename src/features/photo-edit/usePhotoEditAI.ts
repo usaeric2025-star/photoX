@@ -68,6 +68,7 @@ export function usePhotoEditAI() {
             : { zh: String(result.name), en: '', ms: '' };
         }
 
+
           // --- Strict Category Matching ---
           if (result.category_id !== undefined && result.category_id !== null) {
             const rawCat = result.category_id;
@@ -249,9 +250,12 @@ export function usePhotoEditAI() {
           Object.entries(updates).forEach(([key, value]) => {
             setValue(key as any, value, { shouldDirty: true });
           });
-        } // Close if result
-
-        await updatePhoto({ id: editPhotoId, updates, silent: true });
+        
+        try {
+          await updatePhoto({ id: editPhotoId, updates, silent: true });
+        } catch (saveError: unknown) {
+          throw ErrorFactory.wrap(saveError, 'AI识别自动保存', String(editPhotoId));
+        }
         
         // [V2.2] Standard invalidation per architecture rules
         const { queryKeys } = await import('@/lib/query/keys');
@@ -261,11 +265,13 @@ export function usePhotoEditAI() {
         showToast.success(appLang === 'zh' ? '已识别并保存' : 'Identified & Saved');
       }, { showSuccessToast: false, showProgress: true });
     } catch (e: unknown) {
+
       if (e instanceof Error) {
         logger.error('[AI Analyze Failed]', e);
         showToast.error(e.message);
       }
     }
+
   };
 
   return { handleAiAnalyze };
