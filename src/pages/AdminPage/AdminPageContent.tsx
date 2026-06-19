@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { useTasks, 
   useSyncMutation } from '@/hooks';
 import { usePhotoUpload } from '@/features/upload';
+import { UploadButton } from '@/components/shared/UploadButton';
 import { logger } from '@/lib/logger';
 import { useAIBatchAnalysis } from '@/hooks';
 import { useUIStore, useShallow } from '@/store/useUIStore';
@@ -54,6 +55,7 @@ export function AdminPageContent() {
   })();
 
   const isSyncing = tasks.some(t => t.status === 'running' && t.name.includes('Sync'));
+  const isUploadRunning = tasks.some(t => t.status === 'running' && t.name.includes('上传'));
 
   return (
     <AdminAuthGate>
@@ -66,9 +68,18 @@ export function AdminPageContent() {
         )}
         
         {/* Gallery is kept alive */}
-        <div className={currentScreen === 'gallery' ? 'flex-1 relative overflow-hidden pb-16 sm:pb-0' : 'hidden'}>
-          <div key="admin-gallery" className="absolute inset-0 animate-fade-in">
+        <div className={currentScreen === 'gallery' ? 'flex-1 relative overflow-hidden' : 'hidden'}>
+          <div key="admin-gallery" className="absolute inset-0 animate-fade-in translate-z-0">
             <AdminContainer />
+          </div>
+          
+          <div className="absolute bottom-8 right-8 z-50">
+            <UploadButton 
+              onAdd={() => {
+                const input = document.getElementById('admin-quick-add-input') as HTMLInputElement;
+                if (input) input.click();
+              }}
+            />
           </div>
         </div>
 

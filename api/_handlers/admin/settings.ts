@@ -8,7 +8,7 @@ export const adminSettings = new Hono();
 
 adminSettings.get("/get", async (c) => {
     try {
-        const [settingsRes] = await db.execute(sql`SELECT * FROM settings WHERE id = 1 LIMIT 1`);
+        const [settingsRes] = await db.select().from(settingsTable).where(eq(settingsTable.id, 1)).limit(1);
         
         // Fetch secrets to merge legacy AI settings
         const secretsRes = await db.select().from(secretsTable);
@@ -18,9 +18,10 @@ adminSettings.get("/get", async (c) => {
         }
 
         const data = settingsRes ? {
-            access_passcode: settingsRes.access_passcode,
-            logo_url: settingsRes.logo_url,
+            access_passcode: secretsMap['access_passcode'] || '',
+            logo_url: settingsRes.logoUrl,
             gemini_api_key: secretsMap['gemini'] || '',
+            agnes_api_key: secretsMap['agnes'] || '',
             openrouter_api_key: secretsMap['openrouter'] || '',
             custom_model: secretsMap['openrouter_model'] || secretsMap['gemini_model'] || ''
         } : {};
@@ -47,15 +48,16 @@ adminSettings.get("/get-keys", async (c) => {
 
         // Fallback for UI indicators
         if (!hasAgnes || !hasOpenrouter) {
-            const settingsRes = await db.query.settings.findFirst({
-                columns: { geminiApiKey: true },
-                where: eq(settingsTable.id, 1)
-            });
-            const legacyKey = settingsRes?.geminiApiKey;
-            if (legacyKey) {
-                if (legacyKey.startsWith('sk-or-')) hasOpenrouter = true;
-                else hasAgnes = true;
-            }
+            const [settingsRes]: any[] = await db.select({
+                openrouterModel: settingsTable.openrouterModel,
+                agnesModel: settingsTable.agnesModel
+            })
+            .from(settingsTable)
+            .where(eq(settingsTable.id, 1))
+            .limit(1);
+
+            if (settingsRes?.openrouterModel) hasOpenrouter = true;
+            if (settingsRes?.agnesModel) hasAgnes = true;
         }
         
         return c.json({
@@ -161,12 +163,22 @@ adminSettings.post("/save-settings", async (c) => {
     try {
         const { settingsPayload } = await c.req.json();
         
+        // Define allowed keys from settingsTable to avoid injecting non-existent columns (like gemini_api_key)
+        const allowedKeys = ['id', 'logoUrl', 'whatsapp1', 'whatsapp2', 'whatsapp1Name', 'whatsapp2Name', 'categoriesJson', 'tagsJson', 'manufacturersJson', 'primaryColor', 'backgroundColor', 'accentColor', 'contactEmail', 'instagram', 'facebook', 'accessPasscode', 'passcodeEnabled', 'hotTagThreshold', 'hotTagsCount', 'openrouterModel', 'agnesModel'];
+
         // Map frontend fields (snake_case) to Drizzle fields (camelCase)
         const mappedPayload: any = {};
         for (const [key, value] of Object.entries(settingsPayload)) {
             const camelKey = key.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
-            mappedPayload[camelKey] = value;
+            if (allowedKeys.includes(camelKey)) {
+                mappedPayload[camelKey] = value;
+            } else {
+                logger.debug(`[save-settings] Ignoring non-schema key: ${key} -> ${camelKey}`);
+            }
         }
+
+        // Always ensure ID is 1
+        mappedPayload.id = 1;
 
         await db.insert(settingsTable).values(mappedPayload).onConflictDoUpdate({
             target: settingsTable.id,

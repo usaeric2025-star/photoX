@@ -17,6 +17,7 @@ import {
     JsonObject
 } from '../_shared/apiContractSchema.js';
 import { AI_PROMPTS } from './ai/prompts.js';
+import { logger } from '../_lib/logger.js';
 
 interface HonoContextUser {
     id: string;
@@ -111,14 +112,28 @@ ai.post("/analyze", async (c) => {
         if (!finalImageUrl) finalImageUrl = undefined;
         if (!finalImageUrl) throw new Error("Image URL is required for analysis");
 
-        const [catRef, tagRef, groupRef] = await Promise.all([
-            db.select().from(categories),
-            db.select().from(tags),
-            db.select().from(groupsTable)
-                .where(eq(groupsTable.status, 'confirmed'))
-                .orderBy(desc(groupsTable.createdAt))
-                .limit(40),
-        ]);
+        // Use safer query approach - select only what we need and handle errors per-table
+        let catRef: any[] = [];
+        let tagRef: any[] = [];
+        let groupRef: any[] = [];
+
+        try {
+            const [c, t, g] = await Promise.all([
+                db.select({ id: categories.id, nameZh: categories.nameZh }).from(categories).limit(200),
+                db.select({ id: tags.id, name: tags.name }).from(tags).limit(500),
+                db.select({ id: groupsTable.id, name: groupsTable.name, status: groupsTable.status, createdAt: groupsTable.createdAt })
+                  .from(groupsTable)
+                  .where(eq(groupsTable.status, 'confirmed'))
+                  .orderBy(desc(groupsTable.createdAt))
+                  .limit(40),
+            ]);
+            catRef = c;
+            tagRef = t;
+            groupRef = g;
+        } catch (e) {
+            logger.warn("AI Analyze: Background context fetch failed partially:", e);
+            // Continue with whatever we managed to fetch (empty arrays if everything failed)
+        }
 
         const provider = await getAIProvider();
         const modelConfig = (provider as BaseAIProvider).getConfig().model;
@@ -126,7 +141,7 @@ ai.post("/analyze", async (c) => {
         
         const context = {
             categories: catRef.map(c => ({ id: c.id, name: c.nameZh, zh: c.nameZh })).slice(0, 50),
-            tags: tagRef.map(t => ({ id: t.id, name: t.name, aliases: t.aliases })).slice(0, 100),
+            tags: tagRef.map(t => ({ id: t.id, name: t.name, aliases: (t as any).aliases || [] })).slice(0, 100),
             groups: groupRef.map(g => ({ id: g.id, name: typeof g.name === 'object' ? (g.name as any)?.zh : g.name })),
         };
         

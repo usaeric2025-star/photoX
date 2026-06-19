@@ -19,8 +19,10 @@ export function BackgroundTaskPanel() {
     setAvoidingSelection(isSelecting);
   }, [isSelecting, setAvoidingSelection]);
   
-  const activeTasks = allTasks.filter(t => t.status === 'processing' || t.status === 'running' as any);
-  const hasTasks = allTasks.length > 0;
+  const activeTasks = allTasks.filter(t => t.status === 'processing' || t.status === 'running' as any || t.status === 'pending' as any);
+  const recentFinishedTasks = allTasks.filter(t => (t.status === 'completed' || t.status === 'failed') && (Date.now() - t.createdAt < 3000));
+  const displayTasks = [...activeTasks, ...recentFinishedTasks];
+  const hasTasks = displayTasks.length > 0;
   const isTaskPage = location.pathname.includes('/tasks');
   const isAdminPath = location.pathname.startsWith('/admin');
 
@@ -55,10 +57,10 @@ export function BackgroundTaskPanel() {
               </button>
             </div>
             <div className="max-h-[320px] overflow-y-auto p-2 space-y-1.5 no-scrollbar">
-              {allTasks.length === 0 ? (
+              {displayTasks.length === 0 ? (
                 <div className="py-8 text-center text-slate-400 text-[10px]">没有进行中的任务</div>
               ) : (
-                allTasks.map((task, index) => (
+                displayTasks.map((task, index) => (
                   <div 
                     key={task.id}
                     className={`p-3 rounded-2xl border transition-all group relative overflow-hidden animate-fade-right ${

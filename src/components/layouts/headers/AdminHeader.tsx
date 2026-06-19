@@ -134,7 +134,13 @@ export function AdminHeader({}: AdminHeaderProps) {
   
           {/* AI 智能识别 按钮 next to check screen */}
           <button
-            onClick={() => handleBatchAiIdentifyTrigger()}
+            onClick={() => {
+              if (isMultiSelect) {
+                 handleBatchAiIdentifyTrigger();
+              } else {
+                 handleBatchAiIdentifyTrigger();
+              }
+            }}
             className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 border bg-white text-purple-600 border-purple-200 hover:bg-purple-50 hover:text-purple-700 shadow-sm"
             title={t.aiSmartIdentify}
           >

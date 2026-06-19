@@ -5,7 +5,7 @@ import { relations } from 'drizzle-orm';
  * Categories Table
  */
 export const categories = pgTable('categories', {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: integer('id').primaryKey(),
     code: text('code').unique(),
     nameZh: text('name_zh'),
     nameEn: text('name_en'),
@@ -20,22 +20,23 @@ export const categories = pgTable('categories', {
  * Manufacturers Table
  */
 export const manufacturers = pgTable('manufacturers', {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: uuid('id').primaryKey(),
     name: text('name'),
+    aliases: text('aliases').array(),
     createdAt: timestamp('created_at').defaultNow(),
-    updatedAt: timestamp('updated_at').defaultNow(),
 });
 
 /**
  * Groups Table
  */
 export const groups = pgTable('groups', {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: uuid('id').primaryKey(),
     name: text('name'),
     description: text('description'),
     coverPhotoId: uuid('cover_photo_id'),
-    status: text('status').default('confirmed'),
-    userId: uuid('user_id').notNull(),
+    status: text('status'),
+    userId: uuid('user_id'),
+    isHidden: boolean('is_hidden').default(false),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
 });
@@ -44,11 +45,11 @@ export const groups = pgTable('groups', {
  * Furniture Items (Primary Table)
  */
 export const furnitureItems = pgTable('furniture_items', {
-    id: uuid('id').primaryKey().defaultRandom(),
-    userId: text('user_id'),
+    id: uuid('id').primaryKey(),
+    userId: uuid('user_id'),
     name: jsonb('name'),
     description: jsonb('description'),
-    categoryId: uuid('category_id').references(() => categories.id),
+    categoryId: integer('category_id').references(() => categories.id),
     manufacturerId: uuid('manufacturer_id').references(() => manufacturers.id),
     groupId: uuid('group_id').references(() => groups.id),
     isGroupCover: boolean('is_group_cover').default(false),
@@ -56,7 +57,7 @@ export const furnitureItems = pgTable('furniture_items', {
     imageUrl: text('image_url'),
     imageHash: text('image_hash'),
     thumbHash: text('thumb_hash'),
-    price: numeric('price'),
+    price: text('price'),
     note: text('note'),
     type: text('type'),
     isHidden: boolean('is_hidden').default(false),
@@ -70,6 +71,7 @@ export const furnitureItems = pgTable('furniture_items', {
     groupOrder: integer('group_order'),
     updatedAt: timestamp('updated_at').defaultNow(),
     createdAt: timestamp('created_at').defaultNow(),
+    nameSearchable: text('name_searchable'),
 });
 
 /**
@@ -78,13 +80,10 @@ export const furnitureItems = pgTable('furniture_items', {
 export const tags = pgTable('tags', {
     id: integer('id').primaryKey(),
     name: text('name').unique(),
-    aliases: jsonb('aliases'),
-    isGlobal: boolean('is_global').default(false),
-    hotScore: integer('hot_score').default(0),
-    sortOrder: integer('sort_order').default(0),
-    isActive: boolean('is_active').default(true),
+    isPinned: boolean('is_pinned').default(false),
+    usageCount: integer('usage_count').default(0),
+    isHot: boolean('is_hot').default(false),
     createdAt: timestamp('created_at').defaultNow(),
-    updatedAt: timestamp('updated_at').defaultNow(),
 });
 
 /**
@@ -136,10 +135,28 @@ export const maintenanceJobs = pgTable('maintenance_jobs', {
  */
 export const settings = pgTable('settings', {
     id: integer('id').primaryKey(),
-    geminiApiKey: text('gemini_api_key'),
     logoUrl: text('logo_url'),
-    customModel: text('custom_model'),
+    whatsapp1: text('whatsapp_1'),
+    whatsapp2: text('whatsapp_2'),
+    whatsapp1Name: text('whatsapp_1_name'),
+    whatsapp2Name: text('whatsapp_2_name'),
+    categoriesJson: jsonb('categories_json'),
+    tagsJson: jsonb('tags_json'),
+    manufacturersJson: jsonb('manufacturers_json'),
+    primaryColor: text('primary_color'),
+    backgroundColor: text('background_color'),
+    accentColor: text('accent_color'),
+    contactEmail: text('contact_email'),
+    instagram: text('instagram'),
+    facebook: text('facebook'),
+    accessPasscode: text('access_passcode'),
+    passcodeEnabled: boolean('passcode_enabled'),
+    hotTagThreshold: integer('hot_tag_threshold'),
+    hotTagsCount: integer('hot_tags_count'),
+    openrouterModel: text('openrouter_model'),
+    agnesModel: text('agnes_model'),
     updatedAt: timestamp('updated_at').defaultNow(),
+    createdAt: timestamp('created_at').defaultNow(),
 });
 
 /**

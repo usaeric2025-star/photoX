@@ -1,27 +1,50 @@
 import { Hono } from 'hono';
 import { db } from '../_lib/db/index.js';
-import { sql } from 'drizzle-orm';
+import * as schema from '../_lib/db/schema.js';
+import { eq } from 'drizzle-orm';
 import { logger } from '../_lib/logger.js';
 
 export const publicSettings = new Hono();
 
 publicSettings.get("/", async (c) => {
     try {
-        const [settingsRes]: any[] = await db.execute(sql`SELECT * FROM settings WHERE id = 1 LIMIT 1`);
+        // Use safer query approach - if it fails, fallback to empty
+        let settingsRes = null;
+        try {
+            [settingsRes] = await db.select().from(schema.settings).where(eq(schema.settings.id, 1)).limit(1);
+        } catch (e) {
+            logger.warn("Settings table fetch failed (likely schema mismatch):", e);
+        }
+
+        let manufacturersRes: any[] = [];
+        try {
+            manufacturersRes = await db.select().from(schema.manufacturers).orderBy(schema.manufacturers.name);
+        } catch (e) {
+            logger.warn("Manufacturers table fetch failed (likely schema mismatch):", e);
+        }
+
+        let tagsRes: any[] = [];
+        try {
+            tagsRes = await db.select().from(schema.tags);
+        } catch (e) {
+            logger.warn("Tags table fetch failed (likely schema mismatch):", e);
+        }
         
         if (!settingsRes) {
-            return c.json({ success: true, data: {} });
+            return c.json({ success: true, data: { manufacturers: manufacturersRes, tags: tagsRes } });
         }
 
         // Return ONLY non-sensitive data
         const data = {
-            logo_url: settingsRes.logo_url,
-            whatsapp_1: settingsRes.whatsapp_1,
-            whatsapp_2: settingsRes.whatsapp_2,
-            whatsapp_1_name: settingsRes.whatsapp_1_name,
-            whatsapp_2_name: settingsRes.whatsapp_2_name,
-            passcode_enabled: settingsRes.passcode_enabled,
-            access_passcode: settingsRes.access_passcode, // Still need this for frontend passcode check if applicable
+            logo_url: settingsRes.logoUrl,
+            whatsapp_1: settingsRes.whatsapp1,
+            whatsapp_2: settingsRes.whatsapp2,
+            whatsapp_1_name: settingsRes.whatsapp1Name,
+            whatsapp_2_name: settingsRes.whatsapp2Name,
+            passcode_enabled: settingsRes.passcodeEnabled,
+            access_passcode: settingsRes.accessPasscode,
+            manufacturers: manufacturersRes,
+            tags: tagsRes,
             // Do NOT return API keys here
         };
 

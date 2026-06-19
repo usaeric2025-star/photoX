@@ -16,11 +16,7 @@ export const getModel = async (customModel?: string, providerName?: string): Pro
         });
         if (secretData?.value) return secretData.value as string;
         
-        // Fallback to legacy custom_model setting
-        const settingsRes = await db.query.settings.findFirst({
-            where: eq(settingsTable.id, 1)
-        });
-        if (settingsRes?.customModel) return settingsRes.customModel as string;
+        /* Fallback removed: all AI config should be in secrets table */
     } catch (e) {
         logger.warn("[getModel] could not fetch custom model:", e);
     }
@@ -162,24 +158,7 @@ export async function getAIProvider(providerName?: string, modelOverride?: strin
         apiKey = decrypt(secret.value as string);
     }
 
-    // Fallback logic for legacy settings table
-    if (!apiKey) {
-        try {
-            const settings = await db.query.settings.findFirst();
-            if (settings?.geminiApiKey) {
-               // Basic heuristic to decide if the legacy key belongs to this provider
-               const key = settings.geminiApiKey as string;
-               if (actualProvider === 'openrouter' && key.startsWith('sk-or-')) {
-                   apiKey = decrypt(key);
-               } else if (actualProvider === 'agnes' && !key.startsWith('sk-or-')) {
-                   apiKey = decrypt(key);
-               }
-            }
-        } catch (e) {
-            logger.warn("Legacy settings lookup failed:", e);
-        }
-    }
-
+    // Fallback logic for legacy settings table removed (all config should be in secrets)
     if (!apiKey) throw new Error(`未配置 ${actualProvider} API 密鑰`);
 
     let model = modelOverride;

@@ -13,6 +13,8 @@ import { handleError } from './lib/error/errorHandler';
 import { logger } from '@/lib/logger';
 import { startAutoDiagnose } from '@/features/diagnostics/autoDiagnose';
 import { useUIStore } from '@/store/useUIStore';
+import { BackgroundTaskPanel } from '@/components/tasks/BackgroundTaskPanel';
+import { JobResumer } from '@/components/tasks/JobResumer';
 
 export default function AppRoutes() {
   const appLang = useUIStore((s) => s.appLang);
@@ -113,6 +115,8 @@ export default function AppRoutes() {
     <ErrorBoundary>
       <ConfirmProvider>
         <RouterProvider router={router} context={routerContext} />
+        <BackgroundTaskPanel />
+        <JobResumer />
       </ConfirmProvider>
       <Analytics />
     </ErrorBoundary>

@@ -1,13 +1,12 @@
 import { DiagnosticTask, DiagnosticIssue, DiagnosticContext } from "../types.js";
-import { db } from "../../db/index.js";
-import { sql } from "drizzle-orm";
+import { db, secrets } from "../../db/index.js";
 
 export const missingSecretsTableTask: DiagnosticTask = {
   id: 'missing_secrets_table',
   deps: [],
   run: async (ctx: DiagnosticContext): Promise<DiagnosticIssue | null> => {
     try {
-      await db.execute(sql`SELECT 1 FROM secrets LIMIT 1`);
+      await db.select().from(secrets).limit(1);
     } catch (e: any) {
       if (e.code === '42P01' || e.message?.includes('does not exist')) {
         return {

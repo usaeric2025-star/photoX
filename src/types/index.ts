@@ -83,6 +83,8 @@ export interface AppSettings extends Record<string, unknown> {
   whatsapp_2_name?: string;
   whatsapp_2?: string;
   access_passcode?: string;
+  manufacturers?: import('./photo').Manufacturer[];
+  tags?: import('./photo').Tag[];
 }
 
 export interface DialogData {
