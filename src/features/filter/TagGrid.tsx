@@ -5,7 +5,7 @@ import { useFilterState } from './useFilterState';
 import { usePublicSettings } from '@/hooks/settings/useSettings';
 import { usePhotoFilter } from '@/hooks/photo/usePhotoFilter';
 
-export function TagGrid() {
+export function TagGrid({ onClose }: { onClose?: () => void }) {
   const { filters, updateFilters } = useFilterState();
   const { data: tags, isPending } = useTags();
   const { data: settings } = usePublicSettings();
@@ -19,6 +19,7 @@ export function TagGrid() {
     } else {
       updateFilters({ tagIds: [...filters.tagIds, tagId] });
     }
+    onClose?.();
   };
 
   const clearTags = () => {
@@ -65,19 +66,19 @@ export function TagGrid() {
               <button
                 key={tag.id}
                 onClick={() => toggleTag(String(tag.id))}
-                className={`px-2 py-1 rounded-sm text-[10px] font-black transition-all duration-200 cursor-pointer flex items-center gap-1 border shadow-xs leading-none uppercase ${
+                className={`px-1.5 py-0.5 rounded-sm text-[9px] font-medium transition-all duration-200 cursor-pointer flex items-center gap-1 border shadow-xs leading-none uppercase ${
                   isSelected
-                    ? 'bg-slate-950 text-white border-slate-950 scale-105 z-10'
+                    ? 'bg-slate-950 text-white border-slate-950 scale-105'
                     : isPinned
                     ? 'bg-brand-gold/15 text-brand-gold border-brand-gold/30 hover:bg-brand-gold/25'
                     : isHot
-                    ? 'bg-rose-50 text-rose-600 border-rose-200 shadow-sm hover:bg-rose-100'
+                    ? 'bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100'
                     : 'bg-slate-50 text-slate-500 border-slate-100/80 hover:border-slate-200 hover:bg-slate-100'
                 }`}
               >
-                {isPinned && <span className="text-[9px]">📌</span>}
-                {!isPinned && isHot && <span className="text-[9px] animate-pulse">🔥</span>}
-                <span className="tracking-tight">{tag.name}</span>
+                {isPinned && <span className="text-[8px]">📌</span>}
+                {!isPinned && isHot && <span className="text-[8px] animate-pulse">🔥</span>}
+                <span className="tracking-tight truncate max-w-[60px]">{tag.name}</span>
               </button>
             );
           })}

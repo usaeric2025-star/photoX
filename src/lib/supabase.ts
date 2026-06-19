@@ -43,6 +43,16 @@ if (!supabaseUrl || !supabaseAnonKey) {
   isSupabaseConfigured = false;
 }
 
+const dummyAuth = {
+  getSession: async () => ({ data: { session: null }, error: null }),
+  onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+  signInWithOAuth: async () => {
+    logger.error("Supabase environment variables are missing; OAuth login is unavailable.");
+    throw new Error("Supabase is not configured. Please add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.");
+  },
+  signOut: async () => {}
+};
+
 export const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
@@ -58,8 +68,16 @@ export const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabas
     }
   }
 }) : (new Proxy({}, {
-  get: () => {
-    throw ErrorFactory.wrap(new Error("Supabase is not configured. Please add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your environment/secrets."), 'supabaseInitialization');
+  get: (_target, prop) => {
+    if (prop === 'auth') {
+      return dummyAuth;
+    }
+    return () => {
+      throw ErrorFactory.wrap(
+        new Error(`Supabase is not configured. Failed to access property: ${String(prop)}. Please configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your environment/secrets.`),
+        'supabaseInitialization'
+      );
+    };
   }
 }) as any);
 

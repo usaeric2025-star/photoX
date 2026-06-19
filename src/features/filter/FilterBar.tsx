@@ -54,7 +54,7 @@ export function FilterBar({ mode }: FilterBarProps) {
         <CategoryGrid mode={mode} />
         
         {/* 標籤 - 默認折疊，由上方按鈕控制 */}
-        {showTags && <TagGrid />}
+        {showTags && <TagGrid onClose={() => setShowTags(false)} />}
       </div>
     </div>
   );
