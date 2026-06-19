@@ -7,6 +7,7 @@ import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useUIStore } from '@/store/useUIStore';
 import { usePhoto, useTaskExecutor, useTasks, useTranslation, useFilters } from '@/hooks';
 import { OptimizedImage } from '@/components/shared/OptimizedImage';
+import { showToast } from '@/lib/ui/toast';
 
 import { MultilingualInput } from '@/components/shared/MultilingualInput';
 
@@ -69,8 +70,26 @@ export function BasicInfoTab() {
             <Lock size={8} className="text-slate-300" />
             SYSTEM CODE
           </h3>
-          <div className="w-full bg-slate-50 border border-slate-100 px-4 py-3 rounded-2xl text-xs font-mono font-medium text-slate-400 cursor-not-allowed">
+          <div className="w-full bg-slate-50 border border-slate-100 px-4 py-3 rounded-2xl text-xs font-mono font-medium text-slate-400 cursor-not-allowed truncate" title={itemCode || ''}>
             {itemCode || t.systemCodeAuto}
+          </div>
+        </div>
+        <div className="space-y-1.5 opacity-50 select-none">
+          <h3 className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter px-1 flex items-center gap-1">
+            <Lock size={8} className="text-slate-300" />
+            DATABASE ID
+          </h3>
+          <div 
+            className="w-full bg-slate-50 border border-slate-100 px-4 py-3 rounded-2xl text-[10px] font-mono font-medium text-slate-400 cursor-help truncate" 
+            title={detailPhoto?.id || ''}
+            onClick={() => {
+              if (detailPhoto?.id) {
+                navigator.clipboard.writeText(detailPhoto.id);
+                showToast.success('ID 已复制');
+              }
+            }}
+          >
+            {detailPhoto?.id || '---'}
           </div>
         </div>
         <div className="space-y-1.5">

@@ -38,12 +38,15 @@ export function usePhotoCardInteraction({
   const { navigate, location } = useRouterSafe();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { setPhotoId } = useFilters();
-
-  const handleOpenLightbox = () => {
-    logger.debug('[usePhotoCardInteraction] handleOpenLightbox for photo:', photo.id);
-    setPhotoId(photo.id);
-  };
+  const { setPhotoId, setModal } = useFilters();
+ 
+   const handleOpenLightbox = () => {
+     logger.debug('[usePhotoCardInteraction] handleOpenLightbox for photo:', photo.id);
+     setPhotoId(photo.id);
+     if (isManagement) {
+       setModal('edit');
+     }
+   };
     
   const handleGroupNavigate = (gid: string) => {
     const targetPath = isManagement ? `/admin/group/${gid}` : `/group/${gid}`;
