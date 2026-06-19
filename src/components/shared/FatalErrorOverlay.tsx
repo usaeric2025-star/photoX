@@ -4,7 +4,10 @@ import { useCopyToClipboard } from '@/hooks';
 
 export const FatalErrorOverlay = () => {
   const fatalError = useUIStore((s) => s.fatalError);
-  const { copy } = useCopyToClipboard({ successMessage: '诊断信息已复制到剪贴板' });
+  const { copy, copied } = useCopyToClipboard({ 
+    successMessage: '诊断信息已复制到剪贴板',
+    showToast: false // Toast feedback is often hidden behind native dialogs
+  });
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -76,10 +79,12 @@ export const FatalErrorOverlay = () => {
           </button>
           <button
             onClick={handleCopy}
-            className="flex-1 px-6 py-3 border border-slate-200 bg-white text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-2"
+            className={`flex-1 px-6 py-3 border rounded-xl text-sm font-semibold transition-all active:scale-95 flex items-center justify-center gap-2 ${
+              copied ? 'bg-green-50 border-green-200 text-green-600' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+            }`}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-            复制诊断
+            {copied ? '已复制' : '复制诊断'}
           </button>
         </div>
         

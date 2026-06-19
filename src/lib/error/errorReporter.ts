@@ -69,14 +69,17 @@ export async function reportError(error: Error | AppError): Promise<void> {
 
   // 2. Backend logging via system_logs
   if (isAppErrorObj || shouldLogToBackend(error)) {
-    const payload = isAppErrorObj
-      ? error.toJSON()
-      : {
-          name: error.name,
-          message: error.message,
-          stack: error.stack,
-          timestamp: new Date().toISOString(),
-        }
+    const jsonPay = isAppErrorObj ? error.toJSON() : {};
+    const payload = {
+      message: isAppErrorObj ? error.message : error.message,
+      stack: isAppErrorObj ? (error.stack || jsonPay.stack) : error.stack,
+      level: (isAppErrorObj && error.severity === ErrorSeverity.WARNING) ? 'warn' : 'error',
+      module: isAppErrorObj ? (error.code || 'AppError') : 'Error',
+      metadata: isAppErrorObj ? jsonPay : {
+        name: error.name,
+        timestamp: new Date().toISOString(),
+      }
+    }
 
     try {
       await fetch('/api/log-error', {
@@ -135,10 +138,10 @@ export const logError = async (error: Error | unknown, context: EventContext) =>
         'X-Trace-Id': traceId
       },
       body: safeJsonStringify({
-        error_message: normError.message,
-        stack_trace: normError.stack || (errorWithMeta.details as string) || null,
+        message: normError.message,
+        stack: normError.stack || (errorWithMeta.details as string) || null,
         url: typeof window !== 'undefined' ? window.location.href : '',
-        context: context.component || 'global',
+        module: context.component || 'global',
         metadata: {
           ...context.metadata,
           action: context.action,
@@ -161,9 +164,10 @@ export const logResult = async (context: EventContext, type: 'error' | 'success'
         'Content-Type': 'application/json'
       },
       body: safeJsonStringify({
-        error_message: `[${type.toUpperCase()}] ${context.action}`,
+        message: `[${type.toUpperCase()}] ${context.action}`,
         url: typeof window !== 'undefined' ? window.location.href : '',
-        context: context.component || 'global',
+        module: context.component || 'global',
+        level: type === 'error' ? 'error' : 'info',
         metadata: {
           ...context.metadata,
           action: context.action,

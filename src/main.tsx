@@ -159,7 +159,7 @@ async function init() {
     root.render(
       <StrictMode>
         <QueryClientProvider client={queryClient}>
-          <Toaster style={{ '--z-toast': '500' } as React.CSSProperties} position="bottom-center" richColors closeButton expand={false} visibleToasts={2} swipeDirections={['left', 'right']} />
+          <Toaster position="bottom-center" richColors closeButton expand={false} visibleToasts={2} swipeDirections={['left', 'right']} />
           <TaskProvider>
             <ErrorBoundary>
               <App />

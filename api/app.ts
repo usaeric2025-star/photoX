@@ -68,6 +68,8 @@ app.post('/log-error', async (c) => {
             message: msg,
             level,
             operation,
+            traceId,
+            resource: body.url || null,
             metadata: {
                 ...body,
                 traceId,

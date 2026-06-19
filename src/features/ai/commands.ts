@@ -102,8 +102,20 @@ export async function analyzeSinglePhotoDetail(photo: Photo): Promise<Record<str
 
 export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promise<unknown> => {
   try {
-     const resp = await api.ai.analyze.$post({ json: { photoId } }) as Response;
-     const data = await resp.json();
+      const resp = await api.ai.analyze.$post({ json: { photoId } });
+      if (!resp.ok) {
+        let errorMsg = 'AI 服务响应异常';
+        try {
+          const errorData = await resp.json();
+          errorMsg = errorData.error || errorMsg;
+        } catch (je) {
+          const text = await resp.text();
+          errorMsg = `[HTTP ${resp.status}] ${text.substring(0, 100)}`;
+        }
+        throw ErrorFactory.fatal(errorMsg, { context: 'analyzePhoto' });
+      }
+      
+      const data = await resp.json();
      if (data.success) {
        let parsed = data.data;
        if (Array.isArray(parsed)) {

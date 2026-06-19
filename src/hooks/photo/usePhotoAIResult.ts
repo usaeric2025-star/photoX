@@ -10,14 +10,24 @@ export const usePhotoAIResult = (photoId: string) => {
   return useQuery({
     queryKey: ['photos', 'ai-result', photoId],
     queryFn: async (): Promise<PhotoAIResult | null> => {
-      const resp = await api.admin["photo-ai-result"][":photoId"].$get({
-        param: { photoId }
-      });
-      const data = await resp.json() as any;
-      if (!data.success) {
-        throw new Error(data.error || '获取 AI 识别源数据失败');
+      try {
+        const resp = await api.admin["photo-ai-result"][":photoId"].$get({
+          param: { photoId }
+        });
+        
+        if (!resp.ok) {
+           const text = await resp.text();
+           throw new Error(`[HTTP ${resp.status}] ${text.substring(0, 50)}`);
+        }
+
+        const data = await resp.json() as any;
+        if (!data.success) {
+          throw new Error(data.error || '获取 AI 识别源数据失败');
+        }
+        return data.data;
+      } catch (err: any) {
+        throw new Error(err.message || '获取 AI 源数据网络异常');
       }
-      return data.data;
     },
     enabled: !!photoId,
     staleTime: STALE_TIMES.PHOTO_LIST

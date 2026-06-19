@@ -61,7 +61,7 @@ export function usePhotoEditAI() {
         const updates: Record<string, unknown> = {};
         
         if (result.name) {
-          updates.name = String(result.name);
+          updates.name = result.name;
         }
 
           // --- Strict Category Matching ---

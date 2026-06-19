@@ -2,6 +2,7 @@ import { showToast } from '@/lib/ui/toast';
 import type { StandardError } from '@/types/api';
 import { copyToClipboard } from '@/utils/clipboard';
 import { logError } from '@/lib/error/errorReporter';
+import { useUIStore } from '@/store/useUIStore';
 
 /**
  * Safely extracts a clean string message from any error object
@@ -140,6 +141,12 @@ export const handleError = (error: unknown, context: string, silent: boolean = f
   const copyContent = buildCopyContent(standardError)
 
   const messageStr = standardError.message.replace(/\n/g, ' ');
+
+  // For serious context like AI analysis or when a traceId is present, we ALSO show the FatalErrorOverlay
+  // This ensures the error is visible and interaction works even when blocked by a modal dialog
+  if (context === 'analyzePhoto' || standardError.traceId) {
+    useUIStore.getState().setFatalError(new Error(`${messageStr} (${context})`));
+  }
 
   showToast.error(`操作失败`, {
     id: errorId,
