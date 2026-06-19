@@ -53,8 +53,8 @@ app.onError(async (err, c) => {
     });
 
     try {
-        await db.insert(systemLogs).values({
-            message: err.message,
+        await (db as any).insert(systemLogs).values({
+            message: err.message || 'Unknown error',
             level: 'error',
             operation: `internal.${c.req.path}`,
             module: 'backend',
@@ -106,7 +106,7 @@ app.post('/log-error', async (c) => {
         const operation = body.module || 'client.error';
         const msg = typeof body.message === 'string' ? body.message : JSON.stringify(body);
         
-        await db.insert(systemLogs).values({
+        await (db as any).insert(systemLogs).values({
             message: msg,
             level,
             operation,

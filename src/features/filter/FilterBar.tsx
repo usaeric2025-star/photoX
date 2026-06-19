@@ -8,7 +8,6 @@ import { ColumnsToggle } from '@/features/layout/components/ColumnsToggle';
 import { GroupToggle } from '@/components/ui/GroupToggle';
 import { useFilters } from '@/hooks/useFilters';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
 
 interface FilterBarProps {
   mode: 'public' | 'admin';

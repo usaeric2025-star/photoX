@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { showToast } from '@/lib/ui/toast';
 import { MutationConfig } from './types';
 import { logger } from '@/lib/logger';
 import { ErrorFactory, handleError } from '@/lib/error/ErrorFactory';
@@ -140,7 +140,7 @@ export const useOptimisticMutation = <
       config.onSettled?.(data, err, vars);
     },
     onSuccess: (data: TData, vars: TVariables) => {
-      if (config.successMessage) toast.success(config.successMessage);
+      if (config.successMessage) showToast.success(config.successMessage);
     },
   });
 };

@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { batchService } from './batchService';
 import { useSelection } from './SelectionContext';
-import { toast } from 'sonner';
+import { showToast } from '@/lib/ui/toast';
 import { Photo } from '@/types';
 import { handleError } from '@/lib/error/errorHandler';
 import { useInvalidatePhotos } from '@/hooks';
@@ -17,7 +17,7 @@ export function useBatchActions() {
       return res;
     },
     onSuccess: () => {
-      toast.success(`已刪除 ${state.selectedIds.length} 張照片`);
+      showToast.success(`已刪除 ${state.selectedIds.length} 張照片`);
       invalidatePhotos();
       clear();
     },
@@ -33,7 +33,7 @@ export function useBatchActions() {
       return res;
     },
     onSuccess: () => {
-      toast.success(`已更新 ${state.selectedIds.length} 張照片`);
+      showToast.success(`已更新 ${state.selectedIds.length} 張照片`);
       invalidatePhotos();
       clear();
     },
@@ -49,7 +49,7 @@ export function useBatchActions() {
       return res;
     },
     onSuccess: () => {
-      toast.success(`已為 ${state.selectedIds.length} 張照片新增標籤`);
+      showToast.success(`已為 ${state.selectedIds.length} 張照片新增標籤`);
       invalidatePhotos();
       clear();
     },

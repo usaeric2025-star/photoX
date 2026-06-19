@@ -1,5 +1,4 @@
 import { showToast } from '@/lib/ui/toast'
-import { toast } from 'sonner'
 
 export interface ToastAction {
   label: string
@@ -19,13 +18,13 @@ export function showErrorToast(message: string, action?: ToastAction): void {
 }
 
 export function showSuccessToast(message: string): void {
-  toast.success(message, { duration: 3000 })
+  showToast.success(message)
 }
 
 export function showInfoToast(message: string): void {
-  toast.info(message, { duration: 3000 })
+  showToast.info(message)
 }
 
 export function showWarningToast(message: string): void {
-  toast.warning(message, { duration: 4000 })
+  showToast.warning(message)
 }
