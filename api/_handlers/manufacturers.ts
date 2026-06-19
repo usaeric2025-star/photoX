@@ -45,10 +45,13 @@ export const manufacturers = new Hono()
 
     const { manufacturerData } = check;
     try {
+      const crypto = await import('node:crypto');
       const [data] = await db
         .insert(manufacturersTable)
         .values({
-           name: manufacturerData.name
+           id: crypto.randomUUID(),
+           name: manufacturerData.name,
+           aliases: manufacturerData.aliases || []
         })
         .returning();
       

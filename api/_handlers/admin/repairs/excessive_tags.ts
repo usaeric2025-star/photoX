@@ -8,8 +8,8 @@ export async function previewExcessiveTags(c: Context) {
   const pData = await db.select({ id: furnitureItems.id, name: furnitureItems.name }).from(furnitureItems);
   const photoMap = new Map<string, { id: string; name: unknown }>(pData.map(p => [p.id, p]));
 
-  const tagData = await db.select({ id: tagsTable.id, name: tagsTable.name, isGlobal: tagsTable.isGlobal }).from(tagsTable);
-  const tagMap = new Map<number, { id: number; name: string | null; isGlobal: boolean | null }>(tagData.map(t => [t.id, { id: t.id, name: t.name, isGlobal: t.isGlobal }]));
+  const tagData = await db.select({ id: tagsTable.id, name: tagsTable.name, isPinned: tagsTable.isPinned }).from(tagsTable);
+  const tagMap = new Map<number, { id: number; name: string | null; isPinned: boolean | null }>(tagData.map(t => [t.id, { id: t.id, name: t.name, isPinned: t.isPinned }]));
 
   const photoTagGroupMap = new Map<string, number[]>();
   ptData.forEach((pt) => {
@@ -23,9 +23,9 @@ export async function previewExcessiveTags(c: Context) {
   });
 
   const affectedPhotos: unknown[] = [];
-  const getWeight = (tagId: number, tagDetail?: { id: number; name: string | null; isGlobal: boolean | null }) => {
-    if (tagDetail && tagDetail.isGlobal) return 50;
-    return 90;
+  const getWeight = (tagId: number, tagDetail?: { id: number; name: string | null; isPinned: boolean | null }) => {
+    if (tagDetail && tagDetail.isPinned) return 100;
+    return 50;
   };
 
   photoTagGroupMap.forEach((tagIds, photoId) => {
@@ -61,7 +61,7 @@ export async function previewExcessiveTags(c: Context) {
 
 export async function repairExcessiveTags(c: Context) {
   const ptData = await db.select().from(photoTagsTable);
-  const tagData = await db.select({ id: tagsTable.id, name: tagsTable.name, isGlobal: tagsTable.isGlobal }).from(tagsTable);
+  const tagData = await db.select({ id: tagsTable.id, name: tagsTable.name, isPinned: tagsTable.isPinned }).from(tagsTable);
   const tagMap = new Map<number, any>(tagData.map(t => [t.id, t]));
 
   const photoTagGroupMap = new Map<string, number[]>();
@@ -87,8 +87,8 @@ export async function repairExcessiveTags(c: Context) {
   }
 
   const getWeightForRepair = (tagId: number, tagDetail?: any) => {
-    if (tagDetail && tagDetail.isGlobal) return 50;
-    return 90;
+    if (tagDetail && tagDetail.isPinned) return 100;
+    return 50;
   };
 
   let updatedCount = 0;

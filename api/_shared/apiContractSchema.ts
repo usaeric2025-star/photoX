@@ -187,7 +187,8 @@ export const ManufacturerListItemSchema = type({
 
 export const ManufacturerReqSchema = type({
     "id?": "string",
-    name: "string"
+    name: "string",
+    "aliases?": "string[]"
 });
 
 export const GroupReqSchema = type({

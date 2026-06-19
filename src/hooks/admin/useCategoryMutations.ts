@@ -2,7 +2,7 @@ import { Category } from '@/types';
 import { addCategoryToDB, updateCategoryInDB, deleteCategoryFromDB } from '@/services/category/commands';
 import { queryKeys } from '@/lib/query/keys';
 import { defineMutation } from '@/lib/mutations/defineMutation';
-import { useAppMutation } from '@/lib/mutations/useAppMutation';
+import { useOptimisticMutation } from '@/lib/mutations/useOptimisticMutation';
 
 const categoryCreateConfig = defineMutation<Category, string | Partial<Category>, readonly unknown[]>({
   name: 'categoryCreate',
@@ -15,7 +15,7 @@ const categoryCreateConfig = defineMutation<Category, string | Partial<Category>
   invalidate: () => [queryKeys.categories.all, queryKeys.photos.all],
   successMessage: '分类添加成功',
 });
-export const useCategoryCreate = () => useAppMutation(categoryCreateConfig);
+export const useCategoryCreate = () => useOptimisticMutation(categoryCreateConfig);
 
 const categoryEditConfig = defineMutation<boolean, { id: string; updates: Partial<Category> }, readonly unknown[]>({
   name: 'categoryEdit',
@@ -27,7 +27,7 @@ const categoryEditConfig = defineMutation<boolean, { id: string; updates: Partia
   invalidate: () => [queryKeys.categories.all, queryKeys.photos.all],
   successMessage: '分类更新成功',
 });
-export const useCategoryEdit = () => useAppMutation(categoryEditConfig);
+export const useCategoryEdit = () => useOptimisticMutation(categoryEditConfig);
 
 const categoryDeleteConfig = defineMutation<boolean, string, readonly unknown[]>({
   name: 'categoryDelete',
@@ -39,5 +39,5 @@ const categoryDeleteConfig = defineMutation<boolean, string, readonly unknown[]>
   invalidate: () => [queryKeys.categories.all, queryKeys.photos.all],
   successMessage: '分类删除成功',
 });
-export const useCategoryDelete = () => useAppMutation(categoryDeleteConfig);
+export const useCategoryDelete = () => useOptimisticMutation(categoryDeleteConfig);
 

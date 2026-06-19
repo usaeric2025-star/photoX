@@ -4,7 +4,13 @@ import { syncGroupCoversAndCount } from '../../_lib/groups.js';
 
 export const createHandler = (app: Hono) => {
   app.post('/upsert', async (c) => {
-    const { payload } = await c.req.json() as { payload: Record<string, unknown> };
+    const { payload } = await c.req.json() as { payload: Record<string, any> };
+
+    const crypto = await import('node:crypto');
+    // Ensure ID exists
+    if (!payload.id) {
+        payload.id = crypto.randomUUID();
+    }
 
     // Fix user_id if it is 'staff' or missing
     if (!payload.user_id || payload.user_id === 'staff') {
@@ -13,7 +19,7 @@ export const createHandler = (app: Hono) => {
     }
 
     try {
-        const mappedPayload: Record<string, unknown> = {};
+        const mappedPayload: any = {};
         const fieldMap: Record<string, string> = {
             id: 'id',
             user_id: 'userId',
@@ -39,11 +45,16 @@ export const createHandler = (app: Hono) => {
 
         for (const [key, val] of Object.entries(payload)) {
             const mappedKey = fieldMap[key] || key;
-            mappedPayload[mappedKey] = val;
+            // Handle category_id integer conversion
+            if (mappedKey === 'categoryId' && typeof val === 'string') {
+              mappedPayload[mappedKey] = parseInt(val);
+            } else {
+              mappedPayload[mappedKey] = val;
+            }
         }
 
         const results = await db.insert(furnitureItems)
-            .values(mappedPayload)
+            .values([mappedPayload])
             .onConflictDoUpdate({
                 target: furnitureItems.id,
                 set: mappedPayload

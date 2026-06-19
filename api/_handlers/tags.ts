@@ -115,7 +115,7 @@ export const tags = new Hono()
       const existingTagIds = new Set(currentAssociations.map(pt => pt.tagId));
 
       // 2. Query target tags for details
-      const tagDetails = await db.select({ id: tagsTable.id, isGlobal: tagsTable.isGlobal }).from(tagsTable).where(inArray(tagsTable.id, tagIds));
+      const tagDetails = await db.select({ id: tagsTable.id, isPinned: tagsTable.isPinned }).from(tagsTable).where(inArray(tagsTable.id, tagIds));
       const tagDetailsMap = new Map(tagDetails.map(t => [t.id, t]));
 
       const getWeight = (tagId: number, tagDetail?: any) => {
@@ -127,8 +127,8 @@ export const tags = new Hono()
           if (src === 'user') return 90;
           if (src === 'system') return 50;
         }
-        if (tagDetail?.isGlobal) return 50;
-        return 90;
+        if (tagDetail?.isPinned) return 100;
+        return 50;
       };
 
       // 3. Sort and limit
@@ -165,7 +165,7 @@ export const tags = new Hono()
 
     const { photoIds, tagIds, tagWeights, tagSources } = check;
     try {
-      const tagDetails = await db.select({ id: tagsTable.id, isGlobal: tagsTable.isGlobal }).from(tagsTable).where(inArray(tagsTable.id, tagIds));
+      const tagDetails = await db.select({ id: tagsTable.id, isPinned: tagsTable.isPinned }).from(tagsTable).where(inArray(tagsTable.id, tagIds));
       const tagDetailsMap = new Map(tagDetails.map(t => [t.id, t]));
 
       const getWeight = (tagId: number, tagDetail?: any) => {
@@ -177,8 +177,8 @@ export const tags = new Hono()
           if (src === 'user') return 90;
           if (src === 'system') return 50;
         }
-        if (tagDetail?.isGlobal) return 50;
-        return 90;
+        if (tagDetail?.isPinned) return 100;
+        return 50;
       };
 
       const sortedTagIds = [...tagIds].sort((a, b) => {

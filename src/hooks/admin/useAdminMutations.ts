@@ -2,7 +2,7 @@ import { queryKeys } from '@/lib/query/keys';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { api } from '@/lib/api';
 import { defineMutation } from '@/lib/mutations/defineMutation';
-import { useAppMutation } from '@/lib/mutations/useAppMutation';
+import { useOptimisticMutation } from '@/lib/mutations/useOptimisticMutation';
 
 // 1. 修复工具
 const repairConfig = defineMutation<unknown, string, readonly unknown[]>({
@@ -18,7 +18,7 @@ const repairConfig = defineMutation<unknown, string, readonly unknown[]>({
   invalidate: () => [queryKeys.photos.all, queryKeys.groups.all],
   successMessage: '修复成功',
 });
-export const useRepairMutation = () => useAppMutation(repairConfig);
+export const useRepairMutation = () => useOptimisticMutation(repairConfig);
 
 // 2. 同步工具
 const syncConfig = defineMutation<void, 'push' | 'pull', readonly unknown[]>({
@@ -35,7 +35,7 @@ const syncConfig = defineMutation<void, 'push' | 'pull', readonly unknown[]>({
   },
   successMessage: '同步完成',
 });
-export const useSyncMutation = () => useAppMutation(syncConfig);
+export const useSyncMutation = () => useOptimisticMutation(syncConfig);
 
 
 export const useAdminMutations = () => {

@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { type } from 'arktype';
 import { db, categories as categoriesTable, furnitureItems } from '../_lib/db/index.js';
-import { eq, asc, ne } from 'drizzle-orm';
+import { eq, asc, ne, sql } from 'drizzle-orm';
 import { CategoryReqSchema } from '../_shared/apiContractSchema.js';
 
 let categoriesCache: any[] | null = null;
@@ -49,16 +49,16 @@ export const categories = new Hono()
   .post('/seed', async (c) => {
     try {
       // Clean up using Drizzle
-      await db.delete(categoriesTable).where(ne(categoriesTable.id, '00000000-0000-0000-0000-000000000000'));
+      await db.delete(categoriesTable).where(sql`true`);
       
       const seedData = [
-        { code: 'chair', nameZh: '椅子', nameEn: 'Chair', nameMs: 'Kerusi', sortOrder: 1 },
-        { code: 'table', nameZh: '桌子', nameEn: 'Table', nameMs: 'Meja', sortOrder: 2 },
-        { code: 'bed', nameZh: '床具', nameEn: 'Bed', nameMs: 'Katil', sortOrder: 3 },
-        { code: 'cabinet', nameZh: '柜子', nameEn: 'Cabinet', nameMs: 'Almari', sortOrder: 4 },
-        { code: 'office', nameZh: '办公', nameEn: 'Office', nameMs: 'Pejabat', sortOrder: 5 },
-        { code: 'sofa', nameZh: '沙发', nameEn: 'Sofa', nameMs: 'Sofa', sortOrder: 6 },
-        { code: 'others', nameZh: '其他', nameEn: 'Others', nameMs: 'Lain-lain', sortOrder: 7 }
+        { id: 1, code: 'chair', nameZh: '椅子', nameEn: 'Chair', nameMs: 'Kerusi', sortOrder: 1 },
+        { id: 2, code: 'table', nameZh: '桌子', nameEn: 'Table', nameMs: 'Meja', sortOrder: 2 },
+        { id: 3, code: 'bed', nameZh: '床具', nameEn: 'Bed', nameMs: 'Katil', sortOrder: 3 },
+        { id: 4, code: 'cabinet', nameZh: '柜子', nameEn: 'Cabinet', nameMs: 'Almari', sortOrder: 4 },
+        { id: 5, code: 'office', nameZh: '办公', nameEn: 'Office', nameMs: 'Pejabat', sortOrder: 5 },
+        { id: 6, code: 'sofa', nameZh: '沙发', nameEn: 'Sofa', nameMs: 'Sofa', sortOrder: 6 },
+        { id: 7, code: 'others', nameZh: '其他', nameEn: 'Others', nameMs: 'Lain-lain', sortOrder: 7 }
       ];
 
       await db.insert(categoriesTable).values(seedData);
@@ -73,7 +73,7 @@ export const categories = new Hono()
   })
   .post('/clear-photos', async (c) => {
     const body = await c.req.json();
-    const check = type({ categoryId: "string" })(body);
+    const check = type({ categoryId: "number" })(body);
     if (check instanceof type.errors) throw new Error(check.summary);
 
     const { categoryId } = check;
@@ -109,7 +109,7 @@ export const categories = new Hono()
 
       const [data] = await db
           .insert(categoriesTable)
-          .values(mappedData)
+          .values([mappedData as any])
           .returning();
       
       categoriesCache = null; // Clear cache
@@ -139,7 +139,7 @@ export const categories = new Hono()
       await db
           .update(categoriesTable)
           .set(mappedUpdates)
-          .where(eq(categoriesTable.id, id));
+          .where(eq(categoriesTable.id, parseInt(id)));
       
       categoriesCache = null; // Clear cache
       
@@ -154,7 +154,7 @@ export const categories = new Hono()
     try {
       await db
           .delete(categoriesTable)
-          .where(eq(categoriesTable.id, id));
+          .where(eq(categoriesTable.id, parseInt(id)));
       
       categoriesCache = null; // Clear cache
       

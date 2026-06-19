@@ -1,7 +1,7 @@
 import React from 'react';
 import { useRouter } from '@tanstack/react-router';
-import { AlertCircle, RefreshCw, Home } from 'lucide-react';
-import { useTranslation } from '@/hooks/core/useTranslation';
+import { AlertCircle, RefreshCw, Home, Copy, Terminal } from 'lucide-react';
+import { useTranslation, useCopyToClipboard } from '@/hooks';
 
 export function RouteErrorFallback({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
@@ -38,7 +38,10 @@ export function RouteErrorFallback({ error, reset }: { error: Error; reset: () =
       </div>
 
       <div className="w-full bg-slate-50 rounded-xl p-4 border border-slate-100">
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">错误代码</span>
+        <div className="flex items-center gap-2 mb-2">
+          <Terminal size={10} className="text-slate-400" />
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">错误代码</span>
+        </div>
         <code className="text-[11px] text-red-500 font-mono break-all line-clamp-2 leading-relaxed">
           {error.message || 'Unknown Routing Error'}
         </code>
@@ -57,6 +60,7 @@ export function RouteErrorFallback({ error, reset }: { error: Error; reset: () =
             onClick={handleCopyDiagnostics}
             className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-white text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-all text-sm font-semibold active:scale-95 text-nowrap"
           >
+            <Copy size={16} />
             复制诊断
           </button>
         </div>

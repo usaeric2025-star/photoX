@@ -52,7 +52,6 @@ export interface UIStoreState {
   isInitialDataLoading: boolean;
   setInitialDataLoading: (loading: boolean) => void;
   isMultiSelect: boolean;
-  isMultiSelectMode: boolean;
   draggedPhotoId: string | null;
   focusedGroupPhotoId: string | null;
   resetUI: () => void;
@@ -124,7 +123,6 @@ export const useUIStore = create<UIStoreState>()((set) => ({
   isMultiSelect: false,
   selectedIds: [],
   processingIds: [],
-  isMultiSelectMode: false,
   draggedPhotoId: null,
   focusedGroupPhotoId: null,
   toggleSelected: (id) => set((state) => {

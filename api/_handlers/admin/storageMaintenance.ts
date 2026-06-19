@@ -230,6 +230,7 @@ storageMaintenance.post("/storage/import-orphans", async (c) => {
             }
 
             toCreate.push({
+              id: crypto.randomUUID(),
               name: { zh: nameCandidate, en: nameCandidate, ms: nameCandidate },
               imageUrl: publicUrl,
               description: { zh: `[自动恢复] 源文件: ${filename}`, en: `[Auto-restore] Source: ${filename}`, ms: `[Pemulihan automatik] Sumber: ${filename}` },

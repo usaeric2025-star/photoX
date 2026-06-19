@@ -4,7 +4,7 @@ import { createGroup, updateGroup, deleteGroupFromCloud, groupPhotos, movePhotos
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { Photo, ProductGroup } from '@/types';
 import { defineMutation } from '@/lib/mutations/defineMutation';
-import { useAppMutation } from '@/lib/mutations/useAppMutation';
+import { useOptimisticMutation } from '@/lib/mutations/useOptimisticMutation';
 
 // 1. 创建合组
 const groupCreateConfig = defineMutation<ProductGroup, ProductGroup, readonly unknown[]>({
@@ -16,7 +16,7 @@ const groupCreateConfig = defineMutation<ProductGroup, ProductGroup, readonly un
   successMessage: '已创建合组',
 });
 
-export const useGroupCreate = () => useAppMutation(groupCreateConfig);
+export const useGroupCreate = () => useOptimisticMutation(groupCreateConfig);
 
 // 2. 更新合组
 const groupUpdateConfig = defineMutation<
@@ -32,7 +32,7 @@ const groupUpdateConfig = defineMutation<
   successMessage: '已修改',
 });
 
-export const useGroupUpdate = () => useAppMutation(groupUpdateConfig);
+export const useGroupUpdate = () => useOptimisticMutation(groupUpdateConfig);
 
 // 3. 删除合组
 const groupDeleteConfig = defineMutation<void, string, readonly unknown[]>({
@@ -44,7 +44,7 @@ const groupDeleteConfig = defineMutation<void, string, readonly unknown[]>({
   successMessage: '已删除',
 });
 
-export const useGroupDelete = () => useAppMutation(groupDeleteConfig);
+export const useGroupDelete = () => useOptimisticMutation(groupDeleteConfig);
 
 // 4. 设置封面
 const groupCoverConfig = defineMutation<
@@ -60,7 +60,7 @@ const groupCoverConfig = defineMutation<
   successMessage: '已设为封面',
 });
 
-export const useGroupCoverMutation = () => useAppMutation(groupCoverConfig);
+export const useGroupCoverMutation = () => useOptimisticMutation(groupCoverConfig);
 
 // 5. 照片合组
 const groupPhotosConfig = defineMutation<
@@ -95,7 +95,7 @@ const groupPhotosConfig = defineMutation<
   successMessage: '已合组',
 });
 
-export const useGroupPhotosMutation = () => useAppMutation(groupPhotosConfig);
+export const useGroupPhotosMutation = () => useOptimisticMutation(groupPhotosConfig);
 
 // 6. 从合组移出
 const removePhotosConfig = defineMutation<
@@ -130,7 +130,7 @@ const removePhotosConfig = defineMutation<
   successMessage: '已移出',
 });
 
-export const useRemoveFromGroupMutation = () => useAppMutation(removePhotosConfig);
+export const useRemoveFromGroupMutation = () => useOptimisticMutation(removePhotosConfig);
 
 // 7. 解散合组
 const ungroupConfig = defineMutation<void, string, readonly unknown[]>({
@@ -157,7 +157,7 @@ const ungroupConfig = defineMutation<void, string, readonly unknown[]>({
   successMessage: '已解散',
 });
 
-export const useUngroupMutation = () => useAppMutation(ungroupConfig);
+export const useUngroupMutation = () => useOptimisticMutation(ungroupConfig);
 
 export const useGroupMutations = () => {
   const create = useGroupCreate();

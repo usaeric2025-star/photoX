@@ -1,8 +1,6 @@
 import { logger } from '@/lib/logger';
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { JobResumer } from '@/components/tasks/JobResumer';
-import { BackgroundTaskPanel } from '@/components/tasks/BackgroundTaskPanel';
 
 export type TaskStatus = 'running' | 'completed' | 'error' | 'cancelled';
 

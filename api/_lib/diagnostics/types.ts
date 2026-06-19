@@ -14,13 +14,14 @@ export interface DiagnosticIssue {
 }
 
 export interface DBRecord extends Record<string, unknown> {
-  id: string;
+  id: string | number;
   user_id?: string;
   created_at?: string;
   updated_at?: string;
 }
 
-export interface PhotoRecord extends DBRecord {
+export interface PhotoRecord extends Omit<DBRecord, 'id'> {
+  id: string;
   image_url?: string;
   image_hash?: string;
   item_code?: string;
@@ -28,14 +29,22 @@ export interface PhotoRecord extends DBRecord {
   is_hidden?: boolean;
 }
 
-export interface GroupRecord extends DBRecord {
+export interface GroupRecord extends Omit<DBRecord, 'id'> {
+  id: string;
   name?: string;
   cover_photo_id?: string;
 }
 
-export interface CategoryRecord extends DBRecord {
+export interface CategoryRecord extends Omit<DBRecord, 'id'> {
+  id: number;
   code: string;
   name_zh: string;
+}
+
+export interface TagRecord extends Omit<DBRecord, 'id'> {
+  id: number;
+  name: string;
+  usage_count?: number;
 }
 
 export interface ManufacturerRecord extends DBRecord {
@@ -54,9 +63,10 @@ export interface DiagnosticContext {
   categories: CategoryRecord[];
   manufacturers: ManufacturerRecord[];
   photoTags: PhotoTagRecord[];
+  tags: TagRecord[];
 }
 
-export type DiagnosticDependency = 'photos' | 'groups' | 'categories' | 'manufacturers' | 'photoTags';
+export type DiagnosticDependency = 'photos' | 'groups' | 'categories' | 'manufacturers' | 'photoTags' | 'tags';
 
 export interface DiagnosticTask {
   id: string;

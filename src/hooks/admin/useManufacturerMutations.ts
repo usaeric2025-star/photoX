@@ -2,7 +2,7 @@ import { Manufacturer } from '@/types';
 import { addManufacturerToDB, updateManufacturerInDB, deleteManufacturerFromDB } from '@/services/manufacturer/commands';
 import { queryKeys } from '@/lib/query/keys';
 import { defineMutation } from '@/lib/mutations/defineMutation';
-import { useAppMutation } from '@/lib/mutations/useAppMutation';
+import { useOptimisticMutation } from '@/lib/mutations/useOptimisticMutation';
 
 // 1. 创建厂商
 const manufacturerCreateConfig = defineMutation<Manufacturer, string | Partial<Manufacturer>, readonly unknown[]>({
@@ -16,7 +16,7 @@ const manufacturerCreateConfig = defineMutation<Manufacturer, string | Partial<M
   invalidate: () => [queryKeys.manufacturers.all, queryKeys.photos.all],
   successMessage: '厂商添加成功',
 });
-export const useManufacturerCreate = () => useAppMutation(manufacturerCreateConfig);
+export const useManufacturerCreate = () => useOptimisticMutation(manufacturerCreateConfig);
 
 // 2. 编辑厂商
 const manufacturerEditConfig = defineMutation<boolean, { id: string; updates: Partial<Manufacturer> }, readonly unknown[]>({
@@ -29,7 +29,7 @@ const manufacturerEditConfig = defineMutation<boolean, { id: string; updates: Pa
   invalidate: () => [queryKeys.manufacturers.all, queryKeys.photos.all],
   successMessage: '厂商更新成功',
 });
-export const useManufacturerEdit = () => useAppMutation(manufacturerEditConfig);
+export const useManufacturerEdit = () => useOptimisticMutation(manufacturerEditConfig);
 
 // 3. 删除厂商
 const manufacturerDeleteConfig = defineMutation<boolean, string, readonly unknown[]>({
@@ -42,5 +42,5 @@ const manufacturerDeleteConfig = defineMutation<boolean, string, readonly unknow
   invalidate: () => [queryKeys.manufacturers.all, queryKeys.photos.all],
   successMessage: '厂商删除成功',
 });
-export const useManufacturerDelete = () => useAppMutation(manufacturerDeleteConfig);
+export const useManufacturerDelete = () => useOptimisticMutation(manufacturerDeleteConfig);
 

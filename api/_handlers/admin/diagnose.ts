@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
 import { sql } from 'drizzle-orm';
-import { db, furnitureItems, groups as groupsTable, categories as categoriesTable, manufacturers as manufacturersTable, photoTags as photoTagsTable, secrets as secretsTable } from '../../_lib/db/index.js';
+import { db, furnitureItems, groups as groupsTable, categories as categoriesTable, manufacturers as manufacturersTable, photoTags as photoTagsTable, secrets as secretsTable, tags as tagsTable } from '../../_lib/db/index.js';
 import { getR2Client } from "../../_lib/storage.js";
 import { getServerEnv } from "../../_shared/envSchema.js";
 import { diagnosticRegistry } from "../../_lib/diagnostics/registry.js";
-import { DiagnosticIssue, PhotoRecord, GroupRecord, CategoryRecord, ManufacturerRecord, PhotoTagRecord } from "../../_lib/diagnostics/types.js";
+import { DiagnosticIssue, PhotoRecord, GroupRecord, CategoryRecord, ManufacturerRecord, PhotoTagRecord, TagRecord } from "../../_lib/diagnostics/types.js";
 
 const serverEnv = getServerEnv(process.env);
 export const adminDiagnose = new Hono();
@@ -20,6 +20,7 @@ adminDiagnose.get("/", async (c) => {
         mData,
         secretData,
         ptData,
+        tData,
       ] = await Promise.all([
         db.select({
           id: furnitureItems.id,
@@ -53,6 +54,7 @@ adminDiagnose.get("/", async (c) => {
         }).from(manufacturersTable),
         db.select({ key: secretsTable.key }).from(secretsTable).limit(1),
         db.select().from(photoTagsTable),
+        db.select().from(tagsTable),
       ]);
 
       // Map Drizzle results to snake_case for task compatibility
@@ -90,6 +92,12 @@ adminDiagnose.get("/", async (c) => {
         name: m.name || ''
       }));
 
+      const tags: TagRecord[] = tData.map(t => ({
+        id: t.id,
+        name: t.name || '',
+        usage_count: t.usageCount || 0
+      }));
+
       const photoTags: PhotoTagRecord[] = ptData.map(pt => ({
         id: `${pt.photoId ?? ''}_${pt.tagId ?? ''}`,
         photo_id: pt.photoId ?? '',
@@ -112,7 +120,8 @@ adminDiagnose.get("/", async (c) => {
             groups,
             categories,
             manufacturers,
-            photoTags
+            photoTags,
+            tags
           })
         )
       );

@@ -5,7 +5,6 @@ export { useTaskExecutor } from './core/useTaskExecutor';
 export { TaskProvider, useTasks, type BackgroundTask } from './core/useTasks';
 export { usePermission } from './core/auth/usePermission';
 export { useAdminMode } from './core/auth/useAdminMode';
-export { useScrollRestoration } from '../core/infra/useScrollRestoration';
 export { useLongPress } from './core/useLongPress';
 export { useTranslation } from './core/useTranslation';
 export { useIsManagement } from './core/useIsManagement';

@@ -2,7 +2,7 @@ import { Tag } from '@/types';
 import { addTagToDB, updateTagInDB, deleteTagFromDB } from '@/services/tag/commands';
 import { queryKeys } from '@/lib/query/keys';
 import { defineMutation } from '@/lib/mutations/defineMutation';
-import { useAppMutation } from '@/lib/mutations/useAppMutation';
+import { useOptimisticMutation } from '@/lib/mutations/useOptimisticMutation';
 
 // 1. 创建标签
 const tagCreateConfig = defineMutation<Tag, string | Partial<Tag>, readonly unknown[]>({
@@ -18,7 +18,7 @@ const tagCreateConfig = defineMutation<Tag, string | Partial<Tag>, readonly unkn
   invalidate: () => [queryKeys.tags.all, queryKeys.photos.all],
   successMessage: '标签添加成功',
 });
-export const useTagCreate = () => useAppMutation(tagCreateConfig);
+export const useTagCreate = () => useOptimisticMutation(tagCreateConfig);
 
 // 2. 编辑标签
 const tagEditConfig = defineMutation<boolean, { id: string; updates: Partial<Tag> }, readonly unknown[]>({
@@ -31,7 +31,7 @@ const tagEditConfig = defineMutation<boolean, { id: string; updates: Partial<Tag
   invalidate: () => [queryKeys.tags.all, queryKeys.photos.all],
   successMessage: '标签更新成功',
 });
-export const useTagEdit = () => useAppMutation(tagEditConfig);
+export const useTagEdit = () => useOptimisticMutation(tagEditConfig);
 
 // 3. 删除标签
 const tagDeleteConfig = defineMutation<boolean, string, readonly unknown[]>({
@@ -44,5 +44,5 @@ const tagDeleteConfig = defineMutation<boolean, string, readonly unknown[]>({
   invalidate: () => [queryKeys.tags.all, queryKeys.photos.all],
   successMessage: '标签删除成功',
 });
-export const useTagDelete = () => useAppMutation(tagDeleteConfig);
+export const useTagDelete = () => useOptimisticMutation(tagDeleteConfig);
 
