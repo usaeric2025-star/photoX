@@ -75,6 +75,7 @@ export async function reportError(error: Error | AppError): Promise<void> {
       stack: isAppErrorObj ? (error.stack || jsonPay.stack) : error.stack,
       level: (isAppErrorObj && error.severity === ErrorSeverity.WARNING) ? 'warn' : 'error',
       module: isAppErrorObj ? (error.code || 'AppError') : 'Error',
+      operation: isAppErrorObj ? (jsonPay.context || 'client_operation') : 'client_operation',
       metadata: isAppErrorObj ? jsonPay : {
         name: error.name,
         timestamp: new Date().toISOString(),
@@ -142,6 +143,8 @@ export const logError = async (error: Error | unknown, context: EventContext) =>
         stack: normError.stack || (errorWithMeta.details as string) || null,
         url: typeof window !== 'undefined' ? window.location.href : '',
         module: context.component || 'global',
+        level: 'error',
+        operation: context.action,
         metadata: {
           ...context.metadata,
           action: context.action,
@@ -168,6 +171,7 @@ export const logResult = async (context: EventContext, type: 'error' | 'success'
         url: typeof window !== 'undefined' ? window.location.href : '',
         module: context.component || 'global',
         level: type === 'error' ? 'error' : 'info',
+        operation: context.action,
         metadata: {
           ...context.metadata,
           action: context.action,

@@ -39,6 +39,48 @@ app.use('*', cors());
 app.get('/health', (c) => c.json({ success: true, status: 'ok' }));
 setupMiddlewares(app, serverEnv, sentryDsn);
 
+// --- Global Error Logging ---
+app.onError(async (err, c) => {
+    const { db, systemLogs } = await import('./_lib/db/index.js');
+    const { logger } = await import('./_lib/logger.js');
+    const traceId = c.req.header('X-Trace-Id') || 'be-' + Math.random().toString(36).substring(2, 12);
+    
+    logger.error(`[Global Backend Error] ${err.message}`, { 
+        url: c.req.url, 
+        method: c.req.method,
+        traceId,
+        stack: err.stack 
+    });
+
+    try {
+        await db.insert(systemLogs).values({
+            message: err.message,
+            level: 'error',
+            operation: `internal.${c.req.path}`,
+            module: 'backend',
+            traceId,
+            resource: c.req.url,
+            metadata: {
+                stack: err.stack,
+                url: c.req.url,
+                method: c.req.method,
+                params: c.req.param(),
+                query: c.req.query(),
+                timestamp: new Date().toISOString()
+            },
+            createdAt: new Date()
+        });
+    } catch (dbErr) {
+        logger.error('[Fatal] Failed to log error to database:', dbErr);
+    }
+
+    return c.json({ 
+        success: false, 
+        error: err.message || 'Internal Server Error',
+        traceId 
+    }, 500);
+});
+
 // --- API Routes (Distributed) ---
 app.route('/admin', adminApp);
 app.route('/public/settings', publicSettings);

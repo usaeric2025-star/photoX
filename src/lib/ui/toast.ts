@@ -10,7 +10,6 @@ export const showToast = {
     toast.success(message, { 
       duration: 3000,
       position: 'bottom-center',
-      className: 'z-toast',
       ...options
     }),
     
@@ -18,7 +17,6 @@ export const showToast = {
     toast.error(message, { 
       duration: 5000,
       position: 'bottom-center',
-      className: 'z-toast',
       ...options
     }),
     
@@ -26,7 +24,6 @@ export const showToast = {
     toast.info(message, { 
       duration: 3000,
       position: 'bottom-center',
-      className: 'z-toast',
       ...options
     }),
 
@@ -34,14 +31,12 @@ export const showToast = {
     toast.warning(message, { 
       duration: 4000,
       position: 'bottom-center',
-      className: 'z-toast',
       ...options
     }),
     
   loading: (message: string, options?: ExternalToast) => 
     toast.loading(message, { 
       position: 'bottom-center',
-      className: 'z-toast',
       ...options
     }),
     

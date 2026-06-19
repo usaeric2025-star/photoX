@@ -16,7 +16,7 @@ export function BackgroundTaskPanel() {
   if (activeTasks.length === 0) return null;
 
   return (
-    <div className="fixed bottom-6 left-6 z-[100] flex flex-col gap-3 w-80 pointer-events-none">
+    <div className="fixed bottom-6 left-6 z-[var(--z-loading)] flex flex-col gap-3 w-80 pointer-events-none">
       <AnimatePresence mode="popLayout">
         {activeTasks.slice(-3).map((task) => (
           <TaskItem 
