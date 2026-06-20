@@ -122,7 +122,16 @@ const getErrorId = (standardError: StandardError): string => {
 }
 
 const buildCopyContent = (error: StandardError): string => {
-  return `[${error.context}] ${error.message} (Trace: ${error.traceId || 'N/A'})`;
+  const timestamp = error.timestamp ? new Date(error.timestamp).toISOString() : new Date().toISOString();
+  return [
+    `--- PHOTX 錯誤診斷資訊 ---`,
+    `時間戳: ${timestamp}`,
+    `錯誤類型: ${error.context || 'Global'}`,
+    `錯誤代碼: ${error.code || 'UNKNOWN'}`,
+    `追蹤 ID: ${error.traceId || 'N/A'}`,
+    `原始訊息: ${error.message}`,
+    `--- 完 ---`
+  ].join('\n');
 }
 
 export const logError = (error: Error, info: Record<string, unknown> = {}, extras: Record<string, unknown> = {}) => {

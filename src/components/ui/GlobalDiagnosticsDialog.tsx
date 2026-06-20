@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/Icon';
 import { logger } from '@/lib/logger';
 import { clearCacheAndReload } from '@/lib/recovery/clearCacheAndReload';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 interface GlobalDiagnosticsDialogProps {
   open: boolean;
@@ -41,7 +42,24 @@ export function GlobalDiagnosticsDialog({ open, onClose }: GlobalDiagnosticsDial
       }
       // 捕獲當前的啟動和運行期錯誤
       const startupErrors = (window as any).__STARTUP_ERRORS__ || [];
-      setErrors([...startupErrors]);
+      const cachedErrors = ErrorFactory.getLocalErrors();
+      
+      // 合併並去重 (基於 traceId)
+      const allErrors = [...startupErrors];
+      cachedErrors.forEach((ce: any) => {
+        if (!allErrors.find(ae => ae.traceId === ce.traceId)) {
+          allErrors.push({
+            type: ce.category,
+            msg: ce.message,
+            details: ce.context ? JSON.stringify(ce.context) : ce.stack,
+            traceId: ce.traceId,
+            code: ce.code,
+            timestamp: ce.timestamp
+          });
+        }
+      });
+
+      setErrors(allErrors.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
       
       // 進行網路診斷
       checkBackendConnection();
@@ -212,7 +230,10 @@ export function GlobalDiagnosticsDialog({ open, onClose }: GlobalDiagnosticsDial
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">故障與事件堆疊 (Debug Logs)</span>
               {errors.length > 0 && (
                 <button 
-                  onClick={() => setErrors([])}
+                  onClick={() => {
+                    setErrors([]);
+                    ErrorFactory.clearLocalErrors();
+                  }}
                   className="text-[10px] text-slate-400 hover:text-slate-600 active:scale-95 transition-all flex items-center gap-1"
                 >
                   <Trash2 size={10} />

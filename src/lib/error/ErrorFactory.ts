@@ -155,16 +155,29 @@ export class ErrorFactory {
     // 2. 本地持久化記錄 (供診斷面板讀取)
     try {
       const key = 'app_errors';
-      const errors = JSON.parse(localStorage.getItem(key) || '[]');
-      errors.push({
+      const raw = localStorage.getItem(key);
+      const errors = JSON.parse(raw || '[]');
+      
+      const errorEntry = {
         ...appError.toJSON(),
         timestamp: appError.timestamp || new Date().toISOString(),
         url: typeof window !== 'undefined' ? window.location.href : 'unknown',
         userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
-      });
+      };
+
+      errors.push(errorEntry);
+      
       // 只保留最近 50 條記錄
+      const limitedErrors = errors.slice(-50);
+      
       if (typeof localStorage !== 'undefined') {
-        localStorage.setItem(key, JSON.stringify(errors.slice(-50)));
+        try {
+          localStorage.setItem(key, JSON.stringify(limitedErrors));
+        } catch (storageError) {
+          // 如果 QuotaExceededError (localStorage 滿了)，先清空再試一次
+          localStorage.removeItem(key);
+          localStorage.setItem(key, JSON.stringify([errorEntry]));
+        }
       }
     } catch (e) {
       // 靜默失敗，不影響業務
