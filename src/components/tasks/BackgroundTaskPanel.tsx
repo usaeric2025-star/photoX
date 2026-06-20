@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { useTasks, type BackgroundTask } from '@/hooks';
 import { Loader2, CheckCircle2, XCircle, X } from '@/components/ui/Icon';
 import { motion, AnimatePresence } from 'motion/react';
@@ -6,6 +7,11 @@ import { motion, AnimatePresence } from 'motion/react';
 export function BackgroundTaskPanel() {
   const { tasks, removeTask, cancelTask } = useTasks();
   const panelRef = React.useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = React.useState(false);
+  
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
   
   const activeTasks = tasks.filter(t => 
     t.status === 'running' || 
@@ -15,6 +21,7 @@ export function BackgroundTaskPanel() {
   );
 
   React.useEffect(() => {
+    if (!mounted) return;
     if (activeTasks.length > 0 && panelRef.current) {
       if (!panelRef.current.matches(':popover-open')) {
         panelRef.current.showPopover();
@@ -24,9 +31,13 @@ export function BackgroundTaskPanel() {
         panelRef.current.hidePopover();
       }
     }
-  }, [activeTasks.length]);
+  }, [activeTasks.length, mounted]);
 
-  return (
+  if (!mounted || activeTasks.length === 0) return null;
+
+  const portalRoot = document.getElementById('portal-root') || document.body;
+
+  return createPortal(
     <div 
       ref={panelRef}
       popover="manual"
@@ -42,7 +53,8 @@ export function BackgroundTaskPanel() {
           />
         ))}
       </AnimatePresence>
-    </div>
+    </div>,
+    portalRoot
   );
 }
 
