@@ -21,7 +21,7 @@ export const MultilingualInput = ({ name, label, required, type = 'input' }: Mul
           
           return (
             <div key={lang} className="relative group">
-              <div className="absolute top-2.5 left-2.5 z-10 hidden group-focus-within:flex items-center justify-center pointer-events-none px-1.5 py-0.5 rounded-md bg-slate-100/80 backdrop-blur-sm border border-slate-200">
+              <div className="absolute top-2.5 left-2.5 hidden group-focus-within:flex items-center justify-center pointer-events-none px-1.5 py-0.5 rounded-md bg-slate-100/80 backdrop-blur-sm border border-slate-200">
                 <span className="text-[8px] font-black text-slate-500 uppercase leading-none">
                   {lang}
                 </span>

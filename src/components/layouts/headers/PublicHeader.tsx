@@ -5,7 +5,7 @@ import { DynamicIcon } from '../../shared/DynamicIcon';
 import { Camera } from '@/components/ui/Icon'; // Keep one or two critical ones as standard imports for P0 performance
 import { useAuthStore } from '@/store/useAuthStore';
 import { useUIStore, useShallow, usePublicSettings, usePermission } from '@/hooks';
-import { DropdownMenu } from '../../shared/Dropdown';
+import { NativePopover } from '@/components/ui/NativePopover';
 import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
 import { translations } from "@/locales";
 import { storage } from '@/services/storage';
@@ -14,9 +14,10 @@ interface PublicHeaderProps {
   totalCount?: number;
   onRefresh?: () => void;
   isRefreshing?: boolean;
+  className?: string;
 }
 
-export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHeaderProps) {
+export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }: PublicHeaderProps) {
   const { user, isLoading, signOut } = useAuthStore();
   const { data: settings } = usePublicSettings();
   const { role } = usePermission();
@@ -56,7 +57,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
   const headerBgClass = "bg-surface-overlay backdrop-blur-2xl border-border-soft text-text-main";
 
   return (
-    <header className={cn("h-14 sm:h-16 shrink-0 border-b px-2.5 sm:px-6 flex items-center justify-between transition-all duration-300", headerBgClass)}>
+    <header className={cn("h-14 sm:h-16 shrink-0 border-b px-2.5 sm:px-6 flex items-center justify-between transition-all duration-300 relative bg-surface-overlay", headerBgClass, className)}>
       {/* 左侧：Logo & 计数 */}
       <div className="flex items-center gap-2 sm:gap-4 shrink-0 flex-nowrap">
         {logoUrl && logoUrl.trim() !== '' ? (
@@ -95,9 +96,9 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
         )}
 
         {totalCount !== undefined && (
-          <span className="px-2 py-0.5 rounded-full bg-surface-soft text-text-sub text-[10px] font-medium whitespace-nowrap shrink-0 tracking-tight leading-none">
-            {t.photosCount(totalCount)}
-          </span>
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold whitespace-nowrap shrink-0 tracking-tight leading-none">
+            <span>{t.photosCount(totalCount)}</span>
+          </div>
         )}
       </div>
 
@@ -125,7 +126,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
         </button>
 
         {/* 4. 菜单 (語言、登錄、退出) */}
-        <DropdownMenu
+        <NativePopover
           align="end"
           trigger={
             <div className="h-10 w-10 flex items-center justify-center text-text-sub hover:bg-surface-soft rounded-full transition-all cursor-pointer shrink-0">
@@ -214,7 +215,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
               </>
             )}
           </div>
-        </DropdownMenu>
+        </NativePopover>
       </div>
     </header>
   );

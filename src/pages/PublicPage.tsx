@@ -12,6 +12,8 @@ import { useUIStore } from '@/store/useUIStore';
 import { WhatsAppDialog } from '@/components/shared/WhatsAppDialog';
 import { PhotoErrorDisplay } from '@/components/photo/PhotoErrorDisplay';
 import { Icon } from '@/components/ui/Icon';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/lib/api';
 
 export default function PublicPage() {
   const { 
@@ -169,21 +171,27 @@ export default function PublicPage() {
     );
   }
 
+  const { data: globalTotal, isLoading: isCountLoading } = useQuery({
+    queryKey: ['photos', 'count', 'total', 'all'],
+    queryFn: async () => {
+      // 統一讀取總量，不區分管理者模式以反映真實庫存
+      const res = await api.photos.count.$post({ json: { isAdminMode: true } });
+      if (!res.ok) return 0;
+      const json = await res.json();
+      return (json as any).data as number;
+    },
+    staleTime: 5 * 60 * 1000 // 減少重複 API 調用
+  });
+
+  const totalToDisplay = globalTotal ?? totalCount;
+
   return (
     <div 
-      className="flex flex-col h-full w-full bg-surface-base relative" 
+      className="flex flex-col h-full w-full bg-surface-base relative overflow-hidden" 
       id="public-view"
       style={{ height: '100dvh' }}
     >
-      <PublicHeader 
-        totalCount={totalCount}
-        onRefresh={handleRefresh}
-        isRefreshing={isFetching}
-      />
-      
-      <FilterBar mode="public" />
-
-      <div className="flex-1 min-h-0 relative bg-surface-soft overflow-hidden">
+      <div className="flex-1 min-h-0 relative bg-surface-soft overflow-hidden order-0">
         <ErrorBoundary>
           <PublicPhotoGrid 
             {...photoGridData}
@@ -195,8 +203,17 @@ export default function PublicPage() {
         </ErrorBoundary>
       </div>
 
+      <FilterBar mode="public" className="order-[-1]" />
+
+      <PublicHeader 
+        totalCount={totalToDisplay}
+        onRefresh={handleRefresh}
+        isRefreshing={isFetching || isCountLoading}
+        className="order-first"
+      />
+
       {/* 懸浮按鈕組 (回到頂部 & WhatsApp 諮詢) - Apple Style */}
-      <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-40">
+      <div className="fixed bottom-6 right-6 flex flex-col gap-3">
         {showScrollTop && (
           <button
             onClick={() => gridRef.current?.scrollToIndex(0)}

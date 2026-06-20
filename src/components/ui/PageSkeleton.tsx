@@ -46,7 +46,7 @@ export function PageSkeleton() {
 
       {/* stuck recovery panel */}
       {showHelper && (
-        <div className="fixed bottom-6 left-6 right-6 md:left-auto md:right-6 md:w-96 bg-slate-900 border border-slate-800 text-white rounded-3xl p-5 shadow-2xl z-[999999] flex flex-col gap-3 animate-slide-in-up">
+        <div className="fixed bottom-6 left-6 right-6 md:left-auto md:right-6 md:w-96 bg-slate-900 border border-slate-800 text-white rounded-3xl p-5 shadow-2xl flex flex-col gap-3 animate-slide-in-up">
           <div className="flex items-start gap-3">
             <div className="w-8 h-8 rounded-full bg-slate-805 flex items-center justify-center shrink-0 text-amber-500 animate-pulse">
               <Terminal size={15} />

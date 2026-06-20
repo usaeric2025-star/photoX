@@ -51,13 +51,14 @@ export const listExtendedHandlers = (app: any) => {app.post('/list-by-group', as
                 tagsByPhoto.set(t.photoId ?? '', list);
             }
 
-            const formatted = data.map(d => {
+            const photosFormatted = data.map(d => {
                 const item = { ...d.items } as Record<string, unknown>;
+                const gId = d.items.groupId;
                 item.group = d.group ? { ...d.group, member_count: counts.get(d.group.id) || 0 } : null;
                 item.photo_tags = tagsByPhoto.get(d.items.id) || [];
                 return item;
             });
-            return c.json({ success: true, data: formatted });
+            return c.json({ success: true, data: photosFormatted });
         }
         return c.json({ success: true, data: [] });
     } catch (error: unknown) {

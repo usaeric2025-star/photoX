@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { Trash2, Pencil } from '@/components/ui/Icon';
+import { Trash2, Pencil, Icon } from '@/components/ui/Icon';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useClickOutside } from '@/hooks/core/useClickOutside';
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -15,32 +15,19 @@ interface ManufacturerProps {
   onDelete: (id: string | number) => void;
 }
 
+import { NativePopover } from "@/components/ui/NativePopover";
+
 export const ManufacturerItem = ({
   manufacturer,
   onUpdate,
   onDelete,
 }: ManufacturerProps) => {
-  const [activeMenuId, setActiveMenuId] = useState<string | number | null>(
-    null,
-  );
   const [isEditOpen, editDialog] = useDisclosure(false);
   const [isDeleteOpen, deleteDialog] = useDisclosure(false);
 
-  const menuRef = useClickOutside(() => {
-    if (activeMenuId === manufacturer.id) setActiveMenuId(null);
-  });
-
-  useLongPress(menuRef as any, {
-    delay: 400,
-    onLongPress: () => {
-      setActiveMenuId(manufacturer.id);
-    }
-  });
-
   return (
     <div
-      ref={menuRef as any}
-      className={`bg-white border border-brand-navy/10 pl-3 pr-2 py-1 rounded-full flex items-center gap-2 shadow-sm transition-all active:scale-95 relative ${activeMenuId === manufacturer.id ? "bg-brand-gold/10 border-brand-gold/30 scale-95" : ""}`}
+      className="bg-white border border-brand-navy/10 pl-3 pr-2 py-1 rounded-full flex items-center gap-2 shadow-sm transition-all active:scale-95 relative"
     >
       <div className="flex flex-col">
         <span className="text-[11px] font-black text-brand-navy uppercase tracking-tight select-none">
@@ -48,33 +35,39 @@ export const ManufacturerItem = ({
         </span>
       </div>
 
-      {activeMenuId === manufacturer.id && (
-          <div
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-brand-navy rounded-xl shadow-xl p-1 flex flex-col gap-0.5 z-[var(--z-dropdown)] min-w-[120px] animate-scale-in"
-          >
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                editDialog.open();
-                setActiveMenuId(null);
-              }}
-              className="px-3 py-2 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2"
-            >
-              <Pencil size={12} /> 编辑名称
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                deleteDialog.open();
-                setActiveMenuId(null);
-              }}
-              className="px-3 py-2 text-red-400 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2"
-            >
-              <Trash2 size={12} /> 删除
-            </button>
-            <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-brand-navy rotate-45 -mt-1" />
+      <NativePopover
+        align="center"
+        trigger={
+          <div className="p-1 cursor-pointer opacity-50 hover:opacity-100 transition-opacity">
+             {/* Small indicator or just trigger on name? User used long press or button? 
+                 In original it was absolute positioned over the whole thing based on activeMenuId.
+                 Let's add a small dots icon as a trigger for better UX.
+              */}
+             <Icon name="MoreVertical" size={14} />
           </div>
-        )}
+        }
+      >
+        <div className="flex flex-col gap-0.5 p-1 min-w-[120px]">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              editDialog.open();
+            }}
+            className="px-3 py-2 text-slate-700 text-[10px] font-bold uppercase tracking-widest hover:bg-slate-100 rounded-lg flex items-center gap-2 transition-colors"
+          >
+            <Pencil size={12} /> 编辑名称
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              deleteDialog.open();
+            }}
+            className="px-3 py-2 text-red-500 text-[10px] font-bold uppercase tracking-widest hover:bg-red-50 rounded-lg flex items-center gap-2 transition-colors"
+          >
+            <Trash2 size={12} /> 删除
+          </button>
+        </div>
+      </NativePopover>
 
       <PromptDialog
         open={isEditOpen}

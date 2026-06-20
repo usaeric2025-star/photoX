@@ -65,9 +65,10 @@ export function PhotoGridContent({
       count={photos.length}
       dataVersion={dataVersion}
       lanes={columns}
-      itemSize={400} // Simplified for now
+      itemSize={400} 
       shift={true}
-      containerClassName="px-2 pt-2 pb-4"
+      containerClassName="px-2 pt-2"
+      onEndReached={fetchNextPage}
       renderItem={(index) => {
         const photo = photos[index];
         if (!photo) return null;

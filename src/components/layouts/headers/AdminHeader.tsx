@@ -6,15 +6,17 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { useUIStore, useSettings, useAdminBatchActions, usePermission } from '@/hooks';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { DropdownMenu } from '../../shared/Dropdown';
+import { NativePopover } from '@/components/ui/NativePopover';
 import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
 import { translations } from "@/locales";
 import { storage } from '@/services/storage';
 
 
-interface AdminHeaderProps {}
+interface AdminHeaderProps {
+  className?: string;
+}
 
-export function AdminHeader({}: AdminHeaderProps) {
+export function AdminHeader({ className }: AdminHeaderProps) {
   const { handleBatchAiIdentifyTrigger: batchAiIdentifyRaw } = useAdminBatchActions();
   const handleBatchAiIdentifyTrigger = () => batchAiIdentifyRaw([]); // Passing empty allPhotos or we need to fix the contract
   const { user, signOut } = useAuthStore();
@@ -63,7 +65,7 @@ export function AdminHeader({}: AdminHeaderProps) {
   const headerBgClass = "bg-white border-slate-200 text-slate-800";
 
   return (
-    <header className={`h-14 sm:h-16 shrink-0 border-b px-2.5 sm:px-4 flex items-center justify-between font-sans transition-colors duration-300 relative ${headerBgClass}`}>
+    <header className={`h-14 sm:h-16 shrink-0 border-b px-2.5 sm:px-4 flex items-center justify-between font-sans transition-colors duration-300 relative ${headerBgClass} ${className || ''}`}>
       {/* 左侧：Logo & 计数 */}
       <div className="flex items-center gap-1 sm:gap-3 shrink-0 flex-nowrap">
         {logoUrl && logoUrl.trim() !== '' ? (
@@ -103,9 +105,10 @@ export function AdminHeader({}: AdminHeaderProps) {
           )}
   
           {/* 照片总数展示 */}
-          <div className="flex items-center gap-1 sm:gap-2 text-[9px] sm:text-xs font-black bg-white/60 backdrop-blur-sm border border-slate-200/30 rounded-full px-2 py-0.5 sm:px-2.5 sm:py-1 select-none shrink-0 cursor-default min-w-[40px] justify-center">
-            <span className="text-emerald-600 block text-center" title={lang === 'zh' ? '照片总数' : 'Total photo count'}>
-              {t.photosCount(totalCount)}
+          <div className="flex items-center gap-2 text-[10px] sm:text-xs font-bold bg-slate-50 border border-slate-200 rounded-full px-2.5 py-1 select-none shrink-0 cursor-default justify-center shadow-sm">
+            <span className="text-slate-500 uppercase tracking-tighter text-[9px]">{lang === 'zh' ? '总存量' : 'Total'}</span>
+            <span className="text-slate-900 font-black">
+              {totalCount}
             </span>
           </div>
         </div>
@@ -157,7 +160,7 @@ export function AdminHeader({}: AdminHeaderProps) {
           </button>
   
           {/* 4. 菜单 (语言、登录、退出) */}
-          <DropdownMenu
+          <NativePopover
             align="end"
             trigger={
               <div className="h-9 w-9 sm:h-10 sm:w-10 flex items-center justify-center text-slate-600 hover:bg-slate-200 rounded-full transition-all cursor-pointer shrink-0 border border-slate-200 bg-white">
@@ -234,7 +237,7 @@ export function AdminHeader({}: AdminHeaderProps) {
                 </>
               )}
             </div>
-          </DropdownMenu>
+          </NativePopover>
       </div>
     </header>
   );

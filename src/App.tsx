@@ -8,6 +8,7 @@ import { usePublicSettings } from '@/hooks';
 import { useLocalStorage } from '@/hooks/core/useLocalStorage';
 import { useAuthStore, initAuthListener } from '@/store/useAuthStore';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
+import { PortalRoot } from '@/components/ui/PortalRoot';
 // Removed migrateStorage
 import { handleError } from './lib/error/errorHandler';
 import { logger } from '@/lib/logger';
@@ -114,6 +115,7 @@ export default function AppRoutes() {
       <ConfirmProvider>
         <RouterProvider router={router} context={routerContext} />
       </ConfirmProvider>
+      <PortalRoot />
       <Analytics />
     </ErrorBoundary>
   );

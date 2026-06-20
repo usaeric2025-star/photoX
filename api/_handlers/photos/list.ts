@@ -153,7 +153,9 @@ export const listHandler = (app: Hono) => {
         });
 
         // ✅ 契約驗證
-        const nextCursor = formatted.length > 0 ? formatted[formatted.length - 1].createdAt : null;
+        const hasMore = total > (page * limit + data.length);
+        const nextCursor = (data.length === limit && hasMore) ? formatted[formatted.length - 1].createdAt : null;
+        
         return c.json({ 
           success: true, 
           data: PhotoListItemSchema.array().assert(formatted),

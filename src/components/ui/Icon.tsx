@@ -60,6 +60,7 @@ const IconLibrary: Record<string, React.ElementType> = {
   Menu: Icons.Menu,
   MessageCircle: Icons.MessageCircle,
   MoreHorizontal: Icons.MoreHorizontal,
+  MoreVertical: Icons.MoreVertical,
   PackageOpen: Icons.PackageOpen,
   PackageSearch: Icons.PackageSearch,
   Pencil: Icons.Pencil,

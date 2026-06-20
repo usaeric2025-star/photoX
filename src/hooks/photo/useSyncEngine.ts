@@ -51,7 +51,7 @@ export const useSyncEngine = () => {
     await runTask('同步云端數據', async () => {
         const [settingsRes, countRes] = await Promise.all([
           api.admin.settings.get.$get(),
-          api.photos.count.$post({ json: {} })
+          api.photos.count.$post({ json: { isAdminMode: true } })
         ]);
         
         const settingsResult = await settingsRes.json();

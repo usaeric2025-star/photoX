@@ -1,8 +1,7 @@
 import * as React from "react";
-
 import { Icon } from '@/components/ui/Icon';
 
-interface ModalProps {
+export interface ModalProps {
   open: boolean;
   onClose: () => void;
   children: React.ReactNode;
@@ -24,6 +23,10 @@ const sizeClasses = {
   screen: 'max-w-[100vw] w-[100vw] h-[100dvh] max-h-[100dvh] rounded-none m-0',
 };
 
+/**
+ * Modal component using the native <dialog> element.
+ * Provides maximum isolation and standard behavior.
+ */
 export function Modal({ 
   open, 
   onClose, 
@@ -34,16 +37,19 @@ export function Modal({
   className = '',
   hidePadding = false,
   showCloseButton = true
-}: ModalProps & { size?: 'sm' | 'md' | 'lg' | '4xl' | 'xl' | 'full' | 'screen' }) {
+}: ModalProps) {
   const ref = React.useRef<HTMLDialogElement>(null);
 
   React.useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    
     if (open) {
       if (!el.open) {
         try {
           el.showModal();
+          // Lock document scroll when open
+          document.body.style.overflow = 'hidden';
         } catch (e) {
           console.warn('[Modal] Failed to execute showModal, falling back to open attribute:', e);
           el.setAttribute('open', '');
@@ -57,6 +63,11 @@ export function Modal({
           el.removeAttribute('open');
         }
       }
+      // Robust scroll-lock release: Only unlock if there are no other open dialogs
+      const activeDialogs = document.querySelectorAll('dialog[open]');
+      if (activeDialogs.length === 0) {
+        document.body.style.overflow = '';
+      }
     }
     
     return () => {
@@ -67,10 +78,15 @@ export function Modal({
           el.removeAttribute('open');
         }
       }
+      // Ensure we check on unmount as well
+      const activeDialogs = document.querySelectorAll('dialog[open]');
+      if (activeDialogs.length === 0) {
+        document.body.style.overflow = '';
+      }
     };
   }, [open]);
 
-  // Handle ESC close natively
+  // Handle ESC close natively with state syncing
   React.useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -84,6 +100,7 @@ export function Modal({
   }, [onClose]);
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDialogElement>) => {
+    // Only close if user clicked directly on the dialog backdrop
     if (e.target === ref.current) {
       onClose();
     }
@@ -95,24 +112,24 @@ export function Modal({
       onClick={handleBackdropClick}
       className={`
         m-auto
-        animate-in fade-in zoom-in-95 duration-300 ease-apple
+        animate-in fade-in zoom-in-95 duration-200 ease-out
         ${sizeClasses[size]}
-        ${size === 'screen' ? '' : 'rounded-xl shadow-xl'}
+        ${size === 'screen' ? '' : 'rounded-xl shadow-2xl'}
         w-full bg-surface-base border-none
         backdrop:bg-black/40 backdrop:backdrop-blur-xl
         p-0 overflow-hidden outline-none ${className}
       `}
-      id="unified-app-modal"
+      id="native-app-dialog"
     >
       <div className={`flex flex-col w-full relative ${size === 'screen' ? 'h-full max-h-none' : 'max-h-[90vh]'}`}>
         {/* Close Button - Apple Style */}
         {showCloseButton && (
           <button
             onClick={onClose}
-            className="absolute right-4 top-4 p-2 rounded-full text-text-sub hover:text-text-main hover:bg-surface-soft transition-all active:scale-95 z-50"
+            className="absolute right-4 top-4 p-2 rounded-full text-text-sub hover:text-text-main hover:bg-surface-soft transition-all active:scale-95"
             aria-label="关闭"
           >
-            <Icon name="XCircle" size={26} solid className="opacity-20 hover:opacity-100 transition-opacity" />
+            <Icon name="XCircle" size={26} solid className="opacity-25 hover:opacity-100 transition-opacity" />
           </button>
         )}
 
@@ -120,12 +137,12 @@ export function Modal({
         {(title || description) && (
           <div className="px-6 pt-6 pb-2 flex flex-col gap-1 shrink-0">
             {title && (
-              <h2 className="text-[22px] font-bold text-text-main tracking-tight" id="modal-title">
+              <h2 className="text-[22px] font-bold text-text-main tracking-tight" id="dialog-title">
                 {title}
               </h2>
             )}
             {description && (
-              <p className="text-[15px] text-text-sub leading-relaxed" id="modal-desc">
+              <p className="text-[15px] text-text-sub leading-relaxed" id="dialog-desc">
                 {description}
               </p>
             )}

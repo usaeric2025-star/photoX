@@ -15,7 +15,12 @@ function PhotoEditModalContent({ editPhotoId, handleClose }: { editPhotoId: stri
   const updateMutation = usePhotoEditMutation();
 
   if (isPending) {
-    return <div className="p-8 text-center text-slate-500">Loading...</div>;
+    return (
+      <div className="p-20 flex flex-col items-center justify-center gap-4">
+        <div className="w-8 h-8 border-4 border-slate-200 border-t-primary rounded-full animate-spin" />
+        <p className="text-sm font-medium text-slate-500">正在获取照片详情...</p>
+      </div>
+    );
   }
 
   const defaultValues = photo ? {
@@ -31,16 +36,11 @@ function PhotoEditModalContent({ editPhotoId, handleClose }: { editPhotoId: stri
   } : {};
 
   return (
-    <div className="flex flex-col h-[85vh] w-full bg-slate-50 focus:outline-none relative p-6 overflow-y-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-lg font-bold text-slate-800">Edit Photo Details</h2>
-        <button onClick={handleClose} className="p-2 bg-slate-200 rounded-full hover:bg-slate-300">
-          ✕
-        </button>
-      </div>
+    <div className="p-2">
       <AutoForm
         schema={PhotoEditSchema}
         defaultValues={defaultValues}
+        className="space-y-6"
         onSubmit={async (data) => {
           if (editPhotoId) {
             await updateMutation.mutateAsync({ id: editPhotoId, updates: data as unknown as Partial<Photo> });
@@ -78,7 +78,14 @@ export function PhotoEditModal({ isOpen: propIsOpen, onClose: propOnClose, editP
   if (!isOpen) return null;
 
   return (
-    <Modal open={isOpen} onClose={handleClose} size="lg" hidePadding showCloseButton={false} className="max-h-[90vh] overflow-hidden flex flex-col rounded-2xl">
+    <Modal 
+      open={isOpen} 
+      onClose={handleClose} 
+      size="lg" 
+      title="编辑照片信息"
+      description="修改照片的基本元数据、分类与属性"
+      className="max-h-[90vh]"
+    >
       <PhotoEditModalContent 
         editPhotoId={editPhotoId || ''}
         handleClose={handleClose}

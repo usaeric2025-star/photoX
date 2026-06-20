@@ -11,15 +11,16 @@ import { cn } from '@/lib/utils';
 
 interface FilterBarProps {
   mode: 'public' | 'admin';
+  className?: string;
 }
 
-export function FilterBar({ mode }: FilterBarProps) {
+export function FilterBar({ mode, className }: FilterBarProps) {
   const isAdmin = mode === 'admin';
   const { showGroupsCollapsed, setShowGroupsCollapsed } = useFilters();
   const [showTags, setShowTags] = useState(false);
 
   return (
-    <div className="flex-shrink-0 border-b bg-surface-overlay backdrop-blur-md">
+    <div className={cn("flex-shrink-0 border-b bg-surface-overlay backdrop-blur-md", className)}>
       <div className="flex gap-2.5 items-center px-4 py-3 sm:px-6 max-w-full">
         <div className="flex-1 min-w-0">
           <SearchInput />

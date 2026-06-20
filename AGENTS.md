@@ -1,15 +1,15 @@
-## Dropdown 組件規範（鎖定）
+## 浮動層與彈窗組件規範（鎖定）
 
-- ✅ 使用 `useId()` 生成唯一錨點名稱
-- ✅ 通過 `style={{ anchorName }}` 和 `style={{ positionAnchor }}` 綁定
-- ✅ 父容器使用 `relative` 作為定位參考
-- ✅ 浮層使用 `absolute top-full mt-1 z-50`
-- ❌ 禁止使用全局錨點名稱
-- ❌ 禁止在 CSS 中硬編碼 anchor-name
+- ✅ 浮動選單與 Popover 統一使用 `src/components/ui/NativePopover.tsx`
+- ✅ 彈窗與對話框統一使用 `src/components/ui/NativeDialog.tsx`（或關聯 proxy `Modal.tsx`）
+- ✅ 所有 Popover 與 Portals 必須物理渲染到 `<PortalRoot />` 中，確保層級乾淨隔離
+- ✅ 嚴禁手動為彈窗、Popover、選單、遮罩設置任何自定義 `z-index`
+- ❌ 禁止使用 `createPortal` 隨意掛載至 body 以外的雜亂自定義容器
+- ❌ 禁用 BaseUI 或 Radix-UI 等第三方浮動庫，確保維護的最高簡潔度
 
 - ✅ 全屏加載/阻斷遮罩統一使用原生 `<dialog>`
 - ❌ 禁止 fixed inset-0 + z-index 模擬全屏遮罩
-- ❌ 禁止為全屏遮罩使用 createPortal
+- ❌ 禁止為全屏遮罩使用非標準的 createPortal 模擬層級
 
 ## 系統恢復與診斷規範（鎖定）
 

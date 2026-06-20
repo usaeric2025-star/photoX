@@ -49,7 +49,7 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
       </div>
       
       {/* Absolute Close Button */}
-      <div className="absolute top-8 right-8 z-10">
+      <div className="absolute top-8 right-8">
         <Link 
           to={ROUTES.PREVIEW} 
           className="group w-12 h-12 flex items-center justify-center rounded-2xl bg-white text-slate-400 hover:text-slate-900 shadow-sm border border-slate-100 transition-all active:scale-90 animate-fade-in"
@@ -58,7 +58,7 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
         </Link>
       </div>
 
-      <div className="w-full max-w-[400px] z-10 animate-fade-in">
+      <div className="w-full max-w-[400px] animate-fade-in">
         <div className="bg-white rounded-[2.5rem] p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/50 flex flex-col items-center space-y-10">
           
           {/* Branding */}
@@ -89,7 +89,7 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
             />
             <button
               onClick={() => { setMode('admin'); setPassError(false); }}
-              className={`relative z-10 py-3 rounded-xl text-xs font-bold transition-colors duration-200 flex items-center justify-center gap-2 ${
+              className={`relative py-3 rounded-xl text-xs font-bold transition-colors duration-200 flex items-center justify-center gap-2 ${
                 mode === 'admin' ? 'text-slate-900' : 'text-slate-400 hover:text-slate-600'
               }`}
             >
@@ -98,7 +98,7 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
             </button>
             <button
               onClick={() => { setMode('staff'); setPassError(false); }}
-              className={`relative z-10 py-3 rounded-xl text-xs font-bold transition-colors duration-200 flex items-center justify-center gap-2 ${
+              className={`relative py-3 rounded-xl text-xs font-bold transition-colors duration-200 flex items-center justify-center gap-2 ${
                 mode === 'staff' ? 'text-slate-900' : 'text-slate-400 hover:text-slate-600'
               }`}
             >
