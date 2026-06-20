@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTogglePin } from '@/hooks';
-import { Heart } from '@react-zero-ui/icon-sprite';
+import { Heart } from '@/components/ui/Icon';
 
 export function PinButton({ photoId, isPinned }: { photoId: string; isPinned: boolean }) {
   const togglePin = useTogglePin();

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Upload, Image as ImageIcon } from 'lucide-react';
+import { Upload, Image as ImageIcon } from '@/components/ui/Icon';
 import { Category, Tag, Manufacturer, AppSettings } from '../../types';
 
 interface LogoSectionProps {

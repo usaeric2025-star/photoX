@@ -1,7 +1,7 @@
 import { logger } from '@/lib/logger';
 import React, { useEffect, useRef, useState } from 'react';
 import { GlobalDiagnosticsDialog } from './GlobalDiagnosticsDialog';
-import { Terminal } from 'lucide-react';
+import { Terminal } from '@/components/ui/Icon';
 
 export const LoadingScreen = () => {
   const ref = useRef<HTMLDialogElement>(null);

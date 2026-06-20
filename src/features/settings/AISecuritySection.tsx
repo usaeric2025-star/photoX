@@ -3,7 +3,7 @@ import { AgnesConfigBlock } from './AgnesConfigBlock';
 import { logger } from '@/lib/logger';
 
 import React from 'react';
-import { Sparkles, Lock } from 'lucide-react';
+import { Sparkles, Lock } from '@/components/ui/Icon';
 import { showToast } from '@/lib/ui/toast';
 import { AppSettings } from '../../types';
 import { useUIStore } from '@/store/useUIStore';

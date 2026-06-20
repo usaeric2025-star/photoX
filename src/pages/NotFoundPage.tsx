@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from '@tanstack/react-router';
-import { FileQuestion, Home } from 'lucide-react';
+import { FileQuestion, Home } from '@/components/ui/Icon';
 import { ROUTES } from '@/config/constants';
 
 export const NotFoundPage = () => {

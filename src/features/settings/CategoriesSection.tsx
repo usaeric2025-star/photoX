@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2 } from '@/components/ui/Icon';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useClickOutside } from '@/hooks/core/useClickOutside';
 import { PromptDialog } from "@/components/ui/PromptDialog";

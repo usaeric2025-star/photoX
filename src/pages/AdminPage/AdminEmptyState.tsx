@@ -1,5 +1,5 @@
 import React from 'react';
-import { ImageOff } from 'lucide-react';
+import { ImageOff } from '@/components/ui/Icon';
 
 interface AdminEmptyStateProps {
   labels: {

@@ -18,7 +18,7 @@ import {
   Loader2,
   FolderPlus,
   FolderMinus
-} from 'lucide-react';
+} from '@/components/ui/Icon';
 
 // --- Sub-components ---
 

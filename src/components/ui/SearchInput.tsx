@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, X } from '@react-zero-ui/icon-sprite';
+import { Search, X } from '@/components/ui/Icon';
 import { useSearchTransition } from '@/hooks';
 import { Input } from '@/components/shared/Input';
 import { cn } from '@/lib/utils';

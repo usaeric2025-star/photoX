@@ -5,7 +5,7 @@ import Download from 'yet-another-react-lightbox/plugins/download';
 import { useTranslation } from '@/hooks';
 import { Modal } from '@/components/ui/Modal';
 import { downloadPhotoAsJpeg } from '@/services/photo/downloadService';
-import { Edit, Copy } from 'lucide-react';
+import { Edit, Copy } from '@/components/ui/Icon';
 import { Photo } from '@/types';
 import { showToast } from '@/lib/ui/toast';
 import 'yet-another-react-lightbox/styles.css';

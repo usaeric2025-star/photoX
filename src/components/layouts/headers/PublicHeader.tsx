@@ -1,7 +1,7 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React from 'react';
 import { DynamicIcon } from '../../shared/DynamicIcon';
-import { Camera } from 'lucide-react'; // Keep one or two critical ones as standard imports for P0 performance
+import { Camera } from '@/components/ui/Icon'; // Keep one or two critical ones as standard imports for P0 performance
 import { useAuthStore } from '@/store/useAuthStore';
 import { useUIStore, useShallow, usePublicSettings, usePermission } from '@/hooks';
 import { DropdownMenu } from '../../shared/Dropdown';

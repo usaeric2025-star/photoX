@@ -1,7 +1,7 @@
 import React from 'react';
 import { usePhotoAIResult, useCopyToClipboard } from '@/hooks';
 import { useUIStore } from '@/store/useUIStore';
-import { Copy, Check, Terminal, FileJson, Info } from 'lucide-react';
+import { Copy, Check, Terminal, FileJson, Info } from '@/components/ui/Icon';
 
 interface AISourceTabProps {
   photoId: string;

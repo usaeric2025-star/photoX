@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layers, ShieldAlert, Check } from 'lucide-react';
+import { Layers, ShieldAlert, Check } from '@/components/ui/Icon';
 import { PhotoListItem } from '@/types/api';
 import { cn } from '@/lib/utils';
 import { useTranslation, useIsManagement } from '@/hooks';

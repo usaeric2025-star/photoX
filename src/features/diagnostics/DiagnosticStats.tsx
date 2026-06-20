@@ -1,5 +1,5 @@
 import React from 'react';
-import { RefreshCw } from '@react-zero-ui/icon-sprite';
+import { RefreshCw } from '@/components/ui/Icon';
 import { formatters } from '@/utils/formatters';
 
 import { DiagnosticsReport } from '@/types/diagnostics';

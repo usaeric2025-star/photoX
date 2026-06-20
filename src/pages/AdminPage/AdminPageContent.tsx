@@ -1,7 +1,7 @@
 import { useParams, useLocation, useNavigate } from '@tanstack/react-router';
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React, { useEffect, Suspense, lazy } from 'react';
-import { X, Loader2 } from 'lucide-react';
+import { X, Loader2 } from '@/components/ui/Icon';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useTasks, 
   useSyncMutation } from '@/hooks';

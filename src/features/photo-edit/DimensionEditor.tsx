@@ -1,4 +1,4 @@
-import { Sparkles, X as CloseIcon, Info } from 'lucide-react';
+import { Sparkles, X as CloseIcon, Info } from '@/components/ui/Icon';
 import { Dimension, TranslationType } from '@/types';
 import { safeArray } from '@/lib/utils';
 import { showToast } from '@/lib/ui/toast';

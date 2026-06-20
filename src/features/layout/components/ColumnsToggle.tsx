@@ -1,5 +1,5 @@
 import { useColumns } from '../hooks/useColumns';
-import { LayoutGrid } from 'lucide-react';
+import { LayoutGrid } from '@/components/ui/Icon';
 
 const COLUMN_OPTIONS = [2, 3, 5] as const;
 

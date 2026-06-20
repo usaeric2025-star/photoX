@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image } from '@react-zero-ui/icon-sprite';
+import { Image } from '@/components/ui/Icon';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { TranslationType } from '../../types';
 

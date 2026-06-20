@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTasks, type BackgroundTask } from '@/hooks';
-import { Loader2, CheckCircle2, XCircle, X } from 'lucide-react';
+import { Loader2, CheckCircle2, XCircle, X } from '@/components/ui/Icon';
 import { motion, AnimatePresence } from 'motion/react';
 
 export function BackgroundTaskPanel() {

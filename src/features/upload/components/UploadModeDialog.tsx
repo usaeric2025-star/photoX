@@ -1,6 +1,6 @@
 import React from 'react';
 import { Modal } from '@/components/ui/Modal';
-import { Layers, ImagePlus } from 'lucide-react';
+import { Layers, ImagePlus } from '@/components/ui/Icon';
 
 interface UploadModeDialogProps {
   open: boolean;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldAlert, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { ShieldAlert, AlertTriangle, CheckCircle2 } from '@/components/ui/Icon';
 import { MaintenanceTool } from './MaintenanceTool';
 import { ISSUE_ACTIONS } from '@/features/diagnostics/issueActions';
 

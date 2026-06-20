@@ -1,6 +1,6 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import * as React from 'react';
-import { Lock, LogIn } from 'lucide-react';
+import { Lock, LogIn } from '@/components/ui/Icon';
 import { Modal } from '@/components/ui/Modal';
 
 

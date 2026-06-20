@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { X, Heart, Pencil, Trash2 } from "lucide-react";
+import { X, Heart, Pencil, Trash2 } from '@/components/ui/Icon';
 import { Tag } from "../../types";
 import { useClickOutside } from '@/hooks/core/useClickOutside';
 import { useLongPress } from "@/hooks/core/useLongPress";

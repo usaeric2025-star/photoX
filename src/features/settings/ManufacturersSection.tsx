@@ -1,6 +1,6 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import React from "react";
-import { Plus } from "lucide-react";
+import { Plus } from '@/components/ui/Icon';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { Manufacturer } from "../../types";
 import { ManufacturerItem } from '@/components/admin/ManufacturerItem';

@@ -1,6 +1,6 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React, { useState } from 'react';
-import { LogIn, Image as ImageIcon, RefreshCcw, X, Shield, Users } from 'lucide-react';
+import { LogIn, Image as ImageIcon, RefreshCcw, X, Shield, Users } from '@/components/ui/Icon';
 import { showToast } from '@/lib/ui/toast';
 import { usePublicSettings } from '../../hooks';
 import { useUIStore } from '@/store/useUIStore';

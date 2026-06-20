@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PhotoGridSkeleton } from '../photo/PhotoGridSkeleton';
 import { useColumns } from '@/hooks';
 import { GlobalDiagnosticsDialog } from './GlobalDiagnosticsDialog';
-import { Terminal, RefreshCw } from 'lucide-react';
+import { Terminal, RefreshCw } from '@/components/ui/Icon';
 
 export function PageSkeleton() {
   const { columns } = useColumns();

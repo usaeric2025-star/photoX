@@ -1,7 +1,7 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useTaskExecutor, useTasks } from "@/hooks";
 import React, { useState } from "react";
-import { Plus, Heart, RefreshCw } from "lucide-react";
+import { Plus, Heart, RefreshCw } from '@/components/ui/Icon';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { Tag, AppSettings } from "../../types";
 import { TagItem } from "./TagItem";

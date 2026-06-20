@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Pin } from '@react-zero-ui/icon-sprite';
+import { X, Pin } from '@/components/ui/Icon';
 import { cn } from '@/lib/utils';
 
 interface FilterChipProps {

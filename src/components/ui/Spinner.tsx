@@ -1,5 +1,5 @@
 import React from 'react';
-import { Loader2 } from '@react-zero-ui/icon-sprite';
+import { Loader2 } from '@/components/ui/Icon';
 import { cn } from '@/lib/utils';
 
 interface SpinnerProps {

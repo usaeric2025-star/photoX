@@ -1,6 +1,6 @@
 import { useTransition, useState, useEffect } from 'react';
 import { useFilterState } from './useFilterState';
-import { Search, X } from 'lucide-react';
+import { Search, X } from '@/components/ui/Icon';
 import { useTranslation } from '@/hooks';
 
 export function SearchInput() {

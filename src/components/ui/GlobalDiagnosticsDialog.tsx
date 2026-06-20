@@ -11,8 +11,9 @@ import {
   Check, 
   Layers, 
   Database 
-} from 'lucide-react';
+} from '@/components/ui/Icon';
 import { logger } from '@/lib/logger';
+import { clearCacheAndReload } from '@/lib/recovery/clearCacheAndReload';
 
 interface GlobalDiagnosticsDialogProps {
   open: boolean;
@@ -83,58 +84,39 @@ export function GlobalDiagnosticsDialog({ open, onClose }: GlobalDiagnosticsDial
 
   // 一鍵清理硬體快取與重啟
   const handleClearCacheAndRestart = () => {
-    try {
-      // 1. 清除 localStorage 與 sessionStorage
-      window.localStorage.clear();
-      window.sessionStorage.clear();
-      
-      // 2. 清除 Cookies
-      document.cookie.split(";").forEach((cookie) => {
-        const eqPos = cookie.indexOf("=");
-        const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
-        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
-      });
-
-      // 3. 注銷所有 Service Workers
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then((registrations) => {
-          for (const registration of registrations) {
-            registration.unregister();
-          }
-        });
-      }
-      
-      logger.info('[Diagnostics] Storage with service workers cleared, performing hard reload.');
-      
-      // 4. 強制追加隨機 cache-bust 參數重載
-      window.location.href = window.location.origin + window.location.pathname + '?cache-bust=' + Date.now();
-    } catch (err) {
-      window.location.reload();
-    }
+    clearCacheAndReload();
   };
 
   // 構造完整的診斷日誌文字供複製
   const getFullDiagnosticText = () => {
     const timestamp = new Date().toISOString();
+    const traceId = `TRACE-DIA-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+    const url = window.location.href;
+    const errorCode = errors.length > 0 ? (errors[0].code || 'ERR-RUNTIME-500') : 'NONE';
+
     const storageEstimates = typeof navigator.storage !== 'undefined' ? 'Supported' : 'Not supported';
     const currentErrors = errors.map((e, index) => {
-      return `${index + 1}. [${e.type || 'Error'}] ${e.msg}\n${e.details || ''}`;
+      return `${index + 1}. [${e.type || 'Error'}] code: ${e.code || 'UNKNOWN'} | ${e.msg}\n${e.details || ''}`;
     }).join('\n---\n');
 
     return [
       `--- PHOTX 系統核心診斷報告 (Diagnostic Report) ---`,
-      `時間戳: ${timestamp}`,
-      `當前網址: ${window.location.href}`,
+      `[標準診斷欄位]`,
+      `traceId: ${traceId}`,
+      `errorCode: ${errorCode}`,
+      `timestamp: ${timestamp}`,
+      `url: ${url}`,
+      `---------------------------------`,
+      `[設備與狀態詳情]`,
       `瀏覽器 Agent: ${navigator.userAgent}`,
       `語言設定: ${navigator.language}`,
       `螢幕解析度: ${window.innerWidth}x${window.innerHeight}`,
-      `連線測試: ${networkStatus === 'connected' ? `成功 (連線延澤 ${latency}ms)` : networkStatus === 'checking' ? '檢測中' : '連線逾時/失敗'}`,
+      `連線測試: ${networkStatus === 'connected' ? `成功 (連線延遲 ${latency}ms)` : networkStatus === 'checking' ? '檢測中' : '連線逾時/失敗'}`,
       `Storage API Support: ${storageEstimates}`,
       `本機快取 Keys 數量: ${Object.keys(localStorage).length}`,
       `---------------------------------`,
       `系統已捕獲異常日誌 (${errors.length} 筆):\n${currentErrors || '（無未捕獲之全域異常）'}`,
-      `---------------------------------`,
-      `Trace ID: TRACE-DIA-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
+      `---------------------------------`
     ].join('\n');
   };
 

@@ -2,7 +2,7 @@ import React from 'react';
 import { useField, useFormContext } from "el-form-react-hooks";
 import { Modal } from '@/components/ui/Modal';
 import { usePhotoEditSessionContext } from '@/hooks/photo/usePhotoEditSessionContext';
-import { Lock, Loader2, Maximize2, X } from 'lucide-react';
+import { Lock, Loader2, Maximize2, X } from '@/components/ui/Icon';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useUIStore } from '@/store/useUIStore';
 import { usePhoto, useTaskExecutor, useTasks, useTranslation, useFilters } from '@/hooks';

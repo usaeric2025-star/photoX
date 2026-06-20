@@ -1,7 +1,7 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import React, { useState, useRef, useDeferredValue } from "react";
 import { Modal } from "@/components/ui/Modal";
-import { Pencil, Trash2, Heart, X } from "lucide-react";
+import { Pencil, Trash2, Heart, X } from '@/components/ui/Icon';
 import { cn } from "@/lib/utils";
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";

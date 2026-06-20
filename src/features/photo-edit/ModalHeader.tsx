@@ -11,7 +11,7 @@ import {
   Loader2,
   Star,
   LogOut as RemoveFromGroupIcon,
-} from "lucide-react";
+} from '@/components/ui/Icon';
 import {
   usePhoto,
   useTasks,

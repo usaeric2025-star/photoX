@@ -1,5 +1,5 @@
 import { useFilterState } from './useFilterState';
-import { ArrowUpDown } from 'lucide-react';
+import { ArrowUpDown } from '@/components/ui/Icon';
 
 export function SortToggle() {
   const { filters, updateFilters } = useFilterState();

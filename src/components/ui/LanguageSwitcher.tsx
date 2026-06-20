@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Globe, ChevronDown } from '@react-zero-ui/icon-sprite';
+import { Globe, ChevronDown } from '@/components/ui/Icon';
 import { useUIStore } from '@/store/useUIStore';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useClickOutside } from '@/hooks/core/useClickOutside';

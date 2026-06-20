@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp } from '@/components/ui/Icon';
 import { SearchInput } from './SearchInput';
 import { SortToggle } from './SortToggle';
 import { CategoryGrid } from './CategoryGrid';

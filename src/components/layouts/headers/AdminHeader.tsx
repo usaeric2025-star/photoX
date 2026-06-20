@@ -1,6 +1,6 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React from 'react';
-import { Camera } from 'lucide-react';
+import { Camera } from '@/components/ui/Icon';
 import { DynamicIcon } from '../../shared/DynamicIcon';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useUIStore, useSettings, useAdminBatchActions, usePermission } from '@/hooks';

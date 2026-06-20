@@ -6,7 +6,7 @@ import { AdminPhotoCard } from './AdminPhotoCard';
 import { PublicPhotoCard } from './PublicPhotoCard';
 import { LoadMoreIndicator } from './LoadMoreIndicator';
 import { EmptyState } from '../ui/EmptyState';
-import { PackageOpen } from '@react-zero-ui/icon-sprite';
+import { PackageOpen } from '@/components/ui/Icon';
 
 interface PhotoGridContentProps {
   photos: PhotoListItem[];

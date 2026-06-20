@@ -10,7 +10,7 @@ import { CategorySelect } from './CategorySelect';
 // import { TagEditor } from './TagEditor'; // Previously imported
 import { PhotoTagSelector } from './PhotoTagSelector';
 import { ManufacturerSelect } from '@/components/admin/ManufacturerSelect';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from '@/components/ui/Icon';
 
 export function OrgTab() {
   const { form } = useFormContext();

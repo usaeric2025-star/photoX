@@ -1,5 +1,5 @@
 import React from 'react';
-import { User as UserIcon } from 'lucide-react';
+import { User as UserIcon } from '@/components/ui/Icon';
 import { AppSettings } from '../../types';
 
 interface WhatsAppSectionProps {

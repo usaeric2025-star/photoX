@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import { Group } from '@/types';
-import { Edit, Share, Copy, Check } from 'lucide-react';
+import { Edit, Share, Copy, Check } from '@/components/ui/Icon';
 import { showToast } from '@/lib/ui/toast';
 import { useUIStore } from '@/store/useUIStore';
 import { usePhotoSelection } from '@/hooks/photo/usePhotoSelection';

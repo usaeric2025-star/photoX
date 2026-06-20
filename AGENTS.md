@@ -11,6 +11,15 @@
 - ❌ 禁止 fixed inset-0 + z-index 模擬全屏遮罩
 - ❌ 禁止為全屏遮罩使用 createPortal
 
+## 系統恢復與診斷規範（鎖定）
+
+- ✅ 清除快取/重試等恢復操作必須封裝為純函數，禁止內嵌於 UI 元件
+- ✅ 診斷報告必須包含 traceId + errorCode + timestamp + url 標準欄位
+- ✅ 超時降級機制必須有明確的 fallback 狀態（如 Guest 模式）
+- ✅ 診斷 UI 使用原生 <dialog>，確保脫離 React 渲染樹仍可操作
+- ❌ 禁止在 UI 元件中直接操作 localStorage / caches / serviceWorker
+- ❌ 禁止匯出非結構化的診斷資訊
+
 ## 分類顯示規範（鎖定）
 
 - ✅ 前台分類固定顯示 8 個（「全部」 + 前 7 個分類）
@@ -41,16 +50,6 @@
 - ✅ 清理必須遵循「先建後破」原則
 - ✅ 舊組件先標記 `@deprecated`，確認無引用後刪除
 - ✅ 廢棄 CSS 變數先註釋保留一個版本週期
-
-## 表单管理规范（锁定）
-
-- ✅ 使用 `react-hook-form` + `@hookform/resolvers/arktype`
-- ✅ 多语言栏位使用 `<MultilingualInput>`
-- ✅ 动态数组使用 `<DynamicArrayField>`
-- ✅ 表单提交使用 `useFormWithMutation`
-- ✅ 非标准控件使用 `Controller`
-- ❌ 禁止使用 `@mantine/form`
-- ❌ 禁止手动 `watch + setValue` 同步表单值
 
 
 ### 目錄結構
@@ -790,15 +789,10 @@ toast.error('发现数据完整性问题', {
 | 彈窗管理 | ✅ `ConfirmDialog` + `useDisclosure` | ❌ 全域 `alertDialog` |
 
 
-## 圖標系統規範（永久鎖定）
-
-### 核心原則
-- ✅ 所有圖標必須透過 `@/components/ui/Icon` 元件存取
-- ✅ 圖標名稱型別由 `IconName` 定義，獨立於圖標庫
-- ✅ 更換圖標庫時，只修改 `Icon.tsx` 的實作
-- ❌ 禁止在業務程式碼中直接 import 圖標庫
-- ❌ 禁止使用 `DynamicIcon`（已由 `Icon` 取代）
-- ❌ 禁止在全域或元件內使用 `lucide-react`
+## 🎯 圖標系統 (2026-06-20 更新)
+- **方案**: `@react-zero-ui/icon-sprite` (Sprite SVG 系統)
+- **❌ 已移除**: `lucide-react` (全面替換為 Sprite 方案)
+- **遷移狀態**: ✅ 已完成全域遷移
 
 
 ## 乐观更新与工厂安全校验规范（锁定）
@@ -1444,11 +1438,11 @@ optimistic: (oldData, vars, queryKey) => ({ ...(oldData as any), remains: false 
 - ❌ **禁止混合模式**：禁止在同一專案中同時使用 shadcn/ui 元件與對應功能的自研元件。
 - ❌ **禁止配置殘留**：刪除 `components.json` 及所有 `@/components/ui` 下的舊套件代碼。
 
-## 動畫技術棧終局規範（永久鎖定）
-
-### 動畫分層
-- ✅ L1: CSS 原生（Tailwind transition/animation、View Transitions、@starting-style）
-- ✅ L2: @dnd-kit/core（僅拖拽排序）
+## 🎨 動畫系統 (2026-06-20 更新)
+- **狀態過渡**: 使用 CSS `@keyframes` + `transition` 實現，無外部依賴
+- **滾動優化**: 使用 `virtua` 處理虛擬滾動
+- **微交互**: 使用 `motion/react` (原 Framer Motion 輕量版)
+- **❌ 已移除**: `framer-motion` (功能與 CSS 過渡重疊)
 - ✅ L3: Framer Motion（僅 Lightbox 手勢、複雜物理彈簧、CSS 無法實現的狀態機）
 
 ### 使用限制
@@ -1655,11 +1649,7 @@ PhotoX 當前單頁數據 < 100KB，IndexedDB 收益為零且增加 Bundle Size 
 - ✅ 所有 Hook（`usePhoto`, `usePhotos`, `usePhotoGrid`）必須使用 Mapper
 - ✅ 禁止直接使用 Drizzle 回傳的原始資料
 
-## 表單處理規範（鎖定）
-
-- ✅ 所有表單必須使用 El Form (`el-form-react-hooks`)
-- ✅ 所有表單必須從 ArkType Schema 推導
-- ✅ 使用 `AutoForm` 減少樣板程式碼
-- ✅ 動態表單使用 `useFieldArray`
-- ❌ 禁止手動建立表單 UI (除非必要)
-- ❌ 禁止使用 React Hook Form
+## 📝 表單系統 (2026-06-20 更新)
+- **驗證**: `arktype` (類型優先的驗證方案)
+- **表單狀態**: 原生 React `useState` + `useActionState`
+- **❌ 已移除**: `react-hook-form`, `zod`, `@hookform/resolvers`

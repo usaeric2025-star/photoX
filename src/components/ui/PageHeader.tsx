@@ -1,4 +1,4 @@
-import { ArrowLeft } from '@react-zero-ui/icon-sprite';
+import { ArrowLeft } from '@/components/ui/Icon';
 import { Button } from '@/components/shared/Button';
 import { Link } from '@tanstack/react-router';
 

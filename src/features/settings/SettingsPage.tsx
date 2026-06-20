@@ -8,7 +8,7 @@ import React, { useState, Suspense } from 'react';
 import { 
   ChevronLeft,
   Settings2, Save, ChevronDown, X
-} from 'lucide-react';
+} from '@/components/ui/Icon';
 import { api } from '@/lib/api';
 
 import { showToast } from '@/lib/ui/toast';

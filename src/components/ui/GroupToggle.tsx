@@ -1,4 +1,4 @@
-import { Layers, Grid } from '@react-zero-ui/icon-sprite';
+import { Layers, Grid } from '@/components/ui/Icon';
 import { cn } from '@/lib/utils';
 
 interface GroupToggleProps {

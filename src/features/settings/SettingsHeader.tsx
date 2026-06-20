@@ -1,4 +1,4 @@
-import { Settings2, Save, X } from 'lucide-react';
+import { Settings2, Save, X } from '@/components/ui/Icon';
 import { translations } from '@/locales';
 
 interface SettingsHeaderProps {

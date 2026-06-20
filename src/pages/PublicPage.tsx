@@ -12,7 +12,6 @@ import { useUIStore } from '@/store/useUIStore';
 import { WhatsAppDialog } from '@/components/shared/WhatsAppDialog';
 import { PhotoErrorDisplay } from '@/components/photo/PhotoErrorDisplay';
 import { Icon } from '@/components/ui/Icon';
-import { ArrowUp, MessageCircle } from 'lucide-react';
 
 export default function PublicPage() {
   const { 
@@ -199,7 +198,7 @@ export default function PublicPage() {
             className="w-12 h-12 flex items-center justify-center rounded-full bg-white/95 backdrop-blur border border-slate-200 text-slate-700 shadow-lg hover:shadow-xl hover:bg-slate-50 transition-all active:scale-95 group focus:outline-none"
             title="回到頂部"
           >
-            <ArrowUp className="w-5 h-5 group-hover:-translate-y-0.5 transition-transform" />
+            <Icon name="ArrowUp" className="w-5 h-5 group-hover:-translate-y-0.5 transition-transform" />
           </button>
         )}
         <button
@@ -211,7 +210,7 @@ export default function PublicPage() {
           className="w-12 h-12 flex items-center justify-center rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-xl transition-all active:scale-95 focus:outline-none"
           title="WhatsApp 諮詢"
         >
-          <MessageCircle className="w-6 h-6" />
+          <Icon name="MessageCircle" className="w-6 h-6" />
         </button>
       </div>
       

@@ -6,7 +6,7 @@ import { MultilingualInput } from "../shared/MultilingualInput";
 import { Input } from "../shared/Input";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Button } from "../shared/Button";
-import { Trash2, X } from "lucide-react";
+import { Trash2, X } from '@/components/ui/Icon';
 import { useDisclosure } from "../../hooks/core/useDisclosure";
 
 interface GroupSettingsModalProps {

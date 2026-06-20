@@ -34,30 +34,35 @@ export default defineConfig(({mode}) => {
       rollupOptions: {
         output: {
           manualChunks(id) {
-            if (id.includes('node_modules')) {
-              if (id.includes('@radix-ui') || id.includes('lucide-react')) {
-                return 'vendor-ui';
-              }
-              if (id.includes('@tanstack') || id.includes('date-fns') || id.includes('zod') || id.includes('arktype')) {
-                return 'vendor-utils';
-              }
-              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-                return 'vendor-react';
-              }
-              if (id.includes('supabase') || id.includes('drizzle')) {
-                return 'vendor-db';
-              }
-              if (id.includes('@sentry')) {
-                if (id.includes('@sentry/node')) {
-                  return 'node-hidden';
-                }
-                return 'vendor-sentry';
-              }
-              if (id.includes('tsparticles') || id.includes('framer-motion')) {
-                return 'vendor-motion';
-              }
-              return 'vendor';
+            if (!id.includes('node_modules')) return;
+
+            // 🎯 React 核心及路由 (React 19 & TanStack Router)
+            if (/\/node_modules\/(react|react-dom|scheduler|@tanstack\/react-router)\//.test(id)) {
+              return 'vendor-react-core';
             }
+            
+            // 🎯 Sentry (獨立隔離以優化首頁加載)
+            if (/\/node_modules\/@sentry\//.test(id)) {
+              return 'vendor-sentry';
+            }
+            
+            // 🎯 UI、動畫與元件 (Sonner, Lightbox, Virtua, El-Form, Motion)
+            if (/\/node_modules\/(sonner|yet-another-react-lightbox|virtua|el-form-react-components|el-form-react-hooks|motion)\//.test(id)) {
+              return 'vendor-ui';
+            }
+            
+            // 🎯 資料傳輸與狀態治理 (TanStack Query, Supabase, ArkType, Drizzle, Zustand)
+            if (/\/node_modules\/(@tanstack\/react-query|@supabase|arktype|drizzle-orm|zustand)\//.test(id)) {
+              return 'vendor-data';
+            }
+            
+            // 🎯 日期與核心工具庫
+            if (/\/node_modules\/(date-fns|date-fns-tz|clsx|tailwind-merge|thumbhash)\//.test(id)) {
+              return 'vendor-utils';
+            }
+            
+            // 🎯 其他項目
+            return 'vendor-misc';
           }
         }
       }

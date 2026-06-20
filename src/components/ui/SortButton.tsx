@@ -1,5 +1,5 @@
 import { Button } from '@/components/shared/Button';
-import { ArrowUpDown } from '@react-zero-ui/icon-sprite';
+import { ArrowUpDown } from '@/components/ui/Icon';
 
 interface SortButtonProps {
   onClick: () => void;

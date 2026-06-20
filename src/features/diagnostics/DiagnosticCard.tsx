@@ -1,5 +1,5 @@
 import React from 'react';
-import { RefreshCw, CheckCircle2, ShieldAlert, Zap } from '@react-zero-ui/icon-sprite';
+import { RefreshCw, CheckCircle2, ShieldAlert, Zap } from '@/components/ui/Icon';
 
 interface DiagnosticCardProps {
   title: string;

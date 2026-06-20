@@ -48,7 +48,6 @@ export interface UIStoreState {
   isInitialDataLoading: boolean;
   setInitialDataLoading: (loading: boolean) => void;
   isMultiSelect: boolean;
-  draggedPhotoId: string | null;
   focusedGroupPhotoId: string | null;
   resetUI: () => void;
   showWhatsAppChoice: boolean;
@@ -65,7 +64,6 @@ export interface UIStoreState {
   addProcessingIds: (ids: string[]) => void;
   removeProcessingIds: (ids: string[]) => void;
   clearProcessing: (id: string) => void;
-  setDraggedPhoto: (id: string | null) => void;
   updateSelectedIds: (ids: string[]) => void;
   incrementDialogCount: () => void;
   decrementDialogCount: () => void;
@@ -118,7 +116,6 @@ export const useUIStore = create<UIStoreState>()((set) => ({
   isMultiSelect: false,
   selectedIds: [],
   processingIds: [],
-  draggedPhotoId: null,
   focusedGroupPhotoId: null,
   toggleSelected: (id) => set((state) => {
     const newSelected = new Set(state.selectedIds);
@@ -139,7 +136,6 @@ export const useUIStore = create<UIStoreState>()((set) => ({
   clearProcessing: (id) => set((state) => ({
     processingIds: state.processingIds.filter(pid => pid !== id)
   })),
-  setDraggedPhoto: (id) => set({ draggedPhotoId: id }),
   updateSelectedIds: (ids) => set({ selectedIds: ids }),
   resetUI: () => set({
       selectedIds: [],

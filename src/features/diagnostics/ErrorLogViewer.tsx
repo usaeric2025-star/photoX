@@ -1,6 +1,6 @@
 import { logger } from '@/lib/logger';
 import React from 'react';
-import { Trash2, Download, AlertCircle, AlertTriangle, Info, ShieldAlert, ChevronDown, ChevronUp, Copy } from '@react-zero-ui/icon-sprite';
+import { Trash2, Download, AlertCircle, AlertTriangle, Info, ShieldAlert, ChevronDown, ChevronUp, Copy } from '@/components/ui/Icon';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { showToast } from '@/lib/ui/toast';

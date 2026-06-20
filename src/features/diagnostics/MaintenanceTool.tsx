@@ -4,7 +4,7 @@ import { Progress } from "@/components/shared/Progress";
 import { Alert, AlertDescription } from "@/components/shared/Alert";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ISSUE_ACTIONS } from "@/features/diagnostics/issueActions";
-import { Loader2, ShieldAlert } from "lucide-react";
+import { Loader2, ShieldAlert } from '@/components/ui/Icon';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useUIStore } from '@/store/useUIStore';
 import { useTranslation } from '@/hooks';

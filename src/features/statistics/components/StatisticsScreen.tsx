@@ -7,7 +7,7 @@ import {
   Database,
   ArrowUpRight,
   HardDrive
-} from 'lucide-react';
+} from '@/components/ui/Icon';
 import { useCategories, useTags } from '@/hooks';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';

@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useField, useFormContext } from "el-form-react-hooks";
 import { Manufacturer } from '@/types';
-import { ChevronDown, Search } from 'lucide-react';
+import { ChevronDown, Search } from '@/components/ui/Icon';
 
 interface ManufacturerSelectProps {
   name: string;

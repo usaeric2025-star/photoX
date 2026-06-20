@@ -1,5 +1,5 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2 } from '@/components/ui/Icon';
 import { useAuthStore } from '@/store/useAuthStore';
 import { usePublicSettings } from '@/hooks';
 import { useLocalStorage } from '@/hooks/core/useLocalStorage';
