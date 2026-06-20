@@ -38,10 +38,17 @@ import { router } from './router/index';
 import { initChunkHandler } from '@/lib/chunkErrorHandler';
 import { dailyWorker } from '@/features/diagnostics/DailyWorker';
 import { useUIStore } from '@/store/useUIStore';
+import { scheduler } from '@/lib/task-queue/scheduler';
+import { setupQuerySync } from '@/lib/task-queue/querySync';
+import { TaskBadge, TaskDrawer } from '@/lib/task-queue/components';
 
 async function init() {
   // No migration
   initChunkHandler(router);
+  
+  // 初始化 Task Queue
+  const cleanupQuerySync = setupQuerySync();
+  scheduler.restore().catch(console.error);
 
   if (typeof window !== 'undefined') {
     window.addEventListener('unhandledrejection', (event) => {
@@ -141,12 +148,14 @@ async function init() {
     root.render(
       <StrictMode>
         <QueryClientProvider client={queryClient}>
-          <Toaster position="bottom-center" richColors closeButton expand={false} visibleToasts={2} swipeDirections={['left', 'right']} />
+          <Toaster position="bottom-center" richColors closeButton expand={false} visibleToasts={2} swipeDirections={['left', 'right']} style={{ zIndex: 2147483647 }} />
           <TaskProvider>
             <ErrorBoundary>
               <App />
               <FatalErrorOverlay />
               <Analytics />
+              <TaskBadge />
+              <TaskDrawer />
             </ErrorBoundary>
           </TaskProvider>
         </QueryClientProvider>

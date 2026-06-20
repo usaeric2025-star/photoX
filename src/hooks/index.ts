@@ -12,7 +12,6 @@ export { useAppLocale } from './core/useAppLocale';
 export { useImagePreloader } from './core/useImagePreloader';
 export { useQueryWithFallback } from './core/useQueryWithFallback';
 export { useFormDraft } from './core/useFormDraft';
-export { useUploadProgress } from './core/useUploadProgress';
 export { useCopyToClipboard } from './core/useCopyToClipboard';
 export { useMediaQuery } from './core/useMediaQuery';
 

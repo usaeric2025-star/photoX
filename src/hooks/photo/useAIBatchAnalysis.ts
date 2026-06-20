@@ -1,14 +1,14 @@
 import { useCallback } from 'react';
 import type { Photo } from '@/types';
-import { useTaskExecutor } from '@/hooks/core/useTaskExecutor';
 import { useInvalidatePhotos } from '@/hooks/photo/useInvalidatePhotos';
 import { showToast } from '@/lib/ui/toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query/keys';
 import { runBatchAnalysis } from '@/features/ai/orchestration';
+import { scheduler } from '@/lib/task-queue';
+import { generateId } from '@/lib/id';
 
 export function useAIBatchAnalysis() {
-  const { runTask } = useTaskExecutor();
   const invalidatePhotos = useInvalidatePhotos();
   const queryClient = useQueryClient();
 
@@ -19,40 +19,36 @@ export function useAIBatchAnalysis() {
     }
 
     const taskTitle = groupId ? `智能合组分析 (${targetPhotos.length}张)` : `批量 AI 分析 (${targetPhotos.length}张)`;
+    const taskId = `ai-analyze-${generateId()}`;
 
-    await runTask(taskTitle, async ({ updateProgress, taskId }) => {
-        const { successCount, groupSuccess } = await runBatchAnalysis({
-            targetPhotos,
-            groupId,
-            onProgress: (progress, message) => updateProgress(progress, message)
-        });
+    scheduler.enqueue({
+        id: taskId,
+        label: taskTitle,
+        type: 'ai-analyze',
+        state: { status: 'queued' },
+        createdAt: Date.now(),
+        meta: { photoCount: targetPhotos.length, groupId },
+        execute: async (signal) => {
+            const { successCount, groupSuccess } = await runBatchAnalysis({
+                targetPhotos,
+                groupId,
+                onProgress: (progress, message) => {} // TODO: hook up progress to scheduler update
+            });
 
-        // Final Sync
-        await invalidatePhotos();
-        if (groupId) {
-          await Promise.all([
-            queryClient.invalidateQueries({ queryKey: queryKeys.groups.detail(groupId, true) }),
-            queryClient.invalidateQueries({ queryKey: queryKeys.groups.all })
-          ]);
+            // Final Sync
+            await invalidatePhotos();
+            if (groupId) {
+              await Promise.all([
+                queryClient.invalidateQueries({ queryKey: queryKeys.groups.detail(groupId, true) }),
+                queryClient.invalidateQueries({ queryKey: queryKeys.groups.all })
+              ]);
+            }
+            
+            return { successCount, groupSuccess };
         }
-        
-        let finalMessage = "暂无数据更新";
-        if (groupId && groupSuccess) {
-          finalMessage = successCount > 0 
-            ? `已更新合组，并识别出 ${successCount} 张照片`
-            : "已更新合组信息";
-          showToast.success(finalMessage);
-        } else if (successCount > 0) {
-          finalMessage = `已识别 ${successCount} 张照片`;
-          showToast.success(finalMessage);
-        } else {
-          showToast.info("已是最新，无需更新");
-        }
+    });
 
-        if (taskId) updateProgress(100, finalMessage);
-        return successCount;
-    }, { showProgress: true, showSuccessToast: false });
-  }, [runTask, invalidatePhotos, queryClient]);
+  }, [invalidatePhotos, queryClient]);
 
   return { handleBatchAiAnalyze };
 }

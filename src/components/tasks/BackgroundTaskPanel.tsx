@@ -41,8 +41,10 @@ export function BackgroundTaskPanel() {
   const style: React.CSSProperties = {
     top: 'auto',
     right: 'auto',
-    bottom: isAvoidingSelection ? '5.5rem' : '1.5rem',
+    bottom: isAvoidingSelection ? '6.5rem' : '1.5rem',
     left: '1.5rem',
+    margin: 0,
+    inset: 'auto auto auto auto', 
     transition: 'bottom 0.3s ease-in-out'
   };
 
@@ -51,7 +53,10 @@ export function BackgroundTaskPanel() {
       ref={panelRef}
       popover="manual"
       className="fixed z-[2147483647] flex flex-col gap-3 w-80 pointer-events-none bg-transparent m-0 p-0 overflow-visible border-none"
-      style={style}
+      style={{
+        ...style,
+        bottom: isAvoidingSelection ? '6.5rem' : '1.5rem',
+      }}
     >
       <div className="pointer-events-auto bg-white rounded-2xl shadow-xl border border-slate-100 flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-2">

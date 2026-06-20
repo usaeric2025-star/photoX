@@ -1,0 +1,54 @@
+import { supabase } from '@/lib/supabase';
+import { Task } from '../types';
+
+export const taskTable = {
+  // 插入新任務
+  insert: async (task: Task) => {
+    const { error } = await supabase.from('tasks').insert({
+      id: task.id,
+      label: task.label,
+      type: task.type,
+      status: 'queued',
+      meta: task.meta,
+      created_at: new Date(task.createdAt).toISOString(),
+    });
+    if (error) console.error('[Task] Insert error:', error);
+  },
+
+  // 更新狀態
+  updateStatus: async (id: string, status: string, data?: unknown) => {
+    const payload: Record<string, unknown> = { status };
+    if (data !== undefined) payload.data = data;
+    
+    const { error } = await supabase
+      .from('tasks')
+      .update(payload)
+      .eq('id', id);
+    if (error) console.error('[Task] Update error:', error);
+  },
+
+  // 恢復未完成任務
+  restorePending: async (): Promise<Task[]> => {
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('*')
+      .in('status', ['queued', 'processing'])
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('[Task] Restore error:', error);
+      return [];
+    }
+
+    return (data || []).map((row: any) => ({
+      id: row.id,
+      label: row.label,
+      type: row.type,
+      state: { status: row.status as 'queued' | 'processing' },
+      createdAt: new Date(row.created_at).getTime(),
+      meta: row.meta || {},
+      // ⚠️ execute 函數需要業務層重新綁定
+      execute: async () => {},
+    }));
+  },
+};

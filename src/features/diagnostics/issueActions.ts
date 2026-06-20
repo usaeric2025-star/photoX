@@ -1,4 +1,6 @@
 import { api } from '@/lib/api';
+import { scheduler } from '@/lib/task-queue';
+import { generateId } from '@/lib/id';
 
 export interface PreviewResult {
   message?: string;
@@ -22,9 +24,18 @@ export const ISSUE_ACTIONS: Record<string, IssueAction> = {
       return data;
     },
     execute: async () => {
-      const res = await api.admin.repair.$post({ json: { issueId: 'excessive_tags' } });
-      const data = await res.json() as any;
-      return { message: data.message || "修复成功", ...data };
+      scheduler.enqueue({
+        id: `repair-${generateId()}`,
+        label: "清理照片多余标签",
+        type: 'repair',
+        state: { status: 'queued' },
+        createdAt: Date.now(),
+        execute: async () => {
+          const res = await api.admin.repair.$post({ json: { issueId: 'excessive_tags' } });
+          return await res.json();
+        }
+      });
+      return { message: "修复任务已派发" };
     }
   },
   sync: {

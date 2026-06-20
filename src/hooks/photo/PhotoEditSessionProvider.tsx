@@ -71,17 +71,19 @@ export const PhotoEditSessionProvider = ({
   
   const commit = useCallback(async () => {
     const valid = await form.trigger();
+    console.log('[PhotoEdit] Form Validation Triggered. valid?', valid, form.formState.errors);
     if (!valid) {
       const errors = form.formState.errors;
       logger.warn('[PhotoEdit] Form Validation Failed:', errors);
-      const firstError = Object.values(errors)[0];
-      const message = typeof firstError === 'string' ? firstError : '表单验证失败，请检查必填项 / Validation Failed';
+      const firstError = Object.values(errors)[0] as any;
+      const message = typeof firstError === 'string' ? firstError : (firstError?.message || '表单验证失败，请检查必填项 / Validation Failed');
       showToast.error(message);
       return;
     }
     
     try {
       const values = form.watch();
+      console.log('[PhotoEdit] Submitting values:', values);
 
       // Auto-generate itemCode if missing
       if (!values.item_code) {

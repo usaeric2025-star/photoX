@@ -121,11 +121,8 @@ export function TagEditor({
         </div>
       </div>
       <div 
-        className="pb-1 max-h-[220px] overflow-y-auto content-start"
+        className="pb-1 max-h-[220px] overflow-y-auto flex flex-wrap gap-[6px] content-start"
         style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
-          gap: '6px',
           contentVisibility: 'auto',
           containIntrinsicSize: '200px',
         }}

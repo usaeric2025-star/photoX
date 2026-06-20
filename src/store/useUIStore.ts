@@ -52,6 +52,7 @@ export interface UIStoreState {
   resetUI: () => void;
   showWhatsAppChoice: boolean;
   uploadModeDialogOpen: boolean;
+  isTaskDrawerOpen: boolean;
   pendingFiles: FileList | File[] | null;
   processingIds: string[];
   activeDialogCount: number;
@@ -147,6 +148,7 @@ export const useUIStore = create<UIStoreState>()((set) => ({
     }),
   showWhatsAppChoice: false,
   uploadModeDialogOpen: false,
+  isTaskDrawerOpen: false,
   pendingFiles: null,
   activeDialogCount: 0,
   fatalError: null,

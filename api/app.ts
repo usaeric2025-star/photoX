@@ -161,4 +161,28 @@ app.post('/admin/system-logs/delete-logs-batch', async (c) => {
     return c.json({ success: false, error: 'Cannot delete logs from R2 via this endpoint anymore.' }, 400);
 });
 
+app.get('/download', async (c) => {
+    try {
+        const url = c.req.query('url');
+        if (!url) {
+            return c.text('Missing url parameter', 400);
+        }
+        const resp = await fetch(url);
+        if (!resp.ok) {
+            return c.text('Failed to fetch image', resp.status as any);
+        }
+        const buffer = await resp.arrayBuffer();
+        const contentType = resp.headers.get('content-type') || 'application/octet-stream';
+        
+        c.header('Content-Type', contentType);
+        c.header('Access-Control-Allow-Origin', '*');
+        // Let it be cached by CDN but revalidated. We also set a long cache max-age because images are static
+        c.header('Cache-Control', 'public, max-age=31536000, immutable');
+        
+        return c.body(buffer as any);
+    } catch (e: any) {
+        return c.text(e.message, 500);
+    }
+});
+
 export type AppType = typeof app;
