@@ -5,9 +5,10 @@ import { Loader2, CheckCircle2, XCircle, X } from '@/components/ui/Icon';
 import { motion, AnimatePresence } from 'motion/react';
 
 export function BackgroundTaskPanel() {
-  const { tasks, removeTask, cancelTask } = useTasks();
+  const { tasks, removeTask, cancelTask, isAvoidingSelection } = useTasks();
   const panelRef = React.useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = React.useState(false);
+  const [isExpanded, setIsExpanded] = React.useState(true);
   
   React.useEffect(() => {
     setMounted(true);
@@ -37,14 +38,37 @@ export function BackgroundTaskPanel() {
 
   const portalRoot = document.getElementById('portal-root') || document.body;
 
+  const style: React.CSSProperties = {
+    top: 'auto',
+    right: 'auto',
+    bottom: isAvoidingSelection ? '5.5rem' : '1.5rem',
+    left: '1.5rem',
+    transition: 'bottom 0.3s ease-in-out'
+  };
+
   return createPortal(
     <div 
       ref={panelRef}
       popover="manual"
-      className="fixed bottom-6 left-6 z-[2147483647] flex flex-col gap-3 w-80 pointer-events-none bg-transparent m-0 p-0 overflow-visible border-none"
+      className="fixed z-[2147483647] flex flex-col gap-3 w-80 pointer-events-none bg-transparent m-0 p-0 overflow-visible border-none"
+      style={style}
     >
+      <div className="pointer-events-auto bg-white rounded-2xl shadow-xl border border-slate-100 flex items-center justify-between px-4 py-3">
+        <div className="flex items-center gap-2">
+          <Loader2 size={16} className="text-blue-500 animate-spin" />
+          <span className="text-xs font-bold text-slate-700">任务管理中心</span>
+        </div>
+        <button 
+           type="button"
+           onClick={() => setIsExpanded(!isExpanded)}
+           className="text-[10px] bg-slate-100 px-2 py-1 rounded-lg text-slate-500 hover:text-slate-800"
+        >
+          {isExpanded ? '收起' : '展开'} ({activeTasks.length})
+        </button>
+      </div>
+
       <AnimatePresence mode="popLayout">
-        {activeTasks.slice(-3).map((task) => (
+        {isExpanded && activeTasks.slice(-3).map((task) => (
           <TaskItem 
             key={task.id} 
             task={task} 
@@ -96,7 +120,9 @@ function TaskItem({ task, onRemove, onCancel }: { task: BackgroundTask; onRemove
         </div>
         {(isCompleted || isError || isCancelled) ? (
           <button 
-            onClick={onRemove}
+            type="button"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRemove(); }}
             className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
             title="关闭 / Close"
           >
@@ -104,7 +130,9 @@ function TaskItem({ task, onRemove, onCancel }: { task: BackgroundTask; onRemove
           </button>
         ) : (
           <button 
-            onClick={onCancel}
+            type="button"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCancel(); }}
             className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-red-500 transition-colors"
             title="取消 / Cancel"
           >

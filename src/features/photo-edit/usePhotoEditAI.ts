@@ -255,6 +255,11 @@ export function usePhotoEditAI() {
           if (editPhotoId) {
             try {
               await updatePhoto({ id: editPhotoId, updates, silent: true });
+              // Reset the form internal defaultValues to the new state so it's not "dirty" anymore,
+              // providing visual feedback that the auto-save was successful.
+              requestAnimationFrame(() => {
+                form.reset({ values: form.watch() });
+              });
             } catch (saveError: unknown) {
               logger.warn('AI识别结果自动保存失败(但不影响回填):', saveError);
             }

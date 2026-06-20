@@ -117,6 +117,7 @@ export function DialogHeader({
       <div className="flex-1 flex items-center justify-end gap-2">
         <div className="flex items-center gap-1.5">
           <button
+            type="button"
             onClick={onAiAnalyze}
             disabled={isAnalyzing || isRunning}
             className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-slate-100 shadow-sm transition-all disabled:opacity-50 ${isAnalyzing ? "bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed" : "bg-purple-50 text-purple-600 border-purple-100 active:bg-purple-200"}`}
@@ -131,6 +132,7 @@ export function DialogHeader({
 
         {isPartOfGroup && (
           <button
+            type="button"
             onClick={() => {
               const newState = !isGroupCover;
               form.setValue('is_group_cover', newState);
@@ -145,6 +147,7 @@ export function DialogHeader({
 
         {isPartOfGroup && (
           <button
+            type="button"
             onClick={onRemoveFromGroup}
             title="移出合组"
             className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600 border border-slate-200 shadow-sm hover:bg-slate-200 active:scale-95 transition-all"
@@ -155,6 +158,7 @@ export function DialogHeader({
 
         {editPhotoId && (
           <button
+            type="button"
             onClick={onDeleteClick}
             disabled={isRunning}
             className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-red-50 text-red-500 border border-red-100 shadow-sm active:bg-red-100 transition-all font-bold disabled:opacity-50"
@@ -164,6 +168,7 @@ export function DialogHeader({
         )}
 
         <button
+          type="button"
           onClick={commit}
           disabled={isSyncing || isRunning || isPending}
           className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-blue-600 shadow-sm transition-all disabled:opacity-50 ${isSyncing || isRunning || isPending ? "bg-blue-400 text-white border-blue-400 cursor-wait" : "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20 active:bg-blue-700"}`}
@@ -175,6 +180,7 @@ export function DialogHeader({
           )}
         </button>
         <button
+          type="button"
           onClick={onClose}
           className="w-10 h-10 flex-shrink-0 flex items-center justify-center text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 transition-colors rounded-full ml-1"
         >

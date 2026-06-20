@@ -5,7 +5,7 @@ import { useUIStore } from '@/store/useUIStore';
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import { useAIBatchAnalysis } from '@/hooks/photo/useAIBatchAnalysis';
 import { useConfirm } from '@/context/ConfirmContext';
-import { useMediaQuery } from '@/hooks';
+import { useMediaQuery, useTasks } from '@/hooks';
 import { useGroupPhotosMutation, useRemoveFromGroupMutation } from '@/hooks/groups/useGroupMutations';
 import { Photo } from '@/types';
 import { 
@@ -59,13 +59,22 @@ export const SelectionToolbar = memo(function SelectionToolbar({
 
   const [isAiPending, setIsAiPending] = React.useState(false);
   const isAnyPending = isPending || isAiPending || combineMutation.isPending || removeMutation.isPending;
+  const { setAvoidingSelection } = useTasks();
+
+  const isBatchMode = state.mode === 'batch';
+  const selectedCount = state.selectedIds.length;
+  const isVisible = isBatchMode || selectedCount > 0;
+
+  React.useEffect(() => {
+    if (isVisible) {
+      setAvoidingSelection(true);
+      return () => setAvoidingSelection(false);
+    }
+  }, [isVisible, setAvoidingSelection]);
 
   // Media Query Subscriptions
   const isSm = useMediaQuery('(min-width: 640px)');
   const isMd = useMediaQuery('(min-width: 768px)');
-
-  const isBatchMode = state.mode === 'batch';
-  const selectedCount = state.selectedIds.length;
   const isAllSelected = allIds.length > 0 && selectedCount === allIds.length;
 
   // Find actual Photo objects corresponding to selectedIds
@@ -74,7 +83,7 @@ export const SelectionToolbar = memo(function SelectionToolbar({
     return allPhotos.filter((p) => state.selectedIds.includes(p.id));
   }, [allPhotos, state.selectedIds]);
 
-  if (!isBatchMode && selectedCount === 0) {
+  if (!isVisible) {
     return null;
   }
 

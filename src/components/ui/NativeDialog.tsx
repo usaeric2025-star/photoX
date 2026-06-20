@@ -128,6 +128,7 @@ export function NativeDialog({
         {/* Close Button - Apple Style */}
         {showCloseButton && (
           <button
+            type="button"
             onClick={onClose}
             className="absolute right-4 top-4 p-2 rounded-full text-text-sub hover:text-text-main hover:bg-surface-soft transition-all active:scale-95"
             aria-label="关闭"

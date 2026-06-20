@@ -75,6 +75,7 @@ export function useMaintenanceExecution(issueId: string, title: string, onSucces
       },
       {
         issueId,
+        showProgress: false,
         onSuccess: () => {
           setIsExecuting(false);
           setPreview(null);

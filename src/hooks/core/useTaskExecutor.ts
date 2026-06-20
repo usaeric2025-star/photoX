@@ -28,7 +28,7 @@ export function useTaskExecutor() {
       issueId?: string;
     }
   ): Promise<T | null> => {
-    const showProgress = options?.showProgress ?? !options?.silent;
+    const showProgress = options?.showProgress ?? false;
     const isSilent = options?.silent ?? false;
 
     const taskId = showProgress ? addTask({ 
