@@ -2,7 +2,7 @@ import { logger } from '@/lib/logger';
 import { useCallback } from 'react';
 import { useFormContext } from "el-form-react-hooks";
 import { showToast } from '@/lib/ui/toast';
-import { ErrorFactory, handleError } from '@/lib/error/ErrorFactory';
+import { ErrorFactory } from '@/lib/error';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTaskExecutor, useAdminMaintenance, useSettings, useCategories, useTags, useFilters } from '@/hooks';
 import { Tag } from '@/types';
@@ -262,7 +262,7 @@ export function usePhotoEditAI() {
         queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
       }, { showSuccessToast: false, showProgress: true, rethrow: true });
     } catch (e: unknown) {
-      handleError(e, 'AI 识别');
+      ErrorFactory.handleError(e, 'AI 识别');
     }
 
   };

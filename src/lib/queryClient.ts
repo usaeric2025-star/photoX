@@ -1,14 +1,13 @@
 import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query';
-import { logError } from '@/lib/error/errorReporter';
-import { handleError } from './error/errorHandler';
+import { ErrorFactory } from '@/lib/error';
 
 const querySyncChannel = new BroadcastChannel('photo-x-query-sync');
 
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => {
-      logError(error, { action: 'Query Failed', component: 'QueryClient', kind: 'NETWORK' });
-      handleError(error, 'Query Failure');
+      ErrorFactory.capture(error);
+      ErrorFactory.handleError(error, 'Query Failure');
     },
   }),
   mutationCache: new MutationCache({
@@ -22,8 +21,8 @@ export const queryClient = new QueryClient({
     onError: (error, variables, context, mutation) => {
       if (mutation.meta?.suppressGlobalError) return;
       if (error instanceof Error && !error.message.includes('401')) {
-        logError(error, { action: 'Mutation Failed', component: 'QueryClient', kind: 'NETWORK' });
-        handleError(error, 'Mutation Failure');
+        ErrorFactory.capture(error);
+        ErrorFactory.handleError(error, 'Mutation Failure');
       }
     },
   }),

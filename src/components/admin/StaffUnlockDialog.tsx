@@ -73,7 +73,7 @@ export function StaffUnlockDialog({
                       // Don't close modal immediately to show intent
                       await signIn?.();
                     } catch (e: unknown) { 
-                      ErrorFactory.handle(e as any, labels.loginFailed);
+                      ErrorFactory.handleError(e as any, labels.loginFailed);
                     }
                   }}
                   className="w-full py-3 px-4 rounded-2xl font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all text-sm flex items-center justify-center gap-2"

@@ -91,7 +91,7 @@ export function usePhotoUpload() {
           removeFromDuplicateCache(file);
           
           // 在批量任务中保持静默，由任务中心最后統一呈現狀態
-          ErrorFactory.handle(err, `照片上传失败: ${file.name}`, true);
+          ErrorFactory.handleError(err, `照片上传失败: ${file.name}`, true);
           failureCount++;
           // We don't stop the whole batch for one failure
         }
@@ -114,7 +114,7 @@ export function usePhotoUpload() {
              const { router } = await import('@/router');
              router.navigate({ to: '/admin/batch-edit' });
            } catch(e) {
-             ErrorFactory.handle(e, '合组失败');
+             ErrorFactory.handleError(e, '合组失败');
            }
         } else if (uploadedIds.length === 1) {
           // If single photo, we might want to open edit modal immediately?
@@ -136,7 +136,7 @@ export function usePhotoUpload() {
 
     } catch (err: unknown) {
       hapticFeedback.error();
-      ErrorFactory.handle(err, '批量上传异常中止');
+      ErrorFactory.handleError(err, '批量上传异常中止');
       errorUploadBatch(taskId);
     }
   }, [startUploadBatch, updateUploadProgress, completeUploadBatch, errorUploadBatch, invalidatePhotos, user?.id]);

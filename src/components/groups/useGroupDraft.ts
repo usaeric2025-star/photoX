@@ -87,7 +87,7 @@ export const useGroupDraft = (
           }
         }
       } catch (err: unknown) {
-        ErrorFactory.handle(err, "更新群組資料失敗");
+        ErrorFactory.handleError(err, "更新群組資料失敗");
         throw err;
       }
     },

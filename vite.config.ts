@@ -46,11 +46,6 @@ export default defineConfig(({mode}) => {
               return 'vendor-icons';
             }
             
-            // 🎯 Sentry (獨立隔離以優化首頁加載)
-            if (/\/node_modules\/@sentry\//.test(id)) {
-              return 'vendor-sentry';
-            }
-            
             // 🎯 UI、動畫與元件 (Sonner, Lightbox, Virtua, El-Form, Motion)
             if (/\/node_modules\/(sonner|yet-another-react-lightbox|virtua|el-form-react-components|el-form-react-hooks|motion)\//.test(id)) {
               return 'vendor-ui';

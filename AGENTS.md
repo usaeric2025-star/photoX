@@ -1653,3 +1653,21 @@ PhotoX 當前單頁數據 < 100KB，IndexedDB 收益為零且增加 Bundle Size 
 - **驗證**: `arktype` (類型優先的驗證方案)
 - **表單狀態**: 原生 React `useState` + `useActionState`
 - **❌ 已移除**: `react-hook-form`, `zod`, `@hookform/resolvers`
+
+## 🎯 監控系統移除與錯誤處理優化 (2026-06-20 鎖定)
+
+### 決策內容
+- ✅ **全量移除 Sentry**：完全刪除 `@sentry/react` 和 `@sentry/vite-plugin` 依賴。
+- ✅ **錯誤處理回歸本地**：`ErrorFactory.capture()` 改為純本地記錄（Console + `localStorage`）。
+- ✅ **診斷面板自足**：診斷資訊（最後 50 條錯誤）存儲於本地快取，由 `GlobalDiagnosticsDialog` 直接讀取，無需外部服務。
+
+### 理由
+- **穩定性提升**：徹底解決 Sentry 導入導致的 `ReferenceError: Cannot access 'Ga' before initialization` 白屏故障。
+- **架構簡化**：終結循環依賴與 `vendor-sentry` chunk 帶來的複雜度。
+- **效能優化**：減少約 150KB 的 JS Bundle 體積，提升啟動速度。
+- **維護成本**：外部監控工具目前的負擔（維護/故障）已超過其提供的診斷價值。
+
+### 禁止事項 (永久鎖定)
+- ❌ **禁止重新引入 Sentry**：除非未來有極為明確的業務需求且能保證非阻塞載入。
+- ❌ **禁止使用三方監控阻塞渲染**：任何類似工具必須以動態異步方式載入，且失敗時不得影響應用啟動。
+- ❌ **禁止在 ErrorFactory 中保留 Sentry 邏輯**。

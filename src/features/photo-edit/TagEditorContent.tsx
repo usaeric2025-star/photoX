@@ -61,7 +61,7 @@ export function TagEditor({
       const nextSettings = { ...settings, pinned_tags: newPinned };
       await updateSettings(nextSettings);
     } catch (err) {
-      ErrorFactory.handle(err, "切换置顶状态");
+      ErrorFactory.handleError(err, "切换置顶状态");
     }
   };
 

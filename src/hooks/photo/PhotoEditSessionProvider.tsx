@@ -7,7 +7,7 @@ import { PhotoSchema, type PhotoFormValues } from '@/schemas/photo';
 import { showToast } from '@/lib/ui/toast';
 import { generateItemCode } from '@/services/photo/utils';
 import { Photo } from '@/types';
-import { ErrorFactory, handleError } from '@/lib/error/ErrorFactory';
+import { ErrorFactory } from '@/lib/error';
 
 interface PhotoEditSessionContextValue {
   isDirty: boolean;
@@ -104,7 +104,7 @@ export const PhotoEditSessionProvider = ({
       });
       onSuccess?.();
     } catch (err: unknown) {
-      handleError(err, '保存照片数据');
+      ErrorFactory.handleError(err, '保存照片数据');
     }
   }, [photoId, form, updateMutation, onSuccess]);
   

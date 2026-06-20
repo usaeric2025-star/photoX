@@ -1,8 +1,7 @@
 import { useCallback } from 'react';
 import { useTasks } from './useTasks';
-import { logError } from '@/lib/error/errorReporter';
 import { showToast } from '@/lib/ui/toast';
-import { extractErrorMessage, handleError } from '@/lib/error/errorHandler';
+import { ErrorFactory } from '@/lib/error';
 import { hapticFeedback } from '@/lib/ui/haptics';
 
 /**
@@ -60,16 +59,16 @@ export function useTaskExecutor() {
       return result;
     } catch (error) {
       hapticFeedback.error();
-      const errMsg = extractErrorMessage(error);
+      const errMsg = ErrorFactory.extractErrorMessage(error);
       const standardErrorMsg = `${name} 失败: ${errMsg}`;
 
       if (taskId) {
         updateTask(taskId, { status: 'error', progress: 100, message: standardErrorMsg });
       }
-      logError(error, { action: name, component: 'useTaskExecutor', kind: 'UNKNOWN' });
+      ErrorFactory.capture(error);
       
       if (options?.showErrorToast !== false) { 
-        handleError(error, name); // Use global handler with Copy Detail button
+        ErrorFactory.handleError(error, name); // Use global handler with Copy Detail button
       }
       
       const actualError = error instanceof Error ? error : new Error(errMsg);

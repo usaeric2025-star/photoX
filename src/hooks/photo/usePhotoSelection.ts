@@ -108,7 +108,7 @@ export const usePhotoSelection = () => {
         navigate({ to: '/admin' });
       }
     } catch (e: unknown) {
-      ErrorFactory.handle(e, '批量保存失敗');
+      ErrorFactory.handleError(e, '批量保存失敗');
     }
   };
 

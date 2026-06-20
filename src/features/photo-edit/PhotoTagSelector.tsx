@@ -110,7 +110,7 @@ function BasePhotoTagSelector({
               onChange([...new Set([...cleanSelectedIds, String(saved)])]);
             }
           } catch (err: unknown) {
-            ErrorFactory.handle(err, "新增标签失败");
+            ErrorFactory.handleError(err, "新增标签失败");
           }
         }}
       />
@@ -126,7 +126,7 @@ function BasePhotoTagSelector({
               try {
                 await updateTag(String(editingTag.id), n.trim());
               } catch (err: unknown) {
-                ErrorFactory.handle(err, "编辑标签失败");
+                ErrorFactory.handleError(err, "编辑标签失败");
               }
             }
           }}

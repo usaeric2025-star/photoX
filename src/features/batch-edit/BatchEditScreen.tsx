@@ -3,7 +3,7 @@ import { X as CloseIcon, RefreshCcw, Save, Trash2 } from '@/components/ui/Icon';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { usePhotoDelete } from '@/hooks';
-import { handleError } from '@/lib/error/ErrorFactory';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { BatchEditForm } from './BatchEditForm';
 import { useBatchEditSelection } from './useBatchEditSelection';
 
@@ -21,7 +21,7 @@ function BatchDeleteButton({ selectedIds, onSuccess }: { selectedIds: string[], 
       await deleteMutation.mutateAsync(selectedIds);
       onSuccess();
     } catch (err) {
-      handleError(err, '批量删除');
+      ErrorFactory.handleError(err, '批量删除');
     }
   };
 

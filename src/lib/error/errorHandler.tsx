@@ -1,7 +1,7 @@
 import { showToast } from '@/lib/ui/toast';
 import type { StandardError } from '@/types/api';
 import { copyToClipboard } from '@/utils/clipboard';
-import { logError } from '@/lib/error/errorReporter';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useUIStore } from '@/store/useUIStore';
 
 /**
@@ -125,17 +125,16 @@ const buildCopyContent = (error: StandardError): string => {
   return `[${error.context}] ${error.message} (Trace: ${error.traceId || 'N/A'})`;
 }
 
+export const logError = (error: Error, info: Record<string, unknown> = {}, extras: Record<string, unknown> = {}) => {
+  ErrorFactory.capture(error);
+}
+
 export const handleError = (error: unknown, context: string, silent: boolean = false): void => {
   if (silent) return;
   const standardError = normalizeError(error, context)
   
   // Log to backend
-  logError(error, { 
-    action: context, 
-    component: 'ErrorHandler', 
-    kind: 'UNKNOWN', 
-    metadata: { traceId: standardError.traceId } 
-  });
+  ErrorFactory.capture(error);
 
   const errorId = getErrorId(standardError)
   const copyContent = buildCopyContent(standardError)

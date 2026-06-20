@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from '@/hooks/core/useTranslation';
-import { classifyPhotoError, getLocalizedError, showErrorToast, showSuccessToast } from '@/lib/error';
+import { classifyPhotoError, getLocalizedError } from '@/lib/error/photoErrors';
+import { showErrorToast, showSuccessToast } from '@/lib/error/errorUI';
 import { WifiOff, ShieldAlert, FolderOpen, ServerCrash, AlertCircle, RefreshCw, Copy, Check } from '@/components/ui/Icon';
 import { cn } from '@/lib/utils';
 

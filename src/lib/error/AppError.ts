@@ -8,6 +8,14 @@ export enum ErrorSeverity {
   FATAL = 'fatal',     // 記錄 + 緊急呼叫
 }
 
+export enum ErrorCategory {
+  NETWORK = 'network',
+  AUTH = 'auth',
+  VALIDATION = 'validation',
+  RUNTIME = 'runtime',
+  BUSINESS = 'business',
+}
+
 // ===== 2. 輔助函數 =====
 export function mapCodeToStatus(code: ErrorCode | string): number {
   const map: Record<string, number> = {
@@ -31,6 +39,9 @@ export class AppError extends Error {
   public readonly timestamp: string;
   public readonly context?: Record<string, unknown>;
   public override readonly cause?: Error;
+  public readonly category: string;
+  public readonly userMessage: string;
+  public readonly shouldReport: boolean;
 
   constructor(params: {
     code: ErrorCode | string;
@@ -39,6 +50,9 @@ export class AppError extends Error {
     statusCode?: number;
     context?: Record<string, unknown>;
     cause?: Error;
+    category?: string;
+    userMessage?: string;
+    shouldReport?: boolean;
   }) {
     super(params.message, { cause: params.cause });
     this.name = 'AppError';
@@ -49,6 +63,9 @@ export class AppError extends Error {
     this.timestamp = new Date().toISOString();
     this.context = params.context;
     this.cause = params.cause;
+    this.category = params.category ?? 'runtime';
+    this.userMessage = params.userMessage ?? params.message;
+    this.shouldReport = params.shouldReport ?? true;
   }
 
   // 安全序列化（避免循環引用）

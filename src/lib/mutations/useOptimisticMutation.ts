@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { showToast } from '@/lib/ui/toast';
 import { MutationConfig } from './types';
 import { logger } from '@/lib/logger';
-import { ErrorFactory, handleError } from '@/lib/error/ErrorFactory';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useUIStore } from '@/store/useUIStore';
 import { type } from 'arktype';
 
@@ -119,7 +119,7 @@ export const useOptimisticMutation = <
         // P0: Global error logging, automatic ErrorFactory wrapping, and diagnostics UI feedback
         const wrappedError = ErrorFactory.wrap(err, config.name);
         logger.error(`[Optimistic Mutation Failed] ${config.name}:`, wrappedError);
-        handleError(wrappedError, config.name, false);
+        ErrorFactory.handleError(wrappedError, config.name, false);
       }
     },
     onSettled: (data: TData | undefined, err: Error | null, vars: TVariables) => {

@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { logger } from '@/lib/logger';
-import { logResult } from '@/lib/error/errorReporter';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { api } from '@/lib/api';
 
 type DiagnoseIssue = {
@@ -99,7 +99,7 @@ export const runDiagnose = async () => {
 
     // Log the result to system_logs via logResult (Our primary audit trail)
     const duration = performance.now() - startTime;
-    await logResult(
+    await ErrorFactory.logResult(
       {
         action: 'auto_diagnose',
         component: 'AutoDiagnose',
