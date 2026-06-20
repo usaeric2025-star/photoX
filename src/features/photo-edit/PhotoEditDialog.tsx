@@ -3,18 +3,15 @@ import { NativeDialog } from "@/components/ui/NativeDialog";
 import { useUIStore } from "@/store";
 import { 
   usePhoto,
-  usePhotoEditMutation,
   useFilters,
 } from "@/hooks";
-import { AutoForm } from '@/components/form/AutoForm';
-import { PhotoEditSchema } from '@/schemas/photo';
-import { Photo } from '@/types';
-
+import { PhotoEditSessionProvider } from "@/hooks/photo/PhotoEditSessionProvider";
+import { PhotoEditTabs } from "./PhotoEditTabs";
 import { DialogHeader } from "./DialogHeader";
 
 function PhotoEditDialogContent({ editPhotoId, handleClose }: { editPhotoId: string; handleClose: () => void }) {
   const { data: photo, isPending } = usePhoto(editPhotoId);
-  const updateMutation = usePhotoEditMutation();
+  const appLang = useUIStore((s) => s.appLang);
 
   if (isPending) {
     return (
@@ -25,35 +22,13 @@ function PhotoEditDialogContent({ editPhotoId, handleClose }: { editPhotoId: str
     );
   }
 
-  const defaultValues = photo ? {
-    name: typeof photo.name === 'string' ? photo.name : (photo.name?.zh || ''),
-    description: typeof photo.description === 'string' ? photo.description : (photo.description?.zh || ''),
-    category_id: photo.category_id,
-    manufacturer_id: photo.manufacturer_id,
-    price: photo.price,
-    note: photo.note,
-    manual_code: photo.manual_code,
-    model_number: photo.model_number,
-    is_hidden: photo.is_hidden
-  } : {};
-
   return (
-    <>
-      <DialogHeader onClose={handleClose} onDeleteClick={() => {}} />
-      <div className="p-2">
-        <AutoForm
-          schema={PhotoEditSchema}
-          defaultValues={defaultValues}
-          className="space-y-6"
-          onSubmit={async (data) => {
-            if (editPhotoId) {
-              await updateMutation.mutateAsync({ id: editPhotoId, updates: data as unknown as Partial<Photo> });
-              handleClose();
-            }
-          }}
-        />
+    <PhotoEditSessionProvider photoId={editPhotoId} onSuccess={handleClose}>
+      <div className="flex flex-col h-full bg-surface-soft min-h-[500px]">
+        <DialogHeader onClose={handleClose} onDeleteClick={() => {}} />
+        <PhotoEditTabs editPhotoId={editPhotoId} appLang={appLang} />
       </div>
-    </>
+    </PhotoEditSessionProvider>
   );
 }
 
@@ -89,7 +64,7 @@ export function PhotoEditDialog({ isOpen: propIsOpen, onClose: propOnClose, edit
       size="lg" 
       title="编辑照片信息"
       description="修改照片的基本元数据、分类与属性"
-      className="max-h-[90vh]"
+      className="max-h-[90vh] overflow-hidden flex flex-col"
     >
       <PhotoEditDialogContent 
         editPhotoId={editPhotoId || ''}
