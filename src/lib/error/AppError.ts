@@ -1,0 +1,73 @@
+import { ErrorCode } from '@/shared/errorCodes';
+
+// ===== 1. 錯誤嚴重等級 =====
+export enum ErrorSeverity {
+  INFO = 'info',       // 僅記錄，不告警
+  WARNING = 'warning', // 記錄 + 標記
+  ERROR = 'error',     // 記錄 + 即時告警
+  FATAL = 'fatal',     // 記錄 + 緊急呼叫
+}
+
+// ===== 2. 輔助函數 =====
+export function mapCodeToStatus(code: ErrorCode | string): number {
+  const map: Record<string, number> = {
+    [ErrorCode.VALIDATION_FAILED]: 400,
+    [ErrorCode.PERMISSION_DENIED]: 403,
+    [ErrorCode.NOT_FOUND]: 404,
+    [ErrorCode.CONFLICT]: 409,
+    [ErrorCode.NETWORK_ERROR]: 502,
+    [ErrorCode.THIRD_PARTY_TIMEOUT]: 504,
+    [ErrorCode.UNKNOWN_ERROR]: 500,
+  };
+  return map[code] ?? 500;
+}
+
+// ===== 3. 標準化 AppError 類別 =====
+export class AppError extends Error {
+  public readonly code: ErrorCode | string;
+  public readonly severity: ErrorSeverity | string;
+  public readonly statusCode: number;
+  public readonly traceId: string;
+  public readonly timestamp: string;
+  public readonly context?: Record<string, unknown>;
+  public override readonly cause?: Error;
+
+  constructor(params: {
+    code: ErrorCode | string;
+    message: string;
+    severity?: ErrorSeverity | string;
+    statusCode?: number;
+    context?: Record<string, unknown>;
+    cause?: Error;
+  }) {
+    super(params.message, { cause: params.cause });
+    this.name = 'AppError';
+    this.code = params.code;
+    this.severity = params.severity ?? ErrorSeverity.ERROR;
+    this.statusCode = params.statusCode ?? mapCodeToStatus(params.code);
+    this.traceId = crypto.randomUUID();
+    this.timestamp = new Date().toISOString();
+    this.context = params.context;
+    this.cause = params.cause;
+  }
+
+  // 安全序列化（避免循環引用）
+  toJSON(): Record<string, unknown> {
+    return {
+      name: this.name,
+      code: this.code,
+      message: this.message,
+      severity: this.severity,
+      statusCode: this.statusCode,
+      traceId: this.traceId,
+      timestamp: this.timestamp,
+      context: this.context,
+      stack: this.stack,
+      cause: this.cause instanceof AppError ? this.cause.toJSON() : this.cause?.message,
+    };
+  }
+}
+
+export function isAppError(error: unknown): error is AppError {
+  return error instanceof AppError;
+}

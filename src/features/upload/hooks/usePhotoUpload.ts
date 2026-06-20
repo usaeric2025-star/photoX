@@ -5,7 +5,7 @@ import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useCallback } from 'react';
 
 import { checkDuplicateBatch } from '@/services/photo/duplicateCheck';
-import { useInvalidatePhotos } from '@/hooks';
+import { useInvalidatePhotos } from '@/hooks/photo/useInvalidatePhotos';
 import { showToast } from '@/lib/ui/toast';
 import { Photo } from '@/types';
 import { hapticFeedback } from '@/lib/ui/haptics';

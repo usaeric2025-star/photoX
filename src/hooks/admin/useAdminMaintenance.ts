@@ -1,5 +1,5 @@
 import { usePhotoEditMutation, usePhotoDelete, usePhotoBatchEdit, useTogglePin } from '../photo/usePhotoMutations';
-import { useAIBatchAnalysis } from '../photo';
+import { useAIBatchAnalysis } from '../photo/useAIBatchAnalysis';
 
 /**
  * useAdminMaintenance

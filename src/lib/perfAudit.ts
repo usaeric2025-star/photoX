@@ -1,8 +1,3 @@
-import { logger } from '@/lib/logger';
-
-
-import { storage } from '@/services/storage';
-
 export interface PerfIncident {
   label: string;
   duration: number;
@@ -16,11 +11,13 @@ const MAX_INCIDENTS = 50;
 /**
  * PerfAudit
  * Collects performance incidents for diagnostics.
+ * Uses browser native localStorage to remain decoupled.
  */
 export const perfAudit = {
   record: (incident: Omit<PerfIncident, 'timestamp'>) => {
     try {
-      const stored = storage.getItem(STORAGE_KEY);
+      if (typeof window === 'undefined' || typeof window.localStorage === 'undefined') return;
+      const stored = window.localStorage.getItem(STORAGE_KEY);
       let incidents: PerfIncident[] = stored ? JSON.parse(stored) : [];
       
       incidents.unshift({ ...incident, timestamp: Date.now() });
@@ -30,15 +27,16 @@ export const perfAudit = {
         incidents = incidents.slice(0, MAX_INCIDENTS);
       }
       
-      storage.setItem(STORAGE_KEY, JSON.stringify(incidents));
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(incidents));
     } catch (e) {
-      logger.warn('[PerfAudit] Failed to record incident:', e);
+      console.warn('[PerfAudit] Failed to record incident:', e);
     }
   },
 
   getIncidents: (): PerfIncident[] => {
     try {
-      const stored = storage.getItem(STORAGE_KEY);
+      if (typeof window === 'undefined' || typeof window.localStorage === 'undefined') return [];
+      const stored = window.localStorage.getItem(STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch (e) {
       return [];
@@ -46,7 +44,11 @@ export const perfAudit = {
   },
 
   clear: () => {
-    storage.remove(STORAGE_KEY);
+    try {
+      if (typeof window === 'undefined' || typeof window.localStorage === 'undefined') return;
+      window.localStorage.removeItem(STORAGE_KEY);
+    } catch (e) {
+      // ignore
+    }
   }
 };
-

@@ -15,15 +15,15 @@ function walkDir(dir: string, callback: (filePath: string) => void) {
 }
 
 const srcDir = path.join(process.cwd(), 'src');
-let found = false;
 walkDir(srcDir, (filePath) => {
     const content = fs.readFileSync(filePath, 'utf8');
-    if (content.includes('lucide-react')) {
-        console.log(`Found lucide-react in: ${filePath}`);
-        found = true;
+    if (content.includes('ErrorFactory.handle')) {
+        console.log(`File: ${filePath}`);
+        const lines = content.split('\n');
+        lines.forEach((line, index) => {
+            if (line.includes('ErrorFactory.handle')) {
+                console.log(`  Line ${index + 1}: ${line.trim()}`);
+            }
+        });
     }
 });
-
-if (!found) {
-    console.log('No remaining lucide-react imports found.');
-}

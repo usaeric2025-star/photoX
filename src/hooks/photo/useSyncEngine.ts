@@ -3,7 +3,9 @@ import { useCallback, useEffect } from 'react';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { User } from '@/types';
 import { useQueryClient } from '@tanstack/react-query';
-import { useInvalidatePhotos, useTaskExecutor, useSettings } from '@/hooks';
+import { useInvalidatePhotos } from '@/hooks/photo/useInvalidatePhotos';
+import { useTaskExecutor } from '@/hooks/core/useTaskExecutor';
+import { useSettings } from '@/hooks/settings/useSettings';
 import { logger } from '@/lib/logger';
 import { api } from '@/lib/api';
 

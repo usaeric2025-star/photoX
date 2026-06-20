@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
-import { useAdminCategory } from '@/hooks';
+import { useAdminCategory } from '@/hooks/admin/useAdminCategory';
 import { useUIStore } from '@/store/useUIStore';
 
 export const useSettingsManagement = () => {

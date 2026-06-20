@@ -41,6 +41,11 @@ export default defineConfig(({mode}) => {
               return 'vendor-react-core';
             }
             
+            // 🎯 Icon Sprite (全面獨立隔離以優化載入)
+            if (/\/node_modules\/@react-zero-ui\/icon-sprite\//.test(id)) {
+              return 'vendor-icons';
+            }
+            
             // 🎯 Sentry (獨立隔離以優化首頁加載)
             if (/\/node_modules\/@sentry\//.test(id)) {
               return 'vendor-sentry';

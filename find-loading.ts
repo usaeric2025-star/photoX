@@ -16,15 +16,14 @@ function walkDir(dir: string, callback: (filePath: string) => void) {
 
 const srcDir = path.join(process.cwd(), 'src');
 walkDir(srcDir, (filePath) => {
-    let content = fs.readFileSync(filePath, 'utf8');
-    // Replace: from '@react-zero-ui/icon-sprite'
-    // With:    from '@/components/ui/Icon'
-    const newContent = content.replace(/from ['"]@react-zero-ui\/icon-sprite['"]/g, "from '@/components/ui/Icon'");
-    
-    if (content !== newContent) {
-        console.log(`Fixing import in: ${filePath}`);
-        fs.writeFileSync(filePath, newContent, 'utf8');
+    const content = fs.readFileSync(filePath, 'utf8');
+    if (content.includes('isInitialDataLoading') || content.includes('setInitialDataLoading')) {
+        console.log(`File: ${filePath}`);
+        const lines = content.split('\n');
+        lines.forEach((line, index) => {
+            if (line.includes('isInitialDataLoading') || line.includes('setInitialDataLoading')) {
+                console.log(`  Line ${index + 1}: ${line.trim()}`);
+            }
+        });
     }
 });
-
-console.log('Migration fix complete!');

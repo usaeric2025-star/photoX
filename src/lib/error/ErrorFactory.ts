@@ -1,68 +1,11 @@
 import { ProblemDetails } from '@/types/problemDetails';
-import { handleError as legacyHandleError } from './errorHandler';
 import * as Sentry from '@sentry/react';
 import { ErrorCode } from '@/shared/errorCodes';
+import { AppError, ErrorSeverity, isAppError } from './AppError';
 
-export { ErrorCode };
+export { ErrorCode, AppError, ErrorSeverity, isAppError };
 
-// ===== 1. 錯誤碼枚舉 =====
-// Using shared ErrorCode from api/_shared/errorCodes
-
-// ===== 2. 錯誤嚴重等級 =====
-export enum ErrorSeverity {
-  INFO = 'info',       // 僅記錄，不告警
-  WARNING = 'warning', // 記錄 + 標記
-  ERROR = 'error',     // 記錄 + 即時告警
-  FATAL = 'fatal',     // 記錄 + 緊急呼叫
-}
-
-// ===== 3. 標準化 AppError 類別 =====
-export class AppError extends Error {
-  public readonly code: ErrorCode | string
-  public readonly severity: ErrorSeverity | string
-  public readonly statusCode: number
-  public readonly traceId: string
-  public readonly timestamp: string
-  public readonly context?: Record<string, unknown>
-  public override readonly cause?: Error
-
-  constructor(params: {
-    code: ErrorCode | string
-    message: string
-    severity?: ErrorSeverity | string
-    statusCode?: number
-    context?: Record<string, unknown>
-    cause?: Error
-  }) {
-    super(params.message, { cause: params.cause })
-    this.name = 'AppError'
-    this.code = params.code
-    this.severity = params.severity ?? ErrorSeverity.ERROR
-    this.statusCode = params.statusCode ?? mapCodeToStatus(params.code as ErrorCode)
-    this.traceId = crypto.randomUUID()
-    this.timestamp = new Date().toISOString()
-    this.context = params.context
-    this.cause = params.cause
-  }
-
-  // ✅ 安全序列化（避免循環引用）
-  toJSON(): Record<string, unknown> {
-    return {
-      name: this.name,
-      code: this.code,
-      message: this.message,
-      severity: this.severity,
-      statusCode: this.statusCode,
-      traceId: this.traceId,
-      timestamp: this.timestamp,
-      context: this.context,
-      stack: this.stack,
-      cause: this.cause instanceof AppError ? this.cause.toJSON() : this.cause?.message,
-    }
-  }
-}
-
-// ===== 4. 語義化工廠方法 =====
+// ===== 1. 語義化工廠方法 =====
 export const ErrorFactory = {
   // 通用建構
   create: (code: ErrorCode, message: string, context?: Record<string, unknown>) =>
@@ -159,7 +102,11 @@ export const ErrorFactory = {
   },
 
   handle(error: unknown, context: string = '未知操作', silent: boolean = false) {
-    legacyHandleError(error, context, silent);
+    import('./errorHandler').then(({ handleError: realHandleError }) => {
+      realHandleError(error, context, silent);
+    }).catch((err) => {
+      console.error('Critical failure in dynamic handleError loader:', err);
+    });
   },
 
   toProblemDetails(error: AppError, status: number = 500): ProblemDetails {
@@ -174,23 +121,5 @@ export const ErrorFactory = {
     };
   }
 };
-
-// ===== 5. 輔助函數 =====
-function mapCodeToStatus(code: ErrorCode): number {
-  const map: Record<string, number> = {
-    [ErrorCode.VALIDATION_FAILED]: 400,
-    [ErrorCode.PERMISSION_DENIED]: 403,
-    [ErrorCode.NOT_FOUND]: 404,
-    [ErrorCode.CONFLICT]: 409,
-    [ErrorCode.NETWORK_ERROR]: 502,
-    [ErrorCode.THIRD_PARTY_TIMEOUT]: 504,
-    [ErrorCode.UNKNOWN_ERROR]: 500,
-  }
-  return map[code] ?? 500
-}
-
-export function isAppError(error: unknown): error is AppError {
-  return error instanceof AppError
-}
 
 export const handleError = ErrorFactory.handle;

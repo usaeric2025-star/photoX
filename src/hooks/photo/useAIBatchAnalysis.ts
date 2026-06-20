@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import type { Photo } from '@/types';
-import { useTaskExecutor, useInvalidatePhotos } from '@/hooks';
+import { useTaskExecutor } from '@/hooks/core/useTaskExecutor';
+import { useInvalidatePhotos } from '@/hooks/photo/useInvalidatePhotos';
 import { showToast } from '@/lib/ui/toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query/keys';

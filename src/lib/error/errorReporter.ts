@@ -1,5 +1,5 @@
 import { logger } from '@/lib/logger';
-import { AppError, ErrorSeverity, isAppError, ErrorFactory } from './ErrorFactory'
+import { AppError, ErrorSeverity, isAppError } from './AppError'
 import * as Sentry from '@sentry/react'
 import { clientEnv } from '@/shared/envSchema'
 
