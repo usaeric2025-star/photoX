@@ -14,6 +14,7 @@
     { "source": "/error-log", "destination": "/api/error-log" }
   ],
   "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

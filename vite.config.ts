@@ -68,8 +68,8 @@ export default defineConfig(({mode}) => {
     define: {
       'process.env.NODE_ENV': JSON.stringify(mode),
       '__ADMIN_DIAGNOSTICS__': JSON.stringify(mode !== 'production'),
-      'process.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL),
-      'process.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY),
+      'process.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL || ''),
+      'process.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || ''),
     },
     resolve: {
       alias: {

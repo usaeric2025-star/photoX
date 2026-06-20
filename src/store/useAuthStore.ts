@@ -21,7 +21,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   
   init: async () => {
     try {
-      const { data } = await supabase.auth.getSession();
+      // Race getSession with a 3-second timeout to prevent startup hangs if Supabase is slow/unresponsive
+      const sessionPromise = supabase.auth.getSession();
+      const timeoutPromise = new Promise<{ data: { session: null }, error: any }>((_, reject) => {
+        setTimeout(() => reject(new Error('Supabase Auth init timeout (3s)')), 3000);
+      });
+      
+      const { data } = await Promise.race([sessionPromise, timeoutPromise]);
       
       if (data.session?.user) {
         const u = data.session.user;

@@ -38,16 +38,19 @@ async function bootstrap() {
       }
 
       // Delegate to Vite middleware (Connect style)
-      vite.middlewares(req, res, () => {
+      vite.middlewares(req, res, async () => {
         // Fallback to index.html for SPA during dev
-        fs.readFile(path.resolve(process.cwd(), "index.html"), "utf-8", (err, html) => {
-          if (err) {
-            res.statusCode = 500;
-            return res.end("Error loading index.html");
-          }
+        try {
+          const rawHtml = fs.readFileSync(path.resolve(process.cwd(), "index.html"), "utf-8");
+          const html = await vite.transformIndexHtml(req.url || "/", rawHtml);
+          res.statusCode = 200;
           res.setHeader("Content-Type", "text/html");
           res.end(html);
-        });
+        } catch (err: any) {
+          console.error("Vite index.html transform error:", err);
+          res.statusCode = 500;
+          res.end("Error loading index.html: " + (err.message || String(err)));
+        }
       });
     });
 

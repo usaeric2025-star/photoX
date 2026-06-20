@@ -64,7 +64,12 @@ export function usePublicSettings() {
     queryKey: ['settings', 'public'],
     queryFn: async () => {
       try {
-        const response = await api.public.settings.$get();
+        const fetchPromise = api.public.settings.$get();
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('Public Settings fetch timeout (3s)')), 3000);
+        });
+        
+        const response = await Promise.race([fetchPromise, timeoutPromise]);
         const result = await response.json();
         if (!result.success) return {} as AppSettings;
         return result.data as AppSettings;
@@ -74,6 +79,6 @@ export function usePublicSettings() {
       }
     },
     staleTime: STALE_TIMES.MEDIUM,
-    retry: 2,
+    retry: 1,
   });
 }

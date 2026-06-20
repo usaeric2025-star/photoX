@@ -45,6 +45,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 const dummyAuth = {
   getSession: async () => ({ data: { session: null }, error: null }),
+  getUser: async () => ({ data: { user: null }, error: null }),
   onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
   signInWithOAuth: async () => {
     logger.error("Supabase environment variables are missing; OAuth login is unavailable.");

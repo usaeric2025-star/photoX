@@ -125,6 +125,16 @@ async function init() {
         message.includes('NetworkError');
         
       if (isCancellation) return;
+      
+      // 同步到全域診斷陣列
+      const errors = (window as any).__STARTUP_ERRORS__ || [];
+      errors.push({
+        msg: message,
+        type: '非同步拒絕異常 (React Unhandled Promise)',
+        details: reason?.stack || '位置: React App runtime'
+      });
+      (window as any).__STARTUP_ERRORS__ = errors;
+
       logError(reason || new Error(message || 'Unhandled Promise Rejection'), { action: 'Unhandled Rejection', component: 'Global', kind: 'UNKNOWN' });
     });
 
@@ -141,6 +151,16 @@ async function init() {
         message.includes('NetworkError');
 
       if (isNoise) return;
+
+      // 同步到全域診斷陣列
+      const errors = (window as any).__STARTUP_ERRORS__ || [];
+      errors.push({
+        msg: message,
+        type: '運行期異常 (React Runtime Error)',
+        details: event.error?.stack || '位置: React App index'
+      });
+      (window as any).__STARTUP_ERRORS__ = errors;
+
       logError(event.error || new Error(event.message || '全局运行时错误'), { action: 'Runtime Error', component: 'Global', kind: 'UNKNOWN' });
     });
   }
