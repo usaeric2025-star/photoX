@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal } from '@/components/ui/Modal';
+import { NativeDialog } from '@/components/ui/NativeDialog';
 import { Layers, ImagePlus } from '@/components/ui/Icon';
 
 interface UploadModeDialogProps {
@@ -10,7 +10,7 @@ interface UploadModeDialogProps {
 
 export function UploadModeDialog({ open, onOpenChange, onSelectMode }: UploadModeDialogProps) {
   return (
-    <Modal open={open} onClose={() => onOpenChange(false)} title="选择上传模式">
+    <NativeDialog open={open} onClose={() => onOpenChange(false)} title="选择上传模式">
       <div className="p-4 space-y-3">
         <button
           onClick={() => onSelectMode('single')}
@@ -38,6 +38,6 @@ export function UploadModeDialog({ open, onOpenChange, onSelectMode }: UploadMod
           </div>
         </button>
       </div>
-    </Modal>
+    </NativeDialog>
   );
 }

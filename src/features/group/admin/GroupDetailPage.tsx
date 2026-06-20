@@ -14,11 +14,11 @@ import { SelectionProvider, SelectionToolbar } from '@/features/selection';
 import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
 import { useAdminBatchActions } from '@/hooks/admin/useAdminBatch';
 import { translations } from '@/locales';
-import { GroupSettingsModal } from '@/components/groups/GroupSettingsModal';
+import { GroupSettingsDialog } from '@/components/groups/GroupSettingsDialog';
 import { useGroupDraft } from '@/components/groups/useGroupDraft';
 import { useGroupMutations } from '@/hooks/groups/useGroupMutations';
 import { GroupHeader } from '../shared/components/GroupHeader';
-import { PhotoEditModal } from '@/features/photo-edit';
+import { PhotoEditDialog } from '@/features/photo-edit';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { Button } from '@/components/shared/Button';
 
@@ -176,7 +176,7 @@ export function AdminGroupDetailPage() {
         />
 
         {showAdminTools && (
-          <GroupSettingsModal
+          <GroupSettingsDialog
             showGroupSettings={showAdminTools}
             setShowGroupSettings={setShowAdminTools}
             activeGroupId={groupId}
@@ -189,7 +189,7 @@ export function AdminGroupDetailPage() {
           />
         )}
 
-        <PhotoEditModal />
+        <PhotoEditDialog />
       </div>
     </SelectionProvider>
   );

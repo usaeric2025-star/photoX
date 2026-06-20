@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Icon } from '@/components/ui/Icon';
 
-export interface ModalProps {
+export interface NativeDialogProps {
   open: boolean;
   onClose: () => void;
   children: React.ReactNode;
@@ -24,10 +24,10 @@ const sizeClasses = {
 };
 
 /**
- * Modal component using the native <dialog> element.
+ * NativeDialog component using the native <dialog> element.
  * Provides maximum isolation and standard behavior.
  */
-export function Modal({ 
+export function NativeDialog({ 
   open, 
   onClose, 
   children, 
@@ -37,7 +37,7 @@ export function Modal({
   className = '',
   hidePadding = false,
   showCloseButton = true
-}: ModalProps) {
+}: NativeDialogProps) {
   const ref = React.useRef<HTMLDialogElement>(null);
 
   React.useEffect(() => {
@@ -51,7 +51,7 @@ export function Modal({
           // Lock document scroll when open
           document.body.style.overflow = 'hidden';
         } catch (e) {
-          console.warn('[Modal] Failed to execute showModal, falling back to open attribute:', e);
+          console.warn('[NativeDialog] Failed to execute showModal, falling back to open attribute:', e);
           el.setAttribute('open', '');
         }
       }

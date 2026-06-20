@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal } from "../ui/Modal";
+import { NativeDialog } from "../ui/NativeDialog";
 import { ProductGroup, Dimension } from '../../types';
 import { useAdminMode } from '../../hooks';
 import { MultilingualInput } from "../shared/MultilingualInput";
@@ -9,7 +9,7 @@ import { Button } from "../shared/Button";
 import { Trash2, X } from '@/components/ui/Icon';
 import { useDisclosure } from "../../hooks/core/useDisclosure";
 
-interface GroupSettingsModalProps {
+interface GroupSettingsDialogProps {
   showGroupSettings: boolean;
   setShowGroupSettings: (show: boolean) => void;
   activeGroupId: string | null;
@@ -97,7 +97,7 @@ function GroupSettingsContent({ groupData, handleUpdateGroupData, t }: GroupSett
   );
 }
 
-export function GroupSettingsModal(props: GroupSettingsModalProps) {
+export function GroupSettingsDialog(props: GroupSettingsDialogProps) {
   const isAdminMode = useAdminMode();
 
   const childProps = {
@@ -113,12 +113,12 @@ export function GroupSettingsModal(props: GroupSettingsModalProps) {
   };
 
   return (
-    <Modal open={props.showGroupSettings} onClose={() => props.setShowGroupSettings(false)} size="lg" hidePadding showCloseButton={false}>
+    <NativeDialog open={props.showGroupSettings} onClose={() => props.setShowGroupSettings(false)} size="lg" hidePadding showCloseButton={false}>
       <div className="flex flex-col bg-white overflow-hidden max-h-[85vh] w-full max-w-[500px] h-full sm:h-[800px]">
         <GroupSettingsHeader {...headerProps} />
         <GroupSettingsContent {...childProps} />
       </div>
-    </Modal>
+    </NativeDialog>
   );
 };
 

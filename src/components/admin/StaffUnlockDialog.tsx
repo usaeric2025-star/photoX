@@ -1,7 +1,7 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import * as React from 'react';
 import { Lock, LogIn } from '@/components/ui/Icon';
-import { Modal } from '@/components/ui/Modal';
+import { NativeDialog } from '@/components/ui/NativeDialog';
 
 
 interface StaffUnlockDialogProps {
@@ -20,7 +20,7 @@ export function StaffUnlockDialog({
   isOpen, onClose, passInput, setPassInput, passError, onSubmit, onLogin, signIn, labels
 }: StaffUnlockDialogProps) {
   return (
-    <Modal open={isOpen} onClose={onClose} size="sm">
+    <NativeDialog open={isOpen} onClose={onClose} size="sm">
       <div className="w-full text-center">
         <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner ring-4 ring-white">
           <Lock size={32} />
@@ -85,6 +85,6 @@ export function StaffUnlockDialog({
           )}
         </form>
       </div>
-    </Modal>
+    </NativeDialog>
   );
 }

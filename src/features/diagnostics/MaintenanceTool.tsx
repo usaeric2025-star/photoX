@@ -8,7 +8,7 @@ import { Loader2, ShieldAlert } from '@/components/ui/Icon';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useUIStore } from '@/store/useUIStore';
 import { useTranslation } from '@/hooks';
-import { MaintenancePreviewModal } from './MaintenancePreviewModal';
+import { MaintenancePreviewDialog } from './MaintenancePreviewDialog';
 import { useMaintenanceExecution } from './useMaintenanceExecution';
 
 interface MaintenanceToolProps {
@@ -26,7 +26,7 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
   const [showConfirm, { open: openConfirm, close: closeConfirm }] = useDisclosure(false);
 
   const {
-    preview, setPreview, showPreviewModal, setShowPreviewModal,
+    preview, setPreview, showPreviewDialog, setShowPreviewDialog,
     isExecuting, isPreviewing, progress, handlePreview, handleExecute, action
   } = useMaintenanceExecution(issueId, baseTempTitle, onSuccess);
 
@@ -36,9 +36,9 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
 
   const renderSharedModals = () => (
     <>
-      <MaintenancePreviewModal
-        open={showPreviewModal}
-        onClose={() => setShowPreviewModal(false)}
+      <MaintenancePreviewDialog
+        open={showPreviewDialog}
+        onClose={() => setShowPreviewDialog(false)}
         title={baseTempTitle}
         preview={preview}
         danger={danger}

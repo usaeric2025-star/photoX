@@ -1,4 +1,4 @@
-import { Modal } from '@/components/ui/Modal';
+import { NativeDialog } from '@/components/ui/NativeDialog';
 import { cn } from '@/lib/utils';
 
 interface MenuDialogProps {
@@ -27,7 +27,7 @@ export const MenuDialog = ({
   const handleClose = () => onOpenChange(false);
 
   return (
-    <Modal open={open} onClose={handleClose} hidePadding>
+    <NativeDialog open={open} onClose={handleClose} hidePadding>
       <div className="p-6">
         <h2 className="text-lg font-semibold">{title}</h2>
         {description && (
@@ -68,6 +68,6 @@ export const MenuDialog = ({
           </button>
         </div>
       </div>
-    </Modal>
+    </NativeDialog>
   );
 };

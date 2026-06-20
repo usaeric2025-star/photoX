@@ -1,6 +1,6 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import React, { useState, useRef, useDeferredValue } from "react";
-import { Modal } from "@/components/ui/Modal";
+import { NativeDialog } from "@/components/ui/NativeDialog";
 import { Pencil, Trash2, Heart, X } from '@/components/ui/Icon';
 import { cn } from "@/lib/utils";
 import { useDisclosure } from '@/hooks/core/useDisclosure';
@@ -160,7 +160,7 @@ export function TagEditor({
         )}
       </div>
 
-      <Modal open={!!activeActionTag} onClose={() => setActiveActionTag(null)} hidePadding={false}>
+      <NativeDialog open={!!activeActionTag} onClose={() => setActiveActionTag(null)} hidePadding={false}>
           <div
             className="w-full max-w-[280px] space-y-6"
             onClick={(e) => e.stopPropagation()}
@@ -226,7 +226,7 @@ export function TagEditor({
               取消操作 / CANCEL
             </button>
           </div>
-      </Modal>
+      </NativeDialog>
 
       {activeActionTag && (
         <ConfirmDialog

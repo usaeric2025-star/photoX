@@ -1,2 +1,2 @@
-export { PhotoEditModal } from './PhotoEditModal';
+export { PhotoEditDialog } from './PhotoEditDialog';
 export * from './PhotoTagSelector';

@@ -23,7 +23,7 @@ const BatchEditScreen = lazy(() => import('@/features/batch-edit/BatchEditScreen
 const StatisticsScreen = lazy(() => import('@/features/statistics/components/StatisticsScreen').then(m => ({ default: m.StatisticsScreen })));
 const DiagnosticsDashboard = lazy(() => import('@/features/diagnostics/DiagnosticsDashboard').then(m => ({ default: m.DiagnosticsDashboard })));
 const SettingsPage = lazy(() => import('@/features/settings/SettingsPage').then(m => ({ default: m.SettingsPage })));
-import { PhotoEditModal } from '@/features/photo-edit';
+import { PhotoEditDialog } from '@/features/photo-edit';
 
 export function AdminPageContent() {
   const filters = useFilters({ enableStatus: true, enableBatch: true });
@@ -140,7 +140,7 @@ export function AdminPageContent() {
           store.update({ uploadModeDialogOpen: false, pendingFiles: null });
         }}
       />
-      <PhotoEditModal />
+      <PhotoEditDialog />
     </AdminAuthGate>
   );
 }

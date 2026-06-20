@@ -1,6 +1,6 @@
 import React from 'react';
 import { useField, useFormContext } from "el-form-react-hooks";
-import { Modal } from '@/components/ui/Modal';
+import { NativeDialog } from '@/components/ui/NativeDialog';
 import { usePhotoEditSessionContext } from '@/hooks/photo/usePhotoEditSessionContext';
 import { Lock, Loader2, Maximize2, X } from '@/components/ui/Icon';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
@@ -130,7 +130,7 @@ export function BasicInfoTab() {
         </div>
       </div>
 
-      <Modal open={zoomed && !!previewSrc} onClose={closeZoom} size="screen" hidePadding={true} showCloseButton={false}>
+      <NativeDialog open={zoomed && !!previewSrc} onClose={closeZoom} size="screen" hidePadding={true} showCloseButton={false}>
           <div className="relative w-full h-full flex items-center justify-center p-4 lg:p-12 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
             <button 
               onClick={closeZoom}
@@ -145,7 +145,7 @@ export function BasicInfoTab() {
               alt="Zoomed" 
             />
           </div>
-      </Modal>
+      </NativeDialog>
     </div>
   );
 }

@@ -25,15 +25,15 @@ import { showToast } from "@/lib/ui/toast";
 import { useUIStore } from "@/store";
 import { usePhotoEditAI } from "./usePhotoEditAI";
 
-interface ModalHeaderProps {
+interface DialogHeaderProps {
   onClose: () => void;
   onDeleteClick: () => void;
 }
 
-export function ModalHeader({
+export function DialogHeader({
   onClose,
   onDeleteClick,
-}: ModalHeaderProps) {
+}: DialogHeaderProps) {
   const { commit, isPending } = usePhotoEditSessionContext();
   const { form } = useFormContext();
   const { value: isHidden } = useField('is_hidden');

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Modal } from '@/components/ui/Modal';
+import { NativeDialog } from '@/components/ui/NativeDialog';
 import { useUIStore } from '@/store/useUIStore';
 import { usePublicSettings } from '@/hooks/settings/useSettings';
 import { Heart, Sparkles } from '@/components/ui/Icon';
@@ -21,7 +21,7 @@ export const WhatsAppDialog = () => {
   }, [settings]);
 
   return (
-    <Modal open={!!show} onClose={() => update({ showWhatsAppChoice: false })}>
+    <NativeDialog open={!!show} onClose={() => update({ showWhatsAppChoice: false })}>
       <div className="w-full p-6">
         <h3 className="font-bold text-lg mb-4 text-slate-800">选择咨询方式</h3>
         {options.length === 0 ? (
@@ -44,6 +44,6 @@ export const WhatsAppDialog = () => {
           </div>
         )}
       </div>
-    </Modal>
+    </NativeDialog>
   );
 };

@@ -5,7 +5,7 @@ import { handleError } from '@/lib/error/errorHandler';
 
 export function useMaintenanceExecution(issueId: string, title: string, onSuccess?: () => void) {
   const [preview, setPreview] = useState<PreviewResult | null>(null);
-  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -21,7 +21,7 @@ export function useMaintenanceExecution(issueId: string, title: string, onSucces
       const result = await action.preview?.();
       setPreview(result || null);
       if (result && result.affectedPhotos && result.affectedPhotos.length > 0) {
-        setShowPreviewModal(true);
+        setShowPreviewDialog(true);
       }
     } catch (e: unknown) {
       handleError(e, '预检工具');
@@ -92,7 +92,7 @@ export function useMaintenanceExecution(issueId: string, title: string, onSucces
 
   return {
     preview, setPreview,
-    showPreviewModal, setShowPreviewModal,
+    showPreviewDialog, setShowPreviewDialog,
     isExecuting, isPreviewing, progress,
     handlePreview, handleExecute, action
   };

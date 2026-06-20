@@ -3,7 +3,7 @@ import Lightbox from 'yet-another-react-lightbox';
 import Thumbnails from 'yet-another-react-lightbox/plugins/thumbnails';
 import Download from 'yet-another-react-lightbox/plugins/download';
 import { useTranslation } from '@/hooks';
-import { Modal } from '@/components/ui/Modal';
+import { NativeDialog } from '@/components/ui/NativeDialog';
 import { downloadPhotoAsJpeg } from '@/services/photo/downloadService';
 import { Edit, Copy } from '@/components/ui/Icon';
 import { Photo } from '@/types';
@@ -42,7 +42,7 @@ export function YarlLightbox({
   onDelete,
   onSetCover,
 }: YarlLightboxProps) {
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
   const { lang, uiTranslations: t } = useTranslation();
 
   const slides = React.useMemo(() => items.map((item) => ({
@@ -86,7 +86,7 @@ export function YarlLightbox({
       <button
         key="info-btn"
         type="button"
-        onClick={() => setIsDetailModalOpen(true)}
+        onClick={() => setIsDetailDialogOpen(true)}
         className="yarl__button flex items-center justify-center cursor-pointer transition-transform duration-150 hover:scale-105"
         title="產品資訊"
       >
@@ -162,9 +162,9 @@ export function YarlLightbox({
       />
 
       {/* 完整版的資訊卡彈窗 */}
-      <Modal
-        open={isDetailModalOpen}
-        onClose={() => setIsDetailModalOpen(false)}
+      <NativeDialog
+        open={isDetailDialogOpen}
+        onClose={() => setIsDetailDialogOpen(false)}
         title={currentItem?.title || t.furnitureRecord}
         size="md"
         className="text-slate-800"
@@ -281,7 +281,7 @@ export function YarlLightbox({
             </div>
           )}
         </div>
-      </Modal>
+      </NativeDialog>
     </>
   );
 }

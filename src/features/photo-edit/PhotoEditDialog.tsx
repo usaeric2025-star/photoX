@@ -1,5 +1,5 @@
 import React from "react";
-import { Modal } from "@/components/ui/Modal";
+import { NativeDialog } from "@/components/ui/NativeDialog";
 import { useUIStore } from "@/store";
 import { 
   usePhoto,
@@ -10,7 +10,7 @@ import { AutoForm } from '@/components/form/AutoForm';
 import { PhotoEditSchema } from '@/schemas/photo';
 import { Photo } from '@/types';
 
-function PhotoEditModalContent({ editPhotoId, handleClose }: { editPhotoId: string; handleClose: () => void }) {
+function PhotoEditDialogContent({ editPhotoId, handleClose }: { editPhotoId: string; handleClose: () => void }) {
   const { data: photo, isPending } = usePhoto(editPhotoId);
   const updateMutation = usePhotoEditMutation();
 
@@ -52,13 +52,13 @@ function PhotoEditModalContent({ editPhotoId, handleClose }: { editPhotoId: stri
   );
 }
 
-interface PhotoEditModalProps {
+interface PhotoEditDialogProps {
   isOpen?: boolean;
   onClose?: () => void;
   editPhotoId?: string | null;
 }
 
-export function PhotoEditModal({ isOpen: propIsOpen, onClose: propOnClose, editPhotoId: propEditPhotoId }: PhotoEditModalProps) {
+export function PhotoEditDialog({ isOpen: propIsOpen, onClose: propOnClose, editPhotoId: propEditPhotoId }: PhotoEditDialogProps) {
   const { modal, photoId, setModal } = useFilters();
   const urlEditPhotoId = modal === 'edit' ? photoId : null;
 
@@ -78,7 +78,7 @@ export function PhotoEditModal({ isOpen: propIsOpen, onClose: propOnClose, editP
   if (!isOpen) return null;
 
   return (
-    <Modal 
+    <NativeDialog 
       open={isOpen} 
       onClose={handleClose} 
       size="lg" 
@@ -86,10 +86,10 @@ export function PhotoEditModal({ isOpen: propIsOpen, onClose: propOnClose, editP
       description="修改照片的基本元数据、分类与属性"
       className="max-h-[90vh]"
     >
-      <PhotoEditModalContent 
+      <PhotoEditDialogContent 
         editPhotoId={editPhotoId || ''}
         handleClose={handleClose}
       />
-    </Modal>
+    </NativeDialog>
   );
 }

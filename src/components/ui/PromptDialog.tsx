@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Modal } from '@/components/ui/Modal';
+import { NativeDialog } from '@/components/ui/NativeDialog';
 import { Input } from '@/components/shared/Input';
 import { useUIStore } from '@/store/useUIStore';
 
@@ -44,7 +44,7 @@ export const PromptDialog = ({
   };
 
   return (
-    <Modal open={open} onClose={handleClose} hidePadding>
+    <NativeDialog open={open} onClose={handleClose} hidePadding>
       <div className="p-6">
         <h2 className="text-lg font-semibold">{title}</h2>
         {description && (
@@ -78,6 +78,6 @@ export const PromptDialog = ({
           </button>
         </div>
       </div>
-    </Modal>
+    </NativeDialog>
   );
 };

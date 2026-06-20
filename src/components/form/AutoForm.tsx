@@ -23,7 +23,7 @@ export function AutoForm<T extends Record<string, any>>({
   
   return (
     <ElAutoForm
-      // @ts-ignore: ElAutoForm types zod but accepts arktype
+      // @ts-ignore: ElAutoForm types zod but accepts arktype, passing arktype schema directly
       schema={schema}
       fields={activeFields}
       initialValues={defaultValues}

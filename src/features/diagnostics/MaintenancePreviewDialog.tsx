@@ -1,9 +1,9 @@
 import React from 'react';
-import { Modal } from "@/components/ui/Modal";
+import { NativeDialog } from "@/components/ui/NativeDialog";
 import { Button } from "@/components/shared/Button";
 import { PreviewResult } from "@/features/diagnostics/issueActions";
 
-interface MaintenancePreviewModalProps {
+interface MaintenancePreviewDialogProps {
   open: boolean;
   onClose: () => void;
   title: string;
@@ -12,16 +12,16 @@ interface MaintenancePreviewModalProps {
   onConfirm: () => void;
 }
 
-export function MaintenancePreviewModal({
+export function MaintenancePreviewDialog({
   open,
   onClose,
   title,
   preview,
   danger,
   onConfirm
-}: MaintenancePreviewModalProps) {
+}: MaintenancePreviewDialogProps) {
   return (
-    <Modal
+    <NativeDialog
       open={open}
       onClose={onClose}
       title={`${title} - 影响范围预览`}
@@ -75,6 +75,6 @@ export function MaintenancePreviewModal({
           </Button>
         </div>
       </div>
-    </Modal>
+    </NativeDialog>
   );
 }
