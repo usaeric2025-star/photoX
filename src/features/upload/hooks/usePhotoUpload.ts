@@ -26,7 +26,7 @@ export function usePhotoUpload() {
     const { newFiles: uniqueFiles, duplicateHashes } = checkDuplicateBatch(fileArray);
 
     if (duplicateHashes.length > 0) {
-      showToast.warning(`已跳过 ${duplicateHashes.length} 张本地重复照片`);
+      showToast.info(`已自动合并 ${duplicateHashes.length} 张重复照片`);
     }
 
     if (uniqueFiles.length === 0) return;

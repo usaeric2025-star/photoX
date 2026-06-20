@@ -29,6 +29,7 @@ export const gallerySearchValidator = (search: Record<string, unknown>): Gallery
     status: (search.status as string) || undefined,
     batch: (search.batch as string) || undefined,
     modal: (search.modal as string) || undefined,
+    anchor: search.anchor === true || search.anchor === 'true' ? true : (search.anchor === false || search.anchor === 'false' ? false : undefined),
   };
 };
 
@@ -80,6 +81,7 @@ export const groupRoute = createRoute({
       groupId: (search.groupId as string) || undefined,
       columns: (search.columns as string) || undefined,
       showGroupsCollapsed: search.showGroupsCollapsed === false || search.showGroupsCollapsed === 'false' ? false : (search.showGroupsCollapsed === true || search.showGroupsCollapsed === 'true' ? true : undefined),
+      anchor: search.anchor === true || search.anchor === 'true' ? true : (search.anchor === false || search.anchor === 'false' ? false : undefined),
     };
   },
   loader: ({ params: { groupId }, context }) => {

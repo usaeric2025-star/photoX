@@ -29,4 +29,5 @@ export interface GallerySearchParams {
   status?: string;
   batch?: string;
   modal?: string;
+  anchor?: boolean;
 }

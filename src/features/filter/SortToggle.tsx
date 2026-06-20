@@ -12,7 +12,7 @@ export function SortToggle() {
   return (
     <button
       onClick={handleClick}
-      className="p-2 border rounded-lg bg-white hover:bg-gray-50 transition"
+      className="h-10 w-10 flex items-center justify-center rounded-full bg-surface-soft text-text-main border border-border-bold hover:bg-surface-mute transition-all active:scale-95 shrink-0"
       title={isNewest ? '最新' : '最舊'}
     >
       <ArrowUpDown size={18} />

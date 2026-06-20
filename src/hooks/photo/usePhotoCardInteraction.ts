@@ -46,9 +46,16 @@ export function usePhotoCardInteraction({
      setPhotoId(photo.id);
    };
     
-  const handleGroupNavigate = (gid: string) => {
+  const handleGroupNavigate = (gid: string, anchorPhotoId?: string) => {
     const targetPath = isManagement ? `/admin/group/${gid}` : `/group/${gid}`;
-    navigate({ to: targetPath, search: (prev: any) => prev });
+    navigate({ 
+      to: targetPath, 
+      search: (prev: any) => ({ 
+        ...prev, 
+        photoId: anchorPhotoId || prev.photoId, 
+        anchor: !!anchorPhotoId || undefined 
+      }) 
+    });
   };
 
   const handleMouseEnter = () => {
@@ -87,13 +94,23 @@ export function usePhotoCardInteraction({
     }
 
     const isAlreadyOnGroupPage = location?.pathname?.includes('/group/');
+    const shouldGoToGroup = photo.groupId && showGroupsCollapsed && !isAlreadyOnGroupPage;
 
-    if (photo.groupId && showGroupsCollapsed && !hasSearchQuery && !isAlreadyOnGroupPage) {
-      logger.debug('[usePhotoCardInteraction] NAVIGATING to group:', photo.groupId);
-      e.stopPropagation();
-      e.preventDefault();
-      handleGroupNavigate(photo.groupId!);
-      return;
+    if (shouldGoToGroup) {
+      if (!hasSearchQuery) {
+        logger.debug('[usePhotoCardInteraction] NAVIGATING to group (Normal):', photo.groupId);
+        e.stopPropagation();
+        e.preventDefault();
+        handleGroupNavigate(photo.groupId!);
+        return;
+      } else {
+        // From search result: navigate with anchor
+        logger.debug('[usePhotoCardInteraction] NAVIGATING to group (From Search with Anchor):', photo.groupId);
+        e.stopPropagation();
+        e.preventDefault();
+        handleGroupNavigate(photo.groupId!, photo.id);
+        return;
+      }
     }
 
     logger.debug('[usePhotoCardInteraction] OPENING Lightbox');

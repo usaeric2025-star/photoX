@@ -331,3 +331,61 @@ storageMaintenance.post("/storage/repair-hashes", async (c) => {
     return c.json({ success: false, error: (e as Error).message }, 500);
   }
 });
+
+storageMaintenance.post("/storage/deduplicate", async (c) => {
+  try {
+    await requireRealUser(c);
+    
+    // 1. Fetch all records with hash to identify duplicates
+    const records = await db.select({
+      id: furnitureItems.id,
+      imageHash: furnitureItems.imageHash,
+      userId: furnitureItems.userId,
+      imageUrl: furnitureItems.imageUrl,
+      createdAt: furnitureItems.createdAt
+    }).from(furnitureItems)
+    .where(sql`${furnitureItems.imageHash} IS NOT NULL AND ${furnitureItems.imageHash} != ''`);
+
+    // 2. Group by user_id and image_hash
+    const groups: Record<string, typeof records> = {};
+    records.forEach(r => {
+      const key = `${r.userId}_${r.imageHash}`;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(r);
+    });
+
+    let removedCount = 0;
+    const idsToRemove: string[] = [];
+
+    // 3. Keep the oldest, mark others for removal
+    for (const key in groups) {
+      const group = groups[key];
+      if (group.length > 1) {
+        // Sort by created_at ascending to keep the oldest
+        group.sort((a, b) => {
+          const timeA = a.createdAt?.getTime() || 0;
+          const timeB = b.createdAt?.getTime() || 0;
+          return timeA - timeB;
+        });
+        
+        const [oldest, ...duplicates] = group;
+        duplicates.forEach(d => idsToRemove.push(d.id));
+      }
+    }
+
+    if (idsToRemove.length > 0) {
+      // Use inArray for batch delete
+      await db.delete(furnitureItems).where(inArray(furnitureItems.id, idsToRemove));
+      removedCount = idsToRemove.length;
+    }
+
+    return c.json({ 
+      success: true, 
+      count: removedCount,
+      message: `成功自动清理了 ${removedCount} 条重复记录。`
+    });
+  } catch (e: unknown) {
+    logger.error("Deduplication failed:", e);
+    return c.json({ success: false, error: (e as Error).message }, 500);
+  }
+});

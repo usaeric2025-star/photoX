@@ -121,5 +121,13 @@ export const ISSUE_ACTIONS: Record<string, IssueAction> = {
       const data = await res.json() as any;
       return { message: data.message || "Schema 同步成功", ...data };
     }
+  },
+  "duplicate-photos": {
+    name: "自动清理重复照片",
+    execute: async () => {
+      const res = await (api as any).storage.deduplicate.$post();
+      const data = await res.json() as any;
+      return { message: data.message || "重复记录清理完成", ...data };
+    }
   }
 };

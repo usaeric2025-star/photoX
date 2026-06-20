@@ -25,24 +25,24 @@ export const PhotoStatusBadges = ({
   const hiddenLabel = lang === 'zh' ? '已隐藏' : lang === 'ms' ? 'Sembunyi' : 'Hidden';
 
   return (
-    <div className="absolute top-1.5 left-1.5 flex flex-col items-start gap-1 pointer-events-none select-none">
-      {/* Group Badge - Optimized: only show count, remove UUID-like code as per user request */}
-      {shouldShowGroup && (
+    <div className="absolute top-2 left-2 flex flex-col items-start gap-1 pointer-events-none select-none">
+      {/* Group Badge - Apple Style: pill, backdrop-blur */}
+      {shouldShowGroup && typeof photo.memberCount === 'number' && photo.memberCount > 1 && (
         <div className={cn(
-          "px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-sm text-[8px] sm:text-[9px] font-black flex items-center gap-1 shadow-lg border backdrop-blur-md transition-all duration-300",
-          "bg-white/90 text-brand-navy border-white/20"
+          "px-2 py-0.5 sm:px-2.5 sm:py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold flex items-center gap-1 shadow-sm backdrop-blur-xl transition-all duration-300 min-w-[36px] justify-center",
+          "bg-surface-overlay text-text-main border border-white/40"
         )}>
-          <Layers size={10} strokeWidth={3} className="shrink-0 text-brand-gold" />
-          <span className="tracking-tighter uppercase">
-            {typeof photo.memberCount === 'number' && `${photo.memberCount}`}
+          <Layers size={11} className="shrink-0 text-primary" />
+          <span className="leading-none tabular-nums mt-[0.5px] px-0.5">
+            {photo.memberCount}
           </span>
         </div>
       )}
 
-      {/* Hidden Status */}
+      {/* Hidden Status - Apple Style */}
       {isManagement && photo.isHidden && (
-        <div className="bg-rose-600 text-white px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-sm text-[8px] sm:text-[9.5px] font-black flex items-center gap-1.5 shadow-lg border border-rose-500/50 uppercase tracking-tighter">
-          <ShieldAlert size={10} strokeWidth={3} className="shrink-0" />
+        <div className="bg-danger/95 backdrop-blur-md text-text-on-primary px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1.5 shadow-sm border border-white/20 uppercase tracking-tight">
+          <ShieldAlert size={12} className="shrink-0" />
           <span>{hiddenLabel}</span>
         </div>
       )}
@@ -65,14 +65,14 @@ export const PhotoCardInfo = ({
   if (hideDetails) return null;
 
   return (
-    <div className="absolute inset-x-0 bottom-0 p-2 sm:p-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-      <h4 className="text-white font-bold text-xs truncate mb-1">{photoName}</h4>
+    <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+      <h4 className="text-white font-semibold text-sm sm:text-base truncate mb-0.5">{photoName}</h4>
       {photoTags && photoTags.length > 0 && (
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-1.5 mt-1">
           {photoTags.map(tag => (
             <span 
               key={tag} 
-              className="shrink-0 text-[8px] sm:text-[9px] bg-white/20 backdrop-blur-md text-white px-1.5 py-0.5 rounded-sm font-bold tracking-tight uppercase border border-white/20"
+              className="shrink-0 text-[10px] sm:text-[11px] bg-white/20 backdrop-blur-lg text-white px-2 py-0.5 rounded-full font-medium tracking-tight border border-white/10"
             >
               #{tag}
             </span>
@@ -88,11 +88,11 @@ export const PhotoCardInfo = ({
  */
 export const PhotoSelectionIndicator = ({ isSelected }: { isSelected: boolean }) => (
   <div className={cn(
-    "absolute top-2 right-2 w-5 h-5 rounded-full border-2 transition-all duration-300 flex items-center justify-center",
+    "absolute top-2 right-2 w-6 h-6 rounded-full border-2 transition-all duration-300 flex items-center justify-center shadow-[var(--shadow-apple-sm)]",
     isSelected 
-      ? "bg-blue-500 border-blue-500 scale-110 shadow-lg shadow-blue-500/50" 
-      : "bg-black/20 border-white/50 opacity-0 group-hover:opacity-100"
+      ? "bg-apple-blue border-apple-blue scale-110 shadow-[var(--shadow-apple-md)]" 
+      : "bg-black/10 border-white/40 opacity-0 group-hover:opacity-100"
   )}>
-    {isSelected && <Check size={12} className="text-white" strokeWidth={4} />}
+    {isSelected && <Check size={14} className="text-white" />}
   </div>
 );

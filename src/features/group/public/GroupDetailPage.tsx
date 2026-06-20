@@ -42,15 +42,37 @@ export function PublicGroupDetailPage() {
   const updateUI = useUIStore((s) => s.update);
   const { data: settings } = usePublicSettings();
 
-  const lightboxIndex = React.useMemo(() => {
-    if (!photoId) return -1;
-    return photos.findIndex((p) => p.id === photoId);
-  }, [photoId, photos]);
-
-  const lightboxOpen = lightboxIndex !== -1;
-  
   const { lang, uiTranslations: t } = useTranslation();
   const { data: categories = [] } = useCategories();
+  const { anchor, setAnchor } = useFilters();
+
+  // Anchoring effect
+  React.useEffect(() => {
+    if (anchor && photoId && !loading && photos.length > 0) {
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        const element = document.querySelector(`[data-photo-id="${photoId}"]`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Add a temporary highlight effect 
+          element.classList.add('ring-4', 'ring-primary', 'scale-95');
+          setTimeout(() => {
+             element.classList.remove('ring-4', 'ring-primary', 'scale-95');
+             // Clear anchor from URL so it doesn't trigger again on reload
+             setAnchor(false);
+          }, 2000);
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [anchor, photoId, loading, photos.length]);
+
+  const lightboxIndex = React.useMemo(() => {
+    if (!photoId || anchor) return -1;
+    return photos.findIndex((p) => p.id === photoId);
+  }, [photoId, photos, anchor]);
+
+  const lightboxOpen = lightboxIndex !== -1;
   
   const lightboxItems = photos.map((p) => {
     return {

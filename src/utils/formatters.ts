@@ -1,4 +1,4 @@
-import { formatDate, formatDateTime, timeAgo } from '@/lib/date';
+import { formatDate, formatDateTime, formatTime, timeAgo } from '@/lib/date';
 
 export const formatters = {
   // Date/Time
@@ -6,12 +6,7 @@ export const formatters = {
   
   dateTime: (date: Date | string | number | null | undefined) => formatDateTime(date),
 
-  time: (date: Date | string | number | null | undefined) => {
-    const dt = formatDateTime(date);
-    if (dt === '-') return '-';
-    const parts = dt.split(' ');
-    return parts.length > 1 ? parts[1] : parts[0];
-  },
+  time: (date: Date | string | number | null | undefined) => formatTime(date),
 
   relative: (date: Date | string | number | null | undefined) => timeAgo(date),
 

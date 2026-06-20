@@ -22,7 +22,7 @@ export function useUploadProgress() {
   const completeUploadBatch = useCallback((taskId: string, successCount: number, skippedCount: number, failureCount: number, totalFiles: number) => {
     const summaryMsg = [
       successCount > 0 && `成功 ${successCount}`,
-      skippedCount > 0 && `跳过重復 ${skippedCount}`,
+      skippedCount > 0 && `合并重复 ${skippedCount}`,
       failureCount > 0 && `失败 ${failureCount}`
     ].filter(Boolean).join(', ');
 

@@ -47,8 +47,8 @@ export default defineConfig(({mode}) => {
             }
             
             // Layer 2: UI 元件與圖標 (依賴 Layer 0, 1)
-            // 包含 Icon Sprite, Sonner, Lightbox, Virtua, 動畫等
-            if (/\/node_modules\/(@react-zero-ui\/icon-sprite|@radix-ui|sonner|yet-another-react-lightbox|virtua|motion|el-form-react-components|el-form-react-hooks)\//.test(id)) {
+            // 包含 Sonner, Lightbox, Virtua, 動畫等
+            if (/\/node_modules\/(@radix-ui|sonner|yet-another-react-lightbox|virtua|motion|el-form-react-components|el-form-react-hooks)\//.test(id)) {
               return 'vendor-ui';
             }
             

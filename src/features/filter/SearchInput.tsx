@@ -29,27 +29,27 @@ export function SearchInput() {
   };
 
   return (
-    <div className="relative">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+    <div className="relative group">
+      <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-mute transition-colors group-focus-within:text-primary" />
       <input
         type="text"
         id="global-search-input"
         value={inputValue}
         onChange={handleChange}
-        placeholder={t.searchPlaceholder || "搜尋照片..."}
-        className="w-full pl-9 pr-9 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        placeholder={t.searchPlaceholder || "正在搜索..."}
+        className="w-full pl-10 pr-10 h-10 bg-surface-soft border-none rounded-full focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-sm placeholder:text-text-mute"
       />
       {inputValue && (
         <button 
           onClick={handleClear}
-          className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-gray-100"
+          className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-text-mute hover:bg-surface-mute transition-colors active:scale-95"
         >
-          <X className="w-4 h-4 text-gray-400" />
+          <X size={18} />
         </button>
       )}
       {!inputValue && isPending && (
-        <div className="absolute right-3 top-1/2 -translate-y-1/2">
-          <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+        <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
+          <div className="w-4 h-4 border-2 border-surface-mute border-t-primary rounded-full animate-spin" />
         </div>
       )}
     </div>

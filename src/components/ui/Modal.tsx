@@ -95,37 +95,37 @@ export function Modal({
       onClick={handleBackdropClick}
       className={`
         m-auto
-        animate-in fade-in zoom-in-95 duration-200
+        animate-in fade-in zoom-in-95 duration-300 ease-apple
         ${sizeClasses[size]}
-        ${size === 'screen' ? '' : 'rounded-2xl border border-slate-100'}
-        w-full shadow-2xl bg-white
-        backdrop:bg-black/60 backdrop:backdrop-blur-sm
+        ${size === 'screen' ? '' : 'rounded-xl shadow-xl'}
+        w-full bg-surface-base border-none
+        backdrop:bg-black/40 backdrop:backdrop-blur-xl
         p-0 overflow-hidden outline-none ${className}
       `}
       id="unified-app-modal"
     >
       <div className={`flex flex-col w-full relative ${size === 'screen' ? 'h-full max-h-none' : 'max-h-[90vh]'}`}>
-        {/* Close Button */}
+        {/* Close Button - Apple Style */}
         {showCloseButton && (
           <button
             onClick={onClose}
-            className="absolute right-4 top-4 p-2 rounded-full text-slate-400 hover:bg-slate-100 transition-colors bg-white/80 backdrop-blur-sm shadow-sm border border-slate-100"
+            className="absolute right-4 top-4 p-2 rounded-full text-text-sub hover:text-text-main hover:bg-surface-soft transition-all active:scale-95 z-50"
             aria-label="关闭"
           >
-            <Icon name="X" size={18} />
+            <Icon name="XCircle" size={26} solid className="opacity-20 hover:opacity-100 transition-opacity" />
           </button>
         )}
 
-        {/* Title area */}
+        {/* Title area - Apple Style: Integrated, no border if no title */}
         {(title || description) && (
-          <div className="border-b border-slate-100 px-6 py-4 flex flex-col gap-1 shrink-0 bg-slate-50/50">
+          <div className="px-6 pt-6 pb-2 flex flex-col gap-1 shrink-0">
             {title && (
-              <h2 className="text-lg font-bold text-slate-900 tracking-tight leading-none" id="modal-title">
+              <h2 className="text-[22px] font-bold text-text-main tracking-tight" id="modal-title">
                 {title}
               </h2>
             )}
             {description && (
-              <p className="text-xs text-slate-500 leading-normal mt-1" id="modal-desc">
+              <p className="text-[15px] text-text-sub leading-relaxed" id="modal-desc">
                 {description}
               </p>
             )}

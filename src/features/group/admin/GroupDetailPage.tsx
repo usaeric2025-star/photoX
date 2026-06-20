@@ -54,17 +54,39 @@ export function AdminGroupDetailPage() {
   
   const { group, photos, totalCount, loading, error } = useGroupData({ groupId, isAdmin: true });
 
+  const { lang, uiTranslations: t } = useTranslation();
+  const { data: categories = [] } = useCategories();
+  const { anchor, setAnchor } = useFilters();
+
+  // Anchoring effect
+  React.useEffect(() => {
+    if (anchor && photoId && !loading && photos.length > 0) {
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        const element = document.querySelector(`[data-photo-id="${photoId}"]`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Add a temporary highlight effect 
+          element.classList.add('ring-4', 'ring-primary', 'scale-95');
+          setTimeout(() => {
+             element.classList.remove('ring-4', 'ring-primary', 'scale-95');
+             // Clear anchor from URL so it doesn't trigger again on reload
+             setAnchor(false);
+          }, 2000);
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [anchor, photoId, loading, photos.length]);
+
   const lightboxIndex = React.useMemo(() => {
-    if (!photoId) return -1;
+    if (!photoId || anchor) return -1;
     return photos.findIndex((p) => p.id === photoId);
-  }, [photoId, photos]);
+  }, [photoId, photos, anchor]);
 
   const lightboxOpen = lightboxIndex !== -1;
   const [showAdminTools, setShowAdminTools] = useState(false);
   const isMultiSelect = useUIStore((s) => s.isMultiSelect);
-  
-  const { lang, uiTranslations: t } = useTranslation();
-  const { data: categories = [] } = useCategories();
 
   const adminActions = useAdminMaintenance();
   const { handleBatchAiIdentifyTrigger } = useAdminBatchActions();

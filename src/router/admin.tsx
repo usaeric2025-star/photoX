@@ -68,6 +68,7 @@ export const adminGroupRoute = createRoute({
     return {
       photoId: (search.photoId as string) || undefined,
       columns: (search.columns as string) || undefined,
+      anchor: search.anchor === true || search.anchor === 'true' ? true : (search.anchor === false || search.anchor === 'false' ? false : undefined),
     } as GallerySearchParams;
   },
   loader: ({ params: { groupId }, context }) => {

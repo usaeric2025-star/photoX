@@ -12,10 +12,12 @@ export const GroupToggle = ({ showGroupsCollapsed, onClick }: GroupToggleProps) 
     onClick={onClick}
     title={showGroupsCollapsed ? 'Switch to separated view' : 'Switch to grouped view'}
     className={cn(
-      "p-2 border rounded-lg transition-colors flex items-center justify-center",
-      showGroupsCollapsed ? 'bg-slate-900 text-white hover:bg-slate-800 border-slate-900' : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-700'
+      "h-10 w-10 flex items-center justify-center rounded-full transition-all active:scale-95 border shrink-0",
+      showGroupsCollapsed 
+        ? "bg-primary text-text-on-primary border-primary shadow-md" 
+        : "bg-surface-soft text-text-main border-border-bold hover:bg-surface-mute"
     )}
   >
-    {showGroupsCollapsed ? <Layers size={18} /> : <Grid size={18} />}
+    {showGroupsCollapsed ? <Layers size={20} /> : <Grid size={20} />}
   </button>
 );

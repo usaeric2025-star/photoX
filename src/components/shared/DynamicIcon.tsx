@@ -26,9 +26,16 @@ export interface DynamicIconProps {
 
 export const DynamicIcon = ({ name, className, size, ...props }: DynamicIconProps) => {
   const iconName = map[name] as IconName;
-  if (!iconName) {
-    // Fallback: try to use the raw name as IconName if it exists
-    return <Icon name={name as IconName} className={className} size={size} {...props} />;
+  
+  if (iconName) {
+    return <Icon name={iconName} className={className} size={size} {...props} />;
   }
-  return <Icon name={iconName} className={className} size={size} {...props} />;
+
+  // Robust fallback: convert kebab-case to PascalCase (e.g. arrow-up -> ArrowUp)
+  const pascalName = name
+    .split('-')
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join('') as IconName;
+
+  return <Icon name={pascalName} className={className} size={size} {...props} />;
 };

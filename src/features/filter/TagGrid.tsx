@@ -39,24 +39,24 @@ export function TagGrid({ onClose }: { onClose?: () => void }) {
   const hasSelectedTags = filters.tagIds.length > 0;
 
   return (
-    <div className="border-t border-slate-100/50 pt-3 mt-1">
+    <div className="border-t border-border-soft/50 pt-3 mt-1">
       <div className="flex items-center justify-between pb-2">
-        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-tight">
+        <span className="text-[11px] font-bold text-text-mute uppercase tracking-tight">
           🏷️ 標籤篩選 ({tagsToRender.length})
         </span>
         {hasSelectedTags && (
           <button
             onClick={clearTags}
-            className="px-2 py-0.5 rounded-sm text-[9px] font-black bg-rose-50 text-rose-500 hover:bg-rose-100 transition cursor-pointer"
+            className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-danger/10 text-danger hover:bg-danger/20 transition cursor-pointer"
           >
-            重置選擇
+            重置
           </button>
         )}
       </div>
 
       <div className="flex gap-3 items-start select-none">
-        {/* Tag container - show all tags */}
-        <div className="flex flex-wrap gap-2 flex-1 min-w-0 pr-1">
+        {/* Tag container - show all tags with scroll if too many */}
+        <div className="flex flex-wrap gap-2.5 flex-1 min-w-0 pr-1 max-h-60 sm:max-h-80 overflow-y-auto custom-scrollbar px-1 py-1">
           {tagsToRender.map(tag => {
             const isSelected = filters.tagIds.includes(String(tag.id));
             const isPinned = pinnedIds.includes(String(tag.id)) || tag.is_pinned;
@@ -66,19 +66,19 @@ export function TagGrid({ onClose }: { onClose?: () => void }) {
               <button
                 key={tag.id}
                 onClick={() => toggleTag(String(tag.id))}
-                className={`px-1.5 py-0.5 rounded-sm text-[9px] font-medium transition-all duration-200 cursor-pointer flex items-center gap-1 border shadow-xs leading-none uppercase ${
+                className={`px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all duration-300 cursor-pointer flex items-center gap-1 leading-none ${
                   isSelected
-                    ? 'bg-slate-950 text-white border-slate-950 scale-105'
+                    ? 'bg-primary text-text-on-primary shadow-sm scale-105'
                     : isPinned
-                    ? 'bg-brand-gold/15 text-brand-gold border-brand-gold/30 hover:bg-brand-gold/25'
+                    ? 'bg-warning/15 text-warning hover:bg-warning/25'
                     : isHot
-                    ? 'bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100'
-                    : 'bg-slate-50 text-slate-500 border-slate-100/80 hover:border-slate-200 hover:bg-slate-100'
+                    ? 'bg-danger/5 text-danger hover:bg-danger/10'
+                    : 'bg-surface-soft text-text-sub hover:text-text-main hover:bg-surface-mute shadow-sm'
                 }`}
               >
-                {isPinned && <span className="text-[8px]">📌</span>}
-                {!isPinned && isHot && <span className="text-[8px] animate-pulse">🔥</span>}
-                <span className="tracking-tight truncate max-w-[60px]">{tag.name}</span>
+                {isPinned && <span className="text-[10px]">📌</span>}
+                {!isPinned && isHot && <span className="text-[10px] animate-pulse">🔥</span>}
+                <span className="tracking-tight truncate max-w-[80px]">{tag.name}</span>
               </button>
             );
           })}

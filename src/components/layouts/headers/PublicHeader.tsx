@@ -1,5 +1,6 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React from 'react';
+import { cn } from '@/lib/utils';
 import { DynamicIcon } from '../../shared/DynamicIcon';
 import { Camera } from '@/components/ui/Icon'; // Keep one or two critical ones as standard imports for P0 performance
 import { useAuthStore } from '@/store/useAuthStore';
@@ -51,17 +52,17 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
     }
   };
 
-  // Public header should always be white, regardless of user role
-  const headerBgClass = "bg-white border-slate-200 text-slate-800";
+  // Apple header style: white with blur and subtle bottom border
+  const headerBgClass = "bg-surface-overlay backdrop-blur-2xl border-border-soft text-text-main";
 
   return (
-    <header className={`h-14 sm:h-16 shrink-0 border-b px-2.5 sm:px-4 flex items-center justify-between font-sans transition-colors duration-300 ${headerBgClass}`}>
+    <header className={cn("h-14 sm:h-16 shrink-0 border-b px-2.5 sm:px-6 flex items-center justify-between transition-all duration-300", headerBgClass)}>
       {/* 左侧：Logo & 计数 */}
-      <div className="flex items-center gap-1 sm:gap-3 shrink-0 flex-nowrap">
+      <div className="flex items-center gap-2 sm:gap-4 shrink-0 flex-nowrap">
         {logoUrl && logoUrl.trim() !== '' ? (
           <img 
             src={logoUrl} 
-            className="h-7 sm:h-9 w-auto object-contain shrink-0" 
+            className="h-8 sm:h-10 w-auto object-contain shrink-0" 
             alt="Logo" 
             loading="lazy"
             onLoad={() => {
@@ -71,19 +72,22 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
             }}
           />
         ) : (
-          <div className="flex items-center gap-1 font-bold tracking-tighter">
-            <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl flex items-center justify-center shadow-sm text-white shrink-0 ${role === 'admin' ? 'bg-indigo-600' : role === 'staff' ? 'bg-amber-600' : 'bg-blue-600'}`}>
-              <Camera size={14} className="sm:size-4 stroke-[2.5]" />
+          <div className="flex items-center gap-1.5 px-1">
+            <div className={cn(
+              "w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shadow-sm text-text-on-primary shrink-0",
+              role === 'admin' ? 'bg-primary' : role === 'staff' ? 'bg-warning' : 'bg-primary'
+            )}>
+              <Camera size={18} />
             </div>
-            <span className="text-sm sm:text-lg font-black tracking-tighter">
-              PHOT<span className={`${role === 'admin' ? 'text-indigo-600' : role === 'staff' ? 'text-amber-600' : 'text-blue-600'}`}>O</span>X
+            <span className="text-base sm:text-xl font-bold tracking-tight text-text-main">
+              PhotoX
             </span>
             {role === 'admin' ? (
-              <span className="text-[8px] sm:text-[9px] font-black bg-indigo-600 text-white px-1.5 py-0.5 rounded-full uppercase tracking-wider ml-1 select-none">
+              <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-wide ml-1 select-none">
                 Admin
               </span>
             ) : role === 'staff' ? (
-              <span className="text-[8px] sm:text-[9px] font-black bg-amber-600 text-white px-1.5 py-0.5 rounded-full uppercase tracking-wider ml-1 select-none">
+              <span className="text-[10px] font-bold bg-warning/10 text-warning px-2 py-0.5 rounded-full uppercase tracking-wide ml-1 select-none">
                 Staff
               </span>
             ) : null}
@@ -91,41 +95,41 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing }: PublicHead
         )}
 
         {totalCount !== undefined && (
-          <span className="px-1.5 py-0.5 rounded-full bg-white/60 border border-slate-200/20 text-slate-500 text-[9px] font-bold whitespace-nowrap shrink-0 uppercase tracking-widest leading-none">
+          <span className="px-2 py-0.5 rounded-full bg-surface-soft text-text-sub text-[10px] font-medium whitespace-nowrap shrink-0 tracking-tight leading-none">
             {t.photosCount(totalCount)}
           </span>
         )}
       </div>
 
       {/* 右侧：刷新 & 管理/登录入口 */}
-      <div className="flex items-center gap-0.5 sm:gap-2 flex-nowrap shrink-0">
+      <div className="flex items-center gap-2 flex-nowrap shrink-0">
         
         {onRefresh && (
           <button 
             onClick={onRefresh}
             disabled={isRefreshing}
-            className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 border bg-white text-slate-600 border-slate-200 hover:bg-slate-100 disabled:opacity-50 shadow-sm"
+            className="w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 bg-surface-soft text-text-sub hover:text-text-main disabled:opacity-50"
             title={t.refresh}
           >
-            <DynamicIcon name="refresh-cw" size={16} className={isRefreshing ? 'animate-spin' : ''} />
+            <DynamicIcon name="refresh-cw" size={18} className={isRefreshing ? 'animate-spin' : ''} />
           </button>
         )}
 
-        {/* 3. 切换至管理后台按钮 (与 AdminHeader 统一使用 LayoutDashboard 图案的按钮和外观) */}
+        {/* 3. 切换至管理后台按钮 (Apple Style) */}
         <button
           onClick={handleAuthAction}
-          className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 border bg-white text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-900 shadow-sm"
+          className="w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 bg-surface-soft text-text-sub hover:text-text-main"
           title={isAdmin ? t.viewModePublic : t.viewModeAdmin}
         >
-          <DynamicIcon name="layout-dashboard" className="size-4.5 sm:size-5" />
+          <DynamicIcon name="layout-dashboard" size={18} />
         </button>
 
-        {/* 4. 菜单 (语言、登录、退出) */}
+        {/* 4. 菜单 (語言、登錄、退出) */}
         <DropdownMenu
           align="end"
           trigger={
-            <div className="h-9 w-9 sm:h-10 sm:w-10 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded-full transition-all cursor-pointer shrink-0 border border-slate-100 bg-white">
-              <DynamicIcon name="menu" size={22} />
+            <div className="h-10 w-10 flex items-center justify-center text-text-sub hover:bg-surface-soft rounded-full transition-all cursor-pointer shrink-0">
+              <DynamicIcon name="menu" size={18} />
             </div>
           }
         >

@@ -48,10 +48,10 @@ export const PhotoCardBase = ({
         ...props.style
       }}
       className={cn(
-        "aspect-square overflow-hidden cursor-pointer relative transition-all duration-300 group rounded-xl bg-white shadow-sm",
-        "active:scale-[0.98] md:hover:scale-[1.02]",
-        "data-[selected=true]:ring-4 data-[selected=true]:ring-blue-500 data-[selected=true]:scale-[0.96]",
-        isHidden && "opacity-80 grayscale-[0.3] ring-2 ring-rose-500/50 shadow-lg",
+        "aspect-square overflow-hidden cursor-pointer relative transition-all duration-300 group rounded-2xl bg-surface-base shadow-md",
+        "active:scale-[0.98]",
+        "data-[selected=true]:ring-4 data-[selected=true]:ring-primary data-[selected=true]:scale-[0.96]",
+        isHidden && "opacity-80 grayscale-[0.3] ring-2 ring-danger shadow-lg",
         className
       )}
       {...props}

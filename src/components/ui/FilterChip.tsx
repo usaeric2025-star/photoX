@@ -35,7 +35,7 @@ export const FilterChip = ({ label, selected, pinned, hot, onClick, onRemove, ic
       </span>
     )}
     {onRemove && (
-      <X size={10} onClick={(e) => { e.stopPropagation(); onRemove(); }} className="ml-1" />
+      <X size={10} onClick={(e: React.MouseEvent) => { e.stopPropagation(); onRemove(); }} className="ml-1" />
     )}
   </button>
 );

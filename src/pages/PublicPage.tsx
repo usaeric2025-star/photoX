@@ -158,7 +158,7 @@ export default function PublicPage() {
 
   if (isError) {
     return (
-      <div className="flex flex-col h-full w-full bg-slate-50">
+      <div className="flex flex-col h-full w-full bg-surface-soft">
         <PublicHeader totalCount={0} onRefresh={handleRefresh} isRefreshing={false} />
         <div className="flex-1 flex items-center justify-center p-8">
            <ErrorBoundary fallback={null}>
@@ -170,14 +170,20 @@ export default function PublicPage() {
   }
 
   return (
-    <div className="flex flex-col h-full min-h-screen w-full bg-slate-50 relative" id="public-view">
+    <div 
+      className="flex flex-col h-full w-full bg-surface-base relative" 
+      id="public-view"
+      style={{ height: '100dvh' }}
+    >
       <PublicHeader 
         totalCount={totalCount}
         onRefresh={handleRefresh}
         isRefreshing={isFetching}
       />
+      
       <FilterBar mode="public" />
-      <div className="flex-1 overflow-hidden relative">
+
+      <div className="flex-1 min-h-0 relative bg-surface-soft overflow-hidden">
         <ErrorBoundary>
           <PublicPhotoGrid 
             {...photoGridData}
@@ -189,16 +195,16 @@ export default function PublicPage() {
         </ErrorBoundary>
       </div>
 
-      {/* 懸浮按鈕組 (回到頂部 & WhatsApp 諮詢) */}
-      <div className="fixed bottom-6 right-6 flex flex-col gap-3">
+      {/* 懸浮按鈕組 (回到頂部 & WhatsApp 諮詢) - Apple Style */}
+      <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-40">
         {showScrollTop && (
           <button
             onClick={() => gridRef.current?.scrollToIndex(0)}
             type="button"
-            className="w-12 h-12 flex items-center justify-center rounded-full bg-white/95 backdrop-blur border border-slate-200 text-slate-700 shadow-lg hover:shadow-xl hover:bg-slate-50 transition-all active:scale-95 group focus:outline-none"
+            className="w-12 h-12 flex items-center justify-center rounded-full bg-surface-overlay backdrop-blur-xl text-text-main shadow-lg hover:bg-white transition-all active:scale-90 group focus:outline-none"
             title="回到頂部"
           >
-            <Icon name="ArrowUp" className="w-5 h-5 group-hover:-translate-y-0.5 transition-transform" />
+            <Icon name="ArrowUp" size={22} className="group-hover:-translate-y-0.5 transition-transform" />
           </button>
         )}
         <button
@@ -207,10 +213,10 @@ export default function PublicPage() {
             updateUI({ showWhatsAppChoice: true });
           }}
           type="button"
-          className="w-12 h-12 flex items-center justify-center rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-xl transition-all active:scale-95 focus:outline-none"
+          className="w-12 h-12 flex items-center justify-center rounded-full bg-success text-text-on-primary shadow-lg hover:opacity-90 transition-all active:scale-90 focus:outline-none"
           title="WhatsApp 諮詢"
         >
-          <Icon name="MessageCircle" className="w-6 h-6" />
+          <Icon name="MessageCircle" size={26} solid />
         </button>
       </div>
       
