@@ -9,6 +9,16 @@ export function RouteErrorFallback({ error, reset }: { error: Error; reset: () =
   const { copy } = useCopyToClipboard({ successMessage: '诊断信息已复制到剪贴板' });
 
   const isValidationError = error.message.includes('validateSearch') || error.message.includes('Invalid search');
+  const isChunkError = error.message.includes('Failed to fetch dynamically imported module') || 
+                      error.message.includes('ChunkLoadError');
+
+  React.useEffect(() => {
+    // 如果是資源加載失敗，且是第一次發生（防止無限循環），可以嘗試自動刷新
+    if (isChunkError && !sessionStorage.getItem('last_chunk_error_reload')) {
+      sessionStorage.setItem('last_chunk_error_reload', Date.now().toString());
+      window.location.reload();
+    }
+  }, [isChunkError]);
 
   const handleCopyDiagnostics = () => {
     const timestamp = new Date().toISOString();
