@@ -10,6 +10,8 @@ import { AutoForm } from '@/components/form/AutoForm';
 import { PhotoEditSchema } from '@/schemas/photo';
 import { Photo } from '@/types';
 
+import { DialogHeader } from "./DialogHeader";
+
 function PhotoEditDialogContent({ editPhotoId, handleClose }: { editPhotoId: string; handleClose: () => void }) {
   const { data: photo, isPending } = usePhoto(editPhotoId);
   const updateMutation = usePhotoEditMutation();
@@ -36,19 +38,22 @@ function PhotoEditDialogContent({ editPhotoId, handleClose }: { editPhotoId: str
   } : {};
 
   return (
-    <div className="p-2">
-      <AutoForm
-        schema={PhotoEditSchema}
-        defaultValues={defaultValues}
-        className="space-y-6"
-        onSubmit={async (data) => {
-          if (editPhotoId) {
-            await updateMutation.mutateAsync({ id: editPhotoId, updates: data as unknown as Partial<Photo> });
-            handleClose();
-          }
-        }}
-      />
-    </div>
+    <>
+      <DialogHeader onClose={handleClose} onDeleteClick={() => {}} />
+      <div className="p-2">
+        <AutoForm
+          schema={PhotoEditSchema}
+          defaultValues={defaultValues}
+          className="space-y-6"
+          onSubmit={async (data) => {
+            if (editPhotoId) {
+              await updateMutation.mutateAsync({ id: editPhotoId, updates: data as unknown as Partial<Photo> });
+              handleClose();
+            }
+          }}
+        />
+      </div>
+    </>
   );
 }
 
