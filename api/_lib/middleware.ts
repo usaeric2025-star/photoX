@@ -5,9 +5,8 @@ import { refreshPhotosView } from './db/actions.js';
 import { getTraceId } from './error/traceId.js';
 import { logger } from './logger.js';
 import { AppError, errorFactory } from './error/AppError.js';
-import * as Sentry from '@sentry/node';
 
-export function setupMiddlewares(app: Hono, serverEnv: any, sentryDsn?: string) {
+export function setupMiddlewares(app: Hono, serverEnv: any) {
   // --- Middleware ---
   app.use('*', async (c, next) => {
       const traceId = getTraceId(c);
@@ -31,13 +30,6 @@ export function setupMiddlewares(app: Hono, serverEnv: any, sentryDsn?: string) 
       ? err 
       : errorFactory.wrap(err, `api.${path}`, 'HANDLER_ERROR');
     appError.traceId = traceId;
-  
-    if (sentryDsn) {
-      Sentry.captureException(err, {
-        tags: { traceId, path, method, code: appError.code },
-        extra: { appError: { code: appError.code, status: appError.status, message: appError.message, stack: appError.stack, traceId: appError.traceId } }
-      });
-    }
   
     logger.error('api.error', { traceId, path, method, code: appError.code, message: appError.message, stack: appError.stack });
   

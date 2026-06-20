@@ -36,32 +36,34 @@ export default defineConfig(({mode}) => {
           manualChunks(id) {
             if (!id.includes('node_modules')) return;
 
-            // 🎯 React 核心及路由 (React 19 & TanStack Router)
-            if (/\/node_modules\/(react|react-dom|scheduler|@tanstack\/react-router)\//.test(id)) {
-              return 'vendor-react-core';
+            // Layer 0: React 核心 (必須最先載入，絕不依賴其他)
+            if (/\/node_modules\/(react|react-dom|scheduler)\//.test(id)) {
+              return 'vendor-core';
+            }
+
+            // Layer 1: 生態與路由 (依賴 Layer 0)
+            if (/\/node_modules\/(@tanstack\/react-router|@tanstack\/react-query)\//.test(id)) {
+              return 'vendor-ecosystem';
             }
             
-            // 🎯 Icon Sprite (全面獨立隔離以優化載入)
-            if (/\/node_modules\/@react-zero-ui\/icon-sprite\//.test(id)) {
-              return 'vendor-icons';
-            }
-            
-            // 🎯 UI、動畫與元件 (Sonner, Lightbox, Virtua, El-Form, Motion)
-            if (/\/node_modules\/(sonner|yet-another-react-lightbox|virtua|el-form-react-components|el-form-react-hooks|motion)\//.test(id)) {
+            // Layer 2: UI 元件與圖標 (依賴 Layer 0, 1)
+            // 包含 Icon Sprite, Sonner, Lightbox, Virtua, 動畫等
+            if (/\/node_modules\/(@react-zero-ui\/icon-sprite|@radix-ui|sonner|yet-another-react-lightbox|virtua|motion|el-form-react-components|el-form-react-hooks)\//.test(id)) {
               return 'vendor-ui';
             }
             
-            // 🎯 資料傳輸與狀態治理 (TanStack Query, Supabase, ArkType, Drizzle, Zustand)
-            if (/\/node_modules\/(@tanstack\/react-query|@supabase|arktype|drizzle-orm|zustand)\//.test(id)) {
-              return 'vendor-data';
+            // Layer 3: 功能與資料層 (依賴以上)
+            // Supabase, ArkType, Drizzle, Zustand, Postgres
+            if (/\/node_modules\/(@supabase|arktype|drizzle-orm|zustand|postgres)\//.test(id)) {
+              return 'vendor-features';
             }
             
-            // 🎯 日期與核心工具庫
-            if (/\/node_modules\/(date-fns|date-fns-tz|clsx|tailwind-merge|thumbhash)\//.test(id)) {
+            // Layer 4: 核心工具庫
+            if (/\/node_modules\/(date-fns|date-fns-tz|clsx|tailwind-merge|thumbhash|dotenv)\//.test(id)) {
               return 'vendor-utils';
             }
             
-            // 🎯 其他項目
+            // Layer 5: 其他
             return 'vendor-misc';
           }
         }

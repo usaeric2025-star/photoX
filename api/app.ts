@@ -11,33 +11,16 @@ import { groups } from './_handlers/groups.js';
 import { photos } from './_handlers/photos/index.js';
 import { storage } from './_handlers/storage.js';
 import { storageMaintenance } from './_handlers/admin/storageMaintenance.js';
-import * as Sentry from '@sentry/node';
 import { setupMiddlewares } from './_lib/middleware.js';
 
 // Validate env at module level
 const serverEnv = getServerEnv(process.env);
 
-// Initialize Sentry on backend if DSN present
-const sentryDsn = serverEnv.SENTRY_DSN || serverEnv.VITE_SENTRY_DSN;
-if (sentryDsn) {
-  Sentry.init({
-    dsn: sentryDsn,
-    environment: serverEnv.NODE_ENV || 'development',
-    tracesSampleRate: serverEnv.NODE_ENV === 'production' ? 0.1 : 1.0,
-    initialScope: {
-      tags: {
-        app: 'photox-backend',
-        platform: 'node',
-      }
-    }
-  });
-}
-
 export const app = new Hono().basePath('/api');
 
 app.use('*', cors());
 app.get('/health', (c) => c.json({ success: true, status: 'ok' }));
-setupMiddlewares(app, serverEnv, sentryDsn);
+setupMiddlewares(app, serverEnv);
 
 // --- Global Error Logging ---
 app.onError(async (err, c) => {
