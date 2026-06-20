@@ -111,6 +111,27 @@ app.post('/log-error', async (c) => {
     }
 });
 
+// Public error logs API
+app.get('/error-log', async (c) => {
+    try {
+        const limit = parseInt(c.req.query('limit') || '100', 10);
+        const page = parseInt(c.req.query('page') || '0', 10);
+        
+        const { db, systemLogs } = await import('./_lib/db/index.js');
+        const { desc } = await import('drizzle-orm');
+
+        const data = await db.query.systemLogs.findMany({
+            orderBy: [desc(systemLogs.createdAt)],
+            limit: limit,
+            offset: page * limit
+        });
+
+        return c.json({ success: true, data });
+    } catch (e: any) {
+        return c.json({ success: false, error: e.message }, 500);
+    }
+});
+
 // Admin error events list
 app.get('/admin/error-events', async (c) => {
   try {

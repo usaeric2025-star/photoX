@@ -216,6 +216,24 @@ export function AdminHeader({ className }: AdminHeaderProps) {
                       <DynamicIcon name="terminal" size={16} />
                       {t.systemLogs}
                     </button>
+                    <a
+                      href="/stats.html"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-pointer outline-none hover:bg-blue-50 text-gray-700"
+                    >
+                      <DynamicIcon name="bar-chart-3" size={16} />
+                      {lang === 'zh' ? '依赖体积分析' : 'Bundle Analyzer'}
+                    </a>
+                    <a
+                      href="/api/error-log"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-pointer outline-none hover:bg-blue-50 text-gray-700"
+                    >
+                      <DynamicIcon name="shield-alert" size={16} />
+                      {lang === 'zh' ? '系统日志 API' : 'System Logs API'}
+                    </a>
                   </>
                 )}
                 <div className="mt-1">

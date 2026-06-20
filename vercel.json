@@ -15,6 +15,7 @@
   ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api" },
+    { "source": "/stats.html", "destination": "/stats.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
