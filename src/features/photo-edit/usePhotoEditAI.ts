@@ -61,7 +61,11 @@ export function usePhotoEditAI() {
         const updates: Record<string, unknown> = {};
         
         if (result.name) {
-          updates.name = result.name;
+          if (typeof result.name === 'object' && result.name !== null) {
+            updates.name = result.name.zh || result.name.en || result.name.ms || String(result.name);
+          } else {
+            updates.name = String(result.name);
+          }
         }
 
           // --- Strict Category Matching ---

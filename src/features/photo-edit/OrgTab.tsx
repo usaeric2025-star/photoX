@@ -55,10 +55,6 @@ export function OrgTab() {
       <CategorySelect />
       
       <section className="space-y-4">
-        <FormSectionHeader 
-          title="标签" 
-          subtitle="TAGS" 
-        />
         <PhotoTagSelector 
           name="tags"
           tags={tags}

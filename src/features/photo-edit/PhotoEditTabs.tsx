@@ -30,22 +30,22 @@ export function PhotoEditTabs({ editPhotoId, appLang }: PhotoEditTabsProps) {
       contentClassName="pt-2 no-scrollbar"
     >
       {activeTab === 'basic' && (
-        <div className="px-8 xl:px-12 pb-12">
+        <div className="px-4 md:px-8 xl:px-12 pb-12">
           <BasicInfoTab />
         </div>
       )}
       {activeTab === 'org' && (
-        <div className="px-8 xl:px-12 pb-12">
+        <div className="px-4 md:px-8 xl:px-12 pb-12">
           <OrgTab />
         </div>
       )}
       {activeTab === 'details' && (
-        <div className="px-8 xl:px-12 pb-12">
+        <div className="px-4 md:px-8 xl:px-12 pb-12">
           <DetailsTab />
         </div>
       )}
       {activeTab === 'ai-source' && (
-        <div className="px-8 xl:px-12 pb-12">
+        <div className="px-4 md:px-8 xl:px-12 pb-12">
           <AISourceTab photoId={editPhotoId || ''} />
         </div>
       )}

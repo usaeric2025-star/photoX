@@ -61,10 +61,10 @@ export function PhotoEditDialog({ isOpen: propIsOpen, onClose: propOnClose, edit
     <NativeDialog 
       open={isOpen} 
       onClose={handleClose} 
-      size="lg" 
-      title="编辑照片信息"
-      description="修改照片的基本元数据、分类与属性"
-      className="max-h-[90vh] overflow-hidden flex flex-col"
+      size="5xl" 
+      hidePadding
+      showCloseButton={false}
+      className="max-h-[90vh] overflow-hidden flex flex-col p-0"
     >
       <PhotoEditDialogContent 
         editPhotoId={editPhotoId || ''}

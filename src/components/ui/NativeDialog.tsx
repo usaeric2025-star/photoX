@@ -7,7 +7,7 @@ export interface NativeDialogProps {
   children: React.ReactNode;
   title?: string;
   description?: string;
-  size?: 'sm' | 'md' | 'lg' | '4xl' | 'xl' | 'full' | 'screen';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | 'full' | 'screen';
   className?: string;
   hidePadding?: boolean;
   showCloseButton?: boolean;
@@ -17,7 +17,9 @@ const sizeClasses = {
   sm: 'max-w-md',
   md: 'max-w-lg',
   lg: 'max-w-2xl',
+  '3xl': 'max-w-3xl',
   '4xl': 'max-w-4xl',
+  '5xl': 'max-w-5xl',
   xl: 'max-w-6xl',
   full: 'max-w-[90vw]',
   screen: 'max-w-[100vw] w-[100vw] h-[100dvh] max-h-[100dvh] rounded-none m-0',

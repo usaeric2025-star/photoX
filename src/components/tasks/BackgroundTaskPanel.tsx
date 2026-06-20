@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 
 export function BackgroundTaskPanel() {
   const { tasks, removeTask, cancelTask } = useTasks();
+  const panelRef = React.useRef<HTMLDivElement>(null);
   
   const activeTasks = tasks.filter(t => 
     t.status === 'running' || 
@@ -13,10 +14,24 @@ export function BackgroundTaskPanel() {
     (t.status === 'completed' && t.progress === 100)
   );
 
-  if (activeTasks.length === 0) return null;
+  React.useEffect(() => {
+    if (activeTasks.length > 0 && panelRef.current) {
+      if (!panelRef.current.matches(':popover-open')) {
+        panelRef.current.showPopover();
+      }
+    } else if (activeTasks.length === 0 && panelRef.current) {
+      if (panelRef.current.matches(':popover-open')) {
+        panelRef.current.hidePopover();
+      }
+    }
+  }, [activeTasks.length]);
 
   return (
-    <div className="fixed bottom-6 left-6 z-[var(--z-loading)] flex flex-col gap-3 w-80 pointer-events-none">
+    <div 
+      ref={panelRef}
+      popover="manual"
+      className="fixed bottom-6 left-6 z-[2147483647] flex flex-col gap-3 w-80 pointer-events-none bg-transparent m-0 p-0 overflow-visible border-none"
+    >
       <AnimatePresence mode="popLayout">
         {activeTasks.slice(-3).map((task) => (
           <TaskItem 

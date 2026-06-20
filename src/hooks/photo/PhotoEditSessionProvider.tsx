@@ -102,6 +102,7 @@ export const PhotoEditSessionProvider = ({
         id: photoId,
         updates: sanitizedUpdates as unknown as Partial<Photo>
       });
+      showToast.success('保存成功 / Saved successfully');
       onSuccess?.();
     } catch (err: unknown) {
       ErrorFactory.handleError(err, '保存照片数据');

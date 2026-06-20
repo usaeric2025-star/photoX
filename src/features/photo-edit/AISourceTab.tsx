@@ -43,9 +43,9 @@ export function AISourceTab({ photoId }: AISourceTabProps) {
 
   // Prettify the JSON if it's stringified JSON, otherwise show raw text
   let formattedResult = '';
-  if (aiResult?.raw_result) {
+  if (aiResult && aiResult.raw_result) {
     try {
-      const raw = aiResult.raw_result.trim();
+      const raw = typeof aiResult.raw_result === 'string' ? aiResult.raw_result.trim() : JSON.stringify(aiResult.raw_result);
       // If it looks like JSON or contains JSON wrapping, try to parse and format it
       if (raw.startsWith('{') || raw.startsWith('[')) {
         const parsed = JSON.parse(raw);
@@ -57,13 +57,18 @@ export function AISourceTab({ photoId }: AISourceTabProps) {
           const parsed = JSON.parse(match[1]);
           formattedResult = JSON.stringify(parsed, null, 2);
         } else {
-            formattedResult = aiResult.raw_result;
+            formattedResult = raw;
         }
       }
     } catch (e) {
       // Keep original string if parsing fails
-      formattedResult = aiResult.raw_result;
+      formattedResult = typeof aiResult.raw_result === 'string' ? aiResult.raw_result : JSON.stringify(aiResult.raw_result, null, 2);
     }
+  }
+
+  // Final fallback to ensure the pre isn't actually empty
+  if (!formattedResult || formattedResult.trim() === '') {
+     formattedResult = "/* The AI result was empty or unparseable */\n\n" + String(aiResult?.raw_result);
   }
 
   return (
