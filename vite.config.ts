@@ -59,7 +59,7 @@ export default defineConfig(({mode}) => {
             }
             
             // Layer 4: 核心工具庫
-            if (/\/node_modules\/(clsx|tailwind-merge|thumbhash)\//.test(id)) {
+            if (/\/node_modules\/(dayjs|clsx|tailwind-merge|thumbhash)\//.test(id)) {
               return 'vendor-utils';
             }
             

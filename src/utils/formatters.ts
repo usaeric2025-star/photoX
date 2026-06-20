@@ -1,52 +1,19 @@
+import { formatDate, formatDateTime, timeAgo } from '@/lib/date';
+
 export const formatters = {
   // Date/Time
-  date: (date: Date | string | number, locale: string = 'zh-CN') => {
-    try {
-      const d = new Date(date);
-      if (isNaN(d.getTime())) return '-';
-      return new Intl.DateTimeFormat(locale, {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        timeZone: 'Asia/Kuala_Lumpur'
-      }).format(d);
-    } catch {
-      return '-';
-    }
-  },
+  date: (date: Date | string | number | null | undefined) => formatDate(date),
   
-  dateTime: (date: Date | string | number, locale: string = 'zh-CN') => {
-    try {
-      const d = new Date(date);
-      if (isNaN(d.getTime())) return '-';
-      return new Intl.DateTimeFormat(locale, {
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-        timeZone: 'Asia/Kuala_Lumpur'
-      }).format(d);
-    } catch {
-      return '-';
-    }
+  dateTime: (date: Date | string | number | null | undefined) => formatDateTime(date),
+
+  time: (date: Date | string | number | null | undefined) => {
+    const dt = formatDateTime(date);
+    if (dt === '-') return '-';
+    const parts = dt.split(' ');
+    return parts.length > 1 ? parts[1] : parts[0];
   },
 
-  time: (date: Date | string | number, locale: string = 'zh-CN') => {
-    try {
-      const d = new Date(date);
-      if (isNaN(d.getTime())) return '-';
-      return new Intl.DateTimeFormat(locale, {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false,
-        timeZone: 'Asia/Kuala_Lumpur'
-      }).format(d);
-    } catch {
-      return '-';
-    }
-  },
+  relative: (date: Date | string | number | null | undefined) => timeAgo(date),
 
   // File size
   fileSize: (bytes: number) => {

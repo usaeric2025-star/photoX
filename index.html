@@ -68,6 +68,20 @@
         window.onerror = function(message, source, lineno, colno, error) {
           var msgStr = String(message || '');
           if (/ResizeObserver|websocket|hmr|AbortError/i.test(msgStr)) return;
+
+          // 🚀 Long-term Chunk Error Recovery (自動恢復最新版本)
+          if (/chunk|dynamically imported|module script|Failed to fetch/i.test(msgStr)) {
+            var reloadKey = '__chunk_fatal_reload__';
+            var lastReload = sessionStorage.getItem(reloadKey);
+            var now = Date.now();
+            // 10秒內只允許自動重載一次，避免無限循環
+            if (!lastReload || (now - parseInt(lastReload)) > 10000) {
+              sessionStorage.setItem(reloadKey, now);
+              window.location.reload();
+              return;
+            }
+          }
+
           var details = "源位址: " + source + "\n位置: 行 " + lineno + ", 列 " + colno + (error && error.stack ? "\n呼叫棧:\n" + error.stack : "");
           errors.push({ msg: msgStr, type: "運行期異常 (Runtime Error)", details: details });
           renderErrorOverlay();
@@ -78,6 +92,19 @@
           if (!reason) return;
           var msg = reason.message || String(reason || '');
           if (/ResizeObserver|websocket|hmr|AbortError|AbortSignal/i.test(msg)) return;
+
+          // 🚀 同樣處理 Promise 拒絕中的 Chunk 錯誤
+          if (/chunk|dynamically imported|module script|Failed to fetch/i.test(msg)) {
+             var reloadKey = '__chunk_fatal_reload__';
+             var lastReload = sessionStorage.getItem(reloadKey);
+             var now = Date.now();
+             if (!lastReload || (now - parseInt(lastReload)) > 10000) {
+               sessionStorage.setItem(reloadKey, now);
+               window.location.reload();
+               return;
+             }
+          }
+
           var details = reason.stack ? "呼叫棧:\n" + reason.stack : "位置: 匿名非同步拒絕";
           errors.push({ msg: msg, type: "非同步拒絕異常 (Promise Rejection)", details: details });
           renderErrorOverlay();

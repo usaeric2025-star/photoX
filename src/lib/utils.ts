@@ -52,12 +52,10 @@ export function getPathFromUrl(url: string): string {
 /**
  * Standard date formatting for the application: YYYY-MM-DD HH:mm
  */
-export function formatDate(date: Date | string | number): string {
-  try {
-    return formatters.dateTime(date);
-  } catch (e) {
-    return '-';
-  }
+import { formatDate as formatDateLib, formatDateTime as formatDateTimeLib } from './date';
+
+export function formatDate(date: Date | string | number | null | undefined): string {
+  return formatDateTimeLib(date);
 }
 
 /**
