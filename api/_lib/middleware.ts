@@ -121,7 +121,17 @@ export function setupMiddlewares(app: Hono, serverEnv: { NODE_ENV: string | unde
                   logger.error('[Refresh Middleware] Failure', { path, method, error: err.message });
               });
               
-              if (c.executionCtx && typeof c.executionCtx.waitUntil === 'function') {
+              let hasWaitUntil = false;
+              try {
+                  const ctx = c.executionCtx;
+                  if (ctx && typeof ctx.waitUntil === 'function') {
+                      hasWaitUntil = true;
+                  }
+              } catch (e) {
+                  // Ignore 'This context has no ExecutionContext'
+              }
+
+              if (hasWaitUntil) {
                   c.executionCtx.waitUntil(refreshPromise);
               } else {
                   // If waitUntil is not available (like in Cloud Run standard Node), we MUST await it
