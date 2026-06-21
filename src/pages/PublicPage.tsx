@@ -160,6 +160,22 @@ export default function PublicPage() {
     return options;
   };
 
+  const { data: globalTotal, isLoading: isCountLoading } = useQuery({
+    queryKey: ['photos', 'count', 'total', 'all'],
+    queryFn: async () => {
+      // 統一讀取總量，不區分管理者模式以反映真實庫存
+      const res = await api.photos.count.$post({ json: { isAdminMode: true } });
+      if (!res.ok) return 0;
+      const json = await res.json() as { data: number };
+      return json.data;
+    },
+    staleTime: 5 * 60 * 1000 // 減少重複 API 調用
+  });
+
+  const isOpenLightbox = useLightboxStore((s) => s.isOpen);
+  const lightboxImages = useLightboxStore((s) => s.images);
+  const lightboxCurrentIndex = useLightboxStore((s) => s.currentIndex);
+
   if (isError) {
     return (
       <div className="flex flex-col h-full w-full bg-surface-soft">
@@ -173,25 +189,12 @@ export default function PublicPage() {
     );
   }
 
-  const { data: globalTotal, isLoading: isCountLoading } = useQuery({
-    queryKey: ['photos', 'count', 'total', 'all'],
-    queryFn: async () => {
-      // 統一讀取總量，不區分管理者模式以反映真實庫存
-      const res = await api.photos.count.$post({ json: { isAdminMode: true } });
-      if (!res.ok) return 0;
-      const json = await res.json() as { data: number };
-      return json.data;
-    },
-    staleTime: 5 * 60 * 1000 // 減少重複 API 調用
-  });
-
   const totalToDisplay = globalTotal ?? totalCount;
 
   return (
     <div 
-      className="flex flex-col h-full w-full bg-surface-base relative overflow-hidden" 
+      className="flex flex-col h-screen w-full bg-surface-base relative overflow-hidden" 
       id="public-view"
-      style={{ height: '100dvh' }}
     >
       <div className="flex-1 min-h-0 relative bg-surface-soft overflow-hidden order-0">
         <ErrorBoundary>
@@ -240,9 +243,9 @@ export default function PublicPage() {
       </div>
       
       <LazyPhotoLightbox
-        open={useLightboxStore((s) => s.isOpen)}
-        images={useLightboxStore((s) => s.images)}
-        currentIndex={useLightboxStore((s) => s.currentIndex)}
+        open={isOpenLightbox}
+        images={lightboxImages}
+        currentIndex={lightboxCurrentIndex}
         onOpenChange={(open) => !open && useLightboxStore.getState().close()}
         onIndexChange={(idx: number) => useLightboxStore.getState().goTo(idx)}
       />

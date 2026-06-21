@@ -67,9 +67,6 @@ export const createHandler = (app: Hono) => {
           await syncGroupCoversAndCount([String(payload.group_id)]);
         }
 
-        // 非同步刷新視圖，不阻塞響應
-        import('../../_lib/db/view-utils.js').then(m => m.refreshPhotosView()).catch(e => console.error('Refresh view error:', e));
-
         return c.json({ success: true, data });
     } catch (error: unknown) {
         return c.json({ success: false, error: (error instanceof Error ? error.message : String(error)) }, 500);

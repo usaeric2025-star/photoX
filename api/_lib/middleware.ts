@@ -115,10 +115,19 @@ export function setupMiddlewares(app: Hono, serverEnv: { NODE_ENV: string | unde
           const isAffectedPath = affectedPrefixes.some(prefix => path.startsWith(prefix));
           const querySuffixes = ['/list', '/count', '/by-ids', '/check-hash'];
           const isQuery = querySuffixes.some(suffix => path.endsWith(suffix));
+          
           if (isAffectedPath && !isQuery) {
-              refreshPhotosView().catch(err => {
+              const refreshPromise = refreshPhotosView().catch(err => {
                   logger.error('[Refresh Middleware] Failure', { path, method, error: err.message });
               });
+              
+              if (c.executionCtx && typeof c.executionCtx.waitUntil === 'function') {
+                  c.executionCtx.waitUntil(refreshPromise);
+              } else {
+                  // If waitUntil is not available (like in Cloud Run standard Node), we MUST await it
+                  // otherwise the container CPU freezes and the materialized view never refreshes
+                  await refreshPromise;
+              }
           }
       }
   });

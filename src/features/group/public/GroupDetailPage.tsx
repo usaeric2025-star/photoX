@@ -5,6 +5,7 @@ import { PhotoListItem } from '@/types/api';
 import { Photo, Group, Category } from '@/types';
 import { PublicPhotoCard } from '@/components/photo/PublicPhotoCard';
 import { useLightboxStore } from '@/store/useLightboxStore';
+import { LazyPhotoLightbox } from '@/features/lightbox/LazyPhotoLightbox';
 import { useFilters, useTranslation, useCategories } from '@/hooks';
 import { GroupHeader } from '../shared/components/GroupHeader';
 import { PhotoCardSkeleton } from '@/components/ui/Skeleton';
@@ -67,6 +68,9 @@ export function PublicGroupDetailPage() {
   }, [anchor, photoId, loading, photos.length]);
 
   const openLightbox = useLightboxStore((s) => s.open);
+  const isOpenLightbox = useLightboxStore((s) => s.isOpen);
+  const lightboxImages = useLightboxStore((s) => s.images);
+  const lightboxCurrentIndex = useLightboxStore((s) => s.currentIndex);
   
   const lightboxItems = photos.map((p) => {
     return {
@@ -161,6 +165,13 @@ export function PublicGroupDetailPage() {
         <PublicPhotoGrid photos={photos} categories={categories} onPhotoClick={handlePhotoClick} />
       </div>
       <WhatsAppDialog />
+      <LazyPhotoLightbox
+        open={isOpenLightbox}
+        images={lightboxImages}
+        currentIndex={lightboxCurrentIndex}
+        onOpenChange={(open) => !open && useLightboxStore.getState().close()}
+        onIndexChange={(idx: number) => useLightboxStore.getState().goTo(idx)}
+      />
     </div>
   );
 }

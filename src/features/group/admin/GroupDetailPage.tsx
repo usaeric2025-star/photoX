@@ -93,6 +93,9 @@ export function AdminGroupDetailPage() {
   const { handleBatchAiIdentifyTrigger } = useAdminBatchActions();
 
   const openLightbox = useLightboxStore((s) => s.open);
+  const isOpenLightbox = useLightboxStore((s) => s.isOpen);
+  const lightboxImages = useLightboxStore((s) => s.images);
+  const lightboxCurrentIndex = useLightboxStore((s) => s.currentIndex);
   
   const lightboxItems = photos.map((p) => {
     return {
@@ -175,9 +178,9 @@ export function AdminGroupDetailPage() {
         </div>
         
         <LazyPhotoLightbox
-          open={useLightboxStore((s) => s.isOpen)}
-          images={useLightboxStore((s) => s.images)}
-          currentIndex={useLightboxStore((s) => s.currentIndex)}
+          open={isOpenLightbox}
+          images={lightboxImages}
+          currentIndex={lightboxCurrentIndex}
           onOpenChange={(open) => !open && useLightboxStore.getState().close()}
           onIndexChange={(idx: number) => useLightboxStore.getState().goTo(idx)}
           onEdit={openEditDrawer}

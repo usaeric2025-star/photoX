@@ -36,9 +36,6 @@ export const updateHandler = (app: Hono) => {
             .set(mappedUpdates)
             .where(inArray(furnitureItems.id, ids))
             .returning({ id: furnitureItems.id });
-        
-        // 非同步刷新視圖
-        import('../../_lib/db/view-utils.js').then(m => m.refreshPhotosView()).catch(e => console.error('Refresh view error:', e));
 
         return c.json({ success: true, data: data.map(d => d.id) });
     } catch (error: unknown) {
@@ -118,9 +115,6 @@ export const updateHandler = (app: Hono) => {
         if (affectedGroupIds.length > 0) {
             await syncGroupCoversAndCount(affectedGroupIds);
         }
-
-        // 非同步刷新視圖
-        import('../../_lib/db/view-utils.js').then(m => m.refreshPhotosView()).catch(e => console.error('Refresh view error:', e));
 
         return c.json({ success: true, data });
     } catch (error: unknown) {

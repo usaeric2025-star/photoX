@@ -65,29 +65,32 @@ export const useGroupCoverMutation = () => useOptimisticMutation(groupCoverConfi
 // 5. 照片合组
 const groupPhotosConfig = defineMutation<
   { newGroupId: string },
-  { photoIds: string[], targetGroupId?: string },
+  { photoIds: string[], targetGroupId?: string, optimisticGroupId?: string },
   readonly unknown[]
 >({
   name: 'groupPhotos',
-  service: async ({ photoIds, targetGroupId }) => {
-    return await groupPhotos(photoIds, targetGroupId);
+  service: async ({ photoIds, targetGroupId, optimisticGroupId }) => {
+    // Pass the already generated optimisticGroupId to avoid different IDs
+    const finalGroupId = targetGroupId || optimisticGroupId || crypto.randomUUID();
+    return await groupPhotos(photoIds, finalGroupId);
   },
   invalidate: () => [queryKeys.photos.all, queryKeys.groups.all],
-  optimistic: (old, { photoIds, targetGroupId }, queryKey) => {
+  optimistic: (old, { photoIds, targetGroupId, optimisticGroupId }, queryKey) => {
     if (!old) return old;
     type PhotoInfiniteData = { pages: { photos?: Photo[]; items?: Photo[] }[] };
     const oldData = old as PhotoInfiniteData;
     if (oldData.pages) {
       const queryVars = (queryKey && queryKey.length > 2 ? queryKey[2] : {}) as { groupId?: string };
       const currentViewGroupId = queryVars?.groupId;
+      const effectiveId = targetGroupId || optimisticGroupId || 'optimistic_group';
       
-      if (currentViewGroupId && currentViewGroupId !== targetGroupId) {
+      if (currentViewGroupId && currentViewGroupId !== effectiveId) {
           return optimistic.infinite.remove<Photo>()(oldData, photoIds);
       }
       
       return optimistic.infinite.batchUpdate<Photo>()(oldData, {
         ids: photoIds,
-        updates: { group_id: targetGroupId ?? null }
+        updates: { group_id: effectiveId }
       });
     }
     return old;
