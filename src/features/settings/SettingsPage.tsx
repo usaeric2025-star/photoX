@@ -136,6 +136,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
                showToast.success('设置已保存');
              } catch (err) {
                logger.error("Save settings failed:", err);
+               ErrorFactory.handleError(err, appLang === 'zh' ? '保存系统设置' : 'Save settings');
              }
           }}
           onClose={() => {

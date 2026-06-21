@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { logger } from '@/lib/logger';
 import { AppSettings, Tag, Manufacturer, Category, User, Photo } from "@/types";
 import { DEFAULT_AI_MODEL } from '@/config/ai';
 import { useUIStore, useShallow } from "@/store/useUIStore";
@@ -11,6 +12,7 @@ import {
 import { api } from "@/lib/api";
 import { useTaskExecutor, useInvalidatePhotos } from "@/hooks";
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { showToast } from '@/lib/ui/toast';
 
 import { translations } from "@/locales";
 
@@ -48,7 +50,14 @@ export const useSettingsLogic = ({
   const [activeTagMenuId, setActiveTagMenuId] = useState<number | null>(null);
 
   const debouncedSave = useDebouncedCallback((newSettings: AppSettings) => {
-    saveSettings(newSettings).catch(console.error);
+    saveSettings(newSettings)
+      .then(() => {
+        showToast.success(appLang === 'zh' ? '设置已自动同步' : 'Settings auto-synced');
+      })
+      .catch((err) => {
+        logger.error("Auto save settings failed:", err);
+        ErrorFactory.handleError(err, appLang === 'zh' ? '自动保存系统设置' : 'Auto-save settings');
+      });
     setHasChanges(false);
   }, 1500);
 

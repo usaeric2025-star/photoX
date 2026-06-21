@@ -15,7 +15,7 @@ export function SonnerContainer() {
       ref={ref}
       className="pointer-events-none bg-transparent p-0 m-0 border-none outline-none [&::backdrop]:hidden"
     >
-      <div className="pointer-events-auto fixed bottom-6 left-1/2 -translate-x-1/2 z-[2147483647]">
+      <div className="pointer-events-auto z-[2147483647]">
         <Toaster 
           position="bottom-center"
           richColors

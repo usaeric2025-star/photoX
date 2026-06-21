@@ -168,6 +168,22 @@ export class ErrorFactory {
   static capture(error: Error | AppError | unknown) {
     const appError = isAppError(error) ? error : ErrorFactory.fromUnknown(error);
     
+    // 優先過濾雜音錯誤，避免寫入本地及資料庫日誌
+    const message = appError.message || '';
+    const isNoise = 
+      /ResizeObserver/i.test(message) || 
+      /chunk|dynamically imported|module script/i.test(message) ||
+      /AbortError/i.test(message) ||
+      /cancel|abort|precondition|offline|websocket|hmr/i.test(message) ||
+      message.includes('DOMException') ||
+      message.includes('user_cancel') ||
+      message.includes('Failed to fetch') ||
+      message.includes('NetworkError');
+
+    if (isNoise) {
+      return;
+    }
+
     if (!appError.shouldReport) {
       console.info('[Skip Report]', appError.message);
       return;

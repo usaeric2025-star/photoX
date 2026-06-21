@@ -132,7 +132,6 @@ async function init() {
           message.includes('NetworkError');
 
         if (isNoise) {
-          ErrorFactory.capture(error);
           return;
         }
         

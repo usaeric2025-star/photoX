@@ -10,6 +10,8 @@ interface LogoSectionProps {
   manufacturers: Manufacturer[];
   cardClass: string;
   buttonStyles: { secondary: string };
+  setSettingField: <K extends keyof AppSettings>(field: K, value: AppSettings[K]) => void;
+  inputClass: string;
 }
 
 export function LogoSection({
@@ -19,7 +21,9 @@ export function LogoSection({
   tags,
   manufacturers,
   cardClass,
-  buttonStyles
+  buttonStyles,
+  setSettingField,
+  inputClass,
 }: LogoSectionProps) {
   return (
     <div className={cardClass} id="section-logo">
@@ -58,6 +62,19 @@ export function LogoSection({
               />
             </label>
           </div>
+      </div>
+
+      <div className="space-y-2 mt-4 pt-4 border-t border-brand-navy/5">
+        <label className="text-[9px] font-black text-brand-navy/50 uppercase tracking-widest pl-1">
+          商戶名稱 / Store Name
+        </label>
+        <input 
+          type="text" 
+          placeholder="商戶名稱 / Store Name" 
+          className={`${inputClass} w-full`} 
+          value={settings?.app_name || ''} 
+          onChange={(e) => setSettingField('app_name', e.target.value)} 
+        />
       </div>
     </div>
   );
