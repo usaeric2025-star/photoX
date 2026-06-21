@@ -6,7 +6,7 @@ export function SonnerContainer() {
 
   useEffect(() => {
     if (ref.current && !ref.current.open) {
-      ref.current.showModal();
+      ref.current.show();
     }
   }, []);
 

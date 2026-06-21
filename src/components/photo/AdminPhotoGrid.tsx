@@ -36,7 +36,7 @@ export function AdminPhotoGrid({
 
   return (
     <SelectionProvider>
-      <div className="h-full w-full">
+      <div className="h-full w-full relative">
         <PhotoGridContent 
           photos={photos}
           dataVersion={dataVersion}

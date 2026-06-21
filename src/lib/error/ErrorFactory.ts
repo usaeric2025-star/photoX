@@ -1,7 +1,34 @@
 import { ErrorCode } from '@/shared/errorCodes';
 import { AppError, ErrorSeverity, isAppError, ErrorCategory } from './AppError';
+import { showToast } from '@/lib/ui/toast';
 
 export class ErrorFactory {
+  private static mapResourceToChinese(resource: string): string {
+    const map: Record<string, string> = {
+      photo: '照片',
+      Photo: '照片',
+      photos: '照片列表',
+      Photos: '照片列表',
+      category: '分類',
+      Category: '分類',
+      categories: '分類列表',
+      Categories: '分類列表',
+      tag: '標籤',
+      Tag: '標籤',
+      tags: '標籤列表',
+      Tags: '標籤列表',
+      group: '分組',
+      Group: '分組',
+      user: '使用者',
+      User: '使用者',
+      secret: '密鑰',
+      Secret: '密鑰',
+      furniture: '家具',
+      Furniture: '家具',
+    };
+    return map[resource] ?? resource;
+  }
+
   static create(
     message: string,
     options: {
@@ -52,7 +79,7 @@ export class ErrorFactory {
   static network(originalError?: unknown): AppError {
     return this.create('Network Error', {
       category: ErrorCategory.NETWORK,
-      userMessage: '網絡錯誤，請稍後重試',
+      userMessage: '網路連線異常，請檢查您的網路連線',
       originalError,
       code: ErrorCode.NETWORK_ERROR,
       statusCode: 503
@@ -62,7 +89,7 @@ export class ErrorFactory {
   static auth(message: string): AppError {
     return this.create(message, {
       category: ErrorCategory.AUTH,
-      userMessage: '請重新登入',
+      userMessage: '登入逾期，請重新登入',
       code: ErrorCode.UNAUTHORIZED,
       statusCode: 401
     });
@@ -71,7 +98,7 @@ export class ErrorFactory {
   static validation(message: string, context?: Record<string, unknown>): AppError {
     return this.create(message, {
       category: ErrorCategory.VALIDATION,
-      userMessage: '請檢查輸入資料',
+      userMessage: '輸入資料格式不正確，請重新檢查',
       context,
       shouldReport: false,
       code: ErrorCode.VALIDATION_FAILED,
@@ -91,7 +118,7 @@ export class ErrorFactory {
   static fatal(message: string, originalError?: unknown): AppError {
     return this.create(message, {
       category: ErrorCategory.RUNTIME,
-      userMessage: '系統發生嚴重錯誤',
+      userMessage: '系統發生嚴重錯誤，請稍後重試',
       originalError,
       shouldReport: true,
       code: ErrorCode.INTERNAL_ERROR,
@@ -101,9 +128,10 @@ export class ErrorFactory {
   }
 
   static notFound(resource: string, id: string): AppError {
+    const resourceZh = this.mapResourceToChinese(resource);
     return this.create(`${resource} not found`, {
         category: ErrorCategory.BUSINESS,
-        userMessage: `${resource} 不存在`,
+        userMessage: `${resourceZh} 不存在`,
         context: { resource, id },
         code: ErrorCode.NOT_FOUND,
         statusCode: 404,
@@ -112,8 +140,11 @@ export class ErrorFactory {
   }
 
   static wrap(error: unknown, action: string, message?: string): AppError {
-    return this.create(message || (error instanceof Error ? error.message : '未知錯誤'), {
+    const cleanUserMsg = message || this.extractErrorMessage(error);
+    const systemMsg = error instanceof Error ? error.message : String(error || '未知錯誤');
+    return this.create(systemMsg, {
       category: ErrorCategory.RUNTIME,
+      userMessage: cleanUserMsg,
       originalError: error,
       context: { action },
       shouldReport: true,
@@ -125,7 +156,7 @@ export class ErrorFactory {
   static permission(message: string): AppError {
     return this.create(message, {
       category: ErrorCategory.AUTH,
-      userMessage: '權限不足',
+      userMessage: '權限不足，拒絕訪問',
       shouldReport: false,
       code: ErrorCode.PERMISSION_DENIED,
       statusCode: 403,
@@ -185,7 +216,7 @@ export class ErrorFactory {
   }
 
   /** 診斷面板讀取接口 */
-  static getLocalErrors(): any[] {
+  static getLocalErrors(): Record<string, unknown>[] {
     try {
       return JSON.parse(localStorage.getItem('app_errors') || '[]');
     } catch (_) {
@@ -216,47 +247,92 @@ export class ErrorFactory {
     if (silent) return;
     this.capture(error);
     const msg = this.extractErrorMessage(error);
-    import('@/lib/ui/toast').then(({ showToast }) => {
-      showToast.error(`${context}失败: ${msg}`);
-    });
+    showToast.error(`${context}失敗: ${msg}`);
   }
 
-  static async logResult(payload: any, level: 'success' | 'error', context: any) {
-    // 審計日誌實現在此保留 Console 版
+  static async logResult(payload: unknown, level: 'success' | 'error', context: unknown) {
+    // 審計日誌實在此保留 Console 版
     console.log('[Audit]', { payload, level, context });
   }
   
   static extractErrorMessage(error: unknown): string {
-    if (!error) return '未知错误';
-    if (typeof error === 'string') return error;
-
-    if (error && typeof error === 'object') {
+    if (!error) return '未知錯誤';
+    let rawMsg = '';
+    if (typeof error === 'string') {
+      rawMsg = error;
+    } else if (error && typeof error === 'object') {
       const errObj = error as Record<string, unknown>;
-      if (errObj.error && typeof errObj.error === 'string') return errObj.error;
-      if (errObj.message && typeof errObj.message === 'string') return errObj.message;
-      
-      const nestedError = errObj.error as Record<string, unknown> | undefined;
-      if (nestedError?.message) return String(nestedError.message);
-      
-      const respData = (errObj.response as Record<string, unknown> | undefined)?.data as Record<string, unknown> | undefined;
-      if (respData) {
-        if (respData.message) return String(respData.message);
-        const respNestedError = respData.error as Record<string, unknown> | undefined;
-        if (respNestedError?.message) return String(respNestedError.message);
+      if (errObj.error && typeof errObj.error === 'string') {
+        rawMsg = errObj.error;
+      } else if (errObj.message && typeof errObj.message === 'string') {
+        rawMsg = errObj.message;
+      } else {
+        const nestedError = errObj.error as Record<string, unknown> | undefined;
+        if (nestedError?.message) {
+          rawMsg = String(nestedError.message);
+        } else {
+          const respData = (errObj.response as Record<string, unknown> | undefined)?.data as Record<string, unknown> | undefined;
+          if (respData) {
+            if (respData.message) {
+              rawMsg = String(respData.message);
+            } else {
+              const respNestedError = respData.error as Record<string, unknown> | undefined;
+              if (respNestedError?.message) {
+                rawMsg = String(respNestedError.message);
+              }
+            }
+          }
+        }
       }
     }
 
-    if (error instanceof Error) return error.message;
+    if (!rawMsg && error instanceof Error) {
+      rawMsg = error.message;
+    }
 
-    return String(error);
+    if (!rawMsg) {
+      rawMsg = String(error);
+    }
+
+    // 進行英中錯誤訊息轉換，確保「報錯一律只有中文」
+    const lowerMsg = rawMsg.toLowerCase();
+    if (lowerMsg.includes('failed to fetch') || lowerMsg.includes('network request failed')) {
+      return '網路連線異常，請檢查網路';
+    }
+    if (lowerMsg.includes('network error')) {
+      return '網路連線錯誤，請稍後重試';
+    }
+    if (lowerMsg.includes('timeout') || lowerMsg.includes('timed out')) {
+      return '請求逾時，請稍後重試';
+    }
+    if (lowerMsg.includes('unauthorized') || lowerMsg.includes('token expired') || lowerMsg.includes('invalid token')) {
+      return '登入已過期，請重新登入';
+    }
+    if (lowerMsg.includes('permission denied') || lowerMsg.includes('forbidden')) {
+      return '權限不足，拒絕執行此操作';
+    }
+    if (lowerMsg.includes('not found')) {
+      return '找不到該項資源';
+    }
+    if (lowerMsg.includes('conflict') || lowerMsg.includes('already exists')) {
+      return '資料紀錄已存在，請勿重複提交';
+    }
+    if (lowerMsg.includes('validation') || lowerMsg.includes('invalid argument') || lowerMsg.includes('bad request')) {
+      return '輸入資料格式不正確';
+    }
+
+    if (rawMsg === 'Network Error') return '網路錯誤，請稍後重試';
+    if (rawMsg === 'Unknown Error') return '未知的系統錯誤';
+
+    return rawMsg;
   }
 
   // 以下方法改為 No-op 以保持接口兼容性
-  static setUser(user: any) {
+  static setUser(user: unknown) {
     console.debug('[ErrorFactory] setUser:', user);
   }
 
-  static addBreadcrumb(breadcrumb: any) {
+  static addBreadcrumb(breadcrumb: unknown) {
     console.debug('[ErrorFactory] addBreadcrumb:', breadcrumb);
   }
 }

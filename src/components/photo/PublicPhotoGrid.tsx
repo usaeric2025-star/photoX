@@ -30,7 +30,7 @@ export function PublicPhotoGrid({
   onScroll
 }: PublicPhotoGridProps) {
   return (
-    <div className="h-full w-full">
+    <div className="h-full w-full relative">
       <PhotoGridContent 
         photos={photos}
         dataVersion={dataVersion}
