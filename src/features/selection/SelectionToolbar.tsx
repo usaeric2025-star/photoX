@@ -9,6 +9,7 @@ import { useMediaQuery, useTasks } from '@/hooks';
 import { useGroupPhotosMutation, useRemoveFromGroupMutation } from '@/hooks/groups/useGroupMutations';
 import { Photo } from '@/types';
 import { Icon } from '@/components/ui/Icon';
+import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
 
 // --- Sub-components ---
 
@@ -152,7 +153,7 @@ export const SelectionToolbar = memo(function SelectionToolbar({
         {/* 絕對定位的中央處理中狀態，防止工具列按鈕變形 */}
         {isAnyPending && (
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none flex items-center gap-1.5 text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100 shadow-sm animate-in fade-in zoom-in-95 duration-200">
-            <Icon name="loader-2" size={12} className="animate-spin text-blue-500" />
+            <LoadingSpinner size="xs" className="text-blue-500" />
             <span className="hidden xs:inline">正在處理中...</span>
             <span className="xs:hidden">處理中...</span>
           </div>
@@ -169,7 +170,7 @@ export const SelectionToolbar = memo(function SelectionToolbar({
               title="將照片移出此合組"
             >
               {removeMutation.isPending ? (
-                <Icon name="loader-2" size={14} className="animate-spin text-amber-600 shrink-0" />
+                <LoadingSpinner size="xs" className="text-amber-600 shrink-0" />
               ) : (
                 <Icon name="folder-minus" size={14} className="text-amber-600 shrink-0" />
               )}
@@ -188,7 +189,7 @@ export const SelectionToolbar = memo(function SelectionToolbar({
               title="手動將照片合併為一組"
             >
               {combineMutation.isPending ? (
-                <Icon name="loader-2" size={14} className="animate-spin text-blue-600 shrink-0" />
+                <LoadingSpinner size="xs" className="text-blue-600 shrink-0" />
               ) : (
                 <Icon name="folder-plus" size={14} className="text-blue-600 shrink-0" />
               )}
@@ -206,7 +207,7 @@ export const SelectionToolbar = memo(function SelectionToolbar({
             title="AI 智能分析合組"
           >
             {isAiPending ? (
-              <Icon name="loader-2" size={14} className="animate-spin text-purple-600 shrink-0" />
+              <LoadingSpinner size="xs" className="text-purple-600 shrink-0" />
             ) : (
               <Icon name="sparkles" size={14} className="text-purple-600 animate-pulse shrink-0" />
             )}
@@ -236,7 +237,7 @@ export const SelectionToolbar = memo(function SelectionToolbar({
             title="批次刪除照片"
           >
             {batchDelete.isPending ? (
-              <Icon name="loader-2" size={14} className="animate-spin text-red-500 shrink-0" />
+              <LoadingSpinner size="xs" className="text-red-500 shrink-0" />
             ) : (
               <Icon name="trash-2" size={14} className="text-red-500 shrink-0" />
             )}
@@ -249,3 +250,4 @@ export const SelectionToolbar = memo(function SelectionToolbar({
     </div>
   );
 });
+

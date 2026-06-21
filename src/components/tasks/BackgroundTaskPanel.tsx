@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import { useTasks, type BackgroundTask } from '@/hooks';
 import { Icon } from '@/components/ui/Icon';
 import { logger } from '@/lib/logger';
+import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
+import { LoadingProgress } from '@/components/ui/feedback/LoadingProgress';
 
 export function BackgroundTaskPanel() {
   const { tasks, removeTask, cancelTask, isAvoidingSelection } = useTasks();
@@ -67,7 +69,7 @@ export function BackgroundTaskPanel() {
           className="pointer-events-auto bg-white rounded-2xl shadow-lg border border-slate-100 flex items-center justify-between px-3 py-2"
         >
           <div className="flex items-center gap-1.5">
-            <Icon name="loader-2" size={14} className="text-blue-500 animate-spin" />
+            <LoadingSpinner size="xs" />
             <span className="text-[11px] font-bold text-slate-700">任务中心</span>
           </div>
           <button 
@@ -112,7 +114,7 @@ function TaskItem({ task, onRemove, onCancel }: { task: BackgroundTask; onRemove
             isCompleted ? 'bg-green-50 text-green-500' : 
             'bg-blue-50 text-blue-500'
           }`}>
-            {isRunning && <Icon name="loader-2" size={14} className="animate-spin" />}
+            {isRunning && <LoadingSpinner size="xs" />}
             {isCompleted && <Icon name="check-circle-2" size={14} />}
             {isError && <Icon name="x-circle" size={14} />}
           </div>
@@ -149,17 +151,8 @@ function TaskItem({ task, onRemove, onCancel }: { task: BackgroundTask; onRemove
       </div>
 
       {isRunning && (
-        <div className="space-y-1.5">
-          <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-blue-500 transition-all duration-300"
-              style={{ width: `${task.progress}%` }}
-            />
-          </div>
-          <div className="flex justify-between items-center text-[9px] font-bold text-slate-400">
-            <span>PROGRESS</span>
-            <span>{task.progress}%</span>
-          </div>
+        <div className="pt-2">
+          <LoadingProgress value={task.progress} showPercentage />
         </div>
       )}
 

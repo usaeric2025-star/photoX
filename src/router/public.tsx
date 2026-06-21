@@ -5,7 +5,7 @@ import { rootRoute } from './root';
 import { authGuard } from './guards';
 import { GallerySearchParams } from './types';
 import { prefetchMainGallery, prefetchGroupDetail } from '@/services/router/loaders';
-import { PublicGroupDetailPage } from '@/features/group/public/GroupDetailPage';
+const PublicGroupDetailPage = lazy(() => import('@/features/group/public/GroupDetailPage').then(m => ({ default: m.PublicGroupDetailPage })));
 import { RouteErrorFallback } from '@/components/ui/RouteErrorFallback';
 
 const PublicPage = lazy(() => import('@/pages/PublicPage'));

@@ -4,11 +4,18 @@ import { useTags } from './useFilterData';
 import { useFilterState } from './useFilterState';
 import { usePublicSettings } from '@/hooks/settings/useSettings';
 import { usePhotoFilter } from '@/hooks/photo/usePhotoFilter';
+import { useUIStore } from '@/store/useUIStore';
+import { translations } from '@/locales';
+
+import { LoadingContainer } from '@/components/ui/feedback/LoadingContainer';
 
 export function TagGrid({ onClose }: { onClose?: () => void }) {
   const { filters, updateFilters } = useFilterState();
   const { data: tags, isPending } = useTags();
   const { data: settings } = usePublicSettings();
+  
+  const appLang = useUIStore(s => s.appLang);
+  const t = translations[appLang as keyof typeof translations] || translations.en;
 
   // Use the standard hook to resolve sorted, pinned, and hot tags according to database parameters
   const { tagsToRender, pinnedIds, hotIds } = usePhotoFilter(tags || [], settings);
@@ -28,10 +35,10 @@ export function TagGrid({ onClose }: { onClose?: () => void }) {
 
   if (isPending) {
     return (
-      <div className="flex flex-wrap gap-1.5 p-4 pt-0">
-        {[...Array(6)].map((_, i) => (
-          <div key={i} className="h-6 w-12 bg-gray-100 animate-pulse rounded-full" />
-        ))}
+      <div className="p-4 pt-0">
+        <LoadingContainer loading={true} type="skeleton" skeletonType="grid" skeletonCount={8}>
+          <div />
+        </LoadingContainer>
       </div>
     );
   }
@@ -42,14 +49,14 @@ export function TagGrid({ onClose }: { onClose?: () => void }) {
     <div className="border-t border-border-soft/50 pt-3 mt-1">
       <div className="flex items-center justify-between pb-2">
         <span className="text-[11px] font-bold text-text-mute uppercase tracking-tight">
-          🏷️ 標籤篩選 ({tagsToRender.length})
+          🏷️ {t.tagFilter(tagsToRender.length)}
         </span>
         {hasSelectedTags && (
           <button
             onClick={clearTags}
             className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-danger/10 text-danger hover:bg-danger/20 transition cursor-pointer"
           >
-            重置
+            {t.reset}
           </button>
         )}
       </div>

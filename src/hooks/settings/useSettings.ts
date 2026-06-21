@@ -79,6 +79,7 @@ export function usePublicSettings() {
       }
     },
     staleTime: STALE_TIMES.MEDIUM,
+    refetchOnWindowFocus: false,
     retry: 1,
   });
 }

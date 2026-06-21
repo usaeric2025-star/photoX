@@ -276,5 +276,7 @@ export const en = {
     itemCodePlaceholder: 'Item code...',
     modelNumberPlaceholder: 'Numbers only...',
     pricePlaceholder: '0',
-    none: 'None'
+    none: 'None',
+    tagFilter: (count: number) => `Tag Filter (${count})`,
+    reset: 'Reset'
 };

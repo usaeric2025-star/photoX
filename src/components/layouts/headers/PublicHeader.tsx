@@ -5,6 +5,7 @@ import { Icon } from '@/components/ui/Icon'; // Keep one or two critical ones as
 import { useAuthStore } from '@/store/useAuthStore';
 import { useUIStore, useShallow, usePublicSettings, usePermission } from '@/hooks';
 import { NativePopover } from '@/components/ui/NativePopover';
+import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
 import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
 import { translations } from "@/locales";
 import { storage } from '@/services/storage';
@@ -95,8 +96,11 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
         )}
 
         {totalCount !== undefined && (
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold whitespace-nowrap shrink-0 tracking-tight leading-none">
-            <span>{t.photosCount(totalCount)}</span>
+          <div className="flex items-center gap-2 text-[10px] sm:text-xs font-bold bg-slate-50 border border-slate-200 rounded-full px-2.5 py-1 select-none shrink-0 cursor-default justify-center shadow-sm">
+            <span className="text-slate-500 uppercase tracking-tighter text-[9px]">{lang === 'zh' ? '总存量' : 'Total'}</span>
+            <span className="text-slate-900 font-black">
+              {totalCount}
+            </span>
           </div>
         )}
       </div>
@@ -111,7 +115,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
             className="w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 bg-surface-soft text-text-sub hover:text-text-main disabled:opacity-50"
             title={t.refresh}
           >
-            <Icon name="refresh-cw" size={18} className={isRefreshing ? 'animate-spin' : ''} />
+            {isRefreshing ? <LoadingSpinner size="xs" /> : <Icon name="refresh-cw" size={18} />}
           </button>
         )}
 

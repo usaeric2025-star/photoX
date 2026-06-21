@@ -2,10 +2,12 @@ import { useParams, useLocation, useNavigate } from '@tanstack/react-router';
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React, { useEffect, Suspense, lazy } from 'react';
 import { Icon } from '@/components/ui/Icon';
+import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useTasks, 
   useSyncMutation } from '@/hooks';
-import { UploadModeDialog } from '@/features/upload/components/UploadModeDialog';
+const UploadModeDialog = lazy(() => import('@/features/upload/components/UploadModeDialog').then(m => ({ default: m.UploadModeDialog })));
+
 import { usePhotoUpload } from '@/features/upload';
 import { UploadButton } from '@/components/shared/UploadButton';
 import { logger } from '@/lib/logger';
@@ -23,7 +25,7 @@ const BatchEditScreen = lazy(() => import('@/features/batch-edit/BatchEditScreen
 const StatisticsScreen = lazy(() => import('@/features/statistics/components/StatisticsScreen').then(m => ({ default: m.StatisticsScreen })));
 const DiagnosticsDashboard = lazy(() => import('@/features/diagnostics/DiagnosticsDashboard').then(m => ({ default: m.DiagnosticsDashboard })));
 const SettingsPage = lazy(() => import('@/features/settings/SettingsPage').then(m => ({ default: m.SettingsPage })));
-import { PhotoEditDialog } from '@/features/photo-edit';
+const PhotoEditDialog = lazy(() => import('@/features/photo-edit/index').then(m => ({ default: m.PhotoEditDialog })));
 
 export function AdminPageContent() {
   const filters = useFilters({ enableStatus: true, enableBatch: true });
@@ -81,7 +83,7 @@ export function AdminPageContent() {
         {/* Other screens are lazy mounted */}
         {currentScreen !== 'gallery' && (
           <div className="flex-1 relative overflow-hidden pb-16 sm:pb-0 order-0">
-            <Suspense fallback={<div className="h-full flex items-center justify-center bg-slate-50"><Icon name="loader-2" className="w-8 h-8 animate-spin text-slate-400" /></div>}>
+            <Suspense fallback={<div className="h-full flex items-center justify-center bg-slate-50"><LoadingSpinner size="lg" /></div>}>
               {currentScreen === 'dashboard' ? (
                 <ScreenWrapper key="admin-dashboard" onClose={() => navigate({ to: '/admin' })}>
                   <StatisticsScreen />
@@ -129,18 +131,20 @@ export function AdminPageContent() {
       </div>
 
       {/* Put Modals outside the layout container */}
-      <UploadModeDialog 
-        open={uploadModeDialogOpen}
-        onOpenChange={(open) => store.update({ uploadModeDialogOpen: open })}
-        onSelectMode={(mode) => {
-          if (pendingFiles) {
-            store.update({ uploadAsGroup: mode === 'group' });
-            uploadFiles(pendingFiles);
-          }
-          store.update({ uploadModeDialogOpen: false, pendingFiles: null });
-        }}
-      />
-      <PhotoEditDialog />
+      <Suspense fallback={null}>
+        <UploadModeDialog 
+          open={uploadModeDialogOpen}
+          onOpenChange={(open) => store.update({ uploadModeDialogOpen: open })}
+          onSelectMode={(mode) => {
+            if (pendingFiles) {
+              store.update({ uploadAsGroup: mode === 'group' });
+              uploadFiles(pendingFiles);
+            }
+            store.update({ uploadModeDialogOpen: false, pendingFiles: null });
+          }}
+        />
+        <PhotoEditDialog />
+      </Suspense>
     </AdminAuthGate>
   );
 }

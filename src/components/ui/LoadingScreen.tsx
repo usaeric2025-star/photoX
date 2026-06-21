@@ -1,6 +1,6 @@
 import { logger } from '@/lib/logger';
-import React, { useEffect, useRef, useState } from 'react';
-import { GlobalDiagnosticsDialog } from './GlobalDiagnosticsDialog';
+import React, { useEffect, useRef, useState, lazy, Suspense } from 'react';
+const DiagnosticsDialog = lazy(() => import('./DiagnosticsDialog').then(m => ({ default: m.DiagnosticsDialog })));
 import { Icon } from '@/components/ui/Icon';
 
 export const LoadingScreen = () => {
@@ -76,10 +76,12 @@ export const LoadingScreen = () => {
         </div>
       </dialog>
 
-      <GlobalDiagnosticsDialog 
-        open={diagnosticsOpen} 
-        onClose={() => setDiagnosticsOpen(false)} 
-      />
+      <Suspense fallback={null}>
+        <DiagnosticsDialog 
+          open={diagnosticsOpen} 
+          onClose={() => setDiagnosticsOpen(false)} 
+        />
+      </Suspense>
     </>
   );
 };

@@ -1,12 +1,13 @@
 import React from 'react';
 import { PhotoListItem } from '@/types/api';
 import VirtualGrid from '@/components/virtualizer/VirtualGrid';
-import { PhotoGridSkeleton } from './PhotoGridSkeleton';
 import { AdminPhotoCard } from './AdminPhotoCard';
 import { PublicPhotoCard } from './PublicPhotoCard';
 import { LoadMoreIndicator } from './LoadMoreIndicator';
 import { EmptyState } from '../ui/EmptyState';
 import { Icon } from '@/components/ui/Icon';
+
+import { LoadingContainer } from '@/components/ui/feedback';
 
 interface PhotoGridContentProps {
   photos: PhotoListItem[];
@@ -42,7 +43,13 @@ export function PhotoGridContent({
   const hasSearchQuery = !!filters?.search;
 
   if (isPending) {
-    return <PhotoGridSkeleton columns={columns} count={20} />;
+    return (
+      <div className="p-4 w-full h-full">
+        <LoadingContainer loading={true} type="skeleton" skeletonType="grid" skeletonCount={Math.max(columns * 3, 12)}>
+          <div />
+        </LoadingContainer>
+      </div>
+    );
   }
 
   if (photos.length === 0) {

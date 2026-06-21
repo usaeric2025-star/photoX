@@ -1,6 +1,6 @@
 import { createRootRouteWithContext, Outlet } from '@tanstack/react-router';
 import { Suspense } from 'react';
-import { PageSkeleton } from '@/components/ui/PageSkeleton';
+import { LoadingSkeleton } from '@/components/ui/feedback/LoadingSkeleton';
 import { JobResumer } from '@/components/tasks/JobResumer';
 import { BackgroundTaskPanel } from '@/components/tasks/BackgroundTaskPanel';
 import { QueryClient } from '@tanstack/react-query';
@@ -19,7 +19,7 @@ export const rootRoute = createRootRouteWithContext<RouterContext>()({
   },
   errorComponent: ({ error, reset }) => <RouteErrorFallback error={error} reset={reset} />,
   component: () => (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense fallback={<LoadingSkeleton type="page" />}>
       <Outlet />
       <JobResumer />
       <BackgroundTaskPanel />

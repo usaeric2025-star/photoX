@@ -9,6 +9,7 @@ import { translations } from '@/locales';
 import { storage } from '@/services/storage';
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
 import { type } from 'arktype';
+import { Button } from '@/components/ui/Button';
 
 const StaffLoginSchema = type({
   passcode: 'string > 0',
@@ -139,22 +140,16 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
                 key="admin-action"
                 className="w-full flex flex-col items-center space-y-6 animate-fade-in absolute top-0"
               >
-                <button 
+                <Button 
                   onClick={async () => {
                     await submitAdmin({});
                   }}
-                  disabled={isAdminLoggingIn}
-                  className="w-full bg-slate-950 text-white h-14 rounded-2xl text-[13px] font-bold flex items-center justify-center gap-3 shadow-xl shadow-slate-900/10 hover:shadow-2xl hover:shadow-slate-900/20 transition-all hover:bg-black active:scale-[0.98] disabled:opacity-50 group"
+                  loading={isAdminLoggingIn}
+                  className="w-full bg-slate-950 text-white h-14 rounded-2xl text-[13px] hover:shadow-2xl hover:shadow-slate-900/20 hover:bg-black group"
+                  leftIcon={!isAdminLoggingIn && <Icon name="log-in" size={18} className="transition-transform group-hover:translate-x-1" />}
                 >
-                  {isAdminLoggingIn ? (
-                    <Icon name="refresh-ccw" size={18} className="animate-spin" />
-                  ) : (
-                    <>
-                      <Icon name="log-in" size={18} className="transition-transform group-hover:translate-x-1" /> 
-                      {t.login}
-                    </>
-                  )}
-                </button>
+                  {t.login}
+                </Button>
                 
                 <p className="text-[10px] text-slate-400 font-medium text-center leading-relaxed max-w-[240px]">
                   {t.agreeByConnecting} <br/>
@@ -185,20 +180,14 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
                   />
                 </div>
                 
-                <button
+                <Button
                   type="submit"
-                  disabled={isStaffLoggingIn}
-                  className="w-full bg-slate-950 text-white h-14 rounded-2xl text-[13px] font-bold flex items-center justify-center gap-3 shadow-xl shadow-slate-900/10 hover:shadow-2xl hover:shadow-slate-900/20 transition-all hover:bg-black active:scale-[0.98] disabled:opacity-50"
+                  loading={isStaffLoggingIn}
+                  className="w-full bg-slate-950 text-white h-14 rounded-2xl text-[13px] hover:shadow-2xl hover:shadow-slate-900/20 hover:bg-black"
+                  leftIcon={!isStaffLoggingIn && <Icon name="log-in" size={18} />}
                 >
-                  {isStaffLoggingIn ? (
-                    <Icon name="refresh-ccw" size={18} className="animate-spin" />
-                  ) : (
-                    <>
-                      <Icon name="log-in" size={18} />
-                      {t.unlockAndAccess}
-                    </>
-                  )}
-                </button>
+                  {t.unlockAndAccess}
+                </Button>
               </form>
             )}
           </div>

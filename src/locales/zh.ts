@@ -276,5 +276,7 @@ export const zh = {
     itemCodePlaceholder: '編號...',
     modelNumberPlaceholder: '仅限数字...',
     pricePlaceholder: '0',
-    none: '无'
+    none: '无',
+    tagFilter: (count: number) => `标签筛选 (${count})`,
+    reset: '重置'
 };

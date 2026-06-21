@@ -2,6 +2,7 @@ import { usePhotoEditSessionContext } from "@/hooks/photo/usePhotoEditSessionCon
 import React from "react";
 import { useFormContext, useField } from "el-form-react-hooks";
 import { Icon } from '@/components/ui/Icon';
+import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
 import {
   usePhoto,
   useTasks,
@@ -90,7 +91,7 @@ export function DialogHeader({
             className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-slate-100 shadow-sm transition-all disabled:opacity-50 ${isAnalyzing ? "bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed" : "bg-purple-50 text-purple-600 border-purple-100 active:bg-purple-200"}`}
           >
             {isAnalyzing ? (
-              <Icon name="loader-2" size={16} className="text-current animate-spin" />
+              <LoadingSpinner size="xs" />
             ) : (
               <Icon name="sparkles" size={18} />
             )}
@@ -143,7 +144,7 @@ export function DialogHeader({
           className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-blue-600 shadow-sm transition-all disabled:opacity-50 ${isSubmitting || isAnalyzing ? "bg-blue-400 text-white border-blue-400 cursor-wait" : "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20 active:bg-blue-700"}`}
         >
           {isSubmitting || isAnalyzing ? (
-            <Icon name="loader-2" size={16} className="text-current animate-spin" />
+            <LoadingSpinner size="xs" />
           ) : (
             <Icon name="save" size={18} />
           )}

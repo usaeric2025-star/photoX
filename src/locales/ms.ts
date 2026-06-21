@@ -276,5 +276,7 @@ export const ms = {
     itemCodePlaceholder: 'Nombor barang...',
     modelNumberPlaceholder: 'Hanya nombor...',
     pricePlaceholder: '0',
-    none: 'Tiada'
+    none: 'Tiada',
+    tagFilter: (count: number) => `Penapisan Tag (${count})`,
+    reset: 'Tetap Semula'
 };

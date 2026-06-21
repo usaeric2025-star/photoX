@@ -1,4 +1,5 @@
 import { Icon } from '@/components/ui/Icon';
+import { Button } from '@/components/ui/Button';
 import { Dimension, TranslationType } from '@/types';
 import { safeArray } from '@/lib/utils';
 import { showToast } from '@/lib/ui/toast';
@@ -71,16 +72,16 @@ export function DimensionEditor({
         </div>
         <div className="flex items-center gap-2">
           {showAiButton && (
-            <button 
+            <Button 
               onClick={onAiAnalyze}
-              disabled={isAnalyzing}
-              className={`min-h-[44px] min-w-[44px] text-[9px] font-black px-3 py-1 rounded-xl border flex items-center gap-1.5 transition-all shadow-sm active:scale-95 ${isAnalyzing ? 'bg-slate-50 text-slate-400 border-slate-100' : 'bg-purple-50 text-purple-600 border-purple-100 hover:bg-purple-100'}`}
+              loading={isAnalyzing}
+              className={`min-h-[44px] min-w-[44px] text-[9px] font-black px-3 py-1 rounded-xl border transition-all ${isAnalyzing ? 'bg-slate-50 text-slate-400 border-slate-100' : 'bg-purple-50 text-purple-600 border-purple-100 hover:bg-purple-100'}`}
+              leftIcon={!isAnalyzing && <Icon name="sparkles" size={16} />}
               title={t.aiRecognize}
             >
-              <Icon name="sparkles" size={16} className={isAnalyzing ? 'animate-spin' : ''} /> 
               <span className="hidden sm:inline">{isAnalyzing ? '识别中...' : 'AI 识别'}</span>
               <span className="sm:hidden">{isAnalyzing ? '...' : 'AI'}</span>
-            </button>
+            </Button>
           )}
           <button 
             onClick={onAddDimension}

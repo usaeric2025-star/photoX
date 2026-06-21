@@ -2,6 +2,7 @@ import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useTaskExecutor, useTasks } from "@/hooks";
 import React, { useState } from "react";
 import { Icon } from '@/components/ui/Icon';
+import { Button } from '@/components/ui/Button';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { Tag, AppSettings } from "../../types";
 import { TagItem } from "./TagItem";
@@ -11,6 +12,7 @@ import { normalizeTagName } from "@/lib/utils";
 import { triggerRefreshTagHotScores } from "../../services/tag/commands";
 import { useQueryClient } from "@tanstack/react-query";
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
+import { FormProvider } from '@/lib/form/useFormField';
 import { type } from 'arktype';
 
 interface TagsSectionProps {
@@ -60,8 +62,8 @@ export function TagsSection({
   const [isEditOpen, editDialog] = useDisclosure(false);
   const [editingTag, setEditingTag] = useState<Tag | null>(null);
 
-  const { submit: runAddTag, isLoading: isAdding } = useFormSubmit({
-    schema: type({ name: "string" }),
+  const { submit: runAddTag, isLoading: isAdding, fieldErrors: addFieldErrors, clearFieldError: addClearFieldError } = useFormSubmit({
+    schema: type({ name: "string >= 2" }),
     mutationFn: async ({ name }) => {
       const normalized = normalizeTagName(name);
       if (!normalized) return null;
@@ -71,8 +73,8 @@ export function TagsSection({
     errorMessage: '新增失敗 / Add failed'
   });
 
-  const { submit: runUpdateTag, isLoading: isUpdating } = useFormSubmit({
-    schema: type({ id: "number", name: "string" }),
+  const { submit: runUpdateTag, isLoading: isUpdating, fieldErrors: editFieldErrors, clearFieldError: editClearFieldError } = useFormSubmit({
+    schema: type({ id: "number", name: "string > 0" }),
     mutationFn: async ({ id, name }) => {
       await rawUpdateTag(id, { name });
       return true;
@@ -104,10 +106,15 @@ export function TagsSection({
         </span>
       </div>
       <div className="flex flex-wrap gap-2 items-center justify-between">
-        <button onClick={addDialog.open} disabled={isAdding} className={buttonStyles.accent}>
-          {isAdding ? <Icon name="refresh-ccw" size={16} className="animate-spin" /> : <Icon name="plus" size={16} />}
+        <Button 
+           onClick={addDialog.open} 
+           loading={isAdding} 
+           className={buttonStyles.accent}
+           leftIcon={!isAdding && <Icon name="plus" size={16} />}
+           variant="primary"
+        >
           新增標籤 / Add Tag
-        </button>
+        </Button>
         <div className="flex flex-wrap items-center gap-3.5 bg-brand-navy/5 px-4 py-2 rounded-2xl border border-brand-navy/10">
           {/* Hot Limit */}
           <div className="flex flex-col gap-0.5">
@@ -210,32 +217,37 @@ export function TagsSection({
           ))}
       </div>
 
-      <PromptDialog
-        open={isAddOpen}
-        onOpenChange={addDialog.toggle}
-        loading={isAdding}
-        title="新增標籤"
-        description="輸入標籤名稱:"
-        onConfirm={async (name: string) => {
-          if (!name.trim()) return;
-          await runAddTag({ name });
-        }}
-      />
+      <FormProvider fieldErrors={addFieldErrors} clearFieldError={addClearFieldError}>
+        <PromptDialog
+          open={isAddOpen}
+          onOpenChange={addDialog.toggle}
+          loading={isAdding}
+          title="新增標籤"
+          description="輸入標籤名稱:"
+          onConfirm={async (name: string) => {
+            if (!name.trim()) return false;
+            return await runAddTag({ name });
+          }}
+        />
+      </FormProvider>
 
-      <PromptDialog
-        open={isEditOpen}
-        onOpenChange={editDialog.toggle}
-        loading={isUpdating}
-        title="編輯標籤名 / Edit Tag Name"
-        description="輸入新的標籤名稱 / Enter new tag name:"
-        defaultValue={editingTag?.name}
-        onConfirm={async (newName: string) => {
-          if (editingTag && newName.trim()) {
-            await runUpdateTag({ id: editingTag.id, name: newName });
-          }
-          setEditingTag(null);
-        }}
-      />
+      <FormProvider fieldErrors={editFieldErrors} clearFieldError={editClearFieldError}>
+        <PromptDialog
+          open={isEditOpen}
+          onOpenChange={editDialog.toggle}
+          loading={isUpdating}
+          title="編輯標籤名 / Edit Tag Name"
+          description="輸入新的標籤名稱 / Enter new tag name:"
+          defaultValue={editingTag?.name}
+          onConfirm={async (newName: string) => {
+            if (editingTag && newName.trim()) {
+              return await runUpdateTag({ id: editingTag.id, name: newName });
+            }
+            setEditingTag(null);
+            return true;
+          }}
+        />
+      </FormProvider>
     </section>
   );
 }

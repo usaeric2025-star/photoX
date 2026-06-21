@@ -20,7 +20,7 @@ import { useGroupDraft } from '@/components/groups/useGroupDraft';
 import { useGroupMutations } from '@/hooks/groups/useGroupMutations';
 import { GroupHeader } from '../shared/components/GroupHeader';
 import { PhotoEditDialog } from '@/features/photo-edit';
-import { PageSkeleton } from '@/components/ui/PageSkeleton';
+import { LoadingContainer } from '@/components/ui/feedback/LoadingContainer';
 import { Button } from '@/components/shared/Button';
 
 function AdminPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string) => void }) {
@@ -144,7 +144,15 @@ export function AdminGroupDetailPage() {
       }
   };
 
-  if (loading) return <PageSkeleton />;
+  if (loading) {
+    return (
+      <div className="p-4 w-full h-full">
+        <LoadingContainer loading={true} type="skeleton" skeletonType="grid" skeletonCount={20}>
+          <div />
+        </LoadingContainer>
+      </div>
+    );
+  }
   if (error) return <div className="p-4 text-red-500">錯誤：{error}</div>;
   if (!group) return <div className="p-4 flex flex-col justify-center items-center h-full"><div className="text-xl text-slate-500 mb-4">合組不存在或已被刪除</div><Button onClick={() => window.history.back()}>返回</Button></div>;
   

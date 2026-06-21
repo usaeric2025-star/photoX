@@ -1,4 +1,5 @@
 import { Icon } from '@/components/ui/Icon';
+import { Button } from '@/components/ui/Button';
 import { translations } from '@/locales';
 
 interface SettingsHeaderProps {
@@ -27,15 +28,16 @@ export function SettingsHeader({ appLang, hasChanges, isSaving, onSave, onClose 
       </div>
 
       <div className="flex items-center gap-2">
-        <button 
+        <Button 
            onClick={onSave}
-           disabled={isSaving}
-           className="h-10 px-4 rounded-full shadow-sm bg-brand-gold hover:bg-brand-gold/90 text-white flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 hover:shadow-md cursor-pointer disabled:opacity-50"
+           loading={isSaving}
+           variant="primary"
+           className="h-10 px-4 rounded-full shadow-sm bg-brand-gold hover:bg-brand-gold/90 border-0"
+           leftIcon={!isSaving && <Icon name="save" size={16} />}
            title={appLang === 'zh' ? '儲存設定' : 'Save Settings'}
         >
-            {isSaving ? <Icon name="refresh-ccw" size={16} className="animate-spin" /> : <Icon name="save" size={16} />}
-            <span>{appLang === 'zh' ? '儲存' : 'Save'}</span>
-        </button>
+            {appLang === 'zh' ? '儲存' : 'Save'}
+        </Button>
         
         <button 
           onClick={onClose}

@@ -35,13 +35,23 @@ export function useFormSubmit<TData, TResult>({
     isError: false,
     isSuccess: false,
     error: null as string | null,
+    fieldErrors: {} as Record<string, string>,
   });
 
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
   const abortController = useRef<AbortController | null>(null);
 
   const reset = useCallback(() => {
-    setState({ isLoading: false, isError: false, isSuccess: false, error: null });
+    setState({ isLoading: false, isError: false, isSuccess: false, error: null, fieldErrors: {} });
+  }, []);
+
+  const clearFieldError = useCallback((name: string) => {
+    setState((prev) => {
+      if (!prev.fieldErrors[name]) return prev;
+      const newErrors = { ...prev.fieldErrors };
+      delete newErrors[name];
+      return { ...prev, fieldErrors: newErrors };
+    });
   }, []);
 
   const cancel = useCallback(() => {
@@ -61,14 +71,22 @@ export function useFormSubmit<TData, TResult>({
 
       return new Promise((resolve) => {
         const execute = async () => {
-          setState({ isLoading: true, isError: false, isSuccess: false, error: null });
+          setState({ isLoading: true, isError: false, isSuccess: false, error: null, fieldErrors: {} });
 
           // 1. Schema Validation
           const result = schema(rawData);
           if (result instanceof Error) {
             const msg = result.message;
             toast.error(msg);
-            setState({ isLoading: false, isError: true, isSuccess: false, error: msg });
+            
+            let newFieldErrors: Record<string, string> = {};
+            if ('byPath' in result && typeof result.byPath === 'object' && result.byPath) {
+               for (const [path, error] of Object.entries(result.byPath as Record<string, any>)) {
+                 newFieldErrors[path] = error.message.replace(/^.*?must be /, '必須是 '); // basic translation, or just keep raw error if prefered
+               }
+            }
+
+            setState({ isLoading: false, isError: true, isSuccess: false, error: msg, fieldErrors: newFieldErrors });
             onError?.(msg);
             return resolve(false);
           }
@@ -138,5 +156,5 @@ export function useFormSubmit<TData, TResult>({
     ]
   );
 
-  return { submit, cancel, reset, ...state };
+  return { submit, cancel, reset, clearFieldError, ...state };
 }

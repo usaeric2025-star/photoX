@@ -1,6 +1,7 @@
 import { useTransition, useState, useEffect } from 'react';
 import { useFilterState } from './useFilterState';
 import { Icon } from '@/components/ui/Icon';
+import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
 import { useTranslation } from '@/hooks';
 
 export function SearchInput() {
@@ -49,7 +50,7 @@ export function SearchInput() {
       )}
       {!inputValue && isPending && (
         <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
-          <div className="w-4 h-4 border-2 border-surface-mute border-t-primary rounded-full animate-spin" />
+          <LoadingSpinner size="xs" />
         </div>
       )}
     </div>

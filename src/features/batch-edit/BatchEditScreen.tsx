@@ -7,6 +7,7 @@ import { BatchEditForm } from './BatchEditForm';
 import { useBatchEditSelection } from './useBatchEditSelection';
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
 import { type } from 'arktype';
+import { Button } from '@/components/ui/Button';
 
 function BatchDeleteButton({ selectedIds, onSuccess }: { selectedIds: string[], onSuccess: () => void }) {
   const [isDeleteOpen, deleteDialog] = useDisclosure(false);
@@ -22,16 +23,16 @@ function BatchDeleteButton({ selectedIds, onSuccess }: { selectedIds: string[], 
 
   return (
     <div className="relative">
-      <button 
+      <Button 
         onClick={() => deleteDialog.open()}
-        disabled={deleteMutation.isPending || selectedIds.length === 0}
-        className="h-10 px-3 bg-red-50 text-red-500 
-        rounded-xl flex items-center justify-center gap-1.5
-        active:bg-red-100 transition-colors disabled:opacity-50 text-sm font-bold"
+        loading={deleteMutation.isPending}
+        disabled={selectedIds.length === 0}
+        variant="danger"
+        className="h-10 px-3 flex items-center justify-center gap-1.5"
+        leftIcon={!deleteMutation.isPending && <Icon name="trash-2" size={16} />}
       >
-        <Icon name="trash-2" size={16} />
         {deleteMutation.isPending ? '刪除中...' : `刪除 (${selectedIds.length})`}
-      </button>
+      </Button>
       <ConfirmDialog
           open={isDeleteOpen}
           onOpenChange={deleteDialog.toggle}
@@ -86,14 +87,14 @@ export const BatchEditScreen = () => {
             <BatchDeleteButton selectedIds={batchEditIds} onSuccess={handleClose} />
           )}
 
-          <button onClick={() => saveBatch({})}
-            disabled={isSaving || isSyncing}
-            className={`px-3 h-10 bg-blue-600 text-white 
-            rounded-xl flex items-center justify-center gap-1.5
-            shadow-md text-sm font-bold transition-all ${(isSaving || isSyncing) ? 'opacity-50 pointer-events-none' : 'active:bg-blue-700'}`}>
-            {(isSaving || isSyncing) ? <Icon name="refresh-ccw" size={16} className="animate-spin" /> : <Icon name="save" size={16} />}
+          <Button onClick={() => saveBatch({})}
+            loading={isSaving || isSyncing}
+            variant="primary"
+            className="px-3 h-10 flex items-center justify-center gap-1.5 shadow-md text-sm bg-blue-600 hover:bg-blue-700"
+            leftIcon={!(isSaving || isSyncing) && <Icon name="save" size={16} />}
+          >
             {(isSaving || isSyncing) ? '儲存中...' : '儲存'}
-          </button>
+          </Button>
           
           <button onClick={handleClose}
             className="w-10 h-10 bg-slate-100 text-slate-600 

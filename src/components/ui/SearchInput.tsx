@@ -3,7 +3,7 @@ import { Icon } from '@/components/ui/Icon';
 import { useSearchTransition } from '@/hooks';
 import { Input } from '@/components/shared/Input';
 import { cn } from '@/lib/utils';
-import { Spinner } from './Spinner';
+import { LoadingSpinner } from './feedback/LoadingSpinner';
 
 interface SearchInputProps {
   onSearch: (value: string) => void;
@@ -53,7 +53,7 @@ export const SearchInput = ({
         className="pl-9 pr-8"
       />
       {isPending && (
-         <Spinner size="sm" className="absolute right-3 top-1/2 -translate-y-1/2" />
+         <LoadingSpinner size="sm" className="absolute right-3 top-1/2 -translate-y-1/2" />
       )}
       {!isPending && value && (
         <button

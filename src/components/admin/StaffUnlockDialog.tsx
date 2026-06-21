@@ -4,6 +4,7 @@ import { Icon } from '@/components/ui/Icon';
 import { NativeDialog } from '@/components/ui/NativeDialog';
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
 import { type } from 'arktype';
+import { Button } from '@/components/ui/Button';
 
 interface StaffUnlockDialogProps {
   isOpen: boolean;
@@ -63,45 +64,48 @@ export function StaffUnlockDialog({
           {passError && <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest animate-bounce">{labels.invalidKey}</p>}
           
           <div className="flex gap-2">
-            <button 
+            <Button 
               type="button"
               onClick={onClose}
               disabled={isUnlocking}
-              className="flex-1 py-4 px-4 rounded-2xl font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 transition-colors disabled:opacity-50"
+              variant="secondary"
+              className="flex-1 py-4"
             >
               {labels.cancel}
-            </button>
-            <button 
+            </Button>
+            <Button 
               type="submit"
-              disabled={isUnlocking}
-              className="flex-1 py-4 px-4 rounded-2xl font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+              loading={isUnlocking}
+              variant="primary"
+              className="flex-1 py-4 bg-blue-600 hover:bg-blue-700"
             >
-              {isUnlocking && <Icon name="refresh-ccw" size={18} className="animate-spin" />}
               {labels.unlock}
-            </button>
+            </Button>
           </div>
           {(onLogin || rawSignIn) && (
             <div className="pt-4 border-t border-slate-100 mt-4 flex flex-col gap-2">
               {onLogin && (
-                <button
+                <Button
                   type="button"
                   onClick={onLogin}
                   disabled={isUnlocking || isSigningIn}
-                  className="w-full py-3 px-4 rounded-2xl font-bold text-white bg-slate-800 hover:bg-slate-900 transition-all text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white"
+                  leftIcon={<Icon name="log-in" size={16} />}
                 >
-                   <Icon name="log-in" size={16} /> {labels.login}
-                </button>
+                  {labels.login}
+                </Button>
               )}
               {rawSignIn && (
-                <button
+                <Button
                   type="button"
-                  disabled={isUnlocking || isSigningIn}
+                  loading={isSigningIn}
+                  disabled={isUnlocking}
                   onClick={() => runSignIn({})}
-                  className="w-full py-3 px-4 rounded-2xl font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white"
+                  leftIcon={!isSigningIn && <Icon name="log-in" size={16} />}
                 >
-                   {isSigningIn ? <Icon name="refresh-ccw" size={16} className="animate-spin" /> : <Icon name="log-in" size={16} />}
                    {labels.googleLogin}
-                </button>
+                </Button>
               )}
             </div>
           )}

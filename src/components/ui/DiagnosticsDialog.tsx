@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { NativeDialog } from '@/components/ui/NativeDialog';
+import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
 import { logger } from '@/lib/logger';
 import { clearCacheAndReload } from '@/lib/recovery/clearCacheAndReload';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 import { copyToClipboard } from '@/utils/clipboard';
 
-interface GlobalDiagnosticsDialogProps {
+interface DiagnosticsDialogProps {
   open: boolean;
   onClose: () => void;
 }
@@ -21,7 +22,7 @@ interface DiagnosticError {
   timestamp: string;
 }
 
-export function GlobalDiagnosticsDialog({ open, onClose }: GlobalDiagnosticsDialogProps) {
+export function DiagnosticsDialog({ open, onClose }: DiagnosticsDialogProps) {
   const [networkStatus, setNetworkStatus] = useState<'checking' | 'connected' | 'failed'>('checking');
   const [latency, setLatency] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
@@ -155,7 +156,7 @@ export function GlobalDiagnosticsDialog({ open, onClose }: GlobalDiagnosticsDial
               <div className="flex items-center gap-2">
                 {networkStatus === 'checking' && (
                   <>
-                    <Icon name="refresh-cw" size={14} className="text-slate-400 animate-spin" />
+                    <LoadingSpinner size="xs" />
                     <span className="text-xs font-semibold text-slate-600">檢測中...</span>
                   </>
                 )}

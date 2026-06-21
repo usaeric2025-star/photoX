@@ -1,6 +1,7 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import React from "react";
 import { Icon } from '@/components/ui/Icon';
+import { Button } from '@/components/ui/Button';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { Manufacturer } from "../../types";
 import { ManufacturerItem } from '@/components/admin/ManufacturerItem';
@@ -70,10 +71,15 @@ export function ManufacturersSection({
         </span>
       </div>
       <div className="flex gap-2">
-        <button onClick={addDialog.open} disabled={isAdding} className={buttonStyles.accent}>
-          {isAdding ? <Icon name="refresh-ccw" size={16} className="animate-spin" /> : <Icon name="plus" size={16} />}
+        <Button 
+           onClick={addDialog.open} 
+           loading={isAdding} 
+           className={buttonStyles.accent}
+           leftIcon={!isAdding && <Icon name="plus" size={16} />}
+           variant="primary"
+        >
           {appLang === 'zh' ? '新增生產商' : 'Add New'}
-        </button>
+        </Button>
       </div>
       <div className="flex flex-wrap gap-2 p-3 bg-brand-navy/5 rounded-[28px] border border-brand-navy/10 shadow-inner min-h-[48px]">
         {(manufacturers || []).map((sub) => (

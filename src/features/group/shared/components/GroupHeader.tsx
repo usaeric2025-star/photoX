@@ -6,11 +6,35 @@ import { useUIStore } from '@/store/useUIStore';
 import { usePhotoSelection } from '@/hooks/photo/usePhotoSelection';
 import { copyToClipboard } from '@/utils/clipboard';
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
+import { FormProvider, useFormField } from '@/lib/form/useFormField';
 import { type } from 'arktype';
+import { Input } from '@/components/shared/Input';
 
 const GroupTitleSchema = type({
-  title: 'string > 0',
+  title: 'string >= 3',
 });
+
+function TitleInput({ value, onChange, onBlur, onKeyDown, disabled }: any) {
+  const { error, onChange: clearError } = useFormField('title');
+  
+  return (
+    <Input
+      autoFocus
+      disabled={disabled}
+      value={value}
+      onChange={(e) => {
+        onChange(e.target.value);
+        clearError?.();
+      }}
+      onBlur={onBlur}
+      onKeyDown={onKeyDown}
+      error={error}
+      className="text-xl font-bold"
+      containerClassName="w-full max-w-sm"
+      placeholder="請輸入大於2個字元的名稱"
+    />
+  );
+}
 
 interface GroupHeaderProps {
   group: Group;
@@ -29,7 +53,7 @@ export function GroupHeader({ group, photoCount, isAdmin, onEditSettings, onUpda
   const { enable, disable } = usePhotoSelection();
   const isMultiSelect = useUIStore(s => s.isMultiSelect);
 
-  const { submit: updateTitle, isLoading: isUpdating } = useFormSubmit({
+  const { submit: updateTitle, isLoading: isUpdating, fieldErrors, clearFieldError } = useFormSubmit({
     schema: GroupTitleSchema,
     mutationFn: async ({ title }) => {
       if (onUpdateTitle) {
@@ -82,16 +106,15 @@ export function GroupHeader({ group, photoCount, isAdmin, onEditSettings, onUpda
       <div className="flex-1 min-w-0 pr-4">
         <div className="flex items-center gap-2 mb-1">
           {isAdmin && isEditingTitle ? (
-            <input
-              autoFocus
-              disabled={isUpdating}
-              value={editTitleValue}
-              onChange={(e) => setEditTitleValue(e.target.value)}
-              onBlur={handleSaveTitle}
-              onKeyDown={handleKeyDown}
-              className="text-xl font-bold text-slate-900 bg-slate-100 border-none outline-none rounded px-2 py-0.5 w-full max-w-sm"
-              placeholder="名稱"
-            />
+            <FormProvider fieldErrors={fieldErrors} clearFieldError={clearFieldError}>
+              <TitleInput
+                disabled={isUpdating}
+                value={editTitleValue}
+                onChange={setEditTitleValue}
+                onBlur={handleSaveTitle}
+                onKeyDown={handleKeyDown}
+              />
+            </FormProvider>
           ) : (
             <h1 
               className={`text-xl font-bold text-slate-900 truncate ${isAdmin ? 'cursor-pointer hover:underline decoration-slate-300 underline-offset-4' : ''}`}

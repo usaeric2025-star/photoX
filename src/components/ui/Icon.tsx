@@ -24,10 +24,10 @@ export const Icon = ({
   style,
   onClick
 }: IconProps) => {
-  // Normalize icon names from PascalCase/camelCase to kebab-case (Sprite style)
-  const normalizedName = name
-    .replace(/([A-Z])/g, (match, offset) => (offset > 0 ? '-' : '') + match.toLowerCase())
-    .replace(/-+/g, '-');
+  // Warn in development if icon name is not kebab-case
+  if (process.env.NODE_ENV !== 'production' && /[A-Z]/.test(name)) {
+    console.warn(`[Icon] Icon name "${name}" should be in kebab-case.`);
+  }
 
   // Defensive check: If LucideIconBase is not correctly imported/defined, fallback to a spacer
   if (typeof LucideIconBase !== 'function' && typeof LucideIconBase !== 'object') {
@@ -36,7 +36,7 @@ export const Icon = ({
 
   return (
     <LucideIconBase 
-      name={normalizedName as any} 
+      name={name.toLowerCase() as any} 
       size={size} 
       className={cn(className, solid ? 'fill-current' : '')}
       strokeWidth={strokeWidth}

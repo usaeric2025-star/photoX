@@ -4,6 +4,8 @@ import { useTranslation } from '@/hooks';
 import { getTranslatedCategoryName } from '@/services/category/utils';
 import { logger } from '@/lib/logger';
 
+import { LoadingContainer } from '@/components/ui/feedback/LoadingContainer';
+
 export function CategoryGrid({ mode }: { mode?: 'public' | 'admin' }) {
   const { filters, updateFilters } = useFilterState();
   const { data: categories, isPending } = useCategories();
@@ -12,10 +14,10 @@ export function CategoryGrid({ mode }: { mode?: 'public' | 'admin' }) {
 
   if (isPending) {
     return (
-      <div className="flex flex-wrap gap-2 p-4 pt-0">
-        {[...Array(6)].map((_, i) => (
-          <div key={i} className="h-7 w-16 bg-gray-100 animate-pulse rounded-md" />
-        ))}
+      <div className="p-4 pt-0">
+        <LoadingContainer loading={true} type="skeleton" skeletonType="grid" skeletonCount={6}>
+          <div />
+        </LoadingContainer>
       </div>
     );
   }

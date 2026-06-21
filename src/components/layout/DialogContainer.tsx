@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { NativeDialog } from '@/components/ui/NativeDialog';
-import { PhotoEditDialog } from '@/features/photo-edit/PhotoEditDialog';
-import { GlobalDiagnosticsDialog } from '@/components/ui/GlobalDiagnosticsDialog';
+const PhotoEditDialog = lazy(() => import('@/features/photo-edit/PhotoEditDialog').then(m => ({ default: m.PhotoEditDialog })));
+const DiagnosticsDialog = lazy(() => import('@/components/ui/DiagnosticsDialog').then(m => ({ default: m.DiagnosticsDialog })));
 import { useFilters } from '@/hooks';
 
 export function DialogContainer() {
@@ -11,7 +11,7 @@ export function DialogContainer() {
   const close = () => setModal(null);
 
   return (
-    <>
+    <Suspense fallback={null}>
       <NativeDialog 
         id="photo-edit" 
         open={isEditOpen} 
@@ -20,10 +20,10 @@ export function DialogContainer() {
         <PhotoEditDialog onClose={close} />
       </NativeDialog>
 
-      <GlobalDiagnosticsDialog 
+      <DiagnosticsDialog 
         open={isDiagnosticsOpen} 
         onClose={close} 
       />
-    </>
+    </Suspense>
   );
 }

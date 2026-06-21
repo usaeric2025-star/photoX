@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { PhotoGridSkeleton } from './PhotoGridSkeleton';
-import { Spinner } from '../ui/Spinner';
+import { LoadingContainer } from '../ui/feedback/LoadingContainer';
+import { LoadingSpinner } from '../ui/feedback/LoadingSpinner';
 
 interface LoadMoreIndicatorProps {
   isFetchingNextPage: boolean;
@@ -64,10 +64,12 @@ export const LoadMoreIndicator = ({
     >
       {isFetchingNextPage ? (
         <div className="flex flex-col items-center gap-3 animate-in fade-in zoom-in-95 duration-200">
-          <Spinner size="md" className="text-brand-navy/40" />
+          <LoadingSpinner size="md" className="text-brand-navy/40" />
           <span className="text-[11px] text-slate-400 font-medium tracking-tight">正在加载...</span>
           <div className="mt-4 w-full max-w-md hidden sm:block opacity-30 pointer-events-none grayscale">
-             <PhotoGridSkeleton columns={3} count={3} />
+             <LoadingContainer loading={true} type="skeleton" skeletonType="grid" skeletonCount={3}>
+               <div />
+             </LoadingContainer>
           </div>
         </div>
       ) : (

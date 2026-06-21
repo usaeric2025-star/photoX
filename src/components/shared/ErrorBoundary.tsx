@@ -2,6 +2,8 @@ import React, { Component, ReactNode } from 'react';
 import { useCopyToClipboard } from '@/hooks';
 import { isAppError } from '@/lib/error/AppError';
 
+import { LoadingSpinner } from '../ui/feedback/LoadingSpinner';
+
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
@@ -104,7 +106,7 @@ export class ErrorBoundary extends Component<Props, State> {
         return (
           <div className="flex items-center justify-center min-h-screen p-8 bg-slate-50">
             <div className="text-center max-w-sm">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-slate-900 mx-auto mb-6" />
+              <LoadingSpinner size="lg" className="mx-auto mb-6" />
               <h2 className="text-xl font-bold text-slate-900 mb-2">系统需要更新</h2>
               <p className="text-slate-500 mb-8 text-sm">为了为您提供最新功能与修复，我们需要重新加载应用资源。</p>
               <button

@@ -10,6 +10,7 @@ import { PhotoEditSessionProvider } from "@/hooks/photo/PhotoEditSession";
 import { usePhotoEditSessionContext } from "@/hooks/photo/usePhotoEditSessionContext";
 import { PhotoEditTabs } from "./PhotoEditTabs";
 import { DialogHeader } from "./DialogHeader";
+import { LoadingSpinner } from "@/components/ui/feedback/LoadingSpinner";
 
 function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: boolean; handleClose: () => void; editPhotoId: string; }) {
   const { data: photo, isPending } = usePhoto(editPhotoId);
@@ -40,7 +41,7 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
   if (isPending) {
     return (
       <div className="p-20 flex flex-col items-center justify-center gap-4 min-h-[500px]">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-primary rounded-full animate-spin" />
+        <LoadingSpinner size="lg" />
         <p className="text-sm font-medium text-slate-500">正在获取照片详情...</p>
       </div>
     );
