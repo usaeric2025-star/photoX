@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { buttonStyles } from '../../styles/buttonStyles';
 import { usePermission, useUIStore } from '../../hooks';
 
@@ -23,7 +23,7 @@ export function UploadButton({
       className={`${buttonStyles.button} bg-blue-600 fixed bottom-6 right-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-100 active:scale-95 animate-scale-in disabled:opacity-50`}
       title="Add Photo"
     >
-      <Plus size={28} />
+      <Icon name="plus" size={28} />
     </button>
   );
 }

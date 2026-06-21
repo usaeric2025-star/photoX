@@ -9,6 +9,7 @@ import { useLocalStorage } from '@/hooks/core/useLocalStorage';
 import { useAuthStore, initAuthListener } from '@/store/useAuthStore';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { PortalRoot } from '@/components/ui/PortalRoot';
+import { User } from '@/types';
 // Removed migrateStorage
 import { logger } from '@/lib/logger';
 import { startAutoDiagnose } from '@/features/diagnostics/autoDiagnose';
@@ -53,15 +54,18 @@ export default function AppRoutes() {
     return cleanup;
   }, [init]);
 
-  logger.debug('🔍 AppRoutes 渲染:', { 
-    pathname: window.location.pathname,
-    isLoading,
-    isSettingsPending,
-    hasSettings: !!settings?.access_passcode
-  });
-
   const user = useAuthStore((s) => s.user);
-  const prevUserRef = useRef<any>(undefined);
+
+  logger.debug('🔍 [App] Rendering AppRoutes:', { 
+    pathname: typeof window !== 'undefined' ? window.location.pathname : '',
+    isLoading,
+    isInitialDataLoading,
+    isSettingsPending,
+    hasUser: !!user,
+    isStaffMode,
+    hasSettings: !!settings
+  });
+  const prevUserRef = useRef<User | null>(null);
 
   useEffect(() => {
     if (!isLoading && !isSettingsPending) {
@@ -106,6 +110,9 @@ export default function AppRoutes() {
   };
 
   if (isLoading || isSettingsPending || isInitialDataLoading) {
+    if (isLoading) logger.debug('⏳ [App] Blocking: isLoading (Auth)');
+    if (isSettingsPending) logger.debug('⏳ [App] Blocking: isSettingsPending (API)');
+    if (isInitialDataLoading) logger.debug('⏳ [App] Blocking: isInitialDataLoading (UI Store)');
     return <LoadingScreen />;
   }
 

@@ -1,7 +1,7 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useTaskExecutor, useTasks } from "@/hooks";
 import React, { useState } from "react";
-import { Plus, Heart, RefreshCw } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { Tag, AppSettings } from "../../types";
 import { TagItem } from "./TagItem";
@@ -10,6 +10,8 @@ import { PromptDialog } from "@/components/ui/PromptDialog";
 import { normalizeTagName } from "@/lib/utils";
 import { triggerRefreshTagHotScores } from "../../services/tag/commands";
 import { useQueryClient } from "@tanstack/react-query";
+import { useFormSubmit } from '@/lib/form/useFormSubmit';
+import { type } from 'arktype';
 
 interface TagsSectionProps {
   tags: Tag[];
@@ -30,8 +32,8 @@ interface TagsSectionProps {
 export function TagsSection({
   tags,
   settings,
-  addTag,
-  updateTag,
+  addTag: rawAddTag,
+  updateTag: rawUpdateTag,
   activeTagMenuId,
   setActiveTagMenuId,
   deleteTag,
@@ -58,6 +60,27 @@ export function TagsSection({
   const [isEditOpen, editDialog] = useDisclosure(false);
   const [editingTag, setEditingTag] = useState<Tag | null>(null);
 
+  const { submit: runAddTag, isLoading: isAdding } = useFormSubmit({
+    schema: type({ name: "string" }),
+    mutationFn: async ({ name }) => {
+      const normalized = normalizeTagName(name);
+      if (!normalized) return null;
+      return await rawAddTag(normalized);
+    },
+    successMessage: '已新增標籤 / Tag added',
+    errorMessage: '新增失敗 / Add failed'
+  });
+
+  const { submit: runUpdateTag, isLoading: isUpdating } = useFormSubmit({
+    schema: type({ id: "number", name: "string" }),
+    mutationFn: async ({ id, name }) => {
+      await rawUpdateTag(id, { name });
+      return true;
+    },
+    successMessage: '已更新 / Updated',
+    errorMessage: '更新失敗 / Update failed'
+  });
+
   const handleRefreshHotScores = async () => {
     await runTask(
       "刷新热门标签",
@@ -81,14 +104,15 @@ export function TagsSection({
         </span>
       </div>
       <div className="flex flex-wrap gap-2 items-center justify-between">
-        <button onClick={addDialog.open} className={buttonStyles.accent}>
-          <Plus size={16} /> 新增标签 / Add Tag
+        <button onClick={addDialog.open} disabled={isAdding} className={buttonStyles.accent}>
+          {isAdding ? <Icon name="refresh-ccw" size={16} className="animate-spin" /> : <Icon name="plus" size={16} />}
+          新增標籤 / Add Tag
         </button>
         <div className="flex flex-wrap items-center gap-3.5 bg-brand-navy/5 px-4 py-2 rounded-2xl border border-brand-navy/10">
           {/* Hot Limit */}
           <div className="flex flex-col gap-0.5">
             <span className="text-[9px] font-black text-brand-navy uppercase tracking-widest flex items-center gap-1">
-              <Heart size={10} className="text-brand-gold fill-brand-gold" />{" "}
+              <Icon name="heart" size={10} className="text-brand-gold fill-brand-gold" />{" "}
               Hot Limit
             </span>
             <input
@@ -155,7 +179,7 @@ export function TagsSection({
             className="px-3 py-1.5 bg-brand-gold hover:bg-brand-gold/85 text-brand-navy font-black text-[10px] uppercase tracking-wider rounded-xl transition-all shadow-sm flex items-center gap-1 cursor-pointer disabled:opacity-50"
             title="重新计算所有标签的使用次数和热度分值"
            >
-            <RefreshCw size={12} />
+            <Icon name="refresh-cw" size={12} />
             <span>刷新热门标签 / Refresh</span>
           </button>
         </div>
@@ -178,7 +202,7 @@ export function TagsSection({
                 setEditingTag(t);
                 editDialog.open();
               }}
-              updateTag={updateTag}
+              updateTag={rawUpdateTag}
               deleteTag={deleteTag}
               isPinned={(settings?.pinned_tags || []).includes(String(tag.id))}
               togglePin={togglePin}
@@ -189,29 +213,25 @@ export function TagsSection({
       <PromptDialog
         open={isAddOpen}
         onOpenChange={addDialog.toggle}
-        title="新增标签"
-        description="输入标签名称:"
+        loading={isAdding}
+        title="新增標籤"
+        description="輸入標籤名稱:"
         onConfirm={async (name: string) => {
           if (!name.trim()) return;
-          const normalized = name.trim().toUpperCase();
-          try {
-            await addTag(normalized);
-          } catch (error: unknown) {
-            // Error mapped internally by mutation
-          }
+          await runAddTag({ name });
         }}
       />
 
       <PromptDialog
         open={isEditOpen}
         onOpenChange={editDialog.toggle}
-        title="编辑标签名 / Edit Tag Name"
-        description="输入新的标签名称 / Enter new tag name:"
-        placeholder={editingTag?.name}
+        loading={isUpdating}
+        title="編輯標籤名 / Edit Tag Name"
+        description="輸入新的標籤名稱 / Enter new tag name:"
+        defaultValue={editingTag?.name}
         onConfirm={async (newName: string) => {
-          const normalized = normalizeTagName(newName);
-          if (normalized && editingTag && normalized !== editingTag.name) {
-            await updateTag(editingTag.id, { name: normalized });
+          if (editingTag && newName.trim()) {
+            await runUpdateTag({ id: editingTag.id, name: newName });
           }
           setEditingTag(null);
         }}

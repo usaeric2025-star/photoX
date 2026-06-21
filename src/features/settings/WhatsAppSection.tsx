@@ -1,5 +1,5 @@
 import React from 'react';
-import { User as UserIcon } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { AppSettings } from '../../types';
 
 interface WhatsAppSectionProps {
@@ -27,7 +27,7 @@ export function WhatsAppSection({
         {[1, 2].map((i) => (
           <div key={i} className="p-4 bg-slate-50/50 rounded-2xl border border-brand-navy/5 space-y-3">
             <div className="flex items-center gap-2">
-              <UserIcon size={12} className="text-brand-navy/30" />
+              <Icon name="user" size={12} className="text-brand-navy/30" />
               <span className="text-[9px] font-black text-brand-navy/40 uppercase tracking-widest">聯繫人 {i === 1 ? 'A' : 'B'}</span>
             </div>
             <div className="space-y-2">

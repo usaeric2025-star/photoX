@@ -1,5 +1,5 @@
 import React from 'react';
-import { RefreshCw, CheckCircle2, ShieldAlert, Zap } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 
 interface DiagnosticCardProps {
   title: string;
@@ -36,7 +36,7 @@ export function DiagnosticCard({
           disabled={isPending}
           className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-navy text-white rounded-xl text-xs font-bold disabled:opacity-50 active:scale-95 transition-all"
         >
-          <RefreshCw className={`w-3 h-3 ${isPending ? 'animate-spin' : ''}`} />
+          <Icon name="refresh-cw" className={`w-3 h-3 ${isPending ? 'animate-spin' : ''}`} />
           {isPending ? '测试中' : '测试'}
         </button>
       </div>
@@ -49,9 +49,9 @@ export function DiagnosticCard({
         }`}>
           <div className="mt-0.5">
             {result.success ? (
-               <CheckCircle2 className={`w-4 h-4 ${successColor}`} />
+               <Icon name="check-circle-2" className={`w-4 h-4 ${successColor}`} />
             ) : (
-               <ShieldAlert className="w-4 h-4 text-red-500" />
+               <Icon name="shield-alert" className="w-4 h-4 text-red-500" />
             )}
           </div>
           <div className="flex-1 min-w-0">

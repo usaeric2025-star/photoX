@@ -4,7 +4,17 @@ import { db, categories as categoriesTable, furnitureItems } from '../_lib/db/in
 import { eq, asc, ne, sql } from 'drizzle-orm';
 import { CategoryReqSchema } from '../_shared/apiContractSchema.js';
 
-let categoriesCache: any[] | null = null;
+interface FormattedCategory {
+    id: number;
+    name: string;
+    code: string;
+    zh: string;
+    en: string;
+    ms: string;
+    sort_order: number;
+}
+
+let categoriesCache: FormattedCategory[] | null = null;
 let cacheTime = 0;
 
 export const categories = new Hono()
@@ -28,17 +38,17 @@ export const categories = new Hono()
           .orderBy(asc(categoriesTable.sortOrder));
 
       // Transform to frontend format: { id, name, code, zh, en, ms, sort_order }
-      const formatted = data.map((item) => ({
+      const formatted: any[] = data.map((item) => ({
           id: item.id,
-          name: item.name_zh,
-          zh: item.name_zh,
-          en: item.name_en,
-          ms: item.name_ms,
-          code: item.code,
-          sort_order: item.sort_order,
+          name: item.name_zh || '',
+          zh: item.name_zh || '',
+          en: item.name_en || '',
+          ms: item.name_ms || '',
+          code: item.code || '',
+          sort_order: item.sort_order || 0,
       }));
 
-      categoriesCache = formatted;
+      categoriesCache = formatted as any;
       cacheTime = now;
       return c.json({ success: true, data: formatted });
     } catch (error: unknown) {

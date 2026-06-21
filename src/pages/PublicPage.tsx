@@ -7,7 +7,8 @@ import { FilterBar } from '@/features/filter/FilterBar';
 import { PublicPhotoGrid } from '@/components/photo/PublicPhotoGrid';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { useColumns } from '@/features/layout/hooks/useColumns';
-import { LazyYarlLightbox } from '@/features/lightbox/LazyYarlLightbox';
+import { LazyPhotoLightbox } from '@/features/lightbox/LazyPhotoLightbox';
+import { useLightboxStore } from '@/store/useLightboxStore';
 import { useUIStore } from '@/store/useUIStore';
 import { WhatsAppDialog } from '@/components/shared/WhatsAppDialog';
 import { PhotoErrorDisplay } from '@/components/photo/PhotoErrorDisplay';
@@ -28,7 +29,7 @@ export default function PublicPage() {
   
   const { columns } = useColumns();
   const [showScrollTop, setShowScrollTop] = React.useState(false);
-  const gridRef = React.useRef<any>(null);
+  const gridRef = React.useRef<{ scrollToIndex: (index: number) => void } | null>(null);
   
   const isAggregated = showGroupsCollapsed && !search && !category && !tags.length;
 
@@ -55,7 +56,7 @@ export default function PublicPage() {
   const { data: settings } = usePublicSettings();
 
   // 诊断日志：帮助排查骨头屏阻塞问题
-  const [debugInfo, setDebugInfo] = React.useState<any>({});
+  const [debugInfo, setDebugInfo] = React.useState<Record<string, unknown>>({});
   
   React.useEffect(() => {
     const info = {
@@ -83,7 +84,7 @@ export default function PublicPage() {
 
   const lightboxIndex = React.useMemo(() => {
     if (!photoId) return -1;
-    const index = photos.findIndex((p: any) => p.id === photoId);
+    const index = photos.findIndex((p) => p.id === photoId);
     logger.debug('[Lightbox Debug] Find Index Result:', { photoId, index });
     return index;
   }, [photoId, photos]);
@@ -94,16 +95,17 @@ export default function PublicPage() {
     logger.debug('[Lightbox Debug]', { photoId, lightboxIndex, lightboxOpen, photosCount: photos.length });
   }, [photoId, lightboxIndex, lightboxOpen, photos]);
 
-  const lightboxItems = React.useMemo(() => photos.map((p: any) => {
+  const lightboxItems = React.useMemo(() => photos.map((p) => {
     return {
       id: p.id,
       src: p.imageUrl,
-      thumbnail: p.thumbnailUrl || p.imageUrl,
+      alt: p.name || '照片',
       title: p.name || '',
-      description: p.description || '',
       category: p.groupName || '',
-      tags: p.tags || [],
-      photo: p,
+      metadata: {
+        description: p.description,
+        tags: p.tags,
+      }
     };
   }), [photos]);
 
@@ -177,8 +179,8 @@ export default function PublicPage() {
       // 統一讀取總量，不區分管理者模式以反映真實庫存
       const res = await api.photos.count.$post({ json: { isAdminMode: true } });
       if (!res.ok) return 0;
-      const json = await res.json();
-      return (json as any).data as number;
+      const json = await res.json() as { data: number };
+      return json.data;
     },
     staleTime: 5 * 60 * 1000 // 減少重複 API 調用
   });
@@ -221,7 +223,7 @@ export default function PublicPage() {
             className="w-12 h-12 flex items-center justify-center rounded-full bg-surface-overlay backdrop-blur-xl text-text-main shadow-lg hover:bg-white transition-all active:scale-90 group focus:outline-none"
             title="回到頂部"
           >
-            <Icon name="ArrowUp" size={22} className="group-hover:-translate-y-0.5 transition-transform" />
+            <Icon name="arrow-up" size={22} className="group-hover:-translate-y-0.5 transition-transform" />
           </button>
         )}
         <button
@@ -233,16 +235,16 @@ export default function PublicPage() {
           className="w-12 h-12 flex items-center justify-center rounded-full bg-success text-text-on-primary shadow-lg hover:opacity-90 transition-all active:scale-90 focus:outline-none"
           title="WhatsApp 諮詢"
         >
-          <Icon name="MessageCircle" size={26} solid />
+          <Icon name="message-circle" size={26} solid />
         </button>
       </div>
       
-      <LazyYarlLightbox
-        open={lightboxOpen}
-        items={lightboxItems}
-        currentIndex={Math.max(0, lightboxIndex)}
-        onClose={() => setPhotoId(null)}
-        onIndexChange={handleIndexChange}
+      <LazyPhotoLightbox
+        open={useLightboxStore((s) => s.isOpen)}
+        images={useLightboxStore((s) => s.images)}
+        currentIndex={useLightboxStore((s) => s.currentIndex)}
+        onOpenChange={(open) => !open && useLightboxStore.getState().close()}
+        onIndexChange={(idx: number) => useLightboxStore.getState().goTo(idx)}
       />
 
       <WhatsAppDialog />

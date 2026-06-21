@@ -8,4 +8,4 @@ export function defineMutation<
   return config;
 }
 
-type MutationConfigOf<T> = T extends (vars: infer V) => any ? MutationConfig<any, V, any> : never;
+type MutationConfigOf<T> = T extends (vars: infer V) => unknown ? MutationConfig<unknown, V, readonly unknown[]> : never;

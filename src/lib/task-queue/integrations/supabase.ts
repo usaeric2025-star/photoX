@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import { Task } from '../types';
+import { Task, TaskType } from '../types';
 
 export const taskTable = {
   // 插入新任務
@@ -40,13 +40,15 @@ export const taskTable = {
       return [];
     }
 
-    return (data || []).map((row: any) => ({
-      id: row.id,
-      label: row.label,
-      type: row.type,
-      state: { status: row.status as 'queued' | 'processing' },
-      createdAt: new Date(row.created_at).getTime(),
-      meta: row.meta || {},
+    return (data || []).map((row: Record<string, unknown>) => ({
+      id: row.id as string,
+      label: row.label as string,
+      type: row.type as TaskType,
+      state: row.status === 'processing' 
+        ? { status: 'processing', progress: 0 }
+        : { status: 'queued' as const },
+      createdAt: new Date(row.created_at as string).getTime(),
+      meta: row.meta as Record<string, unknown> || {},
       // ⚠️ execute 函數需要業務層重新綁定
       execute: async () => {},
     }));

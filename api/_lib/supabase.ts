@@ -26,8 +26,8 @@ export async function getSupabaseAdmin() {
       auth: { persistSession: false }
     });
     return supabaseAdminInstance;
-  } catch (err) {
-    logger.error("[Supabase] Failed to create client", { error: (err as any).message });
+  } catch (err: unknown) {
+    logger.error("[Supabase] Failed to create client", { error: err instanceof Error ? err.message : String(err) });
     throw err;
   }
 }

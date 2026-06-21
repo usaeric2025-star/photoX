@@ -1,12 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useRef } from 'react';
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import { useGroupData } from '../shared/hooks/useGroupData';
 import { PhotoListItem } from '@/types/api';
 import { Photo, Group, Category } from '@/types';
 import { PublicPhotoCard } from '@/components/photo/PublicPhotoCard';
-import { YarlLightbox } from '@/features/lightbox/YarlLightbox';
+import { useLightboxStore } from '@/store/useLightboxStore';
 import { useFilters, useTranslation, useCategories } from '@/hooks';
-import { getTranslatedCategoryName } from '@/services/category/utils';
 import { GroupHeader } from '../shared/components/GroupHeader';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { Button } from '@/components/shared/Button';
@@ -20,7 +19,7 @@ function PublicPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoLi
       {photos.map((photo) => (
         <PublicPhotoCard
           key={photo.id}
-          photo={photo as any}
+          photo={photo}
           onClick={() => onPhotoClick(photo.id)}
           hideGroupBadge={true}
           sharedCategories={categories}
@@ -67,44 +66,49 @@ export function PublicGroupDetailPage() {
     }
   }, [anchor, photoId, loading, photos.length]);
 
-  const lightboxIndex = React.useMemo(() => {
-    if (!photoId || anchor) return -1;
-    return photos.findIndex((p) => p.id === photoId);
-  }, [photoId, photos, anchor]);
-
-  const lightboxOpen = lightboxIndex !== -1;
+  const openLightbox = useLightboxStore((s) => s.open);
   
   const lightboxItems = photos.map((p) => {
     return {
       id: p.id,
       src: p.imageUrl,
-      thumbnail: p.thumbnailUrl || p.imageUrl,
+      alt: p.name || '',
       title: p.name || '',
-      description: p.description || '',
       category: '',
-      tags: p.tags || [],
-      photo: p as any,
+      categoryPath: [group?.name || ''].filter(Boolean),
+      metadata: {
+        date: p.createdAt || undefined,
+        tags: p.tags || [],
+        description: p.description || '',
+      },
     };
   });
+
+  const handlePhotoClick = (photoId: string) => {
+      const index = photos.findIndex(p => p.id === photoId);
+      if (index !== -1) {
+          openLightbox(lightboxItems, index);
+      }
+  };
 
   const handleScrollToTop = () => {
     scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const openWhatsApp = () => {
-    (window as any)._pendingPhoto = undefined;
+    (window as unknown as { _pendingPhoto?: PhotoListItem })._pendingPhoto = undefined;
     updateUI({ showWhatsAppChoice: false });
   };
 
   const getWhatsAppOptions = () => {
     const options: { name: string; url: string }[] = [];
-    const pendingPhoto = (window as any)._pendingPhoto as any;
+    const pendingPhoto = (window as unknown as { _pendingPhoto?: PhotoListItem })._pendingPhoto;
     let message = '';
     
     if (pendingPhoto) {
       const prompt = t.sharePrompt || "您好，我对这个家具感兴趣：";
-      const name = (pendingPhoto as any).name || "";
-      const url = (pendingPhoto as any).imageUrl || "";
+      const name = pendingPhoto.name || "";
+      const url = pendingPhoto.imageUrl || "";
       message = `${prompt}\n*${name}*\n${url}`;
     } else {
       const groupName = group?.name || '';
@@ -144,21 +148,8 @@ export function PublicGroupDetailPage() {
         />
       </div>
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto relative overscroll-y-auto overscroll-x-none bg-slate-50">
-        <PublicPhotoGrid photos={photos} categories={categories} onPhotoClick={(id: string) => {
-             setPhotoId(id);
-        }} />
+        <PublicPhotoGrid photos={photos} categories={categories} onPhotoClick={handlePhotoClick} />
       </div>
-      <YarlLightbox
-        open={lightboxOpen}
-        items={lightboxItems}
-        currentIndex={Math.max(0, lightboxIndex)}
-        onClose={() => setPhotoId(null)}
-        onIndexChange={(idx: number) => {
-           const photo = photos[idx];
-           if (photo) setPhotoId(photo.id);
-        }}
-      />
-
       <WhatsAppDialog />
     </div>
   );

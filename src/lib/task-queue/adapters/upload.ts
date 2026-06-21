@@ -31,11 +31,17 @@ export const createBatchUploadTask = (
         // 2. Upload to Cloud
         const tempPhoto: Photo = {
           id: `temp-${generateId()}`,
-          name: processed.file.name.split('.')[0],
+          name: { zh: processed.file.name.split('.')[0] },
           uri: processed.dataUrl,
+          image_url: processed.dataUrl,
           image_hash: processed.hash,
+          item_code: '', // Placeholder
+          category_id: null,
+          manufacturer_id: null,
+          categoryName: '',
+          manufacturerName: '',
+          description: null,
           size: processed.file.size,
-          mime_type: processed.file.type,
           width: processed.width,
           height: processed.height,
           is_pinned: false,
@@ -44,7 +50,7 @@ export const createBatchUploadTask = (
           _fileName: file.name,
           _fileSize: file.size,
           _lastModified: file.lastModified
-        } as any;
+        };
         
         const result = await savePhotoToCloud(userId, tempPhoto);
         results.push(result);

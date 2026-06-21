@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CheckCircle2, ChevronDown, ShieldAlert, Zap } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { MaintenanceTool } from './MaintenanceTool';
 
 interface MaintenanceCenterProps {
@@ -16,7 +16,7 @@ export function MaintenanceCenter({ onSuccess }: MaintenanceCenterProps) {
       {/* 第一组：必要定期检查 (Routine Checks) */}
       <div className="space-y-4">
         <div className="flex items-center gap-2 px-1 text-xs font-black text-slate-700">
-          <CheckCircle2 size={14} className="text-emerald-500" />
+          <Icon name="check-circle-2" size={14} className="text-emerald-500" />
           常规健康与数据同步 (Routine Sync & Health)
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -47,7 +47,7 @@ export function MaintenanceCenter({ onSuccess }: MaintenanceCenterProps) {
           onClick={() => setShowAdvanced(!showAdvanced)}
           className="flex items-center gap-2 w-full px-1 py-2 text-xs font-black text-slate-500 hover:text-slate-800 transition-colors uppercase tracking-wider"
         >
-          <ChevronDown size={14} className={`transition-transform duration-300 ${showAdvanced ? 'rotate-180' : ''}`} />
+          <Icon name="chevron-down" size={14} className={`transition-transform duration-300 ${showAdvanced ? 'rotate-180' : ''}`} />
           高级清理与 AI 实验工具 (Advanced / Experimental)
         </button>
         
@@ -58,7 +58,7 @@ export function MaintenanceCenter({ onSuccess }: MaintenanceCenterProps) {
             {/* 第二组：极端情况与系统深度清理 (Advanced Cleanup) */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 px-1 text-xs font-bold text-slate-700">
-                <ShieldAlert size={14} className="text-amber-500" />
+                <Icon name="shield-alert" size={14} className="text-amber-500" />
                 极端恢复与废弃清理
               </div>
               <div className="grid grid-cols-1 gap-4">
@@ -75,7 +75,7 @@ export function MaintenanceCenter({ onSuccess }: MaintenanceCenterProps) {
             {/* 第三组：AI 大规模重构与未来演进 (AI Orchestration) */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 px-1 text-xs font-bold text-slate-700">
-                <Zap size={14} className="text-purple-500" />
+                <Icon name="zap" size={14} className="text-purple-500" />
                 AI 批处理 (按需执行)
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

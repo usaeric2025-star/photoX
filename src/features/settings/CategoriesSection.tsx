@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Pencil, Trash2 } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useClickOutside } from '@/hooks/core/useClickOutside';
 import { PromptDialog } from "@/components/ui/PromptDialog";
@@ -33,11 +33,11 @@ function CategoryItem({
   const [isDeleteOpen, deleteDialog] = useDisclosure(false);
   const appLang = useUIStore((s) => s.appLang);
 
-  const menuRef = useClickOutside(() => {
+  const menuRef = useClickOutside<HTMLDivElement>(() => {
     if (activeMenuId === cat.id) setActiveMenuId(null);
   });
 
-  useLongPress(menuRef as any, {
+  useLongPress(menuRef, {
     delay: 400,
     onLongPress: () => {
       setActiveMenuId(cat.id);
@@ -45,15 +45,13 @@ function CategoryItem({
   });
 
   let displayName = '未命名分类';
-  if (cat.name && typeof cat.name === 'object') {
-    displayName = (cat.name as any)[appLang] || (cat.name as any).zh || '未命名分类';
-  } else if (cat.name) {
-    displayName = String(cat.name);
-  }
+  if (appLang === 'zh') displayName = cat.nameZh || cat.zh || cat.name;
+  else if (appLang === 'en') displayName = cat.nameEn || cat.en || cat.name;
+  else if (appLang === 'ms') displayName = cat.nameMs || cat.ms || cat.name;
 
   return (
       <div
-      ref={menuRef as any}
+      ref={menuRef}
       className={`bg-white border border-brand-navy/10 pl-3 pr-2 py-1 rounded-full flex items-center gap-2 shadow-sm transition-all active:scale-95 relative ${activeMenuId === cat.id ? "bg-brand-gold/10 border-brand-gold/30 scale-95" : ""}`}
     >
       <div className="flex flex-col">
@@ -72,7 +70,7 @@ function CategoryItem({
               }}
               className="px-3 py-2 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2"
             >
-              <Pencil size={12} /> 编辑名称
+              <Icon name="pencil" size={12} /> 编辑名称
             </button>
             <button
               onClick={(e) => {
@@ -82,7 +80,7 @@ function CategoryItem({
               }}
               className="px-3 py-2 text-red-400 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2"
             >
-              <Trash2 size={12} /> 删除
+              <Icon name="trash-2" size={12} /> 删除
             </button>
             <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-brand-navy rotate-45 -mt-1" />
           </div>
@@ -97,7 +95,7 @@ function CategoryItem({
         placeholder={displayName}
         onConfirm={(name) => {
           if (name) {
-            onUpdate({ ...cat, name: { ...cat.name as any, zh: name, en: name, ms: name } });
+            onUpdate({ ...cat, name: name, nameZh: name, nameEn: name, nameMs: name });
           }
         }}
       />
@@ -122,7 +120,7 @@ export function CategoriesSection({
   const [isAddOpen, addDialog] = useDisclosure(false);
 
   const { submit: runUpdateCategory } = useFormSubmit({
-    schema: type('any'),
+    schema: type({ id: 'string', updates: 'unknown' }),
     mutationFn: async ({ id, updates }: { id: string, updates: any }) => {
       await updateCategory(id, updates);
       return true;
@@ -132,7 +130,7 @@ export function CategoriesSection({
   });
 
   const { submit: runDeleteCategory } = useFormSubmit({
-    schema: type('any'),
+    schema: type({ id: 'string' }),
     mutationFn: async ({ id }: { id: string }) => {
       await deleteCategory(id);
       return true;
@@ -142,7 +140,7 @@ export function CategoriesSection({
   });
 
   const { submit: runAddCategory } = useFormSubmit({
-    schema: type('any'),
+    schema: type({ name: 'string' }),
     mutationFn: async ({ name }: { name: string }) => {
       await addCategory(name);
       return true;
@@ -163,7 +161,7 @@ export function CategoriesSection({
 
       <div className="flex gap-2">
         <button onClick={addDialog.open} className={buttonStyles.accent}>
-          <Plus size={16} /> {appLang === 'zh' ? '新增分类' : 'Add New'}
+          <Icon name="plus" size={16} /> {appLang === 'zh' ? '新增分类' : 'Add New'}
         </button>
       </div>
 
@@ -176,9 +174,9 @@ export function CategoriesSection({
               runUpdateCategory({ 
                 id: String(c.id), 
                 updates: { 
-                  name_zh: (c.name as any)?.zh, 
-                  name_en: (c.name as any)?.en, 
-                  name_ms: (c.name as any)?.ms 
+                  name_zh: c.nameZh || c.name, 
+                  name_en: c.nameEn || c.name, 
+                  name_ms: c.nameMs || c.name 
                 } 
               });
             }}

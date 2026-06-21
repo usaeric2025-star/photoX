@@ -2,15 +2,34 @@ import { OpenRouterConfigBlock } from './OpenRouterConfigBlock';
 import { AgnesConfigBlock } from './AgnesConfigBlock';
 import { logger } from '@/lib/logger';
 
-import React from 'react';
-import { Sparkles, Lock } from '@/components/ui/Icon';
-import { showToast } from '@/lib/ui/toast';
+import React, { useCallback } from 'react';
+import { Icon } from '@/components/ui/Icon';
 import { AppSettings } from '../../types';
 import { useUIStore } from '@/store/useUIStore';
 import { translations } from '@/locales';
-import { handleError } from '@/lib/error/errorHandler';
 
 import { api } from '@/lib/api';
+import { useFormSubmit } from '@/lib/form/useFormSubmit';
+import { type } from 'arktype';
+
+const KeySaveSchema = type({
+  provider: "'openrouter' | 'agnes'",
+  apiKey: "string",
+});
+
+const ModelSaveSchema = type({
+  provider: "'openrouter' | 'agnes'",
+  model: "string",
+});
+
+const ProviderSaveSchema = type({
+  provider: "string",
+});
+
+const TestConnectionSchema = type({
+  provider: "'openrouter' | 'agnes'",
+  apiKey: "string",
+});
 
 interface AISecuritySectionProps {
   agnesApiKey: string;
@@ -26,7 +45,6 @@ interface AISecuritySectionProps {
 export function AISecuritySection({
   agnesApiKey: initialAgnesKey,
   setAgnesApiKey,
-  customModel,
   setSettingField,
   cardClass,
   inputClass
@@ -34,28 +52,48 @@ export function AISecuritySection({
   const appLang = useUIStore(s => s.appLang);
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
-  const [keysStatus, setKeysStatus] = React.useState({ openrouter: false, agnes: false, primaryProvider: 'openrouter' });
+  const [keysStatus, setKeysStatus] = React.useState({ 
+    openrouter: false, 
+    agnes: false, 
+    primaryProvider: 'openrouter',
+    openrouter_model: '',
+    agnes_model: '' 
+  });
   
   // Local draft states to prevent rapid re-renders from parent/query invalidation
   const [localOpenRouterKey, setLocalOpenRouterKey] = React.useState('');
   const [localAgnesKey, setLocalAgnesKey] = React.useState(initialAgnesKey || '');
 
-  const [isTesting, setIsTesting] = React.useState<'openrouter' | 'agnes' | null>(null);
   const [isEditingOpenRouter, setIsEditingOpenRouter] = React.useState(false);
   const [isEditingAgnes, setIsEditingAgnes] = React.useState(false);
-  const [isSavingProvider, setIsSavingProvider] = React.useState<boolean | null>(null);
 
   const [openrouterModel, setOpenrouterModel] = React.useState('');
   const [agnesModel, setAgnesModel] = React.useState('');
-  const [currentModel, setCurrentModel] = React.useState('gemini-2.0-flash-exp');
+  const [, setCurrentModel] = React.useState('gemini-2.0-flash-exp');
 
-  const fetchKeysStatus = async () => {
+  const fetchKeysStatus = useCallback(async () => {
     try {
       const res = await api.admin.settings['get-keys'].$get();
       if (res.ok) {
-        const data = await res.json() as any;
+        const data = await res.json() as { 
+          success: boolean; 
+          keysStatus: { 
+            openrouter: boolean; 
+            agnes: boolean; 
+            primaryProvider: string;
+            openrouter_model?: string;
+            agnes_model?: string;
+          };
+          currentModel?: string;
+        };
         if (data.success) {
-          setKeysStatus(data.keysStatus);
+          setKeysStatus({
+            openrouter: data.keysStatus.openrouter,
+            agnes: data.keysStatus.agnes,
+            primaryProvider: data.keysStatus.primaryProvider,
+            openrouter_model: data.keysStatus.openrouter_model || '',
+            agnes_model: data.keysStatus.agnes_model || ''
+          });
           setCurrentModel(data.currentModel || 'gemini-2.0-flash-exp');
           setOpenrouterModel(data.keysStatus.openrouter_model || '');
           setAgnesModel(data.keysStatus.agnes_model || '');
@@ -79,123 +117,100 @@ export function AISecuritySection({
     } catch (e) {
       logger.error("Failed to fetch keys status:", e);
     }
-  };
+  }, [api]);
 
   React.useEffect(() => {
     fetchKeysStatus();
   }, [fetchKeysStatus]);
 
-  const handleTest = async (provider: 'openrouter' | 'agnes') => {
-    setIsTesting(provider);
-    try {
-      const targetKey = provider === 'openrouter' ? localOpenRouterKey : localAgnesKey;
+  const { submit: runTest, isLoading: isTestingProvider } = useFormSubmit({
+    schema: TestConnectionSchema,
+    mutationFn: async ({ provider, apiKey }) => {
       const res = await api.ai.test.$post({
         json: { 
           provider,
-          apiKey: targetKey === "••••••••••••••••" ? "" : targetKey
+          apiKey: apiKey === "••••••••••••••••" ? "" : apiKey
         }
-      }) as any;
-      const data = await res.json();
-      if (data.success) {
-        showToast.success(`[System AI] ${provider} 测试连通性成功`);
-      } else {
-        handleError(data, `[System AI] ${provider} 连接异常`);
-      }
-    } catch (e) {
-      handleError(e, '请求超时或网络异常');
-    } finally {
-      setIsTesting(null);
-    }
+      });
+      const data = await res.json() as { success: boolean };
+      if (!data.success) throw data;
+      return true;
+    },
+    successMessage: '[System AI] 測試連通性成功 / Connection successful',
+    errorMessage: '[System AI] 連接異常 / Connection abnormal'
+  });
+
+  const handleTest = async (provider: 'openrouter' | 'agnes') => {
+    const apiKey = provider === 'openrouter' ? localOpenRouterKey : localAgnesKey;
+    await runTest({ provider, apiKey });
   };
 
-  const [isSaving, setIsSaving] = React.useState<'openrouter' | 'agnes' | null>(null);
-
-  const saveKey = async (provider: 'openrouter' | 'agnes', apiKey: string) => {
-    if (apiKey === "••••••••••••••••" || !apiKey.trim()) {
-      showToast.success('密钥未更改');
-      return;
-    }
-    setIsSaving(provider);
-    try {
+  const { submit: runSaveKey, isLoading: isSavingKey } = useFormSubmit({
+    schema: KeySaveSchema,
+    mutationFn: async ({ provider, apiKey }) => {
+      if (apiKey === "••••••••••••••••" || !apiKey.trim()) {
+        return "noop";
+      }
       const res = await api.admin.settings['save-key'].$post({
         json: { provider, apiKey }
-      }) as any;
-      const data = await res.json();
-      
-      if (res.ok && data.success) {
-        showToast.success(`[System AI] ${provider} 密钥保存成功`);
-        
-        // Immediate UI update
-        if (provider === 'openrouter') {
-          setLocalOpenRouterKey('••••••••••••••••');
-          setIsEditingOpenRouter(false);
-          setKeysStatus(prev => ({ ...prev, openrouter: true }));
-        } else {
-          setLocalAgnesKey('••••••••••••••••');
-          setAgnesApiKey('••••••••••••••••');
-          setIsEditingAgnes(false);
-          setKeysStatus(prev => ({ ...prev, agnes: true }));
-        }
-        
-        // Finalize state in background
+      });
+      const data = await res.json() as { success: boolean };
+      if (!res.ok || !data.success) throw data;
+      return "success";
+    },
+    onSuccess: (result) => {
+      if (result === "success") {
         fetchKeysStatus();
-      } else {
-        handleError(data, '保存失败');
       }
-    } catch (e) { 
-      handleError(e, '保存密钥失败');
-      
-      const errorMsg = (e as any).error?.message || (e as Error).message || '';
-      if (errorMsg.includes('secrets')) {
-        showToast.info('检测到表缺失，请点击：[前往系统故障排查]', {
-          action: {
-            label: '立即处理',
-            onClick: () => (window.location.href = '/admin?tab=diagnostics')
-          },
-          duration: 10000
-        });
-      }
-    }
-    finally {
-      setIsSaving(null);
-    }
+    },
+    successMessage: "[System AI] 金鑰保存成功 / Key saved",
+    errorMessage: "保存失敗 / Save failed"
+  });
+
+  const saveKey = async (provider: 'openrouter' | 'agnes', apiKey: string) => {
+    await runSaveKey({ provider, apiKey });
   };
 
-  const saveProvider = async (provider: string) => {
-    setIsSavingProvider(true);
-    try {
+  const { submit: runSaveProvider, isLoading: isSavingProvider } = useFormSubmit({
+    schema: ProviderSaveSchema,
+    mutationFn: async ({ provider }) => {
       const res = await api.admin.settings['save-provider'].$post({
         json: { provider }
-      }) as any;
-      const data = await res.json();
-      if (res.ok && data.success) {
-        showToast.success(`首选引擎已切换为: ${provider === 'openrouter' ? 'OpenRouter' : 'Agnes'}`);
-        setKeysStatus(prev => ({ ...prev, primaryProvider: provider }));
-        fetchKeysStatus();
-      } else {
-        handleError(data, '切换失败');
-      }
-    } catch (e) {
-      handleError(e, '切换失败: 网络错误');
-    }
-    finally { setIsSavingProvider(null); }
+      });
+      const data = await res.json() as { success: boolean };
+      if (!res.ok || !data.success) throw data;
+      return true;
+    },
+    onSuccess: () => {
+      fetchKeysStatus();
+    },
+    successMessage: '首選引擎已切換 / Primary provider switched',
+    errorMessage: '切換失敗 / Switch failed'
+  });
+
+  const saveProvider = async (provider: string) => {
+    await runSaveProvider({ provider });
   };
 
-  const handleSaveModel = async (provider: 'openrouter' | 'agnes', modelVal: string) => {
-    try {
+  const { submit: runSaveModel } = useFormSubmit({
+    schema: ModelSaveSchema,
+    mutationFn: async ({ provider, model }) => {
       const res = await api.admin.settings['save-model'].$post({
-        json: { provider, model: modelVal }
-      }) as any;
-      const data = await res.json();
-      if (res.ok && data.success) {
-        showToast.success(`[System AI] ${provider === 'openrouter' ? 'OpenRouter' : 'Agnes'} 自定义模型已保存`);
-        fetchKeysStatus();
-      } else {
-        handleError(data, '模型保存失败');
-      }
-    } catch (e) {
-      handleError(e, '模型保存失败: 网络异常');
-    }
+        json: { provider, model }
+      });
+      const data = await res.json() as { success: boolean };
+      if (!res.ok || !data.success) throw data;
+      return true;
+    },
+    onSuccess: () => {
+      fetchKeysStatus();
+    },
+    successMessage: '[System AI] 自定義模型已保存 / Model saved',
+    errorMessage: '模型保存失敗 / Save failed'
+  });
+
+  const handleSaveModel = async (provider: 'openrouter' | 'agnes', modelVal: string) => {
+    await runSaveModel({ provider, model: modelVal });
   };
 
   return (
@@ -203,7 +218,7 @@ export function AISecuritySection({
       <div className="bg-white rounded-[32px] shadow-sm border border-brand-navy/10 overflow-hidden" id="section-ai">
         <div className="p-6 border-b border-brand-navy/5 flex items-center justify-between bg-slate-50/50">
            <div className="flex items-center">
-             <Sparkles size={16} className="text-brand-gold mr-2" />
+             <Icon name="sparkles" size={16} className="text-brand-gold mr-2" />
              <h4 className="font-black text-brand-navy text-[10px] uppercase tracking-widest">
                 AI 处理器配置 / AI Processors
              </h4>
@@ -241,11 +256,12 @@ export function AISecuritySection({
   saveKey={saveKey}
   handleSaveModel={handleSaveModel}
   handleTest={handleTest}
-  isSaving={isSaving}
-  isTesting={isTesting}
+  isSaving={isSavingKey && keysStatus.primaryProvider === 'openrouter' ? 'openrouter' : null}
+  isTesting={isTestingProvider && keysStatus.primaryProvider === 'openrouter' ? 'openrouter' : null}
   appLang={appLang}
   t={t}
 />
+
           {/* Gemini Config (Agnes) */}
           
 <AgnesConfigBlock
@@ -260,8 +276,8 @@ export function AISecuritySection({
   saveKey={saveKey}
   handleSaveModel={handleSaveModel}
   handleTest={handleTest}
-  isSaving={isSaving}
-  isTesting={isTesting}
+  isSaving={isSavingKey && keysStatus.primaryProvider === 'agnes' ? 'agnes' : null}
+  isTesting={isTestingProvider && keysStatus.primaryProvider === 'agnes' ? 'agnes' : null}
   appLang={appLang}
   t={t}
 />

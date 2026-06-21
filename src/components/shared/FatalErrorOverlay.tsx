@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useUIStore } from '@/store/useUIStore';
 import { useCopyToClipboard } from '@/hooks';
+import { isAppError } from '@/lib/error/AppError';
 
 export const FatalErrorOverlay = () => {
   const fatalError = useUIStore((s) => s.fatalError);
@@ -23,8 +24,23 @@ export const FatalErrorOverlay = () => {
   const handleCopy = () => {
     const timestamp = new Date().toISOString();
     const errorType = fatalError.name || 'FatalError';
-    const errorCode = (fatalError as any)?.code || (fatalError as any)?.status || 'FATAL';
-    const traceId = 'traceId' in fatalError ? (fatalError as any).traceId : 'N/A';
+    
+    let errorCode = 'FATAL';
+    let traceId = 'N/A';
+
+    if (isAppError(fatalError)) {
+        errorCode = String(fatalError.code);
+        traceId = fatalError.traceId;
+    } else if ('code' in fatalError) {
+        errorCode = String((fatalError as { code?: string | number }).code);
+    } else if ('status' in fatalError) {
+        errorCode = String((fatalError as { status?: string | number }).status);
+    }
+
+    if (!isAppError(fatalError) && 'traceId' in fatalError) {
+        traceId = String((fatalError as { traceId?: string }).traceId);
+    }
+
     const message = fatalError.message || '未知内部错误';
     
     const diagnosticInfo = [
@@ -40,6 +56,18 @@ export const FatalErrorOverlay = () => {
     ].join('\n');
     
     copy(diagnosticInfo);
+  };
+
+  const getDisplayCode = () => {
+      if (isAppError(fatalError)) return fatalError.code;
+      if ('code' in fatalError) return (fatalError as { code?: string | number }).code;
+      return 'FATAL';
+  };
+
+  const getDisplayTrace = () => {
+      if (isAppError(fatalError)) return fatalError.traceId;
+      if ('traceId' in fatalError) return (fatalError as { traceId?: string }).traceId;
+      return 'N/A';
   };
 
   return (
@@ -62,7 +90,7 @@ export const FatalErrorOverlay = () => {
         <div className="bg-slate-50 rounded-2xl p-4 text-left border border-slate-100">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">故障摘要</span>
-            <span className="text-[10px] p-1 bg-white rounded border border-slate-200 text-slate-400 font-mono">CODE: {(fatalError as any)?.code || 'FATAL'}</span>
+            <span className="text-[10px] p-1 bg-white rounded border border-slate-200 text-slate-400 font-mono">CODE: {getDisplayCode()}</span>
           </div>
           <p className="text-xs font-mono text-slate-600 break-all">
             {fatalError.message || 'Internal System Failure'}
@@ -89,7 +117,7 @@ export const FatalErrorOverlay = () => {
         </div>
         
         <div className="flex justify-center flex-col items-center">
-             <span className="text-[10px] text-slate-400 mt-2 font-mono italic">TRACE: {(fatalError as any)?.traceId || 'N/A'}</span>
+             <span className="text-[10px] text-slate-400 mt-2 font-mono italic">TRACE: {getDisplayTrace()}</span>
         </div>
       </div>
     </dialog>

@@ -3,7 +3,7 @@ import React from 'react';
 import { useTaskSelector } from '../store';
 import { cn } from '@/lib/utils';
 import { useUIStore } from '@/store/useUIStore';
-import { X } from 'lucide-react';
+import { Icon } from '@/components/ui/Icon';
 
 function TaskItem({ task }: { task: any }) {
   return (
@@ -78,7 +78,7 @@ export function TaskDrawer() {
             className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all"
             aria-label="關閉"
           >
-            <X size={18} />
+            <Icon name="x" size={18} />
           </button>
         </div>
         <div className="p-2 space-y-2">

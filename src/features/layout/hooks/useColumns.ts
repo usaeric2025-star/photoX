@@ -7,7 +7,7 @@ const DEFAULT_COLUMNS = 3;
 const COLUMN_OPTIONS: ColumnCount[] = [2, 3, 5];
 
 export function useColumns() {
-  const search = useSearch({ strict: false }) as any;
+  const search = useSearch({ strict: false }) as Record<string, unknown>;
   const navigate = useNavigate();
   const [savedColumns, setSavedColumns] = useLocalStorage<ColumnCount>({ key: 'photo-grid-columns', defaultValue: DEFAULT_COLUMNS });
   
@@ -22,7 +22,7 @@ export function useColumns() {
   const setColumns = (newColumns: ColumnCount) => {
     setSavedColumns(newColumns);
     navigate({
-      search: ((prev: any) => ({
+      search: ((prev: Record<string, unknown>) => ({
         ...prev,
         columns: String(newColumns)
       })) as any

@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Pin } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/lib/utils';
 
 interface FilterChipProps {
@@ -28,14 +28,14 @@ export const FilterChip = ({ label, selected, pinned, hot, onClick, onRemove, ic
   >
     {icon}
     <span>{label}</span>
-    {pinned && <Pin size={8} className="fill-current rotate-45" />}
+    {pinned && <Icon name="pin" size={8} className="fill-current rotate-45" />}
     {hot && !pinned && (
       <span className="text-[7px] font-black px-1 py-0.5 bg-amber-500 text-white rounded-[3px] shadow-sm">
         HOT
       </span>
     )}
     {onRemove && (
-      <X size={10} onClick={(e: React.MouseEvent) => { e.stopPropagation(); onRemove(); }} className="ml-1" />
+      <Icon name="x" size={10} onClick={(e) => { e?.stopPropagation(); onRemove(); }} className="ml-1" />
     )}
   </button>
 );

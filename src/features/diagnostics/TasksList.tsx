@@ -1,5 +1,5 @@
 import React from 'react';
-import { RefreshCw, CheckCircle2, AlertTriangle, History, Zap, Clock, PackageSearch as PackageSearchIcon, BarChart3 } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { useGlobalTasks } from '@/hooks/admin/useGlobalTasks';
 import { UnifiedTask } from '@/types';
 import { Button } from '@/components/shared/Button';
@@ -24,10 +24,10 @@ export function TasksContent() {
       {/* Overview Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: '全部记录', value: stats.total, icon: History, color: 'text-slate-600', bg: 'bg-slate-50' },
-          { label: '进行中', value: stats.active, icon: Zap, color: 'text-blue-500', bg: 'bg-blue-50' },
-          { label: '已完成', value: stats.completed, icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-50' },
-          { label: '失败/异常', value: stats.failed, icon: AlertTriangle, color: 'text-red-500', bg: 'bg-red-50' },
+          { label: '全部记录', value: stats.total, icon: "history", color: 'text-slate-600', bg: 'bg-slate-50' },
+          { label: '进行中', value: stats.active, icon: "zap", color: 'text-blue-500', bg: 'bg-blue-50' },
+          { label: '已完成', value: stats.completed, icon: "check-circle-2", color: 'text-green-500', bg: 'bg-green-50' },
+          { label: '失败/异常', value: stats.failed, icon: "alert-triangle", color: 'text-red-500', bg: 'bg-red-50' },
         ].map((stat, i) => (
           <div
             key={stat.label}
@@ -35,7 +35,7 @@ export function TasksContent() {
           >
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{stat.label}</span>
-              <stat.icon size={14} className={stat.color} />
+              <Icon name={stat.icon as any} size={14} className={stat.color} />
             </div>
             <div className={`text-2xl font-black ${stat.color}`}>{stat.value}</div>
           </div>
@@ -46,11 +46,11 @@ export function TasksContent() {
         <div className="space-y-6">
           <div className="flex items-center justify-between border-b border-slate-50 pb-4">
             <h3 className="text-sm font-black text-brand-navy uppercase tracking-tight flex items-center gap-2">
-              <BarChart3 size={18} className="text-blue-500" />
+              <Icon name="bar-chart-3" size={18} className="text-blue-500" />
               后台任务队列
             </h3>
             <Button variant="outline" size="sm" onClick={() => refetch()} className="h-8 px-3 rounded-full text-[10px] font-black uppercase tracking-widest bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm">
-              <RefreshCw size={12} className={`mr-1.5 ${isPending ? 'animate-spin' : ''}`} />
+              <Icon name="refresh-cw" size={12} className={`mr-1.5 ${isPending ? 'animate-spin' : ''}`} />
               刷新
             </Button>
           </div>
@@ -59,7 +59,7 @@ export function TasksContent() {
             {safeTasks.length === 0 ? (
               <EmptyState 
                 title="暂无执行记录" 
-                icon={<PackageSearchIcon size={48} className="opacity-20" />}
+                icon={<Icon name="package-search" size={48} className="opacity-20" />}
               />
             ) : (
               <div className="grid gap-4">
@@ -85,13 +85,13 @@ function TaskItem({ task }: { task: UnifiedTask }) {
       <div className="shrink-0 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-100 shadow-sm relative">
         {task.status === 'processing' ? (
           <div className="relative">
-             <RefreshCw size={20} className="text-blue-500 animate-spin" />
+             <Icon name="refresh-cw" size={20} className="text-blue-500 animate-spin" />
              <div className="absolute inset-0 bg-blue-500/10 blur-xl animate-pulse" />
           </div>
         ) : task.status === 'completed' ? (
-          <CheckCircle2 size={24} className="text-green-500" />
+          <Icon name="check-circle-2" size={24} className="text-green-500" />
         ) : (
-          <AlertTriangle size={24} className="text-red-500" />
+          <Icon name="alert-triangle" size={24} className="text-red-500" />
         )}
       </div>
 
@@ -109,7 +109,7 @@ function TaskItem({ task }: { task: UnifiedTask }) {
         
         <div className="flex items-center gap-3 text-[10px] font-bold text-slate-400">
           <span className="flex items-center gap-1">
-            <Clock size={10} />
+            <Icon name="clock" size={10} />
             {formatters.time(task.createdAt)}
           </span>
           {task.total && (

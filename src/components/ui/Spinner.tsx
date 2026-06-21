@@ -1,5 +1,5 @@
 import React from 'react';
-import { Loader2 } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/lib/utils';
 
 interface SpinnerProps {
@@ -16,11 +16,11 @@ const sizeClasses = {
 export function Spinner({ className, size = 'md' }: SpinnerProps) {
   return (
     <div className={cn('relative flex items-center justify-center', className)}>
-      <Loader2 
+      <Icon name="loader-2"
         className={cn('animate-spin text-blue-600/20', sizeClasses[size])} 
         strokeWidth={1.5}
       />
-      <Loader2 
+      <Icon name="loader-2"
         className={cn('animate-spin text-blue-600 absolute transition-all', sizeClasses[size])} 
         strokeWidth={2.5}
         style={{ animationDuration: '0.8s', clipPath: 'inset(0 0 50% 0)' }}

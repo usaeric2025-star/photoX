@@ -1,5 +1,5 @@
 import { Button } from '@/components/shared/Button';
-import { ArrowUpDown } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 
 interface SortButtonProps {
   onClick: () => void;
@@ -14,7 +14,7 @@ export const SortButton = ({ onClick, label = "排序", selected }: SortButtonPr
     onClick={onClick} 
     className="h-8 gap-1.5 active:scale-95 transition-transform duration-75"
   >
-    <ArrowUpDown size={14} />
+    <Icon name="arrow-up-down" size={14} />
     {label}
   </Button>
 );

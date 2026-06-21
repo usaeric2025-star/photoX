@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { X as CloseIcon, RefreshCcw, Save, Trash2 } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { usePhotoDelete } from '@/hooks';
@@ -11,21 +11,6 @@ import { type } from 'arktype';
 function BatchDeleteButton({ selectedIds, onSuccess }: { selectedIds: string[], onSuccess: () => void }) {
   const [isDeleteOpen, deleteDialog] = useDisclosure(false);
   
-  const { submit: confirmDelete, isLoading: isDeleting } = useFormSubmit({
-    schema: type('any'),
-    mutationFn: async () => {
-      const { deletePhoto } = await import('@/hooks/photo/usePhotoMutations');
-      // This is a bit hacky because we are inside a component, 
-      // but we need the mutation. Ideally we'd use usePhotoDelete()
-      return true; 
-    },
-    onSuccess: () => {
-      onSuccess();
-    },
-    successMessage: '批量刪除成功',
-    errorMessage: '批量刪除失敗'
-  });
-
   // Re-define mutation here to use standard TanStack Query
   const deleteMutation = usePhotoDelete();
 
@@ -44,7 +29,7 @@ function BatchDeleteButton({ selectedIds, onSuccess }: { selectedIds: string[], 
         rounded-xl flex items-center justify-center gap-1.5
         active:bg-red-100 transition-colors disabled:opacity-50 text-sm font-bold"
       >
-        <Trash2 size={16} />
+        <Icon name="trash-2" size={16} />
         {deleteMutation.isPending ? '刪除中...' : `刪除 (${selectedIds.length})`}
       </button>
       <ConfirmDialog
@@ -74,7 +59,7 @@ export const BatchEditScreen = () => {
   } = useBatchEditSelection();
 
   const { submit: saveBatch, isLoading: isSaving } = useFormSubmit({
-    schema: type('any'),
+    schema: type('unknown'),
     mutationFn: async () => {
       await originalSave();
       return true;
@@ -106,7 +91,7 @@ export const BatchEditScreen = () => {
             className={`px-3 h-10 bg-blue-600 text-white 
             rounded-xl flex items-center justify-center gap-1.5
             shadow-md text-sm font-bold transition-all ${(isSaving || isSyncing) ? 'opacity-50 pointer-events-none' : 'active:bg-blue-700'}`}>
-            {(isSaving || isSyncing) ? <RefreshCcw size={16} className="animate-spin" /> : <Save size={16} />}
+            {(isSaving || isSyncing) ? <Icon name="refresh-ccw" size={16} className="animate-spin" /> : <Icon name="save" size={16} />}
             {(isSaving || isSyncing) ? '儲存中...' : '儲存'}
           </button>
           
@@ -116,7 +101,7 @@ export const BatchEditScreen = () => {
             active:bg-slate-200"
             title="關閉批量修改"
           >
-            <CloseIcon size={18} />
+            <Icon name="x" size={18} />
           </button>
         </div>
       </div>
@@ -129,9 +114,9 @@ export const BatchEditScreen = () => {
           batchIsHiddenApplied={batchIsHiddenApplied}
           setBatchIsHiddenApplied={setBatchIsHiddenApplied}
           quickAddMfr={logic.quickAddManufacturer}
-          addTag={logic.addTag as any}
-          updateTag={logic.updateTag as any}
-          deleteTag={logic.deleteTag as any}
+          addTag={logic.addTag}
+          updateTag={logic.updateTag}
+          deleteTag={logic.deleteTag}
         />
       </div>
     </div>

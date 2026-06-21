@@ -2,7 +2,7 @@ import React from 'react';
 import { useField, useFormContext } from "el-form-react-hooks";
 import { NativeDialog } from '@/components/ui/NativeDialog';
 import { usePhotoEditSessionContext } from '@/hooks/photo/usePhotoEditSessionContext';
-import { Lock, Loader2, Maximize2, X } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useUIStore } from '@/store/useUIStore';
 import { usePhoto, useTaskExecutor, useTasks, useTranslation, useFilters } from '@/hooks';
@@ -44,7 +44,7 @@ export function BasicInfoTab() {
               >
                 <OptimizedImage src={previewSrc} className="w-full h-full object-contain" alt="Preview" />
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Maximize2 className="text-white drop-shadow-md" size={20} />
+                  <Icon name="maximize-2" className="text-white drop-shadow-md" size={20} />
                 </div>
              </div>
           </div>
@@ -71,7 +71,7 @@ export function BasicInfoTab() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 xl:gap-4">
         <div className="space-y-1.5 opacity-50 select-none">
           <h3 className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter px-1 flex items-center gap-1">
-            <Lock size={8} className="text-slate-300" />
+            <Icon name="lock" size={8} className="text-slate-300" />
             SYSTEM CODE
           </h3>
           <div className="w-full bg-slate-50 border border-slate-100 px-4 py-3 rounded-2xl text-xs font-mono font-medium text-slate-400 cursor-not-allowed truncate" title={(itemCode as string) || ''}>
@@ -80,7 +80,7 @@ export function BasicInfoTab() {
         </div>
         <div className="space-y-1.5 opacity-50 select-none">
           <h3 className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter px-1 flex items-center gap-1">
-            <Lock size={8} className="text-slate-300" />
+            <Icon name="lock" size={8} className="text-slate-300" />
             DATABASE ID
           </h3>
           <div 
@@ -136,7 +136,7 @@ export function BasicInfoTab() {
               onClick={closeZoom}
               className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
             >
-              <X size={24} />
+              <Icon name="x" size={24} />
             </button>
             <OptimizedImage 
               src={previewSrc || ''} 

@@ -80,10 +80,10 @@ export const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabas
       );
     };
   }
-}) as any);
+}) as unknown as ReturnType<typeof createClient>);
 
 // 开发环境挂载到 window，方便调试（可选）
 if (typeof window !== 'undefined' && getEnv('NODE_ENV', false) === 'development') {
-  (window as any).supabase = supabase;
+  (window as unknown as { supabase: unknown }).supabase = supabase;
 }
 

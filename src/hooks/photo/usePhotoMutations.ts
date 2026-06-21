@@ -24,7 +24,7 @@ const photoEditConfig = defineMutation<
     
     if (tags && Array.isArray(tags)) {
       const { syncBatchPhotoTags } = await import('@/services/tag/commands');
-      const tagIds = tags.map(t => typeof t === 'object' && t !== null ? String((t as any).id) : String(t)).filter(Boolean);
+      const tagIds = tags.map(t => typeof t === 'object' && t !== null ? String((t as { id?: string | number }).id) : String(t)).filter(Boolean);
       const tagSources: Record<string, "user"> = {};
       tagIds.forEach(tId => {
         tagSources[tId] = "user";

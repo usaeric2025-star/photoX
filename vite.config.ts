@@ -47,14 +47,14 @@ export default defineConfig(({mode}) => {
             }
             
             // Layer 2: UI 元件與圖標 (依賴 Layer 0, 1)
-            // 包含 Sonner, Lightbox, Virtua, 動畫等
-            if (/\/node_modules\/(@radix-ui|sonner|yet-another-react-lightbox|virtua|motion|el-form-react-components|el-form-react-hooks)\//.test(id)) {
+            // 包含 Sonner, Lightbox, Virtua, 動畫與圖標
+            if (/\/node_modules\/(lucide-react|@radix-ui|sonner|yet-another-react-lightbox|virtua|motion|el-form-react-components|el-form-react-hooks)\//.test(id)) {
               return 'vendor-ui';
             }
             
             // Layer 3: 功能與資料層 (依賴以上)
-            // Supabase, ArkType, Drizzle, Zustand, Postgres
-            if (/\/node_modules\/(@supabase|arktype|drizzle-orm|zustand|postgres)\//.test(id)) {
+            // Supabase, ArkType, Drizzle, Zustand, Postgres, AWS SDK
+            if (/\/node_modules\/(@supabase|arktype|drizzle-orm|zustand|postgres|@aws-sdk)\//.test(id)) {
               return 'vendor-features';
             }
             

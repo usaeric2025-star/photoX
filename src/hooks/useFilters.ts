@@ -8,49 +8,49 @@ export interface UseFiltersOptions {
 }
 
 export const useFilters = (options: UseFiltersOptions = {}) => {
-  const search = useSearch({ strict: false }) as Record<string, any>;
+  const search = useSearch({ strict: false }) as Record<string, unknown>;
   const navigate = useNavigate();
 
-  const updateSearch = useCallback((updates: Record<string, any>) => {
+  const updateSearch = useCallback((updates: Record<string, unknown>) => {
     navigate({
       search: ((prev: any) => ({
         ...prev,
         ...updates
       })) as any
-    } as any);
+    });
   }, [navigate]);
 
-  const searchVal = search.q || '';
+  const searchVal = (search.q as string) || '';
   const setSearch = useCallback((val: string) => {
     updateSearch({ q: val || undefined });
   }, [updateSearch]);
 
-  const category = search.cat || search.category || '';
+  const category = (search.cat as string) || (search.category as string) || '';
   const setCategory = useCallback((val: string) => {
     updateSearch({ cat: val || undefined, category: undefined });
   }, [updateSearch]);
 
-  const tags = Array.isArray(search.tag) ? search.tag : (search.tag ? [search.tag] : []);
+  const tags = Array.isArray(search.tag) ? (search.tag as string[]) : (search.tag ? [search.tag as string] : []);
   const setTags = useCallback((vals: string[]) => {
     updateSearch({ tag: vals.length === 0 ? undefined : vals });
   }, [updateSearch]);
 
-  const sort = search.sort || options.sortOptions?.[0]?.value || 'newest';
+  const sort = (search.sort as string) || options.sortOptions?.[0]?.value || 'newest';
   const setSort = useCallback((val: string) => {
     updateSearch({ sort: val || undefined });
   }, [updateSearch]);
 
-  const status = search.status || 'all';
+  const status = (search.status as string) || 'all';
   const setStatus = useCallback((val: string) => {
     updateSearch({ status: val === 'all' ? undefined : val });
   }, [updateSearch]);
 
-  const batchFilter = search.batch || '';
+  const batchFilter = (search.batch as string) || '';
   const setBatchFilter = useCallback((val: string) => {
     updateSearch({ batch: val || undefined });
   }, [updateSearch]);
 
-  const photoId = search.photoId || null;
+  const photoId = (search.photoId as string) || null;
   const setPhotoId = useCallback((val: string | null) => {
     updateSearch({ photoId: val || undefined });
   }, [updateSearch]);
@@ -60,12 +60,12 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
     updateSearch({ anchor: val ? true : undefined });
   }, [updateSearch]);
 
-  const groupId = search.groupId || null;
+  const groupId = (search.groupId as string) || null;
   const setGroupId = useCallback((val: string | null) => {
     updateSearch({ groupId: val || undefined });
   }, [updateSearch]);
 
-  const modal = search.modal || null;
+  const modal = (search.modal as string) || null;
   const setModal = useCallback((val: string | null) => {
     updateSearch({ modal: val || undefined });
   }, [updateSearch]);
@@ -75,7 +75,7 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
     updateSearch({ showGroupsCollapsed: val ? undefined : false });
   }, [updateSearch]);
 
-  const view = search.view || 'grid';
+  const view = (search.view as string) || 'grid';
   const setView = useCallback((val: 'grid' | 'list') => {
     updateSearch({ view: val === 'grid' ? undefined : 'list' });
   }, [updateSearch]);
@@ -86,7 +86,7 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
         photoId: prev.photoId, 
         groupId: prev.groupId,
       })) as any
-    } as any);
+    });
   }, [navigate]);
 
   return {

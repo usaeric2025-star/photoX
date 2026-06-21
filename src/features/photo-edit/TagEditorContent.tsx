@@ -1,7 +1,7 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import React, { useState, useRef, useDeferredValue } from "react";
 import { NativeDialog } from "@/components/ui/NativeDialog";
-import { Pencil, Trash2, Heart, X } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { cn } from "@/lib/utils";
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -179,7 +179,7 @@ export function TagEditor({
                   setActiveActionTag(null);
                 }}
               >
-                <Heart
+                <Icon name="heart"
                   size={18}
                   strokeWidth={2.5}
                   className={
@@ -202,7 +202,7 @@ export function TagEditor({
                   setActiveActionTag(null);
                 }}
               >
-                <Pencil size={18} strokeWidth={2.5} /> 编辑名称 / Rename
+                <Icon name="pencil" size={18} strokeWidth={2.5} /> 编辑名称 / Rename
               </button>
               <button
                 type="button"
@@ -212,7 +212,7 @@ export function TagEditor({
                   setActiveActionTag(null);
                 }}
               >
-                <Trash2 size={18} strokeWidth={2.5} /> 彻底删除 / Delete
+                <Icon name="trash-2" size={18} strokeWidth={2.5} /> 彻底删除 / Delete
               </button>
             </div>
             <button
@@ -310,7 +310,7 @@ const TagButton = ({ tag, isSelected, isHot, isPinned, isDisabled, hideHotLabel,
         </span>
         {isPinned && !isSelected && (
           <span className="text-[9px] bg-amber-500 text-white px-1.5 py-0.5 rounded-full scale-90 origin-left font-black tracking-tighter shadow-sm">
-            <Heart size={8} className="fill-white" /> 置顶
+            <Icon name="heart" size={8} className="fill-white" /> 置顶
           </span>
         )}
         {!hideHotLabel && isHot && !isPinned && !isSelected && (

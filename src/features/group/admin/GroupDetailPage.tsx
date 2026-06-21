@@ -4,7 +4,8 @@ import { useGroupData } from '../shared/hooks/useGroupData';
 import { PhotoListItem } from '@/types/api';
 import { Photo, Group, ProductGroup, Dimension, Category } from '@/types';
 import { AdminPhotoCard } from '@/components/photo/AdminPhotoCard';
-import { YarlLightbox } from '@/features/lightbox/YarlLightbox';
+import { useLightboxStore } from '@/store/useLightboxStore';
+import { LazyPhotoLightbox } from '@/features/lightbox/LazyPhotoLightbox';
 import { useFilters, useTranslation, useCategories } from '@/hooks';
 import { getTranslatedCategoryName } from '@/services/category/utils';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -31,7 +32,7 @@ function AdminPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoLis
       {photos.map((photo) => (
         <AdminPhotoCard
           key={photo.id}
-          photo={photo as any}
+          photo={photo}
           onClick={() => {
             if (isMultiSelect) {
               toggle(photo.id);
@@ -91,21 +92,23 @@ export function AdminGroupDetailPage() {
   const adminActions = useAdminMaintenance();
   const { handleBatchAiIdentifyTrigger } = useAdminBatchActions();
 
+  const openLightbox = useLightboxStore((s) => s.open);
+  
   const lightboxItems = photos.map((p) => {
     return {
       id: p.id,
       src: p.imageUrl,
-      thumbnail: p.thumbnailUrl || p.imageUrl,
+      alt: p.name || '照片',
       title: p.name || '',
-      description: p.description || '',
       category: '',
-      tags: p.tags || [],
-      photo: p as any,
+      metadata: {
+        description: p.description || undefined,
+        tags: p.tags,
+      }
     };
   });
 
   const handleBatchDelete = async (ids: string[]) => {
-    // Basic implementation since original relied on full useGroupAdminLogic
     for (const id of ids) {
       await adminActions.deletePhoto.mutateAsync(id);
     }
@@ -120,17 +123,26 @@ export function AdminGroupDetailPage() {
 
   const { groupData, setGroupData, handleUpdateGroupData } = useGroupDraft(
     groupId,
-    photos as any,
+    photos as unknown as Photo[],
     async (_id, _data) => {}
   );
   const { update, dissolve } = useGroupMutations();
   const { deletePhoto, updatePhoto } = adminActions;
   
   const handleUpdateTitle = async (newName: string) => {
-    await update.mutateAsync({ id: groupId, updates: { name: newName } });
+    if (groupId) {
+      await update.mutateAsync({ id: groupId, updates: { name: newName } });
+    }
   };
   
   const openEditDrawer = (id: string) => { setPhotoId(id); setModal('edit'); };
+
+  const handlePhotoClick = (id: string) => {
+      const index = photos.findIndex(p => p.id === id);
+      if (index !== -1) {
+          openLightbox(lightboxItems, index);
+      }
+  };
 
   if (loading) return <PageSkeleton />;
   if (error) return <div className="p-4 text-red-500">錯誤：{error}</div>;
@@ -149,20 +161,15 @@ export function AdminGroupDetailPage() {
           />
         </div>
         <div className={`flex-1 overflow-y-auto relative overscroll-y-auto overscroll-x-none bg-slate-50 transition-all duration-300 ${isMultiSelect ? 'pb-16' : ''}`}>
-          <AdminPhotoGrid photos={photos} categories={categories} onPhotoClick={(id: string) => {
-               setPhotoId(id);
-          }} />
+          <AdminPhotoGrid photos={photos} categories={categories} onPhotoClick={handlePhotoClick} />
         </div>
         
-        <YarlLightbox
-          open={lightboxOpen}
-          items={lightboxItems}
-          currentIndex={Math.max(0, lightboxIndex)}
-          onClose={() => setPhotoId(null)}
-          onIndexChange={(idx: number) => {
-             const photo = photos[idx];
-             if (photo) setPhotoId(photo.id);
-          }}
+        <LazyPhotoLightbox
+          open={useLightboxStore((s) => s.isOpen)}
+          images={useLightboxStore((s) => s.images)}
+          currentIndex={useLightboxStore((s) => s.currentIndex)}
+          onOpenChange={(open) => !open && useLightboxStore.getState().close()}
+          onIndexChange={(idx: number) => useLightboxStore.getState().goTo(idx)}
           onEdit={openEditDrawer}
           onDelete={(id) => deletePhoto.mutate(id)}
           onSetCover={(id) => updatePhoto.mutate({ id, updates: { is_group_cover: true } })}
@@ -172,19 +179,19 @@ export function AdminGroupDetailPage() {
           totalItems={photos?.length}
           allIds={photos?.map((p) => p.id)}
           allPhotos={photos as any}
-          groupId={groupId}
+          groupId={groupId || undefined}
         />
 
         {showAdminTools && (
           <GroupSettingsDialog
             showGroupSettings={showAdminTools}
             setShowGroupSettings={setShowAdminTools}
-            activeGroupId={groupId}
+            activeGroupId={(groupId as any) || null}
             groupData={groupData}
             setGroupData={setGroupData}
             handleUpdateGroupData={handleUpdateGroupData}
             onUngroup={async (id) => await dissolve.mutateAsync(id)}
-            update={async (updates) => { await update.mutateAsync({ id: groupId, updates }); }}
+            update={async (updates) => { if (groupId) await update.mutateAsync({ id: groupId, updates }); }}
             t={(key: string) => (t as any)[key] || key}
           />
         )}

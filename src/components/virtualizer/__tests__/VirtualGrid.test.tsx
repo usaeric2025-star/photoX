@@ -5,7 +5,7 @@ import * as VirtualGridModule from '../VirtualGrid';
 
 describe('Security Guard: computeLaneIndex export constraint', () => {
   it('should not export computeLaneIndex as a named export', () => {
-    expect((VirtualGridModule as any).computeLaneIndex).toBeUndefined();
+    expect((VirtualGridModule as unknown as Record<string, unknown>).computeLaneIndex).toBeUndefined();
   });
 });
 
@@ -27,7 +27,7 @@ describe('VirtualGrid', () => {
       value: 1000,
     });
 
-    originalResizeObserver = (global as any).ResizeObserver;
+    originalResizeObserver = (globalThis as unknown as { ResizeObserver: typeof ResizeObserver }).ResizeObserver;
     class MockResizeObserver {
       callback: (entries: ResizeObserverEntry[]) => void;
       constructor(callback: (entries: ResizeObserverEntry[]) => void) {
@@ -48,9 +48,9 @@ describe('VirtualGrid', () => {
       unobserve() {}
       disconnect() {}
     }
-    (global as any).ResizeObserver = MockResizeObserver;
+    (globalThis as unknown as { ResizeObserver: typeof MockResizeObserver }).ResizeObserver = MockResizeObserver;
     if (typeof window !== 'undefined') {
-      (window as any).ResizeObserver = MockResizeObserver;
+      (window as unknown as { ResizeObserver: typeof MockResizeObserver }).ResizeObserver = MockResizeObserver;
     }
   });
 
@@ -62,14 +62,14 @@ describe('VirtualGrid', () => {
       Object.defineProperty(HTMLElement.prototype, 'offsetHeight', originalOffsetHeight);
     }
     if (originalResizeObserver) {
-      (global as any).ResizeObserver = originalResizeObserver;
+      (globalThis as unknown as { ResizeObserver: typeof ResizeObserver }).ResizeObserver = originalResizeObserver;
       if (typeof window !== 'undefined') {
-        (window as any).ResizeObserver = originalResizeObserver;
+        (window as unknown as { ResizeObserver: typeof ResizeObserver }).ResizeObserver = originalResizeObserver;
       }
     } else {
-      delete (global as any).ResizeObserver;
+      delete (globalThis as unknown as { ResizeObserver?: typeof ResizeObserver }).ResizeObserver;
       if (typeof window !== 'undefined') {
-        delete (window as any).ResizeObserver;
+        delete (window as unknown as { ResizeObserver?: typeof ResizeObserver }).ResizeObserver;
       }
     }
   });

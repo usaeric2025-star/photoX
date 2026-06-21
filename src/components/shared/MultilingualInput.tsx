@@ -29,7 +29,7 @@ export const MultilingualInput = ({ name, label, required, type = 'input' }: Mul
               {type === 'textarea' ? (
                 <textarea 
                   value={langValue}
-                  onChange={(e) => form.setValue(`${name}.${lang}` as any, e.target.value)}
+                  onChange={(e) => form.setValue(`${name}.${lang}`, e.target.value)}
                   placeholder={lang.toUpperCase()}
                   className={cn(
                     "w-full bg-white border rounded-2xl p-4 text-sm font-medium outline-none h-40 resize-none transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50",
@@ -39,7 +39,7 @@ export const MultilingualInput = ({ name, label, required, type = 'input' }: Mul
               ) : (
                 <input 
                   value={langValue}
-                  onChange={(e) => form.setValue(`${name}.${lang}` as any, e.target.value)}
+                  onChange={(e) => form.setValue(`${name}.${lang}`, e.target.value)}
                   placeholder={lang.toUpperCase()}
                   className={cn(
                     "w-full bg-white border rounded-2xl px-4 py-3 text-sm font-bold outline-none transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50",

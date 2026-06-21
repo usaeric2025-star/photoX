@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Globe, ChevronDown } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { useUIStore } from '@/store/useUIStore';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useClickOutside } from '@/hooks/core/useClickOutside';
@@ -10,7 +10,7 @@ export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dro
   const appLang = useUIStore((s) => s.appLang);
   const update = useUIStore((s) => s.update);
 
-  const langs = [
+  const langs: { code: 'zh' | 'en' | 'ms'; label: string }[] = [
     { code: 'zh', label: '中文' },
     { code: 'en', label: 'EN' },
     { code: 'ms', label: 'BM' }
@@ -25,9 +25,9 @@ export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dro
           <button 
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors cursor-pointer"
           >
-            <Globe size={14} className="text-slate-500" />
+            <Icon name="globe" size={14} className="text-slate-500" />
             <span className="text-[11px] font-black uppercase text-slate-700">{currentLabel}</span>
-            <ChevronDown size={12} className="text-slate-400" />
+            <Icon name="chevron-down" size={12} className="text-slate-400" />
           </button>
         }
       >
@@ -36,7 +36,7 @@ export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dro
             <button
               key={l.code}
               onClick={() => {
-                update({ appLang: l.code as any });
+                update({ appLang: l.code });
               }}
               className={`w-[calc(100%-8px)] mx-1 mb-0.5 last:mb-0 text-left px-3 py-2 rounded-lg text-[11px] font-bold transition-all flex items-center justify-between ${
                 appLang === l.code 
@@ -61,7 +61,7 @@ export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dro
             key={l.code}
             type="button"
             onClick={(e) => {
-              update({ appLang: l.code as any });
+              update({ appLang: l.code });
             }}
             className={`flex-1 flex items-center justify-center h-full rounded-xl text-[11px] font-black tracking-tight transition-all duration-300 ${
               appLang === l.code 
@@ -81,7 +81,7 @@ export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dro
       {langs.map(l => (
         <button 
           key={l.code} 
-          onClick={() => update({ appLang: l.code as any })} 
+          onClick={() => update({ appLang: l.code })} 
           className={`relative flex-1 px-3 sm:px-6 h-full flex items-center justify-center rounded-full text-[10px] sm:text-[13px] font-black uppercase tracking-wider transition-all duration-500 ${
             appLang === l.code 
               ? 'bg-brand-navy text-white shadow-[0_4px_12px_rgba(var(--brand-navy-rgb),0.3)] scale-[1.05]' 

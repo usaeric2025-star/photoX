@@ -20,9 +20,11 @@ export const app = new Hono().basePath('/api');
 
 app.use('*', cors());
 app.get('/health', (c) => c.json({ success: true, status: 'ok' }));
-setupMiddlewares(app, serverEnv);
+setupMiddlewares(app, serverEnv as any);
 
 // --- Global Error Logging ---
+import { type StatusCode } from 'hono/utils/http-status';
+
 app.onError(async (err, c) => {
     const { db, systemLogs } = await import('./_lib/db/index.js');
     const { logger } = await import('./_lib/logger.js');
@@ -36,7 +38,7 @@ app.onError(async (err, c) => {
     });
 
     try {
-        await (db as any).insert(systemLogs).values({
+        await (db as unknown as { insert: (t: any) => { values: (v: any) => Promise<void> } }).insert(systemLogs).values({
             message: err.message || 'Unknown error',
             level: 'error',
             operation: `internal.${c.req.path}`,
@@ -89,7 +91,7 @@ app.post('/log-error', async (c) => {
         const operation = body.module || 'client.error';
         const msg = typeof body.message === 'string' ? body.message : JSON.stringify(body);
         
-        await (db as any).insert(systemLogs).values({
+        await (db as unknown as { insert: (t: any) => { values: (v: any) => Promise<void> } }).insert(systemLogs).values({
             message: msg,
             level,
             operation,
@@ -127,8 +129,8 @@ app.get('/error-log', async (c) => {
         });
 
         return c.json({ success: true, data });
-    } catch (e: any) {
-        return c.json({ success: false, error: e.message }, 500);
+    } catch (e: unknown) {
+        return c.json({ success: false, error: e instanceof Error ? e.message : String(e) }, 500);
     }
 });
 
@@ -152,11 +154,11 @@ app.get('/admin/error-events', async (c) => {
       });
 
       return c.json({ success: true, data });
-  } catch (e: any) {
-      if (e.message?.includes('Unauthorized')) {
+  } catch (e: unknown) {
+      if (e instanceof Error && e.message?.includes('Unauthorized')) {
           return c.json({ success: false, error: 'Unauthorized' }, 401);
       }
-      return c.json({ success: false, error: e.message }, 500);
+      return c.json({ success: false, error: e instanceof Error ? e.message : String(e) }, 500);
   }
 });
 
@@ -170,11 +172,11 @@ app.post('/admin/error-events/clear', async (c) => {
       await db.delete(systemLogs);
 
       return c.json({ success: true });
-  } catch (e: any) {
-      if (e.message?.includes('Unauthorized')) {
+  } catch (e: unknown) {
+      if (e instanceof Error && e.message?.includes('Unauthorized')) {
           return c.json({ success: false, error: 'Unauthorized' }, 401);
       }
-      return c.json({ success: false, error: e.message }, 500);
+      return c.json({ success: false, error: e instanceof Error ? e.message : String(e) }, 500);
   }
 });
 
@@ -200,9 +202,9 @@ app.get('/download', async (c) => {
         // Let it be cached by CDN but revalidated. We also set a long cache max-age because images are static
         c.header('Cache-Control', 'public, max-age=31536000, immutable');
         
-        return c.body(buffer as any);
-    } catch (e: any) {
-        return c.text(e.message, 500);
+        return c.body(buffer);
+    } catch (e: unknown) {
+        return c.text(e instanceof Error ? e.message : String(e), 500);
     }
 });
 

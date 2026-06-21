@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { Trash2, Pencil, Icon } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useClickOutside } from '@/hooks/core/useClickOutside';
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -43,7 +43,7 @@ export const ManufacturerItem = ({
                  In original it was absolute positioned over the whole thing based on activeMenuId.
                  Let's add a small dots icon as a trigger for better UX.
               */}
-             <Icon name="MoreVertical" size={14} />
+             <Icon name="more-vertical" size={14} />
           </div>
         }
       >
@@ -55,7 +55,7 @@ export const ManufacturerItem = ({
             }}
             className="px-3 py-2 text-slate-700 text-[10px] font-bold uppercase tracking-widest hover:bg-slate-100 rounded-lg flex items-center gap-2 transition-colors"
           >
-            <Pencil size={12} /> 编辑名称
+            <Icon name="pencil" size={12} /> 编辑名称
           </button>
           <button
             onClick={(e) => {
@@ -64,7 +64,7 @@ export const ManufacturerItem = ({
             }}
             className="px-3 py-2 text-red-500 text-[10px] font-bold uppercase tracking-widest hover:bg-red-50 rounded-lg flex items-center gap-2 transition-colors"
           >
-            <Trash2 size={12} /> 删除
+            <Icon name="trash-2" size={12} /> 删除
           </button>
         </div>
       </NativePopover>

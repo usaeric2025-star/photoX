@@ -49,7 +49,7 @@ export const analyzeAndSavePhoto = async (
       group_id: analysisData.group_id ? String(analysisData.group_id) : null,
       dimensions: analysisData.dimensions || [],
       metadata: {
-        ...(photo.metadata as any || {}),
+        ...(photo.metadata as Record<string, unknown> || {}),
         ai_updated_at: new Date().toISOString()
       }
     });
@@ -99,7 +99,7 @@ export const autoGroupPhotos = async (
     
     for (let i = 0; i < photos.length; i++) {
       try {
-        const p = photos[i] as any;
+        const p = photos[i] as Photo;
         logger.info(`[autoGroupPhotos] Analyzing and saving single photo ${i+1}/${photos.length}: ${p.id}`);
         await analyzeAndSavePhoto(p);
       } catch (err) {
@@ -109,7 +109,7 @@ export const autoGroupPhotos = async (
 
     const refreshResponse = await api.photos['by-ids'].$post({ json: { ids: photoIds } });
     const refreshBody = await refreshResponse.json();
-    const updatedPhotos = (refreshBody.success ? refreshBody.data || [] : []) as any[];
+    const updatedPhotos = (refreshBody.success ? refreshBody.data || [] : []) as Photo[];
 
     const analysis = await analyzeGroup(updatedPhotos);
     const { name: nameObj, description: descObj } = await mapAiToMultilingual(
@@ -192,11 +192,11 @@ export async function runBatchAnalysis({
     try {
       const response = await api.photos['by-ids'].$post({ json: { ids: targetPhotos.map(p => p.id) } });
       const body = await response.json();
-      const photos = (body.success ? body.data || [] : []) as any[];
+      const photos = (body.success ? body.data || [] : []) as Photo[];
       
       if (photos.length > 0) {
         onProgress(85, '生成合组名称与描述...');
-        await analyzeAndSaveGroup(groupId, photos as any);
+        await analyzeAndSaveGroup(groupId, photos);
         groupSuccess = true;
       }
     } catch (e) {

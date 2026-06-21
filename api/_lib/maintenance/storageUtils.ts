@@ -42,7 +42,7 @@ export async function runStorageAudit() {
 
     const dbRecords: DbRecord[] = dbPhotos.map((p) => ({
         id: String(p.id),
-        name: typeof p.name === 'object' ? (p.name as any)?.zh || "" : String(p.name || ''),
+        name: typeof p.name === 'object' ? (p.name as Record<string, string> | null)?.zh || "" : String(p.name || ''),
         url: String(p.imageUrl || ''),
         normalized: normalizeUrl(String(p.imageUrl || ''))
     }));

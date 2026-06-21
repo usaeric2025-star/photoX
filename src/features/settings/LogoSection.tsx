@@ -1,5 +1,5 @@
 import React from 'react';
-import { Upload, Image as ImageIcon } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { Category, Tag, Manufacturer, AppSettings } from '../../types';
 
 interface LogoSectionProps {
@@ -41,7 +41,7 @@ export function LogoSection({
                 <img src={settings.logo_url} className="relative w-20 h-20 rounded-[32px] object-cover shadow-2xl border-4 border-white p-1 bg-white" alt="Logo" loading="lazy" />
             ) : (
                 <div className="relative w-20 h-20 bg-slate-50 rounded-[32px] flex flex-col items-center justify-center text-brand-navy/10 border border-brand-navy/5">
-                  <ImageIcon size={24} />
+                  <Icon name="image" size={24} />
                 </div>
             )}
           </div>
@@ -52,7 +52,7 @@ export function LogoSection({
             </div>
             <label className="relative overflow-hidden inline-block self-start">
               <span className="px-6 py-2.5 bg-brand-gold text-white rounded-2xl text-[9px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-brand-gold/90 transition-colors cursor-pointer shadow-lg shadow-brand-gold/20">
-                <Upload size={14} /> 上傳新圖標
+                <Icon name="upload" size={14} /> 上傳新圖標
               </span>
               <input 
                 type="file" 

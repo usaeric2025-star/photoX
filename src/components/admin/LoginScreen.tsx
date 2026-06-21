@@ -1,6 +1,6 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React, { useState, useCallback } from 'react';
-import { LogIn, Image as ImageIcon, RefreshCcw, X, Shield, Users } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { usePublicSettings } from '../../hooks';
 import { useUIStore } from '@/store/useUIStore';
 import { Link } from '@tanstack/react-router';
@@ -52,7 +52,7 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
 
   // 2. Admin Login Submission
   const { submit: submitAdmin, isLoading: isAdminLoggingIn } = useFormSubmit({
-    schema: type('any'),
+    schema: type('unknown'),
     mutationFn: async () => {
       await signIn();
       return true;
@@ -79,7 +79,7 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
           to={ROUTES.PREVIEW} 
           className="group w-12 h-12 flex items-center justify-center rounded-2xl bg-white text-slate-400 hover:text-slate-900 shadow-sm border border-slate-100 transition-all active:scale-90 animate-fade-in"
         >
-          <X size={20} className="transition-transform group-hover:rotate-90" />
+          <Icon name="x" size={20} className="transition-transform group-hover:rotate-90" />
         </Link>
       </div>
 
@@ -91,7 +91,7 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
             <div className="relative group">
               <div className="absolute inset-0 bg-slate-900/10 rounded-3xl blur-xl group-hover:bg-slate-900/20 transition-all duration-500 scale-90" />
               <div className="relative w-20 h-20 bg-slate-950 rounded-3xl flex items-center justify-center shadow-2xl transform transition-all duration-500 group-hover:scale-105 group-hover:-rotate-3">
-                <ImageIcon size={36} className="text-white" />
+                <Icon name="image" size={36} className="text-white" />
               </div>
             </div>
             
@@ -118,7 +118,7 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
                 mode === 'admin' ? 'text-slate-900' : 'text-slate-400 hover:text-slate-600'
               }`}
             >
-              <Shield size={14} fill={mode === 'admin' ? 'currentColor' : 'none'} className={mode === 'admin' ? 'opacity-80' : 'opacity-40'} />
+              <Icon name="shield" size={14} fill={mode === 'admin' ? 'currentColor' : 'none'} className={mode === 'admin' ? 'opacity-80' : 'opacity-40'} />
               {t.loginTitleAdmin}
             </button>
             <button
@@ -127,7 +127,7 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
                 mode === 'staff' ? 'text-slate-900' : 'text-slate-400 hover:text-slate-600'
               }`}
             >
-              <Users size={14} fill={mode === 'staff' ? 'currentColor' : 'none'} className={mode === 'staff' ? 'opacity-80' : 'opacity-40'} />
+              <Icon name="users" size={14} fill={mode === 'staff' ? 'currentColor' : 'none'} className={mode === 'staff' ? 'opacity-80' : 'opacity-40'} />
               {t.loginTitleStaff}
             </button>
           </div>
@@ -147,10 +147,10 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
                   className="w-full bg-slate-950 text-white h-14 rounded-2xl text-[13px] font-bold flex items-center justify-center gap-3 shadow-xl shadow-slate-900/10 hover:shadow-2xl hover:shadow-slate-900/20 transition-all hover:bg-black active:scale-[0.98] disabled:opacity-50 group"
                 >
                   {isAdminLoggingIn ? (
-                    <RefreshCcw size={18} className="animate-spin" />
+                    <Icon name="refresh-ccw" size={18} className="animate-spin" />
                   ) : (
                     <>
-                      <LogIn size={18} className="transition-transform group-hover:translate-x-1" /> 
+                      <Icon name="log-in" size={18} className="transition-transform group-hover:translate-x-1" /> 
                       {t.login}
                     </>
                   )}
@@ -191,10 +191,10 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
                   className="w-full bg-slate-950 text-white h-14 rounded-2xl text-[13px] font-bold flex items-center justify-center gap-3 shadow-xl shadow-slate-900/10 hover:shadow-2xl hover:shadow-slate-900/20 transition-all hover:bg-black active:scale-[0.98] disabled:opacity-50"
                 >
                   {isStaffLoggingIn ? (
-                    <RefreshCcw size={18} className="animate-spin" />
+                    <Icon name="refresh-ccw" size={18} className="animate-spin" />
                   ) : (
                     <>
-                      <LogIn size={18} />
+                      <Icon name="log-in" size={18} />
                       {t.unlockAndAccess}
                     </>
                   )}
@@ -211,7 +211,7 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
             className="group flex items-center gap-2 text-slate-400 hover:text-slate-900 text-xs font-bold transition-colors"
           >
             <span className="w-5 h-5 rounded-lg bg-slate-900/5 flex items-center justify-center group-hover:bg-slate-900/10 transition-colors">
-              <X size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+              <Icon name="x" size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
             </span>
             {t.backToShowcase}
           </Link>

@@ -20,10 +20,10 @@ const baseEditPhotoSchema = type({
 
 // ✅ 編輯 Schema（掛載 safeParse 以相容 el-form-react-hooks）
 export const EditPhotoSchema = Object.assign(baseEditPhotoSchema, {
-  safeParse(values: any) {
+  safeParse(values: unknown) {
     const out = baseEditPhotoSchema(values);
     if (out instanceof type.errors) {
-      const issues = Array.from(out as any).map((err: any) => ({
+      const issues = Array.from(out as unknown as { path: string[], message: string }[]).map((err) => ({
         path: err.path || [],
         message: err.message || String(err),
       }));

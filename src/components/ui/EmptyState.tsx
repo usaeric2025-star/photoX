@@ -1,5 +1,5 @@
 import React from 'react';
-import { Ghost } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/lib/utils';
 
 interface EmptyStateProps {
@@ -13,7 +13,7 @@ interface EmptyStateProps {
 export function EmptyState({ 
   title, 
   description, 
-  icon = <Ghost className="w-16 h-16 text-slate-200" />, 
+  icon = <Icon name="ghost" className="w-16 h-16 text-slate-200" />, 
   action,
   className 
 }: EmptyStateProps) {

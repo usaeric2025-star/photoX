@@ -1,4 +1,5 @@
-import { Hono } from 'hono';
+import { Hono, type Context } from 'hono';
+import { type StatusCode } from 'hono/utils/http-status';
 import { requireRealUser } from './auth.js';
 import { logTraffic } from './trafficCapture.js';
 import { refreshPhotosView } from './db/actions.js';
@@ -6,9 +7,9 @@ import { getTraceId } from './error/traceId.js';
 import { logger } from './logger.js';
 import { AppError, errorFactory } from './error/AppError.js';
 
-export function setupMiddlewares(app: Hono, serverEnv: any) {
+export function setupMiddlewares(app: Hono, serverEnv: { NODE_ENV: string | undefined }) {
   // --- Middleware ---
-  app.use('*', async (c, next) => {
+  app.use('*', async (c: Context, next) => {
       const traceId = getTraceId(c);
       c.header('X-Trace-Id', traceId);
       logger.info(`[HTTP] ${c.req.method} ${c.req.path}`, { traceId });
@@ -21,7 +22,7 @@ export function setupMiddlewares(app: Hono, serverEnv: any) {
   });
 
   // Global Exception Handler
-  app.onError((err, c) => {
+  app.onError((err, c: Context) => {
     const traceId = getTraceId(c);
     const path = c.req.path;
     const method = c.req.method;
@@ -49,12 +50,12 @@ export function setupMiddlewares(app: Hono, serverEnv: any) {
       }
     })();
   
-    const status = (err as { status?: number }).status || 500;
-    return c.json(errorFactory.fail(appError), status as any);
+    const status = ((err as any).status || 500);
+    return c.json(errorFactory.fail(appError), (status as any));
   });
 
   // Auth Middleware for Administrative Routes
-  app.use('/admin/*', async (c, next) => {
+  app.use('/admin/*', async (c: Context, next) => {
       const path = c.req.path;
       if (path.includes('/admin/settings/get-keys') || path.includes('/admin/settings/get')) {
           await next();
@@ -69,12 +70,12 @@ export function setupMiddlewares(app: Hono, serverEnv: any) {
           logger.warn(`[Auth Error] ${c.req.path}: ${errorMessage}`, { traceId });
           const appErr = errorFactory.create({ code: 'UNAUTHORIZED', message: errorMessage, operation: `api.auth.${c.req.path}` });
           appErr.traceId = traceId;
-          return c.json(errorFactory.fail(appErr), 401 as any);
+          return c.json(errorFactory.fail(appErr), 401);
       }
   });
 
   // Protect all mutation endpoints (non-GET) that are not under /admin
-  app.use('*', async (c, next) => {
+  app.use('*', async (c: Context, next) => {
       const method = c.req.method;
       const path = c.req.path;
       const isMutation = ['POST', 'PUT', 'DELETE'].includes(method);
@@ -96,7 +97,7 @@ export function setupMiddlewares(app: Hono, serverEnv: any) {
                logger.warn(`[Auth Error - Mutation] ${c.req.path}: ${errorMessage}`, { traceId });
                const appErr = errorFactory.create({ code: 'UNAUTHORIZED', message: errorMessage, operation: `api.auth_mutation.${c.req.path}` });
                appErr.traceId = traceId;
-               return c.json(errorFactory.fail(appErr), 401 as any);
+               return c.json(errorFactory.fail(appErr), 401);
           }
       }
       await next();

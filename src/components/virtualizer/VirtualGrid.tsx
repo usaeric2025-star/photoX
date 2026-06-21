@@ -44,8 +44,8 @@ const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.Ref<Vir
 
   const isTestEnv = typeof window !== 'undefined' && (
     window.navigator.userAgent.includes('jsdom') || 
-    !!(window as any).__vitest_worker__ || 
-    (window as any).process?.env?.NODE_ENV === 'test'
+    !!(window as unknown as { __vitest_worker__?: unknown }).__vitest_worker__ || 
+    (window as unknown as { process?: { env?: { NODE_ENV?: string } } }).process?.env?.NODE_ENV === 'test'
   );
 
   const listItemsCacheRef = useRef<{ count: number; rowCount: number; hasHeader: boolean; hasFooter: boolean; dataVersion?: string | number; items: RowItem[] } | null>(null);

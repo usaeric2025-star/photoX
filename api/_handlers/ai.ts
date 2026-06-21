@@ -113,9 +113,9 @@ ai.post("/analyze", async (c) => {
         if (!finalImageUrl) throw new Error("Image URL is required for analysis");
 
         // Use safer query approach - select only what we need and handle errors per-table
-        let catRef: any[] = [];
-        let tagRef: any[] = [];
-        let groupRef: any[] = [];
+        let catRef: { id: string; nameZh: string }[] = [];
+        let tagRef: { id: string | number; name: string; aliases?: string[] }[] = [];
+        let groupRef: { id: string; name: unknown; status: string; createdAt: Date | null }[] = [];
 
         try {
             const [c, t, g] = await Promise.all([
@@ -127,9 +127,9 @@ ai.post("/analyze", async (c) => {
                   .orderBy(desc(groupsTable.createdAt))
                   .limit(40),
             ]);
-            catRef = c;
-            tagRef = t;
-            groupRef = g;
+            catRef = c as any;
+            tagRef = t as any;
+            groupRef = g as any;
         } catch (err: unknown) {
             logger.warn("AI Analyze: Background context fetch failed partially:", err);
             // Continue with whatever we managed to fetch (empty arrays if everything failed)
@@ -141,8 +141,8 @@ ai.post("/analyze", async (c) => {
         
         const context = {
             categories: catRef.map(c => ({ id: c.id, name: c.nameZh, zh: c.nameZh })).slice(0, 50),
-            tags: tagRef.map(t => ({ id: t.id, name: t.name, aliases: (t as any).aliases || [] })).slice(0, 100),
-            groups: groupRef.map(g => ({ id: g.id, name: typeof g.name === 'object' ? (g.name as any)?.zh : g.name })),
+            tags: tagRef.map(t => ({ id: t.id, name: t.name, aliases: t.aliases || [] })).slice(0, 100),
+            groups: groupRef.map(g => ({ id: g.id, name: typeof g.name === 'object' ? (g.name as Record<string, string> | null)?.zh : g.name })),
         };
         
         const prompt = AI_PROMPTS.ANALYZE_PHOTO(context);
@@ -262,12 +262,12 @@ ai.post("/cluster-photos", async (c) => {
         const check = AIClusterPhotosReqSchema(body);
         if (check instanceof type.errors) throw new Error(check.summary);
 
-        const user = (c as { get: (key: string) => HonoContextUser | undefined }).get('user');
+        const user = c.get('user' as never) as HonoContextUser | undefined;
         const userId = user?.id;
 
         // 1. AI 識別
         const parsed = await processGroupAnalysis(check.photoIds);
-        const createdGroups: any[] = [];
+        const createdGroups: (typeof groupsTable.$inferSelect)[] = [];
 
         // Optimize: Fetch a valid user_id
         let dbUserId: string | undefined = undefined;
@@ -291,13 +291,13 @@ ai.post("/cluster-photos", async (c) => {
                finalUserId = userRecord?.id || '8ec53131-a589-4b50-beb4-6b5308541e1b';
             }
 
-            const [groupData] = await db.insert(groupsTable).values({
+            const [groupData] = await db.insert(groupsTable).values([{
                 id: groupId,
-                name: g.name,
-                status: 'confirmed',
+                name: { zh: g.name } as any,
+                status: 'confirmed' as any,
                 userId: finalUserId,
                 createdAt: new Date()
-            } as any).returning();
+            } as any]).returning();
 
             await db.update(furnitureItems)
                 .set({ groupId: groupId })
@@ -311,9 +311,9 @@ ai.post("/cluster-photos", async (c) => {
             operation: 'ai_cluster',
             inputPhotoIds: check.photoIds,
             createdGroups: createdGroups.map(g => g.id),
-            userId: userId,
+            userId: userId || null,
             createdAt: new Date()
-        } as any);
+        } as typeof groupCorrectionLogs.$inferInsert);
 
         return c.json({ success: true, data: createdGroups } as ApiResponse);
     } catch (error: unknown) { 

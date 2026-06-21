@@ -35,7 +35,7 @@ export function RouteErrorFallback({ error, reset }: { error: Error; reset: () =
   return (
     <div className="flex flex-col items-center justify-center p-8 bg-white/80 backdrop-blur-md rounded-3xl border border-red-50 shadow-xl shadow-red-500/5 max-w-md mx-auto mt-20 space-y-6">
       <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mb-2 animate-bounce-subtle">
-        <Icon name="AlertCircle" size={32} />
+        <Icon name="alert-circle" size={32} />
       </div>
       
       <div className="text-center space-y-2">
@@ -49,7 +49,7 @@ export function RouteErrorFallback({ error, reset }: { error: Error; reset: () =
 
       <div className="w-full bg-slate-50 rounded-xl p-4 border border-slate-100">
         <div className="flex items-center gap-2 mb-2">
-          <Icon name="Terminal" size={10} className="text-slate-400" />
+          <Icon name="terminal" size={10} className="text-slate-400" />
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">错误代码</span>
         </div>
         <code className="text-[11px] text-red-500 font-mono break-all line-clamp-2 leading-relaxed">
@@ -63,14 +63,14 @@ export function RouteErrorFallback({ error, reset }: { error: Error; reset: () =
             onClick={() => reset()}
             className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all text-sm font-semibold active:scale-95 shadow-lg shadow-slate-900/20"
           >
-            <Icon name="RefreshCw" size={16} />
+            <Icon name="refresh-cw" size={16} />
             立即重试
           </button>
           <button
             onClick={handleCopyDiagnostics}
             className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-white text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-all text-sm font-semibold active:scale-95 text-nowrap"
           >
-            <Icon name="Copy" size={16} />
+            <Icon name="copy" size={16} />
             复制诊断
           </button>
         </div>
@@ -81,7 +81,7 @@ export function RouteErrorFallback({ error, reset }: { error: Error; reset: () =
           }}
           className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all text-sm font-semibold active:scale-95"
         >
-          <Icon name="Home" size={16} />
+          <Icon name="home" size={16} />
           回到底部首页
         </button>
       </div>

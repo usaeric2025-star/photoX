@@ -1,13 +1,5 @@
 import React from 'react';
-import { 
-  BarChart3, 
-  Image as ImageIcon, 
-  Tags, 
-  LayoutGrid, 
-  Database,
-  ArrowUpRight,
-  HardDrive
-} from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { useCategories, useTags } from '@/hooks';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
@@ -17,18 +9,18 @@ interface StatCardProps {
   title: string;
   value: string | number;
   subValue?: string;
-  icon: React.ElementType;
+  icon: string;
   colorClass: string;
   delay?: number;
 }
 
-const StatCard = ({ title, value, subValue, icon: Icon, colorClass, delay = 0 }: StatCardProps) => (
+const StatCard = ({ title, value, subValue, icon: iconName, colorClass, delay = 0 }: StatCardProps) => (
   <div 
     className="bg-white p-5 rounded-[28px] border border-brand-navy/5 shadow-sm space-y-3 relative overflow-hidden group animate-fade-in"
     style={{ animationDelay: `${delay}s`, animationFillMode: 'both' }}
   >
     <div className={`w-10 h-10 rounded-xl ${colorClass} flex items-center justify-center mb-1`}>
-      <Icon size={20} />
+      <Icon name={iconName as any} size={20} />
     </div>
     <div className="space-y-1">
       <p className="text-[10px] font-black text-brand-navy/30 uppercase tracking-[0.2em]">{title}</p>
@@ -38,7 +30,7 @@ const StatCard = ({ title, value, subValue, icon: Icon, colorClass, delay = 0 }:
       </div>
     </div>
     <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-      <ArrowUpRight size={14} className="text-brand-navy/20" />
+      <Icon name="arrow-up-right" size={14} className="text-brand-navy/20" />
     </div>
   </div>
 );
@@ -75,7 +67,7 @@ export function StatisticsScreen() {
     <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 no-scrollbar pb-32">
       <div className="space-y-1">
         <h2 className="text-2xl font-black text-brand-navy tracking-tight uppercase italic flex items-center gap-2">
-          <BarChart3 size={24} className="text-brand-gold" />
+          <Icon name="bar-chart-3" size={24} className="text-brand-gold" />
           系统存量概览 / System Inventory
         </h2>
         <p className="text-xs text-brand-navy/40 font-bold uppercase tracking-widest">
@@ -88,7 +80,7 @@ export function StatisticsScreen() {
           title="总计资产 / Total Assets" 
           value={totalPhotos} 
           subValue="Items"
-          icon={ImageIcon}
+          icon="image"
           colorClass="bg-blue-50 text-blue-600"
           delay={0.1}
         />
@@ -96,7 +88,7 @@ export function StatisticsScreen() {
           title="逻辑分组 / Groups" 
           value={groupsCount} 
           subValue="Clusters"
-          icon={LayoutGrid}
+          icon="layout-grid"
           colorClass="bg-brand-navy/5 text-brand-navy"
           delay={0.2}
         />
@@ -104,7 +96,7 @@ export function StatisticsScreen() {
           title="活跃分类 / Categories" 
           value={categories.length} 
           subValue="Types"
-          icon={Database}
+          icon="database"
           colorClass="bg-brand-gold/10 text-brand-gold"
           delay={0.3}
         />
@@ -112,7 +104,7 @@ export function StatisticsScreen() {
           title="逻辑标签 / Labels" 
           value={tags.length} 
           subValue="Tags"
-          icon={Tags}
+          icon="tags"
           colorClass="bg-slate-100 text-slate-600"
           delay={0.4}
         />
@@ -129,7 +121,7 @@ export function StatisticsScreen() {
              <div className="flex items-center justify-between p-4 bg-brand-navy/5 rounded-2xl">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-brand-navy shadow-sm">
-                    <ImageIcon size={16} />
+                    <Icon name="image" size={16} />
                   </div>
                   <div>
                     <p className="text-[11px] font-bold text-brand-navy">隐藏资产 / Hidden</p>
@@ -142,7 +134,7 @@ export function StatisticsScreen() {
              <div className="flex items-center justify-between p-4 bg-brand-navy/5 rounded-2xl">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-brand-navy shadow-sm">
-                    <HardDrive size={16} />
+                    <Icon name="hard-drive" size={16} />
                   </div>
                   <div>
                     <p className="text-[11px] font-bold text-brand-navy">估算占用 / Storage Est.</p>
@@ -172,7 +164,7 @@ export function StatisticsScreen() {
             </div>
           </div>
           
-          <BarChart3 size={200} className="absolute -bottom-20 -right-20 text-white/5 rotate-12" />
+          <Icon name="bar-chart-3" size={200} className="absolute -bottom-20 -right-20 text-white/5 rotate-12" />
         </div>
       </div>
     </div>

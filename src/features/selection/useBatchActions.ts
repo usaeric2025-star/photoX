@@ -4,18 +4,18 @@ import { useSelection } from './SelectionContext';
 import { Photo } from '@/types';
 import { useInvalidatePhotos } from '@/hooks';
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
-import { type } from 'arktype';
+import { type, type Type } from 'arktype';
 
 export function useBatchActions() {
   const { state, clear } = useSelection();
   const invalidatePhotos = useInvalidatePhotos();
 
   const { submit: runBatchDelete, isLoading: isDeleting } = useFormSubmit({
-    schema: type('any'),
+    schema: type('unknown'),
     mutationFn: async () => {
       const res = await batchService.delete(state.selectedIds);
       if (!res.success) throw new Error(res.error || '刪除失敗');
-      return res;
+      return true;
     },
     onSuccess: () => {
       invalidatePhotos();
@@ -26,11 +26,15 @@ export function useBatchActions() {
   });
 
   const { submit: runBatchUpdate, isLoading: isUpdating } = useFormSubmit({
-    schema: type('any'),
+    schema: type({
+      'category_id?': 'string | null',
+      'manufacturer_id?': 'string | null',
+      'group_id?': 'string | null',
+    }) as unknown as Type<Partial<Photo>>,
     mutationFn: async (data: Partial<Photo>) => {
       const res = await batchService.update(state.selectedIds, data);
       if (!res.success) throw new Error(res.error || '更新失敗');
-      return res;
+      return true;
     },
     onSuccess: () => {
       invalidatePhotos();
@@ -41,11 +45,11 @@ export function useBatchActions() {
   });
 
   const { submit: runBatchTag, isLoading: isTagging } = useFormSubmit({
-    schema: type('any'),
+    schema: type('string[]') as unknown as Type<string[]>,
     mutationFn: async (tagIds: string[]) => {
       const res = await batchService.addTags(state.selectedIds, tagIds);
       if (!res.success) throw new Error(res.error || '新增標籤失敗');
-      return res;
+      return true;
     },
     onSuccess: () => {
       invalidatePhotos();
@@ -56,9 +60,9 @@ export function useBatchActions() {
   });
 
   return {
-    batchDelete: { mutate: runBatchDelete, isPending: isDeleting },
-    batchUpdate: { mutate: runBatchUpdate, isPending: isUpdating },
-    batchTag: { mutate: runBatchTag, isPending: isTagging },
+    batchDelete: { mutate: runBatchDelete, mutateAsync: runBatchDelete, isPending: isDeleting },
+    batchUpdate: { mutate: runBatchUpdate, mutateAsync: runBatchUpdate, isPending: isUpdating },
+    batchTag: { mutate: runBatchTag, mutateAsync: runBatchTag, isPending: isTagging },
     isPending: isDeleting || isUpdating || isTagging,
     selectedCount: state.selectedIds.length,
   };

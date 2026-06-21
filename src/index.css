@@ -191,10 +191,6 @@ li[data-sonner-toast] {
   touch-action: none !important;
 }
 
-.rk-lightbox-spinner {
-  display: none !important;
-}
-
 .dark {
   --color-surface-base: #1d1d1f;
   --color-surface-soft: #2c2c2e;

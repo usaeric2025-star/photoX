@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import { Group } from '@/types';
-import { Edit, Share, Copy, Check } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { useUIStore } from '@/store/useUIStore';
 import { usePhotoSelection } from '@/hooks/photo/usePhotoSelection';
 import { copyToClipboard } from '@/utils/clipboard';
@@ -107,7 +107,7 @@ export function GroupHeader({ group, photoCount, isAdmin, onEditSettings, onUpda
             className="p-1 text-slate-400 hover:text-slate-600 transition-colors shrink-0 rounded hover:bg-slate-100"
             title="複製組ID"
           >
-            {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? <Icon name="check" className="w-3.5 h-3.5" /> : <Icon name="copy" className="w-3.5 h-3.5" />}
           </button>
         </div>
         
@@ -124,7 +124,7 @@ export function GroupHeader({ group, photoCount, isAdmin, onEditSettings, onUpda
           className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-100"
           title="複製分享連結"
         >
-          <Share className="w-4 h-4" />
+          <Icon name="share" className="w-4 h-4" />
         </button>
 
         {isAdmin && (
@@ -136,7 +136,7 @@ export function GroupHeader({ group, photoCount, isAdmin, onEditSettings, onUpda
               {isMultiSelect ? '取消' : '選擇'}
             </button>
             <button onClick={onEditSettings} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-sm transition-colors font-medium">
-              <Edit className="w-4 h-4" />
+              <Icon name="edit" className="w-4 h-4" />
               <span className="hidden sm:inline">設定</span>
             </button>
           </>

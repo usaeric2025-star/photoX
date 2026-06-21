@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { SearchInput } from './SearchInput';
 import { SortToggle } from './SortToggle';
 import { CategoryGrid } from './CategoryGrid';
@@ -37,7 +37,7 @@ export function FilterBar({ mode, className }: FilterBarProps) {
             title={showTags ? '收起標籤' : '展開標籤'}
           >
             <span className="text-[13px] font-bold tracking-tight">Tags</span>
-            <ChevronDown 
+            <Icon name="chevron-down"
               size={16} 
               className={cn("transition-transform duration-300", showTags && "rotate-180")} 
             />

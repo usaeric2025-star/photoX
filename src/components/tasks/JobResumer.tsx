@@ -60,17 +60,17 @@ export function JobResumer() {
           if (status.status === 'completed') {
             const currentInt = activeIntervals.current.get(id);
             if (currentInt) {
-              clearInterval(currentInt as any);
+              clearInterval(currentInt);
               activeIntervals.current.delete(id);
             }
             updateTask(id, { status: 'completed', progress: 100, message: '任务已完成' });
           } else if (status.status === 'failed') {
             const currentInt = activeIntervals.current.get(id);
             if (currentInt) {
-              clearInterval(currentInt as any);
+              clearInterval(currentInt);
               activeIntervals.current.delete(id);
             }
-            updateTask(id, { status: 'error', message: (status as any).error || status.message || '任务执行失败' });
+            updateTask(id, { status: 'error', message: (status as { error?: string }).error || status.message || '任务执行失败' });
           }
         } catch (e: unknown) {
           logger.error(`[JobResumer] Polling error for ${jobId}:`, e);
@@ -84,7 +84,7 @@ export function JobResumer() {
     activeIntervals.current.forEach((intervalId, id) => {
       const task = safeTasks.find(t => t.id === id);
       if (!task || task.status !== 'running') {
-        clearInterval(intervalId as any);
+        clearInterval(intervalId);
         activeIntervals.current.delete(id);
         logger.info(`[JobResumer] Cleared stale polling interval for task ID: ${id}`);
       }
@@ -95,7 +95,7 @@ export function JobResumer() {
   useEffect(() => {
     return () => {
       activeIntervals.current.forEach((intervalId) => {
-        clearInterval(intervalId as any);
+        clearInterval(intervalId);
       });
       activeIntervals.current.clear();
     };

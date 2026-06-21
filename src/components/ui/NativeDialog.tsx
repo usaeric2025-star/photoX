@@ -169,7 +169,7 @@ export function NativeDialog({
             className="absolute right-4 top-4 p-2 rounded-full text-text-sub hover:text-text-main hover:bg-surface-soft transition-all active:scale-95"
             aria-label="关闭"
           >
-            <Icon name="XCircle" size={26} solid className="opacity-25 hover:opacity-100 transition-opacity" />
+            <Icon name="x-circle" size={26} solid className="opacity-25 hover:opacity-100 transition-opacity" />
           </button>
         )}
 

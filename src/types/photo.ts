@@ -79,7 +79,10 @@ export interface SubCategory {
 
 export interface Category {
   id: string;
-  name: string;
+  name: string; // Legacy or primary name
+  nameZh?: string;
+  nameEn?: string;
+  nameMs?: string;
   zh?: string;
   en?: string;
   ms?: string;

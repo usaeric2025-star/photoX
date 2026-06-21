@@ -52,7 +52,7 @@ export const useSettingsLogic = ({
   const [activeTagMenuId, setActiveTagMenuId] = useState<number | null>(null);
 
   const { submit: runConnectionTest, isLoading: isTesting } = useFormSubmit({
-    schema: type('any'),
+    schema: type('unknown'),
     mutationFn: async () => {
       const provider = (settings as any).ai_provider || "google";
       const ok = await testAiConnection(
@@ -65,8 +65,7 @@ export const useSettingsLogic = ({
     onSuccess: () => {
       setTestResult({ success: true });
     },
-    onError: (err) => {
-      const msg = err instanceof Error ? err.message : String(err);
+    onError: (msg) => {
       setTestResult({ success: false, error: msg });
     },
     successMessage: appLang === 'zh' ? 'AI 服務連線成功' : 'AI Connection successful',

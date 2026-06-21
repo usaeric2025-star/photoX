@@ -79,8 +79,8 @@ export async function repairI18nNames(c: Context) {
   
   for (const item of itemsToFix) {
     await db.update(furnitureItems).set({
-      name: normalizeI18n(item.name as any) as any,
-      description: normalizeI18n(item.description as any) as any
+      name: normalizeI18n(item.name),
+      description: normalizeI18n(item.description)
     }).where(eq(furnitureItems.id, item.id));
   }
   return c.json({ success: true, message: `已修复 ${itemsToFix.length} 个单品的语种格式` });

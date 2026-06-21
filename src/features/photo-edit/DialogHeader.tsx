@@ -1,17 +1,7 @@
 import { usePhotoEditSessionContext } from "@/hooks/photo/usePhotoEditSessionContext";
 import React from "react";
 import { useFormContext, useField } from "el-form-react-hooks";
-import {
-  X as CloseIcon,
-  EyeOff,
-  Eye,
-  Sparkles,
-  Save,
-  Trash2,
-  Loader2,
-  Star,
-  LogOut as RemoveFromGroupIcon,
-} from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import {
   usePhoto,
   useTasks,
@@ -100,9 +90,9 @@ export function DialogHeader({
             className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-slate-100 shadow-sm transition-all disabled:opacity-50 ${isAnalyzing ? "bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed" : "bg-purple-50 text-purple-600 border-purple-100 active:bg-purple-200"}`}
           >
             {isAnalyzing ? (
-              <Loader2 size={16} className="text-current animate-spin" />
+              <Icon name="loader-2" size={16} className="text-current animate-spin" />
             ) : (
-              <Sparkles size={18} />
+              <Icon name="sparkles" size={18} />
             )}
           </button>
         </div>
@@ -118,7 +108,7 @@ export function DialogHeader({
             title={l.cover}
             className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-amber-200 shadow-sm transition-all ${isGroupCover ? "bg-amber-500 text-white border-amber-500 hover:bg-amber-600" : "bg-white text-amber-500 border-amber-200 hover:bg-amber-50 active:scale-95"}`}
           >
-            <Star size={20} className={isGroupCover ? "fill-white" : "fill-transparent"} />
+            <Icon name="star" size={20} className={isGroupCover ? "fill-white" : "fill-transparent"} />
           </button>
         )}
 
@@ -129,7 +119,7 @@ export function DialogHeader({
             title="移出合组"
             className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600 border border-slate-200 shadow-sm hover:bg-slate-200 active:scale-95 transition-all"
           >
-            <RemoveFromGroupIcon size={18} />
+            <Icon name="log-out" size={18} />
           </button>
         )}
 
@@ -140,7 +130,7 @@ export function DialogHeader({
             disabled={isPending || isAnalyzing}
             className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-red-50 text-red-500 border border-red-100 shadow-sm active:bg-red-100 transition-all font-bold disabled:opacity-50"
           >
-            <Trash2 size={18} />
+            <Icon name="trash-2" size={18} />
           </button>
         )}
 
@@ -153,9 +143,9 @@ export function DialogHeader({
           className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-blue-600 shadow-sm transition-all disabled:opacity-50 ${isSubmitting || isAnalyzing ? "bg-blue-400 text-white border-blue-400 cursor-wait" : "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20 active:bg-blue-700"}`}
         >
           {isSubmitting || isAnalyzing ? (
-            <Loader2 size={16} className="text-current animate-spin" />
+            <Icon name="loader-2" size={16} className="text-current animate-spin" />
           ) : (
-            <Save size={18} />
+            <Icon name="save" size={18} />
           )}
         </button>
         <button
@@ -163,7 +153,7 @@ export function DialogHeader({
           onClick={onClose}
           className="w-10 h-10 flex-shrink-0 flex items-center justify-center text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 transition-colors rounded-full ml-1"
         >
-          <CloseIcon size={20} />
+          <Icon name="x" size={20} />
         </button>
       </div>
     </div>

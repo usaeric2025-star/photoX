@@ -24,7 +24,7 @@ adminPhotos.get("/photo-ai-result/:photoId", async (c) => {
                 .orderBy(desc(aiAuditLogs.createdAt))
                 .limit(1);
             if (fallbackLogs && fallbackLogs.length > 0) {
-                auditLog = fallbackLogs[0] as any;
+                auditLog = fallbackLogs[0] as typeof aiAuditLogs.$inferSelect;
             }
         }
 

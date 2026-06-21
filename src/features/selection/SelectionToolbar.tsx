@@ -8,17 +8,7 @@ import { useConfirm } from '@/context/ConfirmContext';
 import { useMediaQuery, useTasks } from '@/hooks';
 import { useGroupPhotosMutation, useRemoveFromGroupMutation } from '@/hooks/groups/useGroupMutations';
 import { Photo } from '@/types';
-import { 
-  CheckSquare, 
-  Square, 
-  X, 
-  Trash2, 
-  Edit, 
-  Sparkles,
-  Loader2,
-  FolderPlus,
-  FolderMinus
-} from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 
 // --- Sub-components ---
 
@@ -36,7 +26,7 @@ interface SelectionToolbarProps {
   totalItems?: number;
   allIds?: string[];
   className?: string;
-  allPhotos?: Photo[];
+  allPhotos?: any[];
   groupId?: string;
 }
 
@@ -126,7 +116,7 @@ export const SelectionToolbar = memo(function SelectionToolbar({
     });
 
     if (ok) {
-      await batchDelete.mutateAsync();
+      await batchDelete.mutateAsync({});
     }
   };
 
@@ -140,7 +130,7 @@ export const SelectionToolbar = memo(function SelectionToolbar({
             className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors shrink-0"
             title="清除並退出選取"
           >
-            <X size={18} />
+            <Icon name="x" size={18} />
           </button>
 
           {/* 計數顯示 */}
@@ -152,7 +142,7 @@ export const SelectionToolbar = memo(function SelectionToolbar({
             className="flex items-center gap-1 px-1.5 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors shrink-0"
             title={isAllSelected ? "取消全選" : "全選當前"}
           >
-            {isAllSelected ? <CheckSquare size={16} className="text-blue-500" /> : <Square size={16} />}
+            {isAllSelected ? <Icon name="check-square" size={16} className="text-blue-500" /> : <Icon name="square" size={16} />}
             {isSm && (
               <span className="ml-1 shrink-0">{isAllSelected ? '取消全選' : '全選'}</span>
             )}
@@ -162,7 +152,7 @@ export const SelectionToolbar = memo(function SelectionToolbar({
         {/* 絕對定位的中央處理中狀態，防止工具列按鈕變形 */}
         {isAnyPending && (
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none flex items-center gap-1.5 text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100 shadow-sm animate-in fade-in zoom-in-95 duration-200">
-            <Loader2 size={12} className="animate-spin text-blue-500" />
+            <Icon name="loader-2" size={12} className="animate-spin text-blue-500" />
             <span className="hidden xs:inline">正在處理中...</span>
             <span className="xs:hidden">處理中...</span>
           </div>
@@ -179,9 +169,9 @@ export const SelectionToolbar = memo(function SelectionToolbar({
               title="將照片移出此合組"
             >
               {removeMutation.isPending ? (
-                <Loader2 size={14} className="animate-spin text-amber-600 shrink-0" />
+                <Icon name="loader-2" size={14} className="animate-spin text-amber-600 shrink-0" />
               ) : (
-                <FolderMinus size={14} className="text-amber-600 shrink-0" />
+                <Icon name="folder-minus" size={14} className="text-amber-600 shrink-0" />
               )}
               <span className="shrink-0">
                 {isMd ? '移出合組' : isSm ? '移出' : '移出'}
@@ -198,9 +188,9 @@ export const SelectionToolbar = memo(function SelectionToolbar({
               title="手動將照片合併為一組"
             >
               {combineMutation.isPending ? (
-                <Loader2 size={14} className="animate-spin text-blue-600 shrink-0" />
+                <Icon name="loader-2" size={14} className="animate-spin text-blue-600 shrink-0" />
               ) : (
-                <FolderPlus size={14} className="text-blue-600 shrink-0" />
+                <Icon name="folder-plus" size={14} className="text-blue-600 shrink-0" />
               )}
               <span className="shrink-0">
                 {isMd ? '手動合組' : isSm ? '手動合組' : '合組'}
@@ -216,9 +206,9 @@ export const SelectionToolbar = memo(function SelectionToolbar({
             title="AI 智能分析合組"
           >
             {isAiPending ? (
-              <Loader2 size={14} className="animate-spin text-purple-600 shrink-0" />
+              <Icon name="loader-2" size={14} className="animate-spin text-purple-600 shrink-0" />
             ) : (
-              <Sparkles size={14} className="text-purple-600 animate-pulse shrink-0" />
+              <Icon name="sparkles" size={14} className="text-purple-600 animate-pulse shrink-0" />
             )}
             <span className="shrink-0">
               {isMd ? 'AI 智能合組' : isSm ? 'AI 合組' : 'AI'}
@@ -232,7 +222,7 @@ export const SelectionToolbar = memo(function SelectionToolbar({
             className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm"
             title="批次編輯欄位"
           >
-            <Edit size={14} className="text-indigo-600 shrink-0" />
+            <Icon name="edit" size={14} className="text-indigo-600 shrink-0" />
             <span className="shrink-0">
               {isMd ? '批次編輯' : isSm ? '編輯' : '編輯'}
             </span>
@@ -246,9 +236,9 @@ export const SelectionToolbar = memo(function SelectionToolbar({
             title="批次刪除照片"
           >
             {batchDelete.isPending ? (
-              <Loader2 size={14} className="animate-spin text-red-500 shrink-0" />
+              <Icon name="loader-2" size={14} className="animate-spin text-red-500 shrink-0" />
             ) : (
-              <Trash2 size={14} className="text-red-500 shrink-0" />
+              <Icon name="trash-2" size={14} className="text-red-500 shrink-0" />
             )}
             <span className="shrink-0">
               {isMd ? '批次刪除' : isSm ? '刪除' : '刪除'}

@@ -37,7 +37,7 @@ export async function updatePhoto(id: string, initialUpdates: Partial<Photo>): P
   });
   
   if (!res.ok) {
-    const errBody = await res.json().catch(() => ({})) as any;
+    const errBody = await res.json().catch(() => ({})) as { error?: string };
     throw new Error(errBody?.error || 'Update failed');
   }
   const body = await res.json() as { data?: Record<string, unknown> };

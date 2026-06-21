@@ -1,5 +1,6 @@
 import React, { Component, ReactNode } from 'react';
 import { useCopyToClipboard } from '@/hooks';
+import { isAppError } from '@/lib/error/AppError';
 
 interface Props {
   children: ReactNode;
@@ -17,8 +18,20 @@ const ErrorActions = ({ error, isChunkFailure }: { error?: Error, isChunkFailure
   const handleCopy = () => {
     const timestamp = new Date().toISOString();
     const errorType = error?.name || 'Error';
-    const errorCode = (error as any)?.code || (error as any)?.status || 'N/A';
-    const traceId = error && 'traceId' in error ? (error as any).traceId : 'N/A';
+    
+    let errorCode = 'N/A';
+    let traceId = 'N/A';
+
+    if (error && isAppError(error)) {
+        errorCode = String(error.code);
+        traceId = error.traceId;
+    } else if (error) {
+        if ('code' in error) errorCode = String((error as { code?: string | number }).code);
+        else if ('status' in error) errorCode = String((error as { status?: string | number }).status);
+        
+        if ('traceId' in error) traceId = String((error as { traceId?: string }).traceId);
+    }
+
     const message = error?.message || '未知错误';
     
     const diagnosticInfo = [
@@ -124,7 +137,9 @@ export class ErrorBoundary extends Component<Props, State> {
                 <div className="bg-slate-50 rounded-2xl p-4 text-left border border-slate-100 group">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">错误摘要</span>
-                    <span className="text-[10px] p-1 bg-white rounded border border-slate-200 text-slate-400">Trace ID: {(this.state.error as any)?.traceId || 'N/A'}</span>
+                    <span className="text-[10px] p-1 bg-white rounded border border-slate-200 text-slate-400">
+                      Trace ID: {this.state.error && isAppError(this.state.error) ? this.state.error.traceId : (this.state.error && 'traceId' in this.state.error ? (this.state.error as { traceId: string }).traceId : 'N/A')}
+                    </span>
                   </div>
                   <p className="text-xs font-mono text-slate-600 break-all line-clamp-3">
                     {this.state.error?.message || '未知内部错误'}

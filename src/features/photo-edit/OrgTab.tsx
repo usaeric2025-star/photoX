@@ -10,7 +10,7 @@ import { CategorySelect } from './CategorySelect';
 // import { TagEditor } from './TagEditor'; // Previously imported
 import { PhotoTagSelector } from './PhotoTagSelector';
 import { ManufacturerSelect } from '@/components/admin/ManufacturerSelect';
-import { Eye, EyeOff } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 
 export function OrgTab() {
   const { form } = useFormContext();
@@ -40,14 +40,14 @@ export function OrgTab() {
             onClick={() => form.setValue('is_hidden', false)}
             className={`flex-1 flex flex-col items-center justify-center gap-1 p-4 rounded-2xl border-2 transition-all ${!isHidden ? "bg-green-50 border-green-500 text-green-700" : "bg-white border-slate-50 text-slate-400 border-slate-100"}`}
           >
-            <Eye size={16} /><span className="text-[10px] font-black uppercase">显示 (VISIBLE)</span>
+            <Icon name="eye" size={16} /><span className="text-[10px] font-black uppercase">显示 (VISIBLE)</span>
           </button>
           <button
             type="button"
             onClick={() => form.setValue('is_hidden', true)}
             className={`flex-1 flex flex-col items-center justify-center gap-1 p-4 rounded-2xl border-2 transition-all ${isHidden ? "bg-orange-50 border-orange-500 text-orange-700" : "bg-white border-slate-50 text-slate-400 border-slate-100"}`}
           >
-            <EyeOff size={16} /><span className="text-[10px] font-black uppercase">屏蔽 (HIDDEN)</span>
+            <Icon name="eye-off" size={16} /><span className="text-[10px] font-black uppercase">屏蔽 (HIDDEN)</span>
           </button>
         </div>
       </section>

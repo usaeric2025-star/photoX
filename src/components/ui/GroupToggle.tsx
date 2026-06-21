@@ -1,4 +1,4 @@
-import { Layers, Grid } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/lib/utils';
 
 interface GroupToggleProps {
@@ -18,6 +18,6 @@ export const GroupToggle = ({ showGroupsCollapsed, onClick }: GroupToggleProps) 
         : "bg-surface-soft text-text-main border-border-bold hover:bg-surface-mute"
     )}
   >
-    {showGroupsCollapsed ? <Layers size={20} /> : <Grid size={20} />}
+    {showGroupsCollapsed ? <Icon name="layers" size={20} /> : <Icon name="grid-3x3" size={20} />}
   </button>
 );

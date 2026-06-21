@@ -1,11 +1,12 @@
 import { logger } from '@/lib/logger';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AdminPhotoGrid } from '@/components/photo/AdminPhotoGrid';
 import { useTranslation, useColumns, usePhotoGrid, useFilters } from '@/hooks';
 import { AdminEmptyState } from '@/pages/AdminPage/AdminEmptyState';
 import { PhotoErrorDisplay } from '@/components/photo/PhotoErrorDisplay';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
-import { LazyYarlLightbox } from '@/features/lightbox/LazyYarlLightbox';
+import { useLightboxStore } from '@/store/useLightboxStore';
+import { LazyPhotoLightbox } from '@/features/lightbox/LazyPhotoLightbox';
 import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
 
 export function AdminContainer() {
@@ -24,29 +25,32 @@ export function AdminContainer() {
   const { columns } = useColumns();
   const adminActions = useAdminMaintenance();
   
-  const lightboxIndex = React.useMemo(() => {
-    if (!filters.photoId) return -1;
-    return photoGridData.photos.findIndex((p: any) => p.id === filters.photoId);
-  }, [filters.photoId, photoGridData.photos]);
-
-  const lightboxOpen = lightboxIndex !== -1;
-  React.useEffect(() => {
-    logger.debug('[AdminContainer] lightboxOpen:', lightboxOpen, 'photoId:', filters.photoId, 'index:', lightboxIndex);
-  }, [lightboxOpen, filters.photoId, lightboxIndex]);
-
-
+  const openLightbox = useLightboxStore((s) => s.open);
+  
   const lightboxItems = React.useMemo(() => photoGridData.photos.map((p: any) => {
     return {
       id: p.id,
       src: p.imageUrl,
-      thumbnail: p.thumbnailUrl || p.imageUrl,
+      alt: p.name || '',
       title: p.name || '',
-      description: p.description || '',
       category: p.groupName || '',
-      tags: p.tags || [],
-      photo: p,
+      categoryPath: p.categoryPath || [p.groupName].filter(Boolean),
+      metadata: {
+        date: p.date,
+        tags: p.tags || [],
+        description: p.description || '',
+        resolution: p.resolution,
+        size: p.size,
+      },
     };
   }), [photoGridData.photos]);
+
+  const handlePhotoClick = (photoId: string) => {
+      const index = photoGridData.photos.findIndex((p: any) => p.id === photoId);
+      if (index !== -1) {
+          openLightbox(lightboxItems, index);
+      }
+  };
   
   if (photoGridData.isError) {
     return (
@@ -66,8 +70,6 @@ export function AdminContainer() {
     );
   }
   
-  const openEditDrawer = (id: string) => { filters.setPhotoId(id); filters.setModal('edit'); };
-
   return (
     <div className="flex flex-col h-full bg-slate-50 overflow-hidden relative" id="main-admin-screen">
        <div className="flex-1 min-h-0 relative flex flex-col">
@@ -75,22 +77,17 @@ export function AdminContainer() {
             {...photoGridData}
             columns={columns}
             filters={filters}
-            onPhotoClick={(id) => filters.setPhotoId(id)}
+            onPhotoClick={handlePhotoClick}
           />
        </div>
 
-       <LazyYarlLightbox
-          open={lightboxOpen}
-          items={lightboxItems}
-          currentIndex={Math.max(0, lightboxIndex)}
-          onClose={() => filters.setPhotoId(null)}
-          onIndexChange={(idx: number) => {
-             const photo = photoGridData.photos[idx];
-             if (photo && photo.id !== filters.photoId) {
-               filters.setPhotoId(photo.id);
-             }
-          }}
-          onEdit={openEditDrawer}
+       <LazyPhotoLightbox
+          open={useLightboxStore((s) => s.isOpen)}
+          images={useLightboxStore((s) => s.images)}
+          currentIndex={useLightboxStore((s) => s.currentIndex)}
+          onOpenChange={(open) => !open && useLightboxStore.getState().close()}
+          onIndexChange={(idx: number) => useLightboxStore.getState().goTo(idx)}
+          onEdit={(id) => { filters.setPhotoId(id); filters.setModal('edit'); }}
           onDelete={(id) => adminActions.deletePhoto.mutate(id)}
           onSetCover={(id) => adminActions.updatePhoto.mutate({ id, updates: { is_group_cover: true } })}
        />

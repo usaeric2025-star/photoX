@@ -9,7 +9,7 @@ import { Validator, ValidatorMeta } from '../protocol';
  */
 export class ArkTypeValidator<T> implements Validator<T> {
     constructor(
-        private arkSchema: Type<any>,
+        private arkSchema: Type<unknown>,
         private meta: ValidatorMeta
     ) {}
 
@@ -21,8 +21,8 @@ export class ArkTypeValidator<T> implements Validator<T> {
         const out = this.arkSchema(input);
         if (out instanceof type.errors) {
             // [ARKTYPE-ENGINE-COMPAT] Standardizing ArkType errors
-            const errorList = Array.from(out as any);
-            const firstError = errorList[0] as any;
+            const errorList = Array.from(out as unknown as { path: string[], expected: string }[]);
+            const firstError = errorList[0];
             
             throw ErrorFactory.validation(
                 `Validation failed at ${firstError?.path?.join('.') || 'root'}. Expected ${firstError?.expected || 'valid data'}. ${this.meta.aiHints.join(' ')}`

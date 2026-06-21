@@ -1,7 +1,7 @@
 import { useParams, useLocation, useNavigate } from '@tanstack/react-router';
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React, { useEffect, Suspense, lazy } from 'react';
-import { X, Loader2 } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useTasks, 
   useSyncMutation } from '@/hooks';
@@ -81,7 +81,7 @@ export function AdminPageContent() {
         {/* Other screens are lazy mounted */}
         {currentScreen !== 'gallery' && (
           <div className="flex-1 relative overflow-hidden pb-16 sm:pb-0 order-0">
-            <Suspense fallback={<div className="h-full flex items-center justify-center bg-slate-50"><Loader2 className="w-8 h-8 animate-spin text-slate-400" /></div>}>
+            <Suspense fallback={<div className="h-full flex items-center justify-center bg-slate-50"><Icon name="loader-2" className="w-8 h-8 animate-spin text-slate-400" /></div>}>
               {currentScreen === 'dashboard' ? (
                 <ScreenWrapper key="admin-dashboard" onClose={() => navigate({ to: '/admin' })}>
                   <StatisticsScreen />
@@ -149,7 +149,7 @@ function ScreenWrapper({ children, onClose }: { children: React.ReactNode, onClo
   return (
     <div className="h-full bg-slate-50 flex flex-col animate-fade-up">
       <div className="flex justify-end p-4 shrink-0 bg-slate-50 border-b border-slate-100">
-        <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-500 hover:text-slate-900"><X size={24} /></button>
+        <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-500 hover:text-slate-900"><Icon name="x" size={24} /></button>
       </div>
       <div className="flex-1 overflow-y-auto w-full no-scrollbar px-8 pb-8">{children}</div>
     </div>

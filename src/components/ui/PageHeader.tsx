@@ -1,4 +1,4 @@
-import { ArrowLeft } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { Button } from '@/components/shared/Button';
 import { Link } from '@tanstack/react-router';
 
@@ -15,10 +15,10 @@ export const PageHeader = ({ title, description, backUrl, actions }: PageHeaderP
       <div className="flex items-center gap-2">
         {backUrl && (
           <Link 
-            to={backUrl as any}
+            to={backUrl}
             className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-muted transition-colors text-slate-900"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <Icon name="arrow-left" className="h-4 w-4" />
           </Link>
         )}
         <h1 className="text-2xl font-bold">{title}</h1>

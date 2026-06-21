@@ -6,7 +6,10 @@ import { ListByGroupReqSchema, PhotoListReqSchema } from '../../_shared/apiContr
 import { errorFactory } from '../../_lib/error/AppError.js';
 import { getGroupCounts } from './helpers.js';
 
-export const listExtendedHandlers = (app: any) => {app.post('/list-by-group', async (c: any) => {
+import { Hono, type Context } from 'hono';
+
+export const listExtendedHandlers = (app: Hono) => {
+  app.post('/list-by-group', async (c: Context) => {
     const body = await c.req.json();
     const check = ListByGroupReqSchema(body);
     if (check instanceof type.errors) throw new Error(check.summary);
@@ -53,7 +56,6 @@ export const listExtendedHandlers = (app: any) => {app.post('/list-by-group', as
 
             const photosFormatted = data.map(d => {
                 const item = { ...d.items } as Record<string, unknown>;
-                const gId = d.items.groupId;
                 item.group = d.group ? { ...d.group, member_count: counts.get(d.group.id) || 0 } : null;
                 item.photo_tags = tagsByPhoto.get(d.items.id) || [];
                 return item;
@@ -66,7 +68,7 @@ export const listExtendedHandlers = (app: any) => {app.post('/list-by-group', as
     }
   });
 
-  app.post('/list-by-group-paginated', async (c: any) => {
+  app.post('/list-by-group-paginated', async (c: Context) => {
     const body = await c.req.json();
     const check = ListByGroupReqSchema(body);
     if (check instanceof type.errors) throw new Error(check.summary);
@@ -133,7 +135,7 @@ export const listExtendedHandlers = (app: any) => {app.post('/list-by-group', as
     }
   });
 
-  app.post('/count', async (c: any) => {
+  app.post('/count', async (c: Context) => {
     let body;
     try {
       body = await c.req.json();
@@ -148,15 +150,15 @@ export const listExtendedHandlers = (app: any) => {app.post('/list-by-group', as
         const hasTag = tagId !== undefined && tagId !== null && tagId !== '';
         const hasCat = categoryId !== undefined && categoryId !== null && categoryId !== '';
 
-        const builder = db.select({ count: count() }).from(furnitureItems);
+        let builder: any = db.select({ count: count() }).from(furnitureItems);
         
         if (hasTag) {
-            builder.innerJoin(photoTags, eq(furnitureItems.id, photoTags.photoId));
+            builder = builder.innerJoin(photoTags, eq(furnitureItems.id, photoTags.photoId));
         }
 
         const whereClauses: (SQL | undefined)[] = [];
-        if (hasTag) whereClauses.push(eq(photoTags.tagId as any, tagId as any));
-        if (hasCat) whereClauses.push(eq(furnitureItems.categoryId as any, categoryId as any));
+        if (hasTag) whereClauses.push(eq(photoTags.tagId, Number(tagId)));
+        if (hasCat) whereClauses.push(eq(furnitureItems.categoryId, Number(categoryId)));
 
         if (searchQuery && searchQuery.trim().length > 0) {
             const pattern = `%${searchQuery.trim()}%`;

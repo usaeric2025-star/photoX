@@ -1,11 +1,12 @@
 import React from 'react';
-import { usePhotoGrid } from '@/hooks/photo/usePhotoGrid';
 import { useUIStore } from '@/store/useUIStore';
 import { PhotoGridContent } from './PhotoGridContent';
 import { SelectionProvider, SelectionToolbar } from '@/features/selection';
+import { Category } from '@/types/photo';
+import { PhotoListItem } from '@/types/api';
 
 interface AdminPhotoGridProps {
-  photos: any[];
+  photos: PhotoListItem[];
   dataVersion: string;
   isPending: boolean;
   isFetching: boolean;
@@ -13,8 +14,8 @@ interface AdminPhotoGridProps {
   hasNextPage: boolean;
   fetchNextPage: () => void;
   columns: number;
-  filters: any;
-  categories?: any[];
+  filters: Record<string, unknown>;
+  categories?: Category[];
   onPhotoClick?: (id: string, e?: React.MouseEvent) => void;
 }
 
@@ -54,7 +55,7 @@ export function AdminPhotoGrid({
           <SelectionToolbar 
             allIds={allIds} 
             totalItems={photos.length} 
-            allPhotos={photos as any} 
+            allPhotos={photos} 
           />
         )}
       </div>

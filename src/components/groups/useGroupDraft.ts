@@ -44,13 +44,12 @@ export const useGroupDraft = (
         id: activeGroupId,
         name: "",
         description: "",
-        colors: [],
-        materials: [],
         cover_photo_id: null,
         user_id: user?.id || "",
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      } as any);
+        updated_at: new Date().toISOString(),
+        status: 'confirmed'
+      });
     } else {
       setGroupData(null);
     }

@@ -66,13 +66,15 @@ async function init() {
       if (isCancellation) return;
       
       // 同步到全域診斷陣列
-      const errors = (window as any).__STARTUP_ERRORS__ || [];
+      type StartupError = { msg: string; type: string; details: string };
+      const w = window as unknown as { __STARTUP_ERRORS__?: StartupError[] };
+      const errors = w.__STARTUP_ERRORS__ || [];
       errors.push({
         msg: message,
         type: '非同步拒絕異常 (React Unhandled Promise)',
         details: reason?.stack || '位置: React App runtime'
       });
-      (window as any).__STARTUP_ERRORS__ = errors;
+      w.__STARTUP_ERRORS__ = errors;
 
       ErrorFactory.capture(reason || new Error(message || 'Unhandled Promise Rejection'));
     });
@@ -92,13 +94,15 @@ async function init() {
       if (isNoise) return;
 
       // 同步到全域診斷陣列
-      const errors = (window as any).__STARTUP_ERRORS__ || [];
+      type StartupError = { msg: string; type: string; details: string };
+      const w = window as unknown as { __STARTUP_ERRORS__?: StartupError[] };
+      const errors = w.__STARTUP_ERRORS__ || [];
       errors.push({
         msg: message,
         type: '運行期異常 (React Runtime Error)',
         details: event.error?.stack || '位置: React App index'
       });
-      (window as any).__STARTUP_ERRORS__ = errors;
+      w.__STARTUP_ERRORS__ = errors;
 
       ErrorFactory.capture(event.error || new Error(event.message || '全局运行时错误'));
     });

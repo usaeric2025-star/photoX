@@ -1,40 +1,50 @@
-import React from 'react';
-import * as LucideIcons from 'lucide-react';
+import { LucideIcon as LucideIconBase } from 'lucide-react-sprite';
 import { cn } from '@/lib/utils';
-import type { LucideIcon } from 'lucide-react';
 
-export * from 'lucide-react';
-export { TriangleAlert as AlertTriangle, Grid3X3 as Grid } from 'lucide-react';
-
-
-const IconLibrary: Record<string, any> = {
-  ...LucideIcons,
-  AlertTriangle: LucideIcons.TriangleAlert,
-  Grid: LucideIcons.Grid3X3,
-};
-
-export type IconName = keyof typeof IconLibrary;
+export type IconName = string;
 
 interface IconProps {
   name: IconName;
+  size?: number;
   className?: string;
-  size?: number | string;
   solid?: boolean;
+  strokeWidth?: number;
+  fill?: string;
+  style?: React.CSSProperties;
+  onClick?: (e?: React.MouseEvent) => void;
 }
 
-export function Icon({ name, className, size = 20, solid = false }: IconProps) {
-  const IconComponent = IconLibrary[name];
-  if (!IconComponent) {
-    console.warn(`Icon "${name}" not found in curated library`);
-    return null;
+export const Icon = ({ 
+  name, 
+  size = 20, 
+  className = '', 
+  solid = false,
+  strokeWidth,
+  fill,
+  style,
+  onClick
+}: IconProps) => {
+  // Normalize icon names from PascalCase/camelCase to kebab-case (Sprite style)
+  const normalizedName = name
+    .replace(/([A-Z])/g, (match, offset) => (offset > 0 ? '-' : '') + match.toLowerCase())
+    .replace(/-+/g, '-');
+
+  // Defensive check: If LucideIconBase is not correctly imported/defined, fallback to a spacer
+  if (typeof LucideIconBase !== 'function' && typeof LucideIconBase !== 'object') {
+    return <span className={cn("inline-block", className)} style={{ width: size, height: size, ...style }} />;
   }
 
   return (
-    <IconComponent 
-      className={cn(className, solid ? 'fill-current' : '')} 
-      width={size} 
-      height={size} 
-      strokeWidth={1.75}
+    <LucideIconBase 
+      name={normalizedName as any} 
+      size={size} 
+      className={cn(className, solid ? 'fill-current' : '')}
+      strokeWidth={strokeWidth}
+      fill={fill}
+      style={style}
+      onClick={onClick}
     />
   );
-}
+};
+
+export const LucideIcon = Icon;

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useFormContext, useField } from "el-form-react-hooks";
 import { PromptDialog } from "@/components/ui/PromptDialog";
@@ -6,8 +6,8 @@ import { TagEditor as TagEditorContent } from "./TagEditorContent";
 import { MAX_TAGS_PER_PHOTO } from "@/constants/limits";
 import { Tag } from "@/types";
 import { safeArray } from "@/lib/utils";
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { showToast } from '@/lib/ui/toast';
+import { useFormSubmit } from '@/lib/form/useFormSubmit';
+import { type } from 'arktype';
 
 interface BasePhotoTagSelectorProps {
   selectedTagIds: string[];
@@ -22,8 +22,8 @@ interface BasePhotoTagSelectorProps {
 function BasePhotoTagSelector({
   selectedTagIds,
   onChange,
-  addTag,
-  updateTag,
+  addTag: rawAddTag,
+  updateTag: rawUpdateTag,
   deleteTag,
   tags,
   hideHotLabel,
@@ -61,7 +61,7 @@ function BasePhotoTagSelector({
       onChange(cleanSelectedIds.filter((id) => id !== strId));
     } else {
       if (cleanSelectedIds.length >= MAX_TAGS_PER_PHOTO) {
-        showToast.warning(`最多只能选择 ${MAX_TAGS_PER_PHOTO} 个标签`);
+        // Warning is fine as static feedback
         return;
       }
       onChange([...cleanSelectedIds, strId]);
@@ -74,13 +74,47 @@ function BasePhotoTagSelector({
     editDialog.open();
   };
 
+  const { submit: runAddTag, isLoading: isAdding } = useFormSubmit({
+    schema: type({ name: "string" }),
+    mutationFn: async ({ name }) => {
+      const trimmed = name.trim();
+      if (!trimmed) return null;
+
+      const existing = tags.find(
+        (t) => t.name.toUpperCase() === trimmed.toUpperCase(),
+      );
+      if (existing) {
+        onChange([...new Set([...cleanSelectedIds, String(existing.id)])]);
+        return "existing";
+      }
+
+      const saved = await rawAddTag(trimmed);
+      if (saved) {
+        onChange([...new Set([...cleanSelectedIds, String(saved)])]);
+      }
+      return saved;
+    },
+    successMessage: "標籤操作成功 / Tag operation successful",
+    errorMessage: "新增標籤失敗 / Add tag failed"
+  });
+
+  const { submit: runUpdateTag, isLoading: isUpdating } = useFormSubmit({
+    schema: type({ id: "string", name: "string" }),
+    mutationFn: async ({ id, name }) => {
+      await rawUpdateTag(id, name.trim());
+      return true;
+    },
+    successMessage: "標籤已更新 / Tag updated",
+    errorMessage: "編輯標籤失敗 / Edit tag failed"
+  });
+
   return (
     <>
       <TagEditorContent
         tags={sortedTags}
         selectedTagIds={cleanSelectedIds}
         onToggleTag={handleToggleTag}
-        onUpdateTag={updateTag}
+        onUpdateTag={async (id, name) => runUpdateTag({ id, name })}
         onDeleteTag={deleteTag}
         onQuickAdd={onQuickAdd}
         onRenameTagRequest={onRenameTagRequest}
@@ -90,44 +124,24 @@ function BasePhotoTagSelector({
       <PromptDialog
         open={isAddOpen}
         onOpenChange={addDialog.toggle}
-        title="新增标签 / Add Tag"
-        description="输入标签名称 / Enter Tag Name"
+        loading={isAdding}
+        title="新增標籤 / Add Tag"
+        description="輸入標籤名稱 / Enter Tag Name"
         onConfirm={async (name: string) => {
-          const trimmed = name.trim();
-          if (!trimmed) return;
-
-          const existing = tags.find(
-            (t) => t.name.toUpperCase() === trimmed.toUpperCase(),
-          );
-          if (existing) {
-            onChange([...new Set([...cleanSelectedIds, String(existing.id)])]);
-            return;
-          }
-
-          try {
-            const saved = await addTag(trimmed);
-            if (saved) {
-              onChange([...new Set([...cleanSelectedIds, String(saved)])]);
-            }
-          } catch (err: unknown) {
-            ErrorFactory.handleError(err, "新增标签失败");
-          }
+          await runAddTag({ name });
         }}
       />
       {editingTag && (
         <PromptDialog
           open={isEditOpen}
           onOpenChange={editDialog.toggle}
-          title="编辑标签 / Edit Tag"
-          description="输入标签名称 / Enter Tag Name:"
+          loading={isUpdating}
+          title="編輯標籤 / Edit Tag"
+          description="輸入標籤名稱 / Enter Tag Name:"
           defaultValue={editingTag.name}
           onConfirm={async (n: string) => {
             if (n && n.trim()) {
-              try {
-                await updateTag(String(editingTag.id), n.trim());
-              } catch (err: unknown) {
-                ErrorFactory.handleError(err, "编辑标签失败");
-              }
+              await runUpdateTag({ id: String(editingTag.id), name: n });
             }
           }}
         />

@@ -17,16 +17,16 @@ function sortObject(obj: unknown): unknown {
 
 const photos = {
   all: ['photos'] as const,
-  list: (filters: any) => [...photos.all, 'list', sortObject(filters)] as const,
+  list: (filters: unknown) => [...photos.all, 'list', sortObject(filters)] as const,
   detail: (photoId: string) => [...photos.all, 'detail', photoId] as const,
-  infinite: (filters: any, mode: 'public' | 'admin') => 
+  infinite: (filters: unknown, mode: 'public' | 'admin') => 
     [...photos.all, 'infinite', mode, sortObject(filters)] as const,
-  count: (filters: any) => [...photos.all, 'count', sortObject(filters)] as const,
+  count: (filters: unknown) => [...photos.all, 'count', sortObject(filters)] as const,
 };
 
 const groups = {
   all: ['groups'] as const,
-  list: (filters: any) => [...groups.all, 'list', sortObject(filters)] as const,
+  list: (filters: unknown) => [...groups.all, 'list', sortObject(filters)] as const,
   detail: (groupId: string, isAdmin: boolean) => 
     [...groups.all, 'detail', groupId, isAdmin] as const,
   photos: (groupId: string) => [...groups.all, 'photos', groupId] as const,

@@ -55,7 +55,9 @@ export const PhotoEditSessionProvider = ({
   };
 
   const form = useForm<EditFormData>({
-    validator: arktypeValidator(EditPhotoSchema),
+    validators: {
+      onSubmit: arktypeValidator(EditPhotoSchema)
+    },
     defaultValues: {
       ...photo,
       name: toSingleString(photo?.name),
@@ -116,7 +118,7 @@ export const PhotoEditSessionProvider = ({
   // but provide a loading state indicator if necessary (handled by children)
   
   return (
-    <FormProvider form={form as any}>
+    <FormProvider form={form}>
       <PhotoEditSessionContext.Provider value={{ 
         isDirty, 
         isPending,

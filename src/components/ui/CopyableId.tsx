@@ -1,5 +1,5 @@
 import React from 'react';
-import { Copy, Check } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/lib/utils';
 import { useCopyToClipboard } from '@/hooks';
 
@@ -33,7 +33,7 @@ export function CopyableId({ id, label, className }: CopyableIdProps) {
         }}
         className="text-slate-400 hover:text-brand-navy p-1 transition-colors rounded-md hover:bg-slate-100 touch-manipulation cursor-pointer"
       >
-        {copied ? <Check size={12} className="text-green-600" /> : <Copy size={12} />}
+        {copied ? <Icon name="check" size={12} className="text-green-600" /> : <Icon name="copy" size={12} />}
       </button>
     </div>
   );

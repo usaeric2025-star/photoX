@@ -165,8 +165,8 @@ export async function executeAITask(options: AITaskOptions) {
       }
 
       // 3. 多語言格式強制歸一化
-      if (shouldNormalize && data) {
-        const d = data as any;
+      if (shouldNormalize && data && typeof data === 'object') {
+        const d = data as Record<string, unknown>;
         if (d.name) d.name = normalizeI18n(d.name);
         if (d.description) d.description = normalizeI18n(d.description);
       }

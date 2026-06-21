@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldAlert, AlertTriangle, CheckCircle2 } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { MaintenanceTool } from './MaintenanceTool';
 import { ISSUE_ACTIONS } from '@/features/diagnostics/issueActions';
 
@@ -29,7 +29,7 @@ export function IssueList({ issues, isPending, onRepair, onSuccess }: IssueListP
           >
             <div className="p-4 flex items-start gap-4">
               <div className={`p-2.5 rounded-xl ${severityColors[issue.severity as keyof typeof severityColors]}`}>
-                {issue.severity === 'P0' ? <ShieldAlert size={20} /> : <AlertTriangle size={20} />}
+                {issue.severity === 'P0' ? <Icon name="shield-alert" size={20} /> : <Icon name="alert-triangle" size={20} />}
               </div>
               
               <div className="flex-1 min-w-0">
@@ -73,7 +73,7 @@ export function IssueList({ issues, isPending, onRepair, onSuccess }: IssueListP
       {issues.length === 0 && !isPending && (
         <div className="py-12 flex flex-col items-center justify-center text-center space-y-4 bg-white rounded-3xl border border-dashed border-slate-200">
            <div className="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center text-green-500">
-             <CheckCircle2 size={24} />
+             <Icon name="check-circle-2" size={24} />
            </div>
            <div>
              <h3 className="text-base font-bold text-brand-navy">数据非常健康</h3>

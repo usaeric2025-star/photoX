@@ -9,7 +9,7 @@ interface ManufacturerSelectProps {
 
 export const ManufacturerSelect = ({ name, manufacturers }: ManufacturerSelectProps) => {
   const { form } = useFormContext();
-  const { value, error } = useField(name as any);
+  const { value, error } = useField(name);
 
   return (
     <div className="w-full space-y-2">
@@ -23,7 +23,7 @@ export const ManufacturerSelect = ({ name, manufacturers }: ManufacturerSelectPr
                 key={m.id}
                 type="button"
                 onClick={() => {
-                   form.setValue(name as any, isSelected ? null : m.id);
+                   form.setValue(name, isSelected ? null : m.id);
                 }}
                 className={`px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all cursor-pointer ${
                   isSelected

@@ -1,7 +1,7 @@
 import React from 'react';
 import { usePhotoAIResult, useCopyToClipboard } from '@/hooks';
 import { useUIStore } from '@/store/useUIStore';
-import { Copy, Check, Terminal, FileJson, Info } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { usePhotoEditSessionContext } from '@/hooks/photo/usePhotoEditSessionContext';
 
 export function AISourceTab() {
@@ -25,7 +25,7 @@ export function AISourceTab() {
     return (
       <div className="flex flex-col items-center justify-center py-12 px-4 text-center bg-slate-50 border border-slate-200 border-dashed rounded-3xl mt-4">
         <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500 mb-4 border border-amber-100">
-          <Info className="w-6 h-6" />
+          <Icon name="info" className="w-6 h-6" />
         </div>
         <h3 className="font-sans font-semibold text-slate-800 text-base mb-1">
           {appLang === 'zh' ? '暂无 AI 识别原始源代碼' : 'No Raw AI Source Found'}
@@ -73,7 +73,7 @@ export function AISourceTab() {
     <div className="space-y-4 pt-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Terminal className="w-4 h-4 text-indigo-500" />
+          <Icon name="terminal" className="w-4 h-4 text-indigo-500" />
           <span className="text-xs font-mono font-medium text-slate-600 uppercase tracking-wider">
             {appLang === 'zh' ? '照片 AI 分析原始输出 (JSON / Markdown)' : 'Model Output Log (Raw Source)'}
           </span>
@@ -88,12 +88,12 @@ export function AISourceTab() {
         >
           {copied ? (
             <>
-              <Check className="w-3.5 h-3.5" />
+              <Icon name="check" className="w-3.5 h-3.5" />
               <span>{appLang === 'zh' ? '已复制' : 'Copied'}</span>
             </>
           ) : (
             <>
-              <Copy className="w-3.5 h-3.5" />
+              <Icon name="copy" className="w-3.5 h-3.5" />
               <span>{appLang === 'zh' ? '复制代码' : 'Copy Code'}</span>
             </>
           )}
@@ -109,7 +109,7 @@ export function AISourceTab() {
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
           </div>
           <div className="flex items-center gap-1 text-[10px] font-mono text-slate-500">
-            <FileJson className="w-3 h-3" />
+            <Icon name="file-json" className="w-3 h-3" />
             <span>agnes-response.json</span>
           </div>
         </div>
@@ -123,7 +123,7 @@ export function AISourceTab() {
       </div>
 
       <div className="flex gap-2 p-3 bg-slate-50 border border-slate-200 rounded-2xl text-slate-500 text-[11px] font-sans">
-        <Info className="w-4 h-4 text-slate-400 flex-shrink-0" />
+        <Icon name="info" className="w-4 h-4 text-slate-400 flex-shrink-0" />
         <p>
           {appLang === 'zh'
             ? '本区域安全只读展示大语言模型（Agnes AI Pipeline）响应的未经结构化处理的源内容，包含特定尺寸计算规则及翻译建议，供管理员审核审计。'

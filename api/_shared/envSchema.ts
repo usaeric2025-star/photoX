@@ -63,6 +63,6 @@ export function getServerEnv(envObj: NodeJS.ProcessEnv): ServerEnv {
     return result as ServerEnv;
   } catch (e) {
     logger.error("[EnvSchema] Critical error during validation:", e);
-    return envObj as any as ServerEnv;
+    return envObj as unknown as ServerEnv;
   }
 }

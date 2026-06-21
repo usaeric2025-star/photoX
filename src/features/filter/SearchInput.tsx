@@ -1,6 +1,6 @@
 import { useTransition, useState, useEffect } from 'react';
 import { useFilterState } from './useFilterState';
-import { Search, X } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { useTranslation } from '@/hooks';
 
 export function SearchInput() {
@@ -30,7 +30,7 @@ export function SearchInput() {
 
   return (
     <div className="relative group">
-      <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-mute transition-colors group-focus-within:text-primary" />
+      <Icon name="search" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-mute transition-colors group-focus-within:text-primary" />
       <input
         type="text"
         id="global-search-input"
@@ -44,7 +44,7 @@ export function SearchInput() {
           onClick={handleClear}
           className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-text-mute hover:bg-surface-mute transition-colors active:scale-95"
         >
-          <X size={18} />
+          <Icon name="x" size={18} />
         </button>
       )}
       {!inputValue && isPending && (

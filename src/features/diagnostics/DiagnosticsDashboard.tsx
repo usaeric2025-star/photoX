@@ -1,6 +1,6 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React, { useState, Suspense } from 'react';
-import { RefreshCw, ShieldCheck } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { useDiagnostics } from '@/hooks/admin/useDiagnostics';
 import { diagnosticRegistry, diagnosticCategories, type DiagnosticPlugin } from './registry';
 import { DiagnosticCard } from './DiagnosticCard';
@@ -93,7 +93,7 @@ export function DiagnosticsDashboard() {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <ShieldCheck className="w-8 h-8 text-brand-navy" />
+          <Icon name="shield-check" className="w-8 h-8 text-brand-navy" />
           <div className="space-y-0.5">
             <h1 className="text-2xl font-black text-brand-navy tracking-tight uppercase">系统诊断中心</h1>
             <p className="text-xs text-slate-500 font-medium">REAL-TIME SYSTEM DIAGNOSIS & RECOVERY ENGINE</p>
@@ -132,7 +132,7 @@ export function DiagnosticsDashboard() {
             disabled={isPending}
             className="rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors h-9 w-9 flex items-center justify-center shrink-0"
           >
-            <RefreshCw size={16} className={isPending ? "animate-spin text-slate-500" : "text-slate-500"} />
+            <Icon name="refresh-cw" size={16} className={isPending ? "animate-spin text-slate-500" : "text-slate-500"} />
           </Button>
         </div>
       </div>
@@ -149,7 +149,7 @@ export function DiagnosticsDashboard() {
 
           <Suspense fallback={<LoadingScreen />}>
           <AuditVisualizer 
-            auditResult={auditResult} 
+            auditResult={auditResult as any} 
             isAuditing={isAuditing} 
             onAudit={runAudit} 
           />

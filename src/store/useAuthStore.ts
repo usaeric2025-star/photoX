@@ -23,20 +23,32 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       // Race getSession with a 3-second timeout to prevent startup hangs if Supabase is slow/unresponsive
       const sessionPromise = supabase.auth.getSession();
-      const timeoutPromise = new Promise<{ data: { session: null }, error: any }>((_, reject) => {
+      const timeoutPromise = new Promise<{ data: { session: null }, error: unknown }>((_, reject) => {
         setTimeout(() => reject(new Error('Supabase Auth init timeout (3s)')), 3000);
       });
       
-      const { data } = await Promise.race([sessionPromise, timeoutPromise]);
+      const { data } = await Promise.race([sessionPromise, timeoutPromise]) as { 
+        data: { 
+          session: { 
+            user: { 
+              id: string; 
+              email?: string; 
+              user_metadata: Record<string, unknown>;
+              email_confirmed_at?: string;
+            } 
+          } | null 
+        }; 
+        error: unknown; 
+      };
       
       if (data.session?.user) {
         const u = data.session.user;
         const mapped: User = {
           id: u.id,
           email: u.email || null,
-          display_name: u.user_metadata?.full_name || u.user_metadata?.name || u.email || null,
-          photo_url: u.user_metadata?.avatar_url || null,
-          avatar_url: u.user_metadata?.avatar_url || null,
+          display_name: (u.user_metadata?.full_name as string) || (u.user_metadata?.name as string) || u.email || null,
+          photo_url: (u.user_metadata?.avatar_url as string) || null,
+          avatar_url: (u.user_metadata?.avatar_url as string) || null,
           email_verified: !!u.email_confirmed_at,
         };
         set({ user: mapped, isLoading: false });
@@ -73,15 +85,15 @@ export const initAuthListener = () => {
   if (authListenerInitialized) return () => {};
   authListenerInitialized = true;
   
-  const { data } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
+  const { data } = supabase.auth.onAuthStateChange((_event, session) => {
     if (session?.user) {
       const u = session.user;
       const mapped: User = {
         id: u.id,
         email: u.email || null,
-        display_name: u.user_metadata?.full_name || u.user_metadata?.name || u.email || null,
-        photo_url: u.user_metadata?.avatar_url || null,
-        avatar_url: u.user_metadata?.avatar_url || null,
+        display_name: (u.user_metadata?.full_name as string) || (u.user_metadata?.name as string) || u.email || null,
+        photo_url: (u.user_metadata?.avatar_url as string) || null,
+        avatar_url: (u.user_metadata?.avatar_url as string) || null,
         email_verified: !!u.email_confirmed_at,
       };
       useAuthStore.getState().setUser(mapped);

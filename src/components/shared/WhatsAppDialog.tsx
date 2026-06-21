@@ -2,7 +2,7 @@ import * as React from 'react';
 import { NativeDialog } from '@/components/ui/NativeDialog';
 import { useUIStore } from '@/store/useUIStore';
 import { usePublicSettings } from '@/hooks/settings/useSettings';
-import { Heart, Sparkles } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 
 export const WhatsAppDialog = () => {
   const show = useUIStore((s) => s.showWhatsAppChoice);
@@ -38,7 +38,7 @@ export const WhatsAppDialog = () => {
                 className="w-full py-3 px-4 bg-emerald-600 text-white rounded-lg font-bold flex items-center justify-between shadow-sm hover:bg-emerald-700 transition-all"
               >
                 <span>{opt.name}</span>
-                {i === 0 ? <Heart size={18} /> : <Sparkles size={18} />}
+                {i === 0 ? <Icon name="heart" size={18} /> : <Icon name="sparkles" size={18} />}
               </a>
             ))}
           </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronUp, MoreHorizontal } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { useTags } from './useFilterData';
 import { useFilterState } from './useFilterState';
 import { usePublicSettings } from '@/hooks/settings/useSettings';

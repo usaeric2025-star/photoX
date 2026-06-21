@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { X, Heart, Pencil, Trash2 } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { Tag } from "../../types";
 import { useClickOutside } from '@/hooks/core/useClickOutside';
 import { useLongPress } from "@/hooks/core/useLongPress";
@@ -67,7 +67,7 @@ export function TagItem({
       <div className="flex flex-col">
         <span className="text-[11px] font-black text-brand-navy uppercase tracking-tight select-none flex items-center gap-1">
           {isPinned && (
-            <Heart
+            <Icon name="heart"
               size={10}
               className="text-brand-gold fill-brand-gold shrink-0"
             />
@@ -80,7 +80,7 @@ export function TagItem({
         onClick={handleDeleteClick}
         className="text-brand-navy/20 hover:text-brand-gold p-1 rounded-full"
       >
-        <X size={14} />
+        <Icon name="x" size={14} />
       </button>
 
       {activeTagMenuId === tag.id && (
@@ -91,20 +91,20 @@ export function TagItem({
               onClick={handleTogglePin}
               className="px-3 py-2 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2"
             >
-              <Heart size={12} className={isPinned ? "fill-white" : ""} />{" "}
+              <Icon name="heart" size={12} className={isPinned ? "fill-white" : ""} />{" "}
               {isPinned ? "取消推荐" : "设为推荐"}
             </button>
             <button
               onClick={handleEditClick}
               className="px-3 py-2 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2"
             >
-              <Pencil size={12} /> 编辑 / EDIT
+              <Icon name="pencil" size={12} /> 编辑 / EDIT
             </button>
             <button
               onClick={handleMenuDeleteClick}
               className="px-3 py-2 text-red-400 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2"
             >
-              <Trash2 size={12} /> 删除
+              <Icon name="trash-2" size={12} /> 删除
             </button>
             <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-brand-navy rotate-45 -mt-1" />
           </div>

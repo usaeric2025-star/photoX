@@ -61,30 +61,30 @@ export const listHandler = (app: Hono) => {
       }
 
       if (hasCat) {
-          whereClauses.push(eq(vPhotosList.categoryId, categoryId as any));
+          whereClauses.push(eq(vPhotosList.categoryId as any, Number(categoryId)));
       }
 
       if (groupId) {
-        whereClauses.push(eq(vPhotosList.groupId, groupId));
+        whereClauses.push(eq(vPhotosList.groupId as any, groupId));
       }
       
       if (onlyGroupsCover) {
         whereClauses.push(or(
           isNull(vPhotosList.groupId),
-          eq(vPhotosList.isGroupCover, true)
+          eq(vPhotosList.isGroupCover as any, true)
         ));
       } else if (onlyUngrouped) {
         whereClauses.push(isNull(vPhotosList.groupId));
       }
       
       if (!isAdminMode) {
-        whereClauses.push(eq(vPhotosList.isHidden, false));
+        whereClauses.push(eq(vPhotosList.isHidden as any, false));
       } else if (isHidden !== undefined && isHidden !== null) {
-        whereClauses.push(eq(vPhotosList.isHidden, isHidden));
+        whereClauses.push(eq(vPhotosList.isHidden as any, isHidden));
       }
       
       if (manufacturerId !== undefined && manufacturerId !== null) {
-        whereClauses.push(eq(vPhotosList.manufacturerId, manufacturerId as any));
+        whereClauses.push(eq(vPhotosList.manufacturerId as any, String(manufacturerId)));
       }
 
       const finalWhere = and(...whereClauses.filter((c): c is SQL => !!c));
@@ -148,8 +148,8 @@ export const listHandler = (app: Hono) => {
                 isPinned: !!d.isPinned,
                 isHidden: !!d.isHidden,
                 isCover: !!d.isGroupCover || (d.groupCoverPhotoId === d.id),
-                createdAt: d.createdAt ? d.createdAt.toISOString() : null,
-            } as any;
+                createdAt: d.createdAt ? (d.createdAt as unknown as Date).toISOString() : null,
+            } as PhotoListItem;
         });
 
         // ✅ 契約驗證

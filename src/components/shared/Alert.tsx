@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { AlertCircle, CheckCircle2, Info, XCircle } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { cn } from '../../lib/utils';
 
 interface AlertProps {
@@ -27,13 +27,13 @@ export function Alert({
   };
 
   const IconMap = {
-    info: Info,
-    success: CheckCircle2,
-    warning: AlertCircle,
-    destructive: XCircle,
+    info: "info",
+    success: "check-circle-2",
+    warning: "alert-circle",
+    destructive: "x-circle",
   };
 
-  const DefaultIcon = IconMap[variant];
+  const iconName = IconMap[variant];
 
   return (
     <div
@@ -45,7 +45,7 @@ export function Alert({
       )}
     >
       <div className="shrink-0 pt-0.5">
-        {icon || <DefaultIcon size={18} />}
+        {icon || <Icon name={iconName} size={18} />}
       </div>
       <div className="flex-1 text-sm font-medium leading-relaxed">
         {children}

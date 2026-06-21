@@ -1,7 +1,7 @@
 import { logger } from '@/lib/logger';
 import React, { useEffect, useRef, useState } from 'react';
 import { GlobalDiagnosticsDialog } from './GlobalDiagnosticsDialog';
-import { Terminal } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 
 export const LoadingScreen = () => {
   const ref = useRef<HTMLDialogElement>(null);
@@ -69,7 +69,7 @@ export const LoadingScreen = () => {
               onClick={() => setDiagnosticsOpen(true)}
               className="mt-4 px-4 py-2 border rounded-full text-slate-500 hover:text-slate-800 bg-white/50 backdrop-blur border-slate-200 text-[10px] sm:text-xs font-semibold hover:bg-white flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-sm animate-slide-in-up"
             >
-              <Terminal size={12} className="text-slate-400" />
+              <Icon name="terminal" size={12} className="text-slate-400" />
               載入時間較長？開啟連線診斷與快取修復
             </button>
           )}

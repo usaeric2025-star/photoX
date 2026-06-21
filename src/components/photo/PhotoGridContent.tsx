@@ -6,7 +6,7 @@ import { AdminPhotoCard } from './AdminPhotoCard';
 import { PublicPhotoCard } from './PublicPhotoCard';
 import { LoadMoreIndicator } from './LoadMoreIndicator';
 import { EmptyState } from '../ui/EmptyState';
-import { PackageOpen } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 
 interface PhotoGridContentProps {
   photos: PhotoListItem[];
@@ -52,7 +52,7 @@ export function PhotoGridContent({
         <EmptyState 
           title={hasSearch ? 'No results found' : 'No photos'} 
           description={hasSearch ? 'Try searching with different keywords.' : undefined}
-          icon={<PackageOpen className="w-16 h-16 text-slate-300" />}
+          icon={<Icon name="package-open" className="w-16 h-16 text-slate-300" />}
         />
       </div>
     );

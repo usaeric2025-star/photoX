@@ -14,11 +14,13 @@ export const groups = new Hono()
       let query = db.select().from(groupsTable).orderBy(asc(groupsTable.name));
 
       if (!isAdminByQuery) {
-          query = db.select().from(groupsTable)
+          const q = db.select().from(groupsTable)
             .where(and(
                 eq(groupsTable.status, 'confirmed')
             ))
-            .orderBy(asc(groupsTable.name)) as any;
+            .orderBy(asc(groupsTable.name));
+          const data = await q;
+          return c.json({ success: true, data });
       }
 
       const data = await query;
@@ -46,11 +48,23 @@ export const groups = new Hono()
 
     const { groupData } = check;
     try {
-        const inputUserId = (body as any).userId || (body as any).user_id || (groupData as any).userId || (groupData as any).user_id || '8ec53131-a589-4b50-beb4-6b5308541e1b';
-        const [data] = await db.insert(groupsTable).values({
+        const b = body as Record<string, unknown>;
+        const g = groupData as Record<string, unknown>;
+        const inputUserId = (b.userId as string) || (b.user_id as string) || (g.userId as string) || (g.user_id as string) || '8ec53131-a589-4b50-beb4-6b5308541e1b';
+        
+        // Manual mapping to Drizzle schema
+        const insertData = {
+            id: g.id as string || undefined,
+            name: (g.name as Record<string, string>) || { zh: '' },
+            description: (g.description as Record<string, string>) || null,
+            coverPhotoId: (g.cover_photo_id as string) || null,
+            status: (g.status as "draft" | "confirmed" | "rejected") || 'confirmed',
             userId: inputUserId,
-            ...groupData
-        } as any).returning();
+            createdAt: new Date(),
+            updatedAt: new Date()
+        };
+
+        const [data] = await db.insert(groupsTable).values([insertData as any]).returning();
         return c.json({ success: true, data });
     } catch (error: unknown) {
         const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
@@ -65,10 +79,11 @@ export const groups = new Hono()
     if (check instanceof type.errors) throw new Error(check.summary);
 
     const { updates } = check;
-    delete (updates as any).member_count;
+    const updatesObj = updates as Record<string, unknown>;
+    delete updatesObj.member_count;
 
     try {
-        const mapped: Record<string, any> = {};
+        const mapped: Record<string, unknown> = {};
         const fieldMap: Record<string, string> = {
             name: 'name',
             description: 'description',
@@ -76,13 +91,13 @@ export const groups = new Hono()
             status: 'status',
             user_id: 'userId'
         };
-        for (const [key, val] of Object.entries(updates as Record<string, any>)) {
+        for (const [key, val] of Object.entries(updatesObj)) {
             const mappedKey = fieldMap[key] || key;
             mapped[mappedKey] = val;
         }
 
         const [data] = await db.update(groupsTable)
-            .set({ ...mapped, updatedAt: new Date() } as any)
+            .set({ ...mapped, updatedAt: new Date() })
             .where(eq(groupsTable.id, id))
             .returning();
         
@@ -94,9 +109,9 @@ export const groups = new Hono()
     }
   })
   .post('/upsert', async (c) => {
-    const dbUpdates = await c.req.json() as Record<string, any>;
+    const dbUpdates = await c.req.json() as Record<string, unknown>;
     try {
-        const mapped: Record<string, any> = {};
+        const mapped: Record<string, unknown> = {};
         const fieldMap: Record<string, string> = {
             id: 'id',
             name: 'name',
@@ -123,10 +138,10 @@ export const groups = new Hono()
         }
 
         await db.insert(groupsTable)
-            .values(mapped as any)
+            .values(mapped as unknown as typeof groupsTable.$inferInsert)
             .onConflictDoUpdate({
                 target: groupsTable.id,
-                set: mapped as any
+                set: mapped as unknown as typeof groupsTable.$inferInsert
             });
 
         return c.json({ success: true });
@@ -168,7 +183,7 @@ export const groups = new Hono()
       } = check;
       
       // Ensure groupData has the id aligned with targetGroupId to satisfy TS and db
-      const mergedGroupData = { ...groupData, id: targetGroupId };
+      const mergedGroupData = { ...(groupData as any), id: targetGroupId };
       delete (mergedGroupData as any).member_count;
       
       try {
@@ -203,23 +218,35 @@ export const groups = new Hono()
           });
 
           if (!existingGroup) {
-            const { id: _, ...groupDataWithoutId } = mergedGroupData as any;
+            const { id: _, ...groupDataWithoutId } = mergedGroupData;
             let finalUserId = (userId !== 'staff' && userId) ? userId : dbUserId;
             if (!finalUserId) {
                 // Fallback user id
                finalUserId = '8ec53131-a589-4b50-beb4-6b5308541e1b';
             }
 
-            await db.insert(groupsTable).values({
+            const groupDataToInsert = {
                 id: targetGroupId,
                 userId: finalUserId,
-                ...groupDataWithoutId,
-                createdAt: new Date()
-            } as any);
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                status: ((groupDataWithoutId as any).status) || 'confirmed',
+                name: ((groupDataWithoutId as any).name) || { zh: '' },
+                description: ((groupDataWithoutId as any).description) || null,
+                coverPhotoId: ((groupDataWithoutId as any).cover_photo_id) || null,
+            };
+
+            await db.insert(groupsTable).values([groupDataToInsert as any]);
           } else {
-            const { id: _, ...groupDataWithoutId } = mergedGroupData as any;
+            const { id: _, ...groupDataWithoutId } = mergedGroupData;
+            const updatePayload: Record<string, unknown> = { updatedAt: new Date() };
+            if ((groupDataWithoutId as any).name) updatePayload.name = (groupDataWithoutId as any).name;
+            if ((groupDataWithoutId as any).description !== undefined) updatePayload.description = (groupDataWithoutId as any).description;
+            if ((groupDataWithoutId as any).status) updatePayload.status = (groupDataWithoutId as any).status;
+            if ((groupDataWithoutId as any).cover_photo_id !== undefined) updatePayload.coverPhotoId = (groupDataWithoutId as any).cover_photo_id;
+
             await db.update(groupsTable)
-                .set({ ...groupDataWithoutId, updatedAt: new Date() } as any)
+                .set(updatePayload)
                 .where(eq(groupsTable.id, targetGroupId));
           }
 
@@ -241,7 +268,7 @@ export const groups = new Hono()
             try {
                 await db.execute(sql`SELECT merge_groups(${sourceGroupIds}, ${targetGroupId})`);
             } catch (rpcErr) {
-                logger.warn("[groupPhotos] Merge RPC call failed, but photos already moved manually", { error: (rpcErr as any).message });
+                logger.warn("[groupPhotos] Merge RPC call failed, but photos already moved manually", { error: rpcErr instanceof Error ? rpcErr.message : String(rpcErr) });
             }
           }
 

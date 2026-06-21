@@ -10,7 +10,8 @@ export function arktypeToElForm<T extends Record<string, unknown>>(
 ): AutoFormFieldConfig[] {
   // We use the internal definition structure safely. 
   // In ArkType v2, object properties are available in the 'inner' or 'definition' based on build version.
-  const definition = (schema as any).definition || (schema as any).json;
+  const s = schema as unknown as { definition?: Record<string, unknown>; json?: Record<string, unknown> };
+  const definition = s.definition || s.json;
   
   if (!definition || typeof definition !== 'object') {
     return [];

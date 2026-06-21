@@ -2,7 +2,7 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import { useTasks, type BackgroundTask } from '@/hooks';
 import { Icon } from '@/components/ui/Icon';
-import { LazyMotion, domAnimation, m, AnimatePresence } from 'motion/react';
+import { logger } from '@/lib/logger';
 
 export function BackgroundTaskPanel() {
   const { tasks, removeTask, cancelTask, isAvoidingSelection } = useTasks();
@@ -24,12 +24,20 @@ export function BackgroundTaskPanel() {
   React.useEffect(() => {
     if (!mounted) return;
     if (activeTasks.length > 0 && panelRef.current) {
-      if (!panelRef.current.matches(':popover-open')) {
-        panelRef.current.showPopover();
+      try {
+        if (typeof panelRef.current.showPopover === 'function' && !panelRef.current.matches(':popover-open')) {
+          panelRef.current.showPopover();
+        }
+      } catch (e) {
+        logger.warn('Popover API not supported or failed:', e);
       }
     } else if (activeTasks.length === 0 && panelRef.current) {
-      if (panelRef.current.matches(':popover-open')) {
-        panelRef.current.hidePopover();
+      try {
+        if (typeof panelRef.current.hidePopover === 'function' && panelRef.current.matches(':popover-open')) {
+          panelRef.current.hidePopover();
+        }
+      } catch (e) {
+        // ignore
       }
     }
   }, [activeTasks.length, mounted]);
@@ -48,7 +56,6 @@ export function BackgroundTaskPanel() {
   };
 
   return createPortal(
-    <LazyMotion features={domAnimation}>
       <div 
         ref={panelRef}
         popover="manual"
@@ -60,7 +67,7 @@ export function BackgroundTaskPanel() {
           className="pointer-events-auto bg-white rounded-2xl shadow-lg border border-slate-100 flex items-center justify-between px-3 py-2"
         >
           <div className="flex items-center gap-1.5">
-            <Icon name="Loader2" size={14} className="text-blue-500 animate-spin" />
+            <Icon name="loader-2" size={14} className="text-blue-500 animate-spin" />
             <span className="text-[11px] font-bold text-slate-700">任务中心</span>
           </div>
           <button 
@@ -72,18 +79,15 @@ export function BackgroundTaskPanel() {
           </button>
         </div>
 
-        <AnimatePresence mode="popLayout">
-          {isExpanded && activeTasks.slice(-3).map((task) => (
-            <TaskItem 
-              key={task.id} 
-              task={task} 
-              onRemove={() => removeTask(task.id)}
-              onCancel={() => cancelTask(task.id)}
-            />
-          ))}
-        </AnimatePresence>
-      </div>
-    </LazyMotion>,
+        {isExpanded && activeTasks.slice(-3).map((task) => (
+          <TaskItem 
+            key={task.id} 
+            task={task} 
+            onRemove={() => removeTask(task.id)}
+            onCancel={() => cancelTask(task.id)}
+          />
+        ))}
+      </div>,
     portalRoot
   );
 }
@@ -95,13 +99,9 @@ function TaskItem({ task, onRemove, onCancel }: { task: BackgroundTask; onRemove
   const isCancelled = task.status === 'cancelled';
 
   return (
-    <m.div
-      layout
+    <div
       onClick={(e) => e.stopPropagation()}
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      className={`pointer-events-auto bg-white rounded-2xl shadow-lg border p-3 flex flex-col gap-2 overflow-hidden ${
+      className={`pointer-events-auto bg-white rounded-2xl shadow-lg border p-3 flex flex-col gap-2 overflow-hidden transition-all duration-300 ${
         isError ? 'border-red-100' : isCompleted ? 'border-green-50 animate-pulse' : 'border-slate-100'
       }`}
     >
@@ -112,9 +112,9 @@ function TaskItem({ task, onRemove, onCancel }: { task: BackgroundTask; onRemove
             isCompleted ? 'bg-green-50 text-green-500' : 
             'bg-blue-50 text-blue-500'
           }`}>
-            {isRunning && <Icon name="Loader2" size={14} className="animate-spin" />}
-            {isCompleted && <Icon name="CheckCircle2" size={14} />}
-            {isError && <Icon name="XCircle" size={14} />}
+            {isRunning && <Icon name="loader-2" size={14} className="animate-spin" />}
+            {isCompleted && <Icon name="check-circle-2" size={14} />}
+            {isError && <Icon name="x-circle" size={14} />}
           </div>
           <div className="min-w-0">
             <h4 className="text-[10px] font-bold uppercase tracking-tight text-slate-800 truncate">
@@ -133,7 +133,7 @@ function TaskItem({ task, onRemove, onCancel }: { task: BackgroundTask; onRemove
             className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
             title="关闭 / Close"
           >
-            <Icon name="X" size={14} />
+            <Icon name="x" size={14} />
           </button>
         ) : (
           <button 
@@ -143,7 +143,7 @@ function TaskItem({ task, onRemove, onCancel }: { task: BackgroundTask; onRemove
             className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-red-500 transition-colors"
             title="取消 / Cancel"
           >
-            <Icon name="X" size={14} />
+            <Icon name="x" size={14} />
           </button>
         )}
       </div>
@@ -151,11 +151,9 @@ function TaskItem({ task, onRemove, onCancel }: { task: BackgroundTask; onRemove
       {isRunning && (
         <div className="space-y-1.5">
           <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-            <m.div 
-              className="h-full bg-blue-500" 
-              initial={{ width: 0 }}
-              animate={{ width: `${task.progress}%` }}
-              transition={{ duration: 0.3 }}
+            <div 
+              className="h-full bg-blue-500 transition-all duration-300"
+              style={{ width: `${task.progress}%` }}
             />
           </div>
           <div className="flex justify-between items-center text-[9px] font-bold text-slate-400">
@@ -173,6 +171,6 @@ function TaskItem({ task, onRemove, onCancel }: { task: BackgroundTask; onRemove
           关闭
         </button>
       )}
-    </m.div>
+    </div>
   );
 }

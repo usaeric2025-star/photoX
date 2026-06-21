@@ -8,6 +8,6 @@ interface LayoutButtonProps {
 
 export const LayoutButton = ({ isGrid, onClick }: LayoutButtonProps) => (
   <Button variant="outline" size="icon" onClick={onClick} className="h-8 w-8">
-    {isGrid ? <Icon name="LayoutGrid" size={16} /> : <Icon name="List" size={16} />}
+    {isGrid ? <Icon name="layout-grid" size={16} /> : <Icon name="list" size={16} />}
   </Button>
 );

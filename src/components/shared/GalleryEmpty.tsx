@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { TranslationType } from '../../types';
 
@@ -13,7 +13,7 @@ export function GalleryEmpty({ t }: GalleryEmptyProps) {
       title={t.empty}
       icon={
         <div className="w-16 h-16 bg-white/40 rounded-full flex items-center justify-center border border-white shadow-sm">
-          <Image size={32} className="opacity-20 text-brand-navy/20" />
+          <Icon name="image" size={32} className="opacity-20 text-brand-navy/20" />
         </div>
       }
       className="py-20 text-brand-navy/20"

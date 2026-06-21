@@ -12,11 +12,20 @@ interface GlobalDiagnosticsDialogProps {
   onClose: () => void;
 }
 
+interface DiagnosticError {
+  type: string;
+  msg: string;
+  details: string;
+  traceId: string;
+  code: string;
+  timestamp: string;
+}
+
 export function GlobalDiagnosticsDialog({ open, onClose }: GlobalDiagnosticsDialogProps) {
   const [networkStatus, setNetworkStatus] = useState<'checking' | 'connected' | 'failed'>('checking');
   const [latency, setLatency] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
-  const [errors, setErrors] = useState<any[]>([]);
+  const [errors, setErrors] = useState<DiagnosticError[]>([]);
 
   // 捕獲當前的啟動和運行期錯誤
   useEffect(() => {
@@ -25,16 +34,16 @@ export function GlobalDiagnosticsDialog({ open, onClose }: GlobalDiagnosticsDial
       const cachedErrors = ErrorFactory.getLocalErrors();
       
       // 合併並去重 (基於 traceId)
-      const allErrors = [...startupErrors];
-      cachedErrors.forEach((ce: any) => {
+      const allErrors: DiagnosticError[] = [...startupErrors];
+      cachedErrors.forEach((ce) => {
         if (!allErrors.find(ae => ae.traceId === ce.traceId)) {
           allErrors.push({
-            type: ce.category,
-            msg: ce.message,
-            details: ce.context ? JSON.stringify(ce.context) : ce.stack,
-            traceId: ce.traceId,
-            code: ce.code,
-            timestamp: ce.timestamp
+            type: String(ce.category || 'Error'),
+            msg: String(ce.message || 'Unknown error'),
+            details: ce.context ? JSON.stringify(ce.context) : String(ce.stack || ''),
+            traceId: String(ce.traceId || ''),
+            code: String(ce.code || 'UNKNOWN'),
+            timestamp: String(ce.timestamp || '')
           });
         }
       });
@@ -128,7 +137,7 @@ export function GlobalDiagnosticsDialog({ open, onClose }: GlobalDiagnosticsDial
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-150 text-slate-800">
-              <Icon name="Terminal" size={16} />
+              <Icon name="terminal" size={16} />
             </div>
             <div>
               <h3 className="text-base font-bold text-slate-900 leading-none">系統除錯診斷與維護</h3>
@@ -146,19 +155,19 @@ export function GlobalDiagnosticsDialog({ open, onClose }: GlobalDiagnosticsDial
               <div className="flex items-center gap-2">
                 {networkStatus === 'checking' && (
                   <>
-                    <Icon name="RefreshCw" size={14} className="text-slate-400 animate-spin" />
+                    <Icon name="refresh-cw" size={14} className="text-slate-400 animate-spin" />
                     <span className="text-xs font-semibold text-slate-600">檢測中...</span>
                   </>
                 )}
                 {networkStatus === 'connected' && (
                   <>
-                    <Icon name="Wifi" size={16} className="text-emerald-500 animate-pulse" />
+                    <Icon name="wifi" size={16} className="text-emerald-500 animate-pulse" />
                     <span className="text-xs font-semibold text-slate-800">連線暢通 ({latency}ms)</span>
                   </>
                 )}
                 {networkStatus === 'failed' && (
                   <>
-                    <Icon name="WifiOff" size={16} className="text-red-500 animate-bounce" />
+                    <Icon name="wifi-off" size={16} className="text-red-500 animate-bounce" />
                     <span className="text-xs font-semibold text-red-600">連線中斷 / 逾時</span>
                   </>
                 )}
@@ -168,7 +177,7 @@ export function GlobalDiagnosticsDialog({ open, onClose }: GlobalDiagnosticsDial
             <div className="bg-slate-50/70 border border-slate-100 rounded-2xl p-4 flex flex-col justify-between">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 block">當前異常記錄</span>
               <div className="flex items-center gap-2">
-                <Icon name="AlertTriangle" size={15} className={errors.length > 0 ? 'text-amber-500' : 'text-slate-400'} />
+                <Icon name="alert-triangle" size={15} className={errors.length > 0 ? 'text-amber-500' : 'text-slate-400'} />
                 <span className="text-xs font-semibold text-slate-700">
                   {errors.length > 0 ? `${errors.length} 個異常待排查` : '無捕獲異常 (良好)'}
                 </span>
@@ -188,7 +197,7 @@ export function GlobalDiagnosticsDialog({ open, onClose }: GlobalDiagnosticsDial
                   }}
                   className="text-[10px] text-slate-400 hover:text-slate-600 active:scale-95 transition-all flex items-center gap-1"
                 >
-                  <Icon name="Trash2" size={10} />
+                  <Icon name="trash-2" size={10} />
                   清空列表
                 </button>
               )}
@@ -236,7 +245,7 @@ export function GlobalDiagnosticsDialog({ open, onClose }: GlobalDiagnosticsDial
             onClick={handleClearCacheAndRestart}
             className="flex-1 px-5 py-3 bg-red-600 hover:bg-red-750 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md shadow-red-200 cursor-pointer"
           >
-            <Icon name="Trash2" size={14} />
+            <Icon name="trash-2" size={14} />
             一鍵徹底清除快取並修復
           </button>
           
@@ -248,7 +257,7 @@ export function GlobalDiagnosticsDialog({ open, onClose }: GlobalDiagnosticsDial
                 : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
             }`}
           >
-            {copied ? <Icon name="Check" size={14} className="animate-pulse" /> : <Icon name="Copy" size={14} />}
+            {copied ? <Icon name="check" size={14} className="animate-pulse" /> : <Icon name="copy" size={14} />}
             {copied ? '診斷報告已複製' : '一鍵複製診斷報告'}
           </button>
         </div>

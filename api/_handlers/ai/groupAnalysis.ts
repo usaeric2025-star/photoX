@@ -55,16 +55,18 @@ export async function processGroupAnalysis(photoIds: string[]) {
     throw new Error('未找到請求的照片詳情，無法分析');
   }
 
-  const photoListText = photos.map((p: any) => {
-    const name = typeof p.name === 'object' ? (p.name as any)?.zh : p.name;
-    const desc = typeof p.description === 'object' ? (p.description as any)?.zh : p.description;
+  const photoListText = photos.map((p) => {
+    const nameObj = typeof p.name === 'object' ? (p.name as Record<string, string> | null) : null;
+    const descObj = typeof p.description === 'object' ? (p.description as Record<string, string> | null) : null;
+    const name = nameObj?.zh || (typeof p.name === 'string' ? p.name : '');
+    const desc = descObj?.zh || (typeof p.description === 'string' ? p.description : '');
     return `- ID: ${p.id} | Name: ${name || 'N/A'} | Desc: ${desc || 'N/A'}`;
   }).join('\n');
 
   const prompt = buildPrompt(photoIds.length, photoListText);
 
   const provider = await getAIProvider();
-  const model = (provider as any).config.model;
+  const model = (provider as unknown as { config: { model: string } }).config.model;
 
 // 封裝重試邏輯
   const callAIWithValidation = async (currentPrompt: string): Promise<typeof GroupAnalysisSchema.infer> => {
@@ -80,8 +82,9 @@ export async function processGroupAnalysis(photoIds: string[]) {
         shouldNormalize: false
       });
       
-      if (result.data && (result.data as any)._fallback) {
-        throw new Error((result.data as any)._error || 'AI group analysis failed');
+      const resData = result.data as Record<string, unknown> | null;
+      if (resData && resData._fallback) {
+        throw new Error((resData._error as string) || 'AI group analysis failed');
       }
 
       const parsed = GroupAnalysisSchema(result.data);

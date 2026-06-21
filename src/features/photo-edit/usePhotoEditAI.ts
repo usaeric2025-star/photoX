@@ -5,7 +5,7 @@ import { showToast } from '@/lib/ui/toast';
 import { ErrorFactory } from '@/lib/error';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTaskExecutor, useAdminMaintenance, useSettings, useCategories, useTags, useFilters } from '@/hooks';
-import { Tag } from '@/types';
+import { Tag, Photo } from '@/types';
 import { analyzePhoto } from '@/features/ai/commands';
 import { useUIStore } from '@/store';
 
@@ -247,7 +247,7 @@ export function usePhotoEditAI() {
           queryClient.invalidateQueries({ queryKey: ['photos', 'ai-result', editPhotoId] });
 
           Object.entries(updates).forEach(([key, value]) => {
-            form.setValue(key as any, value);
+            form.setValue(key, value);
           });
         
           if (editPhotoId) {
@@ -258,17 +258,17 @@ export function usePhotoEditAI() {
               const { queryKeys: qK } = await import('@/lib/query/keys');
               const detailKey = qK.photos.detail(editPhotoId);
               
-              queryClient.setQueryData(detailKey, (oldPhoto: any) => {
+              queryClient.setQueryData(detailKey, (oldPhoto: Photo | undefined) => {
                 if (!oldPhoto) return oldPhoto;
                 return {
                   ...oldPhoto,
-                  name: updates.name ? { zh: updates.name, en: '', ms: '' } : oldPhoto.name,
-                  description: updates.description || oldPhoto.description,
-                  category_id: updates.category_id || oldPhoto.category_id,
-                  tags: updates.tags || oldPhoto.tags,
-                  dimensions: updates.dimensions || oldPhoto.dimensions,
-                  is_ai_dimensions: updates.is_ai_dimensions ?? oldPhoto.is_ai_dimensions,
-                  item_code: updates.item_code || oldPhoto.item_code,
+                  name: updates.name ? { zh: (updates.name as string), en: '', ms: '' } : oldPhoto.name,
+                  description: (updates.description as { zh: string; en: string; ms: string }) || oldPhoto.description,
+                  category_id: (updates.category_id as string) || oldPhoto.category_id,
+                  tags: (updates.tags as Tag[]) || oldPhoto.tags,
+                  dimensions: (updates.dimensions as import('@/types').Dimension[]) || oldPhoto.dimensions,
+                  is_ai_dimensions: (updates.is_ai_dimensions as boolean) ?? oldPhoto.is_ai_dimensions,
+                  item_code: (updates.item_code as string) || oldPhoto.item_code,
                   updated_at: new Date().toISOString()
                 };
               });

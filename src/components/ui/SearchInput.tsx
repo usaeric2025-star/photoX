@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, X } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { useSearchTransition } from '@/hooks';
 import { Input } from '@/components/shared/Input';
 import { cn } from '@/lib/utils';
@@ -43,7 +43,7 @@ export const SearchInput = ({
 
   return (
     <div className={cn("relative", className)}>
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+      <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
       <Input
         type="text"
         value={value}
@@ -61,7 +61,7 @@ export const SearchInput = ({
           className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
           aria-label={clearLabel}
         >
-          <X size={14} />
+          <Icon name="x" size={14} />
         </button>
       )}
     </div>

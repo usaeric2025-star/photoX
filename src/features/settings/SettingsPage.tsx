@@ -5,10 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/useAuthStore';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import React, { useState, Suspense } from 'react';
-import { 
-  ChevronLeft,
-  Settings2, Save, ChevronDown, X
-} from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { api } from '@/lib/api';
 
 import { showToast } from '@/lib/ui/toast';
@@ -27,6 +24,8 @@ import { SettingsTabs } from './SettingsTabs';
 import { SettingsHeader } from './SettingsHeader';
 import { translations } from '@/locales';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
+import { useFormSubmit } from '@/lib/form/useFormSubmit';
+import { type, type Type } from 'arktype';
 
 import { useSyncMutation, useTasks } from '@/hooks';
 
@@ -124,21 +123,26 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
     if (['/admin/tasks', '/admin/error-logs', '/admin/logs', '/admin/diagnostics', '/admin/diagnose'].includes(path)) setActiveTab('status');
   }, [path]);
 
+  const { submit: runSaveSettings, isLoading: isSavingSettings } = useFormSubmit({
+    schema: type('unknown') as unknown as Type<Partial<AppSettings>>,
+    mutationFn: async (s: Partial<AppSettings>) => {
+      await saveSettings(s);
+      return true;
+    },
+    onSuccess: () => {
+      setHasChanges(false);
+    },
+    successMessage: appLang === 'zh' ? '設定已儲存' : 'Settings saved',
+    errorMessage: appLang === 'zh' ? '儲存失敗' : 'Save failed'
+  });
+
   return (
     <div className="flex flex-col h-full w-full bg-brand-bg pt-safe relative">
         <SettingsHeader 
           appLang={appLang}
           hasChanges={hasChanges}
-          onSave={async () => {
-             try {
-               await saveSettings({ ...settings });
-               setHasChanges(false);
-               showToast.success('设置已保存');
-             } catch (err) {
-               logger.error("Save settings failed:", err);
-               ErrorFactory.handleError(err, appLang === 'zh' ? '保存系统设置' : 'Save settings');
-             }
-          }}
+          isSaving={isSavingSettings}
+          onSave={() => runSaveSettings({ ...settings })}
           onClose={() => {
             if (onClose) onClose();
             else navigate({ to: '/admin' });

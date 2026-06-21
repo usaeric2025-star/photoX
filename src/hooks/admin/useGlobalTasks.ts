@@ -34,7 +34,7 @@ export function useGlobalTasks() {
           return [];
         }
         if (!res.ok) return [];
-        const result = await res.json() as any;
+        const result = await res.json() as { success: boolean; data?: { id: string; status: string; progress: number; processed?: number; total?: number; message?: string; error?: string }[] };
         return (result && result.success && Array.isArray(result.data)) ? result.data : [];
       } catch (err) {
         logger.error('Failed to fetch maintenance jobs:', err);
@@ -48,7 +48,7 @@ export function useGlobalTasks() {
     refetchInterval: (query) => {
       if (!isAdmin) return false;
       if (typeof document !== 'undefined' && document.hidden) return false;
-      const rJobs = query.state.data as any[];
+      const rJobs = query.state.data as { status: string }[];
       const hasRunning = Array.isArray(rJobs) && rJobs.some(job => job && job.status === 'processing');
       const isStatusScreen = ['/admin/tasks', '/admin/diagnostics', '/admin/diagnose', '/admin/history_maintenance'].includes(path);
       return (hasRunning || isStatusScreen) ? 5000 : false;

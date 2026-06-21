@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { sql } from 'drizzle-orm';
+import { SupabaseClient } from "@supabase/supabase-js";
 import { db, furnitureItems, groups as groupsTable, categories as categoriesTable, manufacturers as manufacturersTable, photoTags as photoTagsTable, secrets as secretsTable, tags as tagsTable } from '../../_lib/db/index.js';
 import { getR2Client } from "../../_lib/storage.js";
 import { getServerEnv } from "../../_shared/envSchema.js";
@@ -115,7 +116,7 @@ adminDiagnose.get("/", async (c) => {
       const diagnosticResults = await Promise.all(
         tasksToRun.map(task => 
           task.run({
-            supabase: null as any, 
+            supabase: null as unknown as SupabaseClient, 
             photos,
             groups,
             categories,

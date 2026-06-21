@@ -1,4 +1,4 @@
-import { Sparkles, X as CloseIcon, Info } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { Dimension, TranslationType } from '@/types';
 import { safeArray } from '@/lib/utils';
 import { showToast } from '@/lib/ui/toast';
@@ -66,7 +66,7 @@ export function DimensionEditor({
             onClick={() => showToast.info('AI 识别可自动提取照片中的尺寸规格信息')}
             className="text-slate-300 hover:text-slate-500 transition-colors"
           >
-            <Info size={12} />
+            <Icon name="info" size={12} />
           </button>
         </div>
         <div className="flex items-center gap-2">
@@ -77,7 +77,7 @@ export function DimensionEditor({
               className={`min-h-[44px] min-w-[44px] text-[9px] font-black px-3 py-1 rounded-xl border flex items-center gap-1.5 transition-all shadow-sm active:scale-95 ${isAnalyzing ? 'bg-slate-50 text-slate-400 border-slate-100' : 'bg-purple-50 text-purple-600 border-purple-100 hover:bg-purple-100'}`}
               title={t.aiRecognize}
             >
-              <Sparkles size={16} className={isAnalyzing ? 'animate-spin' : ''} /> 
+              <Icon name="sparkles" size={16} className={isAnalyzing ? 'animate-spin' : ''} /> 
               <span className="hidden sm:inline">{isAnalyzing ? '识别中...' : 'AI 识别'}</span>
               <span className="sm:hidden">{isAnalyzing ? '...' : 'AI'}</span>
             </button>
@@ -116,7 +116,7 @@ export function DimensionEditor({
                   className="absolute -top-2 -right-2 sm:top-2 sm:right-2 p-1.5 bg-white sm:bg-transparent text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all shadow-sm sm:shadow-none border border-slate-100 sm:border-0"
                   title={t.deleteSpec}
                 >
-                  <CloseIcon size={16} />
+                  <Icon name="x" size={16} />
                 </button>
               )}
               <div className="grid grid-cols-5 gap-2">
@@ -125,7 +125,7 @@ export function DimensionEditor({
                     <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">{t.part}</span>
                     {dim.is_ai && (
                       <div className="flex items-center gap-1 text-purple-600 bg-purple-50 px-2 py-1 rounded-lg border border-purple-100 shadow-sm">
-                        <Sparkles size={10} className="animate-pulse" />
+                        <Icon name="sparkles" size={10} className="animate-pulse" />
                         <span className="text-[9px] font-black tracking-tighter">AI 识别</span>
                       </div>
                     )}

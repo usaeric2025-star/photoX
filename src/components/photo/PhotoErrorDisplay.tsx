@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from '@/hooks/core/useTranslation';
 import { classifyPhotoError, getLocalizedError } from '@/lib/error/photoErrors';
 import { showErrorToast, showSuccessToast } from '@/lib/error/errorUI';
-import { WifiOff, ShieldAlert, FolderOpen, ServerCrash, AlertCircle, RefreshCw, Copy, Check } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/lib/utils';
 
 interface PhotoErrorDisplayProps {
@@ -43,13 +43,13 @@ Message: ${message}
     }
   };
 
-  const IconComponent = (() => {
+  const iconName = (() => {
     switch (errorType) {
-      case 'network': return WifiOff;
-      case 'unauthorized': return ShieldAlert;
-      case 'not_found': return FolderOpen;
-      case 'server': return ServerCrash;
-      default: return AlertCircle;
+      case 'network': return 'wifi-off';
+      case 'unauthorized': return 'shield-alert';
+      case 'not_found': return 'folder-open';
+      case 'server': return 'server-crash';
+      default: return 'alert-circle';
     }
   })();
 
@@ -69,7 +69,7 @@ Message: ${message}
         "inline-flex items-center justify-center w-20 h-20 rounded-full mb-2 transition-transform duration-500 hover:rotate-12",
         errorType === 'network' ? 'bg-amber-50 text-amber-500' : 'bg-red-50 text-red-500'
       )}>
-        <IconComponent className="w-10 h-10" />
+        <Icon name={iconName as any} className="w-10 h-10" />
       </div>
 
       <div className="space-y-3">
@@ -113,7 +113,7 @@ Message: ${message}
             className="absolute top-4 right-4 p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-all duration-200 opacity-0 group-hover:opacity-100 shadow-lg border border-slate-700 active:scale-95"
             title="复制诊断信息"
           >
-            {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? <Icon name="check" className="w-3.5 h-3.5 text-green-400" /> : <Icon name="copy" className="w-3.5 h-3.5" />}
           </button>
         </div>
         
@@ -128,7 +128,7 @@ Message: ${message}
           onClick={handleActionClick}
           className="flex-1 inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-slate-900 text-white rounded-2xl text-sm font-bold hover:bg-black transition-all duration-300 shadow-lg shadow-slate-200 hover:shadow-xl hover:-translate-y-0.5 active:scale-95 cursor-pointer min-h-[44px]"
         >
-          <RefreshCw className="w-4 h-4" />
+          <Icon name="refresh-cw" className="w-4 h-4" />
           {localized.action}
         </button>
       </div>

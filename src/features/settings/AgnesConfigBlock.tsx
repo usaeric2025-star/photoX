@@ -58,7 +58,7 @@ export function AgnesConfigBlock({
             }}
             className={`text-[8px] font-black px-2 py-0.5 rounded-full transition-colors ${isEditingAgnes ? 'bg-slate-200 text-slate-600' : 'bg-blue-600 text-white'}`}
           >
-            {isEditingAgnes ? (translations[appLang as keyof typeof translations] as any)?.cancel || '取消' : (translations[appLang as keyof typeof translations] as any)?.edit || '編輯'}
+            {isEditingAgnes ? t.cancel || '取消' : t.edit || '編輯'}
           </button>
         </div>
       </div>

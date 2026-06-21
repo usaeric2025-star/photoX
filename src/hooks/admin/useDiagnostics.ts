@@ -6,6 +6,9 @@ import { DiagnosticsReport } from '@/types/diagnostics';
 import { queryKeys } from '@/lib/query/keys';
 import { useTaskExecutor } from '../core/useTaskExecutor';
 import { useUIStore } from '@/store/useUIStore';
+import { StorageAuditResSchema } from '../../../api/_shared/apiContractSchema';
+
+type StorageAuditRes = typeof StorageAuditResSchema.infer;
 
 /**
  * [ATOMIC-HOOK] useDiagnostics
@@ -20,9 +23,9 @@ export function useDiagnostics() {
     queryKey: queryKeys.diagnostics.audit(),
     queryFn: async () => {
       const res = await api.storage.audit.$get();
-      const data = await res.json() as any;
+      const data = await res.json() as { success: boolean; data?: unknown; error?: string };
       if (!data.success) throw new Error('对账审计失败');
-      return data.data;
+      return data.data as StorageAuditRes;
     },
     enabled: false,
     retry: false,
@@ -46,10 +49,10 @@ export function useDiagnostics() {
         async () => {
           const res = await api.admin.repair.$post({ json: { issueId } });
           if (!res.ok) {
-            const errorData = await res.json() as any;
+            const errorData = await res.json() as { error?: string };
             throw ErrorFactory.wrap(new Error(errorData?.error || `HTTP ${res.status}`), 'runRepair', issueId);
           }
-          return res.json() as any;
+          return res.json() as Promise<{ success: boolean; data?: unknown; error?: string }>;
         }
       );
     },
@@ -84,7 +87,7 @@ export function useDiagnostics() {
     queryFn: async () => {
       const res = await api.admin.diagnose.r2.$get();
       if (!res.ok) throw new Error('R2 存储测试未通过');
-      const data = await res.json() as any;
+      const data = await res.json() as { success: boolean; data?: unknown; error?: string };
       if (!data.success) throw new Error(data.error || 'R2 存储测试未通过');
       return data;
     },
@@ -108,7 +111,7 @@ export function useDiagnostics() {
       appLang === 'zh' ? 'Worker 性能测试' : 'Worker Performance Test',
       async () => {
         const res = await api.admin.repair.$post({ json: { issueId: 'diagnose_worker' } });
-        const result = await res.json() as any;
+        const result = await res.json() as { success: boolean; data?: unknown; error?: string };
         if (!result.success) throw new Error(result.error || 'Worker 检查失败');
         return result.data;
       }
@@ -134,7 +137,7 @@ export function useDiagnostics() {
         appLang === 'zh' ? '執行全域維護清理 (Daily Cleanup)' : 'Run Daily Maintenance',
         async () => {
           const res = await api.admin.maintenance['daily-cleanup'].$post();
-          const data = await res.json() as any;
+          const data = await res.json() as { success: boolean; data?: unknown; error?: string };
           if (!data.success) throw new Error(data.error || 'Cleanup failed');
           return data;
         }

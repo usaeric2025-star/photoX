@@ -58,7 +58,7 @@ export function OpenRouterConfigBlock({
             }}
             className={`text-[8px] font-black px-2 py-0.5 rounded-full transition-colors ${isEditingOpenRouter ? 'bg-slate-200 text-slate-600' : 'bg-brand-navy text-white'}`}
           >
-            {isEditingOpenRouter ? (translations[appLang as keyof typeof translations] as any)?.cancel || '取消' : (translations[appLang as keyof typeof translations] as any)?.edit || '編輯'}
+            {isEditingOpenRouter ? t.cancel || '取消' : t.edit || '編輯'}
           </button>
         </div>
       </div>

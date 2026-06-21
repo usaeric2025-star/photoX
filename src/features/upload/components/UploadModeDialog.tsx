@@ -1,6 +1,6 @@
 import React from 'react';
 import { NativeDialog } from '@/components/ui/NativeDialog';
-import { Layers, ImagePlus } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 
 interface UploadModeDialogProps {
   open: boolean;
@@ -17,7 +17,7 @@ export function UploadModeDialog({ open, onOpenChange, onSelectMode }: UploadMod
           className="w-full flex items-center gap-4 p-4 rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50 transition-all text-left"
         >
           <div className="p-3 bg-blue-100 text-blue-600 rounded-lg shrink-0">
-            <ImagePlus size={24} />
+            <Icon name="image-plus" size={24} />
           </div>
           <div>
             <div className="font-semibold text-slate-800">单图上传</div>
@@ -30,7 +30,7 @@ export function UploadModeDialog({ open, onOpenChange, onSelectMode }: UploadMod
           className="w-full flex items-center gap-4 p-4 rounded-xl border border-slate-200 hover:border-brand-primary hover:bg-brand-primary/5 transition-all text-left"
         >
           <div className="p-3 bg-brand-primary/10 text-brand-primary rounded-lg shrink-0">
-            <Layers size={24} />
+            <Icon name="layers" size={24} />
           </div>
           <div>
             <div className="font-semibold text-slate-800">批量上传后合组</div>
