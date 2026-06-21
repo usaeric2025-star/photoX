@@ -24,7 +24,11 @@ export const updateHandler = (app: Hono) => {
         };
 
         for (const [key, val] of Object.entries(updates)) {
-            mappedUpdates[fieldMap[key] || key] = val;
+            let parsedVal = val;
+            if (key === 'category_id' && typeof val === 'string') {
+                parsedVal = parseInt(val, 10);
+            }
+            mappedUpdates[fieldMap[key] || key] = parsedVal;
         }
 
         const data = await db
@@ -77,7 +81,12 @@ export const updateHandler = (app: Hono) => {
         };
 
         for (const [key, val] of Object.entries(updateObj)) {
-            mappedUpdates[fieldMap[key] || key] = val;
+            let parsedVal = val;
+            if (key === 'category_id' && typeof val === 'string') {
+                parsedVal = parseInt(val, 10);
+                if (isNaN(parsedVal as number)) parsedVal = null;
+            }
+            mappedUpdates[fieldMap[key] || key] = parsedVal;
         }
 
         // Special handling for group cover

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layers, ShieldAlert, Check } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { PhotoListItem } from '@/types/api';
 import { cn } from '@/lib/utils';
 import { useTranslation, useIsManagement } from '@/hooks';
@@ -32,7 +32,7 @@ export const PhotoStatusBadges = ({
           "px-2 py-0.5 sm:px-2.5 sm:py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold flex items-center gap-1 shadow-sm backdrop-blur-xl transition-all duration-300 min-w-[36px] justify-center",
           "bg-surface-overlay text-text-main border border-white/40"
         )}>
-          <Layers size={11} className="shrink-0 text-primary" />
+          <Icon name="Layers" size={11} className="shrink-0 text-primary" />
           <span className="leading-none tabular-nums mt-[0.5px] px-0.5">
             {photo.memberCount}
           </span>
@@ -42,7 +42,7 @@ export const PhotoStatusBadges = ({
       {/* Hidden Status - Apple Style */}
       {isManagement && photo.isHidden && (
         <div className="bg-danger/95 backdrop-blur-md text-text-on-primary px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1.5 shadow-sm border border-white/20 uppercase tracking-tight">
-          <ShieldAlert size={12} className="shrink-0" />
+          <Icon name="ShieldAlert" size={12} className="shrink-0" />
           <span>{hiddenLabel}</span>
         </div>
       )}
@@ -93,6 +93,6 @@ export const PhotoSelectionIndicator = ({ isSelected }: { isSelected: boolean })
       ? "bg-apple-blue border-apple-blue scale-110 shadow-[var(--shadow-apple-md)]" 
       : "bg-black/10 border-white/40 opacity-0 group-hover:opacity-100"
   )}>
-    {isSelected && <Check size={14} className="text-white" />}
+    {isSelected && <Icon name="Check" size={14} className="text-white" />}
   </div>
 );

@@ -1,8 +1,7 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { DynamicIcon } from '../../shared/DynamicIcon';
-import { Camera } from '@/components/ui/Icon'; // Keep one or two critical ones as standard imports for P0 performance
+import { Icon } from '@/components/ui/Icon'; // Keep one or two critical ones as standard imports for P0 performance
 import { useAuthStore } from '@/store/useAuthStore';
 import { useUIStore, useShallow, usePublicSettings, usePermission } from '@/hooks';
 import { NativePopover } from '@/components/ui/NativePopover';
@@ -78,7 +77,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
               "w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shadow-sm text-text-on-primary shrink-0",
               role === 'admin' ? 'bg-primary' : role === 'staff' ? 'bg-warning' : 'bg-primary'
             )}>
-              <Camera size={18} />
+              <Icon name="Camera" size={18} />
             </div>
             <span className="text-base sm:text-xl font-bold tracking-tight text-text-main">
               PhotoX
@@ -112,7 +111,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
             className="w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 bg-surface-soft text-text-sub hover:text-text-main disabled:opacity-50"
             title={t.refresh}
           >
-            <DynamicIcon name="refresh-cw" size={18} className={isRefreshing ? 'animate-spin' : ''} />
+            <Icon name="RefreshCw" size={18} className={isRefreshing ? 'animate-spin' : ''} />
           </button>
         )}
 
@@ -122,7 +121,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
           className="w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 bg-surface-soft text-text-sub hover:text-text-main"
           title={isAdmin ? t.viewModePublic : t.viewModeAdmin}
         >
-          <DynamicIcon name="layout-dashboard" size={18} />
+          <Icon name="LayoutDashboard" size={18} />
         </button>
 
         {/* 4. 菜单 (語言、登錄、退出) */}
@@ -130,7 +129,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
           align="end"
           trigger={
             <div className="h-10 w-10 flex items-center justify-center text-text-sub hover:bg-surface-soft rounded-full transition-all cursor-pointer shrink-0">
-              <DynamicIcon name="menu" size={18} />
+            <Icon name="Menu" size={18} />
             </div>
           }
         >
@@ -141,7 +140,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
                   {user.photo_url && user.photo_url.trim() !== '' ? (
                     <img src={user.photo_url} referrerPolicy="no-referrer" alt="" />
                   ) : (
-                    <DynamicIcon name="user" size={10} />
+                  <Icon name="User" size={10} />
                   )}
                 </div>
                 {user.email?.split("@")[0]}
@@ -164,54 +163,10 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
                       onClick={() => navigate({ to: '/admin' })}
                       className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-pointer outline-none hover:bg-blue-50 text-gray-700"
                     >
-                      <DynamicIcon name="layout-dashboard" size={16} />
+                      <Icon name="LayoutDashboard" size={16} />
                       {t.adminPanel}
                     </button>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => {
-                        navigate({ to: '/admin/settings' });
-                    }}
-                    className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-pointer outline-none hover:bg-blue-50 text-gray-700"
-                  >
-                    <DynamicIcon name="settings" size={16} />
-                    {t.systemSettings}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigate({ to: '/admin/tasks' })}
-                    className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-pointer outline-none hover:bg-blue-50 text-gray-700"
-                  >
-                    <DynamicIcon name="layout-grid" size={16} />
-                    {t.taskCenter}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigate({ to: '/admin/diagnostics' })}
-                    className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-pointer outline-none hover:bg-blue-50 text-gray-700"
-                  >
-                    <DynamicIcon name="terminal" size={16} />
-                    {t.systemLogs}
-                  </button>
-                  <a
-                    href="/stats.html"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-pointer outline-none hover:bg-blue-50 text-gray-700"
-                  >
-                    <DynamicIcon name="bar-chart-3" size={16} />
-                    {lang === 'zh' ? '依赖体积分析' : 'Bundle Analyzer'}
-                  </a>
-                  <a
-                    href="/api/error-log"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-pointer outline-none hover:bg-blue-50 text-gray-700"
-                  >
-                    <DynamicIcon name="shield-alert" size={16} />
-                    {lang === 'zh' ? '系统日志 API' : 'System Logs API'}
-                  </a>
                 </>
               )}
               <div className="mt-1">
@@ -227,7 +182,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
                   onClick={() => signOut()}
                   className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-pointer outline-none hover:bg-red-50 text-red-600"
                 >
-                  <DynamicIcon name="log-out" size={16} />
+                <Icon name="LogOut" size={16} />
                   {t.signOutAccount}
                 </button>
               </>

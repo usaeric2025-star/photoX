@@ -36,7 +36,10 @@ export async function updatePhoto(id: string, initialUpdates: Partial<Photo>): P
     json: { id, updates: dbUpdates }
   });
   
-  if (!res.ok) throw new Error('Update failed');
+  if (!res.ok) {
+    const errBody = await res.json().catch(() => ({})) as any;
+    throw new Error(errBody?.error || 'Update failed');
+  }
   const body = await res.json() as { data?: Record<string, unknown> };
   const rawData = body.data;
   return rawData ? mapSupabasePhoto(rawData as unknown as Record<string, unknown> & { id: string, name: string, image_url: string, created_at: string }) : null;

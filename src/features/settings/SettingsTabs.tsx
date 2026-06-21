@@ -1,5 +1,5 @@
 import React from 'react';
-import { DynamicIcon } from '@/components/shared/DynamicIcon';
+import { Icon } from '@/components/ui/Icon';
 
 interface SettingsTabsProps {
   activeTab: string;
@@ -8,10 +8,10 @@ interface SettingsTabsProps {
 
 export function SettingsTabs({ activeTab, onTabChange }: SettingsTabsProps) {
   const tabs = [
-    { id: 'general', label: '核心配置', icon: 'settings', subLabel: 'General' },
-    { id: 'ai', label: '智能核心', icon: 'cpu', subLabel: 'AI Engine' },
-    { id: 'assets', label: '資產管理', icon: 'layout-grid', subLabel: 'Assets' },
-    { id: 'status', label: '系統監控', icon: 'activity', subLabel: 'Health' },
+    { id: 'general', label: '核心配置', icon: 'Settings', subLabel: 'General' },
+    { id: 'ai', label: '智能核心', icon: 'Cpu', subLabel: 'AI Engine' },
+    { id: 'assets', label: '資產管理', icon: 'LayoutGrid', subLabel: 'Assets' },
+    { id: 'status', label: '系統監控', icon: 'Activity', subLabel: 'Health' },
   ] as const;
 
   return (
@@ -29,7 +29,7 @@ export function SettingsTabs({ activeTab, onTabChange }: SettingsTabsProps) {
                 : 'bg-white border-brand-navy/5 text-brand-navy/60 hover:border-brand-navy/10 active:scale-95'
             }`}
           >
-            <DynamicIcon name={tab.icon} size={20} className={isActive ? 'text-brand-gold' : 'text-brand-navy/40'} />
+            <Icon name={tab.icon as any} size={20} className={isActive ? 'text-brand-gold' : 'text-brand-navy/40'} />
             <span className="text-[10px] font-black uppercase tracking-tighter mt-1">{tab.label}</span>
             <span className="text-[8px] opacity-40 font-bold uppercase tracking-widest">{tab.subLabel}</span>
           </button>

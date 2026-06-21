@@ -1,8 +1,8 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { useTasks, type BackgroundTask } from '@/hooks';
-import { Loader2, CheckCircle2, XCircle, X } from '@/components/ui/Icon';
-import { motion, AnimatePresence } from 'motion/react';
+import { Icon } from '@/components/ui/Icon';
+import { LazyMotion, domAnimation, m, AnimatePresence } from 'motion/react';
 
 export function BackgroundTaskPanel() {
   const { tasks, removeTask, cancelTask, isAvoidingSelection } = useTasks();
@@ -39,50 +39,48 @@ export function BackgroundTaskPanel() {
   const portalRoot = document.getElementById('portal-root') || document.body;
 
   const style: React.CSSProperties = {
+    margin: 0,
     top: 'auto',
     right: 'auto',
     bottom: isAvoidingSelection ? '6.5rem' : '1.5rem',
     left: '1.5rem',
-    margin: 0,
-    inset: 'auto auto auto auto', 
     transition: 'bottom 0.3s ease-in-out'
   };
 
   return createPortal(
-    <div 
-      ref={panelRef}
-      popover="manual"
-      className="fixed z-[2147483647] flex flex-col gap-3 w-80 pointer-events-none bg-transparent m-0 p-0 overflow-visible border-none"
-      style={{
-        ...style,
-        bottom: isAvoidingSelection ? '6.5rem' : '1.5rem',
-      }}
-    >
-      <div className="pointer-events-auto bg-white rounded-2xl shadow-xl border border-slate-100 flex items-center justify-between px-4 py-3">
-        <div className="flex items-center gap-2">
-          <Loader2 size={16} className="text-blue-500 animate-spin" />
-          <span className="text-xs font-bold text-slate-700">任务管理中心</span>
+    <LazyMotion features={domAnimation}>
+      <div 
+        ref={panelRef}
+        popover="manual"
+        className="fixed z-[2147483647] flex flex-col gap-2 w-64 pointer-events-none bg-transparent m-0 p-0 overflow-visible border-none"
+        style={style}
+      >
+        <div className="pointer-events-auto bg-white rounded-2xl shadow-lg border border-slate-100 flex items-center justify-between px-3 py-2">
+          <div className="flex items-center gap-1.5">
+            <Icon name="Loader2" size={14} className="text-blue-500 animate-spin" />
+            <span className="text-[11px] font-bold text-slate-700">任务中心</span>
+          </div>
+          <button 
+             type="button"
+             onClick={() => setIsExpanded(!isExpanded)}
+             className="text-[10px] bg-slate-50 px-2 py-0.5 rounded-lg text-slate-500 hover:text-slate-800"
+          >
+            {isExpanded ? '收起' : '展开'} ({activeTasks.length})
+          </button>
         </div>
-        <button 
-           type="button"
-           onClick={() => setIsExpanded(!isExpanded)}
-           className="text-[10px] bg-slate-100 px-2 py-1 rounded-lg text-slate-500 hover:text-slate-800"
-        >
-          {isExpanded ? '收起' : '展开'} ({activeTasks.length})
-        </button>
-      </div>
 
-      <AnimatePresence mode="popLayout">
-        {isExpanded && activeTasks.slice(-3).map((task) => (
-          <TaskItem 
-            key={task.id} 
-            task={task} 
-            onRemove={() => removeTask(task.id)}
-            onCancel={() => cancelTask(task.id)}
-          />
-        ))}
-      </AnimatePresence>
-    </div>,
+        <AnimatePresence mode="popLayout">
+          {isExpanded && activeTasks.slice(-3).map((task) => (
+            <TaskItem 
+              key={task.id} 
+              task={task} 
+              onRemove={() => removeTask(task.id)}
+              onCancel={() => cancelTask(task.id)}
+            />
+          ))}
+        </AnimatePresence>
+      </div>
+    </LazyMotion>,
     portalRoot
   );
 }
@@ -94,31 +92,31 @@ function TaskItem({ task, onRemove, onCancel }: { task: BackgroundTask; onRemove
   const isCancelled = task.status === 'cancelled';
 
   return (
-    <motion.div
+    <m.div
       layout
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className={`pointer-events-auto bg-white rounded-2xl shadow-2xl border p-4 flex flex-col gap-3 overflow-hidden ${
+      className={`pointer-events-auto bg-white rounded-2xl shadow-lg border p-3 flex flex-col gap-2 overflow-hidden ${
         isError ? 'border-red-100' : isCompleted ? 'border-green-100' : 'border-slate-100'
       }`}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className={`p-2 rounded-xl shrink-0 ${
+      <div className="flex items-start justify-between gap-2.5">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className={`p-1.5 rounded-lg shrink-0 ${
             isError ? 'bg-red-50 text-red-500' : 
             isCompleted ? 'bg-green-50 text-green-500' : 
             'bg-blue-50 text-blue-500'
           }`}>
-            {isRunning && <Loader2 size={16} className="animate-spin" />}
-            {isCompleted && <CheckCircle2 size={16} />}
-            {isError && <XCircle size={16} />}
+            {isRunning && <Icon name="Loader2" size={14} className="animate-spin" />}
+            {isCompleted && <Icon name="CheckCircle2" size={14} />}
+            {isError && <Icon name="XCircle" size={14} />}
           </div>
           <div className="min-w-0">
-            <h4 className="text-[11px] font-black uppercase tracking-tight text-slate-800 truncate">
+            <h4 className="text-[10px] font-bold uppercase tracking-tight text-slate-800 truncate">
               {task.name}
             </h4>
-            <p className="text-[10px] text-slate-500 truncate leading-tight mt-0.5">
+            <p className="text-[9px] text-slate-500 truncate leading-tight mt-0.5">
               {task.message}
             </p>
           </div>
@@ -131,7 +129,7 @@ function TaskItem({ task, onRemove, onCancel }: { task: BackgroundTask; onRemove
             className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
             title="关闭 / Close"
           >
-            <X size={14} />
+            <Icon name="X" size={14} />
           </button>
         ) : (
           <button 
@@ -141,7 +139,7 @@ function TaskItem({ task, onRemove, onCancel }: { task: BackgroundTask; onRemove
             className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-red-500 transition-colors"
             title="取消 / Cancel"
           >
-            <X size={14} />
+            <Icon name="X" size={14} />
           </button>
         )}
       </div>
@@ -149,7 +147,7 @@ function TaskItem({ task, onRemove, onCancel }: { task: BackgroundTask; onRemove
       {isRunning && (
         <div className="space-y-1.5">
           <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-            <motion.div 
+            <m.div 
               className="h-full bg-blue-500" 
               initial={{ width: 0 }}
               animate={{ width: `${task.progress}%` }}
@@ -171,6 +169,6 @@ function TaskItem({ task, onRemove, onCancel }: { task: BackgroundTask; onRemove
           关闭
         </button>
       )}
-    </motion.div>
+    </m.div>
   );
 }

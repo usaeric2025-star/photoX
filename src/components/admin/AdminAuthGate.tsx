@@ -1,5 +1,5 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { Loader2 } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { useAuthStore } from '@/store/useAuthStore';
 import { usePublicSettings } from '@/hooks';
 import { useLocalStorage } from '@/hooks/core/useLocalStorage';
@@ -38,7 +38,7 @@ export function AdminAuthGate({ children }: AdminAuthGateProps) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center justify-center">
-          <Loader2 className="animate-spin text-blue-500 mb-4" size={32} />
+          <Icon name="Loader2" className="animate-spin text-blue-500 mb-4" size={32} />
           <p className="text-sm font-bold text-slate-400 uppercase tracking-widest animate-pulse">
             验证身份中 / Authenticating...
           </p>
@@ -53,7 +53,7 @@ export function AdminAuthGate({ children }: AdminAuthGateProps) {
       <div className="h-screen w-full bg-slate-50">
         <Suspense fallback={
           <div className="flex h-screen w-full items-center justify-center">
-            <Loader2 className="animate-spin text-blue-500" size={32} />
+            <Icon name="Loader2" className="animate-spin text-blue-500" size={32} />
           </div>
         }>
           <LoginScreen signIn={signIn} />

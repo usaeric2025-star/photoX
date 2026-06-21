@@ -215,6 +215,10 @@ export class ErrorFactory {
   static handleError(error: unknown, context: string, silent: boolean = false): void {
     if (silent) return;
     this.capture(error);
+    const msg = this.extractErrorMessage(error);
+    import('@/lib/ui/toast').then(({ showToast }) => {
+      showToast.error(`${context}失败: ${msg}`);
+    });
   }
 
   static async logResult(payload: any, level: 'success' | 'error', context: any) {

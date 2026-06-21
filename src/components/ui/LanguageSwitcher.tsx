@@ -59,8 +59,8 @@ export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dro
         {langs.map(l => (
           <button
             key={l.code}
+            type="button"
             onClick={(e) => {
-              e.stopPropagation();
               update({ appLang: l.code as any });
             }}
             className={`flex-1 flex items-center justify-center h-full rounded-xl text-[11px] font-black tracking-tight transition-all duration-300 ${

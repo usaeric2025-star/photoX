@@ -1,7 +1,6 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React from 'react';
-import { Camera } from '@/components/ui/Icon';
-import { DynamicIcon } from '../../shared/DynamicIcon';
+import { Icon } from '@/components/ui/Icon';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useUIStore, useSettings, useAdminBatchActions, usePermission } from '@/hooks';
 import { useQuery } from '@tanstack/react-query';
@@ -83,7 +82,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
           ) : (
             <div className="flex items-center gap-1 font-bold tracking-tighter">
               <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl flex items-center justify-center shadow-sm text-white shrink-0 ${role === 'admin' ? 'bg-indigo-600' : role === 'staff' ? 'bg-amber-600' : 'bg-slate-800'}`}>
-                <Camera size={14} className="sm:size-4 stroke-[2.5]" />
+                <Icon name="Camera" size={14} className="sm:size-4 stroke-[2.5]" />
               </div>
               <span className="text-sm sm:text-lg font-black tracking-tighter">
                 PHOT<span className={`${role === 'admin' ? 'text-indigo-600' : role === 'staff' ? 'text-amber-600' : 'text-slate-500'}`}>O</span>X
@@ -132,7 +131,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
             }`}
             title={isMultiSelect ? t.exitSelectMode : t.selectModeToggle}
           >
-            <DynamicIcon name="check-square" className="size-4.5 sm:size-5" />
+            <Icon name="CheckSquare" className="size-4.5 sm:size-5" />
           </button>
   
           {/* AI 智能识别 按钮 next to check screen */}
@@ -147,7 +146,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
             className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 border bg-white text-purple-600 border-purple-200 hover:bg-purple-50 hover:text-purple-700 shadow-sm"
             title={t.aiSmartIdentify}
           >
-            <DynamicIcon name="sparkles" className="size-4.5 sm:size-5 animate-pulse" />
+            <Icon name="Sparkles" className="size-4.5 sm:size-5 animate-pulse" />
           </button>
   
           {/* 3. 切换至前台体验按钮 (标准 LayoutDashboard 样式) */}
@@ -156,7 +155,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
             className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 border bg-white text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-900 shadow-sm"
             title={t.viewModePublic}
           >
-            <DynamicIcon name="layout-dashboard" className="size-4.5 sm:size-5" />
+            <Icon name="LayoutDashboard" className="size-4.5 sm:size-5" />
           </button>
   
           {/* 4. 菜单 (语言、登录、退出) */}
@@ -164,7 +163,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
             align="end"
             trigger={
               <div className="h-9 w-9 sm:h-10 sm:w-10 flex items-center justify-center text-slate-600 hover:bg-slate-200 rounded-full transition-all cursor-pointer shrink-0 border border-slate-200 bg-white">
-                <DynamicIcon name="menu" size={18} className="sm:size-5" />
+                <Icon name="Menu" size={18} className="sm:size-5" />
               </div>
             }
           >
@@ -175,7 +174,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
                     {user.photo_url && user.photo_url.trim() !== '' ? (
                       <img src={user.photo_url} referrerPolicy="no-referrer" alt="" loading="lazy" />
                     ) : (
-                      <DynamicIcon name="user" size={10} />
+                      <Icon name="User" size={10} />
                     )}
                   </div>
                   {user.email?.split("@")[0]}
@@ -197,7 +196,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
                       onClick={() => navigate({ to: '/admin/settings' })}
                       className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-pointer outline-none hover:bg-blue-50 text-gray-700"
                     >
-                      <DynamicIcon name="settings" size={16} />
+                      <Icon name="Settings" size={16} />
                       {t.systemSettings}
                     </button>
                     <button
@@ -205,7 +204,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
                       onClick={() => navigate({ to: '/admin/tasks' })}
                       className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-pointer outline-none hover:bg-blue-50 text-gray-700"
                     >
-                      <DynamicIcon name="layout-grid" size={16} />
+                      <Icon name="LayoutGrid" size={16} />
                       {t.taskCenter}
                     </button>
                     <button
@@ -213,27 +212,9 @@ export function AdminHeader({ className }: AdminHeaderProps) {
                       onClick={() => navigate({ to: '/admin/diagnostics' })}
                       className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-pointer outline-none hover:bg-blue-50 text-gray-700"
                     >
-                      <DynamicIcon name="terminal" size={16} />
+                      <Icon name="Terminal" size={16} />
                       {t.systemLogs}
                     </button>
-                    <a
-                      href="/stats.html"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-pointer outline-none hover:bg-blue-50 text-gray-700"
-                    >
-                      <DynamicIcon name="bar-chart-3" size={16} />
-                      {lang === 'zh' ? '依赖体积分析' : 'Bundle Analyzer'}
-                    </a>
-                    <a
-                      href="/api/error-log"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-pointer outline-none hover:bg-blue-50 text-gray-700"
-                    >
-                      <DynamicIcon name="shield-alert" size={16} />
-                      {lang === 'zh' ? '系统日志 API' : 'System Logs API'}
-                    </a>
                   </>
                 )}
                 <div className="mt-1">
@@ -249,7 +230,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
                     onClick={() => signOut()}
                     className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-pointer outline-none hover:bg-red-50 text-red-600"
                   >
-                    <DynamicIcon name="log-out" size={16} />
+                    <Icon name="LogOut" size={16} />
                     {t.signOutAccount}
                   </button>
                 </>
