@@ -1,5 +1,4 @@
 import { AppErrorBoundary } from '@/components/layout/AppErrorBoundary';
-import { DialogContainer } from '@/components/layout/DialogContainer';
 import { ConfirmProvider } from './context/ConfirmContext';
 import { RouterProvider } from '@tanstack/react-router';
 import { router } from './router/index';
@@ -115,7 +114,6 @@ export default function AppRoutes() {
       <ConfirmProvider>
         <RouterProvider router={router} context={routerContext} />
       </ConfirmProvider>
-      <DialogContainer />
       <PortalRoot />
       <Analytics />
     </AppErrorBoundary>

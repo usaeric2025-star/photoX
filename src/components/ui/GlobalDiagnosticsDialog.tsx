@@ -5,6 +5,8 @@ import { logger } from '@/lib/logger';
 import { clearCacheAndReload } from '@/lib/recovery/clearCacheAndReload';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
+import { copyToClipboard } from '@/utils/clipboard';
+
 interface GlobalDiagnosticsDialogProps {
   open: boolean;
   onClose: () => void;
@@ -110,20 +112,7 @@ export function GlobalDiagnosticsDialog({ open, onClose }: GlobalDiagnosticsDial
 
   const handleCopy = () => {
     const text = getFullDiagnosticText();
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    }).catch(() => {
-      // 降級方案
-      const temp = document.createElement('textarea');
-      temp.value = text;
-      document.body.appendChild(temp);
-      temp.select();
-      document.execCommand('copy');
-      document.body.removeChild(temp);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    });
+    copyToClipboard(text, { successMessage: '診斷報告已複製' });
   };
 
   return (

@@ -6,12 +6,10 @@ import {
   usePhoto,
   useFilters,
 } from "@/hooks";
-import { PhotoEditSessionProvider } from "@/hooks/photo/PhotoEditSessionProvider";
+import { PhotoEditSessionProvider } from "@/hooks/photo/PhotoEditSession";
 import { usePhotoEditSessionContext } from "@/hooks/photo/usePhotoEditSessionContext";
 import { PhotoEditTabs } from "./PhotoEditTabs";
 import { DialogHeader } from "./DialogHeader";
-import { useFormSubmit } from "@/lib/form/useFormSubmit";
-import { EditPhotoSchema } from "@/schemas/photoEdit";
 
 function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: boolean; handleClose: () => void; editPhotoId: string; }) {
   const { data: photo, isPending } = usePhoto(editPhotoId);
@@ -19,25 +17,8 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
   const { form } = useFormContext();
 
   const [showConfirm, setShowConfirm] = useState(false);
-  const { isDirty, commit, discard } = usePhotoEditSessionContext();
+  const { isDirty, commit, discard, isSubmitting } = usePhotoEditSessionContext();
   
-  // New centralized submit
-  const { submit, isLoading } = useFormSubmit({
-    schema: EditPhotoSchema,
-    mutationFn: async (data, signal) => {
-        // commit is assumed to take data, but commit in context might not take arguments based on usage. 
-        // Based on previous code, commit() was called without arguments. 
-        // I will adjust to just call commit()
-        return await commit(); 
-    },
-    onSuccess: () => {
-      setShowConfirm(false);
-      handleClose();
-    },
-    successMessage: '照片已儲存',
-    errorMessage: '儲存失敗，請檢查表单'
-  });
-
   const handleInterceptClose = async () => {
     if (isDirty) {
       setShowConfirm(true);
@@ -53,23 +34,15 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
   };
   
   const handleSave = async () => {
-    const formData = form.watch();
-    await submit(formData);
+    await commit();
   };
 
   if (isPending) {
     return (
-      <NativeDialog 
-        id="photo-edit-dialog-loading"
-        open={isOpen} 
-        onClose={handleClose} 
-        className="max-h-[90vh] overflow-hidden flex flex-col p-0"
-      >
-        <div className="p-20 flex flex-col items-center justify-center gap-4 min-h-[500px]">
-          <div className="w-8 h-8 border-4 border-slate-200 border-t-primary rounded-full animate-spin" />
-          <p className="text-sm font-medium text-slate-500">正在获取照片详情...</p>
-        </div>
-      </NativeDialog>
+      <div className="p-20 flex flex-col items-center justify-center gap-4 min-h-[500px]">
+        <div className="w-8 h-8 border-4 border-slate-200 border-t-primary rounded-full animate-spin" />
+        <p className="text-sm font-medium text-slate-500">正在获取照片详情...</p>
+      </div>
     );
   }
 

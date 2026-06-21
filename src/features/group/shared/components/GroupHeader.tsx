@@ -2,9 +2,15 @@ import React, { useState } from 'react';
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import { Group } from '@/types';
 import { Edit, Share, Copy, Check } from '@/components/ui/Icon';
-import { showToast } from '@/lib/ui/toast';
 import { useUIStore } from '@/store/useUIStore';
 import { usePhotoSelection } from '@/hooks/photo/usePhotoSelection';
+import { copyToClipboard } from '@/utils/clipboard';
+import { useFormSubmit } from '@/lib/form/useFormSubmit';
+import { type } from 'arktype';
+
+const GroupTitleSchema = type({
+  title: 'string > 0',
+});
 
 interface GroupHeaderProps {
   group: Group;
@@ -19,22 +25,35 @@ export function GroupHeader({ group, photoCount, isAdmin, onEditSettings, onUpda
   const [copied, setCopied] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editTitleValue, setEditTitleValue] = useState(group.name);
-  const [isUpdating, setIsUpdating] = useState(false);
   
   const { enable, disable } = usePhotoSelection();
   const isMultiSelect = useUIStore(s => s.isMultiSelect);
 
+  const { submit: updateTitle, isLoading: isUpdating } = useFormSubmit({
+    schema: GroupTitleSchema,
+    mutationFn: async ({ title }) => {
+      if (onUpdateTitle) {
+        await onUpdateTitle(title);
+        return true;
+      }
+      return false;
+    },
+    onSuccess: () => {
+      setIsEditingTitle(false);
+    },
+    successMessage: '更新標題成功',
+    errorMessage: '更新標題失敗'
+  });
+
   const handleCopyId = () => {
-    navigator.clipboard.writeText(group.id);
+    copyToClipboard(group.id, { successMessage: '合組 ID 已複製' });
     setCopied(true);
-    showToast.success('合組 ID 已複製');
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleShare = () => {
     const url = `${window.location.origin}/group/${group.id}`;
-    navigator.clipboard.writeText(url);
-    showToast.success('分享連結已複製');
+    copyToClipboard(url, { successMessage: '分享連結已複製' });
   };
 
   const handleSaveTitle = async () => {
@@ -44,20 +63,7 @@ export function GroupHeader({ group, photoCount, isAdmin, onEditSettings, onUpda
       return;
     }
     
-    if (onUpdateTitle) {
-      setIsUpdating(true);
-      try {
-        await onUpdateTitle(editTitleValue.trim());
-      } catch (err) {
-        showToast.error('更新標題失敗');
-        setEditTitleValue(group.name);
-      } finally {
-        setIsUpdating(false);
-        setIsEditingTitle(false);
-      }
-    } else {
-      setIsEditingTitle(false);
-    }
+    await updateTitle({ title: editTitleValue.trim() });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

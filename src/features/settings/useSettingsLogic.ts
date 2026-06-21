@@ -26,6 +26,8 @@ interface UseSettingsLogicProps {
 }
 
 import { useDebouncedCallback } from '@/hooks/core/useDebouncedCallback';
+import { useFormSubmit } from "@/lib/form/useFormSubmit";
+import { type } from "arktype";
 
 export const useSettingsLogic = ({
   user,
@@ -49,17 +51,40 @@ export const useSettingsLogic = ({
   const [hasChanges, setHasChanges] = useState(false);
   const [activeTagMenuId, setActiveTagMenuId] = useState<number | null>(null);
 
+  const { submit: runConnectionTest, isLoading: isTesting } = useFormSubmit({
+    schema: type('any'),
+    mutationFn: async () => {
+      const provider = (settings as any).ai_provider || "google";
+      const ok = await testAiConnection(
+        settings.agnes_api_key || "",
+        provider,
+      );
+      if (!ok) throw new Error('連接失敗 / Connection failed');
+      return true;
+    },
+    onSuccess: () => {
+      setTestResult({ success: true });
+    },
+    onError: (err) => {
+      const msg = err instanceof Error ? err.message : String(err);
+      setTestResult({ success: false, error: msg });
+    },
+    successMessage: appLang === 'zh' ? 'AI 服務連線成功' : 'AI Connection successful',
+    errorMessage: appLang === 'zh' ? 'AI 服務連線失敗' : 'AI Connection failed'
+  });
+
   const debouncedSave = useDebouncedCallback((newSettings: AppSettings) => {
     saveSettings(newSettings)
-      .then(() => {
-        showToast.success(appLang === 'zh' ? '设置已自动同步' : 'Settings auto-synced');
-      })
       .catch((err) => {
         logger.error("Auto save settings failed:", err);
-        ErrorFactory.handleError(err, appLang === 'zh' ? '自动保存系统设置' : 'Auto-save settings');
       });
     setHasChanges(false);
   }, 1500);
+
+  const testConnection = async () => {
+    if (!settings?.agnes_api_key) return;
+    await runConnectionTest({});
+  };
 
   const togglePin = (tagId: number) => {
     const currentPinned = (settings?.pinned_tags || []).map(Number);
@@ -110,39 +135,6 @@ export const useSettingsLogic = ({
         setSettingField('logo_url', res.data.publicUrl);
         return res.data.publicUrl;
       }
-    );
-  };
-
-  const testConnection = async () => {
-    if (!settings?.agnes_api_key) return;
-    
-    return runTask(
-      appLang === 'zh' ? '测试 AI 服务连接' : 'Test AI Connection',
-      async () => {
-        setTestResult({ loading: true });
-        try {
-          const provider = (settings as any).ai_provider || "google";
-          const ok = await testAiConnection(
-            settings.agnes_api_key || "",
-            provider,
-          );
-          
-          if (ok) {
-            setTestResult({ success: true });
-            return true;
-          } else {
-            setTestResult({ success: false, error: '连接失败' });
-            throw new Error('连接失败');
-          }
-        } catch (e: unknown) {
-          const msg = e instanceof Error ? e.message : String(e);
-          setTestResult({ success: false, error: msg });
-          throw e;
-        } finally {
-          setTestResult((prev) => (prev ? { ...prev, loading: false } : null));
-        }
-      },
-      { showSuccessToast: true }
     );
   };
 

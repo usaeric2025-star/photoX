@@ -34,7 +34,7 @@ export function DialogHeader({
   onClose,
   onDeleteClick,
 }: DialogHeaderProps) {
-  const { commit, isPending } = usePhotoEditSessionContext();
+  const { commit, isPending, isSubmitting } = usePhotoEditSessionContext();
   const { form } = useFormContext();
   const { value: isHidden } = useField('is_hidden');
   const { value: isGroupCover } = useField('is_group_cover');
@@ -147,15 +147,12 @@ export function DialogHeader({
         <button
           type="button"
           onClick={async () => {
-            const { success, error } = await commit();
-            if (!success) {
-              showToast.error(error || '保存失败，请检查表单');
-            }
+            await commit();
           }}
-          disabled={isPending || isAnalyzing}
-          className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-blue-600 shadow-sm transition-all disabled:opacity-50 ${isPending || isAnalyzing ? "bg-blue-400 text-white border-blue-400 cursor-wait" : "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20 active:bg-blue-700"}`}
+          disabled={isSubmitting || isAnalyzing}
+          className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-blue-600 shadow-sm transition-all disabled:opacity-50 ${isSubmitting || isAnalyzing ? "bg-blue-400 text-white border-blue-400 cursor-wait" : "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20 active:bg-blue-700"}`}
         >
-          {isPending || isAnalyzing ? (
+          {isSubmitting || isAnalyzing ? (
             <Loader2 size={16} className="text-current animate-spin" />
           ) : (
             <Save size={18} />

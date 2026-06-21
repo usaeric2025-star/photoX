@@ -9,6 +9,13 @@ import { Tag } from '@/types';
 import { analyzePhoto } from '@/features/ai/commands';
 import { useUIStore } from '@/store';
 
+import { useFormSubmit } from '@/lib/form/useFormSubmit';
+import { type } from 'arktype';
+
+const AIAnalysisSchema = type({
+  imageUrl: 'string',
+});
+
 /**
  * Hook to handle AI Analysis and backfilling for Photo Editing
  */
@@ -19,34 +26,25 @@ export function usePhotoEditAI() {
   const appLang = useUIStore((s) => s.appLang);
   const { runTask } = useTaskExecutor();
   const { updatePhoto: { mutateAsync: updatePhoto } } = useAdminMaintenance();
-  const { settings } = useSettings();
   const queryClient = useQueryClient();
 
   // Fetch reference data for matching
   const { data: categories = [] } = useCategories();
   const { data: allTags = [] } = useTags();
 
-  const handleAiAnalyze = async (previewSrc?: string, imageUrl?: string) => {
-    const finalImageUrl = previewSrc || imageUrl;
-    
-    console.log("handleAiAnalyze started", { finalImageUrl, editPhotoId });
-    
-    if (!finalImageUrl || !editPhotoId) {
-      logger.warn('handleAiAnalyze: missing photo info', { finalImageUrl, editPhotoId });
-      showToast.error(appLang === 'zh' ? '照片信息缺失，无法分析' : 'Photo data missing');
-      return;
-    }
+  const { submit: handleAiAnalyze, isLoading: isAnalyzing } = useFormSubmit({
+    schema: AIAnalysisSchema,
+    mutationFn: async ({ imageUrl }: { imageUrl: string }) => {
+      if (!editPhotoId) throw new Error('Missing editPhotoId');
 
-    try {
-      await runTask(appLang === 'zh' ? "AI 识别" : "AI Identification", async ({ updateProgress }) => {
+      return await runTask(appLang === 'zh' ? "AI 识别" : "AI Identification", async ({ updateProgress }) => {
         updateProgress(0, appLang === 'zh' ? '正在启动 AI 识别模块...' : 'Starting AI module...');
         updateProgress(10, appLang === 'zh' ? '正在准备分析照片...' : 'Preparing photo files...');
         
         updateProgress(30, appLang === 'zh' ? '正在由 AI 智能识别各项属性 (约需 2-5 秒)...' : 'Analyzing attributes with AI (approx 2-5s)...');
-        const resp = await analyzePhoto(editPhotoId!);
+        const resp = await analyzePhoto(editPhotoId);
         
-        console.log("AI analysis result:", resp);
-        updateProgress(70, appLang === 'zh' ? '正在解析模型识别结果并写入草稿表单...' : 'Parsing AI attributes and injecting...');
+        updateProgress(70, appLang === 'zh' ? '正在解析模型识别结果并写入草稿表單...' : 'Parsing AI attributes and injecting...');
         
         if (!resp) {
           throw ErrorFactory.wrap(new Error('AI analysis failed (no result)'), 'AI智能识别', String(editPhotoId));
@@ -286,15 +284,25 @@ export function usePhotoEditAI() {
           }
         
         // [V2.2] Standard invalidation per architecture rules
-        const { queryKeys } = await import('@/lib/query/keys');
-        queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
-        queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
+        const { queryKeys: qKeys } = await import('@/lib/query/keys');
+        queryClient.invalidateQueries({ queryKey: qKeys.photos.all });
+        queryClient.invalidateQueries({ queryKey: qKeys.groups.all });
+        
+        return true;
       }, { showSuccessToast: false, showProgress: true, rethrow: true });
-    } catch (e: unknown) {
-      ErrorFactory.handleError(e, 'AI 识别');
-    }
+    },
+    onSuccess: () => {
+      // Any final cleanup if needed
+    },
+    successMessage: appLang === 'zh' ? 'AI 識別補全成功' : 'AI Analysis completed',
+    errorMessage: appLang === 'zh' ? 'AI 識別失敗' : 'AI Analysis failed'
+  });
 
-  };
+  const onAnalyze = useCallback(async (previewSrc?: string, imageUrl?: string) => {
+    const url = previewSrc || imageUrl;
+    if (!url) return false;
+    return await handleAiAnalyze({ imageUrl: url });
+  }, [handleAiAnalyze]);
 
-  return { handleAiAnalyze };
+  return { handleAiAnalyze: onAnalyze, isAnalyzing };
 }

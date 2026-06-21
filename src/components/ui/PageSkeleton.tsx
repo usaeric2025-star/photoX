@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { PhotoGridSkeleton } from '../photo/PhotoGridSkeleton';
-import { useColumns } from '@/hooks';
-import { GlobalDiagnosticsDialog } from './GlobalDiagnosticsDialog';
 import { Icon } from '@/components/ui/Icon';
+import { useColumns, useFilters } from '@/hooks';
 
 export function PageSkeleton() {
   const { columns } = useColumns();
+  const { setModal } = useFilters();
   const [showHelper, setShowHelper] = useState(false);
-  const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
 
   // 如果 3.5 秒後仍卡在骨架屏，說明加載過慢或遇到 chunk/快取異常
   useEffect(() => {
@@ -60,7 +59,7 @@ export function PageSkeleton() {
           </div>
           <div className="flex items-center gap-2 font-semibold">
             <button
-              onClick={() => setDiagnosticsOpen(true)}
+              onClick={() => setModal('diagnostics')}
               className="flex-1 px-4 py-2 bg-white hover:bg-slate-100 text-slate-900 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer"
             >
               <Icon name="Terminal" size={12} />
@@ -77,12 +76,6 @@ export function PageSkeleton() {
           </div>
         </div>
       )}
-
-      {/* Global diagnostics dialog popup */}
-      <GlobalDiagnosticsDialog 
-        open={diagnosticsOpen} 
-        onClose={() => setDiagnosticsOpen(false)} 
-      />
     </div>
   );
 }

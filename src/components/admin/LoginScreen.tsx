@@ -1,13 +1,18 @@
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { LogIn, Image as ImageIcon, RefreshCcw, X, Shield, Users } from '@/components/ui/Icon';
-import { showToast } from '@/lib/ui/toast';
 import { usePublicSettings } from '../../hooks';
 import { useUIStore } from '@/store/useUIStore';
 import { Link } from '@tanstack/react-router';
 import { ROUTES } from '@/config/constants';
 import { translations } from '@/locales';
 import { storage } from '@/services/storage';
+import { useFormSubmit } from '@/lib/form/useFormSubmit';
+import { type } from 'arktype';
+
+const StaffLoginSchema = type({
+  passcode: 'string > 0',
+});
 
 interface LoginScreenProps {
   signIn: () => Promise<void>;
@@ -22,22 +27,42 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
   const [mode, setMode] = useState<'admin' | 'staff'>('admin');
   const [passInput, setPassInput] = useState('');
   const [passError, setPassError] = useState(false);
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  // 1. Staff Login Submission
+  const { submit: submitStaff, isLoading: isStaffLoggingIn } = useFormSubmit({
+    schema: StaffLoginSchema,
+    mutationFn: async ({ passcode }) => {
+      if (!settings?.access_passcode) {
+        throw new Error('管理者尚未配置員工訪問密碼 / Staff passcode not configured');
+      }
+      
+      if (passcode === settings.access_passcode) {
+        storage.setItem('ais_mock_auth_passcode', String(passcode));
+        return true;
+      } else {
+        throw new Error(t.invalidCode);
+      }
+    },
+    onSuccess: () => {
+      window.location.reload();
+    },
+    successMessage: '員工登入成功 / Staff login successful',
+    errorMessage: '登入失敗 / Login failed'
+  });
+
+  // 2. Admin Login Submission
+  const { submit: submitAdmin, isLoading: isAdminLoggingIn } = useFormSubmit({
+    schema: type('any'),
+    mutationFn: async () => {
+      await signIn();
+      return true;
+    },
+    errorMessage: '認證失敗 / Authentication failed'
+  });
 
   const handlePasscodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!settings?.access_passcode) {
-      showToast.error('管理员尚未配置员工访问密码');
-      return;
-    }
-    if (passInput === settings.access_passcode) {
-      showToast.success('员工登录成功');
-      storage.setItem('ais_mock_auth_passcode', String(passInput));
-      window.location.reload();
-    } else {
-      setPassError(true);
-      showToast.error(t.invalidCode);
-    }
+    submitStaff({ passcode: passInput });
   };
 
   return (
@@ -116,18 +141,12 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
               >
                 <button 
                   onClick={async () => {
-                    if (isLoggingIn) return;
-                    setIsLoggingIn(true);
-                    try {
-                      await signIn();
-                    } catch(e) {
-                      setIsLoggingIn(false);
-                    }
+                    await submitAdmin({});
                   }}
-                  disabled={isLoggingIn}
+                  disabled={isAdminLoggingIn}
                   className="w-full bg-slate-950 text-white h-14 rounded-2xl text-[13px] font-bold flex items-center justify-center gap-3 shadow-xl shadow-slate-900/10 hover:shadow-2xl hover:shadow-slate-900/20 transition-all hover:bg-black active:scale-[0.98] disabled:opacity-50 group"
                 >
-                  {isLoggingIn ? (
+                  {isAdminLoggingIn ? (
                     <RefreshCcw size={18} className="animate-spin" />
                   ) : (
                     <>
@@ -168,10 +187,17 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
                 
                 <button
                   type="submit"
-                  className="w-full bg-slate-950 text-white h-14 rounded-2xl text-[13px] font-bold flex items-center justify-center gap-3 shadow-xl shadow-slate-900/10 hover:shadow-2xl hover:shadow-slate-900/20 transition-all hover:bg-black active:scale-[0.98]"
+                  disabled={isStaffLoggingIn}
+                  className="w-full bg-slate-950 text-white h-14 rounded-2xl text-[13px] font-bold flex items-center justify-center gap-3 shadow-xl shadow-slate-900/10 hover:shadow-2xl hover:shadow-slate-900/20 transition-all hover:bg-black active:scale-[0.98] disabled:opacity-50"
                 >
-                  <LogIn size={18} />
-                  {t.unlockAndAccess}
+                  {isStaffLoggingIn ? (
+                    <RefreshCcw size={18} className="animate-spin" />
+                  ) : (
+                    <>
+                      <LogIn size={18} />
+                      {t.unlockAndAccess}
+                    </>
+                  )}
                 </button>
               </form>
             )}

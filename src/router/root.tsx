@@ -7,6 +7,8 @@ import { QueryClient } from '@tanstack/react-query';
 import { type RouterContext } from './types';
 import { RouteErrorFallback } from '@/components/ui/RouteErrorFallback';
 
+import { DialogContainer } from '@/components/layout/DialogContainer';
+
 export const rootRoute = createRootRouteWithContext<RouterContext>()({
   beforeLoad: ({ context }) => {
     return {
@@ -21,6 +23,7 @@ export const rootRoute = createRootRouteWithContext<RouterContext>()({
       <Outlet />
       <JobResumer />
       <BackgroundTaskPanel />
+      <DialogContainer />
     </Suspense>
   ),
 });

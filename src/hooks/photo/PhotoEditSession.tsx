@@ -5,15 +5,16 @@ import { usePhoto } from './usePhoto';
 import { usePhotoEditMutation } from './usePhotoMutations';
 import { EditPhotoSchema, type EditFormData } from '@/schemas/photoEdit';
 import { editFormToSaveData } from '@/lib/form/photoEditAdapter';
-import { showToast } from '@/lib/ui/toast';
+import { useFormSubmit } from '@/lib/form/useFormSubmit';
 import { generateItemCode } from '@/services/photo/utils';
 import { Photo } from '@/types';
-import { ErrorFactory } from '@/lib/error';
+import { arktypeValidator } from '@/lib/form/arktypeAdapter';
 
 interface PhotoEditSessionContextValue {
   isDirty: boolean;
   isPending: boolean;
-  commit: (e?: React.MouseEvent | React.FormEvent) => Promise<{ success: boolean; error?: string }>;
+  isSubmitting: boolean;
+  commit: (data?: EditFormData) => Promise<boolean>;
   discard: () => void;
   form: any;
   photoId: string;
@@ -54,7 +55,7 @@ export const PhotoEditSessionProvider = ({
   };
 
   const form = useForm<EditFormData>({
-    schema: EditPhotoSchema,
+    validator: arktypeValidator(EditPhotoSchema),
     defaultValues: {
       ...photo,
       name: toSingleString(photo?.name),
@@ -70,47 +71,43 @@ export const PhotoEditSessionProvider = ({
   });
   
   const isDirty = form.formState.isDirty;
-  
-  const commit = useCallback(async (e?: React.MouseEvent | React.FormEvent): Promise<{ success: boolean; error?: string }> => {
-    if (e && e.preventDefault) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    
-    const valid = await form.trigger();
-    if (!valid) {
-      const errors = form.formState.errors;
-      logger.warn('[PhotoEdit] Form Validation Failed:', errors);
-      const firstError = Object.values(errors)[0] as any;
-      const message = typeof firstError === 'string' ? firstError : (firstError?.message || '表单验证失败，请检查必填项');
-      return { success: false, error: message };
-    }
-    
-    const values = form.watch() as EditFormData;
-    
-    // Auto-generate item_code if missing
-    if (!values.item_code) {
-      const newCode = generateItemCode();
-      values.item_code = newCode;
-      form.setValue('item_code', newCode);
-    }
-    
-    // Convert using our strict Adapter (fails fast if misaligned)
-    const saveData = editFormToSaveData(values, photoId, {
-      tags: photo?.tags,
-      created_at: photo?.created_at,
-      updated_at: new Date().toISOString(),
-    });
-    
-    await updateMutation.mutateAsync({
-      id: photoId,
-      updates: saveData as unknown as Partial<Photo>
-    });
-    
-    onSuccess?.();
-    return { success: true };
-  }, [photoId, form, photo, updateMutation, onSuccess]);
-  
+
+  const { submit: commit, isLoading: isSubmitting } = useFormSubmit({
+    schema: EditPhotoSchema,
+    mutationFn: async (values: EditFormData) => {
+      // Auto-generate item_code if missing
+      if (!values.item_code) {
+        const newCode = generateItemCode();
+        values.item_code = newCode;
+        form.setValue('item_code', newCode);
+      }
+      
+      // Convert using our strict Adapter (fails fast if misaligned)
+      const saveData = editFormToSaveData(values, photoId, {
+        tags: photo?.tags,
+        created_at: photo?.created_at,
+        updated_at: new Date().toISOString(),
+      });
+      
+      await updateMutation.mutateAsync({
+        id: photoId,
+        updates: saveData as unknown as Partial<Photo>
+      });
+      
+      return true;
+    },
+    onSuccess: () => {
+      onSuccess?.();
+    },
+    successMessage: '照片儲存成功',
+    errorMessage: '照片儲存失敗'
+  });
+
+  const handleCommit = useCallback(async (data?: EditFormData) => {
+    const values = data || form.watch();
+    return await commit(values);
+  }, [commit, form]);
+
   const discard = () => {
     form.reset({ values: (photo || {}) as unknown as EditFormData });
   };
@@ -122,8 +119,9 @@ export const PhotoEditSessionProvider = ({
     <FormProvider form={form as any}>
       <PhotoEditSessionContext.Provider value={{ 
         isDirty, 
-        isPending: updateMutation.isPending || isPending, 
-        commit, 
+        isPending,
+        isSubmitting,
+        commit: handleCommit, 
         discard,
         form,
         photoId

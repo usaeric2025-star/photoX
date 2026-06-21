@@ -1,3 +1,20 @@
+## 表單與提交現代化規範（永久鎖定）
+
+### 1. ArkType 表單整合
+- ✅ 所有表單驗證必須通過 `arktypeValidator` 適配器。
+- ✅ 禁止在組件內手動解析 ArkType 錯誤訊息。
+- ✅ `ArkType Schema` 是數據格式與驗證邏輯的唯一真相源。
+
+### 2. 集中化提交管線 (useFormSubmit)
+- ✅ 所有非原子型（Multi-step 或非 Mutation 直接映射）的表單提交必須通過 `useFormSubmit` Hook。
+- ✅ 該 Hook 必須自動處理：Schema 驗證、Mutation 執行、中途取消（Abort）、Loading 狀態、Toast 反饋與錯誤上報。
+- ❌ 禁止在業務組件中手動編寫 `try/catch` + `toast` 的提交邏輯。
+
+### 3. 全局對話框管理 (DialogContainer)
+- ✅ 頁面層級的全屏對話框必須註冊於 `src/components/layout/DialogContainer.tsx` 中。
+- ✅ 元件內部嚴禁使用 `createPortal` 渲染對話框。
+- ✅ 確保對話框與路由狀態、URL 參數高度同步。
+
 ## 浮動層與彈窗組件規範（鎖定）
 
 - ✅ 浮動選單與 Popover 統一使用 `src/components/ui/NativePopover.tsx`

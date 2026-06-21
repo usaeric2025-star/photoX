@@ -7,6 +7,8 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useLongPress } from "@/hooks/core/useLongPress";
 import { Category } from '../../types';
 import { useUIStore } from '@/store/useUIStore';
+import { useFormSubmit } from '@/lib/form/useFormSubmit';
+import { type } from 'arktype';
 
 interface CategoriesSectionProps {
   categories: Category[];
@@ -119,6 +121,36 @@ export function CategoriesSection({
   const appLang = useUIStore((s) => s.appLang);
   const [isAddOpen, addDialog] = useDisclosure(false);
 
+  const { submit: runUpdateCategory } = useFormSubmit({
+    schema: type('any'),
+    mutationFn: async ({ id, updates }: { id: string, updates: any }) => {
+      await updateCategory(id, updates);
+      return true;
+    },
+    successMessage: '更新分類成功',
+    errorMessage: '更新分類失敗'
+  });
+
+  const { submit: runDeleteCategory } = useFormSubmit({
+    schema: type('any'),
+    mutationFn: async ({ id }: { id: string }) => {
+      await deleteCategory(id);
+      return true;
+    },
+    successMessage: '刪除分類成功',
+    errorMessage: '刪除分類失敗'
+  });
+
+  const { submit: runAddCategory } = useFormSubmit({
+    schema: type('any'),
+    mutationFn: async ({ name }: { name: string }) => {
+      await addCategory(name);
+      return true;
+    },
+    successMessage: '新增分類成功',
+    errorMessage: '新增分類失敗'
+  });
+
   return (
     <section className={cardClass} id="section-categories">
       <div className="flex items-center justify-between">
@@ -140,12 +172,17 @@ export function CategoriesSection({
           <CategoryItem 
             key={cat.id} 
             cat={cat} 
-            onUpdate={async (c) => {
-              try {
-                await updateCategory(String(c.id), { name_zh: (c.name as any)?.zh, name_en: (c.name as any)?.en, name_ms: (c.name as any)?.ms } as any);
-              } catch (e) {}
+            onUpdate={(c) => {
+              runUpdateCategory({ 
+                id: String(c.id), 
+                updates: { 
+                  name_zh: (c.name as any)?.zh, 
+                  name_en: (c.name as any)?.en, 
+                  name_ms: (c.name as any)?.ms 
+                } 
+              });
             }}
-            onDelete={(id) => deleteCategory(String(id))}
+            onDelete={(id) => runDeleteCategory({ id: String(id) })}
           />
         ))}
       </div>
@@ -157,7 +194,7 @@ export function CategoriesSection({
         description={appLang === 'zh' ? '输入分类名称：' : 'Category Name:'}
         onConfirm={async (name: string) => {
           if (!name.trim()) return;
-          await addCategory(name);
+          await runAddCategory({ name });
         }}
       />
     </section>

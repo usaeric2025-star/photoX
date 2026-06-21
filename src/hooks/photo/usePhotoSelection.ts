@@ -87,34 +87,31 @@ export const usePhotoSelection = () => {
     const ids = batchEditingIds || selectedIds;
     if (!ids || ids.length === 0) return;
     
-    try {
-      const updates = { ...formState } as Record<string, unknown>;
-      if (!batchIsHiddenApplied) {
-        delete updates.is_hidden;
+    const updates = { ...formState } as Record<string, unknown>;
+    if (!batchIsHiddenApplied) {
+      delete updates.is_hidden;
+    }
+    
+    const cleanUpdates: Record<string, unknown> = {};
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value !== '' && value !== undefined && value !== null) {
+        if (Array.isArray(value) && value.length === 0) return;
+        cleanUpdates[key] = value;
       }
-      
-      const cleanUpdates: Record<string, unknown> = {};
-      Object.entries(updates).forEach(([key, value]) => {
-        if (value !== '' && value !== undefined && value !== null) {
-          if (Array.isArray(value) && value.length === 0) return;
-          cleanUpdates[key] = value;
-        }
-      });
+    });
 
-      await batchUpdate.mutateAsync({ ids, updates: cleanUpdates });
-      update({ batchEditingIds: null, isMultiSelect: false, selectedIds: [] });
-      resetForm();
-      if (window.location.pathname === '/admin/batch-edit') {
-        navigate({ to: '/admin' });
-      }
-    } catch (e: unknown) {
-      ErrorFactory.handleError(e, '批量保存失敗');
+    await batchUpdate.mutateAsync({ ids, updates: cleanUpdates });
+    update({ batchEditingIds: null, isMultiSelect: false, selectedIds: [] });
+    resetForm();
+    if (window.location.pathname === '/admin/batch-edit') {
+      navigate({ to: '/admin' });
     }
   };
 
   const handleDelete = async () => {
     const ids = batchEditingIds || selectedIds;
     if (!ids || ids.length === 0) return;
+    
     await deletePhoto.mutateAsync(ids);
     update({ batchEditingIds: null, isMultiSelect: false, selectedIds: [] });
     resetForm();
