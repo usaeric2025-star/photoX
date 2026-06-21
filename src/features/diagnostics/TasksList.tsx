@@ -8,6 +8,8 @@ import { Progress } from '@/components/shared/Progress';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { formatters } from '@/utils/formatters';
 
+import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
+
 export function TasksContent() {
   const { tasks = [], isPending, refetch } = useGlobalTasks();
   const safeTasks = Array.isArray(tasks) ? tasks : [];
@@ -49,10 +51,9 @@ export function TasksContent() {
               <Icon name="bar-chart-3" size={18} className="text-blue-500" />
               后台任务队列
             </h3>
-            <Button variant="outline" size="sm" onClick={() => refetch()} className="h-8 px-3 rounded-full text-[10px] font-black uppercase tracking-widest bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm">
-              <Icon name="refresh-cw" size={12} className={`mr-1.5 ${isPending ? 'animate-spin' : ''}`} />
-              刷新
-            </Button>
+              <Button variant="outline" size="sm" onClick={() => refetch()} loading={isPending} className="h-8 px-3 rounded-full text-[10px] font-black uppercase tracking-widest bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm">
+                刷新
+              </Button>
           </div>
 
           <div className="space-y-4">
@@ -85,7 +86,7 @@ function TaskItem({ task }: { task: UnifiedTask }) {
       <div className="shrink-0 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-100 shadow-sm relative">
         {task.status === 'processing' ? (
           <div className="relative">
-             <Icon name="refresh-cw" size={20} className="text-blue-500 animate-spin" />
+             <LoadingSpinner size="md" variant="current" className="text-blue-500" />
              <div className="absolute inset-0 bg-blue-500/10 blur-xl animate-pulse" />
           </div>
         ) : task.status === 'completed' ? (

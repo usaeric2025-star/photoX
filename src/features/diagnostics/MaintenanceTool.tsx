@@ -3,6 +3,7 @@ import { Button } from "@/components/shared/Button";
 import { Progress } from "@/components/shared/Progress";
 import { Alert, AlertDescription } from "@/components/shared/Alert";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { LoadingSpinner } from "@/components/ui/feedback/LoadingSpinner";
 import { ISSUE_ACTIONS } from "@/features/diagnostics/issueActions";
 import { Icon } from '@/components/ui/Icon';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
@@ -65,11 +66,11 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
         <div className="flex items-center gap-1.5 shrink-0">
             <Button variant="outline" size="sm" onClick={handlePreview} disabled={isPreviewing || isExecuting}
               className="text-[11px] h-7 px-2.5 font-medium border-slate-200 hover:bg-slate-50 rounded-lg text-slate-700 transition-all shrink-0">
-              {isPreviewing && <Icon name="loader-2" className="w-3 h-3 animate-spin mr-1.5" />} {preview ? "已预检" : "预览"}
+              {isPreviewing && <LoadingSpinner size="xs" variant="current" className="mr-1.5" />} {preview ? "已预检" : "预览"}
             </Button>
             <Button variant={danger ? "danger" : "primary"} size="sm" onClick={onExecuteClick} disabled={isExecuting || isPreviewing}
               className={`text-[11px] h-7 px-2.5 font-medium rounded-lg transition-all shrink-0 ${!danger && "bg-slate-900 text-white hover:bg-slate-800"}`}>
-              {isExecuting && <Icon name="loader-2" className="w-3 h-3 animate-spin mr-1.5" />} {isExecuting ? `${progress}%` : "修复"}
+              {isExecuting && <LoadingSpinner size="xs" variant="current" className="mr-1.5" />} {isExecuting ? `${progress}%` : "修复"}
             </Button>
         </div>
         {renderSharedModals()}
@@ -92,11 +93,11 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
           <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto mt-1 sm:mt-0">
             <Button variant="outline" size="sm" onClick={handlePreview} disabled={isPreviewing || isExecuting}
               className="text-xs h-8 px-3.5 font-medium rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 transition-all flex-1 sm:flex-initial justify-center">
-              {isPreviewing && <Icon name="loader-2" className="w-3.5 h-3.5 animate-spin mr-1.5" />} 预览范围
+              {isPreviewing && <LoadingSpinner size="xs" variant="current" className="mr-1.5" />} 预览范围
             </Button>
             <Button variant={danger ? "danger" : "primary"} size="sm" onClick={onExecuteClick} disabled={isExecuting || isPreviewing}
               className={`text-xs h-8 px-3.5 font-semibold rounded-xl transition-all flex-1 sm:flex-initial justify-center ${!danger && "bg-slate-900 text-white hover:bg-slate-800"}`}>
-              {isExecuting && <Icon name="loader-2" className="w-3.5 h-3.5 animate-spin mr-1.5" />} {isExecuting ? "执行中" : "开始执行"}
+              {isExecuting && <LoadingSpinner size="xs" variant="current" className="mr-1.5" />} {isExecuting ? "执行中" : "开始执行"}
             </Button>
           </div>
         </div>

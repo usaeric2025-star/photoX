@@ -7,7 +7,7 @@ import { usePhotoFilter } from '@/hooks/photo/usePhotoFilter';
 import { useUIStore } from '@/store/useUIStore';
 import { translations } from '@/locales';
 
-import { LoadingContainer } from '@/components/ui/feedback/LoadingContainer';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 export function TagGrid({ onClose }: { onClose?: () => void }) {
   const { filters, updateFilters } = useFilterState();
@@ -34,11 +34,14 @@ export function TagGrid({ onClose }: { onClose?: () => void }) {
   };
 
   if (isPending) {
+    const defaultPillWidths = ['w-16', 'w-20', 'w-14', 'w-24', 'w-16', 'w-20', 'w-12', 'w-16'];
     return (
-      <div className="p-4 pt-0">
-        <LoadingContainer loading={true} type="skeleton" skeletonType="grid" skeletonCount={8}>
-          <div />
-        </LoadingContainer>
+      <div className="border-t border-border-soft/50 pt-5 mt-1">
+        <div className="flex flex-wrap gap-2.5">
+          {defaultPillWidths.map((width, i) => (
+            <Skeleton key={i} className={`h-6 rounded-full ${width}`} />
+          ))}
+        </div>
       </div>
     );
   }

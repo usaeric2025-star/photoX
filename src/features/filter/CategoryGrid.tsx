@@ -4,7 +4,7 @@ import { useTranslation } from '@/hooks';
 import { getTranslatedCategoryName } from '@/services/category/utils';
 import { logger } from '@/lib/logger';
 
-import { LoadingContainer } from '@/components/ui/feedback/LoadingContainer';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 export function CategoryGrid({ mode }: { mode?: 'public' | 'admin' }) {
   const { filters, updateFilters } = useFilterState();
@@ -14,10 +14,10 @@ export function CategoryGrid({ mode }: { mode?: 'public' | 'admin' }) {
 
   if (isPending) {
     return (
-      <div className="p-4 pt-0">
-        <LoadingContainer loading={true} type="skeleton" skeletonType="grid" skeletonCount={6}>
-          <div />
-        </LoadingContainer>
+      <div className="grid grid-cols-4 gap-1.5">
+         {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="h-[34px] rounded-xl" />
+         ))}
       </div>
     );
   }

@@ -2,6 +2,8 @@ import React from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { formatters } from '@/utils/formatters';
 
+import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
+
 import { DiagnosticsReport } from '@/types/diagnostics';
 
 interface DiagnosticStatsProps {
@@ -28,7 +30,11 @@ export function DiagnosticStats({ report, isPending, onRefresh }: DiagnosticStat
         disabled={isPending}
         className="bg-slate-900 text-white hover:bg-slate-800 rounded-2xl p-4 shadow-sm flex flex-col items-center justify-center gap-1 group active:scale-95 transition-all disabled:opacity-50 h-24"
       >
-        <Icon name="refresh-cw" className={`w-4 h-4 text-white ${isPending ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
+        {isPending ? (
+          <LoadingSpinner size="sm" variant="current" />
+        ) : (
+          <Icon name="refresh-cw" className="w-4 h-4 text-white group-hover:rotate-180 transition-transform duration-500" />
+        )}
         <span className="text-xs font-semibold mt-1">全域扫描</span>
       </button>
     </div>

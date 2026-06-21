@@ -7,7 +7,7 @@ import { LoadMoreIndicator } from './LoadMoreIndicator';
 import { EmptyState } from '../ui/EmptyState';
 import { Icon } from '@/components/ui/Icon';
 
-import { LoadingContainer } from '@/components/ui/feedback';
+import { PhotoCardSkeleton } from '../ui/Skeleton';
 
 interface PhotoGridContentProps {
   photos: PhotoListItem[];
@@ -43,11 +43,17 @@ export function PhotoGridContent({
   const hasSearchQuery = !!filters?.search;
 
   if (isPending) {
+    const skeletonCount = Math.max(columns * 3, 12);
     return (
-      <div className="p-4 w-full h-full">
-        <LoadingContainer loading={true} type="skeleton" skeletonType="grid" skeletonCount={Math.max(columns * 3, 12)}>
-          <div />
-        </LoadingContainer>
+      <div className="p-2 w-full h-full">
+        <div 
+           className="grid gap-1 sm:gap-2" 
+           style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+        >
+           {Array.from({ length: skeletonCount }).map((_, i) => (
+             <PhotoCardSkeleton key={i} />
+           ))}
+        </div>
       </div>
     );
   }

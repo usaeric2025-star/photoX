@@ -1,13 +1,15 @@
 import { useLocation } from '@tanstack/react-router';
 import { useQueryClient, useIsFetching } from '@tanstack/react-query';
 import { useUIStore } from '@/store/useUIStore';
+import { useAuthStore } from '@/store/useAuthStore';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 export function DevToolsPanel() {
   const location = useLocation();
   const queryClient = useQueryClient();
   const isFetching = useIsFetching();
-  const { appLang, user } = useUIStore();
+  const { appLang } = useUIStore();
+  const { user } = useAuthStore();
 
   const cacheCount = queryClient.getQueryCache().getAll().length;
   // Make sure we have a getLocalErrors method, or we skip

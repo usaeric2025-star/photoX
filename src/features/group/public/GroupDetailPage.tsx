@@ -7,7 +7,7 @@ import { PublicPhotoCard } from '@/components/photo/PublicPhotoCard';
 import { useLightboxStore } from '@/store/useLightboxStore';
 import { useFilters, useTranslation, useCategories } from '@/hooks';
 import { GroupHeader } from '../shared/components/GroupHeader';
-import { LoadingContainer } from '@/components/ui/feedback/LoadingContainer';
+import { PhotoCardSkeleton } from '@/components/ui/Skeleton';
 import { Button } from '@/components/shared/Button';
 import { useUIStore } from '@/store/useUIStore';
 import { usePublicSettings } from '@/hooks/settings/useSettings';
@@ -136,10 +136,12 @@ export function PublicGroupDetailPage() {
 
   if (loading) {
     return (
-      <div className="p-4 w-full h-full">
-        <LoadingContainer loading={true} type="skeleton" skeletonType="grid" skeletonCount={20}>
-          <div />
-        </LoadingContainer>
+      <div className="p-1 sm:p-2 lg:p-4 w-full h-full">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1 sm:gap-2">
+           {Array.from({ length: 18 }).map((_, i) => (
+             <PhotoCardSkeleton key={i} />
+           ))}
+        </div>
       </div>
     );
   }

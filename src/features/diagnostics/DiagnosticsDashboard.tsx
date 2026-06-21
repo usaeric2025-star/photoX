@@ -129,10 +129,10 @@ export function DiagnosticsDashboard() {
                 runAudit();
               }
             }}
-            disabled={isPending}
-            className="rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors h-9 w-9 flex items-center justify-center shrink-0"
+            loading={isPending}
+            className="rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors h-9 w-9 shrink-0"
           >
-            <Icon name="refresh-cw" size={16} className={isPending ? "animate-spin text-slate-500" : "text-slate-500"} />
+            <Icon name="refresh-cw" size={16} className="text-slate-500" />
           </Button>
         </div>
       </div>

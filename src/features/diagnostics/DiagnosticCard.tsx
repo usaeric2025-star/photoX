@@ -1,5 +1,6 @@
 import React from 'react';
 import { Icon } from '@/components/ui/Icon';
+import { Button } from '@/components/shared/Button';
 
 interface DiagnosticCardProps {
   title: string;
@@ -31,14 +32,15 @@ export function DiagnosticCard({
           <h3 className="text-base font-black text-brand-navy tracking-tight">{title}</h3>
           <p className="text-xs text-brand-navy/60">{desc}</p>
         </div>
-        <button
+        <Button
+          size="sm"
           onClick={onTest}
-          disabled={isPending}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-navy text-white rounded-xl text-xs font-bold disabled:opacity-50 active:scale-95 transition-all"
+          loading={isPending}
+          className="h-7 px-3 text-[11px] rounded-lg shrink-0"
         >
-          <Icon name="refresh-cw" className={`w-3 h-3 ${isPending ? 'animate-spin' : ''}`} />
-          {isPending ? '测试中' : '测试'}
-        </button>
+          <Icon name="refresh-cw" size={12} />
+          测试
+        </Button>
       </div>
 
       {result && (

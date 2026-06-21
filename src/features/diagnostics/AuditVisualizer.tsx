@@ -3,6 +3,8 @@ import { Icon } from '@/components/ui/Icon';
 import { Button } from '@/components/shared/Button';
 import { PreviewResult } from '@/features/diagnostics/issueActions';
 
+import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
+
 interface AuditVisualizerProps {
   auditResult: PreviewResult | null;
   isAuditing: boolean;
@@ -37,10 +39,9 @@ export function AuditVisualizer({ auditResult, isAuditing, onAudit }: AuditVisua
           variant="outline" 
           size="sm" 
           onClick={onAudit} 
-          disabled={isAuditing}
+          loading={isAuditing}
           className="text-xs font-medium h-8 px-4 rounded-xl text-slate-700 hover:bg-slate-50"
         >
-          {isAuditing ? <Icon name="loader-2" size={12} className="animate-spin mr-1.5" /> : null}
           重新审计
         </Button>
       </div>
@@ -109,8 +110,7 @@ export function AuditVisualizer({ auditResult, isAuditing, onAudit }: AuditVisua
         <div className="h-32 flex flex-col items-center justify-center border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/30">
           {isAuditing ? (
             <>
-              <Icon name="loader-2" className="w-5 h-5 animate-spin text-slate-400" />
-              <p className="text-[10px] font-medium text-slate-500 uppercase tracking-widest mt-2">正在进行全量数据对账审计...</p>
+              <LoadingSpinner size="md" label="正在进行全量数据对账审计..." />
             </>
           ) : (
             <>

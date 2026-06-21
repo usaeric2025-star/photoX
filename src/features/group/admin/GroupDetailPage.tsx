@@ -20,7 +20,7 @@ import { useGroupDraft } from '@/components/groups/useGroupDraft';
 import { useGroupMutations } from '@/hooks/groups/useGroupMutations';
 import { GroupHeader } from '../shared/components/GroupHeader';
 import { PhotoEditDialog } from '@/features/photo-edit';
-import { LoadingContainer } from '@/components/ui/feedback/LoadingContainer';
+import { PhotoCardSkeleton } from '@/components/ui/Skeleton';
 import { Button } from '@/components/shared/Button';
 
 function AdminPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string) => void }) {
@@ -146,10 +146,12 @@ export function AdminGroupDetailPage() {
 
   if (loading) {
     return (
-      <div className="p-4 w-full h-full">
-        <LoadingContainer loading={true} type="skeleton" skeletonType="grid" skeletonCount={20}>
-          <div />
-        </LoadingContainer>
+      <div className="p-1 sm:p-2 lg:p-4 w-full h-full">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1 sm:gap-2">
+           {Array.from({ length: 18 }).map((_, i) => (
+             <PhotoCardSkeleton key={i} />
+           ))}
+        </div>
       </div>
     );
   }

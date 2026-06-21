@@ -1,5 +1,6 @@
 import { ButtonHTMLAttributes, ReactNode, Ref } from 'react';
 import { cn } from '../../lib/utils';
+import { LoadingSpinner } from '../ui/feedback/LoadingSpinner';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline';
@@ -54,7 +55,7 @@ export const Button = ({
       {...props}
     >
       {loading ? (
-        <div className="size-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+        <LoadingSpinner size="sm" variant="current" className="mr-1" />
       ) : (
         <>
           {leftIcon && <span className="shrink-0">{leftIcon}</span>}

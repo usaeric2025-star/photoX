@@ -4,6 +4,7 @@ import { Icon } from '@/components/ui/Icon';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
+import { Button } from '@/components/shared/Button';
 import { type } from 'arktype';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { formatters } from '@/utils/formatters';
@@ -144,14 +145,16 @@ export const ErrorLogViewer = () => {
         
         <div className="flex items-center gap-2">
           {logs.length > 0 && (
-             <button 
+             <Button 
+                variant="danger"
+                size="icon"
                 onClick={() => runClear({})}
-                disabled={isClearing}
-                className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-100 transition-colors disabled:opacity-50"
+                loading={isClearing}
+                className="w-8 h-8 rounded-lg"
                 title="清除日誌"
               >
-                <Icon name={isClearing ? "refresh-ccw" : "trash-2"} size={14} className={isClearing ? "animate-spin" : ""} />
-              </button>
+                <Icon name="trash-2" size={14} />
+              </Button>
           )}
         </div>
       </div>

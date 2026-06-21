@@ -2,6 +2,7 @@ interface LoadingSpinnerProps {
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
   label?: string;
+  variant?: 'primary' | 'current';
 }
 
 const sizeMap = {
@@ -15,14 +16,20 @@ const sizeMap = {
 export function LoadingSpinner({ 
   size = 'md', 
   className = '', 
-  label = '载入中...' 
+  label = '载入中...',
+  variant = 'primary'
 }: LoadingSpinnerProps) {
+  const colorClass = variant === 'current' 
+    ? 'border-current border-t-transparent' 
+    : 'border-slate-300 border-t-primary';
+
   return (
     <div className={`flex items-center justify-center gap-3 ${className}`}>
       <div
         className={`
           ${sizeMap[size]}
-          border-slate-300 border-t-primary rounded-full animate-spin
+          ${colorClass}
+          rounded-full animate-spin
         `}
         role="status"
         aria-label={label}
