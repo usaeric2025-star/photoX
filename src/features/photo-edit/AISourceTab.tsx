@@ -2,12 +2,10 @@ import React from 'react';
 import { usePhotoAIResult, useCopyToClipboard } from '@/hooks';
 import { useUIStore } from '@/store/useUIStore';
 import { Copy, Check, Terminal, FileJson, Info } from '@/components/ui/Icon';
+import { usePhotoEditSessionContext } from '@/hooks/photo/usePhotoEditSessionContext';
 
-interface AISourceTabProps {
-  photoId: string;
-}
-
-export function AISourceTab({ photoId }: AISourceTabProps) {
+export function AISourceTab() {
+  const { photoId } = usePhotoEditSessionContext();
   const appLang = useUIStore((s) => s.appLang);
   const { copy, copied } = useCopyToClipboard({
     successMessage: appLang === 'zh' ? '已复制' : 'Copied'

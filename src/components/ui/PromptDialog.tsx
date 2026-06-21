@@ -44,7 +44,7 @@ export const PromptDialog = ({
   };
 
   return (
-    <NativeDialog open={open} onClose={handleClose} hidePadding>
+    <NativeDialog id="prompt-dialog" open={open} onClose={handleClose} hidePadding>
       <div className="p-6">
         <h2 className="text-lg font-semibold">{title}</h2>
         {description && (

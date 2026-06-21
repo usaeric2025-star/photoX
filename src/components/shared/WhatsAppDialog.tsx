@@ -21,7 +21,7 @@ export const WhatsAppDialog = () => {
   }, [settings]);
 
   return (
-    <NativeDialog open={!!show} onClose={() => update({ showWhatsAppChoice: false })}>
+    <NativeDialog id="whatsapp-choice-dialog" open={!!show} onClose={() => update({ showWhatsAppChoice: false })}>
       <div className="w-full p-6">
         <h3 className="font-bold text-lg mb-4 text-slate-800">选择咨询方式</h3>
         {options.length === 0 ? (

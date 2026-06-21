@@ -11,10 +11,22 @@ adminPhotos.get("/photo-ai-result/:photoId", async (c) => {
         if (!photoId) return c.json({ success: false, error: "photoId is required" }, 400);
 
         // 1. Try querying ai_audit_logs first
-        const auditLog = await db.query.aiAuditLogs.findFirst({
+        let auditLog = await db.query.aiAuditLogs.findFirst({
             where: eq(aiAuditLogs.photoId, photoId),
             orderBy: [desc(aiAuditLogs.createdAt)]
         });
+
+        // If no direct audit log matches, check for fallback records avoiding FK issues
+        if (!auditLog) {
+            const fallbackLogs = await db.select()
+                .from(aiAuditLogs)
+                .where(sql`cleaned_output->>'_failedConstraintPhotoId' = ${photoId}`)
+                .orderBy(desc(aiAuditLogs.createdAt))
+                .limit(1);
+            if (fallbackLogs && fallbackLogs.length > 0) {
+                auditLog = fallbackLogs[0] as any;
+            }
+        }
 
         if (auditLog) {
             let rawResult = '';

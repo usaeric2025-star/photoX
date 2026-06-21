@@ -22,6 +22,7 @@ export function MaintenancePreviewDialog({
 }: MaintenancePreviewDialogProps) {
   return (
     <NativeDialog
+      id="maintenance-preview-dialog"
       open={open}
       onClose={onClose}
       title={`${title} - 影响范围预览`}

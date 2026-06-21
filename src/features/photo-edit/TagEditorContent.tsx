@@ -157,7 +157,7 @@ export function TagEditor({
         )}
       </div>
 
-      <NativeDialog open={!!activeActionTag} onClose={() => setActiveActionTag(null)} hidePadding={false}>
+      <NativeDialog id="tag-editor-dialog" open={!!activeActionTag} onClose={() => setActiveActionTag(null)} hidePadding={false}>
           <div
             className="w-full max-w-[280px] space-y-6"
             onClick={(e) => e.stopPropagation()}

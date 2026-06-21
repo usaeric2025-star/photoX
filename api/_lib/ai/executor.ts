@@ -73,7 +73,29 @@ export const saveAIAuditLog = async (data: AIAuditData): Promise<void> => {
       });
       logger.info(`[AIAudit] Successfully saved AI audit log for ${data.photoId || 'global'}`);
     } catch (dbErr) {
-      logger.error('[AIAudit] Failed to save AI audit log into DB:', dbErr);
+      logger.error('[AIAudit] Failed to save AI audit log into DB, attempting fallback save without foreign key constraint:', dbErr);
+      try {
+        // Fallback: 設為 null 回避外鍵約束，把原本的 photoId 完好無損記錄到 JSONB 內部，確保數據依然救回
+        const fallbackCleanedOutput = {
+          ...(typeof jsonOutput === 'object' && jsonOutput !== null ? jsonOutput : { originalOutput: jsonOutput }),
+          _failedConstraintPhotoId: data.photoId || null
+        };
+        await db.insert(aiAuditLogs).values({
+          photoId: null,
+          model: data.model,
+          promptVersion: data.promptVersion || 'v1',
+          cleanedOutput: fallbackCleanedOutput,
+          rawOutput: parsedRawOutput,
+          latencyMs: data.duration,
+          costEst: data.cost_est ? String(data.cost_est) : "0",
+          tokenUsage: data.token_usage || null,
+          status: data.status,
+          createdAt: new Date()
+        });
+        logger.info(`[AIAudit] Successfully saved fallback AI audit log (avoided FK constraint) for ${data.photoId}`);
+      } catch (fallbackErr) {
+        logger.error('[AIAudit] Fallback AI audit log save also failed:', fallbackErr);
+      }
     }
   } catch (err: unknown) {
     logger.error('[AIAudit] Save task exception:', (err as Error).message);

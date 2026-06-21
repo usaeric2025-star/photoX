@@ -113,7 +113,7 @@ export function GroupSettingsDialog(props: GroupSettingsDialogProps) {
   };
 
   return (
-    <NativeDialog open={props.showGroupSettings} onClose={() => props.setShowGroupSettings(false)} size="lg" hidePadding showCloseButton={false}>
+    <NativeDialog id="group-settings-dialog" open={props.showGroupSettings} onClose={() => props.setShowGroupSettings(false)} size="lg" hidePadding showCloseButton={false}>
       <div className="flex flex-col bg-white overflow-hidden max-h-[85vh] w-full max-w-[500px] h-full sm:h-[800px]">
         <GroupSettingsHeader {...headerProps} />
         <GroupSettingsContent {...childProps} />

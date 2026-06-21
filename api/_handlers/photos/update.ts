@@ -81,6 +81,7 @@ export const updateHandler = (app: Hono) => {
         };
 
         for (const [key, val] of Object.entries(updateObj)) {
+            if (['id', 'created_at', 'updated_at'].includes(key)) continue;
             let parsedVal = val;
             if (key === 'category_id' && typeof val === 'string') {
                 parsedVal = parseInt(val, 10);

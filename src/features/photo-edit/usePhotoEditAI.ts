@@ -255,10 +255,30 @@ export function usePhotoEditAI() {
           if (editPhotoId) {
             try {
               await updatePhoto({ id: editPhotoId, updates, silent: true });
+              
+              // Synchronously update the React Query cache for the photo detail query
+              const { queryKeys: qK } = await import('@/lib/query/keys');
+              const detailKey = qK.photos.detail(editPhotoId);
+              
+              queryClient.setQueryData(detailKey, (oldPhoto: any) => {
+                if (!oldPhoto) return oldPhoto;
+                return {
+                  ...oldPhoto,
+                  name: updates.name ? { zh: updates.name, en: '', ms: '' } : oldPhoto.name,
+                  description: updates.description || oldPhoto.description,
+                  category_id: updates.category_id || oldPhoto.category_id,
+                  tags: updates.tags || oldPhoto.tags,
+                  dimensions: updates.dimensions || oldPhoto.dimensions,
+                  is_ai_dimensions: updates.is_ai_dimensions ?? oldPhoto.is_ai_dimensions,
+                  item_code: updates.item_code || oldPhoto.item_code,
+                  updated_at: new Date().toISOString()
+                };
+              });
+
               // Reset the form internal defaultValues to the new state so it's not "dirty" anymore,
               // providing visual feedback that the auto-save was successful.
               requestAnimationFrame(() => {
-                form.reset({ values: form.watch() });
+                form.reset(form.watch());
               });
             } catch (saveError: unknown) {
               logger.warn('AI识别结果自动保存失败(但不影响回填):', saveError);

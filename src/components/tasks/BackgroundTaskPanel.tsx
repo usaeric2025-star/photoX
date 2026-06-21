@@ -55,7 +55,10 @@ export function BackgroundTaskPanel() {
         className="fixed z-[2147483647] flex flex-col gap-2 w-64 pointer-events-none bg-transparent m-0 p-0 overflow-visible border-none"
         style={style}
       >
-        <div className="pointer-events-auto bg-white rounded-2xl shadow-lg border border-slate-100 flex items-center justify-between px-3 py-2">
+        <div 
+          onClick={(e) => e.stopPropagation()}
+          className="pointer-events-auto bg-white rounded-2xl shadow-lg border border-slate-100 flex items-center justify-between px-3 py-2"
+        >
           <div className="flex items-center gap-1.5">
             <Icon name="Loader2" size={14} className="text-blue-500 animate-spin" />
             <span className="text-[11px] font-bold text-slate-700">任务中心</span>
@@ -94,11 +97,12 @@ function TaskItem({ task, onRemove, onCancel }: { task: BackgroundTask; onRemove
   return (
     <m.div
       layout
+      onClick={(e) => e.stopPropagation()}
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       className={`pointer-events-auto bg-white rounded-2xl shadow-lg border p-3 flex flex-col gap-2 overflow-hidden ${
-        isError ? 'border-red-100' : isCompleted ? 'border-green-100' : 'border-slate-100'
+        isError ? 'border-red-100' : isCompleted ? 'border-green-50 animate-pulse' : 'border-slate-100'
       }`}
     >
       <div className="flex items-start justify-between gap-2.5">

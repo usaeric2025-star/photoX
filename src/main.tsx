@@ -21,7 +21,6 @@ if (typeof window !== 'undefined') {
 
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Toaster } from 'sonner';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Analytics } from '@vercel/analytics/react';
 import App from './App';
@@ -30,6 +29,7 @@ import { TaskProvider } from '@/hooks';
 import { queryClient } from './lib/queryClient';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { FatalErrorOverlay } from '@/components/shared/FatalErrorOverlay';
+import { PortalRoot } from '@/components/ui/PortalRoot';
 import { logger } from './lib/logger';
 import './index.css';
 import { clientEnv } from './shared/envSchema';
@@ -40,7 +40,6 @@ import { dailyWorker } from '@/features/diagnostics/DailyWorker';
 import { useUIStore } from '@/store/useUIStore';
 import { scheduler } from '@/lib/task-queue/scheduler';
 import { setupQuerySync } from '@/lib/task-queue/querySync';
-import { TaskBadge, TaskDrawer } from '@/lib/task-queue/components';
 
 async function init() {
   // No migration
@@ -148,14 +147,12 @@ async function init() {
     root.render(
       <StrictMode>
         <QueryClientProvider client={queryClient}>
-          <Toaster position="bottom-center" richColors closeButton expand={false} visibleToasts={2} swipeDirections={['left', 'right']} style={{ zIndex: 2147483647 }} />
           <TaskProvider>
             <ErrorBoundary>
               <App />
               <FatalErrorOverlay />
               <Analytics />
-              <TaskBadge />
-              <TaskDrawer />
+              <PortalRoot />
             </ErrorBoundary>
           </TaskProvider>
         </QueryClientProvider>

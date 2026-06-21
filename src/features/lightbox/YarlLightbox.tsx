@@ -163,6 +163,7 @@ export function YarlLightbox({
 
       {/* 完整版的資訊卡彈窗 */}
       <NativeDialog
+        id="lightbox-detail-dialog"
         open={isDetailDialogOpen}
         onClose={() => setIsDetailDialogOpen(false)}
         title={currentItem?.title || t.furnitureRecord}

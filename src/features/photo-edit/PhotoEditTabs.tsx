@@ -4,13 +4,12 @@ import { BasicInfoTab } from "./BasicInfoTab";
 import { OrgTab } from "./OrgTab";
 import { DetailsTab } from "./DetailsTab";
 import { AISourceTab } from "./AISourceTab";
+import { useUIStore } from "@/store";
+import { usePhotoEditSessionContext } from "@/hooks/photo/usePhotoEditSessionContext";
 
-interface PhotoEditTabsProps {
-  editPhotoId: string;
-  appLang: string;
-}
-
-export function PhotoEditTabs({ editPhotoId, appLang }: PhotoEditTabsProps) {
+export function PhotoEditTabs() {
+  const { photoId } = usePhotoEditSessionContext();
+  const appLang = useUIStore((s) => s.appLang);
 
   const [activeTab, setActiveTab] = useState('basic');
 
@@ -46,7 +45,7 @@ export function PhotoEditTabs({ editPhotoId, appLang }: PhotoEditTabsProps) {
       )}
       {activeTab === 'ai-source' && (
         <div className="px-4 md:px-8 xl:px-12 pb-12">
-          <AISourceTab photoId={editPhotoId || ''} />
+          <AISourceTab />
         </div>
       )}
     </Tabs>

@@ -130,7 +130,7 @@ export function BasicInfoTab() {
         </div>
       </div>
 
-      <NativeDialog open={zoomed && !!previewSrc} onClose={closeZoom} size="screen" hidePadding={true} showCloseButton={false}>
+      <NativeDialog id="photo-zoom-dialog" open={zoomed && !!previewSrc} onClose={closeZoom} size="screen" hidePadding={true} showCloseButton={false}>
           <div className="relative w-full h-full flex items-center justify-center p-4 lg:p-12 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
             <button 
               onClick={closeZoom}

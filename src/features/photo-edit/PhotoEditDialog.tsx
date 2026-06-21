@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { NativeDialog } from "@/components/ui/NativeDialog";
 import { useUIStore } from "@/store";
 import { 
@@ -15,27 +15,34 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
   const { data: photo, isPending } = usePhoto(editPhotoId);
   const appLang = useUIStore((s) => s.appLang);
   const confirm = useConfirm();
-  const { isDirty } = usePhotoEditSessionContext();
+
+  const [showConfirm, setShowConfirm] = useState(false);
+  const { isDirty, commit, discard } = usePhotoEditSessionContext();
 
   const handleInterceptClose = async () => {
     if (isDirty) {
-      const confirmed = await confirm({
-        title: appLang === 'zh' ? '放弃修改？' : 'Discard changes?',
-        description: appLang === 'zh' ? '您有未保存的修改，关闭将丢失这些修改。' : 'You have unsaved changes. Closing will discard them.',
-        variant: 'destructive',
-        confirmText: appLang === 'zh' ? '放弃修改' : 'Discard'
-      });
-      if (confirmed) {
-        handleClose();
-      }
+      setShowConfirm(true);
     } else {
       handleClose();
     }
+  };
+  
+  const handleDiscard = () => {
+    discard();
+    setShowConfirm(false);
+    handleClose();
+  };
+  
+  const handleSave = async () => {
+    await commit();
+    setShowConfirm(false);
+    handleClose();
   };
 
   if (isPending) {
     return (
       <NativeDialog 
+        id="photo-edit-dialog-loading"
         open={isOpen} 
         onClose={handleClose} 
         size="5xl" 
@@ -53,6 +60,7 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
 
   return (
     <NativeDialog 
+      id="photo-edit-dialog-active"
       open={isOpen} 
       onClose={handleInterceptClose} 
       size="5xl" 
@@ -62,8 +70,30 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
     >
       <div className="flex flex-col h-full bg-surface-soft min-h-[500px]">
         <DialogHeader onClose={handleInterceptClose} onDeleteClick={() => {}} />
-        <PhotoEditTabs editPhotoId={editPhotoId} appLang={appLang} />
+        <PhotoEditTabs />
       </div>
+
+      <NativeDialog
+        id="dirty-confirm-dialog"
+        open={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        size="sm"
+        title={appLang === 'zh' ? '有未保存的修改' : 'Unsaved changes'}
+      >
+        <div className="p-6 flex flex-col gap-4">
+          <p className="text-text-main">
+            {appLang === 'zh' ? '检测到有未保存的修改。要进行何种操作？' : 'Detected unsaved changes. What would you like to do?'}
+          </p>
+          <div className="flex gap-2 justify-end">
+            <button onClick={handleDiscard} className="px-4 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100">
+              {appLang === 'zh' ? '放弃修改' : 'Discard changes'}
+            </button>
+            <button onClick={handleSave} className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90">
+              {appLang === 'zh' ? '保存并关闭' : 'Save and close'}
+            </button>
+          </div>
+        </div>
+      </NativeDialog>
     </NativeDialog>
   );
 }

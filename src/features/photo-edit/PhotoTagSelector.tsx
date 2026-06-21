@@ -61,7 +61,7 @@ function BasePhotoTagSelector({
       onChange(cleanSelectedIds.filter((id) => id !== strId));
     } else {
       if (cleanSelectedIds.length >= MAX_TAGS_PER_PHOTO) {
-        showToast.warning(`最多只能选择 ${MAX_TAGS_PER_PHOTO} 个标签 / Maximum of ${MAX_TAGS_PER_PHOTO} tags allowed`);
+        showToast.warning(`最多只能选择 ${MAX_TAGS_PER_PHOTO} 个标签`);
         return;
       }
       onChange([...cleanSelectedIds, strId]);

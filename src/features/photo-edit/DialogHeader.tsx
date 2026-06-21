@@ -46,8 +46,6 @@ export function DialogHeader({
   const { data: detailPhoto } = usePhoto(editPhotoId || '');
   const { tasks } = useTasks();
   const isAnalyzing = tasks.some((t: BackgroundTask) => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析') || t.name.toLowerCase().includes('analyze') || t.name.toLowerCase().includes('identif')));
-  const isSyncing = tasks.some((t: BackgroundTask) => t.status === 'running' && (t.name.includes('同步') || t.name.includes('导入')));
-  const isRunning = tasks.some((t: BackgroundTask) => t.status === 'running');
 
   const { mutateAsync: removeFromGroup } = useRemoveFromGroupMutation();
   const { updatePhoto: { mutateAsync: updateAdminPhoto } } = useAdminMaintenance();
@@ -119,7 +117,7 @@ export function DialogHeader({
           <button
             type="button"
             onClick={onAiAnalyze}
-            disabled={isAnalyzing || isRunning}
+            disabled={isAnalyzing || isPending}
             className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-slate-100 shadow-sm transition-all disabled:opacity-50 ${isAnalyzing ? "bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed" : "bg-purple-50 text-purple-600 border-purple-100 active:bg-purple-200"}`}
           >
             {isAnalyzing ? (
@@ -160,7 +158,7 @@ export function DialogHeader({
           <button
             type="button"
             onClick={onDeleteClick}
-            disabled={isRunning}
+            disabled={isPending || isAnalyzing}
             className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-red-50 text-red-500 border border-red-100 shadow-sm active:bg-red-100 transition-all font-bold disabled:opacity-50"
           >
             <Trash2 size={18} />
@@ -170,10 +168,10 @@ export function DialogHeader({
         <button
           type="button"
           onClick={commit}
-          disabled={isSyncing || isRunning || isPending}
-          className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-blue-600 shadow-sm transition-all disabled:opacity-50 ${isSyncing || isRunning || isPending ? "bg-blue-400 text-white border-blue-400 cursor-wait" : "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20 active:bg-blue-700"}`}
+          disabled={isPending || isAnalyzing}
+          className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-blue-600 shadow-sm transition-all disabled:opacity-50 ${isPending || isAnalyzing ? "bg-blue-400 text-white border-blue-400 cursor-wait" : "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20 active:bg-blue-700"}`}
         >
-          {isSyncing || isRunning || isPending ? (
+          {isPending || isAnalyzing ? (
             <Loader2 size={16} className="text-current animate-spin" />
           ) : (
             <Save size={18} />

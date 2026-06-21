@@ -10,7 +10,7 @@ interface UploadModeDialogProps {
 
 export function UploadModeDialog({ open, onOpenChange, onSelectMode }: UploadModeDialogProps) {
   return (
-    <NativeDialog open={open} onClose={() => onOpenChange(false)} title="选择上传模式">
+    <NativeDialog id="upload-mode-dialog" open={open} onClose={() => onOpenChange(false)} title="选择上传模式">
       <div className="p-4 space-y-3">
         <button
           onClick={() => onSelectMode('single')}

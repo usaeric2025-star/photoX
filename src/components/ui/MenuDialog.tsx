@@ -27,7 +27,7 @@ export const MenuDialog = ({
   const handleClose = () => onOpenChange(false);
 
   return (
-    <NativeDialog open={open} onClose={handleClose} hidePadding>
+    <NativeDialog id="menu-dialog" open={open} onClose={handleClose} hidePadding>
       <div className="p-6">
         <h2 className="text-lg font-semibold">{title}</h2>
         {description && (

@@ -1,12 +1,22 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
+import { SonnerContainer } from './SonnerContainer';
+import { TaskBadge, TaskDrawer } from '@/lib/task-queue/components';
 
 /**
  * PortalRoot component
  * Provides a dedicated container for Portals in the page.
- * Physically appended to the root layer to guarantee layering order.
  */
 export function PortalRoot() {
-  return (
-    <div id="portal-root" className="absolute top-0 left-0 w-full" style={{ pointerEvents: 'none' }} />
+  const portalRoot = document.getElementById('portal-root');
+  if (!portalRoot) return null;
+
+  return createPortal(
+    <>
+      <SonnerContainer />
+      <TaskBadge />
+      <TaskDrawer />
+    </>,
+    portalRoot
   );
 }

@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
+import { NativeDialog } from '@/components/ui/NativeDialog';
 import { logger } from '@/lib/logger';
 import { clearCacheAndReload } from '@/lib/recovery/clearCacheAndReload';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
@@ -10,25 +11,14 @@ interface GlobalDiagnosticsDialogProps {
 }
 
 export function GlobalDiagnosticsDialog({ open, onClose }: GlobalDiagnosticsDialogProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
   const [networkStatus, setNetworkStatus] = useState<'checking' | 'connected' | 'failed'>('checking');
   const [latency, setLatency] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
   const [errors, setErrors] = useState<any[]>([]);
 
-  // 同步 dialog 展示狀態
+  // 捕獲當前的啟動和運行期錯誤
   useEffect(() => {
-    const el = dialogRef.current;
-    if (!el) return;
     if (open) {
-      if (!el.open) {
-        try {
-          el.showModal();
-        } catch (e) {
-          el.setAttribute('open', '');
-        }
-      }
-      // 捕獲當前的啟動和運行期錯誤
       const startupErrors = (window as any).__STARTUP_ERRORS__ || [];
       const cachedErrors = ErrorFactory.getLocalErrors();
       
@@ -51,14 +41,6 @@ export function GlobalDiagnosticsDialog({ open, onClose }: GlobalDiagnosticsDial
       
       // 進行網路診斷
       checkBackendConnection();
-    } else {
-      if (el.open) {
-        try {
-          el.close();
-        } catch (e) {
-          el.removeAttribute('open');
-        }
-      }
     }
   }, [open]);
 
@@ -79,7 +61,7 @@ export function GlobalDiagnosticsDialog({ open, onClose }: GlobalDiagnosticsDial
         setLatency(Math.round(end - start));
         setNetworkStatus('connected');
       } else {
-        setNetworkStatus('failed');
+        throw new Error(`Health check failed: ${res.status}`);
       }
     } catch (e) {
       logger.error('[Diagnostics] Connection test failed:', e);
@@ -145,13 +127,12 @@ export function GlobalDiagnosticsDialog({ open, onClose }: GlobalDiagnosticsDial
   };
 
   return (
-    <dialog
-      ref={dialogRef}
-      onCancel={(e) => {
-        e.preventDefault();
-        onClose();
-      }}
-      className="m-auto backdrop:bg-slate-900/80 backdrop:backdrop-blur-sm p-0 rounded-3xl overflow-hidden border border-slate-100 shadow-2xl w-full max-w-xl focus:outline-none focus:ring-0 animate-in fade-in zoom-in-95 duration-200"
+    <NativeDialog
+      id="global-diagnostics-dialog"
+      open={open}
+      onClose={onClose}
+      title="系統除錯診斷與維護"
+      size="md"
     >
       <div className="bg-white flex flex-col h-full max-h-[85vh]">
         {/* Header Section */}
@@ -165,12 +146,6 @@ export function GlobalDiagnosticsDialog({ open, onClose }: GlobalDiagnosticsDial
               <p className="text-[10px] text-slate-400 mt-1 font-mono tracking-widest uppercase">System Diagnostics Panel</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors focus:outline-none"
-          >
-            <Icon name="X" size={18} />
-          </button>
         </div>
 
         {/* Content Section (Scrollable) */}
@@ -289,6 +264,6 @@ export function GlobalDiagnosticsDialog({ open, onClose }: GlobalDiagnosticsDial
           </button>
         </div>
       </div>
-    </dialog>
+    </NativeDialog>
   );
 }

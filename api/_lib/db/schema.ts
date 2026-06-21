@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, uuid, jsonb, numeric, integer, primaryKey } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, uuid, jsonb, numeric, integer, primaryKey, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 /**
@@ -175,7 +175,10 @@ export const aiAuditLogs = pgTable('ai_audit_logs', {
     status: text('status'),
     errorMessage: text('error_message'),
     createdAt: timestamp('created_at').defaultNow(),
-});
+}, (table) => ({
+    photoIdIdx: index('ai_audit_logs_photo_id_idx').on(table.photoId),
+    createdAtIdx: index('ai_audit_logs_created_at_idx').on(table.createdAt),
+}));
 
 /**
  * Group Correction Logs Table

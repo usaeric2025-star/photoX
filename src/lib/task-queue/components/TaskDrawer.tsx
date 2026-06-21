@@ -34,6 +34,7 @@ export function TaskDrawer() {
 
   return createPortal(
     <div
+      onClick={(e) => e.stopPropagation()}
       className={cn(
         'fixed right-0 top-0 h-full w-80 bg-card border-l shadow-lg transition-all duration-300',
         !isOpen ? 'translate-x-full pointer-events-none' : 'translate-x-0'

@@ -43,6 +43,7 @@ export const ConfirmDialog = ({
 
   return (
     <NativeDialog 
+      id="confirm-dialog"
       open={open} 
       onClose={handleCancel} 
       title={title} 

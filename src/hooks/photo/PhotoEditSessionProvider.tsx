@@ -16,6 +16,7 @@ interface PhotoEditSessionContextValue {
   commit: (e?: React.MouseEvent | React.FormEvent) => Promise<void>;
   discard: () => void;
   form: any;
+  photoId: string;
 }
 
 export const PhotoEditSessionContext = createContext<PhotoEditSessionContextValue | undefined>(undefined);
@@ -81,7 +82,7 @@ export const PhotoEditSessionProvider = ({
       const errors = form.formState.errors;
       logger.warn('[PhotoEdit] Form Validation Failed:', errors);
       const firstError = Object.values(errors)[0] as any;
-      const message = typeof firstError === 'string' ? firstError : (firstError?.message || '表單驗證失敗，請檢查必填項 / Validation Failed');
+      const message = typeof firstError === 'string' ? firstError : (firstError?.message || '表单验证失败，请检查必填项');
       showToast.error(message);
       return;
     }
@@ -108,11 +109,11 @@ export const PhotoEditSessionProvider = ({
         id: photoId,
         updates: saveData as unknown as Partial<Photo>
       });
-      showToast.success('保存成功 / Saved successfully');
+      showToast.success('保存成功');
       onSuccess?.();
     } catch (err: unknown) {
       console.error('[PhotoEdit] Save failed:', err);
-      ErrorFactory.handleError(err, '保存照片數據');
+      ErrorFactory.handleError(err, '保存照片数据');
     }
   }, [photoId, form, photo, updateMutation, onSuccess]);
   
@@ -130,7 +131,8 @@ export const PhotoEditSessionProvider = ({
         isPending: updateMutation.isPending || isPending, 
         commit, 
         discard,
-        form
+        form,
+        photoId
       }}>
         {children}
       </PhotoEditSessionContext.Provider>

@@ -20,7 +20,7 @@ export function StaffUnlockDialog({
   isOpen, onClose, passInput, setPassInput, passError, onSubmit, onLogin, signIn, labels
 }: StaffUnlockDialogProps) {
   return (
-    <NativeDialog open={isOpen} onClose={onClose} size="sm">
+    <NativeDialog id="staff-unlock-dialog" open={isOpen} onClose={onClose} size="sm">
       <div className="w-full text-center">
         <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner ring-4 ring-white">
           <Lock size={32} />

@@ -2,6 +2,7 @@ import * as React from "react";
 import { Icon } from '@/components/ui/Icon';
 
 export interface NativeDialogProps {
+  id: string;
   open: boolean;
   onClose: () => void;
   children: React.ReactNode;
@@ -31,6 +32,7 @@ const sizeClasses = {
  * Provides maximum isolation and standard behavior.
  */
 export function NativeDialog({ 
+  id,
   open, 
   onClose, 
   children, 
@@ -89,15 +91,27 @@ export function NativeDialog({
     };
   }, [open]);
 
-  // Handle ESC close natively with state syncing
+  // Handle ESC close natively with state syncing and proper intercepting
   React.useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const handleClose = () => {
+    
+    const handleCancel = (e: Event) => {
+      if (e.target !== el) return;
+      // Prevent browser from closing immediately so we can intercept if needed (e.g., discard changes confirmation)
+      e.preventDefault();
       onClose();
     };
+
+    const handleClose = (e: Event) => {
+      if (e.target !== el) return;
+      onClose();
+    };
+
+    el.addEventListener('cancel', handleCancel);
     el.addEventListener('close', handleClose);
     return () => {
+      el.removeEventListener('cancel', handleCancel);
       el.removeEventListener('close', handleClose);
     };
   }, [onClose]);
@@ -105,6 +119,25 @@ export function NativeDialog({
   const handleBackdropClick = (e: React.MouseEvent<HTMLDialogElement>) => {
     // Only close if user clicked directly on the dialog backdrop
     if (e.target === ref.current) {
+      // Verify that click coordinates are strictly outside the dialog's bounding rect
+      const rect = ref.current.getBoundingClientRect();
+      const isInDialog = (
+        e.clientX >= rect.left &&
+        e.clientX <= rect.right &&
+        e.clientY >= rect.top &&
+        e.clientY <= rect.bottom
+      );
+      
+      if (isInDialog) {
+        return; // Click was inside content box, do not close
+      }
+
+      // Ignore click if the original click element is already detached from the DOM (e.g. unmounted during click event)
+      const originalTarget = e.nativeEvent?.target as Node;
+      if (originalTarget && !document.body.contains(originalTarget)) {
+        console.log('[NativeDialog] Detached element click detected; ignoring backdrop close');
+        return;
+      }
       onClose();
     }
   };
@@ -122,14 +155,17 @@ export function NativeDialog({
         backdrop:bg-black/40 backdrop:backdrop-blur-xl
         p-0 overflow-hidden outline-none ${className}
       `}
-      id="native-app-dialog"
+      id={id}
     >
       <div className={`flex flex-col w-full relative ${size === 'screen' ? 'h-full max-h-none' : 'max-h-[90vh]'}`}>
         {/* Close Button - Apple Style */}
         {showCloseButton && (
           <button
             type="button"
-            onClick={onClose}
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
             className="absolute right-4 top-4 p-2 rounded-full text-text-sub hover:text-text-main hover:bg-surface-soft transition-all active:scale-95"
             aria-label="关闭"
           >
