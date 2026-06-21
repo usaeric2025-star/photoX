@@ -30,7 +30,7 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
   const [passError, setPassError] = useState(false);
 
   // 1. Staff Login Submission
-  const { submit: submitStaff, isLoading: isStaffLoggingIn } = useFormSubmit({
+  const { submit: submitStaff, isLoading: isStaffLoggingIn, fieldErrors, clearFieldError } = useFormSubmit({
     schema: StaffLoginSchema,
     mutationFn: async ({ passcode }) => {
       if (!settings?.access_passcode) {
@@ -171,13 +171,19 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
                     onChange={(e) => {
                       setPassInput(e.target.value);
                       setPassError(false);
+                      clearFieldError('passcode');
                     }}
                     className={`w-full bg-slate-50 border p-4 h-14 rounded-2xl text-center text-lg font-bold tracking-[0.2em] outline-none transition-all ${
-                      passError 
+                      passError || fieldErrors.passcode
                         ? 'border-red-200 bg-red-50 text-red-600' 
                         : 'border-slate-100 focus:bg-white focus:border-slate-300 focus:shadow-sm'
                     }`}
                   />
+                  {fieldErrors.passcode && (
+                    <div className="absolute -bottom-5 left-0 right-0 text-center text-[10px] text-red-500 font-bold">
+                      {fieldErrors.passcode}
+                    </div>
+                  )}
                 </div>
                 
                 <Button

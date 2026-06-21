@@ -9,6 +9,7 @@ import { Category } from '../../types';
 import { useUIStore } from '@/store/useUIStore';
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
 import { type } from 'arktype';
+import { FormProvider } from '@/lib/form/useFormField';
 
 interface CategoriesSectionProps {
   categories: Category[];
@@ -119,7 +120,7 @@ export function CategoriesSection({
   const appLang = useUIStore((s) => s.appLang);
   const [isAddOpen, addDialog] = useDisclosure(false);
 
-  const { submit: runUpdateCategory } = useFormSubmit({
+  const { submit: runUpdateCategory, fieldErrors: updateFieldErrors, clearFieldError: updateClearFieldError } = useFormSubmit({
     schema: type({ id: 'string', updates: 'unknown' }),
     mutationFn: async ({ id, updates }: { id: string, updates: any }) => {
       await updateCategory(id, updates);
@@ -139,8 +140,8 @@ export function CategoriesSection({
     errorMessage: '刪除分類失敗'
   });
 
-  const { submit: runAddCategory } = useFormSubmit({
-    schema: type({ name: 'string' }),
+  const { submit: runAddCategory, fieldErrors: addFieldErrors, clearFieldError: addClearFieldError } = useFormSubmit({
+    schema: type({ name: 'string > 0' }),
     mutationFn: async ({ name }: { name: string }) => {
       await addCategory(name);
       return true;
@@ -165,36 +166,40 @@ export function CategoriesSection({
         </button>
       </div>
 
-      <div className="flex flex-wrap gap-2 p-3 bg-brand-navy/5 rounded-[28px] border border-brand-navy/10 shadow-inner min-h-[48px]">
-        {categories.map(cat => (
-          <CategoryItem 
-            key={cat.id} 
-            cat={cat} 
-            onUpdate={(c) => {
-              runUpdateCategory({ 
-                id: String(c.id), 
-                updates: { 
-                  name_zh: c.nameZh || c.name, 
-                  name_en: c.nameEn || c.name, 
-                  name_ms: c.nameMs || c.name 
-                } 
-              });
-            }}
-            onDelete={(id) => runDeleteCategory({ id: String(id) })}
-          />
-        ))}
-      </div>
+      <FormProvider fieldErrors={updateFieldErrors} clearFieldError={updateClearFieldError}>
+        <div className="flex flex-wrap gap-2 p-3 bg-brand-navy/5 rounded-[28px] border border-brand-navy/10 shadow-inner min-h-[48px]">
+          {categories.map(cat => (
+            <CategoryItem 
+              key={cat.id} 
+              cat={cat} 
+              onUpdate={async (c) => {
+                return await runUpdateCategory({ 
+                  id: String(c.id), 
+                  updates: { 
+                    name_zh: c.nameZh || c.name, 
+                    name_en: c.nameEn || c.name, 
+                    name_ms: c.nameMs || c.name 
+                  } 
+                });
+              }}
+              onDelete={(id) => runDeleteCategory({ id: String(id) })}
+            />
+          ))}
+        </div>
+      </FormProvider>
 
-      <PromptDialog
-        open={isAddOpen}
-        onOpenChange={addDialog.toggle}
-        title={appLang === 'zh' ? '新增分类' : 'New Category'}
-        description={appLang === 'zh' ? '输入分类名称：' : 'Category Name:'}
-        onConfirm={async (name: string) => {
-          if (!name.trim()) return;
-          await runAddCategory({ name });
-        }}
-      />
+      <FormProvider fieldErrors={addFieldErrors} clearFieldError={addClearFieldError}>
+        <PromptDialog
+          open={isAddOpen}
+          onOpenChange={addDialog.toggle}
+          title={appLang === 'zh' ? '新增分类' : 'New Category'}
+          description={appLang === 'zh' ? '输入分类名称：' : 'Category Name:'}
+          onConfirm={async (name: string) => {
+            if (!name.trim()) return false;
+            return await runAddCategory({ name });
+          }}
+        />
+      </FormProvider>
     </section>
   );
 };

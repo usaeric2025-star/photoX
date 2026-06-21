@@ -12,6 +12,7 @@ import { useUIStore } from "@/store/useUIStore";
 import { translations } from "@/locales";
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
 import { type } from 'arktype';
+import { FormProvider } from '@/lib/form/useFormField';
 
 interface ManufacturersSectionProps {
   manufacturers: Manufacturer[];
@@ -38,8 +39,8 @@ export function ManufacturersSection({
   const appLang = useUIStore(s => s.appLang);
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
-  const { submit: runAddManufacturer, isLoading: isAdding } = useFormSubmit({
-    schema: type({ name: "string" }),
+  const { submit: runAddManufacturer, isLoading: isAdding, fieldErrors: addFieldErrors, clearFieldError: addClearFieldError } = useFormSubmit({
+    schema: type({ name: "string > 0" }),
     mutationFn: async ({ name }) => {
       const normalized = normalizeManufacturerName(name);
       if (!normalized) return null;
@@ -49,8 +50,8 @@ export function ManufacturersSection({
     errorMessage: appLang === 'zh' ? '新增失敗' : 'Add failed'
   });
 
-  const { submit: runUpdateManufacturer, isLoading: isUpdating } = useFormSubmit({
-    schema: type({ id: "string", name: "string" }),
+  const { submit: runUpdateManufacturer, isLoading: isUpdating, fieldErrors: updateFieldErrors, clearFieldError: updateClearFieldError } = useFormSubmit({
+    schema: type({ id: "string", name: "string > 0" }),
     mutationFn: async ({ id, name }) => {
       await rawUpdateManufacturer(id, { name });
       return true;
@@ -81,30 +82,34 @@ export function ManufacturersSection({
           {appLang === 'zh' ? '新增生產商' : 'Add New'}
         </Button>
       </div>
-      <div className="flex flex-wrap gap-2 p-3 bg-brand-navy/5 rounded-[28px] border border-brand-navy/10 shadow-inner min-h-[48px]">
-        {(manufacturers || []).map((sub) => (
-          <ManufacturerItem
-            key={sub.id}
-            manufacturer={sub}
-            onUpdate={async (mfr) => {
-              await runUpdateManufacturer({ id: String(mfr.id), name: mfr.name });
-            }}
-            onDelete={(id) => deleteManufacturer(String(id))}
-          />
-        ))}
-      </div>
+      <FormProvider fieldErrors={updateFieldErrors} clearFieldError={updateClearFieldError}>
+        <div className="flex flex-wrap gap-2 p-3 bg-brand-navy/5 rounded-[28px] border border-brand-navy/10 shadow-inner min-h-[48px]">
+          {(manufacturers || []).map((sub) => (
+            <ManufacturerItem
+              key={sub.id}
+              manufacturer={sub}
+              onUpdate={async (mfr) => {
+                return await runUpdateManufacturer({ id: String(mfr.id), name: mfr.name });
+              }}
+              onDelete={(id) => deleteManufacturer(String(id))}
+            />
+          ))}
+        </div>
+      </FormProvider>
 
-      <PromptDialog
-        open={isAddOpen}
-        onOpenChange={addDialog.toggle}
-        loading={isAdding}
-        title={t.newMfrTitle}
-        description={t.mfrNamePlaceholder}
-        onConfirm={async (name: string) => {
-          if (!name.trim()) return;
-          await runAddManufacturer({ name });
-        }}
-      />
+      <FormProvider fieldErrors={addFieldErrors} clearFieldError={addClearFieldError}>
+        <PromptDialog
+          open={isAddOpen}
+          onOpenChange={addDialog.toggle}
+          loading={isAdding}
+          title={t.newMfrTitle}
+          description={t.mfrNamePlaceholder}
+          onConfirm={async (name: string) => {
+            if (!name.trim()) return false;
+            return await runAddManufacturer({ name });
+          }}
+        />
+      </FormProvider>
     </section>
   );
 }

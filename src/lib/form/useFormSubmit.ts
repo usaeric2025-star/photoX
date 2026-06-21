@@ -106,14 +106,14 @@ export function useFormSubmit<TData, TResult>({
             // 4. Mutation Execution
             const res = await mutationFn(data, controller.signal);
             
-            setState({ isLoading: false, isError: false, isSuccess: true, error: null });
+            setState({ isLoading: false, isError: false, isSuccess: true, error: null, fieldErrors: {} });
             toast.success(successMessage);
             onSuccess?.(res);
             return resolve(true);
           } catch (err: unknown) {
             // 5. Error Handling
             if (err instanceof Error && err.name === 'AbortError') {
-              setState({ isLoading: false, isError: false, isSuccess: false, error: null });
+              setState({ isLoading: false, isError: false, isSuccess: false, error: null, fieldErrors: {} });
               return resolve(false);
             }
 
@@ -123,7 +123,7 @@ export function useFormSubmit<TData, TResult>({
             toast.error(userMsg);
             ErrorFactory.capture(appError);
             
-            setState({ isLoading: false, isError: true, isSuccess: false, error: userMsg });
+            setState({ isLoading: false, isError: true, isSuccess: false, error: userMsg, fieldErrors: {} });
             onError?.(userMsg);
 
             // 6. Rollback

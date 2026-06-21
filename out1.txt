@@ -1,0 +1,14 @@
+src/components/shared/Button.tsx:        <div className="size-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+src/components/ui/feedback/LoadingSpinner.tsx:          border-slate-300 border-t-primary rounded-full animate-spin
+src/features/diagnostics/DiagnosticStats.tsx:        <Icon name="refresh-cw" className={`w-4 h-4 text-white ${isPending ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
+src/features/diagnostics/DiagnosticCard.tsx:          <Icon name="refresh-cw" className={`w-3 h-3 ${isPending ? 'animate-spin' : ''}`} />
+src/features/diagnostics/ErrorLogViewer.tsx:                <Icon name={isClearing ? "refresh-ccw" : "trash-2"} size={14} className={isClearing ? "animate-spin" : ""} />
+src/features/diagnostics/DiagnosticsDashboard.tsx:            <Icon name="refresh-cw" size={16} className={isPending ? "animate-spin text-slate-500" : "text-slate-500"} />
+src/features/diagnostics/MaintenanceTool.tsx:              {isPreviewing && <Icon name="loader-2" className="w-3 h-3 animate-spin mr-1.5" />} {preview ? "已预检" : "预览"}
+src/features/diagnostics/MaintenanceTool.tsx:              {isExecuting && <Icon name="loader-2" className="w-3 h-3 animate-spin mr-1.5" />} {isExecuting ? `${progress}%` : "修复"}
+src/features/diagnostics/MaintenanceTool.tsx:              {isPreviewing && <Icon name="loader-2" className="w-3.5 h-3.5 animate-spin mr-1.5" />} 预览范围
+src/features/diagnostics/MaintenanceTool.tsx:              {isExecuting && <Icon name="loader-2" className="w-3.5 h-3.5 animate-spin mr-1.5" />} {isExecuting ? "执行中" : "开始执行"}
+src/features/diagnostics/AuditVisualizer.tsx:          {isAuditing ? <Icon name="loader-2" size={12} className="animate-spin mr-1.5" /> : null}
+src/features/diagnostics/AuditVisualizer.tsx:              <Icon name="loader-2" className="w-5 h-5 animate-spin text-slate-400" />
+src/features/diagnostics/TasksList.tsx:              <Icon name="refresh-cw" size={12} className={`mr-1.5 ${isPending ? 'animate-spin' : ''}`} />
+src/features/diagnostics/TasksList.tsx:             <Icon name="refresh-cw" size={20} className="text-blue-500 animate-spin" />

@@ -1,3 +1,4 @@
+import { DevToolsTrigger } from '@/features/devtools';
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React from 'react';
 import { cn } from '@/lib/utils';
@@ -60,40 +61,42 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
     <header className={cn("h-14 sm:h-16 shrink-0 border-b px-2.5 sm:px-6 flex items-center justify-between transition-all duration-300 relative bg-surface-overlay", headerBgClass, className)}>
       {/* 左侧：Logo & 计数 */}
       <div className="flex items-center gap-2 sm:gap-4 shrink-0 flex-nowrap">
-        {logoUrl && logoUrl.trim() !== '' ? (
-          <img 
-            src={logoUrl} 
-            className="h-8 sm:h-10 w-auto object-contain shrink-0" 
-            alt="Logo" 
-            loading="lazy"
-            onLoad={() => {
-              if (settings?.logo_url && settings.logo_url !== cachedLogoUrl) {
-                setCachedLogoUrl(settings.logo_url);
-              }
-            }}
-          />
-        ) : (
-          <div className="flex items-center gap-1.5 px-1">
-            <div className={cn(
-              "w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shadow-sm text-text-on-primary shrink-0",
-              role === 'admin' ? 'bg-primary' : role === 'staff' ? 'bg-warning' : 'bg-primary'
-            )}>
-              <Icon name="camera" size={18} />
+        <DevToolsTrigger>
+          {logoUrl && logoUrl.trim() !== '' ? (
+            <img 
+              src={logoUrl} 
+              className="h-8 sm:h-10 w-auto object-contain shrink-0" 
+              alt="Logo" 
+              loading="lazy"
+              onLoad={() => {
+                if (settings?.logo_url && settings.logo_url !== cachedLogoUrl) {
+                  setCachedLogoUrl(settings.logo_url);
+                }
+              }}
+            />
+          ) : (
+            <div className="flex items-center gap-1.5 px-1">
+              <div className={cn(
+                "w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shadow-sm text-text-on-primary shrink-0",
+                role === 'admin' ? 'bg-primary' : role === 'staff' ? 'bg-warning' : 'bg-primary'
+              )}>
+                <Icon name="camera" size={18} />
+              </div>
+              <span className="text-base sm:text-xl font-bold tracking-tight text-text-main">
+                PhotoX
+              </span>
+              {role === 'admin' ? (
+                <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-wide ml-1 select-none">
+                  Admin
+                </span>
+              ) : role === 'staff' ? (
+                <span className="text-[10px] font-bold bg-warning/10 text-warning px-2 py-0.5 rounded-full uppercase tracking-wide ml-1 select-none">
+                  Staff
+                </span>
+              ) : null}
             </div>
-            <span className="text-base sm:text-xl font-bold tracking-tight text-text-main">
-              PhotoX
-            </span>
-            {role === 'admin' ? (
-              <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-wide ml-1 select-none">
-                Admin
-              </span>
-            ) : role === 'staff' ? (
-              <span className="text-[10px] font-bold bg-warning/10 text-warning px-2 py-0.5 rounded-full uppercase tracking-wide ml-1 select-none">
-                Staff
-              </span>
-            ) : null}
-          </div>
-        )}
+          )}
+        </DevToolsTrigger>
 
         {totalCount !== undefined && (
           <div className="flex items-center gap-2 text-[10px] sm:text-xs font-bold bg-slate-50 border border-slate-200 rounded-full px-2.5 py-1 select-none shrink-0 cursor-default justify-center shadow-sm">

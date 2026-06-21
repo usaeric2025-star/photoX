@@ -21,7 +21,7 @@ interface StaffUnlockDialogProps {
 export function StaffUnlockDialog({
   isOpen, onClose, passInput, setPassInput, passError, onSubmit, onLogin, signIn: rawSignIn, labels
 }: StaffUnlockDialogProps) {
-  const { submit: runUnlock, isLoading: isUnlocking } = useFormSubmit({
+  const { submit: runUnlock, isLoading: isUnlocking, fieldErrors, clearFieldError } = useFormSubmit({
     schema: type('unknown'),
     mutationFn: async (e: any) => {
       if (e && e.preventDefault) e.preventDefault();

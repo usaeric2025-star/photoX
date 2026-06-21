@@ -8,6 +8,7 @@ import { Tag } from "@/types";
 import { safeArray } from "@/lib/utils";
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
 import { type } from 'arktype';
+import { FormProvider } from '@/lib/form/useFormField';
 
 interface BasePhotoTagSelectorProps {
   selectedTagIds: string[];
@@ -74,8 +75,8 @@ function BasePhotoTagSelector({
     editDialog.open();
   };
 
-  const { submit: runAddTag, isLoading: isAdding } = useFormSubmit({
-    schema: type({ name: "string" }),
+  const { submit: runAddTag, isLoading: isAdding, fieldErrors: addFieldErrors, clearFieldError: addClearFieldError } = useFormSubmit({
+    schema: type({ name: "string > 0" }),
     mutationFn: async ({ name }) => {
       const trimmed = name.trim();
       if (!trimmed) return null;
@@ -98,8 +99,8 @@ function BasePhotoTagSelector({
     errorMessage: "新增標籤失敗 / Add tag failed"
   });
 
-  const { submit: runUpdateTag, isLoading: isUpdating } = useFormSubmit({
-    schema: type({ id: "string", name: "string" }),
+  const { submit: runUpdateTag, isLoading: isUpdating, fieldErrors: editFieldErrors, clearFieldError: editClearFieldError } = useFormSubmit({
+    schema: type({ id: "string", name: "string > 0" }),
     mutationFn: async ({ id, name }) => {
       await rawUpdateTag(id, name.trim());
       return true;
@@ -114,37 +115,45 @@ function BasePhotoTagSelector({
         tags={sortedTags}
         selectedTagIds={cleanSelectedIds}
         onToggleTag={handleToggleTag}
-        onUpdateTag={async (id, name) => runUpdateTag({ id, name })}
+        onUpdateTag={async (id, name) => {
+           return await runUpdateTag({ id, name });
+        }}
         onDeleteTag={deleteTag}
         onQuickAdd={onQuickAdd}
         onRenameTagRequest={onRenameTagRequest}
         showHotEffects={false}
         hideHotLabel={hideHotLabel}
       />
-      <PromptDialog
-        open={isAddOpen}
-        onOpenChange={addDialog.toggle}
-        loading={isAdding}
-        title="新增標籤 / Add Tag"
-        description="輸入標籤名稱 / Enter Tag Name"
-        onConfirm={async (name: string) => {
-          await runAddTag({ name });
-        }}
-      />
-      {editingTag && (
+      <FormProvider fieldErrors={addFieldErrors} clearFieldError={addClearFieldError}>
         <PromptDialog
-          open={isEditOpen}
-          onOpenChange={editDialog.toggle}
-          loading={isUpdating}
-          title="編輯標籤 / Edit Tag"
-          description="輸入標籤名稱 / Enter Tag Name:"
-          defaultValue={editingTag.name}
-          onConfirm={async (n: string) => {
-            if (n && n.trim()) {
-              await runUpdateTag({ id: String(editingTag.id), name: n });
-            }
+          open={isAddOpen}
+          onOpenChange={addDialog.toggle}
+          loading={isAdding}
+          title="新增標籤 / Add Tag"
+          description="輸入標籤名稱 / Enter Tag Name"
+          onConfirm={async (name: string) => {
+            if (!name.trim()) return false;
+            return await runAddTag({ name });
           }}
         />
+      </FormProvider>
+      {editingTag && (
+        <FormProvider fieldErrors={editFieldErrors} clearFieldError={editClearFieldError}>
+          <PromptDialog
+            open={isEditOpen}
+            onOpenChange={editDialog.toggle}
+            loading={isUpdating}
+            title="編輯標籤 / Edit Tag"
+            description="輸入標籤名稱 / Enter Tag Name:"
+            defaultValue={editingTag.name}
+            onConfirm={async (n: string) => {
+              if (n && n.trim()) {
+                return await runUpdateTag({ id: String(editingTag.id), name: n });
+              }
+              return false;
+            }}
+          />
+        </FormProvider>
       )}
     </>
   );

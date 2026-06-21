@@ -1,3 +1,4 @@
+import { DevToolsTrigger } from '@/features/devtools';
 import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React from 'react';
 import { Icon } from '@/components/ui/Icon';
@@ -67,43 +68,45 @@ export function AdminHeader({ className }: AdminHeaderProps) {
     <header className={`h-14 sm:h-16 shrink-0 border-b px-2.5 sm:px-4 flex items-center justify-between font-sans transition-colors duration-300 relative ${headerBgClass} ${className || ''}`}>
       {/* 左侧：Logo & 计数 */}
       <div className="flex items-center gap-1 sm:gap-3 shrink-0 flex-nowrap">
-        {logoUrl && logoUrl.trim() !== '' ? (
-          <img 
-              src={logoUrl} 
-              className="h-7 sm:h-9 w-auto object-contain shrink-0" 
-              alt="Logo" 
-              loading="lazy"
-              onLoad={() => {
-                if (settings?.logo_url && settings.logo_url !== cachedLogoUrl) {
-                  setCachedLogoUrl(settings.logo_url);
-                }
-              }}
-            />
-          ) : (
-            <div className="flex items-center gap-1 font-bold tracking-tighter">
-              <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl flex items-center justify-center shadow-sm text-white shrink-0 ${role === 'admin' ? 'bg-indigo-600' : role === 'staff' ? 'bg-amber-600' : 'bg-slate-800'}`}>
-                <Icon name="camera" size={14} className="sm:size-4 stroke-[2.5]" />
+        <DevToolsTrigger>
+          {logoUrl && logoUrl.trim() !== '' ? (
+            <img 
+                src={logoUrl} 
+                className="h-7 sm:h-9 w-auto object-contain shrink-0" 
+                alt="Logo" 
+                loading="lazy"
+                onLoad={() => {
+                  if (settings?.logo_url && settings.logo_url !== cachedLogoUrl) {
+                    setCachedLogoUrl(settings.logo_url);
+                  }
+                }}
+              />
+            ) : (
+              <div className="flex items-center gap-1 font-bold tracking-tighter">
+                <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl flex items-center justify-center shadow-sm text-white shrink-0 ${role === 'admin' ? 'bg-indigo-600' : role === 'staff' ? 'bg-amber-600' : 'bg-slate-800'}`}>
+                  <Icon name="camera" size={14} className="sm:size-4 stroke-[2.5]" />
+                </div>
+                <span className="text-sm sm:text-lg font-black tracking-tighter">
+                  PHOT<span className={`${role === 'admin' ? 'text-indigo-600' : role === 'staff' ? 'text-amber-600' : 'text-slate-500'}`}>O</span>X
+                </span>
+                {role === 'admin' ? (
+                  <span className="text-[8px] sm:text-[9px] font-black bg-indigo-600 text-white px-1.5 py-0.5 rounded-full uppercase tracking-wider ml-1 select-none">
+                    Admin
+                  </span>
+                ) : role === 'staff' ? (
+                  <span className="text-[8px] sm:text-[9px] font-black bg-amber-600 text-white px-1.5 py-0.5 rounded-full uppercase tracking-wider ml-1 select-none">
+                    Staff
+                  </span>
+                ) : (
+                  <span className="text-[8px] sm:text-[9px] font-black bg-slate-600 text-white px-1.5 py-0.5 rounded-full uppercase tracking-wider ml-1 select-none">
+                    Guest
+                  </span>
+                )}
               </div>
-              <span className="text-sm sm:text-lg font-black tracking-tighter">
-                PHOT<span className={`${role === 'admin' ? 'text-indigo-600' : role === 'staff' ? 'text-amber-600' : 'text-slate-500'}`}>O</span>X
-              </span>
-              {role === 'admin' ? (
-                <span className="text-[8px] sm:text-[9px] font-black bg-indigo-600 text-white px-1.5 py-0.5 rounded-full uppercase tracking-wider ml-1 select-none">
-                  Admin
-                </span>
-              ) : role === 'staff' ? (
-                <span className="text-[8px] sm:text-[9px] font-black bg-amber-600 text-white px-1.5 py-0.5 rounded-full uppercase tracking-wider ml-1 select-none">
-                  Staff
-                </span>
-              ) : (
-                <span className="text-[8px] sm:text-[9px] font-black bg-slate-600 text-white px-1.5 py-0.5 rounded-full uppercase tracking-wider ml-1 select-none">
-                  Guest
-                </span>
-              )}
-            </div>
-          )}
+            )}
+        </DevToolsTrigger>
   
-          {/* 照片总数展示 */}
+        {/* 照片总数展示 */}
           <div className="flex items-center gap-2 text-[10px] sm:text-xs font-bold bg-slate-50 border border-slate-200 rounded-full px-2.5 py-1 select-none shrink-0 cursor-default justify-center shadow-sm">
             <span className="text-slate-500 uppercase tracking-tighter text-[9px]">{lang === 'zh' ? '总存量' : 'Total'}</span>
             <span className="text-slate-900 font-black">
