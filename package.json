@@ -42,6 +42,7 @@
     "postgres": "^3.4.9",
     "react": "19.2.7",
     "react-dom": "19.2.7",
+    "react-error-boundary": "^6.1.2",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.6.0",
     "thumbhash": "^0.1.1",

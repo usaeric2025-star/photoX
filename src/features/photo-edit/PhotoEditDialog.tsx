@@ -1,23 +1,42 @@
 import React, { useState } from "react";
 import { NativeDialog } from "@/components/ui/NativeDialog";
 import { useUIStore } from "@/store";
+import { useFormContext } from "el-form-react-hooks";
 import { 
   usePhoto,
   useFilters,
 } from "@/hooks";
-import { useConfirm } from "@/context/ConfirmContext";
 import { PhotoEditSessionProvider } from "@/hooks/photo/PhotoEditSessionProvider";
 import { usePhotoEditSessionContext } from "@/hooks/photo/usePhotoEditSessionContext";
 import { PhotoEditTabs } from "./PhotoEditTabs";
 import { DialogHeader } from "./DialogHeader";
+import { useFormSubmit } from "@/lib/form/useFormSubmit";
+import { EditPhotoSchema } from "@/schemas/photoEdit";
 
 function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: boolean; handleClose: () => void; editPhotoId: string; }) {
   const { data: photo, isPending } = usePhoto(editPhotoId);
   const appLang = useUIStore((s) => s.appLang);
-  const confirm = useConfirm();
+  const { form } = useFormContext();
 
   const [showConfirm, setShowConfirm] = useState(false);
   const { isDirty, commit, discard } = usePhotoEditSessionContext();
+  
+  // New centralized submit
+  const { submit, isLoading } = useFormSubmit({
+    schema: EditPhotoSchema,
+    mutationFn: async (data, signal) => {
+        // commit is assumed to take data, but commit in context might not take arguments based on usage. 
+        // Based on previous code, commit() was called without arguments. 
+        // I will adjust to just call commit()
+        return await commit(); 
+    },
+    onSuccess: () => {
+      setShowConfirm(false);
+      handleClose();
+    },
+    successMessage: '照片已儲存',
+    errorMessage: '儲存失敗，請檢查表单'
+  });
 
   const handleInterceptClose = async () => {
     if (isDirty) {
@@ -34,9 +53,8 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
   };
   
   const handleSave = async () => {
-    await commit();
-    setShowConfirm(false);
-    handleClose();
+    const formData = form.getValues();
+    await submit(formData);
   };
 
   if (isPending) {
@@ -45,9 +63,6 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
         id="photo-edit-dialog-loading"
         open={isOpen} 
         onClose={handleClose} 
-        size="5xl" 
-        hidePadding
-        showCloseButton={false}
         className="max-h-[90vh] overflow-hidden flex flex-col p-0"
       >
         <div className="p-20 flex flex-col items-center justify-center gap-4 min-h-[500px]">
@@ -59,15 +74,7 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
   }
 
   return (
-    <NativeDialog 
-      id="photo-edit-dialog-active"
-      open={isOpen} 
-      onClose={handleInterceptClose} 
-      size="5xl" 
-      hidePadding
-      showCloseButton={false}
-      className="max-h-[90vh] overflow-hidden flex flex-col p-0"
-    >
+    <>
       <div className="flex flex-col h-full bg-surface-soft min-h-[500px]">
         <DialogHeader onClose={handleInterceptClose} onDeleteClick={() => {}} />
         <PhotoEditTabs />
@@ -77,8 +84,6 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
         id="dirty-confirm-dialog"
         open={showConfirm}
         onClose={() => setShowConfirm(false)}
-        size="sm"
-        title={appLang === 'zh' ? '有未保存的修改' : 'Unsaved changes'}
       >
         <div className="p-6 flex flex-col gap-4">
           <p className="text-text-main">
@@ -94,7 +99,7 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
           </div>
         </div>
       </NativeDialog>
-    </NativeDialog>
+    </>
   );
 }
 

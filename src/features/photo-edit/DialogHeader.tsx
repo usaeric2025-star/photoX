@@ -63,32 +63,11 @@ export function DialogHeader({
     }
   };
 
-  const onToggleHidden = async () => {
-    const nextValue = !isHidden;
-    form.setValue('is_hidden', nextValue);
-    if (editPhotoId) {
-      await updateAdminPhoto({ id: editPhotoId, updates: { is_hidden: nextValue } });
-    }
-  };
-
-  const onDelete = () => {
-    if (confirm(appLang === 'zh' ? '确定要删除此照片吗？' : 'Are you sure you want to delete this photo?')) {
-       if (editPhotoId) {
-          deletePhoto([editPhotoId]).then(() => {
-            setModal(null);
-            setPhotoId(null);
-          });
-       }
-    }
-  };
-
   const onAiAnalyze = async () => {
     const finalImageUrl = detailPhoto?.image_url;
-    console.log("AI Analyze clicked", { editPhotoId, finalImageUrl: !!finalImageUrl });
     if (finalImageUrl) {
       await handleAiAnalyze(finalImageUrl);
     } else {
-      console.log("AI Analyze: missing image data", { editPhotoId, detailPhoto });
       showToast.error(appLang === 'zh' ? '照片信息缺失，无法识别' : 'Photo data missing');
     }
   }
@@ -167,7 +146,12 @@ export function DialogHeader({
 
         <button
           type="button"
-          onClick={commit}
+          onClick={async () => {
+            const { success, error } = await commit();
+            if (!success) {
+              showToast.error(error || '保存失败，请检查表单');
+            }
+          }}
           disabled={isPending || isAnalyzing}
           className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-blue-600 shadow-sm transition-all disabled:opacity-50 ${isPending || isAnalyzing ? "bg-blue-400 text-white border-blue-400 cursor-wait" : "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20 active:bg-blue-700"}`}
         >

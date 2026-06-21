@@ -13,7 +13,7 @@ import { ErrorFactory } from '@/lib/error';
 interface PhotoEditSessionContextValue {
   isDirty: boolean;
   isPending: boolean;
-  commit: (e?: React.MouseEvent | React.FormEvent) => Promise<void>;
+  commit: (e?: React.MouseEvent | React.FormEvent) => Promise<{ success: boolean; error?: string }>;
   discard: () => void;
   form: any;
   photoId: string;
@@ -71,50 +71,44 @@ export const PhotoEditSessionProvider = ({
   
   const isDirty = form.formState.isDirty;
   
-  const commit = useCallback(async (e?: React.MouseEvent | React.FormEvent) => {
+  const commit = useCallback(async (e?: React.MouseEvent | React.FormEvent): Promise<{ success: boolean; error?: string }> => {
     if (e && e.preventDefault) {
       e.preventDefault();
       e.stopPropagation();
     }
+    
     const valid = await form.trigger();
-    console.log('[PhotoEdit] Form Validation Triggered. valid?', valid, form.formState.errors);
     if (!valid) {
       const errors = form.formState.errors;
       logger.warn('[PhotoEdit] Form Validation Failed:', errors);
       const firstError = Object.values(errors)[0] as any;
       const message = typeof firstError === 'string' ? firstError : (firstError?.message || '表单验证失败，请检查必填项');
-      showToast.error(message);
-      return;
+      return { success: false, error: message };
     }
     
-    try {
-      const values = form.watch() as EditFormData;
-      console.log('[PhotoEdit] Submitting values:', values);
-
-      // Auto-generate item_code if missing
-      if (!values.item_code) {
-        const newCode = generateItemCode();
-        values.item_code = newCode;
-        form.setValue('item_code', newCode);
-      }
-
-      // Convert using our strict Adapter (fails fast if misaligned)
-      const saveData = editFormToSaveData(values, photoId, {
-        tags: photo?.tags,
-        created_at: photo?.created_at,
-        updated_at: new Date().toISOString(),
-      });
-
-      await updateMutation.mutateAsync({
-        id: photoId,
-        updates: saveData as unknown as Partial<Photo>
-      });
-      showToast.success('保存成功');
-      onSuccess?.();
-    } catch (err: unknown) {
-      console.error('[PhotoEdit] Save failed:', err);
-      ErrorFactory.handleError(err, '保存照片数据');
+    const values = form.watch() as EditFormData;
+    
+    // Auto-generate item_code if missing
+    if (!values.item_code) {
+      const newCode = generateItemCode();
+      values.item_code = newCode;
+      form.setValue('item_code', newCode);
     }
+    
+    // Convert using our strict Adapter (fails fast if misaligned)
+    const saveData = editFormToSaveData(values, photoId, {
+      tags: photo?.tags,
+      created_at: photo?.created_at,
+      updated_at: new Date().toISOString(),
+    });
+    
+    await updateMutation.mutateAsync({
+      id: photoId,
+      updates: saveData as unknown as Partial<Photo>
+    });
+    
+    onSuccess?.();
+    return { success: true };
   }, [photoId, form, photo, updateMutation, onSuccess]);
   
   const discard = () => {

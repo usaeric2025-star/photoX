@@ -1,4 +1,5 @@
-import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
+import { AppErrorBoundary } from '@/components/layout/AppErrorBoundary';
+import { DialogContainer } from '@/components/layout/DialogContainer';
 import { ConfirmProvider } from './context/ConfirmContext';
 import { RouterProvider } from '@tanstack/react-router';
 import { router } from './router/index';
@@ -10,7 +11,6 @@ import { useAuthStore, initAuthListener } from '@/store/useAuthStore';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { PortalRoot } from '@/components/ui/PortalRoot';
 // Removed migrateStorage
-import { handleError } from './lib/error/errorHandler';
 import { logger } from '@/lib/logger';
 import { startAutoDiagnose } from '@/features/diagnostics/autoDiagnose';
 import { useUIStore } from '@/store/useUIStore';
@@ -111,13 +111,14 @@ export default function AppRoutes() {
   }
 
   return (
-    <ErrorBoundary>
+    <AppErrorBoundary>
       <ConfirmProvider>
         <RouterProvider router={router} context={routerContext} />
       </ConfirmProvider>
+      <DialogContainer />
       <PortalRoot />
       <Analytics />
-    </ErrorBoundary>
+    </AppErrorBoundary>
   );
 }
 
