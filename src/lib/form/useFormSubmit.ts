@@ -1,10 +1,10 @@
 import { useState, useCallback, useRef } from 'react';
-import { type Schema } from 'arktype';
+import { type Type } from 'arktype';
 import { toast } from 'sonner';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 interface UseFormSubmitOptions<TData, TResult> {
-  schema: Schema<TData>;
+  schema: Type<TData>;
   mutationFn: (data: TData, signal: AbortSignal) => Promise<TResult>;
   onSuccess?: (result: TResult) => void;
   onError?: (error: string) => void;

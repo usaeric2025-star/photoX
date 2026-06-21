@@ -1,19 +1,21 @@
 import React from 'react';
 import { NativeDialog } from '@/components/ui/NativeDialog';
 import { PhotoEditDialog } from '@/features/photo-edit/PhotoEditDialog';
-import { useUIStore } from '@/store';
+import { useFilters } from '@/hooks';
 
 export function DialogContainer() {
-  const { isPhotoEditOpen, closePhotoEdit } = useUIStore();
+  const { modal, setModal } = useFilters();
+  const isOpen = modal === 'edit';
+  const close = () => setModal(null);
 
   return (
     <>
       <NativeDialog 
         id="photo-edit" 
-        open={isPhotoEditOpen} 
-        onClose={closePhotoEdit}
+        open={isOpen} 
+        onClose={close}
       >
-        <PhotoEditDialog onClose={closePhotoEdit} />
+        <PhotoEditDialog onClose={close} />
       </NativeDialog>
     </>
   );

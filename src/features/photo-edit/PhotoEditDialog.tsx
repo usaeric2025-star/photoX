@@ -53,7 +53,7 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
   };
   
   const handleSave = async () => {
-    const formData = form.getValues();
+    const formData = form.watch();
     await submit(formData);
   };
 
