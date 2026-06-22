@@ -79,7 +79,7 @@ export function NativePopover({
       {createPortal(
         <dialog
           ref={dialogRef}
-          className="absolute m-0 bg-card rounded-xl shadow-xl p-2 border border-border backdrop:bg-transparent outline-none z-50 animate-in fade-in zoom-in-95 duration-100"
+          className="absolute m-0 bg-card rounded-xl shadow-xl p-2 border border-border backdrop:bg-transparent outline-none animate-in fade-in zoom-in-95 duration-100"
           style={{ right: 'auto', bottom: 'auto' }}
           onClose={() => setIsOpen(false)}
           onClick={(e) => {

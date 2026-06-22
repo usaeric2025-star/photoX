@@ -85,7 +85,7 @@ export function TagItem({
 
       {activeTagMenuId === tag.id && (
           <div
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-brand-navy rounded-xl shadow-xl p-1 flex flex-col gap-0.5 z-[var(--z-dropdown)] min-w-[120px] animate-scale-in"
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-brand-navy rounded-xl shadow-xl p-1 flex flex-col gap-0.5 min-w-[120px] animate-scale-in"
           >
             <button
               onClick={handleTogglePin}

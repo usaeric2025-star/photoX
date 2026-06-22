@@ -111,8 +111,9 @@ export function PhotoLightbox({
   // ============ 關閉按鈕（右上） ============
   const CloseButton = () => (
     <button
+      type="button"
       onClick={() => onOpenChange(false)}
-      className="absolute top-4 right-4 p-2 rounded-full bg-black/50 hover:bg-black/70 text-white transition-colors cursor-pointer"
+      className="absolute top-4 right-4 p-2.5 rounded-full bg-black/40 hover:bg-black/70 text-white transition-colors cursor-pointer pointer-events-auto backdrop-blur-md"
       aria-label="關閉"
     >
       <Icon name="x" className="w-6 h-6" />
@@ -137,8 +138,8 @@ export function PhotoLightbox({
     return (
       <div className="absolute bottom-6 left-4 right-4 max-w-4xl mx-auto pointer-events-auto">
         <div className="bg-black/60 backdrop-blur-md rounded-2xl p-4 md:p-5 border border-white/10 space-y-4 shadow-2xl">
-          {/* Header Info: Title & Categorization */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          {/* Top level: Title, Categorization, and Public actions */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-white/5">
             <div className="space-y-1 min-w-0 flex-1">
               <h3 className="text-white text-lg font-semibold tracking-tight truncate">
                 {title || "未命名照片"}
@@ -161,24 +162,54 @@ export function PhotoLightbox({
               ) : null}
             </div>
 
-            {/* Toggle extra details if metadata is present */}
-            {hasMetadata && (
+            {/* Public Action Icons aligned right */}
+            <div className="flex items-center gap-2">
+              {hasMetadata && (
+                <button
+                  type="button"
+                  onClick={() => setInfoExpanded(!infoExpanded)}
+                  className={`p-2 rounded-xl transition-all cursor-pointer border ${infoExpanded ? 'bg-white/25 border-white/20 text-white' : 'bg-white/10 border-white/5 text-white/80 hover:bg-white/15 hover:text-white'}`}
+                  title={infoExpanded ? "隱藏詳細資訊" : "顯示詳細資訊"}
+                >
+                  <Icon name="info" className="w-4 h-4" />
+                </button>
+              )}
+              {onDownload && (
+                <button
+                  type="button"
+                  onClick={() => onDownload(index)}
+                  className="p-2 rounded-xl border border-white/5 bg-white/10 hover:bg-white/15 text-white/80 hover:text-white transition-all cursor-pointer active:scale-95"
+                  title="下載"
+                >
+                  <Icon name="download" className="w-4 h-4" />
+                </button>
+              )}
+              {onShare && (
+                <button
+                  type="button"
+                  onClick={() => onShare(index)}
+                  className="p-2 rounded-xl border border-white/5 bg-white/10 hover:bg-white/15 text-white/80 hover:text-white transition-all cursor-pointer active:scale-95"
+                  title="分享"
+                >
+                  <Icon name="share-2" className="w-4 h-4" />
+                </button>
+              )}
               <button
                 type="button"
-                onClick={() => setInfoExpanded(!infoExpanded)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-white/80 hover:text-white text-xs font-semibold select-none transition-all cursor-pointer border border-white/5"
+                onClick={() => navigator.clipboard.writeText(currentImage.src)}
+                className="p-2 rounded-xl border border-white/5 bg-white/10 hover:bg-white/15 text-white/80 hover:text-white transition-all cursor-pointer active:scale-95"
+                title="複製連結"
               >
-                <Icon name="info" className="w-4 h-4" />
-                {infoExpanded ? "隱藏詳細資訊" : "顯示詳細資訊"}
+                <Icon name="link" className="w-4 h-4" />
               </button>
-            )}
+            </div>
           </div>
 
           {/* Sub-Card: EXIF & Details panel (collapsible) */}
           {infoExpanded && hasMetadata && metadata && (
-            <div className="pt-3 border-t border-white/5 space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-200">
+            <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-200">
               {/* Core EXIF values */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-white/70 text-xs">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-white/70 text-xs mt-1">
                 {metadata.date && (
                   <div className="flex flex-col gap-0.5">
                     <span className="text-white/30 uppercase tracking-widest text-[9px] font-bold">拍攝日期</span>
@@ -228,10 +259,9 @@ export function PhotoLightbox({
             </div>
           )}
 
-          {/* Bottom Tools bar: Admin Mutators on left, global client actions on right */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-white/10">
-            {/* Left aligned: Edit / Delete / Cover (Only for admins, dynamically rendered based on callback bindings) */}
-            <div className="flex flex-wrap items-center gap-2">
+          {/* Admin Management Tools (Edit, Set Cover, Delete) aligned left */}
+          {(onEdit || onSetCover || onDelete) && (
+            <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-white/10">
               {onEdit && (
                 <button
                   type="button"
@@ -263,40 +293,7 @@ export function PhotoLightbox({
                 </button>
               )}
             </div>
-
-            {/* Right aligned: download, share, link copying */}
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => onDownload?.(index)}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white/80 hover:text-white text-xs font-bold transition-all cursor-pointer active:scale-95 border border-white/5"
-                title="下載"
-              >
-                <Icon name="download" className="w-3.5 h-3.5" />
-                下載
-              </button>
-              <button
-                type="button"
-                onClick={() => onShare?.(index)}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white/80 hover:text-white text-xs font-bold transition-all cursor-pointer active:scale-95 border border-white/5"
-                title="分享"
-              >
-                <Icon name="share-2" className="w-3.5 h-3.5" />
-                分享
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  navigator.clipboard.writeText(currentImage.src);
-                }}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white/80 hover:text-white text-xs font-bold transition-all cursor-pointer active:scale-95 border border-white/5"
-                title="複製連結"
-              >
-                <Icon name="link" className="w-3.5 h-3.5" />
-                複製連結
-              </button>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     );
@@ -306,35 +303,36 @@ export function PhotoLightbox({
   if (!open) return null;
 
   return (
-    <dialog
-      ref={dialogRef}
-      className="m-0 p-0 w-screen h-[100dvh] max-w-none max-h-none border-none bg-black/95 outline-none backdrop:bg-black/95 backdrop:backdrop-blur-md overflow-hidden"
-    >
-      <div className="relative w-full h-full text-white overflow-hidden">
-        {/* Main Lightbox Component rendering the active image */}
-        <div className="w-full h-full">
-          <LightboxStyled
-            images={images.map(img => ({
-              src: img.src,
-              alt: img.alt,
-              caption: img.title || img.alt,
-            }))}
-            open={open}
-            index={index}
-            onIndexChange={setIndex}
-            onOpenChange={onOpenChange}
-            showThumbnails={true}
-            zoom={true}
-            loop={true}
-          />
+    <>
+      <dialog
+        ref={dialogRef}
+        className="m-0 p-0 w-screen h-[100dvh] max-w-none max-h-none border-none bg-transparent outline-none backdrop:bg-transparent overflow-hidden pointer-events-none"
+      >
+        <div className="relative w-full h-full flex flex-col text-white overflow-hidden pointer-events-none">
+          {/* Custom Overlays Overlaying on top within native isolated stacking layer */}
+          <div className="absolute inset-0 pointer-events-none">
+            <CloseButton />
+            <TitleBar />
+          </div>
         </div>
-
-        {/* Custom Overlays Overlaying on top within native isolated stacking layer */}
-        <div className="absolute inset-0 pointer-events-none">
-          <CloseButton />
-          <TitleBar />
-        </div>
-      </div>
-    </dialog>
+      </dialog>
+      <LightboxStyled
+        images={images.map(img => ({
+          src: img.src,
+          alt: img.alt,
+          caption: img.title || img.alt,
+        }))}
+        open={open}
+        index={index}
+        onIndexChange={setIndex}
+        onOpenChange={onOpenChange}
+        showThumbnails={true}
+        showClose={false}
+        showCaption={false}
+        showCounter={false}
+        zoom={true}
+        loop={true}
+      />
+    </>
   );
 }

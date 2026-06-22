@@ -67,7 +67,12 @@ export function DevToolsPanel() {
               user: user?.email,
               cache: cacheCount,
               fetching: isFetching,
-              errors: errors.slice(-5),
+              errorsCount: errors.length,
+              recentErrors: errors.slice(-5).map((e: any) => ({
+                code: e.code,
+                message: e.message,
+                traceId: e.traceId
+              })),
             };
             navigator.clipboard.writeText(JSON.stringify(info, null, 2));
           }}

@@ -28,7 +28,7 @@ export function TaskBadge() {
         e.stopPropagation();
         useUIStore.getState().update({ isTaskDrawerOpen: !useUIStore.getState().isTaskDrawerOpen });
       }}
-      className="fixed bottom-4 right-4 z-50 bg-primary text-white rounded-full w-12 h-12 shadow-lg flex items-center justify-center font-bold"
+      className="fixed bottom-4 right-4 bg-primary text-white rounded-full w-12 h-12 shadow-lg flex items-center justify-center font-bold"
     >
       {count}
     </button>,

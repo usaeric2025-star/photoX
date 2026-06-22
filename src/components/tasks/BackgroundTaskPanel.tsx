@@ -61,7 +61,7 @@ export function BackgroundTaskPanel() {
       <div 
         ref={panelRef}
         popover="manual"
-        className="fixed z-[2147483647] flex flex-col gap-2 w-64 pointer-events-none bg-transparent m-0 p-0 overflow-visible border-none"
+        className="fixed flex flex-col gap-2 w-64 pointer-events-none bg-transparent m-0 p-0 overflow-visible border-none"
         style={style}
       >
         <div 
