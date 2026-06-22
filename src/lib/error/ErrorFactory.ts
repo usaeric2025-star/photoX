@@ -1,6 +1,7 @@
 import { ErrorCode } from '@/shared/errorCodes';
 import { AppError, ErrorSeverity, isAppError, ErrorCategory } from './AppError';
 import { showToast } from '@/lib/ui/toast';
+import { logger } from '@/lib/logger';
 
 export class ErrorFactory {
   private static mapResourceToChinese(resource: string): string {
@@ -185,12 +186,12 @@ export class ErrorFactory {
     }
 
     if (!appError.shouldReport) {
-      console.info('[Skip Report]', appError.message);
+      logger.info('[Skip Report]', appError.message);
       return;
     }
 
     // 1. Console 輸出 (精簡結構以便閱讀)
-    console.error('[AppError]', {
+    logger.error('[AppError]', {
       message: appError.message,
       category: appError.category,
       traceId: appError.traceId,
@@ -267,8 +268,7 @@ export class ErrorFactory {
   }
 
   static async logResult(payload: unknown, level: 'success' | 'error', context: unknown) {
-    // 審計日誌實在此保留 Console 版
-    console.log('[Audit]', { payload, level, context });
+    logger.debug('[Audit]', { payload, level, context });
   }
   
   static extractErrorMessage(error: unknown): string {
@@ -345,11 +345,11 @@ export class ErrorFactory {
 
   // 以下方法改為 No-op 以保持接口兼容性
   static setUser(user: unknown) {
-    console.debug('[ErrorFactory] setUser:', user);
+    logger.debug('[ErrorFactory] setUser:', user);
   }
 
   static addBreadcrumb(breadcrumb: unknown) {
-    console.debug('[ErrorFactory] addBreadcrumb:', breadcrumb);
+    logger.debug('[ErrorFactory] addBreadcrumb:', breadcrumb);
   }
 }
 

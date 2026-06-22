@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Icon } from '@/components/ui/Icon';
+import { logger } from '@/lib/logger';
 
 export interface NativeDialogProps {
   id: string;
@@ -135,7 +136,7 @@ export function NativeDialog({
       // Ignore click if the original click element is already detached from the DOM (e.g. unmounted during click event)
       const originalTarget = e.nativeEvent?.target as Node;
       if (originalTarget && !document.body.contains(originalTarget)) {
-        console.log('[NativeDialog] Detached element click detected; ignoring backdrop close');
+        logger.debug('[NativeDialog] Detached element click detected; ignoring backdrop close');
         return;
       }
       onClose();

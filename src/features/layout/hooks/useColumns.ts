@@ -7,7 +7,7 @@ const COLUMN_OPTIONS: ColumnCount[] = [2, 3, 5];
 
 export function useColumns() {
   const route = useRoute();
-  const params = route.params as any;
+  const params = route.params as Record<string, unknown>;
   const [savedColumns, setSavedColumns] = useLocalStorage<ColumnCount>({ key: 'photo-grid-columns', defaultValue: DEFAULT_COLUMNS });
   
   const columns: ColumnCount = (() => {
@@ -21,10 +21,10 @@ export function useColumns() {
   const setColumns = (newColumns: ColumnCount) => {
     setSavedColumns(newColumns);
     const currentRouteName = route.name;
-    const cleanParams: Record<string, any> = {};
+    const cleanParams: Record<string, unknown> = {};
     for (const key in route.params) {
       if (key !== '~internal' && key !== 'href') {
-        cleanParams[key] = (route.params as any)[key];
+        cleanParams[key] = (route.params as Record<string, unknown>)[key];
       }
     }
 

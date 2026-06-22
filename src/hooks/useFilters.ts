@@ -9,15 +9,15 @@ export interface UseFiltersOptions {
 
 export const useFilters = (options: UseFiltersOptions = {}) => {
   const route = useRoute();
-  const params = route.params as any;
+  const params = route.params as Record<string, unknown>;
 
-  const updateSearch = useCallback((updates: Record<string, any>) => {
+  const updateSearch = useCallback((updates: Record<string, unknown>) => {
     const currentRouteName = route.name;
 
-    const cleanParams: Record<string, any> = {};
+    const cleanParams: Record<string, unknown> = {};
     for (const key in route.params) {
       if (key !== '~internal' && key !== 'href') {
-        cleanParams[key] = (route.params as any)[key];
+        cleanParams[key] = (route.params as Record<string, unknown>)[key];
       }
     }
 
@@ -68,7 +68,7 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
     updateSearch({ batch: val || undefined });
   }, [updateSearch]);
 
-  const photoId = (params.photoId as string) || (route.name === 'photo' ? route.params.photoId : null);
+  const photoId = (params.photoId as string) || (route.name === 'photo' ? (route.params as Record<string, unknown>).photoId as string : null);
   const setPhotoId = useCallback((val: string | null) => {
       // 如果是 photo 詳情頁，關閉後回到首頁
       if (route.name === 'photo') {

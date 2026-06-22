@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { type Type } from 'arktype';
 import { toast } from 'sonner';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
@@ -64,6 +64,10 @@ export function useFormSubmit<TData, TResult>({
       debounceTimer.current = null;
     }
   }, []);
+
+  useEffect(() => {
+    return cancel;
+  }, [cancel]);
 
   const submit = useCallback(
     async (rawData: unknown): Promise<boolean> => {

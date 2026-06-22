@@ -7,6 +7,7 @@ import { usePublicSettings, useIsManagement } from '@/hooks';
 import { LightboxInfoCard } from './components/LightboxInfoCard';
 import { LightboxSlide } from '@/lib/lightbox';
 import { useAuthStore } from '@/store/useAuthStore';
+import { logger } from '@/lib/logger';
 
 import { Icon } from '@/components/ui/Icon';
 
@@ -49,7 +50,7 @@ export function PhotoLightbox() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
-      console.error('Download failed:', error);
+      logger.error('Download failed:', typeof error === 'object' && error ? error : String(error));
       window.open(slide.src, '_blank');
     }
   };
