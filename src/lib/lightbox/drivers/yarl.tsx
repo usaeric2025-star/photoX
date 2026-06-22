@@ -72,23 +72,26 @@ export function YARLDriver({
           backgroundColor: 'rgba(0,0,0,0.92)',
           backdropFilter: 'blur(8px)',
         } as any,
-        slide: { padding: 0 } as any,
+        slide: { paddingBottom: '120px' } as any,
         header: { padding: '8px 12px' } as any,
       }}
+      toolbar={{ buttons: ['close'] }}
       render={{
         buttonZoom: () => null,
+        iconZoomIn: () => null,
+        iconZoomOut: () => null,
         controls: () => {
           const slide = slides[state.currentIndex]?.original;
           if (!slide) return null;
           return (
             <div className="absolute inset-0 pointer-events-none z-50 flex flex-col justify-between">
               {renderHeader && (
-                <div className="pointer-events-auto absolute top-0 right-12 p-3">
+                <div className="pointer-events-auto absolute top-0 left-0 p-3">
                   {renderHeader(slide)}
                 </div>
               )}
               {renderFooter && (
-                <div className="pointer-events-auto absolute bottom-0 left-0 right-0 p-4 pb-8 flex justify-center">
+                <div className="pointer-events-auto absolute bottom-0 left-0 right-0 p-4 flex justify-center">
                   {renderFooter(slide)}
                 </div>
               )}

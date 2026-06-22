@@ -15,13 +15,13 @@ export const { RouteProvider, useRoute, routes } = createRouter({
   
   // 公開合組
   publicGroup: defineRoute(
-    { slug: param.path.string, q: param.query.optional.string },
+    { slug: param.path.string, q: param.query.optional.string, photoId: param.query.optional.string },
     (p) => `/group/${p.slug}`
   ),
   
   // 管理合組
   adminGroup: defineRoute(
-    { id: param.path.string, q: param.query.optional.string },
+    { id: param.path.string, q: param.query.optional.string, photoId: param.query.optional.string },
     (p) => `/admin/group/${p.id}`
   ),
   
