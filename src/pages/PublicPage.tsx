@@ -1,5 +1,5 @@
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { logger } from '@/lib/logger';
-import React from 'react';
 import { useFilters } from '@/hooks/useFilters';
 import { useTranslation, usePhotoGrid, usePublicSettings } from '@/hooks';
 import { PublicHeader } from '@/components/layouts/headers/PublicHeader';
@@ -14,7 +14,6 @@ import { PhotoErrorDisplay } from '@/components/photo/PhotoErrorDisplay';
 import { Icon } from '@/components/ui/Icon';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-
 export default function PublicPage() {
   const { 
     category, 
@@ -27,16 +26,16 @@ export default function PublicPage() {
   } = useFilters();
   
   const { columns } = useColumns();
-  const [showScrollTop, setShowScrollTop] = React.useState(false);
-  const gridRef = React.useRef<{ scrollToIndex: (index: number) => void } | null>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const gridRef = useRef<{ scrollToIndex: (index: number) => void } | null>(null);
   
-  const isAggregated = showGroupsCollapsed && !search && !category && !tags.length;
+  const isAggregated = showGroupsCollapsed && !search && !category && (!tags || tags.length === 0);
   
   const photoGridData = usePhotoGrid({
-    categoryId: category,
-    tagId: tags?.[0],
-    searchQuery: search,
-    sortOrder: sort,
+    categoryId: category || undefined,
+    tagId: (tags && tags.length > 0) ? tags[0] : undefined,
+    searchQuery: search || undefined,
+    sortOrder: sort || undefined,
     onlyGroupsCover: isAggregated
   }, 'public');
 
@@ -103,9 +102,10 @@ export default function PublicPage() {
 
   return (
     <div 
-      className="flex flex-col h-screen w-full bg-surface-base relative overflow-hidden" 
+      className="flex flex-col h-full w-full bg-surface-base relative overflow-hidden" 
       id="public-view"
     >
+      <div className="absolute inset-0 pointer-events-none opacity-0 select-none">PUBLIC_PAGE_RENDERED</div>
       <div className="flex-1 min-h-0 relative bg-surface-soft overflow-hidden order-0">
         <ErrorBoundary>
           <PublicPhotoGrid 

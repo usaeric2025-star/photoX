@@ -3,7 +3,7 @@ import { ConfirmProvider } from './context/ConfirmContext';
 import { RouteProvider } from '@/router';
 import { RouterOrchestrator } from '@/components/RouterOrchestrator';
 import { Analytics } from '@vercel/analytics/react';
-import { useEffect, useRef, Suspense } from 'react';
+import { useEffect, useRef, useState, Suspense } from 'react';
 import { usePublicSettings } from '@/hooks';
 import { useLocalStorage } from '@/hooks/core/useLocalStorage';
 import { useAuthStore, initAuthListener } from '@/store/useAuthStore';
@@ -16,6 +16,7 @@ import { startAutoDiagnose } from '@/features/diagnostics/autoDiagnose';
 import { useUIStore } from '@/store/useUIStore';
 
 export default function AppRoutes() {
+  const [isInitialDataLoading, setInitialDataLoading] = useState(true);
   const appLang = useUIStore((s) => s.appLang);
 
   useEffect(() => {
@@ -23,8 +24,6 @@ export default function AppRoutes() {
   }, [appLang]);
 
   const isLoading = useAuthStore((s) => s.isLoading);
-  const isInitialDataLoading = useUIStore((s) => s.isInitialDataLoading);
-  const setInitialDataLoading = useUIStore((s) => s.setInitialDataLoading);
   const init = useAuthStore((s) => s.init);
   const { data: settings, isPending: isSettingsPending } = usePublicSettings();
 
@@ -47,12 +46,19 @@ export default function AppRoutes() {
   const isStaffMode = passcode === settings?.access_passcode && !!settings?.access_passcode;
 
   useEffect(() => {
-    document.title = 'PhotoX';
-    // Background init
+    logger.debug('🛡️ [App] Initializing Auth/Settings...');
     init();
     const cleanup = initAuthListener();
     return cleanup;
   }, [init]);
+
+  useEffect(() => {
+    // If auth and settings are no longer pending, signal that UI can start
+    if (!isLoading && !isSettingsPending) {
+       logger.info('✅ [App] Auth and Settings loaded. Unblocking UI...');
+       setInitialDataLoading(false);
+    }
+  }, [isLoading, isSettingsPending]);
 
   const user = useAuthStore((s) => s.user);
 
@@ -102,9 +108,7 @@ export default function AppRoutes() {
   }, [user, isLoading]);
 
   if (isLoading || isSettingsPending || isInitialDataLoading) {
-    if (isLoading) logger.debug('⏳ [App] Blocking: isLoading (Auth)');
-    if (isSettingsPending) logger.debug('⏳ [App] Blocking: isSettingsPending (API)');
-    if (isInitialDataLoading) logger.debug('⏳ [App] Blocking: isInitialDataLoading (UI Store)');
+    logger.debug('⏳ [App] Blocking UI:', { isLoading, isSettingsPending, isInitialDataLoading });
     return <LoadingScreen />;
   }
 

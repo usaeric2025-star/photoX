@@ -14,8 +14,14 @@ const PhotoEditDialog = lazy(() => import("@/features/photo-edit/PhotoEditDialog
 
 export function RouterOrchestrator() {
   const route = useRoute();
+  console.log('[RouterOrchestrator] Current route:', route?.name, route?.params);
 
   const getPage = () => {
+    if (!route) {
+      console.warn('[RouterOrchestrator] No route matched, showing NotFoundPage');
+      return <NotFoundPage />;
+    }
+
     switch (route.name) {
       case "home":
       case "photo":
