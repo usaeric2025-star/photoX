@@ -9,7 +9,7 @@ export interface UseFiltersOptions {
 
 export const useFilters = (options: UseFiltersOptions = {}) => {
   const route = useAppRoute();
-  const params = route ? route.params : {};
+  const params = route ? (route.params as any) : {};
 
   const updateSearch = useCallback((updates: Record<string, unknown>) => {
     if (!route) return;

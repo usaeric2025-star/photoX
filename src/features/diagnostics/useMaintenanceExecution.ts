@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ISSUE_ACTIONS, PreviewResult } from "@/features/diagnostics/issueActions";
-import { useTaskExecutor, useTasks } from '@/hooks';
+import { useTaskExecutor } from '@/hooks';
 import { handleError } from '@/lib/error/errorHandler';
 
 export function useMaintenanceExecution(issueId: string, title: string, onSuccess?: () => void) {
@@ -11,7 +11,6 @@ export function useMaintenanceExecution(issueId: string, title: string, onSucces
   const [progress, setProgress] = useState(0);
 
   const { runTask } = useTaskExecutor();
-  const { updateTask } = useTasks();
   const action = ISSUE_ACTIONS[issueId];
 
   const handlePreview = async () => {
@@ -39,10 +38,6 @@ export function useMaintenanceExecution(issueId: string, title: string, onSucces
       title,
       async ({ updateProgress, taskId }) => {
         const { jobId, message } = await action.execute();
-        
-        if (taskId && jobId) {
-          updateTask(taskId, { jobId, issueId });
-        }
         
         if (!jobId || jobId === 'sync' || jobId === 'cleanup') {
           updateProgress(100, message || "已完成");

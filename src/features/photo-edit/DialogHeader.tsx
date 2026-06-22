@@ -5,13 +5,12 @@ import { Icon } from '@/components/ui/Icon';
 import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
 import {
   usePhoto,
-  useTasks,
-  type BackgroundTask,
   useRemoveFromGroupMutation,
   useAdminMaintenance,
   usePhotoDelete,
   useFilters,
 } from "@/hooks";
+import { useTaskSelector } from '@/lib/task-queue/store';
 import { showToast } from "@/lib/ui/toast";
 import { useUIStore } from "@/store";
 import { usePhotoEditAI } from "./usePhotoEditAI";
@@ -35,8 +34,8 @@ export function DialogHeader({
   const appLang = useUIStore((s) => s.appLang);
   
   const { data: detailPhoto } = usePhoto(editPhotoId || '');
-  const { tasks } = useTasks();
-  const isAnalyzing = tasks.some((t: BackgroundTask) => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析') || t.name.toLowerCase().includes('analyze') || t.name.toLowerCase().includes('identif')));
+  const tasks = useTaskSelector(s => Array.from(s.tasks.values()));
+  const isAnalyzing = tasks.some(t => t.state?.status === 'processing' && (t.label.includes('识别') || t.label.includes('分析') || t.label.toLowerCase().includes('analyze') || t.label.toLowerCase().includes('identif')));
 
   const { mutateAsync: removeFromGroup } = useRemoveFromGroupMutation();
   const { updatePhoto: { mutateAsync: updateAdminPhoto } } = useAdminMaintenance();

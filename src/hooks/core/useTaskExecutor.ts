@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
-import { useTasks } from './useTasks';
+import { v4 as uuidv4 } from 'uuid';
+import { useTaskStore } from '@/lib/task-queue/store';
 import { showToast } from '@/lib/ui/toast';
 import { ErrorFactory } from '@/lib/error';
 import { hapticFeedback } from '@/lib/ui/haptics';
@@ -8,7 +9,11 @@ import { hapticFeedback } from '@/lib/ui/haptics';
  * Hook for executing long-running tasks with background progress tracking.
  */
 export function useTaskExecutor() {
-  const { addTask, updateTask } = useTasks();
+  const enqueue = useTaskStore(s => s.enqueue);
+  const startTask = useTaskStore(s => s.startTask);
+  const updateProgressState = useTaskStore(s => s.updateProgress);
+  const completeTask = useTaskStore(s => s.completeTask);
+  const failTask = useTaskStore(s => s.failTask);
 
   const runTask = useCallback(async <T,>(
     name: string,
@@ -30,23 +35,32 @@ export function useTaskExecutor() {
   ): Promise<T | null> => {
     const showProgress = options?.showProgress ?? false;
     const isSilent = options?.silent ?? false;
+    const taskId = showProgress ? `client-${uuidv4()}` : null;
 
-    const taskId = showProgress ? addTask({ 
-      name, 
-      jobId: options?.jobId,
-      issueId: options?.issueId
-    }) : null;
+    if (taskId) {
+      enqueue({
+        id: taskId,
+        type: (name.includes('识别') || name.toLowerCase().includes('analy')) ? 'ai-analyze' : 'sync',
+        label: name,
+        createdAt: Date.now(),
+        state: { status: 'pending' },
+        execute: async () => {}, // dummy
+        jobId: options?.jobId,
+        issueId: options?.issueId
+      } as any);
+      startTask(taskId);
+    }
 
     const updateProgress = (pct: number, msg?: string) => {
       if (taskId) {
-        updateTask(taskId, { progress: Math.min(Math.max(pct, 0), 100), message: msg });
+        updateProgressState(taskId, Math.min(Math.max(pct, 0), 100), msg);
       }
     };
 
     try {
       const result = await fn({ updateProgress, taskId });
       if (taskId) {
-        updateTask(taskId, { status: 'completed', progress: 100, message: `${name} 完成` });
+        completeTask(taskId, result);
       }
       hapticFeedback.success();
       
@@ -60,10 +74,9 @@ export function useTaskExecutor() {
     } catch (error) {
       hapticFeedback.error();
       const errMsg = ErrorFactory.extractErrorMessage(error);
-      const standardErrorMsg = `${name} 失败: ${errMsg}`;
 
       if (taskId) {
-        updateTask(taskId, { status: 'error', progress: 100, message: standardErrorMsg });
+        failTask(taskId, errMsg, false);
       }
       ErrorFactory.capture(error);
       
@@ -80,7 +93,7 @@ export function useTaskExecutor() {
       }
       return null;
     }
-  }, [addTask, updateTask]);
+  }, [enqueue, startTask, updateProgressState, completeTask, failTask]);
 
   return { runTask };
 }

@@ -70,8 +70,8 @@ export function useGlobalTasks() {
       source: 'session', 
       title: zt.label,
       status,
-      progress: zt.state.progress || 0,
-      message: zt.state.message || (zt.state.status === 'failed' ? zt.state.error : ''),
+      progress: (zt.state as any).progress || 0,
+      message: (zt.state as any).message || (zt.state.status === 'failed' ? zt.state.error : ''),
       createdAt: zt.createdAt,
     });
   });

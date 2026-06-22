@@ -53,6 +53,8 @@ export interface UIStoreState {
   showWhatsAppChoice: boolean;
   uploadModeDialogOpen: boolean;
   isTaskDrawerOpen: boolean;
+  isAvoidingSelection: boolean;
+  setAvoidingSelection: (isAvoiding: boolean) => void;
   pendingFiles: FileList | File[] | null;
   processingIds: string[];
   activeDialogCount: number;
@@ -149,6 +151,8 @@ export const useUIStore = create<UIStoreState>()((set) => ({
   showWhatsAppChoice: false,
   uploadModeDialogOpen: false,
   isTaskDrawerOpen: false,
+  isAvoidingSelection: false,
+  setAvoidingSelection: (isAvoiding) => set({ isAvoidingSelection: isAvoiding }),
   pendingFiles: null,
   activeDialogCount: 0,
   fatalError: null,

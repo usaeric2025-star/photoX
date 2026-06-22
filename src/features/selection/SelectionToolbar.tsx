@@ -5,7 +5,7 @@ import { useUIStore } from '@/store/useUIStore';
 import { useAppRouter } from '@/lib/router/useAppRouter';
 import { useAIBatchAnalysis } from '@/hooks/photo/useAIBatchAnalysis';
 import { useConfirm } from '@/context/ConfirmContext';
-import { useMediaQuery, useTasks } from '@/hooks';
+import { useMediaQuery } from '@/hooks';
 import { useGroupPhotosMutation, useRemoveFromGroupMutation } from '@/hooks/groups/useGroupMutations';
 import { Photo } from '@/types';
 import { Icon } from '@/components/ui/Icon';
@@ -50,7 +50,7 @@ export const SelectionToolbar = memo(function SelectionToolbar({
 
   const [isAiPending, setIsAiPending] = React.useState(false);
   const isAnyPending = isPending || isAiPending || combineMutation.isPending || removeMutation.isPending;
-  const { setAvoidingSelection } = useTasks();
+  const setAvoidingSelection = useUIStore((s) => s.setAvoidingSelection);
 
   const isBatchMode = state.mode === 'batch';
   const selectedCount = state.selectedIds.length;

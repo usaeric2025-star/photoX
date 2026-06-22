@@ -13,7 +13,6 @@ export * from './useMediaQuery';
 export * from './useQueryWithFallback';
 export * from './useSessionStorage';
 export * from './useTaskExecutor';
-export * from './useTasks';
 export * from './useTranslation';
 export * from './auth/useAdminMode';
 export * from './auth/usePermission';

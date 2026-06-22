@@ -5,7 +5,8 @@ import { usePhotoEditSessionContext } from '@/hooks/photo/usePhotoEditSessionCon
 import { Icon } from '@/components/ui/Icon';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useUIStore } from '@/store/useUIStore';
-import { usePhoto, useTaskExecutor, useTasks, useTranslation, useFilters } from '@/hooks';
+import { usePhoto, useTaskExecutor, useTranslation, useFilters } from '@/hooks';
+import { useTaskSelector } from '@/lib/task-queue/store';
 import { OptimizedImage } from '@/components/shared/OptimizedImage';
 import { showToast } from '@/lib/ui/toast';
 

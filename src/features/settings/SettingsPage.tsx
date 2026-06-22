@@ -26,7 +26,8 @@ import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
 import { type, type Type } from 'arktype';
 
-import { useSyncMutation, useTasks } from '@/hooks';
+import { useSyncMutation } from '@/hooks';
+import { useTaskSelector } from '@/lib/task-queue/store';
 
 const GeneralSettings = React.lazy(() => import('./GeneralSettings').then(m => ({ default: m.GeneralSettings })));
 const AISettings = React.lazy(() => import('./AISettings').then(m => ({ default: m.AISettings })));
@@ -52,14 +53,14 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   const { data: categories = [] } = useCategories();
   const { data: tags = [] } = useTags();
   const { data: manufacturers = [] } = useManufacturers();
-  const { tasks } = useTasks();
+  const tasks = useTaskSelector(s => Array.from(s.tasks.values()));
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) await uploadLogo(file);
   };
   
-  const isMaintenanceRunning = tasks.some(t => (t.name.includes('维护') || t.name.includes('诊断')) && t.status === 'running');
+  const isMaintenanceRunning = tasks.some(t => (t.label.includes('维护') || t.label.includes('诊断')) && t.state?.status === 'processing');
   
   const appLang = useUIStore(s => s.appLang);
   const t = translations[appLang as keyof typeof translations] || translations.en;

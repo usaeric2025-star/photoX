@@ -1,5 +1,6 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { useTaskExecutor, useTasks } from "@/hooks";
+import { useTaskExecutor } from "@/hooks";
+import { useTaskSelector } from '@/lib/task-queue/store';
 import React, { useState } from "react";
 import { Icon } from '@/components/ui/Icon';
 import { Button } from '@/components/ui/Button';
@@ -54,8 +55,8 @@ export function TagsSection({
     // isPinned={(settings?.pinned_tags || []).includes(String(tag.id))}
   
   const { runTask } = useTaskExecutor();
-  const { tasks } = useTasks();
-  const isRunning = tasks.some((t) => t.status === "running");
+  const tasks = useTaskSelector(s => Array.from(s.tasks.values()));
+  const isRunning = tasks.some((t) => t.state?.status === "processing");
   const queryClient = useQueryClient();
 
   const [isAddOpen, addDialog] = useDisclosure(false);

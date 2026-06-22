@@ -1,6 +1,6 @@
 import { createPortal } from 'react-dom';
 import React from 'react';
-import { useTaskSelector } from '../store';
+import { useTaskStore, useTaskSelector } from '../store';
 import { cn } from '@/lib/utils';
 import { useUIStore } from '@/store/useUIStore';
 import { Icon } from '@/components/ui/Icon';
@@ -95,7 +95,7 @@ export function TaskDrawer() {
                 type="button"
                 onClick={() => {
                   const state = useTaskStore.getState();
-                  const remaining = Array.from(state.tasks.values()).filter(t => t.state.status === 'queued' || t.state.status === 'processing');
+                  const remaining = Array.from(state.tasks.values()).filter((t: any) => t.state?.status === 'pending' || t.state?.status === 'processing');
                   state.clearAll();
                   remaining.forEach(t => state.enqueue(t));
                 }}

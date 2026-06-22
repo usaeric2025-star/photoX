@@ -3,14 +3,14 @@ import React, { useEffect, Suspense, lazy } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
 import { useAuthStore } from '@/store/useAuthStore';
-import { useTasks, 
-  useSyncMutation } from '@/hooks';
+import { useSyncMutation } from '@/hooks';
 const UploadModeDialog = lazy(() => import('@/features/upload/components/UploadModeDialog').then(m => ({ default: m.UploadModeDialog })));
 
 import { usePhotoUpload } from '@/features/upload';
 import { UploadButton } from '@/components/shared/UploadButton';
 import { logger } from '@/lib/logger';
 import { useAIBatchAnalysis } from '@/hooks';
+import { useTaskSelector } from '@/lib/task-queue/store';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { Category } from '@/types';
 import { AdminHeader } from '@/components/layouts/headers/AdminHeader';
@@ -34,10 +34,10 @@ export function AdminPageContent() {
   const pendingFiles = useUIStore(s => s.pendingFiles);
   const { handleBatchAiAnalyze } = useAIBatchAnalysis();
   const { mutateAsync: syncMut } = useSyncMutation();
-  const { tasks } = useTasks();
+  const tasks = useTaskSelector(s => Array.from(s.tasks.values()));
   const appLang = useUIStore(s => s.appLang);
   const { navigate, route } = useAppRouter();
-  
+
   const store = useUIStore(useShallow(s => ({
     update: s.update,
     batchEditingIds: s.batchEditingIds })));
@@ -52,8 +52,8 @@ export function AdminPageContent() {
     return 'gallery' as const;
   })();
 
-  const isSyncing = tasks.some(t => t.status === 'running' && t.name.includes('Sync'));
-  const isUploadRunning = tasks.some(t => t.status === 'running' && t.name.includes('上传'));
+  const isSyncing = tasks.some(t => t.state?.status === 'processing' && t.label.includes('Sync'));
+  const isUploadRunning = tasks.some(t => t.state?.status === 'processing' && t.label.includes('上传'));
 
   return (
     <AdminAuthGate>

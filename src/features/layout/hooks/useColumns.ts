@@ -7,7 +7,7 @@ const COLUMN_OPTIONS: ColumnCount[] = [2, 3, 5];
 
 export function useColumns() {
   const route = useAppRoute();
-  const params = route ? route.params : {};
+  const params = route ? (route.params as any) : {};
   const [savedColumns, setSavedColumns] = useLocalStorage<ColumnCount>({ key: 'photo-grid-columns', defaultValue: DEFAULT_COLUMNS });
   
   const columns: ColumnCount = (() => {
