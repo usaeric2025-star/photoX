@@ -42,6 +42,14 @@ export function YARLDriver({
       index={state.currentIndex}
       slides={slides}
       plugins={plugins}
+      thumbnails={{
+        width: 48,
+        height: 48,
+        gap: 6,
+        padding: 4,
+        borderRadius: 4,
+        imageFit: 'cover',
+      }}
       carousel={{ 
         preload: 2,
         imageFit: "contain"
@@ -50,13 +58,16 @@ export function YARLDriver({
         view: ({ index }) => onView?.(index),
       }}
       styles={{
-        root: { "--yarl__color_backdrop": "rgba(0,0,0,0.95)", zIndex: 9999 } as any,
-        container: { backgroundColor: 'transparent' } as any,
+        root: { "--yarl__color_backdrop": "rgba(0,0,0,0.92)", zIndex: 9999 } as any,
+        container: { 
+          backgroundColor: 'rgba(0,0,0,0.92)',
+          backdropFilter: 'blur(8px)',
+        } as any,
         slide: { padding: 0 } as any,
       }}
       render={{
-        slideFooter: ({ index }) => {
-          const originalSlide = state.slides[index];
+        slideFooter: ({ slide }) => {
+          const originalSlide = (slide as any).original;
           return renderFooter ? renderFooter(originalSlide) : null;
         },
       }}
