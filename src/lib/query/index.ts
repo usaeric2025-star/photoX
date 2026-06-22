@@ -33,7 +33,7 @@ export function useAppInfiniteQuery<
   TQueryKey extends import('@tanstack/react-query').QueryKey = import('@tanstack/react-query').QueryKey,
   TPageParam = unknown
 >(
-  options: UseInfiniteQueryOptions<TQueryFnData, TError, TData, TQueryFnData, TQueryKey, TPageParam>
+  options: UseInfiniteQueryOptions<TQueryFnData, TError, TData, TQueryKey, TPageParam>
 ) {
   return useRqInfiniteQuery<TQueryFnData, TError, TData, TQueryKey, TPageParam>(options);
 }

@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useAdminCategory } from '@/hooks/admin/useAdminCategory';
-import { useUIStore } from '@/store/useUIStore';
+import { useUI } from '@/lib/store';
 
 export const useSettingsManagement = () => {
-    const update = useUIStore((s) => s.update);
+    const update = useUI((s) => s.update);
     const [tagToDelete, setTagToDelete] = useState<string | null>(null);
     const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
     const [manufacturerToDelete, setManufacturerToDelete] = useState<string | null>(null);

@@ -10,7 +10,7 @@ export * from './settings';
 
 // Utils
 export { useFilters } from './useFilters';
-export { useUIStore, useShallow } from '../store/useUIStore';
+export { useUI, useStoreShallow as useShallow } from '@/lib/store';
 export { useColumns } from '../features/layout/hooks/useColumns';
 export { useSearchTransition } from './ui/useSearchTransition';
 

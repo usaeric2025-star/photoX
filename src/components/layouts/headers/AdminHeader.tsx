@@ -1,9 +1,9 @@
 import { useAppRouter } from '@/lib/router/useAppRouter';
 import React from 'react';
 import { Icon } from '@/components/ui/Icon';
-import { useAuthStore } from '@/store/useAuthStore';
-import { useUIStore, useSettings, useAdminBatchActions, usePermission } from '@/hooks';
-import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/lib/store';
+import { useUI, useSettings, useAdminBatchActions, usePermission } from '@/hooks';
+import { useAppQuery as useQuery } from '@/lib/query';
 import { api } from '@/lib/api';
 import { NativePopover } from '@/components/ui/NativePopover';
 import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
@@ -18,14 +18,14 @@ interface AdminHeaderProps {
 export function AdminHeader({ className }: AdminHeaderProps) {
   const { handleBatchAiIdentifyTrigger: batchAiIdentifyRaw } = useAdminBatchActions();
   const handleBatchAiIdentifyTrigger = () => batchAiIdentifyRaw([]); // Passing empty allPhotos or we need to fix the contract
-  const { user, signOut } = useAuthStore();
+  const { user, signOut } = useAuth();
   const { settings } = useSettings();
   const { role } = usePermission();
   const { navigate } = useAppRouter();
 
-  const lang = useUIStore(s => s.appLang);
-  const isMultiSelect = useUIStore(s => s.isMultiSelect);
-  const update = useUIStore(s => s.update);
+  const lang = useUI(s => s.appLang);
+  const isMultiSelect = useUI(s => s.isMultiSelect);
+  const update = useUI(s => s.update);
   const t = translations[lang as keyof typeof translations] || translations.en;
 
   const { data: totalCountData } = useQuery({

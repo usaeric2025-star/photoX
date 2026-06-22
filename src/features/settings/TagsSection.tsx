@@ -11,7 +11,7 @@ import { PromptDialog } from "@/components/ui/PromptDialog";
 
 import { normalizeTagName } from "@/lib/utils";
 import { triggerRefreshTagHotScores } from "../../services/tag/commands";
-import { useQueryClient } from "@tanstack/react-query";
+import { useAppQueryClient as useQueryClient } from '@/lib/query';
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
 import { FormProvider } from '@/lib/form/useFormField';
 import { type } from 'arktype';

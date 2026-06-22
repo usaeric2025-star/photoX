@@ -3,7 +3,7 @@ import { useField, useFormContext } from "el-form-react-hooks";
 import { FormSectionHeader } from '@/components/admin/FormShared';
 import { useManufacturers, useManufacturerCreate, useTags } from '@/hooks';
 import { useTagCreate, useTagEdit, useTagDelete } from '@/hooks/admin/useTagMutations';
-import { useUIStore } from '@/store/useUIStore';
+import { useUI } from '@/lib/store';
 import { PromptDialog } from '@/components/ui/PromptDialog';
 import { translations } from '@/locales';
 import { CategorySelect } from './CategorySelect';
@@ -14,7 +14,7 @@ import { Icon } from '@/components/ui/Icon';
 
 export function OrgTab() {
   const { form } = useFormContext();
-  const appLang = useUIStore((s) => s.appLang);
+  const appLang = useUI((s) => s.appLang);
   const { data: manufacturers = [] } = useManufacturers();
   const { data: tags = [] } = useTags();
   

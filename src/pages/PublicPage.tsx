@@ -8,11 +8,11 @@ import { PublicPhotoGrid } from '@/components/photo/PublicPhotoGrid';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { useColumns } from '@/features/layout/hooks/useColumns';
 import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
-import { useUIStore } from '@/store/useUIStore';
+import { useUI } from '@/lib/store';
 import { WhatsAppDialog } from '@/components/shared/WhatsAppDialog';
 import { PhotoErrorDisplay } from '@/components/photo/PhotoErrorDisplay';
 import { Icon } from '@/components/ui/Icon';
-import { useQuery } from '@tanstack/react-query';
+import { useAppQuery as useQuery } from '@/lib/query';
 import { api } from '@/lib/api';
 export default function PublicPage() {
   const { 
@@ -48,8 +48,8 @@ export default function PublicPage() {
     isFetching,
   } = photoGridData;
 
-  const showWhatsAppChoice = useUIStore((s) => s.showWhatsAppChoice);
-  const updateUI = useUIStore((s) => s.update);
+  const showWhatsAppChoice = useUI((s) => s.showWhatsAppChoice);
+  const updateUI = useUI((s) => s.update);
   const { lang, uiTranslations: t } = useTranslation();
   const { data: settings } = usePublicSettings();
 

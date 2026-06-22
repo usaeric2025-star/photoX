@@ -1,8 +1,8 @@
 import React, { useRef } from 'react';
 import { useLongPress } from '@/hooks/core/useLongPress';
-import { useUIStore } from '@/store/useUIStore';
+import { useUI } from '@/lib/store';
 import { useAppRouter } from '@/lib/router/useAppRouter';
-import { useQueryClient } from '@tanstack/react-query';
+import { useAppQueryClient as useQueryClient } from '@/lib/query';
 import { PhotoListItem } from '@/types/api';
 import { queryKeys } from '@/lib/query/keys';
 import { getGroupById } from '@/services/group/queries';
@@ -32,8 +32,8 @@ export function usePhotoCard({
   const longPressTriggered = useRef(false);
   const resetTimerRef = useRef<number | null>(null);
   
-  const toggleSelected = useUIStore((s) => s.toggleSelected);
-  const update = useUIStore((s) => s.update);
+  const toggleSelected = useUI((s) => s.toggleSelected);
+  const update = useUI((s) => s.update);
   const { navigate, route, params } = useAppRouter();
   const queryClient = useQueryClient();
  

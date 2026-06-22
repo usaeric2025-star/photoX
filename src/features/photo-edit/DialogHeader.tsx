@@ -12,7 +12,7 @@ import {
 } from "@/hooks";
 import { useTaskSelector } from '@/lib/task-queue/store';
 import { showToast } from "@/lib/ui/toast";
-import { useUIStore } from "@/store";
+import { useUI } from '@/lib/store';
 import { usePhotoEditAI } from "./usePhotoEditAI";
 
 interface DialogHeaderProps {
@@ -31,7 +31,7 @@ export function DialogHeader({
   
   const { modal, photoId, setModal, setPhotoId } = useFilters();
   const editPhotoId = modal === 'edit' ? photoId : null;
-  const appLang = useUIStore((s) => s.appLang);
+  const appLang = useUI((s) => s.appLang);
   
   const { data: detailPhoto } = usePhoto(editPhotoId || '');
   const tasks = useTaskSelector(s => Array.from(s.tasks.values()));

@@ -1,7 +1,7 @@
 import { useField, useFormContext } from 'el-form-react-hooks';
 import { FormSectionHeader } from '@/components/admin/FormShared';
 import { useCategories } from '@/hooks';
-import { useUIStore } from '@/store/useUIStore';
+import { useUI } from '@/lib/store';
 import { translations, LanguageCode } from "@/locales";
 import { getTranslatedCategoryName } from "@/services/category/utils";
 
@@ -11,7 +11,7 @@ import { getTranslatedCategoryName } from "@/services/category/utils";
 export function CategorySelect() {
   const { value } = useField('category_id');
   const { form } = useFormContext();
-  const appLang = useUIStore((s) => s.appLang);
+  const appLang = useUI((s) => s.appLang);
   const { data: categories = [] } = useCategories();
   
   return (

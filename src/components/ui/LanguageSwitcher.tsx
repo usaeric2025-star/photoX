@@ -1,14 +1,14 @@
 import React, { useRef } from 'react';
 import { Icon } from '@/components/ui/Icon';
-import { useUIStore } from '@/store/useUIStore';
+import { useUI } from '@/lib/store';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useClickOutside } from '@/hooks/core/useClickOutside';
 
 import { NativePopover } from '@/components/ui/NativePopover';
 
 export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dropdown' | 'segmented' }) {
-  const appLang = useUIStore((s) => s.appLang);
-  const update = useUIStore((s) => s.update);
+  const appLang = useUI((s) => s.appLang);
+  const update = useUI((s) => s.update);
 
   const langs: { code: 'zh' | 'en' | 'ms'; label: string }[] = [
     { code: 'zh', label: '中文' },

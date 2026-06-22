@@ -1,5 +1,5 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { useUIStore } from '@/store/useUIStore';
+import { useUI, storeAccessor } from '@/lib/store';
 import { useCallback, useState } from 'react';
 import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
 import { useAppRouter } from '@/lib/router/useAppRouter';
@@ -15,16 +15,16 @@ import { useAppRouter } from '@/lib/router/useAppRouter';
  * outputs: { isMultiSelect: boolean, selectedIds: string[], ... }
  * invariants: stateless (delegates to UIStore)
  * 
- * @deps-contract: static=[useUIStore, useAdminMaintenance, useRouterSafe, useCallback, useState] dynamic=[]
+ * @deps-contract: static=[useUI, useAdminMaintenance, useRouterSafe, useCallback, useState] dynamic=[]
  */
 export const usePhotoSelection = () => {
-  const isMultiSelect = useUIStore((state) => state.isMultiSelect);
-  const selectedIds = useUIStore((state) => state.selectedIds) || [];
-  const batchEditingIds = useUIStore(s => s.batchEditingIds);
-  const formState = useUIStore(s => s.formState);
-  const update = useUIStore((state) => state.update);
-  const updateForm = useUIStore(s => s.updateForm);
-  const resetForm = useUIStore(s => s.resetForm);
+  const isMultiSelect = useUI((state) => state.isMultiSelect);
+  const selectedIds = useUI((state) => state.selectedIds) || [];
+  const batchEditingIds = useUI(s => s.batchEditingIds);
+  const formState = useUI(s => s.formState);
+  const update = useUI((state) => state.update);
+  const updateForm = useUI(s => s.updateForm);
+  const resetForm = useUI(s => s.resetForm);
 
   const { deletePhoto, batchUpdate } = useAdminMaintenance();
   const { navigate, route } = useAppRouter();
@@ -49,7 +49,7 @@ export const usePhotoSelection = () => {
   };
 
   const toggle = useCallback((id: string) => {
-    const current = (useUIStore.getState().selectedIds) ?? [];
+    const current = (storeAccessor.ui.selectedIds) ?? [];
     const next = current.includes(id) 
       ? current.filter((i: string) => i !== id) 
       : [...current, id];
@@ -68,7 +68,7 @@ export const usePhotoSelection = () => {
   };
 
   const selectAll = useCallback((ids: string[]) => {
-    const current = (useUIStore.getState().selectedIds) ?? [];
+    const current = (storeAccessor.ui.selectedIds) ?? [];
     const combined = new Set([...current, ...ids]);
     update({ 
       isMultiSelect: true, 
@@ -77,8 +77,8 @@ export const usePhotoSelection = () => {
   }, [update]);
 
   const deselectAllForList = useCallback((ids: string[]) => {
-    const current = (useUIStore.getState().selectedIds) ?? [];
-    update(state => ({ selectedIds: current.filter(id => !ids.includes(id)) }));
+    const current = (storeAccessor.ui.selectedIds) ?? [];
+    update(state => ({ selectedIds: current.filter((id: string) => !ids.includes(id)) }));
   }, [update]);
 
   // --- 批量操作邏輯 (來自 useBatchEdit) ---

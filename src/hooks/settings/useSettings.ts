@@ -1,6 +1,6 @@
 import { STALE_TIMES } from '@/lib/query/config';
 import React, { useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAppQuery as useQuery, useAppMutation as useMutation, useAppQueryClient as useQueryClient } from '@/lib/query';
 import { storage, STORAGE_KEYS } from '@/lib/storage';
 import { AppSettings } from '@/types';
 import { useSettingsUpdateMutation } from './useSettingsMutations';

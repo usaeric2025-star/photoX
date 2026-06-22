@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import type { Photo } from '@/types';
 import { useInvalidatePhotos } from '@/hooks/photo/useInvalidatePhotos';
 import { showToast } from '@/lib/ui/toast';
-import { useQueryClient } from '@tanstack/react-query';
+import { useAppQueryClient as useQueryClient } from '@/lib/query';
 import { queryKeys } from '@/lib/query/keys';
 import { runBatchAnalysis } from '@/features/ai/orchestration';
 import { scheduler } from '@/lib/task-queue';
@@ -28,11 +28,11 @@ export function useAIBatchAnalysis() {
         state: { status: 'queued' },
         createdAt: Date.now(),
         meta: { photoCount: targetPhotos.length, groupId },
-        execute: async (signal) => {
+        execute: async (signal, onProgress) => {
             const { successCount, groupSuccess } = await runBatchAnalysis({
                 targetPhotos,
                 groupId,
-                onProgress: (progress, message) => {} // TODO: hook up progress to scheduler update
+                onProgress
             });
 
             // Final Sync

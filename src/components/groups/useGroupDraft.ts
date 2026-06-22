@@ -1,9 +1,9 @@
 import { ErrorFactory } from "@/lib/error/ErrorFactory";
 import { useState, useEffect, useCallback } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useAppQueryClient as useQueryClient } from '@/lib/query';
 import { ProductGroup, Photo } from "@/types";
 import { useGroupDetail } from "@/hooks";
-import { useAuthStore } from '@/store/useAuthStore';
+import { useAuth } from '@/lib/store';
 import { upsertGroup } from "@/services/group/commands";
 import { useSessionStorage } from '@/hooks/core/useSessionStorage';
 import { queryKeys } from '@/lib/query/keys';
@@ -13,7 +13,7 @@ export const useGroupDraft = (
   dbGroupPhotos: Photo[] | undefined,
   onUpdatePhoto: (id: string, data: Partial<Photo>) => Promise<unknown>
 ) => {
-  const { user } = useAuthStore();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const [groupData, setGroupData] = useState<ProductGroup | null>(null);

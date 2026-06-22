@@ -8,7 +8,7 @@ import { ManufacturerItem } from '@/components/admin/ManufacturerItem';
 import { PromptDialog } from "@/components/ui/PromptDialog";
 
 import { normalizeManufacturerName } from "@/lib/utils";
-import { useUIStore } from "@/store/useUIStore";
+import { useUI } from '@/lib/store';
 import { translations } from "@/locales";
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
 import { type } from 'arktype';
@@ -36,7 +36,7 @@ export function ManufacturersSection({
 }: ManufacturersSectionProps) {
   
   const [isAddOpen, addDialog] = useDisclosure(false);
-  const appLang = useUIStore(s => s.appLang);
+  const appLang = useUI(s => s.appLang);
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
   const { submit: runAddManufacturer, isLoading: isAdding, fieldErrors: addFieldErrors, clearFieldError: addClearFieldError } = useFormSubmit({

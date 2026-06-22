@@ -4,7 +4,7 @@ import { useTags } from './useFilterData';
 import { useFilterState } from './useFilterState';
 import { usePublicSettings } from '@/hooks/settings/useSettings';
 import { usePhotoFilter } from '@/hooks/photo/usePhotoFilter';
-import { useUIStore } from '@/store/useUIStore';
+import { useUI } from '@/lib/store';
 import { translations } from '@/locales';
 
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -14,7 +14,7 @@ export function TagGrid({ onClose }: { onClose?: () => void }) {
   const { data: tags, isPending } = useTags();
   const { data: settings } = usePublicSettings();
   
-  const appLang = useUIStore(s => s.appLang);
+  const appLang = useUI(s => s.appLang);
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
   // Use the standard hook to resolve sorted, pinned, and hot tags according to database parameters

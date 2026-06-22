@@ -1,9 +1,9 @@
 import { STALE_TIMES } from '@/lib/query/config';
-import { useAuthStore } from '@/store/useAuthStore';
+import { useAuth } from '@/lib/store';
 import { useEffect, useState } from 'react';
 import { UnifiedTask, TaskStatus } from '@/types';
 import { api } from '@/lib/api';
-import { useQuery } from '@tanstack/react-query';
+import { useAppQuery as useQuery } from '@/lib/query';
 import { useAdminMode } from '../core/auth/useAdminMode';
 import { logger } from '@/lib/logger';
 import { useAppRoute } from '@/router';
@@ -14,7 +14,7 @@ import { useTaskSelector } from '@/lib/task-queue/store';
  */
 export function useGlobalTasks() {
   const isAdminPath = useAdminMode();
-  const { user } = useAuthStore();
+  const { user } = useAuth();
   const isAdmin = isAdminPath && !!user;
   const route = useAppRoute();
   const routeName = route?.name;
@@ -60,7 +60,7 @@ export function useGlobalTasks() {
   const aggregatedTasks: UnifiedTask[] = [];
 
   // Map New Zustand Tasks
-  zustandTasksMap.forEach(zt => {
+  zustandTasksMap.forEach((zt: import('@/lib/task-queue/types').Task) => {
     let status: TaskStatus = 'processing';
     if (zt.state.status === 'completed') status = 'completed';
     if (zt.state.status === 'failed' || zt.state.status === 'cancelled') status = 'failed';

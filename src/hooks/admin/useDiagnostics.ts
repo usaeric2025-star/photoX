@@ -1,11 +1,11 @@
 import { STALE_TIMES } from '@/lib/query/config';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAppMutation as useMutation, useAppQuery as useQuery, useAppQueryClient as useQueryClient } from '@/lib/query';
 import { api } from '@/lib/api';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { DiagnosticsReport } from '@/types/diagnostics';
 import { queryKeys } from '@/lib/query/keys';
 import { useTaskExecutor } from '../core/useTaskExecutor';
-import { useUIStore } from '@/store/useUIStore';
+import { useUI } from '@/lib/store';
 import { StorageAuditResSchema } from '../../../api/_shared/apiContractSchema';
 
 type StorageAuditRes = typeof StorageAuditResSchema.infer;
@@ -17,7 +17,7 @@ type StorageAuditRes = typeof StorageAuditResSchema.infer;
 export function useDiagnostics() {
   const queryClient = useQueryClient();
   const { runTask } = useTaskExecutor();
-  const appLang = useUIStore(s => s.appLang);
+  const appLang = useUI(s => s.appLang);
 
   const { data: auditResult, isFetching: isAuditing, refetch: runAuditQuery } = useQuery({
     queryKey: queryKeys.diagnostics.audit(),

@@ -8,7 +8,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   usePhotoFilter,
   useSettings,
-  useUIStore,
+  useUI,
   useShallow,
   useTagSearch,
 } from "@/hooks";

@@ -3,11 +3,11 @@ import { useCallback } from 'react';
 import { useFormContext } from "el-form-react-hooks";
 import { showToast } from '@/lib/ui/toast';
 import { ErrorFactory } from '@/lib/error';
-import { useQueryClient } from '@tanstack/react-query';
+import { useAppQueryClient as useQueryClient } from '@/lib/query';
 import { useTaskExecutor, useAdminMaintenance, useSettings, useCategories, useTags, useFilters } from '@/hooks';
 import { Tag, Photo } from '@/types';
 import { analyzePhoto } from '@/features/ai/commands';
-import { useUIStore } from '@/store';
+import { useUI } from '@/lib/store';
 
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
 import { type } from 'arktype';
@@ -23,7 +23,7 @@ export function usePhotoEditAI() {
   const { form } = useFormContext();
   const { modal, photoId } = useFilters();
   const editPhotoId = modal === 'edit' ? photoId : null;
-  const appLang = useUIStore((s) => s.appLang);
+  const appLang = useUI((s) => s.appLang);
   const { runTask } = useTaskExecutor();
   const { updatePhoto: { mutateAsync: updatePhoto } } = useAdminMaintenance();
   const queryClient = useQueryClient();

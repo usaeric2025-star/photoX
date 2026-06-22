@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { useSelection } from './SelectionContext';
 import { useBatchActions } from './useBatchActions';
-import { useUIStore } from '@/store/useUIStore';
+import { useUI } from '@/lib/store';
 import { useAppRouter } from '@/lib/router/useAppRouter';
 import { useAIBatchAnalysis } from '@/hooks/photo/useAIBatchAnalysis';
 import { useConfirm } from '@/context/ConfirmContext';
@@ -40,7 +40,7 @@ export const SelectionToolbar = memo(function SelectionToolbar({
 }: SelectionToolbarProps) {
   const { state, selectAll, clear } = useSelection();
   const { isPending, batchDelete } = useBatchActions();
-  const update = useUIStore((s) => s.update);
+  const update = useUI((s) => s.update);
   const { navigate } = useAppRouter();
   const { handleBatchAiAnalyze } = useAIBatchAnalysis();
   const confirm = useConfirm();
@@ -50,7 +50,7 @@ export const SelectionToolbar = memo(function SelectionToolbar({
 
   const [isAiPending, setIsAiPending] = React.useState(false);
   const isAnyPending = isPending || isAiPending || combineMutation.isPending || removeMutation.isPending;
-  const setAvoidingSelection = useUIStore((s) => s.setAvoidingSelection);
+  const setAvoidingSelection = useUI((s) => s.setAvoidingSelection);
 
   const isBatchMode = state.mode === 'batch';
   const selectedCount = state.selectedIds.length;

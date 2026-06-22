@@ -14,15 +14,15 @@ export function useAppMutation<TData, TError = Error, TVariables = void, TContex
 ) {
   return baseUseAppMutation({
     mutationFn,
-    onSuccess: (data, variables, context) => {
+    onSuccess: (...args) => {
       if (options?.successMessage) showToast.success(options.successMessage);
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(...args);
     },
-    onError: (error, variables, context) => {
+    onError: (...args) => {
       if (options?.errorMessage) showToast.error(options.errorMessage);
-      else if (error instanceof Error) showToast.error(error.message);
-      else showToast.error(String(error));
-      options?.onError?.(error, variables, context);
+      else if (args[0] instanceof Error) showToast.error(args[0].message);
+      else showToast.error(String(args[0]));
+      options?.onError?.(...args);
     },
     ...options,
   });

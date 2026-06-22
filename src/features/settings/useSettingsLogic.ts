@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { logger } from '@/lib/logger';
 import { AppSettings, Tag, Manufacturer, Category, User, Photo } from "@/types";
 import { DEFAULT_AI_MODEL } from '@/config/ai';
-import { useUIStore, useShallow } from "@/store/useUIStore";
+import { useUI, useStoreShallow } from '@/lib/store';
 import { testAiConnection } from "@/features/ai/commands";
 import { runHealthCheck } from "@/services/photo/healthFlow";
 import {
@@ -40,7 +40,7 @@ export const useSettingsLogic = ({
   
   const invalidatePhotos = useInvalidatePhotos();
   const { runTask } = useTaskExecutor();
-  const appLang = useUIStore(s => s.appLang);
+  const appLang = useUI(s => s.appLang);
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
   const [testResult, setTestResult] = useState<{

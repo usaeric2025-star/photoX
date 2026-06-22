@@ -1,4 +1,4 @@
-import { useAuthStore } from '@/store/useAuthStore';
+import { useAuth } from '@/lib/store';
 import { useCallback } from 'react';
 
 import { checkDuplicateBatch } from '@/services/photo/duplicateCheck';
@@ -7,10 +7,10 @@ import { showToast } from '@/lib/ui/toast';
 import { hapticFeedback } from '@/lib/ui/haptics';
 import { scheduler } from '@/lib/task-queue';
 import { createBatchUploadTask } from '@/lib/task-queue/adapters/upload';
-import { useUIStore } from '@/store/useUIStore';
+import { storeAccessor } from '@/lib/store';
 
 export function usePhotoUpload() {
-  const { user } = useAuthStore();
+  const { user } = useAuth();
 
   const uploadFiles = useCallback(async (files: FileList | File[]) => {
     const fileArray = Array.from(files);
@@ -31,7 +31,7 @@ export function usePhotoUpload() {
     // Batch enqueue
     scheduler.enqueue(createBatchUploadTask(uniqueFiles, userId, {}));
     
-    useUIStore.getState().update({ isTaskDrawerOpen: true });
+    storeAccessor.ui.update({ isTaskDrawerOpen: true });
     
     showToast.success(`已加入 ${uniqueFiles.length} 张照片到上传队列`);
 

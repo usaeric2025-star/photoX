@@ -1,4 +1,4 @@
-import { useUIStore } from '@/store/useUIStore';
+import { useUI } from '@/lib/store';
 
 const translations = {
   zh: {
@@ -76,7 +76,7 @@ const translations = {
 };
 
 export const useAppLocale = () => {
-  const appLang = useUIStore((s) => s.appLang);
+  const appLang = useUI((s) => s.appLang);
   const lang = appLang === 'zh' || appLang === 'en' || appLang === 'ms' ? appLang : 'en';
   return translations[lang];
 };

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAppRouter } from '@/lib/router/useAppRouter';
 import { Group } from '@/types';
 import { Icon } from '@/components/ui/Icon';
-import { useUIStore } from '@/store/useUIStore';
+import { useUI } from '@/lib/store';
 import { usePhotoSelection } from '@/hooks/photo/usePhotoSelection';
 import { copyToClipboard } from '@/utils/clipboard';
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
@@ -51,7 +51,7 @@ export function GroupHeader({ group, photoCount, isAdmin, onEditSettings, onUpda
   const [editTitleValue, setEditTitleValue] = useState(group.name);
   
   const { enable, disable } = usePhotoSelection();
-  const isMultiSelect = useUIStore(s => s.isMultiSelect);
+  const isMultiSelect = useUI(s => s.isMultiSelect);
 
   const { submit: updateTitle, isLoading: isUpdating, fieldErrors, clearFieldError } = useFormSubmit({
     schema: GroupTitleSchema,

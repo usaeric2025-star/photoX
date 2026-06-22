@@ -1,5 +1,5 @@
 import { STALE_TIMES } from '@/lib/query/config';
-import { useQuery } from '@tanstack/react-query';
+import { useAppQuery as useQuery } from '@/lib/query';
 import { api } from '@/lib/api';
 import { PhotoAIResult } from '@/types';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';

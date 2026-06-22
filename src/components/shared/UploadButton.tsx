@@ -1,7 +1,7 @@
 import React from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { buttonStyles } from '../../styles/buttonStyles';
-import { usePermission, useUIStore } from '../../hooks';
+import { usePermission, useUI } from '../../hooks';
 
 interface UploadButtonProps {
   onAdd?: () => void;
@@ -12,7 +12,7 @@ export function UploadButton({
 }: UploadButtonProps) {
   const { can } = usePermission();
   const isManagement = window.location.pathname.startsWith('/admin');
-  const isMultiSelect = useUIStore(s => s.isMultiSelect);
+  const isMultiSelect = useUI(s => s.isMultiSelect);
 
   if (!isManagement || !can('photo:edit') || !onAdd || isMultiSelect) return null;
 

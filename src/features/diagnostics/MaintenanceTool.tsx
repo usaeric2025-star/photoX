@@ -7,7 +7,7 @@ import { LoadingSpinner } from "@/components/ui/feedback/LoadingSpinner";
 import { ISSUE_ACTIONS } from "@/features/diagnostics/issueActions";
 import { Icon } from '@/components/ui/Icon';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
-import { useUIStore } from '@/store/useUIStore';
+import { useUI, storeAccessor } from '@/lib/store';
 import { useTranslation } from '@/hooks';
 import { MaintenancePreviewDialog } from './MaintenancePreviewDialog';
 import { useMaintenanceExecution } from './useMaintenanceExecution';
@@ -48,7 +48,7 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
       <ConfirmDialog
         open={showConfirm}
         onOpenChange={(isOpened) => {
-          isOpened ? useUIStore.getState().incrementDialogCount() : useUIStore.getState().decrementDialogCount();
+          isOpened ? storeAccessor.ui.incrementDialogCount() : storeAccessor.ui.decrementDialogCount();
           isOpened ? openConfirm() : closeConfirm();
         }}
         title="确认执行操作？"

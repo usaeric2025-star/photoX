@@ -1,8 +1,7 @@
 import { createPortal } from 'react-dom';
 import React from 'react';
-import { useTaskStore, useTaskSelector } from '../store';
+import { useTask, useTaskSelector, useUI, storeAccessor } from '@/lib/store';
 import { cn } from '@/lib/utils';
-import { useUIStore } from '@/store/useUIStore';
 import { Icon } from '@/components/ui/Icon';
 
 function TaskItem({ task }: { task: any }) {
@@ -43,7 +42,7 @@ export function TaskDrawer() {
 
   const tasksMap = useTaskSelector((state) => state.tasks);
   const tasks = React.useMemo(() => Array.from(tasksMap.values()), [tasksMap]);
-  const isOpen = useUIStore((s) => s.isTaskDrawerOpen);
+  const isOpen = useUI((s) => s.isTaskDrawerOpen);
 
   React.useEffect(() => {
     if (!isOpen) return;
@@ -52,7 +51,7 @@ export function TaskDrawer() {
       if (e.key === 'Escape') {
         e.preventDefault();
         e.stopPropagation();
-        useUIStore.getState().update({ isTaskDrawerOpen: false });
+        storeAccessor.ui.update({ isTaskDrawerOpen: false });
       }
     };
 
@@ -76,7 +75,7 @@ export function TaskDrawer() {
           onClick={(e) => {
             e.stopPropagation();
             e.preventDefault();
-            useUIStore.getState().update({ isTaskDrawerOpen: false });
+            storeAccessor.ui.update({ isTaskDrawerOpen: false });
           }}
         />
       )}
@@ -94,7 +93,7 @@ export function TaskDrawer() {
               <button 
                 type="button"
                 onClick={() => {
-                  const state = useTaskStore.getState();
+                  const state = storeAccessor.task;
                   const remaining = Array.from(state.tasks.values()).filter((t: any) => t.state?.status === 'pending' || t.state?.status === 'processing');
                   state.clearAll();
                   remaining.forEach(t => state.enqueue(t));
@@ -106,7 +105,7 @@ export function TaskDrawer() {
             )}
             <button 
               type="button"
-              onClick={() => useUIStore.getState().update({ isTaskDrawerOpen: false })}
+              onClick={() => storeAccessor.ui.update({ isTaskDrawerOpen: false })}
               className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all"
               aria-label="關閉"
             >

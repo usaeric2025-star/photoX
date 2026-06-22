@@ -1,6 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Icon } from '@/components/ui/Icon';
-import { useAuthStore } from '@/store/useAuthStore';
+import { useAuth } from '@/lib/store';
 import { usePublicSettings } from '@/hooks';
 import { useLocalStorage } from '@/hooks/core/useLocalStorage';
 import { logger } from '@/lib/logger';
@@ -19,7 +19,7 @@ export function AdminAuthGate({ children }: AdminAuthGateProps) {
     getInitialValueInEffect: false,
   });
 
-  const { user, isLoading: isAuthLoading, signIn } = useAuthStore();
+  const { user, isLoading: isAuthLoading, signIn } = useAuth();
   const { data: settings } = usePublicSettings();
   
   const isStaffMode = !!settings?.access_passcode && passcode === settings.access_passcode;

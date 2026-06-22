@@ -2,7 +2,7 @@ import React from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { AppSettings } from '@/types';
 import { translations } from '@/locales';
-import { useUIStore } from '@/store/useUIStore';
+import { useUI } from '@/lib/store';
 
 interface SocialLinksSectionProps {
   settings: AppSettings;
@@ -17,7 +17,7 @@ export function SocialLinksSection({
   cardClass,
   inputClass
 }: SocialLinksSectionProps) {
-  const appLang = useUIStore(s => s.appLang);
+  const appLang = useUI(s => s.appLang);
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
   return (

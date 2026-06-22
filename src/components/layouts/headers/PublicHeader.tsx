@@ -2,8 +2,8 @@ import { useAppRouter } from '@/lib/router/useAppRouter';
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { Icon } from '@/components/ui/Icon'; // Keep one or two critical ones as standard imports for P0 performance
-import { useAuthStore } from '@/store/useAuthStore';
-import { useUIStore, useShallow, usePublicSettings, usePermission } from '@/hooks';
+import { useAuth } from '@/lib/store';
+import { useUI, useShallow, usePublicSettings, usePermission } from '@/hooks';
 import { NativePopover } from '@/components/ui/NativePopover';
 import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
 import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
@@ -18,14 +18,14 @@ interface PublicHeaderProps {
 }
 
 export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }: PublicHeaderProps) {
-  const { user, isLoading, signOut } = useAuthStore();
+  const { user, isLoading, signOut } = useAuth();
   const { data: settings } = usePublicSettings();
   const { role } = usePermission();
-  const update = useUIStore((s) => s.update);
+  const update = useUI((s) => s.update);
   const { navigate, route } = useAppRouter();
   const isAdmin = route === 'admin' || route === 'adminGroup';
 
-  const lang = useUIStore(s => s.appLang);
+  const lang = useUI(s => s.appLang);
   const t = translations[lang as keyof typeof translations] || translations.en;
 
   const [cachedLogoUrl, setCachedLogoUrl] = React.useState<string | null>(() => {

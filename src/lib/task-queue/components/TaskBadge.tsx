@@ -1,7 +1,7 @@
 import { createPortal } from 'react-dom';
 import React from 'react';
 import { useTaskSelector } from '../store';
-import { useUIStore } from '@/store/useUIStore';
+import { useUI, storeAccessor } from '@/lib/store';
 
 export function TaskBadge() {
   const [mounted, setMounted] = React.useState(false);
@@ -26,7 +26,7 @@ export function TaskBadge() {
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        useUIStore.getState().update({ isTaskDrawerOpen: !useUIStore.getState().isTaskDrawerOpen });
+        storeAccessor.ui.update({ isTaskDrawerOpen: !storeAccessor.ui.isTaskDrawerOpen });
       }}
       className="fixed bottom-4 right-4 bg-primary text-white rounded-full w-12 h-12 shadow-lg flex items-center justify-center font-bold"
     >

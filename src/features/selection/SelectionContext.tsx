@@ -1,5 +1,5 @@
 import React, { createContext, useContext, ReactNode, useCallback } from 'react';
-import { useUIStore } from '@/store/useUIStore';
+import { useUI } from '@/lib/store';
 
 interface SelectionState {
   selectedIds: string[];
@@ -22,11 +22,11 @@ interface SelectionContextValue {
 const SelectionContext = createContext<SelectionContextValue | null>(null);
 
 export function SelectionProvider({ children }: { children: ReactNode }) {
-  const selectedIds = useUIStore((s) => s.selectedIds);
-  const isMultiSelect = useUIStore((s) => s.isMultiSelect);
-  const update = useUIStore((s) => s.update);
-  const toggleSelected = useUIStore((s) => s.toggleSelected);
-  const updateSelectedIds = useUIStore((s) => s.updateSelectedIds);
+  const selectedIds = useUI((s) => s.selectedIds);
+  const isMultiSelect = useUI((s) => s.isMultiSelect);
+  const update = useUI((s) => s.update);
+  const toggleSelected = useUI((s) => s.toggleSelected);
+  const updateSelectedIds = useUI((s) => s.updateSelectedIds);
 
   const state: SelectionState = {
     selectedIds,

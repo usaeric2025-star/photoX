@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { usePublicSettings } from '../../hooks';
-import { useUIStore } from '@/store/useUIStore';
+import { useUI } from '@/lib/store';
 import { Router } from '@/router';
 import { AppLink } from '@/components/router/AppLink';
 import { translations } from '@/locales';
@@ -20,7 +20,7 @@ interface LoginScreenProps {
 
 export function LoginScreen({ signIn }: LoginScreenProps) {
   const { data: settings } = usePublicSettings();
-  const appLang = useUIStore(s => s.appLang);
+  const appLang = useUI(s => s.appLang);
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
 

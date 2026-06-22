@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { Task } from './types';
 
-export interface TaskState {
+export interface TaskStoreState {
   tasks: Map<string, Task>;
   enqueue: (task: Task) => void;
   startTask: (id: string) => void;
@@ -13,7 +13,7 @@ export interface TaskState {
   clearAll: () => void;
 }
 
-export const useTaskStore = create<TaskState>((set) => ({
+export const useTaskStore = create<TaskStoreState>((set) => ({
   tasks: new Map(),
   
   enqueue: (task) => set((state) => {
@@ -85,7 +85,7 @@ export const useTaskStore = create<TaskState>((set) => ({
 
 // ✅ 封裝 selector Hook（避免記憶體洩漏）
 export function useTaskSelector<T>(
-  selector: (state: TaskState) => T
+  selector: (state: TaskStoreState) => T
 ): T {
   return useTaskStore(selector);
 }

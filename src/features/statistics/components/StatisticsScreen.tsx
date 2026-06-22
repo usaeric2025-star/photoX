@@ -1,7 +1,7 @@
 import React from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { useCategories, useTags } from '@/hooks';
-import { useQuery } from '@tanstack/react-query';
+import { useAppQuery as useQuery } from '@/lib/query';
 import { api } from '@/lib/api';
 import { PhotoListItem } from '@/types/api';
 

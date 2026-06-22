@@ -6,7 +6,7 @@ import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
 import { usePublicSettings, useIsManagement } from '@/hooks';
 import { LightboxInfoCard } from './components/LightboxInfoCard';
 import { LightboxSlide } from '@/lib/lightbox';
-import { useAuthStore } from '@/store/useAuthStore';
+import { useAuth } from '@/lib/store';
 import { logger } from '@/lib/logger';
 
 import { Icon } from '@/components/ui/Icon';

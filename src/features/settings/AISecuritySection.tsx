@@ -5,7 +5,7 @@ import { logger } from '@/lib/logger';
 import React, { useCallback } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { AppSettings } from '../../types';
-import { useUIStore } from '@/store/useUIStore';
+import { useUI } from '@/lib/store';
 import { translations } from '@/locales';
 
 import { api } from '@/lib/api';
@@ -49,7 +49,7 @@ export function AISecuritySection({
   cardClass,
   inputClass
 }: AISecuritySectionProps) {
-  const appLang = useUIStore(s => s.appLang);
+  const appLang = useUI(s => s.appLang);
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
   const [keysStatus, setKeysStatus] = React.useState({ 

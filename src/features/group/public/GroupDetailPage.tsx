@@ -9,7 +9,7 @@ import { useFilters, useTranslation, useCategories } from '@/hooks';
 import { GroupHeader } from '../shared/components/GroupHeader';
 import { PhotoCardSkeleton } from '@/components/ui/Skeleton';
 import { Button } from '@/components/shared/Button';
-import { useUIStore } from '@/store/useUIStore';
+import { useUI } from '@/lib/store';
 import { usePublicSettings } from '@/hooks/settings/useSettings';
 import { WhatsAppDialog } from '@/components/shared/WhatsAppDialog';
 import { useColumns } from '@/features/layout/hooks/useColumns';
@@ -45,8 +45,8 @@ export function PublicGroupDetailPage() {
   const { group, photos, totalCount, loading, error } = useGroupData({ groupId, isAdmin: false });
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const showWhatsAppChoice = useUIStore((s) => s.showWhatsAppChoice);
-  const updateUI = useUIStore((s) => s.update);
+  const showWhatsAppChoice = useUI((s) => s.showWhatsAppChoice);
+  const updateUI = useUI((s) => s.update);
   const { data: settings } = usePublicSettings();
 
   const { lang, uiTranslations: t } = useTranslation();

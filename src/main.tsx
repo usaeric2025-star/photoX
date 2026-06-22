@@ -46,7 +46,7 @@ import { clientEnv } from './shared/envSchema';
 // Removed migration
 import { initChunkHandler } from '@/lib/chunkErrorHandler';
 import { dailyWorker } from '@/features/diagnostics/DailyWorker';
-import { useUIStore } from '@/store/useUIStore';
+import { useUI, storeAccessor } from '@/lib/store';
 import { scheduler } from '@/lib/task-queue/scheduler';
 import { setupQuerySync } from '@/lib/task-queue/querySync';
 
@@ -148,7 +148,7 @@ async function init() {
           return;
         }
         
-        useUIStore.getState().setFatalError(error instanceof Error ? error : new Error(String(error)));
+        storeAccessor.ui.setFatalError(error instanceof Error ? error : new Error(String(error)));
       },
       onRecoverableError: (error) => {
         if (/chunk|dynamically imported|module script|ResizeObserver/i.test((error as Error)?.message || '')) return;

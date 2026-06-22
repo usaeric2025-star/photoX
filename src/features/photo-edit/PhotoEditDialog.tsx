@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { NativeDialog } from "@/components/ui/NativeDialog";
-import { useUIStore } from "@/store";
+import { useUI } from '@/lib/store';
 import { useFormContext } from "el-form-react-hooks";
 import { 
   usePhoto,
@@ -14,7 +14,7 @@ import { LoadingSpinner } from "@/components/ui/feedback/LoadingSpinner";
 
 function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: boolean; handleClose: () => void; editPhotoId: string; }) {
   const { data: photo, isPending } = usePhoto(editPhotoId);
-  const appLang = useUIStore((s) => s.appLang);
+  const appLang = useUI((s) => s.appLang);
   const { form } = useFormContext();
 
   const [showConfirm, setShowConfirm] = useState(false);

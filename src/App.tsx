@@ -5,24 +5,25 @@ import { Analytics } from '@vercel/analytics/react';
 import { useEffect, useRef, useState, Suspense } from 'react';
 import { usePublicSettings } from '@/hooks';
 import { useLocalStorage } from '@/hooks/core/useLocalStorage';
-import { useAuthStore, initAuthListener } from '@/store/useAuthStore';
+import { useAuth } from '@/lib/store';
+import { initAuthListener } from '@/store/useAuthStore';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { PortalRoot } from '@/components/ui/PortalRoot';
 import { User } from '@/types';
 // Removed migrateStorage
 import { logger } from '@/lib/logger';
 import { startAutoDiagnose } from '@/features/diagnostics/autoDiagnose';
-import { useUIStore } from '@/store/useUIStore';
+import { useUI } from '@/lib/store';
 
 export default function AppRoutes() {
-  const appLang = useUIStore((s) => s.appLang);
+  const appLang = useUI((s) => s.appLang);
 
   useEffect(() => {
     document.documentElement.dataset.lang = appLang;
   }, [appLang]);
 
-  const isLoading = useAuthStore((s) => s.isLoading);
-  const init = useAuthStore((s) => s.init);
+  const isLoading = useAuth((s) => s.isLoading);
+  const init = useAuth((s) => s.init);
   const { data: settings, isPending: isSettingsPending } = usePublicSettings();
 
   const [passcode] = useLocalStorage({
@@ -47,7 +48,7 @@ export default function AppRoutes() {
     }
   }, [isLoading, isSettingsPending]);
 
-  const user = useAuthStore((s) => s.user);
+  const user = useAuth((s) => s.user);
 
   logger.debug('🔍 [App] Rendering AppRoutes:', { 
     pathname: typeof window !== 'undefined' ? window.location.pathname : '',

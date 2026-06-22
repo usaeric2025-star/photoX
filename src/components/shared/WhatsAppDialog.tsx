@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { NativeDialog } from '@/components/ui/NativeDialog';
-import { useUIStore } from '@/store/useUIStore';
+import { useUI } from '@/lib/store';
 import { usePublicSettings } from '@/hooks/settings/useSettings';
 import { Icon } from '@/components/ui/Icon';
 
 export const WhatsAppDialog = () => {
-  const show = useUIStore((s) => s.showWhatsAppChoice);
-  const update = useUIStore((s) => s.update);
+  const show = useUI((s) => s.showWhatsAppChoice);
+  const update = useUI((s) => s.update);
   const { data: settings } = usePublicSettings();
 
   const options = React.useMemo(() => {

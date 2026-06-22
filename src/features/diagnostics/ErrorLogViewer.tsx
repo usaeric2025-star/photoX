@@ -1,7 +1,7 @@
 import { logger } from '@/lib/logger';
 import React from 'react';
 import { Icon } from '@/components/ui/Icon';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAppQuery as useQuery, useAppMutation as useMutation, useAppQueryClient as useQueryClient } from '@/lib/query';
 import { api } from '@/lib/api';
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
 import { Button } from '@/components/shared/Button';

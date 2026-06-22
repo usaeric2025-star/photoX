@@ -3,7 +3,7 @@ import { useField, useFormContext } from "el-form-react-hooks";
 import { DimensionEditor } from './DimensionEditor';
 import { Dimension } from '@/types';
 import { safeArray } from '@/lib/utils';
-import { useUIStore } from '@/store/useUIStore';
+import { useUI } from '@/lib/store';
 import { usePhoto, useFilters } from '@/hooks';
 import { useTaskSelector } from '@/lib/task-queue/store';
 import { showToast } from '@/lib/ui/toast';
@@ -16,7 +16,7 @@ export function DetailsTab() {
   const { form } = useFormContext();
   const { modal, photoId } = useFilters();
   const editPhotoId = modal === 'edit' ? photoId : null;
-  const appLang = useUIStore((s) => s.appLang);
+  const appLang = useUI((s) => s.appLang);
   const tasks = useTaskSelector(s => Array.from(s.tasks.values()));
   const { data: detailPhoto } = usePhoto(editPhotoId || '');
   const { handleAiAnalyze } = usePhotoEditAI();

@@ -4,7 +4,7 @@ import { NativeDialog } from '@/components/ui/NativeDialog';
 import { usePhotoEditSessionContext } from '@/hooks/photo/usePhotoEditSessionContext';
 import { Icon } from '@/components/ui/Icon';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
-import { useUIStore } from '@/store/useUIStore';
+import { useUI } from '@/lib/store';
 import { usePhoto, useTaskExecutor, useTranslation, useFilters } from '@/hooks';
 import { useTaskSelector } from '@/lib/task-queue/store';
 import { OptimizedImage } from '@/components/shared/OptimizedImage';

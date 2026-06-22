@@ -2,7 +2,7 @@ import { useAppRouter } from '@/lib/router/useAppRouter';
 import React, { useEffect, Suspense, lazy } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
-import { useAuthStore } from '@/store/useAuthStore';
+import { useAuth } from '@/lib/store';
 import { useSyncMutation } from '@/hooks';
 const UploadModeDialog = lazy(() => import('@/features/upload/components/UploadModeDialog').then(m => ({ default: m.UploadModeDialog })));
 
@@ -11,7 +11,7 @@ import { UploadButton } from '@/components/shared/UploadButton';
 import { logger } from '@/lib/logger';
 import { useAIBatchAnalysis } from '@/hooks';
 import { useTaskSelector } from '@/lib/task-queue/store';
-import { useUIStore, useShallow } from '@/store/useUIStore';
+import { useUI, useStoreShallow } from '@/lib/store';
 import { Category } from '@/types';
 import { AdminHeader } from '@/components/layouts/headers/AdminHeader';
 import { AdminAuthGate } from '@/components/admin/AdminAuthGate';
@@ -28,17 +28,17 @@ const PhotoEditDialog = lazy(() => import('@/features/photo-edit/index').then(m 
 
 export function AdminPageContent() {
   const filters = useFilters({ enableStatus: true, enableBatch: true });
-  const { user } = useAuthStore();
+  const { user } = useAuth();
   const { uploadFiles } = usePhotoUpload();
-  const uploadModeDialogOpen = useUIStore(s => s.uploadModeDialogOpen);
-  const pendingFiles = useUIStore(s => s.pendingFiles);
+  const uploadModeDialogOpen = useUI(s => s.uploadModeDialogOpen);
+  const pendingFiles = useUI(s => s.pendingFiles);
   const { handleBatchAiAnalyze } = useAIBatchAnalysis();
   const { mutateAsync: syncMut } = useSyncMutation();
   const tasks = useTaskSelector(s => Array.from(s.tasks.values()));
-  const appLang = useUIStore(s => s.appLang);
+  const appLang = useUI(s => s.appLang);
   const { navigate, route } = useAppRouter();
 
-  const store = useUIStore(useShallow(s => ({
+  const store = useUI(useStoreShallow(s => ({
     update: s.update,
     batchEditingIds: s.batchEditingIds })));
   

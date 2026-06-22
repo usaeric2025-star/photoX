@@ -6,7 +6,7 @@ import { PromptDialog } from "@/components/ui/PromptDialog";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useLongPress } from "@/hooks/core/useLongPress";
 import { Category } from '../../types';
-import { useUIStore } from '@/store/useUIStore';
+import { useUI } from '@/lib/store';
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
 import { type } from 'arktype';
 import { FormProvider } from '@/lib/form/useFormField';
@@ -32,7 +32,7 @@ function CategoryItem({
   const [activeMenuId, setActiveMenuId] = useState<string | number | null>(null);
   const [isEditOpen, editDialog] = useDisclosure(false);
   const [isDeleteOpen, deleteDialog] = useDisclosure(false);
-  const appLang = useUIStore((s) => s.appLang);
+  const appLang = useUI((s) => s.appLang);
 
   const menuRef = useClickOutside<HTMLDivElement>(() => {
     if (activeMenuId === cat.id) setActiveMenuId(null);
@@ -117,7 +117,7 @@ function CategoryItem({
 export function CategoriesSection({ 
   categories, addCategory, updateCategory, deleteCategory, cardClass, buttonStyles
 }: CategoriesSectionProps) {
-  const appLang = useUIStore((s) => s.appLang);
+  const appLang = useUI((s) => s.appLang);
   const [isAddOpen, addDialog] = useDisclosure(false);
 
   const { submit: runUpdateCategory, fieldErrors: updateFieldErrors, clearFieldError: updateClearFieldError } = useFormSubmit({

@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { useTaskStore } from '@/lib/task-queue/store';
+import { useTask } from '@/lib/store';
 import { showToast } from '@/lib/ui/toast';
 import { ErrorFactory } from '@/lib/error';
 import { hapticFeedback } from '@/lib/ui/haptics';
@@ -9,11 +9,11 @@ import { hapticFeedback } from '@/lib/ui/haptics';
  * Hook for executing long-running tasks with background progress tracking.
  */
 export function useTaskExecutor() {
-  const enqueue = useTaskStore(s => s.enqueue);
-  const startTask = useTaskStore(s => s.startTask);
-  const updateProgressState = useTaskStore(s => s.updateProgress);
-  const completeTask = useTaskStore(s => s.completeTask);
-  const failTask = useTaskStore(s => s.failTask);
+  const enqueue = useTask(s => s.enqueue);
+  const startTask = useTask(s => s.startTask);
+  const updateProgressState = useTask(s => s.updateProgress);
+  const completeTask = useTask(s => s.completeTask);
+  const failTask = useTask(s => s.failTask);
 
   const runTask = useCallback(async <T,>(
     name: string,

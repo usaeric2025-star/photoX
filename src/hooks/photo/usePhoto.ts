@@ -1,5 +1,6 @@
 import { STALE_TIMES } from '@/lib/query/config';
-import { useQuery, useQueryClient, InfiniteData } from '@tanstack/react-query';
+import { useAppQuery as useQuery, useAppQueryClient as useQueryClient } from '@/lib/query';
+import { InfiniteData } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query/keys';
 import { Photo } from '@/types';
 import { SupabasePhotoRaw } from '@/types/supabase';

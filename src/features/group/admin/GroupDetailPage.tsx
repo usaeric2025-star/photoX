@@ -8,7 +8,7 @@ import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
 import { useFilters, useTranslation, useCategories } from '@/hooks';
 import { getTranslatedCategoryName } from '@/services/category/utils';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { useUIStore } from '@/store/useUIStore';
+import { useUI } from '@/lib/store';
 import { usePhotoSelection } from '@/hooks/photo/usePhotoSelection';
 import { SelectionProvider, SelectionToolbar } from '@/features/selection';
 import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
@@ -24,7 +24,7 @@ import { useColumns } from '@/features/layout/hooks/useColumns';
 import { FilterBar } from '@/features/filter/FilterBar';
 
 function AdminPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string, index: number) => void }) {
-  const isMultiSelect = useUIStore(s => s.isMultiSelect);
+  const isMultiSelect = useUI(s => s.isMultiSelect);
   const { toggle } = usePhotoSelection();
   const { columns } = useColumns();
 
@@ -96,7 +96,7 @@ export function AdminGroupDetailPage() {
   }, [anchor, photoId, loading, photos.length]);
 
   const [showAdminTools, setShowAdminTools] = useState(false);
-  const isMultiSelect = useUIStore((s) => s.isMultiSelect);
+  const isMultiSelect = useUI((s) => s.isMultiSelect);
 
   const adminActions = useAdminMaintenance();
   

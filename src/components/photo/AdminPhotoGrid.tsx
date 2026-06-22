@@ -1,5 +1,5 @@
 import React from 'react';
-import { useUIStore } from '@/store/useUIStore';
+import { useUI } from '@/lib/store';
 import { PhotoGridContent } from './PhotoGridContent';
 import { SelectionProvider, SelectionToolbar } from '@/features/selection';
 import { Category } from '@/types/photo';
@@ -31,7 +31,7 @@ export function AdminPhotoGrid({
   filters,
   onPhotoClick
 }: AdminPhotoGridProps) {
-  const { isMultiSelect } = useUIStore();
+  const { isMultiSelect } = useUI();
   
   const allIds = React.useMemo(() => photos.map(p => p.id), [photos]);
 

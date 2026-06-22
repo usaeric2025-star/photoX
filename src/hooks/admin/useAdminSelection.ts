@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useAdminMaintenance } from './useAdminMaintenance';
-import { useUIStore } from '@/store/useUIStore';
+import { useUI } from '@/lib/store';
 import { useAppRouter } from '@/lib/router/useAppRouter';
 
 /**
@@ -11,7 +11,7 @@ export const useAdminSelection = () => {
     const [isDeleteOpen, { open, close, toggle }] = useDisclosure(false);
     const [idsToDelete, setIdsToDelete] = useState<string[]>([]);
     const adminActions = useAdminMaintenance();
-    const update = useUIStore(s => s.update);
+    const update = useUI(s => s.update);
     const { navigate } = useAppRouter();
 
     const initiateDelete = (ids: string[]) => {

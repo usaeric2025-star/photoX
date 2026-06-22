@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useUIStore } from '@/store/useUIStore';
+import { useUI, storeAccessor } from '@/lib/store';
 import { useAIBatchAnalysis } from '../photo/useAIBatchAnalysis';
 import { logger } from '@/lib/logger';
 import { showToast } from '@/lib/ui/toast';
@@ -8,7 +8,7 @@ export function useAdminBatchActions() {
   const { handleBatchAiAnalyze } = useAIBatchAnalysis();
   
   const handleBatchAiIdentifyTrigger = async (allPhotos?: any[], ids?: string[]) => {
-    const selectedIds = ids || useUIStore.getState().selectedIds;
+    const selectedIds = ids || storeAccessor.ui.selectedIds;
     
     // If no specific photos provided, we use the passed allPhotos
     let photosToProcess = allPhotos || [];

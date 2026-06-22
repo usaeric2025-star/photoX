@@ -13,8 +13,19 @@ export const savePhotosToCloudBatch = async (
   photos: Photo[],
   onProgress?: (count: number) => void
 ): Promise<Photo[]> => {
-  // TODO: Refactor this to use the orchestrator
-  return [];
+  const successPhotos: Photo[] = [];
+  let count = 0;
+  for (const photo of photos) {
+    try {
+      const result = await uploadSinglePhoto(userId, photo);
+      successPhotos.push({ ...photo, id: result.id });
+    } catch (e) {
+      console.error('Failed to upload photo in batch', e);
+    }
+    count++;
+    onProgress?.(count);
+  }
+  return successPhotos;
 };
 
 

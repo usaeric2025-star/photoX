@@ -1,7 +1,7 @@
 import { logger } from '@/lib/logger';
 import { useAppRouter } from '@/lib/router/useAppRouter';
-import { useQuery } from '@tanstack/react-query';
-import { useAuthStore } from '@/store/useAuthStore';
+import { useAppQuery as useQuery } from '@/lib/query';
+import { useAuth } from '@/lib/store';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import React, { useState, Suspense } from 'react';
 import { Icon } from '@/components/ui/Icon';
@@ -9,9 +9,7 @@ import { api } from '@/lib/api';
 
 import { showToast } from '@/lib/ui/toast';
 import { AppSettings, User, ApiResponse } from '@/types';
-import { 
-  useUIStore, useShallow
-} from '@/store/useUIStore';
+import { useUI, useStoreShallow } from '@/lib/store';
 import { useSettingsManagement } from '@/hooks/settings/useSettingsManagement';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { 
@@ -47,7 +45,7 @@ interface SettingsPageProps {
 }
 
 export function SettingsPage({ onClose }: SettingsPageProps) {
-  const update = useUIStore((s) => s.update);
+  const update = useUI((s) => s.update);
   const { navigate, route } = useAppRouter();
   
   const { data: categories = [] } = useCategories();
@@ -62,10 +60,10 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   
   const isMaintenanceRunning = tasks.some(t => (t.label.includes('维护') || t.label.includes('诊断')) && t.state?.status === 'processing');
   
-  const appLang = useUIStore(s => s.appLang);
+  const appLang = useUI(s => s.appLang);
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
-  const { user, signIn, signOut } = useAuthStore();
+  const { user, signIn, signOut } = useAuth();
   const { settings, agnesApiKey, customModel, accessPasscode, updateSettings } = useSettings();
   const setAgnesApiKey = (key: string) => updateSettings({ ...settings, agnes_api_key: key });
   const setAccessPasscode = (code: string) => updateSettings({ ...settings, access_passcode: code });

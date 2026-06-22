@@ -2,7 +2,7 @@ import { showToast } from '@/lib/ui/toast';
 import type { StandardError } from '@/types/api';
 import { copyToClipboard } from '@/utils/clipboard';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { useUIStore } from '@/store/useUIStore';
+import { useUI, storeAccessor } from '@/lib/store';
 
 /**
  * Safely extracts a clean string message from any error object
@@ -153,7 +153,7 @@ export const handleError = (error: unknown, context: string, silent: boolean = f
   // For serious context like AI analysis, we ALSO show the FatalErrorOverlay
   // This ensures the error is visible and interaction works even when blocked by a modal dialog
   if (context === 'analyzePhoto' || context === 'fatal') {
-    useUIStore.getState().setFatalError(new Error(`${messageStr} (${context})`));
+    storeAccessor.ui.setFatalError(new Error(`${messageStr} (${context})`));
   }
 
   showToast.error(`操作失败`, {

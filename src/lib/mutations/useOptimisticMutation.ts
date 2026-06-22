@@ -1,9 +1,9 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAppMutation as useMutation, useAppQueryClient as useQueryClient } from '@/lib/query';
 import { showToast } from '@/lib/ui/toast';
 import { MutationConfig } from './types';
 import { logger } from '@/lib/logger';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { useUIStore } from '@/store/useUIStore';
+import { useUI, storeAccessor } from '@/lib/store';
 import { type } from 'arktype';
 
 // Client-side idempotency cache
@@ -135,7 +135,7 @@ export const useOptimisticMutation = <
       
       if (config.cleanupKey) {
         const key = typeof config.cleanupKey === 'function' ? config.cleanupKey(vars) : config.cleanupKey;
-        useUIStore.getState().clearProcessing(key);
+        storeAccessor.ui.clearProcessing(key);
       }
       config.onSettled?.(data, err, vars);
     },

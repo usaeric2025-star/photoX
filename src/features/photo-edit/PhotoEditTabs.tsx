@@ -4,12 +4,12 @@ import { BasicInfoTab } from "./BasicInfoTab";
 import { OrgTab } from "./OrgTab";
 import { DetailsTab } from "./DetailsTab";
 import { AISourceTab } from "./AISourceTab";
-import { useUIStore } from "@/store";
+import { useUI } from '@/lib/store';
 import { usePhotoEditSessionContext } from "@/hooks/photo/usePhotoEditSessionContext";
 
 export function PhotoEditTabs() {
   const { photoId } = usePhotoEditSessionContext();
-  const appLang = useUIStore((s) => s.appLang);
+  const appLang = useUI((s) => s.appLang);
 
   const [activeTab, setActiveTab] = useState('basic');
 

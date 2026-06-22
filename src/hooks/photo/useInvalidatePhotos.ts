@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useAppQueryClient as useQueryClient } from '@/lib/query';
 import { queryKeys } from '@/lib/query/keys';
 
 export const useInvalidatePhotos = () => {

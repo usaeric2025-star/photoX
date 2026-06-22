@@ -1,6 +1,7 @@
 import React, { Component, ReactNode } from 'react';
 import { useCopyToClipboard } from '@/hooks';
 import { isAppError } from '@/lib/error/AppError';
+import { logger } from '@/lib/logger';
 
 import { LoadingSpinner } from '../ui/feedback/LoadingSpinner';
 
@@ -93,7 +94,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('ErrorBoundary caught:', error, errorInfo);
+    logger.error('ErrorBoundary caught:', error, errorInfo);
   }
 
   override render() {

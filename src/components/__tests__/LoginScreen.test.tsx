@@ -45,8 +45,8 @@ vi.mock('@/locales', () => ({
 }));
 
 // Mock ui store
-vi.mock('@/store/useUIStore', () => ({
-  useUIStore: (cb: any) => cb({ appLang: 'en' }),
+vi.mock('@/store/useUI', () => ({
+  useUI: (cb: any) => cb({ appLang: 'en' }),
 }));
 
 // Mock settings
