@@ -26,10 +26,16 @@ export function useAppMutation<TData = unknown, TError = Error, TVariables = voi
   return useRqMutation<TData, TError, TVariables, TContext>(options);
 }
 
-export function useAppInfiniteQuery<TQueryFnData = unknown, TError = Error, TData = TQueryFnData, TQueryKey extends import('@tanstack/react-query').QueryKey = import('@tanstack/react-query').QueryKey, TPageParam = unknown>(
+export function useAppInfiniteQuery<
+  TQueryFnData = unknown,
+  TError = Error,
+  TData = TQueryFnData,
+  TQueryKey extends import('@tanstack/react-query').QueryKey = import('@tanstack/react-query').QueryKey,
+  TPageParam = unknown
+>(
   options: UseInfiniteQueryOptions<TQueryFnData, TError, TData, TQueryFnData, TQueryKey, TPageParam>
 ) {
-  return useRqInfiniteQuery<TQueryFnData, TError, TData, TQueryFnData, TQueryKey, TPageParam>(options);
+  return useRqInfiniteQuery<TQueryFnData, TError, TData, TQueryKey, TPageParam>(options);
 }
 
 export function useAppQueryClient() {
