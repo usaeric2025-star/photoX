@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 import { Task, TaskType } from '../types';
 
 export const taskTable = {
@@ -12,7 +13,7 @@ export const taskTable = {
       meta: task.meta,
       created_at: new Date(task.createdAt).toISOString(),
     });
-    if (error) console.error('[Task] Insert error:', error);
+    if (error) logger.error('[Task] Insert error:', error);
   },
 
   // 更新狀態
@@ -24,7 +25,7 @@ export const taskTable = {
       .from('tasks')
       .update(payload)
       .eq('id', id);
-    if (error) console.error('[Task] Update error:', error);
+    if (error) logger.error('[Task] Update error:', error);
   },
 
   // 恢復未完成任務
@@ -36,7 +37,7 @@ export const taskTable = {
       .order('created_at', { ascending: true });
 
     if (error) {
-      console.error('[Task] Restore error:', error);
+      logger.error('[Task] Restore error:', error);
       return [];
     }
 

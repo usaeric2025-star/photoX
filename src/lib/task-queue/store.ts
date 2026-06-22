@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { Task } from './types';
 
-interface TaskState {
+export interface TaskState {
   tasks: Map<string, Task>;
   enqueue: (task: Task) => void;
   startTask: (id: string) => void;

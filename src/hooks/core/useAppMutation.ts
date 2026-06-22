@@ -20,7 +20,8 @@ export function useAppMutation<TData, TError = Error, TVariables = void, TContex
     },
     onError: (error, variables, context) => {
       if (options?.errorMessage) showToast.error(options.errorMessage);
-      else showToast.error(error.message);
+      else if (error instanceof Error) showToast.error(error.message);
+      else showToast.error(String(error));
       options?.onError?.(error, variables, context);
     },
     ...options,

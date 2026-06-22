@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { type Type } from 'arktype';
-import { toast } from 'sonner';
+import { showToast } from '@/lib/ui/toast';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 interface UseFormSubmitOptions<TData, TResult> {
@@ -81,7 +81,7 @@ export function useFormSubmit<TData, TResult>({
           const result = schema(rawData);
           if (result instanceof Error) {
             const msg = result.message;
-            toast.error(msg);
+            showToast.error(msg);
             
             let newFieldErrors: Record<string, string> = {};
             if ('byPath' in result && typeof result.byPath === 'object' && result.byPath) {
@@ -113,7 +113,7 @@ export function useFormSubmit<TData, TResult>({
             const res = await mutationFn(data, controller.signal);
             
             setState({ isLoading: false, isError: false, isSuccess: true, error: null, fieldErrors: {} });
-            toast.success(successMessage);
+            showToast.success(successMessage);
             onSuccess?.(res);
             return resolve(true);
           } catch (err: unknown) {
@@ -126,7 +126,7 @@ export function useFormSubmit<TData, TResult>({
             const appError = ErrorFactory.fromUnknown(err);
             const userMsg = appError.userMessage ?? errorMessage;
             
-            toast.error(userMsg);
+            showToast.error(userMsg);
             ErrorFactory.capture(appError);
             
             setState({ isLoading: false, isError: true, isSuccess: false, error: userMsg, fieldErrors: {} });

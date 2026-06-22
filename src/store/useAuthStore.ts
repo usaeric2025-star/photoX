@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { User } from '@/types';
 import { supabase } from '@/lib/supabase';
 
-interface AuthState {
+export interface AuthState {
   user: User | null;
   isLoading: boolean;
   setUser: (user: User | null) => void;

@@ -2,6 +2,7 @@ import { Task } from './types';
 import { useTaskStore } from './store';
 import { taskTable } from './integrations/supabase';
 import { showToast } from '@/lib/ui/toast';
+import { logger } from '@/lib/logger';
 
 export class TaskScheduler {
   private queue: Task[] = [];
@@ -23,7 +24,7 @@ export class TaskScheduler {
     // 冪等檢查
     const key = `${task.type}:${task.meta?.key || task.id}`;
     if (this.activeKeys.has(key)) {
-      console.warn(`[Task] Duplicate task skipped: ${key}`);
+      logger.warn(`[Task] Duplicate task skipped: ${key}`);
       return;
     }
     this.activeKeys.add(key);
@@ -32,7 +33,7 @@ export class TaskScheduler {
     useTaskStore.getState().enqueue(task);
     
     // 2. 寫入 Supabase（持久層）
-    taskTable.insert(task).catch(console.error);
+    taskTable.insert(task).catch(e => logger.error('[Task] insert error', e));
     
     // 3. 加入調度佇列
     this.queue.push(task);
@@ -55,7 +56,7 @@ export class TaskScheduler {
     useTaskStore.getState().cancelTask(id);
     
     // 更新 Supabase
-    taskTable.updateStatus(id, 'cancelled').catch(console.error);
+    taskTable.updateStatus(id, 'cancelled').catch(e => logger.error('[Task] cancel error', e));
     
     // 釋放去重鍵
     const task = this.findTask(id);
