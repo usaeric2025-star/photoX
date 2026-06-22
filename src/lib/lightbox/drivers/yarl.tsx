@@ -48,7 +48,7 @@ export function YARLDriver({
       slides={slides}
       plugins={plugins}
       zoom={{
-        maxZoomLevel: 3,
+        maxZoomPixelRatio: 3,
         scrollToZoom: true,
         wheelZoomDistanceFactor: 100,
         pinchZoomDistanceFactor: 100,
@@ -65,7 +65,7 @@ export function YARLDriver({
       carousel={{ 
         preload: 2,
         imageFit: "contain",
-        padding: "80px 16px 140px 16px"
+        padding: "16px"
       }}
       on={{
         view: ({ index }) => onView?.(index),
@@ -77,7 +77,6 @@ export function YARLDriver({
           backdropFilter: 'blur(8px)',
         } as any,
         slide: { paddingTop: '80px', paddingBottom: '120px' } as any,
-        header: { padding: '8px 12px' } as any,
       }}
       toolbar={{ buttons: ['close'] }}
       render={{

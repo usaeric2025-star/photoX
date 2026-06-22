@@ -60,8 +60,7 @@ export function PhotoLightbox() {
     window.open(whatsappUrl, '_blank');
   };
 
-  const role = useAuthStore((s) => s.role);
-  const isManagement = useIsManagement() && (role === 'admin' || role === 'staff');
+  const isManagement = useIsManagement();
 
   return (
     <LightboxEngine 

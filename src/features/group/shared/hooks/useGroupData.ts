@@ -1,5 +1,6 @@
 import { useGroupDetail } from '@/hooks/groups/useGroupDetail';
 import { usePhotos } from '@/hooks/photo/usePhotos';
+import { useFilters } from '@/hooks/useFilters';
 
 interface UseGroupDataOptions {
   groupId: string | null;
@@ -7,6 +8,8 @@ interface UseGroupDataOptions {
 }
 
 export function useGroupData({ groupId, isAdmin }: UseGroupDataOptions) {
+  const { search, category, tags, sort } = useFilters();
+  
   const { 
     data: group, 
     isPending: isGroupPending, 
@@ -23,6 +26,10 @@ export function useGroupData({ groupId, isAdmin }: UseGroupDataOptions) {
   } = usePhotos({
     groupId: groupId || undefined,
     mode: isAdmin ? 'admin' : 'public',
+    categoryId: category,
+    tagId: tags?.[0],
+    searchQuery: search,
+    sortOrder: sort,
   });
 
   const photos = data?.pages.flatMap(p => p.items) || [];

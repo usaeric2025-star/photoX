@@ -29,10 +29,13 @@ export function useColumns() {
     }
 
     if (currentRouteName && routes[currentRouteName]) {
-      (routes[currentRouteName] as any)({
+      const nextRoute = (routes[currentRouteName] as any)({
         ...cleanParams,
         columns: newColumns
-      }).push();
+      });
+      if (nextRoute && typeof nextRoute.push === 'function') {
+        nextRoute.push();
+      }
     }
   };
 

@@ -23,10 +23,13 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
 
     // Only update if the route exists in routes and accepts these params
     if (currentRouteName && routes[currentRouteName]) {
-      (routes[currentRouteName] as any)({
+      const nextRoute = (routes[currentRouteName] as any)({
         ...cleanParams,
         ...updates
-      }).push();
+      });
+      if (nextRoute && typeof nextRoute.push === 'function') {
+        nextRoute.push();
+      }
     }
   }, [route]);
 

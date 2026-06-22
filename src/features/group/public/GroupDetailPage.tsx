@@ -12,10 +12,18 @@ import { Button } from '@/components/shared/Button';
 import { useUIStore } from '@/store/useUIStore';
 import { usePublicSettings } from '@/hooks/settings/useSettings';
 import { WhatsAppDialog } from '@/components/shared/WhatsAppDialog';
+import { useColumns } from '@/features/layout/hooks/useColumns';
+import { FilterBar } from '@/features/filter/FilterBar';
 
 function PublicPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string, index: number) => void }) {
+  const { columns } = useColumns();
+  
+  const gridClass = columns === 5 ? "grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6" :
+                    columns === 3 ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4" :
+                    "grid-cols-2 sm:grid-cols-2 lg:grid-cols-3";
+
   return (
-    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1 sm:gap-2 p-1 sm:p-2 lg:p-4">
+    <div className={`grid ${gridClass} gap-1 sm:gap-2 p-1 sm:p-2 lg:p-4`}>
       {photos.map((photo, index) => (
         <PublicPhotoCard
           key={photo.id}
@@ -148,6 +156,7 @@ export function PublicGroupDetailPage() {
           isAdmin={false} 
         />
       </div>
+      <FilterBar mode="public" className="z-10" />
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto relative overscroll-y-auto overscroll-x-none bg-slate-50">
         <PublicPhotoGrid photos={photos} categories={categories} onPhotoClick={handlePhotoClick} />
       </div>
