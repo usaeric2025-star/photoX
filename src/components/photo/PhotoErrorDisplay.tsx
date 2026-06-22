@@ -25,12 +25,11 @@ export function PhotoErrorDisplay({ error, onRetry }: PhotoErrorDisplayProps) {
   const timestamp = new Date().toLocaleString('zh-CN');
 
   const diagnosticsText = `
-[PhotoX Error Report]
-Time: ${timestamp}
-Type: ${errorType}
-Code: ${code || 'Unknown'}
-Trace: ${traceId || 'None'}
-Message: ${message}
+錯誤代碼: ${code || '無'}
+追蹤 ID: ${traceId || '無'}
+時間: ${timestamp}
+詳細網址: ${typeof window !== 'undefined' ? window.location.href : ''}
+錯誤訊息: ${message}
   `.trim();
 
   const handleCopy = async () => {
@@ -107,28 +106,34 @@ Message: ${message}
           <div className="w-full mt-2 group relative bg-slate-900 rounded-xl p-4 text-left font-mono text-[10px] text-slate-300 border border-slate-800 shadow-inner overflow-hidden animate-in fade-in slide-in-from-top-2">
             <div className="flex justify-between items-center border-b border-slate-800 pb-2 mb-2">
               <div className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                <span className="font-bold text-slate-500 text-[9px] uppercase tracking-wider">Diagnostics</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                <span className="font-bold text-slate-500 text-[9px] uppercase tracking-wider">診斷資訊</span>
               </div>
             </div>
-            <div className="space-y-1 opacity-80 break-all max-h-32 overflow-y-auto no-scrollbar">
-              <div className="flex flex-col">
-                <span className="text-slate-500">MESSAGE:</span>
-                <span className="text-slate-300">{message}</span>
-              </div>
+            <div className="space-y-2 opacity-80 break-all max-h-32 overflow-y-auto no-scrollbar">
+              {code && (
+                <div className="flex flex-col">
+                  <span className="text-slate-500">錯誤代碼:</span>
+                  <span className="text-slate-300">{code}</span>
+                </div>
+              )}
               {traceId && (
-                <div className="flex flex-col mt-2">
-                  <span className="text-slate-500">TRACE ID:</span>
+                <div className="flex flex-col">
+                  <span className="text-slate-500">追蹤 ID:</span>
                   <span className="text-slate-300">{traceId}</span>
                 </div>
               )}
+              <div className="flex flex-col">
+                <span className="text-slate-500">錯誤訊息:</span>
+                <span className="text-slate-300 whitespace-normal">{message}</span>
+              </div>
             </div>
             <button
               onClick={handleCopy}
               className="absolute top-2 right-2 p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-md transition-colors border border-slate-700"
-              title="复制信息"
+              title="複製診斷資訊"
             >
-              {copied ? <Icon name="check" className="w-3 h-3 text-green-400" /> : <Icon name="copy" className="w-3 h-3" />}
+              {copied ? <Icon name="check" className="w-3 h-3 text-emerald-400" /> : <Icon name="copy" className="w-3 h-3" />}
             </button>
           </div>
         )}

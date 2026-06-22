@@ -66,7 +66,7 @@ export function usePublicSettings() {
       try {
         const fetchPromise = api.public.settings.$get();
         const timeoutPromise = new Promise<never>((_, reject) => {
-          setTimeout(() => reject(new Error('Public Settings fetch timeout (35s)')), 35000);
+          setTimeout(() => reject(new Error('Public Settings fetch timeout (5s)')), 5000);
         });
         
         const response = await Promise.race([fetchPromise, timeoutPromise]);

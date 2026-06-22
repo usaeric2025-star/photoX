@@ -15,10 +15,12 @@ import { api } from '@/lib/api';
 
 export async function prefetchMainGallery(queryClient: QueryClient) {
   const queryKey = queryKeys.photos.infinite({ 
-    category: undefined,
-    tags: undefined,
-    q: undefined,
-    sort: undefined
+    categoryId: undefined,
+    tagId: undefined,
+    searchQuery: undefined,
+    sortOrder: undefined,
+    onlyGroupsCover: true,
+    mode: 'public'
   }, 'public');
 
   return Promise.all([
@@ -28,14 +30,16 @@ export async function prefetchMainGallery(queryClient: QueryClient) {
         const response = await api.photos.list.$post({
           json: {
             limit: PHOTO_QUERY_CONFIG.limit,
-            isAdminMode: false
+            isAdminMode: false,
+            onlyGroupsCover: true,
           }
         });
         const result = await response.json();
         if (!result.success) throw new Error(result.error);
         return {
-          items: result.data.photos,
-          nextCursor: result.data.cursor
+          items: result.data,
+          nextCursor: result.nextCursor || null,
+          total: result.total || 0,
         };
       },
       initialPageParam: null,
@@ -59,6 +63,11 @@ export async function prefetchGroupDetail(queryClient: QueryClient, groupId: str
   const isQueryAdmin = !!isAdminMode;
   const queryKey = [...queryKeys.groups.detail(groupId, isQueryAdmin)];
   
+  const photosFilters = {
+    groupId: groupId || undefined,
+    mode: isAdminMode ? 'admin' : 'public',
+  };
+
   return Promise.all([
     queryClient.prefetchQuery({
       queryKey,
@@ -79,7 +88,7 @@ export async function prefetchGroupDetail(queryClient: QueryClient, groupId: str
       staleTime: createStaleTime('STABLE'),
     }),
     queryClient.prefetchInfiniteQuery({
-      queryKey: queryKeys.photos.infinite({ groupId } as unknown as Record<string, unknown>, isAdminMode ? 'admin' : 'public'),
+      queryKey: queryKeys.photos.infinite(photosFilters, isAdminMode ? 'admin' : 'public'),
       queryFn: async ({ pageParam = null }) => {
         const response = await api.photos.list.$post({
           json: {
@@ -93,8 +102,9 @@ export async function prefetchGroupDetail(queryClient: QueryClient, groupId: str
         const result = await response.json();
         if (!result.success) throw new Error(result.error);
         return { 
-          items: result.data.photos, 
-          nextCursor: result.data.cursor 
+          items: result.data, 
+          nextCursor: result.nextCursor || null,
+          total: result.total || 0,
         };
       },
       initialPageParam: null,

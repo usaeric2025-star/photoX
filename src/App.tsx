@@ -3,7 +3,7 @@ import { ConfirmProvider } from './context/ConfirmContext';
 import { RouterProvider } from '@tanstack/react-router';
 import { router } from './router/index';
 import { Analytics } from '@vercel/analytics/react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, Suspense } from 'react';
 import { usePublicSettings } from '@/hooks';
 import { useLocalStorage } from '@/hooks/core/useLocalStorage';
 import { useAuthStore, initAuthListener } from '@/store/useAuthStore';
@@ -119,7 +119,9 @@ export default function AppRoutes() {
   return (
     <AppErrorBoundary>
       <ConfirmProvider>
-        <RouterProvider router={router} context={routerContext} />
+        <Suspense fallback={<LoadingScreen />}>
+          <RouterProvider router={router} context={routerContext} />
+        </Suspense>
       </ConfirmProvider>
       <PortalRoot />
       <Analytics />

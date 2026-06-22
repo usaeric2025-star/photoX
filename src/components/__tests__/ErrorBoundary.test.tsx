@@ -27,8 +27,8 @@ describe('ErrorBoundary', () => {
       </ErrorBoundary>
     );
     
-    expect(getByText(/出错了 \/ Something went wrong/)).toBeTruthy();
-    expect(getByText(/刷新页面 \/ Refresh/)).toBeTruthy();
+    expect(getByText(/应用发生意外错误/)).toBeTruthy();
+    expect(getByText(/刷新页面重試|刷新页面重试/)).toBeTruthy();
     
     // Verify componentDidCatch only logs and doesn't trigger side effects
     expect(consoleSpy).toHaveBeenCalled();

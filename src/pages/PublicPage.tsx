@@ -26,6 +26,10 @@ export default function PublicPage() {
     photoId, 
     setPhotoId 
   } = useFilters();
+
+  const isOpenLightbox = useLightboxStore((s) => s.isOpen);
+  const lightboxImages = useLightboxStore((s) => s.images);
+  const lightboxCurrentIndex = useLightboxStore((s) => s.currentIndex);
   
   const { columns } = useColumns();
   const [showScrollTop, setShowScrollTop] = React.useState(false);
@@ -103,11 +107,35 @@ export default function PublicPage() {
       title: p.name || '',
       category: p.groupName || '',
       metadata: {
-        description: p.description,
+        description: p.description || undefined,
         tags: p.tags,
       }
     };
   }), [photos]);
+
+  // Sync URL photoId deep link into raw useLightboxStore
+  React.useEffect(() => {
+    if (lightboxOpen && lightboxIndex !== -1 && lightboxItems.length > 0) {
+      const store = useLightboxStore.getState();
+      if (!store.isOpen || store.currentIndex !== lightboxIndex) {
+        store.open(lightboxItems, lightboxIndex);
+      }
+    } else if (!lightboxOpen && useLightboxStore.getState().isOpen) {
+      useLightboxStore.getState().close();
+    }
+  }, [lightboxOpen, lightboxIndex, lightboxItems]);
+
+  // Sync lightbox changes back to URL photoId query param
+  React.useEffect(() => {
+    if (isOpenLightbox) {
+      const activePhoto = photos[lightboxCurrentIndex];
+      if (activePhoto && activePhoto.id !== photoId) {
+        setPhotoId(activePhoto.id);
+      }
+    } else if (!isOpenLightbox && photoId) {
+      setPhotoId(null);
+    }
+  }, [isOpenLightbox, lightboxCurrentIndex, photos, photoId, setPhotoId]);
 
   const handleIndexChange = (index: number) => {
     const photo = photos[index];
@@ -172,9 +200,7 @@ export default function PublicPage() {
     staleTime: 5 * 60 * 1000 // 減少重複 API 調用
   });
 
-  const isOpenLightbox = useLightboxStore((s) => s.isOpen);
-  const lightboxImages = useLightboxStore((s) => s.images);
-  const lightboxCurrentIndex = useLightboxStore((s) => s.currentIndex);
+  // Selectors moved to the top of component to avoid use-before-define issues
 
   if (isError) {
     return (

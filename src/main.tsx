@@ -16,6 +16,17 @@ if (typeof window !== 'undefined') {
     }
     originalConsoleError.apply(console, args as unknown as Parameters<typeof originalConsoleError>);
   };
+
+  const originalConsoleWarn = console.warn;
+  console.warn = function (...args: unknown[]) {
+    if (
+      typeof args[0] === 'string' && 
+      (args[0].includes("[Virtua]") || args[0].includes("oversize") || args[0].includes("Oversize"))
+    ) {
+      return;
+    }
+    originalConsoleWarn.apply(console, args as unknown as Parameters<typeof originalConsoleWarn>);
+  };
 }
 
 

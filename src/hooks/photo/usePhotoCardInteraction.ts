@@ -36,7 +36,7 @@ export function usePhotoCardInteraction({
   
   const toggleSelected = useUIStore((s) => s.toggleSelected);
   const update = useUIStore((s) => s.update);
-  const { navigate, location } = useRouterSafe();
+  const { navigate, location, params } = useRouterSafe();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { setPhotoId, setModal } = useFilters();
@@ -47,9 +47,9 @@ export function usePhotoCardInteraction({
    };
     
   const handleGroupNavigate = (gid: string, anchorPhotoId?: string) => {
-    const targetPath = isManagement ? `/admin/group/${gid}` : `/group/${gid}`;
     navigate({ 
-      to: targetPath, 
+      to: isManagement ? '/admin/group/$groupId' : '/group/$groupId',
+      params: { groupId: gid },
       search: (prev: any) => ({ 
         ...prev, 
         photoId: anchorPhotoId || prev.photoId, 
@@ -59,13 +59,16 @@ export function usePhotoCardInteraction({
   };
 
   const handleMouseEnter = () => {
-    const isAlreadyOnGroupPage = location?.pathname?.includes('/group/');
+    const isAlreadyOnGroupPage = !!(params as any).groupId || location?.pathname?.includes('/group/') || location?.pathname?.includes('/g/');
     if (photo.groupId && showGroupsCollapsed && !hasSearchQuery && !isAlreadyOnGroupPage) {
       const gid = photo.groupId;
       const isAdmin = isManagement;
-      // Preload route
-      const targetPath = isAdmin ? `/admin/group/${gid}` : `/group/${gid}`;
-      router.preloadRoute({ to: targetPath, search: (prev: any) => prev }).catch(() => {});
+      // Preload route type-safely
+      router.preloadRoute({ 
+        to: isAdmin ? '/admin/group/$groupId' : '/group/$groupId',
+        params: { groupId: gid },
+        search: (prev: any) => prev 
+      }).catch(() => {});
       
       // Prefetch data
       queryClient.prefetchQuery({
@@ -93,7 +96,7 @@ export function usePhotoCardInteraction({
       return;
     }
 
-    const isAlreadyOnGroupPage = location?.pathname?.includes('/group/');
+    const isAlreadyOnGroupPage = !!(params as any).groupId || location?.pathname?.includes('/group/') || location?.pathname?.includes('/g/');
     const shouldGoToGroup = photo.groupId && showGroupsCollapsed && !isAlreadyOnGroupPage;
 
     if (shouldGoToGroup) {

@@ -43,6 +43,7 @@ export const indexRoute = createRoute({
       prefetchMainGallery(context.queryClient);
     }
   },
+  shouldReload: false,
   errorComponent: ({ error, reset }) => <RouteErrorFallback error={error} reset={reset} />,
   component: PublicPage,
 });
@@ -56,6 +57,7 @@ export const previewRoute = createRoute({
       prefetchMainGallery(context.queryClient);
     }
   },
+  shouldReload: false,
   errorComponent: ({ error, reset }) => <RouteErrorFallback error={error} reset={reset} />,
   component: PublicPage,
 });
@@ -90,6 +92,7 @@ export const groupRoute = createRoute({
       void prefetchGroupDetail(context.queryClient, groupId);
     }
   },
+  shouldReload: false,
   errorComponent: ({ error, reset }) => <RouteErrorFallback error={error} reset={reset} />,
   component: PublicGroupDetailPage,
 });

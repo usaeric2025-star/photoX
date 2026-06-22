@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { LightboxImage } from '../PhotoLightbox';
+import type { LightboxImage } from '@/store/useLightboxStore';
 
 export function useLightboxPreloader(images: LightboxImage[], currentIndex: number) {
   useEffect(() => {

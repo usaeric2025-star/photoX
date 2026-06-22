@@ -99,7 +99,7 @@ export class ErrorFactory {
     return this.create(message, {
       category: ErrorCategory.VALIDATION,
       userMessage: '輸入資料格式不正確，請重新檢查',
-      context,
+      context: { fields: context },
       shouldReport: false,
       code: ErrorCode.VALIDATION_FAILED,
       severity: ErrorSeverity.WARNING,

@@ -86,18 +86,13 @@ export function AdminGroupDetailPage() {
   }, [photoId, photos, anchor]);
 
   const lightboxOpen = lightboxIndex !== -1;
-  const [showAdminTools, setShowAdminTools] = useState(false);
-  const isMultiSelect = useUIStore((s) => s.isMultiSelect);
-
-  const adminActions = useAdminMaintenance();
-  const { handleBatchAiIdentifyTrigger } = useAdminBatchActions();
 
   const openLightbox = useLightboxStore((s) => s.open);
   const isOpenLightbox = useLightboxStore((s) => s.isOpen);
   const lightboxImages = useLightboxStore((s) => s.images);
   const lightboxCurrentIndex = useLightboxStore((s) => s.currentIndex);
   
-  const lightboxItems = photos.map((p) => {
+  const lightboxItems = React.useMemo(() => photos.map((p) => {
     return {
       id: p.id,
       src: p.imageUrl,
@@ -109,7 +104,38 @@ export function AdminGroupDetailPage() {
         tags: p.tags,
       }
     };
-  });
+  }), [photos]);
+
+  // Sync URL photoId deep link into raw useLightboxStore
+  React.useEffect(() => {
+    if (lightboxOpen && lightboxIndex !== -1 && lightboxItems.length > 0) {
+      const store = useLightboxStore.getState();
+      if (!store.isOpen || store.currentIndex !== lightboxIndex) {
+        store.open(lightboxItems, lightboxIndex);
+      }
+    } else if (!lightboxOpen && useLightboxStore.getState().isOpen) {
+      useLightboxStore.getState().close();
+    }
+  }, [lightboxOpen, lightboxIndex, lightboxItems]);
+
+  // Sync lightbox changes back to URL photoId query param
+  React.useEffect(() => {
+    if (isOpenLightbox) {
+      const activePhoto = photos[lightboxCurrentIndex];
+      if (activePhoto && activePhoto.id !== photoId) {
+        setPhotoId(activePhoto.id);
+      }
+    } else if (!isOpenLightbox && photoId) {
+      // Avoid clearing if modal is edit
+      const { modal } = useFilters(); // Read fresh modal state so we don't clear photoId if edit modal is open
+    }
+  }, [isOpenLightbox, lightboxCurrentIndex, photos, photoId, setPhotoId]);
+
+  const [showAdminTools, setShowAdminTools] = useState(false);
+  const isMultiSelect = useUIStore((s) => s.isMultiSelect);
+
+  const adminActions = useAdminMaintenance();
+  const { handleBatchAiIdentifyTrigger } = useAdminBatchActions();
 
   const handleBatchDelete = async (ids: string[]) => {
     for (const id of ids) {
@@ -141,10 +167,7 @@ export function AdminGroupDetailPage() {
   const openEditDrawer = (id: string) => { setPhotoId(id); setModal('edit'); };
 
   const handlePhotoClick = (id: string) => {
-      const index = photos.findIndex(p => p.id === id);
-      if (index !== -1) {
-          openLightbox(lightboxItems, index);
-      }
+      setPhotoId(id);
   };
 
   if (loading) {

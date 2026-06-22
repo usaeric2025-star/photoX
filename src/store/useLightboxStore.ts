@@ -1,5 +1,22 @@
 import { create } from 'zustand';
-import { LightboxImage } from '@/features/lightbox/PhotoLightbox';
+
+export interface LightboxImage {
+  id: string;
+  src: string;
+  alt: string;
+  title?: string;
+  category?: string;
+  categoryPath?: string[];
+  metadata?: {
+    date?: string;
+    resolution?: string;
+    size?: number | string;
+    tags?: string[];
+    description?: string;
+    camera?: string;
+    lens?: string;
+  };
+}
 
 interface LightboxState {
   isOpen: boolean;

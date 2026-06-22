@@ -49,8 +49,8 @@ vi.mock('@/store/useUIStore', () => ({
 
 // Mock settings
 vi.mock('../../hooks', () => ({
-  useSettings: () => ({
-    settings: {
+  usePublicSettings: () => ({
+    data: {
       access_passcode: '123456'
     }
   })

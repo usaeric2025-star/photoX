@@ -72,7 +72,7 @@ export function PublicGroupDetailPage() {
   const lightboxImages = useLightboxStore((s) => s.images);
   const lightboxCurrentIndex = useLightboxStore((s) => s.currentIndex);
   
-  const lightboxItems = photos.map((p) => {
+  const lightboxItems = React.useMemo(() => photos.map((p) => {
     return {
       id: p.id,
       src: p.imageUrl,
@@ -86,13 +86,41 @@ export function PublicGroupDetailPage() {
         description: p.description || '',
       },
     };
-  });
+  }), [photos, group?.name]);
+
+  const lightboxIndex = React.useMemo(() => {
+    if (!photoId || anchor) return -1;
+    return photos.findIndex((p) => p.id === photoId);
+  }, [photoId, photos, anchor]);
+
+  const lightboxOpen = lightboxIndex !== -1;
+
+  // Sync URL photoId deep link into raw useLightboxStore
+  React.useEffect(() => {
+    if (lightboxOpen && lightboxIndex !== -1 && lightboxItems.length > 0) {
+      const store = useLightboxStore.getState();
+      if (!store.isOpen || store.currentIndex !== lightboxIndex) {
+        store.open(lightboxItems, lightboxIndex);
+      }
+    } else if (!lightboxOpen && useLightboxStore.getState().isOpen) {
+      useLightboxStore.getState().close();
+    }
+  }, [lightboxOpen, lightboxIndex, lightboxItems]);
+
+  // Sync lightbox changes back to URL photoId query param
+  React.useEffect(() => {
+    if (isOpenLightbox) {
+      const activePhoto = photos[lightboxCurrentIndex];
+      if (activePhoto && activePhoto.id !== photoId) {
+        setPhotoId(activePhoto.id);
+      }
+    } else if (!isOpenLightbox && photoId) {
+      setPhotoId(null);
+    }
+  }, [isOpenLightbox, lightboxCurrentIndex, photos, photoId, setPhotoId]);
 
   const handlePhotoClick = (photoId: string) => {
-      const index = photos.findIndex(p => p.id === photoId);
-      if (index !== -1) {
-          openLightbox(lightboxItems, index);
-      }
+      setPhotoId(photoId);
   };
 
   const handleScrollToTop = () => {

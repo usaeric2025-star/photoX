@@ -77,6 +77,7 @@ export const adminGroupRoute = createRoute({
       void prefetchGroupDetail(context.queryClient, groupId, true);
     }
   },
+  shouldReload: false,
   errorComponent: ({ error, reset }) => <RouteErrorFallback error={error} reset={reset} />,
   component: lazy(() => import('@/pages/AdminGroupPage')),
 });
