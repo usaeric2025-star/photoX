@@ -14,13 +14,15 @@ interface YARLDriverProps {
   onClose: () => void;
   onView?: (index: number) => void;
   renderFooter?: (slide: LightboxSlide) => React.ReactNode;
+  renderHeader?: (slide: LightboxSlide) => React.ReactNode;
 }
 
 export function YARLDriver({ 
   state, 
   onClose, 
   onView,
-  renderFooter
+  renderFooter,
+  renderHeader
 }: YARLDriverProps) {
   const slides = React.useMemo(() => state.slides.map((s) => ({
     src: s.src,
@@ -32,8 +34,9 @@ export function YARLDriver({
 
   const plugins = [];
   if (state.config.canThumbnails) plugins.push(Thumbnails);
-  if (state.config.canZoom) plugins.push(Zoom);
-  if (state.config.canDownload) plugins.push(Download);
+  
+  // 始終啟用 Zoom 用於手勢，但配置隱藏按鈕
+  plugins.push(Zoom);
 
   return (
     <Lightbox
@@ -42,6 +45,12 @@ export function YARLDriver({
       index={state.currentIndex}
       slides={slides}
       plugins={plugins}
+      zoom={{
+        maxZoomLevel: 3,
+        scrollToZoom: true,
+        wheelZoomDistanceFactor: 100,
+        pinchZoomDistanceFactor: 100,
+      }}
       thumbnails={{
         width: 48,
         height: 48,
@@ -64,12 +73,28 @@ export function YARLDriver({
           backdropFilter: 'blur(8px)',
         } as any,
         slide: { padding: 0 } as any,
+        header: { padding: '8px 12px' } as any,
       }}
       render={{
-        slideFooter: ({ slide }) => {
-          const originalSlide = (slide as any).original;
-          return renderFooter ? renderFooter(originalSlide) : null;
-        },
+        buttonZoom: () => null,
+        controls: () => {
+          const slide = slides[state.currentIndex]?.original;
+          if (!slide) return null;
+          return (
+            <div className="absolute inset-0 pointer-events-none z-50 flex flex-col justify-between">
+              {renderHeader && (
+                <div className="pointer-events-auto absolute top-0 right-12 p-3">
+                  {renderHeader(slide)}
+                </div>
+              )}
+              {renderFooter && (
+                <div className="pointer-events-auto absolute bottom-0 left-0 right-0 p-4 pb-8 flex justify-center">
+                  {renderFooter(slide)}
+                </div>
+              )}
+            </div>
+          );
+        }
       }}
     />
   );

@@ -106,7 +106,19 @@ export default function PublicPage() {
       id="public-view"
     >
       <div className="absolute inset-0 pointer-events-none opacity-0 select-none">PUBLIC_PAGE_RENDERED</div>
-      <div className="flex-1 min-h-0 relative bg-surface-soft overflow-hidden order-0">
+      
+      {/* 頂部導航組 - 確保垂直堆疊，不擠壓照片 */}
+      <PublicHeader 
+        totalCount={totalToDisplay}
+        onRefresh={handleRefresh}
+        isRefreshing={isFetching || isCountLoading}
+        className="z-40"
+      />
+
+      <FilterBar mode="public" className="z-30 border-b shadow-sm" />
+
+      {/* 照片網格區域 - 自動佔滿剩餘空間 */}
+      <div className="flex-1 min-h-0 relative bg-surface-soft overflow-hidden">
         <ErrorBoundary>
           <PublicPhotoGrid 
             {...photoGridData}
@@ -118,15 +130,6 @@ export default function PublicPage() {
           />
         </ErrorBoundary>
       </div>
-
-      <FilterBar mode="public" className="order-[-1]" />
-
-      <PublicHeader 
-        totalCount={totalToDisplay}
-        onRefresh={handleRefresh}
-        isRefreshing={isFetching || isCountLoading}
-        className="order-first"
-      />
 
       {/* 懸浮按鈕組 (回到頂部 & WhatsApp 諮詢) - Apple Style */}
       <div className="fixed bottom-6 right-6 flex flex-col gap-3">

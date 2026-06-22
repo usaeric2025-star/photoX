@@ -16,7 +16,6 @@ import { startAutoDiagnose } from '@/features/diagnostics/autoDiagnose';
 import { useUIStore } from '@/store/useUIStore';
 
 export default function AppRoutes() {
-  const [isInitialDataLoading, setInitialDataLoading] = useState(true);
   const appLang = useUIStore((s) => s.appLang);
 
   useEffect(() => {
@@ -26,16 +25,6 @@ export default function AppRoutes() {
   const isLoading = useAuthStore((s) => s.isLoading);
   const init = useAuthStore((s) => s.init);
   const { data: settings, isPending: isSettingsPending } = usePublicSettings();
-
-  useEffect(() => {
-    if (isInitialDataLoading) {
-      const timer = setTimeout(() => {
-        logger.warn('⚠️ [App] Initial data loading timeout, clearing...');
-        setInitialDataLoading(false);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [isInitialDataLoading, setInitialDataLoading]);
 
   const [passcode] = useLocalStorage({
     key: 'ais_mock_auth_passcode',
@@ -56,7 +45,6 @@ export default function AppRoutes() {
     // If auth and settings are no longer pending, signal that UI can start
     if (!isLoading && !isSettingsPending) {
        logger.info('✅ [App] Auth and Settings loaded. Unblocking UI...');
-       setInitialDataLoading(false);
     }
   }, [isLoading, isSettingsPending]);
 
@@ -65,7 +53,6 @@ export default function AppRoutes() {
   logger.debug('🔍 [App] Rendering AppRoutes:', { 
     pathname: typeof window !== 'undefined' ? window.location.pathname : '',
     isLoading,
-    isInitialDataLoading,
     isSettingsPending,
     hasUser: !!user,
     isStaffMode,
@@ -92,13 +79,13 @@ export default function AppRoutes() {
   useEffect(() => {
     // 確保骨架屏被移除
     const skeleton = document.getElementById('app-startup-skeleton');
-    if (skeleton && !isLoading && !isSettingsPending && !isInitialDataLoading) {
+    if (skeleton && !isLoading && !isSettingsPending) {
       skeleton.style.opacity = '0';
       setTimeout(() => {
         skeleton.remove();
       }, 300);
     }
-  }, [isLoading, isSettingsPending, isInitialDataLoading]);
+  }, [isLoading, isSettingsPending]);
 
   useEffect(() => {
     if (user && !isLoading && !isDiagnosedRef.current) {
@@ -107,8 +94,8 @@ export default function AppRoutes() {
     }
   }, [user, isLoading]);
 
-  if (isLoading || isSettingsPending || isInitialDataLoading) {
-    logger.debug('⏳ [App] Blocking UI:', { isLoading, isSettingsPending, isInitialDataLoading });
+  if (isLoading || isSettingsPending) {
+    logger.debug('⏳ [App] Blocking UI:', { isLoading, isSettingsPending });
     return <LoadingScreen />;
   }
 

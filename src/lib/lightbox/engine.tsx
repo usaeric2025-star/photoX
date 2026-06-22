@@ -7,12 +7,14 @@ interface LightboxEngineProps {
   onClose?: () => void;
   onView?: (index: number) => void;
   renderFooter?: (slide: LightboxSlide) => React.ReactNode;
+  renderHeader?: (slide: LightboxSlide) => React.ReactNode;
 }
 
 export function LightboxEngine({ 
   onClose, 
   onView, 
-  renderFooter 
+  renderFooter,
+  renderHeader
 }: LightboxEngineProps) {
   const state = useLightboxStore();
 
@@ -35,6 +37,7 @@ export function LightboxEngine({
       onClose={handleClose}
       onView={handleView}
       renderFooter={renderFooter}
+      renderHeader={renderHeader}
     />
   );
 }

@@ -3,9 +3,12 @@ import { LightboxEngine, useLightboxStore } from '@/lib/lightbox';
 import { useFilters } from '@/hooks/useFilters';
 import { useRoute, routes } from '@/router';
 import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
-import { usePublicSettings } from '@/hooks/settings/useSettings';
+import { usePublicSettings, useIsManagement } from '@/hooks';
 import { LightboxInfoCard } from './components/LightboxInfoCard';
 import { LightboxSlide } from '@/lib/lightbox';
+import { useAuthStore } from '@/store/useAuthStore';
+
+import { Icon } from '@/components/ui/Icon';
 
 export function PhotoLightbox() {
   const state = useLightboxStore();
@@ -57,19 +60,50 @@ export function PhotoLightbox() {
     window.open(whatsappUrl, '_blank');
   };
 
+  const role = useAuthStore((s) => s.role);
+  const isManagement = useIsManagement() && (role === 'admin' || role === 'staff');
+
   return (
     <LightboxEngine 
       onClose={handleClose}
       onView={handleView}
+      renderHeader={(slide) => (
+        isManagement ? (
+          <div className="flex items-center gap-1.5 p-2 bg-black/20 backdrop-blur-md rounded-full border border-white/10 mr-12">
+            <button 
+              onClick={() => { 
+                filters.setPhotoId(slide.id); 
+                filters.setModal('edit'); 
+              }} 
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-600/20 text-blue-400 hover:bg-blue-600/40"
+              title="編輯"
+            >
+              <Icon name="pencil" size={18} />
+            </button>
+            <button 
+              onClick={() => adminActions.updatePhoto.mutate({ id: slide.id, updates: { is_group_cover: true } })} 
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/40"
+              title="設為封面"
+            >
+              <Icon name="check-circle" size={18} />
+            </button>
+            <button 
+              onClick={() => {
+                if (window.confirm('確定要刪除這張照片嗎？')) {
+                  adminActions.deletePhoto.mutate(slide.id);
+                }
+              }} 
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-red-600/20 text-red-400 hover:bg-red-600/40"
+              title="刪除"
+            >
+              <Icon name="trash-2" size={18} />
+            </button>
+          </div>
+        ) : null
+      )}
       renderFooter={(slide) => (
         <LightboxInfoCard 
           slide={slide} 
-          onEdit={route.name === 'admin' || route.name === 'adminGroup' ? (id) => { 
-            filters.setPhotoId(id); 
-            filters.setModal('edit'); 
-          } : undefined}
-          onDelete={(id) => adminActions.deletePhoto.mutate(id)}
-          onSetCover={(id) => adminActions.updatePhoto.mutate({ id, updates: { is_group_cover: true } })}
           onDownload={handleDownload}
           onShare={handleShare}
         />
