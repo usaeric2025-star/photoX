@@ -2,9 +2,10 @@ import React from 'react';
 import Lightbox from 'yet-another-react-lightbox';
 import Thumbnails from 'yet-another-react-lightbox/plugins/thumbnails';
 import Zoom from 'yet-another-react-lightbox/plugins/zoom';
-import Download from 'yet-another-react-lightbox/plugins/download';
+import Counter from 'yet-another-react-lightbox/plugins/counter';
 import 'yet-another-react-lightbox/styles.css';
 import 'yet-another-react-lightbox/plugins/thumbnails.css';
+import 'yet-another-react-lightbox/plugins/counter.css';
 
 import type { LightboxState, LightboxSlide } from '../types';
 import { LightboxInfoCard } from '@/features/lightbox/components/LightboxInfoCard';
@@ -37,6 +38,7 @@ export function YARLDriver({
   
   // 始終啟用 Zoom 用於手勢，但配置隱藏按鈕
   plugins.push(Zoom);
+  plugins.push(Counter);
 
   return (
     <Lightbox
@@ -59,9 +61,11 @@ export function YARLDriver({
         borderRadius: 4,
         imageFit: 'cover',
       }}
+      counter={{ container: { style: { top: 0, left: 0 } } }}
       carousel={{ 
         preload: 2,
-        imageFit: "contain"
+        imageFit: "contain",
+        padding: "80px 16px 140px 16px"
       }}
       on={{
         view: ({ index }) => onView?.(index),
@@ -72,7 +76,7 @@ export function YARLDriver({
           backgroundColor: 'rgba(0,0,0,0.92)',
           backdropFilter: 'blur(8px)',
         } as any,
-        slide: { paddingBottom: '120px' } as any,
+        slide: { paddingTop: '80px', paddingBottom: '120px' } as any,
         header: { padding: '8px 12px' } as any,
       }}
       toolbar={{ buttons: ['close'] }}
@@ -86,7 +90,7 @@ export function YARLDriver({
           return (
             <div className="absolute inset-0 pointer-events-none z-50 flex flex-col justify-between">
               {renderHeader && (
-                <div className="pointer-events-auto absolute top-0 left-0 p-3">
+                <div className="pointer-events-auto absolute top-0 right-16 p-3">
                   {renderHeader(slide)}
                 </div>
               )}

@@ -13,16 +13,27 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
 
   const updateSearch = useCallback((updates: Record<string, any>) => {
     const currentRouteName = route.name;
-    const currentParams = route.params;
+
+    const cleanParams: Record<string, any> = {};
+    for (const key in route.params) {
+      if (key !== '~internal' && key !== 'href') {
+        cleanParams[key] = (route.params as any)[key];
+      }
+    }
 
     // Only update if the route exists in routes and accepts these params
     if (currentRouteName && routes[currentRouteName]) {
       (routes[currentRouteName] as any)({
-        ...currentParams,
+        ...cleanParams,
         ...updates
       }).push();
     }
   }, [route]);
+
+  // Expose batch update capability
+  const updateFilters = useCallback((updates: Record<string, any>) => {
+    updateSearch(updates);
+  }, [updateSearch]);
 
   const searchVal = (params.q as string) || '';
   const setSearch = useCallback((val: string) => {
@@ -116,6 +127,7 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
     showGroupsCollapsed, setShowGroupsCollapsed,
     view, setView,
     reset,
+    updateFilters,
     isAdminMode: options.enableStatus || options.enableBatch,
   };
 };

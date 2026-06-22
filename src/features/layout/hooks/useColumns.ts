@@ -21,11 +21,16 @@ export function useColumns() {
   const setColumns = (newColumns: ColumnCount) => {
     setSavedColumns(newColumns);
     const currentRouteName = route.name;
-    const currentParams = route.params;
+    const cleanParams: Record<string, any> = {};
+    for (const key in route.params) {
+      if (key !== '~internal' && key !== 'href') {
+        cleanParams[key] = (route.params as any)[key];
+      }
+    }
 
     if (currentRouteName && routes[currentRouteName]) {
       (routes[currentRouteName] as any)({
-        ...currentParams,
+        ...cleanParams,
         columns: newColumns
       }).push();
     }

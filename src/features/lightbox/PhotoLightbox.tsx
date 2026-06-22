@@ -69,11 +69,10 @@ export function PhotoLightbox() {
       onView={handleView}
       renderHeader={(slide) => (
         isManagement ? (
-          <div className="flex items-center gap-1.5 p-2 bg-black/20 backdrop-blur-md rounded-full border border-white/10 mr-12">
+          <div className="flex items-center gap-1.5 p-1 bg-black/20 backdrop-blur-md rounded-full border border-white/10">
             <button 
               onClick={() => { 
-                filters.setPhotoId(slide.id); 
-                filters.setModal('edit'); 
+                filters.updateFilters({ photoId: slide.id, modal: 'edit' });
               }} 
               className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-600/20 text-blue-400 hover:bg-blue-600/40"
               title="編輯"

@@ -11,17 +11,20 @@ export const { RouteProvider, useRoute, routes } = createRouter({
     columns: param.query.optional.number,
     showGroupsCollapsed: param.query.optional.boolean,
     photoId: param.query.optional.string,
+    modal: param.query.optional.string,
+    groupId: param.query.optional.string,
+    anchor: param.query.optional.boolean,
   }, () => "/"),
   
   // 公開合組
   publicGroup: defineRoute(
-    { slug: param.path.string, q: param.query.optional.string, photoId: param.query.optional.string },
+    { slug: param.path.string, q: param.query.optional.string, photoId: param.query.optional.string, modal: param.query.optional.string, groupId: param.query.optional.string, anchor: param.query.optional.boolean },
     (p) => `/group/${p.slug}`
   ),
   
   // 管理合組
   adminGroup: defineRoute(
-    { id: param.path.string, q: param.query.optional.string, photoId: param.query.optional.string },
+    { id: param.path.string, q: param.query.optional.string, photoId: param.query.optional.string, modal: param.query.optional.string, groupId: param.query.optional.string, anchor: param.query.optional.boolean },
     (p) => `/admin/group/${p.id}`
   ),
   
@@ -42,6 +45,9 @@ export const { RouteProvider, useRoute, routes } = createRouter({
     view: param.query.optional.string,
     columns: param.query.optional.number,
     photoId: param.query.optional.string,
+    modal: param.query.optional.string,
+    groupId: param.query.optional.string,
+    anchor: param.query.optional.boolean,
   }, () => "/admin"),
   
   adminTasks: defineRoute("/admin/tasks"),
