@@ -38,18 +38,6 @@ export const detailHandler = (app: Hono) => {
     }
   });
 
-  app.post('/without-thumb-hash', async (c) => {
-    try {
-        const data = await db
-            .select({ id: furnitureItems.id })
-            .from(furnitureItems)
-            .where(isNull(furnitureItems.thumbHash));
-        return c.json({ success: true, data: data || [] });
-    } catch (error: unknown) {
-        return c.json({ success: false, error: error instanceof Error ? error.message : String(error) }, 500);
-    }
-  });
-
   app.post('/check-hash', async (c) => {
     const body = await c.req.json();
     const check = PhotoCheckHashReqSchema(body);

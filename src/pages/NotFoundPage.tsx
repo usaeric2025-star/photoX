@@ -1,7 +1,7 @@
 import React from 'react';
-import { Link } from '@tanstack/react-router';
+import { routes } from '@/router';
+import { AppLink } from '@/components/router/AppLink';
 import { Icon } from '@/components/ui/Icon';
-import { ROUTES } from '@/config/constants';
 
 export const NotFoundPage = () => {
   return (
@@ -14,13 +14,13 @@ export const NotFoundPage = () => {
         <p className="text-slate-500 mb-8 max-w-xs">
           The page you are looking for doesn't exist or has been moved.
         </p>
-        <Link 
-          to={ROUTES.HOME}
+        <AppLink 
+          to={routes.home()}
           className="flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-xl font-medium tracking-wide hover:bg-slate-800 transition-all active:scale-[0.98]"
         >
           <Icon name="home" size={18} />
           Return to Home
-        </Link>
+        </AppLink>
       </div>
     </div>
   );

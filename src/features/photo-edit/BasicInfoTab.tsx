@@ -139,7 +139,7 @@ export function BasicInfoTab() {
               <Icon name="x" size={24} />
             </button>
             <OptimizedImage 
-              src={previewSrc || ''} 
+              src={previewSrc || undefined} 
               eager
               className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-300" 
               alt="Zoomed" 

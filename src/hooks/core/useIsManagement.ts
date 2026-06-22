@@ -1,4 +1,4 @@
-import { useRouterSafe } from '@/hooks/core/useRouterSafe';
+import { useAdminMode } from './auth/useAdminMode';
 
 /**
  * useIsManagement
@@ -6,8 +6,5 @@ import { useRouterSafe } from '@/hooks/core/useRouterSafe';
  * Consolidates window.location or checks.
  */
 export function useIsManagement() {
-  const location = useRouterSafe().location;
-  const isManagement = location.pathname.startsWith('/admin');
-  
-  return isManagement;
+  return useAdminMode();
 }

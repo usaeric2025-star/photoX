@@ -1,16 +1,16 @@
 import { useEffect } from 'react';
-import type { LightboxImage } from '@/store/useLightboxStore';
+import type { LightboxSlide } from '@/lib/lightbox';
 
-export function useLightboxPreloader(images: LightboxImage[], currentIndex: number) {
+export function useLightboxPreloader(slides: LightboxSlide[], currentIndex: number) {
   useEffect(() => {
-    if (!images.length) return;
+    if (!slides.length) return;
     
-    const nextIndex = (currentIndex + 1) % images.length;
-    const nextImage = images[nextIndex];
+    const nextIndex = (currentIndex + 1) % slides.length;
+    const nextSlide = slides[nextIndex];
     
-    if (nextImage) {
+    if (nextSlide && nextSlide.src) {
       const img = new Image();
-      img.src = nextImage.src;
+      img.src = nextSlide.src;
     }
-  }, [currentIndex, images]);
+  }, [currentIndex, slides]);
 }

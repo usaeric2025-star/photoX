@@ -1,5 +1,5 @@
 import { DevToolsTrigger } from '@/features/devtools';
-import { useRouterSafe } from '@/hooks/core/useRouterSafe';
+import { useAppRouter } from '@/lib/router/useAppRouter';
 import React from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -22,7 +22,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
   const { user, signOut } = useAuthStore();
   const { settings } = useSettings();
   const { role } = usePermission();
-  const navigate = useRouterSafe().navigate;
+  const { navigate } = useAppRouter();
 
   const lang = useUIStore(s => s.appLang);
   const isMultiSelect = useUIStore(s => s.isMultiSelect);
@@ -58,7 +58,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
   const logoUrl = settings?.logo_url || cachedLogoUrl;
 
   const handleAuthAction = () => {
-    navigate({ to: '/' });
+    navigate.home();
   };
 
   // Admin header matching to PublicHeader
@@ -196,7 +196,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
                   <>
                     <button
                       type="button"
-                      onClick={() => navigate({ to: '/admin/settings' })}
+                      onClick={() => navigate.settings()}
                       className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-pointer outline-none hover:bg-blue-50 text-gray-700"
                     >
                       <Icon name="settings" size={16} />
@@ -204,7 +204,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
                     </button>
                     <button
                       type="button"
-                      onClick={() => navigate({ to: '/admin/tasks' })}
+                      onClick={() => navigate.adminTasks()}
                       className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-pointer outline-none hover:bg-blue-50 text-gray-700"
                     >
                       <Icon name="layout-grid" size={16} />
@@ -212,7 +212,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
                     </button>
                     <button
                       type="button"
-                      onClick={() => navigate({ to: '/admin/diagnostics' })}
+                      onClick={() => navigate.adminDiagnostics()}
                       className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-pointer outline-none hover:bg-blue-50 text-gray-700"
                     >
                       <Icon name="terminal" size={16} />

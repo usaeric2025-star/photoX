@@ -1,4 +1,4 @@
-import { useRouterSafe } from '@/hooks/core/useRouterSafe';
+import { useAppRouter } from '@/lib/router/useAppRouter';
 import React, { useState, Suspense } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { useDiagnostics } from '@/hooks/admin/useDiagnostics';
@@ -22,21 +22,19 @@ interface PluginResult {
 }
 
 export function DiagnosticsDashboard() {
-  const navigate = useRouterSafe().navigate;
-  const location = useRouterSafe().location;
+  const { navigate, route } = useAppRouter();
   
   const activeTab = (() => {
-    const path = location.pathname;
-    if (path.includes('/tasks')) return 'tasks';
-    if (path.includes('/error-logs')) return 'logs';
+    if (route === 'adminTasks') return 'tasks';
+    if (route === 'adminDiagnosticsLogs') return 'logs';
     return 'diagnosis';
   })();
 
   const setActiveTab = (tab: 'diagnosis' | 'tasks' | 'logs') => {
     switch (tab) {
-      case 'tasks': navigate({ to: '/admin/tasks' }); break;
-      case 'logs': navigate({ to: '/admin/error-logs' }); break;
-      default: navigate({ to: '/admin/diagnose' }); break;
+      case 'tasks': navigate.adminTasks(); break;
+      case 'logs': navigate.adminDiagnosticsLogs(); break;
+      default: navigate.adminDiagnostics(); break;
     }
   };
 

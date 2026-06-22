@@ -82,6 +82,8 @@ export interface AppSettings extends Record<string, unknown> {
   whatsapp_1?: string;
   whatsapp_2_name?: string;
   whatsapp_2?: string;
+  facebook?: string;
+  instagram?: string;
   access_passcode?: string;
   manufacturers?: import('./photo').Manufacturer[];
   tags?: import('./photo').Tag[];

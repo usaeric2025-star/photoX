@@ -44,6 +44,8 @@ publicSettings.get("/", async (c) => {
             whatsapp_2: settingsRes?.whatsapp2 || '',
             whatsapp_1_name: settingsRes?.whatsapp1Name || '',
             whatsapp_2_name: settingsRes?.whatsapp2Name || '',
+            facebook: settingsRes?.facebook || '',
+            instagram: settingsRes?.instagram || '',
             passcode_enabled: settingsRes?.passcodeEnabled ?? false,
             access_passcode: passcodeRes?.value || settingsRes?.accessPasscode || '',
             manufacturers: manufacturersRes,

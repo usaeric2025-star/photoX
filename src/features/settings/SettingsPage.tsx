@@ -1,6 +1,5 @@
 import { logger } from '@/lib/logger';
-import { useRouterSafe } from '@/hooks/core/useRouterSafe';
-import { useLocation } from '@tanstack/react-router';
+import { useAppRouter } from '@/lib/router/useAppRouter';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/useAuthStore';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
@@ -48,9 +47,7 @@ interface SettingsPageProps {
 
 export function SettingsPage({ onClose }: SettingsPageProps) {
   const update = useUIStore((s) => s.update);
-  const location = useLocation();
-  const path = location.pathname;
-  const navigate = useRouterSafe().navigate;
+  const { navigate, route } = useAppRouter();
   
   const { data: categories = [] } = useCategories();
   const { data: tags = [] } = useTags();
@@ -117,11 +114,9 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   const [activeTab, setActiveTab] = React.useState('general');
 
   React.useEffect(() => {
-    if (path === '/admin/ai_settings') setActiveTab('ai');
-    if (path === '/admin/manage' || path === '/admin/settings') setActiveTab('general');
-    if (path === '/admin/structure' || path === '/admin/tags') setActiveTab('assets');
-    if (['/admin/tasks', '/admin/error-logs', '/admin/logs', '/admin/diagnostics', '/admin/diagnose'].includes(path)) setActiveTab('status');
-  }, [path]);
+    if (route === 'settings') setActiveTab('general');
+    if (route === 'adminDiagnostics' || route === 'adminDiagnosticsLogs' || route === 'adminTasks') setActiveTab('status');
+  }, [route]);
 
   const { submit: runSaveSettings, isLoading: isSavingSettings } = useFormSubmit({
     schema: type('unknown') as unknown as Type<Partial<AppSettings>>,
@@ -145,7 +140,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
           onSave={() => runSaveSettings({ ...settings })}
           onClose={() => {
             if (onClose) onClose();
-            else navigate({ to: '/admin' });
+            else navigate.admin();
           }}
         />
 

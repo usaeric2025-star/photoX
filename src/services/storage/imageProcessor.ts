@@ -1,12 +1,10 @@
 import { compressImage } from '@/services/storage/uploadUtils';
-import { generateThumbHash } from '@/services/storage/thumbHash';
 import { IMAGE_COMPRESS } from '@/constants/config';
 
 export interface ProcessedImage {
   hash: string;
   dataUrl: string;
   file: File;
-  thumbHash?: string;
   width: number;
   height: number;
 }
@@ -31,17 +29,14 @@ export async function processImageFile(file: File): Promise<ProcessedImage> {
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-  // 3. Generate ThumbHash
-  const thumbHash = await generateThumbHash(rawUri) || undefined;
-
-  // 4. Compress to WebP
+  // 3. Compress to WebP
   const compressedUri = await compressImage(
     rawUri, 
     IMAGE_COMPRESS.MAX_WIDTH, 
     IMAGE_COMPRESS.QUALITY
   );
 
-  // 5. Get Dimensions
+  // 4. Get Dimensions
   const dimensions = await new Promise<{width: number, height: number}>((resolve) => {
     const img = new Image();
     img.onload = () => resolve({ width: img.width, height: img.height });
@@ -52,7 +47,6 @@ export async function processImageFile(file: File): Promise<ProcessedImage> {
     hash,
     dataUrl: compressedUri,
     file,
-    thumbHash,
     width: dimensions.width,
     height: dimensions.height
   };
@@ -91,7 +85,6 @@ export async function processImageFiles(
     const chunk = loadedFiles.slice(i, i + CHUNK_SIZE);
     const chunkResults = await Promise.all(
       chunk.map(async ({ file, rawUri, hash }) => {
-        const thumbHash = await generateThumbHash(rawUri) || undefined;
         const compressedUri = await compressImage(rawUri, IMAGE_COMPRESS.MAX_WIDTH, IMAGE_COMPRESS.QUALITY);
         
         const dimensions = await new Promise<{width: number, height: number}>((resolve) => {
@@ -104,7 +97,6 @@ export async function processImageFiles(
           hash,
           dataUrl: compressedUri,
           file,
-          thumbHash,
           width: dimensions.width,
           height: dimensions.height
         };

@@ -6,7 +6,7 @@ import { PhotoStatusBadges, PhotoCardInfo, PhotoSelectionIndicator } from './Pho
 import { PinButton } from './PinButton';
 import { useColumns, usePermission } from '@/hooks';
 import { useUIStore } from '@/store/useUIStore';
-import { usePhotoCardInteraction } from '@/hooks/photo/usePhotoCardInteraction';
+import { usePhotoCard } from '@/hooks/photo/usePhotoCard';
 
 interface AdminPhotoCardProps {
   photo: PhotoListItem;
@@ -37,7 +37,7 @@ export const AdminPhotoCard = ({
   const isMultiSelect = useUIStore((s) => s.isMultiSelect);
   const { columns } = useColumns();
   
-  const { cardRef, handleClick, handleMouseEnter } = usePhotoCardInteraction({
+  const { cardRef, handleClick, handleMouseEnter } = usePhotoCard({
     photo,
     isManagement: true,
     isMultiSelect,

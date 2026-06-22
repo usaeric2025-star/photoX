@@ -56,22 +56,30 @@ export const PhotoCardBase = ({
       )}
       {...props}
     >
-      <div className="relative aspect-square w-full h-full overflow-hidden transition-all duration-500 group-data-[selected=true]:scale-90 group-data-[selected=true]:rounded-lg">
+      <div className="relative aspect-square w-full h-full overflow-hidden transition-all duration-500 group-data-[selected=true]:scale-95 group-data-[selected=true]:rounded-xl bg-surface-mute animate-shimmer">
         <img 
-          src={imgVariant === 'md' ? item.imageUrl : (item.thumbnailUrl || item.imageUrl)}
+          src={(imgVariant === 'md' ? item.imageUrl : (item.thumbnailUrl || item.imageUrl)) || undefined}
           alt={item.name}
           loading="lazy"
           className={cn(
-            "w-full h-full object-cover transition-transform duration-700 group-hover:scale-110",
+            "w-full h-full object-cover transition-all duration-700 ease-apple group-hover:scale-110 opacity-0",
             isHidden && "opacity-60"
           )}
+          onLoad={(e) => {
+            (e.target as HTMLImageElement).classList.remove('opacity-0');
+            (e.target as HTMLImageElement).classList.add('opacity-100');
+          }}
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             if (target.src !== '/fallback-image.jpg') {
               target.src = '/fallback-image.jpg';
+              target.classList.remove('opacity-0');
+              target.classList.add('opacity-100');
             }
           }}
         />
+        {/* Apple Style Shine Overlay */}
+        <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-10 transition-opacity duration-300 bg-gradient-to-tr from-white/0 via-white/30 to-white/0" />
       </div>
 
       {/* Slots for badges, actions, information */}

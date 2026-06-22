@@ -1,10 +1,9 @@
 import React from 'react';
-import { useRouter } from '@tanstack/react-router';
+import { routes } from '@/router';
 import { Icon } from '@/components/ui/Icon';
 import { useTranslation, useCopyToClipboard } from '@/hooks';
 
 export function RouteErrorFallback({ error, reset }: { error: Error; reset: () => void }) {
-  const router = useRouter();
   const { uiTranslations: t } = useTranslation();
   const { copy } = useCopyToClipboard({ successMessage: '诊断信息已复制到剪贴板' });
 
@@ -77,7 +76,7 @@ export function RouteErrorFallback({ error, reset }: { error: Error; reset: () =
         
         <button
           onClick={() => {
-            router.navigate({ to: '/', replace: true, search: {} });
+            routes.home().replace();
           }}
           className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all text-sm font-semibold active:scale-95"
         >

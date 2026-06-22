@@ -1,10 +1,9 @@
-import { useRouterSafe } from '@/hooks/core/useRouterSafe';
 import React, { useState, useCallback } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { usePublicSettings } from '../../hooks';
 import { useUIStore } from '@/store/useUIStore';
-import { Link } from '@tanstack/react-router';
-import { ROUTES } from '@/config/constants';
+import { routes } from '@/router';
+import { AppLink } from '@/components/router/AppLink';
 import { translations } from '@/locales';
 import { storage } from '@/services/storage';
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
@@ -76,12 +75,12 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
       
       {/* Absolute Close Button */}
       <div className="absolute top-8 right-8">
-        <Link 
-          to={ROUTES.PREVIEW} 
+        <AppLink 
+          to={routes.home()} 
           className="group w-12 h-12 flex items-center justify-center rounded-2xl bg-white text-slate-400 hover:text-slate-900 shadow-sm border border-slate-100 transition-all active:scale-90 animate-fade-in"
         >
           <Icon name="x" size={20} className="transition-transform group-hover:rotate-90" />
-        </Link>
+        </AppLink>
       </div>
 
       <div className="w-full max-w-[400px] animate-fade-in">
@@ -201,15 +200,15 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
 
         {/* Footer Link */}
         <div className="mt-8 flex justify-center animate-fade-in">
-          <Link 
-            to={ROUTES.PREVIEW} 
+          <AppLink 
+            to={routes.home()} 
             className="group flex items-center gap-2 text-slate-400 hover:text-slate-900 text-xs font-bold transition-colors"
           >
             <span className="w-5 h-5 rounded-lg bg-slate-900/5 flex items-center justify-center group-hover:bg-slate-900/10 transition-colors">
               <Icon name="x" size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
             </span>
             {t.backToShowcase}
-          </Link>
+          </AppLink>
         </div>
       </div>
     </div>

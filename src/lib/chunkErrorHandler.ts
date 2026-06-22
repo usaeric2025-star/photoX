@@ -1,4 +1,3 @@
-import type { AnyRouter } from '@tanstack/react-router'
 import { logger } from '@/lib/logger'
 
 const RELOAD_COUNT_KEY = '__chunk_reload_count__'
@@ -7,8 +6,7 @@ const MAX_RELOADS = 2
 /**
  * 設置 Chunk 加載失敗自動恢復機制
  */
-export function setupChunkErrorHandler(router: unknown) {
-  const r = router as AnyRouter;
+export function setupChunkErrorHandler() {
   window.addEventListener('unhandledrejection', async (event) => {
     const msg = event.reason?.message || ''
     const isChunkError = msg.includes('Failed to fetch dynamically imported module')
@@ -35,17 +33,9 @@ export function setupChunkErrorHandler(router: unknown) {
     await clearCaches()
 
     try {
-      await r.invalidate()
-      const rr = r as unknown as { load?: () => Promise<void> };
-      if (typeof rr.load === 'function') {
-        await rr.load()
-      } else {
-        await r.navigate({ to: window.location.pathname, replace: true })
-      }
-      logger.debug('[Chunk] 軟導航成功，狀態已完整保留')
-      clearChunkReloadCount()
+      setTimeout(() => window.location.reload(), 100)
     } catch (softError) {
-      logger.warn('[Chunk] 軟導航失敗，嘗試硬刷新', softError)
+      logger.warn('[Chunk] 刷新失敗', softError)
       setTimeout(() => window.location.reload(), 100)
     }
   })
@@ -103,9 +93,7 @@ export function clearChunkReloadCount() {
   sessionStorage.removeItem(RELOAD_COUNT_KEY)
 }
 
-export function initChunkHandler(router: unknown) {
-  const r = router as AnyRouter;
-  setupChunkErrorHandler(r)
+export function initChunkHandler() {
+  setupChunkErrorHandler()
   window.addEventListener('load', () => clearChunkReloadCount())
-  r.subscribe('onLoad', () => clearChunkReloadCount())
 }

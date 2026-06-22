@@ -1,11 +1,10 @@
 import React, { useRef } from 'react';
-import { useRouterSafe } from '@/hooks/core/useRouterSafe';
+import { useAppRouter } from '@/lib/router/useAppRouter';
 import { useGroupData } from '../shared/hooks/useGroupData';
 import { PhotoListItem } from '@/types/api';
 import { Photo, Group, Category } from '@/types';
 import { PublicPhotoCard } from '@/components/photo/PublicPhotoCard';
-import { useLightboxStore } from '@/store/useLightboxStore';
-import { LazyPhotoLightbox } from '@/features/lightbox/LazyPhotoLightbox';
+import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
 import { useFilters, useTranslation, useCategories } from '@/hooks';
 import { GroupHeader } from '../shared/components/GroupHeader';
 import { PhotoCardSkeleton } from '@/components/ui/Skeleton';
@@ -14,14 +13,14 @@ import { useUIStore } from '@/store/useUIStore';
 import { usePublicSettings } from '@/hooks/settings/useSettings';
 import { WhatsAppDialog } from '@/components/shared/WhatsAppDialog';
 
-function PublicPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string) => void }) {
+function PublicPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string, index: number) => void }) {
   return (
     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1 sm:gap-2 p-1 sm:p-2 lg:p-4">
-      {photos.map((photo) => (
+      {photos.map((photo, index) => (
         <PublicPhotoCard
           key={photo.id}
           photo={photo}
-          onClick={() => onPhotoClick(photo.id)}
+          onClick={() => onPhotoClick(photo.id, index)}
           hideGroupBadge={true}
           sharedCategories={categories}
         />
@@ -31,9 +30,9 @@ function PublicPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoLi
 }
 
 export function PublicGroupDetailPage() {
-  const routerSafe = useRouterSafe();
+  const { params } = useAppRouter();
   const { groupId: fGroupId, photoId, setPhotoId } = useFilters();
-  const groupId = (routerSafe.params as { groupId?: string }).groupId || fGroupId;
+  const groupId = ((params as { slug?: string }).slug) || fGroupId;
   
   const { group, photos, totalCount, loading, error } = useGroupData({ groupId, isAdmin: false });
 
@@ -45,6 +44,8 @@ export function PublicGroupDetailPage() {
   const { lang, uiTranslations: t } = useTranslation();
   const { data: categories = [] } = useCategories();
   const { anchor, setAnchor } = useFilters();
+
+  const { open } = useLightbox();
 
   // Anchoring effect
   React.useEffect(() => {
@@ -67,60 +68,18 @@ export function PublicGroupDetailPage() {
     }
   }, [anchor, photoId, loading, photos.length]);
 
-  const openLightbox = useLightboxStore((s) => s.open);
-  const isOpenLightbox = useLightboxStore((s) => s.isOpen);
-  const lightboxImages = useLightboxStore((s) => s.images);
-  const lightboxCurrentIndex = useLightboxStore((s) => s.currentIndex);
-  
-  const lightboxItems = React.useMemo(() => photos.map((p) => {
-    return {
-      id: p.id,
-      src: p.imageUrl,
-      alt: p.name || '',
-      title: p.name || '',
-      category: '',
-      categoryPath: [group?.name || ''].filter(Boolean),
-      metadata: {
-        date: p.createdAt || undefined,
-        tags: p.tags || [],
-        description: p.description || '',
-      },
-    };
-  }), [photos, group?.name]);
-
-  const lightboxIndex = React.useMemo(() => {
-    if (!photoId || anchor) return -1;
-    return photos.findIndex((p) => p.id === photoId);
-  }, [photoId, photos, anchor]);
-
-  const lightboxOpen = lightboxIndex !== -1;
-
-  // Sync URL photoId deep link into raw useLightboxStore
   React.useEffect(() => {
-    if (lightboxOpen && lightboxIndex !== -1 && lightboxItems.length > 0) {
-      const store = useLightboxStore.getState();
-      if (!store.isOpen || store.currentIndex !== lightboxIndex) {
-        store.open(lightboxItems, lightboxIndex);
-      }
-    } else if (!lightboxOpen && useLightboxStore.getState().isOpen) {
-      useLightboxStore.getState().close();
-    }
-  }, [lightboxOpen, lightboxIndex, lightboxItems]);
+     if (photoId && photos.length > 0) {
+        const slides = photosToLightboxSlides(photos);
+        const index = photos.findIndex(p => p.id === photoId);
+        open(slides, index !== -1 ? index : 0);
+     }
+  }, [photos, photoId, open]);
 
-  // Sync lightbox changes back to URL photoId query param
-  React.useEffect(() => {
-    if (isOpenLightbox) {
-      const activePhoto = photos[lightboxCurrentIndex];
-      if (activePhoto && activePhoto.id !== photoId) {
-        setPhotoId(activePhoto.id);
-      }
-    } else if (!isOpenLightbox && photoId) {
-      setPhotoId(null);
-    }
-  }, [isOpenLightbox, lightboxCurrentIndex, photos, photoId, setPhotoId]);
-
-  const handlePhotoClick = (photoId: string) => {
-      setPhotoId(photoId);
+  const handlePhotoClick = (id: string, index: number) => {
+      const slides = photosToLightboxSlides(photos);
+      open(slides, index);
+      setPhotoId(id);
   };
 
   const handleScrollToTop = () => {
@@ -193,13 +152,6 @@ export function PublicGroupDetailPage() {
         <PublicPhotoGrid photos={photos} categories={categories} onPhotoClick={handlePhotoClick} />
       </div>
       <WhatsAppDialog />
-      <LazyPhotoLightbox
-        open={isOpenLightbox}
-        images={lightboxImages}
-        currentIndex={lightboxCurrentIndex}
-        onOpenChange={(open) => !open && useLightboxStore.getState().close()}
-        onIndexChange={(idx: number) => useLightboxStore.getState().goTo(idx)}
-      />
     </div>
   );
 }

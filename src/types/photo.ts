@@ -35,9 +35,7 @@ export interface Photo {
   height?: number; // Pixel height
   thumbnail_sm_url?: string; // w=300
   thumbnail_md_url?: string; // w=800
-  thumb_hash?: string; // ThumbHash placeholder
   dimensions?: Dimension[] | null;
-  exif_data?: Record<string, unknown> | null;
   created_at: string;
   updated_at?: string;
   group_id?: string | null;

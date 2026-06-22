@@ -6,7 +6,7 @@ import { logger } from '@/lib/logger';
 import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
 import { LoadingProgress } from '@/components/ui/feedback/LoadingProgress';
 
-export function BackgroundTaskPanel() {
+export function TaskPanel() {
   const { tasks, removeTask, cancelTask, isAvoidingSelection } = useTasks();
   const panelRef = React.useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = React.useState(false);

@@ -21,7 +21,6 @@ export const createPhotoValidator = (): Validator<any> => {
         'is_group_cover?': 'boolean',
         'is_pinned?': 'boolean',
         'image_url?': 'string|null',
-        'thumb_hash?': 'string|null',
         'price?': 'string|null',
         'note?': 'string|null',
         'type?': 'string|null',

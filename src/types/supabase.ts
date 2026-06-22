@@ -7,7 +7,6 @@ export interface SupabasePhotoRaw {
   image_hash?: string;
   description?: string;
   image_url: string;
-  thumb_hash?: string;
   created_at: string;
   updated_at?: string;
   is_pinned?: boolean;

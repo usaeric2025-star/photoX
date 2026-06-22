@@ -20,6 +20,12 @@ adminSettings.get("/get", async (c) => {
         const data = settingsRes ? {
             access_passcode: secretsMap['access_passcode'] || settingsRes.accessPasscode || '',
             logo_url: settingsRes.logoUrl,
+            whatsapp_1: settingsRes.whatsapp1 || '',
+            whatsapp_2: settingsRes.whatsapp2 || '',
+            whatsapp_1_name: settingsRes.whatsapp1Name || '',
+            whatsapp_2_name: settingsRes.whatsapp2Name || '',
+            facebook: settingsRes.facebook || '',
+            instagram: settingsRes.instagram || '',
             gemini_api_key: secretsMap['gemini'] || '',
             agnes_api_key: secretsMap['agnes'] || '',
             openrouter_api_key: secretsMap['openrouter'] || '',

@@ -4,7 +4,7 @@ import { PhotoListItem } from '@/types/api';
 import { PhotoCardBase } from './PhotoCardBase';
 import { PhotoStatusBadges, PhotoCardInfo } from './PhotoCardParts';
 import { useColumns } from '@/hooks';
-import { usePhotoCardInteraction } from '@/hooks/photo/usePhotoCardInteraction';
+import { usePhotoCard } from '@/hooks/photo/usePhotoCard';
 
 interface PublicPhotoCardProps {
   photo: PhotoListItem;
@@ -29,7 +29,7 @@ export const PublicPhotoCard = ({
 }: PublicPhotoCardProps) => {
   const { columns } = useColumns();
   
-  const { cardRef, handleClick, handleMouseEnter } = usePhotoCardInteraction({
+  const { cardRef, handleClick, handleMouseEnter } = usePhotoCard({
     photo,
     isManagement: false,
     isMultiSelect: false,

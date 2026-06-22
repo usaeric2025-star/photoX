@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useRouterSafe } from '@/hooks/core/useRouterSafe';
+import { useAppRouter } from '@/lib/router/useAppRouter';
 import { Group } from '@/types';
 import { Icon } from '@/components/ui/Icon';
 import { useUIStore } from '@/store/useUIStore';
@@ -45,7 +45,7 @@ interface GroupHeaderProps {
 }
 
 export function GroupHeader({ group, photoCount, isAdmin, onEditSettings, onUpdateTitle }: GroupHeaderProps) {
-  const navigate = useRouterSafe().navigate;
+  const { navigate } = useAppRouter();
   const [copied, setCopied] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editTitleValue, setEditTitleValue] = useState(group.name);
@@ -166,7 +166,7 @@ export function GroupHeader({ group, photoCount, isAdmin, onEditSettings, onUpda
         )}
         
         <button 
-          onClick={() => navigate({ to: isAdmin ? '/admin' : '/' })}
+          onClick={() => isAdmin ? navigate.admin() : navigate.home()}
           className="p-2 -mr-2 text-slate-500 hover:text-slate-800 transition-colors ml-1"
           title="返回首頁"
         >

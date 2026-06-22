@@ -1,57 +1,49 @@
-Unused files (67)
+Unused files (63)
 .eslintrc.cjs                                     
-api/_admin_tasks/backfill-photo-metadata.ts       
+api/_lib/db/view-utils.ts                         
 api/_lib/supabase.ts                              
-debug-browser.cjs                                 
-src/components/admin/FormShared.tsx               
-src/components/admin/ManufacturerSelect.tsx       
+playwright.config.ts                              
+scripts/migrate-icons-kebab.js                    
+scripts/migrate-icons-reverse.js                  
+scripts/migrate-icons-typos.js                    
+scripts/migrate-icons.js                          
 src/components/admin/ManufacturerTagSelect.tsx    
 src/components/admin/StaffUnlockDialog.tsx        
+src/components/layout/DialogContainer.tsx         
 src/components/shared/DynamicArrayField.tsx       
 src/components/shared/GalleryDialogs.tsx          
 src/components/shared/GalleryEmpty.tsx            
 src/components/shared/GroupPhotoGrid.tsx          
-src/components/shared/OptimizedImage.tsx          
-src/components/shared/Popover.tsx                 
-src/components/shared/Tabs.tsx                    
+src/components/tasks/JobResumer.tsx               
 src/components/ui/CategoryChip.tsx                
 src/components/ui/CopyableId.tsx                  
+src/components/ui/feedback/index.ts               
 src/components/ui/FilterChip.tsx                  
+src/components/ui/index.ts                        
 src/components/ui/LayoutButton.tsx                
-src/components/ui/LoadingOverlay.tsx              
-src/components/ui/MenuDialog.tsx                  
-src/components/ui/Skeleton.tsx                    
+src/components/ui/RouteErrorFallback.tsx          
 src/components/ui/SortButton.tsx                  
 src/components/ui/SubCategoryChip.tsx             
+src/config/constants.ts                           
 src/constants/ai.ts                               
 src/constants/photoFields.ts                      
 src/features/ai/index.ts                          
-src/features/diagnostics/index.ts                 
 src/features/diagnostics/MaintenanceToolButton.tsx
 src/features/filter/index.ts                      
-src/features/filter/InfoButton.tsx                
-src/features/photo-edit/AISourceTab.tsx           
-src/features/photo-edit/BasicInfoTab.tsx          
-src/features/photo-edit/CategorySelect.tsx        
+src/features/lightbox/hooks/useLightbox.ts        
 src/features/photo-edit/DeletePhotoDialog.tsx     
-src/features/photo-edit/DetailsTab.tsx            
-src/features/photo-edit/DimensionEditor.tsx       
-src/features/photo-edit/ModalHeader.tsx           
-src/features/photo-edit/OrgTab.tsx                
-src/features/photo-edit/PhotoEditTabs.tsx         
-src/features/photo-edit/usePhotoEditAI.ts         
-src/hooks/core/useContainerWidth.ts               
-src/hooks/core/useFormWithArkType.ts              
-src/hooks/core/useFormWithMutation.ts             
-src/hooks/photo/PhotoEditSessionProvider.tsx      
-src/hooks/photo/types.ts                          
-src/hooks/photo/usePhotoEditSessionContext.ts     
+src/hooks/photo/useAIAutoGrouping.ts              
+src/hooks/photo/useSyncEngine.ts                  
 src/hooks/useRenderCount.ts                       
 src/hooks/useSkeletonCount.ts                     
+src/lib/array.ts                                  
 src/lib/component-contract.ts                     
-src/lib/form/formFactory.ts                       
+src/lib/number.ts                                 
 src/lib/query/PhotoKeyBuilder.ts                  
+src/lib/router/routeGuards.ts                     
 src/lib/schema/photo.ts                           
+src/lib/string.ts                                 
+src/pages/AdminGroupPage.tsx                      
 src/pages/AdminPage/AdminTabs.tsx                 
 src/services/category/index.ts                    
 src/services/error-log/commands.ts                
@@ -59,30 +51,31 @@ src/services/error-log/index.ts
 src/services/group/index.ts                       
 src/services/manufacturer/index.ts                
 src/services/manufacturer/utils.ts                
+src/services/photo/downloadService.ts             
 src/services/photo/upload/r2Client.ts             
 src/services/photo/upload/uploadOrchestrator.ts   
+src/services/router/loaders.ts                    
 src/services/settings/index.ts                    
 src/services/tag/utils.ts                         
+src/styles/theme.ts                               
+src/types/problemDetails.ts                       
 src/types/router.ts                               
+src/types/settings.ts                             
 src/types/tag.ts                                  
-test4.ts                                          
-Unused dependencies (6)
-@base-ui/react                  package.json:27:6
-@hookform/resolvers             package.json:29:6
-@tanstack/react-query-devtools  package.json:36:6
-image-size                      package.json:46:6
-puppeteer                       package.json:50:6
-react-hook-form                 package.json:53:6
+Unused dependencies (1)
+lucide-react  package.json:39:6
 Unused devDependencies (5)
-@testing-library/jest-dom     package.json:63:6
-esbuild                       package.json:73:6
-eslint-plugin-react-compiler  package.json:74:6
-eslint-plugin-react-hooks     package.json:75:6
-ts-morph                      package.json:79:6
-Unresolved imports (2)
-./src/test/setup.ts  vite.config.ts  
-./src/test/setup.ts  vitest.config.ts
-Unused exports (128)
+@tanstack/react-query-devtools  package.json:54:6
+esbuild                         package.json:66:6
+eslint-plugin-react-compiler    package.json:67:6
+eslint-plugin-react-hooks       package.json:68:6
+ts-morph                        package.json:73:6
+Unlisted dependencies (4)
+glob              scripts/generate-icons-wrapper.js:1:26
+@playwright/test  tests/batch-edit.spec.ts:1:30         
+@playwright/test  tests/merge-groups.spec.ts:1:30       
+@playwright/test  tests/photo-upload.spec.ts:1:30       
+Unused exports (125)
 GroupAnalysisSchema                    api/_handlers/ai/groupAnalysis.ts:9:14              
 saveAIAuditLog                         api/_lib/ai/executor.ts:43:14                       
 getModel                               api/_lib/ai/providerFactory.ts:7:14                 
@@ -92,16 +85,15 @@ getFromR2                              api/_lib/storage.ts:57:14
 deleteFromR2                           api/_lib/storage.ts:77:14                           
 PhotoSchema                            api/_shared/apiContractSchema.ts:201:14             
 serverEnvSchema                        api/_shared/envSchema.ts:8:14                       
+ManufacturerList             function  src/components/admin/FormShared.tsx:54:17           
+LucideIcon                             src/components/ui/Icon.tsx:50:14                    
 AI_CONFIG                              src/config/ai.ts:6:14                               
-PAGINATION                             src/config/constants.ts:2:14                        
-UI                                     src/config/constants.ts:8:14                        
-DEFAULT_MODEL                          src/config/constants.ts:24:14                       
-STORAGE_BUCKET                         src/config/constants.ts:26:14                       
-STORAGE_PATH                           src/config/constants.ts:27:14                       
-R2_PUBLIC_URL                          src/config/constants.ts:28:14                       
 PAGINATION                             src/constants/config.ts:2:14                        
+PHOTO_QUERY_CONFIG                     src/constants/config.ts:12:14                       
 EMPTY_ARRAY                            src/constants/config.ts:19:14                       
 AI_CONFIG                              src/constants/config.ts:36:14                       
+analyzeAndSavePhoto                    src/features/ai/orchestration.ts:29:14              
+autoGroupPhotos                        src/features/ai/orchestration.ts:92:14              
 analyzeAndSaveGroup                    src/features/ai/orchestration.ts:139:14             
 formatUnit                   function  src/features/ai/safeText.ts:117:17                  
 isPlaceholderText                      src/features/ai/utils.ts:6:14                       
@@ -109,11 +101,18 @@ isPlaceholderName                      src/features/ai/utils.ts:26:14
 getDisplayName                         src/features/ai/utils.ts:88:14                      
 splitProductName                       src/features/ai/utils.ts:100:14                     
 runDiagnose                            src/features/diagnostics/autoDiagnose.ts:18:14      
+MaintenanceCenter                      src/features/diagnostics/index.ts:2:10              
+IssueList                              src/features/diagnostics/index.ts:3:10              
+AuditVisualizer                        src/features/diagnostics/index.ts:4:10              
+DiagnosticCard                         src/features/diagnostics/index.ts:5:10              
+TasksList                              src/features/diagnostics/index.ts:6:26              
+ErrorLogViewer                         src/features/diagnostics/index.ts:7:10              
 savePhotosToCloudBatch                 src/features/upload/services/uploadService.ts:11:14 
 useRepairMutation                      src/hooks/admin/useAdminMutations.ts:21:14          
 useAdminMutations                      src/hooks/admin/useAdminMutations.ts:41:14          
 useAdminSelection                      src/hooks/admin/useAdminSelection.ts:10:14          
 useAppLocale                           src/hooks/core/useAppLocale.ts:78:14                
+useContainerWidth            function  src/hooks/core/useContainerWidth.ts:3:17            
 useFormDraft                 function  src/hooks/core/useFormDraft.ts:7:17                 
 useImagePreloader                      src/hooks/core/useImagePreloader.ts:6:14            
 useQueryWithFallback         function  src/hooks/core/useQueryWithFallback.ts:14:17        
@@ -121,41 +120,31 @@ useGroupCreate                         src/hooks/groups/useGroupMutations.ts:19:
 useGroupUpdate                         src/hooks/groups/useGroupMutations.ts:35:14         
 useGroupDelete                         src/hooks/groups/useGroupMutations.ts:47:14         
 useGroupCoverMutation                  src/hooks/groups/useGroupMutations.ts:63:14         
-useUngroupMutation                     src/hooks/groups/useGroupMutations.ts:160:14        
+useUngroupMutation                     src/hooks/groups/useGroupMutations.ts:163:14        
 useGroups                              src/hooks/groups/useGroups.ts:9:14                  
-useLongPress                           src/hooks/index.ts:8:10                             
-useAppLocale                           src/hooks/index.ts:11:10                            
-useImagePreloader                      src/hooks/index.ts:12:10                            
-useQueryWithFallback                   src/hooks/index.ts:13:10                            
-useFormDraft                           src/hooks/index.ts:14:10                            
-useUploadProgress                      src/hooks/index.ts:15:10                            
-useAIAutoGrouping            function  src/hooks/photo/useAIAutoGrouping.ts:11:17          
-usePhotoAIResult                       src/hooks/photo/usePhotoAIResult.ts:10:14           
-useSyncEngine                          src/hooks/photo/useSyncEngine.ts:10:14              
 useSettingsMutations                   src/hooks/settings/useSettingsMutations.ts:18:14    
 ApiResponseError             class     src/lib/api.ts:5:14                                 
 client                                 src/lib/api.ts:37:14                                
-setupChunkErrorHandler       function  src/lib/chunkErrorHandler.ts:10:17                  
-clearChunkReloadCount        function  src/lib/chunkErrorHandler.ts:100:17                 
-reportError                  function  src/lib/error/errorReporter.ts:47:23                
-reportErrors                 function  src/lib/error/errorReporter.ts:97:23                
+setupChunkErrorHandler       function  src/lib/chunkErrorHandler.ts:9:17                   
+clearChunkReloadCount        function  src/lib/chunkErrorHandler.ts:92:17                  
+mapCodeToStatus              function  src/lib/error/AppError.ts:20:17                     
+logError                               src/lib/error/errorHandler.tsx:137:14               
 showInfoToast                function  src/lib/error/errorUI.ts:24:17                      
 showWarningToast             function  src/lib/error/errorUI.ts:28:17                      
-ErrorSeverity                          src/lib/error/index.ts:4:3                          
-isAppError                             src/lib/error/index.ts:6:3                          
-handleError                            src/lib/error/index.ts:7:3                          
-reportError                            src/lib/error/index.ts:10:10                        
-reportErrors                           src/lib/error/index.ts:10:23                        
-showInfoToast                          src/lib/error/index.ts:11:44                        
-showWarningToast                       src/lib/error/index.ts:11:59                        
+ErrorCategory                          src/lib/error/index.ts:3:10                         
+mapCodeToStatus                        src/lib/error/index.ts:3:62                         
+handleError                            src/lib/error/index.ts:4:10                         
+extractErrorMessage                    src/lib/error/index.ts:4:23                         
+logError                               src/lib/error/index.ts:4:44                         
 PhotoErrorMessages                     src/lib/error/photoErrors.ts:78:14                  
-clearPersistence                       src/lib/queryClient.ts:51:14                        
+FormContext                            src/lib/form/useFormField.tsx:8:14                  
+clearPersistence                       src/lib/queryClient.ts:50:14                        
+flushInvalidations           function  src/lib/task-queue/querySync.ts:56:17               
+TaskScheduler                class     src/lib/task-queue/scheduler.ts:5:14                
 toTitleCase                  function  src/lib/utils.ts:13:17                              
 normalizeSearchQuery         function  src/lib/utils.ts:36:17                              
-formatDate                   function  src/lib/utils.ts:55:17                              
-flattenPagination                      src/lib/utils.ts:67:14                              
-createTranslate              function  src/locales/index.ts:14:17                          
-routeTree                              src/router/index.tsx:9:14                           
+formatDate                   function  src/lib/utils.ts:57:17                              
+flattenPagination                      src/lib/utils.ts:65:14                              
 PhotoSchema                            src/schemas/photo.ts:3:14                           
 clearCategoryFromPhotos                src/services/category/commands.ts:13:14             
 updateCategory                         src/services/category/commands.ts:42:14             
@@ -175,8 +164,10 @@ setGroupCover                          src/services/photo/commands/group.ts:10:1
 updatePhotoHidden                      src/services/photo/commands/index.ts:1:23           
 movePhotosToGroup                      src/services/photo/commands/index.ts:3:10           
 setGroupCover                          src/services/photo/commands/index.ts:3:29           
-updatePhotoHidden                      src/services/photo/commands/update.ts:45:14         
+updatePhotoHidden                      src/services/photo/commands/update.ts:48:14         
+removeFromDuplicateCache               src/services/photo/duplicateCheck.ts:104:14         
 update                                 src/services/photo/index.ts:9:14                    
+cleanUpOrphanRecords                   src/services/photo/maintenance/cleanup.ts:5:14      
 deduplicatePhotos                      src/services/photo/maintenance/deduplication.ts:9:14
 standardizePhotoUrl                    src/services/photo/maintenance/urlFixer.ts:5:14     
 bulkFixPhotoUrls                       src/services/photo/maintenance/urlFixer.ts:20:14    
@@ -192,8 +183,7 @@ getCacheBustedImageUrl                 src/services/photo/utils.ts:165:14
 uploadLogo                             src/services/settings/commands.ts:76:14             
 STORAGE_KEYS                           src/services/storage/autoFallback.ts:4:14           
 cleanupPhysicalStorage                 src/services/storage/deleteService.ts:10:14         
-processImageFiles            function  src/services/storage/imageProcessor.ts:64:23        
-thumbHashToDataURL           function  src/services/storage/thumbHash.ts:66:17             
+processImageFiles            function  src/services/storage/imageProcessor.ts:58:23        
 updateTag                              src/services/tag/commands.ts:32:14                  
 batchCreateTagsInCloud                 src/services/tag/commands.ts:51:14                  
 removeTagFromPhotoFromDB               src/services/tag/commands.ts:161:14                 
@@ -210,8 +200,10 @@ TagSchema                              src/types/index.ts:14:14
 DimensionSchema                        src/types/index.ts:20:14                            
 MergeGroupsRequestSchema               src/types/index.ts:26:14                            
 MergeGroupsResponseSchema              src/types/index.ts:32:14                            
-isValidPhoto                 function  src/types/photo.ts:159:17                           
+isValidPhoto                 function  src/types/photo.ts:160:17                           
 Unused exported types (3)
-LanguageCode     type  src/locales/index.ts:11:13
-PhotoFormValues  type  src/schemas/photo.ts:29:13
-TranslationType  type  src/types/index.ts:49:13  
+IconName      type       src/components/ui/Icon.tsx:4:13  
+TaskState     type       src/lib/task-queue/types.ts:1:13 
+TaskIdentity  interface  src/lib/task-queue/types.ts:21:18
+Duplicate exports (1)
+Icon|LucideIcon  src/components/ui/Icon.tsx

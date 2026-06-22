@@ -42,7 +42,7 @@ export default defineConfig(({mode}) => {
             }
 
             // Layer 1: 生態與路由 (依賴 Layer 0)
-            if (/\/node_modules\/(@tanstack\/react-router|@tanstack\/react-query)\//.test(id)) {
+            if (/\/node_modules\/(@tanstack\/react-query)\//.test(id)) {
               return 'vendor-ecosystem';
             }
             
@@ -58,8 +58,8 @@ export default defineConfig(({mode}) => {
               return 'vendor-features';
             }
             
-            // Layer 4: 核心工具庫
-            if (/\/node_modules\/(dayjs|clsx|tailwind-merge|thumbhash)\//.test(id)) {
+            // Layer 4: Core Utils Layer
+            if (/\/node_modules\/(dayjs|clsx|tailwind-merge)\//.test(id)) {
               return 'vendor-utils';
             }
             

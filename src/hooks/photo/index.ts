@@ -11,8 +11,6 @@ export * from './useCategories';
 export * from './useTags';
 export * from './useTagSearch';
 export * from './useManufacturers';
-export * from './useAIAutoGrouping';
 export * from './useAIBatchAnalysis';
 export * from './usePhotoAIResult';
-export * from './useSyncEngine';
 

@@ -1,5 +1,5 @@
 import { DevToolsTrigger } from '@/features/devtools';
-import { useRouterSafe } from '@/hooks/core/useRouterSafe';
+import { useAppRouter } from '@/lib/router/useAppRouter';
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { Icon } from '@/components/ui/Icon'; // Keep one or two critical ones as standard imports for P0 performance
@@ -23,9 +23,8 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
   const { data: settings } = usePublicSettings();
   const { role } = usePermission();
   const update = useUIStore((s) => s.update);
-  const navigate = useRouterSafe().navigate;
-  const location = useRouterSafe().location;
-  const isAdmin = location.pathname.startsWith('/admin');
+  const { navigate, route } = useAppRouter();
+  const isAdmin = route === 'admin' || route === 'adminGroup';
 
   const lang = useUIStore(s => s.appLang);
   const t = translations[lang as keyof typeof translations] || translations.en;
@@ -48,9 +47,9 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
 
   const handleAuthAction = () => {
     if (isAdmin) {
-      navigate({ to: '/' });
+      navigate.home();
     } else {
-      navigate({ to: '/admin' });
+      navigate.admin();
     }
   };
 
@@ -160,6 +159,34 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
             
             <div className="h-px bg-slate-100 my-1 w-full" />
 
+            <div className="px-2 py-1.5 flex flex-col gap-1 w-full border-t border-slate-50 mt-1">
+              <span className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 select-none">
+                {lang === 'zh' ? '联系我们' : 'Connect'}
+              </span>
+              {settings?.facebook && (
+                <a
+                  href={settings.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-pointer outline-none hover:bg-blue-50 text-gray-700"
+                >
+                  <Icon name="facebook" size={16} className="text-[#1877F2]" />
+                  Facebook
+                </a>
+              )}
+              {settings?.instagram && (
+                <a
+                  href={settings.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-pointer outline-none hover:bg-pink-50 text-gray-700"
+                >
+                  <Icon name="instagram" size={16} className="text-[#E4405F]" />
+                  Instagram
+                </a>
+              )}
+            </div>
+
             <div className="px-2 py-1.5 flex flex-col gap-1 w-full">
               <span className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 select-none">{t.systemLabel}</span>
               {user && (
@@ -167,7 +194,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
                   {!isAdmin && (
                     <button
                       type="button"
-                      onClick={() => navigate({ to: '/admin' })}
+                      onClick={() => navigate.admin()}
                       className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-pointer outline-none hover:bg-blue-50 text-gray-700"
                     >
                       <Icon name="layout-dashboard" size={16} />

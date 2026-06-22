@@ -48,7 +48,14 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
   }
 
   return (
-    <>
+    <NativeDialog
+      id="photo-edit-dialog"
+      open={isOpen}
+      onClose={handleInterceptClose}
+      size="screen"
+      hidePadding
+      showCloseButton={false}
+    >
       <div className="flex flex-col h-full bg-surface-soft min-h-[500px]">
         <DialogHeader onClose={handleInterceptClose} onDeleteClick={() => {}} />
         <PhotoEditTabs />
@@ -73,7 +80,7 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
           </div>
         </div>
       </NativeDialog>
-    </>
+    </NativeDialog>
   );
 }
 

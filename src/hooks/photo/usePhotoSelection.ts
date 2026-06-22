@@ -2,7 +2,7 @@ import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useUIStore } from '@/store/useUIStore';
 import { useCallback, useState } from 'react';
 import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
-import { useRouterSafe } from '@/hooks/core/useRouterSafe';
+import { useAppRouter } from '@/lib/router/useAppRouter';
 
 
 /**
@@ -27,7 +27,7 @@ export const usePhotoSelection = () => {
   const resetForm = useUIStore(s => s.resetForm);
 
   const { deletePhoto, batchUpdate } = useAdminMaintenance();
-  const navigate = useRouterSafe().navigate;
+  const { navigate, route } = useAppRouter();
   
 
   const [batchIsHiddenApplied, setBatchIsHiddenApplied] = useState(false);
@@ -103,8 +103,8 @@ export const usePhotoSelection = () => {
     await batchUpdate.mutateAsync({ ids, updates: cleanUpdates });
     update({ batchEditingIds: null, isMultiSelect: false, selectedIds: [] });
     resetForm();
-    if (window.location.pathname === '/admin/batch-edit') {
-      navigate({ to: '/admin' });
+    if (route === 'adminBatchEdit') {
+      navigate.admin();
     }
   };
 
@@ -115,16 +115,16 @@ export const usePhotoSelection = () => {
     await deletePhoto.mutateAsync(ids);
     update({ batchEditingIds: null, isMultiSelect: false, selectedIds: [] });
     resetForm();
-    if (window.location.pathname === '/admin/batch-edit') {
-      navigate({ to: '/admin' });
+    if (route === 'adminBatchEdit') {
+      navigate.admin();
     }
   };
 
   const handleClose = () => {
     update({ batchEditingIds: null });
     resetForm();
-    if (window.location.pathname === '/admin/batch-edit') {
-      navigate({ to: '/admin' });
+    if (route === 'adminBatchEdit') {
+      navigate.admin();
     }
   };
 

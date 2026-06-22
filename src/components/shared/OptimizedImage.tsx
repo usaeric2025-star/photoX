@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface OptimizedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
-  src: string;
+  src: string | undefined;
   alt: string;
   eager?: boolean; // true: LCP/首屏可見圖片；false(默認): Virtua控制
   className?: string;

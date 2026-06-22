@@ -4,7 +4,6 @@ import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import {
   repairGroupIntegrity,
 } from "@/services/photo/maintenance";
-import { backfillThumbHashes } from "@/services/photo/maintenance/backfill";
 import { showToast } from '@/lib/ui/toast';
 
 import { Photo } from '@/types';
@@ -36,31 +35,11 @@ export const runHealthCheck = async (
     }
   }
 
-  // 4. Missing hashes
-  const hashResp = await api.photos['without-thumb-hash'].$post({ json: {} });
-  const hashBody = await hashResp.json();
-  const photos = hashBody.success ? hashBody.data || [] : [];
+  // 4. Missing hashes check removed (thumbhash removed from project)
   
-  if (photos.length === 0) {
-    if (repairCount > 0) {
-      showToast.success(`自检完成：修复 ${repairCount} 项`, { id: 'health-check' });
-    } else {
-      showToast.success("系统状态正常", { id: 'health-check' });
-    }
-    return;
-  }
-
-  let backfilledCount = 0;
-  await backfillThumbHashes((stats) => {
-    backfilledCount = stats.success;
-  });
-
-  if (backfilledCount > 0 || repairCount > 0) {
+  if (repairCount > 0) {
     invalidatePhotos();
-    const msgs = [];
-    if (repairCount > 0) msgs.push(`修复合组 ${repairCount}`);
-    if (backfilledCount > 0) msgs.push(`回填占位图 ${backfilledCount}`);
-    showToast.success(`自检完成：${msgs.join(', ')}`, { id: 'health-check' });
+    showToast.success(`自检完成：修复合组 ${repairCount}`, { id: 'health-check' });
   } else {
     showToast.success("系统状态正常", { id: 'health-check' });
   }

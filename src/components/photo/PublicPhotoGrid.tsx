@@ -14,6 +14,7 @@ interface PublicPhotoGridProps {
   filters: any;
   gridRef?: React.Ref<any>;
   onScroll?: (offset: number) => void;
+  onPhotoClick?: (id: string, index: number, e?: React.MouseEvent) => void;
 }
 
 export function PublicPhotoGrid({ 
@@ -27,7 +28,8 @@ export function PublicPhotoGrid({
   columns,
   filters,
   gridRef,
-  onScroll
+  onScroll,
+  onPhotoClick
 }: PublicPhotoGridProps) {
   return (
     <div className="h-full w-full relative">
@@ -44,6 +46,7 @@ export function PublicPhotoGrid({
         filters={filters}
         gridRef={gridRef}
         onScroll={onScroll}
+        onPhotoClick={onPhotoClick}
       />
     </div>
   );

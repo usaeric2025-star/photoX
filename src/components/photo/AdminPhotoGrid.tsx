@@ -16,7 +16,7 @@ interface AdminPhotoGridProps {
   columns: number;
   filters: Record<string, unknown>;
   categories?: Category[];
-  onPhotoClick?: (id: string, e?: React.MouseEvent) => void;
+  onPhotoClick?: (id: string, index: number, e?: React.MouseEvent) => void;
 }
 
 export function AdminPhotoGrid({ 

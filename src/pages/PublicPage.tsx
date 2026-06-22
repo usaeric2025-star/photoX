@@ -7,8 +7,7 @@ import { FilterBar } from '@/features/filter/FilterBar';
 import { PublicPhotoGrid } from '@/components/photo/PublicPhotoGrid';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { useColumns } from '@/features/layout/hooks/useColumns';
-import { LazyPhotoLightbox } from '@/features/lightbox/LazyPhotoLightbox';
-import { useLightboxStore } from '@/store/useLightboxStore';
+import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
 import { useUIStore } from '@/store/useUIStore';
 import { WhatsAppDialog } from '@/components/shared/WhatsAppDialog';
 import { PhotoErrorDisplay } from '@/components/photo/PhotoErrorDisplay';
@@ -23,20 +22,16 @@ export default function PublicPage() {
     search, 
     sort, 
     showGroupsCollapsed,
-    photoId, 
-    setPhotoId 
+    photoId,
+    setPhotoId
   } = useFilters();
-
-  const isOpenLightbox = useLightboxStore((s) => s.isOpen);
-  const lightboxImages = useLightboxStore((s) => s.images);
-  const lightboxCurrentIndex = useLightboxStore((s) => s.currentIndex);
   
   const { columns } = useColumns();
   const [showScrollTop, setShowScrollTop] = React.useState(false);
   const gridRef = React.useRef<{ scrollToIndex: (index: number) => void } | null>(null);
   
   const isAggregated = showGroupsCollapsed && !search && !category && !tags.length;
-
+  
   const photoGridData = usePhotoGrid({
     categoryId: category,
     tagId: tags?.[0],
@@ -59,148 +54,37 @@ export default function PublicPage() {
   const { lang, uiTranslations: t } = useTranslation();
   const { data: settings } = usePublicSettings();
 
-  // 诊断日志：帮助排查骨头屏阻塞问题
-  const [debugInfo, setDebugInfo] = React.useState<Record<string, unknown>>({});
-  
-  React.useEffect(() => {
-    const info = {
-      timestamp: new Date().toISOString(),
-      photosCount: photos?.length || 0,
-      totalCount,
-      isFetching,
-      isPending: photoGridData.isPending,
-      isError,
-      hasError: !!error,
-      errorMessage: error?.message || String(error || ''),
-      hasSettings: !!settings,
-      category,
-      tagsCount: tags?.length || 0,
-      search,
-      tags
-    };
-    setDebugInfo(info);
-    logger.debug('[Diagnostic] PublicPage Check:', info);
-    
-    if (isError) {
-      logger.error('[Diagnostic] PublicPage Error:', error);
-    }
-  }, [photos, totalCount, isFetching, photoGridData.isPending, isError, error, settings, category, tags, search]);
-
-  const lightboxIndex = React.useMemo(() => {
-    if (!photoId) return -1;
-    const index = photos.findIndex((p) => p.id === photoId);
-    logger.debug('[Lightbox Debug] Find Index Result:', { photoId, index });
-    return index;
-  }, [photoId, photos]);
-
-  const lightboxOpen = lightboxIndex !== -1;
-
-  React.useEffect(() => {
-    logger.debug('[Lightbox Debug]', { photoId, lightboxIndex, lightboxOpen, photosCount: photos.length });
-  }, [photoId, lightboxIndex, lightboxOpen, photos]);
-
-  const lightboxItems = React.useMemo(() => photos.map((p) => {
-    return {
-      id: p.id,
-      src: p.imageUrl,
-      alt: p.name || '照片',
-      title: p.name || '',
-      category: p.groupName || '',
-      metadata: {
-        description: p.description || undefined,
-        tags: p.tags,
-      }
-    };
-  }), [photos]);
-
-  // Sync URL photoId deep link into raw useLightboxStore
-  React.useEffect(() => {
-    if (lightboxOpen && lightboxIndex !== -1 && lightboxItems.length > 0) {
-      const store = useLightboxStore.getState();
-      if (!store.isOpen || store.currentIndex !== lightboxIndex) {
-        store.open(lightboxItems, lightboxIndex);
-      }
-    } else if (!lightboxOpen && useLightboxStore.getState().isOpen) {
-      useLightboxStore.getState().close();
-    }
-  }, [lightboxOpen, lightboxIndex, lightboxItems]);
-
-  // Sync lightbox changes back to URL photoId query param
-  React.useEffect(() => {
-    if (isOpenLightbox) {
-      const activePhoto = photos[lightboxCurrentIndex];
-      if (activePhoto && activePhoto.id !== photoId) {
-        setPhotoId(activePhoto.id);
-      }
-    } else if (!isOpenLightbox && photoId) {
-      setPhotoId(null);
-    }
-  }, [isOpenLightbox, lightboxCurrentIndex, photos, photoId, setPhotoId]);
-
-  const handleIndexChange = (index: number) => {
-    const photo = photos[index];
-    if (photo && photo.id !== photoId) {
-      setPhotoId(photo.id);
-    }
-  };
-
   const handleRefresh = () => {
     refetch();
-  };
-
-  const openWhatsApp = () => {
-    (window as unknown as { _pendingPhoto: undefined })._pendingPhoto = undefined;
-    updateUI({ showWhatsAppChoice: false });
-  };
-
-  const getWhatsAppOptions = () => {
-    const options: { name: string; url: string }[] = [];
-    const pendingPhoto = (window as unknown as { _pendingPhoto: Record<string, unknown> | undefined })._pendingPhoto;
-    let message = '';
-    
-    if (pendingPhoto) {
-      const prompt = t.sharePrompt || "您好，我对这个家具感兴趣：";
-      const itemCode = (pendingPhoto.itemCode as string) || "";
-      const nameObj = pendingPhoto.name as Record<string, string> | undefined;
-      const name = nameObj?.zh || nameObj?.en || "";
-      const url = (pendingPhoto.imageUrl as string) || "";
-      message = `${prompt}\n*${name}* (${itemCode})\n${url}`;
-    } else {
-      message = "您好，我正在浏览您的家具相冊，想了解更多信息！";
-    }
-    
-    const encodedText = encodeURIComponent(message);
-    
-    if (settings?.whatsapp_1) {
-      options.push({ name: settings.whatsapp_1_name || 'Contact 1', url: `https://wa.me/${settings.whatsapp_1}?text=${encodedText}` });
-    }
-    if (settings?.whatsapp_2) {
-      options.push({ name: settings.whatsapp_2_name || 'Contact 2', url: `https://wa.me/${settings.whatsapp_2}?text=${encodedText}` });
-    }
-    
-    if (options.length === 0) {
-      const fallback = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_WHATSAPP_NUMBER : '';
-      if (fallback) {
-        options.push({ name: t.whatsAppInquiry, url: `https://wa.me/${fallback}?text=${encodedText}` });
-      }
-    }
-    
-    return options;
   };
 
   const { data: globalTotal, isLoading: isCountLoading } = useQuery({
     queryKey: ['photos', 'count', 'total', 'all'],
     queryFn: async () => {
-      // 統一讀取總量，不區分管理者模式以反映真實庫存
       const res = await api.photos.count.$post({ json: { isAdminMode: true } });
       if (!res.ok) return 0;
       const json = await res.json() as { data: number };
       return json.data;
     },
-    staleTime: 5 * 60 * 1000 // 減少重複 API 調用
+    staleTime: 5 * 60 * 1000
   });
 
-  // Selectors moved to the top of component to avoid use-before-define issues
+  const { open } = useLightbox();
+  
+  const lightboxItems = React.useMemo(() => photosToLightboxSlides(photos), [photos]);
+
+  // 同步燈箱數據：當照片列表更新且處於燈箱模式時
+  React.useEffect(() => {
+    if (photoId && photos.length > 0) {
+      const index = photos.findIndex(p => p.id === photoId);
+      open(lightboxItems, index !== -1 ? index : 0);
+    }
+  }, [photos, photoId, open, lightboxItems]);
+
+  const handlePhotoClick = (id: string, index: number) => {
+    open(lightboxItems, index);
+    setPhotoId(id);
+  };
 
   if (isError) {
     return (
@@ -230,6 +114,7 @@ export default function PublicPage() {
             onScroll={(offset) => setShowScrollTop(offset > 300)}
             columns={columns}
             filters={{ category, tags, search, sort, showGroupsCollapsed }}
+            onPhotoClick={handlePhotoClick}
           />
         </ErrorBoundary>
       </div>
@@ -268,14 +153,6 @@ export default function PublicPage() {
         </button>
       </div>
       
-      <LazyPhotoLightbox
-        open={isOpenLightbox}
-        images={lightboxImages}
-        currentIndex={lightboxCurrentIndex}
-        onOpenChange={(open) => !open && useLightboxStore.getState().close()}
-        onIndexChange={(idx: number) => useLightboxStore.getState().goTo(idx)}
-      />
-
       <WhatsAppDialog />
     </div>
   );

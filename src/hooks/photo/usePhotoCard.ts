@@ -1,8 +1,7 @@
 import React, { useRef } from 'react';
 import { useLongPress } from '@/hooks/core/useLongPress';
 import { useUIStore } from '@/store/useUIStore';
-import { useRouterSafe } from '@/hooks/core/useRouterSafe';
-import { useRouter } from '@tanstack/react-router';
+import { useAppRouter } from '@/lib/router/useAppRouter';
 import { useQueryClient } from '@tanstack/react-query';
 import { PhotoListItem } from '@/types/api';
 import { queryKeys } from '@/lib/query/keys';
@@ -19,10 +18,9 @@ interface UsePhotoCardInteractionProps {
   onClick?: (e: React.MouseEvent) => void;
 }
 
-import { useFilters } from '@/hooks/useFilters';
 import { logger } from '@/lib/logger';
 
-export function usePhotoCardInteraction({
+export function usePhotoCard({
   photo,
   isManagement,
   isMultiSelect,
@@ -36,39 +34,28 @@ export function usePhotoCardInteraction({
   
   const toggleSelected = useUIStore((s) => s.toggleSelected);
   const update = useUIStore((s) => s.update);
-  const { navigate, location, params } = useRouterSafe();
-  const router = useRouter();
+  const { navigate, route, params } = useAppRouter();
   const queryClient = useQueryClient();
-  const { setPhotoId, setModal } = useFilters();
  
    const handleOpenLightbox = () => {
-     logger.debug('[usePhotoCardInteraction] handleOpenLightbox for photo:', photo.id);
-     setPhotoId(photo.id);
+     logger.debug('[usePhotoCard] handleOpenLightbox for photo:', photo.id);
+     navigate.photo(photo.id);
    };
     
-  const handleGroupNavigate = (gid: string, anchorPhotoId?: string) => {
-    navigate({ 
-      to: isManagement ? '/admin/group/$groupId' : '/group/$groupId',
-      params: { groupId: gid },
-      search: (prev: any) => ({ 
-        ...prev, 
-        photoId: anchorPhotoId || prev.photoId, 
-        anchor: !!anchorPhotoId || undefined 
-      }) 
-    });
+  const handleGroupNavigate = (gid: string) => {
+      if (isManagement) {
+          navigate.adminGroup(gid);
+      } else {
+          navigate.publicGroup(gid);
+      }
   };
 
   const handleMouseEnter = () => {
-    const isAlreadyOnGroupPage = !!(params as any).groupId || location?.pathname?.includes('/group/') || location?.pathname?.includes('/g/');
+    // Basic navigation detection
+    const isAlreadyOnGroupPage = (params as any).groupId || window.location.pathname.includes('/group/');
     if (photo.groupId && showGroupsCollapsed && !hasSearchQuery && !isAlreadyOnGroupPage) {
       const gid = photo.groupId;
       const isAdmin = isManagement;
-      // Preload route type-safely
-      router.preloadRoute({ 
-        to: isAdmin ? '/admin/group/$groupId' : '/group/$groupId',
-        params: { groupId: gid },
-        search: (prev: any) => prev 
-      }).catch(() => {});
       
       // Prefetch data
       queryClient.prefetchQuery({
@@ -80,43 +67,34 @@ export function usePhotoCardInteraction({
   };
 
   const handleClick = (e: React.MouseEvent) => {
-    logger.debug('[usePhotoCardInteraction] CLICKED photo:', photo.id, { isManagement, isMultiSelect, hasSearchQuery });
+    logger.debug('[usePhotoCard] CLICKED photo:', photo.id, { isManagement, isMultiSelect, hasSearchQuery });
     if (longPressTriggered.current) {
-      logger.debug('[usePhotoCardInteraction] BLOCKED by long press');
+      logger.debug('[usePhotoCard] BLOCKED by long press');
       e.stopPropagation();
       e.preventDefault();
       return;
     }
 
     if (isMultiSelect) {
-      logger.debug('[usePhotoCardInteraction] SELECTING photo:', photo.id);
+      logger.debug('[usePhotoCard] SELECTING photo:', photo.id);
       e.stopPropagation();
       e.preventDefault();
       toggleSelected(photo.id);
       return;
     }
 
-    const isAlreadyOnGroupPage = !!(params as any).groupId || location?.pathname?.includes('/group/') || location?.pathname?.includes('/g/');
+    const isAlreadyOnGroupPage = (params as any).groupId || window.location.pathname.includes('/group/');
     const shouldGoToGroup = photo.groupId && showGroupsCollapsed && !isAlreadyOnGroupPage;
 
     if (shouldGoToGroup) {
-      if (!hasSearchQuery) {
-        logger.debug('[usePhotoCardInteraction] NAVIGATING to group (Normal):', photo.groupId);
+        logger.debug('[usePhotoCard] NAVIGATING to group:', photo.groupId);
         e.stopPropagation();
         e.preventDefault();
         handleGroupNavigate(photo.groupId!);
         return;
-      } else {
-        // From search result: navigate with anchor
-        logger.debug('[usePhotoCardInteraction] NAVIGATING to group (From Search with Anchor):', photo.groupId);
-        e.stopPropagation();
-        e.preventDefault();
-        handleGroupNavigate(photo.groupId!, photo.id);
-        return;
-      }
     }
 
-    logger.debug('[usePhotoCardInteraction] OPENING Lightbox');
+    logger.debug('[usePhotoCard] OPENING Lightbox');
     handleOpenLightbox();
 
     if (onClick) {

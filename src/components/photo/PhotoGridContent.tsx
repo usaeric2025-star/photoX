@@ -20,7 +20,7 @@ interface PhotoGridContentProps {
   columns: number;
   mode: 'admin' | 'public';
   filters?: any;
-  onPhotoClick?: (id: string, e?: React.MouseEvent) => void;
+  onPhotoClick?: (id: string, index: number, e?: React.MouseEvent) => void;
   gridRef?: React.Ref<any>;
   onScroll?: (offset: number) => void;
 }
@@ -121,13 +121,13 @@ export function PhotoGridContent({
               {mode === 'admin' 
                 ? <AdminPhotoCard 
                     photo={photo} 
-                    onClick={(e) => onPhotoClick?.(photo.id, e)} 
+                    onClick={(e) => onPhotoClick?.(photo.id, index, e)} 
                     showGroupsCollapsed={showGroupsCollapsed}
                     hasSearchQuery={hasSearchQuery}
                   />
                 : <PublicPhotoCard 
                     photo={photo} 
-                    onClick={(e) => onPhotoClick?.(photo.id, e)} 
+                    onClick={(e) => onPhotoClick?.(photo.id, index, e)} 
                     showGroupsCollapsed={showGroupsCollapsed}
                     hasSearchQuery={hasSearchQuery}
                   />

@@ -1,11 +1,11 @@
-import { useLocation } from '@tanstack/react-router';
+import { useRoute } from '@/router';
 import { useQueryClient, useIsFetching } from '@tanstack/react-query';
 import { useUIStore } from '@/store/useUIStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 export function DevToolsPanel() {
-  const location = useLocation();
+  const route = useRoute();
   const queryClient = useQueryClient();
   const isFetching = useIsFetching();
   const { appLang } = useUIStore();
@@ -21,7 +21,7 @@ export function DevToolsPanel() {
       {/* 路由 */}
       <div className="flex items-center justify-between">
         <span className="text-slate-500">📍 路由</span>
-        <span className="font-mono text-xs">{location.pathname}</span>
+        <span className="font-mono text-xs">{route.name}</span>
       </div>
 
       {/* 語言 */}
@@ -62,7 +62,7 @@ export function DevToolsPanel() {
         <button
           onClick={() => {
             const info = {
-              route: location.pathname,
+              route: route.name,
               lang: appLang,
               user: user?.email,
               cache: cacheCount,

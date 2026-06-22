@@ -1,7 +1,7 @@
 import { AppErrorBoundary } from '@/components/layout/AppErrorBoundary';
 import { ConfirmProvider } from './context/ConfirmContext';
-import { RouterProvider } from '@tanstack/react-router';
-import { router } from './router/index';
+import { RouteProvider } from '@/router';
+import { RouterOrchestrator } from '@/components/RouterOrchestrator';
 import { Analytics } from '@vercel/analytics/react';
 import { useEffect, useRef, Suspense } from 'react';
 import { usePublicSettings } from '@/hooks';
@@ -75,7 +75,7 @@ export default function AppRoutes() {
 
       if (prevUserId !== currentUserId) {
         logger.info('🔑 Auth status changed, invalidating router...', { hasUser: !!user });
-        router.invalidate();
+        // router.invalidate();
       }
       prevUserRef.current = user;
     }
@@ -101,14 +101,6 @@ export default function AppRoutes() {
     }
   }, [user, isLoading]);
 
-  const routerContext = {
-    user: user ?? null,
-    role: user ? ('admin' as const) : isStaffMode ? ('staff' as const) : ('guest' as const),
-    isStaffMode,
-    can: () => !!user || isStaffMode,
-    availableActions: [] as string[],
-  };
-
   if (isLoading || isSettingsPending || isInitialDataLoading) {
     if (isLoading) logger.debug('⏳ [App] Blocking: isLoading (Auth)');
     if (isSettingsPending) logger.debug('⏳ [App] Blocking: isSettingsPending (API)');
@@ -120,7 +112,9 @@ export default function AppRoutes() {
     <AppErrorBoundary>
       <ConfirmProvider>
         <Suspense fallback={<LoadingScreen />}>
-          <RouterProvider router={router} context={routerContext} />
+          <RouteProvider>
+            <RouterOrchestrator />
+          </RouteProvider>
         </Suspense>
       </ConfirmProvider>
       <PortalRoot />

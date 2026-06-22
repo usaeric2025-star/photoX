@@ -3,15 +3,17 @@ import { describe, it, expect, vi } from 'vitest';
 import { LoginScreen } from '../admin/LoginScreen';
 import React from 'react';
 
-// Mock useRouterSafe and Link since we are in a testing environment without router
-vi.mock('@/hooks/core/useRouterSafe', () => ({
-  useRouterSafe: () => ({
-    navigate: vi.fn(),
+// Mock useAppRouter
+vi.mock('@/lib/router/useAppRouter', () => ({
+  useAppRouter: () => ({
+    navigate: {
+      home: vi.fn(),
+      admin: vi.fn(),
+    },
+    route: 'home',
+    params: {},
+    currentUrl: '',
   }),
-}));
-
-vi.mock('@tanstack/react-router', () => ({
-  Link: ({ children, to }: { children: React.ReactNode; to: string }) => <a href={to}>{children}</a>,
 }));
 
 // Mock locales

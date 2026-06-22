@@ -37,6 +37,7 @@ import { Analytics } from '@vercel/analytics/react';
 import App from './App';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { TaskProvider } from '@/hooks';
+import { TaskPanel } from '@/components/tasks/TaskPanel';
 import { queryClient } from './lib/queryClient';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { FatalErrorOverlay } from '@/components/shared/FatalErrorOverlay';
@@ -45,7 +46,6 @@ import { logger } from './lib/logger';
 import './index.css';
 import { clientEnv } from './shared/envSchema';
 // Removed migration
-import { router } from './router/index';
 import { initChunkHandler } from '@/lib/chunkErrorHandler';
 import { dailyWorker } from '@/features/diagnostics/DailyWorker';
 import { useUIStore } from '@/store/useUIStore';
@@ -54,7 +54,6 @@ import { setupQuerySync } from '@/lib/task-queue/querySync';
 
 async function init() {
   // No migration
-  initChunkHandler(router);
   
   // 初始化 Task Queue
   const cleanupQuerySync = setupQuerySync();
@@ -125,6 +124,7 @@ async function init() {
 
   // 啟動每日維護 (P0: Robustness)
   dailyWorker.checkAndRun();
+  initChunkHandler();
 
   const container = document.getElementById("root");
   if (container) {
@@ -164,6 +164,7 @@ async function init() {
           <TaskProvider>
             <ErrorBoundary>
               <App />
+              <TaskPanel />
               <FatalErrorOverlay />
               <Analytics />
               <PortalRoot />

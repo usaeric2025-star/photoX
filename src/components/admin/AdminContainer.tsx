@@ -5,8 +5,7 @@ import { useTranslation, useColumns, usePhotoGrid, useFilters } from '@/hooks';
 import { AdminEmptyState } from '@/pages/AdminPage/AdminEmptyState';
 import { PhotoErrorDisplay } from '@/components/photo/PhotoErrorDisplay';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
-import { useLightboxStore } from '@/store/useLightboxStore';
-import { LazyPhotoLightbox } from '@/features/lightbox/LazyPhotoLightbox';
+import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
 import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
 
 export function AdminContainer() {
@@ -25,35 +24,22 @@ export function AdminContainer() {
   const { columns } = useColumns();
   const adminActions = useAdminMaintenance();
   
-  const openLightbox = useLightboxStore((s) => s.open);
-  const isOpenLightbox = useLightboxStore((s) => s.isOpen);
-  const lightboxImages = useLightboxStore((s) => s.images);
-  const lightboxCurrentIndex = useLightboxStore((s) => s.currentIndex);
+  const { open } = useLightbox();
   
-  const lightboxItems = React.useMemo(() => photoGridData.photos.map((p: any) => {
-    return {
-      id: p.id,
-      src: p.imageUrl,
-      alt: p.name || '',
-      title: p.name || '',
-      category: p.groupName || '',
-      categoryPath: p.categoryPath || [p.groupName].filter(Boolean),
-      metadata: {
-        date: p.date,
-        tags: p.tags || [],
-        description: p.description || '',
-        resolution: p.resolution,
-        size: p.size,
-      },
-    };
-  }), [photoGridData.photos]);
+  const lightboxItems = React.useMemo(() => photosToLightboxSlides(photoGridData.photos), [photoGridData.photos]);
 
-  const handlePhotoClick = (photoId: string) => {
-      const index = photoGridData.photos.findIndex((p: any) => p.id === photoId);
-      if (index !== -1) {
-          openLightbox(lightboxItems, index);
-      }
+  const handlePhotoClick = (photoId: string, index: number) => {
+      open(lightboxItems, index);
+      filters.setPhotoId(photoId);
   };
+  
+  // 同步燈箱數據：當照片列表更新且處於燈箱模式時
+  useEffect(() => {
+    if (filters.photoId && photoGridData.photos.length > 0) {
+      const index = photoGridData.photos.findIndex(p => p.id === filters.photoId);
+      open(lightboxItems, index !== -1 ? index : 0);
+    }
+  }, [photoGridData.photos, filters.photoId, open, lightboxItems]);
   
   if (photoGridData.isError) {
     return (
@@ -83,17 +69,6 @@ export function AdminContainer() {
             onPhotoClick={handlePhotoClick}
           />
        </div>
-
-       <LazyPhotoLightbox
-          open={isOpenLightbox}
-          images={lightboxImages}
-          currentIndex={lightboxCurrentIndex}
-          onOpenChange={(open) => !open && useLightboxStore.getState().close()}
-          onIndexChange={(idx: number) => useLightboxStore.getState().goTo(idx)}
-          onEdit={(id) => { filters.setPhotoId(id); filters.setModal('edit'); }}
-          onDelete={(id) => adminActions.deletePhoto.mutate(id)}
-          onSetCover={(id) => adminActions.updatePhoto.mutate({ id, updates: { is_group_cover: true } })}
-       />
     </div>
   );
 }

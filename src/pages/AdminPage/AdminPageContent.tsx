@@ -1,5 +1,4 @@
-import { useParams, useLocation, useNavigate } from '@tanstack/react-router';
-import { useRouterSafe } from '@/hooks/core/useRouterSafe';
+import { useAppRouter } from '@/lib/router/useAppRouter';
 import React, { useEffect, Suspense, lazy } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
@@ -37,25 +36,20 @@ export function AdminPageContent() {
   const { mutateAsync: syncMut } = useSyncMutation();
   const { tasks } = useTasks();
   const appLang = useUIStore(s => s.appLang);
-  const location = useLocation();
-  const navigate = useNavigate();
+  const { navigate, route } = useAppRouter();
   
   const store = useUIStore(useShallow(s => ({
     update: s.update,
     batchEditingIds: s.batchEditingIds })));
-
-  const path = location.pathname;
   
   const currentScreen = (() => {
-    if (path === '/admin' || path === '/admin/') return 'gallery';
-    if (path.startsWith('/admin/tasks')) return 'tasks';
-    if (path.startsWith('/admin/error-logs')) return 'error-logs';
-    if (path.startsWith('/admin/diagnose') || path.startsWith('/admin/diagnostics')) return 'diagnose';
-    if (path.startsWith('/admin/settings')) return 'settings';
-    if (path.startsWith('/admin/batch-edit')) return 'batch';
-    if (path.startsWith('/admin/statistics')) return 'dashboard';
-    if (path.startsWith('/admin/manage') || path.startsWith('/admin/structure') || path.startsWith('/admin/tags') || path.startsWith('/admin/ai_settings') || path.startsWith('/admin/ai')) return 'settings';
-    return 'gallery';
+    if (route === 'admin') return 'gallery';
+    if (route === 'adminTasks') return 'tasks';
+    if (route === 'adminDiagnosticsLogs') return 'error-logs';
+    if (route === 'adminDiagnostics') return 'diagnose';
+    if (route === 'settings') return 'settings';
+    if (route === 'adminBatchEdit') return 'batch';
+    return 'gallery' as const;
   })();
 
   const isSyncing = tasks.some(t => t.status === 'running' && t.name.includes('Sync'));
@@ -84,21 +78,17 @@ export function AdminPageContent() {
         {currentScreen !== 'gallery' && (
           <div className="flex-1 relative overflow-hidden pb-16 sm:pb-0 order-0">
             <Suspense fallback={<div className="h-full flex items-center justify-center bg-slate-50"><LoadingSpinner size="lg" /></div>}>
-              {currentScreen === 'dashboard' ? (
-                <ScreenWrapper key="admin-dashboard" onClose={() => navigate({ to: '/admin' })}>
-                  <StatisticsScreen />
-                </ScreenWrapper>
-              ) : currentScreen === 'batch' ? (
-                <ScreenWrapper key="admin-batch" onClose={() => navigate({ to: '/admin' })}>
+              {currentScreen === 'batch' ? (
+                <ScreenWrapper key="admin-batch" onClose={navigate.admin}>
                   <BatchEditScreen />
                 </ScreenWrapper>
               ) : currentScreen === 'diagnose' ? (
-                <ScreenWrapper key="admin-diagnose" onClose={() => navigate({ to: '/admin' })}>
+                <ScreenWrapper key="admin-diagnose" onClose={navigate.admin}>
                   <DiagnosticsDashboard />
                 </ScreenWrapper>
-              ) : ['manage', 'settings', 'structure', 'logs', 'tasks', 'error-logs'].includes(currentScreen) ? (
+              ) : ['settings', 'tasks', 'error-logs'].includes(currentScreen) ? (
                 <div key="admin-settings-container" className="h-full bg-slate-50 animate-scale-in">
-                  <SettingsPage onClose={() => navigate({ to: '/admin' })} />
+                  <SettingsPage onClose={navigate.admin} />
                 </div>
               ) : null}
             </Suspense>

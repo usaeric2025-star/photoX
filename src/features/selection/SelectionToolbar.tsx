@@ -2,7 +2,7 @@ import React, { memo } from 'react';
 import { useSelection } from './SelectionContext';
 import { useBatchActions } from './useBatchActions';
 import { useUIStore } from '@/store/useUIStore';
-import { useRouterSafe } from '@/hooks/core/useRouterSafe';
+import { useAppRouter } from '@/lib/router/useAppRouter';
 import { useAIBatchAnalysis } from '@/hooks/photo/useAIBatchAnalysis';
 import { useConfirm } from '@/context/ConfirmContext';
 import { useMediaQuery, useTasks } from '@/hooks';
@@ -41,7 +41,7 @@ export const SelectionToolbar = memo(function SelectionToolbar({
   const { state, selectAll, clear } = useSelection();
   const { isPending, batchDelete } = useBatchActions();
   const update = useUIStore((s) => s.update);
-  const routerSafe = useRouterSafe();
+  const { navigate } = useAppRouter();
   const { handleBatchAiAnalyze } = useAIBatchAnalysis();
   const confirm = useConfirm();
 
@@ -81,7 +81,7 @@ export const SelectionToolbar = memo(function SelectionToolbar({
   const handleBatchEdit = () => {
     if (selectedCount === 0 || isAnyPending) return;
     update({ batchEditingIds: state.selectedIds });
-    routerSafe.navigate({ to: '/admin/batch-edit' });
+    navigate.adminBatchEdit();
   };
 
   const handleBatchAiGroup = async () => {

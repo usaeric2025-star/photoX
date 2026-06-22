@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { useRouterSafe } from '@/hooks/core/useRouterSafe';
+import { useAppRouter } from '@/lib/router/useAppRouter';
 import { useGroupData } from '../shared/hooks/useGroupData';
 import { PhotoListItem } from '@/types/api';
 import { Photo, Group, ProductGroup, Dimension, Category } from '@/types';
 import { AdminPhotoCard } from '@/components/photo/AdminPhotoCard';
-import { useLightboxStore } from '@/store/useLightboxStore';
-import { LazyPhotoLightbox } from '@/features/lightbox/LazyPhotoLightbox';
+import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
 import { useFilters, useTranslation, useCategories } from '@/hooks';
 import { getTranslatedCategoryName } from '@/services/category/utils';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -19,17 +18,16 @@ import { GroupSettingsDialog } from '@/components/groups/GroupSettingsDialog';
 import { useGroupDraft } from '@/components/groups/useGroupDraft';
 import { useGroupMutations } from '@/hooks/groups/useGroupMutations';
 import { GroupHeader } from '../shared/components/GroupHeader';
-import { PhotoEditDialog } from '@/features/photo-edit';
 import { PhotoCardSkeleton } from '@/components/ui/Skeleton';
 import { Button } from '@/components/shared/Button';
 
-function AdminPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string) => void }) {
+function AdminPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string, index: number) => void }) {
   const isMultiSelect = useUIStore(s => s.isMultiSelect);
   const { toggle } = usePhotoSelection();
 
   return (
     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1 sm:gap-2 p-1 sm:p-2 lg:p-4 pb-20">
-      {photos.map((photo) => (
+      {photos.map((photo, index) => (
         <AdminPhotoCard
           key={photo.id}
           photo={photo}
@@ -37,7 +35,7 @@ function AdminPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoLis
             if (isMultiSelect) {
               toggle(photo.id);
             } else {
-              onPhotoClick(photo.id);
+              onPhotoClick(photo.id, index);
             }
           }}
           hideGroupBadge={true}
@@ -49,15 +47,25 @@ function AdminPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoLis
 }
 
 export function AdminGroupDetailPage() {
-  const routerSafe = useRouterSafe();
+  const { params } = useAppRouter();
   const { groupId: fGroupId, photoId, setPhotoId, setModal } = useFilters();
-  const groupId = (routerSafe.params as { groupId?: string }).groupId || fGroupId;
+  const groupId = (params as { id?: string }).id || fGroupId;
   
   const { group, photos, totalCount, loading, error } = useGroupData({ groupId, isAdmin: true });
 
   const { lang, uiTranslations: t } = useTranslation();
   const { data: categories = [] } = useCategories();
   const { anchor, setAnchor } = useFilters();
+
+  const { open } = useLightbox();
+
+  React.useEffect(() => {
+     if (photoId && photos.length > 0) {
+        const slides = photosToLightboxSlides(photos);
+        const index = photos.findIndex(p => p.id === photoId);
+        open(slides, index !== -1 ? index : 0);
+     }
+  }, [photos, photoId, open]);
 
   // Anchoring effect
   React.useEffect(() => {
@@ -80,63 +88,11 @@ export function AdminGroupDetailPage() {
     }
   }, [anchor, photoId, loading, photos.length]);
 
-  const lightboxIndex = React.useMemo(() => {
-    if (!photoId || anchor) return -1;
-    return photos.findIndex((p) => p.id === photoId);
-  }, [photoId, photos, anchor]);
-
-  const lightboxOpen = lightboxIndex !== -1;
-
-  const openLightbox = useLightboxStore((s) => s.open);
-  const isOpenLightbox = useLightboxStore((s) => s.isOpen);
-  const lightboxImages = useLightboxStore((s) => s.images);
-  const lightboxCurrentIndex = useLightboxStore((s) => s.currentIndex);
-  
-  const lightboxItems = React.useMemo(() => photos.map((p) => {
-    return {
-      id: p.id,
-      src: p.imageUrl,
-      alt: p.name || '照片',
-      title: p.name || '',
-      category: '',
-      metadata: {
-        description: p.description || undefined,
-        tags: p.tags,
-      }
-    };
-  }), [photos]);
-
-  // Sync URL photoId deep link into raw useLightboxStore
-  React.useEffect(() => {
-    if (lightboxOpen && lightboxIndex !== -1 && lightboxItems.length > 0) {
-      const store = useLightboxStore.getState();
-      if (!store.isOpen || store.currentIndex !== lightboxIndex) {
-        store.open(lightboxItems, lightboxIndex);
-      }
-    } else if (!lightboxOpen && useLightboxStore.getState().isOpen) {
-      useLightboxStore.getState().close();
-    }
-  }, [lightboxOpen, lightboxIndex, lightboxItems]);
-
-  // Sync lightbox changes back to URL photoId query param
-  React.useEffect(() => {
-    if (isOpenLightbox) {
-      const activePhoto = photos[lightboxCurrentIndex];
-      if (activePhoto && activePhoto.id !== photoId) {
-        setPhotoId(activePhoto.id);
-      }
-    } else if (!isOpenLightbox && photoId) {
-      // Avoid clearing if modal is edit
-      const { modal } = useFilters(); // Read fresh modal state so we don't clear photoId if edit modal is open
-    }
-  }, [isOpenLightbox, lightboxCurrentIndex, photos, photoId, setPhotoId]);
-
   const [showAdminTools, setShowAdminTools] = useState(false);
   const isMultiSelect = useUIStore((s) => s.isMultiSelect);
 
   const adminActions = useAdminMaintenance();
-  const { handleBatchAiIdentifyTrigger } = useAdminBatchActions();
-
+  
   const handleBatchDelete = async (ids: string[]) => {
     for (const id of ids) {
       await adminActions.deletePhoto.mutateAsync(id);
@@ -166,7 +122,9 @@ export function AdminGroupDetailPage() {
   
   const openEditDrawer = (id: string) => { setPhotoId(id); setModal('edit'); };
 
-  const handlePhotoClick = (id: string) => {
+  const handlePhotoClick = (id: string, index: number) => {
+      const slides = photosToLightboxSlides(photos);
+      open(slides, index);
       setPhotoId(id);
   };
 
@@ -200,17 +158,6 @@ export function AdminGroupDetailPage() {
           <AdminPhotoGrid photos={photos} categories={categories} onPhotoClick={handlePhotoClick} />
         </div>
         
-        <LazyPhotoLightbox
-          open={isOpenLightbox}
-          images={lightboxImages}
-          currentIndex={lightboxCurrentIndex}
-          onOpenChange={(open) => !open && useLightboxStore.getState().close()}
-          onIndexChange={(idx: number) => useLightboxStore.getState().goTo(idx)}
-          onEdit={openEditDrawer}
-          onDelete={(id) => deletePhoto.mutate(id)}
-          onSetCover={(id) => updatePhoto.mutate({ id, updates: { is_group_cover: true } })}
-        />
-
         <SelectionToolbar
           totalItems={photos?.length}
           allIds={photos?.map((p) => p.id)}
@@ -231,8 +178,6 @@ export function AdminGroupDetailPage() {
             t={(key: string) => (t as any)[key] || key}
           />
         )}
-
-        <PhotoEditDialog />
       </div>
     </SelectionProvider>
   );

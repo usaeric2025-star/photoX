@@ -32,7 +32,6 @@ export const createHandler = (app: Hono) => {
             is_pinned: 'isPinned',
             image_url: 'imageUrl',
             image_hash: 'imageHash', 
-            thumb_hash: 'thumbHash',
             price: 'price',
             note: 'note',
             type: 'type',
