@@ -99,8 +99,10 @@ export function useFormSubmit<TData, TResult>({
           }
 
           // 3. AbortController
-          const controller = abortable ? new AbortController() : { signal: new AbortController().signal };
-          abortController.current = controller as AbortController;
+          const controller = new AbortController();
+          if (abortable) {
+            abortController.current = controller;
+          }
 
           try {
             // 4. Mutation Execution

@@ -57,7 +57,7 @@ export default function PublicPage() {
     refetch();
   };
 
-  const { data: globalTotal, isLoading: isCountLoading } = useQuery({
+  const { data: globalTotal, isPending: isCountLoading } = useQuery({
     queryKey: ['photos', 'count', 'total', 'all'],
     queryFn: async () => {
       const res = await api.photos.count.$post({ json: { isAdminMode: true } });
@@ -112,10 +112,9 @@ export default function PublicPage() {
         totalCount={totalToDisplay}
         onRefresh={handleRefresh}
         isRefreshing={isFetching || isCountLoading}
-        className="z-40"
       />
 
-      <FilterBar mode="public" className="z-30 border-b shadow-sm" />
+      <FilterBar mode="public" className="border-b shadow-sm" />
 
       {/* 照片網格區域 - 自動佔滿剩餘空間 */}
       <div className="flex-1 min-h-0 relative bg-surface-soft overflow-hidden">

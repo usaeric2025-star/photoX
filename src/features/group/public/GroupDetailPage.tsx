@@ -156,7 +156,7 @@ export function PublicGroupDetailPage() {
           isAdmin={false} 
         />
       </div>
-      <FilterBar mode="public" className="z-10" />
+      <FilterBar mode="public" />
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto relative overscroll-y-auto overscroll-x-none bg-slate-50">
         <PublicPhotoGrid photos={photos} categories={categories} onPhotoClick={handlePhotoClick} />
       </div>

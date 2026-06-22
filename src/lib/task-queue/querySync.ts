@@ -1,4 +1,5 @@
 import { queryClient } from '@/lib/queryClient';
+import { queryKeys } from '@/lib/query/keys';
 import { scheduler } from './scheduler';
 
 type FlushableTimeout = ReturnType<typeof setTimeout> & { flushed?: boolean };
@@ -62,7 +63,7 @@ export function flushInvalidations() {
   keys.forEach(key => {
     switch (key) {
       case 'photos_list':
-        queryClient.invalidateQueries({ queryKey: ['photos', 'list'] });
+        queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
         break;
       case 'diagnostics':
         queryClient.invalidateQueries({ queryKey: ['diagnostics'] });
