@@ -1688,3 +1688,18 @@ PhotoX 當前單頁數據 < 100KB，IndexedDB 收益為零且增加 Bundle Size 
 - ❌ **禁止重新引入 Sentry**：除非未來有極為明確的業務需求且能保證非阻塞載入。
 - ❌ **禁止使用三方監控阻塞渲染**：任何類似工具必須以動態異步方式載入，且失敗時不得影響應用啟動。
 - ❌ **禁止在 ErrorFactory 中保留 Sentry 邏輯**。
+
+## Store 與 Query 抽象化規範（2026-06-22 鎖定）
+
+### 1. Store Adapter 規範
+- ✅ **唯一出口**：所有業務邏輯必須透過 `src/lib/store/index.ts` 中提供的 Hook 取得狀態。
+- ✅ **可用介面**：`useUI()`, `useAuth()`, `useTask()`, `useTaskSelector()`, `useStoreShallow()`。
+- ✅ **非 React 環境**：若要在非 React 函數中取值，使用 `storeAccessor.ui`, `storeAccessor.auth`, `storeAccessor.task`。
+- ❌ **禁止直連**：嚴禁在業務層直接 import `useUIStore`, `useAuthStore`, `useTaskStore` 等具體實作。
+- 🎯 **目的**：隱藏 Zustand 實作細節，為未來狀態框架遷移（如 Storve）鋪平道路。
+
+### 2. Query Adapter 規範
+- ✅ **唯一出口**：所有資料抓取與異步變更必須透過 `src/lib/query/index.ts` 取得。
+- ✅ **可用介面**：`useAppQuery`, `useAppMutation`, `useAppInfiniteQuery`, `useAppQueryClient`。
+- ❌ **禁止直連**：嚴禁在業務層直接 import `@tanstack/react-query` 提供的 Hook（除了型別）。
+- 🎯 **目的**：隔離 TanStack Query，將所有資料請求的 API 收斂至同一 Adapter。
