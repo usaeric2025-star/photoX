@@ -1,7 +1,7 @@
 import React from 'react';
 import { LightboxEngine, useLightboxStore } from '@/lib/lightbox';
 import { useFilters } from '@/hooks/useFilters';
-import { useRoute, routes } from '@/router';
+import { Router, useAppRoute } from '@/router';
 import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
 import { usePublicSettings, useIsManagement } from '@/hooks';
 import { LightboxInfoCard } from './components/LightboxInfoCard';
@@ -14,13 +14,13 @@ import { Icon } from '@/components/ui/Icon';
 export function PhotoLightbox() {
   const state = useLightboxStore();
   const filters = useFilters();
-  const route = useRoute();
+  const route = useAppRoute();
   const adminActions = useAdminMaintenance();
   const { data: settings } = usePublicSettings();
 
   const handleClose = () => {
-    if (route.name === 'photo') {
-      routes.home().push();
+    if (route?.name === 'photo') {
+      Router.push("home");
     } else {
       filters.setPhotoId(null);
     }
@@ -29,8 +29,8 @@ export function PhotoLightbox() {
   const handleView = (index: number) => {
     const photo = state.slides[index];
     if (photo && photo.id) {
-      if (route.name === 'photo') {
-        routes.photo({ photoId: photo.id }).replace();
+      if (route?.name === 'photo') {
+        Router.replace("photo", { photoId: photo.id });
       } else {
         filters.setPhotoId(photo.id);
       }

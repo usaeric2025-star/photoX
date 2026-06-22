@@ -1,9 +1,9 @@
-import { useRoute, routes } from '@/router';
+import { Router, useAppRoute } from '@/router';
 import { useCallback } from 'react';
 
 // ✅ 統一的路由 Hook，元件只使用這個
 export function useAppRouter() {
-  const route = useRoute();
+  const route = useAppRoute();
 
   if (!route) {
     return {
@@ -22,17 +22,17 @@ export function useAppRouter() {
 
   // 統一導航方法
   const navigate = {
-    home: useCallback(() => routes.home().push(), []),
-    photo: useCallback((photoId: string) => routes.photo({ photoId }).push(), []),
-    publicGroup: useCallback((slug: string) => routes.publicGroup({ slug }).push(), []),
-    adminGroup: useCallback((id: string) => routes.adminGroup({ id }).push(), []),
-    admin: useCallback(() => routes.admin().push(), []),
-    adminTasks: useCallback(() => routes.adminTasks().push(), []),
-    adminDiagnostics: useCallback(() => routes.adminDiagnostics().push(), []),
-    adminDiagnosticsLogs: useCallback(() => routes.adminDiagnosticsLogs().push(), []),
-    adminBatchEdit: useCallback(() => routes.adminBatchEdit().push(), []),
-    settings: useCallback(() => routes.settings().push(), []),
-    diagnostics: useCallback(() => routes.diagnostics().push(), []),
+    home: useCallback(() => Router.push("home"), []),
+    photo: useCallback((photoId: string) => Router.push("photo", { photoId }), []),
+    publicGroup: useCallback((slug: string) => Router.push("publicGroup", { slug }), []),
+    adminGroup: useCallback((id: string) => Router.push("adminGroup", { id }), []),
+    admin: useCallback(() => Router.push("admin"), []),
+    adminTasks: useCallback(() => Router.push("adminTasks"), []),
+    adminDiagnostics: useCallback(() => Router.push("adminDiagnostics"), []),
+    adminDiagnosticsLogs: useCallback(() => Router.push("adminDiagnosticsLogs"), []),
+    adminBatchEdit: useCallback(() => Router.push("adminBatchEdit"), []),
+    settings: useCallback(() => Router.push("settings"), []),
+    diagnostics: useCallback(() => Router.push("diagnostics"), []),
   };
 
   // 取得當前 URL（用於分享、日誌）

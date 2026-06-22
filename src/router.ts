@@ -1,66 +1,23 @@
-import { createRouter, defineRoute, param } from "type-route";
+import { createRouter } from "@zoontek/chicane";
 
-export const { RouteProvider, useRoute, routes } = createRouter({
-  // 首頁 (含過濾參數)
-  home: defineRoute({
-    q: param.query.optional.string,
-    cat: param.query.optional.string,
-    tag: param.query.optional.array.string,
-    sort: param.query.optional.string,
-    view: param.query.optional.string,
-    columns: param.query.optional.number,
-    showGroupsCollapsed: param.query.optional.boolean,
-    photoId: param.query.optional.string,
-    modal: param.query.optional.string,
-    groupId: param.query.optional.string,
-    anchor: param.query.optional.boolean,
-  }, () => "/"),
-  
-  // 公開合組
-  publicGroup: defineRoute(
-    { slug: param.path.string, q: param.query.optional.string, photoId: param.query.optional.string, modal: param.query.optional.string, groupId: param.query.optional.string, anchor: param.query.optional.boolean },
-    (p) => `/group/${p.slug}`
-  ),
-  
-  // 管理合組
-  adminGroup: defineRoute(
-    { id: param.path.string, q: param.query.optional.string, photoId: param.query.optional.string, modal: param.query.optional.string, groupId: param.query.optional.string, anchor: param.query.optional.boolean },
-    (p) => `/admin/group/${p.id}`
-  ),
-  
-  // 照片燈箱 (路徑導引)
-  photo: defineRoute(
-    { photoId: param.path.string },
-    (p) => `/photo/${p.photoId}`
-  ),
-  
-  // 管理頁面 (含過濾參數)
-  admin: defineRoute({
-    q: param.query.optional.string,
-    cat: param.query.optional.string,
-    tag: param.query.optional.array.string,
-    sort: param.query.optional.string,
-    status: param.query.optional.string,
-    batch: param.query.optional.string,
-    view: param.query.optional.string,
-    columns: param.query.optional.number,
-    photoId: param.query.optional.string,
-    modal: param.query.optional.string,
-    groupId: param.query.optional.string,
-    anchor: param.query.optional.boolean,
-  }, () => "/admin"),
-  
-  adminTasks: defineRoute("/admin/tasks"),
-  adminDiagnostics: defineRoute("/admin/diagnose"),
-  adminDiagnosticsLogs: defineRoute("/admin/error-logs"),
-  adminBatchEdit: defineRoute("/admin/batch-edit"),
-  
-  // 設定頁面
-  settings: defineRoute("/settings"),
-  
-  // 診斷頁面
-  diagnostics: defineRoute("/diagnostics"),
+export const Router = createRouter({
+  home: "/?:q&/:cat&/:tag[]&/:sort&/:view&/:columns&/:showGroupsCollapsed&/:photoId&/:modal&/:groupId&/:anchor",
+  publicGroup: "/group/:slug?:q&/:photoId&/:modal&/:groupId&/:anchor",
+  adminGroup: "/admin/group/:id?:q&/:photoId&/:modal&/:groupId&/:anchor",
+  photo: "/photo/:photoId",
+  admin: "/admin?:q&/:cat&/:tag[]&/:sort&/:status&/:batch&/:view&/:columns&/:photoId&/:modal&/:groupId&/:anchor",
+  adminTasks: "/admin/tasks",
+  adminDiagnostics: "/admin/diagnose",
+  adminDiagnosticsLogs: "/admin/error-logs",
+  adminBatchEdit: "/admin/batch-edit",
+  settings: "/settings",
+  diagnostics: "/diagnostics"
 });
 
-// 導出類型 (如果需要)
-// export type Routes = typeof routes;
+export const ALL_ROUTES = [
+  "home", "publicGroup", "adminGroup", "photo", "admin", "adminTasks",
+  "adminDiagnostics", "adminDiagnosticsLogs", "adminBatchEdit", "settings", "diagnostics"
+] as const;
+
+export const useAppRoute = () => Router.useRoute(ALL_ROUTES);
+

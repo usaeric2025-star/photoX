@@ -7,6 +7,7 @@ import { showToast } from '@/lib/ui/toast';
 import { hapticFeedback } from '@/lib/ui/haptics';
 import { scheduler } from '@/lib/task-queue';
 import { createBatchUploadTask } from '@/lib/task-queue/adapters/upload';
+import { useUIStore } from '@/store/useUIStore';
 
 export function usePhotoUpload() {
   const { user } = useAuthStore();
@@ -29,6 +30,8 @@ export function usePhotoUpload() {
     
     // Batch enqueue
     scheduler.enqueue(createBatchUploadTask(uniqueFiles, userId, {}));
+    
+    useUIStore.getState().update({ isTaskDrawerOpen: true });
     
     showToast.success(`已加入 ${uniqueFiles.length} 张照片到上传队列`);
 

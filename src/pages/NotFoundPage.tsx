@@ -1,5 +1,5 @@
 import React from 'react';
-import { routes } from '@/router';
+import { Router } from '@/router';
 import { AppLink } from '@/components/router/AppLink';
 import { Icon } from '@/components/ui/Icon';
 
@@ -15,7 +15,7 @@ export const NotFoundPage = () => {
           The page you are looking for doesn't exist or has been moved.
         </p>
         <AppLink 
-          to={routes.home()}
+          to={Router.createURL("home")}
           className="flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-xl font-medium tracking-wide hover:bg-slate-800 transition-all active:scale-[0.98]"
         >
           <Icon name="home" size={18} />

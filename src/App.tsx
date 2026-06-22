@@ -1,6 +1,5 @@
 import { AppErrorBoundary } from '@/components/layout/AppErrorBoundary';
 import { ConfirmProvider } from './context/ConfirmContext';
-import { RouteProvider } from '@/router';
 import { RouterOrchestrator } from '@/components/RouterOrchestrator';
 import { Analytics } from '@vercel/analytics/react';
 import { useEffect, useRef, useState, Suspense } from 'react';
@@ -103,9 +102,7 @@ export default function AppRoutes() {
     <AppErrorBoundary>
       <ConfirmProvider>
         <Suspense fallback={<LoadingScreen />}>
-          <RouteProvider>
-            <RouterOrchestrator />
-          </RouteProvider>
+          <RouterOrchestrator />
         </Suspense>
       </ConfirmProvider>
       <PortalRoot />

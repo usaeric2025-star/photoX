@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { usePublicSettings } from '../../hooks';
 import { useUIStore } from '@/store/useUIStore';
-import { routes } from '@/router';
+import { Router } from '@/router';
 import { AppLink } from '@/components/router/AppLink';
 import { translations } from '@/locales';
 import { storage } from '@/services/storage';
@@ -76,7 +76,7 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
       {/* Absolute Close Button */}
       <div className="absolute top-8 right-8">
         <AppLink 
-          to={routes.home()} 
+          to={Router.createURL("home")} 
           className="group w-12 h-12 flex items-center justify-center rounded-2xl bg-white text-slate-400 hover:text-slate-900 shadow-sm border border-slate-100 transition-all active:scale-90 animate-fade-in"
         >
           <Icon name="x" size={20} className="transition-transform group-hover:rotate-90" />
@@ -201,7 +201,7 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
         {/* Footer Link */}
         <div className="mt-8 flex justify-center animate-fade-in">
           <AppLink 
-            to={routes.home()} 
+            to={Router.createURL("home")} 
             className="group flex items-center gap-2 text-slate-400 hover:text-slate-900 text-xs font-bold transition-colors"
           >
             <span className="w-5 h-5 rounded-lg bg-slate-900/5 flex items-center justify-center group-hover:bg-slate-900/10 transition-colors">

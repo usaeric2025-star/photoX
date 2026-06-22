@@ -1,6 +1,7 @@
 import { Task } from './types';
 import { useTaskStore } from './store';
 import { taskTable } from './integrations/supabase';
+import { showToast } from '@/lib/ui/toast';
 
 export class TaskScheduler {
   private queue: Task[] = [];
@@ -92,12 +93,19 @@ export class TaskScheduler {
     try {
       // 更新 Supabase: processing
       await taskTable.updateStatus(task.id, 'processing');
+      useTaskStore.getState().startTask(task.id);
 
-      const result = await task.execute(controller.signal);
+      const onProgress = (progress: number, message?: string) => {
+        useTaskStore.getState().updateProgress(task.id, progress, message);
+      };
+
+      const result = await task.execute(controller.signal, onProgress);
 
       // 完成
       useTaskStore.getState().completeTask(task.id, result);
       await taskTable.updateStatus(task.id, 'completed', result);
+      
+      showToast.success(`任務完成: ${task.label}`);
 
       // 觸發 querySync（通過事件訂閱）
       this.onTaskComplete?.(task);
@@ -117,6 +125,7 @@ export class TaskScheduler {
       useTaskStore.getState().failTask(task.id, message, retryable);
       await taskTable.updateStatus(task.id, 'failed', { error: message, retryable });
 
+      showToast.error(`任務失敗: ${task.label}`);
     } finally {
       this.controllers.delete(task.id);
       this.running.delete(task.id);

@@ -14,7 +14,7 @@ export interface Task<T = unknown> {
   state: TaskState;
   createdAt: number;
   meta?: Record<string, unknown>;
-  execute: (signal: AbortSignal) => Promise<T>;
+  execute: (signal: AbortSignal, onProgress: (progress: number, message?: string) => void) => Promise<T>;
 }
 
 // 去重鍵：type + meta.key

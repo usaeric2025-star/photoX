@@ -1,4 +1,4 @@
-import { useRoute } from "@/router";
+import { useAppRoute } from "@/router";
 import { lazy, Suspense } from "react";
 import PublicPage from "@/pages/PublicPage";
 import AdminPage from "@/pages/AdminPage";
@@ -13,7 +13,7 @@ const PhotoLightbox = lazy(() => import("@/features/lightbox/PhotoLightbox").the
 const PhotoEditDialog = lazy(() => import("@/features/photo-edit/PhotoEditDialog").then(m => ({ default: m.PhotoEditDialog })));
 
 export function RouterOrchestrator() {
-  const route = useRoute();
+  const route = useAppRoute();
 
   const getPage = () => {
     if (!route) {
@@ -25,6 +25,7 @@ export function RouterOrchestrator() {
       case "photo":
         return <PublicPage />;
       case "admin":
+      case "adminBatchEdit":
         return <AdminPage />;
       case "settings":
       case "adminTasks":

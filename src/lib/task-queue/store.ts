@@ -4,6 +4,7 @@ import { Task } from './types';
 interface TaskState {
   tasks: Map<string, Task>;
   enqueue: (task: Task) => void;
+  startTask: (id: string) => void;
   updateProgress: (id: string, progress: number, message?: string) => void;
   failTask: (id: string, error: string, retryable: boolean) => void;
   completeTask: (id: string, result?: unknown) => void;
@@ -21,13 +22,27 @@ export const useTaskStore = create<TaskState>((set) => ({
     return { tasks };
   }),
   
+  startTask: (id) => set((state) => {
+    const tasks = new Map(state.tasks);
+    const task = tasks.get(id);
+    if (task) {
+      tasks.set(id, { ...task, state: { status: 'processing', progress: 0 } });
+    }
+    return { tasks };
+  }),
+  
   updateProgress: (id, progress, message) => set((state) => {
     const tasks = new Map(state.tasks);
     const task = tasks.get(id);
     if (task && task.state.status === 'processing') {
-      task.state.progress = progress;
-      if (message) task.state.message = message;
-      tasks.set(id, task);
+      tasks.set(id, {
+        ...task,
+        state: {
+          ...task.state,
+          progress,
+          message: message || task.state.message
+        }
+      });
     }
     return { tasks };
   }),
@@ -36,8 +51,7 @@ export const useTaskStore = create<TaskState>((set) => ({
     const tasks = new Map(state.tasks);
     const task = tasks.get(id);
     if (task) {
-      task.state = { status: 'failed', error, retryable, retryCount: 0 };
-      tasks.set(id, task);
+      tasks.set(id, { ...task, state: { status: 'failed', error, retryable, retryCount: 0 } });
     }
     return { tasks };
   }),
@@ -46,8 +60,7 @@ export const useTaskStore = create<TaskState>((set) => ({
     const tasks = new Map(state.tasks);
     const task = tasks.get(id);
     if (task) {
-      task.state = { status: 'completed', result };
-      tasks.set(id, task);
+      tasks.set(id, { ...task, state: { status: 'completed', result } });
     }
     return { tasks };
   }),
@@ -56,8 +69,7 @@ export const useTaskStore = create<TaskState>((set) => ({
     const tasks = new Map(state.tasks);
     const task = tasks.get(id);
     if (task) {
-      task.state = { status: 'cancelled' };
-      tasks.set(id, task);
+      tasks.set(id, { ...task, state: { status: 'cancelled' } });
     }
     return { tasks };
   }),

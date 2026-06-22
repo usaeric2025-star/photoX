@@ -20,10 +20,14 @@ export const createBatchUploadTask = (
     },
     state: { status: 'queued' },
     createdAt: Date.now(),
-    execute: async (signal: AbortSignal) => {
+    execute: async (signal: AbortSignal, onProgress: (progress: number, message?: string) => void) => {
       const results = [];
-      for (const file of files) {
+      const total = files.length;
+      for (let i = 0; i < total; i++) {
+        const file = files[i];
         if (signal.aborted) throw new Error('Upload aborted');
+        
+        onProgress(i / total, `處理第 ${i + 1}/${total} 張...`);
         
         // 1. Process
         const processed = await processImageFile(file);
@@ -52,8 +56,12 @@ export const createBatchUploadTask = (
           _lastModified: file.lastModified
         };
         
-        const result = await savePhotoToCloud(userId, tempPhoto);
+        const result = await savePhotoToCloud(userId, tempPhoto, (statusMsg) => {
+          onProgress((i + 0.5) / total, `上傳中: ${statusMsg}`);
+        });
         results.push(result);
+        
+        onProgress((i + 1) / total, `完成 ${i + 1}/${total}`);
       }
       return results;
     },

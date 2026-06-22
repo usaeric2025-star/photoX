@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useRoute, routes } from '@/router';
+import { Router, useAppRoute } from '@/router';
 
 export interface UseFiltersOptions {
   enableStatus?: boolean;
@@ -8,29 +8,35 @@ export interface UseFiltersOptions {
 }
 
 export const useFilters = (options: UseFiltersOptions = {}) => {
-  const route = useRoute();
-  const params = route.params as Record<string, unknown>;
+  const route = useAppRoute();
+  const params = route ? route.params : {};
 
   const updateSearch = useCallback((updates: Record<string, unknown>) => {
+    if (!route) return;
     const currentRouteName = route.name;
 
-    const cleanParams: Record<string, unknown> = {};
+    const cleanParams: Record<string, any> = {};
     for (const key in route.params) {
       if (key !== '~internal' && key !== 'href') {
         cleanParams[key] = (route.params as Record<string, unknown>)[key];
       }
     }
 
-    // Only update if the route exists in routes and accepts these params
-    if (currentRouteName && routes[currentRouteName]) {
-      const nextRoute = (routes[currentRouteName] as any)({
-        ...cleanParams,
-        ...updates
-      });
-      if (nextRoute && typeof nextRoute.push === 'function') {
-        nextRoute.push();
+    // Cast chicane parameters to strings or string[] if defined
+    const merged = { ...cleanParams };
+    for (const key in updates) {
+      const val = updates[key];
+      if (val === undefined) {
+          delete merged[key];
+      } else if (Array.isArray(val)) {
+          merged[key] = val.map(String);
+      } else {
+          merged[key] = String(val);
       }
     }
+
+    // We can cast merged to any because params are mostly optional string|string[]
+    Router.push(currentRouteName as any, merged);
   }, [route]);
 
   // Expose batch update capability
@@ -68,24 +74,24 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
     updateSearch({ batch: val || undefined });
   }, [updateSearch]);
 
-  const photoId = (params.photoId as string) || (route.name === 'photo' ? (route.params as Record<string, unknown>).photoId as string : null);
+  const photoId = (params.photoId as string) || (route?.name === 'photo' ? params.photoId as string : null);
   const setPhotoId = useCallback((val: string | null) => {
       // 如果是 photo 詳情頁，關閉後回到首頁
-      if (route.name === 'photo') {
+      if (route?.name === 'photo') {
          if (val) {
-           routes.photo({ photoId: val }).push();
+           Router.push("photo", { photoId: val });
          } else {
-           routes.home().push();
+           Router.push("home");
          }
          return;
       }
       // 否則使用 query param 模式以保留過濾條件
       updateSearch({ photoId: val || undefined });
-  }, [route.name, updateSearch]);
+  }, [route?.name, updateSearch]);
 
-  const anchor = params.anchor === true || params.anchor === 'true';
+  const anchor = params.anchor === 'true';
   const setAnchor = useCallback((val: boolean) => {
-    updateSearch({ anchor: val ? true : undefined });
+    updateSearch({ anchor: val ? 'true' : undefined });
   }, [updateSearch]);
 
   const groupId = (params.groupId as string) || null;
@@ -98,9 +104,9 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
     updateSearch({ modal: val || undefined });
   }, [updateSearch]);
 
-  const showGroupsCollapsed = params.showGroupsCollapsed !== false;
+  const showGroupsCollapsed = params.showGroupsCollapsed !== 'false';
   const setShowGroupsCollapsed = useCallback((val: boolean) => {
-    updateSearch({ showGroupsCollapsed: val ? undefined : false });
+    updateSearch({ showGroupsCollapsed: val ? undefined : 'false' });
   }, [updateSearch]);
 
   const view = (params.view as string) || 'grid';
@@ -109,12 +115,12 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
   }, [updateSearch]);
 
   const reset = useCallback(() => {
-    if (route.name === 'admin') {
-        routes.admin({}).push();
+    if (route?.name === 'admin') {
+        Router.push('admin');
     } else {
-        routes.home({}).push();
+        Router.push('home');
     }
-  }, [route.name]);
+  }, [route?.name]);
 
   return {
     search: searchVal, setSearch,

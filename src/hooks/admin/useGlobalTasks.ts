@@ -1,13 +1,13 @@
 import { STALE_TIMES } from '@/lib/query/config';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useEffect, useState } from 'react';
-import { useTasks } from '../core/useTasks';
 import { UnifiedTask, TaskStatus } from '@/types';
 import { api } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
 import { useAdminMode } from '../core/auth/useAdminMode';
 import { logger } from '@/lib/logger';
-import { useRoute } from '@/router';
+import { useAppRoute } from '@/router';
+import { useTaskSelector } from '@/lib/task-queue/store';
 
 /**
  * Adapter hook to aggregate frontend local tasks and backend maintenance jobs.
@@ -16,11 +16,11 @@ export function useGlobalTasks() {
   const isAdminPath = useAdminMode();
   const { user } = useAuthStore();
   const isAdmin = isAdminPath && !!user;
-  const route = useRoute();
-  const routeName = route.name;
+  const route = useAppRoute();
+  const routeName = route?.name;
   
-  // 1. Frontend Tasks (Real-time, transient)
-  const { tasks: localTasks = [] } = useTasks();
+  // 1. Frontend Tasks (Real-time, transient) - New Zustand API
+  const zustandTasksMap = useTaskSelector((state) => state.tasks);
 
   // 2. Backend Jobs (Durable, polled)
   const { data: remoteJobs = [], refetch: refetchJobs, isPending: isPendingJobs } = useQuery({
@@ -56,24 +56,23 @@ export function useGlobalTasks() {
     staleTime: STALE_TIMES.FAST
   });
 
-  // 3. Adapter Logic: Transform to UnifiedTask
+  // 4. Adapter Logic: Transform to UnifiedTask
   const aggregatedTasks: UnifiedTask[] = [];
 
-  // Map Local Tasks
-  const safeLocalTasks = Array.isArray(localTasks) ? localTasks : [];
-  safeLocalTasks.forEach(lt => {
+  // Map New Zustand Tasks
+  zustandTasksMap.forEach(zt => {
     let status: TaskStatus = 'processing';
-    if (lt.status === 'completed') status = 'completed';
-    if (lt.status === 'error' || lt.status === 'cancelled') status = 'failed';
+    if (zt.state.status === 'completed') status = 'completed';
+    if (zt.state.status === 'failed' || zt.state.status === 'cancelled') status = 'failed';
 
     aggregatedTasks.push({
-      id: lt.id,
+      id: zt.id,
       source: 'session', 
-      title: lt.name,
+      title: zt.label,
       status,
-      progress: lt.progress || 0,
-      message: lt.message,
-      createdAt: Date.now(),
+      progress: zt.state.progress || 0,
+      message: zt.state.message || (zt.state.status === 'failed' ? zt.state.error : ''),
+      createdAt: zt.createdAt,
     });
   });
 

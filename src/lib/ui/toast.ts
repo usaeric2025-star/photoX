@@ -19,33 +19,26 @@ export const showToast = {
     const timestamp = new Date().toISOString();
     
     // Copy handler with precise diagnostic fields
-    const handleCopy = (e: React.MouseEvent) => {
-      e.stopPropagation();
-      e.preventDefault();
-      const diagnosticsText = `时间戳: ${timestamp}\n错误类型: 运行逻辑异常\n代码: ERR_MUTATION\nTrace ID: ${traceId}\n原始消息: ${message}`;
-      
-      navigator.clipboard.writeText(diagnosticsText).then(() => {
-        toast.success('诊断信息已复制', { id: 'copy-success' });
-      }).catch(() => {
-        toast.error('复制失败，请重试');
-      });
-    };
-
+    const diagnosticsText = `时间戳: ${timestamp}\n错误类型: 运行逻辑异常\nTrace ID: ${traceId}\n原始消息: ${message}`;
+    
     return toast.error(
       React.createElement('div', { className: 'flex flex-col gap-1 w-full text-left' },
         React.createElement('div', { className: 'font-semibold text-sm leading-tight text-red-600' }, message),
-        React.createElement('div', { className: 'flex items-center justify-between gap-4 mt-2 text-[10px] text-slate-400' },
-          React.createElement('span', null, `Trace ID: ${traceId}`),
-          React.createElement('button', {
-            type: 'button',
-            onClick: handleCopy,
-            className: 'px-2 py-0.5 rounded bg-red-50 hover:bg-red-100 text-red-600 font-bold active:scale-95 transition-all border border-red-200 cursor-pointer pointer-events-auto'
-          }, '复制诊断信息')
-        )
+        React.createElement('div', { className: 'mt-1 text-[10px] text-slate-400' }, `Trace ID: ${traceId}`)
       ),
       { 
         duration: 8000,
         position: 'bottom-center',
+        action: {
+          label: '复制诊断',
+          onClick: (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            navigator.clipboard.writeText(diagnosticsText)
+              .then(() => toast.success('诊断信息已复制', { id: `copy-${traceId}` }))
+              .catch(() => toast.error('复制失败，请重试'));
+          }
+        },
         ...options
       }
     );
