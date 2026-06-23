@@ -4,6 +4,7 @@ import { Photo } from '@/types';
 import { mapToDb, mapSupabasePhoto } from '../mappers';
 import { createPhotoValidator } from '@/lib/validators/factory';
 import { api } from '@/lib/api';
+import { uploadWithRetry } from '@/services/storage';
 
 /**
  * Update a single photo
@@ -23,7 +24,6 @@ export async function updatePhoto(id: string, initialUpdates: Partial<Photo>): P
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw new Error('NO_ACTIVE_SESSION');
 
-    const { uploadWithRetry } = await import('@/services/storage');
     const uploadRes = await uploadWithRetry(session.user.id, id, updates.uri, undefined, undefined, undefined, 3, true);
     
     updates.image_url = uploadRes.imageUrl;

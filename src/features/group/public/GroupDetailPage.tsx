@@ -18,9 +18,7 @@ import { FilterBar } from '@/features/filter/FilterBar';
 function PublicPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string, index: number) => void }) {
   const { columns } = useColumns();
   
-  const gridClass = columns === 5 ? "grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6" :
-                    columns === 3 ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4" :
-                    "grid-cols-2 sm:grid-cols-2 lg:grid-cols-3";
+  const gridClass = "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4";
 
   return (
     <div className={`grid ${gridClass} gap-1 sm:gap-2 p-1 sm:p-2 lg:p-4`}>

@@ -3,6 +3,7 @@ import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { api } from '@/lib/api';
 import { defineMutation } from '@/lib/mutations/defineMutation';
 import { useOptimisticMutation } from '@/lib/mutations/useOptimisticMutation';
+import { queryClient } from '@/lib/queryClient';
 
 // 1. 修复工具
 const repairConfig = defineMutation<unknown, string, readonly unknown[]>({
@@ -25,7 +26,6 @@ const syncConfig = defineMutation<void, 'push' | 'pull', readonly unknown[]>({
   name: 'sync',
   service: async (type) => {
     if (type === 'pull') {
-      const { queryClient } = await import('@/lib/queryClient');
       await queryClient.invalidateQueries({ queryKey: [queryKeys.tags.all] });
       await queryClient.invalidateQueries({ queryKey: [queryKeys.categories.all] });
       await queryClient.invalidateQueries({ queryKey: [queryKeys.manufacturers.all] });

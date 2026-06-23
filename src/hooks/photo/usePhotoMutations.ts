@@ -7,6 +7,7 @@ import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { defineMutation } from '@/lib/mutations/defineMutation';
 import { useOptimisticMutation } from '@/lib/mutations/useOptimisticMutation';
 import { QueryKey } from '@tanstack/react-query';
+import { syncBatchPhotoTags } from '@/services/tag/commands';
 
 /**
  * 照片编辑 Mutation
@@ -23,7 +24,6 @@ const photoEditConfig = defineMutation<
     const res = await update(id, coreUpdates as Partial<Photo>);
     
     if (tags && Array.isArray(tags)) {
-      const { syncBatchPhotoTags } = await import('@/services/tag/commands');
       const tagIds = tags.map(t => typeof t === 'object' && t !== null ? String((t as { id?: string | number }).id) : String(t)).filter(Boolean);
       const tagSources: Record<string, "user"> = {};
       tagIds.forEach(tId => {
@@ -43,7 +43,7 @@ const photoEditConfig = defineMutation<
     if ((castOld as Photo).id === id) return { ...(castOld as Photo), ...updates };
     return castOld;
   },
-  successMessage: '已更新',
+  // successMessage: '已更新',
 });
 
 export const usePhotoEditMutation = () => useOptimisticMutation(photoEditConfig);
@@ -80,7 +80,6 @@ const photoBatchEditConfig = defineMutation<
     const res = await batchUpdate(ids, coreUpdates as Partial<Photo>);
     
     if (tags && Array.isArray(tags)) {
-      const { syncBatchPhotoTags } = await import('@/services/tag/commands');
       const tagIds = (tags as { id: string | number }[]).filter(t => t && t.id).map(t => String(t.id));
       const tagSources: Record<string, "user"> = {};
       tagIds.forEach(tId => {
@@ -127,7 +126,7 @@ const togglePinConfig = defineMutation<
     }
     return castOld;
   },
-  successMessage: '状态已更新',
+  // successMessage: '状态已更新',
 });
 
 export const useTogglePin = () => useOptimisticMutation(togglePinConfig);
