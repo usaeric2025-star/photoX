@@ -21,30 +21,44 @@ export async function copyToClipboard(text: string, options?: CopyOptions): Prom
   }
 
   let success = false;
+
+  // 1. Try synchronous textarea copy first to verify user-gesture is captured synchronously.
+  // This is highly robust inside sandboxed iframes.
   try {
-    if (navigator.clipboard && window.isSecureContext) {
-      await navigator.clipboard.writeText(text);
-      success = true;
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    // Keep it invisible but on screen
+    textArea.setAttribute('readonly', '');
+    textArea.style.position = 'fixed';
+    textArea.style.top = '-9999px';
+    textArea.style.left = '-9999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    // For iOS / mobile devices:
+    const range = document.createRange();
+    range.selectNodeContents(textArea);
+    const selection = window.getSelection();
+    if (selection) {
+      selection.removeAllRanges();
+      selection.addRange(range);
     }
+    textArea.setSelectionRange(0, 999999);
+    
+    success = document.execCommand('copy');
+    document.body.removeChild(textArea);
   } catch (err) {
-    logger.warn('navigator.clipboard failed, trying fallback:', err);
+    logger.warn('Synchronous copy failed, trying navigator.clipboard:', err);
   }
 
-  if (!success) {
+  // 2. If synchronous copy failed, fall back to navigator.clipboard
+  if (!success && navigator.clipboard && window.isSecureContext) {
     try {
-      const textArea = document.createElement('textarea');
-      textArea.value = text;
-      textArea.style.top = '0';
-      textArea.style.left = '0';
-      textArea.style.position = 'fixed';
-      textArea.style.opacity = '0';
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
-      success = document.execCommand('copy');
-      document.body.removeChild(textArea);
-    } catch (fallbackErr) {
-      logger.error('Fallback copy failed:', fallbackErr);
+      await navigator.clipboard.writeText(text);
+      success = true;
+    } catch (err) {
+      logger.warn('navigator.clipboard failed:', err);
     }
   }
 

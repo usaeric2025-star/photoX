@@ -1,5 +1,5 @@
 import { logger } from '@/lib/logger';
-import { createContext, useCallback, useContext } from 'react';
+import { createContext, useCallback, useContext, useMemo } from 'react';
 import { FormProvider, useForm } from "el-form-react-hooks";
 import { usePhoto } from './usePhoto';
 import { usePhotoEditMutation } from './usePhotoMutations';
@@ -54,22 +54,22 @@ export const PhotoEditSessionProvider = ({
     return { zh: s, en: '', ms: '' };
   };
 
+  const initialValues = useMemo(() => {
+    if (!photo) return undefined;
+    return {
+      ...photo,
+      name: toSingleString(photo.name),
+      description: toMultiObject(photo.description),
+      group_id: photo.group_id ?? null,
+    } as unknown as EditFormData;
+  }, [photo]);
+
   const form = useForm<EditFormData>({
     validators: {
       onSubmit: arktypeValidator(EditPhotoSchema)
     },
-    defaultValues: {
-      ...photo,
-      name: toSingleString(photo?.name),
-      description: toMultiObject(photo?.description),
-      group_id: photo?.group_id ?? null,
-    } as unknown as EditFormData,
-    values: {
-      ...photo,
-      name: toSingleString(photo?.name),
-      description: toMultiObject(photo?.description),
-      group_id: photo?.group_id ?? null,
-    } as unknown as EditFormData,
+    defaultValues: initialValues,
+    values: initialValues,
   });
   
   const isDirty = form.formState.isDirty;
