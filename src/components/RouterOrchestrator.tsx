@@ -2,13 +2,13 @@ import { useAppRoute } from "@/router";
 import { lazy, Suspense } from "react";
 import PublicPage from "@/pages/PublicPage";
 import AdminPage from "@/pages/AdminPage";
-import { SettingsPage } from "@/features/settings/SettingsPage";
-import { DiagnosticsDashboard } from "@/features/diagnostics";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { PublicGroupDetailPage } from "@/features/group/public/GroupDetailPage";
 import { AdminGroupDetailPage } from "@/features/group/admin/GroupDetailPage";
 import { LoadingScreen } from "./ui/LoadingScreen";
 
+const SettingsPage = lazy(() => import("@/features/settings/SettingsPage").then(m => ({ default: m.SettingsPage })));
+const DiagnosticsDashboard = lazy(() => import("@/features/diagnostics/DiagnosticsDashboard").then(m => ({ default: m.DiagnosticsDashboard })));
 const PhotoLightbox = lazy(() => import("@/features/lightbox/PhotoLightbox").then(m => ({ default: m.PhotoLightbox })));
 const PhotoEditDialog = lazy(() => import("@/features/photo-edit/PhotoEditDialog").then(m => ({ default: m.PhotoEditDialog })));
 
@@ -45,7 +45,9 @@ export function RouterOrchestrator() {
 
   return (
     <>
-      {getPage()}
+      <Suspense fallback={<LoadingScreen />}>
+        {getPage()}
+      </Suspense>
       <Suspense fallback={null}>
         <PhotoLightbox />
         <PhotoEditDialog />

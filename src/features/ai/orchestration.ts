@@ -4,7 +4,8 @@ import { updatePhoto } from '../../services/photo';
 import { syncPhotoTags, loadTagsFromCloud, batchCreateTags } from '../../services/tag';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { analyzeGroup, analyzeSinglePhotoDetail as analyzeSinglePhoto } from './commands';
-import { updateGroup } from '../../services/group/commands';
+import { updateGroup, groupPhotos } from '../../services/group/commands';
+import { resolveTagNamesToIds } from '../../services/tag/completion';
 import { withTimeout } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 import { mapAiToMultilingual } from './mapping';
@@ -58,9 +59,6 @@ export const analyzeAndSavePhoto = async (
     const tagIds = analysisData.tagIds || [];
     
     if (tagNames.length > 0 || tagIds.length > 0) {
-      const { resolveTagNamesToIds } = await import('../../services/tag/completion');
-      const { syncPhotoTags } = await import('../../services/tag/commands');
-      
       let finalTagIds = [...tagIds];
       if (tagNames.length > 0) {
          try {
@@ -117,7 +115,6 @@ export const autoGroupPhotos = async (
       analysis.description
     );
 
-    const { groupPhotos } = await import('../../services/group/commands');
     const result = await groupPhotos(photoIds, undefined, {
       name: nameObj as unknown as Record<string, string>,
       description: descObj as unknown as Record<string, string>

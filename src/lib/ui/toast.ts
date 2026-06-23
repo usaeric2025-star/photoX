@@ -32,11 +32,49 @@ export const showToast = {
         action: {
           label: '复制诊断',
           onClick: (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            navigator.clipboard.writeText(diagnosticsText)
-              .then(() => toast.success('诊断信息已复制', { id: `copy-${traceId}` }))
-              .catch(() => toast.error('复制失败，请重试'));
+            if (e && typeof e.preventDefault === 'function') e.preventDefault();
+            if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+            
+            let success = false;
+            try {
+              if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(diagnosticsText)
+                  .then(() => toast.success('诊断信息已复制', { id: `copy-${traceId}` }))
+                  .catch((err) => {
+                    console.warn('navigator.clipboard error inside toast action, trying fallback', err);
+                    triggerFallback();
+                  });
+                return;
+              }
+            } catch (err) {
+              console.warn('navigator.clipboard failed, trying fallback:', err);
+            }
+
+            triggerFallback();
+
+            function triggerFallback() {
+              try {
+                const textArea = document.createElement('textarea');
+                textArea.value = diagnosticsText;
+                textArea.style.top = '0';
+                textArea.style.left = '0';
+                textArea.style.position = 'fixed';
+                textArea.style.opacity = '0';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                success = document.execCommand('copy');
+                document.body.removeChild(textArea);
+              } catch (fallbackErr) {
+                console.error('Fallback copy fail in toast:', fallbackErr);
+              }
+
+              if (success) {
+                toast.success('诊断信息已复制', { id: `copy-${traceId}` });
+              } else {
+                toast.error('复制失败，请重试');
+              }
+            }
           }
         },
         ...options

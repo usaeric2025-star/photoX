@@ -20,15 +20,40 @@ export async function copyToClipboard(text: string, options?: CopyOptions): Prom
     return false;
   }
 
+  let success = false;
   try {
-    await navigator.clipboard.writeText(text);
-    
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      success = true;
+    }
+  } catch (err) {
+    logger.warn('navigator.clipboard failed, trying fallback:', err);
+  }
+
+  if (!success) {
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.top = '0';
+      textArea.style.left = '0';
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      success = document.execCommand('copy');
+      document.body.removeChild(textArea);
+    } catch (fallbackErr) {
+      logger.error('Fallback copy failed:', fallbackErr);
+    }
+  }
+
+  if (success) {
     if (options?.showToast !== false) {
       showToast.success(options?.successMessage || '已複製');
     }
     return true;
-  } catch (err) {
-    logger.error('Copy failed:', err);
+  } else {
     showToast.error(options?.errorMessage || '複製失敗，請手動複製');
     return false;
   }

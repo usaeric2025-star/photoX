@@ -37,8 +37,8 @@ const photoEditConfig = defineMutation<
   invalidate: (data, vars) => [queryKeys.photos.all, queryKeys.groups.all, queryKeys.photos.detail(vars.id)],
   cleanupKey: (vars) => vars.id,
   optimistic: (old, { id, updates }) => {
-    const castOld = old as { pages: { photos?: Photo[]; items?: Photo[] }[] } | Photo | undefined;
-    if (!castOld) return castOld;
+    if (typeof old !== 'object' || old === null) return old;
+    const castOld = old as { pages: { photos?: Photo[]; items?: Photo[] }[] } | Photo;
     if ('pages' in castOld) return optimistic.infinite.update<Photo>()(castOld as { pages: { photos?: Photo[]; items?: Photo[] }[] }, { id, updates });
     if ((castOld as Photo).id === id) return { ...(castOld as Photo), ...updates };
     return castOld;
@@ -116,8 +116,8 @@ const togglePinConfig = defineMutation<
   cleanupKey: (vars) => vars.id,
   invalidate: (data, vars) => [queryKeys.photos.all, queryKeys.groups.all, queryKeys.photos.detail(vars.id)],
   optimistic: (old, { id, isPinned }) => {
-    const castOld = old as { pages: { photos?: Photo[]; items?: Photo[] }[] } | Photo | undefined;
-    if (!castOld) return castOld;
+    if (typeof old !== 'object' || old === null) return old;
+    const castOld = old as { pages: { photos?: Photo[]; items?: Photo[] }[] } | Photo;
     if ('pages' in castOld) {
         return optimistic.infinite.update<Photo>()(castOld as { pages: { photos?: Photo[]; items?: Photo[] }[] }, { id, updates: { is_pinned: isPinned } });
     }
