@@ -18,17 +18,17 @@ export class ArkTypeValidator<T> implements Validator<T> {
     }
 
     validate(input: unknown): T {
-        const out = this.arkSchema(input);
-        if (out instanceof type.errors) {
+        const out = this.arkSchema(input) as any;
+        if (out.problems) {
             // [ARKTYPE-ENGINE-COMPAT] Standardizing ArkType errors
-            const errorList = Array.from(out as unknown as { path: string[], expected: string }[]);
-            const firstError = errorList[0];
+            const problems = Array.from(out.problems);
+            const firstProblem = problems[0] as any;
             
             throw ErrorFactory.validation(
-                `Validation failed at ${firstError?.path?.join('.') || 'root'}. Expected ${firstError?.expected || 'valid data'}. ${this.meta.aiHints.join(' ')}`
+                `Validation failed at ${firstProblem?.path?.join('.') || 'root'}. ${firstProblem?.message || 'Invalid data'}. ${this.meta.aiHints.join(' ')}`
             );
         }
-        return out as T;
+        return out.data as T;
     }
 
     serialize(): ValidatorMeta {
