@@ -28,21 +28,19 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
   const lang = useUI(s => s.appLang);
   const t = translations[lang as keyof typeof translations] || translations.en;
 
-  const [cachedLogoUrl, setCachedLogoUrl] = React.useState<string | null>(() => {
+  const cachedSettings = React.useMemo(() => {
     try {
-      const item = storage.getItem('photox_cached_settings');
+      const item = storage.getItem('cached_settings');
       if (item) {
-        const parsed = JSON.parse(item);
-        return parsed.logo_url || null;
+        return JSON.parse(item);
       }
     } catch (e) {
       // ignore
     }
     return null;
-  });
+  }, []);
 
-
-  const logoUrl = settings?.logo_url || cachedLogoUrl;
+  const logoUrl = settings?.logo_url || cachedSettings?.logo_url || null;
 
   const handleAuthAction = () => {
     if (isAdmin) {
@@ -65,11 +63,6 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
             className="h-8 sm:h-10 w-auto object-contain shrink-0" 
             alt="Logo" 
             loading="lazy"
-            onLoad={() => {
-              if (settings?.logo_url && settings.logo_url !== cachedLogoUrl) {
-                setCachedLogoUrl(settings.logo_url);
-              }
-            }}
           />
         ) : (
           <div className="flex items-center gap-1.5 px-1">
@@ -118,12 +111,12 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
           </button>
         )}
 
-        {/* 3. 切换至管理后台按钮 (Apple Style) - 僅員工可見 */}
-        {(role === 'admin' || role === 'staff') && (
+        {/* 3. 切换至管理后台/登录按钮 (Apple Style) - 僅員工及未登錄遊客可見 */}
+        {(!user || role === 'admin' || role === 'staff') && (
           <button
             onClick={handleAuthAction}
             className="w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 bg-surface-soft text-text-sub hover:text-text-main"
-            title={isAdmin ? t.viewModePublic : t.viewModeAdmin}
+            title={role === 'admin' || role === 'staff' ? (isAdmin ? t.viewModePublic : t.viewModeAdmin) : t.adminPanel}
           >
             <Icon name="layout-dashboard" size={18} />
           </button>
@@ -188,7 +181,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
 
             <div className="px-2 py-1.5 flex flex-col gap-1 w-full">
               <span className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 select-none">{t.systemLabel}</span>
-              {user && (
+              {user ? (
                 <>
                   {!isAdmin && (
                     <button
@@ -201,6 +194,15 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
                     </button>
                   )}
                 </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => navigate.admin()}
+                  className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-pointer outline-none hover:bg-blue-50 text-gray-700"
+                >
+                  <Icon name="log-in" size={16} />
+                  {t.adminPanel}
+                </button>
               )}
               <div className="mt-1">
                 <LanguageSwitcher mode="segmented" />

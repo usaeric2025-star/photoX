@@ -40,21 +40,19 @@ export function AdminHeader({ className }: AdminHeaderProps) {
   });
   const totalCount = totalCountData ?? 0;
 
-  const [cachedLogoUrl, setCachedLogoUrl] = React.useState<string | null>(() => {
+  const cachedSettings = React.useMemo(() => {
     try {
-      const item = storage.getItem('photox_cached_settings');
+      const item = storage.getItem('cached_settings');
       if (item) {
-        const parsed = JSON.parse(item);
-        return parsed.logo_url || null;
+        return JSON.parse(item);
       }
     } catch (e) {
       // ignore
     }
     return null;
-  });
+  }, []);
 
-
-  const logoUrl = settings?.logo_url || cachedLogoUrl;
+  const logoUrl = settings?.logo_url || cachedSettings?.logo_url || null;
 
   const handleAuthAction = () => {
     navigate.home();
@@ -73,11 +71,6 @@ export function AdminHeader({ className }: AdminHeaderProps) {
               className="h-7 sm:h-9 w-auto object-contain shrink-0" 
               alt="Logo" 
               loading="lazy"
-              onLoad={() => {
-                if (settings?.logo_url && settings.logo_url !== cachedLogoUrl) {
-                  setCachedLogoUrl(settings.logo_url);
-                }
-              }}
             />
           ) : (
             <div className="flex items-center gap-1 font-bold tracking-tighter">
