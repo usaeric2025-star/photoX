@@ -22,11 +22,8 @@ export default function PublicPage() {
     sort, 
     showGroupsCollapsed,
     photoId,
-    setPhotoId,
-    groupId // Get groupId from filters
+    setPhotoId
   } = useFilters();
-  
-  const isGroupPage = !!groupId; // Check if we are viewing a group page (if group page updates groupId)
   
   const { columns } = useColumns();
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -117,7 +114,7 @@ export default function PublicPage() {
         isRefreshing={isFetching || isCountLoading}
       />
 
-      {!isGroupPage && <FilterBar mode="public" className="border-b shadow-sm" />}
+      <FilterBar mode="public" className="border-b shadow-sm" />
 
       {/* 照片網格區域 - 自動佔滿剩餘空間 */}
       <div className="flex-1 min-h-0 relative bg-surface-soft overflow-hidden">
