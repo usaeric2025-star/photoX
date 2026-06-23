@@ -27,11 +27,18 @@ export async function copyToClipboard(text: string, options?: CopyOptions): Prom
   try {
     const textArea = document.createElement('textarea');
     textArea.value = text;
-    // Keep it invisible but on screen
+    // Keep it invisible but within visible viewport so select is allowed
     textArea.setAttribute('readonly', '');
-    textArea.style.position = 'fixed';
-    textArea.style.top = '-9999px';
+    textArea.style.position = 'absolute';
     textArea.style.left = '-9999px';
+    textArea.style.top = `${window.pageYOffset || document.documentElement.scrollTop}px`;
+    textArea.style.width = '2px';
+    textArea.style.height = '2px';
+    textArea.style.padding = '0';
+    textArea.style.border = 'none';
+    textArea.style.outline = 'none';
+    textArea.style.boxShadow = 'none';
+    textArea.style.background = 'transparent';
     document.body.appendChild(textArea);
     textArea.focus();
     textArea.select();

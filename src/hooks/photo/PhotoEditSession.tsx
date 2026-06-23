@@ -55,12 +55,12 @@ export const PhotoEditSessionProvider = ({
   };
 
   const initialValues = useMemo(() => {
-    if (!photo) return undefined;
+    const p = (photo || {}) as Partial<Photo>;
     return {
-      ...photo,
-      name: toSingleString(photo.name),
-      description: toMultiObject(photo.description),
-      group_id: photo.group_id ?? null,
+      ...p,
+      name: toSingleString(p.name),
+      description: toMultiObject(p.description),
+      group_id: p.group_id ?? null,
     } as unknown as EditFormData;
   }, [photo]);
 
@@ -111,7 +111,7 @@ export const PhotoEditSessionProvider = ({
   }, [commit, form]);
 
   const discard = () => {
-    form.reset({ values: (photo || {}) as unknown as EditFormData });
+    form.reset({ values: initialValues });
   };
   
   // Do not return null to avoid blocking parent modal rendering

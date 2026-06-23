@@ -50,7 +50,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
     }
   };
 
-  const currentRole = (role === 'admin' || role === 'staff' || role === 'public') ? role : 'public';
+  const currentRole = isAdmin ? ((role === 'admin' || role === 'staff') ? role : 'public') : 'public';
 
   const theme = {
     admin: {
@@ -92,7 +92,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
         {logoUrl && logoUrl.trim() !== '' ? (
           <img 
             src={logoUrl} 
-            className="h-8 sm:h-10 w-auto object-contain shrink-0" 
+            className="h-8 sm:h-10 w-auto object-contain shrink-0 rounded-xl" 
             alt="Logo" 
             loading="lazy"
           />

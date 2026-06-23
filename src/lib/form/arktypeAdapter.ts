@@ -7,22 +7,23 @@ export function arktypeValidator<T>(schema: Type<T>) {
   return (values: unknown) => {
     const result = schema(values);
     
-    if (result instanceof Error) {
-      // ArkType 的錯誤通常是一個數組或樹狀結構
-      // 這裡簡單提取所有錯誤訊息，el-form 需要 [path]: message 格式
+    // If it's a success, result should contain 'data'.
+    // If it's a failure (ArkType v2+), it usually returns something without 'data' or with 'problems'.
+    
+    // ArkType v2 API behavior: schema(values) returns result, which can be checked.
+    // If it failed, result.problems will be defined.
+    
+    const problems = (result as any)?.problems; 
+    
+    if (problems) {
       const errors: Record<string, string> = {};
       
-      // 遍歷 ArkType 的具體錯誤位元（如果存在）
-      if ('errors' in result && Array.isArray(result.errors)) {
-        result.errors.forEach((err: any) => {
-          const path = err.path.join('.');
-          if (!errors[path]) {
-            errors[path] = err.message;
-          }
-        });
-      } else {
-        // Fallback: 只有單一錯誤訊息時
-        errors['_root'] = result.message;
+      // ArkType problems are iterable
+      for (const problem of problems) {
+        const path = problem.path.join('.');
+        if (!errors[path]) {
+          errors[path] = problem.message;
+        }
       }
       
       return errors;
