@@ -28,9 +28,7 @@ function AdminPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoLis
   const { toggle } = usePhotoSelection();
   const { columns } = useColumns();
 
-  const gridClass = columns === 5 ? "grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6" :
-                    columns === 3 ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4" :
-                    "grid-cols-2 sm:grid-cols-2 lg:grid-cols-3";
+  const gridClass = "grid-cols-3";
 
   return (
     <div className={`grid ${gridClass} gap-1 sm:gap-2 p-1 sm:p-2 lg:p-4 pb-20`}>
@@ -161,7 +159,6 @@ export function AdminGroupDetailPage() {
             onUpdateTitle={handleUpdateTitle}
           />
         </div>
-        <FilterBar mode="admin" />
         <div className={`flex-1 overflow-y-auto relative overscroll-y-auto overscroll-x-none bg-slate-50 transition-all duration-300 ${isMultiSelect ? 'pb-16' : ''}`}>
           <AdminPhotoGrid photos={photos} categories={categories} onPhotoClick={handlePhotoClick} />
         </div>

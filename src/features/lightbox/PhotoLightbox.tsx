@@ -72,19 +72,13 @@ export function PhotoLightbox() {
           <div className="flex items-center gap-1.5 p-1 bg-black/20 backdrop-blur-md rounded-full border border-white/10">
             <button 
               onClick={() => { 
-                filters.updateFilters({ photoId: slide.id, modal: 'edit' });
+                filters.setPhotoId(slide.id);
+                filters.setModal('edit');
               }} 
               className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-600/20 text-blue-400 hover:bg-blue-600/40"
               title="編輯"
             >
               <Icon name="pencil" size={18} />
-            </button>
-            <button 
-              onClick={() => adminActions.updatePhoto.mutate({ id: slide.id, updates: { is_group_cover: true } })} 
-              className="w-10 h-10 flex items-center justify-center rounded-full bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/40"
-              title="設為封面"
-            >
-              <Icon name="check-circle" size={18} />
             </button>
             <button 
               onClick={() => {
