@@ -55,7 +55,8 @@ export function TagsSection({
     // isPinned={(settings?.pinned_tags || []).includes(String(tag.id))}
   
   const { runTask } = useTaskExecutor();
-  const tasks = useTaskSelector(s => Array.from(s.tasks.values()));
+  const tasksMap = useTaskSelector(s => s.tasks);
+  const tasks = React.useMemo(() => Array.from(tasksMap.values()), [tasksMap]);
   const isRunning = tasks.some((t) => t.state?.status === "processing");
   const queryClient = useQueryClient();
 

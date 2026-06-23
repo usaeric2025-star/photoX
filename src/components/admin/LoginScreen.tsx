@@ -37,7 +37,7 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
       }
       
       if (passcode === settings.access_passcode) {
-        storage.setItem('ais_mock_auth_passcode', String(passcode));
+        storage.setItem('ais_mock_auth_passcode', JSON.stringify(passcode));
         return true;
       } else {
         throw new Error(t.invalidCode);
@@ -133,11 +133,11 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
           </div>
 
           {/* Action Area */}
-          <div className="w-full relative min-h-[140px] flex justify-center">
+          <div className="w-full flex justify-center min-h-[140px]">
             {mode === 'admin' ? (
               <div
                 key="admin-action"
-                className="w-full flex flex-col items-center space-y-6 animate-fade-in absolute top-0"
+                className="w-full flex flex-col items-center space-y-6 animate-fade-in"
               >
                 <Button 
                   onClick={async () => {
@@ -159,7 +159,7 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
               <form
                 key="staff-action"
                 onSubmit={handlePasscodeSubmit}
-                className="w-full space-y-4 animate-fade-in absolute top-0"
+                className="w-full space-y-4 animate-fade-in"
               >
                 <div className="relative">
                   <input

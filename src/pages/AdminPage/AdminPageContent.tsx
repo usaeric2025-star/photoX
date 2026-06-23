@@ -34,7 +34,8 @@ export function AdminPageContent() {
   const pendingFiles = useUI(s => s.pendingFiles);
   const { handleBatchAiAnalyze } = useAIBatchAnalysis();
   const { mutateAsync: syncMut } = useSyncMutation();
-  const tasks = useTaskSelector(s => Array.from(s.tasks.values()));
+  const tasksMap = useTaskSelector(s => s.tasks);
+  const tasks = React.useMemo(() => Array.from(tasksMap.values()), [tasksMap]);
   const appLang = useUI(s => s.appLang);
   const { navigate, route } = useAppRouter();
 

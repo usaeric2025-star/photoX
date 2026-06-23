@@ -15,9 +15,17 @@ export function usePermission() {
   const [passcode] = useLocalStorage({
     key: 'ais_mock_auth_passcode',
     defaultValue: '',
+    deserialize: (val) => {
+      try {
+        const parsed = JSON.parse(val);
+        return String(parsed);
+      } catch {
+        return val;
+      }
+    }
   });
 
-  const isStaffMode = passcode === settings?.access_passcode && !!settings?.access_passcode;
+  const isStaffMode = String(passcode) === settings?.access_passcode && !!settings?.access_passcode;
     
   const role = getEffectiveRole(user || null, isStaffMode);
   const permissions = ROLE_PERMISSIONS[role] || [];

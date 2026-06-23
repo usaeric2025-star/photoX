@@ -2,6 +2,7 @@ import { logger } from '@/lib/logger';
 import { create } from 'zustand';
 import { User } from '@/types';
 import { supabase } from '@/lib/supabase';
+import { storage } from '@/services/storage';
 
 export interface AuthState {
   user: User | null;
@@ -72,7 +73,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     await supabase.auth.signOut();
     set({ user: null });
     if (typeof window !== 'undefined') {
-      window.localStorage.removeItem('ais_mock_auth_passcode');
+      storage.remove('ais_mock_auth_passcode');
       window.location.reload();
     }
   },

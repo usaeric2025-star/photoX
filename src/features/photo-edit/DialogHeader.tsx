@@ -34,7 +34,8 @@ export function DialogHeader({
   const appLang = useUI((s) => s.appLang);
   
   const { data: detailPhoto } = usePhoto(editPhotoId || '');
-  const tasks = useTaskSelector(s => Array.from(s.tasks.values()));
+  const tasksMap = useTaskSelector(s => s.tasks);
+  const tasks = React.useMemo(() => Array.from(tasksMap.values()), [tasksMap]);
   const isAnalyzing = tasks.some(t => t.state?.status === 'processing' && (t.label.includes('识别') || t.label.includes('分析') || t.label.toLowerCase().includes('analyze') || t.label.toLowerCase().includes('identif')));
 
   const { mutateAsync: removeFromGroup } = useRemoveFromGroupMutation();

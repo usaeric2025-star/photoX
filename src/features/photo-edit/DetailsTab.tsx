@@ -17,7 +17,8 @@ export function DetailsTab() {
   const { modal, photoId } = useFilters();
   const editPhotoId = modal === 'edit' ? photoId : null;
   const appLang = useUI((s) => s.appLang);
-  const tasks = useTaskSelector(s => Array.from(s.tasks.values()));
+  const tasksMap = useTaskSelector(s => s.tasks);
+  const tasks = React.useMemo(() => Array.from(tasksMap.values()), [tasksMap]);
   const { data: detailPhoto } = usePhoto(editPhotoId || '');
   const { handleAiAnalyze } = usePhotoEditAI();
 

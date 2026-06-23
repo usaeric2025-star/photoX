@@ -17,12 +17,20 @@ export function AdminAuthGate({ children }: AdminAuthGateProps) {
     key: 'ais_mock_auth_passcode',
     defaultValue: '',
     getInitialValueInEffect: false,
+    deserialize: (val) => {
+      try {
+        const parsed = JSON.parse(val);
+        return String(parsed);
+      } catch {
+        return val;
+      }
+    }
   });
 
   const { user, isLoading: isAuthLoading, signIn } = useAuth();
   const { data: settings } = usePublicSettings();
   
-  const isStaffMode = !!settings?.access_passcode && passcode === settings.access_passcode;
+  const isStaffMode = !!settings?.access_passcode && String(passcode) === settings.access_passcode;
   const [forceShow, setForceShow] = useState(false);
 
   useEffect(() => {

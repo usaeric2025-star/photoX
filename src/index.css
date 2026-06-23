@@ -60,6 +60,13 @@
   --ease-apple: cubic-bezier(0.25, 0.1, 0.25, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
+  --animate-fade-in: fade-in 0.3s var(--ease-apple) forwards;
+  --animate-fade-up: fade-up 0.4s var(--ease-apple) forwards;
+  --animate-fade-right: fade-right 0.3s var(--ease-apple) forwards;
+  --animate-scale-in: scale-in 0.3s var(--ease-spring) forwards;
+  --animate-bounce-subtle: bounce-subtle 2s infinite ease-in-out;
+  --animate-slide-in-up: slide-in-up 0.4s var(--ease-apple) forwards;
+
   /* Legacy brand colors backward compatibility */
   --color-brand-bg: var(--color-surface-soft);
   --color-brand-navy: var(--color-text-main);
@@ -120,9 +127,21 @@
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
   }
+  @keyframes fade-right {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
   @keyframes scale-in {
     from { opacity: 0; transform: scale(0.95); }
     to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes bounce-subtle {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+  @keyframes slide-in-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
   }
   @keyframes loading-bar {
     0% { transform: translateX(-100%); }

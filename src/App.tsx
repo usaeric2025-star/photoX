@@ -30,9 +30,17 @@ export default function AppRoutes() {
     key: 'ais_mock_auth_passcode',
     defaultValue: '',
     getInitialValueInEffect: false,
+    deserialize: (val) => {
+      try {
+        const parsed = JSON.parse(val);
+        return String(parsed);
+      } catch {
+        return val;
+      }
+    }
   });
 
-  const isStaffMode = passcode === settings?.access_passcode && !!settings?.access_passcode;
+  const isStaffMode = String(passcode) === settings?.access_passcode && !!settings?.access_passcode;
 
   useEffect(() => {
     logger.debug('🛡️ [App] Initializing Auth/Settings...');

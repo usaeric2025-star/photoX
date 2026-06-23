@@ -39,7 +39,6 @@ import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { queryClient } from './lib/queryClient';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { FatalErrorOverlay } from '@/components/shared/FatalErrorOverlay';
-import { PortalRoot } from '@/components/ui/PortalRoot';
 import { logger } from './lib/logger';
 import './index.css';
 import { clientEnv } from './shared/envSchema';
@@ -163,7 +162,6 @@ async function init() {
             <App />
             <FatalErrorOverlay />
             <Analytics />
-            <PortalRoot />
           </ErrorBoundary>
         </QueryClientProvider>
       </StrictMode>

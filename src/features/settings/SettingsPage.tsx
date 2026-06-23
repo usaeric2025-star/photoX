@@ -51,7 +51,8 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   const { data: categories = [] } = useCategories();
   const { data: tags = [] } = useTags();
   const { data: manufacturers = [] } = useManufacturers();
-  const tasks = useTaskSelector(s => Array.from(s.tasks.values()));
+  const tasksMap = useTaskSelector(s => s.tasks);
+  const tasks = React.useMemo(() => Array.from(tasksMap.values()), [tasksMap]);
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
