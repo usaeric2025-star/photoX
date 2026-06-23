@@ -94,7 +94,7 @@ export function YARLDriver({
                 </div>
               )}
               {renderFooter && (
-                <div className="pointer-events-auto absolute bottom-0 left-0 right-0 p-4 flex justify-center">
+                <div className="pointer-events-auto absolute bottom-0 left-0 right-0 pb-0 pt-4 px-4 flex justify-center">
                   {renderFooter(slide)}
                 </div>
               )}

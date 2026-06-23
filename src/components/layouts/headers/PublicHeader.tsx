@@ -132,16 +132,16 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
           }
         >
           <div className="flex flex-col gap-1 w-full min-w-[200px]">
-            {user ? (
+            {role === 'admin' || role === 'staff' ? (
               <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 select-none">
                 <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center text-white overflow-hidden text-[8px]">
-                  {user.photo_url && user.photo_url.trim() !== '' ? (
+                  {user?.photo_url && user.photo_url.trim() !== '' ? (
                     <img src={user.photo_url} referrerPolicy="no-referrer" alt="" />
                   ) : (
                   <Icon name="user" size={10} />
                   )}
                 </div>
-                {user.email?.split("@")[0]}
+                {user ? user.email?.split("@")[0] : (lang === 'zh' ? '员工 (Staff)' : 'Staff')}
               </div>
             ) : (
               <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest select-none">
@@ -181,7 +181,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
 
             <div className="px-2 py-1.5 flex flex-col gap-1 w-full">
               <span className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 select-none">{t.systemLabel}</span>
-              {user ? (
+              {role === 'admin' || role === 'staff' ? (
                 <>
                   {!isAdmin && (
                     <button
@@ -209,7 +209,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
               </div>
             </div>
 
-            {user && (
+            {(role === 'admin' || role === 'staff') && (
               <>
                 <div className="h-px bg-slate-100 my-1 w-full" />
                 <button

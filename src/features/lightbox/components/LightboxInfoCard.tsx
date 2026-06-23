@@ -16,7 +16,7 @@ export function LightboxInfoCard({
   if (!slide) return null;
 
   return (
-    <div className="relative z-10 px-4 pb-4 mb-4 max-w-2xl mx-auto w-full">
+    <div className="relative z-10 px-4 pb-0 mb-0 max-w-2xl mx-auto w-full">
       <div className="bg-black/60 backdrop-blur-md rounded-xl p-3 text-white hover:bg-black/70 transition-colors shadow-2xl border border-white/10">
         <div className="flex items-center justify-between gap-3">
           <div className="flex-1 min-w-0 cursor-pointer pl-1" onClick={() => setExpanded(!expanded)}>
