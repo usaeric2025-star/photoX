@@ -63,7 +63,7 @@ const photoDeleteConfig = defineMutation<
     queryKeys.groups.all,
     ...(Array.isArray(vars) ? vars : [vars]).map((id) => queryKeys.photos.detail(id))
   ],
-  successMessage: '照片已删除',
+  // successMessage: '照片已删除',
 });
 
 export const usePhotoDelete = () => useOptimisticMutation(photoDeleteConfig);
@@ -95,7 +95,7 @@ const photoBatchEditConfig = defineMutation<
     queryKeys.groups.all,
     ...vars.ids.map((id) => queryKeys.photos.detail(id))
   ],
-  successMessage: '批量操作完成',
+  // successMessage: '批量操作完成',
 });
 
 export const usePhotoBatchEdit = () => useOptimisticMutation(photoBatchEditConfig);

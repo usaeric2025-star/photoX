@@ -18,18 +18,19 @@ import { FilterBar } from '@/features/filter/FilterBar';
 function PublicPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string, index: number) => void }) {
   const { columns } = useColumns();
   
-  const gridClass = "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4";
+  const gridClass = "grid-cols-3";
 
   return (
-    <div className={`grid ${gridClass} gap-1 sm:gap-2 p-1 sm:p-2 lg:p-4`}>
+    <div className={`grid ${gridClass} gap-1 p-1`}>
       {photos.map((photo, index) => (
-        <PublicPhotoCard
-          key={photo.id}
+        <div key={photo.id} className="min-w-0">
+         <PublicPhotoCard
           photo={photo}
           onClick={() => onPhotoClick(photo.id, index)}
           hideGroupBadge={true}
           sharedCategories={categories}
         />
+        </div>
       ))}
     </div>
   );
@@ -154,7 +155,7 @@ export function PublicGroupDetailPage() {
           isAdmin={false} 
         />
       </div>
-      <FilterBar mode="public" />
+      {/* FilterBar removed */}
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto relative overscroll-y-auto overscroll-x-none bg-slate-50">
         <PublicPhotoGrid photos={photos} categories={categories} onPhotoClick={handlePhotoClick} />
       </div>

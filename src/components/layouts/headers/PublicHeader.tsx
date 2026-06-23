@@ -24,6 +24,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
   const update = useUI((s) => s.update);
   const { navigate, route } = useAppRouter();
   const isAdmin = route === 'admin' || route === 'adminGroup';
+  const isGroupPage = route === 'publicGroup' || route === 'adminGroup';
 
   const lang = useUI(s => s.appLang);
   const t = translations[lang as keyof typeof translations] || translations.en;
