@@ -68,55 +68,45 @@ export function PhotoLightbox() {
       onClose={handleClose}
       onView={handleView}
       renderHeader={(slide) => (
-        isManagement ? (
-          <div className="flex items-center gap-1.5 p-1 bg-black/20 backdrop-blur-md rounded-full border border-white/10">
-            <button 
-              onClick={(e) => { 
-                e.stopPropagation();
-                filters.updateFilters({ photoId: slide.id, modal: 'edit' });
-              }} 
-              className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-600/20 text-blue-400 hover:bg-blue-600/40"
-              title="編輯"
-            >
-              <Icon name="pencil" size={18} />
-            </button>
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                if (window.confirm('確定要刪除這張照片嗎？')) {
-                  adminActions.deletePhoto.mutate(slide.id);
-                }
-              }} 
-              className="w-10 h-10 flex items-center justify-center rounded-full bg-red-600/20 text-red-400 hover:bg-red-600/40"
-              title="刪除"
-            >
-              <Icon name="trash-2" size={18} />
-            </button>
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                handleClose();
-              }} 
-              className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
-              title="關閉"
-            >
-              <Icon name="x" size={18} />
-            </button>
-          </div>
-        ) : (
-          <div className="flex items-center p-1 bg-black/20 backdrop-blur-md rounded-full border border-white/10">
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                handleClose();
-              }} 
-              className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
-              title="關閉"
-            >
-              <Icon name="x" size={18} />
-            </button>
-          </div>
-        )
+        <div className="flex items-center gap-1.5 p-1 bg-black/20 backdrop-blur-md rounded-full border border-white/10">
+          {isManagement && (
+            <>
+              <button 
+                onClick={(e) => { 
+                  e.stopPropagation();
+                  // No need to set photoId again if it's already the slide.id
+                  filters.setModal('edit');
+                }} 
+                className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-600/20 text-blue-400 hover:bg-blue-600/40"
+                title="編輯"
+              >
+                <Icon name="pencil" size={18} />
+              </button>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (window.confirm('確定要刪除這張照片嗎？')) {
+                    adminActions.deletePhoto.mutate(slide.id);
+                  }
+                }} 
+                className="w-10 h-10 flex items-center justify-center rounded-full bg-red-600/20 text-red-400 hover:bg-red-600/40"
+                title="刪除"
+              >
+                <Icon name="trash-2" size={18} />
+              </button>
+            </>
+          )}
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              handleClose();
+            }} 
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+            title="關閉"
+          >
+            <Icon name="x" size={18} />
+          </button>
+        </div>
       )}
       renderFooter={(slide) => (
         <LightboxInfoCard 
