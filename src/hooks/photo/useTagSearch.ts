@@ -1,5 +1,5 @@
 import { STALE_TIMES } from '@/lib/query/config';
-import { useAppQuery as useQuery } from '@/lib/query';
+import { useAppQuery } from '@/lib/query';
 import { api } from '@/lib/api';
 import { Tag } from '@/types';
 
@@ -7,9 +7,9 @@ import { Tag } from '@/types';
  * Perform server-side tag search with debounce handling (via queryKey)
  */
 export const useTagSearch = (keyword: string) => {
-  return useQuery({
-    queryKey: ['tags', 'search', keyword],
-    queryFn: async () => {
+  return useAppQuery(
+    keyword.length >= 0 ? ['tags', 'search', keyword] : null,
+    async () => {
       const resp = await api.tags.search.$get({ query: { keyword } });
       const body = await resp.json();
       if (!body.success) {
@@ -17,7 +17,6 @@ export const useTagSearch = (keyword: string) => {
       }
       return body.data as Tag[];
     },
-    enabled: keyword.length >= 0, // Allow empty keyword for initial listing if needed, or set to > 0
-    staleTime: STALE_TIMES.SHORT
-  });
+    { dedupingInterval: STALE_TIMES.SHORT }
+  );
 };

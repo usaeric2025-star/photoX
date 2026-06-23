@@ -3,7 +3,7 @@ import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { api } from '@/lib/api';
 import { defineMutation } from '@/lib/mutations/defineMutation';
 import { useOptimisticMutation } from '@/lib/mutations/useOptimisticMutation';
-import { queryClient } from '@/lib/queryClient';
+import { appQuery } from '@/lib/query';
 
 // 1. 修复工具
 const repairConfig = defineMutation<unknown, string, readonly unknown[]>({
@@ -26,11 +26,11 @@ const syncConfig = defineMutation<void, 'push' | 'pull', readonly unknown[]>({
   name: 'sync',
   service: async (type) => {
     if (type === 'pull') {
-      await queryClient.invalidateQueries({ queryKey: [queryKeys.tags.all] });
-      await queryClient.invalidateQueries({ queryKey: [queryKeys.categories.all] });
-      await queryClient.invalidateQueries({ queryKey: [queryKeys.manufacturers.all] });
-      await queryClient.invalidateQueries({ queryKey: [queryKeys.groups.all] });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
+      await appQuery.mutate(queryKeys.tags.all);
+      await appQuery.mutate(queryKeys.categories.all);
+      await appQuery.mutate(queryKeys.manufacturers.all);
+      await appQuery.mutate(queryKeys.groups.all);
+      await appQuery.mutate(queryKeys.photos.all);
     }
   },
   successMessage: '同步完成',

@@ -1,7 +1,7 @@
 import { logger } from '@/lib/logger';
 import React from 'react';
 import { Icon } from '@/components/ui/Icon';
-import { useAppQuery as useQuery, useAppMutation as useMutation, useAppQueryClient as useQueryClient } from '@/lib/query';
+import { useAppQuery, useAppMutation, appQuery } from '@/lib/query';
 import { api } from '@/lib/api';
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
 import { Button } from '@/components/shared/Button';
@@ -108,28 +108,26 @@ Message: ${log.message || log.error_message || ''}${metadataStr}${stack ? `\nSta
 };
 
 export const ErrorLogViewer = () => {
-  const queryClient = useQueryClient();
-
-  const { data: logs = [], refetch } = useQuery({
-    queryKey: ['error_logs'],
-    queryFn: async () => {
-        const res = await api.admin['error-events'].$get();
+  const { data: logs = [] } = useAppQuery(
+    'error_logs',
+    async () => {
+        const res = await api.admin.maintenance['error-events'].$get();
         const json = await res.json();
         if (!json.success) throw new Error(json.error || '获取日志失败');
         return json.data as LogEntry[];
     }
-  });
+  );
 
   const { submit: runClear, isLoading: isClearing } = useFormSubmit({
       schema: type('unknown'),
       mutationFn: async () => {
-          const res = await api.admin['error-events-clear'].$post();
+          const res = await api.admin.maintenance['error-events-clear'].$post();
           const json = await res.json();
           if (!json.success) throw new Error(json.error || '清除日誌失敗');
           return json as { success: boolean; count?: number };
       },
       onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ['error_logs'] });
+          appQuery.mutate('error_logs');
       },
       successMessage: '日誌清理成功 / Cleanup successful',
       errorMessage: '清除失敗 / Cleanup failed'

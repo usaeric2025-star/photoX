@@ -278,5 +278,10 @@ export const en = {
     pricePlaceholder: '0',
     none: 'None',
     tagFilter: (count: number) => `Tag Filter (${count})`,
-    reset: 'Reset'
+    reset: 'Reset',
+    download: 'Download',
+    details: 'Details',
+    estimatedPrice: 'Estimated Price',
+    productDescription: 'Product Description',
+    shareAndInquiry: 'Share/Inquiry'
 };

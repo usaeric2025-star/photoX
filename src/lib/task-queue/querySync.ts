@@ -1,4 +1,4 @@
-import { queryClient } from '@/lib/queryClient';
+import { appQuery } from '@/lib/query';
 import { queryKeys } from '@/lib/query/keys';
 import { scheduler } from './scheduler';
 
@@ -21,10 +21,14 @@ export function setupQuerySync(): () => void {
       case 'ai-analyze':
         // ✅ 本地更新單條數據（不需防抖）
         if (task.meta?.photoId) {
-          queryClient.setQueryData(['photo', task.meta.photoId], (old: any) => ({
-            ...old,
-            aiTags: (task.state as { status: 'completed'; result?: { tags: string[] } }).result?.tags,
-          }));
+          appQuery.mutate(
+            ['photos', 'detail', task.meta.photoId],
+            (old: any) => ({
+              ...old,
+              aiTags: (task.state as { status: 'completed'; result?: { tags: string[] } }).result?.tags,
+            }),
+            { revalidate: false }
+          );
         }
         break;
 
@@ -63,10 +67,10 @@ export function flushInvalidations() {
   keys.forEach(key => {
     switch (key) {
       case 'photos_list':
-        queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
+        appQuery.mutate(queryKeys.photos.all);
         break;
       case 'diagnostics':
-        queryClient.invalidateQueries({ queryKey: ['diagnostics'] });
+        appQuery.mutate(['diagnostics']);
         break;
     }
   });

@@ -31,7 +31,7 @@ export function usePhotoUpload() {
     // Batch enqueue
     scheduler.enqueue(createBatchUploadTask(uniqueFiles, userId, {}));
     
-    storeAccessor.ui.update({ isTaskDrawerOpen: true });
+    storeAccessor.ui.patch({ isTaskDrawerOpen: true });
     
     showToast.success(`已加入 ${uniqueFiles.length} 张照片到上传队列`);
 

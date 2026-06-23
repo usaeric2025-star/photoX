@@ -61,30 +61,30 @@ export const listHandler = (app: Hono) => {
       }
 
       if (hasCat) {
-          whereClauses.push(eq(vPhotosList.categoryId as any, Number(categoryId)));
+          whereClauses.push(eq(vPhotosList.categoryId, Number(categoryId)));
       }
 
       if (groupId) {
-        whereClauses.push(eq(vPhotosList.groupId as any, groupId));
+        whereClauses.push(eq(vPhotosList.groupId, groupId));
       }
       
       if (onlyGroupsCover) {
         whereClauses.push(or(
           isNull(vPhotosList.groupId),
-          eq(vPhotosList.isGroupCover as any, true)
+          eq(vPhotosList.isGroupCover, true)
         ));
       } else if (onlyUngrouped) {
         whereClauses.push(isNull(vPhotosList.groupId));
       }
       
       if (!isAdminMode) {
-        whereClauses.push(eq(vPhotosList.isHidden as any, false));
+        whereClauses.push(eq(vPhotosList.isHidden, false));
       } else if (isHidden !== undefined && isHidden !== null) {
-        whereClauses.push(eq(vPhotosList.isHidden as any, isHidden));
+        whereClauses.push(eq(vPhotosList.isHidden, isHidden));
       }
       
       if (manufacturerId !== undefined && manufacturerId !== null) {
-        whereClauses.push(eq(vPhotosList.manufacturerId as any, String(manufacturerId)));
+        whereClauses.push(eq(vPhotosList.manufacturerId, String(manufacturerId)));
       }
 
       const finalWhere = and(...whereClauses.filter((c): c is SQL => !!c));

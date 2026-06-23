@@ -1,43 +1,42 @@
 import React from 'react';
-import { useLightboxStore } from './store';
-import { YARLDriver } from './drivers/yarl';
+import { useLightbox } from '@/lib/lightbox/index';
+import { LightboxDriver } from './drivers/lightboxDriver';
 import type { LightboxSlide } from './types';
 
 interface LightboxEngineProps {
   onClose?: () => void;
   onView?: (index: number) => void;
-  renderFooter?: (slide: LightboxSlide) => React.ReactNode;
-  renderHeader?: (slide: LightboxSlide) => React.ReactNode;
 }
 
 export function LightboxEngine({ 
   onClose, 
-  onView, 
-  renderFooter,
-  renderHeader
+  onView,
 }: LightboxEngineProps) {
-  const state = useLightboxStore();
+  const lightbox = useLightbox();
 
   const handleClose = () => {
-    state.close();
+    lightbox.closeLightbox();
     onClose?.();
   };
 
   const handleView = (index: number) => {
-    if (index === state.currentIndex) return;
-    state.setCurrentIndex(index);
+    if (index === lightbox.currentIndex) return;
+    lightbox.setLightboxIndex(index);
     onView?.(index);
   };
 
-  if (!state.isOpen) return null;
+  if (!lightbox.isOpen) return null;
 
   return (
-    <YARLDriver 
-      state={state} 
+    <LightboxDriver 
+      state={{
+        isOpen: lightbox.isOpen,
+        slides: lightbox.slides,
+        currentIndex: lightbox.currentIndex,
+        config: {},
+      }} 
       onClose={handleClose}
       onView={handleView}
-      renderFooter={renderFooter}
-      renderHeader={renderHeader}
     />
   );
 }

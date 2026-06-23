@@ -1,5 +1,4 @@
 import { useCallback } from 'react';
-import { v4 as uuidv4 } from 'uuid';
 import { useTask } from '@/lib/store';
 import { showToast } from '@/lib/ui/toast';
 import { ErrorFactory } from '@/lib/error';
@@ -35,7 +34,7 @@ export function useTaskExecutor() {
   ): Promise<T | null> => {
     const showProgress = options?.showProgress ?? false;
     const isSilent = options?.silent ?? false;
-    const taskId = showProgress ? `client-${uuidv4()}` : null;
+    const taskId = showProgress ? `client-${crypto.randomUUID()}` : null;
 
     if (taskId) {
       enqueue({

@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { type Type } from 'arktype';
 import { showToast } from '@/lib/ui/toast';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { safeAsync } from '@/lib/utils/safeAsync';
 
 interface UseFormSubmitOptions<TData, TResult> {
   schema: Type<TData>;
@@ -15,6 +16,7 @@ interface UseFormSubmitOptions<TData, TResult> {
   abortable?: boolean;
   optimisticUpdate?: (data: TData) => void;
   rollbackOnError?: (error: unknown, data: TData) => void;
+  context?: string;
 }
 
 export function useFormSubmit<TData, TResult>({
@@ -22,13 +24,14 @@ export function useFormSubmit<TData, TResult>({
   mutationFn,
   onSuccess,
   onError,
-  successMessage = '儲存成功',
-  errorMessage = '儲存失敗，請稍後重試',
+  successMessage = '保存成功',
+  errorMessage = '保存失败，请稍后重试',
   keepOpen = false,
   debounce = 0,
   abortable = false,
   optimisticUpdate,
   rollbackOnError,
+  context = '表单提交',
 }: UseFormSubmitOptions<TData, TResult>) {
   const [state, setState] = useState({
     isLoading: false,
@@ -85,8 +88,9 @@ export function useFormSubmit<TData, TResult>({
             
             let newFieldErrors: Record<string, string> = {};
             if ('byPath' in result && typeof result.byPath === 'object' && result.byPath) {
-               for (const [path, error] of Object.entries(result.byPath as Record<string, any>)) {
-                 newFieldErrors[path] = error.message.replace(/^.*?must be /, '必須是 '); // basic translation, or just keep raw error if prefered
+               const byPath = result.byPath as Record<string, { message: string }>;
+               for (const [path, error] of Object.entries(byPath)) {
+                 newFieldErrors[path] = error.message.replace(/^.*?must be /, '必须是 ');
                }
             }
 
@@ -108,35 +112,33 @@ export function useFormSubmit<TData, TResult>({
             abortController.current = controller;
           }
 
-          try {
-            // 4. Mutation Execution
-            const res = await mutationFn(data, controller.signal);
+          // 4. Safe Execution using safeAsync
+          const res = await safeAsync(async () => {
+            const out = await mutationFn(data, controller.signal);
             
             setState({ isLoading: false, isError: false, isSuccess: true, error: null, fieldErrors: {} });
             showToast.success(successMessage);
-            onSuccess?.(res);
-            return resolve(true);
-          } catch (err: unknown) {
-            // 5. Error Handling
-            if (err instanceof Error && err.name === 'AbortError') {
-              setState({ isLoading: false, isError: false, isSuccess: false, error: null, fieldErrors: {} });
-              return resolve(false);
+            onSuccess?.(out);
+            return out;
+          }, {
+            context,
+            onFinally: () => {
+              if (abortController.current === controller) {
+                abortController.current = null;
+              }
             }
+          });
 
-            const appError = ErrorFactory.fromUnknown(err);
-            const userMsg = appError.userMessage ?? errorMessage;
-            
-            showToast.error(userMsg);
-            ErrorFactory.capture(appError);
-            
-            setState({ isLoading: false, isError: true, isSuccess: false, error: userMsg, fieldErrors: {} });
-            onError?.(userMsg);
-
-            // 6. Rollback
+          if (res !== null) {
+            resolve(true);
+          } else {
+            // Handle Rollback if error occurred
             if (rollbackOnError) {
-              rollbackOnError(err, data);
+              rollbackOnError(new Error(errorMessage), data);
             }
-            return resolve(false);
+            setState(prev => ({ ...prev, isLoading: false, isError: true, error: errorMessage }));
+            onError?.(errorMessage);
+            resolve(false);
           }
         };
 
@@ -159,6 +161,7 @@ export function useFormSubmit<TData, TResult>({
       abortable,
       optimisticUpdate,
       rollbackOnError,
+      context
     ]
   );
 

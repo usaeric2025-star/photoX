@@ -1,5 +1,5 @@
 import { useAuth } from '@/lib/store';
-import { useUI, useStoreShallow } from '@/lib/store';
+import { useUI } from '@/lib/store';
 import { ROLE_PERMISSIONS, getEffectiveRole, Capability } from '@/config/permissions';
 import { useSettings } from '../../settings';
 import { useLocalStorage } from '@/hooks/core/useLocalStorage';

@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import { useFormContext } from "el-form-react-hooks";
 import { showToast } from '@/lib/ui/toast';
 import { ErrorFactory } from '@/lib/error';
-import { useAppQueryClient as useQueryClient } from '@/lib/query';
+import { appQuery } from '@/lib/query';
 import { useTaskExecutor, useAdminMaintenance, useSettings, useCategories, useTags, useFilters } from '@/hooks';
 import { Tag, Photo } from '@/types';
 import { analyzePhoto } from '@/features/ai/commands';
@@ -26,7 +26,6 @@ export function usePhotoEditAI() {
   const appLang = useUI((s) => s.appLang);
   const { runTask } = useTaskExecutor();
   const { updatePhoto: { mutateAsync: updatePhoto } } = useAdminMaintenance();
-  const queryClient = useQueryClient();
 
   // Fetch reference data for matching
   const { data: categories = [] } = useCategories();
@@ -183,14 +182,14 @@ export function usePhotoEditAI() {
                   const uniqueIds = Array.from(new Set(finalTagIds)).slice(0, 3);
                   
                   // Refetch/Invalidate tags so the tag select options are in sync
-                  queryClient.invalidateQueries({ queryKey: ['tags'] });
+                  await appQuery.mutate('tags');
                   
                   const { loadTagsFromCloud } = await import('@/services/tag/queries');
                   const latestTags = await loadTagsFromCloud().catch(() => allTags);
 
-                  // Optimistically set the React Query cache for tags so they display IMMEDIATELY
+                  // Optimistically set the cache for tags so they display IMMEDIATELY
                   const { queryKeys } = await import('@/lib/query/keys');
-                  queryClient.setQueryData(queryKeys.tags.tags(), (old: Tag[] | undefined) => {
+                  appQuery.mutate(queryKeys.tags.tags(), (old: Tag[] | undefined) => {
                     const oldTags = Array.isArray(old) ? old : [];
                     const existingMap = new Map(oldTags.map((t: Tag) => [String(t.id), t]));
                     latestTags.forEach((t: Tag) => existingMap.set(String(t.id), t));
@@ -244,7 +243,7 @@ export function usePhotoEditAI() {
             }));
           }
           // Invalidate the cache to instantly reveal JSON output in AI tab
-          queryClient.invalidateQueries({ queryKey: ['photos', 'ai-result', editPhotoId] });
+          await appQuery.mutate(['photos', 'ai-result', editPhotoId]);
 
           Object.entries(updates).forEach(([key, value]) => {
             form.setValue(key, value);
@@ -254,11 +253,11 @@ export function usePhotoEditAI() {
             try {
               await updatePhoto({ id: editPhotoId, updates, silent: true });
               
-              // Synchronously update the React Query cache for the photo detail query
+              // Synchronously update the cache for the photo detail query
               const { queryKeys: qK } = await import('@/lib/query/keys');
               const detailKey = qK.photos.detail(editPhotoId);
               
-              queryClient.setQueryData(detailKey, (oldPhoto: Photo | undefined) => {
+              await appQuery.mutate(detailKey, (oldPhoto: Photo | undefined) => {
                 if (!oldPhoto) return oldPhoto;
                 return {
                   ...oldPhoto,
@@ -285,8 +284,8 @@ export function usePhotoEditAI() {
         
         // [V2.2] Standard invalidation per architecture rules
         const { queryKeys: qKeys } = await import('@/lib/query/keys');
-        queryClient.invalidateQueries({ queryKey: qKeys.photos.all });
-        queryClient.invalidateQueries({ queryKey: qKeys.groups.all });
+        await appQuery.mutate(qKeys.photos.all);
+        await appQuery.mutate(qKeys.groups.all);
         
         return true;
       }, { showSuccessToast: false, showProgress: true, rethrow: true });

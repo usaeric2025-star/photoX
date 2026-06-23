@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useAdminCategory } from '@/hooks/admin/useAdminCategory';
-import { useUI } from '@/lib/store';
+import { useUI, UIStoreState } from '@/lib/store';
 
 export const useSettingsManagement = () => {
-    const update = useUI((s) => s.update);
+    const patch = useUI((s: UIStoreState) => s.patch);
     const [tagToDelete, setTagToDelete] = useState<string | null>(null);
     const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
     const [manufacturerToDelete, setManufacturerToDelete] = useState<string | null>(null);
@@ -13,7 +13,7 @@ export const useSettingsManagement = () => {
     const [isCategoryDeleteOpen, categoryDeleteDialog] = useDisclosure(false);
     const [isManufacturerDeleteOpen, manufacturerDeleteDialog] = useDisclosure(false);
 
-    const adminActions = useAdminCategory({ update });
+    const adminActions = useAdminCategory();
 
     const triggerTagDelete = (id: string) => {
         setTagToDelete(id);

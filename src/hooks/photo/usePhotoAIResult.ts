@@ -1,5 +1,5 @@
 import { STALE_TIMES } from '@/lib/query/config';
-import { useAppQuery as useQuery } from '@/lib/query';
+import { useAppQuery } from '@/lib/query';
 import { api } from '@/lib/api';
 import { PhotoAIResult } from '@/types';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
@@ -8,9 +8,9 @@ import { ErrorFactory } from '@/lib/error/ErrorFactory';
  * 获取照片对应的 AI 识别原始源代碼與解析後的 JSON 數據。
  */
 export const usePhotoAIResult = (photoId: string) => {
-  return useQuery({
-    queryKey: ['photos', 'ai-result', photoId],
-    queryFn: async (): Promise<PhotoAIResult | null> => {
+  return useAppQuery(
+    photoId ? ['photos', 'ai-result', photoId] : null,
+    async (): Promise<PhotoAIResult | null> => {
       try {
         const resp = await api.admin["photo-ai-result"][":photoId"].$get({
           param: { photoId }
@@ -30,7 +30,6 @@ export const usePhotoAIResult = (photoId: string) => {
         throw ErrorFactory.wrap(err, '获取 AI 源数据网络异常', photoId);
       }
     },
-    enabled: !!photoId,
-    staleTime: STALE_TIMES.PHOTO_LIST
-  });
+    { dedupingInterval: STALE_TIMES.PHOTO_LIST }
+  );
 };

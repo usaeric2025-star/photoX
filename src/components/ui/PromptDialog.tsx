@@ -13,7 +13,7 @@ interface PromptDialogProps {
   description?: string;
   defaultValue?: string;
   placeholder?: string;
-  onConfirm: (value: string) => any;
+  onConfirm: (value: string) => void | boolean | Promise<void | boolean>;
   loading?: boolean;
   fieldName?: string;
 }
@@ -94,7 +94,7 @@ export const PromptDialog = ({
             variant="primary"
             onClick={handleConfirm}
           >
-            確認
+            确认
           </Button>
         </div>
       </div>

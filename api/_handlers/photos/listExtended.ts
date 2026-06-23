@@ -150,10 +150,10 @@ export const listExtendedHandlers = (app: Hono) => {
         const hasTag = tagId !== undefined && tagId !== null && tagId !== '';
         const hasCat = categoryId !== undefined && categoryId !== null && categoryId !== '';
 
-        let builder: any = db.select({ count: count() }).from(furnitureItems);
+        let builder = db.select({ count: count() }).from(furnitureItems).$dynamic();
         
         if (hasTag) {
-            builder = builder.innerJoin(photoTags, eq(furnitureItems.id, photoTags.photoId));
+            builder = builder.innerJoin(photoTags, eq(furnitureItems.id, photoTags.photoId)) as typeof builder;
         }
 
         const whereClauses: (SQL | undefined)[] = [];

@@ -5,7 +5,7 @@ import { Dimension } from '@/types';
 import { safeArray } from '@/lib/utils';
 import { useUI } from '@/lib/store';
 import { usePhoto, useFilters } from '@/hooks';
-import { useTaskSelector } from '@/lib/task-queue/store';
+import { useTaskSelector } from '@/lib/store';
 import { showToast } from '@/lib/ui/toast';
 import { translations } from '@/locales';
 import { usePhotoEditAI } from './usePhotoEditAI';

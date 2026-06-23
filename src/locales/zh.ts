@@ -273,10 +273,15 @@ export const zh = {
     productNamePlaceholderEn: 'Name...',
     productNamePlaceholderMs: 'Nama produk...',
     systemCodeAuto: '自动生成中...',
-    itemCodePlaceholder: '編號...',
+    itemCodePlaceholder: '编号...',
     modelNumberPlaceholder: '仅限数字...',
     pricePlaceholder: '0',
     none: '无',
     tagFilter: (count: number) => `标签筛选 (${count})`,
-    reset: '重置'
+    reset: '重置',
+    download: '下载',
+    details: '详情',
+    estimatedPrice: '预估价格',
+    productDescription: '产品描述',
+    shareAndInquiry: '分享/咨询'
 };

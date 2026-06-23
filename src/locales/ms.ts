@@ -278,5 +278,10 @@ export const ms = {
     pricePlaceholder: '0',
     none: 'Tiada',
     tagFilter: (count: number) => `Penapisan Tag (${count})`,
-    reset: 'Tetap Semula'
+    reset: 'Tetap Semula',
+    download: 'Muat Turun',
+    details: 'Butiran',
+    estimatedPrice: 'Anggaran Harga',
+    productDescription: 'Deskripsi Produk',
+    shareAndInquiry: 'Kongsi/Pertanyaan'
 };

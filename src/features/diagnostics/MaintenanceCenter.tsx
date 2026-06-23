@@ -21,80 +21,36 @@ export function MaintenanceCenter({ onSuccess }: MaintenanceCenterProps) {
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <MaintenanceTool 
+            issueId="refresh_view"
+            title="刷新照片列表快取" 
+            description="手動刷新全局照片快取 (Materialized View)。如果遇到公開頁面數據不更新或顯示空白，請執行此操作。"
+            onSuccess={onSuccess}
+          />
+          <MaintenanceTool 
             issueId="schema_sync"
             title="同步資料庫架構" 
-            description="檢查並補全資料庫中缺失的 group_order、dimensions、status 等必要欄位。如果遇到查詢報錯，請優先執行此操作。"
+            description="檢查並補全資料庫中缺失的欄位或架構同步。如果遇到查詢報錯，請優先執行此操作。"
             onSuccess={onSuccess}
           />
           <MaintenanceTool 
             issueId="orphan_files"
-            title="找回云端孤儿照片" 
-            description="扫描 R2 云端存储，如果在云端发现有照片但在数据库中丢失了记录，会尝试补全并恢复。"
+            title="啟動雲端孤兒照片掃描" 
+            description="掃描 R2 雲端儲存，如果發現有照片但在資料庫中丟失了記錄，會嘗試修復。 (開發中)"
             onSuccess={onSuccess}
           />
           <MaintenanceTool 
-            issueId="empty_groups"
-            title="清理空合组" 
-            description="删除由于移除图片等原因不再包含任何照片的空组，保持数据整洁。"
+            issueId="deduplicate"
+            title="清理重複的照片記錄" 
+            description="自動識別基於檔案雜湊 (Hash) 的重複照片記錄，並僅保留最舊的一份。"
+            onSuccess={onSuccess}
+          />
+          <MaintenanceTool 
+            issueId="cleanup"
+            title="全域系統日誌清理" 
+            description="清除 30 天以前的系統日誌與 90 天之前的審計日誌，節省資料庫空間。"
             onSuccess={onSuccess}
           />
         </div>
-      </div>
-
-      {/* 高级与一次性操作，默认折叠 */}
-      <div className="space-y-4 pt-4 border-t border-slate-200/60">
-        <button 
-          onClick={() => setShowAdvanced(!showAdvanced)}
-          className="flex items-center gap-2 w-full px-1 py-2 text-xs font-black text-slate-500 hover:text-slate-800 transition-colors uppercase tracking-wider"
-        >
-          <Icon name="chevron-down" size={14} className={`transition-transform duration-300 ${showAdvanced ? 'rotate-180' : ''}`} />
-          高级清理与 AI 实验工具 (Advanced / Experimental)
-        </button>
-        
-        {showAdvanced && (
-          <div 
-            className="overflow-hidden space-y-8 pt-2 animate-fade-in"
-          >
-            {/* 第二组：极端情况与系统深度清理 (Advanced Cleanup) */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 px-1 text-xs font-bold text-slate-700">
-                <Icon name="shield-alert" size={14} className="text-amber-500" />
-                极端恢复与废弃清理
-              </div>
-              <div className="grid grid-cols-1 gap-4">
-                <MaintenanceTool 
-                  issueId="ghost_records"
-                  title="清理幽灵数据记录" 
-                  description="【危险操作】兜底清理数据库中完全损坏（无头无哈希无URL）的无效记录。通常为一次性操作。"
-                  danger
-                  onSuccess={onSuccess}
-                />
-              </div>
-            </div>
-
-            {/* 第三组：AI 大规模重构与未来演进 (AI Orchestration) */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 px-1 text-xs font-bold text-slate-700">
-                <Icon name="zap" size={14} className="text-purple-500" />
-                AI 批处理 (按需执行)
-              </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <MaintenanceTool 
-                  issueId="ai_retranslate"
-                  title="AI 全量语种校对" 
-                  description="利用 AI 引擎对存量照片进行底层语种机翻校对。批量调用消耗大，非必要不执行。"
-                  onSuccess={onSuccess}
-                />
-                <MaintenanceTool 
-                  issueId="ai_redimension"
-                  title="AI 深度尺寸重提" 
-                  description="利用 AI 模型更正旧数据库中的遗漏尺寸属性。仅在引入新解析策略时一次性执行。"
-                  onSuccess={onSuccess}
-                />
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

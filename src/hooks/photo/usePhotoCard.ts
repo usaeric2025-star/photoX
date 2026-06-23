@@ -1,8 +1,7 @@
 import React, { useRef } from 'react';
 import { useLongPress } from '@/hooks/core/useLongPress';
-import { useUI } from '@/lib/store';
+import { useUI, UIStoreState } from '@/lib/store';
 import { useAppRouter } from '@/lib/router/useAppRouter';
-import { useAppQueryClient as useQueryClient } from '@/lib/query';
 import { PhotoListItem } from '@/types/api';
 import { queryKeys } from '@/lib/query/keys';
 import { getGroupById } from '@/services/group/queries';
@@ -32,10 +31,9 @@ export function usePhotoCard({
   const longPressTriggered = useRef(false);
   const resetTimerRef = useRef<number | null>(null);
   
-  const toggleSelected = useUI((s) => s.toggleSelected);
-  const update = useUI((s) => s.update);
+  const toggleSelected = useUI((s: UIStoreState) => s.toggleSelected);
+  const patch = useUI((s: UIStoreState) => s.patch);
   const { navigate, route, params } = useAppRouter();
-  const queryClient = useQueryClient();
  
    const handleOpenLightbox = () => {
      logger.debug('[usePhotoCard] handleOpenLightbox for photo:', photo.id);
@@ -52,17 +50,10 @@ export function usePhotoCard({
 
   const handleMouseEnter = () => {
     // Basic navigation detection
-    const isAlreadyOnGroupPage = (params as any).groupId || window.location.pathname.includes('/group/');
+    const isAlreadyOnGroupPage = (params as Record<string, string>).groupId || window.location.pathname.includes('/group/');
     if (photo.groupId && showGroupsCollapsed && !hasSearchQuery && !isAlreadyOnGroupPage) {
-      const gid = photo.groupId;
-      const isAdmin = isManagement;
-      
-      // Prefetch data
-      queryClient.prefetchQuery({
-        queryKey: queryKeys.groups.detail(gid, isAdmin),
-        queryFn: () => getGroupById(gid, isAdmin ? 'admin' : 'public'),
-        staleTime: STALE_TIMES.GROUP_DETAIL,
-      }).catch(() => {});
+      // SWR automatically handles caching when fetcher is called elsewhere.
+      // Removed prefetchQuery as it was TanStack Query specific.
     }
   };
 
@@ -83,7 +74,7 @@ export function usePhotoCard({
       return;
     }
 
-    const isAlreadyOnGroupPage = (params as any).groupId || window.location.pathname.includes('/group/');
+    const isAlreadyOnGroupPage = (params as Record<string, string>).groupId || window.location.pathname.includes('/group/');
     const shouldGoToGroup = photo.groupId && showGroupsCollapsed && !isAlreadyOnGroupPage;
 
     if (shouldGoToGroup) {
@@ -94,12 +85,13 @@ export function usePhotoCard({
         return;
     }
 
-    logger.debug('[usePhotoCard] OPENING Lightbox');
-    handleOpenLightbox();
-
     if (onClick) {
       onClick(e);
+      return;
     }
+
+    logger.debug('[usePhotoCard] OPENING Lightbox');
+    handleOpenLightbox();
   };
 
   useLongPress(cardRef, {
@@ -113,14 +105,14 @@ export function usePhotoCard({
 
       if (isManagement) {
         if (!isMultiSelect) {
-          update({ isMultiSelect: true, selectedIds: [photo.id] });
+          patch({ isMultiSelect: true, selectedIds: [photo.id] });
         } else {
           toggleSelected(photo.id);
         }
         if ('vibrate' in navigator) navigator.vibrate(50);
       } else {
         (window as unknown as { _pendingPhoto: PhotoListItem })._pendingPhoto = photo;
-        update({ showWhatsAppChoice: true });
+        patch({ showWhatsAppChoice: true });
       }
     }
   });

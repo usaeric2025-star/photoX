@@ -33,7 +33,7 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
     schema: StaffLoginSchema,
     mutationFn: async ({ passcode }) => {
       if (!settings?.access_passcode) {
-        throw new Error('管理者尚未配置員工訪問密碼 / Staff passcode not configured');
+        throw new Error('Staff passcode not configured');
       }
       
       if (passcode === settings.access_passcode) {
@@ -46,8 +46,8 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
     onSuccess: () => {
       window.location.reload();
     },
-    successMessage: '員工登入成功 / Staff login successful',
-    errorMessage: '登入失敗 / Login failed'
+    successMessage: 'Staff login successful',
+    errorMessage: 'Login failed'
   });
 
   // 2. Admin Login Submission
@@ -57,7 +57,7 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
       await signIn();
       return true;
     },
-    errorMessage: '認證失敗 / Authentication failed'
+    errorMessage: 'Authentication failed'
   });
 
   const handlePasscodeSubmit = (e: React.FormEvent) => {
@@ -66,7 +66,7 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center p-6 bg-[#FAFAFA] relative overflow-hidden">
+    <div className="h-screen w-full flex flex-col items-center justify-center p-6 bg-slate-50 relative overflow-hidden">
       {/* Background Decorative Elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-[0.03]">
         <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-slate-900 rounded-full" />

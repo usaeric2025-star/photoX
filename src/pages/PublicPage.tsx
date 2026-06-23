@@ -1,19 +1,21 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { logger } from '@/lib/logger';
 import { useFilters } from '@/hooks/useFilters';
-import { useTranslation, usePhotoGrid, usePublicSettings } from '@/hooks';
+import { useTranslation, usePublicSettings, usePhotoGrid } from '@/hooks';
 import { PublicHeader } from '@/components/layouts/headers/PublicHeader';
 import { FilterBar } from '@/features/filter/FilterBar';
 import { PublicPhotoGrid } from '@/components/photo/PublicPhotoGrid';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { useColumns } from '@/features/layout/hooks/useColumns';
 import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
-import { useUI } from '@/lib/store';
+import { useUIStore } from '@/store/uiStore';
+import { useUI, UIStoreState } from '@/lib/store';
 import { WhatsAppDialog } from '@/components/shared/WhatsAppDialog';
 import { PhotoErrorDisplay } from '@/components/photo/PhotoErrorDisplay';
 import { Icon } from '@/components/ui/Icon';
-import { useAppQuery as useQuery } from '@/lib/query';
+import { useAppQuery } from '@/lib/query';
 import { api } from '@/lib/api';
+
 export default function PublicPage() {
   const { 
     category, 
@@ -48,8 +50,8 @@ export default function PublicPage() {
     isFetching,
   } = photoGridData;
 
-  const showWhatsAppChoice = useUI((s) => s.showWhatsAppChoice);
-  const updateUI = useUI((s) => s.update);
+  const showWhatsAppChoice = useUI((s: UIStoreState) => s.showWhatsAppChoice);
+  const ui = useUI();
   const { lang, uiTranslations: t } = useTranslation();
   const { data: settings } = usePublicSettings();
 
@@ -57,18 +59,20 @@ export default function PublicPage() {
     refetch();
   };
 
-  const { data: globalTotal, isPending: isCountLoading } = useQuery({
-    queryKey: ['photos', 'count', 'total', 'all'],
-    queryFn: async () => {
+  const { data: globalTotal, isLoading: isCountLoading } = useAppQuery(
+    ['photos', 'count', 'total', 'all'],
+    async () => {
       const res = await api.photos.count.$post({ json: { isAdminMode: true } });
       if (!res.ok) return 0;
       const json = await res.json() as { data: number };
       return json.data;
     },
-    staleTime: 5 * 60 * 1000
-  });
+    { dedupingInterval: 5 * 60 * 1000 }
+  );
 
-  const { open } = useLightbox();
+  const openLightbox = useUIStore(s => s.openLightbox);
+  const lightboxIsOpen = useUIStore(s => s.lightbox.isOpen);
+  const lightboxCurrentIndex = useUIStore(s => s.lightbox.currentIndex);
   
   const lightboxItems = React.useMemo(() => photosToLightboxSlides(photos), [photos]);
 
@@ -76,12 +80,17 @@ export default function PublicPage() {
   React.useEffect(() => {
     if (photoId && photos.length > 0) {
       const index = photos.findIndex(p => p.id === photoId);
-      open(lightboxItems, index !== -1 ? index : 0);
+      if (index !== -1) {
+         // 只有当灯箱没开，或者灯箱打开但显示的不是当前 photoId 时才打开
+         if (!lightboxIsOpen || photos[lightboxCurrentIndex]?.id !== photoId) {
+            openLightbox(lightboxItems, index);
+         }
+      }
     }
-  }, [photos, photoId, open, lightboxItems]);
+  }, [photos, photoId, openLightbox, lightboxItems, lightboxIsOpen, lightboxCurrentIndex]);
 
   const handlePhotoClick = (id: string, index: number) => {
-    open(lightboxItems, index);
+    openLightbox(lightboxItems, index);
     setPhotoId(id);
   };
 
@@ -145,7 +154,7 @@ export default function PublicPage() {
         <button
           onClick={() => {
             logger.debug('[PublicPage] WhatsApp button clicked');
-            updateUI({ showWhatsAppChoice: true });
+            ui.patch({ showWhatsAppChoice: true });
           }}
           type="button"
           className="w-12 h-12 flex items-center justify-center rounded-full bg-success text-text-on-primary shadow-lg hover:opacity-90 transition-all active:scale-90 focus:outline-none"
@@ -154,8 +163,6 @@ export default function PublicPage() {
           <Icon name="message-circle" size={26} solid />
         </button>
       </div>
-      
-      <WhatsAppDialog />
     </div>
   );
 }

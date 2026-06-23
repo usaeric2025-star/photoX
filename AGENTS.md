@@ -113,25 +113,31 @@
 - ✅ **兼容与容错性**：系统加解密模块必须能对历史 CBC 和明文进行优雅兼容和解密降级，但对所有新录入及更改后的密钥，必须同步以 `aes-256-gcm` 进行重新转换及统一落库 (256gsm 化)。
 
 ## 核心原则（锁定）
-1. 服务端数据 → TanStack Query
-2. 前端 UI 状态 → Zustand（只存瞬态）
-3. 筛选条件 → URL State
-4. ❌ Context 传递业务数据
-5. ❌ Props drilling 超过 2 层
-6. ❌ 预计算层
+1. 服务端数据 → Storve `createAsync` (强制使用 TTL)
+2. 前端 UI 状态 → Storve `createStore` (纯瞬态)
+3. 筛选条件 → URL State (URL 为唯一真理来源)
+4. ❌ 禁止 Context 传递业务数据
+5. ❌ 禁止 Props drilling 超过 2 层
+6. ❌ 禁止预计算层
 
 ## 狀態管理邊界規範（鎖定）
 
-### TanStack Query（服務端狀態）
-- ✅ 所有 useQuery/useMutation/prefetchQuery 必須使用 `queryKeys` 工廠
-- ✅ 預加載與實際查詢共用同一 Key 生成函數
-- ✅ staleTime 必須使用 `STALE_TIMES` 常量
-- ❌ 禁止手動拼接 Query Key 字串
-- ❌ 禁止在 Zustand Store 中快取服務端數據
+### Storve（服務端與UI狀態）
+- ✅ 所有 `createAsync` (服務端資料) 與 `createStore` (UI 狀態) 必須符合 Storve 標準。
+- ✅ 預加載與實際查詢共用同一 Store Key 生成函數。
+- ❌ 禁止手動拼接 Store Key 字串。
+- ❌ 禁止在 Storve Store 中快取無效資料。
 
-### Zustand（客戶端狀態）
-- ✅ 僅管理 UI 狀態、表單草稿、批量選擇等純客戶端數據
-- ❌ 禁止充當服務端數據的二級快取
+### Storve Store（客戶端與瞬態狀態）
+- ✅ 僅管理 UI 狀態、表單草稿、批量選擇等純客戶端數據。
+- ❌ 禁止充當服務端數據的二級快取。
+
+### createAsync TTL 强制規範
+- ✅ 所有 `createAsync` 必須明確指定 `ttl` 參數。
+- ✅ 靜態資料（如分類、設定）：`ttl: 3600000` (1 小時)。
+- ✅ 動態資料（如照片列表）：`ttl: 60000` (1 分鐘)。
+- ✅ 即時資料（如使用者狀態）：`ttl: 30000` (30 秒)。
+- ❌ 禁止使用 `ttl: 0` (無限快取)。
 
 ### 樂觀更新
 - ✅ 優先使用 `useOptimistic` 或 Query 的 `onMutate`
@@ -220,11 +226,11 @@ invalidatePhotos(); // 降维打击，清空全域缓存
 
 ## 状态管理边界（锁定）
 
-| 状态类型 | 存储位置 | 示例 |
+| 狀態類型 | 存儲位置 | 示例 |
 |----------|----------|------|
-| 服务端数据 | TanStack Query | 照片列表、分类、标签、合组 |
+| 服务端数据 | Storve `createAsync` | 照片列表、分类、标签、合组 |
 | URL 持久化 | URL State | 筛选偏好、排序、分页、多选模式 |
-| UI 瞬态 | Zustand (`useUIStore`) | 主题、侧边栏开关、全局弹窗、灯箱索引 |
+| UI 瞬态 | Storve `createStore` | 主题、侧边栏开关、全局弹窗、灯箱索引 |
 | 组件局部 | `useState` / `useMemo` | 简单的 Input 受控、局部勾选 ID 集合 |
 
 ## 数据验证规范（锁定）
@@ -258,25 +264,16 @@ export const PhotoSchema = type({
   - 代码不再需要手动编写大量的 `useMemo` 或 `useCallback`。
   - 父子组件无需为了“避免重渲染”而进行极端的 Props Drilling。
   - 直接依赖 Vite 的 `babel-plugin-react-compiler` 实现编译期的优化。
-- ❌ 禁止使用极端的 Props Drilling 传递海量数据（例如将顶层大对象逐层传递下去只为绕过 Context/Hook），可以更自然地在组件内部使用 Zustand selector。
+- ❌ 禁止使用极端的 Props Drilling 传递海量数据（例如将顶层大对象逐层传递下去只为绕过 Context/Hook），可以更自然地在组件内部使用 Storve selector。
 - ❌ 禁止盲目添加没必要的 `React.memo` 作为预防；由 Compiler 自行判断。
 
 ## 依賴版本規範（鎖定，2026-06-15）
 
-### TanStack Query
-- ✅ 最低版本：v5.150+
-- ✅ 使用物件參數 `useQuery({ queryKey, queryFn })`
-- ✅ 使用 `isPending` 替代 `isLoading`
+### Storve
+- ✅ 核心狀態管理與非同步請求統一使用 `storve` 系列套件。
 
-### TanStack Router
-- ✅ 最低版本：v1.100+
-- ✅ 滾動恢復使用 `scrollRestoration: true`
-
-## TanStack Router 生產規範（鎖定）
-
-- ✅ 每個路由必須定義 errorComponent 處理 validateSearch 失敗
-- ✅ 根路由必須定義 errorComponent 捕獲 beforeLoad 穿透錯誤
-- ❌ 禁止在元件中 try/catch validateSearch 錯誤（由 errorComponent 統一處理）
+### Chicane Router
+- ✅ 路由統一使用 `chicane`。
 
 ### Hono
 - ✅ 最低版本：v4.30+
@@ -429,10 +426,12 @@ export const fetch = handle(app);
 
 - ✅ 所有 Snippet 禁止使用 `any`
 - ✅ 新 Snippet 必須包含 ArKType Schema
-- ✅ 所有 `useMutation` / `useQuery` 必須有明確泛型
-ual List）渲染项中，**严禁** 在子组件内部调用 `useQuery` 或数据量较大的 Hook（如 `useCategories`, `useTags`）。
+- ✅ 所有 Storve `createAsync` / `actions` 必須有明確泛型
+
+### 虛擬清單與效能（Virtual List）
+- ❌ 在虛擬清單（Virtual List）渲染项中，**严禁** 在子组件内部调用 `createAsync` 的 Hook 或数据量较大的 Hook（如 `useCategories`, `useTags`）。
 - ✅ **共享注入**：必须在父容器中获取数据，并通过 `sharedCategories` / `sharedTags` 等 Props 批量注入子项，以避免数千次重复的数据查找开销。
-- ❌ **禁止 Drilling**：Props 路径严禁超过 2 层。如果需要深层传递，考虑使用细粒度的 Zustand Selector。
+- ❌ **禁止 Drilling**：Props 路径严禁超过 2 层。如果需要深层传递，考虑使用细粒度的 Storve Selector。
 
 ## 照片上传排重规范（锁定）
 
@@ -615,7 +614,7 @@ toast.error('发现数据完整性问题', {
 ## 灯箱与合组跳转核心规则（锁定）
 
 ### 1. 核心原则
-- ✅ **URL 唯一事实来源**：禁用 Zustand 存储页面级 ID，所有显示逻辑必须依赖 URL 参数（`photoId`, `groupId`）。
+- ✅ **URL 唯一事实来源**：禁用 Storve 存储页面级 ID，所有显示逻辑必须依赖 URL 参数（`photoId`, `groupId`）。
 - ✅ **路由驱动权限**：所有管理操作权限必须前置校验 `pathname.startsWith('/admin')`。
 
 ### 2. 点击与导航映射
@@ -643,7 +642,7 @@ toast.error('发现数据完整性问题', {
 - ✅ **全量包裹**：所有主要页面和 App 根组件必须包裹 `ErrorBoundary`。
 - ✅ **数据韧性**：所有关键数据查询必须处理 `isLoading` / `isError` 状态，禁止在数据缺失时读取属性。
 - ✅ **友好反馈**：发生致命错误时必须提供「刷新」或「返回首页」的交互入口。
-- ✅ **致命錯誤全局狀態**：React root (`main.tsx`) 的 `onUncaughtError` 必須依賴 Zustand 全局狀態觸發 `<FatalErrorOverlay />`，保留 DOM 結構，以防 Sentry 上下文或追蹤被 innerHTML 覆寫破壞。
+- ✅ **致命錯誤全局狀態**：React root (`main.tsx`) 的 `onUncaughtError` 必須依賴 Storve 全局狀態觸發 `<FatalErrorOverlay />`，保留 DOM 結構，以防 Sentry 上下文或追蹤被 innerHTML 覆寫破壞。
 - ❌ **禁止超時誤殺**：禁止使用 `setTimeout` 或前端啟動時間硬超時。真正的致命錯誤應由 ErrorBoundary 或 React root 捕獲事件觸發。
 
 ### 2. 场景化降级
@@ -746,39 +745,35 @@ toast.error('发现数据完整性问题', {
 - ❌ 禁止對 body 直接使用 overflow:hidden
 - ❌ 禁止在未驗證第三方庫能力前重複實現鎖定
 
-## 错误处理与 Mutation 规范（锁定）
+## 错误处理与 Action 规范（锁定）
 - ❌ 禁止直接 `throw new Error()`，必须用 `ErrorFactory.wrap()`。
-- ❌ 禁止在组件中直接使用 `useMutation`，必须用 `mutations/*` 下的工厂及 `useOptimisticMutation` 生成。
-- ✅ 所有 Mutation 配置文件必须通过 `defineMutation` 定义其配置，并使用 `useOptimisticMutation` 生成 Hook。
-- ✅ 声明式失效：必须通过 `invalidate` 配置缓存失效，禁止在 `onSuccess` 中手动调用 `invalidateQueries`（除非有复杂的动态逻辑）。
-- ✅ 降维打击：删除/移动操作必须同时失效所有相关实体的 key（例如 `deleteGroup` 必须失效 `groupKeys.all` 和 `photoKeys.all`）。
-- ✅ 默认无需手写错误提示：Factory 在 `onError` 中自动执行 `ErrorFactory.wrap()` + `handleError()` 弹出带诊断信息的一键复制 Toast（P0 落地），只有当 `onError` 返回 `true` 时才会抑制全局错误弹出。
-- ✅ 组件层调用 mutateAsync 时必须包裹 try/catch，仅用于控制 UI 流程（如关闭弹窗），禁止在 catch 中执行任何错误提示操作。
-
+- ❌ 禁止在组件中散落数据变更逻辑，必须在 Storve Store 的 `actions` 中集中定义。
+- ✅ 默认无需手写错误提示：Action 內部在 catch 中自动执行 `ErrorFactory.wrap()` + `handleError()` 弹出带诊断信息的一键复制 Toast（P0 落地）。
+- ✅ 组件层调用 Action 时必须包裹 try/catch，仅用于控制 UI 流程（如关闭弹窗），禁止在 catch 中执行任何错误提示操作。
 
 ## 异步任务架构规范（锁定）
 
 ### 职责分层
-- **defineMutation 配置**：原子写操作（API 调用 + 缓存失效（invalidate） + 全局自动错误处理与 Toast（P0） + 声明式乐观更新 + 契约自校验（P1））
+- **Storve actions / createAsync**：原子写操作（API 调用 + 缓存更新 + 全局自动错误处理与 Toast）
 - **useTaskExecutor**：流程编排（进度追蹤 + 并发控制 + 重试 + 任务队列 UI）
 
 ### 组合规则
-- ✅ TaskExecutor 内部调用的业务逻辑必须封装为标准 Mutation
-- ✅ TaskExecutor 使用 `mutateAsync` 调用 Mutation
+- ✅ TaskExecutor 内部调用的业务逻辑必须封装为 Store actions
+- ✅ TaskExecutor 使用 await 调用 actions
 - ❌ 禁止在 TaskExecutor 中直接调用 service/API 函数
-- ❌ 禁止用 defineMutation/useOptimisticMutation 替换 TaskExecutor（两者职责不同）
+- ❌ 禁止用 actions 替换 TaskExecutor（两者职责不同）
 
 ### 错误处理
-- Mutation/Factory 负责自動 Toast + 日志 (P0)
+- Actions 负责自動 Toast + 日志 (P0)
 - TaskExecutor 负责更新任务状态 UI（不重复 Toast）
 
 ## React 19 Hooks 使用規範（鎖定）
 
 ### ❌ 禁止使用
 
-- `useOptimistic`：樂觀更新統一使用 `useOptimisticMutation` 搭配 `defineMutation` 配置中的 `optimistic` 函數與可靠的 `schema` 契約校驗 (P1)
-- `useActionState`：表單狀態統一使用 `useMutation` + 本地狀態
-- `useFormStatus`：表單提交狀態統一使用 `useTaskExecutor` 或元件本地 `useState`
+- `useOptimistic`：樂觀更新統一使用 Storve 的 `store.setState()` 進行快取同步。
+- `useActionState`：表單狀態統一使用 Storve local store 或本地狀態。
+- `useFormStatus`：表單提交狀態統一使用 `useTaskExecutor` 或元件本地 `useState`。
 
 ### ✅ 允許使用
 
@@ -786,7 +781,7 @@ toast.error('发现数据完整性问题', {
 
 ### 理由
 
-- 確保 Query Cache 作為單一事實來源
+- 確保 Storve 作為單一事實來源
 - 保持架構一致性，降低決策成本
 - 避免樂觀更新與全局狀態不同步
 
@@ -796,13 +791,13 @@ toast.error('发现数据完整性问题', {
 
 | 領域 | 鎖定方案 | 禁用/棄用方案 |
 |------|----------|----------------|
-| 樂觀更新 | ✅ `defineMutation` + `useOptimisticMutation` | ❌ `useOptimistic` |
-| 表單狀態 | ✅ `useMutation` + 本地狀態 | ❌ `useActionState` |
+| 樂觀更新 | ✅ Storve `store.setState()` | ❌ `useOptimistic` |
+| 表單狀態 | ✅ Storve actions + 本地狀態 | ❌ `useActionState` |
 | 表單提交狀態 | ✅ `useState` 或 `useTaskExecutor` | ❌ `useFormStatus` |
-| 數據獲取 | ✅ TanStack `useQuery` (配合 `createQuery`) | ❌ `useEffect` + `fetch` |
+| 數據獲取 | ✅ Storve `createAsync` | ❌ `useEffect` + `fetch` |
 | 跨元件儲存 | ✅ Mantine `useLocalStorage` | ❌ 手寫 `localStorage` (React 內) |
 | API 調用 | ✅ Hono RPC (`api.*.$post`) | ❌ 手寫 `fetch('/api/...')` |
-| 篩選狀態 | ✅ URL Filters (`useUrlFilters`) | ❌ Zustand filter store |
+| 篩選狀態 | ✅ URL Filters (`useUrlFilters`) | ❌ Storve filter store |
 | 彈窗管理 | ✅ `ConfirmDialog` + `useDisclosure` | ❌ 全域 `alertDialog` |
 
 
@@ -947,40 +942,24 @@ optimistic: (oldData, vars, queryKey) => ({ ...(oldData as any), remains: false 
 
 ## 编码补充（2026-06-06）
 
-### 例外情况：useMemo 可用于稳定 Query Key
-
-- ✅ 当物件作为 `useQuery` 的 `queryKey` 或参数时，可使用 `useMemo`
-- ❌ 一般渲染逻辑仍禁止手动记忆化
-
-## 架构极致化规范（锁定）
-
-### Mutation
-- ✅ 所有写操作配置文件必须使用 `defineMutation` 进行规范声明，并通过 `useOptimisticMutation` 生成 Hook 供组件消费。
-- ❌ 禁止直接使用 `useMutation`
-
 ### 快取更新（铁律）
-- ✅ 必须同时使用两种机制：
-  1. `setQueryData`：更新当前页面 / 列表 / 明细（避免闪烁）
-  2. `invalidateQueries`：同步其他页面 / 其他列表（确保一致性）
-- ✅ 优先影响范围：
-  - 当前画面：用 `setQueryData`
-  - 其他查询：用 `invalidateQueries`
-- ❌ 禁止只做其中一种
+- ✅ 依照 Storve 原則，優先使用 `store.setState` 進行樂觀更新或直接更新 Store 快取。
+- ✅ 影響範圍擴展：
+  - 当前画面：用 `store.setState` 更新狀態。
+  - 背景同步：依照 `ttl` 或手動調用 `store.fetch` 重新驗證服務器數據。
 
-### Zustand
-- ✅ 必须使用 selector 精确订阅
-- ❌ 禁止无参调用 `useUIStore()`
-
-### TanStack Query
-- ✅ 列表页使用 `select` 缩小订阅字段
-- ✅ 使用 `placeholderData: keepPreviousData`
+### Storve
+- ✅ 必須使用自動依賴追蹤或 selector 精確訂閱
+- ❌ 禁止無參調用 (如舊的 `useUIStore()`) 造成全域渲染
+- ✅ 列表页使用 `select` (若使用 selector) 缩小订阅字段
+- ✅ 使用 `createAsync` 內建的 `ttl` 進行快取管理
 
 ### Virtua
 - ✅ 生产环境配置 `overscan`、`shift`、`estimateSize`
 
 ## 弹窗与工具列协调规范（锁定，2026-06-06）
 
-- ✅ 所有全域弹窗（ConfirmDialog / PromptDialog）必须上报 `useUIStore`
+- ✅ 所有全域弹窗（ConfirmDialog / PromptDialog）必须上报 `uiStore`
 - ✅ 工具列订阅 `activeDialogCount`， >0 时自动隐藏
 - ❌ 禁止直接调 `z-index` 解决弹窗与工具列冲突
 - ❌ 禁止在全域层级观察 DOM（MutationObserver）
@@ -992,7 +971,7 @@ optimistic: (oldData, vars, queryKey) => ({ ...(oldData as any), remains: false 
 - ✅ `src/hooks/core/`：通用、可跨專案複用的 Hook（如 `useAuth`、`useDebounce`、`useLocalStorage`）
 - ✅ `src/hooks/`：與 PhotoX 業務邏輯相關的 Hook（如 `usePhotos`、`useGroups`、`useLightbox`）
 - ✅ `src/services/[domain]/commands.ts`：所有寫入邏輯（Mutation、RPC）
-- ✅ `src/services/[domain]/queries.ts`：所有讀取邏輯（TanStack Query）
+- ✅ `src/services/[domain]/queries.ts`：所有讀取邏輯（Storve createAsync）
 - ❌ 禁止新增 `src/actions/` 目錄或類似 `*Actions.ts` 檔案
 - ❌ 禁止在 `src/hooks/` 根目錄新建非業務 Hook
 
@@ -1236,7 +1215,7 @@ optimistic: (oldData, vars, queryKey) => ({ ...(oldData as any), remains: false 
 
 ## 诊断中心路由规范（锁定，2026-06-09）
 
-- ✅ **核心原则**：诊断中心状态必须由 URL 驱动，禁用 Zustand 管理 activeTab。
+- ✅ **核心原则**：诊断中心状态必须由 URL 驱动，禁用 Storve 存储 activeTab 等路由状态。
 - ✅ **路由映射**：
   - `/admin/diagnose` → 诊断概览
   - `/admin/tasks` → 任务列表
@@ -1543,8 +1522,8 @@ optimistic: (oldData, vars, queryKey) => ({ ...(oldData as any), remains: false 
 
 ## 認證狀態管理規範（鎖定）
 
-- ✅ 使用 Zustand + 原生 Supabase 管理認證狀態
-- ❌ 禁止使用 TanStack Query 管理認證狀態
+- ✅ 使用 Storve Store + 原生 Supabase 管理認證狀態
+- ❌ 禁止使用原生 Query 庫管理認證狀態
 - ✅ 全域監聽僅初始化一次
 - ✅ 登入按鈕必須有本地原子鎖
 
@@ -1558,9 +1537,9 @@ optimistic: (oldData, vars, queryKey) => ({ ...(oldData as any), remains: false 
 
 ## 認證狀態規範（鎖定）
 
-- ✅ Zustand Store 只儲存 `user` 和 `isLoading`
+- ✅ Storve Store 只儲存 `user` 和 `isLoading`
 - ✅ `isAdmin` 從 `!!user` 推導，禁止另外儲存
-- ✅ 使用 selector 讀取狀態，避免不必要的重渲染
+- ✅ 依照 Storve 原則，自動依賴追蹤或 selector 避免不必要的重渲染
 
 ## Z-index 警告（重要）
 如果你再用zindex不遵守规范，就要赔偿我一百万。
@@ -1568,7 +1547,7 @@ optimistic: (oldData, vars, queryKey) => ({ ...(oldData as any), remains: false 
 ## 客戶端快取規範（永久鎖定）
 
 ### 核心原則
-- ✅ 服務端狀態統一由 TanStack Query 記憶體快取管理
+- ✅ 服務端狀態統一由 Storve `createAsync` 記憶體快取管理
 - ✅ 使用者偏好統一由 storage.ts (localStorage) 管理
 - ❌ 禁止引入 IndexedDB 相關依賴（idb, dexie, query-persist-client-core）
 - ❌ 禁止自建 CacheService 或 IndexedDB Adapter
@@ -1696,10 +1675,10 @@ PhotoX 當前單頁數據 < 100KB，IndexedDB 收益為零且增加 Bundle Size 
 - ✅ **可用介面**：`useUI()`, `useAuth()`, `useTask()`, `useTaskSelector()`, `useStoreShallow()`。
 - ✅ **非 React 環境**：若要在非 React 函數中取值，使用 `storeAccessor.ui`, `storeAccessor.auth`, `storeAccessor.task`。
 - ❌ **禁止直連**：嚴禁在業務層直接 import `useUIStore`, `useAuthStore`, `useTaskStore` 等具體實作。
-- 🎯 **目的**：隱藏 Zustand 實作細節，為未來狀態框架遷移（如 Storve）鋪平道路。
+- 🎯 **目的**：隱藏 Storve 實作細節。
 
-### 2. Query Adapter 規範
-- ✅ **唯一出口**：所有資料抓取與異步變更必須透過 `src/lib/query/index.ts` 取得。
-- ✅ **可用介面**：`useAppQuery`, `useAppMutation`, `useAppInfiniteQuery`, `useAppQueryClient`。
-- ❌ **禁止直連**：嚴禁在業務層直接 import `@tanstack/react-query` 提供的 Hook（除了型別）。
-- 🎯 **目的**：隔離 TanStack Query，將所有資料請求的 API 收斂至同一 Adapter。
+### 2. Data Adapter 規範
+- ✅ **唯一出口**：所有資料抓取與異步變更必須透過 `src/lib/query/index.ts` (對應 Storve createAsync) 取得。
+- ✅ **可用介面**：對應 Storve 非同步操作介面。
+- ❌ **禁止直連**：嚴禁在業務層直接 import 原生 Query 庫。
+- 🎯 **目的**：隔離資料請求實作細節。

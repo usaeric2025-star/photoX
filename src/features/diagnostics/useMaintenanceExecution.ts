@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ISSUE_ACTIONS, PreviewResult } from "@/features/diagnostics/issueActions";
 import { useTaskExecutor } from '@/hooks';
-import { handleError } from '@/lib/error/errorHandler';
+import { handleError } from '@/lib/error';
 
 export function useMaintenanceExecution(issueId: string, title: string, onSuccess?: () => void) {
   const [preview, setPreview] = useState<PreviewResult | null>(null);
@@ -36,37 +36,11 @@ export function useMaintenanceExecution(issueId: string, title: string, onSucces
     
     await runTask(
       title,
-      async ({ updateProgress, taskId }) => {
-        const { jobId, message } = await action.execute();
-        
-        if (!jobId || jobId === 'sync' || jobId === 'cleanup') {
-          updateProgress(100, message || "已完成");
-          setProgress(100);
-          return true;
-        }
-
-        return new Promise((resolve, reject) => {
-          const interval = setInterval(async () => {
-            try {
-              const status = (await action.getStatus?.(jobId)) as { progress?: number; message?: string; status?: string; error?: string } | undefined | null;
-              if (!status) return;
-
-              setProgress(status.progress || 0);
-              updateProgress(status.progress || 0, status.message);
-              
-              if (status.status === 'completed') {
-                clearInterval(interval);
-                resolve(true);
-              } else if (status.status === 'failed') {
-                clearInterval(interval);
-                reject(new Error(status.error || status.message || "执行失败"));
-              }
-            } catch (e) {
-              clearInterval(interval);
-              reject(e);
-            }
-          }, 2000);
-        });
+      async ({ updateProgress }) => {
+        const { message } = await action.execute();
+        updateProgress(100, message || "已完成");
+        setProgress(100);
+        return true;
       },
       {
         issueId,

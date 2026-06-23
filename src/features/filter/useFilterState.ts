@@ -13,22 +13,25 @@ export function useFilterState() {
   }), [f.search, f.category, f.tags, f.sort]);
 
   const updateFilters = (updates: Partial<FilterState>) => {
-    if (updates.search !== undefined) f.setSearch(updates.search);
+    const routeUpdates: Record<string, any> = {};
+    if (updates.search !== undefined) routeUpdates.q = updates.search || undefined;
     if (updates.categoryId !== undefined) {
-      f.setCategory(updates.categoryId || '');
+      routeUpdates.cat = updates.categoryId || undefined;
       // When a specific category is selected, clear tags to avoid aggregation
       if (updates.categoryId) {
-        f.setTags([]);
+        routeUpdates.tag = undefined;
       }
     }
     if (updates.tagIds !== undefined) {
-      f.setTags(updates.tagIds);
+      routeUpdates.tag = updates.tagIds.length === 0 ? undefined : updates.tagIds;
       // When tags are selected, clear category to avoid aggregation
       if (updates.tagIds && updates.tagIds.length > 0) {
-        f.setCategory('');
+        routeUpdates.cat = undefined;
       }
     }
-    if (updates.sort !== undefined) f.setSort(updates.sort);
+    if (updates.sort !== undefined) routeUpdates.sort = updates.sort || undefined;
+    
+    f.updateFilters(routeUpdates);
   };
 
   return { filters, updateFilters };

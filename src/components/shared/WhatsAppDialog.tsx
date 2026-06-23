@@ -1,12 +1,15 @@
 import * as React from 'react';
 import { NativeDialog } from '@/components/ui/NativeDialog';
-import { useUI } from '@/lib/store';
+import { useUI, UIStoreState } from '@/lib/store';
 import { usePublicSettings } from '@/hooks/settings/useSettings';
 import { Icon } from '@/components/ui/Icon';
 
-export const WhatsAppDialog = () => {
-  const show = useUI((s) => s.showWhatsAppChoice);
-  const update = useUI((s) => s.update);
+interface WhatsAppDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export const WhatsAppDialog = ({ open, onOpenChange }: WhatsAppDialogProps) => {
   const { data: settings } = usePublicSettings();
 
   const options = React.useMemo(() => {
@@ -21,7 +24,7 @@ export const WhatsAppDialog = () => {
   }, [settings]);
 
   return (
-    <NativeDialog id="whatsapp-choice-dialog" open={!!show} onClose={() => update({ showWhatsAppChoice: false })}>
+    <NativeDialog id="whatsapp-choice-dialog" open={open} onClose={() => onOpenChange(false)}>
       <div className="w-full p-6">
         <h3 className="font-bold text-lg mb-4 text-slate-800">选择咨询方式</h3>
         {options.length === 0 ? (
@@ -34,7 +37,7 @@ export const WhatsAppDialog = () => {
                 href={opt.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => update({ showWhatsAppChoice: false })}
+                onClick={() => onOpenChange(false)}
                 className="w-full py-3 px-4 bg-emerald-600 text-white rounded-lg font-bold flex items-center justify-between shadow-sm hover:bg-emerald-700 transition-all"
               >
                 <span>{opt.name}</span>

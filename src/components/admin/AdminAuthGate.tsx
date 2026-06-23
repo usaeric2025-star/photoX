@@ -34,13 +34,14 @@ export function AdminAuthGate({ children }: AdminAuthGateProps) {
   const [forceShow, setForceShow] = useState(false);
 
   useEffect(() => {
+    logger.debug('🛡️ [AdminAuthGate] Auth status:', { isAuthLoading, user: !!user, isStaffMode, forceShow });
     if (!isAuthLoading) return;
     const timer = setTimeout(() => {
-      logger.warn('⚠️ Auth Loading 超时，强制尝试显示');
+      logger.warn('⚠️ [AdminAuthGate] Auth Loading 超时，强制尝试显示');
       setForceShow(true);
-    }, 8000);
+    }, 3000);
     return () => clearTimeout(timer);
-  }, [isAuthLoading]);
+  }, [isAuthLoading, user, isStaffMode]);
 
   // Auth is still loading
   if (isAuthLoading && !user && !isStaffMode && !forceShow) {

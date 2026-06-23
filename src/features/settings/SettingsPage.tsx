@@ -9,7 +9,7 @@ import { api } from '@/lib/api';
 
 import { showToast } from '@/lib/ui/toast';
 import { AppSettings, User, ApiResponse } from '@/types';
-import { useUI, useStoreShallow } from '@/lib/store';
+import { useUI, UIStoreState } from '@/lib/store';
 import { useSettingsManagement } from '@/hooks/settings/useSettingsManagement';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { 
@@ -25,7 +25,7 @@ import { useFormSubmit } from '@/lib/form/useFormSubmit';
 import { type, type Type } from 'arktype';
 
 import { useSyncMutation } from '@/hooks';
-import { useTaskSelector } from '@/lib/task-queue/store';
+import { useTaskSelector, TaskState } from '@/lib/store';
 
 const GeneralSettings = React.lazy(() => import('./GeneralSettings').then(m => ({ default: m.GeneralSettings })));
 const AISettings = React.lazy(() => import('./AISettings').then(m => ({ default: m.AISettings })));
@@ -45,13 +45,13 @@ interface SettingsPageProps {
 }
 
 export function SettingsPage({ onClose }: SettingsPageProps) {
-  const update = useUI((s) => s.update);
+  const patch = useUI((s: UIStoreState) => s.patch);
   const { navigate, route } = useAppRouter();
   
   const { data: categories = [] } = useCategories();
   const { data: tags = [] } = useTags();
   const { data: manufacturers = [] } = useManufacturers();
-  const tasksMap = useTaskSelector(s => s.tasks);
+  const tasksMap = useTaskSelector((s: TaskState) => s.tasks);
   const tasks = React.useMemo(() => Array.from(tasksMap.values()), [tasksMap]);
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,7 +59,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
     if (file) await uploadLogo(file);
   };
   
-  const isMaintenanceRunning = tasks.some(t => (t.label.includes('维护') || t.label.includes('诊断')) && t.state?.status === 'processing');
+  const isMaintenanceRunning = tasks.some((t: any) => (t.label.includes('维护') || t.label.includes('诊断')) && t.state?.status === 'processing');
   
   const appLang = useUI(s => s.appLang);
   const t = translations[appLang as keyof typeof translations] || translations.en;

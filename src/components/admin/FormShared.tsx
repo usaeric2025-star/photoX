@@ -6,7 +6,7 @@ import { Category, Manufacturer } from "@/types";
 import { useLongPress } from "@/hooks/core/useLongPress";
 import { MenuDialog } from "@/components/ui/MenuDialog";
 import { useDisclosure } from '@/hooks/core/useDisclosure';
-import { useUI, useStoreShallow } from '@/lib/store';
+import { useUI, UIStoreState } from '@/lib/store';
 
 interface SectionHeaderProps {
   title: string;
@@ -58,7 +58,7 @@ export function ManufacturerList({
   onEdit,
   onDelete,
 }: ManufacturerSelectorProps) {
-  const { update } = useUI(useStoreShallow((s) => ({ update: s.update })));
+  const { patch } = useUI((s: UIStoreState) => ({ patch: s.patch }));
 
   return (
     <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto content-start px-0.5 no-scrollbar">

@@ -14,7 +14,7 @@ export function usePhotoGrid(filters: PhotoListFilters, mode: 'admin' | 'public'
     hasNextPage, 
     isFetchingNextPage,
     refetch 
-  } = usePhotos({ ...filters, mode });
+  } = usePhotos({ ...filters, isAdminMode: mode === 'admin' });
   
   const dataVersion = JSON.stringify(filters);
   const ref = useRef<VListHandle>(null);

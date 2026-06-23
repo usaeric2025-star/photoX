@@ -1,5 +1,5 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { useUI, storeAccessor } from '@/lib/store';
+import { useUI, storeAccessor, UIStoreState } from '@/lib/store';
 import { useCallback, useState } from 'react';
 import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
 import { useAppRouter } from '@/lib/router/useAppRouter';
@@ -18,13 +18,13 @@ import { useAppRouter } from '@/lib/router/useAppRouter';
  * @deps-contract: static=[useUI, useAdminMaintenance, useRouterSafe, useCallback, useState] dynamic=[]
  */
 export const usePhotoSelection = () => {
-  const isMultiSelect = useUI((state) => state.isMultiSelect);
-  const selectedIds = useUI((state) => state.selectedIds) || [];
-  const batchEditingIds = useUI(s => s.batchEditingIds);
-  const formState = useUI(s => s.formState);
-  const update = useUI((state) => state.update);
-  const updateForm = useUI(s => s.updateForm);
-  const resetForm = useUI(s => s.resetForm);
+  const isMultiSelect = useUI((state: UIStoreState) => state.isMultiSelect);
+  const selectedIds = useUI((state: UIStoreState) => state.selectedIds) || [];
+  const batchEditingIds = useUI((s: UIStoreState) => s.batchEditingIds);
+  const formState = useUI((s: UIStoreState) => s.formState);
+  const patch = useUI((state: UIStoreState) => state.patch);
+  const updateForm = useUI((s: UIStoreState) => s.updateForm);
+  const resetForm = useUI((s: UIStoreState) => s.resetForm);
 
   const { deletePhoto, batchUpdate } = useAdminMaintenance();
   const { navigate, route } = useAppRouter();
@@ -35,14 +35,14 @@ export const usePhotoSelection = () => {
   // --- 狀態切換邏輯 (來自 useMultiSelect) ---
 
   const enable = useCallback((initialId?: string) => {
-    update({ 
+    patch({ 
       isMultiSelect: true, 
       selectedIds: initialId ? [initialId] : [] 
     });
-  }, [update]);
+  }, [patch]);
 
   const disable = () => {
-    update({ 
+    patch({ 
       isMultiSelect: false, 
       selectedIds: [] 
     });
@@ -53,15 +53,15 @@ export const usePhotoSelection = () => {
     const next = current.includes(id) 
       ? current.filter((i: string) => i !== id) 
       : [...current, id];
-    update({ selectedIds: next });
-  }, [update]);
+    patch({ selectedIds: next });
+  }, [patch]);
 
   const clear = () => {
-    update({ selectedIds: [] });
+    patch({ selectedIds: [] });
   };
 
   const reset = () => {
-    update({ 
+    patch({ 
       isMultiSelect: false, 
       selectedIds: [] 
     });
@@ -70,16 +70,16 @@ export const usePhotoSelection = () => {
   const selectAll = useCallback((ids: string[]) => {
     const current = (storeAccessor.ui.selectedIds) ?? [];
     const combined = new Set([...current, ...ids]);
-    update({ 
+    patch({ 
       isMultiSelect: true, 
       selectedIds: Array.from(combined) 
     });
-  }, [update]);
+  }, [patch]);
 
   const deselectAllForList = useCallback((ids: string[]) => {
     const current = (storeAccessor.ui.selectedIds) ?? [];
-    update(state => ({ selectedIds: current.filter((id: string) => !ids.includes(id)) }));
-  }, [update]);
+    patch((state: UIStoreState) => ({ selectedIds: current.filter((id: string) => !ids.includes(id)) }));
+  }, [patch]);
 
   // --- 批量操作邏輯 (來自 useBatchEdit) ---
 
@@ -101,7 +101,7 @@ export const usePhotoSelection = () => {
     });
 
     await batchUpdate.mutateAsync({ ids, updates: cleanUpdates });
-    update({ batchEditingIds: null, isMultiSelect: false, selectedIds: [] });
+    patch({ batchEditingIds: null, isMultiSelect: false, selectedIds: [] });
     resetForm();
     if (route === 'adminBatchEdit') {
       navigate.admin();
@@ -113,7 +113,7 @@ export const usePhotoSelection = () => {
     if (!ids || ids.length === 0) return;
     
     await deletePhoto.mutateAsync(ids);
-    update({ batchEditingIds: null, isMultiSelect: false, selectedIds: [] });
+    patch({ batchEditingIds: null, isMultiSelect: false, selectedIds: [] });
     resetForm();
     if (route === 'adminBatchEdit') {
       navigate.admin();
@@ -121,7 +121,7 @@ export const usePhotoSelection = () => {
   };
 
   const handleClose = () => {
-    update({ batchEditingIds: null });
+    patch({ batchEditingIds: null });
     resetForm();
     if (route === 'adminBatchEdit') {
       navigate.admin();
@@ -134,7 +134,7 @@ export const usePhotoSelection = () => {
     selectedIds,
     batchEditIds: batchEditingIds || [],
     formState,
-    isSyncing: batchUpdate.isPending,
+    isSyncing: batchUpdate.isMutating,
     batchIsHiddenApplied,
     
     // 操作

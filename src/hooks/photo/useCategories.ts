@@ -1,24 +1,22 @@
-import { STALE_TIMES } from '@/lib/query/config';
-import { createQuery } from '@/lib/query/queryFactory';
-import { loadCategoriesFromCloud } from '@/services/category/queries';
+import { useAppQuery } from '@/lib/query';
 import { queryKeys } from '@/lib/query/keys';
-import { Category } from '@/types';
+import { loadCategoriesFromCloud } from '@/services/category/queries';
+import { STALE_TIMES } from '@/lib/query/config';
 
 /**
- * Hook to get the list of categories using standard query factory.
+ * Hook to get the list of categories.
  */
-export const useCategories = createQuery<Category[]>({
-  queryKey: () => queryKeys.categories.public(),
-  staleTime: STALE_TIMES.SHORT* 5, // 5 minutes (more responsive)
-  gcTime: 1000 * 60 * 30, // 30 minutes
-  queryFn: async () => {
-    const cats = await loadCategoriesFromCloud();
-    // Sort consistently: first by sort_order, then by numeric/string ID as a fallback.
-    const sortedCats = [...cats].sort((a, b) => {
-      const orderA = a.sort_order !== undefined ? a.sort_order : Number(a.id);
-      const orderB = b.sort_order !== undefined ? b.sort_order : Number(b.id);
-      return orderA - orderB;
-    });
-    return sortedCats;
-  }
-});
+export function useCategories(appLang?: string) {
+  // Using SWR for data fetching
+  const { data, isLoading: isPending, error } = useAppQuery(
+    queryKeys.categories.all,
+    loadCategoriesFromCloud,
+    {
+      revalidateOnMount: true,
+      dedupingInterval: STALE_TIMES.MEDIUM, 
+    }
+  );
+  return { data, isPending, error };
+}
+
+

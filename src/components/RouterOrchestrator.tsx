@@ -6,11 +6,10 @@ import { NotFoundPage } from "@/pages/NotFoundPage";
 import { PublicGroupDetailPage } from "@/features/group/public/GroupDetailPage";
 import { AdminGroupDetailPage } from "@/features/group/admin/GroupDetailPage";
 import { LoadingScreen } from "./ui/LoadingScreen";
+import { DialogContainer } from "./layout/DialogContainer";
 
 const SettingsPage = lazy(() => import("@/features/settings/SettingsPage").then(m => ({ default: m.SettingsPage })));
 const DiagnosticsDashboard = lazy(() => import("@/features/diagnostics/DiagnosticsDashboard").then(m => ({ default: m.DiagnosticsDashboard })));
-const PhotoLightbox = lazy(() => import("@/features/lightbox/PhotoLightbox").then(m => ({ default: m.PhotoLightbox })));
-const PhotoEditDialog = lazy(() => import("@/features/photo-edit/PhotoEditDialog").then(m => ({ default: m.PhotoEditDialog })));
 
 export function RouterOrchestrator() {
   const route = useAppRoute();
@@ -48,10 +47,7 @@ export function RouterOrchestrator() {
       <Suspense fallback={<LoadingScreen />}>
         {getPage()}
       </Suspense>
-      <Suspense fallback={null}>
-        <PhotoLightbox />
-        <PhotoEditDialog />
-      </Suspense>
+      <DialogContainer />
     </>
   );
 }

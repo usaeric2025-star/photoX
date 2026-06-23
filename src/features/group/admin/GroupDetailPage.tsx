@@ -18,7 +18,6 @@ import { GroupSettingsDialog } from '@/components/groups/GroupSettingsDialog';
 import { useGroupDraft } from '@/components/groups/useGroupDraft';
 import { useGroupMutations } from '@/hooks/groups/useGroupMutations';
 import { GroupHeader } from '../shared/components/GroupHeader';
-import { PhotoCardSkeleton } from '@/components/ui/Skeleton';
 import { Button } from '@/components/shared/Button';
 import { useColumns } from '@/features/layout/hooks/useColumns';
 import { FilterBar } from '@/features/filter/FilterBar';
@@ -138,7 +137,7 @@ export function AdminGroupDetailPage() {
       <div className="p-1 sm:p-2 lg:p-4 w-full h-full">
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1 sm:gap-2">
            {Array.from({ length: 18 }).map((_, i) => (
-             <PhotoCardSkeleton key={i} />
+             <div key={i} className="aspect-square w-full bg-surface-soft rounded-xl border border-border-soft animate-shimmer" />
            ))}
         </div>
       </div>

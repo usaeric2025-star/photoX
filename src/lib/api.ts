@@ -52,20 +52,24 @@ export const client = hc<AppType>(
       
       let resp: Response;
       let retries = 3;
-      while (true) {
-        try {
-          const signal = AbortSignal.timeout(10000);
-          resp = await fetch(input, { ...init, headers, signal });
-          break;
-        } catch (err) {
-          if (retries > 0) {
-            retries--;
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            continue;
+      
+      const executeRequest = async () => {
+        while (true) {
+          try {
+            const signal = AbortSignal.timeout(15000);
+            return await fetch(input, { ...init, headers, signal });
+          } catch (err) {
+            if (retries > 0) {
+              retries--;
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              continue;
+            }
+            throw err;
           }
-          throw err;
         }
-      }
+      };
+
+      resp = await executeRequest();
       
       // If it's not JSON, it might be the server crashing or returning HTML
       const contentType = resp.headers.get("Content-Type");

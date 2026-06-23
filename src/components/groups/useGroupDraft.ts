@@ -1,6 +1,6 @@
 import { ErrorFactory } from "@/lib/error/ErrorFactory";
 import { useState, useEffect, useCallback } from "react";
-import { useAppQueryClient as useQueryClient } from '@/lib/query';
+import { appQuery } from '@/lib/query';
 import { ProductGroup, Photo } from "@/types";
 import { useGroupDetail } from "@/hooks";
 import { useAuth } from '@/lib/store';
@@ -14,10 +14,9 @@ export const useGroupDraft = (
   onUpdatePhoto: (id: string, data: Partial<Photo>) => Promise<unknown>
 ) => {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
 
   const [groupData, setGroupData] = useState<ProductGroup | null>(null);
-  const { data: queriedGroupData, isPending: isGroupDataPending } =
+  const { data: queriedGroupData, isLoading: isGroupDataPending } =
     useGroupDetail({ groupId: activeGroupId, isAdmin: true });
 
   const [draftGroup, setDraftGroup, removeDraftGroup] = useSessionStorage<ProductGroup | null>({
@@ -72,9 +71,7 @@ export const useGroupDraft = (
 
       try {
         await upsertGroup(nextGroupData);
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.groups.detail(activeGroupId, true),
-        });
+        await appQuery.mutate(queryKeys.groups.detail(activeGroupId, true));
         removeDraftGroup();
 
         if (updates.hasOwnProperty("is_hidden")) {
@@ -95,7 +92,6 @@ export const useGroupDraft = (
       groupData,
       onUpdatePhoto,
       dbGroupPhotos,
-      queryClient,
       setDraftGroup,
       removeDraftGroup
     ],

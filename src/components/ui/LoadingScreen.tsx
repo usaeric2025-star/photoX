@@ -70,7 +70,7 @@ export const LoadingScreen = () => {
               <span>TOX</span>
             </div>
             <div className="hidden sm:flex text-[9px] text-slate-400 font-semibold px-1.5 py-0.5 rounded border border-slate-100 bg-slate-50">
-              CONNECTING
+              连接中...
             </div>
           </div>
           
@@ -120,7 +120,7 @@ export const LoadingScreen = () => {
                 className="pointer-events-auto px-4 py-2.5 border rounded-full text-slate-600 hover:text-slate-900 bg-white border-slate-200/80 text-[11px] sm:text-xs font-semibold hover:bg-slate-55 flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-md shadow-slate-100/80 animate-slide-in-up"
               >
                 <Icon name="terminal" size={12} className="text-amber-500 animate-pulse" />
-                連線診斷與快取修復 (Diagnostics)
+                连线诊断与缓存修复 (Diagnostics)
               </button>
             )}
           </div>

@@ -1,29 +1,27 @@
 import { useAppMutation as baseUseAppMutation } from '@/lib/query';
-import { type UseMutationOptions } from '@tanstack/react-query';
 import { showToast } from '@/lib/ui/toast';
 
 /**
  * 統一 API 變更 Hook
  */
-export function useAppMutation<TData, TError = Error, TVariables = void, TContext = unknown>(
+export function useAppMutation<TVariables, TData>(
   mutationFn: (variables: TVariables) => Promise<TData>,
-  options?: Omit<UseMutationOptions<TData, TError, TVariables, TContext>, 'mutationFn'> & {
+  options?: {
     successMessage?: string;
     errorMessage?: string;
+    onSuccess?: (data: TData, variables: TVariables) => void;
+    onError?: (error: Error, variables: TVariables) => void;
   }
 ) {
-  return baseUseAppMutation({
-    mutationFn,
-    onSuccess: (...args) => {
+  return baseUseAppMutation(mutationFn, {
+    onSuccess: (data: TData, variables: TVariables) => {
       if (options?.successMessage) showToast.success(options.successMessage);
-      options?.onSuccess?.(...args);
+      options?.onSuccess?.(data, variables);
     },
-    onError: (...args) => {
+    onError: (error: Error, variables: TVariables) => {
       if (options?.errorMessage) showToast.error(options.errorMessage);
-      else if (args[0] instanceof Error) showToast.error(args[0].message);
-      else showToast.error(String(args[0]));
-      options?.onError?.(...args);
+      else showToast.error(error.message);
+      options?.onError?.(error, variables);
     },
-    ...options,
   });
 }

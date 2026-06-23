@@ -1,6 +1,6 @@
 import { STALE_TIMES } from '@/lib/query/config';
 import React, { useEffect } from 'react';
-import { useAppQuery as useQuery, useAppMutation as useMutation, useAppQueryClient as useQueryClient } from '@/lib/query';
+import { useAppQuery, useAppMutation, appQuery } from '@/lib/query';
 import { storage, STORAGE_KEYS } from '@/lib/storage';
 import { AppSettings } from '@/types';
 import { useSettingsUpdateMutation } from './useSettingsMutations';
@@ -10,21 +10,20 @@ import { logger } from '@/lib/logger';
 const DEFAULT_SETTINGS: AppSettings = {} as AppSettings;
 
 export function useSettings() {
-  const queryClient = useQueryClient();
   
   useEffect(() => {
     const handler = (e: StorageEvent) => {
       if (e.key === `photox_${STORAGE_KEYS.SETTINGS}`) {
-        queryClient.invalidateQueries({ queryKey: ['settings'] });
+        appQuery.mutate(['settings']);
       }
     };
     window.addEventListener('storage', handler);
     return () => window.removeEventListener('storage', handler);
-  }, [queryClient]);
+  }, []);
 
-  const { data: qSettings, isPending } = useQuery({
-    queryKey: ['settings'],
-    queryFn: async () => {
+  const { data: qSettings, isLoading: isPending } = useAppQuery(
+    'settings',
+    async () => {
       const response = await api.admin.settings.get.$get();
       const result = await response.json();
       if (!result.success) throw new Error(result.error);
@@ -34,15 +33,11 @@ export function useSettings() {
       }
       return data || storage.get(STORAGE_KEYS.SETTINGS, DEFAULT_SETTINGS);
     },
-    staleTime: STALE_TIMES.SHORT,
-    initialData: () => {
-      const cached = storage.get<AppSettings | null>(STORAGE_KEYS.SETTINGS, null);
-      if (cached && Object.keys(cached).length > 0) {
-        return cached;
-      }
-      return undefined;
-    },
-  });
+    {
+      dedupingInterval: STALE_TIMES.SHORT,
+      fallbackData: storage.get<AppSettings | null>(STORAGE_KEYS.SETTINGS, null) || undefined,
+    }
+  );
 
   const updateMutation = useSettingsUpdateMutation();
 
@@ -60,9 +55,9 @@ export function useSettings() {
 }
 
 export function usePublicSettings() {
-  return useQuery({
-    queryKey: ['settings', 'public'],
-    queryFn: async () => {
+  return useAppQuery(
+    ['settings', 'public'],
+    async () => {
       try {
         const fetchPromise = api.public.settings.$get();
         const timeoutPromise = new Promise<never>((_, reject) => {
@@ -78,8 +73,9 @@ export function usePublicSettings() {
         return {} as AppSettings;
       }
     },
-    staleTime: STALE_TIMES.MEDIUM,
-    refetchOnWindowFocus: false,
-    retry: 1,
-  });
+    {
+      dedupingInterval: STALE_TIMES.MEDIUM,
+      revalidateOnFocus: false,
+    }
+  );
 }

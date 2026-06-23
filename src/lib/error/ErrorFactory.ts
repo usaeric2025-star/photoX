@@ -10,20 +10,20 @@ export class ErrorFactory {
       Photo: '照片',
       photos: '照片列表',
       Photos: '照片列表',
-      category: '分類',
-      Category: '分類',
-      categories: '分類列表',
-      Categories: '分類列表',
-      tag: '標籤',
-      Tag: '標籤',
-      tags: '標籤列表',
-      Tags: '標籤列表',
-      group: '分組',
-      Group: '分組',
-      user: '使用者',
-      User: '使用者',
-      secret: '密鑰',
-      Secret: '密鑰',
+      category: '分类',
+      Category: '分类',
+      categories: '分类列表',
+      Categories: '分类列表',
+      tag: '标签',
+      Tag: '标签',
+      tags: '标签列表',
+      Tags: '标签列表',
+      group: '分组',
+      Group: '分组',
+      user: '用户',
+      User: '用户',
+      secret: '密钥',
+      Secret: '密钥',
       furniture: '家具',
       Furniture: '家具',
     };
@@ -80,7 +80,7 @@ export class ErrorFactory {
   static network(originalError?: unknown): AppError {
     return this.create('Network Error', {
       category: ErrorCategory.NETWORK,
-      userMessage: '網路連線異常，請檢查您的網路連線',
+      userMessage: '网络连接异常，请检查您的网络连接',
       originalError,
       code: ErrorCode.NETWORK_ERROR,
       statusCode: 503
@@ -90,7 +90,7 @@ export class ErrorFactory {
   static auth(message: string): AppError {
     return this.create(message, {
       category: ErrorCategory.AUTH,
-      userMessage: '登入逾期，請重新登入',
+      userMessage: '登录过期，请重新登录',
       code: ErrorCode.UNAUTHORIZED,
       statusCode: 401
     });
@@ -99,7 +99,7 @@ export class ErrorFactory {
   static validation(message: string, context?: Record<string, unknown>): AppError {
     return this.create(message, {
       category: ErrorCategory.VALIDATION,
-      userMessage: '輸入資料格式不正確，請重新檢查',
+      userMessage: '输入数据格式不正确，请重新检查',
       context: { fields: context },
       shouldReport: false,
       code: ErrorCode.VALIDATION_FAILED,
@@ -119,7 +119,7 @@ export class ErrorFactory {
   static fatal(message: string, originalError?: unknown): AppError {
     return this.create(message, {
       category: ErrorCategory.RUNTIME,
-      userMessage: '系統發生嚴重錯誤，請稍後重試',
+      userMessage: '系统发生严重错误，请稍后重试',
       originalError,
       shouldReport: true,
       code: ErrorCode.INTERNAL_ERROR,
@@ -142,7 +142,7 @@ export class ErrorFactory {
 
   static wrap(error: unknown, action: string, message?: string): AppError {
     const cleanUserMsg = message || this.extractErrorMessage(error);
-    const systemMsg = error instanceof Error ? error.message : String(error || '未知錯誤');
+    const systemMsg = error instanceof Error ? error.message : String(error || '未知错误');
     return this.create(systemMsg, {
       category: ErrorCategory.RUNTIME,
       userMessage: cleanUserMsg,
@@ -157,7 +157,7 @@ export class ErrorFactory {
   static permission(message: string): AppError {
     return this.create(message, {
       category: ErrorCategory.AUTH,
-      userMessage: '權限不足，拒絕訪問',
+      userMessage: '权限不足，拒绝访问',
       shouldReport: false,
       code: ErrorCode.PERMISSION_DENIED,
       statusCode: 403,
@@ -165,11 +165,11 @@ export class ErrorFactory {
     });
   }
 
-  /** 統一上報入口 (改為純本地記錄) */
+  /** 统一上报入口 (改为纯本地记录) */
   static capture(error: Error | AppError | unknown) {
     const appError = isAppError(error) ? error : ErrorFactory.fromUnknown(error);
     
-    // 優先過濾雜音錯誤，避免寫入本地及資料庫日誌
+    // 优先过滤噪音错误，避免写入本地及数据库日志
     const message = appError.message || '';
     const isNoise = 
       /ResizeObserver/i.test(message) || 
@@ -190,7 +190,7 @@ export class ErrorFactory {
       return;
     }
 
-    // 1. Console 輸出 (精簡結構以便閱讀)
+    // 1. Console 输出 (精简结构以便阅读)
     logger.error('[AppError]', {
       message: appError.message,
       category: appError.category,
@@ -200,7 +200,7 @@ export class ErrorFactory {
       stack: (error as Error)?.stack
     });
 
-    // 2. 本地持久化記錄 (供診斷面板讀取)
+    // 2. 本地持久化记录 (供诊断面板读取)
     try {
       const key = 'app_errors';
       const raw = localStorage.getItem(key);
@@ -215,24 +215,24 @@ export class ErrorFactory {
 
       errors.push(errorEntry);
       
-      // 只保留最近 50 條記錄
+      // 只保留最近 50 条记录
       const limitedErrors = errors.slice(-50);
       
       if (typeof localStorage !== 'undefined') {
         try {
           localStorage.setItem(key, JSON.stringify(limitedErrors));
         } catch (storageError) {
-          // 如果 QuotaExceededError (localStorage 滿了)，先清空再試一次
+          // 如果 QuotaExceededError (localStorage 满了)，先清空再试一次
           localStorage.removeItem(key);
           localStorage.setItem(key, JSON.stringify([errorEntry]));
         }
       }
     } catch (e) {
-      // 靜默失敗，不影響業務
+      // 静默失败，不影响业务
     }
   }
 
-  /** 診斷面板讀取接口 */
+  /** 诊断面板读取接口 */
   static getLocalErrors(): Record<string, unknown>[] {
     try {
       return JSON.parse(localStorage.getItem('app_errors') || '[]');
@@ -241,7 +241,7 @@ export class ErrorFactory {
     }
   }
 
-  /** 診斷面板清理接口 */
+  /** 诊断面板清理接口 */
   static clearLocalErrors() {
     try {
       localStorage.removeItem('app_errors');
@@ -255,7 +255,7 @@ export class ErrorFactory {
       return this.create(error.message, { originalError: error });
     }
     
-    return this.create(typeof error === 'string' ? error : '未知錯誤', { 
+    return this.create(typeof error === 'string' ? error : '未知错误', { 
       context: { raw: error } 
     });
   }
@@ -264,7 +264,7 @@ export class ErrorFactory {
     if (silent) return;
     this.capture(error);
     const msg = this.extractErrorMessage(error);
-    showToast.error(`${context}失敗: ${msg}`);
+    showToast.error(`${context}失败: ${msg}`);
   }
 
   static async logResult(payload: unknown, level: 'success' | 'error', context: unknown) {
@@ -272,7 +272,7 @@ export class ErrorFactory {
   }
   
   static extractErrorMessage(error: unknown): string {
-    if (!error) return '未知錯誤';
+    if (!error) return '未知错误';
     let rawMsg = '';
     if (typeof error === 'string') {
       rawMsg = error;
@@ -310,35 +310,35 @@ export class ErrorFactory {
       rawMsg = String(error);
     }
 
-    // 進行英中錯誤訊息轉換，確保「報錯一律只有中文」
+    // 进行英中错误信息转换，确保「报错一律只有中文」
     const lowerMsg = rawMsg.toLowerCase();
     if (lowerMsg.includes('failed to fetch') || lowerMsg.includes('network request failed')) {
-      return '網路連線異常，請檢查網路';
+      return '网络连接异常，请检查网络';
     }
     if (lowerMsg.includes('network error')) {
-      return '網路連線錯誤，請稍後重試';
+      return '网络连接错误，请稍后重试';
     }
     if (lowerMsg.includes('timeout') || lowerMsg.includes('timed out')) {
-      return '請求逾時，請稍後重試';
+      return '请求超时，请稍后重试';
     }
     if (lowerMsg.includes('unauthorized') || lowerMsg.includes('token expired') || lowerMsg.includes('invalid token')) {
-      return '登入已過期，請重新登入';
+      return '登录已过期，请重新登录';
     }
     if (lowerMsg.includes('permission denied') || lowerMsg.includes('forbidden')) {
-      return '權限不足，拒絕執行此操作';
+      return '权限不足，拒绝执行此操作';
     }
     if (lowerMsg.includes('not found')) {
-      return '找不到該項資源';
+      return '找不到该项资源';
     }
     if (lowerMsg.includes('conflict') || lowerMsg.includes('already exists')) {
-      return '資料紀錄已存在，請勿重複提交';
+      return '数据记录已存在，请勿重复提交';
     }
     if (lowerMsg.includes('validation') || lowerMsg.includes('invalid argument') || lowerMsg.includes('bad request')) {
-      return '輸入資料格式不正確';
+      return '输入数据格式不正确';
     }
 
-    if (rawMsg === 'Network Error') return '網路錯誤，請稍後重試';
-    if (rawMsg === 'Unknown Error') return '未知的系統錯誤';
+    if (rawMsg === 'Network Error') return '网络错误，请稍后重试';
+    if (rawMsg === 'Unknown Error') return '未知的系统错误';
 
     return rawMsg;
   }

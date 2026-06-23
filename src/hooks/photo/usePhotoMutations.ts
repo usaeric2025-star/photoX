@@ -6,7 +6,6 @@ import { queryKeys } from '@/lib/query/keys';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { defineMutation } from '@/lib/mutations/defineMutation';
 import { useOptimisticMutation } from '@/lib/mutations/useOptimisticMutation';
-import { QueryKey } from '@tanstack/react-query';
 import { syncBatchPhotoTags } from '@/services/tag/commands';
 
 /**

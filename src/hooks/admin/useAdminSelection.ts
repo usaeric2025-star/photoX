@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useAdminMaintenance } from './useAdminMaintenance';
-import { useUI } from '@/lib/store';
+import { useUI, UIStoreState } from '@/lib/store';
 import { useAppRouter } from '@/lib/router/useAppRouter';
 
 /**
@@ -11,7 +11,7 @@ export const useAdminSelection = () => {
     const [isDeleteOpen, { open, close, toggle }] = useDisclosure(false);
     const [idsToDelete, setIdsToDelete] = useState<string[]>([]);
     const adminActions = useAdminMaintenance();
-    const update = useUI(s => s.update);
+    const patch = useUI((s: UIStoreState) => s.patch);
     const { navigate } = useAppRouter();
 
     const initiateDelete = (ids: string[]) => {
@@ -29,7 +29,7 @@ export const useAdminSelection = () => {
     };
 
     const initiateBatchEdit = (ids: string[]) => {
-        update({ batchEditingIds: ids });
+        patch({ batchEditingIds: ids });
         navigate.adminBatchEdit();
     };
 

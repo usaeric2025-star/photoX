@@ -2,7 +2,7 @@ import { useCategoryCreate, useCategoryEdit, useCategoryDelete } from './useCate
 import { useTagCreate, useTagEdit, useTagDelete } from './useTagMutations';
 import { useManufacturerCreate, useManufacturerEdit, useManufacturerDelete } from './useManufacturerMutations';
 
-export function useAdminCategory({ update }: { update?: any }) {
+export function useAdminCategory() {
   const { mutateAsync: deleteCategory } = useCategoryDelete();
   const { mutateAsync: deleteTag } = useTagDelete();
   const { mutateAsync: deleteManufacturer } = useManufacturerDelete();

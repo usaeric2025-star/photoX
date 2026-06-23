@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-Hant">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
@@ -9,7 +9,7 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
     <title>photoX</title>
-    <!-- 全局啟動錯誤捕獲與診斷器 (Startup Error Handler and Diagnosis Overlay) -->
+    <!-- 全局启动错误捕获 with Diagnosis (Global Startup Error Catcher) -->
     <script>
       (function() {
         var errors = [];
@@ -25,26 +25,26 @@
               <div style="max-width: 600px; margin: 40px auto; width: 100%; line-height: 1.5;"> \
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;"> \
                   <svg style="width: 28px; height: 28px; fill: #dc2626;" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg> \
-                  <h1 style="font-size: 22px; font-weight: 700; margin: 0; color: #dc2626;">流覽器啟動異常 (Startup Error)</h1> \
+                  <h1 style="font-size: 22px; font-weight: 700; margin: 0; color: #dc2626;">浏览器启动异常 (Startup Error)</h1> \
                 </div> \
-                <p style="font-size: 14px; color: #4b5563; margin-top: 0; margin-bottom: 20px;">頁面載入或腳本執行過程中發生了未經捕獲的例外錯誤。您可以點擊下方按鈕複製診斷資訊，或嘗試重新載入。</p> \
+                <p style="font-size: 14px; color: #4b5563; margin-top: 0; margin-bottom: 20px;">页面加载或脚本执行过程中发生了未经捕获的例外错误。您可以点击下方按钮复制诊断信息，或尝试重新加载。</p> \
                 <div id="startup-error-logs" style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 20px; font-family: ui-monospace, SFMono-Regular, Menlow, Monaco, Consolas, monospace; font-size: 13px; color: #111827; white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto;"></div> \
                 <div style="display: flex; gap: 12px;"> \
-                  <button id="copy-startup-dia" style="background: #2563eb; color: #ffffff; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; transition: background 0.2s;">一鍵複製診斷資訊</button> \
-                  <button onclick="window.location.reload()" style="background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; transition: background 0.2s;">重新載入頁面</button> \
+                  <button id="copy-startup-dia" style="background: #2563eb; color: #ffffff; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; transition: background 0.2s;">一键复制诊断信息</button> \
+                  <button onclick="window.location.reload()" style="background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; transition: background 0.2s;">重新加载页面</button> \
                 </div> \
               </div>';
             document.body.appendChild(errorDiv);
             document.getElementById('copy-startup-dia').onclick = function() {
-              var txt = "--- 啟動診斷資訊 ---\n" +
-                        "時間戳: " + new Date().toISOString() + "\n" +
-                        "瀏覽器環境: " + navigator.userAgent + "\n" +
+              var txt = "--- 启动诊断信息 ---\n" +
+                        "时间戳: " + new Date().toISOString() + "\n" +
+                        "浏览器环境: " + navigator.userAgent + "\n" +
                         "URL: " + window.location.href + "\n" +
-                        "異常詳情:\n" + errors.map(function(e, i) {
+                        "异常详情:\n" + errors.map(function(e, i) {
                           return (i + 1) + ". [" + e.type + "] " + e.msg + (e.details ? "\n" + e.details : "");
                         }).join("\n---\n") + "\nTrace ID: TRACE-STARTUP-" + Math.random().toString(36).substr(2, 9).toUpperCase();
               navigator.clipboard.writeText(txt).then(function() {
-                alert('診斷資訊已複製到剪貼簿！');
+                alert('诊断信息已复制到剪贴板！');
               }).catch(function() {
                 var temp = document.createElement('textarea');
                 temp.value = txt;
@@ -52,7 +52,7 @@
                 temp.select();
                 document.execCommand('copy');
                 document.body.removeChild(temp);
-                alert('診斷資訊已複製到剪貼簿！');
+                alert('诊断信息已复制到剪贴板！');
               });
             };
           }
@@ -69,12 +69,12 @@
           var msgStr = String(message || '');
           if (/ResizeObserver|websocket|hmr|AbortError/i.test(msgStr)) return;
 
-          // 🚀 Long-term Chunk Error Recovery (自動恢復最新版本)
+          // 🚀 Long-term Chunk Error Recovery (自动恢复最新版本)
           if (/chunk|dynamically imported|module script|Failed to fetch/i.test(msgStr)) {
             var reloadKey = '__chunk_fatal_reload__';
             var lastReload = sessionStorage.getItem(reloadKey);
             var now = Date.now();
-            // 10秒內只允許自動重載一次，避免無限循環
+            // 10秒内只允许自动重载一次，避免无限循环
             if (!lastReload || (now - parseInt(lastReload)) > 10000) {
               sessionStorage.setItem(reloadKey, now);
               window.location.reload();
@@ -82,8 +82,8 @@
             }
           }
 
-          var details = "源位址: " + source + "\n位置: 行 " + lineno + ", 列 " + colno + (error && error.stack ? "\n呼叫棧:\n" + error.stack : "");
-          errors.push({ msg: msgStr, type: "運行期異常 (Runtime Error)", details: details });
+          var details = "源地址: " + source + "\n位置: 行 " + lineno + ", 列 " + colno + (error && error.stack ? "\n调用栈:\n" + error.stack : "");
+          errors.push({ msg: msgStr, type: "运行期异常 (Runtime Error)", details: details });
           renderErrorOverlay();
         };
 
@@ -93,7 +93,7 @@
           var msg = reason.message || String(reason || '');
           if (/ResizeObserver|websocket|hmr|AbortError|AbortSignal/i.test(msg)) return;
 
-          // 🚀 同樣處理 Promise 拒絕中的 Chunk 錯誤
+          // 🚀 同样处理 Promise 拒绝中的 Chunk 错误
           if (/chunk|dynamically imported|module script|Failed to fetch/i.test(msg)) {
              var reloadKey = '__chunk_fatal_reload__';
              var lastReload = sessionStorage.getItem(reloadKey);
@@ -105,8 +105,8 @@
              }
           }
 
-          var details = reason.stack ? "呼叫棧:\n" + reason.stack : "位置: 匿名非同步拒絕";
-          errors.push({ msg: msg, type: "非同步拒絕異常 (Promise Rejection)", details: details });
+          var details = reason.stack ? "调用栈:\n" + reason.stack : "位置: 匿名异步拒绝";
+          errors.push({ msg: msg, type: "异步拒绝异常 (Promise Rejection)", details: details });
           renderErrorOverlay();
         });
       })();

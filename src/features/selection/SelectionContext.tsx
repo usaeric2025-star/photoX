@@ -1,5 +1,5 @@
 import React, { createContext, useContext, ReactNode, useCallback } from 'react';
-import { useUI } from '@/lib/store';
+import { useUI, UIStoreState } from '@/lib/store';
 
 interface SelectionState {
   selectedIds: string[];
@@ -22,11 +22,11 @@ interface SelectionContextValue {
 const SelectionContext = createContext<SelectionContextValue | null>(null);
 
 export function SelectionProvider({ children }: { children: ReactNode }) {
-  const selectedIds = useUI((s) => s.selectedIds);
-  const isMultiSelect = useUI((s) => s.isMultiSelect);
-  const update = useUI((s) => s.update);
-  const toggleSelected = useUI((s) => s.toggleSelected);
-  const updateSelectedIds = useUI((s) => s.updateSelectedIds);
+  const selectedIds = useUI((s: UIStoreState) => s.selectedIds);
+  const isMultiSelect = useUI((s: UIStoreState) => s.isMultiSelect);
+  const patch = useUI((s: UIStoreState) => s.patch);
+  const toggleSelected = useUI((s: UIStoreState) => s.toggleSelected);
+  const updateSelectedIds = useUI((s: UIStoreState) => s.updateSelectedIds);
 
   const state: SelectionState = {
     selectedIds,
@@ -51,17 +51,17 @@ export function SelectionProvider({ children }: { children: ReactNode }) {
   }, [toggleSelected]);
 
   const selectAll = useCallback((ids: string[]) => {
-    update({ isMultiSelect: true });
+    patch({ isMultiSelect: true });
     updateSelectedIds(ids);
-  }, [update, updateSelectedIds]);
+  }, [patch, updateSelectedIds]);
 
   const clear = useCallback(() => {
-    update({ isMultiSelect: false, selectedIds: [] });
-  }, [update]);
+    patch({ isMultiSelect: false, selectedIds: [] });
+  }, [patch]);
 
   const toggleMode = useCallback(() => {
-    update((s) => ({ isMultiSelect: !s.isMultiSelect }));
-  }, [update]);
+    patch((s: UIStoreState) => ({ isMultiSelect: !s.isMultiSelect }));
+  }, [patch]);
 
   const isSelected = useCallback((id: string) => {
     return selectedIds.includes(id);

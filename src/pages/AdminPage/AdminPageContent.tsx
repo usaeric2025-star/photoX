@@ -10,8 +10,9 @@ import { usePhotoUpload } from '@/features/upload';
 import { UploadButton } from '@/components/shared/UploadButton';
 import { logger } from '@/lib/logger';
 import { useAIBatchAnalysis } from '@/hooks';
-import { useTaskSelector } from '@/lib/task-queue/store';
-import { useUI, useStoreShallow } from '@/lib/store';
+import { useTaskSelector } from '@/lib/store';
+import { useUI, useUISelector } from '@/lib/store';
+import { UIStoreState } from '@/store/uiStore';
 import { Category } from '@/types';
 import { AdminHeader } from '@/components/layouts/headers/AdminHeader';
 import { AdminAuthGate } from '@/components/admin/AdminAuthGate';
@@ -24,24 +25,23 @@ const BatchEditScreen = lazy(() => import('@/features/batch-edit/BatchEditScreen
 const StatisticsScreen = lazy(() => import('@/features/statistics/components/StatisticsScreen').then(m => ({ default: m.StatisticsScreen })));
 const DiagnosticsDashboard = lazy(() => import('@/features/diagnostics/DiagnosticsDashboard').then(m => ({ default: m.DiagnosticsDashboard })));
 const SettingsPage = lazy(() => import('@/features/settings/SettingsPage').then(m => ({ default: m.SettingsPage })));
-const PhotoEditDialog = lazy(() => import('@/features/photo-edit/index').then(m => ({ default: m.PhotoEditDialog })));
 
 export function AdminPageContent() {
   const filters = useFilters({ enableStatus: true, enableBatch: true });
   const { user } = useAuth();
   const { uploadFiles } = usePhotoUpload();
-  const uploadModeDialogOpen = useUI(s => s.uploadModeDialogOpen);
-  const pendingFiles = useUI(s => s.pendingFiles);
+  const uploadModeDialogOpen = useUISelector((s: UIStoreState) => s.uploadModeDialogOpen);
+  const pendingFiles = useUISelector((s: UIStoreState) => s.pendingFiles);
   const { handleBatchAiAnalyze } = useAIBatchAnalysis();
   const { mutateAsync: syncMut } = useSyncMutation();
-  const tasksMap = useTaskSelector(s => s.tasks);
+  const tasksMap = useTaskSelector((s) => s.tasks);
   const tasks = React.useMemo(() => Array.from(tasksMap.values()), [tasksMap]);
-  const appLang = useUI(s => s.appLang);
+  const appLang = useUISelector((s: UIStoreState) => s.appLang);
   const { navigate, route } = useAppRouter();
 
-  const store = useUI(useStoreShallow(s => ({
-    update: s.update,
-    batchEditingIds: s.batchEditingIds })));
+  const store = useUISelector((s: UIStoreState) => ({
+    patch: s.patch,
+    batchEditingIds: s.batchEditingIds }));
   
   const currentScreen = (() => {
     if (route === 'admin') return 'gallery';
@@ -110,9 +110,9 @@ export function AdminPageContent() {
             if (e.target.files) {
               const files = e.target.files;
               if (files.length > 1) {
-                store.update({ uploadModeDialogOpen: true, pendingFiles: files });
+                store.patch({ uploadModeDialogOpen: true, pendingFiles: files });
               } else {
-                store.update({ uploadAsGroup: false });
+                store.patch({ uploadAsGroup: false });
                 uploadFiles(files);
               }
             }
@@ -121,20 +121,19 @@ export function AdminPageContent() {
         />
       </div>
 
-      {/* Put Modals outside the layout container */}
+      {/* UploadModeDialog is still fine here for fine-grained control if needed, but consider moving to global if it conflicts */}
       <Suspense fallback={null}>
         <UploadModeDialog 
           open={uploadModeDialogOpen}
-          onOpenChange={(open) => store.update({ uploadModeDialogOpen: open })}
+          onOpenChange={(open) => store.patch({ uploadModeDialogOpen: open })}
           onSelectMode={(mode) => {
             if (pendingFiles) {
-              store.update({ uploadAsGroup: mode === 'group' });
+              store.patch({ uploadAsGroup: mode === 'group' });
               uploadFiles(pendingFiles);
             }
-            store.update({ uploadModeDialogOpen: false, pendingFiles: null });
+            store.patch({ uploadModeDialogOpen: false, pendingFiles: null });
           }}
         />
-        <PhotoEditDialog />
       </Suspense>
     </AdminAuthGate>
   );

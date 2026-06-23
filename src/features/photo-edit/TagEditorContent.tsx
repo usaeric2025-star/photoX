@@ -9,7 +9,6 @@ import {
   usePhotoFilter,
   useSettings,
   useUI,
-  useShallow,
   useTagSearch,
 } from "@/hooks";
 import { MAX_TAGS_PER_PHOTO } from "@/constants/limits";

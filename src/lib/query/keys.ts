@@ -39,7 +39,7 @@ const aiAudit = {
 
 const categories = {
   all: ['categories'] as const,
-  public: () => [...categories.all, 'public'] as const,
+  public: (lang: string) => [...categories.all, 'public', lang] as const,
   admin: () => [...categories.all, 'admin'] as const,
   categories: () => [...categories.all] as const,
 };

@@ -6,13 +6,12 @@ import { useEffect, useRef, useState, Suspense } from 'react';
 import { usePublicSettings } from '@/hooks';
 import { useLocalStorage } from '@/hooks/core/useLocalStorage';
 import { useAuth } from '@/lib/store';
-import { initAuthListener } from '@/store/useAuthStore';
+import { authStore, initAuthListener } from '@/store/authStore';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { PortalRoot } from '@/components/ui/PortalRoot';
 import { User } from '@/types';
 // Removed migrateStorage
 import { logger } from '@/lib/logger';
-import { startAutoDiagnose } from '@/features/diagnostics/autoDiagnose';
 import { useUI } from '@/lib/store';
 
 export default function AppRoutes() {
@@ -22,8 +21,8 @@ export default function AppRoutes() {
     document.documentElement.dataset.lang = appLang;
   }, [appLang]);
 
-  const isLoading = useAuth((s) => s.isLoading);
-  const init = useAuth((s) => s.init);
+  const auth = useAuth();
+  const isLoading = auth.isLoading;
   const { data: settings, isPending: isSettingsPending } = usePublicSettings();
 
   const [passcode] = useLocalStorage({
@@ -44,10 +43,10 @@ export default function AppRoutes() {
 
   useEffect(() => {
     logger.debug('🛡️ [App] Initializing Auth/Settings...');
-    init();
+    authStore.getState().init();
     const cleanup = initAuthListener();
     return cleanup;
-  }, [init]);
+  }, []);
 
   useEffect(() => {
     // If auth and settings are no longer pending, signal that UI can start
@@ -82,8 +81,6 @@ export default function AppRoutes() {
     }
   }, [user, isLoading]);
 
-  const isDiagnosedRef = useRef(false);
-
   useEffect(() => {
     // 確保骨架屏被移除
     const skeleton = document.getElementById('app-startup-skeleton');
@@ -96,9 +93,9 @@ export default function AppRoutes() {
   }, [isLoading, isSettingsPending]);
 
   useEffect(() => {
-    if (user && !isLoading && !isDiagnosedRef.current) {
-      isDiagnosedRef.current = true;
-      startAutoDiagnose();
+    if (user && !isLoading) {
+      // Just log auth ready
+      logger.info('🔑 Auth status ready for user:', user.id);
     }
   }, [user, isLoading]);
 

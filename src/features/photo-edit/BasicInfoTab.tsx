@@ -6,7 +6,7 @@ import { Icon } from '@/components/ui/Icon';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useUI } from '@/lib/store';
 import { usePhoto, useTaskExecutor, useTranslation, useFilters } from '@/hooks';
-import { useTaskSelector } from '@/lib/task-queue/store';
+import { useTaskSelector } from '@/lib/store';
 import { OptimizedImage } from '@/components/shared/OptimizedImage';
 import { showToast } from '@/lib/ui/toast';
 

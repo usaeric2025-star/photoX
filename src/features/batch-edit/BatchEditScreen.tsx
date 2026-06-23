@@ -25,13 +25,13 @@ function BatchDeleteButton({ selectedIds, onSuccess }: { selectedIds: string[], 
     <div className="relative">
       <Button 
         onClick={() => deleteDialog.open()}
-        loading={deleteMutation.isPending}
+        loading={deleteMutation.isMutating}
         disabled={selectedIds.length === 0}
         variant="destructive"
         className="h-10 px-3 flex items-center justify-center gap-1.5"
-        leftIcon={!deleteMutation.isPending && <Icon name="trash-2" size={16} />}
+        leftIcon={!deleteMutation.isMutating && <Icon name="trash-2" size={16} />}
       >
-        {deleteMutation.isPending ? '刪除中...' : `刪除 (${selectedIds.length})`}
+        {deleteMutation.isMutating ? '刪除中...' : `刪除 (${selectedIds.length})`}
       </Button>
       <ConfirmDialog
           open={isDeleteOpen}

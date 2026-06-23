@@ -1,7 +1,7 @@
 import React from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { useCategories, useTags } from '@/hooks';
-import { useAppQuery as useQuery } from '@/lib/query';
+import { useAppQuery } from '@/lib/query';
 import { api } from '@/lib/api';
 import { PhotoListItem } from '@/types/api';
 
@@ -36,23 +36,23 @@ const StatCard = ({ title, value, subValue, icon: iconName, colorClass, delay = 
 );
 
 export function StatisticsScreen() {
-  const { data: totalPhotos = 0 } = useQuery({
-    queryKey: ['photos', 'count', 'all'],
-    queryFn: async () => {
+  const { data: totalPhotos = 0 } = useAppQuery(
+    ['photos', 'count', 'all'],
+    async () => {
       const res = await api.photos.count.$post({ json: { isAdminMode: true } });
       const json = await res.json();
       return json.success ? (json.data as number) : 0;
     }
-  });
+  );
 
-  const { data: hiddenCount = 0 } = useQuery({
-    queryKey: ['photos', 'count', 'hidden'],
-    queryFn: async () => {
+  const { data: hiddenCount = 0 } = useAppQuery(
+    ['photos', 'count', 'hidden'],
+    async () => {
       const res = await api.photos.count.$post({ json: { isAdminMode: true, isHidden: true } });
       const json = await res.json();
       return json.success ? (json.data as number) : 0;
     }
-  });
+  );
 
   const { data: categories = [] } = useCategories();
   const { data: tags = [] } = useTags();

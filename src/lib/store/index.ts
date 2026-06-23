@@ -1,26 +1,31 @@
-import { useUIStore as _useUIStore, type UIStoreState } from '@/store/useUIStore';
-import { useAuthStore as _useAuthStore, type AuthState } from '@/store/useAuthStore';
-import { useTaskStore as _useTaskStore, type TaskStoreState } from '@/lib/task-queue/store';
-import { useShallow } from 'zustand/react/shallow';
+import { uiStore, useUIStore as useUI, type UIStoreState, type UIStoreInstance } from '@/store/uiStore';
+import { authStore, useAuthStore as useAuth, type AuthState, type AuthStoreInstance } from '@/store/authStore';
+import { taskStore, useTaskStore as useTask, useTaskSelector, type TaskStoreInstance } from '@/store/taskStore';
+import { useAppLang } from '@/store/uiStore';
 
 /**
- * 統一的 Store Adapter
- * 職責：隱藏底層狀態管理工具的實作細節，提供業務層一致的 API。
+ * 统一的 Store Adapter
+ * 职责：隐藏底层状态管理工具的实现细节，提供业务层一致的 API。
  */
-export { useUIStore as useUI, useAppLang } from '@/store/useUIStore';
-export { useAuthStore as useAuth } from '@/store/useAuthStore';
-export { useTaskStore as useTask, useTaskSelector } from '@/lib/task-queue/store';
-export { useShallow as useStoreShallow } from 'zustand/react/shallow';
+export { useUIStore as useUI, useUISelector } from '@/store/uiStore';
+export { useAppLang } from '@/store/uiStore';
+export { useAuthStore as useAuth, useAuthSelector } from '@/store/authStore';
+export { useTaskStore as useTask, useTaskSelector } from '@/store/taskStore';
+
+/**
+ * Storve handles fine-grained updates via selectors. 
+ * We re-export selectors to maintain a consistent API across components.
+ */
+
 
 // State types
-export type { UIStoreState } from '@/store/useUIStore';
-export type { AuthState } from '@/store/useAuthStore';
-export type { TaskStoreState as TaskState } from '@/lib/task-queue/store';
+export type { UIStoreState } from '@/store/uiStore';
+export type { AuthState } from '@/store/authStore';
+export type { TaskStoreState as TaskState } from '@/store/taskStore';
 
 // Direct state getters (for non-React contexts)
 export const storeAccessor = {
-  get ui() { return _useUIStore.getState(); },
-  get auth() { return _useAuthStore.getState(); },
-  get task() { return _useTaskStore.getState(); }
+  get ui() { return uiStore.getState(); },
+  get auth() { return authStore.getState(); },
+  get task() { return taskStore.getState(); },
 };
-

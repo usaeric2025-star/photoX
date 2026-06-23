@@ -2,20 +2,22 @@ import React, { useState } from "react";
 import { NativeDialog } from "@/components/ui/NativeDialog";
 import { useUI } from '@/lib/store';
 import { useFormContext } from "el-form-react-hooks";
-import { 
-  usePhoto,
-  useFilters,
-} from "@/hooks";
+import { usePhoto } from "@/hooks/photo/usePhoto";
+import { useFilters } from "@/hooks/useFilters";
 import { PhotoEditSessionProvider } from "@/hooks/photo/PhotoEditSession";
 import { usePhotoEditSessionContext } from "@/hooks/photo/usePhotoEditSessionContext";
 import { PhotoEditTabs } from "./PhotoEditTabs";
 import { DialogHeader } from "./DialogHeader";
 import { LoadingSpinner } from "@/components/ui/feedback/LoadingSpinner";
+import { logger } from "@/lib/logger";
 
 function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: boolean; handleClose: () => void; editPhotoId: string; }) {
   const { data: photo, isPending } = usePhoto(editPhotoId);
   const appLang = useUI((s) => s.appLang);
-  const { form } = useFormContext();
+
+  React.useEffect(() => {
+    logger.debug('PhotoEditDialogInner rendered', { isOpen, editPhotoId, photo: !!photo });
+  }, [isOpen, editPhotoId, photo]);
 
   const [showConfirm, setShowConfirm] = useState(false);
   const { isDirty, commit, discard, isSubmitting } = usePhotoEditSessionContext();
@@ -38,15 +40,6 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
     await commit();
   };
 
-  if (isPending) {
-    return (
-      <div className="p-20 flex flex-col items-center justify-center gap-4 min-h-[500px]">
-        <LoadingSpinner size="lg" />
-        <p className="text-sm font-medium text-slate-500">正在获取照片详情...</p>
-      </div>
-    );
-  }
-
   return (
     <NativeDialog
       id="photo-edit-dialog"
@@ -58,7 +51,14 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
     >
       <div className="flex flex-col h-full bg-surface-soft min-h-[500px]">
         <DialogHeader onClose={handleInterceptClose} onDeleteClick={() => {}} />
-        <PhotoEditTabs />
+        {isPending ? (
+          <div className="flex-1 flex flex-col items-center justify-center gap-4 min-h-[500px]">
+            <LoadingSpinner size="lg" />
+            <p className="text-sm font-medium text-slate-500">正在获取照片详情...</p>
+          </div>
+        ) : (
+          <PhotoEditTabs />
+        )}
       </div>
 
       <NativeDialog
@@ -119,4 +119,3 @@ export function PhotoEditDialog({ isOpen: propIsOpen, onClose: propOnClose, edit
     </PhotoEditSessionProvider>
   );
 }
-

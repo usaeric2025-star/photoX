@@ -1,7 +1,6 @@
 import { Hono, type Context } from 'hono';
 import { type StatusCode } from 'hono/utils/http-status';
 import { requireRealUser } from './auth.js';
-import { logTraffic } from './trafficCapture.js';
 import { refreshPhotosView } from './db/actions.js';
 import { getTraceId } from './error/traceId.js';
 import { logger } from './logger.js';
@@ -12,11 +11,9 @@ export function setupMiddlewares(app: Hono, serverEnv: { NODE_ENV: string | unde
   app.use('*', async (c: Context, next) => {
       const traceId = getTraceId(c);
       c.header('X-Trace-Id', traceId);
-      logger.info(`[HTTP] ${c.req.method} ${c.req.path}`, { traceId });
-      if (serverEnv.NODE_ENV === 'production') {
-          if (Math.random() < 0.01) logTraffic(c.req, null);
-      } else {
-          logTraffic(c.req, null);
+      // 只在非 GET 請求或開發環境執行日誌，減少雜訊
+      if (c.req.method !== 'GET' || serverEnv.NODE_ENV === 'development') {
+          logger.info(`[HTTP] ${c.req.method} ${c.req.path}`, { traceId });
       }
       await next();
   });
@@ -34,7 +31,8 @@ export function setupMiddlewares(app: Hono, serverEnv: { NODE_ENV: string | unde
   
     logger.error('api.error', { traceId, path, method, code: appError.code, message: appError.message, stack: appError.stack });
   
-    (async () => {
+    // 使用 c.executionCtx.waitUntil (如果可用) 來處理非同步日誌，避免阻塞回應
+    const logToDb = async () => {
       try {
         const { db, systemLogs } = await import('./db/index.js');
         await db.insert(systemLogs).values({
@@ -44,11 +42,22 @@ export function setupMiddlewares(app: Hono, serverEnv: { NODE_ENV: string | unde
           metadata: { traceId, method, code: appError.code, stack: appError.stack, timestamp: new Date().toISOString() },
           createdAt: new Date()
         });
-        logger.info(`[API ERROR LOG] Successfully saved to system_logs`);
+        logger.debug(`[API ERROR LOG] Saved to system_logs`);
       } catch (logErr) {
         console.error('[log-error] Fatal exception in logger:', logErr);
       }
-    })();
+    };
+
+    try {
+        if (c.executionCtx?.waitUntil) {
+            c.executionCtx.waitUntil(logToDb());
+        } else {
+            // 在不支援 waitUntil 的環境（如標準 Node）中，我們不阻塞使用者，直接執行
+            logToDb().catch(e => console.error('Failed to log to DB:', e));
+        }
+    } catch (e) {
+        logToDb().catch(err => console.error('Failed in logToDb fallback:', err));
+    }
   
     const status = ((err as any).status || 500);
     return c.json(errorFactory.fail(appError), (status as any));

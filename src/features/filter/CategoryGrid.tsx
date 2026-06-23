@@ -4,19 +4,16 @@ import { useTranslation } from '@/hooks';
 import { getTranslatedCategoryName } from '@/services/category/utils';
 import { logger } from '@/lib/logger';
 
-import { Skeleton } from '@/components/ui/Skeleton';
-
 export function CategoryGrid({ mode }: { mode?: 'public' | 'admin' }) {
   const { filters, updateFilters } = useFilterState();
-  const { data: categories, isPending } = useCategories();
-  logger.debug('[CategoryGrid] categories fetched');
   const { appLang, uiTranslations } = useTranslation();
+  const { data: categories, isPending } = useCategories(appLang);
 
   if (isPending) {
     return (
       <div className="grid grid-cols-4 gap-1.5">
          {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="h-[34px] rounded-xl" />
+            <div key={i} className="animate-shimmer h-[34px] rounded-xl" />
          ))}
       </div>
     );
@@ -24,15 +21,16 @@ export function CategoryGrid({ mode }: { mode?: 'public' | 'admin' }) {
 
   // ✅ 固定 8 個：全部 + 前 7 個分類
   const displayCategories = [
-    { id: null, name: '全部', code: 'all' },
+    { id: null, code: 'all' },
     ...(categories?.slice(0, 7) || [])
   ];
 
   return (
     <div className="grid grid-cols-4 gap-1.5 select-none">
       {displayCategories.map(cat => {
+        // Fix: Use a more robust equality check for selection
         const isSelected = (!filters.categoryId && cat.id === null) || 
-                          (filters.categoryId && cat.id !== null && String(filters.categoryId) === String(cat.id));
+                          (filters.categoryId !== null && cat.id !== null && String(filters.categoryId) === String(cat.id));
 
         const categoryName = cat.id === null 
           ? (uiTranslations.all || '全部')
@@ -41,6 +39,7 @@ export function CategoryGrid({ mode }: { mode?: 'public' | 'admin' }) {
         return (
           <button
             key={cat.id ?? 'all'}
+            id={`category-${cat.id ?? 'all'}`}
             onClick={() => updateFilters({ categoryId: cat.id })}
             className={`
               px-2 py-2 rounded-xl text-[13px] font-semibold truncate transition-all duration-300 active:scale-95

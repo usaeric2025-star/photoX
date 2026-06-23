@@ -91,7 +91,7 @@ const uploadImages = async (
     }
 
     if (!presignRes.ok) {
-      throw ErrorFactory.fatal(`获取预签名上传地址失败 (HTTP ${presignRes.status})`, { context: 'uploadFile' });
+      throw ErrorFactory.fatal(`獲取預簽名上傳地址失敗 (HTTP ${presignRes.status})`, { context: 'uploadFile' });
     }
 
     const result = await presignRes.json() as { 
@@ -99,8 +99,8 @@ const uploadImages = async (
       error?: string; 
       data?: { uploadUrl: string; publicUrl: string } 
     };
-    if (!result.success) throw ErrorFactory.fatal(String(result.error), { context: 'uploadFile' });
-    if (!result.data) throw ErrorFactory.fatal('Upload failed: missing data from presign API', { context: 'uploadFile' });
+    if (!result.success) throw ErrorFactory.fatal(`上傳伺服器錯誤: ${String(result.error)}`, { context: 'uploadFile' });
+    if (!result.data) throw ErrorFactory.fatal('上傳失敗: 接口未返回數據', { context: 'uploadFile' });
     
     const { uploadUrl, publicUrl } = result.data;
 
@@ -111,26 +111,25 @@ const uploadImages = async (
         body: new Uint8Array(buffer)
       });
       if (!uploadRes.ok) {
-         throw ErrorFactory.fatal(`R2 Upload failed with HTTP ${uploadRes.status}: ${await uploadRes.text().catch(() => '')}`, { context: 'uploadFile' });
+         throw ErrorFactory.fatal(`雲端存儲上傳失敗 (HTTP ${uploadRes.status})`, { context: 'uploadFile' });
       }
       if (isMain && onProgress) onProgress(100);
       return publicUrl;
     } catch (browserUploadErr) {
-      logger.warn('[Upload] Browser direct upload via presigned URL failed, evaluating fallback...', browserUploadErr);
+      logger.warn('[Upload] Browser direct upload failed, trying fallback...', browserUploadErr);
       
       const strategy = resolveUploadStrategy(buffer.byteLength, browserUploadErr);
       
       if (strategy.status === 'failed') {
-          throw ErrorFactory.fatal(strategy.userMessage || strategy.reason, { context: 'uploadFile' });
+          throw ErrorFactory.fatal(strategy.userMessage || '上傳服務目前不可用', { context: 'uploadFile' });
       }
       
-      // status === 'relay'
-      logger.warn('[Upload] Falling back to server relay...', strategy.status === 'relay' ? strategy.endpoint : '/api/upload-direct');
+      logger.warn('[Upload] Falling back to server relay...');
       const fallbackRes = await api['upload-direct'].$post({
         json: { base64Data: base64, fileKey: safeFileName, contentType: 'image/webp' }
       });
       if (!fallbackRes.ok) {
-         throw ErrorFactory.fatal(`服务器中转上传失败 (HTTP ${fallbackRes.status}): ${await fallbackRes.text().catch(()=>'')}`, { context: 'uploadFile' });
+         throw ErrorFactory.fatal(`伺服器中轉上傳失敗 (HTTP ${fallbackRes.status})`, { context: 'uploadFile' });
       }
       const fallbackResult = await fallbackRes.json() as { data: { publicUrl: string } };
       if (isMain && onProgress) onProgress(100);

@@ -90,7 +90,7 @@ export function TaskDrawer() {
       if (e.key === 'Escape') {
         e.preventDefault();
         e.stopPropagation();
-        storeAccessor.ui.update({ isTaskDrawerOpen: false });
+        storeAccessor.ui.patch({ isTaskDrawerOpen: false });
       }
     };
 
@@ -111,7 +111,7 @@ export function TaskDrawer() {
           onClick={(e) => {
             e.stopPropagation();
             e.preventDefault();
-            storeAccessor.ui.update({ isTaskDrawerOpen: false });
+            storeAccessor.ui.patch({ isTaskDrawerOpen: false });
           }}
         />
       )}
@@ -141,7 +141,7 @@ export function TaskDrawer() {
             )}
             <button 
               type="button"
-              onClick={() => storeAccessor.ui.update({ isTaskDrawerOpen: false })}
+              onClick={() => storeAccessor.ui.patch({ isTaskDrawerOpen: false })}
               className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all cursor-pointer active:scale-95"
               aria-label="關閉"
             >

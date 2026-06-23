@@ -12,7 +12,11 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
   const params = route ? (route.params as any) : {};
 
   const updateSearch = useCallback((updates: Record<string, unknown>) => {
-    if (!route) return;
+    console.log("updateSearch called", { updates, route });
+    if (!route) {
+      console.warn("updateSearch ignored: route is null", { updates });
+      return;
+    }
     const currentRouteName = route.name;
 
     const cleanParams: Record<string, any> = {};
@@ -35,6 +39,7 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
       }
     }
 
+    console.log("Pushing to Router", { currentRouteName, merged });
     // We can cast merged to any because params are mostly optional string|string[]
     Router.push(currentRouteName as any, merged);
   }, [route]);
@@ -79,15 +84,20 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
       // 如果是 photo 詳情頁，關閉後回到首頁
       if (route?.name === 'photo') {
          if (val) {
-           Router.push("photo", { photoId: val });
+           if (val !== params.photoId) Router.push("photo", { photoId: val });
          } else {
            Router.push("home");
          }
          return;
       }
+      
+      // Prevent infinite loops if value is the same
+      if (val === photoId) return;
+      if (!val && !photoId) return;
+
       // 否則使用 query param 模式以保留過濾條件
       updateSearch({ photoId: val || undefined });
-  }, [route?.name, updateSearch]);
+  }, [route?.name, params.photoId, photoId, updateSearch]);
 
   const anchor = params.anchor === 'true';
   const setAnchor = useCallback((val: boolean) => {

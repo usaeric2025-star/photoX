@@ -1,6 +1,6 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useTaskExecutor } from "@/hooks";
-import { useTaskSelector } from '@/lib/task-queue/store';
+import { useTaskSelector } from '@/lib/store';
 import React, { useState } from "react";
 import { Icon } from '@/components/ui/Icon';
 import { Button } from '@/components/ui/Button';
@@ -11,7 +11,7 @@ import { PromptDialog } from "@/components/ui/PromptDialog";
 
 import { normalizeTagName } from "@/lib/utils";
 import { triggerRefreshTagHotScores } from "../../services/tag/commands";
-import { useAppQueryClient as useQueryClient } from '@/lib/query';
+import { appQuery } from '@/lib/query';
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
 import { FormProvider } from '@/lib/form/useFormField';
 import { type } from 'arktype';
@@ -58,7 +58,6 @@ export function TagsSection({
   const tasksMap = useTaskSelector(s => s.tasks);
   const tasks = React.useMemo(() => Array.from(tasksMap.values()), [tasksMap]);
   const isRunning = tasks.some((t) => t.state?.status === "processing");
-  const queryClient = useQueryClient();
 
   const [isAddOpen, addDialog] = useDisclosure(false);
   const [isEditOpen, editDialog] = useDisclosure(false);
@@ -90,7 +89,7 @@ export function TagsSection({
       "刷新热门标签",
       async () => {
         await triggerRefreshTagHotScores();
-        await queryClient.invalidateQueries({ queryKey: ["tags"] });
+        await appQuery.mutate("tags"); // Refactored to use SWR mutate
       },
       { showSuccessToast: true, silent: true },
     );

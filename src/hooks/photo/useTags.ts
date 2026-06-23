@@ -1,18 +1,21 @@
-import { STALE_TIMES } from '@/lib/query/config';
-import { createQuery } from '@/lib/query/queryFactory';
-import { loadTagsFromCloud } from '@/services/tag/queries';
+import { useAppQuery } from '@/lib/query';
 import { queryKeys } from '@/lib/query/keys';
-import { Tag } from '@/types';
-import { CACHE_CONFIG } from '@/constants/config';
+import { loadTagsFromCloud } from '@/services/tag/queries';
+import { STALE_TIMES } from '@/lib/query/config';
 
 /**
- * Hook to get the list of tags using standard query factory.
+ * Hook to get the list of tags.
  */
-export const useTags = createQuery<Tag[]>({
-  queryKey: () => queryKeys.tags.tags(),
-  staleTime: STALE_TIMES.MEDIUM,
-  gcTime: CACHE_CONFIG.GC_TIME_30M,
-  queryFn: async () => {
-    return await loadTagsFromCloud();
-  }
-});
+export function useTags() {
+  // Using SWR for data fetching
+  const { data, isLoading: isPending, error } = useAppQuery(
+    queryKeys.tags.all,
+    loadTagsFromCloud,
+    {
+      revalidateOnMount: true,
+      dedupingInterval: STALE_TIMES.MEDIUM, 
+    }
+  );
+  return { data, isPending, error };
+}
+

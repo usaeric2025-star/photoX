@@ -4,7 +4,7 @@ import { translations as allTranslations } from '@/locales';
 type Translations = Record<string, string> | null | undefined;
 
 export function useTranslation() {
-  const [appLang] = useAppLang();
+  const appLang = useAppLang();
 
   /** 
    * t - Function to resolve localized strings from a data object (e.g. photo.name)

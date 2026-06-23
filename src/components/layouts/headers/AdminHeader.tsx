@@ -3,14 +3,13 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { Icon } from '@/components/ui/Icon';
 import { useAuth } from '@/lib/store';
-import { useUI, useSettings, useAdminBatchActions, usePermission } from '@/hooks';
-import { useAppQuery as useQuery } from '@/lib/query';
+import { useUI, useSettings, useAdminBatchActions, usePermission, UIStoreState } from '@/hooks';
+import { useAppQuery } from '@/lib/query';
 import { api } from '@/lib/api';
 import { NativePopover } from '@/components/ui/NativePopover';
 import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
 import { translations } from "@/locales";
 import { storage } from '@/services/storage';
-
 
 interface AdminHeaderProps {
   className?: string;
@@ -24,21 +23,21 @@ export function AdminHeader({ className }: AdminHeaderProps) {
   const { role } = usePermission();
   const { navigate } = useAppRouter();
 
-  const lang = useUI(s => s.appLang);
-  const isMultiSelect = useUI(s => s.isMultiSelect);
-  const update = useUI(s => s.update);
+  const lang = useUI((s: UIStoreState) => s.appLang);
+  const isMultiSelect = useUI((s: UIStoreState) => s.isMultiSelect);
+  const patch = useUI((s: UIStoreState) => s.patch);
   const t = translations[lang as keyof typeof translations] || translations.en;
 
-  const { data: totalCountData } = useQuery({
-    queryKey: ['photos', 'count', 'total'],
-    queryFn: async () => {
+  const { data: totalCountData } = useAppQuery(
+    ['photos', 'count', 'total'],
+    async () => {
       const res = await api.photos.count.$post({ json: { isAdminMode: true } });
       if (!res.ok) return 0;
       const json = await res.json();
       return json.data as number;
     },
-    staleTime: 60 * 1000
-  });
+    { dedupingInterval: 60 * 1000 }
+  );
   const totalCount = totalCountData ?? 0;
 
   const cachedSettings = React.useMemo(() => {
@@ -148,9 +147,9 @@ export function AdminHeader({ className }: AdminHeaderProps) {
           <button
             onClick={() => {
               if (isMultiSelect) {
-                update({ isMultiSelect: false, selectedIds: [] });
+                patch({ isMultiSelect: false, selectedIds: [] });
               } else {
-                update({ isMultiSelect: true });
+                patch({ isMultiSelect: true });
               }
             }}
             className={cn("w-9 h-9 sm:w-10 sm:h-10", isMultiSelect ? theme.buttonActive : theme.button)}

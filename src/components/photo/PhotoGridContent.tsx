@@ -7,8 +7,6 @@ import { LoadMoreIndicator } from './LoadMoreIndicator';
 import { EmptyState } from '../ui/EmptyState';
 import { Icon } from '@/components/ui/Icon';
 
-import { PhotoCardSkeleton } from '../ui/Skeleton';
-
 interface PhotoGridContentProps {
   photos: PhotoListItem[];
   dataVersion: string;
@@ -23,6 +21,20 @@ interface PhotoGridContentProps {
   onPhotoClick?: (id: string, index: number, e?: React.MouseEvent) => void;
   gridRef?: React.Ref<any>;
   onScroll?: (offset: number) => void;
+}
+
+function CardSkeleton() {
+  return (
+    <div className="aspect-square w-full bg-surface-soft rounded-xl overflow-hidden relative border border-border-soft animate-shimmer">
+      <div className="absolute bottom-0 left-0 w-full p-3 space-y-2 bg-gradient-to-t from-black/5 to-transparent">
+        <div className="h-4 w-3/4 bg-white/20 rounded-full" />
+        <div className="flex gap-2">
+          <div className="h-2 w-12 bg-white/10 rounded-full" />
+          <div className="h-2 w-12 bg-white/10 rounded-full" />
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function PhotoGridContent({ 
@@ -81,7 +93,7 @@ export function PhotoGridContent({
            style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
         >
            {Array.from({ length: skeletonCount }).map((_, i) => (
-             <PhotoCardSkeleton key={i} />
+             <CardSkeleton key={i} />
            ))}
         </div>
       </div>
@@ -93,8 +105,8 @@ export function PhotoGridContent({
     return (
       <div className="h-full w-full flex items-center justify-center p-8 bg-brand-bg">
         <EmptyState 
-          title={hasSearch ? 'No results found' : 'No photos'} 
-          description={hasSearch ? 'Try searching with different keywords.' : undefined}
+          title={hasSearch ? '没有找到相关照片' : '暂无照片数据'} 
+          description={hasSearch ? '尝试使用不同的关键词搜索。' : '如果看到此消息且确定有数据，请尝试在管理端刷新缓存。'}
           icon={<Icon name="package-open" className="w-16 h-16 text-slate-300" />}
         />
       </div>

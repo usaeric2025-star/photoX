@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { useSelection } from './SelectionContext';
 import { useBatchActions } from './useBatchActions';
-import { useUI } from '@/lib/store';
+import { useUI, UIStoreState } from '@/lib/store';
 import { useAppRouter } from '@/lib/router/useAppRouter';
 import { useAIBatchAnalysis } from '@/hooks/photo/useAIBatchAnalysis';
 import { useConfirm } from '@/context/ConfirmContext';
@@ -40,7 +40,7 @@ export const SelectionToolbar = memo(function SelectionToolbar({
 }: SelectionToolbarProps) {
   const { state, selectAll, clear } = useSelection();
   const { isPending, batchDelete } = useBatchActions();
-  const update = useUI((s) => s.update);
+  const patch = useUI((s: UIStoreState) => s.patch);
   const { navigate } = useAppRouter();
   const { handleBatchAiAnalyze } = useAIBatchAnalysis();
   const confirm = useConfirm();
@@ -49,8 +49,8 @@ export const SelectionToolbar = memo(function SelectionToolbar({
   const removeMutation = useRemoveFromGroupMutation();
 
   const [isAiPending, setIsAiPending] = React.useState(false);
-  const isAnyPending = isPending || isAiPending || combineMutation.isPending || removeMutation.isPending;
-  const setAvoidingSelection = useUI((s) => s.setAvoidingSelection);
+  const isAnyPending = isPending || isAiPending || combineMutation.isMutating || removeMutation.isMutating;
+  const setAvoidingSelection = useUI((s: UIStoreState) => s.setAvoidingSelection);
 
   const isBatchMode = state.mode === 'batch';
   const selectedCount = state.selectedIds.length;
@@ -80,7 +80,7 @@ export const SelectionToolbar = memo(function SelectionToolbar({
 
   const handleBatchEdit = () => {
     if (selectedCount === 0 || isAnyPending) return;
-    update({ batchEditingIds: state.selectedIds });
+    patch({ batchEditingIds: state.selectedIds });
     navigate.adminBatchEdit();
   };
 
@@ -169,7 +169,7 @@ export const SelectionToolbar = memo(function SelectionToolbar({
               className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm"
               title="將照片移出此合組"
             >
-              {removeMutation.isPending ? (
+              {removeMutation.isMutating ? (
                 <LoadingSpinner size="xs" className="text-amber-600 shrink-0" />
               ) : (
                 <Icon name="folder-minus" size={14} className="text-amber-600 shrink-0" />
@@ -188,7 +188,7 @@ export const SelectionToolbar = memo(function SelectionToolbar({
               className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm"
               title="手動將照片合併為一組"
             >
-              {combineMutation.isPending ? (
+              {combineMutation.isMutating ? (
                 <LoadingSpinner size="xs" className="text-blue-600 shrink-0" />
               ) : (
                 <Icon name="folder-plus" size={14} className="text-blue-600 shrink-0" />

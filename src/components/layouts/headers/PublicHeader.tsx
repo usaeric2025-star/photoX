@@ -3,7 +3,7 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { Icon } from '@/components/ui/Icon'; // Keep one or two critical ones as standard imports for P0 performance
 import { useAuth } from '@/lib/store';
-import { useUI, useShallow, usePublicSettings, usePermission } from '@/hooks';
+import { useUI, usePublicSettings, usePermission, UIStoreState } from '@/hooks';
 import { NativePopover } from '@/components/ui/NativePopover';
 import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
 import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
@@ -21,12 +21,12 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
   const { user, isLoading, signOut } = useAuth();
   const { data: settings } = usePublicSettings();
   const { role } = usePermission();
-  const update = useUI((s) => s.update);
+  const patch = useUI((s: UIStoreState) => s.patch);
   const { navigate, route } = useAppRouter();
   const isAdmin = route === 'admin' || route === 'adminGroup';
   const isGroupPage = route === 'publicGroup' || route === 'adminGroup';
 
-  const lang = useUI(s => s.appLang);
+  const lang = useUI((s: UIStoreState) => s.appLang);
   const t = translations[lang as keyof typeof translations] || translations.en;
 
   const cachedSettings = React.useMemo(() => {

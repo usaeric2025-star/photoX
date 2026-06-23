@@ -1,20 +1,24 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { Icon } from '@/components/ui/Icon';
-import { useUI } from '@/lib/store';
-import { useDisclosure } from '@/hooks/core/useDisclosure';
-import { useClickOutside } from '@/hooks/core/useClickOutside';
-
+import { useUI, UIStoreState } from '@/lib/store';
 import { NativePopover } from '@/components/ui/NativePopover';
+import { appQuery } from '@/lib/query';
+import { queryKeys } from '@/lib/query/keys';
 
 export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dropdown' | 'segmented' }) {
-  const appLang = useUI((s) => s.appLang);
-  const update = useUI((s) => s.update);
+  const appLang = useUI((s: UIStoreState) => s.appLang);
+  const patch = useUI((s: UIStoreState) => s.patch);
 
   const langs: { code: 'zh' | 'en' | 'ms'; label: string }[] = [
     { code: 'zh', label: '中文' },
     { code: 'en', label: 'EN' },
     { code: 'ms', label: 'BM' }
   ];
+
+  const handleLangChange = (lang: 'zh' | 'en' | 'ms') => {
+    patch({ appLang: lang });
+    appQuery.mutate(queryKeys.categories.all);
+  };
 
   if (mode === 'dropdown') {
     const currentLabel = langs.find(l => l.code === appLang)?.label || 'EN';
@@ -35,9 +39,7 @@ export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dro
           {langs.map(l => (
             <button
               key={l.code}
-              onClick={() => {
-                update({ appLang: l.code });
-              }}
+              onClick={() => handleLangChange(l.code)}
               className={`w-[calc(100%-8px)] mx-1 mb-0.5 last:mb-0 text-left px-3 py-2 rounded-lg text-[11px] font-bold transition-all flex items-center justify-between ${
                 appLang === l.code 
                   ? 'text-white bg-slate-900 shadow-sm' 
@@ -60,9 +62,7 @@ export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dro
           <button
             key={l.code}
             type="button"
-            onClick={(e) => {
-              update({ appLang: l.code });
-            }}
+            onClick={(e) => handleLangChange(l.code)}
             className={`flex-1 flex items-center justify-center h-full rounded-xl text-[11px] font-black tracking-tight transition-all duration-300 ${
               appLang === l.code 
                 ? 'bg-white text-brand-navy shadow-sm scale-[1.02]' 
@@ -81,7 +81,7 @@ export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dro
       {langs.map(l => (
         <button 
           key={l.code} 
-          onClick={() => update({ appLang: l.code })} 
+          onClick={() => handleLangChange(l.code)} 
           className={`relative flex-1 px-3 sm:px-6 h-full flex items-center justify-center rounded-full text-[10px] sm:text-[13px] font-black uppercase tracking-wider transition-all duration-500 ${
             appLang === l.code 
               ? 'bg-brand-navy text-white shadow-[0_4px_12px_rgba(var(--brand-navy-rgb),0.3)] scale-[1.05]' 

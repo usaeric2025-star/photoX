@@ -1,8 +1,10 @@
+import { createStore } from '@storve/core';
+import { useStore } from '@storve/react';
 import { logger } from '@/lib/logger';
-import { create } from 'zustand';
 import { User } from '@/types';
 import { supabase } from '@/lib/supabase';
 import { storage } from '@/services/storage';
+import { safeAsync } from '@/lib/utils/safeAsync';
 
 export interface AuthState {
   user: User | null;
@@ -14,18 +16,24 @@ export interface AuthState {
   signOut: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
+// Internal store reference with setState exposed to avoid repeating casts
+export type AuthStoreInstance = ReturnType<typeof createStore<AuthState>> & { 
+  setState: (updates: Partial<AuthState> | ((state: AuthState) => Partial<AuthState>)) => void 
+};
+
+export const authStore = createStore<AuthState>({
   user: null,
   isLoading: true,
-  setUser: (user) => set({ user, isLoading: false }),
-  setLoading: (loading) => set({ isLoading: loading }),
+  setUser: (user) => {
+    (authStore as unknown as AuthStoreInstance).setState({ user, isLoading: false });
+  },
+  setLoading: (loading) => (authStore as unknown as AuthStoreInstance).setState({ isLoading: loading }),
   
   init: async () => {
-    try {
-      // Race getSession with a 3-second timeout to prevent startup hangs if Supabase is slow/unresponsive
+    await safeAsync(async () => {
       const sessionPromise = supabase.auth.getSession();
-      const timeoutPromise = new Promise<{ data: { session: null }, error: unknown }>((_, reject) => {
-        setTimeout(() => reject(new Error('Supabase Auth init timeout (3s)')), 3000);
+      const timeoutPromise = new Promise<{ data: { session: null }, error: Error }>((_, reject) => {
+        setTimeout(() => reject(new Error('验证超时 (3秒)')), 3000);
       });
       
       const { data } = await Promise.race([sessionPromise, timeoutPromise]) as { 
@@ -52,34 +60,48 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           avatar_url: (u.user_metadata?.avatar_url as string) || null,
           email_verified: !!u.email_confirmed_at,
         };
-        set({ user: mapped, isLoading: false });
+        (authStore as unknown as AuthStoreInstance).setState({ user: mapped, isLoading: false });
       } else {
-        set({ user: null, isLoading: false });
+        (authStore as unknown as AuthStoreInstance).setState({ user: null, isLoading: false });
       }
-    } catch (e) {
-      logger.error('❌ [Auth] Initialization failed:', e);
-      set({ user: null, isLoading: false });
-    }
-  },
-  
-  signIn: async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.location.href },
+    }, { 
+        context: '身份验证初始化', 
+        onFinally: () => (authStore as unknown as AuthStoreInstance).setState({ isLoading: false }) 
     });
   },
   
-  signOut: async () => {
-    await supabase.auth.signOut();
-    set({ user: null });
-    if (typeof window !== 'undefined') {
-      storage.remove('ais_mock_auth_passcode');
-      window.location.reload();
-    }
+  signIn: async () => {
+    await safeAsync(async () => {
+      await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.href },
+      });
+    }, { context: '登录' });
   },
-}));
+  
+  signOut: async () => {
+    await safeAsync(async () => {
+      await supabase.auth.signOut();
+      (authStore as unknown as AuthStoreInstance).setState({ user: null });
+      if (typeof window !== 'undefined') {
+        storage.remove('ais_mock_auth_passcode');
+        window.location.reload();
+      }
+    }, { context: '登出' });
+  },
+});
 
-// 全域監聽（只初始化一次）
+export function useAuthStore(): AuthState;
+export function useAuthStore<T>(selector: (state: AuthState) => T): T;
+export function useAuthStore<T>(selector?: (state: AuthState) => T): T | AuthState {
+  if (selector) {
+    return useStore(authStore, selector);
+  }
+  return useStore(authStore) as AuthState;
+}
+export const useAuthSelector = useAuthStore;
+
+// 全局监听（只初始化一次）
 let authListenerInitialized = false;
 
 export const initAuthListener = () => {
@@ -97,9 +119,9 @@ export const initAuthListener = () => {
         avatar_url: (u.user_metadata?.avatar_url as string) || null,
         email_verified: !!u.email_confirmed_at,
       };
-      useAuthStore.getState().setUser(mapped);
+      authStore.getState().setUser(mapped);
     } else {
-      useAuthStore.getState().setUser(null);
+      authStore.getState().setUser(null);
     }
   });
   

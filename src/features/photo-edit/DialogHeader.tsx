@@ -10,7 +10,7 @@ import {
   usePhotoDelete,
   useFilters,
 } from "@/hooks";
-import { useTaskSelector } from '@/lib/task-queue/store';
+import { useTaskSelector } from '@/lib/store';
 import { showToast } from "@/lib/ui/toast";
 import { useUI } from '@/lib/store';
 import { usePhotoEditAI } from "./usePhotoEditAI";

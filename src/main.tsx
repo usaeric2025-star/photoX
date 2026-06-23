@@ -32,11 +32,11 @@ if (typeof window !== 'undefined') {
 
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { QueryClientProvider } from '@tanstack/react-query';
+import { SWRConfig } from 'swr';
+import { swrConfig } from '@/lib/query/client';
 import { Analytics } from '@vercel/analytics/react';
 import App from './App';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { queryClient } from './lib/queryClient';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { FatalErrorOverlay } from '@/components/shared/FatalErrorOverlay';
 import { logger } from './lib/logger';
@@ -157,13 +157,13 @@ async function init() {
     
     root.render(
       <StrictMode>
-        <QueryClientProvider client={queryClient}>
+        <SWRConfig value={swrConfig}>
           <ErrorBoundary>
             <App />
             <FatalErrorOverlay />
             <Analytics />
           </ErrorBoundary>
-        </QueryClientProvider>
+        </SWRConfig>
       </StrictMode>
     );
 

@@ -10,7 +10,6 @@ import { manufacturers } from './_handlers/manufacturers.js';
 import { groups } from './_handlers/groups.js';
 import { photos } from './_handlers/photos/index.js';
 import { storage } from './_handlers/storage.js';
-import { storageMaintenance } from './_handlers/admin/storageMaintenance.js';
 import { setupMiddlewares } from './_lib/middleware.js';
 
 // Validate env at module level
@@ -20,51 +19,9 @@ export const app = new Hono().basePath('/api');
 
 app.use('*', cors());
 app.get('/health', (c) => c.json({ success: true, status: 'ok' }));
+
+// 全域中間件（含錯誤處理、Auth、Materialized View 刷新）
 setupMiddlewares(app, serverEnv as any);
-
-// --- Global Error Logging ---
-import { type StatusCode } from 'hono/utils/http-status';
-
-app.onError(async (err, c) => {
-    const { db, systemLogs } = await import('./_lib/db/index.js');
-    const { logger } = await import('./_lib/logger.js');
-    const traceId = c.req.header('X-Trace-Id') || 'be-' + Math.random().toString(36).substring(2, 12);
-    
-    logger.error(`[Global Backend Error] ${err.message}`, { 
-        url: c.req.url, 
-        method: c.req.method,
-        traceId,
-        stack: err.stack 
-    });
-
-    try {
-        await (db as unknown as { insert: (t: any) => { values: (v: any) => Promise<void> } }).insert(systemLogs).values({
-            message: err.message || 'Unknown error',
-            level: 'error',
-            operation: `internal.${c.req.path}`,
-            module: 'backend',
-            traceId,
-            resource: c.req.url,
-            metadata: {
-                stack: err.stack,
-                url: c.req.url,
-                method: c.req.method,
-                params: c.req.param(),
-                query: c.req.query(),
-                timestamp: new Date().toISOString()
-            },
-            createdAt: new Date()
-        });
-    } catch (dbErr) {
-        logger.error('[Fatal] Failed to log error to database:', dbErr);
-    }
-
-    return c.json({ 
-        success: false, 
-        error: err.message || 'Internal Server Error',
-        traceId 
-    }, 500);
-});
 
 // --- API Routes (Distributed) ---
 app.route('/admin', adminApp);
@@ -76,130 +33,21 @@ app.route('/manufacturers', manufacturers);
 app.route('/groups', groups);
 app.route('/photos', photos);
 app.route('/', storage);
-app.route('/', storageMaintenance);
 
-// --- Persistent Logging Route ---
-app.post('/log-error', async (c) => {
-    try {
-        const body = await c.req.json();
-        const traceId = c.req.header('X-Trace-Id') || 'backend-' + Math.random().toString(36).substring(2, 12);
-        
-        const { db, systemLogs } = await import('./_lib/db/index.js');
-        const { logger } = await import('./_lib/logger.js');
-        
-        const level = body.level === 'warn' ? 'warn' : 'error';
-        const operation = body.module || 'client.error';
-        const msg = typeof body.message === 'string' ? body.message : JSON.stringify(body);
-        
-        await (db as unknown as { insert: (t: any) => { values: (v: any) => Promise<void> } }).insert(systemLogs).values({
-            message: msg,
-            level,
-            operation,
-            traceId,
-            resource: body.url || null,
-            metadata: {
-                ...body,
-                traceId,
-                timestamp: new Date().toISOString()
-            },
-            createdAt: new Date()
-        });
-        
-        logger.info(`[Remote Log] saved from client via /log-error`, { traceId, operation });
-        return c.json({ success: true, traceId });
-    } catch (e) {
-        console.error('[log-error] Failed to persist log:', e);
-        return c.json({ success: false, error: 'Database error' }, 500);
-    }
-});
-
-// Public error logs API
-app.get('/error-log', async (c) => {
-    try {
-        const limit = parseInt(c.req.query('limit') || '100', 10);
-        const page = parseInt(c.req.query('page') || '0', 10);
-        
-        const { db, systemLogs } = await import('./_lib/db/index.js');
-        const { desc } = await import('drizzle-orm');
-
-        const data = await db.query.systemLogs.findMany({
-            orderBy: [desc(systemLogs.createdAt)],
-            limit: limit,
-            offset: page * limit
-        });
-
-        return c.json({ success: true, data });
-    } catch (e: unknown) {
-        return c.json({ success: false, error: e instanceof Error ? e.message : String(e) }, 500);
-    }
-});
-
-// Admin error events list
-app.get('/admin/error-events', async (c) => {
-  try {
-      // Inline auth to prevent circular dep in app.ts
-      const { requireRealUser } = await import('./_lib/auth.js');
-      await requireRealUser(c);
-
-      const limit = parseInt(c.req.query('limit') || '100', 10);
-      const page = parseInt(c.req.query('page') || '0', 10);
-      
-      const { db, systemLogs } = await import('./_lib/db/index.js');
-      const { desc } = await import('drizzle-orm');
-
-      const data = await db.query.systemLogs.findMany({
-          orderBy: [desc(systemLogs.createdAt)],
-          limit: limit,
-          offset: page * limit
-      });
-
-      return c.json({ success: true, data });
-  } catch (e: unknown) {
-      if (e instanceof Error && e.message?.includes('Unauthorized')) {
-          return c.json({ success: false, error: 'Unauthorized' }, 401);
-      }
-      return c.json({ success: false, error: e instanceof Error ? e.message : String(e) }, 500);
-  }
-});
-
-// Clear all error events
-app.post('/admin/error-events/clear', async (c) => {
-  try {
-      const { requireRealUser } = await import('./_lib/auth.js');
-      await requireRealUser(c);
-
-      const { db, systemLogs } = await import('./_lib/db/index.js');
-      await db.delete(systemLogs);
-
-      return c.json({ success: true });
-  } catch (e: unknown) {
-      if (e instanceof Error && e.message?.includes('Unauthorized')) {
-          return c.json({ success: false, error: 'Unauthorized' }, 401);
-      }
-      return c.json({ success: false, error: e instanceof Error ? e.message : String(e) }, 500);
-  }
-});
-
-app.post('/admin/system-logs/delete-logs-batch', async (c) => {
-    return c.json({ success: false, error: 'Cannot delete logs from R2 via this endpoint anymore.' }, 400);
-});
-
+// --- 公共輔助路由 ---
 app.get('/download', async (c) => {
     try {
         const url = c.req.query('url');
-        if (!url) {
-            return c.text('Missing url parameter', 400);
-        }
+        if (!url) return c.text('Missing url parameter', 400);
+
         const resp = await fetch(url);
-        if (!resp.ok) {
-            return c.text('Failed to fetch image', resp.status as any);
-        }
+        if (!resp.ok) return c.text('Failed to fetch image', resp.status as any);
+
         const buffer = await resp.arrayBuffer();
         const contentType = resp.headers.get('content-type') || 'application/octet-stream';
         
         c.header('Content-Type', contentType);
         c.header('Access-Control-Allow-Origin', '*');
-        // Let it be cached by CDN but revalidated. We also set a long cache max-age because images are static
         c.header('Cache-Control', 'public, max-age=31536000, immutable');
         
         return c.body(buffer);

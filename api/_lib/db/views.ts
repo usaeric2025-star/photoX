@@ -13,7 +13,7 @@ export const vPhotosList = pgMaterializedView('v_photos_list', {
   isHidden: boolean('is_hidden'),
   isPinned: boolean('is_pinned'),
   isGroupCover: boolean('is_group_cover'),
-  categoryId: uuid('category_id'),
+  categoryId: integer('category_id'),
   manufacturerId: uuid('manufacturer_id'),
   manualCode: text('manual_code'),
   modelNumber: text('model_number'),

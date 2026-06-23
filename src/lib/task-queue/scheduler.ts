@@ -1,5 +1,5 @@
 import { Task } from './types';
-import { useTaskStore } from './store';
+import { taskStore } from '@/store/taskStore';
 import { taskTable } from './integrations/supabase';
 import { showToast } from '@/lib/ui/toast';
 import { logger } from '@/lib/logger';
@@ -30,7 +30,7 @@ export class TaskScheduler {
     this.activeKeys.add(key);
 
     // 1. 寫入 Store（UI 驅動）
-    useTaskStore.getState().enqueue(task);
+    taskStore.getState().enqueue(task);
     
     // 2. 寫入 Supabase（持久層）
     taskTable.insert(task).catch(e => logger.error('[Task] insert error', e));
@@ -53,7 +53,7 @@ export class TaskScheduler {
     this.running.delete(id);
     
     // 更新 Store
-    useTaskStore.getState().cancelTask(id);
+    taskStore.getState().cancelTask(id);
     
     // 更新 Supabase
     taskTable.updateStatus(id, 'cancelled').catch(e => logger.error('[Task] cancel error', e));
@@ -94,16 +94,16 @@ export class TaskScheduler {
     try {
       // 更新 Supabase: processing
       await taskTable.updateStatus(task.id, 'processing');
-      useTaskStore.getState().startTask(task.id);
+      taskStore.getState().startTask(task.id);
 
       const onProgress = (progress: number, message?: string) => {
-        useTaskStore.getState().updateProgress(task.id, progress, message);
+        taskStore.getState().updateProgress(task.id, progress, message);
       };
 
       const result = await task.execute(controller.signal, onProgress);
 
       // 完成
-      useTaskStore.getState().completeTask(task.id, result);
+      taskStore.getState().completeTask(task.id, result);
       await taskTable.updateStatus(task.id, 'completed', result);
       
       showToast.success(`任務完成: ${task.label}`);
@@ -123,7 +123,7 @@ export class TaskScheduler {
       const message = error instanceof Error ? error.message : String(error);
       const retryable = true; // 可根據錯誤類型判斷
 
-      useTaskStore.getState().failTask(task.id, message, retryable);
+      taskStore.getState().failTask(task.id, message, retryable);
       await taskTable.updateStatus(task.id, 'failed', { error: message, retryable });
 
       showToast.error(`任務失敗: ${task.label}`);
@@ -148,7 +148,7 @@ export class TaskScheduler {
     if (tasks.length === 0) return;
 
     // ✅ 先清除記憶體中可能存在的重複任務
-    const store = useTaskStore.getState();
+    const store = taskStore.getState();
     tasks.forEach(task => {
       const key = `${task.type}:${task.meta?.key || task.id}`;
       // In a real restore, we need to bind the execute function again based on task type.
@@ -168,7 +168,7 @@ export class TaskScheduler {
     if (found) return found;
     
     // 再查執行中
-    const store = useTaskStore.getState();
+    const store = taskStore.getState();
     return store.tasks.get(id);
   }
 }

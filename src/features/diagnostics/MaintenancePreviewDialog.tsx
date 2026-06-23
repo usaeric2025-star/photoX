@@ -35,7 +35,7 @@ export function MaintenancePreviewDialog({
         </div>
 
         <div className="space-y-2.5 max-h-[45vh] overflow-y-auto pr-1">
-          {preview?.affectedPhotos?.map((photo: { photoId: string; photoName: string; keptTags?: string[]; removedTags?: string[] }) => (
+          {preview?.affectedPhotos?.map((photo) => (
             <div key={photo.photoId} className="bg-slate-50/70 hover:bg-slate-50 border border-slate-100 rounded-xl p-3.5 transition-all flex flex-col gap-2">
               <span className="text-xs font-black text-slate-800 tracking-tight uppercase block">{photo.photoName}</span>
               <div className="flex flex-wrap gap-2.5 items-center">

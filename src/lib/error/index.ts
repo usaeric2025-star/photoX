@@ -1,5 +1,10 @@
 // src/lib/error/index.ts
+import { ErrorFactory } from './ErrorFactory';
 export { ErrorCode } from '@/shared/errorCodes';
 export { ErrorCategory, ErrorSeverity, AppError, isAppError, mapCodeToStatus } from './AppError';
-export { handleError, extractErrorMessage, logError } from './errorHandler';
-export { ErrorFactory } from './ErrorFactory';
+export { ErrorFactory };
+
+// Re-export common methods for backward compatibility
+export const handleError = (error: unknown, context: string, silent: boolean = false) => ErrorFactory.handleError(error, context, silent);
+export const extractErrorMessage = (error: unknown) => ErrorFactory.extractErrorMessage(error);
+export const logError = (error: unknown) => ErrorFactory.capture(error);

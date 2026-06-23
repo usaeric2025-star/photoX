@@ -3,11 +3,11 @@ import { useAuth } from '@/lib/store';
 import { useEffect, useState } from 'react';
 import { UnifiedTask, TaskStatus } from '@/types';
 import { api } from '@/lib/api';
-import { useAppQuery as useQuery } from '@/lib/query';
+import { useAppQuery } from '@/lib/query';
 import { useAdminMode } from '../core/auth/useAdminMode';
 import { logger } from '@/lib/logger';
 import { useAppRoute } from '@/router';
-import { useTaskSelector } from '@/lib/task-queue/store';
+import { useTaskSelector } from '@/lib/store';
 
 /**
  * Adapter hook to aggregate frontend local tasks and backend maintenance jobs.
@@ -19,14 +19,13 @@ export function useGlobalTasks() {
   const route = useAppRoute();
   const routeName = route?.name;
   
-  // 1. Frontend Tasks (Real-time, transient) - New Zustand API
-  const zustandTasksMap = useTaskSelector((state) => state.tasks);
+  // 1. Frontend Tasks (Real-time, transient)
+  const sessionTasksMap = useTaskSelector((state) => state.tasks);
 
   // 2. Backend Jobs (Durable, polled)
-  const { data: remoteJobs = [], refetch: refetchJobs, isPending: isPendingJobs } = useQuery({
-    queryKey: ['maintenance-jobs'],
-    queryFn: async () => {
-      if (!isAdmin) return [];
+  const { data: remoteJobs = [], mutate: refetchJobs, isLoading: isPendingJobs } = useAppQuery(
+    isAdmin ? ['maintenance-jobs'] : null,
+    async () => {
       try {
         const res = await api.admin.maintenance.jobs.$get();
         if (res.status === 401) {
@@ -41,26 +40,26 @@ export function useGlobalTasks() {
         return [];
       }
     },
-    enabled: isAdmin,
-    refetchOnWindowFocus: false, // Prevent focus changes from hammering the server
-    refetchOnReconnect: false,   // Prevent network state changes from refetching
-    // Poll only if there is an active job or the user is on a tasks/logs/diagnostics screen
-    refetchInterval: (query) => {
-      if (!isAdmin) return false;
-      if (typeof document !== 'undefined' && document.hidden) return false;
-      const rJobs = query.state.data as { status: string }[];
-      const hasRunning = Array.isArray(rJobs) && rJobs.some(job => job && job.status === 'processing');
-      const isStatusScreen = typeof routeName === 'string' && ['adminTasks', 'adminDiagnostics', 'adminDiagnosticsLogs'].includes(routeName);
-      return (hasRunning || isStatusScreen) ? 5000 : false;
-    },
-    staleTime: STALE_TIMES.FAST
-  });
+    {
+      revalidateOnFocus: false, // Prevent focus changes from hammering the server
+      revalidateOnReconnect: false,   // Prevent network state changes from refetching
+      // Poll only if there is an active job or the user is on a tasks/logs/diagnostics screen
+      refreshInterval: (rJobs) => {
+        if (!isAdmin) return 0;
+        if (typeof document !== 'undefined' && document.hidden) return 0;
+        const hasRunning = Array.isArray(rJobs) && (rJobs as any[]).some(job => job && job.status === 'processing');
+        const isStatusScreen = typeof routeName === 'string' && ['adminTasks', 'adminDiagnostics', 'adminDiagnosticsLogs'].includes(routeName);
+        return (hasRunning || isStatusScreen) ? 5000 : 0;
+      },
+      dedupingInterval: STALE_TIMES.FAST
+    }
+  );
 
   // 4. Adapter Logic: Transform to UnifiedTask
   const aggregatedTasks: UnifiedTask[] = [];
 
-  // Map New Zustand Tasks
-  zustandTasksMap.forEach((zt: import('@/lib/task-queue/types').Task) => {
+  // Map Session Tasks
+  sessionTasksMap.forEach((zt: import('@/lib/task-queue/types').Task) => {
     let status: TaskStatus = 'processing';
     if (zt.state.status === 'completed') status = 'completed';
     if (zt.state.status === 'failed' || zt.state.status === 'cancelled') status = 'failed';

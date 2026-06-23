@@ -7,8 +7,6 @@ import { usePhotoFilter } from '@/hooks/photo/usePhotoFilter';
 import { useUI } from '@/lib/store';
 import { translations } from '@/locales';
 
-import { Skeleton } from '@/components/ui/Skeleton';
-
 export function TagGrid({ onClose }: { onClose?: () => void }) {
   const { filters, updateFilters } = useFilterState();
   const { data: tags, isPending } = useTags();
@@ -39,7 +37,7 @@ export function TagGrid({ onClose }: { onClose?: () => void }) {
       <div className="border-t border-border-soft/50 pt-5 mt-1">
         <div className="flex flex-wrap gap-2.5">
           {defaultPillWidths.map((width, i) => (
-            <Skeleton key={i} className={`h-6 rounded-full ${width}`} />
+            <div key={i} className={`animate-shimmer h-6 rounded-full ${width}`} />
           ))}
         </div>
       </div>

@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { logger } from '@/lib/logger';
 import { AppSettings, Tag, Manufacturer, Category, User, Photo } from "@/types";
 import { DEFAULT_AI_MODEL } from '@/config/ai';
-import { useUI, useStoreShallow } from '@/lib/store';
+import { useUI } from '@/lib/store';
 import { testAiConnection } from "@/features/ai/commands";
 import { runHealthCheck } from "@/services/photo/healthFlow";
 import {

@@ -2,7 +2,6 @@ import { saveSettings } from '@/services/settings/commands';
 import { AppSettings } from '@/types';
 import { defineMutation } from '@/lib/mutations/defineMutation';
 import { useOptimisticMutation } from '@/lib/mutations/useOptimisticMutation';
-import { QueryKey } from '@tanstack/react-query';
 
 const settingsUpdateConfig = defineMutation<boolean, Partial<AppSettings>, readonly unknown[]>({
   name: 'settingsUpdate',

@@ -14,15 +14,15 @@ export function useBatchActions() {
     schema: type('unknown'),
     mutationFn: async () => {
       const res = await batchService.delete(state.selectedIds);
-      if (!res.success) throw new Error(res.error || '刪除失敗');
+      if (!res.success) throw new Error(String(res.error || '删除失败'));
       return true;
     },
     onSuccess: () => {
       invalidatePhotos();
       clear();
     },
-    successMessage: `已刪除 ${state.selectedIds.length} 張照片`,
-    errorMessage: '批次刪除失敗'
+    successMessage: `已删除 ${state.selectedIds.length} 张照片`,
+    errorMessage: '批量删除失败'
   });
 
   const { submit: runBatchUpdate, isLoading: isUpdating } = useFormSubmit({
@@ -33,30 +33,30 @@ export function useBatchActions() {
     }) as unknown as Type<Partial<Photo>>,
     mutationFn: async (data: Partial<Photo>) => {
       const res = await batchService.update(state.selectedIds, data);
-      if (!res.success) throw new Error(res.error || '更新失敗');
+      if (!res.success) throw new Error(String(res.error || '更新失败'));
       return true;
     },
     onSuccess: () => {
       invalidatePhotos();
       clear();
     },
-    successMessage: `已更新 ${state.selectedIds.length} 張照片`,
-    errorMessage: '批次更新失敗'
+    successMessage: `已更新 ${state.selectedIds.length} 张照片`,
+    errorMessage: '批量更新失败'
   });
 
   const { submit: runBatchTag, isLoading: isTagging } = useFormSubmit({
     schema: type('string[]') as unknown as Type<string[]>,
     mutationFn: async (tagIds: string[]) => {
       const res = await batchService.addTags(state.selectedIds, tagIds);
-      if (!res.success) throw new Error(res.error || '新增標籤失敗');
+      if (!res.success) throw new Error(String(res.error || '添加标签失败'));
       return true;
     },
     onSuccess: () => {
       invalidatePhotos();
       clear();
     },
-    successMessage: `已為 ${state.selectedIds.length} 張照片新增標籤`,
-    errorMessage: '批次新增標籤失敗'
+    successMessage: `已为 ${state.selectedIds.length} 张照片添加标签`,
+    errorMessage: '批量添加标签失败'
   });
 
   return {

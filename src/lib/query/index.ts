@@ -1,46 +1,83 @@
-import {
-  useQuery as useRqQuery,
-  useMutation as useRqMutation,
-  useInfiniteQuery as useRqInfiniteQuery,
-  useQueryClient as useRqQueryClient,
-  type UseQueryOptions,
-  type UseMutationOptions,
-  type UseInfiniteQueryOptions,
-} from '@tanstack/react-query';
+import useSWR, { SWRConfiguration, mutate as swrMutate } from 'swr';
+import { useState } from 'react';
 
 /**
- * 統一的 Query Adapter
- * 職責：隱藏 TanStack Query 的實作細節，提供一致的 API 介面。
- * 未來如果更換為 Storve，只需要修改這裡即可。
+ * 統一的 Query Adapter (SWR Facade)
  */
 
-export function useAppQuery<TQueryFnData = unknown, TError = Error, TData = TQueryFnData, TQueryKey extends import('@tanstack/react-query').QueryKey = import('@tanstack/react-query').QueryKey>(
-  options: UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>
+/**
+ * Global Query/Mutation Controller
+ */
+export const appQuery = {
+  /**
+   * Invalidate or update cache globally
+   * If a functional updater is provided as the second argument, it's used directly for optimisticData
+   */
+  mutate: (key: string | readonly any[], data?: any, options?: any) => {
+    if (typeof data === 'function' && !options) {
+      return swrMutate(key as any, data, {
+        optimisticData: data,
+        rollbackOnError: true,
+      });
+    }
+    return swrMutate(key as any, data, options);
+  },
+};
+
+/**
+ * Standard data fetching hook
+ */
+export function useAppQuery<TData = unknown>(
+  key: string | readonly any[] | null,
+  fetcher: (args: any) => Promise<TData>,
+  options?: SWRConfiguration<TData>
 ) {
-  return useRqQuery<TQueryFnData, TError, TData, TQueryKey>(options);
+  const result = useSWR<TData>(key as any, fetcher, {
+    ...options,
+  });
+  return { ...result, isPending: result.isLoading };
 }
 
-export function useAppMutation<TData = unknown, TError = Error, TVariables = void, TContext = unknown>(
-  options: UseMutationOptions<TData, TError, TVariables, TContext>
+/**
+ * Standard mutation hook (trigger-based)
+ */
+export function useAppMutation<TVariables, TData>(
+  mutationFn: (variables: TVariables) => Promise<TData>,
+  options?: {
+    onSuccess?: (data: TData, variables: TVariables) => void,
+    onError?: (error: Error, variables: TVariables) => void
+  }
 ) {
-  return useRqMutation<TData, TError, TVariables, TContext>(options);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const trigger = async (variables: TVariables) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await mutationFn(variables);
+      options?.onSuccess?.(data, variables);
+      return data;
+    } catch (e) {
+      const err = e instanceof Error ? e : new Error(String(e));
+      setError(err);
+      options?.onError?.(err, variables);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return { 
+    mutate: trigger, 
+    mutateAsync: trigger, 
+    trigger,
+    isPending: isLoading, 
+    isMutating: isLoading, 
+    error 
+  };
 }
 
-export function useAppInfiniteQuery<
-  TQueryFnData = unknown,
-  TError = Error,
-  TData = TQueryFnData,
-  TQueryKey extends import('@tanstack/react-query').QueryKey = import('@tanstack/react-query').QueryKey,
-  TPageParam = unknown
->(
-  options: UseInfiniteQueryOptions<TQueryFnData, TError, TData, TQueryKey, TPageParam>
-) {
-  return useRqInfiniteQuery<TQueryFnData, TError, TData, TQueryKey, TPageParam>(options);
-}
-
-export function useAppQueryClient() {
-  return useRqQueryClient();
-}
-
-// 重新導出必要的型別
-export type { UseQueryOptions, UseMutationOptions, UseInfiniteQueryOptions };
+// For compatibility with useSWRConfig pattern
+export { useSWRConfig as useAppQueryClient } from 'swr';
+export { swrMutate as mutate };

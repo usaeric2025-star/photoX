@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { LightboxSlide } from '@/lib/lightbox/types';
 import { Icon } from '@/components/ui/Icon';
+import { useTranslation } from '@/hooks/core/useTranslation';
 
 export function LightboxInfoCard({ 
   slide, 
@@ -12,6 +13,7 @@ export function LightboxInfoCard({
   onShare?: (slide: LightboxSlide) => void
 }) {
   const [expanded, setExpanded] = useState(false);
+  const { uiTranslations } = useTranslation();
 
   if (!slide) return null;
 
@@ -40,7 +42,7 @@ export function LightboxInfoCard({
               <button 
                 onClick={(e) => { e.stopPropagation(); onDownload(slide); }} 
                 className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-all active:scale-95"
-                title="下載"
+                title={uiTranslations.download}
               >
                 <Icon name="download" className="w-4 h-4" />
               </button>
@@ -49,7 +51,7 @@ export function LightboxInfoCard({
               <button 
                 onClick={(e) => { e.stopPropagation(); onShare(slide); }} 
                 className="w-9 h-9 flex items-center justify-center rounded-full bg-primary hover:opacity-90 transition-all active:scale-95 text-text-on-primary"
-                title="分享/詢問"
+                title={uiTranslations.shareAndInquiry}
               >
                 <Icon name="share" className="w-4.5 h-4.5" />
               </button>
@@ -57,7 +59,7 @@ export function LightboxInfoCard({
             <button 
               onClick={() => setExpanded(!expanded)}
               className="w-9 h-9 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-colors"
-              title="詳情"
+              title={uiTranslations.details}
             >
               <Icon name="info" className="w-4.5 h-4.5 opacity-70" />
             </button>
@@ -68,13 +70,13 @@ export function LightboxInfoCard({
           <div className="mt-4 pt-4 border-t border-white/10 space-y-3 px-1 pb-1">
             {slide.price && (
               <div className="flex items-center gap-2 text-emerald-400 font-bold">
-                <span className="text-xs uppercase opacity-60 font-medium">預估價格</span>
+                <span className="text-xs uppercase opacity-60 font-medium">{uiTranslations.estimatedPrice}</span>
                 <span className="text-lg">{slide.price}</span>
               </div>
             )}
             {slide.description && (
               <div className="space-y-1">
-                <span className="text-[10px] uppercase font-bold text-white/40 tracking-wider">產品描述</span>
+                <span className="text-[10px] uppercase font-bold text-white/40 tracking-wider">{uiTranslations.productDescription}</span>
                 <p className="text-sm text-white/80 leading-relaxed font-light">{slide.description}</p>
               </div>
             )}
