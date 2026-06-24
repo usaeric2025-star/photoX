@@ -173,18 +173,6 @@ export function PhotoLightbox() {
               <button 
                 onClick={(e) => { 
                   e.stopPropagation();
-                  logger.info('[PhotoLightbox] RHF Edit clicked for photo:', currentSlide.id);
-                  toast.info("正在打开 RHF 测试...");
-                  filters.updateFilters({ photoId: currentSlide.id, modal: 'rhf_test' });
-                }} 
-                className="w-9 h-9 flex items-center justify-center rounded-full text-green-400 hover:bg-white/10 transition-colors"
-                title="RHF 测试"
-              >
-                <Icon name="pencil" size={17} />
-              </button>
-              <button 
-                onClick={(e) => { 
-                  e.stopPropagation();
                   logger.info('[PhotoLightbox] Edit clicked for photo:', currentSlide.id);
                   toast.info("正在打开编辑...");
                   filters.updateFilters({ photoId: currentSlide.id, modal: 'edit' });
