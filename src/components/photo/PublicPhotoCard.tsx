@@ -17,7 +17,7 @@ interface PublicPhotoCardProps {
   sharedTags?: Tag[];
 }
 
-export const PublicPhotoCard = memo(({
+export function PublicPhotoCard({
   photo,
   onClick,
   hideDetails = false,
@@ -26,7 +26,7 @@ export const PublicPhotoCard = memo(({
   hasSearchQuery = false,
   sharedCategories,
   sharedTags,
-}: PublicPhotoCardProps) => {
+}: PublicPhotoCardProps) {
   usePerformance('PublicPhotoCard');
   const { columns } = useColumns();
   
@@ -61,4 +61,4 @@ export const PublicPhotoCard = memo(({
       />
     </PhotoCardBase>
   );
-});
+}

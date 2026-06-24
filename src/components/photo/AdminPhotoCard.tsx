@@ -21,7 +21,7 @@ interface AdminPhotoCardProps {
   selected?: boolean;
 }
 
-export const AdminPhotoCard = memo(({
+export function AdminPhotoCard({
   photo,
   onClick,
   hideDetails = false,
@@ -32,7 +32,7 @@ export const AdminPhotoCard = memo(({
   sharedTags,
   canPin,
   selected,
-}: AdminPhotoCardProps) => {
+}: AdminPhotoCardProps) {
   usePerformance('AdminPhotoCard');
   const isSelected = selected !== undefined ? selected : useUI((s) => s.selectedIds.includes(photo.id));
   const isMultiSelect = useUI((s) => s.isMultiSelect);
@@ -78,4 +78,4 @@ export const AdminPhotoCard = memo(({
       />
     </PhotoCardBase>
   );
-});
+}

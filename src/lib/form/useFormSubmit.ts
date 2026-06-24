@@ -113,33 +113,31 @@ export function useFormSubmit<T extends v.GenericSchema, TResult>({
             abortController.current = controller;
           }
 
-          // 4. Safe Execution using safeAsync
-          const res = await safeAsync(async () => {
+          // 4. Safe Execution
+          try {
             const out = await mutationFn(data, controller.signal);
             
             setState({ isLoading: false, isError: false, isSuccess: true, error: null, fieldErrors: {} });
             showToast.success(successMessage);
             onSuccess?.(out);
-            return out;
-          }, {
-            context,
-            onFinally: () => {
-              if (abortController.current === controller) {
-                abortController.current = null;
-              }
-            }
-          });
-
-          if (res !== null) {
             resolve(true);
-          } else {
-            // Handle Rollback if error occurred
+          } catch (e) {
+            const wrappedError = ErrorFactory.wrap(e, context);
+            ErrorFactory.capture(wrappedError);
+            
             if (rollbackOnError) {
-              rollbackOnError(new Error(errorMessage), data);
+              rollbackOnError(wrappedError, data);
             }
-            setState(prev => ({ ...prev, isLoading: false, isError: true, error: errorMessage }));
-            onError?.(errorMessage);
+            
+            const finalErrMsg = wrappedError.userMessage || errorMessage;
+            showToast.error(finalErrMsg);
+            setState(prev => ({ ...prev, isLoading: false, isError: true, error: finalErrMsg }));
+            onError?.(finalErrMsg);
             resolve(false);
+          } finally {
+            if (abortController.current === controller) {
+              abortController.current = null;
+            }
           }
         };
 

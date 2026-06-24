@@ -110,8 +110,9 @@ export const PhotoListItemSchema = v.object({
 
 export type PhotoListItem = v.InferOutput<typeof PhotoListItemSchema>;
 
-const PhotoListResSchema = v.object({
-    photos: v.array(PhotoListItemSchema),
+export const PhotoListResSchema = v.object({
+    success: v.boolean(),
+    data: v.array(PhotoListItemSchema),
     nextCursor: v.nullable(v.string()),
     total: v.number()
 });
@@ -146,7 +147,7 @@ export const ListByGroupReqSchema = v.object({
     pageSize: v.optional(v.number())
 });
 
-const TagListItemSchema = v.object({
+export const TagListItemSchema = v.object({
     id: v.number(),
     name: v.string(),
     aliases: v.optional(v.array(v.string())),
@@ -160,14 +161,15 @@ export const TagReqSchema = v.object({
     aliases: v.optional(v.array(v.string()))
 });
 
-const CategoryListItemSchema = v.object({
-    id: v.union([v.string(), v.number()]),
+export const CategoryListItemSchema = v.object({
+    id: v.string(),
     code: v.string(),
     name: v.string(),
     zh: v.optional(v.string()),
     en: v.optional(v.string()),
     ms: v.optional(v.string()),
-    sort_order: v.optional(v.number())
+    sort_order: v.optional(v.number()),
+    subcategories: v.fallback(v.array(v.any()), [])
 });
 
 export const CategoryReqSchema = v.object({
@@ -180,7 +182,7 @@ export const CategoryReqSchema = v.object({
     is_active: v.optional(v.boolean())
 });
 
-const ManufacturerListItemSchema = v.object({
+export const ManufacturerListItemSchema = v.object({
     id: v.string(),
     name: v.string()
 });

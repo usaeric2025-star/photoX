@@ -92,7 +92,10 @@ export function DiagnosticsDialog({ open, onClose }: DiagnosticsDialogProps) {
     const timestamp = new Date().toISOString();
     const traceId = `TRACE-DIA-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
     const url = window.location.href;
-    const errorCode = errors.length > 0 ? (errors[0].code || 'ERR-RUNTIME-500') : 'NONE';
+    const firstError = errors.length > 0 ? errors[0] : null;
+    const errorCode = firstError ? (firstError.code || 'ERR-RUNTIME-500') : 'NONE';
+    const errorType = firstError ? (firstError.type || 'Error') : 'NONE';
+    const originalMessage = firstError ? firstError.msg : '無錯誤';
 
     const storageEstimates = typeof navigator.storage !== 'undefined' ? 'Supported' : 'Not supported';
     const currentErrors = errors.map((e, index) => {
@@ -101,10 +104,11 @@ export function DiagnosticsDialog({ open, onClose }: DiagnosticsDialogProps) {
 
     return [
       `--- PHOTX 系統核心診斷報告 (Diagnostic Report) ---`,
-      `[標準診斷欄位]`,
-      `traceId: ${traceId}`,
-      `errorCode: ${errorCode}`,
-      `timestamp: ${timestamp}`,
+      `時間戳: ${timestamp}`,
+      `錯誤類型: ${errorType}`,
+      `代碼: ${errorCode}`,
+      `Trace ID: ${traceId}`,
+      `原始 Message: ${originalMessage}`,
       `url: ${url}`,
       `---------------------------------`,
       `[設備與狀態詳情]`,

@@ -45,28 +45,61 @@ export const useOptimisticMutation = <
           return ongoingRequests.get(idempotencyKey) as Promise<TData>;
         }
         
-        const promise = config.service(vars);
+        // --- Optimistic Update Phase ---
+        const keysToInvalidate: (readonly unknown[])[] = [];
+        const rawInvalidateInit = typeof config.invalidate === 'function' 
+            ? config.invalidate({} as TData, vars) // Pass empty object for initial calculation
+            : config.invalidate ?? [];
+        if (Array.isArray(rawInvalidateInit) && rawInvalidateInit.length > 0) {
+           if (Array.isArray(rawInvalidateInit[0])) {
+               keysToInvalidate.push(...(rawInvalidateInit as (readonly unknown[])[]));
+           } else {
+               keysToInvalidate.push(rawInvalidateInit as readonly unknown[]);
+           }
+        }
+
+        if (config.optimistic) {
+            await Promise.all(keysToInvalidate.map(key => 
+                appQuery.mutate(key, (oldData: unknown) => {
+                    return config.optimistic!(oldData, vars, key);
+                }, { revalidate: false })
+            ));
+        }
+        // -------------------------------
+
+        const promise = (async () => {
+          try {
+            const result = await config.service(vars);
+            
+            // Re-evaluate invalidate with actual data
+            const rawInvalidateFinal = typeof config.invalidate === 'function'
+              ? config.invalidate(result, vars)
+              : config.invalidate ?? [];
+              
+            const finalKeys: (readonly unknown[])[] = Array.isArray(rawInvalidateFinal) && rawInvalidateFinal.length > 0 && Array.isArray(rawInvalidateFinal[0])
+              ? rawInvalidateFinal as (readonly unknown[])[]
+              : [rawInvalidateFinal as readonly unknown[]];
+
+            await Promise.all(finalKeys.map(key => appQuery.mutate(key)));
+            return result;
+          } catch (err) {
+            // Rollback optimistic updates by triggering a revalidation
+            if (config.optimistic) {
+                await Promise.all(keysToInvalidate.map(key => appQuery.mutate(key)));
+            }
+            throw err;
+          } finally {
+            ongoingRequests.delete(idempotencyKey);
+          }
+        })();
+
         ongoingRequests.set(idempotencyKey, promise);
         
         let data: TData;
-        try {
-          data = await promise as TData;
-        } finally {
-          ongoingRequests.delete(idempotencyKey);
-        }
+        data = await promise;
 
         if (config.successMessage) showToast.success(config.successMessage);
 
-        const rawInvalidate = typeof config.invalidate === 'function'
-          ? config.invalidate(data, vars)
-          : config.invalidate ?? [];
-
-        const keys: (readonly unknown[])[] = Array.isArray(rawInvalidate) && rawInvalidate.length > 0 && Array.isArray(rawInvalidate[0])
-          ? rawInvalidate as (readonly unknown[])[]
-          : [rawInvalidate as readonly unknown[]];
-
-        await Promise.all(keys.map(key => appQuery.mutate(key)));
-        
         if (config.cleanupKey) {
           const key = typeof config.cleanupKey === 'function' ? config.cleanupKey(vars) : config.cleanupKey;
           storeAccessor.ui.clearProcessing(key);

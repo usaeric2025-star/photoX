@@ -40,18 +40,18 @@ export function useDiagnostics() {
   };
 
   const { isMutating: isCleaning, trigger: deduplicate } = useAppMutation(
-    async () => {
-      return runTask(
-        appLang === 'zh' ? '執行數據去重' : 'Deduplicate Records',
-        async () => {
-          const res = await api.admin.maintenance.storage.deduplicate.$post();
-          const json = await res.json() as { success: boolean; error?: string };
-          if (!json.success) throw new Error(json.error || '去重失敗');
-          return json;
-        }
-      );
-    },
     {
+      mutationFn: async () => {
+        return runTask(
+          appLang === 'zh' ? '執行數據去重' : 'Deduplicate Records',
+          async () => {
+            const res = await api.admin.maintenance.storage.deduplicate.$post();
+            const json = await res.json() as { success: boolean; error?: string };
+            if (!json.success) throw new Error(json.error || '去重失敗');
+            return json;
+          }
+        );
+      },
       onSuccess: () => {
         appQuery.mutate(queryKeys.photos.all);
       }

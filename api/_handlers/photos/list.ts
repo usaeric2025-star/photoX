@@ -8,12 +8,10 @@ import { normalizeI18n } from '../../_shared/i18n.js';
 
 import { getGroupCounts } from './helpers.js';
 
-export const listHandler = (app: Hono) => {
-  app.post('/list', async (c) => {
-    const body = await c.req.json();
-    const check = v.safeParse(PhotoListReqSchema, body);
-    if (!check.success) throw new Error(check.issues[0].message);
+import { vValidator } from '@hono/valibot-validator';
 
+export const listHandler = (app: Hono) => {
+  app.post('/list', vValidator('json', PhotoListReqSchema), async (c) => {
     const { 
       page = 0, limit = 100, cursor,
       categoryId, tagId, searchQuery,
@@ -22,7 +20,7 @@ export const listHandler = (app: Hono) => {
       groupId, manufacturerId, 
       isHidden,
       sortOrder
-    } = check.output;
+    } = c.req.valid('json');
     
     try {
       const hasTag = tagId !== undefined && tagId !== null && tagId !== '';

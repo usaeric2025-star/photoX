@@ -140,14 +140,14 @@ export class ErrorFactory {
     });
   }
 
-  static wrap(error: unknown, action: string, message?: string): AppError {
-    const cleanUserMsg = message || this.extractErrorMessage(error);
+  static wrap(error: unknown, operation: string, resource?: string): AppError {
+    const cleanUserMsg = resource ? `${operation}${resource}失败` : `${operation}失败`;
     const systemMsg = error instanceof Error ? error.message : String(error || '未知错误');
     return this.create(systemMsg, {
       category: ErrorCategory.RUNTIME,
       userMessage: cleanUserMsg,
       originalError: error,
-      context: { action },
+      context: { operation, resource },
       shouldReport: true,
       code: ErrorCode.UNKNOWN_ERROR,
       statusCode: 500

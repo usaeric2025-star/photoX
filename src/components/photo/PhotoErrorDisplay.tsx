@@ -25,6 +25,7 @@ export function PhotoErrorDisplay({ error, onRetry }: PhotoErrorDisplayProps) {
   const timestamp = new Date().toLocaleString('zh-CN');
 
   const diagnosticsText = `
+錯誤類型: ${errorType}
 錯誤代碼: ${code || '無'}
 追蹤 ID: ${traceId || '無'}
 時間: ${timestamp}

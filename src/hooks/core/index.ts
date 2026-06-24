@@ -16,5 +16,6 @@ export * from './useSessionStorage';
 export * from './useTaskExecutor';
 export * from './useTranslation';
 export * from './usePerformance';
+export * from './usePrefetch';
 export * from './auth/useAdminMode';
 export * from './auth/usePermission';

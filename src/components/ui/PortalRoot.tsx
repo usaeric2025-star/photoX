@@ -8,15 +8,12 @@ import { TaskBadge, TaskDrawer } from '@/lib/task-queue/components';
  * Provides a dedicated container for Portals in the page.
  */
 export function PortalRoot() {
-  const portalRoot = document.getElementById('portal-root');
-  if (!portalRoot) return null;
-
   return createPortal(
     <>
       <SonnerContainer />
       <TaskBadge />
       <TaskDrawer />
     </>,
-    portalRoot
+    document.body
   );
 }

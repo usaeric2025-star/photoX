@@ -39,7 +39,10 @@ export function usePhotos(params: PhotoListFilters = {}) {
       const response = await api.photos.list.$post({ json: fetchParams });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const result = await response.json();
-      return result as PhotoListResponse;
+      const v = await import('valibot');
+      const { PhotoListResSchema } = await import('@api/_shared/apiContractSchema');
+      // Validate the response
+      return v.parse(PhotoListResSchema, result) as PhotoListResponse;
     },
     {
       revalidateFirstPage: false,

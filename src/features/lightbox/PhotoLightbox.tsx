@@ -38,7 +38,7 @@ interface LightboxProps {
 
 const LightboxStyled = LightboxStyledBase as unknown as React.ComponentType<LightboxProps>; 
 
-const LightboxToolbar = memo(({ 
+function LightboxToolbar({ 
   currentSlide, 
   canEdit, 
   settings, 
@@ -54,7 +54,7 @@ const LightboxToolbar = memo(({
   onEdit: () => void; 
   onAiAnalyze: () => void; 
   onDelete: () => void;
-}) => {
+}) {
   return (
     <div 
       className="fixed top-4 right-4 flex items-center gap-1.5 p-1 bg-black/80 backdrop-blur-md rounded-full border border-white/10 pointer-events-auto z-[10020] shadow-2xl transition-all duration-300 ease-out animate-in fade-in slide-in-from-top-2"
@@ -106,9 +106,7 @@ const LightboxToolbar = memo(({
       </button>
     </div>
   );
-});
-
-LightboxToolbar.displayName = 'LightboxToolbar';
+}
 
 export function PhotoLightbox() {
   const isOpen = useUIStore(s => s.lightbox.isOpen);

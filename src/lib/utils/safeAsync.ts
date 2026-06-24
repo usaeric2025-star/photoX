@@ -35,7 +35,9 @@ export async function safeAsync<T>(
       }
     }
     
-    if (rethrow) throw error;
+    if (rethrow) {
+      throw ErrorFactory.wrap(error, context);
+    }
     return null;
   } finally {
     onFinally?.();

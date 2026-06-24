@@ -31,7 +31,7 @@ interface SelectionToolbarProps {
   groupId?: string;
 }
 
-export const SelectionToolbar = memo(function SelectionToolbar({
+export function SelectionToolbar({
   totalItems,
   allIds = [],
   className = '',
@@ -266,5 +266,5 @@ export const SelectionToolbar = memo(function SelectionToolbar({
       </div>
     </div>
   );
-});
+}
 

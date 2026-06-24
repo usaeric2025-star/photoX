@@ -2,23 +2,9 @@ import { Toaster } from 'sonner';
 import { createPortal } from 'react-dom';
 
 export function SonnerContainer() {
+  // ✅ 直接掛到 body，與 dialog 同層級
   return createPortal(
-    <Toaster 
-      position="top-center"
-      richColors
-      closeButton
-      duration={6000}
-      expand={true}
-      style={{ zIndex: 999999 }}
-      toastOptions={{
-        style: {
-          borderRadius: '16px',
-          fontFamily: 'var(--font-sans)',
-          zIndex: 999999,
-        },
-        className: 'shadow-lg border border-slate-100 bg-white text-slate-900',
-      }}
-    />,
+    <Toaster position="top-center" richColors closeButton />,
     document.body
   );
 }
