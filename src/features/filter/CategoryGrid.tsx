@@ -9,6 +9,8 @@ export function CategoryGrid({ mode }: { mode?: 'public' | 'admin' }) {
   const { appLang, uiTranslations } = useTranslation();
   const { data: categories, isPending } = useCategories(appLang);
 
+  logger.info('[CategoryGrid] Rendering', { isPending, categoriesCount: categories?.length });
+
   if (isPending) {
     return (
       <div className="grid grid-cols-4 gap-1.5">

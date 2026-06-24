@@ -15,6 +15,7 @@ import { PhotoErrorDisplay } from '@/components/photo/PhotoErrorDisplay';
 import { Icon } from '@/components/ui/Icon';
 
 export default function PublicPage() {
+  logger.info('[PublicPage] Rendering');
   const { 
     category, 
     tags, 
@@ -52,18 +53,8 @@ export default function PublicPage() {
   const ui = useUI();
   const { lang, uiTranslations: t } = useTranslation();
   const { data: settings } = usePublicSettings();
-  
-  logger.info('[PublicPage] Rendering', { 
-    isFetching, 
-    isError, 
-    error: error?.message, 
-    photosCount: photos.length, 
-    categoryId: category,
-    searchQuery: search
-  });
 
   const handleRefresh = () => {
-    refetch();
   };
 
   const openLightbox = useUIStore(s => s.openLightbox);
