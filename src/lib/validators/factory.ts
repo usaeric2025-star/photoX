@@ -1,5 +1,5 @@
-import { type } from 'arktype';
-import { ArkTypeValidator } from './engines/arktype';
+import * as v from 'valibot';
+import { ValibotValidator } from './engines/valibot';
 import { Validator } from './protocol';
 
 /**
@@ -7,30 +7,29 @@ import { Validator } from './protocol';
  * Factory for Photo validator. 
  * Enforces snake_case DB mapping and strict type safety for Photo mutations.
  */
-export const createPhotoValidator = (): Validator<any> => {
-    // ArkType requires strict mode for inference, but we are bypassing for compatibility
-    const photoSchema = type({
-        'id?': 'string',
-        'user_id?': 'string',
-        'name?': 'string|object|null',
-        'description?': 'string|object|null',
-        'description_translations?': 'object|null',
-        'category_id?': 'string|null',
-        'manufacturer_id?': 'string|null',
-        'group_id?': 'string|null',
-        'is_group_cover?': 'boolean',
-        'is_pinned?': 'boolean',
-        'image_url?': 'string|null',
-        'price?': 'string|null',
-        'note?': 'string|null',
-        'type?': 'string|null',
-        'is_hidden?': 'boolean',
-        'item_code?': 'string',
-        'updated_at?': 'string',
-        'created_at?': 'string',
+export const createPhotoValidator = (): Validator<unknown> => {
+    const photoSchema = v.object({
+        id: v.optional(v.string()),
+        user_id: v.optional(v.string()),
+        name: v.optional(v.nullable(v.union([v.string(), v.record(v.string(), v.string())]))),
+        description: v.optional(v.nullable(v.union([v.string(), v.record(v.string(), v.string())]))),
+        description_translations: v.optional(v.nullable(v.record(v.string(), v.unknown()))),
+        category_id: v.optional(v.nullable(v.string())),
+        manufacturer_id: v.optional(v.nullable(v.string())),
+        group_id: v.optional(v.nullable(v.string())),
+        is_group_cover: v.optional(v.boolean()),
+        is_pinned: v.optional(v.boolean()),
+        image_url: v.optional(v.nullable(v.string())),
+        price: v.optional(v.nullable(v.string())),
+        note: v.optional(v.nullable(v.string())),
+        type: v.optional(v.nullable(v.string())),
+        is_hidden: v.optional(v.boolean()),
+        item_code: v.optional(v.string()),
+        updated_at: v.optional(v.string()),
+        created_at: v.optional(v.string()),
     });
 
-    return new ArkTypeValidator(photoSchema, {
+    return new ValibotValidator(photoSchema, {
         fields: {
             id: 'uuid',
             user_id: 'uuid',
@@ -55,23 +54,22 @@ export const createPhotoValidator = (): Validator<any> => {
  * @validator-contract createGroupValidator
  * Factory for ProductGroup validator.
  */
-export const createGroupValidator = (): Validator<any> => {
-    // ArkType requires strict mode for inference, but we are bypassing for compatibility
-    const groupSchema = type({
-        id: 'string',
-        'user_id?': 'string',
-        'name?': 'string|object|null',
-        'description?': 'string|object|null',
-        'description_translations?': 'object|null',
-        'is_hidden?': 'boolean',
-        'cover_photo_id?': 'string|null',
-        'colors?': 'string[]|null',
-        'materials?': 'string[]|null',
-        'created_at?': 'string',
-        'updated_at?': 'string',
+export const createGroupValidator = (): Validator<unknown> => {
+    const groupSchema = v.object({
+        id: v.string(),
+        user_id: v.optional(v.string()),
+        name: v.optional(v.nullable(v.union([v.string(), v.record(v.string(), v.string())]))),
+        description: v.optional(v.nullable(v.union([v.string(), v.record(v.string(), v.string())]))),
+        description_translations: v.optional(v.nullable(v.record(v.string(), v.unknown()))),
+        is_hidden: v.optional(v.boolean()),
+        cover_photo_id: v.optional(v.nullable(v.string())),
+        colors: v.optional(v.nullable(v.array(v.string()))),
+        materials: v.optional(v.nullable(v.array(v.string()))),
+        created_at: v.optional(v.string()),
+        updated_at: v.optional(v.string()),
     });
 
-    return new ArkTypeValidator(groupSchema, {
+    return new ValibotValidator(groupSchema, {
         fields: {
             id: 'uuid',
             user_id: 'uuid',

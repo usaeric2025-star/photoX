@@ -1,17 +1,19 @@
 import React, { useState } from "react";
+import { Modal } from "@/components/ui/Modal";
 import { NativeDialog } from "@/components/ui/NativeDialog";
 import { useUI } from '@/lib/store';
-import { useFormContext } from "el-form-react-hooks";
 import { usePhoto } from "@/hooks/photo/usePhoto";
 import { useFilters } from "@/hooks/useFilters";
-import { PhotoEditSessionProvider } from "@/hooks/photo/PhotoEditSession";
-import { usePhotoEditSessionContext } from "@/hooks/photo/usePhotoEditSessionContext";
+import { PhotoEditSessionProvider, usePhotoEditSessionContext } from "@/hooks/photo";
 import { PhotoEditTabs } from "./PhotoEditTabs";
 import { DialogHeader } from "./DialogHeader";
 import { LoadingSpinner } from "@/components/ui/feedback/LoadingSpinner";
 import { logger } from "@/lib/logger";
+import { useAdminMaintenance } from "@/hooks";
+import { showToast as toast } from "@/lib/ui/toast";
 
 function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: boolean; handleClose: () => void; editPhotoId: string; }) {
+  const adminActions = useAdminMaintenance();
   const { data: photo, isPending } = usePhoto(editPhotoId);
   const appLang = useUI((s) => s.appLang);
 
@@ -41,26 +43,46 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
   };
 
   return (
-    <NativeDialog
-      id="photo-edit-dialog"
-      open={isOpen}
-      onClose={handleInterceptClose}
-      size="screen"
-      hidePadding
-      showCloseButton={false}
-    >
-      <div className="flex flex-col h-full bg-surface-soft min-h-[500px]">
-        <DialogHeader onClose={handleInterceptClose} onDeleteClick={() => {}} />
-        {isPending ? (
-          <div className="flex-1 flex flex-col items-center justify-center gap-4 min-h-[500px]">
-            <LoadingSpinner size="lg" />
-            <p className="text-sm font-medium text-slate-500">正在获取照片详情...</p>
+    <>
+      <Modal
+        id="photo-edit-dialog"
+        open={isOpen}
+        onClose={handleInterceptClose}
+        size="screen"
+        hidePadding
+        showCloseButton={false}
+      >
+        {isOpen && (
+          <div className="flex flex-col h-full bg-surface-soft min-h-[500px]">
+            <div className="p-4 border-b flex justify-between items-center bg-red-100">
+              <div></div>
+              <DialogHeader onClose={handleInterceptClose} onDeleteClick={async () => {
+                logger.info('[PhotoEditDialog] Delete clicked for photo:', editPhotoId);
+                toast.info("正在删除...");
+                try {
+                  await adminActions.deletePhoto.mutateAsync([editPhotoId]);
+                  logger.info('[PhotoEditDialog] Delete successful');
+                  toast.success("删除成功");
+                  handleClose();
+                } catch (err: unknown) {
+                  logger.error('[PhotoEditDialog] Delete failed:', err);
+                  toast.error("删除失败");
+                }
+              }} />
+            </div>
+            
+            {isPending ? (
+              <div className="flex-1 flex flex-col items-center justify-center gap-4 min-h-[500px]">
+                <LoadingSpinner size="lg" />
+                <p className="text-sm font-medium text-slate-500">正在获取照片详情...</p>
+              </div>
+            ) : (
+              <PhotoEditTabs />
+            )}
           </div>
-        ) : (
-          <PhotoEditTabs />
         )}
-      </div>
-
+      </Modal>
+      
       <NativeDialog
         id="dirty-confirm-dialog"
         open={showConfirm}
@@ -80,9 +102,10 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
           </div>
         </div>
       </NativeDialog>
-    </NativeDialog>
+    </>
   );
 }
+
 
 interface PhotoEditDialogProps {
   isOpen?: boolean;
@@ -92,29 +115,32 @@ interface PhotoEditDialogProps {
 
 export function PhotoEditDialog({ isOpen: propIsOpen, onClose: propOnClose, editPhotoId: propEditPhotoId }: PhotoEditDialogProps) {
   const { modal, photoId, setModal } = useFilters();
+  
+  // Debug
+  React.useEffect(() => {
+    logger.info('[PhotoEditDialog] Filters changed:', { modal, photoId, propIsOpen, propEditPhotoId });
+  }, [modal, photoId, propIsOpen, propEditPhotoId]);
+
   const urlEditPhotoId = modal === 'edit' ? photoId : null;
 
   const editPhotoId = propEditPhotoId !== undefined ? propEditPhotoId : urlEditPhotoId;
-  const isOpen = propIsOpen !== undefined ? propIsOpen : !!editPhotoId;
+  const isOpen = propIsOpen !== undefined ? propIsOpen : (modal === 'edit' && !!editPhotoId);
 
   const handleClose = () => {
+    logger.info('[PhotoEditDialog] Closing...');
     if (propOnClose) {
       propOnClose();
     } else {
-      if (modal === 'edit') {
-        setModal(null);
-      }
+      setModal(null);
     }
   };
 
-  if (!isOpen || !editPhotoId) return null;
-
   return (
-    <PhotoEditSessionProvider photoId={editPhotoId} onSuccess={handleClose}>
+    <PhotoEditSessionProvider photoId={editPhotoId || ''} onSuccess={handleClose}>
       <PhotoEditDialogInner 
         isOpen={isOpen}
         handleClose={handleClose}
-        editPhotoId={editPhotoId}
+        editPhotoId={editPhotoId || ''}
       />
     </PhotoEditSessionProvider>
   );

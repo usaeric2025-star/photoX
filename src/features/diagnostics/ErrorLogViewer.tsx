@@ -5,7 +5,7 @@ import { useAppQuery, useAppMutation, appQuery } from '@/lib/query';
 import { api } from '@/lib/api';
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
 import { Button } from '@/components/shared/Button';
-import { type } from 'arktype';
+import * as v from 'valibot';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { formatters } from '@/utils/formatters';
 import { useCopyToClipboard } from '@/hooks';
@@ -119,7 +119,7 @@ export const ErrorLogViewer = () => {
   );
 
   const { submit: runClear, isLoading: isClearing } = useFormSubmit({
-      schema: type('unknown'),
+      schema: v.any(),
       mutationFn: async () => {
           const res = await api.admin.maintenance['error-events-clear'].$post();
           const json = await res.json();

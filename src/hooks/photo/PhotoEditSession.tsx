@@ -1,20 +1,19 @@
 import { logger } from '@/lib/logger';
 import { createContext, useCallback, useContext, useMemo } from 'react';
-import { FormProvider, useForm } from "el-form-react-hooks";
+import { useForm } from '@tanstack/react-form';
+import { useAppForm } from '@/lib/form/useAppForm';
 import { usePhoto } from './usePhoto';
 import { usePhotoEditMutation } from './usePhotoMutations';
-import { EditPhotoSchema, type EditFormData } from '@/schemas/photoEdit';
-import { editFormToSaveData } from '@/lib/form/photoEditAdapter';
-import { useFormSubmit } from '@/lib/form/useFormSubmit';
+import { PhotoEditSchema, type PhotoEditFormData } from '@/schemas/photoEdit';
+import { photoEditAdapter } from '@/lib/form';
 import { generateItemCode } from '@/services/photo/utils';
-import { Photo } from '@/types';
-import { arktypeValidator } from '@/lib/form/arktypeAdapter';
+import { Photo, Tag } from '@/types';
 
 interface PhotoEditSessionContextValue {
   isDirty: boolean;
   isPending: boolean;
   isSubmitting: boolean;
-  commit: (data?: EditFormData) => Promise<boolean>;
+  commit: (data?: PhotoEditFormData) => Promise<void>;
   discard: () => void;
   form: any;
   photoId: string;
@@ -33,7 +32,6 @@ export const PhotoEditSessionProvider = ({
   children, 
   onSuccess 
 }: PhotoEditSessionProps) => {
-  const isNew = !photoId;
   const { data: photo, isPending } = usePhoto(photoId);
   const updateMutation = usePhotoEditMutation();
   
@@ -54,39 +52,40 @@ export const PhotoEditSessionProvider = ({
     return { zh: s, en: '', ms: '' };
   };
 
-  const initialValues = useMemo(() => {
+  const defaultValues = useMemo(() => {
     const p = (photo || {}) as Partial<Photo>;
     return {
-      ...p,
       name: toSingleString(p.name),
       description: toMultiObject(p.description),
+      category_id: p.category_id ?? null,
+      manufacturer_id: p.manufacturer_id ?? null,
       group_id: p.group_id ?? null,
-    } as unknown as EditFormData;
+      is_group_cover: p.is_group_cover ?? false,
+      price: p.price ?? null,
+      note: p.note ?? null,
+      manual_code: p.manual_code ?? null,
+      model_number: p.model_number ?? null,
+      dimensions: p.dimensions ?? null,
+      is_hidden: p.is_hidden ?? false,
+      tags: p.tags ?? null,
+      item_code: p.item_code ?? null,
+    } as unknown as PhotoEditFormData;
   }, [photo]);
 
-  const form = useForm<EditFormData>({
-    validators: {
-      onSubmit: arktypeValidator(EditPhotoSchema)
-    },
-    defaultValues: initialValues,
-    values: initialValues,
-  });
-  
-  const isDirty = form.formState.isDirty;
-
-  const { submit: commit, isLoading: isSubmitting } = useFormSubmit({
-    schema: EditPhotoSchema,
-    mutationFn: async (values: EditFormData) => {
+  const formObj = useAppForm({
+    schema: PhotoEditSchema,
+    defaultValues,
+    onSubmit: async (values: PhotoEditFormData) => {
       // Auto-generate item_code if missing
       if (!values.item_code) {
         const newCode = generateItemCode();
         values.item_code = newCode;
-        form.setValue('item_code', newCode);
+        formObj.form.setFieldValue('item_code', newCode);
       }
       
-      // Convert using our strict Adapter (fails fast if misaligned)
-      const saveData = editFormToSaveData(values, photoId, {
-        tags: photo?.tags,
+      // Convert using our strict Adapter
+      const saveData = photoEditAdapter(values, photoId, {
+        tags: photo?.tags?.map((t: Tag) => t.name) ?? null,
         created_at: photo?.created_at,
         updated_at: new Date().toISOString(),
       });
@@ -96,40 +95,32 @@ export const PhotoEditSessionProvider = ({
         updates: saveData as unknown as Partial<Photo>
       });
       
-      return true;
-    },
-    onSuccess: () => {
       onSuccess?.();
-    },
-    successMessage: '照片儲存成功',
-    errorMessage: '照片儲存失敗'
+    }
   });
-
-  const handleCommit = useCallback(async (data?: EditFormData) => {
-    const values = data || form.watch();
-    return await commit(values);
-  }, [commit, form]);
+  
+  const handleCommit = useCallback(async (data?: PhotoEditFormData) => {
+    if (data) {
+        Object.entries(data).forEach(([key, value]) => formObj.form.setFieldValue(key as keyof PhotoEditFormData, value as never));
+    }
+    return await formObj.form.handleSubmit();
+  }, [formObj]);
 
   const discard = () => {
-    form.reset({ values: initialValues });
+    formObj.form.reset();
   };
   
-  // Do not return null to avoid blocking parent modal rendering
-  // but provide a loading state indicator if necessary (handled by children)
-  
   return (
-    <FormProvider form={form}>
-      <PhotoEditSessionContext.Provider value={{ 
-        isDirty, 
-        isPending,
-        isSubmitting,
-        commit: handleCommit, 
-        discard,
-        form,
-        photoId
-      }}>
-        {children}
-      </PhotoEditSessionContext.Provider>
-    </FormProvider>
+    <PhotoEditSessionContext.Provider value={{ 
+      isDirty: formObj.form.state.isDirty,
+      isPending,
+      isSubmitting: formObj.form.state.isSubmitting,
+      commit: handleCommit, 
+      discard,
+      form: formObj.form,
+      photoId
+    }}>
+      {children}
+    </PhotoEditSessionContext.Provider>
   );
 }

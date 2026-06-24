@@ -1,56 +1,56 @@
 import { logger } from '@/lib/logger';
-import { type } from "arktype";
+import * as v from 'valibot';
 
 /**
  * [ENV-SCHEMA-DEFINED] Client-side Environment Schema
  * Represents variables available via import('meta').env
  */
-export const clientEnvSchema = type({
-  "VITE_SUPABASE_URL?": "string",
-  "VITE_SUPABASE_ANON_KEY?": "string",
-  "VITE_SENTRY_DSN?": "string",
-  "MODE?": "string",
-  "DEV?": "boolean",
-  "PROD?": "boolean"
+export const clientEnvSchema = v.object({
+  "VITE_SUPABASE_URL": v.optional(v.string()),
+  "VITE_SUPABASE_ANON_KEY": v.optional(v.string()),
+  "VITE_SENTRY_DSN": v.optional(v.string()),
+  "MODE": v.optional(v.string()),
+  "DEV": v.optional(v.boolean()),
+  "PROD": v.optional(v.boolean())
 });
 
 /**
  * [ENV-SCHEMA-DEFINED] Server-side Environment Schema
  * Represents variables available via process.env
  */
-export const serverEnvSchema = type({
-  "NODE_ENV?": "'development' | 'production' | 'test' | string",
-  "PORT?": "string | number | undefined",
+export const serverEnvSchema = v.object({
+  "NODE_ENV": v.optional(v.union([v.literal('development'), v.literal('production'), v.literal('test'), v.string()])),
+  "PORT": v.optional(v.union([v.string(), v.number()])),
   
   // Supabase (Server requires either VITE_... or SUPABASE_...)
-  "VITE_SUPABASE_URL?": "string", 
-  "VITE_SUPABASE_ANON_KEY?": "string",
-  "SUPABASE_URL?": "string",
-  "SUPABASE_SERVICE_KEY?": "string",
-  "DATABASE_URL?": "string",
+  "VITE_SUPABASE_URL": v.optional(v.string()), 
+  "VITE_SUPABASE_ANON_KEY": v.optional(v.string()),
+  "SUPABASE_URL": v.optional(v.string()),
+  "SUPABASE_SERVICE_KEY": v.optional(v.string()),
+  "DATABASE_URL": v.optional(v.string()),
 
   // R2 Storage
-  "R2_ENDPOINT?": "string",
-  "R2_ACCESS_KEY_ID?": "string",
-  "R2_SECRET_ACCESS_KEY?": "string",
-  "R2_BUCKET_NAME?": "string",
-  "R2_PUBLIC_URL_PREFIX?": "string",
+  "R2_ENDPOINT": v.optional(v.string()),
+  "R2_ACCESS_KEY_ID": v.optional(v.string()),
+  "R2_SECRET_ACCESS_KEY": v.optional(v.string()),
+  "R2_BUCKET_NAME": v.optional(v.string()),
+  "R2_PUBLIC_URL_PREFIX": v.optional(v.string()),
 
   // Gemini AI
-  "GEMINI_API_KEY?": "string",
+  "GEMINI_API_KEY": v.optional(v.string()),
   
   // Sentry
-  "SENTRY_DSN?": "string",
-  "VITE_SENTRY_DSN?": "string",
+  "SENTRY_DSN": v.optional(v.string()),
+  "VITE_SENTRY_DSN": v.optional(v.string()),
   
   // Other flags
-  "VERCEL?": "string | undefined",
-  "DISABLE_HMR?": "string | undefined"
+  "VERCEL": v.optional(v.string()),
+  "DISABLE_HMR": v.optional(v.string())
 });
 
 // Infer types
-export type ClientEnv = typeof clientEnvSchema.infer;
-type ServerEnv = typeof serverEnvSchema.infer;
+export type ClientEnv = v.InferOutput<typeof clientEnvSchema>;
+type ServerEnv = v.InferOutput<typeof serverEnvSchema>;
 
 const aiDebugHints: Record<string, string> = {
   "VITE_SUPABASE_URL": "Supabase Project URL. Get it from Project Settings -> API.",
@@ -77,16 +77,17 @@ export function getClientEnv(): ClientEnv {
     }
   });
 
-  const result = clientEnvSchema(filteredEnv);
-  if (result instanceof type.errors) {
+  const validation = v.safeParse(clientEnvSchema, filteredEnv);
+  if (!validation.success) {
     logger.warn("⚠️ [ENV-VALIDATION-INTEGRATED] Invalid Client Environment Variables (Falling back gracefully):");
-    result.forEach((err) => {
-      const hint = aiDebugHints[err.path.join('.')] || "Check .env configuration";
-      logger.warn(`- ${err.path}: ${err.message} (aiDebugHint: ${hint})`);
+    validation.issues.forEach((issue) => {
+      const path = issue.path?.map((p: any) => p.key).join('.') || 'unknown';
+      const hint = aiDebugHints[path] || "Check .env configuration";
+      logger.warn(`- ${path}: ${issue.message} (aiDebugHint: ${hint})`);
     });
     return filteredEnv as ClientEnv;
   }
-  return result as ClientEnv;
+  return validation.output;
 }
 
 /**
@@ -94,16 +95,17 @@ export function getClientEnv(): ClientEnv {
  */
 export function getServerEnv(envObj: NodeJS.ProcessEnv): ServerEnv {
   const rawEnv = { ...envObj };
-  const result = serverEnvSchema(rawEnv);
-  if (result instanceof type.errors) {
+  const validation = v.safeParse(serverEnvSchema, rawEnv);
+  if (!validation.success) {
     logger.warn("⚠️ [ENV-VALIDATION-INTEGRATED] Invalid Server Environment Variables (Falling back gracefully):");
-    result.forEach((err) => {
-      const hint = aiDebugHints[err.path.join('.')] || "Check .env configuration or deployment env variables";
-      logger.warn(`- ${err.path}: ${err.message} (aiDebugHint: ${hint})`);
+    validation.issues.forEach((issue) => {
+      const path = issue.path?.map((p: any) => p.key).join('.') || 'unknown';
+      const hint = aiDebugHints[path] || "Check .env configuration or deployment env variables";
+      logger.warn(`- ${path}: ${issue.message} (aiDebugHint: ${hint})`);
     });
     return rawEnv as ServerEnv;
   }
-  return result as ServerEnv;
+  return validation.output;
 }
 
 export const clientEnv = getClientEnv();

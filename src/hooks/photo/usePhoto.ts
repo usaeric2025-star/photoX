@@ -9,10 +9,11 @@ import { mapSupabasePhoto } from '@/services/mappers/photo';
 /**
  * Hook to get detailed photo information.
  */
-export const usePhoto = (photoId: string) => {
+export const usePhoto = (photoId: string | null | undefined) => {
   return useQuery(
-    queryKeys.photos.detail(photoId),
+    photoId ? queryKeys.photos.detail(photoId) : null,
     async () => {
+      if (!photoId) return null;
       const response = await api.photos['by-ids'].$post({
         json: { ids: [photoId] }
       });

@@ -11,7 +11,7 @@ export interface LightboxSlide {
   groupName?: string;
   price?: string;
   itemCode?: string;
-  original?: any; // 原始數據引用
+  original?: unknown; // 原始數據引用
 }
 
 export interface LightboxConfig {

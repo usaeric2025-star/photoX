@@ -9,6 +9,7 @@ import { useFilters, useTranslation, useCategories } from '@/hooks';
 import { getTranslatedCategoryName } from '@/services/category/utils';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useUI } from '@/lib/store';
+import { useUIStore } from '@/store/uiStore';
 import { usePhotoSelection } from '@/hooks/photo/usePhotoSelection';
 import { SelectionProvider, SelectionToolbar } from '@/features/selection';
 import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
@@ -61,15 +62,21 @@ export function AdminGroupDetailPage() {
   const { data: categories = [] } = useCategories();
   const { anchor, setAnchor } = useFilters();
 
-  const { open } = useLightbox();
+  const lightboxIsOpen = useUIStore(s => s.lightbox.isOpen);
+  const lightboxCurrentIndex = useUIStore(s => s.lightbox.currentIndex);
+  const openLightbox = useUIStore(s => s.openLightbox);
+  const lightboxItems = React.useMemo(() => photosToLightboxSlides(photos), [photos]);
 
   React.useEffect(() => {
      if (photoId && photos.length > 0) {
-        const slides = photosToLightboxSlides(photos);
         const index = photos.findIndex(p => p.id === photoId);
-        open(slides, index !== -1 ? index : 0);
+        if (index !== -1) {
+           if (!lightboxIsOpen || photos[lightboxCurrentIndex]?.id !== photoId) {
+              openLightbox(lightboxItems, index);
+           }
+        }
      }
-  }, [photos, photoId, open]);
+  }, [photos, photoId, openLightbox, lightboxItems, lightboxIsOpen, lightboxCurrentIndex]);
 
   // Anchoring effect
   React.useEffect(() => {
@@ -127,8 +134,7 @@ export function AdminGroupDetailPage() {
   const openEditDrawer = (id: string) => { setPhotoId(id); setModal('edit'); };
 
   const handlePhotoClick = (id: string, index: number) => {
-      const slides = photosToLightboxSlides(photos);
-      open(slides, index);
+      openLightbox(lightboxItems, index);
       setPhotoId(id);
   };
 

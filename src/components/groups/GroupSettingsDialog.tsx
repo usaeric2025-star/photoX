@@ -2,7 +2,6 @@ import React from 'react';
 import { NativeDialog } from "../ui/NativeDialog";
 import { ProductGroup, Dimension } from '../../types';
 import { useAdminMode } from '../../hooks';
-import { MultilingualInput } from "../shared/MultilingualInput";
 import { Input } from "../shared/Input";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Button } from "../shared/Button";

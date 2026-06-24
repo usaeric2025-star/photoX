@@ -3,38 +3,38 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { type } from 'arktype';
+import * as v from 'valibot';
 
 // --- Base Types ---
-export const IdSchema = type('string.uuid');
+export const IdSchema = v.pipe(v.string(), v.uuid());
 
-export const JsonObjectSchema = type('object');
+export const JsonObjectSchema = v.record(v.string(), v.any());
 
 // --- Sub-types ---
-export const TagSchema = type({
-  id: 'string',
-  name: 'string',
-  'aliases?': 'string[]',
+export const TagSchema = v.object({
+  id: v.string(),
+  name: v.string(),
+  aliases: v.optional(v.array(v.string())),
 });
 
-export const DimensionSchema = type({
-  width: 'number',
-  height: 'number',
+export const DimensionSchema = v.object({
+  width: v.number(),
+  height: v.number(),
 });
 
 // --- API Types ---
-export const MergeGroupsRequestSchema = type({
+export const MergeGroupsRequestSchema = v.object({
   targetGroupId: IdSchema,
-  sourceGroupIds: IdSchema.array(),
+  sourceGroupIds: v.array(IdSchema),
 });
-type MergeGroupsRequest = typeof MergeGroupsRequestSchema.infer;
+type MergeGroupsRequest = v.InferOutput<typeof MergeGroupsRequestSchema>;
 
-export const MergeGroupsResponseSchema = type({
-  success: 'boolean',
+export const MergeGroupsResponseSchema = v.object({
+  success: v.boolean(),
   targetGroupId: IdSchema,
-  mergedCount: 'number',
+  mergedCount: v.number(),
 });
-type MergeGroupsResponseType = typeof MergeGroupsResponseSchema.infer;
+type MergeGroupsResponseType = v.InferOutput<typeof MergeGroupsResponseSchema>;
 
 // --- Existing Utility Types ---
 type JsonValue = string | number | boolean | null | Record<string, unknown> | JsonValue[];

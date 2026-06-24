@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { type } from 'arktype';
+import * as v from 'valibot';
 import { db, categories as categoriesTable, furnitureItems } from '../_lib/db/index.js';
 import { eq, asc, ne, sql } from 'drizzle-orm';
 import { CategoryReqSchema } from '../_shared/apiContractSchema.js';
@@ -83,10 +83,10 @@ export const categories = new Hono()
   })
   .post('/clear-photos', async (c) => {
     const body = await c.req.json();
-    const check = type({ categoryId: "number" })(body);
-    if (check instanceof type.errors) throw new Error(check.summary);
+    const check = v.safeParse(v.object({ categoryId: v.number() }), body);
+    if (!check.success) throw new Error(check.issues[0].message);
 
-    const { categoryId } = check;
+    const { categoryId } = check.output;
     try {
       const updated = await db
           .update(furnitureItems)
@@ -102,10 +102,10 @@ export const categories = new Hono()
   })
   .post('/', async (c) => {
     const body = await c.req.json();
-    const check = type({ categoryData: CategoryReqSchema })(body);
-    if (check instanceof type.errors) throw new Error(check.summary);
+    const check = v.safeParse(v.object({ categoryData: CategoryReqSchema }), body);
+    if (!check.success) throw new Error(check.issues[0].message);
 
-    const { categoryData } = check;
+    const { categoryData } = check.output;
     try {
       // Map frontend fields (snake_case) to Drizzle fields (camelCase)
       const mappedData = {
@@ -133,10 +133,10 @@ export const categories = new Hono()
   .put('/:id', async (c) => {
     const id = c.req.param('id');
     const body = await c.req.json();
-    const check = type({ updates: CategoryReqSchema.omit("id") })(body);
-    if (check instanceof type.errors) throw new Error(check.summary);
+    const check = v.safeParse(v.object({ updates: v.omit(CategoryReqSchema, ["id"]) }), body);
+    if (!check.success) throw new Error(check.issues[0].message);
 
-    const { updates } = check;
+    const { updates } = check.output;
     try {
       const mappedUpdates: Record<string, unknown> = {};
       if (updates.code !== undefined) mappedUpdates.code = updates.code;

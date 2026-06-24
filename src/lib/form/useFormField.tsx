@@ -5,7 +5,7 @@ export type FormContextType = {
   clearFieldError: (name: string) => void;
 };
 
-export const FormContext = createContext<FormContextType | null>(null);
+const FormContext = createContext<FormContextType | null>(null);
 
 export function FormProvider({ 
   fieldErrors, 

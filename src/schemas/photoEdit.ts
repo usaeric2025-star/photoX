@@ -1,66 +1,48 @@
-import { type } from 'arktype';
+import * as v from 'valibot';
 
-// ✅ 基礎編輯 Schema（定義 UI 可編輯欄位）
-const baseEditPhotoSchema = type({
-  'name': 'string',
-  'description': 'Record<string, string>', // `{ zh: string, en: string, ms: string }`
-  'category_id?': 'string | null',
-  'manufacturer_id?': 'string | null',
-  'group_id?': 'string | null',
-  'is_group_cover?': 'boolean',
-  'price?': 'string | null',
-  'note?': 'string | null',
-  'manual_code?': 'string | null',
-  'model_number?': 'string | null',
-  'dimensions?': 'object | null',
-  'is_hidden?': 'boolean',
-  'tags?': 'unknown[] | null',
-  'item_code?': 'string | null',
+export const TranslationSchema = v.object({
+  zh: v.string(),
+  en: v.string(),
+  ms: v.string()
 });
 
-// ✅ 編輯 Schema（掛載 safeParse 以相容 el-form-react-hooks）
-export const EditPhotoSchema = Object.assign(baseEditPhotoSchema, {
-  safeParse(values: unknown) {
-    const out = baseEditPhotoSchema(values);
-    if (out instanceof type.errors) {
-      const issues = Array.from(out as unknown as { path: string[], message: string }[]).map((err) => ({
-        path: err.path || [],
-        message: err.message || String(err),
-      }));
-      return {
-        success: false,
-        error: { issues },
-      };
-    }
-    return {
-      success: true,
-      data: out,
-    };
-  }
+export const PhotoEditSchema = v.object({
+  name: v.pipe(v.string(), v.minLength(1, '標題不能為空'), v.maxLength(100, '標題不能超過100字')),
+  description: v.optional(TranslationSchema),
+  category_id: v.optional(v.nullable(v.string())),
+  manufacturer_id: v.optional(v.nullable(v.string())),
+  group_id: v.optional(v.nullable(v.string())),
+  is_group_cover: v.optional(v.boolean()),
+  price: v.optional(v.nullable(v.string())),
+  note: v.optional(v.nullable(v.string())),
+  manual_code: v.optional(v.nullable(v.string())),
+  model_number: v.optional(v.nullable(v.string())),
+  dimensions: v.optional(v.nullable(v.object({}))),
+  is_hidden: v.optional(v.boolean()),
+  tags: v.optional(v.nullable(v.array(v.string()))),
+  item_code: v.optional(v.nullable(v.string())),
 });
 
-export type EditFormData = typeof baseEditPhotoSchema.infer;
+export type PhotoEditFormData = v.InferOutput<typeof PhotoEditSchema>;
 
-// ✅ 儲存 Schema（驗證所有儲存欄位）
-export const SavePhotoSchema = type({
-  'id': 'string',
-  'name': '(string | Record<string, string>) | null',
-  'description': '(string | Record<string, string>) | null',
-  'category_id?': 'string | number | null',
-  'manufacturer_id?': 'string | null',
-  'group_id?': 'string | null',
-  'is_group_cover?': 'boolean',
-  'price?': 'string | null',
-  'note?': 'string | null',
-  'manual_code?': 'string | null',
-  'model_number?': 'string | null',
-  'dimensions?': 'object | null',
-  'is_hidden?': 'boolean',
-  'tags?': 'unknown[] | null',
-  'item_code?': 'string | null',
-  'updated_at?': 'string',
-  'created_at?': 'string',
+export const SavePhotoSchema = v.object({
+  id: v.string(),
+  name: v.union([v.string(), TranslationSchema]),
+  description: v.union([v.string(), TranslationSchema]),
+  category_id: v.optional(v.nullable(v.union([v.string(), v.number()]))),
+  manufacturer_id: v.optional(v.nullable(v.string())),
+  group_id: v.optional(v.nullable(v.string())),
+  is_group_cover: v.optional(v.boolean()),
+  price: v.optional(v.nullable(v.string())),
+  note: v.optional(v.nullable(v.string())),
+  manual_code: v.optional(v.nullable(v.string())),
+  model_number: v.optional(v.nullable(v.string())),
+  dimensions: v.optional(v.nullable(v.object({}))),
+  is_hidden: v.optional(v.boolean()),
+  tags: v.optional(v.nullable(v.array(v.string()))),
+  item_code: v.optional(v.nullable(v.string())),
+  updated_at: v.optional(v.string()),
+  created_at: v.optional(v.string()),
 });
 
-export type SaveData = typeof SavePhotoSchema.infer;
-
+export type SaveData = v.InferOutput<typeof SavePhotoSchema>;

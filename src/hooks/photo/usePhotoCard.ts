@@ -50,7 +50,7 @@ export function usePhotoCard({
 
   const handleMouseEnter = () => {
     // Basic navigation detection
-    const isAlreadyOnGroupPage = (params as Record<string, string>).groupId || window.location.pathname.includes('/group/');
+    const isAlreadyOnGroupPage = route === 'publicGroup' || route === 'adminGroup' || (params as Record<string, string>).groupId;
     if (photo.groupId && showGroupsCollapsed && !hasSearchQuery && !isAlreadyOnGroupPage) {
       // SWR automatically handles caching when fetcher is called elsewhere.
       // Removed prefetchQuery as it was TanStack Query specific.
@@ -74,7 +74,7 @@ export function usePhotoCard({
       return;
     }
 
-    const isAlreadyOnGroupPage = (params as Record<string, string>).groupId || window.location.pathname.includes('/group/');
+    const isAlreadyOnGroupPage = route === 'publicGroup' || route === 'adminGroup' || (params as Record<string, string>).groupId;
     const shouldGoToGroup = photo.groupId && showGroupsCollapsed && !isAlreadyOnGroupPage;
 
     if (shouldGoToGroup) {

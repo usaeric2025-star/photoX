@@ -3,7 +3,7 @@ import { Category, Tag } from '@/types';
 import { PhotoListItem } from '@/types/api';
 import { PhotoCardBase } from './PhotoCardBase';
 import { PhotoStatusBadges, PhotoCardInfo } from './PhotoCardParts';
-import { useColumns } from '@/hooks';
+import { useColumns, usePerformance } from '@/hooks';
 import { usePhotoCard } from '@/hooks/photo/usePhotoCard';
 
 interface PublicPhotoCardProps {
@@ -27,6 +27,7 @@ export const PublicPhotoCard = ({
   sharedCategories,
   sharedTags,
 }: PublicPhotoCardProps) => {
+  usePerformance('PublicPhotoCard');
   const { columns } = useColumns();
   
   const { cardRef, handleClick, handleMouseEnter } = usePhotoCard({

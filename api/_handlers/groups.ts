@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { type } from 'arktype';
+import * as v from 'valibot';
 import { db, groups as groupsTable, furnitureItems } from '../_lib/db/index.js';
 import { eq, and, inArray, isNull, sql, asc } from 'drizzle-orm';
 import { GroupReqSchema } from '../_shared/apiContractSchema.js';
@@ -43,10 +43,10 @@ export const groups = new Hono()
   })
   .post('/', async (c) => {
     const body = await c.req.json();
-    const check = type({ groupData: GroupReqSchema })(body);
-    if (check instanceof type.errors) throw new Error(check.summary);
+    const check = v.safeParse(v.object({ groupData: GroupReqSchema }), body);
+    if (!check.success) throw new Error(check.issues[0].message);
 
-    const { groupData } = check;
+    const { groupData } = check.output;
     try {
         const b = body as Record<string, unknown>;
         const g = groupData as Record<string, unknown>;
@@ -75,10 +75,10 @@ export const groups = new Hono()
   .put('/:id', async (c) => {
     const id = c.req.param('id');
     const body = await c.req.json();
-    const check = type({ updates: GroupReqSchema.omit("id") })(body);
-    if (check instanceof type.errors) throw new Error(check.summary);
+    const check = v.safeParse(v.object({ updates: v.omit(GroupReqSchema, ["id"]) }), body);
+    if (!check.success) throw new Error(check.issues[0].message);
 
-    const { updates } = check;
+    const { updates } = check.output;
     const updatesObj = updates as Record<string, unknown>;
     delete updatesObj.member_count;
 
@@ -165,22 +165,22 @@ export const groups = new Hono()
   .post('/group-photos', async (c) => {
       const body = await c.req.json();
       logger.debug('--- GROUP PHOTOS JSON BODY ---', body);
-      const check = type({
-          targetGroupId: "string",
-          userId: "string",
-          "photoIds?": "string[]",
-          groupData: "object",
-          "sourceGroupIds?": "string[]",
-          "ungroupedValidIds?": "string[]"
-      })(body);
-      if (check instanceof type.errors) throw new Error(check.summary);
+      const check = v.safeParse(v.object({
+          targetGroupId: v.string(),
+          userId: v.string(),
+          photoIds: v.optional(v.array(v.string())),
+          groupData: v.record(v.string(), v.any()),
+          sourceGroupIds: v.optional(v.array(v.string())),
+          ungroupedValidIds: v.optional(v.array(v.string()))
+      }), body);
+      if (!check.success) throw new Error(check.issues[0].message);
 
       const { 
           targetGroupId, 
           userId, 
           groupData, 
           photoIds
-      } = check;
+      } = check.output;
       
       // Ensure groupData has the id aligned with targetGroupId to satisfy TS and db
       const mergedGroupData = { ...(groupData as any), id: targetGroupId };
@@ -285,10 +285,10 @@ export const groups = new Hono()
   })
   .post('/move-photos', async (c) => {
     const body = await c.req.json();
-    const check = type({ photoIds: "string[]", targetGroupId: "string|null" })(body);
-    if (check instanceof type.errors) throw new Error(check.summary);
+    const check = v.safeParse(v.object({ photoIds: v.array(v.string()), targetGroupId: v.nullable(v.string()) }), body);
+    if (!check.success) throw new Error(check.issues[0].message);
 
-    const { photoIds, targetGroupId } = check;
+    const { photoIds, targetGroupId } = check.output;
     try {
         // Fetch snapshots before move
         const sourcePhotos = await db.select({ groupId: furnitureItems.groupId })
@@ -321,10 +321,10 @@ export const groups = new Hono()
   })
   .post('/set-cover', async (c) => {
     const body = await c.req.json();
-    const check = type({ photoId: "string|null", groupId: "string" })(body);
-    if (check instanceof type.errors) throw new Error(check.summary);
+    const check = v.safeParse(v.object({ photoId: v.nullable(v.string()), groupId: v.string() }), body);
+    if (!check.success) throw new Error(check.issues[0].message);
 
-    const { photoId, groupId } = check;
+    const { photoId, groupId } = check.output;
     try {
         await db.update(furnitureItems)
             .set({ isGroupCover: false })
@@ -352,10 +352,10 @@ export const groups = new Hono()
   })
   .post('/ungroup', async (c) => {
     const body = await c.req.json();
-    const check = type({ groupId: "string" })(body);
-    if (check instanceof type.errors) throw new Error(check.summary);
+    const check = v.safeParse(v.object({ groupId: v.string() }), body);
+    if (!check.success) throw new Error(check.issues[0].message);
 
-    const { groupId } = check;
+    const { groupId } = check.output;
     try {
         await db.update(furnitureItems)
             .set({ groupId: null, isGroupCover: false })
@@ -376,10 +376,10 @@ export const groups = new Hono()
   })
   .post('/sync-count', async (c) => {
     const body = await c.req.json();
-    const check = type({ groupId: "string" })(body);
-    if (check instanceof type.errors) throw new Error(check.summary);
+    const check = v.safeParse(v.object({ groupId: v.string() }), body);
+    if (!check.success) throw new Error(check.issues[0].message);
 
-    const { groupId } = check;
+    const { groupId } = check.output;
     if (!groupId) return c.json({ success: true });
     
     try {

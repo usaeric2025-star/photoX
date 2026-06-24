@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { type } from 'arktype';
+import * as v from 'valibot';
 import { db, furnitureItems, groups as groupsTable } from '../../_lib/db/index.js';
 import { eq, inArray, and } from 'drizzle-orm';
 import { syncGroupCoversAndCount } from '../../_lib/groups.js';
@@ -8,10 +8,10 @@ import { PhotoBatchUpdateReqSchema, PhotoUpdateReqSchema } from '../../_shared/a
 export const updateHandler = (app: Hono) => {
   app.post('/batch-update', async (c) => {
     const body = await c.req.json();
-    const check = PhotoBatchUpdateReqSchema(body);
-    if (check instanceof type.errors) throw new Error(check.summary);
+    const check = v.safeParse(PhotoBatchUpdateReqSchema, body);
+    if (!check.success) throw new Error(check.issues[0].message);
     
-    const { ids, updates } = check;
+    const { ids, updates } = check.output;
     try {
         const mappedUpdates: Record<string, unknown> = {};
         const fieldMap: Record<string, string> = {
@@ -46,10 +46,10 @@ export const updateHandler = (app: Hono) => {
 
   app.post('/update', async (c) => {
     const body = await c.req.json();
-    const check = PhotoUpdateReqSchema(body);
-    if (check instanceof type.errors) throw new Error(check.summary);
+    const check = v.safeParse(PhotoUpdateReqSchema, body);
+    if (!check.success) throw new Error(check.issues[0].message);
 
-    const { id, updates } = check;
+    const { id, updates } = check.output;
     try {
         // Fetch snapshot before update
         const beforeUpdate = await db.query.furnitureItems.findFirst({

@@ -10,25 +10,25 @@ import { translations } from '@/locales';
 
 import { api } from '@/lib/api';
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
-import { type } from 'arktype';
+import * as v from 'valibot';
 
-const KeySaveSchema = type({
-  provider: "'openrouter' | 'agnes'",
-  apiKey: "string",
+const KeySaveSchema = v.object({
+  provider: v.union([v.literal('openrouter'), v.literal('agnes')]),
+  apiKey: v.string(),
 });
 
-const ModelSaveSchema = type({
-  provider: "'openrouter' | 'agnes'",
-  model: "string",
+const ModelSaveSchema = v.object({
+  provider: v.union([v.literal('openrouter'), v.literal('agnes')]),
+  model: v.string(),
 });
 
-const ProviderSaveSchema = type({
-  provider: "string",
+const ProviderSaveSchema = v.object({
+  provider: v.string(),
 });
 
-const TestConnectionSchema = type({
-  provider: "'openrouter' | 'agnes'",
-  apiKey: "string",
+const TestConnectionSchema = v.object({
+  provider: v.union([v.literal('openrouter'), v.literal('agnes')]),
+  apiKey: v.string(),
 });
 
 interface AISecuritySectionProps {

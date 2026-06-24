@@ -1,4 +1,4 @@
-import type { Type } from 'arktype';
+import type { BaseSchema } from 'valibot';
 
 export interface MutationConfig<TData, TVars, TQueryKey extends readonly unknown[] = readonly unknown[]> {
   name: string
@@ -14,7 +14,7 @@ export interface MutationConfig<TData, TVars, TQueryKey extends readonly unknown
   onError?: (error: unknown, vars: TVars) => boolean | void
   cleanupKey?: (vars: TVars) => string
   onSettled?: (data: TData | undefined, error: Error | null, vars: TVars) => void
-  schema?: Type // Optional ArkType schema to validate previous cache data/next state during optimistic update
-  variablesSchema?: Type<TVars> // Optional ArkType schema to validate input variables prior to executing the mutation
+  schema?: BaseSchema<any, any, any> // Optional Valibot schema to validate previous cache data/next state during optimistic update
+  variablesSchema?: BaseSchema<any, TVars, any> // Optional Valibot schema to validate input variables prior to executing the mutation
 }
 

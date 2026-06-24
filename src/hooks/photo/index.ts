@@ -13,4 +13,6 @@ export * from './useTagSearch';
 export * from './useManufacturers';
 export * from './useAIBatchAnalysis';
 export * from './usePhotoAIResult';
+export * from './PhotoEditSession';
+export * from './usePhotoEditSessionContext';
 

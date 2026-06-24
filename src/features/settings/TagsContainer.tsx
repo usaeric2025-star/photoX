@@ -18,6 +18,6 @@ interface TagsManagerProps {
   buttonStyles: { [key in 'primary' | 'secondary' | 'accent']: string };
 }
 
-export function TagsManager(props: TagsManagerProps) {
+export function TagsContainer(props: TagsManagerProps) {
   return <TagsSection {...props} />;
 };

@@ -1,4 +1,4 @@
-import { type } from 'arktype';
+import * as v from 'valibot';
 import { db, furnitureItems } from '../../_lib/db/index.js';
 import { inArray } from 'drizzle-orm';
 import { getAIProvider } from '../../_lib/ai/providerFactory.js';
@@ -6,14 +6,14 @@ import { extractJSON } from '../../_lib/ai/utils.js';
 import { executeAITask } from '../../_lib/ai/executor.js';
 
 // 1. 輸出 Schema（與提示詞嚴格對應）
-export const GroupAnalysisSchema = type({
-  groups: type({
-    name: 'string', // 中文
-    name_en: 'string',
-    name_ms: 'string',
-    description: 'string',
-    photoIds: 'string[]'
-  }).array()
+export const GroupAnalysisSchema = v.object({
+  groups: v.array(v.object({
+    name: v.string(), // 中文
+    name_en: v.string(),
+    name_ms: v.string(),
+    description: v.string(),
+    photoIds: v.array(v.string())
+  }))
 });
 
 // 2. 強化提示詞
@@ -69,7 +69,7 @@ export async function processGroupAnalysis(photoIds: string[]) {
   const model = (provider as unknown as { config: { model: string } }).config.model;
 
 // 封裝重試邏輯
-  const callAIWithValidation = async (currentPrompt: string): Promise<typeof GroupAnalysisSchema.infer> => {
+  const callAIWithValidation = async (currentPrompt: string): Promise<v.InferOutput<typeof GroupAnalysisSchema>> => {
     let lastError: string | null = null;
     
     for (let attempt = 0; attempt <= 1; attempt++) {
@@ -87,12 +87,12 @@ export async function processGroupAnalysis(photoIds: string[]) {
         throw new Error((resData._error as string) || 'AI group analysis failed');
       }
 
-      const parsed = GroupAnalysisSchema(result.data);
-      if (!(parsed instanceof type.errors)) {
-        return parsed;
+      const parsed = v.safeParse(GroupAnalysisSchema, result.data);
+      if (parsed.success) {
+        return parsed.output;
       }
       
-      lastError = parsed.summary;
+      lastError = parsed.issues.map(i => `${i.path?.map((p: any) => p.key).join('.')}: ${i.message}`).join('; ');
       console.warn(`[AI] 格式錯誤，第 ${attempt + 1} 次重試`, lastError);
       
       // 重試時附帶錯誤反饋

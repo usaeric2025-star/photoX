@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { type } from 'arktype';
+import * as v from 'valibot';
 import { db, furnitureItems, groups as groupsTable, tags as tagsTable, photoTags, categories, vPhotosList } from '../../_lib/db/index.js';
 import { eq, ne, and, or, ilike, sql, asc, desc, inArray, isNull, count, exists, type SQL } from 'drizzle-orm';
 import { PhotoListReqSchema, ListByGroupReqSchema, PhotoListItem, PhotoListItemSchema } from '../../_shared/apiContractSchema.js';
@@ -11,8 +11,8 @@ import { getGroupCounts } from './helpers.js';
 export const listHandler = (app: Hono) => {
   app.post('/list', async (c) => {
     const body = await c.req.json();
-    const check = PhotoListReqSchema(body);
-    if (check instanceof type.errors) throw new Error(check.summary);
+    const check = v.safeParse(PhotoListReqSchema, body);
+    if (!check.success) throw new Error(check.issues[0].message);
 
     const { 
       page = 0, limit = 100, cursor,
@@ -22,7 +22,7 @@ export const listHandler = (app: Hono) => {
       groupId, manufacturerId, 
       isHidden,
       sortOrder
-    } = check;
+    } = check.output;
     
     try {
       const hasTag = tagId !== undefined && tagId !== null && tagId !== '';
@@ -158,7 +158,7 @@ export const listHandler = (app: Hono) => {
         
         return c.json({ 
           success: true, 
-          data: PhotoListItemSchema.array().assert(formatted),
+          data: v.parse(v.array(PhotoListItemSchema), formatted),
           nextCursor,
           total
         });

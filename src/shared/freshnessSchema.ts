@@ -1,8 +1,13 @@
 // [FRESHNESS-SCHEMA-DEFINED]
-import { type } from 'arktype';
+import * as v from 'valibot';
 
-export const DataFreshnessPolicySchema = type("'REALTIME' | 'STABLE' | 'ARCHIVE' | 'INFINITY'");
-export type DataFreshnessPolicy = typeof DataFreshnessPolicySchema.infer;
+export const DataFreshnessPolicySchema = v.union([
+  v.literal('REALTIME'),
+  v.literal('STABLE'),
+  v.literal('ARCHIVE'),
+  v.literal('INFINITY'),
+]);
+export type DataFreshnessPolicy = v.InferOutput<typeof DataFreshnessPolicySchema>;
 
 export const FRESHNESS_POLICIES = {
   REALTIME: {

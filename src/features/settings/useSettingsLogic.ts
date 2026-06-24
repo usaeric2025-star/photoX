@@ -27,7 +27,7 @@ interface UseSettingsLogicProps {
 
 import { useDebouncedCallback } from '@/hooks/core/useDebouncedCallback';
 import { useFormSubmit } from "@/lib/form/useFormSubmit";
-import { type } from "arktype";
+import * as v from 'valibot';
 
 export const useSettingsLogic = ({
   user,
@@ -52,7 +52,7 @@ export const useSettingsLogic = ({
   const [activeTagMenuId, setActiveTagMenuId] = useState<number | null>(null);
 
   const { submit: runConnectionTest, isLoading: isTesting } = useFormSubmit({
-    schema: type('unknown'),
+    schema: v.any(),
     mutationFn: async () => {
       const provider = (settings as any).ai_provider || "google";
       const ok = await testAiConnection(

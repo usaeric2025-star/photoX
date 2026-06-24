@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { type } from 'arktype';
+import * as v from 'valibot';
 import { db, furnitureItems, photoTags } from '../../_lib/db/index.js';
 import { inArray, eq, isNull, and } from 'drizzle-orm';
 import { PhotoIdsReqSchema, PhotoCheckHashReqSchema } from '../../_shared/apiContractSchema.js';
@@ -7,10 +7,10 @@ import { PhotoIdsReqSchema, PhotoCheckHashReqSchema } from '../../_shared/apiCon
 export const detailHandler = (app: Hono) => {
   app.post('/by-ids', async (c) => {
     const body = await c.req.json();
-    const check = PhotoIdsReqSchema(body);
-    if (check instanceof type.errors) throw new Error(check.summary);
+    const check = v.safeParse(PhotoIdsReqSchema, body);
+    if (!check.success) throw new Error(check.issues[0].message);
 
-    const { ids } = check;
+    const { ids } = check.output;
     try {
         const results = await db.query.furnitureItems.findMany({
             where: inArray(furnitureItems.id, ids),
@@ -40,10 +40,10 @@ export const detailHandler = (app: Hono) => {
 
   app.post('/check-hash', async (c) => {
     const body = await c.req.json();
-    const check = PhotoCheckHashReqSchema(body);
-    if (check instanceof type.errors) throw new Error(check.summary);
+    const check = v.safeParse(PhotoCheckHashReqSchema, body);
+    if (!check.success) throw new Error(check.issues[0].message);
 
-    const { hash } = check;
+    const { hash } = check.output;
     try {
         const data = await db.query.furnitureItems.findFirst({
             columns: {

@@ -4,7 +4,7 @@ import { MutationConfig } from './types';
 import { logger } from '@/lib/logger';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { storeAccessor } from '@/lib/store';
-import { type } from 'arktype';
+import * as v from 'valibot';
 import { appQuery } from '@/lib/query';
 import { useState } from 'react';
 
@@ -30,9 +30,10 @@ export const useOptimisticMutation = <
       try {
         // Input verification with variablesSchema
         if (config.variablesSchema) {
-          const check = config.variablesSchema(vars);
-          if (check instanceof type.errors) {
-            throw new Error(`[Mutation Inputs Contract Violated] ${config.name}: ${check.summary}`);
+          const check = v.safeParse(config.variablesSchema, vars);
+          if (!check.success) {
+            const summary = check.issues.map(i => i.message).join(', ');
+            throw new Error(`[Mutation Inputs Contract Violated] ${config.name}: ${summary}`);
           }
         }
 

@@ -4,14 +4,14 @@ import { useSelection } from './SelectionContext';
 import { Photo } from '@/types';
 import { useInvalidatePhotos } from '@/hooks';
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
-import { type, type Type } from 'arktype';
+import * as v from 'valibot';
 
 export function useBatchActions() {
   const { state, clear } = useSelection();
   const invalidatePhotos = useInvalidatePhotos();
 
   const { submit: runBatchDelete, isLoading: isDeleting } = useFormSubmit({
-    schema: type('unknown'),
+    schema: v.unknown(),
     mutationFn: async () => {
       const res = await batchService.delete(state.selectedIds);
       if (!res.success) throw new Error(String(res.error || '删除失败'));
@@ -25,13 +25,16 @@ export function useBatchActions() {
     errorMessage: '批量删除失败'
   });
 
+  const BatchUpdateSchema = v.partial(v.object({
+    category_id: v.nullable(v.string()),
+    manufacturer_id: v.nullable(v.string()),
+    group_id: v.nullable(v.string()),
+  }));
+  type BatchUpdateData = v.InferOutput<typeof BatchUpdateSchema>;
+
   const { submit: runBatchUpdate, isLoading: isUpdating } = useFormSubmit({
-    schema: type({
-      'category_id?': 'string | null',
-      'manufacturer_id?': 'string | null',
-      'group_id?': 'string | null',
-    }) as unknown as Type<Partial<Photo>>,
-    mutationFn: async (data: Partial<Photo>) => {
+    schema: BatchUpdateSchema,
+    mutationFn: async (data: BatchUpdateData) => {
       const res = await batchService.update(state.selectedIds, data);
       if (!res.success) throw new Error(String(res.error || '更新失败'));
       return true;
@@ -45,7 +48,7 @@ export function useBatchActions() {
   });
 
   const { submit: runBatchTag, isLoading: isTagging } = useFormSubmit({
-    schema: type('string[]') as unknown as Type<string[]>,
+    schema: v.array(v.string()),
     mutationFn: async (tagIds: string[]) => {
       const res = await batchService.addTags(state.selectedIds, tagIds);
       if (!res.success) throw new Error(String(res.error || '添加标签失败'));

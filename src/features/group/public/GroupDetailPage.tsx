@@ -9,6 +9,7 @@ import { useFilters, useTranslation, useCategories } from '@/hooks';
 import { GroupHeader } from '../shared/components/GroupHeader';
 import { Button } from '@/components/shared/Button';
 import { useUI, UIStoreState } from '@/lib/store';
+import { useUIStore } from '@/store/uiStore';
 import { usePublicSettings } from '@/hooks/settings/useSettings';
 import { WhatsAppDialog } from '@/components/shared/WhatsAppDialog';
 import { useColumns } from '@/features/layout/hooks/useColumns';
@@ -51,7 +52,10 @@ export function PublicGroupDetailPage() {
   const { data: categories = [] } = useCategories();
   const { anchor, setAnchor } = useFilters();
 
-  const { open } = useLightbox();
+  const lightboxIsOpen = useUIStore(s => s.lightbox.isOpen);
+  const lightboxCurrentIndex = useUIStore(s => s.lightbox.currentIndex);
+  const openLightbox = useUIStore(s => s.openLightbox);
+  const lightboxItems = React.useMemo(() => photosToLightboxSlides(photos), [photos]);
 
   // Anchoring effect
   React.useEffect(() => {
@@ -76,15 +80,17 @@ export function PublicGroupDetailPage() {
 
   React.useEffect(() => {
      if (photoId && photos.length > 0) {
-        const slides = photosToLightboxSlides(photos);
         const index = photos.findIndex(p => p.id === photoId);
-        open(slides, index !== -1 ? index : 0);
+        if (index !== -1) {
+           if (!lightboxIsOpen || photos[lightboxCurrentIndex]?.id !== photoId) {
+              openLightbox(lightboxItems, index);
+           }
+        }
      }
-  }, [photos, photoId, open]);
+  }, [photos, photoId, openLightbox, lightboxItems, lightboxIsOpen, lightboxCurrentIndex]);
 
   const handlePhotoClick = (id: string, index: number) => {
-      const slides = photosToLightboxSlides(photos);
-      open(slides, index);
+      openLightbox(lightboxItems, index);
       setPhotoId(id);
   };
 

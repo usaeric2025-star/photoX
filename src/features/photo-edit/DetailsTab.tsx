@@ -1,5 +1,5 @@
 import React from 'react';
-import { useField, useFormContext } from "el-form-react-hooks";
+import { usePhotoEditSessionContext } from '@/hooks/photo/usePhotoEditSessionContext';
 import { DimensionEditor } from './DimensionEditor';
 import { Dimension } from '@/types';
 import { safeArray } from '@/lib/utils';
@@ -9,24 +9,25 @@ import { useTaskSelector } from '@/lib/store';
 import { showToast } from '@/lib/ui/toast';
 import { translations } from '@/locales';
 import { usePhotoEditAI } from './usePhotoEditAI';
-
+import { AppField } from '@/lib/form/AppField';
 import { MultilingualInput } from '@/components/shared/MultilingualInput';
 
 export function DetailsTab() {
-  const { form } = useFormContext();
+  const { form } = usePhotoEditSessionContext();
   const { modal, photoId } = useFilters();
-  const editPhotoId = modal === 'edit' ? photoId : null;
   const appLang = useUI((s) => s.appLang);
   const tasksMap = useTaskSelector(s => s.tasks);
   const tasks = React.useMemo(() => Array.from(tasksMap.values()), [tasksMap]);
-  const { data: detailPhoto } = usePhoto(editPhotoId || '');
+  const { data: detailPhoto } = usePhoto(modal === 'edit' ? photoId : '');
   const { handleAiAnalyze } = usePhotoEditAI();
 
   const isAnalyzing = tasks.some(t => t.state?.status === 'processing' && (t.label === 'AI 属性智能识别' || t.label === 'AI 识别'));
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
   const onAiAnalyze = async () => {
-    await handleAiAnalyze(detailPhoto?.image_url, detailPhoto?.image_url);
+    if (detailPhoto?.image_url) {
+      await handleAiAnalyze(undefined, detailPhoto.image_url);
+    }
   };
 
   const copyId = () => {
@@ -35,8 +36,6 @@ export function DetailsTab() {
       showToast.success(appLang === 'zh' ? 'ID 已复制' : 'ID Copied');
     }
   };
-
-  const { value: dimensions } = useField('dimensions');
   
   return (
     <div className="m-0 p-4 space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -53,14 +52,18 @@ export function DetailsTab() {
         </div>
       </div>
 
-      <DimensionEditor 
-        dimensions={safeArray<Dimension>(dimensions as any)}
-        onChange={(newDims) => form.setValue('dimensions', newDims)}
-        showAiButton={true}
-        isAnalyzing={isAnalyzing}
-        onAiAnalyze={onAiAnalyze}
-        t={t}
-      />
+      <AppField name="dimensions">
+        {({ value, onChange }) => (
+          <DimensionEditor 
+            dimensions={safeArray<Dimension>(value as any)}
+            onChange={(newDims) => onChange(newDims)}
+            showAiButton={true}
+            isAnalyzing={isAnalyzing}
+            onAiAnalyze={onAiAnalyze}
+            t={t}
+          />
+        )}
+      </AppField>
 
       <div className="space-y-4">
         <div className="flex items-center px-1 border-b border-slate-100 pb-2">
@@ -68,7 +71,7 @@ export function DetailsTab() {
         </div>
 
         <div className="space-y-4">
-          <MultilingualInput name="description" type="textarea" />
+          <MultilingualInput form={form} name="description" type="textarea" />
         </div>
       </div>
     </div>

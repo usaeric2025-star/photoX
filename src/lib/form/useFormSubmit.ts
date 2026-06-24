@@ -1,11 +1,11 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { type Type } from 'arktype';
+import * as v from 'valibot';
 import { showToast } from '@/lib/ui/toast';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { safeAsync } from '@/lib/utils/safeAsync';
 
 interface UseFormSubmitOptions<TData, TResult> {
-  schema: Type<TData>;
+  schema: v.BaseSchema<any, TData, any>;
   mutationFn: (data: TData, signal: AbortSignal) => Promise<TResult>;
   onSuccess?: (result: TResult) => void;
   onError?: (error: string) => void;
@@ -80,18 +80,18 @@ export function useFormSubmit<TData, TResult>({
         const execute = async () => {
           setState({ isLoading: true, isError: false, isSuccess: false, error: null, fieldErrors: {} });
 
-          // 1. Schema Validation
-          const result = schema(rawData);
-          if (result instanceof Error) {
-            const msg = result.message;
+          // 1. Valibot Validation
+          const validationResult = v.safeParse(schema, rawData);
+          
+          if (!validationResult.success) {
+            const firstIssue = validationResult.issues[0];
+            const msg = firstIssue ? `字段 [${firstIssue.path?.map((p: any) => p.key).join('.')}] 验证失败: ${firstIssue.message}` : '输入数据验证失败';
             showToast.error(msg);
             
             let newFieldErrors: Record<string, string> = {};
-            if ('byPath' in result && typeof result.byPath === 'object' && result.byPath) {
-               const byPath = result.byPath as Record<string, { message: string }>;
-               for (const [path, error] of Object.entries(byPath)) {
-                 newFieldErrors[path] = error.message.replace(/^.*?must be /, '必须是 ');
-               }
+            for (const issue of validationResult.issues) {
+              const path = issue.path?.map((p: any) => p.key).join('.') || 'root';
+              newFieldErrors[path] = issue.message;
             }
 
             setState({ isLoading: false, isError: true, isSuccess: false, error: msg, fieldErrors: newFieldErrors });
@@ -99,7 +99,7 @@ export function useFormSubmit<TData, TResult>({
             return resolve(false);
           }
 
-          const data = result as TData;
+          const data = validationResult.output;
 
           // 2. Optimistic Update
           if (optimisticUpdate) {

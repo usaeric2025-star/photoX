@@ -1,9 +1,9 @@
 ## 表單與提交現代化規範（永久鎖定）
 
-### 1. ArkType 表單整合
-- ✅ 所有表單驗證必須通過 `arktypeValidator` 適配器。
-- ✅ 禁止在組件內手動解析 ArkType 錯誤訊息。
-- ✅ `ArkType Schema` 是數據格式與驗證邏輯的唯一真相源。
+### 1. Valibot 表單整合
+- ✅ 所有表單驗證必須通過 `valibot` 適配器。
+- ✅ 禁止在組件內手動解析 Valibot 錯誤訊息。
+- ✅ `Valibot Schema` 是數據格式與驗證邏輯的唯一真相源。
 
 ### 2. 集中化提交管線 (useFormSubmit)
 - ✅ 所有非原子型（Multi-step 或非 Mutation 直接映射）的表單提交必須通過 `useFormSubmit` Hook。
@@ -113,35 +113,34 @@
 - ✅ **兼容与容错性**：系统加解密模块必须能对历史 CBC 和明文进行优雅兼容和解密降级，但对所有新录入及更改后的密钥，必须同步以 `aes-256-gcm` 进行重新转换及统一落库 (256gsm 化)。
 
 ## 核心原则（锁定）
-1. 服务端数据 → Storve `createAsync` (强制使用 TTL)
-2. 前端 UI 状态 → Storve `createStore` (纯瞬态)
+1. 服务端数据 → SWR (`useAppQuery` / `mutate`) (负责缓存、乐观更新、Revalidation)
+2. 前端 UI 状态 → Storve (`createStore`) (纯瞬态，不涉及服务端数据)
 3. 筛选条件 → URL State (URL 为唯一真理来源)
 4. ❌ 禁止 Context 传递业务数据
 5. ❌ 禁止 Props drilling 超过 2 层
 6. ❌ 禁止预计算层
 
-## 狀態管理邊界規範（鎖定）
+## 状态管理边界与职责分类（锁定）
 
-### Storve（服務端與UI狀態）
-- ✅ 所有 `createAsync` (服務端資料) 與 `createStore` (UI 狀態) 必須符合 Storve 標準。
-- ✅ 預加載與實際查詢共用同一 Store Key 生成函數。
-- ❌ 禁止手動拼接 Store Key 字串。
-- ❌ 禁止在 Storve Store 中快取無效資料。
+### SWR（服务端数据主节点）
+- ✅ **服务端数据获取**：统一使用 `src/lib/query/index.ts` 中的 `useAppQuery`。
+- ✅ **缓存与重验证**：SWR 负责维护数据的 `staleTime` (通过 `dedupingInterval`) 与重试机制。
+- ✅ **乐观更新（Optimistic Updates）**：服务端数据的写入操作必须使用 SWR 的 `mutate(key, newData, { optimisticData: ... })` 处理乐观更新，**严禁使用 Storve 处理服务端乐观更新**。
 
-### Storve Store（客戶端與瞬態狀態）
-- ✅ 僅管理 UI 狀態、表單草稿、批量選擇等純客戶端數據。
-- ❌ 禁止充當服務端數據的二級快取。
+### Storve Store（客户端与瞬态状态）
+- ✅ 仅管理 UI 状态（如主题、侧边栏开关、灯箱索引、表单草稿、批量选择等）。
+- ❌ 禁止充当服务端数据的二级缓存。
+- ❌ 禁止在 Storve 中尝试同步或缓存来自 API 的数据。
 
-### createAsync TTL 强制規範
-- ✅ 所有 `createAsync` 必須明確指定 `ttl` 參數。
-- ✅ 靜態資料（如分類、設定）：`ttl: 3600000` (1 小時)。
-- ✅ 動態資料（如照片列表）：`ttl: 60000` (1 分鐘)。
-- ✅ 即時資料（如使用者狀態）：`ttl: 30000` (30 秒)。
-- ❌ 禁止使用 `ttl: 0` (無限快取)。
+### SWR TTL 与缓存规范
+- ✅ 所有 `useAppQuery` 应在工厂方法中明确指定缓存策略。
+- ✅ 静态数据（如分类、设定）：`dedupingInterval: STALE_TIMES.LONG` (1 小时)。
+- ✅ 动态数据（如照片列表）：`dedupingInterval: STALE_TIMES.PHOTO_LIST` (5 秒)。
+- ✅ 实时数据（如组内细节）：`dedupingInterval: STALE_TIMES.GROUP_DETAIL` (30 秒)。
 
-### 樂觀更新
-- ✅ 優先使用 `useOptimistic` 或 Query 的 `onMutate`
-- ❌ 禁止手動 `setQueryData` + Store 雙寫同步
+### 乐观更新标准写法
+- ✅ 优先使用 SWR 导出的 `mutate` 方法，搭配 `optimisticData` 参数。
+- ❌ 禁止手动在 Storve 状态中双写服务端数据。
 
 ### 預加載規範
 - ✅ 使用 `usePrefetch` 通用 Hook
@@ -163,13 +162,13 @@
 ## 架構進化規範 (2026-06-12)
 - ✅ defineMutation 仅返回纯配置对象，禁止返回 Hook 工厂
 - ✅ isDirty 判断禁止使用 JSON.stringify，使用 lodash-es/isEqual 或 RHF formState
-- ✅ ArkType Schema 是数据契约唯一真相源
+- ✅ Valibot Schema 是数据契约唯一真相源
 - ✅ Edit Session 封装完整编辑语义
 
 ## 四大工廠規範（鎖定）
 
 - ✅ Mutation Factory 接收配置对象，禁止直接接收函数
-- ✅ Query Factory 必须绑定 ArkType Schema
+- ✅ Query Factory 必须绑定 Valibot Schema
 - ✅ Form Factory 必须使用集中化 Schema
 - ❌ Error Factory 禁止改动
 ## 命名规范（强制，锁定）
@@ -228,7 +227,7 @@ invalidatePhotos(); // 降维打击，清空全域缓存
 
 | 狀態類型 | 存儲位置 | 示例 |
 |----------|----------|------|
-| 服务端数据 | Storve `createAsync` | 照片列表、分类、标签、合组 |
+| 服务端数据 | SWR `useAppQuery` | 照片列表、分类、标签、合组 |
 | URL 持久化 | URL State | 筛选偏好、排序、分页、多选模式 |
 | UI 瞬态 | Storve `createStore` | 主题、侧边栏开关、全局弹窗、灯箱索引 |
 | 组件局部 | `useState` / `useMemo` | 简单的 Input 受控、局部勾选 ID 集合 |
@@ -425,11 +424,11 @@ export const fetch = handle(app);
 ### Snippet 標準
 
 - ✅ 所有 Snippet 禁止使用 `any`
-- ✅ 新 Snippet 必須包含 ArKType Schema
-- ✅ 所有 Storve `createAsync` / `actions` 必須有明確泛型
+- ✅ 新 Snippet 必須包含 Valibot Schema
+- ✅ 所有 SWR `useAppQuery` / `useAppMutation` 必須有明確泛型
 
 ### 虛擬清單與效能（Virtual List）
-- ❌ 在虛擬清單（Virtual List）渲染项中，**严禁** 在子组件内部调用 `createAsync` 的 Hook 或数据量较大的 Hook（如 `useCategories`, `useTags`）。
+- ❌ 在虛擬清單（Virtual List）渲染项中，**严禁** 在子组件内部调用 `useAppQuery` 的 Hook 或数据量较大的 Hook（如 `useCategories`, `useTags`）。
 - ✅ **共享注入**：必须在父容器中获取数据，并通过 `sharedCategories` / `sharedTags` 等 Props 批量注入子项，以避免数千次重复的数据查找开销。
 - ❌ **禁止 Drilling**：Props 路径严禁超过 2 层。如果需要深层传递，考虑使用细粒度的 Storve Selector。
 
@@ -581,7 +580,7 @@ toast.error('发现数据完整性问题', {
 ## AI 合組識別規範（永久鎖定）
 
 ### 輸出保障
-- ✅ 提示詞必須配合 ArkType/Zod schema 校驗
+- ✅ 提示詞必須配合 Valibot schema 校驗
 - ✅ 校驗失敗必須帶錯誤反饋重試至少一次
 - ✅ 必須校驗 photoIds 完整性（返回總數 = 輸入總數）
 - ❌ 禁止寫入未經 schema 校驗的 AI 輸出
@@ -754,7 +753,7 @@ toast.error('发现数据完整性问题', {
 ## 异步任务架构规范（锁定）
 
 ### 职责分层
-- **Storve actions / createAsync**：原子写操作（API 调用 + 缓存更新 + 全局自动错误处理与 Toast）
+- **SWR useAppMutation**：原子写操作（API 调用 + 缓存更新 + 全局自动错误处理与 Toast）
 - **useTaskExecutor**：流程编排（进度追蹤 + 并发控制 + 重试 + 任务队列 UI）
 
 ### 组合规则
@@ -771,7 +770,7 @@ toast.error('发现数据完整性问题', {
 
 ### ❌ 禁止使用
 
-- `useOptimistic`：樂觀更新統一使用 Storve 的 `store.setState()` 進行快取同步。
+- `useOptimistic`：樂觀更新統一使用 SWR 的 `mutate` (與 `optimisticData`) 進行快取同步。
 - `useActionState`：表單狀態統一使用 Storve local store 或本地狀態。
 - `useFormStatus`：表單提交狀態統一使用 `useTaskExecutor` 或元件本地 `useState`。
 
@@ -791,10 +790,10 @@ toast.error('发现数据完整性问题', {
 
 | 領域 | 鎖定方案 | 禁用/棄用方案 |
 |------|----------|----------------|
-| 樂觀更新 | ✅ Storve `store.setState()` | ❌ `useOptimistic` |
+| 樂觀更新 | ✅ SWR `mutate` + `optimisticData` | ❌ `useOptimistic` |
 | 表單狀態 | ✅ Storve actions + 本地狀態 | ❌ `useActionState` |
 | 表單提交狀態 | ✅ `useState` 或 `useTaskExecutor` | ❌ `useFormStatus` |
-| 數據獲取 | ✅ Storve `createAsync` | ❌ `useEffect` + `fetch` |
+| 數據獲取 | ✅ SWR `useAppQuery` | ❌ `useEffect` + `fetch` |
 | 跨元件儲存 | ✅ Mantine `useLocalStorage` | ❌ 手寫 `localStorage` (React 內) |
 | API 調用 | ✅ Hono RPC (`api.*.$post`) | ❌ 手寫 `fetch('/api/...')` |
 | 篩選狀態 | ✅ URL Filters (`useUrlFilters`) | ❌ Storve filter store |
@@ -813,20 +812,20 @@ toast.error('发现数据完整性问题', {
 
 #### 1. defineMutation 寫入配置 (包含自動錯誤、樂觀更新與雙重契約校驗 [P0] [P1]):
 ```typescript
-import { type } from "arktype";
+import * as v from "valibot";
 import { defineMutation } from "@/lib/mutations/defineMutation";
 
 // 定義資料契約
-export const TodoSchema = type({
-  id: "string",
-  title: "string",
-  completed: "boolean"
+export const TodoSchema = v.object({
+  id: v.string(),
+  title: v.string(),
+  completed: v.boolean()
 });
 
 export const editTodoConfig = defineMutation({
   name: "editTodo",
   // P2: 可選輸入契約校驗
-  variablesSchema: type({ id: "string", title: "string" }),
+  variablesSchema: v.object({ id: v.string(), title: v.string() }),
   service: async ({ id, title }) => {
     return await api.updateTodo(id, { title });
   },
@@ -838,26 +837,25 @@ export const editTodoConfig = defineMutation({
     return { ...(oldData as any), title: vars.title };
   },
   successMessage: "更新成功",
-  // 不需要手寫 catch 或 onError 包羅萬象的捕捉，P0 自動在底層進行 ErrorFactory.wrap + handleError
 });
 ```
 
 #### 2. createQuery 讀取配置 (包含 TVariables compile-time & run-time type safety [P2]):
 ```typescript
-import { type } from "arktype";
+import * as v from "valibot";
 import { createQuery } from "@/lib/query/queryFactory";
 
-export const FilterSchema = type({
-  mode: "'public' | 'admin'",
-  "limit?": "number"
+export const FilterSchema = v.object({
+  mode: v.union([v.literal('public'), v.literal('admin')]),
+  limit: v.optional(v.number())
 });
 
 export const usePhotosQuery = createQuery({
   queryKey: (filters) => queryKeys.photos.infinite(filters),
   queryFn: (filters) => api.getPhotos(filters),
-  // P2: 綁定 ArkType Schema 進行輸入引數嚴格驗證和編譯攔截
+  // P2: 綁定 Valibot Schema 進行輸入引數嚴格驗證和編譯攔截
   variablesSchema: FilterSchema,
-  schema: type("Photo[]"), // 快取資料傳回契約校驗
+  schema: v.array(PhotoListItemSchema), // 快取資料傳回契約校驗
   staleTime: STALE_TIMES.FAST
 });
 ```
@@ -952,7 +950,7 @@ optimistic: (oldData, vars, queryKey) => ({ ...(oldData as any), remains: false 
 - ✅ 必須使用自動依賴追蹤或 selector 精確訂閱
 - ❌ 禁止無參調用 (如舊的 `useUIStore()`) 造成全域渲染
 - ✅ 列表页使用 `select` (若使用 selector) 缩小订阅字段
-- ✅ 使用 `createAsync` 內建的 `ttl` 進行快取管理
+- ✅ 使用 SWR 內建的 `dedupingInterval` 進行快取管理
 
 ### Virtua
 - ✅ 生产环境配置 `overscan`、`shift`、`estimateSize`
@@ -971,7 +969,7 @@ optimistic: (oldData, vars, queryKey) => ({ ...(oldData as any), remains: false 
 - ✅ `src/hooks/core/`：通用、可跨專案複用的 Hook（如 `useAuth`、`useDebounce`、`useLocalStorage`）
 - ✅ `src/hooks/`：與 PhotoX 業務邏輯相關的 Hook（如 `usePhotos`、`useGroups`、`useLightbox`）
 - ✅ `src/services/[domain]/commands.ts`：所有寫入邏輯（Mutation、RPC）
-- ✅ `src/services/[domain]/queries.ts`：所有讀取邏輯（Storve createAsync）
+- ✅ `src/hooks/[domain]/*.ts`：所有讀取邏輯（SWR `useAppQuery`）
 - ❌ 禁止新增 `src/actions/` 目錄或類似 `*Actions.ts` 檔案
 - ❌ 禁止在 `src/hooks/` 根目錄新建非業務 Hook
 

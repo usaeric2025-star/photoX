@@ -8,7 +8,7 @@ import { useLongPress } from "@/hooks/core/useLongPress";
 import { Category } from '../../types';
 import { useUI } from '@/lib/store';
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
-import { type } from 'arktype';
+import * as v from 'valibot';
 import { FormProvider } from '@/lib/form/useFormField';
 
 interface CategoriesSectionProps {
@@ -121,7 +121,7 @@ export function CategoriesSection({
   const [isAddOpen, addDialog] = useDisclosure(false);
 
   const { submit: runUpdateCategory, fieldErrors: updateFieldErrors, clearFieldError: updateClearFieldError } = useFormSubmit({
-    schema: type({ id: 'string', updates: 'unknown' }),
+    schema: v.object({ id: v.string(), updates: v.any() }),
     mutationFn: async ({ id, updates }: { id: string, updates: any }) => {
       await updateCategory(id, updates);
       return true;
@@ -131,7 +131,7 @@ export function CategoriesSection({
   });
 
   const { submit: runDeleteCategory } = useFormSubmit({
-    schema: type({ id: 'string' }),
+    schema: v.object({ id: v.string() }),
     mutationFn: async ({ id }: { id: string }) => {
       await deleteCategory(id);
       return true;
@@ -141,7 +141,7 @@ export function CategoriesSection({
   });
 
   const { submit: runAddCategory, fieldErrors: addFieldErrors, clearFieldError: addClearFieldError } = useFormSubmit({
-    schema: type({ name: 'string > 0' }),
+    schema: v.object({ name: v.pipe(v.string(), v.minLength(1)) }),
     mutationFn: async ({ name }: { name: string }) => {
       await addCategory(name);
       return true;

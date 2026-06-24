@@ -9,10 +9,36 @@ import { usePermission, usePublicSettings, useIsManagement } from '@/hooks';
 import { LightboxInfoCard } from './components/LightboxInfoCard';
 import { useAuth } from '@/lib/store';
 import { Icon } from '@/components/ui/Icon';
+import { motion } from 'motion/react';
+import { Photo } from '@/types';
+import { LightboxSlide } from '@/lib/lightbox/types';
+import { logger } from '@/lib/logger';
 
 // ✅ Directly import from low-level to reduce conflicts
 import { LightboxStyled as LightboxStyledBase } from '@mshafiqyajid/react-lightbox/styled';
-const LightboxStyled = LightboxStyledBase as unknown as React.ComponentType<any>; 
+interface LightboxImage {
+  src: string;
+  alt: string;
+  title?: string | { zh: string; en?: string; ms?: string };
+  description?: string | { zh: string; en?: string; ms?: string } | null;
+  original: Photo | LightboxSlide;
+}
+
+interface LightboxProps {
+  images: LightboxImage[];
+  open: boolean;
+  index: number;
+  onIndexChange: (index: number) => void;
+  onOpenChange: (open: boolean) => void;
+  zoom?: boolean;
+  loop?: boolean;
+  showThumbnails?: boolean;
+  showClose?: boolean;
+  showCaption?: boolean;
+  closeOnOverlayClick?: boolean;
+}
+
+const LightboxStyled = LightboxStyledBase as unknown as React.ComponentType<LightboxProps>; 
 import '@mshafiqyajid/react-lightbox/styles.css';
 
 /**
@@ -34,7 +60,7 @@ export function PhotoLightbox() {
   const { user } = useAuth();
   const { canEdit: canEditPermission } = usePermission();
   
-  const canEdit = isManagement && (canEditPermission || !!user);
+  const canEdit = canEditPermission;
 
   const handleClose = () => {
     closeLightbox();
@@ -76,6 +102,22 @@ export function PhotoLightbox() {
         :root {
           --rlbx-z: 10000;
         }
+        .rlbx-wrapper {
+          opacity: 0;
+          animation: rlbx-fade-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes rlbx-fade-in {
+          to { opacity: 1; }
+        }
+        .rlbx-overlay {
+          background-color: rgba(0, 0, 0, 0.85) !important;
+          backdrop-filter: blur(20px) !important;
+          -webkit-backdrop-filter: blur(20px) !important;
+        }
+        .rlbx-image {
+          border-radius: 8px !important;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+        }
         .rlbx-nav {
           z-index: 10015 !important;
         }
@@ -90,24 +132,40 @@ export function PhotoLightbox() {
           height: 84px !important;
           padding: 0.5rem 0.875rem !important;
           box-sizing: border-box !important;
+          transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
         }
         .rlbx-thumb {
           width: 3.5rem !important;
           height: 3.5rem !important;
+          border-radius: 6px !important;
+          overflow: hidden !important;
+          transition: transform 0.2s ease, border-color 0.2s ease, opacity 0.2s ease !important;
         }
-        @keyframes fade-up {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
+        .rlbx-thumb:hover {
+          transform: scale(1.05);
         }
-        .animate-fade-up {
-          animation: fade-up 0.3s ease-out forwards;
+        /* Disable transition effects completely on all slide containers, sliders, and images during navigation to fix flickering */
+        .rlbx-slide,
+        .rlbx-slider,
+        .rlbx-container,
+        .rlbx-content,
+        .rlbx-image,
+        .rlbx-image-area,
+        .rlbx-item,
+        .rlbx-images-container {
+          transition: none !important;
+          animation: none !important;
         }
       `}} />
 
       {/* Top Toolbar Overlay */}
       {currentSlide && (
-        <div 
-          className="fixed top-4 right-4 flex items-center gap-1.5 p-1 bg-black/70 backdrop-blur-md rounded-full border border-white/10 pointer-events-auto z-[10020] shadow-2xl animate-fade-in"
+        <motion.div 
+          initial={{ opacity: 0, y: -10, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -10, scale: 0.95 }}
+          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+          className="fixed top-4 right-4 flex items-center gap-1.5 p-1 bg-black/70 backdrop-blur-md rounded-full border border-white/10 pointer-events-auto z-[10020] shadow-2xl"
           style={{ isolation: 'isolate' }}
         >
           {canEdit && (
@@ -115,6 +173,20 @@ export function PhotoLightbox() {
               <button 
                 onClick={(e) => { 
                   e.stopPropagation();
+                  logger.info('[PhotoLightbox] RHF Edit clicked for photo:', currentSlide.id);
+                  toast.info("正在打开 RHF 测试...");
+                  filters.updateFilters({ photoId: currentSlide.id, modal: 'rhf_test' });
+                }} 
+                className="w-9 h-9 flex items-center justify-center rounded-full text-green-400 hover:bg-white/10 transition-colors"
+                title="RHF 测试"
+              >
+                <Icon name="pencil" size={17} />
+              </button>
+              <button 
+                onClick={(e) => { 
+                  e.stopPropagation();
+                  logger.info('[PhotoLightbox] Edit clicked for photo:', currentSlide.id);
+                  toast.info("正在打开编辑...");
                   filters.updateFilters({ photoId: currentSlide.id, modal: 'edit' });
                 }} 
                 className="w-9 h-9 flex items-center justify-center rounded-full text-blue-400 hover:bg-white/10 transition-colors"
@@ -136,9 +208,18 @@ export function PhotoLightbox() {
               <button 
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (window.confirm("确定要永久删除这张照片吗？")) {
-                    adminActions.deletePhoto.mutate(currentSlide.id);
-                  }
+                  logger.info('[PhotoLightbox] Delete clicked for photo:', currentSlide.id);
+                  // Use a simpler confirmation or just trigger for now to debug
+                  (async () => {
+                    try {
+                      await adminActions.deletePhoto.mutateAsync([currentSlide.id]);
+                      logger.info('[PhotoLightbox] Delete successful');
+                      toast.success("删除成功");
+                    } catch (err: unknown) {
+                      logger.error('[PhotoLightbox] Delete failed:', err);
+                      toast.error("删除失败");
+                    }
+                  })();
                 }} 
                 className="w-9 h-9 flex items-center justify-center rounded-full text-red-400 hover:bg-white/10 transition-colors"
                 title="删除"
@@ -151,7 +232,7 @@ export function PhotoLightbox() {
           <button 
             onClick={(e) => {
               e.stopPropagation();
-              const text = `您好，我想查询这项产品：\n${currentSlide.title || ''}\n${window.location.origin}/photo/${currentSlide.id}`;
+              const text = `您好，我想查询这项 product：\n${currentSlide.title || ''}\n${window.location.origin}/photo/${currentSlide.id}`;
               window.open(`https://wa.me/${settings?.contact_whatsapp || ''}?text=${encodeURIComponent(text)}`, '_blank');
             }} 
             className="w-9 h-9 flex items-center justify-center rounded-full bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-all active:scale-95"
@@ -162,6 +243,7 @@ export function PhotoLightbox() {
           <button 
             onClick={(e) => {
               e.stopPropagation();
+              logger.info('[PhotoLightbox] Close clicked');
               handleClose();
             }} 
             className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-all active:scale-95"
@@ -169,12 +251,18 @@ export function PhotoLightbox() {
           >
             <Icon name="x" size={17} />
           </button>
-        </div>
+        </motion.div>
       )}
 
       {/* Info Card Overlay - Perfectly flushed with rail */}
       {currentSlide && (
-        <div className="fixed bottom-[84px] left-0 right-0 flex flex-col items-center pointer-events-none px-4 z-[10020] animate-fade-up">
+        <motion.div 
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 15 }}
+          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          className="fixed bottom-[84px] left-0 right-0 flex flex-col items-center pointer-events-none px-4 z-[10020]"
+        >
           <div className="pointer-events-auto w-full max-w-2xl translate-y-[1px]">
             <LightboxInfoCard 
               slide={currentSlide} 
@@ -200,7 +288,7 @@ export function PhotoLightbox() {
               }}
             />
           </div>
-        </div>
+        </motion.div>
       )}
     </>
   );

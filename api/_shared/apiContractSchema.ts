@@ -1,4 +1,4 @@
-import { type } from "arktype";
+import * as v from 'valibot';
 
 type JsonValue = string | number | boolean | null | { [key: string]: JsonValue } | JsonValue[];
 export type JsonObject = { [key: string]: JsonValue };
@@ -12,238 +12,241 @@ export type ApiResponse<T = unknown> = {
     raw_result?: string;
 };
 
-export const AIAnalyzeV1ReqSchema = type({
-    "photoId?": "string",
-    "imageUrl?": "string",
-    "image_url?": "string",
-    "prompt?": "string",
-    "provider?": "'agnes' | 'openrouter'",
-    "model?": "string"
+export const AIAnalyzeV1ReqSchema = v.object({
+    photoId: v.optional(v.string()),
+    imageUrl: v.optional(v.string()),
+    image_url: v.optional(v.string()),
+    prompt: v.optional(v.string()),
+    provider: v.optional(v.union([v.literal('agnes'), v.literal('openrouter')])),
+    model: v.optional(v.string())
 });
 
-export const AIRunReqSchema = type({
-    task: "string",
-    "imageUrl?": "string",
-    "prompt?": "string"
+export const AIRunReqSchema = v.object({
+    task: v.string(),
+    imageUrl: v.optional(v.string()),
+    prompt: v.optional(v.string())
 });
 
-export const AIAnalyzeBase64ReqSchema = type({
-    base64Image: "string",
-    "customModel?": "string",
-    "promptText?": "string"
+export const AIAnalyzeBase64ReqSchema = v.object({
+    base64Image: v.string(),
+    customModel: v.optional(v.string()),
+    promptText: v.optional(v.string())
 });
 
-export const AITranslateReqSchema = type({
-    promptText: "string",
-    "customModel?": "string"
+export const AITranslateReqSchema = v.object({
+    promptText: v.string(),
+    customModel: v.optional(v.string())
 });
 
-export const AIClusterPhotosReqSchema = type({
-    photoIds: "string[]"
+export const AIClusterPhotosReqSchema = v.object({
+    photoIds: v.array(v.string())
 });
 
-export const AIAnalyzeGroupReqSchema = type({
-    photoDetails: "string"
+export const AIAnalyzeGroupReqSchema = v.object({
+    photoDetails: v.string()
 });
 
-export const AIAnalyzePhotoV2ReqSchema = type({
-    photoDetail: "string",
-    "photoId?": "string"
+export const AIAnalyzePhotoV2ReqSchema = v.object({
+    photoDetail: v.string(),
+    photoId: v.optional(v.string())
 });
 
-export const StorageAuditResSchema = type({
-    healthyCount: "number",
-    ghosts: {
-        count: "number",
-        samples: "object[]"
-    },
-    orphans: {
-        count: "number",
-        samples: "object[]"
-    },
-    "truncated?": "boolean",
-    "formatDistribution?": {
-        avif: "number",
-        webp: "number",
-        jpg: "number",
-        other: "number"
-    }
+export const StorageAuditResSchema = v.object({
+    healthyCount: v.number(),
+    ghosts: v.object({
+        count: v.number(),
+        samples: v.array(v.record(v.string(), v.any()))
+    }),
+    orphans: v.object({
+        count: v.number(),
+        samples: v.array(v.record(v.string(), v.any()))
+    }),
+    truncated: v.optional(v.boolean()),
+    formatDistribution: v.optional(v.object({
+        avif: v.number(),
+        webp: v.number(),
+        jpg: v.number(),
+        other: v.number()
+    }))
 });
 
-export const ImportOrphansReqSchema = type({
-    urls: "string[]",
-    "groupId?": "string",
-    "userId?": "string"
+export const ImportOrphansReqSchema = v.object({
+    urls: v.array(v.string()),
+    groupId: v.optional(v.string()),
+    userId: v.optional(v.string())
 });
 
-export const PhotoListReqSchema = type({
-    "page?": "number",
-    "limit?": "number",
-    "cursor?": "string|null",
-    "categoryId?": "string|number|null",
-    "tagId?": "string|number|null",
-    "searchQuery?": "string|null",
-    "isAdminMode?": "boolean",
-    "sortOrder?": "string|null",
-    "onlyUngrouped?": "boolean",
-    "onlyGroupsCover?": "boolean",
-    "groupId?": "string|null",
-    "manufacturerId?": "string|number|null",
-    "isHidden?": "boolean|null"
+export const PhotoListReqSchema = v.object({
+    page: v.optional(v.number()),
+    limit: v.optional(v.number()),
+    cursor: v.optional(v.nullable(v.string())),
+    categoryId: v.optional(v.nullable(v.union([v.string(), v.number()]))),
+    tagId: v.optional(v.nullable(v.union([v.string(), v.number()]))),
+    searchQuery: v.optional(v.nullable(v.string())),
+    isAdminMode: v.optional(v.boolean()),
+    sortOrder: v.optional(v.nullable(v.string())),
+    onlyUngrouped: v.optional(v.boolean()),
+    onlyGroupsCover: v.optional(v.boolean()),
+    groupId: v.optional(v.nullable(v.string())),
+    manufacturerId: v.optional(v.nullable(v.union([v.string(), v.number()]))),
+    isHidden: v.optional(v.nullable(v.boolean()))
 });
 
-export const PhotoListItemSchema = type({
-    id: "string",
-    name: "string",
-    "description?": "string|null",
-    imageUrl: "string",
-    thumbnailUrl: "string",
-    "groupId?": "string|null",
-    "groupName?": "string|null",
-    memberCount: "number",
-    tags: "string[]",
-    "isPinned?": "boolean",
-    "isHidden?": "boolean",
-    "isCover?": "boolean",
-    "createdAt?": "string|null"
+export const PhotoListItemSchema = v.object({
+    id: v.string(),
+    name: v.string(),
+    description: v.optional(v.nullable(v.string())),
+    imageUrl: v.string(),
+    thumbnailUrl: v.string(),
+    groupId: v.optional(v.nullable(v.string())),
+    groupName: v.optional(v.nullable(v.string())),
+    memberCount: v.number(),
+    tags: v.array(v.string()),
+    isPinned: v.optional(v.boolean()),
+    isHidden: v.optional(v.boolean()),
+    isCover: v.optional(v.boolean()),
+    createdAt: v.optional(v.nullable(v.string()))
 });
 
-export type PhotoListItem = typeof PhotoListItemSchema.infer;
+export type PhotoListItem = v.InferOutput<typeof PhotoListItemSchema>;
 
-const PhotoListResSchema = type({
-    photos: PhotoListItemSchema.array(),
-    nextCursor: "string|null",
-    total: "number"
+const PhotoListResSchema = v.object({
+    photos: v.array(PhotoListItemSchema),
+    nextCursor: v.nullable(v.string()),
+    total: v.number()
 });
 
-export const PhotoBatchUpdateReqSchema = type({
-    ids: "string[]",
-    updates: "object"
+export const PhotoBatchUpdateReqSchema = v.object({
+    ids: v.array(v.string()),
+    updates: v.record(v.string(), v.any())
 });
 
-export const PhotoUpdateReqSchema = type({
-    id: "string",
-    updates: "object"
+export const PhotoUpdateReqSchema = v.object({
+    id: v.string(),
+    updates: v.record(v.string(), v.any())
 });
 
-export const PhotoIdReqSchema = type({
-    id: "string",
-    "userId?": "string"
+export const PhotoIdReqSchema = v.object({
+    id: v.string(),
+    userId: v.optional(v.string())
 });
 
-export const PhotoIdsReqSchema = type({
-    ids: "string[]"
+export const PhotoIdsReqSchema = v.object({
+    ids: v.array(v.string())
 });
 
-export const PhotoCheckHashReqSchema = type({
-    hash: "string"
+export const PhotoCheckHashReqSchema = v.object({
+    hash: v.string()
 });
 
-export const ListByGroupReqSchema = type({
-    groupId: "string",
-    "isAdminMode?": "boolean",
-    "page?": "number",
-    "pageSize?": "number"
+export const ListByGroupReqSchema = v.object({
+    groupId: v.string(),
+    isAdminMode: v.optional(v.boolean()),
+    page: v.optional(v.number()),
+    pageSize: v.optional(v.number())
 });
 
-const TagListItemSchema = type({
-    id: "number",
-    name: "string",
-    "aliases?": "string[]",
-    "is_global?": "boolean",
-    "hot_score?": "number"
+const TagListItemSchema = v.object({
+    id: v.number(),
+    name: v.string(),
+    aliases: v.optional(v.array(v.string())),
+    is_global: v.optional(v.boolean()),
+    hot_score: v.optional(v.number())
 });
 
-export const TagReqSchema = type({
-    id: "number",
-    "name?": "string",
-    "aliases?": "string[]"
+export const TagReqSchema = v.object({
+    id: v.number(),
+    name: v.optional(v.string()),
+    aliases: v.optional(v.array(v.string()))
 });
 
-const CategoryListItemSchema = type({
-    id: "string|number",
-    code: "string",
-    name: "string",
-    "zh?": "string",
-    "en?": "string",
-    "ms?": "string",
-    "sort_order?": "number"
+const CategoryListItemSchema = v.object({
+    id: v.union([v.string(), v.number()]),
+    code: v.string(),
+    name: v.string(),
+    zh: v.optional(v.string()),
+    en: v.optional(v.string()),
+    ms: v.optional(v.string()),
+    sort_order: v.optional(v.number())
 });
 
-export const CategoryReqSchema = type({
-    "id?": "string|number",
-    code: "string",
-    name_zh: "string",
-    "name_en?": "string",
-    "name_ms?": "string",
-    "sort_order?": "number",
-    "is_active?": "boolean"
+export const CategoryReqSchema = v.object({
+    id: v.optional(v.union([v.string(), v.number()])),
+    code: v.string(),
+    name_zh: v.string(),
+    name_en: v.optional(v.string()),
+    name_ms: v.optional(v.string()),
+    sort_order: v.optional(v.number()),
+    is_active: v.optional(v.boolean())
 });
 
-const ManufacturerListItemSchema = type({
-    id: "string",
-    name: "string"
+const ManufacturerListItemSchema = v.object({
+    id: v.string(),
+    name: v.string()
 });
 
-export const ManufacturerReqSchema = type({
-    "id?": "string",
-    name: "string",
-    "aliases?": "string[]"
+export const ManufacturerReqSchema = v.object({
+    id: v.optional(v.string()),
+    name: v.string(),
+    aliases: v.optional(v.array(v.string()))
 });
 
-export const GroupReqSchema = type({
-    id: "string",
-    "name?": "string",
-    "cover_photo_id?": "string",
-    "status?": "'draft' | 'confirmed'"
+export const GroupReqSchema = v.object({
+    id: v.string(),
+    name: v.optional(v.string()),
+    cover_photo_id: v.optional(v.string()),
+    status: v.optional(v.union([v.literal('draft'), v.literal('confirmed')]))
 });
 
-export const PhotoSchema = type({
-    "id?": "string",
-    name: {
-        zh: "string",
-        "en?": "string",
-        "ms?": "string"
-    },
-    "category_id?": "string|null",
-    "manufacturer_id?": "string|null",
-    tags: type({
-        id: "number",
-        name: "string",
-        "aliases?": "string[]",
-        "user_id?": "string",
-        "is_global?": "boolean",
-        "hot_score?": "number"
-    }).array().narrow((data) => data.length <= 3),
-    description: {
-        "zh?": "string",
-        "en?": "string",
-        "ms?": "string"
-    },
-    item_code: "string",
-    manual_code: "string",
-    model_number: "string",
-    dimensions: type({
-        label: "string",
-        unit: "'cm' | 'inch' | 'mm'",
-        length: "number",
-        width: "number",
-        height: "number",
-        "part?": "string",
-        "is_ai?": "boolean",
-        "is_ai_estimated?": "boolean"
-    }).array(),
-    is_hidden: "boolean",
-    price: "string",
-    is_group_cover: "boolean",
-    "group_id?": "string|null",
-    "uri?": "string"
+export const PhotoSchema = v.object({
+    id: v.optional(v.string()),
+    name: v.object({
+        zh: v.string(),
+        en: v.optional(v.string()),
+        ms: v.optional(v.string())
+    }),
+    category_id: v.optional(v.nullable(v.string())),
+    manufacturer_id: v.optional(v.nullable(v.string())),
+    tags: v.pipe(
+        v.array(v.object({
+            id: v.number(),
+            name: v.string(),
+            aliases: v.optional(v.array(v.string())),
+            user_id: v.optional(v.string()),
+            is_global: v.optional(v.boolean()),
+            hot_score: v.optional(v.number())
+        })),
+        v.check((data) => data.length <= 3, '最多隻能有3個標籤')
+    ),
+    description: v.object({
+        zh: v.optional(v.string()),
+        en: v.optional(v.string()),
+        ms: v.optional(v.string())
+    }),
+    item_code: v.string(),
+    manual_code: v.string(),
+    model_number: v.string(),
+    dimensions: v.array(v.object({
+        label: v.string(),
+        unit: v.union([v.literal('cm'), v.literal('inch'), v.literal('mm')]),
+        length: v.number(),
+        width: v.number(),
+        height: v.number(),
+        part: v.optional(v.string()),
+        is_ai: v.optional(v.boolean()),
+        is_ai_estimated: v.optional(v.boolean())
+    })),
+    is_hidden: v.boolean(),
+    price: v.string(),
+    is_group_cover: v.boolean(),
+    group_id: v.optional(v.nullable(v.string())),
+    uri: v.optional(v.string())
 });
 
-export const SearchReqSchema = type({
-    query: "string",
-    "limit?": "number",
-    "offset?": "number"
+export const SearchReqSchema = v.object({
+    query: v.string(),
+    limit: v.optional(v.number()),
+    offset: v.optional(v.number())
 });
 
 export interface MaintenanceJob {
@@ -259,15 +262,15 @@ export interface MaintenanceJob {
     total?: number;
 }
 
-export const MaintenanceJobSchema = type({
-    "id?": "string",
-    "task?": "string",
-    status: "'pending' | 'running' | 'completed' | 'failed' | 'processing'",
-    progress: "number",
-    "result?": "unknown",
-    "error?": "string",
-    "created_at?": "string",
-    "message?": "string",
-    "processed?": "number",
-    "total?": "number"
+export const MaintenanceJobSchema = v.object({
+    id: v.optional(v.string()),
+    task: v.optional(v.string()),
+    status: v.union([v.literal('pending'), v.literal('running'), v.literal('completed'), v.literal('failed'), v.literal('processing')]),
+    progress: v.number(),
+    result: v.optional(v.any()),
+    error: v.optional(v.string()),
+    created_at: v.optional(v.string()),
+    message: v.optional(v.string()),
+    processed: v.optional(v.number()),
+    total: v.optional(v.number())
 });

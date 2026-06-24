@@ -1,26 +1,26 @@
 import useSWR, { SWRConfiguration } from 'swr';
 import useSWRInfinite, { SWRInfiniteConfiguration, SWRInfiniteKeyLoader } from 'swr/infinite';
-import { type, type Type } from 'arktype';
+import * as v from 'valibot';
 
 /**
  * Standard Query Factory for PhotoX using SWR.
  */
 
-export function createQuery<TData, TVariables = void, TSchema extends Type = Type>(config: {
+export function createQuery<TData, TVariables = void>(config: {
   queryKey: (variables: TVariables) => readonly unknown[];
   queryFn: (variables: TVariables, signal?: AbortSignal) => Promise<TData>;
   staleTime?: number;
-  schema?: TSchema;
-  variablesSchema?: Type;
+  schema?: v.BaseSchema<any, TData, any>;
+  variablesSchema?: v.BaseSchema<any, TVariables, any>;
 }) {
   return function useStandardQuery(variables: TVariables, options?: SWRConfiguration<TData>) {
     const key = config.queryKey(variables);
 
     // Run-time query variables validation if variablesSchema is provided
     if (config.variablesSchema && variables !== undefined) {
-      const check = config.variablesSchema(variables);
-      if (check instanceof type.errors) {
-        throw new Error(`[Query Variables Validation Failed]: ${check.summary}`);
+      const validation = v.safeParse(config.variablesSchema, variables);
+      if (!validation.success) {
+        throw new Error(`[Query Variables Validation Failed]: ${JSON.stringify(validation.issues)}`);
       }
     }
 
@@ -35,7 +35,10 @@ export function createQuery<TData, TVariables = void, TSchema extends Type = Typ
 
     // Schema validation if schema is provided
     if (config.schema && swr.data) {
-        (config.schema as any).assert(swr.data);
+        const validation = v.safeParse(config.schema, swr.data);
+        if (!validation.success) {
+            console.error('[Query Data Validation Failed]:', validation.issues);
+        }
     }
     
     return swr;

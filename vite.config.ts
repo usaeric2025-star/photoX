@@ -53,8 +53,8 @@ export default defineConfig(({mode}) => {
             }
             
             // Layer 3: 功能與資料層 (依賴以上)
-            // Supabase, ArkType, Drizzle, Zustand, Postgres, AWS SDK
-            if (/\/node_modules\/(@supabase|arktype|drizzle-orm|zustand|postgres|@aws-sdk)\//.test(id)) {
+            // Supabase, Drizzle, Zustand, Postgres, AWS SDK
+            if (/\/node_modules\/(@supabase|drizzle-orm|zustand|postgres|@aws-sdk)\//.test(id)) {
               return 'vendor-features';
             }
             

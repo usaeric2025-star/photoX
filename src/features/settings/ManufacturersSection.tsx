@@ -11,7 +11,7 @@ import { normalizeManufacturerName } from "@/lib/utils";
 import { useUI } from '@/lib/store';
 import { translations } from "@/locales";
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
-import { type } from 'arktype';
+import * as v from 'valibot';
 import { FormProvider } from '@/lib/form/useFormField';
 
 interface ManufacturersSectionProps {
@@ -40,8 +40,8 @@ export function ManufacturersSection({
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
   const { submit: runAddManufacturer, isLoading: isAdding, fieldErrors: addFieldErrors, clearFieldError: addClearFieldError } = useFormSubmit({
-    schema: type({ name: "string > 0" }),
-    mutationFn: async ({ name }) => {
+    schema: v.object({ name: v.pipe(v.string(), v.minLength(1)) }),
+    mutationFn: async ({ name }: { name: string }) => {
       const normalized = normalizeManufacturerName(name);
       if (!normalized) return null;
       return await rawAddManufacturer(normalized);
@@ -51,8 +51,8 @@ export function ManufacturersSection({
   });
 
   const { submit: runUpdateManufacturer, isLoading: isUpdating, fieldErrors: updateFieldErrors, clearFieldError: updateClearFieldError } = useFormSubmit({
-    schema: type({ id: "string", name: "string > 0" }),
-    mutationFn: async ({ id, name }) => {
+    schema: v.object({ id: v.string(), name: v.pipe(v.string(), v.minLength(1)) }),
+    mutationFn: async ({ id, name }: { id: string, name: string }) => {
       await rawUpdateManufacturer(id, { name });
       return true;
     },

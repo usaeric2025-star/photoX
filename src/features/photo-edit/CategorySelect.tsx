@@ -1,4 +1,5 @@
-import { useField, useFormContext } from 'el-form-react-hooks';
+import { Field } from '@tanstack/react-form';
+import { usePhotoEditSessionContext } from "@/hooks/photo/usePhotoEditSessionContext";
 import { FormSectionHeader } from '@/components/admin/FormShared';
 import { useCategories } from '@/hooks';
 import { useUI } from '@/lib/store';
@@ -9,42 +10,45 @@ import { getTranslatedCategoryName } from "@/services/category/utils";
  * Encapsulated Category Selector for Photo Edit Drawer
  */
 export function CategorySelect() {
-  const { value } = useField('category_id');
-  const { form } = useFormContext();
+  const { form } = usePhotoEditSessionContext();
   const appLang = useUI((s) => s.appLang);
   const { data: categories = [] } = useCategories();
   
   return (
-    <section className="space-y-4">
-      <FormSectionHeader title="产品目录" subtitle="CATEGORY *" />
-      <div className="grid grid-cols-4 gap-1.5 px-0.5">
-        {categories
-          .filter((cat) => cat && cat.id)
-          .map((cat) => {
-            const isSelected = String(value || "") === String(cat.id || "");
-            const dict = translations[appLang as LanguageCode] || translations.en;
-            const displayName = getTranslatedCategoryName(
-              cat.id || undefined,
-              categories,
-              appLang,
-              dict,
-            );
-            return (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => form.setValue('category_id', isSelected ? null : String(cat.id))}
-                className={`flex flex-col items-center justify-center py-4 px-1 rounded-xl border-2 transition-all ${isSelected ? "bg-blue-600 border-blue-600 shadow-md shadow-blue-600/20" : "bg-white border-slate-100 active:bg-slate-50"}`}
-              >
-                <span
-                  className={`font-black text-[10px] leading-tight text-center uppercase tracking-tighter ${isSelected ? "text-white" : "text-slate-700"}`}
-                >
-                  {displayName}
-                </span>
-              </button>
-            );
-          })}
-      </div>
-    </section>
+    <Field form={form} name="category_id">
+      {(field) => (
+        <section className="space-y-4">
+          <FormSectionHeader title="产品目录" subtitle="CATEGORY *" />
+          <div className="grid grid-cols-4 gap-1.5 px-0.5">
+            {categories
+              .filter((cat) => cat && cat.id)
+              .map((cat) => {
+                const isSelected = String(field.state.value || "") === String(cat.id || "");
+                const dict = translations[appLang as LanguageCode] || translations.en;
+                const displayName = getTranslatedCategoryName(
+                  cat.id || undefined,
+                  categories,
+                  appLang,
+                  dict,
+                );
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => field.handleChange(isSelected ? null : String(cat.id))}
+                    className={`flex flex-col items-center justify-center py-4 px-1 rounded-xl border-2 transition-all ${isSelected ? "bg-blue-600 border-blue-600 shadow-md shadow-blue-600/20" : "bg-white border-slate-100 active:bg-slate-50"}`}
+                  >
+                    <span
+                      className={`font-black text-[10px] leading-tight text-center uppercase tracking-tighter ${isSelected ? "text-white" : "text-slate-700"}`}
+                    >
+                      {displayName}
+                    </span>
+                  </button>
+                );
+              })}
+          </div>
+        </section>
+      )}
+    </Field>
   );
 }

@@ -14,7 +14,7 @@ import { triggerRefreshTagHotScores } from "../../services/tag/commands";
 import { appQuery } from '@/lib/query';
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
 import { FormProvider } from '@/lib/form/useFormField';
-import { type } from 'arktype';
+import * as v from 'valibot';
 
 interface TagsSectionProps {
   tags: Tag[];
@@ -64,8 +64,8 @@ export function TagsSection({
   const [editingTag, setEditingTag] = useState<Tag | null>(null);
 
   const { submit: runAddTag, isLoading: isAdding, fieldErrors: addFieldErrors, clearFieldError: addClearFieldError } = useFormSubmit({
-    schema: type({ name: "string >= 2" }),
-    mutationFn: async ({ name }) => {
+    schema: v.object({ name: v.pipe(v.string(), v.minLength(2)) }),
+    mutationFn: async ({ name }: { name: string }) => {
       const normalized = normalizeTagName(name);
       if (!normalized) return null;
       return await rawAddTag(normalized);
@@ -75,8 +75,8 @@ export function TagsSection({
   });
 
   const { submit: runUpdateTag, isLoading: isUpdating, fieldErrors: editFieldErrors, clearFieldError: editClearFieldError } = useFormSubmit({
-    schema: type({ id: "number", name: "string > 0" }),
-    mutationFn: async ({ id, name }) => {
+    schema: v.object({ id: v.number(), name: v.pipe(v.string(), v.minLength(1)) }),
+    mutationFn: async ({ id, name }: { id: number, name: string }) => {
       await rawUpdateTag(id, { name });
       return true;
     },

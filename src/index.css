@@ -228,3 +228,15 @@ li[data-sonner-toast] {
   --color-border-bold: #48484a;
 }
 
+/* Ensure portal-root forms a stacking context on top of everything else while allowing clicks to pass through */
+#portal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  pointer-events: none;
+}
+#portal-root > * {
+  pointer-events: auto;
+}
+
+

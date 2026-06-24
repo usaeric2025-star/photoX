@@ -6,8 +6,9 @@ import { usePhotoDelete } from '@/hooks';
 import { BatchEditForm } from './BatchEditForm';
 import { useBatchEditSelection } from './useBatchEditSelection';
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
-import { type } from 'arktype';
+import * as v from 'valibot';
 import { Button } from '@/components/ui/Button';
+import { type ProductFormData } from '@/types';
 
 function BatchDeleteButton({ selectedIds, onSuccess }: { selectedIds: string[], onSuccess: () => void }) {
   const [isDeleteOpen, deleteDialog] = useDisclosure(false);
@@ -60,7 +61,7 @@ export const BatchEditScreen = () => {
   } = useBatchEditSelection();
 
   const { submit: saveBatch, isLoading: isSaving } = useFormSubmit({
-    schema: type('unknown'),
+    schema: v.any(),
     mutationFn: async () => {
       await originalSave();
       return true;
@@ -71,6 +72,12 @@ export const BatchEditScreen = () => {
     successMessage: '批量儲存成功',
     errorMessage: '批量儲存失敗'
   });
+
+  // Convert formState to match BatchEditForm's expected type (name as string)
+  const photoEditFormState = React.useMemo(() => ({
+    ...formState,
+    name: typeof formState.name === 'object' ? formState.name.zh : (formState.name as string || '')
+  }), [formState]);
 
   return (
     <div className="flex flex-col h-full w-full bg-slate-50 pt-safe">
@@ -110,8 +117,8 @@ export const BatchEditScreen = () => {
       {/* Main Content */}
       <div className="flex-1 overflow-hidden bg-slate-50 relative">
         <BatchEditForm 
-          formState={formState}
-          handleUpdateForm={handleUpdateForm}
+          formState={photoEditFormState}
+          handleUpdateForm={(updates) => handleUpdateForm(updates as unknown as ProductFormData)}
           batchIsHiddenApplied={batchIsHiddenApplied}
           setBatchIsHiddenApplied={setBatchIsHiddenApplied}
           quickAddMfr={logic.quickAddManufacturer}

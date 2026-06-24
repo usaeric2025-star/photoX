@@ -42,8 +42,23 @@ export const client = hc<AppType>(
       const token = session.data.session?.access_token;
       
       const headers = new Headers(init?.headers);
-      if (token && !headers.has('Authorization')) {
-        headers.set('Authorization', `Bearer ${token}`);
+      if (token) {
+        if (!headers.has('Authorization')) {
+          headers.set('Authorization', `Bearer ${token}`);
+        }
+      } else {
+        const passcodeRaw = typeof window !== 'undefined' ? localStorage.getItem('ais_mock_auth_passcode') : null;
+        if (passcodeRaw) {
+          let passcode = '';
+          try {
+            passcode = JSON.parse(passcodeRaw);
+          } catch {
+            passcode = passcodeRaw;
+          }
+          if (passcode && !headers.has('Authorization')) {
+            headers.set('Authorization', `Passcode ${passcode}`);
+          }
+        }
       }
       if (!headers.has('X-Trace-Id')) {
         // Generate a simple frontend trace ID (e.g., "frontend-8f2a...")

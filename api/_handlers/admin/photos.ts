@@ -128,11 +128,13 @@ adminPhotos.post("/delete-photos", async (c) => {
         .where(inArray(furnitureItems.id, ids));
 
       // Clean up associated system_logs
-      try {
-        await db.delete(systemLogs)
-            .where(sql`${systemLogs.operation} = 'AI_Executor' AND (metadata->>'photo_id') IN (${sql.join(ids.map(id => sql`${id}`), sql`, `)})`);
-      } catch (err) {
-        logger.warn("[delete-photos] Clean up associated system_logs failed:", err);
+      if (ids.length > 0) {
+        try {
+          await db.delete(systemLogs)
+              .where(sql`${systemLogs.operation} = 'AI_Executor' AND (metadata->>'photo_id') IN (${sql.join(ids.map(id => sql`${id}`), sql`, `)})`);
+        } catch (err) {
+          logger.warn("[delete-photos] Clean up associated system_logs failed:", err);
+        }
       }
 
       await db.delete(furnitureItems).where(inArray(furnitureItems.id, ids));

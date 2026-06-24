@@ -75,7 +75,7 @@ interface FriendlyErrorInfo {
   action: { zh: string; en: string };
 }
 
-export const PhotoErrorMessages: Record<PhotoErrorType, FriendlyErrorInfo> = {
+const PhotoErrorMessages: Record<PhotoErrorType, FriendlyErrorInfo> = {
   [PhotoErrorType.NETWORK]: {
     title: { zh: '无法连接到服务器', en: '无法连接到服务器' },
     message: { zh: '请检查您的网络连接是否稳定。如果网络正常，请稍后再试。', en: '请检查您的网络连接是否稳定。如果网络正常，请稍后再试。' },

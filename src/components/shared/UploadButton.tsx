@@ -2,6 +2,7 @@ import React from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { buttonStyles } from '../../styles/buttonStyles';
 import { usePermission, useUI } from '../../hooks';
+import { useAppRouter } from '@/lib/router/useAppRouter';
 
 interface UploadButtonProps {
   onAdd?: () => void;
@@ -11,7 +12,8 @@ export function UploadButton({
   onAdd
 }: UploadButtonProps) {
   const { can } = usePermission();
-  const isManagement = window.location.pathname.startsWith('/admin');
+  const { route } = useAppRouter();
+  const isManagement = typeof route === 'string' && route.startsWith('admin');
   const isMultiSelect = useUI(s => s.isMultiSelect);
 
   if (!isManagement || !can('photo:edit') || !onAdd || isMultiSelect) return null;

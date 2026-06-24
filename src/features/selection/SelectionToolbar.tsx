@@ -5,7 +5,7 @@ import { useUI, UIStoreState } from '@/lib/store';
 import { useAppRouter } from '@/lib/router/useAppRouter';
 import { useAIBatchAnalysis } from '@/hooks/photo/useAIBatchAnalysis';
 import { useConfirm } from '@/context/ConfirmContext';
-import { useMediaQuery } from '@/hooks';
+import { useMediaQuery, useFilters } from '@/hooks';
 import { useGroupPhotosMutation, useRemoveFromGroupMutation } from '@/hooks/groups/useGroupMutations';
 import { Photo } from '@/types';
 import { Icon } from '@/components/ui/Icon';
@@ -27,7 +27,7 @@ interface SelectionToolbarProps {
   totalItems?: number;
   allIds?: string[];
   className?: string;
-  allPhotos?: any[];
+  allPhotos?: Record<string, unknown>[];
   groupId?: string;
 }
 
@@ -42,6 +42,7 @@ export const SelectionToolbar = memo(function SelectionToolbar({
   const { isPending, batchDelete } = useBatchActions();
   const patch = useUI((s: UIStoreState) => s.patch);
   const { navigate } = useAppRouter();
+  const filters = useFilters();
   const { handleBatchAiAnalyze } = useAIBatchAnalysis();
   const confirm = useConfirm();
 
@@ -71,7 +72,7 @@ export const SelectionToolbar = memo(function SelectionToolbar({
   // Find actual Photo objects corresponding to selectedIds
   const selectedPhotos = React.useMemo(() => {
     if (!allPhotos || allPhotos.length === 0) return [];
-    return allPhotos.filter((p) => state.selectedIds.includes(p.id));
+    return allPhotos.filter((p) => state.selectedIds.includes(String(p.id)));
   }, [allPhotos, state.selectedIds]);
 
   if (!isVisible) {
@@ -215,6 +216,22 @@ export const SelectionToolbar = memo(function SelectionToolbar({
               {isMd ? 'AI 智能合組' : isSm ? 'AI 合組' : 'AI'}
             </span>
           </button>
+
+          {/* RHF 測試編輯 (單圖) */}
+          {selectedCount === 1 && (
+            <button
+              onClick={() => {
+                 filters.updateFilters({ modal: 'rhf_test', photoId: state.selectedIds[0] });
+              }}
+              className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 active:scale-95 shadow-sm"
+              title="單圖編輯 (RHF測試)"
+            >
+              <Icon name="pencil" size={14} className="text-green-600 shrink-0" />
+              <span className="shrink-0">
+                {isMd ? '單圖編輯 (測試)' : '單編'}
+              </span>
+            </button>
+          )}
 
           {/* 批量編輯 */}
           <button

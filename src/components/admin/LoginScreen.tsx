@@ -7,11 +7,11 @@ import { AppLink } from '@/components/router/AppLink';
 import { translations } from '@/locales';
 import { storage } from '@/services/storage';
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
-import { type } from 'arktype';
+import * as v from 'valibot';
 import { Button } from '@/components/ui/Button';
 
-const StaffLoginSchema = type({
-  passcode: 'string > 0',
+const StaffLoginSchema = v.object({
+  passcode: v.pipe(v.string(), v.minLength(1)),
 });
 
 interface LoginScreenProps {
@@ -52,7 +52,7 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
 
   // 2. Admin Login Submission
   const { submit: submitAdmin, isLoading: isAdminLoggingIn } = useFormSubmit({
-    schema: type('unknown'),
+    schema: v.any(),
     mutationFn: async () => {
       await signIn();
       return true;

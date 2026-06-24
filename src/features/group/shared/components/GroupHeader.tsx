@@ -7,11 +7,11 @@ import { usePhotoSelection } from '@/hooks/photo/usePhotoSelection';
 import { copyToClipboard } from '@/utils/clipboard';
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
 import { FormProvider, useFormField } from '@/lib/form/useFormField';
-import { type } from 'arktype';
+import * as v from 'valibot';
 import { Input } from '@/components/shared/Input';
 
-const GroupTitleSchema = type({
-  title: 'string >= 3',
+const GroupTitleSchema = v.object({
+  title: v.pipe(v.string(), v.minLength(3, '標題至少需要3個字元')),
 });
 
 function TitleInput({ value, onChange, onBlur, onKeyDown, disabled }: any) {

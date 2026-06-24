@@ -17,7 +17,7 @@ interface PhotoGridContentProps {
   fetchNextPage: () => void;
   columns: number;
   mode: 'admin' | 'public';
-  filters?: any;
+  filters?: Record<string, unknown>;
   onPhotoClick?: (id: string, index: number, e?: React.MouseEvent) => void;
   gridRef?: React.Ref<any>;
   onScroll?: (offset: number) => void;
@@ -37,6 +37,8 @@ function CardSkeleton() {
   );
 }
 
+import { useUI } from '@/lib/store';
+
 export function PhotoGridContent({ 
   photos, 
   dataVersion, 
@@ -53,6 +55,9 @@ export function PhotoGridContent({
 }: PhotoGridContentProps) {
   const showGroupsCollapsed = filters?.showGroupsCollapsed !== false;
   const hasSearchQuery = !!filters?.search;
+  
+  const selectedIds = useUI(s => s.selectedIds);
+  const selectedSet = React.useMemo(() => new Set(selectedIds), [selectedIds]);
 
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = React.useState(() => typeof window !== 'undefined' ? window.innerWidth : 1200);
@@ -133,6 +138,7 @@ export function PhotoGridContent({
               {mode === 'admin' 
                 ? <AdminPhotoCard 
                     photo={photo} 
+                    selected={selectedSet.has(photo.id)}
                     onClick={(e) => onPhotoClick?.(photo.id, index, e)} 
                     showGroupsCollapsed={showGroupsCollapsed}
                     hasSearchQuery={hasSearchQuery}

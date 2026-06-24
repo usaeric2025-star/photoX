@@ -1,6 +1,6 @@
 import { logger } from '@/lib/logger';
 import { useCallback } from 'react';
-import { useFormContext } from "el-form-react-hooks";
+import { usePhotoEditSessionContext } from "@/hooks/photo/usePhotoEditSessionContext";
 import { showToast } from '@/lib/ui/toast';
 import { ErrorFactory } from '@/lib/error';
 import { appQuery } from '@/lib/query';
@@ -10,17 +10,18 @@ import { analyzePhoto } from '@/features/ai/commands';
 import { useUI } from '@/lib/store';
 
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
-import { type } from 'arktype';
+import * as v from 'valibot';
+import { PhotoEditFormData } from '@/schemas/photoEdit';
 
-const AIAnalysisSchema = type({
-  imageUrl: 'string',
+const AIAnalysisSchema = v.object({
+  imageUrl: v.string(),
 });
 
 /**
  * Hook to handle AI Analysis and backfilling for Photo Editing
  */
 export function usePhotoEditAI() {
-  const { form } = useFormContext();
+  const { form } = usePhotoEditSessionContext();
   const { modal, photoId } = useFilters();
   const editPhotoId = modal === 'edit' ? photoId : null;
   const appLang = useUI((s) => s.appLang);
@@ -140,7 +141,7 @@ export function usePhotoEditAI() {
                   rawNames.push(idOrName);
               }
           });
-
+          
           let uniqueRawNames = Array.from(new Set(rawNames));
           let finalResolvedIds = [...resolvedIds];
 
@@ -246,7 +247,7 @@ export function usePhotoEditAI() {
           await appQuery.mutate(['photos', 'ai-result', editPhotoId]);
 
           Object.entries(updates).forEach(([key, value]) => {
-            form.setValue(key, value);
+            form.setFieldValue(key as keyof PhotoEditFormData, value as never);
           });
         
           if (editPhotoId) {
@@ -275,7 +276,7 @@ export function usePhotoEditAI() {
               // Reset the form internal defaultValues to the new state so it's not "dirty" anymore,
               // providing visual feedback that the auto-save was successful.
               requestAnimationFrame(() => {
-                form.reset(form.watch());
+                form.reset();
               });
             } catch (saveError: unknown) {
               logger.warn('AI识别结果自动保存失败(但不影响回填):', saveError);

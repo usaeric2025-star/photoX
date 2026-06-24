@@ -22,15 +22,15 @@ import { SettingsHeader } from './SettingsHeader';
 import { translations } from '@/locales';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
-import { type, type Type } from 'arktype';
+import * as v from 'valibot';
 
 import { useSyncMutation } from '@/hooks';
 import { useTaskSelector, TaskState } from '@/lib/store';
 
 const GeneralSettings = React.lazy(() => import('./GeneralSettings').then(m => ({ default: m.GeneralSettings })));
 const AISettings = React.lazy(() => import('./AISettings').then(m => ({ default: m.AISettings })));
-const TagsManager = React.lazy(() => import('./TagsManager').then(m => ({ default: m.TagsManager })));
-const CategoriesManager = React.lazy(() => import('./CategoriesManager').then(m => ({ default: m.CategoriesManager })));
+const TagsContainer = React.lazy(() => import('./TagsContainer').then(m => ({ default: m.TagsContainer })));
+const AssetManagementContainer = React.lazy(() => import('./AssetManagementContainer').then(m => ({ default: m.AssetManagementContainer })));
 const DiagnosticsDashboard = React.lazy(() => import('@/features/diagnostics/DiagnosticsDashboard').then(m => ({ default: m.DiagnosticsDashboard })));
 
 
@@ -119,7 +119,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   }, [route]);
 
   const { submit: runSaveSettings, isLoading: isSavingSettings } = useFormSubmit({
-    schema: type('unknown') as unknown as Type<Partial<AppSettings>>,
+    schema: v.any(),
     mutationFn: async (s: Partial<AppSettings>) => {
       await saveSettings(s);
       return true;
@@ -184,7 +184,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
 
           {activeTab === 'assets' && (
             <Suspense fallback={<LoadingScreen />}>
-              <CategoriesManager 
+              <AssetManagementContainer 
                 categories={categories}
                 deleteCategory={deleteCategory}
                 updateCategory={async (id: string, data: any) => { const r = await updateCategory({ id, updates: data }); return !!r; }}
@@ -196,7 +196,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
                 cardClass={cardClass}
                 buttonStyles={BUTTON_STYLES}
               />
-              <TagsManager 
+              <TagsContainer 
                 tags={tags}
                 settings={settings}
                 addTag={async (name: string) => { const r = await addTag(name); if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addTag', name); return r; }}

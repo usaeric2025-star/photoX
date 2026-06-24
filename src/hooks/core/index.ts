@@ -15,5 +15,6 @@ export * from './useQueryWithFallback';
 export * from './useSessionStorage';
 export * from './useTaskExecutor';
 export * from './useTranslation';
+export * from './usePerformance';
 export * from './auth/useAdminMode';
 export * from './auth/usePermission';

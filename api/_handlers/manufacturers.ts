@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { db, manufacturers as manufacturersTable } from '../_lib/db/index.js';
 import { eq, asc } from 'drizzle-orm';
-import { type } from 'arktype';
+import * as v from 'valibot';
 import { ManufacturerReqSchema } from '../_shared/apiContractSchema.js';
 
 export const manufacturers = new Hono()
@@ -20,10 +20,10 @@ export const manufacturers = new Hono()
   })
   .post('/clear-photos', async (c) => {
     const body = await c.req.json();
-    const check = type({ manufacturerId: "string" })(body);
-    if (check instanceof type.errors) throw new Error(check.summary);
+    const check = v.safeParse(v.object({ manufacturerId: v.string() }), body);
+    if (!check.success) throw new Error(check.issues[0].message);
 
-    const { manufacturerId } = check;
+    const { manufacturerId } = check.output;
     try {
       const { furnitureItems } = await import('../_lib/db/index.js');
       const updated = await db
@@ -40,10 +40,10 @@ export const manufacturers = new Hono()
   })
   .post('/', async (c) => {
     const body = await c.req.json();
-    const check = type({ manufacturerData: ManufacturerReqSchema })(body);
-    if (check instanceof type.errors) throw new Error(check.summary);
+    const check = v.safeParse(v.object({ manufacturerData: ManufacturerReqSchema }), body);
+    if (!check.success) throw new Error(check.issues[0].message);
 
-    const { manufacturerData } = check;
+    const { manufacturerData } = check.output;
     try {
       const crypto = await import('node:crypto');
       const [data] = await db
@@ -64,10 +64,10 @@ export const manufacturers = new Hono()
   .put('/:id', async (c) => {
     const id = c.req.param('id');
     const body = await c.req.json();
-    const check = type({ updates: ManufacturerReqSchema.omit("id") })(body);
-    if (check instanceof type.errors) throw new Error(check.summary);
+    const check = v.safeParse(v.object({ updates: v.omit(ManufacturerReqSchema, ["id"]) }), body);
+    if (!check.success) throw new Error(check.issues[0].message);
 
-    const { updates } = check;
+    const { updates } = check.output;
     try {
       await db
         .update(manufacturersTable)

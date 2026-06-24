@@ -16,7 +16,7 @@ interface CategoriesManagerProps {
   buttonStyles: { [key in 'primary' | 'secondary' | 'accent']: string };
 }
 
-export function CategoriesManager(props: CategoriesManagerProps) {
+export function AssetManagementContainer(props: CategoriesManagerProps) {
   return (
     <>
       <CategoriesSection 

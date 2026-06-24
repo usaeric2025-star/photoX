@@ -1,38 +1,21 @@
 import React from 'react';
-import { useField, useFormContext } from "el-form-react-hooks";
-import { NativeDialog } from '@/components/ui/NativeDialog';
 import { usePhotoEditSessionContext } from '@/hooks/photo/usePhotoEditSessionContext';
 import { Icon } from '@/components/ui/Icon';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
-import { useUI } from '@/lib/store';
-import { usePhoto, useTaskExecutor, useTranslation, useFilters } from '@/hooks';
-import { useTaskSelector } from '@/lib/store';
+import { useTranslation, useFilters, usePhoto } from '@/hooks';
 import { OptimizedImage } from '@/components/shared/OptimizedImage';
 import { showToast } from '@/lib/ui/toast';
-
-import { MultilingualInput } from '@/components/shared/MultilingualInput';
+import { NativeDialog } from '@/components/ui/NativeDialog';
+import { Field } from '@tanstack/react-form';
 
 export function BasicInfoTab() {
-  const { form } = useFormContext();
-  const { value: itemCode } = useField('item_code');
-  const { value: nameValue = '' } = useField('name');
-  const { value: manualCode = '' } = useField('manual_code');
-  const { value: modelNumber = '' } = useField('model_number');
-  const { value: price = '' } = useField('price');
-
+  const { form } = usePhotoEditSessionContext();
   const { uiTranslations: t } = useTranslation();
-  
   const { modal, photoId } = useFilters();
-  const editPhotoId = modal === 'edit' ? photoId : null;
-  const { data: detailPhoto } = usePhoto(editPhotoId || '');
+  const { data: detailPhoto } = usePhoto(modal === 'edit' ? photoId : '');
   
   const previewSrc = detailPhoto?.image_url;
-  
   const [zoomed, { open: openZoom, close: closeZoom }] = useDisclosure(false);
-
-  // Rotation logic removed as it depended on client-side newPhotoData.
-  // Future implementation should use server-side rotation or handle existing photo.
-  const onRotate = undefined; 
 
   return (
     <div className="m-0 p-4 space-y-5 animate-in fade-in slide-in-from-left-2 duration-300">
@@ -57,13 +40,17 @@ export function BasicInfoTab() {
                 <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">产品名称 / NAME</span>
               </div>
               
-              <input 
-                type="text" 
-                placeholder="NAME..." 
-                value={nameValue as string}
-                onChange={(e) => form.setValue('name', e.target.value.toUpperCase())}
-                className="w-full bg-white border border-slate-200 px-4 py-3 rounded-2xl text-base sm:text-sm font-bold outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 min-w-0 transition-all" 
-              />
+              <Field form={form} name="name">
+                {({ state, handleChange }) => (
+                  <input 
+                    type="text" 
+                    placeholder="NAME..." 
+                    value={(state.value as string) || ''}
+                    onChange={(e) => handleChange(e.target.value.toUpperCase())}
+                    className="w-full bg-white border border-slate-200 px-4 py-3 rounded-2xl text-base sm:text-sm font-bold outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 min-w-0 transition-all" 
+                  />
+                )}
+              </Field>
             </div>
           </div>
         </div>
@@ -75,8 +62,8 @@ export function BasicInfoTab() {
             <Icon name="lock" size={8} className="text-slate-300" />
             SYSTEM CODE
           </h3>
-          <div className="w-full bg-slate-50 border border-slate-100 px-4 py-3 rounded-2xl text-xs font-mono font-medium text-slate-400 cursor-not-allowed truncate" title={(itemCode as string) || ''}>
-            {(itemCode as string) || t.systemCodeAuto}
+          <div className="w-full bg-slate-50 border border-slate-100 px-4 py-3 rounded-2xl text-xs font-mono font-medium text-slate-400 cursor-not-allowed truncate">
+            {detailPhoto?.item_code || t.systemCodeAuto}
           </div>
         </div>
         <div className="space-y-1.5 opacity-50 select-none">
@@ -97,38 +84,50 @@ export function BasicInfoTab() {
             {detailPhoto?.id || '---'}
           </div>
         </div>
-        <div className="space-y-1.5">
-          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">CODE</h3>
-          <input 
-            type="text" 
-            placeholder="CODE..."
-            value={manualCode as string}
-            onChange={(e) => form.setValue('manual_code', e.target.value)}
-            className="w-full bg-white border border-slate-200 px-4 py-3 rounded-2xl text-sm font-bold outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all" 
-          />
-        </div>
-        <div className="space-y-1.5">
-          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">MODEL</h3>
-          <input 
-            type="text" 
-            inputMode="numeric"
-            placeholder="MODEL..." 
-            value={modelNumber as string}
-            onChange={(e) => form.setValue('model_number', e.target.value.replace(/\D/g, ''))}
-            className="w-full bg-white border border-slate-200 px-4 py-3 rounded-2xl text-sm font-bold outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all" 
-          />
-        </div>
-        <div className="space-y-1.5">
-          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">PRICE</h3>
-          <input 
-            type="text" 
-            inputMode="numeric"
-            placeholder="PRICE..." 
-            value={price as string}
-            onChange={(e) => form.setValue('price', e.target.value.replace(/\D/g, ''))}
-            className="w-full bg-white border border-slate-200 px-4 py-3 rounded-2xl text-sm font-bold text-blue-600 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all" 
-          />
-        </div>
+        <Field form={form} name="manual_code">
+          {({ state, handleChange }) => (
+            <div className="space-y-1.5">
+              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">CODE</h3>
+              <input 
+                type="text" 
+                placeholder="CODE..."
+                value={(state.value as string) || ''}
+                onChange={(e) => handleChange(e.target.value)}
+                className="w-full bg-white border border-slate-200 px-4 py-3 rounded-2xl text-sm font-bold outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all" 
+              />
+            </div>
+          )}
+        </Field>
+        <Field form={form} name="model_number">
+          {({ state, handleChange }) => (
+            <div className="space-y-1.5">
+              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">MODEL</h3>
+              <input 
+                type="text" 
+                inputMode="numeric"
+                placeholder="MODEL..." 
+                value={(state.value as string) || ''}
+                onChange={(e) => handleChange(e.target.value.replace(/\D/g, ''))}
+                className="w-full bg-white border border-slate-200 px-4 py-3 rounded-2xl text-sm font-bold outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all" 
+              />
+            </div>
+          )}
+        </Field>
+        <Field form={form} name="price">
+          {({ state, handleChange }) => (
+            <div className="space-y-1.5">
+              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">PRICE</h3>
+              <input 
+                type="text" 
+                inputMode="numeric"
+                placeholder="PRICE..." 
+                value={(state.value as string) || ''}
+                onChange={(e) => handleChange(e.target.value.replace(/\D/g, ''))}
+                className="w-full bg-white border border-slate-200 px-4 py-3 rounded-2xl text-sm font-bold text-blue-600 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all" 
+              />
+            </div>
+          )}
+        </Field>
       </div>
 
       <NativeDialog id="photo-zoom-dialog" open={zoomed && !!previewSrc} onClose={closeZoom} size="screen" hidePadding={true} showCloseButton={false}>

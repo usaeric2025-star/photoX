@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { type } from 'arktype';
+import * as v from 'valibot';
 import { db, furnitureItems, categories, tags, groups as groupsTable, groupCorrectionLogs, users } from '../_lib/db/index.js';
 import { eq, and, inArray, desc, sql } from 'drizzle-orm';
 import { getAIProvider, OpenRouterProvider, AgnesProvider, BaseAIProvider } from '../_lib/ai/providerFactory.js';
@@ -64,10 +64,10 @@ ai.post("/test", async (c) => {
 ai.post("/run", async (c) => {
     try {
         const body = await c.req.json();
-        const check = AIRunReqSchema(body);
-        if (check instanceof type.errors) throw new Error(check.summary);
+        const check = v.safeParse(AIRunReqSchema, body);
+        if (!check.success) throw new Error(check.issues[0].message);
         
-        const { task, imageUrl, prompt } = check;
+        const { task, imageUrl, prompt } = check.output;
         const provider = await getAIProvider('');
         const modelConfig = (provider as BaseAIProvider).getConfig().model;
         const model = modelConfig || 'google/gemini-2.5-flash-lite';
@@ -95,10 +95,10 @@ ai.post("/run", async (c) => {
 ai.post("/analyze", async (c) => {
     try {
         const body = await c.req.json();
-        const check = AIAnalyzeV1ReqSchema(body);
-        if (check instanceof type.errors) throw new Error(check.summary);
+        const check = v.safeParse(AIAnalyzeV1ReqSchema, body);
+        if (!check.success) throw new Error(check.issues[0].message);
 
-        const { photoId, imageUrl } = check;
+        const { photoId, imageUrl } = check.output;
         let finalImageUrl = imageUrl;
 
         if (photoId) {
@@ -170,10 +170,10 @@ ai.post("/analyze", async (c) => {
 ai.post("/translate", async (c) => {
     try {
       const body = await c.req.json();
-      const check = AITranslateReqSchema(body);
-      if (check instanceof type.errors) throw new Error(check.summary);
+      const check = v.safeParse(AITranslateReqSchema, body);
+      if (!check.success) throw new Error(check.issues[0].message);
 
-      const { customModel, promptText } = check;
+      const { customModel, promptText } = check.output;
       const provider = await getAIProvider(undefined, customModel);
       const modelConfig = (provider as BaseAIProvider).getConfig().model;
       const model = modelConfig || 'google/gemini-2.5-flash-lite';
@@ -200,10 +200,10 @@ ai.post("/translate", async (c) => {
 ai.post("/analyze-group", async (c) => {
     try {
       const body = await c.req.json();
-      const check = AIAnalyzeGroupReqSchema(body);
-      if (check instanceof type.errors) throw new Error(check.summary);
+      const check = v.safeParse(AIAnalyzeGroupReqSchema, body);
+      if (!check.success) throw new Error(check.issues[0].message);
 
-      const prompt = AI_PROMPTS.ANALYZE_GROUP(check.photoDetails);
+      const prompt = AI_PROMPTS.ANALYZE_GROUP(check.output.photoDetails);
       const provider = await getAIProvider();
       const modelConfig = (provider as BaseAIProvider).getConfig().model;
       const model = modelConfig || 'google/gemini-2.5-flash-lite';
@@ -229,10 +229,10 @@ ai.post("/analyze-group", async (c) => {
 ai.post("/analyze-photo-v2", async (c) => {
     try {
       const body = await c.req.json();
-      const check = AIAnalyzePhotoV2ReqSchema(body);
-      if (check instanceof type.errors) throw new Error(check.summary);
+      const check = v.safeParse(AIAnalyzePhotoV2ReqSchema, body);
+      if (!check.success) throw new Error(check.issues[0].message);
 
-      const prompt = AI_PROMPTS.REFINE_PHOTO(check.photoDetail);
+      const prompt = AI_PROMPTS.REFINE_PHOTO(check.output.photoDetail);
       const provider = await getAIProvider();
       const modelConfig = (provider as BaseAIProvider).getConfig().model;
       const model = modelConfig || 'google/gemini-2.5-flash-lite';
@@ -243,7 +243,7 @@ ai.post("/analyze-photo-v2", async (c) => {
             model,
             messages: [{ role: "user", content: prompt }],
             prompt,
-            metadata: { photoId: check.photoId }
+            metadata: { photoId: check.output.photoId }
         });
 
       if (data && (data as { _fallback?: boolean })._fallback) {
@@ -259,22 +259,22 @@ ai.post("/analyze-photo-v2", async (c) => {
 ai.post("/cluster-photos", async (c) => {
     try {
         const body = await c.req.json();
-        const check = AIClusterPhotosReqSchema(body);
-        if (check instanceof type.errors) throw new Error(check.summary);
+        const check = v.safeParse(AIClusterPhotosReqSchema, body);
+        if (!check.success) throw new Error(check.issues[0].message);
 
         const user = c.get('user' as never) as HonoContextUser | undefined;
         const userId = user?.id;
 
         // 1. AI 識別
-        const parsed = await processGroupAnalysis(check.photoIds);
+        const parsed = await processGroupAnalysis(check.output.photoIds);
         const createdGroups: (typeof groupsTable.$inferSelect)[] = [];
 
         // Optimize: Fetch a valid user_id
         let dbUserId: string | undefined = undefined;
-        if (check.photoIds && check.photoIds.length > 0) {
+        if (check.output.photoIds && check.output.photoIds.length > 0) {
             const sourcePhoto = await db.query.furnitureItems.findFirst({
                 columns: { userId: true },
-                where: inArray(furnitureItems.id, check.photoIds)
+                where: inArray(furnitureItems.id, check.output.photoIds)
             });
             if (sourcePhoto?.userId) {
                 dbUserId = sourcePhoto.userId;
@@ -287,8 +287,8 @@ ai.post("/cluster-photos", async (c) => {
             
             let finalUserId = (userId && userId !== 'staff') ? userId : dbUserId;
             if (!finalUserId) {
-               const userRecord = await db.query.users.findFirst({ columns: { id: true } });
-               finalUserId = userRecord?.id || '8ec53131-a589-4b50-beb4-6b5308541e1b';
+                const userRecord = await db.query.users.findFirst({ columns: { id: true } });
+                finalUserId = userRecord?.id || '8ec53131-a589-4b50-beb4-6b5308541e1b';
             }
 
             const [groupData] = await db.insert(groupsTable).values([{
@@ -309,7 +309,7 @@ ai.post("/cluster-photos", async (c) => {
         // 3. 記錄操作日誌
         await db.insert(groupCorrectionLogs).values({
             operation: 'ai_cluster',
-            inputPhotoIds: check.photoIds,
+            inputPhotoIds: check.output.photoIds,
             createdGroups: createdGroups.map(g => g.id),
             userId: userId || null,
             createdAt: new Date()

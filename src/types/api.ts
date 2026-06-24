@@ -1,3 +1,4 @@
+import * as v from 'valibot';
 import { Photo } from './photo';
 import type { 
   ApiResponse as BaseApiResponse,
@@ -16,10 +17,10 @@ export type ApiResponse<T = unknown> = BaseApiResponse<T>;
 export type PhotoListItem = ApiPhotoListItem;
 export const PhotoListItemSchema = ApiPhotoListItemSchema;
 
-type PhotoListReq = typeof PhotoListReqSchema.infer;
-type PhotoBatchUpdateReq = typeof PhotoBatchUpdateReqSchema.infer;
-type PhotoUpdateReq = typeof PhotoUpdateReqSchema.infer;
-type SearchReq = typeof SearchReqSchema.infer;
+export type PhotoListReq = v.InferOutput<typeof PhotoListReqSchema>;
+export type PhotoBatchUpdateReq = v.InferOutput<typeof PhotoBatchUpdateReqSchema>;
+export type PhotoUpdateReq = v.InferOutput<typeof PhotoUpdateReqSchema>;
+export type SearchReq = v.InferOutput<typeof SearchReqSchema>;
 
 export interface FilterOptions {
   q?: string;

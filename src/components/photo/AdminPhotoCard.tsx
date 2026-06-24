@@ -4,7 +4,7 @@ import { PhotoListItem } from '@/types/api';
 import { PhotoCardBase } from './PhotoCardBase';
 import { PhotoStatusBadges, PhotoCardInfo, PhotoSelectionIndicator } from './PhotoCardParts';
 import { PinButton } from './PinButton';
-import { useColumns, usePermission } from '@/hooks';
+import { useColumns, usePermission, usePerformance } from '@/hooks';
 import { useUI } from '@/lib/store';
 import { usePhotoCard } from '@/hooks/photo/usePhotoCard';
 
@@ -33,6 +33,7 @@ export const AdminPhotoCard = ({
   canPin,
   selected,
 }: AdminPhotoCardProps) => {
+  usePerformance('AdminPhotoCard');
   const isSelected = selected !== undefined ? selected : useUI((s) => s.selectedIds.includes(photo.id));
   const isMultiSelect = useUI((s) => s.isMultiSelect);
   const { columns } = useColumns();

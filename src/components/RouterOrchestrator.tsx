@@ -5,6 +5,7 @@ import AdminPage from "@/pages/AdminPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { PublicGroupDetailPage } from "@/features/group/public/GroupDetailPage";
 import { AdminGroupDetailPage } from "@/features/group/admin/GroupDetailPage";
+import { AdminAuthGate } from "@/components/admin/AdminAuthGate";
 import { LoadingScreen } from "./ui/LoadingScreen";
 import { DialogContainer } from "./layout/DialogContainer";
 
@@ -30,13 +31,25 @@ export function RouterOrchestrator() {
       case "adminTasks":
       case "adminDiagnostics":
       case "adminDiagnosticsLogs":
-        return <SettingsPage />;
+        return (
+          <AdminAuthGate>
+            <SettingsPage />
+          </AdminAuthGate>
+        );
       case "diagnostics":
-        return <DiagnosticsDashboard />;
+        return (
+          <AdminAuthGate>
+            <DiagnosticsDashboard />
+          </AdminAuthGate>
+        );
       case "publicGroup":
         return <PublicGroupDetailPage />;
       case "adminGroup":
-        return <AdminGroupDetailPage />;
+        return (
+          <AdminAuthGate>
+            <AdminGroupDetailPage />
+          </AdminAuthGate>
+        );
       default:
         return <NotFoundPage />;
     }

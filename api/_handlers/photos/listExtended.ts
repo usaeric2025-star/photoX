@@ -1,7 +1,6 @@
-
+import * as v from 'valibot';
 import { db, furnitureItems, groups as groupsTable, tags as tagsTable, photoTags, categories } from '../../_lib/db/index.js';
 import { eq, ne, and, or, ilike, sql, asc, desc, inArray, isNull, count, type SQL } from 'drizzle-orm';
-import { type } from 'arktype';
 import { ListByGroupReqSchema, PhotoListReqSchema } from '../../_shared/apiContractSchema.js';
 import { errorFactory } from '../../_lib/error/AppError.js';
 import { getGroupCounts } from './helpers.js';
@@ -11,10 +10,10 @@ import { Hono, type Context } from 'hono';
 export const listExtendedHandlers = (app: Hono) => {
   app.post('/list-by-group', async (c: Context) => {
     const body = await c.req.json();
-    const check = ListByGroupReqSchema(body);
-    if (check instanceof type.errors) throw new Error(check.summary);
+    const check = v.safeParse(ListByGroupReqSchema, body);
+    if (!check.success) throw new Error(check.issues[0].message);
     
-    const { groupId, isAdminMode = false } = check;
+    const { groupId, isAdminMode = false } = check.output;
     try {
         const query = db
             .select({
@@ -70,10 +69,10 @@ export const listExtendedHandlers = (app: Hono) => {
 
   app.post('/list-by-group-paginated', async (c: Context) => {
     const body = await c.req.json();
-    const check = ListByGroupReqSchema(body);
-    if (check instanceof type.errors) throw new Error(check.summary);
+    const check = v.safeParse(ListByGroupReqSchema, body);
+    if (!check.success) throw new Error(check.issues[0].message);
 
-    const { groupId, page = 1, pageSize = 100, isAdminMode = false } = check;
+    const { groupId, page = 1, pageSize = 100, isAdminMode = false } = check.output;
     try {
         const offset = (page - 1) * pageSize;
         const baseCondition = and(
@@ -142,10 +141,10 @@ export const listExtendedHandlers = (app: Hono) => {
     } catch (e) {
       body = {};
     }
-    const check = PhotoListReqSchema(body);
-    if (check instanceof type.errors) throw new Error(check.summary);
+    const check = v.safeParse(PhotoListReqSchema, body);
+    if (!check.success) throw new Error(check.issues[0].message);
 
-    const { categoryId, tagId, searchQuery, isAdminMode = false, isHidden } = check;
+    const { categoryId, tagId, searchQuery, isAdminMode = false, isHidden } = check.output;
     try {
         const hasTag = tagId !== undefined && tagId !== null && tagId !== '';
         const hasCat = categoryId !== undefined && categoryId !== null && categoryId !== '';

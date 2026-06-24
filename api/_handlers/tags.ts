@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { type } from 'arktype';
+import * as v from 'valibot';
 import { db, tags as tagsTable, photoTags } from '../_lib/db/index.js';
 import { eq, ilike, asc, inArray, sql, and, ne } from 'drizzle-orm';
 import { TagReqSchema } from '../_shared/apiContractSchema.js';
@@ -31,10 +31,10 @@ export const tags = new Hono()
   .put('/:id', async (c) => {
     const id = c.req.param('id');
     const body = await c.req.json();
-    const check = type({ updates: TagReqSchema.omit("id") })(body);
-    if (check instanceof type.errors) throw new Error(check.summary);
+    const check = v.safeParse(v.object({ updates: v.omit(TagReqSchema, ["id"]) }), body);
+    if (!check.success) throw new Error(check.issues[0].message);
 
-    const { updates } = check;
+    const { updates } = check.output;
     try {
       await db.update(tagsTable).set(updates).where(eq(tagsTable.id, parseInt(id)));
       return c.json({ success: true });
@@ -44,10 +44,10 @@ export const tags = new Hono()
   })
   .post('/', async (c) => {
     const body = await c.req.json();
-    const check = type({ tagData: TagReqSchema })(body);
-    if (check instanceof type.errors) throw new Error(check.summary);
+    const check = v.safeParse(v.object({ tagData: TagReqSchema }), body);
+    if (!check.success) throw new Error(check.issues[0].message);
 
-    const { tagData } = check;
+    const { tagData } = check.output;
     try {
       const [data] = await db.insert(tagsTable).values(tagData).returning();
       return c.json({ success: true, data });
@@ -57,10 +57,10 @@ export const tags = new Hono()
   })
   .post('/batch', async (c) => {
     const body = await c.req.json();
-    const check = type({ tags: TagReqSchema.array() })(body);
-    if (check instanceof type.errors) throw new Error(check.summary);
+    const check = v.safeParse(v.object({ tags: v.array(TagReqSchema) }), body);
+    if (!check.success) throw new Error(check.issues[0].message);
 
-    const { tags: tagsData } = check;
+    const { tags: tagsData } = check.output;
     try {
       const data = await db.insert(tagsTable).values(tagsData).returning({ id: tagsTable.id, name: tagsTable.name });
       return c.json({ success: true, data });
@@ -87,10 +87,10 @@ export const tags = new Hono()
   })
   .post('/remove-from-photo', async (c) => {
     const body = await c.req.json();
-    const check = type({ photoId: "string", tagId: "number" })(body);
-    if (check instanceof type.errors) throw new Error(check.summary);
+    const check = v.safeParse(v.object({ photoId: v.string(), tagId: v.number() }), body);
+    if (!check.success) throw new Error(check.issues[0].message);
 
-    const { photoId, tagId } = check;
+    const { photoId, tagId } = check.output;
     try {
       await db.delete(photoTags).where(and(eq(photoTags.photoId, photoId), eq(photoTags.tagId, tagId)));
       return c.json({ success: true });
@@ -100,15 +100,15 @@ export const tags = new Hono()
   })
   .post('/sync-photo-tags', async (c) => {
     const body = await c.req.json();
-    const check = type({ 
-      photoId: "string", 
-      tagIds: "number[]",
-      "tagWeights?": "Record<string, number>",
-      "tagSources?": "Record<string, 'ai' | 'user' | 'system'>"
-    })(body);
-    if (check instanceof type.errors) throw new Error(check.summary);
+    const check = v.safeParse(v.object({ 
+      photoId: v.string(), 
+      tagIds: v.array(v.number()),
+      tagWeights: v.optional(v.record(v.string(), v.number())),
+      tagSources: v.optional(v.record(v.string(), v.union([v.literal('ai'), v.literal('user'), v.literal('system')])))
+    }), body);
+    if (!check.success) throw new Error(check.issues[0].message);
 
-    const { photoId, tagIds, tagWeights, tagSources } = check;
+    const { photoId, tagIds, tagWeights, tagSources } = check.output;
     try {
       // 1. Fetch current associations
       const currentAssociations = await db.select({ tagId: photoTags.tagId }).from(photoTags).where(eq(photoTags.photoId, photoId));
@@ -118,9 +118,12 @@ export const tags = new Hono()
       const tagDetails = await db.select({ id: tagsTable.id, isPinned: tagsTable.isPinned }).from(tagsTable).where(inArray(tagsTable.id, tagIds));
       const tagDetailsMap = new Map(tagDetails.map(t => [t.id, t]));
 
-      const getWeight = (tagId: number, tagDetail?: any) => {
+      const getWeight = (tagId: number, tagDetail?: { isPinned?: boolean | null } | null): number => {
         const tagStr = String(tagId);
-        if (tagWeights && tagWeights[tagStr] !== undefined) return tagWeights[tagStr];
+        if (tagWeights && tagWeights[tagStr] !== undefined) {
+          const w = tagWeights[tagStr];
+          if (typeof w === 'number') return w;
+        }
         if (tagSources && tagSources[tagStr]) {
           const src = tagSources[tagStr];
           if (src === 'ai') return 100;
@@ -155,22 +158,25 @@ export const tags = new Hono()
   })
   .post('/sync-batch-photo-tags', async (c) => {
     const body = await c.req.json();
-    const check = type({ 
-      photoIds: "string[]", 
-      tagIds: "number[]",
-      "tagWeights?": "Record<string, number>",
-      "tagSources?": "Record<string, 'ai' | 'user' | 'system'>"
-    })(body);
-    if (check instanceof type.errors) throw new Error(check.summary);
+    const check = v.safeParse(v.object({ 
+      photoIds: v.array(v.string()), 
+      tagIds: v.array(v.number()),
+      tagWeights: v.optional(v.record(v.string(), v.number())),
+      tagSources: v.optional(v.record(v.string(), v.union([v.literal('ai'), v.literal('user'), v.literal('system')])))
+    }), body);
+    if (!check.success) throw new Error(check.issues[0].message);
 
-    const { photoIds, tagIds, tagWeights, tagSources } = check;
+    const { photoIds, tagIds, tagWeights, tagSources } = check.output;
     try {
       const tagDetails = await db.select({ id: tagsTable.id, isPinned: tagsTable.isPinned }).from(tagsTable).where(inArray(tagsTable.id, tagIds));
       const tagDetailsMap = new Map(tagDetails.map(t => [t.id, t]));
 
-      const getWeight = (tagId: number, tagDetail?: any) => {
+      const getWeight = (tagId: number, tagDetail?: { isPinned?: boolean | null } | null): number => {
         const tagStr = String(tagId);
-        if (tagWeights && tagWeights[tagStr] !== undefined) return tagWeights[tagStr];
+        if (tagWeights && tagWeights[tagStr] !== undefined) {
+          const w = tagWeights[tagStr];
+          if (typeof w === 'number') return w;
+        }
         if (tagSources && tagSources[tagStr]) {
           const src = tagSources[tagStr];
           if (src === 'ai') return 100;

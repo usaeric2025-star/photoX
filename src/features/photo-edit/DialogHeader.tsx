@@ -1,8 +1,8 @@
-import { usePhotoEditSessionContext } from "@/hooks/photo/usePhotoEditSessionContext";
+import { usePhotoEditSessionContext } from "@/hooks/photo";
 import React from "react";
-import { useFormContext, useField } from "el-form-react-hooks";
 import { Icon } from '@/components/ui/Icon';
 import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
+import { PhotoEditFormData } from "@/schemas/photoEdit";
 import {
   usePhoto,
   useRemoveFromGroupMutation,
@@ -24,10 +24,7 @@ export function DialogHeader({
   onClose,
   onDeleteClick,
 }: DialogHeaderProps) {
-  const { commit, isPending, isSubmitting } = usePhotoEditSessionContext();
-  const { form } = useFormContext();
-  const { value: isHidden } = useField('is_hidden');
-  const { value: isGroupCover } = useField('is_group_cover');
+  const { commit, isPending, isSubmitting, form } = usePhotoEditSessionContext();
   
   const { modal, photoId, setModal, setPhotoId } = useFilters();
   const editPhotoId = modal === 'edit' ? photoId : null;
@@ -99,18 +96,25 @@ export function DialogHeader({
         </div>
 
         {isPartOfGroup && (
-          <button
-            type="button"
-            onClick={() => {
-              const newState = !isGroupCover;
-              form.setValue('is_group_cover', newState);
-              showToast.success(newState ? '已设为封面' : '已取消封面');
+          <form.Subscribe selector={(state: { values: PhotoEditFormData }) => state.values.is_group_cover}>
+            {(isGroupCover: unknown) => {
+              const active = !!isGroupCover;
+              return (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newState = !active;
+                    form.setFieldValue('is_group_cover', newState);
+                    showToast.success(newState ? '已设为封面' : '已取消封面');
+                  }}
+                  title={l.cover}
+                  className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-amber-200 shadow-sm transition-all ${active ? "bg-amber-500 text-white border-amber-500 hover:bg-amber-600" : "bg-white text-amber-500 border-amber-200 hover:bg-amber-50 active:scale-95"}`}
+                >
+                  <Icon name="star" size={20} className={active ? "fill-white" : "fill-transparent"} />
+                </button>
+              );
             }}
-            title={l.cover}
-            className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-amber-200 shadow-sm transition-all ${isGroupCover ? "bg-amber-500 text-white border-amber-500 hover:bg-amber-600" : "bg-white text-amber-500 border-amber-200 hover:bg-amber-50 active:scale-95"}`}
-          >
-            <Icon name="star" size={20} className={isGroupCover ? "fill-white" : "fill-transparent"} />
-          </button>
+          </form.Subscribe>
         )}
 
         {isPartOfGroup && (
