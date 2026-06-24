@@ -17,7 +17,7 @@ const categoryCreateConfig = defineMutation<Category, string | Partial<Category>
 });
 export const useCategoryCreate = () => useOptimisticMutation(categoryCreateConfig);
 
-const categoryEditConfig = defineMutation<boolean, { id: string; updates: Partial<Category> }, readonly unknown[]>({
+const categoryEditConfig = defineMutation<boolean, { id: number; updates: Partial<Category> }, readonly unknown[]>({
   name: 'categoryEdit',
   service: async ({ id, updates }) => {
     const res = await updateCategoryInDB(id, updates);
@@ -29,7 +29,7 @@ const categoryEditConfig = defineMutation<boolean, { id: string; updates: Partia
 });
 export const useCategoryEdit = () => useOptimisticMutation(categoryEditConfig);
 
-const categoryDeleteConfig = defineMutation<boolean, string, readonly unknown[]>({
+const categoryDeleteConfig = defineMutation<boolean, number, readonly unknown[]>({
   name: 'categoryDelete',
   service: async (id) => {
     const res = await deleteCategoryFromDB(id);

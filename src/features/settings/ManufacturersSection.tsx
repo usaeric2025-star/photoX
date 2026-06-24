@@ -18,10 +18,10 @@ interface ManufacturersSectionProps {
   manufacturers: Manufacturer[];
   addManufacturer: (name: string) => Promise<Manufacturer>;
   updateManufacturer: (
-    id: string,
+    id: number,
     data: Partial<Manufacturer>,
   ) => Promise<boolean>;
-  deleteManufacturer: (id: string) => void;
+  deleteManufacturer: (id: number) => void;
   cardClass: string;
   buttonStyles: { [key in "primary" | "secondary" | "accent"]: string };
 }
@@ -51,8 +51,8 @@ export function ManufacturersSection({
   });
 
   const { submit: runUpdateManufacturer, isLoading: isUpdating, fieldErrors: updateFieldErrors, clearFieldError: updateClearFieldError } = useFormSubmit({
-    schema: v.object({ id: v.string(), name: v.pipe(v.string(), v.minLength(1)) }),
-    mutationFn: async ({ id, name }: { id: string, name: string }) => {
+    schema: v.object({ id: v.number(), name: v.pipe(v.string(), v.minLength(1)) }),
+    mutationFn: async ({ id, name }: { id: number, name: string }) => {
       await rawUpdateManufacturer(id, { name });
       return true;
     },
@@ -89,9 +89,9 @@ export function ManufacturersSection({
               key={sub.id}
               manufacturer={sub}
               onUpdate={async (mfr) => {
-                return await runUpdateManufacturer({ id: String(mfr.id), name: mfr.name });
+                return await runUpdateManufacturer({ id: mfr.id, name: mfr.name });
               }}
-              onDelete={(id) => deleteManufacturer(String(id))}
+              onDelete={(id) => deleteManufacturer(Number(id))}
             />
           ))}
         </div>

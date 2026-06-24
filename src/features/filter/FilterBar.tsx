@@ -21,11 +21,11 @@ export function FilterBar({ mode, className }: FilterBarProps) {
 
   return (
     <div className={cn("flex-shrink-0 border-b bg-surface-overlay backdrop-blur-md", className)}>
-      <div className="flex gap-2.5 items-center px-4 py-3 sm:px-6 max-w-full">
+      <div className="flex flex-col sm:flex-row gap-2.5 sm:items-center px-4 py-3 sm:px-6 max-w-full">
         <div className="flex-1 min-w-0">
           <SearchInput />
         </div>
-        <div className="flex gap-2 shrink-0 items-center">
+        <div className="flex gap-2 shrink-0 items-center overflow-x-auto hide-scrollbar pb-1 sm:pb-0">
           <button 
             onClick={() => setShowTags(!showTags)}
             className={cn(

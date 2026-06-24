@@ -187,12 +187,12 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
               <AssetManagementContainer 
                 categories={categories}
                 deleteCategory={deleteCategory}
-                updateCategory={async (id: string, data: any) => { const r = await updateCategory({ id, updates: data }); return !!r; }}
+                updateCategory={async (id: number, data: any) => { const r = await updateCategory({ id: Number(id), updates: data }); return !!r; }}
                 addCategory={async (name: string) => { const r = await addCategory(name); if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addCategory', name); return r; }}
                 manufacturers={manufacturers}
                 addManufacturer={async (name: string) => { const r = await addManufacturer(name); if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addManufacturer', name); return r; }}
-                updateManufacturer={async (id: string, data: any) => { const r = await updateManufacturer({ id, updates: data }); return !!r; }}
-                deleteManufacturer={deleteManufacturer}
+                updateManufacturer={async (id: number, data: any) => { const r = await updateManufacturer({ id: Number(id), updates: data }); return !!r; }}
+                deleteManufacturer={(id: number) => deleteManufacturer(id)}
                 cardClass={cardClass}
                 buttonStyles={BUTTON_STYLES}
               />
@@ -200,10 +200,10 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
                 tags={tags}
                 settings={settings}
                 addTag={async (name: string) => { const r = await addTag(name); if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addTag', name); return r; }}
-                updateTag={async (id: number, data: any) => { const r = await updateTag({ id: String(id), updates: data }); return !!r; }}
+                updateTag={async (id: number, data: any) => { const r = await updateTag({ id: Number(id), updates: data }); return !!r; }}
                 activeTagMenuId={activeTagMenuId}
                 setActiveTagMenuId={setActiveTagMenuId}
-                deleteTag={(id: number) => deleteTag(String(id))}
+                deleteTag={(id: number) => deleteTag(id)}
                 togglePin={(id: number) => togglePin(id)}
                 setSettings={setSettings}
                 setHasChanges={setHasChanges}

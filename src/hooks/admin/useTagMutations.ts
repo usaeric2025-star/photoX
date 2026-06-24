@@ -21,7 +21,7 @@ const tagCreateConfig = defineMutation<Tag, string | Partial<Tag>, readonly unkn
 export const useTagCreate = () => useOptimisticMutation(tagCreateConfig);
 
 // 2. 编辑标签
-const tagEditConfig = defineMutation<boolean, { id: string; updates: Partial<Tag> }, readonly unknown[]>({
+const tagEditConfig = defineMutation<boolean, { id: number; updates: Partial<Tag> }, readonly unknown[]>({
   name: 'tagEdit',
   service: async ({ id, updates }) => {
     const res = await updateTagInDB(id, updates);
@@ -34,7 +34,7 @@ const tagEditConfig = defineMutation<boolean, { id: string; updates: Partial<Tag
 export const useTagEdit = () => useOptimisticMutation(tagEditConfig);
 
 // 3. 删除标签
-const tagDeleteConfig = defineMutation<boolean, string, readonly unknown[]>({
+const tagDeleteConfig = defineMutation<boolean, number, readonly unknown[]>({
   name: 'tagDelete',
   service: async (id) => {
     const res = await deleteTagFromDB(id);

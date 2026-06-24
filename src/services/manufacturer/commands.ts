@@ -2,9 +2,9 @@ import { api } from '@/lib/api';
 import { SubCategory as Manufacturer } from '../../types';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
-export const clearManufacturerFromPhotos = async (mfrId: string): Promise<string[]> => {
+export const clearManufacturerFromPhotos = async (mfrId: number): Promise<string[]> => {
   const res = await api.manufacturers['clear-photos'].$post({
-    json: { manufacturerId: mfrId }
+    json: { manufacturerId: String(mfrId) }
   });
   if (!res.ok) throw ErrorFactory.fatal('Clear manufacturer photos failed', { context: 'clearManufacturerFromPhotos' });
   const { data } = await res.json() as Record<string, unknown>;
@@ -12,9 +12,9 @@ export const clearManufacturerFromPhotos = async (mfrId: string): Promise<string
   return d?.data || [];
 };
 
-export const updateManufacturer = async (id: string, updates: Partial<Manufacturer>): Promise<void> => {
+export const updateManufacturer = async (id: number, updates: Partial<Manufacturer>): Promise<void> => {
   const res = await api.manufacturers[':id'].$put({
-    param: { id },
+    param: { id: String(id) },
     json: { updates: { name: (updates.name || '').toUpperCase() } }
   });
   if (!res.ok) throw ErrorFactory.fatal('Update manufacturer failed', { context: 'updateManufacturer' });
@@ -29,9 +29,9 @@ export const createManufacturer = async (data: Omit<Manufacturer, 'id' | 'create
   return result.data as Manufacturer;
 };
 
-export const deleteManufacturer = async (id: string): Promise<void> => {
+export const deleteManufacturer = async (id: number): Promise<void> => {
   const res = await api.manufacturers[':id'].$delete({
-    param: { id }
+    param: { id: String(id) }
   });
   if (!res.ok) throw ErrorFactory.fatal('Delete manufacturer failed', { context: 'deleteManufacturer' });
 };
@@ -44,7 +44,7 @@ export const addManufacturerToDB = async (name: string): Promise<Manufacturer | 
   }
 };
 
-export const updateManufacturerInDB = async (id: string, updates: Partial<Manufacturer>): Promise<boolean> => {
+export const updateManufacturerInDB = async (id: number, updates: Partial<Manufacturer>): Promise<boolean> => {
   try {
     await updateManufacturer(id, updates);
     return true;
@@ -53,7 +53,7 @@ export const updateManufacturerInDB = async (id: string, updates: Partial<Manufa
   }
 };
 
-export const deleteManufacturerFromDB = async (id: string): Promise<boolean> => {
+export const deleteManufacturerFromDB = async (id: number): Promise<boolean> => {
   try {
     await deleteManufacturer(id);
     return true;

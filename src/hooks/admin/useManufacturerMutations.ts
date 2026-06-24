@@ -19,7 +19,7 @@ const manufacturerCreateConfig = defineMutation<Manufacturer, string | Partial<M
 export const useManufacturerCreate = () => useOptimisticMutation(manufacturerCreateConfig);
 
 // 2. 编辑厂商
-const manufacturerEditConfig = defineMutation<boolean, { id: string; updates: Partial<Manufacturer> }, readonly unknown[]>({
+const manufacturerEditConfig = defineMutation<boolean, { id: number; updates: Partial<Manufacturer> }, readonly unknown[]>({
   name: 'manufacturerEdit',
   service: async ({ id, updates }) => {
     const res = await updateManufacturerInDB(id, updates);
@@ -32,7 +32,7 @@ const manufacturerEditConfig = defineMutation<boolean, { id: string; updates: Pa
 export const useManufacturerEdit = () => useOptimisticMutation(manufacturerEditConfig);
 
 // 3. 删除厂商
-const manufacturerDeleteConfig = defineMutation<boolean, string, readonly unknown[]>({
+const manufacturerDeleteConfig = defineMutation<boolean, number, readonly unknown[]>({
   name: 'manufacturerDelete',
   service: async (id) => {
     const res = await deleteManufacturerFromDB(id);

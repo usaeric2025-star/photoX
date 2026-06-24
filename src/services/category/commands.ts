@@ -10,12 +10,12 @@ const TABLE_NAME = 'categories';
  * Clears category reference from photos.
  * @postcondition Photo category_id cleared.
  */
-export const clearCategoryFromPhotos = async (categoryId: string): Promise<string[]> => {
+export const clearCategoryFromPhotos = async (categoryId: number): Promise<string[]> => {
   const res = await api.categories['clear-photos'].$post({
-    json: { categoryId }
+    json: { categoryId: String(categoryId) }
   });
   if (!res.ok) throw ErrorFactory.fatal('Clear photos request failed', { context: 'clearCategoryFromPhotos' });
-  const { data } = await res.json();
+  const { data } = await res.json() as { data: string[] };
   return data || [];
 };
 
@@ -39,10 +39,10 @@ const mapToDb = (updates: Partial<Category> & Record<string, unknown>): Record<s
     return dbUpdates;
 };
 
-export const updateCategory = async (categoryId: string, updates: Partial<Category>): Promise<void> => {
+export const updateCategory = async (categoryId: number, updates: Partial<Category>): Promise<void> => {
   const dbUpdates = mapToDb(updates);
   const res = await api.categories[':id'].$put({
-    param: { id: categoryId },
+    param: { id: String(categoryId) },
     json: { updates: dbUpdates }
   });
   if (!res.ok) throw ErrorFactory.fatal('Update category failed', { context: 'updateCategory' });
@@ -58,9 +58,9 @@ export const createCategory = async (categoryData: Omit<Category, 'id'>): Promis
   return data;
 };
 
-export const deleteCategory = async (categoryId: string): Promise<void> => {
+export const deleteCategory = async (categoryId: number): Promise<void> => {
   const res = await api.categories[':id'].$delete({
-    param: { id: categoryId }
+    param: { id: String(categoryId) }
   });
   if (!res.ok) throw ErrorFactory.fatal('Delete category failed', { context: 'deleteCategory' });
 };
@@ -73,7 +73,7 @@ export const addCategoryToDB = async (name: string): Promise<Category | null> =>
   }
 };
 
-export const updateCategoryInDB = async (categoryId: string, updates: Partial<Category>): Promise<boolean> => {
+export const updateCategoryInDB = async (categoryId: number, updates: Partial<Category>): Promise<boolean> => {
   try {
     await updateCategory(categoryId, updates);
     return true;
@@ -82,7 +82,7 @@ export const updateCategoryInDB = async (categoryId: string, updates: Partial<Ca
   }
 };
 
-export const deleteCategoryFromDB = async (categoryId: string): Promise<boolean> => {
+export const deleteCategoryFromDB = async (categoryId: number): Promise<boolean> => {
   try {
     await deleteCategory(categoryId);
     return true;

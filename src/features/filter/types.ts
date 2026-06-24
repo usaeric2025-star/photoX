@@ -3,7 +3,7 @@ export type ColumnCount = 2 | 3 | 5;
 
 export interface FilterState {
   search: string;
-  categoryId: string | null;
+  categoryId: number | null;
   tagIds: string[];
   sort: SortOrder;
 }

@@ -14,7 +14,7 @@ export function ColumnsToggle() {
     <button
       onClick={handleToggle}
       className={cn(
-        "h-10 w-10 rounded-full transition-all flex items-center justify-center cursor-pointer active:scale-90 border bg-surface-soft text-text-main border-border-soft hover:bg-surface-mute"
+        "relative h-10 w-10 rounded-full transition-all flex items-center justify-center cursor-pointer active:scale-90 border bg-surface-soft text-text-main border-border-soft hover:bg-surface-mute"
       )}
       title={`切換欄數 (當前: ${columns})`}
     >

@@ -7,7 +7,7 @@ export function useFilterState() {
 
   const filters: FilterState = useMemo(() => ({
     search: f.search || '',
-    categoryId: f.category || null,
+    categoryId: f.category ? Number(f.category) : null,
     tagIds: f.tags || [],
     sort: (f.sort as SortOrder) || 'newest',
   }), [f.search, f.category, f.tags, f.sort]);

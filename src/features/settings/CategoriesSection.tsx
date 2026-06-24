@@ -14,8 +14,8 @@ import { FormProvider } from '@/lib/form/useFormField';
 interface CategoriesSectionProps {
   categories: Category[];
   addCategory: (name: string) => Promise<Category>;
-  updateCategory: (id: string, data: Partial<Category>) => Promise<boolean>;
-  deleteCategory: (id: string) => void;
+  updateCategory: (id: number, data: Partial<Category>) => Promise<boolean>;
+  deleteCategory: (id: number) => void;
   cardClass: string;
   buttonStyles: { [key in "primary" | "secondary" | "accent"]: string };
 }
@@ -121,8 +121,8 @@ export function CategoriesSection({
   const [isAddOpen, addDialog] = useDisclosure(false);
 
   const { submit: runUpdateCategory, fieldErrors: updateFieldErrors, clearFieldError: updateClearFieldError } = useFormSubmit({
-    schema: v.object({ id: v.string(), updates: v.record(v.string(), v.unknown()) }),
-    mutationFn: async ({ id, updates }: { id: string, updates: Record<string, unknown> }) => {
+    schema: v.object({ id: v.number(), updates: v.record(v.string(), v.unknown()) }),
+    mutationFn: async ({ id, updates }: { id: number, updates: Record<string, unknown> }) => {
       await updateCategory(id, updates);
       return true;
     },
@@ -131,8 +131,8 @@ export function CategoriesSection({
   });
 
   const { submit: runDeleteCategory } = useFormSubmit({
-    schema: v.object({ id: v.string() }),
-    mutationFn: async ({ id }: { id: string }) => {
+    schema: v.object({ id: v.number() }),
+    mutationFn: async ({ id }: { id: number }) => {
       await deleteCategory(id);
       return true;
     },
@@ -174,7 +174,7 @@ export function CategoriesSection({
               cat={cat} 
               onUpdate={async (c) => {
                 return await runUpdateCategory({ 
-                  id: String(c.id), 
+                  id: c.id, 
                   updates: { 
                     name_zh: c.nameZh || c.name, 
                     name_en: c.nameEn || c.name, 
@@ -182,7 +182,7 @@ export function CategoriesSection({
                   } 
                 });
               }}
-              onDelete={(id) => runDeleteCategory({ id: String(id) })}
+              onDelete={(id) => runDeleteCategory({ id: Number(id) })}
             />
           ))}
         </div>

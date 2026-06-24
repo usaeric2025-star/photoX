@@ -5,9 +5,9 @@ import { useUI, UIStoreState } from '@/lib/store';
 
 export const useSettingsManagement = () => {
     const patch = useUI((s: UIStoreState) => s.patch);
-    const [tagToDelete, setTagToDelete] = useState<string | null>(null);
-    const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
-    const [manufacturerToDelete, setManufacturerToDelete] = useState<string | null>(null);
+    const [tagToDelete, setTagToDelete] = useState<number | null>(null);
+    const [categoryToDelete, setCategoryToDelete] = useState<number | null>(null);
+    const [manufacturerToDelete, setManufacturerToDelete] = useState<number | null>(null);
 
     const [isTagDeleteOpen, tagDeleteDialog] = useDisclosure(false);
     const [isCategoryDeleteOpen, categoryDeleteDialog] = useDisclosure(false);
@@ -15,17 +15,17 @@ export const useSettingsManagement = () => {
 
     const adminActions = useAdminCategory();
 
-    const triggerTagDelete = (id: string) => {
+    const triggerTagDelete = (id: number) => {
         setTagToDelete(id);
         tagDeleteDialog.open();
     };
 
-    const triggerCategoryDelete = (id: string) => {
+    const triggerCategoryDelete = (id: number) => {
         setCategoryToDelete(id);
         categoryDeleteDialog.open();
     };
 
-    const triggerManufacturerDelete = (id: string) => {
+    const triggerManufacturerDelete = (id: number) => {
         setManufacturerToDelete(id);
         manufacturerDeleteDialog.open();
     };

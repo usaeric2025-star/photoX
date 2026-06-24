@@ -67,8 +67,8 @@ export function OrgTab() {
                 const result = await addTagMut(name);
                 return result?.id ? String(result.id) : null;
               }}
-              updateTag={async (id, name) => updateTagMut({ id: String(id), updates: { name } })}
-              deleteTag={async (id) => deleteTagMut(String(id))}
+              updateTag={async (id, name) => updateTagMut({ id: Number(id), updates: { name } })}
+              deleteTag={async (id) => deleteTagMut(Number(id))}
             />
           )}
         </AppField>

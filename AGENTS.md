@@ -165,12 +165,12 @@
 - ✅ Valibot Schema 是数据契约唯一真相源
 - ✅ Edit Session 封装完整编辑语义
 
-## 四大工廠規範（鎖定）
+## 四大工廠規範（受控修改）
 
 - ✅ Mutation Factory 接收配置对象，禁止直接接收函数
 - ✅ Query Factory 必须绑定 Valibot Schema
 - ✅ Form Factory 必须使用集中化 Schema
-- ❌ Error Factory 禁止改动
+- ⚠️ 若发现 Error Factory 或其他四大工厂存在问题，需提出方案经确认后方可修改，禁止无正当理由的随意改动
 ## 命名规范（强制，锁定）
 
 ### 组件

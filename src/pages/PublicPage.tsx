@@ -13,8 +13,6 @@ import { useUI, UIStoreState } from '@/lib/store';
 import { WhatsAppDialog } from '@/components/shared/WhatsAppDialog';
 import { PhotoErrorDisplay } from '@/components/photo/PhotoErrorDisplay';
 import { Icon } from '@/components/ui/Icon';
-import { useAppQuery } from '@/lib/query';
-import { api } from '@/lib/api';
 
 export default function PublicPage() {
   const { 
@@ -59,17 +57,6 @@ export default function PublicPage() {
     refetch();
   };
 
-  const { data: globalTotal, isLoading: isCountLoading } = useAppQuery(
-    ['photos', 'count', 'total', 'all'],
-    async () => {
-      const res = await api.photos.count.$post({ json: { isAdminMode: true } });
-      if (!res.ok) return 0;
-      const json = await res.json() as { data: number };
-      return json.data;
-    },
-    { dedupingInterval: 5 * 60 * 1000 }
-  );
-
   const openLightbox = useUIStore(s => s.openLightbox);
   const lightboxIsOpen = useUIStore(s => s.lightbox.isOpen);
   const lightboxCurrentIndex = useUIStore(s => s.lightbox.currentIndex);
@@ -107,8 +94,6 @@ export default function PublicPage() {
     );
   }
 
-  const totalToDisplay = globalTotal ?? totalCount;
-
   return (
     <div 
       className="flex flex-col h-full w-full bg-surface-base relative overflow-hidden" 
@@ -118,9 +103,9 @@ export default function PublicPage() {
       
       {/* 頂部導航組 - 確保垂直堆疊，不擠壓照片 */}
       <PublicHeader 
-        totalCount={totalToDisplay}
+        totalCount={totalCount}
         onRefresh={handleRefresh}
-        isRefreshing={isFetching || isCountLoading}
+        isRefreshing={isFetching}
       />
 
       <FilterBar mode="public" className="border-b shadow-sm" />

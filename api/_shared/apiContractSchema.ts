@@ -162,14 +162,14 @@ export const TagReqSchema = v.object({
 });
 
 export const CategoryListItemSchema = v.object({
-    id: v.string(),
+    id: v.number(),
     code: v.string(),
     name: v.string(),
     zh: v.optional(v.string()),
     en: v.optional(v.string()),
     ms: v.optional(v.string()),
     sort_order: v.optional(v.number()),
-    subcategories: v.fallback(v.array(v.any()), [])
+    subcategories: v.optional(v.array(v.any()), [])
 });
 
 export const CategoryReqSchema = v.object({

@@ -70,13 +70,13 @@ export interface Photo {
 }
 
 export interface SubCategory {
-  id: string;
+  id: number;
   name: string;
   aliases: string[];
 }
 
 export interface Category {
-  id: string;
+  id: number;
   name: string; // Legacy or primary name
   nameZh?: string;
   nameEn?: string;
@@ -102,7 +102,7 @@ export interface Tag {
 }
 
 export interface Manufacturer {
-  id: string;
+  id: number;
   name: string;
   aliases?: string[];
 }

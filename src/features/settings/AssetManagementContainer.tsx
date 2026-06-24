@@ -5,13 +5,13 @@ import { Category, Manufacturer } from '@/types';
 
 interface CategoriesManagerProps {
   categories: Category[];
-  deleteCategory: (id: string) => void;
-  updateCategory: (id: string, data: Partial<Category>) => Promise<boolean>;
+  deleteCategory: (id: number) => void;
+  updateCategory: (id: number, data: Partial<Category>) => Promise<boolean>;
   addCategory: (name: string) => Promise<Category>;
   manufacturers: Manufacturer[];
   addManufacturer: (name: string) => Promise<Manufacturer>;
-  updateManufacturer: (id: string, data: Partial<Manufacturer>) => Promise<boolean>;
-  deleteManufacturer: (id: string) => void;
+  updateManufacturer: (id: number, data: Partial<Manufacturer>) => Promise<boolean>;
+  deleteManufacturer: (id: number) => void;
   cardClass: string;
   buttonStyles: { [key in 'primary' | 'secondary' | 'accent']: string };
 }

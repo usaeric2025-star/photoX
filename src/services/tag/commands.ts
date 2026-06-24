@@ -29,10 +29,10 @@ const mapToDb = (updates: Partial<Tag> & Record<string, unknown>): Record<string
  * @precondition Tag exists.
  * @postcondition Tag record updated.
  */
-export const updateTag = async (tagId: string, updates: Partial<Tag>): Promise<void> => {
+export const updateTag = async (tagId: number, updates: Partial<Tag>): Promise<void> => {
     const dbUpdates = mapToDb(updates);
     const res = await api.tags[':id'].$put({
-        param: { id: tagId },
+        param: { id: String(tagId) },
         json: { updates: dbUpdates }
     });
     if (!res.ok) throw ErrorFactory.fatal('Update tag failed', { context: 'updateTag' });
@@ -58,9 +58,9 @@ export const batchCreateTagsInCloud = async (tags: Partial<Tag>[]): Promise<Tag[
     return data;
 };
 
-const deleteTag = async (tagId: string): Promise<void> => {
+const deleteTag = async (tagId: number): Promise<void> => {
     const res = await api.tags[':id'].$delete({
-        param: { id: tagId }
+        param: { id: String(tagId) }
     });
     if (!res.ok) throw ErrorFactory.fatal('Delete tag failed', { context: 'deleteTag' });
 };
@@ -113,7 +113,7 @@ export const batchCreateTags = async (names: string[]): Promise<Map<string, stri
 /**
  * Helper to update a tag.
  */
-const updateTagAtomic = async (tagId: string, updates: Partial<Tag>): Promise<void> => {
+const updateTagAtomic = async (tagId: number, updates: Partial<Tag>): Promise<void> => {
     const finalUpdates = { ...updates };
     if (finalUpdates.name) {
       finalUpdates.name = finalUpdates.name.toUpperCase().trim();
@@ -124,8 +124,8 @@ const updateTagAtomic = async (tagId: string, updates: Partial<Tag>): Promise<vo
 /**
  * Helper to delete a tag.
  */
-const deleteTagAtomic = async (tagId: string | number): Promise<void> => {
-    return deleteTag(String(tagId));
+const deleteTagAtomic = async (tagId: number): Promise<void> => {
+    return deleteTag(tagId);
 };
 
 /**
@@ -142,7 +142,7 @@ export const addTagToDB = async (name: string) => {
         return { ok: false };
     }
 };
-export const updateTagInDB = async (tagId: string, updates: Partial<Tag>) => {
+export const updateTagInDB = async (tagId: number, updates: Partial<Tag>) => {
     try {
         await updateTagAtomic(tagId, updates);
         return { ok: true };
@@ -150,7 +150,7 @@ export const updateTagInDB = async (tagId: string, updates: Partial<Tag>) => {
         return { ok: false };
     }
 };
-export const deleteTagFromDB = async (tagId: string | number) => {
+export const deleteTagFromDB = async (tagId: number) => {
     try {
         await deleteTagAtomic(tagId);
         return { ok: true };
