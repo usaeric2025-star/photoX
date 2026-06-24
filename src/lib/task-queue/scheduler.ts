@@ -3,6 +3,10 @@ import { taskStore } from '@/store/taskStore';
 import { taskTable } from './integrations/supabase';
 import { showToast } from '@/lib/ui/toast';
 import { logger } from '@/lib/logger';
+import { signal } from '@storve/core/signals';
+
+export const taskStatusSignal = signal(taskStore, 'status');
+export const taskProgressSignal = signal(taskStore, 'progress');
 
 export class TaskScheduler {
   private queue: Task[] = [];

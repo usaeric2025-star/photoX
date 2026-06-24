@@ -3,7 +3,7 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { Icon } from '@/components/ui/Icon';
 import { useAuth } from '@/lib/store';
-import { useUI, useSettings, useAdminBatchActions, usePermission, UIStoreState } from '@/hooks';
+import { useUI, useSettings, useAdminBatchActions, usePermission } from '@/hooks';
 import { useAppQuery } from '@/lib/query';
 import { api } from '@/lib/api';
 import { NativePopover } from '@/components/ui/NativePopover';
@@ -23,9 +23,9 @@ export function AdminHeader({ className }: AdminHeaderProps) {
   const { role } = usePermission();
   const { navigate } = useAppRouter();
 
-  const lang = useUI((s: UIStoreState) => s.appLang);
-  const isMultiSelect = useUI((s: UIStoreState) => s.isMultiSelect);
-  const patch = useUI((s: UIStoreState) => s.patch);
+  const lang = useUI((s) => s.appLang);
+  const isMultiSelect = useUI((s) => s.isMultiSelect);
+  const patch = useUI((s) => s.patch);
   const t = translations[lang as keyof typeof translations] || translations.en;
 
   const { data: totalCountData } = useAppQuery(

@@ -8,6 +8,7 @@ import { useTaskExecutor, useAdminMaintenance, useSettings, useCategories, useTa
 import { Tag, Photo } from '@/types';
 import { analyzePhoto } from '@/features/ai/commands';
 import { useUI } from '@/lib/store';
+import { aiAnalysisSignal } from '@/lib/ai/executor';
 
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
 import * as v from 'valibot';
@@ -41,68 +42,37 @@ export function usePhotoEditAI() {
     schema: AIAnalysisSchema,
     mutationFn: async ({ imageUrl }: { imageUrl: string }) => {
       if (!editPhotoId) throw new Error('Missing editPhotoId');
-
-      return await runTask(appLang === 'zh' ? "AI 识别" : "AI Identification", async ({ updateProgress }) => {
-        updateProgress(0, appLang === 'zh' ? '正在启动 AI 识别模块...' : 'Starting AI module...');
-        updateProgress(10, appLang === 'zh' ? '正在准备分析照片...' : 'Preparing photo files...');
-        
-        updateProgress(30, appLang === 'zh' ? '正在由 AI 智能识别各项属性 (约需 2-5 秒)...' : 'Analyzing attributes with AI (approx 2-5s)...');
-        const resp = await analyzePhoto(editPhotoId);
-        
-        updateProgress(70, appLang === 'zh' ? '正在解析模型识别结果并写入草稿表單...' : 'Parsing AI attributes and injecting...');
-        
-        if (!resp) {
-          throw ErrorFactory.wrap(new Error('AI analysis failed (no result)'), 'AI智能识别', String(editPhotoId));
-        }
-
-        let result = (Array.isArray(resp) && resp.length > 0) ? resp[0] : resp;
-        
-        if (!result || typeof result !== 'object') {
-          throw ErrorFactory.wrap(new Error('Invalid AI format'), 'AI智能识别结果解析', String(editPhotoId));
-        }
-
-        const updates: Record<string, unknown> = {};
-        
-        if (result.name) {
-          if (typeof result.name === 'object' && result.name !== null) {
-            updates.name = result.name.zh || result.name.en || result.name.ms || String(result.name);
-          } else {
-            updates.name = String(result.name);
+      
+      aiAnalysisSignal.set({ status: 'processing', photoId: editPhotoId });
+      
+      try {
+        const result = await runTask(appLang === 'zh' ? "AI 识别" : "AI Identification", async ({ updateProgress }) => {
+          updateProgress(0, appLang === 'zh' ? '正在启动 AI 识别模块...' : 'Starting AI module...');
+          updateProgress(10, appLang === 'zh' ? '正在准备分析照片...' : 'Preparing photo files...');
+          
+          updateProgress(30, appLang === 'zh' ? '正在由 AI 智能识别各项属性 (约需 2-5 秒)...' : 'Analyzing attributes with AI (approx 2-5s)...');
+          const resp = await analyzePhoto(editPhotoId);
+          
+          updateProgress(70, appLang === 'zh' ? '正在解析模型识别结果并写入草稿表單...' : 'Parsing AI attributes and injecting...');
+          
+          if (!resp) {
+            throw ErrorFactory.wrap(new Error('AI analysis failed (no result)'), 'AI智能识别', String(editPhotoId));
           }
-        }
 
-          // --- Strict Category Matching ---
-          if (result.category_id !== undefined && result.category_id !== null) {
-            const rawCat = result.category_id;
-            let targetId: string | undefined;
+          let result = (Array.isArray(resp) && resp.length > 0) ? resp[0] : resp;
+          
+          if (!result || typeof result !== 'object') {
+            throw ErrorFactory.wrap(new Error('Invalid AI format'), 'AI智能识别结果解析', String(editPhotoId));
+          }
 
-            // 1. Try to extract string value
-            let catStr = '';
-            if (Array.isArray(rawCat) && rawCat.length > 0) {
-                const first = rawCat[0];
-                catStr = String(first.id ?? first.category_id ?? first.name ?? first);
-            } else if (typeof rawCat === 'object' && rawCat !== null) {
-                catStr = String(rawCat.id ?? rawCat.category_id ?? rawCat.name ?? '');
+          const updates: Record<string, unknown> = {};
+          
+          if (result.name) {
+            if (typeof result.name === 'object' && result.name !== null) {
+              updates.name = result.name.zh || result.name.en || result.name.ms || String(result.name);
             } else {
-                catStr = String(rawCat);
+              updates.name = String(result.name);
             }
-
-            if (catStr && catStr !== 'undefined' && catStr !== 'null' && catStr !== '[object Object]' && catStr !== '[对象 对象]') {
-                // 2. Exact ID match
-                const exactMatch = categories.find(c => String(c.id) === catStr);
-                if (exactMatch) {
-                    targetId = String(exactMatch.id);
-                } else {
-                    // 3. Fuzzy Name match (Case-insensitive)
-                    const nameMatch = categories.find(c => 
-                        c.name.toLowerCase() === catStr.toLowerCase() ||
-                        (c.zh && c.zh.toLowerCase() === catStr.toLowerCase())
-                    );
-                    if (nameMatch) targetId = String(nameMatch.id);
-                }
-            }
-
-            if (targetId) updates.category_id = targetId;
           }
 
           // --- Strict Group Matching and Assignment Support ---
@@ -282,14 +252,25 @@ export function usePhotoEditAI() {
         await appQuery.mutate(queryKeys.photos.all);
         await appQuery.mutate(queryKeys.groups.all);
         
-        return true;
-      }, { showSuccessToast: true, showProgress: true, rethrow: true });
+        return result;
+      }, { 
+        showSuccessToast: true, 
+        showProgress: true, 
+        rethrow: true,
+        onSuccess: () => {
+          // Any final cleanup if needed
+        },
+        successMessage: appLang === 'zh' ? 'AI 識別補全成功' : 'AI Analysis completed',
+        errorMessage: appLang === 'zh' ? 'AI 識別失敗' : 'AI Analysis failed'
+      });
+      
+      aiAnalysisSignal.set({ status: 'completed', result });
+      return result;
+      } catch (error: unknown) {
+        aiAnalysisSignal.set({ status: 'failed', error: String(error) });
+        throw error;
+      }
     },
-    onSuccess: () => {
-      // Any final cleanup if needed
-    },
-    successMessage: appLang === 'zh' ? 'AI 識別補全成功' : 'AI Analysis completed',
-    errorMessage: appLang === 'zh' ? 'AI 識別失敗' : 'AI Analysis failed'
   });
 
   const onAnalyze = useCallback(async (previewSrc?: string, imageUrl?: string) => {

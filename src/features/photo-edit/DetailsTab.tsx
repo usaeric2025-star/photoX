@@ -9,6 +9,7 @@ import { useTaskSelector } from '@/lib/store';
 import { showToast } from '@/lib/ui/toast';
 import { translations } from '@/locales';
 import { usePhotoEditAI } from './usePhotoEditAI';
+import { AIStatusBadge } from '@/components/ui/AIStatusBadge';
 import { AppField } from '@/lib/form/AppField';
 import { MultilingualInput } from '@/components/shared/MultilingualInput';
 
@@ -50,6 +51,7 @@ export function DetailsTab() {
             {detailPhoto?.id?.slice(0, 8)}...
           </span>
         </div>
+        <AIStatusBadge />
       </div>
 
       <AppField name="dimensions">

@@ -4,6 +4,7 @@ import { Task } from '@/lib/task-queue/types';
 
 export interface TaskStoreState {
   tasks: Map<string, Task>;
+  aiStatus: { status: 'idle' | 'processing' | 'completed' | 'failed', photoId?: string, result?: unknown, error?: string };
   enqueue: (task: Task) => void;
   startTask: (id: string) => void;
   updateProgress: (id: string, progress: number, message?: string) => void;
@@ -12,15 +13,19 @@ export interface TaskStoreState {
   cancelTask: (id: string) => void;
   restoreFromSupabase: (tasks: Task[]) => void;
   clearAll: () => void;
+  setAiStatus: (status: TaskStoreState['aiStatus']) => void;
 }
 
 // Internal store reference with setState exposed to avoid repeating casts
 export type TaskStoreInstance = ReturnType<typeof createStore<TaskStoreState>> & { 
-  setState: (updates: Partial<TaskStoreState> | ((state: TaskStoreState) => Partial<TaskStoreState>)) => void 
+  setState: (updates: Partial<TaskStoreState> | ((state: TaskStoreState) => Partial<TaskStoreState>) | TaskStoreState) => void 
 };
 
 export const taskStore = createStore<TaskStoreState>({
   tasks: new Map(),
+  aiStatus: { status: 'idle' },
+
+  setAiStatus: (aiStatus) => (taskStore as unknown as TaskStoreInstance).setState({ aiStatus }),
 
   enqueue: (task) => (taskStore as unknown as TaskStoreInstance).setState((state: TaskStoreState) => {
     const tasks = new Map(state.tasks);

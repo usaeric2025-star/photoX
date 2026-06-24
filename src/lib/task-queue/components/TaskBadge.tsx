@@ -1,24 +1,15 @@
 import React from 'react';
-import { useTaskSelector } from '@/store/taskStore';
+import { useSignal } from '@storve/react';
+import { taskStatusSignal, taskProgressSignal } from '@/lib/task-queue/scheduler';
 import { useUI, storeAccessor } from '@/lib/store';
 import { Icon } from '@/components/ui/Icon';
 
 export function TaskBadge() {
-  const [mounted, setMounted] = React.useState(false);
-  
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const count = useTaskSelector((state) => 
-    Array.from(state.tasks.values()).filter(t => 
-      t.state.status === 'queued' || t.state.status === 'processing'
-    ).length
-  );
-
+  const status = useSignal(taskStatusSignal);
+  const progress = useSignal(taskProgressSignal);
   const isOpen = useUI((s) => s.isTaskDrawerOpen);
 
-  if (!mounted || count === 0) return null;
+  if (status !== 'processing') return null;
 
   return (
     <button 
@@ -34,11 +25,8 @@ export function TaskBadge() {
         <Icon name="refresh-cw" size={16} className="text-blue-400 animate-spin" />
       </div>
       <span className="text-[11px] font-bold tracking-tight uppercase select-none text-slate-200">
-        上傳任務執行中
+        上傳任務執行中 {progress}%
       </span>
-      <div className="bg-blue-500 text-white rounded-full text-[10px] font-black h-5 min-w-5 px-1.5 flex items-center justify-center shadow-md">
-        {count}
-      </div>
     </button>
   );
 }

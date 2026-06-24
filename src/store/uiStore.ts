@@ -1,5 +1,6 @@
 import { createStore } from '@storve/core';
 import { useStore } from '@storve/react';
+import { signal } from '@storve/core/signals';
 import { STORAGE_KEYS, storage } from '@/lib/storage';
 import { ProductFormData } from '@/types';
 import type { LightboxSlide } from '@/lib/lightbox/types';
@@ -216,3 +217,5 @@ export function useUIStore<T>(selector?: (state: UIStoreState) => T): T | UIStor
 }
 export const useUISelector = useUIStore;
 export const useAppLang = () => useStore(uiStore, (s) => s.appLang);
+export const currentIndexSignal = signal(uiStore, 'lightbox.currentIndex');
+export const isOpenSignal = signal(uiStore, 'lightbox.isOpen');
