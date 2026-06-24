@@ -41,11 +41,23 @@ export default function AppRoutes() {
 
   const isStaffMode = String(passcode) === settings?.access_passcode && !!settings?.access_passcode;
 
+  const [forceUnblock, setForceUnblock] = useState(false);
+
   useEffect(() => {
     logger.debug('🛡️ [App] Initializing Auth/Settings...');
     authStore.getState().init();
     const cleanup = initAuthListener();
-    return cleanup;
+    
+    // Force unblock after 8 seconds no matter what
+    const timer = setTimeout(() => {
+       logger.warn('⏳ [App] Force unblocking UI after 8 seconds safety timeout!');
+       setForceUnblock(true);
+    }, 8000);
+    
+    return () => {
+      cleanup();
+      clearTimeout(timer);
+    };
   }, []);
 
   useEffect(() => {
@@ -61,6 +73,7 @@ export default function AppRoutes() {
     pathname: typeof window !== 'undefined' ? window.location.pathname : '',
     isLoading,
     isSettingsPending,
+    forceUnblock,
     hasUser: !!user,
     isStaffMode,
     hasSettings: !!settings
@@ -68,7 +81,7 @@ export default function AppRoutes() {
   const prevUserRef = useRef<User | null>(null);
 
   useEffect(() => {
-    if (!isLoading && !isSettingsPending) {
+    if ((!isLoading && !isSettingsPending) || forceUnblock) {
       const prevUser = prevUserRef.current;
       const prevUserId = prevUser ? prevUser.id : null;
       const currentUserId = user ? user.id : null;
@@ -79,18 +92,18 @@ export default function AppRoutes() {
       }
       prevUserRef.current = user;
     }
-  }, [user, isLoading]);
+  }, [user, isLoading, isSettingsPending, forceUnblock]);
 
   useEffect(() => {
     // 確保骨架屏被移除
     const skeleton = document.getElementById('app-startup-skeleton');
-    if (skeleton && !isLoading && !isSettingsPending) {
+    if (skeleton && (!isLoading && !isSettingsPending || forceUnblock)) {
       skeleton.style.opacity = '0';
       setTimeout(() => {
         skeleton.remove();
       }, 300);
     }
-  }, [isLoading, isSettingsPending]);
+  }, [isLoading, isSettingsPending, forceUnblock]);
 
   useEffect(() => {
     if (user && !isLoading) {
@@ -99,7 +112,7 @@ export default function AppRoutes() {
     }
   }, [user, isLoading]);
 
-  if (isLoading || isSettingsPending) {
+  if ((isLoading || isSettingsPending) && !forceUnblock) {
     logger.debug('⏳ [App] Blocking UI:', { isLoading, isSettingsPending });
     return <LoadingScreen />;
   }

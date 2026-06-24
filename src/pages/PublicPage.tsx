@@ -52,6 +52,15 @@ export default function PublicPage() {
   const ui = useUI();
   const { lang, uiTranslations: t } = useTranslation();
   const { data: settings } = usePublicSettings();
+  
+  logger.info('[PublicPage] Rendering', { 
+    isFetching, 
+    isError, 
+    error: error?.message, 
+    photosCount: photos.length, 
+    categoryId: category,
+    searchQuery: search
+  });
 
   const handleRefresh = () => {
     refetch();

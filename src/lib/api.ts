@@ -71,7 +71,13 @@ export const client = hc<AppType>(
       const executeRequest = async () => {
         while (true) {
           try {
-            const signal = AbortSignal.timeout(15000);
+            const signal = typeof AbortSignal.timeout === 'function' 
+              ? AbortSignal.timeout(15000) 
+              : (() => {
+                  const controller = new AbortController();
+                  setTimeout(() => controller.abort(), 15000);
+                  return controller.signal;
+                })();
             return await fetch(input, { ...init, headers, signal });
           } catch (err) {
             if (retries > 0) {

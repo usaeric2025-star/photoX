@@ -58,6 +58,8 @@ export function PhotoGridContent({
   
   const selectedIds = useUI(s => s.selectedIds);
   const selectedSet = React.useMemo(() => new Set(selectedIds), [selectedIds]);
+  
+  console.log('[PhotoGridContent] Render Start', { mode, photosCount: photos.length, isPending, columns });
 
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = React.useState(() => typeof window !== 'undefined' ? window.innerWidth : 1200);

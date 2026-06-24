@@ -38,6 +38,7 @@ type RowItem = { type: 'header' | 'row' | 'footer'; content?: React.ReactNode; r
  */
 const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.Ref<VirtualGridHandle> }) => {
   const vlistRef = useRef<VListHandle>(null!);
+  const containerRef = useRef<HTMLDivElement>(null);
   const lanes = Math.max(1, props.lanes || 1);
   const isGridLayout = lanes > 1;
   const rowCount = isGridLayout ? Math.ceil(props.count / lanes) : props.count;
@@ -47,6 +48,10 @@ const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.Ref<Vir
     !!(window as unknown as { __vitest_worker__?: unknown }).__vitest_worker__ || 
     (window as unknown as { process?: { env?: { NODE_ENV?: string } } }).process?.env?.NODE_ENV === 'test'
   );
+
+  const [useFallback, setUseFallback] = React.useState(isTestEnv);
+  
+  console.log('[VirtualGrid] Render', { count: props.count, lanes, isTestEnv, useFallback });
 
   const listItemsCacheRef = useRef<{ count: number; rowCount: number; hasHeader: boolean; hasFooter: boolean; dataVersion?: string | number; items: RowItem[] } | null>(null);
 
@@ -76,19 +81,41 @@ const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.Ref<Vir
     listItemsCacheRef.current = { count: props.count, rowCount, hasHeader, hasFooter, dataVersion: props.dataVersion, items };
   }
 
+  const onEndReachedRef = useRef(props.onEndReached);
+  useEffect(() => { onEndReachedRef.current = props.onEndReached; }, [props.onEndReached]);
+
+  const handleScrollFallback = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    const offset = target.scrollTop;
+    props.onScroll?.(offset);
+    if (offset + target.clientHeight >= target.scrollHeight - 300) {
+      onEndReachedRef.current?.();
+    }
+  };
+
   useImperativeHandle(ref, () => ({
     scrollToIndex: (index: number) => {
       const targetIndex = isGridLayout ? Math.floor(index / lanes) : index;
-      const headerOffset = props.header ? 1 : 0;
-      vlistRef.current?.scrollToIndex(targetIndex + headerOffset);
+      if (useFallback) {
+        const el = containerRef.current?.querySelector(`[data-row-index="${targetIndex}"]`);
+        if (el) {
+          el.scrollIntoView({ block: 'start' });
+        }
+      } else {
+        const headerOffset = props.header ? 1 : 0;
+        vlistRef.current?.scrollToIndex(targetIndex + headerOffset);
+      }
     },
     scrollTo: (offset: number) => {
-      vlistRef.current?.scrollTo(offset);
+      if (useFallback) {
+        if (containerRef.current) {
+          containerRef.current.scrollTop = offset;
+        }
+      } else {
+        vlistRef.current?.scrollTo(offset);
+      }
     }
-  }), [isGridLayout, lanes, props.header]);
-
-  const onEndReachedRef = useRef(props.onEndReached);
-  useEffect(() => { onEndReachedRef.current = props.onEndReached; }, [props.onEndReached]);
+  }), [isGridLayout, lanes, props.header, useFallback]);
 
   const handleScroll = (offset: number) => {
     props.onScroll?.(offset);
@@ -100,39 +127,57 @@ const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.Ref<Vir
     }
   };
 
-  if (isTestEnv) {
+  if (useFallback) {
     return (
-      <div className={cn("w-full h-full min-h-0", props.containerClassName)}>
-        {props.header}
-        {Array.from({ length: rowCount }).map((_, index) => (
-          <div 
-            key={`row-${index}`}
-            data-contract="virtual-grid-row" 
-            style={{ width: '100%', position: 'absolute', transform: `translate3d(0px, ${index * 300}px, 0px)` }}
-          >
-            {isGridLayout ? (
-              <div 
-                data-contract="row-grid-layout"
-                className="grid"
-                style={{ gridTemplateColumns: `repeat(${lanes}, minmax(0, 1fr))` }}
-              >
-                {Array.from({ length: lanes }).map((_, laneIndex) => {
-                  const itemIndex = index * lanes + laneIndex;
-                  return itemIndex < props.count ? (
-                    <div key={`item-${itemIndex}`} data-lane={laneIndex}>
-                      {props.renderItem(itemIndex)}
-                    </div>
-                  ) : <div key={`empty-${laneIndex}`} />;
-                })}
-              </div>
-            ) : (
-              <div data-lane={0}>
-                {props.renderItem(index)}
-              </div>
-            )}
+      <div 
+        ref={containerRef}
+        onScroll={handleScrollFallback}
+        className={cn("w-full h-full overflow-y-auto no-scrollbar", props.containerClassName)}
+        style={{ contentVisibility: 'auto' }}
+      >
+        {props.header && (
+          <div key={`grid-header-${props.dataVersion || 'default'}`} className="w-full shrink-0">
+            {props.header}
           </div>
-        ))}
-        {props.footer}
+        )}
+        
+        <div className="flex flex-col w-full">
+          {Array.from({ length: rowCount }).map((_, index) => (
+            <div 
+              key={`row-${index}-${props.dataVersion || 'default'}`}
+              data-row-index={index}
+              data-contract="virtual-grid-row" 
+              className="w-full shrink-0"
+            >
+              {isGridLayout ? (
+                <div 
+                  data-contract="row-grid-layout"
+                  className="grid"
+                  style={{ gridTemplateColumns: `repeat(${lanes}, minmax(0, 1fr))` }}
+                >
+                  {Array.from({ length: lanes }).map((_, laneIndex) => {
+                    const itemIndex = index * lanes + laneIndex;
+                    return itemIndex < props.count ? (
+                      <div key={`item-${itemIndex}`} data-lane={laneIndex}>
+                        {props.renderItem(itemIndex)}
+                      </div>
+                    ) : <div key={`empty-${laneIndex}`} />;
+                  })}
+                </div>
+              ) : (
+                <div data-lane={0}>
+                  {props.renderItem(index)}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {props.footer && (
+          <div key={`grid-footer-${props.dataVersion || 'default'}`} className="w-full shrink-0">
+            {props.footer}
+          </div>
+        )}
       </div>
     );
   }

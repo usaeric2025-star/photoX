@@ -33,6 +33,9 @@ export function PublicPhotoGrid({
   onScroll,
   onPhotoClick
 }: PublicPhotoGridProps) {
+  
+  console.log('[PublicPhotoGrid] Render Start', { photosCount: photos?.length, isPending, isFetching, columns, dataVersion });
+
   return (
     <div className="h-full w-full relative">
       <PhotoGridContent 
