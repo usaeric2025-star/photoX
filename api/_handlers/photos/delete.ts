@@ -3,7 +3,7 @@ import * as v from 'valibot';
 import { db, furnitureItems } from '../../_lib/db/index.js';
 import { eq, and } from 'drizzle-orm';
 import { syncGroupCoversAndCount } from '../../_lib/groups.js';
-import { PhotoIdReqSchema } from '../../_shared/apiContractSchema.js';
+import { PhotoIdReqSchema } from '../../../shared/apiContractSchema.js';
 
 export const deleteHandler = (app: Hono) => {
   app.post('/delete', async (c) => {

@@ -1,6 +1,6 @@
 import { logger } from './logger.js';
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
-import { getServerEnv } from "../_shared/envSchema.js";
+import { getServerEnv } from "../../shared/envSchema.js";
 
 const serverEnv = getServerEnv(process.env);
 

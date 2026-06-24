@@ -1,4 +1,4 @@
-import { normalizeI18n } from "../../_shared/i18n.js";
+import { normalizeI18n } from "../../../shared/i18n.js";
 import { logger } from "../logger.js";
 import { extractJSON } from "./utils.js";
 import { db, aiAuditLogs } from '../../_lib/db/index.js';

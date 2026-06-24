@@ -29,7 +29,16 @@ export function useAppForm<T extends v.GenericSchema>({
 
   // Sync default values when they change
   React.useEffect(() => {
-    form.reset();
+    // Pass the new defaultValues to reset so the form internal state updates properly.
+    // If the form is already dirty, we only update the defaultValues behind the scenes
+    // without wiping out the user's uncommitted changes.
+    const keepState = form.state.isDirty || form.state.isTouched;
+    if (!keepState) {
+      // @ts-expect-error tanstack form types
+      form.reset(defaultValues);
+    } else {
+      form.update({ defaultValues });
+    }
   }, [form, defaultValues]);
 
   // Watch for value changes and trigger callback

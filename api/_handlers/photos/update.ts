@@ -3,7 +3,7 @@ import * as v from 'valibot';
 import { db, furnitureItems, groups as groupsTable } from '../../_lib/db/index.js';
 import { eq, inArray, and } from 'drizzle-orm';
 import { syncGroupCoversAndCount } from '../../_lib/groups.js';
-import { PhotoBatchUpdateReqSchema, PhotoUpdateReqSchema } from '../../_shared/apiContractSchema.js';
+import { PhotoBatchUpdateReqSchema, PhotoUpdateReqSchema } from '../../../shared/apiContractSchema.js';
 
 export const updateHandler = (app: Hono) => {
   app.post('/batch-update', async (c) => {

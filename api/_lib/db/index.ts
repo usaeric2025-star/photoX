@@ -2,7 +2,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema.js';
 import * as views from './views.js';
-import { getServerEnv } from '../../_shared/envSchema.js';
+import { getServerEnv } from '../../../shared/envSchema.js';
 
 const env = getServerEnv(process.env);
 

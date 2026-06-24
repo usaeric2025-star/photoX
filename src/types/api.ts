@@ -7,10 +7,10 @@ import type {
   PhotoUpdateReqSchema,
   SearchReqSchema,
   PhotoListItem as ApiPhotoListItem,
-} from '../../api/_shared/apiContractSchema';
+} from '../../shared/apiContractSchema';
 import {
   PhotoListItemSchema as ApiPhotoListItemSchema
-} from '../../api/_shared/apiContractSchema';
+} from '../../shared/apiContractSchema';
 
 export type ApiResponse<T = unknown> = BaseApiResponse<T>;
 

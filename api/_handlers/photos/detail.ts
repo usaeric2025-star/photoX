@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import * as v from 'valibot';
 import { db, furnitureItems, photoTags } from '../../_lib/db/index.js';
 import { inArray, eq, isNull, and } from 'drizzle-orm';
-import { PhotoIdsReqSchema, PhotoCheckHashReqSchema } from '../../_shared/apiContractSchema.js';
+import { PhotoIdsReqSchema, PhotoCheckHashReqSchema } from '../../../shared/apiContractSchema.js';
 
 export const detailHandler = (app: Hono) => {
   app.post('/by-ids', async (c) => {

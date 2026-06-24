@@ -1,6 +1,5 @@
-import { createStaleTime } from '@/shared/freshnessSchema';
 import React, { useEffect } from 'react';
-import { appQuery } from '@/lib/query';
+import { mutate } from 'swr';
 import { loadCategoriesFromCloud } from '@/services/category/queries';
 import { loadTagsFromCloud } from '@/services/tag/queries';
 import { queryKeys } from '@/lib/query/keys';
@@ -13,11 +12,11 @@ export default function AdminPage() {
   useEffect(() => {
     document.title = appLang === 'zh' ? 'PhotoX | 管理后台' : 'PhotoX | Admin';
     // Prefetch categories in the background
-    appQuery.mutate(queryKeys.categories.categories(), loadCategoriesFromCloud());
+    mutate(queryKeys.categories.categories(), loadCategoriesFromCloud());
 
     // Prefetch tags in the background
-    appQuery.mutate(queryKeys.tags.tags(), loadTagsFromCloud());
-  }, []);
+    mutate(queryKeys.tags.tags(), loadTagsFromCloud());
+  }, [appLang]);
 
   return (
     <AdminPageContent />

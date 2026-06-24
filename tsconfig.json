@@ -8,7 +8,7 @@
     "strict": true,
     "paths": {
       "@/*": ["./src/*"],
-      "@api/_shared/*": ["./api/_shared/*"],
+      "@shared/*": ["./shared/*"],
       "@api/app": ["./api/app.ts"],
       "@api/*": ["./NON_EXISTENT_PATH_TO_BLOCK_FRONTEND_IMPORTS/*"],
       "../../api/*": ["./NON_EXISTENT_PATH_TO_BLOCK_FRONTEND_IMPORTS/*"],
@@ -25,6 +25,6 @@
     "noImplicitOverride": true,
     "outDir": "./dist"
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "shared/**/*"],
   "exclude": ["node_modules", "dist", "api"]
 }

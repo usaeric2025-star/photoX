@@ -8,7 +8,6 @@ import { PublicPhotoGrid } from '@/components/photo/PublicPhotoGrid';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { useColumns } from '@/hooks';
 import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
-import { useUIStore } from '@/store/uiStore';
 import { useUI, UIStoreState } from '@/lib/store';
 import { WhatsAppDialog } from '@/components/shared/WhatsAppDialog';
 import { PhotoErrorDisplay } from '@/components/photo/PhotoErrorDisplay';
@@ -55,29 +54,28 @@ export default function PublicPage() {
   const { data: settings } = usePublicSettings();
 
   const handleRefresh = () => {
+    refetch();
   };
 
-  const openLightbox = useUIStore(s => s.openLightbox);
-  const lightboxIsOpen = useUIStore(s => s.lightbox.isOpen);
-  const lightboxCurrentIndex = useUIStore(s => s.lightbox.currentIndex);
+  const { open, isOpen, currentIndex } = useLightbox();
   
-  const lightboxItems = React.useMemo(() => photosToLightboxSlides(photos), [photos]);
+  const lightboxItems = useMemo(() => photosToLightboxSlides(photos), [photos]);
 
   // 同步燈箱數據：當照片列表更新且處於燈箱模式時
-  React.useEffect(() => {
+  useEffect(() => {
     if (photoId && photos.length > 0) {
       const index = photos.findIndex(p => p.id === photoId);
       if (index !== -1) {
          // 只有当灯箱没开，或者灯箱打开但显示的不是当前 photoId 时才打开
-         if (!lightboxIsOpen || photos[lightboxCurrentIndex]?.id !== photoId) {
-            openLightbox(lightboxItems, index);
+         if (!isOpen || photos[currentIndex]?.id !== photoId) {
+            open(lightboxItems, index);
          }
       }
     }
-  }, [photos, photoId, openLightbox, lightboxItems, lightboxIsOpen, lightboxCurrentIndex]);
+  }, [photos, photoId, open, isOpen, currentIndex, lightboxItems]);
 
   const handlePhotoClick = (id: string, index: number) => {
-    openLightbox(lightboxItems, index);
+    open(lightboxItems, index);
     setPhotoId(id);
   };
 

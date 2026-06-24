@@ -5,7 +5,7 @@ import { eq, lt, or, isNull, inArray, sql } from "drizzle-orm";
 import { runStorageAudit } from "../../_lib/maintenance/storageUtils.js";
 import { requireRealUser } from "../../_lib/auth.js";
 import { getR2Client } from "../../_lib/storage.js";
-import { getServerEnv } from "../../_shared/envSchema.js";
+import { getServerEnv } from "../../../shared/envSchema.js";
 import { ListObjectsV2Command, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { refreshPhotosView } from '../../_lib/db/actions.js';
 

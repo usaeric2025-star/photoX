@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import * as v from 'valibot';
 import { db, categories as categoriesTable, furnitureItems } from '../_lib/db/index.js';
 import { eq, asc, ne, sql } from 'drizzle-orm';
-import { CategoryReqSchema } from '../_shared/apiContractSchema.js';
+import { CategoryReqSchema } from '../../shared/apiContractSchema.js';
 
 interface FormattedCategory {
     id: number;

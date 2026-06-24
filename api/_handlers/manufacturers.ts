@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { db, manufacturers as manufacturersTable } from '../_lib/db/index.js';
 import { eq, asc } from 'drizzle-orm';
 import * as v from 'valibot';
-import { ManufacturerReqSchema } from '../_shared/apiContractSchema.js';
+import { ManufacturerReqSchema } from '../../shared/apiContractSchema.js';
 
 export const manufacturers = new Hono()
   .get('/', async (c) => {

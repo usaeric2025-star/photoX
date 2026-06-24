@@ -2,7 +2,7 @@ import { useAppQuery } from '@/lib/query';
 import { queryKeys } from '@/lib/query/keys';
 import { loadTagsFromCloud } from '@/services/tag/queries';
 import { STALE_TIMES } from '@/lib/query/config';
-import { TagListItemSchema } from '@api/_shared/apiContractSchema';
+import { TagListItemSchema } from '@shared/apiContractSchema';
 import * as v from 'valibot';
 
 /**

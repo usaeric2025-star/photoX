@@ -1,6 +1,6 @@
 import { logger } from '@/lib/logger';
 import * as v from 'valibot';
-import { clientEnvSchema as sharedClientSchema, serverEnvSchema as sharedServerSchema } from '../../api/_shared/envSchema';
+import { clientEnvSchema as sharedClientSchema, serverEnvSchema as sharedServerSchema } from '../../shared/envSchema';
 
 export const clientEnvSchema = sharedClientSchema;
 export const serverEnvSchema = sharedServerSchema;

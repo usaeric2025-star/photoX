@@ -76,7 +76,7 @@ export default defineConfig(({mode}) => {
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),
-        '@api/_shared': fileURLToPath(new URL('./api/_shared', import.meta.url)),
+        '@shared': fileURLToPath(new URL('./shared', import.meta.url)),
       },
     },
     server: {

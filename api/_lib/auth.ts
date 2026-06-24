@@ -1,6 +1,6 @@
 import { logger } from './logger.js';
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
-import { getServerEnv } from "../_shared/envSchema.js";
+import { getServerEnv } from "../../shared/envSchema.js";
 import { Context, Next } from 'hono';
 
 const serverEnv = getServerEnv(process.env);

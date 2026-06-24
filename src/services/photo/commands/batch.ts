@@ -2,7 +2,7 @@ import { Photo } from '@/types';
 import { mapToDb } from '../mappers';
 import { api } from '@/lib/api';
 import * as v from 'valibot';
-import { PhotoSchema } from '../../../../api/_shared/apiContractSchema';
+import { PhotoSchema } from '../../../../shared/apiContractSchema';
 
 export type BatchActionResult = {
   successCount: number;

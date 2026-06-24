@@ -1,23 +1,18 @@
 import { useAppRouter } from '@/lib/router/useAppRouter';
-import React, { useEffect, Suspense, lazy } from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
 import { useAuth } from '@/lib/store';
-import { useSyncMutation } from '@/hooks';
 const UploadModeDialog = lazy(() => import('@/features/upload/components/UploadModeDialog').then(m => ({ default: m.UploadModeDialog })));
 
 import { usePhotoUpload } from '@/features/upload';
 import { UploadButton } from '@/components/shared/UploadButton';
-import { logger } from '@/lib/logger';
 import { useAIBatchAnalysis } from '@/hooks';
 import { useTaskSelector } from '@/lib/store';
-import { useUI, useUISelector } from '@/lib/store';
-import { UIStoreState } from '@/store/uiStore';
-import { Category } from '@/types';
+import { useUI } from '@/lib/store';
 import { AdminHeader } from '@/components/layouts/headers/AdminHeader';
 import { AdminAuthGate } from '@/components/admin/AdminAuthGate';
 import { AdminContainer } from '@/components/admin/AdminContainer';
-import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { useFilters } from '@/hooks/useFilters';
 import { FilterBar } from '@/features/filter/FilterBar';
 
@@ -30,18 +25,20 @@ export function AdminPageContent() {
   const filters = useFilters({ enableStatus: true, enableBatch: true });
   const { user } = useAuth();
   const { uploadFiles } = usePhotoUpload();
-  const uploadModeDialogOpen = useUISelector((s: UIStoreState) => s.uploadModeDialogOpen);
-  const pendingFiles = useUISelector((s: UIStoreState) => s.pendingFiles);
-  const { handleBatchAiAnalyze } = useAIBatchAnalysis();
-  const { mutateAsync: syncMut } = useSyncMutation();
-  const tasksMap = useTaskSelector((s) => s.tasks);
-  const tasks = React.useMemo(() => Array.from(tasksMap.values()), [tasksMap]);
-  const appLang = useUISelector((s: UIStoreState) => s.appLang);
-  const { navigate, route } = useAppRouter();
-
-  const store = useUISelector((s: UIStoreState) => ({
+  
+  const { 
+    uploadModeDialogOpen, 
+    pendingFiles, 
+    patch,
+  } = useUI((s) => ({
+    uploadModeDialogOpen: s.uploadModeDialogOpen,
+    pendingFiles: s.pendingFiles,
     patch: s.patch,
-    batchEditingIds: s.batchEditingIds }));
+  }));
+  
+  const { handleBatchAiAnalyze } = useAIBatchAnalysis();
+  const tasks = useTaskSelector((s) => Array.from(s.tasks.values()));
+  const { navigate, route } = useAppRouter();
   
   const currentScreen = (() => {
     if (route === 'admin') return 'gallery';
@@ -52,9 +49,6 @@ export function AdminPageContent() {
     if (route === 'adminBatchEdit') return 'batch';
     return 'gallery' as const;
   })();
-
-  const isSyncing = tasks.some(t => t.state?.status === 'processing' && t.label.includes('Sync'));
-  const isUploadRunning = tasks.some(t => t.state?.status === 'processing' && t.label.includes('上传'));
 
   return (
     <AdminAuthGate>
@@ -110,9 +104,9 @@ export function AdminPageContent() {
             if (e.target.files) {
               const files = e.target.files;
               if (files.length > 1) {
-                store.patch({ uploadModeDialogOpen: true, pendingFiles: files });
+                patch({ uploadModeDialogOpen: true, pendingFiles: files });
               } else {
-                store.patch({ uploadAsGroup: false });
+                patch({ uploadAsGroup: false });
                 uploadFiles(files);
               }
             }
@@ -125,13 +119,13 @@ export function AdminPageContent() {
       <Suspense fallback={null}>
         <UploadModeDialog 
           open={uploadModeDialogOpen}
-          onOpenChange={(open) => store.patch({ uploadModeDialogOpen: open })}
+          onOpenChange={(open) => patch({ uploadModeDialogOpen: open })}
           onSelectMode={(mode) => {
             if (pendingFiles) {
-              store.patch({ uploadAsGroup: mode === 'group' });
+              patch({ uploadAsGroup: mode === 'group' });
               uploadFiles(pendingFiles);
             }
-            store.patch({ uploadModeDialogOpen: false, pendingFiles: null });
+            patch({ uploadModeDialogOpen: false, pendingFiles: null });
           }}
         />
       </Suspense>

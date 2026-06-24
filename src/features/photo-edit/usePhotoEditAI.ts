@@ -273,12 +273,6 @@ export function usePhotoEditAI() {
                   updated_at: new Date().toISOString()
                 };
               });
-
-              // Reset the form internal defaultValues to the new state so it's not "dirty" anymore,
-              // providing visual feedback that the auto-save was successful.
-              requestAnimationFrame(() => {
-                form.reset();
-              });
             } catch (saveError: unknown) {
               logger.warn('AI识别结果自动保存失败(但不影响回填):', saveError);
             }
@@ -289,7 +283,7 @@ export function usePhotoEditAI() {
         await appQuery.mutate(queryKeys.groups.all);
         
         return true;
-      }, { showSuccessToast: false, showProgress: true, rethrow: true });
+      }, { showSuccessToast: true, showProgress: true, rethrow: true });
     },
     onSuccess: () => {
       // Any final cleanup if needed

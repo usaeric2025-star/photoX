@@ -1,7 +1,7 @@
 import { db, furnitureItems } from '../../_lib/db/index.js';
 import { getR2Client } from "../storage.js";
 import { ListObjectsV2Command } from "@aws-sdk/client-s3";
-import { getServerEnv } from "../../_shared/envSchema.js";
+import { getServerEnv } from "../../../shared/envSchema.js";
 import { sql, isNotNull } from "drizzle-orm";
 
 const serverEnv = getServerEnv(process.env);

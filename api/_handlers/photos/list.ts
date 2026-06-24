@@ -2,9 +2,9 @@ import { Hono } from 'hono';
 import * as v from 'valibot';
 import { db, furnitureItems, groups as groupsTable, tags as tagsTable, photoTags, categories, vPhotosList } from '../../_lib/db/index.js';
 import { eq, ne, and, or, ilike, sql, asc, desc, inArray, isNull, count, exists, type SQL } from 'drizzle-orm';
-import { PhotoListReqSchema, ListByGroupReqSchema, PhotoListItem, PhotoListItemSchema } from '../../_shared/apiContractSchema.js';
+import { PhotoListReqSchema, ListByGroupReqSchema, PhotoListItem, PhotoListItemSchema } from '../../../shared/apiContractSchema.js';
 import { errorFactory } from '../../_lib/error/AppError.js';
-import { normalizeI18n } from '../../_shared/i18n.js';
+import { normalizeI18n } from '../../../shared/i18n.js';
 
 import { getGroupCounts } from './helpers.js';
 

@@ -7,7 +7,7 @@ import * as v from 'valibot';
 import { 
   TagSchema as ApiTagSchema, 
   DimensionSchema as ApiDimensionSchema 
-} from '../../api/_shared/apiContractSchema';
+} from '../../shared/apiContractSchema';
 
 // --- Base Types ---
 export const IdSchema = v.pipe(v.string(), v.uuid());

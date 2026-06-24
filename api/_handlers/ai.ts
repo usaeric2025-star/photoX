@@ -15,7 +15,7 @@ import {
     AIClusterPhotosReqSchema,
     ApiResponse,
     JsonObject
-} from '../_shared/apiContractSchema.js';
+} from '../../shared/apiContractSchema.js';
 import { AI_PROMPTS } from './ai/prompts.js';
 import { logger } from '../_lib/logger.js';
 

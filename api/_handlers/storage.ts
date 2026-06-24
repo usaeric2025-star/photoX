@@ -4,7 +4,7 @@ import { S3Client, PutObjectCommand, ListObjectsV2Command, DeleteObjectCommand, 
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { db, systemLogs, furnitureItems } from '../_lib/db/index.js';
 import { eq } from "drizzle-orm";
-import { getServerEnv } from "../_shared/envSchema.js";
+import { getServerEnv } from "../../shared/envSchema.js";
 import { getR2Client } from "../_lib/storage.js";
 import { requireRealUser } from "../_lib/auth.js";
 

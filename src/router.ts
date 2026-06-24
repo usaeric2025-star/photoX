@@ -1,7 +1,7 @@
 import { createRouter } from "@zoontek/chicane";
 
 export const Router = createRouter({
-  home: "/?:q&:cat&:tag[]&:sort&:view&:columns&:showGroupsCollapsed&:photoId&:modal&:groupId&:anchor",
+  home: "/?q&:cat&:tag[]&:sort&:view&:columns&:showGroupsCollapsed&:photoId&:modal&:groupId&:anchor",
   publicGroup: "/group/:slug?:q&:photoId&:modal&:groupId&:anchor",
   adminGroup: "/admin/group/:id?:q&:photoId&:modal&:groupId&:anchor",
   photo: "/photo/:photoId?:modal",

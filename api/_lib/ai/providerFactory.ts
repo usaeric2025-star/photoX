@@ -1,5 +1,5 @@
 import { decrypt } from "../encryption.js";
-import { getServerEnv } from "../../_shared/envSchema.js";
+import { getServerEnv } from "../../../shared/envSchema.js";
 import { logger } from "../logger.js";
 import { db, secrets as secretsTable, settings as settingsTable } from '../../_lib/db/index.js';
 import { eq } from "drizzle-orm";

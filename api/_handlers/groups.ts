@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import * as v from 'valibot';
 import { db, groups as groupsTable, furnitureItems } from '../_lib/db/index.js';
 import { eq, and, inArray, isNull, sql, asc } from 'drizzle-orm';
-import { GroupReqSchema } from '../_shared/apiContractSchema.js';
+import { GroupReqSchema } from '../../shared/apiContractSchema.js';
 import { AppError } from '../_lib/error/AppError.js';
 import { logger } from '../_lib/logger.js';
 import { syncGroupCoversAndCount } from '../_lib/groups.js';
