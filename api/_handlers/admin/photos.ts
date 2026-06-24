@@ -79,6 +79,24 @@ adminPhotos.get("/photo-ai-result/:photoId", async (c) => {
 
         const logRecord = rawLogs?.[0];
         if (!logRecord || !logRecord.metadata) {
+            // 3. Last fallback: Check furniture_items metadata column
+            const item = await db.query.furnitureItems.findFirst({
+                columns: { metadata: true },
+                where: eq(furnitureItems.id, photoId)
+            });
+
+            if (item?.metadata && (item.metadata as Record<string, unknown>).ai_raw) {
+                return c.json({
+                    success: true,
+                    data: {
+                        photo_id: photoId,
+                        raw_result: (item.metadata as Record<string, unknown>).ai_raw,
+                        parsed_data: null,
+                        created_at: null
+                    }
+                });
+            }
+
             return c.json({ success: true, data: null });
         }
 

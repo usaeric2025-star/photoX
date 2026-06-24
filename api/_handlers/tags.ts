@@ -102,13 +102,14 @@ export const tags = new Hono()
     const body = await c.req.json();
     const check = v.safeParse(v.object({ 
       photoId: v.string(), 
-      tagIds: v.array(v.number()),
+      tagIds: v.array(v.union([v.number(), v.string()])),
       tagWeights: v.optional(v.record(v.string(), v.number())),
       tagSources: v.optional(v.record(v.string(), v.union([v.literal('ai'), v.literal('user'), v.literal('system')])))
     }), body);
     if (!check.success) throw new Error(check.issues[0].message);
 
-    const { photoId, tagIds, tagWeights, tagSources } = check.output;
+    const { photoId, tagWeights, tagSources } = check.output;
+    const tagIds = check.output.tagIds.map(id => Number(id)).filter(id => !isNaN(id));
     try {
       // 1. Fetch current associations
       const currentAssociations = await db.select({ tagId: photoTags.tagId }).from(photoTags).where(eq(photoTags.photoId, photoId));
@@ -160,13 +161,14 @@ export const tags = new Hono()
     const body = await c.req.json();
     const check = v.safeParse(v.object({ 
       photoIds: v.array(v.string()), 
-      tagIds: v.array(v.number()),
+      tagIds: v.array(v.union([v.number(), v.string()])),
       tagWeights: v.optional(v.record(v.string(), v.number())),
       tagSources: v.optional(v.record(v.string(), v.union([v.literal('ai'), v.literal('user'), v.literal('system')])))
     }), body);
     if (!check.success) throw new Error(check.issues[0].message);
 
-    const { photoIds, tagIds, tagWeights, tagSources } = check.output;
+    const { photoIds, tagWeights, tagSources } = check.output;
+    const tagIds = check.output.tagIds.map(id => Number(id)).filter(id => !isNaN(id));
     try {
       const tagDetails = await db.select({ id: tagsTable.id, isPinned: tagsTable.isPinned }).from(tagsTable).where(inArray(tagsTable.id, tagIds));
       const tagDetailsMap = new Map(tagDetails.map(t => [t.id, t]));

@@ -1,7 +1,8 @@
 import { Photo } from '@/types';
 import { mapToDb } from '../mappers';
-import { createPhotoValidator } from '@/lib/validators/factory';
 import { api } from '@/lib/api';
+import * as v from 'valibot';
+import { PhotoSchema } from '../../../../api/_shared/apiContractSchema';
 
 export type BatchActionResult = {
   successCount: number;
@@ -18,7 +19,8 @@ export async function batchUpdate(ids: string[], initialUpdates: Partial<Photo>)
     return acc;
   }, {} as Record<string, unknown>) as Partial<Photo>;
 
-  createPhotoValidator().validate(updates);
+  // Validate updates using the shared contract (partial since it's a batch update)
+  v.parse(v.partial(PhotoSchema), updates);
 
   const dbUpdates = mapToDb(updates);
   const res = await api.photos['batch-update'].$post({

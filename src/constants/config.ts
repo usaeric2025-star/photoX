@@ -16,7 +16,7 @@ export const PHOTO_QUERY_CONFIG = {
   secondarySort: 'id',
 } as const;
 
-export const EMPTY_ARRAY: any[] = [];
+export const EMPTY_ARRAY: never[] = [];
 
 export const DB_CONFIG = {
   TABLE_NAME: 'furniture_items',

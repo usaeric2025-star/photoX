@@ -13,14 +13,14 @@ export const appQuery = {
    * Invalidate or update cache globally
    * If a functional updater is provided as the second argument, it's used directly for optimisticData
    */
-  mutate: (key: string | readonly any[], data?: any, options?: any) => {
+  mutate: (key: string | readonly unknown[], data?: unknown, options?: unknown) => {
     if (typeof data === 'function' && !options) {
-      return swrMutate(key as any, data, {
-        optimisticData: data,
+      return swrMutate(key as import('swr').Key, data, {
+        optimisticData: data as (currentData: unknown) => unknown,
         rollbackOnError: true,
       });
     }
-    return swrMutate(key as any, data, options);
+    return swrMutate(key as import('swr').Key, data, options as import('swr').MutatorOptions);
   },
 };
 
@@ -28,11 +28,11 @@ export const appQuery = {
  * Standard data fetching hook
  */
 export function useAppQuery<TData = unknown>(
-  key: string | readonly any[] | null,
-  fetcher: (args: any) => Promise<TData>,
+  key: string | readonly unknown[] | null,
+  fetcher: (...args: unknown[]) => Promise<TData>,
   options?: SWRConfiguration<TData>
 ) {
-  const result = useSWR<TData>(key as any, fetcher, {
+  const result = useSWR<TData>(key as import('swr').Key, fetcher, {
     ...options,
   });
   return { ...result, isPending: result.isLoading };

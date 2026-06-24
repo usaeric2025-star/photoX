@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Category, Tag } from '@/types';
 import { PhotoListItem } from '@/types/api';
 import { PhotoCardBase } from './PhotoCardBase';
@@ -21,7 +21,7 @@ interface AdminPhotoCardProps {
   selected?: boolean;
 }
 
-export const AdminPhotoCard = ({
+export const AdminPhotoCard = memo(({
   photo,
   onClick,
   hideDetails = false,
@@ -78,4 +78,4 @@ export const AdminPhotoCard = ({
       />
     </PhotoCardBase>
   );
-};
+});

@@ -2,16 +2,20 @@ import { perfAudit, PerfIncident } from '@/lib/perfAudit';
 
 interface PerformanceIssue {
   id: string;
+  category: string;
   severity: 'P0' | 'P1' | 'P2';
   title: string;
   description: string;
   affectedCount: number;
+  autoFixable: boolean;
+  actionName: string;
+  isClientOnly: boolean;
 }
 
 export function usePerformanceAudit() {
   const incidents = perfAudit.getIncidents();
 
-  const issues: any[] = [];
+  const issues: PerformanceIssue[] = [];
   
   // Group incidents by label
   const grouped = incidents.reduce((acc, curr) => {

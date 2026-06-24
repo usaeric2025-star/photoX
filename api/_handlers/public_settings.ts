@@ -9,28 +9,28 @@ export const publicSettings = new Hono();
 publicSettings.get("/", async (c) => {
     try {
         // Use safer query approach - if it fails, fallback to empty
-        let settingsRes: any = null;
+        let settingsRes: typeof schema.settings.$inferSelect | null = null;
         try {
             [settingsRes] = await db.select().from(schema.settings).where(eq(schema.settings.id, 1)).limit(1);
         } catch (e) {
             logger.warn("Settings table fetch failed (likely schema mismatch):", e);
         }
 
-        let manufacturersRes: any[] = [];
+        let manufacturersRes: typeof schema.manufacturers.$inferSelect[] = [];
         try {
             manufacturersRes = await db.select().from(schema.manufacturers).orderBy(schema.manufacturers.name);
         } catch (e) {
             logger.warn("Manufacturers table fetch failed (likely schema mismatch):", e);
         }
 
-        let tagsRes: any[] = [];
+        let tagsRes: typeof schema.tags.$inferSelect[] = [];
         try {
             tagsRes = await db.select().from(schema.tags);
         } catch (e) {
             logger.warn("Tags table fetch failed (likely schema mismatch):", e);
         }
         
-        let passcodeRes: any = null;
+        let passcodeRes: typeof schema.secrets.$inferSelect | null = null;
         try {
             [passcodeRes] = await db.select().from(schema.secrets).where(eq(schema.secrets.key, 'access_passcode')).limit(1);
         } catch (e) {

@@ -1,9 +1,11 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { useTaskSelector, useUI, storeAccessor } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { Icon } from '@/components/ui/Icon';
+import { Task } from '../types';
 
-function TaskItem({ task }: { task: any }) {
+function TaskItem({ task }: { task: Task }) {
   const statusBg = {
     queued: 'bg-slate-50 border-slate-100',
     processing: 'bg-blue-50/20 border-blue-100/70',
@@ -20,8 +22,10 @@ function TaskItem({ task }: { task: any }) {
     cancelled: '已取消'
   } as const;
 
-  const progress = task.state.progress !== undefined ? task.state.progress : 0;
+  const progress = task.state.status === 'processing' ? task.state.progress : 0;
   const progressPercent = Math.min(100, Math.max(0, Math.round(progress * 100)));
+
+  const message = task.state.status === 'processing' ? task.state.message : (task.state.status === 'failed' ? task.state.error : undefined);
 
   return (
     <div className={cn(
@@ -31,8 +35,8 @@ function TaskItem({ task }: { task: any }) {
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="font-bold text-slate-800 text-xs truncate uppercase tracking-tight">{task.label}</div>
-          {task.state.message && (
-            <p className="text-[10px] text-slate-500 mt-1 line-clamp-2 leading-normal">{task.state.message}</p>
+          {message && (
+            <p className="text-[10px] text-slate-500 mt-1 line-clamp-2 leading-normal">{message}</p>
           )}
         </div>
         <div className="shrink-0 flex items-center gap-1.5">
@@ -59,10 +63,7 @@ function TaskItem({ task }: { task: any }) {
           </div>
           <div className="w-full bg-slate-100 dark:bg-slate-800/50 rounded-full h-1.5 overflow-hidden">
             <div 
-              className={cn(
-                "h-1.5 rounded-full transition-all duration-300", 
-                task.state.status === 'failed' ? 'bg-red-500' : 'bg-blue-500'
-              )} 
+              className="h-1.5 rounded-full transition-all duration-300 bg-blue-500" 
               style={{ width: `${progressPercent}%` }} 
             />
           </div>
@@ -102,7 +103,7 @@ export function TaskDrawer() {
   
   if (!mounted) return null;
 
-  return (
+  return createPortal(
     <>
       {/* Backdrop overlay to prevent underlying elements from receiving outside clicks */}
       {isOpen && (
@@ -130,7 +131,7 @@ export function TaskDrawer() {
                 type="button"
                 onClick={() => {
                   const state = storeAccessor.task;
-                  const remaining = Array.from(state.tasks.values()).filter((t: any) => t.state?.status === 'pending' || t.state?.status === 'processing');
+                  const remaining = Array.from(state.tasks.values()).filter((t) => t.state?.status === 'queued' || t.state?.status === 'processing');
                   state.clearAll();
                   remaining.forEach(t => state.enqueue(t));
                 }}
@@ -167,6 +168,7 @@ export function TaskDrawer() {
           )}
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }

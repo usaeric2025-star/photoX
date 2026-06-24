@@ -2,7 +2,6 @@ import { supabase } from '@/lib/supabase';
 import { DB_CONFIG } from '@/constants/config';
 import { Photo } from '@/types';
 import { mapToDb, mapSupabasePhoto } from '../mappers';
-import { createPhotoValidator } from '@/lib/validators/factory';
 import { api } from '@/lib/api';
 import { uploadWithRetry } from '@/services/storage';
 

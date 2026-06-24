@@ -4,9 +4,9 @@ import { showToast } from '@/lib/ui/toast';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { safeAsync } from '@/lib/utils/safeAsync';
 
-interface UseFormSubmitOptions<TData, TResult> {
-  schema: v.BaseSchema<any, TData, any>;
-  mutationFn: (data: TData, signal: AbortSignal) => Promise<TResult>;
+interface UseFormSubmitOptions<T extends v.GenericSchema, TResult> {
+  schema: T;
+  mutationFn: (data: v.InferOutput<T>, signal: AbortSignal) => Promise<TResult>;
   onSuccess?: (result: TResult) => void;
   onError?: (error: string) => void;
   successMessage?: string;
@@ -14,12 +14,12 @@ interface UseFormSubmitOptions<TData, TResult> {
   keepOpen?: boolean;
   debounce?: number;
   abortable?: boolean;
-  optimisticUpdate?: (data: TData) => void;
-  rollbackOnError?: (error: unknown, data: TData) => void;
+  optimisticUpdate?: (data: v.InferOutput<T>) => void;
+  rollbackOnError?: (error: unknown, data: v.InferOutput<T>) => void;
   context?: string;
 }
 
-export function useFormSubmit<TData, TResult>({
+export function useFormSubmit<T extends v.GenericSchema, TResult>({
   schema,
   mutationFn,
   onSuccess,
@@ -32,7 +32,8 @@ export function useFormSubmit<TData, TResult>({
   optimisticUpdate,
   rollbackOnError,
   context = '表单提交',
-}: UseFormSubmitOptions<TData, TResult>) {
+}: UseFormSubmitOptions<T, TResult>) {
+  type TData = v.InferOutput<T>;
   const [state, setState] = useState({
     isLoading: false,
     isError: false,
@@ -85,12 +86,12 @@ export function useFormSubmit<TData, TResult>({
           
           if (!validationResult.success) {
             const firstIssue = validationResult.issues[0];
-            const msg = firstIssue ? `字段 [${firstIssue.path?.map((p: any) => p.key).join('.')}] 验证失败: ${firstIssue.message}` : '输入数据验证失败';
+            const msg = firstIssue ? `字段 [${firstIssue.path?.map((p) => String(p.key)).join('.')}] 验证失败: ${firstIssue.message}` : '输入数据验证失败';
             showToast.error(msg);
             
             let newFieldErrors: Record<string, string> = {};
             for (const issue of validationResult.issues) {
-              const path = issue.path?.map((p: any) => p.key).join('.') || 'root';
+              const path = issue.path?.map((p) => String(p.key)).join('.') || 'root';
               newFieldErrors[path] = issue.message;
             }
 
@@ -99,7 +100,7 @@ export function useFormSubmit<TData, TResult>({
             return resolve(false);
           }
 
-          const data = validationResult.output;
+          const data = validationResult.output as TData;
 
           // 2. Optimistic Update
           if (optimisticUpdate) {

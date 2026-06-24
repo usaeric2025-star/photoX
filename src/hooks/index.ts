@@ -12,7 +12,7 @@ export * from './settings';
 export { useFilters } from './useFilters';
 export { useUI } from '@/lib/store';
 export type { UIStoreState } from '@/lib/store';
-export { useColumns } from '../features/layout/hooks/useColumns';
+export { useColumns } from './useColumns';
 export { useSearchTransition } from './ui/useSearchTransition';
 
 

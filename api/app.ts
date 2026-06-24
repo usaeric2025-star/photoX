@@ -21,7 +21,7 @@ app.use('*', cors());
 app.get('/health', (c) => c.json({ success: true, status: 'ok' }));
 
 // 全域中間件（含錯誤處理、Auth、Materialized View 刷新）
-setupMiddlewares(app, serverEnv as any);
+setupMiddlewares(app, { NODE_ENV: serverEnv.NODE_ENV });
 
 // --- API Routes (Distributed) ---
 app.route('/admin', adminApp);
@@ -41,7 +41,7 @@ app.get('/download', async (c) => {
         if (!url) return c.text('Missing url parameter', 400);
 
         const resp = await fetch(url);
-        if (!resp.ok) return c.text('Failed to fetch image', resp.status as any);
+        if (!resp.ok) return c.text('Failed to fetch image', { status: (resp.status >= 400 && resp.status < 600 ? resp.status : 500) as import('hono/utils/http-status').ContentfulStatusCode });
 
         const buffer = await resp.arrayBuffer();
         const contentType = resp.headers.get('content-type') || 'application/octet-stream';

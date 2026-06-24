@@ -27,7 +27,7 @@ interface SelectionToolbarProps {
   totalItems?: number;
   allIds?: string[];
   className?: string;
-  allPhotos?: Record<string, unknown>[];
+  allPhotos?: import('@/types/api').PhotoListItem[] | Photo[];
   groupId?: string;
 }
 
@@ -89,7 +89,7 @@ export const SelectionToolbar = memo(function SelectionToolbar({
     if (selectedCount === 0 || isAnyPending) return;
     try {
       setIsAiPending(true);
-      await handleBatchAiAnalyze(selectedPhotos, groupId);
+      await handleBatchAiAnalyze(selectedPhotos as import('@/types').Photo[], groupId);
     } finally {
       setIsAiPending(false);
     }

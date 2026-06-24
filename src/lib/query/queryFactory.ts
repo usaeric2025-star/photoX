@@ -10,8 +10,8 @@ export function createQuery<TData, TVariables = void>(config: {
   queryKey: (variables: TVariables) => readonly unknown[];
   queryFn: (variables: TVariables, signal?: AbortSignal) => Promise<TData>;
   staleTime?: number;
-  schema?: v.BaseSchema<any, TData, any>;
-  variablesSchema?: v.BaseSchema<any, TVariables, any>;
+  schema?: v.BaseSchema<unknown, TData, v.BaseIssue<unknown>>;
+  variablesSchema?: v.BaseSchema<unknown, TVariables, v.BaseIssue<unknown>>;
 }) {
   return function useStandardQuery(variables: TVariables, options?: SWRConfiguration<TData>) {
     const key = config.queryKey(variables);
@@ -45,7 +45,7 @@ export function createQuery<TData, TVariables = void>(config: {
   };
 }
 
-export function createInfiniteQuery<TData, TVariables = unknown, TPageParam = any>(config: {
+export function createInfiniteQuery<TData, TVariables = unknown, TPageParam = unknown>(config: {
   queryKey: (variables: TVariables) => readonly unknown[];
   queryFn: (variables: TVariables, pageParam: TPageParam, signal?: AbortSignal) => Promise<TData>;
   getNextPageParam: (lastPage: TData, allPages: TData[]) => TPageParam | null | undefined;

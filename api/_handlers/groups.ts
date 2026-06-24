@@ -64,7 +64,7 @@ export const groups = new Hono()
             updatedAt: new Date()
         };
 
-        const [data] = await db.insert(groupsTable).values([insertData as any]).returning();
+        const [data] = await db.insert(groupsTable).values([insertData as unknown as typeof groupsTable.$inferInsert]).returning();
         return c.json({ success: true, data });
     } catch (error: unknown) {
         const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
@@ -169,7 +169,7 @@ export const groups = new Hono()
           targetGroupId: v.string(),
           userId: v.string(),
           photoIds: v.optional(v.array(v.string())),
-          groupData: v.record(v.string(), v.any()),
+          groupData: v.record(v.string(), v.unknown()),
           sourceGroupIds: v.optional(v.array(v.string())),
           ungroupedValidIds: v.optional(v.array(v.string()))
       }), body);
@@ -183,8 +183,8 @@ export const groups = new Hono()
       } = check.output;
       
       // Ensure groupData has the id aligned with targetGroupId to satisfy TS and db
-      const mergedGroupData = { ...(groupData as any), id: targetGroupId };
-      delete (mergedGroupData as any).member_count;
+      const mergedGroupData = { ...(groupData as Record<string, unknown>), id: targetGroupId };
+      delete (mergedGroupData as Record<string, unknown>).member_count;
       
       try {
           // Optimize: Compute sourceGroupIds and ungroupedValidIds directly on the server
@@ -230,20 +230,20 @@ export const groups = new Hono()
                 userId: finalUserId,
                 createdAt: new Date(),
                 updatedAt: new Date(),
-                status: ((groupDataWithoutId as any).status) || 'confirmed',
-                name: ((groupDataWithoutId as any).name) || { zh: '' },
-                description: ((groupDataWithoutId as any).description) || null,
-                coverPhotoId: ((groupDataWithoutId as any).cover_photo_id) || null,
+                status: ((groupDataWithoutId as Record<string, unknown>).status as string) || 'confirmed',
+                name: ((groupDataWithoutId as Record<string, unknown>).name as { zh: string }) || { zh: '' },
+                description: ((groupDataWithoutId as Record<string, unknown>).description as string) || null,
+                coverPhotoId: ((groupDataWithoutId as Record<string, unknown>).cover_photo_id as string) || null,
             };
 
-            await db.insert(groupsTable).values([groupDataToInsert as any]);
+            await db.insert(groupsTable).values([groupDataToInsert as unknown as typeof groupsTable.$inferInsert]);
           } else {
             const { id: _, ...groupDataWithoutId } = mergedGroupData;
             const updatePayload: Record<string, unknown> = { updatedAt: new Date() };
-            if ((groupDataWithoutId as any).name) updatePayload.name = (groupDataWithoutId as any).name;
-            if ((groupDataWithoutId as any).description !== undefined) updatePayload.description = (groupDataWithoutId as any).description;
-            if ((groupDataWithoutId as any).status) updatePayload.status = (groupDataWithoutId as any).status;
-            if ((groupDataWithoutId as any).cover_photo_id !== undefined) updatePayload.coverPhotoId = (groupDataWithoutId as any).cover_photo_id;
+            if ((groupDataWithoutId as Record<string, unknown>).name) updatePayload.name = (groupDataWithoutId as Record<string, unknown>).name;
+            if ((groupDataWithoutId as Record<string, unknown>).description !== undefined) updatePayload.description = (groupDataWithoutId as Record<string, unknown>).description;
+            if ((groupDataWithoutId as Record<string, unknown>).status) updatePayload.status = (groupDataWithoutId as Record<string, unknown>).status;
+            if ((groupDataWithoutId as Record<string, unknown>).cover_photo_id !== undefined) updatePayload.coverPhotoId = (groupDataWithoutId as Record<string, unknown>).cover_photo_id;
 
             await db.update(groupsTable)
                 .set(updatePayload)

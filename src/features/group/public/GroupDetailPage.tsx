@@ -1,18 +1,18 @@
 import React, { useRef } from 'react';
 import { useAppRouter } from '@/lib/router/useAppRouter';
-import { useGroupData } from '../shared/hooks/useGroupData';
+import { useGroupData } from '../hooks/useGroupData';
 import { PhotoListItem } from '@/types/api';
 import { Photo, Group, Category } from '@/types';
 import { PublicPhotoCard } from '@/components/photo/PublicPhotoCard';
 import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
 import { useFilters, useTranslation, useCategories } from '@/hooks';
-import { GroupHeader } from '../shared/components/GroupHeader';
+import { GroupHeader } from '../components/GroupHeader';
 import { Button } from '@/components/shared/Button';
 import { useUI, UIStoreState } from '@/lib/store';
 import { useUIStore } from '@/store/uiStore';
 import { usePublicSettings } from '@/hooks/settings/useSettings';
 import { WhatsAppDialog } from '@/components/shared/WhatsAppDialog';
-import { useColumns } from '@/features/layout/hooks/useColumns';
+import { useColumns } from '@/hooks';
 import { FilterBar } from '@/features/filter/FilterBar';
 
 function PublicPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string, index: number) => void }) {

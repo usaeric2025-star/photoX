@@ -25,6 +25,7 @@ interface PhotoAnalysisResponse {
   dimensions?: Dimension[];
   tagNames?: string[];
   tagIds?: string[];
+  raw_result?: string;
 }
 
 export const analyzeAndSavePhoto = async (
@@ -51,7 +52,8 @@ export const analyzeAndSavePhoto = async (
       dimensions: analysisData.dimensions || [],
       metadata: {
         ...(photo.metadata as Record<string, unknown> || {}),
-        ai_updated_at: new Date().toISOString()
+        ai_updated_at: new Date().toISOString(),
+        ai_raw: analysisData.raw_result || null
       }
     });
 

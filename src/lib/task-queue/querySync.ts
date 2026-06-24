@@ -23,8 +23,8 @@ export function setupQuerySync(): () => void {
         if (task.meta?.photoId) {
           appQuery.mutate(
             ['photos', 'detail', task.meta.photoId],
-            (old: any) => ({
-              ...old,
+            (old: unknown) => ({
+              ...(old && typeof old === 'object' ? old : {}),
               aiTags: (task.state as { status: 'completed'; result?: { tags: string[] } }).result?.tags,
             }),
             { revalidate: false }

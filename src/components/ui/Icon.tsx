@@ -36,7 +36,7 @@ export const Icon = ({
 
   return (
     <LucideIconBase 
-      name={name.toLowerCase() as any} 
+      name={name.toLowerCase() as React.ComponentProps<typeof LucideIconBase>['name']} 
       size={size} 
       className={cn(className, solid ? 'fill-current' : '')}
       strokeWidth={strokeWidth}

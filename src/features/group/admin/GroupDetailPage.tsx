@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAppRouter } from '@/lib/router/useAppRouter';
-import { useGroupData } from '../shared/hooks/useGroupData';
+import { useGroupData } from '../hooks/useGroupData';
 import { PhotoListItem } from '@/types/api';
 import { Photo, Group, ProductGroup, Dimension, Category } from '@/types';
 import { AdminPhotoCard } from '@/components/photo/AdminPhotoCard';
@@ -18,9 +18,9 @@ import { translations } from '@/locales';
 import { GroupSettingsDialog } from '@/components/groups/GroupSettingsDialog';
 import { useGroupDraft } from '@/components/groups/useGroupDraft';
 import { useGroupMutations } from '@/hooks/groups/useGroupMutations';
-import { GroupHeader } from '../shared/components/GroupHeader';
+import { GroupHeader } from '../components/GroupHeader';
 import { Button } from '@/components/shared/Button';
-import { useColumns } from '@/features/layout/hooks/useColumns';
+import { useColumns } from '@/hooks';
 import { FilterBar } from '@/features/filter/FilterBar';
 
 function AdminPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string, index: number) => void }) {
@@ -171,7 +171,7 @@ export function AdminGroupDetailPage() {
         <SelectionToolbar
           totalItems={photos?.length}
           allIds={photos?.map((p) => p.id)}
-          allPhotos={photos as any}
+          allPhotos={photos}
           groupId={groupId || undefined}
         />
 
@@ -179,13 +179,13 @@ export function AdminGroupDetailPage() {
           <GroupSettingsDialog
             showGroupSettings={showAdminTools}
             setShowGroupSettings={setShowAdminTools}
-            activeGroupId={(groupId as any) || null}
+            activeGroupId={groupId || null}
             groupData={groupData}
             setGroupData={setGroupData}
             handleUpdateGroupData={handleUpdateGroupData}
             onUngroup={async (id) => await dissolve.mutateAsync(id)}
             update={async (updates) => { if (groupId) await update.mutateAsync({ id: groupId, updates }); }}
-            t={(key: string) => (t as any)[key] || key}
+            t={(key: string) => String((t as Record<string, unknown>)[key] || key)}
           />
         )}
       </div>

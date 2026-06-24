@@ -1,5 +1,6 @@
 import { useAppRoute } from "@/router";
 import { lazy, Suspense } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import PublicPage from "@/pages/PublicPage";
 import AdminPage from "@/pages/AdminPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
@@ -57,9 +58,20 @@ export function RouterOrchestrator() {
 
   return (
     <>
-      <Suspense fallback={<LoadingScreen />}>
-        {getPage()}
-      </Suspense>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={route?.name || 'loading'}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="flex-1 flex flex-col h-full w-full"
+        >
+          <Suspense fallback={<LoadingScreen />}>
+            {getPage()}
+          </Suspense>
+        </motion.div>
+      </AnimatePresence>
       <DialogContainer />
     </>
   );

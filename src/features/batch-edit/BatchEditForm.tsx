@@ -23,7 +23,7 @@ const defaultForm: PhotoEditFormData = {
   note: null,
   manual_code: null,
   model_number: null,
-  dimensions: {},
+  dimensions: [],
   is_hidden: false,
   tags: []
 };

@@ -53,7 +53,7 @@ export function GroupHeader({ group, photoCount, isAdmin, onEditSettings, onUpda
   const { enable, disable } = usePhotoSelection();
   const isMultiSelect = useUI(s => s.isMultiSelect);
 
-  const { submit: updateTitle, isLoading: isUpdating, fieldErrors, clearFieldError } = useFormSubmit({
+  const { submit: updateTitle, isLoading: isUpdating, fieldErrors, clearFieldError } = useFormSubmit<typeof GroupTitleSchema, boolean>({
     schema: GroupTitleSchema,
     mutationFn: async ({ title }) => {
       if (onUpdateTitle) {

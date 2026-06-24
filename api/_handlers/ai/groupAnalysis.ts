@@ -92,7 +92,7 @@ export async function processGroupAnalysis(photoIds: string[]) {
         return parsed.output;
       }
       
-      lastError = parsed.issues.map(i => `${i.path?.map((p: any) => p.key).join('.')}: ${i.message}`).join('; ');
+      lastError = parsed.issues.map(i => `${i.path?.map((p: { key: unknown }) => String(p.key)).join('.')}: ${i.message}`).join('; ');
       console.warn(`[AI] 格式錯誤，第 ${attempt + 1} 次重試`, lastError);
       
       // 重試時附帶錯誤反饋

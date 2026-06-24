@@ -2,8 +2,10 @@ import React from 'react';
 import { usePhotoGrid } from '@/hooks/photo/usePhotoGrid';
 import { PhotoGridContent } from './PhotoGridContent';
 
+import type { PhotoListItem } from '@/types/api';
+
 interface PublicPhotoGridProps {
-  photos: any[];
+  photos: PhotoListItem[];
   dataVersion: string;
   isPending: boolean;
   isFetching: boolean;
@@ -11,8 +13,8 @@ interface PublicPhotoGridProps {
   hasNextPage: boolean;
   fetchNextPage: () => void;
   columns: number;
-  filters: any;
-  gridRef?: React.Ref<any>;
+  filters: Record<string, unknown>;
+  gridRef?: React.Ref<import('virtua').VListHandle>;
   onScroll?: (offset: number) => void;
   onPhotoClick?: (id: string, index: number, e?: React.MouseEvent) => void;
 }

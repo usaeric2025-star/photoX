@@ -2,6 +2,21 @@ import { logger } from '../_lib/logger.js';
 import * as v from 'valibot';
 
 /**
+ * [ENV-SCHEMA-DEFINED] Client-side Environment Schema
+ * Represents variables available via import('meta').env
+ */
+export const clientEnvSchema = v.object({
+  "VITE_SUPABASE_URL": v.optional(v.string()),
+  "VITE_SUPABASE_ANON_KEY": v.optional(v.string()),
+  "VITE_SENTRY_DSN": v.optional(v.string()),
+  "VITE_WHATSAPP_NUMBER": v.optional(v.string()),
+  "VITE_THUMBNAIL_WORKER_URL": v.optional(v.string()),
+  "MODE": v.optional(v.string()),
+  "DEV": v.optional(v.boolean()),
+  "PROD": v.optional(v.boolean())
+});
+
+/**
  * [ENV-SCHEMA-DEFINED] Server-side Environment Schema
  * Represents variables available via process.env
  */

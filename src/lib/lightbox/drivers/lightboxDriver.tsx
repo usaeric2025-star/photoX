@@ -1,6 +1,6 @@
 import React from 'react';
 import { LightboxStyled as LightboxStyledBase } from '@mshafiqyajid/react-lightbox/styled';
-const LightboxStyled = LightboxStyledBase as any;
+const LightboxStyled = LightboxStyledBase as React.ElementType;
 import '@mshafiqyajid/react-lightbox/styles.css';
 
 import type { LightboxState, LightboxSlide } from '../types';

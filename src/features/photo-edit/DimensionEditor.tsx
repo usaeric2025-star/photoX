@@ -52,7 +52,7 @@ export function DimensionEditor({
 
   const handleUnitChange = (idx: number, u: string) => {
     const newDims = [...displayDims];
-    newDims[idx].unit = u as any;
+    newDims[idx].unit = u as 'cm' | 'inch' | 'mm';
     newDims[idx].is_ai = false;
     onChange(newDims);
   };

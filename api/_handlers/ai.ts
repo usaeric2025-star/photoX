@@ -113,9 +113,9 @@ ai.post("/analyze", async (c) => {
         if (!finalImageUrl) throw new Error("Image URL is required for analysis");
 
         // Use safer query approach - select only what we need and handle errors per-table
-        let catRef: { id: string; nameZh: string }[] = [];
-        let tagRef: { id: string | number; name: string; aliases?: string[] }[] = [];
-        let groupRef: { id: string; name: unknown; status: string; createdAt: Date | null }[] = [];
+        let catRef: { id: number; nameZh: string | null }[] = [];
+        let tagRef: { id: string | number; name: string | null; aliases?: string[] | null }[] = [];
+        let groupRef: { id: string; name: unknown; status: string | null; createdAt: Date | null }[] = [];
 
         try {
             const [c, t, g] = await Promise.all([
@@ -127,9 +127,9 @@ ai.post("/analyze", async (c) => {
                   .orderBy(desc(groupsTable.createdAt))
                   .limit(40),
             ]);
-            catRef = c as any;
-            tagRef = t as any;
-            groupRef = g as any;
+            catRef = c;
+            tagRef = t;
+            groupRef = g;
         } catch (err: unknown) {
             logger.warn("AI Analyze: Background context fetch failed partially:", err);
             // Continue with whatever we managed to fetch (empty arrays if everything failed)
@@ -293,11 +293,11 @@ ai.post("/cluster-photos", async (c) => {
 
             const [groupData] = await db.insert(groupsTable).values([{
                 id: groupId,
-                name: { zh: g.name } as any,
-                status: 'confirmed' as any,
+                name: { zh: g.name },
+                status: 'confirmed',
                 userId: finalUserId,
                 createdAt: new Date()
-            } as any]).returning();
+            } as unknown as typeof groupsTable.$inferInsert]).returning();
 
             await db.update(furnitureItems)
                 .set({ groupId: groupId })

@@ -29,7 +29,7 @@ export function cleanTranslationPrefixes(str: string): string {
  */
 export function getSafeText(field: unknown, locale: string = 'zh'): string {
   if (!field) return '';
-  let data: any = field; // Internal state can be any for complex parsing logic, but param is unknown
+  let data: unknown = field; 
 
   // Keep parsing if it's a string representing JSON (handle nested stringified JSON too!)
   let parsedCount = 0;
@@ -41,7 +41,7 @@ export function getSafeText(field: unknown, locale: string = 'zh'): string {
         let cleanStr = trimmed;
         if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
           try {
-            cleanStr = JSON.parse(trimmed); // Unescape the wrapper string
+            cleanStr = JSON.parse(trimmed) as string; // Unescape the wrapper string
           } catch (e) {
             // Strip outer quotes manually if JSON.parse fails on wrapper
             cleanStr = trimmed.slice(1, -1);
@@ -84,11 +84,12 @@ export function getSafeText(field: unknown, locale: string = 'zh'): string {
   }
   
   if (data && typeof data === 'object') {
+    const obj = data as Record<string, unknown>;
     // Check direct locale entry
-    let val = data[locale];
+    let val = obj[locale];
     if (val === undefined || val === null) {
       // Fallback order: zh -> en -> ms -> name
-      val = data.zh || data.en || data.ms || data.name;
+      val = obj.zh || obj.en || obj.ms || obj.name;
     }
     
     // If nested under translation objects, recurse once

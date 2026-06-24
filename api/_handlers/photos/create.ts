@@ -4,7 +4,7 @@ import { syncGroupCoversAndCount } from '../../_lib/groups.js';
 
 export const createHandler = (app: Hono) => {
   app.post('/upsert', async (c) => {
-    const { payload } = await c.req.json() as { payload: Record<string, any> };
+    const { payload } = await c.req.json() as { payload: Record<string, unknown> };
 
     const crypto = await import('node:crypto');
     // Ensure ID exists
@@ -19,7 +19,7 @@ export const createHandler = (app: Hono) => {
     }
 
     try {
-        const mappedPayload: any = {};
+        const mappedPayload: Record<string, unknown> = {};
         const fieldMap: Record<string, string> = {
             id: 'id',
             user_id: 'userId',
@@ -53,10 +53,10 @@ export const createHandler = (app: Hono) => {
         }
 
         const results = await db.insert(furnitureItems)
-            .values([mappedPayload])
+            .values([mappedPayload as typeof furnitureItems.$inferInsert])
             .onConflictDoUpdate({
                 target: furnitureItems.id,
-                set: mappedPayload
+                set: mappedPayload as typeof furnitureItems.$inferInsert
             })
             .returning({ id: furnitureItems.id });
 

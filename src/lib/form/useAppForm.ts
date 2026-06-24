@@ -1,16 +1,17 @@
-import { useForm, FormApi } from '@tanstack/react-form';
+import { useForm } from '@tanstack/react-form';
 import { valibotValidator } from '@tanstack/valibot-form-adapter';
 import * as v from 'valibot';
 import React from 'react';
+import { showToast } from '@/lib/ui/toast';
 
-interface UseAppFormOptions<T extends v.BaseSchema<any, any, any>> {
+interface UseAppFormOptions<T extends v.GenericSchema> {
   schema: T;
   defaultValues: v.InferInput<T>;
   onSubmit: (data: v.InferOutput<T>) => Promise<void> | void;
   onValueChange?: (data: v.InferOutput<T>) => void;
 }
 
-export function useAppForm<T extends v.BaseSchema<any, any, any>>({
+export function useAppForm<T extends v.GenericSchema>({
   schema,
   defaultValues,
   onSubmit,
@@ -19,7 +20,7 @@ export function useAppForm<T extends v.BaseSchema<any, any, any>>({
   const form = useForm({
     defaultValues,
     validators: {
-      onChange: valibotValidator(schema as any),
+      onChange: valibotValidator(schema as never),
     },
     onSubmit: async ({ value }) => {
       await onSubmit(value as v.InferOutput<T>);
@@ -33,7 +34,7 @@ export function useAppForm<T extends v.BaseSchema<any, any, any>>({
 
   // Watch for value changes and trigger callback
   React.useEffect(() => {
-    const unsubscribe: any = form.store.subscribe((state: any) => {
+    const unsubscribe = form.store.subscribe((state) => {
       if (onValueChange) {
         onValueChange(state.values as v.InferOutput<T>);
       }
@@ -41,18 +42,28 @@ export function useAppForm<T extends v.BaseSchema<any, any, any>>({
     
     return () => {
       if (typeof unsubscribe === 'function') {
-        unsubscribe();
-      } else if (unsubscribe && typeof unsubscribe.unsubscribe === 'function') {
-        unsubscribe.unsubscribe();
+        (unsubscribe as () => void)();
       }
     };
   }, [form, onValueChange]);
 
+  const submitWithValidation = async () => {
+    // Manual validation with Valibot to trigger Toast
+    const check = v.safeParse(schema, form.state.values);
+    if (!check.success) {
+      showToast.error('請檢查表單欄位，紅框標記處為必填或格式不正確');
+      // Still trigger form's own validation to update UI (show red borders etc)
+      await form.validateAllFields('submit');
+      return;
+    }
+    return await form.handleSubmit();
+  };
+
   return {
     form,
     // Alias to maintain compatibility during migration
-    updateInput: (path: string[], value: any) => form.setFieldValue(path.join('.') as any, value),
-    submit: form.handleSubmit,
+    updateInput: (path: string[], value: unknown) => form.setFieldValue(path.join('.') as never, value as never),
+    submit: submitWithValidation,
   };
 }
 

@@ -31,7 +31,7 @@ export function AdminPhotoGrid({
   filters,
   onPhotoClick
 }: AdminPhotoGridProps) {
-  const { isMultiSelect } = useUI();
+  const isMultiSelect = useUI(s => s.isMultiSelect);
   
   const allIds = React.useMemo(() => photos.map(p => p.id), [photos]);
 

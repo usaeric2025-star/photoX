@@ -20,7 +20,7 @@ const StatCard = ({ title, value, subValue, icon: iconName, colorClass, delay = 
     style={{ animationDelay: `${delay}s`, animationFillMode: 'both' }}
   >
     <div className={`w-10 h-10 rounded-xl ${colorClass} flex items-center justify-center mb-1`}>
-      <Icon name={iconName as any} size={20} />
+      <Icon name={iconName as React.ComponentProps<typeof Icon>["name"]} size={20} />
     </div>
     <div className="space-y-1">
       <p className="text-[10px] font-black text-brand-navy/30 uppercase tracking-[0.2em]">{title}</p>

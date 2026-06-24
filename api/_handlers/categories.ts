@@ -38,7 +38,7 @@ export const categories = new Hono()
           .orderBy(asc(categoriesTable.sortOrder));
 
       // Transform to frontend format: { id, name, code, zh, en, ms, sort_order }
-      const formatted: any[] = data.map((item) => ({
+      const formatted = data.map((item) => ({
           id: item.id,
           name: item.name_zh || '',
           zh: item.name_zh || '',
@@ -48,7 +48,7 @@ export const categories = new Hono()
           sort_order: item.sort_order || 0,
       }));
 
-      categoriesCache = formatted as any;
+      categoriesCache = formatted;
       cacheTime = now;
       return c.json({ success: true, data: formatted });
     } catch (error: unknown) {
@@ -119,7 +119,7 @@ export const categories = new Hono()
 
       const [data] = await db
           .insert(categoriesTable)
-          .values([mappedData as any])
+          .values([mappedData as typeof categoriesTable.$inferInsert])
           .returning();
       
       categoriesCache = null; // Clear cache

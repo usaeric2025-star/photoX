@@ -4,23 +4,19 @@
  */
 
 import * as v from 'valibot';
+import { 
+  TagSchema as ApiTagSchema, 
+  DimensionSchema as ApiDimensionSchema 
+} from '../../api/_shared/apiContractSchema';
 
 // --- Base Types ---
 export const IdSchema = v.pipe(v.string(), v.uuid());
 
-export const JsonObjectSchema = v.record(v.string(), v.any());
+export const JsonObjectSchema = v.record(v.string(), v.unknown());
 
-// --- Sub-types ---
-export const TagSchema = v.object({
-  id: v.string(),
-  name: v.string(),
-  aliases: v.optional(v.array(v.string())),
-});
-
-export const DimensionSchema = v.object({
-  width: v.number(),
-  height: v.number(),
-});
+// --- Sub-types (re-using API contract) ---
+export const TagSchema = ApiTagSchema;
+export const DimensionSchema = ApiDimensionSchema;
 
 // --- API Types ---
 export const MergeGroupsRequestSchema = v.object({

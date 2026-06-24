@@ -52,7 +52,7 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
 
   // 2. Admin Login Submission
   const { submit: submitAdmin, isLoading: isAdminLoggingIn } = useFormSubmit({
-    schema: v.any(),
+    schema: v.unknown(),
     mutationFn: async () => {
       await signIn();
       return true;

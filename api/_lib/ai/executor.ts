@@ -69,6 +69,7 @@ export const saveAIAuditLog = async (data: AIAuditData): Promise<void> => {
         costEst: data.cost_est ? String(data.cost_est) : "0",
         tokenUsage: data.token_usage || null,
         status: data.status,
+        errorMessage: data.errorMessage || null,
         createdAt: new Date()
       });
       logger.info(`[AIAudit] Successfully saved AI audit log for ${data.photoId || 'global'}`);
@@ -90,6 +91,7 @@ export const saveAIAuditLog = async (data: AIAuditData): Promise<void> => {
           costEst: data.cost_est ? String(data.cost_est) : "0",
           tokenUsage: data.token_usage || null,
           status: data.status,
+          errorMessage: data.errorMessage || null,
           createdAt: new Date()
         });
         logger.info(`[AIAudit] Successfully saved fallback AI audit log (avoided FK constraint) for ${data.photoId}`);

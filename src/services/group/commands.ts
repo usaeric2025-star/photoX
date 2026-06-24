@@ -2,7 +2,8 @@ import { generateId } from '@/lib/id';
 import { supabase } from '../../lib/supabase';
 import { DB_CONFIG } from '../../constants/config';
 import { ProductGroup } from '../../types';
-import { createGroupValidator } from '../../lib/validators/factory';
+import * as v from 'valibot';
+import { GroupReqSchema } from '../../../api/_shared/apiContractSchema';
 import { cleanTranslationPrefixes } from '@/features/ai/safeText';
 import { ungroupPhotos, syncGroupMemberCount } from '@/services/photo/groupUtils';
 import { api } from '@/lib/api';
@@ -46,8 +47,7 @@ const getCurrentUserId = async (): Promise<string | undefined> => {
 };
 
 export async function createGroup(data: ProductGroup): Promise<ProductGroup> {
-  const validator = createGroupValidator();
-  validator.validate(data);
+  v.parse(v.partial(GroupReqSchema), data);
 
   const userId = await getCurrentUserId();
   const dbData = mapToDb(data as unknown as Record<string, unknown>, userId);
@@ -61,8 +61,7 @@ export async function createGroup(data: ProductGroup): Promise<ProductGroup> {
 }
 
 export async function updateGroup(id: string, updates: Partial<ProductGroup>): Promise<ProductGroup> {
-  const validator = createGroupValidator();
-  validator.validate({ ...updates, id } as Partial<ProductGroup>);
+  v.parse(v.partial(GroupReqSchema), { ...updates, id });
 
   const userId = await getCurrentUserId();
   const dbUpdates = mapToDb(updates as unknown as Record<string, unknown>, userId);

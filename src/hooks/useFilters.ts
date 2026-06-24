@@ -9,7 +9,7 @@ export interface UseFiltersOptions {
 
 export const useFilters = (options: UseFiltersOptions = {}) => {
   const route = useAppRoute();
-  const params = route ? (route.params as any) : {};
+  const params = route ? (route.params as Record<string, unknown>) : {};
 
   const updateSearch = useCallback((updates: Record<string, unknown>) => {
     console.log("updateSearch called", { updates, route });
@@ -19,7 +19,7 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
     }
     const currentRouteName = route.name;
 
-    const cleanParams: Record<string, any> = {};
+    const cleanParams: Record<string, unknown> = {};
     for (const key in route.params) {
       if (key !== '~internal' && key !== 'href') {
         cleanParams[key] = (route.params as Record<string, unknown>)[key];
@@ -40,12 +40,12 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
     }
 
     console.log("Pushing to Router", { currentRouteName, merged });
-    // We can cast merged to any because params are mostly optional string|string[]
-    Router.push(currentRouteName as any, merged);
+    // We can cast merged to Record<string, unknown> because params are mostly optional string|string[]
+    Router.push(currentRouteName as never, merged);
   }, [route]);
 
   // Expose batch update capability
-  const updateFilters = useCallback((updates: Record<string, any>) => {
+  const updateFilters = useCallback((updates: Record<string, unknown>) => {
     updateSearch(updates);
   }, [updateSearch]);
 

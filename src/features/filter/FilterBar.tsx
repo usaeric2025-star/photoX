@@ -4,7 +4,7 @@ import { SearchInput } from './SearchInput';
 import { SortToggle } from './SortToggle';
 import { CategoryGrid } from './CategoryGrid';
 import { TagGrid } from './TagGrid';
-import { ColumnsToggle } from '@/features/layout/components/ColumnsToggle';
+import { ColumnsToggle } from '@/components/layout/ColumnsToggle';
 import { GroupToggle } from '@/components/ui/GroupToggle';
 import { useFilters } from '@/hooks/useFilters';
 import { cn } from '@/lib/utils';

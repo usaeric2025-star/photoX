@@ -42,11 +42,13 @@ export function useTaskExecutor() {
         type: (name.includes('识别') || name.toLowerCase().includes('analy')) ? 'ai-analyze' : 'sync',
         label: name,
         createdAt: Date.now(),
-        state: { status: 'pending' },
+        state: { status: 'queued' },
         execute: async () => {}, // dummy
-        jobId: options?.jobId,
-        issueId: options?.issueId
-      } as any);
+        meta: {
+          jobId: options?.jobId,
+          issueId: options?.issueId
+        }
+      });
       startTask(taskId);
     }
 

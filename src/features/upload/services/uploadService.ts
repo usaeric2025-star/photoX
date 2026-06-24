@@ -1,5 +1,4 @@
 import { uploadSinglePhoto } from './upload/uploadOrchestrator';
-import { StandardError } from '@/lib/validators/protocol';
 import { Photo } from '@/types';
 import { extractErrorMessage } from '@/lib/error';
 

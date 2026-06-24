@@ -59,8 +59,8 @@ export function setupMiddlewares(app: Hono, serverEnv: { NODE_ENV: string | unde
         logToDb().catch(err => console.error('Failed in logToDb fallback:', err));
     }
   
-    const status = ((err as any).status || 500);
-    return c.json(errorFactory.fail(appError), (status as any));
+    const status = (typeof err === 'object' && err && 'status' in err ? err.status : 500) as number;
+    return c.json(errorFactory.fail(appError), { status: status as import('hono/utils/http-status').ContentfulStatusCode });
   });
 
   // Auth Middleware for Administrative Routes

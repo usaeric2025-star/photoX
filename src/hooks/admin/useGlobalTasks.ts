@@ -47,7 +47,7 @@ export function useGlobalTasks() {
       refreshInterval: (rJobs) => {
         if (!isAdmin) return 0;
         if (typeof document !== 'undefined' && document.hidden) return 0;
-        const hasRunning = Array.isArray(rJobs) && (rJobs as any[]).some(job => job && job.status === 'processing');
+        const hasRunning = Array.isArray(rJobs) && (rJobs as { status?: string }[]).some(job => job && job.status === 'processing');
         const isStatusScreen = typeof routeName === 'string' && ['adminTasks', 'adminDiagnostics', 'adminDiagnosticsLogs'].includes(routeName);
         return (hasRunning || isStatusScreen) ? 5000 : 0;
       },
@@ -69,8 +69,8 @@ export function useGlobalTasks() {
       source: 'session', 
       title: zt.label,
       status,
-      progress: (zt.state as any).progress || 0,
-      message: (zt.state as any).message || (zt.state.status === 'failed' ? zt.state.error : ''),
+      progress: (zt.state as { progress?: number }).progress || 0,
+      message: (zt.state as { message?: string }).message || (zt.state.status === 'failed' ? zt.state.error : ''),
       createdAt: zt.createdAt,
     });
   });

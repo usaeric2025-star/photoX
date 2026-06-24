@@ -121,8 +121,8 @@ export function CategoriesSection({
   const [isAddOpen, addDialog] = useDisclosure(false);
 
   const { submit: runUpdateCategory, fieldErrors: updateFieldErrors, clearFieldError: updateClearFieldError } = useFormSubmit({
-    schema: v.object({ id: v.string(), updates: v.any() }),
-    mutationFn: async ({ id, updates }: { id: string, updates: any }) => {
+    schema: v.object({ id: v.string(), updates: v.record(v.string(), v.unknown()) }),
+    mutationFn: async ({ id, updates }: { id: string, updates: Record<string, unknown> }) => {
       await updateCategory(id, updates);
       return true;
     },

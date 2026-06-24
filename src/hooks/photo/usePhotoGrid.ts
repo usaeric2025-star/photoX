@@ -16,7 +16,13 @@ export function usePhotoGrid(filters: PhotoListFilters, mode: 'admin' | 'public'
     refetch 
   } = usePhotos({ ...filters, isAdminMode: mode === 'admin' });
   
-  const dataVersion = JSON.stringify(filters);
+  // ✅ Only reset scroll when content-affecting filters change
+  const contentFilters = { ...filters };
+  delete contentFilters.photoId;
+  delete contentFilters.modal;
+  delete contentFilters.anchor;
+  
+  const dataVersion = JSON.stringify(contentFilters);
   const ref = useRef<VListHandle>(null);
 
   // ✅ 篩選變更時重置滾動

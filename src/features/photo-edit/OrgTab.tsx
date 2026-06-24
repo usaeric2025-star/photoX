@@ -60,7 +60,7 @@ export function OrgTab() {
         <AppField name="tags">
           {({ value, onChange }) => (
             <PhotoTagSelector 
-              selectedTagIds={value || []}
+              selectedTagIds={(value as string[]) || []}
               onChange={onChange}
               tags={tags}
               addTag={async (name) => {

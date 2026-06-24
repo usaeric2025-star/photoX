@@ -31,7 +31,7 @@ export function DiagnosticsDialog({ open, onClose }: DiagnosticsDialogProps) {
   // 捕獲當前的啟動和運行期錯誤
   useEffect(() => {
     if (open) {
-      const startupErrors = (window as any).__STARTUP_ERRORS__ || [];
+      const startupErrors: DiagnosticError[] = (window as Window & { __STARTUP_ERRORS__?: DiagnosticError[] }).__STARTUP_ERRORS__ || [];
       const cachedErrors = ErrorFactory.getLocalErrors();
       
       // 合併並去重 (基於 traceId)

@@ -19,9 +19,12 @@ export function usePhotos(params: PhotoListFilters = {}) {
     // If we've reached the end, return null
     if (previousPageData && !previousPageData.nextCursor) return null;
     
+    // Filter out UI-only parameters that shouldn't trigger a re-fetch of the list
+    const { photoId, modal, anchor, ...fetchParams } = params;
+    
     // Add pagination params
     const queryParams = {
-      ...params,
+      ...fetchParams,
       cursor: previousPageData ? previousPageData.nextCursor : undefined,
     };
     
@@ -63,7 +66,7 @@ export function usePhotos(params: PhotoListFilters = {}) {
 export function usePhotosMutations() {
   const { mutate } = useSWRConfig();
 
-  const updateCache = (updater: (data: any) => any) => {
+  const updateCache = (updater: (data: unknown) => unknown) => {
     mutate(queryKeys.photos.all, updater, { revalidate: false });
   };
 

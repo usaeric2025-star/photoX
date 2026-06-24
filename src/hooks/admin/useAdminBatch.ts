@@ -7,7 +7,7 @@ import { showToast } from '@/lib/ui/toast';
 export function useAdminBatchActions() {
   const { handleBatchAiAnalyze } = useAIBatchAnalysis();
   
-  const handleBatchAiIdentifyTrigger = async (allPhotos?: any[], ids?: string[]) => {
+  const handleBatchAiIdentifyTrigger = async (allPhotos?: { id: string; name?: string; description?: string; imageUrl?: string; thumbnailUrl?: string; groupId?: string | null }[], ids?: string[]) => {
     const selectedIds = ids || storeAccessor.ui.selectedIds;
     
     // If no specific photos provided, we use the passed allPhotos
@@ -30,9 +30,9 @@ export function useAdminBatchActions() {
       const targetPhotos = (photosToProcess).filter((p) => 
         selectedIds.includes(p.id) || (p.groupId && groupIdsArray.includes(p.groupId))
       );
-      handleBatchAiAnalyze(targetPhotos);
+      handleBatchAiAnalyze(targetPhotos as unknown as import('@/types').Photo[]);
     } else {
-      handleBatchAiAnalyze(photosToProcess);
+      handleBatchAiAnalyze(photosToProcess as unknown as import('@/types').Photo[]);
     }
   };
 

@@ -119,7 +119,7 @@ export const ErrorLogViewer = () => {
   );
 
   const { submit: runClear, isLoading: isClearing } = useFormSubmit({
-      schema: v.any(),
+      schema: v.unknown(),
       mutationFn: async () => {
           const res = await api.admin.maintenance['error-events-clear'].$post();
           const json = await res.json();

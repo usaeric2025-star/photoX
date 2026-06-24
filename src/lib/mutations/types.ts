@@ -14,7 +14,7 @@ export interface MutationConfig<TData, TVars, TQueryKey extends readonly unknown
   onError?: (error: unknown, vars: TVars) => boolean | void
   cleanupKey?: (vars: TVars) => string
   onSettled?: (data: TData | undefined, error: Error | null, vars: TVars) => void
-  schema?: BaseSchema<any, any, any> // Optional Valibot schema to validate previous cache data/next state during optimistic update
-  variablesSchema?: BaseSchema<any, TVars, any> // Optional Valibot schema to validate input variables prior to executing the mutation
+  schema?: BaseSchema<unknown, unknown, import('valibot').BaseIssue<unknown>> // Optional Valibot schema to validate previous cache data/next state during optimistic update
+  variablesSchema?: BaseSchema<unknown, TVars, import('valibot').BaseIssue<unknown>> // Optional Valibot schema to validate input variables prior to executing the mutation
 }
 

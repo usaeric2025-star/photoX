@@ -54,7 +54,7 @@ adminSettings.get("/get-keys", async (c) => {
 
         // Fallback for UI indicators
         if (!hasAgnes || !hasOpenrouter) {
-            const [settingsRes]: any[] = await db.select({
+            const [settingsRes] = await db.select({
                 openrouterModel: settingsTable.openrouterModel,
                 agnesModel: settingsTable.agnesModel
             })
@@ -173,7 +173,7 @@ adminSettings.post("/save-settings", async (c) => {
         const allowedKeys = ['id', 'logoUrl', 'whatsapp1', 'whatsapp2', 'whatsapp1Name', 'whatsapp2Name', 'categoriesJson', 'tagsJson', 'manufacturersJson', 'primaryColor', 'backgroundColor', 'accentColor', 'contactEmail', 'instagram', 'facebook', 'accessPasscode', 'passcodeEnabled', 'hotTagThreshold', 'hotTagsCount', 'openrouterModel', 'agnesModel'];
 
         // Map frontend fields (snake_case) to Drizzle fields (camelCase)
-        const mappedPayload: any = {};
+        const mappedPayload: Record<string, unknown> = {};
         for (const [key, value] of Object.entries(settingsPayload)) {
             const camelKey = key.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
             if (allowedKeys.includes(camelKey)) {
@@ -186,9 +186,9 @@ adminSettings.post("/save-settings", async (c) => {
         // Always ensure ID is 1
         mappedPayload.id = 1;
 
-        await db.insert(settingsTable).values(mappedPayload).onConflictDoUpdate({
+        await db.insert(settingsTable).values(mappedPayload as unknown as typeof settingsTable.$inferInsert).onConflictDoUpdate({
             target: settingsTable.id,
-            set: mappedPayload
+            set: mappedPayload as unknown as typeof settingsTable.$inferInsert
         });
         
         return c.json({ success: true });

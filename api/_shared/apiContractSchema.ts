@@ -55,11 +55,11 @@ export const StorageAuditResSchema = v.object({
     healthyCount: v.number(),
     ghosts: v.object({
         count: v.number(),
-        samples: v.array(v.record(v.string(), v.any()))
+        samples: v.array(v.record(v.string(), v.unknown()))
     }),
     orphans: v.object({
         count: v.number(),
-        samples: v.array(v.record(v.string(), v.any()))
+        samples: v.array(v.record(v.string(), v.unknown()))
     }),
     truncated: v.optional(v.boolean()),
     formatDistribution: v.optional(v.object({
@@ -118,12 +118,12 @@ const PhotoListResSchema = v.object({
 
 export const PhotoBatchUpdateReqSchema = v.object({
     ids: v.array(v.string()),
-    updates: v.record(v.string(), v.any())
+    updates: v.record(v.string(), v.unknown())
 });
 
 export const PhotoUpdateReqSchema = v.object({
     id: v.string(),
-    updates: v.record(v.string(), v.any())
+    updates: v.record(v.string(), v.unknown())
 });
 
 export const PhotoIdReqSchema = v.object({
@@ -198,44 +198,46 @@ export const GroupReqSchema = v.object({
     status: v.optional(v.union([v.literal('draft'), v.literal('confirmed')]))
 });
 
+export const TranslationSchema = v.object({
+    zh: v.string(),
+    en: v.optional(v.string()),
+    ms: v.optional(v.string())
+});
+
+export const DimensionSchema = v.object({
+    label: v.string(),
+    unit: v.union([v.literal('cm'), v.literal('inch'), v.literal('mm')]),
+    length: v.number(),
+    width: v.number(),
+    height: v.number(),
+    part: v.optional(v.string()),
+    is_ai: v.optional(v.boolean()),
+    is_ai_estimated: v.optional(v.boolean())
+});
+
+export const TagSchema = v.object({
+    id: v.number(),
+    name: v.string(),
+    aliases: v.optional(v.array(v.string())),
+    user_id: v.optional(v.string()),
+    is_global: v.optional(v.boolean()),
+    hot_score: v.optional(v.number())
+});
+
 export const PhotoSchema = v.object({
     id: v.optional(v.string()),
-    name: v.object({
-        zh: v.string(),
-        en: v.optional(v.string()),
-        ms: v.optional(v.string())
-    }),
+    name: TranslationSchema,
     category_id: v.optional(v.nullable(v.string())),
     manufacturer_id: v.optional(v.nullable(v.string())),
     tags: v.pipe(
-        v.array(v.object({
-            id: v.number(),
-            name: v.string(),
-            aliases: v.optional(v.array(v.string())),
-            user_id: v.optional(v.string()),
-            is_global: v.optional(v.boolean()),
-            hot_score: v.optional(v.number())
-        })),
+        v.array(TagSchema),
         v.check((data) => data.length <= 3, '最多隻能有3個標籤')
     ),
-    description: v.object({
-        zh: v.optional(v.string()),
-        en: v.optional(v.string()),
-        ms: v.optional(v.string())
-    }),
+    description: TranslationSchema,
     item_code: v.string(),
     manual_code: v.string(),
     model_number: v.string(),
-    dimensions: v.array(v.object({
-        label: v.string(),
-        unit: v.union([v.literal('cm'), v.literal('inch'), v.literal('mm')]),
-        length: v.number(),
-        width: v.number(),
-        height: v.number(),
-        part: v.optional(v.string()),
-        is_ai: v.optional(v.boolean()),
-        is_ai_estimated: v.optional(v.boolean())
-    })),
+    dimensions: v.array(DimensionSchema),
     is_hidden: v.boolean(),
     price: v.string(),
     is_group_cover: v.boolean(),
@@ -267,7 +269,7 @@ export const MaintenanceJobSchema = v.object({
     task: v.optional(v.string()),
     status: v.union([v.literal('pending'), v.literal('running'), v.literal('completed'), v.literal('failed'), v.literal('processing')]),
     progress: v.number(),
-    result: v.optional(v.any()),
+    result: v.optional(v.unknown()),
     error: v.optional(v.string()),
     created_at: v.optional(v.string()),
     message: v.optional(v.string()),

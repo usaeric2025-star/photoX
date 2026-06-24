@@ -68,6 +68,7 @@ export const furnitureItems = pgTable('furniture_items', {
     subCategory: text('sub_category'),
     dimensions: jsonb('dimensions'),
     groupOrder: integer('group_order'),
+    metadata: jsonb('metadata'),
     updatedAt: timestamp('updated_at').defaultNow(),
     createdAt: timestamp('created_at').defaultNow(),
     nameSearchable: text('name_searchable'),

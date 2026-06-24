@@ -13,7 +13,7 @@ export function useFilterState() {
   }), [f.search, f.category, f.tags, f.sort]);
 
   const updateFilters = (updates: Partial<FilterState>) => {
-    const routeUpdates: Record<string, any> = {};
+    const routeUpdates: Record<string, unknown> = {};
     if (updates.search !== undefined) routeUpdates.q = updates.search || undefined;
     if (updates.categoryId !== undefined) {
       routeUpdates.cat = updates.categoryId || undefined;

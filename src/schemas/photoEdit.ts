@@ -2,8 +2,19 @@ import * as v from 'valibot';
 
 export const TranslationSchema = v.object({
   zh: v.string(),
-  en: v.string(),
-  ms: v.string()
+  en: v.optional(v.string()),
+  ms: v.optional(v.string())
+});
+
+export const DimensionSchema = v.object({
+  label: v.optional(v.nullable(v.string())),
+  unit: v.optional(v.nullable(v.string())),
+  length: v.optional(v.nullable(v.union([v.number(), v.string()]))),
+  width: v.optional(v.nullable(v.union([v.number(), v.string()]))),
+  height: v.optional(v.nullable(v.union([v.number(), v.string()]))),
+  part: v.optional(v.nullable(v.string())),
+  is_ai: v.optional(v.nullable(v.boolean())),
+  is_ai_estimated: v.optional(v.nullable(v.boolean())),
 });
 
 export const PhotoEditSchema = v.object({
@@ -17,7 +28,7 @@ export const PhotoEditSchema = v.object({
   note: v.optional(v.nullable(v.string())),
   manual_code: v.optional(v.nullable(v.string())),
   model_number: v.optional(v.nullable(v.string())),
-  dimensions: v.optional(v.nullable(v.object({}))),
+  dimensions: v.optional(v.nullable(v.array(DimensionSchema))),
   is_hidden: v.optional(v.boolean()),
   tags: v.optional(v.nullable(v.array(v.string()))),
   item_code: v.optional(v.nullable(v.string())),
@@ -37,7 +48,7 @@ export const SavePhotoSchema = v.object({
   note: v.optional(v.nullable(v.string())),
   manual_code: v.optional(v.nullable(v.string())),
   model_number: v.optional(v.nullable(v.string())),
-  dimensions: v.optional(v.nullable(v.object({}))),
+  dimensions: v.optional(v.nullable(v.array(DimensionSchema))),
   is_hidden: v.optional(v.boolean()),
   tags: v.optional(v.nullable(v.array(v.string()))),
   item_code: v.optional(v.nullable(v.string())),

@@ -10,7 +10,6 @@ import { DialogHeader } from "./DialogHeader";
 import { LoadingSpinner } from "@/components/ui/feedback/LoadingSpinner";
 import { logger } from "@/lib/logger";
 import { useAdminMaintenance } from "@/hooks";
-import { showToast as toast } from "@/lib/ui/toast";
 
 function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: boolean; handleClose: () => void; editPhotoId: string; }) {
   const adminActions = useAdminMaintenance();
@@ -58,16 +57,8 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
               <div></div>
               <DialogHeader onClose={handleInterceptClose} onDeleteClick={async () => {
                 logger.info('[PhotoEditDialog] Delete clicked for photo:', editPhotoId);
-                toast.info("正在删除...");
-                try {
-                  await adminActions.deletePhoto.mutateAsync([editPhotoId]);
-                  logger.info('[PhotoEditDialog] Delete successful');
-                  toast.success("删除成功");
-                  handleClose();
-                } catch (err: unknown) {
-                  logger.error('[PhotoEditDialog] Delete failed:', err);
-                  toast.error("删除失败");
-                }
+                await adminActions.deletePhoto.mutateAsync([editPhotoId]);
+                handleClose();
               }} />
             </div>
             

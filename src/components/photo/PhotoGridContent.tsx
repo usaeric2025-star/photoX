@@ -19,7 +19,7 @@ interface PhotoGridContentProps {
   mode: 'admin' | 'public';
   filters?: Record<string, unknown>;
   onPhotoClick?: (id: string, index: number, e?: React.MouseEvent) => void;
-  gridRef?: React.Ref<any>;
+  gridRef?: React.Ref<import('virtua').VListHandle>;
   onScroll?: (offset: number) => void;
 }
 

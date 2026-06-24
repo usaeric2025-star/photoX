@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Category, Tag } from '@/types';
 import { PhotoListItem } from '@/types/api';
 import { PhotoCardBase } from './PhotoCardBase';
@@ -17,7 +17,7 @@ interface PublicPhotoCardProps {
   sharedTags?: Tag[];
 }
 
-export const PublicPhotoCard = ({
+export const PublicPhotoCard = memo(({
   photo,
   onClick,
   hideDetails = false,
@@ -61,4 +61,4 @@ export const PublicPhotoCard = ({
       />
     </PhotoCardBase>
   );
-};
+});

@@ -65,7 +65,7 @@ export const useOptimisticMutation = <
           ? rawInvalidate as (readonly unknown[])[]
           : [rawInvalidate as readonly unknown[]];
 
-        await Promise.all(keys.map(key => appQuery.mutate(key as any)));
+        await Promise.all(keys.map(key => appQuery.mutate(key)));
         
         if (config.cleanupKey) {
           const key = typeof config.cleanupKey === 'function' ? config.cleanupKey(vars) : config.cleanupKey;

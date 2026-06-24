@@ -42,7 +42,7 @@ const photoEditConfig = defineMutation<
     if ((castOld as Photo).id === id) return { ...(castOld as Photo), ...updates };
     return castOld;
   },
-  // successMessage: '已更新',
+  successMessage: '已更新',
 });
 
 export const usePhotoEditMutation = () => useOptimisticMutation(photoEditConfig);
@@ -62,7 +62,7 @@ const photoDeleteConfig = defineMutation<
     queryKeys.groups.all,
     ...(Array.isArray(vars) ? vars : [vars]).map((id) => queryKeys.photos.detail(id))
   ],
-  // successMessage: '照片已删除',
+  successMessage: '照片已删除',
 });
 
 export const usePhotoDelete = () => useOptimisticMutation(photoDeleteConfig);
@@ -94,7 +94,7 @@ const photoBatchEditConfig = defineMutation<
     queryKeys.groups.all,
     ...vars.ids.map((id) => queryKeys.photos.detail(id))
   ],
-  // successMessage: '批量操作完成',
+  successMessage: '批量操作完成',
 });
 
 export const usePhotoBatchEdit = () => useOptimisticMutation(photoBatchEditConfig);
@@ -125,7 +125,7 @@ const togglePinConfig = defineMutation<
     }
     return castOld;
   },
-  // successMessage: '状态已更新',
+  successMessage: '状态已更新',
 });
 
 export const useTogglePin = () => useOptimisticMutation(togglePinConfig);

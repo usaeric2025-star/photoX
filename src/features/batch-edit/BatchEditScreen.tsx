@@ -61,7 +61,7 @@ export const BatchEditScreen = () => {
   } = useBatchEditSelection();
 
   const { submit: saveBatch, isLoading: isSaving } = useFormSubmit({
-    schema: v.any(),
+    schema: v.object({}),
     mutationFn: async () => {
       await originalSave();
       return true;

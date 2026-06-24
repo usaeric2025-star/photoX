@@ -74,7 +74,8 @@ export const updateHandler = (app: Hono) => {
             item_code: 'itemCode',
             manual_code: 'manualCode',
             model_number: 'modelNumber',
-            dimensions: 'dimensions'
+            dimensions: 'dimensions',
+            metadata: 'metadata'
         };
 
         for (const [key, val] of Object.entries(updateObj)) {

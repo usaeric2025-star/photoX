@@ -124,9 +124,9 @@ export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promi
        
        const rawTags = (parsed.tag_names || parsed.new_tags || parsed.tags || []);
        let sanitizedTagNames = Array.isArray(rawTags)
-         ? rawTags.map((t: any) => {
+         ? rawTags.map((t: unknown) => {
              if (!t) return '';
-             if (typeof t === 'object') return String(t.name || t.zh || t.en || '');
+             if (typeof t === 'object') return String((t as Record<string, unknown>).name || (t as Record<string, unknown>).zh || (t as Record<string, unknown>).en || '');
              return String(t);
            }).filter(Boolean)
          : [];
@@ -136,20 +136,20 @@ export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promi
          sanitizedTagNames = sanitizedTagNames.slice(0, 3);
        }
 
-       const safeTrim = (val: any): any => {
+       const safeTrim = (val: unknown): unknown => {
           if (!val) return '';
           if (typeof val === 'string') return val.trim();
           if (typeof val === 'object') {
-            const res: any = {};
+            const res: Record<string, unknown> = {};
             for (const k in val) {
               if (Object.prototype.hasOwnProperty.call(val, k)) {
-                res[k] = typeof val[k] === 'string' ? val[k].trim() : val[k];
+                 res[k] = safeTrim((val as Record<string, unknown>)[k]);
               }
             }
             return res;
           }
-          return String(val).trim();
-        };
+          return val;
+       };
 
         return {
            name: safeTrim(parsed.name),

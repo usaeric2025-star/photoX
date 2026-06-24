@@ -9,7 +9,7 @@ export function useAppRouter() {
     return {
       route: undefined,
       params: {},
-      navigate: {} as any,
+      navigate: {} as Record<string, (...args: unknown[]) => void>,
       currentUrl: typeof window !== 'undefined' ? window.location.href : '',
     };
   }

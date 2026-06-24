@@ -123,7 +123,7 @@ export function AISecuritySection({
     fetchKeysStatus();
   }, [fetchKeysStatus]);
 
-  const { submit: runTest, isLoading: isTestingProvider } = useFormSubmit({
+  const { submit: runTest, isLoading: isTestingProvider } = useFormSubmit<typeof TestConnectionSchema, boolean>({
     schema: TestConnectionSchema,
     mutationFn: async ({ provider, apiKey }) => {
       const res = await api.ai.test.$post({
@@ -145,7 +145,7 @@ export function AISecuritySection({
     await runTest({ provider, apiKey });
   };
 
-  const { submit: runSaveKey, isLoading: isSavingKey } = useFormSubmit({
+  const { submit: runSaveKey, isLoading: isSavingKey } = useFormSubmit<typeof KeySaveSchema, "noop" | "success">({
     schema: KeySaveSchema,
     mutationFn: async ({ provider, apiKey }) => {
       if (apiKey === "••••••••••••••••" || !apiKey.trim()) {
@@ -171,7 +171,7 @@ export function AISecuritySection({
     await runSaveKey({ provider, apiKey });
   };
 
-  const { submit: runSaveProvider, isLoading: isSavingProvider } = useFormSubmit({
+  const { submit: runSaveProvider, isLoading: isSavingProvider } = useFormSubmit<typeof ProviderSaveSchema, boolean>({
     schema: ProviderSaveSchema,
     mutationFn: async ({ provider }) => {
       const res = await api.admin.settings['save-provider'].$post({
@@ -192,7 +192,7 @@ export function AISecuritySection({
     await runSaveProvider({ provider });
   };
 
-  const { submit: runSaveModel } = useFormSubmit({
+  const { submit: runSaveModel } = useFormSubmit<typeof ModelSaveSchema, boolean>({
     schema: ModelSaveSchema,
     mutationFn: async ({ provider, model }) => {
       const res = await api.admin.settings['save-model'].$post({

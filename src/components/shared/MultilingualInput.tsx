@@ -2,7 +2,7 @@ import { Field } from "@tanstack/react-form";
 import { cn } from '@/lib/utils';
 // ... rest of imports
 interface MultilingualInputProps {
-  form: any;
+  form: unknown;
   name: string
   label?: string
   required?: boolean
@@ -16,7 +16,7 @@ export const MultilingualInput = ({ form, name, label, required, type = 'input' 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {['zh', 'en', 'ms'].map((lang) => {
           return (
-            <Field key={lang} form={form} name={`${name}.${lang}` as any}>
+            <Field key={lang} form={form as never} name={`${name}.${lang}` as never}>
               {(field) => (
                 <div className="relative group">
                   <div className="absolute top-2.5 left-2.5 hidden group-focus-within:flex items-center justify-center pointer-events-none px-1.5 py-0.5 rounded-md bg-slate-100/80 backdrop-blur-sm border border-slate-200">

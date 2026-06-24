@@ -6,7 +6,7 @@ import { PublicHeader } from '@/components/layouts/headers/PublicHeader';
 import { FilterBar } from '@/features/filter/FilterBar';
 import { PublicPhotoGrid } from '@/components/photo/PublicPhotoGrid';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
-import { useColumns } from '@/features/layout/hooks/useColumns';
+import { useColumns } from '@/hooks';
 import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
 import { useUIStore } from '@/store/uiStore';
 import { useUI, UIStoreState } from '@/lib/store';
@@ -29,7 +29,7 @@ export default function PublicPage() {
   
   const { columns } = useColumns();
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const gridRef = useRef<{ scrollToIndex: (index: number) => void } | null>(null);
+  const gridRef = useRef<import('virtua').VListHandle | null>(null);
   
   const isAggregated = showGroupsCollapsed && !search && !category && (!tags || tags.length === 0);
   

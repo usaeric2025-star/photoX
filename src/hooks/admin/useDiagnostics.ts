@@ -17,7 +17,7 @@ export function useDiagnostics() {
     null, // manually triggered
     async () => {
       const res = await api.admin.maintenance.storage.audit.$get();
-      const data = await res.json() as { success: boolean; data?: any; error?: string };
+      const data = await res.json() as { success: boolean; data?: unknown; error?: string };
       if (!data.success) throw new Error(data.error || '對賬審計失敗');
       return data.data;
     },
@@ -31,7 +31,7 @@ export function useDiagnostics() {
         // Since key is null we override fetcher directly or simply just call the API here.
         // But we wait, to trigger a null-key query, we should just call fetcher.
         const res = await api.admin.maintenance.storage.audit.$get();
-        const data = await res.json() as { success: boolean; data?: any; error?: string };
+        const data = await res.json() as { success: boolean; data?: unknown; error?: string };
         if (!data.success) throw new Error(data.error || '對賬審計失敗');
         // Manually update the cache if we had a proper key, but here we can just return it.
         return data.data;
@@ -45,7 +45,7 @@ export function useDiagnostics() {
         appLang === 'zh' ? '執行數據去重' : 'Deduplicate Records',
         async () => {
           const res = await api.admin.maintenance.storage.deduplicate.$post();
-          const json = await res.json() as any;
+          const json = await res.json() as { success: boolean; error?: string };
           if (!json.success) throw new Error(json.error || '去重失敗');
           return json;
         }

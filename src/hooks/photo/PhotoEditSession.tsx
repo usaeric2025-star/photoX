@@ -15,7 +15,7 @@ interface PhotoEditSessionContextValue {
   isSubmitting: boolean;
   commit: (data?: PhotoEditFormData) => Promise<void>;
   discard: () => void;
-  form: any;
+  form: ReturnType<typeof useAppForm<typeof PhotoEditSchema>>['form'];
   photoId: string;
 }
 
@@ -103,6 +103,7 @@ export const PhotoEditSessionProvider = ({
     if (data) {
         Object.entries(data).forEach(([key, value]) => formObj.form.setFieldValue(key as keyof PhotoEditFormData, value as never));
     }
+    
     return await formObj.form.handleSubmit();
   }, [formObj]);
 
