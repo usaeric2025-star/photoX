@@ -41,29 +41,24 @@ export default defineConfig(({mode}) => {
               return 'vendor-core';
             }
 
-            // Layer 1: 生態與路由 (依賴 Layer 0)
-            if (/\/node_modules\/(@tanstack\/react-query)\//.test(id)) {
-              return 'vendor-ecosystem';
-            }
-            
-            // Layer 2: UI 元件與圖標 (依賴 Layer 0, 1)
+            // Layer 1: UI 元件與圖標 (依賴 Layer 0)
             // 包含 Sonner, Lightbox, Virtua, 動畫與圖標
             if (/\/node_modules\/(lucide-react|@radix-ui|sonner|yet-another-react-lightbox|virtua|motion|el-form-react-components|el-form-react-hooks)\//.test(id)) {
               return 'vendor-ui';
             }
             
-            // Layer 3: 功能與資料層 (依賴以上)
-            // Supabase, Drizzle, Zustand, Postgres, AWS SDK
-            if (/\/node_modules\/(@supabase|drizzle-orm|zustand|postgres|@aws-sdk)\//.test(id)) {
+            // Layer 2: 功能與資料層 (依賴以上)
+            // Supabase, Drizzle, Postgres, AWS SDK
+            if (/\/node_modules\/(@supabase|drizzle-orm|postgres|@aws-sdk)\//.test(id)) {
               return 'vendor-features';
             }
             
-            // Layer 4: Core Utils Layer
-            if (/\/node_modules\/(dayjs|clsx|tailwind-merge)\//.test(id)) {
+            // Layer 3: Core Utils Layer
+            if (/\/node_modules\/(dayjs|clsx|tailwind-merge|valibot|swr)\//.test(id)) {
               return 'vendor-utils';
             }
             
-            // Layer 5: 其他
+            // Layer 4: 其他
             return 'vendor-misc';
           }
         }
@@ -81,7 +76,7 @@ export default defineConfig(({mode}) => {
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),
-        '@api': fileURLToPath(new URL('./api', import.meta.url)),
+        '@api/_shared': fileURLToPath(new URL('./api/_shared', import.meta.url)),
       },
     },
     server: {

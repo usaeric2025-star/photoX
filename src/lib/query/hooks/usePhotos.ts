@@ -4,6 +4,8 @@ import { queryKeys } from '../keys';
 import { ErrorFactory } from '@/lib/error';
 import { api } from '@/lib/api';
 import { PhotoListItem } from '@/types/api';
+import * as v from 'valibot';
+import { PhotoListResSchema } from '@api/_shared/apiContractSchema';
 
 export type PhotoListFilters = Record<string, unknown>;
 
@@ -39,8 +41,7 @@ export function usePhotos(params: PhotoListFilters = {}) {
       const response = await api.photos.list.$post({ json: fetchParams });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const result = await response.json();
-      const v = await import('valibot');
-      const { PhotoListResSchema } = await import('@api/_shared/apiContractSchema');
+      
       // Validate the response
       return v.parse(PhotoListResSchema, result) as PhotoListResponse;
     },

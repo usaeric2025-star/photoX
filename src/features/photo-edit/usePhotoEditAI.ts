@@ -13,6 +13,11 @@ import { useFormSubmit } from '@/lib/form/useFormSubmit';
 import * as v from 'valibot';
 import { PhotoEditFormData } from '@/schemas/photoEdit';
 
+// Added static imports to fix Ineffective Dynamic Import warnings
+import { resolveTagNamesToIds } from '@/services/tag/completion';
+import { loadTagsFromCloud } from '@/services/tag/queries';
+import { queryKeys } from '@/lib/query/keys';
+
 const AIAnalysisSchema = v.object({
   imageUrl: v.string(),
 });
@@ -171,7 +176,6 @@ export function usePhotoEditAI() {
 
           if (uniqueRawNames.length > 0 || finalResolvedIds.length > 0) {
             try {
-              const { resolveTagNamesToIds } = await import('@/services/tag/completion');
               const resolveResult = await resolveTagNamesToIds(uniqueRawNames, allTags);
 
               let finalTagIds = [...finalResolvedIds];
@@ -185,11 +189,9 @@ export function usePhotoEditAI() {
                   // Refetch/Invalidate tags so the tag select options are in sync
                   await appQuery.mutate('tags');
                   
-                  const { loadTagsFromCloud } = await import('@/services/tag/queries');
                   const latestTags = await loadTagsFromCloud().catch(() => allTags);
 
                   // Optimistically set the cache for tags so they display IMMEDIATELY
-                  const { queryKeys } = await import('@/lib/query/keys');
                   appQuery.mutate(queryKeys.tags.tags(), (old: Tag[] | undefined) => {
                     const oldTags = Array.isArray(old) ? old : [];
                     const existingMap = new Map(oldTags.map((t: Tag) => [String(t.id), t]));
@@ -255,8 +257,7 @@ export function usePhotoEditAI() {
               await updatePhoto({ id: editPhotoId, updates, silent: true });
               
               // Synchronously update the cache for the photo detail query
-              const { queryKeys: qK } = await import('@/lib/query/keys');
-              const detailKey = qK.photos.detail(editPhotoId);
+              const detailKey = queryKeys.photos.detail(editPhotoId);
               
               await appQuery.mutate(detailKey, (oldPhoto: Photo | undefined) => {
                 if (!oldPhoto) return oldPhoto;
@@ -284,9 +285,8 @@ export function usePhotoEditAI() {
           }
         
         // [V2.2] Standard invalidation per architecture rules
-        const { queryKeys: qKeys } = await import('@/lib/query/keys');
-        await appQuery.mutate(qKeys.photos.all);
-        await appQuery.mutate(qKeys.groups.all);
+        await appQuery.mutate(queryKeys.photos.all);
+        await appQuery.mutate(queryKeys.groups.all);
         
         return true;
       }, { showSuccessToast: false, showProgress: true, rethrow: true });
