@@ -29,11 +29,9 @@ export interface UIStoreState {
   fatalError: Error | null;
   
   // Lightbox 状态
-  lightbox: {
-    isOpen: boolean;
-    slides: LightboxSlide[];
-    currentIndex: number;
-  };
+  lightboxIsOpen: boolean;
+  lightboxSlides: LightboxSlide[];
+  lightboxCurrentIndex: number;
 
   // Actions
   patch: (updates: Partial<UIStoreState> | ((state: UIStoreState) => Partial<UIStoreState>)) => void;
@@ -106,11 +104,9 @@ export const uiStore = createStore<UIStoreState>({
   isDiagnosticsOpen: false,
   activeDialogCount: 0,
   fatalError: null,
-  lightbox: {
-    isOpen: false,
-    slides: [],
-    currentIndex: 0
-  },
+  lightboxIsOpen: false,
+  lightboxSlides: [],
+  lightboxCurrentIndex: 0,
 
   updateForm: (updates) => (uiStore as unknown as UIStoreInstance).setState((state: UIStoreState) => {
     const nextFormState = typeof updates === 'function' ? updates(state.formState) : { ...state.formState, ...updates };
@@ -165,20 +161,20 @@ export const uiStore = createStore<UIStoreState>({
       batchEditingIds: null,
       formState: defaultForm,
       activeDialogCount: 0,
-      lightbox: { isOpen: false, slides: [], currentIndex: 0 }
+      lightboxIsOpen: false, lightboxSlides: [], lightboxCurrentIndex: 0
   }),
 
   openLightbox: (slides, index = 0) => (uiStore as unknown as UIStoreInstance).setState({
-    lightbox: { isOpen: true, slides, currentIndex: index }
+    lightboxIsOpen: true, lightboxSlides: slides, lightboxCurrentIndex: index
   }),
 
-  closeLightbox: () => (uiStore as unknown as UIStoreInstance).setState((state: UIStoreState) => ({
-    lightbox: { ...state.lightbox, isOpen: false }
-  })),
+  closeLightbox: () => (uiStore as unknown as UIStoreInstance).setState({
+    lightboxIsOpen: false
+  }),
 
-  setLightboxIndex: (index) => (uiStore as unknown as UIStoreInstance).setState((state: UIStoreState) => ({
-    lightbox: { ...state.lightbox, currentIndex: index }
-  })),
+  setLightboxIndex: (index) => (uiStore as unknown as UIStoreInstance).setState({
+    lightboxCurrentIndex: index
+  }),
 
   patch: (updates: Partial<UIStoreState> | ((state: UIStoreState) => Partial<UIStoreState>)) => {
     (uiStore as unknown as UIStoreInstance).setState((state: UIStoreState) => {
@@ -217,5 +213,6 @@ export function useUIStore<T>(selector?: (state: UIStoreState) => T): T | UIStor
 }
 export const useUISelector = useUIStore;
 export const useAppLang = () => useStore(uiStore, (s) => s.appLang);
-export const currentIndexSignal = signal(uiStore, 'lightbox.currentIndex');
-export const isOpenSignal = signal(uiStore, 'lightbox.isOpen');
+export const currentIndexSignal = signal(uiStore, 'lightboxCurrentIndex');
+export const isOpenSignal = signal(uiStore, 'lightboxIsOpen');
+export const slidesSignal = signal(uiStore, 'lightboxSlides');

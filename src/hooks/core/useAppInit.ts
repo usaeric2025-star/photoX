@@ -19,6 +19,7 @@ export function useAppInit() {
 
   // ✅ 追蹤載入狀態
   useEffect(() => {
+    
     if (auth.isLoading || isSettingsPending) {
       setStatus('loading');
       return;

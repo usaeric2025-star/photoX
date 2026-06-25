@@ -20,9 +20,6 @@ export function ColumnsToggle() {
     >
       <Icon name="layout-grid" size={18} />
       <span className="sr-only">切換欄數</span>
-      <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
-        {columns}
-      </span>
     </button>
   );
 }

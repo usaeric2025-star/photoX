@@ -2,9 +2,9 @@ export * from './types';
 import { useUIStore } from '@/store/uiStore';
 
 export function useLightbox() {
-  const isOpen = useUIStore(s => s.lightbox?.isOpen || false);
-  const slides = useUIStore(s => s.lightbox?.slides || []);
-  const currentIndex = useUIStore(s => s.lightbox?.currentIndex || 0);
+  const isOpen = useUIStore(s => s.lightboxIsOpen || false);
+  const slides = useUIStore(s => s.lightboxSlides || []);
+  const currentIndex = useUIStore(s => s.lightboxCurrentIndex || 0);
   const openLightbox = useUIStore(s => s.openLightbox);
   const closeLightbox = useUIStore(s => s.closeLightbox);
   const setLightboxIndex = useUIStore(s => s.setLightboxIndex);

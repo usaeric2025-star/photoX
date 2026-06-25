@@ -22,7 +22,7 @@ export const DialogContainer = () => {
   } = useUIStore(s => ({
     isDiagnosticsOpen: s.isDiagnosticsOpen,
     showWhatsAppChoice: s.showWhatsAppChoice,
-    isLightboxOpen: s.lightbox.isOpen,
+    isLightboxOpen: s.lightboxIsOpen,
     patch: s.patch
   }));
 

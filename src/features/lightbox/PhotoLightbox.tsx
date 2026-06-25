@@ -1,7 +1,6 @@
 import React, { useMemo, memo } from 'react';
 import { createPortal } from 'react-dom';
-import { useSignal } from '@storve/react';
-import { isOpenSignal, currentIndexSignal } from '@/store/uiStore';
+import { useUIStore } from '@/store/uiStore';
 import { useFilters } from '@/hooks/useFilters';
 import { Router, useAppRoute } from '@/router';
 import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
@@ -110,9 +109,15 @@ function LightboxToolbar({
 }
 
 export function PhotoLightbox() {
-  const isOpen = useSignal(isOpenSignal);
-  const slides = useUI(s => s.lightbox.slides);
-  const currentIndex = useSignal(currentIndexSignal);
+  const { isOpen, slides, currentIndex, closeLightbox, setLightboxIndex } = useUIStore(s => ({
+    isOpen: s.lightboxIsOpen,
+    slides: s.lightboxSlides,
+    currentIndex: s.lightboxCurrentIndex,
+    closeLightbox: s.closeLightbox,
+    setLightboxIndex: s.setLightboxIndex
+  }));
+  
+  console.log('[PhotoLightbox] Rendering', { isOpen, slidesCount: slides.length, currentIndex });
   
   const filters = useFilters();
   const route = useAppRoute();
@@ -123,7 +128,7 @@ export function PhotoLightbox() {
   const canEdit = canEditPermission;
 
   const handleClose = () => {
-    isOpenSignal.set(false);
+    closeLightbox();
     if (route?.name === 'photo') {
       Router.push("home");
     } else {
@@ -135,7 +140,7 @@ export function PhotoLightbox() {
     if (index === currentIndex) return;
     const photo = slides[index];
     if (photo?.id) {
-      currentIndexSignal.set(index);
+      setLightboxIndex(index);
       if (route?.name === 'photo') {
         Router.replace("photo", { photoId: photo.id });
       } else {

@@ -1680,3 +1680,22 @@ PhotoX 當前單頁數據 < 100KB，IndexedDB 收益為零且增加 Bundle Size 
 - ✅ **可用介面**：對應 Storve 非同步操作介面。
 - ❌ **禁止直連**：嚴禁在業務層直接 import 原生 Query 庫。
 - 🎯 **目的**：隔離資料請求實作細節。
+
+## Storve Signal 使用規範
+
+### 1. Signal 宣告位置
+- ✅ 所有 Signal 必須在 Store 檔案中宣告並導出（如 `uiStore.ts`）
+- ❌ 禁止在組件層級動態建立 Signal
+
+### 2. Signal 命名規範
+- ✅ Signal 變數命名：`[狀態名]Signal`（如 `isOpenSignal`）
+- ✅ 在元件中使用時：`const isOpen = useSignal(isOpenSignal)`
+
+### 3. 使用時機
+- ✅ 讀取**單一數值** → 優先使用 `useSignal`
+- ✅ 讀取**多個關聯狀態**或**派生狀態** → 使用 `useStore` + Selector
+- ✅ 非 React 環境（如排程器） → 使用 `signal` 的 `.set()` 和 `.get()` 方法
+
+### 4. 並存策略
+- ✅ 同一個狀態可以同時提供 Signal 和 Selector 兩種存取方式
+- ✅ Selector 適用於需要一次獲取多個狀態的情境

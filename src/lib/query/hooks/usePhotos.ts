@@ -39,7 +39,9 @@ export function usePhotos(params: PhotoListFilters = {}) {
     getKey,
     async ([_p, _l, fetchParams]) => {
       const response = await api.photos.list.$post({ json: fetchParams });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
       const result = await response.json();
       
       // Validate the response

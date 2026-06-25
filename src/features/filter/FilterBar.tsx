@@ -21,7 +21,7 @@ export function FilterBar({ mode, className }: FilterBarProps) {
 
   return (
     <div className={cn("flex-shrink-0 border-b bg-surface-overlay backdrop-blur-md", className)}>
-      <div className="flex flex-col sm:flex-row gap-2.5 sm:items-center px-4 py-3 sm:px-6 max-w-full">
+      <div className="flex flex-row gap-2.5 items-center px-4 py-3 sm:px-6 max-w-full">
         <div className="flex-1 min-w-0">
           <SearchInput />
         </div>

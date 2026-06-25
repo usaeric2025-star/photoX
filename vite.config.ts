@@ -1,5 +1,6 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
+import babel from '@rolldown/plugin-babel';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { fileURLToPath } from 'url';
 import { defineConfig, loadEnv } from 'vite';
@@ -12,15 +13,20 @@ const ReactCompilerConfig = {
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
   return {
+    experimental: {
+      bundledDev: true,
+    },
     base: '/',
     plugins: [
-      react({
-        babel: {
+      babel({
+        include: /\.[jt]sx?$/,
+        babelConfig: {
           plugins: [
             ["babel-plugin-react-compiler", ReactCompilerConfig],
           ],
         },
-      }), 
+      }),
+      react(), 
       tailwindcss(),
       visualizer({
         filename: 'dist/stats.html',
@@ -33,34 +39,26 @@ export default defineConfig(({mode}) => {
       outDir: 'dist',
       rollupOptions: {
         output: {
-          manualChunks(id) {
-            if (!id.includes('node_modules')) return;
-
-            // Layer 0: React 核心 (必須最先載入，絕不依賴其他)
-            if (/\/node_modules\/(react|react-dom|scheduler)\//.test(id)) {
-              return 'vendor-core';
-            }
-
-            // Layer 1: UI 元件與圖標 (依賴 Layer 0)
-            // 包含 Sonner, Lightbox, Virtua, 動畫與圖標
-            if (/\/node_modules\/(lucide-react|@radix-ui|sonner|yet-another-react-lightbox|virtua|motion|el-form-react-components|el-form-react-hooks)\//.test(id)) {
-              return 'vendor-ui';
-            }
-            
-            // Layer 2: 功能與資料層 (依賴以上)
-            // Supabase, Drizzle, Postgres, AWS SDK
-            if (/\/node_modules\/(@supabase|drizzle-orm|postgres|@aws-sdk)\//.test(id)) {
-              return 'vendor-features';
-            }
-            
-            // Layer 3: Core Utils Layer
-            if (/\/node_modules\/(dayjs|clsx|tailwind-merge|valibot|swr)\//.test(id)) {
-              return 'vendor-utils';
-            }
-            
-            // Layer 4: 其他
-            return 'vendor-misc';
-          }
+          advancedChunks: {
+            groups: [
+              {
+                name: 'vendor-core',
+                test: /[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/,
+              },
+              {
+                name: 'vendor-ui',
+                test: /[\\/]node_modules[\\/](lucide-react|@radix-ui|sonner|yet-another-react-lightbox|virtua|motion|el-form-react-components|el-form-react-hooks)[\\/]/,
+              },
+              {
+                name: 'vendor-features',
+                test: /[\\/]node_modules[\\/](@supabase|drizzle-orm|postgres|@aws-sdk)[\\/]/,
+              },
+              {
+                name: 'vendor-utils',
+                test: /[\\/]node_modules[\\/](dayjs|clsx|tailwind-merge|valibot|swr)[\\/]/,
+              }
+            ],
+          },
         }
       }
     },

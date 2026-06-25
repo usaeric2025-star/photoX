@@ -34,8 +34,8 @@ export function AdminContainer() {
       filters.setPhotoId(photoId);
   };
   
-  const lightboxIsOpen = useUIStore(s => s.lightbox.isOpen);
-  const lightboxCurrentIndex = useUIStore(s => s.lightbox.currentIndex);
+  const lightboxIsOpen = useUIStore(s => s.lightboxIsOpen);
+  const lightboxCurrentIndex = useUIStore(s => s.lightboxCurrentIndex);
   
   // 同步燈箱數據：當照片列表更新且處於燈箱模式時
   useEffect(() => {

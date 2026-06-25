@@ -62,8 +62,8 @@ export function AdminGroupDetailPage() {
   const { data: categories = [] } = useCategories();
   const { anchor, setAnchor } = useFilters();
 
-  const lightboxIsOpen = useUIStore(s => s.lightbox.isOpen);
-  const lightboxCurrentIndex = useUIStore(s => s.lightbox.currentIndex);
+  const lightboxIsOpen = useUIStore(s => s.lightboxIsOpen);
+  const lightboxCurrentIndex = useUIStore(s => s.lightboxCurrentIndex);
   const openLightbox = useUIStore(s => s.openLightbox);
   const lightboxItems = React.useMemo(() => photosToLightboxSlides(photos), [photos]);
 

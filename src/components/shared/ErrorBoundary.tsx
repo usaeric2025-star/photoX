@@ -2,7 +2,7 @@ import React, { Component, ReactNode } from 'react';
 import { useCopyToClipboard } from '@/hooks';
 import { isAppError } from '@/lib/error/AppError';
 import { logger } from '@/lib/logger';
-
+import { cn } from '@/lib/utils';
 import { LoadingSpinner } from '../ui/feedback/LoadingSpinner';
 
 interface Props {
@@ -16,7 +16,7 @@ interface State {
 }
 
 const ErrorActions = ({ error, isChunkFailure }: { error?: Error, isChunkFailure: boolean }) => {
-  const { copy } = useCopyToClipboard({ successMessage: '诊断信息已复制到剪贴板' });
+  const { copy, copied } = useCopyToClipboard({ successMessage: '诊断信息已复制到剪贴板' });
 
   const handleCopy = () => {
     const timestamp = new Date().toISOString();
@@ -65,10 +65,17 @@ const ErrorActions = ({ error, isChunkFailure }: { error?: Error, isChunkFailure
         <>
           <button
             onClick={handleCopy}
-            className="px-6 py-2.5 border border-slate-200 bg-white text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-2"
+            className={cn(
+              "px-6 py-2.5 border rounded-xl text-sm font-semibold transition-all active:scale-95 flex items-center justify-center gap-2",
+              copied ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+            )}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-            复制诊断信息
+            {copied ? (
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+            )}
+            {copied ? '已复制' : '复制诊断信息'}
           </button>
           <button
             onClick={() => (window.location.href = '/')}
