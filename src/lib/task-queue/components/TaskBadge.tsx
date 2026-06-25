@@ -1,12 +1,11 @@
 import React from 'react';
-import { useSignal } from '@storve/react';
-import { taskStatusSignal, taskProgressSignal } from '@/lib/task-queue/scheduler';
 import { useUI, storeAccessor } from '@/lib/store';
+import { useTaskStore } from '@/store/taskStore';
 import { Icon } from '@/components/ui/Icon';
 
 export function TaskBadge() {
-  const status = useSignal(taskStatusSignal);
-  const progress = useSignal(taskProgressSignal);
+  const status = useTaskStore(s => s.status);
+  const progress = useTaskStore(s => s.progress);
   const isOpen = useUI((s) => s.isTaskDrawerOpen);
 
   if (status !== 'processing') return null;
