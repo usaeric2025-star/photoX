@@ -37,7 +37,8 @@ function CardSkeleton() {
   );
 }
 
-import { useUI } from '@/lib/store';
+import { useSignal } from '@storve/react';
+import { selectedIdsSignal } from '@/store/uiStore';
 
 export function PhotoGridContent({ 
   photos, 
@@ -56,7 +57,7 @@ export function PhotoGridContent({
   const showGroupsCollapsed = filters?.showGroupsCollapsed !== false;
   const hasSearchQuery = !!filters?.search;
   
-  const selectedIds = useUI(s => s.selectedIds);
+  const selectedIds = useSignal(selectedIdsSignal);
   const selectedSet = React.useMemo(() => new Set(selectedIds), [selectedIds]);
   
   console.log('[PhotoGridContent] Render Start', { mode, photosCount: photos.length, isPending, columns });

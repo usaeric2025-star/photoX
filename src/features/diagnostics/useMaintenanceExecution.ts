@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ISSUE_ACTIONS, PreviewResult } from "@/features/diagnostics/issueActions";
-import { useTaskExecutor } from '@/hooks';
+import { toast } from 'sonner';
 import { handleError } from '@/lib/error';
 
 export function useMaintenanceExecution(issueId: string, title: string, onSuccess?: () => void) {
@@ -10,7 +10,6 @@ export function useMaintenanceExecution(issueId: string, title: string, onSucces
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  const { runTask } = useTaskExecutor();
   const action = ISSUE_ACTIONS[issueId];
 
   const handlePreview = async () => {
@@ -34,30 +33,23 @@ export function useMaintenanceExecution(issueId: string, title: string, onSucces
     setIsExecuting(true);
     setProgress(5);
     
-    await runTask(
-      title,
-      async ({ updateProgress }) => {
-        const { message } = await action.execute();
-        updateProgress(100, message || "已完成");
-        setProgress(100);
-        return true;
-      },
-      {
-        issueId,
-        showProgress: false,
-        onSuccess: () => {
-          setIsExecuting(false);
-          setPreview(null);
-          if (onSuccess) onSuccess();
-          setTimeout(() => setProgress(0), 1000);
-        },
-        onError: () => {
-          setIsExecuting(false);
-          setProgress(0);
-        },
-        showSuccessToast: true
-      }
-    );
+    toast.loading(`正在执行: ${title}...`, { id: issueId });
+
+    try {
+      const { message } = await action.execute();
+      setProgress(100);
+      toast.success(message || "执行完成", { id: issueId });
+      
+      setPreview(null);
+      if (onSuccess) onSuccess();
+      setTimeout(() => setProgress(0), 1000);
+    } catch (e: unknown) {
+      handleError(e, title);
+      toast.error(`执行失败: ${title}`, { id: issueId });
+      setProgress(0);
+    } finally {
+      setIsExecuting(false);
+    }
   };
 
   return {

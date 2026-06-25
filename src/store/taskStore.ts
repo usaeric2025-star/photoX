@@ -1,5 +1,6 @@
 import { createStore } from '@storve/core';
 import { useStore } from '@storve/react';
+import { computed } from '@storve/core/computed';
 import { Task } from '@/lib/task-queue/types';
 
 export interface TaskStoreState {
@@ -107,3 +108,10 @@ export function useTaskStore<T>(selector?: (state: TaskStoreState) => T): T | Ta
   return useStore(taskStore) as TaskStoreState;
 }
 export const useTaskSelector = useTaskStore;
+
+export const activeTaskCount = computed(() => {
+  const state = taskStore.getState();
+  return Array.from(state.tasks.values()).filter(
+    t => t.state?.status === 'processing'
+  ).length;
+});

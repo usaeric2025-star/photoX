@@ -58,12 +58,18 @@ async function init() {
 
   if (typeof window !== 'undefined') {
     window.addEventListener('unhandledrejection', (event) => {
-      event.preventDefault();
       const reason = event.reason;
       const message = reason?.message || String(reason || '');
+      const isChunkError = /chunk|dynamically imported|module script/i.test(message);
+      
+      // If it's a chunk error, let the specialized handler (initChunkHandler) take over.
+      // Do NOT call preventDefault here yet to allow other listeners to see it.
+      if (isChunkError) return;
+
+      event.preventDefault();
       const isCancellation = 
         reason?.name === 'AbortError' || 
-        /cancel|abort|precondition|offline|websocket|websocket|hmr|chunk|module script|dynamically imported/i.test(message) ||
+        /cancel|abort|precondition|offline|websocket|websocket|hmr/i.test(message) ||
         /ResizeObserver/i.test(message) ||
         message.includes('DOMException') ||
         message.includes('user_cancel') ||

@@ -1,6 +1,7 @@
 import { createStore } from '@storve/core';
 import { useStore } from '@storve/react';
 import { signal } from '@storve/core/signals';
+import { computed } from '@storve/core/computed';
 import { STORAGE_KEYS, storage } from '@/lib/storage';
 import { ProductFormData } from '@/types';
 import type { LightboxSlide } from '@/lib/lightbox/types';
@@ -27,6 +28,7 @@ export interface UIStoreState {
   isDiagnosticsOpen: boolean;
   activeDialogCount: number;
   fatalError: Error | null;
+  filters: { category: string; tags: string[]; q: string };
   
   // Lightbox 状态
   lightboxIsOpen: boolean;
@@ -104,6 +106,7 @@ export const uiStore = createStore<UIStoreState>({
   isDiagnosticsOpen: false,
   activeDialogCount: 0,
   fatalError: null,
+  filters: { category: '', tags: [], q: '' },
   lightboxIsOpen: false,
   lightboxSlides: [],
   lightboxCurrentIndex: 0,
@@ -203,16 +206,22 @@ export const uiStore = createStore<UIStoreState>({
   },
 });
 
-export function useUIStore(): UIStoreState;
-export function useUIStore<T>(selector: (state: UIStoreState) => T): T;
-export function useUIStore<T>(selector?: (state: UIStoreState) => T): T | UIStoreState {
-  if (selector) {
-    return useStore(uiStore, selector);
-  }
-  return useStore(uiStore) as UIStoreState;
+export function useUIStore<T>(selector?: (state: UIStoreState) => T): T {
+  return useStore(uiStore, selector || ((s: UIStoreState) => s as unknown as T));
 }
 export const useUISelector = useUIStore;
 export const useAppLang = () => useStore(uiStore, (s) => s.appLang);
 export const currentIndexSignal = signal(uiStore, 'lightboxCurrentIndex');
 export const isOpenSignal = signal(uiStore, 'lightboxIsOpen');
 export const slidesSignal = signal(uiStore, 'lightboxSlides');
+export const selectedIdsSignal = signal(uiStore, 'selectedIds');
+export const isMultiSelectSignal = signal(uiStore, 'isMultiSelect');
+export const searchTermSignal = signal(uiStore, 'filters.q');
+
+export const selectedCount = computed(() => uiStore.getState().selectedIds.length);
+export const isAnySelected = computed(() => uiStore.getState().selectedIds.length > 0);
+
+export const hasActiveFilters = computed(() => {
+  const { category, tags, q } = uiStore.getState().filters;
+  return !!category || tags.length > 0 || !!q;
+});

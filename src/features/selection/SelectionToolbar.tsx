@@ -1,7 +1,8 @@
 import React, { memo } from 'react';
 import { useSelection } from './SelectionContext';
 import { useBatchActions } from './useBatchActions';
-import { useUI, UIStoreState } from '@/lib/store';
+import { useUI, UIStoreState, selectedCount, activeTaskCount } from '@/lib/store';
+import { useStore } from '@storve/react';
 import { useAppRouter } from '@/lib/router/useAppRouter';
 import { useAIBatchAnalysis } from '@/hooks/photo/useAIBatchAnalysis';
 import { useConfirm } from '@/context/ConfirmContext';
@@ -49,13 +50,13 @@ export function SelectionToolbar({
   const combineMutation = useGroupPhotosMutation();
   const removeMutation = useRemoveFromGroupMutation();
 
-  const [isAiPending, setIsAiPending] = React.useState(false);
-  const isAnyPending = isPending || isAiPending || combineMutation.isMutating || removeMutation.isMutating;
+  const activeTasks = useStore(activeTaskCount);
+  const isAnyPending = isPending || activeTasks > 0 || combineMutation.isMutating || removeMutation.isMutating;
   const setAvoidingSelection = useUI((s: UIStoreState) => s.setAvoidingSelection);
 
   const isBatchMode = state.mode === 'batch';
-  const selectedCount = state.selectedIds.length;
-  const isVisible = isBatchMode || selectedCount > 0;
+  const count = useStore(selectedCount);
+  const isVisible = isBatchMode || count > 0;
 
   React.useEffect(() => {
     if (isVisible) {
@@ -67,7 +68,7 @@ export function SelectionToolbar({
   // Media Query Subscriptions
   const isSm = useMediaQuery('(min-width: 640px)');
   const isMd = useMediaQuery('(min-width: 768px)');
-  const isAllSelected = allIds.length > 0 && selectedCount === allIds.length;
+  const isAllSelected = allIds.length > 0 && count === allIds.length;
 
   // Find actual Photo objects corresponding to selectedIds
   const selectedPhotos = React.useMemo(() => {
@@ -80,39 +81,34 @@ export function SelectionToolbar({
   }
 
   const handleBatchEdit = () => {
-    if (selectedCount === 0 || isAnyPending) return;
+    if (count === 0 || isAnyPending) return;
     patch({ batchEditingIds: state.selectedIds });
     navigate.adminBatchEdit();
   };
 
   const handleBatchAiGroup = async () => {
-    if (selectedCount === 0 || isAnyPending) return;
-    try {
-      setIsAiPending(true);
-      await handleBatchAiAnalyze(selectedPhotos as import('@/types').Photo[], groupId);
-    } finally {
-      setIsAiPending(false);
-    }
+    if (count === 0 || isAnyPending) return;
+    await handleBatchAiAnalyze(selectedPhotos as import('@/types').Photo[], groupId);
   };
 
   const handleManualGroup = async () => {
-    if (selectedCount === 0 || isAnyPending) return;
+    if (count === 0 || isAnyPending) return;
     await combineMutation.mutateAsync({ photoIds: state.selectedIds });
     clear();
   };
 
   const handleRemoveFromGroup = async () => {
-    if (selectedCount === 0 || isAnyPending || !groupId) return;
+    if (count === 0 || isAnyPending || !groupId) return;
     await removeMutation.mutateAsync({ photoIds: state.selectedIds, groupId });
     clear();
   };
 
   const handleBatchDeleteClick = async () => {
-    if (selectedCount === 0 || isAnyPending) return;
+    if (count === 0 || isAnyPending) return;
 
     const ok = await confirm({
       title: '確定要刪除選取的照片嗎？',
-      description: `此操作將會永久從系統中刪除這 ${selectedCount} 張照片，且無法復原。`,
+      description: `此操作將會永久從系統中刪除這 ${count} 張照片，且無法復原。`,
       confirmText: '刪除',
       variant: 'destructive',
     });
@@ -136,7 +132,7 @@ export function SelectionToolbar({
           </button>
 
           {/* 計數顯示 */}
-          <SelectionCounter count={selectedCount} total={totalItems} />
+          <SelectionCounter count={count} total={totalItems} />
 
           {/* 全選切換 */}
           <button
@@ -166,7 +162,7 @@ export function SelectionToolbar({
           {groupId && (
             <button
               onClick={handleRemoveFromGroup}
-              disabled={selectedCount === 0 || isAnyPending}
+              disabled={count === 0 || isAnyPending}
               className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm"
               title="將照片移出此合組"
             >
@@ -185,7 +181,7 @@ export function SelectionToolbar({
           {!groupId && (
             <button
               onClick={handleManualGroup}
-              disabled={selectedCount === 0 || isAnyPending}
+              disabled={count === 0 || isAnyPending}
               className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm"
               title="手動將照片合併為一組"
             >
@@ -203,11 +199,11 @@ export function SelectionToolbar({
           {/* AI 智能合組 */}
           <button
             onClick={handleBatchAiGroup}
-            disabled={selectedCount === 0 || isAnyPending}
+            disabled={count === 0 || isAnyPending}
             className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm"
             title="AI 智能分析合組"
           >
-            {isAiPending ? (
+            {activeTasks > 0 ? (
               <LoadingSpinner size="xs" className="text-purple-600 shrink-0" />
             ) : (
               <Icon name="sparkles" size={14} className="text-purple-600 animate-pulse shrink-0" />
@@ -218,7 +214,7 @@ export function SelectionToolbar({
           </button>
 
           {/* RHF 測試編輯 (單圖) */}
-          {selectedCount === 1 && (
+          {count === 1 && (
             <button
               onClick={() => {
                  filters.updateFilters({ modal: 'rhf_test', photoId: state.selectedIds[0] });
@@ -236,7 +232,7 @@ export function SelectionToolbar({
           {/* 批量編輯 */}
           <button
             onClick={handleBatchEdit}
-            disabled={selectedCount === 0 || isAnyPending}
+            disabled={count === 0 || isAnyPending}
             className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm"
             title="批次編輯欄位"
           >
@@ -249,7 +245,7 @@ export function SelectionToolbar({
           {/* 批量刪除 */}
           <button
             onClick={handleBatchDeleteClick}
-            disabled={selectedCount === 0 || isAnyPending}
+            disabled={count === 0 || isAnyPending}
             className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm"
             title="批次刪除照片"
           >

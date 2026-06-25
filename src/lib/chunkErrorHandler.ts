@@ -9,36 +9,50 @@ const MAX_RELOADS = 2
 export function setupChunkErrorHandler() {
   window.addEventListener('unhandledrejection', async (event) => {
     const msg = event.reason?.message || ''
-    const isChunkError = msg.includes('Failed to fetch dynamically imported module')
-      || msg.includes('Importing a module script failed')
-      || msg.includes('Loading chunk failed')
-      || msg.includes('error loading dynamically imported module')
-      || msg.includes('Failed to load module script')
-
-    if (!isChunkError) return
-
-    event.preventDefault()
-
-    const reloadCount = Number(sessionStorage.getItem(RELOAD_COUNT_KEY) || '0')
-    
-    if (reloadCount >= MAX_RELOADS) {
-      logger.error('[Chunk] 多次刷新仍失敗，停止自動恢復')
-      showFallbackErrorPage()
-      return
-    }
-
-    sessionStorage.setItem(RELOAD_COUNT_KEY, String(reloadCount + 1))
-    logger.warn(`[Chunk] 第 ${reloadCount + 1} 次自動恢復中...`)
-
-    await clearCaches()
-
-    try {
-      setTimeout(() => window.location.reload(), 100)
-    } catch (softError) {
-      logger.warn('[Chunk] 刷新失敗', softError)
-      setTimeout(() => window.location.reload(), 100)
-    }
+    handleChunkError(msg, event)
   })
+
+  window.addEventListener('error', (event) => {
+    const msg = event.message || ''
+    // 檢查是否為資源加載錯誤且包含 chunk/module 關鍵字
+    const isResourceError = event.target instanceof HTMLElement && (event.target.tagName === 'SCRIPT' || event.target.tagName === 'LINK')
+    if (isResourceError || /chunk|module script|dynamically imported/i.test(msg)) {
+      handleChunkError(msg, event)
+    }
+  }, true)
+}
+
+async function handleChunkError(msg: string, event: Event | PromiseRejectionEvent) {
+  const isChunkError = msg.includes('Failed to fetch dynamically imported module')
+    || msg.includes('Importing a module script failed')
+    || msg.includes('Loading chunk failed')
+    || msg.includes('error loading dynamically imported module')
+    || msg.includes('Failed to load module script')
+    || /chunk|module script|dynamically imported/i.test(msg)
+
+  if (!isChunkError) return
+
+  event.preventDefault()
+
+  const reloadCount = Number(sessionStorage.getItem(RELOAD_COUNT_KEY) || '0')
+  
+  if (reloadCount >= MAX_RELOADS) {
+    logger.error('[Chunk] 多次刷新仍失敗，停止自動恢復')
+    showFallbackErrorPage()
+    return
+  }
+
+  sessionStorage.setItem(RELOAD_COUNT_KEY, String(reloadCount + 1))
+  logger.warn(`[Chunk] 第 ${reloadCount + 1} 次自動恢復中...`)
+
+  await clearCaches()
+
+  try {
+    setTimeout(() => window.location.reload(), 100)
+  } catch (softError) {
+    logger.warn('[Chunk] 刷新失敗', softError)
+    setTimeout(() => window.location.reload(), 100)
+  }
 }
 
 async function clearCaches() {

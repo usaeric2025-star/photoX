@@ -2,15 +2,14 @@ import { STALE_TIMES } from '@/lib/query/config';
 import { useAppMutation, useAppQuery, appQuery } from '@/lib/query';
 import { api } from '@/lib/api';
 import { queryKeys } from '@/lib/query/keys';
-import { useTaskExecutor } from '../core/useTaskExecutor';
 import { useUI } from '@/lib/store';
+import { toast } from 'sonner';
 
 /**
  * useDiagnostics
  * Handles infrastructure and storage maintenance tasks
  */
 export function useDiagnostics() {
-  const { runTask } = useTaskExecutor();
   const appLang = useUI(s => s.appLang);
 
   const { data: auditResult, isValidating: isAuditing, mutate: runAuditQuery } = useAppQuery(
@@ -25,35 +24,33 @@ export function useDiagnostics() {
   );
 
   const runAudit = async () => {
-    return runTask(
-      appLang === 'zh' ? '存儲對賬審計' : 'Storage Audit',
-      async () => {
-        // Since key is null we override fetcher directly or simply just call the API here.
-        // But we wait, to trigger a null-key query, we should just call fetcher.
+    toast.loading(appLang === 'zh' ? '正在進行存儲對賬審計...' : 'Storage Audit...');
+    try {
         const res = await api.admin.maintenance.storage.audit.$get();
         const data = await res.json() as { success: boolean; data?: unknown; error?: string };
         if (!data.success) throw new Error(data.error || '對賬審計失敗');
-        // Manually update the cache if we had a proper key, but here we can just return it.
+        toast.success(appLang === 'zh' ? '審計完成' : 'Audit complete');
         return data.data;
-      }
-    );
+    } catch (e: any) {
+        toast.error(e.message);
+    }
   };
 
   const { isMutating: isCleaning, trigger: deduplicate } = useAppMutation(
     {
       mutationFn: async () => {
-        return runTask(
-          appLang === 'zh' ? '執行數據去重' : 'Deduplicate Records',
-          async () => {
-            const res = await api.admin.maintenance.storage.deduplicate.$post();
-            const json = await res.json() as { success: boolean; error?: string };
-            if (!json.success) throw new Error(json.error || '去重失敗');
-            return json;
-          }
-        );
+        toast.loading(appLang === 'zh' ? '正在執行數據去重...' : 'Deduplicating...');
+        const res = await api.admin.maintenance.storage.deduplicate.$post();
+        const json = await res.json() as { success: boolean; error?: string };
+        if (!json.success) throw new Error(json.error || '去重失敗');
+        return json;
       },
       onSuccess: () => {
         appQuery.mutate(queryKeys.photos.all);
+        toast.success(appLang === 'zh' ? '去重完成' : 'Deduplication complete');
+      },
+      onError: (e: any) => {
+        toast.error(e.message);
       }
     }
   );
@@ -68,15 +65,16 @@ export function useDiagnostics() {
     isAuditing,
     auditResult: auditResult || null,
     runDailyCleanup: async () => {
-      return runTask(
-        appLang === 'zh' ? '執行全域維護清理 (Daily Cleanup)' : 'Run Daily Maintenance',
-        async () => {
-          const res = await api.admin.maintenance['daily-cleanup'].$post();
-          const data = await res.json() as { success: boolean; data?: unknown; error?: string };
-          if (!data.success) throw new Error(data.error || 'Cleanup failed');
-          return data;
-        }
-      );
+      toast.loading(appLang === 'zh' ? '正在執行全域維護清理...' : 'Running cleanup...');
+      try {
+        const res = await api.admin.maintenance['daily-cleanup'].$post();
+        const data = await res.json() as { success: boolean; data?: unknown; error?: string };
+        if (!data.success) throw new Error(data.error || 'Cleanup failed');
+        toast.success(appLang === 'zh' ? '清理完成' : 'Cleanup complete');
+        return data;
+      } catch (e: any) {
+        toast.error(e.message);
+      }
     },
     report: { issues: [] }, // Compatibility layer
     refreshReport: () => {

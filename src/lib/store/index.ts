@@ -7,10 +7,10 @@ import { useAppLang } from '@/store/uiStore';
  * 统一的 Store Adapter
  * 职责：隐藏底层状态管理工具的实现细节，提供业务层一致的 API。
  */
-export { useUIStore as useUI, useUISelector, isOpenSignal, currentIndexSignal, slidesSignal } from '@/store/uiStore';
+export { useUIStore as useUI, useUISelector, isOpenSignal, currentIndexSignal, slidesSignal, selectedCount, isAnySelected, hasActiveFilters } from '@/store/uiStore';
 export { useAppLang } from '@/store/uiStore';
 export { useAuthStore as useAuth, useAuthSelector } from '@/store/authStore';
-export { useTaskStore as useTask, useTaskSelector } from '@/store/taskStore';
+export { useTaskStore as useTask, useTaskSelector, activeTaskCount } from '@/store/taskStore';
 
 /**
  * Storve handles fine-grained updates via selectors. 

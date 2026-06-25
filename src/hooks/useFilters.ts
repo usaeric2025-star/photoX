@@ -1,5 +1,6 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { Router, useAppRoute } from '@/router';
+import { useUI } from '@/lib/store';
 
 export interface UseFiltersOptions {
   enableStatus?: boolean;
@@ -123,6 +124,19 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
   const setView = useCallback((val: 'grid' | 'list') => {
     updateSearch({ view: val === 'grid' ? undefined : 'list' });
   }, [updateSearch]);
+
+  const patch = useUI(s => s.patch);
+
+  // Sync to Store for computed signals
+  useEffect(() => {
+    patch({ 
+      filters: { 
+        category, 
+        tags, 
+        q: searchVal 
+      } 
+    });
+  }, [category, tags, searchVal, patch]);
 
   const reset = useCallback(() => {
     if (route?.name === 'admin') {

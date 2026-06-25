@@ -5,7 +5,8 @@ import { PhotoCardBase } from './PhotoCardBase';
 import { PhotoStatusBadges, PhotoCardInfo, PhotoSelectionIndicator } from './PhotoCardParts';
 import { PinButton } from './PinButton';
 import { useColumns, usePermission, usePerformance } from '@/hooks';
-import { useUI } from '@/lib/store';
+import { useSignal } from '@storve/react';
+import { selectedIdsSignal, isMultiSelectSignal } from '@/store/uiStore';
 import { usePhotoCard } from '@/hooks/photo/usePhotoCard';
 
 interface AdminPhotoCardProps {
@@ -34,8 +35,9 @@ export function AdminPhotoCard({
   selected,
 }: AdminPhotoCardProps) {
   usePerformance('AdminPhotoCard');
-  const isSelected = selected !== undefined ? selected : useUI((s) => s.selectedIds.includes(photo.id));
-  const isMultiSelect = useUI((s) => s.isMultiSelect);
+  const selectedIds = useSignal(selectedIdsSignal);
+  const isMultiSelect = useSignal(isMultiSelectSignal);
+  const isSelected = selected !== undefined ? selected : selectedIds.includes(photo.id);
   const { columns } = useColumns();
   
   const { cardRef, handleClick, handleMouseEnter } = usePhotoCard({

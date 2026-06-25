@@ -111,7 +111,6 @@ export const groupPhotos = async (
   }
   
   const targetGroupId = predefinedGroupId || generateId();
-  const { supabase } = await import('@/lib/supabase');
   const { data: { session } } = await supabase.auth.getSession();
   const userId = session?.user?.id || 'staff';
 

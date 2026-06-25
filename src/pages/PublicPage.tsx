@@ -8,7 +8,8 @@ import { PublicPhotoGrid } from '@/components/photo/PublicPhotoGrid';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { useColumns } from '@/hooks';
 import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
-import { useUI, UIStoreState } from '@/lib/store';
+import { useUI, UIStoreState, hasActiveFilters } from '@/lib/store';
+import { useStore } from '@storve/react';
 import { WhatsAppDialog } from '@/components/shared/WhatsAppDialog';
 import { PhotoErrorDisplay } from '@/components/photo/PhotoErrorDisplay';
 import { Icon } from '@/components/ui/Icon';
@@ -29,7 +30,8 @@ export default function PublicPage() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const gridRef = useRef<import('virtua').VListHandle | null>(null);
   
-  const isAggregated = showGroupsCollapsed && !search && !category && (!tags || tags.length === 0);
+  const hasFilters = useStore(hasActiveFilters);
+  const isAggregated = showGroupsCollapsed && !hasFilters;
   
   const photoGridData = usePhotoGrid({
     categoryId: category || undefined,

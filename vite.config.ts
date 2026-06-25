@@ -37,28 +37,28 @@ export default defineConfig(({mode}) => {
     build: {
       emptyOutDir: true,
       outDir: 'dist',
+      codeSplitting: {
+        groups: [
+          {
+            name: 'vendor-core',
+            test: /[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/,
+          },
+          {
+            name: 'vendor-ui',
+            test: /[\\/]node_modules[\\/](lucide-react|@radix-ui|sonner|yet-another-react-lightbox|virtua|motion|el-form-react-components|el-form-react-hooks)[\\/]/,
+          },
+          {
+            name: 'vendor-features',
+            test: /[\\/]node_modules[\\/](@supabase|drizzle-orm|postgres|@aws-sdk)[\\/]/,
+          },
+          {
+            name: 'vendor-utils',
+            test: /[\\/]node_modules[\\/](dayjs|clsx|tailwind-merge|valibot|swr)[\\/]/,
+          }
+        ],
+      },
       rollupOptions: {
         output: {
-          advancedChunks: {
-            groups: [
-              {
-                name: 'vendor-core',
-                test: /[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/,
-              },
-              {
-                name: 'vendor-ui',
-                test: /[\\/]node_modules[\\/](lucide-react|@radix-ui|sonner|yet-another-react-lightbox|virtua|motion|el-form-react-components|el-form-react-hooks)[\\/]/,
-              },
-              {
-                name: 'vendor-features',
-                test: /[\\/]node_modules[\\/](@supabase|drizzle-orm|postgres|@aws-sdk)[\\/]/,
-              },
-              {
-                name: 'vendor-utils',
-                test: /[\\/]node_modules[\\/](dayjs|clsx|tailwind-merge|valibot|swr)[\\/]/,
-              }
-            ],
-          },
         }
       }
     },
