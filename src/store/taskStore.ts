@@ -1,6 +1,6 @@
 import { createStore } from '@storve/core';
+import { signal } from '@storve/core/signals';
 import { useStore } from '@storve/react';
-import { computed } from '@storve/core/computed';
 import { Task } from '@/lib/task-queue/types';
 
 export interface TaskStoreState {
@@ -17,10 +17,13 @@ export interface TaskStoreState {
   restoreFromSupabase: (tasks: Task[]) => void;
   clearAll: () => void;
   setAiStatus: (status: TaskStoreState['aiStatus']) => void;
+  setGlobalStatus: (status: TaskStoreState['status']) => void;
+  setGlobalProgress: (progress: number) => void;
 }
 
 // Internal store reference with setState exposed to avoid repeating casts
 export type TaskStoreInstance = ReturnType<typeof createStore<TaskStoreState>> & { 
+  state: TaskStoreState;
   setState: (updates: Partial<TaskStoreState> | ((state: TaskStoreState) => Partial<TaskStoreState>) | TaskStoreState) => void 
 };
 
@@ -31,6 +34,8 @@ export const taskStore = createStore<TaskStoreState>({
   progress: 0,
 
   setAiStatus: (aiStatus) => (taskStore as unknown as TaskStoreInstance).setState({ aiStatus }),
+  setGlobalStatus: (status) => (taskStore as unknown as TaskStoreInstance).setState({ status }),
+  setGlobalProgress: (progress) => (taskStore as unknown as TaskStoreInstance).setState({ progress }),
 
   enqueue: (task) => (taskStore as unknown as TaskStoreInstance).setState((state: TaskStoreState) => {
     const tasks = new Map(state.tasks);
@@ -99,19 +104,14 @@ export const taskStore = createStore<TaskStoreState>({
   clearAll: () => (taskStore as unknown as TaskStoreInstance).setState({ tasks: new Map() }),
 });
 
-export function useTaskStore(): TaskStoreState;
-export function useTaskStore<T>(selector: (state: TaskStoreState) => T): T;
-export function useTaskStore<T>(selector?: (state: TaskStoreState) => T): T | TaskStoreState {
-  if (selector) {
-    return useStore(taskStore, selector);
-  }
-  return useStore(taskStore) as TaskStoreState;
+export const tasksSignal = signal(taskStore, 'tasks');
+
+export function useTaskStore<T = TaskStoreState>(selector?: (state: TaskStoreState) => T): T {
+  return useStore(taskStore as any, selector as any);
 }
 export const useTaskSelector = useTaskStore;
 
-export const activeTaskCount = computed(() => {
-  const state = taskStore.getState();
-  return Array.from(state.tasks.values()).filter(
-    t => t.state?.status === 'processing'
-  ).length;
-});
+// Computed selectors
+export const activeTaskCountSelector = (state: TaskStoreState) => Array.from(state.tasks.values()).filter(
+  (t: Task) => t.state?.status === 'processing' || t.state?.status === 'queued'
+).length;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAppRouter } from '@/lib/router/useAppRouter';
+import { useAppRouter } from '@/lib/router';
 import { useGroupData } from '../hooks/useGroupData';
 import { PhotoListItem } from '@/types/api';
 import { Photo, Group, ProductGroup, Dimension, Category } from '@/types';
@@ -8,8 +8,8 @@ import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
 import { useFilters, useTranslation, useCategories } from '@/hooks';
 import { getTranslatedCategoryName } from '@/services/category/utils';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { useUI } from '@/lib/store';
-import { useUIStore } from '@/store/uiStore';
+import { useUI, useSignal } from '@/lib/store';
+import { batchModeSignal } from '@/lib/store';
 import { usePhotoSelection } from '@/hooks/photo/usePhotoSelection';
 import { SelectionProvider, SelectionToolbar } from '@/features/selection';
 import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
@@ -24,7 +24,7 @@ import { useColumns } from '@/hooks';
 import { FilterBar } from '@/features/filter/FilterBar';
 
 function AdminPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string, index: number) => void }) {
-  const isMultiSelect = useUI(s => s.isMultiSelect);
+  const isMultiSelect = useSignal(batchModeSignal);
   const { toggle } = usePhotoSelection();
   const { columns } = useColumns();
 
@@ -62,16 +62,18 @@ export function AdminGroupDetailPage() {
   const { data: categories = [] } = useCategories();
   const { anchor, setAnchor } = useFilters();
 
-  const lightboxIsOpen = useUIStore(s => s.lightboxIsOpen);
-  const lightboxCurrentIndex = useUIStore(s => s.lightboxCurrentIndex);
-  const openLightbox = useUIStore(s => s.openLightbox);
+  const { lightboxIsOpen, lightboxCurrentIndex, openLightbox } = useUI(s => ({
+    lightboxIsOpen: s.lightboxIsOpen,
+    lightboxCurrentIndex: s.lightboxCurrentIndex,
+    openLightbox: s.openLightbox
+  }));
   const lightboxItems = React.useMemo(() => photosToLightboxSlides(photos), [photos]);
 
   React.useEffect(() => {
-     if (photoId && photos.length > 0) {
-        const index = photos.findIndex(p => p.id === photoId);
+     if (photoId && (photos || []).length > 0) {
+        const index = (photos || []).findIndex(p => p.id === photoId);
         if (index !== -1) {
-           if (!lightboxIsOpen || photos[lightboxCurrentIndex]?.id !== photoId) {
+           if (!lightboxIsOpen || (photos || [])[lightboxCurrentIndex]?.id !== photoId) {
               openLightbox(lightboxItems, index);
            }
         }
@@ -80,7 +82,7 @@ export function AdminGroupDetailPage() {
 
   // Anchoring effect
   React.useEffect(() => {
-    if (anchor && photoId && !loading && photos.length > 0) {
+    if (anchor && photoId && !loading && (photos || []).length > 0) {
       // Small delay to ensure DOM is ready
       const timer = setTimeout(() => {
         const element = document.querySelector(`[data-photo-id="${photoId}"]`);
@@ -97,10 +99,10 @@ export function AdminGroupDetailPage() {
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [anchor, photoId, loading, photos.length]);
+  }, [anchor, photoId, loading, (photos || []).length]);
 
   const [showAdminTools, setShowAdminTools] = useState(false);
-  const isMultiSelect = useUI((s) => s.isMultiSelect);
+  const isMultiSelect = useSignal(batchModeSignal);
 
   const adminActions = useAdminMaintenance();
   
@@ -169,9 +171,9 @@ export function AdminGroupDetailPage() {
         </div>
         
         <SelectionToolbar
-          totalItems={photos?.length}
-          allIds={photos?.map((p) => p.id)}
-          allPhotos={photos}
+          totalItems={(photos || []).length}
+          allIds={(photos || []).map((p) => p.id)}
+          allPhotos={photos || []}
           groupId={groupId || undefined}
         />
 

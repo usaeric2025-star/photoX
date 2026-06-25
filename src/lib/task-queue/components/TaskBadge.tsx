@@ -1,12 +1,10 @@
 import React from 'react';
-import { useUI, storeAccessor } from '@/lib/store';
-import { useTaskStore } from '@/store/taskStore';
+import { useTask, isTaskDrawerOpen } from '@/lib/store';
 import { Icon } from '@/components/ui/Icon';
 
 export function TaskBadge() {
-  const status = useTaskStore(s => s.status);
-  const progress = useTaskStore(s => s.progress);
-  const isOpen = useUI((s) => s.isTaskDrawerOpen);
+  const status = useTask(s => s.status);
+  const progress = useTask(s => s.progress);
 
   if (status !== 'processing') return null;
 
@@ -15,7 +13,7 @@ export function TaskBadge() {
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        storeAccessor.ui.patch({ isTaskDrawerOpen: !isOpen });
+        isTaskDrawerOpen.set(!isTaskDrawerOpen.get());
       }}
       className="fixed bottom-6 right-6 bg-slate-900 border border-slate-800 text-white shadow-2xl rounded-full h-12 px-4 flex items-center gap-2.5 transition-all duration-300 hover:scale-105 active:scale-95 group font-sans z-[9990]"
       aria-label="開啟任務佇列"

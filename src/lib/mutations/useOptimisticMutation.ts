@@ -32,7 +32,7 @@ export const useOptimisticMutation = <
         if (config.variablesSchema) {
           const check = v.safeParse(config.variablesSchema, vars);
           if (!check.success) {
-            const summary = check.issues.map(i => i.message).join(', ');
+            const summary = Array.isArray(check.issues) ? check.issues.map(i => i.message).join(', ') : 'Unknown validation issue';
             throw new Error(`[Mutation Inputs Contract Violated] ${config.name}: ${summary}`);
           }
         }

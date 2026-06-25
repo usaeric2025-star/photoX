@@ -7,23 +7,24 @@ import { queryKeys } from '@/lib/query/keys';
 import { runBatchAnalysis } from '@/features/ai/orchestration';
 import { scheduler } from '@/lib/task-queue';
 import { generateId } from '@/lib/id';
-import { useUIStore } from '@/store/uiStore';
+import { isTaskDrawerOpen } from '@/lib/store';
 
 export function useAIBatchAnalysis() {
   const invalidatePhotos = useInvalidatePhotos();
-  const patchUI = useUIStore(s => s.patch);
 
   const handleBatchAiAnalyze = useCallback(async (targetPhotos: Photo[], groupId?: string) => {
     if (!targetPhotos || targetPhotos.length === 0) {
       showToast.error('请先选择照片');
       return;
     }
+    
+    showToast.info('已加入 AI 分析任務佇列...');
 
     const taskTitle = groupId ? `智能合组分析 (${targetPhotos.length}张)` : `批量 AI 分析 (${targetPhotos.length}张)`;
     const taskId = `ai-analyze-${generateId()}`;
 
-    // Open Task Drawer automatically
-    patchUI({ isTaskDrawerOpen: true });
+    // Open Task Drawer automatically using Signal
+    isTaskDrawerOpen.set(true);
 
     scheduler.enqueue({
         id: taskId,
@@ -47,6 +48,8 @@ export function useAIBatchAnalysis() {
                 appQuery.mutate(queryKeys.groups.all)
               ]);
             }
+            
+            showToast.success(groupId ? `智能合组完成` : `批量 AI 分析完成 (${successCount}张)`);
             
             return { successCount, groupSuccess };
         }

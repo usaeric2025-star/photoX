@@ -1,49 +1,31 @@
-import { useUIStore } from '@/store/uiStore';
+import { createPortal } from 'react-dom';
+import { useSignal, isLightboxOpen, isTaskDrawerOpen, isDiagnosticsOpen } from '@/lib/store';
+import { SonnerContainer } from '@/components/ui/SonnerContainer';
+import { TaskBadge, TaskDrawer } from '@/lib/task-queue/components';
 import { PhotoLightbox } from '@/features/lightbox/PhotoLightbox';
-import { PhotoEditDialog } from '@/features/photo-edit/PhotoEditDialog';
-import { lazy, Suspense } from 'react';
+import { DiagDialog } from '@/components/ui/DiagDialog';
+import { useEffect, useState } from 'react';
 
-/**
- * 集中管理的弹窗容器
- * 优点：
- * 1. 隔离核心渲染路径，避免弹窗重绘影响主视图
- * 2. 实践 AGENTS_md 的全屏对话框注册规范
- */
+export function DialogContainer() {
+  const isLightbox = useSignal(isLightboxOpen);
+  const isTaskDrawer = useSignal(isTaskDrawerOpen);
+  const isDiag = useSignal(isDiagnosticsOpen);
+  
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-const DiagnosticsDialog = lazy(() => import("@/components/ui/DiagnosticsDialog").then(m => ({ default: m.DiagnosticsDialog })));
-const WhatsAppDialog = lazy(() => import("@/components/shared/WhatsAppDialog").then(m => ({ default: m.WhatsAppDialog })));
+  if (!mounted) return null;
 
-export const DialogContainer = () => {
-  const { 
-    isDiagnosticsOpen, 
-    showWhatsAppChoice, 
-    isLightboxOpen,
-    patch 
-  } = useUIStore(s => ({
-    isDiagnosticsOpen: s.isDiagnosticsOpen,
-    showWhatsAppChoice: s.showWhatsAppChoice,
-    isLightboxOpen: s.lightboxIsOpen,
-    patch: s.patch
-  }));
-
-  return (
+  return createPortal(
     <>
-      {isLightboxOpen && <PhotoLightbox />}
-      <PhotoEditDialog />
-      <Suspense fallback={null}>
-        <DiagnosticsDialog 
-          open={isDiagnosticsOpen} 
-          onClose={() => patch({ isDiagnosticsOpen: false })} 
-        />
-      </Suspense>
-      {showWhatsAppChoice && (
-        <Suspense fallback={null}>
-          <WhatsAppDialog 
-            open={showWhatsAppChoice} 
-            onOpenChange={(open) => patch({ showWhatsAppChoice: open })} 
-          />
-        </Suspense>
-      )}
-    </>
+      <SonnerContainer />
+      <TaskBadge />
+      {isTaskDrawer && <TaskDrawer />}
+      {isLightbox && <PhotoLightbox />}
+      {isDiag && <DiagDialog open={isDiag} onClose={() => isDiagnosticsOpen.set(false)} />}
+    </>,
+    document.body
   );
-};
+}

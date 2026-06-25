@@ -1,4 +1,5 @@
-import { Router, useAppRoute } from '@/router';
+import { useAppRoute } from '@/lib/router';
+import { Router } from '@/router';
 import { useLocalStorage } from '@/hooks/core/useLocalStorage';
 import type { ColumnCount } from '@/features/filter/types';
 

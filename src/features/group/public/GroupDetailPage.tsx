@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { useAppRouter } from '@/lib/router/useAppRouter';
+import { useAppRouter } from '@/lib/router';
 import { useGroupData } from '../hooks/useGroupData';
 import { PhotoListItem } from '@/types/api';
 import { Photo, Group, Category } from '@/types';
@@ -8,8 +8,7 @@ import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
 import { useFilters, useTranslation, useCategories } from '@/hooks';
 import { GroupHeader } from '../components/GroupHeader';
 import { Button } from '@/components/shared/Button';
-import { useUI, UIStoreState } from '@/lib/store';
-import { useUIStore } from '@/store/uiStore';
+import { useUI } from '@/lib/store';
 import { usePublicSettings } from '@/hooks/settings/useSettings';
 import { WhatsAppDialog } from '@/components/shared/WhatsAppDialog';
 import { useColumns } from '@/hooks';
@@ -41,25 +40,26 @@ export function PublicGroupDetailPage() {
   const { groupId: fGroupId, photoId, setPhotoId } = useFilters();
   const groupId = ((params as { slug?: string }).slug) || fGroupId;
   
+  const [anchor, setAnchor] = React.useState(true);
+  const { data: categories } = useCategories();
+  const { lang, uiTranslations: t } = useTranslation();
+  
   const { group, photos, totalCount, loading, error } = useGroupData({ groupId, isAdmin: false });
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const showWhatsAppChoice = useUI((s: UIStoreState) => s.showWhatsAppChoice);
-  const patchUI = useUI((s: UIStoreState) => s.patch);
+  const { showWhatsAppChoice, patchUI, lightboxIsOpen, lightboxCurrentIndex, openLightbox } = useUI(s => ({
+    showWhatsAppChoice: s.showWhatsAppChoice,
+    patchUI: s.patch,
+    lightboxIsOpen: s.lightboxIsOpen,
+    lightboxCurrentIndex: s.lightboxCurrentIndex,
+    openLightbox: s.openLightbox
+  }));
   const { data: settings } = usePublicSettings();
-
-  const { lang, uiTranslations: t } = useTranslation();
-  const { data: categories = [] } = useCategories();
-  const { anchor, setAnchor } = useFilters();
-
-  const lightboxIsOpen = useUIStore(s => s.lightboxIsOpen);
-  const lightboxCurrentIndex = useUIStore(s => s.lightboxCurrentIndex);
-  const openLightbox = useUIStore(s => s.openLightbox);
   const lightboxItems = React.useMemo(() => photosToLightboxSlides(photos), [photos]);
 
   // Anchoring effect
   React.useEffect(() => {
-    if (anchor && photoId && !loading && photos.length > 0) {
+    if (anchor && photoId && !loading && (photos || []).length > 0) {
       // Small delay to ensure DOM is ready
       const timer = setTimeout(() => {
         const element = document.querySelector(`[data-photo-id="${photoId}"]`);
@@ -76,13 +76,13 @@ export function PublicGroupDetailPage() {
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [anchor, photoId, loading, photos.length]);
+  }, [anchor, photoId, loading, (photos || []).length]);
 
   React.useEffect(() => {
-     if (photoId && photos.length > 0) {
-        const index = photos.findIndex(p => p.id === photoId);
+     if (photoId && (photos || []).length > 0) {
+        const index = (photos || []).findIndex(p => p.id === photoId);
         if (index !== -1) {
-           if (!lightboxIsOpen || photos[lightboxCurrentIndex]?.id !== photoId) {
+           if (!lightboxIsOpen || (photos || [])[lightboxCurrentIndex]?.id !== photoId) {
               openLightbox(lightboxItems, index);
            }
         }

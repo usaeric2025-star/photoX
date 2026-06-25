@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { mutate } from 'swr';
+import { mutate } from '@/lib/query';
 import { loadCategoriesFromCloud } from '@/services/category/queries';
 import { loadTagsFromCloud } from '@/services/tag/queries';
 import { queryKeys } from '@/lib/query/keys';

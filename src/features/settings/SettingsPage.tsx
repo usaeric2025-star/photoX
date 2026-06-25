@@ -1,5 +1,5 @@
 import { logger } from '@/lib/logger';
-import { useAppRouter } from '@/lib/router/useAppRouter';
+import { useAppRouter } from '@/lib/router';
 import { useAppQuery as useQuery } from '@/lib/query';
 import { useAuth } from '@/lib/store';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
@@ -25,13 +25,13 @@ import { useFormSubmit } from '@/lib/form/useFormSubmit';
 import * as v from 'valibot';
 
 import { useSyncMutation } from '@/hooks';
-import { useTaskSelector, TaskState } from '@/lib/store';
+import { useTask, type TaskStoreState as TaskState } from '@/lib/store';
 
 const GeneralSettings = React.lazy(() => import('./GeneralSettings').then(m => ({ default: m.GeneralSettings })));
 const AISettings = React.lazy(() => import('./AISettings').then(m => ({ default: m.AISettings })));
 const TagsContainer = React.lazy(() => import('./TagsContainer').then(m => ({ default: m.TagsContainer })));
 const AssetManagementContainer = React.lazy(() => import('./AssetManagementContainer').then(m => ({ default: m.AssetManagementContainer })));
-const DiagnosticsDashboard = React.lazy(() => import('@/features/diagnostics/DiagnosticsDashboard').then(m => ({ default: m.DiagnosticsDashboard })));
+const DiagDashboard = React.lazy(() => import('@/features/diagnostics/DiagDashboard').then(m => ({ default: m.DiagDashboard })));
 
 
 const BUTTON_STYLES = {
@@ -51,7 +51,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   const { data: categories = [] } = useCategories();
   const { data: tags = [] } = useTags();
   const { data: manufacturers = [] } = useManufacturers();
-  const tasksMap = useTaskSelector((s: TaskState) => s.tasks);
+  const tasksMap = useTask((s: TaskState) => s.tasks);
   const tasks = React.useMemo(() => Array.from(tasksMap.values()), [tasksMap]);
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -114,8 +114,8 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   const [activeTab, setActiveTab] = React.useState('general');
 
   React.useEffect(() => {
-    if (route === 'settings') setActiveTab('general');
-    if (route === 'adminDiagnostics' || route === 'adminDiagnosticsLogs' || route === 'adminTasks') setActiveTab('status');
+    if (route?.name === 'settings') setActiveTab('general');
+    if (route?.name === 'adminDiagnostics' || route?.name === 'adminDiagnosticsLogs' || route?.name === 'adminTasks') setActiveTab('status');
   }, [route]);
 
   const { submit: runSaveSettings, isLoading: isSavingSettings } = useFormSubmit({
@@ -216,7 +216,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
 
           {activeTab === 'status' && (
             <Suspense fallback={<LoadingScreen />}>
-            <DiagnosticsDashboard />
+            <DiagDashboard />
             </Suspense>
           )}
         </div>

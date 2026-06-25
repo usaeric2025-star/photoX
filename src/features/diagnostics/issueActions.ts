@@ -1,6 +1,6 @@
 import { api } from '@/lib/api';
 
-export interface AffectedPhoto {
+interface AffectedPhoto {
   photoId: string;
   photoName: string;
   keptTags?: string[];

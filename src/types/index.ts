@@ -16,7 +16,6 @@ export const JsonObjectSchema = v.record(v.string(), v.unknown());
 
 // --- Sub-types (re-using API contract) ---
 export const TagSchema = ApiTagSchema;
-export const DimensionSchema = ApiDimensionSchema;
 
 // --- API Types ---
 export const MergeGroupsRequestSchema = v.object({

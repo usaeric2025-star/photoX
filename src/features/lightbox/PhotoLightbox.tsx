@@ -1,11 +1,12 @@
 import React, { useMemo, memo } from 'react';
 import { createPortal } from 'react-dom';
-import { useUIStore } from '@/store/uiStore';
+import { useUI } from '@/lib/store';
 import { useFilters } from '@/hooks/useFilters';
-import { Router, useAppRoute } from '@/router';
+import { useAppRoute, useNavigation } from '@/lib/router';
 import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
 import { usePermission, usePublicSettings } from '@/hooks';
 import { LightboxInfoCard } from './components/LightboxInfoCard';
+import { showToast } from '@/lib/ui/toast';
 import { Icon } from '@/components/ui/Icon';
 import { Photo } from '@/types';
 import { LightboxSlide } from '@/lib/lightbox/types';
@@ -109,7 +110,7 @@ function LightboxToolbar({
 }
 
 export function PhotoLightbox() {
-  const { isOpen, slides, currentIndex, closeLightbox, setLightboxIndex } = useUIStore(s => ({
+  const { isOpen, slides, currentIndex, closeLightbox, setLightboxIndex } = useUI(s => ({
     isOpen: s.lightboxIsOpen,
     slides: s.lightboxSlides,
     currentIndex: s.lightboxCurrentIndex,
@@ -121,6 +122,7 @@ export function PhotoLightbox() {
   
   const filters = useFilters();
   const route = useAppRoute();
+  const navigate = useNavigation();
   const adminActions = useAdminMaintenance();
   const { data: settings } = usePublicSettings();
   const { canEdit: canEditPermission } = usePermission();
@@ -129,8 +131,8 @@ export function PhotoLightbox() {
 
   const handleClose = () => {
     closeLightbox();
-    if (route?.name === 'photo') {
-      Router.push("home");
+    if (route.name === 'photo') {
+      navigate.home();
     } else {
       filters.setPhotoId(null);
     }
@@ -141,8 +143,8 @@ export function PhotoLightbox() {
     const photo = slides[index];
     if (photo?.id) {
       setLightboxIndex(index);
-      if (route?.name === 'photo') {
-        Router.replace("photo", { photoId: photo.id });
+      if (route.name === 'photo') {
+        navigate.photo(photo.id);
       } else {
         filters.setPhotoId(photo.id);
       }
@@ -218,7 +220,13 @@ export function PhotoLightbox() {
             }
           }}
           onDelete={async () => {
-            await adminActions.deletePhoto.mutateAsync([currentSlide.id]);
+            showToast.info('正在删除照片...');
+            try {
+              await adminActions.deletePhoto.mutateAsync([currentSlide.id]);
+              showToast.success('照片已删除');
+            } catch (e) {
+              showToast.error('删除失败，请重试');
+            }
           }}
         />
       )}

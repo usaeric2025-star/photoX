@@ -9,7 +9,7 @@ import { Icon } from '@/components/ui/Icon';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useUI, storeAccessor } from '@/lib/store';
 import { useTranslation } from '@/hooks';
-import { MaintenancePreviewDialog } from './MaintenancePreviewDialog';
+import { MaintPreviewDialog } from './MaintPreviewDialog';
 import { useMaintenanceExecution } from './useMaintenanceExecution';
 
 interface MaintenanceToolProps {
@@ -37,7 +37,7 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
 
   const renderSharedModals = () => (
     <>
-      <MaintenancePreviewDialog
+      <MaintPreviewDialog
         open={showPreviewDialog}
         onClose={() => setShowPreviewDialog(false)}
         title={baseTempTitle}

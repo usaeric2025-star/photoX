@@ -4,7 +4,7 @@ import { LoginScreen } from '../admin/LoginScreen';
 import React from 'react';
 
 // Mock useAppRouter
-vi.mock('@/lib/router/useAppRouter', () => ({
+vi.mock('@/lib/router', () => ({
   useAppRouter: () => ({
     navigate: {
       home: vi.fn(),

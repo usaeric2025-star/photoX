@@ -1,4 +1,4 @@
-import { useAuth } from '@/lib/store';
+import { useAuth, isTaskDrawerOpen } from '@/lib/store';
 import { useCallback } from 'react';
 
 import { checkDuplicateBatch } from '@/services/photo/duplicateCheck';
@@ -7,7 +7,6 @@ import { showToast } from '@/lib/ui/toast';
 import { hapticFeedback } from '@/lib/ui/haptics';
 import { scheduler } from '@/lib/task-queue';
 import { createBatchUploadTask } from '@/lib/task-queue/adapters/upload';
-import { storeAccessor } from '@/lib/store';
 
 export function usePhotoUpload() {
   const { user } = useAuth();
@@ -31,7 +30,7 @@ export function usePhotoUpload() {
     // Batch enqueue
     scheduler.enqueue(createBatchUploadTask(uniqueFiles, userId, {}));
     
-    storeAccessor.ui.patch({ isTaskDrawerOpen: true });
+    isTaskDrawerOpen.set(true);
     
     showToast.success(`已加入 ${uniqueFiles.length} 张照片到上传队列`);
 

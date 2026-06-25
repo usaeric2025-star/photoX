@@ -38,7 +38,7 @@ export function getClientEnv(): ClientEnv {
   if (!validation.success) {
     logger.warn("⚠️ [ENV-VALIDATION-INTEGRATED] Invalid Client Environment Variables (Falling back gracefully):");
     validation.issues.forEach((issue) => {
-      const path = issue.path?.map((p: { key: unknown }) => String(p.key)).join('.') || 'unknown';
+      const path = issue.path ? issue.path.map((p: { key: unknown }) => String(p.key)).join('.') : 'unknown';
       const hint = aiDebugHints[path] || "Check .env configuration";
       logger.warn(`- ${path}: ${issue.message} (aiDebugHint: ${hint})`);
     });
@@ -56,7 +56,7 @@ export function getServerEnv(envObj: NodeJS.ProcessEnv): ServerEnv {
   if (!validation.success) {
     logger.warn("⚠️ [ENV-VALIDATION-INTEGRATED] Invalid Server Environment Variables (Falling back gracefully):");
     validation.issues.forEach((issue) => {
-      const path = issue.path?.map((p: { key: unknown }) => String(p.key)).join('.') || 'unknown';
+      const path = issue.path ? issue.path.map((p: { key: unknown }) => String(p.key)).join('.') : 'unknown';
       const hint = aiDebugHints[path] || "Check .env configuration or deployment env variables";
       logger.warn(`- ${path}: ${issue.message} (aiDebugHint: ${hint})`);
     });

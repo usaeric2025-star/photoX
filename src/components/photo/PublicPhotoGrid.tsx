@@ -39,7 +39,7 @@ export function PublicPhotoGrid({
   return (
     <div className="h-full w-full relative">
       <PhotoGridContent 
-        photos={photos}
+        photos={photos || []}
         dataVersion={dataVersion}
         isPending={isPending}
         isFetching={isFetching}

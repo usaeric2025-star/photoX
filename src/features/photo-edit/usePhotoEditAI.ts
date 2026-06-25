@@ -252,6 +252,9 @@ export function usePhotoEditAI() {
       await appQuery.mutate(queryKeys.groups.all);
       
       return result;
+      }, {
+        showProgress: true,
+        showSuccessToast: true
       });
       return result;
     },

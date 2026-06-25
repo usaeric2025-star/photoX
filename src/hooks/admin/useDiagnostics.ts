@@ -3,7 +3,7 @@ import { useAppMutation, useAppQuery, appQuery } from '@/lib/query';
 import { api } from '@/lib/api';
 import { queryKeys } from '@/lib/query/keys';
 import { useUI } from '@/lib/store';
-import { toast } from 'sonner';
+import { showToast as toast } from '@/lib/ui/toast';
 
 /**
  * useDiagnostics

@@ -10,9 +10,8 @@ import {
   usePhotoDelete,
   useFilters,
 } from "@/hooks";
-import { useTaskSelector } from '@/lib/store';
+import { useTask, useUI } from '@/lib/store';
 import { showToast } from "@/lib/ui/toast";
-import { useUI } from '@/lib/store';
 import { usePhotoEditAI } from "./usePhotoEditAI";
 
 interface DialogHeaderProps {
@@ -31,7 +30,7 @@ export function DialogHeader({
   const appLang = useUI((s) => s.appLang);
   
   const { data: detailPhoto } = usePhoto(editPhotoId || '');
-  const tasksMap = useTaskSelector(s => s.tasks);
+  const tasksMap = useTask(s => s.tasks);
   const tasks = React.useMemo(() => Array.from(tasksMap.values()), [tasksMap]);
   const isAnalyzing = tasks.some(t => t.state?.status === 'processing' && (t.label.includes('识别') || t.label.includes('分析') || t.label.toLowerCase().includes('analyze') || t.label.toLowerCase().includes('identif')));
 

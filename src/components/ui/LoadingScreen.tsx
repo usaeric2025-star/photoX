@@ -1,7 +1,7 @@
 import { logger } from '@/lib/logger';
 import React, { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { createPortal } from 'react-dom';
-const DiagnosticsDialog = lazy(() => import('./DiagnosticsDialog').then(m => ({ default: m.DiagnosticsDialog })));
+const DiagDialog = lazy(() => import('./DiagDialog').then(m => ({ default: m.DiagDialog })));
 import { Icon } from '@/components/ui/Icon';
 
 export const LoadingScreen = ({ error, onRetry }: { error?: Error | null, onRetry?: () => void }) => {
@@ -105,7 +105,7 @@ export const LoadingScreen = ({ error, onRetry }: { error?: Error | null, onRetr
     <>
       {content}
       <Suspense fallback={null}>
-        <DiagnosticsDialog 
+        <DiagDialog 
           open={diagnosticsOpen} 
           onClose={() => setDiagnosticsOpen(false)} 
         />

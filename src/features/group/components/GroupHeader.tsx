@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { useAppRouter } from '@/lib/router/useAppRouter';
+import { useAppRouter } from '@/lib/router';
 import { Group } from '@/types';
 import { Icon } from '@/components/ui/Icon';
-import { useUI } from '@/lib/store';
+import { useSignal } from '@/lib/store';
+import { batchModeSignal } from '@/lib/store';
 import { usePhotoSelection } from '@/hooks/photo/usePhotoSelection';
 import { copyToClipboard } from '@/utils/clipboard';
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
@@ -51,7 +52,7 @@ export function GroupHeader({ group, photoCount, isAdmin, onEditSettings, onUpda
   const [editTitleValue, setEditTitleValue] = useState(group.name);
   
   const { enable, disable } = usePhotoSelection();
-  const isMultiSelect = useUI(s => s.isMultiSelect);
+  const isMultiSelect = useSignal(batchModeSignal);
 
   const { submit: updateTitle, isLoading: isUpdating, fieldErrors, clearFieldError } = useFormSubmit<typeof GroupTitleSchema, boolean>({
     schema: GroupTitleSchema,

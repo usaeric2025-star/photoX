@@ -1,6 +1,6 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useTaskExecutor } from "@/hooks";
-import { useTaskSelector } from '@/lib/store';
+import { useTask } from '@/lib/store';
 import React, { useState } from "react";
 import { Icon } from '@/components/ui/Icon';
 import { Button } from '@/components/ui/Button';
@@ -55,7 +55,7 @@ export function TagsSection({
     // isPinned={(settings?.pinned_tags || []).includes(String(tag.id))}
   
   const { runTask } = useTaskExecutor();
-  const tasksMap = useTaskSelector(s => s.tasks);
+  const tasksMap = useTask(s => s.tasks);
   const tasks = React.useMemo(() => Array.from(tasksMap.values()), [tasksMap]);
   const isRunning = tasks.some((t) => t.state?.status === "processing");
 

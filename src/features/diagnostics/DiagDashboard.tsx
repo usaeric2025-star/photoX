@@ -1,4 +1,4 @@
-import { useAppRouter } from '@/lib/router/useAppRouter';
+import { useAppRouter } from '@/lib/router';
 import React, { useState, Suspense, useMemo } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { useDiagnostics } from '@/hooks/admin/useDiagnostics';
@@ -10,12 +10,12 @@ const ErrorLogViewer = React.lazy(() => import('./ErrorLogViewer').then(m => ({ 
 const MaintenanceCenter = React.lazy(() => import('./MaintenanceCenter').then(m => ({ default: m.MaintenanceCenter })));
 const TasksContent = React.lazy(() => import('./TasksList').then(m => ({ default: m.TasksContent })));
 
-export function DiagnosticsDashboard() {
+export function DiagDashboard() {
   const { navigate, route } = useAppRouter();
   
   const activeTab = (() => {
-    if (route === 'adminTasks') return 'tasks';
-    if (route === 'adminDiagnosticsLogs') return 'logs';
+    if (route?.name === 'adminTasks') return 'tasks';
+    if (route?.name === 'adminDiagnosticsLogs') return 'logs';
     return 'diagnosis';
   })();
 

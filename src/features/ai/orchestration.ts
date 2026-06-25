@@ -28,7 +28,7 @@ interface PhotoAnalysisResponse {
   raw_result?: string;
 }
 
-export const analyzeAndSavePhoto = async (
+const analyzeAndSavePhoto = async (
   photo: Photo
 ): Promise<unknown> => {
   try {
@@ -89,7 +89,7 @@ export const analyzeAndSavePhoto = async (
   }
 };
 
-export const autoGroupPhotos = async (
+const autoGroupPhotos = async (
   photoIds: string[]
 ): Promise<unknown> => {
   try {
@@ -135,7 +135,7 @@ interface GroupAnalysisResponse {
   materials?: string[];
 }
 
-export const analyzeAndSaveGroup = async (
+const analyzeAndSaveGroup = async (
   groupId: string,
   photos: Photo[]
 ): Promise<unknown> => {

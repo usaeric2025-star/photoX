@@ -3,9 +3,8 @@ import { usePhotoEditSessionContext } from '@/hooks/photo/usePhotoEditSessionCon
 import { DimensionEditor } from './DimensionEditor';
 import { Dimension } from '@/types';
 import { safeArray } from '@/lib/utils';
-import { useUI } from '@/lib/store';
+import { useUI, useTask } from '@/lib/store';
 import { usePhoto, useFilters } from '@/hooks';
-import { useTaskSelector } from '@/lib/store';
 import { showToast } from '@/lib/ui/toast';
 import { translations } from '@/locales';
 import { usePhotoEditAI } from './usePhotoEditAI';
@@ -17,7 +16,7 @@ export function DetailsTab() {
   const { form } = usePhotoEditSessionContext();
   const { modal, photoId } = useFilters();
   const appLang = useUI((s) => s.appLang);
-  const tasksMap = useTaskSelector(s => s.tasks);
+  const tasksMap = useTask(s => s.tasks);
   const tasks = React.useMemo(() => Array.from(tasksMap.values()), [tasksMap]);
   const { data: detailPhoto } = usePhoto(modal === 'edit' ? photoId : '');
   const { handleAiAnalyze } = usePhotoEditAI();

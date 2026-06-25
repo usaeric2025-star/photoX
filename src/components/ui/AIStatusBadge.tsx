@@ -1,5 +1,5 @@
 import React from 'react';
-import { useSignal } from '@storve/react';
+import { useSignal } from '@/lib/store';
 import { aiAnalysisSignal } from '@/lib/ai/executor';
 import { Icon } from '@/components/ui/Icon';
 

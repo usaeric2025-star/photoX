@@ -1699,3 +1699,59 @@ PhotoX 當前單頁數據 < 100KB，IndexedDB 收益為零且增加 Bundle Size 
 ### 4. 並存策略
 - ✅ 同一個狀態可以同時提供 Signal 和 Selector 兩種存取方式
 - ✅ Selector 適用於需要一次獲取多個狀態的情境
+
+## 🏗️ PhotoX 狀態管理長久性憲法 (永久鎖定)
+
+這份方案定義了 PhotoX 的狀態管理架構，所有新功能開發、AI 生成程式碼均必須嚴格遵守。
+
+### 📜 第一條：狀態歸屬
+- **UI 瞬態**：Signal (`@storve/core`)，用於燈箱開關、搜尋關鍵字、選取狀態等。
+- **服務器資料**：SWR (`swr`)，用於照片列表、分類、標籤等。
+- **URL 參數**：Chicane (`@zoontek/chicane`)，用於篩選條件、分頁、排序等。
+- **表單狀態**：TanStack Form，用於編輯表單、批量編輯等。
+- **元件內部狀態**：`useState`，用於展開/收合、懸浮狀態等。
+
+### 📜 第二條：讀寫規則
+- **UI 狀態**：`useSignal(signalName)` 讀取；`signalName.value = newValue` 寫入。
+- **服務器資料**：`useSWR(key, fetcher)` 讀取；`mutate(key)` 寫入。
+- **URL 參數**：`useRoute()` 讀取；`router.push({ query: {...} })` 寫入。
+- **表單狀態**：`form.watch()` 讀取；`form.setValue()` 寫入。
+
+### 📜 第三條：禁止事項
+- ❌ 禁止使用 Selector (`(state) => state.xxx`)
+- ❌ 禁止用 `useEffect` 同步 Signal
+- ❌ 禁止在元件中管理跨元件共用的狀態
+- ❌ 禁止直接導入 Store 檔案 (需經 `@/lib/store`)
+- ❌ 禁止在 Signal 和 Zustand 之間混用
+- ❌ 禁止用 `useState` 管理跨元件共用的狀態
+
+### 📜 第四條：檔案結構
+- `src/lib/store/index.ts`: 唯一狀態入口 (統一導出)
+- `hooks/data/`: SWR 資料請求
+- `components/`: 元件只讀取，不管理狀態
+
+### 📜 第五條：遷移檢查清單
+- 移除所有 Zustand 依賴
+- 移除所有 TanStack Query 依賴 (若已過渡至 SWR)
+- 移除所有 Selector 殘留
+- 檢查所有 Signal 同步邏輯 (使用 `reaction` 或直接賦值)
+- 檢查所有 Store 導入入口
+
+### 📜 第六條：AI 開發守則 (強制)
+1. **讀取 UI 狀態**：`useSignal(signalName)`
+2. **更新 UI 狀態**：`signalName.value = newValue`
+3. **服務器資料**：`useSWR(key, fetcher)`
+4. **URL 參數**：`useRoute().query.xxx`
+
+## Chicane 路由使用規範（強制）
+
+### 核心原則
+- Chicane 的 `useRoute()` 必須傳入路由名稱陣列（例如 `ALL_ROUTES`）來匹配指定的路由。
+- 路由定義（`src/router.ts`）是唯一真相源，所有路由名稱和參數結構都由它決定。
+- 封裝層 `@/lib/router` 已經處理了這個參數 (`Router.useRoute(ALL_ROUTES)`)。
+- 元件只需從 `@/lib/router` 導入 `useAppRoute` 即可安全推導出當前的聯合型別。
+- 導航時，請使用 `Router.createURL()` 來建立型別安全的 URL，或使用統一的 `useNavigation()`。
+
+### 禁止事項
+- ❌ 強制統一導入來源：所有元件和 Hook 必須從 `@/lib/router` 導入，禁止直接導入 `@zoontek/chicane`。
+- ❌ 禁止在元件中調用 `useRoute(...)`（應使用封裝好的 `useAppRoute` 或 `useAppRouter`）。

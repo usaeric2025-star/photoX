@@ -1,5 +1,6 @@
 import React from 'react';
-import { useUI } from '@/lib/store';
+import { useSignal } from '@/lib/store';
+import { batchModeSignal } from '@/lib/store';
 import { PhotoGridContent } from './PhotoGridContent';
 import { SelectionProvider, SelectionToolbar } from '@/features/selection';
 import { Category } from '@/types/photo';
@@ -31,15 +32,15 @@ export function AdminPhotoGrid({
   filters,
   onPhotoClick
 }: AdminPhotoGridProps) {
-  const isMultiSelect = useUI(s => s.isMultiSelect);
+  const isMultiSelect = useSignal(batchModeSignal);
   
-  const allIds = React.useMemo(() => photos.map(p => p.id), [photos]);
+  const allIds = React.useMemo(() => (photos || []).map(p => p.id), [photos]);
 
   return (
     <SelectionProvider>
       <div className="h-full w-full relative">
         <PhotoGridContent 
-          photos={photos}
+          photos={photos || []}
           dataVersion={dataVersion}
           isPending={isPending}
           isFetching={isFetching}
@@ -54,8 +55,8 @@ export function AdminPhotoGrid({
         {isMultiSelect && (
           <SelectionToolbar 
             allIds={allIds} 
-            totalItems={photos.length} 
-            allPhotos={photos} 
+            totalItems={(photos || []).length} 
+            allPhotos={photos || []} 
           />
         )}
       </div>

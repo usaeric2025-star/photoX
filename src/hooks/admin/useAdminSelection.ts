@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useAdminMaintenance } from './useAdminMaintenance';
 import { useUI, UIStoreState } from '@/lib/store';
-import { useAppRouter } from '@/lib/router/useAppRouter';
+import { useAppRouter } from '@/lib/router';
 
 /**
  * Handle administrative selection actions (批量删除, 批量隐藏, etc.)

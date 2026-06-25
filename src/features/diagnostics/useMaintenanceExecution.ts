@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { ISSUE_ACTIONS, PreviewResult } from "@/features/diagnostics/issueActions";
-import { toast } from 'sonner';
-import { handleError } from '@/lib/error';
+import { useTaskExecutor } from '@/hooks';
 
 export function useMaintenanceExecution(issueId: string, title: string, onSuccess?: () => void) {
   const [preview, setPreview] = useState<PreviewResult | null>(null);
@@ -10,6 +9,7 @@ export function useMaintenanceExecution(issueId: string, title: string, onSucces
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [progress, setProgress] = useState(0);
 
+  const { runTask } = useTaskExecutor();
   const action = ISSUE_ACTIONS[issueId];
 
   const handlePreview = async () => {
@@ -22,7 +22,7 @@ export function useMaintenanceExecution(issueId: string, title: string, onSucces
         setShowPreviewDialog(true);
       }
     } catch (e: unknown) {
-      handleError(e, '预检工具');
+      console.error(e);
     } finally {
       setIsPreviewing(false);
     }
@@ -31,22 +31,25 @@ export function useMaintenanceExecution(issueId: string, title: string, onSucces
   const handleExecute = async () => {
     if (!action) return;
     setIsExecuting(true);
-    setProgress(5);
     
-    toast.loading(`正在执行: ${title}...`, { id: issueId });
-
     try {
-      const { message } = await action.execute();
-      setProgress(100);
-      toast.success(message || "执行完成", { id: issueId });
-      
-      setPreview(null);
-      if (onSuccess) onSuccess();
-      setTimeout(() => setProgress(0), 1000);
-    } catch (e: unknown) {
-      handleError(e, title);
-      toast.error(`执行失败: ${title}`, { id: issueId });
-      setProgress(0);
+      await runTask(
+        title,
+        async ({ updateProgress }) => {
+          updateProgress(10, '正在初始化...');
+          const result = await action.execute();
+          updateProgress(100, '完成');
+          return result;
+        },
+        {
+          showProgress: false,
+          showSuccessToast: true,
+          onSuccess: () => {
+            setPreview(null);
+            if (onSuccess) onSuccess();
+          }
+        }
+      );
     } finally {
       setIsExecuting(false);
     }

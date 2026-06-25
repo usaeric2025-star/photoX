@@ -1,4 +1,4 @@
-import { useAppRouter } from '@/lib/router/useAppRouter';
+import { useAppRouter } from '@/lib/router';
 import React, { Suspense, lazy } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
@@ -8,8 +8,7 @@ const UploadModeDialog = lazy(() => import('@/features/upload/components/UploadM
 import { usePhotoUpload } from '@/features/upload';
 import { UploadButton } from '@/components/shared/UploadButton';
 import { useAIBatchAnalysis } from '@/hooks';
-import { useTaskSelector } from '@/lib/store';
-import { useUI } from '@/lib/store';
+import { useTask, useUI } from '@/lib/store';
 import { AdminHeader } from '@/components/layouts/headers/AdminHeader';
 import { AdminAuthGate } from '@/components/admin/AdminAuthGate';
 import { AdminContainer } from '@/components/admin/AdminContainer';
@@ -18,7 +17,7 @@ import { FilterBar } from '@/features/filter/FilterBar';
 
 const BatchEditScreen = lazy(() => import('@/features/batch-edit/BatchEditScreen').then(m => ({ default: m.BatchEditScreen })));
 const StatisticsScreen = lazy(() => import('@/features/statistics/components/StatisticsScreen').then(m => ({ default: m.StatisticsScreen })));
-const DiagnosticsDashboard = lazy(() => import('@/features/diagnostics/DiagnosticsDashboard').then(m => ({ default: m.DiagnosticsDashboard })));
+const DiagDashboard = lazy(() => import('@/features/diagnostics/DiagDashboard').then(m => ({ default: m.DiagDashboard })));
 const SettingsPage = lazy(() => import('@/features/settings/SettingsPage').then(m => ({ default: m.SettingsPage })));
 
 export function AdminPageContent() {
@@ -37,16 +36,16 @@ export function AdminPageContent() {
   }));
   
   const { handleBatchAiAnalyze } = useAIBatchAnalysis();
-  const tasks = useTaskSelector((s) => Array.from(s.tasks.values()));
+  const tasks = useTask((s) => Array.from(s.tasks.values()));
   const { navigate, route } = useAppRouter();
   
   const currentScreen = (() => {
-    if (route === 'admin') return 'gallery';
-    if (route === 'adminTasks') return 'tasks';
-    if (route === 'adminDiagnosticsLogs') return 'error-logs';
-    if (route === 'adminDiagnostics') return 'diagnose';
-    if (route === 'settings') return 'settings';
-    if (route === 'adminBatchEdit') return 'batch';
+    if (route?.name === 'admin') return 'gallery';
+    if (route?.name === 'adminTasks') return 'tasks';
+    if (route?.name === 'adminDiagnosticsLogs') return 'error-logs';
+    if (route?.name === 'adminDiagnostics') return 'diagnose';
+    if (route?.name === 'settings') return 'settings';
+    if (route?.name === 'adminBatchEdit') return 'batch';
     return 'gallery' as const;
   })();
 
@@ -79,7 +78,7 @@ export function AdminPageContent() {
                 </ScreenWrapper>
               ) : currentScreen === 'diagnose' ? (
                 <ScreenWrapper key="admin-diagnose" onClose={navigate.admin}>
-                  <DiagnosticsDashboard />
+                  <DiagDashboard />
                 </ScreenWrapper>
               ) : ['settings', 'tasks', 'error-logs'].includes(currentScreen) ? (
                 <div key="admin-settings-container" className="h-full bg-slate-50 animate-scale-in">

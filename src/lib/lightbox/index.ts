@@ -1,13 +1,13 @@
 export * from './types';
-import { useUIStore } from '@/store/uiStore';
+import { useUI } from '@/lib/store';
 
 export function useLightbox() {
-  const isOpen = useUIStore(s => s.lightboxIsOpen || false);
-  const slides = useUIStore(s => s.lightboxSlides || []);
-  const currentIndex = useUIStore(s => s.lightboxCurrentIndex || 0);
-  const openLightbox = useUIStore(s => s.openLightbox);
-  const closeLightbox = useUIStore(s => s.closeLightbox);
-  const setLightboxIndex = useUIStore(s => s.setLightboxIndex);
+  const isOpen = useUI(s => s.lightboxIsOpen || false);
+  const slides = useUI(s => s.lightboxSlides || []);
+  const currentIndex = useUI(s => s.lightboxCurrentIndex || 0);
+  const openLightbox = useUI(s => s.openLightbox);
+  const closeLightbox = useUI(s => s.closeLightbox);
+  const setLightboxIndex = useUI(s => s.setLightboxIndex);
   
   return {
     isOpen,

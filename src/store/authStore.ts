@@ -1,4 +1,5 @@
 import { createStore } from '@storve/core';
+import { signal } from '@storve/core/signals';
 import { useStore } from '@storve/react';
 import { logger } from '@/lib/logger';
 import { User } from '@/types';
@@ -18,6 +19,7 @@ export interface AuthState {
 
 // Internal store reference with setState exposed to avoid repeating casts
 export type AuthStoreInstance = ReturnType<typeof createStore<AuthState>> & { 
+  state: AuthState;
   setState: (updates: Partial<AuthState> | ((state: AuthState) => Partial<AuthState>)) => void 
 };
 
@@ -91,15 +93,13 @@ export const authStore = createStore<AuthState>({
   },
 });
 
-export function useAuthStore(): AuthState;
-export function useAuthStore<T>(selector: (state: AuthState) => T): T;
-export function useAuthStore<T>(selector?: (state: AuthState) => T): T | AuthState {
-  if (selector) {
-    return useStore(authStore, selector);
-  }
-  return useStore(authStore) as AuthState;
+export function useAuthStore<T = AuthState>(selector?: (state: AuthState) => T): T {
+  return useStore(authStore as any, selector as any);
 }
 export const useAuthSelector = useAuthStore;
+
+export const userSignal = signal(authStore, 'user');
+export const authLoadingSignal = signal(authStore, 'isLoading');
 
 // 全局监听（只初始化一次）
 let authListenerInitialized = false;
@@ -119,9 +119,9 @@ export const initAuthListener = () => {
         avatar_url: (u.user_metadata?.avatar_url as string) || null,
         email_verified: !!u.email_confirmed_at,
       };
-      authStore.getState().setUser(mapped);
+      (authStore as AuthStoreInstance).setState({ user: mapped, isLoading: false });
     } else {
-      authStore.getState().setUser(null);
+      (authStore as AuthStoreInstance).setState({ user: null, isLoading: false });
     }
   });
   

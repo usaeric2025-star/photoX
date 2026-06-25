@@ -1,13 +1,12 @@
 import { STALE_TIMES } from '@/lib/query/config';
-import { useAuth } from '@/lib/store';
+import { useAuth, tasksSignal, useSignal } from '@/lib/store';
 import { useEffect, useState } from 'react';
 import { UnifiedTask, TaskStatus } from '@/types';
 import { api } from '@/lib/api';
 import { useAppQuery } from '@/lib/query';
 import { useAdminMode } from '../core/auth/useAdminMode';
 import { logger } from '@/lib/logger';
-import { useAppRoute } from '@/router';
-import { useTaskSelector } from '@/lib/store';
+import { useAppRoute } from '@/lib/router';
 
 /**
  * Adapter hook to aggregate frontend local tasks and backend maintenance jobs.
@@ -20,7 +19,7 @@ export function useGlobalTasks() {
   const routeName = route?.name;
   
   // 1. Frontend Tasks (Real-time, transient)
-  const sessionTasksMap = useTaskSelector((state) => state.tasks);
+  const sessionTasksMap = useSignal(tasksSignal);
 
   // 2. Backend Jobs (Durable, polled)
   const { data: remoteJobs = [], mutate: refetchJobs, isLoading: isPendingJobs } = useAppQuery(

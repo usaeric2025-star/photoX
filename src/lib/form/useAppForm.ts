@@ -70,7 +70,10 @@ export function useAppForm<T extends v.GenericSchema>({
   return {
     form,
     // Alias to maintain compatibility during migration
-    updateInput: (path: string[], value: unknown) => form.setFieldValue(path.join('.') as never, value as never),
+    updateInput: (path: string[], value: unknown) => {
+      if (!path || !Array.isArray(path)) return;
+      form.setFieldValue(path.join('.') as never, value as never);
+    },
     submit: submitWithValidation,
   };
 }

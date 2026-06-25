@@ -46,5 +46,3 @@ export const Icon = ({
     />
   );
 };
-
-export const LucideIcon = Icon;

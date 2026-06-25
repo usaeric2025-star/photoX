@@ -1,4 +1,4 @@
-import { useAppRouter } from '@/lib/router/useAppRouter';
+import { useAppRouter } from '@/lib/router';
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { Icon } from '@/components/ui/Icon'; // Keep one or two critical ones as standard imports for P0 performance
@@ -23,8 +23,8 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
   const { role } = usePermission();
   const patch = useUI((s: UIStoreState) => s.patch);
   const { navigate, route } = useAppRouter();
-  const isAdmin = route === 'admin' || route === 'adminGroup';
-  const isGroupPage = route === 'publicGroup' || route === 'adminGroup';
+  const isAdmin = route?.name === 'admin' || route?.name === 'adminGroup';
+  const isGroupPage = route?.name === 'publicGroup' || route?.name === 'adminGroup';
 
   const lang = useUI((s: UIStoreState) => s.appLang);
   const t = translations[lang as keyof typeof translations] || translations.en;

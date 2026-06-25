@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { useLongPress } from '@/hooks/core/useLongPress';
 import { useUI, UIStoreState } from '@/lib/store';
-import { useAppRouter } from '@/lib/router/useAppRouter';
+import { useAppRoute, useNavigation } from '@/lib/router';
 import { PhotoListItem } from '@/types/api';
 import { queryKeys } from '@/lib/query/keys';
 import { getGroupById } from '@/services/group/queries';
@@ -33,7 +33,8 @@ export function usePhotoCard({
   
   const toggleSelected = useUI((s: UIStoreState) => s.toggleSelected);
   const patch = useUI((s: UIStoreState) => s.patch);
-  const { navigate, route, params } = useAppRouter();
+  const route = useAppRoute();
+  const navigate = useNavigation();
  
    const handleOpenLightbox = () => {
      logger.debug('[usePhotoCard] handleOpenLightbox for photo:', photo.id);
@@ -50,7 +51,7 @@ export function usePhotoCard({
 
   const handleMouseEnter = () => {
     // Basic navigation detection
-    const isAlreadyOnGroupPage = route === 'publicGroup' || route === 'adminGroup' || (params as Record<string, string>).groupId;
+    const isAlreadyOnGroupPage = route.name === 'publicGroup' || route.name === 'adminGroup' || (route.params as Record<string, string>).groupId;
     if (photo.groupId && showGroupsCollapsed && !hasSearchQuery && !isAlreadyOnGroupPage) {
       // SWR automatically handles caching when fetcher is called elsewhere.
       // Removed prefetchQuery as it was TanStack Query specific.
@@ -74,7 +75,7 @@ export function usePhotoCard({
       return;
     }
 
-    const isAlreadyOnGroupPage = route === 'publicGroup' || route === 'adminGroup' || (params as Record<string, string>).groupId;
+    const isAlreadyOnGroupPage = route.name === 'publicGroup' || route.name === 'adminGroup' || (route.params as Record<string, string>).groupId;
     const shouldGoToGroup = photo.groupId && showGroupsCollapsed && !isAlreadyOnGroupPage;
 
     if (shouldGoToGroup) {

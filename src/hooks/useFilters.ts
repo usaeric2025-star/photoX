@@ -1,5 +1,6 @@
 import { useCallback, useEffect } from 'react';
-import { Router, useAppRoute } from '@/router';
+import { useAppRoute } from '@/lib/router';
+import { Router } from '@/router';
 import { useUI } from '@/lib/store';
 
 export interface UseFiltersOptions {
@@ -10,39 +11,26 @@ export interface UseFiltersOptions {
 
 export const useFilters = (options: UseFiltersOptions = {}) => {
   const route = useAppRoute();
-  const params = route ? (route.params as Record<string, unknown>) : {};
+  const params = route ? (route.params as any) : {};
 
   const updateSearch = useCallback((updates: Record<string, unknown>) => {
-    console.log("updateSearch called", { updates, route });
-    if (!route) {
-      console.warn("updateSearch ignored: route is null", { updates });
-      return;
-    }
+    if (!route) return;
     const currentRouteName = route.name;
 
-    const cleanParams: Record<string, unknown> = {};
-    for (const key in route.params) {
-      if (key !== '~internal' && key !== 'href') {
-        cleanParams[key] = (route.params as Record<string, unknown>)[key];
-      }
-    }
-
-    // Cast chicane parameters to strings or string[] if defined
-    const merged = { ...cleanParams };
+    // Merge updates into current params
+    const mergedParams: Record<string, any> = { ...route.params };
     for (const key in updates) {
       const val = updates[key];
       if (val === undefined) {
-          delete merged[key];
+        delete mergedParams[key];
       } else if (Array.isArray(val)) {
-          merged[key] = val.map(String);
+        mergedParams[key] = val.map(String);
       } else {
-          merged[key] = String(val);
+        mergedParams[key] = String(val);
       }
     }
 
-    console.log("Pushing to Router", { currentRouteName, merged });
-    // We can cast merged to Record<string, unknown> because params are mostly optional string|string[]
-    Router.push(currentRouteName as never, merged);
+    Router.push(currentRouteName as never, mergedParams as any);
   }, [route]);
 
   // Expose batch update capability
@@ -62,7 +50,7 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
 
   const tags = Array.isArray(params.tag) ? (params.tag as string[]) : (params.tag ? [params.tag as string] : []);
   const setTags = useCallback((vals: string[]) => {
-    updateSearch({ tag: vals.length === 0 ? undefined : vals });
+    updateSearch({ tag: (vals && vals.length === 0) ? undefined : vals });
   }, [updateSearch]);
 
   const sort = (params.sort as string) || options.sortOptions?.[0]?.value || 'newest';
@@ -94,7 +82,6 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
       
       // Prevent infinite loops if value is the same
       if (val === photoId) return;
-      if (!val && !photoId) return;
 
       // 否則使用 query param 模式以保留過濾條件
       updateSearch({ photoId: val || undefined });
@@ -124,19 +111,6 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
   const setView = useCallback((val: 'grid' | 'list') => {
     updateSearch({ view: val === 'grid' ? undefined : 'list' });
   }, [updateSearch]);
-
-  const patch = useUI(s => s.patch);
-
-  // Sync to Store for computed signals
-  useEffect(() => {
-    patch({ 
-      filters: { 
-        category, 
-        tags, 
-        q: searchVal 
-      } 
-    });
-  }, [category, tags, searchVal, patch]);
 
   const reset = useCallback(() => {
     if (route?.name === 'admin') {

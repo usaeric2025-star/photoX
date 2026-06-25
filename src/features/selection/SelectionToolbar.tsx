@@ -1,9 +1,8 @@
 import React, { memo } from 'react';
 import { useSelection } from './SelectionContext';
 import { useBatchActions } from './useBatchActions';
-import { useUI, UIStoreState, selectedCount, activeTaskCount } from '@/lib/store';
-import { useStore } from '@storve/react';
-import { useAppRouter } from '@/lib/router/useAppRouter';
+import { useUI, type UIStoreState, type TaskStoreState, useTask, useSignal, activeTaskCountSelector, batchModeSignal, selectedCountSelector } from '@/lib/store';
+import { useAppRouter } from '@/lib/router';
 import { useAIBatchAnalysis } from '@/hooks/photo/useAIBatchAnalysis';
 import { useConfirm } from '@/context/ConfirmContext';
 import { useMediaQuery, useFilters } from '@/hooks';
@@ -50,12 +49,13 @@ export function SelectionToolbar({
   const combineMutation = useGroupPhotosMutation();
   const removeMutation = useRemoveFromGroupMutation();
 
-  const activeTasks = useStore(activeTaskCount);
+  // ✅ 使用計算後的 Selector
+  const activeTasks = useTask(activeTaskCountSelector);
   const isAnyPending = isPending || activeTasks > 0 || combineMutation.isMutating || removeMutation.isMutating;
   const setAvoidingSelection = useUI((s: UIStoreState) => s.setAvoidingSelection);
 
-  const isBatchMode = state.mode === 'batch';
-  const count = useStore(selectedCount);
+  const isBatchMode = useSignal(batchModeSignal);
+  const count = useUI(selectedCountSelector);
   const isVisible = isBatchMode || count > 0;
 
   React.useEffect(() => {

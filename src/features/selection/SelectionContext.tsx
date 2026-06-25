@@ -1,5 +1,6 @@
 import React, { createContext, useContext, ReactNode, useCallback } from 'react';
-import { useUI, UIStoreState } from '@/lib/store';
+import { useUI, UIStoreState, useSignal } from '@/lib/store';
+import { batchModeSignal } from '@/lib/store';
 
 interface SelectionState {
   selectedIds: string[];
@@ -23,7 +24,7 @@ const SelectionContext = createContext<SelectionContextValue | null>(null);
 
 export function SelectionProvider({ children }: { children: ReactNode }) {
   const selectedIds = useUI((s: UIStoreState) => s.selectedIds);
-  const isMultiSelect = useUI((s: UIStoreState) => s.isMultiSelect);
+  const isMultiSelect = useSignal(batchModeSignal);
   const patch = useUI((s: UIStoreState) => s.patch);
   const toggleSelected = useUI((s: UIStoreState) => s.toggleSelected);
   const updateSelectedIds = useUI((s: UIStoreState) => s.updateSelectedIds);
@@ -51,17 +52,18 @@ export function SelectionProvider({ children }: { children: ReactNode }) {
   }, [toggleSelected]);
 
   const selectAll = useCallback((ids: string[]) => {
-    patch({ isMultiSelect: true });
+    batchModeSignal.set(true);
     updateSelectedIds(ids);
-  }, [patch, updateSelectedIds]);
+  }, [updateSelectedIds]);
 
   const clear = useCallback(() => {
-    patch({ isMultiSelect: false, selectedIds: [] });
+    batchModeSignal.set(false);
+    patch({ selectedIds: [] });
   }, [patch]);
 
   const toggleMode = useCallback(() => {
-    patch((s: UIStoreState) => ({ isMultiSelect: !s.isMultiSelect }));
-  }, [patch]);
+    batchModeSignal.set(!batchModeSignal.get());
+  }, []);
 
   const isSelected = useCallback((id: string) => {
     return selectedIds.includes(id);

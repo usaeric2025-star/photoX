@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { useTaskSelector, useUI, storeAccessor } from '@/lib/store';
+import { useSignal, storeAccessor, tasksSignal, isTaskDrawerOpen } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { Icon } from '@/components/ui/Icon';
 import { Task } from '../types';
@@ -8,10 +8,10 @@ import { Task } from '../types';
 function TaskItem({ task }: { task: Task }) {
   const statusBg = {
     queued: 'bg-slate-50 border-slate-100',
-    processing: 'bg-blue-50/20 border-blue-100/70',
-    completed: 'bg-green-50/20 border-green-100/70',
-    failed: 'bg-red-50/20 border-red-100/70',
-    cancelled: 'bg-amber-50/20 border-amber-100/70'
+    processing: 'bg-blue-50/10 border-blue-100/50',
+    completed: 'bg-green-50/10 border-green-100/50',
+    failed: 'bg-red-50/10 border-red-100/50',
+    cancelled: 'bg-amber-50/10 border-amber-100/50'
   } as const;
 
   const statusLabels = {
@@ -22,27 +22,48 @@ function TaskItem({ task }: { task: Task }) {
     cancelled: '已取消'
   } as const;
 
-  const progress = task.state.status === 'processing' ? task.state.progress : 0;
-  const progressPercent = Math.min(100, Math.max(0, Math.round(progress * 100)));
+  const typeIcons: Record<string, any> = {
+    'upload': 'upload-cloud',
+    'ai-analyze': 'sparkles',
+    'repair': 'wrench',
+    'sync': 'refresh-cw'
+  };
+
+  const progress = task.state.status === 'processing' ? task.state.progress : (task.state.status === 'completed' ? 100 : 0);
+  const progressPercent = Math.min(100, Math.max(0, Math.round(progress)));
 
   const message = task.state.status === 'processing' ? task.state.message : (task.state.status === 'failed' ? task.state.error : undefined);
 
   return (
     <div className={cn(
-      "p-4 border rounded-2xl relative space-y-3 shadow-sm font-sans transition-all duration-300", 
-      statusBg[task.state.status as keyof typeof statusBg] || 'border-slate-100 bg-slate-50'
+      "p-4 border rounded-2xl relative space-y-3 transition-all duration-300", 
+      statusBg[task.state.status as keyof typeof statusBg] || 'border-slate-100 bg-slate-50',
+      task.state.status === 'processing' ? 'shadow-md shadow-blue-500/5' : 'shadow-sm'
     )}>
       <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          <div className="font-bold text-slate-800 text-xs truncate uppercase tracking-tight">{task.label}</div>
-          {message && (
-            <p className="text-[10px] text-slate-500 mt-1 line-clamp-2 leading-normal">{message}</p>
-          )}
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <div className={cn(
+            "p-1.5 rounded-lg shrink-0",
+            task.state.status === 'processing' ? 'bg-blue-100 text-blue-600 animate-pulse' : 
+            task.state.status === 'completed' ? 'bg-green-100 text-green-600' :
+            task.state.status === 'failed' ? 'bg-red-100 text-red-600' :
+            'bg-slate-100 text-slate-500'
+          )}>
+            <Icon name={typeIcons[task.type] || 'activity'} size={14} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-bold text-slate-800 text-xs truncate uppercase tracking-tight">{task.label}</div>
+            {message && (
+              <p className={cn(
+                "text-[10px] mt-0.5 line-clamp-2 leading-normal font-medium",
+                task.state.status === 'failed' ? 'text-red-500' : 'text-slate-500'
+              )}>
+                {message}
+              </p>
+            )}
+          </div>
         </div>
-        <div className="shrink-0 flex items-center gap-1.5">
-          {task.state.status === 'processing' && (
-            <Icon name="refresh-cw" size={11} className="text-blue-500 animate-spin" />
-          )}
+        <div className="shrink-0">
           <span className={cn(
             "text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full select-none", 
             task.state.status === 'completed' ? 'bg-green-100 text-green-700' :
@@ -63,7 +84,10 @@ function TaskItem({ task }: { task: Task }) {
           </div>
           <div className="w-full bg-slate-100 dark:bg-slate-800/50 rounded-full h-1.5 overflow-hidden">
             <div 
-              className="h-1.5 rounded-full transition-all duration-300 bg-blue-500" 
+              className={cn(
+                "h-1.5 rounded-full transition-all duration-500",
+                task.state.status === 'processing' ? 'bg-blue-500' : 'bg-slate-300'
+              )} 
               style={{ width: `${progressPercent}%` }} 
             />
           </div>
@@ -80,9 +104,9 @@ export function TaskDrawer() {
     setMounted(true);
   }, []);
 
-  const tasksMap = useTaskSelector((state) => state.tasks);
+  const tasksMap = useSignal(tasksSignal);
   const tasks = React.useMemo(() => Array.from(tasksMap.values()), [tasksMap]);
-  const isOpen = useUI((s) => s.isTaskDrawerOpen);
+  const isOpen = useSignal(isTaskDrawerOpen);
 
   React.useEffect(() => {
     if (!isOpen) return;
@@ -91,7 +115,7 @@ export function TaskDrawer() {
       if (e.key === 'Escape') {
         e.preventDefault();
         e.stopPropagation();
-        storeAccessor.ui.patch({ isTaskDrawerOpen: false });
+        isTaskDrawerOpen.set(false);
       }
     };
 
@@ -103,7 +127,7 @@ export function TaskDrawer() {
   
   if (!mounted) return null;
 
-  return createPortal(
+  return (
     <>
       {/* Backdrop overlay to prevent underlying elements from receiving outside clicks */}
       {isOpen && (
@@ -112,7 +136,7 @@ export function TaskDrawer() {
           onClick={(e) => {
             e.stopPropagation();
             e.preventDefault();
-            storeAccessor.ui.patch({ isTaskDrawerOpen: false });
+            isTaskDrawerOpen.set(false);
           }}
         />
       )}
@@ -131,7 +155,7 @@ export function TaskDrawer() {
                 type="button"
                 onClick={() => {
                   const state = storeAccessor.task;
-                  const remaining = Array.from(state.tasks.values()).filter((t) => t.state?.status === 'queued' || t.state?.status === 'processing');
+                  const remaining = Array.from(state.tasks.values()).filter((t: any) => t.state?.status === 'queued' || t.state?.status === 'processing');
                   state.clearAll();
                   remaining.forEach(t => state.enqueue(t));
                 }}
@@ -142,7 +166,7 @@ export function TaskDrawer() {
             )}
             <button 
               type="button"
-              onClick={() => storeAccessor.ui.patch({ isTaskDrawerOpen: false })}
+              onClick={() => isTaskDrawerOpen.set(false)}
               className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all cursor-pointer active:scale-95"
               aria-label="關閉"
             >
@@ -168,7 +192,6 @@ export function TaskDrawer() {
           )}
         </div>
       </div>
-    </>,
-    document.body
+    </>
   );
 }

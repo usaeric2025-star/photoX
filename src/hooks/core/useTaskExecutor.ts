@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useTask } from '@/lib/store';
+import { useTask, storeAccessor } from '@/lib/store';
 import { showToast } from '@/lib/ui/toast';
 import { ErrorFactory } from '@/lib/error';
 import { hapticFeedback } from '@/lib/ui/haptics';
@@ -50,6 +50,8 @@ export function useTaskExecutor() {
         }
       });
       startTask(taskId);
+      // Auto open drawer for progress tasks
+      storeAccessor.ui.patch({ isTaskDrawerOpen: true });
     }
 
     const updateProgress = (pct: number, msg?: string) => {

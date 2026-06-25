@@ -2,7 +2,7 @@ import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useUI, storeAccessor, UIStoreState } from '@/lib/store';
 import { useCallback, useState } from 'react';
 import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
-import { useAppRouter } from '@/lib/router/useAppRouter';
+import { useAppRouter } from '@/lib/router';
 
 
 /**
@@ -103,7 +103,7 @@ export const usePhotoSelection = () => {
     await batchUpdate.mutateAsync({ ids, updates: cleanUpdates });
     patch({ batchEditingIds: null, isMultiSelect: false, selectedIds: [] });
     resetForm();
-    if (route === 'adminBatchEdit') {
+    if (route?.name === 'adminBatchEdit') {
       navigate.admin();
     }
   };
@@ -115,7 +115,7 @@ export const usePhotoSelection = () => {
     await deletePhoto.mutateAsync(ids);
     patch({ batchEditingIds: null, isMultiSelect: false, selectedIds: [] });
     resetForm();
-    if (route === 'adminBatchEdit') {
+    if (route?.name === 'adminBatchEdit') {
       navigate.admin();
     }
   };
@@ -123,7 +123,7 @@ export const usePhotoSelection = () => {
   const handleClose = () => {
     patch({ batchEditingIds: null });
     resetForm();
-    if (route === 'adminBatchEdit') {
+    if (route?.name === 'adminBatchEdit') {
       navigate.admin();
     }
   };

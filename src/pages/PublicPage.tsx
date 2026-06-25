@@ -8,8 +8,7 @@ import { PublicPhotoGrid } from '@/components/photo/PublicPhotoGrid';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { useColumns } from '@/hooks';
 import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
-import { useUI, UIStoreState, hasActiveFilters } from '@/lib/store';
-import { useStore } from '@storve/react';
+import { useUI, hasActiveFiltersSelector, type UIStoreState } from '@/lib/store';
 import { WhatsAppDialog } from '@/components/shared/WhatsAppDialog';
 import { PhotoErrorDisplay } from '@/components/photo/PhotoErrorDisplay';
 import { Icon } from '@/components/ui/Icon';
@@ -30,7 +29,7 @@ export default function PublicPage() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const gridRef = useRef<import('virtua').VListHandle | null>(null);
   
-  const hasFilters = useStore(hasActiveFilters);
+  const hasFilters = useUI(hasActiveFiltersSelector);
   const isAggregated = showGroupsCollapsed && !hasFilters;
   
   const photoGridData = usePhotoGrid({
@@ -51,7 +50,7 @@ export default function PublicPage() {
   } = photoGridData;
 
   const showWhatsAppChoice = useUI((s: UIStoreState) => s.showWhatsAppChoice);
-  const ui = useUI();
+  const patch = useUI(s => s.patch);
   const { lang, uiTranslations: t } = useTranslation();
   const { data: settings } = usePublicSettings();
 
@@ -139,7 +138,7 @@ export default function PublicPage() {
         <button
           onClick={() => {
             logger.debug('[PublicPage] WhatsApp button clicked');
-            ui.patch({ showWhatsAppChoice: true });
+            patch({ showWhatsAppChoice: true });
           }}
           type="button"
           className="w-12 h-12 flex items-center justify-center rounded-full bg-success text-text-on-primary shadow-lg hover:opacity-90 transition-all active:scale-90 focus:outline-none"

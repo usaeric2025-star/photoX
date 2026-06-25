@@ -86,12 +86,13 @@ export function useFormSubmit<T extends v.GenericSchema, TResult>({
           
           if (!validationResult.success) {
             const firstIssue = validationResult.issues[0];
-            const msg = firstIssue ? `字段 [${firstIssue.path?.map((p) => String(p.key)).join('.')}] 验证失败: ${firstIssue.message}` : '输入数据验证失败';
+            const path = firstIssue.path ? firstIssue.path.map((p) => String(p.key)).join('.') : 'root';
+            const msg = firstIssue ? `字段 [${path}] 验证失败: ${firstIssue.message}` : '输入数据验证失败';
             showToast.error(msg);
             
             let newFieldErrors: Record<string, string> = {};
             for (const issue of validationResult.issues) {
-              const path = issue.path?.map((p) => String(p.key)).join('.') || 'root';
+              const path = issue.path ? issue.path.map((p) => String(p.key)).join('.') : 'root';
               newFieldErrors[path] = issue.message;
             }
 

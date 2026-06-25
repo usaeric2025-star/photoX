@@ -3,7 +3,7 @@ import { NativeDialog } from "@/components/ui/NativeDialog";
 import { Button } from "@/components/shared/Button";
 import { PreviewResult } from "@/features/diagnostics/issueActions";
 
-interface MaintenancePreviewDialogProps {
+interface MaintPreviewDialogProps {
   open: boolean;
   onClose: () => void;
   title: string;
@@ -12,14 +12,14 @@ interface MaintenancePreviewDialogProps {
   onConfirm: () => void;
 }
 
-export function MaintenancePreviewDialog({
+export function MaintPreviewDialog({
   open,
   onClose,
   title,
   preview,
   danger,
   onConfirm
-}: MaintenancePreviewDialogProps) {
+}: MaintPreviewDialogProps) {
   return (
     <NativeDialog
       id="maintenance-preview-dialog"
@@ -41,12 +41,12 @@ export function MaintenancePreviewDialog({
               <div className="flex flex-wrap gap-2.5 items-center">
                 <div className="flex items-center gap-1.5 text-[10px] bg-green-50/80 border border-green-100 px-2.5 py-1 rounded-lg text-green-700 font-bold">
                   <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                  保留：{photo.keptTags && photo.keptTags.length > 0 ? photo.keptTags.join(' / ') : '无'}
+                  保留：{photo.keptTags && Array.isArray(photo.keptTags) && photo.keptTags.length > 0 ? photo.keptTags.join(' / ') : '无'}
                 </div>
-                {photo.removedTags && photo.removedTags.length > 0 && (
+                {photo.removedTags && Array.isArray(photo.removedTags) && photo.removedTags.length > 0 && (
                   <div className="flex items-center gap-1.5 text-[10px] bg-red-50/80 border border-red-100 px-2.5 py-1 rounded-lg text-red-600 font-bold">
                     <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                    移除：{photo.removedTags.join(' / ')}
+                    移除：{Array.isArray(photo.removedTags) ? photo.removedTags.join(' / ') : ''}
                   </div>
                 )}
               </div>

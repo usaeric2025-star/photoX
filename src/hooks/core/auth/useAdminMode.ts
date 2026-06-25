@@ -1,4 +1,4 @@
-import { useAppRouter } from '@/lib/router/useAppRouter';
+import { useAppRouter } from '@/lib/router';
 
 /**
  * Unified hook to get the effective admin mode.
@@ -6,5 +6,5 @@ import { useAppRouter } from '@/lib/router/useAppRouter';
  */
 export function useAdminMode() {
   const { route } = useAppRouter();
-  return typeof route === 'string' && route.startsWith('admin');
+  return typeof route?.name === 'string' && route?.name?.startsWith('admin');
 }

@@ -1,7 +1,6 @@
 import { createStore } from '@storve/core';
 import { useStore } from '@storve/react';
 import { signal } from '@storve/core/signals';
-import { computed } from '@storve/core/computed';
 import { STORAGE_KEYS, storage } from '@/lib/storage';
 import { ProductFormData } from '@/types';
 import type { LightboxSlide } from '@/lib/lightbox/types';
@@ -23,6 +22,7 @@ export interface UIStoreState {
   showWhatsAppChoice: boolean;
   uploadModeDialogOpen: boolean;
   isTaskDrawerOpen: boolean;
+  isSidebarOpen: boolean;
   isAvoidingSelection: boolean;
   pendingFiles: FileList | File[] | null;
   isDiagnosticsOpen: boolean;
@@ -59,6 +59,7 @@ export interface UIStoreState {
 
 // Internal store reference with setState exposed to avoid repeating casts
 export type UIStoreInstance = ReturnType<typeof createStore<UIStoreState>> & { 
+  state: UIStoreState;
   setState: (updates: Partial<UIStoreState> | ((state: UIStoreState) => Partial<UIStoreState>)) => void 
 };
 
@@ -101,6 +102,7 @@ export const uiStore = createStore<UIStoreState>({
   showWhatsAppChoice: false,
   uploadModeDialogOpen: false,
   isTaskDrawerOpen: false,
+  isSidebarOpen: false,
   isAvoidingSelection: false,
   pendingFiles: null,
   isDiagnosticsOpen: false,
@@ -206,22 +208,24 @@ export const uiStore = createStore<UIStoreState>({
   },
 });
 
-export function useUIStore<T>(selector?: (state: UIStoreState) => T): T {
-  return useStore(uiStore, selector || ((s: UIStoreState) => s as unknown as T));
+export function useUIStore<T = UIStoreState>(selector?: (state: UIStoreState) => T): T {
+  return useStore(uiStore as any, selector as any);
 }
 export const useUISelector = useUIStore;
-export const useAppLang = () => useStore(uiStore, (s) => s.appLang);
-export const currentIndexSignal = signal(uiStore, 'lightboxCurrentIndex');
-export const isOpenSignal = signal(uiStore, 'lightboxIsOpen');
-export const slidesSignal = signal(uiStore, 'lightboxSlides');
+export const useAppLang = () => useStore(uiStore as any, (s: any) => s.appLang) as 'zh' | 'en' | 'ms';
+
+export const searchTermSignal = signal(uiStore, 'filters.q' as any);
+export const isTaskDrawerOpenSignal = signal(uiStore, 'isTaskDrawerOpen');
+export const isDiagnosticsOpenSignal = signal(uiStore, 'isDiagnosticsOpen');
+export const batchModeSignal = signal(uiStore, 'isMultiSelect');
+export const isSidebarOpenSignal = signal(uiStore, 'isSidebarOpen');
 export const selectedIdsSignal = signal(uiStore, 'selectedIds');
-export const isMultiSelectSignal = signal(uiStore, 'isMultiSelect');
-export const searchTermSignal = signal(uiStore, 'filters.q');
 
-export const selectedCount = computed(() => uiStore.getState().selectedIds.length);
-export const isAnySelected = computed(() => uiStore.getState().selectedIds.length > 0);
-
-export const hasActiveFilters = computed(() => {
-  const { category, tags, q } = uiStore.getState().filters;
+// Computed selectors
+export const selectedCountSelector = (state: UIStoreState) => state.selectedIds.length;
+export const selectedSetSelector = (state: UIStoreState) => new Set(state.selectedIds);
+export const isAnySelectedSelector = (state: UIStoreState) => state.selectedIds.length > 0;
+export const hasActiveFiltersSelector = (state: UIStoreState) => {
+  const { category, tags, q } = state.filters;
   return !!category || tags.length > 0 || !!q;
-});
+};

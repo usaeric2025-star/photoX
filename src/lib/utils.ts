@@ -10,11 +10,6 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * Converts a string to Title Case.
  */
-export function toTitleCase(str: string): string {
-  if (!str) return '';
-  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-}
-
 export function safeArray<T>(arr: unknown): T[] {
   if (!arr) return [];
   if (Array.isArray(arr)) return arr as T[];
@@ -33,10 +28,6 @@ export function normalizeManufacturerName(name: string): string {
   return name?.trim().toUpperCase() || '';
 }
 
-export function normalizeSearchQuery(query: string): string {
-  return query?.trim() || '';
-}
-
 export function getPathFromUrl(url: string): string {
   if (!url) return '';
   try {
@@ -48,24 +39,6 @@ export function getPathFromUrl(url: string): string {
     return url.startsWith('/') ? url : `/${url}`;
   }
 }
-
-/**
- * Standard date formatting for the application: YYYY-MM-DD HH:mm
- */
-import { formatDate as formatDateLib, formatDateTime as formatDateTimeLib } from './date';
-
-export function formatDate(date: Date | string | number | null | undefined): string {
-  return formatDateTimeLib(date);
-}
-
-/**
- * [SELECTOR] flattenPagination
- * 統一處理 TanStack Query InfiniteData 的鋪平邏輯
- */
-export const flattenPagination = <T>(data: { pages: { photos: T[] }[] } | undefined): T[] => {
-  if (!data?.pages) return [];
-  return data.pages.flatMap(page => page.photos);
-};
 
 export function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   const timeout = new Promise<never>((_, reject) =>

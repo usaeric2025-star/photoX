@@ -1,8 +1,8 @@
-import { useAppRouter } from '@/lib/router/useAppRouter';
+import { useAppRouter } from '@/lib/router';
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { Icon } from '@/components/ui/Icon';
-import { useAuth } from '@/lib/store';
+import { useAuth, activeTaskCountSelector, useTask, useSignal } from '@/lib/store';
 import { useUI, useSettings, useAdminBatchActions, usePermission } from '@/hooks';
 import { useAppQuery } from '@/lib/query';
 import { api } from '@/lib/api';
@@ -10,6 +10,7 @@ import { NativePopover } from '@/components/ui/NativePopover';
 import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
 import { translations } from "@/locales";
 import { storage } from '@/services/storage';
+import { batchModeSignal, isTaskDrawerOpenSignal } from '@/lib/store';
 
 interface AdminHeaderProps {
   className?: string;
@@ -24,9 +25,11 @@ export function AdminHeader({ className }: AdminHeaderProps) {
   const { navigate } = useAppRouter();
 
   const lang = useUI((s) => s.appLang);
-  const isMultiSelect = useUI((s) => s.isMultiSelect);
+  const isMultiSelect = useSignal(batchModeSignal);
   const patch = useUI((s) => s.patch);
   const t = translations[lang as keyof typeof translations] || translations.en;
+
+  const taskCount = useTask(activeTaskCountSelector);
 
   const { data: totalCountData } = useAppQuery(
     ['photos', 'count', 'total'],
@@ -145,11 +148,11 @@ export function AdminHeader({ className }: AdminHeaderProps) {
           
           {/* 选择模式/多选 按钮 */}
           <button
+// AdminHeader.tsx
             onClick={() => {
-              if (isMultiSelect) {
-                patch({ isMultiSelect: false, selectedIds: [] });
-              } else {
-                patch({ isMultiSelect: true });
+              batchModeSignal.set(!batchModeSignal.get());
+              if (batchModeSignal.get()) {
+                patch({ selectedIds: [] });
               }
             }}
             className={cn("w-9 h-9 sm:w-10 sm:h-10", isMultiSelect ? theme.buttonActive : theme.button)}
@@ -169,6 +172,20 @@ export function AdminHeader({ className }: AdminHeaderProps) {
             <Icon name="sparkles" className="size-4 sm:size-4.5 animate-pulse" />
           </button>
   
+          {/* Task Queue 門戶 */}
+          <button
+            onClick={() => isTaskDrawerOpenSignal.set(true)}
+            className={cn("w-9 h-9 sm:w-10 sm:h-10 relative", theme.button)}
+            title="查看任務進度"
+          >
+            <Icon name="activity" className="size-4 sm:size-4.5" />
+            {taskCount > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-slate-950 animate-in zoom-in duration-300">
+                {taskCount}
+              </span>
+            )}
+          </button>
+
           {/* 3. 切换至前台体验按钮 (标准 LayoutDashboard 样式) */}
           <button
             onClick={handleAuthAction}

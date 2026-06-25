@@ -8,7 +8,7 @@ import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 import { copyToClipboard } from '@/utils/clipboard';
 
-interface DiagnosticsDialogProps {
+interface DiagDialogProps {
   open: boolean;
   onClose: () => void;
 }
@@ -22,7 +22,7 @@ interface DiagnosticError {
   timestamp: string;
 }
 
-export function DiagnosticsDialog({ open, onClose }: DiagnosticsDialogProps) {
+export function DiagDialog({ open, onClose }: DiagDialogProps) {
   const [networkStatus, setNetworkStatus] = useState<'checking' | 'connected' | 'failed'>('checking');
   const [latency, setLatency] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);

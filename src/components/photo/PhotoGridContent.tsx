@@ -37,8 +37,7 @@ function CardSkeleton() {
   );
 }
 
-import { useSignal } from '@storve/react';
-import { selectedIdsSignal } from '@/store/uiStore';
+import { useUI, type UIStoreState, selectedSetSelector, useSignal } from '@/lib/store';
 
 export function PhotoGridContent({ 
   photos, 
@@ -57,10 +56,11 @@ export function PhotoGridContent({
   const showGroupsCollapsed = filters?.showGroupsCollapsed !== false;
   const hasSearchQuery = !!filters?.search;
   
-  const selectedIds = useSignal(selectedIdsSignal);
-  const selectedSet = React.useMemo(() => new Set(selectedIds), [selectedIds]);
+  const selectedSet = useUI(selectedSetSelector);
   
-  console.log('[PhotoGridContent] Render Start', { mode, photosCount: photos.length, isPending, columns });
+  const safePhotos = photos || [];
+  
+  console.log('[PhotoGridContent] Render Start', { mode, photosCount: safePhotos.length, isPending, columns });
 
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = React.useState(() => typeof window !== 'undefined' ? window.innerWidth : 1200);
@@ -108,7 +108,7 @@ export function PhotoGridContent({
     );
   }
 
-  if (photos.length === 0) {
+  if (safePhotos.length === 0) {
     const hasSearch = !!filters?.search;
     return (
       <div className="h-full w-full flex items-center justify-center p-8 bg-brand-bg">
@@ -126,7 +126,7 @@ export function PhotoGridContent({
       <VirtualGrid
         ref={gridRef}
         onScroll={onScroll}
-        count={photos.length}
+        count={safePhotos.length}
         dataVersion={dataVersion}
         lanes={columns}
         itemSize={estimatedHeight} 
@@ -134,7 +134,7 @@ export function PhotoGridContent({
         containerClassName="px-2 pt-2"
         onEndReached={fetchNextPage}
         renderItem={(index) => {
-          const photo = photos[index];
+          const photo = safePhotos[index];
           if (!photo) return null;
           return (
             <div key={photo.id} className="p-0.5 sm:p-1 w-full">

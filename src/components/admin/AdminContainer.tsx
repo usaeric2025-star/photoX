@@ -7,7 +7,7 @@ import { PhotoErrorDisplay } from '@/components/photo/PhotoErrorDisplay';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
 import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
-import { useUIStore } from '@/store/uiStore';
+import { useUI } from '@/lib/store';
 
 export function AdminContainer() {
   const filters = useFilters({ enableStatus: true });
@@ -25,7 +25,7 @@ export function AdminContainer() {
   const { columns } = useColumns();
   const adminActions = useAdminMaintenance();
   
-  const openLightbox = useUIStore(s => s.openLightbox);
+  const openLightbox = useUI(s => s.openLightbox);
   
   const lightboxItems = React.useMemo(() => photosToLightboxSlides(photoGridData.photos), [photoGridData.photos]);
 
@@ -34,8 +34,8 @@ export function AdminContainer() {
       filters.setPhotoId(photoId);
   };
   
-  const lightboxIsOpen = useUIStore(s => s.lightboxIsOpen);
-  const lightboxCurrentIndex = useUIStore(s => s.lightboxCurrentIndex);
+  const lightboxIsOpen = useUI(s => s.lightboxIsOpen);
+  const lightboxCurrentIndex = useUI(s => s.lightboxCurrentIndex);
   
   // 同步燈箱數據：當照片列表更新且處於燈箱模式時
   useEffect(() => {
