@@ -197,10 +197,10 @@ export function PhotoLightbox() {
           transition: transform 0.15s ease-out !important;
         }
         .rlbx-slide {
-          transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out !important;
         }
-        .rlbx-slider, .rlbx-container, .rlbx-content {
-          transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        .rlbx-slider {
+          transition: transform 0.3s ease-in-out !important;
         }
       `}} />
 
