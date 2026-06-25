@@ -34,7 +34,6 @@ export function useAppForm<T extends v.GenericSchema>({
     // without wiping out the user's uncommitted changes.
     const keepState = form.state.isDirty || form.state.isTouched;
     if (!keepState) {
-      // @ts-expect-error tanstack form types
       form.reset(defaultValues);
     } else {
       form.update({ defaultValues });

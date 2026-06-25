@@ -99,15 +99,18 @@ export class TaskScheduler {
       // 更新 Supabase: processing
       await taskTable.updateStatus(task.id, 'processing');
       taskStore.getState().startTask(task.id);
+      (taskStore as any).setState({ status: 'processing', progress: 0 });
 
       const onProgress = (progress: number, message?: string) => {
         taskStore.getState().updateProgress(task.id, progress, message);
+        (taskStore as any).setState({ progress });
       };
 
       const result = await task.execute(controller.signal, onProgress);
 
       // 完成
       taskStore.getState().completeTask(task.id, result);
+      (taskStore as any).setState({ status: 'completed', progress: 100 });
       await taskTable.updateStatus(task.id, 'completed', result);
       
       showToast.success(`任務完成: ${task.label}`);
@@ -118,6 +121,7 @@ export class TaskScheduler {
     } catch (error) {
       // 如果是取消，不觸發錯誤處理
       if (controller.signal.aborted) {
+        (taskStore as any).setState({ status: 'idle' });
         this.controllers.delete(task.id);
         this.running.delete(task.id);
         this.tick();
@@ -128,12 +132,17 @@ export class TaskScheduler {
       const retryable = true; // 可根據錯誤類型判斷
 
       taskStore.getState().failTask(task.id, message, retryable);
+      (taskStore as any).setState({ status: 'failed' });
       await taskTable.updateStatus(task.id, 'failed', { error: message, retryable });
 
       showToast.error(`任務失敗: ${task.label}`);
     } finally {
       this.controllers.delete(task.id);
       this.running.delete(task.id);
+      
+      if (this.running.size === 0 && this.queue.length === 0) {
+        (taskStore as any).setState({ status: 'idle', progress: 0 });
+      }
       
       // 釋放去重鍵（僅 completed 或 failed）
       const key = `${task.type}:${task.meta?.key || task.id}`;
