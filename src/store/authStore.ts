@@ -94,7 +94,7 @@ export const authStore = createStore<AuthState>({
 });
 
 export function useAuthStore<T = AuthState>(selector?: (state: AuthState) => T): T {
-  return useStore(authStore as any, selector as any);
+  return useStore(authStore, selector);
 }
 export const useAuthSelector = useAuthStore;
 

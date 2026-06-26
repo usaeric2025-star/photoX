@@ -29,7 +29,7 @@ export function SettingsTabs({ activeTab, onTabChange }: SettingsTabsProps) {
                 : 'bg-white border-brand-navy/5 text-brand-navy/60 hover:border-brand-navy/10 active:scale-95'
             }`}
           >
-            <Icon name={tab.icon as any} size={20} className={isActive ? 'text-brand-gold' : 'text-brand-navy/40'} />
+            <Icon name={tab.icon} size={20} className={isActive ? 'text-brand-gold' : 'text-brand-navy/40'} />
             <span className="text-[10px] font-black uppercase tracking-tighter mt-1">{tab.label}</span>
             <span className="text-[8px] opacity-40 font-bold uppercase tracking-widest">{tab.subLabel}</span>
           </button>

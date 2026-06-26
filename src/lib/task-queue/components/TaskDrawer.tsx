@@ -22,7 +22,7 @@ function TaskItem({ task }: { task: Task }) {
     cancelled: '已取消'
   } as const;
 
-  const typeIcons: Record<string, any> = {
+  const typeIcons: Record<string, string> = {
     'upload': 'upload-cloud',
     'ai-analyze': 'sparkles',
     'repair': 'wrench',
@@ -155,7 +155,7 @@ export function TaskDrawer() {
                 type="button"
                 onClick={() => {
                   const state = storeAccessor.task;
-                  const remaining = Array.from(state.tasks.values()).filter((t: any) => t.state?.status === 'queued' || t.state?.status === 'processing');
+                  const remaining = Array.from(state.tasks.values()).filter((t: Task) => t.state?.status === 'queued' || t.state?.status === 'processing');
                   state.clearAll();
                   remaining.forEach(t => state.enqueue(t));
                 }}

@@ -8,7 +8,7 @@ import { usePermission, usePublicSettings } from '@/hooks';
 import { LightboxInfoCard } from './components/LightboxInfoCard';
 import { showToast } from '@/lib/ui/toast';
 import { Icon } from '@/components/ui/Icon';
-import { Photo } from '@/types';
+import { Photo, AppSettings } from '@/types';
 import { LightboxSlide } from '@/lib/lightbox/types';
 
 // ✅ Directly import from low-level to reduce conflicts
@@ -50,7 +50,7 @@ function LightboxToolbar({
 }: { 
   currentSlide: LightboxSlide; 
   canEdit: boolean; 
-  settings: any; 
+  settings?: AppSettings; 
   onClose: () => void; 
   onEdit: () => void; 
   onAiAnalyze: () => void; 

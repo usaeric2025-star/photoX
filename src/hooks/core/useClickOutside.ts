@@ -21,7 +21,7 @@ export function useClickOutside<T extends HTMLElement = HTMLElement>(
         return;
       }
 
-      // Check if target is inside any of the additional nodes
+      // Check if target is inside the additional nodes
       if (nodes) {
         const isOutsideNodes = nodes.every((node) => node && !node.contains(target as Node));
         if (!isOutsideNodes) return;

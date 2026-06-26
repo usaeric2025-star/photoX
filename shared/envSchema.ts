@@ -6,8 +6,8 @@ import * as v from 'valibot';
  * Represents variables available via import('meta').env
  */
 export const clientEnvSchema = v.object({
-  "VITE_SUPABASE_URL": v.optional(v.string()),
-  "VITE_SUPABASE_ANON_KEY": v.optional(v.string()),
+  "VITE_SUPABASE_URL": v.pipe(v.string(), v.url(), v.minLength(1)),
+  "VITE_SUPABASE_ANON_KEY": v.pipe(v.string(), v.minLength(1)),
   "VITE_SENTRY_DSN": v.optional(v.string()),
   "VITE_WHATSAPP_NUMBER": v.optional(v.string()),
   "VITE_THUMBNAIL_WORKER_URL": v.optional(v.string()),
@@ -25,11 +25,11 @@ export const serverEnvSchema = v.object({
   PORT: v.optional(v.union([v.string(), v.number(), v.undefined()])),
   
   // Supabase
-  VITE_SUPABASE_URL: v.optional(v.string()), 
-  VITE_SUPABASE_ANON_KEY: v.optional(v.string()),
-  SUPABASE_URL: v.optional(v.string()),
+  VITE_SUPABASE_URL: v.pipe(v.string(), v.url(), v.minLength(1)), 
+  VITE_SUPABASE_ANON_KEY: v.pipe(v.string(), v.minLength(1)),
+  SUPABASE_URL: v.optional(v.pipe(v.string(), v.url())),
   SUPABASE_SERVICE_KEY: v.optional(v.string()),
-  DATABASE_URL: v.optional(v.string()),
+  DATABASE_URL: v.pipe(v.string(), v.minLength(1)),
 
   // R2 Storage
   R2_ENDPOINT: v.optional(v.string()),

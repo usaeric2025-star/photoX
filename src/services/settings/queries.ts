@@ -10,7 +10,7 @@ export async function fetchPublicSettings(): Promise<AppSettings> {
     });
     
     const response = await Promise.race([fetchPromise, timeoutPromise]);
-    const result = await (response as any).json();
+    const result = await response.json();
     if (!result.success) return {} as AppSettings;
     return result.data as AppSettings;
   } catch (e) {

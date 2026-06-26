@@ -1,4 +1,5 @@
 import { translateFields } from "./translationService";
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { logger } from "@/lib/logger";
 
 export interface TranslatedField {
@@ -47,7 +48,7 @@ export async function mapAiToMultilingual(
       nameObj = translation.name;
       descObj = translation.description;
     } catch(err) {
-      logger.error('Mapping fallback: translation failed', err);
+      ErrorFactory.capture(err);
       nameObj = { zh: nameStr, en: nameStr, ms: nameStr };
       descObj = { zh: descStr, en: descStr, ms: descStr };
     }

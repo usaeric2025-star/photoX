@@ -1,3 +1,4 @@
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 /**
  * Clean up redundant language tag prefixes like "zh:", "en:", "ms:" or quotes from the string.
@@ -6,7 +7,7 @@ export function cleanTranslationPrefixes(str: string): string {
   if (!str) return '';
   let result = str.trim();
   
-  // Strip outer quotes if any
+  // Strip outer quotes if there are quotes
   if (result.startsWith('"') && result.endsWith('"')) {
     result = result.substring(1, result.length - 1).trim();
   } else if (result.startsWith("'") && result.endsWith("'")) {
@@ -44,6 +45,7 @@ export function getSafeText(field: unknown, locale: string = 'zh'): string {
             cleanStr = JSON.parse(trimmed) as string; // Unescape the wrapper string
           } catch (e) {
             // Strip outer quotes manually if JSON.parse fails on wrapper
+            ErrorFactory.capture(e);
             cleanStr = trimmed.slice(1, -1);
           }
         }
@@ -54,13 +56,14 @@ export function getSafeText(field: unknown, locale: string = 'zh'): string {
         }
         parsedCount++;
       } catch (e) {
+        ErrorFactory.capture(e);
         // Fallback: use regex to extract locale key even from a broken JSON string
         const regex = new RegExp(`"${locale}"\\s*:\\s*"([^"]+)`);
         const match = trimmed.match(regex);
         if (match) return cleanTranslationPrefixes(match[1]);
 
-        const anyMatch = trimmed.match(/"[^"]+":"([^"]+)/);
-        if (anyMatch) return cleanTranslationPrefixes(anyMatch[1]);
+        const fallbackMatch = trimmed.match(/"[^"]+":"([^"]+)/);
+        if (fallbackMatch) return cleanTranslationPrefixes(fallbackMatch[1]);
 
         break;
       }
@@ -77,7 +80,9 @@ export function getSafeText(field: unknown, locale: string = 'zh'): string {
         if (parsed && typeof parsed === 'object') {
           data = parsed;
         }
-      } catch (e) {}
+      } catch (e) {
+        ErrorFactory.capture(e);
+      }
     } else {
       return cleanTranslationPrefixes(data);
     }

@@ -36,7 +36,8 @@ export function useGroupData({ groupId, isAdmin }: UseGroupDataOptions) {
   const totalCount = data?.pages[0]?.total || 0;
 
   const loading = isGroupPending || isPhotosPending;
-  const error = (groupError || photosError) ? ((groupError as any)?.message || (photosError as any)?.message || String(groupError || photosError || '載入失敗')) : null;
+  const getErrorMessage = (err: unknown) => (err instanceof Error ? err.message : String(err));
+  const error = (groupError || photosError) ? (getErrorMessage(groupError || photosError)) : null;
 
   return {
     group,

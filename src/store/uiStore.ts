@@ -209,17 +209,10 @@ export const uiStore = createStore<UIStoreState>({
 });
 
 export function useUIStore<T = UIStoreState>(selector?: (state: UIStoreState) => T): T {
-  return useStore(uiStore as any, selector as any);
+  return useStore(uiStore, selector);
 }
 export const useUISelector = useUIStore;
-export const useAppLang = () => useStore(uiStore as any, (s: any) => s.appLang) as 'zh' | 'en' | 'ms';
-
-export const searchTermSignal = signal(uiStore, 'filters.q' as any);
-export const isTaskDrawerOpenSignal = signal(uiStore, 'isTaskDrawerOpen');
-export const isDiagnosticsOpenSignal = signal(uiStore, 'isDiagnosticsOpen');
-export const batchModeSignal = signal(uiStore, 'isMultiSelect');
-export const isSidebarOpenSignal = signal(uiStore, 'isSidebarOpen');
-export const selectedIdsSignal = signal(uiStore, 'selectedIds');
+export const useAppLang = () => useStore(uiStore, (s: UIStoreState) => s.appLang) as 'zh' | 'en' | 'ms';
 
 // Computed selectors
 export const selectedCountSelector = (state: UIStoreState) => state.selectedIds.length;

@@ -1,16 +1,17 @@
 import React from 'react';
 import { Field } from "@tanstack/react-form";
+import { FormApi } from "@tanstack/react-form";
 import { Manufacturer } from '@/types';
 
 interface ManufacturerSelectProps {
-  form: any;
+  form: unknown;
   name: string;
   manufacturers: Manufacturer[];
 }
 
 export const ManufacturerSelect = ({ form, name, manufacturers }: ManufacturerSelectProps) => {
   return (
-    <Field form={form} name={name as any}>
+    <Field form={form as never} name={name as never}>
       {(field) => (
         <div className="w-full space-y-2">
           <div className="flex flex-wrap gap-2">

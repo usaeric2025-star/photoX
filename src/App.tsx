@@ -7,7 +7,6 @@ import { useAppInit } from '@/hooks/core/useAppInit';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { useRouteSync } from '@/hooks/core/useRouteSync';
 import { DialogContainer } from '@/components/layout/DialogContainer';
-import { motion, AnimatePresence } from 'motion/react';
 
 export default function App() {
   const { status, error } = useAppInit();
@@ -18,41 +17,21 @@ export default function App() {
   return (
     <AppErrorBoundary>
       <ConfirmProvider>
-        <AnimatePresence mode="wait">
-          {status === 'loading' ? (
-            <motion.div
-              key="loading"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50"
-            >
-              <LoadingScreen />
-            </motion.div>
-          ) : status === 'error' ? (
-            <motion.div
-              key="error"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50"
-            >
-              <LoadingScreen error={error} />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="app"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.4 }}
-              className="relative min-h-screen"
-            >
-              <Suspense fallback={<LoadingScreen />}>
-                <RouterOrchestrator />
-              </Suspense>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {status === 'loading' ? (
+          <div className="fixed inset-0 z-50 animate-fade-in">
+            <LoadingScreen />
+          </div>
+        ) : status === 'error' ? (
+          <div className="fixed inset-0 z-50 animate-fade-in">
+            <LoadingScreen error={error} />
+          </div>
+        ) : (
+          <div className="relative min-h-screen animate-fade-in">
+            <Suspense fallback={<LoadingScreen />}>
+              <RouterOrchestrator />
+            </Suspense>
+          </div>
+        )}
       </ConfirmProvider>
       <DialogContainer />
       <Analytics />

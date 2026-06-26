@@ -75,7 +75,7 @@ export function useFormSubmit<T extends v.GenericSchema, TResult>({
 
   const submit = useCallback(
     async (rawData: unknown): Promise<boolean> => {
-      cancel(); // Cancel any pending operations
+      cancel(); // Cancel pending operations
 
       return new Promise((resolve) => {
         const execute = async () => {

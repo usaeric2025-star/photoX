@@ -20,8 +20,8 @@ interface UseSettingsLogicProps {
   user: User | null;
   settings: AppSettings;
   agnesApiKey: string;
-  saveSettings: (s: AppSettings) => Promise<any>;
-  performPullSync: () => Promise<any>;
+  saveSettings: (s: AppSettings) => Promise<void>;
+  performPullSync: () => Promise<void>;
   setSettings: (s: AppSettings) => void;
 }
 
@@ -52,9 +52,9 @@ export const useSettingsLogic = ({
   const [activeTagMenuId, setActiveTagMenuId] = useState<number | null>(null);
 
   const { submit: runConnectionTest, isLoading: isTesting } = useFormSubmit({
-    schema: v.any(),
+    schema: v.object({}),
     mutationFn: async () => {
-      const provider = (settings as any).ai_provider || "google";
+      const provider = settings.ai_provider || "google";
       const ok = await testAiConnection(
         settings.agnes_api_key || "",
         provider,
@@ -126,7 +126,7 @@ export const useSettingsLogic = ({
           }
         });
         
-        const res = await resp.json() as any;
+        const res = await resp.json() as { success: boolean; data: { publicUrl: string }; error?: string };
         if (!res.success || !res.data.publicUrl) {
           throw new Error(res.error || 'Upload failed');
         }

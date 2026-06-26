@@ -2,6 +2,7 @@ import { logger } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
 import { DB_CONFIG } from '@/constants/config';
 import { Photo } from '@/types';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 export class DuplicatePhotoError extends Error {
   constructor(message: string = '已存在相同照片') {
@@ -70,7 +71,7 @@ export const checkDuplicate = async (
       return { isDuplicate: true, existingId: data.id };
     }
   } catch (error) {
-    logger.warn('DB check timeout or error, proceeding with caution', error);
+    ErrorFactory.capture(error);
   }
 
   // Mark as processing

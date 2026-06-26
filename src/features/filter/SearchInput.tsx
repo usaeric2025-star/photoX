@@ -1,23 +1,28 @@
-import { useSignal } from '@/lib/store';
-import { searchTermSignal } from '@/lib/store';
+import { uiStore, useUIStore } from '@/store/uiStore';
 import { useFilterState } from './useFilterState';
 import { Icon } from '@/components/ui/Icon';
 import { useTranslation } from '@/hooks';
+import { useDebouncedCallback } from '@/hooks/core/useDebouncedCallback';
 
 export function SearchInput() {
   const { updateFilters } = useFilterState();
-  const searchTerm = useSignal<string>(searchTermSignal);
+  const searchTerm = useUIStore(s => s.filters.q);
+  const patch = useUIStore(s => s.patch);
   const { uiTranslations: t } = useTranslation();
+
+  const debouncedUpdateFilters = useDebouncedCallback((value: string) => {
+    updateFilters({ search: value });
+  }, 300);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    searchTermSignal.set(value);
-    updateFilters({ search: value });
+    patch(s => ({ filters: { ...s.filters, q: value } }));
+    debouncedUpdateFilters(value);
   };
 
   const handleClear = () => {
-    searchTermSignal.set("");
-    updateFilters({ search: "" });
+    patch(s => ({ filters: { ...s.filters, q: '' } }));
+    debouncedUpdateFilters("");
   };
 
   return (

@@ -8,7 +8,8 @@ import { Icon } from '@/components/ui/Icon';
 import { api } from '@/lib/api';
 
 import { showToast } from '@/lib/ui/toast';
-import { AppSettings, User, ApiResponse } from '@/types';
+import { Task } from '@/lib/task-queue/types';
+import { AppSettings, User, ApiResponse, Category, Manufacturer, Tag } from '@/types';
 import { useUI, UIStoreState } from '@/lib/store';
 import { useSettingsManagement } from '@/hooks/settings/useSettingsManagement';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -59,7 +60,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
     if (file) await uploadLogo(file);
   };
   
-  const isMaintenanceRunning = tasks.some((t: any) => (t.label.includes('维护') || t.label.includes('诊断')) && t.state?.status === 'processing');
+  const isMaintenanceRunning = tasks.some((t: Task) => (t.label.includes('维护') || t.label.includes('诊断')) && t.state?.status === 'processing');
   
   const appLang = useUI(s => s.appLang);
   const t = translations[appLang as keyof typeof translations] || translations.en;
@@ -68,7 +69,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   const { settings, agnesApiKey, customModel, accessPasscode, updateSettings } = useSettings();
   const setAgnesApiKey = (key: string) => updateSettings({ ...settings, agnes_api_key: key });
   const setAccessPasscode = (code: string) => updateSettings({ ...settings, access_passcode: code });
-  const setSettings = (s: AppSettings) => { updateSettings(s as any); };
+  const setSettings = (s: AppSettings) => { updateSettings(s); };
   const saveSettings = async (s: Partial<AppSettings>) => { await updateSettings(s); };
 
   const {
@@ -105,7 +106,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
     settings,
     agnesApiKey: agnesApiKey || "",
     saveSettings,
-    performPullSync: async () => ({ success: true, data: null }),
+    performPullSync: async () => {},
     setSettings: (s: AppSettings) => { void updateSettings(s as Partial<AppSettings>); }
   });
 
@@ -119,7 +120,24 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   }, [route]);
 
   const { submit: runSaveSettings, isLoading: isSavingSettings } = useFormSubmit({
-    schema: v.any(),
+    schema: v.partial(v.object({
+      app_name: v.string(),
+      logo_url: v.string(),
+      pinned_tags: v.array(v.string()),
+      hot_tags_count: v.number(),
+      hot_tag_threshold: v.number(),
+      agnes_api_key: v.string(),
+      custom_model: v.string(),
+      provider: v.string(),
+      ai_provider: v.string(),
+      whatsapp_1_name: v.string(),
+      whatsapp_1: v.string(),
+      whatsapp_2_name: v.string(),
+      whatsapp_2: v.string(),
+      facebook: v.string(),
+      instagram: v.string(),
+      access_passcode: v.string(),
+    })),
     mutationFn: async (s: Partial<AppSettings>) => {
       await saveSettings(s);
       return true;
@@ -156,7 +174,6 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
               categories={categories}
               tags={tags}
               manufacturers={manufacturers}
-              photos={[]}
               setSettingField={setSettingField}
               cardClass={cardClass}
               inputClass={inputClass}
@@ -187,11 +204,11 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
               <AssetManagementContainer 
                 categories={categories}
                 deleteCategory={deleteCategory}
-                updateCategory={async (id: number, data: any) => { const r = await updateCategory({ id: Number(id), updates: data }); return !!r; }}
+                updateCategory={async (id: number, data: Partial<Category>) => { const r = await updateCategory({ id: Number(id), updates: data }); return !!r; }}
                 addCategory={async (name: string) => { const r = await addCategory(name); if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addCategory', name); return r; }}
                 manufacturers={manufacturers}
                 addManufacturer={async (name: string) => { const r = await addManufacturer(name); if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addManufacturer', name); return r; }}
-                updateManufacturer={async (id: number, data: any) => { const r = await updateManufacturer({ id: Number(id), updates: data }); return !!r; }}
+                updateManufacturer={async (id: number, data: Partial<Manufacturer>) => { const r = await updateManufacturer({ id: Number(id), updates: data }); return !!r; }}
                 deleteManufacturer={(id: number) => deleteManufacturer(id)}
                 cardClass={cardClass}
                 buttonStyles={BUTTON_STYLES}
@@ -200,7 +217,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
                 tags={tags}
                 settings={settings}
                 addTag={async (name: string) => { const r = await addTag(name); if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addTag', name); return r; }}
-                updateTag={async (id: number, data: any) => { const r = await updateTag({ id: Number(id), updates: data }); return !!r; }}
+                updateTag={async (id: number, data: Partial<Tag>) => { const r = await updateTag({ id: Number(id), updates: data }); return !!r; }}
                 activeTagMenuId={activeTagMenuId}
                 setActiveTagMenuId={setActiveTagMenuId}
                 deleteTag={(id: number) => deleteTag(id)}

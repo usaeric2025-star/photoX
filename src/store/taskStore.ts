@@ -107,7 +107,7 @@ export const taskStore = createStore<TaskStoreState>({
 export const tasksSignal = signal(taskStore, 'tasks');
 
 export function useTaskStore<T = TaskStoreState>(selector?: (state: TaskStoreState) => T): T {
-  return useStore(taskStore as any, selector as any);
+  return useStore(taskStore, selector);
 }
 export const useTaskSelector = useTaskStore;
 

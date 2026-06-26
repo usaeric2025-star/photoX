@@ -10,7 +10,6 @@ interface GeneralSettingsProps {
   categories: Category[];
   tags: Tag[];
   manufacturers: Manufacturer[];
-  photos: any[];
   setSettingField: <K extends keyof AppSettings>(field: K, value: AppSettings[K]) => void;
   cardClass: string;
   inputClass: string;

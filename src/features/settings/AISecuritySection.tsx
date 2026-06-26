@@ -1,5 +1,6 @@
 import { OpenRouterConfigBlock } from './OpenRouterConfigBlock';
 import { AgnesConfigBlock } from './AgnesConfigBlock';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { logger } from '@/lib/logger';
 
 import React, { useCallback } from 'react';
@@ -115,7 +116,7 @@ export function AISecuritySection({
         }
       }
     } catch (e) {
-      logger.error("Failed to fetch keys status:", e);
+      ErrorFactory.capture(e);
     }
   }, [api]);
 

@@ -69,10 +69,12 @@ export function useAppQuery<
     }
   };
 
-  const result = useSWR<TData>(key as import('swr').Key, fetcherWithValidation as any, {
-    ...(options as any),
-  });
-  return { ...result, isPending: result.isLoading } as any;
+  const result = useSWR<TData>(
+    key as import('swr').Key, 
+    fetcherWithValidation as import('swr').Fetcher<TData>, 
+    options as SWRConfiguration<TData>
+  );
+  return { ...result, isPending: result.isLoading };
 }
 
 /**

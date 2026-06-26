@@ -15,7 +15,15 @@ const GroupTitleSchema = v.object({
   title: v.pipe(v.string(), v.minLength(3, '標題至少需要3個字元')),
 });
 
-function TitleInput({ value, onChange, onBlur, onKeyDown, disabled }: any) {
+interface TitleInputProps {
+  value: string;
+  onChange: (val: string) => void;
+  onBlur: () => void;
+  onKeyDown: (e: React.KeyboardEvent) => void;
+  disabled: boolean;
+}
+
+function TitleInput({ value, onChange, onBlur, onKeyDown, disabled }: TitleInputProps) {
   const { error, onChange: clearError } = useFormField('title');
   
   return (

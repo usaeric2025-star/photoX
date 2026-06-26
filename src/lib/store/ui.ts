@@ -23,9 +23,9 @@ export const lightboxSlides = signal<UIStoreState, 'lightboxSlides'>(uiStore, 'l
 export const lightboxCurrentIndex = signal<UIStoreState, 'lightboxCurrentIndex'>(uiStore, 'lightboxCurrentIndex');
 
 // 搜尋與選取
-export const searchTerm = signal<UIStoreState, any>(uiStore, 'filters.q' as any);
-export const searchCategory = signal<UIStoreState, any>(uiStore, 'filters.category' as any);
-export const searchTags = signal<UIStoreState, any>(uiStore, 'filters.tags' as any);
+export const searchTerm = signal<UIStoreState, 'filters'>(uiStore, 'filters');
+export const searchCategory = signal<UIStoreState, 'filters'>(uiStore, 'filters');
+export const searchTags = signal<UIStoreState, 'filters'>(uiStore, 'filters');
 export const selectedIds = signal<UIStoreState, 'selectedIds'>(uiStore, 'selectedIds');
 export const isMultiSelect = signal<UIStoreState, 'isMultiSelect'>(uiStore, 'isMultiSelect');
 export const processingIds = signal<UIStoreState, 'processingIds'>(uiStore, 'processingIds');
@@ -37,7 +37,7 @@ export const isDiagnosticsOpen = signal<UIStoreState, 'isDiagnosticsOpen'>(uiSto
 export const showWhatsAppChoice = signal<UIStoreState, 'showWhatsAppChoice'>(uiStore, 'showWhatsAppChoice');
 
 // Actions
-export const updateFormState = (updates: any) => {
-  (uiStore as any).updateForm(updates);
+export const updateFormState = (updates: Partial<UIStoreState['formState']>) => {
+  uiStore.getState().updateForm(updates);
 };
 

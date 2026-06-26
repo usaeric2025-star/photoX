@@ -1755,3 +1755,15 @@ PhotoX 當前單頁數據 < 100KB，IndexedDB 收益為零且增加 Bundle Size 
 ### 禁止事項
 - ❌ 強制統一導入來源：所有元件和 Hook 必須從 `@/lib/router` 導入，禁止直接導入 `@zoontek/chicane`。
 - ❌ 禁止在元件中調用 `useRoute(...)`（應使用封裝好的 `useAppRoute` 或 `useAppRouter`）。
+
+## 環境變數與驗證規範（鎖定）
+
+- ✅ 所有環境變數驗證必須統一走 `@/shared/envSchema`
+- ✅ 生產環境下的關鍵服務（如 Supabase / DB）配置必須強制必填校驗
+- ❌ 禁止在各處散落 `process.env` 解析與手動校驗
+
+## 資料庫索引優化（鎖定）
+
+- ✅ 高頻查詢表（如 `furniture_items`）必須建立複合索引（如 `userId`, `createdAt`）
+- ✅ 外鍵關聯欄位（如 `groupId`, `categoryId`）必須加上索引以加速關聯
+

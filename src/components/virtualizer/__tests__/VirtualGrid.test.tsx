@@ -141,7 +141,7 @@ describe('VirtualGrid', () => {
         const style = absoluteRow.getAttribute('style');
         expect(style).not.toBeNull();
         if (style) {
-          // Double check there are no NaN values anywhere in the style string
+          // Double check there are no NaN values in the style string
           expect(style).not.toContain('NaN');
           // Verify that it contains translate3d setting 3D transformation values properly
           expect(style).toContain('translate3d(');

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from '@/hooks/core/useTranslation';
 import { classifyPhotoError, getLocalizedError } from '@/lib/error/photoErrors';
 import { showErrorToast, showSuccessToast } from '@/lib/error/errorUI';
-import { Icon } from '@/components/ui/Icon';
+import { Icon, IconName } from '@/components/ui/Icon';
 import { cn } from '@/lib/utils';
 
 interface PhotoErrorDisplayProps {
@@ -70,7 +70,7 @@ export function PhotoErrorDisplay({ error, onRetry }: PhotoErrorDisplayProps) {
         "inline-flex items-center justify-center w-20 h-20 rounded-full mb-2 transition-transform duration-500 hover:rotate-12",
         errorType === 'network' ? 'bg-amber-50 text-amber-500' : 'bg-red-50 text-red-500'
       )}>
-        <Icon name={iconName as any} className="w-10 h-10" />
+        <Icon name={iconName as IconName} className="w-10 h-10" />
       </div>
 
       <div className="space-y-3">

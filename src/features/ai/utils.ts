@@ -58,7 +58,7 @@ export const hasExistingInfo = (p: Record<string, unknown>): boolean => {
   
   if (nameVal) {
     if (typeof nameVal === 'object' && nameVal !== null) {
-      // For multi-lang names, check if any field has real content
+      // For multi-lang names, check if a field has real content
       const n = nameVal as Record<string, unknown>;
       const parts = [n.zh, n.en, n.ms].map(s => String(s || '').trim());
       hasRealName = parts.some(s => s !== '' && !isPlaceholderName(s) && s.length > 2);

@@ -31,7 +31,7 @@ export function useAppMutation<TVariables, TData, TQueryKey extends readonly unk
       if (errorMessage) {
         showToast.error(errorMessage);
       } else {
-        const msg = 'userMessage' in error ? (error as any).userMessage : error.message;
+        const msg = ('userMessage' in error) ? (error as { userMessage: string }).userMessage : error.message;
         showToast.error(msg);
       }
       onError?.(error, variables);

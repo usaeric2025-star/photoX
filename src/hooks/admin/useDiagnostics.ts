@@ -31,8 +31,8 @@ export function useDiagnostics() {
         if (!data.success) throw new Error(data.error || '對賬審計失敗');
         toast.success(appLang === 'zh' ? '審計完成' : 'Audit complete');
         return data.data;
-    } catch (e: any) {
-        toast.error(e.message);
+    } catch (e: unknown) {
+        toast.error(e instanceof Error ? e.message : String(e));
     }
   };
 
@@ -49,7 +49,7 @@ export function useDiagnostics() {
         appQuery.mutate(queryKeys.photos.all);
         toast.success(appLang === 'zh' ? '去重完成' : 'Deduplication complete');
       },
-      onError: (e: any) => {
+      onError: (e: Error) => {
         toast.error(e.message);
       }
     }
@@ -72,8 +72,8 @@ export function useDiagnostics() {
         if (!data.success) throw new Error(data.error || 'Cleanup failed');
         toast.success(appLang === 'zh' ? '清理完成' : 'Cleanup complete');
         return data;
-      } catch (e: any) {
-        toast.error(e.message);
+      } catch (e: unknown) {
+        toast.error(e instanceof Error ? e.message : String(e));
       }
     },
     report: { issues: [] }, // Compatibility layer

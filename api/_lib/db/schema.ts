@@ -72,7 +72,11 @@ export const furnitureItems = pgTable('furniture_items', {
     updatedAt: timestamp('updated_at').defaultNow(),
     createdAt: timestamp('created_at').defaultNow(),
     nameSearchable: text('name_searchable'),
-});
+}, (t) => ({
+    userIdCreatedAtIdx: index('furniture_items_user_id_created_at_idx').on(t.userId, t.createdAt),
+    groupIdIdx: index('furniture_items_group_id_idx').on(t.groupId),
+    categoryIdIdx: index('furniture_items_category_id_idx').on(t.categoryId),
+}));
 
 /**
  * Tags Table

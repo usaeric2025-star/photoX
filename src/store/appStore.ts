@@ -4,6 +4,7 @@ import { initAuthListener, authStore } from './authStore';
 import { logger } from '@/lib/logger';
 import { fetchPublicSettings } from '@/services/settings/queries';
 import { appQuery } from '@/lib/query';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 export interface AppStatusState {
   isLoading: boolean;
@@ -24,7 +25,7 @@ export const initializeApp = async () => {
     initAuthListener();
     
     // 2. 並行執行初始 Session 獲取與 Settings 獲取 (原子化組合)
-    const authState = (authStore as any).state;
+    const authState = authStore.getState();
     const authInitPromise = authState?.init ? authState.init() : Promise.resolve();
     
     // 透過 SWR 機制預加載 Settings 並寫入快取
@@ -33,10 +34,11 @@ export const initializeApp = async () => {
     await Promise.all([authInitPromise, settingsPromise]);
     
     // 3. 標記初始化完成
-    (appStore as any).setState({ isLoading: false, error: null });
+    appStore.setState({ isLoading: false, error: null });
     logger.info('[appStore] Atomic initialization complete');
   } catch (error) {
-    (appStore as any).setState({ isLoading: false, error: error as Error });
+    appStore.setState({ isLoading: false, error: error as Error });
+    ErrorFactory.capture(error);
     logger.error('[appStore] Initialization failed', error);
   }
 };

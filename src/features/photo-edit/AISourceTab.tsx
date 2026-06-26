@@ -1,3 +1,4 @@
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import React from 'react';
 import { usePhotoAIResult, useCopyToClipboard } from '@/hooks';
 import { useUI } from '@/lib/store';
@@ -60,6 +61,7 @@ export function AISourceTab() {
       }
     } catch (e) {
       // Keep original string if parsing fails
+      ErrorFactory.handleError(e, "格式化 AI 响应");
       formattedResult = typeof aiResult.raw_result === 'string' ? aiResult.raw_result : JSON.stringify(aiResult.raw_result, null, 2);
     }
   }

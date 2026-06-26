@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from 'react';
 import { useAppRoute } from '@/lib/router';
-import { Router } from '@/router';
+import { Router, ALL_ROUTES } from '@/router';
 import { useUI } from '@/lib/store';
 
 export interface UseFiltersOptions {
@@ -11,14 +11,14 @@ export interface UseFiltersOptions {
 
 export const useFilters = (options: UseFiltersOptions = {}) => {
   const route = useAppRoute();
-  const params = route ? (route.params as any) : {};
+  const params = route ? (route.params as Record<string, string | string[] | undefined>) : {};
 
   const updateSearch = useCallback((updates: Record<string, unknown>) => {
     if (!route) return;
     const currentRouteName = route.name;
 
     // Merge updates into current params
-    const mergedParams: Record<string, any> = { ...route.params };
+    const mergedParams: Record<string, string | string[] | undefined> = { ...(route.params as Record<string, string | string[] | undefined>) };
     for (const key in updates) {
       const val = updates[key];
       if (val === undefined) {
@@ -30,7 +30,8 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
       }
     }
 
-    Router.push(currentRouteName as never, mergedParams as any);
+    const push = Router.push as unknown as (name: string, params: Record<string, unknown>) => void;
+    push(currentRouteName, mergedParams as Record<string, unknown>);
   }, [route]);
 
   // Expose batch update capability

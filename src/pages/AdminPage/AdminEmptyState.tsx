@@ -3,8 +3,7 @@ import { Icon } from '@/components/ui/Icon';
 
 interface AdminEmptyStateProps {
   labels: {
-    empty: string;
-    [key: string]: any;
+    empty?: string;
   };
 }
 

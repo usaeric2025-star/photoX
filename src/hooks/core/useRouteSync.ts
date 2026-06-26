@@ -1,16 +1,8 @@
 // src/hooks/core/useRouteSync.ts
 import { useEffect } from 'react';
 import { useAppRoute } from '@/lib/router';
-import { Router } from '@/router';
-import { useSignal } from '@storve/react';
-import {
-  searchTerm,
-  searchCategory,
-  searchTags,
-  selectedIds,
-  isMultiSelect,
-  isLightboxOpen,
-} from '@/lib/store';
+import { Router, ALL_ROUTES } from '@/router';
+import { uiStore, useUIStore, UIStoreState, UIStoreInstance } from '@/store/uiStore';
 import { usePhotos } from '@/lib/query/hooks/usePhotos';
 
 export function useRouteSync() {
@@ -19,61 +11,63 @@ export function useRouteSync() {
   const photos = data?.pages.flatMap(p => p.items) || [];
 
   // Reactive values from signals
-  const currentQ = useSignal(searchTerm);
-  const currentCat = useSignal(searchCategory);
-  const currentTags = useSignal(searchTags);
-  const currentBatch = useSignal(isMultiSelect);
-  const currentSelected = useSignal(selectedIds);
+  const filters = useUIStore(s => s.filters);
+  const currentQ = filters.q;
+  const currentCat = filters.category;
+  const currentTags = filters.tags;
+  const currentBatch = useUIStore(s => s.isMultiSelect);
+  const currentSelected = useUIStore(s => s.selectedIds);
+  const lightboxIsOpen = useUIStore(s => s.lightboxIsOpen);
 
   // 1. URL -> Signal (Synchronization from URL to Memory)
   useEffect(() => {
     if (!route) return;
-    const params = route.params as any;
+    const params = route.params as Record<string, string | string[] | undefined>;
 
-    // Search Term
-    const q = (params.q as string) || '';
-    if (searchTerm.get() !== q) {
-      searchTerm.set(q);
-    }
+  // Search Term
+  const q = (params.q as string) || '';
+  if (filters.q !== q) {
+    (uiStore as unknown as UIStoreInstance).setState((s: UIStoreState) => ({ filters: { ...s.filters, q } }));
+  }
 
-    // Category
-    const cat = (params.cat as string) || '';
-    if (searchCategory.get() !== cat) {
-      searchCategory.set(cat);
-    }
+  // Category
+  const cat = (params.cat as string) || '';
+  if (filters.category !== cat) {
+    (uiStore as unknown as UIStoreInstance).setState((s: UIStoreState) => ({ filters: { ...s.filters, category: cat } }));
+  }
 
-    // Tags
-    const tags = (params.tag || []) as string[];
-    if (JSON.stringify(searchTags.get()) !== JSON.stringify(tags)) {
-      searchTags.set(tags);
-    }
+  // Tags
+  const tags = (params.tag || []) as string[];
+  if (JSON.stringify(filters.tags) !== JSON.stringify(tags)) {
+    (uiStore as unknown as UIStoreInstance).setState((s: UIStoreState) => ({ filters: { ...s.filters, tags } }));
+  }
 
     // Batch Mode
     const batch = params.batch === 'true';
-    if (isMultiSelect.get() !== batch) {
-      isMultiSelect.set(batch);
+    if (currentBatch !== batch) {
+      (uiStore as unknown as UIStoreInstance).setState({ isMultiSelect: batch });
     }
 
     // Selection
     const selected = (params.selected as string) || '';
     const newSelected = selected.split(',').filter(Boolean);
-    if (JSON.stringify(selectedIds.get()) !== JSON.stringify(newSelected)) {
-      selectedIds.set(newSelected);
+    if (JSON.stringify(currentSelected) !== JSON.stringify(newSelected)) {
+      (uiStore as unknown as UIStoreInstance).setState({ selectedIds: newSelected });
     }
 
     // Lightbox
     const photoId = params.photoId as string;
     const shouldBeOpen = !!(photoId && photos?.length > 0);
-    if (isLightboxOpen.get() !== shouldBeOpen) {
-      isLightboxOpen.set(shouldBeOpen);
+    if (lightboxIsOpen !== shouldBeOpen) {
+      (uiStore as unknown as UIStoreInstance).setState({ lightboxIsOpen: shouldBeOpen });
     }
   }, [
-    (route?.params as any)?.q, 
-    (route?.params as any)?.cat, 
-    (route?.params as any)?.tag, 
-    (route?.params as any)?.batch, 
-    (route?.params as any)?.selected, 
-    (route?.params as any)?.photoId,
+    (route?.params as Record<string, string | string[] | undefined>)?.q, 
+    (route?.params as Record<string, string | string[] | undefined>)?.cat, 
+    (route?.params as Record<string, string | string[] | undefined>)?.tag, 
+    (route?.params as Record<string, string | string[] | undefined>)?.batch, 
+    (route?.params as Record<string, string | string[] | undefined>)?.selected, 
+    (route?.params as Record<string, string | string[] | undefined>)?.photoId,
     photos?.length
   ]);
 
@@ -81,9 +75,9 @@ export function useRouteSync() {
   useEffect(() => {
     // Skip if not on a route that supports these filters (optional check)
     if (!route || !route.name) return;
-    const params = route.params as any;
+    const params = route.params as Record<string, string | string[] | undefined>;
 
-    const queryUpdates: any = {};
+    const queryUpdates: Record<string, string | string[] | undefined> = {};
     let hasChanges = false;
 
     // Search Term
@@ -119,10 +113,11 @@ export function useRouteSync() {
     }
 
     if (hasChanges) {
-      Router.replace(route.name as any, {
+      const replace = Router.replace as unknown as (name: string, params: Record<string, unknown>) => void;
+      replace(route.name, {
         ...params,
         ...queryUpdates
-      });
+      } as Record<string, unknown>);
     }
   }, [currentQ, currentCat, currentTags, currentBatch, currentSelected, route?.name]);
 }

@@ -14,7 +14,7 @@ export type TranslationType = typeof translations.en;
 export function createTranslate(lang: LanguageCode) {
   const dict = translations[lang] || translations.en;
   return (key: keyof typeof translations.en) => {
-    const value = (dict as any)[key];
+    const value = dict[key];
     if (typeof value === 'function') return value;
     return value || key;
   };

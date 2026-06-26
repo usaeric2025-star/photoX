@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { DB_CONFIG } from '@/constants/config';
 import { logger } from '@/lib/logger';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 export const cleanUpOrphanRecords = async (): Promise<{ count: number }> => {
   logger.info('[Maintenance] Starting Orphan Records Cleanup...');
@@ -15,7 +16,7 @@ export const cleanUpOrphanRecords = async (): Promise<{ count: number }> => {
       return { count: 0 };
     }
 
-    const ids = orphans.map((o: any) => o.id);
+    const ids = orphans.map((o: { id: string }) => o.id);
     const { error: delError } = await supabase
       .from(DB_CONFIG.TABLE_NAME)
       .delete()
@@ -25,7 +26,7 @@ export const cleanUpOrphanRecords = async (): Promise<{ count: number }> => {
     logger.info(`[Maintenance] Successfully removed ${ids.length} orphan records.`);
     return { count: ids.length };
   } catch (err) {
-    logger.error('[Maintenance] Failed to clean orphans:', err);
+    ErrorFactory.capture(err);
     throw err;
   }
 };

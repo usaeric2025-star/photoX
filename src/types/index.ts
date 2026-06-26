@@ -73,6 +73,7 @@ export interface AppSettings extends Record<string, unknown> {
   agnes_api_key?: string;
   custom_model?: string;
   provider?: string;
+  ai_provider?: string;
   whatsapp_1_name?: string;
   whatsapp_1?: string;
   whatsapp_2_name?: string;
