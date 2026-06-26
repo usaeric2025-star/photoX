@@ -28,11 +28,24 @@ export const errorFactory = {
   },
   
   fail(err: AppError) {
+    let safeMessage = err.message;
+    // Prevent leaking raw SQL queries or huge base64 strings to the client
+    if (safeMessage.includes('Failed query:') || safeMessage.includes('PostgresError')) {
+       // We keep the operation name if present (e.g. "[api./api/photos/upsert] Database error")
+       const match = safeMessage.match(/^\[(.*?)\]/);
+       safeMessage = match ? `[${match[1]}] Database operation failed.` : 'Database operation failed.';
+    } else {
+       safeMessage = safeMessage.replace(/data:image\/[^;]+;base64,[a-zA-Z0-9+/=]+/g, '[BASE64_IMAGE_TRUNCATED]');
+       if (safeMessage.length > 500) {
+         safeMessage = safeMessage.substring(0, 500) + '... (詳細錯誤已記錄於後端日誌)';
+       }
+    }
+
     return {
       success: false,
       error: {
         code: err.code,
-        message: err.message,
+        message: safeMessage,
         traceId: err.traceId
       }
     };

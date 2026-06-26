@@ -76,7 +76,8 @@ export const createHandler = (app: Hono) => {
     } catch (error: unknown) {
         logger.error('[UpsertPhoto] Database error during upsert. Mapped payload fields: ' + Object.entries(mappedPayload).map(([k, v]) => `${k}: ${v === null ? 'null' : typeof v} (${v instanceof Date ? 'Date' : 'not Date'})`).join(', '));
         logger.error('[UpsertPhoto] Database error during upsert', error);
-        return c.json({ success: false, error: (error instanceof Error ? error.message : String(error)) }, 500);
+        const { errorFactory } = await import('../../_lib/error/AppError.js');
+        throw errorFactory.wrap(error, 'api./api/photos/upsert', 'DB_ERROR');
     }
   });
 
@@ -99,7 +100,8 @@ export const createHandler = (app: Hono) => {
         
         return c.json({ success: true, data });
     } catch (error: unknown) {
-        return c.json({ success: false, error: (error instanceof Error ? error.message : String(error)) }, 500);
+        const { errorFactory } = await import('../../_lib/error/AppError.js');
+        throw errorFactory.wrap(error, 'api./api/photos/ai-result', 'DB_ERROR');
     }
   });
 };
