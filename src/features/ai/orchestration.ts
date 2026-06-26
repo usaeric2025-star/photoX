@@ -174,7 +174,7 @@ export async function runBatchAnalysis({
 
   for (let i = 0; i < targetPhotos.length; i++) {
     const p = targetPhotos[i];
-    const currentProgress = ((i) / totalPhotosToProcess) * (groupId ? 70 : 100);
+    const currentProgress = ((i) / totalPhotosToProcess) * (groupId ? 0.7 : 1);
 
     try {
       onProgress(currentProgress, `正在分析照片 ${i + 1}/${totalPhotosToProcess}`);
@@ -187,14 +187,14 @@ export async function runBatchAnalysis({
 
   let groupSuccess = false;
   if (groupId) {
-    onProgress(75, '正在總結整个合组...');
+    onProgress(0.75, '正在總結整个合组...');
     try {
       const response = await api.photos['by-ids'].$post({ json: { ids: targetPhotos.map(p => p.id) } });
       const body = await response.json();
       const photos = (body.success ? body.data || [] : []) as Photo[];
       
       if (photos.length > 0) {
-        onProgress(85, '生成合组名称与描述...');
+        onProgress(0.85, '生成合组名称与描述...');
         await analyzeAndSaveGroup(groupId, photos);
         groupSuccess = true;
       }
@@ -203,6 +203,6 @@ export async function runBatchAnalysis({
     }
   }
 
-  onProgress(100, '分析流程完成');
+  onProgress(1, '分析流程完成');
   return { successCount, groupSuccess };
 }

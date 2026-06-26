@@ -37,28 +37,28 @@ export default defineConfig(({mode}) => {
     build: {
       emptyOutDir: true,
       outDir: 'dist',
-      codeSplitting: {
-        groups: [
-          {
-            name: 'vendor-core',
-            test: /[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/,
-          },
-          {
-            name: 'vendor-ui',
-            test: /[\\/]node_modules[\\/](lucide-react|@radix-ui|sonner|yet-another-react-lightbox|virtua|motion|el-form-react-components|el-form-react-hooks)[\\/]/,
-          },
-          {
-            name: 'vendor-features',
-            test: /[\\/]node_modules[\\/](@supabase|drizzle-orm|postgres|@aws-sdk)[\\/]/,
-          },
-          {
-            name: 'vendor-utils',
-            test: /[\\/]node_modules[\\/](dayjs|clsx|tailwind-merge|valibot|swr)[\\/]/,
-          }
-        ],
-      },
       rollupOptions: {
         output: {
+          manualChunks: (id) => {
+            if (id.includes('node_modules')) {
+              if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
+                return 'vendor-react';
+              }
+              if (id.includes('@storve/core') || id.includes('@storve/react')) {
+                return 'vendor-storve';
+              }
+              if (id.includes('@supabase/')) {
+                return 'vendor-supabase';
+              }
+              if (id.includes('@tanstack/react-form') || id.includes('@tanstack/valibot-form-adapter') || id.includes('valibot')) {
+                return 'vendor-form';
+              }
+              if (id.includes('lucide-react-sprite') || id.includes('sonner') || id.includes('@mshafiqyajid/react-lightbox') || id.includes('virtua')) {
+                return 'vendor-ui';
+              }
+              return 'vendor'; // all other dependencies
+            }
+          }
         }
       }
     },

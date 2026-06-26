@@ -58,12 +58,9 @@ export function AdminPageContent() {
             <AdminContainer />
           </div>
           
-          <div className="absolute bottom-8 right-8">
+          <div className="absolute bottom-8 right-8 z-[9999]">
             <UploadButton 
-              onAdd={() => {
-                const input = document.getElementById('admin-quick-add-input') as HTMLInputElement;
-                if (input) input.click();
-              }}
+              onAdd={() => patch({ uploadModeDialogOpen: true })}
             />
           </div>
         </div>
@@ -100,14 +97,8 @@ export function AdminPageContent() {
         <input 
           type="file" id="admin-quick-add-input" multiple accept="image/*" className="hidden" 
           onChange={(e) => {
-            if (e.target.files) {
-              const files = e.target.files;
-              if (files.length > 1) {
-                patch({ uploadModeDialogOpen: true, pendingFiles: files });
-              } else {
-                patch({ uploadAsGroup: false });
-                uploadFiles(files);
-              }
+            if (e.target.files && e.target.files.length > 0) {
+              uploadFiles(e.target.files);
             }
             e.target.value = '';
           }}
@@ -120,11 +111,9 @@ export function AdminPageContent() {
           open={uploadModeDialogOpen}
           onOpenChange={(open) => patch({ uploadModeDialogOpen: open })}
           onSelectMode={(mode) => {
-            if (pendingFiles) {
-              patch({ uploadAsGroup: mode === 'group' });
-              uploadFiles(pendingFiles);
-            }
-            patch({ uploadModeDialogOpen: false, pendingFiles: null });
+            patch({ uploadModeDialogOpen: false, uploadAsGroup: mode === 'group' });
+            const input = document.getElementById('admin-quick-add-input') as HTMLInputElement;
+            if (input) input.click();
           }}
         />
       </Suspense>

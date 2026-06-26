@@ -102,6 +102,13 @@ export class ErrorBoundary extends Component<Props, State> {
 
   override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     logger.error('ErrorBoundary caught:', error, errorInfo);
+    const isChunkFailure = error.message.includes('Failed to fetch dynamically imported module') || 
+         error.message.includes('Loading chunk');
+    if (isChunkFailure) {
+      import('@/lib/chunkErrorHandler').then(({ handleChunkError }) => {
+        handleChunkError(error.message);
+      });
+    }
   }
 
   override render() {
@@ -111,18 +118,13 @@ export class ErrorBoundary extends Component<Props, State> {
          this.state.error.message.includes('Loading chunk'));
 
       if (isChunkFailure) {
+        // Return null or a subtle loading state while handleChunkError reloads the page
         return (
           <div className="flex items-center justify-center min-h-screen p-8 bg-slate-50">
             <div className="text-center max-w-sm">
               <LoadingSpinner size="lg" className="mx-auto mb-6" />
-              <h2 className="text-xl font-bold text-slate-900 mb-2">系统需要更新</h2>
-              <p className="text-slate-500 mb-8 text-sm">为了为您提供最新功能与修复，我们需要重新加载应用资源。</p>
-              <button
-                onClick={() => window.location.reload()}
-                className="w-full px-6 py-3 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all active:scale-95"
-              >
-                立即更新
-              </button>
+              <h2 className="text-xl font-bold text-slate-900 mb-2">更新应用中...</h2>
+              <p className="text-slate-500 mb-8 text-sm">正在自动加载最新资源，请稍候</p>
             </div>
           </div>
         );

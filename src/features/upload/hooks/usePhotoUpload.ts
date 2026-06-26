@@ -1,4 +1,4 @@
-import { useAuth, isTaskDrawerOpen } from '@/lib/store';
+import { useAuth, isTaskDrawerOpen, uiStore } from '@/lib/store';
 import { useCallback } from 'react';
 
 import { checkDuplicateBatch } from '@/services/photo/duplicateCheck';
@@ -7,6 +7,7 @@ import { showToast } from '@/lib/ui/toast';
 import { hapticFeedback } from '@/lib/ui/haptics';
 import { scheduler } from '@/lib/task-queue';
 import { createBatchUploadTask } from '@/lib/task-queue/adapters/upload';
+import { generateId } from '@/lib/id';
 
 export function usePhotoUpload() {
   const { user } = useAuth();
@@ -27,8 +28,12 @@ export function usePhotoUpload() {
 
     const userId = user?.id || 'staff';
     
+    // Check if we should group them
+    const isGroup = uiStore.getState().uploadAsGroup && uniqueFiles.length > 1;
+    const groupId = isGroup ? generateId() : undefined;
+    
     // Batch enqueue
-    scheduler.enqueue(createBatchUploadTask(uniqueFiles, userId, {}));
+    scheduler.enqueue(createBatchUploadTask(uniqueFiles, userId, { groupId }));
     
     isTaskDrawerOpen.set(true);
     

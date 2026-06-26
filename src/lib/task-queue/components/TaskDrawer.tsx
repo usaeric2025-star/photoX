@@ -29,8 +29,8 @@ function TaskItem({ task }: { task: Task }) {
     'sync': 'refresh-cw'
   };
 
-  const progress = task.state.status === 'processing' ? task.state.progress : (task.state.status === 'completed' ? 100 : 0);
-  const progressPercent = Math.min(100, Math.max(0, Math.round(progress)));
+  const progress = task.state.status === 'processing' ? task.state.progress : (task.state.status === 'completed' ? 1 : 0);
+  const progressPercent = Math.min(100, Math.max(0, Math.round(progress * 100)));
 
   const message = task.state.status === 'processing' ? task.state.message : (task.state.status === 'failed' ? task.state.error : undefined);
 

@@ -22,7 +22,7 @@ export function setupChunkErrorHandler() {
   }, true)
 }
 
-async function handleChunkError(msg: string, event: Event | PromiseRejectionEvent) {
+export async function handleChunkError(msg: string, event?: Event | PromiseRejectionEvent) {
   const isChunkError = msg.includes('Failed to fetch dynamically imported module')
     || msg.includes('Importing a module script failed')
     || msg.includes('Loading chunk failed')
@@ -32,7 +32,9 @@ async function handleChunkError(msg: string, event: Event | PromiseRejectionEven
 
   if (!isChunkError) return
 
-  event.preventDefault()
+  if (event) {
+    event.preventDefault()
+  }
 
   const reloadCount = Number(sessionStorage.getItem(RELOAD_COUNT_KEY) || '0')
   

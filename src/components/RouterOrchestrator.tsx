@@ -7,7 +7,6 @@ import { PublicGroupDetailPage } from "@/features/group/public/GroupDetailPage";
 import { AdminGroupDetailPage } from "@/features/group/admin/GroupDetailPage";
 import { AdminAuthGate } from "@/components/admin/AdminAuthGate";
 import { LoadingScreen } from "./ui/LoadingScreen";
-import { DialogContainer } from "./layout/DialogContainer";
 
 const SettingsPage = lazy(() => import("@/features/settings/SettingsPage").then(m => ({ default: m.SettingsPage })));
 const DiagDashboard = lazy(() => import("@/features/diagnostics/DiagDashboard").then(m => ({ default: m.DiagDashboard })));
@@ -62,7 +61,6 @@ export function RouterOrchestrator() {
           {getPage()}
         </Suspense>
       </div>
-      <DialogContainer />
     </>
   );
 }

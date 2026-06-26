@@ -9,7 +9,6 @@ const DiagDialog = lazy(() => import('@/components/ui/DiagDialog').then(m => ({ 
 
 export function DialogContainer() {
   const isLightbox = useSignal(isLightboxOpen);
-  const isTaskDrawer = useSignal(isTaskDrawerOpen);
   const isDiag = useSignal(isDiagnosticsOpen);
   
   const [mounted, setMounted] = useState(false);
@@ -23,7 +22,7 @@ export function DialogContainer() {
     <>
       <SonnerContainer />
       <TaskBadge />
-      {isTaskDrawer && <TaskDrawer />}
+      <TaskDrawer />
       {isLightbox && <PhotoLightbox />}
       {isDiag && (
         <Suspense fallback={null}>
