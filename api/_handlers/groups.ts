@@ -121,6 +121,8 @@ export const groups = new Hono()
             cleanMapped.userId = '8ec53131-a589-4b50-beb4-6b5308541e1b';
         }
 
+        const { id, ...updatePayloadData } = cleanMapped;
+
         const insertPayload = {
             ...cleanMapped,
             createdAt: new Date(),
@@ -128,7 +130,7 @@ export const groups = new Hono()
         };
 
         const updatePayload = {
-            ...cleanMapped,
+            ...updatePayloadData,
             updatedAt: new Date()
         };
 

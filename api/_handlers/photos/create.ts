@@ -44,6 +44,8 @@ export const createHandler = (app: Hono) => {
             }
         }
 
+        const { id, ...updatePayloadData } = mappedPayload;
+
         const insertPayload = {
             ...mappedPayload,
             createdAt: new Date(),
@@ -51,7 +53,7 @@ export const createHandler = (app: Hono) => {
         };
 
         const updatePayload = {
-            ...mappedPayload,
+            ...updatePayloadData,
             updatedAt: new Date()
         };
 

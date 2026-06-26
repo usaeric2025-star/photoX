@@ -186,9 +186,11 @@ adminSettings.post("/save-settings", async (c) => {
         // Always ensure ID is 1
         mappedPayload.id = 1;
 
+        const { id, ...updatePayload } = mappedPayload;
+
         await db.insert(settingsTable).values(mappedPayload as unknown as typeof settingsTable.$inferInsert).onConflictDoUpdate({
             target: settingsTable.id,
-            set: mappedPayload as unknown as typeof settingsTable.$inferInsert
+            set: updatePayload as unknown as typeof settingsTable.$inferInsert
         });
         
         return c.json({ success: true });

@@ -73,7 +73,7 @@ export const FatalErrorOverlay = () => {
   return (
     <dialog 
       ref={dialogRef}
-      className="backdrop:bg-slate-900/90 backdrop:backdrop-blur-sm p-0 rounded-3xl overflow-hidden border-none shadow-2xl w-full max-w-lg focus:outline-none"
+      className="m-auto rounded-3xl overflow-hidden border-none shadow-2xl w-full max-w-md focus:outline-none bg-white p-0 backdrop:bg-slate-950/80 backdrop:backdrop-blur-md animate-in fade-in zoom-in-95 duration-200 ease-out"
       onClose={() => {}} // Prevent accidental close
     >
       <div className="bg-white p-8 space-y-6">
