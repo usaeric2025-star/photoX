@@ -30,7 +30,7 @@ const syncConfig = defineMutation<void, 'push' | 'pull', readonly unknown[]>({
       await appQuery.mutate(queryKeys.categories.all);
       await appQuery.mutate(queryKeys.manufacturers.all);
       await appQuery.mutate(queryKeys.groups.all);
-      await appQuery.mutate(queryKeys.photos.all);
+      await appQuery.mutate((key) => Array.isArray(key) && key[0] === queryKeys.photos.all[0]);
     }
   },
   successMessage: '同步完成',

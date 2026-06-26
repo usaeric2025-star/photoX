@@ -9,6 +9,7 @@ import { LightboxInfoCard } from './components/LightboxInfoCard';
 import { showToast } from '@/lib/ui/toast';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { Icon } from '@/components/ui/Icon';
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { Photo, AppSettings } from '@/types';
 import { LightboxSlide } from '@/lib/lightbox/types';
 import { logger } from '@/lib/logger';
@@ -88,6 +89,8 @@ function LightboxToolbar({
           </button>
         </div>
       )}
+
+      <LanguageSwitcher mode="lightbox" />
 
       <button 
         onClick={(e) => {

@@ -5,7 +5,7 @@ import { NativePopover } from '@/components/ui/NativePopover';
 import { appQuery } from '@/lib/query';
 import { queryKeys } from '@/lib/query/keys';
 
-export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dropdown' | 'segmented' }) {
+export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dropdown' | 'segmented' | 'lightbox' }) {
   const appLang = useUI((s: UIStoreState) => s.appLang);
   const patch = useUI((s: UIStoreState) => s.patch);
 
@@ -19,6 +19,39 @@ export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dro
     patch({ appLang: lang });
     appQuery.mutate(queryKeys.categories.all);
   };
+
+  if (mode === 'lightbox') {
+    const currentLabel = langs.find(l => l.code === appLang)?.label || 'EN';
+    return (
+      <NativePopover
+        align="end"
+        trigger={
+          <button 
+            className="flex items-center justify-center gap-1 w-auto px-2.5 h-9 rounded-full bg-white/10 hover:bg-white/20 transition-all active:scale-95 text-white cursor-pointer"
+            title="Switch Language"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Icon name="globe" size={15} className="opacity-70" />
+            <span className="text-[11px] font-bold tracking-wider">{currentLabel}</span>
+          </button>
+        }
+      >
+        <div className="py-1">
+          {langs.map(l => (
+            <button
+              key={l.code}
+              onClick={() => handleLangChange(l.code)}
+              className={`w-full text-left px-4 py-2 text-sm hover:bg-slate-50 transition-colors cursor-pointer ${
+                appLang === l.code ? 'text-blue-600 font-semibold bg-blue-50/50' : 'text-slate-600'
+              }`}
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
+      </NativePopover>
+    );
+  }
 
   if (mode === 'dropdown') {
     const currentLabel = langs.find(l => l.code === appLang)?.label || 'EN';

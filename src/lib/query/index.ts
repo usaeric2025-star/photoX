@@ -14,14 +14,14 @@ export const appQuery = {
    * Invalidate or update cache globally
    * If a functional updater is provided as the second argument, it's used directly for optimisticData
    */
-  mutate: (key: string | readonly unknown[], data?: unknown, options?: unknown) => {
+  mutate: (key: string | readonly unknown[] | ((key: import('swr').Key) => boolean), data?: unknown, options?: unknown) => {
     if (typeof data === 'function' && !options) {
-      return swrMutate(key as import('swr').Key, data, {
+      return swrMutate(key as any, data, {
         optimisticData: data as (currentData: unknown) => unknown,
         rollbackOnError: true,
       });
     }
-    return swrMutate(key as import('swr').Key, data, options as import('swr').MutatorOptions);
+    return swrMutate(key as any, data, options as import('swr').MutatorOptions);
   },
 };
 

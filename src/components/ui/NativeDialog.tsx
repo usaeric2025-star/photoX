@@ -154,7 +154,7 @@ export function NativeDialog({
         ${size === 'screen' ? '' : 'rounded-xl shadow-2xl'}
         w-full bg-surface-base border-none
         backdrop:bg-black/40 backdrop:backdrop-blur-xl
-        p-0 overflow-hidden outline-none ${className}
+        p-0 overflow-hidden outline-none z-[10050] ${className}
       `}
       id={id}
     >

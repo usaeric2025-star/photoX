@@ -12,6 +12,7 @@ import {
 import { api } from "@/lib/api";
 import { useInvalidatePhotos } from "@/hooks";
 import { executeTask } from '@/lib/task-queue';
+import { uploadToR2 } from '@/features/upload/services/upload/r2Client';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { showToast } from '@/lib/ui/toast';
 
@@ -112,28 +113,10 @@ export const useSettingsLogic = ({
       label: appLang === 'zh' ? '上传系统 Logo' : 'Upload System Logo',
       type: 'upload',
       execute: async () => {
-        const reader = new FileReader();
-        const base64Data = await new Promise<string>((resolve, reject) => {
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-
-        const resp = await api.uploadDirect.$post({
-          json: {
-            base64Data,
-            fileKey: `settings/logo_${Date.now()}.webp`,
-            contentType: file.type
-          }
-        });
-        
-        const res = await resp.json() as { success: boolean; data: { publicUrl: string }; error?: string };
-        if (!res.success || !res.data.publicUrl) {
-          throw new Error(res.error || 'Upload failed');
-        }
-        
-        setSettingField('logo_url', res.data.publicUrl);
-        return res.data.publicUrl;
+        const fileKey = `settings/logo_${Date.now()}`;
+        const { imageUrl } = await uploadToR2('', fileKey, file, undefined);
+        setSettingField('logo_url', imageUrl);
+        return imageUrl;
       }
     });
   };

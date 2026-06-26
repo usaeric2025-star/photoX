@@ -3,6 +3,7 @@ import { useSignal, isLightboxOpen, isTaskDrawerOpen, isDiagnosticsOpen } from '
 import { SonnerContainer } from '@/components/ui/SonnerContainer';
 import { TaskBadge, TaskDrawer } from '@/lib/task-queue/components';
 import { PhotoLightbox } from '@/features/lightbox/PhotoLightbox';
+import { PhotoEditDialog } from '@/features/photo-edit/PhotoEditDialog';
 import { useEffect, useState, lazy, Suspense } from 'react';
 
 const DiagDialog = lazy(() => import('@/components/ui/DiagDialog').then(m => ({ default: m.DiagDialog })));
@@ -24,6 +25,7 @@ export function DialogContainer() {
       <TaskBadge />
       <TaskDrawer />
       {isLightbox && <PhotoLightbox />}
+      <PhotoEditDialog />
       {isDiag && (
         <Suspense fallback={null}>
           <DiagDialog open={isDiag} onClose={() => isDiagnosticsOpen.set(false)} />

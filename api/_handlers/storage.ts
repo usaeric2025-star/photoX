@@ -11,43 +11,6 @@ import { requireRealUser } from "../_lib/auth.js";
 const serverEnv = getServerEnv(process.env);
 export const storage = new Hono();
 
-storage.post("/upload-direct", async (c) => {
-    try {
-      await requireRealUser(c);
-      const { base64Data, fileKey, contentType } = await c.req.json();
-      if (!base64Data || !fileKey) return c.json({ error: "base64Data and fileKey required" }, 400);
-
-      let uint8Array: Uint8Array;
-      try {
-        const buf = Buffer.from(base64Data.replace(/^data:image\/\w+;base64,/, ''), 'base64');
-        uint8Array = new Uint8Array(buf.buffer, buf.byteOffset, buf.length);
-      } catch (err: unknown) {
-        throw new Error('Invalid base64 data');
-      }
-
-      const fileName = `photox/public/${fileKey}`;
-      const s3Client = await getR2Client();
-      const bucketName = serverEnv.R2_BUCKET_NAME;
-      if (!bucketName) throw new Error("R2_BUCKET_NAME missing");
-
-      const command = new PutObjectCommand({
-        Bucket: bucketName,
-        Key: fileName,
-        ContentType: contentType || 'image/webp',
-        Body: uint8Array,
-      });
-      
-      await s3Client.send(command);
-      
-      if (!serverEnv.R2_PUBLIC_URL_PREFIX) throw new Error("R2_PUBLIC_URL_PREFIX missing");
-      const publicUrl = `${serverEnv.R2_PUBLIC_URL_PREFIX}/${fileName}`;
-      
-      return c.json({ success: true, data: { publicUrl } });
-    } catch(e: unknown) {
-      return c.json({ success: false, error: (e as Error).message }, 500);
-    }
-});
-
 storage.post("/upload-presign", async (c) => {
     try {
       await requireRealUser(c);

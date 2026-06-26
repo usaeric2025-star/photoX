@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { NativeDialog } from "@/components/ui/NativeDialog";
+import { AppErrorBoundary } from "@/components/layout/AppErrorBoundary";
 import { useUI } from '@/lib/store';
 import { usePhoto } from "@/hooks/photo/usePhoto";
 import { useFilters } from "@/hooks/useFilters";
@@ -53,7 +54,7 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
       >
         {isOpen && (
           <div className="flex flex-col h-full bg-surface-soft min-h-[500px]">
-            <div className="p-4 border-b flex justify-between items-center bg-red-100">
+            <div className="p-4 border-b flex justify-between items-center bg-surface-base">
               <div></div>
               <DialogHeader onClose={handleInterceptClose} onDeleteClick={async () => {
                 logger.info('[PhotoEditDialog] Delete clicked for photo:', editPhotoId);
@@ -68,7 +69,9 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
                 <p className="text-sm font-medium text-slate-500">正在获取照片详情...</p>
               </div>
             ) : (
-              <PhotoEditTabs />
+              <AppErrorBoundary>
+                <PhotoEditTabs />
+              </AppErrorBoundary>
             )}
           </div>
         )}

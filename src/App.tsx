@@ -18,13 +18,9 @@ export default function App() {
     <AppErrorBoundary>
       <ConfirmProvider>
         {status === 'loading' ? (
-          <div className="fixed inset-0 z-50 animate-fade-in">
-            <LoadingScreen />
-          </div>
+          <LoadingScreen />
         ) : status === 'error' ? (
-          <div className="fixed inset-0 z-50 animate-fade-in">
-            <LoadingScreen error={error} />
-          </div>
+          <LoadingScreen error={error} />
         ) : (
           <div className="relative min-h-screen animate-fade-in">
             <Suspense fallback={<LoadingScreen />}>

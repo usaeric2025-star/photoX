@@ -4,7 +4,6 @@ import { STORAGE } from './storageConfig';
 import { api } from '@/lib/api';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { compressImage, dataURLToArrayBuffer } from './uploadUtils';
-import { resolveUploadStrategy } from './uploadStateMachine';
 
 export interface UploadResult {
   imageUrl: string;
@@ -149,29 +148,8 @@ const uploadImages = async (
       if (isMain && onProgress) onProgress(100);
       return publicUrl;
     } catch (browserUploadErr) {
-      logger.warn('[Upload] Browser direct upload failed, trying fallback...', browserUploadErr);
-      
-      const byteLength = data instanceof File ? data.size : (body as Uint8Array).byteLength;
-      const strategy = resolveUploadStrategy(byteLength, browserUploadErr);
-      
-      if (strategy.status === 'failed') {
-          throw ErrorFactory.fatal(strategy.userMessage || '上傳服務目前不可用', { context: 'uploadFile' });
-      }
-      
-      if (data instanceof File) {
-          throw ErrorFactory.fatal('伺服器中轉上傳不支援原始檔案，請檢查網路連線', { context: 'uploadFile' });
-      }
-      
-      logger.warn('[Upload] Falling back to server relay...');
-      const fallbackRes = await api['upload-direct'].$post({
-        json: { base64Data: fallbackBase64, fileKey: safeFileName, contentType: mimeType }
-      });
-      if (!fallbackRes.ok) {
-         throw ErrorFactory.fatal(`伺服器中轉上傳失敗 (HTTP ${fallbackRes.status})`, { context: 'uploadFile' });
-      }
-      const fallbackResult = await fallbackRes.json() as { data: { publicUrl: string } };
-      if (isMain && onProgress) onProgress(100);
-      return fallbackResult.data.publicUrl;
+      logger.warn('[Upload] Browser direct upload failed', browserUploadErr);
+      throw ErrorFactory.fatal(`雲端存儲上傳失敗`, { context: 'uploadFile', cause: browserUploadErr });
     }
   };
 

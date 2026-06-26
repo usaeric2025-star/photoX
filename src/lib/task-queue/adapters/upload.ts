@@ -83,10 +83,10 @@ export const executeBatchUpload = (
           });
           
           // 觸發重新驗證快取
-          appQuery.mutate(queryKeys.photos.all);
+          appQuery.mutate((key) => Array.isArray(key) && key[0] === queryKeys.photos.all[0]);
           if (options.groupId) {
             appQuery.mutate(queryKeys.groups.detail(options.groupId, true));
-            appQuery.mutate(queryKeys.groups.all);
+            appQuery.mutate((key) => Array.isArray(key) && key[0] === queryKeys.groups.all[0]);
           }
           
           return res;
@@ -95,7 +95,7 @@ export const executeBatchUpload = (
   }
   
   // Trigger initial photos invalidate immediately after upload
-  appQuery.mutate(queryKeys.photos.all);
+  appQuery.mutate((key) => Array.isArray(key) && key[0] === queryKeys.photos.all[0]);
   
   return results;
 };

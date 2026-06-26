@@ -1,6 +1,5 @@
 import { logger } from '@/lib/logger';
 import React, { useEffect, useRef, useState, lazy, Suspense } from 'react';
-import { createPortal } from 'react-dom';
 const DiagDialog = lazy(() => import('./DiagDialog').then(m => ({ default: m.DiagDialog })));
 import { Icon } from '@/components/ui/Icon';
 
@@ -8,8 +7,12 @@ export const LoadingScreen = ({ error, onRetry }: { error?: Error | null, onRetr
   logger.debug('🔄 [LoadingScreen] Rendered');
   const [showHelper, setShowHelper] = useState(false);
   const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
+  const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
+    if (dialogRef.current && !dialogRef.current.open) {
+      dialogRef.current.showModal();
+    }
     const skeleton = document.getElementById('app-startup-skeleton');
     if (skeleton) {
       skeleton.style.opacity = '0';
@@ -28,7 +31,7 @@ export const LoadingScreen = ({ error, onRetry }: { error?: Error | null, onRetr
   }, []);
 
   const content = error ? (
-    <div className="fixed inset-0 flex items-center justify-center bg-white/95 backdrop-blur-sm select-none">
+    <div className="flex items-center justify-center bg-white/95 backdrop-blur-sm select-none min-h-screen">
       <div className="text-center max-w-md p-6">
         <div className="text-red-500 text-4xl mb-4">⚠️</div>
         <h3 className="text-lg font-semibold text-gray-900 mb-2">載入失敗</h3>
@@ -42,7 +45,7 @@ export const LoadingScreen = ({ error, onRetry }: { error?: Error | null, onRetr
       </div>
     </div>
   ) : (
-    <div className="fixed inset-0 flex flex-col bg-slate-50/95 backdrop-blur-sm select-none overflow-hidden">
+    <div className="flex flex-col bg-slate-50/95 backdrop-blur-sm select-none overflow-hidden min-h-screen w-full">
       {/* Top-edge dynamic linear progress bar */}
       <div className="h-[3px] w-full bg-slate-200 relative overflow-hidden shrink-0">
         <div className="absolute top-0 left-0 h-full w-[35%] bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 rounded-full animate-[loading-bar_1.2s_infinite_ease-in-out]"></div>
@@ -101,17 +104,21 @@ export const LoadingScreen = ({ error, onRetry }: { error?: Error | null, onRetr
     </div>
   );
 
-  return createPortal(
+  return (
     <>
-      {content}
+      <dialog 
+        ref={dialogRef}
+        className="w-screen h-screen max-w-none max-h-none m-0 p-0 bg-transparent backdrop:bg-transparent focus:outline-none"
+      >
+        {content}
+      </dialog>
       <Suspense fallback={null}>
         <DiagDialog 
           open={diagnosticsOpen} 
           onClose={() => setDiagnosticsOpen(false)} 
         />
       </Suspense>
-    </>,
-    document.getElementById('loading-root')!
+    </>
   );
 };
 
