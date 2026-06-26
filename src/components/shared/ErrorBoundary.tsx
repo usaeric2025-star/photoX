@@ -4,6 +4,7 @@ import { isAppError } from '@/lib/error/AppError';
 import { logger } from '@/lib/logger';
 import { cn } from '@/lib/utils';
 import { LoadingSpinner } from '../ui/feedback/LoadingSpinner';
+import { handleChunkError } from '@/lib/chunkErrorHandler';
 
 interface Props {
   children: ReactNode;
@@ -105,9 +106,7 @@ export class ErrorBoundary extends Component<Props, State> {
     const isChunkFailure = error.message.includes('Failed to fetch dynamically imported module') || 
          error.message.includes('Loading chunk');
     if (isChunkFailure) {
-      import('@/lib/chunkErrorHandler').then(({ handleChunkError }) => {
-        handleChunkError(error.message);
-      });
+      handleChunkError(error.message);
     }
   }
 

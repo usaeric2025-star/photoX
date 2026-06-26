@@ -4,6 +4,7 @@ import { showToast } from '@/lib/ui/toast';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useCopyToClipboard } from '@/hooks';
 import { isAppError } from '@/lib/error/AppError';
+import { handleChunkError } from '@/lib/chunkErrorHandler';
 
 function GlobalErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
   const { copy } = useCopyToClipboard({ successMessage: '诊断信息已复制' });
@@ -90,9 +91,7 @@ export function AppErrorBoundary({ children }: { children: React.ReactNode }) {
           const isChunkFailure = error.message.includes('Failed to fetch dynamically imported module') || 
                error.message.includes('Loading chunk');
           if (isChunkFailure) {
-            import('@/lib/chunkErrorHandler').then(({ handleChunkError }) => {
-              handleChunkError(error.message);
-            });
+            handleChunkError(error.message);
             return;
           }
         }

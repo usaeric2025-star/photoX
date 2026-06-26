@@ -47,7 +47,9 @@ export const client = hc<AppType>(
           headers.set('Authorization', `Bearer ${token}`);
         }
       } else {
-        const passcodeRaw = typeof window !== 'undefined' ? localStorage.getItem('ais_mock_auth_passcode') : null;
+        const passcodeRaw = typeof window !== 'undefined' 
+          ? (localStorage.getItem('photox_ais_mock_auth_passcode') || localStorage.getItem('ais_mock_auth_passcode')) 
+          : null;
         if (passcodeRaw) {
           let passcode = '';
           try {

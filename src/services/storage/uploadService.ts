@@ -48,8 +48,10 @@ const uploadImages = async (
   force = false
 ): Promise<UploadResult> => {
   const { data: { session } } = await supabase.auth.getSession();
+  const isLocalStorageStaff = typeof window !== 'undefined' && 
+    !!(localStorage.getItem('photox_ais_mock_auth_passcode') || localStorage.getItem('ais_mock_auth_passcode'));
 
-  if (!session?.user) {
+  if (!session?.user && !isLocalStorageStaff) {
     throw ErrorFactory.permission('No active session for storage');
   }
 
