@@ -20,6 +20,7 @@ import '@mshafiqyajid/react-lightbox/styles.css';
 
 interface LightboxImage {
   src: string;
+  srcSet?: string;
   alt: string;
   title?: string | { zh: string; en?: string; ms?: string };
   description?: string | { zh: string; en?: string; ms?: string } | null;
@@ -175,6 +176,7 @@ export function PhotoLightbox() {
         
       return {
         src: previewUrl,
+        srcSet: s.srcSet,
         thumb: thumbUrl,
         alt: s.alt ?? '',
         title: s.title,

@@ -3,6 +3,7 @@ import type { Photo } from '@/types/photo';
 export interface LightboxSlide {
   id: string;
   src: string;
+  srcSet?: string;
   alt?: string;
   title?: string;
   description?: string;

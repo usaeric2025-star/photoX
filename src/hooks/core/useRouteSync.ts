@@ -21,6 +21,8 @@ export function useRouteSync() {
   const lightboxIsOpen = useUIStore(s => s.lightboxIsOpen);
   const lightboxCurrentIndex = useUIStore(s => s.lightboxCurrentIndex);
   const lightboxSlides = useUIStore(s => s.lightboxSlides);
+  const isEditOpen = useUIStore(s => s.isPhotoEditOpen);
+  const editingPhotoId = useUIStore(s => s.currentEditingPhoto?.id);
 
   // 1. URL -> Signal (Synchronization from URL to Memory)
   useEffect(() => {
@@ -147,31 +149,48 @@ export function useRouteSync() {
       hasChanges = true;
     }
 
-    // Lightbox PhotoId
-    if (lightboxIsOpen && lightboxSlides.length > 0) {
-       const currentPhotoId = lightboxSlides[lightboxCurrentIndex]?.id;
-       if (currentPhotoId && currentPhotoId !== params.photoId) {
-          queryUpdates.photoId = currentPhotoId;
-          hasChanges = true;
-       }
-    } else if (!lightboxIsOpen && params.photoId && !params.modal) {
-       // Only clear photoId if not in edit modal
-       queryUpdates.photoId = undefined;
-       hasChanges = true;
+    // Modal & PhotoId Sync
+    const modalParam = params.modal as string;
+    
+    if (isEditOpen) {
+      if (modalParam !== 'edit') {
+        queryUpdates.modal = 'edit';
+        hasChanges = true;
+      }
+      if (editingPhotoId && editingPhotoId !== params.photoId) {
+        queryUpdates.photoId = editingPhotoId;
+        hasChanges = true;
+      }
+    } else if (lightboxIsOpen && lightboxSlides.length > 0) {
+      const currentPhotoId = lightboxSlides[lightboxCurrentIndex]?.id;
+      if (modalParam === 'edit') {
+        queryUpdates.modal = undefined;
+        hasChanges = true;
+      }
+      if (currentPhotoId && currentPhotoId !== params.photoId) {
+        queryUpdates.photoId = currentPhotoId;
+        hasChanges = true;
+      }
+    } else {
+      // Both closed, clean up URL if needed
+      if (modalParam) {
+        queryUpdates.modal = undefined;
+        hasChanges = true;
+      }
+      if (params.photoId) {
+        queryUpdates.photoId = undefined;
+        hasChanges = true;
+      }
     }
 
     if (hasChanges) {
       const replace = Router.replace as unknown as (name: string, params: Record<string, unknown>) => void;
       
-      // Debounce the URL update to keep swiping buttery smooth
-      const timeoutId = window.setTimeout(() => {
-        replace(route.name, {
-          ...params,
-          ...queryUpdates
-        } as Record<string, unknown>);
-      }, 250);
-
-      return () => clearTimeout(timeoutId);
+      // Immediate update for better snappiness, using replace to avoid history bloat
+      replace(route.name, {
+        ...params,
+        ...queryUpdates
+      } as Record<string, unknown>);
     }
-  }, [currentQ, currentCat, currentTags, currentBatch, currentSelected, lightboxIsOpen, lightboxCurrentIndex, lightboxSlides, route?.name]);
+  }, [currentQ, currentCat, currentTags, currentBatch, currentSelected, lightboxIsOpen, lightboxCurrentIndex, lightboxSlides, isEditOpen, editingPhotoId, route?.name, route?.params]);
 }
