@@ -7,6 +7,7 @@ import { OptimizedImage } from '@/components/shared/OptimizedImage';
 import { showToast } from '@/lib/ui/toast';
 import { NativeDialog } from '@/components/ui/NativeDialog';
 import { Field } from '@tanstack/react-form';
+import { copyToClipboard } from '@/utils/clipboard';
 
 export function BasicInfoTab() {
   const { form } = usePhotoEditSessionContext();
@@ -28,7 +29,7 @@ export function BasicInfoTab() {
               >
                 <OptimizedImage src={previewSrc} className="w-full h-full object-contain" alt="Preview" />
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Icon name="maximize-2" className="text-white drop-shadow-md" size={20} />
+                   <Icon name="maximize-2" className="text-white drop-shadow-md" size={20} />
                 </div>
              </div>
           </div>
@@ -74,16 +75,17 @@ export function BasicInfoTab() {
           <div 
             className="w-full bg-slate-50 border border-slate-100 px-4 py-3 rounded-2xl text-[10px] font-mono font-medium text-slate-400 cursor-help truncate" 
             title={detailPhoto?.id || ''}
-            onClick={() => {
+            onClick={async () => {
               if (detailPhoto?.id) {
-                navigator.clipboard.writeText(detailPhoto.id);
-                showToast.success('ID 已复制');
+                const success = await copyToClipboard(detailPhoto.id);
+                if (success) showToast.success('ID 已复制');
               }
             }}
           >
             {detailPhoto?.id || '---'}
           </div>
         </div>
+
         <Field form={form} name="manual_code">
           {({ state, handleChange }) => (
             <div className="space-y-1.5">

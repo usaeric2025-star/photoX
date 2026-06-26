@@ -26,14 +26,34 @@ export const showToast = {
     if (messageOrError && typeof messageOrError === 'object') {
       const err = messageOrError as any;
       userMessage = err.userMessage || err.message || userMessage;
-      systemMessage = err.message || '';
+      
+      // 深度提取系統訊息
+      const extractSystemMsg = (e: any): string => {
+        if (!e) return '';
+        if (typeof e === 'string') return e;
+        if (e.message) return e.message;
+        if (e.error?.message) return e.error.message;
+        if (e.error && typeof e.error === 'string') return e.error;
+        
+        try {
+          return JSON.stringify(e);
+        } catch (err) {
+          return String(e);
+        }
+      };
+
+      systemMessage = extractSystemMsg(err);
       code = err.code || 'UNKNOWN_ERROR';
       traceId = err.traceId || '';
       timestamp = err.timestamp || '';
       
+      // 提取原因
       const originalErr = err.cause || err.originalError || (err.context && err.context.original);
       if (originalErr) {
-        systemMessage += ` | 原因: ${originalErr.message || String(originalErr)}`;
+        const nestedMsg = extractSystemMsg(originalErr);
+        if (nestedMsg && nestedMsg !== systemMessage) {
+          systemMessage += ` | 原因: ${nestedMsg}`;
+        }
         if (originalErr.stack) {
           stackTrace = originalErr.stack;
         }
@@ -50,20 +70,22 @@ export const showToast = {
       traceId = Math.random().toString(36).substring(2, 10).toUpperCase();
     }
     if (!timestamp) {
-      timestamp = new Date().toISOString();
+      timestamp = new Date().toLocaleString('zh-CN');
     }
-    if (!systemMessage) {
+    if (!systemMessage || systemMessage === '[object Object]') {
       systemMessage = userMessage;
     }
     
     // Copy handler with precise diagnostic fields
     const diagnosticsText = [
-      `时间戳: ${timestamp}`,
-      `错误类型: 运行逻辑异常`,
-      `代码: ${code}`,
+      `--- PHOTX 錯誤診斷報告 ---`,
+      `時間戳: ${timestamp}`,
+      `錯誤類型: 運行邏輯異常`,
+      `代碼: ${code}`,
       `Trace ID: ${traceId}`,
+      `當前 URL: ${typeof window !== 'undefined' ? window.location.href : 'unknown'}`,
       `原始 Message: ${systemMessage}`,
-      stackTrace ? `堆栈信息: ${stackTrace}` : ''
+      stackTrace ? `堆棧信息: ${stackTrace}` : ''
     ].filter(Boolean).join('\n');
     
     return toast.error(
@@ -80,10 +102,12 @@ export const showToast = {
             if (e && typeof e.preventDefault === 'function') e.preventDefault();
             if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
             
-            await copyToClipboard(diagnosticsText, {
-              successMessage: '诊断信息已复制',
-              showToast: true
-            });
+            const success = await copyToClipboard(diagnosticsText);
+            if (success) {
+              toast.success('诊断信息已复制', { id: `copy-${traceId}` });
+            } else {
+              toast.error('复制失败，请手动选择复制');
+            }
           }
         },
         ...options

@@ -310,7 +310,11 @@ export class ErrorFactory {
     }
 
     if (!rawMsg) {
-      rawMsg = String(error);
+      rawMsg = String(error || '未知错误');
+    }
+
+    if (rawMsg.trim() === '' || rawMsg === '[object Object]') {
+      rawMsg = '未知系統錯誤 (未提供詳細訊息)';
     }
 
     // 进行英中错误信息转换，确保「报错一律只有中文」

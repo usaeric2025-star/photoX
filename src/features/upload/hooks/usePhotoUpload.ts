@@ -25,7 +25,7 @@ export function usePhotoUpload() {
 
     hapticFeedback.medium();
 
-    const userId = user?.id || 'staff';
+    const userId = user?.id;
     
     // Check if we should group them
     const isGroup = uiStore.getState().uploadAsGroup && uniqueFiles.length > 1;
@@ -35,6 +35,7 @@ export function usePhotoUpload() {
     createTask({
       label: `上傳 ${uniqueFiles.length} 張照片`,
       type: 'upload',
+      userId,
       meta: {
         photoCount: uniqueFiles.length,
         groupId: groupId,

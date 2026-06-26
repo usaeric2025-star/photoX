@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { ISSUE_ACTIONS, PreviewResult } from "@/features/diagnostics/issueActions";
 import { createTask } from '@/lib/task-queue';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { useAuth } from '@/lib/store';
 
 export function useMaintenanceExecution(issueId: string, title: string, onSuccess?: () => void) {
+  const { user } = useAuth();
   const [preview, setPreview] = useState<PreviewResult | null>(null);
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
@@ -36,6 +38,7 @@ export function useMaintenanceExecution(issueId: string, title: string, onSucces
     createTask({
       type: 'repair',
       label: title,
+      userId: user?.id,
       execute: async (signal, onProgress) => {
         onProgress(0.1, '正在初始化...');
         const result = await action.execute();

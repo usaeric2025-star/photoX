@@ -121,9 +121,13 @@ export function DiagDialog({ open, onClose }: DiagDialogProps) {
     ].join('\n');
   };
 
-  const handleCopy = () => {
+  const handleCopy = async () => {
     const text = getFullDiagnosticText();
-    copyToClipboard(text, { successMessage: '診斷報告已複製' });
+    const success = await copyToClipboard(text);
+    if (success) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+    }
   };
 
   return (

@@ -21,6 +21,8 @@ export interface TaskConfig<T = unknown> {
   onError?: (error: Error) => void;
   /** 任務 ID，若未提供則自動生成 */
   id?: string;
+  /** 執行任務的使用者 ID */
+  userId?: string;
   /** 靜默模式，不打開任務面板 */
   silent?: boolean;
 }
@@ -38,6 +40,7 @@ export function createTask<T>(config: TaskConfig<T>): string {
     onComplete, 
     onError, 
     id = generateId(),
+    userId,
     silent = false
   } = config;
 
@@ -52,6 +55,7 @@ export function createTask<T>(config: TaskConfig<T>): string {
     type,
     state: { status: 'queued' } as TaskState,
     createdAt: Date.now(),
+    userId,
     meta,
     execute: async (signal, onProgress) => {
       try {

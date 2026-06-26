@@ -11,6 +11,7 @@ import { usePhotoEditAI } from './usePhotoEditAI';
 import { AIStatusBadge } from '@/components/ui/AIStatusBadge';
 import { AppField } from '@/lib/form/AppField';
 import { MultilingualInput } from '@/components/shared/MultilingualInput';
+import { copyToClipboard } from '@/utils/clipboard';
 
 export function DetailsTab() {
   const { form } = usePhotoEditSessionContext();
@@ -30,10 +31,12 @@ export function DetailsTab() {
     }
   };
 
-  const copyId = () => {
+  const copyId = async () => {
     if (detailPhoto?.id) {
-      navigator.clipboard.writeText(detailPhoto.id);
-      showToast.success(appLang === 'zh' ? 'ID 已复制' : 'ID Copied');
+      const success = await copyToClipboard(detailPhoto.id);
+      if (success) {
+        showToast.success(appLang === 'zh' ? 'ID 已复制' : 'ID Copied');
+      }
     }
   };
   

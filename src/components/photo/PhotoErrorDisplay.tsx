@@ -4,6 +4,7 @@ import { classifyPhotoError, getLocalizedError } from '@/lib/error/photoErrors';
 import { showErrorToast, showSuccessToast } from '@/lib/error/errorUI';
 import { Icon, IconName } from '@/components/ui/Icon';
 import { cn } from '@/lib/utils';
+import { copyToClipboard } from '@/utils/clipboard';
 
 interface PhotoErrorDisplayProps {
   error: unknown;
@@ -21,25 +22,39 @@ export function PhotoErrorDisplay({ error, onRetry }: PhotoErrorDisplayProps) {
   const errObj = error as Record<string, unknown>;
   const traceId = typeof errObj.traceId === 'string' ? errObj.traceId : null;
   const code = typeof errObj.code === 'string' ? errObj.code : null;
-  const message = error instanceof Error ? error.message : typeof error === 'string' ? error : JSON.stringify(error);
+  
+  let message = '';
+  if (error instanceof Error) {
+    message = error.message;
+  } else if (typeof error === 'string') {
+    message = error;
+  } else {
+    try {
+      message = JSON.stringify(error);
+    } catch (e) {
+      message = String(error);
+    }
+  }
+
   const timestamp = new Date().toLocaleString('zh-CN');
 
-  const diagnosticsText = `
-錯誤類型: ${errorType}
-錯誤代碼: ${code || '無'}
-追蹤 ID: ${traceId || '無'}
-時間: ${timestamp}
-詳細網址: ${typeof window !== 'undefined' ? window.location.href : ''}
-錯誤訊息: ${message}
-  `.trim();
+  const diagnosticsText = [
+    `--- PHOTX 載入錯誤診斷報告 ---`,
+    `時間: ${timestamp}`,
+    `錯誤類型: ${errorType}`,
+    `錯誤代碼: ${code || '無'}`,
+    `追蹤 ID: ${traceId || '無'}`,
+    `詳細網址: ${typeof window !== 'undefined' ? window.location.href : ''}`,
+    `錯誤訊息: ${message}`
+  ].join('\n');
 
   const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(diagnosticsText);
+    const success = await copyToClipboard(diagnosticsText);
+    if (success) {
       setCopied(true);
       showSuccessToast('已复制诊断信息到剪贴板');
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
+    } else {
       showErrorToast('复制失败，请手动选择文字');
     }
   };

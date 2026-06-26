@@ -136,7 +136,11 @@ export const tasks = pgTable('tasks', {
     userId: uuid('user_id'),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
-});
+}, (t) => [
+    index('idx_tasks_status').on(t.status),
+    index('idx_tasks_created_at').on(t.createdAt),
+    index('idx_tasks_user_id').on(t.userId),
+]);
 
 /**
  * Maintenance Jobs Table

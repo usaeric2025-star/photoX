@@ -5,8 +5,13 @@ import { Task, TaskType } from '../types';
 export const taskTable = {
   // 插入新任務
   insert: async (task: Task) => {
-    const { data: { session } } = await supabase.auth.getSession();
-    const userId = session?.user?.id;
+    // 優先使用任務自帶的 userId，否則嘗試從 session 獲取
+    let userId = task.userId;
+    
+    if (!userId) {
+      const { data: { session } } = await supabase.auth.getSession();
+      userId = session?.user?.id;
+    }
 
     const { error } = await supabase.from('tasks').insert({
       id: task.id,
@@ -14,10 +19,18 @@ export const taskTable = {
       type: task.type,
       status: 'queued',
       meta: task.meta,
-      user_id: userId,
+      user_id: userId || null,
       created_at: new Date(task.createdAt).toISOString(),
     });
-    if (error) logger.error('[Task] Insert error:', error);
+    
+    if (error) {
+      logger.error('[Task] Insert error:', {
+        error,
+        task: { id: task.id, label: task.label, userId }
+      });
+    } else {
+      logger.debug('[Task] Insert success:', task.id);
+    }
   },
 
   // 更新狀態

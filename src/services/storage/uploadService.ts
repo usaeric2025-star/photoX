@@ -12,7 +12,7 @@ export interface UploadResult {
 }
 
 export const uploadWithRetry = async (
-  userId: string, 
+  userId: string = '', 
   photoId: string, 
   base64Data: string,
   imageHash?: string,
@@ -58,7 +58,7 @@ export const uploadWithRetry = async (
 };
 
 const uploadImages = async (
-  userId: string, 
+  userId: string = '', 
   photoId: string, 
   base64Data: string,
   imageHash?: string,

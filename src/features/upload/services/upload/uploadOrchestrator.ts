@@ -12,10 +12,11 @@ import { generateItemCode } from '@/services/photo/utils';
 import { storage } from '@/services/storage';
 
 export const uploadSinglePhoto = async (
-  userId: string, 
-  photo: Photo, 
+  userId?: string, 
+  photo?: Photo, 
   onStatus?: (s: string) => void
 ): Promise<{ id: string; is_duplicate?: boolean }> => {
+    if (!photo) throw new Error('Missing photo data');
     const { data: { session } } = await supabase.auth.getSession();
     const actUserId = session?.user?.id || userId || 'staff';
     let is_duplicate = false;

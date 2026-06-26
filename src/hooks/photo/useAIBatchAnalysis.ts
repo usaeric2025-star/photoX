@@ -7,8 +7,10 @@ import { queryKeys } from '@/lib/query/keys';
 import { runBatchAnalysis } from '@/features/ai/orchestration';
 import { createTask } from '@/lib/task-queue';
 import { generateId } from '@/lib/id';
+import { useAuth } from '@/lib/store';
 
 export function useAIBatchAnalysis() {
+  const { user } = useAuth();
   const invalidatePhotos = useInvalidatePhotos();
 
   const handleBatchAiAnalyze = useCallback(async (targetPhotos: Photo[], groupId?: string) => {
@@ -24,6 +26,7 @@ export function useAIBatchAnalysis() {
     createTask({
         label: taskTitle,
         type: 'ai-analyze',
+        userId: user?.id,
         meta: { photoCount: targetPhotos.length, groupId },
         execute: async (signal, onProgress) => {
             const { successCount, groupSuccess } = await runBatchAnalysis({

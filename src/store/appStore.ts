@@ -33,7 +33,11 @@ export const initializeApp = async () => {
     
     await Promise.all([authInitPromise, settingsPromise]);
     
-    // 3. 標記初始化完成
+    // 3. 恢復任務佇列（此時 Auth 已就緒）
+    const { scheduler } = await import('@/lib/task-queue/scheduler');
+    scheduler.restore().catch(e => logger.error('[appStore] Task restore failed', e));
+    
+    // 4. 標記初始化完成
     appStore.setState({ isLoading: false, error: null });
     logger.info('[appStore] Atomic initialization complete');
   } catch (error) {

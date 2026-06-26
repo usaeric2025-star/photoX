@@ -36,6 +36,27 @@
       "when": 1781803973553,
       "tag": "0004_gigantic_naoko",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1782462303625,
+      "tag": "0005_outgoing_loners",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1782462715486,
+      "tag": "0006_damp_eternals",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1782462913290,
+      "tag": "0007_lame_madrox",
+      "breakpoints": true
     }
   ]
 }

@@ -7,7 +7,7 @@ import { executeTask } from '@/lib/task-queue';
 import { useAdminMaintenance, useSettings, useCategories, useTags, useFilters } from '@/hooks';
 import { Tag, Photo } from '@/types';
 import { analyzePhoto } from '@/features/ai/commands';
-import { useUI } from '@/lib/store';
+import { useUI, useAuth } from '@/lib/store';
 import { aiAnalysisSignal } from '@/lib/ai/executor';
 
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
@@ -27,6 +27,7 @@ const AIAnalysisSchema = v.object({
  * Hook to handle AI Analysis and backfilling for Photo Editing
  */
 export function usePhotoEditAI() {
+  const { user } = useAuth();
   const { form } = usePhotoEditSessionContext();
   const { modal, photoId } = useFilters();
   const editPhotoId = modal === 'edit' ? photoId : null;
@@ -47,6 +48,7 @@ export function usePhotoEditAI() {
       const result = await executeTask({
         label: appLang === 'zh' ? "AI 识别" : "AI Identification",
         type: 'ai-analyze',
+        userId: user?.id,
         execute: async (signal, onProgress) => {
           onProgress(0, appLang === 'zh' ? '正在启动 AI 识别模块...' : 'Starting AI module...');
           onProgress(0.1, appLang === 'zh' ? '正在准备分析照片...' : 'Preparing photo files...');

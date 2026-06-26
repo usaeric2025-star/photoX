@@ -9,8 +9,8 @@ import { queryKeys } from '@/lib/query/keys';
 
 export const executeBatchUpload = (
   files: File[],
-  userId: string,
-  options: { groupId?: string }
+  userId: string = '',
+  options: { groupId?: string } = {}
 ) => async (signal: AbortSignal, onProgress: (progress: number, message?: string) => void) => {
   const results = [];
   const total = files.length;

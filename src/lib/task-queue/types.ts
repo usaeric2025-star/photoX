@@ -13,6 +13,7 @@ export interface Task<T = unknown> {
   type: TaskType;
   state: TaskState;
   createdAt: number;
+  userId?: string;
   meta?: Record<string, unknown>;
   execute: (signal: AbortSignal, onProgress: (progress: number, message?: string) => void) => Promise<T>;
 }

@@ -54,7 +54,7 @@ async function init() {
   
   // 初始化 Task Queue
   const cleanupQuerySync = setupQuerySync();
-  scheduler.restore().catch(console.error);
+  // scheduler.restore() 已移動到 appStore.ts 初始化邏輯中
 
   if (typeof window !== 'undefined') {
     window.addEventListener('unhandledrejection', (event) => {

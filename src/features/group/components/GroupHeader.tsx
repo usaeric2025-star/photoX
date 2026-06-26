@@ -10,6 +10,7 @@ import { useFormSubmit } from '@/lib/form/useFormSubmit';
 import { FormProvider, useFormField } from '@/lib/form/useFormField';
 import * as v from 'valibot';
 import { Input } from '@/components/shared/Input';
+import { showToast } from '@/lib/ui/toast';
 
 const GroupTitleSchema = v.object({
   title: v.pipe(v.string(), v.minLength(3, '標題至少需要3個字元')),
@@ -78,15 +79,21 @@ export function GroupHeader({ group, photoCount, isAdmin, onEditSettings, onUpda
     errorMessage: '更新標題失敗'
   });
 
-  const handleCopyId = () => {
-    copyToClipboard(group.id, { successMessage: '合組 ID 已複製' });
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopyId = async () => {
+    const success = await copyToClipboard(group.id);
+    if (success) {
+      showToast.success('合組 ID 已複製');
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
-  const handleShare = () => {
+  const handleShare = async () => {
     const url = `${window.location.origin}/group/${group.id}`;
-    copyToClipboard(url, { successMessage: '分享連結已複製' });
+    const success = await copyToClipboard(url);
+    if (success) {
+      showToast.success('分享連結已複製');
+    }
   };
 
   const handleSaveTitle = async () => {

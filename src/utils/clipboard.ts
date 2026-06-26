@@ -1,5 +1,4 @@
 import { logger } from '@/lib/logger';
-import { showToast } from '@/lib/ui/toast';
 
 export interface CopyOptions {
   /** 成功時顯示的提示訊息（預設：已複製） */
@@ -25,9 +24,6 @@ export async function copyToClipboard(text: string, options?: CopyOptions): Prom
     // 1. 嘗試現代瀏覽器 API
     if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(text);
-      if (options?.showToast !== false) {
-        showToast.success(options?.successMessage || '已複製');
-      }
       return true;
     }
     throw new Error('navigator.clipboard unavailable');
@@ -39,34 +35,25 @@ export async function copyToClipboard(text: string, options?: CopyOptions): Prom
       const textArea = document.createElement('textarea');
       textArea.value = text;
       
-      // 確保 textarea 不會影響 UI 但能被選中
       textArea.style.position = 'fixed';
       textArea.style.left = '-9999px';
       textArea.style.top = '-9999px';
       textArea.style.opacity = '0';
-      textArea.setAttribute('readonly', ''); // iOS 相容性
+      textArea.setAttribute('readonly', '');
       
       document.body.appendChild(textArea);
       textArea.focus();
       textArea.select();
       
-      // iOS / Mobile 裝置特殊處理
       textArea.setSelectionRange(0, 999999);
       
       const success = document.execCommand('copy');
       document.body.removeChild(textArea);
-      
-      if (success) {
-        if (options?.showToast !== false) {
-          showToast.success(options?.successMessage || '已複製');
-        }
-        return true;
-      }
+      return !!success;
     } catch (fallbackErr) {
       logger.error('[copyToClipboard] 降級方案也失敗:', fallbackErr);
     }
   }
 
-  showToast.error(options?.errorMessage || '複製失敗，請手動複製');
   return false;
 }
