@@ -12,70 +12,61 @@ export interface CopyOptions {
 
 /**
  * 核心複製功能（非 Hook 版本，適用於單個函數或非組件環境）
- * 這是專案中唯二允許直接調用 navigator.clipboard 的地方
+ * 使用原生 API + 內容檢查 + 降級方案，確保在 iframe 和不同環境中的兼容性
  */
 export async function copyToClipboard(text: string, options?: CopyOptions): Promise<boolean> {
-  if (!text) {
-    showToast.error('無內容可複製');
+  // ✅ 防止複製空內容或無效內容
+  if (!text || text.trim() === '' || text === '{}') {
+    logger.warn('[copyToClipboard] 內容為空或無效，取消複製');
     return false;
   }
 
-  let success = false;
-
-  // 1. Try synchronous textarea copy first to verify user-gesture is captured synchronously.
-  // This is highly robust inside sandboxed iframes.
   try {
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    // Keep it invisible but within visible viewport so select is allowed
-    textArea.setAttribute('readonly', '');
-    textArea.style.position = 'absolute';
-    textArea.style.left = '-9999px';
-    textArea.style.top = `${window.pageYOffset || document.documentElement.scrollTop}px`;
-    textArea.style.width = '2px';
-    textArea.style.height = '2px';
-    textArea.style.padding = '0';
-    textArea.style.border = 'none';
-    textArea.style.outline = 'none';
-    textArea.style.boxShadow = 'none';
-    textArea.style.background = 'transparent';
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-    
-    // For iOS / mobile devices:
-    const range = document.createRange();
-    range.selectNodeContents(textArea);
-    const selection = window.getSelection();
-    if (selection) {
-      selection.removeAllRanges();
-      selection.addRange(range);
-    }
-    textArea.setSelectionRange(0, 999999);
-    
-    success = document.execCommand('copy');
-    document.body.removeChild(textArea);
-  } catch (err) {
-    logger.warn('Synchronous copy failed, trying navigator.clipboard:', err);
-  }
-
-  // 2. If synchronous copy failed, fall back to navigator.clipboard
-  if (!success && navigator.clipboard && window.isSecureContext) {
-    try {
+    // 1. 嘗試現代瀏覽器 API
+    if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(text);
-      success = true;
-    } catch (err) {
-      logger.warn('navigator.clipboard failed:', err);
+      if (options?.showToast !== false) {
+        showToast.success(options?.successMessage || '已複製');
+      }
+      return true;
+    }
+    throw new Error('navigator.clipboard unavailable');
+  } catch (err) {
+    logger.warn('[copyToClipboard] navigator.clipboard 失敗，嘗試降級方案:', err);
+    
+    // 2. 降級方案 (Fallback using textarea)
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      
+      // 確保 textarea 不會影響 UI 但能被選中
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-9999px';
+      textArea.style.top = '-9999px';
+      textArea.style.opacity = '0';
+      textArea.setAttribute('readonly', ''); // iOS 相容性
+      
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      
+      // iOS / Mobile 裝置特殊處理
+      textArea.setSelectionRange(0, 999999);
+      
+      const success = document.execCommand('copy');
+      document.body.removeChild(textArea);
+      
+      if (success) {
+        if (options?.showToast !== false) {
+          showToast.success(options?.successMessage || '已複製');
+        }
+        return true;
+      }
+    } catch (fallbackErr) {
+      logger.error('[copyToClipboard] 降級方案也失敗:', fallbackErr);
     }
   }
 
-  if (success) {
-    if (options?.showToast !== false) {
-      showToast.success(options?.successMessage || '已複製');
-    }
-    return true;
-  } else {
-    showToast.error(options?.errorMessage || '複製失敗，請手動複製');
-    return false;
-  }
+  showToast.error(options?.errorMessage || '複製失敗，請手動複製');
+  return false;
 }

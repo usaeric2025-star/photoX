@@ -5,12 +5,16 @@ import { Task, TaskType } from '../types';
 export const taskTable = {
   // 插入新任務
   insert: async (task: Task) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+
     const { error } = await supabase.from('tasks').insert({
       id: task.id,
       label: task.label,
       type: task.type,
       status: 'queued',
       meta: task.meta,
+      user_id: userId,
       created_at: new Date(task.createdAt).toISOString(),
     });
     if (error) logger.error('[Task] Insert error:', error);
@@ -30,9 +34,14 @@ export const taskTable = {
 
   // 恢復未完成任務
   restorePending: async (): Promise<Task[]> => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    if (!userId) return [];
+
     const { data, error } = await supabase
       .from('tasks')
       .select('*')
+      .eq('user_id', userId)
       .in('status', ['queued', 'processing'])
       .order('created_at', { ascending: true });
 

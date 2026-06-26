@@ -124,6 +124,21 @@ export const systemLogs = pgTable('system_logs', {
 });
 
 /**
+ * Tasks Table (Queue Management)
+ */
+export const tasks = pgTable('tasks', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    label: text('label').notNull(),
+    type: text('type').notNull(),
+    status: text('status').notNull(),
+    meta: jsonb('meta'),
+    data: jsonb('data'),
+    userId: uuid('user_id'),
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+/**
  * Maintenance Jobs Table
  */
 export const maintenanceJobs = pgTable('maintenance_jobs', {

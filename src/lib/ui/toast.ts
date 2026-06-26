@@ -1,5 +1,6 @@
 import { toast, ExternalToast } from 'sonner';
 import React from 'react';
+import { copyToClipboard } from '@/utils/clipboard';
 
 /**
  * [UTILITY] showToast
@@ -75,60 +76,14 @@ export const showToast = {
         position: 'bottom-center',
         action: {
           label: '复制诊断',
-          onClick: (e) => {
+          onClick: async (e) => {
             if (e && typeof e.preventDefault === 'function') e.preventDefault();
             if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
             
-            let success = false;
-            // 1. Try synchronous textarea copy first to verify user-gesture is captured synchronously.
-            // This is highly robust inside sandboxed iframes.
-            try {
-              const textArea = document.createElement('textarea');
-              textArea.value = diagnosticsText;
-              textArea.setAttribute('readonly', '');
-              textArea.style.position = 'absolute';
-              textArea.style.left = '-9999px';
-              textArea.style.top = `${window.pageYOffset || document.documentElement.scrollTop}px`;
-              textArea.style.width = '2px';
-              textArea.style.height = '2px';
-              textArea.style.padding = '0';
-              textArea.style.border = 'none';
-              textArea.style.outline = 'none';
-              textArea.style.boxShadow = 'none';
-              textArea.style.background = 'transparent';
-              document.body.appendChild(textArea);
-              textArea.focus();
-              textArea.select();
-              
-              // For iOS / mobile devices:
-              const range = document.createRange();
-              range.selectNodeContents(textArea);
-              const selection = window.getSelection();
-              if (selection) {
-                selection.removeAllRanges();
-                selection.addRange(range);
-              }
-              textArea.setSelectionRange(0, 999999);
-              
-              success = document.execCommand('copy');
-              document.body.removeChild(textArea);
-            } catch (err) {
-              console.warn('Synchronous copy failed in toast action, trying navigator.clipboard:', err);
-            }
-
-            // 2. Fall back to navigator.clipboard if synchronous copy failed
-            if (success) {
-              toast.success('诊断信息已复制', { id: `copy-${traceId}` });
-            } else if (navigator.clipboard && window.isSecureContext) {
-              navigator.clipboard.writeText(diagnosticsText)
-                .then(() => toast.success('诊断信息已复制', { id: `copy-${traceId}` }))
-                .catch((err) => {
-                  console.error('navigator.clipboard failed inside toast action:', err);
-                  toast.error('复制失败，请重试');
-                });
-            } else {
-              toast.error('复制失败，请重试');
-            }
+            await copyToClipboard(diagnosticsText, {
+              successMessage: '诊断信息已复制',
+              showToast: true
+            });
           }
         },
         ...options
