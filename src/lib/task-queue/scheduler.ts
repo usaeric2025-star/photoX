@@ -3,6 +3,7 @@ import { taskTable } from './integrations/supabase';
 import { showToast } from '@/lib/ui/toast';
 import { logger } from '@/lib/logger';
 import { storeAccessor } from '@/lib/store';
+import { ErrorFactory } from '@/lib/error';
 
 export class TaskScheduler {
   private queue: Task[] = [];
@@ -137,7 +138,8 @@ export class TaskScheduler {
       currentStore.setGlobalStatus('failed');
       await taskTable.updateStatus(task.id, 'failed', { error: message, retryable });
 
-      showToast.error(`${task.label} 失敗: ${message}`);
+      const wrappedError = ErrorFactory.wrap(error, task.label);
+      showToast.error(wrappedError);
     } finally {
       this.controllers.delete(task.id);
       this.running.delete(task.id);

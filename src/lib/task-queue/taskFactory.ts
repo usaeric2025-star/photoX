@@ -37,7 +37,7 @@ export function createTask<T>(config: TaskConfig<T>): string {
     execute, 
     onComplete, 
     onError, 
-    id = `${type}-${generateId()}`,
+    id = generateId(),
     silent = false
   } = config;
 

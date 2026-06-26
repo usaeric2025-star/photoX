@@ -14,16 +14,60 @@ export const showToast = {
       ...options
     }),
     
-  error: (message: string, options?: ExternalToast) => {
-    const traceId = Math.random().toString(36).substring(2, 10).toUpperCase();
-    const timestamp = new Date().toISOString();
+  error: (messageOrError: string | Error | unknown, options?: ExternalToast) => {
+    let userMessage = '發生未知錯誤，請稍後再試';
+    let systemMessage = '';
+    let stackTrace = '';
+    let traceId = '';
+    let timestamp = '';
+    let code = 'UNKNOWN_ERROR';
+
+    if (messageOrError && typeof messageOrError === 'object') {
+      const err = messageOrError as any;
+      userMessage = err.userMessage || err.message || userMessage;
+      systemMessage = err.message || '';
+      code = err.code || 'UNKNOWN_ERROR';
+      traceId = err.traceId || '';
+      timestamp = err.timestamp || '';
+      
+      const originalErr = err.cause || err.originalError || (err.context && err.context.original);
+      if (originalErr) {
+        systemMessage += ` | 原因: ${originalErr.message || String(originalErr)}`;
+        if (originalErr.stack) {
+          stackTrace = originalErr.stack;
+        }
+      }
+      
+      if (err.stack && !stackTrace) {
+        stackTrace = err.stack;
+      }
+    } else {
+      userMessage = String(messageOrError || userMessage);
+    }
+
+    if (!traceId) {
+      traceId = Math.random().toString(36).substring(2, 10).toUpperCase();
+    }
+    if (!timestamp) {
+      timestamp = new Date().toISOString();
+    }
+    if (!systemMessage) {
+      systemMessage = userMessage;
+    }
     
     // Copy handler with precise diagnostic fields
-    const diagnosticsText = `时间戳: ${timestamp}\n错误类型: 运行逻辑异常\nTrace ID: ${traceId}\n原始消息: ${message}`;
+    const diagnosticsText = [
+      `时间戳: ${timestamp}`,
+      `错误类型: 运行逻辑异常`,
+      `代码: ${code}`,
+      `Trace ID: ${traceId}`,
+      `原始 Message: ${systemMessage}`,
+      stackTrace ? `堆栈信息: ${stackTrace}` : ''
+    ].filter(Boolean).join('\n');
     
     return toast.error(
       React.createElement('div', { className: 'flex flex-col gap-1 w-full text-left' },
-        React.createElement('div', { className: 'font-semibold text-sm leading-tight text-red-600' }, message),
+        React.createElement('div', { className: 'font-semibold text-sm leading-tight text-red-600' }, userMessage),
         React.createElement('div', { className: 'mt-1 text-[10px] text-slate-400' }, `Trace ID: ${traceId}`)
       ),
       { 
