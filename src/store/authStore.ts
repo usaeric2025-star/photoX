@@ -92,7 +92,6 @@ export const authStore = createStore<AuthState>({
 export function useAuthStore<T = AuthState>(selector?: (state: AuthState) => T): T {
   return useStore(authStore, selector);
 }
-export const useAuthSelector = useAuthStore;
 
 export const userSignal = signal(authStore, 'user');
 export const authLoadingSignal = signal(authStore, 'isLoading');

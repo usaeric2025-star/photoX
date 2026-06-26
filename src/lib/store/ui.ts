@@ -16,8 +16,6 @@ if (typeof document !== 'undefined') {
   appLang.subscribe(syncLang);
   syncLang(appLang.get());
 }
-export const batchEditingIds = signal<UIStoreState, 'batchEditingIds'>(uiStore, 'batchEditingIds');
-export const formState = signal<UIStoreState, 'formState'>(uiStore, 'formState');
 
 // 燈箱狀態
 export const isLightboxOpen = signal<UIStoreState, 'lightboxIsOpen'>(uiStore, 'lightboxIsOpen');
@@ -27,16 +25,10 @@ export const lightboxCurrentIndex = signal<UIStoreState, 'lightboxCurrentIndex'>
 // 搜尋與選取
 export const selectedIds = signal<UIStoreState, 'selectedIds'>(uiStore, 'selectedIds');
 export const isMultiSelect = signal<UIStoreState, 'isMultiSelect'>(uiStore, 'isMultiSelect');
-export const processingIds = signal<UIStoreState, 'processingIds'>(uiStore, 'processingIds');
 
 // UI 狀態開關
 export const isSidebarOpen = signal<UIStoreState, 'isSidebarOpen'>(uiStore, 'isSidebarOpen');
 export const isTaskDrawerOpen = signal<UIStoreState, 'isTaskDrawerOpen'>(uiStore, 'isTaskDrawerOpen');
 export const isDiagnosticsOpen = signal<UIStoreState, 'isDiagnosticsOpen'>(uiStore, 'isDiagnosticsOpen');
-export const showWhatsAppChoice = signal<UIStoreState, 'showWhatsAppChoice'>(uiStore, 'showWhatsAppChoice');
 
-// Actions
-export const updateFormState = (updates: Partial<UIStoreState['formState']>) => {
-  uiStore.getState().updateForm(updates);
-};
 

@@ -105,7 +105,6 @@ export const tasksSignal = signal(taskStore, 'tasks');
 export function useTaskStore<T = TaskStoreState>(selector?: (state: TaskStoreState) => T): T {
   return useStore(taskStore, selector);
 }
-export const useTaskSelector = useTaskStore;
 
 // Computed selectors
 export const activeTaskCountSelector = (state: TaskStoreState) => Array.from(state.tasks.values()).filter(

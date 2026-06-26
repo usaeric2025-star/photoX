@@ -73,9 +73,10 @@ export function PhotoGridContent({
 
     const observer = new ResizeObserver((entries) => {
       if (!entries || entries.length === 0) return;
-      const width = entries[0].contentRect.width;
-      if (width > 0) {
-        setContainerWidth(width);
+      const newWidth = entries[0].contentRect.width;
+      // 只有在寬度變化超過 5px 時才更新
+      if (Math.abs(newWidth - containerWidth) > 5) {
+        setContainerWidth(newWidth);
       }
     });
 
@@ -83,7 +84,7 @@ export function PhotoGridContent({
     return () => {
       observer.disconnect();
     };
-  }, []);
+  }, [containerWidth]);
 
   const estimatedHeight = React.useMemo(() => {
     const width = containerWidth || 1200;
@@ -92,6 +93,30 @@ export function PhotoGridContent({
     const itemHeight = Math.round(width / columns);
     return Math.max(120, itemHeight);
   }, [containerWidth, columns]);
+
+  const renderItem = React.useCallback((index: number) => {
+    const photo = safePhotos[index];
+    if (!photo) return null;
+    return (
+      <div key={photo.id} className="p-0.5 sm:p-1 w-full">
+        {mode === 'admin' 
+          ? <AdminPhotoCard 
+              photo={photo} 
+              selected={selectedSet.has(photo.id)}
+              onClick={(e) => onPhotoClick?.(photo.id, index, e)} 
+              showGroupsCollapsed={showGroupsCollapsed}
+              hasSearchQuery={hasSearchQuery}
+            />
+          : <PublicPhotoCard 
+              photo={photo} 
+              onClick={(e) => onPhotoClick?.(photo.id, index, e)} 
+              showGroupsCollapsed={showGroupsCollapsed}
+              hasSearchQuery={hasSearchQuery}
+            />
+        }
+      </div>
+    );
+  }, [safePhotos, mode, selectedSet, showGroupsCollapsed, hasSearchQuery, onPhotoClick]);
 
   if (isPending) {
     const skeletonCount = Math.max(columns * 3, 12);
@@ -131,32 +156,9 @@ export function PhotoGridContent({
         dataVersion={dataVersion}
         lanes={columns}
         itemSize={estimatedHeight} 
-        shift={true}
         containerClassName="px-2 pt-2"
         onEndReached={fetchNextPage}
-        renderItem={(index) => {
-          const photo = safePhotos[index];
-          if (!photo) return null;
-          return (
-            <div key={photo.id} className="p-0.5 sm:p-1 w-full">
-              {mode === 'admin' 
-                ? <AdminPhotoCard 
-                    photo={photo} 
-                    selected={selectedSet.has(photo.id)}
-                    onClick={(e) => onPhotoClick?.(photo.id, index, e)} 
-                    showGroupsCollapsed={showGroupsCollapsed}
-                    hasSearchQuery={hasSearchQuery}
-                  />
-                : <PublicPhotoCard 
-                    photo={photo} 
-                    onClick={(e) => onPhotoClick?.(photo.id, index, e)} 
-                    showGroupsCollapsed={showGroupsCollapsed}
-                    hasSearchQuery={hasSearchQuery}
-                  />
-              }
-            </div>
-          );
-        }}
+        renderItem={renderItem}
         footer={
           <div className="pt-4 pb-8">
              <LoadMoreIndicator 

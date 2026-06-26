@@ -17,10 +17,6 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
   const { data: photo, isPending } = usePhoto(editPhotoId);
   const appLang = useSignal(appLangSignal);
 
-  React.useEffect(() => {
-    logger.debug('PhotoEditDialogInner rendered', { isOpen, editPhotoId, photo: !!photo });
-  }, [isOpen, editPhotoId, photo]);
-
   const [showConfirm, setShowConfirm] = useState(false);
   const { isDirty, commit, discard, isSubmitting } = usePhotoEditSessionContext();
   

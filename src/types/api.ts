@@ -17,11 +17,6 @@ export type ApiResponse<T = unknown> = BaseApiResponse<T>;
 export type PhotoListItem = ApiPhotoListItem;
 export const PhotoListItemSchema = ApiPhotoListItemSchema;
 
-export type PhotoListReq = v.InferOutput<typeof PhotoListReqSchema>;
-export type PhotoBatchUpdateReq = v.InferOutput<typeof PhotoBatchUpdateReqSchema>;
-export type PhotoUpdateReq = v.InferOutput<typeof PhotoUpdateReqSchema>;
-export type SearchReq = v.InferOutput<typeof SearchReqSchema>;
-
 export interface FilterOptions {
   q?: string;
   category?: string;
@@ -37,16 +32,6 @@ export interface GroupFilterOptions {
   sort?: string;
   userId?: string;
   isAdmin?: boolean;
-}
-
-export interface StandardError {
-  code: string;
-  message: string;
-  context: string;
-  traceId?: string;
-  timestamp: number;
-  stack?: string;
-  details?: unknown;
 }
 
 interface BatchEditPayload {

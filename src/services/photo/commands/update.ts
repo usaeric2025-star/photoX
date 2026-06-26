@@ -44,6 +44,3 @@ export async function updatePhoto(id: string, initialUpdates: Partial<Photo>): P
   return rawData ? mapSupabasePhoto(rawData as unknown as Record<string, unknown> & { id: string, name: string, image_url: string, created_at: string }) : null;
 }
 
-export const updatePhotoHidden = async (photoId: string, is_hidden: boolean): Promise<Photo | null> => {
-  return await updatePhoto(photoId, { is_hidden, updated_at: new Date().toISOString() });
-};

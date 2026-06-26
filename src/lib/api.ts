@@ -2,7 +2,7 @@ import { hc } from 'hono/client';
 import type { AppType } from '../../api/app';
 import { supabase } from '@/lib/supabase';
 
-export class ApiResponseError extends Error {
+class ApiResponseError extends Error {
   public success = false;
   public status: number;
   public traceId: string;
@@ -34,7 +34,7 @@ export class ApiResponseError extends Error {
 /**
  * [V2.9-RPC-CONTRACT] Type-safe RPC Client
  */
-export const client = hc<AppType>(
+const client = hc<AppType>(
   typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000',
   {
     async fetch(input: string | Request | URL, init?: RequestInit) {

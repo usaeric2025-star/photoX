@@ -213,7 +213,7 @@ const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.Ref<Vir
           const rIndex = item.rowIndex ?? 0;
           return (
             <div 
-              key={`row-${rIndex}-${props.dataVersion || 'default'}`}
+              key={`row-${rIndex}`}
               data-contract="virtual-grid-row" 
               style={{ width: '100%', willChange: 'transform' }}
             >

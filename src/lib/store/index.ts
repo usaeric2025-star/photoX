@@ -9,9 +9,9 @@ import {
   isAnySelectedSelector, hasActiveFiltersSelector, useAppLang 
 } from '@/store/uiStore';
 import type { UIStoreState } from '@/store/uiStore';
-import { authStore, useAuthStore, useAuthSelector, userSignal, authLoadingSignal } from '@/store/authStore';
+import { authStore, useAuthStore, userSignal, authLoadingSignal } from '@/store/authStore';
 import type { AuthState } from '@/store/authStore';
-import { taskStore, useTaskStore, useTaskSelector, activeTaskCountSelector, tasksSignal } from '@/store/taskStore';
+import { taskStore, useTaskStore, activeTaskCountSelector, tasksSignal } from '@/store/taskStore';
 import type { TaskStoreState } from '@/store/taskStore';
 import { appStore, appLoadingSignal, appErrorSignal } from '@/store/appStore';
 import { 
@@ -20,22 +20,19 @@ import {
 } from './ui';
 
 const isTaskDrawerOpenSignal = isTaskDrawerOpen;
-const isDiagnosticsOpenSignal = isDiagnosticsOpen;
 const batchModeSignal = isMultiSelect;
-const isSidebarOpenSignal = isSidebarOpen;
-const selectedIdsSignal = selectedIds;
 
 // Re-exports
 export { 
   uiStore, useUIStore, useUIStore as useUI, selectedCountSelector, 
   selectedSetSelector, isAnySelectedSelector, hasActiveFiltersSelector, 
-  batchModeSignal, selectedIdsSignal, useAppLang,
-  isTaskDrawerOpenSignal, isDiagnosticsOpenSignal, isSidebarOpenSignal,
+  batchModeSignal, useAppLang,
+  isTaskDrawerOpenSignal,
   UIStoreState 
 };
-export { authStore, useAuthStore, useAuthStore as useAuth, useAuthSelector, userSignal, authLoadingSignal, AuthState };
+export { authStore, useAuthStore, useAuthStore as useAuth, userSignal, authLoadingSignal, AuthState };
 export { 
-  taskStore, useTaskStore, useTaskStore as useTask, useTaskSelector, 
+  taskStore, useTaskStore, useTaskStore as useTask, 
   activeTaskCountSelector, tasksSignal, TaskStoreState, TaskStoreState as TaskState 
 };
 export { appStore, appLoadingSignal, appErrorSignal };

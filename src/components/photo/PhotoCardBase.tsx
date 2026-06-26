@@ -34,6 +34,16 @@ export const PhotoCardBase = ({
   const isManagement = useIsManagement();
   const isHidden = !!item.isHidden && isManagement;
 
+  const [isLoaded, setIsLoaded] = React.useState(false);
+  const imgRef = React.useRef<HTMLImageElement>(null);
+
+  // Check if image is already cached
+  React.useEffect(() => {
+    if (imgRef.current?.complete) {
+      setIsLoaded(true);
+    }
+  }, []);
+
   return (
     <div
       ref={ref}
@@ -58,25 +68,26 @@ export const PhotoCardBase = ({
       )}
       {...props}
     >
-      <div className="relative aspect-square w-full h-full overflow-hidden transition-all duration-500 group-data-[selected=true]:scale-95 group-data-[selected=true]:rounded-xl bg-surface-mute animate-shimmer">
+      <div className={cn(
+        "relative aspect-square w-full h-full overflow-hidden transition-all duration-500 group-data-[selected=true]:scale-95 group-data-[selected=true]:rounded-xl bg-surface-mute",
+        !isLoaded && "animate-shimmer"
+      )}>
         <img 
+          ref={imgRef}
           src={(imgVariant === 'md' ? item.imageUrl : (item.thumbnailUrl || item.imageUrl)) || undefined}
           alt={item.name}
           loading="lazy"
           className={cn(
-            "w-full h-full object-cover transition-all duration-700 ease-apple group-hover:scale-110 opacity-0",
+            "w-full h-full object-cover transition-all duration-300 ease-apple group-hover:scale-110",
+            !isLoaded && "opacity-0",
             isHidden && "opacity-60"
           )}
-          onLoad={(e) => {
-            (e.target as HTMLImageElement).classList.remove('opacity-0');
-            (e.target as HTMLImageElement).classList.add('opacity-100');
-          }}
+          onLoad={() => setIsLoaded(true)}
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             if (target.src !== '/fallback-image.jpg') {
               target.src = '/fallback-image.jpg';
-              target.classList.remove('opacity-0');
-              target.classList.add('opacity-100');
+              setIsLoaded(true);
             }
           }}
         />

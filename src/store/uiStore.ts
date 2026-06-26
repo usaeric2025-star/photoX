@@ -209,7 +209,7 @@ export const uiStore = createStore<UIStoreState>({
 export function useUIStore<T = UIStoreState>(selector?: (state: UIStoreState) => T): T {
   return useStore(uiStore, selector);
 }
-export const useUISelector = useUIStore;
+
 export const useAppLang = () => useStore(uiStore, (s: UIStoreState) => s.appLang) as 'zh' | 'en' | 'ms';
 
 // Computed selectors
