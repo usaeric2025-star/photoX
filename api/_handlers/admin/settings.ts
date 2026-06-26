@@ -26,10 +26,8 @@ adminSettings.get("/get", async (c) => {
             whatsapp_2_name: settingsRes.whatsapp2Name || '',
             facebook: settingsRes.facebook || '',
             instagram: settingsRes.instagram || '',
-            gemini_api_key: secretsMap['gemini'] || '',
             agnes_api_key: secretsMap['agnes'] || '',
-            openrouter_api_key: secretsMap['openrouter'] || '',
-            custom_model: secretsMap['openrouter_model'] || secretsMap['gemini_model'] || ''
+            openrouter_api_key: secretsMap['openrouter'] || ''
         } : {};
 
         return c.json({ success: true, data });

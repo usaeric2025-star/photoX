@@ -5,7 +5,6 @@ import { AppSettings } from '@/types';
 interface AISettingsProps {
   agnesApiKey: string | undefined;
   setAgnesApiKey: (key: string) => void;
-  customModel: string;
   testConnection: () => Promise<void>;
   testResult: { success?: boolean; error?: string; loading?: boolean } | null;
   accessPasscode: string;
@@ -16,6 +15,6 @@ interface AISettingsProps {
 }
 
 export function AISettings(props: AISettingsProps) {
-  const { agnesApiKey, customModel, ...rest } = props;
-  return <AISecuritySection {...rest} agnesApiKey={agnesApiKey || ''} customModel={customModel || ''} />;
+  const { agnesApiKey, ...rest } = props;
+  return <AISecuritySection {...rest} agnesApiKey={agnesApiKey || ''} />;
 };

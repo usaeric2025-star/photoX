@@ -48,6 +48,7 @@ export const createHandler = (app: Hono) => {
 
         const insertPayload = {
             ...mappedPayload,
+            imageUrl: (mappedPayload.imageUrl as string | null) || 'https://placeholder.com/placeholder.png',
             createdAt: new Date(),
             updatedAt: new Date()
         };

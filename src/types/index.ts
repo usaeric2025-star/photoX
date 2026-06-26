@@ -71,9 +71,6 @@ export interface AppSettings extends Record<string, unknown> {
   hot_tags_count?: number;
   hot_tag_threshold?: number;
   agnes_api_key?: string;
-  custom_model?: string;
-  provider?: string;
-  ai_provider?: string;
   whatsapp_1_name?: string;
   whatsapp_1?: string;
   whatsapp_2_name?: string;

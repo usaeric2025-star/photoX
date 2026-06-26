@@ -66,7 +66,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
   const { user, signIn, signOut } = useAuth();
-  const { settings, agnesApiKey, customModel, accessPasscode, updateSettings } = useSettings();
+  const { settings, agnesApiKey, accessPasscode, updateSettings } = useSettings();
   const setAgnesApiKey = (key: string) => updateSettings({ ...settings, agnes_api_key: key });
   const setAccessPasscode = (code: string) => updateSettings({ ...settings, access_passcode: code });
   const setSettings = (s: AppSettings) => { updateSettings(s); };
@@ -127,9 +127,6 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
       hot_tags_count: v.number(),
       hot_tag_threshold: v.number(),
       agnes_api_key: v.string(),
-      custom_model: v.string(),
-      provider: v.string(),
-      ai_provider: v.string(),
       whatsapp_1_name: v.string(),
       whatsapp_1: v.string(),
       whatsapp_2_name: v.string(),
@@ -187,7 +184,6 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
             <AISettings 
               agnesApiKey={agnesApiKey || ""}
               setAgnesApiKey={setAgnesApiKey}
-              customModel={customModel || ""}
               testConnection={async () => { await testConnection(); }}
               testResult={testResult}
               accessPasscode={accessPasscode || ""}

@@ -26,9 +26,7 @@ export const saveSettings = async (settings: Partial<AppSettings> & Record<strin
         if (rawPayload.agnes_api_key === "••••••••••••••••") delete rawPayload.agnes_api_key;
         if (rawPayload.api_key) delete rawPayload.api_key;
         
-        const mapping: Record<string, string> = {
-            'custom_model': 'openrouter_model'
-        };
+        const mapping: Record<string, string> = {};
 
         // 2. 根據白名單構建最終 Payload
         Object.entries(rawPayload).forEach(([key, value]) => {

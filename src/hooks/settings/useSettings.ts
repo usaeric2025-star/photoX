@@ -48,7 +48,6 @@ export function useSettings() {
     isPending,
     updateSettings: updateMutation.mutateAsync,
     agnesApiKey: settings?.agnes_api_key,
-    customModel: settings?.custom_model,
     accessPasscode: settings?.access_passcode,
     updateSettingsSync: updateMutation.mutate,
   }), [settings, isPending, updateMutation.mutateAsync, updateMutation.mutate]);

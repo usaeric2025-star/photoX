@@ -35,7 +35,6 @@ const TestConnectionSchema = v.object({
 interface AISecuritySectionProps {
   agnesApiKey: string;
   setAgnesApiKey: (key: string) => void;
-  customModel: string;
   accessPasscode: string;
   setAccessPasscode: (code: string) => void;
   setSettingField: <K extends keyof AppSettings>(field: K, value: AppSettings[K]) => void;
