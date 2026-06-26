@@ -103,21 +103,40 @@ export const groups = new Hono()
     try {
         const mapped = keysToCamel<Record<string, unknown>>(dbUpdates);
 
+        // Filter out client-side createdAt and updatedAt to let backend handle dates
+        const cleanMapped: Record<string, unknown> = {};
+        for (const [key, val] of Object.entries(mapped)) {
+            if (key !== 'createdAt' && key !== 'updatedAt') {
+                cleanMapped[key] = val;
+            }
+        }
+
         // Ensure status gets a fallback
-        if (!mapped.status) {
-            mapped.status = 'confirmed';
+        if (!cleanMapped.status) {
+            cleanMapped.status = 'confirmed';
         }
 
         // Ensure userId gets a fallback
-        if (!mapped.userId) {
-            mapped.userId = '8ec53131-a589-4b50-beb4-6b5308541e1b';
+        if (!cleanMapped.userId) {
+            cleanMapped.userId = '8ec53131-a589-4b50-beb4-6b5308541e1b';
         }
 
+        const insertPayload = {
+            ...cleanMapped,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        };
+
+        const updatePayload = {
+            ...cleanMapped,
+            updatedAt: new Date()
+        };
+
         await db.insert(groupsTable)
-            .values(mapped as unknown as typeof groupsTable.$inferInsert)
+            .values(insertPayload as unknown as typeof groupsTable.$inferInsert)
             .onConflictDoUpdate({
                 target: groupsTable.id,
-                set: mapped as unknown as typeof groupsTable.$inferInsert
+                set: updatePayload as unknown as typeof groupsTable.$inferInsert
             });
 
         return c.json({ success: true });

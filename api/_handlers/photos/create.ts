@@ -14,17 +14,22 @@ export const createHandler = (app: Hono) => {
         payload.id = crypto.randomUUID();
     }
 
+    logger.info('[Upsert] Raw payload:', JSON.stringify(payload));
+
     // Fix user_id if it is 'staff' or missing
     if (!payload.user_id || payload.user_id === 'staff') {
         // Fallback id
         payload.user_id = '8ec53131-a589-4b50-beb4-6b5308541e1b';
     }
 
+    const mappedPayload: Record<string, unknown> = {};
     try {
         const camelPayload = keysToCamel<Record<string, any>>(payload);
-        const mappedPayload: Record<string, unknown> = {};
 
         for (const [key, val] of Object.entries(camelPayload)) {
+            // Skip createdAt and updatedAt from client to avoid type/mismatch errors and let backend generate them
+            if (['createdAt', 'updatedAt'].includes(key)) continue;
+
             if (['categoryId', 'groupId', 'manufacturerId'].includes(key)) {
                 if (val === null || val === undefined || val === '' || val === 'null' || val === 'uncategorized' || val === 'undefined') {
                     mappedPayload[key] = null;
@@ -39,11 +44,22 @@ export const createHandler = (app: Hono) => {
             }
         }
 
+        const insertPayload = {
+            ...mappedPayload,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        };
+
+        const updatePayload = {
+            ...mappedPayload,
+            updatedAt: new Date()
+        };
+
         const results = await db.insert(furnitureItems)
-            .values([mappedPayload as typeof furnitureItems.$inferInsert])
+            .values([insertPayload as typeof furnitureItems.$inferInsert])
             .onConflictDoUpdate({
                 target: furnitureItems.id,
-                set: mappedPayload as typeof furnitureItems.$inferInsert
+                set: updatePayload as typeof furnitureItems.$inferInsert
             })
             .returning({ id: furnitureItems.id });
 
@@ -55,6 +71,7 @@ export const createHandler = (app: Hono) => {
 
         return c.json({ success: true, data });
     } catch (error: unknown) {
+        logger.error('[UpsertPhoto] Database error during upsert. Mapped payload fields: ' + Object.entries(mappedPayload).map(([k, v]) => `${k}: ${v === null ? 'null' : typeof v} (${v instanceof Date ? 'Date' : 'not Date'})`).join(', '));
         logger.error('[UpsertPhoto] Database error during upsert', error);
         return c.json({ success: false, error: (error instanceof Error ? error.message : String(error)) }, 500);
     }

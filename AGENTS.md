@@ -1782,4 +1782,14 @@ PhotoX 當前單頁數據 < 100KB，IndexedDB 收益為零且增加 Bundle Size 
 - **動態鍵轉換**：後端處理 HTTP payload 請求時，全面採用 `keysToCamel` 輔助函數進行自動轉換
 - ❌ **禁止手寫/硬編碼 `fieldMap`**：禁止在 Handler/Controller 程式碼中手寫欄位映射字典。
 
+## 日期欄位規範（鎖定，2026-06-26）
+
+- `createdAt` / `updatedAt` 欄位由後端統一管理和自動生成
+- ❌ **前端與客戶端禁止傳送**：前端不應該傳送這兩個欄位以防類型/格式認知不一致
+- ✅ **後端 Schema 與處理**：
+  - 資料庫定義：採用 `defaultNow()` 設定預設值
+  - 寫入端（Insert/Upsert）：後端收到 Payload 時必須自動過濾或丟棄由客戶端傳遞的 `createdAt` 和 `updatedAt`，寫入時一律使用後端伺服器的 `new Date()` 物件
+  - 更新端（Update/Conflict）：更新時一律僅由後端手動指定 `updatedAt: new Date()`，嚴禁在此覆寫或重設 `createdAt`
+
+
 
