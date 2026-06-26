@@ -17,13 +17,6 @@ export const uploadSinglePhoto = async (
   onStatus?: (s: string) => void
 ): Promise<{ id: string; is_duplicate?: boolean }> => {
     const { data: { session } } = await supabase.auth.getSession();
-    const isLocalStorageStaff = !!storage.getItem('ais_mock_auth_passcode');
-
-    if (!session?.user && !isLocalStorageStaff) {
-        throw ErrorFactory.permission('鑒權失敗：無活躍會話');
-    }
-
-
     const actUserId = session?.user?.id || userId || 'staff';
     let is_duplicate = false;
     

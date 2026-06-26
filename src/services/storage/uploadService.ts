@@ -27,6 +27,25 @@ export const uploadWithRetry = async (
         return await uploadImages(userId, photoId, base64Data, imageHash, onStatus, onProgress, force);
       } catch (err) {
         lastError = err;
+        
+        // 🚨 PREVENT FUTILE RETRIES: If it's a permission / unauthorized error, fail fast and don't retry!
+        const isAuthError = err instanceof Error && (
+          err.message.includes('No active session') || 
+          err.message.includes('鑒權失敗') || 
+          err.message.includes('Unauthorized') || 
+          err.message.includes('401') ||
+          err.message.includes('403') ||
+          (err as any).statusCode === 401 ||
+          (err as any).statusCode === 403 ||
+          (err as any).code === 'PERMISSION_DENIED' ||
+          (err as any).category === 'auth'
+        );
+        
+        if (isAuthError) {
+          logger.error(`[Upload] Auth/Permission error occurred. Failing fast without retry.`, err);
+          break;
+        }
+
         if (i < maxRetries - 1) {
           const delay = Math.pow(2, i) * 1000;
           await new Promise(resolve => setTimeout(resolve, delay));
@@ -47,14 +66,7 @@ const uploadImages = async (
   onProgress?: (percent: number) => void,
   force = false
 ): Promise<UploadResult> => {
-  const { data: { session } } = await supabase.auth.getSession();
-  const isLocalStorageStaff = typeof window !== 'undefined' && 
-    !!(localStorage.getItem('photox_ais_mock_auth_passcode') || localStorage.getItem('ais_mock_auth_passcode'));
-
-  if (!session?.user && !isLocalStorageStaff) {
-    throw ErrorFactory.permission('No active session for storage');
-  }
-
+  // Rely on backend API authorization check (via requireRealUser on upload-presign)
   onStatus?.('compressing');
   const originalBase64 = await compressImage(base64Data, 2048, 0.85); 
 
