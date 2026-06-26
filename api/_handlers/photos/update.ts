@@ -4,6 +4,7 @@ import { db, furnitureItems, groups as groupsTable } from '../../_lib/db/index.j
 import { eq, inArray, and } from 'drizzle-orm';
 import { syncGroupCoversAndCount } from '../../_lib/groups.js';
 import { PhotoBatchUpdateReqSchema, PhotoUpdateReqSchema } from '../../../shared/apiContractSchema.js';
+import { keysToCamel } from '../../_lib/casing.js';
 
 export const updateHandler = (app: Hono) => {
   app.post('/batch-update', async (c) => {
@@ -13,22 +14,15 @@ export const updateHandler = (app: Hono) => {
     
     const { ids, updates } = check.output;
     try {
+        const camelUpdates = keysToCamel<Record<string, any>>(updates);
         const mappedUpdates: Record<string, unknown> = {};
-        const fieldMap: Record<string, string> = {
-            is_hidden: 'isHidden',
-            category_id: 'categoryId',
-            manufacturer_id: 'manufacturerId',
-            group_id: 'groupId',
-            is_pinned: 'isPinned',
-            is_group_cover: 'isGroupCover'
-        };
 
-        for (const [key, val] of Object.entries(updates)) {
+        for (const [key, val] of Object.entries(camelUpdates)) {
             let parsedVal = val;
-            if (key === 'category_id' && typeof val === 'string') {
+            if (key === 'categoryId' && typeof val === 'string') {
                 parsedVal = parseInt(val, 10);
             }
-            mappedUpdates[fieldMap[key] || key] = parsedVal;
+            mappedUpdates[key] = parsedVal;
         }
 
         const data = await db
@@ -57,39 +51,21 @@ export const updateHandler = (app: Hono) => {
             where: eq(furnitureItems.id, id)
         });
 
-        const updateObj = updates as Record<string, unknown>;
+        const camelUpdates = keysToCamel<Record<string, any>>(updates);
         const mappedUpdates: Record<string, unknown> = { updatedAt: new Date() };
-        const fieldMap: Record<string, string> = {
-            is_hidden: 'isHidden',
-            category_id: 'categoryId',
-            manufacturer_id: 'manufacturerId',
-            group_id: 'groupId',
-            is_pinned: 'isPinned',
-            is_group_cover: 'isGroupCover',
-            name: 'name',
-            description: 'description',
-            price: 'price',
-            note: 'note',
-            type: 'type',
-            item_code: 'itemCode',
-            manual_code: 'manualCode',
-            model_number: 'modelNumber',
-            dimensions: 'dimensions',
-            metadata: 'metadata'
-        };
 
-        for (const [key, val] of Object.entries(updateObj)) {
-            if (['id', 'created_at', 'updated_at'].includes(key)) continue;
+        for (const [key, val] of Object.entries(camelUpdates)) {
+            if (['id', 'createdAt', 'updatedAt'].includes(key)) continue;
             let parsedVal = val;
-            if (key === 'category_id' && typeof val === 'string') {
+            if (key === 'categoryId' && typeof val === 'string') {
                 parsedVal = parseInt(val, 10);
                 if (isNaN(parsedVal as number)) parsedVal = null;
             }
-            mappedUpdates[fieldMap[key] || key] = parsedVal;
+            mappedUpdates[key] = parsedVal;
         }
 
         // Special handling for group cover
-        if (updateObj.is_group_cover === true) {
+        if (camelUpdates.isGroupCover === true) {
             const current = await db.query.furnitureItems.findFirst({
                 columns: { groupId: true },
                 where: eq(furnitureItems.id, id)

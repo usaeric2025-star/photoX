@@ -1,6 +1,8 @@
 import { Hono } from 'hono';
 import { db, furnitureItems, systemLogs } from '../../_lib/db/index.js';
 import { syncGroupCoversAndCount } from '../../_lib/groups.js';
+import { logger } from '../../_lib/logger.js';
+import { keysToCamel } from '../../_lib/casing.js';
 
 export const createHandler = (app: Hono) => {
   app.post('/upsert', async (c) => {
@@ -19,36 +21,21 @@ export const createHandler = (app: Hono) => {
     }
 
     try {
+        const camelPayload = keysToCamel<Record<string, any>>(payload);
         const mappedPayload: Record<string, unknown> = {};
-        const fieldMap: Record<string, string> = {
-            id: 'id',
-            user_id: 'userId',
-            name: 'name',
-            description: 'description',
-            category_id: 'categoryId',
-            manufacturer_id: 'manufacturerId',
-            group_id: 'groupId',
-            is_group_cover: 'isGroupCover',
-            is_pinned: 'isPinned',
-            image_url: 'imageUrl',
-            image_hash: 'imageHash', 
-            price: 'price',
-            note: 'note',
-            type: 'type',
-            is_hidden: 'isHidden',
-            item_code: 'itemCode',
-            manual_code: 'manualCode',
-            model_number: 'modelNumber',
-            dimensions: 'dimensions'
-        };
 
-        for (const [key, val] of Object.entries(payload)) {
-            const mappedKey = fieldMap[key] || key;
-            // Handle category_id integer conversion
-            if (mappedKey === 'categoryId' && typeof val === 'string') {
-              mappedPayload[mappedKey] = parseInt(val);
+        for (const [key, val] of Object.entries(camelPayload)) {
+            if (['categoryId', 'groupId', 'manufacturerId'].includes(key)) {
+                if (val === null || val === undefined || val === '' || val === 'null' || val === 'uncategorized' || val === 'undefined') {
+                    mappedPayload[key] = null;
+                } else if (key === 'categoryId') {
+                    const parsed = typeof val === 'string' ? parseInt(val, 10) : Number(val);
+                    mappedPayload[key] = isNaN(parsed) ? null : parsed;
+                } else {
+                    mappedPayload[key] = val;
+                }
             } else {
-              mappedPayload[mappedKey] = val;
+                mappedPayload[key] = val;
             }
         }
 
@@ -68,6 +55,7 @@ export const createHandler = (app: Hono) => {
 
         return c.json({ success: true, data });
     } catch (error: unknown) {
+        logger.error('[UpsertPhoto] Database error during upsert', error);
         return c.json({ success: false, error: (error instanceof Error ? error.message : String(error)) }, 500);
     }
   });

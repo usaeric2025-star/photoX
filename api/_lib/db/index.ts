@@ -21,6 +21,6 @@ const client = postgres(connectionString || '', {
   onnotice: () => {},
 });
 
-export const db = drizzle(client, { schema: { ...schema, ...views } });
+export const db = drizzle(client, { schema: { ...schema, ...views }, casing: 'snake_case' });
 export * from './schema.js';
 export * from './views.js';

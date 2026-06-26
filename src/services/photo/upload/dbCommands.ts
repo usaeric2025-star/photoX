@@ -6,7 +6,16 @@ export const upsertPhotoRecord = async (payload: Record<string, unknown>): Promi
     const res = await api.photos.upsert.$post({
         json: { payload }
     });
-    if (!res.ok) throw ErrorFactory.fatal('Upsert photo failed', { context: 'dbCommands' });
+    if (!res.ok) {
+        let errorMsg = 'Upsert photo failed';
+        try {
+            const errJson = await res.json();
+            if (errJson && errJson.error) {
+                errorMsg = `${errorMsg}: ${errJson.error}`;
+            }
+        } catch (_) {}
+        throw ErrorFactory.fatal(errorMsg, { context: 'dbCommands' });
+    }
     const { data } = await res.json();
     return data;
 };

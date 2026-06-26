@@ -6,6 +6,7 @@ import { GroupReqSchema } from '../../shared/apiContractSchema.js';
 import { AppError } from '../_lib/error/AppError.js';
 import { logger } from '../_lib/logger.js';
 import { syncGroupCoversAndCount } from '../_lib/groups.js';
+import { keysToCamel } from '../_lib/casing.js';
 
 export const groups = new Hono()
   .get('/', async (c) => {
@@ -83,18 +84,7 @@ export const groups = new Hono()
     delete updatesObj.member_count;
 
     try {
-        const mapped: Record<string, unknown> = {};
-        const fieldMap: Record<string, string> = {
-            name: 'name',
-            description: 'description',
-            cover_photo_id: 'coverPhotoId',
-            status: 'status',
-            user_id: 'userId'
-        };
-        for (const [key, val] of Object.entries(updatesObj)) {
-            const mappedKey = fieldMap[key] || key;
-            mapped[mappedKey] = val;
-        }
+        const mapped = keysToCamel<Record<string, unknown>>(updatesObj);
 
         const [data] = await db.update(groupsTable)
             .set({ ...mapped, updatedAt: new Date() })
@@ -104,28 +94,14 @@ export const groups = new Hono()
         return c.json({ success: true, data });
     } catch (error: unknown) {
         const traceId = "TR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-        logger.error("[Groups] Update group failed", { error: (error instanceof Error ? (error instanceof Error ? error.message : String(error)) : String(error)), id, traceId });
-        return c.json({ success: false, error: (error instanceof Error ? (error instanceof Error ? error.message : String(error)) : String(error)), traceId }, 500);
+        logger.error("[Groups] Update group failed", { error: (error instanceof Error ? error.message : String(error)), id, traceId });
+        return c.json({ success: false, error: (error instanceof Error ? error.message : String(error)), traceId }, 500);
     }
   })
   .post('/upsert', async (c) => {
     const dbUpdates = await c.req.json() as Record<string, unknown>;
     try {
-        const mapped: Record<string, unknown> = {};
-        const fieldMap: Record<string, string> = {
-            id: 'id',
-            name: 'name',
-            description: 'description',
-            cover_photo_id: 'coverPhotoId',
-            status: 'status',
-            user_id: 'userId',
-            created_at: 'createdAt',
-            updated_at: 'updatedAt'
-        };
-        for (const [key, val] of Object.entries(dbUpdates)) {
-            const mappedKey = fieldMap[key] || key;
-            mapped[mappedKey] = val;
-        }
+        const mapped = keysToCamel<Record<string, unknown>>(dbUpdates);
 
         // Ensure status gets a fallback
         if (!mapped.status) {

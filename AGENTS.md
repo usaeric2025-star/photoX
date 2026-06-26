@@ -1773,3 +1773,13 @@ PhotoX 當前單頁數據 < 100KB，IndexedDB 收益為零且增加 Bundle Size 
 - ❌ **禁止使用**：嚴禁直接調用 `scheduler.enqueue` 或使用舊版 `useTaskExecutor`。
 - ❌ **禁止手動捕獲**：任務執行函數 (`execute`) 中禁止手動 `try/catch` 處理 UI 反饋，由外層工廠統一處理。
 
+## 資料庫命名與自動轉換規範（鎖定，2026-06-26）
+
+### 核心規則
+- **資料庫欄位**：`snake_case` (由 Drizzle 自動轉換或明確聲明)
+- **程式碼 (Schema/API/前端)**：`camelCase`
+- **Drizzle Casing 設定**：啟用 `casing: 'snake_case'` 自動轉換
+- **動態鍵轉換**：後端處理 HTTP payload 請求時，全面採用 `keysToCamel` 輔助函數進行自動轉換
+- ❌ **禁止手寫/硬編碼 `fieldMap`**：禁止在 Handler/Controller 程式碼中手寫欄位映射字典。
+
+
