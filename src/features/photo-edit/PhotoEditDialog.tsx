@@ -120,6 +120,8 @@ export function PhotoEditDialog({ isOpen: propIsOpen, onClose: propOnClose, edit
   const editPhotoId = propEditPhotoId !== undefined ? propEditPhotoId : urlEditPhotoId;
   const isOpen = propIsOpen !== undefined ? propIsOpen : (modal === 'edit' && !!editPhotoId);
 
+  if (!isOpen || !editPhotoId) return null;
+
   const handleClose = () => {
     logger.info('[PhotoEditDialog] Closing...');
     if (propOnClose) {

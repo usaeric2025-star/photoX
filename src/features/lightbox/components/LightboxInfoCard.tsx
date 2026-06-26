@@ -2,6 +2,8 @@ import { useState } from 'react';
 import type { LightboxSlide } from '@/lib/lightbox/types';
 import { Icon } from '@/components/ui/Icon';
 import { useTranslation } from '@/hooks/core/useTranslation';
+import { useUI } from '@/lib/store';
+import { Photo } from '@/types/photo';
 
 export function LightboxInfoCard({ 
   slide, 
@@ -14,16 +16,32 @@ export function LightboxInfoCard({
 }) {
   const [expanded, setExpanded] = useState(false);
   const { uiTranslations } = useTranslation();
+  const appLang = useUI(s => s.appLang);
 
   if (!slide) return null;
+
+  const original = slide.original as Photo | undefined;
+  
+  // Dynamic language resolution
+  let displayTitle = slide.title;
+  let displayDesc = slide.description;
+  
+  if (original) {
+    if (original.name && typeof original.name === 'object') {
+      displayTitle = (original.name as any)[appLang] || original.name.zh || original.name.en || slide.title;
+    }
+    if (original.description && typeof original.description === 'object') {
+      displayDesc = (original.description as any)[appLang] || original.description.zh || original.description.en || slide.description;
+    }
+  }
 
   return (
     <div className="relative z-10 px-4 pb-0 mb-0 max-w-2xl mx-auto w-full">
       <div className="bg-black/60 backdrop-blur-md rounded-xl p-3 text-white hover:bg-black/70 transition-colors shadow-2xl border border-white/10">
         <div className="flex items-center justify-between gap-3">
           <div className="flex-1 min-w-0 cursor-pointer pl-1" onClick={() => setExpanded(!expanded)}>
-            {slide.title && (
-              <h3 className="text-base font-semibold truncate">{slide.title}</h3>
+            {displayTitle && (
+              <h3 className="text-base font-semibold truncate">{displayTitle}</h3>
             )}
             <div className="flex items-center gap-2 mt-0.5">
               {slide.groupName && (
@@ -74,10 +92,32 @@ export function LightboxInfoCard({
                 <span className="text-lg">{slide.price}</span>
               </div>
             )}
-            {slide.description && (
+            {displayDesc && (
               <div className="space-y-1">
                 <span className="text-[10px] uppercase font-bold text-white/40 tracking-wider">{uiTranslations.productDescription}</span>
-                <p className="text-sm text-white/80 leading-relaxed font-light">{slide.description}</p>
+                <p className="text-sm text-white/80 leading-relaxed font-light whitespace-pre-wrap">{displayDesc}</p>
+              </div>
+            )}
+            {original && (
+              <div className="grid grid-cols-2 gap-4 mt-4 border-t border-white/5 pt-3">
+                {original.dimensions && (
+                  <div>
+                    <span className="block text-[10px] uppercase font-bold text-white/40 tracking-wider mb-1">Dimensions</span>
+                    <span className="text-sm text-white/80">{original.dimensions}</span>
+                  </div>
+                )}
+                {original.model_number && (
+                  <div>
+                    <span className="block text-[10px] uppercase font-bold text-white/40 tracking-wider mb-1">Model</span>
+                    <span className="text-sm text-white/80 font-mono">{original.model_number}</span>
+                  </div>
+                )}
+                {original.note && !displayDesc && (
+                  <div className="col-span-2">
+                    <span className="block text-[10px] uppercase font-bold text-white/40 tracking-wider mb-1">Note</span>
+                    <span className="text-sm text-white/80 whitespace-pre-wrap">{original.note}</span>
+                  </div>
+                )}
               </div>
             )}
           </div>

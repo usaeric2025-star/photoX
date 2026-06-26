@@ -131,7 +131,7 @@ export function Modal({
         ${size === 'screen' ? '' : 'rounded-xl shadow-2xl'}
         w-full bg-surface-base border-none
         backdrop:bg-black/40 backdrop:backdrop-blur-md
-        p-0 overflow-hidden outline-none z-[10050] ${className}
+        p-0 overflow-hidden outline-none ${className}
       `}
       id={id}
     >

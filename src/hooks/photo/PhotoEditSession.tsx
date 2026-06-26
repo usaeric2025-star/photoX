@@ -72,31 +72,33 @@ export const PhotoEditSessionProvider = ({
     } as unknown as PhotoEditFormData;
   }, [photo]);
 
+  const onSubmit = useCallback(async (values: PhotoEditFormData) => {
+    // Auto-generate item_code if missing
+    if (!values.item_code) {
+      const newCode = generateItemCode();
+      values.item_code = newCode;
+      // We will rely on SWR optimistic updates instead of mutating the form immediately
+    }
+    
+    // Convert using our strict Adapter
+    const saveData = photoEditAdapter(values, photoId, {
+      tags: photo?.tags?.map((t: Tag) => t.name) ?? null,
+      created_at: photo?.created_at,
+      updated_at: new Date().toISOString(),
+    });
+    
+    await updateMutation.mutateAsync({
+      id: photoId,
+      updates: saveData as unknown as Partial<Photo>
+    });
+    
+    onSuccess?.();
+  }, [photoId, photo?.tags, photo?.created_at, updateMutation, onSuccess]);
+
   const formObj = useAppForm({
     schema: PhotoEditSchema,
     defaultValues,
-    onSubmit: async (values: PhotoEditFormData) => {
-      // Auto-generate item_code if missing
-      if (!values.item_code) {
-        const newCode = generateItemCode();
-        values.item_code = newCode;
-        formObj.form.setFieldValue('item_code', newCode);
-      }
-      
-      // Convert using our strict Adapter
-      const saveData = photoEditAdapter(values, photoId, {
-        tags: photo?.tags?.map((t: Tag) => t.name) ?? null,
-        created_at: photo?.created_at,
-        updated_at: new Date().toISOString(),
-      });
-      
-      await updateMutation.mutateAsync({
-        id: photoId,
-        updates: saveData as unknown as Partial<Photo>
-      });
-      
-      onSuccess?.();
-    }
+    onSubmit
   });
   
   const handleCommit = useCallback(async (data?: PhotoEditFormData) => {
