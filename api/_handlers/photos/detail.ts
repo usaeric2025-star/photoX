@@ -34,7 +34,8 @@ export const detailHandler = (app: Hono) => {
 
         return c.json({ success: true, data: formatted });
     } catch (error: unknown) {
-        return c.json({ success: false, error: error instanceof Error ? error.message : String(error) }, 500);
+        const { errorFactory } = await import('../../_lib/error/AppError.js');
+        throw errorFactory.wrap(error, 'api./api/photos/by-ids', 'DB_ERROR');
     }
   });
 
@@ -54,7 +55,8 @@ export const detailHandler = (app: Hono) => {
         });
         return c.json({ success: true, data: data || null });
     } catch (error: unknown) {
-        return c.json({ success: false, error: error instanceof Error ? error.message : String(error) }, 500);
+        const { errorFactory } = await import('../../_lib/error/AppError.js');
+        throw errorFactory.wrap(error, 'api./api/photos/check-hash', 'DB_ERROR');
     }
   });
 };

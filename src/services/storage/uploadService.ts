@@ -14,7 +14,7 @@ export interface UploadResult {
 export const uploadWithRetry = async (
   userId: string = '', 
   photoId: string, 
-  base64Data: string,
+  fileOrBase64: File | string,
   imageHash?: string,
   onStatus?: (status: 'compressing' | 'uploading' | 'done') => void,
   onProgress?: (percent: number) => void,
@@ -24,7 +24,7 @@ export const uploadWithRetry = async (
     let lastError: unknown;
     for (let i = 0; i < maxRetries; i++) {
       try {
-        return await uploadImages(userId, photoId, base64Data, imageHash, onStatus, onProgress, force);
+        return await uploadImages(userId, photoId, fileOrBase64, imageHash, onStatus, onProgress, force);
       } catch (err) {
         lastError = err;
         
@@ -60,40 +60,59 @@ export const uploadWithRetry = async (
 const uploadImages = async (
   userId: string = '', 
   photoId: string, 
-  base64Data: string,
+  fileOrBase64: File | string,
   imageHash?: string,
   onStatus?: (status: 'compressing' | 'uploading' | 'done') => void,
   onProgress?: (percent: number) => void,
   force = false
 ): Promise<UploadResult> => {
   // Rely on backend API authorization check (via requireRealUser on upload-presign)
-  onStatus?.('compressing');
-  const originalBase64 = await compressImage(base64Data, 2048, 0.85); 
+  
+  let dataToUpload: File | string = fileOrBase64;
+  let ext = 'webp';
+  let mimeType = 'image/webp';
+  
+  if (typeof fileOrBase64 === 'string') {
+      onStatus?.('compressing');
+      dataToUpload = await compressImage(fileOrBase64, 2048, 0.85); 
+  } else {
+      ext = fileOrBase64.name.split('.').pop() || 'jpg';
+      mimeType = fileOrBase64.type || 'image/jpeg';
+  }
 
   onStatus?.('uploading');
-  const uploadFile = async (base64: string, fileName: string, isMain=false) => {
-    let buffer: ArrayBuffer;
-    try {
-      const parsed = dataURLToArrayBuffer(base64);
-      buffer = parsed.buffer;
-    } catch (err) {
-      logger.warn('[uploadService] dataURLToArrayBuffer failed, falling back to fetch', err);
-      const res = await fetch(base64);
-      const blob = await res.blob();
-      buffer = await blob.arrayBuffer();
+  const uploadFile = async (data: File | string, fileName: string, isMain=false) => {
+    let body: BodyInit;
+    let fallbackBase64 = '';
+    
+    if (data instanceof File) {
+        body = data;
+    } else {
+        fallbackBase64 = data;
+        let buffer: ArrayBuffer;
+        try {
+          const parsed = dataURLToArrayBuffer(data);
+          buffer = parsed.buffer;
+        } catch (err) {
+          logger.warn('[uploadService] dataURLToArrayBuffer failed, falling back to fetch', err);
+          const res = await fetch(data);
+          const blob = await res.blob();
+          buffer = await blob.arrayBuffer();
+        }
+        body = new Uint8Array(buffer);
     }
 
     let safeFileName = fileName.replace('public/', '');
     if (safeFileName.startsWith('temp-')) {
       const timestamp = new Date().toISOString().replace(/[-:T]/g, '').split('.')[0];
-      safeFileName = `upload_${timestamp}_${Math.random().toString(36).substring(7)}.webp`;
+      safeFileName = `upload_${timestamp}_${Math.random().toString(36).substring(7)}.${ext}`;
     }
 
     const presignRes = await api['upload-presign'].$post({
       json: { 
         photoId: photoId, 
         fileKey: safeFileName, 
-        contentType: 'image/webp', 
+        contentType: mimeType, 
         imageHash: isMain ? imageHash : undefined,
         force: force
       }
@@ -121,8 +140,8 @@ const uploadImages = async (
     try {
       const uploadRes = await fetch(uploadUrl, {
         method: 'PUT',
-        headers: { 'Content-Type': 'image/webp' },
-        body: new Uint8Array(buffer)
+        headers: { 'Content-Type': mimeType },
+        body: body
       });
       if (!uploadRes.ok) {
          throw ErrorFactory.fatal(`雲端存儲上傳失敗 (HTTP ${uploadRes.status})`, { context: 'uploadFile' });
@@ -132,15 +151,20 @@ const uploadImages = async (
     } catch (browserUploadErr) {
       logger.warn('[Upload] Browser direct upload failed, trying fallback...', browserUploadErr);
       
-      const strategy = resolveUploadStrategy(buffer.byteLength, browserUploadErr);
+      const byteLength = data instanceof File ? data.size : (body as Uint8Array).byteLength;
+      const strategy = resolveUploadStrategy(byteLength, browserUploadErr);
       
       if (strategy.status === 'failed') {
           throw ErrorFactory.fatal(strategy.userMessage || '上傳服務目前不可用', { context: 'uploadFile' });
       }
       
+      if (data instanceof File) {
+          throw ErrorFactory.fatal('伺服器中轉上傳不支援原始檔案，請檢查網路連線', { context: 'uploadFile' });
+      }
+      
       logger.warn('[Upload] Falling back to server relay...');
       const fallbackRes = await api['upload-direct'].$post({
-        json: { base64Data: base64, fileKey: safeFileName, contentType: 'image/webp' }
+        json: { base64Data: fallbackBase64, fileKey: safeFileName, contentType: mimeType }
       });
       if (!fallbackRes.ok) {
          throw ErrorFactory.fatal(`伺服器中轉上傳失敗 (HTTP ${fallbackRes.status})`, { context: 'uploadFile' });
@@ -151,7 +175,7 @@ const uploadImages = async (
     }
   };
 
-  const imageUrlResult = await uploadFile(originalBase64, `public/${photoId}.webp`, true);
+  const imageUrlResult = await uploadFile(dataToUpload, `public/${photoId}.${ext}`, true);
   
   if (imageUrlResult.startsWith('DUPLICATE:')) {
      return { imageUrl: imageUrlResult.replace('DUPLICATE:', ''), isDuplicate: true };

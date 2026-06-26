@@ -29,7 +29,8 @@ export const deleteHandler = (app: Hono) => {
 
         return c.json({ success: true, data: { photoData } });
     } catch (error: unknown) {
-        return c.json({ success: false, error: (error instanceof Error ? error.message : String(error)) }, 500);
+        const { errorFactory } = await import('../../_lib/error/AppError.js');
+        throw errorFactory.wrap(error, 'api./api/photos/delete', 'DB_ERROR');
     }
   });
 };

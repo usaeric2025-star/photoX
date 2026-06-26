@@ -15,6 +15,22 @@ export const updateHandler = (app: Hono) => {
     const { ids, updates } = check.output;
     try {
         const camelUpdates = keysToCamel<Record<string, any>>(updates);
+
+        // ✅ 強制攔截 base64
+        if (camelUpdates.imageUrl && camelUpdates.imageUrl.startsWith('data:image/')) {
+            throw new Error('image_url 不接受 base64，請先上傳檔案');
+        }
+
+        // ✅ 強制限制標題長度
+        if (camelUpdates.name) {
+            const nameJson = typeof camelUpdates.name === 'string' ? JSON.parse(camelUpdates.name) : camelUpdates.name;
+            for (const lang of ['zh', 'en', 'ms']) {
+               if (nameJson[lang] && String(nameJson[lang]).length > 200) {
+                   throw new Error(`標題(${lang})超過 200 字上限`);
+               }
+            }
+        }
+
         const mappedUpdates: Record<string, unknown> = {};
 
         for (const [key, val] of Object.entries(camelUpdates)) {
@@ -33,8 +49,8 @@ export const updateHandler = (app: Hono) => {
 
         return c.json({ success: true, data: data.map(d => d.id) });
     } catch (error: unknown) {
-        const err = error instanceof Error ? error : new Error(String(error));
-        return c.json({ success: false, error: err.message }, 500);
+        const { errorFactory } = await import('../../_lib/error/AppError.js');
+        throw errorFactory.wrap(error, 'api./api/photos/update-batch', 'DB_ERROR');
     }
   });
 
@@ -52,6 +68,22 @@ export const updateHandler = (app: Hono) => {
         });
 
         const camelUpdates = keysToCamel<Record<string, any>>(updates);
+
+        // ✅ 強制攔截 base64
+        if (camelUpdates.imageUrl && camelUpdates.imageUrl.startsWith('data:image/')) {
+            throw new Error('image_url 不接受 base64，請先上傳檔案');
+        }
+
+        // ✅ 強制限制標題長度
+        if (camelUpdates.name) {
+            const nameJson = typeof camelUpdates.name === 'string' ? JSON.parse(camelUpdates.name) : camelUpdates.name;
+            for (const lang of ['zh', 'en', 'ms']) {
+               if (nameJson[lang] && String(nameJson[lang]).length > 200) {
+                   throw new Error(`標題(${lang})超過 200 字上限`);
+               }
+            }
+        }
+
         const mappedUpdates: Record<string, unknown> = { updatedAt: new Date() };
 
         for (const [key, val] of Object.entries(camelUpdates)) {
@@ -95,8 +127,8 @@ export const updateHandler = (app: Hono) => {
 
         return c.json({ success: true, data });
     } catch (error: unknown) {
-        const err = error instanceof Error ? error : new Error(String(error));
-        return c.json({ success: false, error: err.message }, 500);
+        const { errorFactory } = await import('../../_lib/error/AppError.js');
+        throw errorFactory.wrap(error, 'api./api/photos/update', 'DB_ERROR');
     }
   });
 };

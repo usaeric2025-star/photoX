@@ -30,8 +30,8 @@ export const executeBatchUpload = (
     const tempPhoto: Photo = {
       id: `temp-${generateId()}`,
       name: { zh: processed.file.name.split('.')[0] },
-      uri: processed.dataUrl,
-      image_url: processed.dataUrl,
+      uri: processed.dataUrl, // objectUrl for preview
+      image_url: '', // LEAVE THIS EMPTY SO uploadSinglePhoto UPLOADS TO R2
       image_hash: processed.hash,
       group_id: options.groupId || null,
       item_code: '', // Placeholder
@@ -51,10 +51,13 @@ export const executeBatchUpload = (
       _lastModified: file.lastModified
     };
     
-    const result = await savePhotoToCloud(userId, tempPhoto, (statusMsg) => {
+    const result = await savePhotoToCloud(userId, tempPhoto, processed.file, (statusMsg) => {
       onProgress((i + 0.5) / total, `上傳中: ${statusMsg}`);
     });
     results.push(result);
+    
+    // Release objectUrl after successful upload
+    URL.revokeObjectURL(processed.dataUrl);
     
     uploadedPhotos.push({
         ...tempPhoto,

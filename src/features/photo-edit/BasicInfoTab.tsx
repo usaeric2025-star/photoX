@@ -46,6 +46,7 @@ export function BasicInfoTab() {
                   <input 
                     type="text" 
                     placeholder="NAME..." 
+                    maxLength={200}
                     value={(state.value as string) || ''}
                     onChange={(e) => handleChange(e.target.value.toUpperCase())}
                     className="w-full bg-white border border-slate-200 px-4 py-3 rounded-2xl text-base sm:text-sm font-bold outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 min-w-0 transition-all" 

@@ -14,6 +14,7 @@ import { storage } from '@/services/storage';
 export const uploadSinglePhoto = async (
   userId?: string, 
   photo?: Photo, 
+  file?: File,
   onStatus?: (s: string) => void
 ): Promise<{ id: string; is_duplicate?: boolean }> => {
     if (!photo) throw new Error('Missing photo data');
@@ -42,9 +43,9 @@ export const uploadSinglePhoto = async (
     }
 
     // 2. R2 Upload (MUST HAPPEN BEFORE FINAL DB UPSERT)
-    if (!photo.image_url && photo.uri) {
+    if (!photo.image_url && (file || photo.uri)) {
         const filename = photo.storage_id || photo.id;
-        const { imageUrl, isDuplicate: r2Duplicate } = await uploadToR2(userId, filename, photo.uri, photo.image_hash, onStatus);
+        const { imageUrl, isDuplicate: r2Duplicate } = await uploadToR2(userId, filename, file || photo.uri!, photo.image_hash, onStatus);
         if (r2Duplicate) {
             logger.info(`[Upload] R2 confirmed duplicate file for ${photo.id}. Reusing URL: ${imageUrl}`);
             is_duplicate = true;

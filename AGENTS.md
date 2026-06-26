@@ -1791,5 +1791,19 @@ PhotoX 當前單頁數據 < 100KB，IndexedDB 收益為零且增加 Bundle Size 
   - 寫入端（Insert/Upsert）：後端收到 Payload 時必須自動過濾或丟棄由客戶端傳遞的 `createdAt` 和 `updatedAt`，寫入時一律使用後端伺服器的 `new Date()` 物件
   - 更新端（Update/Conflict）：更新時一律僅由後端手動指定 `updatedAt: new Date()`，嚴禁在此覆寫或重設 `createdAt`
 
+## 資料庫資料規範（強制）
 
+### 禁止事項
+- ❌ 禁止將 base64 圖片存入 `image_url` 欄位
+- ❌ 禁止標題超過 200 字元
+
+### 正確做法
+- ✅ `image_url` 永遠是 R2/S3 URL（< 200 bytes）
+- ✅ 標題在存入前限制長度
+- ✅ 索引只包含必要範圍（前 100 字元）
+
+### 驗證
+```bash
+bash scripts/check-db-health.sh
+```
 

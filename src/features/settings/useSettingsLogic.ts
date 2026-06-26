@@ -54,7 +54,7 @@ export const useSettingsLogic = ({
   const { submit: runConnectionTest, isLoading: isTesting } = useFormSubmit({
     schema: v.object({}),
     mutationFn: async () => {
-      const provider = settings.ai_provider || "google";
+      const provider = "google";
       const ok = await testAiConnection(
         settings.agnes_api_key || "",
         provider,

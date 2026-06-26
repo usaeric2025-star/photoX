@@ -26,6 +26,21 @@ export const createHandler = (app: Hono) => {
     try {
         const camelPayload = keysToCamel<Record<string, any>>(payload);
 
+        // ✅ 強制攔截 base64
+        if (camelPayload.imageUrl && camelPayload.imageUrl.startsWith('data:image/')) {
+            throw new Error('image_url 不接受 base64，請先上傳檔案');
+        }
+
+        // ✅ 強制限制標題長度
+        if (camelPayload.name) {
+            const nameJson = typeof camelPayload.name === 'string' ? JSON.parse(camelPayload.name) : camelPayload.name;
+            for (const lang of ['zh', 'en', 'ms']) {
+               if (nameJson[lang] && String(nameJson[lang]).length > 200) {
+                   throw new Error(`標題(${lang})超過 200 字上限`);
+               }
+            }
+        }
+
         for (const [key, val] of Object.entries(camelPayload)) {
             // Skip createdAt and updatedAt from client to avoid type/mismatch errors and let backend generate them
             if (['createdAt', 'updatedAt'].includes(key)) continue;

@@ -46,8 +46,8 @@ export const showToast = {
         // 替換過長的 Base64 與截斷超長字串
         if (msg) {
           msg = msg.replace(/data:image\/[^;]+;base64,[a-zA-Z0-9+/=]+/g, '[BASE64_IMAGE_TRUNCATED]');
-          if (msg.length > 3000) {
-            msg = msg.substring(0, 3000) + `... (內容過長已截斷，原始長度: ${msg.length})`;
+          if (msg.length > 500) {
+            msg = msg.substring(0, 500) + `... (內容過長已截斷，原始長度: ${msg.length})`;
           }
         }
         return msg;
@@ -89,14 +89,13 @@ export const showToast = {
     
     // Copy handler with precise diagnostic fields
     const diagnosticsText = [
-      `--- PHOTX 錯誤診斷報告 ---`,
-      `時間戳: ${timestamp}`,
-      `錯誤類型: 運行邏輯異常`,
-      `代碼: ${code}`,
+      `--- 诊断信息 ---`,
+      `时间戳: ${timestamp}`,
+      `错误类型: 运行逻辑异常`,
+      `代码: ${code}`,
       `Trace ID: ${traceId}`,
-      `當前 URL: ${typeof window !== 'undefined' ? window.location.href : 'unknown'}`,
-      `原始 Message: ${systemMessage}`,
-      stackTrace ? `堆棧信息: ${stackTrace}` : ''
+      `URL: ${typeof window !== 'undefined' ? window.location.href : 'unknown'}`,
+      `信息: ${systemMessage}`
     ].filter(Boolean).join('\n');
     
     return toast.error(

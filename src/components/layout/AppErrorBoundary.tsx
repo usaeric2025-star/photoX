@@ -29,8 +29,8 @@ function GlobalErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
   let message = error instanceof Error ? error.message : String(error);
   if (message) {
     message = message.replace(/data:image\/[^;]+;base64,[a-zA-Z0-9+/=]+/g, '[BASE64_IMAGE_TRUNCATED]');
-    if (message.length > 3000) {
-      message = message.substring(0, 3000) + `... (內容過長已截斷)`;
+    if (message.length > 500) {
+      message = message.substring(0, 500) + `... (內容過長已截斷)`;
     }
   }
 
@@ -57,10 +57,7 @@ function GlobalErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
       `错误类型: ${errorType}`,
       `代码: ${errorCode}`,
       `Trace ID: ${traceId}`,
-      `原始信息: ${message}`,
-      `----------------`,
-      `堆栈信息:`,
-      error instanceof Error ? error.stack || '无堆栈信息' : '无堆栈信息'
+      `信息: ${message}`
     ].join('\n');
     
     copy(diagnosticInfo);

@@ -37,6 +37,13 @@ const ErrorActions = ({ error, isChunkFailure }: { error?: Error, isChunkFailure
     }
 
     const message = error?.message || '未知错误';
+    let safeMessage = message;
+    if (safeMessage) {
+      safeMessage = safeMessage.replace(/data:image\/[^;]+;base64,[a-zA-Z0-9+/=]+/g, '[BASE64_IMAGE_TRUNCATED]');
+      if (safeMessage.length > 500) {
+        safeMessage = safeMessage.substring(0, 500) + '... (内容过长已截断)';
+      }
+    }
     
     const diagnosticInfo = [
       `--- 诊断信息 ---`,
@@ -44,10 +51,7 @@ const ErrorActions = ({ error, isChunkFailure }: { error?: Error, isChunkFailure
       `错误类型: ${errorType}`,
       `代码: ${errorCode}`,
       `Trace ID: ${traceId}`,
-      `原始信息: ${message}`,
-      `----------------`,
-      `堆栈信息:`,
-      error?.stack || '无堆栈信息'
+      `信息: ${safeMessage}`
     ].join('\n');
     
     copy(diagnosticInfo);
