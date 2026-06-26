@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ISSUE_ACTIONS, PreviewResult } from "@/features/diagnostics/issueActions";
-import { useTaskExecutor } from '@/hooks';
+import { createTask } from '@/lib/task-queue';
 
 export function useMaintenanceExecution(issueId: string, title: string, onSuccess?: () => void) {
   const [preview, setPreview] = useState<PreviewResult | null>(null);
@@ -9,7 +9,6 @@ export function useMaintenanceExecution(issueId: string, title: string, onSucces
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  const { runTask } = useTaskExecutor();
   const action = ISSUE_ACTIONS[issueId];
 
   const handlePreview = async () => {
@@ -28,31 +27,31 @@ export function useMaintenanceExecution(issueId: string, title: string, onSucces
     }
   };
 
-  const handleExecute = async () => {
+  const handleExecute = () => {
     if (!action) return;
     setIsExecuting(true);
+    setProgress(0);
     
-    try {
-      await runTask(
-        title,
-        async ({ updateProgress }) => {
-          updateProgress(10, '正在初始化...');
-          const result = await action.execute();
-          updateProgress(100, '完成');
-          return result;
-        },
-        {
-          showProgress: false,
-          showSuccessToast: true,
-          onSuccess: () => {
-            setPreview(null);
-            if (onSuccess) onSuccess();
-          }
-        }
-      );
-    } finally {
-      setIsExecuting(false);
-    }
+    createTask({
+      type: 'repair',
+      label: title,
+      execute: async (signal, onProgress) => {
+        onProgress(0.1, '正在初始化...');
+        const result = await action.execute();
+        onProgress(1, '完成');
+        return result;
+      },
+      onComplete: () => {
+        setIsExecuting(false);
+        setPreview(null);
+        setProgress(0);
+        if (onSuccess) onSuccess();
+      },
+      onError: () => {
+        setIsExecuting(false);
+        setProgress(0);
+      }
+    });
   };
 
   return {

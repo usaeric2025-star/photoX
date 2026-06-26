@@ -1,6 +1,6 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { useTaskExecutor } from "@/hooks";
 import { useTask } from '@/lib/store';
+import { executeTask } from '@/lib/task-queue';
 import React, { useState } from "react";
 import { Icon } from '@/components/ui/Icon';
 import { Button } from '@/components/ui/Button';
@@ -54,7 +54,6 @@ export function TagsSection({
     //   inside map:
     // isPinned={(settings?.pinned_tags || []).includes(String(tag.id))}
   
-  const { runTask } = useTaskExecutor();
   const tasksMap = useTask(s => s.tasks);
   const tasks = React.useMemo(() => Array.from(tasksMap.values()), [tasksMap]);
   const isRunning = tasks.some((t) => t.state?.status === "processing");
@@ -85,14 +84,15 @@ export function TagsSection({
   });
 
   const handleRefreshHotScores = async () => {
-    await runTask(
-      "刷新热门标签",
-      async () => {
+    await executeTask({
+      label: "刷新热门标签",
+      type: "sync",
+      silent: true,
+      execute: async () => {
         await triggerRefreshTagHotScores();
         await appQuery.mutate("tags"); // Refactored to use SWR mutate
-      },
-      { showSuccessToast: true, silent: true },
-    );
+      }
+    });
   };
 
   return (

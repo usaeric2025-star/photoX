@@ -5,9 +5,8 @@ import { showToast } from '@/lib/ui/toast';
 import { appQuery } from '@/lib/query';
 import { queryKeys } from '@/lib/query/keys';
 import { runBatchAnalysis } from '@/features/ai/orchestration';
-import { scheduler } from '@/lib/task-queue';
+import { createTask } from '@/lib/task-queue';
 import { generateId } from '@/lib/id';
-import { isTaskDrawerOpen } from '@/lib/store';
 
 export function useAIBatchAnalysis() {
   const invalidatePhotos = useInvalidatePhotos();
@@ -21,17 +20,10 @@ export function useAIBatchAnalysis() {
     showToast.info('已加入 AI 分析任務佇列...');
 
     const taskTitle = groupId ? `智能合组分析 (${targetPhotos.length}张)` : `批量 AI 分析 (${targetPhotos.length}张)`;
-    const taskId = `ai-analyze-${generateId()}`;
 
-    // Open Task Drawer automatically using Signal
-    isTaskDrawerOpen.set(true);
-
-    scheduler.enqueue({
-        id: taskId,
+    createTask({
         label: taskTitle,
         type: 'ai-analyze',
-        state: { status: 'queued' },
-        createdAt: Date.now(),
         meta: { photoCount: targetPhotos.length, groupId },
         execute: async (signal, onProgress) => {
             const { successCount, groupSuccess } = await runBatchAnalysis({
@@ -49,9 +41,10 @@ export function useAIBatchAnalysis() {
               ]);
             }
             
-            showToast.success(groupId ? `智能合组完成` : `批量 AI 分析完成 (${successCount}张)`);
-            
             return { successCount, groupSuccess };
+        },
+        onComplete: (result: any) => {
+            showToast.success(groupId ? `智能合组完成` : `批量 AI 分析完成 (${result.successCount}张)`);
         }
     });
 

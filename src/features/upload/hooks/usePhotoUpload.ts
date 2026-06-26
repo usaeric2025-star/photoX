@@ -1,12 +1,11 @@
-import { useAuth, isTaskDrawerOpen, uiStore } from '@/lib/store';
+import { useAuth, uiStore } from '@/lib/store';
 import { useCallback } from 'react';
 
 import { checkDuplicateBatch } from '@/services/photo/duplicateCheck';
-import { useInvalidatePhotos } from '@/hooks/photo/useInvalidatePhotos';
 import { showToast } from '@/lib/ui/toast';
 import { hapticFeedback } from '@/lib/ui/haptics';
-import { scheduler } from '@/lib/task-queue';
-import { createBatchUploadTask } from '@/lib/task-queue/adapters/upload';
+import { createTask } from '@/lib/task-queue';
+import { executeBatchUpload } from '@/lib/task-queue/adapters/upload';
 import { generateId } from '@/lib/id';
 
 export function usePhotoUpload() {
@@ -32,13 +31,20 @@ export function usePhotoUpload() {
     const isGroup = uiStore.getState().uploadAsGroup && uniqueFiles.length > 1;
     const groupId = isGroup ? generateId() : undefined;
     
-    // Batch enqueue
-    scheduler.enqueue(createBatchUploadTask(uniqueFiles, userId, { groupId }));
+    // Batch enqueue via TaskFactory
+    createTask({
+      label: `上傳 ${uniqueFiles.length} 張照片`,
+      type: 'upload',
+      meta: {
+        photoCount: uniqueFiles.length,
+        groupId: groupId,
+      },
+      execute: executeBatchUpload(uniqueFiles, userId, { groupId }),
+      onComplete: (result) => {
+        showToast.success(`上傳完成，共 ${result.length} 張`);
+      }
+    });
     
-    isTaskDrawerOpen.set(true);
-    
-    showToast.success(`已加入 ${uniqueFiles.length} 张照片到上传队列`);
-
   }, [user?.id]);
 
   return { uploadFiles };

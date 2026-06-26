@@ -1767,3 +1767,9 @@ PhotoX 當前單頁數據 < 100KB，IndexedDB 收益為零且增加 Bundle Size 
 - ✅ 高頻查詢表（如 `furniture_items`）必須建立複合索引（如 `userId`, `createdAt`）
 - ✅ 外鍵關聯欄位（如 `groupId`, `categoryId`）必須加上索引以加速關聯
 
+## 任務工廠統一方案（鎖定，2026-06-26）
+- ✅ **唯一入口**：所有任務必須使用 `createTask` 或 `executeTask` 工廠函數創建。
+- ✅ **職責收斂**：`createTask` 負責佇列排程、錯誤捕獲 (ErrorFactory)、Toast 反饋與進度標準化。
+- ❌ **禁止使用**：嚴禁直接調用 `scheduler.enqueue` 或使用舊版 `useTaskExecutor`。
+- ❌ **禁止手動捕獲**：任務執行函數 (`execute`) 中禁止手動 `try/catch` 處理 UI 反饋，由外層工廠統一處理。
+

@@ -10,7 +10,8 @@ import {
   normalizeManufacturerName,
 } from "@/lib/utils";
 import { api } from "@/lib/api";
-import { useTaskExecutor, useInvalidatePhotos } from "@/hooks";
+import { useInvalidatePhotos } from "@/hooks";
+import { executeTask } from '@/lib/task-queue';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { showToast } from '@/lib/ui/toast';
 
@@ -39,7 +40,6 @@ export const useSettingsLogic = ({
 }: UseSettingsLogicProps) => {
   
   const invalidatePhotos = useInvalidatePhotos();
-  const { runTask } = useTaskExecutor();
   const appLang = useUI(s => s.appLang);
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
@@ -108,9 +108,10 @@ export const useSettingsLogic = ({
   };
 
   const uploadLogo = async (file: File) => {
-    return runTask(
-      appLang === 'zh' ? '上传系统 Logo' : 'Upload System Logo',
-      async () => {
+    return executeTask({
+      label: appLang === 'zh' ? '上传系统 Logo' : 'Upload System Logo',
+      type: 'upload',
+      execute: async () => {
         const reader = new FileReader();
         const base64Data = await new Promise<string>((resolve, reject) => {
           reader.onload = () => resolve(reader.result as string);
@@ -134,7 +135,7 @@ export const useSettingsLogic = ({
         setSettingField('logo_url', res.data.publicUrl);
         return res.data.publicUrl;
       }
-    );
+    });
   };
 
   return {
