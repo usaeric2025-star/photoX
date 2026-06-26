@@ -33,7 +33,6 @@ export default function App() {
         )}
       </ConfirmProvider>
       <DialogContainer />
-      <PhotoEditDialog />
       <Suspense fallback={null}>
         <DiagDialog />
       </Suspense>

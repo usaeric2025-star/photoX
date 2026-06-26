@@ -1,16 +1,13 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useAppRoute } from '@/lib/router';
 import { Router, ALL_ROUTES } from '@/router';
-import { useUI } from '@/lib/store';
+import { useUI, isLightboxOpen, lightboxCurrentIndex, uiStore } from '@/lib/store';
 
 export interface UseFiltersOptions {
   enableStatus?: boolean;
   enableBatch?: boolean;
   sortOptions?: { label: string; value: string }[];
 }
-
-// Global timeout tracking for photoId debouncing to prevent excessive URL and router updates during transitions
-let photoIdTimeoutId: any = null;
 
 export const useFilters = (options: UseFiltersOptions = {}) => {
   const route = useAppRoute();
@@ -74,12 +71,6 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
 
   const photoId = (params.photoId as string) || (route?.name === 'photo' ? params.photoId as string : null);
   const setPhotoId = useCallback((val: string | null) => {
-      // Clear any pending deferred updates
-      if (photoIdTimeoutId) {
-        clearTimeout(photoIdTimeoutId);
-        photoIdTimeoutId = null;
-      }
-
       // 如果是 photo 詳情頁，關閉後回到首頁
       if (route?.name === 'photo') {
          if (val) {
@@ -90,22 +81,31 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
          return;
       }
       
-      // Prevent infinite loops if value is the same
-      if (val === photoId) return;
-
+      // Update Signals directly for instantaneous feedback.
+      // useRouteSync will handle the URL update debounced in the background.
       if (val === null) {
-        // Closing the lightbox: update URL immediately so state cleans up instantly
-        updateSearch({ photoId: undefined });
+        if (uiStore.getState().lightboxIsOpen) {
+          isLightboxOpen.set(false);
+        }
       } else {
-        // Opening or Swiping: defer updating the URL slightly (250ms).
-        // This gives the React render cycle and lightbox mount transition full CPU share,
-        // resulting in instantaneous feedback and fluid animations, plus debounces rapid swiping.
-        photoIdTimeoutId = setTimeout(() => {
+        const state = uiStore.getState();
+        const slides = state.lightboxSlides;
+        const index = slides.findIndex(s => s.id === val);
+        if (index !== -1) {
+          // Explicitly guard to prevent redundant signal triggers
+          if (index !== state.lightboxCurrentIndex) {
+            lightboxCurrentIndex.set(index);
+          }
+          if (!state.lightboxIsOpen) {
+            isLightboxOpen.set(true);
+          }
+        } else {
+          // If slide not found in current lightbox state, update URL manually
+          // as it might be a direct link or a jump.
           updateSearch({ photoId: val });
-          photoIdTimeoutId = null;
-        }, 250);
+        }
       }
-  }, [route?.name, params.photoId, photoId, updateSearch]);
+  }, [route?.name, params.photoId, updateSearch]);
 
   const anchor = params.anchor === 'true';
   const setAnchor = useCallback((val: boolean) => {
@@ -140,7 +140,7 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
     }
   }, [route?.name]);
 
-  return {
+  return useMemo(() => ({
     search: searchVal, setSearch,
     category, setCategory,
     tags, setTags,
@@ -156,5 +156,21 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
     reset,
     updateFilters,
     isAdminMode: options.enableStatus || options.enableBatch,
-  };
+  }), [
+    searchVal, setSearch,
+    category, setCategory,
+    tags, setTags,
+    sort, setSort,
+    status, setStatus,
+    batchFilter, setBatchFilter,
+    photoId, setPhotoId,
+    anchor, setAnchor,
+    groupId, setGroupId,
+    modal, setModal,
+    showGroupsCollapsed, setShowGroupsCollapsed,
+    view, setView,
+    reset,
+    updateFilters,
+    options.enableStatus, options.enableBatch
+  ]);
 };

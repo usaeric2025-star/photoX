@@ -65,18 +65,6 @@ export function AdminGroupDetailPage() {
   const openLightbox = useUI(s => s.openLightbox);
   const lightboxItems = React.useMemo(() => photosToLightboxSlides(photos), [photos]);
 
-  React.useEffect(() => {
-     if (photoId && (photos || []).length > 0) {
-        const index = (photos || []).findIndex(p => p.id === photoId);
-        if (index !== -1) {
-           const { lightboxIsOpen, lightboxCurrentIndex } = uiStore.getState();
-           if (!lightboxIsOpen || (photos || [])[lightboxCurrentIndex]?.id !== photoId) {
-              openLightbox(lightboxItems, index);
-           }
-        }
-     }
-  }, [photos, photoId, openLightbox, lightboxItems]);
-
   // Anchoring effect
   React.useEffect(() => {
     if (anchor && photoId && !loading && (photos || []).length > 0) {
@@ -132,9 +120,8 @@ export function AdminGroupDetailPage() {
   
   const openEditDrawer = (id: string) => { setPhotoId(id); setModal('edit'); };
 
-  const handlePhotoClick = (id: string, index: number) => {
+  const handlePhotoClick = (_id: string, index: number) => {
       openLightbox(lightboxItems, index);
-      setPhotoId(id);
   };
 
   if (loading) {

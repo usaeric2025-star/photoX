@@ -62,23 +62,8 @@ export default function PublicPage() {
   
   const lightboxItems = useMemo(() => photosToLightboxSlides(photos), [photos]);
 
-  // 同步燈箱數據：當照片列表更新且處於燈箱模式時
-  useEffect(() => {
-    if (photoId && photos.length > 0) {
-      const index = photos.findIndex(p => p.id === photoId);
-      if (index !== -1) {
-         const { lightboxIsOpen, lightboxCurrentIndex } = uiStore.getState();
-         // 只有当灯箱没开，或者灯箱打开但显示的不是当前 photoId 时才打开
-         if (!lightboxIsOpen || photos[lightboxCurrentIndex]?.id !== photoId) {
-            openLightbox(lightboxItems, index);
-         }
-      }
-    }
-  }, [photos, photoId, openLightbox, lightboxItems]);
-
-  const handlePhotoClick = (id: string, index: number) => {
+  const handlePhotoClick = (_id: string, index: number) => {
     openLightbox(lightboxItems, index);
-    setPhotoId(id);
   };
 
   if (isError) {

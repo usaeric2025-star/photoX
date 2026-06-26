@@ -19,6 +19,8 @@ export function useRouteSync() {
   const currentBatch = useUIStore(s => s.isMultiSelect);
   const currentSelected = useUIStore(s => s.selectedIds);
   const lightboxIsOpen = useUIStore(s => s.lightboxIsOpen);
+  const lightboxCurrentIndex = useUIStore(s => s.lightboxCurrentIndex);
+  const lightboxSlides = useUIStore(s => s.lightboxSlides);
 
   // 1. URL -> Signal (Synchronization from URL to Memory)
   useEffect(() => {
@@ -39,8 +41,10 @@ export function useRouteSync() {
     }
 
     // Tags
-    const tags = (params.tag || []) as string[];
-    if (JSON.stringify(currentState.filters.tags) !== JSON.stringify(tags)) {
+    const tagParam = params.tag;
+    const tags = Array.isArray(tagParam) ? tagParam : (tagParam ? [tagParam] : []);
+    const currentTags = currentState.filters.tags;
+    if (currentTags.length !== tags.length || currentTags.some((t, i) => t !== tags[i])) {
       (uiStore as unknown as UIStoreInstance).setState((s: UIStoreState) => ({ filters: { ...s.filters, tags } }));
     }
 
@@ -51,20 +55,31 @@ export function useRouteSync() {
     }
 
     // Selection
-    const selected = (params.selected as string) || '';
-    const newSelected = selected.split(',').filter(Boolean);
-    if (JSON.stringify(currentState.selectedIds) !== JSON.stringify(newSelected)) {
+    const selectedParam = params.selected as string;
+    const newSelected = selectedParam ? selectedParam.split(',').filter(Boolean) : [];
+    const currentSelected = currentState.selectedIds;
+    if (currentSelected.length !== newSelected.length || currentSelected.some((id, i) => id !== newSelected[i])) {
       (uiStore as unknown as UIStoreInstance).setState({ selectedIds: newSelected });
     }
 
-    // Lightbox
+    // Lightbox & Modal
     const photoId = params.photoId as string;
     const modal = params.modal as string;
     
     // Lightbox handling
-    const shouldBeLightboxOpen = !!(photoId && photos?.length > 0 && modal !== 'edit');
+    // IMPORTANT: Only close if photoId is explicitly missing from URL or we are in edit mode.
+    // Do NOT close just because photos are still loading (photos.length === 0).
+    const shouldBeLightboxOpen = !!(photoId && modal !== 'edit');
     if (currentState.lightboxIsOpen !== shouldBeLightboxOpen) {
       uiStore.setState({ lightboxIsOpen: shouldBeLightboxOpen });
+    }
+
+    // Sync index from photoId if open and photos are available
+    if (shouldBeLightboxOpen && photoId && photos.length > 0) {
+      const index = photos.findIndex(p => p.id === photoId);
+      if (index !== -1 && index !== currentState.lightboxCurrentIndex) {
+        uiStore.setState({ lightboxCurrentIndex: index });
+      }
     }
 
     // Edit modal handling
@@ -132,12 +147,31 @@ export function useRouteSync() {
       hasChanges = true;
     }
 
+    // Lightbox PhotoId
+    if (lightboxIsOpen && lightboxSlides.length > 0) {
+       const currentPhotoId = lightboxSlides[lightboxCurrentIndex]?.id;
+       if (currentPhotoId && currentPhotoId !== params.photoId) {
+          queryUpdates.photoId = currentPhotoId;
+          hasChanges = true;
+       }
+    } else if (!lightboxIsOpen && params.photoId && !params.modal) {
+       // Only clear photoId if not in edit modal
+       queryUpdates.photoId = undefined;
+       hasChanges = true;
+    }
+
     if (hasChanges) {
       const replace = Router.replace as unknown as (name: string, params: Record<string, unknown>) => void;
-      replace(route.name, {
-        ...params,
-        ...queryUpdates
-      } as Record<string, unknown>);
+      
+      // Debounce the URL update to keep swiping buttery smooth
+      const timeoutId = window.setTimeout(() => {
+        replace(route.name, {
+          ...params,
+          ...queryUpdates
+        } as Record<string, unknown>);
+      }, 250);
+
+      return () => clearTimeout(timeoutId);
     }
-  }, [currentQ, currentCat, currentTags, currentBatch, currentSelected, route?.name]);
+  }, [currentQ, currentCat, currentTags, currentBatch, currentSelected, lightboxIsOpen, lightboxCurrentIndex, lightboxSlides, route?.name]);
 }

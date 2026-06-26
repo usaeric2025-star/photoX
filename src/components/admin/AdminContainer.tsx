@@ -29,24 +29,9 @@ export function AdminContainer() {
   
   const lightboxItems = React.useMemo(() => photosToLightboxSlides(photoGridData.photos), [photoGridData.photos]);
 
-  const handlePhotoClick = (photoId: string, index: number) => {
+  const handlePhotoClick = (_photoId: string, index: number) => {
       openLightbox(lightboxItems, index);
-      filters.setPhotoId(photoId);
   };
-  
-  // 同步燈箱數據：當照片列表更新且處於燈箱模式時
-  useEffect(() => {
-    if (filters.photoId && photoGridData.photos.length > 0) {
-      const index = photoGridData.photos.findIndex(p => p.id === filters.photoId);
-      if (index !== -1) {
-         const { lightboxIsOpen, lightboxCurrentIndex } = uiStore.getState();
-         // 只有当灯箱没开，或者灯箱打开但显示的不是当前 photoId 时才打开
-         if (!lightboxIsOpen || photoGridData.photos[lightboxCurrentIndex]?.id !== filters.photoId) {
-            openLightbox(lightboxItems, index);
-         }
-      }
-    }
-  }, [photoGridData.photos, filters.photoId, openLightbox, lightboxItems]);
   
   if (photoGridData.isError) {
     return (
