@@ -25,8 +25,7 @@ export const initializeApp = async () => {
     initAuthListener();
     
     // 2. 並行執行初始 Session 獲取與 Settings 獲取 (原子化組合)
-    const authState = authStore.getState();
-    const authInitPromise = authState?.init ? authState.init() : Promise.resolve();
+    const authInitPromise = authStore.getState().init();
     
     // 透過 SWR 機制預加載 Settings 並寫入快取
     const settingsPromise = appQuery.mutate(['settings', 'public'], fetchPublicSettings());

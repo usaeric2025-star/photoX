@@ -40,9 +40,13 @@ export function useMaintenanceExecution(issueId: string, title: string, onSucces
       label: title,
       userId: user?.id,
       execute: async (signal, onProgress) => {
-        onProgress(0.1, '正在初始化...');
+        const update = (p: number, msg?: string) => {
+          onProgress(p, msg);
+          setProgress(p * 100);
+        };
+        update(0.1, '正在初始化...');
         const result = await action.execute();
-        onProgress(1, '完成');
+        update(1, '完成');
         return result;
       },
       onComplete: () => {

@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React from 'react';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { createStore } from '@storve/core';
+import { useStore } from '@storve/react';
 
 interface ConfirmOptions {
   title: string;
@@ -8,56 +10,59 @@ interface ConfirmOptions {
   variant?: 'default' | 'destructive';
 }
 
-interface ConfirmContextType {
-  confirm: (options: ConfirmOptions) => Promise<boolean>;
+interface ConfirmState extends ConfirmOptions {
+  open: boolean;
+  resolve?: (value: boolean) => void;
 }
 
-const ConfirmContext = createContext<ConfirmContextType | undefined>(undefined);
+const confirmStore = createStore<ConfirmState>({
+  open: false,
+  title: '',
+  description: '',
+});
+
+export const confirmDialog = (options: ConfirmOptions): Promise<boolean> => {
+  return new Promise<boolean>((resolve) => {
+    confirmStore.setState({
+      ...options,
+      open: true,
+      resolve,
+    });
+  });
+};
+
+export function useConfirm() {
+  return confirmDialog;
+}
 
 export function ConfirmProvider({ children }: { children: React.ReactNode }) {
-  const [resolveConfirm, setResolveConfirm] = useState<(value: boolean) => void>();
-  const [open, setOpen] = useState(false);
-  const [options, setOptions] = useState<ConfirmOptions>({ title: '', description: '' });
-
-  const confirm = useCallback((options: ConfirmOptions) => {
-    setOptions(options);
-    setOpen(true);
-    return new Promise<boolean>((resolve) => {
-      setResolveConfirm(() => resolve);
-    });
-  }, []);
+  const state = useStore(confirmStore);
 
   const handleConfirm = () => {
-    resolveConfirm?.(true);
-    setOpen(false);
+    state.resolve?.(true);
+    confirmStore.setState({ ...state, open: false, resolve: undefined });
   };
 
   const handleCancel = () => {
-    resolveConfirm?.(false);
-    setOpen(false);
+    state.resolve?.(false);
+    confirmStore.setState({ ...state, open: false, resolve: undefined });
   };
 
   return (
-    <ConfirmContext.Provider value={{ confirm }}>
+    <>
       {children}
       <ConfirmDialog
-        open={open}
-        onOpenChange={setOpen}
-        title={options.title}
-        description={options.description}
-        confirmText={options.confirmText || '确定'}
-        variant={options.variant || 'default'}
+        open={state.open}
+        onOpenChange={(open) => {
+          if (!open) handleCancel();
+        }}
+        title={state.title}
+        description={state.description}
+        confirmText={state.confirmText || '确定'}
+        variant={state.variant || 'default'}
         onConfirm={handleConfirm}
         onCancel={handleCancel}
       />
-    </ConfirmContext.Provider>
+    </>
   );
-};
-
-export const useConfirm = () => {
-  const context = useContext(ConfirmContext);
-  if (!context) {
-    throw new Error('useConfirm must be used within a ConfirmProvider');
-  }
-  return context.confirm;
-};
+}

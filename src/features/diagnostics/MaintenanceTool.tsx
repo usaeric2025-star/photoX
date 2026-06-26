@@ -2,15 +2,14 @@ import React from 'react';
 import { Button } from "@/components/shared/Button";
 import { Progress } from "@/components/shared/Progress";
 import { Alert, AlertDescription } from "@/components/shared/Alert";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { LoadingSpinner } from "@/components/ui/feedback/LoadingSpinner";
 import { ISSUE_ACTIONS } from "@/features/diagnostics/issueActions";
 import { Icon } from '@/components/ui/Icon';
-import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useUI, storeAccessor } from '@/lib/store';
 import { useTranslation } from '@/hooks';
 import { MaintPreviewDialog } from './MaintPreviewDialog';
 import { useMaintenanceExecution } from './useMaintenanceExecution';
+import { useConfirm } from '@/context/ConfirmContext';
 
 interface MaintenanceToolProps {
   issueId: string;
@@ -24,7 +23,7 @@ interface MaintenanceToolProps {
 export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess, compact }: MaintenanceToolProps) => {
   const { uiTranslations } = useTranslation();
   const baseTempTitle = title || ISSUE_ACTIONS[issueId]?.name || uiTranslations.processing || "未知工具";
-  const [showConfirm, { open: openConfirm, close: closeConfirm }] = useDisclosure(false);
+  const confirm = useConfirm();
 
   const {
     preview, setPreview, showPreviewDialog, setShowPreviewDialog,
@@ -33,7 +32,20 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
 
   if (!action) return null;
 
-  const onExecuteClick = () => danger ? openConfirm() : handleExecute();
+  const onExecuteClick = async () => {
+    if (danger) {
+      if (await confirm({
+        title: "确认执行操作？",
+        description: `你正在尝试执行「${baseTempTitle}」。此操作可能不可逆。`,
+        confirmText: "确定执行",
+        variant: "destructive"
+      })) {
+        handleExecute();
+      }
+    } else {
+      handleExecute();
+    }
+  };
 
   const renderSharedModals = () => (
     <>
@@ -44,18 +56,6 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
         preview={preview}
         danger={danger}
         onConfirm={onExecuteClick}
-      />
-      <ConfirmDialog
-        open={showConfirm}
-        onOpenChange={(isOpened) => {
-          isOpened ? storeAccessor.ui.incrementDialogCount() : storeAccessor.ui.decrementDialogCount();
-          isOpened ? openConfirm() : closeConfirm();
-        }}
-        title="确认执行操作？"
-        description={`你正在尝试执行「${baseTempTitle}」。此操作可能不可逆。`}
-        onConfirm={() => { closeConfirm(); handleExecute(); }}
-        variant="destructive"
-        confirmText="确定执行"
       />
     </>
   );
@@ -70,7 +70,7 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
             </Button>
             <Button variant={danger ? "danger" : "primary"} size="sm" onClick={onExecuteClick} disabled={isExecuting || isPreviewing}
               className={`text-[11px] h-7 px-2.5 font-medium rounded-lg transition-all shrink-0 ${!danger && "bg-slate-900 text-white hover:bg-slate-800"}`}>
-              {isExecuting && <LoadingSpinner size="xs" variant="current" className="mr-1.5" />} {isExecuting ? `${progress}%` : "修复"}
+              {isExecuting && <LoadingSpinner size="xs" variant="current" className="mr-1.5" />} {isExecuting ? `${Math.round(progress)}%` : "修复"}
             </Button>
         </div>
         {renderSharedModals()}
@@ -114,7 +114,7 @@ export const MaintenanceTool = ({ issueId, title, description, danger, onSuccess
         {isExecuting && progress > 0 && (
           <div className="space-y-1.5 animate-in slide-in-from-top-2">
             <div className="flex justify-between text-[9px] font-black text-brand-navy/40 uppercase">
-              <span>处理进度</span><span>{progress}%</span>
+              <span>处理进度</span><span>{Math.round(progress)}%</span>
             </div>
             <Progress value={progress} className="h-1" />
           </div>

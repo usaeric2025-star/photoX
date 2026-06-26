@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTask, isTaskDrawerOpen } from '@/lib/store';
 import { Icon } from '@/components/ui/Icon';
+import { Progress } from '@/components/shared/Progress';
 
 export function TaskBadge() {
   const status = useTask(s => s.status);
@@ -21,9 +22,12 @@ export function TaskBadge() {
       <div className="relative flex items-center justify-center">
         <Icon name="refresh-cw" size={16} className="text-blue-400 animate-spin" />
       </div>
-      <span className="text-[11px] font-bold tracking-tight uppercase select-none text-slate-200">
-        上傳任務執行中 {progress}%
-      </span>
+      <div className="flex flex-col gap-0.5 w-24">
+        <span className="text-[10px] font-bold tracking-tight uppercase select-none text-slate-200">
+          上傳中
+        </span>
+        <Progress value={progress * 100} className="h-1 bg-slate-700" indicatorClassName="bg-blue-400" />
+      </div>
     </button>
   );
 }

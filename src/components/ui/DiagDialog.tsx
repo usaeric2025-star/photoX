@@ -6,13 +6,10 @@ import { logger } from '@/lib/logger';
 import { clearCacheAndReload } from '@/lib/recovery/clearCacheAndReload';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { api } from '@/lib/api';
+import { useSignal } from '@storve/react';
+import { isDiagnosticsOpen } from '@/lib/store';
 
 import { copyToClipboard } from '@/utils/clipboard';
-
-interface DiagDialogProps {
-  open: boolean;
-  onClose: () => void;
-}
 
 interface DiagnosticError {
   type: string;
@@ -23,7 +20,8 @@ interface DiagnosticError {
   timestamp: string;
 }
 
-export function DiagDialog({ open, onClose }: DiagDialogProps) {
+export function DiagDialog() {
+  const open = useSignal(isDiagnosticsOpen);
   const [networkStatus, setNetworkStatus] = useState<'checking' | 'connected' | 'failed'>('checking');
   const [latency, setLatency] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
@@ -130,11 +128,13 @@ export function DiagDialog({ open, onClose }: DiagDialogProps) {
     }
   };
 
+  if (!open) return null;
+
   return (
     <NativeDialog
       id="global-diagnostics-dialog"
       open={open}
-      onClose={onClose}
+      onClose={() => isDiagnosticsOpen.set(false)}
       title="系統除錯診斷與維護"
       size="md"
     >

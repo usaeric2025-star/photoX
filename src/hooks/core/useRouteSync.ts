@@ -4,6 +4,7 @@ import { useAppRoute } from '@/lib/router';
 import { Router, ALL_ROUTES } from '@/router';
 import { uiStore, useUIStore, UIStoreState, UIStoreInstance } from '@/store/uiStore';
 import { usePhotos } from '@/lib/query/hooks/usePhotos';
+import { Photo } from '@/types/photo';
 
 export function useRouteSync() {
   const route = useAppRoute();
@@ -57,9 +58,26 @@ export function useRouteSync() {
 
     // Lightbox
     const photoId = params.photoId as string;
-    const shouldBeOpen = !!(photoId && photos?.length > 0);
-    if (lightboxIsOpen !== shouldBeOpen) {
-      (uiStore as unknown as UIStoreInstance).setState({ lightboxIsOpen: shouldBeOpen });
+    const modal = params.modal as string;
+    
+    // Lightbox handling
+    const shouldBeLightboxOpen = !!(photoId && photos?.length > 0 && modal !== 'edit');
+    if (lightboxIsOpen !== shouldBeLightboxOpen) {
+      uiStore.setState({ lightboxIsOpen: shouldBeLightboxOpen });
+    }
+
+    // Edit modal handling
+    const shouldBeEditOpen = modal === 'edit';
+    if (uiStore.getState().isPhotoEditOpen !== shouldBeEditOpen) {
+      uiStore.setState({ isPhotoEditOpen: shouldBeEditOpen });
+    }
+    
+    // Set photo if edit is open
+    if (shouldBeEditOpen && photoId) {
+        const photo = photos.find(p => p.id === photoId) as Photo | undefined || null;
+        if (uiStore.getState().currentEditingPhoto?.id !== photo?.id) {
+            uiStore.setState({ currentEditingPhoto: photo });
+        }
     }
   }, [
     (route?.params as Record<string, string | string[] | undefined>)?.q, 
@@ -68,7 +86,9 @@ export function useRouteSync() {
     (route?.params as Record<string, string | string[] | undefined>)?.batch, 
     (route?.params as Record<string, string | string[] | undefined>)?.selected, 
     (route?.params as Record<string, string | string[] | undefined>)?.photoId,
-    photos?.length
+    (route?.params as Record<string, string | string[] | undefined>)?.modal,
+    photos?.length,
+    lightboxIsOpen
   ]);
 
   // 2. Signal -> URL (Synchronization from Memory to URL)

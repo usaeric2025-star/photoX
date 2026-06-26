@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
+import { useConfirm } from '@/context/ConfirmContext';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { usePhotoDelete } from '@/hooks';
 import { BatchEditForm } from './BatchEditForm';
@@ -11,21 +12,27 @@ import { Button } from '@/components/ui/Button';
 import { type ProductFormData } from '@/types';
 
 function BatchDeleteButton({ selectedIds, onSuccess }: { selectedIds: string[], onSuccess: () => void }) {
-  const [isDeleteOpen, deleteDialog] = useDisclosure(false);
+  const confirm = useConfirm();
   
   // Re-define mutation here to use standard TanStack Query
   const deleteMutation = usePhotoDelete();
 
   const handleConfirm = async () => {
-    await deleteMutation.mutateAsync(selectedIds);
-    onSuccess();
-    deleteDialog.close();
+    if (await confirm({
+      title: "確認刪除",
+      description: `確認刪除這 ${selectedIds.length} 項嗎？`,
+      confirmText: "刪除",
+      variant: "destructive"
+    })) {
+      await deleteMutation.mutateAsync(selectedIds);
+      onSuccess();
+    }
   };
 
   return (
     <div className="relative">
       <Button 
-        onClick={() => deleteDialog.open()}
+        onClick={handleConfirm}
         loading={deleteMutation.isMutating}
         disabled={selectedIds.length === 0}
         variant="destructive"
@@ -34,15 +41,6 @@ function BatchDeleteButton({ selectedIds, onSuccess }: { selectedIds: string[], 
       >
         {deleteMutation.isMutating ? '刪除中...' : `刪除 (${selectedIds.length})`}
       </Button>
-      <ConfirmDialog
-          open={isDeleteOpen}
-          onOpenChange={deleteDialog.toggle}
-          title="確認刪除"
-          description={`確認刪除這 ${selectedIds.length} 項嗎？`}
-          confirmText="刪除"
-          variant="destructive"
-          onConfirm={handleConfirm}
-      />
     </div>
   );
 }

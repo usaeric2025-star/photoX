@@ -3,10 +3,9 @@ import { NativeDialog } from "../ui/NativeDialog";
 import { ProductGroup, Dimension } from '../../types';
 import { useAdminMode } from '../../hooks';
 import { Input } from "../shared/Input";
-import { ConfirmDialog } from "../ui/ConfirmDialog";
+import { useConfirm } from '@/context/ConfirmContext';
 import { Button } from "../shared/Button";
 import { Icon } from '@/components/ui/Icon';
-import { useDisclosure } from "../../hooks/core/useDisclosure";
 
 interface GroupSettingsDialogProps {
   showGroupSettings: boolean;
@@ -28,13 +27,23 @@ interface GroupSettingsHeaderProps {
 }
 
 function GroupSettingsHeader({ groupData, activeGroupId, onUngroup, setShowGroupSettings }: GroupSettingsHeaderProps) {
-  const [isOpen, { open, close }] = useDisclosure();
+  const confirm = useConfirm();
   return (
     <div className="flex items-center justify-between p-4 border-b">
       <h3 className="text-lg font-bold">合組設定</h3>
       <div className="flex gap-2 items-center">
         {onUngroup && activeGroupId && (
-          <Button variant="outline" className="text-red-500 hover:text-red-600 hover:bg-red-50" size="sm" onClick={open}>
+          <Button variant="outline" className="text-red-500 hover:text-red-600 hover:bg-red-50" size="sm" onClick={async () => {
+            if (await confirm({
+              title: "確認解散合組？",
+              description: "解散後，其中的照片將成為獨立照片。此操作無法復原。",
+              confirmText: "解散",
+              variant: "destructive"
+            })) {
+              await onUngroup(activeGroupId);
+              setShowGroupSettings(false);
+            }
+          }}>
             <Icon name="trash-2" className="w-4 h-4 mr-1" />
             解散合組
           </Button>
@@ -43,20 +52,6 @@ function GroupSettingsHeader({ groupData, activeGroupId, onUngroup, setShowGroup
           <Icon name="x" className="w-5 h-5 text-slate-500" />
         </button>
       </div>
-      <ConfirmDialog
-        open={isOpen}
-        onOpenChange={(val) => !val && close()}
-        title="確認解散合組？"
-        description="解散後，其中的照片將成為獨立照片。此操作無法復原。"
-        onConfirm={async () => {
-          if (onUngroup && activeGroupId) {
-            await onUngroup(activeGroupId);
-            setShowGroupSettings(false);
-          }
-        }}
-        confirmText="解散"
-        variant="destructive"
-      />
     </div>
   );
 }

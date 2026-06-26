@@ -100,10 +100,14 @@ export function LightboxInfoCard({
             )}
             {original && (
               <div className="grid grid-cols-2 gap-4 mt-4 border-t border-white/5 pt-3">
-                {original.dimensions && (
+                {original.dimensions && original.dimensions.length > 0 && (
                   <div>
                     <span className="block text-[10px] uppercase font-bold text-white/40 tracking-wider mb-1">Dimensions</span>
-                    <span className="text-sm text-white/80">{original.dimensions}</span>
+                    <span className="text-sm text-white/80">
+                      {original.dimensions.map((d, i) => (
+                        <div key={i}>{d.label ? `${d.label}: ` : ''}{d.length}x{d.width}x{d.height} {d.unit}</div>
+                      ))}
+                    </span>
                   </div>
                 )}
                 {original.model_number && (

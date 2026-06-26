@@ -2,6 +2,7 @@ import React from 'react';
 import { useSignal, storeAccessor, tasksSignal, isTaskDrawerOpen } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { Icon } from '@/components/ui/Icon';
+import { Progress } from '@/components/shared/Progress';
 import { Task } from '../types';
 
 function TaskItem({ task }: { task: Task }) {
@@ -81,15 +82,7 @@ function TaskItem({ task }: { task: Task }) {
             <span>PROGRESS</span>
             <span className="tabular-nums text-slate-600">{progressPercent}%</span>
           </div>
-          <div className="w-full bg-slate-100 dark:bg-slate-800/50 rounded-full h-1.5 overflow-hidden">
-            <div 
-              className={cn(
-                "h-1.5 rounded-full transition-all duration-500",
-                task.state.status === 'processing' ? 'bg-blue-500' : 'bg-slate-300'
-              )} 
-              style={{ width: `${progressPercent}%` }} 
-            />
-          </div>
+          <Progress value={progressPercent} className="h-1.5" />
         </div>
       )}
     </div>
@@ -154,7 +147,7 @@ export function TaskDrawer() {
                 type="button"
                 onClick={() => {
                   const state = storeAccessor.task;
-                  const remaining = Array.from(state.tasks.values()).filter((t: Task) => t.state?.status === 'queued' || t.state?.status === 'processing');
+                  const remaining = (Array.from(state.tasks.values()) as Task[]).filter(t => t.state?.status === 'queued' || t.state?.status === 'processing');
                   state.clearAll();
                   remaining.forEach(t => state.enqueue(t));
                 }}

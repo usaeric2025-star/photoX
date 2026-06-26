@@ -68,7 +68,7 @@ export function useGlobalTasks() {
       source: 'session', 
       title: zt.label,
       status,
-      progress: (zt.state as { progress?: number }).progress || 0,
+      progress: ((zt.state as { progress?: number }).progress || 0) * 100,
       message: (zt.state as { message?: string }).message || (zt.state.status === 'failed' ? zt.state.error : ''),
       createdAt: zt.createdAt,
     });

@@ -3,8 +3,7 @@ import React, { useState, useRef, useDeferredValue } from "react";
 import { NativeDialog } from "@/components/ui/NativeDialog";
 import { Icon } from '@/components/ui/Icon';
 import { cn } from "@/lib/utils";
-import { useDisclosure } from '@/hooks/core/useDisclosure';
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useConfirm } from '@/context/ConfirmContext';
 import {
   usePhotoFilter,
   useSettings,
@@ -45,7 +44,7 @@ export function TagEditor({
   
   const [activeActionTag, setActiveActionTag] = useState<Tag | null>(null);
   const portalOpenedAt = useRef<number>(0);
-  const [isDeleteOpen, deleteDialog] = useDisclosure(false);
+  const confirm = useConfirm();
 
   // 0. Use server-side search for the keyword
   const { data: searchResults = [] } = useTagSearch(deferredSearchTerm);
@@ -206,8 +205,20 @@ export function TagEditor({
               <button
                 type="button"
                 className="w-full flex items-center justify-center gap-3 text-red-600 bg-red-50/50 backdrop-blur-sm border border-red-100/50 font-bold py-4 rounded-2xl hover:bg-red-100 transition-all cursor-pointer shadow-sm shadow-red-500/5"
-                onClick={() => {
-                  deleteDialog.open();
+                onClick={async () => {
+                  if (!activeActionTag) return;
+                  if (await confirm({
+                    title: `彻底删除标签 / Permanent Delete: #${activeActionTag.name}`,
+                    description: "无法撤销且会从所有照片中移除 / This will be permanently removed from all photos.",
+                    confirmText: "删除",
+                    variant: "destructive"
+                  })) {
+                    try {
+                      onDeleteTag(String(activeActionTag.id));
+                    } catch (e) {
+                      throw ErrorFactory.wrap(e as Error, "彻底删除标签", activeActionTag.name);
+                    }
+                  }
                   setActiveActionTag(null);
                 }}
               >
@@ -223,24 +234,6 @@ export function TagEditor({
             </button>
           </div>
       </NativeDialog>
-
-      {activeActionTag && (
-        <ConfirmDialog
-          open={isDeleteOpen}
-          onOpenChange={deleteDialog.toggle}
-          title={`彻底删除标签 / Permanent Delete: #${activeActionTag.name}`}
-          description="无法撤销且会从所有照片中移除 / This will be permanently removed from all photos."
-          confirmText="删除"
-          variant="destructive"
-              onConfirm={() => {
-            try {
-              onDeleteTag(String(activeActionTag.id));
-            } catch (e) {
-              throw ErrorFactory.wrap(e, "彻底删除标签", activeActionTag.name);
-            }
-          }}
-        />
-      )}
     </div>
   );
 }

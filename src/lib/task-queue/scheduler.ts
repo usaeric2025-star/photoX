@@ -112,7 +112,7 @@ export class TaskScheduler {
       const currentStore = storeAccessor.task;
       currentStore.completeTask(task.id, result);
       currentStore.setGlobalStatus('completed');
-      currentStore.setGlobalProgress(100);
+      currentStore.setGlobalProgress(1);
       await taskTable.updateStatus(task.id, 'completed', result);
       
       showToast.success(`任務完成: ${task.label}`);

@@ -1,13 +1,9 @@
 import { createStore } from '@storve/core';
 import { useStore } from '@storve/react';
-import { signal } from '@storve/core/signals';
 import { STORAGE_KEYS, storage } from '@/lib/storage';
 import { ProductFormData } from '@/types';
 import type { LightboxSlide } from '@/lib/lightbox/types';
 import { Photo } from '@/types/photo';
-
-export const isPhotoEditOpen = signal(false);
-export const currentEditingPhoto = signal<Photo | null>(null);
 
 export interface UIStoreState {
   appLang: 'zh' | 'en' | 'ms';
@@ -64,10 +60,7 @@ export interface UIStoreState {
 }
 
 // Internal store reference with setState exposed to avoid repeating casts
-export type UIStoreInstance = ReturnType<typeof createStore<UIStoreState>> & { 
-  state: UIStoreState;
-  setState: (updates: Partial<UIStoreState> | ((state: UIStoreState) => Partial<UIStoreState>)) => void 
-};
+export type UIStoreInstance = ReturnType<typeof createStore<UIStoreState>>;
 
 const defaultForm: ProductFormData = {
   name: { zh: '', en: '', ms: '' },
@@ -121,7 +114,7 @@ export const uiStore = createStore<UIStoreState>({
   lightboxSlides: [],
   lightboxCurrentIndex: 0,
 
-  updateForm: (updates) => (uiStore as unknown as UIStoreInstance).setState((state: UIStoreState) => {
+  updateForm: (updates) => uiStore.setState((state: UIStoreState) => {
     const nextFormState = typeof updates === 'function' ? updates(state.formState) : { ...state.formState, ...updates };
     storage.set(STORAGE_KEYS.EDIT_FORM_DRAFT, nextFormState);
     return { formState: nextFormState };
@@ -129,12 +122,12 @@ export const uiStore = createStore<UIStoreState>({
 
   resetForm: () => {
     storage.remove(STORAGE_KEYS.EDIT_FORM_DRAFT);
-    (uiStore as unknown as UIStoreInstance).setState({ formState: defaultForm });
+    uiStore.setState({ formState: defaultForm });
   },
 
-  setInitialDataLoading: (loading) => (uiStore as unknown as UIStoreInstance).setState({ isInitialDataLoading: loading }),
+  setInitialDataLoading: (loading) => uiStore.setState({ isInitialDataLoading: loading }),
 
-  toggleSelected: (id) => (uiStore as unknown as UIStoreInstance).setState((state: UIStoreState) => {
+  toggleSelected: (id) => uiStore.setState((state: UIStoreState) => {
     const newSelected = new Set(state.selectedIds);
     if (newSelected.has(id)) newSelected.delete(id);
     else newSelected.add(id);
@@ -145,29 +138,29 @@ export const uiStore = createStore<UIStoreState>({
     };
   }),
 
-  addProcessingIds: (ids) => (uiStore as unknown as UIStoreInstance).setState((state: UIStoreState) => ({ 
+  addProcessingIds: (ids) => uiStore.setState((state: UIStoreState) => ({ 
     processingIds: Array.from(new Set([...state.processingIds, ...ids])) 
   })),
 
-  removeProcessingIds: (ids) => (uiStore as unknown as UIStoreInstance).setState((state: UIStoreState) => ({ 
+  removeProcessingIds: (ids) => uiStore.setState((state: UIStoreState) => ({ 
     processingIds: state.processingIds.filter((id: string) => !ids.includes(id)) 
   })),
 
-  clearProcessing: (id) => (uiStore as unknown as UIStoreInstance).setState((state: UIStoreState) => ({
+  clearProcessing: (id) => uiStore.setState((state: UIStoreState) => ({
     processingIds: state.processingIds.filter((pid: string) => pid !== id)
   })),
 
-  updateSelectedIds: (ids) => (uiStore as unknown as UIStoreInstance).setState({ selectedIds: ids }),
+  updateSelectedIds: (ids) => uiStore.setState({ selectedIds: ids }),
 
-  incrementDialogCount: () => (uiStore as unknown as UIStoreInstance).setState((state: UIStoreState) => ({ activeDialogCount: state.activeDialogCount + 1 })),
+  incrementDialogCount: () => uiStore.setState((state: UIStoreState) => ({ activeDialogCount: state.activeDialogCount + 1 })),
   
-  decrementDialogCount: () => (uiStore as unknown as UIStoreInstance).setState((state: UIStoreState) => ({ activeDialogCount: Math.max(0, state.activeDialogCount - 1) })),
+  decrementDialogCount: () => uiStore.setState((state: UIStoreState) => ({ activeDialogCount: Math.max(0, state.activeDialogCount - 1) })),
   
-  setFatalError: (error) => (uiStore as unknown as UIStoreInstance).setState({ fatalError: error }),
+  setFatalError: (error) => uiStore.setState({ fatalError: error }),
   
-  setAvoidingSelection: (isAvoiding) => (uiStore as unknown as UIStoreInstance).setState({ isAvoidingSelection: isAvoiding }),
+  setAvoidingSelection: (isAvoiding) => uiStore.setState({ isAvoidingSelection: isAvoiding }),
 
-  resetUI: () => (uiStore as unknown as UIStoreInstance).setState({
+  resetUI: () => uiStore.setState({
       selectedIds: [],
       processingIds: [],
       isMultiSelect: false,
@@ -177,20 +170,20 @@ export const uiStore = createStore<UIStoreState>({
       lightboxIsOpen: false, lightboxSlides: [], lightboxCurrentIndex: 0
   }),
 
-  openLightbox: (slides, index = 0) => (uiStore as unknown as UIStoreInstance).setState({
+  openLightbox: (slides, index = 0) => uiStore.setState({
     lightboxIsOpen: true, lightboxSlides: slides, lightboxCurrentIndex: index
   }),
 
-  closeLightbox: () => (uiStore as unknown as UIStoreInstance).setState({
+  closeLightbox: () => uiStore.setState({
     lightboxIsOpen: false
   }),
 
-  setLightboxIndex: (index) => (uiStore as unknown as UIStoreInstance).setState({
+  setLightboxIndex: (index) => uiStore.setState({
     lightboxCurrentIndex: index
   }),
 
   patch: (updates: Partial<UIStoreState> | ((state: UIStoreState) => Partial<UIStoreState>)) => {
-    (uiStore as unknown as UIStoreInstance).setState((state: UIStoreState) => {
+    uiStore.setState((state: UIStoreState) => {
       const nextUpdates = typeof updates === 'function' ? updates(state) : updates;
       const nextState = { ...state, ...nextUpdates };
 

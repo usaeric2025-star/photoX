@@ -21,11 +21,7 @@ export interface TaskStoreState {
   setGlobalProgress: (progress: number) => void;
 }
 
-// Internal store reference with setState exposed to avoid repeating casts
-export type TaskStoreInstance = ReturnType<typeof createStore<TaskStoreState>> & { 
-  state: TaskStoreState;
-  setState: (updates: Partial<TaskStoreState> | ((state: TaskStoreState) => Partial<TaskStoreState>) | TaskStoreState) => void 
-};
+export type TaskStoreInstance = ReturnType<typeof createStore<TaskStoreState>>;
 
 export const taskStore = createStore<TaskStoreState>({
   tasks: new Map(),
@@ -33,17 +29,17 @@ export const taskStore = createStore<TaskStoreState>({
   status: 'idle',
   progress: 0,
 
-  setAiStatus: (aiStatus) => (taskStore as unknown as TaskStoreInstance).setState({ aiStatus }),
-  setGlobalStatus: (status) => (taskStore as unknown as TaskStoreInstance).setState({ status }),
-  setGlobalProgress: (progress) => (taskStore as unknown as TaskStoreInstance).setState({ progress }),
+  setAiStatus: (aiStatus) => taskStore.setState({ aiStatus }),
+  setGlobalStatus: (status) => taskStore.setState({ status }),
+  setGlobalProgress: (progress) => taskStore.setState({ progress }),
 
-  enqueue: (task) => (taskStore as unknown as TaskStoreInstance).setState((state: TaskStoreState) => {
+  enqueue: (task) => taskStore.setState((state: TaskStoreState) => {
     const tasks = new Map(state.tasks);
     tasks.set(task.id, task);
     return { tasks };
   }),
 
-  startTask: (id) => (taskStore as unknown as TaskStoreInstance).setState((state: TaskStoreState) => {
+  startTask: (id) => taskStore.setState((state: TaskStoreState) => {
     const tasks = new Map(state.tasks);
     const task = tasks.get(id);
     if (task) {
@@ -52,7 +48,7 @@ export const taskStore = createStore<TaskStoreState>({
     return { tasks };
   }),
 
-  updateProgress: (id, progress, message) => (taskStore as unknown as TaskStoreInstance).setState((state: TaskStoreState) => {
+  updateProgress: (id, progress, message) => taskStore.setState((state: TaskStoreState) => {
     const tasks = new Map(state.tasks);
     const task = tasks.get(id);
     if (task && task.state?.status === 'processing') {
@@ -68,7 +64,7 @@ export const taskStore = createStore<TaskStoreState>({
     return { tasks };
   }),
 
-  failTask: (id, error, retryable) => (taskStore as unknown as TaskStoreInstance).setState((state: TaskStoreState) => {
+  failTask: (id, error, retryable) => taskStore.setState((state: TaskStoreState) => {
     const tasks = new Map(state.tasks);
     const task = tasks.get(id);
     if (task) {
@@ -77,7 +73,7 @@ export const taskStore = createStore<TaskStoreState>({
     return { tasks };
   }),
 
-  completeTask: (id, result) => (taskStore as unknown as TaskStoreInstance).setState((state: TaskStoreState) => {
+  completeTask: (id, result) => taskStore.setState((state: TaskStoreState) => {
     const tasks = new Map(state.tasks);
     const task = tasks.get(id);
     if (task) {
@@ -86,7 +82,7 @@ export const taskStore = createStore<TaskStoreState>({
     return { tasks };
   }),
 
-  cancelTask: (id) => (taskStore as unknown as TaskStoreInstance).setState((state: TaskStoreState) => {
+  cancelTask: (id) => taskStore.setState((state: TaskStoreState) => {
     const tasks = new Map(state.tasks);
     const task = tasks.get(id);
     if (task) {
@@ -95,13 +91,13 @@ export const taskStore = createStore<TaskStoreState>({
     return { tasks };
   }),
 
-  restoreFromSupabase: (tasks) => (taskStore as unknown as TaskStoreInstance).setState(() => {
+  restoreFromSupabase: (tasks) => taskStore.setState(() => {
     const map = new Map();
     tasks.forEach(t => map.set(t.id, t));
     return { tasks: map };
   }),
 
-  clearAll: () => (taskStore as unknown as TaskStoreInstance).setState({ tasks: new Map() }),
+  clearAll: () => taskStore.setState({ tasks: new Map() }),
 });
 
 export const tasksSignal = signal(taskStore, 'tasks');

@@ -73,21 +73,9 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   const saveSettings = async (s: Partial<AppSettings>) => { await updateSettings(s); };
 
   const {
-      tagToDelete,
-      categoryToDelete,
-      manufacturerToDelete,
-      isTagDeleteOpen,
-      tagDeleteDialog,
-      isCategoryDeleteOpen,
-      categoryDeleteDialog,
-      isManufacturerDeleteOpen,
-      manufacturerDeleteDialog,
       deleteTag,
       deleteCategory,
       deleteManufacturer,
-      deleteTagRaw,
-      deleteCategoryRaw,
-      deleteManufacturerRaw,
       updateTag, updateCategory, addCategory, 
       addManufacturer, updateManufacturer, addTag
   } = useSettingsManagement();
@@ -234,33 +222,6 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
           )}
         </div>
       </div>
-      <ConfirmDialog
-        open={isTagDeleteOpen}
-        onOpenChange={tagDeleteDialog.toggle}
-        title={t.confirmDeleteTagTitle}
-        description={t.confirmDeleteTagDesc}
-        confirmText={t.deleteBtn}
-        variant="destructive"
-        onConfirm={async () => { if (tagToDelete) await deleteTagRaw(tagToDelete); }}
-      />
-      <ConfirmDialog
-        open={isCategoryDeleteOpen}
-        onOpenChange={categoryDeleteDialog.toggle}
-        title={t.confirmDeleteCatTitle}
-        description={t.confirmDeleteCatDesc}
-        confirmText={t.deleteBtn}
-        variant="destructive"
-        onConfirm={async () => { if (categoryToDelete) await deleteCategoryRaw(categoryToDelete); }}
-      />
-      <ConfirmDialog
-        open={isManufacturerDeleteOpen}
-        onOpenChange={manufacturerDeleteDialog.toggle}
-        title={t.confirmDeleteMfrTitle}
-        description={t.confirmDeleteMfrTitle}
-        confirmText={t.deleteBtn}
-        variant="destructive"
-        onConfirm={async () => { if (manufacturerToDelete) await deleteManufacturerRaw(manufacturerToDelete); }}
-      />
     </div>
   );
 };

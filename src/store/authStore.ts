@@ -17,19 +17,15 @@ export interface AuthState {
   signOut: () => Promise<void>;
 }
 
-// Internal store reference with setState exposed to avoid repeating casts
-export type AuthStoreInstance = ReturnType<typeof createStore<AuthState>> & { 
-  state: AuthState;
-  setState: (updates: Partial<AuthState> | ((state: AuthState) => Partial<AuthState>)) => void 
-};
+export type AuthStoreInstance = ReturnType<typeof createStore<AuthState>>;
 
 export const authStore = createStore<AuthState>({
   user: null,
   isLoading: true,
   setUser: (user) => {
-    (authStore as unknown as AuthStoreInstance).setState({ user, isLoading: false });
+    authStore.setState({ user, isLoading: false });
   },
-  setLoading: (loading) => (authStore as unknown as AuthStoreInstance).setState({ isLoading: loading }),
+  setLoading: (loading) => authStore.setState({ isLoading: loading }),
   
   init: async () => {
     await safeAsync(async () => {
@@ -62,13 +58,13 @@ export const authStore = createStore<AuthState>({
           avatar_url: (u.user_metadata?.avatar_url as string) || null,
           email_verified: !!u.email_confirmed_at,
         };
-        (authStore as unknown as AuthStoreInstance).setState({ user: mapped, isLoading: false });
+        authStore.setState({ user: mapped, isLoading: false });
       } else {
-        (authStore as unknown as AuthStoreInstance).setState({ user: null, isLoading: false });
+        authStore.setState({ user: null, isLoading: false });
       }
     }, { 
         context: '身份验证初始化', 
-        onFinally: () => (authStore as unknown as AuthStoreInstance).setState({ isLoading: false }) 
+        onFinally: () => authStore.setState({ isLoading: false }) 
     });
   },
   
@@ -84,7 +80,7 @@ export const authStore = createStore<AuthState>({
   signOut: async () => {
     await safeAsync(async () => {
       await supabase.auth.signOut();
-      (authStore as unknown as AuthStoreInstance).setState({ user: null });
+      authStore.setState({ user: null });
       if (typeof window !== 'undefined') {
         storage.remove('ais_mock_auth_passcode');
         window.location.reload();
@@ -119,9 +115,9 @@ export const initAuthListener = () => {
         avatar_url: (u.user_metadata?.avatar_url as string) || null,
         email_verified: !!u.email_confirmed_at,
       };
-      (authStore as AuthStoreInstance).setState({ user: mapped, isLoading: false });
+      authStore.setState({ user: mapped, isLoading: false });
     } else {
-      (authStore as AuthStoreInstance).setState({ user: null, isLoading: false });
+      authStore.setState({ user: null, isLoading: false });
     }
   });
   

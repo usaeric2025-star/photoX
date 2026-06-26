@@ -3,13 +3,13 @@ import { Icon } from '@/components/ui/Icon';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useClickOutside } from '@/hooks/core/useClickOutside';
 import { PromptDialog } from "@/components/ui/PromptDialog";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useLongPress } from "@/hooks/core/useLongPress";
 import { Category } from '../../types';
 import { useUI } from '@/lib/store';
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
 import * as v from 'valibot';
 import { FormProvider } from '@/lib/form/useFormField';
+import { useConfirm } from '@/context/ConfirmContext';
 
 interface CategoriesSectionProps {
   categories: Category[];
@@ -31,7 +31,7 @@ function CategoryItem({
 }) {
   const [activeMenuId, setActiveMenuId] = useState<string | number | null>(null);
   const [isEditOpen, editDialog] = useDisclosure(false);
-  const [isDeleteOpen, deleteDialog] = useDisclosure(false);
+  const confirm = useConfirm();
   const appLang = useUI((s) => s.appLang);
 
   const menuRef = useClickOutside<HTMLDivElement>(() => {
@@ -74,9 +74,16 @@ function CategoryItem({
               <Icon name="pencil" size={12} /> 编辑名称
             </button>
             <button
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.stopPropagation();
-                deleteDialog.open();
+                if (await confirm({
+                  title: "确认删除",
+                  description: `确定要删除「${displayName}」吗？此操作不可恢复。`,
+                  confirmText: "删除",
+                  variant: "destructive"
+                })) {
+                  onDelete(cat.id);
+                }
                 setActiveMenuId(null);
               }}
               className="px-3 py-2 text-red-400 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2"
@@ -99,16 +106,6 @@ function CategoryItem({
             onUpdate({ ...cat, name: name, nameZh: name, nameEn: name, nameMs: name });
           }
         }}
-      />
-      
-      <ConfirmDialog
-        open={isDeleteOpen}
-        onOpenChange={deleteDialog.toggle}
-        title="确认删除"
-        description={`确定要删除「${displayName}」吗？此操作不可恢复。`}
-        confirmText="删除"
-        variant="destructive"
-        onConfirm={() => onDelete(cat.id)}
       />
     </div>
   );

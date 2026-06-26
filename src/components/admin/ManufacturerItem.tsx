@@ -2,10 +2,10 @@ import React, { useState, useRef } from "react";
 import { Icon } from '@/components/ui/Icon';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useClickOutside } from '@/hooks/core/useClickOutside';
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { PromptDialog } from "@/components/ui/PromptDialog";
 import { useLongPress } from "@/hooks/core/useLongPress";
 import { normalizeManufacturerName } from "@/lib/utils";
+import { useConfirm } from '@/context/ConfirmContext';
 
 import { Manufacturer } from "../../types";
 
@@ -23,7 +23,7 @@ export const ManufacturerItem = ({
   onDelete,
 }: ManufacturerProps) => {
   const [isEditOpen, editDialog] = useDisclosure(false);
-  const [isDeleteOpen, deleteDialog] = useDisclosure(false);
+  const confirm = useConfirm();
 
   return (
     <div
@@ -58,9 +58,16 @@ export const ManufacturerItem = ({
             <Icon name="pencil" size={12} /> 编辑名称
           </button>
           <button
-            onClick={(e) => {
+            onClick={async (e) => {
               e.stopPropagation();
-              deleteDialog.open();
+              if (await confirm({
+                title: "确认删除",
+                description: `确定要删除「${manufacturer.name}」吗？此操作不可恢复。`,
+                confirmText: "删除",
+                variant: "destructive"
+              })) {
+                onDelete(manufacturer.id);
+              }
             }}
             className="px-3 py-2 text-red-500 text-[10px] font-bold uppercase tracking-widest hover:bg-red-50 rounded-lg flex items-center gap-2 transition-colors"
           >
@@ -82,16 +89,6 @@ export const ManufacturerItem = ({
             onUpdate({ ...manufacturer, name: normalized });
           }
         }}
-      />
-      
-      <ConfirmDialog
-        open={isDeleteOpen}
-        onOpenChange={deleteDialog.toggle}
-        title="确认删除"
-        description={`确定要删除「${manufacturer.name}」吗？此操作不可恢复。`}
-        confirmText="删除"
-        variant="destructive"
-        onConfirm={() => onDelete(manufacturer.id)}
       />
     </div>
   );

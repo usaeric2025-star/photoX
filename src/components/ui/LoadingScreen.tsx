@@ -2,11 +2,11 @@ import { logger } from '@/lib/logger';
 import React, { useEffect, useRef, useState, lazy, Suspense } from 'react';
 const DiagDialog = lazy(() => import('./DiagDialog').then(m => ({ default: m.DiagDialog })));
 import { Icon } from '@/components/ui/Icon';
+import { isDiagnosticsOpen } from '@/lib/store';
 
 export const LoadingScreen = ({ error, onRetry }: { error?: Error | null, onRetry?: () => void }) => {
   logger.debug('🔄 [LoadingScreen] Rendered');
   const [showHelper, setShowHelper] = useState(false);
-  const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -93,7 +93,7 @@ export const LoadingScreen = ({ error, onRetry }: { error?: Error | null, onRetr
       {showHelper && (
         <div className="absolute inset-x-0 bottom-6 flex justify-center">
           <button
-            onClick={() => setDiagnosticsOpen(true)}
+            onClick={() => isDiagnosticsOpen.set(true)}
             className="px-4 py-2.5 border rounded-full text-slate-600 hover:text-slate-900 bg-white border-slate-200/80 text-xs font-semibold hover:bg-slate-50 flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-md"
           >
             <Icon name="terminal" size={12} className="text-amber-500" />
@@ -113,10 +113,7 @@ export const LoadingScreen = ({ error, onRetry }: { error?: Error | null, onRetr
         {content}
       </dialog>
       <Suspense fallback={null}>
-        <DiagDialog 
-          open={diagnosticsOpen} 
-          onClose={() => setDiagnosticsOpen(false)} 
-        />
+        <DiagDialog />
       </Suspense>
     </>
   );
