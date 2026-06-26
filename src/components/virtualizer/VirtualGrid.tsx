@@ -30,6 +30,8 @@ type VirtualGridProps = {
 
 type RowItem = { type: 'header' | 'row' | 'footer'; content?: React.ReactNode; rowIndex?: number };
 
+import { logger } from '@/lib/logger';
+
 /**
  * ROLE: Structural Adapter (Dumb Engine)
  * - DO NOT add layout-triggering useEffects here.
@@ -51,7 +53,7 @@ const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.Ref<Vir
 
   const [useFallback, setUseFallback] = React.useState(isTestEnv);
   
-  console.log('[VirtualGrid] Render', { count: props.count, lanes, isTestEnv, useFallback });
+  logger.debug('[VirtualGrid] Render', { count: props.count, lanes, isTestEnv, useFallback });
 
   const listItemsCacheRef = useRef<{ count: number; rowCount: number; hasHeader: boolean; hasFooter: boolean; dataVersion?: string | number; items: RowItem[] } | null>(null);
 

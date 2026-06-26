@@ -3,7 +3,7 @@ import { useAppMutation, useAppQuery, appQuery } from '@/lib/query';
 import { api } from '@/lib/api';
 import { queryKeys } from '@/lib/query/keys';
 import { useUI } from '@/lib/store';
-import { showToast as toast } from '@/lib/ui/toast';
+import { executeTask } from '@/lib/task-queue';
 
 /**
  * useDiagnostics
@@ -12,7 +12,7 @@ import { showToast as toast } from '@/lib/ui/toast';
 export function useDiagnostics() {
   const appLang = useUI(s => s.appLang);
 
-  const { data: auditResult, isValidating: isAuditing, mutate: runAuditQuery } = useAppQuery(
+  const { data: auditResult, isValidating: isAuditing } = useAppQuery(
     null, // manually triggered
     async () => {
       const res = await api.admin.maintenance.storage.audit.$get();
@@ -24,33 +24,37 @@ export function useDiagnostics() {
   );
 
   const runAudit = async () => {
-    toast.loading(appLang === 'zh' ? '正在進行存儲對賬審計...' : 'Storage Audit...');
-    try {
+    return executeTask({
+      label: appLang === 'zh' ? '存儲對賬審計' : 'Storage Audit',
+      type: 'repair',
+      execute: async (signal, onProgress) => {
+        onProgress(0, appLang === 'zh' ? '正在進行存儲對賬審計...' : 'Auditing storage...');
         const res = await api.admin.maintenance.storage.audit.$get();
         const data = await res.json() as { success: boolean; data?: unknown; error?: string };
         if (!data.success) throw new Error(data.error || '對賬審計失敗');
-        toast.success(appLang === 'zh' ? '審計完成' : 'Audit complete');
+        onProgress(1, appLang === 'zh' ? '審計完成' : 'Audit complete');
         return data.data;
-    } catch (e: unknown) {
-        toast.error(e instanceof Error ? e.message : String(e));
-    }
+      }
+    });
   };
 
   const { isMutating: isCleaning, trigger: deduplicate } = useAppMutation(
     {
       mutationFn: async () => {
-        toast.loading(appLang === 'zh' ? '正在執行數據去重...' : 'Deduplicating...');
-        const res = await api.admin.maintenance.storage.deduplicate.$post();
-        const json = await res.json() as { success: boolean; error?: string };
-        if (!json.success) throw new Error(json.error || '去重失敗');
-        return json;
-      },
-      onSuccess: () => {
-        appQuery.mutate(queryKeys.photos.all);
-        toast.success(appLang === 'zh' ? '去重完成' : 'Deduplication complete');
-      },
-      onError: (e: Error) => {
-        toast.error(e.message);
+        return executeTask({
+          label: appLang === 'zh' ? '數據去重' : 'Data Deduplication',
+          type: 'repair',
+          execute: async (signal, onProgress) => {
+            onProgress(0, appLang === 'zh' ? '正在執行數據去重...' : 'Deduplicating...');
+            const res = await api.admin.maintenance.storage.deduplicate.$post();
+            const json = await res.json() as { success: boolean; error?: string };
+            if (!json.success) throw new Error(json.error || '去重失敗');
+            
+            appQuery.mutate(queryKeys.photos.all);
+            onProgress(1, appLang === 'zh' ? '去重完成' : 'Deduplication complete');
+            return json;
+          }
+        });
       }
     }
   );
@@ -65,16 +69,18 @@ export function useDiagnostics() {
     isAuditing,
     auditResult: auditResult || null,
     runDailyCleanup: async () => {
-      toast.loading(appLang === 'zh' ? '正在執行全域維護清理...' : 'Running cleanup...');
-      try {
-        const res = await api.admin.maintenance['daily-cleanup'].$post();
-        const data = await res.json() as { success: boolean; data?: unknown; error?: string };
-        if (!data.success) throw new Error(data.error || 'Cleanup failed');
-        toast.success(appLang === 'zh' ? '清理完成' : 'Cleanup complete');
-        return data;
-      } catch (e: unknown) {
-        toast.error(e instanceof Error ? e.message : String(e));
-      }
+      return executeTask({
+        label: appLang === 'zh' ? '全域維護清理' : 'Global Maintenance Cleanup',
+        type: 'repair',
+        execute: async (signal, onProgress) => {
+          onProgress(0, appLang === 'zh' ? '正在執行全域維護清理...' : 'Running cleanup...');
+          const res = await api.admin.maintenance['daily-cleanup'].$post();
+          const data = await res.json() as { success: boolean; data?: unknown; error?: string };
+          if (!data.success) throw new Error(data.error || 'Cleanup failed');
+          onProgress(1, appLang === 'zh' ? '清理完成' : 'Cleanup complete');
+          return data;
+        }
+      });
     },
     report: { issues: [] }, // Compatibility layer
     refreshReport: () => {

@@ -38,6 +38,7 @@ function CardSkeleton() {
 }
 
 import { useUI, type UIStoreState, selectedSetSelector, useSignal } from '@/lib/store';
+import { logger } from '@/lib/logger';
 
 export function PhotoGridContent({ 
   photos, 
@@ -60,7 +61,7 @@ export function PhotoGridContent({
   
   const safePhotos = photos || [];
   
-  console.log('[PhotoGridContent] Render Start', { mode, photosCount: safePhotos.length, isPending, columns });
+  logger.debug('[PhotoGridContent] Render Start', { mode, photosCount: safePhotos.length, isPending, columns });
 
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = React.useState(() => typeof window !== 'undefined' ? window.innerWidth : 1200);

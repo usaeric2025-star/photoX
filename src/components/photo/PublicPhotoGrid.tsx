@@ -1,6 +1,7 @@
 import React from 'react';
 import { usePhotoGrid } from '@/hooks/photo/usePhotoGrid';
 import { PhotoGridContent } from './PhotoGridContent';
+import { logger } from '@/lib/logger';
 
 import type { PhotoListItem } from '@/types/api';
 
@@ -34,7 +35,7 @@ export function PublicPhotoGrid({
   onPhotoClick
 }: PublicPhotoGridProps) {
   
-  console.log('[PublicPhotoGrid] Render Start', { photosCount: photos?.length, isPending, isFetching, columns, dataVersion });
+  logger.debug('[PublicPhotoGrid] Render Start', { photosCount: photos?.length, isPending, isFetching, columns, dataVersion });
 
   return (
     <div className="h-full w-full relative">

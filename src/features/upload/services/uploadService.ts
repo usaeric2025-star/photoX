@@ -1,6 +1,7 @@
 import { uploadSinglePhoto } from './upload/uploadOrchestrator';
 import { Photo } from '@/types';
-import { extractErrorMessage } from '@/lib/error';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { logger } from '@/lib/logger';
 
 export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: (s: string) => void): Promise<{ id: string; is_duplicate?: boolean }> => {
   const result = await uploadSinglePhoto(userId, photo, onStatus);
@@ -19,7 +20,8 @@ export const savePhotosToCloudBatch = async (
       const result = await uploadSinglePhoto(userId, photo);
       successPhotos.push({ ...photo, id: result.id });
     } catch (e) {
-      console.error('Failed to upload photo in batch', e);
+      logger.error('Failed to upload photo in batch', e);
+      ErrorFactory.capture(e);
     }
     count++;
     onProgress?.(count);

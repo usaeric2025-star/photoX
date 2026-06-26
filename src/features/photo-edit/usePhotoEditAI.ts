@@ -1,7 +1,6 @@
 import { logger } from '@/lib/logger';
 import { useCallback } from 'react';
 import { usePhotoEditSessionContext } from "@/hooks/photo/usePhotoEditSessionContext";
-import { showToast } from '@/lib/ui/toast';
 import { ErrorFactory } from '@/lib/error';
 import { appQuery } from '@/lib/query';
 import { executeTask } from '@/lib/task-queue';

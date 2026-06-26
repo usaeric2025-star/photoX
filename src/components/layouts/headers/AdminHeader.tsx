@@ -21,7 +21,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
   const handleBatchAiIdentifyTrigger = () => batchAiIdentifyRaw([]); // Passing empty allPhotos or we need to fix the contract
   const { user, signOut } = useAuth();
   const { settings } = useSettings();
-  const { role } = usePermission();
+  const { role, isAdmin, isStaff } = usePermission();
   const { navigate } = useAppRouter();
 
   const lang = useUI((s) => s.appLang);
@@ -61,7 +61,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
     navigate.home();
   };
 
-  const currentRole = (role === 'admin' || role === 'staff' || role === 'public') ? role : 'public';
+  const currentRole = isStaff ? role : 'public';
 
   const theme = {
     admin: {
@@ -118,11 +118,11 @@ export function AdminHeader({ className }: AdminHeaderProps) {
               <span className={cn("text-sm sm:text-lg font-black tracking-tighter", theme.logoText)}>
                 PHOT<span>O</span>X
               </span>
-              {role === 'admin' ? (
+              {isAdmin ? (
                 <span className="text-[8px] sm:text-[9px] font-black bg-indigo-600 text-white px-1.5 py-0.5 rounded-full uppercase tracking-wider ml-1 select-none">
                   Admin
                 </span>
-              ) : role === 'staff' ? (
+              ) : isStaff ? (
                 <span className="text-[8px] sm:text-[9px] font-black bg-amber-600 text-white px-1.5 py-0.5 rounded-full uppercase tracking-wider ml-1 select-none">
                   Staff
                 </span>
@@ -205,7 +205,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
             }
           >
             <div className="flex flex-col gap-1 w-full min-w-[200px]">
-              {role === 'admin' || role === 'staff' ? (
+              {isStaff ? (
                 <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 select-none">
                   <div className="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-white overflow-hidden text-[8px]">
                     {user?.photo_url && user.photo_url.trim() !== '' ? (
@@ -226,7 +226,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
 
               <div className="px-2 py-1.5 flex flex-col gap-1 w-full">
                 <span className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 select-none">{t.systemLabel}</span>
-                {(role === 'admin' || role === 'staff') && (
+                {isStaff && (
                   <>
                     <button
                       type="button"
@@ -259,7 +259,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
                 </div>
               </div>
 
-              {(role === 'admin' || role === 'staff') && (
+              {isStaff && (
                 <>
                   <div className="h-px bg-slate-100 my-1 w-full" />
                   <button

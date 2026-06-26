@@ -5,7 +5,7 @@ const DiagDialog = lazy(() => import('./DiagDialog').then(m => ({ default: m.Dia
 import { Icon } from '@/components/ui/Icon';
 
 export const LoadingScreen = ({ error, onRetry }: { error?: Error | null, onRetry?: () => void }) => {
-  console.log('🔄 [LoadingScreen] Rendered');
+  logger.debug('🔄 [LoadingScreen] Rendered');
   const [showHelper, setShowHelper] = useState(false);
   const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
 

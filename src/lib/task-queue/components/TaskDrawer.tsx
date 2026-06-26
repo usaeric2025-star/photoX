@@ -1,5 +1,4 @@
 import React from 'react';
-import { createPortal } from 'react-dom';
 import { useSignal, storeAccessor, tasksSignal, isTaskDrawerOpen } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { Icon } from '@/components/ui/Icon';

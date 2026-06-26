@@ -20,10 +20,10 @@ interface PublicHeaderProps {
 export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }: PublicHeaderProps) {
   const { user, isLoading, signOut } = useAuth();
   const { data: settings } = usePublicSettings();
-  const { role } = usePermission();
+  const { role, isStaff, isAdmin: isGlobalAdmin } = usePermission();
   const patch = useUI((s: UIStoreState) => s.patch);
   const { navigate, route } = useAppRouter();
-  const isAdmin = route?.name === 'admin' || route?.name === 'adminGroup';
+  const isAdminRoute = route?.name === 'admin' || route?.name === 'adminGroup';
   const isGroupPage = route?.name === 'publicGroup' || route?.name === 'adminGroup';
 
   const lang = useUI((s: UIStoreState) => s.appLang);
@@ -44,14 +44,14 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
   const logoUrl = settings?.logo_url || cachedSettings?.logo_url || null;
 
   const handleAuthAction = () => {
-    if (isAdmin) {
+    if (isAdminRoute) {
       navigate.home();
     } else {
       navigate.admin();
     }
   };
 
-  const currentRole = isAdmin ? ((role === 'admin' || role === 'staff') ? role : 'public') : 'public';
+  const currentRole = isAdminRoute ? (isStaff ? role : 'public') : 'public';
 
   const theme = {
     admin: {
@@ -105,11 +105,11 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
             <span className={cn("text-base sm:text-lg font-bold tracking-tight", theme.logoText)}>
               PhotoX
             </span>
-            {role === 'admin' ? (
+            {isGlobalAdmin ? (
               <span className="text-[10px] font-bold bg-indigo-600/10 text-indigo-400 px-2 py-0.5 rounded-full uppercase tracking-wide ml-1 select-none">
                 Admin
               </span>
-            ) : role === 'staff' ? (
+            ) : isStaff ? (
               <span className="text-[10px] font-bold bg-amber-600/10 text-amber-600 px-2 py-0.5 rounded-full uppercase tracking-wide ml-1 select-none">
                 Staff
               </span>
@@ -142,11 +142,11 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
         )}
 
         {/* 3. 切换至管理后台/登录按钮 (Apple Style) - 僅員工及未登錄遊客可見 */}
-        {(!user || role === 'admin' || role === 'staff') && (
+        {(!user || isStaff) && (
           <button
             onClick={handleAuthAction}
             className={cn("w-9 h-9 sm:w-10 sm:h-10", theme.button)}
-            title={role === 'admin' || role === 'staff' ? (isAdmin ? t.viewModePublic : t.viewModeAdmin) : t.adminPanel}
+            title={isStaff ? (isAdminRoute ? t.viewModePublic : t.viewModeAdmin) : t.adminPanel}
           >
             <Icon name="layout-dashboard" size={16} className="sm:size-[18px]" />
           </button>
@@ -162,7 +162,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
           }
         >
           <div className="flex flex-col gap-1 w-full min-w-[200px]">
-            {role === 'admin' || role === 'staff' ? (
+            {isStaff ? (
               <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 select-none">
                 <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center text-white overflow-hidden text-[8px]">
                   {user?.photo_url && user.photo_url.trim() !== '' ? (
@@ -211,9 +211,9 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
 
             <div className="px-2 py-1.5 flex flex-col gap-1 w-full">
               <span className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 select-none">{t.systemLabel}</span>
-              {role === 'admin' || role === 'staff' ? (
+              {isStaff ? (
                 <>
-                  {!isAdmin && (
+                  {!isAdminRoute && (
                     <button
                       type="button"
                       onClick={() => navigate.admin()}
@@ -239,7 +239,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
               </div>
             </div>
 
-            {(role === 'admin' || role === 'staff') && (
+            {isStaff && (
               <>
                 <div className="h-px bg-slate-100 my-1 w-full" />
                 <button

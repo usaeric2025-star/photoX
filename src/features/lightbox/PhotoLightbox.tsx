@@ -7,9 +7,11 @@ import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
 import { usePermission, usePublicSettings } from '@/hooks';
 import { LightboxInfoCard } from './components/LightboxInfoCard';
 import { showToast } from '@/lib/ui/toast';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { Icon } from '@/components/ui/Icon';
 import { Photo, AppSettings } from '@/types';
 import { LightboxSlide } from '@/lib/lightbox/types';
+import { logger } from '@/lib/logger';
 
 // ✅ Directly import from low-level to reduce conflicts
 import { LightboxStyled as LightboxStyledBase } from '@mshafiqyajid/react-lightbox/styled';
@@ -118,7 +120,7 @@ export function PhotoLightbox() {
     setLightboxIndex: s.setLightboxIndex
   }));
   
-  console.log('[PhotoLightbox] Rendering', { isOpen, slidesCount: slides.length, currentIndex });
+  logger.debug('[PhotoLightbox] Rendering', { isOpen, slidesCount: slides.length, currentIndex });
   
   const filters = useFilters();
   const route = useAppRoute();
@@ -225,7 +227,7 @@ export function PhotoLightbox() {
               await adminActions.deletePhoto.mutateAsync([currentSlide.id]);
               showToast.success('照片已删除');
             } catch (e) {
-              showToast.error('删除失败，请重试');
+              ErrorFactory.handleError(e, '删除照片');
             }
           }}
         />

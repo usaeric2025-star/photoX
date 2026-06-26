@@ -5,6 +5,7 @@ import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
 import { logger } from '@/lib/logger';
 import { clearCacheAndReload } from '@/lib/recovery/clearCacheAndReload';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { api } from '@/lib/api';
 
 import { copyToClipboard } from '@/utils/clipboard';
 
@@ -61,12 +62,8 @@ export function DiagDialog({ open, onClose }: DiagDialogProps) {
     setNetworkStatus('checking');
     const start = performance.now();
     try {
-      const controller = new AbortController();
-      const id = setTimeout(() => controller.abort(), 4000);
-      
       // 添加隨機參數防快取
-      const res = await fetch(`/api/health?t=${Date.now()}`, { signal: controller.signal });
-      clearTimeout(id);
+      const res = await api.health.$get({ query: { t: Date.now().toString() } });
       
       const end = performance.now();
       if (res.ok) {

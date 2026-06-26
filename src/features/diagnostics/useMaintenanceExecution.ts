@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ISSUE_ACTIONS, PreviewResult } from "@/features/diagnostics/issueActions";
 import { createTask } from '@/lib/task-queue';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 export function useMaintenanceExecution(issueId: string, title: string, onSuccess?: () => void) {
   const [preview, setPreview] = useState<PreviewResult | null>(null);
@@ -21,7 +22,7 @@ export function useMaintenanceExecution(issueId: string, title: string, onSucces
         setShowPreviewDialog(true);
       }
     } catch (e: unknown) {
-      console.error(e);
+      ErrorFactory.handleError(e, '預覽操作');
     } finally {
       setIsPreviewing(false);
     }
