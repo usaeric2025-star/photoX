@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { NativeDialog } from "@/components/ui/NativeDialog";
 import { AppErrorBoundary } from "@/components/layout/AppErrorBoundary";
-import { useUI } from '@/lib/store';
+import { isPhotoEditOpen, currentEditingPhoto, appLang as appLangSignal } from '@/lib/store';
+import { useSignal } from '@storve/react';
 import { usePhoto } from "@/hooks/photo/usePhoto";
-import { useFilters } from "@/hooks/useFilters";
 import { PhotoEditSessionProvider, usePhotoEditSessionContext } from "@/hooks/photo";
 import { PhotoEditTabs } from "./PhotoEditTabs";
 import { DialogHeader } from "./DialogHeader";
@@ -15,7 +15,7 @@ import { useAdminMaintenance } from "@/hooks";
 function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: boolean; handleClose: () => void; editPhotoId: string; }) {
   const adminActions = useAdminMaintenance();
   const { data: photo, isPending } = usePhoto(editPhotoId);
-  const appLang = useUI((s) => s.appLang);
+  const appLang = useSignal(appLangSignal);
 
   React.useEffect(() => {
     logger.debug('PhotoEditDialogInner rendered', { isOpen, editPhotoId, photo: !!photo });
@@ -100,43 +100,22 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
   );
 }
 
-
-interface PhotoEditDialogProps {
-  isOpen?: boolean;
-  onClose?: () => void;
-  editPhotoId?: string | null;
-}
-
-export function PhotoEditDialog({ isOpen: propIsOpen, onClose: propOnClose, editPhotoId: propEditPhotoId }: PhotoEditDialogProps) {
-  const { modal, photoId, setModal } = useFilters();
+export function PhotoEditDialog() {
+  const isOpen = useSignal(isPhotoEditOpen);
+  const photo = useSignal(currentEditingPhoto);
   
-  // Debug
-  React.useEffect(() => {
-    logger.info('[PhotoEditDialog] Filters changed:', { modal, photoId, propIsOpen, propEditPhotoId });
-  }, [modal, photoId, propIsOpen, propEditPhotoId]);
-
-  const urlEditPhotoId = modal === 'edit' ? photoId : null;
-
-  const editPhotoId = propEditPhotoId !== undefined ? propEditPhotoId : urlEditPhotoId;
-  const isOpen = propIsOpen !== undefined ? propIsOpen : (modal === 'edit' && !!editPhotoId);
-
-  if (!isOpen || !editPhotoId) return null;
+  if (!isOpen || !photo?.id) return null;
 
   const handleClose = () => {
-    logger.info('[PhotoEditDialog] Closing...');
-    if (propOnClose) {
-      propOnClose();
-    } else {
-      setModal(null);
-    }
+    isPhotoEditOpen.set(false);
   };
 
   return (
-    <PhotoEditSessionProvider photoId={editPhotoId || ''} onSuccess={handleClose}>
+    <PhotoEditSessionProvider photoId={photo.id} onSuccess={handleClose}>
       <PhotoEditDialogInner 
         isOpen={isOpen}
         handleClose={handleClose}
-        editPhotoId={editPhotoId || ''}
+        editPhotoId={photo.id}
       />
     </PhotoEditSessionProvider>
   );

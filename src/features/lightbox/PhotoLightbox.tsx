@@ -1,6 +1,6 @@
 import React, { useMemo, memo } from 'react';
 import { createPortal } from 'react-dom';
-import { useUI } from '@/lib/store';
+import { useUI, currentEditingPhoto, isPhotoEditOpen } from '@/lib/store';
 import { useFilters } from '@/hooks/useFilters';
 import { useAppRoute, useNavigation } from '@/lib/router';
 import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
@@ -217,7 +217,13 @@ export function PhotoLightbox() {
           canEdit={canEdit}
           settings={settings}
           onClose={handleClose}
-          onEdit={() => filters.updateFilters({ photoId: currentSlide.id, modal: 'edit' })}
+          onEdit={() => {
+            const original = currentSlide.original as Photo;
+            if (original) {
+              currentEditingPhoto.set(original);
+              isPhotoEditOpen.set(true);
+            }
+          }}
           onAiAnalyze={() => {
             const original = currentSlide.original as Photo;
             if (original) {

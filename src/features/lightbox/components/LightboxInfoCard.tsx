@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { LightboxSlide } from '@/lib/lightbox/types';
 import { Icon } from '@/components/ui/Icon';
 import { useTranslation } from '@/hooks/core/useTranslation';
-import { useUI } from '@/lib/store';
+import { useSignal, appLang as appLangSignal } from '@/lib/store';
 import { Photo } from '@/types/photo';
 
 export function LightboxInfoCard({ 
@@ -16,7 +16,7 @@ export function LightboxInfoCard({
 }) {
   const [expanded, setExpanded] = useState(false);
   const { uiTranslations } = useTranslation();
-  const appLang = useUI(s => s.appLang);
+  const appLang = useSignal(appLangSignal);
 
   if (!slide) return null;
 

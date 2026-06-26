@@ -400,6 +400,19 @@ export const fetch = handle(app);
 - ✅ **禁止洩露內部程式碼**：在前台 UI 中，禁止顯示任何 UUID 或類似 `[a-f0-9]{8}-...` 的原始庫存 ID。
 - ✅ **計數顯示**：左上角或頁首應僅顯示經過格式化的「數量」標籤（例如：`102 张照片`），嚴禁顯示系統內部的 UUID。
 - ✅ **封面標識**：「Cover」標識僅限於管理後台顯示，嚴禁穿透到公開前台頁面。
+## 燈箱編輯規範（強制）
+
+### 核心原則
+- ✅ 燈箱編輯使用 Signal（`isPhotoEditOpen`）控制開關
+- ✅ 編輯對話框是**獨立元件**，在 App 層註冊
+- ✅ 語言切換透過訂閱 `appLang` Signal 實現
+- ✅ 使用 React Compiler 優化，不手動 `useCallback`（除非必要）
+
+### 禁止事項
+- ❌ 禁止將編輯表單掛在 `DialogContainer`
+- ❌ 禁止用 React 條件渲染控制開關（改用 Signal）
+- ❌ 禁止在 `useAppForm` 的 `onSubmit` 中引用 `form` 本身
+
 ## 類型安全規範（永久鎖定）
 
 ### 核心原則

@@ -4,6 +4,10 @@ import { signal } from '@storve/core/signals';
 import { STORAGE_KEYS, storage } from '@/lib/storage';
 import { ProductFormData } from '@/types';
 import type { LightboxSlide } from '@/lib/lightbox/types';
+import { Photo } from '@/types/photo';
+
+export const isPhotoEditOpen = signal(false);
+export const currentEditingPhoto = signal<Photo | null>(null);
 
 export interface UIStoreState {
   appLang: 'zh' | 'en' | 'ms';
@@ -29,6 +33,8 @@ export interface UIStoreState {
   activeDialogCount: number;
   fatalError: Error | null;
   filters: { category: string; tags: string[]; q: string };
+  isPhotoEditOpen: boolean;
+  currentEditingPhoto: Photo | null;
   
   // Lightbox 状态
   lightboxIsOpen: boolean;
@@ -109,6 +115,8 @@ export const uiStore = createStore<UIStoreState>({
   activeDialogCount: 0,
   fatalError: null,
   filters: { category: '', tags: [], q: '' },
+  isPhotoEditOpen: false,
+  currentEditingPhoto: null,
   lightboxIsOpen: false,
   lightboxSlides: [],
   lightboxCurrentIndex: 0,

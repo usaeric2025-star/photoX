@@ -1,9 +1,11 @@
 import { signal } from '@storve/core/signals';
 import { uiStore } from '@/store/uiStore';
 import type { UIStoreState } from '@/store/uiStore';
+import type { Photo } from '@/types/photo';
 
 // ============ UI 狀態 Signal (Derived from uiStore) ============
-
+export const isPhotoEditOpen = signal<UIStoreState, 'isPhotoEditOpen'>(uiStore, 'isPhotoEditOpen');
+export const currentEditingPhoto = signal<UIStoreState, 'currentEditingPhoto'>(uiStore, 'currentEditingPhoto');
 export const appLang = signal<UIStoreState, 'appLang'>(uiStore, 'appLang');
 
 // Sync language to DOM
