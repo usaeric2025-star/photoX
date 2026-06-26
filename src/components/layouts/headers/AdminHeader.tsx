@@ -135,10 +135,10 @@ export function AdminHeader({ className }: AdminHeaderProps) {
           )}
   
         {/* 照片总数展示 */}
-          <div className={cn("flex items-center gap-2 text-[10px] sm:text-xs font-bold border rounded-full px-2.5 py-1 select-none shrink-0 cursor-default justify-center shadow-sm", theme.badge)}>
-            <span className={cn("uppercase tracking-tighter text-[9px]", theme.badgeLabel)}>{lang === 'zh' ? '总存量' : 'Total'}</span>
-            <span className={theme.badgeVal}>
-              {totalCount}
+          <div className={cn("flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-bold border rounded-full px-2 sm:px-2.5 py-1 select-none shrink-0 cursor-default justify-center shadow-sm whitespace-nowrap", theme.badge)}>
+            <span className={cn("uppercase tracking-tighter text-[9px] shrink-0", theme.badgeLabel)}>{lang === 'zh' ? '总存量' : 'Total'}</span>
+            <span className={cn("shrink-0", theme.badgeVal)}>
+              {totalCount.toLocaleString()}
             </span>
           </div>
         </div>
@@ -175,13 +175,13 @@ export function AdminHeader({ className }: AdminHeaderProps) {
           {/* Task Queue 門戶 */}
           <button
             onClick={() => isTaskDrawerOpenSignal.set(true)}
-            className={cn("w-9 h-9 sm:w-10 sm:h-10 relative", theme.button)}
+            className={cn("w-9 h-9 sm:w-10 sm:h-10 relative shrink-0", theme.button)}
             title="查看任務進度"
           >
             <Icon name="activity" className="size-4 sm:size-4.5" />
             {taskCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-slate-950 animate-in zoom-in duration-300">
-                {taskCount}
+              <span className="absolute -top-1 -right-1 flex h-4 min-w-[1rem] w-auto px-1 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white ring-2 ring-slate-950 animate-in zoom-in duration-300">
+                {taskCount > 99 ? '99+' : taskCount}
               </span>
             )}
           </button>

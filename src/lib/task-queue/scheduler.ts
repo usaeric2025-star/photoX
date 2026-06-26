@@ -137,7 +137,7 @@ export class TaskScheduler {
       currentStore.setGlobalStatus('failed');
       await taskTable.updateStatus(task.id, 'failed', { error: message, retryable });
 
-      showToast.error(`任務失敗: ${task.label}`);
+      showToast.error(`${task.label} 失敗: ${message}`);
     } finally {
       this.controllers.delete(task.id);
       this.running.delete(task.id);

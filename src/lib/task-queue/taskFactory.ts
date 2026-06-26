@@ -3,6 +3,7 @@ import { generateId } from '@/lib/id';
 import { logger } from '@/lib/logger';
 import { ErrorFactory } from '@/lib/error';
 import { isTaskDrawerOpen } from '@/lib/store';
+import { getErrorMessage } from '@/lib/error/errorMessages';
 import type { Task, TaskType, TaskState } from './types';
 
 export interface TaskConfig<T = unknown> {
@@ -65,10 +66,17 @@ export function createTask<T>(config: TaskConfig<T>): string {
       } catch (error) {
         // 統一錯誤處理
         const wrappedError = error instanceof Error ? error : new Error(String(error));
+        const userMessage = getErrorMessage(wrappedError);
+        
         logger.error(`[TaskFactory] ${type} 任務失敗: ${id}`, wrappedError);
         ErrorFactory.capture(wrappedError);
-        onError?.(wrappedError);
-        throw wrappedError; // Re-throw to let scheduler handle the state update
+        
+        // Pass original error or wrap it? Let's just create a new error with userMessage
+        const errorToThrow = new Error(userMessage);
+        (errorToThrow as any).originalError = wrappedError;
+        
+        onError?.(errorToThrow);
+        throw errorToThrow; // Re-throw to let scheduler handle the state update
       }
     }
   };

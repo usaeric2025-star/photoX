@@ -118,10 +118,10 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
         )}
 
         {totalCount !== undefined && (
-          <div className={cn("flex items-center gap-2 text-[10px] sm:text-xs font-bold border rounded-full px-2.5 py-1 select-none shrink-0 cursor-default justify-center shadow-sm", theme.badge)}>
-            <span className={cn("uppercase tracking-tighter text-[9px]", theme.badgeLabel)}>{lang === 'zh' ? '总存量' : 'Total'}</span>
-            <span className={theme.badgeVal}>
-              {totalCount}
+          <div className={cn("flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-bold border rounded-full px-2 sm:px-2.5 py-1 select-none shrink-0 cursor-default justify-center shadow-sm whitespace-nowrap", theme.badge)}>
+            <span className={cn("uppercase tracking-tighter text-[9px] shrink-0", theme.badgeLabel)}>{lang === 'zh' ? '总存量' : 'Total'}</span>
+            <span className={cn("shrink-0", theme.badgeVal)}>
+              {totalCount.toLocaleString()}
             </span>
           </div>
         )}
