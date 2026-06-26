@@ -10,7 +10,7 @@ import { PhotoEditTabs } from "./PhotoEditTabs";
 import { DialogHeader } from "./DialogHeader";
 import { LoadingSpinner } from "@/components/ui/feedback/LoadingSpinner";
 import { logger } from "@/lib/logger";
-import { useAdminMaintenance } from "@/hooks";
+import { useAdminMaintenance, useFilters } from "@/hooks";
 
 function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: boolean; handleClose: () => void; editPhotoId: string; }) {
   const adminActions = useAdminMaintenance();
@@ -103,11 +103,14 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
 export function PhotoEditDialog() {
   const isOpen = useSignal(isPhotoEditOpen);
   const photo = useSignal(currentEditingPhoto);
+  const { setModal, setPhotoId } = useFilters();
   
   if (!isOpen || !photo?.id) return null;
 
   const handleClose = () => {
     isPhotoEditOpen.set(false);
+    setModal(null);
+    setPhotoId(null);
   };
 
   return (

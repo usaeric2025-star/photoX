@@ -222,6 +222,7 @@ export function PhotoLightbox() {
             if (original) {
               currentEditingPhoto.set(original);
               isPhotoEditOpen.set(true);
+              filters.updateFilters({ modal: 'edit', photoId: original.id });
             }
           }}
           onAiAnalyze={() => {

@@ -74,10 +74,12 @@ export function useRouteSync() {
     
     // Set photo if edit is open
     if (shouldBeEditOpen && photoId) {
-        const photo = photos.find(p => p.id === photoId) as Photo | undefined || null;
+        const photo = (photos.find(p => p.id === photoId) as Photo | undefined) || ({ id: photoId } as Photo);
         if (uiStore.getState().currentEditingPhoto?.id !== photo?.id) {
             uiStore.setState({ currentEditingPhoto: photo });
         }
+    } else if (!shouldBeEditOpen && uiStore.getState().currentEditingPhoto !== null) {
+        uiStore.setState({ currentEditingPhoto: null });
     }
   }, [
     (route?.params as Record<string, string | string[] | undefined>)?.q, 
