@@ -36,6 +36,13 @@ export function PhotoErrorDisplay({ error, onRetry }: PhotoErrorDisplayProps) {
     }
   }
 
+  if (message) {
+    message = message.replace(/data:image\/[^;]+;base64,[a-zA-Z0-9+/=]+/g, '[BASE64_IMAGE_TRUNCATED]');
+    if (message.length > 3000) {
+      message = message.substring(0, 3000) + `... (內容過長已截斷)`;
+    }
+  }
+
   const timestamp = new Date().toLocaleString('zh-CN');
 
   const diagnosticsText = [

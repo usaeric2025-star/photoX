@@ -29,17 +29,28 @@ export const showToast = {
       
       // 深度提取系統訊息
       const extractSystemMsg = (e: any): string => {
-        if (!e) return '';
-        if (typeof e === 'string') return e;
-        if (e.message) return e.message;
-        if (e.error?.message) return e.error.message;
-        if (e.error && typeof e.error === 'string') return e.error;
-        
-        try {
-          return JSON.stringify(e);
-        } catch (err) {
-          return String(e);
+        let msg = '';
+        if (!e) msg = '';
+        else if (typeof e === 'string') msg = e;
+        else if (e.message) msg = e.message;
+        else if (e.error?.message) msg = e.error.message;
+        else if (e.error && typeof e.error === 'string') msg = e.error;
+        else {
+          try {
+            msg = JSON.stringify(e);
+          } catch (err) {
+            msg = String(e);
+          }
         }
+        
+        // 替換過長的 Base64 與截斷超長字串
+        if (msg) {
+          msg = msg.replace(/data:image\/[^;]+;base64,[a-zA-Z0-9+/=]+/g, '[BASE64_IMAGE_TRUNCATED]');
+          if (msg.length > 3000) {
+            msg = msg.substring(0, 3000) + `... (內容過長已截斷，原始長度: ${msg.length})`;
+          }
+        }
+        return msg;
       };
 
       systemMessage = extractSystemMsg(err);

@@ -26,6 +26,14 @@ function GlobalErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
     );
   }
 
+  let message = error instanceof Error ? error.message : String(error);
+  if (message) {
+    message = message.replace(/data:image\/[^;]+;base64,[a-zA-Z0-9+/=]+/g, '[BASE64_IMAGE_TRUNCATED]');
+    if (message.length > 3000) {
+      message = message.substring(0, 3000) + `... (內容過長已截斷)`;
+    }
+  }
+
   const handleCopy = () => {
     const timestamp = new Date().toISOString();
     const isErrObj = error && typeof error === 'object';
@@ -42,8 +50,6 @@ function GlobalErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
         else if ('status' in error) errorCode = String((error as { status?: string | number }).status);
         if ('traceId' in error) traceId = String((error as { traceId?: string }).traceId);
     }
-
-    const message = error instanceof Error ? error.message : String(error);
     
     const diagnosticInfo = [
       `--- 诊断信息 ---`,
@@ -63,7 +69,7 @@ function GlobalErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
   return (
     <div className="p-4 bg-red-50 text-red-800 rounded-lg">
       <h2 className="text-lg font-bold">系统发生错误</h2>
-      <p className="mt-2 text-sm">{error instanceof Error ? error.message : String(error)}</p>
+      <p className="mt-2 text-sm">{message}</p>
       <div className="flex gap-2 mt-4">
         <button
           onClick={resetErrorBoundary}
