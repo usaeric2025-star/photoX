@@ -23,7 +23,7 @@ export function useAIBatchAnalysis() {
 
     const taskTitle = groupId ? `智能合组分析 (${targetPhotos.length}张)` : `批量 AI 分析 (${targetPhotos.length}张)`;
 
-    createTask({
+    createTask<{ successCount: number; groupSuccess: boolean }>({
         label: taskTitle,
         type: 'ai-analyze',
         userId: user?.id,
@@ -46,7 +46,7 @@ export function useAIBatchAnalysis() {
             
             return { successCount, groupSuccess };
         },
-        onComplete: (result: any) => {
+        onComplete: (result) => {
             showToast.success(groupId ? `智能合组完成` : `批量 AI 分析完成 (${result.successCount}张)`);
         }
     });

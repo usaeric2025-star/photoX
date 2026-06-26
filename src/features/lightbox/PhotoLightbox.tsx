@@ -1,6 +1,6 @@
 import React, { useMemo, memo } from 'react';
 import { createPortal } from 'react-dom';
-import { useUI, currentEditingPhoto, isPhotoEditOpen } from '@/lib/store';
+import { useUI, currentEditingPhoto, isPhotoEditOpen, useSignal, isLightboxOpen, lightboxSlides, lightboxCurrentIndex } from '@/lib/store';
 import { useFilters } from '@/hooks/useFilters';
 import { useAppRoute, useNavigation } from '@/lib/router';
 import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
@@ -9,10 +9,10 @@ import { LightboxInfoCard } from './components/LightboxInfoCard';
 import { showToast } from '@/lib/ui/toast';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { Icon } from '@/components/ui/Icon';
-import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { Photo, AppSettings } from '@/types';
 import { LightboxSlide } from '@/lib/lightbox/types';
 import { logger } from '@/lib/logger';
+import { getThumbnailUrl } from '@/services/mappers/utils';
 
 // ✅ Directly import from low-level to reduce conflicts
 import { LightboxStyled as LightboxStyledBase } from '@mshafiqyajid/react-lightbox/styled';
@@ -90,8 +90,6 @@ function LightboxToolbar({
         </div>
       )}
 
-      <LanguageSwitcher mode="lightbox" />
-
       <button 
         onClick={(e) => {
           e.stopPropagation();
@@ -115,13 +113,9 @@ function LightboxToolbar({
 }
 
 export function PhotoLightbox() {
-  const { isOpen, slides, currentIndex, closeLightbox, setLightboxIndex } = useUI(s => ({
-    isOpen: s.lightboxIsOpen,
-    slides: s.lightboxSlides,
-    currentIndex: s.lightboxCurrentIndex,
-    closeLightbox: s.closeLightbox,
-    setLightboxIndex: s.setLightboxIndex
-  }));
+  const isOpen = useSignal(isLightboxOpen);
+  const slides = useSignal(lightboxSlides);
+  const currentIndex = useSignal(lightboxCurrentIndex);
   
   logger.debug('[PhotoLightbox] Rendering', { isOpen, slidesCount: slides.length, currentIndex });
   
@@ -135,7 +129,7 @@ export function PhotoLightbox() {
   const canEdit = canEditPermission;
 
   const handleClose = () => {
-    closeLightbox();
+    isLightboxOpen.set(false);
     if (route.name === 'photo') {
       navigate.home();
     } else {
@@ -147,7 +141,7 @@ export function PhotoLightbox() {
     if (index === currentIndex) return;
     const photo = slides[index];
     if (photo?.id) {
-      setLightboxIndex(index);
+      lightboxCurrentIndex.set(index);
       if (route.name === 'photo') {
         navigate.photo(photo.id);
       } else {
@@ -156,18 +150,44 @@ export function PhotoLightbox() {
     }
   };
 
-  const images = useMemo(() => slides.map((s) => ({
-    src: s.src,
-    alt: s.alt ?? '',
-    title: s.title,
-    description: s.description,
-    original: s, 
-  })), [slides]);
+  const coarseIndex = Math.floor(currentIndex / 10);
+
+  const images = useMemo(() => {
+    logger.debug('[PhotoLightbox] Calculating images sliding window', { slidesLength: slides.length, coarseIndex });
+    // Use coarseIndex * 10 as the center to stabilize the images array reference
+    // This prevents re-creating the 1000+ images array on every single index change,
+    // making swipe transitions between slides buttery smooth!
+    const centerIndex = coarseIndex * 10;
+    return slides.map((s, i) => {
+      const originalPhoto = s.original as Photo | undefined;
+      const hash = originalPhoto?.image_hash;
+      
+      // 💡 Sliding Window Optimization: Only load thumbnails that are close to the current index (window of ~50 items).
+      // For off-screen thumbnails, return a lightweight transparent SVG base64 to prevent
+      // launching 1000+ concurrent network requests. This completely eliminates lag and browser crash!
+      const distance = Math.abs(i - centerIndex);
+      const isInWindow = distance <= 25; // slightly larger window for seamless coarse-grained sliding window
+      
+      const previewUrl = getThumbnailUrl(s.src, 1200, 1200, hash);
+      const thumbUrl = isInWindow 
+        ? getThumbnailUrl(s.src, 120, 120, hash)
+        : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1" viewBox="0 0 1 1"><rect width="1" height="1" fill="rgba(255,255,255,0.03)"/></svg>';
+        
+      return {
+        src: previewUrl,
+        thumb: thumbUrl,
+        alt: s.alt ?? '',
+        title: s.title,
+        description: s.description,
+        original: s, 
+      };
+    });
+  }, [slides, coarseIndex]);
 
   const currentSlide = slides[currentIndex];
   const isEditModalOpen = filters.modal === 'edit';
 
-  if (!isOpen) return null;
+  const hasThumbnails = slides.length > 1;
 
   const overlays = (
     <>
@@ -186,8 +206,14 @@ export function PhotoLightbox() {
           transition: none !important;
         }
         .rlbx-nav { z-index: 10015 !important; }
-        .rlbx-image-area { margin-bottom: 96px !important; }
+        .rlbx-image-area { margin-bottom: ${hasThumbnails ? '96px' : '0px'} !important; }
         .rlbx-thumbnails {
+          display: flex !important;
+          position: fixed !important;
+          bottom: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+          z-index: 10010 !important;
           background: rgba(0, 0, 0, 0.9) !important;
           backdrop-filter: blur(8px) !important;
           -webkit-backdrop-filter: blur(8px) !important;
@@ -195,13 +221,41 @@ export function PhotoLightbox() {
           height: 84px !important;
           padding: 0.5rem 0.875rem !important;
           box-sizing: border-box !important;
+          align-items: center !important;
+          gap: 0.375rem !important;
+          overflow-x: auto !important;
+          overflow-y: hidden !important;
         }
         .rlbx-thumb {
+          flex-shrink: 0 !important;
           width: 3.5rem !important;
           height: 3.5rem !important;
           border-radius: 4px !important;
           overflow: hidden !important;
-          transition: transform 0.15s ease-out !important;
+          border: 2px solid transparent !important;
+          opacity: 0.5 !important;
+          transition: all 0.15s ease-out !important;
+          background: rgba(255, 255, 255, 0.06) !important;
+          padding: 0 !important;
+          cursor: pointer !important;
+          transform: scale(0.92) !important;
+        }
+        .rlbx-thumb img {
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: cover !important;
+          display: block !important;
+          pointer-events: none !important;
+        }
+        .rlbx-thumb:hover {
+          opacity: 0.85 !important;
+          transform: scale(1.02) !important;
+        }
+        .rlbx-thumb--active {
+          border-color: #fff !important;
+          opacity: 1 !important;
+          transform: scale(1.08) !important;
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5) !important;
         }
         .rlbx-slide {
           transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out !important;
@@ -244,7 +298,7 @@ export function PhotoLightbox() {
       )}
 
       {(currentSlide && !isEditModalOpen) && (
-        <div className="fixed bottom-[84px] left-0 right-0 flex flex-col items-center pointer-events-none px-4 z-[10020] transition-all duration-300 ease-out animate-in fade-in slide-in-from-bottom-2">
+        <div className={`fixed ${hasThumbnails ? 'bottom-[84px]' : 'bottom-8'} left-0 right-0 flex flex-col items-center pointer-events-none px-4 z-[10020] transition-all duration-300 ease-out animate-in fade-in slide-in-from-bottom-2`}>
           <div className="pointer-events-auto w-full max-w-2xl translate-y-[1px]">
             <LightboxInfoCard 
               slide={currentSlide} 
@@ -275,8 +329,6 @@ export function PhotoLightbox() {
     </>
   );
 
-  const portalRoot = document.getElementById('portal-root');
-
   return (
     <>
       <LightboxStyled
@@ -287,12 +339,12 @@ export function PhotoLightbox() {
         onOpenChange={(open: boolean) => !open && handleClose()}
         zoom={true}
         loop={true}
-        showThumbnails={true}
+        showThumbnails={hasThumbnails}
         showClose={false}
         showCaption={false}
         closeOnOverlayClick={true}
       />
-      {portalRoot ? createPortal(overlays, portalRoot) : createPortal(overlays, document.body)}
+      {isOpen && createPortal(overlays, document.body)}
     </>
   );
 }

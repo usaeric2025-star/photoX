@@ -28,10 +28,12 @@ export function LightboxInfoCard({
   
   if (original) {
     if (original.name && typeof original.name === 'object') {
-      displayTitle = (original.name as any)[appLang] || original.name.zh || original.name.en || slide.title;
+      const nameObj = original.name as Record<string, string>;
+      displayTitle = nameObj[appLang] || nameObj.zh || nameObj.en || slide.title;
     }
     if (original.description && typeof original.description === 'object') {
-      displayDesc = (original.description as any)[appLang] || original.description.zh || original.description.en || slide.description;
+      const descObj = original.description as Record<string, string>;
+      displayDesc = descObj[appLang] || descObj.zh || descObj.en || slide.description;
     }
   }
 

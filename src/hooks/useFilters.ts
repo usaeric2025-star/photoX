@@ -9,6 +9,9 @@ export interface UseFiltersOptions {
   sortOptions?: { label: string; value: string }[];
 }
 
+// Global timeout tracking for photoId debouncing to prevent excessive URL and router updates during transitions
+let photoIdTimeoutId: any = null;
+
 export const useFilters = (options: UseFiltersOptions = {}) => {
   const route = useAppRoute();
   const params = route ? (route.params as Record<string, string | string[] | undefined>) : {};
@@ -71,12 +74,18 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
 
   const photoId = (params.photoId as string) || (route?.name === 'photo' ? params.photoId as string : null);
   const setPhotoId = useCallback((val: string | null) => {
+      // Clear any pending deferred updates
+      if (photoIdTimeoutId) {
+        clearTimeout(photoIdTimeoutId);
+        photoIdTimeoutId = null;
+      }
+
       // 如果是 photo 詳情頁，關閉後回到首頁
       if (route?.name === 'photo') {
          if (val) {
-           if (val !== params.photoId) Router.push("photo", { photoId: val });
+            if (val !== params.photoId) Router.push("photo", { photoId: val });
          } else {
-           Router.push("home");
+            Router.push("home");
          }
          return;
       }
@@ -84,8 +93,18 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
       // Prevent infinite loops if value is the same
       if (val === photoId) return;
 
-      // 否則使用 query param 模式以保留過濾條件
-      updateSearch({ photoId: val || undefined });
+      if (val === null) {
+        // Closing the lightbox: update URL immediately so state cleans up instantly
+        updateSearch({ photoId: undefined });
+      } else {
+        // Opening or Swiping: defer updating the URL slightly (250ms).
+        // This gives the React render cycle and lightbox mount transition full CPU share,
+        // resulting in instantaneous feedback and fluid animations, plus debounces rapid swiping.
+        photoIdTimeoutId = setTimeout(() => {
+          updateSearch({ photoId: val });
+          photoIdTimeoutId = null;
+        }, 250);
+      }
   }, [route?.name, params.photoId, photoId, updateSearch]);
 
   const anchor = params.anchor === 'true';

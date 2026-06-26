@@ -7,7 +7,7 @@ import { PhotoErrorDisplay } from '@/components/photo/PhotoErrorDisplay';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
 import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
-import { useUI } from '@/lib/store';
+import { useUI, uiStore } from '@/lib/store';
 
 export function AdminContainer() {
   const filters = useFilters({ enableStatus: true });
@@ -34,21 +34,19 @@ export function AdminContainer() {
       filters.setPhotoId(photoId);
   };
   
-  const lightboxIsOpen = useUI(s => s.lightboxIsOpen);
-  const lightboxCurrentIndex = useUI(s => s.lightboxCurrentIndex);
-  
   // 同步燈箱數據：當照片列表更新且處於燈箱模式時
   useEffect(() => {
     if (filters.photoId && photoGridData.photos.length > 0) {
       const index = photoGridData.photos.findIndex(p => p.id === filters.photoId);
       if (index !== -1) {
+         const { lightboxIsOpen, lightboxCurrentIndex } = uiStore.getState();
          // 只有当灯箱没开，或者灯箱打开但显示的不是当前 photoId 时才打开
          if (!lightboxIsOpen || photoGridData.photos[lightboxCurrentIndex]?.id !== filters.photoId) {
             openLightbox(lightboxItems, index);
          }
       }
     }
-  }, [photoGridData.photos, filters.photoId, openLightbox, lightboxItems, lightboxIsOpen, lightboxCurrentIndex]);
+  }, [photoGridData.photos, filters.photoId, openLightbox, lightboxItems]);
   
   if (photoGridData.isError) {
     return (

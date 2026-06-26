@@ -1,19 +1,47 @@
 import { getPathFromUrl } from '@/lib/utils';
 import { cleanTranslationPrefixes } from '@/features/ai/safeText';
 
-export const getThumbnailUrl = (imageUrl: string, width: number = 400, height: number = 400, imageHash?: string) => {
-  const workerUrl = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_THUMBNAIL_WORKER_URL : undefined;
-  if (!workerUrl || !imageUrl || !workerUrl.startsWith('http')) return imageUrl;
+/**
+ * 取得圖片 URL（支援縮圖）
+ * @param imageUrlOrKey - 原始 URL 或 R2 檔案 Key
+ * @param width - 縮圖寬度（可選）
+ * @param height - 縮圖高度（可選）
+ * @param imageHash - 快取失效標籤（可選）
+ * @returns 圖片 URL
+ */
+export const getThumbnailUrl = (imageUrlOrKey: string, width?: number, height?: number, imageHash?: string) => {
+  if (!imageUrlOrKey) return '';
+  if (imageUrlOrKey.startsWith('data:')) return imageUrlOrKey;
+
+  const env = import.meta.env;
+  const workerUrl = env.VITE_IMAGE_WORKER_URL;
+  const r2Base = env.VITE_R2_BASE_URL || env.VITE_R2_PUBLIC_URL_PREFIX;
   
-  const path = getPathFromUrl(imageUrl);
-  if (!path) return imageUrl;
-  
-  const base = workerUrl.replace(/\/$/, '');
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  
-  const cacheBuster = imageHash ? `&h=${imageHash.slice(0,8)}` : '';
-  
-  return `${base}${cleanPath}?w=${width}&h=${height}${cacheBuster}`;
+  // Extract key if it's a full URL
+  const path = getPathFromUrl(imageUrlOrKey);
+  const key = path || imageUrlOrKey;
+  const cleanKey = key.startsWith('/') ? key.slice(1) : key;
+
+  // 1. 如果有 Worker URL，優先使用 Worker
+  if (workerUrl) {
+    const params = new URLSearchParams();
+    if (width) params.set('width', String(width));
+    if (height) params.set('height', String(height));
+    if (imageHash) params.set('h', imageHash.slice(0, 8));
+    
+    const query = params.toString();
+    const baseUrl = workerUrl.endsWith('/') ? workerUrl.slice(0, -1) : workerUrl;
+    return `${baseUrl}/${cleanKey}${query ? `?${query}` : ''}`;
+  }
+
+  // 2. 降級：沒有 Worker 時使用 R2 Base URL
+  if (r2Base) {
+    const baseUrl = r2Base.endsWith('/') ? r2Base.slice(0, -1) : r2Base;
+    return `${baseUrl}/${cleanKey}`;
+  }
+
+  // 3. 最終降級：回傳原始路徑或 URL
+  return imageUrlOrKey;
 };
 
 export function normalizeStoredUrl(url: string | undefined | null): string {

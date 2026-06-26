@@ -8,7 +8,7 @@ import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
 import { useFilters, useTranslation, useCategories } from '@/hooks';
 import { GroupHeader } from '../components/GroupHeader';
 import { Button } from '@/components/shared/Button';
-import { useUI } from '@/lib/store';
+import { useUI, uiStore } from '@/lib/store';
 import { usePublicSettings } from '@/hooks/settings/useSettings';
 import { WhatsAppDialog } from '@/components/shared/WhatsAppDialog';
 import { useColumns } from '@/hooks';
@@ -47,11 +47,9 @@ export function PublicGroupDetailPage() {
   const { group, photos, totalCount, loading, error } = useGroupData({ groupId, isAdmin: false });
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const { showWhatsAppChoice, patchUI, lightboxIsOpen, lightboxCurrentIndex, openLightbox } = useUI(s => ({
+  const { showWhatsAppChoice, patchUI, openLightbox } = useUI(s => ({
     showWhatsAppChoice: s.showWhatsAppChoice,
     patchUI: s.patch,
-    lightboxIsOpen: s.lightboxIsOpen,
-    lightboxCurrentIndex: s.lightboxCurrentIndex,
     openLightbox: s.openLightbox
   }));
   const { data: settings } = usePublicSettings();
@@ -82,12 +80,13 @@ export function PublicGroupDetailPage() {
      if (photoId && (photos || []).length > 0) {
         const index = (photos || []).findIndex(p => p.id === photoId);
         if (index !== -1) {
+           const { lightboxIsOpen, lightboxCurrentIndex } = uiStore.getState();
            if (!lightboxIsOpen || (photos || [])[lightboxCurrentIndex]?.id !== photoId) {
               openLightbox(lightboxItems, index);
            }
         }
      }
-  }, [photos, photoId, openLightbox, lightboxItems, lightboxIsOpen, lightboxCurrentIndex]);
+  }, [photos, photoId, openLightbox, lightboxItems]);
 
   const handlePhotoClick = (id: string, index: number) => {
       openLightbox(lightboxItems, index);

@@ -107,56 +107,72 @@ interface ResizeOptions {
 }
 
 /**
- * Resolves an image URL, optionally using the thumbnail worker.
+ * Resolves an image URL, optionally using the image worker.
  */
 export function resolveImageUrl(url: string, options: ResizeOptions = {}): string {
   if (!url || url.startsWith('data:')) return url;
   
-  const workerUrl = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_THUMBNAIL_WORKER_URL : undefined;
+  const workerUrl = import.meta.env.VITE_IMAGE_WORKER_URL;
   
   if (workerUrl) {
-    const width = options.width || 400; // Default
+    const width = options.width || 400;
     try {
       const urlObj = new URL(url);
       const path = urlObj.pathname;
-      return `${workerUrl.replace(/\/$/, '')}${path}?w=${width}&h=${width}`;
+      const cleanPath = path.startsWith('/') ? path : `/${path}`;
+      return `${workerUrl.replace(/\/$/, '')}${cleanPath}?width=${width}`;
     } catch (e) {
-      // Fallback if URL parsing fails
       const cleanUrl = url.split('?')[0];
-      return `${workerUrl.replace(/\/$/, '')}/${cleanUrl.split('/').pop()}?w=${width}&h=${width}`;
+      const filename = cleanUrl.split('/').pop() || '';
+      return `${workerUrl.replace(/\/$/, '')}/${filename}?width=${width}`;
     }
   }
 
-  // Fallback for direct R2 resizing (if for some reason worker is not configured)
-  const isResizingSupported = url.includes('r2.dev') || 
-                              url.includes('cloudflarestorage.com');
-  
-  if (!isResizingSupported) {
-    return url;
-  }
-  
-  const { width, format = 'auto' } = options;
-  const params = new URLSearchParams();
-  if (width) params.append('width', width.toString());
-  params.append('format', format);
-
-  return `${url}${url.includes('?') ? '&' : '?'}${params.toString()}`;
+  // Fallback
+  return url;
 }
 
 /**
  * Gets a thumbnail URL for a given original URL.
  */
 export function getThumbnailUrl(originalUrl: string, width: number, updatedAt?: string) {
-  const workerUrl = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_THUMBNAIL_WORKER_URL : undefined;
-  if (!workerUrl || !originalUrl) return originalUrl;
+  if (!originalUrl) return '';
+  if (originalUrl.startsWith('data:')) return originalUrl;
+
+  const workerUrl = import.meta.env.VITE_IMAGE_WORKER_URL;
+  const r2Base = import.meta.env.VITE_R2_BASE_URL || import.meta.env.VITE_R2_PUBLIC_URL_PREFIX;
   
   try {
     const url = new URL(originalUrl);
+    const path = url.pathname;
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
     const cacheBuster = updatedAt ? `&t=${new Date(updatedAt).getTime()}` : '';
-    return `${workerUrl.replace(/\/$/, '')}${url.pathname}?w=${width}${cacheBuster}`;
+    
+    if (workerUrl) {
+      return `${workerUrl.replace(/\/$/, '')}${cleanPath}?width=${width}${cacheBuster}`;
+    }
+    
+    if (r2Base) {
+      return `${r2Base.replace(/\/$/, '')}${cleanPath}`;
+    }
+    
+    return originalUrl;
   } catch (e) {
     return originalUrl;
   }
+}
+
+/**
+ * 取得照片縮圖 URL（包裝函式）
+ */
+export function getPhotoThumbUrl(
+  photo: { image_url?: string; uri?: string; updated_at?: string },
+  size: 'sm' | 'md' | 'lg' = 'sm'
+): string {
+  const url = photo.image_url || photo.uri || '';
+  const sizeMap = { sm: 120, md: 400, lg: 800 };
+  const width = sizeMap[size];
+  return getThumbnailUrl(url, width, photo.updated_at);
 }
 
 /**

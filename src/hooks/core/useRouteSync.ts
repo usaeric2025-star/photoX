@@ -24,35 +24,36 @@ export function useRouteSync() {
   useEffect(() => {
     if (!route) return;
     const params = route.params as Record<string, string | string[] | undefined>;
+    const currentState = uiStore.getState();
 
-  // Search Term
-  const q = (params.q as string) || '';
-  if (filters.q !== q) {
-    (uiStore as unknown as UIStoreInstance).setState((s: UIStoreState) => ({ filters: { ...s.filters, q } }));
-  }
+    // Search Term
+    const q = (params.q as string) || '';
+    if (currentState.filters.q !== q) {
+      (uiStore as unknown as UIStoreInstance).setState((s: UIStoreState) => ({ filters: { ...s.filters, q } }));
+    }
 
-  // Category
-  const cat = (params.cat as string) || '';
-  if (filters.category !== cat) {
-    (uiStore as unknown as UIStoreInstance).setState((s: UIStoreState) => ({ filters: { ...s.filters, category: cat } }));
-  }
+    // Category
+    const cat = (params.cat as string) || '';
+    if (currentState.filters.category !== cat) {
+      (uiStore as unknown as UIStoreInstance).setState((s: UIStoreState) => ({ filters: { ...s.filters, category: cat } }));
+    }
 
-  // Tags
-  const tags = (params.tag || []) as string[];
-  if (JSON.stringify(filters.tags) !== JSON.stringify(tags)) {
-    (uiStore as unknown as UIStoreInstance).setState((s: UIStoreState) => ({ filters: { ...s.filters, tags } }));
-  }
+    // Tags
+    const tags = (params.tag || []) as string[];
+    if (JSON.stringify(currentState.filters.tags) !== JSON.stringify(tags)) {
+      (uiStore as unknown as UIStoreInstance).setState((s: UIStoreState) => ({ filters: { ...s.filters, tags } }));
+    }
 
     // Batch Mode
     const batch = params.batch === 'true';
-    if (currentBatch !== batch) {
+    if (currentState.isMultiSelect !== batch) {
       (uiStore as unknown as UIStoreInstance).setState({ isMultiSelect: batch });
     }
 
     // Selection
     const selected = (params.selected as string) || '';
     const newSelected = selected.split(',').filter(Boolean);
-    if (JSON.stringify(currentSelected) !== JSON.stringify(newSelected)) {
+    if (JSON.stringify(currentState.selectedIds) !== JSON.stringify(newSelected)) {
       (uiStore as unknown as UIStoreInstance).setState({ selectedIds: newSelected });
     }
 
@@ -62,35 +63,32 @@ export function useRouteSync() {
     
     // Lightbox handling
     const shouldBeLightboxOpen = !!(photoId && photos?.length > 0 && modal !== 'edit');
-    if (lightboxIsOpen !== shouldBeLightboxOpen) {
+    if (currentState.lightboxIsOpen !== shouldBeLightboxOpen) {
       uiStore.setState({ lightboxIsOpen: shouldBeLightboxOpen });
     }
 
     // Edit modal handling
     const shouldBeEditOpen = modal === 'edit';
-    if (uiStore.getState().isPhotoEditOpen !== shouldBeEditOpen) {
+    if (currentState.isPhotoEditOpen !== shouldBeEditOpen) {
       uiStore.setState({ isPhotoEditOpen: shouldBeEditOpen });
     }
     
     // Set photo if edit is open
     if (shouldBeEditOpen && photoId) {
         const photo = (photos.find(p => p.id === photoId) as Photo | undefined) || ({ id: photoId } as Photo);
-        if (uiStore.getState().currentEditingPhoto?.id !== photo?.id) {
+        const currentEditing = currentState.currentEditingPhoto;
+        const isMock = currentEditing && !currentEditing.name && !currentEditing.image_url;
+        const gotRealData = photo && (photo.name || photo.image_url);
+        
+        if (!currentEditing || currentEditing.id !== photo?.id || (isMock && gotRealData)) {
             uiStore.setState({ currentEditingPhoto: photo });
         }
-    } else if (!shouldBeEditOpen && uiStore.getState().currentEditingPhoto !== null) {
+    } else if (!shouldBeEditOpen && currentState.currentEditingPhoto !== null) {
         uiStore.setState({ currentEditingPhoto: null });
     }
   }, [
-    (route?.params as Record<string, string | string[] | undefined>)?.q, 
-    (route?.params as Record<string, string | string[] | undefined>)?.cat, 
-    (route?.params as Record<string, string | string[] | undefined>)?.tag, 
-    (route?.params as Record<string, string | string[] | undefined>)?.batch, 
-    (route?.params as Record<string, string | string[] | undefined>)?.selected, 
-    (route?.params as Record<string, string | string[] | undefined>)?.photoId,
-    (route?.params as Record<string, string | string[] | undefined>)?.modal,
+    route?.params,
     photos?.length,
-    lightboxIsOpen
   ]);
 
   // 2. Signal -> URL (Synchronization from Memory to URL)

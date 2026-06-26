@@ -10,22 +10,23 @@ export const errorMessageMap: Record<string, string> = {
   'upload_failed': '上傳失敗',
 };
 
-export function getErrorMessage(error: any): string {
+export function getErrorMessage(error: unknown): string {
   if (!error) return '發生未知錯誤，請稍後再試';
   
+  const errObj = error as Record<string, unknown>;
   // 如果有 traceId，顯示給使用者
   const baseMessage = (() => {
     // 映射錯誤碼
-    if (error.code && errorMessageMap[error.code]) {
-      return errorMessageMap[error.code];
+    if (typeof errObj.code === 'string' && errorMessageMap[errObj.code]) {
+      return errorMessageMap[errObj.code];
     }
     
     // 預設訊息
-    return error.message || '發生未知錯誤，請稍後再試';
+    return (typeof errObj.message === 'string' ? errObj.message : '') || '發生未知錯誤，請稍後再試';
   })();
   
-  if (error.traceId) {
-    return `${baseMessage} (追蹤碼: ${error.traceId})`;
+  if (typeof errObj.traceId === 'string' && errObj.traceId) {
+    return `${baseMessage} (追蹤碼: ${errObj.traceId})`;
   }
   
   return baseMessage;

@@ -15,13 +15,14 @@ export const appQuery = {
    * If a functional updater is provided as the second argument, it's used directly for optimisticData
    */
   mutate: (key: string | readonly unknown[] | ((key: import('swr').Key) => boolean), data?: unknown, options?: unknown) => {
+    type SwrKey = Parameters<typeof swrMutate>[0];
     if (typeof data === 'function' && !options) {
-      return swrMutate(key as any, data, {
+      return swrMutate(key as SwrKey, data, {
         optimisticData: data as (currentData: unknown) => unknown,
         rollbackOnError: true,
       });
     }
-    return swrMutate(key as any, data, options as import('swr').MutatorOptions);
+    return swrMutate(key as SwrKey, data, options as import('swr').MutatorOptions);
   },
 };
 

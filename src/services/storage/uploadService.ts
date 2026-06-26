@@ -28,16 +28,17 @@ export const uploadWithRetry = async (
         lastError = err;
         
         // 🚨 PREVENT FUTILE RETRIES: If it's a permission / unauthorized error, fail fast and don't retry!
+        const errObj = err as Record<string, unknown>;
         const isAuthError = err instanceof Error && (
           err.message.includes('No active session') || 
           err.message.includes('鑒權失敗') || 
           err.message.includes('Unauthorized') || 
           err.message.includes('401') ||
           err.message.includes('403') ||
-          (err as any).statusCode === 401 ||
-          (err as any).statusCode === 403 ||
-          (err as any).code === 'PERMISSION_DENIED' ||
-          (err as any).category === 'auth'
+          errObj.statusCode === 401 ||
+          errObj.statusCode === 403 ||
+          errObj.code === 'PERMISSION_DENIED' ||
+          errObj.category === 'auth'
         );
         
         if (isAuthError) {

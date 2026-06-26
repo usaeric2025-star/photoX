@@ -23,7 +23,7 @@ export function DialogContainer() {
       <SonnerContainer />
       <TaskBadge />
       <TaskDrawer />
-      {isLightbox && <PhotoLightbox />}
+      <PhotoLightbox />
       {isEditOpen && <PhotoEditDialog />}
     </>,
     document.body

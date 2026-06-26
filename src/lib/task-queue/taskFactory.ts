@@ -76,8 +76,8 @@ export function createTask<T>(config: TaskConfig<T>): string {
         ErrorFactory.capture(wrappedError);
         
         // Pass original error or wrap it? Let's just create a new error with userMessage
-        const errorToThrow = new Error(userMessage);
-        (errorToThrow as any).originalError = wrappedError;
+        const errorToThrow = new Error(userMessage) as Error & { originalError?: Error };
+        errorToThrow.originalError = wrappedError;
         
         onError?.(errorToThrow);
         throw errorToThrow; // Re-throw to let scheduler handle the state update

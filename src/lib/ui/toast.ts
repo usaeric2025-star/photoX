@@ -24,23 +24,44 @@ export const showToast = {
     let code = 'UNKNOWN_ERROR';
 
     if (messageOrError && typeof messageOrError === 'object') {
-      const err = messageOrError as any;
+      interface AppErrorLike {
+        userMessage?: string;
+        message?: string;
+        code?: string;
+        traceId?: string;
+        timestamp?: string;
+        cause?: unknown;
+        originalError?: unknown;
+        context?: { original?: unknown };
+        stack?: string;
+        error?: { message?: string } | string;
+      }
+      
+      const err = messageOrError as AppErrorLike & Record<string, unknown>;
       userMessage = err.userMessage || err.message || userMessage;
       
       // 深度提取系統訊息
-      const extractSystemMsg = (e: any): string => {
+      const extractSystemMsg = (e: unknown): string => {
         let msg = '';
         if (!e) msg = '';
         else if (typeof e === 'string') msg = e;
-        else if (e.message) msg = e.message;
-        else if (e.error?.message) msg = e.error.message;
-        else if (e.error && typeof e.error === 'string') msg = e.error;
-        else {
-          try {
-            msg = JSON.stringify(e);
-          } catch (err) {
-            msg = String(e);
+        else if (typeof e === 'object') {
+          const obj = e as Record<string, unknown>;
+          if (obj.message) msg = String(obj.message);
+          else if (obj.error && typeof obj.error === 'object') {
+            const nestedErr = obj.error as Record<string, unknown>;
+            if (nestedErr.message) msg = String(nestedErr.message);
+          } else if (obj.error && typeof obj.error === 'string') {
+            msg = obj.error;
+          } else {
+            try {
+              msg = JSON.stringify(e);
+            } catch {
+              msg = String(e);
+            }
           }
+        } else {
+          msg = String(e);
         }
         
         // 替換過長的 Base64 與截斷超長字串
@@ -59,13 +80,13 @@ export const showToast = {
       timestamp = err.timestamp || '';
       
       // 提取原因
-      const originalErr = err.cause || err.originalError || (err.context && err.context.original);
+      const originalErr = (err.cause || err.originalError || (err.context && err.context.original)) as Record<string, unknown> | undefined;
       if (originalErr) {
         const nestedMsg = extractSystemMsg(originalErr);
         if (nestedMsg && nestedMsg !== systemMessage) {
           systemMessage += ` | 原因: ${nestedMsg}`;
         }
-        if (originalErr.stack) {
+        if (typeof originalErr.stack === 'string') {
           stackTrace = originalErr.stack;
         }
       }

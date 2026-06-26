@@ -8,7 +8,7 @@ import { PublicPhotoGrid } from '@/components/photo/PublicPhotoGrid';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { useColumns } from '@/hooks';
 import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
-import { useUI, hasActiveFiltersSelector, type UIStoreState } from '@/lib/store';
+import { useUI, hasActiveFiltersSelector, type UIStoreState, uiStore } from '@/lib/store';
 import { WhatsAppDialog } from '@/components/shared/WhatsAppDialog';
 import { PhotoErrorDisplay } from '@/components/photo/PhotoErrorDisplay';
 import { Icon } from '@/components/ui/Icon';
@@ -58,7 +58,7 @@ export default function PublicPage() {
     refetch();
   };
 
-  const { open, isOpen, currentIndex } = useLightbox();
+  const openLightbox = useUI(s => s.openLightbox);
   
   const lightboxItems = useMemo(() => photosToLightboxSlides(photos), [photos]);
 
@@ -67,16 +67,17 @@ export default function PublicPage() {
     if (photoId && photos.length > 0) {
       const index = photos.findIndex(p => p.id === photoId);
       if (index !== -1) {
+         const { lightboxIsOpen, lightboxCurrentIndex } = uiStore.getState();
          // 只有当灯箱没开，或者灯箱打开但显示的不是当前 photoId 时才打开
-         if (!isOpen || photos[currentIndex]?.id !== photoId) {
-            open(lightboxItems, index);
+         if (!lightboxIsOpen || photos[lightboxCurrentIndex]?.id !== photoId) {
+            openLightbox(lightboxItems, index);
          }
       }
     }
-  }, [photos, photoId, open, isOpen, currentIndex, lightboxItems]);
+  }, [photos, photoId, openLightbox, lightboxItems]);
 
   const handlePhotoClick = (id: string, index: number) => {
-    open(lightboxItems, index);
+    openLightbox(lightboxItems, index);
     setPhotoId(id);
   };
 

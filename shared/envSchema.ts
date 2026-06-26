@@ -10,7 +10,8 @@ export const clientEnvSchema = v.object({
   "VITE_SUPABASE_ANON_KEY": v.pipe(v.string(), v.minLength(1)),
   "VITE_SENTRY_DSN": v.optional(v.string()),
   "VITE_WHATSAPP_NUMBER": v.optional(v.string()),
-  "VITE_THUMBNAIL_WORKER_URL": v.optional(v.string()),
+  "VITE_IMAGE_WORKER_URL": v.optional(v.string()),
+  "VITE_R2_BASE_URL": v.optional(v.string()),
   "MODE": v.optional(v.string()),
   "DEV": v.optional(v.boolean()),
   "PROD": v.optional(v.boolean())
@@ -45,7 +46,8 @@ export const serverEnvSchema = v.object({
   // Other flags
   VERCEL: v.optional(v.union([v.string(), v.undefined()])),
   DISABLE_HMR: v.optional(v.union([v.string(), v.undefined()])),
-  VITE_THUMBNAIL_WORKER_URL: v.optional(v.string()),
+  "VITE_IMAGE_WORKER_URL": v.optional(v.string()),
+  "VITE_R2_BASE_URL": v.optional(v.string()),
   VITE_SENTRY_DSN: v.optional(v.string()),
   SENTRY_DSN: v.optional(v.string())
 });
