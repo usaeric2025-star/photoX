@@ -90,7 +90,7 @@ const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.Ref<Vir
     const target = e.currentTarget;
     const offset = target.scrollTop;
     props.onScroll?.(offset);
-    if (offset + target.clientHeight >= target.scrollHeight - 300) {
+    if (offset + target.clientHeight >= target.scrollHeight - 1000) {
       onEndReachedRef.current?.();
     }
   };
@@ -123,7 +123,7 @@ const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.Ref<Vir
     props.onScroll?.(offset);
     if (vlistRef.current) {
       const { scrollSize, viewportSize } = vlistRef.current;
-      if (scrollSize && viewportSize && offset + viewportSize >= scrollSize - 300) {
+      if (scrollSize && viewportSize && offset + viewportSize >= scrollSize - 1200) {
         onEndReachedRef.current?.();
       }
     }

@@ -143,11 +143,7 @@ export function PhotoLightbox() {
     const photo = slides[index];
     if (photo?.id) {
       lightboxCurrentIndex.set(index);
-      if (route.name === 'photo') {
-        navigate.photo(photo.id);
-      } else {
-        filters.setPhotoId(photo.id);
-      }
+      // URL update is handled by useURLSync observing lightboxCurrentIndex
     }
   };
 

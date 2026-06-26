@@ -26,7 +26,7 @@ export function Button({
     <button
       disabled={isLoading}
       className={`
-        inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all
+        inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all active:scale-95
         disabled:opacity-50 disabled:cursor-not-allowed
         ${variant === 'primary' ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}
         ${variant === 'secondary' ? 'bg-slate-100 text-slate-900 hover:bg-slate-200' : ''}

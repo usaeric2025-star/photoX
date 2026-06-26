@@ -25,9 +25,6 @@ export const lightboxSlides = signal<UIStoreState, 'lightboxSlides'>(uiStore, 'l
 export const lightboxCurrentIndex = signal<UIStoreState, 'lightboxCurrentIndex'>(uiStore, 'lightboxCurrentIndex');
 
 // 搜尋與選取
-export const searchTerm = signal<UIStoreState, 'filters'>(uiStore, 'filters');
-export const searchCategory = signal<UIStoreState, 'filters'>(uiStore, 'filters');
-export const searchTags = signal<UIStoreState, 'filters'>(uiStore, 'filters');
 export const selectedIds = signal<UIStoreState, 'selectedIds'>(uiStore, 'selectedIds');
 export const isMultiSelect = signal<UIStoreState, 'isMultiSelect'>(uiStore, 'isMultiSelect');
 export const processingIds = signal<UIStoreState, 'processingIds'>(uiStore, 'processingIds');

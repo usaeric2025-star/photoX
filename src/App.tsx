@@ -1,21 +1,20 @@
 import { Suspense, lazy } from 'react';
+import { NuqsAdapter } from 'nuqs/adapters/react';
 import { AppErrorBoundary } from '@/components/layout/AppErrorBoundary';
 import { ConfirmProvider } from './context/ConfirmContext';
 import { RouterOrchestrator } from '@/components/RouterOrchestrator';
 import { Analytics } from '@vercel/analytics/react';
 import { useAppInit } from '@/hooks/core/useAppInit';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
-import { useRouteSync } from '@/hooks/core/useRouteSync';
+import { useURLSync } from '@/hooks/core/useURLSync';
 import { DialogContainer } from '@/components/layout/DialogContainer';
 import { PhotoEditDialog } from '@/features/photo-edit/PhotoEditDialog';
 
 const DiagDialog = lazy(() => import('@/components/ui/DiagDialog').then(m => ({ default: m.DiagDialog })));
 
-export default function App() {
-  const { status, error } = useAppInit();
-
-  // ✅ 路由同步
-  useRouteSync();
+function AppContent({ status, error }: { status: string, error: any }) {
+  // ✅ 路由同步 (using nuqs)
+  useURLSync();
 
   return (
     <AppErrorBoundary>
@@ -38,6 +37,16 @@ export default function App() {
       </Suspense>
       <Analytics />
     </AppErrorBoundary>
+  );
+}
+
+export default function App() {
+  const { status, error } = useAppInit();
+
+  return (
+    <NuqsAdapter>
+      <AppContent status={status} error={error} />
+    </NuqsAdapter>
   );
 }
 

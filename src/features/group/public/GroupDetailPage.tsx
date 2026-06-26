@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { logger } from '@/lib/logger';
 import { useAppRouter } from '@/lib/router';
 import { useGroupData } from '../hooks/useGroupData';
 import { PhotoListItem } from '@/types/api';
@@ -44,8 +45,9 @@ export function PublicGroupDetailPage() {
   const { data: categories } = useCategories();
   const { lang, uiTranslations: t } = useTranslation();
   
-  const { group, photos, totalCount, loading, error } = useGroupData({ groupId, isAdmin: false });
+  const { group, photos: rawPhotos, totalCount, loading, error } = useGroupData({ groupId, isAdmin: false });
 
+  const photos = React.useMemo(() => rawPhotos || [], [rawPhotos]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { showWhatsAppChoice, patchUI, openLightbox } = useUI(s => ({
     showWhatsAppChoice: s.showWhatsAppChoice,
@@ -57,7 +59,7 @@ export function PublicGroupDetailPage() {
 
   // Anchoring effect
   React.useEffect(() => {
-    if (anchor && photoId && !loading && (photos || []).length > 0) {
+    if (anchor && photoId && !loading && photos.length > 0) {
       // Small delay to ensure DOM is ready
       const timer = setTimeout(() => {
         const element = document.querySelector(`[data-photo-id="${photoId}"]`);
@@ -74,11 +76,26 @@ export function PublicGroupDetailPage() {
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [anchor, photoId, loading, (photos || []).length]);
+  }, [anchor, photoId, loading, photos.length]);
 
   const handlePhotoClick = (_id: string, index: number) => {
       openLightbox(lightboxItems, index);
   };
+
+  // Handle deep links for lightbox: if URL has photoId but lightbox is closed, open it.
+  React.useEffect(() => {
+    if (photoId && photos.length > 0) {
+      const state = uiStore.getState();
+      // Only auto-open if it's not already open or if slides are missing
+      if (!state.lightboxIsOpen || state.lightboxSlides.length === 0) {
+        const index = photos.findIndex(p => p.id === photoId);
+        if (index !== -1) {
+          logger.info('[GroupDetailPage] Auto-opening lightbox for deep link', { photoId, index });
+          openLightbox(lightboxItems, index);
+        }
+      }
+    }
+  }, [photoId, photos, lightboxItems, openLightbox]);
 
   const handleScrollToTop = () => {
     scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });

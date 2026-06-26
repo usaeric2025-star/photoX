@@ -59,9 +59,6 @@ export interface UIStoreState {
   setLightboxIndex: (index: number) => void;
 }
 
-// Internal store reference with setState exposed to avoid repeating casts
-export type UIStoreInstance = ReturnType<typeof createStore<UIStoreState>>;
-
 const defaultForm: ProductFormData = {
   name: { zh: '', en: '', ms: '' },
   category_id: '',

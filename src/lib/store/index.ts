@@ -15,11 +15,10 @@ import { taskStore, useTaskStore, useTaskSelector, activeTaskCountSelector, task
 import type { TaskStoreState } from '@/store/taskStore';
 import { appStore, appLoadingSignal, appErrorSignal } from '@/store/appStore';
 import { 
-  searchTerm, isTaskDrawerOpen, isDiagnosticsOpen, 
+  isTaskDrawerOpen, isDiagnosticsOpen, 
   isMultiSelect, isSidebarOpen, selectedIds 
 } from './ui';
 
-const searchTermSignal = searchTerm;
 const isTaskDrawerOpenSignal = isTaskDrawerOpen;
 const isDiagnosticsOpenSignal = isDiagnosticsOpen;
 const batchModeSignal = isMultiSelect;
@@ -28,7 +27,7 @@ const selectedIdsSignal = selectedIds;
 
 // Re-exports
 export { 
-  uiStore, useUIStore, useUIStore as useUI, searchTermSignal, selectedCountSelector, 
+  uiStore, useUIStore, useUIStore as useUI, selectedCountSelector, 
   selectedSetSelector, isAnySelectedSelector, hasActiveFiltersSelector, 
   batchModeSignal, selectedIdsSignal, useAppLang,
   isTaskDrawerOpenSignal, isDiagnosticsOpenSignal, isSidebarOpenSignal,

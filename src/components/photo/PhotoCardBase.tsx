@@ -51,7 +51,7 @@ export const PhotoCardBase = ({
       }}
       className={cn(
         "aspect-square overflow-hidden cursor-pointer relative transition-all duration-300 group rounded-2xl bg-surface-base shadow-md",
-        "active:scale-[0.98]",
+        "active:scale-[0.96] active:shadow-sm active:brightness-95",
         "data-[selected=true]:ring-4 data-[selected=true]:ring-primary data-[selected=true]:scale-[0.96]",
         isHidden && "opacity-80 grayscale-[0.3] ring-2 ring-danger shadow-lg",
         className

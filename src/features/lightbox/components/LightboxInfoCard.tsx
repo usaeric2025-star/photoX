@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { LightboxSlide } from '@/lib/lightbox/types';
 import { Icon } from '@/components/ui/Icon';
 import { useTranslation } from '@/hooks/core/useTranslation';
-import { useSignal, appLang as appLangSignal } from '@/lib/store';
+import { useSignal, appLang } from '@/lib/store';
 import { Photo } from '@/types/photo';
 
 export function LightboxInfoCard({ 
@@ -16,7 +16,7 @@ export function LightboxInfoCard({
 }) {
   const [expanded, setExpanded] = useState(false);
   const { uiTranslations } = useTranslation();
-  const appLang = useSignal(appLangSignal);
+  const currentLang = useSignal(appLang);
 
   if (!slide) return null;
 
@@ -29,11 +29,11 @@ export function LightboxInfoCard({
   if (original) {
     if (original.name && typeof original.name === 'object') {
       const nameObj = original.name as Record<string, string>;
-      displayTitle = nameObj[appLang] || nameObj.zh || nameObj.en || slide.title;
+      displayTitle = nameObj[currentLang] || nameObj.zh || nameObj.en || slide.title;
     }
     if (original.description && typeof original.description === 'object') {
       const descObj = original.description as Record<string, string>;
-      displayDesc = descObj[appLang] || descObj.zh || descObj.en || slide.description;
+      displayDesc = descObj[currentLang] || descObj.zh || descObj.en || slide.description;
     }
   }
 

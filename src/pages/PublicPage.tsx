@@ -41,7 +41,7 @@ export default function PublicPage() {
   }, 'public');
 
   const { 
-    photos, 
+    photos: rawPhotos, 
     totalCount,
     refetch,
     isError,
@@ -49,6 +49,10 @@ export default function PublicPage() {
     isFetching,
   } = photoGridData;
 
+  const photos = useMemo(() => rawPhotos || [], [rawPhotos]);
+  const lightboxItems = useMemo(() => photosToLightboxSlides(photos), [photos]);
+  const openLightbox = useUI(s => s.openLightbox);
+  
   const showWhatsAppChoice = useUI((s: UIStoreState) => s.showWhatsAppChoice);
   const patch = useUI(s => s.patch);
   const { lang, uiTranslations: t } = useTranslation();
@@ -58,13 +62,24 @@ export default function PublicPage() {
     refetch();
   };
 
-  const openLightbox = useUI(s => s.openLightbox);
-  
-  const lightboxItems = useMemo(() => photosToLightboxSlides(photos), [photos]);
-
   const handlePhotoClick = (_id: string, index: number) => {
     openLightbox(lightboxItems, index);
   };
+
+  // Handle deep links for lightbox: if URL has photoId but lightbox is closed, open it.
+  useEffect(() => {
+    if (photoId && photos.length > 0) {
+      const state = uiStore.getState();
+      // Only auto-open if it's not already open or if slides are missing
+      if (!state.lightboxIsOpen || state.lightboxSlides.length === 0) {
+        const index = photos.findIndex(p => p.id === photoId);
+        if (index !== -1) {
+          logger.info('[PublicPage] Auto-opening lightbox for deep link', { photoId, index });
+          openLightbox(lightboxItems, index);
+        }
+      }
+    }
+  }, [photoId, photos, lightboxItems, openLightbox]);
 
   if (isError) {
     return (

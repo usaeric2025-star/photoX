@@ -1,7 +1,23 @@
-import { useCallback, useEffect, useMemo } from 'react';
-import { useAppRoute } from '@/lib/router';
-import { Router, ALL_ROUTES } from '@/router';
+import { useCallback, useMemo } from 'react';
+import { useQueryStates } from 'nuqs';
+import { 
+  searchParser, 
+  categoryParser, 
+  tagsParser, 
+  sortParser, 
+  statusParser, 
+  batchParser, 
+  parseAsPhotoId, 
+  groupIdParser, 
+  modalParser, 
+  viewParser,
+  anchorParser,
+  showGroupsCollapsedParser,
+  selectedIdsParser 
+} from '@/lib/nuqs/parsers';
+import { Router } from '@/router';
 import { useUI, isLightboxOpen, lightboxCurrentIndex, uiStore } from '@/lib/store';
+import { useAppRoute } from '@/lib/router';
 
 export interface UseFiltersOptions {
   enableStatus?: boolean;
@@ -11,134 +27,126 @@ export interface UseFiltersOptions {
 
 export const useFilters = (options: UseFiltersOptions = {}) => {
   const route = useAppRoute();
-  const params = route ? (route.params as Record<string, string | string[] | undefined>) : {};
 
-  const updateSearch = useCallback((updates: Record<string, unknown>) => {
-    if (!route) return;
-    const currentRouteName = route.name;
+  const [query, setQuery] = useQueryStates({
+    q: searchParser,
+    cat: categoryParser,
+    tag: tagsParser,
+    sort: sortParser,
+    status: statusParser,
+    batch: batchParser,
+    photoId: parseAsPhotoId,
+    groupId: groupIdParser,
+    modal: modalParser,
+    view: viewParser,
+    anchor: anchorParser,
+    showGroupsCollapsed: showGroupsCollapsedParser,
+    selected: selectedIdsParser,
+  }, {
+    shallow: true, // Use shallow routing to avoid full page reloads
+    history: 'replace', // Use replace to avoid history bloat
+  });
 
-    // Merge updates into current params
-    const mergedParams: Record<string, string | string[] | undefined> = { ...(route.params as Record<string, string | string[] | undefined>) };
-    for (const key in updates) {
-      const val = updates[key];
-      if (val === undefined) {
-        delete mergedParams[key];
-      } else if (Array.isArray(val)) {
-        mergedParams[key] = val.map(String);
-      } else {
-        mergedParams[key] = String(val);
-      }
-    }
-
-    const push = Router.push as unknown as (name: string, params: Record<string, unknown>) => void;
-    push(currentRouteName, mergedParams as Record<string, unknown>);
-  }, [route]);
-
-  // Expose batch update capability
-  const updateFilters = useCallback((updates: Record<string, unknown>) => {
-    updateSearch(updates);
-  }, [updateSearch]);
-
-  const searchVal = (params.q as string) || '';
+  const searchVal = query.q;
   const setSearch = useCallback((val: string) => {
-    updateSearch({ q: val || undefined });
-  }, [updateSearch]);
+    setQuery({ q: val || null });
+  }, [setQuery]);
 
-  const category = (params.cat as string) || '';
+  const category = query.cat;
   const setCategory = useCallback((val: string) => {
-    updateSearch({ cat: val || undefined });
-  }, [updateSearch]);
+    setQuery({ cat: val || null });
+  }, [setQuery]);
 
-  const tags = Array.isArray(params.tag) ? (params.tag as string[]) : (params.tag ? [params.tag as string] : []);
+  const tags = query.tag;
   const setTags = useCallback((vals: string[]) => {
-    updateSearch({ tag: (vals && vals.length === 0) ? undefined : vals });
-  }, [updateSearch]);
+    setQuery({ tag: (vals && vals.length === 0) ? null : vals });
+  }, [setQuery]);
 
-  const sort = (params.sort as string) || options.sortOptions?.[0]?.value || 'newest';
+  const sort = query.sort || options.sortOptions?.[0]?.value || 'newest';
   const setSort = useCallback((val: string) => {
-    updateSearch({ sort: val || undefined });
-  }, [updateSearch]);
+    setQuery({ sort: val || null });
+  }, [setQuery]);
 
-  const status = (params.status as string) || 'all';
+  const status = query.status;
   const setStatus = useCallback((val: string) => {
-    updateSearch({ status: val === 'all' ? undefined : val });
-  }, [updateSearch]);
+    setQuery({ status: val === 'all' ? null : val });
+  }, [setQuery]);
 
-  const batchFilter = (params.batch as string) || '';
-  const setBatchFilter = useCallback((val: string) => {
-    updateSearch({ batch: val || undefined });
-  }, [updateSearch]);
+  const batchFilter = query.batch;
+  const setBatchFilter = useCallback((val: boolean) => {
+    setQuery({ batch: val || null });
+  }, [setQuery]);
 
-  const photoId = (params.photoId as string) || (route?.name === 'photo' ? params.photoId as string : null);
+  const photoId = query.photoId;
   const setPhotoId = useCallback((val: string | null) => {
-      // 如果是 photo 詳情頁，關閉後回到首頁
       if (route?.name === 'photo') {
          if (val) {
-            if (val !== params.photoId) Router.push("photo", { photoId: val });
+            if (val !== query.photoId) Router.push("photo", { photoId: val });
          } else {
             Router.push("home");
          }
          return;
       }
       
-      // Update Signals directly for instantaneous feedback.
-      // useRouteSync will handle the URL update debounced in the background.
-      if (val === null) {
-        if (uiStore.getState().lightboxIsOpen) {
-          isLightboxOpen.set(false);
-        }
-      } else {
+      setQuery({ photoId: val || null, modal: (val === null && query.modal === 'edit') ? null : query.modal });
+      
+      // We still update index for instant lightbox response
+      if (val !== null) {
         const state = uiStore.getState();
         const slides = state.lightboxSlides;
         const index = slides.findIndex(s => s.id === val);
-        if (index !== -1) {
-          // Explicitly guard to prevent redundant signal triggers
-          if (index !== state.lightboxCurrentIndex) {
-            lightboxCurrentIndex.set(index);
-          }
-          if (!state.lightboxIsOpen) {
-            isLightboxOpen.set(true);
-          }
-        } else {
-          // If slide not found in current lightbox state, update URL manually
-          // as it might be a direct link or a jump.
-          updateSearch({ photoId: val });
+        if (index !== -1 && index !== state.lightboxCurrentIndex) {
+          lightboxCurrentIndex.set(index);
         }
       }
-  }, [route?.name, params.photoId, updateSearch]);
+  }, [route?.name, query.photoId, query.modal, setQuery]);
 
-  const anchor = params.anchor === 'true';
-  const setAnchor = useCallback((val: boolean) => {
-    updateSearch({ anchor: val ? 'true' : undefined });
-  }, [updateSearch]);
-
-  const groupId = (params.groupId as string) || null;
+  const groupId = query.groupId;
   const setGroupId = useCallback((val: string | null) => {
-    updateSearch({ groupId: val || undefined });
-  }, [updateSearch]);
+    setQuery({ groupId: val || null });
+  }, [setQuery]);
 
-  const modal = (params.modal as string) || null;
+  const modal = query.modal;
   const setModal = useCallback((val: string | null) => {
-    updateSearch({ modal: val || undefined });
-  }, [updateSearch]);
+    setQuery({ modal: val || null });
+  }, [setQuery]);
 
-  const showGroupsCollapsed = params.showGroupsCollapsed !== 'false';
-  const setShowGroupsCollapsed = useCallback((val: boolean) => {
-    updateSearch({ showGroupsCollapsed: val ? undefined : 'false' });
-  }, [updateSearch]);
-
-  const view = (params.view as string) || 'grid';
+  const view = query.view as 'grid' | 'list';
   const setView = useCallback((val: 'grid' | 'list') => {
-    updateSearch({ view: val === 'grid' ? undefined : 'list' });
-  }, [updateSearch]);
+    setQuery({ view: val === 'grid' ? null : 'list' });
+  }, [setQuery]);
+
+  const anchor = query.anchor;
+  const setAnchor = useCallback((val: boolean) => {
+    setQuery({ anchor: val || null });
+  }, [setQuery]);
+
+  const showGroupsCollapsed = query.showGroupsCollapsed;
+  const setShowGroupsCollapsed = useCallback((val: boolean) => {
+    setQuery({ showGroupsCollapsed: val === true ? null : false });
+  }, [setQuery]);
 
   const reset = useCallback(() => {
-    if (route?.name === 'admin') {
-        Router.push('admin');
-    } else {
-        Router.push('home');
-    }
-  }, [route?.name]);
+    setQuery({
+      q: null,
+      cat: null,
+      tag: null,
+      sort: null,
+      status: null,
+      batch: null,
+      photoId: null,
+      groupId: null,
+      modal: null,
+      view: null,
+      anchor: null,
+      showGroupsCollapsed: null,
+      selected: null,
+    });
+  }, [setQuery]);
+
+  const updateFilters = useCallback((updates: Partial<typeof query>) => {
+    setQuery(updates);
+  }, [setQuery]);
 
   return useMemo(() => ({
     search: searchVal, setSearch,
@@ -146,11 +154,11 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
     tags, setTags,
     sort, setSort,
     status: options.enableStatus ? status : 'all', setStatus,
-    batchFilter: options.enableBatch ? batchFilter : '', setBatchFilter,
+    batchFilter: options.enableBatch ? batchFilter : false, setBatchFilter,
     photoId, setPhotoId,
-    anchor, setAnchor,
     groupId, setGroupId,
     modal, setModal,
+    anchor, setAnchor,
     showGroupsCollapsed, setShowGroupsCollapsed,
     view, setView,
     reset,
