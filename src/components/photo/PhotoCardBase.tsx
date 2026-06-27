@@ -15,6 +15,9 @@ export interface PhotoCardBaseProps extends React.HTMLAttributes<HTMLDivElement>
   ref?: Ref<HTMLDivElement>;
 }
 
+import { motion } from 'motion/react';
+import { Image } from '@/components/ui/Image';
+
 /**
  * PhotoCardBase provides the foundational layout and visual state for a photo card,
  * strictly driven by the PhotoListItem contract.
@@ -34,16 +37,6 @@ export const PhotoCardBase = ({
   const isManagement = useIsManagement();
   const isHidden = !!item.isHidden && isManagement;
 
-  const [isLoaded, setIsLoaded] = React.useState(false);
-  const imgRef = React.useRef<HTMLImageElement>(null);
-
-  // Check if image is already cached
-  React.useEffect(() => {
-    if (imgRef.current?.complete) {
-      setIsLoaded(true);
-    }
-  }, []);
-
   return (
     <div
       ref={ref}
@@ -60,8 +53,8 @@ export const PhotoCardBase = ({
         ...props.style
       }}
       className={cn(
-        "aspect-square overflow-hidden cursor-pointer relative transition-all duration-300 group rounded-2xl bg-surface-base shadow-md",
-        "active:scale-[0.96] active:shadow-sm active:brightness-95",
+        "aspect-square overflow-hidden cursor-pointer relative transition-all duration-500 group rounded-2xl bg-surface-base shadow-sm",
+        "active:scale-[0.98] active:brightness-95",
         isHidden && "opacity-80 grayscale-[0.3] ring-2 ring-danger shadow-lg",
         isSelected && "ring-4 ring-primary bg-primary/10 shadow-lg scale-[0.98]",
         className
@@ -69,31 +62,20 @@ export const PhotoCardBase = ({
       {...props}
     >
       <div className={cn(
-        "relative aspect-square w-full h-full overflow-hidden transition-all duration-500 bg-surface-mute",
+        "relative aspect-square w-full h-full overflow-hidden transition-all duration-700 ease-in-out bg-surface-mute",
         isSelected ? "scale-[0.92] rounded-xl" : "scale-100 rounded-2xl",
-        !isLoaded && "animate-shimmer"
       )}>
-        <img 
-          ref={imgRef}
-          src={(imgVariant === 'md' ? item.imageUrl : (item.thumbnailUrl || item.imageUrl)) || undefined}
-          alt={item.name}
-          loading="lazy"
+        <Image
+          src={(imgVariant === 'md' ? item.imageUrl : (item.thumbnailUrl || item.imageUrl)) || ''}
+          alt={typeof item.name === 'string' ? item.name : (item.name as any)?.zh || '照片'}
+          blurhash={item.blurhash}
           className={cn(
-            "w-full h-full object-cover transition-all duration-300 ease-apple group-hover:scale-110",
-            !isLoaded && "opacity-0",
+            "w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out",
             isHidden && "opacity-60"
           )}
-          onLoad={() => setIsLoaded(true)}
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            if (target.src !== '/fallback-image.jpg') {
-              target.src = '/fallback-image.jpg';
-              setIsLoaded(true);
-            }
-          }}
         />
         {/* Apple Style Shine Overlay */}
-        <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-10 transition-opacity duration-300 bg-gradient-to-tr from-white/0 via-white/30 to-white/0" />
+        <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-10 transition-opacity duration-500 bg-gradient-to-tr from-white/0 via-white/30 to-white/0" />
         
         {/* Selection overlay */}
         {isSelected && (

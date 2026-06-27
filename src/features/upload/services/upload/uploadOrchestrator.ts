@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase';
 import { DB_CONFIG } from '@/constants/config';
 import { generateItemCode } from '@/services/photo/utils';
 import { storage } from '@/services/storage';
+import { generateBlurhash } from '@/lib/image/blurhash';
 
 export const uploadSinglePhoto = async (
   userId?: string, 
@@ -39,6 +40,15 @@ export const uploadSinglePhoto = async (
         
         if (dbCheck.orphanId) {
              photo.id = dbCheck.orphanId;
+        }
+    }
+
+    // 1.5 BlurHash Generation
+    if (!photo.blurhash && file) {
+        try {
+            photo.blurhash = await generateBlurhash(file);
+        } catch (e) {
+            logger.warn(`[Upload] BlurHash generation failed for ${photo.id}:`, e);
         }
     }
 

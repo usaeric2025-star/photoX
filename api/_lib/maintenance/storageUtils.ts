@@ -2,7 +2,7 @@ import { db, furnitureItems } from '../../_lib/db/index.js';
 import { getR2Client } from "../storage.js";
 import { ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { getServerEnv } from "../../../shared/envSchema.js";
-import { sql, isNotNull } from "drizzle-orm";
+import { sql, isNotNull, or, isNull, eq, count } from "drizzle-orm";
 
 const serverEnv = getServerEnv(process.env);
 
@@ -41,7 +41,7 @@ export async function runStorageAudit() {
         const batch = await db.select({
             id: furnitureItems.id,
             imageUrl: furnitureItems.imageUrl,
-            name: furnitureItems.name
+            name: furnitureItems.name,
         })
         .from(furnitureItems)
         .where(isNotNull(furnitureItems.imageUrl))
@@ -56,7 +56,7 @@ export async function runStorageAudit() {
                     id: String(p.id),
                     name: typeof p.name === 'object' ? (p.name as Record<string, string> | null)?.zh || "" : String(p.name || ''),
                     url: String(p.imageUrl || ''),
-                    normalized: normalizeUrl(String(p.imageUrl || ''))
+                    normalized: normalizeUrl(String(p.imageUrl || '')),
                 });
             });
             offset += limit;

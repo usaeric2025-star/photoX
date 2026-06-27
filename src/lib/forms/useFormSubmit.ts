@@ -1,0 +1,71 @@
+import { useState } from 'react';
+import { handleFormError } from './index';
+import { showToast } from '@/lib/ui/toast';
+import * as v from 'valibot';
+
+interface UseFormSubmitOptions<T extends v.BaseSchema<any, any, any>, R = void> {
+    schema?: T;
+    mutationFn: (values: v.InferOutput<T>) => Promise<R>;
+    onSuccess?: (result: R) => void;
+    successMessage?: string;
+    errorMessage?: string;
+}
+
+export function useFormSubmit<T extends v.BaseSchema<any, any, any>, R = void>({
+    schema,
+    mutationFn,
+    onSuccess,
+    successMessage,
+    errorMessage
+}: UseFormSubmitOptions<T, R>) {
+    const [isLoading, setIsLoading] = useState(false);
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+    const clearFieldError = (name: string) => {
+        setFieldErrors(prev => {
+            const next = { ...prev };
+            delete next[name];
+            return next;
+        });
+    };
+
+    const submit = async (values: unknown) => {
+        if (isLoading) return;
+        setIsLoading(true);
+        setFieldErrors({});
+        
+        try {
+            let parsedValues = values as v.InferOutput<T>;
+            if (schema) {
+                const result = v.safeParse(schema, values);
+                if (!result.success) {
+                    const errors: Record<string, string> = {};
+                    result.issues.forEach(issue => {
+                        if (issue.path?.[0]?.key) {
+                            errors[issue.path[0].key as string] = issue.message;
+                        }
+                    });
+                    setFieldErrors(errors);
+                    setIsLoading(false);
+                    return;
+                }
+                parsedValues = result.output;
+            }
+
+            const result = await mutationFn(parsedValues);
+            if (successMessage) {
+                showToast.success(successMessage);
+            }
+            onSuccess?.(result);
+        } catch (error) {
+            handleFormError(error);
+            if (errorMessage) {
+                showToast.error(errorMessage);
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return { submit, isLoading, fieldErrors, clearFieldError };
+}

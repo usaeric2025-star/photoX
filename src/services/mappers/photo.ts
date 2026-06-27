@@ -7,7 +7,7 @@ import { getThumbnailUrl, normalizeStoredUrl, mapTranslationField } from './util
 export const ALLOWED_FIELDS = [
   'id', 'name', 'name_en', 'name_ms', 'description', 'description_translations', 'category_id', 'manufacturer_id',
   'tag_ids', 'dimensions', 'model_number', 'manual_code', 'group_id', 'is_group_cover', 'is_pinned',
-  'image_url', 'price', 'note', 'type', 'group_order', 'updated_at', 'created_at',
+  'image_url', 'blurhash', 'price', 'note', 'type', 'group_order', 'updated_at', 'created_at',
   'user_id', 'is_hidden', 'is_analyzing', 'image_hash', 'item_code', 'metadata'
 ];
 
@@ -112,6 +112,7 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw, allTags?: Tag[]): Photo
       manufacturer_id: getValue<string | null>('manufacturer_id', 'manufacturerId', null),
       description: item.description as unknown as Photo['description'],
       image_url: imageUrl,
+      blurhash: getValue<string | null>('blurhash', 'blurhash', null),
       thumbnail_sm_url: getThumbnailUrl(imageUrl, 200, 200, imageHash),
       thumbnail_md_url: getThumbnailUrl(imageUrl, 800, 800, imageHash),
       exif_data: getValue<Record<string, unknown> | null>('exif_data', 'exifData', null),

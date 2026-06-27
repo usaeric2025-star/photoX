@@ -150,6 +150,7 @@ export const listHandler = (app: Hono) => {
                 isPinned: !!d.isPinned,
                 isHidden: !!d.isHidden,
                 isCover: !!d.isGroupCover || (d.groupCoverPhotoId === d.id),
+                blurhash: d.blurhash,
                 createdAt: d.createdAt ? (d.createdAt as unknown as Date).toISOString() : null,
             } as PhotoListItem;
         });

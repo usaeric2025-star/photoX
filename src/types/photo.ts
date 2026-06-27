@@ -31,6 +31,7 @@ export interface Photo {
     ms?: string;
   } | null;
   image_url: string; // Public URL in Storage
+  blurhash?: string | null;
   width?: number; // Pixel width
   height?: number; // Pixel height
   thumbnail_sm_url?: string; // w=300
