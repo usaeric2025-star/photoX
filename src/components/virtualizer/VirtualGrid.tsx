@@ -150,6 +150,7 @@ const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.Ref<Vir
               data-row-index={index}
               data-contract="virtual-grid-row" 
               className="w-full shrink-0"
+              style={{ transform: 'translate3d(0px, 0px, 0px)' }}
             >
               {isGridLayout ? (
                 <div 
