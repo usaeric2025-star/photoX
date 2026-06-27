@@ -98,7 +98,6 @@ export const PhotoListItemSchema = v.object({
     description: v.optional(v.nullable(v.string())),
     imageUrl: v.string(),
     thumbnailUrl: v.string(),
-    blurhash: v.optional(v.nullable(v.string())),
     groupId: v.optional(v.nullable(v.string())),
     groupName: v.optional(v.nullable(v.string())),
     memberCount: v.number(),

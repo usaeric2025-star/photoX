@@ -28,14 +28,13 @@ export function PublicPhotoGrid({
   isFetchingNextPage, 
   hasNextPage, 
   fetchNextPage, 
-  columns,
   filters,
   gridRef,
   onScroll,
   onPhotoClick
-}: PublicPhotoGridProps) {
+}: Omit<PublicPhotoGridProps, 'columns'>) {
   
-  logger.debug('[PublicPhotoGrid] Render Start', { photosCount: photos?.length, isPending, isFetching, columns, dataVersion });
+  logger.debug('[PublicPhotoGrid] Render Start', { photosCount: photos?.length, isPending, isFetching, dataVersion });
 
   return (
     <div className="h-full w-full relative">
@@ -47,7 +46,6 @@ export function PublicPhotoGrid({
         isFetchingNextPage={isFetchingNextPage}
         hasNextPage={hasNextPage}
         fetchNextPage={fetchNextPage}
-        columns={columns}
         mode="public"
         filters={filters}
         gridRef={gridRef}

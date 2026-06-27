@@ -56,7 +56,6 @@ export const furnitureItems = pgTable('furniture_items', {
     isPinned: boolean('is_pinned').default(false),
     imageUrl: text('image_url'),
     imageHash: text('image_hash'),
-    blurhash: text('blurhash'),
     price: text('price'),
     note: text('note'),
     type: text('type'),

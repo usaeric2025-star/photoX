@@ -19,7 +19,6 @@ interface AdminPhotoCardProps {
   sharedCategories?: Category[];
   sharedTags?: Tag[];
   canPin?: boolean;
-  selected?: boolean;
   canPinGlobal?: boolean;
 }
 
@@ -33,10 +32,9 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
   sharedCategories,
   sharedTags,
   canPin,
-  selected,
   canPinGlobal,
 }: AdminPhotoCardProps) {
-  const isSelected = !!selected;
+  const isSelected = useUI((s) => s.selectedIds.includes(photo.id));
   const isMultiSelect = useSignal(isMultiSelectSignal);
   const columns = useSignal(gridColumnsSignal);
   const { can } = usePermission();
@@ -85,7 +83,6 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
          prev.photo.name === next.photo.name &&
          prev.photo.imageUrl === next.photo.imageUrl &&
          prev.photo.createdAt === next.photo.createdAt &&
-         prev.selected === next.selected &&
          prev.canPinGlobal === next.canPinGlobal &&
          prev.showGroupsCollapsed === next.showGroupsCollapsed &&
          prev.hasSearchQuery === next.hasSearchQuery;

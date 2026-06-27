@@ -37,15 +37,13 @@ function CardSkeleton() {
   );
 }
 
-import { useUI, type UIStoreState, selectedSetSelector, useSignal, selectedIds, isMultiSelect as isMultiSelectSignal } from '@/lib/store';
+import { useUI, type UIStoreState, selectedSetSelector, useSignal, selectedIds, isMultiSelect as isMultiSelectSignal, gridColumns as gridColumnsSignal } from '@/lib/store';
 import { usePermission } from '@/hooks';
-import { logger } from '@/lib/logger';
 
 export function PhotoGridContent({ 
   photos, 
   dataVersion, 
   isPending, 
-  columns, 
   mode,
   isFetchingNextPage,
   hasNextPage,
@@ -54,17 +52,14 @@ export function PhotoGridContent({
   onPhotoClick,
   gridRef,
   onScroll
-}: PhotoGridContentProps) {
+}: Omit<PhotoGridContentProps, 'columns'>) {
   const showGroupsCollapsed = filters?.showGroupsCollapsed !== false;
   const hasSearchQuery = !!filters?.search;
   
-  const currentSelectedIds = useSignal(selectedIds);
-  const isMultiSelect = useSignal(isMultiSelectSignal);
+  const columns = useSignal(gridColumnsSignal);
   const { can } = usePermission();
   const canPinGlobal = can('photo:toggle-pinned');
 
-  const selectedSet = React.useMemo(() => new Set(currentSelectedIds), [currentSelectedIds]);
-  
   const safePhotos = photos || [];
   
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -78,7 +73,6 @@ export function PhotoGridContent({
     const observer = new ResizeObserver((entries) => {
       if (!entries || entries.length === 0) return;
       const newWidth = entries[0].contentRect.width;
-      // 只有在寬度變化超過 10px 時才更新
       setContainerWidth((prev) => Math.abs(newWidth - prev) > 10 ? newWidth : prev);
     });
 
@@ -98,14 +92,11 @@ export function PhotoGridContent({
     const photo = safePhotos[index];
     if (!photo) return null;
     
-    const isSelected = selectedSet.has(photo.id);
-    
     return (
       <div key={photo.id} className="p-0.5 sm:p-1 w-full">
         {mode === 'admin' 
           ? <AdminPhotoCard 
               photo={photo} 
-              selected={isSelected}
               onClick={(e) => onPhotoClick?.(photo.id, index, e)} 
               showGroupsCollapsed={showGroupsCollapsed}
               hasSearchQuery={hasSearchQuery}
@@ -120,7 +111,7 @@ export function PhotoGridContent({
         }
       </div>
     );
-  }, [safePhotos, mode, selectedSet, showGroupsCollapsed, hasSearchQuery, onPhotoClick, canPinGlobal]);
+  }, [safePhotos, mode, showGroupsCollapsed, hasSearchQuery, onPhotoClick, canPinGlobal]);
 
   if (isPending) {
     const skeletonCount = Math.max(columns * 3, 12);

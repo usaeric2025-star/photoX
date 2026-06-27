@@ -19,11 +19,11 @@
 
 ## 資料庫與驗證 (鎖定)
 - 唯一驗證源：Valibot Schema (取代 Zod/ArkType)。
-- 數據表變更：**必須**透過 Drizzle schema 變更並 `drizzle-kit generate`，**嚴禁**手動寫 SQL (包含新加欄位如 blurhash)。
+- 數據表變更：**必須**透過 Drizzle schema 變更並 `drizzle-kit generate`，**嚴禁**手動寫 SQL。
 
 ## UI 組件規範
 - 彈窗：使用 `src/components/ui/Modal.tsx` (基於原生的 `<dialog>`)。**嚴禁**使用 createPortal 或 z-index 模擬。
-- 圖片：統一使用 `Image` 組件 (骨架屏 -> BlurHash -> 漸進淡入)。
+- 圖片：統一使用 `Image` 組件 (骨架屏 -> 漸進淡入)。
 
 ## API 路由
 - 必須透過 Hono RPC (`hc`) 呼叫，嚴禁手動拼接 `/api/xxx`。

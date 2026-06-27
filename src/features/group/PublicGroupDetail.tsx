@@ -9,19 +9,20 @@ import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
 import { useFilters, useTranslation, useCategories } from '@/hooks';
 import { GroupHeader } from './components/GroupHeader';
 import { Button } from '@/components/shared/Button';
-import { useUI, uiStore } from '@/lib/store';
+import { useUI, uiStore, useSignal, gridColumns as gridColumnsSignal } from '@/lib/store';
 import { usePublicSettings } from '@/hooks/settings/useSettings';
 import { WhatsAppDialog } from '@/components/shared/WhatsAppDialog';
 import { useColumns } from '@/hooks';
 import { FilterBar } from '@/features/filters';
 
 function PublicPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string, index: number) => void }) {
-  const { columns } = useColumns();
+  const columns = useSignal(gridColumnsSignal);
   
-  const gridClass = "grid-cols-3";
-
   return (
-    <div className={`grid ${gridClass} gap-1 p-1`}>
+    <div 
+      className="grid gap-1 p-1"
+      style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+    >
       {photos.map((photo, index) => (
         <div key={photo.id} className="min-w-0">
          <PublicPhotoCard

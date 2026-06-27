@@ -109,7 +109,6 @@ export default function PublicPage() {
             {...photoGridData}
             gridRef={gridRef}
             onScroll={(offset) => setShowScrollTop(offset > 300)}
-            columns={columns}
             filters={{ category, tags, search, sort, showGroupsCollapsed }}
             onPhotoClick={handlePhotoClick}
           />

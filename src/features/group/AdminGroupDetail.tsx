@@ -8,7 +8,7 @@ import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
 import { useFilters, useTranslation, useCategories, usePermission } from '@/hooks';
 import { getTranslatedCategoryName } from '@/services/category/utils';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { useSignal, uiStore, useUI, isPhotoEditOpen, currentEditingPhoto } from '@/lib/store';
+import { useSignal, uiStore, useUI, isPhotoEditOpen, currentEditingPhoto, gridColumns as gridColumnsSignal } from '@/lib/store';
 // import { batchModeSignal } from '@/lib/store'; // 移除此行
 import { useSelection } from '@/features/selection';
 import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
@@ -24,14 +24,15 @@ import { FilterBar } from '@/features/filters';
 
 function AdminPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string, index: number) => void }) {
   const { isMultiSelect, toggleSelect } = useSelection();
-  const { columns } = useColumns();
+  const columns = useSignal(gridColumnsSignal);
   const { can } = usePermission();
   const canPinGlobal = can('photo:toggle-pinned');
 
-  const gridClass = "grid-cols-3";
-
   return (
-    <div className={`grid ${gridClass} gap-1 sm:gap-2 p-1 sm:p-2 lg:p-4 pb-20`}>
+    <div 
+      className="grid gap-1 sm:gap-2 p-1 sm:p-2 lg:p-4 pb-20"
+      style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+    >
       {photos.map((photo, index) => (
         <AdminPhotoCard
           key={photo.id}
