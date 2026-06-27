@@ -3,8 +3,8 @@ import { lazy, Suspense } from "react";
 import PublicPage from "@/pages/PublicPage";
 import AdminPage from "@/pages/AdminPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
-import { PublicGroupDetailPage } from "@/features/group/public/GroupDetailPage";
-import { AdminGroupDetailPage } from "@/features/group/admin/GroupDetailPage";
+import { PublicGroupDetailPage } from "@/features/group/PublicGroupDetail";
+import { AdminGroupDetailPage } from "@/features/group/AdminGroupDetail";
 import { AdminAuthGate } from "@/components/admin/AdminAuthGate";
 import { LoadingScreen } from "./ui/LoadingScreen";
 

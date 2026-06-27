@@ -17,8 +17,6 @@ export interface AuthState {
   signOut: () => Promise<void>;
 }
 
-export type AuthStoreInstance = ReturnType<typeof createStore<AuthState>>;
-
 export const authStore = createStore<AuthState>({
   user: null,
   isLoading: true,

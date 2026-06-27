@@ -254,19 +254,6 @@ export const SearchReqSchema = v.object({
     offset: v.optional(v.number())
 });
 
-export interface MaintenanceJob {
-    id?: string;
-    task?: string;
-    status: 'pending' | 'running' | 'completed' | 'failed' | 'processing';
-    progress: number;
-    result?: unknown;
-    error?: string;
-    created_at?: string;
-    message?: string;
-    processed?: number;
-    total?: number;
-}
-
 export const MaintenanceJobSchema = v.object({
     id: v.optional(v.string()),
     task: v.optional(v.string()),

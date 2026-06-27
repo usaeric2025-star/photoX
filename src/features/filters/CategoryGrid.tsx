@@ -1,5 +1,5 @@
-import { useCategories } from './useFilterData';
-import { useFilterState } from './useFilterState';
+import { useCategories } from './index';
+import { useFilterState } from './useFilters';
 import { useTranslation } from '@/hooks';
 import { getTranslatedCategoryName } from '@/services/category/utils';
 import { logger } from '@/lib/logger';

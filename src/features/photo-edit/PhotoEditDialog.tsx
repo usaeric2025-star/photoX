@@ -105,8 +105,6 @@ export function PhotoEditDialog() {
 
   const handleClose = () => {
     isPhotoEditOpen.set(false);
-    setModal(null);
-    setPhotoId(null);
   };
 
   return (

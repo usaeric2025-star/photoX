@@ -10,7 +10,7 @@ async function run() {
   
   const sql = postgres(process.env.DATABASE_URL);
   try {
-    const migration = fs.readFileSync(path.join(process.cwd(), 'supabase/migrations/0007_lame_madrox.sql'), 'utf-8');
+    const migration = fs.readFileSync(path.join(process.cwd(), 'supabase/migrations/0008_nervous_scarecrow.sql'), 'utf-8');
     await sql.unsafe(migration);
     console.log('Migration completed successfully!');
   } catch (err) {

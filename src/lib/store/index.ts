@@ -1,12 +1,21 @@
 export { useSignal, useStore } from '@storve/react';
 
 // UI 狀態 (Signals)
-export * from './ui';
+export { 
+  isPhotoEditOpen, currentEditingPhoto, 
+  appLangSignal, appLangSignal as appLang,
+  isLightboxOpen, lightboxSlides, lightboxCurrentIndex,
+  selectedIds, selectedIds as selectedIdsSignal,
+  isMultiSelect, isMultiSelect as isMultiSelectSignal,
+  isSidebarOpen, 
+  isTaskDrawerOpen, isTaskDrawerOpen as isTaskDrawerOpenSignal,
+  gridColumns, gridColumns as gridColumnsSignal
+} from '@/store/uiStore';
 
 // Import for local usage and re-export
 import { 
   uiStore, useUIStore, selectedCountSelector, selectedSetSelector, 
-  isAnySelectedSelector, useAppLang 
+  isAnySelectedSelector, useAppLang
 } from '@/store/uiStore';
 import type { UIStoreState } from '@/store/uiStore';
 import { authStore, useAuthStore, userSignal, authLoadingSignal } from '@/store/authStore';
@@ -14,19 +23,12 @@ import type { AuthState } from '@/store/authStore';
 import { taskStore, useTaskStore, activeTaskCountSelector, tasksSignal } from '@/store/taskStore';
 import type { TaskStoreState } from '@/store/taskStore';
 import { appStore, appLoadingSignal, appErrorSignal } from '@/store/appStore';
-import { 
-  isTaskDrawerOpen, isDiagnosticsOpen, 
-  isMultiSelect, isSidebarOpen, selectedIds 
-} from './ui';
-
-const isTaskDrawerOpenSignal = isTaskDrawerOpen;
 
 // Re-exports
 export { 
   uiStore, useUIStore, useUIStore as useUI, selectedCountSelector, 
   selectedSetSelector, isAnySelectedSelector, 
-  isMultiSelect, useAppLang,
-  isTaskDrawerOpenSignal,
+  useAppLang,
   UIStoreState 
 };
 export { authStore, useAuthStore, useAuthStore as useAuth, userSignal, authLoadingSignal, AuthState };

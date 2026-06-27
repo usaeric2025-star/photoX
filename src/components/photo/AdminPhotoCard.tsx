@@ -6,7 +6,7 @@ import { PhotoStatusBadges, PhotoCardInfo, PhotoSelectionIndicator } from './Pho
 import { PinButton } from './PinButton';
 import { useColumns, usePermission, usePerformance } from '@/hooks';
 import { useSignal, useUI, type UIStoreState } from '@/lib/store';
-import { isMultiSelect as isMultiSelectSignal, selectedIds as selectedIdsSignal } from '@/lib/store';
+import { isMultiSelect as isMultiSelectSignal, selectedIds as selectedIdsSignal, gridColumns as gridColumnsSignal } from '@/lib/store';
 import { usePhotoCard } from '@/hooks/photo/usePhotoCard';
 
 interface AdminPhotoCardProps {
@@ -20,6 +20,7 @@ interface AdminPhotoCardProps {
   sharedTags?: Tag[];
   canPin?: boolean;
   selected?: boolean;
+  canPinGlobal?: boolean;
 }
 
 export const AdminPhotoCard = memo(function AdminPhotoCard({
@@ -33,12 +34,12 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
   sharedTags,
   canPin,
   selected,
+  canPinGlobal,
 }: AdminPhotoCardProps) {
-  usePerformance('AdminPhotoCard');
-  const selectedIds = useSignal(selectedIdsSignal);
+  const isSelected = !!selected;
   const isMultiSelect = useSignal(isMultiSelectSignal);
-  const isSelected = selected !== undefined ? selected : selectedIds.includes(photo.id);
-  const { columns } = useColumns();
+  const columns = useSignal(gridColumnsSignal);
+  const { can } = usePermission();
   
   const { cardRef, handleClick, handleMouseEnter } = usePhotoCard({
     photo,
@@ -49,8 +50,7 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
     onClick
   });
 
-  const { can } = usePermission();
-  const actualCanPin = canPin !== undefined ? canPin : can('photo:toggle-pinned');
+  const actualCanPin = canPin !== undefined ? canPin : (canPinGlobal !== undefined ? canPinGlobal : can('photo:toggle-pinned'));
 
   return (
     <PhotoCardBase
@@ -80,4 +80,13 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
       />
     </PhotoCardBase>
   );
+}, (prev, next) => {
+  return prev.photo.id === next.photo.id && 
+         prev.photo.name === next.photo.name &&
+         prev.photo.imageUrl === next.photo.imageUrl &&
+         prev.photo.createdAt === next.photo.createdAt &&
+         prev.selected === next.selected &&
+         prev.canPinGlobal === next.canPinGlobal &&
+         prev.showGroupsCollapsed === next.showGroupsCollapsed &&
+         prev.hasSearchQuery === next.hasSearchQuery;
 });

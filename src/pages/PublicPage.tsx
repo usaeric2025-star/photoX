@@ -1,9 +1,9 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { logger } from '@/lib/logger';
-import { useFilters } from '@/hooks/useFilters';
+import { useFilters } from '@/features/filters';
 import { useTranslation, usePublicSettings, usePhotoGrid } from '@/hooks';
 import { PublicHeader } from '@/components/layouts/headers/PublicHeader';
-import { FilterBar } from '@/features/filter/FilterBar';
+import { FilterBar } from '@/features/filters';
 import { PublicPhotoGrid } from '@/components/photo/PublicPhotoGrid';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { useColumns } from '@/hooks';
@@ -22,7 +22,6 @@ export default function PublicPage() {
     sort, 
     showGroupsCollapsed,
     photoId,
-    setPhotoId
   } = useFilters();
   
   const { columns } = useColumns();
@@ -51,6 +50,14 @@ export default function PublicPage() {
 
   const photos = useMemo(() => rawPhotos || [], [rawPhotos]);
   const lightboxItems = useMemo(() => photosToLightboxSlides(photos), [photos]);
+
+  // Sync lightbox items to store when they change
+  useEffect(() => {
+    if (lightboxItems.length > 0) {
+      uiStore.setState({ lightboxSlides: lightboxItems });
+    }
+  }, [lightboxItems]);
+
   const openLightbox = useUI(s => s.openLightbox);
   
   const showWhatsAppChoice = useUI((s: UIStoreState) => s.showWhatsAppChoice);
@@ -62,24 +69,9 @@ export default function PublicPage() {
     refetch();
   };
 
-  const handlePhotoClick = (_id: string, index: number) => {
+  const handlePhotoClick = (id: string, index: number) => {
     openLightbox(lightboxItems, index);
   };
-
-  // Handle deep links for lightbox: if URL has photoId but lightbox is closed, open it.
-  useEffect(() => {
-    if (photoId && photos.length > 0) {
-      const state = uiStore.getState();
-      // Only auto-open if it's not already open or if slides are missing
-      if (!state.lightboxIsOpen || state.lightboxSlides.length === 0) {
-        const index = photos.findIndex(p => p.id === photoId);
-        if (index !== -1) {
-          logger.info('[PublicPage] Auto-opening lightbox for deep link', { photoId, index });
-          openLightbox(lightboxItems, index);
-        }
-      }
-    }
-  }, [photoId, photos, lightboxItems, openLightbox]);
 
   if (isError) {
     return (

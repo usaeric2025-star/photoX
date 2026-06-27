@@ -10,7 +10,7 @@ export const ManufacturerSchema = v.object({
   aliases: v.optional(v.array(v.string())),
 });
 
-export const ProductGroupSchema = v.object({
+export const GroupSchema = v.object({
   id: v.string(),
   name: v.string(),
   description: v.nullable(v.optional(v.string())),
@@ -23,4 +23,3 @@ export const ProductGroupSchema = v.object({
   metadata: v.optional(v.record(v.string(), v.unknown())),
 });
 
-export const GroupSchema = ProductGroupSchema;

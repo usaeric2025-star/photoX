@@ -30,7 +30,7 @@ export function OrgTab() {
   return (
     <div className="m-0 p-4 space-y-6 animate-in fade-in slide-in-from-right-2 duration-300">
       
-      <AppField name="is_hidden">
+      <AppField form={form} name="is_hidden">
         {({ value, onChange }) => (
           <section className="space-y-4">
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">显示状态 / VISIBILITY</h3>
@@ -57,7 +57,7 @@ export function OrgTab() {
       <CategorySelect />
       
       <section className="space-y-4">
-        <AppField name="tags">
+        <AppField form={form} name="tags">
           {({ value, onChange }) => (
             <PhotoTagSelector 
               selectedTagIds={(value as string[]) || []}

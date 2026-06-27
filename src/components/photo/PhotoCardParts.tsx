@@ -64,7 +64,7 @@ export const PhotoCardInfo = ({
   if (hideDetails) return null;
 
   return (
-    <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 pointer-events-none">
+    <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
       <h4 className="text-white font-semibold text-sm sm:text-base truncate mb-0.5">{photoName}</h4>
       {photoTags && photoTags.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mt-1">

@@ -54,7 +54,7 @@ export const PhotoCardBase = ({
       }}
       className={cn(
         "aspect-square overflow-hidden cursor-pointer relative transition-all duration-500 group rounded-2xl bg-surface-base shadow-sm",
-        "active:scale-[0.98] active:brightness-95",
+        "active:scale-[0.98] active:brightness-95 hover:shadow-xl hover:translate-y-[-4px]",
         isHidden && "opacity-80 grayscale-[0.3] ring-2 ring-danger shadow-lg",
         isSelected && "ring-4 ring-primary bg-primary/10 shadow-lg scale-[0.98]",
         className
@@ -63,19 +63,18 @@ export const PhotoCardBase = ({
     >
       <div className={cn(
         "relative aspect-square w-full h-full overflow-hidden transition-all duration-700 ease-in-out bg-surface-mute",
-        isSelected ? "scale-[0.92] rounded-xl" : "scale-100 rounded-2xl",
+        isSelected ? "scale-[0.92] rounded-xl" : "scale-100 group-hover:scale-105 rounded-2xl",
       )}>
         <Image
           src={(imgVariant === 'md' ? item.imageUrl : (item.thumbnailUrl || item.imageUrl)) || ''}
           alt={typeof item.name === 'string' ? item.name : (item.name as any)?.zh || '照片'}
-          blurhash={item.blurhash}
           className={cn(
-            "w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out",
+            "w-full h-full object-cover transition-transform duration-700 ease-out",
             isHidden && "opacity-60"
           )}
         />
         {/* Apple Style Shine Overlay */}
-        <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-10 transition-opacity duration-500 bg-gradient-to-tr from-white/0 via-white/30 to-white/0" />
+        <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-tr from-white/0 via-white/30 to-white/0" />
         
         {/* Selection overlay */}
         {isSelected && (

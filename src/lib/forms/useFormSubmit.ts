@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { handleFormError } from './index';
 import { showToast } from '@/lib/ui/toast';
 import * as v from 'valibot';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 interface UseFormSubmitOptions<T extends v.BaseSchema<any, any, any>, R = void> {
     schema?: T;
     mutationFn: (values: v.InferOutput<T>) => Promise<R>;
     onSuccess?: (result: R) => void;
+    onError?: (error: any) => void;
     successMessage?: string;
     errorMessage?: string;
 }
@@ -15,6 +16,7 @@ export function useFormSubmit<T extends v.BaseSchema<any, any, any>, R = void>({
     schema,
     mutationFn,
     onSuccess,
+    onError,
     successMessage,
     errorMessage
 }: UseFormSubmitOptions<T, R>) {
@@ -58,10 +60,11 @@ export function useFormSubmit<T extends v.BaseSchema<any, any, any>, R = void>({
             }
             onSuccess?.(result);
         } catch (error) {
-            handleFormError(error);
+            ErrorFactory.handle(error, { context: 'form-submit' });
             if (errorMessage) {
                 showToast.error(errorMessage);
             }
+            onError?.(error);
         } finally {
             setIsLoading(false);
         }

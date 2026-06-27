@@ -1,12 +1,9 @@
 import { logger } from '@/lib/logger';
-import React, { useEffect, useRef, useState, lazy, Suspense } from 'react';
-const DiagDialog = lazy(() => import('./DiagDialog').then(m => ({ default: m.DiagDialog })));
+import React, { useEffect, useRef, lazy, Suspense } from 'react';
 import { Icon } from '@/components/ui/Icon';
-import { isDiagnosticsOpen } from '@/lib/store';
 
 export const LoadingScreen = ({ error, onRetry }: { error?: Error | null, onRetry?: () => void }) => {
   logger.debug('🔄 [LoadingScreen] Rendered');
-  const [showHelper, setShowHelper] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -20,14 +17,6 @@ export const LoadingScreen = ({ error, onRetry }: { error?: Error | null, onRetr
         skeleton.remove();
       }, 300);
     }
-  }, []);
-
-  // 如果載入介面持續 4.5 秒，提供一鍵診斷
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowHelper(true);
-    }, 4550);
-    return () => clearTimeout(timer);
   }, []);
 
   const content = error ? (
@@ -89,33 +78,16 @@ export const LoadingScreen = ({ error, onRetry }: { error?: Error | null, onRetr
           ))}
         </div>
       </div>
-      
-      {showHelper && (
-        <div className="absolute inset-x-0 bottom-6 flex justify-center">
-          <button
-            onClick={() => isDiagnosticsOpen.set(true)}
-            className="px-4 py-2.5 border rounded-full text-slate-600 hover:text-slate-900 bg-white border-slate-200/80 text-xs font-semibold hover:bg-slate-50 flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-md"
-          >
-            <Icon name="terminal" size={12} className="text-amber-500" />
-            连线诊断与缓存修复 (Diagnostics)
-          </button>
-        </div>
-      )}
     </div>
   );
 
   return (
-    <>
-      <dialog 
-        ref={dialogRef}
-        className="w-screen h-screen max-w-none max-h-none m-0 p-0 bg-transparent backdrop:bg-transparent focus:outline-none"
-      >
-        {content}
-      </dialog>
-      <Suspense fallback={null}>
-        <DiagDialog />
-      </Suspense>
-    </>
+    <dialog 
+      ref={dialogRef}
+      className="w-screen h-screen max-w-none max-h-none m-0 p-0 bg-transparent backdrop:bg-transparent focus:outline-none"
+    >
+      {content}
+    </dialog>
   );
 };
 

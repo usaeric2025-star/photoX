@@ -4,13 +4,12 @@ import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { Photo } from '@/types';
 import { uploadToR2 } from './r2Client';
 import { upsertPhotoRecord, syncPhotoTagsInDB } from '@/services/photo/upload/dbCommands';
-import { mapToDb, normalizeDimensionsBeforeSave } from '@/services/photo/mappers';
-import { checkDuplicate, DuplicatePhotoError } from '@/services/photo/duplicateCheck';
+import { mapToDb, normalizeDimensionsBeforeSave } from '@/services/mappers';
+import { checkDuplicate, DuplicatePhotoError } from '@/services/photo';
 import { supabase } from '@/lib/supabase';
 import { DB_CONFIG } from '@/constants/config';
 import { generateItemCode } from '@/services/photo/utils';
 import { storage } from '@/services/storage';
-import { generateBlurhash } from '@/lib/image/blurhash';
 
 export const uploadSinglePhoto = async (
   userId?: string, 
@@ -43,16 +42,7 @@ export const uploadSinglePhoto = async (
         }
     }
 
-    // 1.5 BlurHash Generation
-    if (!photo.blurhash && file) {
-        try {
-            photo.blurhash = await generateBlurhash(file);
-        } catch (e) {
-            logger.warn(`[Upload] BlurHash generation failed for ${photo.id}:`, e);
-        }
-    }
-
-    // 2. R2 Upload (MUST HAPPEN BEFORE FINAL DB UPSERT)
+    // R2 Upload (MUST HAPPEN BEFORE FINAL DB UPSERT)
     if (!photo.image_url && (file || photo.uri)) {
         const filename = photo.storage_id || photo.id;
         const { imageUrl, isDuplicate: r2Duplicate } = await uploadToR2(userId, filename, file || photo.uri!, photo.image_hash, onStatus);

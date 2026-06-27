@@ -1,8 +1,7 @@
 export * from './commands';
-export * from './mappers';
-export * from '@/features/upload/services/upload';
-export * from './groupUtils';
+export * from '@/features/upload/services';
+export * from './utils';
 
-import { updatePhoto } from './commands/update';
+import { updatePhoto } from './commands';
 
 export const update = updatePhoto;

@@ -13,8 +13,8 @@ import { useTask, useUI } from '@/lib/store';
 import { AdminHeader } from '@/components/layouts/headers/AdminHeader';
 import { AdminAuthGate } from '@/components/admin/AdminAuthGate';
 import { AdminContainer } from '@/components/admin/AdminContainer';
-import { useFilters } from '@/hooks/useFilters';
-import { FilterBar } from '@/features/filter/FilterBar';
+import { useFilters } from '@/features/filters';
+import { FilterBar } from '@/features/filters';
 
 const BatchEditScreen = lazy(() => import('@/features/batch-edit/BatchEditScreen').then(m => ({ default: m.BatchEditScreen })));
 const StatisticsScreen = lazy(() => import('@/features/statistics/components/StatisticsScreen').then(m => ({ default: m.StatisticsScreen })));

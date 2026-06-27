@@ -4,32 +4,7 @@
  */
 
 import * as v from 'valibot';
-import { 
-  TagSchema as ApiTagSchema, 
-  DimensionSchema as ApiDimensionSchema 
-} from '../../shared/apiContractSchema';
 
-// --- Base Types ---
-export const IdSchema = v.pipe(v.string(), v.uuid());
-
-export const JsonObjectSchema = v.record(v.string(), v.unknown());
-
-// --- Sub-types (re-using API contract) ---
-export const TagSchema = ApiTagSchema;
-
-// --- API Types ---
-export const MergeGroupsRequestSchema = v.object({
-  targetGroupId: IdSchema,
-  sourceGroupIds: v.array(IdSchema),
-});
-type MergeGroupsRequest = v.InferOutput<typeof MergeGroupsRequestSchema>;
-
-export const MergeGroupsResponseSchema = v.object({
-  success: v.boolean(),
-  targetGroupId: IdSchema,
-  mergedCount: v.number(),
-});
-type MergeGroupsResponseType = v.InferOutput<typeof MergeGroupsResponseSchema>;
 
 // --- Existing Utility Types ---
 type JsonValue = string | number | boolean | null | Record<string, unknown> | JsonValue[];

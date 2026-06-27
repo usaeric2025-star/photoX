@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useFilterState } from './useFilterState';
+import { useFilterState } from './useFilters';
 import { Icon } from '@/components/ui/Icon';
 import { useTranslation } from '@/hooks';
 import { useDebouncedCallback } from '@/hooks/core/useDebouncedCallback';

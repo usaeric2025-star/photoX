@@ -31,25 +31,16 @@ export function AdminContainer() {
   const photos = React.useMemo(() => photoGridData.photos || [], [photoGridData.photos]);
   const lightboxItems = React.useMemo(() => photosToLightboxSlides(photos), [photos]);
 
-  const handlePhotoClick = (_photoId: string, index: number) => {
+  // Sync lightbox items to store when they change
+  useEffect(() => {
+    if (lightboxItems.length > 0) {
+      uiStore.setState({ lightboxSlides: lightboxItems });
+    }
+  }, [lightboxItems]);
+
+  const handlePhotoClick = (photoId: string, index: number) => {
       openLightbox(lightboxItems, index);
   };
-
-  // Handle deep links for lightbox: if URL has photoId but lightbox is closed, open it.
-  useEffect(() => {
-    const photoId = filters.photoId;
-    if (photoId && photos.length > 0) {
-      const state = uiStore.getState();
-      // Only auto-open if it's not already open or if slides are missing
-      if (!state.lightboxIsOpen || state.lightboxSlides.length === 0) {
-        const index = photos.findIndex(p => p.id === photoId);
-        if (index !== -1) {
-          logger.info('[AdminContainer] Auto-opening lightbox for deep link', { photoId, index });
-          openLightbox(lightboxItems, index);
-        }
-      }
-    }
-  }, [filters.photoId, photos, lightboxItems, openLightbox]);
   
   if (photoGridData.isError) {
     return (

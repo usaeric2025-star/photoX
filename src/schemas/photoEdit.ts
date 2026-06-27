@@ -1,12 +1,12 @@
 import * as v from 'valibot';
 
-export const TranslationSchema = v.object({
+const TranslationSchema = v.object({
   zh: v.string(),
   en: v.optional(v.string()),
   ms: v.optional(v.string())
 });
 
-export const DimensionSchema = v.object({
+const DimensionSchema = v.object({
   label: v.optional(v.nullable(v.string())),
   unit: v.optional(v.nullable(v.string())),
   length: v.optional(v.nullable(v.union([v.number(), v.string()]))),
@@ -36,24 +36,3 @@ export const PhotoEditSchema = v.object({
 
 export type PhotoEditFormData = v.InferOutput<typeof PhotoEditSchema>;
 
-export const SavePhotoSchema = v.object({
-  id: v.string(),
-  name: v.union([v.string(), TranslationSchema]),
-  description: v.union([v.string(), TranslationSchema]),
-  category_id: v.optional(v.nullable(v.union([v.string(), v.number()]))),
-  manufacturer_id: v.optional(v.nullable(v.string())),
-  group_id: v.optional(v.nullable(v.string())),
-  is_group_cover: v.optional(v.boolean()),
-  price: v.optional(v.nullable(v.string())),
-  note: v.optional(v.nullable(v.string())),
-  manual_code: v.optional(v.nullable(v.string())),
-  model_number: v.optional(v.nullable(v.string())),
-  dimensions: v.optional(v.nullable(v.array(DimensionSchema))),
-  is_hidden: v.optional(v.boolean()),
-  tags: v.optional(v.nullable(v.array(v.string()))),
-  item_code: v.optional(v.nullable(v.string())),
-  updated_at: v.optional(v.string()),
-  created_at: v.optional(v.string()),
-});
-
-export type SaveData = v.InferOutput<typeof SavePhotoSchema>;

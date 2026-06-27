@@ -1,7 +1,9 @@
 import { useAppRoute } from '@/lib/router';
 import { Router } from '@/router';
 import { useLocalStorage } from '@/hooks/core/useLocalStorage';
-import type { ColumnCount } from '@/features/filter/types';
+import { useEffect } from 'react';
+import { uiStore } from '@/lib/store';
+import type { ColumnCount } from '@/features/filters';
 
 const DEFAULT_COLUMNS = 3;
 const COLUMN_OPTIONS: ColumnCount[] = [2, 3, 5];
@@ -18,6 +20,11 @@ export function useColumns() {
     }
     return savedColumns;
   })();
+
+  // Sync to store for card subscription
+  useEffect(() => {
+    uiStore.getState().setGridColumns(columns);
+  }, [columns]);
 
   const setColumns = (newColumns: ColumnCount) => {
     if (!route) return;

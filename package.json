@@ -33,7 +33,6 @@
     "@supabase/supabase-js": "^2.45.0",
     "@tanstack/react-form": "^1.33.0",
     "@tanstack/valibot-form-adapter": "^0.42.1",
-    "@thi.ng/blurhash": "^1.0.48",
     "@vercel/analytics": "^1.3.0",
     "@zoontek/chicane": "^3.0.0",
     "clsx": "^2.1.0",

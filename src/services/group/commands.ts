@@ -5,7 +5,7 @@ import { ProductGroup } from '../../types';
 import * as v from 'valibot';
 import { GroupReqSchema } from '../../../shared/apiContractSchema';
 import { cleanTranslationPrefixes } from '@/features/ai/safeText';
-import { ungroupPhotos, syncGroupMemberCount } from '@/services/photo/groupUtils';
+import { ungroupPhotos, syncGroupMemberCount } from '@/services/photo/utils';
 import { api } from '@/lib/api';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
@@ -96,7 +96,7 @@ export async function deleteGroup(id: string): Promise<void> {
 // Action aliases for legacy or specific naming compliance
 // Removed aliases
 
-export { ungroupPhotos, syncGroupMemberCount } from '@/services/photo/groupUtils';
+export { ungroupPhotos, syncGroupMemberCount } from '@/services/photo/utils';
 
 export const groupPhotos = async (
   photoIds: string[], 

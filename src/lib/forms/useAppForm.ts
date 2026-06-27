@@ -1,27 +1,36 @@
-import { useForm, valibotValidator } from './index';
-import { type BaseSchema, type BaseSchemaAsync } from 'valibot';
+import { useForm } from '@tanstack/react-form';
 
-interface UseAppFormOptions<T extends BaseSchema<any, any, any> | BaseSchemaAsync<any, any, any>> {
+interface UseAppFormOptions<T> {
     schema: T;
     defaultValues: any;
-    onSubmit: (values: any) => Promise<void>;
+    onSubmit: (values: any) => Promise<void> | void;
+    onValueChange?: (values: any) => void;
 }
 
-export function useAppForm<T extends BaseSchema<any, any, any> | BaseSchemaAsync<any, any, any>>({
+export function useAppForm<T>({
     schema,
     defaultValues,
-    onSubmit
+    onSubmit,
+    onValueChange
 }: UseAppFormOptions<T>) {
     const form = useForm({
-        validatorAdapter: valibotValidator(),
         defaultValues,
         onSubmit: async ({ value }) => {
             await onSubmit(value);
         },
         validators: {
-            onChange: schema,
+            onChange: schema as any,
         }
     });
 
-    return { form };
+    if (onValueChange) {
+        form.store.subscribe((state: any) => {
+            onValueChange(state.values);
+        });
+    }
+
+    return { 
+        form,
+        submit: form.handleSubmit
+    };
 }

@@ -21,8 +21,6 @@ export interface TaskStoreState {
   setGlobalProgress: (progress: number) => void;
 }
 
-export type TaskStoreInstance = ReturnType<typeof createStore<TaskStoreState>>;
-
 export const taskStore = createStore<TaskStoreState>({
   tasks: new Map(),
   aiStatus: { status: 'idle' },

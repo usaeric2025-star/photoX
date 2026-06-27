@@ -6,7 +6,7 @@ import { CategoryGrid } from './CategoryGrid';
 import { TagGrid } from './TagGrid';
 import { ColumnsToggle } from '@/components/layout/ColumnsToggle';
 import { GroupToggle } from '@/components/ui/GroupToggle';
-import { useFilters } from '@/hooks/useFilters';
+import { useFilters } from './useFilters';
 import { cn } from '@/lib/utils';
 
 interface FilterBarProps {

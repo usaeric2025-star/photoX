@@ -5,6 +5,7 @@ import { PhotoCardBase } from './PhotoCardBase';
 import { PhotoStatusBadges, PhotoCardInfo } from './PhotoCardParts';
 import { useColumns, usePerformance } from '@/hooks';
 import { usePhotoCard } from '@/hooks/photo/usePhotoCard';
+import { useSignal, gridColumns as gridColumnsSignal } from '@/lib/store';
 
 interface PublicPhotoCardProps {
   photo: PhotoListItem;
@@ -27,8 +28,7 @@ export const PublicPhotoCard = memo(function PublicPhotoCard({
   sharedCategories,
   sharedTags,
 }: PublicPhotoCardProps) {
-  usePerformance('PublicPhotoCard');
-  const { columns } = useColumns();
+  const columns = useSignal(gridColumnsSignal);
   
   const { cardRef, handleClick, handleMouseEnter } = usePhotoCard({
     photo,
@@ -61,4 +61,11 @@ export const PublicPhotoCard = memo(function PublicPhotoCard({
       />
     </PhotoCardBase>
   );
+}, (prev, next) => {
+  return prev.photo.id === next.photo.id && 
+         prev.photo.name === next.photo.name &&
+         prev.photo.imageUrl === next.photo.imageUrl &&
+         prev.photo.createdAt === next.photo.createdAt &&
+         prev.showGroupsCollapsed === next.showGroupsCollapsed &&
+         prev.hasSearchQuery === next.hasSearchQuery;
 });

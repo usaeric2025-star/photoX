@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
-import { useTags } from './useFilterData';
-import { useFilterState } from './useFilterState';
+import { useTags } from './index';
+import { useFilterState } from './useFilters';
 import { usePublicSettings } from '@/hooks/settings/useSettings';
 import { usePhotoFilter } from '@/hooks/photo/usePhotoFilter';
 import { useUI } from '@/lib/store';

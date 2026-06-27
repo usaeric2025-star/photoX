@@ -8,14 +8,11 @@ import type {
   SearchReqSchema,
   PhotoListItem as ApiPhotoListItem,
 } from '../../shared/apiContractSchema';
-import {
-  PhotoListItemSchema as ApiPhotoListItemSchema
-} from '../../shared/apiContractSchema';
+
 
 export type ApiResponse<T = unknown> = BaseApiResponse<T>;
 
 export type PhotoListItem = ApiPhotoListItem;
-export const PhotoListItemSchema = ApiPhotoListItemSchema;
 
 export interface FilterOptions {
   q?: string;

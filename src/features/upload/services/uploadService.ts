@@ -1,4 +1,4 @@
-import { uploadSinglePhoto } from './upload/uploadOrchestrator';
+import { uploadSinglePhoto } from './uploadOrchestrator';
 import { Photo } from '@/types';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { logger } from '@/lib/logger';

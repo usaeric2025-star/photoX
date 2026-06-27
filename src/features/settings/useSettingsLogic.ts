@@ -4,7 +4,7 @@ import { AppSettings, Tag, Manufacturer, Category, User, Photo } from "@/types";
 import { DEFAULT_AI_MODEL } from '@/config/ai';
 import { useUI } from '@/lib/store';
 import { testAiConnection } from "@/features/ai/commands";
-import { runHealthCheck } from "@/services/photo/healthFlow";
+import { runHealthCheck } from "@/services/photo/utils";
 import {
   normalizeTagName,
   normalizeManufacturerName,
@@ -12,7 +12,7 @@ import {
 import { api } from "@/lib/api";
 import { useInvalidatePhotos } from "@/hooks";
 import { executeTask } from '@/lib/task-queue';
-import { uploadToR2 } from '@/features/upload/services/upload/r2Client';
+import { uploadToR2 } from '@/features/upload/services/r2Client';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { showToast } from '@/lib/ui/toast';
 

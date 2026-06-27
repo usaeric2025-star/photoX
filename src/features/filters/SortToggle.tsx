@@ -1,4 +1,4 @@
-import { useFilterState } from './useFilterState';
+import { useFilterState } from './useFilters';
 import { Icon } from '@/components/ui/Icon';
 
 export function SortToggle() {

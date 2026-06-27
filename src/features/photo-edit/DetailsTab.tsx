@@ -56,7 +56,7 @@ export function DetailsTab() {
         <AIStatusBadge />
       </div>
 
-      <AppField name="dimensions">
+      <AppField form={form} name="dimensions">
         {({ value, onChange }) => (
           <DimensionEditor 
             dimensions={safeArray<Dimension>(value as Dimension[] | null | undefined)}

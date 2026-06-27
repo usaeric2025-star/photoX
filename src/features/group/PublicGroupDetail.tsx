@@ -1,19 +1,19 @@
 import React, { useRef } from 'react';
 import { logger } from '@/lib/logger';
 import { useAppRouter } from '@/lib/router';
-import { useGroupData } from '../hooks/useGroupData';
+import { useGroupData } from './hooks/useGroupData';
 import { PhotoListItem } from '@/types/api';
 import { Photo, Group, Category } from '@/types';
 import { PublicPhotoCard } from '@/components/photo/PublicPhotoCard';
 import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
 import { useFilters, useTranslation, useCategories } from '@/hooks';
-import { GroupHeader } from '../components/GroupHeader';
+import { GroupHeader } from './components/GroupHeader';
 import { Button } from '@/components/shared/Button';
 import { useUI, uiStore } from '@/lib/store';
 import { usePublicSettings } from '@/hooks/settings/useSettings';
 import { WhatsAppDialog } from '@/components/shared/WhatsAppDialog';
 import { useColumns } from '@/hooks';
-import { FilterBar } from '@/features/filter/FilterBar';
+import { FilterBar } from '@/features/filters';
 
 function PublicPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string, index: number) => void }) {
   const { columns } = useColumns();
@@ -57,6 +57,13 @@ export function PublicGroupDetailPage() {
   const { data: settings } = usePublicSettings();
   const lightboxItems = React.useMemo(() => photosToLightboxSlides(photos), [photos]);
 
+  // Sync lightbox items to store when they change
+  React.useEffect(() => {
+    if (lightboxItems.length > 0) {
+      uiStore.setState({ lightboxSlides: lightboxItems });
+    }
+  }, [lightboxItems]);
+
   // Anchoring effect
   React.useEffect(() => {
     if (anchor && photoId && !loading && photos.length > 0) {
@@ -78,24 +85,9 @@ export function PublicGroupDetailPage() {
     }
   }, [anchor, photoId, loading, photos.length]);
 
-  const handlePhotoClick = (_id: string, index: number) => {
+  const handlePhotoClick = (id: string, index: number) => {
       openLightbox(lightboxItems, index);
   };
-
-  // Handle deep links for lightbox: if URL has photoId but lightbox is closed, open it.
-  React.useEffect(() => {
-    if (photoId && photos.length > 0) {
-      const state = uiStore.getState();
-      // Only auto-open if it's not already open or if slides are missing
-      if (!state.lightboxIsOpen || state.lightboxSlides.length === 0) {
-        const index = photos.findIndex(p => p.id === photoId);
-        if (index !== -1) {
-          logger.info('[GroupDetailPage] Auto-opening lightbox for deep link', { photoId, index });
-          openLightbox(lightboxItems, index);
-        }
-      }
-    }
-  }, [photoId, photos, lightboxItems, openLightbox]);
 
   const handleScrollToTop = () => {
     scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });

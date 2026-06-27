@@ -1,7 +1,7 @@
 import React, { useMemo, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { useUI, currentEditingPhoto, isPhotoEditOpen, useSignal, isLightboxOpen, lightboxSlides, lightboxCurrentIndex } from '@/lib/store';
-import { useFilters } from '@/hooks/useFilters';
+import { useFilters } from '@/features/filters';
 import { useAppRoute, useNavigation } from '@/lib/router';
 import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
 import { usePermission, usePublicSettings } from '@/hooks';
@@ -133,8 +133,6 @@ export function PhotoLightbox() {
     isLightboxOpen.set(false);
     if (route.name === 'photo') {
       navigate.home();
-    } else {
-      filters.setPhotoId(null);
     }
   };
 

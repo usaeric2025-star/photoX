@@ -1,5 +1,5 @@
 import { useSignal } from '@storve/react';
-import { selectedIds, isMultiSelect } from '@/lib/store/ui';
+import { selectedIds, isMultiSelect } from '@/lib/store';
 import { useQueryState } from 'nuqs';
 import { batchParser, selectedIdsParser } from '@/lib/nuqs/parsers';
 

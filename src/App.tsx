@@ -10,8 +10,6 @@ import { useURLSync } from '@/hooks/core/useURLSync';
 import { DialogContainer } from '@/components/layout/DialogContainer';
 import { PhotoEditDialog } from '@/features/photo-edit/PhotoEditDialog';
 
-const DiagDialog = lazy(() => import('@/components/ui/DiagDialog').then(m => ({ default: m.DiagDialog })));
-
 function AppContent({ status, error }: { status: string, error: Error | null }) {
   // ✅ 路由同步 (using nuqs)
   useURLSync();
@@ -32,9 +30,6 @@ function AppContent({ status, error }: { status: string, error: Error | null }) 
           )}
       </ConfirmProvider>
       <DialogContainer />
-      <Suspense fallback={null}>
-        <DiagDialog />
-      </Suspense>
       <Analytics />
     </AppErrorBoundary>
   );

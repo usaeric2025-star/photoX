@@ -8,7 +8,7 @@ export * from './groups';
 export * from './settings';
 
 // Utils
-export { useFilters } from './useFilters';
+export { useFilters } from '@/features/filters';
 export { useUI } from '@/lib/store';
 export type { UIStoreState } from '@/lib/store';
 export { useColumns } from './useColumns';

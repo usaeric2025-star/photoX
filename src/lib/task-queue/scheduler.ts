@@ -2,7 +2,7 @@ import { Task } from './types';
 import { taskTable } from './integrations/supabase';
 import { showToast } from '@/lib/ui/toast';
 import { logger } from '@/lib/logger';
-import { storeAccessor } from '@/lib/store';
+import { taskStore } from '@/store/taskStore';
 import { ErrorFactory } from '@/lib/error';
 
 export class TaskScheduler {
@@ -31,7 +31,7 @@ export class TaskScheduler {
     this.activeKeys.add(key);
 
     // 1. 寫入 Store（UI 驅動）
-    storeAccessor.task.enqueue(task);
+    taskStore.getState().enqueue(task);
     
     // 2. 寫入 Supabase（持久層）
     taskTable.insert(task).catch(e => logger.error('[Task] insert error', e));
@@ -54,7 +54,7 @@ export class TaskScheduler {
     this.running.delete(id);
     
     // 更新 Store
-    storeAccessor.task.cancelTask(id);
+    taskStore.getState().cancelTask(id);
     
     // 更新 Supabase
     taskTable.updateStatus(id, 'cancelled').catch(e => logger.error('[Task] cancel error', e));
@@ -91,7 +91,7 @@ export class TaskScheduler {
     // ✅ 每個任務獨立 AbortController
     const controller = new AbortController();
     this.controllers.set(task.id, controller);
-    const store = storeAccessor.task;
+    const store = taskStore.getState();
 
     try {
       // 更新 Supabase: processing
@@ -101,7 +101,7 @@ export class TaskScheduler {
       store.setGlobalProgress(0);
 
       const onProgress = (progress: number, message?: string) => {
-        const currentStore = storeAccessor.task;
+        const currentStore = taskStore.getState();
         currentStore.updateProgress(task.id, progress, message);
         currentStore.setGlobalProgress(progress);
       };
@@ -109,7 +109,7 @@ export class TaskScheduler {
       const result = await task.execute(controller.signal, onProgress);
 
       // 完成
-      const currentStore = storeAccessor.task;
+      const currentStore = taskStore.getState();
       currentStore.completeTask(task.id, result);
       currentStore.setGlobalStatus('completed');
       currentStore.setGlobalProgress(1);
@@ -122,7 +122,7 @@ export class TaskScheduler {
 
     } catch (error) {
       // 如果是取消，不觸發錯誤處理
-      const currentStore = storeAccessor.task;
+      const currentStore = taskStore.getState();
       if (controller.signal.aborted) {
         currentStore.setGlobalStatus('idle');
         this.controllers.delete(task.id);
@@ -144,7 +144,7 @@ export class TaskScheduler {
       this.controllers.delete(task.id);
       this.running.delete(task.id);
       
-      const currentStore = storeAccessor.task;
+      const currentStore = taskStore.getState();
       if (this.running.size === 0 && this.queue.length === 0) {
         currentStore.setGlobalStatus('idle');
         currentStore.setGlobalProgress(0);
@@ -167,7 +167,7 @@ export class TaskScheduler {
     if (tasks.length === 0) return;
 
     // ✅ 先清除記憶體中可能存在的重複任務
-    const store = storeAccessor.task;
+    const store = taskStore.getState();
     tasks.forEach(task => {
       const key = `${task.type}:${task.meta?.key || task.id}`;
       // In a real restore, we need to bind the execute function again based on task type.
@@ -187,7 +187,7 @@ export class TaskScheduler {
     if (found) return found;
     
     // 再查執行中
-    const store = storeAccessor.task;
+    const store = taskStore.getState();
     return store.tasks.get(id);
   }
 }

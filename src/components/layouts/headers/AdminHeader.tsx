@@ -241,14 +241,6 @@ export function AdminHeader({ className }: AdminHeaderProps) {
                       <Icon name="layout-grid" size={16} />
                       {t.taskCenter}
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => navigate.adminDiagnostics()}
-                      className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-pointer outline-none hover:bg-blue-50 text-gray-700"
-                    >
-                      <Icon name="terminal" size={16} />
-                      {t.systemLogs}
-                    </button>
                   </>
                 )}
                 <div className="mt-1">

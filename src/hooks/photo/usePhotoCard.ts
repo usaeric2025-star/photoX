@@ -7,7 +7,7 @@ import { queryKeys } from '@/lib/query/keys';
 import { getGroupById } from '@/services/group/queries';
 import { STALE_TIMES } from '@/lib/query/config';
 import { Photo } from '@/types';
-import { useFilters } from '@/hooks/useFilters';
+import { useFilters } from '@/features/filters';
 import { useSelection } from '@/features/selection';
 
 interface UsePhotoCardInteractionProps {

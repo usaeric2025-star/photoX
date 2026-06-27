@@ -15,7 +15,7 @@ export interface LightboxSlide {
   original?: unknown; // 原始數據引用
 }
 
-export interface LightboxConfig {
+interface LightboxConfig {
   canDownload?: boolean;
   canZoom?: boolean;
   canThumbnails?: boolean;
@@ -27,10 +27,4 @@ export interface LightboxState {
   slides: LightboxSlide[];
   currentIndex: number;
   config: LightboxConfig;
-}
-
-export interface LightboxStore extends LightboxState {
-  open: (slides: LightboxSlide[], index?: number, config?: LightboxConfig) => void;
-  close: () => void;
-  setCurrentIndex: (index: number) => void;
 }

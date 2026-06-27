@@ -1,7 +1,6 @@
 import { optimistic } from '@/lib/query/mutationFactory';
 import { Photo } from '@/types';
-import { updatePhoto as update } from '@/services/photo/commands/update';
-import { BatchActionResult, deleteMany, batchUpdate } from '@/services/photo/commands/batch';
+import { updatePhoto as update, BatchActionResult, deleteMany, batchUpdate } from '@/services/photo/commands';
 import { queryKeys } from '@/lib/query/keys';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { defineMutation } from '@/lib/mutations/defineMutation';

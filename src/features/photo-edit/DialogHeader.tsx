@@ -45,8 +45,7 @@ export function DialogHeader({
   const onRemoveFromGroup = async () => {
     if (editPhotoId && detailPhoto?.group_id) {
       await removeFromGroup({ photoIds: [editPhotoId], groupId: detailPhoto.group_id });
-      setModal(null);
-      setPhotoId(null);
+      onClose();
     }
   };
 

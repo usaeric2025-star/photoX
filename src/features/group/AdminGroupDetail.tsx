@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useAppRouter } from '@/lib/router';
-import { useGroupData } from '../hooks/useGroupData';
+import { useGroupData } from './hooks/useGroupData';
 import { PhotoListItem } from '@/types/api';
 import { Photo, Group, ProductGroup, Dimension, Category } from '@/types';
 import { AdminPhotoCard } from '@/components/photo/AdminPhotoCard';
 import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
-import { useFilters, useTranslation, useCategories } from '@/hooks';
+import { useFilters, useTranslation, useCategories, usePermission } from '@/hooks';
 import { getTranslatedCategoryName } from '@/services/category/utils';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { useSignal, uiStore, useUI } from '@/lib/store';
+import { useSignal, uiStore, useUI, isPhotoEditOpen, currentEditingPhoto } from '@/lib/store';
 // import { batchModeSignal } from '@/lib/store'; // 移除此行
 import { useSelection } from '@/features/selection';
 import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
@@ -17,14 +17,16 @@ import { translations } from '@/locales';
 import { GroupSettingsDialog } from '@/components/groups/GroupSettingsDialog';
 import { useGroupDraft } from '@/components/groups/useGroupDraft';
 import { useGroupMutations } from '@/hooks/groups/useGroupMutations';
-import { GroupHeader } from '../components/GroupHeader';
+import { GroupHeader } from './components/GroupHeader';
 import { Button } from '@/components/shared/Button';
 import { useColumns } from '@/hooks';
-import { FilterBar } from '@/features/filter/FilterBar';
+import { FilterBar } from '@/features/filters';
 
 function AdminPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string, index: number) => void }) {
   const { isMultiSelect, toggleSelect } = useSelection();
   const { columns } = useColumns();
+  const { can } = usePermission();
+  const canPinGlobal = can('photo:toggle-pinned');
 
   const gridClass = "grid-cols-3";
 
@@ -43,6 +45,7 @@ function AdminPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoLis
           }}
           hideGroupBadge={true}
           sharedCategories={categories}
+          canPinGlobal={canPinGlobal}
         />
       ))}
     </div>
@@ -62,6 +65,13 @@ export function AdminGroupDetailPage() {
 
   const openLightbox = useUI(s => s.openLightbox);
   const lightboxItems = React.useMemo(() => photosToLightboxSlides(photos), [photos]);
+
+  // Sync lightbox items to store when they change
+  React.useEffect(() => {
+    if (lightboxItems.length > 0) {
+      uiStore.setState({ lightboxSlides: lightboxItems });
+    }
+  }, [lightboxItems]);
 
   // Anchoring effect
   React.useEffect(() => {
@@ -116,9 +126,15 @@ export function AdminGroupDetailPage() {
     }
   };
   
-  const openEditDrawer = (id: string) => { setPhotoId(id); setModal('edit'); };
+  const openEditDrawer = (id: string) => { 
+    const p = photos.find(p => p.id === id);
+    if (p) {
+      currentEditingPhoto.set(p as any);
+      isPhotoEditOpen.set(true);
+    }
+  };
 
-  const handlePhotoClick = (_id: string, index: number) => {
+  const handlePhotoClick = (id: string, index: number) => {
       openLightbox(lightboxItems, index);
   };
 

@@ -18,8 +18,3 @@ export interface Task<T = unknown> {
   execute: (signal: AbortSignal, onProgress: (progress: number, message?: string) => void) => Promise<T>;
 }
 
-// 去重鍵：type + meta.key
-export interface TaskIdentity {
-  type: TaskType;
-  key: string;
-}

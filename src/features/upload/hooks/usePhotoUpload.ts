@@ -1,7 +1,7 @@
 import { useAuth, uiStore } from '@/lib/store';
 import { useCallback } from 'react';
 
-import { checkDuplicateBatch } from '@/services/photo/duplicateCheck';
+import { checkDuplicateBatch } from '@/services/photo';
 import { showToast } from '@/lib/ui/toast';
 import { hapticFeedback } from '@/lib/ui/haptics';
 import { createTask } from '@/lib/task-queue';
