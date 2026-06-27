@@ -14,7 +14,7 @@ export async function fetchPublicSettings(): Promise<AppSettings> {
     if (!result.success) return {} as AppSettings;
     return result.data as AppSettings;
   } catch (e) {
-    logger.error('Failed to fetch public settings, returning default', e);
+    logger.error('Failed to fetch public settings, returning default', e instanceof Error ? e.message : String(e), e);
     return {} as AppSettings;
   }
 }
