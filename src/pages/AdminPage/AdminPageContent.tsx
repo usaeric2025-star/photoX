@@ -7,6 +7,7 @@ const UploadModeDialog = lazy(() => import('@/features/upload/components/UploadM
 
 import { usePhotoUpload } from '@/features/upload';
 import { UploadButton } from '@/components/shared/UploadButton';
+import { SelectionToolbar } from '@/features/selection';
 import { useAIBatchAnalysis } from '@/hooks';
 import { useTask, useUI } from '@/lib/store';
 import { AdminHeader } from '@/components/layouts/headers/AdminHeader';
@@ -85,6 +86,8 @@ export function AdminPageContent() {
             </Suspense>
           </div>
         )}
+
+        <SelectionToolbar />
 
         {currentScreen === 'gallery' && (
           <>

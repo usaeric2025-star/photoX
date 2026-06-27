@@ -1,6 +1,7 @@
 import { logger } from '@/lib/logger';
 import React, { useEffect } from 'react';
 import { AdminPhotoGrid } from '@/components/photo/AdminPhotoGrid';
+import { SelectionToolbar } from '@/features/selection';
 import { useTranslation, useColumns, usePhotoGrid, useFilters } from '@/hooks';
 import { AdminEmptyState } from '@/pages/AdminPage/AdminEmptyState';
 import { PhotoErrorDisplay } from '@/components/photo/PhotoErrorDisplay';
@@ -78,6 +79,7 @@ export function AdminContainer() {
             onPhotoClick={handlePhotoClick}
           />
        </div>
+       <SelectionToolbar />
     </div>
   );
 }

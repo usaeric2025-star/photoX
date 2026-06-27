@@ -11,7 +11,6 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { useSignal, uiStore, useUI } from '@/lib/store';
 // import { batchModeSignal } from '@/lib/store'; // 移除此行
 import { useSelection } from '@/features/selection';
-import { SelectionToolbar } from '@/features/selection';
 import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
 import { useAdminBatchActions } from '@/hooks/admin/useAdminBatch';
 import { translations } from '@/locales';
@@ -151,10 +150,6 @@ export function AdminGroupDetailPage() {
       <div className={`flex-1 overflow-y-auto relative overscroll-y-auto overscroll-x-none bg-slate-50 transition-all duration-300 ${isMultiSelect ? 'pb-16' : ''}`}>
         <AdminPhotoGrid photos={photos} categories={categories} onPhotoClick={handlePhotoClick} />
       </div>
-      
-      <SelectionToolbar
-        groupId={groupId || undefined}
-      />
 
       {showAdminTools && (
         <GroupSettingsDialog
