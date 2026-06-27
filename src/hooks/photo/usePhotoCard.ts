@@ -34,7 +34,7 @@ export function usePhotoCard({
   const resetTimerRef = useRef<number | null>(null);
   const { updateFilters } = useFilters();
   
-  const { toggle: toggleSelected, select, toggleMode } = useSelection();
+  const { toggleSelect, toggleMode } = useSelection();
   const patch = useUI((s: UIStoreState) => s.patch);
   const route = useAppRoute();
   const navigate = useNavigation();
@@ -74,7 +74,7 @@ export function usePhotoCard({
       logger.debug('[usePhotoCard] SELECTING photo:', photo.id);
       e.stopPropagation();
       e.preventDefault();
-      toggleSelected(photo.id);
+      toggleSelect(photo.id);
       return;
     }
 
@@ -110,9 +110,9 @@ export function usePhotoCard({
       if (isManagement) {
         if (!isMultiSelect) {
           toggleMode();
-          select(photo.id);
+          toggleSelect(photo.id);
         } else {
-          toggleSelected(photo.id);
+          toggleSelect(photo.id);
         }
         if ('vibrate' in navigator) navigator.vibrate(50);
       } else {

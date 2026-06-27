@@ -2,7 +2,7 @@ import { useAppRouter } from '@/lib/router';
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { Icon } from '@/components/ui/Icon';
-import { useAuth, activeTaskCountSelector, useTask, useSignal } from '@/lib/store';
+import { useAuth, activeTaskCountSelector, useTask, useSignal, isMultiSelect as isMultiSelectSignal } from '@/lib/store';
 import { useUI, useSettings, useAdminBatchActions, usePermission } from '@/hooks';
 import { useAppQuery } from '@/lib/query';
 import { api } from '@/lib/api';
@@ -26,8 +26,8 @@ export function AdminHeader({ className }: AdminHeaderProps) {
   const { navigate } = useAppRouter();
 
   const lang = useUI((s) => s.appLang);
-  const { state: selectionState, toggleMode } = useSelection();
-  const multiSelect = selectionState.mode === 'batch';
+  const { toggleMode } = useSelection();
+  const multiSelect = useSignal(isMultiSelectSignal);
   const patch = useUI((s) => s.patch);
   const t = translations[lang as keyof typeof translations] || translations.en;
 

@@ -15,8 +15,8 @@ export function UploadButton({
   const { can } = usePermission();
   const { route } = useAppRouter();
   const isManagement = typeof route?.name === 'string' && route?.name?.startsWith('admin');
-  const { state } = useSelection();
-  const isBatch = state.mode === 'batch';
+  const { isMultiSelect } = useSelection();
+  const isBatch = isMultiSelect;
 
   if (!isManagement || !can('photo:edit') || !onAdd || isBatch) return null;
 

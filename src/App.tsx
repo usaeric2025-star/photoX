@@ -2,7 +2,6 @@ import { Suspense, lazy } from 'react';
 import { NuqsAdapter } from 'nuqs/adapters/react';
 import { AppErrorBoundary } from '@/components/layout/AppErrorBoundary';
 import { ConfirmProvider } from './context/ConfirmContext';
-import { SelectionProvider } from '@/features/selection';
 import { RouterOrchestrator } from '@/components/RouterOrchestrator';
 import { Analytics } from '@vercel/analytics/react';
 import { useAppInit } from '@/hooks/core/useAppInit';
@@ -20,7 +19,6 @@ function AppContent({ status, error }: { status: string, error: Error | null }) 
   return (
     <AppErrorBoundary>
       <ConfirmProvider>
-        <SelectionProvider>
           {status === 'loading' ? (
             <LoadingScreen />
           ) : status === 'error' ? (
@@ -32,7 +30,6 @@ function AppContent({ status, error }: { status: string, error: Error | null }) 
               </Suspense>
             </div>
           )}
-        </SelectionProvider>
       </ConfirmProvider>
       <DialogContainer />
       <Suspense fallback={null}>

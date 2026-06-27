@@ -17,7 +17,7 @@ interface PublicPhotoCardProps {
   sharedTags?: Tag[];
 }
 
-export function PublicPhotoCard({
+export const PublicPhotoCard = memo(function PublicPhotoCard({
   photo,
   onClick,
   hideDetails = false,
@@ -61,4 +61,4 @@ export function PublicPhotoCard({
       />
     </PhotoCardBase>
   );
-}
+});

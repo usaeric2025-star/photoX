@@ -56,13 +56,13 @@ export const BatchEditScreen = () => {
     isSyncing,
   } = useBatchEdit();
 
-  const { state, clear } = useSelection();
+  const { selectedIds, clearSelection } = useSelection();
 
   const { submit: saveBatch, isLoading: isSaving } = useFormSubmit({
     schema: v.object({}),
     mutationFn: async () => {
-      await originalSave(state.selectedIds);
-      clear();
+      await originalSave(selectedIds);
+      clearSelection();
       return true;
     },
     onSuccess: () => {
@@ -92,7 +92,7 @@ export const BatchEditScreen = () => {
           <BatchDeleteButton 
             selectedIds={batchEditIds} 
             onSuccess={() => {
-              clear();
+              clearSelection();
               handleClose();
             }} 
           />

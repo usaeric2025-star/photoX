@@ -22,7 +22,7 @@ interface AdminPhotoCardProps {
   selected?: boolean;
 }
 
-export function AdminPhotoCard({
+export const AdminPhotoCard = memo(function AdminPhotoCard({
   photo,
   onClick,
   hideDetails = false,
@@ -80,4 +80,4 @@ export function AdminPhotoCard({
       />
     </PhotoCardBase>
   );
-}
+});

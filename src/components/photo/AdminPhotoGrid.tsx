@@ -30,8 +30,7 @@ export function AdminPhotoGrid({
   filters,
   onPhotoClick
 }: AdminPhotoGridProps) {
-  const { state } = useSelection();
-  const multiSelect = state.mode === 'batch';
+  const { isMultiSelect, toggleSelect } = useSelection();
   
   const allIds = React.useMemo(() => (photos || []).map(p => p.id), [photos]);
 
@@ -48,7 +47,13 @@ export function AdminPhotoGrid({
         columns={columns}
         mode="admin"
         filters={filters}
-        onPhotoClick={onPhotoClick}
+        onPhotoClick={(id, index, e) => {
+          if (isMultiSelect) {
+            toggleSelect(id);
+          } else {
+            onPhotoClick?.(id, index, e);
+          }
+        }}
       />
     </div>
   );

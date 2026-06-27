@@ -24,8 +24,7 @@ import { useColumns } from '@/hooks';
 import { FilterBar } from '@/features/filter/FilterBar';
 
 function AdminPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string, index: number) => void }) {
-  const { state, toggle } = useSelection();
-  const isMultiSelect = state.mode === 'batch';
+  const { isMultiSelect, toggleSelect } = useSelection();
   const { columns } = useColumns();
 
   const gridClass = "grid-cols-3";
@@ -38,7 +37,7 @@ function AdminPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoLis
           photo={photo}
           onClick={() => {
             if (isMultiSelect) {
-              toggle(photo.id);
+              toggleSelect(photo.id);
             } else {
               onPhotoClick(photo.id, index);
             }
@@ -87,8 +86,7 @@ export function AdminGroupDetailPage() {
   }, [anchor, photoId, loading, (photos || []).length]);
 
   const [showAdminTools, setShowAdminTools] = useState(false);
-  const { state } = useSelection();
-  const isMultiSelect = state.mode === 'batch';
+  const { isMultiSelect } = useSelection();
 
   const adminActions = useAdminMaintenance();
   
@@ -155,9 +153,6 @@ export function AdminGroupDetailPage() {
       </div>
       
       <SelectionToolbar
-        totalItems={(photos || []).length}
-        allIds={(photos || []).map((p) => p.id)}
-        allPhotos={photos || []}
         groupId={groupId || undefined}
       />
 

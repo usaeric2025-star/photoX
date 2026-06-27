@@ -7,10 +7,10 @@ import { useSelection } from '@/features/selection';
 
 export function useAdminBatchActions() {
   const { handleBatchAiAnalyze } = useAIBatchAnalysis();
-  const { state: selectionState } = useSelection();
+  const { selectedIds } = useSelection();
   
   const handleBatchAiIdentifyTrigger = async (allPhotos?: { id: string; name?: string; description?: string; imageUrl?: string; thumbnailUrl?: string; groupId?: string | null }[], ids?: string[]) => {
-    const selectedIds = ids || selectionState.selectedIds;
+    const targetIds = ids || selectedIds;
 
     
     // If no specific photos provided, we use the passed allPhotos
@@ -21,17 +21,17 @@ export function useAdminBatchActions() {
       return;
     }
 
-    if (selectedIds.length > 0) {
+    if (targetIds.length > 0) {
       const selectedGroupIds = new Set<string>();
       (photosToProcess).forEach((p) => {
-        if (selectedIds.includes(p.id) && p.groupId) {
+        if (targetIds.includes(p.id) && p.groupId) {
           selectedGroupIds.add(p.groupId);
         }
       });
       const groupIdsArray = Array.from(selectedGroupIds);
 
       const targetPhotos = (photosToProcess).filter((p) => 
-        selectedIds.includes(p.id) || (p.groupId && groupIdsArray.includes(p.groupId))
+        targetIds.includes(p.id) || (p.groupId && groupIdsArray.includes(p.groupId))
       );
       handleBatchAiAnalyze(targetPhotos as unknown as import('@/types').Photo[]);
     } else {
