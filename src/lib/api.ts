@@ -71,16 +71,27 @@ const client = hc<AppType>(
       let retries = 3;
       
       const executeRequest = async () => {
+        let attempt = 0;
         while (true) {
           try {
             const signal = typeof AbortSignal.timeout === 'function' 
-              ? AbortSignal.timeout(15000) 
+              ? AbortSignal.timeout(30000) 
               : (() => {
                   const controller = new AbortController();
-                  setTimeout(() => controller.abort(), 15000);
+                  setTimeout(() => controller.abort(), 30000);
                   return controller.signal;
                 })();
-            return await fetch(input, { ...init, headers, signal });
+            const res = await fetch(input, { ...init, headers, signal });
+            
+            // Handle 429 Too Many Requests (AI Studio platform limits)
+            if (res.status === 429 && attempt < 5) {
+              attempt++;
+              const backoff = Math.pow(2, attempt) * 500 + Math.random() * 500;
+              await new Promise(resolve => setTimeout(resolve, backoff));
+              continue;
+            }
+            
+            return res;
           } catch (err) {
             if (retries > 0) {
               retries--;

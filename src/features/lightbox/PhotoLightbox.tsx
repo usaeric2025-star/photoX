@@ -127,7 +127,8 @@ export function PhotoLightbox() {
   const { data: settings } = usePublicSettings();
   const { canEdit: canEditPermission } = usePermission();
   
-  const canEdit = canEditPermission;
+  const isAdminRoute = route.name.startsWith('admin');
+  const canEdit = canEditPermission && isAdminRoute;
 
   const handleClose = () => {
     isLightboxOpen.set(false);

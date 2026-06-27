@@ -25,37 +25,35 @@ export function FilterBar({ mode, className }: FilterBarProps) {
         <div className="flex-1 min-w-0">
           <SearchInput />
         </div>
-        {isAdmin && (
-          <div className="flex gap-2 shrink-0 items-center overflow-x-auto hide-scrollbar pb-1 sm:pb-0">
-            <button 
-              onClick={() => setShowTags(!showTags)}
-              className={cn(
-                "h-10 px-3 sm:px-4 rounded-full transition-all flex items-center gap-2 cursor-pointer active:scale-95 border",
-                showTags 
-                  ? "bg-primary text-text-on-primary border-primary shadow-md" 
-                  : "bg-surface-soft text-text-main border-border-soft hover:bg-surface-mute"
-              )}
-              title={showTags ? '收起標籤' : '展開標籤'}
-            >
-              <span className="text-[13px] font-bold tracking-tight">Tags</span>
-              <Icon name="chevron-down"
-                size={16} 
-                className={cn("transition-transform duration-300", showTags && "rotate-180")} 
-              />
-            </button>
-            
-            <div className="flex gap-2 items-center shrink-0">
-              <SortToggle />
-              <ColumnsToggle />
-              <GroupToggle 
-                showGroupsCollapsed={showGroupsCollapsed}
-                onClick={() => {
-                  setShowGroupsCollapsed(!showGroupsCollapsed);
-                }}
-              />
-            </div>
+        <div className="flex gap-2 shrink-0 items-center overflow-x-auto hide-scrollbar pb-1 sm:pb-0">
+          <button 
+            onClick={() => setShowTags(!showTags)}
+            className={cn(
+              "h-10 px-3 sm:px-4 rounded-full transition-all flex items-center gap-2 cursor-pointer active:scale-95 border",
+              showTags 
+                ? "bg-primary text-text-on-primary border-primary shadow-md" 
+                : "bg-surface-soft text-text-main border-border-soft hover:bg-surface-mute"
+            )}
+            title={showTags ? '收起標籤' : '展開標籤'}
+          >
+            <span className="text-[13px] font-bold tracking-tight">Tags</span>
+            <Icon name="chevron-down"
+              size={16} 
+              className={cn("transition-transform duration-300", showTags && "rotate-180")} 
+            />
+          </button>
+          
+          <div className="flex gap-2 items-center shrink-0">
+            <SortToggle />
+            <ColumnsToggle />
+            <GroupToggle 
+              showGroupsCollapsed={showGroupsCollapsed}
+              onClick={() => {
+                setShowGroupsCollapsed(!showGroupsCollapsed);
+              }}
+            />
           </div>
-        )}
+        </div>
       </div>
       
       <div className="px-4 pb-3 space-y-2">
