@@ -9,7 +9,7 @@ import { showToast } from '@/lib/ui/toast';
 import { translations } from '@/locales';
 import { usePhotoEditAI } from './usePhotoEditAI';
 import { AIStatusBadge } from '@/components/ui/AIStatusBadge';
-import { AppField } from '@/lib/form/AppField';
+import { AppField } from '@/lib/forms/AppField';
 import { MultilingualInput } from '@/components/shared/MultilingualInput';
 import { copyToClipboard } from '@/utils/clipboard';
 

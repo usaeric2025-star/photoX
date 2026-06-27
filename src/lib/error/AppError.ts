@@ -53,13 +53,14 @@ export class AppError extends Error {
     category?: string;
     userMessage?: string;
     shouldReport?: boolean;
+    traceId?: string;
   }) {
     super(params.message, { cause: params.cause });
     this.name = 'AppError';
     this.code = params.code;
     this.severity = params.severity ?? ErrorSeverity.ERROR;
     this.statusCode = params.statusCode ?? mapCodeToStatus(params.code);
-    this.traceId = crypto.randomUUID();
+    this.traceId = params.traceId ?? crypto.randomUUID();
     this.timestamp = new Date().toISOString();
     this.context = params.context;
     this.cause = params.cause;

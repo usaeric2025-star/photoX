@@ -1,19 +1,11 @@
-import { parseAsString, parseAsInteger, parseAsJson, parseAsBoolean, createParser } from 'nuqs';
+import { parseAsString, parseAsJson, parseAsBoolean, createParser } from 'nuqs';
 import * as v from 'valibot';
+import { parseWithValibot } from '../valibot/adapters/nuqs';
+import { SortSchema } from '../valibot/schemas/filters';
+import { PageSchema, LimitSchema } from '../valibot/schemas/pagination';
 
 // Photo ID Parser
-export const parseAsPhotoId = createParser({
-  parse: (value: string | null) => {
-    if (!value) return null;
-    const schema = v.string();
-    try {
-      return v.parse(schema, value);
-    } catch {
-      return null;
-    }
-  },
-  serialize: (value: string | null) => value ?? '',
-});
+export const parseAsPhotoId = parseWithValibot(v.string());
 
 // Search Query Parser
 export const searchParser = parseAsString.withDefault('');
@@ -41,8 +33,8 @@ export const selectedIdsParser = parseAsJson<string[]>((value) => {
   }
 }).withDefault([]);
 
-// Sort Parser
-export const sortParser = parseAsString.withDefault('newest');
+// Sort Parser (使用 Valibot)
+export const sortParser = parseWithValibot(SortSchema).withDefault('date');
 
 // Status Parser
 export const statusParser = parseAsString.withDefault('all');
@@ -53,8 +45,8 @@ export const batchParser = parseAsBoolean.withDefault(false);
 // Modal Parser
 export const modalParser = parseAsString.withDefault('');
 
-// Page Parser
-export const pageParser = parseAsInteger.withDefault(1);
+// Page Parser (使用 Valibot)
+export const pageParser = parseWithValibot(PageSchema).withDefault(1);
 
 // Group ID Parser
 export const groupIdParser = parseAsString.withDefault('');

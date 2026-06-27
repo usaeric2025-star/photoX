@@ -12,8 +12,8 @@ import { PromptDialog } from "@/components/ui/PromptDialog";
 import { normalizeTagName } from "@/lib/utils";
 import { triggerRefreshTagHotScores } from "../../services/tag/commands";
 import { appQuery } from '@/lib/query';
-import { useFormSubmit } from '@/lib/form/useFormSubmit';
-import { FormProvider } from '@/lib/form/useFormField';
+import { useFormSubmit } from '@/lib/forms/useFormSubmit';
+import { FormProvider } from '@/lib/forms/useFormField';
 import * as v from 'valibot';
 
 interface TagsSectionProps {

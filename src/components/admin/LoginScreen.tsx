@@ -6,7 +6,7 @@ import { Router } from '@/router';
 import { AppLink } from '@/components/router/AppLink';
 import { translations } from '@/locales';
 import { storage } from '@/services/storage';
-import { useFormSubmit } from '@/lib/form/useFormSubmit';
+import { useFormSubmit } from '@/lib/forms/useFormSubmit';
 import * as v from 'valibot';
 import { Button } from '@/components/ui/Button';
 

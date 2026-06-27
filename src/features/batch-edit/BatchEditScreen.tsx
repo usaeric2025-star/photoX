@@ -7,7 +7,7 @@ import { usePhotoDelete } from '@/hooks';
 import { BatchEditForm } from './BatchEditForm';
 import { useBatchEdit } from './useBatchEdit';
 import { useSelection } from '@/features/selection';
-import { useFormSubmit } from '@/lib/form/useFormSubmit';
+import { useFormSubmit } from '@/lib/forms/useFormSubmit';
 import * as v from 'valibot';
 import { Button } from '@/components/ui/Button';
 import { type ProductFormData } from '@/types';

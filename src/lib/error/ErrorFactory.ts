@@ -1,7 +1,9 @@
+import * as v from 'valibot';
 import { ErrorCode } from '@/shared/errorCodes';
 import { AppError, ErrorSeverity, isAppError, ErrorCategory } from './AppError';
 import { showToast } from '@/lib/ui/toast';
 import { logger } from '@/lib/logger';
+import { generateTraceId } from '@/lib/utils';
 
 export class ErrorFactory {
   private static mapResourceToChinese(resource: string): string {
@@ -28,6 +30,15 @@ export class ErrorFactory {
       Furniture: '家具',
     };
     return map[resource] ?? resource;
+  }
+
+  static formatValibotError(error: v.ValiError<any>): string {
+    return error.issues.map((issue: any) => {
+      // 嘗試獲取友善的路徑名稱
+      const path = issue.path?.map((p: any) => p.key).join('.') || '参数';
+      // 格式化訊息：將欄位名稱與驗證錯誤連結
+      return `${path} ${issue.message}`;
+    }).join('，');
   }
 
   static create(
@@ -57,7 +68,8 @@ export class ErrorFactory {
       category: options.category ?? ErrorCategory.RUNTIME,
       userMessage: options.userMessage ?? message,
       shouldReport: options.shouldReport ?? 
-        (options.category !== ErrorCategory.BUSINESS && options.category !== ErrorCategory.VALIDATION)
+        (options.category !== ErrorCategory.BUSINESS && options.category !== ErrorCategory.VALIDATION),
+      traceId: options.traceId,
     });
   }
 
@@ -248,9 +260,21 @@ export class ErrorFactory {
     } catch (_) {}
   }
 
-  static fromUnknown(error: unknown): AppError {
+  static fromUnknown(error: unknown, context?: Record<string, unknown>): AppError {
     if (isAppError(error)) return error;
     
+    if (error instanceof v.ValiError) {
+      return this.create(this.formatValibotError(error as v.ValiError<any>), {
+        category: ErrorCategory.VALIDATION,
+        userMessage: this.formatValibotError(error as v.ValiError<any>),
+        context: { ...context, original: error },
+        code: ErrorCode.VALIDATION_FAILED,
+        severity: ErrorSeverity.WARNING,
+        statusCode: 400,
+        traceId: generateTraceId(),
+      });
+    }
+
     if (error instanceof Error) {
       return this.create(error.message, { originalError: error });
     }
@@ -260,6 +284,12 @@ export class ErrorFactory {
     });
   }
   
+  static handle(error: unknown, options?: { context?: string; silent?: boolean }): void {
+    const context = options?.context || 'unknown-context';
+    const silent = options?.silent ?? false;
+    this.handleError(error, context, silent);
+  }
+
   static handleError(error: unknown, context: string, silent: boolean = false): void {
     if (silent) return;
     this.capture(error);
@@ -361,4 +391,3 @@ export class ErrorFactory {
     logger.debug('[ErrorFactory] addBreadcrumb:', breadcrumb);
   }
 }
-

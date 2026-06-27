@@ -10,7 +10,7 @@ import { CategorySelect } from './CategorySelect';
 import { PhotoTagSelector } from './PhotoTagSelector';
 import { ManufacturerSelect } from '@/components/admin/ManufacturerSelect';
 import { Icon } from '@/components/ui/Icon';
-import { AppField } from '@/lib/form/AppField';
+import { AppField } from '@/lib/forms/AppField';
 
 export function OrgTab() {
   const { form } = usePhotoEditSessionContext();

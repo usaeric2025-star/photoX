@@ -3,7 +3,7 @@ import React from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { useAppQuery, useAppMutation, appQuery } from '@/lib/query';
 import { api } from '@/lib/api';
-import { useFormSubmit } from '@/lib/form/useFormSubmit';
+import { useFormSubmit } from '@/lib/forms/useFormSubmit';
 import { Button } from '@/components/shared/Button';
 import * as v from 'valibot';
 import { useDisclosure } from '@/hooks/core/useDisclosure';

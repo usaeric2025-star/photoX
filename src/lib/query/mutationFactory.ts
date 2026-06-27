@@ -1,15 +1,26 @@
 import { showToast } from '@/lib/ui/toast';
 import { api } from '@/lib/api';
 import { hapticFeedback } from '@/lib/ui/haptics';
-
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { useAppMutation } from './index';
+
+/**
+ * Standard Mutation Factory
+ */
+export function createMutation<TVariables, TData>(config: {
+  mutationFn: (variables: TVariables) => Promise<TData>;
+  onSuccess?: (data: TData, variables: TVariables) => void;
+  onError?: (error: Error, variables: TVariables) => void;
+}) {
+  return function useStandardMutation() {
+    return useAppMutation(config);
+  };
+}
 
 /**
  * 樂觀更新 DSL 操作符 (Optimistic Update DSL)
- * 減少重複的數據結構处理逻辑
  */
 export const optimistic = {
-  /** 单列表操作 (Array) */
   list: {
     remove: <T extends Record<string, unknown>>(idField: keyof T = 'id' as keyof T) => (old: T[] | undefined, id: T[keyof T]) => {
       return (old || []).filter((item: T) => item[idField] !== id);
@@ -21,7 +32,6 @@ export const optimistic = {
       return [...(old || []), newItem];
     },
   },
-  /** 无限滚动分页结构 (InfiniteData) */
   infinite: {
     remove: <T extends Record<string, unknown>>(idField: keyof T = 'id' as keyof T) => (old: { pages: { photos?: T[], items?: T[] }[] } | undefined, ids: T[keyof T] | T[keyof T][]) => {
       if (!old || !old.pages) return old;

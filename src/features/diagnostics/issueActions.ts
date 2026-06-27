@@ -34,9 +34,60 @@ export const ISSUE_ACTIONS: Record<string, IssueAction> = {
     }
   },
   orphan_files: {
-    name: "找回云端孤儿照片",
+    name: "找回云端孤兒照片",
+    preview: async () => {
+      const res = await api.admin.maintenance.storage.audit.$get();
+      const data = await res.json() as any;
+      if (!data.success) throw new Error("审计失败");
+      return { 
+        affectedCount: data.data.orphans.count, 
+        message: `扫描完成：在 R2 发现 ${data.data.orphans.count} 个孤儿文件（未在数据库中记录）`,
+        truncated: data.data.orphans.truncated,
+        samples: data.data.orphans.samples
+      };
+    },
     execute: async () => {
-      return { message: "此功能正在优化中，请稍后重试" };
+      // 1. 先进行一次审计获取要恢复的 Key
+      const auditRes = await api.admin.maintenance.storage.audit.$get();
+      const auditData = await auditRes.json() as any;
+      if (!auditData.success) throw new Error("审计失败");
+      
+      const orphans = auditData.data.orphans.samples || [];
+      if (orphans.length === 0) return { message: "未发现需要恢复的孤儿文件" };
+      
+      const keys = orphans.map((o: any) => o.key);
+      
+      // 2. 执行批量恢复
+      const res = await api.admin.maintenance.storage['recover-orphans'].$post({
+        json: { keys }
+      });
+      const data = await res.json() as any;
+      if (!data.success) throw new Error(data.error || "恢复失败");
+      
+      const recoveredCount = (data.results || []).filter((r: any) => r.status === 'recovered').length;
+      return { 
+        message: `找回任务完成：成功导入 ${recoveredCount} 条记录，跳过 ${orphans.length - recoveredCount} 条`,
+        details: data.results
+      };
+    }
+  },
+  ghost_records: {
+    name: "清理資料庫殘餘記錄",
+    preview: async () => {
+      const res = await api.admin.maintenance.storage.audit.$get();
+      const data = await res.json() as any;
+      if (!data.success) throw new Error("审计失败");
+      return { 
+        affectedCount: data.data.ghosts.count, 
+        message: `掃描完成：發現 ${data.data.ghosts.count} 條殘餘記錄（資料庫中有記錄但 R2 找不到文件）`,
+        samples: data.data.ghosts.samples
+      };
+    },
+    execute: async () => {
+      const res = await api.admin.maintenance.storage['clean-ghosts'].$post();
+      const data = await res.json() as any;
+      if (!data.success) throw new Error(data.error || "清理失敗");
+      return { message: `修復完成，已移除 ${data.count || 0} 條無效的資料庫記錄` };
     }
   },
   cleanup: {

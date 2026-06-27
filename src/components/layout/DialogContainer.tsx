@@ -26,6 +26,6 @@ export function DialogContainer() {
       <PhotoLightbox />
       {isEditOpen && <PhotoEditDialog />}
     </>,
-    document.body
+    document.getElementById('portal-root')!
   );
 }

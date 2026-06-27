@@ -22,7 +22,7 @@ import { SettingsTabs } from './SettingsTabs';
 import { SettingsHeader } from './SettingsHeader';
 import { translations } from '@/locales';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
-import { useFormSubmit } from '@/lib/form/useFormSubmit';
+import { useFormSubmit } from '@/lib/forms/useFormSubmit';
 import * as v from 'valibot';
 
 import { useSyncMutation } from '@/hooks';

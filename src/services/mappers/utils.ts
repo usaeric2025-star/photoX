@@ -25,9 +25,9 @@ export const getThumbnailUrl = (imageUrlOrKey: string, width?: number, height?: 
   // 1. 如果有 Worker URL，優先使用 Worker
   if (workerUrl) {
     const params = new URLSearchParams();
-    if (width) params.set('width', String(width));
-    if (height) params.set('height', String(height));
-    if (imageHash) params.set('h', imageHash.slice(0, 8));
+    if (width) params.set('w', String(width));
+    if (height) params.set('h', String(height));
+    if (imageHash) params.set('v', imageHash.slice(0, 8));
     
     const query = params.toString();
     const baseUrl = workerUrl.endsWith('/') ? workerUrl.slice(0, -1) : workerUrl;

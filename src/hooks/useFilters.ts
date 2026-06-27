@@ -62,9 +62,9 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
     setQuery({ tag: (vals && vals.length === 0) ? null : vals });
   }, [setQuery]);
 
-  const sort = query.sort || options.sortOptions?.[0]?.value || 'newest';
-  const setSort = useCallback((val: string) => {
-    setQuery({ sort: val || null });
+  const sort = query.sort || 'date';
+  const setSort = useCallback((val: 'date' | 'name' | 'size' | string) => {
+    setQuery({ sort: (val || null) as any });
   }, [setQuery]);
 
   const status = query.status;

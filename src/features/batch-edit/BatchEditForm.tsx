@@ -1,6 +1,6 @@
 import React from "react";
 import { PhotoEditSchema } from "@/schemas/photoEdit";
-import { useAppForm } from "@/lib/form/useAppForm";
+import { useAppForm } from "@/lib/forms/useAppForm";
 import { useCategories, useManufacturers } from "@/hooks";
 import { Field } from "@tanstack/react-form";
 

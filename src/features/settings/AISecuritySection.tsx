@@ -10,7 +10,7 @@ import { useUI } from '@/lib/store';
 import { translations } from '@/locales';
 
 import { api } from '@/lib/api';
-import { useFormSubmit } from '@/lib/form/useFormSubmit';
+import { useFormSubmit } from '@/lib/forms/useFormSubmit';
 import * as v from 'valibot';
 
 const KeySaveSchema = v.object({

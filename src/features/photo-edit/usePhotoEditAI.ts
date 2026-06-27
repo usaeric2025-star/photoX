@@ -10,7 +10,7 @@ import { analyzePhoto } from '@/features/ai/commands';
 import { useUI, useAuth } from '@/lib/store';
 import { aiAnalysisSignal } from '@/lib/ai/executor';
 
-import { useFormSubmit } from '@/lib/form/useFormSubmit';
+import { useFormSubmit } from '@/lib/forms/useFormSubmit';
 import * as v from 'valibot';
 import { PhotoEditFormData } from '@/schemas/photoEdit';
 

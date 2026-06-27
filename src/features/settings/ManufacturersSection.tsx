@@ -10,9 +10,9 @@ import { PromptDialog } from "@/components/ui/PromptDialog";
 import { normalizeManufacturerName } from "@/lib/utils";
 import { useUI } from '@/lib/store';
 import { translations } from "@/locales";
-import { useFormSubmit } from '@/lib/form/useFormSubmit';
+import { useFormSubmit } from '@/lib/forms/useFormSubmit';
 import * as v from 'valibot';
-import { FormProvider } from '@/lib/form/useFormField';
+import { FormProvider } from '@/lib/forms/useFormField';
 
 interface ManufacturersSectionProps {
   manufacturers: Manufacturer[];

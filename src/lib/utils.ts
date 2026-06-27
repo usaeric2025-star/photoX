@@ -2,9 +2,14 @@ import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { showToast } from '@/lib/ui/toast';
 import { formatters } from "@/utils/formatters"
+import { generateId } from "@/lib/id"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
+}
+
+export function generateTraceId(): string {
+  return generateId();
 }
 
 /**

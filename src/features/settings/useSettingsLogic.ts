@@ -28,7 +28,7 @@ interface UseSettingsLogicProps {
 }
 
 import { useDebouncedCallback } from '@/hooks/core/useDebouncedCallback';
-import { useFormSubmit } from "@/lib/form/useFormSubmit";
+import { useFormSubmit } from "@/lib/forms/useFormSubmit";
 import * as v from 'valibot';
 
 export const useSettingsLogic = ({

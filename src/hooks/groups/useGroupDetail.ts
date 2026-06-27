@@ -2,6 +2,8 @@ import { createQuery } from '@/lib/query/queryFactory';
 import { getGroupById } from '@/services/group/queries';
 import { queryKeys } from '@/lib/query/keys';
 import { Group } from '@/types';
+import * as v from 'valibot';
+import { GroupSchema } from '@/lib/valibot';
 
 /**
  * Hook to get group details using standard query factory.
@@ -12,5 +14,6 @@ export const useGroupDetail = createQuery<Group | null, { groupId: string | null
     if (!groupId) return null;
     const result = await getGroupById(groupId, isAdmin ? 'admin' : 'public');
     return result || null;
-  }
+  },
+  schema: v.nullable(GroupSchema)
 });

@@ -6,8 +6,9 @@ import { runStorageAudit } from "../../_lib/maintenance/storageUtils.js";
 import { requireRealUser } from "../../_lib/auth.js";
 import { getR2Client } from "../../_lib/storage.js";
 import { getServerEnv } from "../../../shared/envSchema.js";
-import { ListObjectsV2Command, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { ListObjectsV2Command, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { refreshPhotosView } from '../../_lib/db/actions.js';
+import { normalizeUrl } from '../../_lib/maintenance/storageUtils.js';
 
 const serverEnv = getServerEnv(process.env);
 export const adminMaintenance = new Hono();
@@ -61,6 +62,85 @@ adminMaintenance.get("/storage/audit", async (c) => {
     }
 });
 
+adminMaintenance.post("/storage/recover-orphans", async (c) => {
+    try {
+        await requireRealUser(c);
+        const { keys } = await c.req.json();
+        if (!keys || !Array.isArray(keys)) {
+            return c.json({ success: false, error: "keys array required" }, 400);
+        }
+
+        const targetKeys = keys.slice(0, 50); // Limit to 50
+        const s3Client = await getR2Client();
+        const bucketName = serverEnv.R2_BUCKET_NAME!;
+        const publicUrlPrefix = (serverEnv.R2_PUBLIC_URL_PREFIX || "").replace(/\/$/, '');
+        const isPrefixSsl = publicUrlPrefix.startsWith('http');
+
+        const crypto = await import('node:crypto');
+        const results = [];
+
+        // Pre-fetch existing URLs to avoid duplicates within this batch
+        const existingPhotos = await db.select({ imageUrl: furnitureItems.imageUrl }).from(furnitureItems);
+        const existingUrlsSet = new Set(existingPhotos.map(p => normalizeUrl(p.imageUrl || "")));
+
+        for (const key of targetKeys) {
+            try {
+                // 1. Construct public URL and Normalize
+                const publicUrl = isPrefixSsl 
+                    ? `${publicUrlPrefix}/${key}`
+                    : `https://${publicUrlPrefix}/${key}`;
+                
+                const normalized = normalizeUrl(publicUrl);
+                if (existingUrlsSet.has(normalized)) {
+                    results.push({ key, status: 'skipped', reason: 'exists' });
+                    continue;
+                }
+
+                // 2. Fetch from R2
+                const getCommand = new GetObjectCommand({
+                    Bucket: bucketName,
+                    Key: key
+                });
+                const response = await s3Client.send(getCommand);
+                if (!response.Body) {
+                    results.push({ key, status: 'failed', reason: 'empty_body' });
+                    continue;
+                }
+
+                const buffer = Buffer.from(await response.Body.transformToByteArray());
+                const hash = crypto.createHash('md5').update(buffer).digest('hex');
+
+                // 3. Create DB record
+                const photoId = crypto.randomUUID();
+                await db.insert(furnitureItems).values({
+                    id: photoId,
+                    userId: '8ec53131-a589-4b50-beb4-6b5308541e1b', // Default admin/staff user ID
+                    imageUrl: publicUrl,
+                    imageHash: hash,
+                    name: { zh: `找回的照片 (${key.split('/').pop()})` },
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                } as any);
+
+                existingUrlsSet.add(normalized);
+                results.push({ key, status: 'recovered', id: photoId });
+            } catch (err) {
+                logger.error(`Failed to recover ${key}:`, err);
+                results.push({ key, status: 'failed', error: String(err) });
+            }
+        }
+
+        if (results.some(r => r.status === 'recovered')) {
+            await refreshPhotosView();
+        }
+
+        return c.json({ success: true, results });
+    } catch (e: unknown) {
+        logger.error("Recovery failed:", e);
+        return c.json({ success: false, error: String(e) }, 500);
+    }
+});
+
 adminMaintenance.post("/storage/deduplicate", async (c) => {
     try {
         await requireRealUser(c);
@@ -96,6 +176,24 @@ adminMaintenance.post("/storage/deduplicate", async (c) => {
         return c.json({ success: true, count: idsToRemove.length });
     } catch (e: unknown) {
         logger.error("Deduplication failed:", e);
+        return c.json({ success: false, error: String(e) }, 500);
+    }
+});
+
+adminMaintenance.post("/storage/clean-ghosts", async (c) => {
+    try {
+        await requireRealUser(c);
+        const audit = await runStorageAudit();
+        const ghostIds = audit.ghosts.map(g => g.id);
+        
+        if (ghostIds.length > 0) {
+            await db.delete(furnitureItems).where(inArray(furnitureItems.id, ghostIds));
+            await refreshPhotosView();
+        }
+
+        return c.json({ success: true, count: ghostIds.length });
+    } catch (e: unknown) {
+        logger.error("Ghost cleanup failed:", e);
         return c.json({ success: false, error: String(e) }, 500);
     }
 });

@@ -4,7 +4,7 @@ import { Input } from '@/components/shared/Input';
 import { useUI, storeAccessor } from '@/lib/store';
 import { Icon } from '@/components/ui/Icon';
 import { Button } from '@/components/ui/Button';
-import { useFormField } from '@/lib/form/useFormField';
+import { useFormField } from '@/lib/forms/useFormField';
 
 interface PromptDialogProps {
   open: boolean;

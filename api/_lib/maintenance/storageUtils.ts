@@ -32,20 +32,42 @@ export async function runStorageAudit() {
     const startTime = Date.now();
     const MAX_RUN_TIME = 7500; // 7.5 seconds limit
 
-    const dbPhotos = await db.select({
-        id: furnitureItems.id,
-        imageUrl: furnitureItems.imageUrl,
-        name: furnitureItems.name
-    })
-    .from(furnitureItems)
-    .where(isNotNull(furnitureItems.imageUrl));
+    const dbRecords: DbRecord[] = [];
+    let offset = 0;
+    const limit = 1000;
+    let hasMore = true;
 
-    const dbRecords: DbRecord[] = dbPhotos.map((p) => ({
-        id: String(p.id),
-        name: typeof p.name === 'object' ? (p.name as Record<string, string> | null)?.zh || "" : String(p.name || ''),
-        url: String(p.imageUrl || ''),
-        normalized: normalizeUrl(String(p.imageUrl || ''))
-    }));
+    while (hasMore) {
+        const batch = await db.select({
+            id: furnitureItems.id,
+            imageUrl: furnitureItems.imageUrl,
+            name: furnitureItems.name
+        })
+        .from(furnitureItems)
+        .where(isNotNull(furnitureItems.imageUrl))
+        .limit(limit)
+        .offset(offset);
+
+        if (batch.length === 0) {
+            hasMore = false;
+        } else {
+            batch.forEach((p) => {
+                dbRecords.push({
+                    id: String(p.id),
+                    name: typeof p.name === 'object' ? (p.name as Record<string, string> | null)?.zh || "" : String(p.name || ''),
+                    url: String(p.imageUrl || ''),
+                    normalized: normalizeUrl(String(p.imageUrl || ''))
+                });
+            });
+            offset += limit;
+            if (batch.length < limit) hasMore = false;
+        }
+        
+        // Timeout check for DB part as well
+        if (Date.now() - startTime > MAX_RUN_TIME) {
+            hasMore = false;
+        }
+    }
 
     const dbNormalizedSet = new Set(dbRecords.map((r) => r.normalized));
 

@@ -6,9 +6,9 @@ import { PromptDialog } from "@/components/ui/PromptDialog";
 import { useLongPress } from "@/hooks/core/useLongPress";
 import { Category } from '../../types';
 import { useUI } from '@/lib/store';
-import { useFormSubmit } from '@/lib/form/useFormSubmit';
+import { useFormSubmit } from '@/lib/forms/useFormSubmit';
 import * as v from 'valibot';
-import { FormProvider } from '@/lib/form/useFormField';
+import { FormProvider } from '@/lib/forms/useFormField';
 import { useConfirm } from '@/context/ConfirmContext';
 
 interface CategoriesSectionProps {
