@@ -3,6 +3,46 @@ import { useFilterState } from './useFilterState';
 import { useTranslation } from '@/hooks';
 import { getTranslatedCategoryName } from '@/services/category/utils';
 import { logger } from '@/lib/logger';
+import { usePrefetch } from '@/hooks/core/usePrefetch';
+import { prefetchPhotos } from '@/hooks';
+import type { FilterState } from './types';
+
+interface CategoryButtonProps {
+  cat: { id: number | null; code?: string };
+  isSelected: boolean;
+  categoryName: string;
+  currentFilters: FilterState;
+  onClick: () => void;
+}
+
+function CategoryButton({ cat, isSelected, categoryName, currentFilters, onClick }: CategoryButtonProps) {
+  // 懸浮/觸控雙通道 + 80ms 防抖預加載
+  const prefetchHooks = usePrefetch(() => {
+    logger.debug('[CategoryGrid] Prefetching category photos', { categoryId: cat.id });
+    prefetchPhotos({
+      categoryId: cat.id || undefined,
+      searchQuery: currentFilters.search || undefined,
+      sortOrder: currentFilters.sort || undefined,
+    });
+  }, 80);
+
+  return (
+    <button
+      id={`category-${cat.id ?? 'all'}`}
+      onClick={onClick}
+      {...prefetchHooks}
+      className={`
+        px-2 py-2 rounded-xl text-[13px] font-semibold truncate transition-all duration-300 active:scale-95 cursor-pointer
+        ${isSelected
+          ? 'bg-primary text-text-on-primary shadow-md'
+          : 'bg-surface-soft text-text-sub hover:text-text-main hover:bg-surface-mute'
+        }
+      `}
+    >
+      {categoryName}
+    </button>
+  );
+}
 
 export function CategoryGrid({ mode }: { mode?: 'public' | 'admin' }) {
   const { filters, updateFilters } = useFilterState();
@@ -15,7 +55,7 @@ export function CategoryGrid({ mode }: { mode?: 'public' | 'admin' }) {
     return (
       <div className="grid grid-cols-4 gap-1.5">
          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="animate-shimmer h-[34px] rounded-xl" />
+            <div key={i} className="animate-shimmer h-[34px] rounded-xl bg-surface-soft" />
          ))}
       </div>
     );
@@ -39,20 +79,14 @@ export function CategoryGrid({ mode }: { mode?: 'public' | 'admin' }) {
           : getTranslatedCategoryName(cat.id, categories || [], appLang, uiTranslations);
 
         return (
-          <button
+          <CategoryButton
             key={cat.id ?? 'all'}
-            id={`category-${cat.id ?? 'all'}`}
+            cat={cat}
+            isSelected={isSelected}
+            categoryName={categoryName}
+            currentFilters={filters}
             onClick={() => updateFilters({ categoryId: cat.id })}
-            className={`
-              px-2 py-2 rounded-xl text-[13px] font-semibold truncate transition-all duration-300 active:scale-95
-              ${isSelected
-                ? 'bg-primary text-text-on-primary shadow-md'
-                : 'bg-surface-soft text-text-sub hover:text-text-main hover:bg-surface-mute'
-              }
-            `}
-          >
-            {categoryName}
-          </button>
+          />
         );
       })}
     </div>

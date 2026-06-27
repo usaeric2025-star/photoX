@@ -9,7 +9,6 @@ import { type PhotoEditFormData } from "@/schemas/photoEdit";
 interface BatchEditFormProps {
   formState: Record<string, unknown>;
   handleUpdateForm: (data: Record<string, unknown>) => void;
-  [key: string]: unknown;
 }
 
 const defaultForm: PhotoEditFormData = {

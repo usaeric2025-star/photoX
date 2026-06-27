@@ -7,6 +7,8 @@ import { queryKeys } from '@/lib/query/keys';
 import { getGroupById } from '@/services/group/queries';
 import { STALE_TIMES } from '@/lib/query/config';
 import { Photo } from '@/types';
+import { useFilters } from '@/hooks/useFilters';
+import { useSelection } from '@/features/selection';
 
 interface UsePhotoCardInteractionProps {
   photo: PhotoListItem;
@@ -30,8 +32,9 @@ export function usePhotoCard({
   const cardRef = useRef<HTMLDivElement>(null);
   const longPressTriggered = useRef(false);
   const resetTimerRef = useRef<number | null>(null);
+  const { updateFilters } = useFilters();
   
-  const toggleSelected = useUI((s: UIStoreState) => s.toggleSelected);
+  const { toggle: toggleSelected, select, toggleMode } = useSelection();
   const patch = useUI((s: UIStoreState) => s.patch);
   const route = useAppRoute();
   const navigate = useNavigation();
@@ -106,7 +109,8 @@ export function usePhotoCard({
 
       if (isManagement) {
         if (!isMultiSelect) {
-          patch({ isMultiSelect: true, selectedIds: [photo.id] });
+          toggleMode();
+          select(photo.id);
         } else {
           toggleSelected(photo.id);
         }

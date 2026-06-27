@@ -6,7 +6,7 @@ export * from './ui';
 // Import for local usage and re-export
 import { 
   uiStore, useUIStore, selectedCountSelector, selectedSetSelector, 
-  isAnySelectedSelector, hasActiveFiltersSelector, useAppLang 
+  isAnySelectedSelector, useAppLang 
 } from '@/store/uiStore';
 import type { UIStoreState } from '@/store/uiStore';
 import { authStore, useAuthStore, userSignal, authLoadingSignal } from '@/store/authStore';
@@ -20,13 +20,12 @@ import {
 } from './ui';
 
 const isTaskDrawerOpenSignal = isTaskDrawerOpen;
-const batchModeSignal = isMultiSelect;
 
 // Re-exports
 export { 
   uiStore, useUIStore, useUIStore as useUI, selectedCountSelector, 
-  selectedSetSelector, isAnySelectedSelector, hasActiveFiltersSelector, 
-  batchModeSignal, useAppLang,
+  selectedSetSelector, isAnySelectedSelector, 
+  isMultiSelect, useAppLang,
   isTaskDrawerOpenSignal,
   UIStoreState 
 };

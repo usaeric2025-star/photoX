@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react';
 import { NuqsAdapter } from 'nuqs/adapters/react';
 import { AppErrorBoundary } from '@/components/layout/AppErrorBoundary';
 import { ConfirmProvider } from './context/ConfirmContext';
+import { SelectionProvider } from '@/features/selection';
 import { RouterOrchestrator } from '@/components/RouterOrchestrator';
 import { Analytics } from '@vercel/analytics/react';
 import { useAppInit } from '@/hooks/core/useAppInit';
@@ -19,17 +20,19 @@ function AppContent({ status, error }: { status: string, error: any }) {
   return (
     <AppErrorBoundary>
       <ConfirmProvider>
-        {status === 'loading' ? (
-          <LoadingScreen />
-        ) : status === 'error' ? (
-          <LoadingScreen error={error} />
-        ) : (
-          <div className="relative min-h-screen animate-fade-in">
-            <Suspense fallback={<LoadingScreen />}>
-              <RouterOrchestrator />
-            </Suspense>
-          </div>
-        )}
+        <SelectionProvider>
+          {status === 'loading' ? (
+            <LoadingScreen />
+          ) : status === 'error' ? (
+            <LoadingScreen error={error} />
+          ) : (
+            <div className="relative min-h-screen animate-fade-in">
+              <Suspense fallback={<LoadingScreen />}>
+                <RouterOrchestrator />
+              </Suspense>
+            </div>
+          )}
+        </SelectionProvider>
       </ConfirmProvider>
       <DialogContainer />
       <Suspense fallback={null}>

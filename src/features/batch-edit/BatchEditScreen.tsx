@@ -5,7 +5,8 @@ import { useConfirm } from '@/context/ConfirmContext';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { usePhotoDelete } from '@/hooks';
 import { BatchEditForm } from './BatchEditForm';
-import { useBatchEditSelection } from './useBatchEditSelection';
+import { useBatchEdit } from './useBatchEdit';
+import { useSelection } from '@/features/selection';
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
 import * as v from 'valibot';
 import { Button } from '@/components/ui/Button';
@@ -53,15 +54,15 @@ export const BatchEditScreen = () => {
     handleSave: originalSave,
     handleClose,
     isSyncing,
-    batchIsHiddenApplied,
-    setBatchIsHiddenApplied,
-    logic
-  } = useBatchEditSelection();
+  } = useBatchEdit();
+
+  const { state, clear } = useSelection();
 
   const { submit: saveBatch, isLoading: isSaving } = useFormSubmit({
     schema: v.object({}),
     mutationFn: async () => {
-      await originalSave();
+      await originalSave(state.selectedIds);
+      clear();
       return true;
     },
     onSuccess: () => {
@@ -88,9 +89,13 @@ export const BatchEditScreen = () => {
         </h2>
         
         <div className="flex items-center gap-2">
-          {logic && (
-            <BatchDeleteButton selectedIds={batchEditIds} onSuccess={handleClose} />
-          )}
+          <BatchDeleteButton 
+            selectedIds={batchEditIds} 
+            onSuccess={() => {
+              clear();
+              handleClose();
+            }} 
+          />
 
           <Button onClick={() => saveBatch({})}
             loading={isSaving || isSyncing}
@@ -117,12 +122,6 @@ export const BatchEditScreen = () => {
         <BatchEditForm 
           formState={photoEditFormState}
           handleUpdateForm={(updates) => handleUpdateForm(updates as unknown as ProductFormData)}
-          batchIsHiddenApplied={batchIsHiddenApplied}
-          setBatchIsHiddenApplied={setBatchIsHiddenApplied}
-          quickAddMfr={logic.quickAddManufacturer}
-          addTag={logic.addTag}
-          updateTag={logic.updateTag}
-          deleteTag={logic.deleteTag}
         />
       </div>
     </div>

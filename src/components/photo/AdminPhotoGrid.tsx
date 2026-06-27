@@ -1,8 +1,6 @@
 import React from 'react';
-import { useSignal } from '@/lib/store';
-import { batchModeSignal } from '@/lib/store';
 import { PhotoGridContent } from './PhotoGridContent';
-import { SelectionProvider, SelectionToolbar } from '@/features/selection';
+import { SelectionToolbar, useSelection } from '@/features/selection';
 import { Category } from '@/types/photo';
 import { PhotoListItem } from '@/types/api';
 
@@ -32,34 +30,33 @@ export function AdminPhotoGrid({
   filters,
   onPhotoClick
 }: AdminPhotoGridProps) {
-  const isMultiSelect = useSignal(batchModeSignal);
+  const { state } = useSelection();
+  const multiSelect = state.mode === 'batch';
   
   const allIds = React.useMemo(() => (photos || []).map(p => p.id), [photos]);
 
   return (
-    <SelectionProvider>
-      <div className="h-full w-full relative">
-        <PhotoGridContent 
-          photos={photos || []}
-          dataVersion={dataVersion}
-          isPending={isPending}
-          isFetching={isFetching}
-          isFetchingNextPage={isFetchingNextPage}
-          hasNextPage={hasNextPage}
-          fetchNextPage={fetchNextPage}
-          columns={columns}
-          mode="admin"
-          filters={filters}
-          onPhotoClick={onPhotoClick}
+    <div className="h-full w-full relative">
+      <PhotoGridContent 
+        photos={photos || []}
+        dataVersion={dataVersion}
+        isPending={isPending}
+        isFetching={isFetching}
+        isFetchingNextPage={isFetchingNextPage}
+        hasNextPage={hasNextPage}
+        fetchNextPage={fetchNextPage}
+        columns={columns}
+        mode="admin"
+        filters={filters}
+        onPhotoClick={onPhotoClick}
+      />
+      {multiSelect && (
+        <SelectionToolbar 
+          allIds={allIds} 
+          totalItems={(photos || []).length} 
+          allPhotos={photos || []} 
         />
-        {isMultiSelect && (
-          <SelectionToolbar 
-            allIds={allIds} 
-            totalItems={(photos || []).length} 
-            allPhotos={photos || []} 
-          />
-        )}
-      </div>
-    </SelectionProvider>
+      )}
+    </div>
   );
 }

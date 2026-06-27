@@ -62,14 +62,15 @@ export const PhotoCardBase = ({
       className={cn(
         "aspect-square overflow-hidden cursor-pointer relative transition-all duration-300 group rounded-2xl bg-surface-base shadow-md",
         "active:scale-[0.96] active:shadow-sm active:brightness-95",
-        "data-[selected=true]:ring-4 data-[selected=true]:ring-primary data-[selected=true]:scale-[0.96]",
         isHidden && "opacity-80 grayscale-[0.3] ring-2 ring-danger shadow-lg",
+        isSelected && "ring-4 ring-primary bg-primary/10 shadow-lg scale-[0.98]",
         className
       )}
       {...props}
     >
       <div className={cn(
-        "relative aspect-square w-full h-full overflow-hidden transition-all duration-500 group-data-[selected=true]:scale-95 group-data-[selected=true]:rounded-xl bg-surface-mute",
+        "relative aspect-square w-full h-full overflow-hidden transition-all duration-500 bg-surface-mute",
+        isSelected ? "scale-[0.92] rounded-xl" : "scale-100 rounded-2xl",
         !isLoaded && "animate-shimmer"
       )}>
         <img 
@@ -93,15 +94,15 @@ export const PhotoCardBase = ({
         />
         {/* Apple Style Shine Overlay */}
         <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-10 transition-opacity duration-300 bg-gradient-to-tr from-white/0 via-white/30 to-white/0" />
+        
+        {/* Selection overlay */}
+        {isSelected && (
+          <div className="absolute inset-0 bg-primary/20 pointer-events-none rounded-xl" />
+        )}
       </div>
 
       {/* Slots for badges, actions, information */}
       {children}
-      
-      {/* Selection overlay */}
-      {isSelected && (
-        <div className="absolute inset-0 bg-blue-500/10 pointer-events-none" />
-      )}
     </div>
   );
 };

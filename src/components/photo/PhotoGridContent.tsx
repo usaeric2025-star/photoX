@@ -37,7 +37,7 @@ function CardSkeleton() {
   );
 }
 
-import { useUI, type UIStoreState, selectedSetSelector, useSignal } from '@/lib/store';
+import { useUI, type UIStoreState, selectedSetSelector, useSignal, selectedIds } from '@/lib/store';
 import { logger } from '@/lib/logger';
 
 export function PhotoGridContent({ 
@@ -57,7 +57,8 @@ export function PhotoGridContent({
   const showGroupsCollapsed = filters?.showGroupsCollapsed !== false;
   const hasSearchQuery = !!filters?.search;
   
-  const selectedSet = useUI(selectedSetSelector);
+  const currentSelectedIds = useSignal(selectedIds);
+  const selectedSet = React.useMemo(() => new Set(currentSelectedIds), [currentSelectedIds]);
   
   const safePhotos = photos || [];
   
@@ -66,7 +67,7 @@ export function PhotoGridContent({
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = React.useState(() => typeof window !== 'undefined' ? window.innerWidth : 1200);
 
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     if (typeof ResizeObserver === 'undefined') return;
@@ -75,16 +76,14 @@ export function PhotoGridContent({
       if (!entries || entries.length === 0) return;
       const newWidth = entries[0].contentRect.width;
       // 只有在寬度變化超過 5px 時才更新
-      if (Math.abs(newWidth - containerWidth) > 5) {
-        setContainerWidth(newWidth);
-      }
+      setContainerWidth((prev) => Math.abs(newWidth - prev) > 5 ? newWidth : prev);
     });
 
     observer.observe(el);
     return () => {
       observer.disconnect();
     };
-  }, [containerWidth]);
+  }, []);
 
   const estimatedHeight = React.useMemo(() => {
     const width = containerWidth || 1200;

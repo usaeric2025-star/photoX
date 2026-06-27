@@ -2,9 +2,7 @@ import React, { useState } from 'react';
 import { useAppRouter } from '@/lib/router';
 import { Group } from '@/types';
 import { Icon } from '@/components/ui/Icon';
-import { useSignal } from '@/lib/store';
-import { batchModeSignal } from '@/lib/store';
-import { usePhotoSelection } from '@/hooks/photo/usePhotoSelection';
+import { useSelection } from '@/features/selection';
 import { copyToClipboard } from '@/utils/clipboard';
 import { useFormSubmit } from '@/lib/form/useFormSubmit';
 import { FormProvider, useFormField } from '@/lib/form/useFormField';
@@ -60,8 +58,8 @@ export function GroupHeader({ group, photoCount, isAdmin, onEditSettings, onUpda
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editTitleValue, setEditTitleValue] = useState(group.name);
   
-  const { enable, disable } = usePhotoSelection();
-  const isMultiSelect = useSignal(batchModeSignal);
+  const { state, toggleMode } = useSelection();
+  const isMultiSelect = state.mode === 'batch';
 
   const { submit: updateTitle, isLoading: isUpdating, fieldErrors, clearFieldError } = useFormSubmit<typeof GroupTitleSchema, boolean>({
     schema: GroupTitleSchema,
@@ -169,7 +167,7 @@ export function GroupHeader({ group, photoCount, isAdmin, onEditSettings, onUpda
         {isAdmin && (
           <>
             <button 
-              onClick={() => isMultiSelect ? disable() : enable()}
+              onClick={toggleMode}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors font-medium ${isMultiSelect ? 'bg-indigo-100 text-indigo-700 border border-indigo-200' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-transparent'}`}
             >
               {isMultiSelect ? '取消' : '選擇'}

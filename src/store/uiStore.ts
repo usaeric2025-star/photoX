@@ -28,7 +28,6 @@ export interface UIStoreState {
   isDiagnosticsOpen: boolean;
   activeDialogCount: number;
   fatalError: Error | null;
-  filters: { category: string; tags: string[]; q: string };
   isPhotoEditOpen: boolean;
   currentEditingPhoto: Photo | null;
   
@@ -104,7 +103,6 @@ export const uiStore = createStore<UIStoreState>({
   isDiagnosticsOpen: false,
   activeDialogCount: 0,
   fatalError: null,
-  filters: { category: '', tags: [], q: '' },
   isPhotoEditOpen: false,
   currentEditingPhoto: null,
   lightboxIsOpen: false,
@@ -216,7 +214,3 @@ export const useAppLang = () => useStore(uiStore, (s: UIStoreState) => s.appLang
 export const selectedCountSelector = (state: UIStoreState) => state.selectedIds.length;
 export const selectedSetSelector = (state: UIStoreState) => new Set(state.selectedIds);
 export const isAnySelectedSelector = (state: UIStoreState) => state.selectedIds.length > 0;
-export const hasActiveFiltersSelector = (state: UIStoreState) => {
-  const { category, tags, q } = state.filters;
-  return !!category || tags.length > 0 || !!q;
-};

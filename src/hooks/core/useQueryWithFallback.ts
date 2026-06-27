@@ -1,5 +1,6 @@
 import { showToast } from '@/lib/ui/toast';
 import { useEffect } from 'react';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 interface QueryFallbackOptions {
   showErrorToast?: boolean;
@@ -18,9 +19,8 @@ export function useQueryWithFallback<T>(
 
   useEffect(() => {
     if (queryResult.error && showErrorToast) {
-      showToast.error(`${resourceName} 加载失败`, {
-        description: '请检查网络或刷新重試'
-      });
+      const wrapped = ErrorFactory.wrap(queryResult.error, '加载', resourceName);
+      showToast.error(wrapped);
     }
   }, [queryResult.error, showErrorToast, resourceName]);
 

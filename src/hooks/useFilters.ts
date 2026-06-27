@@ -57,7 +57,7 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
     setQuery({ cat: val || null });
   }, [setQuery]);
 
-  const tags = query.tag;
+  const tags = query.tag || [];
   const setTags = useCallback((vals: string[]) => {
     setQuery({ tag: (vals && vals.length === 0) ? null : vals });
   }, [setQuery]);

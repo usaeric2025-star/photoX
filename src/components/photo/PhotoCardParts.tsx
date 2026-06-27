@@ -89,7 +89,7 @@ export const PhotoSelectionIndicator = ({ isSelected }: { isSelected: boolean })
   <div className={cn(
     "absolute top-2 right-2 w-6 h-6 rounded-full border-2 transition-all duration-300 flex items-center justify-center shadow-[var(--shadow-apple-sm)]",
     isSelected 
-      ? "bg-apple-blue border-apple-blue scale-110 shadow-[var(--shadow-apple-md)]" 
+      ? "bg-primary border-primary scale-110 shadow-[var(--shadow-apple-md)]" 
       : "bg-black/10 border-white/40 opacity-0 group-hover:opacity-100"
   )}>
     {isSelected && <Icon name="check" size={14} className="text-white" />}

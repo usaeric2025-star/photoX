@@ -1,9 +1,6 @@
 import { logger } from '@/lib/logger';
 import { api } from '@/lib/api';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import {
-  repairGroupIntegrity,
-} from "@/services/photo/maintenance";
 import { showToast } from '@/lib/ui/toast';
 
 import { Photo } from '@/types';
@@ -22,8 +19,19 @@ export const runHealthCheck = async (
 //   logger.warn(`[HealthCheck] Found ${broken.length} broken IDs`);
 // }
 
-  // 2. Group Integrity
-  const groupRepair = await repairGroupIntegrity();
+  // 2. Group Integrity (Call standard backend API directly)
+  let groupRepair = { dissolved: 0, synced: 0, deleted: 0 };
+  try {
+    const repairResp = await api.groups['repair-integrity'].$post();
+    if (repairResp.ok) {
+      const repairData = await repairResp.json();
+      if (repairData.success && repairData.data) {
+        groupRepair = repairData.data;
+      }
+    }
+  } catch (err) {
+    logger.error('[HealthCheck] repair-integrity failed', err);
+  }
   const repairCount = groupRepair.dissolved + groupRepair.synced + groupRepair.deleted;
 
   // 3. Storage Audit

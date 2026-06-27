@@ -6,7 +6,7 @@ import { PhotoStatusBadges, PhotoCardInfo, PhotoSelectionIndicator } from './Pho
 import { PinButton } from './PinButton';
 import { useColumns, usePermission, usePerformance } from '@/hooks';
 import { useSignal, useUI, type UIStoreState } from '@/lib/store';
-import { batchModeSignal } from '@/lib/store';
+import { isMultiSelect as isMultiSelectSignal, selectedIds as selectedIdsSignal } from '@/lib/store';
 import { usePhotoCard } from '@/hooks/photo/usePhotoCard';
 
 interface AdminPhotoCardProps {
@@ -35,8 +35,8 @@ export function AdminPhotoCard({
   selected,
 }: AdminPhotoCardProps) {
   usePerformance('AdminPhotoCard');
-  const selectedIds = useUI((s: UIStoreState) => s.selectedIds);
-  const isMultiSelect = useSignal(batchModeSignal);
+  const selectedIds = useSignal(selectedIdsSignal);
+  const isMultiSelect = useSignal(isMultiSelectSignal);
   const isSelected = selected !== undefined ? selected : selectedIds.includes(photo.id);
   const { columns } = useColumns();
   

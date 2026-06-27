@@ -38,18 +38,29 @@ export function usePhotos(params: PhotoListFilters = {}) {
   const { data, error, isLoading, isValidating, size, setSize, mutate } = useSWRInfinite<PhotoListResponse>(
     getKey,
     async ([_p, _l, fetchParams]) => {
-      const response = await api.photos.list.$post({ json: fetchParams });
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+      logger.debug('--- [SWR Fetch] Start with params:', fetchParams);
+      try {
+        const response = await api.photos.list.$post({ json: fetchParams });
+        logger.debug('--- [SWR Fetch] Response status:', response.status);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        const result = await response.json();
+        logger.debug('--- [SWR Fetch] JSON received, item count:', result?.data?.length);
+        
+        // Validate the response
+        const parsed = v.parse(PhotoListResSchema, result) as PhotoListResponse;
+        logger.debug('--- [SWR Fetch] Validation success, parsed:', parsed.data.length);
+        return parsed;
+      } catch (err: unknown) {
+        logger.error('--- [SWR Fetch] Error:', err);
+        throw err;
       }
-      const result = await response.json();
-      
-      // Validate the response
-      return v.parse(PhotoListResSchema, result) as PhotoListResponse;
     },
     {
       revalidateFirstPage: false,
       revalidateOnFocus: false,
+      dedupingInterval: 5000,
     }
   );
 
@@ -67,6 +78,34 @@ export function usePhotos(params: PhotoListFilters = {}) {
     isFetchingNextPage,
     refetch: mutate,
   };
+}
+
+import { mutate as globalMutate } from 'swr';
+import { logger } from '@/lib/logger';
+
+/**
+ * 預加載特定篩選條件的照片列表第一頁並寫入 SWR 快取
+ */
+export async function prefetchPhotos(params: PhotoListFilters = {}) {
+  const { photoId, modal, anchor, ...fetchParams } = params;
+  const queryParams = {
+    ...fetchParams,
+    cursor: undefined,
+  };
+  const key = [ 'photos', 'list', queryParams ];
+  
+  try {
+    globalMutate(key, async () => {
+      const response = await api.photos.list.$post({ json: fetchParams });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const result = await response.json();
+      return v.parse(PhotoListResSchema, result) as PhotoListResponse;
+    }, { revalidate: false });
+  } catch (e) {
+    logger.warn('[prefetchPhotos] Failed to prefetch', e);
+  }
 }
 
 export function usePhotosMutations() {

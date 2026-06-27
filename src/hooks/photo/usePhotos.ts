@@ -1,6 +1,7 @@
-import { usePhotos as useSWRPhotos, PhotoListFilters } from '@/lib/query/hooks/usePhotos';
+import { usePhotos as useSWRPhotos, PhotoListFilters, prefetchPhotos } from '@/lib/query/hooks/usePhotos';
 
 export type { PhotoListFilters };
+export { prefetchPhotos };
 
 /**
  * Hook to get the list of photos using SWR.

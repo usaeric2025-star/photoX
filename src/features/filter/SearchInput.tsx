@@ -1,14 +1,18 @@
-import { uiStore, useUIStore } from '@/store/uiStore';
+import { useState, useEffect } from 'react';
 import { useFilterState } from './useFilterState';
 import { Icon } from '@/components/ui/Icon';
 import { useTranslation } from '@/hooks';
 import { useDebouncedCallback } from '@/hooks/core/useDebouncedCallback';
 
 export function SearchInput() {
-  const { updateFilters } = useFilterState();
-  const searchTerm = useUIStore(s => s.filters.q);
-  const patch = useUIStore(s => s.patch);
+  const { filters, updateFilters } = useFilterState();
+  const [searchTerm, setSearchTerm] = useState(filters.search || '');
   const { uiTranslations: t } = useTranslation();
+
+  // Sync state if filters.search changes externally (e.g. filter reset)
+  useEffect(() => {
+    setSearchTerm(filters.search || '');
+  }, [filters.search]);
 
   const debouncedUpdateFilters = useDebouncedCallback((value: string) => {
     updateFilters({ search: value });
@@ -16,12 +20,12 @@ export function SearchInput() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    patch(s => ({ filters: { ...s.filters, q: value } }));
+    setSearchTerm(value);
     debouncedUpdateFilters(value);
   };
 
   const handleClear = () => {
-    patch(s => ({ filters: { ...s.filters, q: '' } }));
+    setSearchTerm('');
     debouncedUpdateFilters("");
   };
 

@@ -11,7 +11,7 @@ import { useUI, uiStore } from '@/lib/store';
 
 export function AdminContainer() {
   const filters = useFilters({ enableStatus: true });
-  const isAggregated = filters.showGroupsCollapsed && !filters.search && !filters.category && !filters.tags.length;
+  const isAggregated = filters.showGroupsCollapsed && !filters.search && !filters.category && !filters.tags?.length;
   
   const photoGridData = usePhotoGrid({
     categoryId: filters.category,

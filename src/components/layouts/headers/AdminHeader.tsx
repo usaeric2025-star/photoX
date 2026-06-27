@@ -10,7 +10,8 @@ import { NativePopover } from '@/components/ui/NativePopover';
 import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
 import { translations } from "@/locales";
 import { storage } from '@/services/storage';
-import { batchModeSignal, isTaskDrawerOpenSignal } from '@/lib/store';
+import { isTaskDrawerOpenSignal } from '@/lib/store';
+import { useSelection } from '@/features/selection';
 
 interface AdminHeaderProps {
   className?: string;
@@ -25,7 +26,8 @@ export function AdminHeader({ className }: AdminHeaderProps) {
   const { navigate } = useAppRouter();
 
   const lang = useUI((s) => s.appLang);
-  const isMultiSelect = useSignal(batchModeSignal);
+  const { state: selectionState, toggleMode } = useSelection();
+  const multiSelect = selectionState.mode === 'batch';
   const patch = useUI((s) => s.patch);
   const t = translations[lang as keyof typeof translations] || translations.en;
 
@@ -149,14 +151,9 @@ export function AdminHeader({ className }: AdminHeaderProps) {
           {/* 选择模式/多选 按钮 */}
           <button
 // AdminHeader.tsx
-            onClick={() => {
-              batchModeSignal.set(!batchModeSignal.get());
-              if (batchModeSignal.get()) {
-                patch({ selectedIds: [] });
-              }
-            }}
-            className={cn("w-9 h-9 sm:w-10 sm:h-10", isMultiSelect ? theme.buttonActive : theme.button)}
-            title={isMultiSelect ? t.exitSelectMode : t.selectModeToggle}
+            onClick={toggleMode}
+            className={cn("w-9 h-9 sm:w-10 sm:h-10", multiSelect ? theme.buttonActive : theme.button)}
+            title={multiSelect ? t.exitSelectMode : t.selectModeToggle}
           >
             <Icon name="check-square" className="size-4 sm:size-4.5" />
           </button>

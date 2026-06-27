@@ -131,7 +131,7 @@ export function useFormSubmit<T extends v.GenericSchema, TResult>({
             }
             
             const finalErrMsg = wrappedError.userMessage || errorMessage;
-            showToast.error(finalErrMsg);
+            showToast.error(wrappedError);
             setState(prev => ({ ...prev, isLoading: false, isError: true, error: finalErrMsg }));
             onError?.(finalErrMsg);
             resolve(false);

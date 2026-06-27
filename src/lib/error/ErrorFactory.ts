@@ -263,11 +263,13 @@ export class ErrorFactory {
   static handleError(error: unknown, context: string, silent: boolean = false): void {
     if (silent) return;
     this.capture(error);
-    const appError = isAppError(error) ? error : this.fromUnknown(error);
-    const msg = this.extractErrorMessage(appError);
     
-    // 统一使用 showToast.error，该方法已内置 TraceID 生成与诊断复制功能
-    showToast.error(`${context}失败: ${msg}`);
+    const appError = isAppError(error)
+      ? error
+      : this.wrap(error, context);
+    
+    // 统一使用 showToast.error，传递 AppError 对象以便深度提取 TraceID 和详细的诊断信息
+    showToast.error(appError);
   }
 
   static async logResult(payload: unknown, level: 'success' | 'error', context: unknown) {

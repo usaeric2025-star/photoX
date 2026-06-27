@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { useSelection } from './SelectionContext';
-import { useBatchActions } from './useBatchActions';
-import { useUI, type UIStoreState, type TaskStoreState, useTask, useSignal, activeTaskCountSelector, batchModeSignal, selectedCountSelector } from '@/lib/store';
+import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
+import { useUI, type UIStoreState, useTask, activeTaskCountSelector } from '@/lib/store';
 import { useAppRouter } from '@/lib/router';
 import { useAIBatchAnalysis } from '@/hooks/photo/useAIBatchAnalysis';
 import { useConfirm } from '@/context/ConfirmContext';
@@ -38,8 +38,8 @@ export function SelectionToolbar({
   allPhotos = [],
   groupId,
 }: SelectionToolbarProps) {
-  const { state, selectAll, clear } = useSelection();
-  const { isPending, batchDelete } = useBatchActions();
+  const { state, selectAll, clear, count } = useSelection();
+  const { deletePhoto, batchUpdate } = useAdminMaintenance();
   const patch = useUI((s: UIStoreState) => s.patch);
   const { navigate } = useAppRouter();
   const filters = useFilters();
@@ -51,12 +51,10 @@ export function SelectionToolbar({
 
   // ✅ 使用計算後的 Selector
   const activeTasks = useTask(activeTaskCountSelector);
-  const isAnyPending = isPending || activeTasks > 0 || combineMutation.isMutating || removeMutation.isMutating;
+  const isAnyPending = deletePhoto.isMutating || batchUpdate.isMutating || activeTasks > 0 || combineMutation.isMutating || removeMutation.isMutating;
   const setAvoidingSelection = useUI((s: UIStoreState) => s.setAvoidingSelection);
 
-  const isBatchMode = useSignal(batchModeSignal);
-  const count = useUI(selectedCountSelector);
-  const isVisible = isBatchMode || count > 0;
+  const isVisible = state.mode === 'batch' || count > 0;
 
   React.useEffect(() => {
     if (isVisible) {
@@ -114,7 +112,8 @@ export function SelectionToolbar({
     });
 
     if (ok) {
-      await batchDelete.mutateAsync({});
+      await deletePhoto.mutateAsync(state.selectedIds);
+      clear();
     }
   };
 
@@ -213,32 +212,16 @@ export function SelectionToolbar({
             </span>
           </button>
 
-          {/* RHF 測試編輯 (單圖) */}
-          {count === 1 && (
-            <button
-              onClick={() => {
-                 filters.updateFilters({ modal: 'rhf_test', photoId: state.selectedIds[0] });
-              }}
-              className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 active:scale-95 shadow-sm"
-              title="單圖編輯 (RHF測試)"
-            >
-              <Icon name="pencil" size={14} className="text-green-600 shrink-0" />
-              <span className="shrink-0">
-                {isMd ? '單圖編輯 (測試)' : '單編'}
-              </span>
-            </button>
-          )}
-
           {/* 批量編輯 */}
           <button
             onClick={handleBatchEdit}
             disabled={count === 0 || isAnyPending}
             className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm"
-            title="批次編輯欄位"
+            title="編輯選取項目"
           >
             <Icon name="edit" size={14} className="text-indigo-600 shrink-0" />
             <span className="shrink-0">
-              {isMd ? '批次編輯' : isSm ? '編輯' : '編輯'}
+              {isMd ? '編輯' : '編輯'}
             </span>
           </button>
 
@@ -249,7 +232,7 @@ export function SelectionToolbar({
             className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm"
             title="批次刪除照片"
           >
-            {batchDelete.isPending ? (
+            {deletePhoto.isMutating ? (
               <LoadingSpinner size="xs" className="text-red-500 shrink-0" />
             ) : (
               <Icon name="trash-2" size={14} className="text-red-500 shrink-0" />

@@ -1,4 +1,3 @@
-export * from './SelectionContext';
-export * from './useBatchActions';
+export { SelectionProvider, useSelection } from './SelectionContext';
 export * from './SelectionToolbar';
-export * from './batchService';
+export { useSelectionLogic } from './useSelectionLogic';

@@ -22,6 +22,10 @@ export const listHandler = (app: Hono) => {
       sortOrder
     } = c.req.valid('json');
     
+    console.log('--- [API photos.list] Called with params:', { 
+      page, limit, cursor, categoryId, tagId, searchQuery, isAdminMode, onlyUngrouped, onlyGroupsCover, groupId, manufacturerId, isHidden, sortOrder 
+    });
+    
     try {
       const hasTag = tagId !== undefined && tagId !== null && tagId !== '';
       const hasCat = categoryId !== undefined && categoryId !== null && categoryId !== '';

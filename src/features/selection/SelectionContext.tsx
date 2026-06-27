@@ -1,6 +1,5 @@
-import React, { createContext, useContext, ReactNode, useCallback } from 'react';
-import { useUI, UIStoreState, useSignal } from '@/lib/store';
-import { batchModeSignal } from '@/lib/store';
+import React, { createContext, useContext, ReactNode, useMemo } from 'react';
+import { useSelectionLogic } from './useSelectionLogic';
 
 interface SelectionState {
   selectedIds: string[];
@@ -23,63 +22,45 @@ interface SelectionContextValue {
 const SelectionContext = createContext<SelectionContextValue | null>(null);
 
 export function SelectionProvider({ children }: { children: ReactNode }) {
-  const selectedIds = useUI((s: UIStoreState) => s.selectedIds);
-  const isMultiSelect = useSignal(batchModeSignal);
-  const patch = useUI((s: UIStoreState) => s.patch);
-  const toggleSelected = useUI((s: UIStoreState) => s.toggleSelected);
-  const updateSelectedIds = useUI((s: UIStoreState) => s.updateSelectedIds);
-
-  const state: SelectionState = {
+  const {
+    isMultiSelect,
     selectedIds,
-    mode: isMultiSelect ? 'batch' : 'single',
-    isSelecting: selectedIds.length > 0
-  };
+    selectedCount,
+    toggleSelect,
+    selectAll: selectAllFn,
+    clearSelection,
+    toggleBatchMode,
+    isSelected: isSelectedFn
+  } = useSelectionLogic();
 
-  const select = useCallback((id: string) => {
-    if (!selectedIds.includes(id)) {
-      toggleSelected(id);
-    }
-  }, [selectedIds, toggleSelected]);
-
-  const unselect = useCallback((id: string) => {
-    if (selectedIds.includes(id)) {
-      toggleSelected(id);
-    }
-  }, [selectedIds, toggleSelected]);
-
-  const toggle = useCallback((id: string) => {
-    toggleSelected(id);
-  }, [toggleSelected]);
-
-  const selectAll = useCallback((ids: string[]) => {
-    batchModeSignal.set(true);
-    updateSelectedIds(ids);
-  }, [updateSelectedIds]);
-
-  const clear = useCallback(() => {
-    batchModeSignal.set(false);
-    patch({ selectedIds: [] });
-  }, [patch]);
-
-  const toggleMode = useCallback(() => {
-    batchModeSignal.set(!batchModeSignal.get());
-  }, []);
-
-  const isSelected = useCallback((id: string) => {
-    return selectedIds.includes(id);
-  }, [selectedIds]);
-
-  const value: SelectionContextValue = {
-    state,
-    select,
-    unselect,
-    toggle,
-    selectAll,
-    clear,
-    toggleMode,
-    isSelected,
-    get count() { return selectedIds.length; }
-  };
+  const value: SelectionContextValue = useMemo(() => ({
+    state: {
+      selectedIds,
+      mode: isMultiSelect ? 'batch' : 'single',
+      isSelecting: selectedIds.length > 0
+    },
+    select: (id: string) => {
+      if (!selectedIds.includes(id)) toggleSelect(id);
+    },
+    unselect: (id: string) => {
+      if (selectedIds.includes(id)) toggleSelect(id);
+    },
+    toggle: toggleSelect,
+    selectAll: selectAllFn,
+    clear: clearSelection,
+    toggleMode: toggleBatchMode,
+    isSelected: isSelectedFn,
+    count: selectedCount
+  }), [
+    isMultiSelect,
+    selectedIds,
+    selectedCount,
+    toggleSelect,
+    selectAllFn,
+    clearSelection,
+    toggleBatchMode,
+    isSelectedFn
+  ]);
 
   return (
     <SelectionContext.Provider value={value}>
