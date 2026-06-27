@@ -12,6 +12,8 @@ async function testLog() {
     console.log('Inserted log:', log);
   } catch (err) {
     console.error('Failed to insert test log:', err);
+  } finally {
+    process.exit(0);
   }
 }
 
