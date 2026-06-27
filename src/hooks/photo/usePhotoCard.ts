@@ -52,15 +52,6 @@ export function usePhotoCard({
       }
   };
 
-  const handleMouseEnter = () => {
-    // Basic navigation detection
-    const isAlreadyOnGroupPage = route.name === 'publicGroup' || route.name === 'adminGroup' || (route.params as Record<string, string>).groupId;
-    if (photo.groupId && showGroupsCollapsed && !hasSearchQuery && !isAlreadyOnGroupPage) {
-      // SWR automatically handles caching when fetcher is called elsewhere.
-      // Removed prefetchQuery as it was TanStack Query specific.
-    }
-  };
-
   const handleClick = (e: React.MouseEvent) => {
     logger.debug('[usePhotoCard] CLICKED photo:', photo.id, { isManagement, isMultiSelect, hasSearchQuery });
     if (longPressTriggered.current) {
@@ -124,7 +115,6 @@ export function usePhotoCard({
 
   return {
     cardRef,
-    handleClick,
-    handleMouseEnter
+    handleClick
   };
 }

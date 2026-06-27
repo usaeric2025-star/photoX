@@ -16,8 +16,10 @@ export function RouterOrchestrator() {
 
   const getPage = () => {
     if (!route) {
+      console.warn('[Router] No route matched!', window.location.pathname);
       return <NotFoundPage />;
     }
+    console.log('[Router] Matched route:', route.name);
 
     switch (route.name) {
       case "home":

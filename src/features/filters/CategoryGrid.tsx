@@ -3,8 +3,6 @@ import { useFilterState } from './useFilters';
 import { useTranslation } from '@/hooks';
 import { getTranslatedCategoryName } from '@/services/category/utils';
 import { logger } from '@/lib/logger';
-import { usePrefetch } from '@/hooks/core/usePrefetch';
-import { prefetchPhotos } from '@/hooks/photo/usePhotos';
 import type { FilterState } from './types';
 
 interface CategoryButtonProps {
@@ -16,21 +14,10 @@ interface CategoryButtonProps {
 }
 
 function CategoryButton({ cat, isSelected, categoryName, currentFilters, onClick }: CategoryButtonProps) {
-  // 懸浮/觸控雙通道 + 80ms 防抖預加載
-  const prefetchHooks = usePrefetch(() => {
-    logger.debug('[CategoryGrid] Prefetching category photos', { categoryId: cat.id });
-    prefetchPhotos({
-      categoryId: cat.id || undefined,
-      searchQuery: currentFilters.search || undefined,
-      sortOrder: currentFilters.sort || undefined,
-    });
-  }, 80);
-
   return (
     <button
       id={`category-${cat.id ?? 'all'}`}
       onClick={onClick}
-      {...prefetchHooks}
       className={`
         px-2 py-2 rounded-xl text-[13px] font-semibold truncate transition-all duration-300 active:scale-95 cursor-pointer
         ${isSelected

@@ -51,12 +51,6 @@ export function MaintenanceCenter({ onSuccess }: MaintenanceCenterProps) {
             onSuccess={onSuccess}
           />
           <MaintenanceTool 
-            issueId="convert_webp"
-            title="批量轉換為 WebP" 
-            description="將儲存中的舊照片 (如 JPEG/PNG) 轉換為優化後的 WebP 格式，節省頻寬與空間。(每次處理 50 張)"
-            onSuccess={onSuccess}
-          />
-          <MaintenanceTool 
             issueId="ghost_records"
             title="清理資料庫殘餘記錄" 
             description="清理資料庫中存在，但在儲存庫中已經遺失的無效照片記錄。"

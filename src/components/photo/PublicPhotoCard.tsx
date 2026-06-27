@@ -30,7 +30,7 @@ export const PublicPhotoCard = memo(function PublicPhotoCard({
 }: PublicPhotoCardProps) {
   const columns = useSignal(gridColumnsSignal);
   
-  const { cardRef, handleClick, handleMouseEnter } = usePhotoCard({
+  const { cardRef, handleClick } = usePhotoCard({
     photo,
     isManagement: false,
     isMultiSelect: false,
@@ -46,7 +46,6 @@ export const PublicPhotoCard = memo(function PublicPhotoCard({
       isMultiSelect={false}
       imgVariant={columns <= 3 ? 'md' : 'sm'}
       onClick={handleClick}
-      onMouseEnter={handleMouseEnter}
       ref={cardRef}
     >
       <PhotoStatusBadges 

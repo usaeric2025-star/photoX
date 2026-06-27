@@ -39,7 +39,7 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
   const columns = useSignal(gridColumnsSignal);
   const { can } = usePermission();
   
-  const { cardRef, handleClick, handleMouseEnter } = usePhotoCard({
+  const { cardRef, handleClick } = usePhotoCard({
     photo,
     isManagement: true,
     isMultiSelect,
@@ -57,7 +57,6 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
       isMultiSelect={isMultiSelect}
       imgVariant={columns <= 3 ? 'md' : 'sm'}
       onClick={handleClick}
-      onMouseEnter={handleMouseEnter}
       ref={cardRef}
     >
       {isMultiSelect && (

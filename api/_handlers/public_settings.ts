@@ -6,7 +6,7 @@ import { logger } from '../_lib/logger.js';
 
 export const publicSettings = new Hono();
 
-publicSettings.get("/", async (c) => {
+const handler = async (c: any) => {
     try {
         // Use safer query approach - if it fails, fallback to empty
         let settingsRes: typeof schema.settings.$inferSelect | null = null;
@@ -58,4 +58,7 @@ publicSettings.get("/", async (c) => {
         logger.error("Public settings fetch failed:", e);
         return c.json({ success: false, error: (e as Error).message }, 500);
     }
-});
+};
+
+publicSettings.get("/", handler);
+publicSettings.get("", handler);

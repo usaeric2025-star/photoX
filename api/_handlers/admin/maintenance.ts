@@ -14,6 +14,19 @@ const serverEnv = getServerEnv(process.env);
 export const adminMaintenance = new Hono();
 
 // --- 0. View Refresh (CQRS) ---
+adminMaintenance.get("/jobs", async (c) => {
+    try {
+        const { desc } = await import('drizzle-orm');
+        const data = await db.query.maintenanceJobs.findMany({
+            orderBy: [desc(maintenanceJobs.createdAt)],
+            limit: 50
+        });
+        return c.json({ success: true, data });
+    } catch (e: unknown) {
+        return c.json({ success: false, error: String(e) }, 500);
+    }
+});
+
 adminMaintenance.post("/refresh-view", async (c) => {
     try {
         await requireRealUser(c);
@@ -194,108 +207,6 @@ adminMaintenance.post("/storage/clean-ghosts", async (c) => {
         return c.json({ success: true, count: ghostIds.length });
     } catch (e: unknown) {
         logger.error("Ghost cleanup failed:", e);
-        return c.json({ success: false, error: String(e) }, 500);
-    }
-});
-
-adminMaintenance.post("/storage/convert-webp", async (c) => {
-    try {
-        await requireRealUser(c);
-        const { limit = 10 } = await c.req.json().catch(() => ({ limit: 10 }));
-        
-        // Find existing photos that are not webp
-        const targetPhotos = await db.select({
-            id: furnitureItems.id,
-            imageUrl: furnitureItems.imageUrl,
-            imageHash: furnitureItems.imageHash
-        })
-        .from(furnitureItems)
-        .where(sql`${furnitureItems.imageUrl} NOT LIKE '%.webp%'`)
-        .limit(limit);
-
-        if (targetPhotos.length === 0) {
-            return c.json({ success: true, message: 'No non-webp photos found', count: 0 });
-        }
-
-        const s3Client = await getR2Client();
-        const bucketName = serverEnv.R2_BUCKET_NAME!;
-        const publicUrlPrefix = (serverEnv.R2_PUBLIC_URL_PREFIX || "").replace(/\/$/, '');
-        const isPrefixSsl = publicUrlPrefix.startsWith('http');
-        const results = [];
-        const sharp = (await import('sharp')).default;
-
-        for (const photo of targetPhotos) {
-            try {
-                // Extract key from imageUrl
-                let key = photo.imageUrl;
-                if (key) {
-                    try {
-                        const urlObj = new URL(key);
-                        key = urlObj.pathname.replace(/^\//, '');
-                    } catch(e) {
-                         // if invalid url, try to strip prefix
-                         if (key.includes(publicUrlPrefix)) {
-                             key = key.split(publicUrlPrefix + '/')[1] || key;
-                         }
-                    }
-                }
-                
-                if (!key || key.endsWith('.webp') || key.endsWith('_main.webp')) {
-                    results.push({ id: photo.id, status: 'skipped', reason: 'invalid_key_or_already_webp' });
-                    continue;
-                }
-
-                // Get original image from R2
-                const getCommand = new GetObjectCommand({
-                    Bucket: bucketName,
-                    Key: key
-                });
-                const response = await s3Client.send(getCommand);
-                if (!response.Body) throw new Error('Empty body');
-
-                const buffer = Buffer.from(await response.Body.transformToByteArray());
-                
-                // Convert to webp using sharp
-                const webpBuffer = await sharp(buffer)
-                    .webp({ quality: 85 })
-                    .resize({ width: 2048, withoutEnlargement: true })
-                    .toBuffer();
-
-                // Upload to R2 with new key
-                const newKey = key.replace(/\.[^/.]+$/, "") + '.webp';
-                
-                const { PutObjectCommand } = await import("@aws-sdk/client-s3");
-                const putCommand = new PutObjectCommand({
-                    Bucket: bucketName,
-                    Key: newKey,
-                    Body: webpBuffer,
-                    ContentType: 'image/webp'
-                });
-                await s3Client.send(putCommand);
-
-                // Delete old image
-                const deleteCommand = new DeleteObjectCommand({
-                    Bucket: bucketName,
-                    Key: key
-                });
-                await s3Client.send(deleteCommand).catch(e => logger.warn(`Failed to delete old image ${key}`, e));
-
-                // Update DB
-                const newUrl = isPrefixSsl ? `${publicUrlPrefix}/${newKey}` : `https://${publicUrlPrefix}/${newKey}`;
-                await db.update(furnitureItems)
-                    .set({ imageUrl: newUrl })
-                    .where(eq(furnitureItems.id, photo.id));
-
-                results.push({ id: photo.id, status: 'converted', newUrl });
-            } catch (err) {
-                logger.error(`Failed to convert photo ${photo.id}:`, err);
-                results.push({ id: photo.id, status: 'failed', error: String(err) });
-            }
-        }
-        
-        return c.json({ success: true, count: targetPhotos.length, results });
-    } catch (e: unknown) {
-        logger.error("Webp conversion failed:", e);
         return c.json({ success: false, error: String(e) }, 500);
     }
 });

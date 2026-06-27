@@ -6,8 +6,6 @@ import { usePublicSettings } from '@/hooks/settings/useSettings';
 import { usePhotoFilter } from '@/hooks/photo/usePhotoFilter';
 import { useUI } from '@/lib/store';
 import { translations } from '@/locales';
-import { usePrefetch } from '@/hooks/core/usePrefetch';
-import { prefetchPhotos } from '@/hooks/photo/usePhotos';
 import type { FilterState } from './types';
 
 interface TagButtonProps {
@@ -20,19 +18,9 @@ interface TagButtonProps {
 }
 
 function TagButton({ tag, isSelected, isPinned, isHot, currentFilters, onClick }: TagButtonProps) {
-  const prefetchHooks = usePrefetch(() => {
-    prefetchPhotos({
-      tagId: String(tag.id),
-      categoryId: currentFilters.categoryId || undefined,
-      searchQuery: currentFilters.search || undefined,
-      sortOrder: currentFilters.sort || undefined,
-    });
-  }, 80);
-
   return (
     <button
       onClick={onClick}
-      {...prefetchHooks}
       className={`px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all duration-300 cursor-pointer flex items-center gap-1 leading-none ${
         isSelected
           ? 'bg-primary text-text-on-primary shadow-sm scale-105'

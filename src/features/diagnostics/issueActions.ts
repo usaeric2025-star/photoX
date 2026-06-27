@@ -104,15 +104,6 @@ export const ISSUE_ACTIONS: Record<string, IssueAction> = {
       return { message: "数据库架构已与当前程序版本同步" };
     }
   },
-  convert_webp: {
-    name: "批量轉換為 WebP",
-    execute: async () => {
-      const res = await api.admin.maintenance.storage['convert-webp'].$post({ json: { limit: 50 } });
-      const data = await res.json() as Record<string, unknown>;
-      if (!data.success) throw new Error(String(data.error || '轉換失敗'));
-      return { message: `已嘗試轉換，共處理 ${data.count || 0} 張照片` };
-    }
-  },
   refresh_view: {
     name: "刷新照片列表缓存",
     execute: async () => {
