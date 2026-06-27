@@ -30,6 +30,14 @@ if (typeof window !== 'undefined') {
 }
 
 
+import { scan } from 'react-scan';
+
+if (typeof window !== 'undefined') {
+  scan({
+    enabled: true,
+  });
+}
+
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { SWRConfig } from 'swr';
