@@ -33,7 +33,7 @@ export const useSettingsManagement = () => {
         }
     };
 
-    const triggerManufacturerDelete = async (id: number) => {
+    const triggerManufacturerDelete = async (id: string) => {
         if (await confirm({
             title: t.confirmDeleteMfrTitle || "Delete Manufacturer",
             description: t.confirmDeleteMfrTitle || "Are you sure you want to delete this manufacturer?",

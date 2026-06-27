@@ -159,12 +159,11 @@ export function PhotoLightbox() {
       const hash = originalPhoto?.image_hash;
       
       // 💡 Sliding Window Optimization: Only load thumbnails that are close to the current index (window of ~50 items).
-      // For off-screen thumbnails, return a lightweight transparent SVG base64 to prevent
-      // launching 1000+ concurrent network requests. This completely eliminates lag and browser crash!
-      const distance = Math.abs(i - centerIndex);
-      const isInWindow = distance <= 25; // slightly larger window for seamless coarse-grained sliding window
+      // Always ensure the current slide is included in the window.
+      const distance = Math.abs(i - currentIndex);
+      const isInWindow = distance <= 50; 
       
-      const previewUrl = getThumbnailUrl(s.src, 1200, 1200, hash);
+      const previewUrl = getThumbnailUrl(s.src, 1024, 1024, hash);
       const thumbUrl = isInWindow 
         ? getThumbnailUrl(s.src, 120, 120, hash)
         : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1" viewBox="0 0 1 1"><rect width="1" height="1" fill="rgba(255,255,255,0.03)"/></svg>';
@@ -179,7 +178,7 @@ export function PhotoLightbox() {
         original: s, 
       };
     });
-  }, [slides, coarseIndex]);
+  }, [slides, coarseIndex, currentIndex]);
 
   const currentSlide = slides[currentIndex];
   const isEditModalOpen = filters.modal === 'edit';

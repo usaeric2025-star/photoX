@@ -102,7 +102,7 @@ export interface Tag {
 }
 
 export interface Manufacturer {
-  id: number;
+  id: string;
   name: string;
   aliases?: string[];
 }

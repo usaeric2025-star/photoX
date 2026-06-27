@@ -18,10 +18,10 @@ interface ManufacturersSectionProps {
   manufacturers: Manufacturer[];
   addManufacturer: (name: string) => Promise<Manufacturer>;
   updateManufacturer: (
-    id: number,
+    id: string,
     data: Partial<Manufacturer>,
   ) => Promise<boolean>;
-  deleteManufacturer: (id: number) => void;
+  deleteManufacturer: (id: string) => void;
   cardClass: string;
   buttonStyles: { [key in "primary" | "secondary" | "accent"]: string };
 }
@@ -51,8 +51,8 @@ export function ManufacturersSection({
   });
 
   const { submit: runUpdateManufacturer, isLoading: isUpdating, fieldErrors: updateFieldErrors, clearFieldError: updateClearFieldError } = useFormSubmit({
-    schema: v.object({ id: v.number(), name: v.pipe(v.string(), v.minLength(1)) }),
-    mutationFn: async ({ id, name }: { id: number, name: string }) => {
+    schema: v.object({ id: v.string(), name: v.pipe(v.string(), v.minLength(1)) }),
+    mutationFn: async ({ id, name }: { id: string, name: string }) => {
       await rawUpdateManufacturer(id, { name });
       return true;
     },
@@ -91,7 +91,7 @@ export function ManufacturersSection({
               onUpdate={async (mfr) => {
                 return await runUpdateManufacturer({ id: mfr.id, name: mfr.name });
               }}
-              onDelete={(id) => deleteManufacturer(Number(id))}
+              onDelete={(id) => deleteManufacturer(String(id))}
             />
           ))}
         </div>

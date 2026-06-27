@@ -10,8 +10,8 @@ interface CategoriesManagerProps {
   addCategory: (name: string) => Promise<Category>;
   manufacturers: Manufacturer[];
   addManufacturer: (name: string) => Promise<Manufacturer>;
-  updateManufacturer: (id: number, data: Partial<Manufacturer>) => Promise<boolean>;
-  deleteManufacturer: (id: number) => void;
+  updateManufacturer: (id: string, data: Partial<Manufacturer>) => Promise<boolean>;
+  deleteManufacturer: (id: string) => void;
   cardClass: string;
   buttonStyles: { [key in 'primary' | 'secondary' | 'accent']: string };
 }

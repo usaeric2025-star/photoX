@@ -209,8 +209,8 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
                   addCategory={async (name: string) => { const r = await addCategory(name); if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addCategory', name); return r; }}
                   manufacturers={manufacturers}
                   addManufacturer={async (name: string) => { const r = await addManufacturer(name); if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addManufacturer', name); return r; }}
-                  updateManufacturer={async (id: number, data: Partial<Manufacturer>) => { const r = await updateManufacturer({ id: Number(id), updates: data }); return !!r; }}
-                  deleteManufacturer={(id: number) => deleteManufacturer(id)}
+                  updateManufacturer={async (id: string, data: Partial<Manufacturer>) => { const r = await updateManufacturer({ id: id, updates: data }); return !!r; }}
+                  deleteManufacturer={(id: string) => deleteManufacturer(id)}
                   cardClass={cardClass}
                   buttonStyles={BUTTON_STYLES}
                 />

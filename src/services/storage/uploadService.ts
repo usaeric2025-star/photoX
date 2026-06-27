@@ -8,6 +8,7 @@ import { compressImage, dataURLToArrayBuffer } from './uploadUtils';
 export interface UploadResult {
   imageUrl: string;
   isDuplicate?: boolean;
+  imageHash?: string;
 }
 
 export const uploadWithRetry = async (

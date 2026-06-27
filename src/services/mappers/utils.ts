@@ -15,15 +15,13 @@ export const getThumbnailUrl = (imageUrlOrKey: string, width?: number, height?: 
 
   const env = import.meta.env;
   const workerUrl = env.VITE_IMAGE_WORKER_URL;
-  const r2Base = env.VITE_R2_BASE_URL || env.VITE_R2_PUBLIC_URL_PREFIX;
   
-  // Extract key if it's a full URL
-  const path = getPathFromUrl(imageUrlOrKey);
-  const key = path || imageUrlOrKey;
-  const cleanKey = key.startsWith('/') ? key.slice(1) : key;
-
-  // 1. 如果有 Worker URL，優先使用 Worker
+  // If we have a worker, we can resize
   if (workerUrl) {
+    const path = getPathFromUrl(imageUrlOrKey);
+    const key = path || imageUrlOrKey;
+    const cleanKey = key.startsWith('/') ? key.slice(1) : key;
+    
     const params = new URLSearchParams();
     if (width) params.set('w', String(width));
     if (height) params.set('h', String(height));
@@ -34,13 +32,7 @@ export const getThumbnailUrl = (imageUrlOrKey: string, width?: number, height?: 
     return `${baseUrl}/${cleanKey}${query ? `?${query}` : ''}`;
   }
 
-  // 2. 降級：沒有 Worker 時使用 R2 Base URL
-  if (r2Base) {
-    const baseUrl = r2Base.endsWith('/') ? r2Base.slice(0, -1) : r2Base;
-    return `${baseUrl}/${cleanKey}`;
-  }
-
-  // 3. 最終降級：回傳原始路徑或 URL
+  // If no worker, return the original URL as is, assuming it's already a public R2 URL
   return imageUrlOrKey;
 };
 

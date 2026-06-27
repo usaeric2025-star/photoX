@@ -15,6 +15,7 @@ export function LightboxInfoCard({
   onShare?: (slide: LightboxSlide) => void
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [copied, setCopied] = useState(false);
   const { uiTranslations } = useTranslation();
   const currentLang = useSignal(appLang);
 
@@ -118,6 +119,21 @@ export function LightboxInfoCard({
                     <span className="text-sm text-white/80 font-mono">{original.model_number}</span>
                   </div>
                 )}
+                <div className="col-span-2">
+                  <span className="block text-[10px] uppercase font-bold text-white/40 tracking-wider mb-1">UUID</span>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigator.clipboard.writeText(slide.id);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                    className="flex items-center gap-1 text-xs text-white/60 font-mono hover:text-white transition-colors"
+                  >
+                    {slide.id.slice(0, 8)}...
+                    {copied ? <Icon name="check" className="w-3 h-3" /> : <Icon name="copy" className="w-3 h-3" />}
+                  </button>
+                </div>
                 {original.note && !displayDesc && (
                   <div className="col-span-2">
                     <span className="block text-[10px] uppercase font-bold text-white/40 tracking-wider mb-1">Note</span>
