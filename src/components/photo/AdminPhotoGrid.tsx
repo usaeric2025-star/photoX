@@ -1,6 +1,6 @@
 import React from 'react';
 import { PhotoGridContent } from './PhotoGridContent';
-import { SelectionToolbar, useSelection } from '@/features/selection';
+import { useSelection } from '@/features/selection';
 import { Category } from '@/types/photo';
 import { PhotoListItem } from '@/types/api';
 
@@ -50,13 +50,6 @@ export function AdminPhotoGrid({
         filters={filters}
         onPhotoClick={onPhotoClick}
       />
-      {multiSelect && (
-        <SelectionToolbar 
-          allIds={allIds} 
-          totalItems={(photos || []).length} 
-          allPhotos={photos || []} 
-        />
-      )}
     </div>
   );
 }

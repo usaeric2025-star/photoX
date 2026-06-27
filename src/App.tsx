@@ -13,7 +13,7 @@ import { PhotoEditDialog } from '@/features/photo-edit/PhotoEditDialog';
 
 const DiagDialog = lazy(() => import('@/components/ui/DiagDialog').then(m => ({ default: m.DiagDialog })));
 
-function AppContent({ status, error }: { status: string, error: any }) {
+function AppContent({ status, error }: { status: string, error: Error | null }) {
   // ✅ 路由同步 (using nuqs)
   useURLSync();
 

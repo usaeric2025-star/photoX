@@ -11,7 +11,7 @@ import {
   modalParser, 
   viewParser,
 } from '@/lib/nuqs/parsers';
-import { uiStore, useUIStore } from '@/store/uiStore';
+import { uiStore, useUIStore, type UIStoreState } from '@/store/uiStore';
 import { logger } from '@/lib/logger';
 
 /**
@@ -39,7 +39,7 @@ export function useURLSync() {
   // 1. Sync from URL to Store on mount or URL change
   useEffect(() => {
     const state = uiStore.getState();
-    const updates: any = {};
+    const updates: Partial<UIStoreState> = {};
 
     // Lightbox and Modal state
     const shouldBeLightboxOpen = !!(query.photoId && query.modal !== 'edit');
