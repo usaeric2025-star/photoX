@@ -43,7 +43,10 @@ export function usePhotos(params: PhotoListFilters = {}) {
         const response = await api.photos.list.$post({ json: fetchParams });
         logger.debug('--- [SWR Fetch] Response status:', response.status);
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
+          const errData = await response.json().catch(() => null);
+          const err = new Error(errData?.error || errData?.message || `HTTP ${response.status}`);
+          if (errData) Object.assign(err, errData);
+          throw err;
         }
         const result = await response.json();
         logger.debug('--- [SWR Fetch] JSON received, item count:', result?.data?.length);
@@ -98,7 +101,10 @@ export async function prefetchPhotos(params: PhotoListFilters = {}) {
     globalMutate(key, async () => {
       const response = await api.photos.list.$post({ json: fetchParams });
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+        const errData = await response.json().catch(() => null);
+        const err = new Error(errData?.error || errData?.message || `HTTP ${response.status}`);
+        if (errData) Object.assign(err, errData);
+        throw err;
       }
       const result = await response.json();
       return v.parse(PhotoListResSchema, result) as PhotoListResponse;

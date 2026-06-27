@@ -113,14 +113,21 @@ export const secrets = pgTable('secrets', {
  * System Logs Table
  */
 export const systemLogs = pgTable('system_logs', {
-    id: uuid('id').primaryKey().defaultRandom(),
-    level: text('level'), // info, warn, error, debug
+    id: integer('id').primaryKey().generatedByDefaultAsIdentity(), // Match bigint identity in DB
+    level: text('level'), 
     operation: text('operation'),
     message: text('message'),
     resource: text('resource'),
     traceId: text('trace_id'),
     metadata: jsonb('metadata'),
-    createdAt: timestamp('created_at').defaultNow(),
+    errorMessage: text('error_message'),
+    stackTrace: text('stack_trace'),
+    componentStack: text('component_stack'),
+    url: text('url'),
+    userId: uuid('user_id'),
+    stack: text('stack'),
+    context: text('context'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
 /**

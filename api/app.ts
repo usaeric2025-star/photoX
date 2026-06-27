@@ -10,6 +10,7 @@ import { manufacturers } from './_handlers/manufacturers.js';
 import { groups } from './_handlers/groups.js';
 import { photos } from './_handlers/photos/index.js';
 import { storage } from './_handlers/storage.js';
+import { testHandler } from './_handlers/test.js';
 import { setupMiddlewares } from './_lib/middleware.js';
 
 // Validate env at module level
@@ -33,6 +34,7 @@ app.route('/manufacturers', manufacturers);
 app.route('/groups', groups);
 app.route('/photos', photos);
 app.route('/', storage);
+testHandler(app);
 
 // --- 公共輔助路由 ---
 app.get('/download', async (c) => {
