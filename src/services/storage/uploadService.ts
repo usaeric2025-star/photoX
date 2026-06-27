@@ -75,9 +75,20 @@ const uploadImages = async (
   if (typeof fileOrBase64 === 'string') {
       onStatus?.('compressing');
       dataToUpload = await compressImage(fileOrBase64, 2048, 0.85); 
+      ext = 'webp';
+      mimeType = 'image/webp';
   } else {
-      ext = fileOrBase64.name.split('.').pop() || 'jpg';
-      mimeType = fileOrBase64.type || 'image/jpeg';
+      onStatus?.('compressing');
+      // Convert File to data URL first to compress it client-side
+      const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = (e) => reject(e);
+          reader.readAsDataURL(fileOrBase64);
+      });
+      dataToUpload = await compressImage(base64, 2048, 0.85);
+      ext = 'webp';
+      mimeType = 'image/webp';
   }
 
   onStatus?.('uploading');

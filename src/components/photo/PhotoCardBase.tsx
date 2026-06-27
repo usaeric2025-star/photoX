@@ -17,6 +17,7 @@ export interface PhotoCardBaseProps extends React.HTMLAttributes<HTMLDivElement>
 
 import { motion } from 'motion/react';
 import { Image } from '@/components/ui/Image';
+import { getThumbnailUrl } from '@/services/mappers/utils';
 
 /**
  * PhotoCardBase provides the foundational layout and visual state for a photo card,
@@ -66,7 +67,7 @@ export const PhotoCardBase = ({
         isSelected ? "scale-[0.92] rounded-xl" : "scale-100 group-hover:scale-105 rounded-2xl",
       )}>
         <Image
-          src={(imgVariant === 'md' ? item.imageUrl : (item.thumbnailUrl || item.imageUrl)) || ''}
+          src={getThumbnailUrl(item.imageUrl, imgVariant === 'md' ? 800 : 400)}
           alt={typeof item.name === 'string' ? item.name : (item.name as any)?.zh || '照片'}
           className={cn(
             "w-full h-full object-cover transition-transform duration-700 ease-out",
