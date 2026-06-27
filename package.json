@@ -39,6 +39,7 @@
     "dayjs": "^1.11.21",
     "drizzle-orm": "^0.45.2",
     "hono": "^4.12.26",
+    "lite-sleek": "^1.1.0",
     "lucide-react-sprite": "^2.2.1",
     "motion": "^12.42.0",
     "nuqs": "^2.8.9",

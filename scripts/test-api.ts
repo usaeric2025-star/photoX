@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { app } from '../api/app.js';
+import { app } from '../api/_app.js';
 
 async function run() {
   console.log('Testing /api/public/settings...');
