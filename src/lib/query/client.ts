@@ -5,8 +5,8 @@ export const swrConfig = {
   // ✅ 快取時間 (5 分鐘)
   dedupingInterval: 5 * 60 * 1000,
   // ✅ 重新驗證策略
-  revalidateOnFocus: true,
-  revalidateOnReconnect: true,
+  revalidateOnFocus: false,
+  revalidateOnReconnect: false,
   // ✅ 錯誤重試
   errorRetryCount: 3,
   errorRetryInterval: 3000,

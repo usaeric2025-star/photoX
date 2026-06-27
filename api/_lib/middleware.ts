@@ -15,6 +15,19 @@ export function setupMiddlewares(app: Hono, serverEnv: { NODE_ENV: string | unde
       if (c.req.method !== 'GET' || serverEnv.NODE_ENV === 'development') {
           logger.info(`[HTTP] ${c.req.method} ${c.req.path}`, { traceId });
       }
+      
+      // 為頻繁讀取的靜態型錄路由加上 Cache-Control
+      if (c.req.method === 'GET') {
+        const path = c.req.path;
+        if (path.startsWith('/api/tags') || 
+            path.startsWith('/api/categories') || 
+            path.startsWith('/api/manufacturers') || 
+            path.startsWith('/api/groups')) {
+          // CDN 快取 10 秒，在背景重新驗證 60 秒，減少資料庫壓力
+          c.header('Cache-Control', 'public, s-maxage=10, stale-while-revalidate=60');
+        }
+      }
+      
       await next();
   });
 

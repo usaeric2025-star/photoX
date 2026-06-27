@@ -109,7 +109,7 @@ export function Tabs({
         })}
       </div>
 
-      <div className={cn("flex-1 overflow-y-auto relative animate-fade-in", contentClassName)} key={activeTab}>
+      <div className={cn("flex-1 overflow-y-auto relative animate-fade-in", contentClassName)}>
         <div
           role="tabpanel"
           id={`panel-${activeTab}`}

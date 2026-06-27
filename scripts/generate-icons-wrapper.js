@@ -3,7 +3,24 @@ import fs from 'fs';
 import { execSync } from 'child_process';
 
 const files = globSync('src/**/*.{ts,tsx}');
-const icons = new Set();
+const icons = new Set([
+  'settings', 'cpu', 'layout-grid', 'activity', 
+  'chevron-up', 'chevron-down', 'alert-triangle', 'cloud-off', 
+  'clock', 'file-question', 'wifi-off', 'upload-cloud', 
+  'sparkles', 'wrench', 'refresh-cw', 'shield', 'shield-check', 
+  'user', 'users', 'check', 'x', 'plus', 'minus', 'edit', 
+  'trash-2', 'star', 'pin', 'arrow-left', 'arrow-right', 'info', 
+  'alert-circle', 'camera', 'lock', 'unlock', 'eye', 'eye-off',
+  'image', 'download', 'upload', 'more-vertical', 'more-horizontal',
+  'check-circle-2', 'check-circle',
+  'layers', 'shield-alert', 'image-off', 'heart', 'home', 'arrow-up', 
+  'message-circle', 'inbox', 'search', 'arrow-up-down', 'package-open', 
+  'layout-dashboard', 'menu', 'log-in', 'x-circle', 'globe', 'grid-3x3', 
+  'ghost', 'pencil', 'copy', 'share', 'share-2', 'image-plus', 
+  'bar-chart-3', 'package-search', 'file-json', 'terminal', 'maximize-2', 
+  'link', 'facebook', 'instagram', 'hard-drive', 'arrow-up-right', 
+  'folder-minus', 'folder-plus', 'log-out', 'settings-2', 'save', 'check-square'
+]);
 
 for (const file of files) {
   const content = fs.readFileSync(file, 'utf-8');

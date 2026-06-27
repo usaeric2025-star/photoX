@@ -210,7 +210,7 @@ adminMaintenance.post("/storage/convert-webp", async (c) => {
             imageHash: furnitureItems.imageHash
         })
         .from(furnitureItems)
-        .where(sql`${furnitureItems.imageUrl} NOT LIKE '%.webp'`)
+        .where(sql`${furnitureItems.imageUrl} NOT LIKE '%.webp%'`)
         .limit(limit);
 
         if (targetPhotos.length === 0) {

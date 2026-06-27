@@ -16,8 +16,10 @@ if (!connectionString) {
 }
 
 const client = postgres(connectionString || '', {
-  max: 5,
-  prepare: false,
+  max: env.NODE_ENV === 'production' ? 3 : 5, // Reduce max connections per container
+  idle_timeout: 20, // Close idle connections quickly
+  connect_timeout: 10,
+  prepare: false, // Required for PgBouncer/Supabase
   onnotice: () => {},
 });
 

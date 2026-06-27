@@ -101,10 +101,22 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   const inputClass = "flex-1 min-w-0 bg-brand-navy/5 border border-brand-navy/10 p-3 rounded-2xl text-sm outline-none focus:border-brand-gold focus:bg-white shadow-inner font-normal tracking-tight placeholder:text-brand-navy/30 text-brand-navy";
   const cardClass = "bg-white rounded-[32px] p-6 shadow-sm border border-brand-navy/10 space-y-4";
   const [activeTab, setActiveTab] = React.useState('general');
+  const [loadedTabs, setLoadedTabs] = React.useState<string[]>(['general']);
+
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    if (!loadedTabs.includes(tabId)) {
+      setLoadedTabs(prev => [...prev, tabId]);
+    }
+  };
 
   React.useEffect(() => {
-    if (route?.name === 'settings') setActiveTab('general');
-    if (route?.name === 'adminDiagnostics' || route?.name === 'adminDiagnosticsLogs' || route?.name === 'adminTasks') setActiveTab('status');
+    if (route?.name === 'settings') {
+      handleTabChange('general');
+    }
+    if (route?.name === 'adminDiagnostics' || route?.name === 'adminDiagnosticsLogs' || route?.name === 'adminTasks') {
+      handleTabChange('status');
+    }
   }, [route]);
 
   const { submit: runSaveSettings, isLoading: isSavingSettings } = useFormSubmit({
@@ -148,77 +160,85 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
         />
 
       <div className="flex-1 overflow-y-auto p-4 md:p-6 no-scrollbar pb-32">
-        <SettingsTabs activeTab={activeTab} onTabChange={setActiveTab} />
+        <SettingsTabs activeTab={activeTab} onTabChange={handleTabChange} />
         
         <div className="space-y-6">
-          {activeTab === 'general' && (
-            <Suspense fallback={<LoadingScreen />}>
-            <GeneralSettings 
-              settings={settings}
-              handleLogoUpload={handleLogoUpload}
-              categories={categories}
-              tags={tags}
-              manufacturers={manufacturers}
-              setSettingField={setSettingField}
-              cardClass={cardClass}
-              inputClass={inputClass}
-              buttonStyles={BUTTON_STYLES}
-            />
-            </Suspense>
-          )}
-
-          {activeTab === 'ai' && (
-            <Suspense fallback={<LoadingScreen />}>
-            <AISettings 
-              agnesApiKey={agnesApiKey || ""}
-              setAgnesApiKey={setAgnesApiKey}
-              testConnection={async () => { await testConnection(); }}
-              testResult={testResult}
-              accessPasscode={accessPasscode || ""}
-              setAccessPasscode={setAccessPasscode}
-              setSettingField={setSettingField}
-              cardClass={cardClass}
-              inputClass={inputClass}
-            />
-            </Suspense>
-          )}
-
-          {activeTab === 'assets' && (
-            <Suspense fallback={<LoadingScreen />}>
-              <AssetManagementContainer 
-                categories={categories}
-                deleteCategory={deleteCategory}
-                updateCategory={async (id: number, data: Partial<Category>) => { const r = await updateCategory({ id: Number(id), updates: data }); return !!r; }}
-                addCategory={async (name: string) => { const r = await addCategory(name); if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addCategory', name); return r; }}
-                manufacturers={manufacturers}
-                addManufacturer={async (name: string) => { const r = await addManufacturer(name); if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addManufacturer', name); return r; }}
-                updateManufacturer={async (id: number, data: Partial<Manufacturer>) => { const r = await updateManufacturer({ id: Number(id), updates: data }); return !!r; }}
-                deleteManufacturer={(id: number) => deleteManufacturer(id)}
-                cardClass={cardClass}
-                buttonStyles={BUTTON_STYLES}
-              />
-              <TagsContainer 
-                tags={tags}
+          {loadedTabs.includes('general') && (
+            <div className={activeTab === 'general' ? 'block' : 'hidden'}>
+              <Suspense fallback={<LoadingScreen />}>
+              <GeneralSettings 
                 settings={settings}
-                addTag={async (name: string) => { const r = await addTag(name); if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addTag', name); return r; }}
-                updateTag={async (id: number, data: Partial<Tag>) => { const r = await updateTag({ id: Number(id), updates: data }); return !!r; }}
-                activeTagMenuId={activeTagMenuId}
-                setActiveTagMenuId={setActiveTagMenuId}
-                deleteTag={(id: number) => deleteTag(id)}
-                togglePin={(id: number) => togglePin(id)}
-                setSettings={setSettings}
-                setHasChanges={setHasChanges}
-                debouncedSave={debouncedSave}
+                handleLogoUpload={handleLogoUpload}
+                categories={categories}
+                tags={tags}
+                manufacturers={manufacturers}
+                setSettingField={setSettingField}
                 cardClass={cardClass}
+                inputClass={inputClass}
                 buttonStyles={BUTTON_STYLES}
               />
-            </Suspense>
+              </Suspense>
+            </div>
           )}
 
-          {activeTab === 'status' && (
-            <Suspense fallback={<LoadingScreen />}>
-            <DiagDashboard />
-            </Suspense>
+          {loadedTabs.includes('ai') && (
+            <div className={activeTab === 'ai' ? 'block' : 'hidden'}>
+              <Suspense fallback={<LoadingScreen />}>
+              <AISettings 
+                agnesApiKey={agnesApiKey || ""}
+                setAgnesApiKey={setAgnesApiKey}
+                testConnection={async () => { await testConnection(); }}
+                testResult={testResult}
+                accessPasscode={accessPasscode || ""}
+                setAccessPasscode={setAccessPasscode}
+                setSettingField={setSettingField}
+                cardClass={cardClass}
+                inputClass={inputClass}
+              />
+              </Suspense>
+            </div>
+          )}
+
+          {loadedTabs.includes('assets') && (
+            <div className={activeTab === 'assets' ? 'block' : 'hidden'}>
+              <Suspense fallback={<LoadingScreen />}>
+                <AssetManagementContainer 
+                  categories={categories}
+                  deleteCategory={deleteCategory}
+                  updateCategory={async (id: number, data: Partial<Category>) => { const r = await updateCategory({ id: Number(id), updates: data }); return !!r; }}
+                  addCategory={async (name: string) => { const r = await addCategory(name); if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addCategory', name); return r; }}
+                  manufacturers={manufacturers}
+                  addManufacturer={async (name: string) => { const r = await addManufacturer(name); if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addManufacturer', name); return r; }}
+                  updateManufacturer={async (id: number, data: Partial<Manufacturer>) => { const r = await updateManufacturer({ id: Number(id), updates: data }); return !!r; }}
+                  deleteManufacturer={(id: number) => deleteManufacturer(id)}
+                  cardClass={cardClass}
+                  buttonStyles={BUTTON_STYLES}
+                />
+                <TagsContainer 
+                  tags={tags}
+                  settings={settings}
+                  addTag={async (name: string) => { const r = await addTag(name); if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addTag', name); return r; }}
+                  updateTag={async (id: number, data: Partial<Tag>) => { const r = await updateTag({ id: Number(id), updates: data }); return !!r; }}
+                  activeTagMenuId={activeTagMenuId}
+                  setActiveTagMenuId={setActiveTagMenuId}
+                  deleteTag={(id: number) => deleteTag(id)}
+                  togglePin={(id: number) => togglePin(id)}
+                  setSettings={setSettings}
+                  setHasChanges={setHasChanges}
+                  debouncedSave={debouncedSave}
+                  cardClass={cardClass}
+                  buttonStyles={BUTTON_STYLES}
+                />
+              </Suspense>
+            </div>
+          )}
+
+          {loadedTabs.includes('status') && (
+            <div className={activeTab === 'status' ? 'block' : 'hidden'}>
+              <Suspense fallback={<LoadingScreen />}>
+              <DiagDashboard />
+              </Suspense>
+            </div>
           )}
         </div>
       </div>

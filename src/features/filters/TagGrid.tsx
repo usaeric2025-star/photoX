@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
-import { useTags } from './index';
+import { useTags } from '@/hooks/photo/useTags';
 import { useFilterState } from './useFilters';
 import { usePublicSettings } from '@/hooks/settings/useSettings';
 import { usePhotoFilter } from '@/hooks/photo/usePhotoFilter';
 import { useUI } from '@/lib/store';
 import { translations } from '@/locales';
 import { usePrefetch } from '@/hooks/core/usePrefetch';
-import { prefetchPhotos } from '@/hooks';
+import { prefetchPhotos } from '@/hooks/photo/usePhotos';
 import type { FilterState } from './types';
 
 interface TagButtonProps {

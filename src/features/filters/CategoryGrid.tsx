@@ -1,10 +1,10 @@
-import { useCategories } from './index';
+import { useCategories } from '@/hooks/photo/useCategories';
 import { useFilterState } from './useFilters';
 import { useTranslation } from '@/hooks';
 import { getTranslatedCategoryName } from '@/services/category/utils';
 import { logger } from '@/lib/logger';
 import { usePrefetch } from '@/hooks/core/usePrefetch';
-import { prefetchPhotos } from '@/hooks';
+import { prefetchPhotos } from '@/hooks/photo/usePhotos';
 import type { FilterState } from './types';
 
 interface CategoryButtonProps {

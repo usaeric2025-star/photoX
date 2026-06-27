@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Tabs } from "@/components/shared/Tabs";
+import { cn } from "@/lib/utils";
 import { BasicInfoTab } from "./BasicInfoTab";
 import { OrgTab } from "./OrgTab";
 import { DetailsTab } from "./DetailsTab";
@@ -12,6 +13,14 @@ export function PhotoEditTabs() {
   const appLang = useUI((s) => s.appLang);
 
   const [activeTab, setActiveTab] = useState('basic');
+  const [loadedTabs, setLoadedTabs] = useState<string[]>(['basic']);
+
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    if (!loadedTabs.includes(tabId)) {
+      setLoadedTabs(prev => [...prev, tabId]);
+    }
+  };
 
   const tabs = [
     { id: 'basic', label: appLang === 'zh' ? '基础' : 'BASIC' },
@@ -24,27 +33,27 @@ export function PhotoEditTabs() {
     <Tabs
       tabs={tabs}
       activeTab={activeTab}
-      onChange={setActiveTab}
+      onChange={handleTabChange}
       className="flex-1 flex flex-col overflow-hidden bg-transparent"
       contentClassName="pt-2 no-scrollbar"
     >
-      {activeTab === 'basic' && (
-        <div className="px-4 md:px-8 xl:px-12 pb-12">
+      {loadedTabs.includes('basic') && (
+        <div className={cn("px-4 md:px-8 xl:px-12 pb-12", activeTab === 'basic' ? 'block' : 'hidden')}>
           <BasicInfoTab />
         </div>
       )}
-      {activeTab === 'org' && (
-        <div className="px-4 md:px-8 xl:px-12 pb-12">
+      {loadedTabs.includes('org') && (
+        <div className={cn("px-4 md:px-8 xl:px-12 pb-12", activeTab === 'org' ? 'block' : 'hidden')}>
           <OrgTab />
         </div>
       )}
-      {activeTab === 'details' && (
-        <div className="px-4 md:px-8 xl:px-12 pb-12">
+      {loadedTabs.includes('details') && (
+        <div className={cn("px-4 md:px-8 xl:px-12 pb-12", activeTab === 'details' ? 'block' : 'hidden')}>
           <DetailsTab />
         </div>
       )}
-      {activeTab === 'ai-source' && (
-        <div className="px-4 md:px-8 xl:px-12 pb-12">
+      {loadedTabs.includes('ai-source') && (
+        <div className={cn("px-4 md:px-8 xl:px-12 pb-12", activeTab === 'ai-source' ? 'block' : 'hidden')}>
           <AISourceTab />
         </div>
       )}

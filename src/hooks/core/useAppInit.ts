@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useStore } from '@/lib/store';
 import { appStore, initializeApp } from '@/store/appStore';
-import { usePublicSettings } from '@/hooks';
+import { usePublicSettings } from '@/hooks/settings/useSettings';
 
 export function useAppInit() {
   const status = useStore(appStore);

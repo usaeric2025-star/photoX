@@ -56,7 +56,7 @@ export function RouterOrchestrator() {
 
   return (
     <>
-      <div key={route?.name || '404'} className="flex-1 flex flex-col h-full w-full animate-fade-in">
+      <div className="flex-1 flex flex-col h-full w-full animate-fade-in">
         <Suspense fallback={<LoadingScreen />}>
           {getPage()}
         </Suspense>

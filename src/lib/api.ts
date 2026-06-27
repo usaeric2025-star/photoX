@@ -74,14 +74,21 @@ const client = hc<AppType>(
         let attempt = 0;
         while (true) {
           try {
-            const signal = typeof AbortSignal.timeout === 'function' 
-              ? AbortSignal.timeout(30000) 
-              : (() => {
-                  const controller = new AbortController();
-                  setTimeout(() => controller.abort(), 30000);
-                  return controller.signal;
-                })();
-            const res = await fetch(input, { ...init, headers, signal });
+            let finalSignal = init?.signal;
+            if (typeof AbortSignal.timeout === 'function') {
+              const timeoutSignal = AbortSignal.timeout(30000);
+              if (finalSignal && typeof AbortSignal.any === 'function') {
+                finalSignal = AbortSignal.any([finalSignal, timeoutSignal]);
+              } else if (!finalSignal) {
+                finalSignal = timeoutSignal;
+              }
+            } else if (!finalSignal) {
+              const controller = new AbortController();
+              setTimeout(() => controller.abort(), 30000);
+              finalSignal = controller.signal;
+            }
+            
+            const res = await fetch(input, { ...init, headers, signal: finalSignal });
             
             // Handle 429 Too Many Requests (AI Studio platform limits)
             if (res.status === 429 && attempt < 5) {

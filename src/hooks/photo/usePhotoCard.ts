@@ -8,7 +8,7 @@ import { getGroupById } from '@/services/group/queries';
 import { STALE_TIMES } from '@/lib/query/config';
 import { Photo } from '@/types';
 import { useFilters } from '@/features/filters';
-import { useSelection } from '@/features/selection';
+import { useSelection } from '@/features/selection/useSelection';
 
 interface UsePhotoCardInteractionProps {
   photo: PhotoListItem;
