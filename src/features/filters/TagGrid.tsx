@@ -55,7 +55,6 @@ export function TagGrid({ onClose }: { onClose?: () => void }) {
     } else {
       updateFilters({ tagIds: [...filters.tagIds, tagId] });
     }
-    onClose?.();
   };
 
   const clearTags = () => {

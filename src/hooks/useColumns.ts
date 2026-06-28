@@ -1,5 +1,5 @@
-import { useAppRoute } from '@/lib/router';
-import { Router } from '@/router';
+import { useQueryState } from 'nuqs';
+import { columnsParser } from '@/lib/nuqs/parsers';
 import { useLocalStorage } from './core/useLocalStorage';
 import { useEffect } from 'react';
 import { uiStore } from '@/lib/store';
@@ -9,14 +9,15 @@ const DEFAULT_COLUMNS = 3;
 const COLUMN_OPTIONS: ColumnCount[] = [2, 3, 5];
 
 export function useColumns() {
-  const route = useAppRoute();
-  const params = route ? (route.params as Record<string, unknown>) : {};
-  const [savedColumns, setSavedColumns] = useLocalStorage<ColumnCount>({ key: 'photo-grid-columns', defaultValue: DEFAULT_COLUMNS });
+  const [urlColumns, setUrlColumns] = useQueryState('columns', columnsParser);
+  const [savedColumns, setSavedColumns] = useLocalStorage<ColumnCount>({ 
+    key: 'photo-grid-columns', 
+    defaultValue: DEFAULT_COLUMNS 
+  });
   
   const columns: ColumnCount = (() => {
-    const urlColumns = params.columns;
-    if (urlColumns && COLUMN_OPTIONS.includes(Number(urlColumns) as ColumnCount)) {
-      return Number(urlColumns) as ColumnCount;
+    if (urlColumns && COLUMN_OPTIONS.includes(urlColumns as ColumnCount)) {
+      return urlColumns as ColumnCount;
     }
     return savedColumns;
   })();
@@ -27,20 +28,8 @@ export function useColumns() {
   }, [columns]);
 
   const setColumns = (newColumns: ColumnCount) => {
-    if (!route) return;
     setSavedColumns(newColumns);
-    const currentRouteName = route.name;
-    const cleanParams: Record<string, unknown> = {};
-    
-    // Copy all parameters (including path and query parameters)
-    for (const key in route.params) {
-      if (key !== '~internal' && key !== 'href') {
-        cleanParams[key] = (route.params as Record<string, unknown>)[key];
-      }
-    }
-
-    cleanParams.columns = String(newColumns);
-    Router.push(currentRouteName as never, cleanParams);
+    setUrlColumns(newColumns, { shallow: true, history: 'replace' });
   };
 
   return { columns, setColumns };

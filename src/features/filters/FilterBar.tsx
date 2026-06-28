@@ -6,7 +6,8 @@ import { CategoryGrid } from './CategoryGrid';
 import { TagGrid } from './TagGrid';
 import { ColumnsToggle } from '@/components/layout/ColumnsToggle';
 import { GroupToggle } from '@/components/ui/GroupToggle';
-import { useFilters } from './useFilters';
+import { useFilters, useFilterState } from './useFilters';
+import { useTags } from '@/hooks/photo/useTags';
 import { cn } from '@/lib/utils';
 
 interface FilterBarProps {
@@ -18,6 +19,16 @@ export function FilterBar({ mode, className }: FilterBarProps) {
   const isAdmin = mode === 'admin';
   const { showGroupsCollapsed, setShowGroupsCollapsed } = useFilters();
   const [showTags, setShowTags] = useState(false);
+  const { filters, updateFilters } = useFilterState();
+  const { data: allTags } = useTags();
+
+  const selectedTags = allTags?.filter(tag => filters.tagIds.includes(String(tag.id))) || [];
+
+  const removeTag = (tagId: string) => {
+    updateFilters({
+      tagIds: filters.tagIds.filter(id => id !== tagId)
+    });
+  };
 
   return (
     <div className={cn("flex-shrink-0 border-b bg-surface-overlay backdrop-blur-md", className)}>
@@ -59,6 +70,34 @@ export function FilterBar({ mode, className }: FilterBarProps) {
       <div className="px-4 pb-3 space-y-2">
         {/* 分類 - 根據規範固定渲染 2 x 4 */}
         <CategoryGrid mode={mode} />
+
+        {/* 已選標籤顯示與移除 */}
+        {selectedTags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 items-center pt-1.5 pb-0.5 px-1 animate-fade-in">
+            <span className="text-[11px] font-bold text-text-sub uppercase tracking-wider mr-1">已選標籤:</span>
+            {selectedTags.map(tag => (
+              <span 
+                key={tag.id}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-primary/10 text-primary border border-primary/20 animate-scale-in"
+              >
+                <span>{tag.name}</span>
+                <button
+                  onClick={() => removeTag(String(tag.id))}
+                  className="hover:bg-primary/20 rounded-full p-0.5 cursor-pointer text-primary transition-colors focus:outline-none flex items-center justify-center"
+                  title="移除"
+                >
+                  <Icon name="x" size={10} />
+                </button>
+              </span>
+            ))}
+            <button
+              onClick={() => updateFilters({ tagIds: [] })}
+              className="text-[11px] text-text-sub hover:text-danger font-semibold ml-1 cursor-pointer transition-colors"
+            >
+              清除全部
+            </button>
+          </div>
+        )}
         
         {/* 標籤 - 默認折疊，由上方按鈕控制 */}
         {showTags && <TagGrid onClose={() => setShowTags(false)} />}

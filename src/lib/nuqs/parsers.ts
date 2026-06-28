@@ -1,4 +1,4 @@
-import { parseAsString, parseAsJson, parseAsBoolean, createParser } from 'nuqs';
+import { parseAsString, parseAsJson, parseAsBoolean, parseAsInteger, createParser } from 'nuqs';
 import * as v from 'valibot';
 import { parseWithValibot } from '@/lib/valibot/adapters/nuqs';
 import { SortSchema } from '@/lib/valibot/schemas/filters';
@@ -59,3 +59,6 @@ export const anchorParser = parseAsBoolean.withDefault(false);
 
 // Show Groups Collapsed Parser
 export const showGroupsCollapsedParser = parseAsBoolean.withDefault(true);
+
+// Columns Parser
+export const columnsParser = parseAsInteger.withDefault(3);
