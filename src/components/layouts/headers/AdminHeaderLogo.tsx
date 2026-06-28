@@ -2,6 +2,7 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { Icon } from '@/components/ui/Icon';
 import { useUI } from '@/hooks';
+import { UIStoreState } from '@/lib/store';
 
 import { Theme } from '@/types';
 
@@ -14,7 +15,7 @@ interface AdminHeaderLogoProps {
 }
 
 export function AdminHeaderLogo({ logoUrl, isAdmin, isStaff, totalCount, theme }: AdminHeaderLogoProps) {
-  const lang = useUI((s) => s.appLang);
+  const lang = useUI((s: UIStoreState) => s.appLang);
 
   return (
     <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 flex-nowrap z-10">

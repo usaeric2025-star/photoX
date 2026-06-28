@@ -5,9 +5,9 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { db, systemLogs, furnitureItems } from '../_lib/db/index.js';
 import { eq } from "drizzle-orm";
 import { getServerEnv } from "../../shared/envSchema.js";
-import { getR2Client } from "../_lib/storage.js";
-import { requireRealUser } from "../_lib/auth.js";
-import { errorResponse } from "../_lib/response.js";
+import { getR2Client } from '../_lib/storage.js';
+import { requireRealUser } from '../_lib/auth.js';
+import { errorResponse } from '../_lib/response.js';
 
 const serverEnv = getServerEnv(process.env);
 export const storage = new Hono();

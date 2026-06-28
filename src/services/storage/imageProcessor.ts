@@ -1,4 +1,4 @@
-import { compressImage } from '@/services/storage/uploadUtils';
+import { compressImage } from './uploadUtils';
 import { IMAGE_COMPRESS } from '@/constants/config';
 import { sha256 } from '@/lib/image/hash';
 

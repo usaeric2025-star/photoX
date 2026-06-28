@@ -2,7 +2,7 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { Icon } from '@/components/ui/Icon';
 import { NativePopover } from '@/components/ui/NativePopover';
-import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { User, Theme, TranslationType } from '@/types';
 import { Navigation } from '@/lib/router';
 

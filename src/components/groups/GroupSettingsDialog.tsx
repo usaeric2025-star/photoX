@@ -1,10 +1,10 @@
 import React from 'react';
-import { NativeDialog } from "../ui/NativeDialog";
-import { ProductGroup, Dimension } from '../../types';
-import { useAdminMode } from '../../hooks';
-import { Input } from "../shared/Input";
+import { NativeDialog } from "@/components/ui/NativeDialog";
+import { ProductGroup, Dimension } from '@/types';
+import { useAdminMode } from '@/hooks';
+import { Input } from "@/components/shared/Input";
 import { useConfirm } from '@/context/ConfirmContext';
-import { Button } from "../shared/Button";
+import { Button } from "@/components/shared/Button";
 import { Icon } from '@/components/ui/Icon';
 
 interface GroupSettingsDialogProps {

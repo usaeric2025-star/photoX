@@ -7,7 +7,7 @@ import { useLongPress } from "@/hooks/core/useLongPress";
 import { normalizeManufacturerName } from "@/lib/utils";
 import { useConfirm } from '@/context/ConfirmContext';
 
-import { Manufacturer } from "../../types";
+import { Manufacturer } from "@/types";
 
 interface ManufacturerProps {
   manufacturer: Manufacturer;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { NativeDialog } from "@/components/ui/NativeDialog";
 import { Button } from "@/components/shared/Button";
-import { PreviewResult } from "@/features/diagnostics/issueActions";
+import { PreviewResult } from "./issueActions";
 
 interface MaintPreviewDialogProps {
   open: boolean;

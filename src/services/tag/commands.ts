@@ -1,6 +1,6 @@
 import { api } from '@/lib/api';
-import { supabase } from '../../lib/supabase';
-import { Tag } from '../../types';
+import { supabase } from '@/lib/supabase';
+import { Tag } from '@/types';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 const TABLE_NAME = 'tags';

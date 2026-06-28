@@ -1,5 +1,5 @@
 import { logger } from '@/lib/logger';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { STORAGE } from './storageConfig';
 import { api } from '@/lib/api';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';

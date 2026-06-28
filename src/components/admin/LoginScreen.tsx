@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { Icon } from '@/components/ui/Icon';
-import { usePublicSettings } from '../../hooks';
+import { usePublicSettings } from '@/hooks';
 import { useUI } from '@/lib/store';
 import { Router } from '@/router';
 import { AppLink } from '@/components/router/AppLink';

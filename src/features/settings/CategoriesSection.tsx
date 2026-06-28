@@ -4,7 +4,7 @@ import { useDisclosure } from '@/hooks/core/useDisclosure';
 import { useClickOutside } from '@/hooks/core/useClickOutside';
 import { PromptDialog } from "@/components/ui/PromptDialog";
 import { useLongPress } from "@/hooks/core/useLongPress";
-import { Category } from '../../types';
+import { Category } from '@/types';
 import { useUI } from '@/lib/store';
 import { useFormSubmit } from '@/lib/forms/useFormSubmit';
 import * as v from 'valibot';

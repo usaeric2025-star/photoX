@@ -1,9 +1,9 @@
 import { logger } from '@/lib/logger';
-import { supabase } from '../../lib/supabase';
-import { DB_CONFIG } from '../../constants/config';
-import { ErrorFactory } from '../../lib/error/ErrorFactory';
+import { supabase } from '@/lib/supabase';
+import { DB_CONFIG } from '@/constants/config';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
-import { AppSettings } from '../../types';
+import { AppSettings } from '@/types';
 
 import { api } from '@/lib/api';
 

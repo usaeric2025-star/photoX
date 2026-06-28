@@ -5,7 +5,7 @@ import AdminPage from "@/pages/AdminPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { PublicGroupDetailPage } from "@/features/group/PublicGroupDetail";
 import { AdminGroupDetailPage } from "@/features/group/AdminGroupDetail";
-import { AdminAuthGate } from "@/components/admin/AdminAuthGate";
+import { AdminAuthGate } from "./admin/AdminAuthGate";
 import { LoadingScreen } from "./ui/LoadingScreen";
 
 const SettingsPage = lazy(() => import("@/features/settings/SettingsPage").then(m => ({ default: m.SettingsPage })));

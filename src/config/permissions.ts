@@ -44,6 +44,7 @@ export const ROLE_PERMISSIONS: Record<string, Capability[]> = {
     'photo:view-hidden',
     'photo:view-internal-info',
     'photo:edit',
+    'photo:delete',
     'photo:ai-analyze',
     'photo:manage-groups',
     'photo:toggle-pinned',

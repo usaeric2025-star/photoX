@@ -6,7 +6,7 @@ import { useLocalStorage } from '@/hooks/core/useLocalStorage';
 import { logger } from '@/lib/logger';
 import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
 
-const LoginScreen = lazy(() => import('@/components/admin/LoginScreen').then(m => ({ default: m.LoginScreen })));
+const LoginScreen = lazy(() => import('./LoginScreen').then(m => ({ default: m.LoginScreen })));
 
 interface AdminAuthGateProps {
   children: React.ReactNode;

@@ -1,6 +1,6 @@
 import useSWRInfinite from 'swr/infinite';
 import { useSWRConfig } from 'swr';
-import { queryKeys } from '../keys';
+import { queryKeys } from '@/lib/query/keys';
 import { ErrorFactory } from '@/lib/error';
 import { api } from '@/lib/api';
 import { PhotoListItem } from '@/types/api';

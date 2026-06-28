@@ -2,9 +2,9 @@ import { logger } from '../../_lib/logger.js';
 import { Hono } from 'hono';
 import { db, systemLogs, aiAuditLogs, maintenanceJobs, furnitureItems } from '../../_lib/db/index.js';
 import { eq, lt, or, isNull, inArray, sql } from "drizzle-orm";
-import { runStorageAudit } from "../../_lib/maintenance/storageUtils.js";
-import { requireRealUser } from "../../_lib/auth.js";
-import { getR2Client } from "../../_lib/storage.js";
+import { runStorageAudit } from '../../_lib/maintenance/storageUtils.js';
+import { requireRealUser } from '../../_lib/auth.js';
+import { getR2Client } from '../../_lib/storage.js';
 import { getServerEnv } from "../../../shared/envSchema.js";
 import { ListObjectsV2Command, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { refreshPhotosView } from '../../_lib/db/actions.js';
@@ -184,6 +184,7 @@ adminMaintenance.post("/storage/deduplicate", async (c) => {
 
         if (idsToRemove.length > 0) {
             await db.delete(furnitureItems).where(inArray(furnitureItems.id, idsToRemove));
+            await refreshPhotosView();
         }
 
         return c.json({ success: true, count: idsToRemove.length });

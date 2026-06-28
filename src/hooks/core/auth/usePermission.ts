@@ -1,7 +1,6 @@
-import { useAuth } from '@/lib/store';
-import { useUI } from '@/lib/store';
+import { useAuth, useUI } from '@/lib/store';
 import { ROLE_PERMISSIONS, getEffectiveRole, Capability } from '@/config/permissions';
-import { useSettings } from '../../settings';
+import { useSettings } from '@/hooks/settings';
 import { useLocalStorage } from '@/hooks/core/useLocalStorage';
 
 /**

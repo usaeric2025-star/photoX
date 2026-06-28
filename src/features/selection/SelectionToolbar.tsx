@@ -9,6 +9,7 @@ import { useMediaQuery } from '@/hooks';
 import { useGroupPhotosMutation, useRemoveFromGroupMutation } from '@/hooks/groups/useGroupMutations';
 import { Icon } from '@/components/ui/Icon';
 import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
+import { SelectionToolbarActions } from './components/SelectionToolbarActions';
 
 // --- Sub-components ---
 
@@ -123,92 +124,22 @@ export function SelectionToolbar({ className = '', groupId }: { className?: stri
         )}
 
         {/* 行動按鈕組 */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {/* 移出合組 (僅在合組頁面時顯示) */}
-          {groupId && (
-            <button
-              onClick={handleRemoveFromGroup}
-              disabled={selectedCount === 0 || isAnyPending}
-              className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm"
-              title="將照片移出此合組"
-            >
-              {removeMutation.isMutating ? (
-                <LoadingSpinner size="xs" className="text-amber-600 shrink-0" />
-              ) : (
-                <Icon name="folder-minus" size={14} className="text-amber-600 shrink-0" />
-              )}
-              <span className="shrink-0">
-                {isMd ? '移出合組' : isSm ? '移出' : '移出'}
-              </span>
-            </button>
-          )}
-
-          {/* 手動合組 (在合組頁面時不顯示此功能) */}
-          {!groupId && (
-            <button
-              onClick={handleManualGroup}
-              disabled={selectedCount === 0 || isAnyPending}
-              className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm"
-              title="手動將照片合併為一組"
-            >
-              {combineMutation.isMutating ? (
-                <LoadingSpinner size="xs" className="text-blue-600 shrink-0" />
-              ) : (
-                <Icon name="folder-plus" size={14} className="text-blue-600 shrink-0" />
-              )}
-              <span className="shrink-0">
-                {isMd ? '手動合組' : isSm ? '手動合組' : '合組'}
-              </span>
-            </button>
-          )}
-
-          {/* AI 智能合組 */}
-          <button
-            onClick={handleBatchAiGroup}
-            disabled={selectedCount === 0 || isAnyPending}
-            className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm"
-            title="AI 智能分析合組"
-          >
-            {activeTasks > 0 ? (
-              <LoadingSpinner size="xs" className="text-purple-600 shrink-0" />
-            ) : (
-              <Icon name="sparkles" size={14} className="text-purple-600 animate-pulse shrink-0" />
-            )}
-            <span className="shrink-0">
-              {isMd ? 'AI 智能合組' : isSm ? 'AI 合組' : 'AI'}
-            </span>
-          </button>
-
-          {/* 批量編輯 */}
-          <button
-            onClick={handleBatchEdit}
-            disabled={selectedCount === 0 || isAnyPending}
-            className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm"
-            title="編輯選取項目"
-          >
-            <Icon name="edit" size={14} className="text-indigo-600 shrink-0" />
-            <span className="shrink-0">
-              {isMd ? '編輯' : '編輯'}
-            </span>
-          </button>
-
-          {/* 批量刪除 */}
-          <button
-            onClick={handleBatchDeleteClick}
-            disabled={selectedCount === 0 || isAnyPending}
-            className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm"
-            title="批次刪除照片"
-          >
-            {deletePhoto.isMutating ? (
-              <LoadingSpinner size="xs" className="text-red-500 shrink-0" />
-            ) : (
-              <Icon name="trash-2" size={14} className="text-red-500 shrink-0" />
-            )}
-            <span className="shrink-0">
-              {isMd ? '批次刪除' : isSm ? '刪除' : '刪除'}
-            </span>
-          </button>
-        </div>
+        <SelectionToolbarActions
+          selectedCount={selectedCount}
+          isAnyPending={isAnyPending}
+          groupId={groupId}
+          isSm={isSm}
+          isMd={isMd}
+          isRemoving={removeMutation.isMutating}
+          isCombining={combineMutation.isMutating}
+          activeTasks={activeTasks}
+          isDeleting={deletePhoto.isMutating}
+          onRemoveFromGroup={handleRemoveFromGroup}
+          onManualGroup={handleManualGroup}
+          onBatchAiGroup={handleBatchAiGroup}
+          onBatchEdit={handleBatchEdit}
+          onBatchDelete={handleBatchDeleteClick}
+        />
       </div>
     </div>
   );

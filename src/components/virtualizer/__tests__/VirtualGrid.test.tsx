@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import VirtualGrid from '../VirtualGrid';
-import * as VirtualGridModule from '../VirtualGrid';
+import VirtualGrid from '@/components/virtualizer/VirtualGrid';
+import * as VirtualGridModule from '@/components/virtualizer/VirtualGrid';
 
 describe('Security Guard: computeLaneIndex export constraint', () => {
   it('should not export computeLaneIndex as a named export', () => {

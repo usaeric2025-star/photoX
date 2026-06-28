@@ -3,6 +3,7 @@ import * as v from 'valibot';
 import { db, furnitureItems } from '../../_lib/db/index.js';
 import { eq, and } from 'drizzle-orm';
 import { syncGroupCoversAndCount } from '../../_lib/groups.js';
+import { refreshPhotosView } from '../../_lib/db/actions.js';
 import { PhotoIdReqSchema } from '../../../shared/apiContractSchema.js';
 
 export const deleteHandler = (app: Hono) => {
@@ -26,6 +27,8 @@ export const deleteHandler = (app: Hono) => {
         if (photoData?.groupId) {
           await syncGroupCoversAndCount([photoData.groupId]);
         }
+
+        await refreshPhotosView();
 
         return c.json({ success: true, data: { photoData } });
     } catch (error: unknown) {

@@ -1,9 +1,10 @@
 import { Hono } from 'hono';
 import * as v from 'valibot';
 import { db, categories as categoriesTable, furnitureItems } from '../_lib/db/index.js';
-import { eq, asc, ne, sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { CategoryReqSchema } from '../../shared/apiContractSchema.js';
 import { errorResponse } from '../_lib/response.js';
+import { getAllCategories, getCategoryById } from '../_lib/db/queries/categories.js';
 
 interface FormattedCategory {
     id: number;
@@ -24,28 +25,19 @@ export const categories = new Hono()
     if (categoriesCache && now - cacheTime < 5 * 60 * 1000) {
         return c.json({ success: true, data: categoriesCache });
     }
-    const data = await db
-        .select({
-            id: categoriesTable.id,
-            code: categoriesTable.code,
-            name_zh: categoriesTable.nameZh,
-            name_en: categoriesTable.nameEn,
-            name_ms: categoriesTable.nameMs,
-            sort_order: categoriesTable.sortOrder,
-        })
-        .from(categoriesTable)
-        .where(eq(categoriesTable.isActive, true))
-        .orderBy(asc(categoriesTable.sortOrder));
+    
+    const data = await getAllCategories();
+    const activeData = data.filter(c => c.isActive);
 
     // Transform to frontend format: { id, name, code, zh, en, ms, sort_order }
-    const formatted = data.map((item) => ({
+    const formatted = activeData.map((item) => ({
         id: item.id,
-        name: item.name_zh || '',
-        zh: item.name_zh || '',
-        en: item.name_en || '',
-        ms: item.name_ms || '',
+        name: item.nameZh || '',
+        zh: item.nameZh || '',
+        en: item.nameEn || '',
+        ms: item.nameMs || '',
         code: item.code || '',
-        sort_order: item.sort_order || 0,
+        sort_order: item.sortOrder || 0,
     }));
 
     categoriesCache = formatted;

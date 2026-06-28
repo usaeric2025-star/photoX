@@ -1,8 +1,8 @@
 import { api } from '@/lib/api';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { supabase } from '../../lib/supabase';
-import { Category } from '../../types';
-import { DB_CONFIG } from '../../constants/config';
+import { supabase } from '@/lib/supabase';
+import { Category } from '@/types';
+import { DB_CONFIG } from '@/constants/config';
 
 const TABLE_NAME = 'categories';
 

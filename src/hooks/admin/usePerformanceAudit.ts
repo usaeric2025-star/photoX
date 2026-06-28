@@ -24,10 +24,10 @@ export function usePerformanceAudit() {
     return acc;
   }, {} as Record<string, PerfIncident[]>);
 
-  Object.entries(grouped).forEach(([label, list]) => {
+  Object.entries(grouped).forEach(([label, list]: [string, PerfIncident[]]) => {
     if (list.length > 5) {
-      const avgDuration = list.reduce((a, b) => a + b.duration, 0) / list.length;
-      const maxDuration = Math.max(...list.map(i => i.duration));
+      const avgDuration = list.reduce((a: number, b: PerfIncident) => a + b.duration, 0) / list.length;
+      const maxDuration = Math.max(...list.map((i: PerfIncident) => i.duration));
       
       issues.push({
         id: `perf_${label}`,

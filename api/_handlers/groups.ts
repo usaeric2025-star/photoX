@@ -1,35 +1,23 @@
 import { Hono } from 'hono';
 import * as v from 'valibot';
 import { db, groups as groupsTable, furnitureItems } from '../_lib/db/index.js';
-import { eq, and, inArray, isNull, sql, asc } from 'drizzle-orm';
+import { eq, and, inArray, isNull, sql } from 'drizzle-orm';
 import { GroupReqSchema } from '../../shared/apiContractSchema.js';
 import { errorResponse } from '../_lib/response.js';
 import { syncGroupCoversAndCount } from '../_lib/groups.js';
+import { refreshPhotosView } from '../_lib/db/actions.js';
 import { keysToCamel } from '../_lib/casing.js';
+import { getAllGroups, getGroupById, upsertGroup, deleteGroup } from '../_lib/db/queries/groups.js';
 
 export const groups = new Hono()
   .get('/', async (c) => {
     const isAdminByQuery = c.req.query('isAdminMode') === 'true';
-    let query = db.select().from(groupsTable).orderBy(asc(groupsTable.name));
-
-    if (!isAdminByQuery) {
-        const q = db.select().from(groupsTable)
-          .where(and(
-              eq(groupsTable.status, 'confirmed')
-          ))
-          .orderBy(asc(groupsTable.name));
-        const data = await q;
-        return c.json({ success: true, data });
-    }
-
-    const data = await query;
+    const data = await getAllGroups({ isAdminMode: isAdminByQuery });
     return c.json({ success: true, data });
   })
   .get('/:id', async (c) => {
     const id = c.req.param('id');
-    const data = await db.query.groups.findFirst({
-      where: eq(groupsTable.id, id)
-    });
+    const data = await getGroupById(id);
     if (!data) return errorResponse(c, 'Not found', 404);
     return c.json({ success: true, data });
   })
@@ -99,31 +87,16 @@ export const groups = new Hono()
         cleanMapped.userId = '8ec53131-a589-4b50-beb4-6b5308541e1b';
     }
 
-    const { id, ...updatePayloadData } = cleanMapped;
+    const data = await upsertGroup(cleanMapped);
 
-    const insertPayload = {
-        ...cleanMapped,
-        createdAt: new Date(),
-        updatedAt: new Date()
-    };
+    await refreshPhotosView();
 
-    const updatePayload = {
-        ...updatePayloadData,
-        updatedAt: new Date()
-    };
-
-    await db.insert(groupsTable)
-        .values(insertPayload as unknown as typeof groupsTable.$inferInsert)
-        .onConflictDoUpdate({
-            target: groupsTable.id,
-            set: updatePayload as unknown as typeof groupsTable.$inferInsert
-        });
-
-    return c.json({ success: true });
+    return c.json({ success: true, data });
   })
   .delete('/:id', async (c) => {
     const id = c.req.param('id');
-    await db.delete(groupsTable).where(eq(groupsTable.id, id));
+    await deleteGroup(id);
+    await refreshPhotosView();
     return c.json({ success: true });
   })
   .post('/group-photos', async (c) => {
@@ -237,6 +210,7 @@ export const groups = new Hono()
       // Reconcile and synchronize
       const affectedGroupIds = [targetGroupId, ...(sourceGroupIds || [])];
       await syncGroupCoversAndCount(affectedGroupIds);
+      await refreshPhotosView();
 
       return c.json({ success: true });
   })
@@ -267,6 +241,7 @@ export const groups = new Hono()
 
     // Reconcile groups
     await syncGroupCoversAndCount(affectedGroupIds);
+    await refreshPhotosView();
 
     return c.json({ success: true });
   })
@@ -292,6 +267,7 @@ export const groups = new Hono()
 
     // Keep strict integrity
     await syncGroupCoversAndCount([groupId]);
+    await refreshPhotosView();
 
     return c.json({ success: true });
   })
@@ -310,6 +286,8 @@ export const groups = new Hono()
     } catch (rpcErr) {
         await db.delete(groupsTable).where(eq(groupsTable.id, groupId));
     }
+
+    await refreshPhotosView();
 
     return c.json({ success: true });
   })
@@ -350,6 +328,8 @@ export const groups = new Hono()
         synced++;
       }
     }
+
+    await refreshPhotosView();
 
     return c.json({ success: true, data: { dissolved, synced, deleted } });
   });

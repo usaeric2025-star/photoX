@@ -6,7 +6,7 @@ interface EmptyStateProps {
   title: string;
   description?: string;
   icon?: React.ReactNode;
-  action?: React.ReactNode;
+  action?: React.ReactNode | { label: string; onClick: () => void };
   className?: string;
 }
 
@@ -17,6 +17,22 @@ export function EmptyState({
   action,
   className 
 }: EmptyStateProps) {
+  const renderAction = () => {
+    if (!action) return null;
+    if (React.isValidElement(action)) return action;
+    if (typeof action === 'object' && 'label' in action) {
+      return (
+        <button 
+          onClick={action.onClick}
+          className="px-6 py-3 bg-brand-primary text-white font-bold rounded-full hover:bg-brand-primary-dark transition-all shadow-lg active:scale-95"
+        >
+          {action.label}
+        </button>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className={cn("flex flex-col items-center justify-center py-20 px-8 text-center bg-white/50 backdrop-blur-sm rounded-[3rem] border border-slate-100 shadow-sm mx-auto max-w-lg", className)}>
       <div className="mb-6 p-6 bg-slate-50 rounded-full ring-8 ring-slate-50/50 animate-in zoom-in-50 duration-500">{icon}</div>
@@ -24,7 +40,7 @@ export function EmptyState({
       {description ? (
         <p className="mt-2 text-slate-500 font-medium leading-relaxed">{description}</p>
       ) : null}
-      {action ? <div className="mt-8">{action}</div> : null}
+      <div className="mt-8">{renderAction()}</div>
     </div>
   );
-};
+}

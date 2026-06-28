@@ -3,7 +3,7 @@ import { Button } from "@/components/shared/Button";
 import { Progress } from "@/components/shared/Progress";
 import { Alert, AlertDescription } from "@/components/shared/Alert";
 import { LoadingSpinner } from "@/components/ui/feedback/LoadingSpinner";
-import { ISSUE_ACTIONS } from "@/features/diagnostics/issueActions";
+import { ISSUE_ACTIONS } from "./issueActions";
 import { Icon } from '@/components/ui/Icon';
 import { useUI, storeAccessor } from '@/lib/store';
 import { useTranslation } from '@/hooks';

@@ -2,7 +2,7 @@ import { STALE_TIMES } from '@/lib/query/config';
 import { useAppMutation, useAppQuery, appQuery } from '@/lib/query';
 import { api } from '@/lib/api';
 import { queryKeys } from '@/lib/query/keys';
-import { useUI } from '@/lib/store';
+import { useUI, UIStoreState } from '@/lib/store';
 import { executeTask } from '@/lib/task-queue';
 
 /**
@@ -10,7 +10,7 @@ import { executeTask } from '@/lib/task-queue';
  * Handles infrastructure and storage maintenance tasks
  */
 export function useDiagnostics() {
-  const appLang = useUI(s => s.appLang);
+  const appLang = useUI((s: UIStoreState) => s.appLang);
 
   const { data: auditResult, isValidating: isAuditing } = useAppQuery(
     null, // manually triggered

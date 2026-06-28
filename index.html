@@ -109,6 +109,30 @@
           errors.push({ msg: msg, type: "异步拒绝异常 (Promise Rejection)", details: details });
           renderErrorOverlay();
         });
+
+        // 🚀 Watchdog Timer for Blank Page detection
+        setTimeout(function() {
+          var skeleton = document.getElementById('app-startup-skeleton');
+          if (skeleton && getComputedStyle(skeleton).opacity !== '0' && errors.length === 0) {
+             console.warn('App still showing skeleton after 10s. Forcing diagnostics UI...');
+             var diagBtn = document.createElement('button');
+             diagBtn.innerText = '⚠️ 啟動過久？點此診斷 (Timeout? Click to diagnose)';
+             diagBtn.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:9999999;background:#fef3c7;color:#92400e;border:1px solid #fde68a;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:bold;box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);cursor:pointer;';
+             diagBtn.onclick = function() {
+                var probe = { msg: "應用程序載入逾時 (App Load Timeout)", type: "效能/加載警告", details: "應用程序在 12 秒內未完成啟動渲染。正在探測後端系統..." };
+                errors.push(probe);
+                renderErrorOverlay();
+                fetch('/api/health').then(function(r){return r.json()}).then(function(d){
+                  probe.details += "\n\n[後端探測成功]: " + JSON.stringify(d, null, 2);
+                  renderErrorOverlay();
+                }).catch(function(e){
+                  probe.details += "\n\n[後端探測失敗]: " + e.message;
+                  renderErrorOverlay();
+                });
+             };
+             document.body.appendChild(diagBtn);
+          }
+        }, 12000);
       })();
     </script>
   </head>

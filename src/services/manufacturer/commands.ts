@@ -1,5 +1,5 @@
 import { api } from '@/lib/api';
-import { Manufacturer } from '../../types';
+import { Manufacturer } from '@/types';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 export const clearManufacturerFromPhotos = async (mfrId: string): Promise<string[]> => {

@@ -4,9 +4,10 @@ import { useEffect, useState } from 'react';
 import { UnifiedTask, TaskStatus } from '@/types';
 import { api } from '@/lib/api';
 import { useAppQuery } from '@/lib/query';
-import { useAdminMode } from '../core/auth/useAdminMode';
+import { useAdminMode } from '@/hooks/core/auth/useAdminMode';
 import { logger } from '@/lib/logger';
 import { useAppRoute } from '@/lib/router';
+import type { Task } from '@/lib/task-queue/types';
 
 /**
  * Adapter hook to aggregate frontend local tasks and backend maintenance jobs.
@@ -43,7 +44,7 @@ export function useGlobalTasks() {
       revalidateOnFocus: false, // Prevent focus changes from hammering the server
       revalidateOnReconnect: false,   // Prevent network state changes from refetching
       // Poll only if there is an active job or the user is on a tasks/logs/diagnostics screen
-      refreshInterval: (rJobs) => {
+      refreshInterval: (rJobs: unknown) => {
         if (!isAdmin) return 0;
         if (typeof document !== 'undefined' && document.hidden) return 0;
         const hasRunning = Array.isArray(rJobs) && (rJobs as { status?: string }[]).some(job => job && job.status === 'processing');
@@ -58,7 +59,7 @@ export function useGlobalTasks() {
   const aggregatedTasks: UnifiedTask[] = [];
 
   // Map Session Tasks
-  sessionTasksMap.forEach((zt: import('@/lib/task-queue/types').Task) => {
+  sessionTasksMap.forEach((zt: Task) => {
     let status: TaskStatus = 'processing';
     if (zt.state.status === 'completed') status = 'completed';
     if (zt.state.status === 'failed' || zt.state.status === 'cancelled') status = 'failed';

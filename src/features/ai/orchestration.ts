@@ -1,11 +1,11 @@
 import { analyzePhoto } from './commands';
 import { translateFields } from './translationService';
-import { updatePhoto } from '../../services/photo';
-import { syncPhotoTags, loadTagsFromCloud, batchCreateTags } from '../../services/tag';
+import { updatePhoto } from '@/services/photo';
+import { syncPhotoTags, loadTagsFromCloud, batchCreateTags } from '@/services/tag';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { analyzeGroup, analyzeSinglePhotoDetail as analyzeSinglePhoto } from './commands';
-import { updateGroup, groupPhotos } from '../../services/group/commands';
-import { resolveTagNamesToIds } from '../../services/tag/completion';
+import { updateGroup, groupPhotos } from '@/services/group/commands';
+import { resolveTagNamesToIds } from '@/services/tag/completion';
 import { withTimeout } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 import { mapAiToMultilingual } from './mapping';

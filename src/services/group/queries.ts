@@ -1,5 +1,5 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { ProductGroup } from '../../types';
+import { ProductGroup } from '@/types';
 import { getSafeText } from '@/features/ai/safeText';
 import { api } from '@/lib/api';
 

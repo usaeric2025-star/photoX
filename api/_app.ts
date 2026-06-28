@@ -32,7 +32,57 @@ app.onError((err, c) => {
 });
 
 app.use('*', cors());
-app.get('/health', (c) => c.json({ success: true, status: 'ok' }));
+app.get('/health', async (c) => {
+    try {
+        const { db, furnitureItems } = await import('./_lib/db/index.js');
+        const { count, sql } = await import('drizzle-orm');
+        
+        // 1. Check basic table existence first
+        const [tableRes] = await db.select({ total: count() }).from(furnitureItems);
+        const itemCount = Number(tableRes?.total || 0);
+
+        // 2. Try view count, but don't fail hard if missing
+        let photoCount = 0;
+        let viewStatus = 'ok';
+        try {
+            const viewRes = await db.execute(sql`SELECT count(*) FROM v_photos_list`) as any[];
+            photoCount = Number(viewRes?.[0]?.count || 0);
+        } catch (vErr) {
+            console.warn('[Health] v_photos_list query failed (likely missing), attempting repair:', vErr);
+            viewStatus = 'missing_attempting_repair';
+            // Attempt to repair
+            try {
+                const { ensureViewExists } = await import('./_lib/db/actions.js');
+                await ensureViewExists();
+                const viewRes2 = await db.execute(sql`SELECT count(*) FROM v_photos_list`) as any[];
+                photoCount = Number(viewRes2?.[0]?.count || 0);
+                viewStatus = 'repaired';
+            } catch (repairErr) {
+                console.error('[Health] View repair failed:', repairErr);
+                viewStatus = 'repair_failed';
+            }
+        }
+        
+        return c.json({ 
+            success: true, 
+            status: 'ok', 
+            timestamp: new Date().toISOString(),
+            data: {
+                itemCount,
+                photoCount,
+                viewStatus,
+                dbStatus: 'connected'
+            }
+        });
+    } catch (err) {
+        console.error('[Health] Hard failure:', err);
+        return c.json({ 
+            success: false, 
+            status: 'error', 
+            error: err instanceof Error ? err.message : String(err)
+        }, 503);
+    }
+});
 
 // 全域中間件（含錯誤處理、Auth、Materialized View 刷新）
 setupMiddlewares(app, { NODE_ENV: serverEnv.NODE_ENV });

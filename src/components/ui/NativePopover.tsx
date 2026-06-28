@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
 
 interface NativePopoverProps {
   trigger: React.ReactNode;
@@ -83,15 +82,12 @@ export function NativePopover({
     dialogRef.current.style.transform = align === 'center' ? 'translateX(-50%)' : align === 'end' ? 'translateX(-100%)' : 'none';
   }, [isOpen, align]);
 
-  const portalRoot = document.getElementById('portal-root');
-  if (!portalRoot) return null;
-
   return (
     <>
       <div ref={triggerRef} onClick={handleTriggerClick} className="inline-block cursor-pointer">
         {trigger}
       </div>
-      {isOpen && createPortal(
+      {isOpen && (
         <dialog
           ref={dialogRef}
           className={`
@@ -114,8 +110,7 @@ export function NativePopover({
           }}>
             {children}
           </div>
-        </dialog>,
-        portalRoot
+        </dialog>
       )}
     </>
   );

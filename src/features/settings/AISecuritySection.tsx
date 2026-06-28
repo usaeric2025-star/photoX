@@ -5,7 +5,7 @@ import { logger } from '@/lib/logger';
 
 import React, { useCallback } from 'react';
 import { Icon } from '@/components/ui/Icon';
-import { AppSettings } from '../../types';
+import { AppSettings } from '@/types';
 import { useUI } from '@/lib/store';
 import { translations } from '@/locales';
 

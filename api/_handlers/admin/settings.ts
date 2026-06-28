@@ -150,7 +150,7 @@ adminSettings.post("/save-settings", async (c) => {
         const { settingsPayload } = await c.req.json();
         
         // Define allowed keys from settingsTable to avoid injecting non-existent columns (like gemini_api_key)
-        const allowedKeys = ['id', 'logoUrl', 'whatsapp1', 'whatsapp2', 'whatsapp1Name', 'whatsapp2Name', 'categoriesJson', 'tagsJson', 'manufacturersJson', 'primaryColor', 'backgroundColor', 'accentColor', 'contactEmail', 'instagram', 'facebook', 'accessPasscode', 'passcodeEnabled', 'hotTagThreshold', 'hotTagsCount', 'openrouterModel', 'agnesModel'];
+        const allowedKeys = ['id', 'logoUrl', 'whatsapp1', 'whatsapp2', 'whatsapp1Name', 'whatsapp2Name', 'primaryColor', 'backgroundColor', 'accentColor', 'contactEmail', 'instagram', 'facebook', 'accessPasscode', 'passcodeEnabled', 'hotTagThreshold', 'hotTagsCount', 'openrouterModel', 'agnesModel'];
 
         // Map frontend fields (snake_case) to Drizzle fields (camelCase)
         const mappedPayload: Record<string, unknown> = {};

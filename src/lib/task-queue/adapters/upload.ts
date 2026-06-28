@@ -2,7 +2,7 @@ import { generateId } from '@/lib/id';
 import { Photo } from '@/types';
 import { processImageFile } from '@/services/storage/imageProcessor';
 import { savePhotoToCloud } from '@/features/upload/services/uploadService';
-import { createTask } from '../taskFactory';
+import { createTask } from '@/lib/task-queue/taskFactory';
 import { runBatchAnalysis } from '@/features/ai/orchestration';
 import { appQuery } from '@/lib/query';
 import { queryKeys } from '@/lib/query/keys';
@@ -89,7 +89,20 @@ export const executeBatchUpload = (
             appQuery.mutate((key) => Array.isArray(key) && key[0] === queryKeys.groups.all[0]);
           }
           
+          if (res.successCount < uploadedPhotos.length) {
+            const failedCount = uploadedPhotos.length - res.successCount;
+            throw new Error(`${failedCount} 张照片 AI 分析失败`);
+          }
+          if (options.groupId && !res.groupSuccess) {
+            throw new Error(`商品组 AI 分析失败`);
+          }
+          
           return res;
+      },
+      onError: (err) => {
+          import('@/lib/ui/toast').then(({ showToast }) => {
+              showToast.error(`AI 分析有部分失败: ${err.message}`);
+          });
       }
     });
   }

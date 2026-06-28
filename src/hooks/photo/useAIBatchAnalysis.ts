@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import type { Photo } from '@/types';
-import { useInvalidatePhotos } from '@/hooks/photo/useInvalidatePhotos';
+import { useInvalidatePhotos } from './useInvalidatePhotos';
 import { showToast } from '@/lib/ui/toast';
 import { appQuery } from '@/lib/query';
 import { queryKeys } from '@/lib/query/keys';

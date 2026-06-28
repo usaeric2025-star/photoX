@@ -4,12 +4,12 @@ import { showToast } from '@/lib/ui/toast';
 import { logger } from '@/lib/logger';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { api } from '@/lib/api';
-import { supabase } from '../../lib/supabase';
-import { Tag, Photo, Dimension } from '../../types';
-import { safeArray } from '../../lib/utils';
+import { supabase } from '@/lib/supabase';
+import { Tag, Photo, Dimension } from '@/types';
+import { safeArray } from '@/lib/utils';
 import { translations, TranslationType } from '@/locales';
 import { getSafeText } from '@/features/ai/safeText';
-import { getTranslatedCategoryName } from '../category/utils';
+import { getTranslatedCategoryName } from '@/services/category/utils';
 import { Category } from '@/types';
 import { generateId } from '@/lib/id';
 

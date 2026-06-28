@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { Icon } from '@/components/ui/Icon';
-import { Tag } from "../../types";
+import { Tag } from "@/types";
 import { useClickOutside } from '@/hooks/core/useClickOutside';
 import { useLongPress } from "@/hooks/core/useLongPress";
 

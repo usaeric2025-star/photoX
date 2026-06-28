@@ -1,7 +1,7 @@
 import React from 'react';
 import { Icon } from '@/components/ui/Icon';
-import { buttonStyles } from '../../styles/buttonStyles';
-import { usePermission } from '../../hooks';
+import { buttonStyles } from '@/styles/buttonStyles';
+import { usePermission } from '@/hooks';
 import { useAppRouter } from '@/lib/router';
 import { useSelection } from '@/features/selection';
 

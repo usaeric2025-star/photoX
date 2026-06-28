@@ -3,7 +3,7 @@ import { LightboxStyled as LightboxStyledBase } from '@mshafiqyajid/react-lightb
 const LightboxStyled = LightboxStyledBase as React.ElementType;
 import '@mshafiqyajid/react-lightbox/styles.css';
 
-import type { LightboxState, LightboxSlide } from '../types';
+import type { LightboxState, LightboxSlide } from '@/lib/lightbox/types';
 import { LightboxInfoCard } from '@/features/lightbox/components/LightboxInfoCard';
 
 interface LightboxDriverProps {

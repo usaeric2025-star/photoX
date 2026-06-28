@@ -4,7 +4,7 @@ import { api } from '@/lib/api';
 import { errorService } from '@/services/error';
 import { Photo, ProductFormData } from '@/types/photo';
 import { FilterOptions as PhotoFilters } from '@/types/api';
-import { updatePhoto as update, BatchActionResult, deleteMany, batchUpdate } from '@/services/photo/commands';
+import { updatePhoto as update, BatchActionResult, deleteMany, batchUpdate } from './commands';
 import { syncBatchPhotoTags } from '@/services/tag/commands';
 import { queryKeys } from '@/lib/query/keys';
 

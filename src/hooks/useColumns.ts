@@ -1,6 +1,6 @@
 import { useAppRoute } from '@/lib/router';
 import { Router } from '@/router';
-import { useLocalStorage } from '@/hooks/core/useLocalStorage';
+import { useLocalStorage } from './core/useLocalStorage';
 import { useEffect } from 'react';
 import { uiStore } from '@/lib/store';
 import type { ColumnCount } from '@/features/filters';

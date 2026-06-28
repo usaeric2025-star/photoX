@@ -3,7 +3,7 @@ import { useSignal, storeAccessor, tasksSignal, isTaskDrawerOpen } from '@/lib/s
 import { cn } from '@/lib/utils';
 import { Icon } from '@/components/ui/Icon';
 import { Progress } from '@/components/shared/Progress';
-import { Task } from '../types';
+import { Task } from '@/lib/task-queue/types';
 
 function TaskItem({ task }: { task: Task }) {
   const statusBg = {

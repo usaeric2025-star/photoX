@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useUI } from '@/lib/store';
-import { useAIBatchAnalysis } from '../photo/useAIBatchAnalysis';
+import { useAIBatchAnalysis } from '@/hooks/photo/useAIBatchAnalysis';
 import { logger } from '@/lib/logger';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useSelection } from '@/features/selection';

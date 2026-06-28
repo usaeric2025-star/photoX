@@ -1,4 +1,3 @@
-import { createPortal } from 'react-dom';
 import { useSignal, isLightboxOpen } from '@/lib/store';
 import { useUIStore } from '@/store/uiStore';
 import { SonnerContainer } from '@/components/ui/SonnerContainer';
@@ -18,14 +17,13 @@ export function DialogContainer() {
 
   if (!mounted) return null;
 
-  return createPortal(
+  return (
     <>
       <SonnerContainer />
       <TaskBadge />
       <TaskDrawer />
       <PhotoLightbox />
       {isEditOpen && <PhotoEditDialog />}
-    </>,
-    document.getElementById('portal-root')!
+    </>
   );
 }

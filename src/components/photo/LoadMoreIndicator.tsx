@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { LoadingSpinner } from '../ui/feedback/LoadingSpinner';
+import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
 
 interface LoadMoreIndicatorProps {
   isFetchingNextPage: boolean;

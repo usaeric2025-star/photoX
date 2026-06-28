@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ISSUE_ACTIONS, PreviewResult } from "@/features/diagnostics/issueActions";
+import { ISSUE_ACTIONS, PreviewResult } from "./issueActions";
 import { createTask } from '@/lib/task-queue';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useAuth } from '@/lib/store';

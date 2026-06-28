@@ -1,4 +1,4 @@
-import { ErrorFactory } from '../../lib/error/ErrorFactory';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 export const compressImage = (base64Data: string, maxWidth = 1920, quality = 0.8): Promise<string> => {
   return new Promise((resolve, reject) => {

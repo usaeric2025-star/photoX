@@ -1,7 +1,7 @@
 import { Photo } from '@/types';
 import { updatePhoto as update, BatchActionResult, deleteMany, batchUpdate } from '@/services/photo/commands';
 import { queryKeys } from '@/lib/query/keys';
-import { useAppMutation } from '@/lib/query';
+import { useAppMutation, appQuery } from '@/lib/query';
 import { syncBatchPhotoTags } from '@/services/tag/commands';
 
 /**
@@ -31,6 +31,13 @@ export const usePhotoDelete = () => useAppMutation({
   mutationFn: async (ids: string | string[]) => {
     return await deleteMany(Array.isArray(ids) ? ids : [ids]);
   },
+  onSuccess: () => {
+    appQuery.mutate((key) => {
+      if (Array.isArray(key) && key[0] === 'photos') return true;
+      if (typeof key === 'string' && key.includes('photos')) return true;
+      return false;
+    });
+  }
 });
 
 // 3. 批量编辑

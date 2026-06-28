@@ -5,12 +5,12 @@ import React, { useState } from "react";
 import { Icon } from '@/components/ui/Icon';
 import { Button } from '@/components/ui/Button';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
-import { Tag, AppSettings } from "../../types";
+import { Tag, AppSettings } from "@/types";
 import { TagItem } from "./TagItem";
 import { PromptDialog } from "@/components/ui/PromptDialog";
 
 import { normalizeTagName } from "@/lib/utils";
-import { triggerRefreshTagHotScores } from "../../services/tag/commands";
+import { triggerRefreshTagHotScores } from "@/services/tag/commands";
 import { appQuery } from '@/lib/query';
 import { useFormSubmit } from '@/lib/forms/useFormSubmit';
 import { FormProvider } from '@/lib/forms/useFormField';

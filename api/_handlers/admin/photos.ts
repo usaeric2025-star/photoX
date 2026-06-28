@@ -3,8 +3,18 @@ import { Hono } from 'hono';
 import { db, aiAuditLogs, systemLogs, furnitureItems } from '../../_lib/db/index.js';
 import { eq, desc, inArray, sql, like } from "drizzle-orm";
 import { errorResponse } from '../../_lib/response.js';
+import { refreshPhotosView } from '../../_lib/db/actions.js';
 
 export const adminPhotos = new Hono();
+
+adminPhotos.post("/refresh-view", async (c) => {
+    try {
+        await refreshPhotosView();
+        return c.json({ success: true, message: "Materialized view refreshed successfully" });
+    } catch (err: unknown) {
+        return errorResponse(c, err instanceof Error ? err.message : "Failed to refresh view", 500);
+    }
+});
 
 adminPhotos.get("/photo-ai-result/:photoId", async (c) => {
     const { photoId } = c.req.param();
@@ -123,6 +133,7 @@ adminPhotos.post("/photo/update", async (c) => {
     }
 
     await db.update(furnitureItems).set(mappedUpdates).where(eq(furnitureItems.id, id));
+    await refreshPhotosView();
     return c.json({ success: true });
 });
 
@@ -147,6 +158,7 @@ adminPhotos.post("/delete-photos", async (c) => {
     }
 
     await db.delete(furnitureItems).where(inArray(furnitureItems.id, ids));
+    await refreshPhotosView();
 
     if (photosData && photosData.length > 0) {
         const { getR2Client } = await import("../../_lib/storage.js");

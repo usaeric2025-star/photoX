@@ -1,11 +1,12 @@
 import React, { useMemo, memo } from 'react';
-import { createPortal } from 'react-dom';
 import { useUI, currentEditingPhoto, isPhotoEditOpen, useSignal, isLightboxOpen, lightboxSlides, lightboxCurrentIndex } from '@/lib/store';
 import { useFilters } from '@/features/filters';
 import { useAppRoute, useNavigation } from '@/lib/router';
 import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
 import { usePermission, usePublicSettings } from '@/hooks';
 import { LightboxInfoCard } from './components/LightboxInfoCard';
+import { LightboxToolbar } from './components/LightboxToolbar';
+import { LightboxStyles } from './components/LightboxStyles';
 import { showToast } from '@/lib/ui/toast';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { Icon } from '@/components/ui/Icon';
@@ -42,76 +43,6 @@ interface LightboxProps {
 }
 
 const LightboxStyled = LightboxStyledBase as unknown as React.ComponentType<LightboxProps>; 
-
-function LightboxToolbar({ 
-  currentSlide, 
-  canEdit, 
-  settings, 
-  onClose, 
-  onEdit, 
-  onAiAnalyze, 
-  onDelete 
-}: { 
-  currentSlide: LightboxSlide; 
-  canEdit: boolean; 
-  settings?: AppSettings; 
-  onClose: () => void; 
-  onEdit: () => void; 
-  onAiAnalyze: () => void; 
-  onDelete: () => void;
-}) {
-  return (
-    <div 
-      className="fixed top-4 right-4 flex items-center gap-1.5 p-1 bg-black/80 backdrop-blur-md rounded-full border border-white/10 pointer-events-auto z-[10020] shadow-2xl transition-all duration-300 ease-out animate-in fade-in slide-in-from-top-2"
-      style={{ isolation: 'isolate' }}
-    >
-      {canEdit && (
-        <div className="flex items-center gap-1 border-r border-white/10 pr-1.5 mr-1 bg-white/5 rounded-full py-0.5 pl-1">
-          <button 
-            onClick={(e) => { e.stopPropagation(); onEdit(); }} 
-            className="w-9 h-9 flex items-center justify-center rounded-full text-blue-400 hover:bg-white/10 transition-colors"
-            title="编辑照片"
-          >
-            <Icon name="pencil" size={17} />
-          </button>
-          <button 
-            onClick={(e) => { e.stopPropagation(); onAiAnalyze(); }}
-            className="w-9 h-9 flex items-center justify-center rounded-full text-purple-400 hover:bg-white/10 transition-colors"
-            title="AI 分析"
-          >
-            <Icon name="sparkles" size={17} />
-          </button>
-          <button 
-            onClick={(e) => { e.stopPropagation(); onDelete(); }} 
-            className="w-9 h-9 flex items-center justify-center rounded-full text-red-400 hover:bg-white/10 transition-colors"
-            title="删除"
-          >
-            <Icon name="trash-2" size={17} />
-          </button>
-        </div>
-      )}
-
-      <button 
-        onClick={(e) => {
-          e.stopPropagation();
-          const text = `您好，我想查询这项 product：\n${currentSlide.title || ''}\n${window.location.origin}/photo/${currentSlide.id}`;
-          window.open(`https://wa.me/${settings?.contact_whatsapp || ''}?text=${encodeURIComponent(text)}`, '_blank');
-        }} 
-        className="w-9 h-9 flex items-center justify-center rounded-full bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-all active:scale-95"
-        title="WhatsApp 洽谈"
-      >
-        <Icon name="share-2" size={17} />
-      </button>
-      <button 
-        onClick={(e) => { e.stopPropagation(); onClose(); }} 
-        className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-all active:scale-95"
-        title="关闭"
-      >
-        <Icon name="x" size={17} />
-      </button>
-    </div>
-  );
-}
 
 export function PhotoLightbox() {
   const isOpen = useSignal(isLightboxOpen);
@@ -189,79 +120,7 @@ export function PhotoLightbox() {
     
     return (
       <>
-        <style dangerouslySetInnerHTML={{ __html: `
-          :root { --rlbx-z: 10000; }
-          .rlbx-wrapper { opacity: 0; animation: rlbx-fade-in 0.2s ease-out forwards; }
-          @keyframes rlbx-fade-in { to { opacity: 1; } }
-          .rlbx-overlay {
-            background-color: rgba(0, 0, 0, 0.9) !important;
-            backdrop-filter: blur(12px) !important;
-            -webkit-backdrop-filter: blur(12px) !important;
-          }
-          .rlbx-image {
-            border-radius: 4px !important;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
-            transition: none !important;
-          }
-          .rlbx-nav { z-index: 10015 !important; }
-          .rlbx-image-area { margin-bottom: ${hasThumbnails ? '96px' : '0px'} !important; }
-          .rlbx-thumbnails {
-            display: flex !important;
-            position: fixed !important;
-            bottom: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            z-index: 10010 !important;
-            background: rgba(0, 0, 0, 0.9) !important;
-            backdrop-filter: blur(8px) !important;
-            -webkit-backdrop-filter: blur(8px) !important;
-            border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
-            height: 84px !important;
-            padding: 0.5rem 0.875rem !important;
-            box-sizing: border-box !important;
-            align-items: center !important;
-            gap: 0.375rem !important;
-            overflow-x: auto !important;
-            overflow-y: hidden !important;
-          }
-          .rlbx-thumb {
-            flex-shrink: 0 !important;
-            width: 3.5rem !important;
-            height: 3.5rem !important;
-            border-radius: 4px !important;
-            overflow: hidden !important;
-            border: 2px solid transparent !important;
-            opacity: 0.5 !important;
-            transition: all 0.15s ease-out !important;
-            background: rgba(255, 255, 255, 0.06) !important;
-            padding: 0 !important;
-            cursor: pointer !important;
-            transform: scale(0.92) !important;
-          }
-          .rlbx-thumb img {
-            width: 100% !important;
-            height: 100% !important;
-            object-fit: cover !important;
-            display: block !important;
-            pointer-events: none !important;
-          }
-          .rlbx-thumb:hover {
-            opacity: 0.85 !important;
-            transform: scale(1.02) !important;
-          }
-          .rlbx-thumb--active {
-            border-color: #fff !important;
-            opacity: 1 !important;
-            transform: scale(1.08) !important;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5) !important;
-          }
-          .rlbx-slide {
-            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out !important;
-          }
-          .rlbx-slider {
-            transition: transform 0.3s ease-in-out !important;
-          }
-        `}} />
+        <LightboxStyles hasThumbnails={hasThumbnails} />
 
         <LightboxToolbar 
           currentSlide={currentSlide}
@@ -340,7 +199,7 @@ export function PhotoLightbox() {
         showCaption={false}
         closeOnOverlayClick={true}
       />
-      {isOpen && createPortal(overlays, document.body)}
+      {isOpen && overlays}
     </>
   );
 }

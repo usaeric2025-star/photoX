@@ -4,7 +4,7 @@ import VirtualGrid from '@/components/virtualizer/VirtualGrid';
 import { AdminPhotoCard } from './AdminPhotoCard';
 import { PublicPhotoCard } from './PublicPhotoCard';
 import { LoadMoreIndicator } from './LoadMoreIndicator';
-import { EmptyState } from '../ui/EmptyState';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { Icon } from '@/components/ui/Icon';
 import { useSignal } from '@/lib/store';
 import { gridColumns as gridColumnsSignal } from '@/lib/store';
@@ -137,6 +137,19 @@ export function PhotoGridContent({
           title={hasSearch ? '没有找到相关照片' : '暂无照片数据'} 
           description={hasSearch ? '尝试使用不同的关键词搜索。' : '如果看到此消息且确定有数据，请尝试在管理端刷新缓存。'}
           icon={<Icon name="package-open" className="w-16 h-16 text-slate-300" />}
+          action={mode === 'admin' ? {
+            label: '强制刷新数据',
+            onClick: async () => {
+              try {
+                const { api } = await import('@/lib/api');
+                await api.admin['refresh-view'].$post();
+                window.location.reload();
+              } catch (err) {
+                console.error('Failed to refresh view:', err);
+                alert('刷新失败，请检查控制台日记');
+              }
+            }
+          } : undefined}
         />
       </div>
     );

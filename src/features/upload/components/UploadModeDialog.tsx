@@ -20,8 +20,8 @@ export function UploadModeDialog({ open, onOpenChange, onSelectMode }: UploadMod
             <Icon name="image-plus" size={24} />
           </div>
           <div>
-            <div className="font-semibold text-slate-800">单图上传</div>
-            <div className="text-sm text-slate-500">单独上传照片，每张照片独立管理（旧模式）</div>
+            <div className="font-semibold text-slate-800">常规上传</div>
+            <div className="text-sm text-slate-500">单独上传多张照片，各自独立管理。</div>
           </div>
         </button>
 
@@ -33,8 +33,8 @@ export function UploadModeDialog({ open, onOpenChange, onSelectMode }: UploadMod
             <Icon name="layers" size={24} />
           </div>
           <div>
-            <div className="font-semibold text-slate-800">批量上传后合组</div>
-            <div className="text-sm text-slate-500">建议商品展示使用，自动将此次上传的照片设为一个组</div>
+            <div className="font-semibold text-slate-800">创建商品组</div>
+            <div className="text-sm text-slate-500">将多张照片合并为一个商品，统一管理。</div>
           </div>
         </button>
       </div>

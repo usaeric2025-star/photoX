@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/store';
 import { useUI, usePublicSettings, usePermission, UIStoreState } from '@/hooks';
 import { NativePopover } from '@/components/ui/NativePopover';
 import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
-import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { translations } from "@/locales";
 import { storage } from '@/services/storage';
 

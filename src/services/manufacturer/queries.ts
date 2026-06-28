@@ -1,5 +1,5 @@
 import { api } from '@/lib/api';
-import { Manufacturer } from '../../types';
+import { Manufacturer } from '@/types';
 
 export const loadManufacturersFromCloud = async (): Promise<Manufacturer[]> => {
   const res = await api.manufacturers.$get();

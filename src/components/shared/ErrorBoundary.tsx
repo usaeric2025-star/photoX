@@ -3,7 +3,7 @@ import { useCopyToClipboard } from '@/hooks';
 import { isAppError } from '@/lib/error/AppError';
 import { logger } from '@/lib/logger';
 import { cn } from '@/lib/utils';
-import { LoadingSpinner } from '../ui/feedback/LoadingSpinner';
+import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
 import { handleChunkError } from '@/lib/chunkErrorHandler';
 
 interface Props {

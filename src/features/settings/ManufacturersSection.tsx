@@ -3,7 +3,7 @@ import React from "react";
 import { Icon } from '@/components/ui/Icon';
 import { Button } from '@/components/ui/Button';
 import { useDisclosure } from '@/hooks/core/useDisclosure';
-import { Manufacturer } from "../../types";
+import { Manufacturer } from "@/types";
 import { ManufacturerItem } from '@/components/admin/ManufacturerItem';
 import { PromptDialog } from "@/components/ui/PromptDialog";
 

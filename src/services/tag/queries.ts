@@ -1,4 +1,4 @@
-import { Tag } from '../../types';
+import { Tag } from '@/types';
 import { api } from '@/lib/api';
 
 let allTagsPromise: Promise<Tag[]> | null = null;

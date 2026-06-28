@@ -3,7 +3,7 @@ import { db, furnitureItems, groups as groupsTable, tags as tagsTable, photoTags
 import { eq, ne, and, or, ilike, sql, asc, desc, inArray, isNull, count, type SQL } from 'drizzle-orm';
 import { ListByGroupReqSchema, PhotoListReqSchema } from '../../../shared/apiContractSchema.js';
 import { errorFactory } from '../../_lib/error/AppError.js';
-import { getGroupCounts } from './helpers.js';
+import { getGroupCounts } from '../../_lib/db/queries/photos.js';
 
 import { Hono, type Context } from 'hono';
 
