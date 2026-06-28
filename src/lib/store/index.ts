@@ -5,8 +5,6 @@ export {
   isPhotoEditOpen, currentEditingPhoto, 
   appLangSignal, appLangSignal as appLang,
   isLightboxOpen, lightboxSlides, lightboxCurrentIndex,
-  selectedIds, selectedIds as selectedIdsSignal,
-  isMultiSelect, isMultiSelect as isMultiSelectSignal,
   isSidebarOpen, 
   isTaskDrawerOpen, isTaskDrawerOpen as isTaskDrawerOpenSignal,
   gridColumns, gridColumns as gridColumnsSignal
@@ -14,8 +12,7 @@ export {
 
 // Import for local usage and re-export
 import { 
-  uiStore, useUIStore, selectedCountSelector, selectedSetSelector, 
-  isAnySelectedSelector, useAppLang
+  uiStore, useUIStore, useAppLang
 } from '@/store/uiStore';
 import type { UIStoreState } from '@/store/uiStore';
 import { authStore, useAuthStore, userSignal, authLoadingSignal } from '@/store/authStore';
@@ -26,8 +23,7 @@ import { appStore, appLoadingSignal, appErrorSignal } from '@/store/appStore';
 
 // Re-exports
 export { 
-  uiStore, useUIStore, useUIStore as useUI, selectedCountSelector, 
-  selectedSetSelector, isAnySelectedSelector, 
+  uiStore, useUIStore, useUIStore as useUI,
   useAppLang,
   UIStoreState 
 };

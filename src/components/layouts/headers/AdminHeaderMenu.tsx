@@ -3,14 +3,16 @@ import { cn } from '@/lib/utils';
 import { Icon } from '@/components/ui/Icon';
 import { NativePopover } from '@/components/ui/NativePopover';
 import { LanguageSwitcher } from '../../ui/LanguageSwitcher';
+import { User, Theme, TranslationType } from '@/types';
+import { Navigation } from '@/lib/router';
 
 interface AdminHeaderMenuProps {
-  user: any;
+  user: User | null;
   signOut: () => void;
-  navigate: any;
+  navigate: Navigation;
   isStaff: boolean;
-  theme: any;
-  t: any;
+  theme: Theme;
+  t: TranslationType;
   lang: string;
 }
 

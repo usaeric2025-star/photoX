@@ -1,13 +1,14 @@
 import { Hono } from 'hono';
-import { db } from '../../_lib/db';
-import { furnitureItems } from '../../_lib/db/schema';
+import { db } from '../../_lib/db/index.js';
+import { furnitureItems } from '../../_lib/db/schema.js';
 import { eq } from 'drizzle-orm';
+import { errorResponse } from '../../_lib/response.js';
 
 export const checkHashHandler = (app: Hono) => {
   app.get('/check-hash', async (c) => {
     const hash = c.req.query('hash');
     if (!hash) {
-      return c.json({ error: '缺少 hash 參數' }, 400);
+      return errorResponse(c, '缺少 hash 參數', 400);
     }
 
     const existing = await db

@@ -34,7 +34,7 @@ function CategoryButton({ cat, isSelected, categoryName, currentFilters, onClick
 export function CategoryGrid({ mode }: { mode?: 'public' | 'admin' }) {
   const { filters, updateFilters } = useFilterState();
   const { appLang, uiTranslations } = useTranslation();
-  const { data: categories, isPending } = useCategories(appLang);
+  const { data: categories, isPending } = useCategories();
 
   logger.info('[CategoryGrid] Rendering', { isPending, categoriesCount: categories?.length });
 

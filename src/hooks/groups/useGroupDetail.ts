@@ -1,19 +1,21 @@
-import { createQuery } from '@/lib/query/queryFactory';
-import { getGroupById } from '@/services/group/queries';
-import { queryKeys } from '@/lib/query/keys';
-import { Group } from '@/types';
-import * as v from 'valibot';
-import { GroupSchema } from '@/lib/valibot';
+import { useGroupDetail as useGroupDetailService } from '@/services/group/groupService';
 
 /**
- * Hook to get group details using standard query factory.
+ * Hook to get group details using service layer.
  */
-export const useGroupDetail = createQuery<Group | null, { groupId: string | null, isAdmin?: boolean }>({
-  queryKey: ({ groupId, isAdmin }) => groupId ? queryKeys.groups.detail(groupId, !!isAdmin) : ['groups', 'detail', null],
-  queryFn: async ({ groupId, isAdmin }) => {
-    if (!groupId) return null;
-    const result = await getGroupById(groupId, isAdmin ? 'admin' : 'public');
-    return result || null;
-  },
-  schema: v.nullable(GroupSchema)
-});
+export const useGroupDetail = (
+  props: string | null | { groupId: string | null, isAdmin?: boolean },
+  isAdmin?: boolean
+) => {
+  const groupId = typeof props === 'string' ? props : (props as { groupId: string | null })?.groupId;
+  const isAdm = typeof props === 'string' ? isAdmin : (props as { isAdmin?: boolean })?.isAdmin;
+
+  const { group, isLoading, error, mutate } = useGroupDetailService(groupId, isAdm);
+
+  return {
+    data: group,
+    isLoading,
+    error,
+    refetch: mutate,
+  };
+};

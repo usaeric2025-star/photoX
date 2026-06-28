@@ -227,7 +227,7 @@ export function usePhotoEditAI() {
         
           if (editPhotoId) {
             try {
-              await updatePhoto({ id: editPhotoId, updates, silent: true });
+              await updatePhoto({ id: editPhotoId, updates });
               
               // Synchronously update the cache for the photo detail query
               const detailKey = queryKeys.photos.detail(editPhotoId);

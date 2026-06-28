@@ -3,14 +3,16 @@ import { cn } from '@/lib/utils';
 import { Icon } from '@/components/ui/Icon';
 import { isTaskDrawerOpenSignal } from '@/lib/store';
 
+import { Theme, TranslationType } from '@/types';
+
 interface AdminHeaderActionsProps {
   multiSelect: boolean;
   toggleMode: () => void;
   batchAiIdentify: () => void;
   taskCount: number;
   handleAuthAction: () => void;
-  theme: any;
-  t: any;
+  theme: Theme;
+  t: TranslationType;
 }
 
 export function AdminHeaderActions({ 

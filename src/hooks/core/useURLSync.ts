@@ -68,7 +68,7 @@ export function useURLSync() {
   // 2. Sync from Store to URL (User interactions in UI automatically update URL)
   useEffect(() => {
     const unsubscribe = uiStore.subscribe((state) => {
-      const updates: any = {};
+      const updates: Partial<typeof query> = {};
       
       if (state.lightboxIsOpen) {
         // Lightbox mode: Sync photoId

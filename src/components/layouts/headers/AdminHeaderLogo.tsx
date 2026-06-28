@@ -3,12 +3,14 @@ import { cn } from '@/lib/utils';
 import { Icon } from '@/components/ui/Icon';
 import { useUI } from '@/hooks';
 
+import { Theme } from '@/types';
+
 interface AdminHeaderLogoProps {
   logoUrl?: string | null;
   isAdmin: boolean;
   isStaff: boolean;
   totalCount: number;
-  theme: any;
+  theme: Theme;
 }
 
 export function AdminHeaderLogo({ logoUrl, isAdmin, isStaff, totalCount, theme }: AdminHeaderLogoProps) {

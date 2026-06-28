@@ -7,101 +7,94 @@ import { eq } from "drizzle-orm";
 import { getServerEnv } from "../../shared/envSchema.js";
 import { getR2Client } from "../_lib/storage.js";
 import { requireRealUser } from "../_lib/auth.js";
+import { errorResponse } from "../_lib/response.js";
 
 const serverEnv = getServerEnv(process.env);
 export const storage = new Hono();
 
 storage.post("/upload-presign", async (c) => {
-    try {
-      await requireRealUser(c);
-      const { photoId, fileKey, contentType, imageHash, force } = await c.req.json();
-      if (!photoId && !fileKey) return c.json({ error: "photoId or fileKey required" }, 400);
+    await requireRealUser(c);
+    const { photoId, fileKey, contentType, imageHash, force } = await c.req.json();
+    if (!photoId && !fileKey) return errorResponse(c, "photoId or fileKey required", 400);
 
-      // 排重检查
-      if (imageHash && !force) {
+    // 排重检查
+    if (imageHash && !force) {
         const existing = await db.query.furnitureItems.findFirst({
             columns: { id: true, imageUrl: true, imageHash: true },
             where: eq(furnitureItems.imageHash, imageHash)
         });
         
         if (existing) {
-          if (existing.imageUrl && (existing.imageUrl.startsWith('http') || existing.imageUrl.startsWith('https'))) {
+            if (existing.imageUrl && (existing.imageUrl.startsWith('http') || existing.imageUrl.startsWith('https'))) {
+                return c.json({ 
+                    success: false,
+                    error: "照片已存在",
+                    duplicateId: existing.id,
+                    existingUrl: existing.imageUrl 
+                }, 409);
+            }
+            
             return c.json({ 
-              success: false,
-              error: "照片已存在",
-              duplicateId: existing.id,
-              existingUrl: existing.imageUrl 
-            }, 409);
-          }
-          
-          return c.json({ 
-            success: true, 
-            data: { 
-              resuming: true,
-              photoId: existing.id,
-              uploadUrl: await (async () => {
-                const fileName = `photox/public/${existing.id}.webp`;
-                const s3Client = await getR2Client();
-                const bucketName = serverEnv.R2_BUCKET_NAME;
-                const command = new PutObjectCommand({
-                  Bucket: bucketName!,
-                  Key: fileName,
-                  ContentType: contentType || 'image/webp',
-                });
-                return getSignedUrl(s3Client, command, { expiresIn: 300 });
-              })(),
-              publicUrl: `${serverEnv.R2_PUBLIC_URL_PREFIX}/photox/public/${existing.id}.webp`
-            } 
-          });
+                success: true, 
+                data: { 
+                    resuming: true,
+                    photoId: existing.id,
+                    uploadUrl: await (async () => {
+                        const fileName = `photox/public/${existing.id}.webp`;
+                        const s3Client = await getR2Client();
+                        const bucketName = serverEnv.R2_BUCKET_NAME;
+                        const command = new PutObjectCommand({
+                            Bucket: bucketName!,
+                            Key: fileName,
+                            ContentType: contentType || 'image/webp',
+                        });
+                        return getSignedUrl(s3Client, command, { expiresIn: 300 });
+                    })(),
+                    publicUrl: `${serverEnv.R2_PUBLIC_URL_PREFIX}/photox/public/${existing.id}.webp`
+                } 
+            });
         }
-      }
-      
-      const fileName = fileKey ? `photox/public/${fileKey}` : `photox/public/${photoId}.webp`;
-      const s3Client = await getR2Client();
-      
-      const bucketName = serverEnv.R2_BUCKET_NAME;
-      if (!bucketName) throw new Error("R2_BUCKET_NAME missing");
+    }
+    
+    const fileName = fileKey ? `photox/public/${fileKey}` : `photox/public/${photoId}.webp`;
+    const s3Client = await getR2Client();
+    
+    const bucketName = serverEnv.R2_BUCKET_NAME;
+    if (!bucketName) throw new Error("R2_BUCKET_NAME missing");
 
-      const command = new PutObjectCommand({
+    const command = new PutObjectCommand({
         Bucket: bucketName,
         Key: fileName,
         ContentType: contentType || 'image/webp',
-      });
-      
-      const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 300 });
-      if (!serverEnv.R2_PUBLIC_URL_PREFIX) throw new Error("R2_PUBLIC_URL_PREFIX missing");
-      const publicUrl = `${serverEnv.R2_PUBLIC_URL_PREFIX}/${fileName}`;
-      
-      return c.json({ success: true, data: { uploadUrl, publicUrl } });
-    } catch(e: unknown) {
-      return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown error' }, 500);
-    }
+    });
+    
+    const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 300 });
+    if (!serverEnv.R2_PUBLIC_URL_PREFIX) throw new Error("R2_PUBLIC_URL_PREFIX missing");
+    const publicUrl = `${serverEnv.R2_PUBLIC_URL_PREFIX}/${fileName}`;
+    
+    return c.json({ success: true, data: { uploadUrl, publicUrl } });
 });
 
 storage.post("/r2-delete", async (c) => {
-    try {
-      await requireRealUser(c);
-      const { fileKeys } = await c.req.json();
-      if (!fileKeys || !Array.isArray(fileKeys)) {
-        return c.json({ success: false, error: "fileKeys array required" }, 400);
-      }
+    await requireRealUser(c);
+    const { fileKeys } = await c.req.json();
+    if (!fileKeys || !Array.isArray(fileKeys)) {
+        return errorResponse(c, "fileKeys array required", 400);
+    }
 
-      const s3Client = await getR2Client();
-      const bucketName = serverEnv.R2_BUCKET_NAME;
-      if (!bucketName) throw new Error("R2_BUCKET_NAME missing");
+    const s3Client = await getR2Client();
+    const bucketName = serverEnv.R2_BUCKET_NAME;
+    if (!bucketName) throw new Error("R2_BUCKET_NAME missing");
 
-      await Promise.allSettled(fileKeys.map(async (key) => {
-          const command = new DeleteObjectCommand({
+    await Promise.allSettled(fileKeys.map(async (key) => {
+        const command = new DeleteObjectCommand({
             Bucket: bucketName,
             Key: `photox/public/${key}`,
-          });
-          return s3Client.send(command).catch(err => {
-              logger.error(`Failed to delete key ${key}:`, err);
-          });
-      }));
+        });
+        return s3Client.send(command).catch(err => {
+            logger.error(`Failed to delete key ${key}:`, err);
+        });
+    }));
 
-      return c.json({ success: true });
-    } catch(e: unknown) {
-      return c.json({ success: false, error: e instanceof Error ? e.message : 'Unknown error' }, 500);
-    }
+    return c.json({ success: true });
 });

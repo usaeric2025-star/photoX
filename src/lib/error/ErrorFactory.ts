@@ -32,10 +32,10 @@ export class ErrorFactory {
     return map[resource] ?? resource;
   }
 
-  static formatValibotError(error: v.ValiError<any>): string {
-    return error.issues.map((issue: any) => {
+  static formatValibotError(error: v.ValiError<v.GenericSchema>): string {
+    return error.issues.map((issue) => {
       // 嘗試獲取友善的路徑名稱
-      const path = issue.path?.map((p: any) => p.key).join('.') || '参数';
+      const path = issue.path?.map((p) => String((p as any).key)).join('.') || '参数';
       // 格式化訊息：將欄位名稱與驗證錯誤連結
       return `${path} ${issue.message}`;
     }).join('，');
@@ -264,9 +264,9 @@ export class ErrorFactory {
     if (isAppError(error)) return error;
     
     if (error instanceof v.ValiError) {
-      return this.create(this.formatValibotError(error as v.ValiError<any>), {
+      return this.create(this.formatValibotError(error), {
         category: ErrorCategory.VALIDATION,
-        userMessage: this.formatValibotError(error as v.ValiError<any>),
+        userMessage: this.formatValibotError(error),
         context: { ...context, original: error },
         code: ErrorCode.VALIDATION_FAILED,
         severity: ErrorSeverity.WARNING,
@@ -300,10 +300,6 @@ export class ErrorFactory {
     
     // 统一使用 showToast.error，传递 AppError 对象以便深度提取 TraceID 和详细的诊断信息
     showToast.error(appError);
-  }
-
-  static async logResult(payload: unknown, level: 'success' | 'error', context: unknown) {
-    logger.debug('[Audit]', { payload, level, context });
   }
   
   static extractErrorMessage(error: unknown): string {

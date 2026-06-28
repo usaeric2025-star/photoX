@@ -5,8 +5,9 @@ import { PhotoCardBase } from './PhotoCardBase';
 import { PhotoStatusBadges, PhotoCardInfo, PhotoSelectionIndicator } from './PhotoCardParts';
 import { PinButton } from './PinButton';
 import { useColumns, usePermission, usePerformance } from '@/hooks';
-import { useSignal, useUI, type UIStoreState } from '@/lib/store';
-import { isMultiSelect as isMultiSelectSignal, selectedIds as selectedIdsSignal, gridColumns as gridColumnsSignal } from '@/lib/store';
+import { useSelection } from '@/features/selection/useSelection';
+import { useSignal, useUI } from '@/lib/store';
+import { gridColumns as gridColumnsSignal } from '@/lib/store';
 import { usePhotoCard } from '@/hooks/photo/usePhotoCard';
 
 interface AdminPhotoCardProps {
@@ -34,8 +35,8 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
   canPin,
   canPinGlobal,
 }: AdminPhotoCardProps) {
-  const isSelected = useUI((s) => s.selectedIds.includes(photo.id));
-  const isMultiSelect = useSignal(isMultiSelectSignal);
+  const { isSelected, isMultiSelect } = useSelection();
+  const isPhotoSelected = isSelected(photo.id);
   const columns = useSignal(gridColumnsSignal);
   const { can } = usePermission();
   
@@ -53,14 +54,14 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
   return (
     <PhotoCardBase
       item={photo}
-      isSelected={isSelected}
+      isSelected={isPhotoSelected}
       isMultiSelect={isMultiSelect}
       imgVariant={columns <= 3 ? 'md' : 'sm'}
       onClick={handleClick}
       ref={cardRef}
     >
       {isMultiSelect && (
-        <PhotoSelectionIndicator isSelected={isSelected} />
+        <PhotoSelectionIndicator isSelected={isPhotoSelected} />
       )}
       <PhotoStatusBadges 
         photo={photo} 

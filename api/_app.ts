@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { getServerEnv } from '../shared/envSchema.js';
+import { errorResponse } from './_lib/response.js';
 import adminApp from './_admin.js';
 import { publicSettings } from './_handlers/public_settings.js';
 import { ai } from './_handlers/ai.js';
@@ -16,7 +17,19 @@ import { setupMiddlewares } from './_lib/middleware.js';
 // Validate env at module level
 const serverEnv = getServerEnv(process.env);
 
+// --- Environment Validation ---
+if (!serverEnv.DATABASE_URL) {
+    console.error('❌ [CRITICAL] DATABASE_URL is missing!');
+    process.exit(1);
+}
+
 export const app = new Hono().basePath('/api');
+
+// ✅ 統一錯誤處理
+app.onError((err, c) => {
+    console.error('[API Error]', err);
+    return errorResponse(c, err, 500);
+});
 
 app.use('*', cors());
 app.get('/health', (c) => c.json({ success: true, status: 'ok' }));
@@ -38,24 +51,20 @@ testHandler(app);
 
 // --- 公共輔助路由 ---
 app.get('/download', async (c) => {
-    try {
-        const url = c.req.query('url');
-        if (!url) return c.text('Missing url parameter', 400);
+    const url = c.req.query('url');
+    if (!url) return c.text('Missing url parameter', 400);
 
-        const resp = await fetch(url);
-        if (!resp.ok) return c.text('Failed to fetch image', { status: (resp.status >= 400 && resp.status < 600 ? resp.status : 500) as import('hono/utils/http-status').ContentfulStatusCode });
+    const resp = await fetch(url);
+    if (!resp.ok) return c.text('Failed to fetch image', { status: (resp.status >= 400 && resp.status < 600 ? resp.status : 500) as import('hono/utils/http-status').ContentfulStatusCode });
 
-        const buffer = await resp.arrayBuffer();
-        const contentType = resp.headers.get('content-type') || 'application/octet-stream';
-        
-        c.header('Content-Type', contentType);
-        c.header('Access-Control-Allow-Origin', '*');
-        c.header('Cache-Control', 'public, max-age=31536000, immutable');
-        
-        return c.body(buffer);
-    } catch (e: unknown) {
-        return c.text(e instanceof Error ? e.message : String(e), 500);
-    }
+    const buffer = await resp.arrayBuffer();
+    const contentType = resp.headers.get('content-type') || 'application/octet-stream';
+    
+    c.header('Content-Type', contentType);
+    c.header('Access-Control-Allow-Origin', '*');
+    c.header('Cache-Control', 'public, max-age=31536000, immutable');
+    
+    return c.body(buffer);
 });
 
 export type AppType = typeof app;

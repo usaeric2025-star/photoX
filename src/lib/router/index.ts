@@ -39,3 +39,5 @@ export function useNavigation() {
       diagnostics: useCallback(() => Router.push("diagnostics"), []),
     };
 }
+
+export type Navigation = ReturnType<typeof useNavigation>;

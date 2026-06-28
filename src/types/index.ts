@@ -75,6 +75,18 @@ interface DialogData {
   };
 }
 
+export interface Theme {
+  bg: string;
+  logoColor: string;
+  logoText: string;
+  button: string;
+  buttonActive: string;
+  badge: string;
+  badgeLabel: string;
+  badgeVal: string;
+  popoverTrigger: string;
+}
+
 interface AppState {
   photos: import('./photo').Photo[];
   categories: import('./photo').Category[];

@@ -1,7 +1,7 @@
 import { useAppRouter } from '@/lib/router';
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { useAuth, activeTaskCountSelector, useSignal, isMultiSelect as isMultiSelectSignal, useTask } from '@/lib/store';
+import { useAuth, activeTaskCountSelector, useTask } from '@/lib/store';
 import { useUI, useSettings, useAdminBatchActions, usePermission } from '@/hooks';
 import { useAppQuery } from '@/lib/query';
 import { api } from '@/lib/api';
@@ -25,8 +25,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
   const { navigate } = useAppRouter();
 
   const lang = useUI((s) => s.appLang);
-  const { toggleMode } = useSelection();
-  const multiSelect = useSignal(isMultiSelectSignal);
+  const { toggleMode, isMultiSelect } = useSelection();
   const t = translations[lang as keyof typeof translations] || translations.en;
 
   const taskCount = useTask(activeTaskCountSelector);
@@ -104,7 +103,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
 
       <div className="flex items-center gap-1.5 sm:gap-2 flex-nowrap shrink-0 z-10">
         <AdminHeaderActions 
-          multiSelect={multiSelect}
+          multiSelect={isMultiSelect}
           toggleMode={toggleMode}
           batchAiIdentify={handleBatchAiIdentifyTrigger}
           taskCount={taskCount}

@@ -46,21 +46,6 @@ export async function updatePhoto(id: string, initialUpdates: Partial<Photo>): P
   return rawData ? mapSupabasePhoto(rawData as unknown as Record<string, unknown> & { id: string, name: string, image_url: string, created_at: string }) : null;
 }
 
-/**
- * Delete a single photo
- */
-export const deletePhoto = async (photo: Photo): Promise<{ dissolvedGroupId?: string }> => {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) throw new Error('Session required');
-
-  const res = await api.photos.delete.$post({
-    json: { id: photo.id, userId: session.user.id }
-  });
-  if (!res.ok) throw new Error('Delete failed');
-  
-  return { dissolvedGroupId: undefined };
-};
-
 export type BatchActionResult = {
   successCount: number;
   failureCount: number;
@@ -106,18 +91,3 @@ export async function deleteMany(ids: string[]): Promise<BatchActionResult> {
   
   return { successCount: ids.length, failureCount: 0, failedItems: [] };
 }
-
-export const movePhotosToGroup = async (photoIds: string[], targetGroupId: string | null): Promise<void> => {
-  const res = await api.groups['move-photos'].$post({
-      json: { photoIds, targetGroupId }
-  });
-  if (!res.ok) throw new Error('Move photos failed');
-};
-
-export const setGroupCover = async (photoId: string | null, groupId: string): Promise<void> => {
-  if (!groupId) throw new Error('GroupId is required');
-  const res = await api.groups['set-cover'].$post({
-      json: { photoId, groupId }
-  });
-  if (!res.ok) throw new Error('Set photo cover failed');
-};

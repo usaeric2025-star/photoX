@@ -1,23 +1,15 @@
-import { optimistic } from '@/lib/query/mutationFactory';
 import { Photo } from '@/types';
 import { updatePhoto as update, BatchActionResult, deleteMany, batchUpdate } from '@/services/photo/commands';
 import { queryKeys } from '@/lib/query/keys';
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { defineMutation } from '@/lib/mutations/defineMutation';
-import { useOptimisticMutation } from '@/lib/mutations/useOptimisticMutation';
+import { useAppMutation } from '@/lib/query';
 import { syncBatchPhotoTags } from '@/services/tag/commands';
 
 /**
  * 照片编辑 Mutation
  */
 // 1. 照片编辑
-const photoEditConfig = defineMutation<
-  Photo,
-  { id: string; updates: Partial<Photo>; silent?: boolean },
-  readonly unknown[]
->({
-  name: 'photoEdit',
-  service: async ({ id, updates }) => {
+export const usePhotoEditMutation = () => useAppMutation({
+  mutationFn: async ({ id, updates }: { id: string; updates: Partial<Photo> }) => {
     const { tags, ...coreUpdates } = updates;
     const res = await update(id, coreUpdates as Partial<Photo>);
     
@@ -32,48 +24,18 @@ const photoEditConfig = defineMutation<
     
     return res as Photo;
   },
-  invalidate: (data, vars) => [queryKeys.photos.all, queryKeys.groups.all, queryKeys.photos.detail(vars.id)],
-  cleanupKey: (vars) => vars.id,
-  optimistic: (old, { id, updates }) => {
-    if (typeof old !== 'object' || old === null) return old;
-    const castOld = old as { pages: { photos?: Photo[]; items?: Photo[] }[] } | Photo;
-    if ('pages' in castOld) return optimistic.infinite.update<Photo>()(castOld as { pages: { photos?: Photo[]; items?: Photo[] }[] }, { id, updates });
-    if ((castOld as Photo).id === id) return { ...(castOld as Photo), ...updates };
-    return castOld;
-  },
-  successMessage: '已更新',
 });
-
-export const usePhotoEditMutation = () => useOptimisticMutation(photoEditConfig);
 
 // 2. 照片删除
-const photoDeleteConfig = defineMutation<
-  BatchActionResult,
-  string | string[],
-  readonly unknown[]
->({
-  name: 'photoDelete',
-  service: async (ids) => {
+export const usePhotoDelete = () => useAppMutation({
+  mutationFn: async (ids: string | string[]) => {
     return await deleteMany(Array.isArray(ids) ? ids : [ids]);
   },
-  invalidate: (data, vars) => [
-    ['photos', 'list'],
-    queryKeys.groups.all,
-    ...(Array.isArray(vars) ? vars : [vars]).map((id) => queryKeys.photos.detail(id))
-  ],
-  successMessage: '照片已删除',
 });
 
-export const usePhotoDelete = () => useOptimisticMutation(photoDeleteConfig);
-
 // 3. 批量编辑
-const photoBatchEditConfig = defineMutation<
-  BatchActionResult,
-  { ids: string[]; updates: Partial<Photo> },
-  readonly unknown[]
->({
-  name: 'photoBatchEdit',
-  service: async ({ ids, updates }) => {
+export const usePhotoBatchEdit = () => useAppMutation({
+  mutationFn: async ({ ids, updates }: { ids: string[]; updates: Partial<Photo> }) => {
     const { tags, ...coreUpdates } = updates;
     const res = await batchUpdate(ids, coreUpdates as Partial<Photo>);
     
@@ -88,44 +50,15 @@ const photoBatchEditConfig = defineMutation<
     
     return res;
   },
-  invalidate: (data, vars) => [
-    queryKeys.photos.all,
-    queryKeys.groups.all,
-    ...vars.ids.map((id) => queryKeys.photos.detail(id))
-  ],
-  successMessage: '批量操作完成',
 });
 
-export const usePhotoBatchEdit = () => useOptimisticMutation(photoBatchEditConfig);
-
 // 4. 钉选/取消钉选
-const togglePinConfig = defineMutation<
-  Photo,
-  { id: string; isPinned: boolean },
-  readonly unknown[]
->({
-  name: 'togglePin',
-  service: async ({ id, isPinned }) => {
+export const useTogglePin = () => useAppMutation({
+  mutationFn: async ({ id, isPinned }: { id: string; isPinned: boolean }) => {
     const res = await update(id, { is_pinned: isPinned });
     if (!res) throw new Error('Failed to update photo');
     return res;
   },
-  cleanupKey: (vars) => vars.id,
-  invalidate: (data, vars) => [queryKeys.photos.all, queryKeys.groups.all, queryKeys.photos.detail(vars.id)],
-  optimistic: (old, { id, isPinned }) => {
-    if (typeof old !== 'object' || old === null) return old;
-    const castOld = old as { pages: { photos?: Photo[]; items?: Photo[] }[] } | Photo;
-    if ('pages' in castOld) {
-        return optimistic.infinite.update<Photo>()(castOld as { pages: { photos?: Photo[]; items?: Photo[] }[] }, { id, updates: { is_pinned: isPinned } });
-    }
-    // If it's a detail query, castOld should be a Photo
-    if ((castOld as Photo).id === id) {
-        return { ...(castOld as Photo), is_pinned: isPinned };
-    }
-    return castOld;
-  },
-  successMessage: '状态已更新',
 });
 
-export const useTogglePin = () => useOptimisticMutation(togglePinConfig);
 

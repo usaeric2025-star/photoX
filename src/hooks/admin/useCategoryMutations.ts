@@ -1,43 +1,42 @@
 import { Category } from '@/types';
 import { addCategoryToDB, updateCategoryInDB, deleteCategoryFromDB } from '@/services/category/commands';
 import { queryKeys } from '@/lib/query/keys';
-import { defineMutation } from '@/lib/mutations/defineMutation';
-import { useOptimisticMutation } from '@/lib/mutations/useOptimisticMutation';
+import { useAppMutation, appQuery } from '@/lib/query';
 
-const categoryCreateConfig = defineMutation<Category, string | Partial<Category>, readonly unknown[]>({
-  name: 'categoryCreate',
-  service: async (variables) => {
+export const useCategoryCreate = () => useAppMutation({
+  mutationFn: async (variables: string | Partial<Category>) => {
     const name = typeof variables === 'string' ? variables : (variables.name || '');
     const res = await addCategoryToDB(name);
     if (!res) throw new Error('分类创建失败');
     return res;
   },
-  invalidate: () => [queryKeys.categories.all, queryKeys.photos.all],
-  successMessage: '分类添加成功',
+  onSuccess: () => {
+    appQuery.mutate(queryKeys.categories.all);
+    appQuery.mutate(queryKeys.photos.all);
+  }
 });
-export const useCategoryCreate = () => useOptimisticMutation(categoryCreateConfig);
 
-const categoryEditConfig = defineMutation<boolean, { id: number; updates: Partial<Category> }, readonly unknown[]>({
-  name: 'categoryEdit',
-  service: async ({ id, updates }) => {
+export const useCategoryEdit = () => useAppMutation({
+  mutationFn: async ({ id, updates }: { id: number; updates: Partial<Category> }) => {
     const res = await updateCategoryInDB(id, updates);
     if (!res) throw new Error('分类更新失败');
     return true;
   },
-  invalidate: () => [queryKeys.categories.all, queryKeys.photos.all],
-  successMessage: '分类更新成功',
+  onSuccess: () => {
+    appQuery.mutate(queryKeys.categories.all);
+    appQuery.mutate(queryKeys.photos.all);
+  }
 });
-export const useCategoryEdit = () => useOptimisticMutation(categoryEditConfig);
 
-const categoryDeleteConfig = defineMutation<boolean, number, readonly unknown[]>({
-  name: 'categoryDelete',
-  service: async (id) => {
+export const useCategoryDelete = () => useAppMutation({
+  mutationFn: async (id: number) => {
     const res = await deleteCategoryFromDB(id);
     if (!res) throw new Error('分类删除失败');
     return true;
   },
-  invalidate: () => [queryKeys.categories.all, queryKeys.photos.all],
-  successMessage: '分类删除成功',
+  onSuccess: () => {
+    appQuery.mutate(queryKeys.categories.all);
+    appQuery.mutate(queryKeys.photos.all);
+  }
 });
-export const useCategoryDelete = () => useOptimisticMutation(categoryDeleteConfig);
 

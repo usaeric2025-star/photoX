@@ -3,114 +3,101 @@ import { Hono } from 'hono';
 import { db, secrets as secretsTable, settings as settingsTable } from '../../_lib/db/index.js';
 import { eq, inArray, sql } from "drizzle-orm";
 import { encrypt } from '../../_lib/encryption.js';
+import { errorResponse } from '../../_lib/response.js';
 
 export const adminSettings = new Hono();
 
 adminSettings.get("/get", async (c) => {
-    try {
-        const [settingsRes] = await db.select().from(settingsTable).where(eq(settingsTable.id, 1)).limit(1);
-        
-        // Fetch secrets to merge legacy AI settings
-        const secretsRes = await db.select().from(secretsTable);
-        const secretsMap: Record<string, string> = {};
-        for (const s of secretsRes) {
-            secretsMap[s.key] = s.value || '';
-        }
-
-        const data = settingsRes ? {
-            access_passcode: secretsMap['access_passcode'] || settingsRes.accessPasscode || '',
-            logo_url: settingsRes.logoUrl,
-            whatsapp_1: settingsRes.whatsapp1 || '',
-            whatsapp_2: settingsRes.whatsapp2 || '',
-            whatsapp_1_name: settingsRes.whatsapp1Name || '',
-            whatsapp_2_name: settingsRes.whatsapp2Name || '',
-            facebook: settingsRes.facebook || '',
-            instagram: settingsRes.instagram || '',
-            agnes_api_key: secretsMap['agnes'] || '',
-            openrouter_api_key: secretsMap['openrouter'] || ''
-        } : {};
-
-        return c.json({ success: true, data });
-    } catch (e: unknown) {
-        return c.json({ success: false, error: (e as Error).message }, 500);
+    const [settingsRes] = await db.select().from(settingsTable).where(eq(settingsTable.id, 1)).limit(1);
+    
+    // Fetch secrets to merge legacy AI settings
+    const secretsRes = await db.select().from(secretsTable);
+    const secretsMap: Record<string, string> = {};
+    for (const s of secretsRes) {
+        secretsMap[s.key] = s.value || '';
     }
+
+    const data = settingsRes ? {
+        access_passcode: secretsMap['access_passcode'] || settingsRes.accessPasscode || '',
+        logo_url: settingsRes.logoUrl,
+        whatsapp_1: settingsRes.whatsapp1 || '',
+        whatsapp_2: settingsRes.whatsapp2 || '',
+        whatsapp_1_name: settingsRes.whatsapp1Name || '',
+        whatsapp_2_name: settingsRes.whatsapp2Name || '',
+        facebook: settingsRes.facebook || '',
+        instagram: settingsRes.instagram || '',
+        agnes_api_key: secretsMap['agnes'] || '',
+        openrouter_api_key: secretsMap['openrouter'] || ''
+    } : {};
+
+    return c.json({ success: true, data });
 });
 
 adminSettings.get("/get-keys", async (c) => {
-    try {
-        const keysToFetch = ['openrouter', 'agnes', 'PRIMARY_AI_PROVIDER', 'openrouter_model', 'agnes_model'];
-        const secretsRes = await db.select()
-            .from(secretsTable)
-            .where(inArray(secretsTable.key, keysToFetch));
+    const keysToFetch = ['openrouter', 'agnes', 'PRIMARY_AI_PROVIDER', 'openrouter_model', 'agnes_model'];
+    const secretsRes = await db.select()
+        .from(secretsTable)
+        .where(inArray(secretsTable.key, keysToFetch));
 
-        const config: Record<string, string> = {};
-        secretsRes.forEach((s) => { config[s.key] = s.value || ''; });
-        
-        let hasOpenrouter = !!config.openrouter;
-        let hasAgnes = !!config.agnes;
-        const primarySecret = config.PRIMARY_AI_PROVIDER || 'openrouter';
+    const config: Record<string, string> = {};
+    secretsRes.forEach((s) => { config[s.key] = s.value || ''; });
+    
+    let hasOpenrouter = !!config.openrouter;
+    let hasAgnes = !!config.agnes;
+    const primarySecret = config.PRIMARY_AI_PROVIDER || 'openrouter';
 
-        // Fallback for UI indicators
-        if (!hasAgnes || !hasOpenrouter) {
-            const [settingsRes] = await db.select({
-                openrouterModel: settingsTable.openrouterModel,
-                agnesModel: settingsTable.agnesModel
-            })
-            .from(settingsTable)
-            .where(eq(settingsTable.id, 1))
-            .limit(1);
+    // Fallback for UI indicators
+    if (!hasAgnes || !hasOpenrouter) {
+        const [settingsRes] = await db.select({
+            openrouterModel: settingsTable.openrouterModel,
+            agnesModel: settingsTable.agnesModel
+        })
+        .from(settingsTable)
+        .where(eq(settingsTable.id, 1))
+        .limit(1);
 
-            if (settingsRes?.openrouterModel) hasOpenrouter = true;
-            if (settingsRes?.agnesModel) hasAgnes = true;
-        }
-        
-        return c.json({
-            success: true,
-            primaryProvider: primarySecret,
-            customModel: '', // Deprecated
-            currentModel: 'gemini-2.0-flash-exp', // Deprecated
-            keysStatus: { 
-                openrouter: hasOpenrouter, 
-                agnes: hasAgnes,
-                primaryProvider: primarySecret,
-                openrouter_model: config.openrouter_model || '',
-                agnes_model: config.agnes_model || ''
-            }
-        });
-    } catch (e: unknown) {
-        logger.error("get-keys handler failed:", e);
-        return c.json({ success: false, error: (e as Error).message }, 500);
+        if (settingsRes?.openrouterModel) hasOpenrouter = true;
+        if (settingsRes?.agnesModel) hasAgnes = true;
     }
+    
+    return c.json({
+        success: true,
+        primaryProvider: primarySecret,
+        customModel: '', // Deprecated
+        currentModel: 'gemini-2.0-flash-exp', // Deprecated
+        keysStatus: { 
+            openrouter: hasOpenrouter, 
+            agnes: hasAgnes,
+            primaryProvider: primarySecret,
+            openrouter_model: config.openrouter_model || '',
+            agnes_model: config.agnes_model || ''
+        }
+    });
 });
 
 adminSettings.post("/save-key", async (c) => {
-    try {
-        let { provider, apiKey } = await c.req.json();
-        if (!provider || !apiKey) return c.json({ success: false, error: "缺少必要參數" }, 400);
+    let { provider, apiKey } = await c.req.json();
+    if (!provider || !apiKey) return errorResponse(c, "缺少必要參數", 400);
 
-        apiKey = String(apiKey).trim();
-        const encryptedKey = encrypt(apiKey);
-        
-        await db.insert(secretsTable).values({ 
-            key: provider, 
+    apiKey = String(apiKey).trim();
+    const encryptedKey = encrypt(apiKey);
+    
+    await db.insert(secretsTable).values({ 
+        key: provider, 
+        value: encryptedKey,
+        updatedAt: new Date()
+    }).onConflictDoUpdate({
+        target: secretsTable.key,
+        set: { 
             value: encryptedKey,
             updatedAt: new Date()
-        }).onConflictDoUpdate({
-            target: secretsTable.key,
-            set: { 
-                value: encryptedKey,
-                updatedAt: new Date()
-            }
-        });
+        }
+    });
 
-        return c.json({ 
-            success: true, 
-            message: `密鑰已加密保存！` 
-        });
-    } catch (e: unknown) {
-        logger.error("Save key failed:", e);
-        return c.json({ success: false, error: (e as Error).message || "保存失敗，請重試" }, 500);
-    }
+    return c.json({ 
+        success: true, 
+        message: `密鑰已加密保存！` 
+    });
 });
 
 adminSettings.post("/save-model", async (c) => {
@@ -138,29 +125,24 @@ adminSettings.post("/save-model", async (c) => {
 });
 
 adminSettings.post("/save-provider", async (c) => {
-    try {
-        const { provider } = await c.req.json();
-        if (!provider) {
-            return c.json({ success: false, error: "Missing provider" }, 400);
-        }
+    const { provider } = await c.req.json();
+    if (!provider) {
+        return errorResponse(c, "Missing provider", 400);
+    }
 
-        await db.insert(secretsTable).values({ 
-            key: 'PRIMARY_AI_PROVIDER', 
+    await db.insert(secretsTable).values({ 
+        key: 'PRIMARY_AI_PROVIDER', 
+        value: provider,
+        updatedAt: new Date()
+    }).onConflictDoUpdate({
+        target: secretsTable.key,
+        set: { 
             value: provider,
             updatedAt: new Date()
-        }).onConflictDoUpdate({
-            target: secretsTable.key,
-            set: { 
-                value: provider,
-                updatedAt: new Date()
-            }
-        });
-        
-        return c.json({ success: true });
-    } catch (e: unknown) {
-        logger.error("Save provider failed:", e);
-        return c.json({ success: false, error: (e as Error).message }, 500);
-    }
+        }
+    });
+    
+    return c.json({ success: true });
 });
 
 adminSettings.post("/save-settings", async (c) => {

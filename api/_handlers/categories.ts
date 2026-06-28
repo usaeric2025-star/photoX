@@ -3,6 +3,7 @@ import * as v from 'valibot';
 import { db, categories as categoriesTable, furnitureItems } from '../_lib/db/index.js';
 import { eq, asc, ne, sql } from 'drizzle-orm';
 import { CategoryReqSchema } from '../../shared/apiContractSchema.js';
+import { errorResponse } from '../_lib/response.js';
 
 interface FormattedCategory {
     id: number;
@@ -23,154 +24,124 @@ export const categories = new Hono()
     if (categoriesCache && now - cacheTime < 5 * 60 * 1000) {
         return c.json({ success: true, data: categoriesCache });
     }
-    try {
-      const data = await db
-          .select({
-              id: categoriesTable.id,
-              code: categoriesTable.code,
-              name_zh: categoriesTable.nameZh,
-              name_en: categoriesTable.nameEn,
-              name_ms: categoriesTable.nameMs,
-              sort_order: categoriesTable.sortOrder,
-          })
-          .from(categoriesTable)
-          .where(eq(categoriesTable.isActive, true))
-          .orderBy(asc(categoriesTable.sortOrder));
+    const data = await db
+        .select({
+            id: categoriesTable.id,
+            code: categoriesTable.code,
+            name_zh: categoriesTable.nameZh,
+            name_en: categoriesTable.nameEn,
+            name_ms: categoriesTable.nameMs,
+            sort_order: categoriesTable.sortOrder,
+        })
+        .from(categoriesTable)
+        .where(eq(categoriesTable.isActive, true))
+        .orderBy(asc(categoriesTable.sortOrder));
 
-      // Transform to frontend format: { id, name, code, zh, en, ms, sort_order }
-      const formatted = data.map((item) => ({
-          id: item.id,
-          name: item.name_zh || '',
-          zh: item.name_zh || '',
-          en: item.name_en || '',
-          ms: item.name_ms || '',
-          code: item.code || '',
-          sort_order: item.sort_order || 0,
-      }));
+    // Transform to frontend format: { id, name, code, zh, en, ms, sort_order }
+    const formatted = data.map((item) => ({
+        id: item.id,
+        name: item.name_zh || '',
+        zh: item.name_zh || '',
+        en: item.name_en || '',
+        ms: item.name_ms || '',
+        code: item.code || '',
+        sort_order: item.sort_order || 0,
+    }));
 
-      categoriesCache = formatted;
-      cacheTime = now;
-      return c.json({ success: true, data: formatted });
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      return c.json({ success: false, error: err.message }, 500);
-    }
+    categoriesCache = formatted;
+    cacheTime = now;
+    return c.json({ success: true, data: formatted });
   })
   .post('/seed', async (c) => {
-    try {
-      // Clean up using Drizzle
-      await db.delete(categoriesTable).where(sql`true`);
-      
-      const seedData = [
-        { id: 1, code: 'chair', nameZh: '椅子', nameEn: 'Chair', nameMs: 'Kerusi', sortOrder: 1 },
-        { id: 2, code: 'table', nameZh: '桌子', nameEn: 'Table', nameMs: 'Meja', sortOrder: 2 },
-        { id: 3, code: 'bed', nameZh: '床具', nameEn: 'Bed', nameMs: 'Katil', sortOrder: 3 },
-        { id: 4, code: 'cabinet', nameZh: '柜子', nameEn: 'Cabinet', nameMs: 'Almari', sortOrder: 4 },
-        { id: 5, code: 'office', nameZh: '办公', nameEn: 'Office', nameMs: 'Pejabat', sortOrder: 5 },
-        { id: 6, code: 'sofa', nameZh: '沙发', nameEn: 'Sofa', nameMs: 'Sofa', sortOrder: 6 },
-        { id: 7, code: 'others', nameZh: '其他', nameEn: 'Others', nameMs: 'Lain-lain', sortOrder: 7 }
-      ];
+    // Clean up using Drizzle
+    await db.delete(categoriesTable).where(sql`true`);
+    
+    const seedData = [
+      { id: 1, code: 'chair', nameZh: '椅子', nameEn: 'Chair', nameMs: 'Kerusi', sortOrder: 1 },
+      { id: 2, code: 'table', nameZh: '桌子', nameEn: 'Table', nameMs: 'Meja', sortOrder: 2 },
+      { id: 3, code: 'bed', nameZh: '床具', nameEn: 'Bed', nameMs: 'Katil', sortOrder: 3 },
+      { id: 4, code: 'cabinet', nameZh: '柜子', nameEn: 'Cabinet', nameMs: 'Almari', sortOrder: 4 },
+      { id: 5, code: 'office', nameZh: '办公', nameEn: 'Office', nameMs: 'Pejabat', sortOrder: 5 },
+      { id: 6, code: 'sofa', nameZh: '沙发', nameEn: 'Sofa', nameMs: 'Sofa', sortOrder: 6 },
+      { id: 7, code: 'others', nameZh: '其他', nameEn: 'Others', nameMs: 'Lain-lain', sortOrder: 7 }
+    ];
 
-      await db.insert(categoriesTable).values(seedData);
-      
-      categoriesCache = null; // Clear cache
-      
-      return c.json({ success: true, message: 'Database seeded successfully' });
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      return c.json({ success: false, error: err.message }, 500);
-    }
+    await db.insert(categoriesTable).values(seedData);
+    
+    categoriesCache = null; // Clear cache
+    
+    return c.json({ success: true, message: 'Database seeded successfully' });
   })
   .post('/clear-photos', async (c) => {
     const body = await c.req.json();
     const check = v.safeParse(v.object({ categoryId: v.number() }), body);
-    if (!check.success) throw new Error(check.issues[0].message);
+    if (!check.success) return errorResponse(c, check.issues[0].message, 400);
 
     const { categoryId } = check.output;
-    try {
-      const updated = await db
-          .update(furnitureItems)
-          .set({ categoryId: null })
-          .where(eq(furnitureItems.categoryId, categoryId))
-          .returning({ id: furnitureItems.id });
-      
-      return c.json({ success: true, data: updated.map(i => i.id) });
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      return c.json({ success: false, error: err.message }, 500);
-    }
+    const updated = await db
+        .update(furnitureItems)
+        .set({ categoryId: null })
+        .where(eq(furnitureItems.categoryId, categoryId))
+        .returning({ id: furnitureItems.id });
+    
+    return c.json({ success: true, data: updated.map(i => i.id) });
   })
   .post('/', async (c) => {
     const body = await c.req.json();
     const check = v.safeParse(v.object({ categoryData: CategoryReqSchema }), body);
-    if (!check.success) throw new Error(check.issues[0].message);
+    if (!check.success) return errorResponse(c, check.issues[0].message, 400);
 
     const { categoryData } = check.output;
-    try {
-      // Map frontend fields (snake_case) to Drizzle fields (camelCase)
-      const mappedData = {
-        code: categoryData.code,
-        nameZh: categoryData.name_zh,
-        nameEn: categoryData.name_en,
-        nameMs: categoryData.name_ms,
-        sortOrder: categoryData.sort_order,
-        isActive: categoryData.is_active,
-      };
+    // Map frontend fields (snake_case) to Drizzle fields (camelCase)
+    const mappedData = {
+      code: categoryData.code,
+      nameZh: categoryData.name_zh,
+      nameEn: categoryData.name_en,
+      nameMs: categoryData.name_ms,
+      sortOrder: categoryData.sort_order,
+      isActive: categoryData.is_active,
+    };
 
-      const [data] = await db
-          .insert(categoriesTable)
-          .values([mappedData as typeof categoriesTable.$inferInsert])
-          .returning();
-      
-      categoriesCache = null; // Clear cache
-      
-      return c.json({ success: true, data });
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      return c.json({ success: false, error: err.message }, 500);
-    }
+    const [data] = await db
+        .insert(categoriesTable)
+        .values([mappedData as typeof categoriesTable.$inferInsert])
+        .returning();
+    
+    categoriesCache = null; // Clear cache
+    
+    return c.json({ success: true, data });
   })
   .put('/:id', async (c) => {
     const id = c.req.param('id');
     const body = await c.req.json();
     const check = v.safeParse(v.object({ updates: v.omit(CategoryReqSchema, ["id"]) }), body);
-    if (!check.success) throw new Error(check.issues[0].message);
+    if (!check.success) return errorResponse(c, check.issues[0].message, 400);
 
     const { updates } = check.output;
-    try {
-      const mappedUpdates: Record<string, unknown> = {};
-      if (updates.code !== undefined) mappedUpdates.code = updates.code;
-      if (updates.name_zh !== undefined) mappedUpdates.nameZh = updates.name_zh;
-      if (updates.name_en !== undefined) mappedUpdates.nameEn = updates.name_en;
-      if (updates.name_ms !== undefined) mappedUpdates.nameMs = updates.name_ms;
-      if (updates.sort_order !== undefined) mappedUpdates.sortOrder = updates.sort_order;
-      if (updates.is_active !== undefined) mappedUpdates.isActive = updates.is_active;
+    const mappedUpdates: Record<string, unknown> = {};
+    if (updates.code !== undefined) mappedUpdates.code = updates.code;
+    if (updates.name_zh !== undefined) mappedUpdates.nameZh = updates.name_zh;
+    if (updates.name_en !== undefined) mappedUpdates.nameEn = updates.name_en;
+    if (updates.name_ms !== undefined) mappedUpdates.nameMs = updates.name_ms;
+    if (updates.sort_order !== undefined) mappedUpdates.sortOrder = updates.sort_order;
+    if (updates.is_active !== undefined) mappedUpdates.isActive = updates.is_active;
 
-      await db
-          .update(categoriesTable)
-          .set(mappedUpdates)
-          .where(eq(categoriesTable.id, parseInt(id)));
-      
-      categoriesCache = null; // Clear cache
-      
-      return c.json({ success: true });
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      return c.json({ success: false, error: err.message }, 500);
-    }
+    await db
+        .update(categoriesTable)
+        .set(mappedUpdates)
+        .where(eq(categoriesTable.id, parseInt(id)));
+    
+    categoriesCache = null; // Clear cache
+    
+    return c.json({ success: true });
   })
   .delete('/:id', async (c) => {
     const id = c.req.param('id');
-    try {
-      await db
-          .delete(categoriesTable)
-          .where(eq(categoriesTable.id, parseInt(id)));
-      
-      categoriesCache = null; // Clear cache
-      
-      return c.json({ success: true });
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      return c.json({ success: false, error: err.message }, 500);
-    }
+    await db
+        .delete(categoriesTable)
+        .where(eq(categoriesTable.id, parseInt(id)));
+    
+    categoriesCache = null; // Clear cache
+    
+    return c.json({ success: true });
   });

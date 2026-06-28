@@ -85,7 +85,7 @@ export const PhotoEditSessionProvider = ({
       tags: photo?.tags?.map((t: Tag) => t.name) ?? null,
       created_at: photo?.created_at,
       updated_at: new Date().toISOString(),
-    });
+    } as Record<string, unknown>);
     
     await updateMutation.mutateAsync({
       id: photoId,

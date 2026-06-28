@@ -23,9 +23,9 @@ function SelectionCounter({ count }: { count: number }) {
 // --- Main component ---
 
 export function SelectionToolbar({ className = '', groupId }: { className?: string; groupId?: string }) {
-  const { selectedCount, selectedIds, clearSelection, toggleMode, isMultiSelect } = useSelection();
+  const { selectedCount, selectedIds, clearSelection, isMultiSelect, patch, batchEditingIds, isAvoidingSelection } = useSelection();
   const { deletePhoto, batchUpdate } = useAdminMaintenance();
-  const patch = useUI((s: UIStoreState) => s.patch);
+  // const patch = useUI((s: UIStoreState) => s.patch); // Removed
   const { navigate } = useAppRouter();
   const { handleBatchAiAnalyze } = useAIBatchAnalysis();
   const confirm = useConfirm();
@@ -36,7 +36,8 @@ export function SelectionToolbar({ className = '', groupId }: { className?: stri
   // ✅ 使用計算後的 Selector
   const activeTasks = useTask(activeTaskCountSelector);
   const isAnyPending = deletePhoto.isMutating || batchUpdate.isMutating || activeTasks > 0 || combineMutation.isMutating || removeMutation.isMutating;
-  const setAvoidingSelection = useUI((s: UIStoreState) => s.setAvoidingSelection);
+  // const setAvoidingSelection = useUI((s: UIStoreState) => s.setAvoidingSelection); // Removed
+  const setAvoidingSelection = (isAvoiding: boolean) => patch({ isAvoidingSelection: isAvoiding });
 
   const isVisible = isMultiSelect || selectedCount > 0;
 

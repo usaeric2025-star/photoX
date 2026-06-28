@@ -1,13 +1,11 @@
 import { Tag } from '@/types';
 import { addTagToDB, updateTagInDB, deleteTagFromDB } from '@/services/tag/commands';
 import { queryKeys } from '@/lib/query/keys';
-import { defineMutation } from '@/lib/mutations/defineMutation';
-import { useOptimisticMutation } from '@/lib/mutations/useOptimisticMutation';
+import { useAppMutation, appQuery } from '@/lib/query';
 
 // 1. 创建标签
-const tagCreateConfig = defineMutation<Tag, string | Partial<Tag>, readonly unknown[]>({
-  name: 'tagCreate',
-  service: async (variables) => {
+export const useTagCreate = () => useAppMutation({
+  mutationFn: async (variables: string | Partial<Tag>) => {
     const name = typeof variables === 'string' ? variables : (variables.name || '');
     const res = await addTagToDB(name);
     if (!res || (typeof res === 'object' && 'ok' in res && !res.ok)) {
@@ -15,34 +13,35 @@ const tagCreateConfig = defineMutation<Tag, string | Partial<Tag>, readonly unkn
     }
     return res as Tag;
   },
-  invalidate: () => [queryKeys.tags.all, queryKeys.photos.all],
-  successMessage: '标签添加成功',
+  onSuccess: () => {
+    appQuery.mutate(queryKeys.tags.all);
+    appQuery.mutate(queryKeys.photos.all);
+  }
 });
-export const useTagCreate = () => useOptimisticMutation(tagCreateConfig);
 
 // 2. 编辑标签
-const tagEditConfig = defineMutation<boolean, { id: number; updates: Partial<Tag> }, readonly unknown[]>({
-  name: 'tagEdit',
-  service: async ({ id, updates }) => {
+export const useTagEdit = () => useAppMutation({
+  mutationFn: async ({ id, updates }: { id: number; updates: Partial<Tag> }) => {
     const res = await updateTagInDB(id, updates);
     if (!res) throw new Error('标签更新失败');
     return true;
   },
-  invalidate: () => [queryKeys.tags.all, queryKeys.photos.all],
-  successMessage: '标签更新成功',
+  onSuccess: () => {
+    appQuery.mutate(queryKeys.tags.all);
+    appQuery.mutate(queryKeys.photos.all);
+  }
 });
-export const useTagEdit = () => useOptimisticMutation(tagEditConfig);
 
 // 3. 删除标签
-const tagDeleteConfig = defineMutation<boolean, number, readonly unknown[]>({
-  name: 'tagDelete',
-  service: async (id) => {
+export const useTagDelete = () => useAppMutation({
+  mutationFn: async (id: number) => {
     const res = await deleteTagFromDB(id);
     if (!res) throw new Error('标签删除失败');
     return true;
   },
-  invalidate: () => [queryKeys.tags.all, queryKeys.photos.all],
-  successMessage: '标签删除成功',
+  onSuccess: () => {
+    appQuery.mutate(queryKeys.tags.all);
+    appQuery.mutate(queryKeys.photos.all);
+  }
 });
-export const useTagDelete = () => useOptimisticMutation(tagDeleteConfig);
 

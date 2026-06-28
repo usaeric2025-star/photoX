@@ -3,7 +3,7 @@ import { useAppRouter } from '@/lib/router';
 import { Group } from '@/types';
 import { Icon } from '@/components/ui/Icon';
 import { useSelection } from '@/features/selection';
-import { useSignal, isMultiSelect as isMultiSelectSignal } from '@/lib/store';
+import { useSignal } from '@/lib/store';
 import { copyToClipboard } from '@/utils/clipboard';
 import { useFormSubmit } from '@/lib/forms/useFormSubmit';
 import { FormProvider, useFormField } from '@/lib/forms/useFormField';
@@ -59,8 +59,7 @@ export function GroupHeader({ group, photoCount, isAdmin, onEditSettings, onUpda
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editTitleValue, setEditTitleValue] = useState(group.name);
   
-  const { toggleMode } = useSelection();
-  const isMultiSelect = useSignal(isMultiSelectSignal);
+  const { toggleMode, isMultiSelect } = useSelection();
 
   const { submit: updateTitle, isLoading: isUpdating, fieldErrors, clearFieldError } = useFormSubmit<typeof GroupTitleSchema, boolean>({
     schema: GroupTitleSchema,

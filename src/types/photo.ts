@@ -69,7 +69,7 @@ export interface Photo {
   manufacturerName: string;
 }
 
-export interface SubCategory {
+interface SubCategory {
   id: number;
   name: string;
   aliases: string[];

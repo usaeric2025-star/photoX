@@ -1,16 +1,16 @@
 import React from 'react';
-import { useField } from '@tanstack/react-form';
+import { AnyForm } from '@tanstack/react-form';
 import { cn } from '@/lib/utils';
 
-interface AppFieldProps {
-    form: any;
-    name: string;
+interface AppFieldProps<TForm extends AnyForm> {
+    form: TForm;
+    name: any;
     label?: string;
     children: (field: any) => React.ReactNode;
     className?: string;
 }
 
-export function AppField({ form, name, label, children, className }: AppFieldProps) {
+export function AppField<TForm extends AnyForm>({ form, name, label, children, className }: AppFieldProps<TForm>) {
     return (
         <form.Field name={name}>
             {(field: any) => (

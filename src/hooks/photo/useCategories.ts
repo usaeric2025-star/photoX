@@ -1,25 +1,11 @@
-import { useAppQuery } from '@/lib/query';
-import { queryKeys } from '@/lib/query/keys';
-import { loadCategoriesFromCloud } from '@/services/category/queries';
-import { STALE_TIMES } from '@/lib/query/config';
-import { CategoryListItemSchema } from '@shared/apiContractSchema';
-import * as v from 'valibot';
+import { useCategories as useCategoriesService } from '@/services/category/categoryService';
 
 /**
  * Hook to get the list of categories.
  */
-export function useCategories(appLang?: string) {
-  // Using SWR for data fetching
-  const { data, isLoading: isPending, error } = useAppQuery(
-    queryKeys.categories.all,
-    loadCategoriesFromCloud,
-    {
-      revalidateOnMount: true,
-      dedupingInterval: STALE_TIMES.MEDIUM,
-      schema: v.array(CategoryListItemSchema),
-    }
-  );
-  return { data, isPending, error };
+export function useCategories() {
+  const { categories, isLoading, error } = useCategoriesService();
+  return { data: categories, isPending: isLoading, error };
 }
 
 

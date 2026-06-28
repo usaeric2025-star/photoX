@@ -6,6 +6,9 @@ import { PublicPhotoCard } from './PublicPhotoCard';
 import { LoadMoreIndicator } from './LoadMoreIndicator';
 import { EmptyState } from '../ui/EmptyState';
 import { Icon } from '@/components/ui/Icon';
+import { useSignal } from '@/lib/store';
+import { gridColumns as gridColumnsSignal } from '@/lib/store';
+import { usePermission } from '@/hooks';
 
 interface PhotoGridContentProps {
   photos: PhotoListItem[];
@@ -36,9 +39,6 @@ function CardSkeleton() {
     </div>
   );
 }
-
-import { useUI, type UIStoreState, selectedSetSelector, useSignal, selectedIds, isMultiSelect as isMultiSelectSignal, gridColumns as gridColumnsSignal } from '@/lib/store';
-import { usePermission } from '@/hooks';
 
 export function PhotoGridContent({ 
   photos, 

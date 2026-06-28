@@ -31,51 +31,6 @@ export function setupMiddlewares(app: Hono, serverEnv: { NODE_ENV: string | unde
       await next();
   });
 
-  // Global Exception Handler
-  app.onError((err, c: Context) => {
-    const traceId = getTraceId(c);
-    const path = c.req.path;
-    const method = c.req.method;
-  
-    const appError = err instanceof AppError 
-      ? err 
-      : errorFactory.wrap(err, `api.${path}`, 'HANDLER_ERROR');
-    appError.traceId = traceId;
-  
-    logger.error('api.error', { traceId, path, method, code: appError.code, message: appError.message, stack: appError.stack });
-  
-    // 使用 c.executionCtx.waitUntil (如果可用) 來處理非同步日誌，避免阻塞回應
-    const logToDb = async () => {
-      try {
-        const { db, systemLogs } = await import('./db/index.js');
-        await db.insert(systemLogs).values({
-          message: `[API ERROR] ${appError.message}`,
-          level: 'error',
-          operation: `api.${path}`,
-          metadata: { traceId, method, code: appError.code, stack: appError.stack, timestamp: new Date().toISOString() },
-          createdAt: new Date()
-        });
-        logger.debug(`[API ERROR LOG] Saved to system_logs`);
-      } catch (logErr) {
-        console.error('[log-error] Fatal exception in logger:', logErr);
-      }
-    };
-
-    try {
-        if (c.executionCtx?.waitUntil) {
-            c.executionCtx.waitUntil(logToDb());
-        } else {
-            // 在不支援 waitUntil 的環境（如標準 Node）中，我們不阻塞使用者，直接執行
-            logToDb().catch(e => console.error('Failed to log to DB:', e));
-        }
-    } catch (e) {
-        logToDb().catch(err => console.error('Failed in logToDb fallback:', err));
-    }
-  
-    const status = (typeof err === 'object' && err && 'status' in err ? err.status : 500) as number;
-    return c.json(errorFactory.fail(appError), { status: status as import('hono/utils/http-status').ContentfulStatusCode });
-  });
-
   // Auth Middleware for Administrative Routes
   app.use('/admin/*', async (c: Context, next) => {
       const path = c.req.path;

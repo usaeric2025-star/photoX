@@ -3,16 +3,16 @@ import { showToast } from '@/lib/ui/toast';
 import * as v from 'valibot';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
-interface UseFormSubmitOptions<T extends v.BaseSchema<any, any, any>, R = void> {
+interface UseFormSubmitOptions<T extends v.GenericSchema, R = void> {
     schema?: T;
     mutationFn: (values: v.InferOutput<T>) => Promise<R>;
     onSuccess?: (result: R) => void;
-    onError?: (error: any) => void;
+    onError?: (error: unknown) => void;
     successMessage?: string;
     errorMessage?: string;
 }
 
-export function useFormSubmit<T extends v.BaseSchema<any, any, any>, R = void>({
+export function useFormSubmit<T extends v.GenericSchema, R = void>({
     schema,
     mutationFn,
     onSuccess,

@@ -1,15 +1,16 @@
+import { useSelection } from '@/features/selection/useSelection';
 import { useUI, UIStoreState } from '@/lib/store';
-import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
 import { useAppRouter } from '@/lib/router';
+import { usePhotoMutations } from '@/services/photo/photoService';
 
 export function useBatchEdit() {
-  const batchEditingIds = useUI((s: UIStoreState) => s.batchEditingIds);
+  const { batchEditingIds, patch: patchSelection } = useSelection();
   const formState = useUI((s: UIStoreState) => s.formState);
   const patch = useUI((state: UIStoreState) => state.patch);
   const updateForm = useUI((s: UIStoreState) => s.updateForm);
   const resetForm = useUI((s: UIStoreState) => s.resetForm);
 
-  const { deletePhoto, batchUpdate } = useAdminMaintenance();
+  const { remove, batchEdit, isMutating } = usePhotoMutations();
   const { navigate, route } = useAppRouter();
 
   const handleSave = async (selectedIds: string[]) => {
@@ -27,8 +28,8 @@ export function useBatchEdit() {
       }
     });
 
-    await batchUpdate.mutateAsync({ ids, updates: cleanUpdates });
-    patch({ batchEditingIds: null });
+    await batchEdit(ids, cleanUpdates);
+    patchSelection({ batchEditingIds: null });
     resetForm();
     if (route?.name === 'adminBatchEdit') {
       navigate.admin();
@@ -39,8 +40,8 @@ export function useBatchEdit() {
     const ids = batchEditingIds || selectedIds;
     if (!ids || ids.length === 0) return;
     
-    await deletePhoto.mutateAsync(ids);
-    patch({ batchEditingIds: null, isMultiSelect: false, selectedIds: [] });
+    await remove(ids);
+    patchSelection({ batchEditingIds: null, isMultiSelect: false, selectedIds: [] });
     resetForm();
     if (route?.name === 'adminBatchEdit') {
       navigate.admin();
@@ -48,7 +49,7 @@ export function useBatchEdit() {
   };
 
   const handleClose = () => {
-    patch({ batchEditingIds: null });
+    patchSelection({ batchEditingIds: null });
     resetForm();
     if (route?.name === 'adminBatchEdit') {
       navigate.admin();
@@ -62,6 +63,6 @@ export function useBatchEdit() {
     handleSave,
     handleDelete,
     handleClose,
-    isSyncing: batchUpdate.isMutating,
+    isSyncing: isMutating,
   };
 }
