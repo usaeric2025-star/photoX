@@ -3,6 +3,7 @@ import * as v from 'valibot';
 import { db, furnitureItems, groups as groupsTable } from '../../_lib/db/index.js';
 import { eq, inArray, and } from 'drizzle-orm';
 import { syncGroupCoversAndCount } from '../../_lib/groups.js';
+import { refreshPhotosView } from '../../_lib/db/actions.js';
 import { PhotoBatchUpdateReqSchema, PhotoUpdateReqSchema } from '../../../shared/apiContractSchema.js';
 import { keysToCamel } from '../../_lib/casing.js';
 
@@ -23,11 +24,24 @@ export const updateHandler = (app: Hono) => {
 
         // ✅ 強制限制標題長度
         if (camelUpdates.name) {
-            const nameJson = typeof camelUpdates.name === 'string' ? JSON.parse(camelUpdates.name) : camelUpdates.name;
-            for (const lang of ['zh', 'en', 'ms']) {
-               if (nameJson[lang] && String(nameJson[lang]).length > 200) {
-                   throw new Error(`標題(${lang})超過 200 字上限`);
-               }
+            let nameJson = camelUpdates.name;
+            if (typeof camelUpdates.name === 'string' && (camelUpdates.name.startsWith('{') || camelUpdates.name.startsWith('['))) {
+                try {
+                    nameJson = JSON.parse(camelUpdates.name);
+                } catch (e) {
+                    // Not valid JSON
+                }
+            }
+
+            if (typeof nameJson === 'string') {
+                if (nameJson.length > 200) throw new Error('標題超過 200 字上限');
+                camelUpdates.name = { zh: nameJson };
+            } else if (nameJson && typeof nameJson === 'object') {
+                for (const lang of ['zh', 'en', 'ms']) {
+                   if ((nameJson as any)[lang] && String((nameJson as any)[lang]).length > 200) {
+                       throw new Error(`標題(${lang})超過 200 字上限`);
+                   }
+                }
             }
         }
 
@@ -46,6 +60,8 @@ export const updateHandler = (app: Hono) => {
             .set(mappedUpdates)
             .where(inArray(furnitureItems.id, ids))
             .returning({ id: furnitureItems.id });
+
+        await refreshPhotosView();
 
         return c.json({ success: true, data: data.map(d => d.id) });
     } catch (error: unknown) {
@@ -76,11 +92,24 @@ export const updateHandler = (app: Hono) => {
 
         // ✅ 強制限制標題長度
         if (camelUpdates.name) {
-            const nameJson = typeof camelUpdates.name === 'string' ? JSON.parse(camelUpdates.name) : camelUpdates.name;
-            for (const lang of ['zh', 'en', 'ms']) {
-               if (nameJson[lang] && String(nameJson[lang]).length > 200) {
-                   throw new Error(`標題(${lang})超過 200 字上限`);
-               }
+            let nameJson = camelUpdates.name;
+            if (typeof camelUpdates.name === 'string' && (camelUpdates.name.startsWith('{') || camelUpdates.name.startsWith('['))) {
+                try {
+                    nameJson = JSON.parse(camelUpdates.name);
+                } catch (e) {
+                    // Not valid JSON
+                }
+            }
+
+            if (typeof nameJson === 'string') {
+                if (nameJson.length > 200) throw new Error('標題超過 200 字上限');
+                camelUpdates.name = { zh: nameJson };
+            } else if (nameJson && typeof nameJson === 'object') {
+                for (const lang of ['zh', 'en', 'ms']) {
+                   if ((nameJson as any)[lang] && String((nameJson as any)[lang]).length > 200) {
+                       throw new Error(`標題(${lang})超過 200 字上限`);
+                   }
+                }
             }
         }
 
@@ -124,6 +153,8 @@ export const updateHandler = (app: Hono) => {
         if (affectedGroupIds.length > 0) {
             await syncGroupCoversAndCount(affectedGroupIds);
         }
+
+        await refreshPhotosView();
 
         return c.json({ success: true, data });
     } catch (error: unknown) {

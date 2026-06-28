@@ -34,10 +34,10 @@ export function BatchEditForm({ formState, handleUpdateForm }: BatchEditFormProp
     schema: PhotoEditSchema,
     defaultValues: { ...defaultForm, ...formState } as PhotoEditFormData,
     onSubmit: async (data) => {
-      handleUpdateForm(data);
+      handleUpdateForm(data as any);
     },
     onValueChange: (data) => {
-      handleUpdateForm(data);
+      handleUpdateForm(data as any);
     }
   });
 

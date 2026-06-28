@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { db, furnitureItems, systemLogs } from '../../_lib/db/index.js';
 import { syncGroupCoversAndCount } from '../../_lib/groups.js';
+import { refreshPhotosView } from '../../_lib/db/actions.js';
 import { logger } from '../../_lib/logger.js';
 import { keysToCamel } from '../../_lib/casing.js';
 
@@ -33,11 +34,24 @@ export const createHandler = (app: Hono) => {
 
         // ✅ 強制限制標題長度
         if (camelPayload.name) {
-            const nameJson = typeof camelPayload.name === 'string' ? JSON.parse(camelPayload.name) : camelPayload.name;
-            for (const lang of ['zh', 'en', 'ms']) {
-               if (nameJson[lang] && String(nameJson[lang]).length > 200) {
-                   throw new Error(`標題(${lang})超過 200 字上限`);
-               }
+            let nameJson = camelPayload.name;
+            if (typeof camelPayload.name === 'string' && (camelPayload.name.startsWith('{') || camelPayload.name.startsWith('['))) {
+                try {
+                    nameJson = JSON.parse(camelPayload.name);
+                } catch (e) {
+                    // Not valid JSON
+                }
+            }
+
+            if (typeof nameJson === 'string') {
+                if (nameJson.length > 200) throw new Error('標題超過 200 字上限');
+                camelPayload.name = { zh: nameJson };
+            } else if (nameJson && typeof nameJson === 'object') {
+                for (const lang of ['zh', 'en', 'ms']) {
+                   if ((nameJson as any)[lang] && String((nameJson as any)[lang]).length > 200) {
+                       throw new Error(`標題(${lang})超過 200 字上限`);
+                   }
+                }
             }
         }
 
@@ -86,6 +100,8 @@ export const createHandler = (app: Hono) => {
         if (payload.group_id) {
           await syncGroupCoversAndCount([String(payload.group_id)]);
         }
+
+        await refreshPhotosView();
 
         return c.json({ success: true, data });
     } catch (error: unknown) {

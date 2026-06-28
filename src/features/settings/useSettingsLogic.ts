@@ -66,8 +66,8 @@ export const useSettingsLogic = ({
     onSuccess: () => {
       setTestResult({ success: true });
     },
-    onError: (msg) => {
-      setTestResult({ success: false, error: msg });
+    onError: (msg: unknown) => {
+      setTestResult({ success: false, error: String(msg) });
     },
     successMessage: appLang === 'zh' ? 'AI 服務連線成功' : 'AI Connection successful',
     errorMessage: appLang === 'zh' ? 'AI 服務連線失敗' : 'AI Connection failed'

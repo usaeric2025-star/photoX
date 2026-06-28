@@ -15,7 +15,7 @@ interface PhotoEditSessionContextValue {
   isSubmitting: boolean;
   commit: (data?: PhotoEditFormData) => Promise<void>;
   discard: () => void;
-  form: ReturnType<typeof useAppForm<typeof PhotoEditSchema>>['form'];
+  form: ReturnType<typeof useAppForm<PhotoEditFormData>>['form'];
   photoId: string;
 }
 

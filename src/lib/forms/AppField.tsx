@@ -1,18 +1,19 @@
 import React from 'react';
-import { AnyForm } from '@tanstack/react-form';
 import { cn } from '@/lib/utils';
 
-interface AppFieldProps<TForm extends AnyForm> {
-    form: TForm;
+interface AppFieldProps {
+    form: any;
     name: any;
     label?: string;
     children: (field: any) => React.ReactNode;
     className?: string;
 }
 
-export function AppField<TForm extends AnyForm>({ form, name, label, children, className }: AppFieldProps<TForm>) {
+export function AppField({ form, name, label, children, className }: AppFieldProps) {
     return (
-        <form.Field name={name}>
+        <form.Field 
+            name={name as any}
+        >
             {(field: any) => (
                 <div className={cn("space-y-1.5", className)}>
                     {label && (

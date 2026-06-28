@@ -96,7 +96,7 @@ export function DialogHeader({
 
         {isPartOfGroup && (
           <form.Subscribe selector={(state: { values: PhotoEditFormData }) => state.values.is_group_cover}>
-            {(isGroupCover: unknown) => {
+            {(isGroupCover: boolean | undefined) => {
               const active = !!isGroupCover;
               return (
                 <button

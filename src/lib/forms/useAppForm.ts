@@ -16,7 +16,6 @@ export function useAppForm<TData>({
 }: UseAppFormOptions<TData>) {
     const form = useForm({
         defaultValues,
-        validatorAdapter: valibotValidator(),
         validators: {
             onChange: schema,
         },

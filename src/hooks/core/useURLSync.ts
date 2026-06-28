@@ -87,10 +87,10 @@ export function useURLSync() {
       } else {
         // Both closed: Clear photoId if not in deep link / editing
         if (query.photoId !== null && query.modal !== 'edit') {
-          updates.photoId = null;
+          updates.photoId = undefined;
         }
         if (query.modal === 'edit' && !state.isPhotoEditOpen) {
-          updates.modal = null;
+          updates.modal = undefined;
         }
       }
 
