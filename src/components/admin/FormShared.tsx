@@ -58,7 +58,7 @@ export function ManufacturerList({
   onEdit,
   onDelete,
 }: ManufacturerSelectorProps) {
-  const { patch } = useUI((s: UIStoreState) => ({ patch: s.patch }));
+  const patch = useUI((s: UIStoreState) => s.patch);
 
   return (
     <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto content-start px-0.5 no-scrollbar">

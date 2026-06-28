@@ -50,11 +50,9 @@ export function PublicGroupDetailPage() {
 
   const photos = React.useMemo(() => rawPhotos || [], [rawPhotos]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const { showWhatsAppChoice, patchUI, openLightbox } = useUI(s => ({
-    showWhatsAppChoice: s.showWhatsAppChoice,
-    patchUI: s.patch,
-    openLightbox: s.openLightbox
-  }));
+  const showWhatsAppChoice = useUI(s => s.showWhatsAppChoice);
+  const patchUI = useUI(s => s.patch);
+  const openLightbox = useUI(s => s.openLightbox);
   const { data: settings } = usePublicSettings();
   const lightboxItems = React.useMemo(() => photosToLightboxSlides(photos), [photos]);
 

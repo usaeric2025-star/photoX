@@ -1,7 +1,7 @@
 import { useAppRouter } from '@/lib/router';
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { useAuth, activeTaskCountSelector, useTask } from '@/lib/store';
+import { useAuth, activeTaskCountSignal, useSignal } from '@/lib/store';
 import { useUI, useSettings, useAdminBatchActions, usePermission } from '@/hooks';
 import { useAppQuery } from '@/lib/query';
 import { api } from '@/lib/api';
@@ -28,7 +28,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
   const { toggleMode, isMultiSelect } = useSelection();
   const t = translations[lang as keyof typeof translations] || translations.en;
 
-  const taskCount = useTask(activeTaskCountSelector);
+  const taskCount = useSignal(activeTaskCountSignal);
 
   const { data: totalCountData } = useAppQuery(
     ['photos', 'count', 'total'],

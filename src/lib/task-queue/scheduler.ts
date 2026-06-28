@@ -2,7 +2,7 @@ import { Task } from './types';
 import { taskTable } from './integrations/supabase';
 import { showToast } from '@/lib/ui/toast';
 import { logger } from '@/lib/logger';
-import { taskStore } from '@/store/taskStore';
+import { tasksSignal, addTask, updateTask, updateTaskState, removeTask, setGlobalTaskStatus, setGlobalTaskProgress } from '@/services/task/taskService';
 import { ErrorFactory } from '@/lib/error';
 
 export class TaskScheduler {
@@ -31,7 +31,7 @@ export class TaskScheduler {
     this.activeKeys.add(key);
 
     // 1. 寫入 Store（UI 驅動）
-    taskStore.getState().enqueue(task);
+    addTask(task);
     
     // 2. 寫入 Supabase（持久層）
     taskTable.insert(task).catch(e => logger.error('[Task] insert error', e));
@@ -54,7 +54,7 @@ export class TaskScheduler {
     this.running.delete(id);
     
     // 更新 Store
-    taskStore.getState().cancelTask(id);
+    updateTaskState(id, { status: 'cancelled' });
     
     // 更新 Supabase
     taskTable.updateStatus(id, 'cancelled').catch(e => logger.error('[Task] cancel error', e));
@@ -91,28 +91,25 @@ export class TaskScheduler {
     // ✅ 每個任務獨立 AbortController
     const controller = new AbortController();
     this.controllers.set(task.id, controller);
-    const store = taskStore.getState();
 
     try {
       // 更新 Supabase: processing
       await taskTable.updateStatus(task.id, 'processing');
-      store.startTask(task.id);
-      store.setGlobalStatus('processing');
-      store.setGlobalProgress(0);
+      updateTaskState(task.id, { status: 'processing', progress: 0 });
+      setGlobalTaskStatus('processing');
+      setGlobalTaskProgress(0);
 
       const onProgress = (progress: number, message?: string) => {
-        const currentStore = taskStore.getState();
-        currentStore.updateProgress(task.id, progress, message);
-        currentStore.setGlobalProgress(progress);
+        updateTaskState(task.id, { progress, message });
+        setGlobalTaskProgress(progress);
       };
 
       const result = await task.execute(controller.signal, onProgress);
 
       // 完成
-      const currentStore = taskStore.getState();
-      currentStore.completeTask(task.id, result);
-      currentStore.setGlobalStatus('completed');
-      currentStore.setGlobalProgress(1);
+      updateTaskState(task.id, { status: 'completed', result });
+      setGlobalTaskStatus('completed');
+      setGlobalTaskProgress(1);
       await taskTable.updateStatus(task.id, 'completed', result);
       
       showToast.success(`任務完成: ${task.label}`);
@@ -122,9 +119,8 @@ export class TaskScheduler {
 
     } catch (error) {
       // 如果是取消，不觸發錯誤處理
-      const currentStore = taskStore.getState();
       if (controller.signal.aborted) {
-        currentStore.setGlobalStatus('idle');
+        setGlobalTaskStatus('idle');
         this.controllers.delete(task.id);
         this.running.delete(task.id);
         this.tick();
@@ -134,8 +130,8 @@ export class TaskScheduler {
       const message = error instanceof Error ? error.message : String(error);
       const retryable = true; // 可根據錯誤類型判斷
 
-      currentStore.failTask(task.id, message, retryable);
-      currentStore.setGlobalStatus('failed');
+      updateTaskState(task.id, { status: 'failed', error: message, retryable });
+      setGlobalTaskStatus('failed');
       await taskTable.updateStatus(task.id, 'failed', { error: message, retryable });
 
       ErrorFactory.handle(error, { context: task.label });
@@ -143,10 +139,9 @@ export class TaskScheduler {
       this.controllers.delete(task.id);
       this.running.delete(task.id);
       
-      const currentStore = taskStore.getState();
       if (this.running.size === 0 && this.queue.length === 0) {
-        currentStore.setGlobalStatus('idle');
-        currentStore.setGlobalProgress(0);
+        setGlobalTaskStatus('idle');
+        setGlobalTaskProgress(0);
       }
       
       // 釋放去重鍵（僅 completed 或 failed）
@@ -166,14 +161,13 @@ export class TaskScheduler {
     if (tasks.length === 0) return;
 
     // ✅ 先清除記憶體中可能存在的重複任務
-    const store = taskStore.getState();
     tasks.forEach(task => {
       const key = `${task.type}:${task.meta?.key || task.id}`;
       // In a real restore, we need to bind the execute function again based on task type.
       // For now, this is a placeholder.
       if (!this.activeKeys.has(key)) {
         this.activeKeys.add(key);
-        store.enqueue(task);
+        addTask(task);
         this.queue.push(task);
       }
     });
@@ -186,8 +180,8 @@ export class TaskScheduler {
     if (found) return found;
     
     // 再查執行中
-    const store = taskStore.getState();
-    return store.tasks.get(id);
+    const tasks = tasksSignal.get();
+    return tasks.get(id);
   }
 }
 

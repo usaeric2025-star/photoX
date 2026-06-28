@@ -3,7 +3,8 @@ import { usePhotoEditSessionContext } from '@/hooks/photo/usePhotoEditSessionCon
 import { DimensionEditor } from './DimensionEditor';
 import { Dimension } from '@/types';
 import { safeArray } from '@/lib/utils';
-import { useUI, useTask } from '@/lib/store';
+import { useUI, useSignal } from '@/lib/store';
+import { aiAnalysisSignal } from '@/lib/ai/executor';
 import { usePhoto, useFilters } from '@/hooks';
 import { showToast } from '@/lib/ui/toast';
 import { translations } from '@/locales';
@@ -17,12 +18,11 @@ export function DetailsTab() {
   const { form } = usePhotoEditSessionContext();
   const { modal, photoId } = useFilters();
   const appLang = useUI((s) => s.appLang);
-  const tasksMap = useTask(s => s.tasks);
-  const tasks = React.useMemo(() => Array.from(tasksMap.values()), [tasksMap]);
+  const aiState = useSignal(aiAnalysisSignal);
+  const isAnalyzing = aiState.status === 'processing';
   const { data: detailPhoto } = usePhoto(modal === 'edit' ? photoId : '');
   const { handleAiAnalyze } = usePhotoEditAI();
 
-  const isAnalyzing = tasks.some(t => t.state?.status === 'processing' && (t.label === 'AI 属性智能识别' || t.label === 'AI 识别'));
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
   const onAiAnalyze = async () => {

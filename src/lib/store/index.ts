@@ -17,8 +17,7 @@ import {
 import type { UIStoreState } from '@/store/uiStore';
 import { authStore, useAuthStore, userSignal, authLoadingSignal } from '@/store/authStore';
 import type { AuthState } from '@/store/authStore';
-import { taskStore, useTaskStore, activeTaskCountSelector, tasksSignal } from '@/store/taskStore';
-import type { TaskStoreState } from '@/store/taskStore';
+import { tasksSignal, activeTaskCountSignal, globalTaskStatusSignal, globalTaskProgressSignal } from '@/services/task/taskService';
 import { appStore, appLoadingSignal, appErrorSignal } from '@/store/appStore';
 
 // Re-exports
@@ -29,8 +28,7 @@ export {
 };
 export { authStore, useAuthStore, useAuthStore as useAuth, userSignal, authLoadingSignal, AuthState };
 export { 
-  taskStore, useTaskStore, useTaskStore as useTask, 
-  activeTaskCountSelector, tasksSignal, TaskStoreState, TaskStoreState as TaskState 
+  tasksSignal, activeTaskCountSignal, globalTaskStatusSignal, globalTaskProgressSignal 
 };
 export { appStore, appLoadingSignal, appErrorSignal };
 
@@ -38,6 +36,6 @@ export { appStore, appLoadingSignal, appErrorSignal };
 export const storeAccessor = {
   get ui() { return uiStore.getState(); },
   get auth() { return authStore.getState(); },
-  get task() { return taskStore.getState(); },
+  get task() { return { tasks: tasksSignal.get(), status: globalTaskStatusSignal.get(), progress: globalTaskProgressSignal.get() }; },
 };
 

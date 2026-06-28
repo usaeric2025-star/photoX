@@ -68,9 +68,9 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
   return (
     <div className="h-screen w-full flex flex-col items-center justify-center p-6 bg-slate-50 relative overflow-hidden">
       {/* Background Decorative Elements */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-[0.03]">
-        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-slate-900 rounded-full" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600 rounded-full" />
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        <div className="absolute top-[-20%] right-[-20%] w-[60%] h-[60%] bg-slate-900/5 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-20%] left-[-20%] w-[60%] h-[60%] bg-blue-600/5 rounded-full blur-[120px]" />
       </div>
       
       {/* Absolute Close Button */}
@@ -84,20 +84,21 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
       </div>
 
       <div className="w-full max-w-[400px] animate-fade-in">
-        <div className="bg-white rounded-[2.5rem] p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/50 flex flex-col items-center space-y-10">
+        <div className="bg-white rounded-[2.5rem] p-10 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-slate-100/50 flex flex-col items-center space-y-10">
           
           {/* Branding */}
           <div className="flex flex-col items-center text-center space-y-5">
             <div className="relative group">
-              <div className="absolute inset-0 bg-slate-900/10 rounded-3xl blur-xl group-hover:bg-slate-900/20 transition-all duration-500 scale-90" />
+              <div className="absolute inset-0 bg-slate-900/5 rounded-3xl blur-xl group-hover:bg-slate-900/10 transition-all duration-500 scale-90" />
               <div className="relative w-20 h-20 bg-slate-950 rounded-3xl flex items-center justify-center shadow-2xl transform transition-all duration-500 group-hover:scale-105 group-hover:-rotate-3">
                 <Icon name="image" size={36} className="text-white" />
               </div>
             </div>
             
             <div className="space-y-1">
-              <h1 className="text-2xl font-black tracking-tight text-slate-950">
-                PHO<span className="text-blue-600">T</span>OX
+              <h1 className="text-2xl font-black tracking-tight text-slate-950 flex items-center justify-center gap-0.5">
+                <span className="font-extrabold text-slate-950">Photo</span>
+                <span className="font-light text-blue-600">X</span>
               </h1>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] pl-[0.3em]">
                 Suite Control
@@ -132,69 +133,75 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
             </button>
           </div>
 
-          {/* Action Area */}
-          <div className="w-full flex justify-center min-h-[140px]">
-            {mode === 'admin' ? (
-              <div
-                key="admin-action"
-                className="w-full flex flex-col items-center space-y-6 animate-fade-in"
+          {/* Action Area with Smooth Switch Transitions (Zero Height Jank) */}
+          <div className="w-full relative h-[142px] overflow-hidden">
+            {/* Admin Action */}
+            <div
+              className={`w-full flex flex-col items-center space-y-6 transition-all duration-300 absolute inset-x-0 top-0 ${
+                mode === 'admin' 
+                  ? 'opacity-100 translate-y-0 pointer-events-auto' 
+                  : 'opacity-0 -translate-y-2 pointer-events-none'
+              }`}
+            >
+              <Button 
+                onClick={async () => {
+                  await submitAdmin({});
+                }}
+                loading={isAdminLoggingIn}
+                className="w-full bg-slate-950 text-white h-14 rounded-2xl text-[13px] hover:shadow-2xl hover:shadow-slate-900/20 hover:bg-black group"
+                leftIcon={!isAdminLoggingIn && <Icon name="log-in" size={18} className="transition-transform group-hover:translate-x-1" />}
               >
-                <Button 
-                  onClick={async () => {
-                    await submitAdmin({});
+                {t.login}
+              </Button>
+              
+              <p className="text-[10px] text-slate-400 font-medium text-center leading-relaxed max-w-[240px]">
+                {t.agreeByConnecting} <br/>
+                <span className="text-slate-600 hover:text-slate-900 cursor-pointer font-semibold transition-colors">{t.termsOfService}</span> & <span className="text-slate-600 hover:text-slate-900 cursor-pointer font-semibold transition-colors">{t.privacyPolicy}</span>
+              </p>
+            </div>
+
+            {/* Staff Action */}
+            <form
+              onSubmit={handlePasscodeSubmit}
+              className={`w-full space-y-4 transition-all duration-300 absolute inset-x-0 top-0 ${
+                mode === 'staff' 
+                  ? 'opacity-100 translate-y-0 pointer-events-auto' 
+                  : 'opacity-0 translate-y-2 pointer-events-none'
+              }`}
+            >
+              <div className="relative">
+                <input
+                  autoFocus
+                  type="password"
+                  placeholder={t.enterPasscode}
+                  value={passInput}
+                  onChange={(e) => {
+                    setPassInput(e.target.value);
+                    setPassError(false);
+                    clearFieldError('passcode');
                   }}
-                  loading={isAdminLoggingIn}
-                  className="w-full bg-slate-950 text-white h-14 rounded-2xl text-[13px] hover:shadow-2xl hover:shadow-slate-900/20 hover:bg-black group"
-                  leftIcon={!isAdminLoggingIn && <Icon name="log-in" size={18} className="transition-transform group-hover:translate-x-1" />}
-                >
-                  {t.login}
-                </Button>
-                
-                <p className="text-[10px] text-slate-400 font-medium text-center leading-relaxed max-w-[240px]">
-                  {t.agreeByConnecting} <br/>
-                  <span className="text-slate-600 hover:text-slate-900 cursor-pointer font-semibold transition-colors">{t.termsOfService}</span> & <span className="text-slate-600 hover:text-slate-900 cursor-pointer font-semibold transition-colors">{t.privacyPolicy}</span>
-                </p>
+                  className={`w-full bg-slate-50 border p-4 h-14 rounded-2xl text-center text-lg font-bold tracking-[0.2em] outline-none transition-all ${
+                    passError || fieldErrors.passcode
+                      ? 'border-red-200 bg-red-50 text-red-600' 
+                      : 'border-slate-100 focus:bg-white focus:border-slate-300 focus:shadow-sm'
+                  }`}
+                />
+                {fieldErrors.passcode && (
+                  <div className="absolute -bottom-5 left-0 right-0 text-center text-[10px] text-red-500 font-bold">
+                    {fieldErrors.passcode}
+                  </div>
+                )}
               </div>
-            ) : (
-              <form
-                key="staff-action"
-                onSubmit={handlePasscodeSubmit}
-                className="w-full space-y-4 animate-fade-in"
+              
+              <Button
+                type="submit"
+                loading={isStaffLoggingIn}
+                className="w-full bg-slate-950 text-white h-14 rounded-2xl text-[13px] hover:shadow-2xl hover:shadow-slate-900/20 hover:bg-black"
+                leftIcon={!isStaffLoggingIn && <Icon name="log-in" size={18} />}
               >
-                <div className="relative">
-                  <input
-                    autoFocus
-                    type="password"
-                    placeholder={t.enterPasscode}
-                    value={passInput}
-                    onChange={(e) => {
-                      setPassInput(e.target.value);
-                      setPassError(false);
-                      clearFieldError('passcode');
-                    }}
-                    className={`w-full bg-slate-50 border p-4 h-14 rounded-2xl text-center text-lg font-bold tracking-[0.2em] outline-none transition-all ${
-                      passError || fieldErrors.passcode
-                        ? 'border-red-200 bg-red-50 text-red-600' 
-                        : 'border-slate-100 focus:bg-white focus:border-slate-300 focus:shadow-sm'
-                    }`}
-                  />
-                  {fieldErrors.passcode && (
-                    <div className="absolute -bottom-5 left-0 right-0 text-center text-[10px] text-red-500 font-bold">
-                      {fieldErrors.passcode}
-                    </div>
-                  )}
-                </div>
-                
-                <Button
-                  type="submit"
-                  loading={isStaffLoggingIn}
-                  className="w-full bg-slate-950 text-white h-14 rounded-2xl text-[13px] hover:shadow-2xl hover:shadow-slate-900/20 hover:bg-black"
-                  leftIcon={!isStaffLoggingIn && <Icon name="log-in" size={18} />}
-                >
-                  {t.unlockAndAccess}
-                </Button>
-              </form>
-            )}
+                {t.unlockAndAccess}
+              </Button>
+            </form>
           </div>
         </div>
 

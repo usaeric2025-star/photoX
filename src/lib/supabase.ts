@@ -65,10 +65,10 @@ export const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabas
   global: {
     fetch: (url, options) => {
       const signal = typeof AbortSignal.timeout === 'function'
-        ? AbortSignal.timeout(30000)
+        ? AbortSignal.timeout(120000)
         : (() => {
             const controller = new AbortController();
-            setTimeout(() => controller.abort(), 30000);
+            setTimeout(() => controller.abort(), 120000);
             return controller.signal;
           })();
       return fetch(url, { ...options, signal });

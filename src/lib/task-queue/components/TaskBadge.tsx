@@ -1,11 +1,12 @@
 import React from 'react';
-import { useTask, isTaskDrawerOpen } from '@/lib/store';
+import { isTaskDrawerOpen, useSignal } from '@/lib/store';
+import { globalTaskStatusSignal, globalTaskProgressSignal } from '@/services/task/taskService';
 import { Icon } from '@/components/ui/Icon';
 import { Progress } from '@/components/shared/Progress';
 
 export function TaskBadge() {
-  const status = useTask(s => s.status);
-  const progress = useTask(s => s.progress);
+  const status = useSignal(globalTaskStatusSignal);
+  const progress = useSignal(globalTaskProgressSignal);
 
   if (status !== 'processing') return null;
 

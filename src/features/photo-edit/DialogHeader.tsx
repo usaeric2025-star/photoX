@@ -10,7 +10,8 @@ import {
   usePhotoDelete,
   useFilters,
 } from "@/hooks";
-import { useTask, useUI } from '@/lib/store';
+import { useSignal, useUI } from '@/lib/store';
+import { aiAnalysisSignal } from '@/lib/ai/executor';
 import { showToast } from "@/lib/ui/toast";
 import { ErrorFactory } from "@/lib/error/ErrorFactory";
 import { usePhotoEditAI } from "./usePhotoEditAI";
@@ -31,9 +32,8 @@ export function DialogHeader({
   const appLang = useUI((s) => s.appLang);
   
   const { data: detailPhoto } = usePhoto(editPhotoId || '');
-  const tasksMap = useTask(s => s.tasks);
-  const tasks = React.useMemo(() => Array.from(tasksMap.values()), [tasksMap]);
-  const isAnalyzing = tasks.some(t => t.state?.status === 'processing' && (t.label.includes('识别') || t.label.includes('分析') || t.label.toLowerCase().includes('analyze') || t.label.toLowerCase().includes('identif')));
+  const aiState = useSignal(aiAnalysisSignal);
+  const isAnalyzing = aiState.status === 'processing';
 
   const { mutateAsync: removeFromGroup } = useRemoveFromGroupMutation();
   const { updatePhoto: { mutateAsync: updateAdminPhoto } } = useAdminMaintenance();

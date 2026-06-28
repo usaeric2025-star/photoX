@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { useSelection } from './useSelection';
 import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
-import { useUI, type UIStoreState, useTask, activeTaskCountSelector } from '@/lib/store';
+import { useUI, type UIStoreState, useSignal, activeTaskCountSignal } from '@/lib/store';
 import { useAppRouter } from '@/lib/router';
 import { useAIBatchAnalysis } from '@/hooks/photo/useAIBatchAnalysis';
 import { useConfirm } from '@/context/ConfirmContext';
@@ -35,7 +35,7 @@ export function SelectionToolbar({ className = '', groupId }: { className?: stri
   const removeMutation = useRemoveFromGroupMutation();
 
   // ✅ 使用計算後的 Selector
-  const activeTasks = useTask(activeTaskCountSelector);
+  const activeTasks = useSignal(activeTaskCountSignal);
   const isAnyPending = deletePhoto.isMutating || batchUpdate.isMutating || activeTasks > 0 || combineMutation.isMutating || removeMutation.isMutating;
   // const setAvoidingSelection = useUI((s: UIStoreState) => s.setAvoidingSelection); // Removed
   const setAvoidingSelection = (isAvoiding: boolean) => patch({ isAvoidingSelection: isAvoiding });

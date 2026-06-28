@@ -91,7 +91,7 @@
           var reason = event.reason;
           if (!reason) return;
           var msg = reason.message || String(reason || '');
-          if (/ResizeObserver|websocket|hmr|AbortError|AbortSignal/i.test(msg)) return;
+          if (/ResizeObserver|websocket|hmr|AbortError|AbortSignal|signal timed out|TimeoutError/i.test(msg)) return;
 
           // 🚀 同样处理 Promise 拒绝中的 Chunk 错误
           if (/chunk|dynamically imported|module script|Failed to fetch/i.test(msg)) {

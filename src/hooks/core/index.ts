@@ -9,6 +9,7 @@ export * from './useIsManagement';
 export * from './useLocalStorage';
 export * from './useLongPress';
 export * from './useMediaQuery';
+export * from './useOptimisticMutation';
 export * from './useQueryWithFallback';
 export * from './useSessionStorage';
 export * from './useTranslation';

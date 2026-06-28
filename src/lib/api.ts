@@ -76,7 +76,7 @@ const client = hc<AppType>(
           try {
             let finalSignal = init?.signal;
             if (typeof AbortSignal.timeout === 'function') {
-              const timeoutSignal = AbortSignal.timeout(30000);
+              const timeoutSignal = AbortSignal.timeout(120000);
               if (finalSignal && typeof AbortSignal.any === 'function') {
                 finalSignal = AbortSignal.any([finalSignal, timeoutSignal]);
               } else if (!finalSignal) {
@@ -84,7 +84,7 @@ const client = hc<AppType>(
               }
             } else if (!finalSignal) {
               const controller = new AbortController();
-              setTimeout(() => controller.abort(), 30000);
+              setTimeout(() => controller.abort(), 120000);
               finalSignal = controller.signal;
             }
             

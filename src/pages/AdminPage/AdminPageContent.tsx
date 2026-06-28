@@ -9,7 +9,7 @@ import { usePhotoUpload } from '@/features/upload';
 import { UploadButton } from '@/components/shared/UploadButton';
 import { SelectionToolbar } from '@/features/selection';
 import { useAIBatchAnalysis } from '@/hooks';
-import { useTask, useUI } from '@/lib/store';
+import { useUI, useSignal } from '@/lib/store';
 import { AdminHeader } from '@/components/layouts/headers/AdminHeader';
 import { AdminAuthGate } from '@/components/admin/AdminAuthGate';
 import { AdminContainer } from '@/components/admin/AdminContainer';
@@ -26,18 +26,11 @@ export function AdminPageContent() {
   const { user } = useAuth();
   const { uploadFiles } = usePhotoUpload();
   
-  const { 
-    uploadModeDialogOpen, 
-    pendingFiles, 
-    patch,
-  } = useUI((s) => ({
-    uploadModeDialogOpen: s.uploadModeDialogOpen,
-    pendingFiles: s.pendingFiles,
-    patch: s.patch,
-  }));
+  const uploadModeDialogOpen = useUI(s => s.uploadModeDialogOpen);
+  const pendingFiles = useUI(s => s.pendingFiles);
+  const patch = useUI(s => s.patch);
   
   const { handleBatchAiAnalyze } = useAIBatchAnalysis();
-  const tasks = useTask((s) => Array.from(s.tasks.values()));
   const { navigate, route } = useAppRouter();
   
   const currentScreen = (() => {

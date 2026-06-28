@@ -1,5 +1,6 @@
 import React from 'react';
-import { useSignal, storeAccessor, tasksSignal, isTaskDrawerOpen } from '@/lib/store';
+import { useSignal, storeAccessor, isTaskDrawerOpen } from '@/lib/store';
+import { tasksSignal, clearAll, addTask } from '@/services/task/taskService';
 import { cn } from '@/lib/utils';
 import { Icon } from '@/components/ui/Icon';
 import { Progress } from '@/components/shared/Progress';
@@ -97,7 +98,7 @@ export function TaskDrawer() {
   }, []);
 
   const tasksMap = useSignal(tasksSignal);
-  const tasks = React.useMemo(() => Array.from(tasksMap.values()), [tasksMap]);
+  const tasks = React.useMemo(() => Array.from(tasksMap.values() as IterableIterator<Task>), [tasksMap]);
   const isOpen = useSignal(isTaskDrawerOpen);
 
   React.useEffect(() => {
@@ -146,10 +147,9 @@ export function TaskDrawer() {
               <button 
                 type="button"
                 onClick={() => {
-                  const state = storeAccessor.task;
-                  const remaining = (Array.from(state.tasks.values()) as Task[]).filter(t => t.state?.status === 'queued' || t.state?.status === 'processing');
-                  state.clearAll();
-                  remaining.forEach(t => state.enqueue(t));
+                  const remaining = (Array.from(tasksMap.values()) as Task[]).filter(t => t.state?.status === 'queued' || t.state?.status === 'processing');
+                  clearAll();
+                  remaining.forEach(t => addTask(t));
                 }}
                 className="text-xs text-blue-500 hover:text-blue-600 font-bold px-2 py-1 select-none active:scale-95 transition-all"
               >

@@ -21,9 +21,10 @@ export async function processImageFile(file: File): Promise<ProcessedImage> {
   const objectUrl = URL.createObjectURL(file);
 
   // 3. Get Dimensions
-  const dimensions = await new Promise<{width: number, height: number}>((resolve) => {
+  const dimensions = await new Promise<{width: number, height: number}>((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve({ width: img.width, height: img.height });
+    img.onerror = () => reject(new Error('Failed to load image for dimensions'));
     img.src = objectUrl;
   });
 
@@ -58,9 +59,10 @@ export async function processImageFiles(
     const chunk = loadedFiles.slice(i, i + CHUNK_SIZE);
     const chunkResults = await Promise.all(
       chunk.map(async ({ file, objectUrl, hash }) => {
-        const dimensions = await new Promise<{width: number, height: number}>((resolve) => {
+        const dimensions = await new Promise<{width: number, height: number}>((resolve, reject) => {
           const img = new Image();
           img.onload = () => resolve({ width: img.width, height: img.height });
+          img.onerror = () => reject(new Error('Failed to load image for dimensions'));
           img.src = objectUrl;
         });
 

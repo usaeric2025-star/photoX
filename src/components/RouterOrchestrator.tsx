@@ -27,16 +27,11 @@ export function RouterOrchestrator() {
         return <PublicPage />;
       case "admin":
       case "adminBatchEdit":
-        return <AdminPage />;
-      case "settings":
       case "adminTasks":
       case "adminDiagnostics":
       case "adminDiagnosticsLogs":
-        return (
-          <AdminAuthGate>
-            <SettingsPage />
-          </AdminAuthGate>
-        );
+      case "settings":
+        return <AdminPage />;
       case "diagnostics":
         return (
           <AdminAuthGate>
