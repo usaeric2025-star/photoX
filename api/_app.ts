@@ -38,11 +38,31 @@ app.get('/health', async (c) => {
         const { db, furnitureItems } = await import('./_lib/db/index.js');
         const { count, sql } = await import('drizzle-orm');
         
-        // 1. Check basic table existence first
-        const [tableRes] = await db.select({ total: count() }).from(furnitureItems);
-        const itemCount = Number(tableRes?.total || 0);
+        // 1. Verify DB connectivity first with a fast, lightweight ping
+        try {
+            await db.execute(sql`SELECT 1`);
+        } catch (pingErr) {
+            console.error('[Health] DB Ping failed:', pingErr);
+            return c.json({
+                success: false,
+                status: 'error',
+                error: `Database connection failed: ${pingErr instanceof Error ? pingErr.message : String(pingErr)}`
+            }, 503);
+        }
 
-        // 2. Try view count, but don't fail hard if missing
+        // 2. Try counting items safely (fallback to -1 if locked or timed out)
+        let itemCount = 0;
+        let dbStatus = 'connected';
+        try {
+            const [tableRes] = await db.select({ total: count() }).from(furnitureItems);
+            itemCount = Number(tableRes?.total || 0);
+        } catch (tableErr) {
+            console.warn('[Health] Failed to count furniture_items (likely locked or timed out):', tableErr);
+            dbStatus = 'degraded';
+            itemCount = -1;
+        }
+
+        // 3. Try view count, but don't fail hard if missing
         let photoCount = 0;
         let viewStatus = 'ok';
         try {
@@ -61,6 +81,7 @@ app.get('/health', async (c) => {
             } catch (repairErr) {
                 console.error('[Health] View repair failed:', repairErr);
                 viewStatus = 'repair_failed';
+                dbStatus = 'degraded';
             }
         }
         
@@ -72,7 +93,7 @@ app.get('/health', async (c) => {
                 itemCount,
                 photoCount,
                 viewStatus,
-                dbStatus: 'connected'
+                dbStatus
             }
         });
     } catch (err) {

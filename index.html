@@ -110,11 +110,12 @@
           renderErrorOverlay();
         });
 
-        // 🚀 Watchdog Timer for Blank Page detection
+        window.__APP_READY__ = false;
+        // 🚀 Watchdog Timer for Blank Page / Stuck Loading detection
         setTimeout(function() {
-          var skeleton = document.getElementById('app-startup-skeleton');
-          if (skeleton && getComputedStyle(skeleton).opacity !== '0' && errors.length === 0) {
-             console.warn('App still showing skeleton after 10s. Forcing diagnostics UI...');
+          var isAppReady = window.__APP_READY__ === true;
+          if (!isAppReady && errors.length === 0) {
+             console.warn('App still loading after 12s. Forcing diagnostics UI...');
              var diagBtn = document.createElement('button');
              diagBtn.innerText = '⚠️ 啟動過久？點此診斷 (Timeout? Click to diagnose)';
              diagBtn.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:9999999;background:#fef3c7;color:#92400e;border:1px solid #fde68a;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:bold;box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);cursor:pointer;';

@@ -63,12 +63,28 @@ export async function ensureViewExists() {
   }
 }
 
+let isRefreshing = false;
+let pendingRefresh: Promise<void> | null = null;
+
 export async function refreshPhotosView() {
-  try {
-    // Concurrent refresh: non-blocking, requiring unique index on materialized view.
-    await db.execute(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY v_photos_list`);
-    logger.info('[View Refresh] Materialized view v_photos_list updated concurrently');
-  } catch (err: unknown) {
-    logger.error('[View Refresh] Concurrent refresh failed. Skipping simple blocking fallback to prevent database lockups and connection exhaustion:', err);
+  if (isRefreshing && pendingRefresh) {
+    logger.info('[View Refresh] Refresh already in progress. Merging into existing refresh execution.');
+    return pendingRefresh;
   }
+
+  isRefreshing = true;
+  pendingRefresh = (async () => {
+    try {
+      // Concurrent refresh: non-blocking, requiring unique index on materialized view.
+      await db.execute(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY v_photos_list`);
+      logger.info('[View Refresh] Materialized view v_photos_list updated concurrently');
+    } catch (err: unknown) {
+      logger.error('[View Refresh] Concurrent refresh failed. Skipping simple blocking fallback to prevent database lockups and connection exhaustion:', err);
+    } finally {
+      isRefreshing = false;
+      pendingRefresh = null;
+    }
+  })();
+
+  return pendingRefresh;
 }

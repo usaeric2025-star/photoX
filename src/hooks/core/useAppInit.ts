@@ -18,6 +18,14 @@ export function useAppInit() {
   // 核心邏輯：AppStore 初始化完成 且 Settings 也有數據 (或者報錯了)
   const isReady = !isAppStoreLoading && (!isSettingsLoading || isError);
 
+  useEffect(() => {
+    if (isReady && !isError) {
+      if (typeof window !== 'undefined') {
+        (window as any).__APP_READY__ = true;
+      }
+    }
+  }, [isReady, isError]);
+
   return { 
     status: isReady ? (isError ? 'error' : 'success') : 'loading',
     error, 
