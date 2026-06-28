@@ -1,4 +1,3 @@
-import { compressImage } from './uploadUtils';
 import { IMAGE_COMPRESS } from '@/constants/config';
 import { sha256 } from '@/lib/image/hash';
 
@@ -14,24 +13,26 @@ export interface ProcessedImage {
  * Utility to process a raw File: generate a real hash and get dimensions
  */
 export async function processImageFile(file: File): Promise<ProcessedImage> {
+  const activeFile = file;
+
   // 1. Calculate Real Hash based on file content
-  const hash = await sha256(file);
+  const hash = await sha256(activeFile);
 
   // 2. Create Object URL for preview
-  const objectUrl = URL.createObjectURL(file);
+  const objectUrl = URL.createObjectURL(activeFile);
 
   // 3. Get Dimensions
   const dimensions = await new Promise<{width: number, height: number}>((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve({ width: img.width, height: img.height });
-    img.onerror = () => reject(new Error('Failed to load image for dimensions'));
+    img.onerror = () => reject(new Error('圖片載入失敗，請確認檔案格式完整且為有效圖片。'));
     img.src = objectUrl;
   });
 
   return {
     hash,
     dataUrl: objectUrl, // This is now an objectUrl
-    file,
+    file: activeFile,
     width: dimensions.width,
     height: dimensions.height
   };

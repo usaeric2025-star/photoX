@@ -1,7 +1,5 @@
 import { useAuth, uiStore } from '@/lib/store';
 import { useCallback } from 'react';
-import { sha256 } from '@/lib/image/hash';
-import { checkHashExists } from '@/lib/api/photos';
 import { showToast } from '@/lib/ui/toast';
 import { hapticFeedback } from '@/lib/ui/haptics';
 import { createTask } from '@/lib/task-queue';
@@ -15,65 +13,35 @@ export function usePhotoUpload() {
     const fileArray = Array.from(files);
     if (fileArray.length === 0) return;
 
-    // Provide immediate feedback
-    const loadingToastId = showToast.loading(`正在准备上传 ${fileArray.length} 张照片...`);
-
     try {
-      const uniqueFiles: File[] = [];
-      let skippedCount = 0;
-
-      // Process in small batches to avoid blocking main thread too long, but allow parallel hash + check
-      const BATCH_SIZE = 5;
-      for (let i = 0; i < fileArray.length; i += BATCH_SIZE) {
-        const batch = fileArray.slice(i, i + BATCH_SIZE);
-        const results = await Promise.all(batch.map(async (file) => {
-          const hash = await sha256(file);
-          const exists = await checkHashExists(hash);
-          return { file, exists };
-        }));
-
-        for (const { file, exists } of results) {
-          if (exists) {
-            skippedCount++;
-          } else {
-            uniqueFiles.push(file);
-          }
-        }
-      }
-
-      showToast.dismiss(loadingToastId);
-
-      if (skippedCount > 0) {
-        showToast.info(`已自动跳过 ${skippedCount} 张重复照片`);
-      }
-
-      if (uniqueFiles.length === 0) return;
-
       hapticFeedback.medium();
 
       const userId = user?.id;
       
       // Check if we should group them
-      const isGroup = uiStore.getState().uploadAsGroup && uniqueFiles.length > 1;
+      const isGroup = uiStore.getState().uploadAsGroup && fileArray.length > 1;
       const groupId = isGroup ? generateId() : undefined;
       
-      // Batch enqueue via TaskFactory
+      // Batch enqueue via TaskFactory (Drawer opens immediately!)
       createTask({
-        label: `上傳 ${uniqueFiles.length} 張照片`,
+        label: `上傳 ${fileArray.length} 張照片`,
         type: 'upload',
         userId,
         meta: {
-          photoCount: uniqueFiles.length,
+          photoCount: fileArray.length,
           groupId: groupId,
         },
-        execute: executeBatchUpload(uniqueFiles, userId, { groupId }),
+        execute: executeBatchUpload(fileArray, userId, { groupId }),
         onComplete: (result) => {
-          showToast.success(`上傳完成，共 ${result.length} 張`);
+          if (result && result.length > 0) {
+            showToast.success(`上傳完成，共 ${result.length} 張`);
+          } else {
+            showToast.info(`上傳已完成（重複照片已自動略過）`);
+          }
         }
       });
     } catch (error) {
-      showToast.dismiss(loadingToastId);
-      showToast.error(`准备上传失败: ${error instanceof Error ? error.message : '网络或服务器错误'}`);
+      showToast.error(`啟動上傳失敗: ${error instanceof Error ? error.message : '網路或伺服器錯誤'}`);
       console.error('[uploadFiles] Error during preparation:', error);
     }
   }, [user?.id]);

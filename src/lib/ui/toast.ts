@@ -1,25 +1,25 @@
-import { toast, ExternalToast } from 'sonner';
-import React from 'react';
+import { toastStore } from '@/store/toastStore';
 import { copyToClipboard } from '@/utils/clipboard';
 
-/**
- * [UTILITY] showToast
- * Unified toast notification system for PhotoX.
- * Standardizes positioning, duration, and z-index layering.
- */
+export interface ExternalToast {
+  duration?: number;
+  traceId?: string;
+  id?: string | number;
+}
+
 export const showToast = {
   success: (message: string, options?: ExternalToast) => 
-    toast.success(message, { 
-      duration: 3000,
-      position: 'bottom-center',
-      ...options
+    toastStore.getState().addToast({
+      id: options?.id ? String(options.id) : undefined,
+      type: 'success',
+      message,
+      duration: options?.duration,
     }),
     
   error: (messageOrError: string | Error | unknown, options?: ExternalToast) => {
     let userMessage = '發生未知錯誤，請稍後再試';
     let systemMessage = '';
-    let stackTrace = '';
-    let traceId = '';
+    let traceId = options?.traceId || '';
     let timestamp = '';
     let code = 'UNKNOWN_ERROR';
 
@@ -40,7 +40,6 @@ export const showToast = {
       const err = messageOrError as AppErrorLike & Record<string, unknown>;
       userMessage = err.userMessage || err.message || userMessage;
       
-      // 深度提取系統訊息
       const extractSystemMsg = (e: unknown): string => {
         let msg = '';
         if (!e) msg = '';
@@ -64,7 +63,6 @@ export const showToast = {
           msg = String(e);
         }
         
-        // 替換過長的 Base64 與截斷超長字串
         if (msg) {
           msg = msg.replace(/data:image\/[^;]+;base64,[a-zA-Z0-9+/=]+/g, '[BASE64_IMAGE_TRUNCATED]');
           if (msg.length > 500) {
@@ -76,24 +74,8 @@ export const showToast = {
 
       systemMessage = extractSystemMsg(err);
       code = err.code || 'UNKNOWN_ERROR';
-      traceId = err.traceId || '';
+      traceId = err.traceId || traceId;
       timestamp = err.timestamp || '';
-      
-      // 提取原因
-      const originalErr = (err.cause || err.originalError || (err.context && err.context.original)) as Record<string, unknown> | undefined;
-      if (originalErr) {
-        const nestedMsg = extractSystemMsg(originalErr);
-        if (nestedMsg && nestedMsg !== systemMessage) {
-          systemMessage += ` | 原因: ${nestedMsg}`;
-        }
-        if (typeof originalErr.stack === 'string') {
-          stackTrace = originalErr.stack;
-        }
-      }
-      
-      if (err.stack && !stackTrace) {
-        stackTrace = err.stack;
-      }
     } else {
       userMessage = String(messageOrError || userMessage);
     }
@@ -108,7 +90,6 @@ export const showToast = {
       systemMessage = userMessage;
     }
     
-    // Copy handler with precise diagnostic fields
     const diagnosticsText = [
       `--- 诊断信息 ---`,
       `时间戳: ${timestamp}`,
@@ -119,53 +100,61 @@ export const showToast = {
       `信息: ${systemMessage}`
     ].filter(Boolean).join('\n');
     
-    return toast.error(
-      React.createElement('div', { className: 'flex flex-col gap-1 w-full text-left' },
-        React.createElement('div', { className: 'font-semibold text-sm leading-tight text-red-600' }, userMessage),
-        React.createElement('div', { className: 'mt-1 text-[10px] text-slate-400' }, `Trace ID: ${traceId}`)
-      ),
-      { 
-        duration: 8000,
-        position: 'bottom-center',
-        action: {
-          label: '复制诊断',
-          onClick: async (e) => {
-            if (e && typeof e.preventDefault === 'function') e.preventDefault();
-            if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
-            
-            const success = await copyToClipboard(diagnosticsText);
-            if (success) {
-              toast.success('诊断信息已复制', { id: `copy-${traceId}` });
-            } else {
-              toast.error('复制失败，请手动选择复制');
-            }
+    return toastStore.getState().addToast({
+      type: 'error',
+      message: userMessage,
+      traceId,
+      duration: 8000,
+      action: {
+        label: '複製診斷',
+        onClick: async () => {
+          const success = await copyToClipboard(diagnosticsText);
+          if (success) {
+            toastStore.getState().addToast({
+              type: 'success',
+              message: '診斷信息已複製',
+              duration: 2000,
+            });
+          } else {
+            toastStore.getState().addToast({
+              type: 'error',
+              message: '複製失敗，請手動選擇複製',
+              duration: 3000,
+            });
           }
-        },
-        ...options
+        }
       }
-    );
+    });
   },
     
   info: (message: string, options?: ExternalToast) => 
-    toast.info(message, { 
-      duration: 3000,
-      position: 'bottom-center',
-      ...options
+    toastStore.getState().addToast({
+      id: options?.id ? String(options.id) : undefined,
+      type: 'info',
+      message,
+      duration: options?.duration,
     }),
 
   warning: (message: string, options?: ExternalToast) => 
-    toast.warning(message, { 
-      duration: 4000,
-      position: 'bottom-center',
-      ...options
+    toastStore.getState().addToast({
+      id: options?.id ? String(options.id) : undefined,
+      type: 'warning',
+      message,
+      duration: options?.duration || 4000,
     }),
     
   loading: (message: string, options?: ExternalToast) => 
-    toast.loading(message, { 
-      position: 'bottom-center',
-      ...options
+    toastStore.getState().addToast({
+      id: options?.id ? String(options.id) : undefined,
+      type: 'loading',
+      message,
     }),
     
-  dismiss: (toastId?: string | number) => 
-    toast.dismiss(toastId),
+  dismiss: (toastId?: string) => {
+    if (toastId) {
+      toastStore.getState().removeToast(toastId);
+    } else {
+      toastStore.getState().clearAll();
+    }
+  }
 };

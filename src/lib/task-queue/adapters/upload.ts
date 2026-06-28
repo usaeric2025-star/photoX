@@ -6,6 +6,7 @@ import { createTask } from '@/lib/task-queue/taskFactory';
 import { runBatchAnalysis } from '@/features/ai/orchestration';
 import { appQuery } from '@/lib/query';
 import { queryKeys } from '@/lib/query/keys';
+import { checkHashExists } from '@/lib/api/photos';
 
 export const executeBatchUpload = (
   files: File[],
@@ -16,17 +17,32 @@ export const executeBatchUpload = (
   const total = files.length;
   
   const uploadedPhotos: Photo[] = [];
+  let skippedCount = 0;
   
   for (let i = 0; i < total; i++) {
     const file = files[i];
     if (signal.aborted) throw new Error('Upload aborted');
     
-    onProgress(i / total, `處理第 ${i + 1}/${total} 張...`);
+    onProgress(i / total, `處理第 ${i + 1}/${total} 張: 正在校驗格式及計算雜湊值...`);
     
     // 1. Process
     const processed = await processImageFile(file);
     
-    // 2. Upload to Cloud
+    // 2. Check duplicate
+    onProgress((i + 0.2) / total, `處理第 ${i + 1}/${total} 張: 正在比對重複項...`);
+    const exists = await checkHashExists(processed.hash);
+    if (exists) {
+      skippedCount++;
+      // Clean up objectUrl
+      URL.revokeObjectURL(processed.dataUrl);
+      onProgress((i + 1) / total, `處理第 ${i + 1}/${total} 張: 已跳過重複照片 (${processed.file.name})`);
+      
+      // Let's yield briefly
+      await new Promise(resolve => setTimeout(resolve, 50));
+      continue;
+    }
+    
+    // 3. Upload to Cloud
     const tempPhoto: Photo = {
       id: `temp-${generateId()}`,
       name: { zh: processed.file.name.split('.')[0] },
@@ -52,7 +68,7 @@ export const executeBatchUpload = (
     };
     
     const result = await savePhotoToCloud(userId, tempPhoto, processed.file, (statusMsg) => {
-      onProgress((i + 0.5) / total, `上傳中: ${statusMsg}`);
+      onProgress((i + 0.5) / total, `處理第 ${i + 1}/${total} 張: ${statusMsg}`);
     });
     results.push(result);
     
@@ -65,6 +81,12 @@ export const executeBatchUpload = (
     });
     
     onProgress((i + 1) / total, `完成 ${i + 1}/${total}`);
+  }
+  
+  if (skippedCount > 0) {
+    import('@/lib/ui/toast').then(({ showToast }) => {
+      showToast.info(`已自動跳過 ${skippedCount} 張重複照片`);
+    });
   }
   
   // ✅ 自動將 AI 分析任務加入佇列 (如果上傳成功)

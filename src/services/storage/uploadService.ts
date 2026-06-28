@@ -69,34 +69,30 @@ const uploadImages = async (
 ): Promise<UploadResult> => {
   // Rely on backend API authorization check (via requireRealUser on upload-presign)
   
-  let dataToUpload: File | string = fileOrBase64;
+  let dataToUpload: File | Blob | string = fileOrBase64;
   let ext = 'webp';
   let mimeType = 'image/webp';
   
   if (typeof fileOrBase64 === 'string') {
       onStatus?.('compressing');
-      dataToUpload = await compressImage(fileOrBase64, 2048, 0.85); 
+      const res = await fetch(fileOrBase64);
+      const blob = await res.blob();
+      dataToUpload = await compressImage(blob, { maxWidth: 2048, quality: 0.85 }); 
       ext = 'webp';
       mimeType = 'image/webp';
   } else {
       onStatus?.('compressing');
-      // Convert File to Object URL to load into Image for compression
-      const objectUrl = URL.createObjectURL(fileOrBase64);
-      try {
-        dataToUpload = await compressImage(objectUrl, 2048, 0.85);
-      } finally {
-        URL.revokeObjectURL(objectUrl);
-      }
+      dataToUpload = await compressImage(fileOrBase64, { maxWidth: 2048, quality: 0.85 });
       ext = 'webp';
       mimeType = 'image/webp';
   }
 
   onStatus?.('uploading');
-  const uploadFile = async (data: File | string, fileName: string, isMain=false) => {
+  const uploadFile = async (data: File | Blob | string, fileName: string, isMain=false) => {
     let body: BodyInit;
     let fallbackBase64 = '';
     
-    if (data instanceof File) {
+    if (data instanceof File || data instanceof Blob) {
         body = data;
     } else {
         fallbackBase64 = data;

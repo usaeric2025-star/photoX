@@ -93,8 +93,7 @@ export class TaskScheduler {
     this.controllers.set(task.id, controller);
 
     try {
-      // 更新 Supabase: processing
-      await taskTable.updateStatus(task.id, 'processing');
+      // ✅ 立即更新 UI 狀態，不再因網路 I/O 阻礙
       updateTaskState(task.id, { status: 'processing', progress: 0 });
       setGlobalTaskStatus('processing');
       setGlobalTaskProgress(0);
@@ -103,6 +102,9 @@ export class TaskScheduler {
         updateTaskState(task.id, { progress, message });
         setGlobalTaskProgress(progress);
       };
+
+      // 非阻塞式更新 Supabase，不延誤任務執行
+      taskTable.updateStatus(task.id, 'processing').catch(e => logger.error('[Task] updateStatus error', e));
 
       const result = await task.execute(controller.signal, onProgress);
 

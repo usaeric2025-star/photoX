@@ -1,40 +1,40 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
-export const compressImage = (base64Data: string, maxWidth = 1920, quality = 0.8): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      let width = img.width;
-      let height = img.height;
+export interface CompressOptions {
+  maxWidth?: number;
+  maxHeight?: number;
+  quality?: number;
+  format?: 'image/jpeg' | 'image/png' | 'image/webp';
+}
 
-      if (width > maxWidth) {
-        height = Math.round((height * maxWidth) / width);
-        width = maxWidth;
-      }
+export async function compressImage(fileOrBlob: File | Blob, options: CompressOptions = {}): Promise<Blob> {
+  try {
+    const bitmap = await createImageBitmap(fileOrBlob, {
+      resizeWidth: options.maxWidth || 2048,
+      resizeQuality: 'high',
+    });
 
-      canvas.width = width;
-      canvas.height = height;
+    const canvas = document.createElement('canvas');
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Failed to get canvas context');
+    ctx.drawImage(bitmap, 0, 0);
 
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        reject(ErrorFactory.wrap(new Error('Failed to get canvas context'), 'compressImage'));
-        return;
-      }
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(
+        (b) => (b ? resolve(b) : reject(new Error('壓縮失敗'))),
+        options.format || 'image/webp',
+        options.quality || 0.85
+      );
+    });
 
-      ctx.drawImage(img, 0, 0, width, height);
-      const result = canvas.toDataURL('image/webp', quality);
-      
-      canvas.width = 0;
-      canvas.height = 0;
-      img.src = '';
-      
-      resolve(result);
-    };
-    img.onerror = () => reject(ErrorFactory.wrap(new Error('图片加载到画布失败，请确保文件格式完整且是有效的图片'), 'compressImage'));
-    img.src = base64Data;
-  });
-};
+    bitmap.close(); 
+    return blob;
+  } catch (error) {
+    throw ErrorFactory.wrap(error instanceof Error ? error : new Error(String(error)), 'compressImage');
+  }
+}
 
 export function dataURLToArrayBuffer(dataurl: string): { buffer: ArrayBuffer; mime: string } {
   const arr = dataurl.split(',');

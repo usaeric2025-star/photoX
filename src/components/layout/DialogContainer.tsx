@@ -1,5 +1,5 @@
 import { useSignal, isLightboxOpen, useUI } from '@/lib/store';
-import { SonnerContainer } from '@/components/ui/SonnerContainer';
+import { ToastContainer } from '@/components/ui/ToastContainer';
 import { TaskBadge, TaskDrawer } from '@/lib/task-queue/components';
 import { PhotoLightbox } from '@/features/lightbox/PhotoLightbox';
 import { PhotoEditDialog } from '@/features/photo-edit/PhotoEditDialog';
@@ -18,7 +18,7 @@ export function DialogContainer() {
 
   return (
     <>
-      <SonnerContainer />
+      <ToastContainer />
       <TaskBadge />
       <TaskDrawer />
       <PhotoLightbox />
