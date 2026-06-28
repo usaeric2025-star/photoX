@@ -49,6 +49,15 @@ export async function ensureViewExists() {
       `);
       logger.info('[View Check] v_photos_list created successfully.');
     }
+
+    // 2. Unconditionally ensure the unique index exists on the materialized view to support CONCURRENTLY refreshes
+    try {
+      await db.execute(sql`
+        CREATE UNIQUE INDEX IF NOT EXISTS v_photos_list_id_idx ON v_photos_list (id);
+      `);
+    } catch (indexErr) {
+      logger.warn('[View Check] Failed to ensure unique index exists on v_photos_list:', indexErr);
+    }
   } catch (err) {
     logger.error('[View Check] Failed to check or create view:', err);
   }
@@ -60,12 +69,6 @@ export async function refreshPhotosView() {
     await db.execute(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY v_photos_list`);
     logger.info('[View Refresh] Materialized view v_photos_list updated concurrently');
   } catch (err: unknown) {
-    logger.warn('[View Refresh] Concurrent refresh failed, trying simple refresh:', err);
-    try {
-      await db.execute(sql`REFRESH MATERIALIZED VIEW v_photos_list`);
-      logger.info('[View Refresh] Materialized view v_photos_list updated successfully with simple refresh');
-    } catch (fallbackErr: unknown) {
-      logger.error('[View Refresh] Fallback refresh failed:', fallbackErr);
-    }
+    logger.error('[View Refresh] Concurrent refresh failed. Skipping simple blocking fallback to prevent database lockups and connection exhaustion:', err);
   }
 }
