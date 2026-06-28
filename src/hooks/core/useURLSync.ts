@@ -11,7 +11,7 @@ import {
   modalParser, 
   viewParser,
 } from '@/lib/nuqs/parsers';
-import { uiStore, type UIStoreState } from '@/store/uiStore';
+import { uiStore, type UIStoreState } from '@/lib/store';
 import { logger } from '@/lib/logger';
 
 /**

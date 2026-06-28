@@ -1,6 +1,6 @@
 // src/services/selection/selectionService.ts
 import { createStore } from '@storve/core';
-import { useStore } from '@storve/react';
+import { useStore } from '@/lib/store';
 import { useQueryState } from 'nuqs';
 import { batchParser, selectedIdsParser } from '@/lib/nuqs/parsers';
 

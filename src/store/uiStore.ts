@@ -15,7 +15,6 @@ export interface UIStoreState {
   isPhotoPickerOpen: boolean;
   photoPickerGroupId: string | null;
   isInitialDataLoading: boolean;
-  processingIds: string[];
   focusedGroupPhotoId: string | null;
   showWhatsAppChoice: boolean;
   uploadModeDialogOpen: boolean;
@@ -38,9 +37,6 @@ export interface UIStoreState {
   updateForm: (updates: Partial<ProductFormData> | ((prev: ProductFormData) => Partial<ProductFormData>)) => void;
   resetForm: () => void;
   setInitialDataLoading: (loading: boolean) => void;
-  addProcessingIds: (ids: string[]) => void;
-  removeProcessingIds: (ids: string[]) => void;
-  clearProcessing: (id: string) => void;
   incrementDialogCount: () => void;
   decrementDialogCount: () => void;
   setFatalError: (error: Error | null) => void;
@@ -84,7 +80,6 @@ export const uiStore = createStore<UIStoreState>({
   isPhotoPickerOpen: false,
   photoPickerGroupId: null,
   isInitialDataLoading: false,
-  processingIds: [],
   focusedGroupPhotoId: null,
   showWhatsAppChoice: false,
   uploadModeDialogOpen: false,
@@ -113,18 +108,6 @@ export const uiStore = createStore<UIStoreState>({
 
   setInitialDataLoading: (loading) => uiStore.setState({ isInitialDataLoading: loading }),
 
-  addProcessingIds: (ids) => uiStore.setState((state: UIStoreState) => ({ 
-    processingIds: Array.from(new Set([...state.processingIds, ...ids])) 
-  })),
-
-  removeProcessingIds: (ids) => uiStore.setState((state: UIStoreState) => ({ 
-    processingIds: state.processingIds.filter((id: string) => !ids.includes(id)) 
-  })),
-
-  clearProcessing: (id) => uiStore.setState((state: UIStoreState) => ({
-    processingIds: state.processingIds.filter((pid: string) => pid !== id)
-  })),
-
   incrementDialogCount: () => uiStore.setState((state: UIStoreState) => ({ activeDialogCount: state.activeDialogCount + 1 })),
   
   decrementDialogCount: () => uiStore.setState((state: UIStoreState) => ({ activeDialogCount: Math.max(0, state.activeDialogCount - 1) })),
@@ -134,7 +117,6 @@ export const uiStore = createStore<UIStoreState>({
   setGridColumns: (columns) => uiStore.setState({ gridColumns: columns }),
 
   resetUI: () => uiStore.setState({
-      processingIds: [],
       formState: defaultForm,
       activeDialogCount: 0,
       lightboxIsOpen: false, lightboxSlides: [], lightboxCurrentIndex: 0

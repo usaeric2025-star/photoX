@@ -1,5 +1,4 @@
-import { useSignal, isLightboxOpen } from '@/lib/store';
-import { useUIStore } from '@/store/uiStore';
+import { useSignal, isLightboxOpen, useUI } from '@/lib/store';
 import { SonnerContainer } from '@/components/ui/SonnerContainer';
 import { TaskBadge, TaskDrawer } from '@/lib/task-queue/components';
 import { PhotoLightbox } from '@/features/lightbox/PhotoLightbox';
@@ -8,7 +7,7 @@ import { useEffect, useState } from 'react';
 
 export function DialogContainer() {
   const isLightbox = useSignal(isLightboxOpen);
-  const isEditOpen = useUIStore(s => s.isPhotoEditOpen);
+  const isEditOpen = useUI(s => s.isPhotoEditOpen);
   
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
