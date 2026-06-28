@@ -31,6 +31,8 @@ export function useColumns() {
     setSavedColumns(newColumns);
     const currentRouteName = route.name;
     const cleanParams: Record<string, unknown> = {};
+    
+    // Copy all parameters (including path and query parameters)
     for (const key in route.params) {
       if (key !== '~internal' && key !== 'href') {
         cleanParams[key] = (route.params as Record<string, unknown>)[key];

@@ -12,7 +12,7 @@ export const listHandler = (app: Hono) => {
     const { page = 0, limit = 100, isAdminMode = false } = params;
     
     try {
-      const { items, total, nextCursor } = await getPhotosList(params);
+      const { items, total, nextCursor } = await getPhotosList({ ...params, limit });
 
       if (items.length > 0) {
         const gIds = Array.from(new Set(items.filter(d => d.groupId).map(d => d.groupId))) as string[];
@@ -42,8 +42,7 @@ export const listHandler = (app: Hono) => {
             };
         });
 
-        const hasMore = total > (page * limit + items.length);
-        const finalNextCursor = (items.length === limit && hasMore) ? nextCursor : null;
+        const finalNextCursor = nextCursor;
         
         return c.json({ 
           success: true, 

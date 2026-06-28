@@ -34,7 +34,7 @@ export const selectedIdsParser = parseAsJson<string[]>((value) => {
 }).withDefault([]);
 
 // Sort Parser (使用 Valibot)
-export const sortParser = parseWithValibot(SortSchema).withDefault('date');
+export const sortParser = parseWithValibot(SortSchema).withDefault('newest');
 
 // Status Parser
 export const statusParser = parseAsString.withDefault('all');

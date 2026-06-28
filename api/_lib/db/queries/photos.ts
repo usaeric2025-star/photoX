@@ -1,6 +1,6 @@
 
 import { db, furnitureItems, categories, manufacturers, groups, vPhotosList } from '../index.js';
-import { eq, and, or, ilike, sql, desc, isNull, count, inArray, type SQL } from 'drizzle-orm';
+import { eq, and, or, ilike, sql, desc, asc, isNull, count, inArray, type SQL } from 'drizzle-orm';
 
 export interface PhotoListParams {
     page?: number;
@@ -41,7 +41,7 @@ export async function getPhotosList(params: PhotoListParams) {
         isAdminMode = false, 
         onlyUngrouped = false, onlyGroupsCover = false,
         groupId, manufacturerId, 
-        isHidden
+        isHidden, sortOrder
     } = params;
 
     const whereClauses: (SQL | undefined)[] = [];
@@ -49,7 +49,8 @@ export async function getPhotosList(params: PhotoListParams) {
     if (cursor) {
         const cursorTime = new Date(cursor);
         if (!isNaN(cursorTime.getTime())) {
-            whereClauses.push(sql`${vPhotosList.createdAt} < ${cursorTime.toISOString()}`);
+            const op = sortOrder === 'oldest' ? sql`>` : sql`<`;
+            whereClauses.push(sql`${vPhotosList.createdAt} ${op} ${cursorTime.toISOString()}`);
         }
     }
 
@@ -114,11 +115,12 @@ export async function getPhotosList(params: PhotoListParams) {
     const total = Number(countRes.count);
 
     // 2. Get Data
+    const orderSpec = sortOrder === 'oldest' ? asc(vPhotosList.createdAt) : desc(vPhotosList.createdAt);
     const results = await db
         .select()
         .from(vPhotosList)
         .where(finalWhere)
-        .orderBy(desc(vPhotosList.createdAt))
+        .orderBy(orderSpec)
         .limit(limit);
 
     return {

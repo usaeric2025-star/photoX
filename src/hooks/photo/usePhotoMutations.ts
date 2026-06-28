@@ -24,6 +24,13 @@ export const usePhotoEditMutation = () => useAppMutation({
     
     return res as Photo;
   },
+  onSuccess: () => {
+    appQuery.mutate((key) => {
+      if (Array.isArray(key) && key[0] === queryKeys.photos.all[0]) return true;
+      if (typeof key === 'string' && key.includes(queryKeys.photos.all[0])) return true;
+      return false;
+    });
+  }
 });
 
 // 2. 照片删除
@@ -57,6 +64,13 @@ export const usePhotoBatchEdit = () => useAppMutation({
     
     return res;
   },
+  onSuccess: () => {
+    appQuery.mutate((key) => {
+      if (Array.isArray(key) && key[0] === queryKeys.photos.all[0]) return true;
+      if (typeof key === 'string' && key.includes(queryKeys.photos.all[0])) return true;
+      return false;
+    });
+  }
 });
 
 // 4. 钉选/取消钉选
@@ -66,6 +80,13 @@ export const useTogglePin = () => useAppMutation({
     if (!res) throw new Error('Failed to update photo');
     return res;
   },
+  onSuccess: () => {
+    appQuery.mutate((key) => {
+      if (Array.isArray(key) && key[0] === queryKeys.photos.all[0]) return true;
+      if (typeof key === 'string' && key.includes(queryKeys.photos.all[0])) return true;
+      return false;
+    });
+  }
 });
 
 

@@ -63,8 +63,8 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
     setQuery({ tag: (vals && vals.length === 0) ? null : vals });
   }, [setQuery]);
 
-  const sort = query.sort || 'date';
-  const setSort = useCallback((val: 'date' | 'name' | 'size' | string) => {
+  const sort = query.sort || 'newest';
+  const setSort = useCallback((val: 'date' | 'name' | 'size' | 'newest' | 'oldest' | string) => {
     setQuery({ sort: (val || null) as any });
   }, [setQuery]);
 
@@ -199,16 +199,24 @@ export function useFilterState() {
 
   const updateFilters = (updates: Partial<FilterState>) => {
     const routeUpdates: Record<string, unknown> = {};
-    if (updates.search !== undefined) routeUpdates.q = updates.search || undefined;
+    if (updates.search !== undefined) {
+      routeUpdates.q = updates.search || null;
+    }
     if (updates.categoryId !== undefined) {
-      routeUpdates.cat = updates.categoryId || undefined;
-      if (updates.categoryId) routeUpdates.tag = undefined;
+      routeUpdates.cat = updates.categoryId ? String(updates.categoryId) : null;
+      if (updates.categoryId) {
+        routeUpdates.tag = null;
+      }
     }
     if (updates.tagIds !== undefined) {
-      routeUpdates.tag = updates.tagIds.length === 0 ? undefined : updates.tagIds;
-      if (updates.tagIds && updates.tagIds.length > 0) routeUpdates.cat = undefined;
+      routeUpdates.tag = updates.tagIds.length === 0 ? null : updates.tagIds;
+      if (updates.tagIds && updates.tagIds.length > 0) {
+        routeUpdates.cat = null;
+      }
     }
-    if (updates.sort !== undefined) routeUpdates.sort = updates.sort || undefined;
+    if (updates.sort !== undefined) {
+      routeUpdates.sort = updates.sort || null;
+    }
     
     f.updateFilters(routeUpdates);
   };
