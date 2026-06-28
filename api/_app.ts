@@ -13,6 +13,7 @@ import { photos } from './_handlers/photos/index.js';
 import { storage } from './_handlers/storage.js';
 import { testHandler } from './_handlers/test.js';
 import { setupMiddlewares } from './_lib/middleware.js';
+import { cronRefreshView } from './_handlers/cron/refresh-view.js';
 
 // Validate env at module level
 const serverEnv = getServerEnv(process.env);
@@ -96,6 +97,7 @@ app.route('/categories', categories);
 app.route('/manufacturers', manufacturers);
 app.route('/groups', groups);
 app.route('/photos', photos);
+app.route('/cron/refresh-view', cronRefreshView);
 app.route('/', storage);
 testHandler(app);
 
