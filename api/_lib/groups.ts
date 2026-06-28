@@ -57,7 +57,7 @@ export async function syncGroupCoversAndCount(groupIds: string[]): Promise<void>
           return;
         }
 
-        const dbGroup = groupMap.get(groupId);
+        const dbGroup = groupMap.get(groupId) as any;
         const dbCoverPhotoId = dbGroup?.coverPhotoId;
         
         const currentCover = items.find(p => p.isGroupCover === true);

@@ -39,7 +39,7 @@ const LogItem = ({ log }: { log: LogEntry }) => {
   const [expanded, { toggle }] = useDisclosure(false);
   const { copy } = useCopyToClipboard({ successMessage: '日志详情已复制' });
   const dateTimeStr = formatters.dateTime(log.created_at);
-  const level = log.level || log.metadata?.level || 'info';
+  const level = (log.level || log.metadata?.level || 'info') as ErrorLevel;
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
