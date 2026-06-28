@@ -60,9 +60,11 @@ export function useFormSubmit<T extends v.GenericSchema, R = void>({
             }
             onSuccess?.(result);
         } catch (error) {
-            ErrorFactory.handle(error, { context: 'form-submit' });
             if (errorMessage) {
+                ErrorFactory.handle(error, { context: 'form-submit', silent: true });
                 showToast.error(errorMessage);
+            } else {
+                ErrorFactory.handle(error, { context: 'form-submit' });
             }
             onError?.(error);
         } finally {

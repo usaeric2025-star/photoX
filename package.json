@@ -15,7 +15,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "analyze": "vite build --mode analyze",
-    "lint": "tsgo --noEmit",
+    "lint": "tsgo --noEmit && bash scripts/check-imports.sh",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "storage:audit": "npx tsx scripts/storage/auditR2.ts",

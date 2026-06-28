@@ -12,6 +12,7 @@ import {
 } from "@/hooks";
 import { useTask, useUI } from '@/lib/store';
 import { showToast } from "@/lib/ui/toast";
+import { ErrorFactory } from "@/lib/error/ErrorFactory";
 import { usePhotoEditAI } from "./usePhotoEditAI";
 
 interface DialogHeaderProps {
@@ -54,7 +55,7 @@ export function DialogHeader({
     if (finalImageUrl) {
       await handleAiAnalyze(finalImageUrl);
     } else {
-      showToast.error(appLang === 'zh' ? '照片信息缺失，无法识别' : 'Photo data missing');
+      ErrorFactory.handle(appLang === 'zh' ? '照片信息缺失，无法识别' : 'Photo data missing', { context: 'AI 识别' });
     }
   }
 

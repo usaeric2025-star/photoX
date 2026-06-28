@@ -1,4 +1,3 @@
-import { showToast } from '@/lib/ui/toast';
 import { useEffect } from 'react';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
@@ -19,8 +18,7 @@ export function useQueryWithFallback<T>(
 
   useEffect(() => {
     if (queryResult.error && showErrorToast) {
-      const wrapped = ErrorFactory.wrap(queryResult.error, '加载', resourceName);
-      showToast.error(wrapped);
+      ErrorFactory.handle(queryResult.error, { context: `加载${resourceName}` });
     }
   }, [queryResult.error, showErrorToast, resourceName]);
 

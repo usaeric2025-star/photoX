@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useUI } from '@/lib/store';
 import { useAIBatchAnalysis } from '../photo/useAIBatchAnalysis';
 import { logger } from '@/lib/logger';
-import { showToast } from '@/lib/ui/toast';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useSelection } from '@/features/selection';
 
 export function useAdminBatchActions() {
@@ -17,7 +17,7 @@ export function useAdminBatchActions() {
     let photosToProcess = allPhotos || [];
     
     if (photosToProcess.length === 0) {
-      showToast.error('请选择照片或特定合组进行识别');
+      ErrorFactory.handle('请选择照片或特定合组进行识别', { context: '批量操作' });
       return;
     }
 

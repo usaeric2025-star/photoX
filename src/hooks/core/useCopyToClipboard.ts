@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { copyToClipboard, CopyOptions } from '@/utils/clipboard';
 import { showToast } from '@/lib/ui/toast';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 interface UseCopyToClipboardOptions extends CopyOptions {
   /** 複製後的 callback */
@@ -23,7 +24,7 @@ export const useCopyToClipboard = (options?: UseCopyToClipboardOptions) => {
         // 2 秒後重置狀態
         setTimeout(() => setCopied(false), 2000);
       } else {
-        showToast.error(options?.errorMessage || '複製失敗，請手動複製');
+        ErrorFactory.handle(options?.errorMessage || '複製失敗，請手動複製', { context: '剪贴板操作' });
       }
     },
     [options]

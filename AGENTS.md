@@ -27,3 +27,19 @@
 
 ## API 路由
 - 必須透過 Hono RPC (`hc`) 呼叫，嚴禁手動拼接 `/api/xxx`。
+
+## ES Module 導入規範（強制）
+### 核心原則
+- ✅ 導入時**必須指定具體檔案**，且後端程式碼導入需包含 `.js` 結尾（如 `../_lib/db/index.js` 或 `../_lib/db/client.js`）。
+- ❌ 禁止導入目錄而不指定 `index.js`（如 `import { db } from '../_lib/db'`）。
+- ✅ 每個目錄若作為模組導出，**強烈建議有 `index.ts`** 作為唯一導出入口。
+
+### 正確寫法
+```ts
+// ✅ 正確：導入具體檔案與副檔名
+import { db } from '../_lib/db/index.js';
+import { errorResponse } from '../_lib/response.js';
+
+// ❌ 錯誤：導入目錄 (會導致 ERR_UNSUPPORTED_DIR_IMPORT)
+import { db } from '../_lib/db';
+```

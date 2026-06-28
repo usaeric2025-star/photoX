@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from '@/hooks/core/useTranslation';
 import { classifyPhotoError, getLocalizedError } from '@/lib/error/photoErrors';
-import { showErrorToast, showSuccessToast } from '@/lib/error/errorUI';
+import { showToast } from '@/lib/ui/toast';
 import { Icon, IconName } from '@/components/ui/Icon';
 import { cn } from '@/lib/utils';
 import { copyToClipboard } from '@/utils/clipboard';
@@ -59,10 +59,10 @@ export function PhotoErrorDisplay({ error, onRetry }: PhotoErrorDisplayProps) {
     const success = await copyToClipboard(diagnosticsText);
     if (success) {
       setCopied(true);
-      showSuccessToast('已复制诊断信息到剪贴板');
+      showToast.success('已复制诊断信息到剪贴板');
       setTimeout(() => setCopied(false), 2000);
     } else {
-      showErrorToast('复制失败，请手动选择文字');
+      showToast.error('复制失败，请手动选择文字');
     }
   };
 

@@ -99,8 +99,7 @@ export function AppErrorBoundary({ children }: { children: React.ReactNode }) {
           }
         }
 
-        ErrorFactory.capture(error);
-        showToast.error('系統發生錯誤，已自動記錄');
+        ErrorFactory.handle(error, { context: '系统渲染异常' });
       }}
     >
       {children}

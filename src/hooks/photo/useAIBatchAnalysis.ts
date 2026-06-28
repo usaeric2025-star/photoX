@@ -8,6 +8,7 @@ import { runBatchAnalysis } from '@/features/ai/orchestration';
 import { createTask } from '@/lib/task-queue';
 import { generateId } from '@/lib/id';
 import { useAuth } from '@/lib/store';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 export function useAIBatchAnalysis() {
   const { user } = useAuth();
@@ -15,7 +16,7 @@ export function useAIBatchAnalysis() {
 
   const handleBatchAiAnalyze = useCallback(async (targetPhotos: Photo[], groupId?: string) => {
     if (!targetPhotos || targetPhotos.length === 0) {
-      showToast.error('请先选择照片');
+      ErrorFactory.handle('请先选择照片', { context: '批量分析' });
       return;
     }
     

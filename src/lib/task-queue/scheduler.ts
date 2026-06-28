@@ -138,8 +138,7 @@ export class TaskScheduler {
       currentStore.setGlobalStatus('failed');
       await taskTable.updateStatus(task.id, 'failed', { error: message, retryable });
 
-      const wrappedError = ErrorFactory.wrap(error, task.label);
-      showToast.error(wrappedError);
+      ErrorFactory.handle(error, { context: task.label });
     } finally {
       this.controllers.delete(task.id);
       this.running.delete(task.id);
