@@ -1,7 +1,7 @@
 import { useAuth, uiStore } from '@/lib/store';
 import { useCallback } from 'react';
-
-import { checkDuplicateBatch } from '@/services/photo';
+import { sha256 } from '@/lib/image/hash';
+import { checkHashExists } from '@/lib/api/photos';
 import { showToast } from '@/lib/ui/toast';
 import { hapticFeedback } from '@/lib/ui/haptics';
 import { createTask } from '@/lib/task-queue';
@@ -15,10 +15,24 @@ export function usePhotoUpload() {
     const fileArray = Array.from(files);
     if (fileArray.length === 0) return;
 
-    const { newFiles: uniqueFiles, duplicateHashes } = checkDuplicateBatch(fileArray);
+    const uniqueFiles: File[] = [];
+    let skippedCount = 0;
 
-    if (duplicateHashes.length > 0) {
-      showToast.info(`已自动合并 ${duplicateHashes.length} 张重复照片`);
+    for (const file of fileArray) {
+      // 1️⃣ 先算 SHA-256（原始檔案）
+      const hash = await sha256(file);
+
+      // 2️⃣ 檢查是否已存在
+      const exists = await checkHashExists(hash);
+      if (exists) {
+        skippedCount++;
+        continue;
+      }
+      uniqueFiles.push(file);
+    }
+
+    if (skippedCount > 0) {
+      showToast.info(`已自动跳过 ${skippedCount} 张重复照片`);
     }
 
     if (uniqueFiles.length === 0) return;

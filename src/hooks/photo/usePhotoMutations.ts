@@ -57,7 +57,7 @@ const photoDeleteConfig = defineMutation<
     return await deleteMany(Array.isArray(ids) ? ids : [ids]);
   },
   invalidate: (data, vars) => [
-    queryKeys.photos.all,
+    ['photos', 'list'],
     queryKeys.groups.all,
     ...(Array.isArray(vars) ? vars : [vars]).map((id) => queryKeys.photos.detail(id))
   ],

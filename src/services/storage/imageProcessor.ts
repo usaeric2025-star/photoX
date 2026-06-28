@@ -1,5 +1,6 @@
 import { compressImage } from '@/services/storage/uploadUtils';
 import { IMAGE_COMPRESS } from '@/constants/config';
+import { sha256 } from '@/lib/image/hash';
 
 export interface ProcessedImage {
   hash: string;
@@ -10,16 +11,11 @@ export interface ProcessedImage {
 }
 
 /**
- * Utility to process a raw File: generate a pseudo hash and get dimensions
+ * Utility to process a raw File: generate a real hash and get dimensions
  */
 export async function processImageFile(file: File): Promise<ProcessedImage> {
-  // 1. Calculate Pseudo Hash based on file metadata
-  const pseudoString = `${file.name}|${file.size}|${file.lastModified}`;
-  const encoder = new TextEncoder();
-  const data = encoder.encode(pseudoString);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  // 1. Calculate Real Hash based on file content
+  const hash = await sha256(file);
 
   // 2. Create Object URL for preview
   const objectUrl = URL.createObjectURL(file);
@@ -51,13 +47,7 @@ export async function processImageFiles(
   const total = files.length;
   
   const loadedFiles = await Promise.all(files.map(async (file) => {
-    const pseudoString = `${file.name}|${file.size}|${file.lastModified}`;
-    const encoder = new TextEncoder();
-    const data = encoder.encode(pseudoString);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
+    const hash = await sha256(file);
     const objectUrl = URL.createObjectURL(file);
 
     return { file, objectUrl, hash };

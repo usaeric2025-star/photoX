@@ -287,6 +287,7 @@ export function PhotoLightbox() {
             try {
               await adminActions.deletePhoto.mutateAsync([currentSlide.id]);
               showToast.success('照片已删除');
+              handleClose();
             } catch (e) {
               ErrorFactory.handleError(e, '删除照片');
             }
