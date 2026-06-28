@@ -7,9 +7,38 @@ export const logger = {
   debug: (msg: string, meta?: unknown) => log('debug', msg, meta),
 };
 
+function serializeError(err: Error) {
+  return {
+    name: err.name,
+    message: err.message,
+    stack: err.stack,
+    ...(err as any),
+  };
+}
+
 function log(level: LogLevel, msg: string, meta?: unknown) {
   const timestamp = new Date().toISOString();
-  const metaObj = (meta && typeof meta === 'object' && !Array.isArray(meta)) ? (meta as Record<string, unknown>) : { meta };
+  
+  let metaObj: Record<string, unknown> = {};
+  if (meta !== undefined) {
+    if (meta instanceof Error) {
+      metaObj = { error: serializeError(meta) };
+    } else if (typeof meta === 'object' && meta !== null && !Array.isArray(meta)) {
+      // Check if any sub-property is an Error
+      const sanitized: Record<string, unknown> = {};
+      for (const [key, val] of Object.entries(meta)) {
+        if (val instanceof Error) {
+          sanitized[key] = serializeError(val);
+        } else {
+          sanitized[key] = val;
+        }
+      }
+      metaObj = sanitized;
+    } else {
+      metaObj = { meta };
+    }
+  }
+
   const output = {
     timestamp,
     level: level.toUpperCase(),
@@ -25,3 +54,4 @@ function log(level: LogLevel, msg: string, meta?: unknown) {
     console.log(JSON.stringify(output));
   }
 }
+
