@@ -75,18 +75,21 @@ export async function refreshPhotosView() {
   isRefreshing = true;
   pendingRefresh = (async () => {
     try {
+      logger.info('[View Refresh] Starting concurrent refresh...');
       // Concurrent refresh: non-blocking, requiring unique index on materialized view.
       await db.execute(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY v_photos_list`);
       logger.info('[View Refresh] Materialized view v_photos_list updated concurrently');
     } catch (err: unknown) {
       logger.warn('[View Refresh] Concurrent refresh failed, falling back to standard refresh:', err);
       try {
+        logger.info('[View Refresh] Starting standard refresh...');
         await db.execute(sql`REFRESH MATERIALIZED VIEW v_photos_list`);
         logger.info('[View Refresh] Materialized view v_photos_list updated via standard fallback');
       } catch (fallbackErr) {
         logger.error('[View Refresh] Fallback standard refresh also failed:', fallbackErr);
       }
     } finally {
+      logger.info('[View Refresh] Refresh finished.');
       isRefreshing = false;
       pendingRefresh = null;
     }

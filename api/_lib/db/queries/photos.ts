@@ -2,6 +2,7 @@
 import { db, furnitureItems, categories, manufacturers, groups, vPhotosList } from '../index.js';
 import { eq, and, or, ilike, sql, desc, asc, isNull, count, inArray, type SQL } from 'drizzle-orm';
 import { logger } from '../../logger.js';
+import { refreshPhotosView } from '../actions.js';
 
 export interface PhotoListParams {
     page?: number;
@@ -132,7 +133,7 @@ export async function getPhotosList(params: PhotoListParams) {
             const realCount = Number(realCountRes.count);
             if (realCount > 0) {
                 logger.warn(`[Self-Healing] v_photos_list has 0 rows, but furniture_items has ${realCount} rows. Triggering on-demand refresh!`);
-                await db.execute(sql`REFRESH MATERIALIZED VIEW v_photos_list`);
+                await refreshPhotosView();
                 
                 // Re-run total count query
                 const [newCountRes] = await db

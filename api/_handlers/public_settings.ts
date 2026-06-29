@@ -8,15 +8,27 @@ import { errorResponse } from '../_lib/response.js';
 export const publicSettings = new Hono();
 
 const handler = async (c: any) => {
-    // 僅查詢 settings 與 secrets 兩張必要的表，大幅縮短核心 API 回應時間，將載入時間縮短至最低並防止任何資料庫鎖定或連線耗盡
+    logger.info("Fetching settings...");
     const [settingsRes, passcodeRes] = await Promise.all([
-        db.select().from(schema.settings).where(eq(schema.settings.id, 1)).limit(1)
-            .then(res => res[0] || null)
-            .catch(e => { logger.warn("Settings table fetch failed (likely schema mismatch):", e); return null; }),
+        db.select({
+            id: schema.settings.id,
+            logoUrl: schema.settings.logoUrl,
+            whatsapp1: schema.settings.whatsapp1,
+            whatsapp2: schema.settings.whatsapp2,
+            whatsapp1Name: schema.settings.whatsapp1Name,
+            whatsapp2Name: schema.settings.whatsapp2Name,
+            facebook: schema.settings.facebook,
+            instagram: schema.settings.instagram,
+            passcodeEnabled: schema.settings.passcodeEnabled,
+            accessPasscode: schema.settings.accessPasscode,
+        }).from(schema.settings).where(eq(schema.settings.id, 1)).limit(1)
+            .then(res => { logger.info("Settings fetched"); return res[0] || null; })
+            .catch(e => { logger.error("Settings table fetch failed:", e); return null; }),
         db.select().from(schema.secrets).where(eq(schema.secrets.key, 'access_passcode')).limit(1)
-            .then(res => res[0] || null)
-            .catch(e => { logger.warn("Secrets table fetch failed:", e); return null; }),
+            .then(res => { logger.info("Secrets fetched"); return res[0] || null; })
+            .catch(e => { logger.error("Secrets table fetch failed:", e); return null; }),
     ]);
+    logger.info("Fetching complete");
 
     // Return ONLY non-sensitive data
     const data = {
