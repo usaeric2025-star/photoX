@@ -1,8 +1,8 @@
-import { pgMaterializedView, uuid, text, jsonb, boolean, timestamp, integer } from 'drizzle-orm/pg-core';
+import { pgView, uuid, text, jsonb, boolean, timestamp, integer } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { logger } from '../logger.js';
 
-export const vPhotosList = pgMaterializedView('v_photos_list', {
+export const vPhotosList = pgView('v_photos_list', {
   id: uuid('id').primaryKey(),
   name: jsonb('name'),
   description: jsonb('description'),
