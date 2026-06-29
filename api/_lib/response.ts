@@ -43,7 +43,16 @@ export const errorResponse = (c: Context, error: unknown, status: number = 500) 
     }
   };
 
-  if (c.executionCtx?.waitUntil) {
+  let hasWaitUntil = false;
+  try {
+    if (c.executionCtx && typeof c.executionCtx.waitUntil === 'function') {
+      hasWaitUntil = true;
+    }
+  } catch (e) {
+    // Accessing c.executionCtx throws if there is no execution context
+  }
+
+  if (hasWaitUntil) {
     c.executionCtx.waitUntil(logToDb());
   } else {
     logToDb().catch(e => console.error('Failed to log to DB:', e));

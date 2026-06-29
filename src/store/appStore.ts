@@ -5,6 +5,7 @@ import { logger } from '@/lib/logger';
 import { fetchPublicSettings } from '@/services/settings/queries';
 import { appQuery } from '@/lib/query';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { scheduler } from '@/lib/task-queue/scheduler';
 
 export interface AppStatusState {
   isLoading: boolean;
@@ -33,7 +34,6 @@ export const initializeApp = async () => {
     await Promise.all([authInitPromise, settingsPromise]);
     
     // 3. 恢復任務佇列（此時 Auth 已就緒）
-    const { scheduler } = await import('@/lib/task-queue/scheduler');
     scheduler.restore().catch(e => logger.error('[appStore] Task restore failed', e));
     
     // 4. 標記初始化完成

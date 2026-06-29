@@ -27,17 +27,22 @@ const globalForDb = globalThis as unknown as {
   drizzleDb: any | undefined;
 };
 
+const clientOptions: postgres.Options<{}> = {
+  max: maxConnections,
+  idle_timeout: isServerless ? 5 : 20, // Close idle connections quickly
+  connect_timeout: 30, // Increase connect timeout to 30s to allow PgBouncer to queue/wake up if overloaded
+  prepare: false, // Required for PgBouncer/Supabase transaction pooling
+  onnotice: () => {},
+};
+
 if (!globalForDb.postgresClient && connectionString) {
   globalForDb.postgresClient = postgres(connectionString, {
-    max: maxConnections,
-    idle_timeout: isServerless ? 5 : 20, // Close idle connections quickly
-    connect_timeout: 15, // Increase connect timeout to allow PgBouncer to queue if overloaded
-    prepare: false, // Required for PgBouncer/Supabase transaction pooling
-    onnotice: () => {},
+    ...clientOptions,
+    keep_alive: 30000, // 30s keep-alive to prevent stale half-closed connections
   });
 }
 
-export const client = globalForDb.postgresClient || postgres(connectionString || '', { max: maxConnections });
+export const client = globalForDb.postgresClient || postgres(connectionString || '', clientOptions);
 
 if (!globalForDb.drizzleDb && connectionString) {
   globalForDb.drizzleDb = drizzle(client, { 
