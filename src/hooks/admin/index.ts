@@ -1,9 +1,4 @@
 /**
- * 管理員勾選操作與批量狀態
- */
-export * from './useAdminSelection';
-
-/**
  * 管理員具體操作集合（單張、批量、AI）
  */
 export * from './useAdminMaintenance';

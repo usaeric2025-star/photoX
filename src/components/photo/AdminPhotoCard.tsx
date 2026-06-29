@@ -37,7 +37,7 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
 }: AdminPhotoCardProps) {
   const isMultiSelect = useIsMultiSelect();
   const isPhotoSelected = useIsPhotoSelected(photo.id);
-  const columns = useSignal(gridColumnsSignal);
+  const columns = useSignal(gridColumnsSignal) as number;
   const { can } = usePermission();
   
   const { cardRef, handleClick } = usePhotoCard({

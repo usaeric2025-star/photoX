@@ -16,7 +16,7 @@ import { useColumns } from '@/hooks';
 import { FilterBar } from '@/features/filters';
 
 function PublicPhotoGrid({ photos, categories, onPhotoClick, gridRef }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string, index: number, e?: React.MouseEvent) => void; gridRef?: React.Ref<any> }) {
-  const columns = useSignal(gridColumnsSignal);
+  const columns = useSignal(gridColumnsSignal) as number;
   
   return (
     <PhotoGridContent 

@@ -49,7 +49,7 @@ export function PhotoGridContent({
   const showGroupsCollapsed = filters?.showGroupsCollapsed !== false;
   const hasSearchQuery = !!filters?.search;
   
-  const actualColumns = useSignal(gridColumnsSignal) || 3;
+  const actualColumns = (useSignal(gridColumnsSignal) as number) || 3;
   const { can } = usePermission();
   const canPinGlobal = can('photo:toggle-pinned');
 

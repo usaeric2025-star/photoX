@@ -28,7 +28,7 @@ export const PublicPhotoCard = memo(function PublicPhotoCard({
   sharedCategories,
   sharedTags,
 }: PublicPhotoCardProps) {
-  const columns = useSignal(gridColumnsSignal);
+  const columns = useSignal(gridColumnsSignal) as number;
   
   const { cardRef, handleClick } = usePhotoCard({
     photo,

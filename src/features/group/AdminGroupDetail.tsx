@@ -25,7 +25,7 @@ import { FilterBar } from '@/features/filters';
 function AdminPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string, index: number, e?: React.MouseEvent) => void }) {
   const isMultiSelect = useIsMultiSelect();
   const { toggleSelect } = useSelectionActions();
-  const columns = useSignal(gridColumnsSignal);
+  const columns = useSignal(gridColumnsSignal) as number;
 
   return (
     <PhotoGridContent 

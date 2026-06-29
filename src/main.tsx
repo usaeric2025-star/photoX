@@ -41,7 +41,7 @@ import { ErrorBoundary } from './components/shared/ErrorBoundary';
 import { FatalErrorOverlay } from './components/shared/FatalErrorOverlay';
 import { logger } from './lib/logger';
 import './index.css';
-import { clientEnv } from './shared/envSchema';
+// Removed import
 // Removed migration
 import { initChunkHandler } from './lib/chunkErrorHandler';
 import { dailyWorker } from './features/diagnostics/DailyWorker';
@@ -121,7 +121,7 @@ async function init() {
     });
   }
 
-  if (clientEnv.DEV) {
+  if (import.meta.env.DEV) {
     await import('./lib/resizeObserverPolyfill');
   }
 

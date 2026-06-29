@@ -37,4 +37,3 @@ export function useLightbox() {
 }
 
 export * from './adapter';
-export * from './engine';
