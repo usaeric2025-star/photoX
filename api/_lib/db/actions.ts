@@ -79,7 +79,13 @@ export async function refreshPhotosView() {
       await db.execute(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY v_photos_list`);
       logger.info('[View Refresh] Materialized view v_photos_list updated concurrently');
     } catch (err: unknown) {
-      logger.error('[View Refresh] Concurrent refresh failed. Skipping simple blocking fallback to prevent database lockups and connection exhaustion:', err);
+      logger.warn('[View Refresh] Concurrent refresh failed, falling back to standard refresh:', err);
+      try {
+        await db.execute(sql`REFRESH MATERIALIZED VIEW v_photos_list`);
+        logger.info('[View Refresh] Materialized view v_photos_list updated via standard fallback');
+      } catch (fallbackErr) {
+        logger.error('[View Refresh] Fallback standard refresh also failed:', fallbackErr);
+      }
     } finally {
       isRefreshing = false;
       pendingRefresh = null;

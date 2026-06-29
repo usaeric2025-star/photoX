@@ -1,6 +1,7 @@
 
 import { db, furnitureItems, categories, manufacturers, groups, vPhotosList } from '../index.js';
 import { eq, and, or, ilike, sql, desc, asc, isNull, count, inArray, type SQL } from 'drizzle-orm';
+import { logger } from '../../logger.js';
 
 export interface PhotoListParams {
     page?: number;
@@ -112,16 +113,46 @@ export async function getPhotosList(params: PhotoListParams) {
         .from(vPhotosList)
         .where(finalWhere);
     
-    const total = Number(countRes.count);
+    let total = Number(countRes.count);
 
     // 2. Get Data
     const orderSpec = sortOrder === 'oldest' ? asc(vPhotosList.createdAt) : desc(vPhotosList.createdAt);
-    const results = await db
+    let results = await db
         .select()
         .from(vPhotosList)
         .where(finalWhere)
         .orderBy(orderSpec)
         .limit(limit);
+
+    // Self-healing: If materialized view has 0 rows, but furniture_items actually has records, 
+    // it means the view is desynchronized or was never initially populated on a fresh database.
+    if (results.length === 0 && !searchQuery && !tagId && !categoryId && !groupId && !manufacturerId) {
+        try {
+            const [realCountRes] = await db.select({ count: count() }).from(furnitureItems);
+            const realCount = Number(realCountRes.count);
+            if (realCount > 0) {
+                logger.warn(`[Self-Healing] v_photos_list has 0 rows, but furniture_items has ${realCount} rows. Triggering on-demand refresh!`);
+                await db.execute(sql`REFRESH MATERIALIZED VIEW v_photos_list`);
+                
+                // Re-run total count query
+                const [newCountRes] = await db
+                    .select({ count: count() })
+                    .from(vPhotosList)
+                    .where(finalWhere);
+                total = Number(newCountRes.count);
+
+                // Re-run data query
+                results = await db
+                    .select()
+                    .from(vPhotosList)
+                    .where(finalWhere)
+                    .orderBy(orderSpec)
+                    .limit(limit);
+            }
+        } catch (healErr) {
+            logger.error('[Self-Healing] Failed to refresh materialized view on-demand:', healErr);
+        }
+    }
 
     return {
         items: results,
