@@ -4,10 +4,27 @@ import { db, tags as tagsTable, photoTags } from '../_lib/db/index.js';
 import { eq, ilike, asc, inArray, sql, and, ne } from 'drizzle-orm';
 import { TagReqSchema } from '../../shared/apiContractSchema.js';
 import { errorResponse } from '../_lib/response.js';
+import { logger } from '../_lib/logger.js';
+
+let tagsCache: any[] | null = null;
+let tagsCacheTime = 0;
+
+function clearTagsCache() {
+    logger.info('[Tags Cache] Cleared tags list cache');
+    tagsCache = null;
+    tagsCacheTime = 0;
+}
 
 export const tags = new Hono()
   .get('/', async (c) => {
+    const now = Date.now();
+    if (tagsCache && now - tagsCacheTime < 5 * 60 * 1000) {
+        logger.debug('[Tags Cache] Returning cached tags');
+        return c.json({ success: true, data: tagsCache });
+    }
     const data = await db.select().from(tagsTable).orderBy(asc(tagsTable.name));
+    tagsCache = data;
+    tagsCacheTime = now;
     return c.json({ success: true, data });
   })
   .get('/search', async (c) => {
@@ -29,6 +46,7 @@ export const tags = new Hono()
 
     const { updates } = check.output;
     await db.update(tagsTable).set(updates).where(eq(tagsTable.id, parseInt(id)));
+    clearTagsCache();
     return c.json({ success: true });
   })
   .post('/', async (c) => {
@@ -38,6 +56,7 @@ export const tags = new Hono()
 
     const { tagData } = check.output;
     const [data] = await db.insert(tagsTable).values(tagData).returning();
+    clearTagsCache();
     return c.json({ success: true, data });
   })
   .post('/batch', async (c) => {
@@ -47,15 +66,18 @@ export const tags = new Hono()
 
     const { tags: tagsData } = check.output;
     const data = await db.insert(tagsTable).values(tagsData).returning({ id: tagsTable.id, name: tagsTable.name });
+    clearTagsCache();
     return c.json({ success: true, data });
   })
   .delete('/:id', async (c) => {
     const id = c.req.param('id');
     await db.delete(tagsTable).where(eq(tagsTable.id, parseInt(id)));
+    clearTagsCache();
     return c.json({ success: true });
   })
   .post('/refresh-hot-scores', async (c) => {
     await db.execute(sql`SELECT refresh_tag_hot_scores()`);
+    clearTagsCache();
     return c.json({ success: true });
   })
   .post('/remove-from-photo', async (c) => {

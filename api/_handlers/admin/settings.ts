@@ -4,6 +4,7 @@ import { db, secrets as secretsTable, settings as settingsTable } from '../../_l
 import { eq, inArray, sql } from "drizzle-orm";
 import { encrypt } from '../../_lib/encryption.js';
 import { errorResponse } from '../../_lib/response.js';
+import { clearSettingsCache } from '../public_settings.js';
 
 export const adminSettings = new Hono();
 
@@ -173,6 +174,7 @@ adminSettings.post("/save-settings", async (c) => {
             set: updatePayload as unknown as typeof settingsTable.$inferInsert
         });
         
+        clearSettingsCache();
         return c.json({ success: true });
     } catch (e: unknown) {
         return c.json({ success: false, error: (e as Error).message }, 500);
@@ -186,6 +188,7 @@ adminSettings.post("/upsert-logo", async (c) => {
             target: settingsTable.id,
             set: { logoUrl: url }
         });
+        clearSettingsCache();
         return c.json({ success: true });
     } catch (e: unknown) {
         return c.json({ success: false, error: (e as Error).message }, 500);

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { VList } from 'virtua';
 
 interface VirtualizedGridProps<T> {
@@ -24,6 +24,19 @@ export function VirtualizedGrid<T extends { id: string | number }>({
   onScrollEnd,
   footer,
 }: VirtualizedGridProps<T>) {
+  const scrollOffsetRef = useRef(0);
+  const [cooldown, setCooldown] = useState(true);
+
+  // Set up a cooldown whenever the item count changes (e.g. on mount or loading next page)
+  // to avoid double/triple trigger of onScrollEnd during layouts
+  useEffect(() => {
+    setCooldown(true);
+    const timer = setTimeout(() => {
+      setCooldown(false);
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, [items.length]);
+
   const rows = useMemo(() => {
     const r = [];
     for (let i = 0; i < items.length; i += columns) {
@@ -37,11 +50,24 @@ export function VirtualizedGrid<T extends { id: string | number }>({
     return r;
   }, [items, columns]);
 
+  const handleScroll = (offset: number) => {
+    scrollOffsetRef.current = offset;
+    onScroll?.(offset);
+  };
+
+  const handleScrollEnd = () => {
+    // Only trigger onScrollEnd if the user has actually scrolled (offset > 50px)
+    // and we're not currently in the initialization/mounting cooldown phase.
+    if (scrollOffsetRef.current > 50 && !cooldown) {
+      onScrollEnd?.();
+    }
+  };
+
   return (
     <div className="w-full h-full min-h-0 relative" ref={containerRef}>
       <VList 
-        onScroll={onScroll} 
-        onScrollEnd={onScrollEnd}
+        onScroll={handleScroll} 
+        onScrollEnd={handleScrollEnd}
         style={{ height: '100%' }}
       >
         {rows.map((row) => (

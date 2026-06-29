@@ -8,8 +8,24 @@ import { withTimeout, TIMEOUTS } from '../_lib/utils/timeout.js';
 
 export const publicSettings = new Hono();
 
+export let settingsCache: any = null;
+export let settingsCacheTime = 0;
+
+export function clearSettingsCache() {
+    logger.info('[Settings Cache] Cleared public settings cache');
+    settingsCache = null;
+    settingsCacheTime = 0;
+}
+
 const handler = async (c: any) => {
     const requestId = crypto.randomUUID();
+    const now = Date.now();
+    
+    if (settingsCache && now - settingsCacheTime < 5 * 60 * 1000) {
+        logger.debug(`[Settings-${requestId}] Returning cached public settings`);
+        return c.json({ success: true, data: settingsCache });
+    }
+
     logger.info(`[Settings-${requestId}] Starting fetch...`);
     const start = Date.now();
     
@@ -44,9 +60,13 @@ const handler = async (c: any) => {
         tags: [],          
     };
 
+    settingsCache = data;
+    settingsCacheTime = now;
+
     return c.json({ success: true, data });
 };
 
 publicSettings.get("/", handler);
 publicSettings.get("", handler);
+
 
