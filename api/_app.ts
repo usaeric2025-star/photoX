@@ -4,6 +4,7 @@ import { getServerEnv } from '../shared/envSchema.js';
 import { errorResponse } from './_lib/response.js';
 import adminApp from './_admin.js';
 import { publicSettings } from './_handlers/public_settings.js';
+import { publicAuth } from './_handlers/public_auth.js';
 import { ai } from './_handlers/ai.js';
 import { tags } from './_handlers/tags.js';
 import { categories } from './_handlers/categories.js';
@@ -112,6 +113,7 @@ setupMiddlewares(app, { NODE_ENV: serverEnv.NODE_ENV });
 // --- API Routes (Distributed) ---
 app.route('/admin', adminApp);
 app.route('/public/settings', publicSettings);
+app.route('/public/auth', publicAuth);
 app.route('/ai', ai);
 app.route('/tags', tags);
 app.route('/categories', categories);
