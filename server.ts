@@ -13,6 +13,7 @@ const PORT = 3000;
 
 async function bootstrap() {
   const isProd = serverEnv.NODE_ENV === "production";
+  console.log(`>>> [BOOTSTRAP] Starting server. Mode: ${isProd ? 'Production' : 'Development'}`);
   
   if (!isProd) {
     const { createServer: createViteServer } = await import("vite");
@@ -115,6 +116,8 @@ if (!isVercelEnvironment) {
   bootstrap().catch(err => {
     console.error("CRITICAL: Bootstrap failed", err);
   });
+} else {
+  console.log(">>> [SERVER-MODE] Detected Serverless/Vercel Environment. Skipping bootstrap.");
 }
 
 export { app };

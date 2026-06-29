@@ -10,12 +10,15 @@ export function photoToLightboxSlide(photo: Record<string, unknown> | Photo): Li
   // 優先使用原始 URL
   const src = (photo.imageUrl || photo.image_url) as string | undefined;
 
-  // Generate srcSet for responsive loading
+  // Generate srcSet for responsive loading only if worker is available
   let srcSet: string | undefined;
-  if (src) {
-    const w400 = getThumbnailUrl(src, 400, 400);
-    const w800 = getThumbnailUrl(src, 800, 800);
-    const w1200 = getThumbnailUrl(src, 1200, 1200);
+  const env = import.meta.env;
+  const workerUrl = env?.VITE_IMAGE_WORKER_URL;
+  if (src && workerUrl) {
+    const hash = (photo.image_hash || photo.imageHash) as string | undefined;
+    const w400 = getThumbnailUrl(src, 400, undefined, hash);
+    const w800 = getThumbnailUrl(src, 800, undefined, hash);
+    const w1200 = getThumbnailUrl(src, 1200, undefined, hash);
     srcSet = `${w400} 400w, ${w800} 800w, ${w1200} 1200w`;
   }
   

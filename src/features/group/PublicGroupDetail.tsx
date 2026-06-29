@@ -4,7 +4,7 @@ import { useAppRouter } from '@/lib/router';
 import { useGroupData } from './hooks/useGroupData';
 import { PhotoListItem } from '@/types/api';
 import { Photo, Group, Category } from '@/types';
-import { PublicPhotoCard } from '@/components/photo/PublicPhotoCard';
+import { PhotoGridContent } from '@/components/photo/PhotoGridContent';
 import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
 import { useFilters, useTranslation, useCategories } from '@/hooks';
 import { GroupHeader } from './components/GroupHeader';
@@ -15,25 +15,23 @@ import { WhatsAppDialog } from '@/components/shared/WhatsAppDialog';
 import { useColumns } from '@/hooks';
 import { FilterBar } from '@/features/filters';
 
-function PublicPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string, index: number) => void }) {
+function PublicPhotoGrid({ photos, categories, onPhotoClick, gridRef }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string, index: number, e?: React.MouseEvent) => void; gridRef?: React.Ref<any> }) {
   const columns = useSignal(gridColumnsSignal);
   
   return (
-    <div 
-      className="grid gap-1 p-1"
-      style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
-    >
-      {photos.map((photo, index) => (
-        <div key={photo.id} className="min-w-0">
-         <PublicPhotoCard
-          photo={photo}
-          onClick={() => onPhotoClick(photo.id, index)}
-          hideGroupBadge={true}
-          sharedCategories={categories}
-        />
-        </div>
-      ))}
-    </div>
+    <PhotoGridContent 
+      photos={photos}
+      dataVersion="1"
+      isPending={false}
+      isFetching={false}
+      isFetchingNextPage={false}
+      hasNextPage={false}
+      fetchNextPage={() => {}}
+      columns={columns}
+      mode="public"
+      onPhotoClick={onPhotoClick}
+      gridRef={gridRef}
+    />
   );
 }
 
@@ -92,45 +90,6 @@ export function PublicGroupDetailPage() {
     scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const openWhatsApp = () => {
-    (window as unknown as { _pendingPhoto?: PhotoListItem })._pendingPhoto = undefined;
-    patchUI({ showWhatsAppChoice: false });
-  };
-
-  const getWhatsAppOptions = () => {
-    const options: { name: string; url: string }[] = [];
-    const pendingPhoto = (window as unknown as { _pendingPhoto?: PhotoListItem })._pendingPhoto;
-    let message = '';
-    
-    if (pendingPhoto) {
-      const prompt = t.sharePrompt || "您好，我对这个家具感兴趣：";
-      const name = pendingPhoto.name || "";
-      const url = pendingPhoto.imageUrl || "";
-      message = `${prompt}\n*${name}*\n${url}`;
-    } else {
-      const groupName = group?.name || '';
-      message = `您好，我對合組 *${groupName}* 很感興趣，想了解更多信息！`;
-    }
-    
-    const encodedText = encodeURIComponent(message);
-    
-    if (settings?.whatsapp_1) {
-      options.push({ name: settings.whatsapp_1_name || 'Contact 1', url: `https://wa.me/${settings.whatsapp_1}?text=${encodedText}` });
-    }
-    if (settings?.whatsapp_2) {
-      options.push({ name: settings.whatsapp_2_name || 'Contact 2', url: `https://wa.me/${settings.whatsapp_2}?text=${encodedText}` });
-    }
-    
-    if (options.length === 0) {
-      const fallback = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_WHATSAPP_NUMBER : '';
-      if (fallback) {
-        options.push({ name: t.whatsAppInquiry, url: `https://wa.me/${fallback}?text=${encodedText}` });
-      }
-    }
-    
-    return options;
-  };
-
   if (loading) {
     return (
       <div className="p-1 sm:p-2 lg:p-4 w-full h-full">
@@ -155,9 +114,14 @@ export function PublicGroupDetailPage() {
         />
       </div>
       {/* FilterBar removed */}
-      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto relative overscroll-y-auto overscroll-x-none bg-slate-50">
-        <PublicPhotoGrid photos={photos} categories={categories} onPhotoClick={handlePhotoClick} />
+      <div className="flex-1 relative bg-slate-50">
+        <PublicPhotoGrid photos={photos} categories={categories} onPhotoClick={handlePhotoClick} gridRef={scrollContainerRef} />
       </div>
+
+      <WhatsAppDialog 
+        open={showWhatsAppChoice} 
+        onOpenChange={(val) => patchUI({ showWhatsAppChoice: val })} 
+      />
     </div>
   );
 }

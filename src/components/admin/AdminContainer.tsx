@@ -65,6 +65,7 @@ export function AdminContainer() {
        <div className="flex-1 min-h-0 relative flex flex-col">
           <AdminPhotoGrid 
             {...photoGridData}
+            columns={columns}
             filters={filters}
             onPhotoClick={handlePhotoClick}
           />

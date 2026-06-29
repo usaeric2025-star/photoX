@@ -1,5 +1,4 @@
 import React, { useEffect, useRef } from 'react';
-import { VListHandle } from 'virtua';
 import { PhotoListItem } from '@/types/api';
 import { usePhotos, PhotoListFilters } from './usePhotos';
 
@@ -23,7 +22,7 @@ export function usePhotoGrid(filters: PhotoListFilters, mode: 'admin' | 'public'
   delete contentFilters.anchor;
   
   const dataVersion = JSON.stringify(contentFilters);
-  const ref = useRef<VListHandle>(null);
+  const ref = useRef<any>(null);
 
   // ✅ 篩選變更時重置滾動
   useEffect(() => {

@@ -1,7 +1,7 @@
 import { useSelection } from '@/features/selection/useSelection';
 import { useUI, UIStoreState } from '@/lib/store';
 import { useAppRouter } from '@/lib/router';
-import { usePhotoMutations } from '@/services/photo/photoService';
+import { usePhotoBatchEdit, usePhotoDelete } from '@/hooks/photo/usePhotoMutations';
 
 export function useBatchEdit() {
   const { batchEditingIds, patch: patchSelection } = useSelection();
@@ -10,7 +10,9 @@ export function useBatchEdit() {
   const updateForm = useUI((s: UIStoreState) => s.updateForm);
   const resetForm = useUI((s: UIStoreState) => s.resetForm);
 
-  const { remove, batchEdit, isMutating } = usePhotoMutations();
+  const batchEdit = usePhotoBatchEdit();
+  const remove = usePhotoDelete();
+  const isMutating = batchEdit.isPending || remove.isPending;
   const { navigate, route } = useAppRouter();
 
   const handleSave = async (selectedIds: string[]) => {
@@ -28,7 +30,7 @@ export function useBatchEdit() {
       }
     });
 
-    await batchEdit(ids, cleanUpdates);
+    await batchEdit.mutateAsync({ ids, updates: cleanUpdates });
     patchSelection({ batchEditingIds: null });
     resetForm();
     if (route?.name === 'adminBatchEdit') {
@@ -40,7 +42,7 @@ export function useBatchEdit() {
     const ids = batchEditingIds || selectedIds;
     if (!ids || ids.length === 0) return;
     
-    await remove(ids);
+    await remove.mutateAsync(ids);
     patchSelection({ batchEditingIds: null, isMultiSelect: false, selectedIds: [] });
     resetForm();
     if (route?.name === 'adminBatchEdit') {

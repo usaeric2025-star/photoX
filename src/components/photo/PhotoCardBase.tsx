@@ -14,7 +14,6 @@ export interface PhotoCardBaseProps extends React.HTMLAttributes<HTMLDivElement>
   ref?: Ref<HTMLDivElement>;
 }
 
-import { motion } from 'motion/react';
 import { Image } from '@/components/ui/Image';
 import { getThumbnailUrl } from '@/services/mappers/utils';
 
@@ -36,6 +35,15 @@ export const PhotoCardBase = ({
   const isManagement = useIsManagement();
   const isHidden = !!item.isHidden && isManagement;
 
+  const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
+    props.onMouseEnter?.(e);
+    // Preload the lightbox preview image (800px)
+    const hash = (item as any).image_hash || (item as any).imageHash;
+    const previewUrl = getThumbnailUrl(item.imageUrl, 800, undefined, hash);
+    const img = new window.Image();
+    img.src = previewUrl;
+  };
+
   return (
     <div
       ref={ref}
@@ -43,6 +51,7 @@ export const PhotoCardBase = ({
       data-selected={isSelected}
       data-multiselect={isMultiSelect}
       onClick={onClick}
+      onMouseEnter={handleMouseEnter}
       style={{
         WebkitTouchCallout: 'none',
         WebkitUserSelect: 'none',
@@ -64,7 +73,7 @@ export const PhotoCardBase = ({
         isSelected ? "scale-[0.92] rounded-xl" : "scale-100 rounded-2xl",
       )}>
         <Image
-          src={getThumbnailUrl(item.imageUrl, imgVariant === 'md' ? 800 : 400)}
+          src={getThumbnailUrl(item.imageUrl, imgVariant === 'md' ? 800 : 400, undefined, (item as any).image_hash || (item as any).imageHash)}
           alt={typeof item.name === 'string' ? item.name : (item.name as any)?.zh || '照片'}
           className={cn(
             "w-full h-full object-cover transition-transform duration-700 ease-out",

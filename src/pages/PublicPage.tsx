@@ -26,7 +26,7 @@ export default function PublicPage() {
   
   const { columns } = useColumns();
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const gridRef = useRef<import('virtua').VListHandle | null>(null);
+  const gridRef = useRef<any | null>(null);
   
   const hasFilters = !!search || (tags && tags.length > 0) || !!category;
   const isAggregated = showGroupsCollapsed && !hasFilters;
@@ -107,6 +107,7 @@ export default function PublicPage() {
         <ErrorBoundary>
           <PublicPhotoGrid 
             {...photoGridData}
+            columns={columns}
             gridRef={gridRef}
             onScroll={(offset) => setShowScrollTop(offset > 300)}
             filters={{ category, tags, search, sort, showGroupsCollapsed }}
@@ -130,7 +131,7 @@ export default function PublicPage() {
         <button
           onClick={() => {
             logger.debug('[PublicPage] WhatsApp button clicked');
-            patch({ showWhatsAppChoice: true });
+            patch({ showWhatsAppChoice: true, pendingPhoto: null });
           }}
           type="button"
           className="w-12 h-12 flex items-center justify-center rounded-full bg-success text-text-on-primary shadow-lg hover:opacity-90 transition-all active:scale-90 focus:outline-none"
@@ -139,6 +140,11 @@ export default function PublicPage() {
           <Icon name="message-circle" size={26} solid />
         </button>
       </div>
+
+      <WhatsAppDialog 
+        open={showWhatsAppChoice} 
+        onOpenChange={(val) => patch({ showWhatsAppChoice: val })} 
+      />
     </div>
   );
 }

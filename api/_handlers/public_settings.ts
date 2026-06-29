@@ -12,7 +12,7 @@ const handler = async (c: any) => {
     logger.info(`[Settings-${requestId}] Starting fetch...`);
     const start = Date.now();
     
-    const settingsRes = await db.select({
+    const settingsPromise = db.select({
         id: schema.settings.id,
         logoUrl: schema.settings.logoUrl,
         whatsapp1: schema.settings.whatsapp1,
@@ -21,15 +21,23 @@ const handler = async (c: any) => {
         whatsapp2Name: schema.settings.whatsapp2Name,
         facebook: schema.settings.facebook,
         instagram: schema.settings.instagram,
-    }).from(schema.settings).where(eq(schema.settings.id, 1)).limit(1)
-        .then(res => { 
-            logger.info(`[Settings-${requestId}] Settings fetched in ${Date.now() - start}ms`);
-            return res[0] || null; 
-        })
-        .catch(e => { 
-            logger.error(`[Settings-${requestId}] Settings table fetch failed:`, e); 
-            return null; 
-        });
+    }).from(schema.settings).where(eq(schema.settings.id, 1)).limit(1);
+
+    // Timeout the DB query after 12 seconds
+    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => {
+        logger.warn(`[Settings-${requestId}] DB query timed out after 12s`);
+        resolve(null);
+    }, 12000));
+
+    const settingsRes = await Promise.race([
+        settingsPromise.then(res => res[0] || null),
+        timeoutPromise
+    ]).catch(e => { 
+        logger.error(`[Settings-${requestId}] Settings table fetch failed:`, e); 
+        return null; 
+    });
+
+    logger.info(`[Settings-${requestId}] Fetch completed in ${Date.now() - start}ms`);
 
     // Return ONLY non-sensitive data
     const data = {

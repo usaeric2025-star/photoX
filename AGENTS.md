@@ -43,3 +43,21 @@ import { errorResponse } from '../_lib/response.js';
 // ❌ 錯誤：導入目錄 (會導致 ERR_UNSUPPORTED_DIR_IMPORT)
 import { db } from '../_lib/db';
 ```
+
+## 燈箱圖片載入規範（強制）
+
+### 1. Worker 是唯一圖片來源
+- ✅ 所有圖片 URL 必須透過 `getThumbnailUrl(key, width)` 產生
+- ✅ 燈箱主圖使用 `getThumbnailUrl(key, 800)`
+- ✅ 燈箱軌道縮圖使用 `getThumbnailUrl(key, 120)`
+- ❌ 禁止直接使用 R2 原始 URL（`image_url`）作為縮圖
+
+### 2. 燈箱相關元件檢查清單
+- `PhotoLightbox.tsx`：確認 `thumb` 使用 `getThumbnailUrl(key, 120)`
+- `LightboxInfoCard.tsx`：確認顯示元數據和相關資訊
+- `adapter.ts`：確認 `srcSet` 只在有 Worker 時啟用
+
+### 3. 驗證方式
+- 開啟燈箱後，檢查 Network 面板中縮圖網址是否包含 `?width=120`
+- 如果縮圖網址是 R2 原始 URL，表示 `getThumbnailUrl` 未被正確呼叫
+

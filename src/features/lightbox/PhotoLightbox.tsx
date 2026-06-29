@@ -85,18 +85,22 @@ export function PhotoLightbox() {
     // This prevents re-creating the 1000+ images array on every single index change,
     // making swipe transitions between slides buttery smooth!
     const centerIndex = coarseIndex * 10;
+    
     return slides.map((s, i) => {
-      const originalPhoto = s.original as Photo | undefined;
-      const hash = originalPhoto?.image_hash;
+      const originalPhoto = s.original as any;
+      const hash = originalPhoto?.image_hash || originalPhoto?.imageHash;
       
       // 💡 Sliding Window Optimization: Only load thumbnails that are close to the current index (window of ~50 items).
-      // Always ensure the current slide is included in the window.
-      const distance = Math.abs(i - currentIndex);
-      const isInWindow = distance <= 50; 
+      // Since coarseIndex changes every 10 slides, the "window" is always roughly centered.
+      const distance = Math.abs(i - centerIndex);
+      const isInWindow = distance <= 60; // Slightly larger window to account for coarseIndex offset
       
-      const previewUrl = getThumbnailUrl(s.src, 1024, 1024, hash);
+      const thumbUrlSrc = originalPhoto?.thumbnailUrl || originalPhoto?.thumbnail_url || originalPhoto?.imageUrl || originalPhoto?.image_url || s.src;
+      const previewUrlSrc = originalPhoto?.imageUrl || originalPhoto?.image_url || s.src;
+      
+      const previewUrl = getThumbnailUrl(previewUrlSrc, 800, undefined, hash);
       const thumbUrl = isInWindow 
-        ? getThumbnailUrl(s.src, 120, 120, hash)
+        ? getThumbnailUrl(thumbUrlSrc, 120, undefined, hash)
         : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1" viewBox="0 0 1 1"><rect width="1" height="1" fill="rgba(255,255,255,0.03)"/></svg>';
         
       return {
@@ -109,7 +113,7 @@ export function PhotoLightbox() {
         original: s, 
       };
     });
-  }, [slides, coarseIndex, currentIndex]);
+  }, [slides, coarseIndex]);
 
   const currentSlide = slides[currentIndex];
   const isEditModalOpen = filters.modal === 'edit';

@@ -2,8 +2,8 @@ import { SWRConfig } from 'swr';
 import { ErrorFactory } from '@/lib/error';
 
 export const swrConfig = {
-  // ✅ 快取時間 (5 分鐘)
-  dedupingInterval: 5 * 60 * 1000,
+  // ✅ 快取時間 (1 分鐘)
+  dedupingInterval: 1 * 60 * 1000,
   // ✅ 重新驗證策略
   revalidateOnFocus: false,
   revalidateOnReconnect: false,

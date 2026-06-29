@@ -10,20 +10,22 @@ const handler = async (c: any) => {
     logger.info("Fetching auth info...");
     
     try {
-        const passcodeRes = await db.select().from(schema.secrets).where(eq(schema.secrets.key, 'access_passcode')).limit(1)
-            .then(res => { logger.info("Secrets fetched"); return res[0] || null; })
-            .catch(e => { logger.error("Secrets table fetch failed:", e); return null; });
-            
-        const settingsRes = await db.select({
+        const timeout = (ms: number) => new Promise<null>((resolve) => setTimeout(() => resolve(null), ms));
+
+        const passcodeResPromise = db.select().from(schema.secrets).where(eq(schema.secrets.key, 'access_passcode')).limit(1);
+        const settingsResPromise = db.select({
             passcodeEnabled: schema.settings.passcodeEnabled,
             accessPasscode: schema.settings.accessPasscode,
-        }).from(schema.settings).where(eq(schema.settings.id, 1)).limit(1)
-            .then(res => { logger.info("Settings auth fetched"); return res[0] || null; })
-            .catch(e => { logger.error("Settings auth fetch failed:", e); return null; });
+        }).from(schema.settings).where(eq(schema.settings.id, 1)).limit(1);
+
+        const [passcodeRes, settingsRes] = await Promise.all([
+            Promise.race([passcodeResPromise.then(res => res[0] || null), timeout(12000)]),
+            Promise.race([settingsResPromise.then(res => res[0] || null), timeout(12000)])
+        ]);
 
         const data = {
             passcode_enabled: settingsRes?.passcodeEnabled ?? false,
-            access_passcode: passcodeRes?.value || settingsRes?.accessPasscode || '',
+            access_passcode: (passcodeRes as any)?.value || settingsRes?.accessPasscode || '',
         };
 
         return c.json({ success: true, data });

@@ -20,6 +20,7 @@ export interface UIStoreState {
   uploadModeDialogOpen: boolean;
   isTaskDrawerOpen: boolean;
   isSidebarOpen: boolean;
+  pendingPhoto: any | null;
   pendingFiles: FileList | File[] | null;
   activeDialogCount: number;
   fatalError: Error | null;
@@ -85,6 +86,7 @@ export const uiStore = createStore<UIStoreState>({
   uploadModeDialogOpen: false,
   isTaskDrawerOpen: false,
   isSidebarOpen: false,
+  pendingPhoto: null,
   pendingFiles: null,
   activeDialogCount: 0,
   fatalError: null,

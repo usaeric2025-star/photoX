@@ -27,8 +27,9 @@ export function AdminPhotoGrid({
   hasNextPage, 
   fetchNextPage, 
   filters,
-  onPhotoClick
-}: Omit<AdminPhotoGridProps, 'columns'>) {
+  onPhotoClick,
+  columns
+}: AdminPhotoGridProps) {
   const { isMultiSelect, toggleSelect } = useSelection();
   
   const allIds = React.useMemo(() => (photos || []).map(p => p.id), [photos]);
@@ -43,6 +44,7 @@ export function AdminPhotoGrid({
         isFetchingNextPage={isFetchingNextPage}
         hasNextPage={hasNextPage}
         fetchNextPage={fetchNextPage}
+        columns={columns}
         mode="admin"
         filters={filters}
         onPhotoClick={(id, index, e) => {

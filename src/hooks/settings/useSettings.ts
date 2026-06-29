@@ -1,12 +1,22 @@
-import { useSettings as useSettingsService } from '@/services/settings/settingsService';
 import { AppSettings } from '@/types';
 import React from 'react';
-import { useAppQuery } from '@/lib/query';
+import { useAppQuery, useAppMutation, appQuery } from '@/lib/query';
 import { fetchPublicSettings } from '@/services/settings/queries';
+import { saveSettings } from '@/services/settings/commands';
 import { STALE_TIMES } from '@/lib/query/config';
+import { queryKeys } from '@/lib/query/keys';
+
+const SETTINGS_KEY = ['settings', 'public'];
 
 export function useSettings() {
-  const { settings, isLoading, mutate } = useSettingsService();
+  const { data: settings, isLoading, mutate } = useAppQuery<AppSettings>(
+    SETTINGS_KEY,
+    fetchPublicSettings,
+    {
+      dedupingInterval: STALE_TIMES.LONG,
+      revalidateOnFocus: false,
+    }
+  );
 
   return React.useMemo(() => ({
     settings: settings || ({} as AppSettings),
@@ -19,8 +29,8 @@ export function useSettings() {
 }
 
 export function usePublicSettings() {
-  return useAppQuery(
-    ['settings', 'public'],
+  return useAppQuery<AppSettings>(
+    SETTINGS_KEY,
     fetchPublicSettings,
     {
       dedupingInterval: STALE_TIMES.MEDIUM,

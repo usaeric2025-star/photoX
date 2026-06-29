@@ -1,6 +1,8 @@
 // src/services/selection/selectionService.ts
 import { createStore } from '@storve/core';
 import { useStore } from '@/lib/store';
+import { signal } from '@storve/core/signals';
+import { useSignal } from '@/lib/store';
 import { useQueryState } from 'nuqs';
 import { batchParser, selectedIdsParser } from '@/lib/nuqs/parsers';
 
@@ -18,6 +20,9 @@ const selectionStore = createStore<SelectionState>({
   isAvoidingSelection: false,
 });
 
+export const selectedIdsSignal = signal<SelectionState, 'selectedIds'>(selectionStore, 'selectedIds');
+export const isMultiSelectSignal = signal<SelectionState, 'isMultiSelect'>(selectionStore, 'isMultiSelect');
+
 export function useSelection() {
   const [, setBatch] = useQueryState('batch', {
     ...batchParser,
@@ -29,8 +34,8 @@ export function useSelection() {
     history: 'replace',
   });
 
-  const selectedIds = useStore(selectionStore, (s) => s.selectedIds);
-  const isMultiSelect = useStore(selectionStore, (s) => s.isMultiSelect);
+  const selectedIds = useSignal(selectedIdsSignal);
+  const isMultiSelect = useSignal(isMultiSelectSignal);
   const batchEditingIds = useStore(selectionStore, (s) => s.batchEditingIds);
   const isAvoidingSelection = useStore(selectionStore, (s) => s.isAvoidingSelection);
   const selectedCount = selectedIds.length;

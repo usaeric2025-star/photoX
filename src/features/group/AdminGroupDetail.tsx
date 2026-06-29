@@ -3,7 +3,7 @@ import { useAppRouter } from '@/lib/router';
 import { useGroupData } from './hooks/useGroupData';
 import { PhotoListItem } from '@/types/api';
 import { Photo, Group, ProductGroup, Dimension, Category } from '@/types';
-import { AdminPhotoCard } from '@/components/photo/AdminPhotoCard';
+import { PhotoGridContent } from '@/components/photo/PhotoGridContent';
 import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
 import { useFilters, useTranslation, useCategories, usePermission } from '@/hooks';
 import { getTranslatedCategoryName } from '@/services/category/utils';
@@ -22,34 +22,29 @@ import { Button } from '@/components/shared/Button';
 import { useColumns } from '@/hooks';
 import { FilterBar } from '@/features/filters';
 
-function AdminPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string, index: number) => void }) {
+function AdminPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string, index: number, e?: React.MouseEvent) => void }) {
   const { isMultiSelect, toggleSelect } = useSelection();
   const columns = useSignal(gridColumnsSignal);
-  const { can } = usePermission();
-  const canPinGlobal = can('photo:toggle-pinned');
 
   return (
-    <div 
-      className="grid gap-1 sm:gap-2 p-1 sm:p-2 lg:p-4 pb-20"
-      style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
-    >
-      {photos.map((photo, index) => (
-        <AdminPhotoCard
-          key={photo.id}
-          photo={photo}
-          onClick={() => {
-            if (isMultiSelect) {
-              toggleSelect(photo.id);
-            } else {
-              onPhotoClick(photo.id, index);
-            }
-          }}
-          hideGroupBadge={true}
-          sharedCategories={categories}
-          canPinGlobal={canPinGlobal}
-        />
-      ))}
-    </div>
+    <PhotoGridContent 
+      photos={photos}
+      dataVersion="1" // Groups usually load all at once, versioning not critical here
+      isPending={false}
+      isFetching={false}
+      isFetchingNextPage={false}
+      hasNextPage={false}
+      fetchNextPage={() => {}}
+      columns={columns}
+      mode="admin"
+      onPhotoClick={(id, index, e) => {
+        if (isMultiSelect) {
+          toggleSelect(id);
+        } else {
+          onPhotoClick(id, index, e);
+        }
+      }}
+    />
   );
 }
 
@@ -164,7 +159,7 @@ export function AdminGroupDetailPage() {
           onUpdateTitle={handleUpdateTitle}
         />
       </div>
-      <div className={`flex-1 overflow-y-auto relative overscroll-y-auto overscroll-x-none bg-slate-50 transition-all duration-300 ${isMultiSelect ? 'pb-16' : ''}`}>
+      <div className={`flex-1 relative bg-slate-50 transition-all duration-300 ${isMultiSelect ? 'pb-16' : ''}`}>
         <AdminPhotoGrid photos={photos} categories={categories} onPhotoClick={handlePhotoClick} />
       </div>
 

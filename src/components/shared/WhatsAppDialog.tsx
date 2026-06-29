@@ -3,6 +3,7 @@ import { NativeDialog } from '@/components/ui/NativeDialog';
 import { useUI, UIStoreState } from '@/lib/store';
 import { usePublicSettings } from '@/hooks/settings/useSettings';
 import { Icon } from '@/components/ui/Icon';
+import { useTranslation } from '@/hooks';
 
 interface WhatsAppDialogProps {
   open: boolean;
@@ -11,17 +12,42 @@ interface WhatsAppDialogProps {
 
 export const WhatsAppDialog = ({ open, onOpenChange }: WhatsAppDialogProps) => {
   const { data: settings } = usePublicSettings();
+  const pendingPhoto = useUI(s => s.pendingPhoto);
+  const { uiTranslations: t } = useTranslation();
 
   const options = React.useMemo(() => {
     const opts = [];
-    if (settings?.whatsapp_1 && settings?.whatsapp_1_name) {
-      opts.push({ name: settings.whatsapp_1_name, url: `https://wa.me/${settings.whatsapp_1.replace(/\D/g, '')}` });
+    const whatsapp1 = settings?.whatsapp_1?.replace(/\D/g, '');
+    const whatsapp2 = settings?.whatsapp_2?.replace(/\D/g, '');
+
+    let message = '';
+    if (pendingPhoto) {
+      const prompt = t.sharePrompt || "您好，我对这个家具感兴趣：";
+      const name = pendingPhoto.name || "";
+      const url = pendingPhoto.imageUrl || "";
+      message = `${prompt}\n*${name}*\n${url}`;
+    } else {
+      message = `您好，我想了解更多信息！`;
     }
-    if (settings?.whatsapp_2 && settings?.whatsapp_2_name) {
-      opts.push({ name: settings.whatsapp_2_name, url: `https://wa.me/${settings.whatsapp_2.replace(/\D/g, '')}` });
+    const encodedText = encodeURIComponent(message);
+
+    if (whatsapp1 && settings?.whatsapp_1_name) {
+      opts.push({ name: settings.whatsapp_1_name, url: `https://wa.me/${whatsapp1}?text=${encodedText}` });
     }
+    if (whatsapp2 && settings?.whatsapp_2_name) {
+      opts.push({ name: settings.whatsapp_2_name, url: `https://wa.me/${whatsapp2}?text=${encodedText}` });
+    }
+    
+    // Fallback if no numbers configured but we have an env variable
+    if (opts.length === 0) {
+      const fallback = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_WHATSAPP_NUMBER : '';
+      if (fallback) {
+        opts.push({ name: t.whatsAppInquiry || 'WhatsApp', url: `https://wa.me/${fallback.replace(/\D/g, '')}?text=${encodedText}` });
+      }
+    }
+
     return opts;
-  }, [settings]);
+  }, [settings, pendingPhoto, t]);
 
   return (
     <NativeDialog id="whatsapp-choice-dialog" open={open} onClose={() => onOpenChange(false)}>

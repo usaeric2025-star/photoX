@@ -15,7 +15,7 @@ interface PublicPhotoGridProps {
   fetchNextPage: () => void;
   columns: number;
   filters: Record<string, unknown>;
-  gridRef?: React.Ref<import('virtua').VListHandle>;
+  gridRef?: React.Ref<any>;
   onScroll?: (offset: number) => void;
   onPhotoClick?: (id: string, index: number, e?: React.MouseEvent) => void;
 }
@@ -31,8 +31,9 @@ export function PublicPhotoGrid({
   filters,
   gridRef,
   onScroll,
-  onPhotoClick
-}: Omit<PublicPhotoGridProps, 'columns'>) {
+  onPhotoClick,
+  columns
+}: PublicPhotoGridProps) {
   
   logger.debug('[PublicPhotoGrid] Render Start', { photosCount: photos?.length, isPending, isFetching, dataVersion });
 
@@ -46,6 +47,7 @@ export function PublicPhotoGrid({
         isFetchingNextPage={isFetchingNextPage}
         hasNextPage={hasNextPage}
         fetchNextPage={fetchNextPage}
+        columns={columns}
         mode="public"
         filters={filters}
         gridRef={gridRef}
