@@ -8,6 +8,14 @@ import { getServerEnv } from "./shared/envSchema.js";
 // 启动校验
 const serverEnv = getServerEnv(process.env);
 
+// Global Error Handlers to prevent server crashes from unhandled promise rejections (e.g., DB timeouts)
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('>>> [CRITICAL-SAFEGUARD] Unhandled Promise Rejection at:', promise, 'reason:', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('>>> [CRITICAL-SAFEGUARD] Uncaught Exception:', err);
+});
+
 // --- Server Startup ---
 const PORT = 3000;
 

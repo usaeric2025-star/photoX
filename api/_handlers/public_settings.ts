@@ -22,7 +22,7 @@ const handler = async (c: any) => {
         whatsapp2Name: schema.settings.whatsapp2Name,
         facebook: schema.settings.facebook,
         instagram: schema.settings.instagram,
-    }).from(schema.settings).where(eq(schema.settings.id, 1)).limit(1);
+    }).from(schema.settings).where(eq(schema.settings.id, 1)).limit(1).execute();
 
     const settingsResArray = await withTimeout(settingsPromise, TIMEOUTS.DB_QUERY).catch((e: any) => {
         logger.error(`[Settings-${requestId}] Settings table fetch failed or timed out:`, e);

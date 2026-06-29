@@ -11,11 +11,11 @@ const handler = async (c: any) => {
     logger.info("Fetching auth info...");
     
     try {
-        const passcodeResPromise = db.select().from(schema.secrets).where(eq(schema.secrets.key, 'access_passcode')).limit(1);
+        const passcodeResPromise = db.select().from(schema.secrets).where(eq(schema.secrets.key, 'access_passcode')).limit(1).execute();
         const settingsResPromise = db.select({
             passcodeEnabled: schema.settings.passcodeEnabled,
             accessPasscode: schema.settings.accessPasscode,
-        }).from(schema.settings).where(eq(schema.settings.id, 1)).limit(1);
+        }).from(schema.settings).where(eq(schema.settings.id, 1)).limit(1).execute();
 
         const [passcodeRes, settingsRes] = await Promise.all([
             withTimeout(passcodeResPromise, TIMEOUTS.DB_QUERY).catch(e => { logger.error("passcode query failed or timed out", e); return []; }),

@@ -22,10 +22,13 @@ export async function processImageFile(file: File): Promise<ProcessedImage> {
   const objectUrl = URL.createObjectURL(activeFile);
 
   // 3. Get Dimensions
-  const dimensions = await new Promise<{width: number, height: number}>((resolve, reject) => {
+  const dimensions = await new Promise<{width: number, height: number}>((resolve) => {
     const img = new Image();
     img.onload = () => resolve({ width: img.width, height: img.height });
-    img.onerror = () => reject(new Error('圖片載入失敗，請確認檔案格式完整且為有效圖片。'));
+    img.onerror = () => {
+      console.warn(`[ImageProcessor] Failed to load image for dimensions. File: ${activeFile.name}. Proceeding with default dimensions.`);
+      resolve({ width: 0, height: 0 }); // Fallback instead of rejecting
+    };
     img.src = objectUrl;
   });
 
@@ -60,10 +63,13 @@ export async function processImageFiles(
     const chunk = loadedFiles.slice(i, i + CHUNK_SIZE);
     const chunkResults = await Promise.all(
       chunk.map(async ({ file, objectUrl, hash }) => {
-        const dimensions = await new Promise<{width: number, height: number}>((resolve, reject) => {
+        const dimensions = await new Promise<{width: number, height: number}>((resolve) => {
           const img = new Image();
           img.onload = () => resolve({ width: img.width, height: img.height });
-          img.onerror = () => reject(new Error('Failed to load image for dimensions'));
+          img.onerror = () => {
+            console.warn(`[ImageProcessor] Failed to load image for dimensions. File: ${file.name}. Proceeding with default dimensions.`);
+            resolve({ width: 0, height: 0 }); // Fallback instead of rejecting
+          };
           img.src = objectUrl;
         });
 
