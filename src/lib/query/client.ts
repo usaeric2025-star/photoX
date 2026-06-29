@@ -14,6 +14,6 @@ export const swrConfig = {
   keepPreviousData: true,
   // ✅ 統一錯誤處理
   onError: (error: Error) => {
-    ErrorFactory.capture(error);
+    ErrorFactory.handle(error, { context: 'SWR_Global' });
   },
 };

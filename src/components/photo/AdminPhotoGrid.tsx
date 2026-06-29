@@ -15,6 +15,8 @@ interface AdminPhotoGridProps {
   columns: number;
   filters: Record<string, unknown>;
   categories?: Category[];
+  error?: unknown;
+  onRetry?: () => void;
   onPhotoClick?: (id: string, index: number, e?: React.MouseEvent) => void;
 }
 
@@ -28,7 +30,9 @@ export function AdminPhotoGrid({
   fetchNextPage, 
   filters,
   onPhotoClick,
-  columns
+  columns,
+  error,
+  onRetry
 }: AdminPhotoGridProps) {
   const isMultiSelect = useIsMultiSelect();
   const { toggleSelect } = useSelectionActions();
@@ -48,6 +52,8 @@ export function AdminPhotoGrid({
         columns={columns}
         mode="admin"
         filters={filters}
+        error={error}
+        onRetry={onRetry}
         onPhotoClick={(id, index, e) => {
           if (isMultiSelect) {
             toggleSelect(id);

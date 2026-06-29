@@ -9,6 +9,7 @@ import { gridColumns as gridColumnsSignal } from '@/lib/store';
 import { usePermission } from '@/hooks';
 import { CardSkeleton } from '@/components/photo/CardSkeleton';
 import { VirtualizedGrid } from './VirtualizedGrid';
+import { PhotoErrorDisplay } from './PhotoErrorDisplay';
 
 interface PhotoGridContentProps {
   photos: PhotoListItem[];
@@ -21,6 +22,8 @@ interface PhotoGridContentProps {
   columns: number;
   mode: 'admin' | 'public';
   filters?: Record<string, unknown>;
+  error?: unknown;
+  onRetry?: () => void;
   onPhotoClick?: (id: string, index: number, e?: React.MouseEvent) => void;
   onScroll?: (offset: number) => void;
   gridRef?: React.Ref<any>;
@@ -37,6 +40,8 @@ export function PhotoGridContent({
   columns,
   mode,
   filters,
+  error,
+  onRetry,
   onPhotoClick,
   gridRef,
   onScroll,
@@ -49,6 +54,14 @@ export function PhotoGridContent({
   const canPinGlobal = can('photo:toggle-pinned');
 
   const safePhotos = photos || [];
+
+  if (error) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-8 w-full h-full min-h-[400px]">
+        <PhotoErrorDisplay error={error} onRetry={onRetry} />
+      </div>
+    );
+  }
 
   if (isPending && !safePhotos.length) {
     const skeletonCount = Math.max(actualColumns * 3, 12);

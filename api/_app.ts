@@ -38,69 +38,19 @@ app.onError((err, c) => {
 app.use('*', cors());
 app.get('/health', async (c) => {
     try {
-        const { db, furnitureItems } = await import('./_lib/db/index.js');
-        const { count, sql } = await import('drizzle-orm');
+        const { db } = await import('./_lib/db/index.js');
+        const { sql } = await import('drizzle-orm');
         
-        // 1. Verify DB connectivity first with a fast, lightweight ping
-        try {
-            await db.execute(sql`SELECT 1`);
-        } catch (pingErr) {
-            console.error('[Health] DB Ping failed:', pingErr);
-            return c.json({
-                success: false,
-                status: 'error',
-                error: `Database connection failed: ${pingErr instanceof Error ? pingErr.message : String(pingErr)}`
-            }, 503);
-        }
-
-        // 2. Try counting items safely (fallback to -1 if locked or timed out)
-        let itemCount = 0;
-        let dbStatus = 'connected';
-        try {
-            const [tableRes] = await db.select({ total: count() }).from(furnitureItems);
-            itemCount = Number(tableRes?.total || 0);
-        } catch (tableErr) {
-            console.warn('[Health] Failed to count furniture_items (likely locked or timed out):', tableErr);
-            dbStatus = 'degraded';
-            itemCount = -1;
-        }
-
-        // 3. Try view count, but don't fail hard if missing
-        let photoCount = 0;
-        let viewStatus = 'ok';
-        try {
-            const viewRes = await db.execute(sql`SELECT count(*) FROM v_photos_list`) as any[];
-            photoCount = Number(viewRes?.[0]?.count || 0);
-        } catch (vErr) {
-            console.warn('[Health] v_photos_list query failed (likely missing), attempting repair:', vErr);
-            viewStatus = 'missing_attempting_repair';
-            // Attempt to repair
-            try {
-                const { ensureViewExists } = await import('./_lib/db/actions.js');
-                await ensureViewExists();
-                const viewRes2 = await db.execute(sql`SELECT count(*) FROM v_photos_list`) as any[];
-                photoCount = Number(viewRes2?.[0]?.count || 0);
-                viewStatus = 'repaired';
-            } catch (repairErr) {
-                console.error('[Health] View repair failed:', repairErr);
-                viewStatus = 'repair_failed';
-                dbStatus = 'degraded';
-            }
-        }
+        // Fast, lightweight ping to verify DB connectivity
+        await db.execute(sql`SELECT 1`);
         
         return c.json({ 
             success: true, 
             status: 'ok', 
-            timestamp: new Date().toISOString(),
-            data: {
-                itemCount,
-                photoCount,
-                viewStatus,
-                dbStatus
-            }
+            timestamp: new Date().toISOString()
         });
     } catch (err) {
-        console.error('[Health] Hard failure:', err);
+        console.error('[Health] DB Ping or connection failed:', err);
         return c.json({ 
             success: false, 
             status: 'error', 

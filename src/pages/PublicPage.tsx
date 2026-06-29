@@ -105,6 +105,8 @@ export default function PublicPage() {
             onScroll={(offset) => setShowScrollTop(offset > 300)}
             filters={{ category, tags, search, sort, showGroupsCollapsed }}
             onPhotoClick={handlePhotoClick}
+            error={error}
+            onRetry={() => refetch()}
           />
         </ErrorBoundary>
       </div>

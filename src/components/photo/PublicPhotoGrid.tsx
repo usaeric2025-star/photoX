@@ -15,6 +15,8 @@ interface PublicPhotoGridProps {
   fetchNextPage: () => void;
   columns: number;
   filters: Record<string, unknown>;
+  error?: unknown;
+  onRetry?: () => void;
   gridRef?: React.Ref<any>;
   onScroll?: (offset: number) => void;
   onPhotoClick?: (id: string, index: number, e?: React.MouseEvent) => void;
@@ -32,7 +34,9 @@ export function PublicPhotoGrid({
   gridRef,
   onScroll,
   onPhotoClick,
-  columns
+  columns,
+  error,
+  onRetry
 }: PublicPhotoGridProps) {
   
   logger.debug('[PublicPhotoGrid] Render Start', { photosCount: photos?.length, isPending, isFetching, dataVersion });
@@ -53,6 +57,8 @@ export function PublicPhotoGrid({
         gridRef={gridRef}
         onScroll={onScroll}
         onPhotoClick={onPhotoClick}
+        error={error}
+        onRetry={onRetry}
       />
     </div>
   );

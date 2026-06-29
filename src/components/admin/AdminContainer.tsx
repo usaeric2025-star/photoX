@@ -62,6 +62,8 @@ export function AdminContainer() {
             columns={columns}
             filters={filters}
             onPhotoClick={handlePhotoClick}
+            error={photoGridData.error}
+            onRetry={() => photoGridData.refetch()}
           />
        </div>
        <SelectionToolbar />
