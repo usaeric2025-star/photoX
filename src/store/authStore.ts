@@ -6,6 +6,7 @@ import { User } from '@/types';
 import { supabase } from '@/lib/supabase';
 import { storage } from '@/services/storage';
 import { safeAsync } from '@/lib/utils/safeAsync';
+import { withTimeout } from '@/lib/utils';
 
 export interface AuthState {
   user: User | null;
@@ -27,12 +28,9 @@ export const authStore = createStore<AuthState>({
   
   init: async () => {
     await safeAsync(async () => {
-      const sessionPromise = supabase.auth.getSession();
-      const timeoutPromise = new Promise<{ data: { session: null }, error: Error }>((_, reject) => {
-        setTimeout(() => reject(new Error('验证超时 (3秒)')), 3000);
-      });
+      const sessionPromise = supabase.auth.getSession().catch(e => ({ data: { session: null }, error: e }));
       
-      const { data } = await Promise.race([sessionPromise, timeoutPromise]) as { 
+      const { data } = await withTimeout(sessionPromise, 3000).catch(() => ({ data: { session: null } })) as { 
         data: { 
           session: { 
             user: { 
@@ -43,7 +41,7 @@ export const authStore = createStore<AuthState>({
             } 
           } | null 
         }; 
-        error: unknown; 
+        error?: unknown; 
       };
       
       if (data.session?.user) {

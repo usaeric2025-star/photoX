@@ -1,20 +1,16 @@
 import { api } from '@/lib/api';
 import { logger } from '@/lib/logger';
 import { AppSettings } from '@/types';
+import { withTimeout } from '@/lib/utils';
 
 export async function fetchPublicSettings(): Promise<AppSettings> {
   try {
     const settingsPromise = api.public.settings.$get();
     const authPromise = api.public.auth.$get();
     
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Public Settings fetch timeout (25s)')), 25000);
-    });
+    const pAll = Promise.all([settingsPromise, authPromise]);
     
-    const [settingsResponse, authResponse] = await Promise.race([
-        Promise.all([settingsPromise, authPromise]),
-        timeoutPromise
-    ]);
+    const [settingsResponse, authResponse] = await withTimeout(pAll, 25000);
     
     const [settingsResult, authResult] = await Promise.all([
         settingsResponse.json(),

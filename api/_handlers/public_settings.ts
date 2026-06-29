@@ -4,6 +4,7 @@ import * as schema from '../_lib/db/schema.js';
 import { eq } from 'drizzle-orm';
 import { logger } from '../_lib/logger.js';
 import { errorResponse } from '../_lib/response.js';
+import { withTimeout, TIMEOUTS } from '../_lib/utils/timeout.js';
 
 export const publicSettings = new Hono();
 
@@ -23,19 +24,12 @@ const handler = async (c: any) => {
         instagram: schema.settings.instagram,
     }).from(schema.settings).where(eq(schema.settings.id, 1)).limit(1);
 
-    // Timeout the DB query after 6 seconds
-    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => {
-        logger.warn(`[Settings-${requestId}] DB query timed out after 6s`);
-        resolve(null);
-    }, 6000));
-
-    const settingsRes = await Promise.race([
-        settingsPromise.then(res => res[0] || null),
-        timeoutPromise
-    ]).catch(e => { 
-        logger.error(`[Settings-${requestId}] Settings table fetch failed:`, e); 
-        return null; 
+    const settingsResArray = await withTimeout(settingsPromise, TIMEOUTS.DB_QUERY).catch((e: any) => {
+        logger.error(`[Settings-${requestId}] Settings table fetch failed or timed out:`, e);
+        return [];
     });
+    
+    const settingsRes = settingsResArray[0] || null;
 
     logger.info(`[Settings-${requestId}] Fetch completed in ${Date.now() - start}ms`);
 

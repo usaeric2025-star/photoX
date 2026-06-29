@@ -25,6 +25,8 @@ interface HonoContextUser {
     email?: string;
 }
 
+import { withTimeout, TIMEOUTS } from '../_lib/utils/timeout.js';
+
 export const ai = new Hono();
 
 ai.post("/test", async (c) => {
@@ -45,11 +47,8 @@ ai.post("/test", async (c) => {
     }
 
     const chatPromise = provider.chat([{ role: 'user', content: 'test connection' }]);
-    const timeoutPromise = new Promise<{ success: false; error: string }>((_, reject) => 
-        setTimeout(() => reject(new Error('AI 連線測試超時 (15s)')), 15000)
-    );
+    const data = await withTimeout(chatPromise, TIMEOUTS.AI_REQUEST).catch(e => ({ success: false, error: e })) as { success: boolean; error?: unknown; text?: string };
 
-    const data = await Promise.race([chatPromise, timeoutPromise]) as { success: boolean; error?: unknown; text?: string };
     if (!data.success) {
         const errorMsg = typeof data.error === 'object' ? JSON.stringify(data.error) : String(data.error || 'Unknown AI error');
         return errorResponse(c, errorMsg, 500);
