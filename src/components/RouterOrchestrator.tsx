@@ -26,23 +26,33 @@ export function RouterOrchestrator() {
     switch (route.name) {
       case "home":
       case "photo":
+      case "photoSlash":
         return <PublicPage />;
       case "admin":
+      case "adminSlash":
       case "adminBatchEdit":
+      case "adminBatchEditSlash":
       case "adminTasks":
+      case "adminTasksSlash":
       case "adminDiagnostics":
+      case "adminDiagnosticsSlash":
       case "adminDiagnosticsLogs":
+      case "adminDiagnosticsLogsSlash":
       case "settings":
+      case "settingsSlash":
         return <AdminPage />;
       case "diagnostics":
+      case "diagnosticsSlash":
         return (
           <AdminAuthGate>
             <DiagDashboard />
           </AdminAuthGate>
         );
       case "publicGroup":
+      case "publicGroupSlash":
         return <PublicGroupDetailPage />;
       case "adminGroup":
+      case "adminGroupSlash":
         return (
           <AdminAuthGate>
             <AdminGroupDetailPage />

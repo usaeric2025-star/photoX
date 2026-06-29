@@ -77,14 +77,28 @@ const uploadImages = async (
       onStatus?.('compressing');
       const res = await fetch(fileOrBase64);
       const blob = await res.blob();
-      dataToUpload = await compressImage(blob, { maxWidth: 2048, quality: 0.85 }); 
-      ext = 'webp';
-      mimeType = 'image/webp';
+      try {
+        dataToUpload = await compressImage(blob, { maxWidth: 2048, quality: 0.85 }); 
+        ext = 'webp';
+        mimeType = 'image/webp';
+      } catch (err) {
+        logger.warn('[uploadService] compressImage failed for string URL, falling back to original blob', err);
+        dataToUpload = blob;
+        mimeType = blob.type || 'image/jpeg';
+        ext = mimeType.split('/')[1] || 'jpg';
+      }
   } else {
       onStatus?.('compressing');
-      dataToUpload = await compressImage(fileOrBase64, { maxWidth: 2048, quality: 0.85 });
-      ext = 'webp';
-      mimeType = 'image/webp';
+      try {
+        dataToUpload = await compressImage(fileOrBase64, { maxWidth: 2048, quality: 0.85 });
+        ext = 'webp';
+        mimeType = 'image/webp';
+      } catch (err) {
+        logger.warn('[uploadService] compressImage failed for File, falling back to original file', err);
+        dataToUpload = fileOrBase64;
+        mimeType = fileOrBase64.type || 'image/jpeg';
+        ext = fileOrBase64.name?.split('.').pop()?.toLowerCase() || mimeType.split('/')[1] || 'jpg';
+      }
   }
 
   onStatus?.('uploading');

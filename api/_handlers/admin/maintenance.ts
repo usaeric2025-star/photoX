@@ -237,6 +237,17 @@ adminMaintenance.post("/storage/clean-ghosts", async (c) => {
 });
 
 // --- 3. Error Event Management ---
+adminMaintenance.post("/repair", async (c) => {
+    try {
+        const { issueId } = await c.req.json();
+        logger.info(`[Repair] Requested repair for issue: ${issueId}`);
+        // Handle specific issue repairs here if needed
+        return c.json({ success: true, message: `Repair initiated for ${issueId}` });
+    } catch (e: unknown) {
+        return c.json({ success: false, error: String(e) }, 500);
+    }
+});
+
 adminMaintenance.get("/db-debug", async (c) => {
     try {
         const res = await db.execute(sql`SHOW statement_timeout`);

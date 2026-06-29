@@ -33,12 +33,12 @@ export function AdminPageContent() {
   const { navigate, route } = useAppRouter();
   
   const currentScreen = (() => {
-    if (route?.name === 'admin') return 'gallery';
-    if (route?.name === 'adminTasks') return 'tasks';
-    if (route?.name === 'adminDiagnosticsLogs') return 'error-logs';
-    if (route?.name === 'adminDiagnostics') return 'diagnose';
-    if (route?.name === 'settings') return 'settings';
-    if (route?.name === 'adminBatchEdit') return 'batch';
+    if (route?.name === 'admin' || route?.name === 'adminSlash') return 'gallery';
+    if (route?.name === 'adminTasks' || route?.name === 'adminTasksSlash') return 'tasks';
+    if (route?.name === 'adminDiagnosticsLogs' || route?.name === 'adminDiagnosticsLogsSlash') return 'error-logs';
+    if (route?.name === 'adminDiagnostics' || route?.name === 'adminDiagnosticsSlash') return 'diagnose';
+    if (route?.name === 'settings' || route?.name === 'settingsSlash') return 'settings';
+    if (route?.name === 'adminBatchEdit' || route?.name === 'adminBatchEditSlash') return 'batch';
     return 'gallery' as const;
   })();
 

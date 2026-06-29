@@ -1,4 +1,5 @@
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import imageCompression from 'browser-image-compression';
 
 export interface CompressOptions {
   maxWidth?: number;
@@ -9,58 +10,22 @@ export interface CompressOptions {
 
 export async function compressImage(fileOrBlob: File | Blob, options: CompressOptions = {}): Promise<Blob> {
   try {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Failed to get canvas context');
+    // browser-image-compression expects a File object
+    const file = fileOrBlob instanceof File 
+      ? fileOrBlob 
+      : new File([fileOrBlob], 'image.jpg', { type: fileOrBlob.type || 'image/jpeg' });
 
-    try {
-      const bitmap = await createImageBitmap(fileOrBlob, {
-        resizeWidth: options.maxWidth || 2048,
-        resizeQuality: 'high',
-      });
-      canvas.width = bitmap.width;
-      canvas.height = bitmap.height;
-      ctx.drawImage(bitmap, 0, 0);
-      bitmap.close();
-    } catch (bitmapError) {
-      console.warn('createImageBitmap failed, falling back to Image element', bitmapError);
-      
-      const img = new Image();
-      const objectUrl = URL.createObjectURL(fileOrBlob);
-      
-      await new Promise<void>((resolve, reject) => {
-        img.onload = () => {
-          URL.revokeObjectURL(objectUrl);
-          let width = img.width;
-          let height = img.height;
-          
-          if (options.maxWidth && width > options.maxWidth) {
-             height = Math.round((height * options.maxWidth) / width);
-             width = options.maxWidth;
-          }
-          
-          canvas.width = width;
-          canvas.height = height;
-          ctx.drawImage(img, 0, 0, width, height);
-          resolve();
-        };
-        img.onerror = () => {
-          URL.revokeObjectURL(objectUrl);
-          reject(new Error('圖片載入失敗，無法解碼該檔案。'));
-        };
-        img.src = objectUrl;
-      });
-    }
+    const compressionOptions = {
+      maxWidthOrHeight: options.maxWidth || 2048,
+      useWebWorker: true,
+      initialQuality: options.quality || 0.85,
+      alwaysKeepResolution: false,
+      fileType: options.format || 'image/webp',
+      maxIteration: 10,
+    };
 
-    const blob = await new Promise<Blob>((resolve, reject) => {
-      canvas.toBlob(
-        (b) => (b ? resolve(b) : reject(new Error('壓縮失敗'))),
-        options.format || 'image/webp',
-        options.quality || 0.85
-      );
-    });
-
-    return blob;
+    const compressedFile = await imageCompression(file, compressionOptions);
+    return compressedFile;
   } catch (error) {
     throw ErrorFactory.wrap(error instanceof Error ? error : new Error(String(error)), 'compressImage');
   }

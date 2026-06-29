@@ -110,10 +110,10 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   };
 
   React.useEffect(() => {
-    if (route?.name === 'settings') {
+    if (route?.name === 'settings' || route?.name === 'settingsSlash') {
       handleTabChange('general');
     }
-    if (route?.name === 'adminDiagnostics' || route?.name === 'adminDiagnosticsLogs' || route?.name === 'adminTasks') {
+    if (route?.name === 'adminDiagnostics' || route?.name === 'adminDiagnosticsSlash' || route?.name === 'adminDiagnosticsLogs' || route?.name === 'adminDiagnosticsLogsSlash' || route?.name === 'adminTasks' || route?.name === 'adminTasksSlash') {
       handleTabChange('status');
     }
   }, [route]);

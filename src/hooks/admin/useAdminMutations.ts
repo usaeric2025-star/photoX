@@ -6,7 +6,7 @@ import { useAppMutation, appQuery } from '@/lib/query';
 // 1. 修复工具
 export const useRepairMutation = () => useAppMutation({
   mutationFn: async (issueId: string) => {
-    const res = await api.admin.repair.$post({ json: { issueId } });
+    const res = await api.admin.maintenance.repair.$post({ json: { issueId } });
     if (!res.ok) {
         const errorData = await res.json() as { error?: string };
         throw ErrorFactory.wrap(new Error(errorData?.error || `HTTP ${res.status}`), 'runRepair', issueId);
