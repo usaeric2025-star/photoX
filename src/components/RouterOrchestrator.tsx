@@ -1,4 +1,5 @@
 import { useAppRoute } from "@/lib/router";
+import { logger } from "@/lib/logger";
 import { lazy, Suspense } from "react";
 import PublicPage from "@/pages/PublicPage";
 import AdminPage from "@/pages/AdminPage";
@@ -13,14 +14,14 @@ const DiagDashboard = lazy(() => import("@/features/diagnostics/DiagDashboard").
 
 export function RouterOrchestrator() {
   const route = useAppRoute();
-  console.log('[RouterOrchestrator] Current route:', route);
+  logger.debug('[RouterOrchestrator] Current route:', route);
 
   const getPage = () => {
     if (!route) {
-      console.warn('[Router] No route matched!', window.location.pathname);
+      logger.warn('[Router] No route matched!', window.location.pathname);
       return <NotFoundPage />;
     }
-    console.log('[Router] Matched route:', route.name);
+    logger.debug('[Router] Matched route:', route.name);
 
     switch (route.name) {
       case "home":

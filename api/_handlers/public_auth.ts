@@ -19,8 +19,8 @@ const handler = async (c: any) => {
         }).from(schema.settings).where(eq(schema.settings.id, 1)).limit(1);
 
         const [passcodeRes, settingsRes] = await Promise.all([
-            Promise.race([passcodeResPromise.then(res => res[0] || null), timeout(12000)]),
-            Promise.race([settingsResPromise.then(res => res[0] || null), timeout(12000)])
+            Promise.race([passcodeResPromise.then(res => res[0] || null), timeout(6000)]),
+            Promise.race([settingsResPromise.then(res => res[0] || null), timeout(6000)])
         ]);
 
         const data = {

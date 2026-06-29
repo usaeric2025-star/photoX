@@ -8,7 +8,7 @@ export async function fetchPublicSettings(): Promise<AppSettings> {
     const authPromise = api.public.auth.$get();
     
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Public Settings fetch timeout (15s)')), 15000);
+      setTimeout(() => reject(new Error('Public Settings fetch timeout (25s)')), 25000);
     });
     
     const [settingsResponse, authResponse] = await Promise.race([

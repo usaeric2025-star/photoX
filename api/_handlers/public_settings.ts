@@ -23,11 +23,11 @@ const handler = async (c: any) => {
         instagram: schema.settings.instagram,
     }).from(schema.settings).where(eq(schema.settings.id, 1)).limit(1);
 
-    // Timeout the DB query after 12 seconds
+    // Timeout the DB query after 6 seconds
     const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => {
-        logger.warn(`[Settings-${requestId}] DB query timed out after 12s`);
+        logger.warn(`[Settings-${requestId}] DB query timed out after 6s`);
         resolve(null);
-    }, 12000));
+    }, 6000));
 
     const settingsRes = await Promise.race([
         settingsPromise.then(res => res[0] || null),
