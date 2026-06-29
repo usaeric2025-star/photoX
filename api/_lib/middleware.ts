@@ -111,9 +111,9 @@ export function setupMiddlewares(app: Hono, serverEnv: { NODE_ENV: string | unde
               if (hasWaitUntil) {
                   c.executionCtx.waitUntil(refreshPromise);
               } else {
-                  // If waitUntil is not available (like in Cloud Run standard Node), we MUST await it
-                  // otherwise the container CPU freezes and the materialized view never refreshes
-                  await refreshPromise;
+                  // If waitUntil is not available, we trigger the refresh but do not await it
+                  // to avoid blocking the user request.
+                  refreshPromise.catch(e => logger.error('[Refresh Middleware] Async background refresh failed:', e));
               }
           }
       }
