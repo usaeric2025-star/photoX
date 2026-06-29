@@ -134,33 +134,35 @@ export async function getPhotosList(params: PhotoListParams) {
         .orderBy(orderSpec, secondaryOrder)
         .limit(limit);
 
-    // Self-healing: If materialized view has 0 rows, but furniture_items actually has records, 
+    // Self-healing: If materialized view has 0 rows in total, but furniture_items actually has records, 
     // it means the view is desynchronized or was never initially populated on a fresh database.
-    if (results.length === 0 && !searchQuery && !tagId && !categoryId && !groupId && !manufacturerId) {
+    // We only trigger this if there are no filters or pagination parameters applied, ensuring that
+    // an empty paginated result doesn't trigger unnecessary refreshes.
+    const hasAnyFilterOrModifier = !!(
+        cursor || 
+        categoryId || 
+        tagId || 
+        searchQuery || 
+        groupId || 
+        manufacturerId || 
+        isHidden !== undefined ||
+        onlyUngrouped ||
+        onlyGroupsCover
+    );
+
+    if (total === 0 && !hasAnyFilterOrModifier) {
         try {
             const [realCountRes] = await db.select({ count: count() }).from(furnitureItems);
             const realCount = Number(realCountRes.count);
             if (realCount > 0) {
-                logger.warn(`[Self-Healing] v_photos_list has 0 rows, but furniture_items has ${realCount} rows. Triggering on-demand refresh!`);
-                await refreshPhotosView();
-                
-                // Re-run total count query
-                const [newCountRes] = await db
-                    .select({ count: count() })
-                    .from(vPhotosList)
-                    .where(finalWhere);
-                total = Number(newCountRes.count);
-
-                // Re-run data query
-                results = await db
-                    .select()
-                    .from(vPhotosList)
-                    .where(finalWhere)
-                    .orderBy(orderSpec)
-                    .limit(limit);
+                logger.warn(`[Self-Healing] v_photos_list has 0 rows, but furniture_items has ${realCount} rows. Triggering background on-demand refresh!`);
+                // We fire-and-forget the refresh to avoid blocking the user request or causing concurrent lock queueing
+                refreshPhotosView().catch(healErr => {
+                    logger.error('[Self-Healing] Background refresh failed:', healErr);
+                });
             }
         } catch (healErr) {
-            logger.error('[Self-Healing] Failed to refresh materialized view on-demand:', healErr);
+            logger.error('[Self-Healing] Failed to check for self-healing:', healErr);
         }
     }
 
