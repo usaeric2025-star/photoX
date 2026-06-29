@@ -45,11 +45,14 @@ export function getPathFromUrl(url: string): string {
   }
 }
 
-export function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+export function withTimeout<T>(promise: Promise<T>, ms: number, labelOrError?: string): Promise<T> {
   let timeoutId: NodeJS.Timeout | number;
-  const timeout = new Promise<never>((_, reject) =>
-    timeoutId = setTimeout(() => reject(new Error(`Operation timed out after ${ms}ms`)), ms)
-  );
+  const timeout = new Promise<never>((_, reject) => {
+    const msg = labelOrError
+      ? `Operation [${labelOrError}] timed out after ${ms}ms`
+      : `Operation timed out after ${ms}ms`;
+    timeoutId = setTimeout(() => reject(new Error(msg)), ms);
+  });
   
   const actualPromise = Promise.resolve(promise);
   actualPromise.catch(() => {}); // prevent unhandled rejections if timeout wins

@@ -18,8 +18,8 @@ const handler = async (c: any) => {
         }).from(schema.settings).where(eq(schema.settings.id, 1)).limit(1).execute();
 
         const [passcodeRes, settingsRes] = await Promise.all([
-            withTimeout(passcodeResPromise, TIMEOUTS.DB_QUERY).catch(e => { logger.error("passcode query failed or timed out", e); return []; }),
-            withTimeout(settingsResPromise, TIMEOUTS.DB_QUERY).catch(e => { logger.error("settings query failed or timed out", e); return []; })
+            withTimeout(passcodeResPromise, TIMEOUTS.DB_QUERY, 'DB Query Access Passcode secret').catch(e => { logger.error("passcode query failed or timed out", e); return []; }),
+            withTimeout(settingsResPromise, TIMEOUTS.DB_QUERY, 'DB Query Settings passcodeEnabled (ID=1)').catch(e => { logger.error("settings query failed or timed out", e); return []; })
         ]);
 
         const data = {

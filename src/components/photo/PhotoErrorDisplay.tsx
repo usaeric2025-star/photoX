@@ -14,7 +14,7 @@ interface PhotoErrorDisplayProps {
 export function PhotoErrorDisplay({ error, onRetry }: PhotoErrorDisplayProps) {
   const { lang } = useTranslation();
   const errorType = classifyPhotoError(error);
-  const localized = getLocalizedError(errorType, lang);
+  const localized = getLocalizedError(errorType, lang, error);
   const [copied, setCopied] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
 

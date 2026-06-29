@@ -47,7 +47,7 @@ ai.post("/test", async (c) => {
     }
 
     const chatPromise = provider.chat([{ role: 'user', content: 'test connection' }]);
-    const data = await withTimeout(chatPromise, TIMEOUTS.AI_REQUEST).catch(e => ({ success: false, error: e })) as { success: boolean; error?: unknown; text?: string };
+    const data = await withTimeout(chatPromise, TIMEOUTS.AI_REQUEST, 'AI Chat Test Connection').catch(e => ({ success: false, error: e })) as { success: boolean; error?: unknown; text?: string };
 
     if (!data.success) {
         const errorMsg = typeof data.error === 'object' ? JSON.stringify(data.error) : String(data.error || 'Unknown AI error');

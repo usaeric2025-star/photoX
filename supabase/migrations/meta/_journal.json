@@ -71,6 +71,13 @@
       "when": 1782557685549,
       "tag": "0009_famous_nitro",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1782766686040,
+      "tag": "0010_military_vapor",
+      "breakpoints": true
     }
   ]
 }

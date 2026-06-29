@@ -49,7 +49,7 @@ const finalConnectionString = appendDbParam(connectionString || '', 'options', '
 
 const clientOptions: postgres.Options<{}> = {
   max: maxConnections,
-  idle_timeout: isServerless ? 5 : 20, // Close idle connections quickly
+  idle_timeout: isServerless ? 5 : 10, // Close idle connections quickly within 10 seconds to avoid connection leaks
   connect_timeout: 10, // 10s as requested
   prepare: false, // Required for PgBouncer/Supabase transaction pooling
   onnotice: () => {},

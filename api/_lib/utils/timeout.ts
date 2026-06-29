@@ -1,7 +1,10 @@
-export function withTimeout<T>(promiseOrThenable: Promise<T> | PromiseLike<T>, ms: number, errorMessage = 'Operation timed out'): Promise<T> {
+export function withTimeout<T>(promiseOrThenable: Promise<T> | PromiseLike<T>, ms: number, labelOrError = 'Operation timed out'): Promise<T> {
   let timeoutId: NodeJS.Timeout;
   const timeoutPromise = new Promise<never>((_, reject) => {
-    timeoutId = setTimeout(() => reject(new Error(errorMessage)), ms);
+    const errorMsg = labelOrError.includes('timed out') || labelOrError.includes('timeout') || labelOrError.includes('超時') || labelOrError.includes('逾時')
+      ? labelOrError
+      : `Operation [${labelOrError}] timed out after ${ms}ms`;
+    timeoutId = setTimeout(() => reject(new Error(errorMsg)), ms);
   });
 
   const actualPromise = Promise.resolve(promiseOrThenable);

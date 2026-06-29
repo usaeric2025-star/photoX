@@ -20,11 +20,9 @@ const handler = async (c: any) => {
         whatsapp2: schema.settings.whatsapp2,
         whatsapp1Name: schema.settings.whatsapp1Name,
         whatsapp2Name: schema.settings.whatsapp2Name,
-        facebook: schema.settings.facebook,
-        instagram: schema.settings.instagram,
     }).from(schema.settings).where(eq(schema.settings.id, 1)).limit(1).execute();
 
-    const settingsResArray = await withTimeout(settingsPromise, TIMEOUTS.DB_QUERY).catch((e: any) => {
+    const settingsResArray = await withTimeout(settingsPromise, TIMEOUTS.DB_QUERY, 'DB Query Settings table (ID=1)').catch((e: any) => {
         logger.error(`[Settings-${requestId}] Settings table fetch failed or timed out:`, e);
         return [];
     });
@@ -40,8 +38,8 @@ const handler = async (c: any) => {
         whatsapp_2: settingsRes?.whatsapp2 || '',
         whatsapp_1_name: settingsRes?.whatsapp1Name || '',
         whatsapp_2_name: settingsRes?.whatsapp2Name || '',
-        facebook: settingsRes?.facebook || '',
-        instagram: settingsRes?.instagram || '',
+        facebook: '',
+        instagram: '',
         manufacturers: [], 
         tags: [],          
     };

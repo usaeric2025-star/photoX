@@ -10,7 +10,7 @@ export async function fetchPublicSettings(): Promise<AppSettings> {
     
     const pAll = Promise.all([settingsPromise, authPromise]);
     
-    const [settingsResponse, authResponse] = await withTimeout(pAll, 25000);
+    const [settingsResponse, authResponse] = await withTimeout(pAll, 25000, 'Initialize Settings & Auth APIs');
     
     const [settingsResult, authResult] = await Promise.all([
         settingsResponse.json(),

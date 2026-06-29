@@ -30,7 +30,7 @@ export const authStore = createStore<AuthState>({
     await safeAsync(async () => {
       const sessionPromise = supabase.auth.getSession().catch(e => ({ data: { session: null }, error: e }));
       
-      const { data } = await withTimeout(sessionPromise, 3000).catch(() => ({ data: { session: null } })) as { 
+      const { data } = await withTimeout(sessionPromise, 3000, 'Supabase Get Auth Session').catch(() => ({ data: { session: null } })) as { 
         data: { 
           session: { 
             user: { 

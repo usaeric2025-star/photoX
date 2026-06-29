@@ -140,7 +140,7 @@ const analyzeAndSaveGroup = async (
   photos: Photo[]
 ): Promise<unknown> => {
   try {
-    const analysis = (await withTimeout(analyzeGroup(photos), 120000)) as GroupAnalysisResponse; // 120s
+    const analysis = (await withTimeout(analyzeGroup(photos), 120000, 'AI Analyze Group Materials & Colors')) as GroupAnalysisResponse; // 120s
     const { colors, materials } = analysis;
 
     const { name: nameObj, description: descObj } = await mapAiToMultilingual(
