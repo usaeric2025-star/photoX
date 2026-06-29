@@ -5,7 +5,7 @@ import { logger } from '@/lib/logger';
 import { tasksSignal, addTask, updateTask, updateTaskState, removeTask, setGlobalTaskStatus, setGlobalTaskProgress } from '@/services/task/taskService';
 import { ErrorFactory } from '@/lib/error';
 
-export class TaskScheduler {
+class TaskScheduler {
   private queue: Task[] = [];
   private running = new Set<string>();
   private maxConcurrency: number;

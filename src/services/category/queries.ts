@@ -2,7 +2,7 @@ import { Category } from '@/types';
 import { logger } from '@/lib/logger';
 import { api } from '@/lib/api';
 
-export const TABLE_NAME = 'categories';
+const TABLE_NAME = 'categories';
 
 export const loadCategoriesFromCloud = async (): Promise<Category[]> => {
   try {

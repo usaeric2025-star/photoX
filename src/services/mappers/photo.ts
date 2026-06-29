@@ -4,7 +4,7 @@ import { getSafeText } from '@/features/ai/safeText';
 import { generateItemCode, validateDimension } from '@/services/photo/utils';
 import { getThumbnailUrl, normalizeStoredUrl, mapTranslationField } from './utils';
 
-export const ALLOWED_FIELDS = [
+const ALLOWED_FIELDS = [
   'id', 'name', 'name_en', 'name_ms', 'description', 'description_translations', 'category_id', 'manufacturer_id',
   'tag_ids', 'dimensions', 'model_number', 'manual_code', 'group_id', 'is_group_cover', 'is_pinned',
   'image_url', 'price', 'note', 'type', 'group_order', 'updated_at', 'created_at',

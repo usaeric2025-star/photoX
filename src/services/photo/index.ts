@@ -4,4 +4,4 @@ export * from './utils';
 
 import { updatePhoto } from './commands';
 
-export const update = updatePhoto;
+const update = updatePhoto;

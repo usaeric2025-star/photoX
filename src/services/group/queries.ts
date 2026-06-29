@@ -3,7 +3,7 @@ import { ProductGroup } from '@/types';
 import { getSafeText } from '@/features/ai/safeText';
 import { api } from '@/lib/api';
 
-export const TABLE_NAME = 'groups';
+const TABLE_NAME = 'groups';
 
 const mapGroup = (item: Record<string, unknown>): ProductGroup => ({
   id: item.id as string,

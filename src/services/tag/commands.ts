@@ -29,7 +29,7 @@ const mapToDb = (updates: Partial<Tag> & Record<string, unknown>): Record<string
  * @precondition Tag exists.
  * @postcondition Tag record updated.
  */
-export const updateTag = async (tagId: number, updates: Partial<Tag>): Promise<void> => {
+const updateTag = async (tagId: number, updates: Partial<Tag>): Promise<void> => {
     const dbUpdates = mapToDb(updates);
     const res = await api.tags[':id'].$put({
         param: { id: String(tagId) },
@@ -48,7 +48,7 @@ const createTag = async (tagData: Omit<Tag, 'id'>): Promise<Tag> => {
     return data;
 };
 
-export const batchCreateTagsInCloud = async (tags: Partial<Tag>[]): Promise<Tag[]> => {
+const batchCreateTagsInCloud = async (tags: Partial<Tag>[]): Promise<Tag[]> => {
     const dbUpdates = tags.map(tag => mapToDb(tag as unknown as Partial<Tag> & Record<string, unknown>));
     const res = await api.tags.batch.$post({
         json: { tags: dbUpdates }
@@ -158,7 +158,7 @@ export const deleteTagFromDB = async (tagId: number) => {
         return { ok: false };
     }
 };
-export const removeTagFromPhotoFromDB = async (photoId: string, tagId: string) => {
+const removeTagFromPhotoFromDB = async (photoId: string, tagId: string) => {
     try {
         await removeTagFromPhotoAtomic(photoId, tagId);
         return { ok: true };

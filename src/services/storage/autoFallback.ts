@@ -1,7 +1,7 @@
 const PREFIX = 'photox_';
 const memoryCache = new Map<string, unknown>();
 
-export const STORAGE_KEYS = {
+const STORAGE_KEYS = {
   AUTH: 'auth',
   SETTINGS: 'cached_settings',
   THEME: 'theme',

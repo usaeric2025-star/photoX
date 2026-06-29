@@ -6,7 +6,7 @@ const MAX_RELOADS = 2
 /**
  * 設置 Chunk 加載失敗自動恢復機制
  */
-export function setupChunkErrorHandler() {
+function setupChunkErrorHandler() {
   window.addEventListener('unhandledrejection', async (event) => {
     const msg = event.reason?.message || ''
     handleChunkError(msg, event)
@@ -105,7 +105,7 @@ function showFallbackErrorPage() {
   document.body.innerHTML = fallbackHtml
 }
 
-export function clearChunkReloadCount() {
+function clearChunkReloadCount() {
   sessionStorage.removeItem(RELOAD_COUNT_KEY)
 }
 

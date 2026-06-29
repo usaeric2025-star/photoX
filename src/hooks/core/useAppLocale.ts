@@ -75,7 +75,7 @@ const translations = {
   }
 };
 
-export const useAppLocale = () => {
+const useAppLocale = () => {
   const appLang = useUI((s) => s.appLang);
   const lang = appLang === 'zh' || appLang === 'en' || appLang === 'ms' ? appLang : 'en';
   return translations[lang];

@@ -3,7 +3,7 @@ import { logger } from '@/lib/logger';
 /**
  * Checks if a string is a common placeholder or useless text (null, undefined, [], etc.)
  */
-export const isPlaceholderText = (str: string): boolean => {
+const isPlaceholderText = (str: string): boolean => {
   if (!str) return true;
   const s = str.trim().toLowerCase();
   
@@ -23,7 +23,7 @@ export const isPlaceholderText = (str: string): boolean => {
 /**
  * Specific check for product/photo names that look like system defaults or IDs
  */
-export const isPlaceholderName = (nameStr: string): boolean => {
+const isPlaceholderName = (nameStr: string): boolean => {
   if (!nameStr) return true;
   const s = nameStr.trim().toLowerCase();
   
@@ -85,7 +85,7 @@ export const hasExistingInfo = (p: Record<string, unknown>): boolean => {
 /**
  * Safe name splitting/fallback utility
  */
-export const getDisplayName = (nameObj: unknown, lang: string = 'zh'): string => {
+const getDisplayName = (nameObj: unknown, lang: string = 'zh'): string => {
   if (!nameObj) return '未命名';
   if (typeof nameObj === 'string') return nameObj;
   const n = nameObj as Record<string, string>;
@@ -97,7 +97,7 @@ export const getDisplayName = (nameObj: unknown, lang: string = 'zh'): string =>
  * Main name: before delimiter, Others: after
  * Useful for extracting primary product name from technical labels
  */
-export const splitProductName = (name: string): { main: string, others: string[] } => {
+const splitProductName = (name: string): { main: string, others: string[] } => {
   // Clear common [object Object] pollution
   if (!name || name.includes('[object')) return { main: '未命名', others: [] };
   

@@ -40,7 +40,7 @@ export interface AIAuditData {
 /**
  * AI 審計日誌保存：ai_audit_logs (索引)
  */
-export const saveAIAuditLog = async (data: AIAuditData): Promise<void> => {
+const saveAIAuditLog = async (data: AIAuditData): Promise<void> => {
   try {
     let parsedRawOutput = null;
     try {

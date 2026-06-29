@@ -1,7 +1,7 @@
 import { useSWRConfig } from 'swr';
 import { useCallback } from 'react';
 
-export function useOptimisticMutation<TData, TVariables>(
+function useOptimisticMutation<TData, TVariables>(
   swrKey: string,
   mutationFn: (variables: TVariables) => Promise<TData>,
   options?: {

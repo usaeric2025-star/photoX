@@ -4,7 +4,7 @@ import { saveSettings, uploadLogo } from '@/services/settings/commands';
 
 const SETTINGS_KEY = ['settings', 'public'];
 
-export const useSettingsMutations = () => {
+const useSettingsMutations = () => {
   const updateMutation = useAppMutation({
     mutationFn: saveSettings,
     onSuccess: () => {
@@ -27,7 +27,7 @@ export const useSettingsMutations = () => {
 };
 
 // Deprecated: Remove in next cleanup
-export const useSettingsUpdateMutation = () => {
+const useSettingsUpdateMutation = () => {
   const { update } = useSettingsMutations();
   return { mutateAsync: update, mutate: update };
 };

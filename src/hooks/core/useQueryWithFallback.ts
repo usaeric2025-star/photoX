@@ -10,7 +10,7 @@ interface QueryFallbackOptions {
  * [HOOK] useQueryWithFallback
  * Unified wrapper for SWR to handle loading and standard error feedback.
  */
-export function useQueryWithFallback<T>(
+function useQueryWithFallback<T>(
   queryResult: { data: T | undefined; error: Error | undefined; isLoading: boolean },
   options: QueryFallbackOptions = {}
 ) {

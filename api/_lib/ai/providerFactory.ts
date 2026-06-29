@@ -4,7 +4,7 @@ import { logger } from "../logger.js";
 import { db, secrets as secretsTable, settings as settingsTable } from '../../_lib/db/index.js';
 import { eq } from "drizzle-orm";
 
-export const getModel = async (customModel?: string, providerName?: string): Promise<string> => {
+const getModel = async (customModel?: string, providerName?: string): Promise<string> => {
     if (customModel) return customModel;
 
     let targetProvider = providerName || 'openrouter';

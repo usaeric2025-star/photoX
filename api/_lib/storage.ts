@@ -36,7 +36,7 @@ export async function getR2Client() {
   });
 }
 
-export const uploadToR2 = async (key: string, content: string): Promise<{ success: boolean; error?: string }> => {
+const uploadToR2 = async (key: string, content: string): Promise<{ success: boolean; error?: string }> => {
   try {
     const client = await getR2Client();
     const bucket = serverEnv.R2_BUCKET_NAME;
@@ -54,7 +54,7 @@ export const uploadToR2 = async (key: string, content: string): Promise<{ succes
   }
 };
 
-export const getFromR2 = async (key: string): Promise<string | null> => {
+const getFromR2 = async (key: string): Promise<string | null> => {
   try {
     const client = await getR2Client();
     const bucket = serverEnv.R2_BUCKET_NAME;
@@ -74,7 +74,7 @@ export const getFromR2 = async (key: string): Promise<string | null> => {
   }
 };
 
-export const deleteFromR2 = async (key: string): Promise<void> => {
+const deleteFromR2 = async (key: string): Promise<void> => {
   try {
     const client = await getR2Client();
     const bucket = serverEnv.R2_BUCKET_NAME;

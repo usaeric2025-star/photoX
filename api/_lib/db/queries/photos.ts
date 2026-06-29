@@ -20,7 +20,7 @@ export interface PhotoListParams {
     sortOrder?: string | null;
 }
 
-export async function getPhotoById(id: string) {
+async function getPhotoById(id: string) {
     return await db.query.furnitureItems.findFirst({
         where: eq(furnitureItems.id, id),
         with: {

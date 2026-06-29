@@ -115,7 +115,7 @@ export async function prefetchPhotos(params: PhotoListFilters = {}) {
   }
 }
 
-export function usePhotosMutations() {
+function usePhotosMutations() {
   const { mutate } = useSWRConfig();
 
   const updateCache = (updater: (data: unknown) => unknown) => {

@@ -8,7 +8,7 @@ import { useAppRouter } from '@/lib/router';
 /**
  * Handle administrative selection actions (批量删除, 批量隐藏, etc.)
  */
-export const useAdminSelection = () => {
+const useAdminSelection = () => {
     const [isDeleteOpen, { open, close, toggle }] = useDisclosure(false);
     const [idsToDelete, setIdsToDelete] = useState<string[]>([]);
     const adminActions = useAdminMaintenance();

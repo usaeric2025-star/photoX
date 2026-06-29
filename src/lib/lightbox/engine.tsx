@@ -8,7 +8,7 @@ interface LightboxEngineProps {
   onView?: (index: number) => void;
 }
 
-export function LightboxEngine({ 
+function LightboxEngine({ 
   onClose, 
   onView,
 }: LightboxEngineProps) {

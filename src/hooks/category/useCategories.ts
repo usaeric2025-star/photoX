@@ -4,9 +4,10 @@ import { loadCategoriesFromCloud } from '@/services/category/queries';
 import { queryKeys } from '@/lib/query/keys';
 import { STALE_TIMES } from '@/lib/query/config';
 
-export function useCategories() {
+export function useCategories(options?: { enabled?: boolean }) {
+  const isEnabled = options?.enabled ?? true;
   const { data, isLoading, error, mutate } = useAppQuery<Category[]>(
-    queryKeys.categories.all,
+    isEnabled ? queryKeys.categories.all : null,
     loadCategoriesFromCloud,
     {
       dedupingInterval: STALE_TIMES.LONG,

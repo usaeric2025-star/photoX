@@ -2,8 +2,8 @@ import { logger } from '@/lib/logger';
 import * as v from 'valibot';
 import { clientEnvSchema as sharedClientSchema, serverEnvSchema as sharedServerSchema } from '@shared/envSchema';
 
-export const clientEnvSchema = sharedClientSchema;
-export const serverEnvSchema = sharedServerSchema;
+const clientEnvSchema = sharedClientSchema;
+const serverEnvSchema = sharedServerSchema;
 
 // Infer types
 export type ClientEnv = v.InferOutput<typeof clientEnvSchema>;
@@ -20,7 +20,7 @@ const aiDebugHints: Record<string, string> = {
 /**
  * Validates and exports parsed client environment
  */
-export function getClientEnv(): ClientEnv {
+function getClientEnv(): ClientEnv {
   if (typeof window === "undefined") {
     return {} as ClientEnv;
   }
@@ -50,7 +50,7 @@ export function getClientEnv(): ClientEnv {
 /**
  * Validates and exports parsed server environment
  */
-export function getServerEnv(envObj: NodeJS.ProcessEnv): ServerEnv {
+function getServerEnv(envObj: NodeJS.ProcessEnv): ServerEnv {
   const rawEnv = { ...envObj };
   const validation = v.safeParse(serverEnvSchema, rawEnv);
   if (!validation.success) {

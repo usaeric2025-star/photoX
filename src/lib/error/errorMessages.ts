@@ -1,4 +1,4 @@
-export const errorMessageMap: Record<string, string> = {
+const errorMessageMap: Record<string, string> = {
   'network': '網路連線異常，請檢查網路後重試',
   'timeout': '請求逾時，請稍後再試',
   'storage_full': '儲存空間已滿，請清理後重試',

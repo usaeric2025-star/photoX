@@ -62,7 +62,7 @@ if (!globalForDb.postgresClient && connectionString) {
   });
 }
 
-export const client = globalForDb.postgresClient || postgres(finalConnectionString || '', clientOptions);
+const client = globalForDb.postgresClient || postgres(finalConnectionString || '', clientOptions);
 
 if (!globalForDb.drizzleDb && connectionString) {
   globalForDb.drizzleDb = drizzle(client, { 

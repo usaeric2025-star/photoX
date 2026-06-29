@@ -25,13 +25,8 @@ export const initializeApp = async () => {
     // 1. 設置全域 Auth 監聽
     initAuthListener();
     
-    // 2. 並行執行初始 Session 獲取與 Settings 獲取 (原子化組合)
-    const authInitPromise = authStore.getState().init();
-    
-    // 透過 SWR 機制預加載 Settings 並寫入快取
-    const settingsPromise = appQuery.mutate(['settings', 'public'], fetchPublicSettings());
-    
-    await Promise.all([authInitPromise, settingsPromise]);
+    // 2. 執行初始 Session 獲取
+    await authStore.getState().init();
     
     // 3. 恢復任務佇列（此時 Auth 已就緒）
     scheduler.restore().catch(e => logger.error('[appStore] Task restore failed', e));

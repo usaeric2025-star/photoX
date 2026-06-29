@@ -180,6 +180,6 @@ export const lightboxCurrentIndex = signal<UIStoreState, 'lightboxCurrentIndex'>
 // (Selection moved to selectionService)
 
 // UI 狀態開關
-export const isSidebarOpen = signal<UIStoreState, 'isSidebarOpen'>(uiStore, 'isSidebarOpen');
+const isSidebarOpen = signal<UIStoreState, 'isSidebarOpen'>(uiStore, 'isSidebarOpen');
 export const isTaskDrawerOpen = signal<UIStoreState, 'isTaskDrawerOpen'>(uiStore, 'isTaskDrawerOpen');
 export const gridColumns = signal<UIStoreState, 'gridColumns'>(uiStore, 'gridColumns');

@@ -9,7 +9,7 @@ import {
 
 export { useIsPhotoSelected, useIsMultiSelect, useSelectionCount, useSelectedIds, useSelectionActions };
 
-export function useSelection() {
+function useSelection() {
   const service = useSelectionService();
 
   return {

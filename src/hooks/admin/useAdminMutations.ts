@@ -4,7 +4,7 @@ import { api } from '@/lib/api';
 import { useAppMutation, appQuery } from '@/lib/query';
 
 // 1. 修复工具
-export const useRepairMutation = () => useAppMutation({
+const useRepairMutation = () => useAppMutation({
   mutationFn: async (issueId: string) => {
     const res = await api.admin.maintenance.repair.$post({ json: { issueId } });
     if (!res.ok) {
@@ -40,7 +40,7 @@ export const useSyncMutation = () => useAppMutation({
 });
 
 
-export const useAdminMutations = () => {
+const useAdminMutations = () => {
   const repair = useRepairMutation();
   const sync = useSyncMutation();
   return {

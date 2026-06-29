@@ -67,7 +67,7 @@ export async function requireRealUser(c: Context) {
   return user;
 }
 
-export async function adminAuthMiddleware(c: Context, next: Next) {
+async function adminAuthMiddleware(c: Context, next: Next) {
     // Whitelist public-accessible admin routes
     if (c.req.path.endsWith('/admin/settings/get-keys')) {
         await next();

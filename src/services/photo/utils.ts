@@ -151,7 +151,7 @@ export const checkDuplicate = async (
   return { isDuplicate: false };
 };
 
-export const checkDuplicateBatch = (files: File[]) => {
+const checkDuplicateBatch = (files: File[]) => {
   const newFiles: File[] = [];
   const duplicateHashes: string[] = [];
 
@@ -167,7 +167,7 @@ export const checkDuplicateBatch = (files: File[]) => {
   return { newFiles, duplicateHashes };
 };
 
-export const removeFromDuplicateCache = (file: File, imageHash?: string) => {
+const removeFromDuplicateCache = (file: File, imageHash?: string) => {
   const pseudoHash = `${file.name}_${file.size}_${file.lastModified}`;
   memoryPseudoHashes.delete(pseudoHash);
   if (imageHash) {

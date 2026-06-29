@@ -53,7 +53,7 @@ export const useCategoryDelete = () => useAppMutation({
 /**
  * Combined hook for batch usage or specific components
  */
-export function useCategoryMutations() {
+function useCategoryMutations() {
   const create = useCategoryCreate();
   const update = useCategoryEdit();
   const remove = useCategoryDelete();

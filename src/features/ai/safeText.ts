@@ -120,7 +120,7 @@ export function getSafeText(field: unknown, locale: string = 'zh'): string {
 /**
  * Standardizes units for display.
  */
-export function formatUnit(unit: string | null | undefined): string {
+function formatUnit(unit: string | null | undefined): string {
   const u = unit?.toLowerCase().trim();
   if (u === 'inch' || u === 'in' || u === 'inc') return 'inch';
   if (u === 'cm') return 'cm';

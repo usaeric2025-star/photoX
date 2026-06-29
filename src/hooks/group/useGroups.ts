@@ -4,7 +4,7 @@ import { loadGroupsFromCloud, getGroupById } from '@/services/group/queries';
 import { queryKeys } from '@/lib/query/keys';
 import { STALE_TIMES } from '@/lib/query/config';
 
-export function useGroups(userId: string, isAdmin: boolean = false) {
+function useGroups(userId: string, isAdmin: boolean = false) {
   const { data, isLoading, error, mutate } = useAppQuery<ProductGroup[]>(
     [queryKeys.groups.all, userId, isAdmin],
     () => loadGroupsFromCloud(userId, isAdmin),

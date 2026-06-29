@@ -3,7 +3,7 @@ import { useRef, useCallback } from 'react';
 // 全局缓存，避免重复预加载同一张图片
 const preloadedUrls = new Set<string>();
 
-export const useImagePreloader = () => {
+const useImagePreloader = () => {
   const preloadTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const preloadImage = useCallback((url: string) => {

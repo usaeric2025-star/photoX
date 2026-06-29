@@ -3,11 +3,11 @@ export { useSignal, useStore } from '@storve/react';
 // UI 狀態 (Signals)
 export { 
   currentEditingPhoto, 
-  appLangSignal, appLangSignal as appLang,
+   appLangSignal as appLang,
   lightboxSlides, lightboxCurrentIndex,
-  isSidebarOpen, 
+   
   isTaskDrawerOpen, isTaskDrawerOpen as isTaskDrawerOpenSignal,
-  gridColumns, gridColumns as gridColumnsSignal
+  gridColumns, 
 } from '@/store/uiStore';
 
 // Import for local usage and re-export
@@ -22,15 +22,15 @@ import { appStore, appLoadingSignal, appErrorSignal } from '@/store/appStore';
 
 // Re-exports
 export { 
-  uiStore, useUIStore, useUIStore as useUI,
+  uiStore,  useUIStore as useUI,
   useAppLang,
   UIStoreState 
 };
-export { authStore, useAuthStore, useAuthStore as useAuth, userSignal, authLoadingSignal, AuthState };
+export {   useAuthStore as useAuth,    };
 export { 
-  tasksSignal, activeTaskCountSignal, globalTaskStatusSignal, globalTaskProgressSignal 
+  tasksSignal, activeTaskCountSignal,   
 };
-export { appStore, appLoadingSignal, appErrorSignal };
+;
 
 // Direct state getters (for non-React contexts)
 export const storeAccessor = {

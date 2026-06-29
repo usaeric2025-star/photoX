@@ -2,7 +2,7 @@ import { api } from '@/lib/api';
 import { Manufacturer } from '@/types';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
-export const clearManufacturerFromPhotos = async (mfrId: string): Promise<string[]> => {
+const clearManufacturerFromPhotos = async (mfrId: string): Promise<string[]> => {
   const res = await api.manufacturers['clear-photos'].$post({
     json: { manufacturerId: mfrId }
   });
@@ -12,7 +12,7 @@ export const clearManufacturerFromPhotos = async (mfrId: string): Promise<string
   return d?.data || [];
 };
 
-export const updateManufacturer = async (id: string, updates: Partial<Manufacturer>): Promise<void> => {
+const updateManufacturer = async (id: string, updates: Partial<Manufacturer>): Promise<void> => {
   const res = await api.manufacturers[':id'].$put({
     param: { id },
     json: { updates: { name: (updates.name || '').toUpperCase() } }
@@ -20,7 +20,7 @@ export const updateManufacturer = async (id: string, updates: Partial<Manufactur
   if (!res.ok) throw ErrorFactory.fatal('Update manufacturer failed', { context: 'updateManufacturer' });
 };
 
-export const createManufacturer = async (data: Omit<Manufacturer, 'id' | 'created_at' | 'updated_at'>): Promise<Manufacturer> => {
+const createManufacturer = async (data: Omit<Manufacturer, 'id' | 'created_at' | 'updated_at'>): Promise<Manufacturer> => {
   const res = await api.manufacturers.$post({
     json: { manufacturerData: { name: (data.name || '').toUpperCase() } }
   });
@@ -29,7 +29,7 @@ export const createManufacturer = async (data: Omit<Manufacturer, 'id' | 'create
   return result.data as Manufacturer;
 };
 
-export const deleteManufacturer = async (id: string): Promise<void> => {
+const deleteManufacturer = async (id: string): Promise<void> => {
   const res = await api.manufacturers[':id'].$delete({
     param: { id }
   });

@@ -31,10 +31,10 @@ function CategoryButton({ cat, isSelected, categoryName, currentFilters, onClick
   );
 }
 
-export function CategoryGrid({ mode }: { mode?: 'public' | 'admin' }) {
+export function CategoryGrid({ mode, enabled = true }: { mode?: 'public' | 'admin', enabled?: boolean }) {
   const { filters, updateFilters } = useFilterState();
   const { appLang, uiTranslations } = useTranslation();
-  const { categories, isLoading: isPending } = useCategories();
+  const { categories, isLoading: isPending } = useCategories({ enabled });
 
   logger.info('[CategoryGrid] Rendering', { isPending, categoriesCount: categories?.length });
 

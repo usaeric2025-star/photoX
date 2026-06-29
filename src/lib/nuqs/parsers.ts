@@ -46,7 +46,7 @@ export const batchParser = parseAsBoolean.withDefault(false);
 export const modalParser = parseAsString.withDefault('');
 
 // Page Parser (使用 Valibot)
-export const pageParser = parseWithValibot(PageSchema).withDefault(1);
+const pageParser = parseWithValibot(PageSchema).withDefault(1);
 
 // Group ID Parser
 export const groupIdParser = parseAsString.withDefault('');

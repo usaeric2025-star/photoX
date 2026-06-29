@@ -122,5 +122,5 @@ export function useAppMutation<TVariables, TData>(
 }
 
 // For compatibility with useSWRConfig pattern
-export { useSWRConfig as useAppQueryClient } from 'swr';
+;
 export { swrMutate as mutate };

@@ -8,7 +8,7 @@ export const savePhotoToCloud = async (userId: string = '', photo: Photo, file?:
   return result;
 };
 
-export const savePhotosToCloudBatch = async (
+const savePhotosToCloudBatch = async (
   userId: string = '', 
   photos: { photo: Photo; file?: File }[],
   onProgress?: (count: number) => void

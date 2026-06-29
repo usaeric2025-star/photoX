@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { SearchInput } from './SearchInput';
 import { SortToggle } from './SortToggle';
@@ -20,7 +20,17 @@ export function FilterBar({ mode, className }: FilterBarProps) {
   const { showGroupsCollapsed, setShowGroupsCollapsed } = useFilters();
   const [showTags, setShowTags] = useState(false);
   const { filters, updateFilters } = useFilterState();
-  const { tags: allTags } = useTags();
+  
+  // 延遲載入非關鍵資料 (P1)
+  const [isReadyForNonCritical, setIsReadyForNonCritical] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsReadyForNonCritical(true);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const { tags: allTags } = useTags({ enabled: isReadyForNonCritical });
 
   const selectedTags = allTags?.filter(tag => filters.tagIds.includes(String(tag.id))) || [];
 
@@ -69,7 +79,7 @@ export function FilterBar({ mode, className }: FilterBarProps) {
       
       <div className="px-4 pb-3 space-y-2">
         {/* 分類 - 根據規範固定渲染 2 x 4 */}
-        <CategoryGrid mode={mode} />
+        <CategoryGrid mode={mode} enabled={isReadyForNonCritical} />
 
         {/* 已選標籤顯示與移除 */}
         {selectedTags.length > 0 && (

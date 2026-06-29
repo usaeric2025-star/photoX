@@ -55,7 +55,7 @@ export const useManufacturerDelete = () => useAppMutation({
   }
 });
 
-export function useManufacturerMutations() {
+function useManufacturerMutations() {
   const create = useManufacturerCreate();
   const update = useManufacturerEdit();
   const remove = useManufacturerDelete();

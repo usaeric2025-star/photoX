@@ -21,7 +21,7 @@ const confirmStore = createStore<ConfirmState>({
   description: '',
 });
 
-export const confirmDialog = (options: ConfirmOptions): Promise<boolean> => {
+const confirmDialog = (options: ConfirmOptions): Promise<boolean> => {
   return new Promise<boolean>((resolve) => {
     confirmStore.setState({
       ...options,

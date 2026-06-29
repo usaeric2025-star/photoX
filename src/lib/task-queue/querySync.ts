@@ -58,7 +58,7 @@ function scheduleInvalidation() {
 }
 
 // ✅ 暴露 flush 方法
-export function flushInvalidations() {
+function flushInvalidations() {
   if (pendingInvalidations.size === 0) return;
 
   const keys = Array.from(pendingInvalidations);

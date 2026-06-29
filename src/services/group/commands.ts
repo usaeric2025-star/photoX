@@ -96,7 +96,7 @@ export async function deleteGroup(id: string): Promise<void> {
 // Action aliases for legacy or specific naming compliance
 // Removed aliases
 
-export { ungroupPhotos, syncGroupMemberCount } from '@/services/photo/utils';
+export { ungroupPhotos,  } from '@/services/photo/utils';
 
 export const groupPhotos = async (
   photoIds: string[], 

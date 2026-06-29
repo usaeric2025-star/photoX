@@ -17,7 +17,7 @@ export enum ErrorCategory {
 }
 
 // ===== 2. 辅助函数 =====
-export function mapCodeToStatus(code: ErrorCode | string): number {
+function mapCodeToStatus(code: ErrorCode | string): number {
   const map: Record<string, number> = {
     [ErrorCode.VALIDATION_FAILED]: 400,
     [ErrorCode.PERMISSION_DENIED]: 403,

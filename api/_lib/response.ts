@@ -74,7 +74,7 @@ export const errorResponse = (c: Context, error: unknown, status: number = 500) 
 /**
  * 統一成功回應格式
  */
-export const successResponse = (c: Context, data: any, status: number = 200) => {
+const successResponse = (c: Context, data: any, status: number = 200) => {
   return c.json({
     success: true,
     data,

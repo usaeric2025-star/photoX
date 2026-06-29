@@ -6,7 +6,7 @@ import { getThumbnailUrl } from '@/services/mappers/utils';
  * 將 Photo 轉換為燈箱所需的 Slide 格式
  * 處理多語系物件及欄位不一致 (image_url vs imageUrl)
  */
-export function photoToLightboxSlide(photo: Record<string, unknown> | Photo): LightboxSlide {
+function photoToLightboxSlide(photo: Record<string, unknown> | Photo): LightboxSlide {
   // 優先使用原始 URL
   const src = (photo.imageUrl || photo.image_url) as string | undefined;
 

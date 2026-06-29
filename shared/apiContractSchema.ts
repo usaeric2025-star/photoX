@@ -51,7 +51,7 @@ export const AIAnalyzePhotoV2ReqSchema = v.object({
     photoId: v.optional(v.string())
 });
 
-export const StorageAuditResSchema = v.object({
+const StorageAuditResSchema = v.object({
     healthyCount: v.number(),
     ghosts: v.object({
         count: v.number(),
@@ -70,7 +70,7 @@ export const StorageAuditResSchema = v.object({
     }))
 });
 
-export const ImportOrphansReqSchema = v.object({
+const ImportOrphansReqSchema = v.object({
     urls: v.array(v.string()),
     groupId: v.optional(v.string()),
     userId: v.optional(v.string())
@@ -147,7 +147,7 @@ export const ListByGroupReqSchema = v.object({
     pageSize: v.optional(v.number())
 });
 
-export const TagListItemSchema = v.object({
+const TagListItemSchema = v.object({
     id: v.number(),
     name: v.string(),
     aliases: v.optional(v.array(v.string())),
@@ -161,7 +161,7 @@ export const TagReqSchema = v.object({
     aliases: v.optional(v.array(v.string()))
 });
 
-export const CategoryListItemSchema = v.object({
+const CategoryListItemSchema = v.object({
     id: v.number(),
     code: v.string(),
     name: v.string(),
@@ -182,7 +182,7 @@ export const CategoryReqSchema = v.object({
     is_active: v.optional(v.boolean())
 });
 
-export const ManufacturerListItemSchema = v.object({
+const ManufacturerListItemSchema = v.object({
     id: v.string(),
     name: v.string()
 });
@@ -200,13 +200,13 @@ export const GroupReqSchema = v.object({
     status: v.optional(v.union([v.literal('draft'), v.literal('confirmed')]))
 });
 
-export const TranslationSchema = v.object({
+const TranslationSchema = v.object({
     zh: v.string(),
     en: v.optional(v.string()),
     ms: v.optional(v.string())
 });
 
-export const DimensionSchema = v.object({
+const DimensionSchema = v.object({
     label: v.string(),
     unit: v.union([v.literal('cm'), v.literal('inch'), v.literal('mm')]),
     length: v.number(),
@@ -217,7 +217,7 @@ export const DimensionSchema = v.object({
     is_ai_estimated: v.optional(v.boolean())
 });
 
-export const TagSchema = v.object({
+const TagSchema = v.object({
     id: v.number(),
     name: v.string(),
     aliases: v.optional(v.array(v.string())),
@@ -253,7 +253,7 @@ export const SearchReqSchema = v.object({
     offset: v.optional(v.number())
 });
 
-export const MaintenanceJobSchema = v.object({
+const MaintenanceJobSchema = v.object({
     id: v.optional(v.string()),
     task: v.optional(v.string()),
     status: v.union([v.literal('pending'), v.literal('running'), v.literal('completed'), v.literal('failed'), v.literal('processing')]),

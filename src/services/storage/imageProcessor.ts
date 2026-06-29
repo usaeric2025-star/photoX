@@ -44,7 +44,7 @@ export async function processImageFile(file: File): Promise<ProcessedImage> {
 /**
  * Process multiple files concurrently
  */
-export async function processImageFiles(
+async function processImageFiles(
   files: File[], 
   onProgress?: (processed: number, total: number) => void
 ): Promise<ProcessedImage[]> {

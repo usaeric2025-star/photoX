@@ -2,7 +2,7 @@ import { usePhotos as useSWRPhotos, PhotoListFilters, prefetchPhotos } from '@/l
 import { useFilters } from '@/features/filters/useFilters';
 
 export type { PhotoListFilters };
-export { prefetchPhotos };
+;
 
 /**
  * Hook to get the list of photos using SWR.

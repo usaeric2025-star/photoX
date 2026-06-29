@@ -157,7 +157,7 @@ export interface PhotoAIResult {
   created_at?: string;
 }
 
-export function isValidPhoto(photo: unknown): photo is Photo {
+function isValidPhoto(photo: unknown): photo is Photo {
   const p = photo as Record<string, unknown>;
   return (
     !!p && typeof p.id === 'string'
