@@ -114,8 +114,6 @@ export class TaskScheduler {
       setGlobalTaskProgress(1);
       await taskTable.updateStatus(task.id, 'completed', result);
       
-      showToast.success(`任務完成: ${task.label}`);
-
       // 觸發 querySync（通過事件訂閱）
       this.onTaskComplete?.(task);
 

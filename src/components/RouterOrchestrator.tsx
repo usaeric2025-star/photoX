@@ -13,6 +13,7 @@ const DiagDashboard = lazy(() => import("@/features/diagnostics/DiagDashboard").
 
 export function RouterOrchestrator() {
   const route = useAppRoute();
+  console.log('[RouterOrchestrator] Current route:', route);
 
   const getPage = () => {
     if (!route) {

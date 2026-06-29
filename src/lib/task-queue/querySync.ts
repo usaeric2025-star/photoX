@@ -67,7 +67,7 @@ export function flushInvalidations() {
   keys.forEach(key => {
     switch (key) {
       case 'photos_list':
-        appQuery.mutate(queryKeys.photos.all);
+        appQuery.mutate((key) => Array.isArray(key) && key[0] === 'photos');
         break;
       case 'diagnostics':
         appQuery.mutate(['diagnostics']);

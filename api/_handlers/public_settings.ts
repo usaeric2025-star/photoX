@@ -8,22 +8,28 @@ import { errorResponse } from '../_lib/response.js';
 export const publicSettings = new Hono();
 
 const handler = async (c: any) => {
-    logger.info("Fetching settings...");
-    const [settingsRes] = await Promise.all([
-        db.select({
-            id: schema.settings.id,
-            logoUrl: schema.settings.logoUrl,
-            whatsapp1: schema.settings.whatsapp1,
-            whatsapp2: schema.settings.whatsapp2,
-            whatsapp1Name: schema.settings.whatsapp1Name,
-            whatsapp2Name: schema.settings.whatsapp2Name,
-            facebook: schema.settings.facebook,
-            instagram: schema.settings.instagram,
-        }).from(schema.settings).where(eq(schema.settings.id, 1)).limit(1)
-            .then(res => { logger.info("Settings fetched"); return res[0] || null; })
-            .catch(e => { logger.error("Settings table fetch failed:", e); return null; }),
-    ]);
-    logger.info("Fetching complete");
+    const requestId = crypto.randomUUID();
+    logger.info(`[Settings-${requestId}] Starting fetch...`);
+    const start = Date.now();
+    
+    const settingsRes = await db.select({
+        id: schema.settings.id,
+        logoUrl: schema.settings.logoUrl,
+        whatsapp1: schema.settings.whatsapp1,
+        whatsapp2: schema.settings.whatsapp2,
+        whatsapp1Name: schema.settings.whatsapp1Name,
+        whatsapp2Name: schema.settings.whatsapp2Name,
+        facebook: schema.settings.facebook,
+        instagram: schema.settings.instagram,
+    }).from(schema.settings).where(eq(schema.settings.id, 1)).limit(1)
+        .then(res => { 
+            logger.info(`[Settings-${requestId}] Settings fetched in ${Date.now() - start}ms`);
+            return res[0] || null; 
+        })
+        .catch(e => { 
+            logger.error(`[Settings-${requestId}] Settings table fetch failed:`, e); 
+            return null; 
+        });
 
     // Return ONLY non-sensitive data
     const data = {

@@ -213,6 +213,15 @@ adminMaintenance.post("/storage/clean-ghosts", async (c) => {
 });
 
 // --- 3. Error Event Management ---
+adminMaintenance.get("/db-debug", async (c) => {
+    try {
+        const res = await db.execute(sql`SHOW statement_timeout`);
+        return c.json({ success: true, data: res });
+    } catch (e: unknown) {
+        return c.json({ success: false, error: String(e) }, 500);
+    }
+});
+
 adminMaintenance.get("/error-events", async (c) => {
     try {
         const limit = parseInt(c.req.query('limit') || '100', 10);
