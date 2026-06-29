@@ -1,7 +1,6 @@
 import { Hono, type Context } from 'hono';
 import { type StatusCode } from 'hono/utils/http-status';
 import { requireRealUser } from './auth.js';
-import { refreshPhotosView } from './db/actions.js';
 import { getTraceId } from './error/traceId.js';
 import { logger } from './logger.js';
 import { AppError, errorFactory } from './error/AppError.js';
@@ -78,44 +77,5 @@ export function setupMiddlewares(app: Hono, serverEnv: { NODE_ENV: string | unde
           }
       }
       await next();
-  });
-
-  // --- Materialized View Refresh Middleware (CQRS) ---
-  app.use('*', async (c, next) => {
-      await next();
-      const method = c.req.method;
-      const path = c.req.path;
-      const isMutation = ['POST', 'PUT', 'DELETE'].includes(method);
-      const isSuccess = c.res.status >= 200 && c.res.status < 300;
-      if (isMutation && isSuccess) {
-          const affectedPrefixes = ['/api/photos', '/api/groups', '/api/categories', '/api/tags'];
-          const isAffectedPath = affectedPrefixes.some(prefix => path.startsWith(prefix));
-          const querySuffixes = ['/list', '/count', '/by-ids', '/check-hash'];
-          const isQuery = querySuffixes.some(suffix => path.endsWith(suffix));
-          
-          if (isAffectedPath && !isQuery) {
-              const refreshPromise = refreshPhotosView().catch(err => {
-                  logger.error('[Refresh Middleware] Failure', { path, method, error: err.message });
-              });
-              
-              let hasWaitUntil = false;
-              try {
-                  const ctx = c.executionCtx;
-                  if (ctx && typeof ctx.waitUntil === 'function') {
-                      hasWaitUntil = true;
-                  }
-              } catch (e) {
-                  // Ignore 'This context has no ExecutionContext'
-              }
-
-              if (hasWaitUntil) {
-                  c.executionCtx.waitUntil(refreshPromise);
-              } else {
-                  // If waitUntil is not available, we trigger the refresh but do not await it
-                  // to avoid blocking the user request.
-                  refreshPromise.catch(e => logger.error('[Refresh Middleware] Async background refresh failed:', e));
-              }
-          }
-      }
   });
 }

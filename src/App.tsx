@@ -29,7 +29,7 @@ function AppContent({ status, error }: { status: string, error: Error | null }) 
           )}
       </ConfirmProvider>
       <DialogContainer />
-      <Toaster position="bottom-center" />
+      <Toaster position="bottom-center" closeButton />
       <Analytics />
     </AppErrorBoundary>
   );

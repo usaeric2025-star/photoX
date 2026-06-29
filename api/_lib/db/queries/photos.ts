@@ -2,7 +2,6 @@
 import { db, furnitureItems, categories, manufacturers, groups, vPhotosList } from '../index.js';
 import { eq, and, or, ilike, sql, desc, asc, isNull, count, inArray, type SQL } from 'drizzle-orm';
 import { logger } from '../../logger.js';
-import { refreshPhotosView } from '../actions.js';
 
 export interface PhotoListParams {
     page?: number;
