@@ -1,111 +1,157 @@
-// src/services/selection/selectionService.ts
 import { createStore } from '@storve/core';
 import { useStore } from '@/lib/store';
-import { signal } from '@storve/core/signals';
-import { useSignal } from '@/lib/store';
 import { useQueryState } from 'nuqs';
 import { batchParser, selectedIdsParser } from '@/lib/nuqs/parsers';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 interface SelectionState {
+  selectedIds: string[];
+  isMultiSelect: boolean;
   batchEditingIds: string[] | null;
   isAvoidingSelection: boolean;
 }
 
-const selectionStore = createStore<SelectionState>({
+export const selectionStore = createStore<SelectionState>({
+  selectedIds: [],
+  isMultiSelect: false,
   batchEditingIds: null,
   isAvoidingSelection: false,
 });
 
 /**
- * useSelection: Selection logic driven directly by URL state.
- * No more useEffect sync - the URL is the Source of Truth.
+ * SelectionSync: Background component to keep Store and URL in sync.
+ * Optimized for performance: 
+ * 1. Immediate UI state update
+ * 2. Debounced URL persistence
  */
-export function useSelection() {
-  const [batch, setBatch] = useQueryState('batch', {
-    ...batchParser,
-    history: 'replace',
-  });
+export function SelectionSync() {
+  const [batch, setBatch] = useQueryState('batch', { ...batchParser, history: 'replace', shallow: true });
+  const [selected, setSelected] = useQueryState('selected', { ...selectedIdsParser, history: 'replace', shallow: true });
+  
+  const isInternalUpdate = useRef(false);
 
-  const [selected, setSelected] = useQueryState('selected', {
-    ...selectedIdsParser,
-    history: 'replace',
-  });
-
-  const isMultiSelect = !!batch;
-  const selectedIds = selected || [];
-  const batchEditingIds = useStore(selectionStore, (s) => s.batchEditingIds);
-  const isAvoidingSelection = useStore(selectionStore, (s) => s.isAvoidingSelection);
-  const selectedCount = selectedIds.length;
-
-  const toggleSelect = (id: string) => {
-    const current = selectedIds;
-    const isSelected = current.includes(id);
-    const newIds = isSelected
-      ? current.filter((i) => i !== id)
-      : [...current, id];
-    
-    setSelected(newIds.length > 0 ? newIds : null);
-    
-    // If selecting first item and not in batch mode, enable it
-    if (newIds.length > 0 && !isMultiSelect) {
-      setBatch(true);
+  // 1. Sync from URL to Store (e.g. on load or browser navigation)
+  useEffect(() => {
+    if (isInternalUpdate.current) {
+      isInternalUpdate.current = false;
+      return;
     }
+
+    const updates: Partial<SelectionState> = {};
+    const current = selectionStore.getState();
+    
+    if (!!batch !== current.isMultiSelect) {
+      updates.isMultiSelect = !!batch;
+    }
+    
+    const urlIds = selected || [];
+    if (urlIds.length !== current.selectedIds.length || 
+        (urlIds.length > 0 && urlIds[0] !== current.selectedIds[0])) {
+      // Simple check for efficiency, deep comparison if needed
+      updates.selectedIds = urlIds;
+    }
+
+    if (Object.keys(updates).length > 0) {
+      selectionStore.setState(updates);
+    }
+  }, [batch, selected]);
+
+  // 2. Sync from Store to URL (debounced for performance)
+  useEffect(() => {
+    const unsubscribe = selectionStore.subscribe((state) => {
+      const timer = setTimeout(() => {
+        isInternalUpdate.current = true;
+        setBatch(state.isMultiSelect || null);
+        setSelected(state.selectedIds.length > 0 ? state.selectedIds : null);
+      }, 300);
+      return () => clearTimeout(timer);
+    });
+    return unsubscribe;
+  }, [setBatch, setSelected]);
+
+  return null;
+}
+
+/**
+ * useSelectionActions: Returns actions that update Store immediately for snappy UI.
+ */
+export function useSelectionActions() {
+  const toggleSelect = (id: string) => {
+    const { selectedIds, isMultiSelect } = selectionStore.getState();
+    const isSelected = selectedIds.includes(id);
+    const newIds = isSelected
+      ? selectedIds.filter((i) => i !== id)
+      : [...selectedIds, id];
+    
+    selectionStore.setState({ 
+      selectedIds: newIds,
+      isMultiSelect: newIds.length > 0 ? true : isMultiSelect
+    });
   };
 
   const clearSelection = () => {
-    setSelected(null);
-    setBatch(null);
-    selectionStore.setState({ batchEditingIds: null });
+    selectionStore.setState({ 
+      selectedIds: [], 
+      isMultiSelect: false,
+      batchEditingIds: null 
+    });
   };
 
   const toggleMode = () => {
+    const { isMultiSelect } = selectionStore.getState();
     const nextMode = !isMultiSelect;
-    setBatch(nextMode || null);
-    if (!nextMode) {
-      setSelected(null);
-      selectionStore.setState({ batchEditingIds: null });
-    }
+    selectionStore.setState({ 
+      isMultiSelect: nextMode,
+      selectedIds: nextMode ? selectionStore.getState().selectedIds : []
+    });
   };
 
-  const setBatchEditingIds = (ids: string[] | null) => {
-    selectionStore.setState({ batchEditingIds: ids });
+  const patch = (updates: Partial<SelectionState>) => {
+    selectionStore.setState(updates);
   };
 
-  const patch = (updates: { 
-    selectedIds?: string[]; 
-    isMultiSelect?: boolean;
-    batchEditingIds?: string[] | null;
-    isAvoidingSelection?: boolean;
-  }) => {
-    if ('isMultiSelect' in updates) {
-      setBatch(updates.isMultiSelect || null);
-      if (updates.isMultiSelect === false) {
-        setSelected(null);
-      }
-    }
-    if ('selectedIds' in updates) {
-      setSelected(updates.selectedIds && updates.selectedIds.length > 0 ? updates.selectedIds : null);
-    }
-    if ('batchEditingIds' in updates) {
-      selectionStore.setState({ batchEditingIds: updates.batchEditingIds });
-    }
-    if ('isAvoidingSelection' in updates) {
-      selectionStore.setState({ isAvoidingSelection: updates.isAvoidingSelection });
-    }
-  };
+  return { toggleSelect, clearSelection, toggleMode, patch };
+}
 
+/**
+ * useIsMultiSelect: Atomic subscription to isMultiSelect status.
+ */
+export function useIsMultiSelect() {
+  return useStore(selectionStore, (s) => s.isMultiSelect);
+}
+
+/**
+ * useSelectionCount: Atomic subscription to selectedCount.
+ */
+export function useSelectionCount() {
+  return useStore(selectionStore, (s) => s.selectedIds.length);
+}
+
+/**
+ * useSelectedIds: Atomic subscription to selectedIds.
+ */
+export function useSelectedIds() {
+  return useStore(selectionStore, (s) => s.selectedIds);
+}
+
+/**
+ * useIsPhotoSelected: Atomic subscription to a photo's selection status.
+ * Optimized for large grids to prevent unnecessary re-renders.
+ */
+export function useIsPhotoSelected(id: string) {
+  return useStore(selectionStore, (s) => s.selectedIds.includes(id));
+}
+
+/**
+ * useSelection: Compatibility hook (deprecated, use atomic hooks for performance).
+ */
+export function useSelection() {
+  const state = useStore(selectionStore, (s) => s);
+  const actions = useSelectionActions();
   return {
-    selectedIds,
-    isMultiSelect,
-    batchEditingIds,
-    isAvoidingSelection,
-    selectedCount,
-    toggleSelect,
-    clearSelection,
-    toggleMode,
-    patch,
-    setBatchEditingIds,
-    isSelected: (id: string) => selectedIds.includes(id),
+    ...state,
+    ...actions,
+    selectedCount: state.selectedIds.length,
+    isSelected: (id: string) => state.selectedIds.includes(id),
   };
 }

@@ -3,7 +3,7 @@ import { Icon } from '@/components/ui/Icon';
 import { buttonStyles } from '@/styles/buttonStyles';
 import { usePermission } from '@/hooks';
 import { useAppRouter } from '@/lib/router';
-import { useSelection } from '@/features/selection';
+import { useIsMultiSelect } from '@/features/selection';
 
 interface UploadButtonProps {
   onAdd?: () => void;
@@ -15,7 +15,7 @@ export function UploadButton({
   const { can } = usePermission();
   const { route } = useAppRouter();
   const isManagement = typeof route?.name === 'string' && route?.name?.startsWith('admin');
-  const { isMultiSelect } = useSelection();
+  const isMultiSelect = useIsMultiSelect();
   const isBatch = isMultiSelect;
 
   if (!isManagement || !can('photo:edit') || !onAdd || isBatch) return null;

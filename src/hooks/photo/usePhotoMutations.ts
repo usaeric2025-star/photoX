@@ -3,6 +3,9 @@ import { updatePhoto as update, BatchActionResult, deleteMany, batchUpdate } fro
 import { queryKeys } from '@/lib/query/keys';
 import { useAppMutation, appQuery } from '@/lib/query';
 import { syncBatchPhotoTags } from '@/services/tag/commands';
+import { showToast } from '@/lib/ui/toast';
+import { useSelectionActions } from '@/features/selection';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 /**
  * 照片编辑 Mutation
@@ -25,27 +28,42 @@ export const usePhotoEditMutation = () => useAppMutation({
     return res as Photo;
   },
   onSuccess: () => {
+    showToast.success('照片已更新');
     appQuery.mutate((key) => {
-      if (Array.isArray(key) && key[0] === queryKeys.photos.all[0]) return true;
-      if (typeof key === 'string' && key.includes(queryKeys.photos.all[0])) return true;
-      return false;
+      if (!key) return false;
+      const keyStr = typeof key === 'string' ? key : JSON.stringify(key);
+      return keyStr.includes('photos') || keyStr.includes('groups') || keyStr.includes('storage') || keyStr.includes('ai-audit');
     });
+  },
+  onError: (err) => {
+    ErrorFactory.handle(err, { context: '照片更新' });
   }
 });
 
 // 2. 照片删除
-export const usePhotoDelete = () => useAppMutation({
-  mutationFn: async (ids: string | string[]) => {
-    return await deleteMany(Array.isArray(ids) ? ids : [ids]);
-  },
-  onSuccess: () => {
-    appQuery.mutate((key) => {
-      if (Array.isArray(key) && key[0] === 'photos') return true;
-      if (typeof key === 'string' && key.includes('photos')) return true;
-      return false;
-    });
-  }
-});
+export const usePhotoDelete = () => {
+  const { clearSelection } = useSelectionActions();
+  
+  return useAppMutation({
+    mutationFn: async (ids: string | string[]) => {
+      return await deleteMany(Array.isArray(ids) ? ids : [ids]);
+    },
+    onSuccess: () => {
+      showToast.success('照片已刪除');
+      clearSelection();
+      
+      // 廣泛刷新緩存，考慮到 SWR Infinite 的 key 可能被序列化成 $inf$... 字串
+      appQuery.mutate((key) => {
+        if (!key) return false;
+        const keyStr = typeof key === 'string' ? key : JSON.stringify(key);
+        return keyStr.includes('photos') || keyStr.includes('groups') || keyStr.includes('storage') || keyStr.includes('ai-audit');
+      });
+    },
+    onError: (err) => {
+      ErrorFactory.handle(err, { context: '照片删除' });
+    }
+  });
+};
 
 // 3. 批量编辑
 export const usePhotoBatchEdit = () => useAppMutation({
@@ -64,12 +82,16 @@ export const usePhotoBatchEdit = () => useAppMutation({
     
     return res;
   },
-  onSuccess: () => {
+  onSuccess: (res) => {
+    showToast.success(`成功更新 ${Array.isArray(res) ? res.length : ''} 張照片`);
     appQuery.mutate((key) => {
-      if (Array.isArray(key) && key[0] === queryKeys.photos.all[0]) return true;
-      if (typeof key === 'string' && key.includes(queryKeys.photos.all[0])) return true;
-      return false;
+      if (!key) return false;
+      const keyStr = typeof key === 'string' ? key : JSON.stringify(key);
+      return keyStr.includes('photos') || keyStr.includes('groups') || keyStr.includes('storage') || keyStr.includes('ai-audit');
     });
+  },
+  onError: (err) => {
+    ErrorFactory.handle(err, { context: '批量更新照片' });
   }
 });
 
@@ -80,12 +102,16 @@ export const useTogglePin = () => useAppMutation({
     if (!res) throw new Error('Failed to update photo');
     return res;
   },
-  onSuccess: () => {
+  onSuccess: (_, { isPinned }) => {
+    showToast.success(isPinned ? '已置頂' : '已取消置頂');
     appQuery.mutate((key) => {
-      if (Array.isArray(key) && key[0] === queryKeys.photos.all[0]) return true;
-      if (typeof key === 'string' && key.includes(queryKeys.photos.all[0])) return true;
-      return false;
+      if (!key) return false;
+      const keyStr = typeof key === 'string' ? key : JSON.stringify(key);
+      return keyStr.includes('photos') || keyStr.includes('groups') || keyStr.includes('storage') || keyStr.includes('ai-audit');
     });
+  },
+  onError: (err) => {
+    ErrorFactory.handle(err, { context: '操作' });
   }
 });
 

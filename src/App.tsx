@@ -7,12 +7,15 @@ import { Analytics } from '@vercel/analytics/react';
 import { useAppInit } from './hooks/core/useAppInit';
 import { LoadingScreen } from './components/ui/LoadingScreen';
 import { DialogContainer } from './components/layout/DialogContainer';
+import { Toaster } from 'sonner';
 import { PhotoEditDialog } from './features/photo-edit/PhotoEditDialog';
+import { SelectionSync } from './features/selection';
 
 function AppContent({ status, error }: { status: string, error: Error | null }) {
   return (
     <AppErrorBoundary>
       <ConfirmProvider>
+          <SelectionSync />
           {status === 'loading' ? (
             <LoadingScreen />
           ) : status === 'error' ? (
@@ -26,6 +29,7 @@ function AppContent({ status, error }: { status: string, error: Error | null }) 
           )}
       </ConfirmProvider>
       <DialogContainer />
+      <Toaster position="bottom-center" />
       <Analytics />
     </AppErrorBoundary>
   );

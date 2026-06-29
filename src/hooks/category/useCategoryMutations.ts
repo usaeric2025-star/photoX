@@ -6,13 +6,17 @@ import { useAppMutation, appQuery } from '@/lib/query';
 export const useCategoryCreate = () => useAppMutation({
   mutationFn: async (variables: string | Partial<Category>) => {
     const name = typeof variables === 'string' ? variables : (variables.name || '');
-    const res = await createCategory({ name } as any);
+    const res = await createCategory({ name });
     if (!res) throw new Error('分类创建失败');
     return res;
   },
   onSuccess: () => {
     appQuery.mutate(queryKeys.categories.all);
-    appQuery.mutate(queryKeys.photos.all);
+    appQuery.mutate((key) => {
+      if (!key) return false;
+      const keyStr = typeof key === 'string' ? key : JSON.stringify(key);
+      return keyStr.includes('photos');
+    });
   }
 });
 
@@ -23,7 +27,11 @@ export const useCategoryEdit = () => useAppMutation({
   },
   onSuccess: () => {
     appQuery.mutate(queryKeys.categories.all);
-    appQuery.mutate(queryKeys.photos.all);
+    appQuery.mutate((key) => {
+      if (!key) return false;
+      const keyStr = typeof key === 'string' ? key : JSON.stringify(key);
+      return keyStr.includes('photos');
+    });
   }
 });
 
@@ -34,7 +42,11 @@ export const useCategoryDelete = () => useAppMutation({
   },
   onSuccess: () => {
     appQuery.mutate(queryKeys.categories.all);
-    appQuery.mutate(queryKeys.photos.all);
+    appQuery.mutate((key) => {
+      if (!key) return false;
+      const keyStr = typeof key === 'string' ? key : JSON.stringify(key);
+      return keyStr.includes('photos');
+    });
   }
 });
 

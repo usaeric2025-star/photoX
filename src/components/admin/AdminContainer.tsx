@@ -12,10 +12,11 @@ import { useUI, uiStore } from '@/lib/store';
 
 export function AdminContainer() {
   const filters = useFilters({ enableStatus: true });
-  const isAggregated = filters.showGroupsCollapsed && !filters.search && !filters.category && !filters.tags?.length;
+  const hasFilters = !!filters.search || (filters.category && filters.category !== 'all' && filters.category !== '') || (filters.tags && filters.tags.length > 0);
+  const isAggregated = filters.showGroupsCollapsed;
   
   const photoGridData = usePhotoGrid({
-    categoryId: filters.category,
+    categoryId: (filters.category && filters.category !== 'all' && filters.category !== '') ? filters.category : undefined,
     tagId: filters.tags?.[0],
     searchQuery: filters.search,
     sortOrder: filters.sort,

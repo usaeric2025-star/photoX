@@ -1,10 +1,12 @@
-import { useSelection } from '@/features/selection/useSelection';
-import { useUI, UIStoreState } from '@/lib/store';
+import { useSelectionActions } from '@/features/selection/useSelection';
+import { selectionStore } from '@/services/selection/selectionService';
+import { useUI, UIStoreState, useStore } from '@/lib/store';
 import { useAppRouter } from '@/lib/router';
 import { usePhotoBatchEdit, usePhotoDelete } from '@/hooks/photo/usePhotoMutations';
 
 export function useBatchEdit() {
-  const { batchEditingIds, patch: patchSelection } = useSelection();
+  const batchEditingIds = useStore(selectionStore, s => s.batchEditingIds);
+  const { patch: patchSelection } = useSelectionActions();
   const formState = useUI((s: UIStoreState) => s.formState);
   const patch = useUI((state: UIStoreState) => state.patch);
   const updateForm = useUI((s: UIStoreState) => s.updateForm);

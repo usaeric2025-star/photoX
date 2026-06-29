@@ -1,4 +1,3 @@
-import { ToastContainer } from '@/components/ui/ToastContainer';
 import { TaskBadge, TaskDrawer } from '@/lib/task-queue/components';
 import { PhotoLightbox } from '@/features/lightbox/PhotoLightbox';
 import { PhotoEditDialog } from '@/features/photo-edit/PhotoEditDialog';
@@ -14,7 +13,6 @@ export function DialogContainer() {
 
   return (
     <>
-      <ToastContainer />
       <TaskBadge />
       <TaskDrawer />
       <PhotoLightbox />

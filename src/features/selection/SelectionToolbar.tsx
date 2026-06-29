@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { useSelection } from './useSelection';
+import { useSelectionCount, useSelectedIds, useSelectionActions, useIsMultiSelect } from './useSelection';
 import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
 import { useUI, type UIStoreState, useSignal, activeTaskCountSignal } from '@/lib/store';
 import { useAppRouter } from '@/lib/router';
@@ -24,7 +24,11 @@ function SelectionCounter({ count }: { count: number }) {
 // --- Main component ---
 
 export function SelectionToolbar({ className = '', groupId }: { className?: string; groupId?: string }) {
-  const { selectedCount, selectedIds, clearSelection, isMultiSelect, patch, batchEditingIds, isAvoidingSelection } = useSelection();
+  const selectedCount = useSelectionCount();
+  const selectedIds = useSelectedIds();
+  const isMultiSelect = useIsMultiSelect();
+  const { clearSelection, patch } = useSelectionActions();
+  
   const { deletePhoto, batchUpdate } = useAdminMaintenance();
   // const patch = useUI((s: UIStoreState) => s.patch); // Removed
   const { navigate } = useAppRouter();

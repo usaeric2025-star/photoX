@@ -5,6 +5,7 @@ import { hapticFeedback } from '@/lib/ui/haptics';
 import { createTask } from '@/lib/task-queue';
 import { executeBatchUpload } from '@/lib/task-queue/adapters/upload';
 import { generateId } from '@/lib/id';
+import { logger } from '@/lib/logger';
 
 export function usePhotoUpload() {
   const { user } = useAuth();
@@ -42,7 +43,7 @@ export function usePhotoUpload() {
       });
     } catch (error) {
       showToast.error(`啟動上傳失敗: ${error instanceof Error ? error.message : '網路或伺服器錯誤'}`);
-      console.error('[uploadFiles] Error during preparation:', error);
+      logger.error('[uploadFiles] Error during preparation:', error);
     }
   }, [user?.id]);
 

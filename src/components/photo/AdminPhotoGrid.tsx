@@ -1,6 +1,6 @@
 import React from 'react';
 import { PhotoGridContent } from './PhotoGridContent';
-import { useSelection } from '@/features/selection';
+import { useIsMultiSelect, useSelectionActions } from '@/features/selection';
 import { Category } from '@/types/photo';
 import { PhotoListItem } from '@/types/api';
 
@@ -30,7 +30,8 @@ export function AdminPhotoGrid({
   onPhotoClick,
   columns
 }: AdminPhotoGridProps) {
-  const { isMultiSelect, toggleSelect } = useSelection();
+  const isMultiSelect = useIsMultiSelect();
+  const { toggleSelect } = useSelectionActions();
   
   const allIds = React.useMemo(() => (photos || []).map(p => p.id), [photos]);
 

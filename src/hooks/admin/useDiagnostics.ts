@@ -50,7 +50,11 @@ export function useDiagnostics() {
             const json = await res.json() as { success: boolean; error?: string };
             if (!json.success) throw new Error(json.error || '去重失敗');
             
-            appQuery.mutate((key) => Array.isArray(key) && key[0] === queryKeys.photos.all[0]);
+            appQuery.mutate((key) => {
+              if (!key) return false;
+              const keyStr = typeof key === 'string' ? key : JSON.stringify(key);
+              return keyStr.includes('photos');
+            });
             onProgress(1, appLang === 'zh' ? '去重完成' : 'Deduplication complete');
             return json;
           }

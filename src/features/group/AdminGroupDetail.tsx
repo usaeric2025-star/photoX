@@ -10,7 +10,7 @@ import { getTranslatedCategoryName } from '@/services/category/utils';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useSignal, uiStore, useUI, currentEditingPhoto, gridColumns as gridColumnsSignal } from '@/lib/store';
 // import { batchModeSignal } from '@/lib/store'; // 移除此行
-import { useSelection } from '@/features/selection';
+import { useIsMultiSelect, useSelectionActions } from '@/features/selection';
 import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
 import { useAdminBatchActions } from '@/hooks/admin/useAdminBatch';
 import { translations } from '@/locales';
@@ -23,7 +23,8 @@ import { useColumns } from '@/hooks';
 import { FilterBar } from '@/features/filters';
 
 function AdminPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string, index: number, e?: React.MouseEvent) => void }) {
-  const { isMultiSelect, toggleSelect } = useSelection();
+  const isMultiSelect = useIsMultiSelect();
+  const { toggleSelect } = useSelectionActions();
   const columns = useSignal(gridColumnsSignal);
 
   return (
@@ -84,7 +85,7 @@ export function AdminGroupDetailPage() {
   }, [anchor, photoId, loading, (photos || []).length]);
 
   const [showAdminTools, setShowAdminTools] = useState(false);
-  const { isMultiSelect } = useSelection();
+  const isMultiSelect = useIsMultiSelect();
 
   const adminActions = useAdminMaintenance();
   

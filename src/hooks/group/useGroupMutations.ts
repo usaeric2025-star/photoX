@@ -11,10 +11,19 @@ import {
 import { queryKeys } from '@/lib/query/keys';
 import { ProductGroup } from '@/types';
 
+// Helper to invalidate photos cache robustly
+const invalidatePhotos = () => {
+  appQuery.mutate((key) => {
+    if (!key) return false;
+    const keyStr = typeof key === 'string' ? key : JSON.stringify(key);
+    return keyStr.includes('photos');
+  });
+};
+
 export function useGroupMutations() {
   const createMutation = useAppMutation({
     mutationFn: (args: { name: string; userId: string }) => 
-      createGroup({ name: args.name, user_id: args.userId } as any),
+      createGroup({ name: args.name, user_id: args.userId }),
     onSuccess: () => appQuery.mutate(queryKeys.groups.all),
   });
 
@@ -29,19 +38,28 @@ export function useGroupMutations() {
 
   const deleteMutation = useAppMutation({
     mutationFn: deleteGroup,
-    onSuccess: () => appQuery.mutate(queryKeys.groups.all),
+    onSuccess: () => {
+      appQuery.mutate(queryKeys.groups.all);
+      invalidatePhotos();
+    }
   });
 
   const setCoverMutation = useAppMutation({
     mutationFn: (args: { groupId: string; photoId: string }) => 
       setPhotoAsGroupCover(args.photoId, args.groupId),
-    onSuccess: (_, variables) => appQuery.mutate(queryKeys.groups.detail(variables.groupId, false)),
+    onSuccess: (_, variables) => {
+      appQuery.mutate(queryKeys.groups.detail(variables.groupId, false));
+      invalidatePhotos();
+    }
   });
 
   const combineMutation = useAppMutation({
     mutationFn: (args: { photoIds: string[]; targetGroupId?: string }) => 
       groupPhotos(args.photoIds, args.targetGroupId),
-    onSuccess: () => appQuery.mutate(queryKeys.groups.all),
+    onSuccess: () => {
+      appQuery.mutate(queryKeys.groups.all);
+      invalidatePhotos();
+    }
   });
 
   const movePhotosMutation = useAppMutation({
@@ -50,12 +68,16 @@ export function useGroupMutations() {
     onSuccess: (_, variables) => {
       appQuery.mutate(queryKeys.groups.all);
       appQuery.mutate(queryKeys.groups.detail(variables.groupId, false));
+      invalidatePhotos();
     }
   });
 
   const dissolveMutation = useAppMutation({
     mutationFn: ungroupPhotos,
-    onSuccess: () => appQuery.mutate(queryKeys.groups.all),
+    onSuccess: () => {
+      appQuery.mutate(queryKeys.groups.all);
+      invalidatePhotos();
+    }
   });
 
   return {

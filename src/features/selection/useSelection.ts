@@ -1,4 +1,13 @@
-import { useSelection as useSelectionService } from '@/services/selection/selectionService';
+import { 
+  useSelection as useSelectionService,
+  useIsPhotoSelected,
+  useIsMultiSelect,
+  useSelectionCount,
+  useSelectedIds,
+  useSelectionActions
+} from '@/services/selection/selectionService';
+
+export { useIsPhotoSelected, useIsMultiSelect, useSelectionCount, useSelectedIds, useSelectionActions };
 
 export function useSelection() {
   const service = useSelectionService();

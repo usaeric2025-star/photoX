@@ -3,11 +3,11 @@ import { useUI } from '@/lib/store';
 import { useAIBatchAnalysis } from '@/hooks/photo/useAIBatchAnalysis';
 import { logger } from '@/lib/logger';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { useSelection } from '@/features/selection';
+import { useSelectedIds } from '@/features/selection';
 
 export function useAdminBatchActions() {
   const { handleBatchAiAnalyze } = useAIBatchAnalysis();
-  const { selectedIds } = useSelection();
+  const selectedIds = useSelectedIds();
   
   const handleBatchAiIdentifyTrigger = async (allPhotos?: { id: string; name?: string; description?: string; imageUrl?: string; thumbnailUrl?: string; groupId?: string | null }[], ids?: string[]) => {
     const targetIds = ids || selectedIds;

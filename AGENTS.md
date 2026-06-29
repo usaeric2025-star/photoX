@@ -1,63 +1,34 @@
-# PhotoX 核心開發規範 (2026-06 精簡版)
+# PhotoX 核心開發規範 (2026-06 最終鎖定)
 
-## 核心技術棧 (嚴格鎖定)
-- 狀態管理：Storve (UI 瞬態), URL State (篩選), SWR (Server State)
-- 表單：@tanstack/react-form + Valibot
-- 動畫：lite-sleek (進出場) + CSS (懸停/淡入)
-- 路由：Chicane
-- 後端：Vercel Serverless + Hono (RPC)
-- 數據庫：PostgreSQL + Drizzle ORM
+## 1. 核心技術棧
+- **狀態管理**: 
+  - URL 狀態 (唯一真相來源): `nuqs`
+  - UI 瞬態 (如主題): `Storve (Signal)`
+  - Server State: `SWR` (`useAppQuery`)，寫入必須透過 mutate 處理樂觀更新。
+  - 選擇狀態: `SelectionService` (使用 `useIsMultiSelect`, `useSelectionActions` 等)
+- **表單**: `@tanstack/react-form` + `Valibot` (取代 Zod/ArkType)
+- **動畫**: `lite-sleek` (進出場/交錯) + 純 CSS (懸停/淡入)
+- **路由**: `Chicane`
+- **後端**: Vercel Serverless + Hono (RPC)
+- **數據庫**: PostgreSQL + Drizzle ORM (嚴禁手動寫 SQL)
 
-## 動畫與過渡 (2026-06 鎖定)
-- ✅ 懸浮/點擊反饋 (Hover/Active) & 圖片載入淡入: **使用純 CSS** (如 `hover:scale-105`, `transition-opacity`)，因為簡單高效。
-- ✅ 進出場控制 & 複雜交錯動畫: **使用 lite-sleek** (如燈箱、彈窗的 `AnimatePresence`, 照片牆交錯)。
+## 2. 數據流與架構邊界
+- **單向數據流**: URL → Hook → Component。禁止 `useEffect` 同步 URL ↔ Store。禁止使用 `useURLSync`。
+- **Hook 導入**: 統一從 `src/hooks/` 導入，按領域分類 (`photo/`, `category/`, `tag/`, `group/`)。
+- **API 路由**: 必須透過 Hono RPC (`hc`) 呼叫，嚴禁手動拼接 `/api/xxx`。
 
-## 狀態管理邊界 (鎖定)
-1. **SWR (`useAppQuery`)**: 唯一負責 Server State。寫入操作必須透過 SWR 的 `mutate` 處理樂觀更新。
-2. **Storve (`createStore`)**: 僅負責 UI 瞬態 (如主題、燈箱索引)。**嚴禁**雙寫 Server State。
-3. **URL State**: 負責所有篩選條件與視圖模式。
+## 3. UI 與錯誤處理
+- **錯誤處理**: 所有錯誤統一使用 `ErrorFactory.handle`，禁止 `console.error` 散落各處。
+- **Toast**: 統一使用 `sonner` (`toast.success` 等)。
+- **彈窗**: 使用 `src/components/ui/Modal.tsx` (基於原生 `<dialog>`)，嚴禁 createPortal 或 z-index 模擬。
 
-## 資料庫與驗證 (鎖定)
-- 唯一驗證源：Valibot Schema (取代 Zod/ArkType)。
-- 數據表變更：**必須**透過 Drizzle schema 變更並 `drizzle-kit generate`，**嚴禁**手動寫 SQL。
+## 4. 圖片載入 (Worker 唯一來源)
+- 圖片 URL 必須透過 `getThumbnailUrl(key, width)` 產生：
+  - 主圖 (如燈箱): `getThumbnailUrl(key, 800)`
+  - 縮圖 (如軌道/卡片): `getThumbnailUrl(key, 120)`
+- **禁止**直接使用 R2 原始 URL (`image_url`) 作為縮圖。
+- 圖片元件統一使用 `Image` 組件 (支援骨架屏漸進淡入)。
 
-## UI 組件規範
-- 彈窗：使用 `src/components/ui/Modal.tsx` (基於原生的 `<dialog>`)。**嚴禁**使用 createPortal 或 z-index 模擬。
-- 圖片：統一使用 `Image` 組件 (骨架屏 -> 漸進淡入)。
-
-## API 路由
-- 必須透過 Hono RPC (`hc`) 呼叫，嚴禁手動拼接 `/api/xxx`。
-
-## ES Module 導入規範（強制）
-### 核心原則
-- ✅ 導入時**必須指定具體檔案**，且後端程式碼導入需包含 `.js` 結尾（如 `../_lib/db/index.js` 或 `../_lib/db/client.js`）。
-- ❌ 禁止導入目錄而不指定 `index.js`（如 `import { db } from '../_lib/db'`）。
-- ✅ 每個目錄若作為模組導出，**強烈建議有 `index.ts`** 作為唯一導出入口。
-
-### 正確寫法
-```ts
-// ✅ 正確：導入具體檔案與副檔名
-import { db } from '../_lib/db/index.js';
-import { errorResponse } from '../_lib/response.js';
-
-// ❌ 錯誤：導入目錄 (會導致 ERR_UNSUPPORTED_DIR_IMPORT)
-import { db } from '../_lib/db';
-```
-
-## 燈箱圖片載入規範（強制）
-
-### 1. Worker 是唯一圖片來源
-- ✅ 所有圖片 URL 必須透過 `getThumbnailUrl(key, width)` 產生
-- ✅ 燈箱主圖使用 `getThumbnailUrl(key, 800)`
-- ✅ 燈箱軌道縮圖使用 `getThumbnailUrl(key, 120)`
-- ❌ 禁止直接使用 R2 原始 URL（`image_url`）作為縮圖
-
-### 2. 燈箱相關元件檢查清單
-- `PhotoLightbox.tsx`：確認 `thumb` 使用 `getThumbnailUrl(key, 120)`
-- `LightboxInfoCard.tsx`：確認顯示元數據和相關資訊
-- `adapter.ts`：確認 `srcSet` 只在有 Worker 時啟用
-
-### 3. 驗證方式
-- 開啟燈箱後，檢查 Network 面板中縮圖網址是否包含 `?width=120`
-- 如果縮圖網址是 R2 原始 URL，表示 `getThumbnailUrl` 未被正確呼叫
-
+## 5. ES Module 導入規範 (後端)
+- 導入時**必須指定具體檔案與 `.js` 結尾** (如 `import { db } from '../_lib/db/index.js'`)。
+- **禁止**導入目錄而不指定 `index.js`，以避免 `ERR_UNSUPPORTED_DIR_IMPORT`。

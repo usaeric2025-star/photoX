@@ -28,11 +28,11 @@ export default function PublicPage() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const gridRef = useRef<any | null>(null);
   
-  const hasFilters = !!search || (tags && tags.length > 0) || !!category;
-  const isAggregated = showGroupsCollapsed && !hasFilters;
+  const hasFilters = !!search || (tags && tags.length > 0) || (category && category !== 'all' && category !== '');
+  const isAggregated = showGroupsCollapsed;
   
   const photoGridData = usePhotoGrid({
-    categoryId: category || undefined,
+    categoryId: (category && category !== 'all' && category !== '') ? category : undefined,
     tagId: (tags && tags.length > 0) ? tags[0] : undefined,
     searchQuery: search || undefined,
     sortOrder: sort || undefined,

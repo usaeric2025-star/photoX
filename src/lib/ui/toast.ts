@@ -1,4 +1,4 @@
-import { toastStore } from '@/store/toastStore';
+import { toast } from 'sonner';
 import { copyToClipboard } from '@/utils/clipboard';
 
 export interface ExternalToast {
@@ -9,10 +9,8 @@ export interface ExternalToast {
 
 export const showToast = {
   success: (message: string, options?: ExternalToast) => 
-    toastStore.getState().addToast({
-      id: options?.id ? String(options.id) : undefined,
-      type: 'success',
-      message,
+    toast.success(message, {
+      id: options?.id,
       duration: options?.duration,
     }),
     
@@ -100,27 +98,17 @@ export const showToast = {
       `信息: ${systemMessage}`
     ].filter(Boolean).join('\n');
     
-    return toastStore.getState().addToast({
-      type: 'error',
-      message: userMessage,
-      traceId,
-      duration: 8000,
+    return toast.error(userMessage, {
+      id: options?.id,
+      duration: options?.duration || 8000,
       action: {
         label: '複製診斷',
         onClick: async () => {
           const success = await copyToClipboard(diagnosticsText);
           if (success) {
-            toastStore.getState().addToast({
-              type: 'success',
-              message: '診斷信息已複製',
-              duration: 2000,
-            });
+            toast.success('診斷信息已複製', { duration: 2000 });
           } else {
-            toastStore.getState().addToast({
-              type: 'error',
-              message: '複製失敗，請手動選擇複製',
-              duration: 3000,
-            });
+            toast.error('複製失敗，請手動選擇複製', { duration: 3000 });
           }
         }
       }
@@ -128,33 +116,23 @@ export const showToast = {
   },
     
   info: (message: string, options?: ExternalToast) => 
-    toastStore.getState().addToast({
-      id: options?.id ? String(options.id) : undefined,
-      type: 'info',
-      message,
+    toast.info(message, {
+      id: options?.id,
       duration: options?.duration,
     }),
 
   warning: (message: string, options?: ExternalToast) => 
-    toastStore.getState().addToast({
-      id: options?.id ? String(options.id) : undefined,
-      type: 'warning',
-      message,
+    toast.warning(message, {
+      id: options?.id,
       duration: options?.duration || 4000,
     }),
     
   loading: (message: string, options?: ExternalToast) => 
-    toastStore.getState().addToast({
-      id: options?.id ? String(options.id) : undefined,
-      type: 'loading',
-      message,
+    toast.loading(message, {
+      id: options?.id,
     }),
     
   dismiss: (toastId?: string) => {
-    if (toastId) {
-      toastStore.getState().removeToast(toastId);
-    } else {
-      toastStore.getState().clearAll();
-    }
+    toast.dismiss(toastId);
   }
 };

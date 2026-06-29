@@ -8,7 +8,7 @@ import { getGroupById } from '@/services/group/queries';
 import { STALE_TIMES } from '@/lib/query/config';
 import { Photo } from '@/types';
 import { useFilters } from '@/features/filters';
-import { useSelection } from '@/features/selection/useSelection';
+import { useIsMultiSelect, useSelectionActions } from '@/features/selection/useSelection';
 
 interface UsePhotoCardInteractionProps {
   photo: PhotoListItem;
@@ -34,7 +34,8 @@ export function usePhotoCard({
   const resetTimerRef = useRef<number | null>(null);
   const { updateFilters } = useFilters();
   
-  const { toggleSelect, toggleMode } = useSelection();
+  const isMultiSelectActual = useIsMultiSelect();
+  const { toggleSelect, toggleMode } = useSelectionActions();
   const patch = useUI((s: UIStoreState) => s.patch);
   const route = useAppRoute();
   const navigate = useNavigation();

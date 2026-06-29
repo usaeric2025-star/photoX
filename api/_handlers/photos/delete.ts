@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import * as v from 'valibot';
-import { db, furnitureItems } from '../../_lib/db/index.js';
-import { eq, and } from 'drizzle-orm';
+import { db, furnitureItems, aiAuditLogs } from '../../_lib/db/index.js';
+import { eq, and, inArray } from 'drizzle-orm';
 import { syncGroupCoversAndCount } from '../../_lib/groups.js';
 import { refreshPhotosView } from '../../_lib/db/actions.js';
 import { PhotoIdReqSchema } from '../../../shared/apiContractSchema.js';
@@ -19,6 +19,9 @@ export const deleteHandler = (app: Hono) => {
             where: eq(furnitureItems.id, id)
         });
         
+        // Pre-delete cleanup to avoid FK constraints (ai_audit_logs doesn't have cascade delete)
+        await db.delete(aiAuditLogs).where(eq(aiAuditLogs.photoId, id));
+
         await db.delete(furnitureItems).where(
             eq(furnitureItems.id, id)
         );

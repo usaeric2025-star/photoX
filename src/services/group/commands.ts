@@ -46,7 +46,7 @@ const getCurrentUserId = async (): Promise<string | undefined> => {
     return user?.id;
 };
 
-export async function createGroup(data: ProductGroup): Promise<ProductGroup> {
+export async function createGroup(data: Partial<ProductGroup> & { name: string | Record<string, string> }): Promise<ProductGroup> {
   v.parse(v.partial(GroupReqSchema), data);
 
   const userId = await getCurrentUserId();

@@ -5,7 +5,7 @@ import { PhotoCardBase } from './PhotoCardBase';
 import { PhotoStatusBadges, PhotoCardInfo, PhotoSelectionIndicator } from './PhotoCardParts';
 import { PinButton } from './PinButton';
 import { useColumns, usePermission, usePerformance } from '@/hooks';
-import { useSelection } from '@/features/selection/useSelection';
+import { useIsMultiSelect, useIsPhotoSelected } from '@/features/selection';
 import { useSignal, useUI } from '@/lib/store';
 import { gridColumns as gridColumnsSignal } from '@/lib/store';
 import { usePhotoCard } from '@/hooks/photo/usePhotoCard';
@@ -35,8 +35,8 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
   canPin,
   canPinGlobal,
 }: AdminPhotoCardProps) {
-  const { isSelected, isMultiSelect } = useSelection();
-  const isPhotoSelected = isSelected(photo.id);
+  const isMultiSelect = useIsMultiSelect();
+  const isPhotoSelected = useIsPhotoSelected(photo.id);
   const columns = useSignal(gridColumnsSignal);
   const { can } = usePermission();
   

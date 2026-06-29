@@ -14,8 +14,11 @@ export const useRepairMutation = () => useAppMutation({
     return await res.json();
   },
   onSuccess: () => {
-      appQuery.mutate(queryKeys.photos.all);
-      appQuery.mutate(queryKeys.groups.all);
+    appQuery.mutate((key) => {
+      if (!key) return false;
+      const keyStr = typeof key === 'string' ? key : JSON.stringify(key);
+      return keyStr.includes('photos') || keyStr.includes('groups');
+    });
   }
 });
 
@@ -23,11 +26,15 @@ export const useRepairMutation = () => useAppMutation({
 export const useSyncMutation = () => useAppMutation({
   mutationFn: async (type: 'push' | 'pull') => {
     if (type === 'pull') {
-      await appQuery.mutate(queryKeys.tags.all);
-      await appQuery.mutate(queryKeys.categories.all);
-      await appQuery.mutate(queryKeys.manufacturers.all);
-      await appQuery.mutate(queryKeys.groups.all);
-      await appQuery.mutate((key) => Array.isArray(key) && key[0] === queryKeys.photos.all[0]);
+      appQuery.mutate((key) => {
+        if (!key) return false;
+        const keyStr = typeof key === 'string' ? key : JSON.stringify(key);
+        return keyStr.includes('photos') || 
+               keyStr.includes('groups') || 
+               keyStr.includes('tags') || 
+               keyStr.includes('categories') || 
+               keyStr.includes('manufacturers');
+      });
     }
   },
 });

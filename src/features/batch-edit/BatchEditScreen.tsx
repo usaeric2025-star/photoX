@@ -6,7 +6,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { usePhotoDelete } from '@/hooks';
 import { BatchEditForm } from './BatchEditForm';
 import { useBatchEdit } from './useBatchEdit';
-import { useSelection } from '@/features/selection';
+import { useSelectedIds, useSelectionActions } from '@/features/selection';
 import { useFormSubmit } from '@/lib/forms/useFormSubmit';
 import * as v from 'valibot';
 import { Button } from '@/components/ui/Button';
@@ -56,7 +56,8 @@ export const BatchEditScreen = () => {
     isSyncing,
   } = useBatchEdit();
 
-  const { selectedIds, clearSelection } = useSelection();
+  const selectedIds = useSelectedIds();
+  const { clearSelection } = useSelectionActions();
 
   const { submit: saveBatch, isLoading: isSaving } = useFormSubmit({
     schema: v.object({}),

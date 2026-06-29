@@ -48,7 +48,7 @@ export const updateCategory = async (categoryId: number, updates: Partial<Catego
   if (!res.ok) throw ErrorFactory.fatal('Update category failed', { context: 'updateCategory' });
 };
 
-export const createCategory = async (categoryData: Omit<Category, 'id'>): Promise<Category> => {
+export const createCategory = async (categoryData: Partial<Category> & { name: string }): Promise<Category> => {
   const dbUpdates = mapToDb(categoryData as unknown as Partial<Category> & Record<string, unknown>);
   const res = await api.categories.$post({
     json: { categoryData: dbUpdates }

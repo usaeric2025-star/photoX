@@ -88,19 +88,26 @@ export async function getPhotosList(params: PhotoListParams) {
     }
     
     if (onlyGroupsCover) {
+        // 合组视图逻辑：
+        // 1. 没有 groupId 的照片（散图）
+        // 2. 是组封面的照片
+        // 3. 虽有 groupId 但找不到组名的照片（孤儿数据/孤本），也直接显示，防止数据“失踪”
         whereClauses.push(or(
             isNull(vPhotosList.groupId),
-            eq(vPhotosList.isGroupCover, true)
+            eq(vPhotosList.isGroupCover, true),
+            isNull(vPhotosList.groupName)
         ));
     } else if (onlyUngrouped) {
         whereClauses.push(isNull(vPhotosList.groupId));
     }
     
-    if (!isAdminMode) {
-        whereClauses.push(eq(vPhotosList.isHidden, false));
-    } else if (isHidden !== undefined && isHidden !== null) {
+    if (isHidden !== undefined && isHidden !== null) {
         whereClauses.push(eq(vPhotosList.isHidden, isHidden));
+    } else if (!isAdminMode) {
+        // 只有非管理员模式下才默认隐藏 isHidden=true 的照片
+        whereClauses.push(eq(vPhotosList.isHidden, false));
     }
+    // 管理员模式下如果不传 isHidden 参数，默认显示全部（包括隐藏的），确保不漏掉任何没删除的数据
     
     if (manufacturerId !== undefined && manufacturerId !== null) {
         whereClauses.push(eq(vPhotosList.manufacturerId, String(manufacturerId)));
@@ -118,11 +125,13 @@ export async function getPhotosList(params: PhotoListParams) {
 
     // 2. Get Data
     const orderSpec = sortOrder === 'oldest' ? asc(vPhotosList.createdAt) : desc(vPhotosList.createdAt);
+    const secondaryOrder = sortOrder === 'oldest' ? asc(vPhotosList.id) : desc(vPhotosList.id);
+
     let results = await db
         .select()
         .from(vPhotosList)
         .where(finalWhere)
-        .orderBy(orderSpec)
+        .orderBy(orderSpec, secondaryOrder)
         .limit(limit);
 
     // Self-healing: If materialized view has 0 rows, but furniture_items actually has records, 

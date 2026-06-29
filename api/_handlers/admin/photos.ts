@@ -152,8 +152,12 @@ adminPhotos.post("/delete-photos", async (c) => {
         try {
             await db.delete(systemLogs)
                 .where(sql`${systemLogs.operation} = 'AI_Executor' AND (metadata->>'photo_id') IN (${sql.join(ids.map(id => sql`${id}`), sql`, `)})`);
+            
+            // Also clean up ai_audit_logs
+            await db.delete(aiAuditLogs)
+                .where(inArray(aiAuditLogs.photoId, ids));
         } catch (err) {
-            logger.warn("[delete-photos] Clean up associated system_logs failed:", err);
+            logger.warn("[delete-photos] Clean up associated logs failed:", err);
         }
     }
 

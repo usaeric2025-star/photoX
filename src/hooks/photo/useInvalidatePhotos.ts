@@ -8,9 +8,9 @@ export const useInvalidatePhotos = () => {
     // SWRInfinite keys might be serialized strings starting with $inf$
     return appQuery.mutate(
       (key) => {
-        if (Array.isArray(key) && key[0] === queryKeys.photos.all[0]) return true;
-        if (typeof key === 'string' && key.includes(queryKeys.photos.all[0])) return true;
-        return false;
+        if (!key) return false;
+        const keyStr = typeof key === 'string' ? key : JSON.stringify(key);
+        return keyStr.includes('photos');
       }
     );
   }, []);
