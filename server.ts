@@ -16,6 +16,14 @@ async function bootstrap() {
   console.log(`>>> [BOOTSTRAP] Starting server. Mode: ${isProd ? 'Production' : 'Development'}`);
   
   if (!isProd) {
+    // Dev view check
+    try {
+      const { ensureViewExists } = await import("./api/_lib/db/actions.js");
+      await ensureViewExists();
+    } catch (viewErr) {
+      console.warn(">>> [STARTUP] Initial view check failed (ignoring for dev):", viewErr);
+    }
+
     const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -71,6 +79,14 @@ async function bootstrap() {
     // Production Mode (Standard Node)
     const distPath = path.resolve(process.cwd(), "dist");
     
+    // Production view check
+    try {
+       const { ensureViewExists } = await import("./api/_lib/db/actions.js");
+       await ensureViewExists();
+    } catch (viewErr) {
+       console.error(">>> [STARTUP] Critical view check failed in production:", viewErr);
+    }
+
     serve({
       fetch: (req) => {
         const url = new URL(req.url);

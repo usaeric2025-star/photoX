@@ -1,4 +1,4 @@
-import { useGroupDetail } from '@/hooks/groups/useGroupDetail';
+import { useGroupDetail } from '@/hooks/group';
 import { usePhotos } from '@/hooks/photo/usePhotos';
 import { useFilters } from '@/features/filters';
 
@@ -11,10 +11,10 @@ export function useGroupData({ groupId, isAdmin }: UseGroupDataOptions) {
   const { search, category, tags, sort } = useFilters();
   
   const { 
-    data: group, 
+    group, 
     isLoading: isGroupPending, 
     error: groupError 
-  } = useGroupDetail({ groupId, isAdmin });
+  } = useGroupDetail(groupId, isAdmin);
 
   const {
     data,

@@ -16,14 +16,13 @@ import {
   selectedIdsParser 
 } from '@/lib/nuqs/parsers';
 import { Router } from '@/router';
-import { useUI, isLightboxOpen, lightboxCurrentIndex, uiStore } from '@/lib/store';
+import { useUI, uiStore, lightboxCurrentIndex } from '@/lib/store';
 import { useAppRoute } from '@/lib/router';
 import type { FilterState, SortOrder } from './types';
 
 export interface UseFiltersOptions {
   enableStatus?: boolean;
   enableBatch?: boolean;
-  sortOptions?: { label: string; value: string }[];
 }
 
 export const useFilters = (options: UseFiltersOptions = {}) => {
@@ -48,37 +47,13 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
     history: 'replace',
   });
 
-  const searchVal = query.q;
-  const setSearch = useCallback((val: string) => {
-    setQuery({ q: val || null });
-  }, [setQuery]);
-
-  const category = query.cat;
-  const setCategory = useCallback((val: string) => {
-    setQuery({ cat: val || null });
-  }, [setQuery]);
-
-  const tags = query.tag || [];
-  const setTags = useCallback((vals: string[]) => {
-    setQuery({ tag: (vals && vals.length === 0) ? null : vals });
-  }, [setQuery]);
-
-  const sort = query.sort || 'newest';
-  const setSort = useCallback((val: 'date' | 'name' | 'size' | 'newest' | 'oldest' | string) => {
-    setQuery({ sort: (val || null) as any });
-  }, [setQuery]);
-
-  const status = query.status;
-  const setStatus = useCallback((val: string) => {
-    setQuery({ status: val === 'all' ? null : val });
-  }, [setQuery]);
-
-  const batchFilter = query.batch;
-  const setBatchFilter = useCallback((val: boolean) => {
-    setQuery({ batch: val || null });
-  }, [setQuery]);
-
-  const photoId = query.photoId;
+  const setSearch = useCallback((val: string) => setQuery({ q: val || null }), [setQuery]);
+  const setCategory = useCallback((val: string) => setQuery({ cat: val || null }), [setQuery]);
+  const setTags = useCallback((vals: string[]) => setQuery({ tag: vals?.length ? vals : null }), [setQuery]);
+  const setSort = useCallback((val: string) => setQuery({ sort: val as any }), [setQuery]);
+  const setStatus = useCallback((val: string) => setQuery({ status: val === 'all' ? null : val }), [setQuery]);
+  const setBatchFilter = useCallback((val: boolean) => setQuery({ batch: val || null }), [setQuery]);
+  
   const setPhotoId = useCallback((val: string | null) => {
       if (route?.name === 'photo') {
          if (val) {
@@ -88,97 +63,94 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
          }
          return;
       }
-      
       setQuery({ photoId: val || null, modal: (val === null && query.modal === 'edit') ? null : query.modal });
-      
-      if (val !== null) {
-        const state = uiStore.getState();
-        const slides = state.lightboxSlides;
-        const index = slides.findIndex(s => s.id === val);
-        if (index !== -1 && index !== state.lightboxCurrentIndex) {
-          lightboxCurrentIndex.set(index);
-        }
-      }
   }, [route?.name, query.photoId, query.modal, setQuery]);
 
-  const groupId = query.groupId;
-  const setGroupId = useCallback((val: string | null) => {
-    setQuery({ groupId: val || null });
-  }, [setQuery]);
-
-  const modal = query.modal;
-  const setModal = useCallback((val: string | null) => {
-    setQuery({ modal: val || null });
-  }, [setQuery]);
-
-  const view = query.view as 'grid' | 'list';
-  const setView = useCallback((val: 'grid' | 'list') => {
-    setQuery({ view: val === 'grid' ? null : 'list' });
-  }, [setQuery]);
-
-  const anchor = query.anchor;
-  const setAnchor = useCallback((val: boolean) => {
-    setQuery({ anchor: val || null });
-  }, [setQuery]);
-
-  const showGroupsCollapsed = query.showGroupsCollapsed;
-  const setShowGroupsCollapsed = useCallback((val: boolean) => {
-    setQuery({ showGroupsCollapsed: val === true ? null : false });
-  }, [setQuery]);
-
-  const reset = useCallback(() => {
-    setQuery({
-      q: null,
-      cat: null,
-      tag: null,
-      sort: null,
-      status: null,
-      batch: null,
-      photoId: null,
-      groupId: null,
-      modal: null,
-      view: null,
-      anchor: null,
-      showGroupsCollapsed: null,
-      selected: null,
-    });
-  }, [setQuery]);
+  const setGroupId = useCallback((val: string | null) => setQuery({ groupId: val || null }), [setQuery]);
+  const setModal = useCallback((val: string | null) => setQuery({ modal: val || null }), [setQuery]);
+  const setView = useCallback((val: 'grid' | 'list') => setQuery({ view: val === 'grid' ? null : 'list' }), [setQuery]);
+  const setAnchor = useCallback((val: boolean) => setQuery({ anchor: val || null }), [setQuery]);
+  const setShowGroupsCollapsed = useCallback((val: boolean) => setQuery({ showGroupsCollapsed: val === true ? null : false }), [setQuery]);
 
   const updateFilters = useCallback((updates: Partial<typeof query>) => {
     setQuery(updates);
   }, [setQuery]);
 
+  const reset = useCallback(() => {
+    setQuery({
+      q: null, cat: null, tag: null, sort: null, status: null, batch: null,
+      photoId: null, groupId: null, modal: null, view: null, anchor: null,
+      showGroupsCollapsed: null, selected: null,
+    });
+  }, [setQuery]);
+
+  // Derived state
+  const search = query.q || '';
+  const category = query.cat || 'all';
+  const tags = query.tag || [];
+  const sort = query.sort || 'newest';
+  const status = options.enableStatus ? (query.status || 'all') : 'all';
+  const batchFilter = options.enableBatch ? !!query.batch : false;
+
+  // SWR Cache Key components (Aligned with PhotoListReqSchema)
+  const queryKey = useMemo(() => {
+    const catId = (query.cat && query.cat !== 'all') ? Number(query.cat) : undefined;
+    return {
+      searchQuery: query.q || undefined,
+      categoryId: (catId !== undefined && !isNaN(catId)) ? catId : undefined,
+      tagId: (query.tag && query.tag.length > 0) ? Number(query.tag[0]) : undefined,
+      sortOrder: query.sort || undefined,
+      status: options.enableStatus ? query.status : undefined,
+      isHidden: options.enableStatus ? (query.status === 'hidden' ? true : (query.status === 'active' ? false : undefined)) : undefined,
+      isAdminMode: options.enableStatus || options.enableBatch,
+      groupId: query.groupId || undefined,
+    };
+  }, [query.q, query.cat, query.tag, query.sort, query.status, query.batch, query.groupId, options.enableStatus, options.enableBatch]);
+
   return useMemo(() => ({
-    search: searchVal, setSearch,
-    category, setCategory,
-    tags, setTags,
-    sort, setSort,
-    status: options.enableStatus ? status : 'all', setStatus,
-    batchFilter: options.enableBatch ? batchFilter : false, setBatchFilter,
-    photoId, setPhotoId,
-    groupId, setGroupId,
-    modal, setModal,
-    anchor, setAnchor,
-    showGroupsCollapsed, setShowGroupsCollapsed,
-    view, setView,
-    reset,
-    updateFilters,
-    isAdminMode: options.enableStatus || options.enableBatch,
-  }), [
-    searchVal, setSearch,
+    // ✅ Flattened API for compatibility
+    search, setSearch,
     category, setCategory,
     tags, setTags,
     sort, setSort,
     status, setStatus,
     batchFilter, setBatchFilter,
-    photoId, setPhotoId,
-    anchor, setAnchor,
-    groupId, setGroupId,
-    modal, setModal,
-    showGroupsCollapsed, setShowGroupsCollapsed,
-    view, setView,
-    reset,
+    photoId: query.photoId, setPhotoId,
+    groupId: query.groupId, setGroupId,
+    modal: query.modal, setModal,
+    anchor: query.anchor, setAnchor,
+    showGroupsCollapsed: query.showGroupsCollapsed ?? true, setShowGroupsCollapsed,
+    view: (query.view || 'grid') as 'grid' | 'list', setView,
+    selectedIds: query.selected || [],
+    
+    // ✅ New structured API
+    filters: {
+      search,
+      category,
+      categoryId: (query.cat && query.cat !== 'all' && !isNaN(Number(query.cat))) ? Number(query.cat) : null,
+      tagIds: query.tag || [],
+      sort: (query.sort || 'newest') as SortOrder,
+      status,
+      batchFilter,
+      photoId: query.photoId,
+      groupId: query.groupId,
+      modal: query.modal,
+      anchor: query.anchor,
+      showGroupsCollapsed: query.showGroupsCollapsed ?? true,
+      selectedIds: query.selected || [],
+    },
+    queryKey,
     updateFilters,
+    reset,
+    setQuery,
+    isAdminMode: options.enableStatus || options.enableBatch,
+  }), [
+    search, setSearch, category, setCategory, tags, setTags, sort, setSort, 
+    status, setStatus, batchFilter, setBatchFilter, 
+    query.photoId, setPhotoId, query.groupId, setGroupId, query.modal, setModal, 
+    query.anchor, setAnchor, query.showGroupsCollapsed, setShowGroupsCollapsed, 
+    query.view, setView, query.selected, query.cat, query.sort, query.tag,
+    queryKey, updateFilters, reset, setQuery,
     options.enableStatus, options.enableBatch
   ]);
 };
@@ -192,7 +164,7 @@ export function useFilterState() {
 
   const filters: FilterState = useMemo(() => ({
     search: f.search || '',
-    categoryId: f.category ? Number(f.category) : null,
+    categoryId: f.category !== 'all' ? Number(f.category) : null,
     tagIds: f.tags || [],
     sort: (f.sort as SortOrder) || 'newest',
   }), [f.search, f.category, f.tags, f.sort]);

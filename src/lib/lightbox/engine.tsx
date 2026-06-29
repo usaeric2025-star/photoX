@@ -15,7 +15,7 @@ export function LightboxEngine({
   const lightbox = useLightbox();
 
   const handleClose = () => {
-    lightbox.closeLightbox();
+    lightbox.close();
     onClose?.();
   };
 

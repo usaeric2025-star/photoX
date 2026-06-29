@@ -45,3 +45,18 @@ export const useTagDelete = () => useAppMutation({
   }
 });
 
+/**
+ * Combined hook for backward compatibility or bulk usage
+ */
+export function useTagMutations() {
+  const create = useTagCreate();
+  const update = useTagEdit();
+  const remove = useTagDelete();
+
+  return {
+    add: create.mutateAsync,
+    update: update.mutateAsync,
+    remove: remove.mutateAsync,
+    isMutating: create.isPending || update.isPending || remove.isPending,
+  };
+}

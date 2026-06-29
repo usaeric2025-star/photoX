@@ -1,4 +1,4 @@
-import { useCategories } from '@/hooks/photo/useCategories';
+import { useCategories } from '@/hooks/category';
 import { useFilterState } from './useFilters';
 import { useTranslation } from '@/hooks';
 import { getTranslatedCategoryName } from '@/services/category/utils';
@@ -34,7 +34,7 @@ function CategoryButton({ cat, isSelected, categoryName, currentFilters, onClick
 export function CategoryGrid({ mode }: { mode?: 'public' | 'admin' }) {
   const { filters, updateFilters } = useFilterState();
   const { appLang, uiTranslations } = useTranslation();
-  const { data: categories, isPending } = useCategories();
+  const { categories, isLoading: isPending } = useCategories();
 
   logger.info('[CategoryGrid] Rendering', { isPending, categoriesCount: categories?.length });
 

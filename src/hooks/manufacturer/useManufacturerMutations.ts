@@ -43,3 +43,15 @@ export const useManufacturerDelete = () => useAppMutation({
   }
 });
 
+export function useManufacturerMutations() {
+  const create = useManufacturerCreate();
+  const update = useManufacturerEdit();
+  const remove = useManufacturerDelete();
+
+  return {
+    create: create.mutateAsync,
+    update: update.mutateAsync,
+    remove: remove.mutateAsync,
+    isMutating: create.isPending || update.isPending || remove.isPending,
+  };
+}

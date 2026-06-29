@@ -26,17 +26,10 @@ export function AdminContainer() {
   const { columns } = useColumns();
   const adminActions = useAdminMaintenance();
   
-  const openLightbox = useUI(s => s.openLightbox);
+  const { open: openLightbox } = useLightbox();
   
   const photos = React.useMemo(() => photoGridData.photos || [], [photoGridData.photos]);
   const lightboxItems = React.useMemo(() => photosToLightboxSlides(photos), [photos]);
-
-  // Sync lightbox items to store when they change
-  useEffect(() => {
-    if (lightboxItems.length > 0) {
-      uiStore.setState({ lightboxSlides: lightboxItems });
-    }
-  }, [lightboxItems]);
 
   const handlePhotoClick = (photoId: string, index: number) => {
       openLightbox(lightboxItems, index);

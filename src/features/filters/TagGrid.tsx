@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
-import { useTags } from '@/hooks/photo/useTags';
+import { useTags } from '@/hooks/tag';
 import { useFilterState } from './useFilters';
 import { usePublicSettings } from '@/hooks/settings/useSettings';
 import { usePhotoFilter } from '@/hooks/photo/usePhotoFilter';
@@ -40,7 +40,7 @@ function TagButton({ tag, isSelected, isPinned, isHot, currentFilters, onClick }
 
 export function TagGrid({ onClose }: { onClose?: () => void }) {
   const { filters, updateFilters } = useFilterState();
-  const { data: tags, isPending } = useTags();
+  const { tags, isLoading: isPending } = useTags();
   const { data: settings } = usePublicSettings();
   
   const appLang = useUI(s => s.appLang);

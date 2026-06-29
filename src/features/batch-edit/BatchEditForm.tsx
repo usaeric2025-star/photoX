@@ -28,8 +28,8 @@ const defaultForm: PhotoEditFormData = {
 };
 
 export function BatchEditForm({ formState, handleUpdateForm }: BatchEditFormProps) {
-  const { data: categories = [] } = useCategories();
-  const { data: manufacturers = [] } = useManufacturers();
+  const { categories = [] } = useCategories();
+  const { manufacturers = [] } = useManufacturers();
   const formObj = useAppForm({
     schema: PhotoEditSchema,
     defaultValues: { ...defaultForm, ...formState } as PhotoEditFormData,

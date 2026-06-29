@@ -4,7 +4,10 @@ export * from './core';
 // Domain Hooks
 export * from './admin';
 export * from './photo';
-export * from './groups';
+export * from './group';
+export * from './category';
+export * from './tag';
+export * from './manufacturer';
 export * from './settings';
 
 // Utils

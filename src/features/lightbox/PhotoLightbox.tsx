@@ -1,5 +1,5 @@
 import React, { useMemo, memo } from 'react';
-import { useUI, currentEditingPhoto, isPhotoEditOpen, useSignal, isLightboxOpen, lightboxSlides, lightboxCurrentIndex } from '@/lib/store';
+import { useUI, currentEditingPhoto, useSignal, lightboxSlides, lightboxCurrentIndex } from '@/lib/store';
 import { useFilters } from '@/features/filters';
 import { useAppRoute, useNavigation } from '@/lib/router';
 import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
@@ -45,13 +45,19 @@ interface LightboxProps {
 const LightboxStyled = LightboxStyledBase as unknown as React.ComponentType<LightboxProps>; 
 
 export function PhotoLightbox() {
-  const isOpen = useSignal(isLightboxOpen);
   const slides = useSignal(lightboxSlides);
-  const currentIndex = useSignal(lightboxCurrentIndex);
-  
-  logger.debug('[PhotoLightbox] Rendering', { isOpen, slidesCount: slides.length, currentIndex });
-  
   const filters = useFilters();
+  const { photoId: urlPhotoId, modal, setPhotoId } = filters;
+  
+  const currentIndex = useMemo(() => {
+    if (!urlPhotoId || slides.length === 0) return 0;
+    const index = slides.findIndex(s => s.id === urlPhotoId);
+    return index !== -1 ? index : 0;
+  }, [urlPhotoId, slides]);
+  
+  const isOpen = !!(urlPhotoId && modal !== 'edit');
+  
+  logger.debug('[PhotoLightbox] Rendering', { isOpen, slidesCount: slides.length, currentIndex, urlPhotoId });
   const route = useAppRoute();
   const navigate = useNavigation();
   const adminActions = useAdminMaintenance();
@@ -62,7 +68,7 @@ export function PhotoLightbox() {
   const canEdit = canEditPermission && isAdminRoute;
 
   const handleClose = () => {
-    isLightboxOpen.set(false);
+    setPhotoId(null);
     if (route.name === 'photo') {
       navigate.home();
     }
@@ -72,8 +78,7 @@ export function PhotoLightbox() {
     if (index === currentIndex) return;
     const photo = slides[index];
     if (photo?.id) {
-      lightboxCurrentIndex.set(index);
-      // URL update is handled by useURLSync observing lightboxCurrentIndex
+      setPhotoId(photo.id);
     }
   };
 
@@ -135,7 +140,6 @@ export function PhotoLightbox() {
             const original = currentSlide.original as Photo;
             if (original) {
               currentEditingPhoto.set(original);
-              isPhotoEditOpen.set(true);
               filters.updateFilters({ modal: 'edit', photoId: original.id });
             }
           }}

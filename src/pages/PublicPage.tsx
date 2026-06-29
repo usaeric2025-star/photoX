@@ -51,14 +51,7 @@ export default function PublicPage() {
   const photos = useMemo(() => rawPhotos || [], [rawPhotos]);
   const lightboxItems = useMemo(() => photosToLightboxSlides(photos), [photos]);
 
-  // Sync lightbox items to store when they change
-  useEffect(() => {
-    if (lightboxItems.length > 0) {
-      uiStore.setState({ lightboxSlides: lightboxItems });
-    }
-  }, [lightboxItems]);
-
-  const openLightbox = useUI(s => s.openLightbox);
+  const { open: openLightbox } = useLightbox();
   
   const showWhatsAppChoice = useUI((s: UIStoreState) => s.showWhatsAppChoice);
   const patch = useUI(s => s.patch);

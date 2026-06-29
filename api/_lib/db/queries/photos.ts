@@ -75,11 +75,11 @@ export async function getPhotosList(params: PhotoListParams) {
         ));
     }
 
-    if (tagId) {
+    if (tagId && !isNaN(Number(tagId))) {
         whereClauses.push(sql`${Number(tagId)} = ANY(${vPhotosList.tagIds})`);
     }
 
-    if (categoryId) {
+    if (categoryId && !isNaN(Number(categoryId))) {
         whereClauses.push(eq(vPhotosList.categoryId, Number(categoryId)));
     }
 

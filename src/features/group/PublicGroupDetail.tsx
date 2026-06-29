@@ -41,7 +41,7 @@ export function PublicGroupDetailPage() {
   const groupId = ((params as { slug?: string }).slug) || fGroupId;
   
   const [anchor, setAnchor] = React.useState(true);
-  const { data: categories } = useCategories();
+  const { categories } = useCategories();
   const { lang, uiTranslations: t } = useTranslation();
   
   const { group, photos: rawPhotos, totalCount, loading, error } = useGroupData({ groupId, isAdmin: false });
@@ -50,16 +50,9 @@ export function PublicGroupDetailPage() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const showWhatsAppChoice = useUI(s => s.showWhatsAppChoice);
   const patchUI = useUI(s => s.patch);
-  const openLightbox = useUI(s => s.openLightbox);
+  const { open: openLightbox } = useLightbox();
   const { data: settings } = usePublicSettings();
   const lightboxItems = React.useMemo(() => photosToLightboxSlides(photos), [photos]);
-
-  // Sync lightbox items to store when they change
-  React.useEffect(() => {
-    if (lightboxItems.length > 0) {
-      uiStore.setState({ lightboxSlides: lightboxItems });
-    }
-  }, [lightboxItems]);
 
   // Anchoring effect
   React.useEffect(() => {

@@ -24,12 +24,10 @@ export interface UIStoreState {
   pendingFiles: FileList | File[] | null;
   activeDialogCount: number;
   fatalError: Error | null;
-  isPhotoEditOpen: boolean;
   currentEditingPhoto: Photo | null;
   gridColumns: number;
   
-  // Lightbox 状态
-  lightboxIsOpen: boolean;
+  // Lightbox 状态 (Data only)
   lightboxSlides: LightboxSlide[];
   lightboxCurrentIndex: number;
 
@@ -45,8 +43,8 @@ export interface UIStoreState {
   resetUI: () => void;
   
   // Lightbox Actions
-  openLightbox: (slides: LightboxSlide[], index?: number) => void;
-  closeLightbox: () => void;
+  setLightboxData: (slides: LightboxSlide[], index?: number) => void;
+  clearLightboxData: () => void;
   setLightboxIndex: (index: number) => void;
 }
 
@@ -90,10 +88,8 @@ export const uiStore = createStore<UIStoreState>({
   pendingFiles: null,
   activeDialogCount: 0,
   fatalError: null,
-  isPhotoEditOpen: false,
   currentEditingPhoto: null,
   gridColumns: 3,
-  lightboxIsOpen: false,
   lightboxSlides: [],
   lightboxCurrentIndex: 0,
 
@@ -121,15 +117,16 @@ export const uiStore = createStore<UIStoreState>({
   resetUI: () => uiStore.setState({
       formState: defaultForm,
       activeDialogCount: 0,
-      lightboxIsOpen: false, lightboxSlides: [], lightboxCurrentIndex: 0
+      lightboxSlides: [], 
+      lightboxCurrentIndex: 0
   }),
 
-  openLightbox: (slides, index = 0) => uiStore.setState({
-    lightboxIsOpen: true, lightboxSlides: slides, lightboxCurrentIndex: index
+  setLightboxData: (slides, index = 0) => uiStore.setState({
+    lightboxSlides: slides, lightboxCurrentIndex: index
   }),
 
-  closeLightbox: () => uiStore.setState({
-    lightboxIsOpen: false
+  clearLightboxData: () => uiStore.setState({
+    lightboxSlides: [], lightboxCurrentIndex: 0
   }),
 
   setLightboxIndex: (index) => uiStore.setState({
@@ -163,7 +160,6 @@ export function useUIStore<T = UIStoreState>(selector?: (state: UIStoreState) =>
 export const useAppLang = () => useStore(uiStore, (s: UIStoreState) => s.appLang) as 'zh' | 'en' | 'ms';
 
 // ============ UI 狀態 Signal (Derived from uiStore) ============
-export const isPhotoEditOpen = signal<UIStoreState, 'isPhotoEditOpen'>(uiStore, 'isPhotoEditOpen');
 export const currentEditingPhoto = signal<UIStoreState, 'currentEditingPhoto'>(uiStore, 'currentEditingPhoto');
 export const appLangSignal = signal<UIStoreState, 'appLang'>(uiStore, 'appLang');
 
@@ -177,7 +173,6 @@ if (typeof document !== 'undefined') {
 }
 
 // 燈箱狀態
-export const isLightboxOpen = signal<UIStoreState, 'lightboxIsOpen'>(uiStore, 'lightboxIsOpen');
 export const lightboxSlides = signal<UIStoreState, 'lightboxSlides'>(uiStore, 'lightboxSlides');
 export const lightboxCurrentIndex = signal<UIStoreState, 'lightboxCurrentIndex'>(uiStore, 'lightboxCurrentIndex');
 

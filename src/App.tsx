@@ -6,14 +6,10 @@ import { RouterOrchestrator } from './components/RouterOrchestrator';
 import { Analytics } from '@vercel/analytics/react';
 import { useAppInit } from './hooks/core/useAppInit';
 import { LoadingScreen } from './components/ui/LoadingScreen';
-import { useURLSync } from './hooks/core/useURLSync';
 import { DialogContainer } from './components/layout/DialogContainer';
 import { PhotoEditDialog } from './features/photo-edit/PhotoEditDialog';
 
 function AppContent({ status, error }: { status: string, error: Error | null }) {
-  // ✅ 路由同步 (using nuqs)
-  useURLSync();
-
   return (
     <AppErrorBoundary>
       <ConfirmProvider>

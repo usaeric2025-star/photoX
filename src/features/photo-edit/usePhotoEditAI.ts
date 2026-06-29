@@ -35,8 +35,8 @@ export function usePhotoEditAI() {
   const { updatePhoto: { mutateAsync: updatePhoto } } = useAdminMaintenance();
 
   // Fetch reference data for matching
-  const { data: categories = [] } = useCategories();
-  const { data: allTags = [] } = useTags();
+  const { categories = [] } = useCategories();
+  const { tags: allTags = [] } = useTags();
 
   const { submit: handleAiAnalyze, isLoading: isAnalyzing } = useFormSubmit({
     schema: AIAnalysisSchema,

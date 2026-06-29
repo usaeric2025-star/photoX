@@ -17,7 +17,6 @@ import { useFilters } from '@/features/filters';
 import { FilterBar } from '@/features/filters';
 
 const BatchEditScreen = lazy(() => import('@/features/batch-edit/BatchEditScreen').then(m => ({ default: m.BatchEditScreen })));
-const StatisticsScreen = lazy(() => import('@/features/statistics/components/StatisticsScreen').then(m => ({ default: m.StatisticsScreen })));
 const DiagDashboard = lazy(() => import('@/features/diagnostics/DiagDashboard').then(m => ({ default: m.DiagDashboard })));
 const SettingsPage = lazy(() => import('@/features/settings/SettingsPage').then(m => ({ default: m.SettingsPage })));
 

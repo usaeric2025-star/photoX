@@ -1,12 +1,12 @@
 import { Category } from '@/types';
-import { addCategoryToDB, updateCategoryInDB, deleteCategoryFromDB } from '@/services/category/commands';
+import { createCategory, updateCategory, deleteCategory } from '@/services/category/commands';
 import { queryKeys } from '@/lib/query/keys';
 import { useAppMutation, appQuery } from '@/lib/query';
 
 export const useCategoryCreate = () => useAppMutation({
   mutationFn: async (variables: string | Partial<Category>) => {
     const name = typeof variables === 'string' ? variables : (variables.name || '');
-    const res = await addCategoryToDB(name);
+    const res = await createCategory({ name } as any);
     if (!res) throw new Error('分类创建失败');
     return res;
   },
@@ -18,8 +18,7 @@ export const useCategoryCreate = () => useAppMutation({
 
 export const useCategoryEdit = () => useAppMutation({
   mutationFn: async ({ id, updates }: { id: number; updates: Partial<Category> }) => {
-    const res = await updateCategoryInDB(id, updates);
-    if (!res) throw new Error('分类更新失败');
+    await updateCategory(id, updates);
     return true;
   },
   onSuccess: () => {
@@ -30,8 +29,7 @@ export const useCategoryEdit = () => useAppMutation({
 
 export const useCategoryDelete = () => useAppMutation({
   mutationFn: async (id: number) => {
-    const res = await deleteCategoryFromDB(id);
-    if (!res) throw new Error('分类删除失败');
+    await deleteCategory(id);
     return true;
   },
   onSuccess: () => {
@@ -40,3 +38,18 @@ export const useCategoryDelete = () => useAppMutation({
   }
 });
 
+/**
+ * Combined hook for batch usage or specific components
+ */
+export function useCategoryMutations() {
+  const create = useCategoryCreate();
+  const update = useCategoryEdit();
+  const remove = useCategoryDelete();
+
+  return {
+    create: create.mutateAsync,
+    update: update.mutateAsync,
+    remove: remove.mutateAsync,
+    isMutating: create.isPending || update.isPending || remove.isPending,
+  };
+}

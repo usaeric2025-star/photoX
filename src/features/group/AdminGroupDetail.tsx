@@ -8,7 +8,7 @@ import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
 import { useFilters, useTranslation, useCategories, usePermission } from '@/hooks';
 import { getTranslatedCategoryName } from '@/services/category/utils';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { useSignal, uiStore, useUI, isPhotoEditOpen, currentEditingPhoto, gridColumns as gridColumnsSignal } from '@/lib/store';
+import { useSignal, uiStore, useUI, currentEditingPhoto, gridColumns as gridColumnsSignal } from '@/lib/store';
 // import { batchModeSignal } from '@/lib/store'; // 移除此行
 import { useSelection } from '@/features/selection';
 import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
@@ -16,7 +16,7 @@ import { useAdminBatchActions } from '@/hooks/admin/useAdminBatch';
 import { translations } from '@/locales';
 import { GroupSettingsDialog } from '@/components/groups/GroupSettingsDialog';
 import { useGroupDraft } from '@/components/groups/useGroupDraft';
-import { useGroupMutations } from '@/hooks/groups/useGroupMutations';
+import { useGroupMutations } from '@/hooks/group';
 import { GroupHeader } from './components/GroupHeader';
 import { Button } from '@/components/shared/Button';
 import { useColumns } from '@/hooks';
@@ -56,18 +56,11 @@ export function AdminGroupDetailPage() {
   const { group, photos, totalCount, loading, error } = useGroupData({ groupId, isAdmin: true });
 
   const { lang, uiTranslations: t } = useTranslation();
-  const { data: categories = [] } = useCategories();
+  const { categories = [] } = useCategories();
   const { anchor, setAnchor } = useFilters();
 
-  const openLightbox = useUI(s => s.openLightbox);
+  const { open: openLightbox } = useLightbox();
   const lightboxItems = React.useMemo(() => photosToLightboxSlides(photos), [photos]);
-
-  // Sync lightbox items to store when they change
-  React.useEffect(() => {
-    if (lightboxItems.length > 0) {
-      uiStore.setState({ lightboxSlides: lightboxItems });
-    }
-  }, [lightboxItems]);
 
   // Anchoring effect
   React.useEffect(() => {
@@ -126,7 +119,8 @@ export function AdminGroupDetailPage() {
     const p = photos.find(p => p.id === id);
     if (p) {
       currentEditingPhoto.set(p as any);
-      isPhotoEditOpen.set(true);
+      setModal('edit');
+      setPhotoId(p.id);
     }
   };
 

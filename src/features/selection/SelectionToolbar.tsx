@@ -6,7 +6,7 @@ import { useAppRouter } from '@/lib/router';
 import { useAIBatchAnalysis } from '@/hooks/photo/useAIBatchAnalysis';
 import { useConfirm } from '@/context/ConfirmContext';
 import { useMediaQuery } from '@/hooks';
-import { useGroupPhotosMutation, useRemoveFromGroupMutation } from '@/hooks/groups/useGroupMutations';
+import { useGroupPhotosMutation, useRemoveFromGroupMutation } from '@/hooks/group';
 import { Icon } from '@/components/ui/Icon';
 import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
 import { SelectionToolbarActions } from './components/SelectionToolbarActions';

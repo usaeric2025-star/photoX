@@ -1,23 +1,38 @@
 export * from './types';
 import { useUI } from '@/lib/store';
+import { useFilters } from '@/hooks';
 
 export function useLightbox() {
-  const isOpen = useUI(s => s.lightboxIsOpen || false);
   const slides = useUI(s => s.lightboxSlides || []);
   const currentIndex = useUI(s => s.lightboxCurrentIndex || 0);
-  const openLightbox = useUI(s => s.openLightbox);
-  const closeLightbox = useUI(s => s.closeLightbox);
+  const setLightboxData = useUI(s => s.setLightboxData);
+  const clearLightboxData = useUI(s => s.clearLightboxData);
   const setLightboxIndex = useUI(s => s.setLightboxIndex);
   
+  const { photoId, setPhotoId, modal } = useFilters();
+  const isOpen = !!(photoId && modal !== 'edit');
+  
+  const open = (slides: any[], index: number = 0) => {
+    setLightboxData(slides, index);
+    if (slides[index]?.id) {
+      setPhotoId(slides[index].id);
+    }
+  };
+
+  const close = () => {
+    setPhotoId(null);
+    clearLightboxData();
+  };
+
   return {
     isOpen,
     slides,
     currentIndex,
-    openLightbox,
-    closeLightbox,
+    setLightboxData,
+    clearLightboxData,
     setLightboxIndex,
-    open: openLightbox,
-    close: closeLightbox
+    open,
+    close,
   };
 }
 

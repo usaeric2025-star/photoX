@@ -5,25 +5,33 @@ import { useDiagnostics } from '@/hooks/admin/useDiagnostics';
 import { Button } from '@/components/shared/Button';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { usePerformanceAudit } from '@/hooks/admin/usePerformanceAudit';
+import { useQueryState, parseAsString } from 'nuqs';
 
 const ErrorLogViewer = React.lazy(() => import('./ErrorLogViewer').then(m => ({ default: m.ErrorLogViewer })));
 const MaintenanceCenter = React.lazy(() => import('./MaintenanceCenter').then(m => ({ default: m.MaintenanceCenter })));
 const TasksContent = React.lazy(() => import('./TasksList').then(m => ({ default: m.TasksContent })));
+const StatisticsScreen = React.lazy(() => import('../statistics/components/StatisticsScreen').then(m => ({ default: m.StatisticsScreen })));
 
 export function DiagDashboard() {
   const { navigate, route } = useAppRouter();
+  const [tab, setTab] = useQueryState('tab', parseAsString.withDefault('stats'));
   
   const activeTab = (() => {
     if (route?.name === 'adminTasks') return 'tasks';
     if (route?.name === 'adminDiagnosticsLogs') return 'logs';
-    return 'diagnosis';
+    return tab;
   })();
 
-  const setActiveTab = (tab: 'diagnosis' | 'tasks' | 'logs') => {
-    switch (tab) {
-      case 'tasks': navigate.adminTasks(); break;
-      case 'logs': navigate.adminDiagnosticsLogs(); break;
-      default: navigate.adminDiagnostics(); break;
+  const setActiveTab = (newTab: 'diagnosis' | 'tasks' | 'logs' | 'stats') => {
+    if (newTab === 'tasks') {
+      navigate.adminTasks();
+    } else if (newTab === 'logs') {
+      navigate.adminDiagnosticsLogs();
+    } else {
+      if (route?.name !== 'adminDiagnostics') {
+        navigate.adminDiagnostics();
+      }
+      setTab(newTab === 'stats' ? null : newTab);
     }
   };
 
@@ -42,13 +50,14 @@ export function DiagDashboard() {
         <div className="flex items-center gap-2.5 flex-wrap">
           <div className="flex bg-slate-100 p-1 rounded-xl gap-1">
              {[
+               { id: 'stats', label: '數據概覽 / Stats' },
                { id: 'diagnosis', label: '診斷與修復 / Repair' },
                { id: 'tasks', label: '任務佇列 / Tasks' },
                { id: 'logs', label: '系統日誌 / Logs' }
              ].map(tab => (
                <button
                  key={tab.id}
-                 onClick={() => setActiveTab(tab.id as 'diagnosis' | 'tasks' | 'logs')}
+                 onClick={() => setActiveTab(tab.id as any)}
                  className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-tight transition-all ${
                    activeTab === tab.id 
                     ? 'bg-white text-brand-navy shadow-sm' 
@@ -64,7 +73,7 @@ export function DiagDashboard() {
             variant="outline" 
             size="icon"
             onClick={() => {
-              if (activeTab === 'diagnosis') {
+              if (activeTab === 'diagnosis' || activeTab === 'stats') {
                 refreshReport();
                 runAudit();
               }
@@ -76,6 +85,14 @@ export function DiagDashboard() {
           </Button>
         </div>
       </div>
+
+      {activeTab === 'stats' && (
+        <div className="animate-in fade-in duration-500">
+          <Suspense fallback={<LoadingScreen />}>
+            <StatisticsScreen />
+          </Suspense>
+        </div>
+      )}
 
       {activeTab === 'diagnosis' && (
         <div className="space-y-8 animate-in fade-in duration-500">

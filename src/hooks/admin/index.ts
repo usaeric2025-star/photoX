@@ -31,6 +31,3 @@ export * from './useAdminCategory';
 // Modularized business hooks
 export * from './useAdminMutations';
 export * from './useAdminBatch';
-export * from './useTagMutations';
-export * from './useCategoryMutations';
-export * from './useManufacturerMutations';

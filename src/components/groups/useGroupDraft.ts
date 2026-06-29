@@ -16,8 +16,8 @@ export const useGroupDraft = (
   const { user } = useAuth();
 
   const [groupData, setGroupData] = useState<ProductGroup | null>(null);
-  const { data: queriedGroupData, isLoading: isGroupDataPending } =
-    useGroupDetail({ groupId: activeGroupId, isAdmin: true });
+  const { group: queriedGroupData, isLoading: isGroupDataPending } =
+    useGroupDetail(activeGroupId, true);
 
   const [draftGroup, setDraftGroup, removeDraftGroup] = useSessionStorage<ProductGroup | null>({
     key: `draft_group_${activeGroupId || 'default'}`,

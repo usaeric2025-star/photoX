@@ -1,6 +1,6 @@
 export * from './useFilters';
-export { useCategories } from '@/hooks/photo/useCategories';
-export { useTags } from '@/hooks/photo/useTags';
+export { useCategories } from '@/hooks/category';
+export { useTags } from '@/hooks/tag';
 export * from './types';
 export * from './FilterBar';
 export * from './SearchInput';

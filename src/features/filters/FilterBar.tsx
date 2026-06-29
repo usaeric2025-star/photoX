@@ -7,7 +7,7 @@ import { TagGrid } from './TagGrid';
 import { ColumnsToggle } from '@/components/layout/ColumnsToggle';
 import { GroupToggle } from '@/components/ui/GroupToggle';
 import { useFilters, useFilterState } from './useFilters';
-import { useTags } from '@/hooks/photo/useTags';
+import { useTags } from '@/hooks/tag';
 import { cn } from '@/lib/utils';
 
 interface FilterBarProps {
@@ -20,7 +20,7 @@ export function FilterBar({ mode, className }: FilterBarProps) {
   const { showGroupsCollapsed, setShowGroupsCollapsed } = useFilters();
   const [showTags, setShowTags] = useState(false);
   const { filters, updateFilters } = useFilterState();
-  const { data: allTags } = useTags();
+  const { tags: allTags } = useTags();
 
   const selectedTags = allTags?.filter(tag => filters.tagIds.includes(String(tag.id))) || [];
 

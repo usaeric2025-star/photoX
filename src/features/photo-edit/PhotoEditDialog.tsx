@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { NativeDialog } from "@/components/ui/NativeDialog";
 import { AppErrorBoundary } from "@/components/layout/AppErrorBoundary";
-import { isPhotoEditOpen, currentEditingPhoto, appLang as appLangSignal, useSignal } from '@/lib/store';
+import { currentEditingPhoto, appLang as appLangSignal, useSignal } from '@/lib/store';
 import { usePhoto } from "@/hooks/photo/usePhoto";
 import { PhotoEditSessionProvider, usePhotoEditSessionContext } from "@/hooks/photo";
 import { PhotoEditTabs } from "./PhotoEditTabs";
@@ -96,22 +96,25 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
 }
 
 export function PhotoEditDialog() {
-  const isOpen = useSignal(isPhotoEditOpen);
+  const { modal, photoId } = useFilters();
   const photo = useSignal(currentEditingPhoto);
-  const { setModal, setPhotoId } = useFilters();
+  const { setModal } = useFilters();
   
-  if (!isOpen || !photo?.id) return null;
+  const isOpen = modal === 'edit' && (!!photoId || !!photo?.id);
+  const activePhotoId = photoId || photo?.id;
+  
+  if (!isOpen || !activePhotoId) return null;
 
   const handleClose = () => {
-    isPhotoEditOpen.set(false);
+    setModal(null);
   };
 
   return (
-    <PhotoEditSessionProvider photoId={photo.id} onSuccess={handleClose}>
+    <PhotoEditSessionProvider photoId={activePhotoId} onSuccess={handleClose}>
       <PhotoEditDialogInner 
         isOpen={isOpen}
         handleClose={handleClose}
-        editPhotoId={photo.id}
+        editPhotoId={activePhotoId}
       />
     </PhotoEditSessionProvider>
   );

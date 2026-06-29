@@ -1,6 +1,6 @@
-import { useCategoryCreate, useCategoryEdit, useCategoryDelete } from './useCategoryMutations';
-import { useTagCreate, useTagEdit, useTagDelete } from './useTagMutations';
-import { useManufacturerCreate, useManufacturerEdit, useManufacturerDelete } from './useManufacturerMutations';
+import { useCategoryCreate, useCategoryEdit, useCategoryDelete } from '@/hooks/category';
+import { useTagCreate, useTagEdit, useTagDelete } from '@/hooks/tag';
+import { useManufacturerCreate, useManufacturerEdit, useManufacturerDelete } from '@/hooks/manufacturer';
 
 export function useAdminCategory() {
   const { mutateAsync: deleteCategory } = useCategoryDelete();

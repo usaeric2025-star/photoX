@@ -1,7 +1,7 @@
 import { logger } from '../../_lib/logger.js';
 import { Hono } from 'hono';
-import { db, systemLogs, aiAuditLogs, maintenanceJobs, furnitureItems } from '../../_lib/db/index.js';
-import { eq, lt, or, isNull, inArray, sql } from "drizzle-orm";
+import { db, systemLogs, aiAuditLogs, maintenanceJobs, furnitureItems, groups as groupsTable, tags as tagsTable, categories } from '../../_lib/db/index.js';
+import { eq, lt, or, isNull, inArray, sql, count } from "drizzle-orm";
 import { runStorageAudit } from '../../_lib/maintenance/storageUtils.js';
 import { requireRealUser } from '../../_lib/auth.js';
 import { getR2Client } from '../../_lib/storage.js';
@@ -52,6 +52,30 @@ adminMaintenance.post("/daily-cleanup", async (c) => {
         return c.json({ success: true, message: 'Daily cleanup executed' });
     } catch (e: unknown) {
         logger.error('[Maintenance] Cleanup failed', e);
+        return c.json({ success: false, error: String(e) }, 500);
+    }
+});
+
+adminMaintenance.get("/stats", async (c) => {
+    try {
+        const [photoCount] = await db.select({ count: count() }).from(furnitureItems);
+        const [hiddenCount] = await db.select({ count: count() }).from(furnitureItems).where(eq(furnitureItems.isHidden, true));
+        const [groupCount] = await db.select({ count: count() }).from(groupsTable);
+        const [tagCount] = await db.select({ count: count() }).from(tagsTable);
+        const [categoryCount] = await db.select({ count: count() }).from(categories);
+
+        return c.json({
+            success: true,
+            data: {
+                totalPhotos: Number(photoCount.count),
+                hiddenPhotos: Number(hiddenCount.count),
+                totalGroups: Number(groupCount.count),
+                totalTags: Number(tagCount.count),
+                totalCategories: Number(categoryCount.count)
+            }
+        });
+    } catch (e: unknown) {
+        logger.error('[Maintenance] Stats failed', e);
         return c.json({ success: false, error: String(e) }, 500);
     }
 });

@@ -50,9 +50,9 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   const patch = useUI((s: UIStoreState) => s.patch);
   const { navigate, route } = useAppRouter();
   
-  const { data: categories = [] } = useCategories();
-  const { data: tags = [] } = useTags();
-  const { data: manufacturers = [] } = useManufacturers();
+  const { categories = [] } = useCategories();
+  const { tags = [] } = useTags();
+  const { manufacturers = [] } = useManufacturers();
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

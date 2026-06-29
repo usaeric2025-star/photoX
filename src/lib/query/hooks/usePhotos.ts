@@ -44,7 +44,8 @@ export function usePhotos(params: PhotoListFilters = {}) {
         logger.debug('--- [SWR Fetch] Response status:', response.status);
         if (!response.ok) {
           const errData = await response.json().catch(() => null);
-          const err = new Error(errData?.error || errData?.message || `HTTP ${response.status}`);
+          const rawMsg = errData?.error?.message || errData?.message || errData?.error || `HTTP ${response.status}`;
+          const err = new Error(typeof rawMsg === 'string' ? rawMsg : JSON.stringify(rawMsg));
           if (errData) Object.assign(err, errData);
           throw err;
         }

@@ -12,7 +12,7 @@ import { getTranslatedCategoryName } from "@/services/category/utils";
 export function CategorySelect() {
   const { form } = usePhotoEditSessionContext();
   const appLang = useUI((s) => s.appLang);
-  const { data: categories = [] } = useCategories();
+  const { categories = [] } = useCategories();
   
   return (
     <Field form={form} name="category_id">

@@ -2,7 +2,7 @@ import React from 'react';
 import { usePhotoEditSessionContext } from '@/hooks/photo/usePhotoEditSessionContext';
 import { FormSectionHeader } from '@/components/admin/FormShared';
 import { useManufacturers, useManufacturerCreate, useTags } from '@/hooks';
-import { useTagCreate, useTagEdit, useTagDelete } from '@/hooks/admin/useTagMutations';
+import { useTagCreate, useTagEdit, useTagDelete } from '@/hooks/tag';
 import { useUI } from '@/lib/store';
 import { PromptDialog } from '@/components/ui/PromptDialog';
 import { translations } from '@/locales';
@@ -15,8 +15,8 @@ import { AppField } from '@/lib/forms/AppField';
 export function OrgTab() {
   const { form } = usePhotoEditSessionContext();
   const appLang = useUI((s) => s.appLang);
-  const { data: manufacturers = [] } = useManufacturers();
-  const { data: tags = [] } = useTags();
+  const { manufacturers = [] } = useManufacturers();
+  const { tags = [] } = useTags();
   
   const { mutateAsync: addManMut } = useManufacturerCreate();
   const { mutateAsync: addTagMut } = useTagCreate();

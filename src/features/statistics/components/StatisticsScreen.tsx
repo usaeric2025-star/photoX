@@ -1,6 +1,5 @@
 import React from 'react';
 import { Icon } from '@/components/ui/Icon';
-import { useCategories, useTags } from '@/hooks';
 import { useAppQuery } from '@/lib/query';
 import { api } from '@/lib/api';
 import { PhotoListItem } from '@/types/api';
@@ -36,29 +35,22 @@ const StatCard = ({ title, value, subValue, icon: iconName, colorClass, delay = 
 );
 
 export function StatisticsScreen() {
-  const { data: totalPhotos = 0 } = useAppQuery(
-    ['photos', 'count', 'all'],
+  const { data: stats, isLoading } = useAppQuery(
+    ['admin', 'stats'],
     async () => {
-      const res = await api.photos.count.$post({ json: { isAdminMode: true } });
+      const res = await api.admin.maintenance.stats.$get();
       const json = await res.json();
-      return json.success ? (json.data as number) : 0;
+      return json.success ? json.data : null;
     }
   );
 
-  const { data: hiddenCount = 0 } = useAppQuery(
-    ['photos', 'count', 'hidden'],
-    async () => {
-      const res = await api.photos.count.$post({ json: { isAdminMode: true, isHidden: true } });
-      const json = await res.json();
-      return json.success ? (json.data as number) : 0;
-    }
-  );
+  if (isLoading) return <div className="p-8 text-center text-slate-400 font-bold uppercase tracking-widest animate-pulse">Calculating Metrics...</div>;
 
-  const { data: categories = [] } = useCategories();
-  const { data: tags = [] } = useTags();
-
-  // For now, groupsCount is mocked or we use a separate query if needed
-  const groupsCount = '---';
+  const totalPhotos = stats?.totalPhotos || 0;
+  const hiddenCount = stats?.hiddenPhotos || 0;
+  const categoriesCount = stats?.totalCategories || 0;
+  const tagsCount = stats?.totalTags || 0;
+  const groupsCount = stats?.totalGroups || 0;
   
   // Fake storage calculation for now (average 200KB per photo)
   const estStorage = (totalPhotos * 0.2).toFixed(1);
@@ -94,7 +86,7 @@ export function StatisticsScreen() {
         />
         <StatCard 
           title="活跃分类 / Categories" 
-          value={categories.length} 
+          value={categoriesCount} 
           subValue="Types"
           icon="database"
           colorClass="bg-brand-gold/10 text-brand-gold"
@@ -102,7 +94,7 @@ export function StatisticsScreen() {
         />
         <StatCard 
           title="逻辑标签 / Labels" 
-          value={tags.length} 
+          value={tagsCount} 
           subValue="Tags"
           icon="tags"
           colorClass="bg-slate-100 text-slate-600"
