@@ -79,33 +79,33 @@ export function usePhotoEditAI() {
           }
 
           // --- Strict Group Matching and Assignment Support ---
-          if (result.group_id !== undefined && result.group_id !== null) {
-            const rawGroup = result.group_id;
+          if (result.groupId !== undefined && result.groupId !== null || result.group_id !== undefined && result.group_id !== null) {
+            const rawGroup = result.groupId || result.group_id;
             let targetGroupId: string | null = null;
             if (typeof rawGroup === 'string' && rawGroup.trim().length > 0 && rawGroup !== 'null' && rawGroup !== 'undefined') {
               targetGroupId = rawGroup.trim();
             } else if (typeof rawGroup === 'object' && rawGroup !== null) {
-              targetGroupId = String(rawGroup.id || rawGroup.group_id || '');
+              targetGroupId = String(rawGroup.id || rawGroup.groupId || rawGroup.group_id || '');
             }
             if (targetGroupId && targetGroupId !== 'undefined' && targetGroupId !== 'null') {
-              updates.group_id = targetGroupId;
+              updates.groupId = targetGroupId;
             }
           }
 
           // --- Strict Tag Matching (Full format-compatible) with auto-creation ---
-          const sourceTags: (string | { id?: string; tag_id?: string; name?: string })[] = Array.isArray(result.tagNames) ? result.tagNames : (Array.isArray(result.tag_names) ? result.tag_names : []);
-          const sourceTagIds: (string | { id?: string; tag_id?: string; name?: string })[] = Array.isArray(result.tagIds) ? result.tagIds : (Array.isArray(result.tag_ids) ? result.tag_ids : []);
+          const sourceTags: (string | { id?: string; tag_id?: string; tagId?: string; name?: string })[] = Array.isArray(result.tagNames) ? result.tagNames : (Array.isArray(result.tag_names) ? result.tag_names : []);
+          const sourceTagIds: (string | { id?: string; tag_id?: string; tagId?: string; name?: string })[] = Array.isArray(result.tagIds) ? result.tagIds : (Array.isArray(result.tag_ids) ? result.tag_ids : []);
 
           const rawNames: string[] = sourceTags.map((rawTag) => {
               if (rawTag && typeof rawTag === 'object') {
-                  return String(rawTag.name ?? rawTag.id ?? rawTag.tag_id ?? '');
+                  return String(rawTag.name ?? rawTag.id ?? rawTag.tagId ?? rawTag.tag_id ?? '');
               }
               return String(rawTag);
           }).filter(Boolean);
 
           const parsedTagIds: string[] = sourceTagIds.map((t) => {
               if (t && typeof t === 'object') {
-                  return String(t.id ?? t.tag_id ?? t.name ?? '');
+                  return String(t.id ?? t.tagId ?? t.tag_id ?? t.name ?? '');
               }
               return String(t);
           }).filter(Boolean);
@@ -124,14 +124,15 @@ export function usePhotoEditAI() {
           let finalResolvedIds = [...resolvedIds];
 
           // Prevent tags that perfectly match the chosen category name
-          if (updates.category_id) {
-              const chosenCategory = categories.find(c => String(c.id) === updates.category_id);
+          if (updates.categoryId || result.categoryId || result.category_id) {
+              const catId = updates.categoryId || result.categoryId || result.category_id;
+              const chosenCategory = categories.find(c => String(c.id) === String(catId));
               if (chosenCategory) {
                   const catNames = [
                       chosenCategory.name.toLowerCase(),
-                      chosenCategory.zh?.toLowerCase(),
-                      chosenCategory.en?.toLowerCase(),
-                      chosenCategory.ms?.toLowerCase()
+                      chosenCategory.nameZh?.toLowerCase(),
+                      chosenCategory.nameEn?.toLowerCase(),
+                      chosenCategory.nameMs?.toLowerCase()
                   ].filter(Boolean);
                   
                   uniqueRawNames = uniqueRawNames.filter(n => !catNames.includes(n.toLowerCase()));
@@ -179,7 +180,7 @@ export function usePhotoEditAI() {
                     }
                     // Fallback
                     const matchingRaw = [...sourceTags, ...sourceTagIds].find((raw) => {
-                      const rStr = typeof raw === 'object' && raw ? String(raw.id ?? raw.tag_id ?? raw.name ?? '') : String(raw);
+                      const rStr = typeof raw === 'object' && raw ? String(raw.id ?? raw.tagId ?? raw.tag_id ?? raw.name ?? '') : String(raw);
                       return rStr.toLowerCase() === id.toLowerCase();
                     });
                     const nameVal = typeof matchingRaw === 'object' ? (matchingRaw.name || id) : (matchingRaw || id);
@@ -214,8 +215,8 @@ export function usePhotoEditAI() {
               length: Number(d.length) || 0,
               width: Number(d.width) || 0,
               height: Number(d.height) || 0,
-              is_ai_estimated: !!d.is_ai_estimated,
-              is_ai: true
+              isAiEstimated: !!(d.isAiEstimated || d.is_ai_estimated),
+              isAi: true
             }));
           }
           // Invalidate the cache to instantly reveal JSON output in AI tab
@@ -238,12 +239,12 @@ export function usePhotoEditAI() {
                   ...oldPhoto,
                   name: updates.name ? { zh: (updates.name as string), en: '', ms: '' } : oldPhoto.name,
                   description: (updates.description as { zh: string; en: string; ms: string }) || oldPhoto.description,
-                  category_id: (updates.category_id as string) || oldPhoto.category_id,
+                  categoryId: (updates.categoryId as string) || oldPhoto.categoryId,
                   tags: (updates.tags as Tag[]) || oldPhoto.tags,
                   dimensions: (updates.dimensions as import('@/types').Dimension[]) || oldPhoto.dimensions,
-                  is_ai_dimensions: (updates.is_ai_dimensions as boolean) ?? oldPhoto.is_ai_dimensions,
-                  item_code: (updates.item_code as string) || oldPhoto.item_code,
-                  updated_at: new Date().toISOString()
+                  isAiDimensions: (updates.isAiDimensions as boolean) ?? oldPhoto.isAiDimensions,
+                  itemCode: (updates.itemCode as string) || oldPhoto.itemCode,
+                  updatedAt: new Date().toISOString()
                 };
               });
             } catch (saveError: unknown) {

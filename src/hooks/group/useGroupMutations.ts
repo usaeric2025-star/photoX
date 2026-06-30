@@ -23,7 +23,7 @@ const invalidatePhotos = () => {
 export function useGroupMutations() {
   const createMutation = useAppMutation({
     mutationFn: (args: { name: string; userId: string }) => 
-      createGroup({ name: args.name, user_id: args.userId }),
+      createGroup({ name: args.name, userId: args.userId }),
     onSuccess: () => appQuery.mutate(queryKeys.groups.all),
   });
 

@@ -54,11 +54,11 @@ const handler = async (c: any) => {
 
     // Return ONLY non-sensitive data
     const data = {
-        logo_url: settingsRes?.logoUrl || '',
-        whatsapp_1: settingsRes?.whatsapp1 || '',
-        whatsapp_2: settingsRes?.whatsapp2 || '',
-        whatsapp_1_name: settingsRes?.whatsapp1Name || '',
-        whatsapp_2_name: settingsRes?.whatsapp2Name || '',
+        logoUrl: settingsRes?.logoUrl || '',
+        whatsapp1: settingsRes?.whatsapp1 || '',
+        whatsapp2: settingsRes?.whatsapp2 || '',
+        whatsapp1Name: settingsRes?.whatsapp1Name || '',
+        whatsapp2Name: settingsRes?.whatsapp2Name || '',
         facebook: '',
         instagram: '',
         manufacturers: [], 

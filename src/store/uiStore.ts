@@ -50,17 +50,17 @@ export interface UIStoreState {
 
 const defaultForm: ProductFormData = {
   name: { zh: '', en: '', ms: '' },
-  category_id: '',
+  categoryId: '',
   tags: [],
-  manufacturer_id: '',
-  item_code: '',
-  model_number: '',
-  manual_code: '',
+  manufacturerId: '',
+  itemCode: '',
+  modelNumber: '',
+  manualCode: '',
   description: { zh: '', en: '', ms: '' },
-  is_hidden: false,
+  isHidden: false,
   dimensions: [],
   price: '',
-  is_group_cover: false
+  isGroupCover: false
 };
 
 export const uiStore = createStore<UIStoreState>({

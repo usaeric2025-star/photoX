@@ -38,7 +38,7 @@ export const PhotoCardBase = ({
   const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
     props.onMouseEnter?.(e);
     // Preload the lightbox preview image (800px)
-    const hash = (item as any).image_hash || (item as any).imageHash;
+    const hash = item.imageHash || (item as any).image_hash;
     const previewUrl = getThumbnailUrl(item.imageUrl, 800, undefined, hash);
     const img = new window.Image();
     img.src = previewUrl;
@@ -73,7 +73,7 @@ export const PhotoCardBase = ({
         isSelected ? "scale-[0.92] rounded-xl" : "scale-100 rounded-2xl",
       )}>
         <Image
-          src={getThumbnailUrl(item.imageUrl, imgVariant === 'md' ? 800 : 400, undefined, (item as any).image_hash || (item as any).imageHash)}
+          src={getThumbnailUrl(item.imageUrl, imgVariant === 'md' ? 800 : 400, undefined, item.imageHash || (item as any).image_hash)}
           alt={typeof item.name === 'string' ? item.name : (item.name as any)?.zh || '照片'}
           className={cn(
             "w-full h-full object-cover transition-transform duration-700 ease-out",

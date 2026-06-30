@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
 import * as v from 'valibot';
-import { db, furnitureItems, aiAuditLogs } from '../../_lib/db/index.js';
+import { db, furnitureItems, aiAuditLogs } from '@/api/_lib/db/index.js';
 import { eq, and, inArray } from 'drizzle-orm';
-import { syncGroupCoversAndCount } from '../../_lib/groups.js';
-import { refreshPhotosView } from '../../_lib/db/actions.js';
-import { PhotoIdReqSchema } from '@shared/apiContractSchema.js';
+import { syncGroupCoversAndCount } from '@/api/_lib/groups.js';
+import { refreshPhotosView } from '@/api/_lib/db/actions.js';
+import { PhotoIdReqSchema } from '@/shared/apiContractSchema.js';
 
 export const deleteHandler = (app: Hono) => {
   app.post('/delete', async (c) => {

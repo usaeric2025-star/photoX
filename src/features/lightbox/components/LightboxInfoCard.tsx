@@ -113,10 +113,10 @@ export function LightboxInfoCard({
                     </span>
                   </div>
                 )}
-                {original.model_number && (
+                {original.modelNumber && (
                   <div>
                     <span className="block text-[10px] uppercase font-bold text-white/40 tracking-wider mb-1">Model</span>
-                    <span className="text-sm text-white/80 font-mono">{original.model_number}</span>
+                    <span className="text-sm text-white/80 font-mono">{original.modelNumber}</span>
                   </div>
                 )}
                 <div className="col-span-2">

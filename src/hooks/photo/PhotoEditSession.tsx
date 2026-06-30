@@ -57,34 +57,34 @@ export const PhotoEditSessionProvider = ({
     return {
       name: toSingleString(p.name),
       description: toMultiObject(p.description),
-      category_id: p.category_id ?? null,
-      manufacturer_id: p.manufacturer_id ?? null,
-      group_id: p.group_id ?? null,
-      is_group_cover: p.is_group_cover ?? false,
+      categoryId: p.categoryId ?? null,
+      manufacturerId: p.manufacturerId ?? null,
+      groupId: p.groupId ?? null,
+      isGroupCover: p.isGroupCover ?? false,
       price: p.price ?? null,
       note: p.note ?? null,
-      manual_code: p.manual_code ?? null,
-      model_number: p.model_number ?? null,
+      manualCode: p.manualCode ?? null,
+      modelNumber: p.modelNumber ?? null,
       dimensions: p.dimensions ?? null,
-      is_hidden: p.is_hidden ?? false,
+      isHidden: p.isHidden ?? false,
       tags: p.tags ?? null,
-      item_code: p.item_code ?? null,
+      itemCode: p.itemCode ?? null,
     } as unknown as PhotoEditFormData;
   }, [photo]);
 
   const onSubmit = useCallback(async (values: PhotoEditFormData) => {
-    // Auto-generate item_code if missing
-    if (!values.item_code) {
+    // Auto-generate itemCode if missing
+    if (!values.itemCode) {
       const newCode = generateItemCode();
-      values.item_code = newCode;
+      values.itemCode = newCode;
       // We will rely on SWR optimistic updates instead of mutating the form immediately
     }
     
     // Convert using our strict Adapter
     const saveData = photoEditAdapter(values, photoId, {
       tags: photo?.tags?.map((t: Tag) => t.name) ?? null,
-      created_at: photo?.created_at,
-      updated_at: new Date().toISOString(),
+      createdAt: photo?.createdAt,
+      updatedAt: new Date().toISOString(),
     } as Record<string, unknown>);
     
     await updateMutation.mutateAsync({
@@ -93,7 +93,7 @@ export const PhotoEditSessionProvider = ({
     });
     
     onSuccess?.();
-  }, [photoId, photo?.tags, photo?.created_at, updateMutation, onSuccess]);
+  }, [photoId, photo?.tags, photo?.createdAt, updateMutation, onSuccess]);
 
   const formObj = useAppForm({
     schema: PhotoEditSchema,

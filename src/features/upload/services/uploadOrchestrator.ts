@@ -23,10 +23,10 @@ export const uploadSinglePhoto = async (
     let is_duplicate = false;
     
     // 1. Duplicate Check
-    if (photo.image_hash) {
+    if (photo.imageHash) {
         const dbCheck = await checkDuplicate(
             actUserId, 
-            photo.image_hash, 
+            photo.imageHash, 
             photo._fileSize, 
             photo._fileName, 
             photo._lastModified,
@@ -43,17 +43,17 @@ export const uploadSinglePhoto = async (
     }
 
     // R2 Upload (MUST HAPPEN BEFORE FINAL DB UPSERT)
-    if (!photo.image_url && (file || photo.uri)) {
-        const filename = photo.storage_id || photo.id;
-        const { imageUrl, isDuplicate: r2Duplicate } = await uploadToR2(userId, filename, file || photo.uri!, photo.image_hash, onStatus);
+    if (!photo.imageUrl && (file || photo.uri)) {
+        const filename = photo.storageId || photo.id;
+        const { imageUrl, isDuplicate: r2Duplicate } = await uploadToR2(userId, filename, file || photo.uri!, photo.imageHash, onStatus);
         if (r2Duplicate) {
             logger.info(`[Upload] R2 confirmed duplicate file for ${photo.id}. Reusing URL: ${imageUrl}`);
             is_duplicate = true;
         }
-        photo.image_url = imageUrl;
+        photo.imageUrl = imageUrl;
     }
 
-    if (!photo.image_url) {
+    if (!photo.imageUrl) {
         throw ErrorFactory.fatal('Upload failed: No image URL generated', { context: 'uploadOrchestrator' });
     }
 
@@ -65,7 +65,7 @@ export const uploadSinglePhoto = async (
     
     const payload = mapToDb({
         ...photo,
-        user_id: actUserId,
+        userId: actUserId,
     }, true);
     
     if (!payload.id) payload.id = photo.id;

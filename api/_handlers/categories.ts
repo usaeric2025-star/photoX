@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
 import * as v from 'valibot';
-import { db, categories as categoriesTable, furnitureItems } from '../_lib/db/index.js';
+import { db, categories as categoriesTable, furnitureItems } from '@/api/_lib/db/index.js';
 import { eq, sql } from 'drizzle-orm';
-import { CategoryReqSchema } from '@shared/apiContractSchema.js';
-import { errorResponse } from '../_lib/response.js';
-import { getAllCategories, getCategoryById } from '../_lib/db/queries/categories.js';
+import { CategoryReqSchema } from '@/shared/apiContractSchema.js';
+import { errorResponse } from '@/api/_lib/response.js';
+import { getAllCategories, getCategoryById } from '@/api/_lib/db/queries/categories.js';
 
 interface FormattedCategory {
     id: number;
@@ -29,7 +29,7 @@ export const categories = new Hono()
     const data = await getAllCategories();
     const activeData = data.filter(c => c.isActive);
 
-    // Transform to frontend format: { id, name, code, zh, en, ms, sort_order }
+    // Transform to frontend format: { id, name, code, zh, en, ms, sortOrder }
     const formatted = activeData.map((item) => ({
         id: item.id,
         name: item.nameZh || '',
@@ -37,10 +37,10 @@ export const categories = new Hono()
         en: item.nameEn || '',
         ms: item.nameMs || '',
         code: item.code || '',
-        sort_order: item.sortOrder || 0,
+        sortOrder: item.sortOrder || 0,
     }));
 
-    categoriesCache = formatted;
+    categoriesCache = formatted as any;
     cacheTime = now;
     return c.json({ success: true, data: formatted });
   })
@@ -84,19 +84,9 @@ export const categories = new Hono()
     if (!check.success) return errorResponse(c, check.issues[0].message, 400);
 
     const { categoryData } = check.output;
-    // Map frontend fields (snake_case) to Drizzle fields (camelCase)
-    const mappedData = {
-      code: categoryData.code,
-      nameZh: categoryData.name_zh,
-      nameEn: categoryData.name_en,
-      nameMs: categoryData.name_ms,
-      sortOrder: categoryData.sort_order,
-      isActive: categoryData.is_active,
-    };
-
     const [data] = await db
         .insert(categoriesTable)
-        .values([mappedData as typeof categoriesTable.$inferInsert])
+        .values([categoryData as typeof categoriesTable.$inferInsert])
         .returning();
     
     categoriesCache = null; // Clear cache
@@ -110,17 +100,9 @@ export const categories = new Hono()
     if (!check.success) return errorResponse(c, check.issues[0].message, 400);
 
     const { updates } = check.output;
-    const mappedUpdates: Record<string, unknown> = {};
-    if (updates.code !== undefined) mappedUpdates.code = updates.code;
-    if (updates.name_zh !== undefined) mappedUpdates.nameZh = updates.name_zh;
-    if (updates.name_en !== undefined) mappedUpdates.nameEn = updates.name_en;
-    if (updates.name_ms !== undefined) mappedUpdates.nameMs = updates.name_ms;
-    if (updates.sort_order !== undefined) mappedUpdates.sortOrder = updates.sort_order;
-    if (updates.is_active !== undefined) mappedUpdates.isActive = updates.is_active;
-
     await db
         .update(categoriesTable)
-        .set(mappedUpdates)
+        .set(updates)
         .where(eq(categoriesTable.id, parseInt(id)));
     
     categoriesCache = null; // Clear cache

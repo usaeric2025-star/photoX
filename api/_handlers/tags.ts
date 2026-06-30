@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import * as v from 'valibot';
 import { db, tags as tagsTable, photoTags } from '../_lib/db/index.js';
 import { eq, ilike, asc, inArray, sql, and, ne } from 'drizzle-orm';
-import { TagReqSchema } from '@shared/apiContractSchema.js';
+import { TagReqSchema } from '@/shared/apiContractSchema.js';
 import { errorResponse } from '../_lib/response.js';
 import { logger } from '../_lib/logger.js';
 

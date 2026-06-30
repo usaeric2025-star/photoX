@@ -15,7 +15,7 @@ export function BasicInfoTab() {
   const { modal, photoId } = useFilters();
   const { data: detailPhoto } = usePhoto(modal === 'edit' ? photoId : '');
   
-  const previewSrc = detailPhoto?.image_url;
+  const previewSrc = detailPhoto?.imageUrl;
   const [zoomed, { open: openZoom, close: closeZoom }] = useDisclosure(false);
 
   return (
@@ -65,7 +65,7 @@ export function BasicInfoTab() {
             SYSTEM CODE
           </h3>
           <div className="w-full bg-slate-50 border border-slate-100 px-4 py-3 rounded-2xl text-xs font-mono font-medium text-slate-400 cursor-not-allowed truncate">
-            {detailPhoto?.item_code || t.systemCodeAuto}
+            {detailPhoto?.itemCode || t.systemCodeAuto}
           </div>
         </div>
         <div className="space-y-1.5 opacity-50 select-none">
@@ -87,7 +87,7 @@ export function BasicInfoTab() {
           </div>
         </div>
 
-        <Field form={form} name="manual_code">
+        <Field form={form} name="manualCode">
           {({ state, handleChange }) => (
             <div className="space-y-1.5">
               <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">CODE</h3>
@@ -101,7 +101,7 @@ export function BasicInfoTab() {
             </div>
           )}
         </Field>
-        <Field form={form} name="model_number">
+        <Field form={form} name="modelNumber">
           {({ state, handleChange }) => (
             <div className="space-y-1.5">
               <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">MODEL</h3>

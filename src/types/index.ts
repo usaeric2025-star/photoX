@@ -27,34 +27,35 @@ interface Task {
   progress?: number;
   message?: string;
   onCancel?: () => void;
-  finished_at?: number;
+  finishedAt?: number;
 }
 
 export interface User {
   id: string;
   email: string | null;
-  display_name: string | null;
-  photo_url: string | null;
-  avatar_url?: string | null;
-  email_verified: boolean;
+  displayName: string | null;
+  photoUrl: string | null;
+  avatarUrl?: string | null;
+  emailVerified: boolean;
 }
 
-export interface AppSettings extends Record<string, unknown> {
-  app_name?: string;
-  logo_url?: string;
-  pinned_tags?: string[];
-  hot_tags_count?: number;
-  hot_tag_threshold?: number;
-  agnes_api_key?: string;
-  whatsapp_1_name?: string;
-  whatsapp_1?: string;
-  whatsapp_2_name?: string;
-  whatsapp_2?: string;
+export interface AppSettings {
+  appName?: string;
+  logoUrl?: string;
+  pinnedTags?: string[];
+  hotTagsCount?: number;
+  hotTagThreshold?: number;
+  agnesApiKey?: string;
+  whatsapp1Name?: string;
+  whatsapp1?: string;
+  whatsapp2Name?: string;
+  whatsapp2?: string;
   facebook?: string;
   instagram?: string;
-  access_passcode?: string;
+  accessPasscode?: string;
   manufacturers?: import('./photo').Manufacturer[];
   tags?: import('./photo').Tag[];
+  [key: string]: unknown;
 }
 
 interface DialogData {

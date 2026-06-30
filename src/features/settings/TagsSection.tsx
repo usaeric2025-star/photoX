@@ -128,8 +128,8 @@ export function TagsSection({
               max={50}
               className="w-14 text-center bg-white border border-brand-navy/10 text-xs font-black text-brand-navy rounded-md py-1 outline-none focus:border-brand-gold"
               value={
-                settings?.hot_tags_count !== undefined
-                  ? settings.hot_tags_count
+                settings?.hotTagsCount !== undefined
+                  ? settings.hotTagsCount
                   : 9
               }
               onChange={(e) => {
@@ -137,7 +137,7 @@ export function TagsSection({
                 const num = isNaN(val) ? 9 : val;
                 const nextSettings = {
                   ...settings,
-                  hot_tags_count: num,
+                  hotTagsCount: num,
                 } as AppSettings;
                 setSettings(nextSettings);
                 setHasChanges(true);
@@ -159,8 +159,8 @@ export function TagsSection({
               max={100}
               className="w-14 text-center bg-white border border-brand-navy/10 text-xs font-black text-brand-navy rounded-md py-1 outline-none focus:border-brand-gold"
               value={
-                settings?.hot_tag_threshold !== undefined
-                  ? settings.hot_tag_threshold
+                settings?.hotTagThreshold !== undefined
+                  ? settings.hotTagThreshold
                   : 10
               }
               onChange={(e) => {
@@ -168,7 +168,7 @@ export function TagsSection({
                 const num = isNaN(val) ? 10 : val;
                 const nextSettings = {
                   ...settings,
-                  hot_tag_threshold: num,
+                  hotTagThreshold: num,
                 } as AppSettings;
                 setSettings(nextSettings);
                 setHasChanges(true);
@@ -194,8 +194,8 @@ export function TagsSection({
       <div className="flex flex-wrap gap-2 p-3 bg-brand-navy/5 rounded-[28px] border border-brand-navy/10 shadow-inner min-h-[48px]">
         {(Array.from(tags || []) as Tag[])
           .sort((a, b) => {
-            const ap = (settings?.pinned_tags || []).includes(String(a.id)) ? 1 : 0;
-            const bp = (settings?.pinned_tags || []).includes(String(b.id)) ? 1 : 0;
+            const ap = (settings?.pinnedTags || []).includes(String(a.id)) ? 1 : 0;
+            const bp = (settings?.pinnedTags || []).includes(String(b.id)) ? 1 : 0;
             if (ap !== bp) return bp - ap;
             return String(a.name).localeCompare(String(b.name));
           })
@@ -211,7 +211,7 @@ export function TagsSection({
               }}
               updateTag={rawUpdateTag}
               deleteTag={deleteTag}
-              isPinned={(settings?.pinned_tags || []).includes(String(tag.id))}
+              isPinned={(settings?.pinnedTags || []).includes(String(tag.id))}
               togglePin={togglePin}
             />
           ))}

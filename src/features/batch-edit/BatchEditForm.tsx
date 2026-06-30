@@ -14,16 +14,16 @@ interface BatchEditFormProps {
 const defaultForm: PhotoEditFormData = {
   name: '',
   description: { zh: '', en: '', ms: '' },
-  category_id: null,
-  manufacturer_id: null,
-  group_id: null,
-  is_group_cover: false,
+  categoryId: null,
+  manufacturerId: null,
+  groupId: null,
+  isGroupCover: false,
   price: null,
   note: null,
-  manual_code: null,
-  model_number: null,
+  manualCode: null,
+  modelNumber: null,
   dimensions: [],
-  is_hidden: false,
+  isHidden: false,
   tags: []
 };
 
@@ -51,7 +51,7 @@ export function BatchEditForm({ formState, handleUpdateForm }: BatchEditFormProp
          className="space-y-6"
        >
          
-         <Field form={formObj.form} name="is_hidden">
+         <Field form={formObj.form} name="isHidden">
             {({ state, handleChange }) => (
                 <div className="space-y-2">
                     <label className="text-sm font-bold">显示状态 / VISIBILITY</label>
@@ -71,7 +71,7 @@ export function BatchEditForm({ formState, handleUpdateForm }: BatchEditFormProp
             )}
          </Field>
 
-         <Field form={formObj.form} name="category_id">
+         <Field form={formObj.form} name="categoryId">
             {({ state, handleChange }) => (
                 <div className="space-y-2">
                     <label className="text-sm font-bold">分类 / CATEGORY</label>
@@ -91,7 +91,7 @@ export function BatchEditForm({ formState, handleUpdateForm }: BatchEditFormProp
             )}
          </Field>
 
-         <Field form={formObj.form} name="manufacturer_id">
+         <Field form={formObj.form} name="manufacturerId">
             {({ state, handleChange }) => (
                 <div className="space-y-2">
                     <label className="text-sm font-bold">厂商 / MANUFACTURER</label>

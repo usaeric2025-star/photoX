@@ -30,8 +30,8 @@ export function AdminHeaderMenu({ user, signOut, navigate, isStaff, theme, t, la
         {isStaff ? (
           <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 select-none">
             <div className="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-white overflow-hidden text-[8px]">
-              {user?.photo_url && user.photo_url.trim() !== '' ? (
-                <img src={user.photo_url} referrerPolicy="no-referrer" alt="" loading="lazy" />
+              {user?.photoUrl && user.photoUrl.trim() !== '' ? (
+                <img src={user.photoUrl} referrerPolicy="no-referrer" alt="" loading="lazy" />
               ) : (
                 <Icon name="user" size={10} />
               )}

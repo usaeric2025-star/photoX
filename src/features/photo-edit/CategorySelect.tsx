@@ -15,7 +15,7 @@ export function CategorySelect() {
   const { categories = [] } = useCategories();
   
   return (
-    <Field form={form} name="category_id">
+    <Field form={form} name="categoryId">
       {(field) => (
         <section className="space-y-4">
           <FormSectionHeader title="产品目录" subtitle="CATEGORY *" />

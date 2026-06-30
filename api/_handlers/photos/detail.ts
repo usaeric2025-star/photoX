@@ -1,10 +1,9 @@
 import { Hono } from 'hono';
 import * as v from 'valibot';
-import { db, furnitureItems } from '../../_lib/db/index.js';
+import { db, furnitureItems } from '@/api/_lib/db/index.js';
 import { inArray, eq } from 'drizzle-orm';
-import { PhotoIdsReqSchema, PhotoCheckHashReqSchema } from '@shared/apiContractSchema.js';
-import { errorResponse } from '../../_lib/response.js';
-import { toCamelCaseArray } from '../../_lib/transform.js';
+import { PhotoIdsReqSchema, PhotoCheckHashReqSchema } from '@/shared/apiContractSchema.js';
+import { errorResponse } from '@/api/_lib/response.js';
 
 export const detailHandler = (app: Hono) => {
   app.post('/by-ids', async (c) => {
@@ -24,16 +23,15 @@ export const detailHandler = (app: Hono) => {
         }
     });
 
-    // Legacy format matching photo_tags: [{tag_id: '...'}]
     const formatted = results.map(photo => {
         const { tags, ...rest } = photo;
         return {
             ...rest,
-            photo_tags: tags.map(t => ({ tag_id: t.tagId }))
+            photoTags: tags.map(t => ({ tagId: t.tagId }))
         };
     });
 
-    return c.json({ success: true, data: toCamelCaseArray(formatted as Record<string, unknown>[]) });
+    return c.json({ success: true, data: formatted });
   });
 
   app.post('/check-hash', async (c) => {

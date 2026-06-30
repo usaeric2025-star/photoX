@@ -1,13 +1,12 @@
 import { Hono } from 'hono';
 import * as v from 'valibot';
-import { db, groups as groupsTable, furnitureItems } from '../_lib/db/index.js';
+import { db, groups as groupsTable, furnitureItems } from '@/api/_lib/db/index.js';
 import { eq, and, inArray, isNull, sql } from 'drizzle-orm';
-import { GroupReqSchema } from '@shared/apiContractSchema.js';
-import { errorResponse } from '../_lib/response.js';
-import { syncGroupCoversAndCount } from '../_lib/groups.js';
-import { refreshPhotosView } from '../_lib/db/actions.js';
-import { keysToCamel } from '../_lib/casing.js';
-import { getAllGroups, getGroupById, upsertGroup, deleteGroup } from '../_lib/db/queries/groups.js';
+import { GroupReqSchema } from '@/shared/apiContractSchema.js';
+import { errorResponse } from '@/api/_lib/response.js';
+import { syncGroupCoversAndCount } from '@/api/_lib/groups.js';
+import { refreshPhotosView } from '@/api/_lib/db/actions.js';
+import { getAllGroups, getGroupById, upsertGroup, deleteGroup } from '@/api/_lib/db/queries/groups.js';
 
 export const groups = new Hono()
   .get('/', async (c) => {
@@ -28,16 +27,13 @@ export const groups = new Hono()
 
     const { groupData } = check.output;
     const b = body as Record<string, unknown>;
-    const g = groupData as Record<string, unknown>;
-    const inputUserId = (b.userId as string) || (b.user_id as string) || (g.userId as string) || (g.user_id as string) || '8ec53131-a589-4b50-beb4-6b5308541e1b';
+    const inputUserId = (b.userId as string) || (b.user_id as string) || '8ec53131-a589-4b50-beb4-6b5308541e1b';
     
     // Manual mapping to Drizzle schema
     const insertData = {
-        id: g.id as string || undefined,
-        name: (g.name as Record<string, string>) || { zh: '' },
-        description: (g.description as Record<string, string>) || null,
-        coverPhotoId: (g.cover_photo_id as string) || null,
-        status: (g.status as "draft" | "confirmed" | "rejected") || 'confirmed',
+        ...groupData,
+        name: (groupData.name as unknown as Record<string, string>) || { zh: '' },
+        status: (groupData.status as "draft" | "confirmed" | "rejected") || 'confirmed',
         userId: inputUserId,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -54,12 +50,9 @@ export const groups = new Hono()
 
     const { updates } = check.output;
     const updatesObj = updates as Record<string, unknown>;
-    delete updatesObj.member_count;
-
-    const mapped = keysToCamel<Record<string, unknown>>(updatesObj);
 
     const [data] = await db.update(groupsTable)
-        .set({ ...mapped, updatedAt: new Date() })
+        .set({ ...updatesObj, updatedAt: new Date() })
         .where(eq(groupsTable.id, id))
         .returning();
     
@@ -67,27 +60,26 @@ export const groups = new Hono()
   })
   .post('/upsert', async (c) => {
     const dbUpdates = await c.req.json() as Record<string, unknown>;
-    const mapped = keysToCamel<Record<string, unknown>>(dbUpdates);
 
     // Filter out client-side createdAt and updatedAt to let backend handle dates
-    const cleanMapped: Record<string, unknown> = {};
-    for (const [key, val] of Object.entries(mapped)) {
+    const cleanUpdates: Record<string, unknown> = {};
+    for (const [key, val] of Object.entries(dbUpdates)) {
         if (key !== 'createdAt' && key !== 'updatedAt') {
-            cleanMapped[key] = val;
+            cleanUpdates[key] = val;
         }
     }
 
     // Ensure status gets a fallback
-    if (!cleanMapped.status) {
-        cleanMapped.status = 'confirmed';
+    if (!cleanUpdates.status) {
+        cleanUpdates.status = 'confirmed';
     }
 
     // Ensure userId gets a fallback
-    if (!cleanMapped.userId) {
-        cleanMapped.userId = '8ec53131-a589-4b50-beb4-6b5308541e1b';
+    if (!cleanUpdates.userId) {
+        cleanUpdates.userId = '8ec53131-a589-4b50-beb4-6b5308541e1b';
     }
 
-    const data = await upsertGroup(cleanMapped);
+    const data = await upsertGroup(cleanUpdates);
 
     await refreshPhotosView();
 
@@ -120,7 +112,6 @@ export const groups = new Hono()
       
       // Ensure groupData has the id aligned with targetGroupId to satisfy TS and db
       const mergedGroupData = { ...(groupData as Record<string, unknown>), id: targetGroupId };
-      delete (mergedGroupData as Record<string, unknown>).member_count;
       
       // Optimize: Compute sourceGroupIds and ungroupedValidIds directly on the server
       let sourceGroupIds: string[] = [];
@@ -168,7 +159,7 @@ export const groups = new Hono()
             status: ((groupDataWithoutId as Record<string, unknown>).status as string) || 'confirmed',
             name: ((groupDataWithoutId as Record<string, unknown>).name as { zh: string }) || { zh: '' },
             description: ((groupDataWithoutId as Record<string, unknown>).description as string) || null,
-            coverPhotoId: ((groupDataWithoutId as Record<string, unknown>).cover_photo_id as string) || null,
+            coverPhotoId: ((groupDataWithoutId as Record<string, unknown>).coverPhotoId as string) || null,
         };
 
         await db.insert(groupsTable).values([groupDataToInsert as unknown as typeof groupsTable.$inferInsert]);
@@ -178,7 +169,7 @@ export const groups = new Hono()
         if ((groupDataWithoutId as Record<string, unknown>).name) updatePayload.name = (groupDataWithoutId as Record<string, unknown>).name;
         if ((groupDataWithoutId as Record<string, unknown>).description !== undefined) updatePayload.description = (groupDataWithoutId as Record<string, unknown>).description;
         if ((groupDataWithoutId as Record<string, unknown>).status) updatePayload.status = (groupDataWithoutId as Record<string, unknown>).status;
-        if ((groupDataWithoutId as Record<string, unknown>).cover_photo_id !== undefined) updatePayload.coverPhotoId = (groupDataWithoutId as Record<string, unknown>).cover_photo_id;
+        if ((groupDataWithoutId as Record<string, unknown>).coverPhotoId !== undefined) updatePayload.coverPhotoId = (groupDataWithoutId as Record<string, unknown>).coverPhotoId;
 
         await db.update(groupsTable)
             .set(updatePayload)

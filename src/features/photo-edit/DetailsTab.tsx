@@ -26,8 +26,8 @@ export function DetailsTab() {
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
   const onAiAnalyze = async () => {
-    if (detailPhoto?.image_url) {
-      await handleAiAnalyze(undefined, detailPhoto.image_url);
+    if (detailPhoto?.imageUrl) {
+      await handleAiAnalyze(undefined, detailPhoto.imageUrl);
     }
   };
 

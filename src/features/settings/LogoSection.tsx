@@ -37,8 +37,8 @@ export function LogoSection({
       <div className="flex items-center gap-6">
           <div className="relative group">
             <div className="absolute -inset-1 bg-gradient-to-tr from-brand-gold/20 to-transparent rounded-[36px] blur-sm opacity-0 group-hover:opacity-100 transition-opacity" />
-            {settings?.logo_url && settings.logo_url.trim() !== '' ? (
-                <img src={settings.logo_url} className="relative w-20 h-20 rounded-[32px] object-cover shadow-2xl border-4 border-white p-1 bg-white" alt="Logo" loading="lazy" />
+            {typeof settings?.logoUrl === 'string' && settings.logoUrl.trim() !== '' ? (
+                <img src={settings.logoUrl} className="relative w-20 h-20 rounded-[32px] object-cover shadow-2xl border-4 border-white p-1 bg-white" alt="Logo" loading="lazy" />
             ) : (
                 <div className="relative w-20 h-20 bg-slate-50 rounded-[32px] flex flex-col items-center justify-center text-brand-navy/10 border border-brand-navy/5">
                   <Icon name="image" size={24} />
@@ -72,8 +72,8 @@ export function LogoSection({
           type="text" 
           placeholder="商戶名稱 / Store Name" 
           className={`${inputClass} w-full`} 
-          value={settings?.app_name || ''} 
-          onChange={(e) => setSettingField('app_name', e.target.value)} 
+          value={String(settings?.appName || '')} 
+          onChange={(e) => setSettingField('appName', e.target.value)} 
         />
       </div>
     </div>

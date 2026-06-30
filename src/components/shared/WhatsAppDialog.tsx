@@ -17,8 +17,8 @@ export const WhatsAppDialog = ({ open, onOpenChange }: WhatsAppDialogProps) => {
 
   const options = React.useMemo(() => {
     const opts = [];
-    const whatsapp1 = settings?.whatsapp_1?.replace(/\D/g, '');
-    const whatsapp2 = settings?.whatsapp_2?.replace(/\D/g, '');
+    const whatsapp1 = typeof settings?.whatsapp1 === 'string' ? settings.whatsapp1.replace(/\D/g, '') : '';
+    const whatsapp2 = typeof settings?.whatsapp2 === 'string' ? settings.whatsapp2.replace(/\D/g, '') : '';
 
     let message = '';
     if (pendingPhoto) {
@@ -31,11 +31,11 @@ export const WhatsAppDialog = ({ open, onOpenChange }: WhatsAppDialogProps) => {
     }
     const encodedText = encodeURIComponent(message);
 
-    if (whatsapp1 && settings?.whatsapp_1_name) {
-      opts.push({ name: settings.whatsapp_1_name, url: `https://wa.me/${whatsapp1}?text=${encodedText}` });
+    if (whatsapp1 && settings?.whatsapp1Name) {
+      opts.push({ name: settings.whatsapp1Name, url: `https://wa.me/${whatsapp1}?text=${encodedText}` });
     }
-    if (whatsapp2 && settings?.whatsapp_2_name) {
-      opts.push({ name: settings.whatsapp_2_name, url: `https://wa.me/${whatsapp2}?text=${encodedText}` });
+    if (whatsapp2 && settings?.whatsapp2Name) {
+      opts.push({ name: settings.whatsapp2Name, url: `https://wa.me/${whatsapp2}?text=${encodedText}` });
     }
     
     // Fallback if no numbers configured but we have an env variable

@@ -32,11 +32,11 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
   const { submit: submitStaff, isLoading: isStaffLoggingIn, fieldErrors, clearFieldError } = useFormSubmit({
     schema: StaffLoginSchema,
     mutationFn: async ({ passcode }) => {
-      if (!settings?.access_passcode) {
+      if (!settings?.accessPasscode) {
         throw new Error('Staff passcode not configured');
       }
       
-      if (passcode === settings.access_passcode) {
+      if (passcode === settings.accessPasscode) {
         storage.setItem('ais_mock_auth_passcode', JSON.stringify(passcode));
         return true;
       } else {

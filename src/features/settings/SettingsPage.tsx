@@ -66,8 +66,8 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
 
   const { user, signIn, signOut } = useAuth();
   const { settings, agnesApiKey, accessPasscode, updateSettings } = useSettings();
-  const setAgnesApiKey = (key: string) => updateSettings({ ...settings, agnes_api_key: key });
-  const setAccessPasscode = (code: string) => updateSettings({ ...settings, access_passcode: code });
+  const setAgnesApiKey = (key: string) => updateSettings({ ...settings, agnesApiKey: key });
+  const setAccessPasscode = (code: string) => updateSettings({ ...settings, accessPasscode: code });
   const setSettings = (s: AppSettings) => { updateSettings(s); };
   const saveSettings = async (s: Partial<AppSettings>) => { await updateSettings(s); };
 
@@ -91,7 +91,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   } = useSettingsLogic({
     user: user || null,
     settings,
-    agnesApiKey: agnesApiKey || "",
+    agnesApiKey: String(agnesApiKey || ""),
     saveSettings,
     performPullSync: async () => {},
     setSettings: (s: AppSettings) => { void updateSettings(s as Partial<AppSettings>); }
@@ -120,19 +120,19 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
 
   const { submit: runSaveSettings, isLoading: isSavingSettings } = useFormSubmit({
     schema: v.partial(v.object({
-      app_name: v.string(),
-      logo_url: v.string(),
-      pinned_tags: v.array(v.string()),
-      hot_tags_count: v.number(),
-      hot_tag_threshold: v.number(),
-      agnes_api_key: v.string(),
-      whatsapp_1_name: v.string(),
-      whatsapp_1: v.string(),
-      whatsapp_2_name: v.string(),
-      whatsapp_2: v.string(),
+      appName: v.string(),
+      logoUrl: v.string(),
+      pinnedTags: v.array(v.string()),
+      hotTagsCount: v.number(),
+      hotTagThreshold: v.number(),
+      agnesApiKey: v.string(),
+      whatsapp1Name: v.string(),
+      whatsapp1: v.string(),
+      whatsapp2Name: v.string(),
+      whatsapp2: v.string(),
       facebook: v.string(),
       instagram: v.string(),
-      access_passcode: v.string(),
+      accessPasscode: v.string(),
     })),
     mutationFn: async (s: Partial<AppSettings>) => {
       await saveSettings(s);
@@ -184,11 +184,11 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
             <div className={activeTab === 'ai' ? 'block' : 'hidden'}>
               <Suspense fallback={<LoadingScreen />}>
               <AISettings 
-                agnesApiKey={agnesApiKey || ""}
+                agnesApiKey={String(agnesApiKey || "")}
                 setAgnesApiKey={setAgnesApiKey}
                 testConnection={async () => { await testConnection(); }}
                 testResult={testResult}
-                accessPasscode={accessPasscode || ""}
+                accessPasscode={String(accessPasscode || "")}
                 setAccessPasscode={setAccessPasscode}
                 setSettingField={setSettingField}
                 cardClass={cardClass}

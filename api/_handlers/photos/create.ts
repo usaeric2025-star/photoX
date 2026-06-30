@@ -3,7 +3,6 @@ import { db, furnitureItems, systemLogs } from '../../_lib/db/index.js';
 import { syncGroupCoversAndCount } from '../../_lib/groups.js';
 import { refreshPhotosView } from '../../_lib/db/actions.js';
 import { logger } from '../../_lib/logger.js';
-import { keysToCamel } from '../../_lib/casing.js';
 
 export const createHandler = (app: Hono) => {
   app.post('/upsert', async (c) => {
@@ -17,27 +16,25 @@ export const createHandler = (app: Hono) => {
 
     logger.info('[Upsert] Raw payload:', JSON.stringify(payload));
 
-    // Fix user_id if it is 'staff' or missing
-    if (!payload.user_id || payload.user_id === 'staff') {
+    // Fix userId if it is 'staff' or missing
+    if (!payload.userId || payload.userId === 'staff') {
         // Fallback id
-        payload.user_id = '8ec53131-a589-4b50-beb4-6b5308541e1b';
+        payload.userId = '8ec53131-a589-4b50-beb4-6b5308541e1b';
     }
 
     const mappedPayload: Record<string, unknown> = {};
     try {
-        const camelPayload = keysToCamel<Record<string, any>>(payload);
-
         // ✅ 強制攔截 base64
-        if (camelPayload.imageUrl && camelPayload.imageUrl.startsWith('data:image/')) {
+        if (payload.imageUrl && (payload.imageUrl as string).startsWith('data:image/')) {
             throw new Error('image_url 不接受 base64，請先上傳檔案');
         }
 
         // ✅ 強制限制標題長度
-        if (camelPayload.name) {
-            let nameJson = camelPayload.name;
-            if (typeof camelPayload.name === 'string' && (camelPayload.name.startsWith('{') || camelPayload.name.startsWith('['))) {
+        if (payload.name) {
+            let nameJson = payload.name;
+            if (typeof payload.name === 'string' && (payload.name.startsWith('{') || payload.name.startsWith('['))) {
                 try {
-                    nameJson = JSON.parse(camelPayload.name);
+                    nameJson = JSON.parse(payload.name);
                 } catch (e) {
                     // Not valid JSON
                 }
@@ -45,7 +42,7 @@ export const createHandler = (app: Hono) => {
 
             if (typeof nameJson === 'string') {
                 if (nameJson.length > 200) throw new Error('標題超過 200 字上限');
-                camelPayload.name = { zh: nameJson };
+                payload.name = { zh: nameJson };
             } else if (nameJson && typeof nameJson === 'object') {
                 for (const lang of ['zh', 'en', 'ms']) {
                    if ((nameJson as any)[lang] && String((nameJson as any)[lang]).length > 200) {
@@ -55,7 +52,7 @@ export const createHandler = (app: Hono) => {
             }
         }
 
-        for (const [key, val] of Object.entries(camelPayload)) {
+        for (const [key, val] of Object.entries(payload)) {
             // Skip createdAt and updatedAt from client to avoid type/mismatch errors and let backend generate them
             if (['createdAt', 'updatedAt'].includes(key)) continue;
 
@@ -97,8 +94,8 @@ export const createHandler = (app: Hono) => {
 
         const data = results[0] || null;
 
-        if (payload.group_id) {
-          await syncGroupCoversAndCount([String(payload.group_id)]);
+        if (payload.groupId) {
+          await syncGroupCoversAndCount([String(payload.groupId)]);
         }
 
         await refreshPhotosView();

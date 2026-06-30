@@ -22,7 +22,7 @@ export function AISourceTab() {
     );
   }
 
-  if (error || !aiResult || !aiResult.raw_result) {
+  if (error || !aiResult || !aiResult.rawResult) {
     return (
       <div className="flex flex-col items-center justify-center py-12 px-4 text-center bg-slate-50 border border-slate-200 border-dashed rounded-3xl mt-4">
         <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500 mb-4 border border-amber-100">
@@ -42,9 +42,9 @@ export function AISourceTab() {
 
   // Prettify the JSON if it's stringified JSON, otherwise show raw text
   let formattedResult = '';
-  if (aiResult && aiResult.raw_result) {
+  if (aiResult && aiResult.rawResult) {
     try {
-      const raw = typeof aiResult.raw_result === 'string' ? aiResult.raw_result.trim() : JSON.stringify(aiResult.raw_result);
+      const raw = typeof aiResult.rawResult === 'string' ? aiResult.rawResult.trim() : JSON.stringify(aiResult.rawResult);
       // If it looks like JSON or contains JSON wrapping, try to parse and format it
       if (raw.startsWith('{') || raw.startsWith('[')) {
         const parsed = JSON.parse(raw);
@@ -62,13 +62,13 @@ export function AISourceTab() {
     } catch (e) {
       // Keep original string if parsing fails
       ErrorFactory.handleError(e, "格式化 AI 响应");
-      formattedResult = typeof aiResult.raw_result === 'string' ? aiResult.raw_result : JSON.stringify(aiResult.raw_result, null, 2);
+      formattedResult = typeof aiResult.rawResult === 'string' ? aiResult.rawResult : JSON.stringify(aiResult.rawResult, null, 2);
     }
   }
 
   // Final fallback to ensure the pre isn't actually empty
   if (!formattedResult || formattedResult.trim() === '') {
-     formattedResult = "/* The AI result was empty or unparseable */\n\n" + String(aiResult?.raw_result);
+     formattedResult = "/* The AI result was empty or unparseable */\n\n" + String(aiResult?.rawResult);
   }
 
   return (

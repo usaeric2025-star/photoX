@@ -30,7 +30,7 @@ export function AdminAuthGate({ children }: AdminAuthGateProps) {
   const { user, isLoading: isAuthLoading, signIn } = useAuth();
   const { data: settings } = usePublicSettings();
   
-  const isStaffMode = !!settings?.access_passcode && String(passcode) === settings.access_passcode;
+  const isStaffMode = !!settings?.accessPasscode && String(passcode) === settings.accessPasscode;
   const [forceShow, setForceShow] = useState(false);
 
   useEffect(() => {

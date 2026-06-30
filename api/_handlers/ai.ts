@@ -1,9 +1,9 @@
 import { Hono } from 'hono';
 import * as v from 'valibot';
-import { db, furnitureItems, categories, tags, groups as groupsTable, groupCorrectionLogs, users } from '../_lib/db/index.js';
+import { db, furnitureItems, categories, tags, groups as groupsTable, groupCorrectionLogs, users } from '@/api/_lib/db/index.js';
 import { eq, and, inArray, desc, sql } from 'drizzle-orm';
-import { getAIProvider, OpenRouterProvider, AgnesProvider, BaseAIProvider } from '../_lib/ai/providerFactory.js';
-import { executeAITask } from '../_lib/ai/executor.js';
+import { getAIProvider, OpenRouterProvider, AgnesProvider, BaseAIProvider } from '@/api/_lib/ai/providerFactory.js';
+import { executeAITask } from '@/api/_lib/ai/executor.js';
 import { processGroupAnalysis } from './ai/groupAnalysis.js';
 import { 
     AIAnalyzeV1ReqSchema, 
@@ -15,17 +15,17 @@ import {
     AIClusterPhotosReqSchema,
     ApiResponse,
     JsonObject
-} from '@shared/apiContractSchema.js';
+} from '@/shared/apiContractSchema.js';
 import { AI_PROMPTS } from './ai/prompts.js';
-import { logger } from '../_lib/logger.js';
-import { errorResponse } from '../_lib/response.js';
+import { logger } from '@/api/_lib/logger.js';
+import { errorResponse } from '@/api/_lib/response.js';
 
 interface HonoContextUser {
     id: string;
     email?: string;
 }
 
-import { withTimeout, TIMEOUTS } from '../_lib/utils/timeout.js';
+import { withTimeout, TIMEOUTS } from '@/api/_lib/utils/timeout.js';
 
 export const ai = new Hono();
 
@@ -81,7 +81,7 @@ ai.post("/run", async (c) => {
         shouldNormalize: false
     });
 
-    return c.json({ success: true, text: data as string, raw_result: rawText, usage: {} } as ApiResponse);
+    return c.json({ success: true, text: data as string, rawResult: rawText, usage: {} } as ApiResponse);
 });
 
 ai.post("/analyze", async (c) => {
@@ -152,7 +152,7 @@ ai.post("/analyze", async (c) => {
         return errorResponse(c, (data as { _error?: string })._error || 'AI analysis failed', 500);
     }
 
-    return c.json({ success: true, data, raw_result: rawText } as ApiResponse);
+    return c.json({ success: true, data, rawResult: rawText } as ApiResponse);
 });
 
 ai.post("/translate", async (c) => {
@@ -178,7 +178,7 @@ ai.post("/translate", async (c) => {
         return errorResponse(c, (data as { _error?: string })._error || 'AI translation failed', 500);
     }
 
-    return c.json({ success: true, data, raw_result: rawText } as ApiResponse);
+    return c.json({ success: true, data, rawResult: rawText } as ApiResponse);
 });
 
 ai.post("/analyze-group", async (c) => {
@@ -203,7 +203,7 @@ ai.post("/analyze-group", async (c) => {
         return errorResponse(c, (data as { _error?: string })._error || 'AI group analysis failed', 500);
     }
 
-    return c.json({ success: true, data, raw_result: rawText } as ApiResponse);
+    return c.json({ success: true, data, rawResult: rawText } as ApiResponse);
 });
 
 ai.post("/analyze-photo-v2", async (c) => {
@@ -229,7 +229,7 @@ ai.post("/analyze-photo-v2", async (c) => {
         return errorResponse(c, (data as { _error?: string })._error || 'AI refine photo failed', 500);
     }
 
-    return c.json({ success: true, data, raw_result: rawText } as ApiResponse);
+    return c.json({ success: true, data, rawResult: rawText } as ApiResponse);
 });
 
 ai.post("/cluster-photos", async (c) => {

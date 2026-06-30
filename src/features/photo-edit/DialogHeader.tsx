@@ -41,17 +41,17 @@ export function DialogHeader({
   
   const { handleAiAnalyze } = usePhotoEditAI();
 
-  const isPartOfGroup = !!detailPhoto?.group_id;
+  const isPartOfGroup = !!detailPhoto?.groupId;
 
   const onRemoveFromGroup = async () => {
-    if (editPhotoId && detailPhoto?.group_id) {
-      await removeFromGroup({ photoIds: [editPhotoId], groupId: detailPhoto.group_id });
+    if (editPhotoId && detailPhoto?.groupId) {
+      await removeFromGroup({ photoIds: [editPhotoId], groupId: detailPhoto.groupId });
       onClose();
     }
   };
 
   const onAiAnalyze = async () => {
-    const finalImageUrl = detailPhoto?.image_url;
+    const finalImageUrl = detailPhoto?.imageUrl;
     if (finalImageUrl) {
       await handleAiAnalyze(finalImageUrl);
     } else {
@@ -95,7 +95,7 @@ export function DialogHeader({
         </div>
 
         {isPartOfGroup && (
-          <form.Subscribe selector={(state: { values: PhotoEditFormData }) => state.values.is_group_cover}>
+          <form.Subscribe selector={(state: { values: PhotoEditFormData }) => state.values.isGroupCover}>
             {(isGroupCover: boolean | undefined) => {
               const active = !!isGroupCover;
               return (
@@ -103,7 +103,7 @@ export function DialogHeader({
                   type="button"
                   onClick={() => {
                     const newState = !active;
-                    form.setFieldValue('is_group_cover', newState);
+                    form.setFieldValue('isGroupCover', newState);
                     showToast.success(newState ? '已设为封面' : '已取消封面');
                   }}
                   title={l.cover}

@@ -7,13 +7,13 @@ const TABLE_NAME = 'groups';
 
 const mapGroup = (item: Record<string, unknown>): ProductGroup => ({
   id: item.id as string,
-  name: getSafeText((item.name || item.name_zh || item.name_en) as unknown),
+  name: getSafeText((item.name || item.nameZh || item.nameEn) as unknown),
   description: getSafeText(item.description as unknown),
-  cover_photo_id: (item.coverPhotoId || item.cover_photo_id) as string,
-  is_hidden: (item.isHidden ?? item.is_hidden ?? false) as boolean,
-  created_at: (item.createdAt || item.created_at) as string,
-  updated_at: (item.updatedAt || item.updated_at) as string,
-  user_id: (item.userId || item.user_id) as string,
+  coverPhotoId: (item.coverPhotoId || item.cover_photo_id) as string,
+  isHidden: (item.isHidden ?? item.is_hidden ?? false) as boolean,
+  createdAt: (item.createdAt || item.created_at) as string,
+  updatedAt: (item.updatedAt || item.updated_at) as string,
+  userId: (item.userId || item.user_id) as string,
   status: item.status as 'draft' | 'confirmed',
   metadata: (item.metadata || {}) as Record<string, unknown>,
 });

@@ -49,10 +49,10 @@ export const authStore = createStore<AuthState>({
         const mapped: User = {
           id: u.id,
           email: u.email || null,
-          display_name: (u.user_metadata?.full_name as string) || (u.user_metadata?.name as string) || u.email || null,
-          photo_url: (u.user_metadata?.avatar_url as string) || null,
-          avatar_url: (u.user_metadata?.avatar_url as string) || null,
-          email_verified: !!u.email_confirmed_at,
+          displayName: (u.user_metadata?.full_name as string) || (u.user_metadata?.name as string) || u.email || null,
+          photoUrl: (u.user_metadata?.avatar_url as string) || null,
+          avatarUrl: (u.user_metadata?.avatar_url as string) || null,
+          emailVerified: !!u.email_confirmed_at,
         };
         authStore.setState({ user: mapped, isLoading: false });
       } else {
@@ -105,10 +105,10 @@ export const initAuthListener = () => {
       const mapped: User = {
         id: u.id,
         email: u.email || null,
-        display_name: (u.user_metadata?.full_name as string) || (u.user_metadata?.name as string) || u.email || null,
-        photo_url: (u.user_metadata?.avatar_url as string) || null,
-        avatar_url: (u.user_metadata?.avatar_url as string) || null,
-        email_verified: !!u.email_confirmed_at,
+        displayName: (u.user_metadata?.full_name as string) || (u.user_metadata?.name as string) || u.email || null,
+        photoUrl: (u.user_metadata?.avatar_url as string) || null,
+        avatarUrl: (u.user_metadata?.avatar_url as string) || null,
+        emailVerified: !!u.email_confirmed_at,
       };
       authStore.setState({ user: mapped, isLoading: false });
     } else {

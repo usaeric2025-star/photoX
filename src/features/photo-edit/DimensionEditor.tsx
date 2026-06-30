@@ -26,7 +26,7 @@ export function DimensionEditor({
   const handleUpdateLabel = (idx: number, newPrefix: string, newDimPart: string) => {
     const finalLabel = newPrefix ? `${newPrefix}: ${newDimPart}` : newDimPart;
     const newDims = [...displayDims];
-    newDims[idx] = { ...newDims[idx], label: finalLabel, is_ai: false };
+    newDims[idx] = { ...newDims[idx], label: finalLabel, isAi: false };
     
     // Attempt to parse numbers for background data
     const hMatch = newDimPart.match(/H\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
@@ -53,7 +53,7 @@ export function DimensionEditor({
   const handleUnitChange = (idx: number, u: string) => {
     const newDims = [...displayDims];
     newDims[idx].unit = u as 'cm' | 'inch' | 'mm';
-    newDims[idx].is_ai = false;
+    newDims[idx].isAi = false;
     onChange(newDims);
   };
 
@@ -124,7 +124,7 @@ export function DimensionEditor({
                 <div className="col-span-2 space-y-1">
                   <div className="flex items-center justify-between pl-1">
                     <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">{t.part}</span>
-                    {dim.is_ai && (
+                    {dim.isAi && (
                       <div className="flex items-center gap-1 text-purple-600 bg-purple-50 px-2 py-1 rounded-lg border border-purple-100 shadow-sm">
                         <Icon name="sparkles" size={10} className="animate-pulse" />
                         <span className="text-[9px] font-black tracking-tighter">AI 识别</span>

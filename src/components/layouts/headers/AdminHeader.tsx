@@ -51,7 +51,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
     return null;
   }, []);
 
-  const logoUrl = settings?.logo_url || cachedSettings?.logo_url || null;
+  const logoUrl = settings?.logoUrl || cachedSettings?.logoUrl || null;
   const currentRole = isStaff ? role : 'public';
 
   const themes = {

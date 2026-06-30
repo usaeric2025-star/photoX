@@ -7,22 +7,22 @@ import { Tag, AppSettings } from '@/types';
  */
 export function usePhotoFilter(tags: Tag[], settings?: AppSettings) {
   
-  const pinnedIds = (settings?.pinned_tags || []).map(id => String(id));
+  const pinnedIds = (settings?.pinnedTags || []).map(id => String(id));
 
   const hotIds = (() => {
-    const hotTagsCount = settings?.hot_tags_count ?? 9;
-    const hotTagThreshold = settings?.hot_tag_threshold ?? 0;
+    const hotTagsCount = settings?.hotTagsCount ?? 9;
+    const hotTagThreshold = Number(settings?.hotTagThreshold ?? 0);
 
     const candidates = tags
       .filter(tag => !pinnedIds.includes(String(tag.id))) // Mutual Exclusivity: Exclude pinned tags from hot section
       .map(tag => ({
         ...tag,
-        hot_score: tag.hot_score || 0
+        hotScore: tag.hotScore || 0
       }))
-      .filter(tag => (tag.hot_score || 0) >= hotTagThreshold && (tag.hot_score || 0) > 0);
+      .filter(tag => (tag.hotScore || 0) >= hotTagThreshold && (tag.hotScore || 0) > 0);
 
     const sorted = [...candidates].sort((a, b) => {
-      const diff = (b.hot_score || 0) - (a.hot_score || 0);
+      const diff = (b.hotScore || 0) - (a.hotScore || 0);
       if (diff !== 0) return diff;
       return (a.name || '').localeCompare(b.name || '', 'zh-CN');
     });
@@ -32,8 +32,8 @@ export function usePhotoFilter(tags: Tag[], settings?: AppSettings) {
   })();
 
   const tagsToRender = [...tags].sort((a, b) => {
-    const aPinned = !!a.is_pinned || pinnedIds.includes(String(a.id));
-    const bPinned = !!b.is_pinned || pinnedIds.includes(String(b.id));
+    const aPinned = !!a.isPinned || pinnedIds.includes(String(a.id));
+    const bPinned = !!b.isPinned || pinnedIds.includes(String(b.id));
     if (aPinned && !bPinned) return -1;
     if (!aPinned && bPinned) return 1;
     
@@ -42,8 +42,8 @@ export function usePhotoFilter(tags: Tag[], settings?: AppSettings) {
     if (aHot && !bHot) return -1;
     if (!aHot && bHot) return 1;
     
-    const countA = a.hot_score || 0;
-    const countB = b.hot_score || 0;
+    const countA = a.hotScore || 0;
+    const countB = b.hotScore || 0;
     return countB - countA || (a.name || '').localeCompare(b.name || '', 'zh-CN');
   });
 

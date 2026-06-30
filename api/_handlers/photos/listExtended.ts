@@ -1,10 +1,9 @@
 import * as v from 'valibot';
-import { db, furnitureItems, groups as groupsTable, tags as tagsTable, photoTags, categories } from '../../_lib/db/index.js';
+import { db, furnitureItems, groups as groupsTable, tags as tagsTable, photoTags, categories } from '@/api/_lib/db/index.js';
 import { eq, ne, and, or, ilike, sql, asc, desc, inArray, isNull, count, type SQL } from 'drizzle-orm';
-import { ListByGroupReqSchema, PhotoListReqSchema } from '@shared/apiContractSchema.js';
-import { errorFactory } from '../../_lib/error/AppError.js';
-import { getGroupCounts } from '../../_lib/db/queries/photos.js';
-import { toCamelCaseArray } from '../../_lib/transform.js';
+import { ListByGroupReqSchema, PhotoListReqSchema } from '@/shared/apiContractSchema.js';
+import { errorFactory } from '@/api/_lib/error/AppError.js';
+import { getGroupCounts } from '@/api/_lib/db/queries/photos.js';
 
 import { Hono, type Context } from 'hono';
 
@@ -50,21 +49,21 @@ export const listExtendedHandlers = (app: Hono) => {
             const tagsByPhoto = new Map<string, unknown[]>();
             for (const t of tagsData) {
                 const list = tagsByPhoto.get(t.photoId ?? '') || [];
-                list.push({ tag_id: t.tagId, tags: { id: t.tagId, name: t.name } });
+                list.push({ tagId: t.tagId, tags: { id: t.tagId, name: t.name } });
                 tagsByPhoto.set(t.photoId ?? '', list);
             }
 
             const photosFormatted = data.map(d => {
                 const item = { ...d.items } as Record<string, unknown>;
-                item.group = d.group ? { ...d.group, member_count: counts.get(d.group.id) || 0 } : null;
-                item.photo_tags = tagsByPhoto.get(d.items.id) || [];
+                item.group = d.group ? { ...d.group, memberCount: counts.get(d.group.id) || 0 } : null;
+                item.photoTags = tagsByPhoto.get(d.items.id) || [];
                 if (item.createdAt) {
                     item.createdAt = typeof item.createdAt === 'string' ? item.createdAt : (item.createdAt as Date).toISOString();
                 }
                 
                 return item;
             });
-            return c.json({ success: true, data: toCamelCaseArray(photosFormatted as Record<string, unknown>[]) });
+            return c.json({ success: true, data: photosFormatted });
         }
         return c.json({ success: true, data: [] });
     } catch (error: unknown) {
@@ -121,21 +120,21 @@ export const listExtendedHandlers = (app: Hono) => {
             const tagsByPhoto = new Map<string, unknown[]>();
             for (const t of tagsData) {
                 const list = tagsByPhoto.get(t.photoId ?? '') || [];
-                list.push({ tag_id: t.tagId, tags: { id: t.tagId, name: t.name } });
+                list.push({ tagId: t.tagId, tags: { id: t.tagId, name: t.name } });
                 tagsByPhoto.set(t.photoId ?? '', list);
             }
 
             const photosFormatted = data.map(d => {
                 const item = { ...d.items } as Record<string, unknown>;
-                item.group = d.group ? { ...d.group, member_count: counts.get(d.group.id) || 0 } : null;
-                item.photo_tags = tagsByPhoto.get(d.items.id) || [];
+                item.group = d.group ? { ...d.group, memberCount: counts.get(d.group.id) || 0 } : null;
+                item.photoTags = tagsByPhoto.get(d.items.id) || [];
                 if (item.createdAt) {
                     item.createdAt = typeof item.createdAt === 'string' ? item.createdAt : (item.createdAt as Date).toISOString();
                 }
 
                 return item;
             });
-            return c.json({ success: true, data: { photos: toCamelCaseArray(photosFormatted as Record<string, unknown>[]), total: Number(countRes.count) } });
+            return c.json({ success: true, data: { photos: photosFormatted, total: Number(countRes.count) } });
         }
         return c.json({ success: true, data: { photos: [], total: 0 } });
     } catch (error: unknown) {

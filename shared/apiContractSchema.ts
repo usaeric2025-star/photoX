@@ -9,13 +9,12 @@ export type ApiResponse<T = unknown> = {
     error?: string;
     text?: string;
     usage?: JsonObject;
-    raw_result?: string;
+    rawResult?: string;
 };
 
 export const AIAnalyzeV1ReqSchema = v.object({
     photoId: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
-    image_url: v.optional(v.string()),
     prompt: v.optional(v.string()),
     provider: v.optional(v.union([v.literal('agnes'), v.literal('openrouter')])),
     model: v.optional(v.string())
@@ -98,6 +97,7 @@ export const PhotoListItemSchema = v.object({
     description: v.optional(v.nullable(v.string())),
     imageUrl: v.string(),
     thumbnailUrl: v.string(),
+    imageHash: v.optional(v.nullable(v.string())),
     groupId: v.optional(v.nullable(v.string())),
     groupName: v.optional(v.nullable(v.string())),
     memberCount: v.number(),
@@ -151,8 +151,8 @@ const TagListItemSchema = v.object({
     id: v.number(),
     name: v.string(),
     aliases: v.optional(v.array(v.string())),
-    is_global: v.optional(v.boolean()),
-    hot_score: v.optional(v.number())
+    isGlobal: v.optional(v.boolean()),
+    hotScore: v.optional(v.number())
 });
 
 export const TagReqSchema = v.object({
@@ -168,18 +168,18 @@ const CategoryListItemSchema = v.object({
     zh: v.optional(v.string()),
     en: v.optional(v.string()),
     ms: v.optional(v.string()),
-    sort_order: v.optional(v.number()),
+    sortOrder: v.optional(v.number()),
     subcategories: v.optional(v.array(v.any()), [])
 });
 
 export const CategoryReqSchema = v.object({
     id: v.optional(v.union([v.string(), v.number()])),
     code: v.string(),
-    name_zh: v.string(),
-    name_en: v.optional(v.string()),
-    name_ms: v.optional(v.string()),
-    sort_order: v.optional(v.number()),
-    is_active: v.optional(v.boolean())
+    nameZh: v.string(),
+    nameEn: v.optional(v.string()),
+    nameMs: v.optional(v.string()),
+    sortOrder: v.optional(v.number()),
+    isActive: v.optional(v.boolean())
 });
 
 const ManufacturerListItemSchema = v.object({
@@ -196,7 +196,7 @@ export const ManufacturerReqSchema = v.object({
 export const GroupReqSchema = v.object({
     id: v.string(),
     name: v.optional(v.string()),
-    cover_photo_id: v.optional(v.string()),
+    coverPhotoId: v.optional(v.string()),
     status: v.optional(v.union([v.literal('draft'), v.literal('confirmed')]))
 });
 
@@ -213,37 +213,37 @@ const DimensionSchema = v.object({
     width: v.number(),
     height: v.number(),
     part: v.optional(v.string()),
-    is_ai: v.optional(v.boolean()),
-    is_ai_estimated: v.optional(v.boolean())
+    isAi: v.optional(v.boolean()),
+    isAiEstimated: v.optional(v.boolean())
 });
 
 const TagSchema = v.object({
     id: v.number(),
     name: v.string(),
     aliases: v.optional(v.array(v.string())),
-    user_id: v.optional(v.string()),
-    is_global: v.optional(v.boolean()),
-    hot_score: v.optional(v.number())
+    userId: v.optional(v.string()),
+    isGlobal: v.optional(v.boolean()),
+    hotScore: v.optional(v.number())
 });
 
 export const PhotoSchema = v.object({
     id: v.optional(v.string()),
     name: TranslationSchema,
-    category_id: v.optional(v.nullable(v.string())),
-    manufacturer_id: v.optional(v.nullable(v.string())),
+    categoryId: v.optional(v.nullable(v.string())),
+    manufacturerId: v.optional(v.nullable(v.string())),
     tags: v.pipe(
         v.array(TagSchema),
         v.check((data) => data.length <= 3, '最多隻能有3個標籤')
     ),
     description: TranslationSchema,
-    item_code: v.string(),
-    manual_code: v.string(),
-    model_number: v.string(),
+    itemCode: v.string(),
+    manualCode: v.string(),
+    modelNumber: v.string(),
     dimensions: v.array(DimensionSchema),
-    is_hidden: v.boolean(),
+    isHidden: v.boolean(),
     price: v.string(),
-    is_group_cover: v.boolean(),
-    group_id: v.optional(v.nullable(v.string())),
+    isGroupCover: v.boolean(),
+    groupId: v.optional(v.nullable(v.string())),
     uri: v.optional(v.string())
 });
 
@@ -260,7 +260,7 @@ const MaintenanceJobSchema = v.object({
     progress: v.number(),
     result: v.optional(v.unknown()),
     error: v.optional(v.string()),
-    created_at: v.optional(v.string()),
+    createdAt: v.optional(v.string()),
     message: v.optional(v.string()),
     processed: v.optional(v.number()),
     total: v.optional(v.number())

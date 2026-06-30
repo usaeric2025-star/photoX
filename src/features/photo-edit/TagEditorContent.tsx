@@ -51,12 +51,12 @@ export function TagEditor({
 
   const togglePin = async (tagId: string) => {
     try {
-      const pinnedTags = settings?.pinned_tags || [];
+      const pinnedTags = settings?.pinnedTags || [];
       const newPinned = pinnedTags.includes(tagId)
         ? pinnedTags.filter((id: string) => id !== tagId)
         : [...pinnedTags, tagId];
 
-      const nextSettings = { ...settings, pinned_tags: newPinned };
+      const nextSettings = { ...settings, pinnedTags: newPinned };
       await updateSettings(nextSettings);
     } catch (err) {
       ErrorFactory.handleError(err, "切换置顶状态");

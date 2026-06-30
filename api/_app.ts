@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { getServerEnv } from '../shared/envSchema.js';
+import { getServerEnv } from '@/shared/envSchema.js';
 import { errorResponse } from './_lib/response.js';
 import adminApp from './_admin.js';
 import { publicSettings } from './_handlers/public_settings.js';

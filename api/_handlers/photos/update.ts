@@ -4,8 +4,7 @@ import { db, furnitureItems, groups as groupsTable } from '../../_lib/db/index.j
 import { eq, inArray, and } from 'drizzle-orm';
 import { syncGroupCoversAndCount } from '../../_lib/groups.js';
 import { refreshPhotosView } from '../../_lib/db/actions.js';
-import { PhotoBatchUpdateReqSchema, PhotoUpdateReqSchema } from '@shared/apiContractSchema.js';
-import { keysToCamel } from '../../_lib/casing.js';
+import { PhotoBatchUpdateReqSchema, PhotoUpdateReqSchema } from '@/shared/apiContractSchema.js';
 
 export const updateHandler = (app: Hono) => {
   app.post('/batch-update', async (c) => {
@@ -15,19 +14,17 @@ export const updateHandler = (app: Hono) => {
     
     const { ids, updates } = check.output;
     try {
-        const camelUpdates = keysToCamel<Record<string, any>>(updates);
-
         // ✅ 強制攔截 base64
-        if (camelUpdates.imageUrl && camelUpdates.imageUrl.startsWith('data:image/')) {
+        if (updates.imageUrl && (updates.imageUrl as string).startsWith('data:image/')) {
             throw new Error('image_url 不接受 base64，請先上傳檔案');
         }
 
         // ✅ 強制限制標題長度
-        if (camelUpdates.name) {
-            let nameJson = camelUpdates.name;
-            if (typeof camelUpdates.name === 'string' && (camelUpdates.name.startsWith('{') || camelUpdates.name.startsWith('['))) {
+        if (updates.name) {
+            let nameJson = updates.name;
+            if (typeof updates.name === 'string' && (updates.name.startsWith('{') || updates.name.startsWith('['))) {
                 try {
-                    nameJson = JSON.parse(camelUpdates.name);
+                    nameJson = JSON.parse(updates.name);
                 } catch (e) {
                     // Not valid JSON
                 }
@@ -35,7 +32,7 @@ export const updateHandler = (app: Hono) => {
 
             if (typeof nameJson === 'string') {
                 if (nameJson.length > 200) throw new Error('標題超過 200 字上限');
-                camelUpdates.name = { zh: nameJson };
+                updates.name = { zh: nameJson };
             } else if (nameJson && typeof nameJson === 'object') {
                 for (const lang of ['zh', 'en', 'ms']) {
                    if ((nameJson as any)[lang] && String((nameJson as any)[lang]).length > 200) {
@@ -47,7 +44,7 @@ export const updateHandler = (app: Hono) => {
 
         const mappedUpdates: Record<string, unknown> = {};
 
-        for (const [key, val] of Object.entries(camelUpdates)) {
+        for (const [key, val] of Object.entries(updates)) {
             let parsedVal = val;
             if (key === 'categoryId' && typeof val === 'string') {
                 parsedVal = parseInt(val, 10);
@@ -83,19 +80,17 @@ export const updateHandler = (app: Hono) => {
             where: eq(furnitureItems.id, id)
         });
 
-        const camelUpdates = keysToCamel<Record<string, any>>(updates);
-
         // ✅ 強制攔截 base64
-        if (camelUpdates.imageUrl && camelUpdates.imageUrl.startsWith('data:image/')) {
+        if (updates.imageUrl && (updates.imageUrl as string).startsWith('data:image/')) {
             throw new Error('image_url 不接受 base64，請先上傳檔案');
         }
 
         // ✅ 強制限制標題長度
-        if (camelUpdates.name) {
-            let nameJson = camelUpdates.name;
-            if (typeof camelUpdates.name === 'string' && (camelUpdates.name.startsWith('{') || camelUpdates.name.startsWith('['))) {
+        if (updates.name) {
+            let nameJson = updates.name;
+            if (typeof updates.name === 'string' && (updates.name.startsWith('{') || updates.name.startsWith('['))) {
                 try {
-                    nameJson = JSON.parse(camelUpdates.name);
+                    nameJson = JSON.parse(updates.name);
                 } catch (e) {
                     // Not valid JSON
                 }
@@ -103,7 +98,7 @@ export const updateHandler = (app: Hono) => {
 
             if (typeof nameJson === 'string') {
                 if (nameJson.length > 200) throw new Error('標題超過 200 字上限');
-                camelUpdates.name = { zh: nameJson };
+                updates.name = { zh: nameJson };
             } else if (nameJson && typeof nameJson === 'object') {
                 for (const lang of ['zh', 'en', 'ms']) {
                    if ((nameJson as any)[lang] && String((nameJson as any)[lang]).length > 200) {
@@ -115,7 +110,7 @@ export const updateHandler = (app: Hono) => {
 
         const mappedUpdates: Record<string, unknown> = { updatedAt: new Date() };
 
-        for (const [key, val] of Object.entries(camelUpdates)) {
+        for (const [key, val] of Object.entries(updates)) {
             if (['id', 'createdAt', 'updatedAt'].includes(key)) continue;
             let parsedVal = val;
             if (key === 'categoryId' && typeof val === 'string') {
@@ -126,7 +121,7 @@ export const updateHandler = (app: Hono) => {
         }
 
         // Special handling for group cover
-        if (camelUpdates.isGroupCover === true) {
+        if (updates.isGroupCover === true) {
             const current = await db.query.furnitureItems.findFirst({
                 columns: { groupId: true },
                 where: eq(furnitureItems.id, id)

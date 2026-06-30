@@ -43,10 +43,10 @@ export const useGroupDraft = (
         id: activeGroupId,
         name: "",
         description: "",
-        cover_photo_id: null,
-        user_id: user?.id || "",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        coverPhotoId: null,
+        userId: user?.id || "",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         status: 'confirmed'
       });
     } else {
@@ -74,11 +74,11 @@ export const useGroupDraft = (
         await appQuery.mutate(queryKeys.groups.detail(activeGroupId, true));
         removeDraftGroup();
 
-        if (updates.hasOwnProperty("is_hidden")) {
-          const is_hidden = updates.is_hidden;
+        if (updates.hasOwnProperty("isHidden")) {
+          const isHidden = updates.isHidden;
           if (dbGroupPhotos && dbGroupPhotos.length > 0 && onUpdatePhoto) {
             await Promise.all(
-              dbGroupPhotos.map((p) => onUpdatePhoto(p.id, { is_hidden })),
+              dbGroupPhotos.map((p) => onUpdatePhoto(p.id, { isHidden })),
             );
           }
         }

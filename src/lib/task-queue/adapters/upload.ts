@@ -47,21 +47,22 @@ export const executeBatchUpload = (
       id: `temp-${generateId()}`,
       name: { zh: processed.file.name.split('.')[0] },
       uri: processed.dataUrl, // objectUrl for preview
-      image_url: '', // LEAVE THIS EMPTY SO uploadSinglePhoto UPLOADS TO R2
-      image_hash: processed.hash,
-      group_id: options.groupId || null,
-      item_code: '', // Placeholder
-      category_id: null,
-      manufacturer_id: null,
+      imageUrl: '', // LEAVE THIS EMPTY SO uploadSinglePhoto UPLOADS TO R2
+      imageHash: processed.hash,
+      groupId: options.groupId || null,
+      itemCode: '', // Placeholder
+      categoryId: null,
+      manufacturerId: null,
       categoryName: '',
       manufacturerName: '',
       description: null,
       size: processed.file.size,
       width: processed.width,
       height: processed.height,
-      is_pinned: false,
-      is_hidden: false,
-      created_at: new Date().toISOString(),
+      isPinned: false,
+      isHidden: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       _fileName: file.name,
       _fileSize: file.size,
       _lastModified: file.lastModified

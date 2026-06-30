@@ -9,7 +9,7 @@ import { translations } from '@/locales';
 import type { FilterState } from './types';
 
 interface TagButtonProps {
-  tag: { id: number | string; name: string; is_pinned?: boolean };
+  tag: { id: number | string; name: string; isPinned?: boolean };
   isSelected: boolean;
   isPinned: boolean;
   isHot: boolean;
@@ -97,7 +97,7 @@ export function TagGrid({ onClose }: { onClose?: () => void }) {
         <div className="flex flex-wrap gap-2.5 flex-1 min-w-0 pr-1 max-h-60 sm:max-h-80 overflow-y-auto custom-scrollbar px-1 py-1">
           {tagsToRender.map(tag => {
             const isSelected = filters.tagIds.includes(String(tag.id));
-            const isPinned = pinnedIds.includes(String(tag.id)) || !!tag.is_pinned;
+            const isPinned = pinnedIds.includes(String(tag.id)) || !!tag.isPinned;
             const isHot = hotIds.has(String(tag.id));
 
             return (

@@ -45,20 +45,38 @@ interface LightboxProps {
 
 const LightboxStyled = LightboxStyledBase as unknown as React.ComponentType<LightboxProps>; 
 
-export function PhotoLightbox() {
-  const slides = useSignal(lightboxSlides);
+export const PhotoLightbox = memo(function PhotoLightbox() {
+  const rawSlides = useSignal(lightboxSlides);
   const filters = useFilters();
   const { photoId: urlPhotoId, modal, setPhotoId } = filters;
   
-  const currentIndex = useMemo(() => {
-    if (!urlPhotoId || slides.length === 0) return 0;
-    const index = slides.findIndex(s => s.id === urlPhotoId);
-    return index !== -1 ? index : 0;
-  }, [urlPhotoId, slides]);
-  
+  // ✅ Use refs to lock state during closing animation without triggering unnecessary re-renders
+  const lastIndexRef = React.useRef(0);
+  const lastSlidesRef = React.useRef<LightboxSlide[]>([]);
+
+  // Update refs whenever we have valid data
+  if (urlPhotoId && rawSlides.length > 0) {
+    const idx = rawSlides.findIndex(s => s.id === urlPhotoId);
+    if (idx !== -1) {
+      lastIndexRef.current = idx;
+      lastSlidesRef.current = rawSlides;
+    }
+  }
+
   const isOpen = !!(urlPhotoId && modal !== 'edit');
+  const currentIndex = (urlPhotoId && rawSlides.length > 0) 
+    ? Math.max(0, rawSlides.findIndex(s => s.id === urlPhotoId))
+    : lastIndexRef.current;
   
-  logger.debug('[PhotoLightbox] Rendering', { isOpen, slidesCount: slides.length, currentIndex, urlPhotoId });
+  const slides = (isOpen && rawSlides.length > 0) ? rawSlides : lastSlidesRef.current;
+  
+  // Use a local ref for logging to avoid excessive console noise
+  const lastLoggedRef = React.useRef(0);
+  if (isOpen && Date.now() - lastLoggedRef.current > 1000) {
+    logger.debug('[PhotoLightbox] Active', { slidesCount: slides.length, currentIndex, urlPhotoId });
+    lastLoggedRef.current = Date.now();
+  }
+
   const route = useAppRoute();
   const navigate = useNavigation();
   const adminActions = useAdminMaintenance();
@@ -76,7 +94,7 @@ export function PhotoLightbox() {
   };
 
   const handleView = (index: number) => {
-    if (index === currentIndex) return;
+    if (index === currentIndex || !isOpen) return;
     const photo = slides[index];
     if (photo?.id) {
       setPhotoId(photo.id);
@@ -86,23 +104,19 @@ export function PhotoLightbox() {
   const coarseIndex = Math.floor(currentIndex / 10);
 
   const images = useMemo(() => {
-    logger.debug('[PhotoLightbox] Calculating images sliding window', { slidesLength: slides.length, coarseIndex });
-    // Use coarseIndex * 10 as the center to stabilize the images array reference
-    // This prevents re-creating the 1000+ images array on every single index change,
-    // making swipe transitions between slides buttery smooth!
+    if (!isOpen && lastSlidesRef.current.length === 0) return [];
+    
     const centerIndex = coarseIndex * 10;
     
     return slides.map((s, i) => {
       const originalPhoto = s.original as any;
-      const hash = originalPhoto?.image_hash || originalPhoto?.imageHash;
+      const hash = originalPhoto?.imageHash || originalPhoto?.image_hash;
       
-      // 💡 Sliding Window Optimization: Only load thumbnails that are close to the current index (window of ~50 items).
-      // Since coarseIndex changes every 10 slides, the "window" is always roughly centered.
       const distance = Math.abs(i - centerIndex);
-      const isInWindow = distance <= 60; // Slightly larger window to account for coarseIndex offset
+      const isInWindow = distance <= 60; 
       
-      const thumbUrlSrc = originalPhoto?.thumbnailUrl || originalPhoto?.thumbnail_url || originalPhoto?.imageUrl || originalPhoto?.image_url || s.src;
-      const previewUrlSrc = originalPhoto?.imageUrl || originalPhoto?.image_url || s.src;
+      const thumbUrlSrc = originalPhoto?.thumbnailUrl || originalPhoto?.imageUrl || s.src;
+      const previewUrlSrc = originalPhoto?.imageUrl || s.src;
       
       const previewUrl = getThumbnailUrl(previewUrlSrc, 800, undefined, hash);
       const thumbUrl = isInWindow 
@@ -119,7 +133,8 @@ export function PhotoLightbox() {
         original: s, 
       };
     });
-  }, [slides, coarseIndex]);
+    // ✅ Include slides.length to re-calc if list changes, but stable center prevents flickering
+  }, [slides, coarseIndex, isOpen]);
 
   const currentSlide = slides[currentIndex];
   const isEditModalOpen = filters.modal === 'edit';
@@ -132,10 +147,10 @@ export function PhotoLightbox() {
     if (!currentSlide) return null;
     return {
       ...currentSlide,
-      title: activePhoto?.name?.zh || activePhoto?.name?.en || activePhoto?.name?.ms || activePhoto?.manual_code || currentSlide.title,
+      title: activePhoto?.name?.zh || activePhoto?.name?.en || activePhoto?.name?.ms || activePhoto?.manualCode || currentSlide.title,
       description: activePhoto?.description?.zh || activePhoto?.description?.en || activePhoto?.description?.ms || currentSlide.description,
       price: activePhoto?.price || currentSlide.price,
-      itemCode: activePhoto?.item_code || currentSlide.itemCode,
+      itemCode: activePhoto?.itemCode || currentSlide.itemCode,
       groupName: activePhoto?.group?.name || currentSlide.groupName,
       original: activePhoto || currentSlide.original,
     };
@@ -228,4 +243,4 @@ export function PhotoLightbox() {
       {isOpen && overlays}
     </>
   );
-}
+});

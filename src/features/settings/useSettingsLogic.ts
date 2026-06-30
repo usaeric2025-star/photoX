@@ -57,7 +57,7 @@ export const useSettingsLogic = ({
     mutationFn: async () => {
       const provider = "google";
       const ok = await testAiConnection(
-        settings.agnes_api_key || "",
+        String(settings.agnesApiKey || ""),
         provider,
       );
       if (!ok) throw new Error('連接失敗 / Connection failed');
@@ -82,19 +82,19 @@ export const useSettingsLogic = ({
   }, 1500);
 
   const testConnection = async () => {
-    if (!settings?.agnes_api_key) return;
+    if (!settings?.agnesApiKey) return;
     await runConnectionTest({});
   };
 
   const togglePin = (tagId: number) => {
-    const currentPinned = (settings?.pinned_tags || []).map(Number);
+    const currentPinned = (settings?.pinnedTags || []).map(Number);
     let nextPinned;
     if (currentPinned.includes(tagId)) {
       nextPinned = currentPinned.filter((id) => id !== tagId);
     } else {
       nextPinned = [...currentPinned, tagId];
     }
-    const nextSettings = { ...settings, pinned_tags: nextPinned.map(String) };
+    const nextSettings = { ...settings, pinnedTags: nextPinned.map(String) };
     setSettings(nextSettings);
     setHasChanges(true);
     debouncedSave(nextSettings);
@@ -115,7 +115,7 @@ export const useSettingsLogic = ({
       execute: async () => {
         const fileKey = `settings/logo_${Date.now()}`;
         const { imageUrl } = await uploadToR2('', fileKey, file, undefined);
-        setSettingField('logo_url', imageUrl);
+        setSettingField('logoUrl', imageUrl);
         return imageUrl;
       }
     });

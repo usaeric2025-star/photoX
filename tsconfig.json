@@ -8,14 +8,9 @@
     "strict": false,
     "noImplicitAny": false,
     "paths": {
-      "@/*": ["./src/*"],
+      "@/*": ["./src/*", "./*"],
       "@shared/*": ["./shared/*"],
-      "@api/app": ["./api/app.ts"],
-      "@api/*": ["./NON_EXISTENT_PATH_TO_BLOCK_FRONTEND_IMPORTS/*"],
-      "../../api/*": ["./NON_EXISTENT_PATH_TO_BLOCK_FRONTEND_IMPORTS/*"],
-      "../../../api/*": ["./NON_EXISTENT_PATH_TO_BLOCK_FRONTEND_IMPORTS/*"],
-      "../../api/app": ["./api/app.ts"],
-      "../../../api/_shared/*": ["./api/_shared/*"]
+      "@api/*": ["./api/*"]
     },
     "rootDir": "./",
     "jsx": "react-jsx",

@@ -1,11 +1,10 @@
 import { Hono } from 'hono';
 import * as v from 'valibot';
-import { PhotoListReqSchema, PhotoListItemSchema } from '@shared/apiContractSchema.js';
-import { errorFactory } from '../../_lib/error/AppError.js';
-import { normalizeI18n } from '@shared/i18n.js';
+import { PhotoListReqSchema, PhotoListItemSchema } from '@/shared/apiContractSchema.js';
+import { errorFactory } from '@/api/_lib/error/AppError.js';
+import { normalizeI18n } from '@/shared/i18n.js';
 import { vValidator } from '@hono/valibot-validator';
-import { getPhotosList, getGroupCounts } from '../../_lib/db/queries/photos.js';
-import { toCamelCaseArray } from '../../_lib/transform.js';
+import { getPhotosList, getGroupCounts } from '@/api/_lib/db/queries/photos.js';
 
 export const listHandler = (app: Hono) => {
   app.post('/list', vValidator('json', PhotoListReqSchema), async (c) => {
@@ -36,6 +35,7 @@ export const listHandler = (app: Hono) => {
                     description: displayDesc,
                     imageUrl: d.imageUrl || '',
                     thumbnailUrl: d.imageUrl || '',
+                    imageHash: d.imageHash || null,
                     groupId: d.groupId || null,
                     groupName: d.groupName || null,
                     memberCount: d.groupId ? (counts.get(d.groupId) || 0) : 0,

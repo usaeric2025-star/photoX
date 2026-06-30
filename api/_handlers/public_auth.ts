@@ -1,9 +1,9 @@
 import { Hono } from 'hono';
-import { db } from '../_lib/db/index.js';
-import * as schema from '../_lib/db/schema.js';
+import { db } from '@/api/_lib/db/index.js';
+import * as schema from '@/api/_lib/db/schema.js';
 import { eq } from 'drizzle-orm';
-import { logger } from '../_lib/logger.js';
-import { withTimeout, TIMEOUTS } from '../_lib/utils/timeout.js';
+import { logger } from '@/api/_lib/logger.js';
+import { withTimeout, TIMEOUTS } from '@/api/_lib/utils/timeout.js';
 
 export const publicAuth = new Hono();
 
@@ -32,8 +32,8 @@ const handler = async (c: any) => {
         ]);
 
         const data = {
-            passcode_enabled: settingsRes[0]?.passcodeEnabled ?? false,
-            access_passcode: (passcodeRes[0] as any)?.value || settingsRes[0]?.accessPasscode || '',
+            passcodeEnabled: settingsRes[0]?.passcodeEnabled ?? false,
+            accessPasscode: (passcodeRes[0] as any)?.value || settingsRes[0]?.accessPasscode || '',
         };
 
         return c.json({ success: true, data });
