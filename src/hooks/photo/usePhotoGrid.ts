@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { PhotoListItem } from '@/types/api';
 import { usePhotos, PhotoListFilters } from './usePhotos';
+import { useUI } from '@/lib/store';
 
 export function usePhotoGrid(filters: PhotoListFilters, mode: 'admin' | 'public') {
   const { 
@@ -23,6 +24,15 @@ export function usePhotoGrid(filters: PhotoListFilters, mode: 'admin' | 'public'
   
   const dataVersion = JSON.stringify(contentFilters);
   const ref = useRef<any>(null);
+  const patch = useUI(s => s.patch);
+  const totalCount = data?.pages[0]?.total || 0;
+
+  // ✅ Sync total count with global state
+  useEffect(() => {
+    if (totalCount !== undefined && totalCount > 0) {
+      patch({ totalCount });
+    }
+  }, [totalCount, patch]);
 
   // ✅ 篩選變更時重置滾動
   useEffect(() => {

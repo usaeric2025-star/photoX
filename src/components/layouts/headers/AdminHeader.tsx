@@ -31,17 +31,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
 
   const taskCount = useSignal(activeTaskCountSignal);
 
-  const { data: totalCountData } = useAppQuery(
-    ['photos', 'count', 'total'],
-    async () => {
-      const res = await api.photos.count.$post({ json: { isAdminMode: true } });
-      if (!res.ok) return 0;
-      const json = await res.json();
-      return json.data as number;
-    },
-    { dedupingInterval: 60 * 1000 }
-  );
-  const totalCount = totalCountData ?? 0;
+  const totalCount = useUI((s) => s.totalCount) ?? 0;
 
   const cachedSettings = React.useMemo(() => {
     try {

@@ -21,7 +21,7 @@ if (!connectionString) {
 // To avoid exhausting connection limits, we limit the pool size to 1.
 // In non-serverless environments like Cloud Run, we allow up to 10 connections to handle parallel requests.
 const isServerless = process.env.VERCEL === '1' || process.env.AWS_LAMBDA_FUNCTION_NAME !== undefined;
-const maxConnections = isServerless ? 1 : 10;
+const maxConnections = isServerless ? 5 : 10;
 
 // Reuse the postgres client and drizzle db across invocations in serverless/development
 const globalForDb = globalThis as unknown as {

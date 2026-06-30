@@ -52,7 +52,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
     }
   };
 
-  const currentRole = isAdminRoute ? (isStaff ? role : 'public') : 'public';
+  const currentRole = isGroupPage ? 'public' : (isStaff ? role : 'public');
 
   const theme = {
     admin: {

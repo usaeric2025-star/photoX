@@ -10,7 +10,7 @@ export function useCategories(options?: { enabled?: boolean }) {
     isEnabled ? queryKeys.categories.all : null,
     loadCategoriesFromCloud,
     {
-      dedupingInterval: STALE_TIMES.LONG,
+      dedupingInterval: STALE_TIMES.MEDIUM,
     }
   );
 

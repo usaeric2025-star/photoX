@@ -26,6 +26,7 @@ export interface UIStoreState {
   fatalError: Error | null;
   currentEditingPhoto: Photo | null;
   gridColumns: number;
+  totalCount: number;
   
   // Lightbox 状态 (Data only)
   lightboxSlides: LightboxSlide[];
@@ -90,6 +91,7 @@ export const uiStore = createStore<UIStoreState>({
   fatalError: null,
   currentEditingPhoto: null,
   gridColumns: 3,
+  totalCount: 0,
   lightboxSlides: [],
   lightboxCurrentIndex: 0,
 
