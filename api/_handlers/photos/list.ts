@@ -5,7 +5,6 @@ import { errorFactory } from '../../_lib/error/AppError.js';
 import { normalizeI18n } from '../../../shared/i18n.js';
 import { vValidator } from '@hono/valibot-validator';
 import { getPhotosList, getGroupCounts } from '../../_lib/db/queries/photos.js';
-import { toCamelCaseArray } from '../../_lib/transform.js';
 
 export const listHandler = (app: Hono) => {
   app.post('/list', vValidator('json', PhotoListReqSchema), async (c) => {
@@ -51,7 +50,7 @@ export const listHandler = (app: Hono) => {
         
         return c.json({ 
           success: true, 
-          data: toCamelCaseArray(v.parse(v.array(PhotoListItemSchema), formatted) as Record<string, unknown>[]),
+          data: v.parse(v.array(PhotoListItemSchema), formatted),
           nextCursor: finalNextCursor,
           total
         });

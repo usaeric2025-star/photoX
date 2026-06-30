@@ -66,13 +66,13 @@ const client = globalForDb.postgresClient || postgres(finalConnectionString || '
 if (!globalForDb.drizzleDb && connectionString) {
   globalForDb.drizzleDb = drizzle(client, { 
     schema: { ...schema }, 
-    casing: 'snake_case' 
+    casing: 'camelCase' 
   });
 }
 
 export const db = globalForDb.drizzleDb || drizzle(client, { 
   schema: { ...schema }, 
-  casing: 'snake_case' 
+  casing: 'camelCase' 
 });
 
 export * from './schema.js';
