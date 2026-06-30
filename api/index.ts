@@ -26,7 +26,6 @@ const wrapHandler = (originalHandler: any, method: string) => {
     }
     
     console.log(`[VERCEL-API] [${method}] Path: ${url}`);
-    console.log(`[VERCEL-API] [${method}] Headers:`, JSON.stringify(headersObj));
     
     try {
       const result = await originalHandler(req, res);
@@ -49,7 +48,5 @@ export const PUT = wrapHandler(handler, 'PUT');
 export const DELETE = wrapHandler(handler, 'DELETE');
 export const PATCH = wrapHandler(handler, 'PATCH');
 export const OPTIONS = wrapHandler(handler, 'OPTIONS');
-
-export default wrapHandler(handler, 'DEFAULT');
 
 
