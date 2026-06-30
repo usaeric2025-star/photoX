@@ -12,10 +12,19 @@ const handler = async (c: any) => {
     
     try {
         const passcodeResPromise = db.select().from(schema.secrets).where(eq(schema.secrets.key, 'access_passcode')).limit(1).execute();
+        // Prevent unhandled promise rejections on the underlying connection
+        passcodeResPromise.catch((err) => {
+            logger.warn("[DB-DRIVER] Access passcode query rejected or cancelled:", err.message || err);
+        });
+
         const settingsResPromise = db.select({
             passcodeEnabled: schema.settings.passcodeEnabled,
             accessPasscode: schema.settings.accessPasscode,
         }).from(schema.settings).where(eq(schema.settings.id, 1)).limit(1).execute();
+        // Prevent unhandled promise rejections on the underlying connection
+        settingsResPromise.catch((err) => {
+            logger.warn("[DB-DRIVER] Settings passcode query rejected or cancelled:", err.message || err);
+        });
 
         const [passcodeRes, settingsRes] = await Promise.all([
             withTimeout(passcodeResPromise, TIMEOUTS.DB_QUERY, 'DB Query Access Passcode secret').catch(e => { logger.error("passcode query failed or timed out", e); return []; }),

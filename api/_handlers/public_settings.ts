@@ -38,6 +38,11 @@ const handler = async (c: any) => {
         whatsapp2Name: schema.settings.whatsapp2Name,
     }).from(schema.settings).where(eq(schema.settings.id, 1)).limit(1).execute();
 
+    // Prevent unhandled promise rejections on the underlying connection
+    settingsPromise.catch((err) => {
+        logger.warn("[DB-DRIVER] Settings query rejected or cancelled:", err.message || err);
+    });
+
     const settingsResArray = await withTimeout(settingsPromise, TIMEOUTS.DB_QUERY, 'DB Query Settings table (ID=1)').catch((e: any) => {
         logger.error(`[Settings-${requestId}] Settings table fetch failed or timed out:`, e);
         return [];
