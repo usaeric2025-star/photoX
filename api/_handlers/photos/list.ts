@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
 import * as v from 'valibot';
-import { PhotoListReqSchema, PhotoListItemSchema } from '../../../shared/apiContractSchema.js';
+import { PhotoListReqSchema, PhotoListItemSchema } from '@shared/apiContractSchema.js';
 import { errorFactory } from '../../_lib/error/AppError.js';
-import { normalizeI18n } from '../../../shared/i18n.js';
+import { normalizeI18n } from '@shared/i18n.js';
 import { vValidator } from '@hono/valibot-validator';
 import { getPhotosList, getGroupCounts } from '../../_lib/db/queries/photos.js';
 import { toCamelCaseArray } from '../../_lib/transform.js';

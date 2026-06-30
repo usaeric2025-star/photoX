@@ -4,7 +4,7 @@ import { db, furnitureItems, aiAuditLogs } from '../../_lib/db/index.js';
 import { eq, and, inArray } from 'drizzle-orm';
 import { syncGroupCoversAndCount } from '../../_lib/groups.js';
 import { refreshPhotosView } from '../../_lib/db/actions.js';
-import { PhotoIdReqSchema } from '../../../shared/apiContractSchema.js';
+import { PhotoIdReqSchema } from '@shared/apiContractSchema.js';
 
 export const deleteHandler = (app: Hono) => {
   app.post('/delete', async (c) => {

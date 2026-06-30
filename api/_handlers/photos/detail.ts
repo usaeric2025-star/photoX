@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import * as v from 'valibot';
 import { db, furnitureItems } from '../../_lib/db/index.js';
 import { inArray, eq } from 'drizzle-orm';
-import { PhotoIdsReqSchema, PhotoCheckHashReqSchema } from '../../../shared/apiContractSchema.js';
+import { PhotoIdsReqSchema, PhotoCheckHashReqSchema } from '@shared/apiContractSchema.js';
 import { errorResponse } from '../../_lib/response.js';
 import { toCamelCaseArray } from '../../_lib/transform.js';
 

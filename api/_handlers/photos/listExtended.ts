@@ -1,7 +1,7 @@
 import * as v from 'valibot';
 import { db, furnitureItems, groups as groupsTable, tags as tagsTable, photoTags, categories } from '../../_lib/db/index.js';
 import { eq, ne, and, or, ilike, sql, asc, desc, inArray, isNull, count, type SQL } from 'drizzle-orm';
-import { ListByGroupReqSchema, PhotoListReqSchema } from '../../../shared/apiContractSchema.js';
+import { ListByGroupReqSchema, PhotoListReqSchema } from '@shared/apiContractSchema.js';
 import { errorFactory } from '../../_lib/error/AppError.js';
 import { getGroupCounts } from '../../_lib/db/queries/photos.js';
 import { toCamelCaseArray } from '../../_lib/transform.js';

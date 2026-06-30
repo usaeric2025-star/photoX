@@ -4,7 +4,7 @@ import { db, furnitureItems, groups as groupsTable } from '../../_lib/db/index.j
 import { eq, inArray, and } from 'drizzle-orm';
 import { syncGroupCoversAndCount } from '../../_lib/groups.js';
 import { refreshPhotosView } from '../../_lib/db/actions.js';
-import { PhotoBatchUpdateReqSchema, PhotoUpdateReqSchema } from '../../../shared/apiContractSchema.js';
+import { PhotoBatchUpdateReqSchema, PhotoUpdateReqSchema } from '@shared/apiContractSchema.js';
 import { keysToCamel } from '../../_lib/casing.js';
 
 export const updateHandler = (app: Hono) => {
