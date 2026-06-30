@@ -5,7 +5,7 @@ import { mapToDb, mapSupabasePhoto } from '@/services/mappers';
 import { api } from '@/lib/api';
 import { uploadWithRetry } from '@/services/storage';
 import * as v from 'valibot';
-import { PhotoSchema } from '@shared/apiContractSchema';
+import { PhotoSchema } from '@/shared/apiContractSchema';
 
 /**
  * Update a single photo

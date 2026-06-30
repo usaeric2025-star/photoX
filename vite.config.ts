@@ -72,10 +72,11 @@ export default defineConfig(({mode}) => {
       'process.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || ''),
     },
     resolve: {
-      alias: {
-        '@': fileURLToPath(new URL('./src', import.meta.url)),
-        '@shared': fileURLToPath(new URL('./shared', import.meta.url)),
-      },
+      alias: [
+        { find: /^@\/shared\/(.*)/, replacement: fileURLToPath(new URL('./shared/$1', import.meta.url)) },
+        { find: /^@\/(.*)/, replacement: fileURLToPath(new URL('./src/$1', import.meta.url)) },
+        { find: '@shared', replacement: fileURLToPath(new URL('./shared', import.meta.url)) },
+      ],
     },
     server: {
       port: 3000,

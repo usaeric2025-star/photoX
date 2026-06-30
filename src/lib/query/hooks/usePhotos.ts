@@ -5,7 +5,7 @@ import { ErrorFactory } from '@/lib/error';
 import { api } from '@/lib/api';
 import { PhotoListItem } from '@/types/api';
 import * as v from 'valibot';
-import { PhotoListResSchema } from '@shared/apiContractSchema';
+import { PhotoListResSchema } from '@/shared/apiContractSchema';
 
 export type PhotoListFilters = Record<string, unknown>;
 

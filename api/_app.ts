@@ -27,16 +27,16 @@ if (!serverEnv.DATABASE_URL) {
     console.log('✅ [INIT] DATABASE_URL validated, proceeding to route initialization.');
 }
 
-export const app = new Hono().basePath('/api');
+const apiApp = new Hono();
 
 // ✅ 統一錯誤處理
-app.onError((err, c) => {
+apiApp.onError((err, c) => {
     console.error('[API Error]', err);
     return errorResponse(c, err, 500);
 });
 
-app.use('*', cors());
-app.get('/health', async (c) => {
+apiApp.use('*', cors());
+apiApp.get('/health', async (c) => {
     try {
         const { db } = await import('./_lib/db/index.js');
         const { sql } = await import('drizzle-orm');
@@ -60,24 +60,24 @@ app.get('/health', async (c) => {
 });
 
 // 全域中間件（含錯誤處理、Auth、Materialized View 刷新）
-setupMiddlewares(app, { NODE_ENV: serverEnv.NODE_ENV });
+setupMiddlewares(apiApp, { NODE_ENV: serverEnv.NODE_ENV });
 
 // --- API Routes (Distributed) ---
-app.route('/admin', adminApp);
-app.route('/public/settings', publicSettings);
-app.route('/public/auth', publicAuth);
-app.route('/ai', ai);
-app.route('/tags', tags);
-app.route('/categories', categories);
-app.route('/manufacturers', manufacturers);
-app.route('/groups', groups);
-app.route('/photos', photos);
-app.route('/cron/refresh-view', cronRefreshView);
-app.route('/', storage);
-testHandler(app);
+apiApp.route('/admin', adminApp);
+apiApp.route('/public/settings', publicSettings);
+apiApp.route('/public/auth', publicAuth);
+apiApp.route('/ai', ai);
+apiApp.route('/tags', tags);
+apiApp.route('/categories', categories);
+apiApp.route('/manufacturers', manufacturers);
+apiApp.route('/groups', groups);
+apiApp.route('/photos', photos);
+apiApp.route('/cron/refresh-view', cronRefreshView);
+apiApp.route('/', storage);
+testHandler(apiApp);
 
 // --- 公共輔助路由 ---
-app.get('/download', async (c) => {
+apiApp.get('/download', async (c) => {
     const url = c.req.query('url');
     if (!url) return c.text('Missing url parameter', 400);
 
@@ -93,5 +93,7 @@ app.get('/download', async (c) => {
     
     return c.body(buffer);
 });
+
+export const app = new Hono().route('/api', apiApp);
 
 export type AppType = typeof app;
