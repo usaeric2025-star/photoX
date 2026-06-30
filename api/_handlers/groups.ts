@@ -32,7 +32,7 @@ export const groups = new Hono()
     // Manual mapping to Drizzle schema
     const insertData = {
         ...groupData,
-        name: (groupData.name as unknown as Record<string, string>) || { zh: '' },
+        name: "GROUP",
         status: (groupData.status as "draft" | "confirmed" | "rejected") || 'confirmed',
         userId: inputUserId,
         createdAt: new Date(),
@@ -157,7 +157,7 @@ export const groups = new Hono()
             createdAt: new Date(),
             updatedAt: new Date(),
             status: ((groupDataWithoutId as Record<string, unknown>).status as string) || 'confirmed',
-            name: ((groupDataWithoutId as Record<string, unknown>).name as { zh: string }) || { zh: '' },
+            name: "GROUP",
             description: ((groupDataWithoutId as Record<string, unknown>).description as string) || null,
             coverPhotoId: ((groupDataWithoutId as Record<string, unknown>).coverPhotoId as string) || null,
         };

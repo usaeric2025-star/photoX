@@ -197,7 +197,18 @@ export async function getPhotosList(params: PhotoListParams) {
             const item = { ...d.items } as Record<string, unknown>;
             item.name = normalizeI18n(d.items.name).zh;
             item.description = normalizeI18n(d.items.description).zh;
-            item.groupName = d.group?.name || null;
+            let parsedGroupName = d.group?.name || null;
+            if (typeof parsedGroupName === 'string' && parsedGroupName.startsWith('{')) {
+                try {
+                    const parsed = JSON.parse(parsedGroupName);
+                    if (parsed && typeof parsed.zh === 'string') {
+                        parsedGroupName = parsed.zh;
+                    }
+                } catch (e) {
+                    // Ignore JSON parse errors
+                }
+            }
+            item.groupName = parsedGroupName;
             item.groupCoverPhotoId = d.group?.coverPhotoId || null;
             item.categoryNameZh = d.category?.nameZh || null;
             item.categoryNameEn = d.category?.nameEn || null;

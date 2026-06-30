@@ -55,20 +55,27 @@ export const PhotoStatusBadges = ({
 export const PhotoCardInfo = ({ 
   hideDetails, 
   photoTags,
-  photoName
+  photoName,
+  categoryName
 }: { 
   hideDetails?: boolean; 
   photoTags?: string[];
   photoName?: string;
+  categoryName?: string;
 }) => {
   if (hideDetails) return null;
 
   return (
     <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
       <h4 className="text-white font-semibold text-sm sm:text-base truncate mb-0.5">{photoName}</h4>
-      {photoTags && photoTags.length > 0 && (
+      {(photoTags && photoTags.length > 0) || categoryName ? (
         <div className="flex flex-wrap gap-1.5 mt-1">
-          {photoTags.map(tag => (
+          {categoryName && (
+            <span className="shrink-0 text-[10px] sm:text-[11px] bg-primary/80 backdrop-blur-lg text-white px-2 py-0.5 rounded-full font-medium tracking-tight border border-white/20">
+              {categoryName}
+            </span>
+          )}
+          {photoTags?.map(tag => (
             <span 
               key={tag} 
               className="shrink-0 text-[10px] sm:text-[11px] bg-white/20 backdrop-blur-lg text-white px-2 py-0.5 rounded-full font-medium tracking-tight border border-white/10"
@@ -77,7 +84,7 @@ export const PhotoCardInfo = ({
             </span>
           ))}
         </div>
-      )}
+      ) : null}
     </div>
   );
 };

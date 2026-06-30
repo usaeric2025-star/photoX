@@ -51,6 +51,11 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
 
   const actualCanPin = canPin !== undefined ? canPin : (canPinGlobal !== undefined ? canPinGlobal : can('photo:toggle-pinned'));
 
+  const isGroupCard = showGroupsCollapsed && photo.groupId && typeof photo.memberCount === 'number' && photo.memberCount > 1;
+  const displayPhotoName = isGroupCard ? (photo.groupName || 'GROUP') : photo.name;
+  const displayPhotoTags = isGroupCard ? undefined : photo.tags;
+  const displayCategoryName = isGroupCard ? (photo.categoryNameZh || undefined) : undefined;
+
   return (
     <PhotoCardBase
       item={photo}
@@ -73,8 +78,9 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
       )}
       <PhotoCardInfo 
         hideDetails={hideDetails}
-        photoTags={photo.tags}
-        photoName={photo.name}
+        photoTags={displayPhotoTags}
+        photoName={displayPhotoName}
+        categoryName={displayCategoryName}
       />
     </PhotoCardBase>
   );
