@@ -57,6 +57,9 @@ export const listExtendedHandlers = (app: Hono) => {
                 const item = { ...d.items } as Record<string, unknown>;
                 item.group = d.group ? { ...d.group, member_count: counts.get(d.group.id) || 0 } : null;
                 item.photo_tags = tagsByPhoto.get(d.items.id) || [];
+                if (item.createdAt) {
+                    item.createdAt = typeof item.createdAt === 'string' ? item.createdAt : (item.createdAt as Date).toISOString();
+                }
                 return item;
             });
             return c.json({ success: true, data: photosFormatted });
@@ -124,6 +127,9 @@ export const listExtendedHandlers = (app: Hono) => {
                 const item = { ...d.items } as Record<string, unknown>;
                 item.group = d.group ? { ...d.group, member_count: counts.get(d.group.id) || 0 } : null;
                 item.photo_tags = tagsByPhoto.get(d.items.id) || [];
+                if (item.createdAt) {
+                    item.createdAt = typeof item.createdAt === 'string' ? item.createdAt : (item.createdAt as Date).toISOString();
+                }
                 return item;
             });
             return c.json({ success: true, data: { photos: photosFormatted, total: Number(countRes.count) } });

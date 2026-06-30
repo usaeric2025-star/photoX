@@ -38,11 +38,15 @@ export const listHandler = (app: Hono) => {
                 isPinned: !!d.isPinned,
                 isHidden: !!d.isHidden,
                 isCover: !!d.isGroupCover || (d.groupCoverPhotoId === d.id),
-                createdAt: d.createdAt ? (d.createdAt as unknown as Date).toISOString() : null,
+                createdAt: d.createdAt 
+                    ? (typeof d.createdAt === 'string' ? d.createdAt : (d.createdAt as unknown as Date).toISOString()) 
+                    : null,
             };
         });
 
-        const finalNextCursor = nextCursor;
+        const finalNextCursor = nextCursor 
+            ? (typeof nextCursor === 'string' ? nextCursor : (nextCursor as unknown as Date).toISOString())
+            : null;
         
         return c.json({ 
           success: true, 
