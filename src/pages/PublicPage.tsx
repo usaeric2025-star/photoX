@@ -98,16 +98,18 @@ export default function PublicPage() {
       {/* 照片網格區域 - 自動佔滿剩餘空間 */}
       <div className="flex-1 min-h-0 relative bg-surface-soft overflow-hidden">
         <ErrorBoundary>
-          <PublicPhotoGrid 
-            {...photoGridData}
-            columns={columns}
-            gridRef={gridRef}
-            onScroll={(offset) => setShowScrollTop(offset > 300)}
-            filters={{ category, tags, search, sort, showGroupsCollapsed }}
-            onPhotoClick={handlePhotoClick}
-            error={error}
-            onRetry={() => refetch()}
-          />
+          <div className="absolute inset-0">
+            <PublicPhotoGrid 
+              {...photoGridData}
+              columns={columns}
+              gridRef={gridRef}
+              onScroll={(offset) => setShowScrollTop(offset > 300)}
+              filters={{ category, tags, search, sort, showGroupsCollapsed }}
+              onPhotoClick={handlePhotoClick}
+              error={error}
+              onRetry={() => refetch()}
+            />
+          </div>
         </ErrorBoundary>
       </div>
 

@@ -108,7 +108,9 @@ export function PublicGroupDetailPage() {
       </div>
       {/* FilterBar removed */}
       <div className="flex-1 relative bg-slate-50">
-        <PublicPhotoGrid photos={photos} categories={categories} onPhotoClick={handlePhotoClick} gridRef={scrollContainerRef} />
+        <div className="absolute inset-0">
+          <PublicPhotoGrid photos={photos} categories={categories} onPhotoClick={handlePhotoClick} gridRef={scrollContainerRef} />
+        </div>
       </div>
 
       <WhatsAppDialog 

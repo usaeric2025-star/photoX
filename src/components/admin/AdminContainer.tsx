@@ -56,15 +56,17 @@ export function AdminContainer() {
   
   return (
     <div className="flex flex-col h-full bg-slate-50 overflow-hidden relative" id="main-admin-screen">
-       <div className="flex-1 min-h-0 relative flex flex-col">
-          <AdminPhotoGrid 
-            {...photoGridData}
-            columns={columns}
-            filters={filters}
-            onPhotoClick={handlePhotoClick}
-            error={photoGridData.error}
-            onRetry={() => photoGridData.refetch()}
-          />
+       <div className="flex-1 min-h-0 relative">
+          <div className="absolute inset-0">
+            <AdminPhotoGrid 
+              {...photoGridData}
+              columns={columns}
+              filters={filters}
+              onPhotoClick={handlePhotoClick}
+              error={photoGridData.error}
+              onRetry={() => photoGridData.refetch()}
+            />
+          </div>
        </div>
        <SelectionToolbar />
     </div>

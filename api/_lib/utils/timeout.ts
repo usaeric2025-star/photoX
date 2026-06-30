@@ -19,6 +19,6 @@ export function withTimeout<T>(promiseOrThenable: Promise<T> | PromiseLike<T>, m
 
 // Global timeout configs to avoid magic numbers across the app
 export const TIMEOUTS = {
-  DB_QUERY: 30000, // 30 seconds for standard DB queries (resilient to cold starts)
-  AI_REQUEST: 40000, // 40 seconds for AI inference 
+  DB_QUERY: 10000, // 10 seconds for standard DB queries
+  AI_REQUEST: 20000, // 20 seconds for AI inference 
 };

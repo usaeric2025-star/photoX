@@ -155,7 +155,9 @@ export function AdminGroupDetailPage() {
         />
       </div>
       <div className={`flex-1 relative bg-slate-50 transition-all duration-300 ${isMultiSelect ? 'pb-16' : ''}`}>
-        <AdminPhotoGrid photos={photos} categories={categories} onPhotoClick={handlePhotoClick} />
+        <div className="absolute inset-0">
+          <AdminPhotoGrid photos={photos} categories={categories} onPhotoClick={handlePhotoClick} />
+        </div>
       </div>
 
       {showAdminTools && (
