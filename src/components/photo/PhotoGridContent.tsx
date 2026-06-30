@@ -84,7 +84,7 @@ export function PhotoGridContent({
   }
 
   return (
-    <div className="w-full h-full p-1 sm:p-2">
+    <div className="w-full h-full p-1 sm:p-2 relative">
       <VirtualizedGrid
         items={safePhotos}
         columns={actualColumns}

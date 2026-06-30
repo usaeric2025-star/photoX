@@ -45,12 +45,12 @@ function appendDbParam(url: string, key: string, value: string) {
 }
 
 // Ensure statement_timeout is set at the connection level
-const finalConnectionString = appendDbParam(connectionString || '', 'options', '-c statement_timeout=15000');
+const finalConnectionString = appendDbParam(connectionString || '', 'options', '-c statement_timeout=35000');
 
 const clientOptions: postgres.Options<{}> = {
   max: maxConnections,
   idle_timeout: isServerless ? 5 : 10, // Close idle connections quickly within 10 seconds to avoid connection leaks
-  connect_timeout: 10, // 10s as requested
+  connect_timeout: 20, // 20s as requested
   prepare: false, // Required for PgBouncer/Supabase transaction pooling
   onnotice: () => {},
 };

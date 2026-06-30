@@ -64,7 +64,7 @@ export function VirtualizedGrid<T extends { id: string | number }>({
   };
 
   return (
-    <div className="w-full h-full min-h-0 relative" ref={containerRef}>
+    <div className="w-full h-full absolute inset-0" ref={containerRef}>
       <VList 
         onScroll={handleScroll} 
         onScrollEnd={handleScrollEnd}
