@@ -6,5 +6,6 @@ import { useAppRouter } from '@/lib/router';
  */
 export function useAdminMode() {
   const { route } = useAppRouter();
-  return typeof route?.name === 'string' && route?.name?.startsWith('admin');
+  const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+  return (typeof route?.name === 'string' && route?.name?.startsWith('admin')) || pathname.startsWith('/admin');
 }

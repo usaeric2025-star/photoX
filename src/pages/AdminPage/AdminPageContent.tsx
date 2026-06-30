@@ -32,13 +32,14 @@ export function AdminPageContent() {
   const { handleBatchAiAnalyze } = useAIBatchAnalysis();
   const { navigate, route } = useAppRouter();
   
+  const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
   const currentScreen = (() => {
-    if (route?.name === 'admin' || route?.name === 'adminSlash') return 'gallery';
-    if (route?.name === 'adminTasks' || route?.name === 'adminTasksSlash') return 'tasks';
-    if (route?.name === 'adminDiagnosticsLogs' || route?.name === 'adminDiagnosticsLogsSlash') return 'error-logs';
-    if (route?.name === 'adminDiagnostics' || route?.name === 'adminDiagnosticsSlash') return 'diagnose';
-    if (route?.name === 'settings' || route?.name === 'settingsSlash') return 'settings';
-    if (route?.name === 'adminBatchEdit' || route?.name === 'adminBatchEditSlash') return 'batch';
+    if (pathname.startsWith('/admin/batch-edit')) return 'batch';
+    if (pathname.startsWith('/admin/tasks')) return 'tasks';
+    if (pathname.startsWith('/admin/error-logs')) return 'error-logs';
+    if (pathname.startsWith('/admin/diagnose')) return 'diagnose';
+    if (pathname.startsWith('/settings')) return 'settings';
+    if (pathname.startsWith('/admin')) return 'gallery';
     return 'gallery' as const;
   })();
 

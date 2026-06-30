@@ -48,7 +48,12 @@ export function useGlobalTasks() {
         if (!isAdmin) return 0;
         if (typeof document !== 'undefined' && document.hidden) return 0;
         const hasRunning = Array.isArray(rJobs) && (rJobs as { status?: string }[]).some(job => job && job.status === 'processing');
-        const isStatusScreen = typeof routeName === 'string' && ['adminTasks', 'adminDiagnostics', 'adminDiagnosticsLogs'].includes(routeName);
+        const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+        const isStatusScreen = 
+          (typeof routeName === 'string' && ['adminTasks', 'adminDiagnostics', 'adminDiagnosticsLogs'].includes(routeName)) ||
+          pathname.startsWith('/admin/tasks') ||
+          pathname.startsWith('/admin/diagnose') ||
+          pathname.startsWith('/admin/error-logs');
         return (hasRunning || isStatusScreen) ? 5000 : 0;
       },
       dedupingInterval: STALE_TIMES.FAST

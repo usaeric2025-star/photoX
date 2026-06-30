@@ -19,31 +19,33 @@ export function RouterOrchestrator() {
 
   const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
   
-  // Resolve route name stably using fallback logic for nuqs / chicane transient states
+  // FORCE matching based on pathname for all admin and system pages to avoid any Chicane matching issues or transient state desyncs!
   let routeName = route?.name;
-  if (!routeName || routeName === '') {
+  
+  if (pathname.startsWith('/admin/batch-edit')) {
+    routeName = 'adminBatchEdit';
+  } else if (pathname.startsWith('/admin/group/')) {
+    routeName = 'adminGroup';
+  } else if (pathname.startsWith('/admin/tasks')) {
+    routeName = 'adminTasks';
+  } else if (pathname.startsWith('/admin/diagnose')) {
+    routeName = 'adminDiagnostics';
+  } else if (pathname.startsWith('/admin/error-logs')) {
+    routeName = 'adminDiagnosticsLogs';
+  } else if (pathname.startsWith('/admin')) {
+    routeName = 'admin';
+  } else if (pathname.startsWith('/settings')) {
+    routeName = 'settings';
+  } else if (pathname.startsWith('/diagnostics')) {
+    routeName = 'diagnostics';
+  } else if (!routeName || routeName === '') {
+    // Default fallback for other pages
     if (pathname === '/' || pathname === '') {
       routeName = 'home';
-    } else if (pathname.startsWith('/admin/batch-edit')) {
-      routeName = 'adminBatchEdit';
-    } else if (pathname.startsWith('/admin/group/')) {
-      routeName = 'adminGroup';
-    } else if (pathname.startsWith('/admin/tasks')) {
-      routeName = 'adminTasks';
-    } else if (pathname.startsWith('/admin/diagnose')) {
-      routeName = 'adminDiagnostics';
-    } else if (pathname.startsWith('/admin/error-logs')) {
-      routeName = 'adminDiagnosticsLogs';
-    } else if (pathname.startsWith('/admin')) {
-      routeName = 'admin';
     } else if (pathname.startsWith('/group/')) {
       routeName = 'publicGroup';
     } else if (pathname.startsWith('/photo/')) {
       routeName = 'photo';
-    } else if (pathname.startsWith('/settings')) {
-      routeName = 'settings';
-    } else if (pathname.startsWith('/diagnostics')) {
-      routeName = 'diagnostics';
     }
   }
 

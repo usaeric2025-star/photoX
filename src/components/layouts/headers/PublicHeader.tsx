@@ -23,8 +23,9 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
   const { role, isStaff, isAdmin: isGlobalAdmin } = usePermission();
   const patch = useUI((s: UIStoreState) => s.patch);
   const { navigate, route } = useAppRouter();
-  const isAdminRoute = route?.name === 'admin' || route?.name === 'adminGroup';
-  const isGroupPage = route?.name === 'publicGroup' || route?.name === 'adminGroup';
+  const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+  const isAdminRoute = route?.name === 'admin' || route?.name === 'adminGroup' || pathname.startsWith('/admin');
+  const isGroupPage = route?.name === 'publicGroup' || route?.name === 'adminGroup' || pathname.startsWith('/group/') || pathname.startsWith('/admin/group/');
 
   const lang = useUI((s: UIStoreState) => s.appLang);
   const t = translations[lang as keyof typeof translations] || translations.en;
@@ -105,15 +106,6 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
             <span className={cn("text-base sm:text-lg font-bold tracking-tight", theme.logoText)}>
               PhotoX
             </span>
-            {isGlobalAdmin ? (
-              <span className="text-[10px] font-bold bg-indigo-600/10 text-indigo-400 px-2 py-0.5 rounded-full uppercase tracking-wide ml-1 select-none">
-                Admin
-              </span>
-            ) : isStaff ? (
-              <span className="text-[10px] font-bold bg-amber-600/10 text-amber-600 px-2 py-0.5 rounded-full uppercase tracking-wide ml-1 select-none">
-                Staff
-              </span>
-            ) : null}
           </div>
         )}
 

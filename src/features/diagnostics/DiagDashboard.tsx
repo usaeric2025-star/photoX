@@ -15,10 +15,11 @@ const StatisticsScreen = React.lazy(() => import('../statistics/components/Stati
 export function DiagDashboard() {
   const { navigate, route } = useAppRouter();
   const [tab, setTab] = useQueryState('tab', parseAsString.withDefault('stats'));
+  const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
   
   const activeTab = (() => {
-    if (route?.name === 'adminTasks') return 'tasks';
-    if (route?.name === 'adminDiagnosticsLogs') return 'logs';
+    if (route?.name === 'adminTasks' || pathname.startsWith('/admin/tasks')) return 'tasks';
+    if (route?.name === 'adminDiagnosticsLogs' || pathname.startsWith('/admin/error-logs')) return 'logs';
     return tab;
   })();
 
@@ -28,7 +29,7 @@ export function DiagDashboard() {
     } else if (newTab === 'logs') {
       navigate.adminDiagnosticsLogs();
     } else {
-      if (route?.name !== 'adminDiagnostics') {
+      if (route?.name !== 'adminDiagnostics' && !pathname.startsWith('/admin/diagnose')) {
         navigate.adminDiagnostics();
       }
       setTab(newTab === 'stats' ? null : newTab);

@@ -35,7 +35,8 @@ export function useBatchEdit() {
     await batchEdit.mutateAsync({ ids, updates: cleanUpdates });
     patchSelection({ batchEditingIds: null });
     resetForm();
-    if (route?.name === 'adminBatchEdit') {
+    const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+    if (route?.name === 'adminBatchEdit' || pathname.startsWith('/admin/batch-edit')) {
       navigate.admin();
     }
   };
@@ -47,7 +48,8 @@ export function useBatchEdit() {
     await remove.mutateAsync(ids);
     patchSelection({ batchEditingIds: null, isMultiSelect: false, selectedIds: [] });
     resetForm();
-    if (route?.name === 'adminBatchEdit') {
+    const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+    if (route?.name === 'adminBatchEdit' || pathname.startsWith('/admin/batch-edit')) {
       navigate.admin();
     }
   };
@@ -55,7 +57,8 @@ export function useBatchEdit() {
   const handleClose = () => {
     patchSelection({ batchEditingIds: null });
     resetForm();
-    if (route?.name === 'adminBatchEdit') {
+    const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+    if (route?.name === 'adminBatchEdit' || pathname.startsWith('/admin/batch-edit')) {
       navigate.admin();
     }
   };

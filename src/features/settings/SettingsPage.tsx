@@ -99,7 +99,15 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
 
   const inputClass = "flex-1 min-w-0 bg-brand-navy/5 border border-brand-navy/10 p-3 rounded-2xl text-sm outline-none focus:border-brand-gold focus:bg-white shadow-inner font-normal tracking-tight placeholder:text-brand-navy/30 text-brand-navy";
   const cardClass = "bg-white rounded-[32px] p-6 shadow-sm border border-brand-navy/10 space-y-4";
-  const [activeTab, setActiveTab] = React.useState('general');
+  const [activeTab, setActiveTab] = React.useState(() => {
+    const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+    if (pathname.startsWith('/admin/diagnose') || 
+        pathname.startsWith('/admin/error-logs') || 
+        pathname.startsWith('/admin/tasks')) {
+      return 'status';
+    }
+    return 'general';
+  });
   const [loadedTabs, setLoadedTabs] = React.useState<string[]>(['general']);
 
   const handleTabChange = (tabId: string) => {
@@ -108,15 +116,6 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
       setLoadedTabs(prev => [...prev, tabId]);
     }
   };
-
-  React.useEffect(() => {
-    if (route?.name === 'settings' || route?.name === 'settingsSlash') {
-      handleTabChange('general');
-    }
-    if (route?.name === 'adminDiagnostics' || route?.name === 'adminDiagnosticsSlash' || route?.name === 'adminDiagnosticsLogs' || route?.name === 'adminDiagnosticsLogsSlash' || route?.name === 'adminTasks' || route?.name === 'adminTasksSlash') {
-      handleTabChange('status');
-    }
-  }, [route]);
 
   const { submit: runSaveSettings, isLoading: isSavingSettings } = useFormSubmit({
     schema: v.partial(v.object({

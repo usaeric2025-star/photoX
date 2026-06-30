@@ -55,7 +55,8 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
   const setBatchFilter = useCallback((val: boolean) => setQuery({ batch: val || null }), [setQuery]);
   
   const setPhotoId = useCallback((val: string | null) => {
-      if (route?.name === 'photo') {
+      const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+      if (route?.name === 'photo' || pathname.startsWith('/photo/')) {
          if (val) {
             if (val !== query.photoId) Router.push("photo", { photoId: val });
          } else {
