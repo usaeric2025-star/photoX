@@ -38,8 +38,8 @@ const supabaseAnonKey = getEnv('VITE_SUPABASE_ANON_KEY');
 
 // 验证环境变量
 let isSupabaseConfigured = true;
-if (!supabaseUrl || !supabaseAnonKey) {
-  logger.error(`Missing Supabase environment variables.`);
+if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('your-project-url.supabase.co')) {
+  logger.error(`Missing or invalid Supabase environment variables.`);
   isSupabaseConfigured = false;
 }
 
