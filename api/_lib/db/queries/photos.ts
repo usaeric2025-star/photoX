@@ -1,5 +1,5 @@
 
-import { db, furnitureItems, categories, manufacturers, groups, vPhotosList } from '../index.js';
+import { db, furnitureItems, categories, manufacturers, groups as groupsTable, tags as tagsTable, photoTags } from '../index.js';
 import { eq, and, or, ilike, sql, desc, asc, isNull, count, inArray, type SQL } from 'drizzle-orm';
 import { logger } from '../../logger.js';
 
@@ -51,65 +51,71 @@ export async function getPhotosList(params: PhotoListParams) {
         const cursorTime = new Date(cursor);
         if (!isNaN(cursorTime.getTime())) {
             const op = sortOrder === 'oldest' ? sql`>` : sql`<`;
-            whereClauses.push(sql`${vPhotosList.createdAt} ${op} ${cursorTime.toISOString()}`);
+            whereClauses.push(sql`${furnitureItems.createdAt} ${op} ${cursorTime.toISOString()}`);
         }
     }
 
     const pattern = searchQuery?.trim() ? `%${searchQuery.trim()}%` : null;
     if (pattern) {
         whereClauses.push(or(
-            ilike(sql`${vPhotosList.name}->>'zh'`, pattern),
-            ilike(sql`${vPhotosList.name}->>'en'`, pattern),
-            ilike(sql`${vPhotosList.name}->>'ms'`, pattern),
-            ilike(vPhotosList.manualCode, pattern),
-            ilike(vPhotosList.modelNumber, pattern),
-            ilike(vPhotosList.itemCode, pattern),
+            ilike(sql`${furnitureItems.name}->>'zh'`, pattern),
+            ilike(sql`${furnitureItems.name}->>'en'`, pattern),
+            ilike(sql`${furnitureItems.name}->>'ms'`, pattern),
+            ilike(furnitureItems.manualCode, pattern),
+            ilike(furnitureItems.modelNumber, pattern),
+            ilike(furnitureItems.itemCode, pattern),
+            // Tags Subquery
             sql`EXISTS (
-                SELECT 1 FROM unnest(${vPhotosList.tags}) t
-                WHERE t ILIKE ${pattern}
+                SELECT 1 FROM ${photoTags} pt
+                JOIN ${tagsTable} t ON pt.tag_id = t.id
+                WHERE pt.photo_id = ${furnitureItems.id} AND t.name ILIKE ${pattern}
             )`,
-            ilike(vPhotosList.categoryNameZh, pattern),
-            ilike(vPhotosList.categoryNameEn, pattern),
-            ilike(vPhotosList.categoryNameMs, pattern)
+            // Category Subquery
+            sql`EXISTS (
+                SELECT 1 FROM ${categories} c
+                WHERE c.id = ${furnitureItems.categoryId} AND (
+                    c.name_zh ILIKE ${pattern} OR 
+                    c.name_en ILIKE ${pattern} OR 
+                    c.name_ms ILIKE ${pattern}
+                )
+            )`
         ));
     }
 
     if (tagId && !isNaN(Number(tagId))) {
-        whereClauses.push(sql`${Number(tagId)} = ANY(${vPhotosList.tagIds})`);
+        whereClauses.push(sql`EXISTS (
+            SELECT 1 FROM ${photoTags} pt
+            WHERE pt.photo_id = ${furnitureItems.id} AND pt.tag_id = ${Number(tagId)}
+        )`);
     }
 
     if (categoryId && !isNaN(Number(categoryId))) {
-        whereClauses.push(eq(vPhotosList.categoryId, Number(categoryId)));
+        whereClauses.push(eq(furnitureItems.categoryId, Number(categoryId)));
     }
 
     if (groupId) {
-        whereClauses.push(eq(vPhotosList.groupId, groupId));
+        whereClauses.push(eq(furnitureItems.groupId, groupId));
     }
     
     if (onlyGroupsCover) {
-        // 合组视图逻辑：
-        // 1. 没有 groupId 的照片（散图）
-        // 2. 是组封面的照片
-        // 3. 虽有 groupId 但找不到组名的照片（孤儿数据/孤本），也直接显示，防止数据“失踪”
+        // 合组视图逻辑：散图、组封面、孤儿数据
         whereClauses.push(or(
-            isNull(vPhotosList.groupId),
-            eq(vPhotosList.isGroupCover, true),
-            isNull(vPhotosList.groupName)
+            isNull(furnitureItems.groupId),
+            eq(furnitureItems.isGroupCover, true),
+            sql`NOT EXISTS (SELECT 1 FROM ${groupsTable} g WHERE g.id = ${furnitureItems.groupId})`
         ));
     } else if (onlyUngrouped) {
-        whereClauses.push(isNull(vPhotosList.groupId));
+        whereClauses.push(isNull(furnitureItems.groupId));
     }
     
     if (isHidden !== undefined && isHidden !== null) {
-        whereClauses.push(eq(vPhotosList.isHidden, isHidden));
+        whereClauses.push(eq(furnitureItems.isHidden, isHidden));
     } else if (!isAdminMode) {
-        // 只有非管理员模式下才默认隐藏 isHidden=true 的照片
-        whereClauses.push(eq(vPhotosList.isHidden, false));
+        whereClauses.push(eq(furnitureItems.isHidden, false));
     }
-    // 管理员模式下如果不传 isHidden 参数，默认显示全部（包括隐藏的），确保不漏掉任何没删除的数据
     
     if (manufacturerId !== undefined && manufacturerId !== null) {
-        whereClauses.push(eq(vPhotosList.manufacturerId, String(manufacturerId)));
+        whereClauses.push(eq(furnitureItems.manufacturerId, String(manufacturerId)));
     }
 
     const finalWhere = and(...whereClauses.filter((c): c is SQL => !!c));
@@ -117,21 +123,64 @@ export async function getPhotosList(params: PhotoListParams) {
     // 1. Get Total Count
     const [countRes] = await db
         .select({ count: count() })
-        .from(vPhotosList)
+        .from(furnitureItems)
         .where(finalWhere);
     
     let total = Number(countRes.count);
 
     // 2. Get Data
-    const orderSpec = sortOrder === 'oldest' ? asc(vPhotosList.createdAt) : desc(vPhotosList.createdAt);
-    const secondaryOrder = sortOrder === 'oldest' ? asc(vPhotosList.id) : desc(vPhotosList.id);
+    const orderSpec = sortOrder === 'oldest' ? asc(furnitureItems.createdAt) : desc(furnitureItems.createdAt);
+    const secondaryOrder = sortOrder === 'oldest' ? asc(furnitureItems.id) : desc(furnitureItems.id);
 
-    let results = await db
-        .select()
-        .from(vPhotosList)
+    let dbData = await db
+        .select({
+            items: furnitureItems,
+            group: groupsTable,
+            category: categories,
+        })
+        .from(furnitureItems)
+        .leftJoin(groupsTable, eq(furnitureItems.groupId, groupsTable.id))
+        .leftJoin(categories, eq(furnitureItems.categoryId, categories.id))
         .where(finalWhere)
         .orderBy(orderSpec, secondaryOrder)
         .limit(limit);
+
+    // Fetch tags in bulk
+    const photoIds = dbData.map(d => d.items.id);
+    const tagsByPhoto = new Map<string, any[]>();
+    
+    if (photoIds.length > 0) {
+        const tagsData = await db.select({
+            photoId: photoTags.photoId,
+            tagId: photoTags.tagId,
+            name: tagsTable.name
+        })
+        .from(photoTags)
+        .innerJoin(tagsTable, eq(photoTags.tagId, tagsTable.id))
+        .where(inArray(photoTags.photoId, photoIds));
+
+        for (const t of tagsData) {
+            const list = tagsByPhoto.get(t.photoId ?? '') || [];
+            list.push({ tag_id: t.tagId, tags: { id: t.tagId, name: t.name } });
+            tagsByPhoto.set(t.photoId ?? '', list);
+        }
+    }
+
+    // Format to match old v_photos_list return shape
+    const results = dbData.map(d => {
+        const item = { ...d.items } as Record<string, unknown>;
+        item.group_name = d.group?.name || null;
+        item.group_cover_photo_id = d.group?.coverPhotoId || null;
+        item.category_name_zh = d.category?.nameZh || null;
+        item.category_name_en = d.category?.nameEn || null;
+        item.category_name_ms = d.category?.nameMs || null;
+        
+        const pTags = tagsByPhoto.get(d.items.id) || [];
+        item.tags = pTags.map((pt: any) => pt.tags.name);
+        item.tag_ids = pTags.map((pt: any) => pt.tags.id);
+        
+        return item;
+    });
 
     return {
         items: results,

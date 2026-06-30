@@ -1,7 +1,6 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema.js';
-import * as views from './views.js';
 import { getServerEnv } from '../../../shared/envSchema.js';
 
 const env = getServerEnv(process.env);
@@ -66,16 +65,15 @@ const client = globalForDb.postgresClient || postgres(finalConnectionString || '
 
 if (!globalForDb.drizzleDb && connectionString) {
   globalForDb.drizzleDb = drizzle(client, { 
-    schema: { ...schema, ...views }, 
+    schema: { ...schema }, 
     casing: 'snake_case' 
   });
 }
 
 export const db = globalForDb.drizzleDb || drizzle(client, { 
-  schema: { ...schema, ...views }, 
+  schema: { ...schema }, 
   casing: 'snake_case' 
 });
 
 export * from './schema.js';
-export * from './views.js';
 

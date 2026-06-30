@@ -15,7 +15,6 @@ import { storage } from './_handlers/storage.js';
 import { testHandler } from './_handlers/test.js';
 import { setupMiddlewares } from './_lib/middleware.js';
 import { cronRefreshView } from './_handlers/cron/refresh-view.js';
-import { ensureViewExists } from './_lib/db/actions.js';
 
 // Validate env at module level
 const serverEnv = getServerEnv(process.env);
@@ -26,11 +25,6 @@ if (!serverEnv.DATABASE_URL) {
     process.exit(1);
 } else {
     console.log('✅ [INIT] DATABASE_URL validated, proceeding to route initialization.');
-    
-    // Automatically verify and migrate to standard dynamic views asynchronously
-    ensureViewExists().catch(err => {
-        console.error('❌ [INIT] Failed to verify/create v_photos_list view:', err);
-    });
 }
 
 export const app = new Hono().basePath('/api');
