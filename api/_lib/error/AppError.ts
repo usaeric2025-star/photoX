@@ -1,4 +1,4 @@
-import { ErrorCode } from '@/shared/errorCodes.js';
+import { ErrorCode } from '../../../shared/errorCodes.js';
 
 export class AppError extends Error {
   public code: ErrorCode | string;

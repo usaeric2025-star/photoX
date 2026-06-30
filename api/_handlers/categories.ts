@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
 import * as v from 'valibot';
-import { db, categories as categoriesTable, furnitureItems } from '@/api/_lib/db/index.js';
+import { db, categories as categoriesTable, furnitureItems } from '../_lib/db/index.js';
 import { eq, sql } from 'drizzle-orm';
-import { CategoryReqSchema } from '@/shared/apiContractSchema.js';
-import { errorResponse } from '@/api/_lib/response.js';
-import { getAllCategories, getCategoryById } from '@/api/_lib/db/queries/categories.js';
+import { CategoryReqSchema } from '../../shared/apiContractSchema.js';
+import { errorResponse } from '../_lib/response.js';
+import { getAllCategories, getCategoryById } from '../_lib/db/queries/categories.js';
 
 interface FormattedCategory {
     id: number;

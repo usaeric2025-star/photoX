@@ -1,9 +1,9 @@
 import { Hono } from 'hono';
-import { db } from '@/api/_lib/db/index.js';
-import * as schema from '@/api/_lib/db/schema.js';
+import { db } from '../_lib/db/index.js';
+import * as schema from '../_lib/db/schema.js';
 import { eq } from 'drizzle-orm';
-import { logger } from '@/api/_lib/logger.js';
-import { withTimeout, TIMEOUTS } from '@/api/_lib/utils/timeout.js';
+import { logger } from '../_lib/logger.js';
+import { withTimeout, TIMEOUTS } from '../_lib/utils/timeout.js';
 
 export const publicAuth = new Hono();
 

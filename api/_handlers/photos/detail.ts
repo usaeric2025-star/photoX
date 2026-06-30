@@ -1,9 +1,9 @@
 import { Hono } from 'hono';
 import * as v from 'valibot';
-import { db, furnitureItems } from '@/api/_lib/db/index.js';
+import { db, furnitureItems } from '../../_lib/db/index.js';
 import { inArray, eq } from 'drizzle-orm';
-import { PhotoIdsReqSchema, PhotoCheckHashReqSchema } from '@/shared/apiContractSchema.js';
-import { errorResponse } from '@/api/_lib/response.js';
+import { PhotoIdsReqSchema, PhotoCheckHashReqSchema } from '../../../shared/apiContractSchema.js';
+import { errorResponse } from '../../_lib/response.js';
 
 export const detailHandler = (app: Hono) => {
   app.post('/by-ids', async (c) => {

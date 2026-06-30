@@ -1,12 +1,12 @@
 import { Hono } from 'hono';
 import * as v from 'valibot';
-import { db, groups as groupsTable, furnitureItems } from '@/api/_lib/db/index.js';
+import { db, groups as groupsTable, furnitureItems } from '../_lib/db/index.js';
 import { eq, and, inArray, isNull, sql } from 'drizzle-orm';
-import { GroupReqSchema } from '@/shared/apiContractSchema.js';
-import { errorResponse } from '@/api/_lib/response.js';
-import { syncGroupCoversAndCount } from '@/api/_lib/groups.js';
-import { refreshPhotosView } from '@/api/_lib/db/actions.js';
-import { getAllGroups, getGroupById, upsertGroup, deleteGroup } from '@/api/_lib/db/queries/groups.js';
+import { GroupReqSchema } from '../../shared/apiContractSchema.js';
+import { errorResponse } from '../_lib/response.js';
+import { syncGroupCoversAndCount } from '../_lib/groups.js';
+import { refreshPhotosView } from '../_lib/db/actions.js';
+import { getAllGroups, getGroupById, upsertGroup, deleteGroup } from '../_lib/db/queries/groups.js';
 
 export const groups = new Hono()
   .get('/', async (c) => {

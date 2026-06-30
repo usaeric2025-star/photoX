@@ -50,25 +50,27 @@ export const PhotoLightbox = memo(function PhotoLightbox() {
   const filters = useFilters();
   const { photoId: urlPhotoId, modal, setPhotoId } = filters;
   
-  // ✅ Use refs to lock state during closing animation without triggering unnecessary re-renders
-  const lastIndexRef = React.useRef(0);
-  const lastSlidesRef = React.useRef<LightboxSlide[]>([]);
+  // ✅ Keep only the last valid index to remember where we were
+  const [lastIndex, setLastIndex] = React.useState(0);
 
-  // Update refs whenever we have valid data
-  if (urlPhotoId && rawSlides.length > 0) {
-    const idx = rawSlides.findIndex(s => s.id === urlPhotoId);
-    if (idx !== -1) {
-      lastIndexRef.current = idx;
-      lastSlidesRef.current = rawSlides;
+  // Sync lastIndex whenever we have valid data
+  React.useEffect(() => {
+    if (urlPhotoId && rawSlides.length > 0) {
+      const idx = rawSlides.findIndex(s => s.id === urlPhotoId);
+      if (idx !== -1) {
+        setLastIndex(idx);
+      }
     }
-  }
+  }, [urlPhotoId, rawSlides]);
 
   const isOpen = !!(urlPhotoId && modal !== 'edit');
   const currentIndex = (urlPhotoId && rawSlides.length > 0) 
     ? Math.max(0, rawSlides.findIndex(s => s.id === urlPhotoId))
-    : lastIndexRef.current;
+    : lastIndex;
   
-  const slides = (isOpen && rawSlides.length > 0) ? rawSlides : lastSlidesRef.current;
+  // Use rawSlides directly to keep memory low. The backdrop exit animation 
+  // remains smooth, and we avoid keeping stale large slide arrays.
+  const slides = rawSlides;
   
   // Use a local ref for logging to avoid excessive console noise
   const lastLoggedRef = React.useRef(0);
@@ -104,7 +106,7 @@ export const PhotoLightbox = memo(function PhotoLightbox() {
   const coarseIndex = Math.floor(currentIndex / 10);
 
   const images = useMemo(() => {
-    if (!isOpen && lastSlidesRef.current.length === 0) return [];
+    if (!isOpen && slides.length === 0) return [];
     
     const centerIndex = coarseIndex * 10;
     

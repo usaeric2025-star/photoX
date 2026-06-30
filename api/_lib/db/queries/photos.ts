@@ -1,8 +1,8 @@
 
-import { db, furnitureItems, categories, manufacturers, groups as groupsTable, tags as tagsTable, photoTags } from '@/api/_lib/db/index.js';
+import { db, furnitureItems, categories, manufacturers, groups as groupsTable, tags as tagsTable, photoTags } from '../index.js';
 import { eq, and, or, ilike, sql, desc, asc, isNull, count, inArray, type SQL } from 'drizzle-orm';
-import { logger } from '@/api/_lib/logger.js';
-import { normalizeI18n } from '@/shared/i18n.js';
+import { logger } from '../../logger.js';
+import { normalizeI18n } from '../../../../shared/i18n.js';
 
 export interface PhotoListParams {
     page?: number;

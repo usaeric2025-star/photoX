@@ -1,5 +1,5 @@
 
-import { db, groups as groupsTable, furnitureItems } from '@/api/_lib/db/index.js';
+import { db, groups as groupsTable, furnitureItems } from '../index.js';
 import { eq, and, inArray, sql, asc } from 'drizzle-orm';
 
 export interface GroupListParams {
