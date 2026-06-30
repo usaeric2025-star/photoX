@@ -17,39 +17,72 @@ export function RouterOrchestrator() {
   const route = useAppRoute();
   logger.debug('[RouterOrchestrator] Current route:', route);
 
-  const getPage = () => {
-    let routeName = route?.name;
-    const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
-
-    // Fix for nuqs + chicane interaction: 
-    // Nuqs updates query string, Chicane might momentarily fail to match
-    // resulting in a transient 404 page. We fallback based on pathname.
-    if (!routeName) {
-      if (pathname === '/' || pathname === '') {
-        routeName = 'home';
-      } else if (pathname.startsWith('/admin/batch-edit')) {
-        routeName = 'adminBatchEdit';
-      } else if (pathname.startsWith('/admin/group/')) {
-        routeName = 'adminGroup';
-      } else if (pathname.startsWith('/admin/tasks')) {
-        routeName = 'adminTasks';
-      } else if (pathname.startsWith('/admin/diagnose')) {
-        routeName = 'adminDiagnostics';
-      } else if (pathname.startsWith('/admin/error-logs')) {
-        routeName = 'adminDiagnosticsLogs';
-      } else if (pathname.startsWith('/admin')) {
-        routeName = 'admin';
-      } else if (pathname.startsWith('/group/')) {
-        routeName = 'publicGroup';
-      } else if (pathname.startsWith('/photo/')) {
-        routeName = 'photo';
-      } else if (pathname.startsWith('/settings')) {
-        routeName = 'settings';
-      } else if (pathname.startsWith('/diagnostics')) {
-        routeName = 'diagnostics';
-      }
+  const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+  
+  // Resolve route name stably using fallback logic for nuqs / chicane transient states
+  let routeName = route?.name;
+  if (!routeName || routeName === '') {
+    if (pathname === '/' || pathname === '') {
+      routeName = 'home';
+    } else if (pathname.startsWith('/admin/batch-edit')) {
+      routeName = 'adminBatchEdit';
+    } else if (pathname.startsWith('/admin/group/')) {
+      routeName = 'adminGroup';
+    } else if (pathname.startsWith('/admin/tasks')) {
+      routeName = 'adminTasks';
+    } else if (pathname.startsWith('/admin/diagnose')) {
+      routeName = 'adminDiagnostics';
+    } else if (pathname.startsWith('/admin/error-logs')) {
+      routeName = 'adminDiagnosticsLogs';
+    } else if (pathname.startsWith('/admin')) {
+      routeName = 'admin';
+    } else if (pathname.startsWith('/group/')) {
+      routeName = 'publicGroup';
+    } else if (pathname.startsWith('/photo/')) {
+      routeName = 'photo';
+    } else if (pathname.startsWith('/settings')) {
+      routeName = 'settings';
+    } else if (pathname.startsWith('/diagnostics')) {
+      routeName = 'diagnostics';
     }
+  }
 
+  // Group routes to avoid tearing down the entire layout when swapping nested sub-views
+  const getPageGroupKey = (rName: string) => {
+    if (rName === 'home' || rName === 'photo' || rName === 'photoSlash') {
+      return 'public-home';
+    }
+    if (
+      rName === 'admin' || 
+      rName === 'adminSlash' || 
+      rName === 'adminBatchEdit' || 
+      rName === 'adminBatchEditSlash' || 
+      rName === 'adminTasks' || 
+      rName === 'adminTasksSlash' || 
+      rName === 'adminDiagnostics' || 
+      rName === 'adminDiagnosticsSlash' || 
+      rName === 'adminDiagnosticsLogs' || 
+      rName === 'adminDiagnosticsLogsSlash' || 
+      rName === 'settings' || 
+      rName === 'settingsSlash'
+    ) {
+      return 'admin-dashboard';
+    }
+    if (rName === 'diagnostics' || rName === 'diagnosticsSlash') {
+      return 'diag-dashboard';
+    }
+    if (rName === 'publicGroup' || rName === 'publicGroupSlash') {
+      return 'public-group';
+    }
+    if (rName === 'adminGroup' || rName === 'adminGroupSlash') {
+      return 'admin-group';
+    }
+    return rName || 'unknown';
+  };
+
+  const groupKey = getPageGroupKey(routeName || '');
+
+  const getPage = () => {
     if (!routeName) {
       logger.warn('[Router] No route matched!', pathname);
       return <NotFoundPage />;
@@ -100,7 +133,7 @@ export function RouterOrchestrator() {
     <>
       <AnimatePresence>
         <motion.div 
-          key={route?.name || 'unknown'}
+          key={groupKey}
           variant="fade"
           transition="easeOut"
           className="flex-1 flex flex-col h-full w-full"
