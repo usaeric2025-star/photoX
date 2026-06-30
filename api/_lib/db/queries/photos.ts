@@ -166,18 +166,18 @@ export async function getPhotosList(params: PhotoListParams) {
         }
     }
 
-    // Format to match old v_photos_list return shape
+    // Format to match expected frontend structure
     const results = dbData.map(d => {
         const item = { ...d.items } as Record<string, unknown>;
-        item.group_name = d.group?.name || null;
-        item.group_cover_photo_id = d.group?.coverPhotoId || null;
-        item.category_name_zh = d.category?.nameZh || null;
-        item.category_name_en = d.category?.nameEn || null;
-        item.category_name_ms = d.category?.nameMs || null;
+        item.groupName = d.group?.name || null;
+        item.groupCoverPhotoId = d.group?.coverPhotoId || null;
+        item.categoryNameZh = d.category?.nameZh || null;
+        item.categoryNameEn = d.category?.nameEn || null;
+        item.categoryNameMs = d.category?.nameMs || null;
         
         const pTags = tagsByPhoto.get(d.items.id) || [];
         item.tags = pTags.map((pt: any) => pt.tags.name);
-        item.tag_ids = pTags.map((pt: any) => pt.tags.id);
+        item.tagIds = pTags.map((pt: any) => pt.tags.id);
         
         return item;
     });

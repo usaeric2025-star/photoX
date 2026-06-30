@@ -4,6 +4,7 @@ import { eq, ne, and, or, ilike, sql, asc, desc, inArray, isNull, count, type SQ
 import { ListByGroupReqSchema, PhotoListReqSchema } from '../../../shared/apiContractSchema.js';
 import { errorFactory } from '../../_lib/error/AppError.js';
 import { getGroupCounts } from '../../_lib/db/queries/photos.js';
+import { toCamelCaseArray } from '../../_lib/transform.js';
 
 import { Hono, type Context } from 'hono';
 
@@ -60,9 +61,10 @@ export const listExtendedHandlers = (app: Hono) => {
                 if (item.createdAt) {
                     item.createdAt = typeof item.createdAt === 'string' ? item.createdAt : (item.createdAt as Date).toISOString();
                 }
+                
                 return item;
             });
-            return c.json({ success: true, data: photosFormatted });
+            return c.json({ success: true, data: toCamelCaseArray(photosFormatted as Record<string, unknown>[]) });
         }
         return c.json({ success: true, data: [] });
     } catch (error: unknown) {
@@ -130,9 +132,10 @@ export const listExtendedHandlers = (app: Hono) => {
                 if (item.createdAt) {
                     item.createdAt = typeof item.createdAt === 'string' ? item.createdAt : (item.createdAt as Date).toISOString();
                 }
+
                 return item;
             });
-            return c.json({ success: true, data: { photos: photosFormatted, total: Number(countRes.count) } });
+            return c.json({ success: true, data: { photos: toCamelCaseArray(photosFormatted as Record<string, unknown>[]), total: Number(countRes.count) } });
         }
         return c.json({ success: true, data: { photos: [], total: 0 } });
     } catch (error: unknown) {
