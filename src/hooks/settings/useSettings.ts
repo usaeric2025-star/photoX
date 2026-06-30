@@ -23,7 +23,7 @@ export function useSettings() {
     isPending: isLoading,
     updateSettings: mutate,
     agnesApiKey: settings?.agnes_api_key,
-    accessPasscode: settings?.access_passcode,
+    accessPasscode: settings?.accessPasscode,
     updateSettingsSync: mutate,
   }), [settings, isLoading, mutate]);
 }

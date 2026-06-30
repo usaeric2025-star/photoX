@@ -24,7 +24,7 @@ export function usePermission() {
     }
   });
 
-  const isStaffMode = String(passcode) === settings?.access_passcode && !!settings?.access_passcode;
+  const isStaffMode = String(passcode) === settings?.accessPasscode && !!settings?.accessPasscode;
     
   const role = getEffectiveRole(user || null, isStaffMode);
   const permissions = ROLE_PERMISSIONS[role] || [];
