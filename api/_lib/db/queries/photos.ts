@@ -2,6 +2,7 @@
 import { db, furnitureItems, categories, manufacturers, groups as groupsTable, tags as tagsTable, photoTags } from '../index.js';
 import { eq, and, or, ilike, sql, desc, asc, isNull, count, inArray, type SQL } from 'drizzle-orm';
 import { logger } from '../../logger.js';
+import { normalizeI18n } from '../../../shared/i18n.js';
 
 export interface PhotoListParams {
     page?: number;
@@ -169,6 +170,8 @@ export async function getPhotosList(params: PhotoListParams) {
     // Format to match expected frontend structure
     const results = dbData.map(d => {
         const item = { ...d.items } as Record<string, unknown>;
+        item.name = normalizeI18n(d.items.name).zh;
+        item.description = normalizeI18n(d.items.description).zh;
         item.groupName = d.group?.name || null;
         item.groupCoverPhotoId = d.group?.coverPhotoId || null;
         item.categoryNameZh = d.category?.nameZh || null;
