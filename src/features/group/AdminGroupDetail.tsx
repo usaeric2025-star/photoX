@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { motion } from 'lite-sleek';
 import { useAppRouter } from '@/lib/router';
 import { useGroupData } from './hooks/useGroupData';
 import { PhotoListItem } from '@/types/api';
 import { Photo, Group, ProductGroup, Dimension, Category } from '@/types';
 import { PhotoGridContent } from '@/components/photo/PhotoGridContent';
+import { AdminPhotoCard } from '@/components/photo/AdminPhotoCard';
 import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
 import { useFilters, useTranslation, useCategories, usePermission } from '@/hooks';
 import { getTranslatedCategoryName } from '@/services/category/utils';
@@ -26,6 +28,33 @@ function AdminPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoLis
   const isMultiSelect = useIsMultiSelect();
   const { toggleSelect } = useSelectionActions();
   const columns = useSignal(gridColumnsSignal) as number;
+  const { can } = usePermission();
+  const canPinGlobal = can('photo:toggle-pinned');
+
+  const renderItem = React.useCallback((photo: PhotoListItem, index: number) => {
+    return (
+      <motion.div
+        initial={{ opacity: 0, transform: 'translateY(10px)' }}
+        animate={{ opacity: 1, transform: 'translateY(0)' }}
+        transition="all 0.3s cubic-bezier(0.16, 1, 0.3, 1)"
+        className="w-full h-full p-[1px]"
+      >
+        <AdminPhotoCard 
+          photo={photo} 
+          onClick={(e: any) => {
+            if (isMultiSelect) {
+              toggleSelect(photo.id);
+            } else {
+              onPhotoClick(photo.id, index, e);
+            }
+          }} 
+          showGroupsCollapsed={false}
+          hasSearchQuery={false}
+          canPinGlobal={canPinGlobal}
+        />
+      </motion.div>
+    );
+  }, [isMultiSelect, toggleSelect, onPhotoClick, canPinGlobal]);
 
   return (
     <PhotoGridContent 
@@ -37,14 +66,7 @@ function AdminPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoLis
       hasNextPage={false}
       fetchNextPage={() => {}}
       columns={columns}
-      mode="admin"
-      onPhotoClick={(id, index, e) => {
-        if (isMultiSelect) {
-          toggleSelect(id);
-        } else {
-          onPhotoClick(id, index, e);
-        }
-      }}
+      renderItem={renderItem}
     />
   );
 }

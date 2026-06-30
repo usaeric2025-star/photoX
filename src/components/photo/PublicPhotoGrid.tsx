@@ -1,7 +1,8 @@
 import React from 'react';
-import { usePhotoGrid } from '@/hooks/photo/usePhotoGrid';
+import { motion } from 'lite-sleek';
 import { PhotoGridContent } from './PhotoGridContent';
 import { logger } from '@/lib/logger';
+import { PublicPhotoCard } from './PublicPhotoCard';
 
 import type { PhotoListItem } from '@/types/api';
 
@@ -41,6 +42,28 @@ export function PublicPhotoGrid({
   
   logger.debug('[PublicPhotoGrid] Render Start', { photosCount: photos?.length, isPending, isFetching, dataVersion });
 
+  const showGroupsCollapsed = filters?.showGroupsCollapsed !== false;
+  const hasSearchQuery = !!filters?.search;
+
+  const renderItem = React.useCallback((photo: PhotoListItem, index: number) => {
+    return (
+      <motion.div
+        initial={{ opacity: 0, transform: 'translateY(10px)' }}
+        animate={{ opacity: 1, transform: 'translateY(0)' }}
+        transition="all 0.3s cubic-bezier(0.16, 1, 0.3, 1)"
+        className="w-full h-full p-[1px]"
+      >
+        <PublicPhotoCard 
+          photo={photo} 
+          onClick={(e: any) => onPhotoClick?.(photo.id, index, e)} 
+          showGroupsCollapsed={showGroupsCollapsed}
+          hasSearchQuery={hasSearchQuery}
+        />
+      </motion.div>
+    );
+  }, [onPhotoClick, showGroupsCollapsed, hasSearchQuery]);
+
+
   return (
     <div className="h-full w-full relative">
       <PhotoGridContent 
@@ -52,13 +75,11 @@ export function PublicPhotoGrid({
         hasNextPage={hasNextPage}
         fetchNextPage={fetchNextPage}
         columns={columns}
-        mode="public"
-        filters={filters}
         gridRef={gridRef}
         onScroll={onScroll}
-        onPhotoClick={onPhotoClick}
         error={error}
         onRetry={onRetry}
+        renderItem={renderItem}
       />
     </div>
   );

@@ -113,7 +113,7 @@ export async function getPhotosList(params: PhotoListParams) {
     if (isHidden !== undefined && isHidden !== null) {
         whereClauses.push(eq(furnitureItems.isHidden, isHidden));
     } else if (!isAdminMode) {
-        whereClauses.push(eq(furnitureItems.isHidden, false));
+        whereClauses.push(or(eq(furnitureItems.isHidden, false), isNull(furnitureItems.isHidden)));
     }
     
     if (manufacturerId !== undefined && manufacturerId !== null) {

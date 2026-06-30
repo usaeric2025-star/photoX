@@ -1,12 +1,10 @@
 import React from 'react';
 import { motion } from 'lite-sleek';
 import { PhotoListItem } from '@/types/api';
-import { AdminPhotoCard } from './AdminPhotoCard';
-import { PublicPhotoCard } from './PublicPhotoCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useSignal } from '@/lib/store';
 import { gridColumns as gridColumnsSignal } from '@/lib/store';
-import { usePermission, useTranslation } from '@/hooks';
+import { useTranslation } from '@/hooks';
 import { CardSkeleton } from '@/components/photo/CardSkeleton';
 import { VirtualizedGrid } from './VirtualizedGrid';
 import { PhotoErrorDisplay } from './PhotoErrorDisplay';
@@ -20,11 +18,9 @@ interface PhotoGridContentProps {
   hasNextPage: boolean;
   fetchNextPage: () => void;
   columns: number;
-  mode: 'admin' | 'public';
-  filters?: Record<string, unknown>;
+  renderItem: (photo: PhotoListItem, index: number) => React.ReactNode;
   error?: unknown;
   onRetry?: () => void;
-  onPhotoClick?: (id: string, index: number, e?: React.MouseEvent) => void;
   onScroll?: (offset: number) => void;
   gridRef?: React.Ref<any>;
 }
@@ -38,49 +34,14 @@ export function PhotoGridContent({
   hasNextPage,
   fetchNextPage,
   columns,
-  mode,
-  filters,
+  renderItem,
   error,
   onRetry,
-  onPhotoClick,
   gridRef,
   onScroll,
 }: PhotoGridContentProps) {
-  const showGroupsCollapsed = filters?.showGroupsCollapsed !== false;
-  const hasSearchQuery = !!filters?.search;
-  
   const actualColumns = (useSignal(gridColumnsSignal) as number) || 3;
-  const { can } = usePermission();
   const { uiTranslations } = useTranslation();
-  const canPinGlobal = can('photo:toggle-pinned');
-
-  const renderItem = React.useCallback((photo: PhotoListItem, index: number) => {
-    return (
-      <motion.div
-        initial={{ opacity: 0, transform: 'translateY(10px)' }}
-        animate={{ opacity: 1, transform: 'translateY(0)' }}
-        transition="all 0.3s cubic-bezier(0.16, 1, 0.3, 1)"
-        className="w-full h-full p-[1px]"
-      >
-        {mode === 'admin' ? (
-          <AdminPhotoCard 
-            photo={photo} 
-            onClick={(e: any) => onPhotoClick?.(photo.id, index, e)} 
-            showGroupsCollapsed={showGroupsCollapsed}
-            hasSearchQuery={hasSearchQuery}
-            canPinGlobal={canPinGlobal}
-          />
-        ) : (
-          <PublicPhotoCard 
-            photo={photo} 
-            onClick={(e: any) => onPhotoClick?.(photo.id, index, e)} 
-            showGroupsCollapsed={showGroupsCollapsed}
-            hasSearchQuery={hasSearchQuery}
-          />
-        )}
-      </motion.div>
-    );
-  }, [mode, onPhotoClick, showGroupsCollapsed, hasSearchQuery, canPinGlobal]);
 
   const safePhotos = photos || [];
 

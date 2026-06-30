@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { useSignal } from '@/lib/store';
 import { initializeApp, appLoadingSignal, appErrorSignal } from '@/store/appStore';
 import { usePublicSettings } from '@/hooks/settings/useSettings';
-import { prefetchPhotos } from '@/lib/query/hooks/usePhotos';
 
 export function useAppInit() {
   const isAppStoreLoading = useSignal(appLoadingSignal);
@@ -12,10 +11,6 @@ export function useAppInit() {
   useEffect(() => {
     // 1. 啟動核心初始化 (Auth 等)
     initializeApp();
-    
-    // 2. 啟動首屏數據預取 (公開頁面默認列表)
-    // 這樣在 LoadingScreen 消失前，數據可能已經加載好了
-    prefetchPhotos({ onlyGroupsCover: true });
   }, []);
 
   const error = appError || (settingsError as Error | null);

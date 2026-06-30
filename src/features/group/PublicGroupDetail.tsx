@@ -1,10 +1,12 @@
 import React, { useRef } from 'react';
+import { motion } from 'lite-sleek';
 import { logger } from '@/lib/logger';
 import { useAppRouter } from '@/lib/router';
 import { useGroupData } from './hooks/useGroupData';
 import { PhotoListItem } from '@/types/api';
 import { Photo, Group, Category } from '@/types';
 import { PhotoGridContent } from '@/components/photo/PhotoGridContent';
+import { PublicPhotoCard } from '@/components/photo/PublicPhotoCard';
 import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
 import { useFilters, useTranslation, useCategories } from '@/hooks';
 import { PublicGroupHeader } from './components/PublicGroupHeader';
@@ -18,6 +20,24 @@ import { FilterBar } from '@/features/filters';
 function PublicPhotoGrid({ photos, categories, onPhotoClick, gridRef }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string, index: number, e?: React.MouseEvent) => void; gridRef?: React.Ref<any> }) {
   const columns = useSignal(gridColumnsSignal) as number;
   
+  const renderItem = React.useCallback((photo: PhotoListItem, index: number) => {
+    return (
+      <motion.div
+        initial={{ opacity: 0, transform: 'translateY(10px)' }}
+        animate={{ opacity: 1, transform: 'translateY(0)' }}
+        transition="all 0.3s cubic-bezier(0.16, 1, 0.3, 1)"
+        className="w-full h-full p-[1px]"
+      >
+        <PublicPhotoCard 
+          photo={photo} 
+          onClick={(e: any) => onPhotoClick(photo.id, index, e)} 
+          showGroupsCollapsed={false}
+          hasSearchQuery={false}
+        />
+      </motion.div>
+    );
+  }, [onPhotoClick]);
+
   return (
     <PhotoGridContent 
       photos={photos}
@@ -28,8 +48,7 @@ function PublicPhotoGrid({ photos, categories, onPhotoClick, gridRef }: { photos
       hasNextPage={false}
       fetchNextPage={() => {}}
       columns={columns}
-      mode="public"
-      onPhotoClick={onPhotoClick}
+      renderItem={renderItem}
       gridRef={gridRef}
     />
   );

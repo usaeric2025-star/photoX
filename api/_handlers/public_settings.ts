@@ -22,7 +22,7 @@ const handler = async (c: any) => {
     const now = Date.now();
     
     // 1. Ultra-fast Memory Cache
-    if (settingsCache && now - settingsCacheTime < 10 * 60 * 1000) {
+    if (settingsCache && now - settingsCacheTime < 30 * 60 * 1000) {
         return c.json({ success: true, data: settingsCache });
     }
 

@@ -7,6 +7,9 @@ import { getGroupCounts } from '../../_lib/db/queries/photos.js';
 
 import { Hono, type Context } from 'hono';
 
+const countCache = new Map<string, number>();
+const countCacheTime = new Map<string, number>();
+
 export const listExtendedHandlers = (app: Hono) => {
   app.post('/list-by-group', async (c: Context) => {
     const body = await c.req.json();
@@ -24,7 +27,7 @@ export const listExtendedHandlers = (app: Hono) => {
             .leftJoin(groupsTable, eq(furnitureItems.groupId, groupsTable.id))
             .where(and(
                 eq(furnitureItems.groupId, groupId),
-                !isAdminMode ? eq(furnitureItems.isHidden, false) : undefined
+                !isAdminMode ? or(eq(furnitureItems.isHidden, false), isNull(furnitureItems.isHidden)) : undefined
             ))
             .orderBy(
                 desc(furnitureItems.isGroupCover),
@@ -81,7 +84,7 @@ export const listExtendedHandlers = (app: Hono) => {
         const offset = (page - 1) * pageSize;
         const baseCondition = and(
             eq(furnitureItems.groupId, groupId),
-            !isAdminMode ? eq(furnitureItems.isHidden, false) : undefined
+            !isAdminMode ? or(eq(furnitureItems.isHidden, false), isNull(furnitureItems.isHidden)) : undefined
         );
 
         const [countRes] = await db
@@ -156,6 +159,14 @@ export const listExtendedHandlers = (app: Hono) => {
     try {
         const hasTag = tagId !== undefined && tagId !== null && tagId !== '';
         const hasCat = categoryId !== undefined && categoryId !== null && categoryId !== '';
+        const hasSearch = searchQuery && searchQuery.trim().length > 0;
+
+        // 1. Memory Cache for common global counts (10 minutes)
+        const cacheKey = JSON.stringify({ categoryId, tagId, hasSearch, searchQuery, isAdminMode, isHidden });
+        const now = Date.now();
+        if (countCache.has(cacheKey) && now - (countCacheTime.get(cacheKey) || 0) < 10 * 60 * 1000) {
+            return c.json({ success: true, data: countCache.get(cacheKey) });
+        }
 
         let builder = db.select({ count: count() }).from(furnitureItems).$dynamic();
         
@@ -167,7 +178,7 @@ export const listExtendedHandlers = (app: Hono) => {
         if (hasTag) whereClauses.push(eq(photoTags.tagId, Number(tagId)));
         if (hasCat) whereClauses.push(eq(furnitureItems.categoryId, Number(categoryId)));
 
-        if (searchQuery && searchQuery.trim().length > 0) {
+        if (hasSearch) {
             const pattern = `%${searchQuery.trim()}%`;
             const searchSql = or(
                 ilike(sql`${furnitureItems.name}->>'zh'`, pattern),
@@ -196,7 +207,7 @@ export const listExtendedHandlers = (app: Hono) => {
         }
 
         if (!isAdminMode) {
-            whereClauses.push(eq(furnitureItems.isHidden, false));
+            whereClauses.push(or(eq(furnitureItems.isHidden, false), isNull(furnitureItems.isHidden)));
         } else if (isHidden !== undefined && isHidden !== null) {
             whereClauses.push(eq(furnitureItems.isHidden, isHidden));
         }
@@ -204,7 +215,10 @@ export const listExtendedHandlers = (app: Hono) => {
         if (whereClauses.length > 0) builder.where(and(...whereClauses.filter((c): c is SQL => !!c)));
 
         const [res] = await builder;
-        return c.json({ success: true, data: Number(res.count) });
+        const total = Number(res.count);
+        countCache.set(cacheKey, total);
+        countCacheTime.set(cacheKey, Date.now());
+        return c.json({ success: true, data: total });
     } catch (error: unknown) {
         throw errorFactory.wrap(error, 'photos.count', 'QUERY_FAILURE');
     }

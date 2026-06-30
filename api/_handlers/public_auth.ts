@@ -21,7 +21,7 @@ const handler = async (c: any) => {
     const now = Date.now();
 
     // 1. Memory Cache Check (Extremely fast)
-    if (authCache && now - authCacheTime < 10 * 60 * 1000) {
+    if (authCache && now - authCacheTime < 30 * 60 * 1000) {
         return c.json({ success: true, data: authCache });
     }
 

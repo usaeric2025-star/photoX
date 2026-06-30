@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { PhotoListItem } from '@/types/api';
 import * as v from 'valibot';
 import { PhotoListResSchema } from '@/shared/apiContractSchema';
+import { logger } from '@/lib/logger';
 
 export type PhotoListFilters = Record<string, unknown>;
 
@@ -25,14 +26,23 @@ export function usePhotos(params: PhotoListFilters = {}) {
     const { photoId, modal, anchor, ...fetchParams } = params;
     
     // Add pagination params
-    const queryParams = {
+    const queryParams: Record<string, any> = {
       ...fetchParams,
       cursor: previousPageData ? previousPageData.nextCursor : undefined,
     };
+
+    // Strip undefined values and sort keys for stable serialization
+    const stableQueryParams = Object.keys(queryParams)
+      .filter(key => queryParams[key] !== undefined)
+      .sort()
+      .reduce((obj, key) => {
+        obj[key] = queryParams[key];
+        return obj;
+      }, {} as Record<string, any>);
     
     // Convert to a stable key string for SWR
     // SWRInfinite expects a string, array, or null
-    return [ 'photos', 'list', queryParams ];
+    return [ 'photos', 'list', stableQueryParams ];
   };
 
   const { data, error, isLoading, isValidating, size, setSize, mutate } = useSWRInfinite<PhotoListResponse>(
@@ -82,35 +92,4 @@ export function usePhotos(params: PhotoListFilters = {}) {
     isFetchingNextPage,
     refetch: mutate,
   };
-}
-
-import { mutate as globalMutate } from 'swr';
-import { logger } from '@/lib/logger';
-
-/**
- * 預加載特定篩選條件的照片列表第一頁並寫入 SWR 快取
- */
-export function prefetchPhotos(params: PhotoListFilters = {}) {
-  const { photoId, modal, anchor, ...fetchParams } = params;
-  const queryParams = {
-    ...fetchParams,
-    cursor: undefined,
-  };
-  const key = [ 'photos', 'list', queryParams ];
-  
-  try {
-    globalMutate(key, async () => {
-      const response = await api.photos.list.$post({ json: fetchParams });
-      if (!response.ok) {
-        const errData = await response.json().catch(() => null);
-        const err = new Error(errData?.error || errData?.message || `HTTP ${response.status}`);
-        if (errData) Object.assign(err, errData);
-        throw err;
-      }
-      const result = await response.json();
-      return v.parse(PhotoListResSchema, result) as PhotoListResponse;
-    }, { revalidate: false });
-  } catch (e) {
-    logger.warn('[prefetchPhotos] Failed to prefetch', e);
-  }
 }
