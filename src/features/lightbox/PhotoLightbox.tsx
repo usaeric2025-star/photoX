@@ -14,6 +14,7 @@ import { Photo, AppSettings } from '@/types';
 import { LightboxSlide } from '@/lib/lightbox/types';
 import { logger } from '@/lib/logger';
 import { getThumbnailUrl } from '@/services/mappers/utils';
+import { usePhoto } from '@/hooks/photo/usePhoto';
 
 // ✅ Directly import from low-level to reduce conflicts
 import { LightboxStyled as LightboxStyledBase } from '@mshafiqyajid/react-lightbox/styled';
@@ -124,27 +125,44 @@ export function PhotoLightbox() {
   const isEditModalOpen = filters.modal === 'edit';
   const hasThumbnails = slides.length > 1;
 
+  // Dynamically load the detailed photo when the slide is active
+  const { data: activePhoto } = usePhoto(isOpen && currentSlide?.id ? currentSlide.id : null);
+
+  const enrichedSlide = useMemo(() => {
+    if (!currentSlide) return null;
+    return {
+      ...currentSlide,
+      title: activePhoto?.name?.zh || activePhoto?.name?.en || activePhoto?.name?.ms || activePhoto?.manual_code || currentSlide.title,
+      description: activePhoto?.description?.zh || activePhoto?.description?.en || activePhoto?.description?.ms || currentSlide.description,
+      price: activePhoto?.price || currentSlide.price,
+      itemCode: activePhoto?.item_code || currentSlide.itemCode,
+      groupName: activePhoto?.group?.name || currentSlide.groupName,
+      original: activePhoto || currentSlide.original,
+    };
+  }, [currentSlide, activePhoto]);
+
   const overlays = useMemo(() => {
-    if (!currentSlide || isEditModalOpen) return null;
+    const slideToUse = enrichedSlide || currentSlide;
+    if (!slideToUse || isEditModalOpen) return null;
     
     return (
       <>
         <LightboxStyles hasThumbnails={hasThumbnails} />
 
         <LightboxToolbar 
-          currentSlide={currentSlide}
+          currentSlide={slideToUse}
           canEdit={canEdit}
           settings={settings}
           onClose={handleClose}
           onEdit={() => {
-            const original = currentSlide.original as Photo;
+            const original = slideToUse.original as Photo;
             if (original) {
               currentEditingPhoto.set(original);
               filters.updateFilters({ modal: 'edit', photoId: original.id });
             }
           }}
           onAiAnalyze={() => {
-            const original = currentSlide.original as Photo;
+            const original = slideToUse.original as Photo;
             if (original) {
               adminActions.handleBatchAiAnalyze([original]);
             }
@@ -152,7 +170,7 @@ export function PhotoLightbox() {
           onDelete={async () => {
             showToast.info('正在删除照片...');
             try {
-              await adminActions.deletePhoto.mutateAsync([currentSlide.id]);
+              await adminActions.deletePhoto.mutateAsync([slideToUse.id]);
               showToast.success('照片已删除');
               handleClose();
             } catch (e) {
@@ -164,25 +182,25 @@ export function PhotoLightbox() {
         <div className={`fixed ${hasThumbnails ? 'bottom-[84px]' : 'bottom-8'} left-0 right-0 flex flex-col items-center pointer-events-none px-4 z-[10020] transition-all duration-300 ease-out animate-in fade-in slide-in-from-bottom-2`}>
           <div className="pointer-events-auto w-full max-w-2xl translate-y-[1px]">
             <LightboxInfoCard 
-              slide={currentSlide} 
+              slide={slideToUse} 
               onDownload={async () => {
                 try {
-                  const response = await fetch(currentSlide.src);
+                  const response = await fetch(slideToUse.src);
                   const blob = await response.blob();
                   const url = window.URL.createObjectURL(blob);
                   const a = document.createElement('a');
                   a.href = url;
-                  a.download = `${currentSlide.title || 'photo'}.jpg`;
+                  a.download = `${slideToUse.title || 'photo'}.jpg`;
                   document.body.appendChild(a);
                   a.click();
                   window.URL.revokeObjectURL(url);
                   document.body.removeChild(a);
                 } catch (e) {
-                  window.open(currentSlide.src, '_blank');
+                  window.open(slideToUse.src, '_blank');
                 }
               }}
               onShare={() => {
-                const text = `产品：${currentSlide.title}\n${window.location.origin}/photo/${currentSlide.id}`;
+                const text = `产品：${slideToUse.title}\n${window.location.origin}/photo/${slideToUse.id}`;
                 window.open(`https://wa.me/${settings?.contact_whatsapp || ''}?text=${encodeURIComponent(text)}`, '_blank');
               }}
             />
@@ -190,7 +208,7 @@ export function PhotoLightbox() {
         </div>
       </>
     );
-  }, [currentSlide, isEditModalOpen, hasThumbnails, canEdit, settings, adminActions, filters]);
+  }, [enrichedSlide, currentSlide, isEditModalOpen, hasThumbnails, canEdit, settings, adminActions, filters]);
 
   return (
     <>

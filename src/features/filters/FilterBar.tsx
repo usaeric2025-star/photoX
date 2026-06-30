@@ -79,7 +79,7 @@ export function FilterBar({ mode, className }: FilterBarProps) {
       
       <div className="px-4 pb-3 space-y-2">
         {/* 分類 - 根據規範固定渲染 2 x 4 */}
-        <CategoryGrid mode={mode} enabled={isReadyForNonCritical} />
+        <CategoryGrid mode={mode} enabled={true} />
 
         {/* 已選標籤顯示與移除 */}
         {selectedTags.length > 0 && (
