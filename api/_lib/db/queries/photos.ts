@@ -145,7 +145,7 @@ export async function getPhotosList(params: PhotoListParams) {
         .where(finalWhere)
         .orderBy(orderSpec, secondaryOrder)
         .limit(limit);
-
+    
     // Fetch tags in bulk
     const photoIds = dbData.map(d => d.items.id);
     const tagsByPhoto = new Map<string, any[]>();
