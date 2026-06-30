@@ -21,6 +21,6 @@
     "noImplicitOverride": true,
     "outDir": "./dist"
   },
-  "include": ["src/**/*", "shared/**/*"],
-  "exclude": ["node_modules", "dist", "api"]
+  "include": ["src/**/*", "shared/**/*", "api/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

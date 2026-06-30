@@ -1,11 +1,10 @@
-import { usePhotos as useSWRPhotos, PhotoListFilters, prefetchPhotos } from '@/lib/query/hooks/usePhotos';
+import { usePhotos as useSWRPhotos, PhotoListFilters } from '@/lib/query/hooks/usePhotos';
 import { useFilters } from '@/features/filters/useFilters';
 
 export type { PhotoListFilters };
-;
 
 /**
- * Hook to get the list of photos using SWR.
+ * Hook to get the list of photos using SWR and URL state.
  */
 export function usePhotos(options: PhotoListFilters & { mode?: 'admin' | 'public' } = {}) {
   const { queryKey } = useFilters({ 
@@ -13,7 +12,7 @@ export function usePhotos(options: PhotoListFilters & { mode?: 'admin' | 'public
     enableBatch: options.mode === 'admin'
   });
 
-  // Ensure mode is included if provided manually or derived
+  // Merge URL params with manual options (manual options override URL params if provided)
   const filters = {
     ...queryKey,
     ...options

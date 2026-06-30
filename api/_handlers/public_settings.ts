@@ -18,57 +18,67 @@ export function clearSettingsCache() {
 }
 
 const handler = async (c: any) => {
-    const requestId = crypto.randomUUID();
+    const requestId = crypto.randomUUID().slice(0, 8);
     const now = Date.now();
     
-    if (settingsCache && now - settingsCacheTime < 5 * 60 * 1000) {
-        logger.debug(`[Settings-${requestId}] Returning cached public settings`);
+    // 1. Ultra-fast Memory Cache
+    if (settingsCache && now - settingsCacheTime < 10 * 60 * 1000) {
         return c.json({ success: true, data: settingsCache });
     }
 
-    logger.info(`[Settings-${requestId}] Starting fetch...`);
-    const start = Date.now();
-    
-    const settingsPromise = db.select({
-        id: schema.settings.id,
-        logoUrl: schema.settings.logoUrl,
-        whatsapp1: schema.settings.whatsapp1,
-        whatsapp2: schema.settings.whatsapp2,
-        whatsapp1Name: schema.settings.whatsapp1Name,
-        whatsapp2Name: schema.settings.whatsapp2Name,
-    }).from(schema.settings).where(eq(schema.settings.id, 1)).limit(1).execute();
+    try {
+        const start = Date.now();
+        
+        const settingsPromise = db.select({
+            id: schema.settings.id,
+            logoUrl: schema.settings.logoUrl,
+            whatsapp1: schema.settings.whatsapp1,
+            whatsapp2: schema.settings.whatsapp2,
+            whatsapp1Name: schema.settings.whatsapp1Name,
+            whatsapp2Name: schema.settings.whatsapp2Name,
+        }).from(schema.settings).where(eq(schema.settings.id, 1)).limit(1).execute();
 
-    // Prevent unhandled promise rejections on the underlying connection
-    settingsPromise.catch((err) => {
-        logger.warn("[DB-DRIVER] Settings query rejected or cancelled:", err.message || err);
-    });
+        const settingsResArray = await withTimeout(
+            settingsPromise, 
+            TIMEOUTS.PUBLIC_META, 
+            'Public Settings DB Fetch'
+        ).catch((e: any) => {
+            logger.error(`[Settings-${requestId}] DB Timeout/Error, using fallback:`, e.message);
+            return [];
+        });
+        
+        const settingsRes = settingsResArray[0] || null;
 
-    const settingsResArray = await withTimeout(settingsPromise, TIMEOUTS.DB_QUERY, 'DB Query Settings table (ID=1)').catch((e: any) => {
-        logger.error(`[Settings-${requestId}] Settings table fetch failed or timed out:`, e);
-        return [];
-    });
-    
-    const settingsRes = settingsResArray[0] || null;
+        // Return ONLY non-sensitive data
+        const data = {
+            logoUrl: settingsRes?.logoUrl || 'https://vbpnlkeweqkjufijtdph.supabase.co/storage/v1/object/public/furniture_images/app/logo-1777046441324.webp',
+            whatsapp1: settingsRes?.whatsapp1 || '601111280883',
+            whatsapp2: settingsRes?.whatsapp2 || '601130308865',
+            whatsapp1Name: settingsRes?.whatsapp1Name || 'Auntie Shery',
+            whatsapp2Name: settingsRes?.whatsapp2Name || 'Company',
+            facebook: '',
+            instagram: '',
+            manufacturers: [], 
+            tags: [],          
+        };
 
-    logger.info(`[Settings-${requestId}] Fetch completed in ${Date.now() - start}ms`);
+        // Update Cache
+        settingsCache = data;
+        settingsCacheTime = now;
 
-    // Return ONLY non-sensitive data
-    const data = {
-        logoUrl: settingsRes?.logoUrl || '',
-        whatsapp1: settingsRes?.whatsapp1 || '',
-        whatsapp2: settingsRes?.whatsapp2 || '',
-        whatsapp1Name: settingsRes?.whatsapp1Name || '',
-        whatsapp2Name: settingsRes?.whatsapp2Name || '',
-        facebook: '',
-        instagram: '',
-        manufacturers: [], 
-        tags: [],          
-    };
-
-    settingsCache = data;
-    settingsCacheTime = now;
-
-    return c.json({ success: true, data });
+        logger.info(`[Settings-${requestId}] Resolved in ${Date.now() - start}ms`);
+        return c.json({ success: true, data });
+    } catch (e) {
+        logger.error(`[Settings-${requestId}] Critical Failure:`, e);
+        return c.json({ 
+            success: true, 
+            data: {
+                logoUrl: 'https://vbpnlkeweqkjufijtdph.supabase.co/storage/v1/object/public/furniture_images/app/logo-1777046441324.webp',
+                whatsapp1: '601111280883',
+                whatsapp1Name: 'Auntie Shery',
+            }
+        });
+    }
 };
 
 publicSettings.get("/", handler);

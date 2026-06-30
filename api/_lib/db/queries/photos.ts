@@ -36,6 +36,9 @@ async function getPhotoById(id: string) {
     });
 }
 
+// Simple memory cache for counts to avoid redundant heavy queries
+const countCache = new Map<string, { count: number, timestamp: number }>();
+
 export async function getPhotosList(params: PhotoListParams) {
     const { 
         limit = 100, cursor,
@@ -48,6 +51,7 @@ export async function getPhotosList(params: PhotoListParams) {
 
     const whereClauses: (SQL | undefined)[] = [];
 
+    // ... (rest of the logic for whereClauses remains same)
     if (cursor) {
         const cursorTime = new Date(cursor);
         if (!isNaN(cursorTime.getTime())) {
@@ -65,13 +69,11 @@ export async function getPhotosList(params: PhotoListParams) {
             ilike(furnitureItems.manualCode, pattern),
             ilike(furnitureItems.modelNumber, pattern),
             ilike(furnitureItems.itemCode, pattern),
-            // Tags Subquery
             sql`EXISTS (
                 SELECT 1 FROM ${photoTags} pt
                 JOIN ${tagsTable} t ON pt.tag_id = t.id
                 WHERE pt.photo_id = ${furnitureItems.id} AND t.name ILIKE ${pattern}
             )`,
-            // Category Subquery
             sql`EXISTS (
                 SELECT 1 FROM ${categories} c
                 WHERE c.id = ${furnitureItems.categoryId} AND (
@@ -99,7 +101,6 @@ export async function getPhotosList(params: PhotoListParams) {
     }
     
     if (onlyGroupsCover) {
-        // 合组视图逻辑：散图、组封面、孤儿数据
         whereClauses.push(or(
             isNull(furnitureItems.groupId),
             eq(furnitureItems.isGroupCover, true),
@@ -121,19 +122,30 @@ export async function getPhotosList(params: PhotoListParams) {
 
     const finalWhere = and(...whereClauses.filter((c): c is SQL => !!c));
 
-    // 1. Get Total Count
-    const [countRes] = await db
-        .select({ count: count() })
-        .from(furnitureItems)
-        .where(finalWhere);
-    
-    let total = Number(countRes.count);
+    // 1. Smarter Count with Cache
+    const cacheKey = JSON.stringify({ categoryId, tagId, searchQuery, isAdminMode, onlyUngrouped, onlyGroupsCover, groupId, isHidden });
+    const cached = countCache.get(cacheKey);
+    let total = 0;
 
-    // 2. Get Data
+    if (cached && Date.now() - cached.timestamp < 60000) {
+        total = cached.count;
+    } else {
+        // Count queries can be heavy, execute in parallel or use a fallback if slow
+        try {
+            const [countRes] = await db.select({ count: count() }).from(furnitureItems).where(finalWhere).execute();
+            total = Number(countRes.count);
+            countCache.set(cacheKey, { count: total, timestamp: Date.now() });
+        } catch (e) {
+            logger.warn('Count query failed or timed out, using fallback total=0', e);
+            total = cached?.count || 0;
+        }
+    }
+
+    // 2. Data Fetch
     const orderSpec = sortOrder === 'oldest' ? asc(furnitureItems.createdAt) : desc(furnitureItems.createdAt);
     const secondaryOrder = sortOrder === 'oldest' ? asc(furnitureItems.id) : desc(furnitureItems.id);
 
-    let dbData = await db
+    const dbData = await db
         .select({
             items: furnitureItems,
             group: groupsTable,
@@ -144,26 +156,31 @@ export async function getPhotosList(params: PhotoListParams) {
         .leftJoin(categories, eq(furnitureItems.categoryId, categories.id))
         .where(finalWhere)
         .orderBy(orderSpec, secondaryOrder)
-        .limit(limit);
+        .limit(limit)
+        .execute();
     
     // Fetch tags in bulk
     const photoIds = dbData.map(d => d.items.id);
     const tagsByPhoto = new Map<string, any[]>();
     
     if (photoIds.length > 0) {
-        const tagsData = await db.select({
-            photoId: photoTags.photoId,
-            tagId: photoTags.tagId,
-            name: tagsTable.name
-        })
-        .from(photoTags)
-        .innerJoin(tagsTable, eq(photoTags.tagId, tagsTable.id))
-        .where(inArray(photoTags.photoId, photoIds));
+        try {
+            const tagsData = await db.select({
+                photoId: photoTags.photoId,
+                tagId: photoTags.tagId,
+                name: tagsTable.name
+            })
+            .from(photoTags)
+            .innerJoin(tagsTable, eq(photoTags.tagId, tagsTable.id))
+            .where(inArray(photoTags.photoId, photoIds));
 
-        for (const t of tagsData) {
-            const list = tagsByPhoto.get(t.photoId ?? '') || [];
-            list.push({ tagId: t.tagId, tags: { id: t.tagId, name: t.name } });
-            tagsByPhoto.set(t.photoId ?? '', list);
+            for (const t of tagsData) {
+                const list = tagsByPhoto.get(t.photoId ?? '') || [];
+                list.push({ tagId: t.tagId, tags: { id: t.tagId, name: t.name } });
+                tagsByPhoto.set(t.photoId ?? '', list);
+            }
+        } catch (e) {
+            logger.error('Error fetching tags in bulk', e);
         }
     }
 

@@ -27,7 +27,7 @@ if (!serverEnv.DATABASE_URL) {
     console.log('✅ [INIT] DATABASE_URL validated, proceeding to route initialization.');
 }
 
-const apiApp = new Hono();
+export const apiApp = new Hono();
 
 // ✅ 統一錯誤處理
 apiApp.onError((err, c) => {
