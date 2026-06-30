@@ -7,39 +7,63 @@ import { withTimeout, TIMEOUTS } from '../_lib/utils/timeout.js';
 
 export const publicAuth = new Hono();
 
+export let authCache: any = null;
+export let authCacheTime = 0;
+
+export function clearAuthCache() {
+    logger.info('[Auth Cache] Cleared public auth cache');
+    authCache = null;
+    authCacheTime = 0;
+}
+
 const handler = async (c: any) => {
-    logger.info("Fetching auth info...");
+    const requestId = crypto.randomUUID();
+    const now = Date.now();
+
+    if (authCache && now - authCacheTime < 5 * 60 * 1000) {
+        logger.debug(`[Auth-${requestId}] Returning cached public auth info`);
+        return c.json({ success: true, data: authCache });
+    }
+
+    logger.info(`[Auth-${requestId}] Starting fetch...`);
+    const start = Date.now();
     
     try {
-        const passcodeResPromise = db.select().from(schema.secrets).where(eq(schema.secrets.key, 'access_passcode')).limit(1).execute();
-        // Prevent unhandled promise rejections on the underlying connection
-        passcodeResPromise.catch((err) => {
-            logger.warn("[DB-DRIVER] Access passcode query rejected or cancelled:", err.message || err);
+        const settingsRes = await withTimeout(
+            db.select({
+                passcodeEnabled: schema.settings.passcodeEnabled,
+                accessPasscode: schema.settings.accessPasscode,
+            }).from(schema.settings).where(eq(schema.settings.id, 1)).limit(1).execute(),
+            TIMEOUTS.DB_QUERY,
+            'DB Query Settings passcodeEnabled (ID=1)'
+        ).catch(e => {
+            logger.error(`[Auth-${requestId}] settings query failed or timed out`, e);
+            return [];
         });
 
-        const settingsResPromise = db.select({
-            passcodeEnabled: schema.settings.passcodeEnabled,
-            accessPasscode: schema.settings.accessPasscode,
-        }).from(schema.settings).where(eq(schema.settings.id, 1)).limit(1).execute();
-        // Prevent unhandled promise rejections on the underlying connection
-        settingsResPromise.catch((err) => {
-            logger.warn("[DB-DRIVER] Settings passcode query rejected or cancelled:", err.message || err);
+        const passcodeRes = await withTimeout(
+            db.select().from(schema.secrets).where(eq(schema.secrets.key, 'access_passcode')).limit(1).execute(),
+            TIMEOUTS.DB_QUERY,
+            'DB Query Access Passcode secret'
+        ).catch(e => {
+            logger.error(`[Auth-${requestId}] passcode query failed or timed out`, e);
+            return [];
         });
-
-        const [passcodeRes, settingsRes] = await Promise.all([
-            withTimeout(passcodeResPromise, TIMEOUTS.DB_QUERY, 'DB Query Access Passcode secret').catch(e => { logger.error("passcode query failed or timed out", e); return []; }),
-            withTimeout(settingsResPromise, TIMEOUTS.DB_QUERY, 'DB Query Settings passcodeEnabled (ID=1)').catch(e => { logger.error("settings query failed or timed out", e); return []; })
-        ]);
 
         const data = {
             passcodeEnabled: settingsRes[0]?.passcodeEnabled ?? false,
             accessPasscode: (passcodeRes[0] as any)?.value || settingsRes[0]?.accessPasscode || '',
         };
 
+        logger.info(`[Auth-${requestId}] Fetch completed in ${Date.now() - start}ms`);
+
+        authCache = data;
+        authCacheTime = now;
+
         return c.json({ success: true, data });
     } catch (e) {
-        logger.error("Failed to fetch auth info:", e);
-        return c.json({ success: false, data: { passcode_enabled: false, access_passcode: '' } });
+        logger.error(`[Auth-${requestId}] Failed to fetch auth info:`, e);
+        return c.json({ success: false, data: { passcodeEnabled: false, accessPasscode: '' } });
     }
 };
 
