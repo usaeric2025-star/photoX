@@ -4,6 +4,7 @@ import { db, furnitureItems } from '../../_lib/db/index.js';
 import { inArray, eq } from 'drizzle-orm';
 import { PhotoIdsReqSchema, PhotoCheckHashReqSchema } from '../../../shared/apiContractSchema.js';
 import { errorResponse } from '../../_lib/response.js';
+import { toCamelCaseArray } from '../../_lib/transform.js';
 
 export const detailHandler = (app: Hono) => {
   app.post('/by-ids', async (c) => {
@@ -32,7 +33,7 @@ export const detailHandler = (app: Hono) => {
         };
     });
 
-    return c.json({ success: true, data: formatted });
+    return c.json({ success: true, data: toCamelCaseArray(formatted as Record<string, unknown>[]) });
   });
 
   app.post('/check-hash', async (c) => {

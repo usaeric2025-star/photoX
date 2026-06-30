@@ -169,21 +169,26 @@ export async function getPhotosList(params: PhotoListParams) {
 
     // Format to match expected frontend structure
     const results = dbData.map(d => {
-        const item = { ...d.items } as Record<string, unknown>;
-        item.name = normalizeI18n(d.items.name).zh;
-        item.description = normalizeI18n(d.items.description).zh;
-        item.groupName = d.group?.name || null;
-        item.groupCoverPhotoId = d.group?.coverPhotoId || null;
-        item.categoryNameZh = d.category?.nameZh || null;
-        item.categoryNameEn = d.category?.nameEn || null;
-        item.categoryNameMs = d.category?.nameMs || null;
-        
-        const pTags = tagsByPhoto.get(d.items.id) || [];
-        item.tags = pTags.map((pt: any) => pt.tags.name);
-        item.tagIds = pTags.map((pt: any) => pt.tags.id);
-        
-        return item;
-    });
+        try {
+            const item = { ...d.items } as Record<string, unknown>;
+            item.name = normalizeI18n(d.items.name).zh;
+            item.description = normalizeI18n(d.items.description).zh;
+            item.groupName = d.group?.name || null;
+            item.groupCoverPhotoId = d.group?.coverPhotoId || null;
+            item.categoryNameZh = d.category?.nameZh || null;
+            item.categoryNameEn = d.category?.nameEn || null;
+            item.categoryNameMs = d.category?.nameMs || null;
+            
+            const pTags = tagsByPhoto.get(d.items.id) || [];
+            item.tags = pTags.map((pt: any) => pt.tags.name);
+            item.tagIds = pTags.map((pt: any) => pt.tags.id);
+            
+            return item;
+        } catch (e) {
+            logger.error('Error formatting photo item', { photoId: d.items.id, error: e });
+            return null;
+        }
+    }).filter((i): i is Record<string, unknown> => i !== null);
 
     return {
         items: results,
