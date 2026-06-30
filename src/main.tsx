@@ -84,8 +84,8 @@ async function init() {
       const errors = w.__STARTUP_ERRORS__ || [];
       errors.push({
         msg: message,
-        type: '非同步拒絕異常 (React Unhandled Promise)',
-        details: reason?.stack || '位置: React App runtime'
+        type: 'Async Unhandled Promise',
+        details: reason?.stack || 'Location: React App runtime'
       });
       w.__STARTUP_ERRORS__ = errors;
 
@@ -112,12 +112,12 @@ async function init() {
       const errors = w.__STARTUP_ERRORS__ || [];
       errors.push({
         msg: message,
-        type: '運行期異常 (React Runtime Error)',
-        details: event.error?.stack || '位置: React App index'
+        type: 'React Runtime Error',
+        details: event.error?.stack || 'Location: React App index'
       });
       w.__STARTUP_ERRORS__ = errors;
 
-      ErrorFactory.capture(event.error || new Error(event.message || '全局运行时错误'));
+      ErrorFactory.capture(event.error || new Error(event.message || 'Global runtime error'));
     });
   }
 

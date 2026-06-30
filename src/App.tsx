@@ -1,5 +1,6 @@
 import { Suspense, lazy } from 'react';
 import { NuqsAdapter } from 'nuqs/adapters/react';
+import { motion } from 'lite-sleek';
 import { AppErrorBoundary } from './components/layout/AppErrorBoundary';
 import { ConfirmProvider } from './context/ConfirmContext';
 import { RouterOrchestrator } from './components/RouterOrchestrator';
@@ -21,11 +22,15 @@ function AppContent({ status, error }: { status: string, error: Error | null }) 
           ) : status === 'error' ? (
             <LoadingScreen error={error} />
           ) : (
-            <div className="relative min-h-screen animate-fade-in">
+            <motion.div 
+              variant="fade"
+              transition="easeOut"
+              className="relative min-h-screen"
+            >
               <Suspense fallback={<LoadingScreen />}>
                 <RouterOrchestrator />
               </Suspense>
-            </div>
+            </motion.div>
           )}
       </ConfirmProvider>
       <DialogContainer />

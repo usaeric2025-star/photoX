@@ -28,6 +28,7 @@ adminSettings.get("/get", async (c) => {
         whatsapp_2_name: settingsRes.whatsapp2Name || '',
         facebook: '',
         instagram: '',
+        app_name: secretsMap['site_name'] || 'PhotoX',
         agnes_api_key: secretsMap['agnes'] || '',
         openrouter_api_key: secretsMap['openrouter'] || ''
     } : {};
@@ -174,6 +175,13 @@ adminSettings.post("/save-settings", async (c) => {
             target: settingsTable.id,
             set: updatePayload as unknown as typeof settingsTable.$inferInsert
         });
+        
+        if (settingsPayload.app_name !== undefined) {
+             await db.insert(secretsTable).values({ key: 'site_name', value: settingsPayload.app_name as string }).onConflictDoUpdate({
+                 target: secretsTable.key,
+                 set: { value: settingsPayload.app_name as string }
+             });
+        }
         
         clearSettingsCache();
         clearAuthCache();

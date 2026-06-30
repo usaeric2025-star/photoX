@@ -24,6 +24,21 @@ export const appQuery = {
     }
     return swrMutate(key as SwrKey, data, options as import('swr').MutatorOptions);
   },
+  
+  /**
+   * Invalidate all photo-related queries
+   */
+  invalidatePhotos: () => {
+    return swrMutate(
+      (key: import('swr').Key) => {
+        if (!key) return false;
+        const keyStr = typeof key === 'string' ? key : JSON.stringify(key);
+        return keyStr.includes('photos') || keyStr.includes('groups') || keyStr.includes('storage') || keyStr.includes('ai-audit');
+      },
+      undefined,
+      { revalidate: true }
+    );
+  }
 };
 
 /**

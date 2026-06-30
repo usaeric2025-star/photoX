@@ -90,7 +90,7 @@ import { logger } from '@/lib/logger';
 /**
  * 預加載特定篩選條件的照片列表第一頁並寫入 SWR 快取
  */
-export async function prefetchPhotos(params: PhotoListFilters = {}) {
+export function prefetchPhotos(params: PhotoListFilters = {}) {
   const { photoId, modal, anchor, ...fetchParams } = params;
   const queryParams = {
     ...fetchParams,
@@ -113,18 +113,4 @@ export async function prefetchPhotos(params: PhotoListFilters = {}) {
   } catch (e) {
     logger.warn('[prefetchPhotos] Failed to prefetch', e);
   }
-}
-
-function usePhotosMutations() {
-  const { mutate } = useSWRConfig();
-
-  const updateCache = (updater: (data: unknown) => unknown) => {
-    mutate(queryKeys.photos.all, updater, { revalidate: false });
-  };
-
-  const invalidate = () => {
-    mutate(queryKeys.photos.all);
-  };
-
-  return { updateCache, invalidate };
 }

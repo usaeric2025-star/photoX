@@ -1,4 +1,5 @@
 import React from 'react';
+import { AppNameSection } from './AppNameSection';
 import { LogoSection } from './LogoSection';
 import { WhatsAppSection } from './WhatsAppSection';
 import { SocialLinksSection } from './SocialLinksSection';
@@ -30,6 +31,12 @@ export function GeneralSettings({
 
   return (
     <div className="space-y-6">
+      <AppNameSection 
+        settings={settings}
+        setSettingField={setSettingField}
+        cardClass={cardClass}
+        inputClass={inputClass}
+      />
       <LogoSection 
         settings={settings}
         handleLogoUpload={handleLogoUpload}

@@ -4,30 +4,29 @@ import { AppError, ErrorSeverity, isAppError, ErrorCategory } from './AppError';
 import { showToast } from '@/lib/ui/toast';
 import { logger } from '@/lib/logger';
 import { generateTraceId } from '@/lib/utils';
+import { translations, TranslationType } from '@/locales';
 
 export class ErrorFactory {
-  private static mapResourceToChinese(resource: string): string {
+  private static get t(): TranslationType {
+    const lang = (typeof document !== 'undefined' ? document.documentElement.dataset.lang : 'en') as keyof typeof translations;
+    return translations[lang] || translations.en;
+  }
+
+  private static mapResourceToLocalized(resource: string): string {
+    const t = this.t;
     const map: Record<string, string> = {
-      photo: '照片',
-      Photo: '照片',
-      photos: '照片列表',
-      Photos: '照片列表',
-      category: '分类',
-      Category: '分类',
-      categories: '分类列表',
-      Categories: '分类列表',
-      tag: '标签',
-      Tag: '标签',
-      tags: '标签列表',
-      Tags: '标签列表',
-      group: '分组',
-      Group: '分组',
-      user: '用户',
-      User: '用户',
-      secret: '密钥',
-      Secret: '密钥',
-      furniture: '家具',
-      Furniture: '家具',
+      photo: t.furniture,
+      Photo: t.furniture,
+      photos: t.galleryName,
+      Photos: t.galleryName,
+      category: t.category,
+      Category: t.category,
+      tag: t.tags,
+      Tag: t.tags,
+      group: t.furniture, // closest fallback
+      Group: t.furniture,
+      user: t.login,
+      User: t.login,
     };
     return map[resource] ?? resource;
   }
@@ -92,7 +91,7 @@ export class ErrorFactory {
   static network(originalError?: unknown): AppError {
     return this.create('Network Error', {
       category: ErrorCategory.NETWORK,
-      userMessage: '网络连接异常，请检查您的网络连接',
+      userMessage: this.t.imageLoadFailed,
       originalError,
       code: ErrorCode.NETWORK_ERROR,
       statusCode: 503
@@ -102,16 +101,17 @@ export class ErrorFactory {
   static auth(message: string): AppError {
     return this.create(message, {
       category: ErrorCategory.AUTH,
-      userMessage: '登录过期，请重新登录',
+      userMessage: this.t.loginFailed,
       code: ErrorCode.UNAUTHORIZED,
       statusCode: 401
     });
   }
 
   static validation(message: string, context?: Record<string, unknown>): AppError {
+    const t = this.t;
     return this.create(message, {
       category: ErrorCategory.VALIDATION,
-      userMessage: '输入数据格式不正确，请重新检查',
+      userMessage: t.invalidDataFormat || '输入数据格式不正确',
       context: { fields: context },
       shouldReport: false,
       code: ErrorCode.VALIDATION_FAILED,
@@ -131,7 +131,7 @@ export class ErrorFactory {
   static fatal(message: string, originalError?: unknown): AppError {
     return this.create(message, {
       category: ErrorCategory.RUNTIME,
-      userMessage: '系统发生严重错误，请稍后重试',
+      userMessage: this.t.mutationRollbackFailed,
       originalError,
       shouldReport: true,
       code: ErrorCode.INTERNAL_ERROR,
@@ -141,10 +141,10 @@ export class ErrorFactory {
   }
 
   static notFound(resource: string, id: string): AppError {
-    const resourceZh = this.mapResourceToChinese(resource);
+    const resourceLocalized = this.mapResourceToLocalized(resource);
     return this.create(`${resource} not found`, {
         category: ErrorCategory.BUSINESS,
-        userMessage: `${resourceZh} 不存在`,
+        userMessage: this.t.loadFailed(resourceLocalized),
         context: { resource, id },
         code: ErrorCode.NOT_FOUND,
         statusCode: 404,
@@ -153,8 +153,11 @@ export class ErrorFactory {
   }
 
   static wrap(error: unknown, operation: string, resource?: string): AppError {
-    const cleanUserMsg = resource ? `${operation}${resource}失败` : `${operation}失败`;
-    const systemMsg = error instanceof Error ? error.message : String(error || '未知错误');
+    const t = this.t;
+    const opLocalized = operation; // TODO: map operation
+    const resLocalized = resource ? this.mapResourceToLocalized(resource) : '';
+    const cleanUserMsg = resource ? `${opLocalized}${resLocalized}${t.saveFailed}` : `${opLocalized}${t.saveFailed}`;
+    const systemMsg = error instanceof Error ? error.message : String(error || t.unknown);
     return this.create(systemMsg, {
       category: ErrorCategory.RUNTIME,
       userMessage: cleanUserMsg,
@@ -169,7 +172,7 @@ export class ErrorFactory {
   static permission(message: string): AppError {
     return this.create(message, {
       category: ErrorCategory.AUTH,
-      userMessage: '权限不足，拒绝访问',
+      userMessage: this.t.permissionDenied || '权限不足，拒绝访问',
       shouldReport: false,
       code: ErrorCode.PERMISSION_DENIED,
       statusCode: 403,

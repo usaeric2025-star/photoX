@@ -5,7 +5,7 @@ import { useAuth, activeTaskCountSignal, useSignal } from '@/lib/store';
 import { useUI, useSettings, useAdminBatchActions, usePermission } from '@/hooks';
 import { useAppQuery } from '@/lib/query';
 import { api } from '@/lib/api';
-import { translations } from "@/locales";
+import { translations, TranslationType } from "@/locales";
 import { storage } from '@/services/storage';
 import { useIsMultiSelect, useSelectionActions } from '@/features/selection';
 import { AdminHeaderLogo } from './AdminHeaderLogo';
@@ -27,7 +27,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
   const lang = useUI((s) => s.appLang);
   const isMultiSelect = useIsMultiSelect();
   const { toggleMode } = useSelectionActions();
-  const t = translations[lang as keyof typeof translations] || translations.en;
+  const t = (translations[lang as keyof typeof translations] || translations.en) as TranslationType;
 
   const taskCount = useSignal(activeTaskCountSignal);
 

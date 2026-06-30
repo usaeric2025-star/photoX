@@ -45,7 +45,7 @@ export function AdminHeaderActions({
       <button
         onClick={() => isTaskDrawerOpenSignal.set(true)}
         className={cn("w-9 h-9 sm:w-10 sm:h-10 relative shrink-0", theme.button)}
-        title="查看任務進度"
+        title={t.taskCenter}
       >
         <Icon name="activity" className="size-4 sm:size-4.5" />
         {taskCount > 0 && (

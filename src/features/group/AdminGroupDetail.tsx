@@ -17,7 +17,7 @@ import { translations } from '@/locales';
 import { GroupSettingsDialog } from '@/components/groups/GroupSettingsDialog';
 import { useGroupDraft } from '@/components/groups/useGroupDraft';
 import { useGroupMutations } from '@/hooks/group';
-import { GroupHeader } from './components/GroupHeader';
+import { AdminGroupHeader } from './components/AdminGroupHeader';
 import { Button } from '@/components/shared/Button';
 import { useColumns } from '@/hooks';
 import { FilterBar } from '@/features/filters';
@@ -140,16 +140,15 @@ export function AdminGroupDetailPage() {
       </div>
     );
   }
-  if (error) return <div className="p-4 text-red-500">錯誤：{error}</div>;
-  if (!group) return <div className="p-4 flex flex-col justify-center items-center h-full"><div className="text-xl text-slate-500 mb-4">合組不存在或已被刪除</div><Button onClick={() => window.history.back()}>返回</Button></div>;
+  if (error) return <div className="p-4 text-red-500">{t.errorPrefix}{error}</div>;
+  if (!group) return <div className="p-4 flex flex-col justify-center items-center h-full"><div className="text-xl text-slate-500 mb-4">{t.groupNotFound}</div><Button onClick={() => window.history.back()}>{t.goBack}</Button></div>;
   
   return (
     <div className="bg-slate-50 group-detail-admin flex flex-col relative w-full h-[100dvh] overflow-hidden overscroll-none text-base">
       <div className="flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-slate-100 shadow-sm">
-        <GroupHeader 
+        <AdminGroupHeader 
           group={group} 
           photoCount={totalCount} 
-          isAdmin={true} 
           onEditSettings={() => setShowAdminTools(true)}
           onUpdateTitle={handleUpdateTitle}
         />

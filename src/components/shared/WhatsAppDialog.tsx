@@ -27,7 +27,7 @@ export const WhatsAppDialog = ({ open, onOpenChange }: WhatsAppDialogProps) => {
       const url = pendingPhoto.imageUrl || "";
       message = `${prompt}\n*${name}*\n${url}`;
     } else {
-      message = `您好，我想了解更多信息！`;
+      message = t.inquiryDefaultMessage;
     }
     const encodedText = encodeURIComponent(message);
 
@@ -52,9 +52,9 @@ export const WhatsAppDialog = ({ open, onOpenChange }: WhatsAppDialogProps) => {
   return (
     <NativeDialog id="whatsapp-choice-dialog" open={open} onClose={() => onOpenChange(false)}>
       <div className="w-full p-6">
-        <h3 className="font-bold text-lg mb-4 text-slate-800">选择咨询方式</h3>
+        <h3 className="font-bold text-lg mb-4 text-slate-800">{t.chooseInquiryMethod}</h3>
         {options.length === 0 ? (
-          <p className="text-slate-500 text-sm">暂无设置咨询方式</p>
+          <p className="text-slate-500 text-sm">{t.noInquiryMethods}</p>
         ) : (
           <div className="space-y-3">
             {options.map((opt, i) => (

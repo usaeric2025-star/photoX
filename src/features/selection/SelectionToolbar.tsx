@@ -10,6 +10,7 @@ import { useGroupPhotosMutation, useRemoveFromGroupMutation } from '@/hooks/grou
 import { Icon } from '@/components/ui/Icon';
 import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
 import { SelectionToolbarActions } from './components/SelectionToolbarActions';
+import { api } from '@/lib/api';
 
 // --- Sub-components ---
 
@@ -41,17 +42,15 @@ export function SelectionToolbar({ className = '', groupId }: { className?: stri
   // ✅ 使用計算後的 Selector
   const activeTasks = useSignal(activeTaskCountSignal);
   const isAnyPending = deletePhoto.isMutating || batchUpdate.isMutating || activeTasks > 0 || combineMutation.isMutating || removeMutation.isMutating;
-  // const setAvoidingSelection = useUI((s: UIStoreState) => s.setAvoidingSelection); // Removed
-  const setAvoidingSelection = (isAvoiding: boolean) => patch({ isAvoidingSelection: isAvoiding });
 
   const isVisible = isMultiSelect || selectedCount > 0;
 
   React.useEffect(() => {
     if (isVisible) {
-      setAvoidingSelection(true);
-      return () => setAvoidingSelection(false);
+      patch({ isAvoidingSelection: true });
+      return () => { patch({ isAvoidingSelection: false }); };
     }
-  }, [isVisible, setAvoidingSelection]);
+  }, [isVisible, patch]);
 
   // Media Query Subscriptions
   const isSm = useMediaQuery('(min-width: 640px)');
@@ -69,8 +68,13 @@ export function SelectionToolbar({ className = '', groupId }: { className?: stri
 
   const handleBatchAiGroup = async () => {
     if (selectedCount === 0 || isAnyPending) return;
-    // Note: We might need to adjust this as we don't have allPhotos anymore easily
-    await handleBatchAiAnalyze([], groupId); // This might need fixing to pass photos
+    
+    // Fetch photos by selectedIds before analysis
+    const response = await api.photos['by-ids'].$post({ json: { ids: selectedIds } });
+    const data = await response.json();
+    const targetPhotos = data.success ? data.data : [];
+    
+    await handleBatchAiAnalyze(targetPhotos as any[], groupId);
   };
 
   const handleManualGroup = async () => {

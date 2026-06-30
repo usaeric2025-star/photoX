@@ -38,19 +38,21 @@ const handler = async (c: any) => {
             whatsapp2Name: schema.settings.whatsapp2Name,
         }).from(schema.settings).where(eq(schema.settings.id, 1)).limit(1).execute();
 
-        const settingsResArray = await withTimeout(
-            settingsPromise, 
-            TIMEOUTS.PUBLIC_META, 
-            'Public Settings DB Fetch'
-        ).catch((e: any) => {
-            logger.error(`[Settings-${requestId}] DB Timeout/Error, using fallback:`, e.message);
-            return [];
-        });
+        const secretsPromise = db.select({
+            value: schema.secrets.value
+        }).from(schema.secrets).where(eq(schema.secrets.key, 'site_name')).limit(1).execute();
+
+        const [settingsResArray, secretsResArray] = await Promise.all([
+            withTimeout(settingsPromise, TIMEOUTS.PUBLIC_META, 'Public Settings DB Fetch').catch((e: any) => []),
+            withTimeout(secretsPromise, TIMEOUTS.PUBLIC_META, 'Public Secrets DB Fetch').catch((e: any) => [])
+        ]);
         
         const settingsRes = settingsResArray[0] || null;
+        const siteName = secretsResArray[0]?.value || 'PhotoX';
 
         // Return ONLY non-sensitive data
         const data = {
+            appName: siteName,
             logoUrl: settingsRes?.logoUrl || 'https://vbpnlkeweqkjufijtdph.supabase.co/storage/v1/object/public/furniture_images/app/logo-1777046441324.webp',
             whatsapp1: settingsRes?.whatsapp1 || '601111280883',
             whatsapp2: settingsRes?.whatsapp2 || '601130308865',

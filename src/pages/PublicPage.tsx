@@ -120,7 +120,7 @@ export default function PublicPage() {
             onClick={() => gridRef.current?.scrollToIndex(0)}
             type="button"
             className="w-12 h-12 flex items-center justify-center rounded-full bg-surface-overlay backdrop-blur-xl text-text-main shadow-lg hover:bg-white transition-all active:scale-90 group focus:outline-none"
-            title="回到頂部"
+            title={t.backToTop}
           >
             <Icon name="arrow-up" size={22} className="group-hover:-translate-y-0.5 transition-transform" />
           </button>
@@ -132,7 +132,7 @@ export default function PublicPage() {
           }}
           type="button"
           className="w-12 h-12 flex items-center justify-center rounded-full bg-success text-text-on-primary shadow-lg hover:opacity-90 transition-all active:scale-90 focus:outline-none"
-          title="WhatsApp 諮詢"
+          title={t.whatsAppInquiry}
         >
           <Icon name="message-circle" size={26} solid />
         </button>

@@ -1,6 +1,6 @@
 import { useQueryState } from 'nuqs';
 import { columnsParser } from '@/lib/nuqs/parsers';
-import { useLocalStorage } from './core/useLocalStorage';
+import { useLocalStorage } from '../core/useLocalStorage';
 import { useEffect } from 'react';
 import { uiStore } from '@/lib/store';
 import type { ColumnCount } from '@/features/filters';

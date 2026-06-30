@@ -59,7 +59,7 @@ export const authStore = createStore<AuthState>({
         authStore.setState({ user: null, isLoading: false });
       }
     }, { 
-        context: '身份验证初始化', 
+        context: 'auth-init', 
         onFinally: () => authStore.setState({ isLoading: false }) 
     });
   },
@@ -70,7 +70,7 @@ export const authStore = createStore<AuthState>({
         provider: 'google',
         options: { redirectTo: window.location.href },
       });
-    }, { context: '登录' });
+    }, { context: 'auth-signin' });
   },
   
   signOut: async () => {
@@ -81,7 +81,7 @@ export const authStore = createStore<AuthState>({
         storage.remove('ais_mock_auth_passcode');
         window.location.reload();
       }
-    }, { context: '登出' });
+    }, { context: 'auth-signout' });
   },
 });
 

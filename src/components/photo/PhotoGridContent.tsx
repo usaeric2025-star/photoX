@@ -6,7 +6,7 @@ import { PublicPhotoCard } from './PublicPhotoCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useSignal } from '@/lib/store';
 import { gridColumns as gridColumnsSignal } from '@/lib/store';
-import { usePermission } from '@/hooks';
+import { usePermission, useTranslation } from '@/hooks';
 import { CardSkeleton } from '@/components/photo/CardSkeleton';
 import { VirtualizedGrid } from './VirtualizedGrid';
 import { PhotoErrorDisplay } from './PhotoErrorDisplay';
@@ -51,7 +51,36 @@ export function PhotoGridContent({
   
   const actualColumns = (useSignal(gridColumnsSignal) as number) || 3;
   const { can } = usePermission();
+  const { uiTranslations } = useTranslation();
   const canPinGlobal = can('photo:toggle-pinned');
+
+  const renderItem = React.useCallback((photo: PhotoListItem, index: number) => {
+    return (
+      <motion.div
+        initial={{ opacity: 0, transform: 'translateY(10px)' }}
+        animate={{ opacity: 1, transform: 'translateY(0)' }}
+        transition="all 0.3s cubic-bezier(0.16, 1, 0.3, 1)"
+        className="w-full h-full p-[1px]"
+      >
+        {mode === 'admin' ? (
+          <AdminPhotoCard 
+            photo={photo} 
+            onClick={(e: any) => onPhotoClick?.(photo.id, index, e)} 
+            showGroupsCollapsed={showGroupsCollapsed}
+            hasSearchQuery={hasSearchQuery}
+            canPinGlobal={canPinGlobal}
+          />
+        ) : (
+          <PublicPhotoCard 
+            photo={photo} 
+            onClick={(e: any) => onPhotoClick?.(photo.id, index, e)} 
+            showGroupsCollapsed={showGroupsCollapsed}
+            hasSearchQuery={hasSearchQuery}
+          />
+        )}
+      </motion.div>
+    );
+  }, [mode, onPhotoClick, showGroupsCollapsed, hasSearchQuery, canPinGlobal]);
 
   const safePhotos = photos || [];
 
@@ -80,7 +109,11 @@ export function PhotoGridContent({
   }
 
   if (!safePhotos.length) {
-    return <EmptyState title="暂无照片数据" />;
+    return (
+      <div className="flex-1 flex items-center justify-center p-8 w-full h-full min-h-[400px]">
+        <EmptyState title={uiTranslations.noPhotos} />
+      </div>
+    );
   }
 
   return (
@@ -88,6 +121,8 @@ export function PhotoGridContent({
       <VirtualizedGrid
         items={safePhotos}
         columns={actualColumns}
+        columnGap={4}
+        rowGap={4}
         containerRef={gridRef}
         onScroll={onScroll}
         onScrollEnd={() => {
@@ -100,38 +135,12 @@ export function PhotoGridContent({
             <div className="py-8 flex justify-center w-full">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                <span>正在載入更多...</span>
+                <span>{uiTranslations.loadingMore}</span>
               </div>
             </div>
           ) : null
         }
-        rowGap={0}
-        columnGap={0}
-        renderItem={(photo, index) => (
-          <motion.div
-            initial={{ opacity: 0, transform: 'translateY(10px)' }}
-            animate={{ opacity: 1, transform: 'translateY(0)' }}
-            transition="all 0.3s cubic-bezier(0.16, 1, 0.3, 1)"
-            className="w-full h-full p-0.5 sm:p-1"
-          >
-            {mode === 'admin' ? (
-              <AdminPhotoCard 
-                photo={photo} 
-                onClick={(e: any) => onPhotoClick?.(photo.id, index, e)} 
-                showGroupsCollapsed={showGroupsCollapsed}
-                hasSearchQuery={hasSearchQuery}
-                canPinGlobal={canPinGlobal}
-              />
-            ) : (
-              <PublicPhotoCard 
-                photo={photo} 
-                onClick={(e: any) => onPhotoClick?.(photo.id, index, e)} 
-                showGroupsCollapsed={showGroupsCollapsed}
-                hasSearchQuery={hasSearchQuery}
-              />
-            )}
-          </motion.div>
-        )}
+        renderItem={renderItem}
       />
     </div>
   );

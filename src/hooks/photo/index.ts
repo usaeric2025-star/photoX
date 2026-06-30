@@ -1,4 +1,4 @@
-export * from './usePhotoFilter';
+export * from './useTagSorting';
 
 // Modularized business hooks
 export * from './usePhotos';

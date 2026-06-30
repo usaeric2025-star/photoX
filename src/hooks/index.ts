@@ -14,7 +14,7 @@ export * from './settings';
 export { useFilters } from '@/features/filters';
 export { useUI } from '@/lib/store';
 export type { UIStoreState } from '@/lib/store';
-export { useColumns } from './useColumns';
+export { useColumns } from './ui/useColumns';
 export { useSearchTransition } from './ui/useSearchTransition';
 
 

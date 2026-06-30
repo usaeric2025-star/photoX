@@ -1,6 +1,7 @@
 import { useAppRoute } from "@/lib/router";
 import { logger } from "@/lib/logger";
 import { lazy, Suspense } from "react";
+import { motion, AnimatePresence } from "lite-sleek";
 import PublicPage from "@/pages/PublicPage";
 import AdminPage from "@/pages/AdminPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
@@ -17,13 +18,45 @@ export function RouterOrchestrator() {
   logger.debug('[RouterOrchestrator] Current route:', route);
 
   const getPage = () => {
-    if (!route) {
-      logger.warn('[Router] No route matched!', window.location.pathname);
+    let routeName = route?.name;
+    const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+
+    // Fix for nuqs + chicane interaction: 
+    // Nuqs updates query string, Chicane might momentarily fail to match
+    // resulting in a transient 404 page. We fallback based on pathname.
+    if (!routeName) {
+      if (pathname === '/' || pathname === '') {
+        routeName = 'home';
+      } else if (pathname.startsWith('/admin/batch-edit')) {
+        routeName = 'adminBatchEdit';
+      } else if (pathname.startsWith('/admin/group/')) {
+        routeName = 'adminGroup';
+      } else if (pathname.startsWith('/admin/tasks')) {
+        routeName = 'adminTasks';
+      } else if (pathname.startsWith('/admin/diagnose')) {
+        routeName = 'adminDiagnostics';
+      } else if (pathname.startsWith('/admin/error-logs')) {
+        routeName = 'adminDiagnosticsLogs';
+      } else if (pathname.startsWith('/admin')) {
+        routeName = 'admin';
+      } else if (pathname.startsWith('/group/')) {
+        routeName = 'publicGroup';
+      } else if (pathname.startsWith('/photo/')) {
+        routeName = 'photo';
+      } else if (pathname.startsWith('/settings')) {
+        routeName = 'settings';
+      } else if (pathname.startsWith('/diagnostics')) {
+        routeName = 'diagnostics';
+      }
+    }
+
+    if (!routeName) {
+      logger.warn('[Router] No route matched!', pathname);
       return <NotFoundPage />;
     }
-    logger.debug('[Router] Matched route:', route.name);
+    logger.debug('[Router] Matched route:', routeName);
 
-    switch (route.name) {
+    switch (routeName) {
       case "home":
       case "photo":
       case "photoSlash":
@@ -65,11 +98,18 @@ export function RouterOrchestrator() {
 
   return (
     <>
-      <div className="flex-1 flex flex-col h-full w-full animate-fade-in">
-        <Suspense fallback={<LoadingScreen />}>
-          {getPage()}
-        </Suspense>
-      </div>
+      <AnimatePresence>
+        <motion.div 
+          key={route?.name || 'unknown'}
+          variant="fade"
+          transition="easeOut"
+          className="flex-1 flex flex-col h-full w-full"
+        >
+          <Suspense fallback={<LoadingScreen />}>
+            {getPage()}
+          </Suspense>
+        </motion.div>
+      </AnimatePresence>
     </>
   );
 }

@@ -5,7 +5,7 @@ import { Icon } from '@/components/ui/Icon';
 import { cn } from "@/lib/utils";
 import { useConfirm } from '@/context/ConfirmContext';
 import {
-  usePhotoFilter,
+  useTagSorting,
   useSettings,
   useUI,
   useTagSearch,
@@ -63,7 +63,7 @@ export function TagEditor({
     }
   };
 
-  const { hotIds: hotTagsSet, pinnedIds } = usePhotoFilter(allTags, settings);
+  const { hotIds: hotTagsSet, pinnedIds } = useTagSorting(allTags, settings);
 
   const selectedSet = new Set(selectedTagIds.map(String));
   const pinnedSet = new Set(pinnedIds.map(String));

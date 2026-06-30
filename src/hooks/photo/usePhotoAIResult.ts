@@ -23,11 +23,11 @@ export const usePhotoAIResult = (photoId: string) => {
 
         const data = await resp.json() as Record<string, unknown>;
         if (!data.success) {
-          throw new Error((data.error as string) || '获取 AI 识别源数据失败');
+          throw new Error((data.error as string) || 'AI Analysis Failed');
         }
         return data.data as PhotoAIResult;
       } catch (err: unknown) {
-        throw ErrorFactory.wrap(err, '获取 AI 源数据网络异常', photoId);
+        throw ErrorFactory.wrap(err, 'Network Error', photoId);
       }
     },
     { dedupingInterval: STALE_TIMES.PHOTO_LIST }

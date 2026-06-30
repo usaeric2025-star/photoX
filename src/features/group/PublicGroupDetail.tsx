@@ -7,7 +7,7 @@ import { Photo, Group, Category } from '@/types';
 import { PhotoGridContent } from '@/components/photo/PhotoGridContent';
 import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
 import { useFilters, useTranslation, useCategories } from '@/hooks';
-import { GroupHeader } from './components/GroupHeader';
+import { PublicGroupHeader } from './components/PublicGroupHeader';
 import { Button } from '@/components/shared/Button';
 import { useUI, uiStore, useSignal, gridColumns as gridColumnsSignal } from '@/lib/store';
 import { usePublicSettings } from '@/hooks/settings/useSettings';
@@ -94,16 +94,15 @@ export function PublicGroupDetailPage() {
       </div>
     );
   }
-  if (error) return <div className="p-4 text-red-500">錯誤：{error}</div>;
-  if (!group) return <div className="p-4 flex flex-col justify-center items-center h-full"><div className="text-xl text-slate-500 mb-4">合組不存在或已被刪除</div><Button onClick={() => window.history.back()}>返回</Button></div>;
+  if (error) return <div className="p-4 text-red-500">{t.errorPrefix}{error}</div>;
+  if (!group) return <div className="p-4 flex flex-col justify-center items-center h-full"><div className="text-xl text-slate-500 mb-4">{t.groupNotFound}</div><Button onClick={() => window.history.back()}>{t.goBack}</Button></div>;
   
   return (
     <div className="min-h-screen bg-slate-50 group-detail-public flex flex-col relative w-full h-[100dvh] overflow-hidden overscroll-none">
       <div className="flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-slate-100 shadow-sm relative">
-        <GroupHeader 
+        <PublicGroupHeader 
           group={group} 
           photoCount={totalCount} 
-          isAdmin={false} 
         />
       </div>
       {/* FilterBar removed */}

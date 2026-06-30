@@ -36,7 +36,7 @@ export function AdminHeaderMenu({ user, signOut, navigate, isStaff, theme, t, la
                 <Icon name="user" size={10} />
               )}
             </div>
-            {user ? user.email?.split("@")[0] : (lang === 'zh' ? '员工 (Staff)' : 'Staff')}
+            {user ? user.email?.split("@")[0] : t.loginTitleStaff}
           </div>
         ) : (
           <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest select-none">

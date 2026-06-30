@@ -1,7 +1,7 @@
 import React from "react";
 import { PhotoEditSchema } from "@/schemas/photoEdit";
 import { useAppForm } from "@/lib/forms/useAppForm";
-import { useCategories, useManufacturers } from "@/hooks";
+import { useCategories, useManufacturers, useTags, useTranslation } from "@/hooks";
 import { Field } from "@tanstack/react-form";
 
 import { type PhotoEditFormData } from "@/schemas/photoEdit";
@@ -30,6 +30,7 @@ const defaultForm: PhotoEditFormData = {
 export function BatchEditForm({ formState, handleUpdateForm }: BatchEditFormProps) {
   const { categories = [] } = useCategories();
   const { manufacturers = [] } = useManufacturers();
+  const { tags = [] } = useTags();
   const formObj = useAppForm({
     schema: PhotoEditSchema,
     defaultValues: { ...defaultForm, ...formState } as PhotoEditFormData,
@@ -41,6 +42,7 @@ export function BatchEditForm({ formState, handleUpdateForm }: BatchEditFormProp
     }
   });
 
+  const { uiTranslations: t } = useTranslation();
   return (
     <div className="flex-1 overflow-y-auto w-full p-6">
        <form
@@ -54,7 +56,7 @@ export function BatchEditForm({ formState, handleUpdateForm }: BatchEditFormProp
          <Field form={formObj.form} name="isHidden">
             {({ state, handleChange }) => (
                 <div className="space-y-2">
-                    <label className="text-sm font-bold">显示状态 / VISIBILITY</label>
+                    <label className="text-sm font-bold">{t.visibility.toUpperCase()} / VISIBILITY</label>
                     <select 
                       value={state.value === true ? 'true' : state.value === false ? 'false' : ''} 
                       onChange={(e) => {
@@ -63,9 +65,9 @@ export function BatchEditForm({ formState, handleUpdateForm }: BatchEditFormProp
                       }}
                       className="w-full border p-2 rounded"
                     >
-                      <option value="">保持不变 (Unchanged)</option>
-                      <option value="false">显示 (Visible)</option>
-                      <option value="true">屏蔽 (Hidden)</option>
+                      <option value="">{t.unchanged}</option>
+                      <option value="false">{t.visible}</option>
+                      <option value="true">{t.hidden}</option>
                     </select>
                 </div>
             )}
@@ -74,7 +76,7 @@ export function BatchEditForm({ formState, handleUpdateForm }: BatchEditFormProp
          <Field form={formObj.form} name="categoryId">
             {({ state, handleChange }) => (
                 <div className="space-y-2">
-                    <label className="text-sm font-bold">分类 / CATEGORY</label>
+                    <label className="text-sm font-bold">{t.category.toUpperCase()} / CATEGORY</label>
                     <select 
                       value={String(state.value || '')} 
                       onChange={(e) => {
@@ -82,7 +84,7 @@ export function BatchEditForm({ formState, handleUpdateForm }: BatchEditFormProp
                       }}
                       className="w-full border p-2 rounded"
                     >
-                      <option value="">保持不变 (Unchanged)</option>
+                      <option value="">{t.unchanged}</option>
                       {categories.map(c => (
                         <option key={c.id} value={c.id}>{c.name}</option>
                       ))}
@@ -94,7 +96,7 @@ export function BatchEditForm({ formState, handleUpdateForm }: BatchEditFormProp
          <Field form={formObj.form} name="manufacturerId">
             {({ state, handleChange }) => (
                 <div className="space-y-2">
-                    <label className="text-sm font-bold">厂商 / MANUFACTURER</label>
+                    <label className="text-sm font-bold">{t.manufacturer.toUpperCase()} / MANUFACTURER</label>
                     <select 
                       value={String(state.value || '')} 
                       onChange={(e) => {
@@ -102,7 +104,7 @@ export function BatchEditForm({ formState, handleUpdateForm }: BatchEditFormProp
                       }}
                       className="w-full border p-2 rounded"
                     >
-                      <option value="">保持不变 (Unchanged)</option>
+                      <option value="">{t.unchanged}</option>
                       {manufacturers.map(m => (
                         <option key={m.id} value={m.id}>{m.name}</option>
                       ))}
@@ -111,11 +113,33 @@ export function BatchEditForm({ formState, handleUpdateForm }: BatchEditFormProp
             )}
          </Field>
 
+         <Field form={formObj.form} name="tags">
+            {({ state, handleChange }) => (
+                <div className="space-y-2">
+                    <label className="text-sm font-bold">{t.tags.toUpperCase()} / TAGS (ADD)</label>
+                    <select 
+                      multiple
+                      value={state.value || []} 
+                      onChange={(e) => {
+                          const options = Array.from(e.target.selectedOptions, option => option.value);
+                          handleChange(options);
+                      }}
+                      className="w-full border p-2 rounded min-h-[100px]"
+                    >
+                      {tags.map(tag => (
+                        <option key={tag.id} value={tag.name}>{tag.name}</option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-slate-500">Select multiple tags to add to all selected photos. Existing tags will not be removed.</p>
+                </div>
+            )}
+         </Field>
+
          <button type="submit" className="hidden">Submit</button>
        </form>
        
        <div className="mt-8 text-xs text-slate-400">
-         * Note: Form properties are staged automatically upon selection. Use the top bar to Apply.
+         {t.batchEditNote}
        </div>
     </div>
   );

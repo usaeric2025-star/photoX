@@ -39,6 +39,14 @@ export function AdminPhotoGrid({
   
   const allIds = React.useMemo(() => (photos || []).map(p => p.id), [photos]);
 
+  const handlePhotoClick = React.useCallback((id: string, index: number, e?: React.MouseEvent) => {
+    if (isMultiSelect) {
+      toggleSelect(id);
+    } else {
+      onPhotoClick?.(id, index, e);
+    }
+  }, [isMultiSelect, toggleSelect, onPhotoClick]);
+
   return (
     <div className="h-full w-full relative">
       <PhotoGridContent 
@@ -54,13 +62,7 @@ export function AdminPhotoGrid({
         filters={filters}
         error={error}
         onRetry={onRetry}
-        onPhotoClick={(id, index, e) => {
-          if (isMultiSelect) {
-            toggleSelect(id);
-          } else {
-            onPhotoClick?.(id, index, e);
-          }
-        }}
+        onPhotoClick={handlePhotoClick}
       />
     </div>
   );

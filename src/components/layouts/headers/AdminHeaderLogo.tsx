@@ -1,7 +1,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { Icon } from '@/components/ui/Icon';
-import { useUI } from '@/hooks';
+import { useUI, useTranslation } from '@/hooks';
 import { UIStoreState } from '@/lib/store';
 
 import { Theme } from '@/types';
@@ -15,7 +15,7 @@ interface AdminHeaderLogoProps {
 }
 
 export function AdminHeaderLogo({ logoUrl, isAdmin, isStaff, totalCount, theme }: AdminHeaderLogoProps) {
-  const lang = useUI((s: UIStoreState) => s.appLang);
+  const { uiTranslations: t, lang } = useTranslation();
 
   return (
     <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 flex-nowrap z-10">
@@ -51,7 +51,7 @@ export function AdminHeaderLogo({ logoUrl, isAdmin, isStaff, totalCount, theme }
       )}
 
       <div className={cn("flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-bold border rounded-full px-2 sm:px-2.5 py-1 select-none shrink-0 cursor-default justify-center shadow-sm whitespace-nowrap", theme.badge)}>
-        <span className={cn("uppercase tracking-tighter text-[9px] shrink-0", theme.badgeLabel)}>{lang === 'zh' ? '总存量' : 'Total'}</span>
+        <span className={cn("uppercase tracking-tighter text-[9px] shrink-0", theme.badgeLabel)}>{t.totalStock}</span>
         <span className={cn("shrink-0", theme.badgeVal)}>
           {totalCount.toLocaleString()}
         </span>

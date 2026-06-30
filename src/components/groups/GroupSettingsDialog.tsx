@@ -24,20 +24,21 @@ interface GroupSettingsHeaderProps {
   activeGroupId: string | null;
   onUngroup?: (groupId: string) => Promise<void> | void;
   setShowGroupSettings: (show: boolean) => void;
+  t: (key: string) => string;
 }
 
-function GroupSettingsHeader({ groupData, activeGroupId, onUngroup, setShowGroupSettings }: GroupSettingsHeaderProps) {
+function GroupSettingsHeader({ groupData, activeGroupId, onUngroup, setShowGroupSettings, t }: GroupSettingsHeaderProps) {
   const confirm = useConfirm();
   return (
     <div className="flex items-center justify-between p-4 border-b">
-      <h3 className="text-lg font-bold">合組設定</h3>
+      <h3 className="text-lg font-bold">{t('groupSettings')}</h3>
       <div className="flex gap-2 items-center">
         {onUngroup && activeGroupId && (
           <Button variant="outline" className="text-red-500 hover:text-red-600 hover:bg-red-50" size="sm" onClick={async () => {
             if (await confirm({
-              title: "確認解散合組？",
-              description: "解散後，其中的照片將成為獨立照片。此操作無法復原。",
-              confirmText: "解散",
+              title: t('confirmDissolve'),
+              description: t('dissolveDesc'),
+              confirmText: t('dissolveBtn'),
               variant: "destructive"
             })) {
               await onUngroup(activeGroupId);
@@ -45,7 +46,7 @@ function GroupSettingsHeader({ groupData, activeGroupId, onUngroup, setShowGroup
             }
           }}>
             <Icon name="trash-2" className="w-4 h-4 mr-1" />
-            解散合組
+            {t('dissolveGroupBtn')}
           </Button>
         )}
         <button onClick={() => setShowGroupSettings(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
@@ -63,28 +64,28 @@ interface GroupSettingsContentProps {
 }
 
 function GroupSettingsContent({ groupData, handleUpdateGroupData, t }: GroupSettingsContentProps) {
-  if (!groupData) return <div className="p-4 text-slate-500 text-center">無法載入合組資料</div>;
+  if (!groupData) return <div className="p-4 text-slate-500 text-center">{t('failedLoadGroupData')}</div>;
   
   return (
     <div className="p-4 space-y-6 overflow-y-auto">
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">合組名稱</label>
+        <label className="block text-sm font-medium text-slate-700 mb-1">{t('groupName')}</label>
         <input
           type="text"
           value={groupData.name || ''}
           onChange={(e) => handleUpdateGroupData({ name: e.target.value })}
           className="w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 border"
-          placeholder="合組名稱..."
+          placeholder={t('groupNamePlaceholder')}
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">合組描述</label>
+        <label className="block text-sm font-medium text-slate-700 mb-1">{t('groupDesc')}</label>
         <textarea
           value={groupData.description || ''}
           onChange={(e) => handleUpdateGroupData({ description: e.target.value })}
           rows={4}
           className="w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 border"
-          placeholder="描述..."
+          placeholder={t('descPlaceholder')}
         />
       </div>
     </div>
@@ -104,6 +105,7 @@ export function GroupSettingsDialog(props: GroupSettingsDialogProps) {
     activeGroupId: childProps.activeGroupId,
     onUngroup: childProps.onUngroup,
     setShowGroupSettings: childProps.setShowGroupSettings,
+    t: childProps.t,
   };
 
   return (

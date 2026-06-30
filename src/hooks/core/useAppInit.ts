@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
-import { useStore } from '@/lib/store';
-import { appStore, initializeApp } from '@/store/appStore';
+import { useSignal } from '@/lib/store';
+import { initializeApp, appLoadingSignal, appErrorSignal } from '@/store/appStore';
 import { usePublicSettings } from '@/hooks/settings/useSettings';
 import { prefetchPhotos } from '@/lib/query/hooks/usePhotos';
 
 export function useAppInit() {
-  const status = useStore(appStore);
+  const isAppStoreLoading = useSignal(appLoadingSignal);
+  const appError = useSignal(appErrorSignal);
   const { data: settings, error: settingsError, isLoading: isSettingsLoading } = usePublicSettings();
 
   useEffect(() => {
@@ -17,8 +18,7 @@ export function useAppInit() {
     prefetchPhotos({ onlyGroupsCover: true });
   }, []);
 
-  const isAppStoreLoading = status.isLoading;
-  const error = status.error || (settingsError as Error | null);
+  const error = appError || (settingsError as Error | null);
   const isError = !!error;
   
   // 核心邏輯優化：只要 AppStore 初始化完成即可渲染，Settings 可以在背景繼續加載

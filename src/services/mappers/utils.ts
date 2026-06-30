@@ -50,7 +50,9 @@ export function normalizeStoredUrl(url: string | undefined | null): string {
     const match = processedUrl.match(/photox\/(public|thumb|original)\/(.+)/);
     if (match) {
         const pathAndFilename = match[0];
-        return `https://pub-ffc4b0692ab74fabb58cbccc5287d7b1.r2.dev/${pathAndFilename}`;
+        const r2Base = import.meta.env.VITE_R2_BASE_URL || import.meta.env.VITE_R2_PUBLIC_URL_PREFIX || 'https://pub-ffc4b0692ab74fabb58cbccc5287d7b1.r2.dev';
+        const cleanBase = r2Base.endsWith('/') ? r2Base.slice(0, -1) : r2Base;
+        return `${cleanBase}/${pathAndFilename}`;
     }
     
     return processedUrl;

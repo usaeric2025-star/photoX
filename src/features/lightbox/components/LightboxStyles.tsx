@@ -17,7 +17,7 @@ export function LightboxStyles({ hasThumbnails }: { hasThumbnails: boolean }) {
         transition: none !important;
       }
       .rlbx-nav { z-index: 10015 !important; }
-      .rlbx-image-area { margin-bottom: ${hasThumbnails ? '96px' : '0px'} !important; }
+      .rlbx-image-area { margin-bottom: 0px !important; }
       .rlbx-thumbnails {
         display: flex !important;
         position: fixed !important;
@@ -33,23 +33,28 @@ export function LightboxStyles({ hasThumbnails }: { hasThumbnails: boolean }) {
         padding: 0.5rem 0.875rem !important;
         box-sizing: border-box !important;
         align-items: center !important;
-        gap: 0.375rem !important;
+        justify-content: safe center !important;
+        gap: 0.5rem !important;
         overflow-x: auto !important;
         overflow-y: hidden !important;
+        scroll-snap-type: x mandatory !important;
+        scrollbar-width: none !important;
       }
+      .rlbx-thumbnails::-webkit-scrollbar { display: none !important; }
       .rlbx-thumb {
         flex-shrink: 0 !important;
-        width: 3.5rem !important;
-        height: 3.5rem !important;
-        border-radius: 4px !important;
+        width: 3.75rem !important;
+        height: 3.75rem !important;
+        border-radius: 6px !important;
         overflow: hidden !important;
         border: 2px solid transparent !important;
         opacity: 0.5 !important;
-        transition: all 0.15s ease-out !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
         background: rgba(255, 255, 255, 0.06) !important;
         padding: 0 !important;
         cursor: pointer !important;
         transform: scale(0.92) !important;
+        scroll-snap-align: center !important;
       }
       .rlbx-thumb img {
         width: 100% !important;

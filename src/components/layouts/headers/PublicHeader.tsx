@@ -119,7 +119,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
 
         {totalCount !== undefined && (
           <div className={cn("flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-bold border rounded-full px-2 sm:px-2.5 py-1 select-none shrink-0 cursor-default justify-center shadow-sm whitespace-nowrap", theme.badge)}>
-            <span className={cn("uppercase tracking-tighter text-[9px] shrink-0", theme.badgeLabel)}>{lang === 'zh' ? '总存量' : 'Total'}</span>
+            <span className={cn("uppercase tracking-tighter text-[9px] shrink-0", theme.badgeLabel)}>{t.totalStock}</span>
             <span className={cn("shrink-0", theme.badgeVal)}>
               {totalCount.toLocaleString()}
             </span>
@@ -171,7 +171,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
                   <Icon name="user" size={10} />
                   )}
                 </div>
-                {user ? user.email?.split("@")[0] : (lang === 'zh' ? '员工 (Staff)' : 'Staff')}
+                {user ? user.email?.split("@")[0] : t.staffUser}
               </div>
             ) : (
               <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest select-none">
@@ -183,7 +183,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
 
             <div className="px-2 py-1.5 flex flex-col gap-1 w-full border-t border-slate-50 mt-1">
               <span className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 select-none">
-                {lang === 'zh' ? '联系我们' : 'Connect'}
+                {t.connectLabel}
               </span>
               {settings?.facebook && (
                 <a

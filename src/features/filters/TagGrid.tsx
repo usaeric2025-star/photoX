@@ -3,7 +3,7 @@ import { Icon } from '@/components/ui/Icon';
 import { useTags } from '@/hooks/tag';
 import { useFilterState } from './useFilters';
 import { usePublicSettings } from '@/hooks/settings/useSettings';
-import { usePhotoFilter } from '@/hooks/photo/usePhotoFilter';
+import { useTagSorting } from '@/hooks/photo';
 import { useUI } from '@/lib/store';
 import { translations } from '@/locales';
 import type { FilterState } from './types';
@@ -47,7 +47,7 @@ export function TagGrid({ onClose }: { onClose?: () => void }) {
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
   // Use the standard hook to resolve sorted, pinned, and hot tags according to database parameters
-  const { tagsToRender, pinnedIds, hotIds } = usePhotoFilter(tags || [], settings);
+  const { tagsToRender, pinnedIds, hotIds } = useTagSorting(tags || [], settings);
 
   const toggleTag = (tagId: string) => {
     if (filters.tagIds.includes(tagId)) {

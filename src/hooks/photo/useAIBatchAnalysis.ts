@@ -9,20 +9,22 @@ import { createTask } from '@/lib/task-queue';
 import { generateId } from '@/lib/id';
 import { useAuth } from '@/lib/store';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { useTranslation } from '@/hooks';
 
 export function useAIBatchAnalysis() {
   const { user } = useAuth();
   const invalidatePhotos = useInvalidatePhotos();
+  const { uiTranslations: t } = useTranslation();
 
   const handleBatchAiAnalyze = useCallback(async (targetPhotos: Photo[], groupId?: string) => {
     if (!targetPhotos || targetPhotos.length === 0) {
-      ErrorFactory.handle('请先选择照片', { context: '批量分析' });
+      ErrorFactory.handle(t.selectPhotoFirst, { context: t.batchAi });
       return;
     }
     
-    showToast.info('已加入 AI 分析任務佇列...');
+    showToast.info(t.aiAnalyzing);
 
-    const taskTitle = groupId ? `智能合组分析 (${targetPhotos.length}张)` : `批量 AI 分析 (${targetPhotos.length}张)`;
+    const taskTitle = groupId ? t.aiGroupTask(targetPhotos.length) : t.aiBatchTask(targetPhotos.length);
 
     createTask<{ successCount: number; groupSuccess: boolean }>({
         label: taskTitle,
@@ -48,7 +50,7 @@ export function useAIBatchAnalysis() {
             return { successCount, groupSuccess };
         },
         onComplete: (result) => {
-            showToast.success(groupId ? `智能合组完成` : `批量 AI 分析完成 (${result.successCount}张)`);
+            showToast.success(groupId ? t.taskCompleted(t.aiGroupTask(1).split('(')[0]) : t.aiAnalyzeSuccess(result.successCount));
         }
     });
 

@@ -1,4 +1,5 @@
 import * as v from 'valibot';
+import { TranslationType } from '@/locales';
 
 const TranslationSchema = v.object({
   zh: v.string(),
@@ -17,8 +18,8 @@ const DimensionSchema = v.object({
   isAiEstimated: v.optional(v.nullable(v.boolean())),
 });
 
-export const PhotoEditSchema = v.object({
-  name: v.pipe(v.string(), v.minLength(1, '標題不能為空'), v.maxLength(100, '標題不能超過100字')),
+export const getPhotoEditSchema = (t: TranslationType) => v.object({
+  name: v.pipe(v.string(), v.minLength(1, t.titleRequired), v.maxLength(100, t.titleTooLong)),
   description: v.optional(TranslationSchema),
   categoryId: v.optional(v.nullable(v.string())),
   manufacturerId: v.optional(v.nullable(v.string())),
@@ -33,6 +34,8 @@ export const PhotoEditSchema = v.object({
   tags: v.optional(v.nullable(v.array(v.string()))),
   itemCode: v.optional(v.nullable(v.string())),
 });
+
+export const PhotoEditSchema = getPhotoEditSchema({} as any); // Fallback for types
 
 export type PhotoEditFormData = v.InferOutput<typeof PhotoEditSchema>;
 

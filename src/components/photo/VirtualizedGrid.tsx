@@ -1,6 +1,9 @@
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { VList } from 'virtua';
 
+import { translations } from '@/locales';
+import { useUI } from '@/lib/store';
+
 interface VirtualizedGridProps<T> {
   items: T[];
   columns: number;
@@ -66,15 +69,20 @@ export function VirtualizedGrid<T extends { id: string | number }>({
   return (
     <div className="w-full h-full absolute inset-0" ref={containerRef}>
       <VList 
+        bufferSize={800}
         onScroll={handleScroll} 
         onScrollEnd={handleScrollEnd}
-        style={{ height: '100%' }}
+        style={{ height: '100%', overflowX: 'hidden' }}
       >
         {rows.map((row) => (
           <div 
             key={row.id} 
             className="flex w-full"
-            style={{ marginBottom: rowGap }}
+            style={{ 
+              marginBottom: rowGap,
+              paddingLeft: columnGap / 2,
+              paddingRight: columnGap / 2
+            }}
           >
             {row.items.map((item, colIndex) => {
               const index = row.startIndex + colIndex;
@@ -83,8 +91,7 @@ export function VirtualizedGrid<T extends { id: string | number }>({
                   key={item.id} 
                   style={{ 
                     width: `${100 / columns}%`,
-                    paddingLeft: colIndex === 0 ? 0 : columnGap / 2,
-                    paddingRight: colIndex === columns - 1 ? 0 : columnGap / 2
+                    padding: columnGap / 2
                   }}
                 >
                   {renderItem(item, index)}

@@ -1,11 +1,11 @@
 import { Tag, AppSettings } from '@/types';
 
 /**
- * usePhotoFilter
+ * useTagSorting
  * 處理標籤的排序與顯示邏輯，包括置頂標籤與熱門標籤。
  * 改名自 useTagFiltering。
  */
-export function usePhotoFilter(tags: Tag[], settings?: AppSettings) {
+export function useTagSorting(tags: Tag[], settings?: AppSettings) {
   
   const pinnedIds = (settings?.pinnedTags || []).map(id => String(id));
 

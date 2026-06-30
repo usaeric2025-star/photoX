@@ -2,12 +2,13 @@ import React from 'react';
 import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
 import { showToast } from '@/lib/ui/toast';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { useCopyToClipboard } from '@/hooks';
+import { useCopyToClipboard, useTranslation } from '@/hooks';
 import { isAppError } from '@/lib/error/AppError';
 import { handleChunkError } from '@/lib/chunkErrorHandler';
 
 function GlobalErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
-  const { copy } = useCopyToClipboard({ successMessage: '诊断信息已复制' });
+  const { uiTranslations: t } = useTranslation();
+  const { copy } = useCopyToClipboard({ successMessage: t.copySuccess });
 
   const isChunkFailure = error instanceof Error && (
     error.message.includes('Failed to fetch dynamically imported module') || 
@@ -19,8 +20,8 @@ function GlobalErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
       <div className="flex items-center justify-center min-h-screen p-8 bg-slate-50">
         <div className="text-center max-w-sm">
           <div className="w-10 h-10 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin mx-auto mb-6"></div>
-          <h2 className="text-xl font-bold text-slate-900 mb-2">更新应用中...</h2>
-          <p className="text-slate-500 mb-8 text-sm">正在自动加载最新资源，请稍候</p>
+          <h2 className="text-xl font-bold text-slate-900 mb-2">{t.updatingApp}</h2>
+          <p className="text-slate-500 mb-8 text-sm">{t.autoLoadingRes}</p>
         </div>
       </div>
     );
@@ -30,7 +31,7 @@ function GlobalErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
   if (message) {
     message = message.replace(/data:image\/[^;]+;base64,[a-zA-Z0-9+/=]+/g, '[BASE64_IMAGE_TRUNCATED]');
     if (message.length > 500) {
-      message = message.substring(0, 500) + `... (內容過長已截斷)`;
+      message = message.substring(0, 500) + t.errorTruncated;
     }
   }
 
@@ -52,12 +53,12 @@ function GlobalErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
     }
     
     const diagnosticInfo = [
-      `--- 诊断信息 ---`,
-      `时间戳: ${timestamp}`,
-      `错误类型: ${errorType}`,
-      `代码: ${errorCode}`,
-      `Trace ID: ${traceId}`,
-      `信息: ${message}`
+      t.errorDiagReport,
+      `${t.timeLabel}${timestamp}`,
+      `${t.errorTypeLabel}${errorType}`,
+      `${t.errorCodeLabel}${errorCode}`,
+      `${t.traceIdLabel}${traceId}`,
+      `${t.errorMsgLabel}${message}`
     ].join('\n');
     
     copy(diagnosticInfo);
@@ -65,20 +66,20 @@ function GlobalErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
 
   return (
     <div className="p-4 bg-red-50 text-red-800 rounded-lg">
-      <h2 className="text-lg font-bold">系统发生错误</h2>
+      <h2 className="text-lg font-bold">{t.sysError}</h2>
       <p className="mt-2 text-sm">{message}</p>
       <div className="flex gap-2 mt-4">
         <button
           onClick={resetErrorBoundary}
           className="px-4 py-2 bg-red-100 text-red-800 rounded-md hover:bg-red-200"
         >
-          重试
+          {t.retryBtn}
         </button>
         <button
           onClick={handleCopy}
           className="px-4 py-2 border border-red-200 bg-white text-red-800 rounded-md hover:bg-red-50"
         >
-          复制诊断信息
+          {t.copyDiag}
         </button>
       </div>
     </div>
@@ -99,7 +100,7 @@ export function AppErrorBoundary({ children }: { children: React.ReactNode }) {
           }
         }
 
-        ErrorFactory.handle(error, { context: '系统渲染异常' });
+        ErrorFactory.handle(error, { context: 'System Render Error' });
       }}
     >
       {children}

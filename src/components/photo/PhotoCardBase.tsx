@@ -36,7 +36,7 @@ export const PhotoCardBase = ({
   const isHidden = !!item.isHidden && isManagement;
 
   const handleMouseEnter = React.useCallback(() => {
-    // Preload the lightbox preview image (800px)
+    // Preload the lightbox preview image (800px) - keep original aspect for lightbox
     const hash = item.imageHash || (item as any).image_hash;
     const previewUrl = getThumbnailUrl(item.imageUrl, 800, undefined, hash);
     const img = new window.Image();
@@ -59,23 +59,28 @@ export const PhotoCardBase = ({
         ...props.style
       }}
       className={cn(
-        "aspect-square overflow-hidden cursor-pointer relative transition-all duration-500 group rounded-2xl bg-surface-base shadow-sm",
-        "active:scale-[0.98] active:brightness-95",
-        isHidden && "opacity-80 grayscale-[0.3] ring-2 ring-danger shadow-lg",
-        isSelected && "ring-4 ring-primary bg-primary/10 shadow-lg scale-[0.98]",
+        "aspect-square overflow-hidden cursor-pointer relative transition-all duration-500 group rounded-[4px] bg-surface-base",
+        "active:brightness-95",
+        isHidden && "opacity-80 grayscale-[0.3] ring-1 ring-danger inset-ring-1 inset-ring-danger",
+        isSelected && "ring-2 ring-primary bg-primary/10 z-10",
         className
       )}
       {...props}
     >
       <div className={cn(
-        "relative aspect-square w-full h-full overflow-hidden transition-all duration-700 ease-in-out bg-surface-mute",
-        isSelected ? "scale-[0.92] rounded-xl" : "scale-100 rounded-2xl",
+        "relative aspect-square w-full h-full overflow-hidden transition-all duration-700 ease-in-out bg-surface-mute flex items-center justify-center",
+        isSelected ? "scale-[0.92] rounded-md" : "scale-100 rounded-[2px]",
       )}>
         <Image
-          src={getThumbnailUrl(item.imageUrl, imgVariant === 'md' ? 800 : 120, undefined, item.imageHash || (item as any).image_hash)}
+          src={getThumbnailUrl(
+            item.imageUrl, 
+            imgVariant === 'md' ? 800 : 120, 
+            imgVariant === 'md' ? 800 : 120, 
+            item.imageHash || (item as any).image_hash
+          )}
           alt={typeof item.name === 'string' ? item.name : (item.name as any)?.zh || '照片'}
           className={cn(
-            "w-full h-full object-cover transition-transform duration-700 ease-out",
+            "w-full h-full object-cover object-center transition-transform duration-700 ease-out",
             isHidden && "opacity-60"
           )}
         />

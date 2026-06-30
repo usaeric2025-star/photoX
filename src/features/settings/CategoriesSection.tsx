@@ -10,6 +10,7 @@ import { useFormSubmit } from '@/lib/forms/useFormSubmit';
 import * as v from 'valibot';
 import { FormProvider } from '@/lib/forms/useFormField';
 import { useConfirm } from '@/context/ConfirmContext';
+import { motion, AnimatePresence } from 'lite-sleek';
 
 interface CategoriesSectionProps {
   categories: Category[];
@@ -61,8 +62,13 @@ function CategoryItem({
         </span>
       </div>
 
-      {activeMenuId === cat.id && (
-          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-brand-navy rounded-xl shadow-xl p-1 flex flex-col gap-0.5 min-w-[120px] animate-scale-in">
+      <AnimatePresence>
+        {activeMenuId === cat.id && (
+          <motion.div 
+            variant="scale"
+            transition="easeOut"
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-brand-navy rounded-xl shadow-xl p-1 flex flex-col gap-0.5 min-w-[120px]"
+          >
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -91,8 +97,9 @@ function CategoryItem({
               <Icon name="trash-2" size={12} /> 删除
             </button>
             <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-brand-navy rotate-45 -mt-1" />
-          </div>
+          </motion.div>
         )}
+      </AnimatePresence>
 
       <PromptDialog
         open={isEditOpen}

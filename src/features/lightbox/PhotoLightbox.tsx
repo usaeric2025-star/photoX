@@ -1,11 +1,13 @@
 import React, { useMemo, memo } from 'react';
+import { motion } from 'lite-sleek';
 import { useUI, currentEditingPhoto, useSignal, lightboxSlides, lightboxCurrentIndex } from '@/lib/store';
 import { useFilters } from '@/features/filters';
 import { useAppRoute, useNavigation } from '@/lib/router';
 import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
 import { usePermission, usePublicSettings } from '@/hooks';
 import { LightboxInfoCard } from './components/LightboxInfoCard';
-import { LightboxToolbar } from './components/LightboxToolbar';
+import { AdminLightboxToolbar } from './components/AdminLightboxToolbar';
+import { PublicLightboxToolbar } from './components/PublicLightboxToolbar';
 import { LightboxStyles } from './components/LightboxStyles';
 import { showToast } from '@/lib/ui/toast';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
@@ -45,7 +47,10 @@ interface LightboxProps {
 
 const LightboxStyled = LightboxStyledBase as unknown as React.ComponentType<LightboxProps>; 
 
+import { useTranslation } from '@/hooks/core/useTranslation';
+
 export const PhotoLightbox = memo(function PhotoLightbox() {
+  const { uiTranslations: t } = useTranslation();
   const rawSlides = useSignal(lightboxSlides);
   const filters = useFilters();
   const { photoId: urlPhotoId, modal, setPhotoId } = filters;
@@ -166,37 +171,48 @@ export const PhotoLightbox = memo(function PhotoLightbox() {
       <>
         <LightboxStyles hasThumbnails={hasThumbnails} />
 
-        <LightboxToolbar 
-          currentSlide={slideToUse}
-          canEdit={canEdit}
-          settings={settings}
-          onClose={handleClose}
-          onEdit={() => {
-            const original = slideToUse.original as Photo;
-            if (original) {
-              currentEditingPhoto.set(original);
-              filters.updateFilters({ modal: 'edit', photoId: original.id });
-            }
-          }}
-          onAiAnalyze={() => {
-            const original = slideToUse.original as Photo;
-            if (original) {
-              adminActions.handleBatchAiAnalyze([original]);
-            }
-          }}
-          onDelete={async () => {
-            showToast.info('正在删除照片...');
-            try {
-              await adminActions.deletePhoto.mutateAsync([slideToUse.id]);
-              showToast.success('照片已删除');
-              handleClose();
-            } catch (e) {
-              ErrorFactory.handleError(e, '删除照片');
-            }
-          }}
-        />
+        {canEdit ? (
+          <AdminLightboxToolbar 
+            currentSlide={slideToUse}
+            settings={settings}
+            onClose={handleClose}
+            onEdit={() => {
+              const original = slideToUse.original as Photo;
+              if (original) {
+                currentEditingPhoto.set(original);
+                filters.updateFilters({ modal: 'edit', photoId: original.id });
+              }
+            }}
+            onAiAnalyze={() => {
+              const original = slideToUse.original as Photo;
+              if (original) {
+                adminActions.handleBatchAiAnalyze([original]);
+              }
+            }}
+            onDelete={async () => {
+              showToast.info(t.deletingPhoto);
+              try {
+                await adminActions.deletePhoto.mutateAsync([slideToUse.id]);
+                showToast.success(t.photoDeleted);
+                handleClose();
+              } catch (e) {
+                ErrorFactory.handleError(e, t.deletePhotoAction);
+              }
+            }}
+          />
+        ) : (
+          <PublicLightboxToolbar 
+            currentSlide={slideToUse}
+            settings={settings}
+            onClose={handleClose}
+          />
+        )}
 
-        <div className={`fixed ${hasThumbnails ? 'bottom-[84px]' : 'bottom-8'} left-0 right-0 flex flex-col items-center pointer-events-none px-4 z-[10020] transition-all duration-300 ease-out animate-in fade-in slide-in-from-bottom-2`}>
+        <motion.div 
+          variant="slideUp"
+          transition="easeOut"
+          className={`fixed ${hasThumbnails ? 'bottom-[84px]' : 'bottom-8'} left-0 right-0 flex flex-col items-center pointer-events-none px-4 z-[10020]`}
+        >
           <div className="pointer-events-auto w-full max-w-2xl translate-y-[1px]">
             <LightboxInfoCard 
               slide={slideToUse} 
@@ -217,12 +233,12 @@ export const PhotoLightbox = memo(function PhotoLightbox() {
                 }
               }}
               onShare={() => {
-                const text = `产品：${slideToUse.title}\n${window.location.origin}/photo/${slideToUse.id}`;
+                const text = t.whatsappProductQueryShort(slideToUse.title || '', `${window.location.origin}/photo/${slideToUse.id}`);
                 window.open(`https://wa.me/${settings?.contact_whatsapp || ''}?text=${encodeURIComponent(text)}`, '_blank');
               }}
             />
           </div>
-        </div>
+        </motion.div>
       </>
     );
   }, [enrichedSlide, currentSlide, isEditModalOpen, hasThumbnails, canEdit, settings, adminActions, filters]);

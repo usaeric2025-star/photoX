@@ -1,0 +1,822 @@
+src/components/ui/NativeDialog.tsx:            aria-label="关闭"
+src/components/ui/MenuDialog.tsx:            取消
+src/components/ui/LanguageSwitcher.tsx:    { code: 'zh', label: '中文' },
+src/components/ui/LanguageSwitcher.tsx:          <span className="relative">{l.code === 'zh' ? '中文' : l.code.toUpperCase()}</span>
+src/components/ui/PromptDialog.tsx:            取消
+src/components/ui/PromptDialog.tsx:            确认
+src/components/ui/feedback/LoadingSpinner.tsx:  label = '载入中...',
+src/components/ui/LoadingScreen.tsx:        <h3 className="text-2xl font-black text-gray-900 mb-2">啟動失敗</h3>
+src/components/ui/LoadingScreen.tsx:          {error.message?.includes('逾時') ? '連線速度較慢或系統正在初始化，請稍候再試' : (error.message || '應用程式在啟動過程中遇到未知錯誤')}
+src/components/ui/LoadingScreen.tsx:            <div className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">診斷報告 (Diagnostics)</div>
+src/components/ui/LoadingScreen.tsx:                alert('診斷資料已複製到剪貼簿');
+src/components/ui/LoadingScreen.tsx:              複製代碼
+src/components/ui/LoadingScreen.tsx:            嘗試重新載入
+src/components/ui/LoadingScreen.tsx:            進入維護中心 (Diagnostics)
+src/components/ui/LoadingScreen.tsx:          PhotoX Core Engine v2.6 • 穩定性優先模式
+src/components/ui/ConfirmDialog.tsx:  confirmText = '確認',
+src/components/ui/ConfirmDialog.tsx:  cancelText = '取消',
+src/components/ui/Modal.tsx: * 2026 规范化 Modal 组件 (使用原生 <dialog>)
+src/components/ui/Modal.tsx: * 遵照 AGENTS.md 规范：
+src/components/ui/Modal.tsx: * - 物理渲染在声明位置，通过原生 API 顶层渲染
+src/components/ui/Modal.tsx: * - 严禁手动设置 z-index 保证天然层级
+src/components/ui/Modal.tsx: * - 精准处理 HTML5 dialog 各种边界情况
+src/components/ui/Modal.tsx:  // 处理原生 ESC 键取消
+src/components/ui/Modal.tsx:            aria-label="关闭"
+src/components/shared/FatalErrorOverlay.tsx:    successMessage: '诊断信息已复制到剪贴板',
+src/components/shared/FatalErrorOverlay.tsx:    const message = fatalError.message || '未知内部错误';
+src/components/shared/FatalErrorOverlay.tsx:      `--- 核心系统诊断 ---`,
+src/components/shared/FatalErrorOverlay.tsx:      `时间戳: ${timestamp}`,
+src/components/shared/FatalErrorOverlay.tsx:      `错误类型: ${errorType}`,
+src/components/shared/FatalErrorOverlay.tsx:      `代码: ${errorCode}`,
+src/components/shared/FatalErrorOverlay.tsx:      `原始信息: ${message}`,
+src/components/shared/FatalErrorOverlay.tsx:      `堆栈信息:`,
+src/components/shared/FatalErrorOverlay.tsx:      fatalError.stack || '无堆栈信息'
+src/components/shared/FatalErrorOverlay.tsx:          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">系统核心组件故障</h2>
+src/components/shared/FatalErrorOverlay.tsx:            {fatalError.message || '系统底层发生了未预期的严重异常，可能影响数据一致性。'}
+src/components/shared/FatalErrorOverlay.tsx:            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">故障摘要</span>
+src/components/shared/FatalErrorOverlay.tsx:            重载应用
+src/components/shared/FatalErrorOverlay.tsx:            {copied ? '已复制' : '复制诊断'}
+src/components/shared/WhatsAppDialog.tsx:      const prompt = t.sharePrompt || "您好，我对这个家具感兴趣：";
+src/components/shared/OptimizedImage.tsx:  eager?: boolean; // true: LCP/首屏可見圖片；false(默認): Virtua控制
+src/components/shared/ErrorBoundary.tsx:  const { copy, copied } = useCopyToClipboard({ successMessage: '诊断信息已复制到剪贴板' });
+src/components/shared/ErrorBoundary.tsx:    const message = error?.message || '未知错误';
+src/components/shared/ErrorBoundary.tsx:        safeMessage = safeMessage.substring(0, 500) + '... (内容过长已截断)';
+src/components/shared/ErrorBoundary.tsx:      `--- 诊断信息 ---`,
+src/components/shared/ErrorBoundary.tsx:      `时间戳: ${timestamp}`,
+src/components/shared/ErrorBoundary.tsx:      `错误类型: ${errorType}`,
+src/components/shared/ErrorBoundary.tsx:      `代码: ${errorCode}`,
+src/components/shared/ErrorBoundary.tsx:      `信息: ${safeMessage}`
+src/components/shared/ErrorBoundary.tsx:        {isChunkFailure ? '立即更新系统' : '刷新页面重试'}
+src/components/shared/ErrorBoundary.tsx:            {copied ? '已复制' : '复制诊断信息'}
+src/components/shared/ErrorBoundary.tsx:            回到底部首页
+src/components/shared/ErrorBoundary.tsx:              <h2 className="text-xl font-bold text-slate-900 mb-2">更新应用中...</h2>
+src/components/shared/ErrorBoundary.tsx:              <p className="text-slate-500 mb-8 text-sm">正在自动加载最新资源，请稍候</p>
+src/components/shared/ErrorBoundary.tsx:                  <h2 className="text-2xl font-bold text-slate-900 tracking-tight">应用发生意外错误</h2>
+src/components/shared/ErrorBoundary.tsx:                    程序在运行过程中遇到了无法自动处理的问题。您可以尝试刷新页面，或将诊断信息发送给管理员。
+src/components/shared/ErrorBoundary.tsx:                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">错误摘要</span>
+src/components/shared/ErrorBoundary.tsx:                    {this.state.error?.message || '未知内部错误'}
+src/components/shared/ErrorBoundary.tsx:                <p className="text-[10px] text-slate-400">如果您多次遇到此问题，请联系系统维护人员</p>
+src/components/photo/PhotoErrorDisplay.tsx:      showToast.success('已复制诊断信息到剪贴板');
+src/components/photo/PhotoErrorDisplay.tsx:      showToast.error('复制失败，请手动选择文字');
+src/components/photo/PhotoCardParts.tsx:  const hiddenLabel = lang === 'zh' ? '已隐藏' : lang === 'ms' ? 'Sembunyi' : 'Hidden';
+src/components/photo/PhotoCardBase.tsx:          alt={typeof item.name === 'string' ? item.name : (item.name as any)?.zh || '照片'}
+src/components/admin/ManufacturerItem.tsx:            <Icon name="pencil" size={12} /> 编辑名称
+src/components/admin/ManufacturerItem.tsx:                title: "确认删除",
+src/components/admin/ManufacturerItem.tsx:                description: `确定要删除「${manufacturer.name}」吗？此操作不可恢复。`,
+src/components/admin/ManufacturerItem.tsx:                confirmText: "删除",
+src/components/admin/ManufacturerItem.tsx:            <Icon name="trash-2" size={12} /> 删除
+src/components/admin/ManufacturerItem.tsx:        title="编辑厂商名称 / Edit Manufacturer"
+src/components/admin/ManufacturerItem.tsx:        description="输入新的名称 / Enter new name:"
+src/components/admin/AdminAuthGate.tsx:      logger.warn('⚠️ [AdminAuthGate] Auth Loading 超时，强制尝试显示');
+src/components/admin/AdminAuthGate.tsx:            验证身份中 / Authenticating...
+src/components/admin/FormShared.tsx:          {actionLabel || "+ 新增"}
+src/components/admin/FormShared.tsx:        title={`管理厂商: ${mfr.name}`}
+src/components/admin/FormShared.tsx:        description="请选择操作"
+src/components/admin/FormShared.tsx:        primaryActionLabel="删除"
+src/components/admin/FormShared.tsx:        secondaryActionLabel="编辑"
+src/components/admin/ManufacturerSelect.tsx:              <div className="text-sm text-slate-400">尚无厂商，请先添加 / No manufacturers yet</div>
+src/components/groups/useGroupDraft.ts:        ErrorFactory.handleError(err, "更新群組資料失敗");
+src/components/layouts/headers/PublicHeader.tsx:      {/* 左侧：Logo & 计数 */}
+src/components/layouts/headers/PublicHeader.tsx:      {/* 右侧：刷新 & 管理/登录入口 */}
+src/components/layouts/headers/PublicHeader.tsx:        {/* 3. 切换至管理后台/登录按钮 (Apple Style) - 僅員工及未登錄遊客可見 */}
+src/components/layouts/headers/PublicHeader.tsx:        {/* 4. 菜单 (語言、登錄、退出) */}
+src/components/__tests__/LoginScreen.test.tsx:      loginTitleAdmin: '管理员',
+src/components/__tests__/LoginScreen.test.tsx:      loginTitleStaff: '员工',
+src/components/__tests__/LoginScreen.test.tsx:      login: '登录',
+src/components/__tests__/LoginScreen.test.tsx:      enterPasscode: '输入访问码',
+src/components/__tests__/LoginScreen.test.tsx:      unlockAndAccess: '解锁并进入',
+src/components/__tests__/LoginScreen.test.tsx:      invalidCode: '无效代码',
+src/components/__tests__/LoginScreen.test.tsx:      loginFailed: '登录失败'
+src/components/__tests__/ErrorBoundary.test.tsx:    expect(getByText(/应用发生意外错误/)).toBeTruthy();
+src/components/__tests__/ErrorBoundary.test.tsx:    expect(getByText(/刷新页面重試|刷新页面重试/)).toBeTruthy();
+src/types/supabase.ts:  // 关联字段
+src/lib/lightbox/types.ts:  original?: unknown; // 原始數據引用
+src/lib/forms/index.ts:// ✅ 匯出 TanStack Form 核心 API
+src/lib/forms/index.ts:// ✅ 匯出 Valibot（方便統一導入）
+src/lib/forms/index.ts:// ✅ 錯誤處理工具（整合 ErrorFactory）
+src/lib/forms/index.ts:// ✅ 匯出專案自定義表單工具
+src/lib/query/config.ts:  /** REALTIME：0 秒（永遠獲取最新） */
+src/lib/query/config.ts:  /** 快速狀態：4 秒（防止重複掛載時的閃爍） */
+src/lib/query/config.ts:  /** 照片列表：5 秒 */
+src/lib/query/config.ts:  /** 合組詳情：30 秒（配合預加載） */
+src/lib/query/config.ts:  /** 短期緩存（設置/狀態/搜尋）：1 分鐘 */
+src/lib/query/config.ts:  /** 中等緩存（分類/標籤/日常狀態）：5 分鐘 */
+src/lib/query/config.ts:  /** 基礎數據：10 分鐘 */
+src/lib/query/config.ts:  /** 系統/AI 審計日誌：1 小時 */
+src/lib/query/config.ts:  /** 靜態數據：永不過期 */
+src/lib/query/hooks/usePhotos.ts: * 預加載特定篩選條件的照片列表第一頁並寫入 SWR 快取
+src/lib/query/keys.ts: * 稳定化排序对象，确保 Query Key 顺通一致
+src/lib/query/index.ts: * 統一的 Query Adapter (SWR Facade)
+src/lib/query/index.ts:      const wrappedError = ErrorFactory.wrap(e, '数据加载');
+src/lib/query/index.ts:      const wrappedError = ErrorFactory.wrap(e, 'Mutation 操作');
+src/lib/query/client.ts:  // ✅ 快取時間 (1 分鐘)
+src/lib/query/client.ts:  // ✅ 重新驗證策略
+src/lib/query/client.ts:  // ✅ 錯誤重試
+src/lib/query/client.ts:  // ✅ 載入中顯示舊資料
+src/lib/query/client.ts:  // ✅ 統一錯誤處理
+src/lib/id.ts:  // 優先使用原生 crypto.randomUUID()
+src/lib/id.ts:      // 降級到 fallback
+src/lib/id.ts:  // Fallback: 手動生成 UUID v4（無需套件）
+src/lib/supabase.ts: * 安全获取环境变量
+src/lib/supabase.ts: * 兼容 Vite (import.meta.env) 和 Node.js (process.env)
+src/lib/supabase.ts:  // 降级使用 process.env（运行时）
+src/lib/supabase.ts:  // 既没有 import.meta.env 也没有 process.env
+src/lib/supabase.ts:    logger.error(`❌ 环境变量 ${key} 未找到`);
+src/lib/supabase.ts:// 验证环境变量
+src/lib/supabase.ts:// 开发环境挂载到 window，方便调试（可选）
+src/lib/task-queue/components/TaskBadge.tsx:      aria-label="開啟任務佇列"
+src/lib/task-queue/components/TaskBadge.tsx:          上傳中
+src/lib/task-queue/components/TaskDrawer.tsx:    queued: '等待中',
+src/lib/task-queue/components/TaskDrawer.tsx:    processing: '處理中',
+src/lib/task-queue/components/TaskDrawer.tsx:    completed: '已完成',
+src/lib/task-queue/components/TaskDrawer.tsx:    failed: '失敗',
+src/lib/task-queue/components/TaskDrawer.tsx:    cancelled: '已取消'
+src/lib/task-queue/components/TaskDrawer.tsx:          <span className="font-extrabold text-sm text-slate-800 uppercase tracking-tight">任務佇列 (Queue)</span>
+src/lib/task-queue/components/TaskDrawer.tsx:                清除歷史
+src/lib/task-queue/components/TaskDrawer.tsx:              aria-label="關閉"
+src/lib/task-queue/components/TaskDrawer.tsx:              <h4 className="text-xs font-bold text-slate-600 uppercase tracking-wider">暫無佇列任務</h4>
+src/lib/task-queue/components/TaskDrawer.tsx:                上傳照片或執行系統維護時，將在此處顯示詳細的任務狀態與即時進度。
+src/lib/task-queue/querySync.ts:// ✅ 封裝為可清理的初始化函數
+src/lib/task-queue/querySync.ts:        // ✅ 本地更新單條數據（不需防抖）
+src/lib/task-queue/querySync.ts:  // ✅ 返回 cleanup 函數
+src/lib/task-queue/querySync.ts:      flushInvalidations(); // 強制執行
+src/lib/task-queue/querySync.ts:// ✅ 暴露 flush 方法
+src/lib/task-queue/querySync.ts:// ✅ HMR 安全
+src/lib/task-queue/integrations/supabase.ts:  // 插入新任務
+src/lib/task-queue/integrations/supabase.ts:    // 優先使用任務自帶的 userId，否則嘗試從 session 獲取
+src/lib/task-queue/integrations/supabase.ts:  // 更新狀態
+src/lib/task-queue/integrations/supabase.ts:  // 恢復未完成任務
+src/lib/task-queue/integrations/supabase.ts:      // ⚠️ execute 函數需要業務層重新綁定
+src/lib/task-queue/adapters/upload.ts:    onProgress(i / total, `處理第 ${i + 1}/${total} 張: 正在校驗格式及計算雜湊值...`);
+src/lib/task-queue/adapters/upload.ts:    onProgress((i + 0.2) / total, `處理第 ${i + 1}/${total} 張: 正在比對重複項...`);
+src/lib/task-queue/adapters/upload.ts:      onProgress((i + 1) / total, `處理第 ${i + 1}/${total} 張: 已跳過重複照片 (${processed.file.name})`);
+src/lib/task-queue/adapters/upload.ts:      onProgress((i + 0.5) / total, `處理第 ${i + 1}/${total} 張: ${statusMsg}`);
+src/lib/task-queue/adapters/upload.ts:    onProgress((i + 1) / total, `完成 ${i + 1}/${total}`);
+src/lib/task-queue/adapters/upload.ts:      showToast.info(`已自動跳過 ${skippedCount} 張重複照片`);
+src/lib/task-queue/adapters/upload.ts:  // ✅ 自動將 AI 分析任務加入佇列 (如果上傳成功)
+src/lib/task-queue/adapters/upload.ts:    const taskTitle = options.groupId ? `智能合组分析 (${uploadedPhotos.length}张)` : `批量 AI 分析 (${uploadedPhotos.length}张)`;
+src/lib/task-queue/adapters/upload.ts:          // 觸發重新驗證快取
+src/lib/task-queue/adapters/upload.ts:            throw new Error(`${failedCount} 张照片 AI 分析失败`);
+src/lib/task-queue/adapters/upload.ts:            throw new Error(`商品组 AI 分析失败`);
+src/lib/task-queue/adapters/upload.ts:              showToast.error(`AI 分析有部分失败: ${err.message}`);
+src/lib/task-queue/scheduler.ts:  // ✅ AbortController 僅存於內部 Map，不污染 Task 物件
+src/lib/task-queue/scheduler.ts:  // ✅ 去重檢查：type + meta.key
+src/lib/task-queue/scheduler.ts:  // ✅ 唯一 enqueue 入口
+src/lib/task-queue/scheduler.ts:    // 冪等檢查
+src/lib/task-queue/scheduler.ts:    // 1. 寫入 Store（UI 驅動）
+src/lib/task-queue/scheduler.ts:    // 2. 寫入 Supabase（持久層）
+src/lib/task-queue/scheduler.ts:    // 3. 加入調度佇列
+src/lib/task-queue/scheduler.ts:    // ✅ 從內部 Map 取得 Controller
+src/lib/task-queue/scheduler.ts:    // 從佇列移除
+src/lib/task-queue/scheduler.ts:    // 更新 Store
+src/lib/task-queue/scheduler.ts:    // 更新 Supabase
+src/lib/task-queue/scheduler.ts:    // 釋放去重鍵
+src/lib/task-queue/scheduler.ts:    // 重置狀態
+src/lib/task-queue/scheduler.ts:    // ✅ 每個任務獨立 AbortController
+src/lib/task-queue/scheduler.ts:      // ✅ 立即更新 UI 狀態，不再因網路 I/O 阻礙
+src/lib/task-queue/scheduler.ts:      // 非阻塞式更新 Supabase，不延誤任務執行
+src/lib/task-queue/scheduler.ts:      // 完成
+src/lib/task-queue/scheduler.ts:      // 觸發 querySync（通過事件訂閱）
+src/lib/task-queue/scheduler.ts:      // 如果是取消，不觸發錯誤處理
+src/lib/task-queue/scheduler.ts:      const retryable = true; // 可根據錯誤類型判斷
+src/lib/task-queue/scheduler.ts:      // 釋放去重鍵（僅 completed 或 failed）
+src/lib/task-queue/scheduler.ts:  // 供 querySync 訂閱
+src/lib/task-queue/scheduler.ts:  // 從 Supabase 恢復任務
+src/lib/task-queue/scheduler.ts:    // ✅ 先清除記憶體中可能存在的重複任務
+src/lib/task-queue/scheduler.ts:    // 先查佇列
+src/lib/task-queue/scheduler.ts:    // 再查執行中
+src/lib/task-queue/scheduler.ts:// 單例
+src/lib/task-queue/taskFactory.ts:  /** 任務類型 */
+src/lib/task-queue/taskFactory.ts:  /** 任務標題 */
+src/lib/task-queue/taskFactory.ts:  /** 任務載荷（非必需，因為邏輯會被封裝在 execute 裡） */
+src/lib/task-queue/taskFactory.ts:  /** 執行邏輯 */
+src/lib/task-queue/taskFactory.ts:  /** 完成回調 */
+src/lib/task-queue/taskFactory.ts:  /** 錯誤回調 */
+src/lib/task-queue/taskFactory.ts:  /** 任務 ID，若未提供則自動生成 */
+src/lib/task-queue/taskFactory.ts:  /** 執行任務的使用者 ID */
+src/lib/task-queue/taskFactory.ts:  /** 靜默模式，不打開任務面板 */
+src/lib/task-queue/taskFactory.ts: * ✅ 統一的任務創建工廠
+src/lib/task-queue/taskFactory.ts: * 所有任務觸發點必須經過這裡
+src/lib/task-queue/taskFactory.ts:  // ✅ 標準化進度值（強制 0-1）
+src/lib/task-queue/taskFactory.ts:        // 統一完成處理
+src/lib/task-queue/taskFactory.ts:        logger.info(`[TaskFactory] ${type} 任務完成: ${id}`);
+src/lib/task-queue/taskFactory.ts:        // 統一錯誤處理
+src/lib/task-queue/taskFactory.ts:        logger.error(`[TaskFactory] ${type} 任務失敗: ${id}`, wrappedError);
+src/lib/task-queue/taskFactory.ts:  // 加入任務隊列
+src/lib/task-queue/taskFactory.ts: * 等待任務完成的工廠方法
+src/lib/error/photoErrors.ts:    if (msg.includes('timeout') || msg.includes('timed out') || msg.includes('超時') || msg.includes('逾時')) {
+src/lib/error/photoErrors.ts:    title: { zh: '无法连接到服务器', en: '无法连接到服务器' },
+src/lib/error/photoErrors.ts:    message: { zh: '请检查您的网络连接是否稳定。如果网络正常，请稍后再试。', en: '请检查您的网络连接是否稳定。如果网络正常，请稍后再试。' },
+src/lib/error/photoErrors.ts:    action: { zh: '立即重试', en: '立即重试' },
+src/lib/error/photoErrors.ts:    title: { zh: '权限或会话失效', en: '权限或会话失效' },
+src/lib/error/photoErrors.ts:    message: { zh: '您当前的登录状态已过期，或者您没有访问此内容的权限。', en: '您当前的登录状态已过期，或者您没有访问此内容的权限。' },
+src/lib/error/photoErrors.ts:    action: { zh: '重新登录', en: '重新登录' },
+src/lib/error/photoErrors.ts:    title: { zh: '后端服务响应异常', en: '后端服务响应异常' },
+src/lib/error/photoErrors.ts:    message: { zh: '服务器在处理请求时遇到问题（代码 5xx），请联系管理员排查。', en: '服务器在处理请求时遇到问题（代码 5xx），请联系管理员排查。' },
+src/lib/error/photoErrors.ts:    action: { zh: '手动刷新', en: '手动刷新' },
+src/lib/error/photoErrors.ts:    title: { zh: '请求的内容不存在', en: '请求的内容不存在' },
+src/lib/error/photoErrors.ts:    message: { zh: '该照片、合组或分类可能已被删除，或者您使用了错误的访问链接。', en: '该照片、合组或分类可能已被删除，或者您使用了错误的访问链接。' },
+src/lib/error/photoErrors.ts:    action: { zh: '返回首页', en: '返回首页' },
+src/lib/error/photoErrors.ts:    title: { zh: '請求逾時，可能服務繁忙 (504)', en: '請求逾時，可能服務繁忙 (504)' },
+src/lib/error/photoErrors.ts:    message: { zh: '操作耗時過長已被系統安全中斷。這通常是因為後端服務冷啟動、資料庫負載過高或外部 AI API 響應過慢。', en: '操作耗時過長已被系統安全中斷。這通常是因為後端服務冷啟動、資料庫負載過高或外部 AI API 響應過慢。' },
+src/lib/error/photoErrors.ts:    action: { zh: '重新嘗試', en: '重新嘗試' },
+src/lib/error/photoErrors.ts:    title: { zh: '载入照片时出错', en: '载入照片时出错' },
+src/lib/error/photoErrors.ts:    message: { zh: '发生了一个非预期的错误，请复制下方的诊断代码并联系技术人员。', en: '发生了一个非预期的错误，请复制下方的诊断代码并联系技术人员。' },
+src/lib/error/photoErrors.ts:    action: { zh: '点此重试', en: '点此重试' },
+src/lib/error/photoErrors.ts:    let subTitle = '請求處理逾時 (Timeout)';
+src/lib/error/photoErrors.ts:    let subMessage = '操作執行時間超過系統設定的安全閾值，已被看門狗機制中斷。請稍後重試。';
+src/lib/error/photoErrors.ts:    let subAction = '立即重試';
+src/lib/error/photoErrors.ts:      subTitle = '系統初始化逾時 (25秒)';
+src/lib/error/photoErrors.ts:      subMessage = '前端看門狗檢測到載入系統核心設定與認證狀態 (Settings & Auth APIs) 時逾時。這通常發生在 Vercel Serverless Function 冷啟動、資料庫連線池滿載或 PostgreSQL 還在睡眠中。';
+src/lib/error/photoErrors.ts:      subTitle = '會員認證連線逾時 (3秒)';
+src/lib/error/photoErrors.ts:      subMessage = '前端看門狗在請求 Supabase 會員狀態時 3000ms 未響應。可能原因：您的網路阻擋了 Supabase 連線，或者認證伺服器當前繁忙。我們已為您安全降級為訪客身分繼續瀏覽。';
+src/lib/error/photoErrors.ts:      subTitle = 'AI 智慧分析逾時 (120秒)';
+src/lib/error/photoErrors.ts:      subMessage = '批量照片智能合組與特徵提取 (analyzeGroup) 執行超過 120 秒而被看門狗中斷。可能原因：照片檔案過大、一次性分析照片過多（建議不超過 10 張），或外部 AI 提供商 (Google Gemini / OpenRouter) 當前請求量過大，建議稍後再試。';
+src/lib/error/photoErrors.ts:      subTitle = '資料庫設定讀取逾時';
+src/lib/error/photoErrors.ts:      subMessage = '後端看門狗讀取 settings 設定表時逾時。這代表當前資料庫執行緒已被阻塞，請前往「系統診斷控制台」進行自檢與修復。';
+src/lib/error/photoErrors.ts:      subTitle = '資料庫密鑰讀取逾時';
+src/lib/error/photoErrors.ts:      subMessage = '後端看門狗讀取 access_passcode 密鑰表時逾時。這通常是因為資料庫並行鎖定 (Lock) 或連線超載。';
+src/lib/error/photoErrors.ts:      subTitle = 'AI 連線測試逾時';
+src/lib/error/photoErrors.ts:      subMessage = '與 AI 推理伺服器的握手測試逾時。請確認您的 .env 中配置的 API Key 與 Provider 網路是否暢通。';
+src/lib/error/photoErrors.ts:      subTitle = '資料庫語句執行逾時';
+src/lib/error/photoErrors.ts:      subMessage = 'PostgreSQL 連線級看門狗 (statement_timeout) 強制中斷了當前 SQL。通常是因為對未建索引的大表進行了複雜的全表掃描，或是資料庫表格正被寫入鎖定 (Locking)。';
+src/lib/error/photoErrors.ts:    let subTitle = '請求的內容不存在';
+src/lib/error/photoErrors.ts:    let subMessage = '該照片、合組或分類可能已被刪除，或者您使用了錯誤的訪問連結。';
+src/lib/error/photoErrors.ts:    let subAction = '返回首頁';
+src/lib/error/photoErrors.ts:      subTitle = '照片不存在或已刪除 (404)';
+src/lib/error/photoErrors.ts:      subMessage = '您所請求的特定照片資源不存在。它可能已被管理員永久刪除，或者其 ID 已失效。';
+src/lib/error/photoErrors.ts:      subTitle = '合組不存在或已刪除 (404)';
+src/lib/error/photoErrors.ts:      subMessage = '您所請求的照片合組不存在。此合組可能已被解散、刪除，或該連結的合組 ID 不正確。';
+src/lib/error/photoErrors.ts:      subTitle = '分類不存在或已刪除 (404)';
+src/lib/error/photoErrors.ts:      subMessage = '該照片分類不存在。它可能已被重命名、刪除，或路徑參數不正確。';
+src/lib/error/photoErrors.ts:      subTitle = '標籤不存在或已刪除 (404)';
+src/lib/error/photoErrors.ts:      subMessage = '該照片標籤不存在。標籤可能已被管理員刪除或清理。';
+src/lib/error/photoErrors.ts:      subTitle = 'API 端點不存在 (404)';
+src/lib/error/photoErrors.ts:      subMessage = '後端服務未正確載入此 API 端點。請檢查後端路由、vercel.json 配置或開發伺服器運行狀態。';
+src/lib/error/errorMessages.ts:  'network': '網路連線異常，請檢查網路後重試',
+src/lib/error/errorMessages.ts:  'timeout': '請求逾時，請稍後再試',
+src/lib/error/errorMessages.ts:  'storage_full': '儲存空間已滿，請清理後重試',
+src/lib/error/errorMessages.ts:  'permission_denied': '權限不足，請聯絡管理員',
+src/lib/error/errorMessages.ts:  'file_too_large': '檔案過大，請壓縮後重新上傳',
+src/lib/error/errorMessages.ts:  'unsupported_format': '不支援的檔案格式',
+src/lib/error/errorMessages.ts:  'server_error': '伺服器異常，請稍後再試',
+src/lib/error/errorMessages.ts:  'auth_failed': '認證失敗，請重新登入',
+src/lib/error/errorMessages.ts:  'upload_failed': '上傳失敗',
+src/lib/error/errorMessages.ts:  if (!error) return '發生未知錯誤，請稍後再試';
+src/lib/error/errorMessages.ts:  // 如果有 traceId，顯示給使用者
+src/lib/error/errorMessages.ts:    // 映射錯誤碼
+src/lib/error/errorMessages.ts:    // 預設訊息
+src/lib/error/errorMessages.ts:    return (typeof errObj.message === 'string' ? errObj.message : '') || '發生未知錯誤，請稍後再試';
+src/lib/error/errorMessages.ts:    return `${baseMessage} (追蹤碼: ${errObj.traceId})`;
+src/lib/error/AppError.ts:// ===== 1. 错误严重等级 =====
+src/lib/error/AppError.ts:  INFO = 'info',       // 仅记录，不告警
+src/lib/error/AppError.ts:  WARNING = 'warning', // 记录 + 标记
+src/lib/error/AppError.ts:  ERROR = 'error',     // 记录 + 即时告警
+src/lib/error/AppError.ts:  FATAL = 'fatal',     // 记录 + 紧急呼叫
+src/lib/error/AppError.ts:// ===== 2. 辅助函数 =====
+src/lib/error/AppError.ts:// ===== 3. 标准化 AppError 类别 =====
+src/lib/error/AppError.ts:  // 安全序列化（避免循环引用）
+src/lib/error/__tests__/ErrorFactory.test.ts:    const error = ErrorFactory.validation('標題不能為空', { title: 'required' })
+src/lib/error/ErrorFactory.ts:      // 嘗試獲取友善的路徑名稱
+src/lib/error/ErrorFactory.ts:      const path = issue.path?.map((p) => String((p as any).key)).join('.') || '参数';
+src/lib/error/ErrorFactory.ts:      // 格式化訊息：將欄位名稱與驗證錯誤連結
+src/lib/error/ErrorFactory.ts:      userMessage: t.invalidDataFormat || '输入数据格式不正确',
+src/lib/error/ErrorFactory.ts:      userMessage: this.t.permissionDenied || '权限不足，拒绝访问',
+src/lib/error/ErrorFactory.ts:  /** 统一上报入口 (改为纯本地记录) */
+src/lib/error/ErrorFactory.ts:    // 优先过滤噪音错误，避免写入本地及数据库日志
+src/lib/error/ErrorFactory.ts:    // 1. Console 输出 (精简结构以便阅读)
+src/lib/error/ErrorFactory.ts:    // 2. 本地持久化记录 (供诊断面板读取)
+src/lib/error/ErrorFactory.ts:      // 只保留最近 50 条记录
+src/lib/error/ErrorFactory.ts:          // 如果 QuotaExceededError (localStorage 满了)，先清空再试一次
+src/lib/error/ErrorFactory.ts:      // 静默失败，不影响业务
+src/lib/error/ErrorFactory.ts:  /** 诊断面板读取接口 */
+src/lib/error/ErrorFactory.ts:  /** 诊断面板清理接口 */
+src/lib/error/ErrorFactory.ts:    return this.create(typeof error === 'string' ? error : '未知错误', { 
+src/lib/error/ErrorFactory.ts:    // 统一使用 showToast.error，传递 AppError 对象以便深度提取 TraceID 和详细的诊断信息
+src/lib/error/ErrorFactory.ts:    if (!error) return '未知错误';
+src/lib/error/ErrorFactory.ts:      rawMsg = String(error || '未知错误');
+src/lib/error/ErrorFactory.ts:      rawMsg = '未知系統錯誤 (未提供詳細訊息)';
+src/lib/error/ErrorFactory.ts:    // 进行英中错误信息转换，确保「报错一律只有中文」
+src/lib/error/ErrorFactory.ts:      return '网络连接异常，请检查网络';
+src/lib/error/ErrorFactory.ts:      return '网络连接错误，请稍后重试';
+src/lib/error/ErrorFactory.ts:      return '请求超时，请稍后重试';
+src/lib/error/ErrorFactory.ts:      return '登录已过期，请重新登录';
+src/lib/error/ErrorFactory.ts:      return '权限不足，拒绝执行此操作';
+src/lib/error/ErrorFactory.ts:      return '找不到该项资源';
+src/lib/error/ErrorFactory.ts:      return '数据记录已存在，请勿重复提交';
+src/lib/error/ErrorFactory.ts:      return '输入数据格式不正确';
+src/lib/error/ErrorFactory.ts:    if (rawMsg === 'Network Error') return '网络错误，请稍后重试';
+src/lib/error/ErrorFactory.ts:    if (rawMsg === 'Unknown Error') return '未知的系统错误';
+src/lib/error/ErrorFactory.ts:  // 以下方法改為 No-op 以保持接口兼容性
+src/lib/ui/toast.ts:    let userMessage = '發生未知錯誤，請稍後再試';
+src/lib/ui/toast.ts:            msg = msg.substring(0, 500) + `... (內容過長已截斷，原始長度: ${msg.length})`;
+src/lib/ui/toast.ts:      `--- 诊断信息 ---`,
+src/lib/ui/toast.ts:      `时间戳: ${timestamp}`,
+src/lib/ui/toast.ts:      `错误类型: 运行逻辑异常`,
+src/lib/ui/toast.ts:      `代码: ${code}`,
+src/lib/ui/toast.ts:      `信息: ${systemMessage}`
+src/lib/ui/toast.ts:        label: '複製診斷',
+src/lib/ui/toast.ts:            toast.success('診斷信息已複製', { duration: 2000 });
+src/lib/ui/toast.ts:            toast.error('複製失敗，請手動選擇複製', { duration: 3000 });
+src/lib/store/index.ts:// UI 狀態 (Signals)
+src/lib/logger.ts:  // 性能计时
+src/lib/logger.ts:   * 性能追蹤工具
+src/lib/logger.ts:   * @param label 標籤
+src/lib/logger.ts:   * @param threshold 閾值（毫秒），超過此值將輸出警告
+src/lib/logger.ts:   * @param fn 執行的函數
+src/lib/logger.ts:// 挂载到 window 方便调试
+src/lib/chunkErrorHandler.ts: * 設置 Chunk 加載失敗自動恢復機制
+src/lib/chunkErrorHandler.ts:    // 檢查是否為資源加載錯誤且包含 chunk/module 關鍵字
+src/lib/chunkErrorHandler.ts:    logger.error('[Chunk] 多次刷新仍失敗，停止自動恢復')
+src/lib/chunkErrorHandler.ts:  logger.warn(`[Chunk] 第 ${reloadCount + 1} 次自動恢復中...`)
+src/lib/chunkErrorHandler.ts:    logger.warn('[Chunk] 刷新失敗', softError)
+src/lib/chunkErrorHandler.ts:      logger.warn('[Chunk] Service Worker 清理失敗', e)
+src/lib/chunkErrorHandler.ts:      logger.warn('[Chunk] Cache API 清理失敗', e)
+src/lib/chunkErrorHandler.ts:        <title>更新失敗 - PhotoX</title>
+src/lib/chunkErrorHandler.ts:          <h2>⚠️ 應用更新失敗</h2>
+src/lib/chunkErrorHandler.ts:          <p>尝试自动恢复多次后仍无法载入最新版本。请点击下方按钮清除缓存后重新进入。</p>
+src/lib/chunkErrorHandler.ts:          <button onclick="localStorage.clear(); sessionStorage.clear(); location.reload();">清除緩存並重試</button>
+src/lib/router/index.ts:// ✅ 唯一出口：永遠不傳參數
+src/lib/router/index.ts:// ✅ 統一的路由 Hook
+src/lib/utils/safeAsync.ts: * 集中處理非同步異常的包裝器
+src/lib/utils/safeAsync.ts: * 優點：
+src/lib/utils/safeAsync.ts: * 1. 統一捕獲未處理的 Promise 異常
+src/lib/utils/safeAsync.ts: * 2. 自動過濾雜音 (Noise filtering)
+src/lib/utils/safeAsync.ts: * 3. 確保報錯一致性 (ErrorFactory 轉換)
+src/lib/utils/safeAsync.ts:    // 1. 雜音過濾
+src/lib/date.ts:// 初始化插件
+src/lib/image/hash.ts: * 計算 Blob/File 的 SHA-256（使用 Web Crypto API）
+src/lib/image/hash.ts: * 輸出 64 字元十六進位字串，與現有 image_hash 格式一致
+src/lib/api.ts:          platformTip = " [诊断提示: Vercel Serverless 服务崩溃。通常是云端环境变量(R2/Supabase)配置缺失、交换错误，或服务启动代码出错]";
+src/lib/api.ts:          platformTip = " [诊断提示: 传输的图片体积超出了 Serverless Platform 上行 body 限制 (通常为 4.5MB)]";
+src/lib/api.ts:          platformTip = " [诊断提示: 网关超时/错误，后端子域名或中间件运行异常]";
+src/lib/api.ts:          platformTip = " [诊断提示: 路径不存在，请检查后台路由重写 vercel.json 映射配置和 API 挂载路径]";
+src/lib/api.ts:        const message = `服务器响应异常 [${requestMethod} ${requestUrl}] (HTTP ${resp.status}): ${text.substring(0, 400)}${platformTip}`;
+src/lib/nuqs/parsers.ts:// Sort Parser (使用 Valibot)
+src/lib/nuqs/parsers.ts:// Page Parser (使用 Valibot)
+src/services/tag/completion.ts: * 標籤自動補全與映射服務
+src/services/tag/completion.ts: * 將 AI 返回的名稱列表轉換為數據庫 ID 列表，不存在的自動創建
+src/services/tag/completion.ts:    throw ErrorFactory.fatal((err as Error).message || '標籤解析失敗', { context: 'resolveTagNamesToIds' });
+src/services/storage/uploadService.ts:          err.message.includes('鑒權失敗') || 
+src/services/storage/uploadService.ts:      throw ErrorFactory.fatal(`獲取預簽名上傳地址失敗 (HTTP ${presignRes.status})`, { context: 'uploadFile' });
+src/services/storage/uploadService.ts:    if (!result.success) throw ErrorFactory.fatal(`上傳伺服器錯誤: ${String(result.error)}`, { context: 'uploadFile' });
+src/services/storage/uploadService.ts:    if (!result.data) throw ErrorFactory.fatal('上傳失敗: 接口未返回數據', { context: 'uploadFile' });
+src/services/storage/uploadService.ts:         throw ErrorFactory.fatal(`雲端存儲上傳失敗 (HTTP ${uploadRes.status})`, { context: 'uploadFile' });
+src/services/storage/uploadService.ts:      throw ErrorFactory.fatal(`雲端存儲上傳失敗`, { context: 'uploadFile', cause: browserUploadErr });
+src/services/photo/commands.ts:    throw new Error('无效的照片ID');
+src/services/photo/utils.ts:  constructor(message: string = '已存在相同照片') {
+src/services/photo/utils.ts:  showToast.success("系统自检中...");
+src/services/photo/utils.ts:    showToast.success(`自检完成：修复合组 ${repairCount}`, { id: 'health-check' });
+src/services/photo/utils.ts:    showToast.success("系统狀態正常", { id: 'health-check' });
+src/services/mappers/utils.ts: * 取得圖片 URL（支援縮圖）
+src/services/mappers/utils.ts: * @param imageUrlOrKey - 原始 URL 或 R2 檔案 Key
+src/services/mappers/utils.ts: * @param width - 縮圖寬度（可選）
+src/services/mappers/utils.ts: * @param height - 縮圖高度（可選）
+src/services/mappers/utils.ts: * @param imageHash - 快取失效標籤（可選）
+src/services/mappers/utils.ts: * @returns 圖片 URL
+src/services/category/utils.ts:  const uncatValues = ['未分类', 'uncategorized', 'tiada kategori'];
+src/services/category/utils.ts:  if (nameLower === 'other' || nameLower === 'others' || nameLower === '其他') return false;
+src/services/group/commands.ts:    throw new Error('至少需要一張照片才能成組');
+src/services/group/commands.ts:  // Strictly enforce 'GROUP' for all new groups as per user rule: "新的合组一律叫GROUP，不要乱改。"
+src/services/group/commands.ts:    throw ErrorFactory.wrap(new Error(msg), '分组照片', traceId);
+src/services/settings/commands.ts: * 核心設置字段白名單 (Database Columns Only)
+src/services/settings/commands.ts: * 嚴禁將前端狀態字段 (UI state) 直接傳入數據庫
+src/services/settings/commands.ts:        // 1. 字段映射與預處理
+src/services/settings/commands.ts:        // 2. 根據白名單構建最終 Payload
+src/services/settings/commands.ts:        // 2.1 特別處理首選供應商 (經由專用 API)
+src/services/settings/commands.ts:        // 3. 處理熱點標籤 JSON
+src/features/settings/OpenRouterConfigBlock.tsx:           <p className="text-[8px] text-brand-navy/40 font-bold uppercase tracking-widest">萬能引擎 / Multi-Model</p>
+src/features/settings/OpenRouterConfigBlock.tsx:          {keysStatus.openrouter && <div className="px-2 py-0.5 bg-green-50 text-green-600 rounded-full text-[8px] font-black uppercase">已激活</div>}
+src/features/settings/OpenRouterConfigBlock.tsx:            {isEditingOpenRouter ? t.cancel || '取消' : t.edit || '編輯'}
+src/features/settings/OpenRouterConfigBlock.tsx:                   {isSaving === 'openrouter' ? '..' : '保存'}
+src/features/settings/OpenRouterConfigBlock.tsx:            <label className="text-[10px] font-bold text-brand-navy/60 block">模型型号</label>
+src/features/settings/OpenRouterConfigBlock.tsx:                placeholder="例如: google/gemini-2.5-flash-lite"
+src/features/settings/OpenRouterConfigBlock.tsx:              {isTesting === 'openrouter' ? '測試連通性中...' : '测试連通性 / Test Connection'}
+src/features/settings/ManufacturersSection.tsx:    successMessage: appLang === 'zh' ? '已新增生產商' : 'Manufacturer added',
+src/features/settings/ManufacturersSection.tsx:    errorMessage: appLang === 'zh' ? '新增失敗' : 'Add failed'
+src/features/settings/ManufacturersSection.tsx:    successMessage: appLang === 'zh' ? '已更新' : 'Updated',
+src/features/settings/ManufacturersSection.tsx:    errorMessage: appLang === 'zh' ? '更新失敗' : 'Update failed'
+src/features/settings/ManufacturersSection.tsx:          {appLang === 'zh' ? '生產商設定 / MANUFACTURERS' : 'Manufacturers Setting'}
+src/features/settings/ManufacturersSection.tsx:          {appLang === 'zh' ? '新增生產商' : 'Add New'}
+src/features/settings/SettingsTabs.tsx:    { id: 'general', label: '核心配置', icon: 'Settings', subLabel: 'General' },
+src/features/settings/SettingsTabs.tsx:    { id: 'ai', label: '智能核心', icon: 'Cpu', subLabel: 'AI Engine' },
+src/features/settings/SettingsTabs.tsx:    { id: 'assets', label: '資產管理', icon: 'LayoutGrid', subLabel: 'Assets' },
+src/features/settings/SettingsTabs.tsx:    { id: 'status', label: '系統監控', icon: 'Activity', subLabel: 'Health' },
+src/features/settings/TagsSection.tsx:    successMessage: '已新增標籤 / Tag added',
+src/features/settings/TagsSection.tsx:    errorMessage: '新增失敗 / Add failed'
+src/features/settings/TagsSection.tsx:    successMessage: '已更新 / Updated',
+src/features/settings/TagsSection.tsx:    errorMessage: '更新失敗 / Update failed'
+src/features/settings/TagsSection.tsx:      label: "刷新热门标签",
+src/features/settings/TagsSection.tsx:          标签管理 / Tag Management
+src/features/settings/TagsSection.tsx:          新增標籤 / Add Tag
+src/features/settings/TagsSection.tsx:              热度阈值 / Hot Threshold
+src/features/settings/TagsSection.tsx:            title="重新计算所有标签的使用次数和热度分值"
+src/features/settings/TagsSection.tsx:            <span>刷新热门标签 / Refresh</span>
+src/features/settings/TagsSection.tsx:          title="新增標籤"
+src/features/settings/TagsSection.tsx:          description="輸入標籤名稱:"
+src/features/settings/TagsSection.tsx:          title="編輯標籤名 / Edit Tag Name"
+src/features/settings/TagsSection.tsx:          description="輸入新的標籤名稱 / Enter new tag name:"
+src/features/settings/SettingsPage.tsx:  const isMaintenanceRunning = useStore(taskStore, s => Array.from(s.tasks.values()).some(t => (t.label.includes('维护') || t.label.includes('诊断')) && t.state?.status === 'processing'));
+src/features/settings/SettingsPage.tsx:    successMessage: appLang === 'zh' ? '設定已儲存' : 'Settings saved',
+src/features/settings/SettingsPage.tsx:    errorMessage: appLang === 'zh' ? '儲存失敗' : 'Save failed'
+src/features/settings/SocialLinksSection.tsx:          {appLang === 'zh' ? '社交媒体链接' : 'Social Media Links'}
+src/features/settings/SettingsHeader.tsx:          {appLang === 'zh' ? '系統設定' : 'System Settings'}
+src/features/settings/SettingsHeader.tsx:            {appLang === 'zh' ? '有未儲存修改' : 'Unsaved Changes'}
+src/features/settings/SettingsHeader.tsx:           title={appLang === 'zh' ? '儲存設定' : 'Save Settings'}
+src/features/settings/SettingsHeader.tsx:            {appLang === 'zh' ? '儲存' : 'Save'}
+src/features/settings/SettingsHeader.tsx:          title={appLang === 'zh' ? '关闭并返回管理模式' : 'Close and Return'}
+src/features/settings/AgnesConfigBlock.tsx:           <p className="text-[8px] text-blue-900/40 font-bold uppercase tracking-widest">集成原生引擎 / Native Engine</p>
+src/features/settings/AgnesConfigBlock.tsx:          {keysStatus.agnes && <div className="px-2 py-0.5 bg-blue-100 text-blue-600 rounded-full text-[8px] font-black uppercase">已激活</div>}
+src/features/settings/AgnesConfigBlock.tsx:            {isEditingAgnes ? t.cancel || '取消' : t.edit || '編輯'}
+src/features/settings/AgnesConfigBlock.tsx:                   {isSaving === 'agnes' ? '..' : '保存'}
+src/features/settings/AgnesConfigBlock.tsx:            <label className="text-[10px] font-bold text-blue-900/60 block">模型型号</label>
+src/features/settings/AgnesConfigBlock.tsx:                placeholder="例如: gemini-2.0-flash-exp"
+src/features/settings/AgnesConfigBlock.tsx:            {isTesting === 'agnes' ? '測試連通性中...' : '测试连通性 / Test Connection'}
+src/features/settings/WhatsAppSection.tsx:          聯繫人設定 / WhatsApp Contacts
+src/features/settings/WhatsAppSection.tsx:              <span className="text-[9px] font-black text-brand-navy/40 uppercase tracking-widest">聯繫人 {i === 1 ? 'A' : 'B'}</span>
+src/features/settings/WhatsAppSection.tsx:                placeholder="名稱 / Name" 
+src/features/settings/WhatsAppSection.tsx:                placeholder="號碼 / Phone (e.g. +86138...)" 
+src/features/settings/TagItem.tsx:              {isPinned ? "取消推荐" : "设为推荐"}
+src/features/settings/TagItem.tsx:              <Icon name="pencil" size={12} /> 编辑 / EDIT
+src/features/settings/TagItem.tsx:              <Icon name="trash-2" size={12} /> 删除
+src/features/settings/LogoSection.tsx:          品牌識別 / Brand Identity
+src/features/settings/LogoSection.tsx:              <h5 className="text-[11px] font-black text-brand-navy uppercase tracking-tight">商戶 Logo / Store Logo</h5>
+src/features/settings/LogoSection.tsx:              <p className="text-[9px] text-brand-navy/40 font-bold uppercase tracking-widest leading-none">推薦比例 1:1 · 透明背景為佳</p>
+src/features/settings/LogoSection.tsx:                <Icon name="upload" size={14} /> 上傳新圖標
+src/features/settings/LogoSection.tsx:          商戶名稱 / Store Name
+src/features/settings/LogoSection.tsx:          placeholder="商戶名稱 / Store Name" 
+src/features/settings/AISecuritySection.tsx:    successMessage: '[System AI] 測試連通性成功 / Connection successful',
+src/features/settings/AISecuritySection.tsx:    errorMessage: '[System AI] 連接異常 / Connection abnormal'
+src/features/settings/AISecuritySection.tsx:    successMessage: "[System AI] 金鑰保存成功 / Key saved",
+src/features/settings/AISecuritySection.tsx:    errorMessage: "保存失敗 / Save failed"
+src/features/settings/AISecuritySection.tsx:    successMessage: '首選引擎已切換 / Primary provider switched',
+src/features/settings/AISecuritySection.tsx:    errorMessage: '切換失敗 / Switch failed'
+src/features/settings/AISecuritySection.tsx:    successMessage: '[System AI] 自定義模型已保存 / Model saved',
+src/features/settings/AISecuritySection.tsx:    errorMessage: '模型保存失敗 / Save failed'
+src/features/settings/AISecuritySection.tsx:                AI 处理器配置 / AI Processors
+src/features/settings/AISecuritySection.tsx:              <span className="text-[8px] font-bold text-brand-navy/60 ml-2 uppercase">首选 / Primary</span>
+src/features/settings/CategoriesSection.tsx:  let displayName = '未命名分类';
+src/features/settings/CategoriesSection.tsx:              <Icon name="pencil" size={12} /> 编辑名称
+src/features/settings/CategoriesSection.tsx:                  title: "确认删除",
+src/features/settings/CategoriesSection.tsx:                  description: `确定要删除「${displayName}」吗？此操作不可恢复。`,
+src/features/settings/CategoriesSection.tsx:                  confirmText: "删除",
+src/features/settings/CategoriesSection.tsx:              <Icon name="trash-2" size={12} /> 删除
+src/features/settings/CategoriesSection.tsx:        title="编辑分类名称 / Edit Category"
+src/features/settings/CategoriesSection.tsx:        description="输入新的名称 / Enter new name:"
+src/features/settings/CategoriesSection.tsx:    successMessage: '更新分類成功',
+src/features/settings/CategoriesSection.tsx:    errorMessage: '更新分類失敗'
+src/features/settings/CategoriesSection.tsx:    successMessage: '刪除分類成功',
+src/features/settings/CategoriesSection.tsx:    errorMessage: '刪除分類失敗'
+src/features/settings/CategoriesSection.tsx:    successMessage: '新增分類成功',
+src/features/settings/CategoriesSection.tsx:    errorMessage: '新增分類失敗'
+src/features/settings/CategoriesSection.tsx:            分类列表 / Category List
+src/features/settings/CategoriesSection.tsx:          <Icon name="plus" size={16} /> {appLang === 'zh' ? '新增分类' : 'Add New'}
+src/features/settings/CategoriesSection.tsx:          title={appLang === 'zh' ? '新增分类' : 'New Category'}
+src/features/settings/CategoriesSection.tsx:          description={appLang === 'zh' ? '输入分类名称：' : 'Category Name:'}
+src/features/settings/useSettingsLogic.ts:      if (!ok) throw new Error('連接失敗 / Connection failed');
+src/features/settings/useSettingsLogic.ts:    successMessage: appLang === 'zh' ? 'AI 服務連線成功' : 'AI Connection successful',
+src/features/settings/useSettingsLogic.ts:    errorMessage: appLang === 'zh' ? 'AI 服務連線失敗' : 'AI Connection failed'
+src/features/settings/useSettingsLogic.ts:      label: appLang === 'zh' ? '上传系统 Logo' : 'Upload System Logo',
+src/features/lightbox/PhotoLightbox.tsx:            showToast.info('正在删除照片...');
+src/features/lightbox/PhotoLightbox.tsx:              showToast.success('照片已删除');
+src/features/lightbox/PhotoLightbox.tsx:              ErrorFactory.handleError(e, '删除照片');
+src/features/lightbox/PhotoLightbox.tsx:                const text = `产品：${slideToUse.title}\n${window.location.origin}/photo/${slideToUse.id}`;
+src/features/lightbox/components/LightboxToolbar.tsx:            title="编辑照片"
+src/features/lightbox/components/LightboxToolbar.tsx:            title="AI 分析"
+src/features/lightbox/components/LightboxToolbar.tsx:            title="删除"
+src/features/lightbox/components/LightboxToolbar.tsx:          const text = `您好，我想查询这项 product：\n${currentSlide.title || ''}\n${window.location.origin}/photo/${currentSlide.id}`;
+src/features/lightbox/components/LightboxToolbar.tsx:        title="WhatsApp 洽谈"
+src/features/lightbox/components/LightboxToolbar.tsx:        title="关闭"
+src/features/upload/components/UploadModeDialog.tsx:    <NativeDialog id="upload-mode-dialog" open={open} onClose={() => onOpenChange(false)} title="选择上传模式">
+src/features/upload/components/UploadModeDialog.tsx:            <div className="font-semibold text-slate-800">常规上传</div>
+src/features/upload/components/UploadModeDialog.tsx:            <div className="text-sm text-slate-500">单独上传多张照片，各自独立管理。</div>
+src/features/upload/components/UploadModeDialog.tsx:            <div className="font-semibold text-slate-800">创建商品组</div>
+src/features/upload/components/UploadModeDialog.tsx:            <div className="text-sm text-slate-500">将多张照片合并为一个商品，统一管理。</div>
+src/features/upload/hooks/usePhotoUpload.ts:        label: `上傳 ${fileArray.length} 張照片`,
+src/features/upload/hooks/usePhotoUpload.ts:            showToast.success(`上傳完成，共 ${result.length} 張`);
+src/features/upload/hooks/usePhotoUpload.ts:            showToast.info(`上傳已完成（重複照片已自動略過）`);
+src/features/upload/hooks/usePhotoUpload.ts:      showToast.error(`啟動上傳失敗: ${error instanceof Error ? error.message : '網路或伺服器錯誤'}`);
+src/features/filters/SearchInput.tsx:        placeholder={t.searchPlaceholder || "正在搜索..."}
+src/features/filters/SortToggle.tsx:      title={isNewest ? '最新' : '最舊'}
+src/features/filters/CategoryGrid.tsx:  // ✅ 固定 8 個：全部 + 前 7 個分類
+src/features/filters/CategoryGrid.tsx:          ? (uiTranslations.all || '全部')
+src/features/filters/FilterBar.tsx:  // 延遲載入非關鍵資料 (P1)
+src/features/filters/FilterBar.tsx:            title={showTags ? '收起標籤' : '展開標籤'}
+src/features/filters/FilterBar.tsx:        {/* 分類 - 根據規範固定渲染 2 x 4 */}
+src/features/filters/FilterBar.tsx:        {/* 已選標籤顯示與移除 */}
+src/features/filters/FilterBar.tsx:            <span className="text-[11px] font-bold text-text-sub uppercase tracking-wider mr-1">已選標籤:</span>
+src/features/filters/FilterBar.tsx:                  title="移除"
+src/features/filters/FilterBar.tsx:              清除全部
+src/features/filters/FilterBar.tsx:        {/* 標籤 - 默認折疊，由上方按鈕控制 */}
+src/features/selection/components/SelectionToolbarActions.tsx:      {/* 移出合組 (僅在合組頁面時顯示) */}
+src/features/selection/components/SelectionToolbarActions.tsx:          title="將照片移出此合組"
+src/features/selection/components/SelectionToolbarActions.tsx:            {isMd ? '移出合組' : isSm ? '移出' : '移出'}
+src/features/selection/components/SelectionToolbarActions.tsx:      {/* 手動合組 (在合組頁面時不顯示此功能) */}
+src/features/selection/components/SelectionToolbarActions.tsx:          title="手動將照片合併為一組"
+src/features/selection/components/SelectionToolbarActions.tsx:            {isMd ? '手動合組' : isSm ? '手動合組' : '合組'}
+src/features/selection/components/SelectionToolbarActions.tsx:      {/* AI 智能合組 */}
+src/features/selection/components/SelectionToolbarActions.tsx:        title="AI 智能分析合組"
+src/features/selection/components/SelectionToolbarActions.tsx:          {isMd ? 'AI 智能合組' : isSm ? 'AI 合組' : 'AI'}
+src/features/selection/components/SelectionToolbarActions.tsx:      {/* 批量編輯 */}
+src/features/selection/components/SelectionToolbarActions.tsx:        title="編輯選取項目"
+src/features/selection/components/SelectionToolbarActions.tsx:          {isMd ? '編輯' : '編輯'}
+src/features/selection/components/SelectionToolbarActions.tsx:      {/* 批量刪除 */}
+src/features/selection/components/SelectionToolbarActions.tsx:        title="批次刪除照片"
+src/features/selection/components/SelectionToolbarActions.tsx:          {isMd ? '批次刪除' : isSm ? '刪除' : '刪除'}
+src/features/selection/SelectionToolbar.tsx:  // ✅ 使用計算後的 Selector
+src/features/selection/SelectionToolbar.tsx:      title: '確定要刪除選取的照片嗎？',
+src/features/selection/SelectionToolbar.tsx:      description: `此操作將會永久從系統中刪除這 ${selectedCount} 張照片，且無法復原。`,
+src/features/selection/SelectionToolbar.tsx:      confirmText: '刪除',
+src/features/selection/SelectionToolbar.tsx:          {/* 關閉/清除選擇 */}
+src/features/selection/SelectionToolbar.tsx:            title="清除並退出選取"
+src/features/selection/SelectionToolbar.tsx:          {/* 計數顯示 */}
+src/features/selection/SelectionToolbar.tsx:        {/* 絕對定位的中央處理中狀態，防止工具列按鈕變形 */}
+src/features/selection/SelectionToolbar.tsx:            <span className="hidden xs:inline">正在處理中...</span>
+src/features/selection/SelectionToolbar.tsx:            <span className="xs:hidden">處理中...</span>
+src/features/selection/SelectionToolbar.tsx:        {/* 行動按鈕組 */}
+src/features/ai/commands.ts:    return `- 名称: ${nameStr}, 标签: ${tagNames || '无'}, 描述: ${descStr || '无'}`;
+src/features/ai/commands.ts:    throw ErrorFactory.fatal(error.error || 'AI 智能合组分析失败', { context: 'analyzeGroup' });
+src/features/ai/commands.ts:  const photoDetail = `- 名称: ${nameStr}\n- 现有分类: ${photo.category}\n- 现有标签: ${tagNames || '无'}\n- 描述: ${descStr || '无'}`;
+src/features/ai/commands.ts:    throw ErrorFactory.fatal(error.error || 'AI 单张识别分析失败', { context: 'analyzeSinglePhoto' });
+src/features/ai/commands.ts:        let errorMsg = 'AI 服务响应异常';
+src/features/ai/commands.ts:       let errorMsg = data.error || 'AI 分析失败';
+src/features/ai/commands.ts:    if ((e as Error).name === 'AbortError') throw ErrorFactory.fatal('请求已取消', { context: 'analyzePhoto' });
+src/features/ai/commands.ts:    throw ErrorFactory.fatal((e as Error).message || 'AI 分析异常', { context: 'analyzePhoto' });
+src/features/ai/orchestration.ts:        throw ErrorFactory.fatal('AI 分析未返回有效結果', { context: 'analyzeAndSavePhoto' });
+src/features/ai/orchestration.ts:    throw ErrorFactory.fatal((err as Error).message || '分析照片失敗', { context: 'analyzeAndSavePhoto' });
+src/features/ai/orchestration.ts:    throw ErrorFactory.fatal((err as Error).message || '自动合组失败', { context: 'autoGroupPhotos' });
+src/features/ai/orchestration.ts:    throw ErrorFactory.fatal((err as Error).message || '合组分析失败', { context: 'analyzeAndSaveGroup' });
+src/features/ai/orchestration.ts:      onProgress(currentProgress, `正在分析照片 ${i + 1}/${totalPhotosToProcess}`);
+src/features/ai/orchestration.ts:    onProgress(0.75, '正在總結整个合组...');
+src/features/ai/orchestration.ts:        onProgress(0.85, '生成合组名称与描述...');
+src/features/ai/orchestration.ts:  onProgress(1, '分析流程完成');
+src/features/ai/utils.ts:  const technicalNulls = ['null', 'undefined', '{}', '[object object]', '[对象 对象]', 'n/a', 'na', 'none', '', 'undefined undefined'];
+src/features/ai/utils.ts:    '暂无', '置顶', '无', '未命名', '不知名', '说明', 
+src/features/ai/utils.ts:    '请填写', '描述', '产品描述', '暂无说明', '未命名产品',
+src/features/ai/utils.ts:    '待补充', '批量分析', '测试'
+src/features/ai/utils.ts:  if (!nameObj) return '未命名';
+src/features/ai/utils.ts:  return n[lang] || n.zh || n.en || n.ms || '未命名';
+src/features/ai/utils.ts:  if (!name || name.includes('[object')) return { main: '未命名', others: [] };
+src/features/photo-edit/OrgTab.tsx:            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">显示状态 / VISIBILITY</h3>
+src/features/photo-edit/OrgTab.tsx:                <Icon name="eye" size={16} /><span className="text-[10px] font-black uppercase">显示 (VISIBLE)</span>
+src/features/photo-edit/OrgTab.tsx:                <Icon name="eye-off" size={16} /><span className="text-[10px] font-black uppercase">屏蔽 (HIDDEN)</span>
+src/features/photo-edit/OrgTab.tsx:          title="厂商名称" 
+src/features/photo-edit/CategorySelect.tsx:          <FormSectionHeader title="产品目录" subtitle="CATEGORY *" />
+src/features/photo-edit/AISourceTab.tsx:    successMessage: appLang === 'zh' ? '已复制' : 'Copied'
+src/features/photo-edit/AISourceTab.tsx:          {appLang === 'zh' ? '暂无 AI 识别原始源代碼' : 'No Raw AI Source Found'}
+src/features/photo-edit/AISourceTab.tsx:            ? '尚未为此照片保存原始 LLM 识别输出。您可以在「细节 (DETAIL)」页签下运行「AI 属性智能识别」之后重新查看此处。' 
+src/features/photo-edit/AISourceTab.tsx:      ErrorFactory.handleError(e, "格式化 AI 响应");
+src/features/photo-edit/AISourceTab.tsx:            {appLang === 'zh' ? '照片 AI 分析原始输出 (JSON / Markdown)' : 'Model Output Log (Raw Source)'}
+src/features/photo-edit/AISourceTab.tsx:              <span>{appLang === 'zh' ? '已复制' : 'Copied'}</span>
+src/features/photo-edit/AISourceTab.tsx:              <span>{appLang === 'zh' ? '复制代码' : 'Copy Code'}</span>
+src/features/photo-edit/AISourceTab.tsx:            ? '本区域安全只读展示大语言模型（Agnes AI Pipeline）响应的未经结构化处理的源内容，包含特定尺寸计算规则及翻译建议，供管理员审核审计。'
+src/features/photo-edit/usePhotoEditAI.ts:        label: appLang === 'zh' ? "AI 识别" : "AI Identification",
+src/features/photo-edit/usePhotoEditAI.ts:          onProgress(0, appLang === 'zh' ? '正在启动 AI 识别模块...' : 'Starting AI module...');
+src/features/photo-edit/usePhotoEditAI.ts:          onProgress(0.1, appLang === 'zh' ? '正在准备分析照片...' : 'Preparing photo files...');
+src/features/photo-edit/usePhotoEditAI.ts:          onProgress(0.3, appLang === 'zh' ? '正在由 AI 智能识别各项属性 (约需 2-5 秒)...' : 'Analyzing attributes with AI (approx 2-5s)...');
+src/features/photo-edit/usePhotoEditAI.ts:          onProgress(0.7, appLang === 'zh' ? '正在解析模型识别结果并写入草稿表單...' : 'Parsing AI attributes and injecting...');
+src/features/photo-edit/usePhotoEditAI.ts:            throw ErrorFactory.wrap(new Error('AI analysis failed (no result)'), 'AI智能识别', String(editPhotoId));
+src/features/photo-edit/usePhotoEditAI.ts:            throw ErrorFactory.wrap(new Error('Invalid AI format'), 'AI智能识别结果解析', String(editPhotoId));
+src/features/photo-edit/usePhotoEditAI.ts:              logger.warn('AI识别结果自动保存失败(但不影响回填):', saveError);
+src/features/photo-edit/usePhotoEditAI.ts:    successMessage: appLang === 'zh' ? 'AI 識別補全成功' : 'AI Analysis completed',
+src/features/photo-edit/usePhotoEditAI.ts:    errorMessage: appLang === 'zh' ? 'AI 識別失敗' : 'AI Analysis failed'
+src/features/photo-edit/DetailsTab.tsx:        showToast.success(appLang === 'zh' ? 'ID 已复制' : 'ID Copied');
+src/features/photo-edit/DetailsTab.tsx:          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">物品说明 / DESCRIPTION</span>
+src/features/photo-edit/TagEditorContent.tsx:      ErrorFactory.handleError(err, "切换置顶状态");
+src/features/photo-edit/TagEditorContent.tsx:          标签 / TAGS
+src/features/photo-edit/TagEditorContent.tsx:            placeholder="搜索标签..."
+src/features/photo-edit/TagEditorContent.tsx:            + 新增
+src/features/photo-edit/TagEditorContent.tsx:                更多标签请使用搜索... / Search to find more tags
+src/features/photo-edit/TagEditorContent.tsx:                标签管理 / TAG
+src/features/photo-edit/TagEditorContent.tsx:                  ? "取消置顶 / Unpin"
+src/features/photo-edit/TagEditorContent.tsx:                  : "设为置顶 / Pin as Hot"}
+src/features/photo-edit/TagEditorContent.tsx:                <Icon name="pencil" size={18} strokeWidth={2.5} /> 编辑名称 / Rename
+src/features/photo-edit/TagEditorContent.tsx:                    title: `彻底删除标签 / Permanent Delete: #${activeActionTag.name}`,
+src/features/photo-edit/TagEditorContent.tsx:                    description: "无法撤销且会从所有照片中移除 / This will be permanently removed from all photos.",
+src/features/photo-edit/TagEditorContent.tsx:                    confirmText: "删除",
+src/features/photo-edit/TagEditorContent.tsx:                      throw ErrorFactory.wrap(e as Error, "彻底删除标签", activeActionTag.name);
+src/features/photo-edit/TagEditorContent.tsx:                <Icon name="trash-2" size={18} strokeWidth={2.5} /> 彻底删除 / Delete
+src/features/photo-edit/TagEditorContent.tsx:              取消操作 / CANCEL
+src/features/photo-edit/TagEditorContent.tsx:            <Icon name="heart" size={8} className="fill-white" /> 置顶
+src/features/photo-edit/PhotoEditDialog.tsx:                <p className="text-sm font-medium text-slate-500">正在获取照片详情...</p>
+src/features/photo-edit/PhotoEditDialog.tsx:            {appLang === 'zh' ? '检测到有未保存的修改。要进行何种操作？' : 'Detected unsaved changes. What would you like to do?'}
+src/features/photo-edit/PhotoEditDialog.tsx:              {appLang === 'zh' ? '放弃修改' : 'Discard changes'}
+src/features/photo-edit/PhotoEditDialog.tsx:              {appLang === 'zh' ? '保存并关闭' : 'Save and close'}
+src/features/photo-edit/PhotoTagSelector.tsx:        title="新增標籤 / Add Tag"
+src/features/photo-edit/PhotoTagSelector.tsx:        description="輸入標籤名稱 / Enter Tag Name"
+src/features/photo-edit/PhotoTagSelector.tsx:          title="編輯標籤 / Edit Tag"
+src/features/photo-edit/PhotoTagSelector.tsx:          description="輸入標籤名稱 / Enter Tag Name:"
+src/features/photo-edit/BasicInfoTab.tsx:                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">产品名称 / NAME</span>
+src/features/photo-edit/BasicInfoTab.tsx:                if (success) showToast.success('ID 已复制');
+src/features/photo-edit/PhotoEditTabs.tsx:    { id: 'basic', label: appLang === 'zh' ? '基础' : 'BASIC' },
+src/features/photo-edit/PhotoEditTabs.tsx:    { id: 'org', label: appLang === 'zh' ? '组织' : 'ORG' },
+src/features/photo-edit/PhotoEditTabs.tsx:    { id: 'details', label: appLang === 'zh' ? '细节' : 'DETAIL' },
+src/features/photo-edit/PhotoEditTabs.tsx:    { id: 'ai-source', label: appLang === 'zh' ? 'AI原始数据' : 'AI RAW' },
+src/features/photo-edit/DialogHeader.tsx:      ErrorFactory.handle(appLang === 'zh' ? '照片信息缺失，无法识别' : 'Photo data missing', { context: 'AI 识别' });
+src/features/photo-edit/DialogHeader.tsx:                    showToast.success(newState ? '已设为封面' : '已取消封面');
+src/features/photo-edit/DialogHeader.tsx:            title="移出合组"
+src/features/photo-edit/DimensionEditor.tsx:            onClick={() => showToast.info('AI 识别可自动提取照片中的尺寸规格信息')}
+src/features/photo-edit/DimensionEditor.tsx:              <span className="hidden sm:inline">{isAnalyzing ? '识别中...' : 'AI 识别'}</span>
+src/features/photo-edit/DimensionEditor.tsx:                        <span className="text-[9px] font-black tracking-tighter">AI 识别</span>
+src/features/photo-edit/DimensionEditor.tsx:                    placeholder="如: WD" 
+src/features/photo-edit/DimensionEditor.tsx:                  placeholder={isAnalyzing ? "AI 识别中..." : "H94 x W96 x D23"} 
+src/features/diagnostics/useMaintenanceExecution.ts:      ErrorFactory.handleError(e, '預覽操作');
+src/features/diagnostics/useMaintenanceExecution.ts:        update(0.1, '正在初始化...');
+src/features/diagnostics/useMaintenanceExecution.ts:        update(1, '完成');
+src/features/diagnostics/issueActions.ts:    name: "自动清理重复照片",
+src/features/diagnostics/issueActions.ts:      return { message: `修复完成，已移除 ${data.count || 0} 条重复记录`, ...data };
+src/features/diagnostics/issueActions.ts:    name: "找回云端孤兒照片",
+src/features/diagnostics/issueActions.ts:      if (!data.success) throw new Error("审计失败");
+src/features/diagnostics/issueActions.ts:        message: `扫描完成：在 R2 发现 ${data.data.orphans.count} 个孤儿文件（未在数据库中记录）`,
+src/features/diagnostics/issueActions.ts:      // 1. 先进行一次审计获取要恢复的 Key
+src/features/diagnostics/issueActions.ts:      if (!auditData.success) throw new Error("审计失败");
+src/features/diagnostics/issueActions.ts:      if (orphans.length === 0) return { message: "未发现需要恢复的孤儿文件" };
+src/features/diagnostics/issueActions.ts:      // 2. 执行批量恢复
+src/features/diagnostics/issueActions.ts:      if (!data.success) throw new Error(data.error || "恢复失败");
+src/features/diagnostics/issueActions.ts:        message: `找回任务完成：成功导入 ${recoveredCount} 条记录，跳过 ${orphans.length - recoveredCount} 条`,
+src/features/diagnostics/issueActions.ts:    name: "清理資料庫殘餘記錄",
+src/features/diagnostics/issueActions.ts:      if (!data.success) throw new Error("审计失败");
+src/features/diagnostics/issueActions.ts:        message: `掃描完成：發現 ${data.data.ghosts.count} 條殘餘記錄（資料庫中有記錄但 R2 找不到文件）`,
+src/features/diagnostics/issueActions.ts:      if (!data.success) throw new Error(data.error || "清理失敗");
+src/features/diagnostics/issueActions.ts:      return { message: `修復完成，已移除 ${data.count || 0} 條無效的資料庫記錄` };
+src/features/diagnostics/issueActions.ts:    name: "全局系统清理",
+src/features/diagnostics/issueActions.ts:      return { message: "系统日志与过期缓存清理完成" };
+src/features/diagnostics/issueActions.ts:    name: "同步数据库架构",
+src/features/diagnostics/issueActions.ts:      return { message: "数据库架构已与当前程序版本同步" };
+src/features/diagnostics/issueActions.ts:    name: "刷新照片列表缓存",
+src/features/diagnostics/issueActions.ts:      if (!data.success) throw new Error(String(data.error || '刷新失败'));
+src/features/diagnostics/issueActions.ts:      return { message: "已强制刷新全局照片列表缓存 (Materialized View)" };
+src/features/diagnostics/MaintenanceTool.tsx:  const baseTempTitle = title || ISSUE_ACTIONS[issueId]?.name || uiTranslations.processing || "未知工具";
+src/features/diagnostics/MaintenanceTool.tsx:        title: "确认执行操作？",
+src/features/diagnostics/MaintenanceTool.tsx:        description: `你正在尝试执行「${baseTempTitle}」。此操作可能不可逆。`,
+src/features/diagnostics/MaintenanceTool.tsx:        confirmText: "确定执行",
+src/features/diagnostics/MaintenanceTool.tsx:              {isPreviewing && <LoadingSpinner size="xs" variant="current" className="mr-1.5" />} {preview ? "已预检" : "预览"}
+src/features/diagnostics/MaintenanceTool.tsx:              {isExecuting && <LoadingSpinner size="xs" variant="current" className="mr-1.5" />} {isExecuting ? `${Math.round(progress)}%` : "修复"}
+src/features/diagnostics/MaintenanceTool.tsx:              {isPreviewing && <LoadingSpinner size="xs" variant="current" className="mr-1.5" />} 预览范围
+src/features/diagnostics/MaintenanceTool.tsx:              {isExecuting && <LoadingSpinner size="xs" variant="current" className="mr-1.5" />} {isExecuting ? "执行中" : "开始执行"}
+src/features/diagnostics/MaintenanceTool.tsx:              <span>即将影响 {preview.affectedCount} 项数据记录</span>
+src/features/diagnostics/MaintenanceTool.tsx:              <button onClick={() => setPreview(null)} className="opacity-50 hover:opacity-100 transition-opacity">清除</button>
+src/features/diagnostics/MaintenanceTool.tsx:              <span>处理进度</span><span>{Math.round(progress)}%</span>
+src/features/diagnostics/ErrorLogViewer.tsx:  const { copy } = useCopyToClipboard({ successMessage: '日志详情已复制' });
+src/features/diagnostics/ErrorLogViewer.tsx:            title="复制日志详情 / Copy details"
+src/features/diagnostics/ErrorLogViewer.tsx:        if (!json.success) throw new Error(json.error || '获取日志失败');
+src/features/diagnostics/ErrorLogViewer.tsx:          if (!json.success) throw new Error(json.error || '清除日誌失敗');
+src/features/diagnostics/ErrorLogViewer.tsx:      successMessage: '日誌清理成功 / Cleanup successful',
+src/features/diagnostics/ErrorLogViewer.tsx:      errorMessage: '清除失敗 / Cleanup failed'
+src/features/diagnostics/ErrorLogViewer.tsx:          系統錯誤與操作日誌 / System Logs
+src/features/diagnostics/ErrorLogViewer.tsx:                title="清除日誌"
+src/features/diagnostics/ErrorLogViewer.tsx:            暂无日志记录 / No logs yet
+src/features/diagnostics/MaintenanceCenter.tsx:      <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">系统维护指令中心 / SYSTEM MAINTENANCE CENTER</h3>
+src/features/diagnostics/MaintenanceCenter.tsx:      {/* 第一组：必要定期检查 (Routine Checks) */}
+src/features/diagnostics/MaintenanceCenter.tsx:          常规健康与数据同步 (Routine Sync & Health)
+src/features/diagnostics/MaintenanceCenter.tsx:            title="刷新照片列表快取" 
+src/features/diagnostics/MaintenanceCenter.tsx:            description="手動刷新全局照片快取 (Materialized View)。如果遇到公開頁面數據不更新或顯示空白，請執行此操作。"
+src/features/diagnostics/MaintenanceCenter.tsx:            title="同步資料庫架構" 
+src/features/diagnostics/MaintenanceCenter.tsx:            description="檢查並補全資料庫中缺失的欄位或架構同步。如果遇到查詢報錯，請優先執行此操作。"
+src/features/diagnostics/MaintenanceCenter.tsx:            title="啟動雲端孤兒照片掃描" 
+src/features/diagnostics/MaintenanceCenter.tsx:            description="掃描 R2 雲端儲存，如果發現有照片但在資料庫中丟失了記錄，會嘗試修復。 (開發中)"
+src/features/diagnostics/MaintenanceCenter.tsx:            title="清理重複的照片記錄" 
+src/features/diagnostics/MaintenanceCenter.tsx:            description="自動識別基於檔案雜湊 (Hash) 的重複照片記錄，並僅保留最舊的一份。"
+src/features/diagnostics/MaintenanceCenter.tsx:            title="全域系統日誌清理" 
+src/features/diagnostics/MaintenanceCenter.tsx:            description="清除 30 天以前的系統日誌與 90 天之前的審計日誌，節省資料庫空間。"
+src/features/diagnostics/MaintenanceCenter.tsx:            title="清理資料庫殘餘記錄" 
+src/features/diagnostics/MaintenanceCenter.tsx:            description="清理資料庫中存在，但在儲存庫中已經遺失的無效照片記錄。"
+src/features/diagnostics/TasksList.tsx:          { label: '全部记录', value: stats.total, icon: "history", color: 'text-slate-600', bg: 'bg-slate-50' },
+src/features/diagnostics/TasksList.tsx:          { label: '进行中', value: stats.active, icon: "zap", color: 'text-blue-500', bg: 'bg-blue-50' },
+src/features/diagnostics/TasksList.tsx:          { label: '已完成', value: stats.completed, icon: "check-circle-2", color: 'text-green-500', bg: 'bg-green-50' },
+src/features/diagnostics/TasksList.tsx:          { label: '失败/异常', value: stats.failed, icon: "alert-triangle", color: 'text-red-500', bg: 'bg-red-50' },
+src/features/diagnostics/TasksList.tsx:              后台任务队列
+src/features/diagnostics/TasksList.tsx:                刷新
+src/features/diagnostics/TasksList.tsx:                title="暂无执行记录" 
+src/features/diagnostics/TasksList.tsx:            {isMaintenance ? '系统维护' : '会话任务'}
+src/features/diagnostics/TasksList.tsx:               进度: {task.processed}/{task.total}
+src/features/diagnostics/DailyWorker.ts: * 每日維護 Worker
+src/features/diagnostics/DailyWorker.ts: * 在後台靜默执行，确保系统日志不膨胀，缓存保持洁净
+src/features/diagnostics/DailyWorker.ts:    // 前置检查：只有已登录用户才触发后端清理，避免访客触发产生 401 报错
+src/features/diagnostics/DailyWorker.ts:      return; // 今天已执行过
+src/features/diagnostics/DailyWorker.ts:      // 1. 触发后端清理
+src/features/diagnostics/DailyWorker.ts:      // 2. 本地 IDB 冗余键清理 (未来扩展)
+src/features/diagnostics/MaintPreviewDialog.tsx:      title={`${title} - 影响范围预览`}
+src/features/diagnostics/MaintPreviewDialog.tsx:      description={`系统分析发现有 ${preview?.affectedPhotos?.length || 0} 张照片关联了多于 3 个标签。请预览以下即将执行的保留与裁剪清理结果：`}
+src/features/diagnostics/MaintPreviewDialog.tsx:          💡 注：系统已根据最优权重算法（置信度高 &gt; 用户手动添加 &gt; 系统默认）进行智能排序，并对多余部分进行物理移除。下方清晰呈现了每一张受影响的照片在清理前后的标签变化细节。
+src/features/diagnostics/MaintPreviewDialog.tsx:                  保留：{photo.keptTags && Array.isArray(photo.keptTags) && photo.keptTags.length > 0 ? photo.keptTags.join(' / ') : '无'}
+src/features/diagnostics/MaintPreviewDialog.tsx:                    移除：{Array.isArray(photo.removedTags) ? photo.removedTags.join(' / ') : ''}
+src/features/diagnostics/MaintPreviewDialog.tsx:            取消
+src/features/diagnostics/MaintPreviewDialog.tsx:            确认并开始批量清理
+src/features/diagnostics/DiagDashboard.tsx:            <h1 className="text-2xl font-black text-brand-navy tracking-tight uppercase">系統維護中心</h1>
+src/features/diagnostics/DiagDashboard.tsx:               { id: 'stats', label: '數據概覽 / Stats' },
+src/features/diagnostics/DiagDashboard.tsx:               { id: 'diagnosis', label: '診斷與修復 / Repair' },
+src/features/diagnostics/DiagDashboard.tsx:               { id: 'tasks', label: '任務佇列 / Tasks' },
+src/features/diagnostics/DiagDashboard.tsx:               { id: 'logs', label: '系統日誌 / Logs' }
+src/features/statistics/components/StatisticsScreen.tsx:          系统存量概览 / System Inventory
+src/features/statistics/components/StatisticsScreen.tsx:          实时统计与资源分布 / Live Metrics & Resource Distribution
+src/features/statistics/components/StatisticsScreen.tsx:          title="总计资产 / Total Assets" 
+src/features/statistics/components/StatisticsScreen.tsx:          title="逻辑分组 / Groups" 
+src/features/statistics/components/StatisticsScreen.tsx:          title="活跃分类 / Categories" 
+src/features/statistics/components/StatisticsScreen.tsx:          title="逻辑标签 / Labels" 
+src/features/statistics/components/StatisticsScreen.tsx:            资源明细 / Details
+src/features/statistics/components/StatisticsScreen.tsx:                    <p className="text-[11px] font-bold text-brand-navy">隐藏资产 / Hidden</p>
+src/features/statistics/components/StatisticsScreen.tsx:                    <p className="text-[11px] font-bold text-brand-navy">估算占用 / Storage Est.</p>
+src/features/statistics/components/StatisticsScreen.tsx:                系统运行<span className="text-brand-gold">极佳</span><br />
+src/features/statistics/components/StatisticsScreen.tsx:                所有数据库分片状态正常，R2 存储链路延迟 45ms，AI 语义引擎索引已完成 100%。
+src/features/group/components/GroupHeader.tsx:  title: v.pipe(v.string(), v.minLength(3, '標題至少需要3個字元')),
+src/features/group/components/GroupHeader.tsx:      placeholder="請輸入大於2個字元的名稱"
+src/features/group/components/GroupHeader.tsx:    successMessage: '更新標題成功',
+src/features/group/components/GroupHeader.tsx:    errorMessage: '更新標題失敗'
+src/features/group/components/GroupHeader.tsx:      showToast.success('合組 ID 已複製');
+src/features/group/components/GroupHeader.tsx:      showToast.success('分享連結已複製');
+src/features/group/components/GroupHeader.tsx:              title={isAdmin ? "點擊編輯標題" : (group.name || '未命名合組')}
+src/features/group/components/GroupHeader.tsx:              {group.name || (isAdmin ? '點擊新增標題...' : '未命名合組')}
+src/features/group/components/GroupHeader.tsx:            title="複製組ID"
+src/features/group/components/GroupHeader.tsx:            {photoCount > 0 ? `${photoCount} 張照片` : '無照片'}
+src/features/group/components/GroupHeader.tsx:          title="複製分享連結"
+src/features/group/components/GroupHeader.tsx:              {isMultiSelect ? '取消' : '選擇'}
+src/features/group/components/GroupHeader.tsx:              <span className="hidden sm:inline">設定</span>
+src/features/group/components/GroupHeader.tsx:          title="返回首頁"
+src/features/group/AdminGroupDetail.tsx:// import { batchModeSignal } from '@/lib/store'; // 移除此行
+src/features/batch-edit/useBatchEdit.ts:      // 只有當值不是 undefined 且不是空字串時才發送 (null 是有效的，代表清空)
+src/hooks/admin/usePerformanceAudit.ts:        title: `${label} 性能分析预警`,
+src/hooks/admin/usePerformanceAudit.ts:        description: `检测到 ${label} 在近期运行中多次触发阈值。平均耗时 ${avgDuration.toFixed(2)}ms，最大耗时 ${maxDuration.toFixed(2)}ms。当前处于 L2 观察期，若平均耗时持续超过阈值将触发 L3 优化。`,
+src/hooks/admin/usePerformanceAudit.ts:        actionName: '清除统计/忽略',
+src/hooks/admin/useAdminBatch.ts:      ErrorFactory.handle('请选择照片或特定合组进行识别', { context: '批量操作' });
+src/hooks/admin/useGlobalTasks.ts:      title: rj.id.startsWith('sync') ? '计数值同步' :
+src/hooks/admin/useGlobalTasks.ts:             rj.id.startsWith('backfill') ? '哈希补全' :
+src/hooks/admin/useGlobalTasks.ts:             rj.id.startsWith('restore') ? '孤兒照片導出' : '系统维护',
+src/hooks/admin/useAdminMaintenance.ts: * 管理員操作的聚合 Hook，提供刪除、更新、批量操作等功能。
+src/hooks/admin/useAdminMaintenance.ts: * 替換原有的 features/admin/useAdminActions.ts。
+src/hooks/admin/index.ts: * 管理員具體操作集合（單張、批量、AI）
+src/hooks/admin/index.ts: * 診斷報表與檢查邏輯
+src/hooks/admin/index.ts: * 系統級後台任務管理（全局）
+src/hooks/admin/index.ts: * 性能審計與報表
+src/hooks/admin/index.ts: * 管理員分類/標籤/製造商刪除操作
+src/hooks/photo/usePhotoGrid.ts:  // ✅ 篩選變更時重置滾動
+src/hooks/photo/usePhotoAIResult.ts: * 获取照片对应的 AI 识别原始源代碼與解析後的 JSON 數據。
+src/hooks/photo/usePhotoMutations.ts: * 照片编辑 Mutation
+src/hooks/photo/usePhotoMutations.ts:// 1. 照片编辑
+src/hooks/photo/usePhotoMutations.ts:// 2. 照片删除
+src/hooks/photo/usePhotoMutations.ts:// 3. 批量编辑
+src/hooks/photo/usePhotoMutations.ts:// 4. 钉选/取消钉选
+src/hooks/photo/useTagSorting.ts: * 處理標籤的排序與顯示邏輯，包括置頂標籤與熱門標籤。
+src/hooks/photo/useTagSorting.ts: * 改名自 useTagFiltering。
+src/hooks/category/useCategoryMutations.ts:    if (!res) throw new Error('分类创建失败');
+src/hooks/core/useAppInit.ts:    // 1. 啟動核心初始化 (Auth 等)
+src/hooks/core/useAppInit.ts:    // 2. 啟動首屏數據預取 (公開頁面默認列表)
+src/hooks/core/useAppInit.ts:    // 這樣在 LoadingScreen 消失前，數據可能已經加載好了
+src/hooks/core/useAppInit.ts:  // 核心邏輯優化：只要 AppStore 初始化完成即可渲染，Settings 可以在背景繼續加載
+src/hooks/core/useAppInit.ts:  // 這樣公開頁面可以立即顯示骨架屏或基礎佈局，而不是死等 2-30 秒
+src/hooks/core/useCopyToClipboard.ts:  /** 複製後的 callback */
+src/hooks/core/useCopyToClipboard.ts:        // 2 秒後重置狀態
+src/hooks/tag/useTagMutations.ts:// 1. 创建标签
+src/hooks/tag/useTagMutations.ts:      throw new Error('标签创建失败');
+src/hooks/tag/useTagMutations.ts:// 2. 编辑标签
+src/hooks/tag/useTagMutations.ts:    if (!res) throw new Error('标签更新失败');
+src/hooks/tag/useTagMutations.ts:// 3. 删除标签
+src/hooks/tag/useTagMutations.ts:    if (!res) throw new Error('标签删除失败');
+src/hooks/tag/useTagSearch.ts:        throw new Error(body.error || '搜索标签失败');
+src/hooks/manufacturer/useManufacturerMutations.ts:// 1. 创建厂商
+src/hooks/manufacturer/useManufacturerMutations.ts:    if (!res) throw new Error('厂商创建失败');
+src/hooks/manufacturer/useManufacturerMutations.ts:// 2. 编辑厂商
+src/hooks/manufacturer/useManufacturerMutations.ts:    if (!res) throw new Error('厂商更新失败');
+src/hooks/manufacturer/useManufacturerMutations.ts:// 3. 删除厂商
+src/hooks/manufacturer/useManufacturerMutations.ts:    if (!res) throw new Error('厂商删除失败');
+src/index.css:  /* --- 1. Primitive Design Tokens (底層設計數值) --- */
+src/index.css:  /* --- 2. Semantic Layers (語義化主題層) --- */
+src/index.css:  /* 背景與表面 (Surface) */
+src/index.css:  /* 文字 (Text) */
+src/index.css:  /* 品牌與功能 (Brand & Functional) */
+src/index.css:  /* 邊框 (Border) */
+src/index.css:  /* 陰影 (Shadows) */
+src/index.css:  /* 字體 (Typography) */
+src/index.css:  /* 圓角 (Border Radius) */
+src/index.css:  /* 動畫 (Animation) */
+src/store/authStore.ts:// 全局监听（只初始化一次）
+src/store/appStore.ts:    // 1. 設置全域 Auth 監聽
+src/store/appStore.ts:    // 2. 執行初始 Session 獲取
+src/store/appStore.ts:    // 3. 恢復任務佇列（此時 Auth 已就緒）
+src/store/appStore.ts:    // 4. 背景並行啟動分類與標籤預加載 (DK-PATTERN: 前置緩存提高首屏響應速度)
+src/store/appStore.ts:    // 5. 標記初始化完成
+src/store/uiStore.ts:  // Lightbox 状态 (Data only)
+src/store/uiStore.ts:// ============ UI 狀態 Signal (Derived from uiStore) ============
+src/store/uiStore.ts:// 燈箱狀態
+src/store/uiStore.ts:// 搜尋與選取
+src/store/uiStore.ts:// UI 狀態開關
+src/pages/PublicPage.tsx:      {/* 頂部導航組 - 確保垂直堆疊，不擠壓照片 */}
+src/pages/PublicPage.tsx:      {/* 照片網格區域 - 自動佔滿剩餘空間 */}
+src/pages/PublicPage.tsx:      {/* 懸浮按鈕組 (回到頂部 & WhatsApp 諮詢) - Apple Style */}
+src/main.tsx:  // 初始化 Task Queue
+src/main.tsx:  // scheduler.restore() 已移動到 appStore.ts 初始化邏輯中
+src/main.tsx:      // 同步到全域診斷陣列
+src/main.tsx:      // 同步到全域診斷陣列
+src/main.tsx:  // 啟動每日維護 (P0: Robustness)
+src/main.tsx:    // 移除启动骨架屏逻辑，改由 LoadingScreen 控制
+src/utils/clipboard.ts:  /** 成功時顯示的提示訊息（預設：已複製） */
+src/utils/clipboard.ts:  /** 失敗時顯示的提示訊息（預設：複製失敗，請手動複製） */
+src/utils/clipboard.ts:  /** 是否顯示成功提示（預設：true） */
+src/utils/clipboard.ts: * 核心複製功能（非 Hook 版本，適用於單個函數或非組件環境）
+src/utils/clipboard.ts: * 使用原生 API + 內容檢查 + 降級方案，確保在 iframe 和不同環境中的兼容性
+src/utils/clipboard.ts:  // ✅ 防止複製空內容或無效內容
+src/utils/clipboard.ts:    logger.warn('[copyToClipboard] 內容為空或無效，取消複製');
+src/utils/clipboard.ts:    // 1. 嘗試現代瀏覽器 API
+src/utils/clipboard.ts:    logger.warn('[copyToClipboard] navigator.clipboard 失敗，嘗試降級方案:', err);
+src/utils/clipboard.ts:    // 2. 降級方案 (Fallback using textarea)
+src/utils/clipboard.ts:      logger.error('[copyToClipboard] 降級方案也失敗:', fallbackErr);

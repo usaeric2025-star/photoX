@@ -125,27 +125,31 @@ export async function getPhotosList(params: PhotoListParams) {
     // 1. Smarter Count with Cache
     const cacheKey = JSON.stringify({ categoryId, tagId, searchQuery, isAdminMode, onlyUngrouped, onlyGroupsCover, groupId, isHidden });
     const cached = countCache.get(cacheKey);
-    let total = 0;
+    let totalPromise: Promise<number>;
 
     if (cached && Date.now() - cached.timestamp < 60000) {
-        total = cached.count;
+        totalPromise = Promise.resolve(cached.count);
     } else {
-        // Count queries can be heavy, execute in parallel or use a fallback if slow
-        try {
-            const [countRes] = await db.select({ count: count() }).from(furnitureItems).where(finalWhere).execute();
-            total = Number(countRes.count);
-            countCache.set(cacheKey, { count: total, timestamp: Date.now() });
-        } catch (e) {
-            logger.warn('Count query failed or timed out, using fallback total=0', e);
-            total = cached?.count || 0;
-        }
+        totalPromise = db.select({ count: count() })
+            .from(furnitureItems)
+            .where(finalWhere)
+            .execute()
+            .then(res => {
+                const cnt = Number(res[0]?.count || 0);
+                countCache.set(cacheKey, { count: cnt, timestamp: Date.now() });
+                return cnt;
+            })
+            .catch(e => {
+                logger.warn('Count query failed or timed out, using fallback total=0', e);
+                return cached?.count || 0;
+            });
     }
 
     // 2. Data Fetch
     const orderSpec = sortOrder === 'oldest' ? asc(furnitureItems.createdAt) : desc(furnitureItems.createdAt);
     const secondaryOrder = sortOrder === 'oldest' ? asc(furnitureItems.id) : desc(furnitureItems.id);
 
-    const dbData = await db
+    const dbDataPromise = db
         .select({
             items: furnitureItems,
             group: groupsTable,
@@ -158,6 +162,9 @@ export async function getPhotosList(params: PhotoListParams) {
         .orderBy(orderSpec, secondaryOrder)
         .limit(limit)
         .execute();
+
+    // Run queries in parallel
+    const [total, dbData] = await Promise.all([totalPromise, dbDataPromise]);
     
     // Fetch tags in bulk
     const photoIds = dbData.map(d => d.items.id);
