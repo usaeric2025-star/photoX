@@ -1,7 +1,6 @@
 import { STALE_TIMES } from '@/lib/query/config';
 import { DB_CONFIG } from '@/constants/config';
 import { showToast } from '@/lib/ui/toast';
-import { logger } from '@/lib/logger';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { api } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
@@ -193,7 +192,7 @@ export const runHealthCheck = async (
       }
     }
   } catch (err) {
-    logger.error('[HealthCheck] repair-integrity failed', err);
+    ErrorFactory.handle(err, { context: '[HealthCheck] repair-integrity failed' });
   }
   const repairCount = groupRepair.dissolved + groupRepair.synced + groupRepair.deleted;
 

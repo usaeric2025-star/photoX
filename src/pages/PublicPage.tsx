@@ -1,5 +1,4 @@
-import React, { useMemo, useState, useRef, useEffect } from 'react';
-import { logger } from '@/lib/logger';
+import React, { useMemo, useState, useRef } from 'react';
 import { useFilters } from '@/features/filters';
 import { useTranslation, usePublicSettings, usePhotoGrid } from '@/hooks';
 import { PublicHeader } from '@/components/layouts/headers/PublicHeader';
@@ -8,27 +7,25 @@ import { PublicPhotoGrid } from '@/components/photo/PublicPhotoGrid';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { useColumns } from '@/hooks';
 import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
-import { useUI, type UIStoreState, uiStore } from '@/lib/store';
+import { useUI, type UIStoreState } from '@/lib/store';
 import { WhatsAppDialog } from '@/components/shared/WhatsAppDialog';
 import { PhotoErrorDisplay } from '@/components/photo/PhotoErrorDisplay';
 import { Icon } from '@/components/ui/Icon';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 export default function PublicPage() {
-  logger.info('[PublicPage] Rendering');
   const { 
     category, 
     tags, 
     search, 
     sort, 
     showGroupsCollapsed,
-    photoId,
   } = useFilters();
   
   const { columns } = useColumns();
   const [showScrollTop, setShowScrollTop] = useState(false);
   const gridRef = useRef<any | null>(null);
   
-  const hasFilters = !!search || (tags && tags.length > 0) || (category && category !== 'all' && category !== '');
   const isAggregated = showGroupsCollapsed;
   
   const photoGridData = usePhotoGrid({
@@ -55,14 +52,13 @@ export default function PublicPage() {
   
   const showWhatsAppChoice = useUI((s: UIStoreState) => s.showWhatsAppChoice);
   const patch = useUI(s => s.patch);
-  const { lang, uiTranslations: t } = useTranslation();
-  const { data: settings } = usePublicSettings();
+  const { uiTranslations: t } = useTranslation();
 
   const handleRefresh = () => {
     refetch();
   };
 
-  const handlePhotoClick = (id: string, index: number) => {
+  const handlePhotoClick = (_id: string, index: number) => {
     openLightbox(lightboxItems, index);
   };
 
@@ -86,7 +82,6 @@ export default function PublicPage() {
     >
       <div className="absolute inset-0 pointer-events-none opacity-0 select-none">PUBLIC_PAGE_RENDERED</div>
       
-      {/* 頂部導航組 - 確保垂直堆疊，不擠壓照片 */}
       <PublicHeader 
         totalCount={totalCount}
         onRefresh={handleRefresh}
@@ -95,7 +90,6 @@ export default function PublicPage() {
 
       <FilterBar mode="public" className="border-b shadow-sm" />
 
-      {/* 照片網格區域 - 自動佔滿剩餘空間 */}
       <div className="flex-1 min-h-0 relative bg-surface-soft overflow-hidden">
         <ErrorBoundary>
           <div className="absolute inset-0">
@@ -113,7 +107,6 @@ export default function PublicPage() {
         </ErrorBoundary>
       </div>
 
-      {/* 懸浮按鈕組 (回到頂部 & WhatsApp 諮詢) - Apple Style */}
       <div className="fixed bottom-6 right-6 flex flex-col gap-3">
         {showScrollTop && (
           <button
@@ -127,7 +120,6 @@ export default function PublicPage() {
         )}
         <button
           onClick={() => {
-            logger.debug('[PublicPage] WhatsApp button clicked');
             patch({ showWhatsAppChoice: true, pendingPhoto: null });
           }}
           type="button"

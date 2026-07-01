@@ -44,13 +44,17 @@ export const uploadSinglePhoto = async (
 
     // R2 Upload (MUST HAPPEN BEFORE FINAL DB UPSERT)
     if (!photo.imageUrl && (file || photo.uri)) {
-        const filename = photo.storageId || photo.id;
-        const { imageUrl, isDuplicate: r2Duplicate } = await uploadToR2(userId, filename, file || photo.uri!, photo.imageHash, onStatus);
-        if (r2Duplicate) {
-            logger.info(`[Upload] R2 confirmed duplicate file for ${photo.id}. Reusing URL: ${imageUrl}`);
-            is_duplicate = true;
+        try {
+            const filename = photo.storageId || photo.id;
+            const { imageUrl, isDuplicate: r2Duplicate } = await uploadToR2(userId, filename, file || photo.uri!, photo.imageHash, onStatus);
+            if (r2Duplicate) {
+                logger.info(`[Upload] R2 confirmed duplicate file for ${photo.id}. Reusing URL: ${imageUrl}`);
+                is_duplicate = true;
+            }
+            photo.imageUrl = imageUrl;
+        } catch (err) {
+            throw ErrorFactory.wrap(err instanceof Error ? err : new Error('R2 upload failed'), 'uploadOrchestrator.R2');
         }
-        photo.imageUrl = imageUrl;
     }
 
     if (!photo.imageUrl) {
@@ -71,7 +75,11 @@ export const uploadSinglePhoto = async (
     if (!payload.id) payload.id = photo.id;
 
     // 3. Final DB Upsert (ONLY AFTER R2 IS SUCCESSFUL)
-    await upsertPhotoRecord(payload);
+    try {
+        await upsertPhotoRecord(payload);
+    } catch (err) {
+         throw ErrorFactory.wrap(err instanceof Error ? err : new Error('Database upsert failed'), 'uploadOrchestrator.DB');
+    }
     
     // 4. Tag Sync
     try {

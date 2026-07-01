@@ -1,4 +1,3 @@
-import { logger } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
 import { DB_CONFIG } from '@/constants/config';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
@@ -66,7 +65,7 @@ export const saveSettings = async (settings: Partial<AppSettings> & Record<strin
         
         return true;
     } catch (err) {
-        logger.error("Save settings fatal error:", err);
+        ErrorFactory.handle(err, { context: 'saveSettings' });
         throw ErrorFactory.wrap(err, 'saveSettings');
     }
 };
@@ -82,7 +81,7 @@ export const uploadLogo = async (file: File) => {
             .upload(fileName, file, { upsert: true });
 
         if (uploadError) {
-            logger.error("Supabase Logo Upload Error:", uploadError);
+            ErrorFactory.handle(uploadError, { context: 'uploadLogo.upload' });
             throw ErrorFactory.wrap(uploadError, 'uploadLogo', fileName);
         }
 
@@ -96,12 +95,12 @@ export const uploadLogo = async (file: File) => {
         });
 
         if (!res.ok) {
-            logger.error("Failed to upsert logo url in settings:", await res.text());
+            ErrorFactory.handle(new Error(await res.text()), { context: 'uploadLogo.upsert' });
         }
 
         return publicUrl;
     } catch (err: unknown) {
-        logger.error("Logo upload process error:", err);
+        ErrorFactory.handle(err, { context: 'uploadLogo' });
         throw ErrorFactory.wrap(err instanceof Error ? err : new Error(String(err)), 'uploadLogo');
     }
 };

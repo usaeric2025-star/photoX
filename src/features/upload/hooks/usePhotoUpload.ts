@@ -1,5 +1,6 @@
 import { useAuth, uiStore } from '@/lib/store';
 import { useCallback } from 'react';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { showToast } from '@/lib/ui/toast';
 import { hapticFeedback } from '@/lib/ui/haptics';
 import { createTask } from '@/lib/task-queue';
@@ -41,13 +42,11 @@ export function usePhotoUpload() {
           }
         },
         onError: (err) => {
-          showToast.error(`上傳過程發生錯誤: ${err instanceof Error ? err.message : '未知錯誤'}`);
-          logger.error('[uploadFiles] Error during execution:', err);
+          ErrorFactory.handle(err, { context: 'usePhotoUpload.uploadFiles' });
         }
       });
     } catch (error) {
-      showToast.error(`啟動上傳失敗: ${error instanceof Error ? error.message : '網路或伺服器錯誤'}`);
-      logger.error('[uploadFiles] Error during preparation:', error);
+      ErrorFactory.handle(error, { context: 'usePhotoUpload.execute' });
     }
   }, [user?.id]);
 

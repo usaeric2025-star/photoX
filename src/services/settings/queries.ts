@@ -1,7 +1,7 @@
 import { api } from '@/lib/api';
-import { logger } from '@/lib/logger';
 import { AppSettings } from '@/types';
 import { withTimeout } from '@/lib/utils';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 export async function fetchPublicSettings(): Promise<AppSettings> {
   try {
@@ -25,7 +25,7 @@ export async function fetchPublicSettings(): Promise<AppSettings> {
       ...settingsResult.data
     } as AppSettings;
   } catch (e) {
-    logger.error('Failed to fetch public settings, returning default', e instanceof Error ? e.message : String(e), e);
+    ErrorFactory.handle(e, { context: 'fetchPublicSettings' });
     return {
       app_name: 'photoX',
       passcode_enabled: false,

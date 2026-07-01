@@ -1,9 +1,10 @@
 import { Task } from './types';
 import { taskTable } from './integrations/supabase';
 import { showToast } from '@/lib/ui/toast';
-import { logger } from '@/lib/logger';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { tasksSignal, addTask, updateTask, updateTaskState, removeTask, setGlobalTaskStatus, setGlobalTaskProgress } from '@/services/task/taskService';
-import { ErrorFactory } from '@/lib/error';
+
+// ... (rest of code)
 
 class TaskScheduler {
   private queue: Task[] = [];
@@ -25,7 +26,8 @@ class TaskScheduler {
     // 冪等檢查
     const key = `${task.type}:${task.meta?.key || task.id}`;
     if (this.activeKeys.has(key)) {
-      logger.warn(`[Task] Duplicate task skipped: ${key}`);
+    // silently ignore duplicate task
+
       return;
     }
     this.activeKeys.add(key);
@@ -34,7 +36,7 @@ class TaskScheduler {
     addTask(task);
     
     // 2. 寫入 Supabase（持久層）
-    taskTable.insert(task).catch(e => logger.error('[Task] insert error', e));
+    taskTable.insert(task).catch(e => ErrorFactory.handle(e, { context: '[Task] insert error' }));
     
     // 3. 加入調度佇列
     this.queue.push(task);
@@ -57,7 +59,7 @@ class TaskScheduler {
     updateTaskState(id, { status: 'cancelled' });
     
     // 更新 Supabase
-    taskTable.updateStatus(id, 'cancelled').catch(e => logger.error('[Task] cancel error', e));
+    taskTable.updateStatus(id, 'cancelled').catch(e => ErrorFactory.handle(e, { context: '[Task] cancel error' }));
     
     // 釋放去重鍵
     const task = this.findTask(id);
@@ -104,7 +106,7 @@ class TaskScheduler {
       };
 
       // 非阻塞式更新 Supabase，不延誤任務執行
-      taskTable.updateStatus(task.id, 'processing').catch(e => logger.error('[Task] updateStatus error', e));
+      taskTable.updateStatus(task.id, 'processing').catch(e => ErrorFactory.handle(e, { context: '[Task] updateStatus error' }));
 
       const result = await task.execute(controller.signal, onProgress);
 

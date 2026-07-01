@@ -1,6 +1,5 @@
-import { logger } from '@/lib/logger';
-import { api } from '@/lib/api';
 import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { api } from '@/lib/api';
 import type { TranslationResult } from './types';
 
 export const translateFields = async (
@@ -51,7 +50,7 @@ export const translateFields = async (
       description: { zh: description, en: dt.en, ms: dt.ms }
     };
   } catch (err) {
-    logger.error('Translation failed', err);
+    ErrorFactory.handle(err, { context: 'Translation failed' });
     throw ErrorFactory.fatal((err as Error).message || 'Translation failed', { context: 'translateFields' });
   }
 };

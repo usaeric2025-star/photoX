@@ -7,6 +7,8 @@ import { runBatchAnalysis } from '@/features/ai/orchestration';
 import { appQuery } from '@/lib/query';
 import { queryKeys } from '@/lib/query/keys';
 import { checkHashExists } from '@/lib/api/photos';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { logger } from '@/lib/logger';
 
 export const executeBatchUpload = (
   files: File[],
@@ -84,8 +86,8 @@ export const executeBatchUpload = (
         
         onProgress((i + 1) / total, `完成 ${i + 1}/${total}`);
     } catch (err) {
-        logger.error(`Error uploading file ${i}: ${file.name}`, err);
-        throw new Error(`上傳第 ${i + 1} 張照片 "${file.name}" 失敗: ${err instanceof Error ? err.message : String(err)}`);
+        ErrorFactory.handle(err, { context: `uploadAdapter.uploadFile:${file.name}` });
+        throw err;
     }
   }
   

@@ -1,4 +1,3 @@
-import { logger } from '@/lib/logger';
 import { api } from '@/lib/api';
 import { Photo } from '@/types';
 
@@ -65,7 +64,6 @@ export async function analyzeGroup(photos: Photo[]): Promise<Record<string, unkn
     try {
       parsed = JSON.parse(parsed.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim());
     } catch (e) {
-      logger.warn("Failed to parse group analysis JSON:", parsed);
       throw ErrorFactory.fatal('Json Parse error', { context: 'analyzeGroup' });
     }
   }
@@ -93,7 +91,6 @@ export async function analyzeSinglePhotoDetail(photo: Photo): Promise<Record<str
     try {
       parsed = JSON.parse(parsed.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim());
     } catch (e) {
-      logger.warn("Failed to parse single photo analysis JSON:", parsed);
       throw ErrorFactory.fatal('Json Parse error', { context: 'analyzeSinglePhoto' });
     }
   }

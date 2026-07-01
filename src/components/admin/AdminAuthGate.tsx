@@ -1,9 +1,8 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { Icon } from '@/components/ui/Icon';
 import { useAuth } from '@/lib/store';
 import { usePublicSettings } from '@/hooks';
 import { useLocalStorage } from '@/hooks/core/useLocalStorage';
-import { logger } from '@/lib/logger';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
 
 const LoginScreen = lazy(() => import('./LoginScreen').then(m => ({ default: m.LoginScreen })));
@@ -34,14 +33,12 @@ export function AdminAuthGate({ children }: AdminAuthGateProps) {
   const [forceShow, setForceShow] = useState(false);
 
   useEffect(() => {
-    logger.debug('🛡️ [AdminAuthGate] Auth status:', { isAuthLoading, user: !!user, isStaffMode, forceShow });
     if (!isAuthLoading) return;
     const timer = setTimeout(() => {
-      logger.warn('⚠️ [AdminAuthGate] Auth Loading 超时，强制尝试显示');
       setForceShow(true);
     }, 3000);
     return () => clearTimeout(timer);
-  }, [isAuthLoading, user, isStaffMode]);
+  }, [isAuthLoading]);
 
   // Auth is still loading
   if (isAuthLoading && !user && !isStaffMode && !forceShow) {

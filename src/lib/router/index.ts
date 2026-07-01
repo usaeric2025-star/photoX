@@ -1,6 +1,6 @@
 import { Router, ALL_ROUTES } from '@/router';
 import { useCallback } from 'react';
-import { logger } from '@/lib/logger';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 
 // ✅ 唯一出口：永遠不傳參數
 export function useAppRoute() {
@@ -8,7 +8,7 @@ export function useAppRoute() {
     const route = Router.useRoute(ALL_ROUTES);
     return route || { query: {}, params: {}, name: '' };
   } catch (e) {
-    logger.error('[useAppRoute] Error calling Router.useRoute', e);
+    ErrorFactory.handle(e, { context: 'useAppRoute.useRoute' });
     return { query: {}, params: {}, name: '' };
   }
 }

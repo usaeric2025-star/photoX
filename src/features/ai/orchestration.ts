@@ -84,7 +84,7 @@ const analyzeAndSavePhoto = async (
 
     return updateResult;
   } catch (err) {
-    logger.error(`[AI Orchestration] analyzeAndSavePhoto failed for ${photo.id}:`, err);
+    ErrorFactory.handle(err, { context: `[AI Orchestration] analyzeAndSavePhoto failed for ${photo.id}` });
     throw ErrorFactory.fatal((err as Error).message || '分析照片失敗', { context: 'analyzeAndSavePhoto' });
   }
 };
@@ -103,7 +103,7 @@ const autoGroupPhotos = async (
         logger.info(`[autoGroupPhotos] Analyzing and saving single photo ${i+1}/${photos.length}: ${p.id}`);
         await analyzeAndSavePhoto(p);
       } catch (err) {
-        logger.error(`[autoGroupPhotos] Single photo analysis failed:`, err);
+        ErrorFactory.handle(err, { context: '[autoGroupPhotos] Single photo analysis failed' });
       }
     }
 
@@ -181,7 +181,7 @@ export async function runBatchAnalysis({
       await analyzeAndSavePhoto(p);
       successCount++;
     } catch (err) {
-      logger.error(`[AI Batch] Photo ${p.id} error:`, err);
+      ErrorFactory.handle(err, { context: `[AI Batch] Photo ${p.id} error` });
     }
   }
 

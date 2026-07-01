@@ -1,7 +1,7 @@
 import React, { Component, ReactNode } from 'react';
 import { useCopyToClipboard } from '@/hooks';
 import { isAppError } from '@/lib/error/AppError';
-import { logger } from '@/lib/logger';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { cn } from '@/lib/utils';
 import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
 import { handleChunkError } from '@/lib/chunkErrorHandler';
@@ -106,7 +106,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    logger.error('ErrorBoundary caught:', error, errorInfo);
+    ErrorFactory.handle(error, { context: 'ErrorBoundary' });
     const isChunkFailure = error.message.includes('Failed to fetch dynamically imported module') || 
          error.message.includes('Loading chunk');
     if (isChunkFailure) {

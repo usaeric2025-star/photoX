@@ -1,4 +1,4 @@
-import { logger } from '@/lib/logger';
+import { ErrorFactory } from '@/lib/error/ErrorFactory';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { storage } from '@/services/storage';
 
@@ -26,7 +26,7 @@ export function useLocalStorage<T = string>({
       const item = storage.getItem(key);
       return item !== null ? deserialize(item) : defaultValue;
     } catch (error) {
-      logger.warn(`Error reading localStorage key "${key}":`, error);
+      ErrorFactory.handle(error, { context: `useLocalStorage.read:${key}` });
       return defaultValue;
     }
   };
@@ -54,7 +54,7 @@ export function useLocalStorage<T = string>({
       const serialized = serialize(valueToStore);
       storage.setItem(key, serialized);
     } catch (error) {
-      logger.warn(`[useLocalStorage] Error setting key "${key}":`, error);
+      ErrorFactory.handle(error, { context: `useLocalStorage.set:${key}` });
     }
   }, [key, serialize]);
 
@@ -63,7 +63,7 @@ export function useLocalStorage<T = string>({
       storage.remove(key);
       setValue(defaultValue);
     } catch (error) {
-      logger.warn(`Error removing localStorage key "${key}":`, error);
+      ErrorFactory.handle(error, { context: `useLocalStorage.remove:${key}` });
     }
   }, [key, defaultValue]);
 
@@ -74,7 +74,7 @@ export function useLocalStorage<T = string>({
         try {
           setValue(deserialize(event.newValue));
         } catch (error) {
-          logger.warn(`Error deserializing synced localStorage key "${key}":`, error);
+          ErrorFactory.handle(error, { context: `useLocalStorage.sync:${key}` });
         }
       } else if (event.key === key && event.newValue === null) {
         setValue(defaultValue);

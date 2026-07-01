@@ -3,20 +3,34 @@ import { Photo } from '@/types';
 import { api } from '@/lib/api';
 
 export const upsertPhotoRecord = async (payload: Record<string, unknown>): Promise<unknown> => {
-    const res = await api.photos.upsert.$post({
-        json: { payload }
-    });
+    let res;
+    try {
+        res = await api.photos.upsert.$post({
+            json: { payload }
+        });
+    } catch (err) {
+        throw ErrorFactory.wrap(err instanceof Error ? err : new Error('Network error during upsert'), 'dbCommands.upsertPhotoRecord');
+    }
+
     if (!res.ok) {
         let errorMsg = 'Upsert photo failed';
         try {
-            const errJson = await res.json();
+            const errJson = await res.json() as any;
             if (errJson && errJson.error) {
-                errorMsg = `${errorMsg}: ${errJson.error}`;
+                const errorDetail = typeof errJson.error === 'object' ? JSON.stringify(errJson.error) : errJson.error;
+                errorMsg = `${errorMsg}: ${errorDetail}`;
             }
-        } catch (_) {}
+        } catch (_) {
+            // If json parsing fails, try text
+            try {
+                const errText = await res.text();
+                if (errText) errorMsg = `${errorMsg}: ${errText}`;
+            } catch (__) {}
+        }
         throw ErrorFactory.fatal(errorMsg, { context: 'dbCommands' });
     }
-    const { data } = await res.json();
+    
+    const { data } = await res.json() as any;
     return data;
 };
 

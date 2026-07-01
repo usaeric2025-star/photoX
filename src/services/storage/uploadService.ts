@@ -1,4 +1,3 @@
-import { logger } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
 import { STORAGE } from './storageConfig';
 import { api } from '@/lib/api';
@@ -43,14 +42,14 @@ export const uploadWithRetry = async (
         );
         
         if (isAuthError) {
-          logger.error(`[Upload] Auth/Permission error occurred. Failing fast without retry.`, err);
+          ErrorFactory.handle(err, { context: '[Upload] Auth/Permission error occurred. Failing fast without retry.' });
           break;
         }
 
         if (i < maxRetries - 1) {
           const delay = Math.pow(2, i) * 1000;
           await new Promise(resolve => setTimeout(resolve, delay));
-          logger.warn(`[Upload] Attempt ${i + 1} failed, retrying in ${delay}ms...`, err);
+          // Log warn silently or handle differently if needed, but ErrorFactory.handle handles errors.
         }
       }
     }
@@ -82,7 +81,7 @@ const uploadImages = async (
         ext = 'webp';
         mimeType = 'image/webp';
       } catch (err) {
-        logger.warn('[uploadService] compressImage failed for string URL, falling back to original blob', err);
+        ErrorFactory.handle(err, { context: '[uploadService] compressImage failed for string URL' });
         dataToUpload = blob;
         mimeType = blob.type || 'image/jpeg';
         ext = mimeType.split('/')[1] || 'jpg';
@@ -94,7 +93,7 @@ const uploadImages = async (
         ext = 'webp';
         mimeType = 'image/webp';
       } catch (err) {
-        logger.warn('[uploadService] compressImage failed for File, falling back to original file', err);
+        ErrorFactory.handle(err, { context: '[uploadService] compressImage failed for File' });
         dataToUpload = fileOrBase64;
         mimeType = fileOrBase64.type || 'image/jpeg';
         ext = fileOrBase64.name?.split('.').pop()?.toLowerCase() || mimeType.split('/')[1] || 'jpg';
@@ -115,7 +114,7 @@ const uploadImages = async (
           const parsed = dataURLToArrayBuffer(data);
           buffer = parsed.buffer;
         } catch (err) {
-          logger.warn('[uploadService] dataURLToArrayBuffer failed, falling back to fetch', err);
+          ErrorFactory.handle(err, { context: '[uploadService] dataURLToArrayBuffer failed' });
           const res = await fetch(data);
           const blob = await res.blob();
           buffer = await blob.arrayBuffer();
@@ -170,7 +169,7 @@ const uploadImages = async (
       if (isMain && onProgress) onProgress(100);
       return publicUrl;
     } catch (browserUploadErr) {
-      logger.warn('[Upload] Browser direct upload failed', browserUploadErr);
+      ErrorFactory.handle(browserUploadErr, { context: '[Upload] Browser direct upload failed' });
       throw ErrorFactory.fatal(`雲端存儲上傳失敗`, { context: 'uploadFile', cause: browserUploadErr });
     }
   };
