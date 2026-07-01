@@ -23,65 +23,70 @@ export const executeBatchUpload = (
     const file = files[i];
     if (signal.aborted) throw new Error('Upload aborted');
     
-    onProgress(i / total, `處理第 ${i + 1}/${total} 張: 正在校驗格式及計算雜湊值...`);
-    
-    // 1. Process
-    const processed = await processImageFile(file);
-    
-    // 2. Check duplicate
-    onProgress((i + 0.2) / total, `處理第 ${i + 1}/${total} 張: 正在比對重複項...`);
-    const exists = await checkHashExists(processed.hash);
-    if (exists) {
-      skippedCount++;
-      // Clean up objectUrl
-      URL.revokeObjectURL(processed.dataUrl);
-      onProgress((i + 1) / total, `處理第 ${i + 1}/${total} 張: 已跳過重複照片 (${processed.file.name})`);
-      
-      // Let's yield briefly
-      await new Promise(resolve => setTimeout(resolve, 50));
-      continue;
+    try {
+        onProgress(i / total, `處理第 ${i + 1}/${total} 張: 正在校驗格式及計算雜湊值...`);
+        
+        // 1. Process
+        const processed = await processImageFile(file);
+        
+        // 2. Check duplicate
+        onProgress((i + 0.2) / total, `處理第 ${i + 1}/${total} 張: 正在比對重複項...`);
+        const exists = await checkHashExists(processed.hash);
+        if (exists) {
+          skippedCount++;
+          // Clean up objectUrl
+          URL.revokeObjectURL(processed.dataUrl);
+          onProgress((i + 1) / total, `處理第 ${i + 1}/${total} 張: 已跳過重複照片 (${processed.file.name})`);
+          
+          // Let's yield briefly
+          await new Promise(resolve => setTimeout(resolve, 50));
+          continue;
+        }
+        
+        // 3. Upload to Cloud
+        const tempPhoto: Photo = {
+          id: `temp-${generateId()}`,
+          name: { zh: processed.file.name.split('.')[0] },
+          uri: processed.dataUrl, // objectUrl for preview
+          imageUrl: '', // LEAVE THIS EMPTY SO uploadSinglePhoto UPLOADS TO R2
+          imageHash: processed.hash,
+          groupId: options.groupId || null,
+          itemCode: '', // Placeholder
+          categoryId: null,
+          manufacturerId: null,
+          categoryName: '',
+          manufacturerName: '',
+          description: null,
+          size: processed.file.size,
+          width: processed.width,
+          height: processed.height,
+          isPinned: false,
+          isHidden: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          _fileName: file.name,
+          _fileSize: file.size,
+          _lastModified: file.lastModified
+        };
+        
+        const result = await savePhotoToCloud(userId, tempPhoto, processed.file, (statusMsg) => {
+          onProgress((i + 0.5) / total, `處理第 ${i + 1}/${total} 張: ${statusMsg}`);
+        });
+        results.push(result);
+        
+        // Release objectUrl after successful upload
+        URL.revokeObjectURL(processed.dataUrl);
+        
+        uploadedPhotos.push({
+            ...tempPhoto,
+            id: result.id
+        });
+        
+        onProgress((i + 1) / total, `完成 ${i + 1}/${total}`);
+    } catch (err) {
+        logger.error(`Error uploading file ${i}: ${file.name}`, err);
+        throw new Error(`上傳第 ${i + 1} 張照片 "${file.name}" 失敗: ${err instanceof Error ? err.message : String(err)}`);
     }
-    
-    // 3. Upload to Cloud
-    const tempPhoto: Photo = {
-      id: `temp-${generateId()}`,
-      name: { zh: processed.file.name.split('.')[0] },
-      uri: processed.dataUrl, // objectUrl for preview
-      imageUrl: '', // LEAVE THIS EMPTY SO uploadSinglePhoto UPLOADS TO R2
-      imageHash: processed.hash,
-      groupId: options.groupId || null,
-      itemCode: '', // Placeholder
-      categoryId: null,
-      manufacturerId: null,
-      categoryName: '',
-      manufacturerName: '',
-      description: null,
-      size: processed.file.size,
-      width: processed.width,
-      height: processed.height,
-      isPinned: false,
-      isHidden: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      _fileName: file.name,
-      _fileSize: file.size,
-      _lastModified: file.lastModified
-    };
-    
-    const result = await savePhotoToCloud(userId, tempPhoto, processed.file, (statusMsg) => {
-      onProgress((i + 0.5) / total, `處理第 ${i + 1}/${total} 張: ${statusMsg}`);
-    });
-    results.push(result);
-    
-    // Release objectUrl after successful upload
-    URL.revokeObjectURL(processed.dataUrl);
-    
-    uploadedPhotos.push({
-        ...tempPhoto,
-        id: result.id
-    });
-    
-    onProgress((i + 1) / total, `完成 ${i + 1}/${total}`);
   }
   
   if (skippedCount > 0) {

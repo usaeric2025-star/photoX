@@ -94,7 +94,7 @@ export const createHandler = (app: Hono) => {
 
         const data = results[0] || null;
 
-        if (payload.groupId) {
+        if (payload.groupId && payload.groupId !== 'null' && payload.groupId !== 'undefined') {
           await syncGroupCoversAndCount([String(payload.groupId)]);
         }
 

@@ -39,6 +39,10 @@ export function usePhotoUpload() {
           } else {
             showToast.info(`上傳已完成（重複照片已自動略過）`);
           }
+        },
+        onError: (err) => {
+          showToast.error(`上傳過程發生錯誤: ${err instanceof Error ? err.message : '未知錯誤'}`);
+          logger.error('[uploadFiles] Error during execution:', err);
         }
       });
     } catch (error) {
