@@ -1,5 +1,5 @@
 import * as v from 'valibot';
-import { ErrorCode } from '#shared/errorCodes';
+import { ErrorCode } from '#shared/errorCodes.js';
 import { AppError, ErrorSeverity, isAppError, ErrorCategory } from './AppError';
 import { showToast } from '#lib/ui/toast';
 import { logger } from '#lib/logger';

@@ -3,7 +3,7 @@ import { supabase } from '#lib/supabase';
 import { DB_CONFIG } from '#src/constants/config';
 import { ProductGroup } from '#src/types';
 import * as v from 'valibot';
-import { GroupReqSchema } from '#shared/apiContractSchema';
+import { GroupReqSchema } from '#shared/apiContractSchema.js';
 import { cleanTranslationPrefixes } from '#src/features/ai/safeText';
 import { ungroupPhotos, syncGroupMemberCount } from '#src/services/photo/utils';
 import { api } from '#lib/api';
