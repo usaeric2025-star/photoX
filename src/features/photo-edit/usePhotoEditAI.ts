@@ -237,7 +237,7 @@ export function usePhotoEditAI() {
                 if (!oldPhoto) return oldPhoto;
                 return {
                   ...oldPhoto,
-                  name: updates.name ? { zh: (updates.name as string), en: '', ms: '' } : oldPhoto.name,
+                  name: updates.name ? (updates.name as string) : oldPhoto.name,
                   description: (updates.description as { zh: string; en: string; ms: string }) || oldPhoto.description,
                   categoryId: (updates.categoryId as string) || oldPhoto.categoryId,
                   tags: (updates.tags as Tag[]) || oldPhoto.tags,

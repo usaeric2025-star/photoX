@@ -50,11 +50,6 @@ export function LightboxInfoCard({
               {slide.groupName && (
                 <p className="text-xs text-white/50 truncate tracking-wide uppercase">{slide.groupName}</p>
               )}
-              {slide.itemCode && (
-                <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded uppercase font-mono text-white/60">
-                  {slide.itemCode}
-                </span>
-              )}
             </div>
           </div>
           

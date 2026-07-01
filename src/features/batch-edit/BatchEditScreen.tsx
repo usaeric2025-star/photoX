@@ -79,7 +79,7 @@ export const BatchEditScreen = () => {
   // Convert formState to match BatchEditForm's expected type (name as string)
   const photoEditFormState = React.useMemo(() => ({
     ...formState,
-    name: typeof formState.name === 'object' ? formState.name.zh : (formState.name as string || '')
+    name: formState.name as string || ''
   }), [formState]);
 
   return (

@@ -19,11 +19,7 @@ export interface Photo {
   manualCode?: string; // Hidden price code
   modelNumber?: string; // Manufacturer model number
   imageHash: string; // MD5 fingerprint
-  name: {
-    zh: string;
-    en?: string;
-    ms?: string;
-  };
+  name: string;
   description: {
     zh: string;
     en?: string;
@@ -124,11 +120,7 @@ export type Group = ProductGroup;
 
 export interface ProductFormData {
   id?: string;
-  name: {
-    zh: string;
-    en?: string;
-    ms?: string;
-  };
+  name: string;
   categoryId: string | null;
   manufacturerId: string | null;
   tags: Tag[];

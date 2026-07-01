@@ -48,7 +48,7 @@ export const executeBatchUpload = (
         // 3. Upload to Cloud
         const tempPhoto: Photo = {
           id: `temp-${generateId()}`,
-          name: { zh: processed.file.name.split('.')[0] },
+          name: processed.file.name.split('.')[0],
           uri: processed.dataUrl, // objectUrl for preview
           imageUrl: '', // LEAVE THIS EMPTY SO uploadSinglePhoto UPLOADS TO R2
           imageHash: processed.hash,
@@ -59,7 +59,6 @@ export const executeBatchUpload = (
           categoryName: '',
           manufacturerName: '',
           description: null,
-          size: processed.file.size,
           width: processed.width,
           height: processed.height,
           isPinned: false,

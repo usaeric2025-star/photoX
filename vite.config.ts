@@ -44,10 +44,11 @@ export default defineConfig(({mode}) => {
       emptyOutDir: true,
       outDir: 'dist',
       rollupOptions: {
+        external: ['postgres'],
         output: {
           manualChunks: (id) => {
             if (id.includes('node_modules')) {
-              if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
+              if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler') || id.includes('react-router')) {
                 return 'vendor-react';
               }
               if (id.includes('@storve/core') || id.includes('@storve/react')) {
@@ -59,7 +60,13 @@ export default defineConfig(({mode}) => {
               if (id.includes('@tanstack/react-form') || id.includes('@tanstack/valibot-form-adapter') || id.includes('valibot')) {
                 return 'vendor-form';
               }
-              if (id.includes('lucide-react-sprite') || id.includes('sonner') || id.includes('@mshafiqyajid/react-lightbox') || id.includes('virtua')) {
+              if (
+                id.includes('lucide-react') || 
+                id.includes('sonner') || 
+                id.includes('@mshafiqyajid/react-lightbox') || 
+                id.includes('virtua') ||
+                id.includes('react-image-gallery')
+              ) {
                 return 'vendor-ui';
               }
               return 'vendor'; // all other dependencies

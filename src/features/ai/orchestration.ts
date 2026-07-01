@@ -45,7 +45,7 @@ const analyzeAndSavePhoto = async (
     );
 
     const updateResult = await updatePhoto(photo.id, {
-      name: nameObj,
+      name: nameObj.en || nameObj.zh || '',
       description: descObj,
       category_id: analysisData.category_id ? String(analysisData.category_id) : null,
       group_id: analysisData.group_id ? String(analysisData.group_id) : null,
@@ -118,8 +118,8 @@ const autoGroupPhotos = async (
     );
 
     const result = await groupPhotos(photoIds, undefined, {
-      name: nameObj as unknown as Record<string, string>,
-      description: descObj as unknown as Record<string, string>
+      name: nameObj.en || nameObj.zh || '',
+      description: descObj.en || descObj.zh || ''
     });
     
     return result;
@@ -149,7 +149,7 @@ const analyzeAndSaveGroup = async (
     );
 
     const res = await updateGroup(groupId, {
-      name: nameObj as unknown as string,
+      name: nameObj.en || nameObj.zh || '',
       colors,
       materials
     } as unknown as Partial<ProductGroup>);

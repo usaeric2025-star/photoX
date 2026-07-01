@@ -1,6 +1,7 @@
 export * from './types';
 import { useUI } from '@/lib/store';
 import { useFilters } from '@/hooks';
+import { useAppRoute } from '@/lib/router';
 
 export function useLightbox() {
   const slides = useUI(s => s.lightboxSlides || []);
@@ -9,7 +10,10 @@ export function useLightbox() {
   const clearLightboxData = useUI(s => s.clearLightboxData);
   const setLightboxIndex = useUI(s => s.setLightboxIndex);
   
-  const { photoId, setPhotoId, modal } = useFilters();
+  const { photoId: queryPhotoId, setPhotoId, modal } = useFilters();
+  const route = useAppRoute();
+  
+  const photoId = queryPhotoId || (route.name === 'photo' ? (route.params as any).photoId : null);
   const isOpen = !!(photoId && modal !== 'edit');
   
   const open = (slides: any[], index: number = 0) => {

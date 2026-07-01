@@ -165,7 +165,7 @@ export function Modal({
           </div>
         )}
 
-        <div className={`flex-1 overflow-y-auto min-h-0 ${hidePadding ? '' : 'px-6 py-5'}`}>
+        <div className={`flex-1 ${size === 'screen' ? '' : 'overflow-y-auto min-h-0'} ${hidePadding ? '' : 'px-6 py-5'}`}>
           {children}
         </div>
       </div>

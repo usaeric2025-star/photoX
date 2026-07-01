@@ -47,7 +47,7 @@ export const groups = pgTable('groups', {
 export const furnitureItems = pgTable('furniture_items', {
     id: uuid('id').primaryKey(),
     userId: uuid('user_id'),
-    name: jsonb('name'),
+    name: text('name'),
     description: jsonb('description'),
     categoryId: integer('category_id').references(() => categories.id),
     manufacturerId: uuid('manufacturer_id').references(() => manufacturers.id),

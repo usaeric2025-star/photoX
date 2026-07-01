@@ -1,264 +1,273 @@
-import React, { useMemo, memo } from 'react';
-import { motion } from 'lite-sleek';
-import { useUI, currentEditingPhoto, useSignal, lightboxSlides, lightboxCurrentIndex } from '@/lib/store';
+import { useMemo, useState, useEffect } from 'react';
+import ImageGallery from 'react-image-gallery';
+import 'react-image-gallery/styles/image-gallery.css';
+import { Photo } from '@/types';
+import { useLightbox } from '@/lib/lightbox';
 import { useFilters } from '@/features/filters';
-import { useAppRoute, useNavigation } from '@/lib/router';
-import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
-import { usePermission, usePublicSettings } from '@/hooks';
-import { LightboxInfoCard } from './components/LightboxInfoCard';
-import { AdminLightboxToolbar } from './components/AdminLightboxToolbar';
-import { PublicLightboxToolbar } from './components/PublicLightboxToolbar';
-import { LightboxStyles } from './components/LightboxStyles';
-import { showToast } from '@/lib/ui/toast';
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { Icon } from '@/components/ui/Icon';
-import { Photo, AppSettings } from '@/types';
-import { LightboxSlide } from '@/lib/lightbox/types';
-import { logger } from '@/lib/logger';
-import { getThumbnailUrl } from '@/services/mappers/utils';
-import { usePhoto } from '@/hooks/photo/usePhoto';
+import { Modal } from '@/components/ui/Modal';
 
-// ✅ Directly import from low-level to reduce conflicts
-import { LightboxStyled as LightboxStyledBase } from '@mshafiqyajid/react-lightbox/styled';
-import '@mshafiqyajid/react-lightbox/styles.css';
-
-interface LightboxImage {
-  src: string;
-  srcSet?: string;
-  alt: string;
-  title?: string | { zh: string; en?: string; ms?: string };
-  description?: string | { zh: string; en?: string; ms?: string } | null;
-  original: Photo | LightboxSlide;
+interface PhotoLightboxProps {
+  photos?: Photo[];
+  initialIndex?: number;
+  isOpen?: boolean;
+  onClose?: () => void;
+  onEdit?: (photo: any) => void;
 }
 
-interface LightboxProps {
-  images: LightboxImage[];
-  open: boolean;
-  index: number;
-  onIndexChange: (index: number) => void;
-  onOpenChange: (open: boolean) => void;
-  zoom?: boolean;
-  loop?: boolean;
-  showThumbnails?: boolean;
-  showClose?: boolean;
-  showCaption?: boolean;
-  closeOnOverlayClick?: boolean;
-}
+type GalleryItem = any;
 
-const LightboxStyled = LightboxStyledBase as unknown as React.ComponentType<LightboxProps>; 
-
-import { useTranslation } from '@/hooks/core/useTranslation';
-
-export const PhotoLightbox = memo(function PhotoLightbox() {
-  const { uiTranslations: t } = useTranslation();
-  const rawSlides = useSignal(lightboxSlides);
-  const filters = useFilters();
-  const { photoId: urlPhotoId, modal, setPhotoId } = filters;
+export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
+  const { 
+    isOpen: hookIsOpen, 
+    slides: hookSlides, 
+    currentIndex: hookIndex, 
+    close: hookClose,
+    setLightboxIndex
+  } = useLightbox();
   
-  // ✅ Keep only the last valid index to remember where we were
-  const [lastIndex, setLastIndex] = React.useState(0);
-
-  // Sync lastIndex whenever we have valid data
-  React.useEffect(() => {
-    if (urlPhotoId && rawSlides.length > 0) {
-      const idx = rawSlides.findIndex(s => s.id === urlPhotoId);
-      if (idx !== -1) {
-        setLastIndex(idx);
-      }
-    }
-  }, [urlPhotoId, rawSlides]);
-
-  const isOpen = !!(urlPhotoId && modal !== 'edit');
-  const currentIndex = (urlPhotoId && rawSlides.length > 0) 
-    ? Math.max(0, rawSlides.findIndex(s => s.id === urlPhotoId))
-    : lastIndex;
+  const photos = (props.photos && props.photos.length > 0) ? props.photos : hookSlides;
+  const initialIndex = props.initialIndex ?? hookIndex;
+  const isOpen = props.isOpen ?? hookIsOpen;
+  const onClose = props.onClose || hookClose;
+  const { setPhotoId, setModal } = useFilters();
   
-  // Use rawSlides directly to keep memory low. The backdrop exit animation 
-  // remains smooth, and we avoid keeping stale large slide arrays.
-  const slides = rawSlides;
-  
-  // Use a local ref for logging to avoid excessive console noise
-  const lastLoggedRef = React.useRef(0);
-  if (isOpen && Date.now() - lastLoggedRef.current > 1000) {
-    logger.debug('[PhotoLightbox] Active', { slidesCount: slides.length, currentIndex, urlPhotoId });
-    lastLoggedRef.current = Date.now();
-  }
+  const onEdit = props.onEdit || ((photo: any) => {
+    setPhotoId(photo.id);
+    setModal('edit');
+  });
 
-  const route = useAppRoute();
-  const navigate = useNavigation();
-  const adminActions = useAdminMaintenance();
-  const { data: settings } = usePublicSettings();
-  const { canEdit: canEditPermission } = usePermission();
-  
-  const isAdminRoute = route.name.startsWith('admin');
-  const canEdit = canEditPermission && isAdminRoute;
+  const [showInfo, setShowInfo] = useState(false);
+  const [lang, setLang] = useState<'zh' | 'en' | 'ms'>('zh');
 
-  const handleClose = () => {
-    setPhotoId(null);
-    if (route.name === 'photo') {
-      navigate.home();
-    }
-  };
+  // Key to force re-mount of ImageGallery when opening to a specific index
+  const galleryKey = useMemo(() => `gallery-${isOpen}-${initialIndex}`, [isOpen, initialIndex]);
 
-  const handleView = (index: number) => {
-    if (index === currentIndex || !isOpen) return;
-    const photo = slides[index];
-    if (photo?.id) {
-      setPhotoId(photo.id);
-    }
-  };
+  const items = useMemo(() => 
+    photos.map((p: any): GalleryItem => {
+      // Handle LightboxSlide vs raw Photo
+      const photo = p.original || p;
+      const src = p.src || photo.imageUrl || photo.uri;
+      const title = p.title || photo.name || 'Photo';
 
-  const coarseIndex = Math.floor(currentIndex / 10);
-
-  const images = useMemo(() => {
-    if (!isOpen && slides.length === 0) return [];
-    
-    const centerIndex = coarseIndex * 10;
-    
-    return slides.map((s, i) => {
-      const originalPhoto = s.original as any;
-      const hash = originalPhoto?.imageHash || originalPhoto?.image_hash;
-      
-      const distance = Math.abs(i - centerIndex);
-      const isInWindow = distance <= 60; 
-      
-      const thumbUrlSrc = originalPhoto?.thumbnailUrl || originalPhoto?.imageUrl || s.src;
-      const previewUrlSrc = originalPhoto?.imageUrl || s.src;
-      
-      const previewUrl = getThumbnailUrl(previewUrlSrc, 800, undefined, hash);
-      const thumbUrl = isInWindow 
-        ? getThumbnailUrl(thumbUrlSrc, 120, undefined, hash)
-        : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1" viewBox="0 0 1 1"><rect width="1" height="1" fill="rgba(255,255,255,0.03)"/></svg>';
-        
       return {
-        src: previewUrl,
-        srcSet: s.srcSet,
-        thumb: thumbUrl,
-        alt: s.alt ?? '',
-        title: s.title,
-        description: s.description,
-        original: s, 
+        original: src,
+        thumbnail: src,
+        originalAlt: title,
+        description: '', 
+        _data: photo,
       };
-    });
-    // ✅ Include slides.length to re-calc if list changes, but stable center prevents flickering
-  }, [slides, coarseIndex, isOpen]);
+    }),
+    [photos]
+  );
 
-  const currentSlide = slides[currentIndex];
-  const isEditModalOpen = filters.modal === 'edit';
-  const hasThumbnails = slides.length > 1;
+  const [localIndex, setLocalIndex] = useState(initialIndex);
 
-  // Dynamically load the detailed photo when the slide is active
-  const { data: activePhoto } = usePhoto(isOpen && currentSlide?.id ? currentSlide.id : null);
+  useEffect(() => {
+    if (isOpen) {
+      setLocalIndex(initialIndex);
+      setShowInfo(false); // Default to closed when opening
+    }
+  }, [isOpen, initialIndex]);
 
-  const enrichedSlide = useMemo(() => {
-    if (!currentSlide) return null;
-    return {
-      ...currentSlide,
-      title: activePhoto?.name?.zh || activePhoto?.name?.en || activePhoto?.name?.ms || activePhoto?.manualCode || currentSlide.title,
-      description: activePhoto?.description?.zh || activePhoto?.description?.en || activePhoto?.description?.ms || currentSlide.description,
-      price: activePhoto?.price || currentSlide.price,
-      itemCode: activePhoto?.itemCode || currentSlide.itemCode,
-      groupName: activePhoto?.group?.name || currentSlide.groupName,
-      original: activePhoto || currentSlide.original,
-    };
-  }, [currentSlide, activePhoto]);
+  const currentPhoto = photos[localIndex] || photos[0];
 
-  const overlays = useMemo(() => {
-    const slideToUse = enrichedSlide || currentSlide;
-    if (!slideToUse || isEditModalOpen) return null;
-    
-    return (
-      <>
-        <LightboxStyles hasThumbnails={hasThumbnails} />
+  const handleSlide = (index: number) => {
+    setLocalIndex(index);
+    setLightboxIndex(index);
+  };
 
-        {canEdit ? (
-          <AdminLightboxToolbar 
-            currentSlide={slideToUse}
-            settings={settings}
-            onClose={handleClose}
-            onEdit={() => {
-              const original = slideToUse.original as Photo;
-              if (original) {
-                currentEditingPhoto.set(original);
-                filters.updateFilters({ modal: 'edit', photoId: original.id });
-              }
-            }}
-            onAiAnalyze={() => {
-              const original = slideToUse.original as Photo;
-              if (original) {
-                adminActions.handleBatchAiAnalyze([original]);
-              }
-            }}
-            onDelete={async () => {
-              showToast.info(t.deletingPhoto);
-              try {
-                await adminActions.deletePhoto.mutateAsync([slideToUse.id]);
-                showToast.success(t.photoDeleted);
-                handleClose();
-              } catch (e) {
-                ErrorFactory.handleError(e, t.deletePhotoAction);
-              }
-            }}
-          />
-        ) : (
-          <PublicLightboxToolbar 
-            currentSlide={slideToUse}
-            settings={settings}
-            onClose={handleClose}
-          />
-        )}
-
-        <motion.div 
-          variant="slideUp"
-          transition="easeOut"
-          className={`fixed ${hasThumbnails ? 'bottom-[84px]' : 'bottom-8'} left-0 right-0 flex flex-col items-center pointer-events-none px-4 z-[10020]`}
-        >
-          <div className="pointer-events-auto w-full max-w-2xl translate-y-[1px]">
-            <LightboxInfoCard 
-              slide={slideToUse} 
-              onDownload={async () => {
-                try {
-                  const response = await fetch(slideToUse.src);
-                  const blob = await response.blob();
-                  const url = window.URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = `${slideToUse.title || 'photo'}.jpg`;
-                  document.body.appendChild(a);
-                  a.click();
-                  window.URL.revokeObjectURL(url);
-                  document.body.removeChild(a);
-                } catch (e) {
-                  window.open(slideToUse.src, '_blank');
-                }
-              }}
-              onShare={() => {
-                const text = t.whatsappProductQueryShort(slideToUse.title || '', `${window.location.origin}/photo/${slideToUse.id}`);
-                window.open(`https://wa.me/${settings?.contact_whatsapp || ''}?text=${encodeURIComponent(text)}`, '_blank');
+  return (
+    <Modal
+      id="photo-lightbox"
+      open={isOpen}
+      onClose={onClose}
+      size="screen"
+      hidePadding
+      showCloseButton={false}
+      className="bg-black border-none overflow-hidden"
+    >
+      {isOpen && photos.length > 0 ? (
+        <div className="absolute inset-0 bg-black flex flex-col" key={galleryKey}>
+          <style>{`
+            .image-gallery {
+              width: 100%;
+              height: 100%;
+            }
+            .image-gallery-content {
+              height: 100%;
+              display: flex;
+              flex-direction: column;
+            }
+            .image-gallery-slide-wrapper {
+              flex: 1;
+              min-height: 0;
+              position: relative;
+            }
+            .image-gallery-swipe, .image-gallery-slides, .image-gallery-slide {
+              height: 100% !important;
+            }
+            .image-gallery-slide .image-gallery-image {
+              max-height: 100% !important;
+              width: auto !important;
+              height: 100% !important;
+              object-fit: contain !important;
+              margin: 0 auto !important;
+              display: block !important;
+            }
+            .image-gallery-thumbnails-wrapper {
+              background: #000 !important;
+              padding: 12px 0 !important;
+              border-top: 1px solid rgba(255,255,255,0.1);
+              z-index: 30 !important;
+            }
+            .image-gallery-thumbnail {
+              width: 70px !important;
+              height: 48px !important;
+              border: 2px solid transparent !important;
+              border-radius: 8px !important;
+              overflow: hidden !important;
+              transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+              margin: 0 4px !important;
+              background: #111 !important;
+              opacity: 0.5;
+            }
+            .image-gallery-thumbnail.active {
+              border-color: #3b82f6 !important;
+              transform: scale(1.08);
+              box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+              opacity: 1;
+            }
+            .image-gallery-icon {
+                filter: drop-shadow(0 4px 12px rgba(0,0,0,0.9)) !important;
+                transition: transform 0.2s ease, color 0.2s ease !important;
+            }
+            .image-gallery-icon:hover {
+                color: #3b82f6 !important;
+                transform: scale(1.1);
+            }
+            .image-gallery-nav {
+                padding: 20px !important;
+                z-index: 50 !important;
+            }
+            .image-gallery-left-nav, .image-gallery-right-nav {
+                top: 50% !important;
+                transform: translateY(-50%) !important;
+            }
+          `}</style>
+          <div className="flex-1 relative h-full w-full">
+            <ImageGallery
+              items={items}
+              startIndex={initialIndex}
+              onSlide={handleSlide}
+              showThumbnails={true}
+              showFullscreenButton={false}
+              showPlayButton={false}
+              showBullets={false}
+              showNav={true}
+              lazyLoad={true}
+              slideDuration={450}
+              flickThreshold={0.4}
+              thumbnailPosition="bottom"
+              useBrowserFullscreen={false}
+              renderCustomControls={() => (
+                <div className="absolute top-6 right-6 flex gap-3 z-50 pointer-events-auto">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setShowInfo(!showInfo); }}
+                    className={`h-10 px-4 rounded-full text-sm font-bold shadow-2xl transition-all active:scale-95 flex items-center gap-2 border ${showInfo ? 'bg-blue-600 border-blue-500 text-white' : 'bg-white/10 border-white/10 text-white/70 hover:bg-white/20'}`}
+                  >
+                    <span>{showInfo ? '📖' : '📘'}</span>
+                    <span className="hidden sm:inline">{showInfo ? '隐藏资讯' : '查看资讯'}</span>
+                  </button>
+                  {onEdit && currentPhoto && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onEdit(currentPhoto); }}
+                      className="h-10 px-5 bg-white/10 hover:bg-white/20 text-white rounded-full text-sm font-bold shadow-2xl transition-all active:scale-95 flex items-center gap-2 border border-white/10"
+                    >
+                      <span className="text-base">✏️</span>
+                      <span className="hidden sm:inline">编辑</span>
+                    </button>
+                  )}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onClose(); }}
+                    className="h-10 w-10 flex items-center justify-center bg-white/10 hover:bg-white/20 text-white rounded-full shadow-2xl backdrop-blur-xl transition-all active:scale-95 border border-white/10"
+                    aria-label="关闭"
+                  >
+                    <span className="text-xl font-light">✕</span>
+                  </button>
+                </div>
+              )}
+              renderItem={(item) => {
+                const galleryItem = item as GalleryItem;
+                const photoData = galleryItem._data;
+                const descriptionObj = photoData?.description;
+                const displayDescription = descriptionObj ? (typeof descriptionObj === 'string' ? descriptionObj : (descriptionObj[lang] || descriptionObj.zh || '')) : '';
+                const title = galleryItem.originalAlt || 'Photo';
+                
+                return (
+                  <div className="relative w-full h-full flex items-center justify-center bg-black overflow-hidden group">
+                    <img 
+                      src={galleryItem.original} 
+                      alt={title} 
+                      className="max-h-full max-w-full object-contain select-none transition-opacity duration-300"
+                      loading="lazy"
+                      onDragStart={(e) => e.preventDefault()}
+                    />
+                    
+                    {/* Info Panel - Positioned exactly above the thumbnails */}
+                    {showInfo && (
+                      <div className="absolute bottom-6 left-4 right-4 md:left-10 md:right-auto text-white max-w-xl bg-black/50 rounded-3xl p-6 md:p-8 backdrop-blur-3xl border border-white/10 shadow-2xl z-20 animate-in fade-in slide-in-from-bottom-4 duration-300 pointer-events-auto">
+                        <div className="flex justify-between items-center gap-4 mb-4">
+                            <h3 className="text-2xl md:text-3xl font-black tracking-tight truncate pr-4 drop-shadow-lg">{title}</h3>
+                            <div className="flex gap-1 bg-white/5 p-1 rounded-xl shrink-0 border border-white/5">
+                                {(['zh', 'en', 'ms'] as const).map((l) => (
+                                    <button 
+                                      key={l} 
+                                      onClick={(e) => { e.stopPropagation(); setLang(l); }} 
+                                      className={`px-3 py-1 rounded-lg text-[10px] font-black transition-all ${lang === l ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/10'}`}
+                                    >
+                                        {l.toUpperCase()}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        {displayDescription && (
+                          <p className="text-sm md:text-base text-white/70 leading-relaxed mb-6 line-clamp-4 font-medium">{displayDescription}</p>
+                        )}
+                        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-6 border-t border-white/10">
+                          {(photoData?.category || photoData?.categoryNameZh) && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] uppercase tracking-widest text-white/30 font-black">Category</span>
+                              <span className="text-sm text-blue-400 font-black">{photoData.category || photoData.categoryNameZh}</span>
+                            </div>
+                          )}
+                          {photoData?.tags && photoData.tags.length > 0 && (
+                            <div className="flex items-center gap-4">
+                              <span className="text-[10px] uppercase tracking-widest text-white/30 font-black">Tags</span>
+                              <div className="flex flex-wrap gap-2">
+                                {photoData.tags.slice(0, 3).map((tag: any) => (
+                                  <span key={typeof tag === 'string' ? tag : (tag.id || tag.name)} className="px-2.5 py-1 bg-white/5 border border-white/10 rounded-lg text-[11px] text-white/50 font-bold">
+                                    #{typeof tag === 'string' ? tag : tag.name}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
               }}
             />
           </div>
-        </motion.div>
-      </>
-    );
-  }, [enrichedSlide, currentSlide, isEditModalOpen, hasThumbnails, canEdit, settings, adminActions, filters]);
-
-  return (
-    <>
-      <LightboxStyled
-        images={images}
-        open={isOpen}
-        index={currentIndex}
-        onIndexChange={handleView}
-        onOpenChange={(open: boolean) => !open && handleClose()}
-        zoom={true}
-        loop={true}
-        showThumbnails={hasThumbnails}
-        showClose={false}
-        showCaption={false}
-        closeOnOverlayClick={true}
-      />
-      {isOpen && overlays}
-    </>
+        </div>
+      ) : isOpen ? (
+        <div className="absolute inset-0 bg-black flex items-center justify-center text-white flex-col gap-6" key="loading">
+           <div className="animate-spin rounded-full h-12 w-12 border-4 border-white/5 border-t-blue-500"></div>
+           <p className="text-white/40 font-black tracking-widest uppercase text-[10px] animate-pulse">Initializing</p>
+           <button onClick={onClose} className="mt-8 px-6 py-2 bg-white/10 rounded-xl text-xs font-bold transition-all border border-white/10">CANCEL</button>
+        </div>
+      ) : null}
+    </Modal>
   );
-});
+}

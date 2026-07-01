@@ -89,10 +89,10 @@ export function mapSupabasePhoto(item: any, allTags?: Tag[]): Photo {
       manualCode: item.manualCode || item.manual_code || '',
       modelNumber: item.modelNumber || item.model_number || '',
       imageHash,
-      name: item.name as unknown as Photo['name'],
+      name: (item.name && typeof item.name === 'object') ? ((item.name as any).en || (item.name as any).zh || '') : (item.name || ''),
       categoryId: item.categoryId || item.category_id || null,
       manufacturerId: item.manufacturerId || item.manufacturer_id || null,
-      description: item.description as unknown as Photo['description'],
+      description: (item.description && typeof item.description === 'object') ? item.description : { zh: String(item.description || '') },
       imageUrl,
       thumbnailSmUrl: getThumbnailUrl(imageUrl, 200, undefined, imageHash),
       thumbnailMdUrl: getThumbnailUrl(imageUrl, 800, undefined, imageHash),
@@ -166,8 +166,8 @@ export const mapToDb = (updates: Partial<Photo> & Record<string, any>, isCreate 
             }
         }
         
-        if (key === 'name' || key === 'description') {
-            valueToSave = mapTranslationField(valueToSave);
+        if (key === 'name') {
+            valueToSave = String(valueToSave || '');
         }
         
         dbUpdates[key] = valueToSave;
