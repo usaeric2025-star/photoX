@@ -32,3 +32,8 @@
 ## 5. ES Module 導入規範 (後端)
 - 導入時**必須指定具體檔案與 `.js` 結尾** (如 `import { db } from '../_lib/db/index.js'`)。
 - **禁止**導入目錄而不指定 `index.js`，以避免 `ERR_UNSUPPORTED_DIR_IMPORT`。
+
+## 6. 清理與 Knip 規則 (嚴禁刪除入口檔案)
+- **嚴禁刪除關鍵入口**：在使用 `knip` 或進行任何檔案/代碼清理時，**絕對禁止**刪除 `api/index.ts`、`server.ts` 等平台關鍵 Entry Points，即使清理工具誤將其判定為無效或未使用的檔案。
+- **Vercel 簽名規範**：`api/index.ts` 必須採用 Vercel 推薦的 Named 導出（例如：`GET`, `POST`, `PUT`, `DELETE` 等，調用 `app.request(request)`），以防出現 Vercel 函數簽名警告及 504 請求掛起超時。
+- **減少高頻請求**：盡可能避免添加額外的全量 `/count` 單獨高頻輪詢請求，應優先使用 list API 內含的 `total` 或本地/UI 狀態中的計數。

@@ -145,13 +145,4 @@ export const listExtendedHandlers = (app: Hono) => {
     }
   });
 
-  app.get('/count', async (c: Context) => {
-    try {
-        const [res] = await db.select({ count: count() }).from(furnitureItems);
-        return c.json({ success: true, data: Number(res.count) });
-    } catch (error: unknown) {
-        throw errorFactory.wrap(error, 'photos.count', 'QUERY_FAILURE');
-    }
-  });
-
 };

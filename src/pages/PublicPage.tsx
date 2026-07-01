@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { logger } from '@/lib/logger';
 import { useFilters } from '@/features/filters';
-import { useTranslation, usePublicSettings, usePhotoGrid, usePhotosCount } from '@/hooks';
+import { useTranslation, usePublicSettings, usePhotoGrid } from '@/hooks';
 import { PublicHeader } from '@/components/layouts/headers/PublicHeader';
 import { FilterBar } from '@/features/filters';
 import { PublicPhotoGrid } from '@/components/photo/PublicPhotoGrid';
@@ -48,8 +48,6 @@ export default function PublicPage() {
     isFetching,
   } = photoGridData;
 
-  const { count: totalPhotosCount } = usePhotosCount();
-
   const photos = useMemo(() => rawPhotos || [], [rawPhotos]);
   const lightboxItems = useMemo(() => photosToLightboxSlides(photos), [photos]);
 
@@ -71,7 +69,7 @@ export default function PublicPage() {
   if (isError) {
     return (
       <div className="flex flex-col h-full w-full bg-surface-soft">
-        <PublicHeader totalCount={totalPhotosCount} onRefresh={handleRefresh} isRefreshing={false} />
+        <PublicHeader totalCount={totalCount} onRefresh={handleRefresh} isRefreshing={false} />
         <div className="flex-1 flex items-center justify-center p-8">
            <ErrorBoundary fallback={null}>
              <PhotoErrorDisplay error={error} onRetry={() => refetch()} />
@@ -90,7 +88,7 @@ export default function PublicPage() {
       
       {/* 頂部導航組 - 確保垂直堆疊，不擠壓照片 */}
       <PublicHeader 
-        totalCount={totalPhotosCount}
+        totalCount={totalCount}
         onRefresh={handleRefresh}
         isRefreshing={isFetching}
       />
