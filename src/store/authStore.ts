@@ -4,7 +4,7 @@ import { useStore } from '@storve/react';
 import { logger } from '#lib/logger.js';
 import { User } from '#src/types/index.js';
 import { supabase } from '#lib/supabase.js';
-import { storage } from '#src/services/storage.js';
+import { storage } from '#src/services/storage/index.js';
 import { safeAsync } from '#lib/utils/safeAsync.js';
 import { withTimeout } from '#lib/utils.js';
 

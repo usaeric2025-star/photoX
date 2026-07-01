@@ -1,14 +1,14 @@
-import { useAppRouter } from '#lib/router';
+import { useAppRouter } from '#lib/router/index.js';
 import React from 'react';
-import { cn } from '#lib/utils';
-import { Icon } from '#src/components/ui/Icon'; // Keep one or two critical ones as standard imports for P0 performance
-import { useAuth } from '#lib/store';
-import { useUI, usePublicSettings, usePermission, UIStoreState } from '#src/hooks';
-import { NativePopover } from '#src/components/ui/NativePopover';
-import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner';
-import { LanguageSwitcher } from '#src/components/ui/LanguageSwitcher';
-import { translations } from "#src/locales";
-import { storage } from '#src/services/storage';
+import { cn } from '#lib/utils.js';
+import { Icon } from '#src/components/ui/Icon/index.js';
+import { useAuth } from '#lib/store/index.js';
+import { useUI, usePublicSettings, usePermission, UIStoreState } from '#src/hooks/index.js';
+import { NativePopover } from '#src/components/ui/NativePopover/index.js';
+import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner/index.js';
+import { LanguageSwitcher } from '#src/components/ui/LanguageSwitcher/index.js';
+import { translations } from "#src/locales/index.js";
+import { storage } from '#src/services/storage/index.js';
 
 interface PublicHeaderProps {
   totalCount?: number;

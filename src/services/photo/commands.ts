@@ -1,9 +1,9 @@
-import { supabase } from '#lib/supabase';
-import { DB_CONFIG } from '#src/constants/config';
-import { Photo } from '#src/types';
-import { mapToDb, mapSupabasePhoto } from '#src/services/mappers';
-import { api } from '#lib/api';
-import { uploadWithRetry } from '#src/services/storage';
+import { supabase } from '#lib/supabase.js';
+import { DB_CONFIG } from '#src/constants/config.js';
+import { Photo } from '#src/types/index.js';
+import { mapToDb, mapSupabasePhoto } from '#src/services/mappers/index.js';
+import { api } from '#lib/api.js';
+import { uploadWithRetry } from '#src/services/storage/index.js';
 import * as v from 'valibot';
 import { PhotoSchema } from '#shared/apiContractSchema.js';
 

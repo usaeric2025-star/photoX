@@ -1,15 +1,15 @@
-import { generateId } from '#lib/id';
-import { logger } from '#lib/logger';
-import { ErrorFactory } from '#lib/error/ErrorFactory';
-import { Photo } from '#src/types';
-import { uploadToR2 } from './r2Client';
-import { upsertPhotoRecord, syncPhotoTagsInDB } from '#src/services/photo/upload/dbCommands';
-import { mapToDb, normalizeDimensionsBeforeSave } from '#src/services/mappers';
-import { checkDuplicate, DuplicatePhotoError } from '#src/services/photo';
-import { supabase } from '#lib/supabase';
-import { DB_CONFIG } from '#src/constants/config';
-import { generateItemCode } from '#src/services/photo/utils';
-import { storage } from '#src/services/storage';
+import { generateId } from '#lib/id/index.js';
+import { logger } from '#lib/logger.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
+import { Photo } from '#src/types/index.js';
+import { uploadToR2 } from './r2Client.js';
+import { upsertPhotoRecord, syncPhotoTagsInDB } from '#src/services/photo/upload/dbCommands.js';
+import { mapToDb, normalizeDimensionsBeforeSave } from '#src/services/mappers/index.js';
+import { checkDuplicate, DuplicatePhotoError } from '#src/services/photo/index.js';
+import { supabase } from '#lib/supabase.js';
+import { DB_CONFIG } from '#src/constants/config.js';
+import { generateItemCode } from '#src/services/photo/utils/index.js';
+import { storage } from '#src/services/storage/index.js';
 
 export const uploadSinglePhoto = async (
   userId?: string, 

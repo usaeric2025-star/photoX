@@ -1,14 +1,14 @@
 import React, { useState, useCallback } from 'react';
-import { Icon } from '#src/components/ui/Icon';
-import { usePublicSettings } from '#src/hooks';
-import { useUI } from '#lib/store';
-import { Router } from '#src/router';
-import { AppLink } from '#src/components/router/AppLink';
-import { translations } from '#src/locales';
-import { storage } from '#src/services/storage';
-import { useFormSubmit } from '#lib/forms/useFormSubmit';
+import { Icon } from '#src/components/ui/Icon/index.js';
+import { usePublicSettings } from '#src/hooks/index.js';
+import { useUI } from '#lib/store/index.js';
+import { Router } from '#src/router/index.js';
+import { AppLink } from '#src/components/router/AppLink/index.js';
+import { translations } from '#src/locales/index.js';
+import { storage } from '#src/services/storage/index.js';
+import { useFormSubmit } from '#lib/forms/useFormSubmit/index.js';
 import * as v from 'valibot';
-import { Button } from '#src/components/ui/Button';
+import { Button } from '#src/components/ui/Button/index.js';
 
 const StaffLoginSchema = v.object({
   passcode: v.pipe(v.string(), v.minLength(1)),

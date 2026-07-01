@@ -6,7 +6,7 @@ import { useUI, useSettings, useAdminBatchActions, usePermission } from '#src/ho
 import { useAppQuery } from '#lib/query';
 import { api } from '#lib/api';
 import { translations, TranslationType } from "#src/locales";
-import { storage } from '#src/services/storage';
+import { storage } from '#src/services/storage/index.js';
 import { useIsMultiSelect, useSelectionActions } from '#src/features/selection';
 import { AdminHeaderLogo } from './AdminHeaderLogo';
 import { AdminHeaderActions } from './AdminHeaderActions';
