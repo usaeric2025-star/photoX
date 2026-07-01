@@ -35,14 +35,6 @@ export const PhotoCardBase = ({
   const isManagement = useIsManagement();
   const isHidden = !!item.isHidden && isManagement;
 
-  const handleMouseEnter = React.useCallback(() => {
-    // Preload the lightbox preview image (800px) - keep original aspect for lightbox
-    const hash = item.imageHash || (item as any).image_hash;
-    const previewUrl = getThumbnailUrl(item.imageUrl, 800, undefined, hash);
-    const img = new window.Image();
-    img.src = previewUrl;
-  }, [item.imageUrl, item.imageHash]);
-
   return (
     <div
       ref={ref}
@@ -50,7 +42,6 @@ export const PhotoCardBase = ({
       data-selected={isSelected}
       data-multiselect={isMultiSelect}
       onClick={onClick}
-      onMouseEnter={handleMouseEnter}
       style={{
         WebkitTouchCallout: 'none',
         WebkitUserSelect: 'none',

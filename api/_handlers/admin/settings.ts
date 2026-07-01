@@ -5,7 +5,6 @@ import { eq, inArray, sql } from "drizzle-orm";
 import { encrypt } from '../../_lib/encryption.js';
 import { errorResponse } from '../../_lib/response.js';
 import { clearSettingsCache } from '../public_settings.js';
-import { clearAuthCache } from '../public_auth.js';
 
 export const adminSettings = new Hono();
 
@@ -184,7 +183,6 @@ adminSettings.post("/save-settings", async (c) => {
         }
         
         clearSettingsCache();
-        clearAuthCache();
         return c.json({ success: true });
     } catch (e: unknown) {
         return c.json({ success: false, error: (e as Error).message }, 500);
@@ -199,7 +197,6 @@ adminSettings.post("/upsert-logo", async (c) => {
             set: { logoUrl: url }
         });
         clearSettingsCache();
-        clearAuthCache();
         return c.json({ success: true });
     } catch (e: unknown) {
         return c.json({ success: false, error: (e as Error).message }, 500);

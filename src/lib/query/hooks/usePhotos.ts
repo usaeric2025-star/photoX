@@ -77,6 +77,8 @@ export function usePhotos(params: PhotoListFilters = {}) {
       revalidateOnReconnect: false,
       revalidateIfStale: false,
       dedupingInterval: 10000,
+      persistSize: true,
+      keepPreviousData: true,
     }
   );
 

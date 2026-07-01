@@ -63,30 +63,10 @@ export const PhotoCardInfo = ({
   photoName?: string;
   categoryName?: string;
 }) => {
+  // REMOVED group-hover to improve PC grid scrolling performance
   if (hideDetails) return null;
 
-  return (
-    <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
-      <h4 className="text-white font-semibold text-sm sm:text-base truncate mb-0.5">{photoName}</h4>
-      {(photoTags && photoTags.length > 0) || categoryName ? (
-        <div className="flex flex-wrap gap-1.5 mt-1">
-          {categoryName && (
-            <span className="shrink-0 text-[10px] sm:text-[11px] bg-primary/80 backdrop-blur-lg text-white px-2 py-0.5 rounded-full font-medium tracking-tight border border-white/20">
-              {categoryName}
-            </span>
-          )}
-          {photoTags?.map(tag => (
-            <span 
-              key={tag} 
-              className="shrink-0 text-[10px] sm:text-[11px] bg-white/20 backdrop-blur-lg text-white px-2 py-0.5 rounded-full font-medium tracking-tight border border-white/10"
-            >
-              #{tag}
-            </span>
-          ))}
-        </div>
-      ) : null}
-    </div>
-  );
+  return null; 
 };
 
 /**
@@ -94,10 +74,10 @@ export const PhotoCardInfo = ({
  */
 export const PhotoSelectionIndicator = ({ isSelected }: { isSelected: boolean }) => (
   <div className={cn(
-    "absolute top-2 right-2 w-6 h-6 rounded-full border-2 transition-all duration-300 flex items-center justify-center shadow-sm",
+    "absolute top-2 right-2 w-6 h-6 rounded-full border-2 transition-none flex items-center justify-center shadow-sm",
     isSelected 
       ? "bg-primary border-primary scale-110 shadow-md" 
-      : "bg-black/10 border-white/40 opacity-0 group-hover:opacity-100"
+      : "hidden"
   )}>
     {isSelected && <Icon name="check" size={14} className="text-white" />}
   </div>

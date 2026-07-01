@@ -2,7 +2,7 @@ import { useAppRouter } from '@/lib/router';
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { useAuth, activeTaskCountSignal, useSignal } from '@/lib/store';
-import { useUI, useSettings, useAdminBatchActions, usePermission } from '@/hooks';
+import { useUI, useSettings, useAdminBatchActions, usePermission, usePhotosCount } from '@/hooks';
 import { useAppQuery } from '@/lib/query';
 import { api } from '@/lib/api';
 import { translations, TranslationType } from "@/locales";
@@ -31,7 +31,8 @@ export function AdminHeader({ className }: AdminHeaderProps) {
 
   const taskCount = useSignal(activeTaskCountSignal);
 
-  const totalCount = useUI((s) => s.totalCount) ?? 0;
+  const { count: totalPhotosCount } = usePhotosCount();
+  const totalCount = totalPhotosCount || 0;
 
   const cachedSettings = React.useMemo(() => {
     try {

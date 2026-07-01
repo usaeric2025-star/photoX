@@ -145,82 +145,13 @@ export const listExtendedHandlers = (app: Hono) => {
     }
   });
 
-  app.post('/count', async (c: Context) => {
-    let body;
+  app.get('/count', async (c: Context) => {
     try {
-      body = await c.req.json();
-    } catch (e) {
-      body = {};
-    }
-    const check = v.safeParse(PhotoListReqSchema, body);
-    if (!check.success) throw new Error(check.issues[0].message);
-
-    const { categoryId, tagId, searchQuery, isAdminMode = false, isHidden } = check.output;
-    try {
-        const hasTag = tagId !== undefined && tagId !== null && tagId !== '';
-        const hasCat = categoryId !== undefined && categoryId !== null && categoryId !== '';
-        const hasSearch = searchQuery && searchQuery.trim().length > 0;
-
-        // 1. Memory Cache for common global counts (10 minutes)
-        const cacheKey = JSON.stringify({ categoryId, tagId, hasSearch, searchQuery, isAdminMode, isHidden });
-        const now = Date.now();
-        if (countCache.has(cacheKey) && now - (countCacheTime.get(cacheKey) || 0) < 10 * 60 * 1000) {
-            return c.json({ success: true, data: countCache.get(cacheKey) });
-        }
-
-        let builder = db.select({ count: count() }).from(furnitureItems).$dynamic();
-        
-        if (hasTag) {
-            builder = builder.innerJoin(photoTags, eq(furnitureItems.id, photoTags.photoId)) as typeof builder;
-        }
-
-        const whereClauses: (SQL | undefined)[] = [];
-        if (hasTag) whereClauses.push(eq(photoTags.tagId, Number(tagId)));
-        if (hasCat) whereClauses.push(eq(furnitureItems.categoryId, Number(categoryId)));
-
-        if (hasSearch) {
-            const pattern = `%${searchQuery.trim()}%`;
-            const searchSql = or(
-                ilike(sql`${furnitureItems.name}->>'zh'`, pattern),
-                ilike(sql`${furnitureItems.name}->>'en'`, pattern),
-                ilike(sql`${furnitureItems.name}->>'ms'`, pattern),
-                ilike(furnitureItems.manualCode, pattern),
-                ilike(furnitureItems.modelNumber, pattern),
-                ilike(furnitureItems.itemCode, pattern),
-                // Tags Subquery
-                sql`EXISTS (
-                    SELECT 1 FROM ${photoTags} pt
-                    JOIN ${tagsTable} t ON pt.tag_id = t.id
-                    WHERE pt.photo_id = ${furnitureItems.id} AND t.name ILIKE ${pattern}
-                )`,
-                // Category Subquery
-                sql`EXISTS (
-                    SELECT 1 FROM ${categories} c
-                    WHERE c.id = ${furnitureItems.categoryId} AND (
-                        c.name_zh ILIKE ${pattern} OR 
-                        c.name_en ILIKE ${pattern} OR 
-                        c.name_ms ILIKE ${pattern}
-                    )
-                )`
-            );
-            whereClauses.push(searchSql as SQL);
-        }
-
-        if (!isAdminMode) {
-            whereClauses.push(or(eq(furnitureItems.isHidden, false), isNull(furnitureItems.isHidden)));
-        } else if (isHidden !== undefined && isHidden !== null) {
-            whereClauses.push(eq(furnitureItems.isHidden, isHidden));
-        }
-
-        if (whereClauses.length > 0) builder.where(and(...whereClauses.filter((c): c is SQL => !!c)));
-
-        const [res] = await builder;
-        const total = Number(res.count);
-        countCache.set(cacheKey, total);
-        countCacheTime.set(cacheKey, Date.now());
-        return c.json({ success: true, data: total });
+        const [res] = await db.select({ count: count() }).from(furnitureItems);
+        return c.json({ success: true, data: Number(res.count) });
     } catch (error: unknown) {
         throw errorFactory.wrap(error, 'photos.count', 'QUERY_FAILURE');
     }
   });
+
 };
