@@ -215,22 +215,11 @@ export class ErrorFactory {
       stack: (error as Error)?.stack
     });
 
-    // 3. 后端日志入库 (仅在 Node 环境)
+    // 3. 後端日誌入庫 (僅在 Node 環境)
+    // 注意：此處已移除直接導入 DB 的邏輯，避免 Vite 將 server-only 的 postgres 套件捆綁進前端
     if (typeof process !== 'undefined' && process.versions?.node) {
-        import('../../../api/_lib/db/index.js').then(({ db, systemLogs }) => {
-            db.insert(systemLogs).values({
-                message: appError.message,
-                operation: appError.context?.operation as string || 'unknown',
-                level: 'error',
-                resource: appError.context?.resource as string || 'unknown',
-                metadata: {
-                    traceId: appError.traceId,
-                    context: appError.context,
-                    stack: (error as Error)?.stack
-                },
-                createdAt: new Date()
-            }).catch(e => console.error('Failed to log error to DB', e));
-        }).catch(e => console.error('Failed to import DB for logging', e));
+        // 如果需要在 Node 環境（如 server.ts）中使用此 ErrorFactory 記錄日誌，
+        // 建議透過依賴注入或專用的 server-side logger 處理，而非在此處動態導入。
     }
 
     // 2. 本地持久化记录 (供诊断面板读取)

@@ -44,7 +44,6 @@ export default defineConfig(({mode}) => {
       emptyOutDir: true,
       outDir: 'dist',
       rollupOptions: {
-        external: ['postgres'],
         output: {
           manualChunks: (id) => {
             if (id.includes('node_modules')) {

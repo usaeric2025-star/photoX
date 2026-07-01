@@ -41,6 +41,7 @@
     "hono": "^4.12.26",
     "lite-sleek": "^1.1.0",
     "lucide-react-sprite": "^2.2.1",
+    "motion": "^12.42.2",
     "nuqs": "^2.8.9",
     "postgres": "^3.4.9",
     "react": "19.2.7",
