@@ -102,10 +102,19 @@ export const createHandler = (app: Hono) => {
 
         return c.json({ success: true, data });
     } catch (error: unknown) {
+        let errorMessage = 'Unknown database error';
+        if (error instanceof Error) {
+            errorMessage = error.message;
+        } else if (typeof error === 'object' && error !== null && 'detail' in error) {
+            errorMessage = (error as any).detail;
+        } else {
+            errorMessage = String(error);
+        }
+        
         logger.error('[UpsertPhoto] Database error during upsert. Mapped payload fields: ' + Object.entries(mappedPayload).map(([k, v]) => `${k}: ${v === null ? 'null' : typeof v} (${v instanceof Date ? 'Date' : 'not Date'})`).join(', '));
-        logger.error('[UpsertPhoto] Database error during upsert', error);
+        logger.error('[UpsertPhoto] Database error during upsert', { error, errorMessage });
         const { errorFactory } = await import('../../_lib/error/AppError.js');
-        throw errorFactory.wrap(error, 'api./api/photos/upsert', 'DB_ERROR');
+        throw errorFactory.wrap(new Error(errorMessage), 'api./api/photos/upsert', 'DB_ERROR');
     }
   });
 
