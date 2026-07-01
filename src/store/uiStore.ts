@@ -1,10 +1,10 @@
 import { createStore } from '@storve/core';
 import { useStore } from '@storve/react';
 import { signal } from '@storve/core/signals';
-import { STORAGE_KEYS, storage } from '@/lib/storage';
-import { ProductFormData } from '@/types';
-import type { LightboxSlide } from '@/lib/lightbox/types';
-import { Photo } from '@/types/photo';
+import { STORAGE_KEYS, storage } from '#lib/storage';
+import { ProductFormData } from '#src/types';
+import type { LightboxSlide } from '#lib/lightbox/types';
+import { Photo } from '#src/types/photo';
 
 export interface UIStoreState {
   appLang: 'zh' | 'en' | 'ms';

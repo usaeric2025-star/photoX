@@ -1,15 +1,15 @@
 import { useCallback } from 'react';
-import type { Photo } from '@/types';
+import type { Photo } from '#src/types';
 import { useInvalidatePhotos } from './useInvalidatePhotos';
-import { showToast } from '@/lib/ui/toast';
-import { appQuery } from '@/lib/query';
-import { queryKeys } from '@/lib/query/keys';
-import { runBatchAnalysis } from '@/features/ai/orchestration';
-import { createTask } from '@/lib/task-queue';
-import { generateId } from '@/lib/id';
-import { useAuth } from '@/lib/store';
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { useTranslation } from '@/hooks';
+import { showToast } from '#lib/ui/toast';
+import { appQuery } from '#lib/query';
+import { queryKeys } from '#lib/query/keys';
+import { runBatchAnalysis } from '#src/features/ai/orchestration';
+import { createTask } from '#lib/task-queue';
+import { generateId } from '#lib/id';
+import { useAuth } from '#lib/store';
+import { ErrorFactory } from '#lib/error/ErrorFactory';
+import { useTranslation } from '#src/hooks';
 
 export function useAIBatchAnalysis() {
   const { user } = useAuth();

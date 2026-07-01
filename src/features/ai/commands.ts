@@ -1,10 +1,10 @@
-import { api } from '@/lib/api';
-import { Photo } from '@/types';
+import { api } from '#lib/api';
+import { Photo } from '#src/types';
 
-import { supabase } from '@/lib/supabase';
-import { DB_CONFIG } from '@/constants/config';
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { MAX_TAGS_PER_PHOTO } from '@/constants/limits';
+import { supabase } from '#lib/supabase';
+import { DB_CONFIG } from '#src/constants/config';
+import { ErrorFactory } from '#lib/error/ErrorFactory';
+import { MAX_TAGS_PER_PHOTO } from '#src/constants/limits';
 
 /**
  * [V2.0-SERVICE-SINGLETON] AI Photo Analysis Service

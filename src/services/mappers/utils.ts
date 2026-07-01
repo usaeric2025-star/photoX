@@ -1,5 +1,5 @@
-import { getPathFromUrl } from '@/lib/utils';
-import { cleanTranslationPrefixes } from '@/features/ai/safeText';
+import { getPathFromUrl } from '#lib/utils';
+import { cleanTranslationPrefixes } from '#src/features/ai/safeText';
 
 /**
  * 取得圖片 URL（支援縮圖）

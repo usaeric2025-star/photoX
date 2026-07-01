@@ -1,4 +1,4 @@
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { ErrorFactory } from '#lib/error/ErrorFactory';
 import imageCompression from 'browser-image-compression';
 
 export interface CompressOptions {

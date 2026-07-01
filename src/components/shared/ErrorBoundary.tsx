@@ -1,10 +1,10 @@
 import React, { Component, ReactNode } from 'react';
-import { useCopyToClipboard } from '@/hooks';
-import { isAppError } from '@/lib/error/AppError';
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { cn } from '@/lib/utils';
-import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
-import { handleChunkError } from '@/lib/chunkErrorHandler';
+import { useCopyToClipboard } from '#src/hooks';
+import { isAppError } from '#lib/error/AppError';
+import { ErrorFactory } from '#lib/error/ErrorFactory';
+import { cn } from '#lib/utils';
+import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner';
+import { handleChunkError } from '#lib/chunkErrorHandler';
 
 interface Props {
   children: ReactNode;

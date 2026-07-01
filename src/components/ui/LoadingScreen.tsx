@@ -1,6 +1,6 @@
-import { logger } from '@/lib/logger';
+import { logger } from '#lib/logger';
 import React, { useEffect, useRef, lazy, Suspense } from 'react';
-import { Icon } from '@/components/ui/Icon';
+import { Icon } from '#src/components/ui/Icon';
 
 export const LoadingScreen = ({ error, onRetry }: { error?: Error | null, onRetry?: () => void }) => {
   logger.debug('🔄 [LoadingScreen] Rendered');

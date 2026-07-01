@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
-import { useSignal } from '@/lib/store';
-import { initializeApp, appLoadingSignal, appErrorSignal } from '@/store/appStore';
-import { usePublicSettings } from '@/hooks/settings/useSettings';
+import { useSignal } from '#lib/store';
+import { initializeApp, appLoadingSignal, appErrorSignal } from '#src/store/appStore';
+import { usePublicSettings } from '#src/hooks/settings/useSettings';
 
 export function useAppInit() {
   const isAppStoreLoading = useSignal(appLoadingSignal);

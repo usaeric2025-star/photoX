@@ -1,18 +1,18 @@
 import React from 'react';
-import { usePhotoEditSessionContext } from '@/hooks/photo/usePhotoEditSessionContext';
+import { usePhotoEditSessionContext } from '#src/hooks/photo/usePhotoEditSessionContext';
 import { DimensionEditor } from './DimensionEditor';
-import { Dimension } from '@/types';
-import { safeArray } from '@/lib/utils';
-import { useUI, useSignal } from '@/lib/store';
-import { aiAnalysisSignal } from '@/lib/ai/executor';
-import { usePhoto, useFilters } from '@/hooks';
-import { showToast } from '@/lib/ui/toast';
-import { translations } from '@/locales';
+import { Dimension } from '#src/types';
+import { safeArray } from '#lib/utils';
+import { useUI, useSignal } from '#lib/store';
+import { aiAnalysisSignal } from '#lib/ai/executor';
+import { usePhoto, useFilters } from '#src/hooks';
+import { showToast } from '#lib/ui/toast';
+import { translations } from '#src/locales';
 import { usePhotoEditAI } from './usePhotoEditAI';
-import { AIStatusBadge } from '@/components/ui/AIStatusBadge';
-import { AppField } from '@/lib/forms/AppField';
-import { MultilingualInput } from '@/components/shared/MultilingualInput';
-import { copyToClipboard } from '@/utils/clipboard';
+import { AIStatusBadge } from '#src/components/ui/AIStatusBadge';
+import { AppField } from '#lib/forms/AppField';
+import { MultilingualInput } from '#src/components/shared/MultilingualInput';
+import { copyToClipboard } from '#src/utils/clipboard';
 
 export function DetailsTab() {
   const { form } = usePhotoEditSessionContext();

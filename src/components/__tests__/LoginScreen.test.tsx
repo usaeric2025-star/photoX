@@ -1,10 +1,10 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { LoginScreen } from '@/components/admin/LoginScreen';
+import { LoginScreen } from '#src/components/admin/LoginScreen';
 import React from 'react';
 
 // Mock useAppRouter
-vi.mock('@/lib/router', () => ({
+vi.mock('#lib/router', () => ({
   useAppRouter: () => ({
     navigate: {
       home: vi.fn(),
@@ -17,7 +17,7 @@ vi.mock('@/lib/router', () => ({
 }));
 
 // Mock locales
-vi.mock('@/locales', () => ({
+vi.mock('#src/locales', () => ({
   translations: {
     en: {
       loginTitleAdmin: 'Admin',
@@ -45,7 +45,7 @@ vi.mock('@/locales', () => ({
 }));
 
 // Mock ui store
-vi.mock('@/store/useUI', () => ({
+vi.mock('#src/store/useUI', () => ({
   useUI: (cb: (state: { appLang: string }) => unknown) => cb({ appLang: 'en' }),
 }));
 

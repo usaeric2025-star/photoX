@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Image } from '@/components/ui/Image';
+import { Image } from '#src/components/ui/Image';
 
 interface LightboxStageProps {
   currentPhoto: any;

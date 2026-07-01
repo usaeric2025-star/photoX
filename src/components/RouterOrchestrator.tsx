@@ -1,17 +1,17 @@
-import { useAppRoute } from "@/lib/router";
-import { logger } from "@/lib/logger";
+import { useAppRoute } from "#lib/router";
+import { logger } from "#lib/logger";
 import { lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "lite-sleek";
-import PublicPage from "@/pages/PublicPage";
-import AdminPage from "@/pages/AdminPage";
-import { NotFoundPage } from "@/pages/NotFoundPage";
-import { PublicGroupDetailPage } from "@/features/group/PublicGroupDetail";
-import { AdminGroupDetailPage } from "@/features/group/AdminGroupDetail";
+import PublicPage from "#src/pages/PublicPage";
+import AdminPage from "#src/pages/AdminPage";
+import { NotFoundPage } from "#src/pages/NotFoundPage";
+import { PublicGroupDetailPage } from "#src/features/group/PublicGroupDetail";
+import { AdminGroupDetailPage } from "#src/features/group/AdminGroupDetail";
 import { AdminAuthGate } from "./admin/AdminAuthGate";
 import { LoadingScreen } from "./ui/LoadingScreen";
 
-const SettingsPage = lazy(() => import("@/features/settings/SettingsPage").then(m => ({ default: m.SettingsPage })));
-const DiagDashboard = lazy(() => import("@/features/diagnostics/DiagDashboard").then(m => ({ default: m.DiagDashboard })));
+const SettingsPage = lazy(() => import("#src/features/settings/SettingsPage").then(m => ({ default: m.SettingsPage })));
+const DiagDashboard = lazy(() => import("#src/features/diagnostics/DiagDashboard").then(m => ({ default: m.DiagDashboard })));
 
 export function RouterOrchestrator() {
   const route = useAppRoute();

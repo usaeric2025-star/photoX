@@ -1,4 +1,4 @@
-import { useAppRouter } from '@/lib/router';
+import { useAppRouter } from '#lib/router';
 
 /**
  * Unified hook to get the effective admin mode.

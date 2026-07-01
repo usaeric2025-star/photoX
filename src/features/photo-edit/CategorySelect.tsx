@@ -1,10 +1,10 @@
 import { Field } from '@tanstack/react-form';
-import { usePhotoEditSessionContext } from "@/hooks/photo/usePhotoEditSessionContext";
-import { FormSectionHeader } from '@/components/admin/FormShared';
-import { useCategories } from '@/hooks';
-import { useUI } from '@/lib/store';
-import { translations, LanguageCode } from "@/locales";
-import { getTranslatedCategoryName } from "@/services/category/utils";
+import { usePhotoEditSessionContext } from "#src/hooks/photo/usePhotoEditSessionContext";
+import { FormSectionHeader } from '#src/components/admin/FormShared';
+import { useCategories } from '#src/hooks';
+import { useUI } from '#lib/store';
+import { translations, LanguageCode } from "#src/locales";
+import { getTranslatedCategoryName } from "#src/services/category/utils";
 
 /**
  * Encapsulated Category Selector for Photo Edit Drawer

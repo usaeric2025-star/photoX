@@ -1,13 +1,13 @@
 import React from 'react';
-import { usePhotoEditSessionContext } from '@/hooks/photo/usePhotoEditSessionContext';
-import { Icon } from '@/components/ui/Icon';
-import { useDisclosure } from '@/hooks/core/useDisclosure';
-import { useTranslation, useFilters, usePhoto } from '@/hooks';
-import { OptimizedImage } from '@/components/shared/OptimizedImage';
-import { showToast } from '@/lib/ui/toast';
-import { NativeDialog } from '@/components/ui/NativeDialog';
+import { usePhotoEditSessionContext } from '#src/hooks/photo/usePhotoEditSessionContext';
+import { Icon } from '#src/components/ui/Icon';
+import { useDisclosure } from '#src/hooks/core/useDisclosure';
+import { useTranslation, useFilters, usePhoto } from '#src/hooks';
+import { OptimizedImage } from '#src/components/shared/OptimizedImage';
+import { showToast } from '#lib/ui/toast';
+import { NativeDialog } from '#src/components/ui/NativeDialog';
 import { Field } from '@tanstack/react-form';
-import { copyToClipboard } from '@/utils/clipboard';
+import { copyToClipboard } from '#src/utils/clipboard';
 
 export function BasicInfoTab() {
   const { form } = usePhotoEditSessionContext();

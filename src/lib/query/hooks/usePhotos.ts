@@ -1,12 +1,12 @@
 import useSWRInfinite from 'swr/infinite';
 import { useSWRConfig } from 'swr';
-import { queryKeys } from '@/lib/query/keys';
-import { ErrorFactory } from '@/lib/error';
-import { api } from '@/lib/api';
-import { PhotoListItem } from '@/types/api';
+import { queryKeys } from '#lib/query/keys';
+import { ErrorFactory } from '#lib/error';
+import { api } from '#lib/api';
+import { PhotoListItem } from '#src/types/api';
 import * as v from 'valibot';
-import { PhotoListResSchema } from '@/shared/apiContractSchema';
-import { logger } from '@/lib/logger';
+import { PhotoListResSchema } from '#shared/apiContractSchema';
+import { logger } from '#lib/logger';
 
 export type PhotoListFilters = Record<string, unknown>;
 

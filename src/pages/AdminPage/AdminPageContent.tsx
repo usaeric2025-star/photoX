@@ -1,24 +1,24 @@
-import { useAppRouter } from '@/lib/router';
+import { useAppRouter } from '#lib/router';
 import React, { Suspense, lazy } from 'react';
-import { Icon } from '@/components/ui/Icon';
-import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
-import { useAuth } from '@/lib/store';
-const UploadModeDialog = lazy(() => import('@/features/upload/components/UploadModeDialog').then(m => ({ default: m.UploadModeDialog })));
+import { Icon } from '#src/components/ui/Icon';
+import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner';
+import { useAuth } from '#lib/store';
+const UploadModeDialog = lazy(() => import('#src/features/upload/components/UploadModeDialog').then(m => ({ default: m.UploadModeDialog })));
 
-import { usePhotoUpload } from '@/features/upload';
-import { UploadButton } from '@/components/shared/UploadButton';
-import { SelectionToolbar } from '@/features/selection';
-import { useAIBatchAnalysis } from '@/hooks';
-import { useUI, useSignal } from '@/lib/store';
-import { AdminHeader } from '@/components/layouts/headers/AdminHeader';
-import { AdminAuthGate } from '@/components/admin/AdminAuthGate';
-import { AdminContainer } from '@/components/admin/AdminContainer';
-import { useFilters } from '@/features/filters';
-import { FilterBar } from '@/features/filters';
+import { usePhotoUpload } from '#src/features/upload';
+import { UploadButton } from '#src/components/shared/UploadButton';
+import { SelectionToolbar } from '#src/features/selection';
+import { useAIBatchAnalysis } from '#src/hooks';
+import { useUI, useSignal } from '#lib/store';
+import { AdminHeader } from '#src/components/layouts/headers/AdminHeader';
+import { AdminAuthGate } from '#src/components/admin/AdminAuthGate';
+import { AdminContainer } from '#src/components/admin/AdminContainer';
+import { useFilters } from '#src/features/filters';
+import { FilterBar } from '#src/features/filters';
 
-const BatchEditScreen = lazy(() => import('@/features/batch-edit/BatchEditScreen').then(m => ({ default: m.BatchEditScreen })));
-const DiagDashboard = lazy(() => import('@/features/diagnostics/DiagDashboard').then(m => ({ default: m.DiagDashboard })));
-const SettingsPage = lazy(() => import('@/features/settings/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const BatchEditScreen = lazy(() => import('#src/features/batch-edit/BatchEditScreen').then(m => ({ default: m.BatchEditScreen })));
+const DiagDashboard = lazy(() => import('#src/features/diagnostics/DiagDashboard').then(m => ({ default: m.DiagDashboard })));
+const SettingsPage = lazy(() => import('#src/features/settings/SettingsPage').then(m => ({ default: m.SettingsPage })));
 
 export function AdminPageContent() {
   const filters = useFilters({ enableStatus: true, enableBatch: true });

@@ -1,23 +1,23 @@
-import { logger } from '@/lib/logger';
+import { logger } from '#lib/logger';
 import { useCallback } from 'react';
-import { usePhotoEditSessionContext } from "@/hooks/photo/usePhotoEditSessionContext";
-import { ErrorFactory } from '@/lib/error';
-import { appQuery } from '@/lib/query';
-import { executeTask } from '@/lib/task-queue';
-import { useAdminMaintenance, useSettings, useCategories, useTags, useFilters } from '@/hooks';
-import { Tag, Photo } from '@/types';
-import { analyzePhoto } from '@/features/ai/commands';
-import { useUI, useAuth } from '@/lib/store';
-import { aiAnalysisSignal } from '@/lib/ai/executor';
+import { usePhotoEditSessionContext } from "#src/hooks/photo/usePhotoEditSessionContext";
+import { ErrorFactory } from '#lib/error';
+import { appQuery } from '#lib/query';
+import { executeTask } from '#lib/task-queue';
+import { useAdminMaintenance, useSettings, useCategories, useTags, useFilters } from '#src/hooks';
+import { Tag, Photo } from '#src/types';
+import { analyzePhoto } from '#src/features/ai/commands';
+import { useUI, useAuth } from '#lib/store';
+import { aiAnalysisSignal } from '#lib/ai/executor';
 
-import { useFormSubmit } from '@/lib/forms/useFormSubmit';
+import { useFormSubmit } from '#lib/forms/useFormSubmit';
 import * as v from 'valibot';
-import { PhotoEditFormData } from '@/schemas/photoEdit';
+import { PhotoEditFormData } from '#src/schemas/photoEdit';
 
 // Added static imports to fix Ineffective Dynamic Import warnings
-import { resolveTagNamesToIds } from '@/services/tag/completion';
-import { loadTagsFromCloud } from '@/services/tag/queries';
-import { queryKeys } from '@/lib/query/keys';
+import { resolveTagNamesToIds } from '#src/services/tag/completion';
+import { loadTagsFromCloud } from '#src/services/tag/queries';
+import { queryKeys } from '#lib/query/keys';
 
 const AIAnalysisSchema = v.object({
   imageUrl: v.string(),
@@ -241,7 +241,7 @@ export function usePhotoEditAI() {
                   description: (updates.description as { zh: string; en: string; ms: string }) || oldPhoto.description,
                   categoryId: (updates.categoryId as string) || oldPhoto.categoryId,
                   tags: (updates.tags as Tag[]) || oldPhoto.tags,
-                  dimensions: (updates.dimensions as import('@/types').Dimension[]) || oldPhoto.dimensions,
+                  dimensions: (updates.dimensions as import('#src/types').Dimension[]) || oldPhoto.dimensions,
                   isAiDimensions: (updates.isAiDimensions as boolean) ?? oldPhoto.isAiDimensions,
                   itemCode: (updates.itemCode as string) || oldPhoto.itemCode,
                   updatedAt: new Date().toISOString()

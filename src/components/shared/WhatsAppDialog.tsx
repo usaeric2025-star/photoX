@@ -1,9 +1,9 @@
 import * as React from 'react';
-import { NativeDialog } from '@/components/ui/NativeDialog';
-import { useUI, UIStoreState } from '@/lib/store';
-import { usePublicSettings } from '@/hooks/settings/useSettings';
-import { Icon } from '@/components/ui/Icon';
-import { useTranslation } from '@/hooks';
+import { NativeDialog } from '#src/components/ui/NativeDialog';
+import { useUI, UIStoreState } from '#lib/store';
+import { usePublicSettings } from '#src/hooks/settings/useSettings';
+import { Icon } from '#src/components/ui/Icon';
+import { useTranslation } from '#src/hooks';
 
 interface WhatsAppDialogProps {
   open: boolean;

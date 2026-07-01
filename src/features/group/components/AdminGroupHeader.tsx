@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { useAppRouter } from '@/lib/router';
-import { Group } from '@/types';
-import { Icon } from '@/components/ui/Icon';
-import { useIsMultiSelect, useSelectionActions } from '@/features/selection';
-import { copyToClipboard } from '@/utils/clipboard';
-import { useFormSubmit } from '@/lib/forms/useFormSubmit';
-import { FormProvider, useFormField } from '@/lib/forms/useFormField';
+import { useAppRouter } from '#lib/router';
+import { Group } from '#src/types';
+import { Icon } from '#src/components/ui/Icon';
+import { useIsMultiSelect, useSelectionActions } from '#src/features/selection';
+import { copyToClipboard } from '#src/utils/clipboard';
+import { useFormSubmit } from '#lib/forms/useFormSubmit';
+import { FormProvider, useFormField } from '#lib/forms/useFormField';
 import * as v from 'valibot';
-import { Input } from '@/components/shared/Input';
-import { showToast } from '@/lib/ui/toast';
-import { useTranslation } from '@/hooks/core/useTranslation';
+import { Input } from '#src/components/shared/Input';
+import { showToast } from '#lib/ui/toast';
+import { useTranslation } from '#src/hooks/core/useTranslation';
 
 const GroupTitleSchema = v.object({
   title: v.pipe(v.string(), v.minLength(3, 'Title error')),

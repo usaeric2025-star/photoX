@@ -1,12 +1,12 @@
-import { Photo } from '@/types';
-import { updatePhoto as update, BatchActionResult, deleteMany, batchUpdate } from '@/services/photo/commands';
-import { queryKeys } from '@/lib/query/keys';
-import { useAppMutation, appQuery } from '@/lib/query';
-import { syncBatchPhotoTags } from '@/services/tag/commands';
-import { showToast } from '@/lib/ui/toast';
-import { useSelectionActions } from '@/features/selection';
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { useTranslation } from '@/hooks';
+import { Photo } from '#src/types';
+import { updatePhoto as update, BatchActionResult, deleteMany, batchUpdate } from '#src/services/photo/commands';
+import { queryKeys } from '#lib/query/keys';
+import { useAppMutation, appQuery } from '#lib/query';
+import { syncBatchPhotoTags } from '#src/services/tag/commands';
+import { showToast } from '#lib/ui/toast';
+import { useSelectionActions } from '#src/features/selection';
+import { ErrorFactory } from '#lib/error/ErrorFactory';
+import { useTranslation } from '#src/hooks';
 
 /**
  * 照片编辑 Mutation

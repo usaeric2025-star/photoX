@@ -1,16 +1,16 @@
 import React, { useCallback } from 'react';
-import { Icon } from '@/components/ui/Icon';
-import { useDisclosure } from '@/hooks/core/useDisclosure';
-import { useConfirm } from '@/context/ConfirmContext';
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { usePhotoDelete, useTranslation } from '@/hooks';
+import { Icon } from '#src/components/ui/Icon';
+import { useDisclosure } from '#src/hooks/core/useDisclosure';
+import { useConfirm } from '#src/context/ConfirmContext';
+import { ConfirmDialog } from '#src/components/ui/ConfirmDialog';
+import { usePhotoDelete, useTranslation } from '#src/hooks';
 import { BatchEditForm } from './BatchEditForm';
 import { useBatchEdit } from './useBatchEdit';
-import { useSelectedIds, useSelectionActions } from '@/features/selection';
-import { useFormSubmit } from '@/lib/forms/useFormSubmit';
+import { useSelectedIds, useSelectionActions } from '#src/features/selection';
+import { useFormSubmit } from '#lib/forms/useFormSubmit';
 import * as v from 'valibot';
-import { Button } from '@/components/ui/Button';
-import { type ProductFormData } from '@/types';
+import { Button } from '#src/components/ui/Button';
+import { type ProductFormData } from '#src/types';
 
 function BatchDeleteButton({ selectedIds, onSuccess }: { selectedIds: string[], onSuccess: () => void }) {
   const confirm = useConfirm();

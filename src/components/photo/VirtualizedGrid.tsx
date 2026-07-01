@@ -1,8 +1,8 @@
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { VList } from 'virtua';
 
-import { translations } from '@/locales';
-import { useUI } from '@/lib/store';
+import { translations } from '#src/locales';
+import { useUI } from '#lib/store';
 
 interface VirtualizedGridProps<T> {
   items: T[];
@@ -67,8 +67,9 @@ export function VirtualizedGrid<T extends { id: string | number }>({
   };
 
   return (
-    <div className="w-full h-full absolute inset-0" ref={containerRef}>
+    <div className="w-full h-full absolute inset-0">
       <VList 
+        ref={containerRef}
         bufferSize={200}
         onScroll={handleScroll} 
         onScrollEnd={handleScrollEnd}

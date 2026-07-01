@@ -1,10 +1,10 @@
-import { STALE_TIMES } from '@/lib/query/config';
-import { useAppQuery as useQuery } from '@/lib/query';
-import { queryKeys } from '@/lib/query/keys';
-import { Photo } from '@/types';
-import { SupabasePhotoRaw } from '@/types/supabase';
-import { api } from '@/lib/api';
-import { mapSupabasePhoto } from '@/services/mappers/photo';
+import { STALE_TIMES } from '#lib/query/config';
+import { useAppQuery as useQuery } from '#lib/query';
+import { queryKeys } from '#lib/query/keys';
+import { Photo } from '#src/types';
+import { SupabasePhotoRaw } from '#src/types/supabase';
+import { api } from '#lib/api';
+import { mapSupabasePhoto } from '#src/services/mappers/photo';
 
 /**
  * Hook to get detailed photo information.

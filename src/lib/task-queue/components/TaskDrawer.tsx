@@ -1,10 +1,10 @@
 import React from 'react';
-import { useSignal, storeAccessor, isTaskDrawerOpen } from '@/lib/store';
-import { tasksSignal, clearAll, addTask } from '@/services/task/taskService';
-import { cn } from '@/lib/utils';
-import { Icon } from '@/components/ui/Icon';
-import { Progress } from '@/components/shared/Progress';
-import { Task } from '@/lib/task-queue/types';
+import { useSignal, storeAccessor, isTaskDrawerOpen } from '#lib/store';
+import { tasksSignal, clearAll, addTask } from '#src/services/task/taskService';
+import { cn } from '#lib/utils';
+import { Icon } from '#src/components/ui/Icon';
+import { Progress } from '#src/components/shared/Progress';
+import { Task } from '#lib/task-queue/types';
 
 function TaskItem({ task }: { task: Task }) {
   const statusBg = {

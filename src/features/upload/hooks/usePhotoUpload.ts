@@ -1,12 +1,12 @@
-import { useAuth, uiStore } from '@/lib/store';
+import { useAuth, uiStore } from '#lib/store';
 import { useCallback } from 'react';
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { showToast } from '@/lib/ui/toast';
-import { hapticFeedback } from '@/lib/ui/haptics';
-import { createTask } from '@/lib/task-queue';
-import { executeBatchUpload } from '@/lib/task-queue/adapters/upload';
-import { generateId } from '@/lib/id';
-import { logger } from '@/lib/logger';
+import { ErrorFactory } from '#lib/error/ErrorFactory';
+import { showToast } from '#lib/ui/toast';
+import { hapticFeedback } from '#lib/ui/haptics';
+import { createTask } from '#lib/task-queue';
+import { executeBatchUpload } from '#lib/task-queue/adapters/upload';
+import { generateId } from '#lib/id';
+import { logger } from '#lib/logger';
 
 export function usePhotoUpload() {
   const { user } = useAuth();

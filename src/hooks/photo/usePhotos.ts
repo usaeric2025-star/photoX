@@ -1,5 +1,5 @@
-import { usePhotos as useSWRPhotos, PhotoListFilters } from '@/lib/query/hooks/usePhotos';
-import { useFilters } from '@/features/filters/useFilters';
+import { usePhotos as useSWRPhotos, PhotoListFilters } from '#lib/query/hooks/usePhotos';
+import { useFilters } from '#src/features/filters/useFilters';
 
 export type { PhotoListFilters };
 

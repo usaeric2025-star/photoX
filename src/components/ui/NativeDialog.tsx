@@ -1,6 +1,6 @@
 import * as React from "react";
-import { Icon } from '@/components/ui/Icon';
-import { logger } from '@/lib/logger';
+import { Icon } from '#src/components/ui/Icon';
+import { logger } from '#lib/logger';
 
 export interface NativeDialogProps {
   id: string;

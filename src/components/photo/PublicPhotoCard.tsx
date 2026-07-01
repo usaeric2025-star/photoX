@@ -1,11 +1,11 @@
 import React, { memo } from 'react';
-import { Category, Tag } from '@/types';
-import { PhotoListItem } from '@/types/api';
+import { Category, Tag } from '#src/types';
+import { PhotoListItem } from '#src/types/api';
 import { PhotoCardBase } from './PhotoCardBase';
 import { PhotoStatusBadges, PhotoCardInfo } from './PhotoCardParts';
-import { useColumns, usePerformance } from '@/hooks';
-import { usePhotoCard } from '@/hooks/photo/usePhotoCard';
-import { useSignal, gridColumns as gridColumnsSignal } from '@/lib/store';
+import { useColumns, usePerformance } from '#src/hooks';
+import { usePhotoCard } from '#src/hooks/photo/usePhotoCard';
+import { useSignal, gridColumns as gridColumnsSignal } from '#lib/store';
 
 interface PublicPhotoCardProps {
   photo: PhotoListItem;

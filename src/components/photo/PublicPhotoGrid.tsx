@@ -1,9 +1,9 @@
 import React from 'react';
 import { PhotoGridContent } from './PhotoGridContent';
-import { logger } from '@/lib/logger';
+import { logger } from '#lib/logger';
 import { PublicPhotoCard } from './PublicPhotoCard';
 
-import type { PhotoListItem } from '@/types/api';
+import type { PhotoListItem } from '#src/types/api';
 
 interface PublicPhotoGridProps {
   photos: PhotoListItem[];

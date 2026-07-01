@@ -1,9 +1,9 @@
 import React from 'react';
-import { Router } from '@/router';
-import { AppLink } from '@/components/router/AppLink';
-import { Icon } from '@/components/ui/Icon';
-import { useUI } from '@/lib/store';
-import { translations } from '@/locales';
+import { Router } from '#src/router';
+import { AppLink } from '#src/components/router/AppLink';
+import { Icon } from '#src/components/ui/Icon';
+import { useUI } from '#lib/store';
+import { translations } from '#src/locales';
 
 export const NotFoundPage = () => {
   const pathname = typeof window !== 'undefined' ? window.location.pathname : '';

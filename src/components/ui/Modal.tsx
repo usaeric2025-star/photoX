@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Icon } from './Icon';
-import { logger } from '@/lib/logger';
+import { logger } from '#lib/logger';
 
 export interface ModalProps {
   id: string;

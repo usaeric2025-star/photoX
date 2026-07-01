@@ -1,28 +1,28 @@
 import React, { useState } from 'react';
 import { motion } from 'lite-sleek';
-import { useAppRouter } from '@/lib/router';
+import { useAppRouter } from '#lib/router';
 import { useGroupData } from './hooks/useGroupData';
-import { PhotoListItem } from '@/types/api';
-import { Photo, Group, ProductGroup, Dimension, Category } from '@/types';
-import { PhotoGridContent } from '@/components/photo/PhotoGridContent';
-import { AdminPhotoCard } from '@/components/photo/AdminPhotoCard';
-import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
-import { useFilters, useTranslation, useCategories, usePermission } from '@/hooks';
-import { getTranslatedCategoryName } from '@/services/category/utils';
-import { PageHeader } from '@/components/ui/PageHeader';
-import { useSignal, uiStore, useUI, currentEditingPhoto, gridColumns as gridColumnsSignal } from '@/lib/store';
-// import { batchModeSignal } from '@/lib/store'; // 移除此行
-import { useIsMultiSelect, useSelectionActions } from '@/features/selection';
-import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
-import { useAdminBatchActions } from '@/hooks/admin/useAdminBatch';
-import { translations } from '@/locales';
-import { GroupSettingsDialog } from '@/components/groups/GroupSettingsDialog';
-import { useGroupDraft } from '@/components/groups/useGroupDraft';
-import { useGroupMutations } from '@/hooks/group';
+import { PhotoListItem } from '#src/types/api';
+import { Photo, Group, ProductGroup, Dimension, Category } from '#src/types';
+import { PhotoGridContent } from '#src/components/photo/PhotoGridContent';
+import { AdminPhotoCard } from '#src/components/photo/AdminPhotoCard';
+import { useLightbox, photosToLightboxSlides } from '#lib/lightbox';
+import { useFilters, useTranslation, useCategories, usePermission } from '#src/hooks';
+import { getTranslatedCategoryName } from '#src/services/category/utils';
+import { PageHeader } from '#src/components/ui/PageHeader';
+import { useSignal, uiStore, useUI, currentEditingPhoto, gridColumns as gridColumnsSignal } from '#lib/store';
+// import { batchModeSignal } from '#lib/store'; // 移除此行
+import { useIsMultiSelect, useSelectionActions } from '#src/features/selection';
+import { useAdminMaintenance } from '#src/hooks/admin/useAdminMaintenance';
+import { useAdminBatchActions } from '#src/hooks/admin/useAdminBatch';
+import { translations } from '#src/locales';
+import { GroupSettingsDialog } from '#src/components/groups/GroupSettingsDialog';
+import { useGroupDraft } from '#src/components/groups/useGroupDraft';
+import { useGroupMutations } from '#src/hooks/group';
 import { AdminGroupHeader } from './components/AdminGroupHeader';
-import { Button } from '@/components/shared/Button';
-import { useColumns } from '@/hooks';
-import { FilterBar } from '@/features/filters';
+import { Button } from '#src/components/shared/Button';
+import { useColumns } from '#src/hooks';
+import { FilterBar } from '#src/features/filters';
 
 function AdminPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string, index: number, e?: React.MouseEvent) => void }) {
   const isMultiSelect = useIsMultiSelect();

@@ -1,15 +1,15 @@
 import React from 'react';
-import { Button } from "@/components/shared/Button";
-import { Progress } from "@/components/shared/Progress";
-import { Alert, AlertDescription } from "@/components/shared/Alert";
-import { LoadingSpinner } from "@/components/ui/feedback/LoadingSpinner";
+import { Button } from "#src/components/shared/Button";
+import { Progress } from "#src/components/shared/Progress";
+import { Alert, AlertDescription } from "#src/components/shared/Alert";
+import { LoadingSpinner } from "#src/components/ui/feedback/LoadingSpinner";
 import { ISSUE_ACTIONS } from "./issueActions";
-import { Icon } from '@/components/ui/Icon';
-import { useUI, storeAccessor } from '@/lib/store';
-import { useTranslation } from '@/hooks';
+import { Icon } from '#src/components/ui/Icon';
+import { useUI, storeAccessor } from '#lib/store';
+import { useTranslation } from '#src/hooks';
 import { MaintPreviewDialog } from './MaintPreviewDialog';
 import { useMaintenanceExecution } from './useMaintenanceExecution';
-import { useConfirm } from '@/context/ConfirmContext';
+import { useConfirm } from '#src/context/ConfirmContext';
 
 interface MaintenanceToolProps {
   issueId: string;

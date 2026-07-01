@@ -1,8 +1,8 @@
 import React from 'react';
-import { Icon } from '@/components/ui/Icon';
-import { AppSettings } from '@/types';
-import { translations } from '@/locales';
-import { useUI } from '@/lib/store';
+import { Icon } from '#src/components/ui/Icon';
+import { AppSettings } from '#src/types';
+import { translations } from '#src/locales';
+import { useUI } from '#lib/store';
 
 interface SocialLinksSectionProps {
   settings: AppSettings;

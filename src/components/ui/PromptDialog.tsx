@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { NativeDialog } from '@/components/ui/NativeDialog';
-import { Input } from '@/components/shared/Input';
-import { useUI, storeAccessor } from '@/lib/store';
-import { Icon } from '@/components/ui/Icon';
-import { Button } from '@/components/ui/Button';
-import { useFormField } from '@/lib/forms/useFormField';
+import { NativeDialog } from '#src/components/ui/NativeDialog';
+import { Input } from '#src/components/shared/Input';
+import { useUI, storeAccessor } from '#lib/store';
+import { Icon } from '#src/components/ui/Icon';
+import { Button } from '#src/components/ui/Button';
+import { useFormField } from '#lib/forms/useFormField';
 
 interface PromptDialogProps {
   open: boolean;

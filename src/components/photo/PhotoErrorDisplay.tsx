@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { useTranslation } from '@/hooks/core/useTranslation';
-import { classifyPhotoError, getLocalizedError } from '@/lib/error/photoErrors';
-import { showToast } from '@/lib/ui/toast';
-import { Icon, IconName } from '@/components/ui/Icon';
-import { cn } from '@/lib/utils';
-import { copyToClipboard } from '@/utils/clipboard';
+import { useTranslation } from '#src/hooks/core/useTranslation';
+import { classifyPhotoError, getLocalizedError } from '#lib/error/photoErrors';
+import { showToast } from '#lib/ui/toast';
+import { Icon, IconName } from '#src/components/ui/Icon';
+import { cn } from '#lib/utils';
+import { copyToClipboard } from '#src/utils/clipboard';
 import { motion } from 'lite-sleek';
 
 interface PhotoErrorDisplayProps {

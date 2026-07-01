@@ -3,7 +3,7 @@ import { AppNameSection } from './AppNameSection';
 import { LogoSection } from './LogoSection';
 import { WhatsAppSection } from './WhatsAppSection';
 import { SocialLinksSection } from './SocialLinksSection';
-import { AppSettings, Category, Tag, Manufacturer, Photo } from '@/types';
+import { AppSettings, Category, Tag, Manufacturer, Photo } from '#src/types';
 
 interface GeneralSettingsProps {
   settings: AppSettings;

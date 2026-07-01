@@ -1,19 +1,19 @@
-import { usePhotoEditSessionContext } from "@/hooks/photo";
+import { usePhotoEditSessionContext } from "#src/hooks/photo";
 import React from "react";
-import { Icon } from '@/components/ui/Icon';
-import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
-import { PhotoEditFormData } from "@/schemas/photoEdit";
+import { Icon } from '#src/components/ui/Icon';
+import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner';
+import { PhotoEditFormData } from "#src/schemas/photoEdit";
 import {
   usePhoto,
   useRemoveFromGroupMutation,
   useAdminMaintenance,
   usePhotoDelete,
   useFilters,
-} from "@/hooks";
-import { useSignal, useUI } from '@/lib/store';
-import { aiAnalysisSignal } from '@/lib/ai/executor';
-import { showToast } from "@/lib/ui/toast";
-import { ErrorFactory } from "@/lib/error/ErrorFactory";
+} from "#src/hooks";
+import { useSignal, useUI } from '#lib/store';
+import { aiAnalysisSignal } from '#lib/ai/executor';
+import { showToast } from "#lib/ui/toast";
+import { ErrorFactory } from "#lib/error/ErrorFactory";
 import { usePhotoEditAI } from "./usePhotoEditAI";
 
 interface DialogHeaderProps {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { translations } from '@/locales';
+import { translations } from '#src/locales';
 
 interface KeysStatus {
   openrouter: boolean;

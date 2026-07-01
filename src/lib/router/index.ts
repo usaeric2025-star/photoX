@@ -1,6 +1,6 @@
-import { Router, ALL_ROUTES } from '@/router';
+import { Router, ALL_ROUTES } from '#src/router';
 import { useCallback } from 'react';
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { ErrorFactory } from '#lib/error/ErrorFactory';
 
 // ✅ 唯一出口：永遠不傳參數
 export function useAppRoute() {

@@ -1,5 +1,5 @@
-import { Tag } from '@/types';
-import { api } from '@/lib/api';
+import { Tag } from '#src/types';
+import { api } from '#lib/api';
 
 let allTagsPromise: Promise<Tag[]> | null = null;
 let allTagsFetchedAt = 0;

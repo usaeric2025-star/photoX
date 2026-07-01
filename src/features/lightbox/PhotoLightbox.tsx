@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'lite-sleek';
-import { useLightbox } from '@/lib/lightbox';
-import { useFilters } from '@/features/filters';
-import { usePermission } from '@/hooks/core/auth/usePermission';
+import { useLightbox } from '#lib/lightbox';
+import { useFilters } from '#src/features/filters';
+import { usePermission } from '#src/hooks/core/auth/usePermission';
 
 // Components
 import { LightboxStage } from './components/LightboxStage';

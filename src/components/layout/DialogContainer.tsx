@@ -1,6 +1,6 @@
-import { TaskBadge, TaskDrawer } from '@/lib/task-queue/components';
-import { PhotoLightbox } from '@/features/lightbox/PhotoLightbox';
-import { PhotoEditDialog } from '@/features/photo-edit/PhotoEditDialog';
+import { TaskBadge, TaskDrawer } from '#lib/task-queue/components';
+import { PhotoLightbox } from '#src/features/lightbox/PhotoLightbox';
+import { PhotoEditDialog } from '#src/features/photo-edit/PhotoEditDialog';
 import { useEffect, useState } from 'react';
 
 export function DialogContainer() {

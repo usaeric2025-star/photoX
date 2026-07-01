@@ -1,7 +1,7 @@
-import { supabase } from '@/lib/supabase';
+import { supabase } from '#lib/supabase';
 import { STORAGE } from './storageConfig';
-import { api } from '@/lib/api';
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { api } from '#lib/api';
+import { ErrorFactory } from '#lib/error/ErrorFactory';
 import { compressImage, dataURLToArrayBuffer } from './uploadUtils';
 
 export interface UploadResult {

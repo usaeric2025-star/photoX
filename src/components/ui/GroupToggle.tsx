@@ -1,5 +1,5 @@
-import { Icon } from '@/components/ui/Icon';
-import { cn } from '@/lib/utils';
+import { Icon } from '#src/components/ui/Icon';
+import { cn } from '#lib/utils';
 
 interface GroupToggleProps {
   showGroupsCollapsed: boolean;

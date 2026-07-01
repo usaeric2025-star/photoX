@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Icon } from '@/components/ui/Icon';
-import { useSearchTransition } from '@/hooks';
-import { Input } from '@/components/shared/Input';
-import { cn } from '@/lib/utils';
+import { Icon } from '#src/components/ui/Icon';
+import { useSearchTransition } from '#src/hooks';
+import { Input } from '#src/components/shared/Input';
+import { cn } from '#lib/utils';
 import { LoadingSpinner } from './feedback/LoadingSpinner';
 
 interface SearchInputProps {

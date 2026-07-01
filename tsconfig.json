@@ -8,9 +8,10 @@
     "strict": false,
     "noImplicitAny": false,
     "paths": {
-      "@/*": ["./src/*", "./*"],
-      "@shared/*": ["./shared/*"],
-      "@api/*": ["./api/*"]
+      "#shared/*": ["./shared/*"],
+      "#api/*": ["./api/*"],
+      "#src/*": ["./src/*"],
+      "#lib/*": ["./src/lib/*"]
     },
     "rootDir": "./",
     "jsx": "react-jsx",

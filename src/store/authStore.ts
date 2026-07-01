@@ -1,12 +1,12 @@
 import { createStore } from '@storve/core';
 import { signal } from '@storve/core/signals';
 import { useStore } from '@storve/react';
-import { logger } from '@/lib/logger';
-import { User } from '@/types';
-import { supabase } from '@/lib/supabase';
-import { storage } from '@/services/storage';
-import { safeAsync } from '@/lib/utils/safeAsync';
-import { withTimeout } from '@/lib/utils';
+import { logger } from '#lib/logger';
+import { User } from '#src/types';
+import { supabase } from '#lib/supabase';
+import { storage } from '#src/services/storage';
+import { safeAsync } from '#lib/utils/safeAsync';
+import { withTimeout } from '#lib/utils';
 
 export interface AuthState {
   user: User | null;

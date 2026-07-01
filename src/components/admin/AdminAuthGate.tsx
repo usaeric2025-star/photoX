@@ -1,9 +1,9 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { useAuth } from '@/lib/store';
-import { usePublicSettings } from '@/hooks';
-import { useLocalStorage } from '@/hooks/core/useLocalStorage';
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
+import { useAuth } from '#lib/store';
+import { usePublicSettings } from '#src/hooks';
+import { useLocalStorage } from '#src/hooks/core/useLocalStorage';
+import { ErrorFactory } from '#lib/error/ErrorFactory';
+import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner';
 
 const LoginScreen = lazy(() => import('./LoginScreen').then(m => ({ default: m.LoginScreen })));
 

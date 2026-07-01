@@ -1,4 +1,4 @@
-import { PhotoEditFormData } from '@/schemas/photoEdit';
+import { PhotoEditFormData } from '#src/schemas/photoEdit';
 
 export function photoEditAdapter(values: PhotoEditFormData, id: string, extra?: Record<string, unknown>) {
     return {

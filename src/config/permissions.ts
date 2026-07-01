@@ -1,4 +1,4 @@
-import { User } from '@/types';
+import { User } from '#src/types';
 
 /**
  * Capability identifiers for the PhotoX ecosystem.

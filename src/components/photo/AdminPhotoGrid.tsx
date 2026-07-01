@@ -1,10 +1,10 @@
 import React from 'react';
 import { PhotoGridContent } from './PhotoGridContent';
-import { useIsMultiSelect, useSelectionActions } from '@/features/selection';
-import { Category } from '@/types/photo';
-import { PhotoListItem } from '@/types/api';
+import { useIsMultiSelect, useSelectionActions } from '#src/features/selection';
+import { Category } from '#src/types/photo';
+import { PhotoListItem } from '#src/types/api';
 import { AdminPhotoCard } from './AdminPhotoCard';
-import { usePermission } from '@/hooks';
+import { usePermission } from '#src/hooks';
 
 interface AdminPhotoGridProps {
   photos: PhotoListItem[];
@@ -20,6 +20,7 @@ interface AdminPhotoGridProps {
   error?: unknown;
   onRetry?: () => void;
   onPhotoClick?: (id: string, index: number, e?: React.MouseEvent) => void;
+  ref?: React.Ref<any>;
 }
 
 export function AdminPhotoGrid({ 
@@ -34,7 +35,8 @@ export function AdminPhotoGrid({
   onPhotoClick,
   columns,
   error,
-  onRetry
+  onRetry,
+  ref: gridRef
 }: AdminPhotoGridProps) {
   const isMultiSelect = useIsMultiSelect();
   const { toggleSelect } = useSelectionActions();
@@ -82,6 +84,7 @@ export function AdminPhotoGrid({
         error={error}
         onRetry={onRetry}
         renderItem={renderItem}
+        gridRef={gridRef}
       />
     </div>
   );

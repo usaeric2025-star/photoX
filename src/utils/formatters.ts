@@ -1,4 +1,4 @@
-import { formatDate, formatDateTime, formatTime, timeAgo } from '@/lib/date';
+import { formatDate, formatDateTime, formatTime, timeAgo } from '#lib/date';
 
 export const formatters = {
   // Date/Time

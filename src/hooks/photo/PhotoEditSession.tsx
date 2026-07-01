@@ -1,13 +1,13 @@
-import { logger } from '@/lib/logger';
+import { logger } from '#lib/logger';
 import { createContext, useCallback, useContext, useMemo } from 'react';
 import { useForm } from '@tanstack/react-form';
-import { useAppForm } from '@/lib/forms/useAppForm';
+import { useAppForm } from '#lib/forms/useAppForm';
 import { usePhoto } from './usePhoto';
 import { usePhotoEditMutation } from './usePhotoMutations';
-import { PhotoEditSchema, type PhotoEditFormData } from '@/schemas/photoEdit';
-import { photoEditAdapter } from '@/lib/forms';
-import { generateItemCode } from '@/services/photo/utils';
-import { Photo, Tag } from '@/types';
+import { PhotoEditSchema, type PhotoEditFormData } from '#src/schemas/photoEdit';
+import { photoEditAdapter } from '#lib/forms';
+import { generateItemCode } from '#src/services/photo/utils';
+import { Photo, Tag } from '#src/types';
 
 interface PhotoEditSessionContextValue {
   isDirty: boolean;

@@ -1,14 +1,14 @@
 import React from 'react';
-import { Icon } from '@/components/ui/Icon';
-import { useGlobalTasks } from '@/hooks/admin/useGlobalTasks';
-import { UnifiedTask } from '@/types';
-import { Button } from '@/components/shared/Button';
-import { Badge } from '@/components/shared/Badge';
-import { Progress } from '@/components/shared/Progress';
-import { EmptyState } from '@/components/ui/EmptyState';
-import { formatters } from '@/utils/formatters';
+import { Icon } from '#src/components/ui/Icon';
+import { useGlobalTasks } from '#src/hooks/admin/useGlobalTasks';
+import { UnifiedTask } from '#src/types';
+import { Button } from '#src/components/shared/Button';
+import { Badge } from '#src/components/shared/Badge';
+import { Progress } from '#src/components/shared/Progress';
+import { EmptyState } from '#src/components/ui/EmptyState';
+import { formatters } from '#src/utils/formatters';
 
-import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
+import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner';
 
 export function TasksContent() {
   const { tasks = [], isPending, refetch } = useGlobalTasks();

@@ -1,6 +1,6 @@
-import { useGroupDetail } from '@/hooks/group';
-import { usePhotos } from '@/hooks/photo/usePhotos';
-import { useFilters } from '@/features/filters';
+import { useGroupDetail } from '#src/hooks/group';
+import { usePhotos } from '#src/hooks/photo/usePhotos';
+import { useFilters } from '#src/features/filters';
 
 interface UseGroupDataOptions {
   groupId: string | null;

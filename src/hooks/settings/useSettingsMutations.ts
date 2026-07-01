@@ -1,6 +1,6 @@
-import { AppSettings } from '@/types';
-import { useAppMutation, appQuery } from '@/lib/query';
-import { saveSettings, uploadLogo } from '@/services/settings/commands';
+import { AppSettings } from '#src/types';
+import { useAppMutation, appQuery } from '#lib/query';
+import { saveSettings, uploadLogo } from '#src/services/settings/commands';
 
 const SETTINGS_KEY = ['settings', 'public'];
 

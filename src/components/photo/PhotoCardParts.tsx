@@ -1,9 +1,9 @@
 import React from 'react';
-import { Icon } from '@/components/ui/Icon';
-import { PhotoListItem } from '@/types/api';
-import { cn } from '@/lib/utils';
-import { useTranslation, useIsManagement } from '@/hooks';
-import { getDisplayGroupCode } from '@/services/photo/utils';
+import { Icon } from '#src/components/ui/Icon';
+import { PhotoListItem } from '#src/types/api';
+import { cn } from '#lib/utils';
+import { useTranslation, useIsManagement } from '#src/hooks';
+import { getDisplayGroupCode } from '#src/services/photo/utils';
 
 /**
  * Renders badges for photo status (pinned, hidden, group info)

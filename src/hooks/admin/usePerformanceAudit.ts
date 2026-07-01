@@ -1,4 +1,4 @@
-import { perfAudit, PerfIncident } from '@/lib/perfAudit';
+import { perfAudit, PerfIncident } from '#lib/perfAudit';
 
 interface PerformanceIssue {
   id: string;

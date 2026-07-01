@@ -1,4 +1,4 @@
-import { ErrorCode } from '@/shared/errorCodes';
+import { ErrorCode } from '#shared/errorCodes';
 
 export enum PhotoErrorType {
   NETWORK = 'network',

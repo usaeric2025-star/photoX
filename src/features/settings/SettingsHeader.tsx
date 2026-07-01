@@ -1,6 +1,6 @@
-import { Icon } from '@/components/ui/Icon';
-import { Button } from '@/components/ui/Button';
-import { translations } from '@/locales';
+import { Icon } from '#src/components/ui/Icon';
+import { Button } from '#src/components/ui/Button';
+import { translations } from '#src/locales';
 
 interface SettingsHeaderProps {
   appLang: string;

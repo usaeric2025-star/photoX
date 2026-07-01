@@ -1,5 +1,5 @@
-import { Icon } from '@/components/ui/Icon';
-import { Button } from '@/components/shared/Button';
+import { Icon } from '#src/components/ui/Icon';
+import { Button } from '#src/components/shared/Button';
 
 interface PageHeaderProps {
   title: string;

@@ -1,4 +1,4 @@
-import { ErrorCode } from '@/shared/errorCodes';
+import { ErrorCode } from '#shared/errorCodes';
 
 // ===== 1. 错误严重等级 =====
 export enum ErrorSeverity {

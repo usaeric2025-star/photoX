@@ -1,6 +1,6 @@
-import { useColumns, useTranslation } from '@/hooks';
-import { Icon } from '@/components/ui/Icon';
-import { cn } from '@/lib/utils';
+import { useColumns, useTranslation } from '#src/hooks';
+import { Icon } from '#src/components/ui/Icon';
+import { cn } from '#lib/utils';
 
 export function ColumnsToggle() {
   const { columns, setColumns } = useColumns();

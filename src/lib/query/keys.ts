@@ -1,4 +1,4 @@
-import type { FilterOptions, GroupFilterOptions } from '@/types/api';
+import type { FilterOptions, GroupFilterOptions } from '#src/types/api';
 
 /**
  * 稳定化排序对象，确保 Query Key 顺通一致

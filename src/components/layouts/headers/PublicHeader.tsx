@@ -1,14 +1,14 @@
-import { useAppRouter } from '@/lib/router';
+import { useAppRouter } from '#lib/router';
 import React from 'react';
-import { cn } from '@/lib/utils';
-import { Icon } from '@/components/ui/Icon'; // Keep one or two critical ones as standard imports for P0 performance
-import { useAuth } from '@/lib/store';
-import { useUI, usePublicSettings, usePermission, UIStoreState } from '@/hooks';
-import { NativePopover } from '@/components/ui/NativePopover';
-import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
-import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
-import { translations } from "@/locales";
-import { storage } from '@/services/storage';
+import { cn } from '#lib/utils';
+import { Icon } from '#src/components/ui/Icon'; // Keep one or two critical ones as standard imports for P0 performance
+import { useAuth } from '#lib/store';
+import { useUI, usePublicSettings, usePermission, UIStoreState } from '#src/hooks';
+import { NativePopover } from '#src/components/ui/NativePopover';
+import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner';
+import { LanguageSwitcher } from '#src/components/ui/LanguageSwitcher';
+import { translations } from "#src/locales";
+import { storage } from '#src/services/storage';
 
 interface PublicHeaderProps {
   totalCount?: number;

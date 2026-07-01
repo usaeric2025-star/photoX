@@ -1,6 +1,6 @@
 import React from 'react';
-import { NativeDialog } from "@/components/ui/NativeDialog";
-import { Button } from "@/components/shared/Button";
+import { NativeDialog } from "#src/components/ui/NativeDialog";
+import { Button } from "#src/components/shared/Button";
 import { PreviewResult } from "./issueActions";
 
 interface MaintPreviewDialogProps {

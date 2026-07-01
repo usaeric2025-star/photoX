@@ -1,4 +1,4 @@
-import { api } from '@/lib/api';
+import { api } from '#lib/api';
 
 export async function checkHashExists(hash: string): Promise<boolean> {
   try {

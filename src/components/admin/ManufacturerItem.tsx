@@ -1,13 +1,13 @@
 import React, { useState, useRef } from "react";
-import { Icon } from '@/components/ui/Icon';
-import { useDisclosure } from '@/hooks/core/useDisclosure';
-import { useClickOutside } from '@/hooks/core/useClickOutside';
-import { PromptDialog } from "@/components/ui/PromptDialog";
-import { useLongPress } from "@/hooks/core/useLongPress";
-import { normalizeManufacturerName } from "@/lib/utils";
-import { useConfirm } from '@/context/ConfirmContext';
+import { Icon } from '#src/components/ui/Icon';
+import { useDisclosure } from '#src/hooks/core/useDisclosure';
+import { useClickOutside } from '#src/hooks/core/useClickOutside';
+import { PromptDialog } from "#src/components/ui/PromptDialog";
+import { useLongPress } from "#src/hooks/core/useLongPress";
+import { normalizeManufacturerName } from "#lib/utils";
+import { useConfirm } from '#src/context/ConfirmContext';
 
-import { Manufacturer } from "@/types";
+import { Manufacturer } from "#src/types";
 
 interface ManufacturerProps {
   manufacturer: Manufacturer;
@@ -15,7 +15,7 @@ interface ManufacturerProps {
   onDelete: (id: string | number) => void;
 }
 
-import { NativePopover } from "@/components/ui/NativePopover";
+import { NativePopover } from "#src/components/ui/NativePopover";
 
 export const ManufacturerItem = ({
   manufacturer,

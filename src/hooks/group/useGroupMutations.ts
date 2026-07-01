@@ -1,4 +1,4 @@
-import { useAppMutation, appQuery } from '@/lib/query';
+import { useAppMutation, appQuery } from '#lib/query';
 import { 
   createGroup, 
   updateGroup, 
@@ -7,9 +7,9 @@ import {
   groupPhotos, 
   movePhotosToGroup,
   ungroupPhotos
-} from '@/services/group/commands';
-import { queryKeys } from '@/lib/query/keys';
-import { ProductGroup } from '@/types';
+} from '#src/services/group/commands';
+import { queryKeys } from '#lib/query/keys';
+import { ProductGroup } from '#src/types';
 
 // Helper to invalidate photos cache robustly
 const invalidatePhotos = () => {

@@ -1,8 +1,8 @@
-import { useSelectionActions } from '@/features/selection/useSelection';
-import { selectionStore } from '@/services/selection/selectionService';
-import { useUI, UIStoreState, useStore } from '@/lib/store';
-import { useAppRouter } from '@/lib/router';
-import { usePhotoBatchEdit, usePhotoDelete } from '@/hooks/photo/usePhotoMutations';
+import { useSelectionActions } from '#src/features/selection/useSelection';
+import { selectionStore } from '#src/services/selection/selectionService';
+import { useUI, UIStoreState, useStore } from '#lib/store';
+import { useAppRouter } from '#lib/router';
+import { usePhotoBatchEdit, usePhotoDelete } from '#src/hooks/photo/usePhotoMutations';
 
 export function useBatchEdit() {
   const batchEditingIds = useStore(selectionStore, s => s.batchEditingIds);

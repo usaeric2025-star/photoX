@@ -1,5 +1,5 @@
 import { toast } from 'sonner';
-import { copyToClipboard } from '@/utils/clipboard';
+import { copyToClipboard } from '#src/utils/clipboard';
 
 export interface ExternalToast {
   duration?: number;

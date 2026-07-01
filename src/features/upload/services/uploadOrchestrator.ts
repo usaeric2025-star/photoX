@@ -1,15 +1,15 @@
-import { generateId } from '@/lib/id';
-import { logger } from '@/lib/logger';
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { Photo } from '@/types';
+import { generateId } from '#lib/id';
+import { logger } from '#lib/logger';
+import { ErrorFactory } from '#lib/error/ErrorFactory';
+import { Photo } from '#src/types';
 import { uploadToR2 } from './r2Client';
-import { upsertPhotoRecord, syncPhotoTagsInDB } from '@/services/photo/upload/dbCommands';
-import { mapToDb, normalizeDimensionsBeforeSave } from '@/services/mappers';
-import { checkDuplicate, DuplicatePhotoError } from '@/services/photo';
-import { supabase } from '@/lib/supabase';
-import { DB_CONFIG } from '@/constants/config';
-import { generateItemCode } from '@/services/photo/utils';
-import { storage } from '@/services/storage';
+import { upsertPhotoRecord, syncPhotoTagsInDB } from '#src/services/photo/upload/dbCommands';
+import { mapToDb, normalizeDimensionsBeforeSave } from '#src/services/mappers';
+import { checkDuplicate, DuplicatePhotoError } from '#src/services/photo';
+import { supabase } from '#lib/supabase';
+import { DB_CONFIG } from '#src/constants/config';
+import { generateItemCode } from '#src/services/photo/utils';
+import { storage } from '#src/services/storage';
 
 export const uploadSinglePhoto = async (
   userId?: string, 

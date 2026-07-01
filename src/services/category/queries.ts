@@ -1,6 +1,6 @@
-import { Category } from '@/types';
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { api } from '@/lib/api';
+import { Category } from '#src/types';
+import { ErrorFactory } from '#lib/error/ErrorFactory';
+import { api } from '#lib/api';
 
 const TABLE_NAME = 'categories';
 

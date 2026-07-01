@@ -1,8 +1,8 @@
-import { Icon } from '@/components/ui/Icon';
-import { Button } from '@/components/ui/Button';
-import { Dimension, TranslationType } from '@/types';
-import { safeArray } from '@/lib/utils';
-import { showToast } from '@/lib/ui/toast';
+import { Icon } from '#src/components/ui/Icon';
+import { Button } from '#src/components/ui/Button';
+import { Dimension, TranslationType } from '#src/types';
+import { safeArray } from '#lib/utils';
+import { showToast } from '#lib/ui/toast';
 
 interface DimensionEditorProps {
   dimensions: Dimension[];

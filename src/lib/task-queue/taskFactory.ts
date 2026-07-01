@@ -1,9 +1,9 @@
 import { scheduler } from './scheduler';
-import { generateId } from '@/lib/id';
-import { logger } from '@/lib/logger';
-import { ErrorFactory } from '@/lib/error';
-import { isTaskDrawerOpen } from '@/lib/store';
-import { getErrorMessage } from '@/lib/error/errorMessages';
+import { generateId } from '#lib/id';
+import { logger } from '#lib/logger';
+import { ErrorFactory } from '#lib/error';
+import { isTaskDrawerOpen } from '#lib/store';
+import { getErrorMessage } from '#lib/error/errorMessages';
 import type { Task, TaskType, TaskState } from './types';
 
 export interface TaskConfig<T = unknown> {

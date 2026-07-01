@@ -1,6 +1,6 @@
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { ErrorFactory } from '#lib/error/ErrorFactory';
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { storage } from '@/services/storage';
+import { storage } from '#src/services/storage';
 
 interface UseLocalStorageOptions<T> {
   key: string;

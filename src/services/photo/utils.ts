@@ -1,16 +1,16 @@
-import { STALE_TIMES } from '@/lib/query/config';
-import { DB_CONFIG } from '@/constants/config';
-import { showToast } from '@/lib/ui/toast';
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { api } from '@/lib/api';
-import { supabase } from '@/lib/supabase';
-import { Tag, Photo, Dimension } from '@/types';
-import { safeArray } from '@/lib/utils';
-import { translations, TranslationType } from '@/locales';
-import { getSafeText } from '@/features/ai/safeText';
-import { getTranslatedCategoryName } from '@/services/category/utils';
-import { Category } from '@/types';
-import { generateId } from '@/lib/id';
+import { STALE_TIMES } from '#lib/query/config';
+import { DB_CONFIG } from '#src/constants/config';
+import { showToast } from '#lib/ui/toast';
+import { ErrorFactory } from '#lib/error/ErrorFactory';
+import { api } from '#lib/api';
+import { supabase } from '#lib/supabase';
+import { Tag, Photo, Dimension } from '#src/types';
+import { safeArray } from '#lib/utils';
+import { translations, TranslationType } from '#src/locales';
+import { getSafeText } from '#src/features/ai/safeText';
+import { getTranslatedCategoryName } from '#src/services/category/utils';
+import { Category } from '#src/types';
+import { generateId } from '#lib/id';
 
 const NEVER_ALLOWED = ['isAnalyzing', 'exif_data', 'is_hidden', 'tempId', 'isSelected', 'isDragging', 'rawResponse'];
 

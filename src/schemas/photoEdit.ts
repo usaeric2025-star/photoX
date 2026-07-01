@@ -1,5 +1,5 @@
 import * as v from 'valibot';
-import { TranslationType } from '@/locales';
+import { TranslationType } from '#src/locales';
 
 const TranslationSchema = v.object({
   zh: v.string(),

@@ -1,7 +1,7 @@
-import { Tag } from '@/types';
-import { addTagToDB, updateTagInDB, deleteTagFromDB } from '@/services/tag/commands';
-import { queryKeys } from '@/lib/query/keys';
-import { useAppMutation, appQuery } from '@/lib/query';
+import { Tag } from '#src/types';
+import { addTagToDB, updateTagInDB, deleteTagFromDB } from '#src/services/tag/commands';
+import { queryKeys } from '#lib/query/keys';
+import { useAppMutation, appQuery } from '#lib/query';
 
 // 1. 创建标签
 export const useTagCreate = () => useAppMutation({

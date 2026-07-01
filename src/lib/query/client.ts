@@ -1,5 +1,5 @@
 import { SWRConfig } from 'swr';
-import { ErrorFactory } from '@/lib/error';
+import { ErrorFactory } from '#lib/error';
 
 export const swrConfig = {
   // ✅ 快取時間 (1 分鐘)

@@ -43,9 +43,13 @@ export default defineConfig(({mode}) => {
     build: {
       emptyOutDir: true,
       outDir: 'dist',
+      chunkSizeWarningLimit: 1000,
       rollupOptions: {
         output: {
           manualChunks: (id) => {
+            if (id.includes('postgres') || id.includes('pg')) {
+              return 'empty';
+            }
             if (id.includes('node_modules')) {
               if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler') || id.includes('react-router')) {
                 return 'vendor-react';
@@ -56,7 +60,7 @@ export default defineConfig(({mode}) => {
               if (id.includes('@supabase/')) {
                 return 'vendor-supabase';
               }
-              if (id.includes('@tanstack/react-form') || id.includes('@tanstack/valibot-form-adapter') || id.includes('valibot')) {
+              if (id.includes('@tanstack/react-form') || id.includes('@tanstack/valibot-form-adapter') || id.includes('valibot') || id.includes('drizzle')) {
                 return 'vendor-form';
               }
               if (
@@ -85,9 +89,7 @@ export default defineConfig(({mode}) => {
     },
     resolve: {
       alias: [
-        { find: /^@\/shared\/(.*)/, replacement: fileURLToPath(new URL('./shared/$1', import.meta.url)) },
-        { find: /^@\/(.*)/, replacement: fileURLToPath(new URL('./src/$1', import.meta.url)) },
-        { find: '@shared', replacement: fileURLToPath(new URL('./shared', import.meta.url)) },
+        { find: 'postgres', replacement: fileURLToPath(new URL('./empty-module.js', import.meta.url)) },
       ],
     },
     server: {

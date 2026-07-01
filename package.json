@@ -6,6 +6,12 @@
   "engines": {
     "node": ">=22.0.0"
   },
+  "imports": {
+    "#shared/*": "./shared/*",
+    "#api/*": "./api/*",
+    "#src/*": "./src/*",
+    "#lib/*": "./src/lib/*"
+  },
   "scripts": {
     "icons:generate": "npx tsx scripts/generate-icons-wrapper.js",
     "dev": "npm run icons:generate && tsx server.ts",

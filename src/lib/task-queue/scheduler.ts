@@ -1,8 +1,8 @@
 import { Task } from './types';
 import { taskTable } from './integrations/supabase';
-import { showToast } from '@/lib/ui/toast';
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { tasksSignal, addTask, updateTask, updateTaskState, removeTask, setGlobalTaskStatus, setGlobalTaskProgress } from '@/services/task/taskService';
+import { showToast } from '#lib/ui/toast';
+import { ErrorFactory } from '#lib/error/ErrorFactory';
+import { tasksSignal, addTask, updateTask, updateTaskState, removeTask, setGlobalTaskStatus, setGlobalTaskProgress } from '#src/services/task/taskService';
 
 // ... (rest of code)
 

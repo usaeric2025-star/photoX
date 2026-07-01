@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Tabs } from "@/components/shared/Tabs";
-import { cn } from "@/lib/utils";
+import { Tabs } from "#src/components/shared/Tabs";
+import { cn } from "#lib/utils";
 import { BasicInfoTab } from "./BasicInfoTab";
 import { OrgTab } from "./OrgTab";
 import { DetailsTab } from "./DetailsTab";
 import { AISourceTab } from "./AISourceTab";
-import { useUI } from '@/lib/store';
-import { usePhotoEditSessionContext } from "@/hooks/photo/usePhotoEditSessionContext";
+import { useUI } from '#lib/store';
+import { usePhotoEditSessionContext } from "#src/hooks/photo/usePhotoEditSessionContext";
 
 export function PhotoEditTabs() {
   const { photoId } = usePhotoEditSessionContext();

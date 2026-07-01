@@ -1,17 +1,17 @@
 import React, { useMemo, useState, useRef } from 'react';
-import { useFilters } from '@/features/filters';
-import { useTranslation, usePublicSettings, usePhotoGrid } from '@/hooks';
-import { PublicHeader } from '@/components/layouts/headers/PublicHeader';
-import { FilterBar } from '@/features/filters';
-import { PublicPhotoGrid } from '@/components/photo/PublicPhotoGrid';
-import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
-import { useColumns } from '@/hooks';
-import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
-import { useUI, type UIStoreState } from '@/lib/store';
-import { WhatsAppDialog } from '@/components/shared/WhatsAppDialog';
-import { PhotoErrorDisplay } from '@/components/photo/PhotoErrorDisplay';
-import { Icon } from '@/components/ui/Icon';
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { useFilters } from '#src/features/filters';
+import { useTranslation, usePublicSettings, usePhotoGrid } from '#src/hooks';
+import { PublicHeader } from '#src/components/layouts/headers/PublicHeader';
+import { FilterBar } from '#src/features/filters';
+import { PublicPhotoGrid } from '#src/components/photo/PublicPhotoGrid';
+import { ErrorBoundary } from '#src/components/shared/ErrorBoundary';
+import { useColumns } from '#src/hooks';
+import { useLightbox, photosToLightboxSlides } from '#lib/lightbox';
+import { useUI, type UIStoreState } from '#lib/store';
+import { WhatsAppDialog } from '#src/components/shared/WhatsAppDialog';
+import { PhotoErrorDisplay } from '#src/components/photo/PhotoErrorDisplay';
+import { Icon } from '#src/components/ui/Icon';
+import { ErrorFactory } from '#lib/error/ErrorFactory';
 
 export default function PublicPage() {
   const { 
@@ -24,7 +24,6 @@ export default function PublicPage() {
   
   const { columns } = useColumns();
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const gridRef = useRef<any | null>(null);
   
   const isAggregated = showGroupsCollapsed;
   
@@ -43,6 +42,7 @@ export default function PublicPage() {
     isError,
     error,
     isFetching,
+    ref: gridRef,
   } = photoGridData;
 
   const photos = useMemo(() => rawPhotos || [], [rawPhotos]);

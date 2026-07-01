@@ -1,8 +1,8 @@
-import { useCategories } from '@/hooks/category';
+import { useCategories } from '#src/hooks/category';
 import { useFilterState } from './useFilters';
-import { useTranslation } from '@/hooks';
-import { getTranslatedCategoryName } from '@/services/category/utils';
-import { logger } from '@/lib/logger';
+import { useTranslation } from '#src/hooks';
+import { getTranslatedCategoryName } from '#src/services/category/utils';
+import { logger } from '#lib/logger';
 import type { FilterState } from './types';
 
 interface CategoryButtonProps {

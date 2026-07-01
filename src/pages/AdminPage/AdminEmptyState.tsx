@@ -1,5 +1,5 @@
 import React from 'react';
-import { Icon } from '@/components/ui/Icon';
+import { Icon } from '#src/components/ui/Icon';
 
 interface AdminEmptyStateProps {
   labels: {

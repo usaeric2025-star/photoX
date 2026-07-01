@@ -1,8 +1,8 @@
-import { Tag } from '@/types';
-import { useAppQuery } from '@/lib/query';
-import { loadTagsFromCloud } from '@/services/tag/queries';
-import { queryKeys } from '@/lib/query/keys';
-import { STALE_TIMES } from '@/lib/query/config';
+import { Tag } from '#src/types';
+import { useAppQuery } from '#lib/query';
+import { loadTagsFromCloud } from '#src/services/tag/queries';
+import { queryKeys } from '#lib/query/keys';
+import { STALE_TIMES } from '#lib/query/config';
 
 export function useTags(options?: { enabled?: boolean }) {
   const isEnabled = options?.enabled ?? true;

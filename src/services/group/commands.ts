@@ -1,13 +1,13 @@
-import { generateId } from '@/lib/id';
-import { supabase } from '@/lib/supabase';
-import { DB_CONFIG } from '@/constants/config';
-import { ProductGroup } from '@/types';
+import { generateId } from '#lib/id';
+import { supabase } from '#lib/supabase';
+import { DB_CONFIG } from '#src/constants/config';
+import { ProductGroup } from '#src/types';
 import * as v from 'valibot';
-import { GroupReqSchema } from '@/shared/apiContractSchema';
-import { cleanTranslationPrefixes } from '@/features/ai/safeText';
-import { ungroupPhotos, syncGroupMemberCount } from '@/services/photo/utils';
-import { api } from '@/lib/api';
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { GroupReqSchema } from '#shared/apiContractSchema';
+import { cleanTranslationPrefixes } from '#src/features/ai/safeText';
+import { ungroupPhotos, syncGroupMemberCount } from '#src/services/photo/utils';
+import { api } from '#lib/api';
+import { ErrorFactory } from '#lib/error/ErrorFactory';
 
 const TABLE_NAME = 'groups';
 
@@ -96,7 +96,7 @@ export async function deleteGroup(id: string): Promise<void> {
 // Action aliases for legacy or specific naming compliance
 // Removed aliases
 
-export { ungroupPhotos,  } from '@/services/photo/utils';
+export { ungroupPhotos,  } from '#src/services/photo/utils';
 
 export const groupPhotos = async (
   photoIds: string[], 

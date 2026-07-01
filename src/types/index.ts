@@ -15,7 +15,7 @@ export * from './photo';
 export * from './api';
 export * from './tasks';
 
-import { translations } from '@/locales';
+import { translations } from '#src/locales';
 export type TranslationType = typeof translations['en'];
 
 // ... rest of the file

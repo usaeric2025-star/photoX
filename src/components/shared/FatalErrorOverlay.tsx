@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
-import { useUI } from '@/lib/store';
-import { useCopyToClipboard } from '@/hooks';
-import { isAppError } from '@/lib/error/AppError';
+import { useUI } from '#lib/store';
+import { useCopyToClipboard } from '#src/hooks';
+import { isAppError } from '#lib/error/AppError';
 
 export const FatalErrorOverlay = () => {
   const fatalError = useUI((s) => s.fatalError);

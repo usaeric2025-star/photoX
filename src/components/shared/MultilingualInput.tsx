@@ -1,5 +1,5 @@
 import { Field } from "@tanstack/react-form";
-import { cn } from '@/lib/utils';
+import { cn } from '#lib/utils';
 // ... rest of imports
 interface MultilingualInputProps {
   form: unknown;

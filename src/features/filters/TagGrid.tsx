@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Icon } from '@/components/ui/Icon';
-import { useTags } from '@/hooks/tag';
+import { Icon } from '#src/components/ui/Icon';
+import { useTags } from '#src/hooks/tag';
 import { useFilterState } from './useFilters';
-import { usePublicSettings } from '@/hooks/settings/useSettings';
-import { useTagSorting } from '@/hooks/photo';
-import { useUI } from '@/lib/store';
-import { translations } from '@/locales';
+import { usePublicSettings } from '#src/hooks/settings/useSettings';
+import { useTagSorting } from '#src/hooks/photo';
+import { useUI } from '#lib/store';
+import { translations } from '#src/locales';
 import type { FilterState } from './types';
 
 interface TagButtonProps {

@@ -1,6 +1,6 @@
-import { PhotoListItem } from '@/types/api';
+import { PhotoListItem } from '#src/types/api';
 import type { LightboxSlide } from './types';
-import { getThumbnailUrl } from '@/services/mappers/utils';
+import { getThumbnailUrl } from '#src/services/mappers/utils';
 
 export function photosToLightboxSlides(photos: PhotoListItem[]): LightboxSlide[] {
   return photos.map(photo => ({

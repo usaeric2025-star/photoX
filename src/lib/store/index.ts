@@ -8,17 +8,17 @@ export {
    
   isTaskDrawerOpen, isTaskDrawerOpen as isTaskDrawerOpenSignal,
   gridColumns, 
-} from '@/store/uiStore';
+} from '#src/store/uiStore';
 
 // Import for local usage and re-export
 import { 
   uiStore, useUIStore, useAppLang
-} from '@/store/uiStore';
-import type { UIStoreState } from '@/store/uiStore';
-import { authStore, useAuthStore, userSignal, authLoadingSignal } from '@/store/authStore';
-import type { AuthState } from '@/store/authStore';
-import { tasksSignal, activeTaskCountSignal, globalTaskStatusSignal, globalTaskProgressSignal } from '@/services/task/taskService';
-import { appStore, appLoadingSignal, appErrorSignal } from '@/store/appStore';
+} from '#src/store/uiStore';
+import type { UIStoreState } from '#src/store/uiStore';
+import { authStore, useAuthStore, userSignal, authLoadingSignal } from '#src/store/authStore';
+import type { AuthState } from '#src/store/authStore';
+import { tasksSignal, activeTaskCountSignal, globalTaskStatusSignal, globalTaskProgressSignal } from '#src/services/task/taskService';
+import { appStore, appLoadingSignal, appErrorSignal } from '#src/store/appStore';
 
 // Re-exports
 export { 

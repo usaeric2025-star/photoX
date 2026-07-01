@@ -1,5 +1,5 @@
-import { useAppLang } from '@/lib/store';
-import { translations as allTranslations, TranslationType } from '@/locales';
+import { useAppLang } from '#lib/store';
+import { translations as allTranslations, TranslationType } from '#src/locales';
 
 type Translations = Record<string, string> | null | undefined;
 

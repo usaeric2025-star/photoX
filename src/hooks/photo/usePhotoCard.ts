@@ -1,14 +1,14 @@
 import React, { useRef } from 'react';
-import { useLongPress } from '@/hooks/core/useLongPress';
-import { useUI, UIStoreState } from '@/lib/store';
-import { useAppRoute, useNavigation } from '@/lib/router';
-import { PhotoListItem } from '@/types/api';
-import { queryKeys } from '@/lib/query/keys';
-import { getGroupById } from '@/services/group/queries';
-import { STALE_TIMES } from '@/lib/query/config';
-import { Photo } from '@/types';
-import { useFilters } from '@/features/filters';
-import { useIsMultiSelect, useSelectionActions } from '@/features/selection/useSelection';
+import { useLongPress } from '#src/hooks/core/useLongPress';
+import { useUI, UIStoreState } from '#lib/store';
+import { useAppRoute, useNavigation } from '#lib/router';
+import { PhotoListItem } from '#src/types/api';
+import { queryKeys } from '#lib/query/keys';
+import { getGroupById } from '#src/services/group/queries';
+import { STALE_TIMES } from '#lib/query/config';
+import { Photo } from '#src/types';
+import { useFilters } from '#src/features/filters';
+import { useIsMultiSelect, useSelectionActions } from '#src/features/selection/useSelection';
 
 interface UsePhotoCardInteractionProps {
   photo: PhotoListItem;
@@ -19,7 +19,7 @@ interface UsePhotoCardInteractionProps {
   onClick?: (e: React.MouseEvent) => void;
 }
 
-import { logger } from '@/lib/logger';
+import { logger } from '#lib/logger';
 
 export function usePhotoCard({
   photo,

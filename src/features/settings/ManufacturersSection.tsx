@@ -1,18 +1,18 @@
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { ErrorFactory } from '#lib/error/ErrorFactory';
 import React from "react";
-import { Icon } from '@/components/ui/Icon';
-import { Button } from '@/components/ui/Button';
-import { useDisclosure } from '@/hooks/core/useDisclosure';
-import { Manufacturer } from "@/types";
-import { ManufacturerItem } from '@/components/admin/ManufacturerItem';
-import { PromptDialog } from "@/components/ui/PromptDialog";
+import { Icon } from '#src/components/ui/Icon';
+import { Button } from '#src/components/ui/Button';
+import { useDisclosure } from '#src/hooks/core/useDisclosure';
+import { Manufacturer } from "#src/types";
+import { ManufacturerItem } from '#src/components/admin/ManufacturerItem';
+import { PromptDialog } from "#src/components/ui/PromptDialog";
 
-import { normalizeManufacturerName } from "@/lib/utils";
-import { useUI } from '@/lib/store';
-import { translations } from "@/locales";
-import { useFormSubmit } from '@/lib/forms/useFormSubmit';
+import { normalizeManufacturerName } from "#lib/utils";
+import { useUI } from '#lib/store';
+import { translations } from "#src/locales";
+import { useFormSubmit } from '#lib/forms/useFormSubmit';
 import * as v from 'valibot';
-import { FormProvider } from '@/lib/forms/useFormField';
+import { FormProvider } from '#lib/forms/useFormField';
 
 interface ManufacturersSectionProps {
   manufacturers: Manufacturer[];

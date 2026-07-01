@@ -1,4 +1,4 @@
-import { logger } from '@/lib/logger';
+import { logger } from '#lib/logger';
 import { createClient } from '@supabase/supabase-js';
 import { ErrorFactory } from './error/ErrorFactory';
 

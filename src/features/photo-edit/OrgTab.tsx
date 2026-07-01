@@ -1,16 +1,16 @@
 import React from 'react';
-import { usePhotoEditSessionContext } from '@/hooks/photo/usePhotoEditSessionContext';
-import { FormSectionHeader } from '@/components/admin/FormShared';
-import { useManufacturers, useManufacturerCreate, useTags } from '@/hooks';
-import { useTagCreate, useTagEdit, useTagDelete } from '@/hooks/tag';
-import { useUI } from '@/lib/store';
-import { PromptDialog } from '@/components/ui/PromptDialog';
-import { translations } from '@/locales';
+import { usePhotoEditSessionContext } from '#src/hooks/photo/usePhotoEditSessionContext';
+import { FormSectionHeader } from '#src/components/admin/FormShared';
+import { useManufacturers, useManufacturerCreate, useTags } from '#src/hooks';
+import { useTagCreate, useTagEdit, useTagDelete } from '#src/hooks/tag';
+import { useUI } from '#lib/store';
+import { PromptDialog } from '#src/components/ui/PromptDialog';
+import { translations } from '#src/locales';
 import { CategorySelect } from './CategorySelect';
 import { PhotoTagSelector } from './PhotoTagSelector';
-import { ManufacturerSelect } from '@/components/admin/ManufacturerSelect';
-import { Icon } from '@/components/ui/Icon';
-import { AppField } from '@/lib/forms/AppField';
+import { ManufacturerSelect } from '#src/components/admin/ManufacturerSelect';
+import { Icon } from '#src/components/ui/Icon';
+import { AppField } from '#lib/forms/AppField';
 
 export function OrgTab() {
   const { form } = usePhotoEditSessionContext();

@@ -1,6 +1,6 @@
-import { api } from '@/lib/api';
-import { Manufacturer } from '@/types';
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { api } from '#lib/api';
+import { Manufacturer } from '#src/types';
+import { ErrorFactory } from '#lib/error/ErrorFactory';
 
 const clearManufacturerFromPhotos = async (mfrId: string): Promise<string[]> => {
   const res = await api.manufacturers['clear-photos'].$post({

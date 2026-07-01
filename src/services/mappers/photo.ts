@@ -1,7 +1,7 @@
-import { SupabasePhotoRaw } from '@/types/supabase';
-import { Photo, Tag, Dimension } from '@/types';
-import { getSafeText } from '@/features/ai/safeText';
-import { generateItemCode, validateDimension } from '@/services/photo/utils';
+import { SupabasePhotoRaw } from '#src/types/supabase';
+import { Photo, Tag, Dimension } from '#src/types';
+import { getSafeText } from '#src/features/ai/safeText';
+import { generateItemCode, validateDimension } from '#src/services/photo/utils';
 import { getThumbnailUrl, normalizeStoredUrl, mapTranslationField } from './utils';
 
 const ALLOWED_FIELDS = [

@@ -1,6 +1,6 @@
 import React from 'react';
 import { AISecuritySection } from './AISecuritySection';
-import { AppSettings } from '@/types';
+import { AppSettings } from '#src/types';
 
 interface AISettingsProps {
   agnesApiKey: string | undefined;

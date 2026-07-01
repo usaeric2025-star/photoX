@@ -1,15 +1,15 @@
 import React, { useState } from "react";
-import { Modal } from "@/components/ui/Modal";
-import { NativeDialog } from "@/components/ui/NativeDialog";
-import { AppErrorBoundary } from "@/components/layout/AppErrorBoundary";
-import { currentEditingPhoto, appLang as appLangSignal, useSignal } from '@/lib/store';
-import { usePhoto } from "@/hooks/photo/usePhoto";
-import { PhotoEditSessionProvider, usePhotoEditSessionContext } from "@/hooks/photo";
+import { Modal } from "#src/components/ui/Modal";
+import { NativeDialog } from "#src/components/ui/NativeDialog";
+import { AppErrorBoundary } from "#src/components/layout/AppErrorBoundary";
+import { currentEditingPhoto, appLang as appLangSignal, useSignal } from '#lib/store';
+import { usePhoto } from "#src/hooks/photo/usePhoto";
+import { PhotoEditSessionProvider, usePhotoEditSessionContext } from "#src/hooks/photo";
 import { PhotoEditTabs } from "./PhotoEditTabs";
 import { DialogHeader } from "./DialogHeader";
-import { LoadingSpinner } from "@/components/ui/feedback/LoadingSpinner";
-import { logger } from "@/lib/logger";
-import { useAdminMaintenance, useFilters } from "@/hooks";
+import { LoadingSpinner } from "#src/components/ui/feedback/LoadingSpinner";
+import { logger } from "#lib/logger";
+import { useAdminMaintenance, useFilters } from "#src/hooks";
 
 function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: boolean; handleClose: () => void; editPhotoId: string; }) {
   const adminActions = useAdminMaintenance();

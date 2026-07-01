@@ -1,11 +1,11 @@
 import React from 'react';
 import { motion } from 'lite-sleek';
-import { PhotoListItem } from '@/types/api';
-import { EmptyState } from '@/components/ui/EmptyState';
-import { useSignal } from '@/lib/store';
-import { gridColumns as gridColumnsSignal } from '@/lib/store';
-import { useTranslation } from '@/hooks';
-import { CardSkeleton } from '@/components/photo/CardSkeleton';
+import { PhotoListItem } from '#src/types/api';
+import { EmptyState } from '#src/components/ui/EmptyState';
+import { useSignal } from '#lib/store';
+import { gridColumns as gridColumnsSignal } from '#lib/store';
+import { useTranslation } from '#src/hooks';
+import { CardSkeleton } from '#src/components/photo/CardSkeleton';
 import { VirtualizedGrid } from './VirtualizedGrid';
 import { PhotoErrorDisplay } from './PhotoErrorDisplay';
 

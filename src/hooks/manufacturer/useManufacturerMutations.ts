@@ -1,7 +1,7 @@
-import { Manufacturer } from '@/types';
-import { addManufacturerToDB, updateManufacturerInDB, deleteManufacturerFromDB } from '@/services/manufacturer/commands';
-import { queryKeys } from '@/lib/query/keys';
-import { useAppMutation, appQuery } from '@/lib/query';
+import { Manufacturer } from '#src/types';
+import { addManufacturerToDB, updateManufacturerInDB, deleteManufacturerFromDB } from '#src/services/manufacturer/commands';
+import { queryKeys } from '#lib/query/keys';
+import { useAppMutation, appQuery } from '#lib/query';
 
 // 1. 创建厂商
 export const useManufacturerCreate = () => useAppMutation({

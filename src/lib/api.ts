@@ -1,6 +1,6 @@
 import { hc } from 'hono/client';
 import type { AppType } from '../../api/_app';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '#lib/supabase';
 
 class ApiResponseError extends Error {
   public success = false;

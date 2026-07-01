@@ -1,4 +1,4 @@
-import { logger } from '@/lib/logger'
+import { logger } from '#lib/logger'
 
 const RELOAD_COUNT_KEY = '__chunk_reload_count__'
 const MAX_RELOADS = 2

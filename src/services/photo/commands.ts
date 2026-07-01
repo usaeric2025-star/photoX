@@ -1,11 +1,11 @@
-import { supabase } from '@/lib/supabase';
-import { DB_CONFIG } from '@/constants/config';
-import { Photo } from '@/types';
-import { mapToDb, mapSupabasePhoto } from '@/services/mappers';
-import { api } from '@/lib/api';
-import { uploadWithRetry } from '@/services/storage';
+import { supabase } from '#lib/supabase';
+import { DB_CONFIG } from '#src/constants/config';
+import { Photo } from '#src/types';
+import { mapToDb, mapSupabasePhoto } from '#src/services/mappers';
+import { api } from '#lib/api';
+import { uploadWithRetry } from '#src/services/storage';
 import * as v from 'valibot';
-import { PhotoSchema } from '@/shared/apiContractSchema';
+import { PhotoSchema } from '#shared/apiContractSchema';
 
 /**
  * Update a single photo

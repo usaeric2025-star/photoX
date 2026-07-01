@@ -1,7 +1,7 @@
 import { useForm } from '@tanstack/react-form';
 import * as v from 'valibot';
-import { showToast } from '@/lib/ui/toast';
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { showToast } from '#lib/ui/toast';
+import { ErrorFactory } from '#lib/error/ErrorFactory';
 
 // ✅ 匯出 TanStack Form 核心 API
 ;

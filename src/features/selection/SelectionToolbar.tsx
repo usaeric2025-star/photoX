@@ -1,16 +1,16 @@
 import React, { memo } from 'react';
 import { useSelectionCount, useSelectedIds, useSelectionActions, useIsMultiSelect } from './useSelection';
-import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
-import { useUI, type UIStoreState, useSignal, activeTaskCountSignal } from '@/lib/store';
-import { useAppRouter } from '@/lib/router';
-import { useAIBatchAnalysis } from '@/hooks/photo/useAIBatchAnalysis';
-import { useConfirm } from '@/context/ConfirmContext';
-import { useMediaQuery } from '@/hooks';
-import { useGroupPhotosMutation, useRemoveFromGroupMutation } from '@/hooks/group';
-import { Icon } from '@/components/ui/Icon';
-import { LoadingSpinner } from '@/components/ui/feedback/LoadingSpinner';
+import { useAdminMaintenance } from '#src/hooks/admin/useAdminMaintenance';
+import { useUI, type UIStoreState, useSignal, activeTaskCountSignal } from '#lib/store';
+import { useAppRouter } from '#lib/router';
+import { useAIBatchAnalysis } from '#src/hooks/photo/useAIBatchAnalysis';
+import { useConfirm } from '#src/context/ConfirmContext';
+import { useMediaQuery } from '#src/hooks';
+import { useGroupPhotosMutation, useRemoveFromGroupMutation } from '#src/hooks/group';
+import { Icon } from '#src/components/ui/Icon';
+import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner';
 import { SelectionToolbarActions } from './components/SelectionToolbarActions';
-import { api } from '@/lib/api';
+import { api } from '#lib/api';
 
 // --- Sub-components ---
 

@@ -1,10 +1,10 @@
 import React from 'react';
 import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
-import { showToast } from '@/lib/ui/toast';
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { useCopyToClipboard, useTranslation } from '@/hooks';
-import { isAppError } from '@/lib/error/AppError';
-import { handleChunkError } from '@/lib/chunkErrorHandler';
+import { showToast } from '#lib/ui/toast';
+import { ErrorFactory } from '#lib/error/ErrorFactory';
+import { useCopyToClipboard, useTranslation } from '#src/hooks';
+import { isAppError } from '#lib/error/AppError';
+import { handleChunkError } from '#lib/chunkErrorHandler';
 
 function GlobalErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
   const { uiTranslations: t } = useTranslation();

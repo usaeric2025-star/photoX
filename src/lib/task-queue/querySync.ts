@@ -1,5 +1,5 @@
-import { appQuery } from '@/lib/query';
-import { queryKeys } from '@/lib/query/keys';
+import { appQuery } from '#lib/query';
+import { queryKeys } from '#lib/query/keys';
 import { scheduler } from './scheduler';
 
 type FlushableTimeout = ReturnType<typeof setTimeout> & { flushed?: boolean };

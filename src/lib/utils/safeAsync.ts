@@ -1,5 +1,5 @@
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { logger } from '@/lib/logger';
+import { ErrorFactory } from '#lib/error/ErrorFactory';
+import { logger } from '#lib/logger';
 
 /**
  * 集中處理非同步異常的包裝器

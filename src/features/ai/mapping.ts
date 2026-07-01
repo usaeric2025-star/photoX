@@ -1,6 +1,6 @@
 import { translateFields } from "./translationService";
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { logger } from "@/lib/logger";
+import { ErrorFactory } from '#lib/error/ErrorFactory';
+import { logger } from "#lib/logger";
 
 export interface TranslatedField {
   zh: string;

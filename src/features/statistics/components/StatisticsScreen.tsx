@@ -1,8 +1,8 @@
 import React from 'react';
-import { Icon } from '@/components/ui/Icon';
-import { useAppQuery } from '@/lib/query';
-import { api } from '@/lib/api';
-import { PhotoListItem } from '@/types/api';
+import { Icon } from '#src/components/ui/Icon';
+import { useAppQuery } from '#lib/query';
+import { api } from '#lib/api';
+import { PhotoListItem } from '#src/types/api';
 
 interface StatCardProps {
   title: string;

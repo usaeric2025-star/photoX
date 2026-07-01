@@ -1,7 +1,7 @@
-import { Tag } from '@/types';
+import { Tag } from '#src/types';
 import { loadTagsFromCloud } from './queries';
 import { batchCreateTags } from './commands';
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
+import { ErrorFactory } from '#lib/error/ErrorFactory';
 
 /**
  * 標籤自動補全與映射服務

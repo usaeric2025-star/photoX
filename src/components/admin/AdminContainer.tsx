@@ -1,14 +1,14 @@
-import { logger } from '@/lib/logger';
+import { logger } from '#lib/logger';
 import React, { useEffect } from 'react';
-import { AdminPhotoGrid } from '@/components/photo/AdminPhotoGrid';
-import { SelectionToolbar } from '@/features/selection';
-import { useTranslation, useColumns, usePhotoGrid, useFilters } from '@/hooks';
-import { AdminEmptyState } from '@/pages/AdminPage/AdminEmptyState';
-import { PhotoErrorDisplay } from '@/components/photo/PhotoErrorDisplay';
-import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
-import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
-import { useAdminMaintenance } from '@/hooks/admin/useAdminMaintenance';
-import { useUI, uiStore } from '@/lib/store';
+import { AdminPhotoGrid } from '#src/components/photo/AdminPhotoGrid';
+import { SelectionToolbar } from '#src/features/selection';
+import { useTranslation, useColumns, usePhotoGrid, useFilters } from '#src/hooks';
+import { AdminEmptyState } from '#src/pages/AdminPage/AdminEmptyState';
+import { PhotoErrorDisplay } from '#src/components/photo/PhotoErrorDisplay';
+import { ErrorBoundary } from '#src/components/shared/ErrorBoundary';
+import { useLightbox, photosToLightboxSlides } from '#lib/lightbox';
+import { useAdminMaintenance } from '#src/hooks/admin/useAdminMaintenance';
+import { useUI, uiStore } from '#lib/store';
 
 export function AdminContainer() {
   const filters = useFilters({ enableStatus: true });

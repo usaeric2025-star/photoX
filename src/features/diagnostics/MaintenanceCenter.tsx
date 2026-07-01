@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Icon } from '@/components/ui/Icon';
+import { Icon } from '#src/components/ui/Icon';
 import { MaintenanceTool } from './MaintenanceTool';
 
 interface MaintenanceCenterProps {

@@ -1,21 +1,21 @@
 import React, { useRef } from 'react';
 import { motion } from 'lite-sleek';
-import { logger } from '@/lib/logger';
-import { useAppRouter } from '@/lib/router';
+import { logger } from '#lib/logger';
+import { useAppRouter } from '#lib/router';
 import { useGroupData } from './hooks/useGroupData';
-import { PhotoListItem } from '@/types/api';
-import { Photo, Group, Category } from '@/types';
-import { PhotoGridContent } from '@/components/photo/PhotoGridContent';
-import { PublicPhotoCard } from '@/components/photo/PublicPhotoCard';
-import { useLightbox, photosToLightboxSlides } from '@/lib/lightbox';
-import { useFilters, useTranslation, useCategories } from '@/hooks';
+import { PhotoListItem } from '#src/types/api';
+import { Photo, Group, Category } from '#src/types';
+import { PhotoGridContent } from '#src/components/photo/PhotoGridContent';
+import { PublicPhotoCard } from '#src/components/photo/PublicPhotoCard';
+import { useLightbox, photosToLightboxSlides } from '#lib/lightbox';
+import { useFilters, useTranslation, useCategories } from '#src/hooks';
 import { PublicGroupHeader } from './components/PublicGroupHeader';
-import { Button } from '@/components/shared/Button';
-import { useUI, uiStore, useSignal, gridColumns as gridColumnsSignal } from '@/lib/store';
-import { usePublicSettings } from '@/hooks/settings/useSettings';
-import { WhatsAppDialog } from '@/components/shared/WhatsAppDialog';
-import { useColumns } from '@/hooks';
-import { FilterBar } from '@/features/filters';
+import { Button } from '#src/components/shared/Button';
+import { useUI, uiStore, useSignal, gridColumns as gridColumnsSignal } from '#lib/store';
+import { usePublicSettings } from '#src/hooks/settings/useSettings';
+import { WhatsAppDialog } from '#src/components/shared/WhatsAppDialog';
+import { useColumns } from '#src/hooks';
+import { FilterBar } from '#src/features/filters';
 
 function PublicPhotoGrid({ photos, categories, onPhotoClick, gridRef }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string, index: number, e?: React.MouseEvent) => void; gridRef?: React.Ref<any> }) {
   const columns = useSignal(gridColumnsSignal) as number;

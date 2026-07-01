@@ -1,6 +1,6 @@
 import React from 'react';
-import { NativeDialog } from '@/components/ui/NativeDialog';
-import { Icon } from '@/components/ui/Icon';
+import { NativeDialog } from '#src/components/ui/NativeDialog';
+import { Icon } from '#src/components/ui/Icon';
 
 interface UploadModeDialogProps {
   open: boolean;

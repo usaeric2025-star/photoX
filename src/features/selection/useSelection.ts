@@ -5,7 +5,7 @@ import {
   useSelectionCount,
   useSelectedIds,
   useSelectionActions
-} from '@/services/selection/selectionService';
+} from '#src/services/selection/selectionService';
 
 export { useIsPhotoSelected, useIsMultiSelect, useSelectionCount, useSelectedIds, useSelectionActions };
 

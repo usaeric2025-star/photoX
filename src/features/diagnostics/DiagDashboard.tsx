@@ -1,10 +1,10 @@
-import { useAppRouter } from '@/lib/router';
+import { useAppRouter } from '#lib/router';
 import React, { useState, Suspense, useMemo } from 'react';
-import { Icon } from '@/components/ui/Icon';
-import { useDiagnostics } from '@/hooks/admin/useDiagnostics';
-import { Button } from '@/components/shared/Button';
-import { LoadingScreen } from '@/components/ui/LoadingScreen';
-import { usePerformanceAudit } from '@/hooks/admin/usePerformanceAudit';
+import { Icon } from '#src/components/ui/Icon';
+import { useDiagnostics } from '#src/hooks/admin/useDiagnostics';
+import { Button } from '#src/components/shared/Button';
+import { LoadingScreen } from '#src/components/ui/LoadingScreen';
+import { usePerformanceAudit } from '#src/hooks/admin/usePerformanceAudit';
 import { useQueryState, parseAsString } from 'nuqs';
 
 const ErrorLogViewer = React.lazy(() => import('./ErrorLogViewer').then(m => ({ default: m.ErrorLogViewer })));

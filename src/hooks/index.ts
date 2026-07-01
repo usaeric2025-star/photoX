@@ -11,9 +11,9 @@ export * from './manufacturer';
 export * from './settings';
 
 // Utils
-export { useFilters } from '@/features/filters';
-export { useUI } from '@/lib/store';
-export type { UIStoreState } from '@/lib/store';
+export { useFilters } from '#src/features/filters';
+export { useUI } from '#lib/store';
+export type { UIStoreState } from '#lib/store';
 export { useColumns } from './ui/useColumns';
 export { useSearchTransition } from './ui/useSearchTransition';
 

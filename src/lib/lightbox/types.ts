@@ -1,4 +1,4 @@
-import type { Photo } from '@/types/photo';
+import type { Photo } from '#src/types/photo';
 
 export interface LightboxSlide {
   id: string;

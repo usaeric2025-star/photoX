@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { useDisclosure } from '@/hooks/core/useDisclosure';
-import { PromptDialog } from "@/components/ui/PromptDialog";
+import { useDisclosure } from '#src/hooks/core/useDisclosure';
+import { PromptDialog } from "#src/components/ui/PromptDialog";
 import { TagEditor } from "./TagEditorContent";
-import { MAX_TAGS_PER_PHOTO } from "@/constants/limits";
-import { Tag } from "@/types";
-import { safeArray } from "@/lib/utils";
+import { MAX_TAGS_PER_PHOTO } from "#src/constants/limits";
+import { Tag } from "#src/types";
+import { safeArray } from "#lib/utils";
 
 interface PhotoTagSelectorProps {
   selectedTagIds: string[];

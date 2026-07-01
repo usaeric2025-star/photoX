@@ -1,5 +1,5 @@
-import { ErrorFactory } from '@/lib/error/ErrorFactory';
-import { api } from '@/lib/api';
+import { ErrorFactory } from '#lib/error/ErrorFactory';
+import { api } from '#lib/api';
 import type { TranslationResult } from './types';
 
 export const translateFields = async (

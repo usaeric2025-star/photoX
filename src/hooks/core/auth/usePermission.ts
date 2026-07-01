@@ -1,7 +1,7 @@
-import { useAuth, useUI } from '@/lib/store';
-import { ROLE_PERMISSIONS, getEffectiveRole, Capability } from '@/config/permissions';
-import { useSettings } from '@/hooks/settings';
-import { useLocalStorage } from '@/hooks/core/useLocalStorage';
+import { useAuth, useUI } from '#lib/store';
+import { ROLE_PERMISSIONS, getEffectiveRole, Capability } from '#src/config/permissions';
+import { useSettings } from '#src/hooks/settings';
+import { useLocalStorage } from '#src/hooks/core/useLocalStorage';
 
 /**
  * Unified permission and capability checking hook.
