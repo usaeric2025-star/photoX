@@ -4,6 +4,7 @@ import babel from '@rolldown/plugin-babel';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { fileURLToPath } from 'url';
 import { defineConfig, loadEnv } from 'vite';
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 const ReactCompilerConfig = {
   target: '19'
@@ -18,6 +19,11 @@ export default defineConfig(({mode}) => {
     },
     base: '/',
     plugins: [
+      nodePolyfills({
+        globals: {
+          Buffer: true,
+        },
+      }),
       babel({
         include: /\.[jt]sx?$/,
         babelConfig: {

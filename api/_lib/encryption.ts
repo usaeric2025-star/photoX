@@ -1,5 +1,6 @@
 import { logger } from './logger.js';
 import crypto from 'crypto';
+import { Buffer } from 'buffer';
 
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 12;
