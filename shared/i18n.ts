@@ -33,7 +33,19 @@ function getStringValue(val: unknown): string {
 
 export function normalizeI18n(val: unknown): { zh: string; en: string; ms: string } {
     if (!val) return { zh: '', en: '', ms: '' };
-    if (typeof val === 'string') return { zh: val, en: val, ms: val };
+    if (typeof val === 'string') {
+        try {
+            if (val.startsWith('{') && val.endsWith('}')) {
+                const parsed = JSON.parse(val);
+                return {
+                    zh: getStringValue(parsed.zh || parsed.en || parsed.ms || ''),
+                    en: getStringValue(parsed.en || parsed.zh || parsed.ms || ''),
+                    ms: getStringValue(parsed.ms || parsed.en || parsed.zh || '')
+                };
+            }
+        } catch (e) {}
+        return { zh: val, en: val, ms: val };
+    }
     
     const v = val as Record<string, unknown>;
     return {

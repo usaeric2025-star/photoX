@@ -146,10 +146,11 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
           
           <button 
             onClick={handleCopyId}
-            className="p-1 text-slate-400 hover:text-slate-600 transition-colors shrink-0 rounded hover:bg-slate-100"
+            className="flex items-center gap-1.5 p-1 px-2 text-slate-400 hover:text-slate-700 transition-colors shrink-0 rounded hover:bg-slate-100 group"
             title={t.copyGroupId}
           >
-            {copied ? <Icon name="check" className="w-3.5 h-3.5" /> : <Icon name="copy" className="w-3.5 h-3.5" />}
+            <span className="text-xs font-mono tracking-wider">{group.id.substring(0, 4)}</span>
+            {copied ? <Icon name="check" className="w-3 h-3 text-emerald-500" /> : <Icon name="copy" className="w-3 h-3 transition-transform group-active:scale-90" />}
           </button>
         </div>
         

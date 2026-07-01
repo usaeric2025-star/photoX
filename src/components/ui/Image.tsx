@@ -1,15 +1,17 @@
-import { useState } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 
 interface ImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
     src: string;
     alt: string;
     containerClassName?: string;
+    lqipSrc?: string;
+    disableFade?: boolean;
 }
 
 /**
  * Highly efficient progressive Image component:
- * 1. Skeleton placeholder (visible during loading)
+ * 1. Fast LQIP loading natively
  * 2. Final Image fade-in transition
  */
 export function Image({ 
@@ -17,31 +19,72 @@ export function Image({
     alt, 
     className, 
     containerClassName,
+    lqipSrc: providedLqip,
     onLoad,
+    disableFade = false,
     ...props 
 }: ImageProps) {
     const [isLoaded, setIsLoaded] = useState(false);
+    const imgRef = useRef<HTMLImageElement>(null);
+
+    // Reset loaded state when src changes
+    useEffect(() => {
+        setIsLoaded(false);
+    }, [src]);
+
+    // Check if already loaded from cache
+    useEffect(() => {
+        if (imgRef.current?.complete) {
+            setIsLoaded(true);
+        }
+    }, [src]);
 
     const handleLoad = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
         setIsLoaded(true);
         onLoad?.(e);
     };
 
+    const lqipSrc = useMemo(() => {
+        if (providedLqip) return providedLqip;
+        if (!src) return undefined;
+        try {
+            const url = new URL(src, window.location.origin);
+            if (url.searchParams.has('w')) {
+                url.searchParams.set('w', '20');
+                url.searchParams.delete('h');
+                return url.toString();
+            }
+        } catch(e) {}
+        return undefined;
+    }, [src, providedLqip]);
+
     return (
         <div className={cn("relative overflow-hidden bg-surface-mute w-full h-full", containerClassName)}>
-            {/* 1. Static placeholder (much lighter than animate-pulse for hundreds of items) */}
-            {!isLoaded && (
+            {/* 1. Static placeholder */}
+            {!isLoaded && !lqipSrc && (
                 <div className="absolute inset-0 bg-surface-base z-10" />
             )}
 
-            {/* 2. Final Image */}
+            {/* 2. Low Quality Image Placeholder */}
+            {!isLoaded && lqipSrc && (
+                <img
+                    src={lqipSrc}
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover object-center z-10"
+                    aria-hidden="true"
+                />
+            )}
+
+            {/* 3. Final Image */}
             <img
+                ref={imgRef}
                 src={src}
                 alt={alt}
                 onLoad={handleLoad}
                 className={cn(
-                    "absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-300 ease-out",
-                    isLoaded ? "opacity-100" : "opacity-0",
+                    "absolute inset-0 w-full h-full object-cover object-center z-20",
+                    !disableFade && "transition-opacity duration-200 ease-out",
+                    (isLoaded || disableFade) ? "opacity-100" : "opacity-0",
                     className
                 )}
                 loading="lazy"

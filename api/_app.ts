@@ -21,7 +21,6 @@ const serverEnv = getServerEnv(process.env);
 // --- Environment Validation ---
 if (!serverEnv.DATABASE_URL) {
     console.error('❌ [CRITICAL] DATABASE_URL is missing or invalid in serverEnv!');
-    process.exit(1);
 } else {
     console.log('✅ [INIT] DATABASE_URL validated, proceeding to route initialization.');
 }

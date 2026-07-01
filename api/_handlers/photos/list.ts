@@ -13,14 +13,11 @@ export const listHandler = (app: Hono) => {
     
     try {
       const { items, total, nextCursor } = await getPhotosList({ ...params, limit });
-      console.log('Got items from getPhotosList', items.length);
 
       if (items.length > 0) {
         const gIds = Array.from(new Set(items.filter(d => d.groupId).map(d => d.groupId))) as string[];
         const counts = await getGroupCounts(gIds, isAdminMode);
         
-        console.log('Got group counts', counts.size);
-
         const formatted = items.map(d => {
             try {
                 const nameObj = normalizeI18n(d.name);
@@ -57,7 +54,7 @@ export const listHandler = (app: Hono) => {
             }
         }).filter((item): item is NonNullable<typeof item> => item !== null);
 
-        console.log('Formatted items', formatted.length);
+        
         
         const finalNextCursor = nextCursor 
             ? (typeof nextCursor === 'string' ? nextCursor : (nextCursor as unknown as Date).toISOString())

@@ -2,6 +2,8 @@ import React, { Ref } from 'react';
 import { cn } from '@/lib/utils';
 import { PhotoListItem } from '@/types/api';
 import { useIsManagement } from '@/hooks';
+import { Image } from '@/components/ui/Image';
+import { getThumbnailUrl } from '@/services/mappers/utils';
 
 export interface PhotoCardBaseProps extends React.HTMLAttributes<HTMLDivElement> {
   item: PhotoListItem;
@@ -14,8 +16,22 @@ export interface PhotoCardBaseProps extends React.HTMLAttributes<HTMLDivElement>
   ref?: Ref<HTMLDivElement>;
 }
 
-import { Image } from '@/components/ui/Image';
-import { getThumbnailUrl } from '@/services/mappers/utils';
+const getDisplayString = (val: any) => {
+  if (!val) return '照片';
+  if (typeof val === 'string') {
+    try {
+      if (val.startsWith('{') && val.endsWith('}')) {
+        const parsed = JSON.parse(val);
+        return parsed.zh || parsed.en || parsed.ms || val;
+      }
+    } catch(e) {}
+    return val;
+  }
+  if (typeof val === 'object') {
+    return val.zh || val.en || val.ms || '照片';
+  }
+  return String(val);
+};
 
 /**
  * PhotoCardBase provides the foundational layout and visual state for a photo card,
@@ -69,7 +85,7 @@ export const PhotoCardBase = ({
             imgVariant === 'md' ? 800 : 120, 
             item.imageHash || (item as any).image_hash
           )}
-          alt={typeof item.name === 'string' ? item.name : (item.name as any)?.zh || '照片'}
+          alt={getDisplayString(item.name)}
           className={cn(
             "w-full h-full object-cover object-center transition-transform duration-700 ease-out",
             isHidden && "opacity-60"

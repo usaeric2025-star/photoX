@@ -9,10 +9,7 @@ const connectionString = env.DATABASE_URL;
 
 if (!connectionString) {
   // If we don't have a database URL, we provide a dummy db or throw if in production
-  console.error('❌ [DB-CRITICAL] DATABASE_URL is missing in process.env!');
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('DATABASE_URL is required in production');
-  }
+  console.error('❌ [DB-CRITICAL] DATABASE_URL is missing in process.env! Queries will fail.');
 } else {
     console.log('✅ [DB-INFO] DATABASE_URL successfully loaded (length:', connectionString.length, ')');
 }

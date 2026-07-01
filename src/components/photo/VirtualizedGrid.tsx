@@ -69,7 +69,7 @@ export function VirtualizedGrid<T extends { id: string | number }>({
   return (
     <div className="w-full h-full absolute inset-0" ref={containerRef}>
       <VList 
-        bufferSize={800}
+        bufferSize={200}
         onScroll={handleScroll} 
         onScrollEnd={handleScrollEnd}
         style={{ height: '100%', overflowX: 'hidden' }}
