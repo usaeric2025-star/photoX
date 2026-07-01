@@ -9,8 +9,8 @@ export const createHandler = (app: Hono) => {
     const { payload } = await c.req.json() as { payload: Record<string, unknown> };
 
     const crypto = await import('node:crypto');
-    // Ensure ID exists
-    if (!payload.id) {
+    // Ensure ID exists and is a valid UUID (if present, ignore temp IDs)
+    if (!payload.id || (typeof payload.id === 'string' && payload.id.startsWith('temp-'))) {
         payload.id = crypto.randomUUID();
     }
 
