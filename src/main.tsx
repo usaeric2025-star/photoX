@@ -33,21 +33,21 @@ if (typeof window !== 'undefined') {
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { SWRConfig } from 'swr';
-import { swrConfig } from './lib/query/client';
+import { swrConfig } from './lib/query/client.js';
 import { Analytics } from '@vercel/analytics/react';
-import App from './App';
-import { ErrorFactory } from './lib/error/ErrorFactory';
-import { ErrorBoundary } from './components/shared/ErrorBoundary';
-import { FatalErrorOverlay } from './components/shared/FatalErrorOverlay';
-import { logger } from './lib/logger';
+import App from './App.js';
+import { ErrorFactory } from './lib/error/ErrorFactory.js';
+import { ErrorBoundary } from './components/shared/ErrorBoundary.js';
+import { FatalErrorOverlay } from './components/shared/FatalErrorOverlay.js';
+import { logger } from './lib/logger.js';
 import './index.css';
 // Removed import
 // Removed migration
-import { initChunkHandler } from './lib/chunkErrorHandler';
-import { dailyWorker } from './features/diagnostics/DailyWorker';
-import { useUI, storeAccessor } from './lib/store';
-import { scheduler } from './lib/task-queue/scheduler';
-import { setupQuerySync } from './lib/task-queue/querySync';
+import { initChunkHandler } from './lib/chunkErrorHandler.js';
+import { dailyWorker } from './features/diagnostics/DailyWorker.js';
+import { useUI, storeAccessor } from './lib/store/index.js';
+import { scheduler } from './lib/task-queue/scheduler.js';
+import { setupQuerySync } from './lib/task-queue/querySync.js';
 
 async function init() {
   // No migration
@@ -122,7 +122,7 @@ async function init() {
   }
 
   if (import.meta.env.DEV) {
-    await import('./lib/resizeObserverPolyfill');
+    await import('./lib/resizeObserverPolyfill.js');
   }
 
   // 啟動每日維護 (P0: Robustness)

@@ -1,6 +1,6 @@
 import useSWR, { SWRConfiguration, mutate as swrMutate } from 'swr';
 import { useState } from 'react';
-import { ErrorFactory } from '#lib/error/ErrorFactory';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
 /**
  * 統一的 Query Adapter (SWR Facade)

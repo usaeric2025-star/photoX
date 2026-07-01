@@ -1,10 +1,10 @@
-import { supabase } from '#lib/supabase';
-import { DB_CONFIG } from '#src/constants/config';
-import { ErrorFactory } from '#lib/error/ErrorFactory';
+import { supabase } from '#lib/supabase.js';
+import { DB_CONFIG } from '#src/constants/config.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
-import { AppSettings } from '#src/types';
+import { AppSettings } from '#src/types/index.js';
 
-import { api } from '#lib/api';
+import { api } from '#lib/api.js';
 
 /**
  * 核心設置字段白名單 (Database Columns Only)

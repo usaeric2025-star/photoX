@@ -1,7 +1,7 @@
-import { api } from '#lib/api';
-import { AppSettings } from '#src/types';
-import { withTimeout } from '#lib/utils';
-import { ErrorFactory } from '#lib/error/ErrorFactory';
+import { api } from '#lib/api.js';
+import { AppSettings } from '#src/types/index.js';
+import { withTimeout } from '#lib/utils.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
 export async function fetchPublicSettings(): Promise<AppSettings> {
   try {

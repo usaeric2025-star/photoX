@@ -1,9 +1,9 @@
 import { useQueryState } from 'nuqs';
-import { columnsParser } from '#lib/nuqs/parsers';
-import { useLocalStorage } from '../core/useLocalStorage';
+import { columnsParser } from '#lib/nuqs/parsers.js';
+import { useLocalStorage } from '../core/useLocalStorage.js';
 import { useEffect } from 'react';
-import { uiStore } from '#lib/store';
-import type { ColumnCount } from '#src/features/filters';
+import { uiStore } from '#lib/store/index.js';
+import type { ColumnCount } from '#src/features/filters/index.js';
 
 const DEFAULT_COLUMNS = 3;
 const COLUMN_OPTIONS: ColumnCount[] = [2, 3, 5];

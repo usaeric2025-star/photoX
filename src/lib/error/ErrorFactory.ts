@@ -1,10 +1,10 @@
 import * as v from 'valibot';
 import { ErrorCode } from '#shared/errorCodes.js';
-import { AppError, ErrorSeverity, isAppError, ErrorCategory } from './AppError';
-import { showToast } from '#lib/ui/toast';
-import { logger } from '#lib/logger';
-import { generateTraceId } from '#lib/utils';
-import { translations, TranslationType } from '#src/locales';
+import { AppError, ErrorSeverity, isAppError, ErrorCategory } from './AppError.js';
+import { showToast } from '#lib/ui/toast.js';
+import { logger } from '#lib/logger.js';
+import { generateTraceId } from '#lib/utils.js';
+import { translations, TranslationType } from '#src/locales/index.js';
 
 export class ErrorFactory {
   private static get t(): TranslationType {

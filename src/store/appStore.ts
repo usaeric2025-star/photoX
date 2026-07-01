@@ -1,12 +1,12 @@
 import { createStore } from '@storve/core';
 import { signal } from '@storve/core/signals';
-import { initAuthListener, authStore } from './authStore';
-import { loadCategoriesFromCloud } from '#src/services/category/queries';
-import { loadTagsFromCloud } from '#src/services/tag/queries';
+import { initAuthListener, authStore } from './authStore.js';
+import { loadCategoriesFromCloud } from '#src/services/category/queries.js';
+import { loadTagsFromCloud } from '#src/services/tag/queries.js';
 import { mutate } from 'swr';
-import { queryKeys } from '#lib/query/keys';
-import { scheduler } from '#lib/task-queue/scheduler';
-import { ErrorFactory } from '#lib/error/ErrorFactory';
+import { queryKeys } from '#lib/query/keys.js';
+import { scheduler } from '#lib/task-queue/scheduler.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
 export interface AppStatusState {
   isLoading: boolean;
