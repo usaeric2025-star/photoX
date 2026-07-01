@@ -8,7 +8,7 @@ import { translations, TranslationType } from '@/locales';
 
 export class ErrorFactory {
   private static get t(): TranslationType {
-    const lang = (typeof document !== 'undefined' ? document.documentElement.dataset.lang : 'en') as keyof typeof translations;
+    const lang = (typeof document !== 'undefined' && document.documentElement?.dataset?.lang) as keyof typeof translations || 'en';
     return translations[lang] || translations.en;
   }
 
@@ -215,8 +215,27 @@ export class ErrorFactory {
       stack: (error as Error)?.stack
     });
 
+    // 3. 后端日志入库 (仅在 Node 环境)
+    if (typeof process !== 'undefined' && process.versions?.node) {
+        import('../../../api/_lib/db/index.js').then(({ db, systemLogs }) => {
+            db.insert(systemLogs).values({
+                message: appError.message,
+                operation: appError.context?.operation as string || 'unknown',
+                level: 'error',
+                resource: appError.context?.resource as string || 'unknown',
+                metadata: {
+                    traceId: appError.traceId,
+                    context: appError.context,
+                    stack: (error as Error)?.stack
+                },
+                createdAt: new Date()
+            }).catch(e => console.error('Failed to log error to DB', e));
+        }).catch(e => console.error('Failed to import DB for logging', e));
+    }
+
     // 2. 本地持久化记录 (供诊断面板读取)
     try {
+      if (typeof localStorage === 'undefined') return;
       const key = 'app_errors';
       const raw = localStorage.getItem(key);
       const errors = JSON.parse(raw || '[]');
@@ -233,14 +252,12 @@ export class ErrorFactory {
       // 只保留最近 50 条记录
       const limitedErrors = errors.slice(-50);
       
-      if (typeof localStorage !== 'undefined') {
-        try {
-          localStorage.setItem(key, JSON.stringify(limitedErrors));
-        } catch (storageError) {
-          // 如果 QuotaExceededError (localStorage 满了)，先清空再试一次
-          localStorage.removeItem(key);
-          localStorage.setItem(key, JSON.stringify([errorEntry]));
-        }
+      try {
+        localStorage.setItem(key, JSON.stringify(limitedErrors));
+      } catch (storageError) {
+        // 如果 QuotaExceededError (localStorage 满了)，先清空再试一次
+        localStorage.removeItem(key);
+        localStorage.setItem(key, JSON.stringify([errorEntry]));
       }
     } catch (e) {
       // 静默失败，不影响业务
@@ -302,7 +319,9 @@ export class ErrorFactory {
       : this.wrap(error, context);
     
     // 统一使用 showToast.error，传递 AppError 对象以便深度提取 TraceID 和详细的诊断信息
-    showToast.error(appError);
+    if (typeof window !== 'undefined') {
+      showToast.error(appError);
+    }
   }
   
   static extractErrorMessage(error: unknown): string {

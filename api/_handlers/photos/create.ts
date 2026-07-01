@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { db, furnitureItems, systemLogs } from '../../_lib/db/index.js';
 import { syncGroupCoversAndCount } from '../../_lib/groups.js';
 import { refreshPhotosView } from '../../_lib/db/actions.js';
-import { logger } from '../../_lib/logger.js';
+import { ErrorFactory } from '../../../src/lib/error/ErrorFactory.js';
 
 export const createHandler = (app: Hono) => {
   app.post('/upsert', async (c) => {
@@ -13,8 +13,6 @@ export const createHandler = (app: Hono) => {
     if (!payload.id) {
         payload.id = crypto.randomUUID();
     }
-
-    logger.info('[Upsert] Raw payload:', JSON.stringify(payload));
 
     // Fix userId if it is 'staff' or missing
     if (!payload.userId || payload.userId === 'staff') {
@@ -90,7 +88,13 @@ export const createHandler = (app: Hono) => {
                 target: furnitureItems.id,
                 set: updatePayload as typeof furnitureItems.$inferInsert
             })
-            .returning({ id: furnitureItems.id });
+            .returning({ id: furnitureItems.id })
+            .catch(err => {
+                if (err.code === '23503') {
+                    throw new Error(`Group not found (FK Violation): ${payload.groupId}`);
+                }
+                throw err;
+            });
 
         const data = results[0] || null;
 
@@ -102,6 +106,8 @@ export const createHandler = (app: Hono) => {
 
         return c.json({ success: true, data });
     } catch (error: unknown) {
+        ErrorFactory.handle(error, { context: 'api./api/photos/upsert' });
+        
         let errorMessage = 'Unknown database error';
         if (error instanceof Error) {
             errorMessage = error.message;
@@ -111,12 +117,11 @@ export const createHandler = (app: Hono) => {
             errorMessage = String(error);
         }
         
-        logger.error('[UpsertPhoto] Database error during upsert. Mapped payload fields: ' + Object.entries(mappedPayload).map(([k, v]) => `${k}: ${v === null ? 'null' : typeof v} (${v instanceof Date ? 'Date' : 'not Date'})`).join(', '));
-        logger.error('[UpsertPhoto] Database error during upsert', { error, errorMessage });
         const { errorFactory } = await import('../../_lib/error/AppError.js');
         throw errorFactory.wrap(new Error(errorMessage), 'api./api/photos/upsert', 'DB_ERROR');
     }
   });
+
 
   app.post('/ai-result', async (c) => {
     const { payload } = await c.req.json() as { payload: Record<string, unknown> };

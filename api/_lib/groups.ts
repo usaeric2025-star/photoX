@@ -1,4 +1,5 @@
 import { logger } from './logger.js';
+import { ErrorFactory } from '../../src/lib/error/ErrorFactory.js';
 import { db, furnitureItems, groups as groupsTable } from './db/index.js';
 import { eq, inArray, and, isNull } from 'drizzle-orm';
 
@@ -106,10 +107,10 @@ export async function syncGroupCoversAndCount(groupIds: string[]): Promise<void>
             .where(eq(groupsTable.id, groupId));
         }
       } catch (err) {
-        logger.error(`[GroupSync] Error in group ${groupId}:`, err);
+        ErrorFactory.handle(err, { context: `[GroupSync] Error in group ${groupId}` });
       }
     }));
   } catch (err) {
-    logger.error(`[GroupSync] Bulk fetch failed:`, err);
+    ErrorFactory.handle(err, { context: '[GroupSync] Bulk fetch failed' });
   }
 }
