@@ -7,13 +7,19 @@ export const errorFactory = {
     let message = error?.message || String(err);
     const context: Record<string, any> = { operation };
     
-    if (error && typeof error === 'object') {
-        const dbDetail = error.detail || error.hint || error.where || '';
+    // Unwrap DrizzleQueryError or similar wrappers
+    const actualError = error?.cause || error;
+
+    if (actualError && typeof actualError === 'object') {
+        const dbDetail = actualError.detail || actualError.hint || actualError.where || '';
         if (dbDetail) {
             message = `${message} (Detail: ${dbDetail})`;
         }
-        if (error.code) {
-            context.postgresCode = error.code;
+        if (actualError.message && actualError !== error) {
+            message = `${message} - ${actualError.message}`;
+        }
+        if (actualError.code) {
+            context.postgresCode = actualError.code;
         }
     }
     

@@ -71,8 +71,9 @@ export const createHandler = (app: Hono) => {
             })
             .returning({ id: furnitureItems.id })
             .catch(err => {
-                if (err.code === '23503') {
-                    throw new Error(`Group not found (FK Violation): ${payload.groupId}`);
+                const code = err.code || (err.cause && err.cause.code);
+                if (code === '23503') {
+                    throw new Error(`Foreign Key Violation: Make sure the referenced Category, Manufacturer, or Group exists.`);
                 }
                 throw err;
             });

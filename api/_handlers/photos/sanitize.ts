@@ -7,13 +7,13 @@ export function sanitizePhotoPayload(payload: Record<string, any>): Record<strin
     const sanitized: Record<string, any> = { ...payload };
 
     // Fields that should be strictly cast to integers or null
-    const integerFields = ['categoryId'];
+    const integerFields = ['categoryId', 'category_id'];
     
     // Fields that should be string-based UUID/text or null
-    const nullableFields = ['groupId', 'manufacturerId', 'description', 'descriptionTranslations'];
+    const nullableFields = ['groupId', 'group_id', 'manufacturerId', 'manufacturer_id', 'description', 'descriptionTranslations', 'description_translations'];
 
     // Fields that should be strictly cast to booleans
-    const booleanFields = ['isGroupCover', 'isPinned', 'isHidden', 'isAnalyzing'];
+    const booleanFields = ['isGroupCover', 'is_group_cover', 'isPinned', 'is_pinned', 'isHidden', 'is_hidden', 'isAnalyzing', 'is_analyzing'];
 
     // Process all potential nullish values
     const isNullish = (val: any): boolean => {
@@ -28,7 +28,26 @@ export function sanitizePhotoPayload(payload: Record<string, any>): Record<strin
         return false;
     };
 
-    // 1. Sanitize integer fields
+    // 1. Map common snake_case keys to camelCase to prevent them from being dropped by VALID_KEYS
+    const snakeToCamel: Record<string, string> = {
+        'category_id': 'categoryId',
+        'manufacturer_id': 'manufacturerId',
+        'group_id': 'groupId',
+        'is_group_cover': 'isGroupCover',
+        'is_pinned': 'isPinned',
+        'is_hidden': 'isHidden',
+        'is_analyzing': 'isAnalyzing',
+        'description_translations': 'descriptionTranslations'
+    };
+    
+    for (const [snake, camel] of Object.entries(snakeToCamel)) {
+        if (snake in sanitized) {
+            sanitized[camel] = sanitized[snake];
+            delete sanitized[snake];
+        }
+    }
+
+    // 2. Sanitize integer fields
     for (const field of integerFields) {
         if (field in sanitized) {
             const val = sanitized[field];
