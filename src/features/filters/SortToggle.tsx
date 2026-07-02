@@ -1,5 +1,5 @@
-import { useFilterState } from './useFilters';
-import { Icon } from '#src/components/ui/Icon';
+import { useFilterState } from './useFilters.js';
+import { Icon } from '#src/components/ui/Icon.js';
 
 export function SortToggle() {
   const { filters, updateFilters } = useFilterState();

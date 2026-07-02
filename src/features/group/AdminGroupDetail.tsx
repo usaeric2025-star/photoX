@@ -1,28 +1,28 @@
 import React, { useState } from 'react';
 import { motion } from 'lite-sleek';
-import { useAppRouter } from '#lib/router';
-import { useGroupData } from './hooks/useGroupData';
-import { PhotoListItem } from '#src/types/api';
-import { Photo, Group, ProductGroup, Dimension, Category } from '#src/types';
-import { PhotoGridContent } from '#src/components/photo/PhotoGridContent';
-import { AdminPhotoCard } from '#src/components/photo/AdminPhotoCard';
-import { useLightbox, photosToLightboxSlides } from '#lib/lightbox';
-import { useFilters, useTranslation, useCategories, usePermission } from '#src/hooks';
-import { getTranslatedCategoryName } from '#src/services/category/utils';
-import { PageHeader } from '#src/components/ui/PageHeader';
-import { useSignal, uiStore, useUI, currentEditingPhoto, gridColumns as gridColumnsSignal } from '#lib/store';
-// import { batchModeSignal } from '#lib/store'; // 移除此行
-import { useIsMultiSelect, useSelectionActions } from '#src/features/selection';
-import { useAdminMaintenance } from '#src/hooks/admin/useAdminMaintenance';
-import { useAdminBatchActions } from '#src/hooks/admin/useAdminBatch';
-import { translations } from '#src/locales';
-import { GroupSettingsDialog } from '#src/components/groups/GroupSettingsDialog';
-import { useGroupDraft } from '#src/components/groups/useGroupDraft';
-import { useGroupMutations } from '#src/hooks/group';
-import { AdminGroupHeader } from './components/AdminGroupHeader';
-import { Button } from '#src/components/shared/Button';
-import { useColumns } from '#src/hooks';
-import { FilterBar } from '#src/features/filters';
+import { useAppRouter } from '#lib/router/index.js';
+import { useGroupData } from './hooks/useGroupData.js';
+import { PhotoListItem } from '#src/types/api.js';
+import { Photo, Group, ProductGroup, Dimension, Category } from '#src/types/index.js';
+import { PhotoGridContent } from '#src/components/photo/PhotoGridContent.js';
+import { AdminPhotoCard } from '#src/components/photo/AdminPhotoCard.js';
+import { useLightbox, photosToLightboxSlides } from '#lib/lightbox/index.js';
+import { useFilters, useTranslation, useCategories, usePermission } from '#src/hooks/index.js';
+import { getTranslatedCategoryName } from '#src/services/category/utils.js';
+import { PageHeader } from '#src/components/ui/PageHeader.js';
+import { useSignal, uiStore, useUI, currentEditingPhoto, gridColumns as gridColumnsSignal } from '#lib/store/index.js';
+// import { batchModeSignal } from '#lib/store/index.js'; // 移除此行
+import { useIsMultiSelect, useSelectionActions } from '#src/features/selection/index.js';
+import { useAdminMaintenance } from '#src/hooks/admin/useAdminMaintenance.js';
+import { useAdminBatchActions } from '#src/hooks/admin/useAdminBatch.js';
+import { translations } from '#src/locales/index.js';
+import { GroupSettingsDialog } from '#src/components/groups/GroupSettingsDialog.js';
+import { useGroupDraft } from '#src/components/groups/useGroupDraft.js';
+import { useGroupMutations } from '#src/hooks/group/index.js';
+import { AdminGroupHeader } from './components/AdminGroupHeader.js';
+import { Button } from '#src/components/shared/Button.js';
+import { useColumns } from '#src/hooks/index.js';
+import { FilterBar } from '#src/features/filters/index.js';
 
 function AdminPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string, index: number, e?: React.MouseEvent) => void }) {
   const isMultiSelect = useIsMultiSelect();

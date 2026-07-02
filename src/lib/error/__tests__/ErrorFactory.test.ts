@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { ErrorFactory, ErrorCode, ErrorSeverity, isAppError } from '#lib/error'
+import { ErrorFactory, ErrorCode, ErrorSeverity, isAppError } from '#lib/error/index.js'
 
 describe('ErrorFactory', () => {
   it('should create validation error', () => {

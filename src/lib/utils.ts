@@ -1,8 +1,8 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { showToast } from '#lib/ui/toast';
-import { formatters } from "#src/utils/formatters"
-import { generateId } from "#lib/id"
+import { showToast } from '#lib/ui/toast.js';
+import { formatters } from "#src/utils/formatters.js"
+import { generateId } from "#lib/id.js"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))

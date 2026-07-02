@@ -1,8 +1,8 @@
-import { Manufacturer } from '#src/types';
-import { useAppQuery } from '#lib/query';
-import { loadManufacturersFromCloud } from '#src/services/manufacturer/queries';
-import { queryKeys } from '#lib/query/keys';
-import { STALE_TIMES } from '#lib/query/config';
+import { Manufacturer } from '#src/types/index.js';
+import { useAppQuery } from '#lib/query/index.js';
+import { loadManufacturersFromCloud } from '#src/services/manufacturer/queries.js';
+import { queryKeys } from '#lib/query/keys.js';
+import { STALE_TIMES } from '#lib/query/config.js';
 
 export function useManufacturers() {
   const { data, isLoading, error, mutate } = useAppQuery<Manufacturer[]>(

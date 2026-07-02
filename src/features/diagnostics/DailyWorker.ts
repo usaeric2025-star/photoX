@@ -1,7 +1,7 @@
-import { api } from '#lib/api';
-import { STORAGE_KEYS, storage } from '#lib/storage';
-import { supabase } from '#lib/supabase';
-import { logger } from '#lib/logger';
+import { api } from '#lib/api.js';
+import { STORAGE_KEYS, storage } from '#lib/storage.js';
+import { supabase } from '#lib/supabase.js';
+import { logger } from '#lib/logger.js';
 
 /**
  * 每日維護 Worker

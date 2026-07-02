@@ -1,15 +1,15 @@
 import React, { useState } from "react";
-import { Modal } from "#src/components/ui/Modal";
-import { NativeDialog } from "#src/components/ui/NativeDialog";
-import { AppErrorBoundary } from "#src/components/layout/AppErrorBoundary";
-import { currentEditingPhoto, appLang as appLangSignal, useSignal } from '#lib/store';
-import { usePhoto } from "#src/hooks/photo/usePhoto";
-import { PhotoEditSessionProvider, usePhotoEditSessionContext } from "#src/hooks/photo";
-import { PhotoEditTabs } from "./PhotoEditTabs";
-import { DialogHeader } from "./DialogHeader";
-import { LoadingSpinner } from "#src/components/ui/feedback/LoadingSpinner";
-import { logger } from "#lib/logger";
-import { useAdminMaintenance, useFilters } from "#src/hooks";
+import { Modal } from "#src/components/ui/Modal.js";
+import { NativeDialog } from "#src/components/ui/NativeDialog.js";
+import { AppErrorBoundary } from "#src/components/layout/AppErrorBoundary.js";
+import { currentEditingPhoto, appLang as appLangSignal, useSignal } from '#lib/store/index.js';
+import { usePhoto } from "#src/hooks/photo/usePhoto.js";
+import { PhotoEditSessionProvider, usePhotoEditSessionContext } from "#src/hooks/photo/index.js";
+import { PhotoEditTabs } from "./PhotoEditTabs.js";
+import { DialogHeader } from "./DialogHeader.js";
+import { LoadingSpinner } from "#src/components/ui/feedback/LoadingSpinner.js";
+import { logger } from "#lib/logger.js";
+import { useAdminMaintenance, useFilters } from '#src/hooks/index.js';
 
 function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: boolean; handleClose: () => void; editPhotoId: string; }) {
   const adminActions = useAdminMaintenance();

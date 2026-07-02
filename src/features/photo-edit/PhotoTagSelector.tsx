@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { useDisclosure } from '#src/hooks/core/useDisclosure';
-import { PromptDialog } from "#src/components/ui/PromptDialog";
-import { TagEditor } from "./TagEditorContent";
-import { MAX_TAGS_PER_PHOTO } from "#src/constants/limits";
-import { Tag } from "#src/types";
-import { safeArray } from "#lib/utils";
+import { useDisclosure } from '#src/hooks/core/useDisclosure.js';
+import { PromptDialog } from "#src/components/ui/PromptDialog.js";
+import { TagEditor } from "./TagEditorContent.js";
+import { MAX_TAGS_PER_PHOTO } from "#src/constants/limits.js";
+import { Tag } from '#src/types/index.js';
+import { safeArray } from "#lib/utils.js";
 
 interface PhotoTagSelectorProps {
   selectedTagIds: string[];
@@ -35,7 +35,7 @@ export function PhotoTagSelector({
         .map((item) => String(typeof item === 'object' && item !== null ? (item as Record<string, unknown>).id || '' : item).trim())
         .filter(Boolean),
     ),
-  );
+  ) as string[];
 
   const sortedTags = [...tags].sort((a, b) => {
     const isASelected = cleanSelectedIds.includes(String(a.id));

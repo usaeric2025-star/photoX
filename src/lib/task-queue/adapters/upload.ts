@@ -1,14 +1,14 @@
-import { generateId } from '#lib/id';
-import { Photo } from '#src/types';
-import { processImageFile } from '#src/services/storage/imageProcessor';
-import { savePhotoToCloud } from '#src/features/upload/services/uploadService';
-import { createTask } from '#lib/task-queue/taskFactory';
-import { runBatchAnalysis } from '#src/features/ai/orchestration';
-import { appQuery } from '#lib/query';
-import { queryKeys } from '#lib/query/keys';
-import { checkHashExists } from '#lib/api/photos';
-import { ErrorFactory } from '#lib/error/ErrorFactory';
-import { logger } from '#lib/logger';
+import { generateId } from '#lib/id.js';
+import { Photo } from '#src/types/index.js';
+import { processImageFile } from '#src/services/storage/imageProcessor.js';
+import { savePhotoToCloud } from '#src/features/upload/services/uploadService.js';
+import { createTask } from '#lib/task-queue/taskFactory.js';
+import { runBatchAnalysis } from '#src/features/ai/orchestration.js';
+import { appQuery } from '#lib/query/index.js';
+import { queryKeys } from '#lib/query/keys.js';
+import { checkHashExists } from '#lib/api/photos.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
+import { logger } from '#lib/logger.js';
 
 export const executeBatchUpload = (
   files: File[],
@@ -91,7 +91,7 @@ export const executeBatchUpload = (
   }
   
   if (skippedCount > 0) {
-    import('#lib/ui/toast').then(({ showToast }) => {
+    import('#lib/ui/toast.js').then(({ showToast }) => {
       showToast.info(`已自動跳過 ${skippedCount} 張重複照片`);
     });
   }
@@ -129,7 +129,7 @@ export const executeBatchUpload = (
           return res;
       },
       onError: (err) => {
-          import('#lib/ui/toast').then(({ showToast }) => {
+          import('#lib/ui/toast.js').then(({ showToast }) => {
               showToast.error(`AI 分析有部分失败: ${err.message}`);
           });
       }

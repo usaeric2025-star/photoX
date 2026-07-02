@@ -1,4 +1,4 @@
-import { User } from '#src/types';
+import { User } from '#src/types/index.js';
 
 /**
  * Capability identifiers for the PhotoX ecosystem.

@@ -1,16 +1,16 @@
-import { STALE_TIMES } from '#lib/query/config';
-import { DB_CONFIG } from '#src/constants/config';
-import { showToast } from '#lib/ui/toast';
-import { ErrorFactory } from '#lib/error/ErrorFactory';
-import { api } from '#lib/api';
-import { supabase } from '#lib/supabase';
-import { Tag, Photo, Dimension } from '#src/types';
-import { safeArray } from '#lib/utils';
-import { translations, TranslationType } from '#src/locales';
-import { getSafeText } from '#src/features/ai/safeText';
-import { getTranslatedCategoryName } from '#src/services/category/utils';
-import { Category } from '#src/types';
-import { generateId } from '#lib/id';
+import { STALE_TIMES } from '#lib/query/config.js';
+import { DB_CONFIG } from '#src/constants/config.js';
+import { showToast } from '#lib/ui/toast.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
+import { api } from '#lib/api.js';
+import { supabase } from '#lib/supabase.js';
+import { Tag, Photo, Dimension } from '#src/types/index.js';
+import { safeArray } from '#lib/utils.js';
+import { translations, TranslationType } from '#src/locales/index.js';
+import { getSafeText } from '#src/features/ai/safeText.js';
+import { getTranslatedCategoryName } from '#src/services/category/utils.js';
+import { Category } from '#src/types/index.js';
+import { generateId } from '#lib/id.js';
 
 const NEVER_ALLOWED = ['isAnalyzing', 'exif_data', 'is_hidden', 'tempId', 'isSelected', 'isDragging', 'rawResponse'];
 

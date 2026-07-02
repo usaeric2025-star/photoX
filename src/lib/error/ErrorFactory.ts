@@ -1,6 +1,6 @@
 import * as v from 'valibot';
 import { ErrorCode } from '#shared/errorCodes.js';
-import { AppError, ErrorSeverity, isAppError, ErrorCategory } from './AppError.js';
+import { AppError, ErrorSeverity, isAppError, ErrorCategory } from '#shared/AppError.js';
 import { showToast } from '#lib/ui/toast.js';
 import { logger } from '#lib/logger.js';
 import { generateTraceId } from '#lib/utils.js';

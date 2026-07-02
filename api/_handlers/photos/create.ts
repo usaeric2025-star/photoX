@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { errorResponse, successResponse } from '../../_lib/response.js';
 import { db, furnitureItems, systemLogs } from '../../_lib/db/index.js';
 import { syncGroupCoversAndCount } from '../../_lib/groups.js';
 import { refreshPhotosView } from '../../_lib/db/actions.js';
@@ -104,7 +105,7 @@ export const createHandler = (app: Hono) => {
 
         await refreshPhotosView();
 
-        return c.json({ success: true, data });
+        return successResponse(c, data);
     } catch (error: unknown) {
         ErrorFactory.handle(error, { context: 'api./api/photos/upsert' });
         
@@ -117,7 +118,7 @@ export const createHandler = (app: Hono) => {
             errorMessage = String(error);
         }
         
-        const { errorFactory } = await import('../../_lib/error/AppError.js');
+        const { errorFactory } = await import('../../_lib/error/factory.js');
         throw errorFactory.wrap(new Error(errorMessage), 'api./api/photos/upsert', 'DB_ERROR');
     }
   });
@@ -140,9 +141,9 @@ export const createHandler = (app: Hono) => {
             createdAt: payload.created_at ? new Date(payload.created_at as string) : new Date()
         }).returning();
         
-        return c.json({ success: true, data });
+        return successResponse(c, data);
     } catch (error: unknown) {
-        const { errorFactory } = await import('../../_lib/error/AppError.js');
+        const { errorFactory } = await import('../../_lib/error/factory.js');
         throw errorFactory.wrap(error, 'api./api/photos/ai-result', 'DB_ERROR');
     }
   });

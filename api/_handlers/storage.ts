@@ -7,7 +7,7 @@ import { eq } from "drizzle-orm";
 import { getServerEnv } from "../../shared/envSchema.js";
 import { getR2Client } from '../_lib/storage.js';
 import { requireRealUser } from '../_lib/auth.js';
-import { errorResponse } from '../_lib/response.js';
+import { errorResponse, successResponse } from '../_lib/response.js';
 
 const serverEnv = getServerEnv(process.env);
 export const storage = new Hono();
@@ -34,24 +34,21 @@ storage.post("/upload-presign", async (c) => {
                 }, 409);
             }
             
-            return c.json({ 
-                success: true, 
-                data: { 
-                    resuming: true,
-                    photoId: existing.id,
-                    uploadUrl: await (async () => {
-                        const fileName = `photox/public/${existing.id}.webp`;
-                        const s3Client = await getR2Client();
-                        const bucketName = serverEnv.R2_BUCKET_NAME;
-                        const command = new PutObjectCommand({
-                            Bucket: bucketName!,
-                            Key: fileName,
-                            ContentType: contentType || 'image/webp',
-                        });
-                        return getSignedUrl(s3Client, command, { expiresIn: 300 });
-                    })(),
-                    publicUrl: `${serverEnv.R2_PUBLIC_URL_PREFIX}/photox/public/${existing.id}.webp`
-                } 
+            return successResponse(c, { 
+                resuming: true,
+                photoId: existing.id,
+                uploadUrl: await (async () => {
+                    const fileName = `photox/public/${existing.id}.webp`;
+                    const s3Client = await getR2Client();
+                    const bucketName = serverEnv.R2_BUCKET_NAME;
+                    const command = new PutObjectCommand({
+                        Bucket: bucketName!,
+                        Key: fileName,
+                        ContentType: contentType || 'image/webp',
+                    });
+                    return getSignedUrl(s3Client, command, { expiresIn: 300 });
+                })(),
+                publicUrl: `${serverEnv.R2_PUBLIC_URL_PREFIX}/photox/public/${existing.id}.webp`
             });
         }
     }
@@ -72,7 +69,7 @@ storage.post("/upload-presign", async (c) => {
     if (!serverEnv.R2_PUBLIC_URL_PREFIX) throw new Error("R2_PUBLIC_URL_PREFIX missing");
     const publicUrl = `${serverEnv.R2_PUBLIC_URL_PREFIX}/${fileName}`;
     
-    return c.json({ success: true, data: { uploadUrl, publicUrl } });
+    return successResponse(c, { uploadUrl, publicUrl });
 });
 
 storage.post("/r2-delete", async (c) => {
@@ -96,5 +93,5 @@ storage.post("/r2-delete", async (c) => {
         });
     }));
 
-    return c.json({ success: true });
+    return successResponse(c, null);
 });

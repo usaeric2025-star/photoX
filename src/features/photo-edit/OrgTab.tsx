@@ -1,16 +1,16 @@
 import React from 'react';
-import { usePhotoEditSessionContext } from '#src/hooks/photo/usePhotoEditSessionContext';
-import { FormSectionHeader } from '#src/components/admin/FormShared';
-import { useManufacturers, useManufacturerCreate, useTags } from '#src/hooks';
-import { useTagCreate, useTagEdit, useTagDelete } from '#src/hooks/tag';
-import { useUI } from '#lib/store';
-import { PromptDialog } from '#src/components/ui/PromptDialog';
-import { translations } from '#src/locales';
-import { CategorySelect } from './CategorySelect';
-import { PhotoTagSelector } from './PhotoTagSelector';
-import { ManufacturerSelect } from '#src/components/admin/ManufacturerSelect';
-import { Icon } from '#src/components/ui/Icon';
-import { AppField } from '#lib/forms/AppField';
+import { usePhotoEditSessionContext } from '#src/hooks/photo/usePhotoEditSessionContext.js';
+import { FormSectionHeader } from '#src/components/admin/FormShared.js';
+import { useManufacturers, useManufacturerCreate, useTags } from '#src/hooks/index.js';
+import { useTagCreate, useTagEdit, useTagDelete } from '#src/hooks/tag/index.js';
+import { useUI } from '#lib/store/index.js';
+import { PromptDialog } from '#src/components/ui/PromptDialog.js';
+import { translations } from '#src/locales/index.js';
+import { CategorySelect } from './CategorySelect.js';
+import { PhotoTagSelector } from './PhotoTagSelector.js';
+import { ManufacturerSelect } from '#src/components/admin/ManufacturerSelect.js';
+import { Icon } from '#src/components/ui/Icon.js';
+import { AppField } from '#lib/forms/AppField.js';
 
 export function OrgTab() {
   const { form } = usePhotoEditSessionContext();

@@ -1,9 +1,9 @@
-import { useCategories } from '#src/hooks/category';
-import { useFilterState } from './useFilters';
-import { useTranslation } from '#src/hooks';
-import { getTranslatedCategoryName } from '#src/services/category/utils';
-import { logger } from '#lib/logger';
-import type { FilterState } from './types';
+import { useCategories } from '#src/hooks/category/index.js';
+import { useFilterState } from './useFilters.js';
+import { useTranslation } from '#src/hooks/index.js';
+import { getTranslatedCategoryName } from '#src/services/category/utils.js';
+import { logger } from '#lib/logger.js';
+import type { FilterState } from './types.js';
 
 interface CategoryButtonProps {
   cat: { id: number | null; code?: string };

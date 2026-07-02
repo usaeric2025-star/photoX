@@ -1,4 +1,4 @@
-import { Icon } from '#src/components/ui/Icon';
+import { Icon } from '#src/components/ui/Icon.js';
 import { toast } from 'sonner';
 
 interface LightboxHeaderProps {

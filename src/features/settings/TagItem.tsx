@@ -1,8 +1,8 @@
 import React, { useState, useRef } from "react";
-import { Icon } from '#src/components/ui/Icon';
-import { Tag } from "#src/types";
-import { useClickOutside } from '#src/hooks/core/useClickOutside';
-import { useLongPress } from "#src/hooks/core/useLongPress";
+import { Icon } from '#src/components/ui/Icon.js';
+import { Tag } from '#src/types/index.js';
+import { useClickOutside } from '#src/hooks/core/useClickOutside.js';
+import { useLongPress } from "#src/hooks/core/useLongPress.js";
 import { motion, AnimatePresence } from "lite-sleek";
 
 interface TagItemProps {

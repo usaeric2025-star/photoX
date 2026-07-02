@@ -1,12 +1,12 @@
-import { getTranslatedCategoryName } from "#src/services/category/utils";
-import { createTranslate } from "#src/locales";
+import { getTranslatedCategoryName } from "#src/services/category/utils.js";
+import { createTranslate } from '#src/locales/index.js';
 import React, { useRef } from "react";
-import { translations, LanguageCode } from "#src/locales";
-import { Category, Manufacturer } from "#src/types";
-import { useLongPress } from "#src/hooks/core/useLongPress";
-import { MenuDialog } from "#src/components/ui/MenuDialog";
-import { useDisclosure } from '#src/hooks/core/useDisclosure';
-import { useUI, UIStoreState } from '#lib/store';
+import { translations, LanguageCode } from '#src/locales/index.js';
+import { Category, Manufacturer } from '#src/types/index.js';
+import { useLongPress } from "#src/hooks/core/useLongPress.js";
+import { MenuDialog } from "#src/components/ui/MenuDialog.js";
+import { useDisclosure } from '#src/hooks/core/useDisclosure.js';
+import { useUI, UIStoreState } from '#lib/store/index.js';
 
 interface SectionHeaderProps {
   title: string;

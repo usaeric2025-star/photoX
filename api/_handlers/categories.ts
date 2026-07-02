@@ -3,7 +3,7 @@ import * as v from 'valibot';
 import { db, categories as categoriesTable, furnitureItems } from '../_lib/db/index.js';
 import { eq, sql } from 'drizzle-orm';
 import { CategoryReqSchema } from '../../shared/apiContractSchema.js';
-import { errorResponse } from '../_lib/response.js';
+import { errorResponse, successResponse } from '../_lib/response.js';
 import { getAllCategories, getCategoryById } from '../_lib/db/queries/categories.js';
 
 interface FormattedCategory {
@@ -23,7 +23,7 @@ export const categories = new Hono()
   .get('/', async (c) => {
     const now = Date.now();
     if (categoriesCache && now - cacheTime < 5 * 60 * 1000) {
-        return c.json({ success: true, data: categoriesCache });
+        return successResponse(c, categoriesCache);
     }
     
     const data = await getAllCategories();
@@ -42,7 +42,7 @@ export const categories = new Hono()
 
     categoriesCache = formatted as any;
     cacheTime = now;
-    return c.json({ success: true, data: formatted });
+    return successResponse(c, formatted);
   })
   .post('/seed', async (c) => {
     // Clean up using Drizzle
@@ -62,7 +62,7 @@ export const categories = new Hono()
     
     categoriesCache = null; // Clear cache
     
-    return c.json({ success: true, message: 'Database seeded successfully' });
+    return successResponse(c, { message: 'Database seeded successfully' });
   })
   .post('/clear-photos', async (c) => {
     const body = await c.req.json();
@@ -76,7 +76,7 @@ export const categories = new Hono()
         .where(eq(furnitureItems.categoryId, categoryId))
         .returning({ id: furnitureItems.id });
     
-    return c.json({ success: true, data: updated.map(i => i.id) });
+    return successResponse(c, updated.map(i => i.id));
   })
   .post('/', async (c) => {
     const body = await c.req.json();
@@ -91,7 +91,7 @@ export const categories = new Hono()
     
     categoriesCache = null; // Clear cache
     
-    return c.json({ success: true, data });
+    return successResponse(c, data);
   })
   .put('/:id', async (c) => {
     const id = c.req.param('id');
@@ -107,7 +107,7 @@ export const categories = new Hono()
     
     categoriesCache = null; // Clear cache
     
-    return c.json({ success: true });
+    return successResponse(c, null);
   })
   .delete('/:id', async (c) => {
     const id = c.req.param('id');
@@ -117,5 +117,5 @@ export const categories = new Hono()
     
     categoriesCache = null; // Clear cache
     
-    return c.json({ success: true });
+    return successResponse(c, null);
   });

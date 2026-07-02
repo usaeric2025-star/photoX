@@ -1,3 +1,3 @@
-export * from './useTags';
-export * from './useTagMutations';
-export * from './useTagSearch';
+export * from './useTags.js';
+export * from './useTagMutations.js';
+export * from './useTagSearch.js';

@@ -1,9 +1,9 @@
-import { ErrorFactory } from '#lib/error/ErrorFactory';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import React from 'react';
-import { usePhotoAIResult, useCopyToClipboard } from '#src/hooks';
-import { useUI } from '#lib/store';
-import { Icon } from '#src/components/ui/Icon';
-import { usePhotoEditSessionContext } from '#src/hooks/photo/usePhotoEditSessionContext';
+import { usePhotoAIResult, useCopyToClipboard } from '#src/hooks/index.js';
+import { useUI } from '#lib/store/index.js';
+import { Icon } from '#src/components/ui/Icon.js';
+import { usePhotoEditSessionContext } from '#src/hooks/photo/usePhotoEditSessionContext.js';
 
 export function AISourceTab() {
   const { photoId } = usePhotoEditSessionContext();

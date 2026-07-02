@@ -1,2 +1,2 @@
-export * from './autoFallback';
-export * from './uploadService';
+export * from './autoFallback.js';
+export * from './uploadService.js';

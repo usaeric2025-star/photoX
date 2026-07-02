@@ -1,8 +1,8 @@
 import { parseAsString, parseAsJson, parseAsBoolean, parseAsInteger, createParser } from 'nuqs';
 import * as v from 'valibot';
-import { parseWithValibot } from '#lib/valibot/adapters/nuqs';
-import { SortSchema } from '#lib/valibot/schemas/filters';
-import { PageSchema, LimitSchema } from '#lib/valibot/schemas/pagination';
+import { parseWithValibot } from '#lib/valibot/adapters/nuqs.js';
+import { SortSchema } from '#lib/valibot/schemas/filters.js';
+import { PageSchema, LimitSchema } from '#lib/valibot/schemas/pagination.js';
 
 // Photo ID Parser
 export const parseAsPhotoId = parseWithValibot(v.string());

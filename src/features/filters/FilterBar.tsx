@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Icon } from '#src/components/ui/Icon';
-import { SearchInput } from './SearchInput';
-import { SortToggle } from './SortToggle';
-import { CategoryGrid } from './CategoryGrid';
-import { TagGrid } from './TagGrid';
-import { ColumnsToggle } from '#src/components/layout/ColumnsToggle';
-import { GroupToggle } from '#src/components/ui/GroupToggle';
-import { useFilters, useFilterState } from './useFilters';
-import { useTags } from '#src/hooks/tag';
-import { cn } from '#lib/utils';
+import { Icon } from '#src/components/ui/Icon.js';
+import { SearchInput } from './SearchInput.js';
+import { SortToggle } from './SortToggle.js';
+import { CategoryGrid } from './CategoryGrid.js';
+import { TagGrid } from './TagGrid.js';
+import { ColumnsToggle } from '#src/components/layout/ColumnsToggle.js';
+import { GroupToggle } from '#src/components/ui/GroupToggle.js';
+import { useFilters, useFilterState } from './useFilters.js';
+import { useTags } from '#src/hooks/tag/index.js';
+import { cn } from '#lib/utils.js';
 
 interface FilterBarProps {
   mode: 'public' | 'admin';

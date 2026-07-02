@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react';
-import { hapticFeedback } from '#lib/ui/haptics';
+import { hapticFeedback } from '#lib/ui/haptics.js';
 
 interface UseLongPressOptions {
   delay?: number;

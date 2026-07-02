@@ -1,9 +1,9 @@
 import React from 'react';
-import { Icon } from '#src/components/ui/Icon';
-import { useUI, UIStoreState } from '#lib/store';
-import { NativePopover } from '#src/components/ui/NativePopover';
-import { appQuery } from '#lib/query';
-import { queryKeys } from '#lib/query/keys';
+import { Icon } from '#src/components/ui/Icon.js';
+import { useUI, UIStoreState } from '#lib/store/index.js';
+import { NativePopover } from '#src/components/ui/NativePopover.js';
+import { appQuery } from '#lib/query/index.js';
+import { queryKeys } from '#lib/query/keys.js';
 
 export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dropdown' | 'segmented' | 'lightbox' }) {
   const appLang = useUI((s: UIStoreState) => s.appLang);

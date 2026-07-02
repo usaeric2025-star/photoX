@@ -1,10 +1,10 @@
 import React from 'react';
-import { cn } from '#lib/utils';
-import { Icon } from '#src/components/ui/Icon';
-import { NativePopover } from '#src/components/ui/NativePopover';
-import { LanguageSwitcher } from '#src/components/ui/LanguageSwitcher';
-import { User, Theme, TranslationType } from '#src/types';
-import { Navigation } from '#lib/router';
+import { cn } from '#lib/utils.js';
+import { Icon } from '#src/components/ui/Icon.js';
+import { NativePopover } from '#src/components/ui/NativePopover.js';
+import { LanguageSwitcher } from '#src/components/ui/LanguageSwitcher.js';
+import { User, Theme, TranslationType } from '#src/types/index.js';
+import { Navigation } from '#lib/router/index.js';
 
 interface AdminHeaderMenuProps {
   user: User | null;

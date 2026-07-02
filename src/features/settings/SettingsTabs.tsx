@@ -1,5 +1,5 @@
 import React from 'react';
-import { Icon } from '#src/components/ui/Icon';
+import { Icon } from '#src/components/ui/Icon.js';
 
 interface SettingsTabsProps {
   activeTab: string;

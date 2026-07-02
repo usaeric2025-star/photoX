@@ -1,5 +1,5 @@
-import { IMAGE_COMPRESS } from '#src/constants/config';
-import { sha256 } from '#lib/image/hash';
+import { IMAGE_COMPRESS } from '#src/constants/config.js';
+import { sha256 } from '#lib/image/hash.js';
 
 export interface ProcessedImage {
   hash: string;

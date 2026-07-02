@@ -1,18 +1,18 @@
 import React from 'react';
-import { usePhotoEditSessionContext } from '#src/hooks/photo/usePhotoEditSessionContext';
-import { DimensionEditor } from './DimensionEditor';
-import { Dimension } from '#src/types';
-import { safeArray } from '#lib/utils';
-import { useUI, useSignal } from '#lib/store';
-import { aiAnalysisSignal } from '#lib/ai/executor';
-import { usePhoto, useFilters } from '#src/hooks';
-import { showToast } from '#lib/ui/toast';
-import { translations } from '#src/locales';
-import { usePhotoEditAI } from './usePhotoEditAI';
-import { AIStatusBadge } from '#src/components/ui/AIStatusBadge';
-import { AppField } from '#lib/forms/AppField';
-import { MultilingualInput } from '#src/components/shared/MultilingualInput';
-import { copyToClipboard } from '#src/utils/clipboard';
+import { usePhotoEditSessionContext } from '#src/hooks/photo/usePhotoEditSessionContext.js';
+import { DimensionEditor } from './DimensionEditor.js';
+import { Dimension } from '#src/types/index.js';
+import { safeArray } from '#lib/utils.js';
+import { useUI, useSignal } from '#lib/store/index.js';
+import { aiAnalysisSignal } from '#lib/ai/executor.js';
+import { usePhoto, useFilters } from '#src/hooks/index.js';
+import { showToast } from '#lib/ui/toast.js';
+import { translations } from '#src/locales/index.js';
+import { usePhotoEditAI } from './usePhotoEditAI.js';
+import { AIStatusBadge } from '#src/components/ui/AIStatusBadge.js';
+import { AppField } from '#lib/forms/AppField.js';
+import { MultilingualInput } from '#src/components/shared/MultilingualInput.js';
+import { copyToClipboard } from '#src/utils/clipboard.js';
 
 export function DetailsTab() {
   const { form } = usePhotoEditSessionContext();

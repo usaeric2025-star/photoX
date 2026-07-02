@@ -1,7 +1,7 @@
 import React from 'react';
-import { CategoriesSection } from './CategoriesSection';
-import { ManufacturersSection } from './ManufacturersSection';
-import { Category, Manufacturer } from '#src/types';
+import { CategoriesSection } from './CategoriesSection.js';
+import { ManufacturersSection } from './ManufacturersSection.js';
+import { Category, Manufacturer } from '#src/types/index.js';
 
 interface CategoriesManagerProps {
   categories: Category[];

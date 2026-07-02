@@ -1,3 +1,3 @@
-export * from './SelectionToolbar';
-export * from './useSelection';
-export { SelectionSync, useIsPhotoSelected } from '#src/services/selection/selectionService';
+export * from './SelectionToolbar.js';
+export * from './useSelection.js';
+export { SelectionSync, useIsPhotoSelected } from '#src/services/selection/selectionService.js';

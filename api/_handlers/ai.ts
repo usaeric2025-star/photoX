@@ -18,7 +18,7 @@ import {
 } from '../../shared/apiContractSchema.js';
 import { AI_PROMPTS } from './ai/prompts.js';
 import { logger } from '../_lib/logger.js';
-import { errorResponse } from '../_lib/response.js';
+import { errorResponse, successResponse } from '../_lib/response.js';
 
 interface HonoContextUser {
     id: string;
@@ -54,7 +54,7 @@ ai.post("/test", async (c) => {
         return errorResponse(c, errorMsg, 500);
     }
 
-    return c.json({ success: true, message: 'Connection successful', data: data.text });
+    return successResponse(c, data.text, { message: 'Connection successful' });
 });
 
 ai.post("/run", async (c) => {
@@ -81,7 +81,7 @@ ai.post("/run", async (c) => {
         shouldNormalize: false
     });
 
-    return c.json({ success: true, text: data as string, rawResult: rawText, usage: {} } as ApiResponse);
+    return successResponse(c, data, { rawResult: rawText, usage: {} });
 });
 
 ai.post("/analyze", async (c) => {
@@ -152,7 +152,7 @@ ai.post("/analyze", async (c) => {
         return errorResponse(c, (data as { _error?: string })._error || 'AI analysis failed', 500);
     }
 
-    return c.json({ success: true, data, rawResult: rawText } as ApiResponse);
+    return successResponse(c, data, { rawResult: rawText });
 });
 
 ai.post("/translate", async (c) => {
@@ -178,7 +178,7 @@ ai.post("/translate", async (c) => {
         return errorResponse(c, (data as { _error?: string })._error || 'AI translation failed', 500);
     }
 
-    return c.json({ success: true, data, rawResult: rawText } as ApiResponse);
+    return successResponse(c, data, { rawResult: rawText });
 });
 
 ai.post("/analyze-group", async (c) => {
@@ -203,7 +203,7 @@ ai.post("/analyze-group", async (c) => {
         return errorResponse(c, (data as { _error?: string })._error || 'AI group analysis failed', 500);
     }
 
-    return c.json({ success: true, data, rawResult: rawText } as ApiResponse);
+    return successResponse(c, data, { rawResult: rawText });
 });
 
 ai.post("/analyze-photo-v2", async (c) => {
@@ -229,7 +229,7 @@ ai.post("/analyze-photo-v2", async (c) => {
         return errorResponse(c, (data as { _error?: string })._error || 'AI refine photo failed', 500);
     }
 
-    return c.json({ success: true, data, rawResult: rawText } as ApiResponse);
+    return successResponse(c, data, { rawResult: rawText });
 });
 
 ai.post("/cluster-photos", async (c) => {
@@ -290,5 +290,5 @@ ai.post("/cluster-photos", async (c) => {
         createdAt: new Date()
     } as typeof groupCorrectionLogs.$inferInsert);
 
-    return c.json({ success: true, data: createdGroups } as ApiResponse);
+    return successResponse(c, createdGroups);
 });

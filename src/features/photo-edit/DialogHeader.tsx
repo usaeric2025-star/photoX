@@ -1,20 +1,20 @@
-import { usePhotoEditSessionContext } from "#src/hooks/photo";
+import { usePhotoEditSessionContext } from "#src/hooks/photo/index.js";
 import React from "react";
-import { Icon } from '#src/components/ui/Icon';
-import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner';
-import { PhotoEditFormData } from "#src/schemas/photoEdit";
+import { Icon } from '#src/components/ui/Icon.js';
+import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner.js';
+import { PhotoEditFormData } from "#src/schemas/photoEdit.js";
 import {
   usePhoto,
   useRemoveFromGroupMutation,
   useAdminMaintenance,
   usePhotoDelete,
   useFilters,
-} from "#src/hooks";
-import { useSignal, useUI } from '#lib/store';
-import { aiAnalysisSignal } from '#lib/ai/executor';
-import { showToast } from "#lib/ui/toast";
-import { ErrorFactory } from "#lib/error/ErrorFactory";
-import { usePhotoEditAI } from "./usePhotoEditAI";
+} from '#src/hooks/index.js';
+import { useSignal, useUI } from '#lib/store/index.js';
+import { aiAnalysisSignal } from '#lib/ai/executor.js';
+import { showToast } from "#lib/ui/toast.js";
+import { ErrorFactory } from "#lib/error/ErrorFactory.js";
+import { usePhotoEditAI } from "./usePhotoEditAI.js";
 
 interface DialogHeaderProps {
   onClose: () => void;

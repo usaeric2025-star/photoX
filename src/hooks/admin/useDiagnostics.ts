@@ -1,10 +1,10 @@
-import { STALE_TIMES } from '#lib/query/config';
-import { useAppMutation, useAppQuery, appQuery } from '#lib/query';
-import { api } from '#lib/api';
-import { queryKeys } from '#lib/query/keys';
-import { useUI, UIStoreState } from '#lib/store';
-import { executeTask } from '#lib/task-queue';
-import { useTranslation } from '#src/hooks';
+import { STALE_TIMES } from '#lib/query/config.js';
+import { useAppMutation, useAppQuery, appQuery } from '#lib/query/index.js';
+import { api } from '#lib/api.js';
+import { queryKeys } from '#lib/query/keys.js';
+import { useUI, UIStoreState } from '#lib/store/index.js';
+import { executeTask } from '#lib/task-queue/index.js';
+import { useTranslation } from '#src/hooks/index.js';
 
 /**
  * useDiagnostics

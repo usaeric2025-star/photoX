@@ -1,14 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'lite-sleek';
-import { useLightbox } from '#lib/lightbox';
-import { useFilters } from '#src/features/filters';
-import { usePermission } from '#src/hooks/core/auth/usePermission';
+import { useLightbox } from '#lib/lightbox/index.js';
+import { useFilters } from '#src/features/filters/index.js';
+import { usePermission } from '#src/hooks/core/auth/usePermission.js';
 
 // Components
-import { LightboxStage } from './components/LightboxStage';
-import { LightboxThumbnails } from './components/LightboxThumbnails';
-import { LightboxHeader } from './components/LightboxHeader';
-import { LightboxInfo } from './components/LightboxInfo';
+import { LightboxStage } from './components/LightboxStage.js';
+import { LightboxThumbnails } from './components/LightboxThumbnails.js';
+import { LightboxHeader } from './components/LightboxHeader.js';
+import { LightboxInfo } from './components/LightboxInfo.js';
 
 interface PhotoLightboxProps {
   photos?: any[];

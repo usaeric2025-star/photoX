@@ -1,11 +1,11 @@
 import React, { useEffect } from 'react';
-import { mutate } from '#lib/query';
-import { loadCategoriesFromCloud } from '#src/services/category/queries';
-import { loadTagsFromCloud } from '#src/services/tag/queries';
-import { queryKeys } from '#lib/query/keys';
-import { AdminPageContent } from './AdminPageContent';
-import { useUI } from '#lib/store';
-import { translations } from '#src/locales';
+import { mutate } from '#lib/query/index.js';
+import { loadCategoriesFromCloud } from '#src/services/category/queries.js';
+import { loadTagsFromCloud } from '#src/services/tag/queries.js';
+import { queryKeys } from '#lib/query/keys.js';
+import { AdminPageContent } from './AdminPageContent.js';
+import { useUI } from '#lib/store/index.js';
+import { translations } from '#src/locales/index.js';
 
 export default function AdminPage() {
   const appLang = useUI((s) => s.appLang);

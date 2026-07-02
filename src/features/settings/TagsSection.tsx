@@ -1,20 +1,20 @@
-import { ErrorFactory } from '#lib/error/ErrorFactory';
-import { useStore } from '#lib/store';
-import { taskStore } from '#src/services/task/taskService';
-import { executeTask } from '#lib/task-queue';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
+import { useStore } from '#lib/store/index.js';
+import { taskStore } from '#src/services/task/taskService.js';
+import { executeTask } from '#lib/task-queue/index.js';
 import React, { useState } from "react";
-import { Icon } from '#src/components/ui/Icon';
-import { Button } from '#src/components/ui/Button';
-import { useDisclosure } from '#src/hooks/core/useDisclosure';
-import { Tag, AppSettings } from "#src/types";
-import { TagItem } from "./TagItem";
-import { PromptDialog } from "#src/components/ui/PromptDialog";
+import { Icon } from '#src/components/ui/Icon.js';
+import { Button } from '#src/components/ui/Button.js';
+import { useDisclosure } from '#src/hooks/core/useDisclosure.js';
+import { Tag, AppSettings } from '#src/types/index.js';
+import { TagItem } from "./TagItem.js";
+import { PromptDialog } from "#src/components/ui/PromptDialog.js";
 
-import { normalizeTagName } from "#lib/utils";
-import { triggerRefreshTagHotScores } from "#src/services/tag/commands";
-import { appQuery } from '#lib/query';
-import { useFormSubmit } from '#lib/forms/useFormSubmit';
-import { FormProvider } from '#lib/forms/useFormField';
+import { normalizeTagName } from "#lib/utils.js";
+import { triggerRefreshTagHotScores } from "#src/services/tag/commands.js";
+import { appQuery } from '#lib/query/index.js';
+import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
+import { FormProvider } from '#lib/forms/useFormField.js';
 import * as v from 'valibot';
 
 interface TagsSectionProps {

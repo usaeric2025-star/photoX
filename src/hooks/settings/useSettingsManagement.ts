@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { useAdminCategory } from '#src/hooks/admin/useAdminCategory';
-import { useUI, UIStoreState } from '#lib/store';
-import { useConfirm } from '#src/context/ConfirmContext';
-import { useTranslation } from '#src/hooks/core/useTranslation';
+import { useAdminCategory } from '#src/hooks/admin/useAdminCategory.js';
+import { useUI, UIStoreState } from '#lib/store/index.js';
+import { useConfirm } from '#src/context/ConfirmContext.js';
+import { useTranslation } from '#src/hooks/core/useTranslation.js';
 
 export const useSettingsManagement = () => {
     const patch = useUI((s: UIStoreState) => s.patch);

@@ -1,9 +1,9 @@
 import React, { Ref } from 'react';
-import { cn } from '#lib/utils';
-import { PhotoListItem } from '#src/types/api';
-import { useIsManagement } from '#src/hooks';
-import { Image } from '#src/components/ui/Image';
-import { getThumbnailUrl } from '#src/services/mappers/utils';
+import { cn } from '#lib/utils.js';
+import { PhotoListItem } from '#src/types/api.js';
+import { useIsManagement } from '#src/hooks/index.js';
+import { Image } from '#src/components/ui/Image.js';
+import { getThumbnailUrl } from '#src/services/mappers/utils.js';
 
 export interface PhotoCardBaseProps extends React.HTMLAttributes<HTMLDivElement> {
   item: PhotoListItem;

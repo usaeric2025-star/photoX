@@ -1,15 +1,15 @@
 import React from 'react';
-import { Button } from "#src/components/shared/Button";
-import { Progress } from "#src/components/shared/Progress";
-import { Alert, AlertDescription } from "#src/components/shared/Alert";
-import { LoadingSpinner } from "#src/components/ui/feedback/LoadingSpinner";
-import { ISSUE_ACTIONS } from "./issueActions";
-import { Icon } from '#src/components/ui/Icon';
-import { useUI, storeAccessor } from '#lib/store';
-import { useTranslation } from '#src/hooks';
-import { MaintPreviewDialog } from './MaintPreviewDialog';
-import { useMaintenanceExecution } from './useMaintenanceExecution';
-import { useConfirm } from '#src/context/ConfirmContext';
+import { Button } from "#src/components/shared/Button.js";
+import { Progress } from "#src/components/shared/Progress.js";
+import { Alert, AlertDescription } from "#src/components/shared/Alert.js";
+import { LoadingSpinner } from "#src/components/ui/feedback/LoadingSpinner.js";
+import { ISSUE_ACTIONS } from "./issueActions.js";
+import { Icon } from '#src/components/ui/Icon.js';
+import { useUI, storeAccessor } from '#lib/store/index.js';
+import { useTranslation } from '#src/hooks/index.js';
+import { MaintPreviewDialog } from './MaintPreviewDialog.js';
+import { useMaintenanceExecution } from './useMaintenanceExecution.js';
+import { useConfirm } from '#src/context/ConfirmContext.js';
 
 interface MaintenanceToolProps {
   issueId: string;

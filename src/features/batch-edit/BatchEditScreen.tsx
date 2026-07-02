@@ -1,16 +1,16 @@
 import React, { useCallback } from 'react';
-import { Icon } from '#src/components/ui/Icon';
-import { useDisclosure } from '#src/hooks/core/useDisclosure';
-import { useConfirm } from '#src/context/ConfirmContext';
-import { ConfirmDialog } from '#src/components/ui/ConfirmDialog';
-import { usePhotoDelete, useTranslation } from '#src/hooks';
-import { BatchEditForm } from './BatchEditForm';
-import { useBatchEdit } from './useBatchEdit';
-import { useSelectedIds, useSelectionActions } from '#src/features/selection';
-import { useFormSubmit } from '#lib/forms/useFormSubmit';
+import { Icon } from '#src/components/ui/Icon.js';
+import { useDisclosure } from '#src/hooks/core/useDisclosure.js';
+import { useConfirm } from '#src/context/ConfirmContext.js';
+import { ConfirmDialog } from '#src/components/ui/ConfirmDialog.js';
+import { usePhotoDelete, useTranslation } from '#src/hooks/index.js';
+import { BatchEditForm } from './BatchEditForm.js';
+import { useBatchEdit } from './useBatchEdit.js';
+import { useSelectedIds, useSelectionActions } from '#src/features/selection/index.js';
+import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import * as v from 'valibot';
-import { Button } from '#src/components/ui/Button';
-import { type ProductFormData } from '#src/types';
+import { Button } from '#src/components/ui/Button.js';
+import { type ProductFormData } from '#src/types/index.js';
 
 function BatchDeleteButton({ selectedIds, onSuccess }: { selectedIds: string[], onSuccess: () => void }) {
   const confirm = useConfirm();

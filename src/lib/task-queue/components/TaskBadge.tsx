@@ -1,8 +1,8 @@
 import React from 'react';
-import { isTaskDrawerOpen, useSignal } from '#lib/store';
-import { globalTaskStatusSignal, globalTaskProgressSignal } from '#src/services/task/taskService';
-import { Icon } from '#src/components/ui/Icon';
-import { Progress } from '#src/components/shared/Progress';
+import { isTaskDrawerOpen, useSignal } from '#lib/store/index.js';
+import { globalTaskStatusSignal, globalTaskProgressSignal } from '#src/services/task/taskService.js';
+import { Icon } from '#src/components/ui/Icon.js';
+import { Progress } from '#src/components/shared/Progress.js';
 
 export function TaskBadge() {
   const status = useSignal(globalTaskStatusSignal);

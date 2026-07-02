@@ -1,5 +1,5 @@
-import { NativeDialog } from '#src/components/ui/NativeDialog';
-import { cn } from '#lib/utils';
+import { NativeDialog } from '#src/components/ui/NativeDialog.js';
+import { cn } from '#lib/utils.js';
 
 interface MenuDialogProps {
   open: boolean;

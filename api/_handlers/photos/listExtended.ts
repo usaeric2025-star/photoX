@@ -2,7 +2,8 @@ import * as v from 'valibot';
 import { db, furnitureItems, groups as groupsTable, tags as tagsTable, photoTags, categories } from '../../_lib/db/index.js';
 import { eq, ne, and, or, ilike, sql, asc, desc, inArray, isNull, count, type SQL } from 'drizzle-orm';
 import { ListByGroupReqSchema, PhotoListReqSchema } from '../../../shared/apiContractSchema.js';
-import { errorFactory } from '../../_lib/error/AppError.js';
+import { errorResponse, successResponse } from '../../_lib/response.js';
+import { errorFactory } from '../../_lib/error/factory.js';
 import { getGroupCounts } from '../../_lib/db/queries/photos.js';
 
 import { Hono, type Context } from 'hono';
@@ -66,9 +67,9 @@ export const listExtendedHandlers = (app: Hono) => {
                 
                 return item;
             });
-            return c.json({ success: true, data: photosFormatted });
+            return successResponse(c, photosFormatted);
         }
-        return c.json({ success: true, data: [] });
+        return successResponse(c, []);
     } catch (error: unknown) {
         throw errorFactory.wrap(error, 'photos.list-by-group', 'QUERY_FAILURE');
     }
@@ -137,9 +138,9 @@ export const listExtendedHandlers = (app: Hono) => {
 
                 return item;
             });
-            return c.json({ success: true, data: { photos: photosFormatted, total: Number(countRes.count) } });
+            return successResponse(c, photosFormatted, { total: Number(countRes.count) });
         }
-        return c.json({ success: true, data: { photos: [], total: 0 } });
+        return successResponse(c, [], { total: 0 });
     } catch (error: unknown) {
         throw errorFactory.wrap(error, 'photos.list-by-group-paginated', 'QUERY_FAILURE');
     }

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'lite-sleek';
-import { Icon } from '#src/components/ui/Icon';
+import { Icon } from '#src/components/ui/Icon.js';
 
 interface LightboxInfoProps {
   currentPhoto: any;

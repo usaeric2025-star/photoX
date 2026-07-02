@@ -1,6 +1,6 @@
-import { translateFields } from "./translationService";
-import { ErrorFactory } from '#lib/error/ErrorFactory';
-import { logger } from "#lib/logger";
+import { translateFields } from "./translationService.js";
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
+import { logger } from "#lib/logger.js";
 
 export interface TranslatedField {
   zh: string;

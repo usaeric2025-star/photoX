@@ -1,9 +1,9 @@
 import { useCallback, useState } from 'react';
-import { copyToClipboard, CopyOptions } from '#src/utils/clipboard';
-import { showToast } from '#lib/ui/toast';
-import { ErrorFactory } from '#lib/error/ErrorFactory';
+import { copyToClipboard, CopyOptions } from '#src/utils/clipboard.js';
+import { showToast } from '#lib/ui/toast.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
-import { useTranslation } from '#src/hooks';
+import { useTranslation } from '#src/hooks/index.js';
 
 interface UseCopyToClipboardOptions extends CopyOptions {
   /** 複製後的 callback */

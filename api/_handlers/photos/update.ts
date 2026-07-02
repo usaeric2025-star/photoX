@@ -4,6 +4,7 @@ import { db, furnitureItems, groups as groupsTable } from '../../_lib/db/index.j
 import { eq, inArray, and } from 'drizzle-orm';
 import { syncGroupCoversAndCount } from '../../_lib/groups.js';
 import { refreshPhotosView } from '../../_lib/db/actions.js';
+import { errorResponse, successResponse } from '../../_lib/response.js';
 import { PhotoBatchUpdateReqSchema, PhotoUpdateReqSchema } from '../../../shared/apiContractSchema.js';
 
 export const updateHandler = (app: Hono) => {
@@ -60,9 +61,9 @@ export const updateHandler = (app: Hono) => {
 
         await refreshPhotosView();
 
-        return c.json({ success: true, data: data.map(d => d.id) });
+        return successResponse(c, data.map(d => d.id));
     } catch (error: unknown) {
-        const { errorFactory } = await import('../../_lib/error/AppError.js');
+        const { errorFactory } = await import('../../_lib/error/factory.js');
         throw errorFactory.wrap(error, 'api./api/photos/update-batch', 'DB_ERROR');
     }
   });
@@ -151,9 +152,9 @@ export const updateHandler = (app: Hono) => {
 
         await refreshPhotosView();
 
-        return c.json({ success: true, data });
+        return successResponse(c, data);
     } catch (error: unknown) {
-        const { errorFactory } = await import('../../_lib/error/AppError.js');
+        const { errorFactory } = await import('../../_lib/error/factory.js');
         throw errorFactory.wrap(error, 'api./api/photos/update', 'DB_ERROR');
     }
   });

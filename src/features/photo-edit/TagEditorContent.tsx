@@ -1,19 +1,19 @@
-import { ErrorFactory } from '#lib/error/ErrorFactory';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import React, { useState, useRef, useDeferredValue } from "react";
-import { NativeDialog } from "#src/components/ui/NativeDialog";
-import { Icon } from '#src/components/ui/Icon';
-import { cn } from "#lib/utils";
-import { useConfirm } from '#src/context/ConfirmContext';
+import { NativeDialog } from "#src/components/ui/NativeDialog.js";
+import { Icon } from '#src/components/ui/Icon.js';
+import { cn } from "#lib/utils.js";
+import { useConfirm } from '#src/context/ConfirmContext.js';
 import {
   useTagSorting,
   useSettings,
   useUI,
   useTagSearch,
-} from "#src/hooks";
-import { MAX_TAGS_PER_PHOTO } from "#src/constants/limits";
-import { Tag } from "#src/types";
-import { SearchInput } from "#src/components/ui/SearchInput";
-import { useLongPress } from "#src/hooks/core/useLongPress";
+} from '#src/hooks/index.js';
+import { MAX_TAGS_PER_PHOTO } from "#src/constants/limits.js";
+import { Tag } from '#src/types/index.js';
+import { SearchInput } from "#src/components/ui/SearchInput.js";
+import { useLongPress } from "#src/hooks/core/useLongPress.js";
 
 interface TagEditorProps {
   tags: Tag[]; // Initial tags or global list

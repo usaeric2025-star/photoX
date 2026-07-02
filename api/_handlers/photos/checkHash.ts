@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { db } from '../../_lib/db/index.js';
 import { furnitureItems } from '../../_lib/db/schema.js';
 import { eq } from 'drizzle-orm';
-import { errorResponse } from '../../_lib/response.js';
+import { errorResponse, successResponse } from '../../_lib/response.js';
 
 export const checkHashHandler = (app: Hono) => {
   app.get('/check-hash', async (c) => {
@@ -17,7 +17,7 @@ export const checkHashHandler = (app: Hono) => {
       .where(eq(furnitureItems.imageHash, hash))
       .limit(1);
 
-    return c.json({
+    return successResponse(c, {
       exists: existing.length > 0,
       photo: existing[0] || null,
     });

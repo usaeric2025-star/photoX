@@ -1,3 +1,3 @@
-export * from '#src/services/photo/upload/dbCommands';
-export * from './r2Client';
-export * from './uploadOrchestrator';
+export * from '#src/services/photo/upload/dbCommands.js';
+export * from './r2Client.js';
+export * from './uploadOrchestrator.js';

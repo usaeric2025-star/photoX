@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { Icon } from '#src/components/ui/Icon';
-import { useDisclosure } from '#src/hooks/core/useDisclosure';
-import { useClickOutside } from '#src/hooks/core/useClickOutside';
-import { PromptDialog } from "#src/components/ui/PromptDialog";
-import { useLongPress } from "#src/hooks/core/useLongPress";
-import { Category } from '#src/types';
-import { useUI } from '#lib/store';
-import { useFormSubmit } from '#lib/forms/useFormSubmit';
+import { Icon } from '#src/components/ui/Icon.js';
+import { useDisclosure } from '#src/hooks/core/useDisclosure.js';
+import { useClickOutside } from '#src/hooks/core/useClickOutside.js';
+import { PromptDialog } from "#src/components/ui/PromptDialog.js";
+import { useLongPress } from "#src/hooks/core/useLongPress.js";
+import { Category } from '#src/types/index.js';
+import { useUI } from '#lib/store/index.js';
+import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import * as v from 'valibot';
-import { FormProvider } from '#lib/forms/useFormField';
-import { useConfirm } from '#src/context/ConfirmContext';
+import { FormProvider } from '#lib/forms/useFormField.js';
+import { useConfirm } from '#src/context/ConfirmContext.js';
 import { motion, AnimatePresence } from 'lite-sleek';
 
 interface CategoriesSectionProps {

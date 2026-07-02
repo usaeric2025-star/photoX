@@ -1,9 +1,9 @@
 import React from 'react';
-import { Icon } from '#src/components/ui/Icon';
-import { buttonStyles } from '#src/styles/buttonStyles';
-import { usePermission } from '#src/hooks';
-import { useAppRouter } from '#lib/router';
-import { useIsMultiSelect } from '#src/features/selection';
+import { Icon } from '#src/components/ui/Icon.js';
+import { buttonStyles } from '#src/styles/buttonStyles.js';
+import { usePermission } from '#src/hooks/index.js';
+import { useAppRouter } from '#lib/router/index.js';
+import { useIsMultiSelect } from '#src/features/selection/index.js';
 
 interface UploadButtonProps {
   onAdd?: () => void;

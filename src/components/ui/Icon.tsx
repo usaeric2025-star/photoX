@@ -1,5 +1,5 @@
 import { LucideIcon as LucideIconBase } from 'lucide-react-sprite';
-import { cn } from '#lib/utils';
+import { cn } from '#lib/utils.js';
 
 export type IconName = string;
 

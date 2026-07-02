@@ -1,10 +1,10 @@
-import { AppSettings } from '#src/types';
+import { AppSettings } from '#src/types/index.js';
 import React from 'react';
-import { useAppQuery, useAppMutation, appQuery } from '#lib/query';
-import { fetchPublicSettings } from '#src/services/settings/queries';
-import { saveSettings } from '#src/services/settings/commands';
-import { STALE_TIMES } from '#lib/query/config';
-import { queryKeys } from '#lib/query/keys';
+import { useAppQuery, useAppMutation, appQuery } from '#lib/query/index.js';
+import { fetchPublicSettings } from '#src/services/settings/queries.js';
+import { saveSettings } from '#src/services/settings/commands.js';
+import { STALE_TIMES } from '#lib/query/config.js';
+import { queryKeys } from '#lib/query/keys.js';
 
 const SETTINGS_KEY = ['settings', 'public'];
 

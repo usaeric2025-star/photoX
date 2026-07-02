@@ -1,16 +1,16 @@
-import { useAppRouter } from '#lib/router';
+import { useAppRouter } from '#lib/router/index.js';
 import React from 'react';
-import { cn } from '#lib/utils';
-import { useAuth, activeTaskCountSignal, useSignal } from '#lib/store';
-import { useUI, useSettings, useAdminBatchActions, usePermission } from '#src/hooks';
-import { useAppQuery } from '#lib/query';
-import { api } from '#lib/api';
-import { translations, TranslationType } from "#src/locales";
+import { cn } from '#lib/utils.js';
+import { useAuth, activeTaskCountSignal, useSignal } from '#lib/store/index.js';
+import { useUI, useSettings, useAdminBatchActions, usePermission } from '#src/hooks/index.js';
+import { useAppQuery } from '#lib/query/index.js';
+import { api } from '#lib/api.js';
+import { translations, TranslationType } from '#src/locales/index.js';
 import { storage } from '#src/services/storage/index.js';
-import { useIsMultiSelect, useSelectionActions } from '#src/features/selection';
-import { AdminHeaderLogo } from './AdminHeaderLogo';
-import { AdminHeaderActions } from './AdminHeaderActions';
-import { AdminHeaderMenu } from './AdminHeaderMenu';
+import { useIsMultiSelect, useSelectionActions } from '#src/features/selection/index.js';
+import { AdminHeaderLogo } from './AdminHeaderLogo.js';
+import { AdminHeaderActions } from './AdminHeaderActions.js';
+import { AdminHeaderMenu } from './AdminHeaderMenu.js';
 
 interface AdminHeaderProps {
   className?: string;

@@ -1,40 +1,12 @@
-import { logger } from '#lib/logger';
+import { logger } from '#lib/logger.js';
 import { createClient } from '@supabase/supabase-js';
-import { ErrorFactory } from './error/ErrorFactory';
+import { ErrorFactory } from './error/ErrorFactory.js';
+import { getClientEnv } from '#shared/envSchema.js';
 
-/**
- * 安全获取环境变量
- * 兼容 Vite (import.meta.env) 和 Node.js (process.env)
- */
-const getEnv = (key: string, required: boolean = true): string => {
-  // Statically check keys for robust Vite production compilation
-  if (key === 'VITE_SUPABASE_URL') {
-    return import.meta.env.VITE_SUPABASE_URL || (typeof process !== 'undefined' && process.env ? process.env.VITE_SUPABASE_URL : '') || '';
-  }
-  if (key === 'VITE_SUPABASE_ANON_KEY') {
-    return import.meta.env.VITE_SUPABASE_ANON_KEY || (typeof process !== 'undefined' && process.env ? process.env.VITE_SUPABASE_ANON_KEY : '') || '';
-  }
-  if (key === 'NODE_ENV') {
-    return import.meta.env.MODE || (typeof process !== 'undefined' && process.env ? process.env.NODE_ENV : '') || 'production';
-  }
+const clientEnv = getClientEnv(import.meta.env);
 
-  // Fallback to dynamic checking
-  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
-    return import.meta.env[key];
-  }
-  // 降级使用 process.env（运行时）
-  if (typeof process !== 'undefined' && process.env && process.env[key]) {
-    return process.env[key];
-  }
-  // 既没有 import.meta.env 也没有 process.env
-  if (required) {
-    logger.error(`❌ 环境变量 ${key} 未找到`);
-  }
-  return '';
-};
-
-const supabaseUrl = getEnv('VITE_SUPABASE_URL');
-const supabaseAnonKey = getEnv('VITE_SUPABASE_ANON_KEY');
+const supabaseUrl = clientEnv.VITE_SUPABASE_URL;
+const supabaseAnonKey = clientEnv.VITE_SUPABASE_ANON_KEY;
 
 // 验证环境变量
 let isSupabaseConfigured = true;
@@ -89,7 +61,7 @@ export const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabas
 }) as unknown as ReturnType<typeof createClient>);
 
 // 开发环境挂载到 window，方便调试（可选）
-if (typeof window !== 'undefined' && getEnv('NODE_ENV', false) === 'development') {
+if (typeof window !== 'undefined' && clientEnv.MODE === 'development') {
   (window as unknown as { supabase: unknown }).supabase = supabase;
 }
 

@@ -1,8 +1,8 @@
 import React from 'react';
-import { ConfirmDialog } from '#src/components/ui/ConfirmDialog';
+import { ConfirmDialog } from '#src/components/ui/ConfirmDialog.js';
 import { createStore } from '@storve/core';
-import { useStore, useUI } from '#lib/store';
-import { translations } from '#src/locales';
+import { useStore, useUI } from '#lib/store/index.js';
+import { translations } from '#src/locales/index.js';
 
 interface ConfirmOptions {
   title: string;

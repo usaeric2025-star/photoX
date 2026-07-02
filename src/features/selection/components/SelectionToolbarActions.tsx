@@ -1,6 +1,6 @@
 import React from 'react';
-import { Icon } from '#src/components/ui/Icon';
-import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner';
+import { Icon } from '#src/components/ui/Icon.js';
+import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner.js';
 
 interface SelectionToolbarActionsProps {
   selectedCount: number;

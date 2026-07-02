@@ -1,4 +1,4 @@
-import { useAdminMode } from './auth/useAdminMode';
+import { useAdminMode } from './auth/useAdminMode.js';
 
 /**
  * useIsManagement

@@ -1,7 +1,7 @@
-import { api } from '#lib/api';
-import { supabase } from '#lib/supabase';
-import { Tag } from '#src/types';
-import { ErrorFactory } from '#lib/error/ErrorFactory';
+import { api } from '#lib/api.js';
+import { supabase } from '#lib/supabase.js';
+import { Tag } from '#src/types/index.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
 const TABLE_NAME = 'tags';
 const ALLOWED_FIELDS = ['id', 'name', 'zh', 'en', 'ms', 'aliases', 'userId', 'hot_score'];

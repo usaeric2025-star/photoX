@@ -1,7 +1,7 @@
-import { logger } from '#lib/logger';
+import { logger } from '#lib/logger.js';
 import * as React from 'react';
-import { NativeDialog } from '#src/components/ui/NativeDialog';
-import { useUI } from '#lib/store';
+import { NativeDialog } from '#src/components/ui/NativeDialog.js';
+import { useUI } from '#lib/store/index.js';
 
 interface ConfirmDialogProps {
   open: boolean;

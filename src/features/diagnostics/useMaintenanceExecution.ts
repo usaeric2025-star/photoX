@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { ISSUE_ACTIONS, PreviewResult } from "./issueActions";
-import { createTask } from '#lib/task-queue';
-import { ErrorFactory } from '#lib/error/ErrorFactory';
-import { useAuth } from '#lib/store';
+import { ISSUE_ACTIONS, PreviewResult } from "./issueActions.js";
+import { createTask } from '#lib/task-queue/index.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
+import { useAuth } from '#lib/store/index.js';
 
 export function useMaintenanceExecution(issueId: string, title: string, onSuccess?: () => void) {
   const { user } = useAuth();

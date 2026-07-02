@@ -1,7 +1,7 @@
-import { Category } from '#src/types';
-import { createCategory, updateCategory, deleteCategory } from '#src/services/category/commands';
-import { queryKeys } from '#lib/query/keys';
-import { useAppMutation, appQuery } from '#lib/query';
+import { Category } from '#src/types/index.js';
+import { createCategory, updateCategory, deleteCategory } from '#src/services/category/commands.js';
+import { queryKeys } from '#lib/query/keys.js';
+import { useAppMutation, appQuery } from '#lib/query/index.js';
 
 export const useCategoryCreate = () => useAppMutation({
   mutationFn: async (variables: string | Partial<Category>) => {

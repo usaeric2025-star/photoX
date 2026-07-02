@@ -1,9 +1,9 @@
 import { useCallback } from 'react';
-import { useUI } from '#lib/store';
-import { useAIBatchAnalysis } from '#src/hooks/photo/useAIBatchAnalysis';
-import { logger } from '#lib/logger';
-import { ErrorFactory } from '#lib/error/ErrorFactory';
-import { useSelectedIds } from '#src/features/selection';
+import { useUI } from '#lib/store/index.js';
+import { useAIBatchAnalysis } from '#src/hooks/photo/useAIBatchAnalysis.js';
+import { logger } from '#lib/logger.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
+import { useSelectedIds } from '#src/features/selection/index.js';
 
 export function useAdminBatchActions() {
   const { handleBatchAiAnalyze } = useAIBatchAnalysis();
@@ -33,9 +33,9 @@ export function useAdminBatchActions() {
       const targetPhotos = (photosToProcess).filter((p) => 
         targetIds.includes(p.id) || (p.groupId && groupIdsArray.includes(p.groupId))
       );
-      handleBatchAiAnalyze(targetPhotos as unknown as import('#src/types').Photo[]);
+      handleBatchAiAnalyze(targetPhotos as unknown as import('#src/types/index.js').Photo[]);
     } else {
-      handleBatchAiAnalyze(photosToProcess as unknown as import('#src/types').Photo[]);
+      handleBatchAiAnalyze(photosToProcess as unknown as import('#src/types/index.js').Photo[]);
     }
   };
 

@@ -1,10 +1,10 @@
-import { scheduler } from './scheduler';
-import { generateId } from '#lib/id';
-import { logger } from '#lib/logger';
-import { ErrorFactory } from '#lib/error';
-import { isTaskDrawerOpen } from '#lib/store';
-import { getErrorMessage } from '#lib/error/errorMessages';
-import type { Task, TaskType, TaskState } from './types';
+import { scheduler } from './scheduler.js';
+import { generateId } from '#lib/id.js';
+import { logger } from '#lib/logger.js';
+import { ErrorFactory } from '#lib/error/index.js';
+import { isTaskDrawerOpen } from '#lib/store/index.js';
+import { getErrorMessage } from '#lib/error/errorMessages.js';
+import type { Task, TaskType, TaskState } from './types.js';
 
 export interface TaskConfig<T = unknown> {
   /** 任務類型 */

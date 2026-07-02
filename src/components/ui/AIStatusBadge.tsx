@@ -1,7 +1,7 @@
 import React from 'react';
-import { useSignal } from '#lib/store';
-import { aiAnalysisSignal } from '#lib/ai/executor';
-import { Icon } from '#src/components/ui/Icon';
+import { useSignal } from '#lib/store/index.js';
+import { aiAnalysisSignal } from '#lib/ai/executor.js';
+import { Icon } from '#src/components/ui/Icon.js';
 
 export function AIStatusBadge() {
   const aiStatus = useSignal(aiAnalysisSignal);

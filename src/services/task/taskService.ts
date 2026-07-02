@@ -1,6 +1,6 @@
 import { createStore } from '@storve/core';
 import { signal } from '@storve/core/signals';
-import { Task } from '#lib/task-queue/types';
+import { Task } from '#lib/task-queue/types.js';
 
 interface TaskServiceState {
   tasks: Map<string, Task>;

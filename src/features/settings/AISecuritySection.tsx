@@ -1,16 +1,16 @@
-import { OpenRouterConfigBlock } from './OpenRouterConfigBlock';
-import { AgnesConfigBlock } from './AgnesConfigBlock';
-import { ErrorFactory } from '#lib/error/ErrorFactory';
-import { logger } from '#lib/logger';
+import { OpenRouterConfigBlock } from './OpenRouterConfigBlock.js';
+import { AgnesConfigBlock } from './AgnesConfigBlock.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
+import { logger } from '#lib/logger.js';
 
 import React, { useCallback } from 'react';
-import { Icon } from '#src/components/ui/Icon';
-import { AppSettings } from '#src/types';
-import { useUI } from '#lib/store';
-import { translations } from '#src/locales';
+import { Icon } from '#src/components/ui/Icon.js';
+import { AppSettings } from '#src/types/index.js';
+import { useUI } from '#lib/store/index.js';
+import { translations } from '#src/locales/index.js';
 
-import { api } from '#lib/api';
-import { useFormSubmit } from '#lib/forms/useFormSubmit';
+import { api } from '#lib/api.js';
+import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import * as v from 'valibot';
 
 const KeySaveSchema = v.object({

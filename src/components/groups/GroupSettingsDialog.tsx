@@ -1,11 +1,11 @@
 import React from 'react';
-import { NativeDialog } from "#src/components/ui/NativeDialog";
-import { ProductGroup, Dimension } from '#src/types';
-import { useAdminMode } from '#src/hooks';
-import { Input } from "#src/components/shared/Input";
-import { useConfirm } from '#src/context/ConfirmContext';
-import { Button } from "#src/components/shared/Button";
-import { Icon } from '#src/components/ui/Icon';
+import { NativeDialog } from "#src/components/ui/NativeDialog.js";
+import { ProductGroup, Dimension } from '#src/types/index.js';
+import { useAdminMode } from '#src/hooks/index.js';
+import { Input } from "#src/components/shared/Input.js";
+import { useConfirm } from '#src/context/ConfirmContext.js';
+import { Button } from "#src/components/shared/Button.js";
+import { Icon } from '#src/components/ui/Icon.js';
 
 interface GroupSettingsDialogProps {
   showGroupSettings: boolean;

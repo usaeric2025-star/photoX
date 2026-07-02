@@ -3,7 +3,7 @@ import * as v from 'valibot';
 import { db, groups as groupsTable, furnitureItems } from '../_lib/db/index.js';
 import { eq, and, inArray, isNull, sql } from 'drizzle-orm';
 import { GroupReqSchema } from '../../shared/apiContractSchema.js';
-import { errorResponse } from '../_lib/response.js';
+import { errorResponse, successResponse } from '../_lib/response.js';
 import { syncGroupCoversAndCount } from '../_lib/groups.js';
 import { refreshPhotosView } from '../_lib/db/actions.js';
 import { getAllGroups, getGroupById, upsertGroup, deleteGroup } from '../_lib/db/queries/groups.js';
@@ -12,13 +12,13 @@ export const groups = new Hono()
   .get('/', async (c) => {
     const isAdminByQuery = c.req.query('isAdminMode') === 'true';
     const data = await getAllGroups({ isAdminMode: isAdminByQuery });
-    return c.json({ success: true, data });
+    return successResponse(c, data);
   })
   .get('/:id', async (c) => {
     const id = c.req.param('id');
     const data = await getGroupById(id);
     if (!data) return errorResponse(c, 'Not found', 404);
-    return c.json({ success: true, data });
+    return successResponse(c, data);
   })
   .post('/', async (c) => {
     const body = await c.req.json();
@@ -40,7 +40,7 @@ export const groups = new Hono()
     };
 
     const [data] = await db.insert(groupsTable).values([insertData as unknown as typeof groupsTable.$inferInsert]).returning();
-    return c.json({ success: true, data });
+    return successResponse(c, data);
   })
   .put('/:id', async (c) => {
     const id = c.req.param('id');
@@ -56,7 +56,7 @@ export const groups = new Hono()
         .where(eq(groupsTable.id, id))
         .returning();
     
-    return c.json({ success: true, data });
+    return successResponse(c, data);
   })
   .post('/upsert', async (c) => {
     const dbUpdates = await c.req.json() as Record<string, unknown>;
@@ -83,13 +83,13 @@ export const groups = new Hono()
 
     await refreshPhotosView();
 
-    return c.json({ success: true, data });
+    return successResponse(c, data);
   })
   .delete('/:id', async (c) => {
     const id = c.req.param('id');
     await deleteGroup(id);
     await refreshPhotosView();
-    return c.json({ success: true });
+    return successResponse(c, null);
   })
   .post('/group-photos', async (c) => {
       const body = await c.req.json();
@@ -203,7 +203,7 @@ export const groups = new Hono()
       await syncGroupCoversAndCount(affectedGroupIds);
       await refreshPhotosView();
 
-      return c.json({ success: true });
+      return successResponse(c, null);
   })
   .post('/move-photos', async (c) => {
     const body = await c.req.json();
@@ -234,7 +234,7 @@ export const groups = new Hono()
     await syncGroupCoversAndCount(affectedGroupIds);
     await refreshPhotosView();
 
-    return c.json({ success: true });
+    return successResponse(c, null);
   })
   .post('/set-cover', async (c) => {
     const body = await c.req.json();
@@ -260,7 +260,7 @@ export const groups = new Hono()
     await syncGroupCoversAndCount([groupId]);
     await refreshPhotosView();
 
-    return c.json({ success: true });
+    return successResponse(c, null);
   })
   .post('/ungroup', async (c) => {
     const body = await c.req.json();
@@ -280,7 +280,7 @@ export const groups = new Hono()
 
     await refreshPhotosView();
 
-    return c.json({ success: true });
+    return successResponse(c, null);
   })
   .post('/sync-count', async (c) => {
     const body = await c.req.json();
@@ -288,10 +288,10 @@ export const groups = new Hono()
     if (!check.success) return errorResponse(c, check.issues[0].message, 400);
 
     const { groupId } = check.output;
-    if (!groupId) return c.json({ success: true });
+    if (!groupId) return successResponse(c, null);
     
     await syncGroupCoversAndCount([groupId]);
-    return c.json({ success: true });
+    return successResponse(c, null);
   })
   .post('/repair-integrity', async (c) => {
     const groups = await db.select({ id: groupsTable.id }).from(groupsTable);
@@ -322,5 +322,5 @@ export const groups = new Hono()
 
     await refreshPhotosView();
 
-    return c.json({ success: true, data: { dissolved, synced, deleted } });
+    return successResponse(c, { dissolved, synced, deleted });
   });

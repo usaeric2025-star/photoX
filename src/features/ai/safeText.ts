@@ -1,4 +1,4 @@
-import { ErrorFactory } from '#lib/error/ErrorFactory';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
 /**
  * Clean up redundant language tag prefixes like "zh:", "en:", "ms:" or quotes from the string.

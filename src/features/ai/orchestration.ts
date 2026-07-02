@@ -1,21 +1,21 @@
-import { analyzePhoto } from './commands';
-import { translateFields } from './translationService';
-import { updatePhoto } from '#src/services/photo';
-import { syncPhotoTags, loadTagsFromCloud, batchCreateTags } from '#src/services/tag';
-import { ErrorFactory } from '#lib/error/ErrorFactory';
-import { analyzeGroup, analyzeSinglePhotoDetail as analyzeSinglePhoto } from './commands';
-import { updateGroup, groupPhotos } from '#src/services/group/commands';
-import { resolveTagNamesToIds } from '#src/services/tag/completion';
-import { withTimeout } from '#lib/utils';
-import { logger } from '#lib/logger';
-import { mapAiToMultilingual } from './mapping';
+import { analyzePhoto } from './commands.js';
+import { translateFields } from './translationService.js';
+import { updatePhoto } from '#src/services/photo/index.js';
+import { syncPhotoTags, loadTagsFromCloud, batchCreateTags } from '#src/services/tag/index.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
+import { analyzeGroup, analyzeSinglePhotoDetail as analyzeSinglePhoto } from './commands.js';
+import { updateGroup, groupPhotos } from '#src/services/group/commands.js';
+import { resolveTagNamesToIds } from '#src/services/tag/completion.js';
+import { withTimeout } from '#lib/utils.js';
+import { logger } from '#lib/logger.js';
+import { mapAiToMultilingual } from './mapping.js';
 
-export * from './utils';
-import { hasExistingInfo } from './utils';
-import { supabase } from '#lib/supabase';
-import { api } from '#lib/api';
+export * from './utils.js';
+import { hasExistingInfo } from './utils.js';
+import { supabase } from '#lib/supabase.js';
+import { api } from '#lib/api.js';
 
-import { Photo, Dimension, ProductGroup } from '#src/types';
+import { Photo, Dimension, ProductGroup } from '#src/types/index.js';
 
 interface PhotoAnalysisResponse {
   name?: unknown;

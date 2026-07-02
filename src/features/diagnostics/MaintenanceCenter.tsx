@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Icon } from '#src/components/ui/Icon';
-import { MaintenanceTool } from './MaintenanceTool';
+import { Icon } from '#src/components/ui/Icon.js';
+import { MaintenanceTool } from './MaintenanceTool.js';
 
 interface MaintenanceCenterProps {
   onSuccess: () => void;

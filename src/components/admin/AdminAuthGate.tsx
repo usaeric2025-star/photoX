@@ -1,11 +1,11 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { useAuth } from '#lib/store';
-import { usePublicSettings } from '#src/hooks';
-import { useLocalStorage } from '#src/hooks/core/useLocalStorage';
-import { ErrorFactory } from '#lib/error/ErrorFactory';
-import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner';
+import { useAuth } from '#lib/store/index.js';
+import { usePublicSettings } from '#src/hooks/index.js';
+import { useLocalStorage } from '#src/hooks/core/useLocalStorage.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
+import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner.js';
 
-const LoginScreen = lazy(() => import('./LoginScreen').then(m => ({ default: m.LoginScreen })));
+const LoginScreen = lazy(() => import('./LoginScreen.js').then(m => ({ default: m.LoginScreen })));
 
 interface AdminAuthGateProps {
   children: React.ReactNode;

@@ -1,9 +1,9 @@
 import React from 'react';
-import { cn } from '#lib/utils';
-import { Icon } from '#src/components/ui/Icon';
-import { isTaskDrawerOpenSignal } from '#lib/store';
+import { cn } from '#lib/utils.js';
+import { Icon } from '#src/components/ui/Icon.js';
+import { isTaskDrawerOpenSignal } from '#lib/store/index.js';
 
-import { Theme, TranslationType } from '#src/types';
+import { Theme, TranslationType } from '#src/types/index.js';
 
 interface AdminHeaderActionsProps {
   multiSelect: boolean;

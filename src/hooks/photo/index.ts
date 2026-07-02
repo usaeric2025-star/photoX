@@ -1,13 +1,13 @@
-export * from './useTagSorting';
+export * from './useTagSorting.js';
 
 // Modularized business hooks
-export * from './usePhotos';
-export * from './usePhotoGrid';
-export * from './usePhoto';
-export * from './usePhotoMutations';
-export * from './useInvalidatePhotos';
-export * from './useAIBatchAnalysis';
-export * from './usePhotoAIResult';
-export * from './PhotoEditSession';
-export * from './usePhotoEditSessionContext';
+export * from './usePhotos.js';
+export * from './usePhotoGrid.js';
+export * from './usePhoto.js';
+export * from './usePhotoMutations.js';
+export * from './useInvalidatePhotos.js';
+export * from './useAIBatchAnalysis.js';
+export * from './usePhotoAIResult.js';
+export * from './PhotoEditSession.js';
+export * from './usePhotoEditSessionContext.js';
 

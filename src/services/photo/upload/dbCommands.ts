@@ -1,6 +1,6 @@
-import { ErrorFactory } from '#lib/error/ErrorFactory';
-import { Photo } from '#src/types';
-import { api } from '#lib/api';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
+import { Photo } from '#src/types/index.js';
+import { api } from '#lib/api.js';
 
 export const upsertPhotoRecord = async (payload: Record<string, unknown>): Promise<unknown> => {
     let res;

@@ -1,7 +1,7 @@
 import { useForm } from '@tanstack/react-form';
 import * as v from 'valibot';
-import { showToast } from '#lib/ui/toast';
-import { ErrorFactory } from '#lib/error/ErrorFactory';
+import { showToast } from '#lib/ui/toast.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
 // ✅ 匯出 TanStack Form 核心 API
 ;
@@ -15,9 +15,9 @@ function handleFormError(error: unknown) {
 }
 
 // ✅ 匯出專案自定義表單工具
-export * from './useAppForm';
-export * from './useFormSubmit';
-export * from './useFormField';
-export * from './AppField';
-export * from './adapters/photoEditAdapter';
+export * from './useAppForm.js';
+export * from './useFormSubmit.js';
+export * from './useFormField.js';
+export * from './AppField.js';
+export * from './adapters/photoEditAdapter.js';
 

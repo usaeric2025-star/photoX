@@ -50,7 +50,7 @@ class Logger {
       console.warn(`[PERF] ${label} exceeded threshold (${threshold}ms): ${duration.toFixed(2)}ms`);
       // Record incident for diagnostics - skip if in worker (no localStorage)
       if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-        import('./perfAudit').then(({ perfAudit }) => {
+        import('./perfAudit.js').then(({ perfAudit }) => {
           perfAudit.record({ label, duration, threshold });
         }).catch(() => {});
       }

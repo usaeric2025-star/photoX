@@ -1,14 +1,14 @@
 import React, { memo } from 'react';
-import { Category, Tag } from '#src/types';
-import { PhotoListItem } from '#src/types/api';
-import { PhotoCardBase } from './PhotoCardBase';
-import { PhotoStatusBadges, PhotoCardInfo, PhotoSelectionIndicator } from './PhotoCardParts';
-import { PinButton } from './PinButton';
-import { useColumns, usePermission, usePerformance } from '#src/hooks';
-import { useIsMultiSelect, useIsPhotoSelected } from '#src/features/selection';
-import { useSignal, useUI } from '#lib/store';
-import { gridColumns as gridColumnsSignal } from '#lib/store';
-import { usePhotoCard } from '#src/hooks/photo/usePhotoCard';
+import { Category, Tag } from '#src/types/index.js';
+import { PhotoListItem } from '#src/types/api.js';
+import { PhotoCardBase } from './PhotoCardBase.js';
+import { PhotoStatusBadges, PhotoCardInfo, PhotoSelectionIndicator } from './PhotoCardParts.js';
+import { PinButton } from './PinButton.js';
+import { useColumns, usePermission, usePerformance } from '#src/hooks/index.js';
+import { useIsMultiSelect, useIsPhotoSelected } from '#src/features/selection/index.js';
+import { useSignal, useUI } from '#lib/store/index.js';
+import { gridColumns as gridColumnsSignal } from '#lib/store/index.js';
+import { usePhotoCard } from '#src/hooks/photo/usePhotoCard.js';
 
 interface AdminPhotoCardProps {
   photo: PhotoListItem;

@@ -1,10 +1,10 @@
 import React from "react";
-import { PhotoEditSchema } from "#src/schemas/photoEdit";
-import { useAppForm } from "#lib/forms/useAppForm";
-import { useCategories, useManufacturers, useTags, useTranslation } from "#src/hooks";
+import { PhotoEditSchema } from "#src/schemas/photoEdit.js";
+import { useAppForm } from "#lib/forms/useAppForm.js";
+import { useCategories, useManufacturers, useTags, useTranslation } from '#src/hooks/index.js';
 import { Field } from "@tanstack/react-form";
 
-import { type PhotoEditFormData } from "#src/schemas/photoEdit";
+import { type PhotoEditFormData } from "#src/schemas/photoEdit.js";
 
 interface BatchEditFormProps {
   formState: Record<string, unknown>;

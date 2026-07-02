@@ -1,7 +1,7 @@
 // src/lib/error/index.ts
 import { ErrorFactory } from './ErrorFactory.js';
 export { ErrorCode } from '#shared/errorCodes.js';
-export { ErrorSeverity, isAppError } from './AppError.js';
+export { ErrorSeverity, isAppError, AppError, ErrorCategory } from '#shared/AppError.js';
 export { ErrorFactory };
 
 // Re-export common methods for backward compatibility

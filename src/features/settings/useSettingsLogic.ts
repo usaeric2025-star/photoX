@@ -1,22 +1,22 @@
 import { useState, useCallback } from "react";
-import { logger } from '#lib/logger';
-import { AppSettings, Tag, Manufacturer, Category, User, Photo } from "#src/types";
-import { DEFAULT_AI_MODEL } from '#src/config/ai';
-import { useUI } from '#lib/store';
-import { testAiConnection } from "#src/features/ai/commands";
-import { runHealthCheck } from "#src/services/photo/utils";
+import { logger } from '#lib/logger.js';
+import { AppSettings, Tag, Manufacturer, Category, User, Photo } from '#src/types/index.js';
+import { DEFAULT_AI_MODEL } from '#src/config/ai.js';
+import { useUI } from '#lib/store/index.js';
+import { testAiConnection } from "#src/features/ai/commands.js";
+import { runHealthCheck } from "#src/services/photo/utils.js";
 import {
   normalizeTagName,
   normalizeManufacturerName,
-} from "#lib/utils";
-import { api } from "#lib/api";
-import { useInvalidatePhotos } from "#src/hooks";
-import { executeTask } from '#lib/task-queue';
-import { uploadToR2 } from '#src/features/upload/services/r2Client';
-import { ErrorFactory } from '#lib/error/ErrorFactory';
-import { showToast } from '#lib/ui/toast';
+} from "#lib/utils.js";
+import { api } from "#lib/api.js";
+import { useInvalidatePhotos } from '#src/hooks/index.js';
+import { executeTask } from '#lib/task-queue/index.js';
+import { uploadToR2 } from '#src/features/upload/services/r2Client.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
+import { showToast } from '#lib/ui/toast.js';
 
-import { translations } from "#src/locales";
+import { translations } from '#src/locales/index.js';
 
 interface UseSettingsLogicProps {
   user: User | null;
@@ -27,8 +27,8 @@ interface UseSettingsLogicProps {
   setSettings: (s: AppSettings) => void;
 }
 
-import { useDebouncedCallback } from '#src/hooks/core/useDebouncedCallback';
-import { useFormSubmit } from "#lib/forms/useFormSubmit";
+import { useDebouncedCallback } from '#src/hooks/core/useDebouncedCallback.js';
+import { useFormSubmit } from "#lib/forms/useFormSubmit.js";
 import * as v from 'valibot';
 
 export const useSettingsLogic = ({

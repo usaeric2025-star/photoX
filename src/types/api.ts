@@ -1,5 +1,5 @@
 import * as v from 'valibot';
-import { Photo } from './photo';
+import { Photo } from './photo.js';
 import type { 
   ApiResponse as BaseApiResponse,
   PhotoListReqSchema,

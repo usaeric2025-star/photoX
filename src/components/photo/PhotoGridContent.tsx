@@ -1,13 +1,13 @@
 import React from 'react';
 import { motion } from 'lite-sleek';
-import { PhotoListItem } from '#src/types/api';
-import { EmptyState } from '#src/components/ui/EmptyState';
-import { useSignal } from '#lib/store';
-import { gridColumns as gridColumnsSignal } from '#lib/store';
-import { useTranslation } from '#src/hooks';
-import { CardSkeleton } from '#src/components/photo/CardSkeleton';
-import { VirtualizedGrid } from './VirtualizedGrid';
-import { PhotoErrorDisplay } from './PhotoErrorDisplay';
+import { PhotoListItem } from '#src/types/api.js';
+import { EmptyState } from '#src/components/ui/EmptyState.js';
+import { useSignal } from '#lib/store/index.js';
+import { gridColumns as gridColumnsSignal } from '#lib/store/index.js';
+import { useTranslation } from '#src/hooks/index.js';
+import { CardSkeleton } from '#src/components/photo/CardSkeleton.js';
+import { VirtualizedGrid } from './VirtualizedGrid.js';
+import { PhotoErrorDisplay } from './PhotoErrorDisplay.js';
 
 interface PhotoGridContentProps {
   photos: PhotoListItem[];

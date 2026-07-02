@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { useAppRouter } from '#lib/router';
-import { Group } from '#src/types';
-import { Icon } from '#src/components/ui/Icon';
-import { copyToClipboard } from '#src/utils/clipboard';
-import { showToast } from '#lib/ui/toast';
-import { useTranslation } from '#src/hooks/core/useTranslation';
+import { useAppRouter } from '#lib/router/index.js';
+import { Group } from '#src/types/index.js';
+import { Icon } from '#src/components/ui/Icon.js';
+import { copyToClipboard } from '#src/utils/clipboard.js';
+import { showToast } from '#lib/ui/toast.js';
+import { useTranslation } from '#src/hooks/core/useTranslation.js';
 
 interface PublicGroupHeaderProps {
   group: Group;

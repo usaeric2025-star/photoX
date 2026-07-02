@@ -1,7 +1,7 @@
 import React from 'react';
 import { Field } from "@tanstack/react-form";
 import { FormApi } from "@tanstack/react-form";
-import { Manufacturer } from '#src/types';
+import { Manufacturer } from '#src/types/index.js';
 
 interface ManufacturerSelectProps {
   form: unknown;

@@ -1,2 +1,2 @@
-export * from './useManufacturers';
-export * from './useManufacturerMutations';
+export * from './useManufacturers.js';
+export * from './useManufacturerMutations.js';

@@ -1,3 +1,3 @@
-export * from './useSettings';
-export * from './useSettingsMutations';
-export * from './useSettingsManagement';
+export * from './useSettings.js';
+export * from './useSettingsMutations.js';
+export * from './useSettingsManagement.js';

@@ -1,6 +1,6 @@
 import React from 'react';
-import { Icon } from '#src/components/ui/Icon';
-import { AppSettings } from '#src/types';
+import { Icon } from '#src/components/ui/Icon.js';
+import { AppSettings } from '#src/types/index.js';
 
 interface WhatsAppSectionProps {
   settings: AppSettings | null;

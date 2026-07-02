@@ -3,7 +3,7 @@ import * as v from 'valibot';
 import { db, furnitureItems } from '../../_lib/db/index.js';
 import { inArray, eq } from 'drizzle-orm';
 import { PhotoIdsReqSchema, PhotoCheckHashReqSchema } from '../../../shared/apiContractSchema.js';
-import { errorResponse } from '../../_lib/response.js';
+import { errorResponse, successResponse } from '../../_lib/response.js';
 
 export const detailHandler = (app: Hono) => {
   app.post('/by-ids', async (c) => {
@@ -31,7 +31,7 @@ export const detailHandler = (app: Hono) => {
         };
     });
 
-    return c.json({ success: true, data: formatted });
+    return successResponse(c, formatted);
   });
 
   app.post('/check-hash', async (c) => {
@@ -47,6 +47,6 @@ export const detailHandler = (app: Hono) => {
         },
         where: eq(furnitureItems.imageHash, hash)
     });
-    return c.json({ success: true, data: data || null });
+    return successResponse(c, data || null);
   });
 };

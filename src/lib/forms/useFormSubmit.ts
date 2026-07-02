@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { showToast } from '#lib/ui/toast';
+import { showToast } from '#lib/ui/toast.js';
 import * as v from 'valibot';
-import { ErrorFactory } from '#lib/error/ErrorFactory';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
 interface UseFormSubmitOptions<T extends v.GenericSchema, R = void> {
     schema?: T;

@@ -1,13 +1,13 @@
-import { STALE_TIMES } from '#lib/query/config';
-import { useAuth, tasksSignal, useSignal } from '#lib/store';
+import { STALE_TIMES } from '#lib/query/config.js';
+import { useAuth, tasksSignal, useSignal } from '#lib/store/index.js';
 import { useEffect, useState } from 'react';
-import { UnifiedTask, TaskStatus } from '#src/types';
-import { api } from '#lib/api';
-import { useAppQuery } from '#lib/query';
-import { useAdminMode } from '#src/hooks/core/auth/useAdminMode';
-import { logger } from '#lib/logger';
-import { useAppRoute } from '#lib/router';
-import type { Task } from '#lib/task-queue/types';
+import { UnifiedTask, TaskStatus } from '#src/types/index.js';
+import { api } from '#lib/api.js';
+import { useAppQuery } from '#lib/query/index.js';
+import { useAdminMode } from '#src/hooks/core/auth/useAdminMode.js';
+import { logger } from '#lib/logger.js';
+import { useAppRoute } from '#lib/router/index.js';
+import type { Task } from '#lib/task-queue/types.js';
 
 /**
  * Adapter hook to aggregate frontend local tasks and backend maintenance jobs.

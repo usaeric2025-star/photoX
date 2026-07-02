@@ -1,17 +1,17 @@
-import { useAppRoute } from "#lib/router";
-import { logger } from "#lib/logger";
+import { useAppRoute } from '#lib/router/index.js';
+import { logger } from "#lib/logger.js";
 import { lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "lite-sleek";
-import PublicPage from "#src/pages/PublicPage";
-import AdminPage from "#src/pages/AdminPage";
-import { NotFoundPage } from "#src/pages/NotFoundPage";
-import { PublicGroupDetailPage } from "#src/features/group/PublicGroupDetail";
-import { AdminGroupDetailPage } from "#src/features/group/AdminGroupDetail";
-import { AdminAuthGate } from "./admin/AdminAuthGate";
-import { LoadingScreen } from "./ui/LoadingScreen";
+import PublicPage from "#src/pages/PublicPage.js";
+import AdminPage from '#src/pages/AdminPage/index.js';
+import { NotFoundPage } from "#src/pages/NotFoundPage.js";
+import { PublicGroupDetailPage } from "#src/features/group/PublicGroupDetail.js";
+import { AdminGroupDetailPage } from "#src/features/group/AdminGroupDetail.js";
+import { AdminAuthGate } from "./admin/AdminAuthGate.js";
+import { LoadingScreen } from "./ui/LoadingScreen.js";
 
-const SettingsPage = lazy(() => import("#src/features/settings/SettingsPage").then(m => ({ default: m.SettingsPage })));
-const DiagDashboard = lazy(() => import("#src/features/diagnostics/DiagDashboard").then(m => ({ default: m.DiagDashboard })));
+const SettingsPage = lazy(() => import("#src/features/settings/SettingsPage.js").then(m => ({ default: m.SettingsPage })));
+const DiagDashboard = lazy(() => import("#src/features/diagnostics/DiagDashboard.js").then(m => ({ default: m.DiagDashboard })));
 
 export function RouterOrchestrator() {
   const route = useAppRoute();

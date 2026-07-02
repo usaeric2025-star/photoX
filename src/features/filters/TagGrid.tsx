@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Icon } from '#src/components/ui/Icon';
-import { useTags } from '#src/hooks/tag';
-import { useFilterState } from './useFilters';
-import { usePublicSettings } from '#src/hooks/settings/useSettings';
-import { useTagSorting } from '#src/hooks/photo';
-import { useUI } from '#lib/store';
-import { translations } from '#src/locales';
-import type { FilterState } from './types';
+import { Icon } from '#src/components/ui/Icon.js';
+import { useTags } from '#src/hooks/tag/index.js';
+import { useFilterState } from './useFilters.js';
+import { usePublicSettings } from '#src/hooks/settings/useSettings.js';
+import { useTagSorting } from '#src/hooks/photo/index.js';
+import { useUI } from '#lib/store/index.js';
+import { translations } from '#src/locales/index.js';
+import type { FilterState } from './types.js';
 
 interface TagButtonProps {
   tag: { id: number | string; name: string; isPinned?: boolean };

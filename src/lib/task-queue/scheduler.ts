@@ -1,8 +1,8 @@
-import { Task } from './types';
-import { taskTable } from './integrations/supabase';
-import { showToast } from '#lib/ui/toast';
-import { ErrorFactory } from '#lib/error/ErrorFactory';
-import { tasksSignal, addTask, updateTask, updateTaskState, removeTask, setGlobalTaskStatus, setGlobalTaskProgress } from '#src/services/task/taskService';
+import { Task } from './types.js';
+import { taskTable } from './integrations/supabase.js';
+import { showToast } from '#lib/ui/toast.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
+import { tasksSignal, addTask, updateTask, updateTaskState, removeTask, setGlobalTaskStatus, setGlobalTaskProgress } from '#src/services/task/taskService.js';
 
 // ... (rest of code)
 

@@ -1,13 +1,13 @@
 import { useAppRouter } from '#lib/router/index.js';
 import React from 'react';
 import { cn } from '#lib/utils.js';
-import { Icon } from '#src/components/ui/Icon/index.js';
+import { Icon } from '#src/components/ui/Icon.js';
 import { useAuth } from '#lib/store/index.js';
 import { useUI, usePublicSettings, usePermission, UIStoreState } from '#src/hooks/index.js';
-import { NativePopover } from '#src/components/ui/NativePopover/index.js';
-import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner/index.js';
-import { LanguageSwitcher } from '#src/components/ui/LanguageSwitcher/index.js';
-import { translations } from "#src/locales/index.js";
+import { NativePopover } from '#src/components/ui/NativePopover.js';
+import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner.js';
+import { LanguageSwitcher } from '#src/components/ui/LanguageSwitcher.js';
+import { translations } from '#src/locales/index.js';
 import { storage } from '#src/services/storage/index.js';
 
 interface PublicHeaderProps {

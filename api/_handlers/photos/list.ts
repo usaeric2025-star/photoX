@@ -1,9 +1,10 @@
 import { Hono } from 'hono';
 import * as v from 'valibot';
-import { PhotoListReqSchema, PhotoListItemSchema } from '../../../shared/apiContractSchema.js';
-import { errorFactory } from '../../_lib/error/AppError.js';
+import { errorResponse, successResponse } from '../../_lib/response.js';
+import { errorFactory } from '../../_lib/error/factory.js';
 import { normalizeI18n } from '../../../shared/i18n.js';
 import { vValidator } from '@hono/valibot-validator';
+import { PhotoListReqSchema, PhotoListItemSchema } from '../../../shared/apiContractSchema.js';
 import { getPhotosList, getGroupCounts } from '../../_lib/db/queries/photos.js';
 
 export const listHandler = (app: Hono) => {
@@ -54,21 +55,17 @@ export const listHandler = (app: Hono) => {
             }
         }).filter((item): item is NonNullable<typeof item> => item !== null);
 
-        
-        
         const finalNextCursor = nextCursor 
             ? (typeof nextCursor === 'string' ? nextCursor : (nextCursor as unknown as Date).toISOString())
             : null;
         
-        return c.json({ 
-          success: true, 
-          data: v.parse(v.array(PhotoListItemSchema), formatted),
+        return successResponse(c, v.parse(v.array(PhotoListItemSchema), formatted), {
           nextCursor: finalNextCursor,
           total
         });
       }
 
-      return c.json({ success: true, data: [], nextCursor: null, total: 0 });
+      return successResponse(c, [], { nextCursor: null, total: 0 });
     } catch (error: unknown) {
       throw errorFactory.wrap(error, 'photos.list', 'QUERY_FAILURE');
     }

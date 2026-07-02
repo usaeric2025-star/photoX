@@ -1,2 +1,2 @@
-export * from './photo';
-export * from './utils';
+export * from './photo.js';
+export * from './utils.js';

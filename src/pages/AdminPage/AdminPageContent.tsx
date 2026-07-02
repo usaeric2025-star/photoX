@@ -1,24 +1,32 @@
-import { useAppRouter } from '#lib/router';
+import { useAppRouter } from '#lib/router/index.js';
 import React, { Suspense, lazy } from 'react';
-import { Icon } from '#src/components/ui/Icon';
-import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner';
-import { useAuth } from '#lib/store';
-const UploadModeDialog = lazy(() => import('#src/features/upload/components/UploadModeDialog').then(m => ({ default: m.UploadModeDialog })));
+import { Icon } from '#src/components/ui/Icon.js';
+import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner.js';
+import { useAuth } from '#lib/store/index.js';
+interface UploadModeDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSelectMode: (mode: 'single' | 'group') => void;
+}
+const UploadModeDialog = lazy(() => import('#src/features/upload/components/UploadModeDialog.js').then(m => ({ default: m.UploadModeDialog }))) as React.ComponentType<UploadModeDialogProps>;
 
-import { usePhotoUpload } from '#src/features/upload';
-import { UploadButton } from '#src/components/shared/UploadButton';
-import { SelectionToolbar } from '#src/features/selection';
-import { useAIBatchAnalysis } from '#src/hooks';
-import { useUI, useSignal } from '#lib/store';
-import { AdminHeader } from '#src/components/layouts/headers/AdminHeader';
-import { AdminAuthGate } from '#src/components/admin/AdminAuthGate';
-import { AdminContainer } from '#src/components/admin/AdminContainer';
-import { useFilters } from '#src/features/filters';
-import { FilterBar } from '#src/features/filters';
+import { usePhotoUpload } from '#src/features/upload/index.js';
+import { UploadButton } from '#src/components/shared/UploadButton.js';
+import { SelectionToolbar } from '#src/features/selection/index.js';
+import { useAIBatchAnalysis } from '#src/hooks/index.js';
+import { useUI, useSignal } from '#lib/store/index.js';
+import { AdminHeader } from '#src/components/layouts/headers/AdminHeader.js';
+import { AdminAuthGate } from '#src/components/admin/AdminAuthGate.js';
+import { AdminContainer } from '#src/components/admin/AdminContainer.js';
+import { useFilters } from '#src/features/filters/index.js';
+import { FilterBar } from '#src/features/filters/index.js';
 
-const BatchEditScreen = lazy(() => import('#src/features/batch-edit/BatchEditScreen').then(m => ({ default: m.BatchEditScreen })));
-const DiagDashboard = lazy(() => import('#src/features/diagnostics/DiagDashboard').then(m => ({ default: m.DiagDashboard })));
-const SettingsPage = lazy(() => import('#src/features/settings/SettingsPage').then(m => ({ default: m.SettingsPage })));
+interface SettingsPageProps {
+  onClose?: () => void;
+}
+const BatchEditScreen = lazy(() => import('#src/features/batch-edit/BatchEditScreen.js').then(m => ({ default: m.BatchEditScreen })));
+const DiagDashboard = lazy(() => import('#src/features/diagnostics/DiagDashboard.js').then(m => ({ default: m.DiagDashboard })));
+const SettingsPage = lazy(() => import('#src/features/settings/SettingsPage.js').then(m => ({ default: m.SettingsPage }))) as React.ComponentType<SettingsPageProps>;
 
 export function AdminPageContent() {
   const filters = useFilters({ enableStatus: true, enableBatch: true });

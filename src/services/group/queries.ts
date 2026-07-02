@@ -1,7 +1,7 @@
-import { ErrorFactory } from '#lib/error/ErrorFactory';
-import { ProductGroup } from '#src/types';
-import { getSafeText } from '#src/features/ai/safeText';
-import { api } from '#lib/api';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
+import { ProductGroup } from '#src/types/index.js';
+import { getSafeText } from '#src/features/ai/safeText.js';
+import { api } from '#lib/api.js';
 
 const TABLE_NAME = 'groups';
 

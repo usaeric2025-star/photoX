@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { getThumbnailUrl } from '#src/services/mappers/utils';
+import { getThumbnailUrl } from '#src/services/mappers/utils.js';
 
 interface LightboxThumbnailsProps {
   photos: any[];

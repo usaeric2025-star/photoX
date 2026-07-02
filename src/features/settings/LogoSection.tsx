@@ -1,6 +1,6 @@
 import React from 'react';
-import { Icon } from '#src/components/ui/Icon';
-import { Category, Tag, Manufacturer, AppSettings } from '#src/types';
+import { Icon } from '#src/components/ui/Icon.js';
+import { Category, Tag, Manufacturer, AppSettings } from '#src/types/index.js';
 
 interface LogoSectionProps {
   settings: AppSettings | null;

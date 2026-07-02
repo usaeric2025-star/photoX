@@ -3,7 +3,7 @@ import { db } from '../_lib/db/index.js';
 import * as schema from '../_lib/db/schema.js';
 import { eq } from 'drizzle-orm';
 import { logger } from '../_lib/logger.js';
-import { errorResponse } from '../_lib/response.js';
+import { errorResponse, successResponse } from '../_lib/response.js';
 import { withTimeout, TIMEOUTS } from '../_lib/utils/timeout.js';
 
 export const publicSettings = new Hono();
@@ -23,7 +23,7 @@ const handler = async (c: any) => {
     
     // 1. Ultra-fast Memory Cache
     if (settingsCache && now - settingsCacheTime < 30 * 60 * 1000) {
-        return c.json({ success: true, data: settingsCache });
+        return successResponse(c, settingsCache);
     }
 
     try {
@@ -80,18 +80,15 @@ const handler = async (c: any) => {
         settingsCacheTime = now;
 
         logger.info(`[Settings-${requestId}] Resolved in ${Date.now() - start}ms`);
-        return c.json({ success: true, data });
+        return successResponse(c, data);
     } catch (e) {
         logger.error(`[Settings-${requestId}] Critical Failure:`, e);
-        return c.json({ 
-            success: true, 
-            data: {
-                logoUrl: 'https://vbpnlkeweqkjufijtdph.supabase.co/storage/v1/object/public/furniture_images/app/logo-1777046441324.webp',
-                whatsapp1: '601111280883',
-                whatsapp1Name: 'Auntie Shery',
-                passcodeEnabled: true,
-                accessPasscode: 'a123456'
-            }
+        return successResponse(c, {
+            logoUrl: 'https://vbpnlkeweqkjufijtdph.supabase.co/storage/v1/object/public/furniture_images/app/logo-1777046441324.webp',
+            whatsapp1: '601111280883',
+            whatsapp1Name: 'Auntie Shery',
+            passcodeEnabled: true,
+            accessPasscode: 'a123456'
         });
     }
 };

@@ -3,7 +3,7 @@ import { db, manufacturers as manufacturersTable } from '../_lib/db/index.js';
 import { eq, asc } from 'drizzle-orm';
 import * as v from 'valibot';
 import { ManufacturerReqSchema } from '../../shared/apiContractSchema.js';
-import { errorResponse } from '../_lib/response.js';
+import { errorResponse, successResponse } from '../_lib/response.js';
 
 export const manufacturers = new Hono()
   .get('/', async (c) => {
@@ -12,7 +12,7 @@ export const manufacturers = new Hono()
       .from(manufacturersTable)
       .orderBy(asc(manufacturersTable.name));
     
-    return c.json({ success: true, data });
+    return successResponse(c, data);
   })
   .post('/clear-photos', async (c) => {
     const body = await c.req.json();
@@ -27,7 +27,7 @@ export const manufacturers = new Hono()
         .where(eq(furnitureItems.manufacturerId, manufacturerId))
         .returning({ id: furnitureItems.id });
     
-    return c.json({ success: true, data: updated.map(i => i.id) });
+    return successResponse(c, updated.map(i => i.id));
   })
   .post('/', async (c) => {
     const body = await c.req.json();
@@ -45,7 +45,7 @@ export const manufacturers = new Hono()
       })
       .returning();
     
-    return c.json({ success: true, data });
+    return successResponse(c, data);
   })
   .put('/:id', async (c) => {
     const id = c.req.param('id');
@@ -59,7 +59,7 @@ export const manufacturers = new Hono()
       .set({ name: updates.name })
       .where(eq(manufacturersTable.id, id));
     
-    return c.json({ success: true });
+    return successResponse(c, null);
   })
   .delete('/:id', async (c) => {
     const id = c.req.param('id');
@@ -67,5 +67,5 @@ export const manufacturers = new Hono()
       .delete(manufacturersTable)
       .where(eq(manufacturersTable.id, id));
     
-    return c.json({ success: true });
+    return successResponse(c, null);
   });

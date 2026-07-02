@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
-import { PhotoListItem } from '#src/types/api';
-import { usePhotos, PhotoListFilters } from './usePhotos';
-import { useUI } from '#lib/store';
+import { PhotoListItem } from '#src/types/api.js';
+import { usePhotos, PhotoListFilters } from './usePhotos.js';
+import { useUI } from '#lib/store/index.js';
 
 export function usePhotoGrid(filters: PhotoListFilters, mode: 'admin' | 'public') {
   const { 

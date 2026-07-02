@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { PhotoEditSessionContext } from './PhotoEditSession';
+import { PhotoEditSessionContext } from './PhotoEditSession.js';
 
 export const usePhotoEditSessionContext = () => {
   const context = useContext(PhotoEditSessionContext);

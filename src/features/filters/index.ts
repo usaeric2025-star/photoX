@@ -1,9 +1,9 @@
-export * from './useFilters';
+export * from './useFilters.js';
 ;
 ;
-export * from './types';
-export * from './FilterBar';
-export * from './SearchInput';
-export * from './SortToggle';
-export * from './CategoryGrid';
-export * from './TagGrid';
+export * from './types.js';
+export * from './FilterBar.js';
+export * from './SearchInput.js';
+export * from './SortToggle.js';
+export * from './CategoryGrid.js';
+export * from './TagGrid.js';

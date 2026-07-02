@@ -1,2 +1,2 @@
-export * from './useCategories';
-export * from './useCategoryMutations';
+export * from './useCategories.js';
+export * from './useCategoryMutations.js';

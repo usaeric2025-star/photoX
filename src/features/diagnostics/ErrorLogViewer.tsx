@@ -1,14 +1,14 @@
-import { logger } from '#lib/logger';
+import { logger } from '#lib/logger.js';
 import React from 'react';
-import { Icon } from '#src/components/ui/Icon';
-import { useAppQuery, useAppMutation, appQuery } from '#lib/query';
-import { api } from '#lib/api';
-import { useFormSubmit } from '#lib/forms/useFormSubmit';
-import { Button } from '#src/components/shared/Button';
+import { Icon } from '#src/components/ui/Icon.js';
+import { useAppQuery, useAppMutation, appQuery } from '#lib/query/index.js';
+import { api } from '#lib/api.js';
+import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
+import { Button } from '#src/components/shared/Button.js';
 import * as v from 'valibot';
-import { useDisclosure } from '#src/hooks/core/useDisclosure';
-import { formatters } from '#src/utils/formatters';
-import { useCopyToClipboard } from '#src/hooks';
+import { useDisclosure } from '#src/hooks/core/useDisclosure.js';
+import { formatters } from '#src/utils/formatters.js';
+import { useCopyToClipboard } from '#src/hooks/index.js';
 
 type ErrorLevel = 'critical' | 'error' | 'warn' | 'medium' | 'low' | 'info';
 

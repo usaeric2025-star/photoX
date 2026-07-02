@@ -1,4 +1,4 @@
-import { ErrorFactory } from '#lib/error/ErrorFactory';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import imageCompression from 'browser-image-compression';
 
 export interface CompressOptions {
@@ -24,7 +24,9 @@ export async function compressImage(fileOrBlob: File | Blob, options: CompressOp
       maxIteration: 10,
     };
 
-    const compressedFile = await imageCompression(file, compressionOptions);
+    // Fix for CJS default export behavior
+    const compressFn = (imageCompression as any).default || imageCompression;
+    const compressedFile = await compressFn(file, compressionOptions);
     return compressedFile;
   } catch (error) {
     throw ErrorFactory.wrap(error instanceof Error ? error : new Error(String(error)), 'compressImage');

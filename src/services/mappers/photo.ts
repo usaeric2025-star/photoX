@@ -1,8 +1,8 @@
-import { SupabasePhotoRaw } from '#src/types/supabase';
-import { Photo, Tag, Dimension } from '#src/types';
-import { getSafeText } from '#src/features/ai/safeText';
-import { generateItemCode, validateDimension } from '#src/services/photo/utils';
-import { getThumbnailUrl, normalizeStoredUrl, mapTranslationField } from './utils';
+import { SupabasePhotoRaw } from '#src/types/supabase.js';
+import { Photo, Tag, Dimension } from '#src/types/index.js';
+import { getSafeText } from '#src/features/ai/safeText.js';
+import { generateItemCode, validateDimension } from '#src/services/photo/utils.js';
+import { getThumbnailUrl, normalizeStoredUrl, mapTranslationField } from './utils.js';
 
 const ALLOWED_FIELDS = [
   'id', 'name', 'nameEn', 'nameMs', 'description', 'descriptionTranslations', 'categoryId', 'manufacturerId',

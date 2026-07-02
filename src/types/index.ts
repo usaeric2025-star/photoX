@@ -11,11 +11,11 @@ type JsonValue = string | number | boolean | null | Record<string, unknown> | Js
 type AnyFunction = (...args: unknown[]) => unknown;
 type AnyArray = unknown[];
 
-export * from './photo';
-export * from './api';
-export * from './tasks';
+export * from './photo.js';
+export * from './api.js';
+export * from './tasks.js';
 
-import { translations } from '#src/locales';
+import { translations } from '#src/locales/index.js';
 export type TranslationType = typeof translations['en'];
 
 // ... rest of the file
@@ -53,8 +53,8 @@ export interface AppSettings {
   facebook?: string;
   instagram?: string;
   accessPasscode?: string;
-  manufacturers?: import('./photo').Manufacturer[];
-  tags?: import('./photo').Tag[];
+  manufacturers?: import('./photo.js').Manufacturer[];
+  tags?: import('./photo.js').Tag[];
   [key: string]: unknown;
 }
 
@@ -89,7 +89,7 @@ export interface Theme {
 }
 
 interface AppState {
-  photos: import('./photo').Photo[];
-  categories: import('./photo').Category[];
-  tags: import('./photo').Tag[];
+  photos: import('./photo.js').Photo[];
+  categories: import('./photo.js').Category[];
+  tags: import('./photo.js').Tag[];
 }

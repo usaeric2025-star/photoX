@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useFilterState } from './useFilters';
-import { Icon } from '#src/components/ui/Icon';
-import { useTranslation } from '#src/hooks';
-import { useDebouncedCallback } from '#src/hooks/core/useDebouncedCallback';
+import { useFilterState } from './useFilters.js';
+import { Icon } from '#src/components/ui/Icon.js';
+import { useTranslation } from '#src/hooks/index.js';
+import { useDebouncedCallback } from '#src/hooks/core/useDebouncedCallback.js';
 
 export function SearchInput() {
   const { filters, updateFilters } = useFilterState();

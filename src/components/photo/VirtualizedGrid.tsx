@@ -1,8 +1,8 @@
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { VList } from 'virtua';
 
-import { translations } from '#src/locales';
-import { useUI } from '#lib/store';
+import { translations } from '#src/locales/index.js';
+import { useUI } from '#lib/store/index.js';
 
 interface VirtualizedGridProps<T> {
   items: T[];

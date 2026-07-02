@@ -1,17 +1,17 @@
 import React, { useMemo, useState, useRef } from 'react';
-import { useFilters } from '#src/features/filters';
-import { useTranslation, usePublicSettings, usePhotoGrid } from '#src/hooks';
-import { PublicHeader } from '#src/components/layouts/headers/PublicHeader';
-import { FilterBar } from '#src/features/filters';
-import { PublicPhotoGrid } from '#src/components/photo/PublicPhotoGrid';
-import { ErrorBoundary } from '#src/components/shared/ErrorBoundary';
-import { useColumns } from '#src/hooks';
-import { useLightbox, photosToLightboxSlides } from '#lib/lightbox';
-import { useUI, type UIStoreState } from '#lib/store';
-import { WhatsAppDialog } from '#src/components/shared/WhatsAppDialog';
-import { PhotoErrorDisplay } from '#src/components/photo/PhotoErrorDisplay';
-import { Icon } from '#src/components/ui/Icon';
-import { ErrorFactory } from '#lib/error/ErrorFactory';
+import { useFilters } from '#src/features/filters/index.js';
+import { useTranslation, usePublicSettings, usePhotoGrid } from '#src/hooks/index.js';
+import { PublicHeader } from '#src/components/layouts/headers/PublicHeader.js';
+import { FilterBar } from '#src/features/filters/index.js';
+import { PublicPhotoGrid } from '#src/components/photo/PublicPhotoGrid.js';
+import { ErrorBoundary } from '#src/components/shared/ErrorBoundary.js';
+import { useColumns } from '#src/hooks/index.js';
+import { useLightbox, photosToLightboxSlides } from '#lib/lightbox/index.js';
+import { useUI, type UIStoreState } from '#lib/store/index.js';
+import { WhatsAppDialog } from '#src/components/shared/WhatsAppDialog.js';
+import { PhotoErrorDisplay } from '#src/components/photo/PhotoErrorDisplay.js';
+import { Icon } from '#src/components/ui/Icon.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
 export default function PublicPage() {
   const { 

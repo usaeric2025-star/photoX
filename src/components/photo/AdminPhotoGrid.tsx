@@ -1,10 +1,10 @@
 import React from 'react';
-import { PhotoGridContent } from './PhotoGridContent';
-import { useIsMultiSelect, useSelectionActions } from '#src/features/selection';
-import { Category } from '#src/types/photo';
-import { PhotoListItem } from '#src/types/api';
-import { AdminPhotoCard } from './AdminPhotoCard';
-import { usePermission } from '#src/hooks';
+import { PhotoGridContent } from './PhotoGridContent.js';
+import { useIsMultiSelect, useSelectionActions } from '#src/features/selection/index.js';
+import { Category } from '#src/types/photo.js';
+import { PhotoListItem } from '#src/types/api.js';
+import { AdminPhotoCard } from './AdminPhotoCard.js';
+import { usePermission } from '#src/hooks/index.js';
 
 interface AdminPhotoGridProps {
   photos: PhotoListItem[];

@@ -3,7 +3,7 @@ import * as v from 'valibot';
 import { db, tags as tagsTable, photoTags } from '../_lib/db/index.js';
 import { eq, ilike, asc, inArray, sql, and, ne } from 'drizzle-orm';
 import { TagReqSchema } from '../../shared/apiContractSchema.js';
-import { errorResponse } from '../_lib/response.js';
+import { errorResponse, successResponse } from '../_lib/response.js';
 import { logger } from '../_lib/logger.js';
 
 let tagsCache: any[] | null = null;
@@ -20,12 +20,12 @@ export const tags = new Hono()
     const now = Date.now();
     if (tagsCache && now - tagsCacheTime < 5 * 60 * 1000) {
         logger.debug('[Tags Cache] Returning cached tags');
-        return c.json({ success: true, data: tagsCache });
+        return successResponse(c, tagsCache);
     }
     const data = await db.select().from(tagsTable).orderBy(asc(tagsTable.name));
     tagsCache = data;
     tagsCacheTime = now;
-    return c.json({ success: true, data });
+    return successResponse(c, data);
   })
   .get('/search', async (c) => {
     const keyword = c.req.query('keyword') || '';
@@ -36,7 +36,7 @@ export const tags = new Hono()
       : query;
 
     const data = await filteredQuery.limit(20);
-    return c.json({ success: true, data });
+    return successResponse(c, data);
   })
   .put('/:id', async (c) => {
     const id = c.req.param('id');

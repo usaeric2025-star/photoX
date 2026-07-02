@@ -1,5 +1,5 @@
-import { Tag } from '#src/types';
-import { api } from '#lib/api';
+import { Tag } from '#src/types/index.js';
+import { api } from '#lib/api.js';
 
 let allTagsPromise: Promise<Tag[]> | null = null;
 let allTagsFetchedAt = 0;

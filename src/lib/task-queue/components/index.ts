@@ -1,2 +1,2 @@
-export * from './TaskBadge';
-export * from './TaskDrawer';
+export * from './TaskBadge.js';
+export * from './TaskDrawer.js';

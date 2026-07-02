@@ -1,8 +1,8 @@
-import { STALE_TIMES } from '#lib/query/config';
-import { useAppQuery } from '#lib/query';
-import { api } from '#lib/api';
-import { PhotoAIResult } from '#src/types';
-import { ErrorFactory } from '#lib/error/ErrorFactory';
+import { STALE_TIMES } from '#lib/query/config.js';
+import { useAppQuery } from '#lib/query/index.js';
+import { api } from '#lib/api.js';
+import { PhotoAIResult } from '#src/types/index.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
 /**
  * 获取照片对应的 AI 识别原始源代碼與解析後的 JSON 數據。

@@ -1,5 +1,5 @@
 import React from 'react';
-import { AppSettings } from '#src/types';
+import { AppSettings } from '#src/types/index.js';
 
 interface AppNameSectionProps {
   settings: AppSettings | null;

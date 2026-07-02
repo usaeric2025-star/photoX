@@ -1,7 +1,7 @@
-export * from './types';
-import { useUI } from '#lib/store';
-import { useFilters } from '#src/hooks';
-import { useAppRoute } from '#lib/router';
+export * from './types.js';
+import { useUI } from '#lib/store/index.js';
+import { useFilters } from '#src/hooks/index.js';
+import { useAppRoute } from '#lib/router/index.js';
 
 export function useLightbox() {
   const slides = useUI(s => s.lightboxSlides || []);
@@ -40,4 +40,4 @@ export function useLightbox() {
   };
 }
 
-export * from './adapter';
+export * from './adapter.js';

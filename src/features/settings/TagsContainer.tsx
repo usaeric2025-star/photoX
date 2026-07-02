@@ -1,6 +1,6 @@
 import React from 'react';
-import { TagsSection } from './TagsSection';
-import { Tag, AppSettings } from '#src/types';
+import { TagsSection } from './TagsSection.js';
+import { Tag, AppSettings } from '#src/types/index.js';
 
 interface TagsManagerProps {
   tags: Tag[];

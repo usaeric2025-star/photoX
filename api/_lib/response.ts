@@ -1,6 +1,7 @@
 import { type Context } from 'hono';
 import { getTraceId } from './error/traceId.js';
-import { AppError, errorFactory } from './error/AppError.js';
+import { AppError } from '../../shared/AppError.js';
+import { errorFactory } from './error/factory.js';
 import { logger } from './logger.js';
 
 /**
@@ -22,7 +23,7 @@ export const errorResponse = (c: Context, error: unknown, status: number = 500) 
   appError.traceId = traceId;
 
   message = appError.message;
-  statusCode = appError.status || status;
+  statusCode = appError.statusCode || status;
   errorCode = appError.code;
 
   // --- Logging ---
@@ -74,9 +75,11 @@ export const errorResponse = (c: Context, error: unknown, status: number = 500) 
 /**
  * 統一成功回應格式
  */
-const successResponse = (c: Context, data: any, status: number = 200) => {
-  return c.json({
+export const successResponse = (c: Context, data: any, extra: Record<string, any> = {}, status: number = 200) => {
+  const response: any = {
     success: true,
     data,
-  }, status as import('hono/utils/http-status').ContentfulStatusCode);
+    ...extra
+  };
+  return c.json(response, status as import('hono/utils/http-status').ContentfulStatusCode);
 };

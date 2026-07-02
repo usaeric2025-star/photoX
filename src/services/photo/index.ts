@@ -1,7 +1,7 @@
-export * from './commands';
-export * from '#src/features/upload/services';
-export * from './utils';
+export * from './commands.js';
+export * from '#src/features/upload/services/index.js';
+export * from './utils.js';
 
-import { updatePhoto } from './commands';
+import { updatePhoto } from './commands.js';
 
 const update = updatePhoto;

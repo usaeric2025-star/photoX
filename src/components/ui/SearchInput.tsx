@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Icon } from '#src/components/ui/Icon';
-import { useSearchTransition } from '#src/hooks';
-import { Input } from '#src/components/shared/Input';
-import { cn } from '#lib/utils';
-import { LoadingSpinner } from './feedback/LoadingSpinner';
+import { Icon } from '#src/components/ui/Icon.js';
+import { useSearchTransition } from '#src/hooks/index.js';
+import { Input } from '#src/components/shared/Input.js';
+import { cn } from '#lib/utils.js';
+import { LoadingSpinner } from './feedback/LoadingSpinner.js';
 
 interface SearchInputProps {
   onSearch: (value: string) => void;

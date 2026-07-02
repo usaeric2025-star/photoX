@@ -1,5 +1,12 @@
-import { logger } from '../api/_lib/logger.js';
 import * as v from 'valibot';
+
+/**
+ * Basic logger for shared env validation
+ */
+const envLogger = {
+  error: (...args: any[]) => console.error('[ENV-ERROR]', ...args),
+  warn: (...args: any[]) => console.warn('[ENV-WARN]', ...args),
+};
 
 /**
  * [ENV-SCHEMA-DEFINED] Client-side Environment Schema
@@ -52,7 +59,26 @@ export const serverEnvSchema = v.object({
   SENTRY_DSN: v.optional(v.string())
 });
 
+export type ClientEnv = v.InferOutput<typeof clientEnvSchema>;
 export type ServerEnv = v.InferOutput<typeof serverEnvSchema>;
+
+/**
+ * Validates and returns client environment
+ */
+export function getClientEnv(importMetaEnv: any): ClientEnv {
+  try {
+    const result = v.safeParse(clientEnvSchema, importMetaEnv);
+    if (!result.success) {
+      const summary = result.issues[0].message;
+      envLogger.warn("⚠️ [ENV-CLIENT] Validation mismatch:", summary);
+      return importMetaEnv as ClientEnv;
+    }
+    return result.output as ClientEnv;
+  } catch (e) {
+    envLogger.error("[ClientEnv] Validation error:", e);
+    return importMetaEnv as ClientEnv;
+  }
+}
 
 const aiDebugHints: Record<string, string> = {
   "AGNES_API_KEY": "Agnes AI API Key for photo analysis.",
@@ -70,15 +96,15 @@ export function getServerEnv(envObj: NodeJS.ProcessEnv): ServerEnv {
     if (!result.success) {
       const summary = result.issues[0].message;
       if (envObj.NODE_ENV === 'production') {
-        logger.error("❌ [ENV-CRITICAL] Invalid production environment:", summary);
+        envLogger.error("❌ [ENV-CRITICAL] Invalid production environment:", summary);
       } else {
-        logger.warn("⚠️ [ENV-VALIDATION] Environment mismatch:", summary);
+        envLogger.warn("⚠️ [ENV-VALIDATION] Environment mismatch:", summary);
       }
       return rawEnv as ServerEnv;
     }
     return result.output as ServerEnv;
   } catch (e) {
-    logger.error("[EnvSchema] Critical error during validation:", e);
+    envLogger.error("[EnvSchema] Critical error during validation:", e);
     return envObj as unknown as ServerEnv;
   }
 }

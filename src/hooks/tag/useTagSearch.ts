@@ -1,7 +1,7 @@
-import { STALE_TIMES } from '#lib/query/config';
-import { useAppQuery } from '#lib/query';
-import { api } from '#lib/api';
-import { Tag } from '#src/types';
+import { STALE_TIMES } from '#lib/query/config.js';
+import { useAppQuery } from '#lib/query/index.js';
+import { api } from '#lib/api.js';
+import { Tag } from '#src/types/index.js';
 
 /**
  * Perform server-side tag search with debounce handling (via queryKey)

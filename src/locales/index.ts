@@ -1,6 +1,6 @@
-import { zh } from './zh';
-import { en } from './en';
-import { ms } from './ms';
+import { zh } from './zh.js';
+import { en } from './en.js';
+import { ms } from './ms.js';
 
 export const translations = {
   en,

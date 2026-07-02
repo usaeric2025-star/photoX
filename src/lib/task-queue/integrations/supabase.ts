@@ -1,6 +1,6 @@
-import { supabase } from '#lib/supabase';
-import { logger } from '#lib/logger';
-import { Task, TaskType } from '#lib/task-queue/types';
+import { supabase } from '#lib/supabase.js';
+import { logger } from '#lib/logger.js';
+import { Task, TaskType } from '#lib/task-queue/types.js';
 
 export const taskTable = {
   // 插入新任務

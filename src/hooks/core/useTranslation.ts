@@ -1,5 +1,5 @@
-import { useAppLang } from '#lib/store';
-import { translations as allTranslations, TranslationType } from '#src/locales';
+import { useAppLang } from '#lib/store/index.js';
+import { translations as allTranslations, TranslationType } from '#src/locales/index.js';
 
 type Translations = Record<string, string> | null | undefined;
 

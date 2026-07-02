@@ -1,39 +1,39 @@
-import { logger } from '#lib/logger';
-import { useAppRouter } from '#lib/router';
-import { useAppQuery as useQuery } from '#lib/query';
-import { useAuth } from '#lib/store';
-import { ErrorFactory } from '#lib/error/ErrorFactory';
+import { logger } from '#lib/logger.js';
+import { useAppRouter } from '#lib/router/index.js';
+import { useAppQuery as useQuery } from '#lib/query/index.js';
+import { useAuth } from '#lib/store/index.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import React, { useState, Suspense } from 'react';
-import { Icon } from '#src/components/ui/Icon';
-import { api } from '#lib/api';
+import { Icon } from '#src/components/ui/Icon.js';
+import { api } from '#lib/api.js';
 
-import { showToast } from '#lib/ui/toast';
-import { Task } from '#lib/task-queue/types';
-import { AppSettings, User, ApiResponse, Category, Manufacturer, Tag } from '#src/types';
-import { useUI, UIStoreState } from '#lib/store';
-import { useSettingsManagement } from '#src/hooks/settings/useSettingsManagement';
-import { ConfirmDialog } from '#src/components/ui/ConfirmDialog';
+import { showToast } from '#lib/ui/toast.js';
+import { Task } from '#lib/task-queue/types.js';
+import { AppSettings, User, ApiResponse, Category, Manufacturer, Tag } from '#src/types/index.js';
+import { useUI, UIStoreState } from '#lib/store/index.js';
+import { useSettingsManagement } from '#src/hooks/settings/useSettingsManagement.js';
+import { ConfirmDialog } from '#src/components/ui/ConfirmDialog.js';
 import { 
   useCategories, useTags, useManufacturers,
   useAdminCategory, useSettings
-} from '#src/hooks';
-import { useSettingsLogic } from './useSettingsLogic';
-import { SettingsTabs } from './SettingsTabs';
-import { SettingsHeader } from './SettingsHeader';
-import { translations } from '#src/locales';
-import { LoadingScreen } from '#src/components/ui/LoadingScreen';
-import { useFormSubmit } from '#lib/forms/useFormSubmit';
+} from '#src/hooks/index.js';
+import { useSettingsLogic } from './useSettingsLogic.js';
+import { SettingsTabs } from './SettingsTabs.js';
+import { SettingsHeader } from './SettingsHeader.js';
+import { translations } from '#src/locales/index.js';
+import { LoadingScreen } from '#src/components/ui/LoadingScreen.js';
+import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import * as v from 'valibot';
 
-import { useSyncMutation } from '#src/hooks';
-import { useStore } from '#lib/store';
-import { taskStore } from '#src/services/task/taskService';
+import { useSyncMutation } from '#src/hooks/index.js';
+import { useStore } from '#lib/store/index.js';
+import { taskStore } from '#src/services/task/taskService.js';
 
-const GeneralSettings = React.lazy(() => import('./GeneralSettings').then(m => ({ default: m.GeneralSettings })));
-const AISettings = React.lazy(() => import('./AISettings').then(m => ({ default: m.AISettings })));
-const TagsContainer = React.lazy(() => import('./TagsContainer').then(m => ({ default: m.TagsContainer })));
-const AssetManagementContainer = React.lazy(() => import('./AssetManagementContainer').then(m => ({ default: m.AssetManagementContainer })));
-const DiagDashboard = React.lazy(() => import('#src/features/diagnostics/DiagDashboard').then(m => ({ default: m.DiagDashboard })));
+const GeneralSettings = React.lazy(() => import('./GeneralSettings.js').then(m => ({ default: m.GeneralSettings })));
+const AISettings = React.lazy(() => import('./AISettings.js').then(m => ({ default: m.AISettings })));
+const TagsContainer = React.lazy(() => import('./TagsContainer.js').then(m => ({ default: m.TagsContainer })));
+const AssetManagementContainer = React.lazy(() => import('./AssetManagementContainer.js').then(m => ({ default: m.AssetManagementContainer })));
+const DiagDashboard = React.lazy(() => import('#src/features/diagnostics/DiagDashboard.js').then(m => ({ default: m.DiagDashboard })));
 
 
 const BUTTON_STYLES = {

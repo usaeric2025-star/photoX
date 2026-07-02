@@ -1,21 +1,21 @@
 import React, { useRef } from 'react';
 import { motion } from 'lite-sleek';
-import { logger } from '#lib/logger';
-import { useAppRouter } from '#lib/router';
-import { useGroupData } from './hooks/useGroupData';
-import { PhotoListItem } from '#src/types/api';
-import { Photo, Group, Category } from '#src/types';
-import { PhotoGridContent } from '#src/components/photo/PhotoGridContent';
-import { PublicPhotoCard } from '#src/components/photo/PublicPhotoCard';
-import { useLightbox, photosToLightboxSlides } from '#lib/lightbox';
-import { useFilters, useTranslation, useCategories } from '#src/hooks';
-import { PublicGroupHeader } from './components/PublicGroupHeader';
-import { Button } from '#src/components/shared/Button';
-import { useUI, uiStore, useSignal, gridColumns as gridColumnsSignal } from '#lib/store';
-import { usePublicSettings } from '#src/hooks/settings/useSettings';
-import { WhatsAppDialog } from '#src/components/shared/WhatsAppDialog';
-import { useColumns } from '#src/hooks';
-import { FilterBar } from '#src/features/filters';
+import { logger } from '#lib/logger.js';
+import { useAppRouter } from '#lib/router/index.js';
+import { useGroupData } from './hooks/useGroupData.js';
+import { PhotoListItem } from '#src/types/api.js';
+import { Photo, Group, Category } from '#src/types/index.js';
+import { PhotoGridContent } from '#src/components/photo/PhotoGridContent.js';
+import { PublicPhotoCard } from '#src/components/photo/PublicPhotoCard.js';
+import { useLightbox, photosToLightboxSlides } from '#lib/lightbox/index.js';
+import { useFilters, useTranslation, useCategories } from '#src/hooks/index.js';
+import { PublicGroupHeader } from './components/PublicGroupHeader.js';
+import { Button } from '#src/components/shared/Button.js';
+import { useUI, uiStore, useSignal, gridColumns as gridColumnsSignal } from '#lib/store/index.js';
+import { usePublicSettings } from '#src/hooks/settings/useSettings.js';
+import { WhatsAppDialog } from '#src/components/shared/WhatsAppDialog.js';
+import { useColumns } from '#src/hooks/index.js';
+import { FilterBar } from '#src/features/filters/index.js';
 
 function PublicPhotoGrid({ photos, categories, onPhotoClick, gridRef }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string, index: number, e?: React.MouseEvent) => void; gridRef?: React.Ref<any> }) {
   const columns = useSignal(gridColumnsSignal) as number;

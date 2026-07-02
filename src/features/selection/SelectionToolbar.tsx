@@ -1,16 +1,16 @@
 import React, { memo } from 'react';
-import { useSelectionCount, useSelectedIds, useSelectionActions, useIsMultiSelect } from './useSelection';
-import { useAdminMaintenance } from '#src/hooks/admin/useAdminMaintenance';
-import { useUI, type UIStoreState, useSignal, activeTaskCountSignal } from '#lib/store';
-import { useAppRouter } from '#lib/router';
-import { useAIBatchAnalysis } from '#src/hooks/photo/useAIBatchAnalysis';
-import { useConfirm } from '#src/context/ConfirmContext';
-import { useMediaQuery } from '#src/hooks';
-import { useGroupPhotosMutation, useRemoveFromGroupMutation } from '#src/hooks/group';
-import { Icon } from '#src/components/ui/Icon';
-import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner';
-import { SelectionToolbarActions } from './components/SelectionToolbarActions';
-import { api } from '#lib/api';
+import { useSelectionCount, useSelectedIds, useSelectionActions, useIsMultiSelect } from './useSelection.js';
+import { useAdminMaintenance } from '#src/hooks/admin/useAdminMaintenance.js';
+import { useUI, type UIStoreState, useSignal, activeTaskCountSignal } from '#lib/store/index.js';
+import { useAppRouter } from '#lib/router/index.js';
+import { useAIBatchAnalysis } from '#src/hooks/photo/useAIBatchAnalysis.js';
+import { useConfirm } from '#src/context/ConfirmContext.js';
+import { useMediaQuery } from '#src/hooks/index.js';
+import { useGroupPhotosMutation, useRemoveFromGroupMutation } from '#src/hooks/group/index.js';
+import { Icon } from '#src/components/ui/Icon.js';
+import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner.js';
+import { SelectionToolbarActions } from './components/SelectionToolbarActions.js';
+import { api } from '#lib/api.js';
 
 // --- Sub-components ---
 

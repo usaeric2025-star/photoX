@@ -1,4 +1,4 @@
-import { Tag, AppSettings } from '#src/types';
+import { Tag, AppSettings } from '#src/types/index.js';
 
 /**
  * useTagSorting

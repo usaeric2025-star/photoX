@@ -1,8 +1,8 @@
-import { supabase } from '#lib/supabase';
-import { STORAGE } from './storageConfig';
-import { api } from '#lib/api';
-import { ErrorFactory } from '#lib/error/ErrorFactory';
-import { compressImage, dataURLToArrayBuffer } from './uploadUtils';
+import { supabase } from '#lib/supabase.js';
+import { STORAGE } from './storageConfig.js';
+import { api } from '#lib/api.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
+import { compressImage, dataURLToArrayBuffer } from './uploadUtils.js';
 
 export interface UploadResult {
   imageUrl: string;

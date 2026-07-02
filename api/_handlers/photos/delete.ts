@@ -4,6 +4,7 @@ import { db, furnitureItems, aiAuditLogs } from '../../_lib/db/index.js';
 import { eq, and, inArray } from 'drizzle-orm';
 import { syncGroupCoversAndCount } from '../../_lib/groups.js';
 import { refreshPhotosView } from '../../_lib/db/actions.js';
+import { errorResponse, successResponse } from '../../_lib/response.js';
 import { PhotoIdReqSchema } from '../../../shared/apiContractSchema.js';
 
 export const deleteHandler = (app: Hono) => {
@@ -33,9 +34,9 @@ export const deleteHandler = (app: Hono) => {
 
         await refreshPhotosView();
 
-        return c.json({ success: true, data: { photoData } });
+        return successResponse(c, { photoData });
     } catch (error: unknown) {
-        const { errorFactory } = await import('../../_lib/error/AppError.js');
+        const { errorFactory } = await import('../../_lib/error/factory.js');
         throw errorFactory.wrap(error, 'api./api/photos/delete', 'DB_ERROR');
     }
   });

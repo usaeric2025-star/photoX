@@ -1,6 +1,6 @@
-import { Category } from '#src/types';
-import { TranslationType } from '#src/locales';
-import { getSafeText } from '#src/features/ai/safeText';
+import { Category } from '#src/types/index.js';
+import { TranslationType } from '#src/locales/index.js';
+import { getSafeText } from '#src/features/ai/safeText.js';
 
 /**
  * Gets the translated name for a category with proper fallbacks.

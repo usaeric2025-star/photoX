@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { LoginScreen } from '#src/components/admin/LoginScreen';
+import { LoginScreen } from '#src/components/admin/LoginScreen.js';
 import React from 'react';
 
 // Mock useAppRouter

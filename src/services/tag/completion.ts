@@ -1,7 +1,7 @@
-import { Tag } from '#src/types';
-import { loadTagsFromCloud } from './queries';
-import { batchCreateTags } from './commands';
-import { ErrorFactory } from '#lib/error/ErrorFactory';
+import { Tag } from '#src/types/index.js';
+import { loadTagsFromCloud } from './queries.js';
+import { batchCreateTags } from './commands.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
 /**
  * 標籤自動補全與映射服務

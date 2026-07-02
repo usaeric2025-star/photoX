@@ -1,16 +1,16 @@
-import { useAppRouter } from '#lib/router';
+import { useAppRouter } from '#lib/router/index.js';
 import React, { useState, Suspense, useMemo } from 'react';
-import { Icon } from '#src/components/ui/Icon';
-import { useDiagnostics } from '#src/hooks/admin/useDiagnostics';
-import { Button } from '#src/components/shared/Button';
-import { LoadingScreen } from '#src/components/ui/LoadingScreen';
-import { usePerformanceAudit } from '#src/hooks/admin/usePerformanceAudit';
+import { Icon } from '#src/components/ui/Icon.js';
+import { useDiagnostics } from '#src/hooks/admin/useDiagnostics.js';
+import { Button } from '#src/components/shared/Button.js';
+import { LoadingScreen } from '#src/components/ui/LoadingScreen.js';
+import { usePerformanceAudit } from '#src/hooks/admin/usePerformanceAudit.js';
 import { useQueryState, parseAsString } from 'nuqs';
 
-const ErrorLogViewer = React.lazy(() => import('./ErrorLogViewer').then(m => ({ default: m.ErrorLogViewer })));
-const MaintenanceCenter = React.lazy(() => import('./MaintenanceCenter').then(m => ({ default: m.MaintenanceCenter })));
-const TasksContent = React.lazy(() => import('./TasksList').then(m => ({ default: m.TasksContent })));
-const StatisticsScreen = React.lazy(() => import('../statistics/components/StatisticsScreen').then(m => ({ default: m.StatisticsScreen })));
+const ErrorLogViewer = React.lazy(() => import('./ErrorLogViewer.js').then(m => ({ default: m.ErrorLogViewer })));
+const MaintenanceCenter = React.lazy(() => import('./MaintenanceCenter.js').then(m => ({ default: m.MaintenanceCenter })));
+const TasksContent = React.lazy(() => import('./TasksList.js').then(m => ({ default: m.TasksContent })));
+const StatisticsScreen = React.lazy(() => import('../statistics/components/StatisticsScreen.js').then(m => ({ default: m.StatisticsScreen })));
 
 export function DiagDashboard() {
   const { navigate, route } = useAppRouter();

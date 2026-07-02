@@ -1,5 +1,5 @@
-import { queryKeys } from '#lib/query/keys';
-import { useAppMutation, appQuery } from '#lib/query';
+import { queryKeys } from '#lib/query/keys.js';
+import { useAppMutation, appQuery } from '#lib/query/index.js';
 
 export const useSyncMutation = () => useAppMutation({
   mutationFn: async (type: 'push' | 'pull') => {

@@ -14,11 +14,11 @@ import {
   anchorParser,
   showGroupsCollapsedParser,
   selectedIdsParser 
-} from '#lib/nuqs/parsers';
-import { Router } from '#src/router';
-import { useUI, uiStore, lightboxCurrentIndex } from '#lib/store';
-import { useAppRoute } from '#lib/router';
-import type { FilterState, SortOrder } from './types';
+} from '#lib/nuqs/parsers.js';
+import { Router } from '#src/router.js';
+import { useUI, uiStore, lightboxCurrentIndex } from '#lib/store/index.js';
+import { useAppRoute } from '#lib/router/index.js';
+import type { FilterState, SortOrder } from './types.js';
 
 export interface UseFiltersOptions {
   enableStatus?: boolean;

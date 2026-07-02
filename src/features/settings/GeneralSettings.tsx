@@ -1,9 +1,9 @@
 import React from 'react';
-import { AppNameSection } from './AppNameSection';
-import { LogoSection } from './LogoSection';
-import { WhatsAppSection } from './WhatsAppSection';
-import { SocialLinksSection } from './SocialLinksSection';
-import { AppSettings, Category, Tag, Manufacturer, Photo } from '#src/types';
+import { AppNameSection } from './AppNameSection.js';
+import { LogoSection } from './LogoSection.js';
+import { WhatsAppSection } from './WhatsAppSection.js';
+import { SocialLinksSection } from './SocialLinksSection.js';
+import { AppSettings, Category, Tag, Manufacturer, Photo } from '#src/types/index.js';
 
 interface GeneralSettingsProps {
   settings: AppSettings;

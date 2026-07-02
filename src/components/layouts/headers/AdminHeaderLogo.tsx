@@ -1,10 +1,10 @@
 import React from 'react';
-import { cn } from '#lib/utils';
-import { Icon } from '#src/components/ui/Icon';
-import { useUI, useTranslation } from '#src/hooks';
-import { UIStoreState } from '#lib/store';
+import { cn } from '#lib/utils.js';
+import { Icon } from '#src/components/ui/Icon.js';
+import { useUI, useTranslation } from '#src/hooks/index.js';
+import { UIStoreState } from '#lib/store/index.js';
 
-import { Theme } from '#src/types';
+import { Theme } from '#src/types/index.js';
 
 interface AdminHeaderLogoProps {
   logoUrl?: string | null;

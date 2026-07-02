@@ -1,12 +1,12 @@
-import { ErrorFactory } from "#lib/error/ErrorFactory";
+import { ErrorFactory } from "#lib/error/ErrorFactory.js";
 import { useState, useEffect, useCallback } from "react";
-import { appQuery } from '#lib/query';
-import { ProductGroup, Photo } from "#src/types";
-import { useGroupDetail } from "#src/hooks";
-import { useAuth } from '#lib/store';
-import { upsertGroup } from "#src/services/group/commands";
-import { useSessionStorage } from '#src/hooks/core/useSessionStorage';
-import { queryKeys } from '#lib/query/keys';
+import { appQuery } from '#lib/query/index.js';
+import { ProductGroup, Photo } from '#src/types/index.js';
+import { useGroupDetail } from '#src/hooks/index.js';
+import { useAuth } from '#lib/store/index.js';
+import { upsertGroup } from "#src/services/group/commands.js";
+import { useSessionStorage } from '#src/hooks/core/useSessionStorage.js';
+import { queryKeys } from '#lib/query/keys.js';
 
 export const useGroupDraft = (
   activeGroupId: string | null,

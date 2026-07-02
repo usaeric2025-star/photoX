@@ -3,7 +3,8 @@ import { type StatusCode } from 'hono/utils/http-status';
 import { requireRealUser } from './auth.js';
 import { getTraceId } from './error/traceId.js';
 import { logger } from './logger.js';
-import { AppError, errorFactory } from './error/AppError.js';
+import { AppError } from '../../shared/AppError.js';
+import { errorFactory } from './error/factory.js';
 
 export function setupMiddlewares(app: Hono, serverEnv: { NODE_ENV: string | undefined }) {
   // --- Middleware ---

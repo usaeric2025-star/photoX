@@ -1,6 +1,6 @@
 import React from 'react';
-import { useTogglePin } from '#src/hooks';
-import { Icon } from '#src/components/ui/Icon';
+import { useTogglePin } from '#src/hooks/index.js';
+import { Icon } from '#src/components/ui/Icon.js';
 
 export function PinButton({ photoId, isPinned }: { photoId: string; isPinned: boolean }) {
   const togglePin = useTogglePin();

@@ -1,4 +1,4 @@
-import { logger } from '#lib/logger';
+import { logger } from '#lib/logger.js';
 
 /**
  * Checks if a string is a common placeholder or useless text (null, undefined, [], etc.)
