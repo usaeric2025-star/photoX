@@ -94,7 +94,7 @@ export function Image({
                     className
                 )}
                 loading={priority ? "eager" : "lazy"}
-                {...(priority ? { fetchpriority: "high" } : {})}
+                {...(priority ? { fetchPriority: "high" } : {})}
                 {...props}
             />
         </div>
