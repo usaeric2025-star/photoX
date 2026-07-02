@@ -266,8 +266,6 @@ export const ms = {
     metadata: 'Metadata',
     members: ' ahli',
     unknown: 'Tidak diketahui',
-    materials: 'Bahan',
-    colors: 'Warna',
     aiAnalyze: 'Analisis AI',
     productNamePlaceholderZh: 'Nama Bahasa Cina...',
     productNamePlaceholderEn: 'English name...',

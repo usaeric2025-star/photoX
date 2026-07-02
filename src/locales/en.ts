@@ -266,8 +266,6 @@ export const en = {
     metadata: 'Metadata',
     members: ' members',
     unknown: 'Unknown',
-    materials: 'Materials',
-    colors: 'Colors',
     aiAnalyze: 'AI Analyze',
     productNamePlaceholderZh: 'Name...',
     productNamePlaceholderEn: 'Name...',

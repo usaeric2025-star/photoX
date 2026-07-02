@@ -264,8 +264,6 @@ export const zh = {
     metadata: '元数据',
     members: ' 个成员',
     unknown: '未知',
-    materials: '材质',
-    colors: '颜色',
     aiAnalyze: 'AI 分析',
     groupDetails: '合组详情',
     photoDetails: '照片详情',
