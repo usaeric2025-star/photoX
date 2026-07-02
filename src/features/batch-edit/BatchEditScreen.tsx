@@ -5,8 +5,8 @@ import { useConfirm } from '#src/context/ConfirmContext.js';
 import { ConfirmDialog } from '#src/components/ui/ConfirmDialog.js';
 import { usePhotoDelete, useTranslation } from '#src/hooks/index.js';
 import { BatchEditForm } from './BatchEditForm.js';
-import { useBatchEdit } from './useBatchEdit.js';
-import { useSelectedIds, useSelectionActions } from '#src/features/selection/index.js';
+import { useBatchEdit } from '#src/hooks/index.js'; // fixed import path
+import { useSelectedIds, useSelectionActions } from '#src/hooks/index.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import * as v from 'valibot';
 import { Button } from '#src/components/ui/Button.js';

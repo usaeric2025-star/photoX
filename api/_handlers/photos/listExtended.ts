@@ -32,6 +32,7 @@ export const listExtendedHandlers = (app: Hono) => {
             ))
             .orderBy(
                 desc(furnitureItems.isGroupCover),
+                sql`case when ${furnitureItems.isPinned} = true then 0 else 1 end asc`,
                 asc(furnitureItems.isHidden),
                 desc(furnitureItems.createdAt),
                 asc(furnitureItems.id)
@@ -103,6 +104,7 @@ export const listExtendedHandlers = (app: Hono) => {
             .where(baseCondition)
             .orderBy(
                 desc(furnitureItems.isGroupCover),
+                sql`case when ${furnitureItems.isPinned} = true then 0 else 1 end asc`,
                 desc(furnitureItems.createdAt),
                 asc(furnitureItems.id)
             )
