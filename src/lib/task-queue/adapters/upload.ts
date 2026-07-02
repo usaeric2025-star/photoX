@@ -174,6 +174,7 @@ export const executeBatchUpload = (
   }
 
   // ✅ 自動將 AI 分析任務加入佇列 (如果上傳成功)
+  /*
   if (uploadedPhotos.length > 0) {
     const taskTitle = options.groupId ? `智能合組分析 (${uploadedPhotos.length}張)` : `批量 AI 分析 (${uploadedPhotos.length}張)`;
     
@@ -214,6 +215,7 @@ export const executeBatchUpload = (
       }
     });
   }
+  */
   
   // Trigger initial photos invalidate immediately after upload
   appQuery.invalidatePhotos();

@@ -21,22 +21,22 @@ const mapToDb = (updates: Record<string, unknown>, userId?: string): Record<stri
     if ('name' in dbUpdates) {
         const val = dbUpdates.name;
         if (typeof val === 'string') {
-            dbUpdates.name = { zh: cleanTranslationPrefixes(val).trim(), en: '', ms: '' };
+            dbUpdates.name = cleanTranslationPrefixes(val).trim();
         } else if (val && typeof val === 'object') {
-            let nameObj = val as Record<string, unknown>;
-            if (nameObj.zh && typeof nameObj.zh === 'object' && ('zh' in nameObj.zh || 'en' in nameObj.zh || 'ms' in nameObj.zh)) {
-                nameObj = nameObj.zh;
-            }
-            dbUpdates.name = {
-                zh: cleanTranslationPrefixes(String(nameObj.zh || '')).trim(),
-                en: cleanTranslationPrefixes(String(nameObj.en || '')).trim(),
-                ms: cleanTranslationPrefixes(String(nameObj.ms || '')).trim(),
-            };
+            const nameObj = val as Record<string, unknown>;
+            // Prioritize English name if available, otherwise any translation, but return as STRING
+            dbUpdates.name = cleanTranslationPrefixes(String(nameObj.en || nameObj.zh || nameObj.ms || '')).trim();
         }
     }
 
-    // description removed intentionally
-    delete (dbUpdates as Record<string, unknown>).description;
+    if ('description' in dbUpdates) {
+        const val = dbUpdates.description;
+        if (typeof val === 'string') {
+            dbUpdates.description = val;
+        } else if (val && typeof val === 'object') {
+            dbUpdates.description = JSON.stringify(val);
+        }
+    }
 
     return dbUpdates;
 };
