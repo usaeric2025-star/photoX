@@ -1,5 +1,5 @@
 import React from 'react';
-import { useFilterState, useFilters } from './useFilters.js';
+import { useFilterState, useFilters } from '#src/hooks/index.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { cn } from '#lib/utils.js';
 

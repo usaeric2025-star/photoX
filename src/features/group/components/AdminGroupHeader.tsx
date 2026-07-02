@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAppRouter } from '#lib/router/index.js';
 import { Group } from '#src/types/index.js';
 import { Icon } from '#src/components/ui/Icon.js';
-import { useIsMultiSelect, useSelectionActions } from '#src/features/selection/index.js';
+import { useIsMultiSelect, useSelectionActions } from '#src/hooks/index.js';
 import { copyToClipboard } from '#src/utils/clipboard.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import { FormProvider, useFormField } from '#lib/forms/useFormField.js';

@@ -3,7 +3,7 @@ import { useUI } from '#lib/store/index.js';
 import { useAIBatchAnalysis } from '#src/hooks/photo/useAIBatchAnalysis.js';
 import { logger } from '#lib/logger.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
-import { useSelectedIds } from '#src/features/selection/index.js';
+import { useSelectedIds } from '#src/hooks/index.js';
 
 export function useAdminBatchActions() {
   const { handleBatchAiAnalyze } = useAIBatchAnalysis();

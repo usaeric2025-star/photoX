@@ -189,30 +189,6 @@ ai.post("/translate", async (c) => {
     return successResponse(c, data, { rawResult: rawText });
 });
 
-ai.post("/analyze-group", async (c) => {
-    const body = await c.req.json();
-    const check = v.safeParse(AIAnalyzeGroupReqSchema, body);
-    if (!check.success) return errorResponse(c, check.issues[0].message, 400);
-
-    const prompt = AI_PROMPTS.ANALYZE_GROUP(check.output.photoDetails);
-    const provider = await getAIProvider();
-    const modelConfig = (provider as BaseAIProvider).getConfig().model;
-    const model = modelConfig || 'google/gemini-2.5-flash-lite';
-
-    const { data, rawText } = await executeAITask({
-        task: 'analyze-group',
-        provider,
-        model,
-        messages: [{ role: "user", content: prompt }],
-        prompt
-    });
-
-    if (data && (data as { _fallback?: boolean })._fallback) {
-        return errorResponse(c, (data as { _error?: string })._error || 'AI group analysis failed', 500);
-    }
-
-    return successResponse(c, data, { rawResult: rawText });
-});
 
 ai.post("/analyze-photo-v2", async (c) => {
     const body = await c.req.json();

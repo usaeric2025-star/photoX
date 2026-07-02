@@ -41,34 +41,6 @@ function formatField(field: Record<string, unknown> | string | number | null | u
   return String(field);
 }
 
-export async function analyzeGroup(photos: Photo[]): Promise<Record<string, unknown>> {
-  const photoDetails = photos.map(p => {
-    const nameStr = formatField(p.name);
-    const descStr = formatField(p.description);
-    const tagNames = (p.tags || []).map(t => t.name).join(',');
-    return `- 名称: ${nameStr}, 标签: ${tagNames || '无'}, 描述: ${descStr || '无'}`;
-  }).join('\n');
-  
-  const response = await api.ai['analyze-group'].$post({
-    json: { photoDetails }
-  });
-
-  if (!response.ok) {
-    const error = await response.json() as { error?: string };
-    throw ErrorFactory.fatal(error.error || 'AI 智能合组分析失败', { context: 'analyzeGroup' });
-  }
-
-  const resData = await response.json() as { data: Record<string, unknown> | string };
-  let parsed = resData.data;
-  if (typeof parsed === 'string') {
-    try {
-      parsed = JSON.parse(parsed.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim());
-    } catch (e) {
-      throw ErrorFactory.fatal('Json Parse error', { context: 'analyzeGroup' });
-    }
-  }
-  return parsed as Record<string, unknown>;
-}
 
 export async function analyzeSinglePhotoDetail(photo: Photo): Promise<Record<string, unknown>> {
   const nameStr = formatField(photo.name);

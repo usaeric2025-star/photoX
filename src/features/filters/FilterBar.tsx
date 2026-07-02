@@ -6,7 +6,7 @@ import { CategoryGrid } from './CategoryGrid.js';
 import { TagGrid } from './TagGrid.js';
 import { ColumnsToggle } from '#src/components/layout/ColumnsToggle.js';
 import { GroupToggle } from '#src/components/ui/GroupToggle.js';
-import { useFilters, useFilterState } from './useFilters.js';
+import { useFilters, useFilterState } from '#src/hooks/index.js';
 import { useTags } from '#src/hooks/tag/index.js';
 import { cn } from '#lib/utils.js';
 

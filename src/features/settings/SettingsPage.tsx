@@ -17,7 +17,7 @@ import {
   useCategories, useTags, useManufacturers,
   useAdminCategory, useSettings
 } from '#src/hooks/index.js';
-import { useSettingsLogic } from './useSettingsLogic.js';
+import { useSettingsLogic } from '#src/hooks/index.js';
 import { SettingsTabs } from './SettingsTabs.js';
 import { SettingsHeader } from './SettingsHeader.js';
 import { translations } from '#src/locales/index.js';

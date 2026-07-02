@@ -10,13 +10,11 @@ import { LoadingScreen } from './components/ui/LoadingScreen.js';
 import { DialogContainer } from './components/layout/DialogContainer.js';
 import { Toaster } from 'sonner';
 import { PhotoEditDialog } from './features/photo-edit/PhotoEditDialog.js';
-import { SelectionSync } from './features/selection/index.js';
 
 function AppContent({ status, error }: { status: string, error: Error | null }) {
   return (
     <AppErrorBoundary>
       <ConfirmProvider>
-          <SelectionSync />
           {status === 'loading' ? (
             <LoadingScreen />
           ) : status === 'error' ? (

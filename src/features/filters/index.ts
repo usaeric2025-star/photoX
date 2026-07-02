@@ -1,6 +1,4 @@
-export * from './useFilters.js';
-;
-;
+export { useFilters } from '#src/hooks/ui/useFilters.js';
 export * from './types.js';
 export * from './FilterBar.js';
 export * from './SearchInput.js';

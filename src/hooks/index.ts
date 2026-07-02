@@ -9,9 +9,10 @@ export * from './category/index.js';
 export * from './tag/index.js';
 export * from './manufacturer/index.js';
 export * from './settings/index.js';
+export * from './selection/index.js';
 
 // Utils
-export { useFilters } from '#src/features/filters/index.js';
+export * from './ui/useFilters.js';
 export { useUI } from '#lib/store/index.js';
 export type { UIStoreState } from '#lib/store/index.js';
 export { useColumns } from './ui/useColumns.js';

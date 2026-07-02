@@ -1,5 +1,5 @@
 import { useCategories } from '#src/hooks/category/index.js';
-import { useFilterState } from './useFilters.js';
+import { useFilterState } from '#src/hooks/index.js';
 import { useTranslation } from '#src/hooks/index.js';
 import { getTranslatedCategoryName } from '#src/services/category/utils.js';
 import { logger } from '#lib/logger.js';

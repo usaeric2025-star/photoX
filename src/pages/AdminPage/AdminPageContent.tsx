@@ -10,7 +10,7 @@ interface UploadModeDialogProps {
 }
 const UploadModeDialog = lazy(() => import('#src/features/upload/components/UploadModeDialog.js').then(m => ({ default: m.UploadModeDialog }))) as React.ComponentType<UploadModeDialogProps>;
 
-import { usePhotoUpload } from '#src/features/upload/index.js';
+import { usePhotoUpload } from '#src/hooks/index.js';
 import { UploadButton } from '#src/components/shared/UploadButton.js';
 import { SelectionToolbar } from '#src/features/selection/index.js';
 import { useAIBatchAnalysis } from '#src/hooks/index.js';

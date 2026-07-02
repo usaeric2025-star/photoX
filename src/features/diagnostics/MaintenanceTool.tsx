@@ -8,7 +8,7 @@ import { Icon } from '#src/components/ui/Icon.js';
 import { useUI, storeAccessor } from '#lib/store/index.js';
 import { useTranslation } from '#src/hooks/index.js';
 import { MaintPreviewDialog } from './MaintPreviewDialog.js';
-import { useMaintenanceExecution } from './useMaintenanceExecution.js';
+import { useMaintenanceExecution } from '#src/hooks/index.js';
 import { useConfirm } from '#src/context/ConfirmContext.js';
 
 interface MaintenanceToolProps {

@@ -11,7 +11,7 @@ import {
 } from '#src/services/group/commands.js';
 import { queryKeys } from '#lib/query/keys.js';
 import { ProductGroup } from '#src/types/index.js';
-import { useSelectionActions } from '#src/features/selection/index.js';
+import { useSelectionActions } from '#src/hooks/index.js';
 import { showToast } from '#lib/ui/toast.js';
 
 // Helper to invalidate photos cache robustly

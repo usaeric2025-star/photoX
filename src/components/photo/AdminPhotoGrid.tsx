@@ -1,6 +1,6 @@
 import React from 'react';
 import { PhotoGridContent } from './PhotoGridContent.js';
-import { useIsMultiSelect, useSelectionActions } from '#src/features/selection/index.js';
+import { useIsMultiSelect, useSelectionActions } from '#src/hooks/index.js';
 import { Category } from '#src/types/photo.js';
 import { PhotoListItem } from '#src/types/api.js';
 import { AdminPhotoCard } from './AdminPhotoCard.js';

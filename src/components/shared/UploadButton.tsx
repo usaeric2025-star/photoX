@@ -3,7 +3,7 @@ import { Icon } from '#src/components/ui/Icon.js';
 import { buttonStyles } from '#src/styles/buttonStyles.js';
 import { usePermission } from '#src/hooks/index.js';
 import { useAppRouter } from '#lib/router/index.js';
-import { useIsMultiSelect } from '#src/features/selection/index.js';
+import { useIsMultiSelect } from '#src/hooks/index.js';
 
 interface UploadButtonProps {
   onAdd?: () => void;

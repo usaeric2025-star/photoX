@@ -7,7 +7,7 @@ import { useAppQuery } from '#lib/query/index.js';
 import { api } from '#lib/api.js';
 import { translations, TranslationType } from '#src/locales/index.js';
 import { storage } from '#src/services/storage/index.js';
-import { useIsMultiSelect, useSelectionActions } from '#src/features/selection/index.js';
+import { useIsMultiSelect, useSelectionActions } from '#src/hooks/index.js';
 import { AdminHeaderLogo } from './AdminHeaderLogo.js';
 import { AdminHeaderActions } from './AdminHeaderActions.js';
 import { AdminHeaderMenu } from './AdminHeaderMenu.js';

@@ -8,7 +8,7 @@ import { getGroupById } from '#src/services/group/queries.js';
 import { STALE_TIMES } from '#lib/query/config.js';
 import { Photo } from '#src/types/index.js';
 import { useFilters } from '#src/features/filters/index.js';
-import { useIsMultiSelect, useSelectionActions } from '#src/features/selection/useSelection.js';
+import { useIsMultiSelect, useSelectionActions } from '#src/hooks/index.js';
 
 interface UsePhotoCardInteractionProps {
   photo: PhotoListItem;

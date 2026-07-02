@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
 import { useTags } from '#src/hooks/tag/index.js';
-import { useFilterState } from './useFilters.js';
+import { useFilterState } from '#src/hooks/index.js';
 import { usePublicSettings } from '#src/hooks/settings/useSettings.js';
 import { useTagSorting } from '#src/hooks/photo/index.js';
 import { useUI } from '#lib/store/index.js';

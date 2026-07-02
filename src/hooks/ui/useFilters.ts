@@ -18,7 +18,7 @@ import {
 import { Router } from '#src/router.js';
 import { useUI, uiStore, lightboxCurrentIndex } from '#lib/store/index.js';
 import { useAppRoute } from '#lib/router/index.js';
-import type { FilterState, SortOrder } from './types.js';
+import type { FilterState, SortOrder } from '#src/features/filters/types.js';
 
 export interface UseFiltersOptions {
   enableStatus?: boolean;

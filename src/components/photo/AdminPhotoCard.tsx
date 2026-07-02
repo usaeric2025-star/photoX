@@ -5,7 +5,7 @@ import { PhotoCardBase } from './PhotoCardBase.js';
 import { PhotoStatusBadges, PhotoCardInfo, PhotoSelectionIndicator } from './PhotoCardParts.js';
 import { PinButton } from './PinButton.js';
 import { useColumns, usePermission, usePerformance } from '#src/hooks/index.js';
-import { useIsMultiSelect, useIsPhotoSelected } from '#src/features/selection/index.js';
+import { useIsMultiSelect, useIsPhotoSelected } from '#src/hooks/index.js';
 import { useSignal, useUI } from '#lib/store/index.js';
 import { gridColumns as gridColumnsSignal } from '#lib/store/index.js';
 import { usePhotoCard } from '#src/hooks/photo/usePhotoCard.js';

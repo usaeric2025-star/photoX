@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import { motion } from 'lite-sleek';
 import { logger } from '#lib/logger.js';
 import { useAppRouter } from '#lib/router/index.js';
-import { useGroupData } from './hooks/useGroupData.js';
+import { useGroupData } from '#src/hooks/index.js';
 import { PhotoListItem } from '#src/types/api.js';
 import { Photo, Group, Category } from '#src/types/index.js';
 import { PhotoGridContent } from '#src/components/photo/PhotoGridContent.js';

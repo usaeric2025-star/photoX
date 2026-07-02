@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'lite-sleek';
 import { useAppRouter } from '#lib/router/index.js';
-import { useGroupData } from './hooks/useGroupData.js';
+import { useGroupData } from '#src/hooks/index.js';
 import { PhotoListItem } from '#src/types/api.js';
 import { Photo, Group, ProductGroup, Dimension, Category } from '#src/types/index.js';
 import { PhotoGridContent } from '#src/components/photo/PhotoGridContent.js';
@@ -12,7 +12,7 @@ import { getTranslatedCategoryName } from '#src/services/category/utils.js';
 import { PageHeader } from '#src/components/ui/PageHeader.js';
 import { useSignal, uiStore, useUI, gridColumns as gridColumnsSignal } from '#lib/store/index.js';
 // import { batchModeSignal } from '#lib/store/index.js'; // 移除此行
-import { useIsMultiSelect, useSelectionActions } from '#src/features/selection/index.js';
+import { useIsMultiSelect, useSelectionActions } from '#src/hooks/index.js';
 import { useAdminMaintenance } from '#src/hooks/admin/useAdminMaintenance.js';
 import { useAdminBatchActions } from '#src/hooks/admin/useAdminBatch.js';
 import { translations } from '#src/locales/index.js';

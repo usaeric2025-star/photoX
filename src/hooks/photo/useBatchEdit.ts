@@ -1,4 +1,4 @@
-import { useSelectionActions } from '#src/features/selection/useSelection.js';
+import { useSelectionActions } from '#src/hooks/index.js';
 import { selectionStore } from '#src/services/selection/selectionService.js';
 import { useUI, UIStoreState, useStore } from '#lib/store/index.js';
 import { useAppRouter } from '#lib/router/index.js';
@@ -46,7 +46,7 @@ export function useBatchEdit() {
     if (!ids || ids.length === 0) return;
     
     await remove.mutateAsync(ids);
-    patchSelection({ batchEditingIds: null, isMultiSelect: false, selectedIds: [] });
+    patchSelection({ batchEditingIds: null, selectedIds: [] });
     resetForm();
     const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
     if (route?.name === 'adminBatchEdit' || pathname.startsWith('/admin/batch-edit')) {

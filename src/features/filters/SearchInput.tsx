@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useFilterState } from './useFilters.js';
+import { useFilterState } from '#src/hooks/index.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { useTranslation } from '#src/hooks/index.js';
 import { useDebouncedCallback } from '#src/hooks/core/useDebouncedCallback.js';

@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { useSelectionCount, useSelectedIds, useSelectionActions, useIsMultiSelect } from './useSelection.js';
+import { useSelectionCount, useSelectedIds, useSelectionActions, useIsMultiSelect } from '#src/hooks/index.js';
 import { useAdminMaintenance } from '#src/hooks/admin/useAdminMaintenance.js';
 import { useUI, type UIStoreState, useSignal, activeTaskCountSignal } from '#lib/store/index.js';
 import { useAppRouter } from '#lib/router/index.js';

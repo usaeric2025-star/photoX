@@ -14,7 +14,7 @@ import { useSignal, useUI } from '#lib/store/index.js';
 import { aiAnalysisSignal } from '#lib/ai/executor.js';
 import { showToast } from "#lib/ui/toast.js";
 import { ErrorFactory } from "#lib/error/ErrorFactory.js";
-import { usePhotoEditAI } from "./usePhotoEditAI.js";
+import { usePhotoEditAI } from "#src/hooks/index.js";
 import { useGroupMutations } from "#src/hooks/group/index.js";
 
 interface DialogHeaderProps {

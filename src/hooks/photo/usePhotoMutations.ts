@@ -4,7 +4,7 @@ import { queryKeys } from '#lib/query/keys.js';
 import { useAppMutation, appQuery } from '#lib/query/index.js';
 import { syncBatchPhotoTags } from '#src/services/tag/commands.js';
 import { showToast } from '#lib/ui/toast.js';
-import { useSelectionActions } from '#src/features/selection/index.js';
+import { useSelectionActions } from '#src/hooks/index.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { useTranslation } from '#src/hooks/index.js';
 

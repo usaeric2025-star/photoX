@@ -11,3 +11,6 @@ export * from './usePhotoAIResult.js';
 export * from './PhotoEditSession.js';
 export * from './usePhotoEditSessionContext.js';
 
+export * from './useBatchEdit.js';
+export * from './usePhotoUpload.js';
+export * from './usePhotoEditAI.js';
