@@ -30,25 +30,16 @@ export const createHandler = (app: Hono) => {
 
         // ✅ 強制限制標題長度
         if (payload.name) {
-            let nameJson = payload.name;
-            if (typeof payload.name === 'string' && (payload.name.startsWith('{') || payload.name.startsWith('['))) {
-                try {
-                    nameJson = JSON.parse(payload.name);
-                } catch (e) {
-                    // Not valid JSON
-                }
+            let nameStr = '';
+            if (typeof payload.name === 'string') {
+                nameStr = payload.name;
+            } else if (payload.name && typeof payload.name === 'object') {
+                const obj = payload.name as any;
+                nameStr = obj.zh || obj.en || obj.ms || '';
             }
 
-            if (typeof nameJson === 'string') {
-                if (nameJson.length > 200) throw new Error('標題超過 200 字上限');
-                payload.name = { zh: nameJson };
-            } else if (nameJson && typeof nameJson === 'object') {
-                for (const lang of ['zh', 'en', 'ms']) {
-                   if ((nameJson as any)[lang] && String((nameJson as any)[lang]).length > 200) {
-                       throw new Error(`標題(${lang})超過 200 字上限`);
-                   }
-                }
-            }
+            if (nameStr.length > 200) throw new Error('標題超過 200 字上限');
+            payload.name = nameStr;
         }
 
         for (const [key, val] of Object.entries(payload)) {

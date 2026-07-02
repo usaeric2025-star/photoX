@@ -22,25 +22,16 @@ export const updateHandler = (app: Hono) => {
 
         // ✅ 強制限制標題長度
         if (updates.name) {
-            let nameJson = updates.name;
-            if (typeof updates.name === 'string' && (updates.name.startsWith('{') || updates.name.startsWith('['))) {
-                try {
-                    nameJson = JSON.parse(updates.name);
-                } catch (e) {
-                    // Not valid JSON
-                }
+            let nameStr = '';
+            if (typeof updates.name === 'string') {
+                nameStr = updates.name;
+            } else if (updates.name && typeof updates.name === 'object') {
+                const obj = updates.name as any;
+                nameStr = obj.zh || obj.en || obj.ms || '';
             }
 
-            if (typeof nameJson === 'string') {
-                if (nameJson.length > 200) throw new Error('標題超過 200 字上限');
-                updates.name = { zh: nameJson };
-            } else if (nameJson && typeof nameJson === 'object') {
-                for (const lang of ['zh', 'en', 'ms']) {
-                   if ((nameJson as any)[lang] && String((nameJson as any)[lang]).length > 200) {
-                       throw new Error(`標題(${lang})超過 200 字上限`);
-                   }
-                }
-            }
+            if (nameStr.length > 200) throw new Error('標題超過 200 字上限');
+            updates.name = nameStr;
         }
 
         const mappedUpdates: Record<string, unknown> = {};
@@ -88,25 +79,16 @@ export const updateHandler = (app: Hono) => {
 
         // ✅ 強制限制標題長度
         if (updates.name) {
-            let nameJson = updates.name;
-            if (typeof updates.name === 'string' && (updates.name.startsWith('{') || updates.name.startsWith('['))) {
-                try {
-                    nameJson = JSON.parse(updates.name);
-                } catch (e) {
-                    // Not valid JSON
-                }
+            let nameStr = '';
+            if (typeof updates.name === 'string') {
+                nameStr = updates.name;
+            } else if (updates.name && typeof updates.name === 'object') {
+                const obj = updates.name as any;
+                nameStr = obj.zh || obj.en || obj.ms || '';
             }
 
-            if (typeof nameJson === 'string') {
-                if (nameJson.length > 200) throw new Error('標題超過 200 字上限');
-                updates.name = { zh: nameJson };
-            } else if (nameJson && typeof nameJson === 'object') {
-                for (const lang of ['zh', 'en', 'ms']) {
-                   if ((nameJson as any)[lang] && String((nameJson as any)[lang]).length > 200) {
-                       throw new Error(`標題(${lang})超過 200 字上限`);
-                   }
-                }
-            }
+            if (nameStr.length > 200) throw new Error('標題超過 200 字上限');
+            updates.name = nameStr;
         }
 
         const mappedUpdates: Record<string, unknown> = { updatedAt: new Date() };

@@ -167,7 +167,12 @@ export const mapToDb = (updates: Partial<Photo> & Record<string, any>, isCreate 
         }
         
         if (key === 'name') {
-            valueToSave = String(valueToSave || '');
+            if (valueToSave && typeof valueToSave === 'object') {
+                const obj = valueToSave as any;
+                valueToSave = obj.zh || obj.en || obj.ms || obj.name || '';
+            } else {
+                valueToSave = String(valueToSave || '');
+            }
         }
         
         dbUpdates[key] = valueToSave;
