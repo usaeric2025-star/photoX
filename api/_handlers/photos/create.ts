@@ -4,6 +4,7 @@ import { db, furnitureItems, systemLogs } from '../../_lib/db/index.js';
 import { syncGroupCoversAndCount } from '../../_lib/groups.js';
 import { refreshPhotosView } from '../../_lib/db/actions.js';
 import { ErrorFactory } from '../../../src/lib/error/ErrorFactory.js';
+import { sanitizePhotoPayload } from './sanitize.js';
 
 export const createHandler = (app: Hono) => {
   app.post('/upsert', async (c) => {
@@ -21,7 +22,6 @@ export const createHandler = (app: Hono) => {
         payload.userId = '8ec53131-a589-4b50-beb4-6b5308541e1b';
     }
 
-    const mappedPayload: Record<string, unknown> = {};
     try {
         // ✅ 強制攔截 base64
         if (payload.imageUrl && (payload.imageUrl as string).startsWith('data:image/')) {
@@ -42,31 +42,12 @@ export const createHandler = (app: Hono) => {
             payload.name = nameStr;
         }
 
-        for (const [key, val] of Object.entries(payload)) {
-            // Skip createdAt and updatedAt from client to avoid type/mismatch errors and let backend generate them
-            if (['createdAt', 'updatedAt'].includes(key)) continue;
+        // Apply our sanitized logic to cleanse relations and avoid SQL constraints
+        const mappedPayload = sanitizePhotoPayload(payload);
 
-            if (['categoryId', 'groupId', 'manufacturerId', 'description', 'descriptionTranslations'].includes(key)) {
-                if (val === null || val === undefined || val === '' || val === 'null' || val === 'uncategorized' || val === 'undefined') {
-                    mappedPayload[key] = null;
-                } else if (key === 'categoryId') {
-                    const parsed = typeof val === 'string' ? parseInt(val, 10) : Number(val);
-                    mappedPayload[key] = isNaN(parsed) ? null : parsed;
-                } else {
-                    mappedPayload[key] = val;
-                }
-            } else {
-                mappedPayload[key] = val;
-            }
-        }
-
-        // Explicitly guarantee missing or nullish targets are null
-        const keysToNull = ['categoryId', 'groupId', 'manufacturerId', 'description', 'descriptionTranslations'];
-        for (const k of keysToNull) {
-            if (mappedPayload[k] === undefined || mappedPayload[k] === '' || mappedPayload[k] === 'null' || mappedPayload[k] === 'undefined') {
-                mappedPayload[k] = null;
-            }
-        }
+        // Remove createdAt/updatedAt if accidentally passed from client
+        delete mappedPayload.createdAt;
+        delete mappedPayload.updatedAt;
 
         const { id, ...updatePayloadData } = mappedPayload;
 

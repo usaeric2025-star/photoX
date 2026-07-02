@@ -6,6 +6,7 @@ import { syncGroupCoversAndCount } from '../../_lib/groups.js';
 import { refreshPhotosView } from '../../_lib/db/actions.js';
 import { errorResponse, successResponse } from '../../_lib/response.js';
 import { PhotoBatchUpdateReqSchema, PhotoUpdateReqSchema } from '../../../shared/apiContractSchema.js';
+import { sanitizePhotoPayload } from './sanitize.js';
 
 export const updateHandler = (app: Hono) => {
   app.post('/batch-update', async (c) => {
@@ -34,20 +35,7 @@ export const updateHandler = (app: Hono) => {
             updates.name = nameStr;
         }
 
-        const mappedUpdates: Record<string, unknown> = {};
-
-        for (const [key, val] of Object.entries(updates)) {
-            let parsedVal = val;
-            if (['categoryId', 'groupId', 'manufacturerId', 'description', 'descriptionTranslations'].includes(key)) {
-                if (val === null || val === undefined || val === '' || val === 'null' || val === 'uncategorized' || val === 'undefined') {
-                    parsedVal = null;
-                } else if (key === 'categoryId') {
-                    const parsed = typeof val === 'string' ? parseInt(val, 10) : Number(val);
-                    parsedVal = isNaN(parsed) ? null : parsed;
-                }
-            }
-            mappedUpdates[key] = parsedVal;
-        }
+        const mappedUpdates = sanitizePhotoPayload(updates);
 
         const data = await db
             .update(furnitureItems)
@@ -96,21 +84,12 @@ export const updateHandler = (app: Hono) => {
             updates.name = nameStr;
         }
 
-        const mappedUpdates: Record<string, unknown> = { updatedAt: new Date() };
+        const mappedUpdates = sanitizePhotoPayload(updates);
+        mappedUpdates.updatedAt = new Date();
 
-        for (const [key, val] of Object.entries(updates)) {
-            if (['id', 'createdAt', 'updatedAt'].includes(key)) continue;
-            let parsedVal = val;
-            if (['categoryId', 'groupId', 'manufacturerId', 'description', 'descriptionTranslations'].includes(key)) {
-                if (val === null || val === undefined || val === '' || val === 'null' || val === 'uncategorized' || val === 'undefined') {
-                    parsedVal = null;
-                } else if (key === 'categoryId') {
-                    const parsed = typeof val === 'string' ? parseInt(val, 10) : Number(val);
-                    parsedVal = isNaN(parsed) ? null : parsed;
-                }
-            }
-            mappedUpdates[key] = parsedVal;
-        }
+        // Remove unupdatable keys if they were accidentally passed
+        delete mappedUpdates.id;
+        delete mappedUpdates.createdAt;
 
         // Special handling for group cover
         if (updates.isGroupCover === true) {
