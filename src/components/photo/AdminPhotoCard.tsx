@@ -21,6 +21,7 @@ interface AdminPhotoCardProps {
   sharedTags?: Tag[];
   canPin?: boolean;
   canPinGlobal?: boolean;
+  priority?: boolean;
 }
 
 export const AdminPhotoCard = memo(function AdminPhotoCard({
@@ -34,6 +35,7 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
   sharedTags,
   canPin,
   canPinGlobal,
+  priority = false,
 }: AdminPhotoCardProps) {
   const isMultiSelect = useIsMultiSelect();
   const isPhotoSelected = useIsPhotoSelected(photo.id);
@@ -63,6 +65,7 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
       isSelected={isPhotoSelected}
       isMultiSelect={isMultiSelect}
       imgVariant={columns <= 3 ? 'md' : 'sm'}
+      priority={priority}
       onClick={handleClick}
       ref={cardRef}
     >

@@ -65,6 +65,7 @@ export function AdminPhotoGrid({
           showGroupsCollapsed={showGroupsCollapsed}
           hasSearchQuery={hasSearchQuery}
           canPinGlobal={canPinGlobal}
+          priority={index < 12}
         />
       </div>
     );

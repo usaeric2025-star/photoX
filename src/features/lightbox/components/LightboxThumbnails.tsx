@@ -44,8 +44,11 @@ export function LightboxThumbnails({
         {photos.map((p, idx) => {
           const photoData = (p.original || p) as any;
           const key = photoData.imageUrl || photoData.uri || (p as any).src;
-          const thumb = getThumbnailUrl(key, 120) || key;
+          const hash = photoData.imageHash || photoData.image_hash;
+          const thumb = getThumbnailUrl(key, 120, 120, hash) || key;
           const isActive = idx === currentIndex;
+          const isNear = Math.abs(idx - currentIndex) <= 2;
+          
           return (
             <button
               key={`${key}-${idx}`}
@@ -54,7 +57,13 @@ export function LightboxThumbnails({
               aria-label={`Select photo ${idx + 1}`}
               aria-current={isActive}
             >
-              <Image src={thumb} className="w-full h-full object-cover" alt="" />
+              <Image 
+                src={thumb} 
+                className="w-full h-full object-cover" 
+                alt="" 
+                disableFade={true} 
+                priority={isNear}
+              />
             </button>
           );
         })}

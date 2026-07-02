@@ -52,6 +52,7 @@ export function PublicPhotoGrid({
           onClick={(e: any) => onPhotoClick?.(photo.id, index, e)} 
           showGroupsCollapsed={showGroupsCollapsed}
           hasSearchQuery={hasSearchQuery}
+          priority={index < 12}
         />
       </div>
     );

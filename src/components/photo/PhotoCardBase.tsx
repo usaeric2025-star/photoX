@@ -10,6 +10,7 @@ export interface PhotoCardBaseProps extends React.HTMLAttributes<HTMLDivElement>
   isSelected?: boolean;
   isMultiSelect?: boolean;
   imgVariant?: 'sm' | 'md';
+  priority?: boolean;
   className?: string;
   onClick?: (e: React.MouseEvent<HTMLDivElement>) => void;
   children?: React.ReactNode;
@@ -42,6 +43,7 @@ export const PhotoCardBase = ({
   isSelected,
   isMultiSelect,
   imgVariant = 'sm',
+  priority = false,
   className,
   onClick,
   children,
@@ -81,11 +83,12 @@ export const PhotoCardBase = ({
         <Image
           src={getThumbnailUrl(
             item.imageUrl, 
-            imgVariant === 'md' ? 800 : 120, 
-            imgVariant === 'md' ? 800 : 120, 
+            imgVariant === 'md' ? 400 : 120, 
+            imgVariant === 'md' ? 400 : 120, 
             item.imageHash || (item as any).image_hash
           )}
           alt={getDisplayString(item.name)}
+          priority={priority}
           className={cn(
             "w-full h-full object-cover object-center transition-transform duration-700 ease-out",
             isHidden && "opacity-60"

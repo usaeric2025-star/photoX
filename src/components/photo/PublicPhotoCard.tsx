@@ -16,6 +16,7 @@ interface PublicPhotoCardProps {
   hasSearchQuery?: boolean;
   sharedCategories?: Category[];
   sharedTags?: Tag[];
+  priority?: boolean;
 }
 
 export const PublicPhotoCard = memo(function PublicPhotoCard({
@@ -27,6 +28,7 @@ export const PublicPhotoCard = memo(function PublicPhotoCard({
   hasSearchQuery = false,
   sharedCategories,
   sharedTags,
+  priority = false,
 }: PublicPhotoCardProps) {
   const columns = useSignal(gridColumnsSignal) as number;
   
@@ -51,6 +53,7 @@ export const PublicPhotoCard = memo(function PublicPhotoCard({
       isSelected={false}
       isMultiSelect={false}
       imgVariant={columns <= 3 ? 'md' : 'sm'}
+      priority={priority}
       onClick={handleClick}
       ref={cardRef}
     >
