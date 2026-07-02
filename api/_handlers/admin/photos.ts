@@ -63,10 +63,10 @@ adminPhotos.get("/photo-ai-result/:photoId", async (c) => {
         }
 
         const resultObj = {
-            photo_id: photoId,
-            raw_result: rawResult,
-            parsed_data: auditLog.cleanedOutput || null,
-            created_at: auditLog.createdAt
+            photoId: photoId,
+            rawResult: rawResult,
+            parsedData: auditLog.cleanedOutput || null,
+            createdAt: auditLog.createdAt
         };
         return c.json({ success: true, data: resultObj });
     }
@@ -99,10 +99,10 @@ adminPhotos.get("/photo-ai-result/:photoId", async (c) => {
             return c.json({
                 success: true,
                 data: {
-                    photo_id: photoId,
-                    raw_result: (item.metadata as Record<string, unknown>).ai_raw,
-                    parsed_data: null,
-                    created_at: null
+                    photoId: photoId,
+                    rawResult: (item.metadata as Record<string, unknown>).ai_raw,
+                    parsedData: null,
+                    createdAt: null
                 }
             });
         }
@@ -112,10 +112,10 @@ adminPhotos.get("/photo-ai-result/:photoId", async (c) => {
 
     const metadata = logRecord.metadata as Record<string, unknown> | null;
     const resultObj = {
-        photo_id: photoId,
-        raw_result: (metadata?.raw_result as string) || '',
-        parsed_data: (metadata?.parsed_data as unknown) || null,
-        created_at: logRecord.createdAt
+        photoId: photoId,
+        rawResult: (metadata?.raw_result as string) || '',
+        parsedData: (metadata?.parsed_data as unknown) || null,
+        createdAt: logRecord.createdAt
     };
 
     return c.json({ success: true, data: resultObj });

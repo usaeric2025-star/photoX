@@ -53,15 +53,8 @@ export const createHandler = (app: Hono) => {
         if (mappedPayload.groupId) {
             const groupRows = await db.select({ id: groups.id }).from(groups).where(eq(groups.id, mappedPayload.groupId)).limit(1);
             if (groupRows.length === 0) {
-                // Group doesn't exist, create it on the fly!
-                await db.insert(groups).values({
-                    id: mappedPayload.groupId,
-                    name: '新商品组 (New Group)',
-                    userId: mappedPayload.userId || 'system',
-                    status: 'draft',
-                    createdAt: new Date(),
-                    updatedAt: new Date()
-                });
+                // Fallback to null if group not found
+                mappedPayload.groupId = null;
             }
         }
         if (mappedPayload.categoryId) {

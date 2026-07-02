@@ -86,28 +86,38 @@ export function LightboxStage({
   const photoData = (currentPhoto.original || currentPhoto) as any;
   const title = (currentPhoto as any).title || photoData.name || 'Photo';
   const key = photoData.imageUrl || photoData.uri || (currentPhoto as any).src;
+  const hash = photoData.imageHash || photoData.image_hash;
   
   // Use high resolution for Lightbox (800 as instructed by user)
-  const src = getThumbnailUrl(key, 800) || key;
+  const src = getThumbnailUrl(key, 800, 800, hash) || key;
 
   // Create LQIP (120 as instructed by user)
-  const lqipSrc = getThumbnailUrl(key, 120) || undefined;
+  const lqipSrc = getThumbnailUrl(key, 120, 120, hash) || undefined;
 
-  // Preload adjacent images
+  // Preload adjacent images with a slight delay to prioritize current image
+  const [shouldPreload, setShouldPreload] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setShouldPreload(true), 500);
+    return () => clearTimeout(timer);
+  }, [currentIndex]);
+
   const nextIdx = (currentIndex + 1) % totalPhotos;
   const prevIdx = (currentIndex - 1 + totalPhotos) % totalPhotos;
 
-  const getSlideKey = (slide: any) => {
-    if (!slide) return '';
+  const getSlideInfo = (slide: any) => {
+    if (!slide) return { key: '', hash: '' };
     const d = (slide.original || slide) as any;
-    return d.imageUrl || d.uri || (slide as any).src;
+    return {
+      key: d.imageUrl || d.uri || (slide as any).src,
+      hash: d.imageHash || d.image_hash
+    };
   };
 
-  const nextKey = getSlideKey(photos[nextIdx]);
-  const prevKey = getSlideKey(photos[prevIdx]);
+  const nextInfo = getSlideInfo(photos[nextIdx]);
+  const prevInfo = getSlideInfo(photos[prevIdx]);
 
-  const nextSrc = nextKey ? (getThumbnailUrl(nextKey, 800) || nextKey) : '';
-  const prevSrc = prevKey ? (getThumbnailUrl(prevKey, 800) || prevKey) : '';
+  const nextSrc = nextInfo.key ? (getThumbnailUrl(nextInfo.key, 800, 800, nextInfo.hash) || nextInfo.key) : '';
+  const prevSrc = prevInfo.key ? (getThumbnailUrl(prevInfo.key, 800, 800, prevInfo.hash) || prevInfo.key) : '';
 
   return (
     <div 
@@ -145,7 +155,7 @@ export function LightboxStage({
               lqipSrc={lqipSrc}
               alt={title}
               disableFade={true}
-              loading="eager"
+              priority={true}
               containerClassName="bg-transparent"
               className={`object-contain max-w-full max-h-full drop-shadow-2xl transition-all duration-300 select-none ${isZoomed ? 'scale-150 cursor-zoom-out' : 'scale-100 cursor-zoom-in'}`}
             />
@@ -154,10 +164,10 @@ export function LightboxStage({
       </div>
 
       {/* Hidden preloading container */}
-      {totalPhotos > 1 && (
+      {totalPhotos > 1 && shouldPreload && (
         <div className="hidden" aria-hidden="true">
-          {nextSrc && <img src={nextSrc} alt="" />}
-          {prevSrc && <img src={prevSrc} alt="" />}
+          {nextSrc && <img src={nextSrc} alt="" loading="lazy" />}
+          {prevSrc && <img src={prevSrc} alt="" loading="lazy" />}
         </div>
       )}
     </div>

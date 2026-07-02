@@ -6,6 +6,8 @@ export const Router = createRouter({
   publicGroupSlash: "/group/:slug/",
   adminGroup: "/admin/group/:id",
   adminGroupSlash: "/admin/group/:id/",
+  adminPhoto: "/admin/photo/:photoId",
+  adminPhotoSlash: "/admin/photo/:photoId/",
   photo: "/photo/:photoId",
   photoSlash: "/photo/:photoId/",
   admin: "/admin",
@@ -26,6 +28,7 @@ export const Router = createRouter({
 
 export const ALL_ROUTES = [
   "home", "publicGroup", "publicGroupSlash", "adminGroup", "adminGroupSlash", 
+  "adminPhoto", "adminPhotoSlash",
   "photo", "photoSlash", "admin", "adminSlash", "adminTasks", "adminTasksSlash",
   "adminDiagnostics", "adminDiagnosticsSlash", "adminDiagnosticsLogs", "adminDiagnosticsLogsSlash", 
   "adminBatchEdit", "adminBatchEditSlash", "settings", "settingsSlash", "diagnostics", "diagnosticsSlash"

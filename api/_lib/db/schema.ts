@@ -195,6 +195,7 @@ export const aiAuditLogs = pgTable('ai_audit_logs', {
     tokenUsage: jsonb('token_usage'),
     status: text('status'),
     errorMessage: text('error_message'),
+    rawStoragePath: text('raw_storage_path').default(''),
     createdAt: timestamp('created_at').defaultNow(),
 }, (table) => ({
     photoIdIdx: index('ai_audit_logs_photo_id_idx').on(table.photoId),

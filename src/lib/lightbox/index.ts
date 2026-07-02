@@ -13,7 +13,8 @@ export function useLightbox() {
   const { photoId: queryPhotoId, setPhotoId, modal } = useFilters();
   const route = useAppRoute();
   
-  const photoId = queryPhotoId || (route.name === 'photo' ? (route.params as any).photoId : null);
+  const photoId = queryPhotoId || 
+    (route.name === 'photo' || route.name === 'adminPhoto' ? (route.params as any).photoId : null);
   const isOpen = !!(photoId && modal !== 'edit');
   
   const open = (slides: any[], index: number = 0) => {

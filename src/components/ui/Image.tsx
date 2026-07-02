@@ -7,6 +7,7 @@ interface ImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
     containerClassName?: string;
     lqipSrc?: string;
     disableFade?: boolean;
+    priority?: boolean;
 }
 
 /**
@@ -22,6 +23,7 @@ export function Image({
     lqipSrc: providedLqip,
     onLoad,
     disableFade = false,
+    priority = false,
     ...props 
 }: ImageProps) {
     const [isLoaded, setIsLoaded] = useState(false);
@@ -70,7 +72,11 @@ export function Image({
                 <img
                     src={lqipSrc}
                     alt=""
-                    className="absolute inset-0 w-full h-full object-cover object-center z-10"
+                    className={cn(
+                        "absolute inset-0 w-full h-full object-cover object-center z-10",
+                        className?.includes('object-contain') && 'object-contain',
+                        className?.includes('object-fill') && 'object-fill'
+                    )}
                     aria-hidden="true"
                 />
             )}
@@ -87,7 +93,8 @@ export function Image({
                     (isLoaded || disableFade) ? "opacity-100" : "opacity-0",
                     className
                 )}
-                loading="lazy"
+                loading={priority ? "eager" : "lazy"}
+                {...(priority ? { fetchpriority: "high" } : {})}
                 {...props}
             />
         </div>

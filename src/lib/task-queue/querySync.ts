@@ -29,6 +29,8 @@ export function setupQuerySync(): () => void {
             }),
             { revalidate: false }
           );
+          // ✅ 同時使 AI 詳細結果失效以觸發重新加載
+          appQuery.mutate(['photos', 'ai-result', task.meta.photoId]);
         }
         break;
 

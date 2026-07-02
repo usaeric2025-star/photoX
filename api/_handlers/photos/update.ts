@@ -40,14 +40,7 @@ export const updateHandler = (app: Hono) => {
         if (mappedUpdates.groupId) {
             const groupRows = await db.select({ id: groupsTable.id }).from(groupsTable).where(eq(groupsTable.id, mappedUpdates.groupId)).limit(1);
             if (groupRows.length === 0) {
-                await db.insert(groupsTable).values({
-                    id: mappedUpdates.groupId,
-                    name: '新商品组 (New Group)',
-                    userId: 'system',
-                    status: 'draft',
-                    createdAt: new Date(),
-                    updatedAt: new Date()
-                });
+                mappedUpdates.groupId = null;
             }
         }
         if (mappedUpdates.categoryId) {
@@ -112,14 +105,7 @@ export const updateHandler = (app: Hono) => {
         if (mappedUpdates.groupId) {
             const groupRows = await db.select({ id: groupsTable.id }).from(groupsTable).where(eq(groupsTable.id, mappedUpdates.groupId)).limit(1);
             if (groupRows.length === 0) {
-                await db.insert(groupsTable).values({
-                    id: mappedUpdates.groupId,
-                    name: '新商品组 (New Group)',
-                    userId: 'system',
-                    status: 'draft',
-                    createdAt: new Date(),
-                    updatedAt: new Date()
-                });
+                mappedUpdates.groupId = null;
             }
         }
         if (mappedUpdates.categoryId) {

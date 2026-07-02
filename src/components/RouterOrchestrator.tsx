@@ -26,6 +26,8 @@ export function RouterOrchestrator() {
     routeName = 'adminBatchEdit';
   } else if (pathname.startsWith('/admin/group/')) {
     routeName = 'adminGroup';
+  } else if (pathname.startsWith('/admin/photo/')) {
+    routeName = 'adminPhoto';
   } else if (pathname.startsWith('/admin/tasks')) {
     routeName = 'adminTasks';
   } else if (pathname.startsWith('/admin/diagnose')) {
@@ -57,6 +59,8 @@ export function RouterOrchestrator() {
     if (
       rName === 'admin' || 
       rName === 'adminSlash' || 
+      rName === 'adminPhoto' || 
+      rName === 'adminPhotoSlash' || 
       rName === 'adminBatchEdit' || 
       rName === 'adminBatchEditSlash' || 
       rName === 'adminTasks' || 
@@ -98,6 +102,8 @@ export function RouterOrchestrator() {
         return <PublicPage />;
       case "admin":
       case "adminSlash":
+      case "adminPhoto":
+      case "adminPhotoSlash":
       case "adminBatchEdit":
       case "adminBatchEditSlash":
       case "adminTasks":

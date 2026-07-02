@@ -39,6 +39,10 @@ async function getPhotoById(id: string) {
 // Simple memory cache for counts to avoid redundant heavy queries
 const countCache = new Map<string, { count: number, timestamp: number }>();
 
+export function clearCountCache() {
+    countCache.clear();
+}
+
 export async function getPhotosList(params: PhotoListParams) {
     const { 
         limit = 100, cursor,
