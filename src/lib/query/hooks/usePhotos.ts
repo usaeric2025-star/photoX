@@ -72,11 +72,11 @@ export function usePhotos(params: PhotoListFilters = {}) {
       }
     },
     {
-      revalidateFirstPage: false,
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-      revalidateIfStale: false,
-      dedupingInterval: 10000,
+      revalidateFirstPage: true,
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+      revalidateIfStale: true,
+      dedupingInterval: 2000,
       persistSize: true,
       keepPreviousData: true,
     }

@@ -21,6 +21,7 @@ import { useGroupDraft } from '#src/components/groups/useGroupDraft.js';
 import { useGroupMutations } from '#src/hooks/group/index.js';
 import { AdminGroupHeader } from './components/AdminGroupHeader.js';
 import { Button } from '#src/components/shared/Button.js';
+import { toast } from 'sonner';
 import { useColumns } from '#src/hooks/index.js';
 import { FilterBar } from '#src/features/filters/index.js';
 
@@ -72,7 +73,7 @@ function AdminPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoLis
 }
 
 export function AdminGroupDetailPage() {
-  const { params } = useAppRouter();
+  const { params, navigate } = useAppRouter();
   const { groupId: fGroupId, photoId, setPhotoId, setModal } = useFilters();
   const groupId = (params as { id?: string }).id || fGroupId;
   
@@ -81,6 +82,22 @@ export function AdminGroupDetailPage() {
   const { lang, uiTranslations: t } = useTranslation();
   const { categories = [] } = useCategories();
   const { anchor, setAnchor } = useFilters();
+
+  // Redirect to admin index if group is not found or error occurs
+  React.useEffect(() => {
+    if (!loading && (!group || error)) {
+      // Only redirect if we definitely don't have a group after loading finished
+      const isNotFound = error?.includes('找不到') || error?.toLowerCase().includes('not found') || !group;
+      
+      if (isNotFound) {
+        toast.error(error || '該分組不存在或已被刪除，正在跳轉回管理頁面...');
+        const timer = setTimeout(() => {
+          navigate.admin();
+        }, 2000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [loading, group, error, navigate]);
 
   const { open: openLightbox } = useLightbox();
   const lightboxItems = React.useMemo(() => photosToLightboxSlides(photos), [photos]);
@@ -189,7 +206,10 @@ export function AdminGroupDetailPage() {
           groupData={groupData}
           setGroupData={setGroupData}
           handleUpdateGroupData={handleUpdateGroupData}
-          onUngroup={async (id) => await dissolve.mutateAsync(id)}
+          onUngroup={async (id) => {
+            await dissolve.mutateAsync(id);
+            navigate.admin();
+          }}
           update={async (updates) => { if (groupId) await update.mutateAsync({ id: groupId, updates }); }}
           t={(key: string) => String((t as Record<string, unknown>)[key] || key)}
         />

@@ -147,7 +147,9 @@ export async function getPhotosList(params: PhotoListParams) {
     }
 
     // 2. Data Fetch
-    const orderSpec = sortOrder === 'oldest' ? asc(furnitureItems.createdAt) : desc(furnitureItems.createdAt);
+    // isHidden should default to the very end of the list (false/null first, true last)
+    const hiddenOrder = sql`case when ${furnitureItems.isHidden} = true then 1 else 0 end asc`;
+    const primaryOrder = sortOrder === 'oldest' ? asc(furnitureItems.createdAt) : desc(furnitureItems.createdAt);
     const secondaryOrder = sortOrder === 'oldest' ? asc(furnitureItems.id) : desc(furnitureItems.id);
 
     const dbDataPromise = db
@@ -160,7 +162,7 @@ export async function getPhotosList(params: PhotoListParams) {
         .leftJoin(groupsTable, eq(furnitureItems.groupId, groupsTable.id))
         .leftJoin(categories, eq(furnitureItems.categoryId, categories.id))
         .where(finalWhere)
-        .orderBy(orderSpec, secondaryOrder)
+        .orderBy(hiddenOrder, primaryOrder, secondaryOrder)
         .limit(limit)
         .execute();
 

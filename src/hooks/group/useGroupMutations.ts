@@ -13,11 +13,7 @@ import { ProductGroup } from '#src/types/index.js';
 
 // Helper to invalidate photos cache robustly
 const invalidatePhotos = () => {
-  appQuery.mutate((key) => {
-    if (!key) return false;
-    const keyStr = typeof key === 'string' ? key : JSON.stringify(key);
-    return keyStr.includes('photos');
-  });
+  appQuery.invalidatePhotos();
 };
 
 export function useGroupMutations() {
@@ -31,15 +27,15 @@ export function useGroupMutations() {
     mutationFn: (args: { id: string; updates: Partial<ProductGroup> }) => 
       updateGroup(args.id, args.updates),
     onSuccess: (_, variables) => {
-      appQuery.mutate(queryKeys.groups.all);
+      invalidatePhotos();
       appQuery.mutate(queryKeys.groups.detail(variables.id, false));
+      appQuery.mutate(queryKeys.groups.detail(variables.id, true));
     }
   });
 
   const deleteMutation = useAppMutation({
     mutationFn: deleteGroup,
     onSuccess: () => {
-      appQuery.mutate(queryKeys.groups.all);
       invalidatePhotos();
     }
   });
@@ -48,8 +44,9 @@ export function useGroupMutations() {
     mutationFn: (args: { groupId: string; photoId: string }) => 
       setPhotoAsGroupCover(args.photoId, args.groupId),
     onSuccess: (_, variables) => {
-      appQuery.mutate(queryKeys.groups.detail(variables.groupId, false));
       invalidatePhotos();
+      appQuery.mutate(queryKeys.groups.detail(variables.groupId, false));
+      appQuery.mutate(queryKeys.groups.detail(variables.groupId, true));
     }
   });
 
@@ -57,7 +54,6 @@ export function useGroupMutations() {
     mutationFn: (args: { photoIds: string[]; targetGroupId?: string }) => 
       groupPhotos(args.photoIds, args.targetGroupId),
     onSuccess: () => {
-      appQuery.mutate(queryKeys.groups.all);
       invalidatePhotos();
     }
   });
@@ -66,9 +62,9 @@ export function useGroupMutations() {
     mutationFn: (args: { groupId: string; photoIds: string[] }) => 
       movePhotosToGroup(args.photoIds, args.groupId),
     onSuccess: (_, variables) => {
-      appQuery.mutate(queryKeys.groups.all);
-      appQuery.mutate(queryKeys.groups.detail(variables.groupId, false));
       invalidatePhotos();
+      appQuery.mutate(queryKeys.groups.detail(variables.groupId, false));
+      appQuery.mutate(queryKeys.groups.detail(variables.groupId, true));
     }
   });
 

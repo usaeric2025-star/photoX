@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState, useEffect } from 'react';
 import { useQueryStates } from 'nuqs';
 import { 
   searchParser, 
@@ -47,12 +47,30 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
     history: 'replace',
   });
 
-  const setSearch = useCallback((val: string) => setQuery({ q: val || null }), [setQuery]);
-  const setCategory = useCallback((val: string) => setQuery({ cat: val || null }), [setQuery]);
-  const setTags = useCallback((vals: string[]) => setQuery({ tag: vals?.length ? vals : null }), [setQuery]);
-  const setSort = useCallback((val: string) => setQuery({ sort: val as any }), [setQuery]);
-  const setStatus = useCallback((val: string) => setQuery({ status: val === 'all' ? null : val }), [setQuery]);
-  const setBatchFilter = useCallback((val: boolean) => setQuery({ batch: val || null }), [setQuery]);
+  // Force update this Hook instance when url-change event is dispatched by other instances
+  const [, setTick] = useState({});
+  useEffect(() => {
+    const handleUrlChange = () => {
+      setTick({});
+    };
+    window.addEventListener('url-change', handleUrlChange);
+    return () => window.removeEventListener('url-change', handleUrlChange);
+  }, []);
+
+  const wrappedSetQuery = useCallback((updates: any) => {
+    const promise = setQuery(updates);
+    promise.then(() => {
+      window.dispatchEvent(new Event('url-change'));
+    });
+    return promise;
+  }, [setQuery]);
+
+  const setSearch = useCallback((val: string) => wrappedSetQuery({ q: val || null }), [wrappedSetQuery]);
+  const setCategory = useCallback((val: string) => wrappedSetQuery({ cat: val || null }), [wrappedSetQuery]);
+  const setTags = useCallback((vals: string[]) => wrappedSetQuery({ tag: vals?.length ? vals : null }), [wrappedSetQuery]);
+  const setSort = useCallback((val: string) => wrappedSetQuery({ sort: val as any }), [wrappedSetQuery]);
+  const setStatus = useCallback((val: string) => wrappedSetQuery({ status: val === 'all' ? null : val }), [wrappedSetQuery]);
+  const setBatchFilter = useCallback((val: boolean) => wrappedSetQuery({ batch: val || null }), [wrappedSetQuery]);
   
   const setPhotoId = useCallback((val: string | null) => {
       const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
@@ -64,26 +82,26 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
          }
          return;
       }
-      setQuery({ photoId: val || null, modal: (val === null && query.modal === 'edit') ? null : query.modal });
-  }, [route?.name, query.photoId, query.modal, setQuery]);
+      wrappedSetQuery({ photoId: val || null, modal: (val === null && query.modal === 'edit') ? null : query.modal });
+  }, [route?.name, query.photoId, query.modal, wrappedSetQuery]);
 
-  const setGroupId = useCallback((val: string | null) => setQuery({ groupId: val || null }), [setQuery]);
-  const setModal = useCallback((val: string | null) => setQuery({ modal: val || null }), [setQuery]);
-  const setView = useCallback((val: 'grid' | 'list') => setQuery({ view: val === 'grid' ? null : 'list' }), [setQuery]);
-  const setAnchor = useCallback((val: boolean) => setQuery({ anchor: val || null }), [setQuery]);
-  const setShowGroupsCollapsed = useCallback((val: boolean) => setQuery({ showGroupsCollapsed: val === true ? null : false }), [setQuery]);
+  const setGroupId = useCallback((val: string | null) => wrappedSetQuery({ groupId: val || null }), [wrappedSetQuery]);
+  const setModal = useCallback((val: string | null) => wrappedSetQuery({ modal: val || null }), [wrappedSetQuery]);
+  const setView = useCallback((val: 'grid' | 'list') => wrappedSetQuery({ view: val === 'grid' ? null : 'list' }), [wrappedSetQuery]);
+  const setAnchor = useCallback((val: boolean) => wrappedSetQuery({ anchor: val || null }), [wrappedSetQuery]);
+  const setShowGroupsCollapsed = useCallback((val: boolean) => wrappedSetQuery({ showGroupsCollapsed: val === true ? null : false }), [wrappedSetQuery]);
 
   const updateFilters = useCallback((updates: Partial<typeof query>) => {
-    setQuery(updates);
-  }, [setQuery]);
+    wrappedSetQuery(updates);
+  }, [wrappedSetQuery]);
 
   const reset = useCallback(() => {
-    setQuery({
+    wrappedSetQuery({
       q: null, cat: null, tag: null, sort: null, status: null, batch: null,
       photoId: null, groupId: null, modal: null, view: null, anchor: null,
       showGroupsCollapsed: null, selected: null,
     });
-  }, [setQuery]);
+  }, [wrappedSetQuery]);
 
   // Derived state
   const search = query.q || '';

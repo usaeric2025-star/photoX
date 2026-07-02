@@ -74,14 +74,26 @@ async function bootstrap() {
     server.listen(PORT, "0.0.0.0", () => {
       console.log(`>>> [STARTUP] Hono + Vite (Dev) listening on 0.0.0.0:${PORT}`);
       // [DEV-BRIDGE-PREWARMED] v2.11.1
-      fetch(`http://127.0.0.1:${PORT}/api/health`)
-        .then(async (r) => {
-          const data = await r.json();
-          console.log('>>> [PREWARM] Dev Bridge Ready:', data);
-        })
-        .catch((err) => {
-          console.error('>>> [PREWARM] Dev Bridge Failed:', err.message);
-        });
+      // Use setTimeout to ensure the server event loop has spun up
+      setTimeout(() => {
+        fetch(`http://127.0.0.1:${PORT}/api/system/health`)
+          .then(async (r) => {
+            const text = await r.text();
+            if (!r.ok) {
+              console.error(`>>> [PREWARM] Dev Bridge HTTP Error ${r.status}:`, text);
+              return;
+            }
+            try {
+              const data = JSON.parse(text);
+              console.log('>>> [PREWARM] Dev Bridge Ready:', data);
+            } catch (err: any) {
+              console.error('>>> [PREWARM] Dev Bridge Failed to parse JSON:', err.message, 'Raw response:', text);
+            }
+          })
+          .catch((err) => {
+            console.error('>>> [PREWARM] Dev Bridge Fetch Failed:', err.message);
+          });
+      }, 500);
     });
   } else {
     // Production Mode (Standard Node)

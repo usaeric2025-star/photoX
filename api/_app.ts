@@ -30,8 +30,13 @@ export const apiApp = new Hono();
 // ✅ 統一錯誤處理
 apiApp.onError((err, c) => {
     console.error('[API Error]', err);
+    if (err.message?.includes('Not found') || err.message?.includes('not found') || err.message?.includes('NotFound')) {
+        return errorResponse(c, err, 404);
+    }
     if (err.message?.toLowerCase().includes('foreign key')) {
-        err.message = '关联数据不存在，请刷新页面后重试 (Foreign Key Error)';
+        const foreignKeyErr = new Error('关联的数据不存在，请刷新页面後重试 (Foreign Key Error)');
+        (foreignKeyErr as any).code = 'FOREIGN_KEY_VIOLATION';
+        return errorResponse(c, foreignKeyErr, 400);
     }
     return errorResponse(c, err, 500);
 });
